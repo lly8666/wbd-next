@@ -18,7 +18,22 @@ def df_option(sock,enabled):
         raise RuntimeError("kernel IP DF option readback mismatch")
     return (name,value)
 
-def tcp64k(local,remote):
+def stage_barrier(gate,label,timeout_s=12):
+    # Both OS sockets must reach precisely the same packet family before
+    # either side sends; never count a different-size late packet as success.
+    me="windows" if os.name=="nt" else "linux"
+    other="linux" if me=="windows" else "windows"
+    marker=pathlib.Path(str(gate)+"."+label+"."+me)
+    peer=pathlib.Path(str(gate)+"."+label+"."+other)
+    marker.write_text("REAL_NATIVE_SOCKET_READY\n")
+    until=time.monotonic()+timeout_s
+    while not peer.is_file():
+        if time.monotonic()>until:
+            raise RuntimeError("genuine opposite OS stage barrier missing: "+label)
+        time.sleep(.04)
+    print(json.dumps({"phase":"stage_barrier","name":label,"os":me}),flush=True)
+
+def tcp64k(local,remote,gate):
     listen=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     listen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
     listen.bind((local,45910));listen.listen(1);listen.settimeout(10)
@@ -38,6 +53,7 @@ def tcp64k(local,remote):
                     raise RuntimeError("TCP64 server received nonidentical payload")
                 conn.sendall(data);received.append(len(data))
         except Exception as error:issues.append(str(error))
+    stage_barrier(gate,"tcp64k",12)
     worker=threading.Thread(target=serve,daemon=True);worker.start()
     try:
         outbound=payload(local,65507)+bytes(29)
@@ -76,6 +92,7 @@ def main():
         failures=[];sizes=[]
         for n in PROBE_SIZES:
             try:
+                stage_barrier(gate,"df0-"+str(n),12)
                 if s.sendto(payload(local,n),(remote,PORT))!=n:
                     raise RuntimeError("short native DF0 send")
                 expected=payload(remote,n)
@@ -84,6 +101,9 @@ def main():
                     try:data,peer=s.recvfrom(65535)
                     except socket.timeout:continue
                     if peer[0]==remote and data==expected:ok=True;break
+                    print(json.dumps({"phase":"unexpected_df0_input","expected_size":n,
+                         "received_size":len(data),"peer_matches":peer[0]==remote,
+                         "payload_matches":data==expected}),flush=True)
                 if not ok:raise RuntimeError("native DF0 complete reassembly missing")
                 line={"size":n,"result":"DF0_FULL_DATAGRAM_BYTE_EXACT"}
             except Exception as error:
@@ -106,7 +126,7 @@ def main():
                 df1sizes.append(line)
                 print(json.dumps({"phase":"DF1",**line}),flush=True)
             finally:probe.close()
-        try:tcp=tcp64k(local,remote)
+        try:tcp=tcp64k(local,remote,gate)
         except Exception as error:
             tcp={"result":"FAIL","reason":str(error)};failures.append(tcp)
         print(json.dumps({"phase":"TCP64K",**tcp}),flush=True)

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 991,
-  "checkpoint_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+  "sequence": 992,
+  "checkpoint_sha": "e966c93885c931b98a1134eb55164c114dd52076",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H991 repair evidence source field while preserving exact H990 eleven independent source-locked native runs",
-  "why_now": "H990 governance structure requires evidence.source_sha to match cursor.last_tested_source; raw H990 preliminary evidence only carried product_source",
+  "current_task": "H992 collect H990 eleven native results 9 PASS 2 FAIL; source-fixed only failing Normal1280 and extended DF probes retry",
+  "why_now": "User demanded all outstanding tests together; H990 completed 11 actions and two real test failures need narrowly scoped repairs, no duplicated successful scenes",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect all 11 H990 Action IDs/outcomes at original fixture SHA; read OS/mode/size/Stop evidence. New in-place PMTU/ICMP still NOT_RUN unless genuine owner integration becomes available.",
+  "next_action": "Collect H992 two retry Actions. Check per-OS DF logs, Normal1280 MSS/OS/Stop. Outstanding real in-place dynamic PMTU and user-state ICMP must be tested in actual owner/native before closing PLAN027A.",
   "unverified": true,
   "last_tested_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json"
+    "docs/evidence/M0/PLAN027A-H992-H990-11-NATIVE-COLLECT-20261103.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H987-GOV-REPAIR-H986-REUSE-20261103.json",
     "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H988-SOURCE-EXACT-NATIVE-RECEIPTS.md",
-    "docs/devlog/M0/20261103-PLAN027A-H989-FEATURE-CARD-BOUND.md",
     "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H990-ALL-REMAINING-NATIVE.md",
     "docs/devlog/M0/20261103-PLAN027A-H991-EVIDENCE-SOURCE-FIELD.md",
+    "docs/evidence/M0/PLAN027A-H992-H990-11-NATIVE-COLLECT-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H992-REPAIR-TWO-NATIVE-FAILURES.md",
     "docs/architecture/MTU_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H990 source-locked 11 independent original Windows/WSL2 Actions dispatched, orchestrator Action 41554842970 success; native results still RUNNING. H991 fixes source field required by governance, not any product/fixture; original product source H986. Prior H987 PASS unchanged."
+  "partial_summary": "Nine of H990 eleven genuine native Modes/outer actions PASS, Normal1280 and extended DF failed with exact source logs. H992 test-harness-only source and scenario barriers remediate exact two; preserve previous failures and do not rerun green original product modes."
 }

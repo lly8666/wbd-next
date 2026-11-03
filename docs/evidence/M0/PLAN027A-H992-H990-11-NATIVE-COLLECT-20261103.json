@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+  "product_build_action": 41546652567,
+  "orchestrator_action": 41554842970,
+  "orchestrator_conclusion": "success",
+  "scope": "EXACT_NATIVE_ELEVEN_SCOPES_PRIOR_TO_H992_FIX",
+  "status": "PARTIAL_9_PASS_2_FAIL",
+  "all_completions_collected": true,
+  "cases": [
+    {
+      "scope": "Normal1460 DF-extended",
+      "run": 41554874742,
+      "verdict": "FAIL",
+      "detail": "DF0 1728/4096/65507 timed out on Windows after source variant change; original H987 1728 PASS"
+    },
+    {
+      "scope": "Fixed1460",
+      "run": 41554882448,
+      "verdict": "PASS",
+      "detail": "actual original Windows/WSL2 native + Stop"
+    },
+    {
+      "scope": "Game21460",
+      "run": 41554892070,
+      "verdict": "PASS",
+      "detail": "actual native + Stop"
+    },
+    {
+      "scope": "Game41460",
+      "run": 41554905507,
+      "verdict": "PASS",
+      "detail": "real Windows/Linux OS inner1373 + Stop"
+    },
+    {
+      "scope": "Game2FEC1460",
+      "run": 41554912671,
+      "verdict": "PASS",
+      "detail": "actual native + Stop"
+    },
+    {
+      "scope": "Normal1280",
+      "run": 41554919787,
+      "verdict": "FAIL",
+      "detail": "fixture tools/m0_wl_public_mss_contract.py excluded valid 1280 before any business test"
+    },
+    {
+      "scope": "Game4FEC1280",
+      "run": 41554928445,
+      "verdict": "PASS",
+      "detail": "real native outer1280 and OS applied + Stop"
+    },
+    {
+      "scope": "Fixed1500",
+      "run": 41554935893,
+      "verdict": "PASS",
+      "detail": "real native explicit1500 + Stop"
+    },
+    {
+      "scope": "Game4FEC1500",
+      "run": 41554944208,
+      "verdict": "PASS",
+      "detail": "real native explicit1500 + Stop"
+    },
+    {
+      "scope": "Auto revision2 1460",
+      "run": 41554953134,
+      "verdict": "PASS",
+      "detail": "real operator revision2 Applied and UDP + Stop"
+    },
+    {
+      "scope": "Auto adaptive 1460",
+      "run": 41554960288,
+      "verdict": "PASS",
+      "detail": "real natural adaptive policy + Stop"
+    }
+  ],
+  "extended_df_old_control": {
+    "run": 41548218023,
+    "status": "PASS_AT_PRIOR_H987_SOURCE",
+    "bytes": 1728
+  },
+  "retest": "H992 changes test fixture only, once, and dispatches only the original two failed scopes; H990 historical fails retained",
+  "remaining_NOT_RUN": [
+    "real live in-place 1460->1280->1460 kernel path revision",
+    "real ICMP3/4 user-state transmit/remote readback",
+    "source-current ARM64 game4fec physical guest",
+    "same-host causal CPU/RSS A/B"
+  ],
+  "acceptance": "full IP fragments should reassemble at least one exact original datagram in validated size/mode; no fragment loss rate gate"
+}

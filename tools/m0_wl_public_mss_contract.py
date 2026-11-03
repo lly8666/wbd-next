@@ -5,7 +5,7 @@ def one(s,pattern,label):
  if not rows or len(set(map(str,rows)))!=1:raise ValueError("missing/conflicting "+label)
  return rows[0]
 def verified_current_v4_mss(win,linux,outer):
- if outer not in (1400,1460,1500):raise ValueError("bad V4 configured outer")
+ if outer not in (1280,1400,1460,1500):raise ValueError("bad V4 configured outer")
  receipt=one(win,r"^WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=\S+ configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+) limiting_reason=(\w+) source=RUST_V1_REAL_OS$","Windows cold source")
  generation,configured,physical,effective,win_mss,win_inner=map(int,receipt[:6])
  reason=receipt[6]

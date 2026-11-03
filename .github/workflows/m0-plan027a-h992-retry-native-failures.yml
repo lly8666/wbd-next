@@ -1,0 +1,60 @@
+name: M0 PLAN027A H992 exact two-failure native retry with corrected tests
+run-name: "M0|PLAN027A-H992-RETRY|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h992-retry-native-failures.yml]
+permissions: {contents: read, actions: write}
+concurrency:
+  group: plan027a-h992-two-native-failure-scopes
+  cancel-in-progress: false
+jobs:
+  verified-product-two-cases:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 1e8325f16e2975a9da3497ab97ac570771a97238
+      BUILD_RUN: "41546652567"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate exactly unchanged product and bounded real kernel tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          git fetch --depth=1 origin "$SOURCE_SHA"
+          drift="$(git diff --name-only "$SOURCE_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_install_public_faketcp.py)"
+          test -z "$drift" || { echo "H992_ABORT_CHANGED_PRODUCT_SOURCE $drift";exit 1; }
+          python3 -m unittest tests.test_m0_wl_native_df_kernel tests.test_m0_wl_native_mtu_contract tests.test_m0_wl_public_mss_contract -v
+          python3 -m py_compile tools/m0_wl_native_df_kernel.py
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts" --jq '.artifacts[]|select(.expired==false)|.name' > /tmp/products
+          grep -Fx "m0-wl-windows-product-binaries-$SOURCE_SHA" /tmp/products
+          grep -Fx m0-plan024-linux-product /tmp/products
+          echo "H992_REUSED_REAL_PRODUCT_BINARY_VALID source=$SOURCE_SHA no_new_build=1"
+      - name: Only original H990 failed native scopes: expanded DF and Normal1280
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          while IFS='|' read -r mode outer scene;do
+            [ -n "$mode" ] || continue
+            scene_label="$scene";[ -n "$scene_label" ] || scene_label=no-scene
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene_label|outer=$outer"
+            found="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg x "$title" '.workflow_runs[]|select(.display_title==$x)|.id' | head -1)"
+            if [ -n "$found" ];then echo "H992_ALREADY_DISPATCHED $found $title";continue;fi
+            if [ -n "$scene" ];then
+              gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main -f public_mode=normal -f "native_outer_mtu=$outer" -f run_n0=false -f outer_repair=on -f "perf_reuse_run_id=$BUILD_RUN" -f "perf_binary_source_sha=$SOURCE_SHA" -f "perf_scenario_file=$scene"
+            else
+              gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main -f public_mode=normal -f "native_outer_mtu=$outer" -f run_n0=false -f outer_repair=on -f "perf_reuse_run_id=$BUILD_RUN" -f "perf_binary_source_sha=$SOURCE_SHA"
+            fi
+            echo "H992_RETEST_QUEUED_NOT_PASS $title"
+          done <<'CASES'
+          normal|default1460|scenarios/plan027a-h958-normal-1460-5m-df-60s.json
+          normal|1280|
+          CASES
+          echo H992_ONLY_TWO_ORIGINAL_FAILURES_REDISPATCHED
