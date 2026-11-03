@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1020,
-  "checkpoint_sha": "d3d0be09571f21fe8da5789cad5af8c3143dbc55",
+  "sequence": 1021,
+  "checkpoint_sha": "784e4d3f5560039f691124a2d322cb09f425096f",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1020 repair exact original Go TLS multi-server auto-IP READY/Stop status in one-device native test; H1019 3-netns multi-client not reached",
-  "why_now": "H1019 SOURCEd3d0 Action41585432181 FAIL M0_V4_PUBLIC_REAL_CLIENT_SERVER_NOT_READY though real TLS client lease+Rust ready and server V4_PUBLIC_MULTI_SESSION_READY authenticated; old test only recognized singleton server marker",
+  "current_task": "H1021 fail-closed SOURCE-locked automatic /32 native Stop diagnostic persisted before test cleanup; H1020 5/5 genuine original TLS M4 UDP succeeds but native final Stop gate FAIL, 3netns not run",
+  "why_now": "Action 41587460751 SOURCE784e4d3 native after original TLS/5 real UDP echoes FAIL at Stop/readback without server/client logs (ephemeral TMP deleted), impossible to classify accurately",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1020 exact-source Actions for real auto-IP one shared Rust reader+native UDP/Stop, then mandatory 3-netns A→A+B→B simultaneous authenticated original Go TLS, BPF32 and all existing native regressions. Repair actual downstream failures without bypass or parallel duplicate scenarios. Continue same-account multi-install plus other-account and seven modes/OS path-switch.",
+  "next_action": "Collect exact new H1021 native Action failure diagnostics from both original Go endpoints and Rust Stop after actual five UDP echoes. Repair precise Stop/route/lifetime code; then run three-netns Alice/Bob simultaneous UDP A/A+B/B and same-account installation takeover with genuine one-port Rust shared reader.",
   "unverified": true,
   "last_tested_source": "9c39b5878087bb201b4b318532ce9784684ab63a",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1020-REAL-MULTI-READY-CONTRACT.md",
+    "docs/devlog/M0/20261103-PLAN028-H1021-STOP-FAIL-EXACT-LOGS.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1017 source9c39 original native one Rust shared TUN reader real two-netns UDP5/Stop PASS. H1019 source d3d0 introduced server port443 multi-account concurrent manager and 3-netns A/A+B/B test but native Action41585432181 FAIL at old auto-IP singleton-ready marker before UDP (client actual lease10.66.0.254/32 + Rust and server multi-session READY visible); downstream tests NOT_RUN. H1020 fixes exact auto auto TLS server READY/Stop witness; multi-device remains UNVERIFIED."
+  "partial_summary": "H1017 one device native shared TUN original TLS 5 UDP/readback/Stop PASS source9c39. H1019 real multi-manager code source d3d0 first auto native FAIL old readiness expectation. H1020 source784e4d fixed READY, real 5/5 app echo, but remaining Stop/reader gate FAIL; three-netns not run. H1021 captures narrow redacted original logs at failure before cleanup, no loosened gate or PASS; H998 and Win Game4 FAIL preserved."
 }

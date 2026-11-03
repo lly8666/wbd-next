@@ -40,7 +40,32 @@ mkdir -m 0700 -p "$TMP"
 NSC="v4cl_${GITHUB_RUN_ID}" NSS="v4sv_${GITHUB_RUN_ID}"
 PIDC='' PIDS='' APPS=''
 cleanup(){
+  local exit_code=$?
   set +e
+  if [[ "$exit_code" -ne 0 && "$AUTO_IP" == 1 ]];then
+    # Save only original native owner/readback diagnostics; no secrets,
+    # command line, packet body, TLS transcript or certificates.
+    echo "M0_PLAN028_AUTO_NATIVE_FAIL status=$exit_code" >&2
+    for role in client server;do
+      if [[ -f "$TMP/$role.log" ]];then
+        grep -E 'V4_PUBLIC_|V4_ORIGINAL_GO_.*_NATIVE_READY|WBD_LINUX_|[Ee]rror|[Ff]ail|[Ss]top|[Pp]anic|[Tt]imeout' "$TMP/$role.log" |
+          sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' |
+          tail -60 >"$ART/plan028-auto-$role-diagnostic.log"
+        echo "M0_PLAN028_AUTO_${role}_LAST_NATIVE_EVENTS" >&2
+        cat "$ART/plan028-auto-$role-diagnostic.log" >&2
+      fi
+    done
+    for role in client server;do
+      if [[ -f "$TMP/$role.pid" ]];then
+        pid="$(cat "$TMP/$role.pid")"
+        if sudo -n kill -0 "$pid" 2>/dev/null;then
+          echo "M0_PLAN028_AUTO_FAIL_PROCESS role=$role state=still_live" >&2
+        else
+          echo "M0_PLAN028_AUTO_FAIL_PROCESS role=$role state=exited" >&2
+        fi
+      fi
+    done
+  fi
   for p in "$PIDC" "$PIDS" "$APPS"; do
     if [[ -n "$p" ]]; then sudo -n kill -TERM "$p" 2>/dev/null || true; fi
   done
