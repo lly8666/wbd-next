@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1031,
+  "sequence": 1032,
   "checkpoint_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1031 PLAN028 Linux route-specific MTU effective readback and truthful 32 cold slots/16 native owner capacity; small targeted Go test pending",
-  "why_now": "Continue core PLAN028 path-change work rather than broad performance proof: route-get MTU may be smaller than network-interface MTU, and 32 Go SYN slots were incorrectly called 32 native users.",
+  "current_task": "H1032 PLAN028 route-specific MTU preserved through protected TLS callback on Linux A+B; short Go route metric + post-auth budget native test PENDING",
+  "why_now": "H1031 found true kernel route cap ignored by post-TLS configureTunnelMTU, which read raw iface.MTU and would upsize the actual TUN despite correct cold SYN and route readback.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Run targeted original Go/Linux PLAN028 path route tests and compile; then continue per-client configuration and Windows/Game path transition. Do not claim 32 native sessions or route-MTU native integration before test.",
+  "next_action": "Run two small Go PLAN028 route-MTU budget unit tests and original Linux native path 2/5netns, verify no false FAIL from stale capacity parser. Then advance Windows route notifications/Game mode or per-client config without repeated full performance matrix.",
   "unverified": true,
   "last_tested_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1029 fa32 exact native Rust/Go PASS documented. H1031 small Go Linux patch: use min(actual interface MTU, destination route JSON MTU) for underlay/path generation, reject malformed route metric; clarify 32 cold association slots versus 16 Rust native sessions without changing memory allocation or data-plane limits. Go targeted test pending. PLAN028 remains ongoing."
+  "partial_summary": "H1029 fa32 native scoped PASS. H1031/32 code: Go cold OS route MTU bounds interface, same cap frozen into authenticated MTU callback even A+B, 32 cold/16 native capacity accurately logged and fixture updated; two small Go unit cases plus same original Go TLS Linux run pending. CPU/p99 physical H998/Win Game4FEC and all PLAN028 scope remain open."
 }

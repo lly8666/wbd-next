@@ -102,6 +102,9 @@ type config struct{
     disableOuterRepair bool
     recordLimit uint16
     innerMTU int
+    // Cold generation's kernel-selected path budget; zero for the older
+    // non-path-supervised product. Never user-supplied or serialized.
+    underlayBudgetMTU int
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -751,6 +754,19 @@ func deriveMTUBudget(outer,device int,peerMSS,recordLimit uint16,
  }
  return uint16(b.RecordWireCap),int(b.SingleInnerIPCap),nil
 }
+// The authenticated-MTU callback must use the SAME cold kernel path budget
+// as the SYN/record offer. Reading only iface.MTU would discard a stricter
+// destination-route MTU and break source-locked path handover.
+func originalNativeDeviceMTU(c config,interfaceMTU int)(int,error){
+    if interfaceMTU<576||interfaceMTU>65535{
+        return 0,fmt.Errorf("invalid kernel interface MTU")
+    }
+    if c.underlayBudgetMTU==0{return interfaceMTU,nil}
+    if c.underlayBudgetMTU<576||c.underlayBudgetMTU>65535{
+        return 0,fmt.Errorf("invalid kernel-selected path MTU")
+    }
+    return min(interfaceMTU,c.underlayBudgetMTU),nil
+}
 // Called with authenticated record limits before Rust begins reading TUN.
 // Multiple Game lanes can only lower the shared TUN MTU. No per-packet work.
 func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
@@ -759,7 +775,9 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
         if err!=nil{return err}
         limit:=min(clientLimit,serverLimit)
         if limit==0{return fmt.Errorf("missing authenticated record limit")}
-        wire,inner,err:=deriveMTUBudget(c.outerMTU,iface.MTU,peerMSS,limit,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)
+        deviceMTU,err:=originalNativeDeviceMTU(c,iface.MTU)
+        if err!=nil{return err}
+        wire,inner,err:=deriveMTUBudget(c.outerMTU,deviceMTU,peerMSS,limit,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)
         if err!=nil{return err}
         if inner!=tun.mtu {
             if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
@@ -768,9 +786,9 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
         if err!=nil{return err}
         if applied!=inner{return fmt.Errorf("owned TUN OS-applied MTU mismatch requested=%d actual=%d",inner,applied)}
         tun.mtu=applied
-        log.Printf("V4_PUBLIC_MTU role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d peer_mss=%d local_record_cap=%d peer_record_cap=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
+        log.Printf("V4_PUBLIC_MTU role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d peer_mss=%d local_record_cap=%d peer_record_cap=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d path_budget_mtu=%d",
             c.role,c.outerMTU,iface.MTU,faketcp.PublicV4AdvertisedMSS(),peerMSS,
-            c.recordLimit,limit,wire,tun.mtu,c.fecMode,c.gameLanes)
+            c.recordLimit,limit,wire,tun.mtu,c.fecMode,c.gameLanes,deviceMTU)
         return nil
     }
 }

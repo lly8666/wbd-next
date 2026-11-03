@@ -64,6 +64,9 @@ func startOriginalClientGeneration(
     if overlap&&previousPhysicalMTU>=576&&previousPhysicalMTU<budgetMTU{
         budgetMTU=previousPhysicalMTU
     }
+    // Freeze the same bounded kernel path budget for the later protected
+    // TLS authenticated callback; it must not use bare iface.MTU again.
+    c.underlayBudgetMTU=budgetMTU
     cold,err:=realityfront.V4DeriveColdMTUBudget(realityfront.V4ColdMTUBudgetInput{
         ConfiguredOuterIPMTU:uint32(c.outerMTU),
         PhysicalOuterIPMTU:uint32(budgetMTU),

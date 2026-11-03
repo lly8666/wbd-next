@@ -64,6 +64,31 @@ func TestPLAN028RouteMTUMetricOverridesPhysicalInterface(t *testing.T){
     if err!=nil||got.mtu!=1500{t.Fatalf("no metric broke interface fallback: %+v %v",got,err)}
 }
 
+func TestPLAN028RouteMTUCarriesIntoAuthenticatedNativeBudget(t *testing.T){
+    // Candidate B path is 1280 while physical NIC still advertises 1500.
+    // The post-TLS callback MUST preserve the stricter cold budget.
+    cases:=[]struct{iface,path,want int}{
+        {1500,1280,1280},
+        {1280,1500,1280},
+        {1500,0,1500},
+        {1500,1500,1500},
+    }
+    for _,tc:=range cases{
+        got,err:=originalNativeDeviceMTU(config{underlayBudgetMTU:tc.path},tc.iface)
+        if err!=nil||got!=tc.want{
+            t.Fatalf("authenticated native MTU iface=%d path=%d: got=%d err=%v want=%d",
+                tc.iface,tc.path,got,err,tc.want)
+        }
+    }
+    for _,tc:=range []struct{iface,path int}{
+        {1500,575},{1500,65536},{575,1280},
+    }{
+        if _,err:=originalNativeDeviceMTU(config{underlayBudgetMTU:tc.path},tc.iface);err==nil{
+            t.Fatalf("invalid path/interface MTU accepted: %+v",tc)
+        }
+    }
+}
+
 func TestPLAN028NativePathNotifications200msQuiet500msAbsolute(t *testing.T){
     start:=time.Unix(1000,0)
     var c originalLinuxCoalescer
