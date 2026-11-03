@@ -536,13 +536,18 @@ func runGameMultiServer(
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }
         rec.stopped=true
-        for i,l:=range rec.members{
+        for _,l:=range rec.members{
             delete(detached,l.Association())
             forget(l.Association())
-            _=i
         }
         if remaining:=peers(nil);len(remaining)>0{
             if err:=raw.ExcludeDetachedDataSet(remaining);err!=nil{return err}
+        }else{
+            // The LAST authenticated native Game group is fully stopped:
+            // restore the original listener port filter, not the stale
+            // detached tuple filter. A NAT may reuse the same TCP 4-tuple
+            // for a completely fresh genuine TLS bootstrap.
+            if err:=raw.RestoreOriginalBootstrapPortFilter();err!=nil{return err}
         }
         log.Printf("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=%s remaining_flows=%d",
             reason,len(detached))

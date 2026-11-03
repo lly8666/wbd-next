@@ -94,6 +94,25 @@ func (e *RawIPv4Endpoint) ExcludeDetachedData(peerIP [4]byte, peerPort uint16) e
 }
 
 
+// Restore the ORIGINAL kernel bootstrap receive-port gate only after the
+// LAST fully authenticated native Game group has drained. Keeping the final
+// detached peer tuple in SO_ATTACH_FILTER would discard the NEW TLS payload
+// when a mobile NAT legitimately reuses that same 4-tuple, despite its old
+// Game M4 owner having stopped. Empty-group rearm must not be inferred from
+// peer-supplied FIN/RST; the caller owns the exact native group Stop fence.
+func (e *RawIPv4Endpoint) RestoreOriginalBootstrapPortFilter() error {
+    if e==nil{return errors.New("faketcp: nil original TLS receive-port rearm")}
+    e.mu.Lock()
+    defer e.mu.Unlock()
+    if e.closed{return net.ErrClosed}
+    if !e.kernelPortFilter||e.receivePort==0{
+        return errors.New("faketcp: no original kernel receive-port scope for rearm")
+    }
+    ins:=rawReceivePortFilter(e.localIP,e.receivePort)
+    program:=unix.SockFprog{Len:uint16(len(ins)),Filter:&ins[0]}
+    return unix.SetsockoptSockFprog(e.recvFD,unix.SOL_SOCKET,unix.SO_ATTACH_FILTER,&program)
+}
+
 // DetachedPeer is the inbound exact transport peer of a credential-checked
 // original Go Game lane. All entries use one server IP and listening port.
 // A same-source-IP NAT client is distinguished by its true TCP source port.

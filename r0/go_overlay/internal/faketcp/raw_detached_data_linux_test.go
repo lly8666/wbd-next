@@ -3,6 +3,7 @@
 package faketcp
 
 import (
+	"golang.org/x/sys/unix"
 	"encoding/binary"
 	"testing"
 
@@ -199,5 +200,47 @@ func TestPLAN028OriginalTLS32ConcurrentPortKernelExclusion(t *testing.T){
     n,err:=vm.Run(frame(50032,0x18))
     if err!=nil||n==0{
         t.Fatalf("new same-NAT client lost admission: n=%d err=%v",n,err)
+    }
+}
+
+// Once the final genuine native Game owner is drained, reusing an old
+// NAT four-tuple must not silently blackhole the NEXT original TLS ClientHello.
+// Compare the exact Linux socket BPF programs, not a Go mock of the decision.
+func TestPLAN028GameLastGroupRearmsOriginalTLSFourTuple(t *testing.T){
+    local:=[4]byte{192,0,2,8}
+    peer:=DetachedPeer{IP:[4]byte{198,51,100,9},Port:41031}
+    detached,err:=detachedDataKernelFilterSet(local,443,[]DetachedPeer{peer})
+    if err!=nil{t.Fatal(err)}
+    bootstrap:=rawReceivePortFilter(local,443)
+    run:=func(ins []unix.SockFilter,srcPort,dstPort uint16)int{
+        t.Helper()
+        raw:=make([]bpf.RawInstruction,len(ins))
+        for i,x:=range ins{raw[i]=bpf.RawInstruction{
+            Op:x.Code,Jt:x.Jt,Jf:x.Jf,K:x.K,
+        }}
+        decoded,ok:=bpf.Disassemble(raw)
+        if !ok{t.Fatal("invalid exact Linux AF_PACKET BPF")}
+        vm,e:=bpf.NewVM(decoded)
+        if e!=nil{t.Fatal(e)}
+        // Ethernet + IPv4/20 + TCP/20 + TLS payload/64.
+        b:=make([]byte,14+20+20+64)
+        b[12],b[13]=8,0;b[14]=0x45;b[23]=6
+        binary.BigEndian.PutUint16(b[16:],uint16(20+20+64))
+        copy(b[26:30],peer.IP[:]);copy(b[30:34],local[:])
+        binary.BigEndian.PutUint16(b[34:],srcPort)
+        binary.BigEndian.PutUint16(b[36:],dstPort)
+        b[46]=0x50;b[47]=0x18 // TCP data offset, PSH|ACK
+        accepted,e:=vm.Run(b)
+        if e!=nil{t.Fatal(e)}
+        return accepted
+    }
+    if n:=run(detached,peer.Port,443);n!=0{
+        t.Fatalf("old detached Game DATA reentered Go: n=%d",n)
+    }
+    if n:=run(bootstrap,peer.Port,443);n==0{
+        t.Fatal("after last Game Stop original TLS payload from recycled tuple blackholed")
+    }
+    if n:=run(bootstrap,peer.Port,444);n!=0{
+        t.Fatal("restored TLS port filter leaked unrelated server port")
     }
 }
