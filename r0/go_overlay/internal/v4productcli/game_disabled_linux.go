@@ -15,3 +15,12 @@ import (
 func runGame(_ context.Context,c config,_ uint32,_ *ownedTun,_ *logicaltunnel.LeaseRegistry,_ *realityfront.V4EpochStore,_ *bool)error{
     return fmt.Errorf("original Go V4 Game%d native M4 product not compiled",c.gameLanes)
 }
+
+// The exact same physical-path client supervisor compiles on builds where
+// Game M4 is intentionally absent. No synthetic handshake/owner fallback.
+func runGameClientGeneration(
+ _ context.Context,c config,_ uint32,_ *ownedTun,
+ _ *bool,_ chan<- struct{},
+)error{
+ return fmt.Errorf("original Go V4 Game%d native M4 product not compiled",c.gameLanes)
+}

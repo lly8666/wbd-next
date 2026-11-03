@@ -25,7 +25,7 @@ func gamePort(base uint16,lane int)(uint16,error){
 }
 func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)error{
     if c.gameLanes!=2&&c.gameLanes!=4{return realityfront.ErrAdmissionUnsupported}
-    if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected)}
+    if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected,nil)}
     return runGameServer(ctx,c,ifindex,tun,leases,epochs,connected)
 }
 // Planned is the original bounded FEC owner count; sent requires at
@@ -67,7 +67,19 @@ func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled
         row[13],row[14],row[15],row[16],row[17],row[18],row[19],row[20])
     return nil
 }
-func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
+// The shared PLAN028 physical path supervisor alone owns fresh Game cold
+// generations. Its ready receipt is published ONLY after real Go TLS, Rust
+// M4 activation and exact raw kernel handoff; never on SYN or Go parser state.
+func runGameClientGeneration(
+ ctx context.Context,c config,ifindex uint32,tun *ownedTun,
+ connected *bool,ready chan<- struct{},
+)error{
+ return runGameClient(ctx,c,ifindex,tun,connected,ready)
+}
+func runGameClient(
+ ctx context.Context,c config,ifindex uint32,tun *ownedTun,
+ connected *bool,ready chan<- struct{},
+)error{
     n:=int(c.gameLanes)
     policy,err:=realityfront.FixedPolicyForClient(int(c.gameLanes),4)
     if err!=nil{return err}
@@ -129,12 +141,26 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     }
     log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
         n,c.peerPort,len(flows))
+    // The original one process TUN is kept across COLD Game generations.
+    // Never let retired A Close() the OS fd that B must use after native
+    // M4 has joined. The single top-level CLI owns final TUN Close.
+    cleanup:=func()error{return tun.Close()}
+    if c.autoIP{cleanup=func()error{return nil}}
+    applyLease:=configureAuthenticatedClientIPv4(tun)
+    if c.leaseMustStay{
+        applyLease=func(lease string)error{
+            if lease!=tun.cidr{
+                return fmt.Errorf("new authenticated Game generation changed the same installation /32")
+            }
+            return configureAuthenticatedClientIPv4(tun)(lease)
+        }
+    }
     native,err:=realityfront.NewV4LinuxGameClientProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:cleanup,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
-            ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+            ConfigureLeaseIPv4:applyLease,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
@@ -169,6 +195,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     log.Printf("V4_PUBLIC_GAME_GO_RX_HANDOFF role=client lanes=%d filtered=%d rust_ready=1 original_send_fd_open=1",n,n)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=%d original_tls=1 rust_m4=1",n)
+    if ready!=nil{select{case ready<-struct{}{}:default:}}
     if c.gameFecEnabled{
         log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=%d mode=fixed profile=%d auth_original_tls=1 original_M4=1",n,c.gameFecProfile)
     }else{
@@ -187,8 +214,11 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
     if n==4{
-        if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
+        if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{
+            err=errors.Join(err,e)
+        }
     }
+    // Even a failed cold readback must not skip exact M4 native Stop.
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
     return errors.Join(err,closeErr)

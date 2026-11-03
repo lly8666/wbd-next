@@ -12,7 +12,18 @@ PATH_SWITCH="${WBD_V4_PUBLIC_PATH_SWITCH:-0}"
 if [[ "$PATH_SWITCH" != 0 && "$PATH_SWITCH" != 1 ]];then echo "invalid path switch selector" >&2;exit 2;fi
 if [[ "$PATH_SWITCH" == 1 && "$AUTO_IP" != 1 ]];then echo "real path switch requires protected automatic lease" >&2;exit 2;fi
 if [[ "$AUTO_IP" != 0 && "$AUTO_IP" != 1 ]];then echo "invalid auto-IP selector" >&2;exit 2;fi
-if [[ "$AUTO_IP" == 1 && "$MODE" != normal ]];then echo "PLAN028 initial auto-IP native witness requires Normal/off" >&2;exit 2;fi
+# Normal and Game4 only: reuse the SAME authenticated rtnetlink supervisor.
+if [[ "$AUTO_IP" == 1 && "$MODE" != normal && "$MODE" != game4 ]];then
+  echo "PLAN028 auto-IP fixture supports Normal and Game4" >&2;exit 2
+fi
+GAME_FEC_ARG=''
+if [[ "${WBD_V4_PUBLIC_GAME_FEC:-off}" != off ]];then
+  [[ "$MODE" == game4 && "$PATH_SWITCH" == 1 &&
+     "${WBD_V4_PUBLIC_GAME_FEC}" == fixed6 ]] || {
+    echo "PLAN028 path Game FEC trial only game4 fixed6" >&2;exit 2;
+  }
+  GAME_FEC_ARG='--game-fec fixed6'
+fi
 case "$MODE" in
   normal|fec-fixed|fec-auto|game2|game4) ;;
   *) echo "V4 public product mode not yet authenticated/installed: $MODE" >&2; exit 2 ;;
@@ -121,7 +132,7 @@ sudo -n ip netns exec "$NSS" bash -c "
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
     --username '$USER' --password '$PASS' $SERVER_ID_ARG $SERVER_LEASE_ARG \
     --tls-cert '$TMP/server-cert.pem' --tls-key '$TMP/server-key.pem' \
-    --mode "$MODE" --fec-profile 1" >"$TMP/server.log" 2>&1 &
+    --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/server.log" 2>&1 &
 PIDS=$!
 sleep 1
 sudo -n ip netns exec "$NSC" bash -c "
@@ -132,7 +143,7 @@ sudo -n ip netns exec "$NSC" bash -c "
     --tun-name wbdvc4 $CLIENT_TUN_ARG \
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
     --username '$USER' --password '$PASS' $CLIENT_ID_ARG \
-    --mode "$MODE" --fec-profile 1" >"$TMP/client.log" 2>&1 &
+    --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/client.log" 2>&1 &
 PIDC=$!
 # Real server-side Python socket only ECHOES a real UDP packet the Linux
 # kernel accepted from the owner TUN. It never makes fake TCP ciphertext.
@@ -339,12 +350,25 @@ PY
   # handoff BEFORE the old generation retires. The server accepts both
   # source TCP flows on port 443 and keeps this device's verified /32.
   path_ready=0
-  for i in {1..120};do
-    if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
-       grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
-       grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
-       grep -q 'V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=same-lease-new-generation' "$TMP/server.log";then
-      path_ready=1;break
+  for i in {1..160};do
+    if [[ "$GAME" != 0 ]];then
+      # Sequential original Game M4 Stop before B TLS; no duplicate reader.
+      if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_GAME_OLD_DRAINING role=client generation=1 lanes=4' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=false source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
+         [[ "$(grep -c 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=4' "$TMP/client.log" || true)" -ge 2 ]] &&
+         [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] &&
+         grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log";then
+        path_ready=1;break
+      fi
+    else
+      if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=same-lease-new-generation' "$TMP/server.log";then
+        path_ready=1;break
+      fi
     fi
     sleep .25
   done
@@ -377,7 +401,19 @@ finally:s.close()
 ' >"$ART/plan028-real-path-switched-business.log" 2>&1
   cat "$ART/plan028-real-path-switched-business.log"
   test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "$ART/plan028-real-path-switched-business.log")" -eq 5
-  echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=rtnetlink_os coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
+  if [[ "$GAME" != 0 ]];then
+    grep -q 'V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=4' "$TMP/client.log"
+    python3 - "$TMP/client.log" <<'PY'
+import re,sys,pathlib
+text=pathlib.Path(sys.argv[1]).read_text()
+ips=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\.66\.0\.[0-9]+)/32',text)
+assert len(ips)==2 and ips[0]==ips[1],ips
+print("M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS")
+PY
+    echo "M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_OLD_STOP_NEW_AUTH_PASS source=10.25.0.3 outer=1460 physical=1280 new_tun_readback=1 genuine_udp=5 old_game_exact_Stop=1 new_game_native_ready=1 old_lane_overlap=NOT_SUPPORTED"
+  else
+    echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=rtnetlink_os coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
+  fi
 fi
 if [[ "$FEC" == 1 ]];then
   # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL

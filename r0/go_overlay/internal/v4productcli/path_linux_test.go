@@ -126,3 +126,29 @@ func TestPLAN028NativeLinuxRtnetlinkOnlyLinkAddrRoute(t *testing.T){
     }
     if routeRelevantNetlink(packet(unix.NLMSG_NOOP)){t.Fatal("irrelevant netlink event")}
 }
+
+// A whole cold Game group, not an individual lane, rotates its source-port
+// range on physical NIC/IP changes. All 4 distinct original FakeTCP flows
+// STILL target the same server 443. Old and fresh ranges never overlap.
+func TestPLAN028Game4RtnetlinkColdGenerationPortAndSingleServer443(t *testing.T){
+ base:=uint16(41031)
+ prior:=map[uint16]bool{}
+ for seq:=uint64(1);seq<=4;seq++{
+  port,err:=originalGenerationGamePort(base,seq,4)
+  if err!=nil{t.Fatal(err)}
+  for lane:=0;lane<4;lane++{
+   src:=uint16(int(port)+lane)
+   if prior[src]{
+    t.Fatalf("Game4 generation %d reuses an old live source port %d",seq,src)
+   }
+   prior[src]=true
+  }
+  if seq==1&&port!=base{t.Fatal("initial Game4 source port changed")}
+ }
+ if _,err:=originalGenerationGamePort(65534,1,4);err==nil{
+  t.Fatal("Game4 source port overflow must be rejected before SYN")
+ }
+ if _,err:=originalGenerationGamePort(41031,1,3);err==nil{
+  t.Fatal("unsupported Game lane count admitted")
+ }
+}

@@ -44,19 +44,42 @@ func originalGenerationPort(base uint16,seq uint64)uint16{
     if candidate==base{candidate++}
     return candidate
 }
+// Game source ports form one immutable local 4-tuple set per cold group.
+// All lanes retain server destination 443; reserve 4 consecutive client
+// source ports and do not collide with an old-generation port.
+func originalGenerationGamePort(base uint16,seq uint64,lanes uint8)(uint16,error){
+ if lanes!=2&&lanes!=4{return 0,fmt.Errorf("invalid Game generation lane count")}
+ port:=base
+ if seq>1{
+  port=uint16(49152+(uint64(base)+seq*7919)%16380)
+  if port==base{port++}
+ }
+ if int(port)+int(lanes)-1>65535{
+  return 0,fmt.Errorf("Game source ports overflow in cold generation")
+ }
+ return port,nil
+}
 func startOriginalClientGeneration(
     parent context.Context,original config,tun *ownedTun,
     path originalLinuxUnderlay,seq uint64,overlap bool,
     previousPhysicalMTU int,
 )(*originalClientGeneration,error){
-    if !path.valid()||original.peerIP!=path.peer||original.sharedTun==nil{
+    if !path.valid()||original.peerIP!=path.peer||
+        (original.gameLanes==0&&original.sharedTun==nil){
         return nil,fmt.Errorf("native path candidate requires verified numeric physical endpoint and shared Rust TUN")
     }
     c:=original
     c.rawInterface=path.iface
     c.localIP=path.src
     c.localPort=originalGenerationPort(original.localPort,seq)
-    c.leaseMustStay=overlap
+    if c.gameLanes!=0{
+        port,e:=originalGenerationGamePort(original.localPort,seq,original.gameLanes)
+        if e!=nil{return nil,e}
+        c.localPort=port
+    }
+    // Game has no simultaneous client-side TUN fanout; after A drains,
+    // the same installation must still retain its protected /32.
+    c.leaseMustStay=overlap||(c.gameLanes!=0&&seq>1)
     // New physical ceiling is read from the actual selected OS interface.
     // On overlap, do not increase an A-effective tunnel budget before A Stop:
     // keep B's cold offered record cap at least as conservative as old A.
@@ -79,8 +102,25 @@ func startOriginalClientGeneration(
     mss:=uint16(cold.LocalSYNAdvertisedMSS)
     if err=faketcp.SetPublicV4AdvertisedMSS(mss);err!=nil{return nil,err}
     c.recordLimit,c.innerMTU,err=deriveMTUBudget(c.outerMTU,budgetMTU,
-        mss,0,c.fecMode,false,false)
+        mss,0,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)
     if err!=nil{return nil,err}
+    if c.gameLanes!=0{
+        // Reuse the original TLS/Rust Game group on the new native path.
+        // The supervisor guarantees the old group's exact Stop is joined
+        // BEFORE this call; never give two drivers the same TUN input.
+        runCtx,cancel:=context.WithCancel(parent)
+        a:=&originalClientGeneration{
+            seq:seq,path:path,cancel:cancel,
+            ready:make(chan struct{},1),done:make(chan error,1),
+        }
+        log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d mode=game%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d single_tun_owner=1",
+            seq,c.gameLanes,path.ifindex,path.mtu,c.outerMTU,cold.LocalSYNAdvertisedMSS,c.recordLimit)
+        go func(){
+            var connected bool
+            a.done<-runGameClientGeneration(runCtx,c,path.ifindex,tun,&connected,a.ready)
+        }()
+        return a,nil
+    }
     raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
         c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
         faketcp.RawIPv4EndpointOptions{ReceivePort:c.localPort},
@@ -180,6 +220,19 @@ func runOriginalLinuxClientPaths(
     launch:=func()error{
         if candidate!=nil||retiring!=nil{return nil}
         if current!=nil&&desired==current.path{return nil}
+        if c.gameLanes!=0&&current!=nil{
+            // Current Game Rust M4 owns the SINGLE client TUN reader.
+            // Unlike Normal's shared reader, Game has no client fanout
+            // to safely run two native owners at once. Retire/join A
+            // before starting B. A disconnected path recovers directly;
+            // no second Health90 timer or independent supervisor.
+            retiring=current
+            current=nil
+            retiring.cancel()
+            log.Printf("V4_PUBLIC_PATH_GAME_OLD_DRAINING role=client generation=%d lanes=%d new_physical_path=1 no_dual_tun_reader=1",
+                retiring.seq,c.gameLanes)
+            return nil
+        }
         seq++
         previousMTU:=0
         if current!=nil{previousMTU=current.path.mtu}

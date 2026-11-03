@@ -567,6 +567,12 @@ func Run(role string,args []string)(retErr error){
     if cfg.gameLanes!=0{
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
+        if role=="client"&&cfg.autoIP{
+            // Game joins the SAME native rtnetlink path supervisor used by
+            // Normal. Its old M4 TUN reader fully Stops before new TLS/M4;
+            // this stage is explicit cold recovery, not overlapping Game.
+            return runOriginalLinuxClientPaths(ctx,cfg,tun)
+        }
         return runGame(ctx,cfg,uint32(iface.Index),tun,leases,epochs,&connected)
     }
     if role=="client"&&cfg.autoIP{

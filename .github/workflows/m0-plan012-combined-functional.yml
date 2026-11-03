@@ -446,6 +446,27 @@ jobs:
           grep -q 'M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
           grep -q 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
           cat fixed-kernel-result/plan028-real-linux-path-switch-native.log
+      - name: PLAN028 original Linux Game4 FEC6 native rtnetlink true source IP switch, one TUN owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Reuse this exact SOURCE build of original Go client+server and
+          # Rust .so. Real 10.25.0.2->.3 OS route/IPv4 and 1500->1280
+          # underlay, full old Game Stop before new TLS + Game M4.
+          # This is sequential recovery, not an overlap Game PASS.
+          WBD_V4_PUBLIC_MODE=game4 WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_GAME_FEC=fixed6 \
+            bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log 2>&1 || {
+              tail -145 fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_OLD_STOP_NEW_AUTH_PASS' \
+            fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log
+          grep -Fq 'M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS' \
+            fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log
+          grep -Fq 'M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280' \
+            fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log
+          cat fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log
       - name: PLAN028 real original Go two different accounts simultaneously on ONE server 443 and ONE shared Rust TUN reader
         id: plan028_multi
         continue-on-error: true
