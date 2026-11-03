@@ -279,6 +279,15 @@ func (s *V4ClientSession) AuthenticatedLeaseIPv4()(string,error){
     return s.verifiedLease4,nil
 }
 
+// Server-side effective client /32 is the original protected lease reply,
+ // never an untrusted account, outer tuple, CLI string or mutable result.
+func (s *V4ServerSession) AuthenticatedLeaseIPv4()(string,error){
+    if s==nil||s.ServerAdmissionSession==nil{return "",ErrAdmissionUnsupported}
+    if _,err:=s.ColdSnapshot();err!=nil{return "",err}
+    if s.Negotiated.Lease4!=s.verifiedLease4{return "",ErrAdmissionParams}
+    return s.verifiedLease4,nil
+}
+
 // A typed tuple makes the authenticated account + fixed 16-byte tunnel scope
 // explicit; no ambiguous textual identity keys or binary allocations.
 type v4IdentityKey struct{

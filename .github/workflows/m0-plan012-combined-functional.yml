@@ -355,6 +355,23 @@ jobs:
           cat fixed-kernel-result/v4-public-normal-real-cli.log
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
           cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+      - name: PLAN028 real authenticated auto IPv4 lease bound to Rust Normal server inner-source and Linux OS readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Reuse the exact two already-built original-Go V4 binaries plus
+          # the SAME Rust .so; this is not a second/forged TLS data plane.
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+          WBD_V4_PUBLIC_AUTO_IP=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-auto-lease-real-native.log 2>&1 || {
+              tail -95 fixed-kernel-result/plan028-auto-lease-real-native.log >&2
+              exit 1
+            }
+          grep -q 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1' \
+            fixed-kernel-result/plan028-auto-lease-real-native.log
+          grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' \
+            fixed-kernel-result/plan028-auto-lease-real-native.log
+          cat fixed-kernel-result/plan028-auto-lease-real-native.log
       # Preserve exact 1% public NETEM failure as a required final gate.
       # This step's temporary continued execution lets later Fixed/Auto/
       # Game2/4 modes run against the SAME compiled source and real OS,

@@ -7,6 +7,9 @@ ROOT="${1:?expected argument: directory containing the V4 client, server and Rus
 ROOT="$(realpath "$ROOT")"
 LOSS="${WBD_V4_PUBLIC_KERNEL_LOSS:-0}"
 MODE="${WBD_V4_PUBLIC_MODE:-normal}"
+AUTO_IP="${WBD_V4_PUBLIC_AUTO_IP:-0}"
+if [[ "$AUTO_IP" != 0 && "$AUTO_IP" != 1 ]];then echo "invalid auto-IP selector" >&2;exit 2;fi
+if [[ "$AUTO_IP" == 1 && "$MODE" != normal ]];then echo "PLAN028 initial auto-IP native witness requires Normal/off" >&2;exit 2;fi
 case "$MODE" in
   normal|fec-fixed|fec-auto|game2|game4) ;;
   *) echo "V4 public product mode not yet authenticated/installed: $MODE" >&2; exit 2 ;;
@@ -70,6 +73,16 @@ ROUTE='aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff'
 TUNNEL='102030405060708090a0b0c0d0e0f001'
 USER='v4qualified'
 PASS='v4-real-original-tls-credential-20261020'
+SERVER_ID_ARG="--tunnel-id '$TUNNEL'"
+SERVER_LEASE_ARG=''
+CLIENT_ID_ARG="--tunnel-id '$TUNNEL'"
+CLIENT_TUN_ARG='--tun-ipv4 10.66.0.2/24'
+if [[ "$AUTO_IP" == 1 ]];then
+  SERVER_ID_ARG=''
+  SERVER_LEASE_ARG='--lease-pool 10.66.0.128/25'
+  CLIENT_ID_ARG="--auto-ip --installation-id-file '$TMP/installation-id'"
+  CLIENT_TUN_ARG=''
+fi
 # Startup uses exactly the production binaries and unmodified original Go
 # TLS/FakeTCP code. PID belongs to the exec'd process in each netns.
 sudo -n ip netns exec "$NSS" bash -c "
@@ -78,7 +91,7 @@ sudo -n ip netns exec "$NSS" bash -c "
     --raw-interface wbdvs0 --local-ip 10.25.0.1 --local-port 443 \
     --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
-    --username '$USER' --password '$PASS' --tunnel-id '$TUNNEL' \
+    --username '$USER' --password '$PASS' $SERVER_ID_ARG $SERVER_LEASE_ARG \
     --tls-cert '$TMP/server-cert.pem' --tls-key '$TMP/server-key.pem' \
     --mode "$MODE" --fec-profile 1" >"$TMP/server.log" 2>&1 &
 PIDS=$!
@@ -88,9 +101,9 @@ sudo -n ip netns exec "$NSC" bash -c "
   exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
     --raw-interface wbdvc0 --local-ip 10.25.0.2 --local-port 41031 \
     --peer-ip 10.25.0.1 --peer-port 443 \
-    --tun-name wbdvc4 --tun-ipv4 10.66.0.2/24 \
+    --tun-name wbdvc4 $CLIENT_TUN_ARG \
     --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
-    --username '$USER' --password '$PASS' --tunnel-id '$TUNNEL' \
+    --username '$USER' --password '$PASS' $CLIENT_ID_ARG \
     --mode "$MODE" --fec-profile 1" >"$TMP/client.log" 2>&1 &
 PIDC=$!
 # Real server-side Python socket only ECHOES a real UDP packet the Linux
@@ -133,6 +146,27 @@ if [[ "$ready" != 1 ]];then
   sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' "$TMP/client.log" "$TMP/server.log" | tail -65 >&2
   exit 1
 fi
+# PLAN028 source-locked native per-device IP witness. A protected TLS
+# reply installed a /32 and Rust bound it to THIS generation before M4.
+# The test gets the actual kernel-selected address from the real CLI log,
+# never guesses the random lease or substitutes a synthetic UDP sender.
+CLIENT_EFFECTIVE_IP='10.66.0.2'
+if [[ "$AUTO_IP" == 1 ]];then
+  grep -q 'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=' "$TMP/client.log"
+  CLIENT_EFFECTIVE_IP="$(python3 - "$TMP/client.log" <<'PY'
+import ipaddress,pathlib,re,sys
+data=pathlib.Path(sys.argv[1]).read_text()
+assigned=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\\.66\\.0\\.[0-9]+)/32',data)
+assert len(assigned)==1,assigned
+address=ipaddress.ip_address(assigned[0])
+assert address in ipaddress.ip_network("10.66.0.128/25")
+print(address)
+PY
+)"
+  # An auto-IP client TUN owns only its assigned /32; the server's stable
+  # 10.66.0.1/32 route is explicitly bound to that TUN, not underlay DNS.
+  sudo -n ip -n "$NSC" route replace 10.66.0.1/32 dev wbdvc4
+fi
 # Real LOSS is imposed on the actual Linux underlay AFTER both original
 # Go TLS handshakes and both native Rust/M4 driver bindings are READY.
 # The exact existing CLI binaries, not an alternative sender, handle it.
@@ -150,10 +184,10 @@ if [[ "$GAME" != 0 ]];then
   sudo -n ip netns exec "$NSC" iptables -I OUTPUT 1 -p tcp --sport 41031 --dport 443 -j DROP
   sudo -n ip netns exec "$NSS" iptables -I OUTPUT 1 -p tcp --sport 443 --dport 41031 -j DROP
 fi
-if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" WBD_REAL_LOSS="$LOSS" python3 -u -c '
+if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" WBD_REAL_LOSS="$LOSS" WBD_REAL_CLIENT_IPV4="$CLIENT_EFFECTIVE_IP" python3 -u -c '
 import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-s.bind(("10.66.0.2",45902));s.settimeout(12)
+s.bind((os.environ.get("WBD_REAL_CLIENT_IPV4","10.66.0.2"),45902));s.settimeout(12)
 count=int(os.environ["WBD_REAL_COUNT"])
 fec=os.environ.get("WBD_REAL_FEC")=="1"
 loss=os.environ.get("WBD_REAL_LOSS")=="1"
@@ -315,6 +349,9 @@ elif [[ "$LOSS" == 1 ]];then
   cp "$ART/public-v4-normal-business.log" "$ART/v4-public-1pct-business.log"
 else
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
+fi
+if [[ "$AUTO_IP" == 1 ]];then
+  echo "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=$CLIENT_EFFECTIVE_IP app_udp=$PACKETS exact_generation_Rust_M4=1"
 fi
 if [[ "$GAME" == 0 ]];then
   grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"

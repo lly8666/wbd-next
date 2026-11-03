@@ -90,7 +90,7 @@ impl GameKernelOwner{
         adapter:Arc<Mutex<GameAdapter>>,flows:Vec<GoFlow>,seqs:Vec<u64>,
         server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
         generation:u32,outer_repair_enabled:bool,
-        peer_persona:PacketPersona,
+        peer_persona:PacketPersona,authenticated_client_ip:Option<[u8;4]>,
     )->Result<Self,()>{
         let n=flows.len();
         if !matches!(n,2|4)||seqs.len()!=n||generation==0||
@@ -669,6 +669,29 @@ impl GameKernelOwner{
                         match decoded{
                             Ok(Some(batch))=>{
                                 rx_some.fetch_add(1,Ordering::Relaxed);
+                                // A FEC batch may contain multiple recovered
+                                // IPv4 packets: preflight ALL sources before
+                                // the first irreversible kernel TUN write.
+                                if !batch.frames().iter().all(|frame|
+                                    crate::v4_session_address::admitted_client_source(
+                                        frame,authenticated_client_ip)){
+                                    classified.scope.fetch_add(1,Ordering::Relaxed);
+                                    recv_rejected.fetch_add(1,Ordering::Relaxed);
+                                    let retired=match receiver_owner.lock(){
+                                        Ok(mut rx)=>rx.finish_fec_batch(batch,false),
+                                        Err(_)=>{
+                                            commit_failed.fetch_add(1,Ordering::Relaxed);
+                                            rx_stop.store(true,Ordering::Release);
+                                            break
+                                        }
+                                    };
+                                    if retired.is_err(){
+                                        commit_failed.fetch_add(1,Ordering::Relaxed);
+                                        rx_stop.store(true,Ordering::Release);
+                                        break
+                                    }
+                                    continue
+                                }
                                 let mut all_written=true;
                                 let mut wrote_count=0u64;
                                 for frame in batch.frames(){
@@ -740,7 +763,12 @@ impl GameKernelOwner{
                             rx_some.fetch_add(1,Ordering::Relaxed);
                             // Do not hold RX owner mutex across a TUN syscall;
                             // other lanes can authenticate/prepare immediately.
-                            let written=rx_tun.write_authenticated_ipv4(
+                            let source_allowed=crate::v4_session_address::admitted_client_source(
+                                prepared.payload(),authenticated_client_ip);
+                            if !source_allowed{
+                                classified.scope.fetch_add(1,Ordering::Relaxed);
+                            }
+                            let written=source_allowed && rx_tun.write_authenticated_ipv4(
                                 generation,prepared.payload()).is_ok();
                             let finished=match receiver_owner.lock(){
                                 Ok(mut rx)=>rx.finish_receive(prepared,written),

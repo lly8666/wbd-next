@@ -760,6 +760,9 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
 struct Entry{
     generation:u32,
     server_side:bool,
+    // Authenticated original TLS server-selected auto-IP /32. One field per
+    // native generation; no per-packet registry lock or user IP authority.
+    client_lease_ipv4:Option<[u8;4]>,
     owner:ProtectedScopedOwner,normal:Option<NormalOffReceive>,
     #[cfg(feature="m0_fec2_owner_probe")]
     protected_fec2_features:u16,
@@ -916,6 +919,7 @@ struct Entry{
 struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
+    client_lease_ipv4:Option<[u8;4]>,
     // M4 Game never registers Normal's outer M2 shadow/repair timer.
     outer_repair_enabled:bool,
     // The SAME original-Go server-selected peer persona as Normal, for
@@ -1076,7 +1080,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
-        generation,server_side,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
+        generation,server_side,client_lease_ipv4:None,
+        owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
         #[cfg(feature="m0_fec2_owner_probe")]
         protected_fec2_features:handoff.negotiated_features,
         #[cfg(feature="m0_fec2_owner_probe")]
@@ -2830,6 +2835,7 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         .collect::<Result<Vec<_>,_>>()?;
     let mut epoch=None;
     let mut tunnel=None;
+    let mut client_lease:Option<Option<[u8;4]>>=None;
     let mut seen:u8=0;
     for e in &locks{
         if e.phase!=PH_ACTIVE||e.server_side!=server||
@@ -2842,6 +2848,10 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
            e.raw_rx.is_some()||e.tun_sink.is_some(){
             return Err(BAD_STAGE)
         }
+        if let Some(prior)=client_lease{
+            if prior!=e.client_lease_ipv4{return Err(INVALID)}
+        }
+        client_lease=Some(e.client_lease_ipv4);
         let id=e.game_pending_cold.as_ref().ok_or(BAD_STAGE)?.identity();
         if id.server!=server||id.logical_epoch==[0;16]||
            id.go_lane_id==0||usize::from(id.go_lane_id)>handles.len(){
@@ -2888,6 +2898,7 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     r.game_groups.insert(group_handle,GameGroupNative{
         adapter:Arc::new(Mutex::new(adapter)),handles:ids,
         stopped:false,stopping:false,outer_repair_enabled:true,
+        client_lease_ipv4:client_lease.flatten(),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         peer_persona:PacketPersona::Legacy,
@@ -3152,7 +3163,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
-        e.outer_repair_enabled,e.peer_persona
+        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4
     );
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);
@@ -3605,6 +3616,28 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     e.raw_ifname=Some(ifname.to_owned());OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// PLAN028: bind the original Go protected and credential-checked /32 before
+// any native M4 worker writes an inner IPv4 datagram to the server TUN.
+// This C call is package-private Go cold control, not a public IP setter.
+#[cfg(target_os="linux")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
+    handle:u64,ip:*const u8,len:usize
+)->i32{
+    if ip.is_null()||len!=4{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(ip,4)};
+    let mut expected=[0u8;4];
+    expected.copy_from_slice(bytes);
+    if expected==[0;4]||expected[0]==0||expected[0]>=224{return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||!e.server_side||e.game_joined||
+       e.workers.is_some()||e.client_lease_ipv4.is_some(){
+        return BAD_STAGE
+    }
+    e.client_lease_ipv4=Some(expected);
+    OK
+}
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -4078,6 +4111,7 @@ fn background_raw_once(
     arena:&mut Arena,anchor:&mut u64,
     flow:crate::v4_protected_handoff::GoFlow,generation:u32,
     server_side:bool,peer_persona:PacketPersona,
+    authenticated_client_ip:Option<[u8;4]>,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
@@ -4191,7 +4225,8 @@ fn background_raw_once(
         };
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
-        let receipt=owner.consume_original(slab,len,tun,when);
+        let receipt=owner.consume_original(
+            slab,len,tun,when,authenticated_client_ip);
         // Do not let a replay-unique, AEAD-valid but retired WBC4
         // Receipt share a frame with Health/Quality and then update
         // authenticated activity, window grades or outer ACK shadows.
@@ -6095,6 +6130,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     e.counters.outer_presentation_ack.store(rx_anchor as u32,Ordering::Release);
     let rx_flow=e.flow;
     let rx_server_side=e.server_side;
+    let rx_assigned_ip=if e.server_side{e.client_lease_ipv4}else{None};
     let rx_peer_persona=e.incoming_peer_persona;
     #[cfg(feature="fec2_product_record")]
     let rx_sack_permitted=e.original_sack_permitted;
@@ -6149,7 +6185,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if !loop_readiness(raw_fd,&stop_rx,10){continue}
                 match background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
-                    rx_flow,generation,rx_server_side,rx_peer_persona,&raw_for_rx,&tun_for_rx,
+                    rx_flow,generation,rx_server_side,rx_peer_persona,
+                    rx_assigned_ip,&raw_for_rx,&tun_for_rx,
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
                     &stats_rx,

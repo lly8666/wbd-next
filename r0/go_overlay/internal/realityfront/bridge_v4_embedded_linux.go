@@ -25,6 +25,7 @@ extern int32_t wbd_m0_embedded_go_prepare_client(const unsigned char *,size_t,
     const unsigned char *,size_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_stage(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_commit(uint64_t,uint32_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_bind_authenticated_client_ipv4(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_abort(uint64_t);
 extern int32_t wbd_m0_embedded_go_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_release(uint64_t);
@@ -62,6 +63,7 @@ import "C"
 import (
     "errors"
     "fmt"
+    "net/netip"
     "runtime"
     "unsafe"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -161,6 +163,26 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
     b.protectedLane=cold.laneID
     b.sackPermitted=handoff.Peer.SACKPermitted
     b.committed=true
+    return nil
+}
+// Private native source-IP authority: only the verified server TLS lease,
+// after original Rust owner commit and before any Rust raw/TUN worker starts.
+// No feature token, client source IP, manual fallback or pre-TLS address can
+// mint this binding. Manual-address product retains old behavior.
+func (b *v4EmbeddedNativeBridge) bindAuthenticatedClientIPv4(lease string)error{
+    if b==nil||b.handle==0||!b.committed||!b.serverSide||lease==""{
+        return errV4Embedded
+    }
+    prefix,err:=netip.ParsePrefix(lease)
+    if err!=nil||!prefix.Addr().Is4()||prefix.Bits()!=32||
+       prefix.Addr().IsUnspecified()||prefix.Addr().IsMulticast(){
+        return errV4Embedded
+    }
+    addr:=prefix.Addr().As4()
+    rc:=C.wbd_m0_embedded_go_bind_authenticated_client_ipv4(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&addr[0])),C.size_t(len(addr)))
+    runtime.KeepAlive(addr)
+    if rc!=0{return fmt.Errorf("%w: authenticated client IPv4 bind=%d",errV4Embedded,int(rc))}
     return nil
 }
 type v4EmbeddedPending struct{

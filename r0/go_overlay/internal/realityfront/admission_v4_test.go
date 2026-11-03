@@ -142,6 +142,16 @@ func TestR0V4RealTLSMultiDeviceAutoIPIdentityAndLeaseIsolation(t *testing.T){
        a.Epoch==b.Epoch||a.Epoch==c.Epoch{
         t.Fatalf("identity/IP isolation violated: %s %s %s",la,lb,lc)
     }
+    // Native Rust can only bind the original protected SERVER lease.
+    // Caller-mutated server results must not forge another device's IP.
+    if assigned,err:=as.AuthenticatedLeaseIPv4();err!=nil||assigned!=la{
+        t.Fatalf("verified server address differs from protected client: %s %v",assigned,err)
+    }
+    as.Negotiated.Lease4=lb
+    if _,err:=as.AuthenticatedLeaseIPv4();!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("mutable server result granted Rust a sibling IP: %v",err)
+    }
+    as.Negotiated.Lease4=la
     if !store.HasLiveTunnel(aID)||!store.HasLiveTunnel(bID)||!store.HasLiveTunnel(cID){
         t.Fatal("live authentic tunnels not protected against expiration")
     }

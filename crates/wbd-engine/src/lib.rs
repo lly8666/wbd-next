@@ -42,6 +42,8 @@ pub mod recovery_ingress;
 pub mod cold_v4;
 /// Normal-build crypto composition reused by the private Go native probe.
 mod v4_owner_crypto;
+/// PLAN028 authenticated per-device inner source gate before native TUN write.
+mod v4_session_address;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

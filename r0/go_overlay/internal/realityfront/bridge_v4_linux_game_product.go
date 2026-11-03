@@ -205,6 +205,16 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)
         p.bridges=append(p.bridges,bridge)
+        // Every Game lane is its own real original-Go protected TLS owner,
+        // but all lanes must carry the SAME account/device effective IPv4.
+        // Rust's group join independently rechecks that immutable equality.
+        assigned,leaseErr:=session.AuthenticatedLeaseIPv4()
+        if leaseErr!=nil{return errors.Join(leaseErr,p.abortLocked())}
+        if assigned!=""{
+            if leaseErr=bridge.bindAuthenticatedClientIPv4(assigned);leaseErr!=nil{
+                return errors.Join(leaseErr,p.abortLocked())
+            }
+        }
         if p.cfg.ConfigureTunnelMTU!=nil {
             cold,err:=session.ColdSnapshot()
             if err!=nil{return errors.Join(err,p.abortLocked())}

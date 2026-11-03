@@ -133,6 +133,18 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.lane=verified.LaneID()
     p.epoch=verified.Epoch()
     p.incarnation=verified.Incarnation()
+    // Bind auto-assigned inner IPv4 to this exact authenticated Rust owner.
+    // A valid other-device account or forged inner source cannot write into
+    // the shared server TUN once the native kernel receiver is running.
+    effective,leaseErr:=session.AuthenticatedLeaseIPv4()
+    if leaseErr!=nil{
+        return nil,errors.Join(leaseErr,p.closeLocked())
+    }
+    if effective!=""{
+        if leaseErr=bridge.bindAuthenticatedClientIPv4(effective);leaseErr!=nil{
+            return nil,errors.Join(leaseErr,p.closeLocked())
+        }
+    }
     // Real Go SYN/SYN-ACK peer profile, recorded after protected TLS.
     bridge.sackPermitted=assoc.PeerTCPProfile().SACKPermitted
     if p.cfg.ConfigureTunnelMTU!=nil {

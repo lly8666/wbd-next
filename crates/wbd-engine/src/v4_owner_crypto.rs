@@ -415,7 +415,9 @@ impl ProtectedBackgroundRx{
     // Input is M4 checked-tuple but still UNAUTHENTICATED raw ciphertext.
     // The generation-scoped TUN driver and stop fence remain mandatory.
     pub(crate) fn consume_original(&mut self,mut slab:UniqueBuffer,
-        len:usize,tun:&ScopedTunSink,now:MonoNs)->BackgroundRxReceipt{
+        len:usize,tun:&ScopedTunSink,now:MonoNs,
+        authenticated_client_ip:Option<[u8;4]>
+    )->BackgroundRxReceipt{
         let mut receipt=BackgroundRxReceipt::default();
         if tun.generation()!=self.generation||tun.is_stopping()
             ||len==0||len>slab.writable().len(){return receipt}
@@ -470,7 +472,9 @@ impl ProtectedBackgroundRx{
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
                         if first.recovered{receipt.fec_rx[5]+=1}else{receipt.fec_rx[4]+=1}
-                        if tun.write_authenticated_ipv4(self.generation,&first.frame)
+                        if crate::v4_session_address::admitted_client_source(
+                            &first.frame,authenticated_client_ip) &&
+                            tun.write_authenticated_ipv4(self.generation,&first.frame)
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
                             if first.recovered{receipt.fec_rx[7]+=1}else{receipt.fec_rx[6]+=1}
@@ -528,7 +532,9 @@ impl ProtectedBackgroundRx{
         self.normal.accept_authenticated_link(
             opened.pn,opened.payload,now.0/1_000_000,
             &mut |_pn,business|{
-                if tun.write_authenticated_ipv4(self.generation,business).is_ok(){
+                if crate::v4_session_address::admitted_client_source(
+                    business,authenticated_client_ip) &&
+                   tun.write_authenticated_ipv4(self.generation,business).is_ok(){
                     receipt.delivered+=1;
                     if business.len()>9{
                         match business[9]{
