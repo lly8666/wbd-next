@@ -1406,7 +1406,10 @@ func runSharedMultiServer(
             }
         }
     }
-    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d capacity=32 shared_rust_tun=1",
+    // 32 is the FakeTCP *cold association* table, not the number of
+    // authenticated Rust native owners. prepare_side has MAX_SESSIONS=16.
+    // Truthful readiness avoids advertising unqualified 32-live capacity.
+    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1",
         c.localPort)
     go func(){
         for {

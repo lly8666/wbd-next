@@ -4,6 +4,7 @@ package v4productcli
 
 import (
     "encoding/binary"
+    "fmt"
     "net"
     "net/netip"
     "testing"
@@ -37,6 +38,30 @@ func TestPLAN028PhysicalRouteAuthorityNotVPNOrTextIntent(t *testing.T){
             t.Fatalf("untrusted/loopback route accepted: %s",bad)
         }
     }
+}
+
+// Route metrics are kernel-originated and override an otherwise healthy
+// 1500-byte physical device on the exact numeric server destination.
+func TestPLAN028RouteMTUMetricOverridesPhysicalInterface(t *testing.T){
+    remote:=netip.MustParseAddr("203.0.113.44")
+    lookup:=func(name string)(*net.Interface,error){
+        if name=="ethA"{return &net.Interface{Name:name,Index:12,MTU:1500},nil}
+        return nil,net.ErrClosed
+    }
+    route:=func(mtu int)[]byte{
+        return []byte(fmt.Sprintf(`[{"dst":"203.0.113.44","dev":"ethA","prefsrc":"192.0.2.22","mtu":%d}]`,mtu))
+    }
+    got,err:=parseOriginalRouteJSON(route(1280),remote,"wbd-tun",lookup)
+    if err!=nil||got.mtu!=1280{t.Fatalf("real route MTU not applied: %+v %v",got,err)}
+    got,err=parseOriginalRouteJSON(route(1600),remote,"wbd-tun",lookup)
+    if err!=nil||got.mtu!=1500{t.Fatalf("interface cap bypassed: %+v %v",got,err)}
+    for _,mtu:=range []int{-1,575,65536}{
+        if _,err=parseOriginalRouteJSON(route(mtu),remote,"wbd-tun",lookup);err==nil{
+            t.Fatalf("illegal route mtu %d accepted",mtu)
+        }
+    }
+    got,err=parseOriginalRouteJSON([]byte(`[{"dst":"203.0.113.44","dev":"ethA","prefsrc":"192.0.2.22"}]`),remote,"wbd-tun",lookup)
+    if err!=nil||got.mtu!=1500{t.Fatalf("no metric broke interface fallback: %+v %v",got,err)}
 }
 
 func TestPLAN028NativePathNotifications200msQuiet500msAbsolute(t *testing.T){

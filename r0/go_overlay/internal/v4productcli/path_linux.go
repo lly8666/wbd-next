@@ -40,6 +40,7 @@ type originalRouteJSON struct{
     Src string `json:"src"`
     Gateway string `json:"gateway"`
     Type string `json:"type"`
+    MTU int `json:"mtu"` // ip -j route get may expose a per-destination ceiling
 }
 func parseOriginalRouteJSON(raw []byte,peer netip.Addr,tunName string,
     getInterface func(string)(*net.Interface,error),
@@ -69,9 +70,20 @@ func parseOriginalRouteJSON(raw []byte,peer netip.Addr,tunName string,
         gateway,err=netip.ParseAddr(r.Gateway)
         if err!=nil||!gateway.Is4(){return p,fmt.Errorf("physical gateway is not IPv4")}
     }
+    // A destination route may enforce a smaller MTU than the interface.
+    // Ignore neither the actual kernel route metric nor the interface cap:
+    // using only iface.MTU would admit oversized M1 records after a route
+    // change and silently create an inner-TCP black hole.
+    effectiveMTU:=iface.MTU
+    if r.MTU!=0{
+        if r.MTU<576||r.MTU>65535{
+            return p,fmt.Errorf("invalid physical route MTU %d",r.MTU)
+        }
+        if r.MTU<effectiveMTU{effectiveMTU=r.MTU}
+    }
     p=originalLinuxUnderlay{
         iface:iface.Name,ifindex:uint32(iface.Index),src:src,
-        gateway:gateway,peer:peer,mtu:iface.MTU,
+        gateway:gateway,peer:peer,mtu:effectiveMTU,
     }
     return p,nil
 }

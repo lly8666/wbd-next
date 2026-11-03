@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1030,
+  "sequence": 1031,
   "checkpoint_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1029 Rust TUN original shared reader pre-copy age/bytes 100ms/64KiB native exact-source fa32 PASS; next H1030 PLAN028 server 32 Go SYN slots versus Rust 16 native active and generation overlap contract",
-  "why_now": "Action41609656406 original kernel Go TLS/Rust compiled SOURCE fa32 with deterministic A4096/B256 unit, two-/five-netns native70UDP, path/MTU, accounted1%/Stop all PASS; uncovered 32 cold associations vs16 native session cap/overlap architecture mismatch.",
+  "current_task": "H1031 PLAN028 Linux route-specific MTU effective readback and truthful 32 cold slots/16 native owner capacity; small targeted Go test pending",
+  "why_now": "Continue core PLAN028 path-change work rather than broad performance proof: route-get MTU may be smaller than network-interface MTU, and 32 Go SYN slots were incorrectly called 32 native users.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "H1030 design and implement truthful Go FakeTCP association slots vs Rust protected owner session capacity/candidate-overlap budget, demonstrate 17th session rejection or authorized successor under full load on exact source. Avoid unvalidated raising to32. CPU/p99 and real high-PPS tenant starvation remain NOT_RUN. Then PLAN028 Windows 7-mode changes.",
+  "next_action": "Run targeted original Go/Linux PLAN028 path route tests and compile; then continue per-client configuration and Windows/Game path transition. Do not claim 32 native sessions or route-MTU native integration before test.",
   "unverified": true,
   "last_tested_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1029 SOURCE fa32 Action41609656406 native SUCCESS: Rust 4096 full-A reject with 0 additional Vec constructs/B256 live, extra reader pending 8 packets/64KiB/100ms, original Linux Go TLS 2/5netns 3 devices4TLS 70UDP, path MTU1280/inner1209, 1%512/506/6 missing and exact Stop PASS; artifact manifest/so/client/server hashes inspected. CPU/p99 and actual native full-queue stress not measured; H998 physical/ARM64 Game4FEC/Win Game failures unchanged. Additional Go FakeTCP table32 vs Rust native MAX_SESSIONS16 mismatch, H1030 needed before 32-live or always-overlap claim."
+  "partial_summary": "H1029 fa32 exact native Rust/Go PASS documented. H1031 small Go Linux patch: use min(actual interface MTU, destination route JSON MTU) for underlay/path generation, reject malformed route metric; clarify 32 cold association slots versus 16 Rust native sessions without changing memory allocation or data-plane limits. Go targeted test pending. PLAN028 remains ongoing."
 }
