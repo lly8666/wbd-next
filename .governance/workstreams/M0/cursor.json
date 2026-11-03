@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1022,
-  "checkpoint_sha": "cb4eca3e5cd67b21502335ce6e43a1fc22d8dc00",
+  "sequence": 1023,
+  "checkpoint_sha": "9d5eaf8f2c7f19fa79783d11ee924ed14f417720",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1022 fix final obsolete singleton shared-TUN-ready log check; H1021 native evidence confirms TLS /32 + 5/5 UDP + server per-client Rust Stop remaining0 + shared reader routed5 joined1, but source Action failed old logger check",
-  "why_now": "SOURCEcb4e Action41588558024 exact redacted native logs: all functional product M4 and Stop conditions passed, but old V4_PUBLIC_SHARED_TUN_READER_READY logger was superseded by V4_PUBLIC_MULTI_SERVER_READY when concurrent server manager was implemented",
+  "current_task": "H1023 original Go protected zero-epoch same-install authenticated cold replacement, server opt-in exact one overlapping lane A->A+B->B, Rust shared /32 generation handoff and Bob simultaneous real netns native gate SOURCE pending",
+  "why_now": "H1022 SOURCE9d5e native 2-account same443 one Rust TUN real UDP34 /Stop PASS. Fresh reconnect client legitimately has zero server epoch, but V4EpochStore.prepare previously rejected any existing same-install identity; fix exact original protected TLS owned overlap before OS path-switch and rotation.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Run H1022 single-source genuine PLAN012 Go TLS/Rust netns auto /32 5UDP/Stop/reader and then mandatory three-netns A→A+B simultaneous two-account/one port and B surviving A Stop; repair only actual next failures, record PASS/FAIL exact source. Continue same-account installation takeover and seven mode / Windows Linux path events.",
+  "next_action": "Collect exact new H1023 SOURCE native same-build actual Go TLS zero epoch unit; one Rust shared real TUN four-netns A(old Alice)→A+R(new same installation)→R while Bob delivers 6 real overlapping UDP and 46 total with exact-old Stop. Repair observed failures only; then same-account 2 installations plus another account, OS network native notification and 7 modes. Do not start PLAN029.",
   "unverified": true,
-  "last_tested_source": "9c39b5878087bb201b4b318532ce9784684ab63a",
+  "last_tested_source": "9d5eaf8f2c7f19fa79783d11ee924ed14f417720",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1018-SOURCE9C39-SHARED-TUN-REAL-KERNEL-20261103.json"
+    "docs/evidence/M0/PLAN028-H1022-SOURCE9D5-REAL-TWO-ACCOUNTS-SHARED-TUN-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1022-REAL-READER-READY-CONTRACT.md",
+    "docs/devlog/M0/20261103-PLAN028-H1023-ZERO-EPOCH-REAL-NATIVE-HANDOVER.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1019 multi-client server source d3d0 test FAIL stale singleton READY. H1020 source784e real auto /32 UDP5/5 but test FAIL at old Stop/reader logger; H1021 sourcecb4e redacted logs prove client/native Stop, server session Stop remaining0, reader routed5/unrouted0/backpressure0/joined1; failed only old shared reader startup marker. H1022 fixes exact marker, retains strict real native gates. Multi-client concurrent A+B still untested, H998/Win Game4 FAIL retained."
+  "partial_summary": "H1022 SOURCE9d5e original 2-account one 443 true 3netns Linux shared Rust reader: A5/A+B12+12/B-after-AStop5=34 routed=34 unroute0 backpressure0 nativeStop PASS; same source 1pct 512offered510delivered2missing, Fixed/Auto limited64, Game2/4 limited business PASS. H1023 source candidate permits server-only zero-epoch same install lane 1→2 overlap and exact incarnation Stop, keeps sibling separate, adds real 4netns A/R new generation while Bob delivers and 46 native echoes test. H1023 result NOT_RUN; Windows/Linux OS route notifications and seven modes pending. H998 physical/ARM64 Game4FEC and Win Game4 bootstrap FAIL preserved."
 }

@@ -399,18 +399,29 @@ func (s *V4EpochStore) prepare(
     s.mu.Lock()
     defer s.mu.Unlock()
     e,found:=s.entries[key]
-    newTunnel:=want==zero
+    // A fresh original-Go TLS request intentionally carries zero epoch.
+    // Only the SERVER may authorize overlap for the exact authenticated
+    // principal+derived installation/TunnelID+lane that is already active.
+    // Reuse its logical epoch, but mint a NEW random incarnation and
+    // exporter-derived keys. No client-provided IP/outer tuple decides this.
+    newTunnel:=want==zero&&!found
     if newTunnel {
-        if found || len(s.entries)>=s.max {return zero,zero,nil,ErrAdmissionParams}
+        if len(s.entries)>=s.max {return zero,zero,nil,ErrAdmissionParams}
         var epoch [16]byte
         if _,err:=io.ReadFull(rng,epoch[:]);err!=nil{return zero,zero,nil,err}
         if epoch==zero{return zero,zero,nil,ErrAdmissionParams}
         e=&v4Entry{epoch:epoch}
     } else {
-        if !found || !e.active || e.epoch!=want || e.pending&bit!=0 {
+        if !found || !e.active || e.pending&bit!=0 ||
+           (want!=zero && e.epoch!=want) {
             return zero,zero,nil,ErrAdmissionParams
         }
         n:=len(e.instances[lane])
+        // Zero-epoch reconnect is ONLY an exact 1->2 same-lane handoff.
+        // Explicit-epoch Game lane joins remain on their prior contract.
+        if want==zero && (!allowReplacement || n!=1) {
+            return zero,zero,nil,ErrAdmissionParams
+        }
         if n>0 && (!allowReplacement || n>=2) {
             return zero,zero,nil,ErrAdmissionParams
         }

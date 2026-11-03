@@ -40,6 +40,9 @@ type V4LinuxServerProductConfig struct {
     // Shared process TUN owner is supplied only by the Linux server's
     // original Go cold network lifetime, never by an untrusted TLS peer.
     SharedTun *V4LinuxSharedTun
+    // Cold, server-owned opt-in: same verified account+installation
+    // logical lane may overlap one generation during A->A+B->B.
+    AllowLaneReplacement bool
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
@@ -116,6 +119,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
         Authenticate:p.cfg.Authenticate,
+        AllowLaneReplacement:p.cfg.AllowLaneReplacement,
         fec2Product:v4ProductFecEnabled(mode),
     })
     if err!=nil{return nil,err}

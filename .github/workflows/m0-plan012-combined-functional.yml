@@ -154,6 +154,14 @@ jobs:
           grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_PLAN019_NATIVE_GAME_SHARED_ORIGINAL_TLS_MISSING_AUTH_DENIED" fixed-kernel-result/original-go-game-tls.log
+          # First real protected TLS client has zero server epoch; a second
+          # same-installation candidate is allowed by server-only policy
+          # strictly as A->A+B->B with fresh exporter/generation and
+          # exact-incarnation Stop. No mock candidate or fixture clock.
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run '^TestR0V4PLAN028ZeroEpochAuthenticatedSameInstallOverlapAndSiblingIsolation$' -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/plan028-zero-epoch-reconnect-tls.log" 2>&1) || {
+            cat fixed-kernel-result/plan028-zero-epoch-reconnect-tls.log; exit 1;
+          }
+          grep -q 'M0_PLAN028_ORIGINAL_GO_TLS_ZERO_EPOCH_SAME_INSTALL_A_TO_AB_TO_B_EXACT_STOP_PASS' fixed-kernel-result/plan028-zero-epoch-reconnect-tls.log
           cargo +1.85.1 test --locked -p wbd-engine --lib m0_private_go_game_ -- --test-threads=1 --nocapture >fixed-kernel-result/real-go-native-game-lanes.log 2>&1 || { cat fixed-kernel-result/real-go-native-game-lanes.log; exit 1; }
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=2' fixed-kernel-result/real-go-native-game-lanes.log
           grep -q 'M0_ORIGINAL_GO_TLS_GAME_NATIVE_AEAD_PN_FIRST_DELIVERY_PASS lanes=4' fixed-kernel-result/real-go-native-game-lanes.log
@@ -400,6 +408,8 @@ jobs:
           grep -q 'M0_PLAN028_REAL_TWO_ACCOUNT_SAME_SERVER_PORT_SHARED_RUST_TUN_PASS' \
             fixed-kernel-result/plan028-two-account-one-port-real-native.log
           grep -q 'M0_PLAN028_REAL_GO_TLS_TWO_ACCOUNTS_ONE_PORT_MULTIDEVICE_NATIVE_STOP_PASS' \
+            fixed-kernel-result/plan028-two-account-one-port-real-native.log
+          grep -q 'M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS' \
             fixed-kernel-result/plan028-two-account-one-port-real-native.log
           cat fixed-kernel-result/plan028-two-account-one-port-real-native.log
       # Preserve exact 1% public NETEM failure as a required final gate.

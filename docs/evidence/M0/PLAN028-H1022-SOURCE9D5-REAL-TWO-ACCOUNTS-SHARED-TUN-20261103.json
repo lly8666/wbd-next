@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1022",
+  "source_sha": "9d5eaf8f2c7f19fa79783d11ee924ed14f417720",
+  "overall": "SCOPED_REAL_NATIVE_PASS",
+  "provenance": {
+    "workflow_run_id": 41589306085,
+    "workflow_job_id": 125762078930,
+    "conclusion": "success",
+    "artifact_id": 13209785911,
+    "artifact_zip_sha256": "UNKNOWN_NOT_CLAIMED",
+    "github_url": "https://github.com/lly8666/wbd-next/actions/runs/41589306085",
+    "same_release_binaries": true
+  },
+  "witnesses": [
+    {
+      "scene": "original-Go protected TLS auto-/32 OS readback single device",
+      "status": "PASS",
+      "log": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.222 app_udp=5 exact_generation_Rust_M4=1"
+    },
+    {
+      "scene": "one real Rust shared Linux physical TUN reader + owner Stop",
+      "status": "PASS",
+      "log": "M0_PLAN028_REAL_SHARED_RUST_SINGLE_TUN_READER_PASS routed=5 unrouted=0 backpressure=0 reader_joined=1"
+    },
+    {
+      "scene": "three real network namespaces two different accounts simultaneous original TLS and per-session Rust M1/M4 on same server port",
+      "status": "PASS",
+      "log": "M0_PLAN028_REAL_TWO_ACCOUNT_SAME_SERVER_PORT_SHARED_RUST_TUN_PASS original_tls_sessions=2 distinct_auto_leases=2 server_port=443 A=5 overlap_A=12 overlap_B=12 B_after_A_Stop=5 routed=34 unrouted=0 backpressure=0 native_stop=1"
+    },
+    {
+      "scene": "original protected Go TLS two accounts same server port 443 independent per-client Stop",
+      "status": "PASS",
+      "log": "M0_PLAN028_REAL_GO_TLS_TWO_ACCOUNTS_ONE_PORT_MULTIDEVICE_NATIVE_STOP_PASS"
+    },
+    {
+      "scene": "real Linux netem 1pct app accountability, no zero-loss rewrite",
+      "status": "PASS",
+      "log": "M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS original_tls=1 offered=512 first_unique_delivered=510 missing=2 tc_client_drop=7 tc_server_drop=5 kernel_first_copy_client=512 kernel_first_copy_server=512 retired_m2_reports_client=0 retired_m2_reports_server=0 outer_repair_attempts_observed=9 outer_repair_delivery_not_required=1 Stop_drained_both=1"
+    },
+    {
+      "scene": "Fixed and Auto existing original native FEC first packet",
+      "status": "SCOPED_PASS",
+      "log": [
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1"
+      ]
+    },
+    {
+      "scene": "Game2 and Game4 existing real native single port",
+      "status": "SCOPED_PASS",
+      "log": [
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ]
+    }
+  ],
+  "not_claimed": [
+    "No same account same InstallationID overlapping generation A->A+B->B native at H1022",
+    "No same-account two installations + different-account third client native yet",
+    "No Game+FEC true multi-device simultaneous highest FEC, no seven-mode handover",
+    "No Windows/Linux true OS route notification/rebinding, no physical 1500->1280 source qualification",
+    "No CPU causal or p99 performance assertion, no Android"
+  ],
+  "historical_failures_preserved": [
+    "PLAN027A H998 physical outer1500->1280 small packet 3/3 no echo and ARM64 Game4FEC Stop/active failures",
+    "Win/WSL2 Game4 lane2 TCP bootstrap timeout run 41579974280",
+    "Historic PLAN020 writer revision3 vs registry revision4 static audit"
+  ]
+}

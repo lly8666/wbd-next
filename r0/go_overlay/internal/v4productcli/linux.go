@@ -1279,6 +1279,9 @@ func runSharedMultiServer(
         cfg:=realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+            // Only real authenticated auto-lease server sessions reach
+            // this path; old manual/standalone duplicate lane stays DENY.
+            AllowLaneReplacement:true,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             // One authenticated peer cannot mutate a sibling's TUN MTU.
             // The original Rust per-session record/route budgets still apply.

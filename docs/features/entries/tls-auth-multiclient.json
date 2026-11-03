@@ -47,7 +47,8 @@
     "docs/devlog/M0/20261103-PLAN028-H1007-MULTIACCOUNT-AUTOLEASE-CANDIDATE.md",
     "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md",
     "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md",
-    "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md"
+    "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1023-ZERO-EPOCH-REAL-NATIVE-HANDOVER.md"
   ],
   "verification": [
     {
@@ -133,6 +134,20 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Linux amd64 original-Go protected TLS, Rust M1/M4 two authentic accounts, shared TUN, 3 real netns",
+      "scope": "H1022 SOURCE9d5e one server port443 2 independently authenticated installations/accounts A5→A+B12+12→B5 actual Linux UDP, each /32, 34 routed, Stop reader joined, 1% 512/510 not assumed lossless",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9d5eaf8f2c7f19fa79783d11ee924ed14f417720",
+      "evidence": "docs/evidence/M0/PLAN028-H1022-SOURCE9D5-REAL-TWO-ACCOUNTS-SHARED-TUN-20261103.json"
+    },
+    {
+      "platform": "Linux original-Go protected TLS and one native Rust TUN, same-install new cold epoch + sibling account",
+      "scope": "H1023 server-owned zero-epoch reconnect exact same installation/lane A→A+B→B; original exporter fresh incarnation, old Stop, Bob real UDP during Alice takeover, four actual Linux namespaces (including server), SOURCE Action required",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -147,7 +162,7 @@
     "H1008 scope: SOURCE837 real Go TLS 21/21 PASS and Linux original V4 CLI Go tests + binary build PASS. Distinct installed IPv4 real OS and native multi-client simultaneous traffic NOT_RUN; raw Game one-port code is a subsequent SOURCE, not included in SOURCE837.",
     "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim.",
     "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN.",
-    "H1018 SOURCE9c39 1-device shared physical TUN reader native proof NOT simultaneous multi-client. H1019 concurrent original-Go TLS 2 accounts + BPF32 real kernel candidate must prove A->A+B->B actual 3-netns UDP, no PASS inferred. Windows Game4 cold FAIL and H998 remain."
+    "H1022 SOURCE9d5e verified 2 DIFFERENT accounts 3 real netns, 34 real UDP/Stop one port and shared reader. This is not same-install overlap, same-account two installs plus a third account, seven-mode Game4FEC or OS route-change validation. H1023 adds cold zero-epoch same-install handover candidate with native gate; historical Win Game4 cold and H998 failures unchanged."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

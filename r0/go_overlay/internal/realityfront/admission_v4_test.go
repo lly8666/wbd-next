@@ -1033,3 +1033,71 @@ func TestR0V4StopBeforeOwnedNetworkCleanupFailClosed(t *testing.T){
     }
     t.Log("M0_STOP_AND_OWNED_NETWORK_CLEANUP_ORDER_FAIL_CLOSED_PASS no_fake_disconnected=1")
 }
+
+// Test the exact fresh cold client case, not only explicit old-epoch test
+// fixtures. The new client has no server epoch but DOES carry the matching
+// authenticated account and derived installation TunnelID. The original
+// server must preserve A until B has its own valid TLS exporter/generation.
+func TestR0V4PLAN028ZeroEpochAuthenticatedSameInstallOverlapAndSiblingIsolation(t *testing.T) {
+    store,err:=NewV4EpochStore(3)
+    if err!=nil{t.Fatal(err)}
+    user:="plan028-owner"
+    own:=[]byte("0123456789abcdef")
+    sibling:=[]byte("fedcba9876543210")
+    policy:=v4TestPolicy(1,CipherChaCha)
+    zero:=[16]byte{}
+    a,as,ae,ase:=v4Pair(t,store,user,own,1,policy,zero)
+    if ae!=nil||ase!=nil{t.Fatalf("cold A %v %v",ae,ase)}
+    snapA,err:=as.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    other,otherServer,oe,ose:=v4Pair(t,store,user,sibling,1,policy,zero)
+    if oe!=nil||ose!=nil{t.Fatalf("other installation %v %v",oe,ose)}
+    // The historical default must remain CLOSED to zero-epoch duplicates.
+    _,_,deniedClient,deniedServer:=v4PairFeatureProbe(
+        t,store,user,own,1,policy,zero,false,false)
+    if !errors.Is(deniedServer,ErrAdmissionParams) ||
+       !errors.Is(deniedClient,ErrAdmissionParams) {
+        t.Fatalf("unprivileged cold duplicate accepted: %v %v",deniedClient,deniedServer)
+    }
+    b,bs,be,bse:=v4PairFeatureProbe(t,store,user,own,1,policy,zero,false,false,true)
+    if be!=nil||bse!=nil{t.Fatalf("real cold same-install B: %v %v",be,bse)}
+    snapB,err:=bs.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if b.Epoch!=a.Epoch||snapB.Incarnation()==snapA.Incarnation()||
+       snapB.DirectionKeys()==snapA.DirectionKeys(){
+        t.Fatal("zero-epoch reconnect changed logical identity or reused keys")
+    }
+    // Two exact instances are maximal. Even with verified TLS and the same
+    // installation another overlapping C must be refused.
+    _,_,cClient,cServer:=v4PairFeatureProbe(t,store,user,own,1,policy,zero,false,false,true)
+    if !errors.Is(cServer,ErrAdmissionParams)||!errors.Is(cClient,ErrAdmissionParams){
+        t.Fatalf("third active generation accepted: %v %v",cClient,cServer)
+    }
+    if err:=store.ReleaseLaneInstance(user,own,1,a.Epoch,snapA.Incarnation());err!=nil{
+        t.Fatalf("old A exact Stop: %v",err)
+    }
+    if err:=store.ReleaseLaneInstance(user,own,1,a.Epoch,snapA.Incarnation());!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("stale A Stop revoked new B: %v",err)
+    }
+    if !store.HasLiveTunnel(logicaltunnel.TunnelID(snapA.TunnelID()))||
+       other.Epoch==b.Epoch {
+        t.Fatal("replacement or other installation leaked/collided logical owner")
+    }
+    next,ns,ne,nse:=v4PairFeatureProbe(t,store,user,own,1,policy,zero,false,false,true)
+    if ne!=nil||nse!=nil{t.Fatalf("zero epoch next generation: %v %v",ne,nse)}
+    snapNext,err:=ns.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if next.Epoch!=b.Epoch||snapNext.Incarnation()==snapB.Incarnation(){
+        t.Fatal("zero epoch next generation reused nonce or lost identity")
+    }
+    if err:=store.ReleaseLaneInstance(user,own,1,b.Epoch,snapB.Incarnation());err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance(user,own,1,next.Epoch,snapNext.Incarnation());err!=nil{t.Fatal(err)}
+    snapOther,err:=otherServer.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance(user,sibling,1,other.Epoch,snapOther.Incarnation());err!=nil{t.Fatal(err)}
+    store.mu.Lock()
+    remaining:=len(store.entries)
+    store.mu.Unlock()
+    if remaining!=0{t.Fatalf("logical registry leak after exact Stop: %d",remaining)}
+    t.Log("M0_PLAN028_ORIGINAL_GO_TLS_ZERO_EPOCH_SAME_INSTALL_A_TO_AB_TO_B_EXACT_STOP_PASS protected_tls=1 same_logical_epoch=1 new_incarnation=1 other_install_survives=1 third_denied=1")
+}
