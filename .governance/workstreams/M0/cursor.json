@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1033,
+  "sequence": 1034,
   "checkpoint_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1033 PLAN028 Windows real OS route/IPv4 change notification wired to original cold Go/Rust Stop→reauth for Normal/FEC/Game, Windows Go compile and 2 small units PASS",
-  "why_now": "Windows original client only reauthenticated after Health90; route/IP notifications were not wired to original cold generation, leaving a working new physical path waiting for dead verdict.",
+  "current_task": "H1034 PLAN028 two-second Windows/Linux physical interface/source IPv4 only poll; new exact source CI pending",
+  "why_now": "User requests simpler 2s physical interface/IP check, not broad route/MTU/link event subscriptions; retain already implemented cold protected TLS/native owner and MTU readback.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "H1034 original Game2/4 single-port multi-group client admission and generation handover; afterward prove Windows route change via real owned OS event and cover break-first path/Stop, then Windows A+B. No protocol, FEC or hot-route rewrite.",
+  "next_action": "Run original Windows source Go build/unit and Linux original Go 2s identity unit plus real netns path switch on H1034 source. Then continue Game multi-client single-port handover without extra performance matrix.",
   "unverified": true,
   "last_tested_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1033 Windows original native Go route/addr event callback + 200/500 coalescing and selected physical route compare, wired into current TLS/Rust Stop/re-auth across Normal/Fixed/Auto/Game, source 9ef code; Windows Go product/test build and two targeted route coalescing/fingerprint tests PASS Action41619392833, existing Windows native OS/WAL Action41618704334 success. Physical path switch (A+B), client route recovery when first path already absent and Game multi-client groups remain outstanding. H1029 Linux source fa32 native functional PASS; PLAN028 still ongoing."
+  "partial_summary": "H1034 replaces Windows NotifyRouteChange2/IP callback and Linux rtnetlink OS watchers with a simple 2-second selected physical NIC+source IPv4 check. Gateway/MTU alone do not reauth; new path still recalculates MTU before native Ready. Windows Stop-before-reconnect, Linux A+B; new CI pending. PLAN028 remains IN_PROGRESS."
 }

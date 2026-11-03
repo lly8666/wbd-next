@@ -5,16 +5,12 @@ package v4productcli
 import (
     "context"
     "encoding/json"
-    "errors"
     "fmt"
     "log"
     "net"
     "net/netip"
     "os/exec"
-    "syscall"
     "time"
-
-    "golang.org/x/sys/unix"
 )
 
 // PLAN028 cold network authority. These are physical ROUTE readbacks, never
@@ -115,116 +111,41 @@ func readOriginalLinuxUnderlay(peer netip.Addr,tunName string)(originalLinuxUnde
     return zero,fmt.Errorf("physical route source not installed on selected interface")
 }
 
-type originalLinuxCoalescer struct{
-    first time.Time
-    last time.Time
-}
-func (c *originalLinuxCoalescer) push(at time.Time){
-    if c.first.IsZero(){c.first=at}
-    c.last=at
-}
-func (c *originalLinuxCoalescer) remaining(at time.Time)time.Duration{
-    if c.first.IsZero(){return -1}
-    // 200ms since last notification, but at most 500ms from the first.
-    quiet:=c.last.Add(200*time.Millisecond).Sub(at)
-    deadline:=c.first.Add(500*time.Millisecond).Sub(at)
-    if deadline<quiet{quiet=deadline}
-    if quiet<0{return 0}
-    return quiet
-}
-func (c *originalLinuxCoalescer) clear(){
-    *c=originalLinuxCoalescer{}
+// Only the default physical egress interface and selected IPv4 may trigger
+// a new native generation. Route metric/MTU still constrain new TLS budget.
+const originalPhysicalCheckInterval=2*time.Second
+func (p originalLinuxUnderlay) samePhysicalInterfaceIPv4(next originalLinuxUnderlay)bool{
+    return p.ifindex==next.ifindex&&p.iface==next.iface&&p.src==next.src
 }
 
-func routeRelevantNetlink(datagram []byte)bool{
-    msgs,err:=syscall.ParseNetlinkMessage(datagram)
-    if err!=nil{return false}
-    for _,m:=range msgs{
-        switch m.Header.Type{
-        case unix.RTM_NEWLINK,unix.RTM_DELLINK,
-            unix.RTM_NEWADDR,unix.RTM_DELADDR,
-            unix.RTM_NEWROUTE,unix.RTM_DELROUTE:
-            return true
-        }
-    }
-    return false
-}
-
-// True rtnetlink subscriptions, not polling link state at a periodic rate.
-// The only recurring poll timeout lets context cancellation join within
-// 250ms, and does not send a handshake, ping, or periodic path probe.
+// One 2-second cold physical readback, no netlink route/addr subscriptions.
 func watchOriginalLinuxUnderlay(
     ctx context.Context,peer netip.Addr,tunName string,
     initial originalLinuxUnderlay,
 )(<-chan originalLinuxUnderlay,error){
-    const groups=uint32(0x1|0x10|0x40) // RTMGRP_LINK|IPV4_IFADDR|IPV4_ROUTE
-    fd,err:=unix.Socket(unix.AF_NETLINK,unix.SOCK_RAW|unix.SOCK_CLOEXEC|unix.SOCK_NONBLOCK,unix.NETLINK_ROUTE)
-    if err!=nil{return nil,fmt.Errorf("native rtnetlink socket: %w",err)}
-    if err=unix.Bind(fd,&unix.SockaddrNetlink{Family:unix.AF_NETLINK,Groups:groups});err!=nil{
-        _=unix.Close(fd)
-        return nil,fmt.Errorf("native rtnetlink subscribe: %w",err)
-    }
+    if !initial.valid(){return nil,fmt.Errorf("initial physical path invalid")}
     events:=make(chan originalLinuxUnderlay,1)
     go func(){
         defer close(events)
-        defer unix.Close(fd)
+        ticker:=time.NewTicker(originalPhysicalCheckInterval)
+        defer ticker.Stop()
         current:=initial
-        var pending originalLinuxCoalescer
-        var raw [8192]byte
-        poll:=[]unix.PollFd{{Fd:int32(fd),Events:unix.POLLIN}}
-        for ctx.Err()==nil{
-            wait:=250*time.Millisecond
-            if remaining:=pending.remaining(time.Now());remaining>=0&&remaining<wait{
-                wait=remaining
-            }
-            n,pollErr:=unix.Poll(poll,int(wait/time.Millisecond))
-            if errors.Is(pollErr,unix.EINTR){continue}
-            if pollErr!=nil{
-                log.Printf("V4_PUBLIC_PATH_NOTIFICATION_ERROR stage=poll")
-                return
-            }
-            if n>0&&(poll[0].Revents&unix.POLLIN)!=0{
-                // A burst cannot prevent the 500ms absolute deadline from
-                // being checked. Read at most 256 datagrams per turn.
-                for i:=0;i<256;i++{
-                    bytes,_,e:=unix.Recvfrom(fd,raw[:],unix.MSG_DONTWAIT)
-                    if errors.Is(e,unix.EAGAIN){break}
-                    if errors.Is(e,unix.EINTR){continue}
-                    if errors.Is(e,unix.ENOBUFS){
-                        pending.push(time.Now()) // kernel signaled lost notifications; resample
-                        break
-                    }
-                    if e!=nil{return}
-                    if bytes==0{break}
-                    if routeRelevantNetlink(raw[:bytes]){
-                        pending.push(time.Now())
-                    }
+        for{
+            select{
+            case <-ctx.Done():return
+            case <-ticker.C:
+                next,err:=readOriginalLinuxUnderlay(peer,tunName)
+                if err!=nil||!next.valid(){continue}
+                same:=current.samePhysicalInterfaceIPv4(next)
+                current=next
+                if same{continue}
+                select{case events<-next:default:
+                    select{case <-events:default:}
+                    select{case events<-next:default:}
                 }
+                log.Printf("V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=physical_if_ipv4_2s_poll interface=%s ifindex=%d src=%s mtu=%d",
+                    next.iface,next.ifindex,next.src,next.mtu)
             }
-            if (poll[0].Revents&(unix.POLLERR|unix.POLLHUP))!=0{
-                log.Printf("V4_PUBLIC_PATH_NOTIFICATION_ERROR stage=kernel_subscription")
-                return
-            }
-            if pending.remaining(time.Now())!=0{continue}
-            pending.clear()
-            next,err:=readOriginalLinuxUnderlay(peer,tunName)
-            if err!=nil{
-                // No usable physical path: retain the old authenticated
-                // Rust generation if still healthy; another actual OS
-                // event will wake the original cold path selector.
-                log.Printf("V4_PUBLIC_PATH_UNAVAILABLE role=client source=rtnetlink_os_readback")
-                continue
-            }
-            if !next.valid()||next==current{continue}
-            current=next
-            // At most one latest intent: a rapid A→B→A burst is collapsed
-            // to the final OS readback without unbounded goroutines/queues.
-            select{case events<-next:default:
-                select{case <-events:default:}
-                select{case events<-next:default:}
-            }
-            log.Printf("V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback interface=%s ifindex=%d mtu=%d coalesce_quiet_ms=200 max_ms=500",
-                next.iface,next.ifindex,next.mtu)
         }
     }()
     return events,nil

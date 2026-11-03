@@ -3,14 +3,11 @@
 package v4productcli
 
 import (
-    "encoding/binary"
     "fmt"
     "net"
     "net/netip"
     "testing"
     "time"
-
-    "golang.org/x/sys/unix"
 )
 
 func TestPLAN028PhysicalRouteAuthorityNotVPNOrTextIntent(t *testing.T){
@@ -89,48 +86,22 @@ func TestPLAN028RouteMTUCarriesIntoAuthenticatedNativeBudget(t *testing.T){
     }
 }
 
-func TestPLAN028NativePathNotifications200msQuiet500msAbsolute(t *testing.T){
-    start:=time.Unix(1000,0)
-    var c originalLinuxCoalescer
-    if c.remaining(start)!=-1{t.Fatal("unarmed path coalescer")}
-    c.push(start)
-    if c.remaining(start)!=200*time.Millisecond{t.Fatal("first OS path event not 200ms")}
-    c.push(start.Add(190*time.Millisecond))
-    if c.remaining(start.Add(200*time.Millisecond))!=190*time.Millisecond{
-        t.Fatal("repeated events did not quiet coalesce")
+func TestPLAN028PhysicalInterfaceIPv4OnlyTwoSecondPolling(t *testing.T){
+    if originalPhysicalCheckInterval!=2*time.Second{
+        t.Fatalf("underlay interval=%v",originalPhysicalCheckInterval)
     }
-    for elapsed:=210*time.Millisecond;elapsed<=490*time.Millisecond;elapsed+=20*time.Millisecond{
-        c.push(start.Add(elapsed))
+    original:=originalLinuxUnderlay{
+        iface:"eth0",ifindex:11,src:netip.MustParseAddr("192.0.2.2"),
+        gateway:netip.MustParseAddr("192.0.2.1"),mtu:1500,
     }
-    if remaining:=c.remaining(start.Add(495*time.Millisecond));remaining!=5*time.Millisecond{
-        t.Fatalf("burst postponed beyond hard 500ms deadline: %v",remaining)
-    }
-    if c.remaining(start.Add(500*time.Millisecond))!=0{
-        t.Fatal("500ms absolute deadline missed")
-    }
-    c.clear()
-    if c.remaining(start.Add(time.Second))!=-1{t.Fatal("OS event not cleared")}
-    c.push(start.Add(time.Second))
-    if c.remaining(start.Add(1200*time.Millisecond))!=0{
-        t.Fatal("new path epoch not independent")
-    }
-}
-
-func TestPLAN028RawRtnetlinkOnlyLinkAddrRouteEvents(t *testing.T){
-    packet:=func(typ uint16)[]byte{
-        b:=make([]byte,16)
-        binary.NativeEndian.PutUint32(b[:4],16)
-        binary.NativeEndian.PutUint16(b[4:6],typ)
-        return b
-    }
-    for _,typ:=range []uint16{
-        unix.RTM_NEWROUTE,unix.RTM_DELROUTE,
-        unix.RTM_NEWADDR,unix.RTM_DELADDR,
-        unix.RTM_NEWLINK,unix.RTM_DELLINK,
-    }{
-        if !routeRelevantNetlink(packet(typ)){t.Fatalf("physical rtnetlink type %d ignored",typ)}
-    }
-    if routeRelevantNetlink(packet(unix.NLMSG_DONE))||routeRelevantNetlink([]byte{1,2}){
-        t.Fatal("unrelated/invalid netlink packet signaled a path switch")
-    }
+    other:=original;other.mtu=1280
+    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("MTU-only change must not reauthenticate")}
+    other=original;other.gateway=netip.MustParseAddr("192.0.2.3")
+    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("gateway-only change must not reauthenticate")}
+    other=original;other.ifindex=12
+    if original.samePhysicalInterfaceIPv4(other){t.Fatal("NIC switch not detected")}
+    other=original;other.src=netip.MustParseAddr("192.0.2.4")
+    if original.samePhysicalInterfaceIPv4(other){t.Fatal("IPv4 change not detected")}
+    other=original;other.iface="eth1"
+    if original.samePhysicalInterfaceIPv4(other){t.Fatal("interface rename not detected")}
 }

@@ -25,7 +25,6 @@ import(
  "strings"
  "syscall"
  "time"
- "unsafe"
 
  "github.com/lly8666/wobuzhidao/internal/faketcp"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -89,10 +88,12 @@ func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err e
 // compare the kernel-selected physical endpoint after 200ms quiet / 500ms max.
 var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path changed; exact owned Stop then new TLS")
 
+// Only the selected physical NIC and source IPv4 trigger native recovery.
+// Gateway and MTU-only changes do not trigger cold reauthentication.
+const m0WindowsPhysicalCheckInterval=2*time.Second
 type m0WindowsPhysicalPath struct{
  ifindex uint32
- source4,nextHop4 netip.Addr
- interfaceMTU int
+ source4 netip.Addr
 }
 func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhysicalPath,error){
  var zero m0WindowsPhysicalPath
@@ -104,100 +105,38 @@ func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhy
   strings.EqualFold(iface.Name,tunAlias){
   return zero,windowsclient.ErrN4NativeGuard
  }
- return m0WindowsPhysicalPath{
-  ifindex:underlay.InterfaceIndex,source4:underlay.Source4,
-  nextHop4:underlay.NextHop4,interfaceMTU:iface.MTU,
- },nil
+ return m0WindowsPhysicalPath{ifindex:underlay.InterfaceIndex,source4:underlay.Source4},nil
 }
-type m0WindowsPathCoalescer struct{first,last time.Time}
-func(c *m0WindowsPathCoalescer) push(now time.Time){
- if c.first.IsZero(){c.first=now}
- c.last=now
-}
-func(c m0WindowsPathCoalescer) remaining(now time.Time)time.Duration{
- if c.first.IsZero(){return -1}
- quiet:=c.last.Add(200*time.Millisecond).Sub(now)
- hard:=c.first.Add(500*time.Millisecond).Sub(now)
- if quiet>hard{quiet=hard}
- if quiet<0{return 0}
- return quiet
-}
-func(c *m0WindowsPathCoalescer) clear(){*c=m0WindowsPathCoalescer{}}
 
-// NotifyRouteChange2 and NotifyUnicastIpAddressChange are native asynchronous
-// IP Helper subscriptions. Their WinAPI callbacks only wake one buffered
-// channel; actual OS readback, TLS, WFP and Stop remain on ordinary Go threads.
+// A single 2-second cold Go check, no IP Helper callbacks or route listeners.
+// Stop cancels and joins this ticker; DATA remains Rust-owned.
 func watchM0WindowsOriginalPhysicalPath(
  parent context.Context,peer netip.Addr,tunAlias string,
 )(<-chan struct{},func(),error){
- baseline,err:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+ initial,err:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
  if err!=nil{return nil,nil,err}
- dll:=windows.NewLazySystemDLL("iphlpapi.dll")
- routeProc:=dll.NewProc("NotifyRouteChange2")
- addressProc:=dll.NewProc("NotifyUnicastIpAddressChange")
- cancelProc:=dll.NewProc("CancelMibChangeNotify2")
- for _,p:=range []*windows.LazyProc{routeProc,addressProc,cancelProc}{
-  if err=p.Find();err!=nil{return nil,nil,err}
- }
- raw:=make(chan struct{},1)
- cb:=syscall.NewCallback(func(_,_,_ uintptr)uintptr{
-  select{case raw<-struct{}{}:default:}
-  return 0
- })
- var routeHandle,addressHandle uintptr
- // AF_INET (IPv4); FALSE: do not fake an initial OS path-change event.
- if status,_,_:=routeProc.Call(uintptr(syscall.AF_INET),cb,0,0,
-  uintptr(unsafe.Pointer(&routeHandle)));status!=0{
-  return nil,nil,syscall.Errno(status)
- }
- if status,_,_:=addressProc.Call(uintptr(syscall.AF_INET),cb,0,0,
-  uintptr(unsafe.Pointer(&addressHandle)));status!=0{
-  cancelProc.Call(routeHandle)
-  return nil,nil,syscall.Errno(status)
- }
- // Cover route transition between baseline and native subscription setup.
- if latest,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias);e==nil&&latest!=baseline{
-  select{case raw<-struct{}{}:default:}
- }
  ctx,cancel:=context.WithCancel(parent)
- done:=make(chan struct{})
  changed:=make(chan struct{},1)
+ done:=make(chan struct{})
  go func(){
   defer close(done)
-  defer cancelProc.Call(routeHandle)
-  defer cancelProc.Call(addressHandle)
-  current:=baseline
-  var pending m0WindowsPathCoalescer
+  ticker:=time.NewTicker(m0WindowsPhysicalCheckInterval)
+  defer ticker.Stop()
+  current:=initial
   for{
-   var timer *time.Timer
-   var fire <-chan time.Time
-   if delay:=pending.remaining(time.Now());delay>=0{
-    timer=time.NewTimer(delay)
-    fire=timer.C
-   }
-   var fired bool
    select{
-   case <-ctx.Done():
-    if timer!=nil{timer.Stop()}
-    return
-   case <-raw:
-    pending.push(time.Now())
-   case <-fire:
-    fired=true
+   case <-ctx.Done():return
+   case <-ticker.C:
+    next,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+    if e!=nil||next==current{continue}
+    current=next
+    select{case changed<-struct{}{}:default:}
+    fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d source4=%s trigger=physical_if_or_ipv4 poll_ms=2000\n",
+     next.ifindex,next.source4)
    }
-   if timer!=nil{timer.Stop()}
-   if !fired{continue}
-   pending.clear()
-   next,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
-   if e!=nil||next==current{continue}
-   current=next
-   select{case changed<-struct{}{}:default:}
-   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d mtu=%d source=os_route_address_readback coalesce_quiet_ms=200 max_ms=500\n",
-    next.ifindex,next.interfaceMTU)
   }
  }()
- stop:=func(){cancel();<-done}
- return changed,stop,nil
+ return changed,func(){cancel();<-done},nil
 }
 
 func runM0NativeV4Windows(o m0NativeV4Options)error{
@@ -241,7 +180,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
    reauthAuthorized=false
    coldRetries=0
    generation++
-   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=%d previous_native_joined=1 source=NotifyRouteChange2_or_UnicastAddress\n",generation)
+   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=%d previous_native_joined=1 source=physical_if_or_ipv4_2s_poll\n",generation)
    continue
   }
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a

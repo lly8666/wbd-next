@@ -417,7 +417,7 @@ jobs:
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' \
             fixed-kernel-result/plan028-auto-lease-real-native.log
           cat fixed-kernel-result/plan028-auto-lease-real-native.log
-      - name: PLAN028 real Linux rtnetlink OS source and MTU change while old TLS/Rust lane remains live
+      - name: PLAN028 real Linux 2-second physical NIC/IPv4 check and authenticated A-to-B with new-path MTU
         shell: bash
         run: |
           set -euo pipefail
@@ -429,7 +429,7 @@ jobs:
               tail -120 fixed-kernel-result/plan028-real-linux-path-switch-native.log >&2
               exit 1
             }
-          grep -q 'M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
+          grep -q 'M0_PLAN028_REAL_LINUX_2S_PHYSICAL_POLL_A_TO_AB_TO_B_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
           grep -q 'M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
           grep -q 'M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
           grep -q 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log

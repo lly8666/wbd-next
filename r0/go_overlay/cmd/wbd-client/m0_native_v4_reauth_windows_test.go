@@ -78,38 +78,19 @@ func TestM0PLAN027AWindowsColdBudgetABIShapeAndModes(t *testing.T){
 }
 
 
-func TestM0PLAN028WindowsPhysicalPathQuietAndHardDeadline(t *testing.T){
- start:=time.Unix(1_000,0)
- var c m0WindowsPathCoalescer
- if c.remaining(start)!=-1{t.Fatal("unarmed native path watcher")}
- c.push(start)
- if c.remaining(start)!=200*time.Millisecond{t.Fatal("first notification not bounded")}
- c.push(start.Add(190*time.Millisecond))
- if c.remaining(start.Add(200*time.Millisecond))!=190*time.Millisecond{
-  t.Fatal("burst must coalesce from last event")
+func TestM0PLAN028WindowsPhysicalPathCheckIsTwoSeconds(t *testing.T){
+ if m0WindowsPhysicalCheckInterval!=2*time.Second{
+  t.Fatalf("physical adapter/IP check interval=%v",m0WindowsPhysicalCheckInterval)
  }
- for ms:=210;ms<500;ms+=20{c.push(start.Add(time.Duration(ms)*time.Millisecond))}
- if c.remaining(start.Add(500*time.Millisecond))!=0{
-  t.Fatal("notification burst missed 500ms hard deadline")
- }
- c.clear()
- if c.remaining(start.Add(time.Second))!=-1{t.Fatal("cleared path event persisted")}
 }
-func TestM0PLAN028WindowsPhysicalPathFingerprintRoutesNotJustNIC(t *testing.T){
- a:=m0WindowsPhysicalPath{
-  ifindex:8,source4:netip.MustParseAddr("192.0.2.11"),
-  nextHop4:netip.MustParseAddr("192.0.2.1"),interfaceMTU:1500,
- }
- if a!=a{t.Fatal("same OS route must not churn native Rust owner")}
- b:=a;b.nextHop4=netip.MustParseAddr("192.0.2.2")
- if b==a{t.Fatal("same NIC+source but new gateway must rotate TLS")}
- b=a;b.source4=netip.MustParseAddr("192.0.2.12")
- if b==a{t.Fatal("IP change must rotate original generation")}
- b=a;b.interfaceMTU=1280
- if b==a{t.Fatal("path-MTU shrink must trigger new native budget")}
+func TestM0PLAN028WindowsPhysicalPathOnlyAdapterOrIPv4(t *testing.T){
+ a:=m0WindowsPhysicalPath{ifindex:8,source4:netip.MustParseAddr("192.0.2.11")}
+ if a!=a{t.Fatal("unchanged adapter and IPv4 must not reconnect")}
+ b:=a;b.source4=netip.MustParseAddr("192.0.2.12")
+ if b==a{t.Fatal("IP change must reauthorize original TLS")}
  b=a;b.ifindex=9
- if b==a{t.Fatal("different physical egress must rebind NPF")}
+ if b==a{t.Fatal("physical NIC change must rebind NPF")}
  if !errors.Is(errM0WindowsPhysicalPathChanged,errM0WindowsPhysicalPathChanged){
-  t.Fatal("exact owner Stop/reconnect intent lost")
+  t.Fatal("Stop-before-reauth intent lost")
  }
 }
