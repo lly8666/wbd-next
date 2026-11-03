@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1060",
+  "product_source_sha": "ec09e5178ca299fde4e3a746495e6e9583ee1bb1",
+  "first_action": {
+    "id": 41675780906,
+    "result": "FAIL_PRE_TEST",
+    "failure": "Windows Python cp1252 UnicodeDecodeError when reading manifest-plan020 JSON UTF8, no Go unit actually run",
+    "failed_stage": "assemble original Go"
+  },
+  "fix": {
+    "scope": "test harness only, pathlib read_text encoding utf-8",
+    "same_binary_source": true,
+    "windows_go_rust_product_source_changed": false
+  },
+  "requalification": "UNIT_PENDING_NEXT_ACTION",
+  "platform_schedule": "Linux next whole task native x86 client/server, then ARM client/server; Windows independent"
+}

@@ -34,7 +34,7 @@ jobs:
           root=pathlib.Path.cwd();sha=os.environ["GITHUB_SHA"]
           original="a7a82db31fe736ffedee330795a3234d358f1984"
           assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()==original
-          m=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
+          m=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text(encoding="utf-8"))
           assert m["legacy_source"]==original
           gitblob=lambda b:hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
           for op in m["operations"]:

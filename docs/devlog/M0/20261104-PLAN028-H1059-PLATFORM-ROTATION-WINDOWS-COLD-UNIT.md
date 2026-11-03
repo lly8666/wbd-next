@@ -9,3 +9,7 @@ H1058 原 SOURCE `ec09e5178ca299fde4e3a746495e6e9583ee1bb1`：Windows/Go/Rust/Wi
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1059 user clarifies alternate whole Linux same-ISA client/server task x86 then ARM; exact Windows pre-READY change unit tests run instead of compile-only."}
 ```
+
+## H1060 工具故障窄修
+
+首个源锁 Windows Go 单测 Action [41675780906](https://github.com/lly8666/wbd-next/actions/runs/41675780906) 在原 Go assembly 前的 manifest JSON 读取中被 Windows Python 默认 cp1252 UnicodeDecodeError 阻断，五个 Go 测试未运行，不能报告 UNIT PASS。只更改测试 workflow 的 read_text(encoding="utf-8")，不碰产品 Rust/Go、源锁 bytes、不重启 Wintun 五模式。
