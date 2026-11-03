@@ -10,6 +10,10 @@
 
 测试：Rust A/B/A2 同 reader 路由绑定/回收单测、新 C ABI 导出、原 Go Game2/4 TLS/Rust M4/UDP 原生回归。真实 concurrent Game 多组仍 NOT_RUN。
 
+## 同源码小范围验证
+
+Rust/Go 原生源码 `2035e945472891e455c2d1e73e3b828317f80c23`，[Linux Action 41633142709](https://github.com/lly8666/wbd-next/actions/runs/41633142709) SUCCESS；包含共享 Game A/B/A2 精确路由单测与新 FFI、原 Go TLS 构建、原有单组 Game2/4 真实 M4/UDP 和 Stop、两个账号 Normal 共享 TUN、1% loss 精确计数。**未跑同一端口同时两个 Game 组，也未做真实 Game AUTO shared M4 双组场景**；H1036 仅是必要底座，不可升级为完整 Game 多客户端 PASS。
+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1036 Game AUTO protected /32 uses one Rust TUN reader across group generations, per-client queue route and exact Stop fencing; Go single-port Game multi-group still open."}
 ```

@@ -5,15 +5,15 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 1036,
-  "checkpoint_sha": "774e4b23f991eb8cb8b362be261fb42cba682d67",
+  "checkpoint_sha": "2035e945472891e455c2d1e73e3b828317f80c23",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1036 PLAN028 Game AUTO verified /32 through one shared TUN reader; native check pending",
-  "why_now": "Every Game group currently reads duplicated physical TUN directly; two groups cannot coexist reliably because one steals other's kernel packet. Reuse already proven Normal single-reader router with authenticated /32 game dispatch before adding Go multi-group listener.",
+  "current_task": "H1036 scoped PASS: Linux original Game2/4 AUTO verified /32 shared TUN TX routing foundation, stale old group and late publish fenced; single-group native regression PASS",
+  "why_now": "Two native Game group TUN readers would steal other tenant packets; one original Rust shared kernel reader now dispatches by authenticated lease /32 with exact generation and per-client bound.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Source-locked Rust group A/B/A2 route unit + original Go Game2/4 Linux native smoke and Windows ABI. Then build protected one-port Game cohort multi-group admission, verifying simultaneous real tenants.",
+  "next_action": "H1037: extend one-port Go server to receive/authenticate multiple independent Game2/4 cohorts by original TLS principal+tunnel+epoch, then test two live Game clients and shared TUN/Rust M4 first UDP/Stop. Game group count <= Rust 16 entry slots/2 or /4; do not over-advertise capacity.",
   "unverified": true,
-  "last_tested_source": "774e4b23f991eb8cb8b362be261fb42cba682d67",
+  "last_tested_source": "2035e945472891e455c2d1e73e3b828317f80c23",
   "evidence_refs": [],
   "context_refs": [
     "START_HERE.md",
@@ -26,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1035 source774e original Game2/4 authenticated TLS and real M4 UDP/Stop PASS. H1036 source candidate: Game AUTO /32 attaches existing process-wide Rust shared reader, group TX consumes own bounded channel, per-lease exact generation Stop, manual group stays dedicated; Go Game server holds reader until after native Stop. Multiple actual Game groups under one port remain not implemented. Native source pending. Stale Game buffered TX is fenced on new owner and lower-generation delayed publish cannot retake protected /32; final source pending native."
+  "partial_summary": "SOURCE2035 Game auto /32 shared TUN router and Game TX alive fence, monotonic late publish protection PASS_SCOPED, exact native Linux original-Go combined Action41633142709 SUCCESS: new route unit, original Go/Rust build, two account Normal shared TUN, existing Game2+Game4 real TLS/M4/UDP/Stop and 1% accounted loss. Windows real physical switch and actual simultaneous Game groups STILL NOT_RUN. PLAN028 IN_PROGRESS."
 }
