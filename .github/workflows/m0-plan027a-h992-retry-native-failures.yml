@@ -36,7 +36,7 @@ jobs:
           grep -Fx "m0-wl-windows-product-binaries-$SOURCE_SHA" /tmp/products
           grep -Fx m0-plan024-linux-product /tmp/products
           echo "H992_REUSED_REAL_PRODUCT_BINARY_VALID source=$SOURCE_SHA no_new_build=1"
-      - name: Only original H990 failed native scopes: expanded DF and Normal1280
+      - name: 'Only original H990 failed native scopes: expanded DF and Normal1280'
         shell: bash
         run: |
           set -euo pipefail

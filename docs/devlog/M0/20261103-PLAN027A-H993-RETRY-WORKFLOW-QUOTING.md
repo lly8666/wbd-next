@@ -1,0 +1,3 @@
+# H993 — retry workflow YAML parse repair
+
+H992 original retry workflow GitHub run 41556346589 failed before any jobs because unquoted YAML step `name` contained colon+space. H992 governance and main native workflow failed the same YAML preflight; no H992 child tests were dispatched. H993 quotes only that human-readable step name. The already applied H992 Python verifier and per-size OS synchronization remain unchanged; the nine H990 native successes and two failures are immutable historical evidence. This workflow will again check H986 exact original product artifacts and product path non-drift before dispatching exactly two failed native scenes. No product build or prior green scene duplicate.
