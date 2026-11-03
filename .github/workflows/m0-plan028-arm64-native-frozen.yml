@@ -1,0 +1,95 @@
+name: M0 PLAN028 real ARM64 native original Go and Rust frozen binary
+run-name: PLAN028 native ARM64 source140a ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-arm64-native-frozen.yml"
+      - "tools/arm64_linux_netns_smoke.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-plan028-arm64-native-frozen-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  real-arm64-linux-native-original:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 17
+    env:
+      WBD_ARM64_FROZEN_SOURCE: 140a06622a97251863c6959c1290a0dd11b7a38b
+      WBD_ARM64_USE_AUTO_ROUTE: "1"
+      WBD_V4_MODE: normal
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41667172847
+          github-token: ${{ github.token }}
+          name: m0-plan028-dual-isa-41667172847-1
+          path: mixed-isa-build/
+      - name: Real ARM64 native Linux kernel netns / original Go TLS Rust owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl
+          test -c /dev/net/tun
+          test -s mixed-isa-build/manifest.json
+          (cd mixed-isa-build/arm64 && sha256sum -c SHA256SUMS)
+          mkdir -p arm64-public-bundle/
+          cp mixed-isa-build/arm64/{wbd-v4-client,wbd-v4-server,libwbd_engine.so,SHA256SUMS} arm64-public-bundle/
+          chmod 0755 arm64-public-bundle/wbd-v4-client arm64-public-bundle/wbd-v4-server
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("mixed-isa-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source"]==os.environ["WBD_ARM64_FROZEN_SOURCE"],m["source"]
+          assert m["original_go_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for file in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/"arm64"/file).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183
+              assert hashlib.sha256(b).hexdigest()==m["arm64"][file]["sha256"]
+          manifest=dict(m)
+          manifest.update({"source":m["source"],"architecture":"aarch64",
+                           "harness_source":os.environ["GITHUB_SHA"],
+                           "native_arm64_platform":"ubuntu-24.04-arm",
+                           "qualification":"ORIGINAL_GO_RUST_BOTH_ARM64_NATIVE_FUNCTIONAL_PENDING",
+                           "binary_bytes_unchanged":True,"cpu_p99":"NOT_RUN",
+                           "mixed_arm64_x86_hosts":"NOT_RUN"})
+          pathlib.Path("arm64-public-bundle/manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+          print("M0_PLAN028_ARM64_EXACT_H1053_BINARY_ON_NATIVE_HARDWARE_VERIFIED")
+          PY
+          bash -n tools/arm64_linux_netns_smoke.sh
+          bash tools/arm64_linux_netns_smoke.sh >arm64-native-original-source.log 2>&1 || {
+            tail -n 135 arm64-native-original-source.log >&2
+            tail -n 60 arm64-netns-result/client.log >&2 || true
+            tail -n 60 arm64-netns-result/server.log >&2 || true
+            exit 1
+          }
+          grep -q 'ARM64_NATIVE_NO_MANUAL_ROUTE_X25519_TLS_CERT_VERIFIED_PASS' arm64-native-original-source.log
+          grep -q 'ARM64_PUBLIC_' arm64-native-original-source.log || true
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("arm64-netns-result/receipt.json")
+          d=json.loads(p.read_text())
+          assert d["source"]=="140a06622a97251863c6959c1290a0dd11b7a38b"
+          assert d["qualification"]=="PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN"
+          assert d["owned_stop"]=="TWO_DRAINED"
+          assert d["bidirectional"]=="3_ICMP_PER_DIRECTION"
+          print("M0_PLAN028_REAL_NATIVE_ARM64_SAME_SOURCE_GO_RUST_TLS_TUN_STOP_PASS",flush=True)
+          PY
+          cat arm64-native-original-source.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-real-arm64-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            arm64-public-bundle/manifest.json
+            arm64-public-bundle/SHA256SUMS
+            arm64-netns-result/
+            arm64-native-original-source.log
+          if-no-files-found: warn
+          retention-days: 14

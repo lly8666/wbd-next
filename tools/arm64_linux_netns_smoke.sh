@@ -110,8 +110,13 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
 # Fixed and Normal are separate exact-source functional cases.
 # Shared credentials via private fd-checked files only, never argv secret.
-set -- --username smoke --password-file "$work/password" \
-  --route-key-hex-file "$work/route-key" --server-name wbd.test \
+# A pre-ClientHello ephemeral X25519 route exchange needs NO operator
+# shared route-key; the real TLS certificate must still verify on client.
+# Keep old explicit route file for the historical frozen rollback scenes.
+route_args=(--route-key-hex-file "$work/route-key")
+if [[ "${WBD_ARM64_USE_AUTO_ROUTE:-0}" == 1 ]];then route_args=();fi
+set -- --username smoke --password-file "$work/password" "${route_args[@]}" \
+  --server-name wbd.test \
   --tunnel-id 00112233445566778899aabbccddeeff --mode "$mode" --fec-profile 1
 client_mtu_args=(); server_mtu_args=()
 # Older frozen bundles do not expose this flag. Default smoke keeps their
@@ -178,7 +183,7 @@ if [ "$game_lanes" -eq 0 ];then
 else
   echo ARM64_GAME_SERVER_KERNEL_AF_PACKET_LANES_BEFORE_SYN_PASS
 fi
-sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" \
+sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" SSL_CERT_FILE="$work/server.crt" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
   "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
@@ -214,6 +219,13 @@ if [ "$ready" -ne 1 ]; then
   tail -n 50 "$out/client.log" || true
   tail -n 50 "$out/server.log" || true
   exit 1
+fi
+# The exact original pinned X25519 route classifier is only a pre-TLS gate;
+# certificate validation and protected password still authorize this owner.
+if [[ "${WBD_ARM64_USE_AUTO_ROUTE:-0}" == 1 ]];then
+  grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=client mode=ephemeral_x25519' "$out/client.log"
+  grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=server mode=ephemeral_x25519' "$out/server.log"
+  echo ARM64_NATIVE_NO_MANUAL_ROUTE_X25519_TLS_CERT_VERIFIED_PASS
 fi
 # 3 request/reply observations certify Normal. Fixed needs enough authentic
 # sources to form at least one <=16-source block and mature M2 feedback.
