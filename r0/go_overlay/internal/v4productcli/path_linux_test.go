@@ -4,6 +4,9 @@ package v4productcli
 
 import (
     "encoding/binary"
+    "encoding/hex"
+    "os"
+    "path/filepath"
     "fmt"
     "net"
     "net/netip"
@@ -151,4 +154,18 @@ func TestPLAN028Game4RtnetlinkColdGenerationPortAndSingleServer443(t *testing.T)
  if _,err:=originalGenerationGamePort(41031,1,3);err==nil{
   t.Fatal("unsupported Game lane count admitted")
  }
+}
+
+func TestPLAN028OfflineServerRouteKeyFileCreateExclusiveNoNetwork(t *testing.T){
+    dest:=filepath.Join(t.TempDir(),"server-route-key.hex")
+    if e:=initServerRouteKeyFile(dest);e!=nil{t.Fatal(e)}
+    st,e:=os.Lstat(dest);if e!=nil{t.Fatal(e)}
+    if !st.Mode().IsRegular()||st.Mode().Perm()!=0600{t.Fatal("route-key must be owner-only regular file")}
+    data,e:=os.ReadFile(dest);if e!=nil{t.Fatal(e)}
+    key,e:=hex.DecodeString(string(data[:len(data)-1]))
+    if e!=nil||len(key)!=32||data[len(data)-1]!='\n'{t.Fatal("server did not generate 32B random key")}
+    if e=initServerRouteKeyFile(dest);e==nil{t.Fatal("offline server route-key silently overwritten")}
+    link:=filepath.Join(t.TempDir(),"link")
+    if e=os.Symlink(dest,link);e!=nil{t.Fatal(e)}
+    if e=initServerRouteKeyFile(link);e==nil{t.Fatal("symlink accepted as private route-key target")}
 }

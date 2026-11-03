@@ -3,6 +3,9 @@ package main
 
 import (
  "errors"
+ "crypto/x509"
+ "fmt"
+ "os"
  "net/netip"
 )
 // Mainline Windows CLI needs real V4 ownership, not a V3/PowerShell
@@ -13,6 +16,7 @@ type m0NativeV4Options struct {
  ServerPort,SourcePort uint16
  ServerName string
  RouteKey []byte
+ TrustedServerRoots *x509.CertPool
  Username,Password string
  TunnelID [16]byte
  Installation [16]byte
@@ -31,3 +35,15 @@ type m0NativeV4Options struct {
  HealthIntervalSeconds,HealthDeadSeconds,HealthDormantSeconds uint32
 }
 var errM0NativeV4PacketBridge=errors.New("Windows original Go native V4 TLS authenticated, but public Rust M3 TCP/Wintun application packet bridge and full OS Applied/Stop remain NOT_RUN; refusing production network activation")
+
+// Application-scoped TLS trust: a locally imported server certificate/CA
+// adds no system-wide trust and never skips hostname/signature validation.
+func m0LoadWindowsV4ServerRoots(path string)(*x509.CertPool,error){
+ if path==""{return nil,nil} // Use ordinary Windows system roots.
+ raw,err:=os.ReadFile(path)
+ if err!=nil{return nil,fmt.Errorf("trusted server PEM: %w",err)}
+ if len(raw)==0||len(raw)>1<<20{return nil,fmt.Errorf("trusted server PEM invalid size")}
+ roots:=x509.NewCertPool()
+ if !roots.AppendCertsFromPEM(raw){return nil,fmt.Errorf("trusted server PEM contains no certificate")}
+ return roots,nil
+}

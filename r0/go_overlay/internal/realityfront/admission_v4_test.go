@@ -7,6 +7,7 @@ import (
     "os"
     "context"
     "crypto/tls"
+    "crypto/x509"
     "errors"
     "io"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -16,6 +17,15 @@ import (
     "time"
 )
 
+// Test-only certificate pinning mirrors production application-specific
+// trust import: no InsecureSkipVerify even for locally generated self-sign.
+func v4TestRoots(cert tls.Certificate)*x509.CertPool{
+ roots:=x509.NewCertPool()
+ parsed,err:=x509.ParseCertificate(cert.Certificate[0])
+ if err!=nil{panic(err)}
+ roots.AddCert(parsed)
+ return roots
+}
 func v4TestPolicy(lanes uint8, cipher uint8) AdmissionPolicy {
     p:=AdmissionPolicy{
         Schema:PolicySchemaV3,Transport:TransportNormal,DesiredLanes:lanes,
@@ -46,7 +56,7 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
         server<-answer{s,e}
     }()
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:user,Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,LaneID:lane,Policy:policy,
     },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2})
@@ -108,7 +118,7 @@ func TestR0V4RealTLSMultiDeviceAutoIPIdentityAndLeaseIsolation(t *testing.T){
             ch<-answer{server,serverErr}
         }()
         client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-            TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+            TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
             AutoLease:true,InstallationID:append([]byte(nil),install[:]...),
             Username:username,Password:password,TunnelID:id.Bytes(),
             ClientLimit:1400,DesiredLanes:1,LaneID:1,
@@ -393,7 +403,7 @@ func TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner(t *testing.
             }()
             policy:=v4TestPolicy(2,CipherChaCha)
             _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-                TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+                TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
                 Username:"game-fec",Password:"secret",
                 TunnelID:[]byte("gamefec012345678"),ClientLimit:1400,
                 LaneID:1,DesiredLanes:2,Policy:policy,
@@ -492,7 +502,7 @@ func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
         ch<-serverAnswer{err}
     }()
     _,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"solo",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
         ClientLimit:1400,Policy:v4TestPolicy(1,CipherChaCha),
     },V4ClientOptions{DataPlaneReady:true})
@@ -722,7 +732,7 @@ func TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback(t *testing.T) {
         ch<-se
     }()
     _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"rollback",Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
     },V4ClientOptions{DataPlaneReady:true})
@@ -839,7 +849,7 @@ func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochSt
         ch<-result{s,e}
     }()
     c,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
         ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,cipher),
     },V4ClientOptions{DataPlaneReady:true,fec2ProbeOnly:f2})

@@ -1,11 +1,8 @@
 name: M0 PLAN028 frozen x86 Linux Game4 native physical source switch
 run-name: PLAN028 x86 Game4 original SOURCE2943 path ${{ github.sha }}
+# Historical H1064 binaries do not implement the new offline TLS route-key.
+# Retained for forensic manual use ONLY, not a push qualification of new SHA.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-linux-game4-path-frozen.yml"
-      - "tools/m0-v4-public-real-linux-netns.sh"
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:

@@ -79,9 +79,9 @@ cat >"$TMP/users.json" <<'JSON'
 {"alice":"game-alice-protected-20261103","bob":"game-bob-protected-20261103"}
 JSON
 chmod 0600 "$TMP/users.json" "$TMP/key.pem"
-ROUTE='aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff'
-ROUTE_ARG="--route-key-hex $ROUTE"
-if [[ "$AUTO_ROUTE" == 1 ]];then ROUTE_ARG="";fi
+env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
+ROUTE_ARG="--route-key-hex-file '$TMP/route-key.hex'"
+# AUTO_ROUTE kept only as a scenario selector, no ephemeral pre-TLS exchange.
 sudo -n ip netns exec "$NSS" bash -c "
  echo \$\$ > '$TMP/server.pid'
  exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
@@ -119,7 +119,7 @@ start_client(){
   exec env LD_LIBRARY_PATH='$ROOT' SSL_CERT_FILE='$TMP/cert.pem' '$ROOT/wbd-v4-client' \
    --raw-interface '$raw' --local-ip '$ip' --local-port '$port' \
    --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
-   --server-name wbd-v4.example.test $ROUTE_ARG \
+   --server-name wbd-v4.example.test $ROUTE_ARG --tls-ca-pem '$TMP/cert.pem' \
    --username '$user' --password '$password' \
    --auto-ip --installation-id-file '$key' --mode "$MODE" --game-fec "$GAME_FEC"
  " >"$log" 2>&1 &
@@ -215,7 +215,7 @@ if [[ "$HANDOVER" == 1 ]];then
         env LD_LIBRARY_PATH="$ROOT" SSL_CERT_FILE="$trust" "$ROOT/wbd-v4-client" \
         --raw-interface wbdvr0 --local-ip 10.25.0.4 --local-port "$port" \
         --peer-ip 10.25.0.1 --peer-port 443 --tun-name "$tun" \
-        --server-name wbd-v4.example.test --username alice --password "$password" \
+        --server-name wbd-v4.example.test --route-key-hex-file "$TMP/route-key.hex" --tls-ca-pem "$trust" --username alice --password "$password" \
         --auto-ip --installation-id-file "$TMP/install-denied-$tag" --mode game2 \
         >"$TMP/denied-$tag.log" 2>&1 || rc=$?
       [[ "$rc" != 0 && "$rc" != 124 && "$rc" != 137 ]] || {
@@ -293,11 +293,11 @@ grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
 if [[ "$AUTO_ROUTE" == 1 ]];then
   for who in A B R;do
-    grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=client mode=ephemeral_x25519' "$TMP/$who.log"
+    ! grep -q 'V4_PUBLIC_ROUTE_PREHELLO' "$TMP/$who.log"
     grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$LANES" "$TMP/$who.log"
   done
-  grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=server mode=ephemeral_x25519' "$TMP/server.log"
-  echo "M0_PLAN028_GAME2_PASSWORD_ONLY_EPHEMERAL_PREHELLO_NATIVE_PASS same_server_port=443 accounts=2 install_successor=1 original_TLS_verified_certificate=1"
+  ! grep -q 'V4_PUBLIC_ROUTE_PREHELLO' "$TMP/server.log"
+  echo "M0_PLAN028_GAME2_PRESHARED_STANDARD_TLS_NO_PRELUDE_NATIVE_PASS same_server_port=443 accounts=2 install_successor=1 verified_server_certificate=1"
 fi
 if [[ "$GAME_FEC" == fixed6 ]];then
   for who in A B R;do
@@ -314,4 +314,4 @@ assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
 print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
 PY
 fi
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90 auto_route_ephemeral=$AUTO_ROUTE auth_negative=$AUTH_NEGATIVE"
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90 preshared_route_key=1 auth_negative=$AUTH_NEGATIVE"

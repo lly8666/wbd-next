@@ -61,13 +61,14 @@ cat >"$TMP/users.json" <<'JSON'
 {"alice":"auth-alice-original-20261103","bob":"auth-bob-original-20261103"}
 JSON
 chmod 0600 "$TMP/users.json" "$TMP/key.pem"
-ROUTE='aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff'
+env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
+test "$(stat -c %a "$TMP/route-key.hex")" = 600
 sudo -n ip netns exec "$NSS" bash -c "
   echo \$\$ > '$TMP/s.pid'
   exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
     --raw-interface wbdvs0 --local-ip 10.25.0.1 --local-port 443 \
     --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
-    --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
     --users-file '$TMP/users.json' --lease-pool 10.66.0.128/25 \
     --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode normal
 " >"$TMP/server.log" 2>&1 &
@@ -100,7 +101,7 @@ start_client(){
     exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
       --raw-interface '$raw' --local-ip '$ip' --local-port '$port' \
       --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
-      --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+      --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' --tls-ca-pem '$TMP/cert.pem' \
       --username '$user' --password '$pass' \
       --auto-ip --installation-id-file '$key' --mode normal
   " >"$logfile" 2>&1 &

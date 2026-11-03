@@ -602,23 +602,18 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if opt.fec2ProbeOnly||opt.fec2Product {offeredFeatures |= v4FeatureFEC2}
     wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec})
     if err!=nil{return nil,err}
+    // The route classifier secret must be provisioned BEFORE opening
+    // transport. A missing key is an ordinary local config failure: no
+    // WB-R1/private challenge, no alternative first payload or downgrade.
+    if len(cfg.TLS.RouteKey)!=32{return nil,ErrAdmissionParams}
     guard,err:=beginCandidateDeadline(ctx,conn,cfg.TLS.Timeout)
     if err!=nil{return nil,err}
     success:=false
     defer func(){ guard.Finish(success);if !success {_=conn.Close()} }()
     tlsCfg:=cfg.TLS
-    if len(tlsCfg.RouteKey)==0{
-        // Genuine ephemeral marker material is exchanged on this original
-        // FakeTCP association BEFORE the very first WBD ClientHello.
-        route,e:=v4AutoRoutePrelude(ctx,conn,false,guard.Remaining())
-        if e!=nil{return nil,candidateError(ctx,e)}
-        tlsCfg.RouteKey=route
-        // The unauthenticated pre-TLS X25519 exchange is NOT server
-        // identity verification; reject any untrusted certificate BEFORE
-        // protected username/password bytes can be sent.
-        tlsCfg.VerifyServer=true
-        if e=guard.Rearm();e!=nil{return nil,e}
-    }
+    // Certificate verification is mandatory even for an explicit route-key;
+    // key possession is NOT a server identity proof.
+    tlsCfg.VerifyServer=true
     tlsCfg.Timeout=guard.Remaining()
     client,err:=handshakeClientConn(ctx,conn,tlsCfg)
     if err!=nil{return nil,candidateError(ctx,err)}
@@ -657,20 +652,15 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
        !validRecordLimit(cfg.ServerLimit) {
         return nil,ErrAdmissionParams
     }
+    if len(cfg.TLS.RouteKey)!=32{return nil,ErrAdmissionParams}
     conn:=assoc.BootstrapConn()
     guard,err:=beginCandidateDeadline(ctx,conn,cfg.TLS.Timeout)
     if err!=nil{return nil,err}
     success:=false
     defer func(){guard.Finish(success);if !success {assoc.Close()} }()
     tlsCfg:=cfg.TLS
-    if len(tlsCfg.RouteKey)==0{
-        // Per-association X25519 supplies the private HMAC marker key
-        // before TLS recognition, never a public token/TLS exporter.
-        route,e:=v4AutoRoutePrelude(ctx,conn,true,guard.Remaining())
-        if e!=nil{return nil,candidateError(ctx,e)}
-        tlsCfg.RouteKey=route
-        if e=guard.Rearm();e!=nil{return nil,e}
-    }
+    // Only a valid TLS ClientHello with its existing compatible HMAC
+    // SessionID reaches the actual crypto/tls server; no earlier payload.
     hello,err:=ReadHello(conn,tlsCfg.ServerName,tlsCfg.RouteKey,guard.Remaining())
     if err!=nil{return nil,candidateError(ctx,err)}
     if err:=guard.Rearm();err!=nil{return nil,err}

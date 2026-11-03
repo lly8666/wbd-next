@@ -237,7 +237,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
-  o.ServerName==""||(len(o.RouteKey)>0&&len(o.RouteKey)<16)||o.Username==""||o.Password==""||
+  o.ServerName==""||len(o.RouteKey)!=32||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
   !o.Lease4.IsValid()||!o.Lease4.Addr().Is4()||o.Lease4.Bits()!=32||
   o.Lease4.Addr().IsUnspecified()||o.TunnelMTU<576||o.TunnelMTU>1500||
@@ -527,7 +527,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
-    RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second},
+    RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
   AutoLease:false,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:recordOffer,

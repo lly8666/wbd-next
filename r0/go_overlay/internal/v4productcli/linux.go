@@ -513,8 +513,28 @@ func productNativeCleanup(c config,tun *ownedTun)func()error{
  return func()error{return nil}
 }
 
+// Offline initialization: create a fresh 32B server entry-recognition key
+// exactly once, owner-only and no symlink/overwrite. The secret is NEVER
+// placed on stdout or in argv. Client imports the file via an offline channel.
+func initServerRouteKeyFile(path string)error{
+ if path==""{return fmt.Errorf("missing destination for server route-key initialization")}
+ var key [32]byte
+ if _,err:=rand.Read(key[:]);err!=nil{return err}
+ fd,err:=syscall.Open(path,syscall.O_WRONLY|syscall.O_CREAT|syscall.O_EXCL|syscall.O_CLOEXEC|syscall.O_NOFOLLOW,0600)
+ if err!=nil{return fmt.Errorf("create route-key file without overwrite: %w",err)}
+ f:=os.NewFile(uintptr(fd),"generated-route-key")
+ _,err=f.WriteString(hex.EncodeToString(key[:])+"\n")
+ if e:=f.Sync();err==nil{err=e}
+ if e:=f.Close();err==nil{err=e}
+ if err!=nil{return err}
+ log.Print("V4_PUBLIC_ROUTE_KEY_GENERATED local_file_only=1 bytes=32 permissions=0600")
+ return nil
+}
 func Run(role string,args []string)(retErr error){
-    cfg,err:=parse(role,args)
+ if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
+   return initServerRouteKeyFile(args[1])
+ }
+ cfg,err:=parse(role,args)
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}

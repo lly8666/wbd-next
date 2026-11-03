@@ -108,7 +108,8 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
   -subj '/CN=wbd-v4.example.test' -addext 'subjectAltName=DNS:wbd-v4.example.test' \
   >"$TMP/certificate-create.log" 2>&1
 chmod 0600 "$TMP/server-key.pem"
-ROUTE='aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff'
+env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
+test "$(stat -c %a "$TMP/route-key.hex")" = 600
 TUNNEL='102030405060708090a0b0c0d0e0f001'
 USER='v4qualified'
 PASS='v4-real-original-tls-credential-20261020'
@@ -122,6 +123,17 @@ if [[ "$AUTO_IP" == 1 ]];then
   CLIENT_ID_ARG="--auto-ip --installation-id-file '$TMP/installation-id'"
   CLIENT_TUN_ARG=''
 fi
+# Real TCP payload capture begins before first SYN/ClientHello. The pcap
+# never enters artifacts; only a bounded structural/hash JSON report leaves
+# this ephemeral runner. Only run on the single Normal wire-audit task.
+WIRE_PID=''
+if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
+  test "$MODE" = normal
+  sudo -n ip netns exec "$NSS" tcpdump -i wbdvs0 -U -s 4096 -w "$TMP/hello-wire.pcap" 'tcp port 443' >"$TMP/tcpdump.log" 2>&1 &
+  WIRE_PID=$!
+  sleep .35
+  sudo -n kill -0 "$WIRE_PID"
+fi
 # Startup uses exactly the production binaries and unmodified original Go
 # TLS/FakeTCP code. PID belongs to the exec'd process in each netns.
 sudo -n ip netns exec "$NSS" bash -c "
@@ -129,7 +141,7 @@ sudo -n ip netns exec "$NSS" bash -c "
   exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
     --raw-interface wbdvs0 --local-ip 10.25.0.1 --local-port 443 \
     --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
-    --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
     --username '$USER' --password '$PASS' $SERVER_ID_ARG $SERVER_LEASE_ARG \
     --tls-cert '$TMP/server-cert.pem' --tls-key '$TMP/server-key.pem' \
     --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/server.log" 2>&1 &
@@ -141,7 +153,7 @@ sudo -n ip netns exec "$NSC" bash -c "
     --raw-interface wbdvc0 --local-ip 10.25.0.2 --local-port 41031 \
     --peer-ip 10.25.0.1 --peer-port 443 \
     --tun-name wbdvc4 $CLIENT_TUN_ARG \
-    --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' --tls-ca-pem '$TMP/server-cert.pem' \
     --username '$USER' --password '$PASS' $CLIENT_ID_ARG \
     --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/client.log" 2>&1 &
 PIDC=$!
@@ -610,4 +622,13 @@ elif [[ "$GAME" != 0 ]];then
   echo "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$GAME udp_app=$PACKETS auth_go=1 native_m4=1 lane1_underlay_dropped=1 stop_drained=1 production_off=1"
 else
   echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
+fi
+if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
+  sudo -n kill -INT "$WIRE_PID" 2>/dev/null || true
+  wait "$WIRE_PID" || true
+  test -s "$TMP/hello-wire.pcap"
+  sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$TMP/hello-wire.pcap" >"$ART/plan028-tls-wire-audit.json"
+  grep -Fq 'REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS' "$ART/plan028-tls-wire-audit.json"
+  sudo -n rm -f "$TMP/hello-wire.pcap"
+  echo M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS cert_verified_by_original_TLS=1
 fi

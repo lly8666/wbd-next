@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "8bf923dbd6fa94dee177f8f55558327cc7456c98",
+      "result_blob": "953c43eae5cc7655c5113f417f42a5057b555595",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -160,6 +160,34 @@
         {
           "find": "\tif err := realityfront.ValidateClientAdmissionConfig(realityfront.ClientAdmissionConfig{\n\t\tTLS:       realityfront.ClientConfig{ServerName: *serverName, RouteKey: routeKey},\n\t\tAutoLease: autoLease, DesiredLanes: uint8(*lanes), InstallationID: installation[:], Username: *username, Password: *password, TunnelID: tunnelID.Bytes(), ClientLimit: uint16(*clientLimit), Policy: requestedPolicy,\n\t}); err != nil {\n\t\treturn err\n\t}",
           "replace": "    // The original generic V3 validator still requires a static key. The\n    // V4 native admission validates its exact protected request and gets a\n    // fresh per-lane X25519 route marker BEFORE the first TLS ClientHello.\n    if !*nativeV4Product || len(routeKey)>0 {\n        if err := realityfront.ValidateClientAdmissionConfig(realityfront.ClientAdmissionConfig{\n            TLS:realityfront.ClientConfig{ServerName:*serverName,RouteKey:routeKey},\n            AutoLease:autoLease,DesiredLanes:uint8(*lanes),InstallationID:installation[:],\n            Username:*username,Password:*password,TunnelID:tunnelID.Bytes(),\n            ClientLimit:uint16(*clientLimit),Policy:requestedPolicy,\n        });err!=nil{return err}\n    }"
+        },
+        {
+          "find": "*serverName == \"\" || (*routeKeyHex == \"\" && !*nativeV4Product) ||",
+          "replace": "*serverName == \"\" || (*routeKeyHex == \"\" && *routeKeyHexFile == \"\") ||"
+        },
+        {
+          "find": "\t\trouteKeyHex        = flag.String(\"route-key-hex\", \"\", \"hex route key\")",
+          "replace": "\t\trouteKeyHex        = flag.String(\"route-key-hex\", \"\", \"32B pre-shared TLS entry route key in hex\")\n\t\trouteKeyHexFile = flag.String(\"route-key-hex-file\", \"\", \"offline imported route key hex, locally protected file\")\n\t\ttlsCAPEM = flag.String(\"tls-ca-pem\", \"\", \"native V4 server TLS CA/cert PEM; empty uses system trust\")"
+        },
+        {
+          "find": "\tif handleVersion() {\n\t\treturn nil\n\t}",
+          "replace": "\tif *routeKeyHexFile != \"\" {\n\t\tif *routeKeyHex != \"\" {return errors.New(\"route-key-hex and route-key-hex-file are exclusive\")}\n\t\traw,e:=os.ReadFile(*routeKeyHexFile);if e!=nil{return fmt.Errorf(\"import route-key file: %w\",e)}\n\t\tif len(raw)==0||len(raw)>256{return errors.New(\"route-key import size invalid\")}\n\t\t*routeKeyHex=strings.TrimSpace(string(raw))\n\t}\n\tif handleVersion() {\n\t\treturn nil\n\t}"
+        },
+        {
+          "find": "if err != nil || (len(routeKey)==0 && !*nativeV4Product) || (len(routeKey)>0 && len(routeKey)<16) {\n        return errors.New(\"explicit route-key-hex must decode to at least 16 bytes; native V4 may omit it for pre-TLS ephemeral bootstrap\")\n    }",
+          "replace": "if err != nil || len(routeKey)==0 || (*nativeV4Product&&len(routeKey)!=32) || (!*nativeV4Product&&len(routeKey)<16) {\n        return errors.New(\"native V4 requires 32B pre-shared route key; no online exchange\")\n    }"
+        },
+        {
+          "find": "    // The original generic V3 validator still requires a static key. The\n    // V4 native admission validates its exact protected request and gets a\n    // fresh per-lane X25519 route marker BEFORE the first TLS ClientHello.",
+          "replace": "    // The original generic V3 validator and V4 both require an offline key.\n    // The HMAC SessionID uses the pre-provisioned secret; NO network prelude."
+        },
+        {
+          "find": "\t\treturn runM0NativeV4Windows(m0NativeV4Options{",
+          "replace": "\t\ttrustedRoots,trustErr:=m0LoadWindowsV4ServerRoots(*tlsCAPEM)\n\t\tif trustErr!=nil{return trustErr}\n\t\treturn runM0NativeV4Windows(m0NativeV4Options{"
+        },
+        {
+          "find": "ServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,",
+          "replace": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,Username:*username,Password:*password,"
         }
       ]
     },
@@ -195,7 +223,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "7c898d78e5fe46b2ff034f38c98147f12fba5032",
+      "result_blob": "9b37736a1ed584e78e4411054c2613968907a48e",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -220,6 +248,10 @@
         {
           "find": "外层 IPv4 包上限；576–9000，通常 1500",
           "replace": "外层完整 IPv4 IP 包上限（不含 L2）；默认 1460，可显式设 576–1500，内层自动计算"
+        },
+        {
+          "find": "  \"route-key-hex\": [\n    \"服务器\",\n    \"路由密钥\",\n    \"服务端提供的十六进制密钥\"\n  ],\n",
+          "replace": "  \"route-key-hex\": [\n    \"服务器\",\n    \"路由密钥\",\n    \"服务端提供的十六进制密钥\"\n  ],\n  \"route-key-hex-file\": [\n    \"服务器\",\n    \"离线路由密钥文件\",\n    \"在程序目录 data 内导入32字节十六进制密钥文件；和上方密钥文本只能填一种，不进行网络取key\"\n  ],\n  \"tls-ca-pem\": [\n    \"服务器\",\n    \"服务器证书信任文件\",\n    \"导入本服务器证书/CA PEM路径；留空只信Windows系统证书，不会忽略验证\"\n  ],\n"
         }
       ]
     },
@@ -355,7 +387,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "5ded3b119b4e789118edb08c01f3d591ea52991a",
+      "result_blob": "8c1244219c39b8c31090e423ebb319a93aac4944",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -382,6 +414,10 @@
           "find": "\"default_expression\": \"1500\"",
           "replace": "\"default_expression\": \"1460\"",
           "count": 3
+        },
+        {
+          "find": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
+          "replace": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"route-key-hex-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"client native V4 offline imported 32B route-key hex file; exclusive with route-key-hex\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"tls-ca-pem\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"client native V4 server-specific certificate trust PEM path; empty uses Windows system trust; never disable verification\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n"
         }
       ]
     },
@@ -690,7 +726,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "4b44e76026dfcd339aa9c5ab5ee5aa9fab990439"
+      "result_blob": "01059a512f8eefc56c5088f5b14e2fcda3503f02"
     },
     {
       "kind": "create",
@@ -702,7 +738,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "ab295438b580629545e9d73d29ab2f7bffd00ab3"
+      "result_blob": "0f55f3aa3d5270f90a6ffda9bc69e0dbd1491c49"
     },
     {
       "kind": "create",
@@ -774,7 +810,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "e9a5ff9509028cb060204da7ac7ff8e3417e0d96"
+      "result_blob": "64e67925dd6a4c6ccb0d9e1a9c499395c93b1920"
     },
     {
       "kind": "create",
@@ -1026,27 +1062,40 @@
     },
     {
       "kind": "create",
-      "path": "internal/realityfront/v4_route_prelude.go",
-      "overlay_path": "r0/go_overlay/internal/realityfront/v4_route_prelude.go",
-      "result_blob": "91f060e0cf6db41fa62f6526900187bf6252c11a"
-    },
-    {
-      "kind": "create",
-      "path": "internal/realityfront/v4_route_prelude_test.go",
-      "overlay_path": "r0/go_overlay/internal/realityfront/v4_route_prelude_test.go",
-      "result_blob": "a1464392ce7a9c8052dc348b4afae4145ce04f22"
-    },
-    {
-      "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "776ef5f2fb06474d000c40b63455386d2c887449"
+      "result_blob": "1bf37f6fa0813ee4d9231906a4b6ada91214105b"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "c8a2c903657a0bfd4ac472c5c95ab96a1c764327"
+      "result_blob": "503a6560d149328d5c64b4c5fad82f6a6bd09841"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/realityfront/tls.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/tls.go",
+      "original_blob": "518a18104803baf75c703fd8b038f2126beb8d64",
+      "result_blob": "f25a840b485c91721462e1a91d1919df10a8b168"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/admission_v4_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
+      "result_blob": "707b219f3c86fc57857b2c2c8ca38b0659f24ef2"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_tls_handshake_contract_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go",
+      "result_blob": "0c682a18cbb95dd6037349d612c8ec32a88d8612"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_dual_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_dual_test.go",
+      "result_blob": "55ba115d0f41f5dce78f2868a32071780daecd72"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

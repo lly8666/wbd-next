@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1067",
+  "base_sha": "bb2dfb8a1c39d82b89ec394a5691598ef01fa382",
+  "state": "SOURCE_CANDIDATE_TEST_NOT_YET_EXECUTED",
+  "rejected_legacy_wire": "WB-R1 server-first 37B X25519 pre-ClientHello",
+  "new_contract": "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
+  "proposed": {
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "route_key": "offline32bytes exclusive import; NO WB-R1",
+    "client_tls": "uTLS Firefox120 standard TLS1.3 + existing 32B HMAC SessionID",
+    "server_tls": "crypto/tls recognized ClientHello; mandatory TLS certificate validation in V4 client",
+    "scope": "Windows/Linux Go cold control only; no Rust steady wire changes",
+    "static_go_test": "4 original Game lane ClientHello, no prelude, wrong/missing key/cert/password",
+    "native_test": "Linux x86_64 client+server netns original Go/Rust normal, actual TCP pcap stream reassembly and small UDP Stop",
+    "subsequent": "Windows original Go assembly and ARM64 client+server distinct next Linux task"
+  },
+  "preserved": [
+    "H1048–H1052 old ephemeral feature PASS only historical and noncompliant wire",
+    "H998 physical live MTU shrink FAIL",
+    "previous ARM64 Game4FEC Action FAIL",
+    "H1064 actual Linux Game4 path 5 UDP observed under old wire, Action FAIL; not qualified TLS appearance",
+    "Windows physical NIC switch NOT_RUN",
+    "CPU/p99 not causally measured"
+  ]
+}

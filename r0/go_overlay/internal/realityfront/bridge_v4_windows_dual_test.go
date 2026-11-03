@@ -112,7 +112,7 @@ func TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers(t *testin
             ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second)
             defer cancel()
             cliSession,clientErr:=cliOwner.connectVerifiedClient(ctx,client,ClientAdmissionConfig{
-                TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,Timeout:4*time.Second},
+                TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,RootCAs:v4TestRoots(cert),Timeout:4*time.Second},
                 Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
                 ClientLimit:1400,LaneID:1,DesiredLanes:1,Policy:policy,
             })
