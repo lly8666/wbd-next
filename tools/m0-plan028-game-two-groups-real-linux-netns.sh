@@ -158,10 +158,10 @@ wait "$a_echo_pid" "$b_echo_pid"
 # Only client A stops. Do not Stop the one server or B's Rust Game owner.
 sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
 for _ in {1..80};do
- if grep -q 'V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2' "$TMP/A.log";then break;fi
+ if grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$LANES" "$TMP/A.log";then break;fi
  sleep .25
 done
-grep -q 'V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2' "$TMP/A.log"
+grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$LANES" "$TMP/A.log"
 send_udp "$NSB" "$IPB" "B_AFTER_A_STOP" 6 "$TMP/b_after.log"
 sudo -n kill -TERM "$(cat "$TMP/bob.pid")"
 sudo -n kill -TERM "$(cat "$TMP/server.pid")"
