@@ -1,5 +1,7 @@
 # M0｜PLAN030接续提示词
 
+跨包红线：先读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`；预共享route-key可导入/手填，本地生成/存储/验证，不得为配置便利恢复TLS前私有交换或关闭服务器验证。
+
 你继续lly8666/wbd-next的PLAN030。先读START_HERE/AGENTS、M0长期提示词、最新registry/cursor、`docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 与 `M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md`。默认上轮中断，先收在途结果/补增量留痕，不重复dispatch。仅用户实际启动才登记此包，不因文件存在抢占PLAN027。
 
 目标：薄的wbd-next中文菜单/子命令，最小服务端配置（监听、借站域名、账号）、持久服务化、客户端快照与完整owned卸载。028负责账号/IP/每client配置，029负责Windows域名/DNS/UI；接口明确后菜单/包/unit可并行，真实验收不得使用假会话替身。

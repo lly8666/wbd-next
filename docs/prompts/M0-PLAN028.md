@@ -1,20 +1,22 @@
 # M0｜PLAN028接续提示词
 
+**当前首要任务（用户2026-11-04）：修复TLS建链外观。**读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`，先收存已在途结果，随后撤掉`WB-R1`/37B X25519前导；预共享route-key正式允许，保留证书验证。先完成公共冷入口、各平台装配/配置和有限抓包验收，再继续cursor原切网/交接工作。代码未修/抓包未验保持OPEN，旧auto-route功能PASS不是外观PASS。
+
 你继续lly8666/wbd-next的PLAN028。**本包已由用户2026-11-03明确启动，不等再次授权；实际代码进度读最新registry/cursor，不能沿用旧“尚未开工”字样停工。**先读START_HERE/AGENTS、M0长期提示词、registry/cursor，再读 `docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 和 `M0-PLAN028-SESSION-CONFIG-20261102.md`。默认上轮可能中断，只追checkpoint增量，先收在途Actions不重复派发。保留[027A H998限定收口](../evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)的在线收窄FAIL、ARM64 Game4FEC Action FAIL、远端ICMP未测及CPU因果未证；028按真实新路径重认证/预算安装补衔接，不冒称原同连接热更新已成功。
 
 PLAN027/027A已限定范围收口，不因历史NOT_RUN重开旧矩阵，不复制第二套恢复器，不将旧PASS推广。用既有registry/cursor记录本包，不添加审批/任务系统。H1000入口依赖已核查，无新源码差异不要再写同一轮审计，直接按028§0进入施工。
 
 **范围锁定**：仅补单端口接入/会话分发、lane新旧代交接和冷配置/OS适配；复用FEC/Auto/Game/重传/record/AEAD/PN算法与稳态wire。不新增每包路由头、反馈协议、通用多租户框架或Go热泵。单owner是资源归属，不是服务器仅能有一个client；Rust用连接/隧道IP索引分发，不逐包扫描/复制给所有会话，不让多个owner争读TUN，不持全局锁等待TLS/Stop。
 
-按028§0.2分成共享接入/会话、交接/切网、认证简化冷路径三个完整工作包；每包先写齐双方、装配、配置与夹具再冻结SOURCE测试，不每helper dispatch，也不把全028代码堆完才第一次测IO。route-key首次材料必须在首个ClientHello前可得，TLS后导出不是首次解法；冷路径只做必要适配，不拿公开常量/关闭识别过关。该问题不阻塞使用既有测试凭据验证其他包，但最终必须完成账号密码操作目标。
+按028§0.2分包；当前先做上述完整建链修复包，双方/装配/配置与夹具齐后冻结SOURCE，不每helper dispatch。route-key首次材料通过本地导入或显式配置取得；缺失本地失败，禁止TLS前交换/公开常量/关闭识别。复用原HMAC SessionID，服务器验证独立于key来源，不造TLS PSK握手，不动稳态数据面。随后接续原完整工作包。
 
 MTU配置只有外层完整IPv4 IP上限（**以后普通默认固定1460B、不含L2；1500B仅为显式最大值，不是默认**）；client传意图，server按自身实际限制收窄，内层自动算/应用/读回。不要要求两端手填内层MTU，不把派生结果回写为用户外层值或覆盖其他client的TUN。
 
 交接顺序：新路径限制→真实认证/最终预算→安装配置、应用MTU并读回→放行新lane业务→退休旧lane；允许未放流owner的prepare，不允许先放流再补MTU。旧回调只回收自己的generation/实例，不清掉新lane或新租约。客户端不同本地端口仍可接同一服务端口，不能为简化分发改变稳态包格式。
 
-目标：账号密码操作简化、自动/手动IP、同账号多设备、一个服务端口、每client独立配置接入既有数据面。先定最小配置/session/endpoint/snapshot接口，再连续写齐双方与调用方；029 DNS、030 CLI独立模块可并行，main共享接口单写入。
+目标：账号密码及预共享route-key配置清楚、自动/手动IP、同账号多设备、一个服务端口、每client独立配置接入既有数据面。先定最小配置/session/endpoint/snapshot接口，再连续写齐双方与调用方；029 DNS、030 CLI独立模块可并行，main共享接口单写入。
 
-重点真实证明七模式换laneA→A+B→B、同账号不串身份/IP/配置、Game健康lane不中断；复用老15s Health/90s dead/1–30s退避和当前修复，别重做FEC/重传/密码算法。route-key自动化若有握手前依赖要解决，不隐藏手工key要求或关闭认证。
+重点真实证明七模式换laneA→A+B→B、同账号不串身份/IP/配置、Game健康lane不中断；复用老15s Health/90s dead/1–30s退避和当前修复，别重做FEC/重传/密码算法。route-key允许显式配置/导入，彻底移除私有自动协商；缺失、错key、错密码、错证书及轮换首包均按建链契约验。
 
 网络切换按028§4.1–4.2现在做公共会话接管和Windows/Linux原生网络通知以200ms静默、最长500ms合并后读取实际物理出口网卡/接口IPv4，不等Android，也不提前造安卓客户端。只在网卡或物理出口源IPv4真正变化时尝试新路径TLS认证，不等dead90；保留合法session/IP、更新lane密钥/generation和raw/Npcap出口、重新计算MTU与auto启动状态。能重叠就交接，已断就直接恢复；Game有可用lane先送。休眠切网不唤醒、用户Stop不复活，旧建链/回收不能覆盖新会话。默认外层1460不改。只比较物理网卡/出口IP，忽略单纯网关、路由和MTU变化，不做额外探针/逐包FFI；新连接仍需重新计算真实MTU。
 

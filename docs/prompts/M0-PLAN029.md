@@ -1,5 +1,7 @@
 # M0｜PLAN029接续提示词
 
+跨包红线：先读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`；预共享route-key可导入/手填，本地生成/存储/验证，不得为配置便利恢复TLS前私有交换或关闭服务器验证。
+
 你继续lly8666/wbd-next的PLAN029。读START_HERE/AGENTS、M0长期提示词、实时registry/cursor、`docs/decisions/M0-LEGACY-ROLLOUT-20261102.md`、`M0-PLAN029-CLIENT-DNS-PADDING-20261102.md`；只补checkpoint后相关增量/Actions，先收已有结果。文件存在不代表已启动，用户调用本提示词后按现有机制登记任务。
 
 目标：Windows客户端服务器地址支持IP/域名，DNS接管后仍能重连/唤醒/换lane；配置落到真实CLI/GUI/owner；有限TCP/UDP新流填充不拖慢业务。028 schema/session接口是依赖，DNS直出与UI可先独立实现；030服务CLI可并行，main共享WAL/ABI单写入。

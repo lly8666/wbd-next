@@ -4,6 +4,8 @@
 
 ## 1. 三包与依赖
 
+**跨包红线**：遵守[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)。预共享route-key允许导入/手填，server本地生成持久保存；禁止为“只填账号密码”发TLS前私有交换。028先修H1048前导；029配置/UI、030材料生成/导出/服务化均沿同一契约，不恢复自动线上取key。
+
 前置新增：[PLAN027A MTU统一](M0-PLAN027A-MTU-UNIFICATION-20261102.md) / [开工提示词](../prompts/M0-PLAN027A.md)。次序为027→027A→028；本页三包复用[唯一MTU契约](../architecture/MTU_CONTRACT.md)，不重新推导。已实现与SOURCE资格仍动态核，不为了先后顺序重复测试同一未变边界。
 
 跨包配置约定：用户填的MTU始终是外层完整IP上限（默认1460、不含L2，显式最大1500仍可用）；内层TUN自动派生且只读展示。028传递/安装、029 UI/填充、030 server菜单均沿同一意图与effective快照，不增加手填内层参数。

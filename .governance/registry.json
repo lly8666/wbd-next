@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 user-activated 2026-11-03. H1000 entry/dependency audit complete; no PLAN028 product code, native qualification or session/path-switch PASS yet. Implement docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md: authenticated single-port per-device sessions, protected per-client config/IP and outer-MTU, seven-mode A->A+B->B, genuine Windows/Linux route notification and new-path reauth. Reuse docs/architecture/MTU_CONTRACT.md Rust budget and exact PLAN027A H998 scoped evidence; retain H995 physical online 1500->1280 FAIL. Do not restart 027/027A Actions.",
-      "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
+      "goal": "PLAN028 IN_PROGRESS, progress is latest cursor/evidence. User 2026-11-04 prioritizes docs/architecture/TLS_HANDSHAKE_CONTRACT.md: remove H1048 WB-R1 pre-ClientHello exchange, require preprovisioned route-key, preserve server verification, source-locked wire audit. Then resume existing single-port multi-client/config/IP, seven-mode rotation and Windows/Linux path reconnect work. Reuse mature TLS/Rust and MTU contract; retain historical scoped FAIL/NOT_RUN; do not restart 027/027A matrices.",
+      "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
     {

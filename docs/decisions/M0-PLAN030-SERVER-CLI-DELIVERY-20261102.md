@@ -8,11 +8,12 @@ PLANNED；吸收并替代已撤回的独立 `M0-SERVER-CLI-SIMPLIFICATION-202611
 {
   "listen": "0.0.0.0:443",
   "server-name": "www.cisco.com",
+  "route-key-hex-file": "/var/lib/wbd-next/route-key.hex",
   "users": [{ "username": "user1", "password": "自行设置" }]
 }
 ```
 
-借站域名在服务端配置并随客户端连接资料提供，不能等TLS完成后才让客户端知道。网卡/绑定IP/地址池/日志目录为高级可选，默认自动；FEC/cipher/MTU等每client独立，菜单不再提供误导性的全server单档位。默认100年自签证书是内部材料管理选项，首次生成后复用，与已验证借站握手职责分开，不改外层握手来迁就菜单。
+借站域名在服务端配置并随客户端连接资料提供，不能等TLS完成后才让客户端知道。遵守[TLS建链契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)：本地初始化生成32B随机route-key并持久复用，客户端配置导出包含key及服务器专属信任材料，允许显式配置；缺材料在本地报错，不用线上前置协商。上例路径键为计划语义，施工映射到唯一参数schema/既有CLI，不另造冲突别名；域名示例不代表持有该站证书私钥。网卡/绑定IP/地址池/日志目录为高级可选，默认自动；FEC/cipher/MTU等每client独立，菜单不再提供误导性的全server单档位。默认100年自签证书是内部材料管理选项，首次生成后复用，与已验证借站握手职责分开，不改外层握手来迁就菜单。
 
 MTU遵守[唯一契约](../architecture/MTU_CONTRACT.md)第1节：用户默认外层完整IPv4 IP包上限1460（不含L2，可显式最大1500）；client提交外层完整IP上限，server按自身路径限制自动收窄并计算内层，不增加必填server MTU或内层TUN输入。若已有高级服务端外层上限需要保留，只作本地额外约束且明确标“外层”；不照抄client数值成全局TUN MTU。
 

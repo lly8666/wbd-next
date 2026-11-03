@@ -37,7 +37,7 @@ MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-2026
 
 MTU编辑框标“外层 MTU（字节，上限）”，默认1460；最大1500可显式配置；它包含外层IP/TCP/隧道封装、不含以太网头。状态只读展示“有效外层上限”和“内层 MTU（自动生效）/OS应用状态”。切换模式、FEC或服务器不要求用户手算扣减，也不把派生内层值回写到外层设置；普通GUI不提供内层MTU编辑框。保存/导入保持旧外层键单位，明确旧内层override迁移，按契约第1节处理。
 
-- 重点核服务器IPv4/域名、port、server-name、账号密码、自动/手动IP、Normal/Game、cipher、FEC及Normal auto策略、MTU、重传开关、idle/rotation、业务DNS主备及bootstrap DNS高级项、分流/IPv6、padding。
+- 重点核服务器IPv4/域名、port、server-name、账号密码、预共享route-key导入/填写及服务器专属信任材料、自动/手动IP、Normal/Game、cipher、FEC及Normal auto策略、MTU、重传开关、idle/rotation、业务DNS主备及bootstrap DNS高级项、分流/IPv6、padding。
 - 不增加为内部调试服务的高级选项大墙；沿用旧字段，缺口集中补。一项设置至少一条真实生效证据，能共享一个实际场景读回的不要拆几十个Action。
 - 更换服务器/账号/加密/模式/MTU需要新会话时，先正常Stop或现有安全切换，再接新配置；不能GUI显示新值而owner仍用旧值。保存不等于当前生效，显示“下次连接生效/当前已生效”。
 - Portable配置、状态、日志和随包库留在程序目录；Npcap/系统服务资源沿现有安装方案，不为UI运行临时释放脚本。没有新权限或GUI库升级任务。
@@ -76,3 +76,5 @@ UI/config验证补一条：默认外层1460保存→不同模式连接→读自�
 模式覆盖：DNS重连/唤醒选Normal、Game4最高档两个真实代表；七模式换lane完整表由028统一维护，不在此重跑。域名有效的每次换lane不得误把SNI改为服务器域名。padding做稀疏小TCP/UDP及持续大TCP+小UDP各一条容量内同VM off/on，报实际填充、CPU/RSS、首到/p99/超时；正常业务不为padding主动延迟，差异超过噪声才修，最多一次必要反序。默认off普通性能不回退；不重做200M全矩阵。
 
 退出：域名在真实DNS接管后仍可初建/重连/唤醒，配置与UI生效，有限填充各模式语义及成本清楚，Stop无脏状态；更新dns-split-ipv6/gui-config-feedback/相关新功能卡，不重复新建分流系统。
+
+建链沿[TLS建链契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)：route-key缺失本地提示，不从被劫持DNS/网络私有前导取得；本包新流填充仅用于隧道内业务，不能用于掩盖或改写外层TLS握手。

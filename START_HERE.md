@@ -1,5 +1,7 @@
 # WBD Next｜main 最小接续
 
+**最新优先级（2026-11-04）：先修PLAN028 TLS建链外观。**用户已接受预共享route-key；H1048的`WB-R1`前置交换被否决，按[TLS建链契约](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)写齐修复并定向验收，再续原切网工作。历史功能PASS保留但不证明外观合格；当前产品修复状态只看最新证据。
+
 源码、计划、进度均在 `main`。全新 agent 先读本页、[AGENTS](AGENTS.md)、[PROJECT_CHARTER](PROJECT_CHARTER.md)、[M0长期提示](docs/prompts/M0.md)、[registry](.governance/registry.json)、[M0 cursor](.governance/workstreams/M0/cursor.json)，只核上一 checkpoint 后增量与在途 Actions；不得无故重复派发。
 
 **当前接续状态：PLAN027A 已按用户2026-11-03明确指示限定范围收口；PLAN028 已由用户在2026-11-03本次明确调用启动，现为 IN_PROGRESS（截至H1002仅完成入场依赖审计/治理，产品进度以最新cursor和提交为准）。** 027 已先前限定结案（[H920](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)）；027A 的逐证据收口及保留失败详见 [H998](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json) 与 [H998 devlog](docs/devlog/M0/20261103-PLAN027A-H998-USER-SCOPED-CLOSEOUT-PLAN028-HANDOFF.md)。

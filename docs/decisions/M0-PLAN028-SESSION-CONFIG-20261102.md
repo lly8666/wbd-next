@@ -4,6 +4,8 @@ IN_PROGRESS（2026-11-03用户明确启动；H1000仅依赖审计、无产品SOU
 
 ## 0. 施工边界：补接入与交接，不重做架构协议
 
+**2026-11-04最高优先修复：建链无私有协议特征是用户红线。**先按[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)撤除H1048前置交换，采用显式/导入预共享route-key并保持服务器身份验证；定向外观验收后再续原切网任务。旧功能PASS不代表握手外观合格。
+
 2026-11-03用户明确要求收紧范围。已核实[H1000入口依赖](../devlog/M0/20261103-PLAN028-H1000-ENTRY-DEPENDENCIES.md)：当前Linux产品单会话、Game按lane递增服务端口、同lane活跃位拒绝重叠；这三点是需要补齐的真实接入限制，**不是推翻成熟数据面的理由，也不要求先完成所有多客户端产品功能才能验证一次轮换**。无新代码/证据变化，不重复写同一轮依赖审计；按下述工作包进入施工。
 
 ### 0.1 允许改什么，保留什么
@@ -12,13 +14,13 @@ IN_PROGRESS（2026-11-03用户明确启动；H1000仅依赖审计、无产品SOU
 - 单外部服务端口按现有TCP连接五元组识别lane，客户端各lane可使用不同本地端口；不能要求四条连接连本地端口也完全相同。认证后的session/lane关联复用冷协商，**不为单端口分发新增稳态DATA路由头**。现有全局`handoffCommitted`/首会话完成后忽略新SYN的行为应改为按连接实例移交，后来的冷建链仍可接入，已接管业务仍由Rust处理。
 - “唯一owner”是明确的资源所有权，**不是全服务器只能有一个客户端**。共享接收入口用连接索引定位目标会话/lane，共享TUN按已分配隧道IP定位出站session，复用现有队列/缓冲句柄；不逐包遍历所有会话，不为每个client复制全量原始收包，不让多个owner争读同一TUN，不恢复Go逐包搬运。冷注册表锁不得跨TLS握手、驱动IO或等待Stop持有；普通分发不引入全局每包大锁。线程/批处理沿已有模型，不强制为了本包造新执行器。
 - 同一logical session可有旧active与新candidate/retiring lane实例；用现有generation/实例handle精确区分。prepare/commit/retire必须匹配自己的实例，旧回调不能清掉新lane位或释放新租约；失败只回滚候选。保留会话级FEC/去重归属和原密文语义，不因换一条lane清空整个会话。用最少的现有对象/引用实现，不为了这些状态做持久事务系统。
-- 冷协议允许的改动仅限目标必需的参数/续接材料及route-key首次取得方式；先复用现有字段，确需扩展则双方同批、明确能力/版本、只在建链时使用。不得静默改现有字段含义或借认证简化重写TLS/借站机制；稳态wire格式/算法保持。若所选办法必须另造协议，先留下具体缺口与最小替代，继续独立工作，不把泛化协议重构混入028。
+- 冷配置扩展仅限真实TLS保护下的Admission参数/续接材料，双方同批明确版本；不得把“冷接口适配”解释成允许TLS前私有交换。route-key在连接前通过本地预配置取得，复用原标准SessionID识别，不增加TLS字段/握手往返；其余TLS/稳态wire沿既有实现。详见唯一建链契约。
 
 ### 0.2 顺序与交付粒度
 
 1. **共享接入/会话包**：冻结最小session/租约/lane实例/IO归属接口；接单端口分发、同账号多设备、每client配置和Rust共享TUN，双方及装配清单同批写齐。复用老租约逻辑和现有数据面，不先做新平台。
 2. **交接/切网包**：在同一接口上接旧新lane重叠、精确退休、原生网卡/IP通知200/500ms合并、出口重绑定和MTU安装；复用原生命周期、Health/idle/退避，不增第二控制器。顺序是**读取新路径限制→真实建链认证并确定最终预算→安装配置/应用MTU并读回→新lane放行业务→有界退休旧lane**。允许认证后预分配未放流的owner；禁止先开始真实业务再补MTU/路由。server只更新该session预算/必要路由，共用TUN不随最后一个client修改。
-3. **认证简化冷路径包**可在接口明确后与上两包独立推进：必须说明首个ClientHello之前route-key如何取得，详见§2.4。现有已知测试凭据可先用于验证分发和交接，但不是最终“只输账号密码”验收；不允许拿隐藏导入key替代承诺。
+3. **认证冷路径修复包当前优先**：先收存已在途结果，再撤掉TLS前X25519前导，显式/导入预共享route-key，修证书验证耦合并补真实握手审计，见§2.4和唯一契约。用户已接受填写/导入key，“只填账号密码”旧限制撤销；其他session/交接成果保留，修复通过后续原未完任务。
 
 “代码写齐再测试”以**上述完整工作包的双方实现、实际调用/装配、配置读回与夹具齐备**为单位；不每helper跑一次Action，也不要求三包所有功能写完后才首次验证真实IO。公共接口先定，产品功能可分批递进；最终仍要完成本计划全部目标。每包一次SOURCE构建并复用产物，随后沿§5的有限场景验证，已有资格只补受影响部分。
 
@@ -28,16 +30,16 @@ IN_PROGRESS（2026-11-03用户明确启动；H1000仅依赖审计、无产品SOU
 
 **配置里的MTU统一指外层完整IP包上限（默认1460，不含L2；可显式配置1500）。**client传每session外层意图；server结合本方向出口/MSS/协商限制收窄。两端内层MTU均由027A自动推导，不新增用户手填内层MTU，不把收到的外层值直接写进TUN。requested外层值与effective内层/OS读回分别存取；多个客户端各有外层意图，不相互覆盖全局TUN。
 
-- 服务端常用配置仅 `listen`、`server-name`、`users`；默认示例 `0.0.0.0:443`、`www.cisco.com`。每client模式/FEC/cipher/MTU等来自认证配置，不是服务端进程级单值。
-- 客户端服务器地址可填IPv4或域名，端口单独填写；它与**借站域名/SNI**是不同字段。连接信息由服务端提供/导出，支持手填和导入，用户不手填route-key/tunnel-id/lane ID。解析机制交029，028接口接收已选择的数值endpoint，不在热路径查DNS。
+- 服务端常用配置为 `listen`、`server-name`、`users`及持久route-key引用；route-key首次可由本地初始化生成并随连接配置导出，不要求手工造随机数。默认监听 `0.0.0.0:443`；SNI/证书身份按建链契约配置，不把示例域名当已取得真实站点私钥。每client模式/FEC/cipher/MTU等来自认证配置，不是服务端进程级单值。
+- 客户端服务器地址可填IPv4或域名，端口单独填写；它与**借站域名/SNI**是不同字段。连接信息由服务端提供/导出，支持手填和导入；route-key允许显式填写或导入，tunnel-id/lane ID仍自动管理。解析机制交029，028接口接收已选择的数值endpoint，不在热路径查DNS。
 - 用户名密码允许同账号多终端；正常启动自动生成内部安装/会话标识，各设备不互踢。安装标识可沿老版保存在portable目录，IP租约仍不持久化，不能误把“不持久IP”解释成每次换lane换设备身份。
 
 ## 2. 最短实现链
 
 1. 配置统一解析/验证 → 真实TLS账号认证 → 服务端SessionRegistry分配/恢复logical session与租约 → 安装双方effective配置 → lane归组 → 当前Rust owner。GUI/CLI不能绕过这条链。
 2. 复用 `logicaltunnel/lease_registry.go`、`realityfront/policy_v3.go`、`runtimeentry/automatic_lease_test.go` 的行为；当前入口在 `r0/go_overlay/internal/v4productcli/linux.go`、`realityfront/admission_v4.go`，目前固定tunnel/DesiredLanes检查需改为正确的会话归组，不只是删除检查。
-3. 保留真实认证、每lane密钥/PN、generation、session隔离。用户只输账号密码不代表内部不要ID。内部ID自动生成，旧会话退出不能释放新会话/其他设备的地址。
-4. **route-key首次取得必须闭环。**已核实原`hello.go:recognized`在TLS账号认证之前用route-key识别ClientHello；server单独随机生成不能让手填client知道，**“TLS成功后再导出”不能解决首次ClientHello的前置依赖**。M0用一条短决策说明首次所需材料来源、双方何时可得、必要冷字段及原识别/回落行为如何保持，采用最小冷入口适配；实际TLS内账号认证和后续会话材料仍复用原实现。不用公开常量冒充秘密，不关闭识别/认证，不强制隐藏导入key却声称仅手填账号密码，不影响稳态DATA格式。确需冷扩展沿§0.1双方同批版本化；新旧冷入口无需长期双轨。不要反复重查已确认的HMAC事实或拿此独立冷路径问题阻塞可先验证的会话/交接包。
+3. 保留真实认证、每lane密钥/PN、generation、session隔离。用户填写账号密码及导入/预置route-key，不代表内部不要ID。内部ID自动生成，旧会话退出不能释放新会话/其他设备的地址。
+4. **route-key首包前已预配置。**采用服务端32B随机持久key，客户端显式填写或导入；缺失在本地失败，不做线上获取。复用原HMAC占用既有32B兼容SessionID，ClientHello长度/字段/标准TLS流程不变。真实TLS完成后才发送用户名密码及配置；证书验证与key来源解耦。用户明确接受该配置成本；禁止再用X25519前导、公开常量、TLS后exporter或关闭识别来“解决”首次材料。具体调用/装配/测试按唯一建链契约。
 5. 一个外部端口的accept/association入口按真实连接五元组分流，认证后挂到session+lane+generation；同IP/NAT/用户名都不等于同设备。Game四lane归一个逻辑session，不起四个服务端口/四套地址池。各客户端队列有界，某客户端拥塞不锁住所有其他session。
 6. 一处参数schema复用旧PARAMETERS/configfile，给默认/适用模式/作用范围/生效时机/effective读回。双方认证配置携带这些信息并有限填充，不新增长期固定反馈包；不为每个设置增加一次往返。Unknown能力明确拒绝/返回不支持，不静默退到另一模式。
 
@@ -47,7 +49,7 @@ IN_PROGRESS（2026-11-03用户明确启动；H1000仅依赖审计、无产品SOU
 
 | 范围 | 内容 | 生效 |
 |---|---|---|
-| server | listen、借站域名、账号、出口/地址池等高级项 | 保存后显式重启；不要求第一版热重载 |
+| server | listen、server-name、账号、预共享route-key引用及信任材料、出口/地址池等高级项 | 保存后显式重启；不要求第一版热重载 |
 | session | 账号身份、隧道IP、Normal/Game、lane数、加密、期望outer MTU、启动填充/idle/rotation策略 | 同路径换lane继承配置；换网络保留用户意图，按新路径重算effective MTU/质量状态 |
 | direction/block | fixed/off/auto策略、Auto有效档位 | Normal上下行独立；沿现有块边界切档/旧块有界退役，Game无Auto |
 | local | GUI、DNS/分流、设备路径、日志 | 按已有本地配置，不盲传给server照单执行 |
@@ -119,8 +121,8 @@ MTU配置组合复用上述多client场景：一方默认外层1460、另一clie
 - 分开记录`t_path_available / t_reconnect_requested / t_authenticated / t_first_business`、最大交付空洞、p99、真实TCP是否持续、重连次数、旧资源数以及CPU/RSS。恢复预算按同源同路径冷建链耗时+通知合并最长500ms+当次实际退避解释，2秒不是总重连SLA；低损容量内不应无故等dead90，30%允许多次认证尝试，不能拿握手失败算业务HOL。线路全断期间不要求交付，但恢复后不能等永久旧锁/旧owner或排无界旧队列。
 - 无切网对照复用同SOURCE合格阶段，确认没有新增周期包、忙轮询和稳态CPU/p99回退；只在确有差异时做一次同VM顺序A/B。捕获计数/时序/有限包头摘要即可，不存大pcap；一Action一场景，构建产物按SOURCE/hash复用。
 
-退出：目标账号密码操作、单端口/多客户端/独立配置/IP全部真实有效，7模式换lane和Windows/Linux网络切换资格齐或复用有效证据，相关配置/UI/endpoint事件接口提供029/030及未来Android；未解阻断不藏，容量/物理/Android NOT_RUN准确。更新原tls-auth-multiclient/idle-rotation-keepalive等功能卡，不另立重复生命周期产品。
+退出：标准TLS建链/零私有前导的定向审计通过，账号密码与预共享route-key配置、单端口/多客户端/独立配置/IP全部真实有效，7模式换lane和Windows/Linux网络切换资格齐或复用有效证据，相关配置/UI/endpoint事件接口提供029/030及未来Android；未解阻断不藏，容量/物理/Android NOT_RUN准确。更新原tls-auth-multiclient/idle-rotation-keepalive等功能卡，不另立重复生命周期产品。
 
-## 2026-11-03 H1048 implementation amendment — route-key first material
+## 2026-11-04修订：H1048前置交换方案废止
 
-PLAN028首次正式WBD ClientHello前必须已持有route-marker key。自动模式在已建立的FakeTCP连接上先完成每lane临时X25519公钥双向冷交换（`WB-R1`/37B每向），HKDF-SHA256输出独立32B识别密钥，再进入原uTLS ClientHello marker；受信任TLS证书验证及用户名密码受保护Admission不可跳过。它不是从该TLS exporter事后获取第一次key，也不是公开key/关闭分类，且不更改稳态record/wire。显式强私有route-key仍可继续使用；当前自动模式不对旧显式协议隐式降级。证据等级必须单独分auto-route资格，旧fixture凭据PASS不可推广。
+H1048曾引入server先发`WB-R1`及每向37B X25519数据，再进入ClientHello。该实现虽有功能/认证测试PASS，但违反用户标准建链外观红线，**不再是有效设计**。历史devlog/evidence原样保留，仅限其SOURCE功能事实；不标外观PASS。现在以[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)的预共享方案及有限验收为准，代码修复状态以最新cursor/evidence为准；本次文档更正不等于产品已修好。
