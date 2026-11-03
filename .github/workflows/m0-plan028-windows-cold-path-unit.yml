@@ -41,6 +41,9 @@ jobs:
               if op["kind"]=="replace":
                   raw=subprocess.check_output(["git","-C","legacy","show",original+":"+op["path"]])
                   assert gitblob(raw)==op["original_blob"],op["path"]
+                  destination=root/"legacy"/op["path"]
+                  assert destination.is_file(),op["path"]
+                  destination.write_bytes(raw)
               if op.get("overlay_path"):
                   raw=subprocess.check_output(["git","show",sha+":"+op["overlay_path"]])
                   assert gitblob(raw)==op["result_blob"],op["overlay_path"]
