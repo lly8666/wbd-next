@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1046",
+  "source_sha": "f8cd31102adfa9d0df32473a04cb562d53ea61b9",
+  "result": "PASS_SCOPED_ORIGINAL_WINDOWS_LINUX_REAL_SEVEN_MODE_STARTUP_AND_STOP",
+  "artifact_verified": true,
+  "action": {
+    "id": 41656044117,
+    "job_id": 125989505999,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41656044117",
+    "conclusion": "success",
+    "artifact_id": 13240353032,
+    "artifact_name": "m0-wl-full-public-normal-direct"
+  },
+  "binaries_sha256": {
+    "windows_cli": "c6a292901241d6529a3ef29fa35d33b83f315feeb4d77377d8c22d362538aad7",
+    "windows_rust_dll": "873095994635c01b4b7e0bbd9bcd0d143e9ecf5c530c22512462dd35268a21fb",
+    "linux_original_go_server": "339d9b47428cf6a1ec3250c13e8f708e23623f0989bd968467d4b570a09ed696"
+  },
+  "modes": {
+    "normal": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/normal/report.json",
+      "windows_udp_received": 27,
+      "linux_udp_received": 26,
+      "windows_process_avg_single_logical_core_pct": 4.103
+    },
+    "fixed": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/fixed/report.json",
+      "windows_udp_received": 24,
+      "linux_udp_received": 25,
+      "windows_process_avg_single_logical_core_pct": 2.877
+    },
+    "auto": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/auto/report.json",
+      "windows_udp_received": 24,
+      "linux_udp_received": 25,
+      "windows_process_avg_single_logical_core_pct": 4.907
+    },
+    "game2": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/game2/report.json",
+      "windows_udp_received": 24,
+      "linux_udp_received": 25,
+      "windows_process_avg_single_logical_core_pct": 3.735
+    },
+    "game4": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/game4/report.json",
+      "windows_udp_received": 25,
+      "linux_udp_received": 25,
+      "windows_process_avg_single_logical_core_pct": 3.735
+    },
+    "game2-fec": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/game2-fec/report.json",
+      "windows_udp_received": 26,
+      "linux_udp_received": 26,
+      "windows_process_avg_single_logical_core_pct": 3.061
+    },
+    "game4-fec": {
+      "result": "PASS_REAL_KERNEL_TCP_UDP_AND_BOTH_OWNED_STOP",
+      "report": "mode-results/game4-fec/report.json",
+      "windows_udp_received": 25,
+      "linux_udp_received": 26,
+      "windows_process_avg_single_logical_core_pct": 4.414
+    }
+  },
+  "root_cause": "Windows Game multi-lane wrong ServerPort+i (443,444,445,446), repaired to fixed ServerPort=443 and unique local source ports. Original Linux server only accepts fixed 443.",
+  "qualification": {
+    "mode_batch_json": "mode-batch.json",
+    "windows_npf_wintun_tls_os_applied": true,
+    "outer_ipv4_configured_test_bytes": 1400,
+    "outer_default_normal_bytes": 1460,
+    "seven_mode_physical_switch_A_AB_B": "NOT_RUN",
+    "windows_physical_ip_change": "NOT_RUN",
+    "p99_one_way": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "CPU_language_causality": "NOT_PROVEN",
+    "H998_online_MTU_shrink": "FAIL_RETAINED",
+    "H998_arm64_game4fec": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_MEASURED",
+    "android": "NOT_RUN"
+  }
+}
