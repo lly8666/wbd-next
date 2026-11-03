@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H1042",
+  "plan": "PLAN028",
+  "source_sha": "58c7d9f2e3dac052e216b117e85ec65cd9c0fc61",
+  "result": "PASS_SCOPED",
+  "artifact_verified": false,
+  "run": {
+    "id": 41646279251,
+    "job_id": 125952348228,
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41646279251"
+  },
+  "tests": {
+    "native_game4_fixed6_dual_cohort_A2": {
+      "result": "PASS_BY_MANDATORY_NATIVE_ASSERTIONS",
+      "port": 443,
+      "shared_tun_readers": 1,
+      "active_groups": 2,
+      "same_install_successor": true,
+      "sibling_b_udp_continues": true,
+      "real_kernel_udp": true,
+      "fec_counters_three_distinct_m4": "SOURCE_PARITY_OFFERED_AND_KERNEL_COPIED_NONZERO"
+    }
+  },
+  "qualification": {
+    "plan028": "IN_PROGRESS",
+    "windows_physical": "NOT_RUN",
+    "game_natural_health90": "NOT_RUN",
+    "CPU_p99": "NOT_MEASURED",
+    "h998_mtu_shrink": "FAIL_RETAINED",
+    "arm64_game4fec": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_MEASURED"
+  }
+}

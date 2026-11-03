@@ -340,7 +340,7 @@ PY
   # source TCP flows on port 443 and keeps this device's verified /32.
   path_ready=0
   for i in {1..120};do
-    if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=physical_if_ipv4_2s_poll' "$TMP/client.log" &&
+    if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
        grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
        grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
        grep -q 'V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=same-lease-new-generation' "$TMP/server.log";then
@@ -377,7 +377,7 @@ finally:s.close()
 ' >"$ART/plan028-real-path-switched-business.log" 2>&1
   cat "$ART/plan028-real-path-switched-business.log"
   test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "$ART/plan028-real-path-switched-business.log")" -eq 5
-  echo "M0_PLAN028_REAL_LINUX_2S_PHYSICAL_POLL_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=physical_if_ipv4_poll interval_ms=2000 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
+  echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=rtnetlink_os coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
 fi
 if [[ "$FEC" == 1 ]];then
   # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL

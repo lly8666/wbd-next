@@ -9,3 +9,7 @@ H1041 已验证原 Go TLS、同端口/共享 TUN 的 Game2 A→A2+B 和 Game4 A+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1042 Game4 fixed6 multi-cohort authentic original TLS A+B/A2 and per-group Rust FEC source/parity/driver counters at exact owned Stop; native evidence pending."}
 ```
+
+## H1042 原生同 SOURCE 结果
+
+SOURCE `58c7d9f2e3dac052e216b117e85ec65cd9c0fc61`，[Action 41646279251](https://github.com/lly8666/wbd-next/actions/runs/41646279251) native job `125952348228` **SUCCESS**。强制检查原GoTLS/Rust Game4 fixed6 A+B、同安装新代A2、真实TUN UDP、Bob业务不因旧A精确Stop中断，以及三组Rust M4 parity kernel copied均大于零。未独立解包核对ZIP的manifest细项，未提供CPU/p99、Windows真实切网、Health90自然退休或ARM64资格。

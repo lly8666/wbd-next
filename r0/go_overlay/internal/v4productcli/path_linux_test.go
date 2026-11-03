@@ -3,11 +3,14 @@
 package v4productcli
 
 import (
+    "encoding/binary"
     "fmt"
     "net"
     "net/netip"
     "testing"
     "time"
+
+    "golang.org/x/sys/unix"
 )
 
 func TestPLAN028PhysicalRouteAuthorityNotVPNOrTextIntent(t *testing.T){
@@ -86,10 +89,16 @@ func TestPLAN028RouteMTUCarriesIntoAuthenticatedNativeBudget(t *testing.T){
     }
 }
 
-func TestPLAN028PhysicalInterfaceIPv4OnlyTwoSecondPolling(t *testing.T){
-    if originalPhysicalCheckInterval!=2*time.Second{
-        t.Fatalf("underlay interval=%v",originalPhysicalCheckInterval)
-    }
+func TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter(t *testing.T){
+    start:=time.Unix(1000,0);var c originalLinuxCoalescer
+    if c.remaining(start)!=-1{t.Fatal("not armed")}
+    c.push(start)
+    if c.remaining(start)!=200*time.Millisecond{t.Fatal("200ms quiet")}
+    c.push(start.Add(190*time.Millisecond))
+    if c.remaining(start.Add(200*time.Millisecond))!=190*time.Millisecond{t.Fatal("no coalescing")}
+    for ms:=210;ms<=490;ms+=20{c.push(start.Add(time.Duration(ms)*time.Millisecond))}
+    if c.remaining(start.Add(495*time.Millisecond))!=5*time.Millisecond||c.remaining(start.Add(500*time.Millisecond))!=0{t.Fatal("no hard 500ms bound")}
+    c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("stale event")}
     original:=originalLinuxUnderlay{
         iface:"eth0",ifindex:11,src:netip.MustParseAddr("192.0.2.2"),
         gateway:netip.MustParseAddr("192.0.2.1"),mtu:1500,
@@ -104,4 +113,16 @@ func TestPLAN028PhysicalInterfaceIPv4OnlyTwoSecondPolling(t *testing.T){
     if original.samePhysicalInterfaceIPv4(other){t.Fatal("IPv4 change not detected")}
     other=original;other.iface="eth1"
     if original.samePhysicalInterfaceIPv4(other){t.Fatal("interface rename not detected")}
+}
+func TestPLAN028NativeLinuxRtnetlinkOnlyLinkAddrRoute(t *testing.T){
+    packet:=func(kind uint16)[]byte{
+        b:=make([]byte,16)
+        binary.NativeEndian.PutUint32(b[:4],16)
+        binary.NativeEndian.PutUint16(b[4:6],kind)
+        return b
+    }
+    for _,kind:=range []uint16{unix.RTM_NEWLINK,unix.RTM_DELLINK,unix.RTM_NEWADDR,unix.RTM_DELADDR,unix.RTM_NEWROUTE,unix.RTM_DELROUTE}{
+        if !routeRelevantNetlink(packet(kind)){t.Fatalf("native RTNL %d ignored",kind)}
+    }
+    if routeRelevantNetlink(packet(unix.NLMSG_NOOP)){t.Fatal("irrelevant netlink event")}
 }

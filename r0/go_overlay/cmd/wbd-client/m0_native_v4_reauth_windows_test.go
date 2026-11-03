@@ -78,19 +78,20 @@ func TestM0PLAN027AWindowsColdBudgetABIShapeAndModes(t *testing.T){
 }
 
 
-func TestM0PLAN028WindowsPhysicalPathCheckIsTwoSeconds(t *testing.T){
- if m0WindowsPhysicalCheckInterval!=2*time.Second{
-  t.Fatalf("physical adapter/IP check interval=%v",m0WindowsPhysicalCheckInterval)
- }
+func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
+ start:=time.Unix(1000,0);var c m0WindowsPathCoalescer
+ if c.remaining(start)!=-1{t.Fatal("not armed")}
+ c.push(start)
+ if c.remaining(start)!=200*time.Millisecond{t.Fatal("200ms quiet")}
+ c.push(start.Add(190*time.Millisecond))
+ if c.remaining(start.Add(200*time.Millisecond))!=190*time.Millisecond{t.Fatal("no coalescing")}
+ for ms:=210;ms<=490;ms+=20{c.push(start.Add(time.Duration(ms)*time.Millisecond))}
+ if c.remaining(start.Add(495*time.Millisecond))!=5*time.Millisecond||c.remaining(start.Add(500*time.Millisecond))!=0{t.Fatal("no 500ms absolute bound")}
+ c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("not cleared")}
 }
-func TestM0PLAN028WindowsPhysicalPathOnlyAdapterOrIPv4(t *testing.T){
+func TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4(t *testing.T){
  a:=m0WindowsPhysicalPath{ifindex:8,source4:netip.MustParseAddr("192.0.2.11")}
- if a!=a{t.Fatal("unchanged adapter and IPv4 must not reconnect")}
- b:=a;b.source4=netip.MustParseAddr("192.0.2.12")
- if b==a{t.Fatal("IP change must reauthorize original TLS")}
- b=a;b.ifindex=9
- if b==a{t.Fatal("physical NIC change must rebind NPF")}
- if !errors.Is(errM0WindowsPhysicalPathChanged,errM0WindowsPhysicalPathChanged){
-  t.Fatal("Stop-before-reauth intent lost")
- }
+ b:=a;b.source4=netip.MustParseAddr("192.0.2.12");if b==a{t.Fatal("IPv4 change")}
+ b=a;b.ifindex=9;if b==a{t.Fatal("NIC change")}
+ if !errors.Is(errM0WindowsPhysicalPathChanged,errM0WindowsPhysicalPathChanged){t.Fatal("native Stop")}
 }
