@@ -1,0 +1,70 @@
+name: M0 PLAN027A H996 real native same VM Normal pair and Game4FEC capacity
+run-name: "M0|PLAN027A-H996-PERF|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h996-real-perf-protection.yml]
+permissions: {contents: read, actions: write}
+concurrency:
+  group: m0-plan027a-h996-source-locked-real-perf
+  cancel-in-progress: false
+jobs:
+  two-independent-true-original-native-measurements:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SHA: 1e8325f16e2975a9da3497ab97ac570771a97238
+      PRODUCT_RUN: "41546652567"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify no product drift and bounded identical packet mixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          git fetch --depth=1 origin "$PRODUCT_SHA"
+          diff_product="$(git diff --name-only "$PRODUCT_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_install_public_faketcp.py)"
+          test -z "$diff_product" || { echo "H996_REFUSE_PRODUCT_SOURCE_DRIFT $diff_product";exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts" --jq '.artifacts[]|select(.expired==false)|.name' > /tmp/h996-products
+          grep -Fx "m0-wl-windows-product-binaries-$PRODUCT_SHA" /tmp/h996-products
+          grep -Fx m0-plan024-linux-product /tmp/h996-products
+          python3 -m unittest tests.test_m0_wl_perf_v2_config tests.test_m0_wl_mode_runtime_report tests.test_m0_wl_native_resource_sampler -v
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          scenarios=(
+            ("scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json","normal"),
+            ("scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json","game4-fec"),
+          )
+          for path,mode in scenarios:
+            s=read_scenario(path)
+            assert s["public_mode"]==mode and s["tun_mtu"]==1460 and s["duration_s"]==60
+            for d in ("windows_to_linux","linux_to_windows"):
+              row=s[d]
+              assert row["offered_mbps"]==3 and row["delay_ms"]==25 and row["loss_pct"]==0
+              assert any(p["udp_payload_bytes"]==1200 for p in row["packet_mix"])
+            print("H996_PERF_SOURCE_SCENARIO_VALID",path,s["scenario_sha256"])
+          PY
+          echo H996_REUSED_ORIGINAL_BINARY_SOURCE_PASS
+      - name: Two independent native Actions with identical workload rates and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          while IFS='|' read -r mode scene pair;do
+            [ -n "$mode" ] || continue
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene|outer=default1460"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+            if [ -n "$prior" ];then echo "H996_ALREADY_DISPATCHED $prior $title";continue;fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main -f "public_mode=$mode" -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f "outer_pair=$pair" -f "perf_scenario_file=$scene" -f "perf_reuse_run_id=$PRODUCT_RUN" -f "perf_binary_source_sha=$PRODUCT_SHA"
+            echo "H996_SCOPED_ORIGINAL_NATIVE_PERFORMANCE_QUEUED_NOT_PASS $title pair=$pair"
+          done <<'SCENES'
+          normal|scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json|true
+          game4-fec|scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json|false
+          SCENES
+          echo H996_TWO_REAL_NATIVE_PERF_ACTIONS_DISPATCHED_SEPARATELY

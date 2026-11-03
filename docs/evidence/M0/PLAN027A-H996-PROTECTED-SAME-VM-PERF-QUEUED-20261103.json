@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "binary_source_build": 41546652567,
+  "fixture_sha": "DETERMINED_BY_H996_GITHUB_SHA",
+  "status": "NOT_RUN_AT_COMMIT",
+  "scope": "TWO_INDEPENDENT_ORIGINAL_WINDOWS_WSL2_SIGNED_NATIVE_PERFORMANCE_ACTIONS",
+  "case_normal": {
+    "mode": "normal",
+    "outer": 1460,
+    "scenario": "scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json",
+    "same_vm_order": "repair_OFF_then_ON",
+    "sequential_owned_stop_required": true,
+    "payload_offered_mbps_each_direction": 3,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "source_identical": true
+  },
+  "case_game4fec": {
+    "mode": "game4-fec",
+    "outer": 1460,
+    "scenario": "scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json",
+    "outer_repair": "ON",
+    "payload_offered_mbps_each_direction": 3,
+    "delay_ms": 25,
+    "loss_pct": 0
+  },
+  "comparison": {
+    "scenario_packet_mix": "SAME_MIX_AND_SEED_NOMINAL_GAME4FEC_AND_NORMAL",
+    "baseline_scope": "NORMAL_REPAIR_OFF_ON_SAME_VM_NOT_OLD_NEW_PRODUCT_BENCHMARK",
+    "metrics_to_collect": [
+      "exact process CPU seconds",
+      "peak RSS bytes",
+      "first-delivery vs offered",
+      "bidirectional kernel UDP RTT p99 and longest gaps",
+      "F/R/C wire accounting",
+      "native TC snapshot and OS TUN drop counters",
+      "owned Stop and source hashes"
+    ]
+  },
+  "qualifier": "NATIVE_ACTION_QUEUED_IS_NOT_PASS; causal before-versus-after product CPU impact requires a true same-host old/new control and must remain NOT_PROVEN without it"
+}
