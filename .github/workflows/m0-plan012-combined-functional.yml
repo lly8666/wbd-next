@@ -411,6 +411,8 @@ jobs:
             fixed-kernel-result/plan028-two-account-one-port-real-native.log
           grep -q 'M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS' \
             fixed-kernel-result/plan028-two-account-one-port-real-native.log
+          grep -q 'M0_PLAN028_REAL_THREE_DEVICE_SAME_ACCOUNT_TWO_INSTALLATIONS_ANOTHER_ACCOUNT_ONE_PORT_NATIVE_PASS' \
+            fixed-kernel-result/plan028-two-account-one-port-real-native.log
           cat fixed-kernel-result/plan028-two-account-one-port-real-native.log
       # Preserve exact 1% public NETEM failure as a required final gate.
       # This step's temporary continued execution lets later Fixed/Auto/

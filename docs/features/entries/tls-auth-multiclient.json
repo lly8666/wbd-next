@@ -48,7 +48,8 @@
     "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md",
     "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md",
     "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md",
-    "docs/devlog/M0/20261103-PLAN028-H1023-ZERO-EPOCH-REAL-NATIVE-HANDOVER.md"
+    "docs/devlog/M0/20261103-PLAN028-H1023-ZERO-EPOCH-REAL-NATIVE-HANDOVER.md",
+    "docs/devlog/M0/20261103-PLAN028-H1024-THREE-DEVICE-NATIVE-ISO.md"
   ],
   "verification": [
     {
@@ -144,7 +145,14 @@
     },
     {
       "platform": "Linux original-Go protected TLS and one native Rust TUN, same-install new cold epoch + sibling account",
-      "scope": "H1023 server-owned zero-epoch reconnect exact same installation/lane A→A+B→B; original exporter fresh incarnation, old Stop, Bob real UDP during Alice takeover, four actual Linux namespaces (including server), SOURCE Action required",
+      "scope": "H1023 SOURCE96a original Go TLS zero-epoch same-install authenticated new incarnation/keys, old A exact native Stop, same IP /32, Bob separate account UDP; real 4-netns total 46 routed, unrouted0/backpressure0, single service443/shared TUN reader",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "96a420a0e2e5fd811272440be90700a5c35b6c34",
+      "evidence": "docs/evidence/M0/PLAN028-H1023-SOURCE96A-ZERO-EPOCH-NATIVE-SAME-INSTALL-HANDOVER-20261103.json"
+    },
+    {
+      "platform": "Linux original-Go protected TLS 3 devices (same-account 2 installations + other-account 1), shared Rust real TUN",
+      "scope": "H1024 5 actual Linux netns, 3 independent simultaneous automatic /32 and UDP, then same-install old-A/new-A authenticated handover with other 2 devices continuously delivering, 70 genuine app UDP/Stop; exact-source native Actions PENDING",
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
@@ -162,7 +170,8 @@
     "H1008 scope: SOURCE837 real Go TLS 21/21 PASS and Linux original V4 CLI Go tests + binary build PASS. Distinct installed IPv4 real OS and native multi-client simultaneous traffic NOT_RUN; raw Game one-port code is a subsequent SOURCE, not included in SOURCE837.",
     "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim.",
     "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN.",
-    "H1022 SOURCE9d5e verified 2 DIFFERENT accounts 3 real netns, 34 real UDP/Stop one port and shared reader. This is not same-install overlap, same-account two installs plus a third account, seven-mode Game4FEC or OS route-change validation. H1023 adds cold zero-epoch same-install handover candidate with native gate; historical Win Game4 cold and H998 failures unchanged."
+    "H1022 SOURCE9d5e verified 2 DIFFERENT accounts 3 real netns, 34 real UDP/Stop one port and shared reader. This is not same-install overlap, same-account two installs plus a third account, seven-mode Game4FEC or OS route-change validation. H1023 adds cold zero-epoch same-install handover candidate with native gate; historical Win Game4 cold and H998 failures unchanged.",
+    "H1023 SOURCE96a same-install zero-epoch handover 46 genuine Linux TUN/UDP incl Bob survives PASS, but not three distinct installations concurrently. H1024 5-netns 3-device cross-account/installation + handover source candidate requires NEW native Action; seven modes and Windows/Linux OS event rebind not yet native-qualified."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

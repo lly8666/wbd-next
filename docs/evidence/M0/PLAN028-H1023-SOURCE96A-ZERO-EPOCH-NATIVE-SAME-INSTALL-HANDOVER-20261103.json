@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1023",
+  "source_sha": "96a420a0e2e5fd811272440be90700a5c35b6c34",
+  "overall": "SCOPED_REAL_NATIVE_PASS",
+  "provenance": {
+    "original_pinned_go": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+    "workflow_run": 41592889627,
+    "job_id": 125773444318,
+    "conclusion": "success",
+    "artifact_id": 13211351382,
+    "source_locked_same_build": true,
+    "secondary_compile_pass_runs": [
+      41592889729,
+      41592889637,
+      41592889493
+    ]
+  },
+  "verified": [
+    {
+      "scene": "Actual protected TLS client with zero expected server epoch A then B same installation and lane",
+      "status": "PASS",
+      "witness": "M0_PLAN028_ORIGINAL_GO_TLS_ZERO_EPOCH_SAME_INSTALL_A_TO_AB_TO_B_EXACT_STOP_PASS",
+      "notes": "Original Go unit performed protected TLS A/B/C, fresh keys/incarnation, old exact generation Stop, third overlapping candidate rejected and unrelated installation still active; assert included in source-locked workflow"
+    },
+    {
+      "scene": "Actual 4 Linux netns old Alice→new Alice cold protected TLS handover with independent Bob real UDP",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_TWO_ACCOUNT_SAME_SERVER_PORT_SHARED_RUST_TUN_PASS original_tls_sessions=3 distinct_auto_leases=2 server_port=443 A=5 overlap_A=12 overlap_B=12 alice_new_generation=6 bob_while_alice_reauth=6 B_after_A_Stop=5 routed=46 unrouted=0 backpressure=0 native_stop=1"
+    },
+    {
+      "scene": "Server exact same lease generation replacement with original TLS",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS same_verified_lease=1 fresh_original_go_tls=1 new_rust_owner=1 old_exact_Stop=1 other_account_delivered=1"
+    },
+    {
+      "scene": "Same binary protected auto IP client OS readback, one Rust TUN reader",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.130 app_udp=5 exact_generation_Rust_M4=1"
+    },
+    {
+      "scene": "Actual 1 percent independent netem kernel loss, original TCP+UDP owner, Stop",
+      "status": "SCOPED_PASS",
+      "witness": "M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS original_tls=1 offered=512 first_unique_delivered=506 missing=6 tc_client_drop=6 tc_server_drop=5 kernel_first_copy_client=512 kernel_first_copy_server=508 retired_m2_reports_client=0 retired_m2_reports_server=0 outer_repair_attempts_observed=4 outer_repair_delivery_not_required=1 Stop_drained_both=1"
+    },
+    {
+      "scene": "Fixed and Auto one-build short real FEC UDP",
+      "status": "SCOPED_PASS",
+      "witness": [
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1"
+      ]
+    },
+    {
+      "scene": "Game2/Game4 earlier original fixed native single port app and damaged lane",
+      "status": "SCOPED_PASS",
+      "witness": [
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ]
+    }
+  ],
+  "governance": {
+    "run": 41592889681,
+    "governance_job": "success",
+    "feature_catalog_job": "failure",
+    "reason": "idle-rotation-keepalive was declared updated but unchanged in same SOURCE; H1024 correction prepared without hiding original failed feature job"
+  },
+  "not_claimed": [
+    "Same account two distinct installations PLUS another account simultaneously on one physical Rust shared TUN: H1024 added genuine scene, NOT_RUN here",
+    "Seven modes concurrent generation A+B plus real Windows/Linux route/path notification, dormant/Stop/MTU 1460→1280: NOT_RUN",
+    "Android/physical native PMTU and ARM64 Game4FEC qualification: NOT_RUN or prior FAIL",
+    "No causal CPU or p99 throughput proof"
+  ],
+  "historical_failures_preserved": [
+    "PLAN027A H998 outer1500→1280 small three probe no echo; ARM64 Game4FEC app+Stop FAIL",
+    "Win/WSL2 Game4 lane2 TCP bootstrap time limit failure 41579974280",
+    "Historic static PLAN020 revision3 vs current registry revision4"
+  ]
+}
