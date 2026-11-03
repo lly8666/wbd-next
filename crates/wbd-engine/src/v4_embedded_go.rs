@@ -3622,8 +3622,19 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.raw_rx.is_some(){return BAD_STAGE}
-    let Ok(driver)=ScopedRawIpv4Rx::open(ifname,ifindex,(handle>>32) as u32)
-    else{return INVALID};
+    // The original Go TLS-verified and frozen owner flow scopes this raw
+    // socket in kernel BPF; all AEAD/PN checks remain on the Rust receiver.
+    let f=e.flow;
+    let tuple=if e.server_side{Ipv4Tuple{
+        src_ip:&f.client_ip,dst_ip:&f.server_ip,
+        src_port:f.client_port,dst_port:f.server_port,
+    }}else{Ipv4Tuple{
+        src_ip:&f.server_ip,dst_ip:&f.client_ip,
+        src_port:f.server_port,dst_port:f.client_port,
+    }};
+    let Ok(driver)=ScopedRawIpv4Rx::open_exact_tuple(
+        ifname,ifindex,(handle>>32) as u32,tuple
+    )else{return INVALID};
     e.raw_rx=Some(Arc::new(driver));
     e.raw_ifname=Some(ifname.to_owned());OK
 }
@@ -3874,6 +3885,28 @@ struct LoopCounts {
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
 }
+// Small packet storage recycles after the original per-generation M1 loan
+// has copied it. A full recycler drops the buffer; it never waits on TX.
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct SharedTunPacket{
+    bytes:Vec<u8>,
+    recycle:std::sync::mpsc::SyncSender<Vec<u8>>,
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl SharedTunPacket{
+    fn len(&self)->usize{self.bytes.len()}
+    fn as_slice(&self)->&[u8]{&self.bytes}
+    fn into_vec(mut self)->Vec<u8>{std::mem::take(&mut self.bytes)}
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl Drop for SharedTunPacket{
+    fn drop(&mut self){
+        let mut bytes=std::mem::take(&mut self.bytes);
+        if bytes.capacity()>4096{return}
+        bytes.clear();
+        let _=self.recycle.try_send(bytes);
+    }
+}
 // One bounded per-product Normal/off ingress. No AEAD/PN, raw socket or
 // forged TCP ACK is owned by this reader. The receiver remains sole M3/M4.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3883,7 +3916,7 @@ enum OriginalTunIngress{
     // One process-wide physical TUN read, routed by the protected lease /32.
     // TX converts this owned packet into ITS original per-generation M1 loan
     // before the original Normal/FEC seals it, never a second crypto path.
-    Shared(Vec<u8>),
+    Shared(SharedTunPacket),
 }
 // PLAN028 real Linux process TUN ingress: exactly ONE kernel reader in this
 // process, independent of every session's duplicated Rust TUN *writer*.
@@ -3903,6 +3936,8 @@ struct SharedTunReader{
     stop:Arc<AtomicBool>,
     worker:Mutex<Option<JoinHandle<()>>>,
     delivered:AtomicU64,unrouted:AtomicU64,backpressure:AtomicU64,
+    queue_full_drops:AtomicU64,retired_drops:AtomicU64,
+    recycle_send:SyncSender<Vec<u8>>,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct SharedTunSession{
@@ -3940,6 +3975,141 @@ fn shared_route_retire(
     if routes.get(&ip).is_some_and(|r|
         r.generation==generation && Arc::ptr_eq(&r.alive,alive)){
         routes.remove(&ip);
+    }
+}
+// A congested route may retain at most 8 owned packets in addition to its
+// existing 64-channel queue. The physical TUN reader never sleeps on A.
+// Each ready route receives at most one nonblocking FIFO retry per turn.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const SHARED_TUN_PENDING_PER_ROUTE:usize=8;
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct PendingSharedTunRoute{
+    route:SharedTunRoute,
+    packets:VecDeque<OriginalTunIngress>,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[derive(Default,Debug)]
+struct SharedTunDispatchDelta{
+    delivered:u64,backpressure:u64,overflow:u64,retired:u64,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
+    a.generation==b.generation&&Arc::ptr_eq(&a.alive,&b.alive)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn enqueue_shared_tun(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
+    key:[u8;4],route:SharedTunRoute,packet:OriginalTunIngress
+)->SharedTunDispatchDelta{
+    let mut d=SharedTunDispatchDelta::default();
+    if !route.alive.load(Ordering::Acquire){d.retired+=1;return d}
+    if pending.get(&key).is_some_and(|old|
+        !same_shared_tun_route(&old.route,&route)){
+        if let Some(old)=pending.remove(&key){
+            d.retired+=old.packets.len() as u64;
+        }
+    }
+    if let Some(q)=pending.get_mut(&key){
+        if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{d.overflow+=1}
+        else{q.packets.push_back(packet)}
+        return d
+    }
+    match route.send.try_send(packet){
+        Ok(())=>d.delivered+=1,
+        Err(TrySendError::Full(packet))=>{
+            d.backpressure+=1;
+            let mut packets=VecDeque::with_capacity(SHARED_TUN_PENDING_PER_ROUTE);
+            packets.push_back(packet);
+            pending.insert(key,PendingSharedTunRoute{route,packets});
+        },
+        Err(TrySendError::Disconnected(_))=>d.retired+=1,
+    }
+    d
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn flush_shared_tun(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>
+)->SharedTunDispatchDelta{
+    let mut d=SharedTunDispatchDelta::default();
+    pending.retain(|_,q|{
+        if q.route.alive.load(Ordering::Acquire){true}else{
+            d.retired+=q.packets.len() as u64;
+            false
+        }
+    });
+    for q in pending.values_mut(){
+        if let Some(packet)=q.packets.pop_front(){
+            match q.route.send.try_send(packet){
+                Ok(())=>d.delivered+=1,
+                Err(TrySendError::Full(packet))=>{
+                    q.packets.push_front(packet);
+                    d.backpressure+=1;
+                },
+                Err(TrySendError::Disconnected(_))=>{
+                    d.retired+=1+q.packets.len() as u64;
+                    q.packets.clear();
+                    q.route.alive.store(false,Ordering::Release);
+                },
+            }
+        }
+    }
+    pending.retain(|_,q|!q.packets.is_empty());
+    d
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl SharedTunReader{
+    fn note_dispatch(&self,d:SharedTunDispatchDelta){
+        if d.delivered!=0{self.delivered.fetch_add(d.delivered,Ordering::Relaxed);}
+        if d.backpressure!=0{self.backpressure.fetch_add(d.backpressure,Ordering::Relaxed);}
+        if d.overflow!=0{self.queue_full_drops.fetch_add(d.overflow,Ordering::Relaxed);}
+        if d.retired!=0{self.retired_drops.fetch_add(d.retired,Ordering::Relaxed);}
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
+    let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(32);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let (a_tx,a_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let (b_tx,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    assert!(a_tx.try_send(packet(0)).is_ok());
+    let a=Arc::new(AtomicBool::new(true));
+    let b=Arc::new(AtomicBool::new(true));
+    let ra=SharedTunRoute{generation:10,alive:Arc::clone(&a),send:a_tx};
+    let rb=SharedTunRoute{generation:20,alive:Arc::clone(&b),send:b_tx};
+    let ka=[10,66,0,1];let kb=[10,66,0,2];
+    let mut pending=HashMap::new();
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(1)).backpressure,1);
+    for n in 2..=SHARED_TUN_PENDING_PER_ROUTE as u8{
+        assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(n)).overflow,0);
+    }
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(99)).overflow,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,kb,rb,packet(55)).delivered,1);
+    match b_rx.try_recv().expect("B independent of saturated A"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[55]),
+        _=>panic!("wrong B kind"),
+    }
+    assert_eq!(flush_shared_tun(&mut pending).delivered,0);
+    assert_eq!(pending[&ka].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+    drop(a_rx.try_recv().expect("free only A inbox slot"));
+    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    match a_rx.try_recv().expect("oldest A packet first"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[1]),
+        _=>panic!("wrong A kind"),
+    }
+    a.store(false,Ordering::Release);
+    assert_eq!(flush_shared_tun(&mut pending).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
+    assert!(pending.is_empty());
+    let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let newer=SharedTunRoute{
+        generation:11,alive:Arc::new(AtomicBool::new(true)),send:new_tx,
+    };
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,newer,packet(101)).delivered,1);
+    match new_rx.try_recv().expect("successor A delivered"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[101]),
+        _=>panic!("wrong successor kind"),
     }
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4019,60 +4189,61 @@ fn retire_shared_tun_session(session:&SharedTunSession){
     }
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn run_shared_tun_reader(router:Arc<SharedTunReader>){
-    let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
+    // Existing native nonblocking TUN batch API: at most 8 ready frames,
+    // never wait to fill the batch. These kernel receive slots are reused.
+    let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
+    let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
     let fd=router.tun.readiness_fd();
     while !router.stop.load(Ordering::Acquire){
         if router.routes.lock().map_or(true,|routes|routes.is_empty()){
+            let old=std::mem::take(&mut pending);
+            router.retired_drops.fetch_add(
+                old.values().map(|q|q.packets.len() as u64).sum::<u64>(),Ordering::Relaxed);
             thread::sleep(Duration::from_millis(5));
             continue
         }
-        if !loop_readiness(fd,&router.stop,10){continue}
+        router.note_dispatch(flush_shared_tun(&mut pending));
+        if !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){continue}
         let read={
-            let mut slots=[&mut scratch[..]];
+            let [a,b,c,d,e,f,g,h]=&mut scratch;
+            let mut slots=[
+                a.as_mut_slice(),b.as_mut_slice(),c.as_mut_slice(),d.as_mut_slice(),
+                e.as_mut_slice(),f.as_mut_slice(),g.as_mut_slice(),h.as_mut_slice(),
+            ];
             router.tun.read_ready_batch(router.generation,&mut slots)
         };
-        let len=match read{
-            Ok(batch)=>match batch.entry(0){
-                Some(TunReadyEntry::UntrustedIpv4{len}) if len>=20 =>len,
-                _=>continue,
-            },
+        let batch=match read{
+            Ok(batch)=>batch,
             Err(TunError::Stopped)=>break,
             Err(_)=>continue,
         };
-        let mut destination=[0u8;4];
-        destination.copy_from_slice(&scratch[16..20]);
-        // HashMap O(1) expected destination lookup. No original Entry, AEAD
-        // bitmap, RX state or M1 owner is locked by this kernel reader.
-        let route=router.routes.lock().ok()
-            .and_then(|routes|routes.get(&destination)
-                // Client TUN packets may target ANY remote VPN/LAN IP.
-                // The reserved 0/0 key is the ONE currently authenticated
-                // client generation, never a server-issued lease /32.
-                .or_else(||routes.get(&[0u8;4])).cloned());
-        let Some(route)=route else{
-            router.unrouted.fetch_add(1,Ordering::Relaxed);
-            continue
-        };
-        if !route.alive.load(Ordering::Acquire){continue}
-        let mut owned=OriginalTunIngress::Shared(scratch[..len].to_vec());
-        loop{
-            if router.stop.load(Ordering::Acquire)||
-                !route.alive.load(Ordering::Acquire){break}
-            match route.send.try_send(owned){
-                Ok(())=>{
-                    router.delivered.fetch_add(1,Ordering::Relaxed);
-                    break
-                },
-                Err(TrySendError::Full(packet))=>{
-                    owned=packet;
-                    router.backpressure.fetch_add(1,Ordering::Relaxed);
-                    thread::sleep(Duration::from_micros(100));
-                },
-                Err(TrySendError::Disconnected(_))=>break,
-            }
+        for i in 0..batch.observed{
+            let len=match batch.entry(i){
+                Some(TunReadyEntry::UntrustedIpv4{len}) if len>=20=>len,
+                _=>continue,
+            };
+            let mut destination=[0u8;4];
+            destination.copy_from_slice(&scratch[i][16..20]);
+            let selected=router.routes.lock().ok().and_then(|routes|
+                routes.get(&destination).map(|r|(destination,r.clone()))
+                .or_else(||routes.get(&[0u8;4]).map(|r|([0u8;4],r.clone()))));
+            let Some((key,route))=selected else{
+                router.unrouted.fetch_add(1,Ordering::Relaxed);
+                continue
+            };
+            let mut bytes=recycle_recv.try_recv()
+                .unwrap_or_else(|_|Vec::with_capacity(2048));
+            bytes.clear();
+            bytes.extend_from_slice(&scratch[i][..len]);
+            let packet=OriginalTunIngress::Shared(SharedTunPacket{
+                bytes,recycle:router.recycle_send.clone(),
+            });
+            router.note_dispatch(enqueue_shared_tun(&mut pending,key,route,packet));
         }
     }
+    let remaining:usize=pending.values().map(|q|q.packets.len()).sum();
+    router.retired_drops.fetch_add(remaining as u64,Ordering::Relaxed);
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
@@ -4095,6 +4266,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
     if gen==0||gen==u32::MAX{return FULL}
     let Ok(tun)=ScopedTunSink::from_owned_fd(owned,gen,name)else{return INVALID};
     let handle=(u64::from(gen)<<32)|0x5455u64;
+    let (recycle_send,recycle_recv)=mpsc::sync_channel::<Vec<u8>>(128);
     let router=Arc::new(SharedTunReader{
         generation:gen,tun:Arc::new(tun),
         routes:Mutex::new(HashMap::with_capacity(32)),
@@ -4102,10 +4274,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
         worker:Mutex::new(None),
         delivered:AtomicU64::new(0),unrouted:AtomicU64::new(0),
         backpressure:AtomicU64::new(0),
+        queue_full_drops:AtomicU64::new(0),retired_drops:AtomicU64::new(0),
+        recycle_send,
     });
     let worker_router=Arc::clone(&router);
     let Ok(worker)=thread::Builder::new().name("wbd-v4-shared-tun-reader".into())
-        .spawn(move||run_shared_tun_reader(worker_router))
+        .spawn(move||run_shared_tun_reader(worker_router,recycle_recv))
     else{return INVALID};
     let Ok(mut slot)=router.worker.lock()else{
         router.stop.store(true,Ordering::Release);
@@ -4135,10 +4309,12 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     if router.tun.stop_until(Instant::now())!=StopResult::Drained{
         return STOP_INCOMPLETE
     }
-    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} reader_joined=1",
+    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} queue_full_drops={} retired_drops={} reader_joined=1",
         router.generation,router.delivered.load(Ordering::Relaxed),
         router.unrouted.load(Ordering::Relaxed),
-        router.backpressure.load(Ordering::Relaxed));
+        router.backpressure.load(Ordering::Relaxed),
+        router.queue_full_drops.load(Ordering::Relaxed),
+        router.retired_drops.load(Ordering::Relaxed));
     registry.remove(&handle);
     OK
 }
@@ -6598,7 +6774,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
             let mut active_jumbo=None::<PendingOriginalJumbo>;
-            let mut deferred_shared=None::<Vec<u8>>;
+            let mut deferred_shared=None::<SharedTunPacket>;
+            let mut wakeup_shared=None::<OriginalTunIngress>;
             while !stop_tx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
@@ -6640,13 +6817,15 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
                         let next=if let Some(buf)=deferred_shared.take(){
                             Ok(OriginalTunIngress::Shared(buf))
+                        }else if let Some(packet)=wakeup_shared.take(){
+                            Ok(packet)
                         }else{ingress_recv.try_recv()};
                         match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
                             Ok(OriginalTunIngress::Shared(buf))=>{
                                 if buf.len()>M0_SMALL_ARENA_PAYLOAD{
-                                    jumbo_queue.push_back(buf);
+                                    jumbo_queue.push_back(buf.into_vec());
                                 }else{
                                     let loan={
                                         let Ok(mut owner)=tx_cell.lock()else{break};
@@ -6664,7 +6843,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                     match loan{
                                         Ok(mut slab)=>{
                                             let n=buf.len();
-                                            slab.writable()[14..14+n].copy_from_slice(&buf);
+                                            slab.writable()[14..14+n].copy_from_slice(buf.as_slice());
                                             tx_pending.push((slab,n));
                                         },
                                         Err(_)=>{deferred_shared=Some(buf);break}
@@ -6800,7 +6979,23 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // Split-ingress mode must NOT poll the same owned fd:
                     // allow the separate reader to make progress without
                     // spinning on an empty bounded queue and starving CPU.
-                    if split_ingress{thread::sleep(Duration::from_micros(250));}
+                    if split_ingress{
+                        if deferred_shared.is_some(){
+                            thread::sleep(Duration::from_millis(1));
+                        }else{
+                            // Queue arrival OR nearest existing FEC/health
+                            // deadline, with no 250us periodic empty wake.
+                            let delay=Duration::from_nanos(wait_ns.clamp(1,10_000_000));
+                            match ingress_recv.recv_timeout(delay){
+                                Ok(packet)=>wakeup_shared=Some(packet),
+                                Err(std::sync::mpsc::RecvTimeoutError::Timeout)=>{},
+                                Err(std::sync::mpsc::RecvTimeoutError::Disconnected)=>{
+                                    if stop_tx.load(Ordering::Acquire){break}
+                                    thread::sleep(Duration::from_millis(1));
+                                },
+                            }
+                        }
+                    }
                     continue
                 }
                 let slice_start=Instant::now();
