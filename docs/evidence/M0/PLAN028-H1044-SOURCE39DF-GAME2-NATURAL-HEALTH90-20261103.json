@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1044",
+  "source_sha": "39df67722f2deab28b3d0600c5810df70bcb1743",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "run": {
+    "id": 41650275157,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41650275157",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "artifact_id": 13236259505,
+    "artifact_name": "m0-plan012-combined-41650275157-1",
+    "artifact_manifest_path": "fixed-kernel-result/manifest.json",
+    "manifest_exact_source": "39df67722f2deab28b3d0600c5810df70bcb1743",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go_toolchain": "1.23.12",
+    "rust_toolchain": "1.85.1",
+    "binaries_sha256": {
+      "libwbd_engine.so": "b33ed5bb0d3bfab5a4fb24a07995eb3fe1944f894e6c39e31b6e9e0bf43d41b7",
+      "wbd-v4-client": "0d7a5f343af1dab4f2f39083a6c31f5d69ae50ee446e097b0ea93aa97e14957a",
+      "wbd-v4-server": "339d9b47428cf6a1ec3250c13e8f708e23623f0989bd968467d4b570a09ed696"
+    }
+  },
+  "tests": {
+    "natural_game2_health90": {
+      "result": "PASS",
+      "log": "fixed-kernel-result/plan028-game2-natural-health90.log",
+      "elapsed_seconds": 91,
+      "permitted_seconds": [
+        85,
+        130
+      ],
+      "one_lost_group": 1,
+      "remaining_lanes": 2,
+      "other_account_real_udp_survived": true,
+      "single_server_port": 443,
+      "one_rust_tun_reader": true,
+      "stop_reason": "authenticated-rust-game-health90"
+    },
+    "game4_fixed6_two_cohorts_same_install_A2": {
+      "result": "PASS",
+      "log": "fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log",
+      "groups_observed_total": 3,
+      "simultaneous_authenticated_groups": 2,
+      "parity_kernel_nonzero_for_all_three": true,
+      "same_install_successor": true,
+      "bob_survives_old_A_stop": true
+    }
+  },
+  "qualification": {
+    "whole_plan028": "IN_PROGRESS",
+    "windows_actual_physical_nic_change": "NOT_RUN",
+    "windows_original_game_multilane_a92c": "FAIL_RETAINED",
+    "h998_online_mtu_shrink": "FAIL_RETAINED",
+    "h998_arm64_game4fec": "FAIL_RETAINED",
+    "remote_icmp": "NOT_MEASURED",
+    "cpu_p99": "NOT_MEASURED",
+    "android": "NOT_RUN"
+  }
+}
