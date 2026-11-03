@@ -3214,13 +3214,16 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
     #[cfg(target_os="linux")]
+    let alive=e.shared_tun.as_ref().map(|s|Arc::clone(&s.alive));
+    #[cfg(target_os="linux")]
     let ingress=e.shared_tun.as_mut().and_then(|s|s.receiver.take());
     #[cfg(not(target_os="linux"))]
-    let ingress=None;
+    let (ingress,alive)=(None,None);
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
-        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4,ingress
+        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4,
+        ingress,alive
     );
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);
@@ -3229,10 +3232,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
         let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
         if router.stop.load(Ordering::Acquire){return BAD_STAGE}
         let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-        shared_route_publish(&mut routes,shared.ip,SharedTunRoute{
+        if !shared_route_publish(&mut routes,shared.ip,SharedTunRoute{
             generation:shared.generation,alive:Arc::clone(&shared.alive),
             send:shared.sender.clone(),
-        });
+        }){return BAD_STAGE}
     }
     OK
 }
@@ -4015,12 +4018,19 @@ fn shared_tun_reader(handle:u64)->Result<Arc<SharedTunReader>,i32>{
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_route_publish(
     routes:&mut HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],route:SharedTunRoute
-){
-    // New Rust workers and original-Go protected session are already
-    // committed. An old generation can no longer receive the same /32.
+)->bool{
+    // TLS completion/start order does NOT necessarily match protected
+    // generation allocation order. A delayed old A must NEVER re-publish
+    // its /32 after the fully authenticated successor A2 has taken over.
+    if routes.get(&ip).is_some_and(|old|
+        old.generation>=route.generation){
+        route.alive.store(false,Ordering::Release);
+        return false
+    }
     if let Some(old)=routes.insert(ip,route){
         old.alive.store(false,Ordering::Release);
     }
+    true
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_route_retire(
@@ -4350,6 +4360,15 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     assert_eq!(routes.len(),2);
     assert_eq!(routes[&a].generation,30);
     assert_eq!(routes[&b].generation,20);
+    // A late old group cannot overtake the protected newer lease owner.
+    let (late_tx,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let late=Arc::new(AtomicBool::new(true));
+    assert!(!shared_route_publish(&mut routes,a,SharedTunRoute{
+        generation:10,alive:Arc::clone(&late),send:late_tx,
+    }));
+    assert!(!late.load(Ordering::Acquire));
+    assert_eq!(routes[&a].generation,30);
+    assert_eq!(routes.len(),2);
     shared_route_retire(&mut routes,b,20,&b1);
     assert!(routes.contains_key(&a));
     shared_route_retire(&mut routes,a,30,&a2);
@@ -7275,7 +7294,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             generation:sh.generation,alive:Arc::clone(&sh.alive),
             send:sh.sender.clone(),
         };
-        shared_route_publish(&mut routes,sh.ip,new);
+        if !shared_route_publish(&mut routes,sh.ip,new){return BAD_STAGE}
     }
     OK
 }

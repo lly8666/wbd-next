@@ -94,7 +94,9 @@ impl GameKernelOwner{
         generation:u32,outer_repair_enabled:bool,
         peer_persona:PacketPersona,authenticated_client_ip:Option<[u8;4]>,
         shared_ingress:Option<Receiver<OriginalTunIngress>>,
+        shared_alive:Option<Arc<AtomicBool>>,
     )->Result<Self,()>{
+        if shared_ingress.is_some()!=shared_alive.is_some(){return Err(())}
         let n=flows.len();
         if !matches!(n,2|4)||seqs.len()!=n||generation==0||
             ifindex==0||ifname.is_empty()||tun_name.is_empty()||
@@ -210,6 +212,14 @@ impl GameKernelOwner{
                 let mut cosmetic=scoped_cosmetic;
                 let mut observed_hints=[0u64;4];
                 while !tx_stop.load(Ordering::Acquire){
+                    // An A2 /32 publication revokes old A without waiting
+                    // for old Rust Stop. Do not drain old A's queued ingress
+                    // into original Game AEAD after the successor owns it.
+                    if shared_alive.as_ref().is_some_and(|alive|
+                        !alive.load(Ordering::Acquire)){
+                        tx_stop.store(true,Ordering::Release);
+                        break
+                    }
                     // Never hold the TUN device's shared serialized mutex
                     // during a 750ms missing-app poll: authenticated RX
                     // needs the SAME device mutex for first-delivery write.

@@ -26,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1035 source774e original Game2/4 authenticated TLS and real M4 UDP/Stop PASS. H1036 source candidate: Game AUTO /32 attaches existing process-wide Rust shared reader, group TX consumes own bounded channel, per-lease exact generation Stop, manual group stays dedicated; Go Game server holds reader until after native Stop. Multiple actual Game groups under one port remain not implemented. Native source pending."
+  "partial_summary": "H1035 source774e original Game2/4 authenticated TLS and real M4 UDP/Stop PASS. H1036 source candidate: Game AUTO /32 attaches existing process-wide Rust shared reader, group TX consumes own bounded channel, per-lease exact generation Stop, manual group stays dedicated; Go Game server holds reader until after native Stop. Multiple actual Game groups under one port remain not implemented. Native source pending. Stale Game buffered TX is fenced on new owner and lower-generation delayed publish cannot retake protected /32; final source pending native."
 }
