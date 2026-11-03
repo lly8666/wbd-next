@@ -244,6 +244,13 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
             }
         }
     }()
+    // A real self-signed test server must be imported into this client's
+    // application trust store. Never set InsecureSkipVerify even in CI.
+    serverCert:=m0WinJoinCert(t)
+    serverLeaf,e:=x509.ParseCertificate(serverCert.Certificate[0])
+    if e!=nil{t.Fatal(e)}
+    serverRoots:=x509.NewCertPool()
+    serverRoots.AddCert(serverLeaf)
     store,e:=realityfront.NewV4EpochStore(1)
     if e!=nil{t.Fatal(e)}
     type response struct{
@@ -258,7 +265,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
             realityfront.ServerAdmissionConfig{
                 TLS:realityfront.ServerConfig{
                     ServerName:"target.test",RouteKey:routeKey,
-                    TLSConfig:&tls.Config{Certificates:[]tls.Certificate{m0WinJoinCert(t)}},
+                    TLSConfig:&tls.Config{Certificates:[]tls.Certificate{serverCert}},
                     Timeout:5*time.Second,
                 },
                 ExpectedUsername:"protected-owner",ExpectedPassword:"secret",
@@ -271,7 +278,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
     native,cliSession,err:=realityfront.V4WindowsEstablishOriginalClientOwner(
         ctx,library,client,realityfront.ClientAdmissionConfig{
             TLS:realityfront.ClientConfig{ServerName:"target.test",
-                RouteKey:routeKey,Timeout:5*time.Second},
+                RouteKey:routeKey,RootCAs:serverRoots,Timeout:5*time.Second},
             Username:"protected-owner",Password:"secret",
             TunnelID:[]byte("0123456789abcdef"),ClientLimit:1400,
             LaneID:1,DesiredLanes:1,Policy:policy,

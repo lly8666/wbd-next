@@ -18,8 +18,8 @@ class OldTestSourceMSSMigration(unittest.TestCase):
    product=dst/"original_product.go";product.write_text("package realityfront\nvar currentProduct=true\n")
    prepare(root)
    self.assertEqual(product.read_text(),"package realityfront\nvar currentProduct=true\n")
-   self.assertEqual(len(EXPECTED),4)
-   self.assertEqual(sum(EXPECTED.values()),11)
+   self.assertEqual(len(EXPECTED),3)
+   self.assertEqual(sum(EXPECTED.values()),10)
    self.assertIn("const m0CurrentV4MSSFixture = 1420",(dst/FILE).read_text())
    self.assertIn("SetPublicV4AdvertisedMSS(m0CurrentV4MSSFixture)",(dst/FILE).read_text())
    for name in EXPECTED:

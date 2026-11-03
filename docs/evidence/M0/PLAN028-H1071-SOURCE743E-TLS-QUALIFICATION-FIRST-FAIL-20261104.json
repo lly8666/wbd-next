@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1071",
+  "product_source_base": "743e026e2723d20c1c09e1cd5c5f8a2bbe6c2536",
+  "result": "NEW_SOURCE_TLS_WIRE_NOT_QUALIFIED",
+  "prior_runs": [
+    {
+      "id": 41690743091,
+      "conclusion": "failure",
+      "cause": "compiled x86 Linux V4 client does not recognize --tls-ca-pem; failed before client first TLS; fix parser+RootCAs"
+    },
+    {
+      "id": 41690742952,
+      "conclusion": "failure",
+      "cause": "Windows real original-Go TLS test self-signed certificate rejected by mandatory x509 validation; test-scoped trusted root import required"
+    },
+    {
+      "id": 41690742974,
+      "conclusion": "failure",
+      "cause": "Linux builder refused overwrite preexisting original tls.go after manifesto includes source-pinned replace; Windows Go compile+Rust library PASS"
+    },
+    {
+      "id": 41690742842,
+      "conclusion": "failure",
+      "cause": "original-Go private native bridge mock MSS1420 constant mismatches its actual FakeTCP SYN; TLS core build PASS"
+    },
+    {
+      "id": 41690742839,
+      "conclusion": "failure",
+      "cause": "feature card not updated"
+    },
+    {
+      "id": 41690742823,
+      "conclusion": "failure",
+      "cause": "legacy MSS migration fixture test expects old 4 files/11 refs instead of current pinned 3 files/10 refs"
+    }
+  ],
+  "scope": "no product Rust/AEAD/FEC/record/PN changes, only Linux cold config, Windows native test scoped CA, exact pinned donor install+MSS fixture",
+  "next": "Wait new source x86 real TCP first-client-hello + no early server payload + TLS baseline + CA/password negative + native UDP/Stop; then ARM64/ARM64 full Linux task",
+  "explicit_limits": [
+    "H1048/H1052/H1057 auto prelude functional PASS historically but TLS appearance redline violation",
+    "H998 live shrink FAIL and old ARM64 Game4FEC FAIL retained",
+    "physical Windows NIC switch NOT_RUN",
+    "CPU/p99 causal and remote ICMP NOT_RUN"
+  ]
+}

@@ -11,6 +11,7 @@ package v4productcli
 import (
     "context"
     "crypto/rand"
+    "crypto/x509"
     "crypto/subtle"
     "crypto/tls"
     "encoding/binary"
@@ -81,6 +82,7 @@ type config struct{
     tunCIDR string
     serverName string
     routeKey []byte
+    tlsRoots *x509.CertPool
     tlsCert string
     tlsKey string
     username string
@@ -127,7 +129,8 @@ func parse(role string,args []string)(config,error){
     tunName:=flags.String("tun-name","wbdv40","owned original Linux TUN name")
     tunCIDR:=flags.String("tun-ipv4","","owned real TUN IPv4 CIDR")
     name:=flags.String("server-name","","original TLS recognized SNI")
-    route:=flags.String("route-key-hex","","original protected TLS route key")
+    route:=flags.String("route-key-hex","","pre-shared 32-byte route key hex (64 characters); no on-wire key exchange")
+    caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
     user:=flags.String("username","","original protected admission user")
@@ -260,12 +263,19 @@ func parse(role string,args []string)(config,error){
     c.username=*user
     c.password=*pass
     c.routeKey,err=hex.DecodeString(*route)
-    if err!=nil||(len(c.routeKey)>0&&len(c.routeKey)<16){return c,fmt.Errorf("invalid explicit TLS route key")}
-    if len(c.routeKey)==0{
-        // A fresh X25519 route-classifier key will be negotiated on the
-        // already-established FakeTCP association BEFORE TLS ClientHello.
-        // Original protected account authentication remains mandatory.
-        log.Printf("V4_PUBLIC_ROUTE_PREHELLO role=%s mode=ephemeral_x25519 tls_certificate_verification=client_required",role)
+    if err!=nil||len(c.routeKey)!=32{
+        return c,fmt.Errorf("offline 32-byte route-key is required locally (64 hex characters); no network key bootstrap")
+    }
+    if role=="server"&&*caPEM!=""{
+        return c,fmt.Errorf("tls-ca-pem is a client-only setting; server uses tls-cert and tls-key")
+    }
+    if role=="client"&&*caPEM!=""{
+        pem,e:=os.ReadFile(*caPEM)
+        if e!=nil{return c,fmt.Errorf("load server TLS trust PEM: %w",e)}
+        if len(pem)==0||len(pem)>1<<20{return c,fmt.Errorf("invalid TLS trust PEM size")}
+        roots:=x509.NewCertPool()
+        if !roots.AppendCertsFromPEM(pem){return c,fmt.Errorf("trusted server TLS PEM contains no certificate")}
+        c.tlsRoots=roots
     }
     if role=="client"&&c.autoIP{
         if *tunnel!=""||*installPath==""{return c,fmt.Errorf("auto-ip derives tunnel ID, do not pass manual ID")}
@@ -975,7 +985,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
-        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second},
+        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:true,RootCAs:c.tlsRoots,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         AutoLease:c.autoIP,InstallationID:c.installation[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,

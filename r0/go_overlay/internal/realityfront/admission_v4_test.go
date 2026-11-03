@@ -783,9 +783,10 @@ func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32, obs
     b.prepared++
     b.boundary=boundary
     b.identity=s.TunnelID()
-    // Current product outer-IP intent 1460B means original SYN advertises MSS=1420B.
-    // This is a test vector only; never revive removed faketcp.DefaultMSS.
-    if observedPeer.mss!=1420 || !observedPeer.advertised ||
+    // This bridge tests the authenticated association's *actual* SYN
+    // transport, not an invented MSS. The production outer 1460/MSS1420
+    // envelope is independently checked by the real cold-budget/SYN tests.
+    if observedPeer.mss!=faketcp.PublicV4AdvertisedMSS() || !observedPeer.advertised ||
        observedPeer.flow.ClientPort==0 || observedPeer.flow.ServerPort==0 ||
        observedPeer.flow.ClientIP==([4]byte{}) || observedPeer.flow.ServerIP==([4]byte{}) {
         return nil,ErrAdmissionParams

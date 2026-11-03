@@ -595,10 +595,19 @@ jobs:
           # source-locked by the same authoritative Windows assembly manifest.
           python3 tools/m0_install_public_realityfront_tests.py legacy
           for f in r0/go_overlay/internal/realityfront/*.go; do
-            case "$(basename "$f")" in
+            name="$(basename "$f")"
+            case "$name" in
               tls_test.go|wire_qualification_test.go) continue ;;
+              tls.go)
+                # Source-locked REPLACE of original Go TLS by the identical
+                # plan020 manifest, not an unreviewed native file overwrite.
+                test "$(git -C legacy hash-object internal/realityfront/tls.go)" = 518a18104803baf75c703fd8b038f2126beb8d64 || {
+                  echo "original Go TLS donor source mismatch" >&2; exit 1;
+                }
+                cp "$f" legacy/internal/realityfront/tls.go
+                continue ;;
             esac
-            dst="legacy/internal/realityfront/$(basename "$f")"
+            dst="legacy/internal/realityfront/$name"
             test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
             cp "$f" "$dst"
           done

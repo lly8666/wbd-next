@@ -169,7 +169,7 @@ func runGameClient(
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{
-            ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second,
+            ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:true,RootCAs:c.tlsRoots,Timeout:15*time.Second,
         },
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         AutoLease:c.autoIP,InstallationID:c.installation[:],
