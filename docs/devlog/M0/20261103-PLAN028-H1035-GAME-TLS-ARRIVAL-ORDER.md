@@ -8,6 +8,10 @@
 
 验证：`TestM0V4OriginalTLSGame2And4AuthenticatedColdSet` 增加真实保护 TLS session 打乱顺序并核对身份；`TestPLAN028GameServerProtectedLaneNotSYNPosition` 覆盖任意合法 1..n ID/越界/错误组大小。同源码原 Game2+Game4 Linux netns 真产品测试沿用已有 combined native CI。待 exact SHA 结果，不对多组并存和 Windows 真切网冒称 PASS。
 
+## 同源码小范围结果
+
+[Linux 原始 Go/Rust native Action 41628407153](https://github.com/lly8666/wbd-next/actions/runs/41628407153) **SUCCESS**，SOURCE `774e4b23f991eb8cb8b362be261fb42cba682d67`。Go 原 TLS Game2/4 认证 cold-set 与 lane 顺序单测、真正 Game2+Game4 单端口组内产品 M4/UDP、受损 lane 无 HOL、停止回收均过；1% loss 计数门槛也过。真正把 SYN 到达打乱的 OS 端到端未单独强制注入，因此严格只报 unit + 现有 native 模式回归 PASS。**同时容纳多个独立 Game 组尚未实现。**
+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1035 original Go Game2/4 server protected TLS in parallel for arbitrary SYN order, verifying authenticated group and per-lane peer MSS before native Game M4; real grouped modes source tests."}
 ```

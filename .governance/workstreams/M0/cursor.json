@@ -5,15 +5,15 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 1035,
-  "checkpoint_sha": "ce9c128e712024164e586e89a76b395579370e78",
+  "checkpoint_sha": "774e4b23f991eb8cb8b362be261fb42cba682d67",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1035 PLAN028 Linux Game2/4 async original protected TLS by arbitrary SYN arrival, authenticated group ordering before native M4; new exact source tests pending",
-  "why_now": "Original Game server accepted n FakeTCP associations in arrival order, then called TLS serially and required lane index to match arrival; out-of-order SYNs could block TLS or reject valid authenticated lanes. Pure protocol binding must follow protected LaneID.",
+  "current_task": "H1035 scoped native PASS: Game2/4 parallel protected TLS independent of SYN arrival index, group verified before TUN changes; full multi-group server still open",
+  "why_now": "One original Go server port's Game lane TCP arrivals are unordered; protected TLS admission now parallel and authentic lane ID decides peer MSS/native lane, protecting Game2/4 against SYN-order deadlock.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Run one source-locked Game 2/4 original TLS unit and real Linux original Go Game2/4 product same-binary native, plus Windows Go compatibility. Then implement true multiple Game groups per server port/shared TUN (not claimed by H1035).",
+  "next_action": "PLAN028 H1036: allow multiple independent authenticated Game groups on one server port sharing exactly one TUN reader and isolating leases/identity; preserve 2-second physical NIC/IPv4 check and native Stop. Do not claim multi-group capacity from a single-group native PASS.",
   "unverified": true,
-  "last_tested_source": "ce9c128e712024164e586e89a76b395579370e78",
+  "last_tested_source": "774e4b23f991eb8cb8b362be261fb42cba682d67",
   "evidence_refs": [],
   "context_refs": [
     "START_HERE.md",
@@ -26,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1034 physical NIC/IPv4-only 2s polling native scoped Linux+Windows compile PASS on ce9c. H1035 source candidate: Game server now runs 2/4 original TLS admissions concurrently independent of SYN arrival, checks complete authenticated group before shared TUN IP/MTU changes, and maps actual peer MSS by protected LaneID. Authenticated lane 1..n and shuffled group unit added; real Game2/4 source CI PENDING; simultaneous Game groups on one port NOT IMPLEMENTED."
+  "partial_summary": "H1035 source774e original-Go 2/4 parallel protected TLS admission and protected lane ordering, all group identities verified before shared TUN OS writes; original Linux Game2+Game4 real native M4 UDP/Stop, prior path and 1% loss scoped gates SUCCESS Action41628407153. SYN arrival disorder tested through shuffled authenticated TLS sessions, not real imposed SYN disorder. Multiple concurrent Game groups and real Windows physical path switch remain open. H1034 sourcece9c 2s NIC/IP poll Linux A+B/Windows compile previously scoped PASS. PLAN028 IN_PROGRESS."
 }
