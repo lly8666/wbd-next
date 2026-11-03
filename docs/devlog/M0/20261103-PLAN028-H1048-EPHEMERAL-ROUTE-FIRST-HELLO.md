@@ -21,3 +21,7 @@
 ## H1049 装配增量复核
 
 H1048原Go分支构建Action缺新独立`v4_route_prelude.go`，报`undefined: v4AutoRoutePrelude`，Windows原Go assembly的main replace记录只改result_blob未补三个精确非覆盖patch，报`FEC2_ASSEMBLY_REJECTED: overlay result blob mismatch`。本增量按原workflow列表补齐冷helper和单测源、source/hash输入，Windows按此前确定的原源码patch精确合成唯一main，不重写恢复器、record或密码算法。修正前原生auto-route未运行，H1049仍是SOURCE候选。
+
+## H1050 单owner原Go装配边界
+
+H1049 原Go TLS/cold fixture编译已PASS。Win PLAN020严格拒绝重复owner时发现：新的唯一manifest已拥有`admission_v4.go`，但旧 Windows bundle 又试图复制同名文件。只允许已存在的原Go admission **与本SOURCE Git blob完全一致**时复用，任何不符、软链或其他新文件仍拒绝；不另造Go TLS owner。真实Game2账户密码自动route认证及Windows双OS仍需新Action。
