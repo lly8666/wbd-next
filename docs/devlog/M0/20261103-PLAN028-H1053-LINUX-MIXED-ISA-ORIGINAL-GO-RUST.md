@@ -11,3 +11,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1053 source-locked dual-ISA original-Go+Rust Linux ARM64/x86 real-kernel netns reciprocal endpoint fixture, strict QEMU-vs-real-ARM performance distinction; Actions pending."}
 ```
+
+## H1053 原生失败窄定位
+
+H1053 构建 job PASS；两个互换角色 job 都在首次原 Go TLS 前失败，原始 ARM64 动态装载器缺 `libgcc_s.so.1`。H1054 冻结下载旧工件，不为测试夹具重建 Rust/Go。
