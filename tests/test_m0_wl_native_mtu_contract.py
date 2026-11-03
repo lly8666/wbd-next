@@ -13,11 +13,11 @@ class NativeM4MTUTests(unittest.TestCase):
    with self.assertRaises(ValueError):exact_native_test_mtu(bad)
 
  def test_default1460_and_explicit_outer_bound(self):
-  for choice,mtu in [('default1460',1460),('1460',1460),('1500',1500),('legacy1400',1400)]:
+  for choice,mtu in [('default1460',1460),('1280',1280),('1460',1460),('1500',1500),('legacy1400',1400)]:
    self.assertEqual(native_outer_choice(choice),choice)
    with patch.dict('os.environ',{'WBD_WL_NATIVE_OUTER_MTU_REQUEST':choice,'WBD_WL_TUN_MTU':str(mtu)}):
     self.assertEqual(configured_native_test_mtu(),mtu)
-  for bad in ('default1500','0','1280',None,1460):
+  for bad in ('default1500','0','1279',None,1460):
    with self.assertRaises(ValueError):native_outer_choice(bad)
   with patch.dict('os.environ',{'WBD_WL_NATIVE_OUTER_MTU_REQUEST':'default1460','WBD_WL_TUN_MTU':'1400'}):
    with self.assertRaises(ValueError):configured_native_test_mtu()

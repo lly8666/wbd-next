@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "scope": "ONE_ORIGINAL_TWO_OS_BUILD_11_INDEPENDENT_NATIVE_MEASUREMENTS",
+  "status": "NOT_RUN_AT_AUTHORING",
+  "product_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "product_build_run": 41546652567,
+  "fixture_source": "DETERMINED_BY_H990_GITHUB_SHA",
+  "scenes": [
+    {
+      "mode": "normal",
+      "outer": 1460,
+      "scenario": "scenarios/plan027a-h958-normal-1460-5m-df-60s.json",
+      "new_tests": "UDP DF0 original 1728,4096,65507 exact reassembly each direction; DF1 local EMSGSIZE each size; TCP 65536 byte sendall/echo"
+    },
+    {
+      "mode": "fixed",
+      "outer": 1460,
+      "new_tests": "real original Go TLS/Rust + Win32/WSL2 actual MTU/MSS, kernel UDP/TCP, owned Stop"
+    },
+    {
+      "mode": "game2",
+      "outer": 1460,
+      "new_tests": "real original Go TLS/Rust + Win32/WSL2 actual MTU/MSS, kernel UDP/TCP, owned Stop"
+    },
+    {
+      "mode": "game4",
+      "outer": 1460,
+      "new_tests": "real original Go TLS/Rust + Win32/WSL2 actual MTU/MSS, kernel UDP/TCP, owned Stop"
+    },
+    {
+      "mode": "game2-fec",
+      "outer": 1460,
+      "new_tests": "real original Go TLS/Rust + Win32/WSL2 actual MTU/MSS, kernel UDP/TCP, owned Stop"
+    },
+    {
+      "mode": "normal",
+      "outer": 1280,
+      "new_tests": "genuine new-session smaller outer and independently derived/applied TUN MTU; not in-place route change"
+    },
+    {
+      "mode": "game4-fec",
+      "outer": 1280,
+      "new_tests": "genuine new-session smaller outer and independently derived/applied TUN MTU; not in-place route change"
+    },
+    {
+      "mode": "fixed",
+      "outer": 1500,
+      "new_tests": "genuine explicit outer maximum and mode-specific MSS/record/TUN"
+    },
+    {
+      "mode": "game4-fec",
+      "outer": 1500,
+      "new_tests": "genuine explicit outer maximum and mode-specific MSS/record/TUN"
+    },
+    {
+      "mode": "auto-revision",
+      "outer": 1460,
+      "new_tests": "in-owner dynamic Rust policy revision2 after genuine kernel UDP"
+    },
+    {
+      "mode": "auto-adaptive",
+      "outer": 1460,
+      "new_tests": "natural adaptive profile and actual Applied on real OS"
+    }
+  ],
+  "already_scoped_pass_not_replayed": [
+    41548218023,
+    41548233145,
+    41548243272
+  ],
+  "fragmentation_rule": "No fragment loss percentage acceptance threshold; each claimed size/OS success must be complete byte-identical datagram; missing 4096/65507 still FAIL their separately recorded test.",
+  "uncovered": [
+    "in-place physical PMTU/route 1460→1280→1460 from actual kernel watcher",
+    "real user-state emission and remote observation ICMP Type3 Code4",
+    "current SOURCE ARM64 Game4FEC original two-OS",
+    "same-VM causal A/B CPU and RSS for current source",
+    "physical WAN/IPv6/unsupported 9k"
+  ],
+  "exit_decision": "IN_PROGRESS_UNTIL_EACH_ACTION_COLLECTED"
+}

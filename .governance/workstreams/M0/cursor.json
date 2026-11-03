@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 989,
-  "checkpoint_sha": "94dedb866b1156b5afe3e1d335ad9efabfa8a491",
+  "sequence": 990,
+  "checkpoint_sha": "2c23983857818a0f372bd1795202b7ca2ce0ad22",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H989 correct 16KiB feature-card descriptive bound while keeping H988 exact DF/native qualification; no product test changed",
-  "why_now": "H988 GitHub feature catalog rejected over-16KiB path-mtu-budget after three truthfully logged H987 native outcomes; immutable earlier Action and FAILs kept",
+  "current_task": "H990 one-source 11 native test cases: genuine full UDP DF0 1728/4096/65507, DF1, TCP64K, missing modes/MTU1280/1500 and adaptive",
+  "why_now": "User ordered all remaining tests at once; original H986 signed binary build reusable and H987 successful stages must not be repeated",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H989 governance; continue only genuinely untested dynamic/exceptional MTU source call sites, not H987 already-green scenarios; PLAN028 after full 027A scope.",
+  "next_action": "Collect H990 dispatcher exact source, eleven independent child run IDs and outcomes; inspect genuine failures. Dynamic live PMTU and user-state ICMP remain not tested by available native harness, do not close 027A or start 028 prematurely.",
   "unverified": true,
   "last_tested_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
+    "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md",
     "docs/evidence/M0/PLAN027A-H987-GOV-REPAIR-H986-REUSE-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H987-GOV-CURSOR-BINARY-REUSE.md",
     "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H988-SOURCE-EXACT-NATIVE-RECEIPTS.md",
     "docs/devlog/M0/20261103-PLAN027A-H989-FEATURE-CARD-BOUND.md",
+    "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H990-ALL-REMAINING-NATIVE.md",
     "docs/architecture/MTU_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H988 source-locked three native PASS unchanged, 1728 DF0 full reassembly both OS and DF1 EMSGSIZE; user fragmentation loss% excluded. H989 trims only feature-card size to repo 16KiB gate; all historic SOURCE/FAIL kept. Dynamic/other oversized scope still open."
+  "partial_summary": "H987 three existing native Windows/WSL PASS preserved. H990 11 remaining independent test sources prepared; real DF0 4096/65507 and TCP64K added. All new native results NOT_RUN at authoring. In-place PMTU and ICMP Type3/4 still not measured."
 }

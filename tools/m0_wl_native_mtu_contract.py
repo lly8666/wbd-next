@@ -7,7 +7,7 @@ confirmed full OS/WAL cleanup. No unsupported 9000-byte JNI/Go ABI claim.
 import os
 import re
 PUBLIC_NATIVE_MTUS=(1280,1400,1460,1500)
-NATIVE_OUTER_CHOICES=('legacy1400','default1460','1460','1500')
+NATIVE_OUTER_CHOICES=('legacy1400','default1460','1280','1460','1500')
 
 def native_outer_choice(value):
  if type(value) is not str or value not in NATIVE_OUTER_CHOICES:
