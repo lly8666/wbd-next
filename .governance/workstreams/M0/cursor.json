@@ -8,10 +8,10 @@
   "checkpoint_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1033 PLAN028 Windows native NotifyRouteChange2/NotifyUnicastIpAddressChange -> original TLS exact Stop and reauth, Normal/FEC/Game; source CI PENDING",
+  "current_task": "H1033 PLAN028 Windows real OS route/IPv4 change notification wired to original cold Go/Rust Stop→reauth for Normal/FEC/Game, Windows Go compile and 2 small units PASS",
   "why_now": "Windows original client only reauthenticated after Health90; route/IP notifications were not wired to original cold generation, leaving a working new physical path waiting for dead verdict.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Build original Windows Go client/units from same source (coalescer and kernel path fingerprint), confirm no signature/regression failure; then tackle original Game2/4 multi-client single-port group owner and true overlapping cross-path lanes. Scope Windows break-before-make is not A+B.",
+  "next_action": "H1034 original Game2/4 single-port multi-group client admission and generation handover; afterward prove Windows route change via real owned OS event and cover break-first path/Stop, then Windows A+B. No protocol, FEC or hot-route rewrite.",
   "unverified": true,
   "last_tested_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1032 Linux code route MTU cold+auth callback and source locked functional auto IP/path PASS, multi-account fixture false FAIL corrected; 41615942136 SUCCESS. H1033 Windows original Go native route+address OS callback candidate, 200/500ms coalesce and OS fingerprint, Stop before reauth for Normal/Fixed/Auto/Game2/4; exact source compile pending; no A+B Windows, CPU/p99 or full PLAN028 qualification."
+  "partial_summary": "H1033 Windows original native Go route/addr event callback + 200/500 coalescing and selected physical route compare, wired into current TLS/Rust Stop/re-auth across Normal/Fixed/Auto/Game, source 9ef code; Windows Go product/test build and two targeted route coalescing/fingerprint tests PASS Action41619392833, existing Windows native OS/WAL Action41618704334 success. Physical path switch (A+B), client route recovery when first path already absent and Game multi-client groups remain outstanding. H1029 Linux source fa32 native functional PASS; PLAN028 still ongoing."
 }
