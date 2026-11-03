@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1016,
-  "checkpoint_sha": "f76086cda1238ea9cd24e72876170abf56469462",
+  "sequence": 1017,
+  "checkpoint_sha": "4070f76a30c96f9b7f0d192e069ff4be1e9dd862",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1016 native shared Linux Rust TUN one kernel reader, protected per-client /32 ingress→original M1 owners, generation-fenced takeover, real same-binary auto-IP netns gate; tests PENDING",
-  "why_now": "H1013 source74b1 real original Go protected auto-IP + M4 application PASS, H1014 Governance/feature PASS. Next necessary boundary is prevent multiple Rust native sessions independently consuming one physical Linux TUN while preserving exact /32 and Stop fence.",
+  "current_task": "H1017 restore source-locked native workflow YAML exact baseline; prior H1016 GitHub workflows failed parsing before native tests, shared Rust TUN candidate still unverified",
+  "why_now": "GitHub H1016 native Action did not create jobs due malformed 1977-line YAML generated from JS '$-apostrophe substitution; Feature Catalog also YAML parse FAIL",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect new H1016 exact SOURCE Actions: Rust non-FEC and FEC builds; Go original server shared TUN native one-device auto-IP 2-netns true first UDP/Stop, routed>=5, Rust generation fence; repair real failures. Then implement true Go concurrently authenticated multi-account/device sessions in one listen port and multi-device kernel A+B→B, Windows/Linux notifications and seven modes; do NOT promote before actual native evidence.",
+  "next_action": "Collect exact H1017 source GitHub native Rust Go original TLS auto-lease /32 shared reader real two-netns business and Stop; resolve actual compile/kernel failure if any; then implement concurrent Go same port multi-device A+B->B.",
   "unverified": true,
   "last_tested_source": "74b1fa101a7e912cebbc20bfcdc937683c0c185e",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1017-YAML-REGEN-20261103.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1013 SOURCE74b1 actual original Go TLS auto-/32 and Rust M4 two-netns UDP5/Stop PASS, Game2/4 single-server port native PASS, H1014 Governance SUCCESS. H1016 shared Rust single TUN reader, real GO cold bind and generation-fenced /32 routing into original M1, native end-to-end test added but not run on this SOURCE yet. Go multi-device single-port accept and seven modes A+B still not implemented. Win/WSL2 Game4 lane2 bootstrap FAIL, H998 preserved."
+  "partial_summary": "H1013 original auto-lease one device Rust TUN app real PASS; H1014 Governance PASS; H1016 native single-reader code committed but source4070 Actions could not parse corrupted workflow, no native result. H1017 restores baseline workflow with exactly necessary ABI/unit additions and no product code modifications. Cross-device Go simultaneous accept still pending, H998 preserved."
 }
