@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1013,
-  "checkpoint_sha": "5427217202e2760a31d7ba3bafcc0fb680e40d38",
+  "sequence": 1014,
+  "checkpoint_sha": "74b1fa101a7e912cebbc20bfcdc937683c0c185e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1013 repair Rust non-FEC cfg E0609, auto-IP native fixture regex, overlong Game feature card; rerun exact H1013 source to learn real native verdict",
-  "why_now": "SOURCE542 real CI identified an E0609 on non-FEC Normal build, authenticated client IP log extraction regex false failure, and 18KB feature catalog overflow",
+  "current_task": "H1014 resolve UTF-8 byte limit of game-lanes feature card without deleting historical scoped evidence; H1013 actual native auto-IP Action pending",
+  "why_now": "H1013 governance-feature Action 41579974283 rejected 16,823-byte card despite JS 15,857 chars; feature_catalog checks UTF-8 bytes <=16,384",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1013 exact SOURCE build+original Go TLS native 2netns auto-IP UDP/Stop test and repair any real product failure. Then implement Rust shared single TUN read and /32 O(1) fanout and Go concurrent account+device accept without independent competing owner. Preserve H998 and 029/030 not started.",
+  "next_action": "Verify H1014 feature catalog governance PASS and H1013 source74b1fa real auto-IP 2netns UDP native Action (fix if FAIL). Then implement true Rust single TUN reader + destination /32 fanout & Go concurrent original TLS accept, full-source-native test, and 7-mode handover/path notification.",
   "unverified": true,
   "last_tested_source": "34f5c154f887911174ed03c56e002a4944975a8e",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1013-SOURCE542-NATIVE-AND-FEATURE-REPAIR.md",
+    "docs/devlog/M0/20261103-PLAN028-H1014-FEATURE-CARD-UTF8-BOUND.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1011 Game2/4 OFF one port true native PASS. H1012 added genuine protected auto-IP /32 Rust Normal/Game/FEC source ownership checks, but source542 NORMAL-COMMON cfg E0609, new netns auto-IP parsing test FAIL, governance feature card oversized. H1013 fixes those exact defects, product scope awaits new SOURCE tests; cross-device shared Rust TUN still NOT_IMPLEMENTED."
+  "partial_summary": "H1012 real Rust source-IP ownership code; H1013 non-FEC E0609 fixed and Normal-Common source74b1 PASS; auto-IP kernel scene awaited. H1014 fixes Game feature card from >16KB to 15,381 UTF-8 bytes while retaining 21 verification rows; true multi-device shared Rust TUN still pending."
 }
