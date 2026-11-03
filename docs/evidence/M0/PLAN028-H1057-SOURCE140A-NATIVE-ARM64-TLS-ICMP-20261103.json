@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1057",
+  "qualification": "PASS_SCOPED_NATIVE_ARM64_NORMAL",
+  "source_sha": "140a06622a97251863c6959c1290a0dd11b7a38b",
+  "harness_sha": "b7630173b5f868a3d2a534ba5dd5338a0a4af7b0",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_binary": {
+    "build_run_id": 41667172847,
+    "artifact_id": 13246003010,
+    "abi": "Linux/aarch64 GNU ARM64",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "unchanged_sha256": {
+      "wbd-v4-client": "54f282a7df8a03495bc145aa09094c4666dc785ee493bfdc8e80f7a5952186dd",
+      "wbd-v4-server": "239a225479c000afee713fa1d740edb911a184b01807695c799b944598c2311f",
+      "libwbd_engine.so": "07962beafdf02cf7d1d062b0bab6d6375dea7dcd86c90c17d931befe38a97ccc"
+    }
+  },
+  "native_action": {
+    "run_id": 41670216313,
+    "job_id": 126036275275,
+    "artifact_id": 13249110172,
+    "conclusion": "success",
+    "manifest_and_logs_zip_independently_verified": true
+  },
+  "native_original_linux": {
+    "architecture": "aarch64_native_runner_ubuntu_24_04_arm",
+    "execution": "native_isa_not_qemu_user",
+    "kernel": "real Linux AF_PACKET, TUN, veth and 2 isolated network namespaces on same ARM64 runner",
+    "server_port": 443,
+    "pre_clienthello": "ephemeral X25519 fresh route marker; no manual route-key",
+    "server_certificate": "real original TLS cert verified with runner-provisioned trusted CA",
+    "credentials": "real original protected password-file",
+    "mtu": {
+      "client_outer_ipv4_config": 1460,
+      "server_outer_ipv4_config": 1460,
+      "client_inner_ipv4_readback": 1389,
+      "server_inner_ipv4_readback": 1389
+    },
+    "payload": {
+      "c2s_icmp": {
+        "sent": 3,
+        "received": 3,
+        "loss_percent": 0
+      },
+      "s2c_icmp": {
+        "sent": 3,
+        "received": 3,
+        "loss_percent": 0
+      }
+    },
+    "owned_stop": {
+      "client": "V4_PUBLIC_NATIVE_STOP_DRAINED",
+      "server": "V4_PUBLIC_NATIVE_STOP_DRAINED",
+      "namespace_cleanup": "PASS"
+    }
+  },
+  "original_network_receipt_sha256": {
+    "client.log": "f84e1a1e60679efbd3064337c9afca12b0b709ee093d2fa86a1fc9e042a7bade",
+    "server.log": "6ad94620c3307346db9fa26da52443bb4bd3fce62a959dcb48a87821e1e845ed",
+    "c2s.log": "0c07fa093d88ee184e956952c3ba8bb92b94393796db80dd65cfd6cc25e47dff",
+    "s2c.log": "3d1f44dbd75276998c5d8f7c3dd74b1d24d0f30cf324a131171c3454ddb1d820"
+  },
+  "scoped_limits": [
+    "Two netns on one native ARM64 runner; NOT a physically distinct ARM64↔x86_64 end-to-end test.",
+    "Old QEMU-user ARM64↔x86 original TLS/MTU PASS but data UDP FAIL preserved, not overwritten by this result.",
+    "Normal only, Game4FEC ARM64 older Action FAIL retained.",
+    "Live 1500→1280 MTU shrink previous H998 FAIL retained.",
+    "No physical Windows NIC/IP switch qualification.",
+    "No CPU/p99 causality, remote ICMP3/4, Android, or cross-host throughput claim.",
+    "PLAN028 IN_PROGRESS"
+  ]
+}
