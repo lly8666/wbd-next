@@ -234,6 +234,13 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
    "evidence": "docs/evidence/M0/PLAN027A-H995-H994-11-OF-11-REAL-NATIVE-CLOSE-20261103.json"
+  },
+  {
+   "platform": "H998 PLAN027A user scope closeout / exact original Windows Wintun↔WSL2 and ARM64",
+   "scope": "User accepted scoped PLAN027A delivery. 11 original Windows/WSL2 tests PASS; H996 Normal same-VM OFF→ON and Game4FEC3M loss0 original PASS. ARM64 Normal and asymmetric native PASS. ARM64 Game4FEC original TLS/UDP/128 parity copies and owned Stop in both 1460/1500 logs, but H997 Actions remain FAIL (44 replay duplicate rejects, 0 auth rejects). H995 real online physical MTU shrink made 3/3 small ICMP replies fail; remote ICMP3/4 not measured. Not all exit gates certified.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
+   "evidence": "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   }
  ],
  "limitations": [
@@ -254,7 +261,8 @@
   "历史H669/H673/H676/H678真实首到失败、H928/H935编译失败和H978 Fixed1333异常完整保留各自证据；新H981/H987 PASS不得抹消旧SOURCE失败。",
   "H988用户验收：DF0应有≥1个完整大datagram真实分片后逐字节重组成功，不按丢片率/完成比例硬门。Normal真实双端1728B PASS；ICMP3/4仍NOT_MEASURED。",
   "H987 Auto/Game4FEC阶段性真实5/30/5只覆盖指定SOURCE、负载、Windows/WSL2；不代表动态PMTU、ARM64 Game、4096/65507或物理网络资格。",
-  "H995: 11 Windows/WSL2 original product scoped native PASS includes true UDP DF0 65507 and TCP 65536; does not prove online 1460→1280→restore, remote ICMP3/4, same-host CPU causal A/B or current ARM64 GameFEC. H995 one-shot native ARM64 actual test outcome must be collected separately."
+  "H995: 11 Windows/WSL2 original product scoped native PASS includes true UDP DF0 65507 and TCP 65536; does not prove online 1460→1280→restore, remote ICMP3/4, same-host CPU causal A/B or current ARM64 GameFEC. H995 one-shot native ARM64 actual test outcome must be collected separately.",
+  "H998 PLAN027A user-accepted SCOPED CLOSEOUT; real live physical MTU decrease remains FAIL (H995); ARM64 Game4FEC H997 Action FAIL despite TLS/FEC/Stop observed; remote ICMP3/4, causal old/new CPU and physical WAN NOT_PROVEN. PLAN028 must handle path switch/new budget; stage remains experimental."
  ],
  "promotion": null
 }

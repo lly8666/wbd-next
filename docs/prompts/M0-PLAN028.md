@@ -1,6 +1,6 @@
 # M0｜PLAN028接续提示词
 
-你继续lly8666/wbd-next的PLAN028。先读START_HERE/AGENTS、M0长期提示词、最新registry/cursor，再读 `docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 和 `M0-PLAN028-SESSION-CONFIG-20261102.md`。默认上轮可能中断，只追checkpoint增量，先收在途Actions不重复派发。
+你继续lly8666/wbd-next的PLAN028。**2026-11-03 用户已明确要求PLAN027A限定范围收口，未来另找全新agent开工028；本包尚未开始施工。**先核 [027A H998 用户接受范围收口证据](../evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)：真实在线物理出口MTU从1500改1280后3/3小业务没有回应（FAIL），ARM64 Game4FEC真实业务/FEC/Stop可见但Actions失败，远端ICMP Type3/Code4未测，CPU优化因果未证。028§4.1–4.2 必须在实际新路径重认证/会话接管时补齐已知在线预算衔接，不假装027A已在同一连接热更新成功。先读START_HERE/AGENTS、M0长期提示词、最新registry/cursor，再读 `docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 和 `M0-PLAN028-SESSION-CONFIG-20261102.md`。默认上轮可能中断，只追checkpoint增量，先收在途Actions不重复派发。
 
 本提示词由用户实际调用或既有完整序列授权推进时启动本包；仓库仅存在文件不等于已开工。PLAN027已限定范围收口，先核PLAN027A交付及本包实际依赖，不因历史NOT_RUN重开027，不复制第二套恢复器，不将旧PASS推广。用既有registry/cursor登记本包，不添加审批/任务系统。
 

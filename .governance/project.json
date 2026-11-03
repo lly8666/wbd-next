@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "MAIN_PLAN027_IMPLEMENTATION_AND_QUALIFICATION",
+  "phase": "MAIN_PLAN028_PLANNED_USER_SCOPED_PLAN027A_CLOSED",
   "governance_evidence": "docs/evidence/M0/GOV-003-PR4-main-integration.json",
   "product_design": "DESIGN_READY",
   "product_implementation": "INTEGRATED_FUNCTIONAL_SCOPES_PERFORMANCE_CLOSEOUT",
@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "2026-11-02 authorization resumes full PLAN027 beyond prior GameFEC-only pause: collect live results; optimize and measure Normal shared cosmetic outer retransmission once, reuse in every mode. In parallel run outer-repair-OFF network/FEC/Game/lifecycle matrix and independent measured optimizations. Integrate and perform affected ON regressions plus 300s long run. Follow docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md section0; reuse scoped evidence/builds, no retired Go A5. Pending work or one family capacity limit is not completion; final source-scoped evidence and no necessary blocker/run permit stop. Then complete PLAN027A unified MTU/oversize handling before PLAN028; plan docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md and sole contract docs/architecture/MTU_CONTRACT.md. Current phase/cursor remain PLAN027 until its closeout.",
+  "next_decision": "2026-11-03 user explicitly accepted PLAN027A scoped closeout and will separately activate a new agent for PLAN028. See docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json. Main priority is no new 027A Actions; PLAN028 planned, not started. Retain real H995 online physical PMTU failure and H997 ARM64 Game4FEC Action failures; do not treat remote user-space ICMP3/4 or causal CPU optimization as proven. Default full outer IPv4 IP MTU 1460 without L2; 1500 explicit max, inner auto/OS readback. PLAN028 §4.1–4.2 must handle actual network path change and fresh budget.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

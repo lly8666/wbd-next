@@ -1,11 +1,9 @@
-# WBD Next｜全体agent硬约束
+# WBD Next｜全体 agent 硬约束
 
-1. 用户最新指令优先。真实业务首到、低延迟/无跨流HOL、低CPU；允许有界内存。认证/完整性、账户和lane隔离、generation、原密文、MTU、真实驱动结果、owned Stop不可退让，见PROJECT_CHARTER。
-2. M0在main连续开发；只有另授独立任务用其他分支。新聊天或定时提示默认上次可能中断，按START_HERE恢复main/cursor后增量与在途Actions，不重复dispatch、重扫历史或复活已结束FEC工位。
-3. 当前registry正式任务为PLAN027A（docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md），唯一规范docs/architecture/MTU_CONTRACT.md。2026-11-02用户明确要求PLAN027依据已有证据限定范围结案，见该计划§7；原Action失败、NOT_MEASURED与无CPU增益保持事实，不重启旧矩阵。
-4. Go保留成熟TLS/OS/GUI冷控制，Rust稳态，禁止Go逐包FFI/空轮询/双控制器。普通实现选择自主做，不增防御性包装/通用框架，不为假设极端钻牛角尖；必要正确性检查保持。
-5. 同一批代码/双方调用/配置读回/功能卡/夹具先齐再冻结SOURCE。执行测试在Actions：一Action一场景测试控制进程/测量job，必要双端进程允许；不同场景可独立Action并行，同VM A/B顺序。一次构建按SOURCE/manifest/hash复用；容量耗尽停更重同族，不刷seed，产品锁/单核瓶颈不能伪称环境。
-6. 单main写入，不覆盖未知变更、不reset/force。每批短devlog带feature-impact，功能卡统一记录；阶段/恢复更新cursor与在途run。旧SOURCE PASS不转移新SOURCE，失败/未验/物理范围保留。
-7. 完成以当前registry所指方案全部退出条件为准；PLAN027限定收口后按用户指定PLAN027A→028–030。PLAN027A已在main持续施工；用户新默认外层完整IPv4 IP MTU=1460，最大仍允许显式1500，内层由Rust预算自动推导/OS读回。真实七模式/DF/弱网/性能尚未验满，不能把编译当产品通过。凭据/正文/大pcap不入库，不擅自部署物理机或发其他聊天消息。
-
-历史细节按需读docs/GOVERNANCE.md、docs/history/2026-10-28-M0-MAIN-HANDOFF.md及原证据。
+1. **最新用户指令优先**。真实业务首到、低延迟/无跨流HOL、低CPU；允许有界内存。认证/完整性、账户/lane隔离、generation、原密文、MTU、安全重放、真实驱动和owned Stop不可退让，见 [PROJECT_CHARTER](PROJECT_CHARTER.md)。
+2. M0在 `main` 单写者；全新会话默认上轮中断，先读 START_HERE、章程、registry、cursor 和相关 Actions，增量续接，不重复dispatch、不重扫旧网测、不复活旧FEC工位。
+3. **PLAN027A于2026-11-03按用户明确指示限定范围收口**，不是“所有原技术出口 PASS”。[H998权威证据](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)：11个Windows/WSL2原生范围内PASS；ARM64 Normal PASS、Game4FEC真实业务通过但 Action FAIL；在线物理 MTU 缩窄真实 FAIL；对端ICMP3/4未测，性能无旧新产品因果结论。原日志、source锁、历史失败不改写。
+4. 下一包 **PLAN028已在registry登记为PLANNED，但尚未开工**。待用户以全新agent明确启动，[028开工入口](docs/prompts/M0-PLAN028.md)，并复用 [MTU_CONTRACT](docs/architecture/MTU_CONTRACT.md) 的Rust统一预算。027A尚未解决的在线收窄请按028§4.1–4.2真实网络切换、重认证和新路径预算处理，不冒称原已解决。
+5. Go保留成熟TLS/OS/GUI冷控制，Rust稳态，禁止Go逐包FFI/空轮询/双控制器。普通实现自主决策，不叠防御通用框架。
+6. 完整同批改双方/配置/夹具/功能卡后冻结SOURCE；一Action一场景，不同场景可并行，同VM A/B顺序，一次构建按SOURCE/manifest/hash复用；不刷seed、不把不同OS/VM结果当因果CPU增益。
+7. main不reset/force、不覆盖未知变更。短devlog、证据、功能卡、cursor及时更新；旧SOURCE PASS≠新SOURCE PASS，失败/未验/物理资格原样记录。用户普通入口外层完整IPv4 IP MTU固定默认 **1460B、不含L2**，1500B仅显式最大；内层Rust预算自动推导、OS读回，不回写外层用户设置。无凭据/大pcap入库，不擅自部署物理机或发其他会话消息。

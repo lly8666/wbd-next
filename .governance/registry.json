@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reservation_revision": 3,
+  "reservation_revision": 4,
   "roles": [
     {
       "id": "M0",
@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "Implement docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md according to docs/architecture/MTU_CONTRACT.md. Single Rust V4 budget and Go cold ABI, typed outer/inner/MSS/options, OS applied readback, IPv4 oversize DF/fragment/ICMP, precise mode capabilities and bounded native regression. PLAN027 accepted source-scoped per docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json; no duplicate old network matrix. User-updated default complete outer IPv4 IP MTU 1460; 1500 explicit maximum.",
-      "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
-      "assigned_task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE"
+      "goal": "PLAN028 is PLANNED/READY_FOR_NEW_AGENT, NOT_STARTED: after user-accepted scoped PLAN027A H998 closeout, implement docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md and docs/prompts/M0-PLAN028.md. Single-port per-user/per-device session registry, authenticated configuration, per-client IP/outer-MTU semantics, seven-mode lane replacement, and actual Windows/Linux path-change reconnection. Reuse docs/architecture/MTU_CONTRACT.md Rust budget and exact source-scoped PLAN027A evidence. The H995 true online physical MTU 1500->1280 failure must not be misrepresented as already solved. Do not start PLAN028 until separate new-agent user invocation.",
+      "done_when": "On explicit new-agent launch of PLAN028: true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. Existing PLAN027A source-accepted H998 closeout is not rewritten as unqualified PASS.",
+      "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
     {
       "id": "M1",

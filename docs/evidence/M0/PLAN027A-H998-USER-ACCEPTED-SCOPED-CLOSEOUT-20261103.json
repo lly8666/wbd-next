@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "closeout": "USER_ACCEPTED_SCOPED_PLAN027A_CLOSEOUT",
+  "acceptance_basis": "2026-11-03 user explicitly directed direct PLAN027A closure as complete and will separately initiate PLAN028 with new agent",
+  "scope_classification": "DELIVERY_SCOPE_CLOSED_WITH_RETAINED_PRODUCT_GAPS_NOT_UNIVERSAL_QUALIFICATION",
+  "source_sha": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
+  "base_main_sha": "f95f4f55e6090c9c12c96c18383c4b3df49757fe",
+  "product_sources": {
+    "windows_linux": "1e8325f16e2975a9da3497ab97ac570771a97238",
+    "arm64": "26ca847019d8ffddaa163d40f77c61b6cc2401f9"
+  },
+  "product_changes_in_closeout": false,
+  "main_native": {
+    "result": "11_OF_11_SCOPED_WINDOWS_WSL2_NATIVE_PASS",
+    "source_locked": true,
+    "evidence": "docs/evidence/M0/PLAN027A-H995-H994-11-OF-11-REAL-NATIVE-CLOSE-20261103.json",
+    "runs": [
+      41554882448,
+      41554892070,
+      41554905507,
+      41554912671,
+      41554928445,
+      41554935893,
+      41554944208,
+      41554953134,
+      41554960288,
+      41557351763,
+      41557359570
+    ],
+    "udp_df0": "1728/4096/65507 original UDP byte-identical both real OS; at least one full reassembled datagram, no fragmentation loss-rate threshold",
+    "df1": "real kernel EMSGSIZE windows10040/linux90, not remote ICMP",
+    "tcp64k": "65536 byte real TCP write and echo both OS",
+    "owned_stop": "ALL_SCOPED_PASS"
+  },
+  "arm64": {
+    "run": 41560362587,
+    "result": "BUILD_PASS_NORMAL_TWO_CASE_PASS_GAMEFEC_H997_OBSERVED_FUNCTIONAL_BUT_ACTION_FAIL",
+    "build_job": 125669250908,
+    "normal_1460_job": 125670144738,
+    "normal_asymmetric_1460_1280_job": 125670144704,
+    "game_fec_observation": {
+      "run": 41561622303,
+      "action_conclusion": "failure",
+      "cases": [
+        {
+          "outer_ipv4": 1460,
+          "job": 125673425877
+        },
+        {
+          "outer_ipv4": 1500,
+          "job": 125673425908
+        }
+      ],
+      "both_os_original_tls_auth": "READY",
+      "both_os_udp_first_business": "DELIVERED_REAL_KERNEL",
+      "fec_fixed6_applied": true,
+      "each_side_parity_offered": 128,
+      "each_side_parity_copied": 128,
+      "each_side_kernel_copied": 768,
+      "each_side_tun_delivered": 64,
+      "each_side_authenticated_rejected": 0,
+      "each_side_replay_duplicate": 44,
+      "each_side_owned_stop": "DRAINED",
+      "meaning": "The test still failed because verifier demanded rejected=0, while actual rejected=44 is counted replay/duplicates; remains FAILED_ACTION and cannot be recorded as green run. Scoped functionality exists in logs; source-specific throughput and fault-free acceptance NOT_PROVEN."
+    },
+    "real_live_path_change": {
+      "run": 41560362587,
+      "job": 125670144696,
+      "conclusion": "failure",
+      "changed_actual_link": "both native ARM64 veth links 1500 to 1280 AFTER authenticated original Go TLS",
+      "actual_small_packet_delivery": "0 of 3 client->server small ICMP replies after change",
+      "qualifier": "REAL_UNRESOLVED_PRODUCT_OR_INTEGRATION_GAP; do not claim hot physical PMTU solved"
+    }
+  },
+  "performance": {
+    "result": "TWO_SCOPED_NATIVE_ACTIONS_PASS",
+    "normal": {
+      "run": 41561006375,
+      "conclusion": "success",
+      "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+      "harness": "b1b88aec05fee6df554ca431e97f5cb04639c9a2",
+      "scene": "scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json",
+      "same_vm_same_binary_sequential": true,
+      "off": {
+        "windows_cpu_total_s": 2.5938,
+        "windows_peak_rss_bytes": 42070016,
+        "first_delivery_fraction_windows": 1,
+        "first_delivery_fraction_linux": 1
+      },
+      "on": {
+        "windows_cpu_total_s": 1.6406,
+        "windows_peak_rss_bytes": 40292352,
+        "first_delivery_fraction_windows": 1,
+        "first_delivery_fraction_linux": 1
+      },
+      "note": "Total process time includes cold start/Stop. 0% loss; not causal proof of MTU code optimization."
+    },
+    "game4fec": {
+      "run": 41561019363,
+      "conclusion": "success",
+      "scene": "scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json",
+      "windows_cpu_total_s": 12.9531,
+      "windows_peak_rss_bytes": 70098944,
+      "first_delivery_fraction_windows": 1,
+      "first_delivery_fraction_linux": 1,
+      "note": "Different mode and independent VM; do not directly compare against Normal CPU as causal algorithm delta"
+    }
+  },
+  "historical_actions_preserved_as_fail": [
+    41554874742,
+    41554919787,
+    41556515001,
+    41556523338,
+    41560362587,
+    41561622303
+  ],
+  "retained_nonqualified": [
+    {
+      "area": "physical_live_pmtu",
+      "severity": "REAL_FAIL",
+      "next_owner": "PLAN028_NETWORK_PATH_SWITCH_AND_MTU_REBIND",
+      "detail": "True running session did not recover under in-place physical MTU reduction; 028 must not describe this capability as already delivered."
+    },
+    {
+      "area": "remote_user_space_icmp_type3_code4",
+      "severity": "NOT_MEASURED",
+      "next_owner": "FOLLOWUP_AS_REQUIRED_FOR_REAL_USERSPACE_OVERSIZE",
+      "detail": "DF1 local EMSGSIZE alone is not remote ICMP; native Game logs have icmp kernel sent=0 in this scoped workload."
+    },
+    {
+      "area": "game4fec_arm64_action",
+      "severity": "ACTION_FAIL_WITH_SCOPED_BUSINESS_PASS",
+      "next_owner": "FOLLOWUP_IF_ARM64_PROMOTION_REQUIRED",
+      "detail": "Fixture strict rejected=0 counts harmless replay/duplicate; authentic data, parity, Stop observed."
+    },
+    {
+      "area": "same_host_before_after_product_algorithm_cpu",
+      "severity": "NOT_PROVEN",
+      "next_owner": "LATER_CAUSAL_PERF_A_B_IF_NEEDED"
+    },
+    {
+      "area": "physical_wan_ipv6_unsupported_jumbo",
+      "severity": "NOT_RUN_OR_UNSUPPORTED",
+      "next_owner": "SEPARATE_PHYSICAL_PLATFORM_QUALIFICATION"
+    }
+  ],
+  "protocol_contract": {
+    "configured_outer_ipv4_default": 1460,
+    "maximum_only_explicit": 1500,
+    "layer2_included": false,
+    "inner_tun": "DERIVED_OS_APPLIED_READONLY",
+    "game_fec_1500_cap": 1398
+  },
+  "handoff": {
+    "next_task": "R0-M0-PLAN028-SESSION-CONFIG",
+    "status": "READY_FOR_NEW_AGENT_USER_ACTIVATION_NOT_STARTED",
+    "new_agent_entry": "docs/prompts/M0-PLAN028.md",
+    "continuity": "START_HERE.md, AGENTS.md, .governance/registry.json, .governance/workstreams/M0/cursor.json",
+    "guard": "Do not re-dispatch H990-H997 completed or failed Actions by default; don't retest 027A until a new product change demands regression; preserve source-specific original outcomes."
+  },
+  "new_product_test": "NOT_RUN_IN_CLOSEOUT_COMMIT",
+  "user_acceptance": "SCOPED_COMPLETION_SIGNOFF_NOT_CERTIFICATION_ALL_ORIGINAL_EXIT_GATES",
+  "full_product_qualification": false
+}
