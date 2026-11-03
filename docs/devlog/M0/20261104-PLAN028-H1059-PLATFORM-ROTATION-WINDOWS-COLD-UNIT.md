@@ -19,3 +19,7 @@ H1058 原 SOURCE `ec09e5178ca299fde4e3a746495e6e9583ee1bb1`：Windows/Go/Rust/Wi
 H1060 单测 Action [41676107633](https://github.com/lly8666/wbd-next/actions/runs/41676107633) 已过 UTF-8，但在 Windows `MainForm.cs` 原 Git blob 比对处仍 pre-test FAIL。对照既有 PLAN020 成功装配，发现本夹具只检 original_blob 而未将 donor `replace` 原文写回目标再由 assemble 施加 overlay；补相同源锁原字节恢复，不软化校验，不重编 Rust 数据面。
 
 独立回收此前漏记的 H1052 Linux/x86 原始证据：[Action 41663704278](https://github.com/lly8666/wbd-next/actions/runs/41663704278) SUCCESS，原工件 13246920018 manifest 证 SOURCE 987a3d、实际客户端/服务端/Rust SHA256、Game2 密码/证书拒绝日志 SHA256 均已解包核对。真实原 Go TLS+Rust 两个账户共享443、无手输route-key，Alice A2 同安装交接；错误密码、未知 CA 各自**未获得 Rust NativeOwner**，合法 A2/B 的真实 UDP 继续工作。见 [H1061 证据](../../evidence/M0/PLAN028-H1061-SOURCE987A-ORIGINAL-LINUX-GAME2-PASSWORD-NEGATIVE-20261104.json)。该证据来自已完成历史 Action，不作为用户新要求的平台轮换计数。
+
+## H1062 单测最终结果
+
+[Action 41676732684](https://github.com/lly8666/wbd-next/actions/runs/41676732684) SUCCESS。工件13251516137 独立读取：原 Go donor a7a8 + overlay 8f07；assembly receipt SHA256 8fcd35...、真实 Go test 日志 SHA256 f952b...。五个原 Windows TestM0PLAN028 分别测试 IPHelper 200/500ms 合并、真实出口 ifindex/source4 判定、在途 TLS context 取消、User Stop 不复活、密码认证失败不可被洗为重试，全部实际执行 PASS。前两次编译前夹具故障保留，不冒充物理 NIC/IP 真切换。证据 docs/evidence/M0/PLAN028-H1062-SOURCE8F07-WIN-PRE_READY-COLD-GO-UNIT-20261104.json。

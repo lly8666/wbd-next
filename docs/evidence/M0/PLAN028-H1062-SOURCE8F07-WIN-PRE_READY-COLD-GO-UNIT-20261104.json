@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1062",
+  "result": "PASS_SCOPED_WINDOWS_GO_UNIT_5_OF_5",
+  "source_sha": "8f078e28c1564cc5dd3d2bb92011a10fb26895fa",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "unchanged_windows_product_sha": "ec09e5178ca299fde4e3a746495e6e9583ee1bb1",
+  "action": {
+    "run_id": 41676732684,
+    "job_id": 126059256331,
+    "conclusion": "success",
+    "artifact_id": 13251516137,
+    "source_assembly_receipt_sha256": "8fcd35aedec7b23fc2babad272983583ad6009a79e3c1017775c78c647f474d7",
+    "log_sha256": "f952b114d628d9f736b27bfe6a1fb89e6e51c0dd05842de96bb120cc4e3f67ce"
+  },
+  "original_go_tests": [
+    "TestM0PLAN028NativeWindowsIPv4CallbackCoalescer",
+    "TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4",
+    "TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient",
+    "TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts",
+    "TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject"
+  ],
+  "assertions": {
+    "executed": 5,
+    "passed": 5,
+    "failed": 0,
+    "actual_go_test_elapsed_seconds": 0.021,
+    "artifacts_inspected": true
+  },
+  "previous_harness_failures": [
+    {
+      "run_id": 41675780906,
+      "cause": "Windows Python default cp1252 attempted UTF-8 manifest before Go tests"
+    },
+    {
+      "run_id": 41676107633,
+      "cause": "focused fixture did not reset donor replace Git blobs before source-locked assemble"
+    }
+  ],
+  "qualification_limits": [
+    "Go unit, no actual Windows physical NIC/IP switch",
+    "No real source egress rebind to first business packet timing",
+    "H1058 prior Windows real Wintun/Rust/WAL modes separately PASS scoped",
+    "H998 physical online MTU shrink FAIL retained",
+    "ARM64 Game4FEC older Action FAIL retained",
+    "CPU/p99 and Android NOT_RUN"
+  ],
+  "linux_task_platform_rule": "alternate native x86_64 client+server then ARM64 client+server per complete Linux task, Windows excluded",
+  "plan028": "IN_PROGRESS"
+}
