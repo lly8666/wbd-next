@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1010,
-  "checkpoint_sha": "8f14af9fa50f2f03b05182b8975d1b04fc3bd572",
+  "sequence": 1011,
+  "checkpoint_sha": "34f5c154f887911174ed03c56e002a4944975a8e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1010 repair source207 one-server-port Game2/4 native weak-lane fixture scoped drop: exact five-tuple, original action failed because port-only drop blackholed all lanes",
-  "why_now": "Action 41576418459 genuine native Game2 FAIL; both original TLS/Rust native owners Ready and Stop, but harness --dport 443 and --sport443 dropped all shared-port Game lanes instead of only lane1",
+  "current_task": "H1011 genuine one-server-port Game2/4 OFF full original Go TLS/Rust two-netns damaged-one-lane real app and owned Stop SOURCE34F5 PASS; next shared TUN per-device server IO",
+  "why_now": "Native Action 41577056598 succeeded after H1010 exact client source41031/server443 damaged-lane fixture correction; preserve original SOURCE207 FAIL",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1010 fixture-corrected native Game2/4 original Go protected TLS/Rust real first app and Stop exact SOURCE Actions. Do not report PASS from prior Action 41576418458 (product=NOT_RUN). Continue actual multi-device Rust shared TUN/one-server-port beyond a single Game group; seven modes and OS path switch remain.",
+  "next_action": "Implement PLAN028 §0.2 shared Rust TUN single-reader with destination-/32 to authenticated per-device session O(1) mapping, single server accept reauth and per-client effective route/MTU; then genuine same-account 2-device + another-account session concurrent TCP/UDP. Only after original authenticated native owner supports overlap enable A+B and Windows/Linux route notification catchup. No redundant 027A tests.",
   "unverified": true,
-  "last_tested_source": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
+  "last_tested_source": "34f5c154f887911174ed03c56e002a4944975a8e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1010-GAME-SHARED-PORT-DAMAGED-LANE-TEST-HARNESS-FAIL-SOURCE207-20261103.json"
+    "docs/evidence/M0/PLAN028-H1011-GAME2-GAME4-ONE-PORT-NATIVE-SOURCE34F5-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1010-GAME-NATIVE-HARNESS-5TUPLE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1011-GAME-ONE-PORT-NATIVE-ACCEPT.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 H1007 SOURCE837 protected Go multi-device cold TLS21/21 PASS; CLI config Go unit+Linux build PASS. H1008 SOURCE207 single-server-port Game source+kernel exact BPF passed compile/Ready/Stop but native damaged-lane business Action FAIL because test harness dropped *all* shared-port lanes. H1010 fixes fixture to first lane exact 41031↔443 only; pending real requalification. H998 historical failures kept."
+  "partial_summary": "H1007 original protected Go TLS 21/21 and Linux CLI cfg PASS. H1011 true source34f5 Game2/4 OFF one server TCP port, 2/4 distinct client ports, real damaged lane app/Stop PASS; preceding SOURCE207 fixture-caused failure retained. Server still only one logical device/TUN owner, no multi-client concurrently, no seven mode rotation or OS switch yet. H998 preserved."
 }

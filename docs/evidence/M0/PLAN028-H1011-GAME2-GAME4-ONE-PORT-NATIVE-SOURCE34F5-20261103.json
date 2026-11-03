@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1011",
+  "source_sha": "34f5c154f887911174ed03c56e002a4944975a8e",
+  "product_code_preceding_source": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
+  "overall": "SCOPED_FUNCTIONAL_PASS",
+  "action": {
+    "run_id": 41577056598,
+    "conclusion": "success",
+    "native_job_id": 125722897647,
+    "native_job_conclusion": "success",
+    "mode": "Actual original Go protected TLS ↔ Rust M3/M4, real AF_PACKET/TUN, 2-netns Linux same-source build"
+  },
+  "passing_scenes": [
+    {
+      "mode": "Game2",
+      "scope": "single server port443, 2 true independent client source ports, one damaged original FakeTCP lane via exact 41031->443 and server443->41031, healthy lane real UDP echo, owned Stop",
+      "result": "PASS",
+      "marker": "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2"
+    },
+    {
+      "mode": "Game4",
+      "scope": "single server port443, 4 true independent client source ports, one damaged original FakeTCP lane via exact ports, healthy lanes real UDP echo, owned Stop",
+      "result": "PASS",
+      "marker": "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+    },
+    {
+      "mode": "Normal Fixed",
+      "scope": "existing current product 64 real first-app UDP samples under original TLS/Rust TUN",
+      "result": "PASS",
+      "marker": "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64"
+    },
+    {
+      "mode": "Normal Auto",
+      "scope": "existing current product 64 real first-app UDP samples under original TLS/Rust TUN; Auto quality maturity NOT proven",
+      "result": "PASS",
+      "marker": "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64"
+    }
+  ],
+  "additional": "1pct underlay loss offered 512 real UDP, first unique delivered 507, 5 missing, Stop both; no false zero-loss inference",
+  "prior_failure": {
+    "source_sha": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
+    "run_id": 41576418459,
+    "result": "FAIL",
+    "cause": "old test harness dropped all single-port Game lanes using only --dport443/--sport443",
+    "preserved_evidence": "docs/evidence/M0/PLAN028-H1010-GAME-SHARED-PORT-DAMAGED-LANE-TEST-HARNESS-FAIL-SOURCE207-20261103.json"
+  },
+  "not_proven": [
+    "Two same-account devices simultaneous real Rust shared TUN",
+    "7-mode actual A->A+B->B",
+    "Game2/4 highest GameFEC damaged-lane new-source qualification",
+    "Windows/Linux OS path event and authenticated rebind",
+    "outer 1500->1280 physical online narrowing H998 remains FAIL",
+    "ARM64 Game4FEC H998 Action remains FAIL",
+    "remote ICMP3/4",
+    "causal CPU regression vs legacy",
+    "Android"
+  ]
+}
