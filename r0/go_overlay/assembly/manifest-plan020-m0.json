@@ -1046,7 +1046,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "aebd5f91981bbd93d1c4076bd983cb8e349cfc93"
+      "result_blob": "c8a2c903657a0bfd4ac472c5c95ab96a1c764327"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

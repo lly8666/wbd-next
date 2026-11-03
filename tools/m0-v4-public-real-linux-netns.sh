@@ -493,7 +493,7 @@ elif [[ "$LOSS" == 1 ]];then
 else
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
 fi
-if [[ "$AUTO_IP" == 1 ]];then
+if [[ "$AUTO_IP" == 1 && "$GAME" == 0 ]];then
   # Exactly one Rust process TUN reader, not one destructive TUN read per
   # connected device. Every real app echo must pass through the /32 demux.
   # The real auto-IP server is NOW the concurrent protected-TLS manager;
@@ -526,6 +526,30 @@ for role,path in (('server',sys.argv[1]),('client',sys.argv[2])):
         print("M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS authenticated_tls=1 os_lease_readback=1 routed=%d unrouted=%d backpressure=%d reader_joined=1"%(routed,unrouted,pressure))
 PY
   echo "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=$CLIENT_EFFECTIVE_IP app_udp=$PACKETS exact_generation_Rust_M4=1"
+fi
+# A Game client intentionally has no multi-group TUN fanout.
+# One ORIGINAL native group must join/Stop before the successor starts,
+# while the server's shared TUN reader continues through both cohorts.
+if [[ "$AUTO_IP" == 1 && "$GAME" != 0 ]];then
+  grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$GAME" "$TMP/server.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
+  python3 - "$TMP/client.log" "$TMP/server.log" "$GAME" <<'PY'
+import pathlib,re,sys
+client=pathlib.Path(sys.argv[1]).read_text()
+server=pathlib.Path(sys.argv[2]).read_text()
+n=int(sys.argv[3])
+assert client.count('V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes='+str(n))==2
+stop=client.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
+fresh=client.index('V4_PUBLIC_PATH_CANDIDATE role=client generation=2')
+assert stop<fresh,("new Game owner started before old Stop",stop,fresh)
+rows=re.findall(r'V4_PUBLIC_SHARED_TUN_STOP generation=(\d+) routed=(\d+) unrouted=(\d+) backpressure=(\d+) reader_joined=1',server)
+assert len(rows)==1 and int(rows[0][1])>=10,rows
+assert server.count('V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation')==1
+for role,log in (("client",client),("server",server)):
+    pairs=re.findall(r'V4_PUBLIC_GAME_FEC_COUNTERS role='+role+r' lanes='+str(n)+r' source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)',log)
+    assert len(pairs)==2 and all(int(s)>=5 and int(p)>0 and int(k)>0 for s,p,k in pairs),(role,pairs)
+print("M0_PLAN028_GAME4_FEC6_EXACT_ONE_TUN_READER_STOP_AND_TWO_PARITY_COHORTS_NATIVE_PASS old_stop_before_new_tls=1 server_shared_routed="+rows[0][1]+" parity_both_generations=1")
+PY
 fi
 if [[ "$GAME" == 0 ]];then
   grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1065",
+  "source_sha": "2943b2754bf576b59ccecc3765dc28d7b0bbd4f1",
+  "result": "TARGET_NATIVE_GAME4_FUNCTIONAL_OBSERVED_PASS_ACTION_OVERALL_FAIL_RETAINED",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run": {
+    "id": 41680333332,
+    "artifact_id": 13251334641,
+    "conclusion": "failure",
+    "native_log_path": "fixed-kernel-result/plan028-real-linux-game4fec6-path-switch-native.log",
+    "manifest": "fixed-kernel-result/manifest.json",
+    "source_manifest_exact": true,
+    "binary_source_reused_by_next_harness": true
+  },
+  "positive_observations": {
+    "hardware": "Linux/x86_64 both original Go TLS/Rust endpoints; two genuine netns, veth/TUN/raw AF_PACKET",
+    "mode": "Game4 fixed6",
+    "port": 443,
+    "original_client_lane_ports": 4,
+    "physical_source_change": [
+      "10.25.0.2",
+      "10.25.0.3"
+    ],
+    "outer_intent_ipv4": 1460,
+    "physical_new_ip_mtu": 1280,
+    "first_generation_client_tun_mtu": 1358,
+    "new_generation_client_tun_mtu_readback": 1178,
+    "same_verified_lease": "10.66.0.238/32",
+    "exact_old_stop_before_new_original_tls": true,
+    "old_client_ownership_DRAINED": true,
+    "new_tls_rust_m4_authenticated": true,
+    "old_server_group_exact_retirement": "same-protected-cohort-new-generation",
+    "new_application_udp_echo_count": 5,
+    "both_groups_client_parity_copied_nonzero": true,
+    "both_groups_server_parity_copied_nonzero": true
+  },
+  "why_action_failed": {
+    "native_fixture": "AUTO_IP final assertions checked Normal-only client V4_PUBLIC_SHARED_TUN_READER_READY and client V4_PUBLIC_SHARED_TUN_STOP in Game, but Game intentionally has one sequential group-owned TUN driver and server shared Rust TUN; misleading diagnostic FAIL after genuine native UDP success.",
+    "windows_source": "plan020 manifest result_blob pinned old overlay linux.go; assembly checks failed before Windows runtime, not product Windows TLS/Rust failure",
+    "final_mandatory_gate": "downstream loss multi-mode skipped due prior functional stage failed; no loss semantic inference"
+  },
+  "frozen_remedy": "reuse already compiled source2943 Go/Rust binary artifact with separate test harness checked via exact SHA and Game-specific server single reader + exact two client group Stop",
+  "limitations": [
+    "overall source2943 Action FAILURE remains until frozen Game-specific Action verified",
+    "no simultaneous healthy client Game lanes A+B overlap",
+    "not Windows physical NIC switch",
+    "not ARM64 latest Game4FEC qualification",
+    "H998 online MTU shrink FAIL retained",
+    "CPU/p99 and remote ICMP unmeasured"
+  ]
+}

@@ -1,0 +1,82 @@
+name: M0 PLAN028 frozen x86 Linux Game4 native physical source switch
+run-name: PLAN028 x86 Game4 original SOURCE2943 path ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-linux-game4-path-frozen.yml"
+      - "tools/m0-v4-public-real-linux-netns.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-go-rust-x86-game4-fec6-physical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      WBD_PLAN028_FROZEN_SOURCE: 2943b2754bf576b59ccecc3765dc28d7b0bbd4f1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41680333332
+          github-token: ${{ github.token }}
+          name: m0-plan012-combined-41680333332-1
+          path: ./
+      - name: Exact H1064 built original Go/Rust SHA/ELF, no second build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-kernel-result")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["WBD_PLAN028_FROZEN_SOURCE"],m["source_sha"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              p=pathlib.Path("fixed-build")/name
+              b=p.read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["binaries_sha256"][name],name
+              assert b[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",b,18)[0]==62,(name,"not x86_64 ELF")
+          print("M0_PLAN028_H1064_FROZEN_X86_PRODUCT_GO_RUST_SHA_VERIFIED no_rebuild=1")
+          PY
+          chmod 0755 fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: One real Linux x86 client+server Game4 FEC6 RTNL 1500 to 1280
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          # No 027 legacy matrix; only the exact new Game path scenario.
+          WBD_V4_PUBLIC_MODE=game4 WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_GAME_FEC=fixed6 \
+            bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-h1065-game4-native-frozen.log 2>&1 || {
+              tail -150 fixed-kernel-result/plan028-h1065-game4-native-frozen.log >&2
+              exit 1
+            }
+          for marker in \
+            M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_OLD_STOP_NEW_AUTH_PASS \
+            M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS \
+            M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS \
+            M0_PLAN028_GAME4_FEC6_EXACT_ONE_TUN_READER_STOP_AND_TWO_PARITY_COHORTS_NATIVE_PASS;do
+              grep -Fq "$marker" fixed-kernel-result/plan028-h1065-game4-native-frozen.log
+          done
+          echo M0_PLAN028_FROZEN_X86_GAME4FEC6_RTN_NETLINK_REAL_APP_STOP_PASS source=${WBD_PLAN028_FROZEN_SOURCE} harness=${GITHUB_SHA}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-h1065-game4-x86-frozen-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/plan028-h1065-game4-native-frozen.log
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          if-no-files-found: warn
+          retention-days: 14
