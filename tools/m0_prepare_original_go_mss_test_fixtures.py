@@ -14,7 +14,7 @@ FIXTURE = "m0CurrentV4MSSFixture"
 # Exact number of references is part of the pinned source contract. A new
 # caller of DefaultMSS cannot be silently accepted by a mass replace.
 EXPECTED = {
-    "admission_v4_test.go": 1,
+    # Admission V4 fixture now directly pins 1460 outer / MSS1420.
     "bridge_v4_probe_linux_test.go": 7,
     "tls_test.go": 1,
     "wire_qualification_test.go": 2,

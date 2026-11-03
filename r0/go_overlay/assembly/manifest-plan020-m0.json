@@ -1083,7 +1083,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "707b219f3c86fc57857b2c2c8ca38b0659f24ef2"
+      "result_blob": "a266afb9f0f2c158adfecbeec83583d2018ee7c9"
     },
     {
       "kind": "create",
