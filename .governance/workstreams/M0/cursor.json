@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1004,
-  "checkpoint_sha": "f139bc585fcc0cd18c817120688930c2634f5afe",
+  "sequence": 1005,
+  "checkpoint_sha": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1004 actual PLAN028 protected TLS A+B lane incarnation fencing and native Linux Normal/Game exact Stop first code slice",
-  "why_now": "H1003 startup ambiguities fixed; user asked immediate product construction",
+  "current_task": "H1005 collect exact original Go protected TLS cold lane fencing 20/20 PASS; PLAN028 first shared-access workpackage still in_progress",
+  "why_now": "Original SOURCE c429 native/source-locked Go V4 cold tests passed; record exact scope and protect H998 historical failures",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect exact-source H1004 Go TLS Action; then implement shared single-port accept, per-device config/lease and Rust indexed shared TUN IO with both sides/assembly/fixture before native qualification. Enable production replacement only after native owner supports overlap. Continue network events and route-key UX.",
+  "next_action": "Continue PLAN028 §0.2 shared access/real per-device lease: implement single server port and shared Rust owner IP-indexed dispatch plus its two-sided config and native harness; do not enable overlap native yet. Collect still-in-flight source c429 Windows/Linux Actions before deciding affected retests. Then handover/path events and route-key first hello UX. H998 remains FAIL.",
   "unverified": true,
-  "last_tested_source": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
+  "last_tested_source": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
+    "docs/evidence/M0/PLAN028-H1005-EXACT-GO-COLD-LANE-FENCE-SOURCEC429-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -25,8 +25,8 @@
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/devlog/M0/20261103-PLAN028-H1004-AUTH-LANE-FENCING.md",
-    "docs/evidence/M0/PLAN028-H1000-ENTRY-DEPENDENCY-AUDIT-20261103.json"
+    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 has first product code: opt-in same-lane protected A+B cold admission and incarnation-exact Linux Normal/Game Stop; legacy still rejects duplicates, native overlap remains disabled. H998 FAIL retained; not complete."
+  "partial_summary": "H1004 actual code committed: Go authenticated same-lane epoch overlap + incarnation-specific release and Linux Normal/Game Stop caller. H1005 original pinned Go V4 TLS 20 PASS incl two new tests at c429, cold Rust parser 4 PASS; original Linux modes non-overlap PASS. Real multi-client/shared TUN/path change NOT_RUN. No 028 full completion."
 }

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1005",
+  "source_sha": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
+  "scope": "GO_V4_PROTECTED_TLS_COLD_ADMISSION_ONLY",
+  "result": "PASS",
+  "artifact_verified": true,
+  "actions": {
+    "go_original_tls": {
+      "run": 41571723148,
+      "conclusion": "success",
+      "build_job": 125705901622,
+      "consume_job": 125706144294,
+      "tests_passed": 20,
+      "tests_failed": 0,
+      "binary_sha256": "27b62bdb1d63407837010d2a7a3f8445e6fe8eec3032aa3be1cac8e39a0236f4",
+      "test_log_sha256": "e234f7a1427ba0a4512749542b3834fbb6d47ea056221cdeea0e3577b78df488",
+      "new_tests": [
+        "TestR0V4AuthenticatedSameLaneOverlapAndExactGenerationRetire",
+        "TestR0V4ReplacementNonceRejectsWithoutTouchingOriginal"
+      ]
+    },
+    "go_rust_cold_abi": {
+      "run": 41571723222,
+      "conclusion": "success",
+      "rust_parser_tests": 4,
+      "go_real_tls_cold_bundle_test": 1,
+      "live_rust_install": "NOT_IMPLEMENTED"
+    },
+    "go_control": {
+      "run": 41571723056,
+      "conclusion": "success",
+      "old_go_runtimeentry_groups_passed": 6
+    },
+    "original_linux_modes_regression": {
+      "run": 41571723076,
+      "conclusion": "success",
+      "scope": "Original Linux real Go/Rust Normal fixed/auto and Game2/Game4 compatibility scenarios; no PLAN028 multi-device or overlap enabled"
+    },
+    "governance": {
+      "run": 41571723040,
+      "conclusion": "success"
+    },
+    "normal_common": {
+      "run": 41571723066,
+      "conclusion": "success"
+    }
+  },
+  "settings": {
+    "allow_lane_replacement_default": false,
+    "outer_mtu_default": 1460,
+    "server_port_multi_client": "NOT_WIRED"
+  },
+  "claims": {
+    "auth_tls_generation_fence": "GO_COLD_PASS",
+    "exact_native_owner_replacement": "NOT_RUN",
+    "single_port_multi_client_rust_tun": "NOT_RUN",
+    "real_windows_linux_path_notifications": "NOT_RUN",
+    "android": "NOT_RUN",
+    "physical_pmtu_1500_to_1280": "H998_FAIL_NOT_RETESTED",
+    "remote_icmp_type3_code4": "NOT_MEASURED",
+    "cpu_causality": "NOT_PROVEN"
+  },
+  "note": "Go cold tests are original TLS with FakeTCP association, not a native Rust shared owner. Existing Linux modes use default no-overlap and cannot prove A+B lane or multi-client IP routing."
+}

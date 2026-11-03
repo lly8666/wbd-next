@@ -61,9 +61,16 @@
       "evidence": null
     },
     {
-      "platform": "Go protected V4 cold TLS and Linux Stop callsites",
-      "scope": "PLAN028 H1004 exact per-instance generation fencing source candidate, native multi-client business pending",
-      "status": "IMPLEMENTED_NOT_TESTED",
+      "platform": "linux/x64 original Go V4 protected TLS FakeTCP cold admission",
+      "scope": "PLAN028 authenticated same-lane A+B B+C, strict stale generation release, other-device isolation and invalid nonce: exact 20 protected TLS tests; native Rust shared TUN not included",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
+      "evidence": "docs/evidence/M0/PLAN028-H1005-EXACT-GO-COLD-LANE-FENCE-SOURCEC429-20261103.json"
+    },
+    {
+      "platform": "Windows/Linux real multi-client shared Rust native IO",
+      "scope": "PLAN028 same-port actual two-device business, Game A+B, physical network change and independent MTU",
+      "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     }
@@ -74,7 +81,8 @@
     "PLAN028仅规划补齐账号输入简化、单端口同账号多设备/自动地址/每会话独立配置；不改变本卡现有源码与资格。",
     "PLAN028后续约定：client只提交外层MTU意图，server结合本地方向限制收窄；内层自动派生，不要求双端手填，不覆盖其他client全局TUN。本次仅方案同步。",
     "PLAN028 IN_PROGRESS: H1004 implements an opt-in protected TLS same-lane overlapping epoch reservation and incarnation-fenced Stop API. Native shared owner/single-port dispatch still NOT_RUN; H998 live MTU failure remains.",
-    "H1004 Linux Normal/Game Stop callsites now use authenticated TLS incarnation tokens; an old epoch-only retire is forbidden after overlap. No PLAN028 real-network multi-client PASS is claimed."
+    "H1004 Linux Normal/Game Stop callsites now use authenticated TLS incarnation tokens; an old epoch-only retire is forbidden after overlap. No PLAN028 real-network multi-client PASS is claimed.",
+    "H1005 exact Go protected TLS Action 41571723148 success 20/20 confirms cold generation-fencing only; the native single-port shared session owner, configuration readback and path notification remain not qualified."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
