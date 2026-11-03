@@ -4,18 +4,17 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1000,
-  "checkpoint_sha": "ea3b97a973defc8727d12e6ec81937d7877c0abf",
+  "sequence": 1001,
+  "checkpoint_sha": "8d4e380cf030ddb446abcb1d0364b25efc12ce66",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1000 PLAN028 explicit user start; scoped H998 preserved; audited current Go V4 admission/port/route-key/lifecycle and assembly boundary; no product changes",
-  "why_now": "User explicitly invoked M0-PLAN028 after H998; H999 governance recovered at ea3b97a and Action 41566715536 success",
+  "current_task": "H1001 PLAN028 audit governance attribution correction; product implementation and test still NOT_RUN",
+  "why_now": "H1000 initial governance Action 41567893869 rejected a non-test entry audit under evidence_refs; move H1000 audit to context_refs and keep only exact H998 tested source as evidence",
   "done_when": "On explicit new-agent launch of PLAN028: true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. Existing PLAN027A source-accepted H998 closeout is not rewritten as unqualified PASS.",
-  "next_action": "Implement as one cohesive Go TLS + Rust owner + Windows/Linux OS batch, beginning with versioned authenticated session/config/endpoint/snapshot and true per-device ownership. Existing one-owner/server and per-lane Game ports must be replaced, not papered over; after source freeze run build once and source-locked native Action scenarios. H1000 is audit only.",
+  "next_action": "Proceed with full product implementation at authenticated Go/Rust/Windows/Linux boundary; H1001 documentation-only governance correction. A separate pinned G2 rev3 bootstrap remains red on registry rev4 and is not a PLAN028 product test.",
   "unverified": true,
   "last_tested_source": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1000-ENTRY-DEPENDENCY-AUDIT-20261103.json",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "context_refs": [
@@ -26,8 +25,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1000-ENTRY-DEPENDENCIES.md"
+    "docs/devlog/M0/20261103-PLAN028-H1000-ENTRY-DEPENDENCIES.md",
+    "docs/evidence/M0/PLAN028-H1000-ENTRY-DEPENDENCY-AUDIT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 now authorized/in progress. H1000 contains real code-path audit, no product code or new test. Server one-owner and Game multi-port, strict epoch lane conflict, pre-TLS HMAC route-key, common TUN MTU and dead90-only current cold retry are the concrete integration gaps. Existing H998 scoped fail/not measured retained."
+  "partial_summary": "PLAN028 user activated. No product code or native source tests. H1000 audit is context, not source-locked native evidence; H998 only evidence_refs. H1000 governance fail attributable to audit falsely in source-only field. Frozen G2 bootstrap rev3 check also failed at registry rev4."
 }
