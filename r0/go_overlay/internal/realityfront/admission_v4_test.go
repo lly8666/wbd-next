@@ -26,7 +26,7 @@ func v4TestPolicy(lanes uint8, cipher uint8) AdmissionPolicy {
 func v4Pair(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint8,policy AdmissionPolicy,epoch [16]byte)(*V4ClientSession,*V4ServerSession,error,error) {
     return v4PairFeatureProbe(t,store,user,tunnel,lane,policy,epoch,false,false)
 }
-func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint8,policy AdmissionPolicy,epoch [16]byte,clientFec2,serverFec2 bool)(*V4ClientSession,*V4ServerSession,error,error) {
+func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []byte,lane uint8,policy AdmissionPolicy,epoch [16]byte,clientFec2,serverFec2 bool,allowReplacement ...bool)(*V4ClientSession,*V4ServerSession,error,error) {
     t.Helper()
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
@@ -40,7 +40,7 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
             TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                 TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
             ExpectedUsername:user,ExpectedPassword:"secret",ServerLimit:1400,
-        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2})
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0]})
         server<-answer{s,e}
     }()
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
@@ -101,6 +101,107 @@ func TestR0V4LaneJoinEpochAndDuplicateRejected(t *testing.T) {
     if ce!=nil||se!=nil{t.Fatalf("explicit released restart %v %v",ce,se)}
     if c3.Epoch==c1.Epoch {t.Fatal("new logical tunnel reused epoch")}
     if err:=store.ReleaseLane("alice",tunnel,1,c3.Epoch);err!=nil{t.Fatal(err)}
+}
+
+// Two real protected TLS handshakes may share one logical epoch and one
+// lane only when the server explicitly enables an A+B candidate. The
+// per-incarnation secret is a server-authenticated generation fence, not a
+// client-chosen or epoch-only resource key. No native owner is claimed here.
+func TestR0V4AuthenticatedSameLaneOverlapAndExactGenerationRetire(t *testing.T) {
+    store,err:=NewV4EpochStore(2)
+    if err!=nil {t.Fatal(err)}
+    user:="device-owner"
+    tunnel:=[]byte("abcdef0123456789")
+    otherTunnel:=[]byte("0123456789abcdef")
+    policy:=v4TestPolicy(1,CipherChaCha)
+    a,sa,ae,ase:=v4Pair(t,store,user,tunnel,1,policy,[16]byte{})
+    if ae!=nil||ase!=nil {t.Fatalf("A admission %v %v",ae,ase)}
+    aCold,err:=sa.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    sibling,ss,se,sse:=v4Pair(t,store,user,otherTunnel,1,policy,[16]byte{})
+    if se!=nil||sse!=nil{t.Fatalf("sibling admission %v %v",se,sse)}
+    siblingCold,err:=ss.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if sibling.Epoch==a.Epoch||siblingCold.TunnelID()==aCold.TunnelID(){
+        t.Fatal("same-account different devices share a tunnel or epoch")
+    }
+
+    // Opt-in is protected server state, not a client request; old API still
+    // rejects duplicates in the default path (covered by lane-join test).
+    b,sb,be,bse:=v4PairFeatureProbe(t,store,user,tunnel,1,policy,a.Epoch,false,false,true)
+    if be!=nil||bse!=nil{t.Fatalf("B protected candidate %v %v",be,bse)}
+    bCold,err:=sb.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if b.Epoch!=a.Epoch||bCold.Incarnation()==aCold.Incarnation()||
+       bCold.DirectionKeys()==aCold.DirectionKeys(){
+        t.Fatal("replacement changed logical epoch or reused per-lane keys")
+    }
+
+    // At most two active instances of a lane; third overlapping candidate
+    // must be refused even with authenticated account and correct epoch.
+    _,_,thirdClient,thirdServer:=v4PairFeatureProbe(t,store,user,tunnel,1,policy,a.Epoch,false,false,true)
+    if !errors.Is(thirdClient,ErrAdmissionParams)||!errors.Is(thirdServer,ErrAdmissionParams){
+        t.Fatalf("third lane accepted: client=%v server=%v",thirdClient,thirdServer)
+    }
+    if err:=store.ReleaseLane(user,tunnel,1,a.Epoch);!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("epoch-only old owner could release overlapping B: %v",err)
+    }
+    if err:=store.ReleaseLaneInstance(user,tunnel,1,a.Epoch,siblingCold.Incarnation());!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("sibling token released another device: %v",err)
+    }
+    if err:=store.ReleaseLaneInstance(user,tunnel,1,a.Epoch,aCold.Incarnation());err!=nil{
+        t.Fatalf("A exact retirement: %v",err)
+    }
+    if err:=store.ReleaseLane(user,tunnel,1,a.Epoch);!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("stale epoch-only A retired new B after A stop: %v",err)
+    }
+    if err:=store.ReleaseLaneInstance(user,tunnel,1,a.Epoch,aCold.Incarnation());!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("stale A Stop returned success twice: %v",err)
+    }
+
+    // B stays live and permits the next protected C, while independent
+    // device/session remains valid across both generation changes.
+    c,sc,ce,cse:=v4PairFeatureProbe(t,store,user,tunnel,1,policy,b.Epoch,false,false,true)
+    if ce!=nil||cse!=nil{t.Fatalf("C after A retire %v %v",ce,cse)}
+    cCold,err:=sc.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if c.Epoch!=b.Epoch||cCold.Incarnation()==bCold.Incarnation(){
+        t.Fatal("C did not rotate unique generation")
+    }
+    if err:=store.ReleaseLaneInstance(user,tunnel,1,b.Epoch,bCold.Incarnation());err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance(user,tunnel,1,c.Epoch,cCold.Incarnation());err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLane(user,otherTunnel,1,sibling.Epoch);err!=nil{
+        t.Fatalf("sibling session wrongly retired by first device: %v",err)
+    }
+    store.mu.Lock()
+    remaining:=len(store.entries)
+    store.mu.Unlock()
+    if remaining!=0{t.Fatalf("owner leak after exact stop: %d",remaining)}
+}
+
+// Candidate nonce collision/failure cannot disturb an already active lane or
+// leave the pending slot stuck. Errors are resolved before reply/Detach.
+func TestR0V4ReplacementNonceRejectsWithoutTouchingOriginal(t *testing.T) {
+    store,_:=NewV4EpochStore(1)
+    tunnel:=[]byte("0123456789abcdef")
+    policy:=v4TestPolicy(1,CipherAES128)
+    a,sa,ce,se:=v4Pair(t,store,"noncetest",tunnel,1,policy,[16]byte{})
+    if ce!=nil||se!=nil{t.Fatalf("A admission %v %v",ce,se)}
+    cold,err:=sa.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    for _,entropy:=range [][]byte{make([]byte,16),func()[]byte{n:=cold.Incarnation();return append([]byte(nil),n[:]...)}()} {
+        _,_,finish,err:=store.prepare("noncetest",tunnel,1,a.Epoch,
+            bytes.NewReader(entropy),true)
+        if !errors.Is(err,ErrAdmissionParams)||finish!=nil{
+            t.Fatalf("bad candidate nonce accepted or returned finish: %v",err)
+        }
+    }
+    b,sb,be,bse:=v4PairFeatureProbe(t,store,"noncetest",tunnel,1,policy,a.Epoch,false,false,true)
+    if be!=nil||bse!=nil{t.Fatalf("live A poisoned by rejected B: %v %v",be,bse)}
+    fresh,err:=sb.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance("noncetest",tunnel,1,a.Epoch,cold.Incarnation());err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance("noncetest",tunnel,1,b.Epoch,fresh.Incarnation());err!=nil{t.Fatal(err)}
 }
 
 func TestR0V4WrongEpochAndIdentityReject(t *testing.T) {

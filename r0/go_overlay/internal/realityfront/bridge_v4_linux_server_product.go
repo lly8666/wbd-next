@@ -59,6 +59,7 @@ type V4LinuxServerProduct struct {
     tunnel [16]byte
     lane uint8
     epoch [16]byte
+    incarnation [16]byte // verified TLS owner identity; never epoch-only retire
     stopped bool
 }
 // NewV4LinuxServerProduct requires the real kernel device, rather than a
@@ -129,6 +130,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.tunnel=verified.TunnelID()
     p.lane=verified.LaneID()
     p.epoch=verified.Epoch()
+    p.incarnation=verified.Incarnation()
     // Real Go SYN/SYN-ACK peer profile, recorded after protected TLS.
     bridge.sackPermitted=assoc.PeerTCPProfile().SACKPermitted
     if p.cfg.ConfigureTunnelMTU!=nil {
@@ -268,11 +270,11 @@ func (p *V4LinuxServerProduct) closeLocked()error{
     if p.owner==nil||p.session==nil{return ErrAdmissionUnsupported}
     _,err:=V4StopThenCleanupNetwork(p.owner,p.cfg.CleanupOwnedNetwork)
     if err!=nil{return err}
-    if p.principal==""||p.epoch==[16]byte{}||p.lane==0 {
+    if p.principal==""||p.epoch==[16]byte{}||p.incarnation==[16]byte{}||p.lane==0 {
         return ErrAdmissionParams
     }
-    if err=p.cfg.Epochs.ReleaseLane(
-        p.principal,p.tunnel[:],p.lane,p.epoch,
+    if err=p.cfg.Epochs.ReleaseLaneInstance(
+        p.principal,p.tunnel[:],p.lane,p.epoch,p.incarnation,
     );err!=nil{return err}
     p.stopped=true
     return nil

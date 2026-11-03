@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1003,
-  "checkpoint_sha": "743ddf0e25bdb2ba62cfe2c701e8241c724ae98f",
+  "sequence": 1004,
+  "checkpoint_sha": "f139bc585fcc0cd18c817120688930c2634f5afe",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1003 correct three stale PLAN028 start references; immediately proceed to §0.2 shared-access/session product workpackage",
-  "why_now": "User explicitly asked to fix remaining 3 startup ambiguities and begin actual PLAN028 product implementation",
+  "current_task": "H1004 actual PLAN028 protected TLS A+B lane incarnation fencing and native Linux Normal/Game exact Stop first code slice",
+  "why_now": "H1003 startup ambiguities fixed; user asked immediate product construction",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "PLAN028 already authorized. From §0.2 implement first incomplete coherent shared-access/session workpackage (both sides, assembly, config, harness), freeze source and test after that workpackage; follow with handover/path event and route-key cold UX workpackages. Never re-run H1000 admission audit without new source conflict.",
+  "next_action": "Collect exact-source H1004 Go TLS Action; then implement shared single-port accept, per-device config/lease and Rust indexed shared TUN IO with both sides/assembly/fixture before native qualification. Enable production replacement only after native owner supports overlap. Continue network events and route-key UX.",
   "unverified": true,
   "last_tested_source": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1000-ENTRY-DEPENDENCIES.md",
+    "docs/devlog/M0/20261103-PLAN028-H1004-AUTH-LANE-FENCING.md",
     "docs/evidence/M0/PLAN028-H1000-ENTRY-DEPENDENCY-AUDIT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 previously activated; H1003 corrects stale START_HERE, rollout overview, cursor/registry open-condition wording. Current product source still NOT_RUN at this checkpoint; begin §0.2 product implementation immediately; preserve H998 FAIL/NOT_MEASURED."
+  "partial_summary": "PLAN028 has first product code: opt-in same-lane protected A+B cold admission and incarnation-exact Linux Normal/Game Stop; legacy still rejects duplicates, native overlap remains disabled. H998 FAIL retained; not complete."
 }

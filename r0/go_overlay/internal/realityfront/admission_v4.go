@@ -212,6 +212,10 @@ type V4ServerOptions struct {
     fec2Product bool // package-private genuine Linux fixed/auto owner
     GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
     Epochs *V4EpochStore // shared by all lanes of the same server instance
+    // Explicit cold admission capability only. The native shared owner must
+    // independently prove that two generations can coexist before enabling.
+    // Default false preserves reject-duplicate semantics on old call sites.
+    AllowLaneReplacement bool
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
 
@@ -242,9 +246,16 @@ type v4Entry struct {
     active bool
     lanes uint8 // 1<<lane (IDs 1..4)
     pending uint8
+    // One owner incarnation normally; at most old+new during explicit
+    // make-before-break. Keys and nonce are unique even when epoch is shared.
+    instances [5][][16]byte
+    // Once a lane overlaps, epoch-only release can no longer identify an
+    // owner. Keep it disabled after old A leaves, until tunnel retirement.
+    fenced [5]bool
 }
-// Per-server explicit-lifecycle store. Session close must call ReleaseLane;
-// it must not rely on GC, wall-clock or TunnelID alone as a generation.
+
+// Per-server explicit-lifecycle store. Session close must release its exact
+// authenticated incarnation; do not infer an owner from username or epoch.
 type V4EpochStore struct {
     mu sync.Mutex
     entries map[string]*v4Entry
@@ -257,21 +268,63 @@ func NewV4EpochStore(max int) (*V4EpochStore,error) {
 func v4Identity(username string,tunnelID []byte) string {
     return username + "/" + string(tunnelID)
 }
+
+// ReleaseLane keeps only the legacy non-overlapping lifecycle working.
+// After overlap it refuses epoch-only release, including after one of the two
+// generations has retired: a stale callback must not remove its successor.
 func (s *V4EpochStore) ReleaseLane(username string,tunnelID []byte,lane uint8,epoch [16]byte) error {
-    if s==nil || !validAdmissionLaneID(lane) {return ErrAdmissionParams}
+    if s==nil || !validAdmissionLaneID(lane) || len(tunnelID)!=16 {return ErrAdmissionParams}
     key:=v4Identity(username,tunnelID)
     s.mu.Lock()
     defer s.mu.Unlock()
-    e,ok:=s.entries[key]
-    bit:=uint8(1<<lane)
-    if !ok || !e.active || e.epoch!=epoch || e.lanes&bit==0 {return ErrAdmissionParams}
-    e.lanes &^= bit
+    e:=s.entries[key]
+    if e==nil || e.epoch!=epoch || !e.active ||
+       e.fenced[lane] || len(e.instances[lane])!=1 {return ErrAdmissionParams}
+    e.instances[lane]=nil
+    e.lanes &^= uint8(1<<lane)
     if e.lanes==0 && e.pending==0 {delete(s.entries,key)}
     return nil
 }
-func (s *V4EpochStore) prepare(username string,tunnelID []byte,lane uint8,want [16]byte,rng io.Reader)([16]byte,func(bool),error) {
+
+// ReleaseLaneInstance is the only safe Stop/retire path for a replacement.
+// The immutable nonce comes from the verified TLS snapshot, not user input.
+func (s *V4EpochStore) ReleaseLaneInstance(
+    username string,tunnelID []byte,lane uint8,epoch,incarnation [16]byte,
+) error {
+    if s==nil || !validAdmissionLaneID(lane) || len(tunnelID)!=16 ||
+       incarnation==[16]byte{} {return ErrAdmissionParams}
+    key:=v4Identity(username,tunnelID)
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    e:=s.entries[key]
+    if e==nil || !e.active || e.epoch!=epoch {return ErrAdmissionParams}
+    index:=-1
+    for i,instance:=range e.instances[lane] {
+        if instance==incarnation {index=i;break}
+    }
+    if index<0 {return ErrAdmissionParams}
+    instances:=e.instances[lane]
+    copy(instances[index:],instances[index+1:])
+    instances=instances[:len(instances)-1]
+    e.instances[lane]=instances
+    if len(instances)==0 {e.lanes &^= uint8(1<<lane)}
+    if e.lanes==0 && e.pending==0 {delete(s.entries,key)}
+    return nil
+}
+
+// prepare runs only after TLS credential verification. The first attempt
+// creates a new logical epoch; additional lanes join that epoch. Explicit
+// replacement can reserve one additional instance of the SAME lane, but no
+// third owner and never two simultaneously pending candidates. The per-lane
+// random incarnation is drawn here, before the protected reply, and reused
+// as the immutable generation-fencing token for its exact Stop callback.
+func (s *V4EpochStore) prepare(
+    username string,tunnelID []byte,lane uint8,want [16]byte,
+    rng io.Reader,allowReplacement bool,
+)([16]byte,[16]byte,func(bool),error) {
     var zero [16]byte
-    if s==nil || rng==nil || !validAdmissionLaneID(lane) || len(tunnelID)!=16 {return zero,nil,ErrAdmissionParams}
+    if s==nil || rng==nil || !validAdmissionLaneID(lane) ||
+       len(tunnelID)!=16 {return zero,zero,nil,ErrAdmissionParams}
     key:=v4Identity(username,tunnelID)
     bit:=uint8(1<<lane)
     s.mu.Lock()
@@ -279,37 +332,48 @@ func (s *V4EpochStore) prepare(username string,tunnelID []byte,lane uint8,want [
     e,found:=s.entries[key]
     newTunnel:=want==zero
     if newTunnel {
-        if found || len(s.entries)>=s.max {return zero,nil,ErrAdmissionParams}
+        if found || len(s.entries)>=s.max {return zero,zero,nil,ErrAdmissionParams}
         var epoch [16]byte
-        if _,err:=io.ReadFull(rng,epoch[:]);err!=nil{return zero,nil,err}
-        if epoch==zero {return zero,nil,ErrAdmissionParams}
-        e=&v4Entry{epoch:epoch,pending:bit}
-        s.entries[key]=e
+        if _,err:=io.ReadFull(rng,epoch[:]);err!=nil{return zero,zero,nil,err}
+        if epoch==zero{return zero,zero,nil,ErrAdmissionParams}
+        e=&v4Entry{epoch:epoch}
     } else {
-        if !found || !e.active || e.epoch!=want || e.pending&bit!=0 || e.lanes&bit!=0 {
-            return zero,nil,ErrAdmissionParams
+        if !found || !e.active || e.epoch!=want || e.pending&bit!=0 {
+            return zero,zero,nil,ErrAdmissionParams
         }
-        e.pending|=bit
+        n:=len(e.instances[lane])
+        if n>0 && (!allowReplacement || n>=2) {
+            return zero,zero,nil,ErrAdmissionParams
+        }
     }
+    var nonce [16]byte
+    if _,err:=io.ReadFull(rng,nonce[:]);err!=nil{return zero,zero,nil,err}
+    if nonce==zero{return zero,zero,nil,ErrAdmissionParams}
+    for _,old:=range e.instances[lane] {
+        if old==nonce {return zero,zero,nil,ErrAdmissionParams}
+    }
+    e.pending|=bit
+    if newTunnel {s.entries[key]=e}
     actual:=e.epoch
-    // Idempotent transaction end, with an explicit commit AFTER DetachTransition.
     ended:=false
     finish:=func(commit bool) {
         s.mu.Lock()
         defer s.mu.Unlock()
-        if ended {return}
+        if ended{return}
         ended=true
         current:=s.entries[key]
-        if current!=e {return}
+        if current!=e{return}
         e.pending &^= bit
         if commit {
-            e.lanes |= bit
+            if len(e.instances[lane])!=0 {e.fenced[lane]=true}
+            e.instances[lane]=append(e.instances[lane],nonce)
+            e.lanes|=bit
             e.active=true
-        } else if newTunnel || (!e.active && e.pending==0) {
+        } else if e.lanes==0 && e.pending==0 {
             delete(s.entries,key)
         }
     }
-    return actual,finish,nil
+    return actual,nonce,finish,nil
 }
 
 func v4RequestWire(req AdmissionRequest,ext V4Extension)([]byte,error) {
@@ -545,7 +609,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     source:=cfg.Random
     if source==nil {source=rand.Reader}
-    epoch,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source)
+    epoch,nonce,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source,opt.AllowLaneReplacement)
     if err!=nil {
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,err
@@ -554,8 +618,6 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     // finish is idempotent; the authenticated successful branch explicitly
     // commits only after protected reply and DetachTransition both succeed.
     defer finish(false)
-    var nonce [16]byte
-    if _,err:=io.ReadFull(source,nonce[:]);err!=nil{return nil,err}
     lease:=""
     if req.AutoLease {
         if cfg.AllocateLease==nil {

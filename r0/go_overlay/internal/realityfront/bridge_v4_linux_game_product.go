@@ -264,8 +264,8 @@ func (p *V4LinuxGameProduct) abortLocked()error{
         for _,session:=range p.serverSessions{
             cold,e:=session.ColdSnapshot()
             if e!=nil{return e}
-            if err:=p.cfg.Epochs.ReleaseLane(
-                cold.principal,cold.tunnelID[:],cold.laneID,cold.epoch,
+            if err:=p.cfg.Epochs.ReleaseLaneInstance(
+                cold.principal,cold.tunnelID[:],cold.laneID,cold.epoch,cold.incarnation,
             );err!=nil{return err}
         }
     }
