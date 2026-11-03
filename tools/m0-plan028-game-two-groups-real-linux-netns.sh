@@ -106,13 +106,13 @@ start_client(){
 await_group(){
  local log="$1" count="$2"
  for _ in {1..120};do
-  if grep -q 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$LANES' "$log" &&
+  if grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$LANES" "$log" &&
      [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge "$count" ]];then
    return 0
   fi
   sleep .25
  done
- echo "PLAN028 authentic Game2 groups not ready" >&2
+ echo "PLAN028 authentic $MODE groups not ready" >&2
  return 1
 }
 read_lease(){
