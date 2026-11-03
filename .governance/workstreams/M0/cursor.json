@@ -5,15 +5,15 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 1041,
-  "checkpoint_sha": "0a0bd7509f82d754917a2b7a6745276aa2cc6e7f",
+  "checkpoint_sha": "7a438f47b54d11abdd69ae6ccf0b9b59ee03d065",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1041 PLAN028 real same-install Game2 A→A2 while Bob cohort B remains on single 443/one Rust TUN, old A precise Stop and A2 reused /32; source CI pending",
-  "why_now": "H1040 two real authenticated Game4 groups/8 lanes succeeded Action41642592457, but a different-client concurrent group test alone cannot prove exact same-installation A→A2 group handover and /32 reuse without killing Bob.",
+  "current_task": "H1041 scoped original native PASS: independent two Game2 / Game4 cohorts on one443 and single TUN, Game2 same-install A→A2 handover exact /32 and Bob UDP survives",
+  "why_now": "Confirmed native Games now support both separate concurrent cohorts (2xGame2 and 2xGame4) and per-installation Game2 new-generation TLS/Rust group takeover A→A2 without stealing Bob /32 or Stop. Evidence source exact Action41643673917 artifact13234476284.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Qualify source-locked 4-netns Game2 A/B/A2 original Go TLS, same protected lease, A2 replaces old A before old client Stop, Bob remains UDP-active, then all native Game groups/TUN Stop; retain Game4 dual group as regression. Any new failures must be distinguished from fixture errors.",
+  "next_action": "H1042 prioritize real Windows 2-second physical-interface/IP switch with original Stop/reauth, then Linux Game4 fixed-FEC simultaneous cohorts and real authenticated Game Health90 dead-group retirement; do not infer untested mobile/Windows all-mode recovery from Linux multi-group PASS.",
   "unverified": true,
-  "last_tested_source": "0a0bd7509f82d754917a2b7a6745276aa2cc6e7f",
+  "last_tested_source": "7a438f47b54d11abdd69ae6ccf0b9b59ee03d065",
   "evidence_refs": [],
   "context_refs": [
     "START_HERE.md",
@@ -26,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1039 source766 original TLS BPF rearm after last Game group Stop Go VM+real kernel native PASS Action41640733307. H1040 source0a0bd750 exact combined native Action41642592457 SUCCESS: real Game2 and two Game4 groups (8 original Go TLS lanes) on shared 443/one Rust TUN, concurrent genuine UDP and B after A Stop, exact native Stop. H1041 opt-in same-install Game2 A→A2/B 4-netns test source candidate; new source CI PENDING. PLAN028 still incomplete: real server 90s Game Health expiry, Win physical switch, multi Game4 FEC."
+  "partial_summary": "H1039 source766 original TLS cBPF rearm after last Game Stop VM/native PASS Action41640733307. H1040 source0a0b real 2 separate auto Game2 + Game4 groups 443/one Rust TUN/UDP/Stop PASS Action41642592457. H1041 source7a438 exact-native manifest verified artifact13234476284 Action41643673917 SUCCESS: Game2 A→A2 same-install original TLS + identical protected lease /32, server stops only old A, Bob stays live UDP and A2 after old Stop, and Game4 2 groups/8 lanes 443/UDP/Stop PASS. Genuine 90s Game server auto-dead, Windows actual physical IP 2s switch, ARM64 Game4FEC/physical 1500→1280 still not all verified. PLAN028 IN_PROGRESS."
 }
