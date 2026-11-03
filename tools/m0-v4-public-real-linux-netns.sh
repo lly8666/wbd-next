@@ -396,7 +396,11 @@ fi
 if [[ "$AUTO_IP" == 1 ]];then
   # Exactly one Rust process TUN reader, not one destructive TUN read per
   # connected device. Every real app echo must pass through the /32 demux.
-  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=server auto_lease=1 owner=rust_single_kernel_reader' "$TMP/server.log"
+  # The real auto-IP server is NOW the concurrent protected-TLS manager;
+  # its own readiness proves original Rust shared_tun was opened before
+  # the per-session first authenticated M4 worker, not the old singleton
+  # V4_PUBLIC_SHARED_TUN_READER_READY marker that it no longer emits.
+  grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 capacity=32 shared_rust_tun=1' "$TMP/server.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
   sudo -n ip netns exec "$NSS" true
   python3 - "$TMP/server.log" "$PACKETS" <<'PY'
