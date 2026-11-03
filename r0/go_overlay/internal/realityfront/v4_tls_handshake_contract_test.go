@@ -121,9 +121,10 @@ func TestPLAN028V4WrongRouteKeyWrongCertAndWrongPasswordNoAdmission(t *testing.T
    go func(){
     _,se:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
      TLS:ServerConfig{ServerName:"target.test",RouteKey:goodKey,TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:2*time.Second},
-     Authenticate:func(user,password string)bool{select{case called<-struct{}{}:default:};return user=="alice"&&password=="correct"},
      ServerLimit:1400,
-    },V4ServerOptions{DataPlaneReady:true,Epochs:store})
+    },V4ServerOptions{DataPlaneReady:true,Epochs:store,
+     Authenticate:func(user,password string)bool{select{case called<-struct{}{}:default:};return user=="alice"&&password=="correct"},
+    })
     serverResult<-se
    }()
    key:=goodKey

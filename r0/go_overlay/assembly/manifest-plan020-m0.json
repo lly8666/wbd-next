@@ -1089,7 +1089,7 @@
       "kind": "create",
       "path": "internal/realityfront/v4_tls_handshake_contract_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go",
-      "result_blob": "0c682a18cbb95dd6037349d612c8ec32a88d8612"
+      "result_blob": "ddb7d567a026d9b474b97ce03d567c952815a691"
     },
     {
       "kind": "create",

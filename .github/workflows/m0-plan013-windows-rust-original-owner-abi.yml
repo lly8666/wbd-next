@@ -199,7 +199,7 @@ jobs:
           root=pathlib.Path.cwd()
           src=root/"r0/go_overlay/internal/realityfront"
           dest=root/"legacy/internal/realityfront"
-          for filename in ("admission_v4.go","admission_v4_test.go",
+          for filename in ("tls.go","admission_v4.go","admission_v4_test.go",
                            "bridge_v4_windows_private_owner.go","bridge_v4_windows_private_owner_test.go",
                            "bridge_v4_windows_dual_test.go","bridge_v4_windows_wintun_lease.go",
                            "bridge_v4_windows_scoped_client.go"):

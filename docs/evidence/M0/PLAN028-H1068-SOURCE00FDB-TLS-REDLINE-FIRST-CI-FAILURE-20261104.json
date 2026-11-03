@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1068",
+  "source_sha": "00fdb00d0e60f6a8c4d6b052f0561674885e9232",
+  "classification": "FIRST_RUN_HARNESS_COMPILATION_BLOCKED_WIRE_NOT_RUN",
+  "results": [
+    {
+      "id": 41688220163,
+      "overall": "failure",
+      "phase": "source manifest assembled, Rust build success, Go test compile fail old DefaultMSS and unrelated v4RawC2STestPacket undefined",
+      "wire_traffic": "NOT_RUN"
+    },
+    {
+      "id": 41688220149,
+      "overall": "failure",
+      "phase": "Windows Go test wrong Authenticate field; cheap source prep + Linux/Windows Rust jobs success",
+      "tls_wire": "NOT_RUN"
+    },
+    {
+      "id": 41688220339,
+      "overall": "failure",
+      "governance": "success",
+      "feature_catalog": "FAIL stale code_refs removed prelude"
+    },
+    {
+      "id": 41688220205,
+      "overall": "failure",
+      "reason": "old r0-v4-tls workflow references deleted v4_route_prelude.go"
+    },
+    {
+      "id": 41688220319,
+      "overall": "failure",
+      "reason": "old r0_go_control_patch.py copies deleted v4_route_prelude.go"
+    },
+    {
+      "id": 41688220362,
+      "overall": "success",
+      "scope": "Windows preREADY path notified Go unit; NOT_TLS_WIRE"
+    },
+    {
+      "id": 41688220155,
+      "overall": "success",
+      "scope": "Linux original auto health; NOT_TLS_WIRE"
+    }
+  ],
+  "repair": [
+    "Go test Authenticate moved to V4ServerOptions",
+    "same exact manifest test SHA updated",
+    "scoped Go test fixture copy only relevant cases, run existing frozen donor test-only MSS migration",
+    "remove prelude source path from feature inventory and old workflows",
+    "old Windows frozen/native Rust Go test uses current TLS RootCAs source"
+  ],
+  "pending": [
+    "actual TCP-first-flight and baseline wire structure",
+    "native x86_64 client/server real TLS+UDP Stop",
+    "Windows current native Go build & negative",
+    "ARM64 homogeneous native next task",
+    "Windows physical NIC change"
+  ],
+  "limits": [
+    "old H1048 WB-R1 feature PASS is not compliant wire",
+    "old H1064 x86 game4 path native marker under noncompliant wire remains old-source only",
+    "H998 live MTU shrink FAIL preserved"
+  ]
+}

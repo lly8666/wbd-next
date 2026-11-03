@@ -11,8 +11,8 @@ on:
       - "crates/wbd-engine/src/lib.rs"
       - "crates/wbd-engine/src/cold_v4.rs"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
-      - "r0/go_overlay/internal/realityfront/v4_route_prelude.go"
-      - "r0/go_overlay/internal/realityfront/v4_route_prelude_test.go"
+      - "r0/go_overlay/internal/realityfront/tls.go"
+      - "r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
 permissions:
   contents: read
@@ -44,8 +44,8 @@ jobs:
           test "$(rustc --version)" = "rustc 1.85.1 (4eb161250 2025-03-15)"
           test "$(go version | awk '{print $3}')" = "go1.23.12"
           cp r0/go_overlay/internal/realityfront/admission_v4.go legacy/internal/realityfront/
-          cp r0/go_overlay/internal/realityfront/v4_route_prelude.go legacy/internal/realityfront/
-          cp r0/go_overlay/internal/realityfront/v4_route_prelude_test.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/tls.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go legacy/internal/realityfront/
           cp r0/go_overlay/internal/realityfront/admission_v4_test.go legacy/internal/realityfront/
           (cd legacy && go test -c -o "$GITHUB_WORKSPACE/cold_go.test" ./internal/realityfront)
           cargo test --release --locked -p wbd-engine --lib --no-run
@@ -60,8 +60,8 @@ jobs:
           inputs=["Cargo.lock","Cargo.toml","rust-toolchain.toml",
                   "crates/wbd-engine/src/cold_v4.rs","crates/wbd-engine/src/lib.rs",
                   "r0/go_overlay/internal/realityfront/admission_v4.go",
-                  "r0/go_overlay/internal/realityfront/v4_route_prelude.go",
-                  "r0/go_overlay/internal/realityfront/v4_route_prelude_test.go",
+                  "r0/go_overlay/internal/realityfront/tls.go",
+                  "r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go",
                   "r0/go_overlay/internal/realityfront/admission_v4_test.go",
                   ".github/workflows/r0-v4-cold-native.yml"]
           m={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],

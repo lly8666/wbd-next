@@ -69,7 +69,7 @@ jobs:
           cargo build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go
           mkdir common-build common-result
           cp target/release/libwbd_engine.so common-build/libwbd_engine.so
-          for file in admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go fec_v2_policy.go; do
+          for file in tls.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go fec_v2_policy.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
