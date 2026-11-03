@@ -702,7 +702,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "0ae81b0b1b3f4af17889f39b37388a935aedb8ee"
+      "result_blob": "ab295438b580629545e9d73d29ab2f7bffd00ab3"
     },
     {
       "kind": "create",
@@ -870,7 +870,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "83e172cc59a448cac5306535e43c17a689c0994d"
+      "result_blob": "db09bb6250b2c60489e2e3202048c46d697c70df"
     },
     {
       "kind": "create",

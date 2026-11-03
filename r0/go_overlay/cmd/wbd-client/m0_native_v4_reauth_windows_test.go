@@ -1,6 +1,6 @@
 //go:build windows && wbd_v4_embedded_go
 package main
-import("net/netip";"time";"context";"errors";"fmt";"syscall";"testing";"unsafe";"github.com/lly8666/wobuzhidao/internal/faketcp")
+import("net/netip";"time";"context";"errors";"fmt";"syscall";"testing";"unsafe";"github.com/lly8666/wobuzhidao/internal/faketcp";"github.com/lly8666/wobuzhidao/internal/realityfront")
 func TestM0PLAN027WindowsColdRetryRequiresAuthenticatedDeadAndNoAppliedOS(t *testing.T){
  timeout:=fmt.Errorf("original cold FakeTCP: %w",faketcp.ErrBootstrapTimeout)
  for _,e:=range []error{timeout,fmt.Errorf("network timed out: %w",context.DeadlineExceeded),syscall.ETIMEDOUT}{
@@ -94,4 +94,59 @@ func TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4(t *testing.T){
  b:=a;b.source4=netip.MustParseAddr("192.0.2.12");if b==a{t.Fatal("IPv4 change")}
  b=a;b.ifindex=9;if b==a{t.Fatal("NIC change")}
  if !errors.Is(errM0WindowsPhysicalPathChanged,errM0WindowsPhysicalPathChanged){t.Fatal("native Stop")}
+}
+
+func TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient(t *testing.T){
+ physical:=make(chan struct{},1)
+ started:=make(chan struct{})
+ result:=make(chan error,1)
+ go func(){
+  result<-m0WindowsRunPathScopedGeneration(context.Background(),physical,
+   func(ctx context.Context,_ <-chan struct{})error{
+    close(started)
+    <-ctx.Done()
+    return fmt.Errorf("original TLS pre-ready aborted: %w",ctx.Err())
+   })
+ }()
+ <-started
+ physical<-struct{}{}
+ select{
+ case err:=<-result:
+  if !errors.Is(err,errM0WindowsPhysicalPathChanged)||!errors.Is(err,context.Canceled){
+   t.Fatalf("physical event must cancel TLS and request new generation: %v",err)
+  }
+ case <-time.After(3*time.Second):t.Fatal("cold path change waited dead90")
+ }
+}
+func TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts(t *testing.T){
+ physical:=make(chan struct{},1)
+ parent,stop:=context.WithCancel(context.Background())
+ started:=make(chan struct{})
+ result:=make(chan error,1)
+ go func(){
+  result<-m0WindowsRunPathScopedGeneration(parent,physical,
+   func(ctx context.Context,_ <-chan struct{})error{
+    close(started)
+    <-ctx.Done()
+    return ctx.Err()
+   })
+ }()
+ <-started
+ stop()
+ select{
+ case err:=<-result:
+  if errors.Is(err,errM0WindowsPhysicalPathChanged)||!errors.Is(err,context.Canceled){
+   t.Fatalf("user Stop cannot reauthorize a cold generation: %v",err)
+  }
+ case <-time.After(3*time.Second):t.Fatal("Stop failed to cancel in-flight cold TLS")
+ }
+}
+func TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject(t *testing.T){
+ physical:=make(chan struct{},1)
+ physical<-struct{}{}
+ err:=m0WindowsRunPathScopedGeneration(context.Background(),physical,
+  func(context.Context,<-chan struct{})error{return realityfront.ErrAdmissionAuth})
+ if !errors.Is(err,realityfront.ErrAdmissionAuth)||errors.Is(err,errM0WindowsPhysicalPathChanged){
+  t.Fatalf("path event cannot turn invalid credentials into new owner: %v",err)
+ }
 }

@@ -196,6 +196,41 @@ func watchM0WindowsOriginalPhysicalPath(
  return changed,stop,nil
 }
 
+// An actual OS path change can arrive BEFORE FakeTCP/TLS reaches READY.
+// Cancel that cold TLS, but join this exact Rust/WAL Stop before starting
+// the next original TLS generation (never the per-packet data path).
+func m0WindowsRunPathScopedGeneration(
+ parent context.Context,physicalChanged <-chan struct{},
+ run func(context.Context,<-chan struct{})error,
+)error{
+ genCtx,cancel:=context.WithCancel(parent)
+ generationChanged:=make(chan struct{},1)
+ done:=make(chan struct{})
+ go func(){
+  defer close(done)
+  select{
+  case <-physicalChanged:
+   select{case generationChanged<-struct{}{}:default:}
+   cancel()
+  case <-genCtx.Done():
+  }
+ }()
+ err:=run(genCtx,generationChanged) // exact owned Stop is synchronous
+ cancel()
+ <-done
+ if parent.Err()!=nil{return err} // user Stop/sleep cannot reauthorize
+ if errors.Is(err,realityfront.ErrAdmissionAuth){return err}
+ select{
+ case <-generationChanged:return errors.Join(errM0WindowsPhysicalPathChanged,err)
+ default:
+ }
+ select{
+ case <-physicalChanged:return errors.Join(errM0WindowsPhysicalPathChanged,err)
+ default:
+ }
+ return err
+}
+
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -230,7 +265,11 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
   applied:=false
-  err:=runM0NativeV4WindowsGeneration(ctx,o,generation,autoOperatorRequests,&applied,pathChanged)
+  err:=m0WindowsRunPathScopedGeneration(ctx,pathChanged,
+   func(genCtx context.Context,generationChanged <-chan struct{})error{
+    return runM0NativeV4WindowsGeneration(
+     genCtx,o,generation,autoOperatorRequests,&applied,generationChanged)
+   })
   // Only after exact native OS/WAL Stop may the existing Go cold owner
   // establish the next generation on a DIFFERENT physical kernel route.
   if ctx.Err()==nil&&errors.Is(err,errM0WindowsPhysicalPathChanged){
