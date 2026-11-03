@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1074_H1073_RECEIPT",
+  "source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+  "harness_sha": "2a91125b7ebfffbb02cd236d6c5350665d04c88a",
+  "status": "PASS_SCOPED_REAL_TCP_TLS_FIRST_FLIGHT_NATIVE_X86",
+  "action": {
+    "id": 41697925602,
+    "job_id": 126133267064,
+    "conclusion": "success",
+    "artifact_id": 13262935935,
+    "artifact_name": "m0-plan028-h1072-frozen-native-x86-tls-wire-41697925602",
+    "reused_prebuilt_go_rust": true,
+    "source_manifest_verified": true
+  },
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "toolchains": {
+    "go": "1.23.12",
+    "rust": "1.85.1"
+  },
+  "artifact_checksums": {
+    "fixed-build/manifest.json": "7c90681b4a1f89f2e941dd730666b4ad93fe55355809108a9aa51529c06aee36",
+    "fixed-kernel-result/plan028-tls-wire-audit.json": "931e028b947d1ddc0d1e3da76791aa4f4eac767be1a3fbb5adad2c2c7fe71182",
+    "fixed-kernel-result/plan028-h1072-native-wire.log": "5e2a8fbac0de517cb8e4ab3bd0e4257a80ec59c6fe1eca5d3871c7688ac5048c",
+    "fixed-kernel-result/public-v4-normal-business.log": "8f11e0189fc266142d245fd5ffc4eb530f33d204eba56f1b4f72b0cf28528668"
+  },
+  "binaries_sha256": {
+    "wbd-v4-client": "e21816b01b88e45ee66bd61762a4ba7a54c0c99bae34763e831a87bb08b9bd66",
+    "wbd-v4-server": "21cf1e7da9bb8ab34595e8c67d9d3917c6aed2fbebc6f9c9aedbc2e2b2648c67",
+    "libwbd_engine.so": "b33ed5bb0d3bfab5a4fb24a07995eb3fe1944f894e6c39e31b6e9e0bf43d41b7"
+  },
+  "real_native_case": {
+    "arch": "Linux native x86_64 client plus native x86_64 server",
+    "real_kernel": "two Linux netns with veth/raw FakeTCP AF_PACKET, Rust real TUN",
+    "single_server_port": 443,
+    "offline_route_key_bytes": 32,
+    "server_cert_verified": true,
+    "user_password_authenticated": true,
+    "raw_capture": "tcpdump -i any cooked SLL2 in client and server netns; bounded ephemeral raw pcap discarded in run",
+    "tcp_reassembly": {
+      "client_first_payload": "TLS_Handshake_ClientHello",
+      "server_first_payload": "TLS_Handshake_ServerHello",
+      "server_payload_before_client_hello_bytes": 0,
+      "client_hello_record_bytes": 667,
+      "server_hello_record_bytes": 127,
+      "tls13_extensions_count": 15,
+      "session_id_bytes": 32,
+      "client_tcp_payload_segments_observed": 8,
+      "server_tcp_payload_segments_observed": 8,
+      "client_hello_sha256": "95f30711d97de1b1ce14945dff92ce6ea6cf6e8fcaadeec3b40c3a57263ee4dd",
+      "private_prelude": "ABSENT"
+    },
+    "real_inner_udp_echo": 5,
+    "original_rust_server_tun_routed": 5,
+    "original_rust_stop_reader_joined": true,
+    "auto_lease_os_readback": "10.66.0.184"
+  },
+  "limits": [
+    "H1072 earlier veth-only tcpdump zero-packet Action FAIL remains as historical observer error; H1073 successful two-netns capture supersedes observation gap only for this SOURCE/scenario.",
+    "First ClientHello and first ServerHello record audited; not cryptographic deep inspection of all TLS Finished or public-site fingerprint equivalence; TLS library and Go integration validate certificate.",
+    "Other modes/Game lanes/warm generation and Windows/ARM native first-flight PCAP not covered by this Action.",
+    "Old WB-R1 functional PASS evidence is NOT handshake-appearance compliance.",
+    "CPU/p99, Android, physical Windows NIC change and PLAN027A H998 open failures remain unqualified."
+  ],
+  "plan028": "IN_PROGRESS"
+}
