@@ -34,6 +34,9 @@ on:
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
       - "r0/go_overlay/internal/v4productcli/linux.go"
+      - "r0/go_overlay/internal/v4productcli/path_linux.go"
+      - "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go"
+      - "r0/go_overlay/internal/v4productcli/path_linux_test.go"
       - "r0/go_overlay/cmd/wbd-v4-client/main.go"
       - "r0/go_overlay/cmd/wbd-v4-server/main.go"
       - "tools/m0-v4-public-real-linux-netns.sh"
@@ -141,6 +144,9 @@ jobs:
           python3 tools/m0_prepare_original_go_mss_test_fixtures.py legacy
           echo H984_PLAN012_NO_LEGACY_DEFAULTMSS_TEST_SHIM_PASS
           cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+          cp r0/go_overlay/internal/v4productcli/path_linux.go legacy/internal/v4productcli/path_linux.go
+          cp r0/go_overlay/internal/v4productcli/path_supervisor_linux.go legacy/internal/v4productcli/path_supervisor_linux.go
+          cp r0/go_overlay/internal/v4productcli/path_linux_test.go legacy/internal/v4productcli/path_linux_test.go
           cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
           cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
@@ -397,6 +403,23 @@ jobs:
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' \
             fixed-kernel-result/plan028-auto-lease-real-native.log
           cat fixed-kernel-result/plan028-auto-lease-real-native.log
+      - name: PLAN028 real Linux rtnetlink OS source and MTU change while old TLS/Rust lane remains live
+        shell: bash
+        run: |
+          set -euo pipefail
+          # One SOURCE-built original Go client/server + original Rust .so
+          # from the preceding step. Real RTM_NEWADDR/NEWLINK/NEWROUTE,
+          # not an injected callback or a TCP/ownership pointer switch.
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+          WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1             bash tools/m0-v4-public-real-linux-netns.sh fixed-build             >fixed-kernel-result/plan028-real-linux-path-switch-native.log 2>&1 || {
+              tail -120 fixed-kernel-result/plan028-real-linux-path-switch-native.log >&2
+              exit 1
+            }
+          grep -q 'M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
+          grep -q 'M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
+          grep -q 'M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
+          grep -q 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS'             fixed-kernel-result/plan028-real-linux-path-switch-native.log
+          cat fixed-kernel-result/plan028-real-linux-path-switch-native.log
       - name: PLAN028 real original Go two different accounts simultaneously on ONE server 443 and ONE shared Rust TUN reader
         id: plan028_multi
         continue-on-error: true

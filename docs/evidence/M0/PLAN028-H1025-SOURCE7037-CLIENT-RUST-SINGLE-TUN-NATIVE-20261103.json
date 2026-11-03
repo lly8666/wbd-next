@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1025",
+  "source_sha": "7037f6eea30c532d4c8980071ec7514e62933968",
+  "overall": "SCOPED_REAL_NATIVE_PASS",
+  "provenance": {
+    "run_id": 41595536395,
+    "native_job_id": 125781904151,
+    "conclusion": "success",
+    "governance_run_id": 41595536456,
+    "governance": "success",
+    "feature_catalog": "success"
+  },
+  "verified": [
+    {
+      "scene": "One real original-Go protected automatic/32 Linux CLIENT process Rust shared TUN reader, native 2-netns UDP/Stop",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS authenticated_tls=1 os_lease_readback=1 routed=5 unrouted=0 backpressure=0 reader_joined=1"
+    },
+    {
+      "scene": "Same-source original Go TLS client/server OS-authenticated auto-IP and Rust M4 5 real app UDP",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.146 app_udp=5 exact_generation_Rust_M4=1"
+    },
+    {
+      "scene": "Five Linux netns three independent installations, Alice same-account two devices, Bob other account, and one Alice new incarnation",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_THREE_DEVICE_SAME_ACCOUNT_TWO_INSTALLATIONS_ANOTHER_ACCOUNT_ONE_PORT_NATIVE_PASS protected_tls_sessions=4 distinct_installations=3 distinct_lease32=3 live_devices=3 server_port=443 shared_tun_single_reader=1 total_real_udp=70 exact_generation_Stop=1"
+    },
+    {
+      "scene": "Same-installation zero-epoch authenticated native owner handover independent sibling",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS same_verified_lease=1 fresh_original_go_tls=1 new_rust_owner=1 old_exact_Stop=1 other_account_delivered=1"
+    },
+    {
+      "scene": "Same build 1% real netem loss actual original app denominator",
+      "status": "SCOPED_PASS",
+      "witness": "M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS original_tls=1 offered=512 first_unique_delivered=507 missing=5 Stop_drained_both=1"
+    },
+    {
+      "scene": "Same-source Fixed/Auto and Game2/4 single logical devices",
+      "status": "SCOPED_PASS",
+      "witness": [
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ]
+    }
+  ],
+  "not_claimed": [
+    "Client same-process native A→A+B→B on actual changed physical underlay; H1025 still one runClient at a time.",
+    "Linux rtnetlink / Windows native path notification, 200/500ms coalescing, physical interface/source/MTU change after first auth and exact cold reconnect.",
+    "Seven-mode highest FEC path change including Game2/4, per-client server cipher/FEC/outer-MTU independence.",
+    "Original route-key first ClientHello without pre-provisioning, Windows↔Linux latest Game4 lane2 bootstrap, CPU/p99 comparative causality and physical H998 MTU transition.",
+    "Android native VPN and physical switch remains NOT_RUN."
+  ],
+  "historical_failures": [
+    "H998 online physical 1500→1280 tiny-packet 3/3 FAIL + ARM64 Game4FEC app/Stop FAIL",
+    "Windows/WSL2 latest source Win Game4 lane2 timeout persisted",
+    "PLAN020 legacy revision3 static audit gate incompatible revision4"
+  ]
+}

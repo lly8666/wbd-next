@@ -60,6 +60,11 @@ for file in "${files[@]}"; do
 done
 mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
 cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
+# PLAN028 original physical rtnetlink cold event + generation-safe native
+# reconnect now part of the ACTUAL arm64 public Go client binary.
+cp r0/go_overlay/internal/v4productcli/path_linux.go legacy/internal/v4productcli/path_linux.go
+cp r0/go_overlay/internal/v4productcli/path_supervisor_linux.go legacy/internal/v4productcli/path_supervisor_linux.go
+cp r0/go_overlay/internal/v4productcli/path_linux_test.go legacy/internal/v4productcli/path_linux_test.go
 cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
 cp r0/go_overlay/internal/v4productcli/game_disabled_linux.go legacy/internal/v4productcli/game_disabled_linux.go
 # These three real original-Go product files export the verified grouped Game

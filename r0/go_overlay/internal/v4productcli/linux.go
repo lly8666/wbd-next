@@ -105,6 +105,9 @@ type config struct{
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
+    // Transient generation safety: a pending new-path TLS session cannot
+    // mutate an active generation's authenticated inner IPv4 address.
+    leaseMustStay bool
     tunFqMaxrateMbps int
     tunTxQLenPackets int
 }
@@ -577,6 +580,12 @@ func Run(role string,args []string)(retErr error){
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
+    if role=="client"&&cfg.autoIP{
+        // PLAN028 only for real protected automatic IPv4 on Linux Normal.
+        // The one process-shared Rust TUN reader already exists above and
+        // remains owned across simultaneous A+B TLS/native generations.
+        return runOriginalLinuxClientPaths(ctx,cfg,tun)
+    }
     reauthAuthorized:=false
     coldRetries:=0
     for attempt:=uint64(1);;attempt++{
@@ -833,7 +842,8 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
 }
 
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
-    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,connected *bool)error{
+    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,
+    connected *bool,ready ...chan<- struct{})error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
         LocalPort:c.localPort,PeerPort:c.peerPort}
     isn,err:=originalRandomISN()
@@ -892,13 +902,25 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         policy,err=realityfront.FixedPolicyForClient(1,0)
     }
     if err!=nil{return err}
+    applyLease:=configureAuthenticatedClientIPv4(tun)
+    if c.leaseMustStay{
+        // New owner must retain the same verified /32 until OLD native
+        // Stop; server restart that issues another address must report a
+        // real reconfiguration need instead of silently changing live TCP.
+        applyLease=func(lease string)error{
+            if tun.cidr!=lease{
+                return fmt.Errorf("new path authenticated lease differs from active OS tunnel address")
+            }
+            return configureAuthenticatedClientIPv4(tun)(lease)
+        }
+    }
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
-            ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+            ConfigureLeaseIPv4:applyLease,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
@@ -929,6 +951,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
+    if len(ready)>0&&ready[0]!=nil{
+        // The only valid promotion point is after protected original TLS,
+        // native Rust M4, DATA handoff filter and OS config/readback.
+        select{case ready[0]<-struct{}{}:default:}
+    }
     startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
     // Rust authenticates dead90. Observe one low-frequency terminal flag in
     // ALL Normal modes; neither ACK nor local driver errors may reauthorize TLS.

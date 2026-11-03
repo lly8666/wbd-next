@@ -8,6 +8,9 @@ ROOT="$(realpath "$ROOT")"
 LOSS="${WBD_V4_PUBLIC_KERNEL_LOSS:-0}"
 MODE="${WBD_V4_PUBLIC_MODE:-normal}"
 AUTO_IP="${WBD_V4_PUBLIC_AUTO_IP:-0}"
+PATH_SWITCH="${WBD_V4_PUBLIC_PATH_SWITCH:-0}"
+if [[ "$PATH_SWITCH" != 0 && "$PATH_SWITCH" != 1 ]];then echo "invalid path switch selector" >&2;exit 2;fi
+if [[ "$PATH_SWITCH" == 1 && "$AUTO_IP" != 1 ]];then echo "real path switch requires protected automatic lease" >&2;exit 2;fi
 if [[ "$AUTO_IP" != 0 && "$AUTO_IP" != 1 ]];then echo "invalid auto-IP selector" >&2;exit 2;fi
 if [[ "$AUTO_IP" == 1 && "$MODE" != normal ]];then echo "PLAN028 initial auto-IP native witness requires Normal/off" >&2;exit 2;fi
 case "$MODE" in
@@ -133,10 +136,12 @@ sudo -n ip netns exec "$NSC" bash -c "
 PIDC=$!
 # Real server-side Python socket only ECHOES a real UDP packet the Linux
 # kernel accepted from the owner TUN. It never makes fake TCP ciphertext.
-sudo -n ip netns exec "$NSS" env WBD_REAL_COUNT="$PACKETS" python3 -u -c '
+ECHO_PACKETS="$PACKETS"
+if [[ "$PATH_SWITCH" == 1 ]];then ECHO_PACKETS=10;fi
+sudo -n ip netns exec "$NSS" env WBD_REAL_COUNT="$ECHO_PACKETS" python3 -u -c '
 import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-s.bind(("10.66.0.1",45901));s.settimeout(28)
+s.bind(("10.66.0.1",45901));s.settimeout(55 if os.environ.get("WBD_REAL_COUNT")=="10" else 28)
 try:
     # Count distinct ORIGINAL UDP payloads, not received retries. The
     # Native outer repair is only opportunistic; duplicate delivery never
@@ -315,6 +320,65 @@ if [[ "$PACKETS" == 5 || "$FEC" == 1 ]];then cat "$ART/public-v4-normal-business
 if [[ "$GAME" != 0 ]];then
   echo "M0_GAME_PUBLIC_ORIGINAL_GO_M4_FIRST_APP_WITH_LANE1_DAMAGE_PASS lanes=$GAME udp=$PACKETS first_real_app=1 healthy_lane_no_hol=1"
 fi
+if [[ "$PATH_SWITCH" == 1 ]];then
+  # REAL Linux addr+link+route kernel notifications on the running
+  # client process. No simulated OS event or TCP pointer reassignment.
+  # Keep the first original source assigned so old A can serve until B
+  # fully authenticates, installs MTU and starts native Rust M4.
+  sudo -n ip -n "$NSC" addr add 10.25.0.3/24 dev wbdvc0
+  sudo -n ip -n "$NSC" link set dev wbdvc0 mtu 1280
+  sudo -n ip -n "$NSC" route replace 10.25.0.1/32 dev wbdvc0 src 10.25.0.3
+  sudo -n ip netns exec "$NSC" ip -j -4 route get 10.25.0.1 >"$ART/plan028-effective-new-physical-route.json"
+  python3 - "$ART/plan028-effective-new-physical-route.json" <<'PY'
+import json,sys
+rows=json.load(open(sys.argv[1]))
+assert len(rows)==1 and rows[0]["dev"]=="wbdvc0" and rows[0]["prefsrc"]=="10.25.0.3",rows
+print("M0_PLAN028_ACTUAL_LINUX_NEW_ROUTE_READBACK_PASS source=10.25.0.3 interface=wbdvc0")
+PY
+  # The new TLS/Rust generation must complete original AEAD and native
+  # handoff BEFORE the old generation retires. The server accepts both
+  # source TCP flows on port 443 and keeps this device's verified /32.
+  path_ready=0
+  for i in {1..120};do
+    if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
+       grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
+       grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
+       grep -q 'V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=same-lease-new-generation' "$TMP/server.log";then
+      path_ready=1;break
+    fi
+    sleep .25
+  done
+  if [[ "$path_ready" != 1 ]];then
+    echo 'M0_PLAN028_REAL_LINUX_NATIVE_PATH_SWITCH_NOT_READY' >&2
+    grep -E 'V4_PUBLIC_PATH_|V4_PUBLIC_MTU|V4_PUBLIC_MULTI_|V4_PUBLIC_NATIVE_STOP' "$TMP/client.log" "$TMP/server.log" |tail -65 >&2 || true
+    exit 1
+  fi
+  sudo -n ip netns exec "$NSC" ip -j link show dev wbdvc4 >"$ART/plan028-new-tun-mtu.json"
+  python3 - "$ART/plan028-new-tun-mtu.json" <<'PY'
+import json,sys
+links=json.load(open(sys.argv[1]))
+assert len(links)==1 and links[0]["ifname"]=="wbdvc4",links
+mtu=links[0]["mtu"]
+assert 900<=mtu<1280,mtu
+print("M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280 effective_tun=%d"%(mtu))
+PY
+  sudo -n ip netns exec "$NSC" env WBD_REAL_CLIENT_IPV4="$CLIENT_EFFECTIVE_IP" python3 -u -c '
+import os,socket
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind((os.environ["WBD_REAL_CLIENT_IPV4"],45904));s.settimeout(12)
+try:
+    for i in range(100,105):
+        data=b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64
+        assert s.sendto(data,("10.66.0.1",45901))==len(data)
+        got,src=s.recvfrom(8192)
+        assert got==b"V4_SERVER_APP_ECHO/"+data and src[0]=="10.66.0.1",(i,src)
+        print("M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK",i,flush=True)
+finally:s.close()
+' >"$ART/plan028-real-path-switched-business.log" 2>&1
+  cat "$ART/plan028-real-path-switched-business.log"
+  test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "$ART/plan028-real-path-switched-business.log")" -eq 5
+  echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_events=kernel_link_addr_route coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
+fi
 if [[ "$FEC" == 1 ]];then
   # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL
   # 2s authentic M2 maturity + the following 2s Go policy decision turn.
@@ -408,7 +472,9 @@ if [[ "$AUTO_IP" == 1 ]];then
   grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader' "$TMP/client.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/client.log"
   sudo -n ip netns exec "$NSS" true
-  python3 - "$TMP/server.log" "$TMP/client.log" "$PACKETS" <<'PY'
+  READER_MIN_PACKETS="$PACKETS"
+  if [[ "$PATH_SWITCH" == 1 ]];then READER_MIN_PACKETS=10;fi
+  python3 - "$TMP/server.log" "$TMP/client.log" "$READER_MIN_PACKETS" <<'PY'
 import pathlib,re,sys
 pattern=r'V4_PUBLIC_SHARED_TUN_STOP generation=([0-9]+) routed=([0-9]+) unrouted=([0-9]+) backpressure=([0-9]+) reader_joined=1'
 for role,path in (('server',sys.argv[1]),('client',sys.argv[2])):
