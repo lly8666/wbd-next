@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# PLAN028 two original Go TLS Game2 groups concurrently sharing a single
+# PLAN028 two original Go TLS Game2/4 groups concurrently sharing a single
 # server 443, ONE authenticated Rust TUN reader, two independent /32 leases.
 set -euo pipefail
 MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
 HANDOVER="${WBD_PLAN028_GAME_MULTI_HANDOVER:-0}"
+GAME_FEC="${WBD_PLAN028_GAME_MULTI_FEC:-off}"
 if [[ "$HANDOVER" != 0 && "$HANDOVER" != 1 ]];then echo "invalid Game handover selector" >&2; exit 2;fi
-if [[ "$HANDOVER" == 1 && "$MODE" != game2 ]];then echo "Game2 successor proof only" >&2;exit 2;fi
+case "$GAME_FEC" in
+  off) ;;
+  fixed6) [[ "$MODE" == game4 ]] || { echo "fixed6 proof is Game4 only" >&2; exit 2; } ;;
+  *) echo "invalid Game multi-cohort FEC: $GAME_FEC" >&2; exit 2 ;;
+esac
 case "$MODE" in
   game2) LANES=2 ;;
   game4) LANES=4 ;;
@@ -70,7 +75,7 @@ sudo -n ip netns exec "$NSS" bash -c "
   --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
   --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
   --users-file '$TMP/users.json' --lease-pool 10.66.0.128/25 \
-  --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode "$MODE"
+  --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode "$MODE" --game-fec "$GAME_FEC"
 " >"$TMP/server.log" 2>&1 &
 PIDS+=("$!")
 for _ in {1..80};do
@@ -86,7 +91,7 @@ import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45901));s.settimeout(45)
 try:
-  for _ in range(60):
+  for _ in range(600):
     data,src=s.recvfrom(4096)
     assert data.startswith(b"WBD_GAME_GROUP/"),(src,data)
     s.sendto(b"WBD_GAME_ECHO/"+data,src)
@@ -102,7 +107,7 @@ start_client(){
    --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
    --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
    --username '$user' --password '$password' \
-   --auto-ip --installation-id-file '$key' --mode "$MODE"
+   --auto-ip --installation-id-file '$key' --mode "$MODE" --game-fec "$GAME_FEC"
  " >"$log" 2>&1 &
  PIDS+=("$!")
 }
@@ -158,6 +163,14 @@ a_echo_pid=$!
 send_udp "$NSB" "$IPB" "A_PLUS_B_B" 6 "$TMP/b_echo.log" &
 b_echo_pid=$!
 wait "$a_echo_pid" "$b_echo_pid"
+if [[ "$GAME_FEC" == fixed6 ]];then
+  # Real 64-packet UDP from each protected owner, not a fabricated FEC ACK.
+  send_udp "$NSA" "$IPA" "GAME4_FEC_A" 64 "$TMP/a_echo.log" &
+  fec_a=$!
+  send_udp "$NSB" "$IPB" "GAME4_FEC_B" 64 "$TMP/b_echo.log" &
+  fec_b=$!
+  wait "$fec_a" "$fec_b"
+fi
 if [[ "$HANDOVER" == 1 ]];then
   # Preserve the original A process PID; the replacement is the same
   # authenticated Alice installation but has a NEW physical TCP tuple.
@@ -177,6 +190,13 @@ if [[ "$HANDOVER" == 1 ]];then
   send_udp "$NSB" "$IPB" "BOB_SURVIVES_SUCCESSOR" 6 "$TMP/r_b_echo.log" &
   p_b=$!
   wait "$p_r" "$p_b"
+  if [[ "$GAME_FEC" == fixed6 ]];then
+    send_udp "$NSR" "$IPR" "GAME4_FEC_A2" 64 "$TMP/r_echo.log" &
+    fec_r=$!
+    send_udp "$NSB" "$IPB" "GAME4_FEC_B2" 64 "$TMP/r_b_echo.log" &
+    fec_b2=$!
+    wait "$fec_r" "$fec_b2"
+  fi
 fi
 # Only client A stops. Do not Stop the one server or B's Rust Game owner.
 if [[ "$HANDOVER" == 1 ]];then
@@ -204,4 +224,19 @@ done
 grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log"
 [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq 2 ]]
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER"
+if [[ "$GAME_FEC" == fixed6 ]];then
+  for who in A B R;do
+    grep -q "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/$who.log"
+  done
+  # A was retired by its precise old generation; B and A2 by server Stop.
+  # All three real driver-bound Rust groups must have copied FEC parity.
+  python3 - "$TMP/server.log" <<'PY'
+import pathlib,re,sys
+log=pathlib.Path(sys.argv[1]).read_text()
+rows=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=server lanes=4 source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)",log)
+assert len(rows)==3,("expected old A, B, A2 FEC readbacks",rows)
+assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
+print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
+PY
+fi
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0)"

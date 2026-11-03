@@ -41,6 +41,7 @@ on:
       - "r0/go_overlay/cmd/wbd-v4-server/main.go"
       - "tools/m0-v4-public-real-linux-netns.sh"
       - "tools/m0-plan028-two-client-real-linux-netns.sh"
+      - "tools/m0-plan028-game-two-groups-real-linux-netns.sh"
       - "r0/go_overlay/internal/faketcp/raw_detached_data_linux.go"
       - "r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
@@ -548,6 +549,13 @@ jobs:
             grep -Fq "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$lanes" "fixed-kernel-result/plan028-game-two-groups-$mode.log"
             grep -Fq "handover_A_to_A2=$handover" "fixed-kernel-result/plan028-game-two-groups-$mode.log"
           done
+          # Exact same SOURCE/build, one bounded real Game4 fixed6 A+B/A2 scene.
+          WBD_PLAN028_GAME_MULTI_MODE=game4 WBD_PLAN028_GAME_MULTI_HANDOVER=1 WBD_PLAN028_GAME_MULTI_FEC=fixed6 bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log 2>&1 || {
+            tail -160 fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log >&2
+            exit 1
+          }
+          grep -Fq "M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1" fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log
+          grep -Fq "handover_A_to_A2=1 fec_fixed6=1" fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
       # Earlier independent Fixed/Game jobs complete first and can expose

@@ -532,6 +532,9 @@ func runGameMultiServer(
     }
     retire:=func(rec *originalGameCohortLive,reason string)error{
         if rec==nil||rec.stopped{return nil}
+        // Cold readback of this exact authenticated group's real M4 FEC
+        // counters precedes owned Stop; do not aggregate siblings.
+        if c.gameFecEnabled{logOriginalGameFec("server",n,rec.product)}
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }
