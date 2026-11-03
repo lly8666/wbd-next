@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1055",
+  "source_sha": "140a06622a97251863c6959c1290a0dd11b7a38b",
+  "result": "BUILD_PASS_HANDSHAKE_PASS_MIXED_ISA_UDP_FAIL",
+  "source_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source_binary_artifact": {
+    "run_id": 41667172847,
+    "artifact_id": 13246003010,
+    "source_sha": "140a06622a97251863c6959c1290a0dd11b7a38b",
+    "original_amd64_arm64_rust_go_sha256_independently_verified": true,
+    "elf_architecture_verified": true
+  },
+  "harness_only_artifact": {
+    "run_id": 41668311813,
+    "source_sha": "761f1200efa79fb63e08b0f79f84878b11ec387d",
+    "conclusion": "failure",
+    "clients_role_job_id": 126029534862,
+    "servers_role_job_id": 126029534128,
+    "client_role_artifact_id": 13246379680,
+    "server_role_artifact_id": 13245988762
+  },
+  "scope": {
+    "network": "real Linux kernel netns/veth/AF_PACKET/TUN, ARM64 process user-mode QEMU, not native ARM64 hardware",
+    "single_server_port": 443,
+    "outer_default_bytes": 1460
+  },
+  "tests": [
+    {
+      "arm64_role": "client",
+      "other_role": "amd64 server",
+      "pre_clienthello_x25519": "PASS",
+      "original_tls_certificate_password": "PASS",
+      "lease4": "10.66.0.225/32",
+      "client_and_server_inner_mtu_os": 1389,
+      "owned_stop": "PASS_BOTH",
+      "real_udp_echo": "FAIL_TIMEOUT_12S",
+      "diagnostic": "ARM64 client Rust TX staged_udp=1 but first_wire_bytes=0, no echo delivery",
+      "product_root_cause": "NOT_PROVEN_QEMU_USER"
+    },
+    {
+      "arm64_role": "server",
+      "other_role": "amd64 client",
+      "pre_clienthello_x25519": "PASS",
+      "original_tls_certificate_password": "PASS",
+      "lease4": "10.66.0.238/32",
+      "client_and_server_inner_mtu_os": 1389,
+      "owned_stop": "PASS_BOTH",
+      "real_udp_echo": "FAIL_TIMEOUT_12S",
+      "diagnostic": "AMD64 client first_wire_bytes=114, ARM64 server no UDP application receive; one server TUN routed packet counter",
+      "product_root_cause": "NOT_PROVEN_QEMU_USER"
+    }
+  ],
+  "limitations": [
+    "QEMU-user aarch64 system calls do not prove physical ARM64 product I/O correctness or performance",
+    "CPU/p99 NOT_MEASURED",
+    "original H998 physical online MTU shrink FAIL retained",
+    "original ARM64 Game4FEC Action FAIL retained",
+    "remote ICMP3/4 NOT_MEASURED",
+    "PLAN028 IN_PROGRESS"
+  ]
+}
