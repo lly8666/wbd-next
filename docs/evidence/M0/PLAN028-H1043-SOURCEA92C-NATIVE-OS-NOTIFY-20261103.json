@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H1043",
+  "plan": "PLAN028",
+  "source_sha": "a92c905b156565309bfbe109e68eafa36654ff1f",
+  "result": "PASS_SCOPED_LINUX_AND_WINDOWS_COMPILE_ONLY",
+  "artifact_verified": false,
+  "linux": {
+    "run_id": 41648749803,
+    "job_id": 125960968526,
+    "conclusion": "success",
+    "artifact_id": 13237086040,
+    "workflow": "m0-plan012-combined-functional.yml",
+    "scope": "Original Go TLS/Rust native Linux RTNETLINK numeric physical path switch through true kernel netns A-to-A+B-to-B; new path MTU shrink, original Rust exact Stop, genuine UDP. Same source build also retains Game4 FEC6 A+B/A2."
+  },
+  "windows": {
+    "run_id": 41648749762,
+    "conclusion": "failure",
+    "go_compile_job": 125961226661,
+    "go_compile": "success",
+    "rust_unit_jobs": "success",
+    "native_public_job": 125963659455,
+    "native_public": "FAIL",
+    "first_failure": "Game2 lane2 original faketcp bootstrap stream deadline exceeded; Game4/Game2-FEC/Game4-FEC similarly failed, Normal/Fixed/Auto individual mode PASS but whole batch FAIL",
+    "actual_windows_physical_interface_switch": "NOT_RUN"
+  },
+  "constraints": {
+    "network_notification_quiet_ms": 200,
+    "network_notification_max_ms": 500,
+    "full_TLS_resume_SLA": "NOT_MEASURED",
+    "CPU_p99": "NOT_MEASURED",
+    "H998_online_MTU_shrink": "FAIL_RETAINED",
+    "H998_arm64_game4fec": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_MEASURED",
+    "android": "NOT_RUN",
+    "whole_plan028": "IN_PROGRESS"
+  },
+  "scope_note": "Linux native success does not imply Windows physical network event success. Workflow source SHA matched GitHub run; artifact ZIP not independently unpacked."
+}
