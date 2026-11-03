@@ -14,6 +14,8 @@ CPU/p99 improvements are NOT_PROVEN without same-source OS workload and process+
 
 ## Source-locked final native receipt (H1027 f823)
 
+Feature catalog metadata correction: both existing proof cards are compacted below the enforced 16 KiB limit; superseded IMPLEMENTED_NOT_TESTED H1027 candidate rows are removed, while the f823 SOURCE-backed FUNCTIONAL_PASS and separate b1d original FAIL evidence remain. No data-plane source was changed in this correction.
+
 `f823600c052f7e25fecc0f3ef763c6245f6154c9` original combined Action [`41606128749`](https://github.com/lly8666/wbd-next/actions/runs/41606128749), native job `125817863188` **SUCCESS** with tested artifact `13217595442`; embedded `fixed-kernel-result/manifest.json` confirms exact source, Rust 1.85.1, Go 1.23.12. New saturated-A/live-B/FIFO/overflow/stale-Stop Rust unit 1/1 PASS; one-port/3 real clients/4 protected TLS/3 /32 actual UDP 70, old exact Stop, isolated Linux OS switch `10.25.0.2 -> 10.25.0.3`, physical 1280 and TUN effective 1209, two real endpoints joined. 1% netem offered512/delivered508/missing4, not lossless. Source evidence: `docs/evidence/M0/PLAN028-H1027-SOURCEF823-NATIVE-20261103.json`.
 
 **Qualification**: The deterministic queue-full case is a unit test, not an actual high-rate overloaded Linux run. The real Linux shared reader's clean case was `backpressure=0`. CPU utilization, p99 and traffic-loss causal improvements remain unmeasured and cannot be inferred from a passing native regression. Older b1d mandatory harness FAIL stays recorded. H998 physical path shrink, ARM64 Game4FEC failure, Windows full seven-mode and Android remain unchanged.
