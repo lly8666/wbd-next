@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1076",
+  "result": "PASS_SCOPED_REAL_TCP_GAME4_FIRST_FLIGHTS_8_OF_8",
+  "source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+  "harness_sha": "ffdccf114641ab24c8af5f1c1ca5d3728a993da6",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41742013361,
+    "job_id": 126285584408,
+    "conclusion": "success",
+    "artifact_id": 13280709751,
+    "binaries_reused_without_build": true,
+    "artifact_independently_unpacked": true
+  },
+  "sha256": {
+    "manifest": "7c90681b4a1f89f2e941dd730666b4ad93fe55355809108a9aa51529c06aee36",
+    "tcp_wire_audit": "45124e9ecbce16f18dc1c8d9a4b3fc9f33fd5d6b9a279bbf69b67316fff56a30",
+    "native_log": "a93317cc67a53362139a8f03bf993163740ed71643f5b3f6508a80662c415706",
+    "new_mtu": "752d8d047a59a6de5e8d1ee697f39874348274d30287dfd61d8fe553de70de8b"
+  },
+  "real_original_go_tls": {
+    "arch": "x86_64 client+server real netns",
+    "mode": "Game4 fixed6",
+    "same_server_port": 443,
+    "old_source_ipv4": "10.25.0.2",
+    "new_source_ipv4": "10.25.0.3",
+    "old_client_ports": [
+      41031,
+      41032,
+      41033,
+      41034
+    ],
+    "new_client_ports": [
+      56881,
+      56882,
+      56883,
+      56884
+    ],
+    "actual_syn_synack_each": true,
+    "client_first": "TLS ClientHello",
+    "server_first": "TLS ServerHello",
+    "private_prelude": false,
+    "server_early_application_bytes": 0,
+    "record_client_bytes_each": 667,
+    "record_server_bytes_each": 127,
+    "session_id_bytes": 32,
+    "distinct_session_ids": 8,
+    "per_lane_extensions": 15
+  },
+  "native_M4": {
+    "real_FEC6_parity_both_groups": true,
+    "old_group_Stop_before_new_TLS": true,
+    "single_server_shared_TUN_reader_joined": true,
+    "same_protected_lease": true,
+    "physical_underlay_new_MTU": 1280,
+    "outer_user_intent": 1460,
+    "inner_OS_MTU_readback": 1178,
+    "UDP_before_switch": 5,
+    "UDP_after_switch": 5
+  },
+  "limits": [
+    "Sequential Game Stop then new TLS only, NOT A→A+B→B healthy overlap.",
+    "Only TLS first-flight, no complete Finished transcript/site fingerprint proof.",
+    "Windows physical NIC and first TCP PCAP NOT_RUN.",
+    "H998 live shrink FAIL, ARM64 old Game4FEC Action FAIL, CPU/p99/ICMP unresolved."
+  ],
+  "plan028": "IN_PROGRESS"
+}
