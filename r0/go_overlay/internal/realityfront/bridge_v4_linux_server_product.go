@@ -32,6 +32,7 @@ const (
 type V4LinuxServerProductConfig struct {
     PeerPersona V4PublicNativePeerPersona
     Epochs *V4EpochStore
+    Authenticate func(username,password string)bool // protected multi-account cold auth only
     NetworkInterface string
     NetworkIfIndex uint32
     Tun *os.File
@@ -111,6 +112,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
+        Authenticate:p.cfg.Authenticate,
         fec2Product:v4ProductFecEnabled(mode),
     })
     if err!=nil{return nil,err}

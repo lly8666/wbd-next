@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1006,
-  "checkpoint_sha": "1903dea50ea9179924eae43377d4e4e99ef51a79",
+  "sequence": 1007,
+  "checkpoint_sha": "992a585013969ddc643228c47d80ae84f35a042a",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1006 add required H1005 feature-impact devlog for exact-source cold TLS feature status; PLAN028 shared IO pending",
-  "why_now": "H1005 source evidence and feature card valid but Action 41572285053 feature-gate rejected missing same-commit devlog impact declaration",
+  "current_task": "H1007 actual PLAN028 bilateral cold multiuser + auto lease + Linux Normal/Game authenticated IPv4 OS install code frozen; native shared multi-client not yet implemented",
+  "why_now": "Existing V4 protected admission wire already contains AutoLease/InstallationID; reuse pinned logicaltunnel 7-day lease and OS readback instead of inventing new protocol",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect exact HEAD governance and in-flight Windows/Linux source c429 Action; continue §0.2 real shared server accept, per-device lease/config, Rust indexed shared IO with fixture. Keep production overlap disabled until native resources safe, then true A+B and network event tasks.",
+  "next_action": "Collect exact-source H1007 native/Go test Actions and repair only new failures. Continue PLAN028 §0.2 server single-port accept + shared Rust TUN O(1) IP-indexed fanout, then actual same-account multi-device native business/7-mode A+B and OS path notifications; do not enable multiple independent TUN-reading Rust owners.",
   "unverified": true,
   "last_tested_source": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1005-GO-TLS-ACTION-COLLECTION.md",
+    "docs/devlog/M0/20261103-PLAN028-H1007-MULTIACCOUNT-AUTOLEASE-CANDIDATE.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 H1004 product code started, H1005 original Go protected TLS cold 20/20 PASS exact source; H1006 corrects feature-impact declaration. No shared single-port multi-client, path switch or Android qualification yet."
+  "partial_summary": "H1007 Go code batch implements protected multi-user account roster, installation-derived tunnel, original auto 7-day per-device lease, live epoch pin, authenticated Linux /32 apply/readback in Normal/Game and server pool validation. New real Go TLS + CLI tests staged; no H1007 SOURCE PASS until Actions. Production Rust remains one-session/older Game ports; H998 failure retained."
 }

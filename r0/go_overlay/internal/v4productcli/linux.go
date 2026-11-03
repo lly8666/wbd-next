@@ -11,6 +11,7 @@ package v4productcli
 import (
     "context"
     "crypto/rand"
+    "crypto/subtle"
     "crypto/tls"
     "encoding/binary"
     "encoding/hex"
@@ -33,6 +34,7 @@ import (
     "unsafe"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
+    "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 
@@ -82,7 +84,11 @@ type config struct{
     tlsKey string
     username string
     password string
+    users map[string]string
     tunnel [16]byte
+    autoIP bool
+    installation [16]byte
+    leasePool netip.Prefix
     fecMode realityfront.FecV2Mode
     peerPersona realityfront.V4PublicNativePeerPersona
     fecProfile realityfront.FecV2Profile
@@ -118,7 +124,11 @@ func parse(role string,args []string)(config,error){
     pass:=flags.String("password","","original protected admission password; prefer --password-file on shared devices")
     passFile:=flags.String("password-file","","mode-0600 regular secret file, no symlinks")
     routeFile:=flags.String("route-key-hex-file","","mode-0600 route key hex file, no symlinks")
-    tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
+    tunnel:=flags.String("tunnel-id","","manual 16B tunnel-id (auto-ip derives from installation)")
+    autoIP:=flags.Bool("auto-ip",false,"client protected automatic IPv4 assignment")
+    installPath:=flags.String("installation-id-file",".wbd-next-installation-id","portable 0600 installation identity")
+    leasePool:=flags.String("lease-pool","","server memory-only 7-day IPv4 pool CIDR")
+    usersFile:=flags.String("users-file","","server: 0600 JSON object username->password")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
@@ -140,6 +150,18 @@ func parse(role string,args []string)(config,error){
         value,e:=readPrivateArgFile(*routeFile)
         if e!=nil{return c,fmt.Errorf("invalid route-key-hex-file: %w",e)}
         *route=value
+    }
+    if *usersFile!=""{
+        if role!="server"||*user!=""||*pass!=""{return c,fmt.Errorf("users-file replaces single server credentials")}
+        raw,e:=readPrivateArgFile(*usersFile)
+        if e!=nil{return c,fmt.Errorf("users-file: %w",e)}
+        if e=json.Unmarshal([]byte(raw),&c.users);e!=nil||len(c.users)==0||len(c.users)>256{
+            return c,fmt.Errorf("users-file must be bounded nonempty JSON object")
+        }
+        for username,password:=range c.users{
+            if len(username)<1||len(username)>128||strings.TrimSpace(username)!=username||
+               len(password)<1||len(password)>512{return c,fmt.Errorf("invalid users-file credentials")}
+        }
     }
     switch *mode{
     case "normal":c.fecMode=realityfront.FecV2Off
@@ -195,9 +217,25 @@ func parse(role string,args []string)(config,error){
     default:return c,fmt.Errorf("outer-repair must be on or off")
     }
     c.outerMTU=*outerMTU
+    c.autoIP=*autoIP
+    if role=="server"{
+        if c.autoIP{return c,fmt.Errorf("auto-ip client-only; configure server lease-pool")}
+        if *leasePool!=""{
+            prefix,e:=netip.ParsePrefix(*leasePool)
+            if e!=nil||!prefix.Addr().Is4()||prefix.Bits()>30||prefix.Bits()<1{
+                return c,fmt.Errorf("lease-pool requires bounded IPv4 CIDR")
+            }
+            c.leasePool=prefix.Masked()
+        }
+    }else if *usersFile!=""||*leasePool!=""{
+        return c,fmt.Errorf("users-file/lease-pool server-only")
+    }
     c.fecProfile=realityfront.FecV2Profile(*profile)
+    if role=="client"&&c.autoIP&&*tunCIDR==""{*tunCIDR="169.254.240.1/32"}
+    validCredentials:=*user!=""&&*pass!=""
+    if role=="server"&&len(c.users)>0{validCredentials=true}
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
-       *tunCIDR==""||*name==""||*user==""||*pass==""||
+       *tunCIDR==""||*name==""||!validCredentials||
        *port==0||*port>65535||len(*route)<32{
         return c,fmt.Errorf("missing/invalid real original V4 TLS/raw/TUN settings")
     }
@@ -213,10 +251,20 @@ func parse(role string,args []string)(config,error){
     c.password=*pass
     c.routeKey,err=hex.DecodeString(*route)
     if err!=nil||len(c.routeKey)<16{return c,fmt.Errorf("invalid TLS route key")}
-    tunnelRaw,err:=hex.DecodeString(*tunnel)
-    if err!=nil||len(tunnelRaw)!=16{return c,fmt.Errorf("invalid tunnel-id")}
-    copy(c.tunnel[:],tunnelRaw)
-    if c.tunnel==[16]byte{}{return c,fmt.Errorf("empty logical tunnel id")}
+    if role=="client"&&c.autoIP{
+        if *tunnel!=""||*installPath==""{return c,fmt.Errorf("auto-ip derives tunnel ID, do not pass manual ID")}
+        installation,e:=logicaltunnel.ResolveInstallation("",*installPath,false)
+        if e!=nil{return c,fmt.Errorf("installation-id-file: %w",e)}
+        c.installation=installation
+        c.tunnel=logicaltunnel.DerivedTunnelID(c.username,installation)
+    }else if *tunnel!=""{
+        raw,e:=hex.DecodeString(*tunnel)
+        if e!=nil||len(raw)!=16{return c,fmt.Errorf("invalid manual tunnel-id")}
+        copy(c.tunnel[:],raw)
+    }
+    if c.tunnel==[16]byte{}&&!(role=="server"&&c.leasePool.IsValid()){
+        return c,fmt.Errorf("manual tunnel-id required without auto-IP/lease-pool")
+    }
     if role=="server"{
         if *cert==""||*key==""{return c,fmt.Errorf("tls-cert and tls-key required")}
         c.tlsCert=*cert;c.tlsKey=*key
@@ -227,7 +275,15 @@ func parse(role string,args []string)(config,error){
         if *remotePort==0||*remotePort>65535{return c,fmt.Errorf("peer-port invalid")}
         c.peerPort=uint16(*remotePort)
     }
-    if _,err=netip.ParsePrefix(*tunCIDR);err!=nil{return c,fmt.Errorf("invalid tun-ipv4")}
+    tunPrefix,e:=netip.ParsePrefix(*tunCIDR)
+    if e!=nil||!tunPrefix.Addr().Is4(){return c,fmt.Errorf("invalid tun-ipv4")}
+    if role=="server"&&c.leasePool.IsValid(){
+        if !tunPrefix.Contains(c.leasePool.Addr())||
+           tunPrefix.Bits()>c.leasePool.Bits()||
+           c.leasePool.Contains(tunPrefix.Addr()){
+            return c,fmt.Errorf("server tun-ipv4 must route the whole client pool but reserve its own IP outside the pool")
+        }
+    }
     return c,nil
 }
 func runIP(args ...string)error{
@@ -318,6 +374,7 @@ func readOwnedTunMTU(name string)(int,error){
 type ownedTun struct{
     f *os.File
     name string
+    cidr string
     cleaned bool
     mtu int
 }
@@ -331,7 +388,7 @@ func openTun(name,cidr string,mtu int)(*ownedTun,error){
     _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,fd.Fd(),tunSetIFF,
         uintptr(unsafe.Pointer(&ifr[0])))
     if errno!=0{_ = fd.Close();return nil,errno}
-    device:=&ownedTun{f:fd,name:name,mtu:mtu}
+    device:=&ownedTun{f:fd,name:name,cidr:cidr,mtu:mtu}
     // This public TUN is IPv4-only. At MTU>=1280 Linux would otherwise create
     // IPv6 link-local/RS traffic, which the IPv4 driver correctly rejects.
     // Set only our newly-owned device, before bringing it up; no host sysctl.
@@ -475,10 +532,26 @@ func Run(role string,args []string)error{
     } else {
         log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=0 readback=kernel_default",cfg.role,tun.name)
     }
+    var leases *logicaltunnel.LeaseRegistry
+    var epochs *realityfront.V4EpochStore
+    if role=="server"{
+        epochs,err=realityfront.NewV4EpochStore(4096)
+        if err!=nil{return err}
+        if cfg.leasePool.IsValid(){
+            leases,err=logicaltunnel.NewLeaseRegistry(cfg.leasePool,4096)
+            if err!=nil{return err}
+            // Original 7-day lease may recycle INACTIVE devices, but never
+            // a live or pending Go TLS/Rust session. The callback runs only
+            // on cold authenticated allocation, never on packet hot paths.
+            leases.BeforeExpire=func(id logicaltunnel.TunnelID)bool{
+                return !epochs.HasLiveTunnel(id)
+            }
+        }
+    }
     if cfg.gameLanes!=0{
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
-        return runGame(ctx,cfg,uint32(iface.Index),tun,&connected)
+        return runGame(ctx,cfg,uint32(iface.Index),tun,leases,epochs,&connected)
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
@@ -512,7 +585,7 @@ func Run(role string,args []string)error{
         if role=="client"{
             runErr=runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,reauthAuthorized,&connected)
         }else{
-            runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,reauthAuthorized,&connected)
+            runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,leases,epochs,reauthAuthorized,&connected)
         }
         closeErr:=raw.Close()
         if reauthAuthorized&&ctx.Err()==nil&&runErr!=nil&&
@@ -671,6 +744,72 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
     }
 }
 
+// Account selection happens only after the original marker and genuine TLS
+// protected request. Never derive a public pre-TLS verifier from a password.
+func originalV4CredentialCheck(c config)func(string,string)bool{
+    if len(c.users)==0{return nil}
+    return func(username,password string)bool{
+        secret,ok:=c.users[username]
+        return ok&&subtle.ConstantTimeCompare([]byte(secret),[]byte(password))==1
+    }
+}
+func originalV4AutomaticLease(reg *logicaltunnel.LeaseRegistry)func(realityfront.AdmissionRequest)(string,error){
+    if reg==nil{return nil}
+    return func(req realityfront.AdmissionRequest)(string,error){
+        return realityfront.V4AllocateAutomaticLease(reg,req)
+    }
+}
+// The Linux kernel must confirm the exact authenticated /32 before Rust can
+// read or write the TUN. No user-controlled inner-MTU setting is introduced.
+func readOwnedTunIPv4(name string)(netip.Prefix,error){
+    data,err:=exec.Command("ip","-j","addr","show","dev",name).CombinedOutput()
+    if err!=nil{return netip.Prefix{},fmt.Errorf("owned TUN IP readback: %w %s",err,data)}
+    var links []struct{
+        IfName string `json:"ifname"`
+        IfIndex int `json:"ifindex"`
+        AddrInfo []struct{
+            Family string `json:"family"`
+            Local string `json:"local"`
+            PrefixLen int `json:"prefixlen"`
+        } `json:"addr_info"`
+    }
+    if err:=json.Unmarshal(data,&links);err!=nil{return netip.Prefix{},err}
+    if len(links)!=1||links[0].IfName!=name||links[0].IfIndex<=0{
+        return netip.Prefix{},fmt.Errorf("owned TUN IP device identity mismatch")
+    }
+    var address netip.Prefix
+    for _,item:=range links[0].AddrInfo{
+        if item.Family!="inet"{continue}
+        ip,e:=netip.ParseAddr(item.Local)
+        if e!=nil||!ip.Is4()||item.PrefixLen!=32||address.IsValid(){
+            return netip.Prefix{},fmt.Errorf("owned TUN IPv4 address set invalid")
+        }
+        address=netip.PrefixFrom(ip,32)
+    }
+    if !address.IsValid(){return netip.Prefix{},fmt.Errorf("owned TUN lacks IPv4")}
+    return address,nil
+}
+func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
+    return func(lease string)error{
+        prefix,err:=netip.ParsePrefix(lease)
+        if err!=nil||!prefix.Addr().Is4()||prefix.Bits()!=32||
+           prefix.Addr().IsUnspecified()||prefix.Addr().IsMulticast(){
+            return fmt.Errorf("invalid authenticated IPv4 lease")
+        }
+        desired:=prefix.String()
+        if tun.cidr!=desired{
+            if err:=runIP("addr","add",desired,"dev",tun.name);err!=nil{return err}
+            if err:=runIP("addr","del",tun.cidr,"dev",tun.name);err!=nil{return err}
+        }
+        actual,err:=readOwnedTunIPv4(tun.name)
+        if err!=nil{return err}
+        if actual!=prefix{return fmt.Errorf("client authenticated IPv4 OS readback mismatch")}
+        tun.cidr=desired
+        log.Printf("V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=%s",desired)
+        return nil
+    }
+}
+
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
@@ -736,12 +875,14 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
+        AutoLease:c.autoIP,InstallationID:c.installation[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
     nativeAdmissionStart:=time.Now()
@@ -827,10 +968,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     return closeErr
 }
 func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
-    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,connected *bool)error{
+    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
+    leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
+    coldReauth bool,connected *bool)error{
+    if epochs==nil{return realityfront.ErrAdmissionParams}
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
-    if err!=nil{return err}
-    epochs,err:=realityfront.NewV4EpochStore(16)
     if err!=nil{return err}
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
@@ -838,7 +980,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
-            PeerPersona:c.peerPersona,
+            PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
     table,err:=faketcp.NewServerAssociationTable(32,emit)
@@ -848,9 +990,16 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{certificate}},
             Timeout:15*time.Second},
         ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:c.recordLimit,
+        AllocateLease:originalV4AutomaticLease(leases),
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
-            if len(req.TunnelID)!=16 || string(req.TunnelID)!=string(c.tunnel[:]) ||
-               req.DesiredLanes!=1||req.LaneID!=1{return realityfront.ErrAdmissionParams}
+            if len(req.TunnelID)!=16||req.DesiredLanes!=1||req.LaneID!=1{
+                return realityfront.ErrAdmissionParams
+            }
+            if req.AutoLease{
+                if leases==nil{return realityfront.ErrAdmissionParams}
+            }else if c.tunnel==[16]byte{}||string(req.TunnelID)!=string(c.tunnel[:]){
+                return realityfront.ErrAdmissionParams
+            }
             return nil
         },
     }

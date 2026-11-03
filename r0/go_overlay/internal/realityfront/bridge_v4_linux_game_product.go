@@ -22,6 +22,8 @@ type V4LinuxGameProductConfig struct {
     TunName string
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
+    ConfigureLeaseIPv4 func(lease string)error // apply once before Game group Rust M4 start
+    Authenticate func(username,password string)bool // server account roster
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
@@ -114,6 +116,7 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         return ErrAdmissionUnsupported
     }
     var epoch [16]byte
+    var effectiveLease string
     for i,a:=range associations{
         if a==nil||a.BootstrapConn()==nil{
             return errors.Join(ErrAdmissionParams,p.abortLocked())
@@ -134,6 +137,20 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         }
         p.clientSessions=append(p.clientSessions,session)
         p.bridges=append(p.bridges,bridge)
+        if base.AutoLease{
+            lease,leaseErr:=session.AuthenticatedLeaseIPv4()
+            if leaseErr!=nil||lease==""||p.cfg.ConfigureLeaseIPv4==nil{
+                return errors.Join(ErrAdmissionParams,leaseErr,p.abortLocked())
+            }
+            if i==0{
+                effectiveLease=lease
+                if err:=p.cfg.ConfigureLeaseIPv4(lease);err!=nil{
+                    return errors.Join(err,p.abortLocked())
+                }
+            }else if lease!=effectiveLease{
+                return errors.Join(ErrAdmissionParams,p.abortLocked())
+            }
+        }
         if p.cfg.ConfigureTunnelMTU!=nil {
             cold,err:=session.ColdSnapshot()
             if err!=nil{return errors.Join(err,p.abortLocked())}
@@ -183,6 +200,7 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
         session,e:=EstablishServerV4(ctx,a,cfg,V4ServerOptions{
             DataPlaneReady:true,Epochs:p.cfg.Epochs,
             ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
+            Authenticate:p.cfg.Authenticate,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)

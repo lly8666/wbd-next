@@ -18,6 +18,7 @@ import (
     "sync"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
+    "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/tlsrecord"
     "golang.org/x/crypto/hkdf"
 )
@@ -216,12 +217,19 @@ type V4ServerOptions struct {
     // independently prove that two generations can coexist before enabling.
     // Default false preserves reject-duplicate semantics on old call sites.
     AllowLaneReplacement bool
+    // Cold V4 only: optional server account roster, checked AFTER real TLS
+    // protected request and BEFORE any epoch/lease/native owner reservation.
+    // Nil uses original exact ExpectedUsername/ExpectedPassword pair.
+    Authenticate func(username,password string)bool
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
 
 type V4ClientSession struct {
     *ClientAdmissionSession
     Epoch [16]byte
+    // Freeze only the protected reply's validated IPv4 lease, never user
+    // requested MTU or mutable Negotiated fields as OS network authority.
+    verifiedLease4 string
     // Only EstablishClientV4 after verified protected reply and KDF may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
@@ -233,6 +241,7 @@ type V4ClientSession struct {
 type V4ServerSession struct {
     *ServerAdmissionSession
     Epoch [16]byte
+    verifiedLease4 string
     // Only EstablishServerV4 after credentials, protected reply and Detach may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
@@ -241,6 +250,41 @@ type V4ServerSession struct {
     negotiatedFeatures uint16
 }
 
+// Reuse the pinned original logicaltunnel allocator: 7-day memory lease,
+ // account+installation-derived stable tunnel identity, active lease renewal.
+// The allocator is called by EstablishServerV4 only AFTER credentials are
+// checked. Never mint a tunnel ID merely from a source IP/NAT tuple.
+func V4AllocateAutomaticLease(registry *logicaltunnel.LeaseRegistry,req AdmissionRequest)(string,error){
+    if registry==nil||!req.AutoLease||len(req.InstallationID)!=16||
+       len(req.TunnelID)!=16||req.Username==""{return "",ErrAdmissionParams}
+    var install logicaltunnel.InstallationID
+    copy(install[:],req.InstallationID)
+    if install==[16]byte{} {return "",ErrAdmissionParams}
+    id,err:=logicaltunnel.TunnelIDFromBytes(req.TunnelID)
+    if err!=nil||id!=logicaltunnel.DerivedTunnelID(req.Username,install){
+        return "",ErrAdmissionParams
+    }
+    lease,err:=registry.Acquire(req.Username,install,id)
+    if err!=nil {return "",err}
+    return lease.Config.Address4,nil
+}
+
+// AuthenticatedLeaseIPv4 exposes only a fully validated TLS reply's effective
+// lease and rejects caller mutation of Negotiated, for OS installation BEFORE
+// starting the Rust raw/TUN business loop. Empty means manual-IP admission.
+func (s *V4ClientSession) AuthenticatedLeaseIPv4()(string,error){
+    if s==nil||s.ClientAdmissionSession==nil{return "",ErrAdmissionUnsupported}
+    if _,err:=s.ColdSnapshot();err!=nil{return "",err}
+    if s.Negotiated.Lease4!=s.verifiedLease4{return "",ErrAdmissionParams}
+    return s.verifiedLease4,nil
+}
+
+// A typed tuple makes the authenticated account + fixed 16-byte tunnel scope
+// explicit; no ambiguous textual identity keys or binary allocations.
+type v4IdentityKey struct{
+    username string
+    tunnel [16]byte
+}
 type v4Entry struct {
     epoch [16]byte
     active bool
@@ -258,15 +302,17 @@ type v4Entry struct {
 // authenticated incarnation; do not infer an owner from username or epoch.
 type V4EpochStore struct {
     mu sync.Mutex
-    entries map[string]*v4Entry
+    entries map[v4IdentityKey]*v4Entry
     max int
 }
 func NewV4EpochStore(max int) (*V4EpochStore,error) {
     if max<1 || max>4096 { return nil,ErrAdmissionParams }
-    return &V4EpochStore{entries:make(map[string]*v4Entry),max:max},nil
+    return &V4EpochStore{entries:make(map[v4IdentityKey]*v4Entry),max:max},nil
 }
-func v4Identity(username string,tunnelID []byte) string {
-    return username + "/" + string(tunnelID)
+func v4Identity(username string,tunnelID []byte) v4IdentityKey {
+    var tunnel [16]byte
+    copy(tunnel[:],tunnelID)
+    return v4IdentityKey{username:username,tunnel:tunnel}
 }
 
 // ReleaseLane keeps only the legacy non-overlapping lifecycle working.
@@ -310,6 +356,20 @@ func (s *V4EpochStore) ReleaseLaneInstance(
     if len(instances)==0 {e.lanes &^= uint8(1<<lane)}
     if e.lanes==0 && e.pending==0 {delete(s.entries,key)}
     return nil
+}
+
+// Lease expiry is a cold admission operation, not per-packet routing.
+// A pending authenticated candidate must pin its address just like an
+// active owner; otherwise another login could steal the same IPv4 while
+// the original TLS/Detach is still completing.
+func (s *V4EpochStore) HasLiveTunnel(id logicaltunnel.TunnelID)bool{
+    if s==nil{return false}
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    for key,e:=range s.entries{
+        if key.tunnel==[16]byte(id) && (e.lanes!=0||e.pending!=0){return true}
+    }
+    return false
 }
 
 // prepare runs only after TLS credential verification. The first attempt
@@ -549,7 +609,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     success=true
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
-        Epoch:extension.Epoch,
+        Epoch:extension.Epoch,verifiedLease4:result.Lease4,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
         verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
     },nil
@@ -561,7 +621,8 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
 func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,opt V4ServerOptions)(*V4ServerSession,error) {
     if !opt.DataPlaneReady||opt.Epochs==nil||opt.GameFec>7||
        (opt.GameFec!=0&&!opt.fec2Product){return nil,ErrAdmissionUnsupported}
-    if assoc==nil || cfg.ExpectedUsername=="" || cfg.ExpectedPassword=="" || !validRecordLimit(cfg.ServerLimit) {
+    if assoc==nil || (opt.Authenticate==nil&&(cfg.ExpectedUsername==""||cfg.ExpectedPassword=="")) ||
+       !validRecordLimit(cfg.ServerLimit) {
         return nil,ErrAdmissionParams
     }
     conn:=assoc.BootstrapConn()
@@ -580,7 +641,13 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err:=guard.Rearm();err!=nil{return nil,err}
     req,offered,err:=v4ReadRequest(tlsConn)
     if err!=nil{_ = writeAdmissionFailure(tlsConn,admissionStatus(err));return nil,candidateError(ctx,err)}
-    if !credentialsMatch(req.Username,req.Password,cfg.ExpectedUsername,cfg.ExpectedPassword) {
+    authenticated:=false
+    if opt.Authenticate!=nil {
+        authenticated=opt.Authenticate(req.Username,req.Password)
+    }else{
+        authenticated=credentialsMatch(req.Username,req.Password,cfg.ExpectedUsername,cfg.ExpectedPassword)
+    }
+    if !authenticated {
         _=writeAdmissionFailure(tlsConn,admissionAuthFail)
         return nil,ErrAdmissionAuth
     }
@@ -689,7 +756,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         ServerAdmissionSession:&ServerAdmissionSession{
             TLS:&ServerSession{Hello:hello,Keys:keys},
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
-        },Epoch:epoch,
+        },Epoch:epoch,verifiedLease4:lease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
         verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
     },nil

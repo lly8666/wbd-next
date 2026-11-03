@@ -25,6 +25,7 @@ type V4LinuxClientProductConfig struct {
     CleanupOwnedNetwork func()error
     // Optional original OS owner callback, only after authentication and before TUN starts.
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
+    ConfigureLeaseIPv4 func(lease string)error // protected reply, pre-native business
     FECMode FecV2Mode
     FECProfile FecV2Profile
     DisableOuterRepair bool
@@ -100,6 +101,17 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.owner=bridge
     p.session=session
     p.association=assoc
+    // Never let Rust begin TUN business before the original authenticated
+    // server-selected per-device IPv4 address has been installed/read back.
+    if cfg.AutoLease {
+        lease,leaseErr:=session.AuthenticatedLeaseIPv4()
+        if leaseErr!=nil||lease==""||p.cfg.ConfigureLeaseIPv4==nil {
+            return nil,errors.Join(ErrAdmissionParams,leaseErr,p.closeLocked())
+        }
+        if leaseErr=p.cfg.ConfigureLeaseIPv4(lease);leaseErr!=nil {
+            return nil,errors.Join(leaseErr,p.closeLocked())
+        }
+    }
     if p.cfg.ConfigureTunnelMTU!=nil {
         clientLimit,serverLimit:=cold.RecordLimits()
         if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,clientLimit,serverLimit);err!=nil{

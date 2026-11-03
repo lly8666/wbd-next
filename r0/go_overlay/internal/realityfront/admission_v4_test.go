@@ -10,6 +10,8 @@ import (
     "errors"
     "io"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
+    "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
+    "net/netip"
     "testing"
     "time"
 )
@@ -54,6 +56,139 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
     case <-time.After(5*time.Second):
         t.Fatal("V4 real TLS server timeout")
         return nil,nil,nil,nil
+    }
+}
+
+// The original pinned Go allocator and the live V4 protected TLS request
+// already have the fields necessary for per-installation automatic leases.
+// Prove 3 independent authenticated sessions with one account repeated,
+// protected rejected credentials, wrong installation/tunnel binding, stable
+// reconnect, and lease snapshot mutation rejection. This is the cold path;
+// it does not claim a shared native Rust TUN or one-port acceptor.
+func TestR0V4RealTLSMultiDeviceAutoIPIdentityAndLeaseIsolation(t *testing.T){
+    store,err:=NewV4EpochStore(8)
+    if err!=nil{t.Fatal(err)}
+    pool:=netip.MustParsePrefix("10.219.0.0/24")
+    leases,err:=logicaltunnel.NewLeaseRegistry(pool,32)
+    if err!=nil{t.Fatal(err)}
+    leases.BeforeExpire=func(id logicaltunnel.TunnelID)bool{
+        return !store.HasLiveTunnel(id)
+    }
+    passwords:=map[string]string{"alice":"alice-secret","bob":"bob-secret"}
+    allocations:=0
+    mkInstall:=func(byteID byte)logicaltunnel.InstallationID{
+        var out logicaltunnel.InstallationID
+        out[0]=byteID
+        return out
+    }
+    pair:=func(username,password string,install logicaltunnel.InstallationID,id logicaltunnel.TunnelID)(
+       *V4ClientSession,*V4ServerSession,error,error){
+        t.Helper()
+        cert:=makeServerCert(t)
+        key:=[]byte("0123456789abcdef0123456789abcdef")
+        assoc,peer:=newAssociationPeer(t)
+        defer assoc.Close()
+        defer peer.Close()
+        type answer struct{s *V4ServerSession;err error}
+        ch:=make(chan answer,1)
+        go func(){
+            server,serverErr:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+                TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                    TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
+                ServerLimit:1400,AllocateLease:func(req AdmissionRequest)(string,error){
+                    allocations++
+                    return V4AllocateAutomaticLease(leases,req)
+                },
+            },V4ServerOptions{DataPlaneReady:true,Epochs:store,
+                Authenticate:func(user,secret string)bool{
+                    expected,ok:=passwords[user]
+                    return ok&&expected==secret
+                },
+            })
+            ch<-answer{server,serverErr}
+        }()
+        client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
+            TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+            AutoLease:true,InstallationID:append([]byte(nil),install[:]...),
+            Username:username,Password:password,TunnelID:id.Bytes(),
+            ClientLimit:1400,DesiredLanes:1,LaneID:1,
+            Policy:v4TestPolicy(1,CipherChaCha),
+        },V4ClientOptions{DataPlaneReady:true})
+        select{
+        case server:=<-ch:
+            return client,server.s,clientErr,server.err
+        case <-time.After(5*time.Second):
+            t.Fatal("protected V4 automatic lease pair hung")
+        }
+        return nil,nil,nil,nil
+    }
+    aInstall,bInstall,cInstall:=mkInstall(1),mkInstall(2),mkInstall(3)
+    aID:=logicaltunnel.DerivedTunnelID("alice",aInstall)
+    bID:=logicaltunnel.DerivedTunnelID("alice",bInstall)
+    cID:=logicaltunnel.DerivedTunnelID("bob",cInstall)
+    a,as,ac,ae:=pair("alice","alice-secret",aInstall,aID)
+    if ac!=nil||ae!=nil{t.Fatalf("device A TLS %v %v",ac,ae)}
+    b,bs,bc,be:=pair("alice","alice-secret",bInstall,bID)
+    if bc!=nil||be!=nil{t.Fatalf("device B TLS %v %v",bc,be)}
+    c,cs,cc,ce:=pair("bob","bob-secret",cInstall,cID)
+    if cc!=nil||ce!=nil{t.Fatalf("account B TLS %v %v",cc,ce)}
+    la,err:=a.AuthenticatedLeaseIPv4()
+    if err!=nil{t.Fatal(err)}
+    lb,err:=b.AuthenticatedLeaseIPv4()
+    if err!=nil{t.Fatal(err)}
+    lc,err:=c.AuthenticatedLeaseIPv4()
+    if err!=nil{t.Fatal(err)}
+    if la==lb||la==lc||lb==lc||la==""||lb==""||lc==""||
+       a.Epoch==b.Epoch||a.Epoch==c.Epoch{
+        t.Fatalf("identity/IP isolation violated: %s %s %s",la,lb,lc)
+    }
+    if !store.HasLiveTunnel(aID)||!store.HasLiveTunnel(bID)||!store.HasLiveTunnel(cID){
+        t.Fatal("live authentic tunnels not protected against expiration")
+    }
+    base:=allocations
+    _,_,badClient,badServer:=pair("alice","wrong-password",mkInstall(4),
+        logicaltunnel.DerivedTunnelID("alice",mkInstall(4)))
+    if !errors.Is(badClient,ErrAdmissionAuth)||!errors.Is(badServer,ErrAdmissionAuth)||
+       allocations!=base{
+        t.Fatalf("rejected credentials allocated lease: %v %v calls=%d",badClient,badServer,allocations)
+    }
+    _,_,forgedClient,forgedServer:=pair("alice","alice-secret",aInstall,cID)
+    if !errors.Is(forgedServer,ErrAdmissionParams)||forgedClient==nil{
+        t.Fatalf("forged cross-account TunnelID admitted: %v %v",forgedClient,forgedServer)
+    }
+    a.Negotiated.Lease4="10.219.0.77/32"
+    if _,err:=a.AuthenticatedLeaseIPv4();!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("mutable client result granted new OS IP: %v",err)
+    }
+    a.Negotiated.Lease4=la
+    if got,err:=a.AuthenticatedLeaseIPv4();err!=nil||got!=la{
+        t.Fatalf("frozen valid lease not recoverable: %s %v",got,err)
+    }
+    firstSnap,err:=as.ColdSnapshot()
+    if err!=nil{t.Fatal(err)}
+    if err:=store.ReleaseLaneInstance("alice",aID.Bytes(),1,as.Epoch,firstSnap.Incarnation());err!=nil{
+        t.Fatalf("A stop: %v",err)
+    }
+    if store.HasLiveTunnel(aID)||!store.HasLiveTunnel(bID)||!store.HasLiveTunnel(cID){
+        t.Fatal("one device Stop corrupted another account's active lease")
+    }
+    next,ns,nc,ne:=pair("alice","alice-secret",aInstall,aID)
+    if nc!=nil||ne!=nil{t.Fatalf("same installation reauth %v %v",nc,ne)}
+    renewed,err:=next.AuthenticatedLeaseIPv4()
+    if err!=nil||renewed!=la||next.Epoch==a.Epoch{
+        t.Fatalf("fresh TLS did not preserve device lease with new epoch: %s %v",renewed,err)
+    }
+    for _,sc:=range []struct{user string;id logicaltunnel.TunnelID;s *V4ServerSession}{
+        {"alice",bID,bs},{"bob",cID,cs},{"alice",aID,ns},
+    }{
+        snap,err:=sc.s.ColdSnapshot()
+        if err!=nil{t.Fatal(err)}
+        if err:=store.ReleaseLaneInstance(sc.user,sc.id.Bytes(),1,sc.s.Epoch,snap.Incarnation());err!=nil{
+            t.Fatalf("generation Stop leaked: %v",err)
+        }
+    }
+    if store.HasLiveTunnel(aID)||store.HasLiveTunnel(bID)||store.HasLiveTunnel(cID){
+        t.Fatal("stopped leases still owned a live native epoch")
     }
 }
 

@@ -14,6 +14,7 @@ import (
     "sync/atomic"
     "time"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
+    "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 func gamePort(base uint16,lane int)(uint16,error){
@@ -21,10 +22,10 @@ func gamePort(base uint16,lane int)(uint16,error){
     if value<1||value>65535{return 0,fmt.Errorf("Game 2/4 per-lane FakeTCP port overflow")}
     return uint16(value),nil
 }
-func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
+func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)error{
     if c.gameLanes!=2&&c.gameLanes!=4{return realityfront.ErrAdmissionUnsupported}
     if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected)}
-    return runGameServer(ctx,c,ifindex,tun,connected)
+    return runGameServer(ctx,c,ifindex,tun,leases,epochs,connected)
 }
 // Planned is the original bounded FEC owner count; sent requires at
 // least ONE definite kernel M4 copy per Game logical parity row. Recovery
@@ -129,6 +130,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
@@ -140,6 +142,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second,
         },
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
+        AutoLease:c.autoIP,InstallationID:c.installation[:],
         ClientLimit:c.recordLimit,DesiredLanes:c.gameLanes,Policy:policy,
     }
     dialCtx,cancel:=context.WithTimeout(ctx,60*time.Second)
@@ -186,12 +189,11 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
     return errors.Join(err,closeErr)
 }
-func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
+func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)error{
     n:=int(c.gameLanes)
     cert,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
-    store,err:=realityfront.NewV4EpochStore(16)
-    if err!=nil{return err}
+    if epochs==nil{return realityfront.ErrAdmissionParams}
     native,err:=realityfront.NewV4LinuxGameServerProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
@@ -201,7 +203,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
-            Epochs:store,PeerPersona:c.peerPersona,
+            Epochs:epochs,PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
@@ -297,8 +299,12 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             Timeout:15*time.Second,
         },
         ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:c.recordLimit,
+        AllocateLease:originalV4AutomaticLease(leases),
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
-            if len(req.TunnelID)!=16||string(req.TunnelID)!=string(c.tunnel[:]){
+            if len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+            if req.AutoLease{
+                if leases==nil{return realityfront.ErrAdmissionParams}
+            }else if c.tunnel==[16]byte{}||string(req.TunnelID)!=string(c.tunnel[:]){
                 return realityfront.ErrAdmissionParams
             }
             return nil

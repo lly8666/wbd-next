@@ -141,3 +141,69 @@ func TestGame4Fixed6StaggerDefaultAndGame2Unchanged(t *testing.T){
         })
     }
 }
+
+// PLAN028: the original Go client generates and persists only an installation
+// ID; the actual per-session IPv4 comes from protected TLS, not a hardcoded
+// UI/TUN field. Same credentials on different installations must not collide.
+func TestPLAN028AutomaticIPAndServerMultiAccountConfiguration(t *testing.T){
+    dir:=t.TempDir()
+    password:=filepath.Join(dir,"password")
+    route:=filepath.Join(dir,"route")
+    roster:=filepath.Join(dir,"users")
+    if err:=os.WriteFile(password,[]byte("alice-password\n"),0600);err!=nil{t.Fatal(err)}
+    if err:=os.WriteFile(route,[]byte(strings.Repeat("ca",32)+"\n"),0600);err!=nil{t.Fatal(err)}
+    if err:=os.WriteFile(roster,[]byte("{\"alice\":\"alice-password\",\"bob\":\"bob-password\"}\n"),0600);err!=nil{t.Fatal(err)}
+    base:=[]string{
+        "--raw-interface","lo","--local-ip","192.0.2.10",
+        "--peer-ip","192.0.2.11","--local-port","50001","--peer-port","443",
+        "--tun-name","wbd4","--server-name","target.test","--username","alice",
+        "--password-file",password,"--route-key-hex-file",route,
+        "--auto-ip",
+    }
+    install1:=filepath.Join(dir,"install-1")
+    install2:=filepath.Join(dir,"install-2")
+    one,err:=parse("client",append(append([]string(nil),base...),"--installation-id-file",install1))
+    if err!=nil{t.Fatal(err)}
+    same,err:=parse("client",append(append([]string(nil),base...),"--installation-id-file",install1))
+    if err!=nil{t.Fatal(err)}
+    other,err:=parse("client",append(append([]string(nil),base...),"--installation-id-file",install2))
+    if err!=nil{t.Fatal(err)}
+    if !one.autoIP||one.tunnel==[16]byte{}||one.installation==[16]byte{}||
+       one.tunnel!=same.tunnel||one.installation!=same.installation||
+       one.tunnel==other.tunnel||one.installation==other.installation||
+       one.tunCIDR!="169.254.240.1/32"||one.outerMTU!=1460{
+        t.Fatal("automatic IP created unstable or colliding installation identity")
+    }
+    st,err:=os.Stat(install1)
+    if err!=nil||st.Mode().Perm()!=0600{t.Fatal("installation file not 0600")}
+    if _,err:=parse("client",append(append([]string(nil),base...),
+        "--installation-id-file",install1,"--tunnel-id","000102030405060708090a0b0c0d0e0f"));err==nil{
+        t.Fatal("auto-IP accepted client-forged tunnel ID")
+    }
+    server:=[]string{
+        "--raw-interface","lo","--local-ip","192.0.2.11",
+        "--local-port","443","--tun-name","wbd4","--tun-ipv4","10.219.0.1/24",
+        "--server-name","target.test","--route-key-hex-file",route,
+        "--tls-cert","server.crt","--tls-key","server.key",
+        "--users-file",roster,"--lease-pool","10.219.0.128/25",
+    }
+    srv,err:=parse("server",server)
+    if err!=nil{t.Fatal(err)}
+    if len(srv.users)!=2||!srv.leasePool.IsValid()||srv.tunnel!=[16]byte{}||
+       srv.users["bob"]!="bob-password"||srv.outerMTU!=1460{
+        t.Fatal("server did not accept bounded multi-account lease settings")
+    }
+    if _,err:=parse("server",append(append([]string(nil),server...),
+        "--auto-ip"));err==nil{t.Fatal("server accepted client-only auto-ip")}
+    collision:=append([]string(nil),server...)
+    for i:=range collision{
+        if collision[i]=="10.219.0.128/25"{collision[i]="10.219.0.0/24";break}
+    }
+    if _,err:=parse("server",collision);err==nil{
+        t.Fatal("server lease pool may assign its own TUN address")
+    }
+    if err:=os.Chmod(roster,0644);err!=nil{t.Fatal(err)}
+    if _,err:=parse("server",server);err==nil{
+        t.Fatal("world-readable multi-account credential file admitted")
+    }
+}
