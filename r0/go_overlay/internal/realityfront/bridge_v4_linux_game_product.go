@@ -167,6 +167,186 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
     }
     return nil
 }
+// Authenticated Game cohort identity is available ONLY after original Go
+// credential TLS and Rust private Prepare/Commit. This struct is never
+// constructed from a SYN, source address, TCP port, or client-controlled
+// plaintext. All fields are read-only outside realityfront.
+type V4LinuxGameCohortID struct{
+    Principal string
+    TunnelID [16]byte
+    Epoch [16]byte
+    Lanes uint8
+}
+
+// One protected original TLS lane is temporarily held by the cold server
+// dispatcher until n complete members of the SAME cohort are available.
+// Ownership then moves exactly once into V4LinuxGameProduct (whose Close
+// joins original Rust M4 before releasing the OS-backed epoch).
+type V4LinuxGameAuthenticatedLane struct{
+    session *V4ServerSession
+    bridge *v4EmbeddedNativeBridge
+    assoc *faketcp.ServerAssociation
+    peerMSS uint16
+    epochs *V4EpochStore
+    transferred bool
+}
+func (l *V4LinuxGameAuthenticatedLane) Cohort()(
+    V4LinuxGameCohortID,uint8,error,
+){
+    var zero V4LinuxGameCohortID
+    if l==nil||l.session==nil||l.bridge==nil{return zero,0,ErrAdmissionParams}
+    cold,err:=l.session.ColdSnapshot()
+    if err!=nil{return zero,0,err}
+    n:=int(l.session.verifiedPolicy.DesiredLanes)
+    if !validGameGroupPolicy(l.session.verifiedPolicy,n)||
+        cold.LaneID()==0||int(cold.LaneID())>n{
+        return zero,0,ErrAdmissionUnsupported
+    }
+    return V4LinuxGameCohortID{
+        Principal:cold.Principal(),TunnelID:cold.TunnelID(),
+        Epoch:cold.Epoch(),Lanes:uint8(n),
+    },cold.LaneID(),nil
+}
+func (l *V4LinuxGameAuthenticatedLane) DetachedPeer()(faketcp.DetachedPeer,error){
+    if l==nil||l.assoc==nil{return faketcp.DetachedPeer{},ErrAdmissionParams}
+    state,ok:=l.assoc.TransitionState()
+    if !ok||state!=faketcp.TransitionDetached{return faketcp.DetachedPeer{},ErrAdmissionUnsupported}
+    flow:=l.assoc.Flow()
+    return faketcp.DetachedPeer{IP:flow.ClientIP,Port:flow.ClientPort},nil
+}
+func (l *V4LinuxGameAuthenticatedLane) Association()*faketcp.ServerAssociation{
+    if l==nil{return nil}
+    return l.assoc
+}
+func (l *V4LinuxGameAuthenticatedLane) Close()error{
+    if l==nil||l.transferred{return nil}
+    // Revoke the sole authenticated cold lane, not its sibling's Rust group.
+    var err error
+    if l.bridge!=nil&&l.bridge.handle!=0&&!l.bridge.stopped{
+        _,err=l.bridge.StopAndReleaseOriginalOwner()
+        if err!=nil{return err}
+    }
+    if l.epochs!=nil&&l.session!=nil{
+        cold,e:=l.session.ColdSnapshot()
+        if e!=nil{return errors.Join(err,e)}
+        tunnel:=cold.TunnelID()
+        if e=l.epochs.ReleaseLaneInstance(
+            cold.Principal(),tunnel[:],cold.LaneID(),
+            cold.Epoch(),cold.Incarnation(),
+        );e!=nil{return errors.Join(err,e)}
+    }
+    l.transferred=true
+    return err
+}
+
+// Cold one-association TLS may run concurrently for every 443 flow; TLS
+// completions are grouped only by the authenticated immutable cohort key.
+// This is a separate API from the original single-group legacy method.
+func V4AuthenticateLinuxGameServerLane(
+    ctx context.Context,assoc *faketcp.ServerAssociation,
+    base ServerAdmissionConfig,cfg V4LinuxGameProductConfig,n int,
+)(*V4LinuxGameAuthenticatedLane,error){
+    if assoc==nil||ctx==nil||cfg.Epochs==nil||(n!=2&&n!=4){
+        return nil,ErrAdmissionParams
+    }
+    allow:=base.PolicyAllow
+    validate:=base.ValidateRequest
+    base.PolicyAllow=func(policy AdmissionPolicy)error{
+        if !validGameGroupPolicy(policy,n){return ErrAdmissionUnsupported}
+        if allow!=nil{return allow(policy)}
+        return nil
+    }
+    base.ValidateRequest=func(req AdmissionRequest)error{
+        if err:=v4ServerGameProtectedLaneRequest(req,n);err!=nil{return err}
+        if validate!=nil{return validate(req)}
+        return nil
+    }
+    gameFec:=uint8(0)
+    if cfg.GameFecEnabled{gameFec=cfg.GameFecProfile+1}
+    bridge:=&v4EmbeddedNativeBridge{}
+    session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
+        DataPlaneReady:true,Epochs:cfg.Epochs,
+        ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
+        Authenticate:cfg.Authenticate,AllowLaneReplacement:cfg.SharedTun!=nil,
+    })
+    if err!=nil{return nil,err}
+    lane:=&V4LinuxGameAuthenticatedLane{
+        session:session,bridge:bridge,assoc:assoc,
+        peerMSS:assoc.PeerTCPProfile().MSS,epochs:cfg.Epochs,
+    }
+    if _,_,err=lane.Cohort();err!=nil{
+        return nil,errors.Join(err,lane.Close())
+    }
+    return lane,nil
+}
+
+// The complete cohort has already independently authenticated on each
+// physical FakeTCP flow. Take ALL original lanes or none. Before sharing
+// a TUN or publishing any Game Ready, enforce every original Go verified
+// lane identity, policy, incarnation and independent exporter key.
+func (p *V4LinuxGameProduct) AdoptServerGameLanes(
+    members []*V4LinuxGameAuthenticatedLane,
+)error{
+    if p==nil||!p.server{return ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    n:=len(members)
+    if p.stopped||p.connected||len(p.bridges)>0||(n!=2&&n!=4){
+        return ErrAdmissionUnsupported
+    }
+    seen:=make(map[*V4LinuxGameAuthenticatedLane]bool,n)
+    var cohort V4LinuxGameCohortID
+    for i,l:=range members{
+        if l==nil||l.transferred||seen[l]{return ErrAdmissionParams}
+        seen[l]=true
+        id,_,err:=l.Cohort()
+        if err!=nil{return err}
+        if i==0{cohort=id}else if id!=cohort{return ErrAdmissionParams}
+    }
+    for _,l:=range members{
+        p.serverSessions=append(p.serverSessions,l.session)
+        p.bridges=append(p.bridges,l.bridge)
+        l.transferred=true
+    }
+    order,err:=v4GameServerTLSArrivalOrder(p.serverSessions)
+    if err!=nil{return errors.Join(err,p.abortLocked())}
+    sessions:=make([]*V4ServerSession,n)
+    bridges:=make([]*v4EmbeddedNativeBridge,n)
+    mss:=make([]uint16,n)
+    for lane,arrival:=range order{
+        sessions[lane]=p.serverSessions[arrival]
+        bridges[lane]=p.bridges[arrival]
+        mss[lane]=members[arrival].peerMSS
+    }
+    p.serverSessions=sessions
+    p.bridges=bridges
+    // No group can mutate a sibling's TUN: AUTO multi-group config has
+    // no per-group ConfigureTunnelMTU and the shared device is Go-owned.
+    for i,session:=range p.serverSessions{
+        lease,e:=session.AuthenticatedLeaseIPv4()
+        if e!=nil{return errors.Join(e,p.abortLocked())}
+        if p.cfg.SharedTun!=nil&&lease==""{
+            return errors.Join(ErrAdmissionParams,p.abortLocked())
+        }
+        if lease!=""{
+            if e=p.bridges[i].bindAuthenticatedClientIPv4(lease);e!=nil{
+                return errors.Join(e,p.abortLocked())
+            }
+        }
+        if p.cfg.ConfigureTunnelMTU!=nil{
+            cold,e:=session.ColdSnapshot()
+            if e!=nil{return errors.Join(e,p.abortLocked())}
+            cl,sl:=cold.RecordLimits()
+            if e=p.cfg.ConfigureTunnelMTU(mss[i],cl,sl);e!=nil{
+                return errors.Join(e,p.abortLocked())
+            }
+        }
+    }
+    if err=p.commitGroupedOwnerLocked();err!=nil{
+        return errors.Join(err,p.abortLocked())
+    }
+    return nil
+}
+
 // The n original Go FakeTCP associations can arrive in ANY SYN order. The
 // client's protected TLS runs lane1..laneN sequentially, so processing the
 // server TLS in SYN arrival order can deadlock and wrongly bind lane IDs.

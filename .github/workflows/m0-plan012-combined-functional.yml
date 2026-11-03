@@ -174,7 +174,7 @@ jobs:
           # never upload and do not print. Wipe after bridge test.
           export WBD_GAME_TLS_FIXTURE_DIR="$RUNNER_TEMP/m0-go-game-private-${GITHUB_RUN_ID}"
           mkdir -m 0700 "$WBD_GAME_TLS_FIXTURE_DIR"
-          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestPLAN028GameServerProtectedLaneNotSYNPosition|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
+          (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run "^(TestM0V4OriginalTLSGame2And4AuthenticatedColdSet|TestPLAN028GameServerProtectedLaneNotSYNPosition|TestPLAN028AuthenticatedGameCohortSeparatesAccountsAndDevices|TestM0Plan019RealTLSGroup2And4ImmutableOwnerBoundary|TestM0Plan019NativeGameGroupRejectsMissingCommittedOriginalTLS)$" -count=1 -v ./internal/realityfront >"$GITHUB_WORKSPACE/fixed-kernel-result/original-go-game-tls.log" 2>&1) || { cat fixed-kernel-result/original-go-game-tls.log; exit 1; }
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=4" fixed-kernel-result/original-go-game-tls.log
           grep -q "M0_PLAN019_REAL_ORIGINAL_GO_TLS_PUBLIC_GAME_GROUP_BOUNDARY_PASS lanes=2" fixed-kernel-result/original-go-game-tls.log
@@ -531,6 +531,13 @@ jobs:
             grep -q "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$lanes" "fixed-kernel-result/v4-public-$game-real-cli.log"
             echo "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=$game" 
           done
+          # Separate actual auto-lease cohort flow: 2 credential-distinct
+          # Game2 groups (4 TLS lanes) on ONE server 443/ONE Rust TUN reader.
+          bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game-two-groups.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-game-two-groups.log >&2
+            exit 1
+          }
+          grep -q 'M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS' fixed-kernel-result/plan028-game-two-groups.log
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
       # Earlier independent Fixed/Game jobs complete first and can expose

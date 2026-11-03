@@ -11,6 +11,7 @@ import (
     "errors"
     "fmt"
     "log"
+    "sync"
     "sync/atomic"
     "time"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -197,25 +198,19 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     cert,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
     if epochs==nil{return realityfront.ErrAdmissionParams}
-    // Each automatic Game /32 joins one Rust physical TUN reader.
-    // Without a verified lease retain original single-group M4 ownership.
-    var shared *realityfront.V4LinuxSharedTun
-    if c.autoIP{
-        if leases==nil{return realityfront.ErrAdmissionParams}
-        shared,err=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
-        if err!=nil{return err}
-        defer func(){retErr=errors.Join(retErr,shared.Close())}()
+    // Server auto-lease is enabled by --lease-pool, NEVER --auto-ip
+    // (the latter is client-only). H1036's c.autoIP check could never be
+    // reached on a valid server; use actual verified lease-pool authority.
+    if c.leasePool.IsValid(){
+        return runGameMultiServer(ctx,c,ifindex,tun,leases,epochs,connected,cert)
     }
-    // The Go Run() parent owns the single physical device until every
-    // native Game group and shared reader has drained. Per-group Close is
-    // never allowed to steal a sibling group's OS TUN.
-    cleanup:=tun.Close
-    if shared!=nil{cleanup=func()error{return nil}}
+    // Manual old one-group mode remains exactly the original dedicated
+    // physical TUN owner until the multi-group server path is qualified.
     native,err:=realityfront.NewV4LinuxGameServerProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,SharedTun:shared,
-            CleanupOwnedNetwork:cleanup,
+            Tun:tun.f,TunName:c.tunName,
+            CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
@@ -389,4 +384,319 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server lanes=%d",n)}
     return errors.Join(err,closeErr)
+}
+
+
+/*
+PLAN028 H1037: one real Game2/4 server socket and original Go TLS policy,
+many independently authenticated groups. All untrusted packets are still
+delivered only to the original Go FakeTCP cold handler; native Rust owns
+all detached DATA. No new transport, FEC or per-packet Go forwarding.
+*/
+type originalGameCohortPending struct{
+    created time.Time
+    lanes map[uint8]*realityfront.V4LinuxGameAuthenticatedLane
+}
+type originalGameCohortLive struct{
+    key realityfront.V4LinuxGameCohortID
+    product *realityfront.V4LinuxGameProduct
+    members []*realityfront.V4LinuxGameAuthenticatedLane
+    peers []faketcp.DetachedPeer
+    stopped bool
+}
+func stageOriginalAuthenticatedGameLane(
+    groups map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending,
+    lane *realityfront.V4LinuxGameAuthenticatedLane,now time.Time,
+)(realityfront.V4LinuxGameCohortID,[]*realityfront.V4LinuxGameAuthenticatedLane,error){
+    var zero realityfront.V4LinuxGameCohortID
+    if lane==nil{return zero,nil,realityfront.ErrAdmissionParams}
+    key,id,err:=lane.Cohort()
+    if err!=nil{return zero,nil,err}
+    n:=int(key.Lanes)
+    if n!=2&&n!=4{return zero,nil,realityfront.ErrAdmissionUnsupported}
+    group:=groups[key]
+    if group==nil{
+        group=&originalGameCohortPending{
+            created:now,lanes:make(map[uint8]*realityfront.V4LinuxGameAuthenticatedLane,n),
+        }
+        groups[key]=group
+    }
+    // A simultaneous same-identity successor carrying an already occupied
+    // lane cannot be distinguished using SYN order. Reject the ambiguity,
+    // NEVER mix old/new exporter incarnations into one GameAdapter.
+    if group.lanes[id]!=nil{return key,nil,realityfront.ErrAdmissionParams}
+    group.lanes[id]=lane
+    if len(group.lanes)!=n{return key,nil,nil}
+    ordered:=make([]*realityfront.V4LinuxGameAuthenticatedLane,n)
+    for id:=1;id<=n;id++{
+        if group.lanes[uint8(id)]==nil{return key,nil,realityfront.ErrAdmissionParams}
+        ordered[id-1]=group.lanes[uint8(id)]
+    }
+    delete(groups,key)
+    return key,ordered,nil
+}
+func runGameMultiServer(
+    ctx context.Context,c config,ifindex uint32,tun *ownedTun,
+    leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
+    connected *bool,cert tls.Certificate,
+)(retErr error){
+    const maxLiveRustLanes=16 // Rust MAX_SESSIONS, includes candidates and successors
+    const cohortTimeout=45*time.Second
+    n:=int(c.gameLanes)
+    if !c.leasePool.IsValid()||leases==nil||epochs==nil||
+        (n!=2&&n!=4){return realityfront.ErrAdmissionParams}
+    shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
+    if err!=nil{return err}
+    // The original Go Run() owns the underlying OS TUN until the final
+    // Game group Stop and this one reader have both joined.
+    defer func(){retErr=errors.Join(retErr,shared.Close())}()
+    cfg:=realityfront.V4LinuxGameProductConfig{
+        NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
+        Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+        CleanupOwnedNetwork:func()error{return nil},
+        // Shared TUN MTU is process-owned; one device cannot raise it while
+        // another authenticated Game group is still using its old budget.
+        ConfigureTunnelMTU:nil,
+        GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+        DisableOuterRepair:c.disableOuterRepair,
+        Game4CopyStagger:c.game4CopyStagger,
+        Game4CopyWideStagger:c.game4CopyWideStagger,
+        Epochs:epochs,PeerPersona:c.peerPersona,
+        Authenticate:originalV4CredentialCheck(c),
+    }
+    rawPersona:=faketcp.PacketPersonaLegacy
+    if c.peerPersona==realityfront.V4PeerWindows11{
+        rawPersona=faketcp.PacketPersonaWindows11
+    }
+    raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
+        c.rawInterface,c.localIP.As4(),rawPersona,
+        faketcp.RawIPv4EndpointOptions{ReceivePort:c.localPort},
+    )
+    if err!=nil{return err}
+    defer raw.Close()
+    emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
+    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    if err!=nil{return err}
+    defer table.Close()
+    runCtx,cancel:=context.WithCancel(ctx)
+    defer cancel()
+    base:=realityfront.ServerAdmissionConfig{
+        TLS:realityfront.ServerConfig{
+            ServerName:c.serverName,RouteKey:c.routeKey,
+            TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},
+            Timeout:15*time.Second,
+        },
+        ExpectedUsername:c.username,ExpectedPassword:c.password,
+        ServerLimit:c.recordLimit,
+        AllocateLease:originalV4AutomaticLease(leases),
+        ValidateRequest:func(req realityfront.AdmissionRequest)error{
+            // Protected TLS alone may allocate the device's /32. A manual
+            // tunnel, unauthenticated source tuple or a no-install ID cannot
+            // enter the multi-group native shared TUN.
+            if !req.AutoLease||len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+            return nil
+        },
+    }
+    type authResult struct{
+        assoc *faketcp.ServerAssociation
+        lane *realityfront.V4LinuxGameAuthenticatedLane
+        err error
+    }
+    established:=make(chan *faketcp.ServerAssociation,32)
+    authenticated:=make(chan authResult,32)
+    failed:=make(chan error,1)
+    var mu sync.Mutex
+    seen:=make(map[*faketcp.ServerAssociation]bool,32)
+    pending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending)
+    active:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
+    detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
+    var tlsWG sync.WaitGroup
+    var goPostHandoffDataCopies atomic.Uint64
+    var stopping atomic.Bool
+    peers:=func(extra []faketcp.DetachedPeer)[]faketcp.DetachedPeer{
+        out:=make([]faketcp.DetachedPeer,0,len(detached)+len(extra))
+        for _,p:=range detached{out=append(out,p)}
+        return append(out,extra...)
+    }
+    forget:=func(a *faketcp.ServerAssociation){
+        if a==nil{return}
+        mu.Lock();delete(seen,a);mu.Unlock()
+        table.Remove(a.Flow())
+    }
+    rejectLane:=func(l *realityfront.V4LinuxGameAuthenticatedLane){
+        if l==nil{return}
+        if err:=l.Close();err!=nil{
+            select{case failed<-fmt.Errorf("Game incomplete original TLS Stop: %w",err):default:}
+        }
+        forget(l.Association())
+    }
+    retire:=func(rec *originalGameCohortLive,reason string)error{
+        if rec==nil||rec.stopped{return nil}
+        if err:=rec.product.Close();err!=nil{
+            return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
+        }
+        rec.stopped=true
+        for i,l:=range rec.members{
+            delete(detached,l.Association())
+            forget(l.Association())
+            _=i
+        }
+        if remaining:=peers(nil);len(remaining)>0{
+            if err:=raw.ExcludeDetachedDataSet(remaining);err!=nil{return err}
+        }
+        log.Printf("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=%s remaining_flows=%d",
+            reason,len(detached))
+        return nil
+    }
+    defer func(){
+        stopping.Store(true)
+        cancel()
+        tlsWG.Wait() // no TLS goroutine may create a native owner after Stop
+        for _,group:=range pending{
+            for _,lane:=range group.lanes{rejectLane(lane)}
+        }
+        for _,group:=range active{
+            if err:=retire(group,"server-close");err!=nil{
+                retErr=errors.Join(retErr,err)
+            }
+        }
+        *connected=*connected||len(active)>0
+    }()
+    go func(){
+        for{
+            seg,_,e:=raw.ReadSegment()
+            if e!=nil{
+                if runCtx.Err()==nil{
+                    select{case failed<-e:default:}
+                }
+                return
+            }
+            if seg.DstPort!=c.localPort{continue}
+            if faketcp.IsInitialSYN(seg){
+                if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{continue}
+                isn,e:=originalRandomISN()
+                if e!=nil{select{case failed<-e:default:};return}
+                a,e:=table.AddSYN(seg,isn,time.Second)
+                if errors.Is(e,faketcp.ErrAssociationExists){continue}
+                if e!=nil{continue} // cold table full, never evict live native
+                synack,e:=a.SYNACKSegment()
+                if e==nil{e=emit(synack)}
+                if e!=nil{select{case failed<-e:default:};return}
+                continue
+            }
+            a,ok:=table.GetSegment(seg)
+            if !ok||a.State()==faketcp.ServerAssociationClosed{continue}
+            if state,exists:=a.TransitionState();exists&&
+               state==faketcp.TransitionDetached{
+                if len(seg.Payload)>0{goPostHandoffDataCopies.Add(1)}
+                continue
+            }
+            outcome,e:=a.HandleSegment(seg,time.Now())
+            if e!=nil{continue}
+            if outcome.AckNeeded{
+                if e=emit(a.ACKSegment(outcome.Ack));e!=nil{
+                    select{case failed<-e:default:};return
+                }
+            }
+            if a.State()!=faketcp.ServerAssociationEstablished{continue}
+            mu.Lock()
+            if !stopping.Load()&&!seen[a]&&len(seen)<maxLiveRustLanes{
+                seen[a]=true
+                select{case established<-a:default:delete(seen,a)}
+            }
+            mu.Unlock()
+        }
+    }()
+    log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
+        c.localPort,n)
+    ticker:=time.NewTicker(time.Second)
+    defer ticker.Stop()
+    for{
+        select{
+        case <-runCtx.Done():return nil
+        case e:=<-failed:return e
+        case a:=<-established:
+            if a==nil{continue}
+            tlsWG.Add(1)
+            go func(a *faketcp.ServerAssociation){
+                defer tlsWG.Done()
+                lane,e:=realityfront.V4AuthenticateLinuxGameServerLane(
+                    runCtx,a,base,cfg,n,
+                )
+                select{
+                case authenticated<-authResult{assoc:a,lane:lane,err:e}:
+                case <-runCtx.Done():
+                    if lane!=nil{_ = lane.Close()}
+                }
+            }(a)
+        case result:=<-authenticated:
+            if result.err!=nil{
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=protected_tls")
+                forget(result.assoc)
+                continue
+            }
+            lane:=result.lane
+            key,complete,e:=stageOriginalAuthenticatedGameLane(
+                pending,lane,time.Now(),
+            )
+            if e!=nil{
+                rejectLane(lane)
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=cohort_identity")
+                continue
+            }
+            if len(complete)==0{continue}
+            product,e:=realityfront.NewV4LinuxGameServerProduct(cfg)
+            if e!=nil{
+                for _,l:=range complete{rejectLane(l)}
+                continue
+            }
+            e=product.AdoptServerGameLanes(complete)
+            if e!=nil{
+                _=product.Close()
+                for _,l:=range complete{rejectLane(l)}
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=game_owner")
+                continue
+            }
+            newPeers:=make([]faketcp.DetachedPeer,0,n)
+            for _,member:=range complete{
+                peer,e:=member.DetachedPeer()
+                flow:=member.Association().Flow()
+                if e!=nil||flow.ServerIP!=c.localIP.As4()||
+                    flow.ServerPort!=c.localPort{
+                    _=product.Close()
+                    return realityfront.ErrAdmissionUnsupported
+                }
+                newPeers=append(newPeers,peer)
+            }
+            if e=raw.ExcludeDetachedDataSet(peers(newPeers));e!=nil{
+                _=product.Close()
+                return fmt.Errorf("Game multi-group shared-port DATA filter: %w",e)
+            }
+            rec:=&originalGameCohortLive{
+                key:key,product:product,members:complete,peers:newPeers,
+            }
+            for i,l:=range complete{detached[l.Association()]=newPeers[i]}
+            older:=active[key]
+            active[key]=rec
+            *connected=true
+            log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=%d server_port=%d distinct_client_flows=%d",
+                n,c.localPort,len(detached))
+            log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",n)
+            log.Printf("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server server_port=%d groups=%d detached_flows=%d native_shared_tun=1",
+                c.localPort,len(active),len(detached))
+            if older!=nil{
+                if e=retire(older,"same-protected-cohort-new-generation");e!=nil{return e}
+            }
+        case <-ticker.C:
+            now:=time.Now()
+            table.Sweep(now)
+            if e:=table.EmitRetransmitDue(now);e!=nil{return e}
+            for key,group:=range pending{
+                if now.Sub(group.created)<cohortTimeout{continue}
+                delete(pending,key)
+                for _,lane:=range group.lanes{rejectLane(lane)}
+                log.Printf("V4_PUBLIC_GAME_MULTI_INCOMPLETE_GROUP_EXPIRED lane_slots=%d",len(group.lanes))
+            }
+        }
+    }
 }
