@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "ea9608a2ef80ce0eb983267334b849f3f45e4e61",
+      "result_blob": "8bf923dbd6fa94dee177f8f55558327cc7456c98",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -690,7 +690,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "fe8ffa224b3c69bfb42aeab86a56db5723cdf4fb"
+      "result_blob": "0ae81b0b1b3f4af17889f39b37388a935aedb8ee"
     },
     {
       "kind": "create",
@@ -1011,6 +1011,30 @@
       "path": "internal/realityfront/v4_public_mss_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/v4_public_mss_test.go",
       "result_blob": "298230094a69ccbfaa101e896fe54e22e4e970c2"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_route_prelude.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_route_prelude.go",
+      "result_blob": "91f060e0cf6db41fa62f6526900187bf6252c11a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_route_prelude_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_route_prelude_test.go",
+      "result_blob": "a1464392ce7a9c8052dc348b4afae4145ce04f22"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/admission_v4.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
+      "result_blob": "776ef5f2fb06474d000c40b63455386d2c887449"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/linux.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
+      "result_blob": "aebd5f91981bbd93d1c4076bd983cb8e349cfc93"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

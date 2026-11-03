@@ -5,6 +5,8 @@ set -euo pipefail
 MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
 HANDOVER="${WBD_PLAN028_GAME_MULTI_HANDOVER:-0}"
 GAME_FEC="${WBD_PLAN028_GAME_MULTI_FEC:-off}"
+AUTO_ROUTE="${WBD_PLAN028_GAME_MULTI_AUTO_ROUTE:-0}"
+if [[ "$AUTO_ROUTE" != 0 && "$AUTO_ROUTE" != 1 ]];then echo "invalid pre-ClientHello route source" >&2;exit 2;fi
 DEAD90="${WBD_PLAN028_GAME_MULTI_DEAD90:-0}"
 if [[ "$DEAD90" != 0 && "$DEAD90" != 1 ]];then echo "invalid Health90 selector" >&2;exit 2;fi
 if [[ "$HANDOVER" != 0 && "$HANDOVER" != 1 ]];then echo "invalid Game handover selector" >&2; exit 2;fi
@@ -73,12 +75,14 @@ cat >"$TMP/users.json" <<'JSON'
 JSON
 chmod 0600 "$TMP/users.json" "$TMP/key.pem"
 ROUTE='aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff'
+ROUTE_ARG="--route-key-hex $ROUTE"
+if [[ "$AUTO_ROUTE" == 1 ]];then ROUTE_ARG="";fi
 sudo -n ip netns exec "$NSS" bash -c "
  echo \$\$ > '$TMP/server.pid'
  exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
   --raw-interface wbdvs0 --local-ip 10.25.0.1 --local-port 443 \
   --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
-  --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+  --server-name wbd-v4.example.test $ROUTE_ARG \
   --users-file '$TMP/users.json' --lease-pool 10.66.0.128/25 \
   --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode "$MODE" --game-fec "$GAME_FEC"
 " >"$TMP/server.log" 2>&1 &
@@ -107,10 +111,10 @@ start_client(){
  local ns="$1" raw="$2" ip="$3" tun="$4" port="$5" user="$6" password="$7" key="$8" log="$9"
  sudo -n ip netns exec "$ns" bash -c "
   echo \$\$ > '$TMP/$user.pid'
-  exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
+  exec env LD_LIBRARY_PATH='$ROOT' SSL_CERT_FILE='$TMP/cert.pem' '$ROOT/wbd-v4-client' \
    --raw-interface '$raw' --local-ip '$ip' --local-port '$port' \
    --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
-   --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
+   --server-name wbd-v4.example.test $ROUTE_ARG \
    --username '$user' --password '$password' \
    --auto-ip --installation-id-file '$key' --mode "$MODE" --game-fec "$GAME_FEC"
  " >"$log" 2>&1 &
@@ -250,6 +254,14 @@ done
 grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log"
 [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq "$expected_server_close" ]]
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
+if [[ "$AUTO_ROUTE" == 1 ]];then
+  for who in A B R;do
+    grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=client mode=ephemeral_x25519' "$TMP/$who.log"
+    grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$LANES" "$TMP/$who.log"
+  done
+  grep -q 'V4_PUBLIC_ROUTE_PREHELLO role=server mode=ephemeral_x25519' "$TMP/server.log"
+  echo "M0_PLAN028_GAME2_PASSWORD_ONLY_EPHEMERAL_PREHELLO_NATIVE_PASS same_server_port=443 accounts=2 install_successor=1 original_TLS_verified_certificate=1"
+fi
 if [[ "$GAME_FEC" == fixed6 ]];then
   for who in A B R;do
     grep -q "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/$who.log"
@@ -265,4 +277,4 @@ assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
 print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
 PY
 fi
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90"
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90 auto_route_ephemeral=$AUTO_ROUTE"

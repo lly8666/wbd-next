@@ -607,6 +607,18 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     success:=false
     defer func(){ guard.Finish(success);if !success {_=conn.Close()} }()
     tlsCfg:=cfg.TLS
+    if len(tlsCfg.RouteKey)==0{
+        // Genuine ephemeral marker material is exchanged on this original
+        // FakeTCP association BEFORE the very first WBD ClientHello.
+        route,e:=v4AutoRoutePrelude(ctx,conn,false,guard.Remaining())
+        if e!=nil{return nil,candidateError(ctx,e)}
+        tlsCfg.RouteKey=route
+        // The unauthenticated pre-TLS X25519 exchange is NOT server
+        // identity verification; reject any untrusted certificate BEFORE
+        // protected username/password bytes can be sent.
+        tlsCfg.VerifyServer=true
+        if e=guard.Rearm();e!=nil{return nil,e}
+    }
     tlsCfg.Timeout=guard.Remaining()
     client,err:=handshakeClientConn(ctx,conn,tlsCfg)
     if err!=nil{return nil,candidateError(ctx,err)}
@@ -650,11 +662,19 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{return nil,err}
     success:=false
     defer func(){guard.Finish(success);if !success {assoc.Close()} }()
-    hello,err:=ReadHello(conn,cfg.TLS.ServerName,cfg.TLS.RouteKey,guard.Remaining())
+    tlsCfg:=cfg.TLS
+    if len(tlsCfg.RouteKey)==0{
+        // Per-association X25519 supplies the private HMAC marker key
+        // before TLS recognition, never a public token/TLS exporter.
+        route,e:=v4AutoRoutePrelude(ctx,conn,true,guard.Remaining())
+        if e!=nil{return nil,candidateError(ctx,e)}
+        tlsCfg.RouteKey=route
+        if e=guard.Rearm();e!=nil{return nil,e}
+    }
+    hello,err:=ReadHello(conn,tlsCfg.ServerName,tlsCfg.RouteKey,guard.Remaining())
     if err!=nil{return nil,candidateError(ctx,err)}
     if err:=guard.Rearm();err!=nil{return nil,err}
     if !hello.Recognized {return nil,ErrMarker}
-    tlsCfg:=cfg.TLS
     tlsCfg.Timeout=guard.Remaining()
     tlsConn,err:=handshakeServerRecognizedConn(ctx,conn,hello,tlsCfg)
     if err!=nil{return nil,candidateError(ctx,err)}

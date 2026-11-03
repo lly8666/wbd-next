@@ -117,3 +117,7 @@ MTU配置组合复用上述多client场景：一方默认外层1460、另一clie
 - 无切网对照复用同SOURCE合格阶段，确认没有新增周期包、忙轮询和稳态CPU/p99回退；只在确有差异时做一次同VM顺序A/B。捕获计数/时序/有限包头摘要即可，不存大pcap；一Action一场景，构建产物按SOURCE/hash复用。
 
 退出：目标账号密码操作、单端口/多客户端/独立配置/IP全部真实有效，7模式换lane和Windows/Linux网络切换资格齐或复用有效证据，相关配置/UI/endpoint事件接口提供029/030及未来Android；未解阻断不藏，容量/物理/Android NOT_RUN准确。更新原tls-auth-multiclient/idle-rotation-keepalive等功能卡，不另立重复生命周期产品。
+
+## 2026-11-03 H1048 implementation amendment — route-key first material
+
+PLAN028首次正式WBD ClientHello前必须已持有route-marker key。自动模式在已建立的FakeTCP连接上先完成每lane临时X25519公钥双向冷交换（`WB-R1`/37B每向），HKDF-SHA256输出独立32B识别密钥，再进入原uTLS ClientHello marker；受信任TLS证书验证及用户名密码受保护Admission不可跳过。它不是从该TLS exporter事后获取第一次key，也不是公开key/关闭分类，且不更改稳态record/wire。显式强私有route-key仍可继续使用；当前自动模式不对旧显式协议隐式降级。证据等级必须单独分auto-route资格，旧fixture凭据PASS不可推广。

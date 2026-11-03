@@ -202,7 +202,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
-  o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
+  o.ServerName==""||(len(o.RouteKey)>0&&len(o.RouteKey)<16)||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
   !o.Lease4.IsValid()||!o.Lease4.Addr().Is4()||o.Lease4.Bits()!=32||
   o.Lease4.Addr().IsUnspecified()||o.TunnelMTU<576||o.TunnelMTU>1500||

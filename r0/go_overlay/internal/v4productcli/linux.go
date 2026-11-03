@@ -246,7 +246,7 @@ func parse(role string,args []string)(config,error){
     if role=="server"&&len(c.users)>0{validCredentials=true}
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
        *tunCIDR==""||*name==""||!validCredentials||
-       *port==0||*port>65535||len(*route)<32{
+       *port==0||*port>65535||(len(*route)>0&&len(*route)<32){
         return c,fmt.Errorf("missing/invalid real original V4 TLS/raw/TUN settings")
     }
     parsed,err:=netip.ParseAddr(*ip)
@@ -260,7 +260,13 @@ func parse(role string,args []string)(config,error){
     c.username=*user
     c.password=*pass
     c.routeKey,err=hex.DecodeString(*route)
-    if err!=nil||len(c.routeKey)<16{return c,fmt.Errorf("invalid TLS route key")}
+    if err!=nil||(len(c.routeKey)>0&&len(c.routeKey)<16){return c,fmt.Errorf("invalid explicit TLS route key")}
+    if len(c.routeKey)==0{
+        // A fresh X25519 route-classifier key will be negotiated on the
+        // already-established FakeTCP association BEFORE TLS ClientHello.
+        // Original protected account authentication remains mandatory.
+        log.Printf("V4_PUBLIC_ROUTE_PREHELLO role=%s mode=ephemeral_x25519 tls_certificate_verification=client_required",role)
+    }
     if role=="client"&&c.autoIP{
         if *tunnel!=""||*installPath==""{return c,fmt.Errorf("auto-ip derives tunnel ID, do not pass manual ID")}
         installation,e:=logicaltunnel.ResolveInstallation("",*installPath,false)
