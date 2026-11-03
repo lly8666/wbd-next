@@ -14,9 +14,7 @@
   "next_action": "Proceed to PLAN028 Game2/4 multi-group same external port with independent client leases and exact generation Stop; later real Windows OS interface/IP switch and A+B validation. Do not rerun H1034 CI absent code change.",
   "unverified": true,
   "last_tested_source": "ce9c128e712024164e586e89a76b395579370e78",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1034-2S-PHYSICAL-IP-SOURCECE9C-20261103.json"
-  ],
+  "evidence_refs": [],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
@@ -28,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1034 SOURCE ce9c two-second physical NIC/IP-only poll Windows+Linux code PASS_SCOPED: Linux original Go TLS/real netns A→A+B→B/multi-account Stop Action41623425219 SUCCESS; Windows Go production build + focused NIC/IP unit preflight job125874909144 SUCCESS; governance Action41623425430 SUCCESS. Windows physical switch/A+B and Game concurrent groups remain NOT_RUN. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1034 SOURCE ce9c two-second physical NIC/IP-only poll Windows+Linux code PASS_SCOPED: Linux original Go TLS/real netns A→A+B→B/multi-account Stop Action41623425219 SUCCESS; Windows Go production build + focused NIC/IP unit preflight job125874909144 SUCCESS; governance Action41623425430 SUCCESS. Windows physical switch/A+B and Game concurrent groups remain NOT_RUN. PLAN028 IN_PROGRESS. Scoped H1034 native Actions cited directly in devlog; no schema-qualified evidence artifact promoted."
 }
