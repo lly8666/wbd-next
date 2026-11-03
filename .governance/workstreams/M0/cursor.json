@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1019,
-  "checkpoint_sha": "9c39b5878087bb201b4b318532ce9784684ab63a",
+  "sequence": 1020,
+  "checkpoint_sha": "d3d0be09571f21fe8da5789cad5af8c3143dbc55",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1019 real Go original TLS two-account concurrent same-server-443 acceptance over one native Rust shared physical TUN reader; three-netns A->A+B->B duplex UDP/Stop native Action PENDING",
-  "why_now": "H1017 SOURCE9c39 original Go auto lease actual Rust one shared reader routed=5 Stop and generation-fence test PASS; next is remove Go single-product admission bottleneck without second data plane",
+  "current_task": "H1020 repair exact original Go TLS multi-server auto-IP READY/Stop status in one-device native test; H1019 3-netns multi-client not reached",
+  "why_now": "H1019 SOURCEd3d0 Action41585432181 FAIL M0_V4_PUBLIC_REAL_CLIENT_SERVER_NOT_READY though real TLS client lease+Rust ready and server V4_PUBLIC_MULTI_SESSION_READY authenticated; old test only recognized singleton server marker",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1019 exact SOURCE new native Action: Go BPF32 unit, Linux 3 actual netns two accounts A-only A+B simultaneous B-only 34 real UDP echoes, distinct protected TLS leases, one server443 Rust shared reader and both Stop. Repair honest native failures, then same-account two installations + other account and 7-mode/OS path lifecycle before H029.",
+  "next_action": "Collect H1020 exact-source Actions for real auto-IP one shared Rust reader+native UDP/Stop, then mandatory 3-netns A→A+B→B simultaneous authenticated original Go TLS, BPF32 and all existing native regressions. Repair actual downstream failures without bypass or parallel duplicate scenarios. Continue same-account multi-install plus other-account and seven modes/OS path-switch.",
   "unverified": true,
   "last_tested_source": "9c39b5878087bb201b4b318532ce9784684ab63a",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1020-REAL-MULTI-READY-CONTRACT.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1017 SOURCE9c39 native 1-device original TLS /32 Rust shared reader routed5/Stop PASS; H1019 true Go one port multi-account admission and original BPF32 DATA exclusion code, three OS netns A->A+B->B app fixture committed as UNTESTED candidate. Same-account 2 installations+another account/7 modes/Windows path notifications still pending. H998 and Win Game4 cold FAIL preserved."
+  "partial_summary": "H1017 source9c39 original native one Rust shared TUN reader real two-netns UDP5/Stop PASS. H1019 source d3d0 introduced server port443 multi-account concurrent manager and 3-netns A/A+B/B test but native Action41585432181 FAIL at old auto-IP singleton-ready marker before UDP (client actual lease10.66.0.254/32 + Rust and server multi-session READY visible); downstream tests NOT_RUN. H1020 fixes exact auto auto TLS server READY/Stop witness; multi-device remains UNVERIFIED."
 }

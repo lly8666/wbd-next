@@ -126,6 +126,24 @@ try:
 finally:s.close()
 ' >"$TMP/echo.log" 2>&1 &
 APPS=$!
+# A protected auto-lease server now owns many independent Go TLS/Rust
+# sessions; preserve the old singleton READY marker only for manual mode.
+# Both branches require the REAL server M4 ready event, not Go parser config.
+original_server_native_ready(){
+  if [[ "$AUTO_IP" == 1 ]];then
+    grep -q 'V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443 active_detached_flows=1 auto_lease=1 original_TLS=1 Rust_M4=1' "$TMP/server.log"
+  else
+    grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
+  fi
+}
+original_server_native_stopped(){
+  if [[ "$AUTO_IP" == 1 ]];then
+    grep -q 'V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=server-close' "$TMP/server.log" &&
+    grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
+  else
+    grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+  fi
+}
 # Allow real original Go TLS and Rust M4 worker start; fail if no actual
 # readiness within a bounded time. Never infer readiness from config.
 ready=0
@@ -136,7 +154,7 @@ for i in {1..40}; do
       ready=1;break
     fi
   elif grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log" &&
-       grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"; then
+       original_server_native_ready; then
     ready=1;break
   fi
   sleep 0.25
@@ -301,7 +319,7 @@ if [[ "$GAME" != 0 ]];then
   grep -q "V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=$GAME server_port=443 distinct_client_flows=$GAME" "$TMP/server.log"
 else
   grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
-  grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"
+  original_server_native_ready
 fi
 if [[ "$GAME" != 0 ]];then
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
@@ -369,7 +387,7 @@ PY
 fi
 if [[ "$GAME" == 0 ]];then
   grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
-  grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+  original_server_native_stopped
 fi
 if [[ "$LOSS" == 1 ]];then
   sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$TMP/kernel-client-netem.txt"
