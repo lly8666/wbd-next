@@ -1,12 +1,16 @@
 # M0｜PLAN028接续提示词
 
-你继续lly8666/wbd-next的PLAN028。**2026-11-03 用户已明确要求PLAN027A限定范围收口，未来另找全新agent开工028；本包尚未开始施工。**先核 [027A H998 用户接受范围收口证据](../evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)：真实在线物理出口MTU从1500改1280后3/3小业务没有回应（FAIL），ARM64 Game4FEC真实业务/FEC/Stop可见但Actions失败，远端ICMP Type3/Code4未测，CPU优化因果未证。028§4.1–4.2 必须在实际新路径重认证/会话接管时补齐已知在线预算衔接，不假装027A已在同一连接热更新成功。先读START_HERE/AGENTS、M0长期提示词、最新registry/cursor，再读 `docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 和 `M0-PLAN028-SESSION-CONFIG-20261102.md`。默认上轮可能中断，只追checkpoint增量，先收在途Actions不重复派发。
+你继续lly8666/wbd-next的PLAN028。**本包已由用户2026-11-03明确启动，不等再次授权；实际代码进度读最新registry/cursor，不能沿用旧“尚未开工”字样停工。**先读START_HERE/AGENTS、M0长期提示词、registry/cursor，再读 `docs/decisions/M0-LEGACY-ROLLOUT-20261102.md` 和 `M0-PLAN028-SESSION-CONFIG-20261102.md`。默认上轮可能中断，只追checkpoint增量，先收在途Actions不重复派发。保留[027A H998限定收口](../evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)的在线收窄FAIL、ARM64 Game4FEC Action FAIL、远端ICMP未测及CPU因果未证；028按真实新路径重认证/预算安装补衔接，不冒称原同连接热更新已成功。
 
-本提示词由用户实际调用或既有完整序列授权推进时启动本包；仓库仅存在文件不等于已开工。PLAN027已限定范围收口，先核PLAN027A交付及本包实际依赖，不因历史NOT_RUN重开027，不复制第二套恢复器，不将旧PASS推广。用既有registry/cursor登记本包，不添加审批/任务系统。
+PLAN027/027A已限定范围收口，不因历史NOT_RUN重开旧矩阵，不复制第二套恢复器，不将旧PASS推广。用既有registry/cursor记录本包，不添加审批/任务系统。H1000入口依赖已核查，无新源码差异不要再写同一轮审计，直接按028§0进入施工。
 
-2026-11-02新增前置：027后先做PLAN027A统一MTU，再到本包；读取其交付摘要与docs/architecture/MTU_CONTRACT.md，直接复用预算/OS读回，不另写公式。若用户启动完整序列，按此顺序连续推进。
+**范围锁定**：仅补单端口接入/会话分发、lane新旧代交接和冷配置/OS适配；复用FEC/Auto/Game/重传/record/AEAD/PN算法与稳态wire。不新增每包路由头、反馈协议、通用多租户框架或Go热泵。单owner是资源归属，不是服务器仅能有一个client；Rust用连接/隧道IP索引分发，不逐包扫描/复制给所有会话，不让多个owner争读TUN，不持全局锁等待TLS/Stop。
+
+按028§0.2分成共享接入/会话、交接/切网、认证简化冷路径三个完整工作包；每包先写齐双方、装配、配置与夹具再冻结SOURCE测试，不每helper dispatch，也不把全028代码堆完才第一次测IO。route-key首次材料必须在首个ClientHello前可得，TLS后导出不是首次解法；冷路径只做必要适配，不拿公开常量/关闭识别过关。该问题不阻塞使用既有测试凭据验证其他包，但最终必须完成账号密码操作目标。
 
 MTU配置只有外层完整IPv4 IP上限（**以后普通默认固定1460B、不含L2；1500B仅为显式最大值，不是默认**）；client传意图，server按自身实际限制收窄，内层自动算/应用/读回。不要要求两端手填内层MTU，不把派生结果回写为用户外层值或覆盖其他client的TUN。
+
+交接顺序：新路径限制→真实认证/最终预算→安装配置、应用MTU并读回→放行新lane业务→退休旧lane；允许未放流owner的prepare，不允许先放流再补MTU。旧回调只回收自己的generation/实例，不清掉新lane或新租约。客户端不同本地端口仍可接同一服务端口，不能为简化分发改变稳态包格式。
 
 目标：账号密码操作简化、自动/手动IP、同账号多设备、一个服务端口、每client独立配置接入既有数据面。先定最小配置/session/endpoint/snapshot接口，再连续写齐双方与调用方；029 DNS、030 CLI独立模块可并行，main共享接口单写入。
 
