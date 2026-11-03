@@ -108,6 +108,11 @@ jobs:
             cat fixed-kernel-result/plan028-nohol-test.log; exit 1;
           }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-nohol-test.log
+          # A full for 4096 packets must not allocate; B live, 64KiB/100ms.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes -- --test-threads=1 --nocapture >fixed-kernel-result/plan028-precopy-age.log 2>&1 || {
+            cat fixed-kernel-result/plan028-precopy-age.log; exit 1;
+          }
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-precopy-age.log
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'

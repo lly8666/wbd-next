@@ -3936,7 +3936,8 @@ struct SharedTunReader{
     stop:Arc<AtomicBool>,
     worker:Mutex<Option<JoinHandle<()>>>,
     delivered:AtomicU64,unrouted:AtomicU64,backpressure:AtomicU64,
-    queue_full_drops:AtomicU64,retired_drops:AtomicU64,
+    queue_full_drops:AtomicU64,queue_byte_drops:AtomicU64,
+    queue_age_drops:AtomicU64,retired_drops:AtomicU64,
     recycle_send:SyncSender<Vec<u8>>,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3977,77 +3978,102 @@ fn shared_route_retire(
         routes.remove(&ip);
     }
 }
-// A congested route may retain at most 8 owned packets in addition to its
-// existing 64-channel queue. The physical TUN reader never sleeps on A.
-// Each ready route receives at most one nonblocking FIFO retry per turn.
+// Per-lease backlog has count, byte and age bounds. Materialize a packet
+// only after admission, not before discovering a full slow-client queue.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const SHARED_TUN_PENDING_PER_ROUTE:usize=8;
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const SHARED_TUN_PENDING_BYTES_PER_ROUTE:usize=64*1024;
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const SHARED_TUN_PENDING_MAX_AGE:Duration=Duration::from_millis(100);
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct PendingSharedTunPacket{
+    packet:OriginalTunIngress,bytes:usize,queued_at:Instant,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct PendingSharedTunRoute{
-    route:SharedTunRoute,
-    packets:VecDeque<OriginalTunIngress>,
+    route:SharedTunRoute,packets:VecDeque<PendingSharedTunPacket>,queued_bytes:usize,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default,Debug)]
 struct SharedTunDispatchDelta{
-    delivered:u64,backpressure:u64,overflow:u64,retired:u64,
+    delivered:u64,backpressure:u64,overflow:u64,byte_limit:u64,expired:u64,retired:u64,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
     a.generation==b.generation&&Arc::ptr_eq(&a.alive,&b.alive)
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn enqueue_shared_tun(
+fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
-    key:[u8;4],route:SharedTunRoute,packet:OriginalTunIngress
+    key:[u8;4],route:SharedTunRoute,bytes:usize,make:F
 )->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     if !route.alive.load(Ordering::Acquire){d.retired+=1;return d}
-    if pending.get(&key).is_some_and(|old|
-        !same_shared_tun_route(&old.route,&route)){
-        if let Some(old)=pending.remove(&key){
-            d.retired+=old.packets.len() as u64;
-        }
+    if pending.get(&key).is_some_and(|old|!same_shared_tun_route(&old.route,&route)){
+        if let Some(old)=pending.remove(&key){d.retired+=old.packets.len() as u64}
     }
     if let Some(q)=pending.get_mut(&key){
-        if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{d.overflow+=1}
-        else{q.packets.push_back(packet)}
+        if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{
+            d.overflow+=1;return d
+        }
+        if q.queued_bytes.saturating_add(bytes)>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+            d.overflow+=1;d.byte_limit+=1;return d
+        }
+        q.queued_bytes+=bytes;
+        q.packets.push_back(PendingSharedTunPacket{
+            packet:make(),bytes,queued_at:Instant::now(),
+        });
         return d
     }
-    match route.send.try_send(packet){
+    match route.send.try_send(make()){
         Ok(())=>d.delivered+=1,
         Err(TrySendError::Full(packet))=>{
             d.backpressure+=1;
-            let mut packets=VecDeque::with_capacity(SHARED_TUN_PENDING_PER_ROUTE);
-            packets.push_back(packet);
-            pending.insert(key,PendingSharedTunRoute{route,packets});
+            if bytes>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+                d.overflow+=1;d.byte_limit+=1;
+            }else{
+                let mut packets=VecDeque::with_capacity(SHARED_TUN_PENDING_PER_ROUTE);
+                packets.push_back(PendingSharedTunPacket{
+                    packet,bytes,queued_at:Instant::now(),
+                });
+                pending.insert(key,PendingSharedTunRoute{route,packets,queued_bytes:bytes});
+            }
         },
         Err(TrySendError::Disconnected(_))=>d.retired+=1,
     }
     d
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn flush_shared_tun(
-    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>
-)->SharedTunDispatchDelta{
+fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
+->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
-    pending.retain(|_,q|{
-        if q.route.alive.load(Ordering::Acquire){true}else{
-            d.retired+=q.packets.len() as u64;
-            false
-        }
+    let now=Instant::now();
+    pending.retain(|_,q|if q.route.alive.load(Ordering::Acquire){true}else{
+        d.retired+=q.packets.len() as u64;false
     });
     for q in pending.values_mut(){
-        if let Some(packet)=q.packets.pop_front(){
-            match q.route.send.try_send(packet){
+        while q.packets.front().is_some_and(|p|
+            now.saturating_duration_since(p.queued_at)>=SHARED_TUN_PENDING_MAX_AGE){
+            if let Some(old)=q.packets.pop_front(){
+                q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+                d.expired+=1;
+            }
+        }
+        if let Some(old)=q.packets.pop_front(){
+            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+            match q.route.send.try_send(old.packet){
                 Ok(())=>d.delivered+=1,
                 Err(TrySendError::Full(packet))=>{
-                    q.packets.push_front(packet);
+                    q.queued_bytes+=old.bytes;
+                    q.packets.push_front(PendingSharedTunPacket{
+                        packet,bytes:old.bytes,queued_at:old.queued_at,
+                    });
                     d.backpressure+=1;
                 },
                 Err(TrySendError::Disconnected(_))=>{
                     d.retired+=1+q.packets.len() as u64;
-                    q.packets.clear();
+                    q.packets.clear();q.queued_bytes=0;
                     q.route.alive.store(false,Ordering::Release);
                 },
             }
@@ -4062,6 +4088,8 @@ impl SharedTunReader{
         if d.delivered!=0{self.delivered.fetch_add(d.delivered,Ordering::Relaxed);}
         if d.backpressure!=0{self.backpressure.fetch_add(d.backpressure,Ordering::Relaxed);}
         if d.overflow!=0{self.queue_full_drops.fetch_add(d.overflow,Ordering::Relaxed);}
+        if d.byte_limit!=0{self.queue_byte_drops.fetch_add(d.byte_limit,Ordering::Relaxed);}
+        if d.expired!=0{self.queue_age_drops.fetch_add(d.expired,Ordering::Relaxed);}
         if d.retired!=0{self.retired_drops.fetch_add(d.retired,Ordering::Relaxed);}
     }
 }
@@ -4081,12 +4109,12 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     let rb=SharedTunRoute{generation:20,alive:Arc::clone(&b),send:b_tx};
     let ka=[10,66,0,1];let kb=[10,66,0,2];
     let mut pending=HashMap::new();
-    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(1)).backpressure,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(1)).backpressure,1);
     for n in 2..=SHARED_TUN_PENDING_PER_ROUTE as u8{
-        assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(n)).overflow,0);
+        assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(n)).overflow,0);
     }
-    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),packet(99)).overflow,1);
-    assert_eq!(enqueue_shared_tun(&mut pending,kb,rb,packet(55)).delivered,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(99)).overflow,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,kb,rb,1,||packet(55)).delivered,1);
     match b_rx.try_recv().expect("B independent of saturated A"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[55]),
         _=>panic!("wrong B kind"),
@@ -4106,11 +4134,71 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     let newer=SharedTunRoute{
         generation:11,alive:Arc::new(AtomicBool::new(true)),send:new_tx,
     };
-    assert_eq!(enqueue_shared_tun(&mut pending,ka,newer,packet(101)).delivered,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,newer,1,||packet(101)).delivered,1);
     match new_rx.try_recv().expect("successor A delivered"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[101]),
         _=>panic!("wrong successor kind"),
     }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
+    let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(32);
+    let packet=|n:u8,size:usize|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n;size],recycle:recycle.clone(),
+    });
+    let (a_send,_a_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let (b_send,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    assert!(a_send.try_send(packet(0,1)).is_ok());
+    let ra=SharedTunRoute{generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_send};
+    let rb=SharedTunRoute{generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_send};
+    let ka=[10,66,0,1];let kb=[10,66,0,2];
+    let mut pending=HashMap::new();
+    let made=std::cell::Cell::new(0u64);
+    for n in 0..SHARED_TUN_PENDING_PER_ROUTE{
+        let d=enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||{
+            made.set(made.get()+1);packet(n as u8+1,1)
+        });
+        assert_eq!(d.overflow,0);
+    }
+    assert_eq!(made.get(),8);
+    for n in 0..4096{
+        assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||{
+            made.set(made.get()+1);packet(99,1)
+        }).overflow,1);
+        if n%16==0{
+            assert_eq!(enqueue_shared_tun(&mut pending,kb,rb.clone(),1,
+                ||packet(55,1)).delivered,1);
+            match b_rx.try_recv().expect("B independent of full A"){
+                OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[55]),
+                _=>panic!("B packet kind"),
+            }
+        }
+    }
+    assert_eq!(made.get(),8); // 4096 discarded without extra Vec/copy.
+    assert_eq!(pending[&ka].queued_bytes,8);
+    let expired=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-Duration::from_millis(1);
+    for item in pending.get_mut(&ka).unwrap().packets.iter_mut(){item.queued_at=expired;}
+    let d=flush_shared_tun(&mut pending);
+    assert_eq!(d.expired,8);assert_eq!(d.backpressure,0);
+    assert!(pending.is_empty()); // Silent A no longer wakes reader at 1ms.
+    assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,
+        ||packet(88,1)).backpressure,1);
+    assert_eq!(pending[&ka].queued_bytes,1);
+    let (large_send,_large_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    assert!(large_send.try_send(packet(0,1)).is_ok());
+    let large=[10,66,0,3];
+    let largeroute=SharedTunRoute{
+        generation:30,alive:Arc::new(AtomicBool::new(true)),send:large_send,
+    };
+    assert_eq!(enqueue_shared_tun(&mut pending,large,largeroute.clone(),40*1024,
+        ||packet(1,40*1024)).backpressure,1);
+    let d=enqueue_shared_tun(&mut pending,large,largeroute,30*1024,||{
+        made.set(made.get()+1);packet(2,30*1024)
+    });
+    assert_eq!(d.overflow,1);assert_eq!(d.byte_limit,1);
+    assert_eq!(made.get(),8); // byte bound rejects before construction.
+    assert_eq!(pending[&large].queued_bytes,40*1024);
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -4232,14 +4320,16 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 router.unrouted.fetch_add(1,Ordering::Relaxed);
                 continue
             };
-            let mut bytes=recycle_recv.try_recv()
-                .unwrap_or_else(|_|Vec::with_capacity(2048));
-            bytes.clear();
-            bytes.extend_from_slice(&scratch[i][..len]);
-            let packet=OriginalTunIngress::Shared(SharedTunPacket{
-                bytes,recycle:router.recycle_send.clone(),
-            });
-            router.note_dispatch(enqueue_shared_tun(&mut pending,key,route,packet));
+            // Reject saturated/stale A BEFORE any Vec allocation or copy.
+            router.note_dispatch(enqueue_shared_tun(&mut pending,key,route,len,||{
+                let mut bytes=recycle_recv.try_recv()
+                    .unwrap_or_else(|_|Vec::with_capacity(2048));
+                bytes.clear();
+                bytes.extend_from_slice(&scratch[i][..len]);
+                OriginalTunIngress::Shared(SharedTunPacket{
+                    bytes,recycle:router.recycle_send.clone(),
+                })
+            }));
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();
@@ -4274,7 +4364,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
         worker:Mutex::new(None),
         delivered:AtomicU64::new(0),unrouted:AtomicU64::new(0),
         backpressure:AtomicU64::new(0),
-        queue_full_drops:AtomicU64::new(0),retired_drops:AtomicU64::new(0),
+        queue_full_drops:AtomicU64::new(0),queue_byte_drops:AtomicU64::new(0),
+        queue_age_drops:AtomicU64::new(0),retired_drops:AtomicU64::new(0),
         recycle_send,
     });
     let worker_router=Arc::clone(&router);
@@ -4309,12 +4400,14 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     if router.tun.stop_until(Instant::now())!=StopResult::Drained{
         return STOP_INCOMPLETE
     }
-    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} reader_joined=1 queue_full_drops={} retired_drops={}",
+    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} reader_joined=1 queue_full_drops={} retired_drops={} queue_byte_drops={} queue_age_drops={}",
         router.generation,router.delivered.load(Ordering::Relaxed),
         router.unrouted.load(Ordering::Relaxed),
         router.backpressure.load(Ordering::Relaxed),
         router.queue_full_drops.load(Ordering::Relaxed),
-        router.retired_drops.load(Ordering::Relaxed));
+        router.retired_drops.load(Ordering::Relaxed),
+        router.queue_byte_drops.load(Ordering::Relaxed),
+        router.queue_age_drops.load(Ordering::Relaxed));
     registry.remove(&handle);
     OK
 }

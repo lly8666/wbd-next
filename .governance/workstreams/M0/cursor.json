@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1028,
+  "sequence": 1029,
   "checkpoint_sha": "f823600c052f7e25fecc0f3ef763c6245f6154c9",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1027 PLAN028 server shared TUN bounded FIFO cross-client HOL + Normal exact 5-tuple + 8-ready batch/pool and deadline wake: native Linux SOURCE f823 functional PASS; CPU/p99 high-PPS unmeasured, rest 028 in progress",
-  "why_now": "Collected real H1027 source-locked combined Action 41606128749 native SUCCESS and downloaded artifact manifest matches f823; old b1d Stop-marker harness FAIL retained without promotion.",
+  "current_task": "H1029 PLAN028 Rust shared TUN pre-copy drop, per-route 8 packets/64KiB/100ms age and B fairness; SOURCE native PENDING",
+  "why_now": "H1027 still copied saturated-A packets before rejection and retried silent A every 1ms forever; eliminate shared-reader CPU/memory second-order coupling.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "No further native performance expansion absent new user request. Resume separately authorized PLAN028 Windows path notifications, seven mode generation swap, first-ClientHello credential simplification and per-client config; keep H998 and Game4FEC failures unchanged.",
+  "next_action": "Collect exact SOURCE Rust 4096 A rejected/no-copy, B live, 64KiB/100ms unit and original Linux Go TLS 2/5netns 1% Stop and route MTU native; only claim tested qualification. Real high-PPS CPU/p99 still separate.",
   "unverified": true,
   "last_tested_source": "f823600c052f7e25fecc0f3ef763c6245f6154c9",
   "evidence_refs": [
@@ -25,8 +25,8 @@
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
-    "docs/devlog/M0/20261103-PLAN028-H1027-SHARED-TUN-NOHOL-EXACT-TUPLE.md"
+    "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1027 native Rust shared TUN HOL fairness corrected: original exact-source f823 unit A full/B independent + FIFO/overflow/old generation passed, real Linux 2netns/5netns 3-client 70 UDP/443/stop, Linux A+B new OS MTU1280/TUN1209 and 1% 512/508 pass in Action41606128749, manifest artifact13217595442 inspected. Healthy scenario backpressure0; no CPU/p99 or real saturated-native throughput proof. b1d log-marker harness FAIL retained; H998 physical shrink and ARM64 Game4FEC FAIL unchanged. PLAN028 Windows/seven-mode/first route-key incomplete."
+  "partial_summary": "H1027 SOURCE f823 Linux native and 70 UDP/Stop PASS; but overflow A still allocated Vec and pending 8 FIFO waited forever with 1ms retries. H1029 code candidate pre-copy reject/64KiB/100ms age + explicit counters and 4096 A/256 B native Rust unit gated; new SOURCE not tested, CPU/p99 unknown. H998 physical 3/3 and Game4FEC failures retained."
 }
