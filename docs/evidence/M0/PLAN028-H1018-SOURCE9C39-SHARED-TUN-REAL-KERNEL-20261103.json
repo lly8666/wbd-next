@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1018",
+  "source_sha": "9c39b5878087bb201b4b318532ce9784684ab63a",
+  "overall": "SCOPED_FUNCTIONAL_PASS",
+  "action": {
+    "run_id": 41583636961,
+    "native_job_id": 125743937176,
+    "conclusion": "success",
+    "source_locked": true,
+    "original_go_tls": true,
+    "original_rust_crypto": true,
+    "real_linux_two_netns": true,
+    "same_compiled_binaries": true
+  },
+  "verified": [
+    {
+      "scene": "One shared Rust physical TUN reader + original Go protected auto-/32 route to original M1",
+      "witness": "M0_PLAN028_REAL_SHARED_RUST_SINGLE_TUN_READER_PASS routed=5 unrouted=0 backpressure=0 reader_joined=1",
+      "result": "PASS"
+    },
+    {
+      "scene": "Real random original TLS IP lease installed with Linux kernel OS readback",
+      "witness": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.138 app_udp=5 exact_generation_Rust_M4=1",
+      "result": "PASS"
+    },
+    {
+      "scene": "Rust exact generation /32 route takeover old Stop cannot retire new, independent B session",
+      "witness": "test result: ok. 1 passed; 0 failed",
+      "result": "PASS"
+    },
+    {
+      "scene": "Game2/4 damaged-lane one server port",
+      "witness": [
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ],
+      "result": "PASS"
+    },
+    {
+      "scene": "Normal/off underlay real 1% loss counted; do not imply zero loss",
+      "witness": "M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS original_tls=1 offered=512 first_unique_delivered=507 missing=5",
+      "result": "PASS_SCOPED"
+    },
+    {
+      "scene": "Fixed, Auto short real first app",
+      "witness": [
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1"
+      ],
+      "result": "PASS_SCOPED"
+    }
+  ],
+  "not_proven": [
+    "H1019 Go concurrent 2 genuine clients + ONE server port and ONE shared Rust TUN reader new source not yet tested",
+    "No 7-mode A->A+B->B, Game4 highest FEC, Windows/Linux physical route transition or Android",
+    "CPU causal perf or 200/500ms OS event coalescing not proven",
+    "Historic Windows/WSL2 native Game4 cold lane2 bootstrap Action 41579974280 FAIL remains",
+    "Historic H998 1500→1280 physical online shrink and ARM64 Game4FEC FAIL remain"
+  ],
+  "workflow_repair": "SOURCE4070 H1016 YAML malformed so no native run; SOURCE9c39 H1017 original workflow regenerated and exact real Native PASS."
+}

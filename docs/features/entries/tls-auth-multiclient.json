@@ -33,7 +33,10 @@
     "crates/wbd-engine/src/v4_owner_crypto.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
     "crates/wbd-engine/src/v4_game_public_kernel.rs",
-    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/faketcp/raw_detached_data_linux.go",
+    "r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go",
+    "tools/m0-plan028-two-client-real-linux-netns.sh"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -43,7 +46,8 @@
     "docs/devlog/M0/20261102-PLAN028-NETWORK-CHANGE-SCOPE.md",
     "docs/devlog/M0/20261103-PLAN028-H1007-MULTIACCOUNT-AUTOLEASE-CANDIDATE.md",
     "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md",
-    "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md"
+    "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md"
   ],
   "verification": [
     {
@@ -115,6 +119,20 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Linux native original Go/FakeTCP + Rust shared M4 kernel two netns",
+      "scope": "H1018 source9c39 one true Rust physical TUN reader, protected autoIP and Linux OS UDP five packets/owned Stop, exact route generation unit PASS; only one device active",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9c39b5878087bb201b4b318532ce9784684ab63a",
+      "evidence": "docs/evidence/M0/PLAN028-H1018-SOURCE9C39-SHARED-TUN-REAL-KERNEL-20261103.json"
+    },
+    {
+      "platform": "Linux/amd64 original Go protected multi-account single-port multiple actual Rust generations",
+      "scope": "H1019 code candidate one Go server FakeTCP table, 32 peer C-BPF, per-device original protected TLS/auto lease Rust single TUN reader, A->A+B->B Linux3-netns true UDP/native Stop; new SOURCE Actions required",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -128,7 +146,8 @@
     "H1007 source candidate: multi-account auth is inside protected TLS; the pre-TLS marker still requires existing shared route-key. CLI auto-IP /32 readback is implemented but full native multi-client one-port shared Rust TUN path remains NOT_WIRED and must not be promoted from Go test PASS. Server lease pool must be covered by TUN prefix without containing server TUN's own IP. Active epoch prevents TTL lease reuse.",
     "H1008 scope: SOURCE837 real Go TLS 21/21 PASS and Linux original V4 CLI Go tests + binary build PASS. Distinct installed IPv4 real OS and native multi-client simultaneous traffic NOT_RUN; raw Game one-port code is a subsequent SOURCE, not included in SOURCE837.",
     "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim.",
-    "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN."
+    "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN.",
+    "H1018 SOURCE9c39 1-device shared physical TUN reader native proof NOT simultaneous multi-client. H1019 concurrent original-Go TLS 2 accounts + BPF32 real kernel candidate must prove A->A+B->B actual 3-netns UDP, no PASS inferred. Windows Game4 cold FAIL and H998 remain."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

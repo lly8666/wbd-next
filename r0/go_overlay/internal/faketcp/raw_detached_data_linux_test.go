@@ -145,3 +145,59 @@ func TestPLAN028SharedGamePortKernelFourTupleGate(t *testing.T){
         t.Fatal("invalid peer port admitted")
     }
 }
+
+
+// PLAN028 real single-server-port: 32 separately authenticated device
+// flow tuples, including multiple clients behind the same NAT address.
+// The real classic-BPF VM verifies this is still a FILTER, not Go DATA
+// copy or an in-process simulated router.
+func TestPLAN028OriginalTLS32ConcurrentPortKernelExclusion(t *testing.T){
+    local:=[4]byte{192,0,2,8}
+    nat:=[4]byte{198,51,100,9}
+    peers:=make([]DetachedPeer,32)
+    for i:=range peers{
+        peers[i]=DetachedPeer{IP:nat,Port:uint16(50000+i)}
+    }
+    if _,err:=detachedDataKernelFilterSet(local,443,append(peers,
+       DetachedPeer{IP:nat,Port:50032}));err==nil{
+        t.Fatal("33rd flow bypassed bounded original raw listener")
+    }
+    program,err:=detachedDataKernelFilterSet(local,443,peers)
+    if err!=nil{t.Fatal(err)}
+    raw:=make([]bpf.RawInstruction,len(program))
+    for i,f:=range program{
+        raw[i]=bpf.RawInstruction{Op:f.Code,Jt:f.Jt,Jf:f.Jf,K:f.K}
+    }
+    decoded,ok:=bpf.Disassemble(raw)
+    if !ok{t.Fatal("32-connection cBPF invalid")}
+    vm,err:=bpf.NewVM(decoded)
+    if err!=nil{t.Fatal(err)}
+    frame:=func(srcPort uint16,flags byte)[]byte{
+        data:=make([]byte,14+20+20+48)
+        data[12],data[13]=8,0
+        data[14]=0x45
+        binary.BigEndian.PutUint16(data[16:],88)
+        data[23]=6
+        copy(data[26:30],nat[:])
+        copy(data[30:34],local[:])
+        binary.BigEndian.PutUint16(data[34:],srcPort)
+        binary.BigEndian.PutUint16(data[36:],443)
+        data[46]=0x50
+        data[47]=flags
+        return data
+    }
+    for _,peer:=range peers{
+        n,err:=vm.Run(frame(peer.Port,0x18))
+        if err!=nil||n!=0{
+            t.Fatalf("old Rust-owned DATA exposed to Go %d: n=%d err=%v",peer.Port,n,err)
+        }
+        n,err=vm.Run(frame(peer.Port,0x02))
+        if err!=nil||n==0{
+            t.Fatalf("new control/SYN suppressed %d: n=%d err=%v",peer.Port,n,err)
+        }
+    }
+    n,err:=vm.Run(frame(50032,0x18))
+    if err!=nil||n==0{
+        t.Fatalf("new same-NAT client lost admission: n=%d err=%v",n,err)
+    }
+}

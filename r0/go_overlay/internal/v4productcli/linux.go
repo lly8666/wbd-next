@@ -28,6 +28,7 @@ import (
     "os/signal"
     "strconv"
     "strings"
+    "sync"
     "sync/atomic"
     "syscall"
     "time"
@@ -972,36 +973,17 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     coldReauth bool,connected *bool)(retErr error){
     if epochs==nil{return realityfront.ErrAdmissionParams}
+    if leases!=nil{
+        return runSharedMultiServer(ctx,c,ifindex,tun,raw,emit,leases,epochs,connected)
+    }
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
-    // Original automatic /32 sessions share one process-wide native
-    // TUN reader; Go retains the OS handle until the per-owner Stop join.
-    var shared *realityfront.V4LinuxSharedTun
-    if leases!=nil{
-        shared,err=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
-        if err!=nil{return err}
-        defer func(){
-            if e:=shared.Close();e!=nil{
-                retErr=errors.Join(retErr,e)
-                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_INCOMPLETE error=%v",e)
-            }else{
-                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server")
-            }
-        }()
-        log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=server auto_lease=1 owner=rust_single_kernel_reader")
-    }
-    mtuConfigure:=configureTunnelMTU(c,tun)
-    if shared!=nil{
-        // One client cannot mutate the physical shared TUN's MTU.
-        // Each original Rust generation retains its own record budget.
-        mtuConfigure=nil
-    }
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+            Tun:tun.f,TunName:c.tunName,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
-            ConfigureTunnelMTU:mtuConfigure,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
             PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
@@ -1178,4 +1160,299 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         return closeErr
     }
     return err
+}
+
+
+// PLAN028: one real Go FakeTCP server listening port, many independent
+// credential-verified device sessions and ONE Rust-owned physical TUN reader.
+// No Go steady-state plaintext/record loop is introduced here. Each admitted
+// association owns its own original-Go TLS -> Rust AEAD/PN M1/M4 generation.
+type originalV4MultiRecord struct {
+    assoc *faketcp.ServerAssociation
+    product *realityfront.V4LinuxServerProduct
+    lease string // server verified protected TLS /32, never client claimed
+    peer faketcp.DetachedPeer
+    ready bool
+    stopping bool
+}
+func runSharedMultiServer(
+    ctx context.Context,c config,ifindex uint32,tun *ownedTun,
+    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
+    leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
+    connected *bool,
+)(retErr error){
+    if leases==nil||epochs==nil||connected==nil{return realityfront.ErrAdmissionParams}
+    certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
+    if err!=nil{return err}
+    shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
+    if err!=nil{return err}
+    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    if err!=nil{
+        _=shared.Close()
+        return err
+    }
+    runCtx,cancel:=context.WithCancel(ctx)
+    var mu sync.Mutex
+    records:=make(map[*faketcp.ServerAssociation]*originalV4MultiRecord,32)
+    detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer,32)
+    stopping:=false
+    var admitted sync.WaitGroup
+    var ever atomic.Bool
+    transportErr:=make(chan error,1)
+    // Original Go TLS protected credentials and automatic lease allocation
+    // are shared policy, while each p has a different immutable cold epoch.
+    reply:=realityfront.ServerAdmissionConfig{
+        TLS:realityfront.ServerConfig{ServerName:c.serverName,RouteKey:c.routeKey,
+            TLSConfig:&tls.Config{Certificates:[]tls.Certificate{certificate}},
+            Timeout:15*time.Second},
+        ExpectedUsername:c.username,ExpectedPassword:c.password,
+        ServerLimit:c.recordLimit,AllocateLease:originalV4AutomaticLease(leases),
+        ValidateRequest:func(req realityfront.AdmissionRequest)error{
+            if !req.AutoLease||len(req.TunnelID)!=16||
+               req.DesiredLanes!=1||req.LaneID!=1{
+                return realityfront.ErrAdmissionParams
+            }
+            return nil
+        },
+    }
+    peersLocked:=func()[]faketcp.DetachedPeer{
+        peers:=make([]faketcp.DetachedPeer,0,len(detached))
+        for _,p:=range detached{peers=append(peers,p)}
+        return peers
+    }
+    retire:=func(rec *originalV4MultiRecord,reason string)error{
+        if rec==nil||rec.product==nil||!rec.ready{return nil}
+        if err:=rec.product.Close();err!=nil{
+            return fmt.Errorf("PLAN028 Rust native per-session Stop %s: %w",reason,err)
+        }
+        mu.Lock()
+        delete(detached,rec.assoc)
+        delete(records,rec.assoc)
+        peers:=peersLocked()
+        var filterErr error
+        // If zero routes remain, the previous exclusion safely continues to
+        // drop retired DATA, while a new SYN is always still eligible.
+        if len(peers)>0{filterErr=raw.ExcludeDetachedDataSet(peers)}
+        mu.Unlock()
+        table.Remove(rec.assoc.Flow())
+        if filterErr!=nil{return filterErr}
+        log.Printf("V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=%s remaining=%d",
+            reason,len(peers))
+        return nil
+    }
+    // Close in the invariant order: deny NEW Go admissions, join cold TLS
+    // admission goroutines, Stop every committed Rust generation, THEN join
+    // the independent native TUN reader; never release the OS TUN first.
+    defer func(){
+        cancel()
+        mu.Lock();stopping=true;mu.Unlock()
+        admitted.Wait()
+        mu.Lock()
+        active:=make([]*originalV4MultiRecord,0,len(records))
+        for _,rec:=range records{if rec.ready{active=append(active,rec)}}
+        mu.Unlock()
+        for _,rec:=range active{
+            if err:=retire(rec,"server-close");err!=nil{
+                retErr=errors.Join(retErr,err)
+            }
+        }
+        table.Close()
+        if err:=shared.Close();err!=nil{
+            retErr=errors.Join(retErr,err)
+            log.Printf("V4_PUBLIC_SHARED_TUN_STOP_INCOMPLETE error=%v",err)
+        }else{
+            log.Printf("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server")
+        }
+        *connected=ever.Load()
+    }()
+    accept:=func(rec *originalV4MultiRecord){
+        defer admitted.Done()
+        published:=false
+        defer func(){
+            if !published{
+                mu.Lock()
+                if !rec.ready{delete(records,rec.assoc)}
+                mu.Unlock()
+                table.Remove(rec.assoc.Flow())
+            }
+        }()
+        cfg:=realityfront.V4LinuxServerProductConfig{
+            Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
+            Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+            CleanupOwnedNetwork:productNativeCleanup(c,tun),
+            // One authenticated peer cannot mutate a sibling's TUN MTU.
+            // The original Rust per-session record/route budgets still apply.
+            ConfigureTunnelMTU:nil,
+            FECMode:c.fecMode,FECProfile:c.fecProfile,
+            DisableOuterRepair:c.disableOuterRepair,PeerPersona:c.peerPersona,
+            Authenticate:originalV4CredentialCheck(c),
+        }
+        p,err:=realityfront.NewV4LinuxServerProduct(cfg)
+        if err!=nil{
+            log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=product")
+            return
+        }
+        mu.Lock();rec.product=p;mu.Unlock()
+        sess,err:=p.AcceptAuthenticatedPeer(runCtx,rec.assoc,reply)
+        if err!=nil{
+            log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner")
+            return
+        }
+        lease,err:=sess.AuthenticatedLeaseIPv4()
+        if err!=nil||lease==""{
+            _=p.Close()
+            log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=verified_lease")
+            return
+        }
+        state,exists:=rec.assoc.TransitionState()
+        flow:=rec.assoc.Flow()
+        if !exists||state!=faketcp.TransitionDetached||
+           flow.ServerIP!=c.localIP.As4()||flow.ServerPort!=c.localPort{
+            _=p.Close()
+            log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=detached_scope")
+            return
+        }
+        peer:=faketcp.DetachedPeer{IP:flow.ClientIP,Port:flow.ClientPort}
+        mu.Lock()
+        if stopping||runCtx.Err()!=nil{
+            mu.Unlock()
+            _=p.Close()
+            return
+        }
+        detached[rec.assoc]=peer
+        if err=raw.ExcludeDetachedDataSet(peersLocked());err!=nil{
+            delete(detached,rec.assoc)
+            mu.Unlock()
+            _=p.Close()
+            log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=kernel_filter")
+            return
+        }
+        rec.lease=lease
+        rec.peer=peer
+        rec.ready=true
+        published=true
+        older:=make([]*originalV4MultiRecord,0,1)
+        for _,sibling:=range records{
+            if sibling!=rec&&sibling.ready&&!sibling.stopping&&
+               sibling.lease==lease{
+                // New original-TLS generation already published its native
+                // TUN /32 route and fenced the old generation. Retire only
+                // THAT old identity, never another device under same account.
+                sibling.stopping=true
+                older=append(older,sibling)
+            }
+        }
+        count:=len(detached)
+        mu.Unlock()
+        ever.Store(true)
+        log.Printf("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=%d active_detached_flows=%d auto_lease=1 original_TLS=1 Rust_M4=1",
+            c.localPort,count)
+        for _,old:=range older{
+            if err:=retire(old,"same-lease-new-generation");err!=nil{
+                select{case transportErr<-err:default:}
+                return
+            }
+        }
+    }
+    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d capacity=32 shared_rust_tun=1",
+        c.localPort)
+    go func(){
+        for {
+            seg,_,readErr:=raw.ReadSegment()
+            if readErr!=nil{
+                if runCtx.Err()!=nil{return}
+                select{case transportErr<-readErr:default:}
+                return
+            }
+            if seg.DstPort!=c.localPort{continue}
+            if faketcp.IsInitialSYN(seg){
+                if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{continue}
+                isn,e:=originalRandomISN()
+                if e!=nil{
+                    select{case transportErr<-e:default:}
+                    return
+                }
+                assoc,e:=table.AddSYN(seg,isn,time.Second)
+                if errors.Is(e,faketcp.ErrAssociationExists){continue}
+                if e!=nil{
+                    // One untrusted new SYN cannot evict a live authenticated
+                    // generation. Table capacity is bounded and swept.
+                    continue
+                }
+                synack,e:=assoc.SYNACKSegment()
+                if e==nil{e=emit(synack)}
+                if e!=nil{
+                    select{case transportErr<-e:default:}
+                    return
+                }
+                continue
+            }
+            assoc,ok:=table.GetSegment(seg)
+            if !ok||assoc.State()==faketcp.ServerAssociationClosed{continue}
+            if state,exists:=assoc.TransitionState();exists&&
+               state==faketcp.TransitionDetached{
+                // The kernel socket filter already excludes authenticated
+                // DATA from Go; ACK, FIN, and new SYN are still visible.
+                continue
+            }
+            outcome,e:=assoc.HandleSegment(seg,time.Now())
+            if e!=nil{
+                if !errors.Is(e,faketcp.ErrHandshakeState){
+                    log.Printf("V4_PUBLIC_MULTI_COLD_SEGMENT_REJECT")
+                }
+                continue
+            }
+            if outcome.AckNeeded{
+                if e=emit(assoc.ACKSegment(outcome.Ack));e!=nil{
+                    select{case transportErr<-e:default:}
+                    return
+                }
+            }
+            if assoc.State()!=faketcp.ServerAssociationEstablished{continue}
+            mu.Lock()
+            if !stopping{
+                if _,exists:=records[assoc];!exists{
+                    rec:=&originalV4MultiRecord{assoc:assoc}
+                    records[assoc]=rec
+                    admitted.Add(1)
+                    go accept(rec)
+                }
+            }
+            mu.Unlock()
+        }
+    }()
+    ticker:=time.NewTicker(time.Second)
+    defer ticker.Stop()
+    for {
+        select{
+        case <-runCtx.Done():
+            return nil
+        case e:=<-transportErr:
+            return e
+        case <-ticker.C:
+            now:=time.Now()
+            table.Sweep(now)
+            if e:=table.EmitRetransmitDue(now);e!=nil{
+                return e
+            }
+            mu.Lock()
+            living:=make([]*originalV4MultiRecord,0,len(records))
+            for _,rec:=range records{
+                if rec.ready&&!rec.stopping{living=append(living,rec)}
+            }
+            mu.Unlock()
+            for _,rec:=range living{
+                pulse,e:=rec.product.OriginalLoopPulse()
+                if e!=nil{continue}
+                if !publicNativeHealthDead(pulse){continue}
+                mu.Lock()
+                if rec.stopping{mu.Unlock();continue}
+                rec.stopping=true
+                mu.Unlock()
+                if e:=retire(rec,"authenticated-health90");e!=nil{
+                    return e
+                }
+            }
+        }
+    }
 }

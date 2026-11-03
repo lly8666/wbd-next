@@ -103,11 +103,12 @@ type DetachedPeer struct{
 }
 
 // Unlike installing a new classic BPF program per lane (which overwrites the
-// previous exclusion), compile all 2/4 authenticated lane tuples into ONE
-// kernel listener filter. Go can then receive new SYN/control on that same
-// server port without copying any existing Rust-owned payload traffic.
+// previous exclusion), compile up to 32 authenticated TCP tuples into ONE
+// existing kernel listener filter: one Game2/4 lane group OR multiple
+// independent protected-TLS device sessions. New SYN/control is still visible
+// on the same port while native Rust owns their DATA.
 func detachedDataKernelFilterSet(local [4]byte,port uint16,peers []DetachedPeer)([]unix.SockFilter,error){
-    if port==0||len(peers)<1||len(peers)>4{return nil,errors.New("faketcp: expected 1..4 scoped Game peers")}
+    if port==0||len(peers)<1||len(peers)>32{return nil,errors.New("faketcp: expected 1..32 independently authenticated peers")}
     seen:=make(map[DetachedPeer]bool,len(peers))
     for _,peer:=range peers{
         if peer.Port==0||peer.IP==[4]byte{}||seen[peer]{

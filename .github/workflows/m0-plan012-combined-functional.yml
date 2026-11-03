@@ -37,6 +37,9 @@ on:
       - "r0/go_overlay/cmd/wbd-v4-client/main.go"
       - "r0/go_overlay/cmd/wbd-v4-server/main.go"
       - "tools/m0-v4-public-real-linux-netns.sh"
+      - "tools/m0-plan028-two-client-real-linux-netns.sh"
+      - "r0/go_overlay/internal/faketcp/raw_detached_data_linux.go"
+      - "r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_m4_linux_connect_stop_test.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_release_client_linux.go"
@@ -122,6 +125,7 @@ jobs:
           test -f r0/go_overlay/internal/faketcp/raw_detached_data_linux.go
           test ! -e legacy/internal/faketcp/raw_detached_data_linux.go
           cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
           cmp -s r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
           # Actual Go SYN and SYN-ACK bytes, retransmission and MSS option tests
           # run against the final assembled original-Go product package.
@@ -379,6 +383,25 @@ jobs:
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' \
             fixed-kernel-result/plan028-auto-lease-real-native.log
           cat fixed-kernel-result/plan028-auto-lease-real-native.log
+      - name: PLAN028 real original Go two different accounts simultaneously on ONE server 443 and ONE shared Rust TUN reader
+        id: plan028_multi
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Reuse the already built original protected TLS Go client/server
+          # binaries and original Rust .so from THIS SOURCE, no test sender.
+          bash -n tools/m0-plan028-two-client-real-linux-netns.sh
+          bash tools/m0-plan028-two-client-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-two-account-one-port-real-native.log 2>&1 || {
+              tail -100 fixed-kernel-result/plan028-two-account-one-port-real-native.log >&2
+              exit 1
+            }
+          grep -q 'M0_PLAN028_REAL_TWO_ACCOUNT_SAME_SERVER_PORT_SHARED_RUST_TUN_PASS' \
+            fixed-kernel-result/plan028-two-account-one-port-real-native.log
+          grep -q 'M0_PLAN028_REAL_GO_TLS_TWO_ACCOUNTS_ONE_PORT_MULTIDEVICE_NATIVE_STOP_PASS' \
+            fixed-kernel-result/plan028-two-account-one-port-real-native.log
+          cat fixed-kernel-result/plan028-two-account-one-port-real-native.log
       # Preserve exact 1% public NETEM failure as a required final gate.
       # This step's temporary continued execution lets later Fixed/Auto/
       # Game2/4 modes run against the SAME compiled source and real OS,
@@ -456,6 +479,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "${{ steps.plan028_multi.outcome }}" = success
+          grep -Fq 'M0_PLAN028_REAL_GO_TLS_TWO_ACCOUNTS_ONE_PORT_MULTIDEVICE_NATIVE_STOP_PASS' \
+            fixed-kernel-result/plan028-two-account-one-port-real-native.log
           test "${{ steps.v4_real_loss.outcome }}" = success
           grep -Fq 'M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS' \
             fixed-kernel-result/v4-public-1pct-no-M2-real-delivery.log
