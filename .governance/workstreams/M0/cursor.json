@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1005,
-  "checkpoint_sha": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
+  "sequence": 1006,
+  "checkpoint_sha": "1903dea50ea9179924eae43377d4e4e99ef51a79",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1005 collect exact original Go protected TLS cold lane fencing 20/20 PASS; PLAN028 first shared-access workpackage still in_progress",
-  "why_now": "Original SOURCE c429 native/source-locked Go V4 cold tests passed; record exact scope and protect H998 historical failures",
+  "current_task": "H1006 add required H1005 feature-impact devlog for exact-source cold TLS feature status; PLAN028 shared IO pending",
+  "why_now": "H1005 source evidence and feature card valid but Action 41572285053 feature-gate rejected missing same-commit devlog impact declaration",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Continue PLAN028 §0.2 shared access/real per-device lease: implement single server port and shared Rust owner IP-indexed dispatch plus its two-sided config and native harness; do not enable overlap native yet. Collect still-in-flight source c429 Windows/Linux Actions before deciding affected retests. Then handover/path events and route-key first hello UX. H998 remains FAIL.",
+  "next_action": "Collect exact HEAD governance and in-flight Windows/Linux source c429 Action; continue §0.2 real shared server accept, per-device lease/config, Rust indexed shared IO with fixture. Keep production overlap disabled until native resources safe, then true A+B and network event tasks.",
   "unverified": true,
   "last_tested_source": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1004-AUTH-LANE-FENCING.md",
+    "docs/devlog/M0/20261103-PLAN028-H1005-GO-TLS-ACTION-COLLECTION.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1004 actual code committed: Go authenticated same-lane epoch overlap + incarnation-specific release and Linux Normal/Game Stop caller. H1005 original pinned Go V4 TLS 20 PASS incl two new tests at c429, cold Rust parser 4 PASS; original Linux modes non-overlap PASS. Real multi-client/shared TUN/path change NOT_RUN. No 028 full completion."
+  "partial_summary": "PLAN028 H1004 product code started, H1005 original Go protected TLS cold 20/20 PASS exact source; H1006 corrects feature-impact declaration. No shared single-port multi-client, path switch or Android qualification yet."
 }
