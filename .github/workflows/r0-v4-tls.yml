@@ -6,6 +6,8 @@ on:
     branches: [main, governance/incremental-ci-20261015]
     paths:
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/v4_route_prelude.go"
+      - "r0/go_overlay/internal/realityfront/v4_route_prelude_test.go"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
       - "r0/source-lock.json"
       - "tools/r0_v4_tls.py"
@@ -47,6 +49,8 @@ jobs:
           set -euo pipefail
           test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
           cp r0/go_overlay/internal/realityfront/admission_v4.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/v4_route_prelude.go legacy/internal/realityfront/
+          cp r0/go_overlay/internal/realityfront/v4_route_prelude_test.go legacy/internal/realityfront/
           cp r0/go_overlay/internal/realityfront/admission_v4_test.go legacy/internal/realityfront/
           (
             cd legacy

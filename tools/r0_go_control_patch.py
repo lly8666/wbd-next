@@ -145,6 +145,8 @@ def main():
         print(f"patched exact pinned Go callsite: {path}")
     overlays = [
         "internal/realityfront/admission_v4.go",
+        "internal/realityfront/v4_route_prelude.go",
+        "internal/realityfront/v4_route_prelude_test.go",
         "internal/runtimeentry/r0_admission_mode.go",
         "internal/runtimeentry/r0_admission_mode_test.go",
     ]

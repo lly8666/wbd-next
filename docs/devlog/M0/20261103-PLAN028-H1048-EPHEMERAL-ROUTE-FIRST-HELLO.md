@@ -17,3 +17,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1048 original TLS pre-ClientHello per-association X25519 route-key cold adaptation, default password-only clients with mandatory TLS certificate verification; Linux/Windows entry, server and genuine Game2 native fixture source candidate."}
 ```
+
+## H1049 装配增量复核
+
+H1048原Go分支构建Action缺新独立`v4_route_prelude.go`，报`undefined: v4AutoRoutePrelude`，Windows原Go assembly的main replace记录只改result_blob未补三个精确非覆盖patch，报`FEC2_ASSEMBLY_REJECTED: overlay result blob mismatch`。本增量按原workflow列表补齐冷helper和单测源、source/hash输入，Windows按此前确定的原源码patch精确合成唯一main，不重写恢复器、record或密码算法。修正前原生auto-route未运行，H1049仍是SOURCE候选。

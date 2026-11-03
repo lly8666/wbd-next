@@ -148,6 +148,18 @@
         {
           "find": "\ttunMTU, err := pathmtu.DeriveTunnelInterfaceMTU(pathmtu.Config{ConnectionMTU: *mtu, IPv4HeaderLen: 20, TCPHeaderLen: 20, RecordWireLimit: int(*clientLimit), ParityShards: fecBudgetParity})\n\tif err != nil {\n\t\treturn err\n\t}",
           "replace": "\t// Native V4 uses the ONE Rust FEC2 codec budget, never Go FEC1/56B.\n\tvar tunMTU int\n\tif *nativeV4Product {\n\t\tmode,e:=m0ParseWindowsV4Mode(*lanes,*fec2Selection.Mode,*fecMode,*fecParity)\n\t\tif e!=nil{return e}\n\t\tgameFEC:=(mode==m0WinModeGame2||mode==m0WinModeGame4)&&*fec2Selection.Mode==\"fixed\"\n\t\ttunMTU,err=m0WindowsV4StartupInnerMTU(\n\t\t\tfilepath.Join(windowsExecutableDir(),\"wbd_engine.dll\"),\n\t\t\tuint32(*mtu),uint32(*clientLimit),mode,gameFEC)\n\t} else {\n\t\ttunMTU,err=pathmtu.DeriveTunnelInterfaceMTU(pathmtu.Config{\n\t\t\tConnectionMTU:*mtu,IPv4HeaderLen:20,TCPHeaderLen:20,\n\t\t\tRecordWireLimit:int(*clientLimit),ParityShards:fecBudgetParity})\n\t}\n\tif err!=nil{return err}"
+        },
+        {
+          "find": "*serverName == \"\" || *routeKeyHex == \"\" ||",
+          "replace": "*serverName == \"\" || (*routeKeyHex == \"\" && !*nativeV4Product) ||"
+        },
+        {
+          "find": "if err != nil || len(routeKey) == 0 {\n\t\treturn errors.New(\"route-key-hex must decode to non-empty bytes\")\n\t}",
+          "replace": "if err != nil || (len(routeKey)==0 && !*nativeV4Product) || (len(routeKey)>0 && len(routeKey)<16) {\n        return errors.New(\"explicit route-key-hex must decode to at least 16 bytes; native V4 may omit it for pre-TLS ephemeral bootstrap\")\n    }"
+        },
+        {
+          "find": "\tif err := realityfront.ValidateClientAdmissionConfig(realityfront.ClientAdmissionConfig{\n\t\tTLS:       realityfront.ClientConfig{ServerName: *serverName, RouteKey: routeKey},\n\t\tAutoLease: autoLease, DesiredLanes: uint8(*lanes), InstallationID: installation[:], Username: *username, Password: *password, TunnelID: tunnelID.Bytes(), ClientLimit: uint16(*clientLimit), Policy: requestedPolicy,\n\t}); err != nil {\n\t\treturn err\n\t}",
+          "replace": "    // The original generic V3 validator still requires a static key. The\n    // V4 native admission validates its exact protected request and gets a\n    // fresh per-lane X25519 route marker BEFORE the first TLS ClientHello.\n    if !*nativeV4Product || len(routeKey)>0 {\n        if err := realityfront.ValidateClientAdmissionConfig(realityfront.ClientAdmissionConfig{\n            TLS:realityfront.ClientConfig{ServerName:*serverName,RouteKey:routeKey},\n            AutoLease:autoLease,DesiredLanes:uint8(*lanes),InstallationID:installation[:],\n            Username:*username,Password:*password,TunnelID:tunnelID.Bytes(),\n            ClientLimit:uint16(*clientLimit),Policy:requestedPolicy,\n        });err!=nil{return err}\n    }"
         }
       ]
     },
