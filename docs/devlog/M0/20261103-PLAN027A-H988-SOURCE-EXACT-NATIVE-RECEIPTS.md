@@ -1,0 +1,13 @@
+# H988 — collect exact native DF + Auto/GameFEC staged Actions; user fragment acceptance
+
+No queued/running Actions and no new dispatch at collection. Current product SOURCE `1e8325f16e2975a9da3497ab97ac570771a97238`; helper/harness SOURCE `00d197b7033524a7fe547daabe3f9e936c1150c8`. H986 source Build Action 41546652567 PASS and two OS binary artifacts verified; H987 Action 41547002571 PASS, explicitly shared its artifact run and source across three separate native measurement Actions. H986 governance/cursor over-eight FAIL historical preserved and H987 governance PASS.
+
+- [Normal DF Action 41548218023](https://github.com/lly8666/wbd-next/actions/runs/41548218023): true Windows Wintun and Linux WSL2 TUN separate local UDP sockets: both full 1728-byte original payloads byte-identically reconstructed after DF0; socket options actual Windows (14,0)/(14,1), Linux (10,0)/(10,2). DF1 kernel EMSGSIZE10040/90; **ICMP3/4 NOT_MEASURED**, not inferred. Actual ordinary UDP+TCP and Stop PASS, native 5 Mbps 25ms 0% 60s, first delivery 1.0 both; monotonic RTT p99 51.596ms (NOT one-way).
+- [Auto staged Action 41548233145](https://github.com/lly8666/wbd-next/actions/runs/41548233145): real 5 Mbps per direction, 250ms 5%→30%→5% at 0/40/80s (actual 0/40.282/80.391s), stage kernel tc readbacks and owned Stop PASS; first fractions Win0.999216/Lin0.998910, RTT p99 528.43ms; Auto mature policy grade remains NOT_PROVEN.
+- [Game4FEC staged Action 41548243272](https://github.com/lly8666/wbd-next/actions/runs/41548243272): real 3Mbps per direction, same wave (actual 0/40.532/80.438s), owned Stop PASS; first fractions Win0.999884/Lin0.999896; RTT p99 601.113ms, Windows process sampled 43.6406 CPU-s/227.438s and 71,004,160B peak working set. These are not calibrated one-way latencies or same-host AB gains.
+
+User's 2026-11-03 correction: **fragmentation is not assessed by packet-loss rate**; at least one original large DF0 IP datagram must be fully reassembled and delivered with exact payload for the measured mode/direction. Do not replace that with a first-fragment counter. Existing H987 dual-direction Normal positive exceeds this gate; no requirement for high-loss big UDP to be zero-loss or have a percentage threshold. Security, packet cap, ICMP correctness, small-flow non-HOL, Stop remain mandatory. Existing 4096/65507, dynamic route/PMTU, Game user-state oversized, real ICMP3/4, ARM64 distinct scope remain NOT_RUN / NOT_MEASURED.
+
+```feature-impact
+{"kind":"updated","ids":["path-mtu-budget"],"reason":"Recorded exact current-source native OS DF success and both staged weakness Actions; added user fragment success-not-loss-rate criterion, updated feature qualification without generalizing beyond real mode/platform."}
+```

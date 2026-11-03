@@ -209,10 +209,24 @@
     },
     {
       "platform": "Windows signed Npcap/Wintun + Linux/WSL2 original-Go/Rust",
-      "scope": "H986 current-source one-build three independent native DF0/DF1, staged Auto and Game4FEC 5/30/5; DO NOT inherit old source successes.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": "docs/evidence/M0/PLAN027A-H986-SOURCE-BUILD-THREE-SCENES-20261103.json"
+      "scope": "H986/H987 one original binary build, Normal outer default1460 1728B DF0 real Windows/Linux reassembly BOTH directions, DF1 kernel EMSGSIZE10040/90, real TLS TCP/UDP/Stop; ICMP3/4 NOT_MEASURED.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+      "evidence": "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
+    },
+    {
+      "platform": "Windows signed Wintun/Npcap ↔ WSL2 Linux original Go TLS/Rust Auto FEC2",
+      "scope": "H987 Action41548233145 exact binary and 5Mbps 250ms staged kernel tc 5/30/5, native first delivery windows0.999216 linux0.998910, owned Stop; Auto mature quality grade NOT_PROVEN, no fragment-loss rate gate.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+      "evidence": "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
+    },
+    {
+      "platform": "Windows signed Wintun/Npcap ↔ WSL2 Linux original Go TLS/Rust Game4FEC",
+      "scope": "H987 Action41548243272 exact binary and 3Mbps 250ms staged kernel tc 5/30/5, native first delivery windows0.999884 linux0.999896, Stop; source-specific 601.113ms UDP RTT p99, no unsupported LINK claimed.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+      "evidence": "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
     }
   ],
   "limitations": [
@@ -230,7 +244,9 @@
     "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
     "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
     "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/H946 Windows numeric live proof remains NOT_RUN; no promotion/PLAN028.",
-    "Historical H669/H673/H676/H678 first-delivery counterexamples, H928/H935 compilation failures and source-locked prior limitations remain in H943 parent SOURCE 96ead0c07d3bc0121116bc801617c7e32d9bf142 and original dated evidence/devlogs. No old failure was deleted or promoted. H943 is only a scoped functional native result; Game4FEC p99, DF/ICMP, staged weaknet and capacity remain unresolved."
+    "Historical H669/H673/H676/H678 first-delivery counterexamples, H928/H935 compilation failures and source-locked prior limitations remain in H943 parent SOURCE 96ead0c07d3bc0121116bc801617c7e32d9bf142 and original dated evidence/devlogs. No old failure was deleted or promoted. H943 is only a scoped functional native result; Game4FEC p99, DF/ICMP, staged weaknet and capacity remain unresolved.",
+    "H988 user fragmentation acceptance: real DF0 IP fragments must have ≥1 completely reassembled original datagram with byte-identical payload in the scoped native pairing; no fragment drop/loss percentage acceptance gate. H987 Windows/Linux Normal DF0 1728B on BOTH ends PASS; native ICMP3/4 remains NOT_MEASURED (local DF1 EMSGSIZE is not an ICMP receipt).",
+    "H987 Auto/Game4FEC staged 5/30/5 metrics and Windows-only sampled CPU/RSS are scoped evidence, NOT dynamic PMTU change, ARM64 Game native, high-rate capacity, 4096/65507 datagram or physical-Internet qualification."
   ],
   "promotion": null
 }

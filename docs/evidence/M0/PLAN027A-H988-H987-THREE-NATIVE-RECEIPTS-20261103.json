@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "harness_source_sha": "00d197b7033524a7fe547daabe3f9e936c1150c8",
+  "result": "PASS",
+  "status": "SCOPED_FUNCTIONAL_AND_NATIVE_MEASUREMENT_PASS_NOT_PLAN027A_COMPLETE",
+  "artifact_verified": true,
+  "source_reuse": {
+    "original_source_build_action": 41546652567,
+    "build_conclusion": "success",
+    "windows_artifact_name": "m0-wl-windows-product-binaries-1e8325f16e2975a9da3497ab97ac570771a97238",
+    "linux_artifact_name": "m0-plan024-linux-product",
+    "one_build_many_independent_scenes": true,
+    "dispatcher_action": 41547002571,
+    "dispatcher_conclusion": "success"
+  },
+  "verification": {
+    "normal_df_ipv4": {
+      "run": 41548218023,
+      "conclusion": "success",
+      "scene": "scenarios/plan027a-h958-normal-1460-5m-df-60s.json",
+      "scenario_sha256": "027e7d3dbcb5a100ace9d4e2e60dec9465a33174d3c072b75a6a29297039f074",
+      "outer_ip_default": 1460,
+      "protocol": "REAL_WINDOWS_WINTUN_LINUX_TUN_ORIGINAL_GO_TLS_RUST",
+      "df0_application_payload_bytes": 1728,
+      "df0_reassembly": {
+        "windows": {
+          "result": "REAL_DF0_REASSEMBLED_DF1_EMSGSIZE",
+          "received_bytes": 1728,
+          "byte_exact": true,
+          "df0_socket_option": [
+            14,
+            0
+          ]
+        },
+        "linux": {
+          "result": "REAL_DF0_REASSEMBLED_DF1_EMSGSIZE",
+          "received_bytes": 1728,
+          "byte_exact": true,
+          "df0_socket_option": [
+            10,
+            0
+          ]
+        }
+      },
+      "df1_local_os": {
+        "windows": {
+          "df1_option": [
+            14,
+            1
+          ],
+          "errno": 10040
+        },
+        "linux": {
+          "df1_option": [
+            10,
+            2
+          ],
+          "errno": 90
+        }
+      },
+      "icmp3_code4": "NOT_MEASURED_LOCAL_EMSGSIZE",
+      "windows_first_delivery_fraction": 1,
+      "linux_first_delivery_fraction": 1,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "application_udp_rtt_p99_ms": 51.596,
+      "windows_process_cpu_total_s": 2.5,
+      "windows_process_peak_working_set_bytes": 41816064
+    },
+    "auto_staged": {
+      "run": 41548233145,
+      "conclusion": "success",
+      "scene": "scenarios/plan027a-h986-auto-1460-5m-staged5-30-5-210s.json",
+      "scenario_sha256": "b04d9b36fa3cf8e7af0bb230cb8a55cc9afe542b16a8f4caf6221e3786f8b57f",
+      "outer_ip_default": 1460,
+      "mode": "fec-auto",
+      "offered_mbps_each_direction": 5,
+      "latency_ms_each_direction": 250,
+      "loss_percent_wave": [
+        5,
+        30,
+        5
+      ],
+      "scheduled_stage_seconds": [
+        0,
+        40,
+        80
+      ],
+      "actual_stage_elapsed_seconds": [
+        0,
+        40.282,
+        80.391
+      ],
+      "readback": "REAL_ETH0_IFB_OWNED_TC_QDISC_CHANGE",
+      "windows_first_delivery_fraction": 0.999216,
+      "linux_first_delivery_fraction": 0.99891,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "application_udp_rtt_p99_ms": 528.43,
+      "windows_process_cpu_total_s": 6.8438,
+      "windows_process_peak_working_set_bytes": 43581440,
+      "auto_mature_quality": "NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK"
+    },
+    "game4_fec_staged": {
+      "run": 41548243272,
+      "conclusion": "success",
+      "scene": "scenarios/plan027a-h957-game4fec-1460-3m-staged5-30-5-210s.json",
+      "scenario_sha256": "80c3bc883318abecdf8e18252b1612d5f4d69583c4d80f075da72523ff7601c2",
+      "outer_ip_default": 1460,
+      "mode": "game4-fec",
+      "offered_mbps_each_direction": 3,
+      "latency_ms_each_direction": 250,
+      "loss_percent_wave": [
+        5,
+        30,
+        5
+      ],
+      "scheduled_stage_seconds": [
+        0,
+        40,
+        80
+      ],
+      "actual_stage_elapsed_seconds": [
+        0,
+        40.532,
+        80.438
+      ],
+      "readback": "REAL_ETH0_IFB_OWNED_TC_QDISC_CHANGE",
+      "windows_first_delivery_fraction": 0.999884,
+      "linux_first_delivery_fraction": 0.999896,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "application_udp_rtt_p99_ms": 601.113,
+      "windows_process_cpu_total_s": 43.6406,
+      "windows_process_peak_working_set_bytes": 71004160,
+      "measured_time_type": "SAME_ORIGIN_MONOTONIC_REAL_OS_UDP_ROUNDTRIP_NOT_ONEWAY"
+    }
+  },
+  "fragmentation_acceptance_20261103": {
+    "rule": "≥1 exact full original datagram successfully reassembled from real fragmented IPv4 DF0; no fragment packet-loss rate or completed-datagram delivery-percent threshold",
+    "scope": "Verified Normal Windows/Linux 1728B DF0 both directions only; not all modes or sizes",
+    "does_not_excuse": [
+      "wrong header/checksum/options",
+      "DF1 silently dropped in place of OS error",
+      "ciphertext reuse or unauthenticated route",
+      "ordinary small-flow global HOL or Stop due to one oversize"
+    ]
+  },
+  "unverified": [
+    "native ICMP Type3 Code4 when packet enters user space; already local OS EMSGSIZE verified",
+    "4096/65507 real IP payload sizes and 64KiB TCP write",
+    "Windows FEC/Game user-space oversized exceptional admission",
+    "real dynamic path MTU 1460->1280->recover, disparate lane/peer budget snapshots",
+    "uncovered actual ARM64 Game native and physical IPv4 PMTU",
+    "multi-generation association/GUI numeric actual Applied completeness",
+    "same-host AB protection performance; no one-way clock calibration"
+  ],
+  "prior_failures_preserved": [
+    "H958 originally NOT_RUN",
+    "H986 governance and dispatcher FAIL due cursor 10 refs (H987 fixed)",
+    "H978 old Fixed1333",
+    "H962 earlier Go test setup FAIL"
+  ],
+  "next": "PLAN027A still open; no repeat H987 measurements; perform narrow remaining dynamic/oversize source-specific fixes, then PLAN028"
+}

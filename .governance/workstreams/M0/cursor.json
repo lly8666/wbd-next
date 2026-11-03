@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 987,
-  "checkpoint_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "sequence": 988,
+  "checkpoint_sha": "00d197b7033524a7fe547daabe3f9e936c1150c8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H987 fix governance cursor over-8 history refs; reuse H986 already running original binary and separately dispatch native DF/Auto/Game staged if success",
-  "why_now": "H986 governance failed solely because M0 context_refs had 10 and max is 8; avoid duplicate current-source native build already action41546652567",
+  "current_task": "H988 accepted exact H987 true Windows/Linux DF0 reassembly and DF1 local EMSGSIZE + staged Auto/Game4FEC; no repeat these scenes",
+  "why_now": "Collect three already completed genuinely built-source Actions and register user 2026-11-03 fragmented datagram criterion, while keeping untested exceptional/dynamic scope explicit",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H987 gated H986 build/real three scene run IDs and OS/service evidence; do not infer PASS from launch. Resume outstanding platform/mode MTU/DF then PLAN028.",
+  "next_action": "Narrow next real gap: dynamic 1460->1280->restore or exceptional 4096/65507 and owned ICMP3/4, inspect current Windows/Go entry before coding; do not repeat qualified 1728 DF and 5/30/5. Plan028 follows only full PLAN027A exit.",
   "unverified": true,
-  "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+  "last_tested_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H984-OLD-TEST-MSS-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H984-TEST-FIXTURE.md",
     "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md",
     "docs/evidence/M0/PLAN027A-H986-SOURCE-BUILD-THREE-SCENES-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H986-DF-STAGED-ONE-BUILD.md",
     "docs/evidence/M0/PLAN027A-H987-GOV-REPAIR-H986-REUSE-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H987-GOV-CURSOR-BINARY-REUSE.md"
+    "docs/devlog/M0/20261103-PLAN027A-H987-GOV-CURSOR-BINARY-REUSE.md",
+    "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H988-SOURCE-EXACT-NATIVE-RECEIPTS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H986 source and fixture preflight PASS, original Win/WSL product build Action 41546652567 IN_PROGRESS; governance H986 FAIL due 10>8 context_refs fixed in H987. DF/Auto/Game stages NOT_RUN. Full 027A still open; 028 not started."
+  "partial_summary": "H987 genuine native one SOURCE three independent Actions all PASS: real DF0 1728 full reassembly Windows/Linux; DF1 local EMSGSIZE; both staged weak-net and owned Stop. ICMP3/4 native and dynamic path NOT_MEASURED. User disallows fragment-loss percentage threshold. Full 027A open."
 }

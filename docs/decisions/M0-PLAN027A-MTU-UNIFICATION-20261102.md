@@ -67,6 +67,10 @@ Linux ARM64原生完成预算ABI/codec和Normal+GameFEC边界代表；Windows am
 
 若附件说“跨32片/65KB都要过”，须区分supported LINK、内核IPv4碎片与未支持模式；不能靠下调真实TUN MTU后应用已经拒绝，写成“大包成功通过”。反之合法OS的EMSGSIZE是正确DF结果，不当作产品坏包。
 
+2026-11-03 最新分包验收补充：分包功能只要求**在实际受测模式/方向中至少一个合法完整大datagram分片后成功组合且业务载荷完全一致**，不设置分片丢包率、重组成功率百分比、30%线路损伤下的全交付率门槛。DF1的OS级EMSGSIZE正确通过，但须与实际发送ICMP3/4分开报告，不能由本地EMSGSIZE推断对端收到了ICMP。每个原生成功只认证对应source、模式、方向、大小与OS，不外推4096/65507/动态PMTU。其他数据安全、Stop、无全局HOL、长度与内存/CPU/p99仍按规范。
+
+H988 已收取源锁三项原生 Actions：Windows/Linux Normal DF0双向1728B完整UDP重组/DF1本地EMSGSIZE；Auto与Game4FEC 5%→30%→5%三阶段真实tc和应用/Stop，分别记录在 `docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json`。其中 Auto 的成熟质量档位仍 NOT_PROVEN，不能因Action绿灯升级为策略已经最佳。
+
 普通原生夹具只输入外层MTU，让真实产品自动应用内层；不可另注入预先算好的TUN值帮助产品过关。明确标出的异常/兼容测试才可强制虚拟MTU。补配置保存/加载/CLI别名/UI只读生效值用例：配置外层1460经过模式切换或路径收窄仍保存1460，内层随实际预算更新，server无需手填同一内层值。
 
 ## 4. 宽而明确的门与退出
