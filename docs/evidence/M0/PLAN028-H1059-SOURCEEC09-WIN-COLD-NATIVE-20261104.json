@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1059",
+  "source_sha": "ec09e5178ca299fde4e3a746495e6e9583ee1bb1",
+  "result": "WINDOWS_NATIVE_SCOPED_PASS_PRE_READY_GO_UNIT_PENDING",
+  "jobs": [
+    {
+      "run_id": 41671643624,
+      "conclusion": "success",
+      "scope": "Original Windows Go/Rust signed Wintun/WAL and five mode scoped native, not physical NIC change"
+    },
+    {
+      "run_id": 41671643589,
+      "conclusion": "success",
+      "scope": "Original Go Windows compile + Windows/Linux Rust source tests"
+    },
+    {
+      "run_id": 41671643759,
+      "conclusion": "success",
+      "scope": "Governance"
+    }
+  ],
+  "next": "Five specific Windows cold notification Go units, target new workflow H1059 only",
+  "linux_test_rule": {
+    "next": "native x86_64 client + native x86_64 server",
+    "following": "native ARM64 client + native ARM64 server",
+    "rotate_per": "complete Linux task",
+    "not_heterogeneous": true,
+    "windows_excluded": true
+  },
+  "remaining": [
+    "Windows actual NIC/IP switch NOT_RUN",
+    "Windows mid-TLS unit before new Action NOT_RUN",
+    "Physical MTU live shrink H998 FAIL retained",
+    "ARM64 Game4FEC prior FAIL retained",
+    "QEMU-user mixed ISA UDP FAIL historical",
+    "CPU/p99 and remote ICMP not qualified"
+  ]
+}

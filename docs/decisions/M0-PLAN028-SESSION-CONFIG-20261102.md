@@ -91,6 +91,9 @@ Android阶段仍参考[Android网络回调/Network绑定](https://developer.andr
 
 ## 5. 测试：少而覆盖关键差异
 
+**Linux 按任务整平台交替（2026-11-04 用户更正）**：本次 Linux 任务测 x86_64 客户端+x86_64 服务端；下一个完整 Linux 任务测 ARM64 客户端+ARM64 服务端；之后轮换。不是 ARM↔x86 异构双端连接。Windows 任务不参与 Linux 轮换计数。只算实际 Linux 同架构 SOURCE/原生业务/Stop 场景，不用 QEMU-user 冒充 ARM64 原生测试；旧 mixed-QEMU 失败保留历史证据，不再作为后续前置条件。若原生 runner 暂不可用，记 NOT_RUN 并继续独立任务，不重跑旧矩阵。
+
+
 代码/双方/配置读回写齐后构建一次，功能可顺序合批，性能一Action一场景，各模式Action并行。优先当前真实Windows↔Linux夹具，Linux原生arm64补相关server/session接口；不以纯mock或旧Go PASS代替真实产品。
 
 | 场景 | 最小验收 |
