@@ -13,9 +13,8 @@
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
   "next_action": "Collect the fixed exact-source Linux Rust saturated-A/live-B unit and original 2/5-netns native multi-account/path/Stop, fix only genuine new failure; then measure comparable CPU/p99, do not claim throughput gain from units. Continue PLAN028 Windows/7-mode independently.",
   "unverified": true,
-  "last_tested_source": "61cc2d2d7543c0e5461b41827d30dd1e54d6ae8a",
+  "last_tested_source": "b1d95455b592d3c7232e8ad1bfcc1cf37e2d645f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1025-SOURCE7037-CLIENT-RUST-SINGLE-TUN-NATIVE-20261103.json",
     "docs/evidence/M0/PLAN028-H1027-SOURCEB1D-INITIAL-HARNESS-FAIL-20261103.json"
   ],
   "context_refs": [
@@ -29,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1027-SHARED-TUN-NOHOL-EXACT-TUPLE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1026 source61cc native Linux rtnetlink A+B/MTU narrow Action41599359343 scoped SUCCESS; H1027 b1d ABI/cross builds PASS and real 5+5 UDP/Stop observed but native hard gate FAIL due changed stable Stop marker. Fixed source with original marker and targeted HOL unit pending. Preserve H998/Win Game4FEC/ARM64 Game4FEC failures and CPU p99 not proven; 028 not complete."
+  "partial_summary": "H1026 source61cc native Linux rtnetlink A+B/MTU narrow Action41599359343 scoped SUCCESS; H1027 b1d ABI/cross builds PASS and real 5+5 UDP/Stop observed but native hard gate FAIL due changed stable Stop marker. Fixed source with original marker and targeted HOL unit pending. Preserve H998/Win Game4FEC/ARM64 Game4FEC failures and CPU p99 not proven; 028 not complete. M0 evidence_refs point exclusively to exact b1d failed SOURCE (unverified=true); H1025/H1026 passed older source evidence remains in feature cards/devlogs, not conflated with new native run."
 }
