@@ -3902,7 +3902,7 @@ impl SharedTunPacket{
 impl Drop for SharedTunPacket{
     fn drop(&mut self){
         let mut bytes=std::mem::take(&mut self.bytes);
-        if bytes.capacity()>4096{return}
+        if bytes.capacity()==0||bytes.capacity()>4096{return}
         bytes.clear();
         let _=self.recycle.try_send(bytes);
     }
@@ -4309,7 +4309,7 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     if router.tun.stop_until(Instant::now())!=StopResult::Drained{
         return STOP_INCOMPLETE
     }
-    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} queue_full_drops={} retired_drops={} reader_joined=1",
+    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} reader_joined=1 queue_full_drops={} retired_drops={}",
         router.generation,router.delivered.load(Ordering::Relaxed),
         router.unrouted.load(Ordering::Relaxed),
         router.backpressure.load(Ordering::Relaxed),

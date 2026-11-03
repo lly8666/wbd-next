@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1026,
-  "checkpoint_sha": "7037f6eea30c532d4c8980071ec7514e62933968",
+  "sequence": 1027,
+  "checkpoint_sha": "b1d95455b592d3c7232e8ad1bfcc1cf37e2d645f",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1026 PLAN028 genuine Linux Normal auto-IP rtnetlink kernel route/source/link notification 200/500ms and in-process original Go TLS/Rust A->A+B->B path/source/MTU rebind; new SOURCE native test PENDING",
-  "why_now": "H1025 one physical native client TUN reader and source-locked two-/five-netns actual Go TLS/Rust M4 success. Missing link is OS-selected new physical route triggering same-process new verified generation without waiting dead90 or destructive old TUN read.",
+  "current_task": "H1027 PLAN028 bounded per-session shared TUN FIFO fairness, Normal raw exact tuple, 8-ready read batch and recycled small ingress / deadline wake: source native pending",
+  "why_now": "User prioritized actual cross-client TUN reader HOL and Normal socket per-flow CPU overhead. Initial source b1d compiled and sent real 5+5 UDP/Stop but mandatory native regex failed after stop-log field reordering.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect exact new H1026 SOURCE native Go test compile, 2 real netns OS address+route+MTU 1500->1280 path change with old A->new B TLS/Rust and 5+5 actual UDP/Stop/reader joined, all same-built 5netns client/server modes; repair true Action FAIL. Then Windows NotifyRouteChange2 cold adapter and seven mode per-lane replacement, endpoint/credential first hello and per-client MTU/FEC; do not repeat physical H998.",
+  "next_action": "Collect the fixed exact-source Linux Rust saturated-A/live-B unit and original 2/5-netns native multi-account/path/Stop, fix only genuine new failure; then measure comparable CPU/p99, do not claim throughput gain from units. Continue PLAN028 Windows/7-mode independently.",
   "unverified": true,
-  "last_tested_source": "7037f6eea30c532d4c8980071ec7514e62933968",
+  "last_tested_source": "61cc2d2d7543c0e5461b41827d30dd1e54d6ae8a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1025-SOURCE7037-CLIENT-RUST-SINGLE-TUN-NATIVE-20261103.json"
+    "docs/evidence/M0/PLAN028-H1025-SOURCE7037-CLIENT-RUST-SINGLE-TUN-NATIVE-20261103.json",
+    "docs/evidence/M0/PLAN028-H1027-SOURCEB1D-INITIAL-HARNESS-FAIL-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -25,8 +26,9 @@
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/devlog/M0/20261103-PLAN028-H1026-LINUX-RNETLINK-PATH-RECONNECT.md",
-    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
+    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
+    "docs/devlog/M0/20261103-PLAN028-H1027-SHARED-TUN-NOHOL-EXACT-TUPLE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1025 source7037 original protected Go Linux client single Rust TUN reader and original 5netns 3-installation 70 real UDP+Stop PASS exact native Action41595536395; governance/feature Pass41595536456. H1026 full Linux numeric-IPv4 Normal auto-IP native rtnetlink 200/500ms coalesce, physical route/source/MTU readback, new same-process original TLS/Rust M4 candidate ready before old exact Rust Stop, strict original netns OS path-switch test, code/assembly/docs committed as candidate awaiting exact-source Action. Windows/7-mode/first-routekey unresolved, H998/Win Game4 fails retained."
+  "partial_summary": "H1026 source61cc native Linux rtnetlink A+B/MTU narrow Action41599359343 scoped SUCCESS; H1027 b1d ABI/cross builds PASS and real 5+5 UDP/Stop observed but native hard gate FAIL due changed stable Stop marker. Fixed source with original marker and targeted HOL unit pending. Preserve H998/Win Game4FEC/ARM64 Game4FEC failures and CPU p99 not proven; 028 not complete."
 }

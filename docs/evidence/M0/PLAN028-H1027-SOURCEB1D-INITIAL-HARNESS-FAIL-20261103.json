@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1027",
+  "source_sha": "b1d95455b592d3c7232e8ad1bfcc1cf37e2d645f",
+  "action_run_id": 41605334277,
+  "job_id": 125813638556,
+  "conclusion": "FAIL",
+  "source_compile": "PASS x86_64 Linux, Windows GNU, ARM64",
+  "observed_native": "Two real Linux namespaces protected Go TLS/Rust: 5 UDP echo each, server/client shared TUN routed=5 unrouted=0, both native Stop joined",
+  "first_fatal": "AssertionError: ('server', [])",
+  "narrow_cause": "The existing original public 2-netns harness regex requires backpressure=<n> reader_joined=1 contiguous. New stop fields were placed between them.",
+  "correction": "Keep old marker token order and append queue_full_drops + retired_drops after reader_joined=1; source-retest required.",
+  "not_claimed": [
+    "native PASS of initial SHA",
+    "CPU gain",
+    "H998 physical recovery",
+    "ARM64 Game4FEC",
+    "seven-mode path swap"
+  ]
+}
