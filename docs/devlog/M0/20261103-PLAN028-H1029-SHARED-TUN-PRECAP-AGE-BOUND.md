@@ -6,6 +6,12 @@ Fix in original Rust shared reader: closure-based per-client admission rejects s
 
 Original same-SOURCE Linux Rust/Go native workflow adds 4096 dropped A with zero extra packet-builds, 256 interleaved B immediate deliveries, 8-head expiry without sleeping, and 40KiB+30KiB pre-copy byte rejection; H1027 A/B unit, actual 2/5-netns 70 UDP/443, path/MTU and 1%/Stop remain gates. Source remains IMPLEMENTED_NOT_TESTED pending native Action. CPU/p99 magnitude and real high-PPS multi-client overload unmeasured; no performance PASS claim. Historical f823 H1027 native PASS, H998 physical 3/3 FAIL, ARM64 Game4FEC and Win Game failures retained; PLAN028 ongoing.
 
+## H1029 exact-source native readback and next architectural blocker
+
+Source `fa32f4e0a8ac0e04c258a526ec3c22ff15fba747`, exact original Action [41609656406](https://github.com/lly8666/wbd-next/actions/runs/41609656406), native job125829608743 SUCCESS; downloaded artifact13217799669 manifest pins exact SOURCE, Rust1.85.1/Go1.23.12 and same-built Go/Rust binary hashes. The `plan028-precopy-age.log` Rust unit 1/1 PASS verifies 4096 A overflow rejected without constructing another buffer, 256 B packets live, 8-slot/64KiB/100ms extra staging limits; H1027 original sibling/Stop unit also 1/1 PASS.
+Two real Go TLS Linux netns and five real netns multi-device tests retained pass: one port443, 3 installation leases, 4 protected TLS sessions, 70 genuine UDP, Rust reader Stop; native rtnetlink A→A+B→B route switch to 1280 physical /1209 inner MTU passed; 1% kernel netem 512 offered /506 first unique /6 missing, NOT lossless. Evidence `docs/evidence/M0/PLAN028-H1029-SOURCEFA32-NATIVE-20261103.json`.
+An additional capacity architecture mismatch remains: Go `NewServerAssociationTable(32)` and `V4_PUBLIC_MULTI_SERVER_READY capacity=32`, while `crates/wbd-engine/src/v4_embedded_go.rs::prepare_side` refuses native session entries after `MAX_SESSIONS=16`. Cold FakeTCP slots are not native active-session slots; neither 32 live Rust owners nor a 16-active+overlap handoff are qualified. Next task must explicitly define ready/candidate/retiring admission budgets, not just raise a constant or claim 32 clients. This finding does not retroactively invalidate 3-client native PASS.
+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient","idle-rotation-keepalive"],"reason":"H1029 original Rust TUN per-client bounded pre-copy drop, 64KiB/100ms FIFO and exact-source native unit regression; no protocol changes."}
 ```

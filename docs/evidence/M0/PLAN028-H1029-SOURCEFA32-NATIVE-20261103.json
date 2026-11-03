@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H1029",
+  "plan": "PLAN028",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
+  "run": {
+    "id": 41609656406,
+    "job_id": 125829608743,
+    "attempt": 1,
+    "conclusion": "success",
+    "workflow": ".github/workflows/m0-plan012-combined-functional.yml",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41609656406",
+    "artifact_id": 13217799669,
+    "artifact_name": "m0-plan012-combined-41609656406-1",
+    "artifact_manifest_path": "fixed-kernel-result/manifest.json",
+    "manifest_exact_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust_toolchain": "1.85.1",
+    "go_toolchain": "1.23.12",
+    "source_file_sha256": "ac9d1310c5245babdbeaba4a8ec59353b56c114b4d65d14918520446161e1a6f",
+    "binaries_sha256": {
+      "libwbd_engine.so": "f610d08c3584fe7023e1c31630f10128fc4169d37f95a214f3b3e5b7258c429e",
+      "wbd-v4-client": "2b9a5fd968f0d6857e4a55f287eb2ce1cbcdd7d1b79ef9f36771c39f803342f2",
+      "wbd-v4-server": "52d7fa5da432904f7ca534e10af91c83c710989f93447ee18f511b79f2f0975c"
+    }
+  },
+  "tests": {
+    "unit": {
+      "new_name": "m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes",
+      "log": "fixed-kernel-result/plan028-precopy-age.log",
+      "result": "PASS 1/1",
+      "slow_route_a_rejections": 4096,
+      "slow_route_extra_vec_constructions": 0,
+      "live_route_b_deliveries": 256,
+      "pending_packet_limit": 8,
+      "pending_byte_limit": 65536,
+      "pending_residence_limit_ms": 100,
+      "byte_limit_test": "40KiB + 30KiB refused before second Vec creation",
+      "note": "Deterministic Rust unit, not a kernel throughput or CPU benchmark"
+    },
+    "previous_nohol_unit": {
+      "name": "m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop",
+      "result": "PASS 1/1",
+      "log": "fixed-kernel-result/plan028-nohol-test.log"
+    },
+    "kernel_auto_ip": {
+      "result": "PASS",
+      "server_reader_routed": 5,
+      "client_reader_routed": 5,
+      "unrouted": 0,
+      "backpressure": 0,
+      "joined_stop": 1
+    },
+    "linux_route_switch": {
+      "result": "PASS",
+      "old_source": "10.25.0.2",
+      "new_source": "10.25.0.3",
+      "physical_mtu": 1280,
+      "effective_tun_mtu": 1209,
+      "new_real_udp": 5,
+      "old_exact_stop": true,
+      "read_from_kernel": true
+    },
+    "linux_three_devices": {
+      "result": "PASS",
+      "server_port": 443,
+      "distinct_installations": 3,
+      "authenticated_tls_sessions": 4,
+      "distinct_leases32": 3,
+      "real_udp": 70,
+      "one_shared_rust_reader": true,
+      "other_account_survived_handover": true
+    },
+    "netem_one_percent": {
+      "result": "PASS_ACCOUNTED_NOT_LOSSLESS",
+      "offered": 512,
+      "first_unique_delivered": 506,
+      "missing": 6,
+      "tc_client_drop": 4,
+      "tc_server_drop": 6,
+      "stop_drained_both": true
+    }
+  },
+  "qualification": {
+    "rust_original_kernel_and_unit": "FUNCTIONAL_PASS_SCOPED",
+    "measured_cpu_percent": "NOT_RUN",
+    "measured_p99": "NOT_RUN",
+    "actual_Linux_saturated_native_multi_tenant_p99": "NOT_RUN",
+    "whole_PLAN028": "IN_PROGRESS",
+    "h998_physical_1500_1280": "FAIL_RETAINED",
+    "arm64_game4fec": "FAIL_RETAINED",
+    "windows_full_7_mode": "NOT_QUALIFIED",
+    "fakeTCP_admission_table_slots": 32,
+    "rust_embedded_native_max_entries": 16,
+    "native_32_clients_qualified": false,
+    "capacity_inconsistency": "Current Go table 32 slots and startup capacity=32 do not prove Rust active sessions above hard MAX_SESSIONS=16"
+  }
+}
