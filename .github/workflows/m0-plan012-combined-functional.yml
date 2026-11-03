@@ -556,6 +556,14 @@ jobs:
           }
           grep -Fq "M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1" fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log
           grep -Fq "handover_A_to_A2=1 fec_fixed6=1" fixed-kernel-result/plan028-game4fec6-two-cohorts-a2.log
+          # One genuine natural 90s original Rust Game2 health-dead A
+          # versus still-live Bob, using the already-built same SOURCE.
+          WBD_PLAN028_GAME_MULTI_MODE=game2 WBD_PLAN028_GAME_MULTI_DEAD90=1 bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game2-natural-health90.log 2>&1 || {
+            tail -160 fixed-kernel-result/plan028-game2-natural-health90.log >&2
+            exit 1
+          }
+          grep -Fq "M0_PLAN028_GAME2_AUTHENTICATED_HEALTH90_EXACT_GROUP_RETIRE_NATIVE_PASS one_lost_group=1 remaining_lanes=2 sibling_B_udp_survives=1" fixed-kernel-result/plan028-game2-natural-health90.log
+          grep -Fq "natural_health90=1" fixed-kernel-result/plan028-game2-natural-health90.log
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
       # Earlier independent Fixed/Game jobs complete first and can expose

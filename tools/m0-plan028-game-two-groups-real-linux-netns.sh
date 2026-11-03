@@ -5,6 +5,8 @@ set -euo pipefail
 MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
 HANDOVER="${WBD_PLAN028_GAME_MULTI_HANDOVER:-0}"
 GAME_FEC="${WBD_PLAN028_GAME_MULTI_FEC:-off}"
+DEAD90="${WBD_PLAN028_GAME_MULTI_DEAD90:-0}"
+if [[ "$DEAD90" != 0 && "$DEAD90" != 1 ]];then echo "invalid Health90 selector" >&2;exit 2;fi
 if [[ "$HANDOVER" != 0 && "$HANDOVER" != 1 ]];then echo "invalid Game handover selector" >&2; exit 2;fi
 case "$GAME_FEC" in
   off) ;;
@@ -16,6 +18,9 @@ case "$MODE" in
   game4) LANES=4 ;;
   *) echo "PLAN028 two-group real native only supports game2/game4" >&2;exit 2 ;;
 esac
+if [[ "$DEAD90" == 1 && ( "$MODE" != game2 || "$HANDOVER" != 0 || "$GAME_FEC" != off ) ]];then
+  echo "natural Health90 requires Game2 two cohorts, no A2 or FEC" >&2;exit 2
+fi
 ROOT="$(realpath "${1:?fixed-build source directory}")"
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
@@ -210,19 +215,40 @@ for _ in {1..80};do
 done
 grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$LANES" "$TMP/A.log"
 send_udp "$NSB" "$IPB" "B_AFTER_A_STOP" 6 "$TMP/b_after.log"
+if [[ "$DEAD90" == 1 ]];then
+  # A really lost, B continuous native original Go TLS/Rust M4 traffic.
+  # Observe the existing Rust Health90 terminal state, never synthesize it.
+  dead_started="$(date +%s)"
+  dead_observed=0
+  for tick in {1..25};do
+    send_udp "$NSB" "$IPB" "BOB_CONTINUOUS_AFTER_A_LOSS_$tick" 1 "$TMP/b_after.log"
+    if grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=authenticated-rust-game-health90 remaining_flows=2' "$TMP/server.log";then
+      dead_observed=1;break
+    fi
+    sleep 5
+  done
+  [[ "$dead_observed" == 1 ]] || { echo "original Game M4 did not naturally retire dead A" >&2;exit 1; }
+  dead_elapsed="$(( $(date +%s) - dead_started ))"
+  ((dead_elapsed >= 85 && dead_elapsed <= 130)) || { echo "Health90 elapsed invalid: $dead_elapsed" >&2;exit 1; }
+  [[ "$(grep -c 'reason=authenticated-rust-game-health90' "$TMP/server.log")" -eq 1 ]] || { echo "sibling B retired or duplicate Health90" >&2;exit 1; }
+  send_udp "$NSB" "$IPB" "BOB_STILL_ALIVE_AFTER_A_HEALTH90" 4 "$TMP/b_after.log"
+  echo "M0_PLAN028_GAME2_AUTHENTICATED_HEALTH90_EXACT_GROUP_RETIRE_NATIVE_PASS one_lost_group=1 remaining_lanes=2 sibling_B_udp_survives=1 seconds=$dead_elapsed"
+fi
 if [[ "$HANDOVER" == 1 ]];then
   send_udp "$NSR" "$IPR" "A2_AFTER_OLD_A_STOP" 3 "$TMP/r_echo.log"
 fi
 sudo -n kill -TERM "$(cat "$TMP/bob.pid")"
 if [[ "$HANDOVER" == 1 ]];then sudo -n kill -TERM "$(cat "$TMP/alice.pid")";fi
 sudo -n kill -TERM "$(cat "$TMP/server.pid")"
+expected_server_close=2
+if [[ "$DEAD90" == 1 ]];then expected_server_close=1;fi
 for _ in {1..80};do
- if [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 2 ]] &&
+ if [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge "$expected_server_close" ]] &&
     grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log";then break;fi
  sleep .25
 done
 grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log"
-[[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq 2 ]]
+[[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq "$expected_server_close" ]]
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
 if [[ "$GAME_FEC" == fixed6 ]];then
   for who in A B R;do
@@ -239,4 +265,4 @@ assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
 print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
 PY
 fi
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0)"
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90"
