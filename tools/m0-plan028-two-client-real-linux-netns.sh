@@ -73,10 +73,10 @@ sudo -n ip netns exec "$NSS" bash -c "
 " >"$TMP/server.log" 2>&1 &
 S_PID=$!
 for _ in {1..40};do
-  if grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 capacity=32 shared_rust_tun=1' "$TMP/server.log";then break;fi
+  if grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1' "$TMP/server.log";then break;fi
   sleep .25
 done
-grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 capacity=32 shared_rust_tun=1' "$TMP/server.log" || {
+grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1' "$TMP/server.log" || {
   tail -40 "$TMP/server.log" >&2; exit 1;
 }
 sudo -n ip netns exec "$NSS" python3 -u -c '
