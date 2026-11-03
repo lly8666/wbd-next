@@ -534,8 +534,9 @@ jobs:
           done
           # Separate actual auto-lease cohort flow: 2 credential-distinct
           # Game2 groups (4 TLS lanes) on ONE server 443/ONE Rust TUN reader.
-          # SOURCE H1040: enforce both dynamic Game2/4 readiness markers,
-          # never grep a literal $LANES when receiving four real TLS lanes.
+          # SOURCE H1040: enforce dynamic Game2/4 readiness AND exact
+          # native Stop markers using actual $LANES; no literal Game2-only
+          # assertions in the two-cohort Game4 scenario.
           for mode in game2 game4; do
             WBD_PLAN028_GAME_MULTI_MODE="$mode" bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >"fixed-kernel-result/plan028-game-two-groups-$mode.log" 2>&1 || {
               tail -120 "fixed-kernel-result/plan028-game-two-groups-$mode.log" >&2
