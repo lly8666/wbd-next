@@ -19,7 +19,7 @@
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
       "goal": "PLAN028 user-activated 2026-11-03. H1000 entry/dependency audit complete; no PLAN028 product code, native qualification or session/path-switch PASS yet. Implement docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md: authenticated single-port per-device sessions, protected per-client config/IP and outer-MTU, seven-mode A->A+B->B, genuine Windows/Linux route notification and new-path reauth. Reuse docs/architecture/MTU_CONTRACT.md Rust budget and exact PLAN027A H998 scoped evidence; retain H995 physical online 1500->1280 FAIL. Do not restart 027/027A Actions.",
-      "done_when": "On explicit new-agent launch of PLAN028: true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. Existing PLAN027A source-accepted H998 closeout is not rewritten as unqualified PASS.",
+      "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
     {

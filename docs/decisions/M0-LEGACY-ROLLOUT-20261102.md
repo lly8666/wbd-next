@@ -1,6 +1,6 @@
 # 老功能产品化接续｜PLAN028–030总入口
 
-2026-11-02用户授权准备后续方案，**本页028–030仅PLANNED，不切换当前registry任务（目前PLAN027A），不dispatch产品测试**。PLAN027已限定范围收口，历史NOT_RUN不重开旧矩阵。实际开工由用户调用对应M0提示词或按完整序列授权推进；届时M0在现有registry/cursor记录当前包，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
+2026-11-02最初仅批准准备028–030方案、当时未启动。**当前状态以最新registry/cursor为准：2026-11-03用户已明确启动PLAN028（IN_PROGRESS，无需再次授权），PLAN029/030尚未由本次启动自动授权施工。**PLAN027及027A均已限定范围收口，历史NOT_RUN不重开旧矩阵。028使用现有M0 registry/cursor记录真实施工进度，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
 
 ## 1. 三包与依赖
 
