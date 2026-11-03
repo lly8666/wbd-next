@@ -1,0 +1,3 @@
+# H991 governance evidence field repair
+
+H990 orchestrator Action 41554842970 PASS after all eleven independent H990 native actions dispatched. H990 governance Action 41554843017 FAIL (structure and Feature catalog downstream) because the new preliminary H990 evidence had `product_source` but no canonical `source_sha` matching M0 `last_tested_source`. H991 adds the identical exact original H986 product SHA in the required field; source, testcase, native build reuse, test results and qualification states are unchanged. This repair is committed after the H990 orchestrator completed so no child dispatch is interrupted by main moving. The H990 test Action outcomes are not yet claimed PASS; their original exact fixture SHA stays b03332b9886ed2321b8711b149bc8e78325b797d.

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 990,
-  "checkpoint_sha": "2c23983857818a0f372bd1795202b7ca2ce0ad22",
+  "sequence": 991,
+  "checkpoint_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H990 one-source 11 native test cases: genuine full UDP DF0 1728/4096/65507, DF1, TCP64K, missing modes/MTU1280/1500 and adaptive",
-  "why_now": "User ordered all remaining tests at once; original H986 signed binary build reusable and H987 successful stages must not be repeated",
+  "current_task": "H991 repair evidence source field while preserving exact H990 eleven independent source-locked native runs",
+  "why_now": "H990 governance structure requires evidence.source_sha to match cursor.last_tested_source; raw H990 preliminary evidence only carried product_source",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H990 dispatcher exact source, eleven independent child run IDs and outcomes; inspect genuine failures. Dynamic live PMTU and user-state ICMP remain not tested by available native harness, do not close 027A or start 028 prematurely.",
+  "next_action": "Collect all 11 H990 Action IDs/outcomes at original fixture SHA; read OS/mode/size/Stop evidence. New in-place PMTU/ICMP still NOT_RUN unless genuine owner integration becomes available.",
   "unverified": true,
   "last_tested_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
     "docs/evidence/M0/PLAN027A-H987-GOV-REPAIR-H986-REUSE-20261103.json",
     "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H988-SOURCE-EXACT-NATIVE-RECEIPTS.md",
     "docs/devlog/M0/20261103-PLAN027A-H989-FEATURE-CARD-BOUND.md",
     "docs/evidence/M0/PLAN027A-H990-REMAINING-QUEUED-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H990-ALL-REMAINING-NATIVE.md",
+    "docs/devlog/M0/20261103-PLAN027A-H991-EVIDENCE-SOURCE-FIELD.md",
     "docs/architecture/MTU_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H987 three existing native Windows/WSL PASS preserved. H990 11 remaining independent test sources prepared; real DF0 4096/65507 and TCP64K added. All new native results NOT_RUN at authoring. In-place PMTU and ICMP Type3/4 still not measured."
+  "partial_summary": "H990 source-locked 11 independent original Windows/WSL2 Actions dispatched, orchestrator Action 41554842970 success; native results still RUNNING. H991 fixes source field required by governance, not any product/fixture; original product source H986. Prior H987 PASS unchanged."
 }

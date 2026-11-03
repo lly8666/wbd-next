@@ -77,5 +77,6 @@
     "same-VM causal A/B CPU and RSS for current source",
     "physical WAN/IPv6/unsupported 9k"
   ],
-  "exit_decision": "IN_PROGRESS_UNTIL_EACH_ACTION_COLLECTED"
+  "exit_decision": "IN_PROGRESS_UNTIL_EACH_ACTION_COLLECTED",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238"
 }
