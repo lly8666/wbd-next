@@ -15,7 +15,6 @@
   "unverified": true,
   "last_tested_source": "ce9c128e712024164e586e89a76b395579370e78",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1029-SOURCEFA32-NATIVE-20261103.json",
     "docs/evidence/M0/PLAN028-H1034-2S-PHYSICAL-IP-SOURCECE9C-20261103.json"
   ],
   "context_refs": [
