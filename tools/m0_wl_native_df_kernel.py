@@ -3,6 +3,8 @@ import errno,json,os,pathlib,socket,sys,time,threading
 SIZE=1728
 PROBE_SIZES=(1728,4096,65507)
 PORT=45909
+TCP_PORT=45902
+DF0_SMALL_ATTEMPTS=3
 
 def payload(ip,size=SIZE):
     if type(size) is not int or not 64<=size<=65507:
@@ -36,7 +38,7 @@ def stage_barrier(gate,label,timeout_s=12):
 def tcp64k(local,remote,gate):
     listen=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     listen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-    listen.bind((local,45910));listen.listen(1);listen.settimeout(10)
+    listen.bind((local,TCP_PORT));listen.listen(1);listen.settimeout(10)
     issues=[];received=[]
     def serve():
         try:
@@ -59,7 +61,7 @@ def tcp64k(local,remote,gate):
         outbound=payload(local,65507)+bytes(29)
         until=time.monotonic()+5;conn=None
         while time.monotonic()<until:
-            try:conn=socket.create_connection((remote,45910),timeout=1)
+            try:conn=socket.create_connection((remote,TCP_PORT),timeout=1)
             except (OSError,TimeoutError):time.sleep(.05)
             else:break
         if conn is None:raise RuntimeError("TCP64 real peer connect timeout")
@@ -93,8 +95,11 @@ def main():
         for n in PROBE_SIZES:
             try:
                 stage_barrier(gate,"df0-"+str(n),12)
-                if s.sendto(payload(local,n),(remote,PORT))!=n:
-                    raise RuntimeError("short native DF0 send")
+                sends=DF0_SMALL_ATTEMPTS if n==1728 else 1
+                for _ in range(sends):
+                    if s.sendto(payload(local,n),(remote,PORT))!=n:
+                        raise RuntimeError("short native DF0 send")
+                    if sends>1:time.sleep(.12)
                 expected=payload(remote,n)
                 until=time.monotonic()+7;ok=False
                 while time.monotonic()<until:

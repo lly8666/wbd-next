@@ -57,4 +57,4 @@ jobs:
           normal|default1460|scenarios/plan027a-h958-normal-1460-5m-df-60s.json
           normal|1280|
           CASES
-          echo H992_ONLY_TWO_ORIGINAL_FAILURES_REDISPATCHED
+          echo H994_ONLY_TWO_REMAINING_ORIGINAL_FAILURES_REDISPATCHED_WITH_SOURCE_FIXES

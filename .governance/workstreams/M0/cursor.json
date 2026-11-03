@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 993,
-  "checkpoint_sha": "f205d750f075f6ea08f7c3fdde9897bc56b39f17",
+  "sequence": 994,
+  "checkpoint_sha": "a5a7cbe12a0329091e30924663e99769b7aed5d1",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H993 repair H992 retry workflow colon quoting; re-dispatch exactly failed Normal1280 and extended DF scene with unchanged products",
-  "why_now": "GitHub rejected H992 retry YAML before jobs due unquoted colon in a step name; H990 nine original successful native cases remain intact",
+  "current_task": "H994 confirmed true both-OS 4096/65507 DF0 complete reassembly plus all DF1 errors; retry bounded 1728, TCP64 and symmetric Linux/Windows new-session outer1280",
+  "why_now": "H993 all real native per-side logs show jumbo fragments successful but 1728 single loss, test port45910 not authorized, and Linux outer flag missing1280",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H993 workflow (two-failure retry); collect exact two child Actions and diagnose per-side df logs. Full dynamic PMTU and ICMP3/4 remain untested.",
+  "next_action": "Collect H994 two only source-locked independent native child Actions and report exact size, MSS/OS, TCP64 and Stop. In-place PMTU and real ICMP3/4 are separate untested requirements.",
   "unverified": true,
   "last_tested_source": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027A-H992-H990-11-NATIVE-COLLECT-20261103.json"
+    "docs/evidence/M0/PLAN027A-H994-H993-PER-SIZE-NATIVE-DIAG-20261103.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json",
@@ -23,10 +23,10 @@
     "docs/evidence/M0/PLAN027A-H992-H990-11-NATIVE-COLLECT-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H992-REPAIR-TWO-NATIVE-FAILURES.md",
     "docs/devlog/M0/20261103-PLAN027A-H993-RETRY-WORKFLOW-QUOTING.md",
-    "docs/architecture/MTU_CONTRACT.md",
-    "docs/devlog/M0/20261103-PLAN027A-H991-EVIDENCE-SOURCE-FIELD.md",
-    "docs/devlog/M0/20261103-PLAN027A-H989-FEATURE-CARD-BOUND.md"
+    "docs/evidence/M0/PLAN027A-H994-H993-PER-SIZE-NATIVE-DIAG-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H994-TRUE-SIZE-AND-OUTER-REPAIR.md",
+    "docs/architecture/MTU_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H990 9 current original native PASS and 2 original failures preserved. H992 fixed the source-only failure causes but H992 retry dispatch had invalid YAML step name and no jobs; H993 repairs syntax only. Product SOURCE unchanged."
+  "partial_summary": "H990 nine true native scopes PASS. H993 DF 4096/65507 complete reassembly both OS and all DF1 EMSGSIZE, original 1728 Linux success/Windows first miss and TCP64 test-only port blocked. Normal1280 was Linux peer test argument default mismatch. H994 retest only these; no product changes."
 }

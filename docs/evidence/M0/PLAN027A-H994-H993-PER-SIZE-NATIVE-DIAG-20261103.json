@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "harness_sha": "a5a7cbe12a0329091e30924663e99769b7aed5d1",
+  "status": "PARTIAL_NATIVE_FRAGMENT_SIZES_PASS_BUT_TWO_ACTIONS_FAIL",
+  "cases": [
+    {
+      "run": 41556515001,
+      "mode": "normal",
+      "outer": 1460,
+      "overall": "FAIL",
+      "native_windows": {
+        "df0_1728": "FAIL_SINGLE_ONE_SHOT",
+        "df0_4096": "REAL_FULL_BYTE_EXACT",
+        "df0_65507": "REAL_FULL_BYTE_EXACT",
+        "df1_1728_4096_65507": "EMSGSIZE_10040",
+        "tcp64k": "FAIL_TEST_PORT_45910_NOT_EXISTING_45902"
+      },
+      "native_linux": {
+        "df0_1728": "REAL_FULL_BYTE_EXACT",
+        "df0_4096": "REAL_FULL_BYTE_EXACT",
+        "df0_65507": "REAL_FULL_BYTE_EXACT",
+        "df1_1728_4096_65507": "EMSGSIZE_90",
+        "tcp64k": "FAIL_PEER_CONNECT"
+      },
+      "fragmentation_user_acceptance": "PASS_4096_65507_ON_BOTH_REAL_OS_ONE_COMPLETE_DATAGRAM_EACH"
+    },
+    {
+      "run": 41556523338,
+      "mode": "normal",
+      "outer": 1280,
+      "overall": "FAIL",
+      "cause": "H993 Python MSS verifier accepts 1280, but true Linux original-Go CLI launched without --outer-mtu 1280, so server remained default1460; not proof product cannot process1280"
+    }
+  ],
+  "source_only_fix_H994": [
+    "bounded three 1728 DF0 original datagrams per OS; at least one full exact reconstruction satisfies user non-loss-rate requirement",
+    "TCP64K original Windows kernel firewall allowed port45902, not new45910; reuse same port after prior separate TCP smoke Stop",
+    "Linux normal configured1280 explicitly passes matching --outer-mtu1280 to the original peer instead of incorrectly assuming its default1460 matches Windows1280"
+  ],
+  "already_PASS_other_H990_9": [
+    41554882448,
+    41554892070,
+    41554905507,
+    41554912671,
+    41554928445,
+    41554935893,
+    41554944208,
+    41554953134,
+    41554960288
+  ],
+  "outstanding": "H994 exact 2 scoped native reruns NOT_RUN_AT_COMMIT; in-place PMTU and remote ICMP3/4 remain separate NOT_RUN",
+  "no_inference": "No 100% fragmentation delivery ratio promised; each complete 4096/65507 datagram was identical on both Windows/Linux original sockets."
+}
