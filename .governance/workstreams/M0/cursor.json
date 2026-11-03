@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 999,
-  "checkpoint_sha": "8219ce5c7fd2ec1499301dc5abbe9abaa12bf114",
-  "progress": "planned",
+  "sequence": 1000,
+  "checkpoint_sha": "ea3b97a973defc8727d12e6ec81937d7877c0abf",
+  "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H999 H998 PLAN027A scoped closure preserved; compact oversized feature-card JSON to pass 16KiB catalog guard; PLAN028 PLANNED NOT_STARTED",
-  "why_now": "H998 repo governance PASS but feature catalog JSON UTF-8 card crossed 16KiB; formatting-only change, no new native test",
+  "current_task": "H1000 PLAN028 explicit user start; scoped H998 preserved; audited current Go V4 admission/port/route-key/lifecycle and assembly boundary; no product changes",
+  "why_now": "User explicitly invoked M0-PLAN028 after H998; H999 governance recovered at ea3b97a and Action 41566715536 success",
   "done_when": "On explicit new-agent launch of PLAN028: true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. Existing PLAN027A source-accepted H998 closeout is not rewritten as unqualified PASS.",
-  "next_action": "New agent starts PLAN028 upon user invocation; no further PLAN027A reruns. Check the H999 governance/catalog result and read PLAN027A H998 handoff.",
+  "next_action": "Implement as one cohesive Go TLS + Rust owner + Windows/Linux OS batch, beginning with versioned authenticated session/config/endpoint/snapshot and true per-device ownership. Existing one-owner/server and per-lane Game ports must be replaced, not papered over; after source freeze run build once and source-locked native Action scenarios. H1000 is audit only.",
   "unverified": true,
   "last_tested_source": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1000-ENTRY-DEPENDENCY-AUDIT-20261103.json",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "AGENTS.md",
+    "docs/prompts/M0.md",
     "docs/prompts/M0-PLAN028.md",
-    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H998-USER-SCOPED-CLOSEOUT-PLAN028-HANDOFF.md",
-    "docs/devlog/M0/20261103-PLAN027A-H999-FEATURE-CARD-BOUNDED-REPAIR.md",
     "docs/architecture/MTU_CONTRACT.md",
-    "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md"
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
+    "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
+    "docs/devlog/M0/20261103-PLAN028-H1000-ENTRY-DEPENDENCIES.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027A user-accepted H998 scoped closeout unchanged. H999 corrects only UTF8 card size JSON whitespace and awaits catalog status. PLAN028 reserved PLANNED, NOT_STARTED; H995 physical midflight MTU FAIL and H997 ARM64 Game FEC Action FAIL preserved in H998 evidence."
+  "partial_summary": "PLAN028 now authorized/in progress. H1000 contains real code-path audit, no product code or new test. Server one-owner and Game multi-port, strict epoch lane conflict, pre-TLS HMAC route-key, common TUN MTU and dead90-only current cold retry are the concrete integration gaps. Existing H998 scoped fail/not measured retained."
 }

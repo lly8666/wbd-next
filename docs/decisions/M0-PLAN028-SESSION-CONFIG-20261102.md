@@ -1,6 +1,6 @@
 # PLAN028｜简化认证、单端口多客户端与配置接线
 
-PLANNED。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)及当前M0 cursor，复用PLAN027限定收口及PLAN027A的精确源码资格；旧范围外NOT_RUN不因此重开027。本包补会话/配置接线和网络切换恢复，不优化FEC/重传算法，不更换已验证的TLS建链/AEAD实现。入口提示词：[M0-PLAN028](../prompts/M0-PLAN028.md)。
+IN_PROGRESS（2026-11-03用户明确启动；H1000仅依赖审计、无产品SOURCE测试）。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)及当前M0 cursor，复用PLAN027限定收口及PLAN027A的精确源码资格；旧范围外NOT_RUN不因此重开027。本包补会话/配置接线和网络切换恢复，不优化FEC/重传算法，不更换已验证的TLS建链/AEAD实现。入口提示词：[M0-PLAN028](../prompts/M0-PLAN028.md)。
 
 ## 1. 对用户的行为
 

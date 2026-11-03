@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1000",
+  "status": "ENTRY_DEPENDENCY_AUDIT_ONLY",
+  "authorization": "EXPLICIT_USER_NEW_AGENT_INVOCATION_2026-11-03",
+  "base_main_sha": "ea3b97a973defc8727d12e6ec81937d7877c0abf",
+  "prior_checkpoint": "8219ce5c7fd2ec1499301dc5abbe9abaa12bf114",
+  "prior_h999_governance": {
+    "run": 41566715536,
+    "conclusion": "success",
+    "head_sha": "ea3b97a973defc8727d12e6ec81937d7877c0abf"
+  },
+  "in_flight_actions_checked": "NONE_IN_RECENT_MAIN_ACTIONS",
+  "new_actions_dispatched": 0,
+  "product_source_changed": false,
+  "product_build": "NOT_RUN",
+  "native_business_tests": "NOT_RUN",
+  "all_PLAN028_exit_gates": "NOT_QUALIFIED",
+  "h998_preserved": {
+    "scoped_acceptance": "USER_ACCEPTED",
+    "live_physical_mtu_change": "FAIL_0_OF_3_SMALL_BUSINESS_REPLIES",
+    "arm64_game4_fec": "ACTION_FAIL_WITH_FUNCTIONAL_LOGS",
+    "remote_icmp_type3_code4": "NOT_MEASURED",
+    "cpu_algorithm_causality": "NOT_PROVEN"
+  },
+  "audit": [
+    {
+      "file": "r0/go_overlay/internal/v4productcli/linux.go",
+      "lines": "443-550,674-774,829-949",
+      "finding": "Normal server builds a single V4LinuxServerProduct and accepts one authenticated peer; client reauth requires Rust-authenticated dead and Stop before new generation; this is not concurrent per-client accept or new path fast takeover."
+    },
+    {
+      "file": "r0/go_overlay/internal/v4productcli/game_linux.go",
+      "lines": "19-23,68-143,189-308",
+      "finding": "Game2/4 uses per-lane local and peer FakeTCP ports plus single grouped product; currently fails PLAN028 one-server-port requirement."
+    },
+    {
+      "file": "r0/go_overlay/internal/realityfront/admission_v4.go",
+      "lines": "240-312,497-624",
+      "finding": "Epoch identity is username+tunnelID; prepare rejects active same-lane overlap; release keyed only by epoch/lane. Must not just remove check without generation-fenced retirement and authenticated per-device takeover."
+    },
+    {
+      "file": "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+      "lines": "44-165",
+      "finding": "One product, owner and session. Its ConfigureTunnelMTU callback is process-TUN scoped; cannot apply independent client inner MTUs to shared server TUN."
+    },
+    {
+      "file": "r0/go_overlay/internal/v4productcli/linux.go",
+      "lines": "101-229,743-745,846-854",
+      "finding": "Public CLI requires route key/tunnel ID and server validates single fixed tunnel ID; AutoLease/InstallationID request fields exist in TLS protocol but are not wired to this public CLI."
+    },
+    {
+      "file": "lly8666/wobuzhidao/internal/realityfront/hello.go@a7a82db31fe736ffedee330795a3234d358f1984",
+      "lines": "18-99",
+      "finding": "Pre-TLS ClientHello recognized marker is HMAC(routeKey, random, SNI). Account/password arrive only later under TLS. Removing route-key input without a provisioning/versioned handshake solution would break marker recognition/authentication."
+    },
+    {
+      "file": "lly8666/wobuzhidao/internal/logicaltunnel/lease_registry.go@a7a82db31fe736ffedee330795a3234d358f1984",
+      "lines": "1-114",
+      "finding": "Reusable 7-day memory-only install-bound lease implementation exists. Active lease protection and derived tunnel ID are available; do not duplicate."
+    },
+    {
+      "file": "r0/go_overlay/assembly/assemble.py and r0/go_overlay/assembly/manifest*.json",
+      "lines": "whole assembly boundary",
+      "finding": "Code is overlay over pinned original Go; new replacements/creates need exact manifest hashes and native bundle copy paths, otherwise test-only code can be mistaken for shipped product."
+    }
+  ],
+  "performance_test_sizing": {
+    "normal_mbps_each_direction": "5-10",
+    "normal_default_inner_mtu": 1389,
+    "normal_approx_full_inner_packets_per_second": "450-900",
+    "game_logical_mbps": 3,
+    "game4_fec_default_inner_mtu": 1358,
+    "game4_logical_packets_per_second_approx": 276,
+    "game4_lane_copies_per_second_before_parity_approx": 1105,
+    "note": "Order-of-magnitude first-pass sizing, not observed measurement; do not conflate lane copies with delivered logical traffic."
+  },
+  "next_validation": "One source build after complete code/config/callsite batch; real same-port multi-client, seven modes lane replacement, desktop native physical route events, path MTU, owned Stop; separate timestamps/CPU/p99; Android NOT_RUN."
+}
