@@ -163,63 +163,113 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
     }
     return nil
 }
-// AcceptServerGame consumes already established real Go FakeTCP associations.
-// The only accepted original TLS request matches the same exact group lane
-// policy; a rogue independently authenticated V4 Normal lane cannot join.
+// The n original Go FakeTCP associations can arrive in ANY SYN order. The
+// client's protected TLS runs lane1..laneN sequentially, so processing the
+// server TLS in SYN arrival order can deadlock and wrongly bind lane IDs.
+// Admit all n finite cold flows concurrently, then sort by verified TLS lane.
+// No Go steady-state packet reader, new transport or wire field is created.
 func (p *V4LinuxGameProduct) AcceptServerGame(
     ctx context.Context,associations []*faketcp.ServerAssociation,
     base ServerAdmissionConfig,
 )error{
-    if p==nil||!p.server{return ErrAdmissionParams}
+    if p==nil||!p.server||ctx==nil{return ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()
     n:=len(associations)
     if p.stopped||p.connected||len(p.bridges)!=0||(n!=2&&n!=4){
         return ErrAdmissionUnsupported
     }
-    for i,a:=range associations{
+    seen:=make(map[*faketcp.ServerAssociation]struct{},n)
+    for _,a:=range associations{
         if a==nil{return errors.Join(ErrAdmissionParams,p.abortLocked())}
-        id:=uint8(i+1)
-        cfg:=base
-        allow:=base.PolicyAllow
-        validate:=base.ValidateRequest
-        cfg.PolicyAllow=func(policy AdmissionPolicy)error{
-            if !validGameGroupPolicy(policy,n){return ErrAdmissionUnsupported}
-            if allow!=nil{return allow(policy)}
-            return nil
+        if _,ok:=seen[a];ok{return errors.Join(ErrAdmissionParams,p.abortLocked())}
+        seen[a]=struct{}{}
+    }
+    allow:=base.PolicyAllow
+    validate:=base.ValidateRequest
+    protectedPolicy:=func(policy AdmissionPolicy)error{
+        if !validGameGroupPolicy(policy,n){return ErrAdmissionUnsupported}
+        if allow!=nil{return allow(policy)}
+        return nil
+    }
+    protectedRequest:=func(req AdmissionRequest)error{
+        // Invoked only AFTER credential-checked TLS inside EstablishServerV4.
+        // TCP SYN arrival position is never an authentication authority.
+        if err:=v4ServerGameProtectedLaneRequest(req,n);err!=nil{return err}
+        if validate!=nil{return validate(req)}
+        return nil
+    }
+    type admission struct{
+        session *V4ServerSession
+        bridge *v4EmbeddedNativeBridge
+        peerMSS uint16
+        err error
+    }
+    replies:=make(chan admission,n)
+    coldCtx,cancel:=context.WithCancel(ctx)
+    defer cancel()
+    for _,assoc:=range associations{
+        go func(a *faketcp.ServerAssociation){
+            cfg:=base
+            cfg.PolicyAllow=protectedPolicy
+            cfg.ValidateRequest=protectedRequest
+            bridge:=&v4EmbeddedNativeBridge{}
+            gameFec:=uint8(0)
+            if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
+            session,err:=EstablishServerV4(coldCtx,a,cfg,V4ServerOptions{
+                DataPlaneReady:true,Epochs:p.cfg.Epochs,
+                ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
+                Authenticate:p.cfg.Authenticate,
+            })
+            replies<-admission{session:session,bridge:bridge,
+                peerMSS:a.PeerTCPProfile().MSS,err:err}
+        }(assoc)
+    }
+    peerMSS:=make([]uint16,0,n)
+    var tlsErr error
+    // Wait for EVERY cold task before a failed group's native Stop.
+    // An in-flight TLS must not publish a Rust owner after cleanup.
+    for i:=0;i<n;i++{
+        accepted:=<-replies
+        if accepted.err!=nil&&tlsErr==nil{
+            tlsErr=accepted.err
+            cancel()
         }
-        cfg.ValidateRequest=func(req AdmissionRequest)error{
-            if req.LaneID!=id||req.DesiredLanes!=uint8(n){
-                return ErrAdmissionUnsupported
-            }
-            if validate!=nil{return validate(req)}
-            return nil
+        if accepted.session!=nil{
+            p.serverSessions=append(p.serverSessions,accepted.session)
+            p.bridges=append(p.bridges,accepted.bridge)
+            peerMSS=append(peerMSS,accepted.peerMSS)
         }
-        bridge:=&v4EmbeddedNativeBridge{}
-        gameFec:=uint8(0)
-        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
-        session,e:=EstablishServerV4(ctx,a,cfg,V4ServerOptions{
-            DataPlaneReady:true,Epochs:p.cfg.Epochs,
-            ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
-            Authenticate:p.cfg.Authenticate,
-        })
-        if e!=nil{return errors.Join(e,p.abortLocked())}
-        p.serverSessions=append(p.serverSessions,session)
-        p.bridges=append(p.bridges,bridge)
-        // Every Game lane is its own real original-Go protected TLS owner,
-        // but all lanes must carry the SAME account/device effective IPv4.
-        // Rust's group join independently rechecks that immutable equality.
+    }
+    if tlsErr!=nil{return errors.Join(tlsErr,p.abortLocked())}
+    // Enforce account/tunnel/epoch/policy, distinct per-lane exporter keys,
+    // and complete 1..n lane set BEFORE any shared-TUN MTU or lease writes.
+    order,err:=v4GameServerTLSArrivalOrder(p.serverSessions)
+    if err!=nil{return errors.Join(err,p.abortLocked())}
+    sessions:=make([]*V4ServerSession,n)
+    bridges:=make([]*v4EmbeddedNativeBridge,n)
+    mss:=make([]uint16,n)
+    for lane,arrival:=range order{
+        sessions[lane]=p.serverSessions[arrival]
+        bridges[lane]=p.bridges[arrival]
+        mss[lane]=peerMSS[arrival]
+    }
+    p.serverSessions=sessions
+    p.bridges=bridges
+    for i,session:=range p.serverSessions{
         assigned,leaseErr:=session.AuthenticatedLeaseIPv4()
         if leaseErr!=nil{return errors.Join(leaseErr,p.abortLocked())}
         if assigned!=""{
-            if leaseErr=bridge.bindAuthenticatedClientIPv4(assigned);leaseErr!=nil{
+            if leaseErr=p.bridges[i].bindAuthenticatedClientIPv4(assigned);leaseErr!=nil{
                 return errors.Join(leaseErr,p.abortLocked())
             }
         }
-        if p.cfg.ConfigureTunnelMTU!=nil {
-            cold,err:=session.ColdSnapshot()
-            if err!=nil{return errors.Join(err,p.abortLocked())}
+        if p.cfg.ConfigureTunnelMTU!=nil{
+            cold,e:=session.ColdSnapshot()
+            if e!=nil{return errors.Join(e,p.abortLocked())}
             cl,sl:=cold.RecordLimits()
-            if err=p.cfg.ConfigureTunnelMTU(a.PeerTCPProfile().MSS,cl,sl);err!=nil{return errors.Join(err,p.abortLocked())}
+            if e=p.cfg.ConfigureTunnelMTU(mss[i],cl,sl);e!=nil{
+                return errors.Join(e,p.abortLocked())
+            }
         }
     }
     if err:=p.commitGroupedOwnerLocked();err!=nil{

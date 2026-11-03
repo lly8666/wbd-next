@@ -32,6 +32,22 @@ func TestM0V4OriginalTLSGame2And4AuthenticatedColdSet(t *testing.T){
             // allocators originate from independent original TLS exporters.
             clients[0],clients[n-1]=clients[n-1],clients[0]
             servers[0],servers[n-1]=servers[n-1],servers[0]
+            // Server SYN arrival order can be [laneN,2,3,lane1].
+            // Only protected TLS readback may choose the Rust lane slot.
+            order,orderErr:=v4GameServerTLSArrivalOrder(servers)
+            if orderErr!=nil||len(order)!=n{
+                t.Fatalf("ordered authenticated server lanes: %v %v",order,orderErr)
+            }
+            for lane,arrival:=range order{
+                snap,snapErr:=servers[arrival].ColdSnapshot()
+                if snapErr!=nil||snap.LaneID()!=uint8(lane+1){
+                    t.Fatalf("SYN completion order affected TLS lane%d: arrival=%d snapshot=%v error=%v",
+                        lane+1,arrival,snap.LaneID(),snapErr)
+                }
+            }
+            if order[0]!=n-1||order[n-1]!=0{
+                t.Fatalf("unordered original TLS server lanes did not canonicalize: %v",order)
+            }
             send,err:=v4OriginalGameServerColdSet(servers...)
             if err!=nil{t.Fatalf("server cold set: %v",err)}
             recv,err:=v4OriginalGameClientColdSet(clients...)
@@ -115,5 +131,34 @@ func TestM0V4OriginalTLSGame2And4AuthenticatedColdSet(t *testing.T){
             }
             t.Logf("M0_ORIGINAL_GO_TLS_GAME_AUTHENTICATED_COLD_SET_PASS lanes=%d independent_exporter_keys=1 original_TLS=1 mixed_features_denied=1 post_TLS_mutation_denied=1 INDEPENDENT_M4_RAW_KERNEL_FIRST_APP_NOT_RUN=1 GAME_PRODUCTION_OFF=1",n)
         })
+    }
+}
+
+
+func TestPLAN028GameServerProtectedLaneNotSYNPosition(t *testing.T){
+    for _,n:=range []int{2,4}{
+        for lane:=1;lane<=n;lane++{
+            // Any authenticated lane is valid regardless of which Go TCP
+            // association arrived first; the whole TLS group later verifies
+            // uniqueness, identical principal and independent Rust keys.
+            req:=AdmissionRequest{LaneID:uint8(lane),DesiredLanes:uint8(n)}
+            if err:=v4ServerGameProtectedLaneRequest(req,n);err!=nil{
+                t.Fatalf("authenticated Game%d lane%d rejected: %v",n,lane,err)
+            }
+        }
+        for _,lane:=range []uint8{0,uint8(n+1)}{
+            req:=AdmissionRequest{LaneID:lane,DesiredLanes:uint8(n)}
+            if err:=v4ServerGameProtectedLaneRequest(req,n);err==nil{
+                t.Fatalf("Game%d out-of-range lane%d admitted",n,lane)
+            }
+        }
+        if err:=v4ServerGameProtectedLaneRequest(AdmissionRequest{
+            LaneID:1,DesiredLanes:uint8(n/2),
+        },n);err==nil{
+            t.Fatalf("Game%d mismatched desired lanes admitted",n)
+        }
+    }
+    if err:=v4ServerGameProtectedLaneRequest(AdmissionRequest{LaneID:1,DesiredLanes:3},3);err==nil{
+        t.Fatal("Game3 unsupported protected lane count admitted")
     }
 }

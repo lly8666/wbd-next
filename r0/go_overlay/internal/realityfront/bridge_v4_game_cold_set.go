@@ -51,6 +51,32 @@ func v4CheckAuthenticatedGameLanes(
     return append([]V4ColdSessionSnapshot(nil),ordered[:n]...),nil
 }
 
+// The protected request's lane is trusted only inside EstablishServerV4
+// after original TLS credentials. A Game connection's raw source port,
+// SYN arrival index and collection index are NOT lane identities.
+func v4ServerGameProtectedLaneRequest(req AdmissionRequest,n int)error{
+    if (n!=2&&n!=4)||req.LaneID==0||int(req.LaneID)>n||
+        req.DesiredLanes!=uint8(n){return ErrAdmissionUnsupported}
+    return nil
+}
+
+// Map async protected-TLS completion indices back to immutable 1..n lanes.
+// The original TLS snapshot verifier also enforces a single principal,
+// tunnel, epoch, cipher, limits and independent exporter keys. Never install
+// per-lane M4/bind network before this complete set has been verified.
+func v4GameServerTLSArrivalOrder(sessions []*V4ServerSession)([]int,error){
+    if _,err:=v4OriginalGameServerColdSet(sessions...);err!=nil{
+        return nil,err
+    }
+    order:=make([]int,len(sessions))
+    for arrival,s:=range sessions{
+        cold,err:=s.ColdSnapshot()
+        if err!=nil{return nil,err}
+        order[int(cold.LaneID())-1]=arrival
+    }
+    return order,nil
+}
+
 func v4OriginalGameClientColdSet(
     sessions ...*V4ClientSession,
 )([]V4ColdSessionSnapshot,error){
