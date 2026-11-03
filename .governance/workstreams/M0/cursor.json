@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1009,
-  "checkpoint_sha": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
+  "sequence": 1010,
+  "checkpoint_sha": "8f14af9fa50f2f03b05182b8975d1b04fc3bd572",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1009 correct Game feature card 16KiB bound without losing historic verification; SOURCE207 Game one-port ongoing native checks",
-  "why_now": "SOURCE207 Action 41576418478 Governance PASS, Feature Catalog FAIL because Game card exceeded 16KiB; compact exact content only",
+  "current_task": "H1010 repair source207 one-server-port Game2/4 native weak-lane fixture scoped drop: exact five-tuple, original action failed because port-only drop blackholed all lanes",
+  "why_now": "Action 41576418459 genuine native Game2 FAIL; both original TLS/Rust native owners Ready and Stop, but harness --dport 443 and --sport443 dropped all shared-port Game lanes instead of only lane1",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect exact 207 source-locked BPF test/Go Linux CLI build and native Game2/4 in Actions, no green UNWIRED fake promotion; if native test not dispatched by automation, use existing scene workflow without duplicating. Then proceed Rust shared per-device TUN owner and IPv4/5-tuple route, A+B and OS notifications.",
+  "next_action": "Collect H1010 fixture-corrected native Game2/4 original Go protected TLS/Rust real first app and Stop exact SOURCE Actions. Do not report PASS from prior Action 41576418458 (product=NOT_RUN). Continue actual multi-device Rust shared TUN/one-server-port beyond a single Game group; seven modes and OS path switch remain.",
   "unverified": true,
-  "last_tested_source": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
+  "last_tested_source": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1008-SOURCE837-PROTECTED-MULTIDEVICE-20261103.json"
+    "docs/evidence/M0/PLAN028-H1010-GAME-SHARED-PORT-DAMAGED-LANE-TEST-HARNESS-FAIL-SOURCE207-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1009-FEATURE-CARD-BOUNDS.md",
+    "docs/devlog/M0/20261103-PLAN028-H1010-GAME-NATIVE-HARNESS-5TUPLE.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN028 H1007 SOURCE837 Go original protected multiaccount/auto-IP 21 TLS PASS and Go Linux CLI test PASS. H1008 SOURCE207 Game2/4 actual one external port client/server and kernel union BPF candidate; native product NOT_RUN until exact Actions. H1009 fixes feature-card-size gate only."
+  "partial_summary": "PLAN028 H1007 SOURCE837 protected Go multi-device cold TLS21/21 PASS; CLI config Go unit+Linux build PASS. H1008 SOURCE207 single-server-port Game source+kernel exact BPF passed compile/Ready/Stop but native damaged-lane business Action FAIL because test harness dropped *all* shared-port lanes. H1010 fixes fixture to first lane exact 41031↔443 only; pending real requalification. H998 historical failures kept."
 }

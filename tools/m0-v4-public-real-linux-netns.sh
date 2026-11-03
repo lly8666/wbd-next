@@ -144,8 +144,11 @@ if [[ "$GAME" != 0 ]];then
   # After true Go TLS and Rust M4 device readiness, break exactly the
   # FIRST Game's original TCP carrier in both directions. The second
   # logical UDP app still must arrive over a healthy independent lane.
-  sudo -n ip netns exec "$NSC" iptables -I OUTPUT 1 -p tcp --dport 443 -j DROP
-  sudo -n ip netns exec "$NSS" iptables -I OUTPUT 1 -p tcp --sport 443 -j DROP
+  # PLAN028: all lanes now share server port 443; the first lane is
+  # (client source=41031, server dest=443), so dport 443 alone would drop
+  # EVERY lane and falsely report a native Game failure. Bind both ports.
+  sudo -n ip netns exec "$NSC" iptables -I OUTPUT 1 -p tcp --sport 41031 --dport 443 -j DROP
+  sudo -n ip netns exec "$NSS" iptables -I OUTPUT 1 -p tcp --sport 443 --dport 41031 -j DROP
 fi
 if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" WBD_REAL_LOSS="$LOSS" python3 -u -c '
 import socket,time,os
