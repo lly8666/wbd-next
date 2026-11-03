@@ -32,7 +32,8 @@
     "crates/wbd-engine/src/v4_session_address.rs",
     "crates/wbd-engine/src/v4_owner_crypto.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
-    "crates/wbd-engine/src/v4_game_public_kernel.rs"
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -41,7 +42,8 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN028-NETWORK-CHANGE-SCOPE.md",
     "docs/devlog/M0/20261103-PLAN028-H1007-MULTIACCOUNT-AUTOLEASE-CANDIDATE.md",
-    "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md"
+    "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md",
+    "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md"
   ],
   "verification": [
     {
@@ -106,6 +108,13 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Linux/amd64 original-Go authenticated /32 server Rust shared TUN ingress",
+      "scope": "H1016 one kernel TUN reader + generation-fenced destination /32 HashMap + original per-client Rust M1 loan path source candidate; real 2netns and 2-device kernel scenario require new exact native Action",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -118,7 +127,8 @@
     "H1005 exact Go protected TLS Action 41571723148 success 20/20 confirms cold generation-fencing only; the native single-port shared session owner, configuration readback and path notification remain not qualified.",
     "H1007 source candidate: multi-account auth is inside protected TLS; the pre-TLS marker still requires existing shared route-key. CLI auto-IP /32 readback is implemented but full native multi-client one-port shared Rust TUN path remains NOT_WIRED and must not be promoted from Go test PASS. Server lease pool must be covered by TUN prefix without containing server TUN's own IP. Active epoch prevents TTL lease reuse.",
     "H1008 scope: SOURCE837 real Go TLS 21/21 PASS and Linux original V4 CLI Go tests + binary build PASS. Distinct installed IPv4 real OS and native multi-client simultaneous traffic NOT_RUN; raw Game one-port code is a subsequent SOURCE, not included in SOURCE837.",
-    "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim."
+    "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim.",
+    "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

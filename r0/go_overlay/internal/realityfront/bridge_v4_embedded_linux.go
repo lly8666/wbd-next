@@ -26,6 +26,9 @@ extern int32_t wbd_m0_embedded_go_prepare_client(const unsigned char *,size_t,
 extern int32_t wbd_m0_embedded_go_stage(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_commit(uint64_t,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_bind_authenticated_client_ipv4(uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_shared_tun_open(int32_t,const unsigned char *,size_t,uint64_t *);
+extern int32_t wbd_m0_embedded_go_shared_tun_bind(uint64_t,uint64_t);
+extern int32_t wbd_m0_embedded_go_shared_tun_close(uint64_t);
 extern int32_t wbd_m0_embedded_go_abort(uint64_t);
 extern int32_t wbd_m0_embedded_go_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_release(uint64_t);
@@ -64,7 +67,9 @@ import (
     "errors"
     "fmt"
     "net/netip"
+    "os"
     "runtime"
+    "sync"
     "unsafe"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
@@ -183,6 +188,46 @@ func (b *v4EmbeddedNativeBridge) bindAuthenticatedClientIPv4(lease string)error{
         C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&addr[0])),C.size_t(len(addr)))
     runtime.KeepAlive(addr)
     if rc!=0{return fmt.Errorf("%w: authenticated client IPv4 bind=%d",errV4Embedded,int(rc))}
+    return nil
+}
+// V4LinuxSharedTun owns ONE process-wide real Linux TUN kernel reader.
+// Go retains the original OS fd; Rust borrows/dups it and guarantees that
+// every registered original-TLS Rust M1 sender joins before Close succeeds.
+// A session Stop never closes this independent reader used by siblings.
+type V4LinuxSharedTun struct{
+    mu sync.Mutex
+    handle uint64
+}
+func NewV4LinuxSharedTun(f *os.File,name string)(*V4LinuxSharedTun,error){
+    if f==nil||name==""||len(name)>15{return nil,errV4Embedded}
+    var h C.uint64_t
+    rc:=C.wbd_m0_embedded_go_shared_tun_open(C.int32_t(f.Fd()),
+        (*C.uchar)(unsafe.Pointer(unsafe.StringData(name))),
+        C.size_t(len(name)),&h)
+    runtime.KeepAlive(f)
+    if rc!=0||h==0{return nil,fmt.Errorf("%w: shared native TUN open=%d",errV4Embedded,int(rc))}
+    return &V4LinuxSharedTun{handle:uint64(h)},nil
+}
+func (r *V4LinuxSharedTun) Close()error{
+    if r==nil{return nil}
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    if r.handle==0{return nil}
+    rc:=C.wbd_m0_embedded_go_shared_tun_close(C.uint64_t(r.handle))
+    if rc!=0{return fmt.Errorf("%w: shared native TUN Close=%d (owned sessions must Stop first)",
+        errV4Embedded,int(rc))}
+    r.handle=0
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)error{
+    if b==nil||b.handle==0||!b.committed||!b.serverSide||r==nil{
+        return errV4Embedded
+    }
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    if r.handle==0{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_shared_tun_bind(C.uint64_t(b.handle),C.uint64_t(r.handle))
+    if rc!=0{return fmt.Errorf("%w: authenticated shared TUN bind=%d",errV4Embedded,int(rc))}
     return nil
 }
 type v4EmbeddedPending struct{

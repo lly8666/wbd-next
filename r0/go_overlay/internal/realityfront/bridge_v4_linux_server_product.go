@@ -37,6 +37,9 @@ type V4LinuxServerProductConfig struct {
     NetworkIfIndex uint32
     Tun *os.File
     TunName string
+    // Shared process TUN owner is supplied only by the Linux server's
+    // original Go cold network lifetime, never by an untrusted TLS peer.
+    SharedTun *V4LinuxSharedTun
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
@@ -142,6 +145,15 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     }
     if effective!=""{
         if leaseErr=bridge.bindAuthenticatedClientIPv4(effective);leaseErr!=nil{
+            return nil,errors.Join(leaseErr,p.closeLocked())
+        }
+    }
+    if p.cfg.SharedTun!=nil{
+        // A manual-IP peer has no authenticated per-device /32 and cannot
+        // share physical TUN ingress. Never mint routing authority from
+        // the untrusted claimed source or the outer TCP tuple.
+        if effective==""{return nil,errors.Join(ErrAdmissionParams,p.closeLocked())}
+        if leaseErr=bridge.bindAuthenticatedSharedTun(p.cfg.SharedTun);leaseErr!=nil{
             return nil,errors.Join(leaseErr,p.closeLocked())
         }
     }

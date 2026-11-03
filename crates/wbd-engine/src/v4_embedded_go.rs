@@ -7,6 +7,10 @@
 //! Default production ABI features stay zero; M4 driver-held stop NOT_RUN.
 #![allow(clippy::missing_safety_doc)]
 use std::collections::{BTreeMap,VecDeque};
+#[cfg(target_os="linux")]
+use std::collections::HashMap;
+#[cfg(target_os="linux")]
+use std::sync::mpsc::{self,Receiver,SyncSender,TrySendError};
 use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::thread::{self,JoinHandle};
@@ -893,6 +897,8 @@ struct Entry{
     next_link_packet_id:u32,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     workers:Option<LoopWorkers>,
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    shared_tun:Option<SharedTunSession>,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     joining:bool,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -1194,6 +1200,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         next_link_packet_id:1,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         workers:None,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        shared_tun:None,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         joining:false,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2714,6 +2722,10 @@ fn stop(handle:u64)->i32{
                 w.shutdown.store(true,Ordering::Release);
                 e.joining=true;
             }
+            #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+            if let Some(shared)=e.shared_tun.as_ref(){
+                retire_shared_tun_session(shared);
+            }
             #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
             e.fec2_rx_admit.store(false,Ordering::Release);
             e.phase=PH_STOPPING;
@@ -3862,6 +3874,260 @@ struct LoopCounts {
 enum OriginalTunIngress{
     Small(crate::memory::UniqueBuffer,usize),
     Jumbo(Vec<u8>),
+    // One process-wide physical TUN read, routed by the protected lease /32.
+    // TX converts this owned packet into ITS original per-generation M1 loan
+    // before the original Normal/FEC seals it, never a second crypto path.
+    Shared(Vec<u8>),
+}
+// PLAN028 real Linux process TUN ingress: exactly ONE kernel reader in this
+// process, independent of every session's duplicated Rust TUN *writer*.
+// Only original-Go credential-verified server AUTO /32 owners may bind.
+// This is NOT a second crypto engine, transport, scheduler or recovery stack.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[derive(Clone)]
+struct SharedTunRoute{
+    generation:u32,alive:Arc<AtomicBool>,send:SyncSender<OriginalTunIngress>,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct SharedTunReader{
+    generation:u32,
+    tun:Arc<ScopedTunSink>,
+    routes:Mutex<HashMap<[u8;4],SharedTunRoute>>,
+    stop:Arc<AtomicBool>,
+    worker:Mutex<Option<JoinHandle<()>>>,
+    delivered:AtomicU64,unrouted:AtomicU64,backpressure:AtomicU64,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct SharedTunSession{
+    router:u64,generation:u32,ip:[u8;4],
+    alive:Arc<AtomicBool>,
+    sender:SyncSender<OriginalTunIngress>,
+    receiver:Option<Receiver<OriginalTunIngress>>,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_tun_registry()->&'static Mutex<BTreeMap<u64,Arc<SharedTunReader>>>{
+    static R:OnceLock<Mutex<BTreeMap<u64,Arc<SharedTunReader>>>>=OnceLock::new();
+    R.get_or_init(||Mutex::new(BTreeMap::new()))
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_tun_reader(handle:u64)->Result<Arc<SharedTunReader>,i32>{
+    shared_tun_registry().lock().map_err(|_|BAD_STAGE)?
+        .get(&handle).cloned().ok_or(UNKNOWN)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_route_publish(
+    routes:&mut HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],route:SharedTunRoute
+){
+    // New Rust workers and original-Go protected session are already
+    // committed. An old generation can no longer receive the same /32.
+    if let Some(old)=routes.insert(ip,route){
+        old.alive.store(false,Ordering::Release);
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_route_retire(
+    routes:&mut HashMap<[u8;4],SharedTunRoute>,
+    ip:[u8;4],generation:u32,alive:&Arc<AtomicBool>
+){
+    alive.store(false,Ordering::Release);
+    if routes.get(&ip).is_some_and(|r|
+        r.generation==generation && Arc::ptr_eq(&r.alive,alive)){
+        routes.remove(&ip);
+    }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
+    let (a_send,_a_recv)=mpsc::sync_channel(2);
+    let (b_send,_b_recv)=mpsc::sync_channel(2);
+    let (new_send,_new_recv)=mpsc::sync_channel(2);
+    let a=Arc::new(AtomicBool::new(true));
+    let b=Arc::new(AtomicBool::new(true));
+    let new=Arc::new(AtomicBool::new(true));
+    let ip_a=[10,66,0,154];
+    let ip_b=[10,66,0,155];
+    let mut routes=HashMap::<[u8;4],SharedTunRoute>::new();
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{
+        generation:10,alive:Arc::clone(&a),send:a_send,
+    });
+    shared_route_publish(&mut routes,ip_b,SharedTunRoute{
+        generation:20,alive:Arc::clone(&b),send:b_send,
+    });
+    assert_eq!(routes.len(),2);
+    // Same-account A and B are distinct installation leases and never
+    // share one ingress channel or Rust generation.
+    assert_eq!(routes[&ip_a].generation,10);
+    assert_eq!(routes[&ip_b].generation,20);
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{
+        generation:11,alive:Arc::clone(&new),send:new_send,
+    });
+    assert!(!a.load(Ordering::Acquire));
+    assert!(new.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,ip_a,10,&a);
+    assert_eq!(routes[&ip_a].generation,11);
+    assert_eq!(routes[&ip_b].generation,20);
+    shared_route_retire(&mut routes,ip_b,20,&b);
+    assert!(!routes.contains_key(&ip_b));
+    assert_eq!(routes[&ip_a].generation,11);
+    shared_route_retire(&mut routes,ip_a,11,&new);
+    assert!(routes.is_empty());
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn retire_shared_tun_session(session:&SharedTunSession){
+    // Revoke source before any owner/driver joining. A late old generation
+    // cannot remove the replacement mapping (exact generation + Arc fence).
+    session.alive.store(false,Ordering::Release);
+    if let Ok(router)=shared_tun_reader(session.router){
+        if let Ok(mut routes)=router.routes.lock(){
+            shared_route_retire(&mut routes,session.ip,
+                session.generation,&session.alive);
+        }
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn run_shared_tun_reader(router:Arc<SharedTunReader>){
+    let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+    let fd=router.tun.readiness_fd();
+    while !router.stop.load(Ordering::Acquire){
+        if router.routes.lock().map_or(true,|routes|routes.is_empty()){
+            thread::sleep(Duration::from_millis(5));
+            continue
+        }
+        if !loop_readiness(fd,&router.stop,10){continue}
+        let read={
+            let mut slots=[&mut scratch[..]];
+            router.tun.read_ready_batch(router.generation,&mut slots)
+        };
+        let len=match read{
+            Ok(batch)=>match batch.entry(0){
+                Some(TunReadyEntry::UntrustedIpv4{len}) if len>=20 =>len,
+                _=>continue,
+            },
+            Err(TunError::Stopped)=>break,
+            Err(_)=>continue,
+        };
+        let mut destination=[0u8;4];
+        destination.copy_from_slice(&scratch[16..20]);
+        // HashMap O(1) expected destination lookup. No original Entry, AEAD
+        // bitmap, RX state or M1 owner is locked by this kernel reader.
+        let route=router.routes.lock().ok()
+            .and_then(|routes|routes.get(&destination).cloned());
+        let Some(route)=route else{
+            router.unrouted.fetch_add(1,Ordering::Relaxed);
+            continue
+        };
+        if !route.alive.load(Ordering::Acquire){continue}
+        let mut owned=OriginalTunIngress::Shared(scratch[..len].to_vec());
+        loop{
+            if router.stop.load(Ordering::Acquire)||
+                !route.alive.load(Ordering::Acquire){break}
+            match route.send.try_send(owned){
+                Ok(())=>{
+                    router.delivered.fetch_add(1,Ordering::Relaxed);
+                    break
+                },
+                Err(TrySendError::Full(packet))=>{
+                    owned=packet;
+                    router.backpressure.fetch_add(1,Ordering::Relaxed);
+                    thread::sleep(Duration::from_micros(100));
+                },
+                Err(TrySendError::Disconnected(_))=>break,
+            }
+        }
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
+    fd:i32,name:*const u8,name_len:usize,out:*mut u64
+)->i32{
+    if fd<3||name.is_null()||name_len==0||name_len>15||out.is_null(){
+        return INVALID
+    }
+    let Ok(name)=std::str::from_utf8(unsafe{std::slice::from_raw_parts(name,name_len)})
+    else{return INVALID};
+    let Ok(owned)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+    else{return INVALID};
+    let Ok(mut map)=shared_tun_registry().lock()else{return BAD_STAGE};
+    // One physical server TUN reader; adding a second independent owner
+    // would race kernel dequeue even if configured with different names.
+    if !map.is_empty(){return BAD_STAGE}
+    static NEXT:AtomicU32=AtomicU32::new(1);
+    let gen=NEXT.fetch_add(1,Ordering::AcqRel);
+    if gen==0||gen==u32::MAX{return FULL}
+    let Ok(tun)=ScopedTunSink::from_owned_fd(owned,gen,name)else{return INVALID};
+    let handle=(u64::from(gen)<<32)|0x5455u64;
+    let router=Arc::new(SharedTunReader{
+        generation:gen,tun:Arc::new(tun),
+        routes:Mutex::new(HashMap::with_capacity(32)),
+        stop:Arc::new(AtomicBool::new(false)),
+        worker:Mutex::new(None),
+        delivered:AtomicU64::new(0),unrouted:AtomicU64::new(0),
+        backpressure:AtomicU64::new(0),
+    });
+    let worker_router=Arc::clone(&router);
+    let Ok(worker)=thread::Builder::new().name("wbd-v4-shared-tun-reader".into())
+        .spawn(move||run_shared_tun_reader(worker_router))
+    else{return INVALID};
+    let Ok(mut slot)=router.worker.lock()else{
+        router.stop.store(true,Ordering::Release);
+        let _=worker.join();
+        return BAD_STAGE
+    };
+    *slot=Some(worker);
+    drop(slot);
+    map.insert(handle,router);
+    unsafe{out.write(handle)};
+    OK
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
+    let Ok(mut registry)=shared_tun_registry().lock()else{return BAD_STAGE};
+    let Some(router)=registry.get(&handle).cloned()else{return UNKNOWN};
+    let Ok(routes)=router.routes.lock()else{return BAD_STAGE};
+    if !routes.is_empty(){return BAD_STAGE}
+    drop(routes);
+    router.stop.store(true,Ordering::Release);
+    let Ok(mut worker)=router.worker.lock()else{return STOP_INCOMPLETE};
+    if let Some(join)=worker.take(){
+        if join.join().is_err(){return STOP_INCOMPLETE}
+    }
+    router.tun.begin_stop();
+    if router.tun.stop_until(Instant::now())!=StopResult::Drained{
+        return STOP_INCOMPLETE
+    }
+    eprintln!("V4_PUBLIC_SHARED_TUN_STOP generation={} routed={} unrouted={} backpressure={} reader_joined=1",
+        router.generation,router.delivered.load(Ordering::Relaxed),
+        router.unrouted.load(Ordering::Relaxed),
+        router.backpressure.load(Ordering::Relaxed));
+    registry.remove(&handle);
+    OK
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
+    handle:u64,router_handle:u64
+)->i32{
+    let Ok(router)=shared_tun_reader(router_handle)else{return UNKNOWN};
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||!e.server_side||e.workers.is_some()||
+       e.shared_tun.is_some(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    if e.game_joined{return BAD_STAGE}
+    let Some(ip)=e.client_lease_ipv4 else{return BAD_STAGE};
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    e.shared_tun=Some(SharedTunSession{
+        router:router_handle,generation:e.generation,ip,
+        alive:Arc::new(AtomicBool::new(true)),
+        sender,receiver:Some(receiver),
+    });
+    // Cold bind itself is not active authority. The exact native loop's
+    // successful startup publishes this mapping atomically and fences an old
+    // same-/32 generation; failed worker startup leaves previous owner live.
+    drop(router);
+    OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_tun_ingress_worker(
@@ -4883,6 +5149,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let (generation,defer_route,read_cap)={
         let e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        if e.shared_tun.as_ref().is_some_and(|shared|
+            !shared.alive.load(Ordering::Acquire)){return Err(BAD_STAGE)}
         let defer_route=e.tx_route.as_ref().is_some_and(|cache|
             wbd_platform::linux_route_events::classify(
                 cache.route_event_revision,observed_event.revision,
@@ -6238,14 +6507,27 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.phase=PH_STOPPING;
         return INVALID
     };
-    // Restrict split ingress to the live Normal/off public product. Fixed,
-    // Auto, Game and probe owners retain their existing single TUN reader.
+    // A protected server /32 chooses the ONE physical TUN reader; the
+    // previous single-owner reader remains unchanged for manual sessions.
+    #[cfg(target_os="linux")]
+    let shared_mode=e.shared_tun.is_some();
+    #[cfg(not(target_os="linux"))]
+    let shared_mode=false;
     #[cfg(feature="fec2_product_record")]
-    let split_ingress=e.original_public_feedback_armed && e.protected_features==7
-        && e.fixed_pending.is_none() && e.fixed_applied.is_none();
+    let split_ingress=shared_mode||(e.original_public_feedback_armed &&
+        e.protected_features==7 && e.fixed_pending.is_none() &&
+        e.fixed_applied.is_none());
     #[cfg(not(feature="fec2_product_record"))]
-    let split_ingress=false;
-    let (ingress_send,ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
+    let split_ingress=shared_mode;
+    let (ingress_send,normal_ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
+    #[cfg(target_os="linux")]
+    let ingress_recv=if shared_mode{
+        let Some(rx)=e.shared_tun.as_mut().and_then(|sh|sh.receiver.take())
+        else{return BAD_STAGE};
+        rx
+    }else{normal_ingress_recv};
+    #[cfg(not(target_os="linux"))]
+    let ingress_recv=normal_ingress_recv;
     // TX and the dedicated FD reader hold independent Arc handles; the
     // original bounded TunSink remains one object/one generation/one FD.
     let tun_for_ingress=Arc::clone(&tun);
@@ -6271,6 +6553,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
             let mut active_jumbo=None::<PendingOriginalJumbo>;
+            let mut deferred_shared=None::<Vec<u8>>;
             while !stop_tx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
@@ -6305,14 +6588,44 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                 }
                 if split_ingress {
-                    // This is the SOLE recipient of one bounded original
-                    // source TUN ingress queue. Sender preserves fresh-order.
+                    // The per-client TX remains the SOLE consumer of its
+                    // source ingress; shared packets take original M1 loans.
                     for _ in 0..32 {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
-                        match ingress_recv.try_recv(){
+                        let next=if let Some(buf)=deferred_shared.take(){
+                            Ok(OriginalTunIngress::Shared(buf))
+                        }else{ingress_recv.try_recv()};
+                        match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
+                            Ok(OriginalTunIngress::Shared(buf))=>{
+                                if buf.len()>M0_SMALL_ARENA_PAYLOAD{
+                                    jumbo_queue.push_back(buf);
+                                }else{
+                                    let loan={
+                                        let Ok(mut owner)=tx_cell.lock()else{break};
+                                        if owner.phase!=PH_ACTIVE{break}
+                                        #[cfg(feature="fec2_product_record")]
+                                        let floor=if owner.rx_feedback.is_some() &&
+                                            owner.fixed_pending.is_none()&&
+                                            owner.fixed_applied.is_none(){
+                                            M0_NORMAL_FEEDBACK_SLAB_RESERVE
+                                        }else{0};
+                                        #[cfg(not(feature="fec2_product_record"))]
+                                        let floor=0;
+                                        owner.arena.allocate_preserving(floor)
+                                    };
+                                    match loan{
+                                        Ok(mut slab)=>{
+                                            let n=buf.len();
+                                            slab.writable()[14..14+n].copy_from_slice(&buf);
+                                            tx_pending.push((slab,n));
+                                        },
+                                        Err(_)=>{deferred_shared=Some(buf);break}
+                                    }
+                                }
+                            },
                             Err(_)=>break,
                         }
                     }
@@ -6509,7 +6822,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let _=rx.join();
         return INVALID
     };
-    let ingress=if split_ingress{
+    let ingress=if split_ingress && !shared_mode{
         let stop_ingress=Arc::clone(&shutdown);
         let ingress_cell=Arc::clone(&cell);
         let ingress_tun=Arc::clone(&tun_for_ingress);
@@ -6528,6 +6841,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Some(worker)
     }else{None};
     e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,route_events:events});
+    #[cfg(target_os="linux")]
+    if let Some(sh)=e.shared_tun.as_ref(){
+        let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
+        if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+        let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+        let new=SharedTunRoute{
+            generation:sh.generation,alive:Arc::clone(&sh.alive),
+            send:sh.sender.clone(),
+        };
+        shared_route_publish(&mut routes,sh.ip,new);
+    }
     OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]

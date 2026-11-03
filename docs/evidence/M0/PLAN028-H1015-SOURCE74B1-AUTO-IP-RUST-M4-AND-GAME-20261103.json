@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1015",
+  "source_sha": "74b1fa101a7e912cebbc20bfcdc937683c0c185e",
+  "overall": "SCOPED_FUNCTIONAL_PASS",
+  "verified": [
+    {
+      "scene": "Actual original protected Go TLS auto-IP, Linux two-netns Rust M4 Normal UDP echo+Stop",
+      "run_id": 41579974216,
+      "job_id": 125732260905,
+      "conclusion": "success",
+      "witness": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.154 app_udp=5 exact_generation_Rust_M4=1"
+    },
+    {
+      "scene": "Same-source Game2/4 one shared listening port, damaged lane/other healthy real app",
+      "run_id": 41579974216,
+      "job_id": 125732260905,
+      "conclusion": "success",
+      "witness": [
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ]
+    },
+    {
+      "scene": "Rust normal/non-FEC production native original Go owner build",
+      "run_id": 41579974321,
+      "conclusion": "success"
+    },
+    {
+      "scene": "Feature catalog + governance after JSON UTF-8 limit repair",
+      "run_id": 41580302912,
+      "source_sha": "f76086cda1238ea9cd24e72876170abf56469462",
+      "conclusion": "success"
+    }
+  ],
+  "known_failures": [
+    {
+      "scene": "Windows/WSL2 latest signed Win-Linux original Game4FEC startup",
+      "run_id": 41579974280,
+      "conclusion": "failure",
+      "observation": "Game4 lane2 TCP bootstrap stream deadline exceeded, Windows client process exit 1; native two-OS product NOT_PASS"
+    },
+    {
+      "scene": "historical static PLAN020 revision3 writer vs registry revision4",
+      "run_id": 41579974331,
+      "conclusion": "failure"
+    },
+    {
+      "scene": "historic H998 physical online 1500->1280 MTU and ARM64 Game4FEC",
+      "conclusion": "FAIL preserved"
+    }
+  ],
+  "limits": [
+    "One auto-leased device only; pre-H1016 Rust shared physical TUN multi-device O(1) router NOT_RUN",
+    "No two simultaneous independent authenticated devices/business, no seven-mode A->A+B->B",
+    "New H1016 shared TUN reader code is distinct untested candidate, cannot inherit this source success",
+    "Windows/Linux actual path change and remote ICMP3/4 unmeasured",
+    "Physical and Android not qualified"
+  ]
+}

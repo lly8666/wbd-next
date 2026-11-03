@@ -970,15 +970,38 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
 func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
-    coldReauth bool,connected *bool)error{
+    coldReauth bool,connected *bool)(retErr error){
     if epochs==nil{return realityfront.ErrAdmissionParams}
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
+    // Original automatic /32 sessions share one process-wide native
+    // TUN reader; Go retains the OS handle until the per-owner Stop join.
+    var shared *realityfront.V4LinuxSharedTun
+    if leases!=nil{
+        shared,err=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
+        if err!=nil{return err}
+        defer func(){
+            if e:=shared.Close();e!=nil{
+                retErr=errors.Join(retErr,e)
+                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_INCOMPLETE error=%v",e)
+            }else{
+                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server")
+            }
+        }()
+        log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=server auto_lease=1 owner=rust_single_kernel_reader")
+    }
+    mtuConfigure:=configureTunnelMTU(c,tun)
+    if shared!=nil{
+        // One client cannot mutate the physical shared TUN's MTU.
+        // Each original Rust generation retains its own record budget.
+        mtuConfigure=nil
+    }
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
-            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+            CleanupOwnedNetwork:productNativeCleanup(c,tun),
+            ConfigureTunnelMTU:mtuConfigure,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
             PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })

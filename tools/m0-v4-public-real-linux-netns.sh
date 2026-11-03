@@ -351,6 +351,20 @@ else
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
 fi
 if [[ "$AUTO_IP" == 1 ]];then
+  # Exactly one Rust process TUN reader, not one destructive TUN read per
+  # connected device. Every real app echo must pass through the /32 demux.
+  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=server auto_lease=1 owner=rust_single_kernel_reader' "$TMP/server.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
+  sudo -n ip netns exec "$NSS" true
+  python3 - "$TMP/server.log" "$PACKETS" <<'PY'
+import pathlib,re,sys
+log=pathlib.Path(sys.argv[1]).read_text()
+matches=re.findall(r'V4_PUBLIC_SHARED_TUN_STOP generation=([0-9]+) routed=([0-9]+) unrouted=([0-9]+) backpressure=([0-9]+) reader_joined=1',log)
+assert len(matches)==1,matches
+gen,routed,unrouted,pressure=map(int,matches[0])
+assert gen>0 and routed>=int(sys.argv[2]),(gen,routed,unrouted,pressure)
+print("M0_PLAN028_REAL_SHARED_RUST_SINGLE_TUN_READER_PASS routed=%d unrouted=%d backpressure=%d reader_joined=1"%(routed,unrouted,pressure))
+PY
   echo "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=$CLIENT_EFFECTIVE_IP app_udp=$PACKETS exact_generation_Rust_M4=1"
 fi
 if [[ "$GAME" == 0 ]];then
