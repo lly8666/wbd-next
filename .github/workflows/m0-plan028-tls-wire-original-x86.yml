@@ -51,7 +51,10 @@ jobs:
                   # qualification. Broad native FEC/Game tests have different
                   # build tags/helper dependencies and their own Actions.
                   if src.name.endswith("_test.go") and src.name not in (
-                      "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go",
+                      # Obsolete-MSS donor migration needs this fixture file;
+                      # its native-probe build tag excludes it from this test.
+                      "bridge_v4_probe_linux_test.go"):
                       continue
                   dst=original/part/src.name
                   if dst.exists():
