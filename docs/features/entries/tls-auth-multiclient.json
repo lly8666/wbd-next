@@ -82,9 +82,16 @@
       "evidence": null
     },
     {
-      "platform": "Linux/amd64 original Go TLS and V4 public CLI source candidate",
-      "scope": "PLAN028 H1007 protected account roster, same-account independent installation-derived tunnel and 7-day in-memory automatic /32 lease, cold OS IP readback and Normal/Game opt-in wiring",
-      "status": "IMPLEMENTED_NOT_TESTED",
+      "platform": "Linux/amd64 original Go V4 TLS + CLI unit tests",
+      "scope": "H1007 SOURCE837 original protected TLS multi-account + installation-derived/7-day lease isolation; typed Go CLI config for auto-IP, owner-only users-file and route pool; kernel OS lease apply in real dual-netns still NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
+      "evidence": "docs/evidence/M0/PLAN028-H1008-SOURCE837-PROTECTED-MULTIDEVICE-20261103.json"
+    },
+    {
+      "platform": "Linux real two OS netns / active native Rust TUN",
+      "scope": "PLAN028 actual client protected auto-IP applied/read back with server lease and live TCP/UDP, multiple concurrent accounts",
+      "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     }
@@ -97,7 +104,8 @@
     "PLAN028 IN_PROGRESS: H1004 implements an opt-in protected TLS same-lane overlapping epoch reservation and incarnation-fenced Stop API. Native shared owner/single-port dispatch still NOT_RUN; H998 live MTU failure remains.",
     "H1004 Linux Normal/Game Stop callsites now use authenticated TLS incarnation tokens; an old epoch-only retire is forbidden after overlap. No PLAN028 real-network multi-client PASS is claimed.",
     "H1005 exact Go protected TLS Action 41571723148 success 20/20 confirms cold generation-fencing only; the native single-port shared session owner, configuration readback and path notification remain not qualified.",
-    "H1007 source candidate: multi-account auth is inside protected TLS; the pre-TLS marker still requires existing shared route-key. CLI auto-IP /32 readback is implemented but full native multi-client one-port shared Rust TUN path remains NOT_WIRED and must not be promoted from Go test PASS. Server lease pool must be covered by TUN prefix without containing server TUN's own IP. Active epoch prevents TTL lease reuse."
+    "H1007 source candidate: multi-account auth is inside protected TLS; the pre-TLS marker still requires existing shared route-key. CLI auto-IP /32 readback is implemented but full native multi-client one-port shared Rust TUN path remains NOT_WIRED and must not be promoted from Go test PASS. Server lease pool must be covered by TUN prefix without containing server TUN's own IP. Active epoch prevents TTL lease reuse.",
+    "H1008 scope: SOURCE837 real Go TLS 21/21 PASS and Linux original V4 CLI Go tests + binary build PASS. Distinct installed IPv4 real OS and native multi-client simultaneous traffic NOT_RUN; raw Game one-port code is a subsequent SOURCE, not included in SOURCE837."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

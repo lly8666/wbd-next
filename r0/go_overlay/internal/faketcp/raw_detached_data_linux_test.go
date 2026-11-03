@@ -70,3 +70,78 @@ func TestDetachedDataKernelFilterPreservesHandshakeAndControl(t *testing.T) {
 		})
 	}
 }
+
+
+// PLAN028 Game2/4 single shared server port must exclude every authenticated
+// lane from Go AFTER Rust attach; a new 5-tuple on the port remains eligible
+// for protected TLS even behind the same NAT. Pure classic-BPF VM, no mocks
+// of Go/Rust identity and no root privileges.
+func TestPLAN028SharedGamePortKernelFourTupleGate(t *testing.T){
+    local:=[4]byte{192,0,2,8}
+    peers:=[]DetachedPeer{
+        {IP:[4]byte{198,51,100,9},Port:50011},
+        {IP:[4]byte{198,51,100,9},Port:50012},
+        {IP:[4]byte{198,51,100,10},Port:55103},
+        {IP:[4]byte{203,0,113,12},Port:55104},
+    }
+    filter,err:=detachedDataKernelFilterSet(local,443,peers)
+    if err!=nil{t.Fatal(err)}
+    raw:=make([]bpf.RawInstruction,len(filter))
+    for i,f:=range filter{raw[i]=bpf.RawInstruction{Op:f.Code,Jt:f.Jt,Jf:f.Jf,K:f.K}}
+    decoded,ok:=bpf.Disassemble(raw)
+    if !ok{t.Fatal("invalid single-listener cBPF")}
+    vm,err:=bpf.NewVM(decoded)
+    if err!=nil{t.Fatal(err)}
+    frame:=func(src [4]byte,srcPort,dstPort uint16,ipLen,tcpLen,payload int,flags byte)[]byte{
+        size:=ipLen+tcpLen+payload
+        data:=make([]byte,14+size)
+        data[12],data[13]=8,0
+        data[14]=0x40|byte(ipLen/4)
+        binary.BigEndian.PutUint16(data[16:],uint16(size))
+        data[23]=6
+        copy(data[26:30],src[:])
+        copy(data[30:34],local[:])
+        tcp:=14+ipLen
+        binary.BigEndian.PutUint16(data[tcp:],srcPort)
+        binary.BigEndian.PutUint16(data[tcp+2:],dstPort)
+        data[tcp+12]=byte(tcpLen/4)<<4
+        data[tcp+13]=flags
+        return data
+    }
+    for _,peer:=range peers{
+        for _,tc:=range []struct{payload int;flags byte;ipLen,tcpLen int;wantGo bool}{
+            {128,0x18,20,20,false},
+            {64,0x10,24,32,false},
+            {0,0x10,20,20,true}, // pure ACK
+            {23,0x02,20,20,true}, // new SYN
+            {23,0x01,20,20,true}, // FIN
+            {23,0x04,20,20,true}, // RST
+        }{
+            got,err:=vm.Run(frame(peer.IP,peer.Port,443,tc.ipLen,tc.tcpLen,tc.payload,tc.flags))
+            if err!=nil{t.Fatal(err)}
+            if (got!=0)!=tc.wantGo{
+                t.Fatalf("peer=%v:%d flags=%x payload=%d got=%d wantGo=%t",
+                    peer.IP,peer.Port,tc.flags,tc.payload,got,tc.wantGo)
+            }
+        }
+    }
+    for _,tc:=range []struct{src [4]byte;port,dst uint16;want bool}{
+        {peers[0].IP,60000,443,true}, // same NAT, new client
+        {[4]byte{198,51,100,99},50011,443,true}, // same port, new IP
+        {peers[0].IP,peers[0].Port,444,false}, // unrelated listener port
+    }{
+        result,err:=vm.Run(frame(tc.src,tc.port,tc.dst,20,20,128,0x18))
+        if err!=nil|| (result!=0)!=tc.want{
+            t.Fatalf("new tuple classification port=%d dst=%d got=%d err=%v",tc.port,tc.dst,result,err)
+        }
+    }
+    if _,err:=detachedDataKernelFilterSet(local,443,append(peers,peers[0]));err==nil{
+        t.Fatal("duplicate/overcapacity kernel tuple set admitted")
+    }
+    if _,err:=detachedDataKernelFilterSet(local,443,nil);err==nil{
+        t.Fatal("empty detached set admitted")
+    }
+    if _,err:=detachedDataKernelFilterSet(local,443,[]DetachedPeer{{IP:peers[0].IP,Port:0}});err==nil{
+        t.Fatal("invalid peer port admitted")
+    }
+}

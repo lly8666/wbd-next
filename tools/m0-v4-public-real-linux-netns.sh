@@ -258,6 +258,10 @@ fi
 if [[ "$GAME" != 0 ]];then
   grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log"
   grep -q "V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=$GAME" "$TMP/server.log"
+  # The same genuine Go TLS/Rust Game app harness now requires ONE server
+  # listening port even though clients use 2/4 distinct local TCP ports.
+  grep -q "V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=$GAME server_port=443 distinct_local_ports=$GAME" "$TMP/client.log"
+  grep -q "V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=$GAME server_port=443 distinct_client_flows=$GAME" "$TMP/server.log"
 else
   grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY' "$TMP/client.log"
   grep -q 'V4_ORIGINAL_GO_SERVER_NATIVE_READY' "$TMP/server.log"

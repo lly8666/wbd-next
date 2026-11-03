@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "checkpoint": "H1008",
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "source_sha": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
+  "result": "SCOPED_PASS",
+  "scopes": {
+    "go_protected_TLS_account_lease": {
+      "status": "FUNCTIONAL_PASS",
+      "action_run": 41575226889,
+      "action_conclusion": "success",
+      "tested": "Original Go uTLS over FakeTCP V4 protected admission after correct pre-TLS route-key, three account/installations, different IPv4 leases, invalid password/misbound ID fail, authenticated reply mutation fails",
+      "tests_passed": 21,
+      "tests_failed": 0,
+      "artifact_binary_sha256": "9fc25d50f550a75cbe3bac858f16be64ee94f7ce6625d4a601925c5bb56a1706",
+      "log_sha256": "7e3f2aa5d188c616bdf001e624c4e351a99030c850e28edac9c86ae6e9dcd72f"
+    },
+    "linux_public_cli_config": {
+      "status": "UNIT_PASS_BUILD_PASS",
+      "run_id": 41575226878,
+      "job_id": 125717604534,
+      "go_test": "go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli",
+      "result_line": "ok github.com/lly8666/wobuzhidao/internal/v4productcli 2.309s",
+      "compilation": "both original Go Linux V4 client/server production executable build succeeded",
+      "native_os_autoip_readback": "NOT_RUN"
+    },
+    "original_go_rust_cold_parser": {
+      "status": "BUILD_PASS",
+      "run_id": 41575226883,
+      "conclusion": "success"
+    },
+    "normal_common": {
+      "status": "PASS_LEGACY_COMPAT",
+      "run_id": 41575226879,
+      "conclusion": "success"
+    },
+    "native_plan012": {
+      "status": "PASS_LEGACY_COMPAT",
+      "run_id": 41575226892,
+      "conclusion": "success"
+    },
+    "go_control": {
+      "status": "PASS_LEGACY_GATE",
+      "run_id": 41575226972,
+      "conclusion": "success"
+    },
+    "governance": {
+      "status": "PASS",
+      "run_id": 41575226909,
+      "conclusion": "success"
+    }
+  },
+  "not_proven": [
+    "Actual two clients simultaneously sharing Rust TUN",
+    "single server port all modes",
+    "real client OS assigned IPv4 IP pre-native apply in netns",
+    "seven-mode A->A+B->B",
+    "Windows/Linux OS native notification switch",
+    "Android",
+    "account/password only pre-TLS route-key elimination",
+    "CPU causal improvement",
+    "H998 physical online MTU 1500->1280 remains FAIL",
+    "H998 ARM64 Game4FEC Action remains FAIL"
+  ],
+  "source_context": "SOURCE837 tests are Go protected TLS/CLI config; new H1008 next Game one-port code changes are a distinct unqualified SOURCE."
+}

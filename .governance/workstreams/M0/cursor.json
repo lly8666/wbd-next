@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1007,
-  "checkpoint_sha": "992a585013969ddc643228c47d80ae84f35a042a",
+  "sequence": 1008,
+  "checkpoint_sha": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1007 actual PLAN028 bilateral cold multiuser + auto lease + Linux Normal/Game authenticated IPv4 OS install code frozen; native shared multi-client not yet implemented",
-  "why_now": "Existing V4 protected admission wire already contains AutoLease/InstallationID; reuse pinned logicaltunnel 7-day lease and OS readback instead of inventing new protocol",
+  "current_task": "H1008 same-port Linux Game2/4 code/actual native fixture and exact-source H1007 Go TLS+CLI evidence; Rust shared per-device TUN pending",
+  "why_now": "H1007 used already-present AutoLease/InstallationID protected wire, SOURCE837 genuine Go TLS 21/21+Linux CLI tests pass; Game still consumes 2/4 server ports, so wire one port with one classic-BPF union filter",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect exact-source H1007 native/Go test Actions and repair only new failures. Continue PLAN028 §0.2 server single-port accept + shared Rust TUN O(1) IP-indexed fanout, then actual same-account multi-device native business/7-mode A+B and OS path notifications; do not enable multiple independent TUN-reading Rust owners.",
+  "next_action": "Collect H1008 new SOURCE Game classic-BPF VM + same-port original Go TLS/Rust native Game2/4 real netns actions. Correct only specific results. Then implement NORMAL+Game across-device single shared Rust TUN reader/IP indexed session dispatcher and platform native network notifications; cannot claim PLAN028 complete before genuine concurrent-client tests.",
   "unverified": true,
-  "last_tested_source": "c42918890abd2105cdbdc79e97ef7fa2ea39fff5",
+  "last_tested_source": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1005-EXACT-GO-COLD-LANE-FENCE-SOURCEC429-20261103.json"
+    "docs/evidence/M0/PLAN028-H1008-SOURCE837-PROTECTED-MULTIDEVICE-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1007-MULTIACCOUNT-AUTOLEASE-CANDIDATE.md",
+    "docs/devlog/M0/20261103-PLAN028-H1008-GAME-ONE-SERVER-PORT.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1007 Go code batch implements protected multi-user account roster, installation-derived tunnel, original auto 7-day per-device lease, live epoch pin, authenticated Linux /32 apply/readback in Normal/Game and server pool validation. New real Go TLS + CLI tests staged; no H1007 SOURCE PASS until Actions. Production Rust remains one-session/older Game ports; H998 failure retained."
+  "partial_summary": "SOURCE837 Go protected TLS same-account 3 installations 21/21 and Linux CLI config unit+binary build PASS, OS lease applied real network NOT_RUN. H1008 next code switches Game2/4 to one server port and shared 2/4 tuple BPF filter + native fixture, not yet tested. Rust multi-session/shared TUN and physical MTU FAIL unresolved."
 }

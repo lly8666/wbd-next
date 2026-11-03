@@ -92,3 +92,86 @@ func (e *RawIPv4Endpoint) ExcludeDetachedData(peerIP [4]byte, peerPort uint16) e
 	program := unix.SockFprog{Len: uint16(len(ins)), Filter: &ins[0]}
 	return unix.SetsockoptSockFprog(e.recvFD, unix.SOL_SOCKET, unix.SO_ATTACH_FILTER, &program)
 }
+
+
+// DetachedPeer is the inbound exact transport peer of a credential-checked
+// original Go Game lane. All entries use one server IP and listening port.
+// A same-source-IP NAT client is distinguished by its true TCP source port.
+type DetachedPeer struct{
+    IP [4]byte
+    Port uint16
+}
+
+// Unlike installing a new classic BPF program per lane (which overwrites the
+// previous exclusion), compile all 2/4 authenticated lane tuples into ONE
+// kernel listener filter. Go can then receive new SYN/control on that same
+// server port without copying any existing Rust-owned payload traffic.
+func detachedDataKernelFilterSet(local [4]byte,port uint16,peers []DetachedPeer)([]unix.SockFilter,error){
+    if port==0||len(peers)<1||len(peers)>4{return nil,errors.New("faketcp: expected 1..4 scoped Game peers")}
+    seen:=make(map[DetachedPeer]bool,len(peers))
+    for _,peer:=range peers{
+        if peer.Port==0||peer.IP==[4]byte{}||seen[peer]{
+            return nil,errors.New("faketcp: invalid or repeated authenticated Game tuple")
+        }
+        seen[peer]=true
+    }
+    filter:=rawReceivePortFilter(local,port)
+    // The port filter's success return is replaced by a branch over its
+    // reject instruction into the exact peer tuple checks.
+    filter[len(filter)-2]=unix.SockFilter{Code:unix.BPF_JMP|unix.BPF_JA,K:1}
+    jumps:=make([]int,0,len(peers))
+    for _,peer:=range peers{
+        filter=append(filter,
+            unix.SockFilter{Code:unix.BPF_LD|unix.BPF_W|unix.BPF_ABS,K:26},
+            // Jf=4 skips source-port tests plus their branch on IP mismatch.
+            unix.SockFilter{Code:unix.BPF_JMP|unix.BPF_JEQ|unix.BPF_K,Jf:4,K:binary.BigEndian.Uint32(peer.IP[:])},
+            unix.SockFilter{Code:unix.BPF_LDX|unix.BPF_B|unix.BPF_MSH,K:14},
+            unix.SockFilter{Code:unix.BPF_LD|unix.BPF_H|unix.BPF_IND,K:14},
+            // Jf=1 skips the following jump when source port mismatches.
+            unix.SockFilter{Code:unix.BPF_JMP|unix.BPF_JEQ|unix.BPF_K,Jf:1,K:uint32(peer.Port)},
+        )
+        jumps=append(jumps,len(filter))
+        filter=append(filter,unix.SockFilter{Code:unix.BPF_JMP|unix.BPF_JA})
+    }
+    // New peer (including one using the same NAT IP) stays eligible for TLS.
+    filter=append(filter,unix.SockFilter{Code:unix.BPF_RET|unix.BPF_K,K:^uint32(0)})
+    common:=len(filter)
+    // Reuse the already qualified IPv4/TCP header and DATA length gate.
+    // No second parser, no per-packet Go loop, no wire changes.
+    original:=detachedDataKernelFilter(local,port,peers[0].IP,peers[0].Port)
+    filter=append(filter,original[len(rawReceivePortFilter(local,port))+5:]...)
+    accept:=len(filter)-1
+    for _,idx:=range jumps{
+        filter[idx].K=uint32(common-idx-1)
+    }
+    for idx:=common;idx<len(filter);idx++{
+        ins:=&filter[idx]
+        if ins.Code==unix.BPF_JMP|unix.BPF_JSET|unix.BPF_K&&ins.K==0x07{
+            ins.Jt=uint8(accept-idx-1)
+        }
+        if ins.Code==unix.BPF_JMP|unix.BPF_JEQ|unix.BPF_K&&
+           ins.K==0&&idx+1<len(filter)&&
+           filter[idx+1].Code==unix.BPF_RET|unix.BPF_K&&filter[idx+1].K==0{
+            ins.Jt=uint8(accept-idx-1)
+        }
+    }
+    return filter,nil
+}
+
+// Only after every original protected TLS lane has detached and one Rust
+// GameAdapter has installed exact tuple M4 receivers. A single Linux packet
+// filter handles all accepted lanes; repeated ExcludeDetachedData calls would
+// accidentally re-expose earlier ciphertext to the Go hot path.
+func (e *RawIPv4Endpoint) ExcludeDetachedDataSet(peers []DetachedPeer)error{
+    if e==nil{return errors.New("faketcp: nil shared original TLS listener")}
+    e.mu.Lock()
+    defer e.mu.Unlock()
+    if e.closed{return net.ErrClosed}
+    if !e.kernelPortFilter||e.receivePort==0{
+        return errors.New("faketcp: shared Game listener requires original receive-port filter")
+    }
+    ins,err:=detachedDataKernelFilterSet(e.localIP,e.receivePort,peers)
+    if err!=nil{return err}
+    program:=unix.SockFprog{Len:uint16(len(ins)),Filter:&ins[0]}
+    return unix.SetsockoptSockFprog(e.recvFD,unix.SOL_SOCKET,unix.SO_ATTACH_FILTER,&program)
+}

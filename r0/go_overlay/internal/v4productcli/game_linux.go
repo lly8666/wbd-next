@@ -83,8 +83,9 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     for i:=0;i<n;i++{
         local,err:=gamePort(c.localPort,i)
         if err!=nil{return err}
-        remote,err:=gamePort(c.peerPort,i)
-        if err!=nil{return err}
+        // Multiple independent client source ports still use ONE real
+        // server destination port. Rust authenticates each exact 5-tuple.
+        remote:=c.peerPort
         raw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
             c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
             faketcp.RawIPv4EndpointOptions{ReceivePort:local},
@@ -125,6 +126,8 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         cancel()
         if e!=nil{return e}
     }
+    log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
+        n,c.peerPort,len(flows))
     native,err:=realityfront.NewV4LinuxGameClientProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
@@ -206,88 +209,92 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
             Epochs:epochs,PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
-    raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
-    defer func(){for _,r:=range raws{r.Close()}}()
-    // Same original Go Windows11 pre-TLS packet envelope as the proved
-    // Normal peer; Linux↔Linux Game keeps its existing Legacy default.
+    // One real AF_PACKET listener per server port, not one port or Go
+    // socket per Game lane. Cold FakeTCP connection key is the immutable
+    // client/server IPv4+port tuple. Only Rust can consume detached DATA.
     rawPersona:=faketcp.PacketPersonaLegacy
-    if c.peerPersona==realityfront.V4PeerWindows11 {
+    if c.peerPersona==realityfront.V4PeerWindows11{
         rawPersona=faketcp.PacketPersonaWindows11
     }
+    raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
+        c.rawInterface,c.localIP.As4(),rawPersona,
+        faketcp.RawIPv4EndpointOptions{ReceivePort:c.localPort},
+    )
+    if err!=nil{return err}
+    defer raw.Close()
+    emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
+    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    if err!=nil{return err}
     assocs:=make([]*faketcp.ServerAssociation,n)
     var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
-    admitted:=make(chan int,n)
+    admitted:=make(chan *faketcp.ServerAssociation,n)
     failed:=make(chan error,n)
-    for i:=0;i<n;i++{
-        port,e:=gamePort(c.localPort,i)
-        if e!=nil{return e}
-        raw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
-            c.rawInterface,c.localIP.As4(),rawPersona,
-            faketcp.RawIPv4EndpointOptions{ReceivePort:port},
-        )
-        if e!=nil{return e}
-        raws=append(raws,raw)
-        emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-        table,e:=faketcp.NewServerAssociationTable(32,emit)
-        if e!=nil{return e}
-        go func(slot int,listenPort uint16,r *faketcp.RawIPv4Endpoint,
-            table *faketcp.ServerAssociationTable,emit faketcp.SegmentEmitter){
-            seen:=false
-            for{
-                seg,_,readErr:=r.ReadSegment()
-                if readErr!=nil{
-                    select{case <-ctx.Done():return;default:}
-                    select{case failed<-readErr:default:}
-                    return
+    go func(){
+        // This is COLD bootstrap only. All four established raw flows are
+        // collected before protected TLS policies bind their lane IDs; the
+        // native Game adapter still owns exactly one TUN reader for the group.
+        seen:=make(map[faketcp.ServerFlow]bool,n)
+        for{
+            seg,_,readErr:=raw.ReadSegment()
+            if readErr!=nil{
+                select{case <-ctx.Done():return;default:}
+                select{case failed<-readErr:default:}
+                return
+            }
+            if seg.DstPort!=c.localPort{continue}
+            if faketcp.IsInitialSYN(seg){
+                // Leave existing retransmitted SYN/ACK behavior intact;
+                // do not admit a fifth independently originated flow.
+                if table.Len()>=n{
+                    if _,ok:=table.GetSegment(seg);!ok{continue}
                 }
-                if seg.DstPort!=listenPort{continue}
-                if faketcp.IsInitialSYN(seg){
-                    if seen{continue}
-                    isn,e:=originalRandomISN()
-                    if e!=nil{select{case failed<-e:default:};return}
-                    a,e:=table.AddSYN(seg,isn,time.Second)
-                    if errors.Is(e,faketcp.ErrAssociationExists){continue}
-                    if e!=nil{select{case failed<-e:default:};return}
-                    reply,e:=a.SYNACKSegment()
-                    if e==nil{e=emit(reply)}
-                    if e!=nil{select{case failed<-e:default:};return}
-                    continue
+                isn,e:=originalRandomISN()
+                if e!=nil{select{case failed<-e:default:};return}
+                a,e:=table.AddSYN(seg,isn,time.Second)
+                if errors.Is(e,faketcp.ErrAssociationExists){continue}
+                if e!=nil{select{case failed<-e:default:};return}
+                synack,e:=a.SYNACKSegment()
+                if e==nil{e=emit(synack)}
+                if e!=nil{select{case failed<-e:default:};return}
+                continue
+            }
+            a,ok:=table.GetSegment(seg)
+            if !ok||a.State()==faketcp.ServerAssociationClosed{continue}
+            if state,exists:=a.TransitionState();exists&&
+               state==faketcp.TransitionDetached{
+                if len(seg.Payload)!=0&&handoffCommitted.Load(){
+                    goPostHandoffDataCopies.Add(1)
                 }
-                a,ok:=table.GetSegment(seg)
-                if !ok||a.State()==faketcp.ServerAssociationClosed{continue}
-                if state,exists:=a.TransitionState();exists&&
-                   state==faketcp.TransitionDetached{
-                    if len(seg.Payload)!=0 && handoffCommitted.Load(){
-                        goPostHandoffDataCopies.Add(1)
-                    }
-                    continue
+                continue
+            }
+            outcome,e:=a.HandleSegment(seg,time.Now())
+            if e!=nil{
+                if !errors.Is(e,faketcp.ErrHandshakeState){
+                    select{case failed<-e:default:}
                 }
-                outcome,e:=a.HandleSegment(seg,time.Now())
-                if e!=nil{
-                    if !errors.Is(e,faketcp.ErrHandshakeState){
-                        select{case failed<-e:default:}
-                    }
-                    continue
-                }
-                if outcome.AckNeeded{
-                    if e=emit(a.ACKSegment(outcome.Ack));e!=nil{
-                        select{case failed<-e:default:};return
-                    }
-                }
-                if !seen&&a.State()==faketcp.ServerAssociationEstablished{
-                    seen=true;assocs[slot]=a
-                    select{case admitted<-slot:default:}
+                continue
+            }
+            if outcome.AckNeeded{
+                if e=emit(a.ACKSegment(outcome.Ack));e!=nil{
+                    select{case failed<-e:default:};return
                 }
             }
-        }(i,port,raw,table,emit)
-    }
-    ready:=make(map[int]bool,n)
+            flow:=a.Flow()
+            if !seen[flow]&&a.State()==faketcp.ServerAssociationEstablished{
+                seen[flow]=true
+                select{case admitted<-a:default:}
+            }
+        }
+    }()
+    // Client opens lanes sequentially; after collection each still must
+    // present its correct protected lane ID 1..n to AcceptServerGame.
+    // Source port, NAT and SYN arrival order NEVER grant authorization.
     waitCtx,cancel:=context.WithTimeout(ctx,45*time.Second)
     defer cancel()
-    for len(ready)<n{
+    for i:=range assocs{
         select{
-        case i:=<-admitted: ready[i]=true
+        case a:=<-admitted:assocs[i]=a
         case err=<-failed:return err
         case <-waitCtx.Done():return waitCtx.Err()
         }
@@ -314,28 +321,33 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     err=native.AcceptServerGame(admitCtx,assocs,reply)
     cancelAdmission()
     if err!=nil{_ = native.Close();return err}
-    for i,r:=range raws{
-        if assocs[i]==nil{
+    peers:=make([]faketcp.DetachedPeer,0,n)
+    for i,a:=range assocs{
+        if a==nil{
             _=native.Close()
-            return fmt.Errorf("Game server lane %d missing at M4 handoff",i+1)
+            return fmt.Errorf("Game server lane %d missing at original M4 handoff",i+1)
         }
-        state,exists:=assocs[i].TransitionState()
+        state,exists:=a.TransitionState()
         if !exists||state!=faketcp.TransitionDetached{
             _=native.Close()
             return fmt.Errorf("Game server lane %d not detached at M4 handoff",i+1)
         }
-        flow:=assocs[i].Flow()
-        port,e:=gamePort(c.localPort,i)
-        if e!=nil||flow.ServerIP!=c.localIP.As4()||flow.ServerPort!=port{
+        flow:=a.Flow()
+        if flow.ServerIP!=c.localIP.As4()||flow.ServerPort!=c.localPort{
             _=native.Close()
-            return fmt.Errorf("Game server lane %d kernel RX scope mismatch",i+1)
+            return fmt.Errorf("Game server lane %d escaped single-port tuple scope",i+1)
         }
-        if e:=r.ExcludeDetachedData(flow.ClientIP,flow.ClientPort);e!=nil{
-            _=native.Close()
-            return fmt.Errorf("Game server lane %d kernel RX handoff: %w",i+1,e)
-        }
+        peers=append(peers,faketcp.DetachedPeer{IP:flow.ClientIP,Port:flow.ClientPort})
+    }
+    // Install the exact union once; a second SO_ATTACH_FILTER call for
+    // another lane would silently re-expose the earlier native DATA to Go.
+    if e:=raw.ExcludeDetachedDataSet(peers);e!=nil{
+        _=native.Close()
+        return fmt.Errorf("Game server shared-port kernel RX handoff: %w",e)
     }
     handoffCommitted.Store(true)
+    log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=%d server_port=%d distinct_client_flows=%d",
+        n,c.localPort,len(peers))
     log.Printf("V4_PUBLIC_GAME_GO_RX_HANDOFF role=server lanes=%d filtered=%d rust_ready=1 original_send_fd_open=1",n,n)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",n)
