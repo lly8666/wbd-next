@@ -16,7 +16,23 @@ def audit(raw):
     elif magic==b"\xa1\xb2\xc3\xd4": endian=">"
     else: raise AssertionError("pcap must use classic microsecond format")
     _,_,_,_,_,_,link=struct.unpack_from(endian+"IHHIIII",raw)
-    if link!=1: raise AssertionError("veth must use ethernet capture")
+    if link not in (1,113,276):
+        raise AssertionError("expected kernel Ethernet/SLL/SLL2 capture on real netns")
+    def ipv4(frame):
+        if link==1:
+            if len(frame)<14:return None
+            kind=frame[12:14]
+            offset=14
+            # VLAN-tagged Ethernet remains a valid real L2 witness.
+            if kind in (b"\x81\x00",b"\x88\xa8"):
+                if len(frame)<18:return None
+                kind=frame[16:18];offset=18
+            return frame[offset:] if kind==b"\x08\x00" else None
+        if link==113:
+            # Linux SLL v1: 16-byte cooked header, network protocol at 14.
+            return frame[16:] if len(frame)>=16 and frame[14:16]==b"\x08\x00" else None
+        # Linux SLL v2: 20-byte cooked header, network protocol at 0.
+        return frame[20:] if len(frame)>=20 and frame[:2]==b"\x08\x00" else None
     records=[]
     off=24
     while off+16<=len(raw):
@@ -24,8 +40,8 @@ def audit(raw):
         off+=16
         if inc>65535 or off+inc>len(raw):raise AssertionError("truncated frame")
         frame=raw[off:off+inc];off+=inc
-        if len(frame)<34 or frame[12:14]!=b"\x08\x00":continue
-        ip=frame[14:]
+        ip=ipv4(frame)
+        if ip is None or len(ip)<20:continue
         ihl=(ip[0]&15)*4
         if len(ip)<ihl+20 or ip[9]!=6:continue
         total=int.from_bytes(ip[2:4],"big")

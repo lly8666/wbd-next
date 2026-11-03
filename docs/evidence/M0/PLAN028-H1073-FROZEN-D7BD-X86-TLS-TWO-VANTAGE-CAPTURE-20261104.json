@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1073",
+  "binary_product_source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+  "product_binary_run_id": 41694943009,
+  "product_binary_artifact_id": 13260387707,
+  "prior_harness_run_id": 41696747514,
+  "prior_harness_conclusion": "failure",
+  "actual_real_native_tls_ca_auth_udp_stop": "PASS_SCOPED",
+  "tcp_exterior_first_payload": "NOT_PROVEN",
+  "failure": "Prior frozen Linux netns server veth tcpdump Ethernet PCAP only 24-byte header, zero packets even with unfiltered ip BPF. Cannot infer TLS exterior from Rust business.",
+  "fixture_remedy": {
+    "new_harness_source": "THIS_COMMIT",
+    "os": "Linux/x86_64 native both original Go/Rust endpoints, two netns on same x86 runner",
+    "method": "two isolated root netns native tcpdump -i any with no kernel BPF, cooked SLL/SLL2 + raw Ethernet datalink support, strict offline exact-port443 TCP sequence reassembly",
+    "private_pcap_retention": "temporary runner only; never included in artifacts",
+    "reported_facts": "TCP first client handshake byte/ServerHello byte, no earlier server payload, TLS record and extension lengths, compatibility sessionID 32, source hash and actual 5 UDP Stop",
+    "result": "WAIT_NEW_ACTION"
+  },
+  "external_limits": [
+    "No Windows physical NIC qualification",
+    "No ARM64 new handshake native qualification",
+    "H998 outer live MTU shrink original FAIL unchanged",
+    "Old ARM64 Game4FEC original FAIL unchanged",
+    "No CPU/p99/remote ICMP inference"
+  ]
+}

@@ -56,6 +56,14 @@ PIDC='' PIDS='' APPS=''
 cleanup(){
   local exit_code=$?
   set +e
+  # A failed admission or packet assertion must not leak passive observers.
+  # Both captures remain private and ephemeral, including early exits.
+  for pid in "${WIRE_SERVER_PID:-}" "${WIRE_CLIENT_PID:-}";do
+    if [[ -n "$pid" ]];then
+      sudo -n kill -INT "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    fi
+  done
   if [[ "$exit_code" -ne 0 && "$AUTO_IP" == 1 ]];then
     # Save only original native owner/readback diagnostics; no secrets,
     # command line, packet body, TLS transcript or certificates.
@@ -126,13 +134,20 @@ fi
 # Real TCP payload capture begins before first SYN/ClientHello. The pcap
 # never enters artifacts; only a bounded structural/hash JSON report leaves
 # this ephemeral runner. Only run on the single Normal wire-audit task.
-WIRE_PID=''
+WIRE_SERVER_PID=''
+WIRE_CLIENT_PID=''
 if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   test "$MODE" = normal
-  sudo -n ip netns exec "$NSS" tcpdump -i wbdvs0 -U -s 4096 -w "$TMP/hello-wire.pcap" 'ip' >"$TMP/tcpdump.log" 2>&1 &
-  WIRE_PID=$!
-  sleep .35
-  sudo -n kill -0 "$WIRE_PID"
+  # Kernel's ETH_P_ALL cooked capture on BOTH isolated namespaces.
+  # No port-BPF can suppress the original raw FakeTCP datagrams.
+  # These PCAPs never leave the test runner.
+  sudo -n ip netns exec "$NSS" tcpdump --immediate-mode -i any -U -s 4096 -w "$TMP/hello-server.pcap" >"$TMP/tcpdump-server.log" 2>&1 &
+  WIRE_SERVER_PID=$!
+  sudo -n ip netns exec "$NSC" tcpdump --immediate-mode -i any -U -s 4096 -w "$TMP/hello-client.pcap" >"$TMP/tcpdump-client.log" 2>&1 &
+  WIRE_CLIENT_PID=$!
+  sleep .5
+  sudo -n kill -0 "$WIRE_SERVER_PID"
+  sudo -n kill -0 "$WIRE_CLIENT_PID"
 fi
 # Startup uses exactly the production binaries and unmodified original Go
 # TLS/FakeTCP code. PID belongs to the exec'd process in each netns.
@@ -624,20 +639,31 @@ else
   echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
 fi
 if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
-  sudo -n kill -INT "$WIRE_PID" 2>/dev/null || true
-  wait "$WIRE_PID" || true
-  test -s "$TMP/hello-wire.pcap"
-  echo "M0_PLAN028_TCPDUMP_CAPTURE_INFO interface=wbdvs0 scope=isolated_kernel_IP bytes=$(stat -c %s "$TMP/hello-wire.pcap")"
-  # The private PCAP never leaves the runner; log only first bounded
-  # IP/port metadata and capture counts if the structural auditor fails.
-  sudo -n tcpdump -nn -tt -r "$TMP/hello-wire.pcap" -c 8 2>&1 |
-    grep -E 'reading from file| IP | packets' | tail -9 || true
-  if ! sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$TMP/hello-wire.pcap" >"$ART/plan028-tls-wire-audit.json";then
-    echo "M0_PLAN028_REAL_TCP_STREAM_AUDIT_FAIL bytes=$(stat -c %s "$TMP/hello-wire.pcap")" >&2
-    tail -8 "$TMP/tcpdump.log" >&2 || true
+  for pid in "$WIRE_SERVER_PID" "$WIRE_CLIENT_PID";do
+    sudo -n kill -INT "$pid" 2>/dev/null || true
+    wait "$pid" || true
+  done
+  selected=''
+  for role in server client;do
+    capture="$TMP/hello-$role.pcap"
+    test -s "$capture" || { echo "M0_PLAN028_TCPDUMP_EMPTY role=$role" >&2;continue; }
+    size="$(stat -c %s "$capture")"
+    echo "M0_PLAN028_TLS_CAPTURE_INFO role=$role link=cooked_any bytes=$size"
+    # Only visible IP/port metadata is printed. Never retain TLS payloads.
+    sudo -n tcpdump -nn -tt -r "$capture" -c 7 2>&1 |
+      grep -E 'reading from file| IP | packets' | tail -9 || true
+    if sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$capture" >"$TMP/tls-audit-$role.json";then
+      selected="$role";break
+    fi
+    echo "M0_PLAN028_TLS_CAPTURE_NOT_QUALIFIED role=$role bytes=$size" >&2
+    tail -5 "$TMP/tcpdump-$role.log" >&2 || true
+  done
+  [[ -n "$selected" ]] || {
+    echo "M0_PLAN028_TWO_VANTAGE_REAL_TCP_STREAM_AUDIT_FAIL" >&2
     exit 1
-  fi
+  }
+  cp "$TMP/tls-audit-$selected.json" "$ART/plan028-tls-wire-audit.json"
   grep -Fq 'REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS' "$ART/plan028-tls-wire-audit.json"
-  sudo -n rm -f "$TMP/hello-wire.pcap"
-  echo M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS cert_verified_by_original_TLS=1
+  sudo -n rm -f "$TMP/hello-server.pcap" "$TMP/hello-client.pcap"
+  echo "M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS vantage=$selected cert_verified_by_original_TLS=1"
 fi
