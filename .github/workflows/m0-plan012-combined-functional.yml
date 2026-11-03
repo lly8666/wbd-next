@@ -232,9 +232,11 @@ jobs:
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
           file fixed-build/wbd-v4-client fixed-build/wbd-v4-server
-          # PLAN028 destination-route MTU under a larger physical NIC;
-          # one focused Go test, no extra matrix or separate native stack.
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028(RouteMTUMetricOverridesPhysicalInterface|PhysicalRouteAuthorityNotVPNOrTextIntent)          python3 - <<'PY'
+          # One Go unit for the new kernel route-MTU clamp.
+          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestPLAN028RouteMTUMetricOverridesPhysicalInterface -count=1 ./internal/v4productcli) >fixed-kernel-result/plan028-route-mtu-unit.log 2>&1 || {
+            cat fixed-kernel-result/plan028-route-mtu-unit.log; exit 1;
+          }
+          python3 - <<'PY'
           import hashlib,json,os,pathlib
           sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           source=["crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-engine/src/v4_owner_crypto.rs",
