@@ -79,6 +79,15 @@ if [ "$game_lanes" -gt 0 ]; then
   server_ready_marker=V4_ORIGINAL_GO_GAME_NATIVE_READY
   stop_marker=V4_PUBLIC_GAME_NATIVE_STOP_DRAINED
 fi
+# Explicit current-Game protected group, never conflate Game4/FEC with
+# Normal's standalone FEC mode. Both original TLS peers receive SAME flag.
+game_fec_args=()
+if [ -n "${WBD_ARM64_GAME_FEC_PROFILE:-}" ]; then
+  if [ "$mode" != game4 ] || [ "$WBD_ARM64_GAME_FEC_PROFILE" != 6 ]; then
+    echo 'ARM64_GAME_FEC_TEST_ONLY_FIXED6_GAME4' >&2; exit 2
+  fi
+  game_fec_args=(--game-fec fixed6)
+fi
 export WBD_V4_GAME_LANES="$game_lanes"
 # Raw FakeTCP SYN/SYNACK uses no kernel TCP socket. The kernel otherwise emits
 # a real TCP RST to that unmatched tuple, and the original Go client closes.
@@ -114,7 +123,7 @@ fi
 if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
   server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
 fi
-sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" \
+sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" "${game_fec_args[@]}" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
   "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
@@ -150,7 +159,7 @@ if [ "$raw_listen" -ne 1 ];then
   exit 1
 fi
 echo ARM64_REAL_GO_AF_PACKET_SERVER_LISTENING_BEFORE_SYN_PASS
-sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" \
+sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
   "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
@@ -221,6 +230,40 @@ if [ "${WBD_ARM64_MTU_BOUNDARY:-0}" = 1 ]; then
     echo "ARM64_REAL_MTU_BOUNDARY_PASS mode=$mode direction=$direction inner_ipv4=$mtu df_plus_one=REJECTED" >>"$out/mtu-boundary.txt"
   done
 fi
+# Actual routed physical MTU change AFTER authenticated original TLS and
+# normal business; do not touch Wintun/TUN to fake correct budget derivation.
+# A product that cannot rebind or fail-close in a bounded manner must FAIL.
+if [ "${WBD_ARM64_LIVE_MTU_CYCLE:-0}" = 1 ]; then
+  [ "$mode" = normal ] || { echo ARM64_LIVE_MTU_NORMAL_ONLY >&2; exit 2; }
+  echo 'ARM64_LIVE_PHYSICAL_MTU_CHANGE_BEGIN old=1500 new=1280' | tee -a "$out/dynamic-mtu.txt"
+  sudo -n ip -n "$client_ns" link set v4ac mtu 1280
+  sudo -n ip -n "$server_ns" link set v4as mtu 1280
+  for ns in "$client_ns" "$server_ns";do
+    port=v4ac; [ "$ns" = "$server_ns" ] && port=v4as
+    got=$(sudo -n ip -j -n "$ns" link show "$port" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["mtu"])')
+    test "$got" = 1280 || { echo 'ARM64_LIVE_PHYSICAL_MTU_OS_READBACK_FAIL'; exit 1; }
+  done
+  sleep 3
+  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -s 64 -c 3 -W 2 10.188.18.2 > "$out/dynamic-small-c2s.log" 2>&1 || { echo ARM64_LIVE_MTU_SMALL_C2S_FAIL;exit 1; }
+  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -s 64 -c 3 -W 2 10.188.18.1 > "$out/dynamic-small-s2c.log" 2>&1 || { echo ARM64_LIVE_MTU_SMALL_S2C_FAIL;exit 1; }
+  grep -q '0% packet loss' "$out/dynamic-small-c2s.log"
+  grep -q '0% packet loss' "$out/dynamic-small-s2c.log"
+  for direction in c2s s2c;do
+    ns="$client_ns";device=wbdcl
+    if [ "$direction" = s2c ];then ns="$server_ns";device=wbdsv;fi
+    actual=$(sudo -n ip -j -n "$ns" link show "$device" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["mtu"])')
+    echo "ARM64_LIVE_MTU_PHASE mid direction=$direction inner_os=$actual physical_os=1280" | tee -a "$out/dynamic-mtu.txt"
+    if [ "$actual" -gt 1209 ];then
+      echo "ARM64_LIVE_MTU_NARROW_NOT_APPLIED direction=$direction actual=$actual maximum=1209" | tee -a "$out/dynamic-mtu.txt"
+      exit 1
+    fi
+  done
+  sudo -n ip -n "$client_ns" link set v4ac mtu 1500
+  sudo -n ip -n "$server_ns" link set v4as mtu 1500
+  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -s 64 -c 3 -W 2 10.188.18.2 > "$out/dynamic-restored.log" 2>&1
+  grep -q '0% packet loss' "$out/dynamic-restored.log"
+  echo ARM64_LIVE_MTU_1460_1280_RECOVER_REAL_OS_PASS | tee -a "$out/dynamic-mtu.txt"
+fi
 export WBD_V4_EXPECTED_ICMP="$count"
 # One bounded, real-product capacity discovery; not codec A/B, first-arrival
 # p99, or a production rate guarantee. Do NOT repeat if capacity is insufficient.
@@ -274,6 +317,16 @@ if [ "$game_lanes" -gt 0 ]; then
     grep -Eq "V4_PUBLIC_GAME_KERNEL role=$side lanes=$game_lanes copied=[1-9][0-9]* delivered=[1-9][0-9]* rejected=0 raw_received=[1-9][0-9]* auth_rejected=0" "$out/$side.log"
   done
 fi
+if [ -n "${WBD_ARM64_GAME_FEC_PROFILE:-}" ]; then
+  # Genuine Game FEC source/parity must have passed the actual kernel copy
+  # before we can call this a protected-source native mode.
+  for side in client server;do
+    grep -Eq "V4_PUBLIC_GAME_FEC_COUNTERS role=$side lanes=4 source_offered=[1-9][0-9]* parity_offered=[1-9][0-9]* parity_copied=[1-9][0-9]*" "$out/$side.log" || {
+      echo "ARM64_GAME4_FEC6_REAL_PARITY_MISSING role=$side" >&2;tail -n 18 "$out/$side.log" >&2;exit 1;
+    }
+  done
+  echo ARM64_GAME4_FEC6_NATIVE_PARITY_KERNEL_COPIED_BOTH_PASS
+fi
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
@@ -303,6 +356,8 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "test_harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
 "qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
 "mode":os.environ.get("WBD_V4_MODE","normal"),
+"game_fec_profile":os.environ.get("WBD_ARM64_GAME_FEC_PROFILE","off"),
+"dynamic_mtu_cycle":os.environ.get("WBD_ARM64_LIVE_MTU_CYCLE","NOT_RUN"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
 "game_lanes":int(os.environ.get("WBD_V4_GAME_LANES","0")),
 "bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",

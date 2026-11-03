@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "result": "PASS_SCOPED_ELEVEN_ORIGINAL_WINDOWS_LINUX_NATIVE_CASES_NOT_FULL_PLAN027A",
+  "status": "SCOPED_REAL_NATIVE_11_OF_11_PASS",
+  "binary_build_action": 41546652567,
+  "case_count": 11,
+  "cases": [
+    {
+      "scope": "normal_df0_df1_udp1728_4096_65507_tcp65536",
+      "run": 41557351763,
+      "harness_sha": "203fab7b507742e2d051c57f73263210417a3c2c",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "normal_1280_mss1240_inner1209",
+      "run": 41557359570,
+      "harness_sha": "203fab7b507742e2d051c57f73263210417a3c2c",
+      "outer_ip_mtu": 1280,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "fixed_1460_inner1375",
+      "run": 41554882448,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "game2_1460_inner1373",
+      "run": 41554892070,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "game4_1460_inner1373",
+      "run": 41554905507,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "game2_fec6_1460",
+      "run": 41554912671,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "game4_fec6_1280",
+      "run": 41554928445,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1280,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "fixed_1500_inner1415",
+      "run": 41554935893,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1500,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "game4_fec6_1500",
+      "run": 41554944208,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1500,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "auto_revision2_applied_1460",
+      "run": 41554953134,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    },
+    {
+      "scope": "auto_adaptive_mature_policy_applied_1460",
+      "run": 41554960288,
+      "harness_sha": "b03332b9886ed2321b8711b149bc8e78325b797d",
+      "outer_ip_mtu": 1460,
+      "conclusion": "success",
+      "result": "PASS",
+      "platform": "actual original Windows signed Npcap/Wintun ↔ Linux WSL2 TUN Go TLS/Rust owned Stop"
+    }
+  ],
+  "extension_proof": {
+    "run": 41557351763,
+    "outer_ip": 1460,
+    "inner_os_readback": {
+      "windows": 1389,
+      "linux": 1389
+    },
+    "actual_syn_mss": {
+      "windows": 1420,
+      "linux": 1420
+    },
+    "df0_complete_byte_exact_udp_application_payloads_both_directions": [
+      1728,
+      4096,
+      65507
+    ],
+    "df1_local_kernel_emsgsize": {
+      "windows": 10040,
+      "linux": 90
+    },
+    "df1_sizes": [
+      1728,
+      4096,
+      65507
+    ],
+    "tcp_application_write_echo_bytes_each_direction": 65536,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "reassembly_detail": "two genuine independent OS sockets report exact data against peer's original payload, staged DF0 1728 bounded repeats, all 3 sizes per OS eventually one byte-exact full datagram"
+  },
+  "normal1280_proof": {
+    "run": 41557359570,
+    "configured_outer": {
+      "client": 1280,
+      "server": 1280
+    },
+    "local_syn_mss": {
+      "windows": 1240,
+      "linux": 1240
+    },
+    "inner_os_applied": {
+      "windows": 1209,
+      "linux": 1209
+    },
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "old_actions_preserved_as_failed": [
+    41554874742,
+    41554919787,
+    41556515001,
+    41556523338
+  ],
+  "prior_accepted_staged_loss": [
+    41548218023,
+    41548233145,
+    41548243272
+  ],
+  "native_arm64_current_source": "NOT_RUN_AT_AUTHORING_H995_WORKFLOW_QUEUED_SEPARATELY",
+  "inplace_physical_mtu_test": "NOT_RUN_AT_AUTHORING_H995_WORKFLOW_QUEUED_SEPARATELY",
+  "user_state_icmp_type3_code4": "NOT_MEASURED_LOCAL_KERNEL_EMSGSIZE_IS_NOT_REMOTE_ICMP",
+  "physical_wan": "NOT_MEASURED",
+  "performance_ab_same_vm": "NOT_PROVEN_AS_CAUSAL",
+  "plan027a_exit": "OPEN_PENDING_REMAINING_NON_EQUIVALENT_GATES"
+}

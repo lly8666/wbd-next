@@ -227,6 +227,13 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
    "evidence": "docs/evidence/M0/PLAN027A-H988-H987-THREE-NATIVE-RECEIPTS-20261103.json"
+  },
+  {
+   "platform": "Windows signed Npcap/Wintun ↔ Linux WSL2 TUN original Go TLS/Rust",
+   "scope": "H995 collects H990/H994 eleven exact product-source native PASS incl UDP DF0 full byte-exact 1728/4096/65507 both OS, DF1 local EMSGSIZE 10040/90, 64KiB TCP byte-exact echo, Normal1280 MSS1240/inner1209, all original owned Stop. Previous test FAILs retained; real ICMP3/4 and hot physical PMTU still unverified.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+   "evidence": "docs/evidence/M0/PLAN027A-H995-H994-11-OF-11-REAL-NATIVE-CLOSE-20261103.json"
   }
  ],
  "limitations": [
@@ -246,7 +253,8 @@
   "H943旧ae3e7e9f六场景原生PASS但Game4FEC10M首到RTT p99>1s；H987仅3Mbps分阶段，不追认高负载全性能。",
   "历史H669/H673/H676/H678真实首到失败、H928/H935编译失败和H978 Fixed1333异常完整保留各自证据；新H981/H987 PASS不得抹消旧SOURCE失败。",
   "H988用户验收：DF0应有≥1个完整大datagram真实分片后逐字节重组成功，不按丢片率/完成比例硬门。Normal真实双端1728B PASS；ICMP3/4仍NOT_MEASURED。",
-  "H987 Auto/Game4FEC阶段性真实5/30/5只覆盖指定SOURCE、负载、Windows/WSL2；不代表动态PMTU、ARM64 Game、4096/65507或物理网络资格。"
+  "H987 Auto/Game4FEC阶段性真实5/30/5只覆盖指定SOURCE、负载、Windows/WSL2；不代表动态PMTU、ARM64 Game、4096/65507或物理网络资格。",
+  "H995: 11 Windows/WSL2 original product scoped native PASS includes true UDP DF0 65507 and TCP 65536; does not prove online 1460→1280→restore, remote ICMP3/4, same-host CPU causal A/B or current ARM64 GameFEC. H995 one-shot native ARM64 actual test outcome must be collected separately."
  ],
  "promotion": null
 }

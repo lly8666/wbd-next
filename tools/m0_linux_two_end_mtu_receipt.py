@@ -15,7 +15,14 @@ def one(pattern,log,label):
         raise ValueError("H981 missing actual "+label)
     return values[-1]
 
-def verify(directory:pathlib.Path,mode:str,client_outer:int,server_outer:int):
+def real_equal_outer_inner_mtu(outer:int,mode:str,game_fec:bool=False)->int:
+    # Independent literal native-readback oracle; not the product budget path.
+    if mode=="normal" and not game_fec:return outer-71
+    if mode in ("fec-fixed","fec-auto") and not game_fec:return outer-85
+    if mode in ("game2","game4"):return outer-(102 if game_fec else 87)
+    raise ValueError("unsupported real ARM64 mode or FEC shape")
+
+def verify(directory:pathlib.Path,mode:str,client_outer:int,server_outer:int,game_fec:bool=False):
     logs={side:(directory/(side+".log")).read_text(errors="replace")
           for side in ("client","server")}
     kernel=(directory/"mtu-boundary.txt").read_text()
@@ -64,7 +71,7 @@ def verify(directory:pathlib.Path,mode:str,client_outer:int,server_outer:int):
     if client_outer==server_outer and all(
         row["physical"]>=client_outer for row in results.values()):
         wire=client_outer-40
-        inner=client_outer-(71 if mode=="normal" else 85)
+        inner=real_equal_outer_inner_mtu(client_outer,mode,game_fec)
         for side,row in results.items():
             if (row["local_advertised_mss"],row["received_peer_mss"],
                 row["agreed_record_wire_cap"],row["inner_tun_os_applied"])!=(
@@ -89,7 +96,9 @@ if __name__=="__main__":
     p.add_argument("mode")
     p.add_argument("client_outer",type=int)
     p.add_argument("server_outer",type=int)
+    p.add_argument("--game-fec",action="store_true",help="real authenticated Game4 fixed6")
     x=p.parse_args()
+    if x.game_fec and x.mode!="game4":raise SystemExit("only Game4 fixed6 accepted")
     print("H981_LINUX_CLIENT_SERVER_REAL_MTU_PROOF "+json.dumps(
-      verify(x.directory,x.mode,x.client_outer,x.server_outer),
+      verify(x.directory,x.mode,x.client_outer,x.server_outer,x.game_fec),
       sort_keys=True),flush=True)

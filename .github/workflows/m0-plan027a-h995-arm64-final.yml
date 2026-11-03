@@ -1,0 +1,134 @@
+name: M0 PLAN027A H995 exact ARM64 GameFEC and live route MTU native verification
+run-name: "M0|PLAN027A-H995-ARM64|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h995-arm64-final.yml]
+permissions: {contents: read}
+jobs:
+  build-one-original-arm64-product:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 78
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Validate exact original ARM64 source, typed budget and IPv4 fragment suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt tests.test_m0_linux_initial_syn_ready -v
+          python3 -m py_compile tools/m0_linux_two_end_mtu_receipt.py
+          python3 tools/m0_install_public_faketcp.py --check-only
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-codec --lib path_budget
+          cargo +1.85.1 test --locked -p wbd-platform --lib ipv4_fragment
+          echo H995_NATIVE_ARM64_CURRENT_SOURCE_BUDGET_IP_FRAG_PRECHECK_PASS
+      - name: Compile exactly one native original Go TLS Rust Game FEC ARM64 product
+        shell: bash
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc iproute2 iputils-ping openssl iptables
+          bash tools/arm64_public_go_rust_bundle.sh
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("arm64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="aarch64"
+          print("H995_ARM64_BUNDLE_SHA256_ORIGINAL_GO_RUST_SOURCE_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h995-arm64-exact-source-product
+          path: arm64-public-bundle/
+          retention-days: 30
+          if-no-files-found: error
+  one-real-native-case-per-independent-job:
+    needs: [build-one-original-arm64-product]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: normal-default1460
+            mode: normal
+            client: 1460
+            server: 1460
+            fec: ""
+            live: "0"
+          - id: normal-asymmetric1460-1280
+            mode: normal
+            client: 1460
+            server: 1280
+            fec: ""
+            live: "0"
+          - id: game4-fec6-default1460
+            mode: game4
+            client: 1460
+            server: 1460
+            fec: "6"
+            live: "0"
+          - id: game4-fec6-explicit1500
+            mode: game4
+            client: 1500
+            server: 1500
+            fec: "6"
+            live: "0"
+          - id: normal-physical-live1460-1280-recover
+            mode: normal
+            client: 1460
+            server: 1460
+            fec: ""
+            live: "1"
+    env:
+      WBD_V4_MODE: ${{ matrix.mode }}
+      WBD_ARM64_OUTER_MTU: ${{ matrix.client }}
+      WBD_ARM64_SERVER_OUTER_MTU: ${{ matrix.server }}
+      WBD_ARM64_GAME_FEC_PROFILE: ${{ matrix.fec }}
+      WBD_ARM64_LIVE_MTU_CYCLE: ${{ matrix.live }}
+      WBD_ARM64_MTU_BOUNDARY: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: h995-arm64-exact-source-product
+          path: arm64-public-bundle/
+      - name: Verify same binary SHA and true kernel namespace case
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt -v
+          echo "H995_ARM64_TRUE_NATIVE_CASE_BEGIN ${{ matrix.id }} source=$GITHUB_SHA"
+          bash tools/arm64_linux_netns_smoke.sh
+          dir="h995-${{ matrix.id }}"
+          mv arm64-netns-result "$dir"
+          if [ "$WBD_ARM64_GAME_FEC_PROFILE" = "6" ];then
+            python3 tools/m0_linux_two_end_mtu_receipt.py "$dir" "$WBD_V4_MODE" "$WBD_ARM64_OUTER_MTU" "$WBD_ARM64_SERVER_OUTER_MTU" --game-fec | tee "$dir/mtu-mss-validated.jsonl"
+          else
+            python3 tools/m0_linux_two_end_mtu_receipt.py "$dir" "$WBD_V4_MODE" "$WBD_ARM64_OUTER_MTU" "$WBD_ARM64_SERVER_OUTER_MTU" | tee "$dir/mtu-mss-validated.jsonl"
+          fi
+          echo "H995_ARM64_TRUE_NATIVE_CASE_PASS ${{ matrix.id }} original_go_tls_rust_os_tun_stop=YES"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h995-arm64-${{ matrix.id }}
+          path: |
+            arm64-public-bundle/manifest.json
+            arm64-public-bundle/SHA256SUMS
+            h995-${{ matrix.id }}/
+            arm64-netns-result/
+          retention-days: 30
+          if-no-files-found: warn
