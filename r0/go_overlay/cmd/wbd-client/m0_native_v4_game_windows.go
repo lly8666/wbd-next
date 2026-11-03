@@ -28,6 +28,22 @@ func offerGameColdInbound(inbound chan<- m0GameInbound,record m0GameInbound)bool
  }
 }
 
+// All Game lanes retain one authenticated server listener port.
+// Source ports distinguish exact original FakeTCP 5-tuples; incrementing the
+// destination (443+i) breaks the single-port server before any real TLS.
+func m0WindowsGameOriginalClientFlow(
+ o m0NativeV4Options,localIP [4]byte,lane int,
+)(faketcp.ClientFlow,error){
+ src:=int(o.SourcePort)+lane
+ if lane<0||lane>=4||o.ServerPort==0||src<=0||src>65535||!o.ServerIP.Is4(){
+  return faketcp.ClientFlow{},windowsclient.ErrN4NativeGuard
+ }
+ return faketcp.ClientFlow{
+  LocalIP:localIP,PeerIP:o.ServerIP.As4(),
+  LocalPort:uint16(src),PeerPort:o.ServerPort,
+ },nil
+}
+
 func runM0NativeV4WindowsGame(
  ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
@@ -55,15 +71,13 @@ func runM0NativeV4WindowsGame(
   for _,assoc:=range assocs{assoc.Close()}
  }()
  for i:=0;i<count;i++{
-  src,dst:=int(o.SourcePort)+i,int(o.ServerPort)+i
-  if src>65535||dst>65535{return windowsclient.ErrN4NativeGuard}
-  ep,err:=open(uint16(src),uint16(dst))
+  flow,err:=m0WindowsGameOriginalClientFlow(o,localIP,i)
+  if err!=nil{return err}
+  // Each Npcap receive filter and the SYN emitter now target this exact
+  // independent client source port AND the same remote server 443.
+  ep,err:=open(flow.LocalPort,flow.PeerPort)
   if err!=nil{return err}
   endpoints=append(endpoints,ep)
-  flow:=faketcp.ClientFlow{
-   LocalIP:localIP,PeerIP:o.ServerIP.As4(),
-   LocalPort:uint16(src),PeerPort:uint16(dst),
-  }
   var seed [4]byte
   if _,err=rand.Read(seed[:]);err!=nil{return err}
   assoc,err:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),
