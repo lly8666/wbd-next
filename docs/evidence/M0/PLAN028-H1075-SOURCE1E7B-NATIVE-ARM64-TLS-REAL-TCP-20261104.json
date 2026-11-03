@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1075",
+  "result": "PASS_SCOPED_NORMAL_ARM64_REAL_TCP_FIRST_FLIGHT",
+  "source_sha": "1e7b48cdf3d68e1108590a8e397029c613584779",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41740841952,
+    "job_id": 126281641074,
+    "artifact_id": 13281038936,
+    "conclusion": "success",
+    "artifact_independently_unpacked": true,
+    "os": "ubuntu-24.04-arm native_aarch64"
+  },
+  "binary_manifest": {
+    "source_sha": "1e7b48cdf3d68e1108590a8e397029c613584779",
+    "arch": "native_aarch64",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "sha256": {
+      "wbd-v4-client": "1c84043d923e9edecc25df545fc807e1668c5dbcc84d29ed7f36101f1b8b449a",
+      "wbd-v4-server": "0cc048c24f0137dd41a3b341f649cc4a4f7ce541a8662e8bdd2ef85dfd234922",
+      "libwbd_engine.so": "420f4af9ea6f036df753931fee6ed4690aa6e4d49746a1449e5c5f762f55bbd5"
+    }
+  },
+  "artifact_sha256": {
+    "fixed-kernel-result/plan028-tls-wire-audit.json": "e38d9838e2464380653a2c2a6db923a4f7a5f91eef473b026494bff82a3747f1",
+    "fixed-kernel-result/native-arm64-real-tcp-wire.log": "483b31049bd1551096aac793df41c9304410e70acd4ba831bd246ae461edffb1",
+    "fixed-kernel-result/native-arm64-tls-go-unit.log": "8aab1729010f97848e34d28e14e9fb6f3c578a84cf37117d6a9155c2e748dc4f",
+    "fixed-build/manifest.json": "0f2f152cda86b0f2bae42d53a84f0983d83c231b22a72ad614e87c939472f38b"
+  },
+  "observed": {
+    "original_go_tls": true,
+    "offline_route_key_bytes": 32,
+    "CA_verified": true,
+    "real_netns_and_TUN": true,
+    "server_port": 443,
+    "client_first_payload": "TLS_Handshake_ClientHello",
+    "server_first_payload": "TLS_Handshake_ServerHello",
+    "client_hello_first_record_bytes": 667,
+    "server_hello_first_record_bytes": 127,
+    "server_early_application_bytes": 0,
+    "session_id_length": 32,
+    "tls_extension_count": 15,
+    "real_udp_echo": 5,
+    "shared_server_rust_TUN_reader_joined": true,
+    "go_tests_pass": [
+      "TestFirefox120PersonaKeepsPresetAndRouteMarker",
+      "TestPLAN028V4NoPreludeOriginalClientHelloFullCertificateAndSessionIDEpoch",
+      "TestPLAN028V4NoRouteKeyRejectsLocallyWithoutNetworkReadWrite",
+      "TestPLAN028V4WrongRouteKeyWrongCertAndWrongPasswordNoAdmission"
+    ]
+  },
+  "cross_isa_comparison": "H1073 native x86 and H1075 native ARM both same-SNI/CA normal ClientHello 667B ServerHello 127B extensions same order; no inference for another SNI/certificate or site",
+  "limitations": [
+    "Normal first flight only, full certificate/Finished wire baseline or public website fingerprint not independently decoded",
+    "Game per-lane/rotation and actual Windows first-flight NOT_RUN",
+    "H998 online MTU old FAIL and ARM64 Game4FEC old FAIL preserved",
+    "Windows physical NIC, CPU/p99 causality, remote ICMP, Android NOT_RUN"
+  ],
+  "plan028": "IN_PROGRESS"
+}

@@ -10,6 +10,9 @@ on:
 permissions: {contents: read, actions: read}
 jobs:
   real-native-x86-tls-wire-no-rebuild:
+    # H1073 already qualified Normal on exact immutable source d7bd.
+    # A Game4-only fixture edit must not re-run the accepted Normal scene.
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[tls-game-wire-only]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 13
     env:

@@ -137,7 +137,15 @@ fi
 WIRE_SERVER_PID=''
 WIRE_CLIENT_PID=''
 if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
-  test "$MODE" = normal
+  if [[ "$MODE" != normal ]];then
+    # Eight real TLS tuples: four original Game4 lanes, then a new four
+    # after OS source IPv4 changes and original old Game M4 joins.
+    [[ "$MODE" == game4 && "$AUTO_IP" == 1 && "$PATH_SWITCH" == 1 &&
+       "$GAME_FEC_ARG" == '--game-fec fixed6' ]] || {
+      echo 'wire audit supports Normal or one Game4FEC6 physical path switch' >&2
+      exit 2
+    }
+  fi
   # Kernel's ETH_P_ALL cooked capture on BOTH isolated namespaces.
   # No port-BPF can suppress the original raw FakeTCP datagrams.
   # These PCAPs never leave the test runner.
@@ -475,18 +483,24 @@ else
 fi
 if [[ "$GAME" != 0 ]];then
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
-  for role in client server;do
+  # The authenticated auto-IP server is a MULTI-GROUP Rust M4 owner,
+  # not the old singleton server stop/kernel marker. Its exact per-group
+  # retire plus shared-TUN ReaderJoin are validated below.
+  game_singleton_roles=(client server)
+  if [[ "$AUTO_IP" == 1 ]];then game_singleton_roles=(client);fi
+  for role in "${game_singleton_roles[@]}";do
     grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=$role lanes=$GAME" "$TMP/$role.log"
     grep -q "V4_PUBLIC_GAME_KERNEL role=$role lanes=$GAME" "$TMP/$role.log"
   done
-  python3 - "$TMP" "$GAME" <<'PY'
+  python3 - "$TMP" "$GAME" "$AUTO_IP" <<'PY'
 import pathlib,re,sys
 p=pathlib.Path(sys.argv[1]);n=int(sys.argv[2])
-for role in ("client","server"):
+roles=("client",) if sys.argv[3]=="1" else ("client","server")
+for role in roles:
     data=(p/(role+".log")).read_text()
     matches=re.findall(r"V4_PUBLIC_GAME_KERNEL role="+role+
         r" lanes="+str(n)+r" copied=(\d+) delivered=(\d+) rejected=(\d+)",data)
-    assert matches and int(matches[-1][0])>=5 and int(matches[-1][1])>=5,        (role,matches)
+    assert matches and int(matches[-1][0])>=5 and int(matches[-1][1])>=5,(role,matches)
 PY
 elif [[ "$FEC" == 1 ]];then
   grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
@@ -644,15 +658,23 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
     wait "$pid" || true
   done
   selected=''
+  audit_script=tools/m0_plan028_tls_wire_audit.py
+  audit_receipt="$ART/plan028-tls-wire-audit.json"
+  expected_audit=REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS
+  if [[ "$MODE" == game4 ]];then
+    audit_script=tools/m0_plan028_tls_game_lane_wire_audit.py
+    audit_receipt="$ART/plan028-game4-tls-wire-audit.json"
+    expected_audit=REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS
+  fi
   for role in server client;do
     capture="$TMP/hello-$role.pcap"
     test -s "$capture" || { echo "M0_PLAN028_TCPDUMP_EMPTY role=$role" >&2;continue; }
     size="$(stat -c %s "$capture")"
     echo "M0_PLAN028_TLS_CAPTURE_INFO role=$role link=cooked_any bytes=$size"
-    # Only visible IP/port metadata is printed. Never retain TLS payloads.
+    # Never upload PCAP. Only packet metadata and redacted JSON results.
     sudo -n tcpdump -nn -tt -r "$capture" -c 7 2>&1 |
       grep -E 'reading from file| IP | packets' | tail -9 || true
-    if sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$capture" >"$TMP/tls-audit-$role.json";then
+    if sudo -n python3 "$audit_script" "$capture" >"$TMP/tls-audit-$role.json";then
       selected="$role";break
     fi
     echo "M0_PLAN028_TLS_CAPTURE_NOT_QUALIFIED role=$role bytes=$size" >&2
@@ -662,8 +684,12 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
     echo "M0_PLAN028_TWO_VANTAGE_REAL_TCP_STREAM_AUDIT_FAIL" >&2
     exit 1
   }
-  cp "$TMP/tls-audit-$selected.json" "$ART/plan028-tls-wire-audit.json"
-  grep -Fq 'REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS' "$ART/plan028-tls-wire-audit.json"
+  cp "$TMP/tls-audit-$selected.json" "$audit_receipt"
+  grep -Fq "$expected_audit" "$audit_receipt"
   sudo -n rm -f "$TMP/hello-server.pcap" "$TMP/hello-client.pcap"
-  echo "M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS vantage=$selected cert_verified_by_original_TLS=1"
+  if [[ "$MODE" == game4 ]];then
+    echo "M0_PLAN028_TLS_GAME4_EIGHT_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS vantage=$selected per_group=4 new_generation=1"
+  else
+    echo "M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS vantage=$selected cert_verified_by_original_TLS=1"
+  fi
 fi
