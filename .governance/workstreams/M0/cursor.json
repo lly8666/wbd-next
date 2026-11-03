@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1008,
-  "checkpoint_sha": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
+  "sequence": 1009,
+  "checkpoint_sha": "2072554c40b7f55706c975ec4e9f6686fc0a2b4a",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1008 same-port Linux Game2/4 code/actual native fixture and exact-source H1007 Go TLS+CLI evidence; Rust shared per-device TUN pending",
-  "why_now": "H1007 used already-present AutoLease/InstallationID protected wire, SOURCE837 genuine Go TLS 21/21+Linux CLI tests pass; Game still consumes 2/4 server ports, so wire one port with one classic-BPF union filter",
+  "current_task": "H1009 correct Game feature card 16KiB bound without losing historic verification; SOURCE207 Game one-port ongoing native checks",
+  "why_now": "SOURCE207 Action 41576418478 Governance PASS, Feature Catalog FAIL because Game card exceeded 16KiB; compact exact content only",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1008 new SOURCE Game classic-BPF VM + same-port original Go TLS/Rust native Game2/4 real netns actions. Correct only specific results. Then implement NORMAL+Game across-device single shared Rust TUN reader/IP indexed session dispatcher and platform native network notifications; cannot claim PLAN028 complete before genuine concurrent-client tests.",
+  "next_action": "Collect exact 207 source-locked BPF test/Go Linux CLI build and native Game2/4 in Actions, no green UNWIRED fake promotion; if native test not dispatched by automation, use existing scene workflow without duplicating. Then proceed Rust shared per-device TUN owner and IPv4/5-tuple route, A+B and OS notifications.",
   "unverified": true,
   "last_tested_source": "837691d7374edbf74b79c4637d5569c7fea4b8d7",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1008-GAME-ONE-SERVER-PORT.md",
+    "docs/devlog/M0/20261103-PLAN028-H1009-FEATURE-CARD-BOUNDS.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE837 Go protected TLS same-account 3 installations 21/21 and Linux CLI config unit+binary build PASS, OS lease applied real network NOT_RUN. H1008 next code switches Game2/4 to one server port and shared 2/4 tuple BPF filter + native fixture, not yet tested. Rust multi-session/shared TUN and physical MTU FAIL unresolved."
+  "partial_summary": "PLAN028 H1007 SOURCE837 Go original protected multiaccount/auto-IP 21 TLS PASS and Go Linux CLI test PASS. H1008 SOURCE207 Game2/4 actual one external port client/server and kernel union BPF candidate; native product NOT_RUN until exact Actions. H1009 fixes feature-card-size gate only."
 }
