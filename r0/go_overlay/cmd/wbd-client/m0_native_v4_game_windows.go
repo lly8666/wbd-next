@@ -32,6 +32,7 @@ func runM0NativeV4WindowsGame(
  ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func()(windowsclient.NetworkPlan,error),
+ pathChanged <-chan struct{},
 )error{
  count:=2;if o.Mode==m0WinModeGame4{count=4}
  assocs:=make([]*faketcp.ClientAssociation,0,count)
@@ -219,6 +220,10 @@ func runM0NativeV4WindowsGame(
  }
  fmt.Printf("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=%d applied=%d outer_config=%d\n",
   o.TunnelMTU,actualInner,o.ConnectionMTU)
+ select{
+ case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,stop())
+ default:
+ }
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d fec=%d tls=1 rust=1 native_os_wal=1\n",count,fecMode)
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
@@ -228,6 +233,9 @@ outer:
  for{
   select{
   case <-ctx.Done():break outer
+  case <-pathChanged:
+   runtimeErr=errM0WindowsPhysicalPathChanged
+   break outer
   case runtimeErr=<-packet.Errors():break outer
   case runtimeErr=<-failed:break outer
   case <-ticker.C:

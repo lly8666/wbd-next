@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1032,
+  "sequence": 1033,
   "checkpoint_sha": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1032 PLAN028 route-specific MTU preserved through protected TLS callback on Linux A+B; short Go route metric + post-auth budget native test PENDING",
-  "why_now": "H1031 found true kernel route cap ignored by post-TLS configureTunnelMTU, which read raw iface.MTU and would upsize the actual TUN despite correct cold SYN and route readback.",
+  "current_task": "H1033 PLAN028 Windows native NotifyRouteChange2/NotifyUnicastIpAddressChange -> original TLS exact Stop and reauth, Normal/FEC/Game; source CI PENDING",
+  "why_now": "Windows original client only reauthenticated after Health90; route/IP notifications were not wired to original cold generation, leaving a working new physical path waiting for dead verdict.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Run two small Go PLAN028 route-MTU budget unit tests and original Linux native path 2/5netns, verify no false FAIL from stale capacity parser. Then advance Windows route notifications/Game mode or per-client config without repeated full performance matrix.",
+  "next_action": "Build original Windows Go client/units from same source (coalescer and kernel path fingerprint), confirm no signature/regression failure; then tackle original Game2/4 multi-client single-port group owner and true overlapping cross-path lanes. Scope Windows break-before-make is not A+B.",
   "unverified": true,
   "last_tested_source": "fa32f4e0a8ac0e04c258a526ec3c22ff15fba747",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1029 fa32 native scoped PASS. H1031/32 code: Go cold OS route MTU bounds interface, same cap frozen into authenticated MTU callback even A+B, 32 cold/16 native capacity accurately logged and fixture updated; two small Go unit cases plus same original Go TLS Linux run pending. CPU/p99 physical H998/Win Game4FEC and all PLAN028 scope remain open."
+  "partial_summary": "H1032 Linux code route MTU cold+auth callback and source locked functional auto IP/path PASS, multi-account fixture false FAIL corrected; 41615942136 SUCCESS. H1033 Windows original Go native route+address OS callback candidate, 200/500ms coalesce and OS fingerprint, Stop before reauth for Normal/Fixed/Auto/Game2/4; exact source compile pending; no A+B Windows, CPU/p99 or full PLAN028 qualification."
 }

@@ -25,6 +25,7 @@ import(
  "strings"
  "syscall"
  "time"
+ "unsafe"
 
  "github.com/lly8666/wobuzhidao/internal/faketcp"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -82,6 +83,123 @@ func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err e
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
+// PLAN028: the ONE existing cold Go generation supervisor receives actual
+// Windows route/address notifications. No polling, packet callback, new
+// Rust owner, or wire-format change. A route event is not authentication:
+// compare the kernel-selected physical endpoint after 200ms quiet / 500ms max.
+var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path changed; exact owned Stop then new TLS")
+
+type m0WindowsPhysicalPath struct{
+ ifindex uint32
+ source4,nextHop4 netip.Addr
+ interfaceMTU int
+}
+func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhysicalPath,error){
+ var zero m0WindowsPhysicalPath
+ underlay,err:=windowsclient.DiscoverPhysicalUnderlay(peer,0)
+ if err!=nil{return zero,err}
+ iface,err:=net.InterfaceByIndex(int(underlay.InterfaceIndex))
+ if err!=nil{return zero,err}
+ if iface.MTU<576||!underlay.Source4.Is4()||
+  strings.EqualFold(iface.Name,tunAlias){
+  return zero,windowsclient.ErrN4NativeGuard
+ }
+ return m0WindowsPhysicalPath{
+  ifindex:underlay.InterfaceIndex,source4:underlay.Source4,
+  nextHop4:underlay.NextHop4,interfaceMTU:iface.MTU,
+ },nil
+}
+type m0WindowsPathCoalescer struct{first,last time.Time}
+func(c *m0WindowsPathCoalescer) push(now time.Time){
+ if c.first.IsZero(){c.first=now}
+ c.last=now
+}
+func(c m0WindowsPathCoalescer) remaining(now time.Time)time.Duration{
+ if c.first.IsZero(){return -1}
+ quiet:=c.last.Add(200*time.Millisecond).Sub(now)
+ hard:=c.first.Add(500*time.Millisecond).Sub(now)
+ if quiet>hard{quiet=hard}
+ if quiet<0{return 0}
+ return quiet
+}
+func(c *m0WindowsPathCoalescer) clear(){*c=m0WindowsPathCoalescer{}}
+
+// NotifyRouteChange2 and NotifyUnicastIpAddressChange are native asynchronous
+// IP Helper subscriptions. Their WinAPI callbacks only wake one buffered
+// channel; actual OS readback, TLS, WFP and Stop remain on ordinary Go threads.
+func watchM0WindowsOriginalPhysicalPath(
+ parent context.Context,peer netip.Addr,tunAlias string,
+)(<-chan struct{},func(),error){
+ baseline,err:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+ if err!=nil{return nil,nil,err}
+ dll:=windows.NewLazySystemDLL("iphlpapi.dll")
+ routeProc:=dll.NewProc("NotifyRouteChange2")
+ addressProc:=dll.NewProc("NotifyUnicastIpAddressChange")
+ cancelProc:=dll.NewProc("CancelMibChangeNotify2")
+ for _,p:=range []*windows.LazyProc{routeProc,addressProc,cancelProc}{
+  if err=p.Find();err!=nil{return nil,nil,err}
+ }
+ raw:=make(chan struct{},1)
+ cb:=syscall.NewCallback(func(_,_,_ uintptr)uintptr{
+  select{case raw<-struct{}{}:default:}
+  return 0
+ })
+ var routeHandle,addressHandle uintptr
+ // AF_INET (IPv4); FALSE: do not fake an initial OS path-change event.
+ if status,_,_:=routeProc.Call(uintptr(syscall.AF_INET),cb,0,0,
+  uintptr(unsafe.Pointer(&routeHandle)));status!=0{
+  return nil,nil,syscall.Errno(status)
+ }
+ if status,_,_:=addressProc.Call(uintptr(syscall.AF_INET),cb,0,0,
+  uintptr(unsafe.Pointer(&addressHandle)));status!=0{
+  cancelProc.Call(routeHandle)
+  return nil,nil,syscall.Errno(status)
+ }
+ // Cover route transition between baseline and native subscription setup.
+ if latest,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias);e==nil&&latest!=baseline{
+  select{case raw<-struct{}{}:default:}
+ }
+ ctx,cancel:=context.WithCancel(parent)
+ done:=make(chan struct{})
+ changed:=make(chan struct{},1)
+ go func(){
+  defer close(done)
+  defer cancelProc.Call(routeHandle)
+  defer cancelProc.Call(addressHandle)
+  current:=baseline
+  var pending m0WindowsPathCoalescer
+  for{
+   var timer *time.Timer
+   var fire <-chan time.Time
+   if delay:=pending.remaining(time.Now());delay>=0{
+    timer=time.NewTimer(delay)
+    fire=timer.C
+   }
+   var fired bool
+   select{
+   case <-ctx.Done():
+    if timer!=nil{timer.Stop()}
+    return
+   case <-raw:
+    pending.push(time.Now())
+   case <-fire:
+    fired=true
+   }
+   if timer!=nil{timer.Stop()}
+   if !fired{continue}
+   pending.clear()
+   next,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+   if e!=nil||next==current{continue}
+   current=next
+   select{case changed<-struct{}{}:default:}
+   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d mtu=%d source=os_route_address_readback coalesce_quiet_ms=200 max_ms=500\n",
+    next.ifindex,next.interfaceMTU)
+  }
+ }()
+ stop:=func(){cancel();<-done}
+ return changed,stop,nil
+}
+
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -107,12 +225,25 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  slot,err:=acquireGUIClientSlot()
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
+ // One native route/address watcher for all original Normal/FEC/Game modes.
+ pathChanged,stopPathWatch,err:=watchM0WindowsOriginalPhysicalPath(ctx,o.ServerIP,o.AdapterAlias)
+ if err!=nil{return fmt.Errorf("original Windows route/address subscription: %w",err)}
+ defer stopPathWatch()
  reauthAuthorized:=false
  coldRetries:=0
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
   applied:=false
-  err:=runM0NativeV4WindowsGeneration(ctx,o,generation,autoOperatorRequests,&applied)
+  err:=runM0NativeV4WindowsGeneration(ctx,o,generation,autoOperatorRequests,&applied,pathChanged)
+  // Only after exact native OS/WAL Stop may the existing Go cold owner
+  // establish the next generation on a DIFFERENT physical kernel route.
+  if ctx.Err()==nil&&errors.Is(err,errM0WindowsPhysicalPathChanged){
+   reauthAuthorized=false
+   coldRetries=0
+   generation++
+   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=%d previous_native_joined=1 source=NotifyRouteChange2_or_UnicastAddress\n",generation)
+   continue
+  }
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
@@ -144,7 +275,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
 // One original-Go credential TLS + Rust NativeOwner generation. The caller
 // owns GUI/stop and starts the next epoch only after this one's WAL Stop.
 func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
- generation uint64,autoOperatorRequests <-chan realityfront.FecV2Profile,applied *bool)error{
+ generation uint64,autoOperatorRequests <-chan realityfront.FecV2Profile,applied *bool,
+ pathChanged <-chan struct{},
+)error{
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(o.ServerIP,0)
  if err!=nil{return err}
  // The actual OS physical egress path, not the inner Wintun interface.
@@ -240,7 +373,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     StatePath:o.StatePath,
    })
   }
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,open,planForGame)
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,open,planForGame,pathChanged)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
@@ -493,6 +626,12 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  }
  fmt.Printf("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=%d applied=%d outer_config=%d\n",
   o.TunnelMTU,actualInner,o.ConnectionMTU)
+ // If the OS path changed during cold TLS/WFP Apply, do not announce a
+ // stale generation as Ready; Stop it before this caller re-authenticates.
+ select{
+ case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,cleanup())
+ default:
+ }
  fmt.Println("WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1")
  // Native OS readback and original Rust M3 peer first+reverse proved.
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
@@ -515,6 +654,9 @@ waitNative:
  for{
   select{
   case <-ctx.Done():break waitNative
+  case <-pathChanged:
+   runtimeErr=errM0WindowsPhysicalPathChanged
+   break waitNative
   case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
   case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
   case requested:=<-autoOperatorRequests:
