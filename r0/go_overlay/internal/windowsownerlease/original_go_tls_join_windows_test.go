@@ -37,6 +37,17 @@ import (
 // crash-persistent host WFP guard: Arm/Disarm intentionally fail closed.
 // Verify only authorizes one bounded address to an ALREADY process-owned
 // adapter in this native test, never a default route or public product.
+// Client-specific trust for test self-signed certs; certificate validation
+// remains active on Normal, Fixed, Auto and every Game lane.
+func m0WinJoinTrustRoots(t *testing.T,cert tls.Certificate)*x509.CertPool{
+ t.Helper()
+ leaf,e:=x509.ParseCertificate(cert.Certificate[0])
+ if e!=nil{t.Fatal(e)}
+ roots:=x509.NewCertPool()
+ roots.AddCert(leaf)
+ return roots
+}
+
 type m0NativeTLSTestGuard struct{}
 func (m0NativeTLSTestGuard) Durable()bool{return true}
 func (m0NativeTLSTestGuard) Verify(ctx context.Context)(bool,error){
@@ -247,10 +258,7 @@ func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.
     // A real self-signed test server must be imported into this client's
     // application trust store. Never set InsecureSkipVerify even in CI.
     serverCert:=m0WinJoinCert(t)
-    serverLeaf,e:=x509.ParseCertificate(serverCert.Certificate[0])
-    if e!=nil{t.Fatal(e)}
-    serverRoots:=x509.NewCertPool()
-    serverRoots.AddCert(serverLeaf)
+    serverRoots:=m0WinJoinTrustRoots(t,serverCert)
     store,e:=realityfront.NewV4EpochStore(1)
     if e!=nil{t.Fatal(e)}
     type response struct{

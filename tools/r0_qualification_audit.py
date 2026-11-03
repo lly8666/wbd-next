@@ -173,13 +173,14 @@ def audit():
     roles={r["id"]:r for r in registry["roles"]}
     # R0 historic qualification locks its original 2026-10-17 evidence
     # and the REAL currently approved main writer. The explicit user
-    # 2026-10-21 PLAN020 M4->M0 takeover is revision3, not a vanished R0
-    # source and not a new M4 scope. The original M4 cursor is frozen.
+    # PLAN020 M4->M0 takeover was revision3. The approved 2026-11-04
+    # TLS-first priority made registry revision4 while preserving the same
+    # M0 branch/global writer and historical R0/M4 frozen provenance.
     require(roles["M0"]["state"]=="active" and roles["M0"]["branch"]=="main" and
-            registry["reservation_revision"]==3 and roles["M0"]["assignment_epoch"]==1 and
+            registry["reservation_revision"]==4 and roles["M0"]["assignment_epoch"]==1 and
             roles["M0"]["global_writer"] is True and
             Path("docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md").is_file(),
-            "M0 user-authorized PLAN020 revision3 writer changed")
+            "M0 user-authorized current TLS revision4 global writer changed")
     expected_worker_paths = {
       "M1": ("work/m1-r1-runtime", ("crates/wbd-engine/src/runtime/","crates/wbd-engine/src/memory/")),
       "M2": ("work/m2-r2-recovery", ("crates/wbd-recovery/",)),

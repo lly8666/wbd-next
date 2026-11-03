@@ -15,6 +15,9 @@ on:
 permissions: {contents: read}
 jobs:
   original-x86-go-tls-real-native-wire:
+    # The H1072 fixture-only commit uses the exact H1071 product SHA/ELF
+    # through the one-scenario frozen Action instead of a second build.
+    if: ${{ !contains(github.event.head_commit.message, '[frozen-fixture-only]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:

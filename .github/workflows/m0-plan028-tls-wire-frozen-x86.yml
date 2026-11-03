@@ -1,0 +1,86 @@
+name: M0 PLAN028 exact SOURCE frozen native x86 TLS first-flight wire
+run-name: PLAN028 H1072 x86 original Go/Rust SOURCE-d7bd TLS 443 wire ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-tls-wire-frozen-x86.yml"
+      - "tools/m0-v4-public-real-linux-netns.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  real-native-x86-tls-wire-no-rebuild:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    env:
+      WBD_PLAN028_EXACT_BINARY_SOURCE: d7bd355389c1233c54eaa6a4553ebadcbe0eeb70
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41694943009
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: fixed-build/
+      - name: Verify identical original Go and Rust linked binary SHA; no rebuild
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          mkdir -p fixed-kernel-result
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path("fixed-build")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["WBD_PLAN028_EXACT_BINARY_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              data=(p/name).read_bytes()
+              assert hashlib.sha256(data).hexdigest()==m["sha256"][name],name
+              assert data[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",data,18)[0]==62
+          print("M0_PLAN028_H1072_FROZEN_ORIGINAL_GO_RUST_SHA256_ELF_PASS no_second_product_build=1")
+          PY
+          chmod 0755 fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+      - name: One real kernel x86/x86 first TLS ClientHello, verified CA, UDP and Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl tcpdump
+          test -c /dev/net/tun
+          WBD_V4_PUBLIC_MODE=normal WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_WIRE_AUDIT=1 \
+            bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-h1072-native-wire.log 2>&1 || {
+              tail -180 fixed-kernel-result/plan028-h1072-native-wire.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS' fixed-kernel-result/plan028-h1072-native-wire.log
+          grep -Fq 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS' fixed-kernel-result/plan028-h1072-native-wire.log
+          python3 - <<'PY'
+          import json
+          d=json.load(open("fixed-kernel-result/plan028-tls-wire-audit.json"))
+          assert d["result"]=="REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS"
+          assert d["client_first_payload"]=="TLS_Handshake_ClientHello"
+          assert d["server_first_payload"]=="TLS_Handshake_ServerHello"
+          assert d["server_early_application_bytes"]==0
+          assert d["session_id_length"]==32
+          assert 43 in [int(x) for x in d["extension_types"]]
+          assert 51 in [int(x) for x in d["extension_types"]]
+          print("M0_PLAN028_H1072_TLS_GENUINE_TWO_WAY_STREAM_FIRST_FLIGHT_PASS orig_source=d7bd")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-h1072-frozen-native-x86-tls-wire-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/plan028-h1072-native-wire.log
+            fixed-kernel-result/plan028-tls-wire-audit.json
+            fixed-kernel-result/public-v4-normal-business.log
+          if-no-files-found: warn
+          retention-days: 14

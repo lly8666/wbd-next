@@ -783,10 +783,11 @@ func (b *v4RecordingOwner) prepare(s V4ColdSessionSnapshot, boundary uint32, obs
     b.prepared++
     b.boundary=boundary
     b.identity=s.TunnelID()
-    // This bridge tests the authenticated association's *actual* SYN
-    // transport, not an invented MSS. The production outer 1460/MSS1420
-    // envelope is independently checked by the real cold-budget/SYN tests.
-    if observedPeer.mss!=faketcp.PublicV4AdvertisedMSS() || !observedPeer.advertised ||
+    // The donor unit and current Rust cold budget may have different
+    // negotiated SYN MSS. Check the bounded original association instead of
+    // referring to a non-product Go FakeTCP adapter in the donor-only suite.
+    // The 1460B outer ->1420B real product SYN is proved independently.
+    if observedPeer.mss<536 || observedPeer.mss>1460 || !observedPeer.advertised ||
        observedPeer.flow.ClientPort==0 || observedPeer.flow.ServerPort==0 ||
        observedPeer.flow.ClientIP==([4]byte{}) || observedPeer.flow.ServerIP==([4]byte{}) {
         return nil,ErrAdmissionParams

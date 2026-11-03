@@ -129,7 +129,7 @@ fi
 WIRE_PID=''
 if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   test "$MODE" = normal
-  sudo -n ip netns exec "$NSS" tcpdump -i wbdvs0 -U -s 4096 -w "$TMP/hello-wire.pcap" 'tcp port 443' >"$TMP/tcpdump.log" 2>&1 &
+  sudo -n ip netns exec "$NSS" tcpdump -i wbdvs0 -U -s 4096 -w "$TMP/hello-wire.pcap" 'ip' >"$TMP/tcpdump.log" 2>&1 &
   WIRE_PID=$!
   sleep .35
   sudo -n kill -0 "$WIRE_PID"
@@ -627,7 +627,16 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   sudo -n kill -INT "$WIRE_PID" 2>/dev/null || true
   wait "$WIRE_PID" || true
   test -s "$TMP/hello-wire.pcap"
-  sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$TMP/hello-wire.pcap" >"$ART/plan028-tls-wire-audit.json"
+  echo "M0_PLAN028_TCPDUMP_CAPTURE_INFO interface=wbdvs0 scope=isolated_kernel_IP bytes=$(stat -c %s "$TMP/hello-wire.pcap")"
+  # The private PCAP never leaves the runner; log only first bounded
+  # IP/port metadata and capture counts if the structural auditor fails.
+  sudo -n tcpdump -nn -tt -r "$TMP/hello-wire.pcap" -c 8 2>&1 |
+    grep -E 'reading from file| IP | packets' | tail -9 || true
+  if ! sudo -n python3 tools/m0_plan028_tls_wire_audit.py "$TMP/hello-wire.pcap" >"$ART/plan028-tls-wire-audit.json";then
+    echo "M0_PLAN028_REAL_TCP_STREAM_AUDIT_FAIL bytes=$(stat -c %s "$TMP/hello-wire.pcap")" >&2
+    tail -8 "$TMP/tcpdump.log" >&2 || true
+    exit 1
+  fi
   grep -Fq 'REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS' "$ART/plan028-tls-wire-audit.json"
   sudo -n rm -f "$TMP/hello-wire.pcap"
   echo M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS cert_verified_by_original_TLS=1

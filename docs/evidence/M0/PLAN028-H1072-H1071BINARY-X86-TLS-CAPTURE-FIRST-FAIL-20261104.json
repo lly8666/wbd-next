@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1072",
+  "result": "REAL_GO_TLS_AND_UDP_FUNCTIONAL_PASS_NATIVE_TCP_WIRE_AUDIT_FAIL_SCOPED",
+  "binary_source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+  "source_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "native_x86": {
+    "run_id": 41694943172,
+    "conclusion": "failure",
+    "genuine_original_TLS_plus_CA_auth": "PASS",
+    "real_udp_echo_count": 5,
+    "real_owner_stop": "PASS",
+    "tcp_first_payload_wire_qualification": "FAIL_NOT_PROVEN",
+    "cause": "kernel tcpdump filter captured no TCP port443 payload; exact reason requires unfiltered IPv4 kernel sniff",
+    "binary_rebuild_needed": false
+  },
+  "reused_original_binary": {
+    "build_run_id": 41694943009,
+    "artifact_id": 13260387707,
+    "artifact": "m0-plan024-linux-product",
+    "source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+    "manifest_sha_must_verify": true
+  },
+  "windows": {
+    "run_id": 41694943037,
+    "conclusion": "failure",
+    "normal_signed_wintun_original_TLS_udp_both_directions_stop": "PASS",
+    "fixed_and_auto_test_certificate": "FAIL_UNTRUSTED_SELF_SIGNED",
+    "game_test_certificate": "PENDING_NEW_IMPORT",
+    "production_tls_certificate_verification": "MANDATORY_UNCHANGED"
+  },
+  "other": {
+    "run_id": 41694943251,
+    "conclusion": "failure",
+    "cause": "donor-only Go test lacks product-only PublicV4AdvertisedMSS exported function"
+  },
+  "governance": {
+    "run_id": 41694942976,
+    "conclusion": "failure",
+    "cause": "historical R0 audit expected registry revision3, authorized user TLS priority advanced registry revision4"
+  },
+  "restrictions": [
+    "No private pre-TLS WB-R1 in current product",
+    "No source-qualified TLS exterior PASS until PCAP reassembly proof",
+    "H998 physical hot outer shrink FAIL retained",
+    "Old ARM64 Game4FEC Action FAIL retained",
+    "Windows physical NIC/IP NOT_RUN",
+    "CPU/p99 and remote ICMP NOT_RUN"
+  ]
+}

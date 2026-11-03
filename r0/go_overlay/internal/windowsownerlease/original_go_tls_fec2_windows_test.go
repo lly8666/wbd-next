@@ -67,6 +67,8 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
    }
   }
  }()
+ serverCert:=m0WinJoinCert(t)
+ serverRoots:=m0WinJoinTrustRoots(t,serverCert)
  store,e:=realityfront.NewV4EpochStore(1)
  if e!=nil{t.Fatal(e)}
  // Preserve pinned original Go policy invariants: Fixed requires nonzero
@@ -88,7 +90,7 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
    ctx,dll,server,realityfront.ServerAdmissionConfig{
     TLS:realityfront.ServerConfig{
      ServerName:"target.test",RouteKey:routeKey,
-     TLSConfig:&tls.Config{Certificates:[]tls.Certificate{m0WinJoinCert(t)}},
+     TLSConfig:&tls.Config{Certificates:[]tls.Certificate{serverCert}},
      Timeout:6*time.Second,
     },
     ExpectedUsername:"protected-owner",ExpectedPassword:"secret",
@@ -99,7 +101,7 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  owner,session,clientErr:=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(
   ctx,dll,client,realityfront.ClientAdmissionConfig{
    TLS:realityfront.ClientConfig{ServerName:"target.test",
-    RouteKey:routeKey,Timeout:6*time.Second},
+    RouteKey:routeKey,RootCAs:serverRoots,Timeout:6*time.Second},
    Username:"protected-owner",Password:"secret",
    TunnelID:[]byte("0123456789abcdef"),ClientLimit:1400,
    LaneID:1,DesiredLanes:1,Policy:policy,

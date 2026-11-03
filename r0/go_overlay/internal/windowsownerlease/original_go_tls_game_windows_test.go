@@ -80,6 +80,7 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  epochs,e:=realityfront.NewV4EpochStore(16)
  if e!=nil{t.Fatal(e)}
  cert:=m0WinJoinCert(t)
+ roots:=m0WinJoinTrustRoots(t,cert)
  answer:=make(chan struct{
   group *realityfront.V4WindowsAuthenticatedGameServerGroup
   err error
@@ -105,7 +106,7 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  clientGroup,clientErr:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
   ctx,dll,clients,realityfront.ClientAdmissionConfig{
    TLS:realityfront.ClientConfig{
-    ServerName:"target.test",RouteKey:routeKey,Timeout:8*time.Second,
+    ServerName:"target.test",RouteKey:routeKey,RootCAs:roots,Timeout:8*time.Second,
    },
    Username:"protected-owner",Password:"secret",
    TunnelID:[]byte("0123456789abcdef"),ClientLimit:1400,
