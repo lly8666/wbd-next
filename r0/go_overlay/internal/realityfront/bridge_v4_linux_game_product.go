@@ -503,6 +503,18 @@ func (p *V4LinuxGameProduct) FecCounters()(V4GameFecCounters,error){
     }
     return p.native.originalGameFecCounters()
 }
+// An already authenticated group has ONE existing Rust Game M4 Health90
+// verdict. Polling this cold readback cannot change the cryptographic
+// owner or authorize any new packet; the caller must still perform exact
+// group Stop and native drain before releasing its authenticated /32.
+func (p *V4LinuxGameProduct) NativeM4Alive()(bool,error){
+    if p==nil{return false,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{
+        return false,ErrAdmissionUnsupported
+    }
+    return p.native.originalM4Alive()
+}
 func (p *V4LinuxGameProduct) Connected()bool{
     if p==nil{return false}
     p.mu.Lock();defer p.mu.Unlock()

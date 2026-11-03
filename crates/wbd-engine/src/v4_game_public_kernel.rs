@@ -895,6 +895,12 @@ impl GameKernelOwner{
         (self.raw_received.load(Ordering::Relaxed),
          self.rx_reject.aead.load(Ordering::Relaxed))
     }
+    // Original Game M4 Health90 (or an authenticated RX fatal) sets the
+    // existing owner stop flag. The Go single-port supervisor observes this
+    // ONE authoritative verdict; it must not invent a second dead timer.
+    pub(crate) fn is_live(&self)->bool{
+        !self.stop.load(Ordering::Acquire)
+    }
     pub(crate) fn stop_and_drain(&mut self)->Result<(),()>{
         self.stop.store(true,Ordering::Release);
         // Give in-flight M4 kernel borrows a bounded opportunity to finish

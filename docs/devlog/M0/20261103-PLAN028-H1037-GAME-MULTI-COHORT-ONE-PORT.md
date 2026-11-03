@@ -16,6 +16,10 @@ Rust `MAX_SESSIONS=16` 是总 native lane 资源，不宣称 32 个在线 Game �
 
 原 Go 两个独立 Game2 TLS cohort 元信息纯单测、原 Go Game2/4 单组 TLS/native 回归；新增 3-netns 原生两个账户/两个自动 `/32`，在服务器 443 同时收发真实 UDP，客户端 A Stop 后 B 继续可用，最后核实两个组与唯一共享 Rust TUN 完整 Stop。
 
+## 原生同源码双组实测
+
+源 `acedb4feced251ca43822778278817dd4a3fbe79`，[Action 41636586054](https://github.com/lly8666/wbd-next/actions/runs/41636586054) SUCCESS。已下载源码工件 artifact `13231240873`：manifest `source_sha` 精确匹配；`fixed-kernel-result/plan028-game-two-groups.log` 包含两个真实 Game2 客户端组、4 protected TLS lane、两自动 `/32`、同时真实 UDP、A 停止后 B 继续收发、两个原生 Game Stop 和唯一 TUN reader Stop PASS 标记。原 Game4 单组原生继续 PASS。新 H1038 Health90 服务端主动退休在后续源码关口，**不混同此前已通过的双组验收**。
+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1037 server --lease-pool activates Rust Game shared TUN, independent original Go TLS per 443 flow cohort keyed only by authenticated account/installation/epoch/lane, multiple Game2/4 groups with exact native Stop."}
 ```

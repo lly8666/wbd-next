@@ -3191,6 +3191,25 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     e.stopped=true;e.stopping=false;OK
 }
+// Existing authenticated Game M4 owner stop flag is authoritative for
+// Health90 and fatal native RX. A server with multiple groups checks this
+// at its ordinary 1s cold-maintenance turn and retires only the dead group.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_m4_live(
+    group:u64,out:*mut u32,
+)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping{return BAD_STAGE}
+    let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
+    unsafe{out.write(if driver.is_live(){1}else{0})};
+    OK
+}
+
 #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(

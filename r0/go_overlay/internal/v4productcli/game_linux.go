@@ -697,6 +697,17 @@ func runGameMultiServer(
                 for _,lane:=range group.lanes{rejectLane(lane)}
                 log.Printf("V4_PUBLIC_GAME_MULTI_INCOMPLETE_GROUP_EXPIRED lane_slots=%d",len(group.lanes))
             }
+            // The EXISTING authenticated Game M4 Health90 sets its
+            // native stop bit. Retire exactly that group (and its own
+            // /32/Go TCP tuples) without a second dead timer or sibling
+            // interference. No unauthenticated FIN/RST can do this.
+            for key,group:=range active{
+                alive,e:=group.product.NativeM4Alive()
+                if e!=nil{return e}
+                if alive{continue}
+                if e=retire(group,"authenticated-rust-game-health90");e!=nil{return e}
+                delete(active,key)
+            }
         }
     }
 }

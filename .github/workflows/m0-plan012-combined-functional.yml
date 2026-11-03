@@ -119,6 +119,7 @@ jobs:
             cat fixed-kernel-result/plan028-game-shared-tun-route.log; exit 1;
           }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-game-shared-tun-route.log
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_m4_live$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'

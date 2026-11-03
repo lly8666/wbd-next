@@ -8,6 +8,7 @@ package realityfront
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_game_group_peer_persona_set(uint64_t,uint32_t);
@@ -95,6 +96,15 @@ func (g *v4NativeGameJoined) originalCryptoState()(lanes uint32,drivers bool,err
     rc:=C.wbd_m0_embedded_go_game_group_state(C.uint64_t(g.handle),&n,&ready)
     if rc!=0{return 0,false,fmt.Errorf("%w: native Game state=%d",errV4Embedded,int(rc))}
     return uint32(n),ready!=0,nil
+}
+func (g *v4NativeGameJoined) originalM4Alive()(bool,error){
+    if g==nil||g.handle==0||g.stopped||g.verified==nil{
+        return false,ErrAdmissionUnsupported
+    }
+    var alive C.uint32_t
+    rc:=C.wbd_m0_embedded_go_game_group_m4_live(C.uint64_t(g.handle),&alive)
+    if rc!=0{return false,fmt.Errorf("%w: native Game M4 Health90 state=%d",errV4Embedded,int(rc))}
+    return alive!=0,nil
 }
 // Single explicit authorization boundary for fixed Game FEC. This is NOT
 // exposed by the unauthenticated cold snapshot or by a direct Go key grant.

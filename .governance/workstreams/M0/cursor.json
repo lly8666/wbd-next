@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1037,
-  "checkpoint_sha": "2035e945472891e455c2d1e73e3b828317f80c23",
+  "sequence": 1038,
+  "checkpoint_sha": "acedb4feced251ca43822778278817dd4a3fbe79",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1037 PLAN028 credential-protected Game2/4 multi-cohort Go 443 dispatcher with verified cohort groups, auto /32 shared native TUN; new exact-source native 2-client test PENDING",
-  "why_now": "Prior H1036 Rust shared TUN reader was guarded by c.autoIP on server, which is client-only; server --lease-pool never activated Game shared ingress. One-port collector also capped itself to exactly one Game group and could misjoin interleaved clients.",
+  "current_task": "H1038 PLAN028 server Game2/4 per-cohort exact native Health90 group retirement (not new timer) after H1037 real two Game2 groups PASS; source CI pending",
+  "why_now": "Two live Game2 account groups on one original 443/one Rust reader are native-proven. But client A Stop can leave server A owner occupying native slots until process exit; the existing authenticated Game M4 Health90 stop must retire exactly A while B stays.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Run source-locked Go TLS Game2/4 cohort test + real 3-netns 2 independent Game2 clients on same 443, simultaneous UDP, B after A stop, exact native reader Stop. Fix only actual failures. Then retire dead Game cohorts by native Health90 without harming siblings; broader Windows A+B and Game4 FEC concurrent remain outstanding.",
+  "next_action": "Qualify H1038 source Go/C ABI/normal Game2+Game4 and real two Game2 groups using exact native artifact, then source-locked test real server-side Health90 A release without affecting B if reasonably feasible. Continue Windows native physical IP switch and Game4 multi-group only after verified core.",
   "unverified": true,
-  "last_tested_source": "2035e945472891e455c2d1e73e3b828317f80c23",
+  "last_tested_source": "acedb4feced251ca43822778278817dd4a3fbe79",
   "evidence_refs": [],
   "context_refs": [
     "START_HERE.md",
@@ -26,5 +26,5 @@
     "docs/devlog/M0/20261103-PLAN028-H1029-SHARED-TUN-PRECAP-AGE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1036 source2035 Rust Game /32 single-reader route and stale-generation fencing PASS native unit but server auto branch used impossible c.autoIP; H1037 candidate fixes authority to server leasePool and adds full 443 original-Go TLS per-flow cold dispatcher. Groups only on post-TLS principal+tunnel+epoch+LANES; interleaved lane order independent, 45s partial expiry, cohort-level M4 activation, shared Rust /32 TUN and BPF union, independent Stop, capacity=16 Rust native lanes, no Go per-packet. Actual 2 live Game2 groups NEW native test PENDING. PLAN028 still in progress."
+  "partial_summary": "H1037 source aced native Action41636586054 SUCCESS, artifact13231240873 verified exact source: two authenticated different Game2 groups same server443,4 TLS lanes, distinct auto/32, simultaneous real UDP, B survives A client Stop, groups+single Rust TUN reader Stop. Product/ABI exact test tag relocation only on source1d PASS combined Action41637141032, governance failed only missing docs impact. H1038 changes Rust GameKernelOwner authenticated Health90 alive readback via new private C FFI and Go 1s existing maintenance turn, retires only dead group /32 TCP tuples, no new Health clock. New source CI pending; full PLAN028 incomplete."
 }
