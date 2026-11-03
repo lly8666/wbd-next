@@ -156,7 +156,7 @@ if [[ "$AUTO_IP" == 1 ]];then
   CLIENT_EFFECTIVE_IP="$(python3 - "$TMP/client.log" <<'PY'
 import ipaddress,pathlib,re,sys
 data=pathlib.Path(sys.argv[1]).read_text()
-assigned=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\\.66\\.0\\.[0-9]+)/32',data)
+assigned=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\.66\.0\.[0-9]+)/32',data)
 assert len(assigned)==1,assigned
 address=ipaddress.ip_address(assigned[0])
 assert address in ipaddress.ip_network("10.66.0.128/25")

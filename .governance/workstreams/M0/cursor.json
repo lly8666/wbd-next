@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1012,
-  "checkpoint_sha": "fe3fa5f417a53e8813274d74c28a24585a815beb",
+  "sequence": 1013,
+  "checkpoint_sha": "5427217202e2760a31d7ba3bafcc0fb680e40d38",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1012 PLAN028 real original-Go protected auto-/32 lease bound into native Rust Normal/Game/FEC before TUN write, source IP spoof fence + one-source native auto-IP netns",
-  "why_now": "After H1011 true one-server-port Game2/4 native first business PASS, automatic client lease existed in original Go TLS but decrypted Rust kernel ingress could still send another device's inner IPv4 source; close real isolation gap before shared TUN",
+  "current_task": "H1013 repair Rust non-FEC cfg E0609, auto-IP native fixture regex, overlong Game feature card; rerun exact H1013 source to learn real native verdict",
+  "why_now": "SOURCE542 real CI identified an E0609 on non-FEC Normal build, authenticated client IP log extraction regex false failure, and 18KB feature catalog overflow",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect new H1012 SOURCE test Actions: Rust lib unit, Go protected TLS, Linux build and actual WBD_V4_PUBLIC_AUTO_IP=1 original Go TLS/Rust M4 two-netns UDP/Stop. Repair exact failures. Then implement one native Rust shared TUN reader IP-indexed outbound dispatch and multi-device single port accept. Preserve 7-mode and OS path-switch pending.",
+  "next_action": "Collect H1013 exact SOURCE build+original Go TLS native 2netns auto-IP UDP/Stop test and repair any real product failure. Then implement Rust shared single TUN read and /32 O(1) fanout and Go concurrent account+device accept without independent competing owner. Preserve H998 and 029/030 not started.",
   "unverified": true,
   "last_tested_source": "34f5c154f887911174ed03c56e002a4944975a8e",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1012-AUTHENTICATED-LEASE-RUST-SOURCE-BOUNDARY.md",
+    "docs/devlog/M0/20261103-PLAN028-H1013-SOURCE542-NATIVE-AND-FEATURE-REPAIR.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1011 SOURCE34f5 verified actual Game2/4 one server port, lane1 damaged siblings real UDP/owned Stop PASS. H1012 real bilateral Go TLS→native generation binding applies protected server /32 to Normal and Game/FEC Rust complete IP before TUN kernel write; manual legacy unchanged, no multi-device shared reader yet. New original native auto-IP scene added, SOURCE result pending. H998 FAIL unchanged."
+  "partial_summary": "H1011 Game2/4 OFF one port true native PASS. H1012 added genuine protected auto-IP /32 Rust Normal/Game/FEC source ownership checks, but source542 NORMAL-COMMON cfg E0609, new netns auto-IP parsing test FAIL, governance feature card oversized. H1013 fixes those exact defects, product scope awaits new SOURCE tests; cross-device shared Rust TUN still NOT_IMPLEMENTED."
 }

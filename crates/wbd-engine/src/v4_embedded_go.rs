@@ -3631,8 +3631,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     if expected==[0;4]||expected[0]==0||expected[0]>=224{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||!e.server_side||e.game_joined||
-       e.workers.is_some()||e.client_lease_ipv4.is_some(){
+    if e.phase!=PH_ACTIVE||!e.server_side||
+       e.workers.is_some()||e.client_lease_ipv4.is_some(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    if e.game_joined{
         return BAD_STAGE
     }
     e.client_lease_ipv4=Some(expected);
