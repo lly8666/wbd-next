@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
+  "status": "PARTIAL_CURRENT_ARM64_TWO_PASS_THREE_FAIL",
+  "run": 41560362587,
+  "build": {
+    "job_id": 125669250908,
+    "conclusion": "success",
+    "platform": "ubuntu-24.04-arm true aarch64",
+    "artifact_id": 13196648172,
+    "artifact_name": "h995-arm64-exact-source-product",
+    "sha256_manifests": "VERIFIED_IN_JOB"
+  },
+  "native": [
+    {
+      "scope": "normal_default_outer1460",
+      "job_id": 125670144738,
+      "conclusion": "success",
+      "protocol": "original Linux ARM64 two real netns Go TLS Rust AF_PACKET/TUN",
+      "os_tun": "real readback",
+      "stop": "TWO_DRAINED"
+    },
+    {
+      "scope": "normal_asym_outer1460_1280",
+      "job_id": 125670144704,
+      "conclusion": "success",
+      "protocol": "original Linux ARM64 two real netns Go TLS Rust AF_PACKET/TUN",
+      "os_tun": "real readback",
+      "stop": "TWO_DRAINED"
+    },
+    {
+      "scope": "game4_fec6_outer1460",
+      "job_id": 125670144745,
+      "conclusion": "failure",
+      "server_pre_tls": {
+        "outer_config": 1460,
+        "physical": 1500,
+        "syn_mss": 1420,
+        "planned_tun": 1358
+      },
+      "first_fault": "ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN after 10 seconds; client not launched",
+      "stop": "NO_OWNED_PRODUCT_READINESS",
+      "interpretation": "H995 fixture FALSE NEGATIVE before SYN: waited Normal-only raw listener log absent in Game source. Product Game FEC original native admission not actually attempted; H997 will check actual 4 AF_PACKET sockets and demand full business/parity/Stop."
+    },
+    {
+      "scope": "game4_fec6_outer1500",
+      "job_id": 125670144646,
+      "conclusion": "failure",
+      "server_pre_tls": {
+        "outer_config": 1500,
+        "physical": 1500,
+        "syn_mss": 1460,
+        "planned_tun": 1398
+      },
+      "first_fault": "ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN after 10 seconds; client not launched",
+      "stop": "NO_OWNED_PRODUCT_READINESS",
+      "interpretation": "H995 fixture FALSE NEGATIVE before SYN: waited Normal-only raw listener log absent in Game source. Product Game FEC original native admission not actually attempted; H997 will check actual 4 AF_PACKET sockets and demand full business/parity/Stop."
+    },
+    {
+      "scope": "normal_real_live_physical1500_to1280",
+      "job_id": 125670144696,
+      "conclusion": "failure",
+      "before": {
+        "outer_user": 1460,
+        "inner_os": 1389,
+        "original_tls": "READY",
+        "two_way_ping": "PASS"
+      },
+      "change": {
+        "physical_link_os_both": 1280,
+        "changed_after_auth": true,
+        "inner_manual_override": false
+      },
+      "observed": {
+        "client_small_ping_sent": 3,
+        "client_small_ping_received": 0,
+        "fail_marker": "ARM64_LIVE_MTU_SMALL_C2S_FAIL",
+        "logs": "arm64-netns-result/dynamic-small-c2s.log"
+      },
+      "interpretation": "real source-scoped failure to keep small flow alive through cold same-generation physical shrink; no evidence of safe in-place re-derive or bounded automated rebuild"
+    }
+  ],
+  "previous_original_Windows_WS2_11_all_pass": "docs/evidence/M0/PLAN027A-H995-H994-11-OF-11-REAL-NATIVE-CLOSE-20261103.json",
+  "rerun_scope": "H997 only Game4FEC native two unsuccessful cold-start jobs; same H995 actual binary artifacts, 30s actual listener deadline and PID/wchan diagnostics; live-physical failure stays FAIL pending genuine product code change",
+  "user_data": "No fragment loss-rate threshold; H994 original 65507B full byte-exact reassembly both OS already PASS.",
+  "exit": "PLAN027A_OPEN_MISSING_REAL_DYNAMIC_PHYSICAL_MTU_AND_ARM64_GAME_FEC6_AND_USERSPACE_ICMP",
+  "h997_game_cold_root_cause": "H995 harness mistakenly waited for V4_PUBLIC_RAW_AF_PACKET_READY role=server (Normal-only marker); genuine Game4 source does not emit this marker. Game4 pre-TLS raw readiness must be source-locked actual Linux netns AF_PACKET socket count >= four; then authenticated original game4 FEC TLS/Rust/kernel/parity/Stop tests still required. No product PASS derived from this correction.",
+  "h997_binary_reuse": {
+    "source_sha": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
+    "build_run": 41560362587,
+    "build_job_conclusion": "success",
+    "artifact_id": 13196648172,
+    "new_rust_go_build_required": false,
+    "scopes": [
+      "game4 FEC fixed6 1460",
+      "game4 FEC fixed6 1500"
+    ],
+    "result": "NOT_RUN_AT_H997_AUTHORING"
+  }
+}

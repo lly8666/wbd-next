@@ -1,0 +1,13 @@
+# H997 — ARM64 real Game4 FEC6 pre-SYN listener proof, one binary reused
+
+H995 ARM64 current-source Action 41560362587 compiled pinned original Go TLS/Rust/aarch64 native product once and checked SHA256SUMS; build job125669250908 success. Native Normal1460 and Normal1460:1280 asymmetric true Linux netns/TUN original-Go TLS/Rust/Stop passed (jobs125670144738 and 125670144704). Game4 FEC6 1460/1500 native jobs125670144745/125670144646 failed BEFORE any client SYN: the H995 test-script waited for the `V4_PUBLIC_RAW_AF_PACKET_READY role=server` Normal-only log marker, absent in source `r0/go_overlay/internal/v4productcli/game_linux.go`. This was a **test-only false negative**, not a product GameFEC DATA verdict. H997 inspects the server network namespace's actual `AF_PACKET` kernel socket count >= four, after server process starts and before launching the original client, with 30s bounded Game cold deadline. A real four-lane original TCP handshake/TLS, full game/FEC UDP ping/kernel output, parity_offered/parity_copied counters, OS TUN/MSS/record readback and owned Stop must still succeed; no substitute synthetic positive.
+
+Reuse H995 artifact `h995-arm64-exact-source-product` (ID13196648172, source 26ca847019d8ffddaa163d40f77c61b6cc2401f9) via pinned GitHub Actions download. H997 guard validates exact H995 successful build job and all product source dirs unchanged; no new original product build. Only H995 unsuccessful Game4FEC1460/1500 mode cases rerun. Actual source checked in Linux arm native runner may differ only in fixture and documentation; set WBD_ARM64_FROZEN_SOURCE to the original product binary source and retain precise harness GITHUB_SHA.
+
+Independent ARM64 online physical MTU change H995 job125670144696 is a **true remaining FAIL**: after original TLS ready, actual veth OS MTU lowered 1500→1280 both directions, first 3 small tunneled ICMP requests lost 3/3. This is not the erroneous Game pre-SYN marker and is NOT rerun without real live-budget/rebuild product repair. Old H995 failures retained; do not hide failure in one successful 1280 new-session test. Unmeasured user-space emitted remote ICMP type3/code4 stays separate; local socket EMSGSIZE alone is insufficient.
+
+At the same time H996 separate original Windows/WSL2 performance Actions (Normal same VM OFF/ON and Game4FEC3Mbps loss0) are already dispatched. H997 never redispatches them.
+
+```feature-impact
+{"kind":"updated","ids":["path-mtu-budget"],"reason":"H997 preserves genuine ARM64 live physical MTU failure, corrects source-inaccurate Game4 pre-SYN readiness from Normal-only log to 4 real server-netns AF_PACKET kernel sockets, and reuses successful H995 ARM64 Go/Rust build for only Game4FEC1460/1500 true native retests."}
+```

@@ -145,20 +145,39 @@ fi
 # The first source-locked SYN MUST start only after the REAL server raw
 # endpoint has bound its exact port; do not silently paper over cold loss.
 raw_listen=0
-for i in $(seq 1 100); do
-  if grep -Eq 'V4_PUBLIC_RAW_AF_PACKET_READY role=server attempt=[0-9]+ interface=v4as port=443' "$out/server.log"; then
-    raw_listen=1
-    break
+# Normal emits an explicit raw-listener log; Game4's actual Go source does
+# NOT emit that Normal-only log. For Game, count real AF_PACKET sockets in
+# the server NETNS before allowing the client's original SYN. Requiring a
+# nonexistent Normal log was H995's test-only false negative.
+raw_deadline_loops=100
+if [ "$game_lanes" -gt 0 ];then raw_deadline_loops=300;fi
+for i in $(seq 1 "$raw_deadline_loops"); do
+  if [ "$game_lanes" -eq 0 ];then
+    if grep -Eq 'V4_PUBLIC_RAW_AF_PACKET_READY role=server attempt=[0-9]+ interface=v4as port=443' "$out/server.log"; then
+      raw_listen=1;break
+    fi
+  else
+    packet_sockets=$(sudo -n ip netns exec "$server_ns" sh -c "tail -n +2 /proc/net/packet | wc -l" 2>/dev/null | tr -d '[:space:]' || true)
+    if [[ "$packet_sockets" =~ ^[0-9]+$ ]] && [ "$packet_sockets" -ge "$game_lanes" ];then
+      echo "ARM64_GAME_SERVER_TRUE_AF_PACKET_SOCKET_PRE_SYN_READY sockets=$packet_sockets lanes=$game_lanes"
+      raw_listen=1;break
+    fi
   fi
   if ! kill -0 "$server_launcher" 2>/dev/null; then break; fi
   sleep .1
 done
 if [ "$raw_listen" -ne 1 ];then
-  echo 'ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN'
-  tail -n 25 "$out/server.log" || true
+  echo "ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN mode=$mode loops=$raw_deadline_loops"
+  ps -eo pid,stat,wchan:28,comm | grep -E 'wbd-v4|sudo|ip netns' | tail -n 16 || true
+  sudo -n ip netns pids "$server_ns" || true
+  tail -n 40 "$out/server.log" || true
   exit 1
 fi
-echo ARM64_REAL_GO_AF_PACKET_SERVER_LISTENING_BEFORE_SYN_PASS
+if [ "$game_lanes" -eq 0 ];then
+  echo ARM64_REAL_GO_AF_PACKET_SERVER_LISTENING_BEFORE_SYN_PASS
+else
+  echo ARM64_GAME_SERVER_KERNEL_AF_PACKET_LANES_BEFORE_SYN_PASS
+fi
 sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
   "${client_mtu_args[@]}" \

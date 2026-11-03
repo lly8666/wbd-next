@@ -1,0 +1,95 @@
+name: M0 PLAN027A H997 exact ARM64 Game4 FEC6 cold listening retry
+run-name: "M0|PLAN027A-H997-ARM64-GAMEFEC|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h997-arm64-gamefec-cold-retry.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  verify-h995-original-arm64-bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SHA: 26ca847019d8ffddaa163d40f77c61b6cc2401f9
+      PRODUCT_RUN: "41560362587"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Original ARM64 Go/Rust source and prior successful single build only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch --depth=1 origin "$PRODUCT_SHA"
+          changed="$(git diff --name-only "$PRODUCT_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/arm64_public_go_rust_bundle.sh tools/m0_install_public_faketcp.py)"
+          test -z "$changed" || { echo "H997_REFUSE_PRODUCT_SOURCE_DRIFT $changed";exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SHA"
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/jobs?per_page=100" | jq -e '[.jobs[]|select(.name=="build-one-original-arm64-product" and .conclusion=="success")]|length==1'
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts" | jq -e '[.artifacts[]|select(.name=="h995-arm64-exact-source-product" and .expired==false)]|length==1'
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt -v
+          echo H997_H995_BUILD_SUCCESS_AND_SINGLE_BINARY_REUSE_PASS
+  one-original-arm64-game-fec-scene:
+    needs: [verify-h995-original-arm64-bundle]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 34
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: game4-fec6-1460
+            outer: 1460
+          - id: game4-fec6-1500
+            outer: 1500
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      WBD_ARM64_FROZEN_SOURCE: 26ca847019d8ffddaa163d40f77c61b6cc2401f9
+      WBD_V4_MODE: game4
+      WBD_ARM64_GAME_FEC_PROFILE: "6"
+      WBD_ARM64_OUTER_MTU: ${{ matrix.outer }}
+      WBD_ARM64_SERVER_OUTER_MTU: ${{ matrix.outer }}
+      WBD_ARM64_MTU_BOUNDARY: "1"
+      WBD_ARM64_LIVE_MTU_CYCLE: "0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: h995-arm64-exact-source-product
+          run-id: "41560362587"
+          github-token: ${{ github.token }}
+          path: arm64-public-bundle/
+      - name: Source-verified real ARM64 Linux Game4 FEC6 dual netns and owned Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          python3 - <<'PY'
+          import os,json
+          m=json.load(open("arm64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["WBD_ARM64_FROZEN_SOURCE"] and m["architecture"]=="aarch64"
+          print("H997_PRODUCT_BINARY_SAME_ARM64_GORUST_SHA256_SOURCE_PASS")
+          PY
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt -v
+          echo "H997_NATIVE_COLD_GAME_FEC_CASE_BEGIN ${{ matrix.id }} binary_source=$WBD_ARM64_FROZEN_SOURCE fixture=$GITHUB_SHA"
+          bash tools/arm64_linux_netns_smoke.sh
+          dir="h997-${{ matrix.id }}"
+          mv arm64-netns-result "$dir"
+          python3 tools/m0_linux_two_end_mtu_receipt.py "$dir" game4 "$WBD_ARM64_OUTER_MTU" "$WBD_ARM64_SERVER_OUTER_MTU" --game-fec | tee "$dir/mtu-mss-validated.jsonl"
+          echo "H997_REAL_GAME4_FEC6_TWO_ARM64_NATIVE_STOP_PASS ${{ matrix.id }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h997-arm64-${{ matrix.id }}
+          path: |
+            arm64-public-bundle/manifest.json
+            arm64-public-bundle/SHA256SUMS
+            h997-${{ matrix.id }}/
+            arm64-netns-result/
+          retention-days: 30
+          if-no-files-found: warn
