@@ -6,6 +6,11 @@ MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
 HANDOVER="${WBD_PLAN028_GAME_MULTI_HANDOVER:-0}"
 GAME_FEC="${WBD_PLAN028_GAME_MULTI_FEC:-off}"
 AUTO_ROUTE="${WBD_PLAN028_GAME_MULTI_AUTO_ROUTE:-0}"
+AUTH_NEGATIVE="${WBD_PLAN028_GAME_MULTI_AUTH_NEGATIVE:-0}"
+if [[ "$AUTH_NEGATIVE" != 0 && "$AUTH_NEGATIVE" != 1 ]];then echo "invalid auth negative selector" >&2;exit 2;fi
+if [[ "$AUTH_NEGATIVE" == 1 && ( "$AUTO_ROUTE" != 1 || "$HANDOVER" != 1 || "$MODE" != game2 ) ]];then
+  echo "auth negative real test requires auto-route Game2 with A2" >&2;exit 2
+fi
 if [[ "$AUTO_ROUTE" != 0 && "$AUTO_ROUTE" != 1 ]];then echo "invalid pre-ClientHello route source" >&2;exit 2;fi
 DEAD90="${WBD_PLAN028_GAME_MULTI_DEAD90:-0}"
 if [[ "$DEAD90" != 0 && "$DEAD90" != 1 ]];then echo "invalid Health90 selector" >&2;exit 2;fi
@@ -38,7 +43,7 @@ cleanup(){
   set +e
   if ((code));then
     echo "PLAN028_GAME_MULTIGROUP_NATIVE_FAIL code=$code" >&2
-    for f in server.log A.log B.log R.log echo.log a_echo.log b_echo.log b_after.log r_echo.log r_b_echo.log;do
+    for f in server.log A.log B.log R.log echo.log a_echo.log b_echo.log b_after.log r_echo.log r_b_echo.log denied-wrong_password.log denied-untrusted_cert.log;do
       if [[ -f "$TMP/$f" ]];then
         echo "=== $f ===" >&2;tail -60 "$TMP/$f" >&2
       fi
@@ -199,6 +204,38 @@ if [[ "$HANDOVER" == 1 ]];then
   send_udp "$NSB" "$IPB" "BOB_SURVIVES_SUCCESSOR" 6 "$TMP/r_b_echo.log" &
   p_b=$!
   wait "$p_r" "$p_b"
+  if [[ "$AUTH_NEGATIVE" == 1 ]];then
+    # A2/B remain live. Two real original FakeTCP/TLS negative admissions.
+    openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
+      -keyout "$TMP/untrusted-key.pem" -out "$TMP/untrusted.pem" \
+      -subj '/CN=not-the-WBD-server' >"$TMP/untrusted-create.log" 2>&1
+    attempt_denied(){
+      local tag="$1" port="$2" trust="$3" password="$4" tun="$5" rc=0
+      timeout 30s sudo -n ip netns exec "$NSR" \
+        env LD_LIBRARY_PATH="$ROOT" SSL_CERT_FILE="$trust" "$ROOT/wbd-v4-client" \
+        --raw-interface wbdvr0 --local-ip 10.25.0.4 --local-port "$port" \
+        --peer-ip 10.25.0.1 --peer-port 443 --tun-name "$tun" \
+        --server-name wbd-v4.example.test --username alice --password "$password" \
+        --auto-ip --installation-id-file "$TMP/install-denied-$tag" --mode game2 \
+        >"$TMP/denied-$tag.log" 2>&1 || rc=$?
+      [[ "$rc" != 0 && "$rc" != 124 && "$rc" != 137 ]] || {
+        echo "$tag not rejected promptly rc=$rc" >&2;exit 1;
+      }
+      ! grep -q 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client' "$TMP/denied-$tag.log" || {
+        echo "unauthorized $tag entered native Rust owner" >&2;exit 1;
+      }
+    }
+    attempt_denied wrong_password 45031 "$TMP/cert.pem" "NOT-the-alice-password" wbdvn1
+    grep -q 'realityfront: admission authentication failed' "$TMP/denied-wrong_password.log"
+    attempt_denied untrusted_cert 47031 "$TMP/untrusted.pem" "game-alice-protected-20261103" wbdvn2
+    grep -Eq 'x509: certificate signed by unknown authority|certificate signed by unknown authority|tls: failed to verify certificate' "$TMP/denied-untrusted_cert.log"
+    [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -eq 3 ]] || {
+      echo "unauthorized candidate minted another Game group" >&2;exit 1;
+    }
+    send_udp "$NSB" "$IPB" "BOB_SURVIVES_INVALID_TLS_AND_PASSWORD" 3 "$TMP/r_b_echo.log"
+    send_udp "$NSR" "$IPR" "A2_SURVIVES_INVALID_TLS_AND_PASSWORD" 3 "$TMP/r_echo.log"
+    echo "M0_PLAN028_GAME2_AUTO_ROUTE_AUTH_REJECT_NATIVE_PASS wrong_password_no_native=1 untrusted_certificate_no_native=1 valid_A2_B_continuous_udp=1"
+  fi
   if [[ "$GAME_FEC" == fixed6 ]];then
     send_udp "$NSR" "$IPR" "GAME4_FEC_A2" 64 "$TMP/r_echo.log" &
     fec_r=$!
@@ -277,4 +314,4 @@ assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
 print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
 PY
 fi
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90 auto_route_ephemeral=$AUTO_ROUTE"
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER fec_fixed6=$([[ "$GAME_FEC" == fixed6 ]] && echo 1 || echo 0) natural_health90=$DEAD90 auto_route_ephemeral=$AUTO_ROUTE auth_negative=$AUTH_NEGATIVE"

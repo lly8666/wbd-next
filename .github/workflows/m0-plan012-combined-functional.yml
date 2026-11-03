@@ -571,12 +571,13 @@ jobs:
           # Reuse this SOURCE build; no operator-supplied route secret.
           # Genuine per-lane X25519 bootstrap before verified TLS and
           # Alice+Bob plus same-installation A2 true kernel UDP/Stop.
-          WBD_PLAN028_GAME_MULTI_MODE=game2 WBD_PLAN028_GAME_MULTI_HANDOVER=1 WBD_PLAN028_GAME_MULTI_AUTO_ROUTE=1 bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game2-password-only-prehello-a2.log 2>&1 || {
+          WBD_PLAN028_GAME_MULTI_MODE=game2 WBD_PLAN028_GAME_MULTI_HANDOVER=1 WBD_PLAN028_GAME_MULTI_AUTO_ROUTE=1 WBD_PLAN028_GAME_MULTI_AUTH_NEGATIVE=1 bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game2-password-only-prehello-a2.log 2>&1 || {
             tail -160 fixed-kernel-result/plan028-game2-password-only-prehello-a2.log >&2
             exit 1
           }
           grep -Fq "M0_PLAN028_GAME2_PASSWORD_ONLY_EPHEMERAL_PREHELLO_NATIVE_PASS same_server_port=443 accounts=2 install_successor=1 original_TLS_verified_certificate=1" fixed-kernel-result/plan028-game2-password-only-prehello-a2.log
-          grep -Fq "auto_route_ephemeral=1" fixed-kernel-result/plan028-game2-password-only-prehello-a2.log
+          grep -Fq "auto_route_ephemeral=1 auth_negative=1" fixed-kernel-result/plan028-game2-password-only-prehello-a2.log
+          grep -Fq "M0_PLAN028_GAME2_AUTO_ROUTE_AUTH_REJECT_NATIVE_PASS wrong_password_no_native=1 untrusted_certificate_no_native=1 valid_A2_B_continuous_udp=1" fixed-kernel-result/plan028-game2-password-only-prehello-a2.log
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
       # Earlier independent Fixed/Game jobs complete first and can expose

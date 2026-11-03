@@ -29,3 +29,9 @@ H1049 原Go TLS/cold fixture编译已PASS。Win PLAN020严格拒绝重复owner�
 ## H1051 Windows相同源二次复制的唯一修正
 
 `prepare_windows_wiring.py` 已通过完整manifest原Go装配后，自己的`EXTRA_BRIDGES`又将同一`admission_v4.go`当作全新文件写入，触发`competing original/overlay owner`。只对该文件在已经由唯一manifest安装且和同SHA原Go overlay逐字节相符时**不再复制**；其余Windows独立文件仍执行旧严格不存在检查。无多余恢复器、不修改原认证决策、未主张Windows真实路径PASS。
+
+## H1052 同原生场景的真正认证失败路径
+
+SOURCE `01a639ed1069a1f8099a6ff57f0f4ecf15818d31` [Action41661304305](https://github.com/lly8666/wbd-next/actions/runs/41661304305) 与artifact13242791642 已独立核对：`plan028-game2-password-only-prehello-a2.log` 是原Go TLS/Rust、真实双账号、单端口443/共享TUN、同安装A→A2、内层UDP/Stop、没有手工route-key却可使用受信自签测试证书的严格限定PASS。此SOURCE未测错误密码/证书。
+
+H1052仍复用此夹具/构建SOURCE来增加两条真实拒绝：Alice密码错误而证书受信，和Alice密码正确但证书来自另一不受信CA，两者须在30秒内以正确错误类别失败、不得出现native READY或新增Game认证组；活Bob与A2在失败前后须继续真实UDP。失败时保留最窄被拒客户端日志，绝不通过关TLS校验/加宽超时蒙混。新SOURCE待Action，原H1049成功不冒称负例通过。

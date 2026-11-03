@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H1049",
+  "plan": "PLAN028",
+  "source_sha": "01a639ed1069a1f8099a6ff57f0f4ecf15818d31",
+  "result": "PASS_SCOPED_LINUX_ORIGINAL_GAME2_AUTO_ROUTE",
+  "artifact_verified": true,
+  "run": {
+    "id": 41661304305,
+    "job_id": 126004914275,
+    "conclusion": "success",
+    "artifact_id": 13242791642,
+    "artifact_name": "m0-plan012-combined-41661304305-1",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41661304305"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "test": {
+    "log": "fixed-kernel-result/plan028-game2-password-only-prehello-a2.log",
+    "port": 443,
+    "route_key_user_argument": false,
+    "per_lane_pre_ClientHello_X25519": true,
+    "server_certificate_verified_with_fixture_trust": true,
+    "accounts": 2,
+    "completed_groups_total": 3,
+    "same_installation_A2": true,
+    "other_account_B_continuous": true,
+    "real_native_tun_udp": true,
+    "owned_stop": true
+  },
+  "binaries_sha256": {
+    "original_client": "9215d0636eb27215211d2fb68dbd1aa96a6c151a424d7b151e6058d224daa6c7",
+    "original_server": "92b6c072d84822a405a629510d8c69f91430a242a7800b2d5f8b9f0ca07963d1",
+    "rust_so": "b33ed5bb0d3bfab5a4fb24a07995eb3fe1944f894e6c39e31b6e9e0bf43d41b7"
+  },
+  "limits": {
+    "negative_password": "NOT_RUN_ON_THIS_SOURCE",
+    "negative_untrusted_cert": "NOT_RUN_ON_THIS_SOURCE",
+    "Windows_auto_route": "NOT_RUN",
+    "actual_Windows_physical_switch": "NOT_RUN",
+    "full_seven_mode_auto_route": "NOT_RUN",
+    "H998_online_MTU_shrink": "FAIL_RETAINED",
+    "H998_ARM64_Game4FEC": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_MEASURED",
+    "CPU_p99": "NOT_MEASURED"
+  }
+}
