@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1177",
+  "source_sha": "baa1e9b9e1efe287108c5c151fce09d76f8ab29c",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "PASS_SCOPED_NATIVE_ARM64_ARM64_PHYSICAL_LINK_DOWN_FIRST_GAME4_DIRECT_RECOVERY_NORMAL_LIVE",
+  "action": {
+    "run_id": 41885126982,
+    "job_id": 126767426336,
+    "conclusion": "success",
+    "artifact_id": 13350418540,
+    "artifact_zip_sha256": "c382accb781ee6724b2b82752092c4cf060c91892cb6e188242ea92f88261d2f"
+  },
+  "native": {
+    "architecture": "AARCH64_ELF183",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "client_sha256": "591af92f984c922f8b4ab6291849b150eac6c191954918266378d55f80cd3cad",
+    "server_sha256": "7111b20ffdcd33dbc8ba4d966662440127643dad2811e53e4762c92846074874",
+    "rust_sha256": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "original_tls": true,
+  "server_shared_port": 443,
+  "physical_link": "mxb0",
+  "os_link_down_verified": true,
+  "link_DOWN_duration_ms": 1331.81,
+  "physical_mutation_to_gen2_READY_ms": 1619.91,
+  "source4_before": "10.25.0.3",
+  "source4_after": "10.25.0.9",
+  "link_ipv4_mtu_after": 1280,
+  "configured_outer_user_ipv4_mtu": 1460,
+  "game4_new_os_inner_mtu": 1178,
+  "normal_sibling_os_inner_mtu": 1375,
+  "game4_auto_lease_preserved": "10.66.0.193/32",
+  "old_gen1_terminated_before_new_TLS": true,
+  "old_gen1_exact_stop_after_new": false,
+  "new_gen2_TLS_Rust_M4_ready": true,
+  "new_gen2_real_game4_udp_echoes": 32,
+  "healthy_sibling_normal_auto_real_udp_echoes": 48,
+  "server_shared_tun_final_stop": true,
+  "qualified_only": "real link down then recover on same physical interface with a different source4, not permanent physical loss; not healthy old generation overlap",
+  "not_measured": [
+    "native OS-notification event→TLS initiation",
+    "authenticated→first inner packet",
+    "CPU/p99 in this exact case",
+    "persistent inner TCP",
+    "remote ICMP3/4",
+    "Android physical Wi-Fi/cellular"
+  ],
+  "h998_retained": [
+    "same-connection hot MTU-shrink FAIL",
+    "ARM old Game4FEC Action FAIL",
+    "remote ICMP not measured",
+    "old/new CPU causal not proven"
+  ],
+  "next_whole_linux": "x86_64 client + x86_64 server"
+}
