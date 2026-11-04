@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1139",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_ARM64_ARM64_ORIGINAL_M2_SOURCE4_TWO_GENERATIONS",
+  "source_sha": "eaf29401025d83aaa3c5ea6f941b475dbc13f0f8",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "platform": "ubuntu-24.04-arm aarch64 original Go TLS+Rust M4 client and aarch64 original Go TLS+Rust M4 shared server, same native ELF183, no QEMU or heterogeneous peers",
+  "workflow": {
+    "run_id": 41826394630,
+    "job_id": 126562098040,
+    "conclusion": "success",
+    "artifact_id": 13319656329,
+    "artifact_digest": "sha256:ba1b08b50120faea4fef90c33f868bdcfcd3459338dcef2a44603d58daa1f368"
+  },
+  "binary_sha256": {
+    "wbd-v4-client": "411bbc32fecfb9a78b664b42319325aebddced743e430c00d1b1da08bc816c2d",
+    "wbd-v4-server": "95267b8b93790f0540f7cdb6a285926436598756adbb5762c9c19c79fdc1011e",
+    "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "build": {
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "original_tls_first_flight_authenticated": true,
+    "route_key": "new local-only private 32B key 0600; no TLS-prelude",
+    "product_rebuild_count": 1,
+    "source_exact": true
+  },
+  "network": {
+    "original_client_source4": "10.25.0.2",
+    "new_physical_source4": "10.25.0.3",
+    "new_physical_ipv4_mtu_bytes": 1280,
+    "outer_user_intent_ipv4_mtu_bytes": 1460,
+    "inner_tun_mtu_os_readback_bytes": 1209,
+    "real_pre_change_udp_echoes": 5,
+    "real_post_change_udp_echoes": 5,
+    "real_rtnetlink_os_trigger": true,
+    "quiet_window_ms": 200,
+    "max_coalesce_ms": 500
+  },
+  "session": {
+    "server_port": 443,
+    "authenticated_shared_ready_active_flows": [
+      1,
+      2
+    ],
+    "real_rust_server_original_outer_repair_enabled": [
+      1,
+      1
+    ],
+    "rust_original_first_wire_bytes": [
+      1040,
+      1050
+    ],
+    "rust_original_shadow_limit_bytes": [
+      65536,
+      65536
+    ],
+    "readback_from_real_rust_owner_before_exact_stop": true,
+    "old_exact_retire": {
+      "reason": "same-lease-new-generation",
+      "remaining": 1
+    },
+    "final_retire": {
+      "reason": "server-close",
+      "remaining": 0
+    },
+    "both_native_shared_tun_readers_joined": true,
+    "routed_packets_server": 10,
+    "unrouted_packets_server": 0
+  },
+  "limitations": [
+    "Single Normal off same-architecture native ARM64 5 old+5 new genuine UDP test, not all modes nor 5–10Mbps/TCP continuity.",
+    "No exact OS-notification→TLS or TLS Finished→first UDP timestamp, no CPU/p99 causal A/B on this SOURCE.",
+    "No Android/physical Wi-Fi/cellular test; WSL2 virtual switched Windows independent H1135 PASS.",
+    "H998 same-connection hot MTU shrink historical FAIL, historic ARM64 Game4FEC Action FAIL, remote ICMP NOT_MEASURED, CPU causal improvement NOT_PROVEN."
+  ],
+  "next_linux_platform": "x86_64 client+x86_64 server for next distinct complete Linux task"
+}
