@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1081",
+  "product_source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "status": "REAL_WINDOWS_WSL2_FIRST_FLIGHT_FAIL_PRE_SYN_CAPTURE",
+  "live_action": {
+    "run_id": 41757222750,
+    "job_id": 126337684961,
+    "conclusion": "failure",
+    "failed_stage": "real WSL2 eth0 tcpdump child exited before Windows Npcap SYN",
+    "artifact_id": 13288579971,
+    "artifact_name": "m0-wl-full-public-normal-direct",
+    "raw_pcap_present": false,
+    "capture_stderr_present": false
+  },
+  "same_action_build": {
+    "Windows_original_Go_compile": "success",
+    "Windows_Rust_native_test": "success",
+    "Linux_original_Go_Rust_build": "success",
+    "Windows_original_Go_Rust_binaries": {
+      "artifact_name": "m0-wl-windows-product-binaries-7b38d2baddaa41ab5e410d2533a1e8c396510745",
+      "product_source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745"
+    },
+    "Linux_binaries": {
+      "artifact_name": "m0-plan024-linux-product",
+      "product_source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745"
+    }
+  },
+  "independent_linux_audit_failure": {
+    "run_id": 41756961106,
+    "source_sha": "ff3fea0d824875b092a055ef5335b36eeacf397d",
+    "conclusion": "failure",
+    "true_underlay_TCP": "observed",
+    "genuine_udp_counters": "observed",
+    "root_failure": "NameError: server_ip was never declared in audit; real Windows caller also sends now-unsupported server_ip kwarg",
+    "tls_exterior_qualified": false
+  },
+  "proposed_frozen_harness_only_fix": [
+    "write WSL2 capture shell script via ASCII LF-only write_bytes, not Windows text-mode write_text; original Go server script already uses write_bytes",
+    "fail with actual early-exit /bin/sh/tcpdump stderr and return code",
+    "one actual TCP 4-tuple using dynamic WSL2 server eth0 IP and optional verified server_ip argument",
+    "synthetic test frames only as parser regression, never evidence of real TLS"
+  ],
+  "frozen_reuse": {
+    "same_original_source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+    "run_id": 41757222750,
+    "product_rebuild": "FORBIDDEN_HARNESS_ONLY",
+    "new_real_network_verdict": "PENDING"
+  },
+  "qualifications": [
+    "standard TLS first flight of this Windows run NOT_PROVEN",
+    "full Finished transcript and comparable standard uTLS reference NOT_PROVEN",
+    "real Windows NIC/IP switching and Game healthy overlapping lanes NOT_RUN",
+    "H998 online outer MTU shrink FAIL, old ARM64 Game4FEC FAIL retained",
+    "remote ICMP, CPU/p99 causal relationship unmeasured"
+  ]
+}

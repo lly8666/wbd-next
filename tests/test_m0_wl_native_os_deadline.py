@@ -28,6 +28,11 @@ class NativeWslDeadlineTests(unittest.TestCase):
         script=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         self.assertIn("echo $$ > ",script)
         self.assertNotIn("echo $ > ",script)
+        # Windows defaults to CRLF in text-mode writes; native WSL /bin/sh
+        # requires an LF-only script. A stopped capture is NOT TLS evidence.
+        self.assertIn("capture_script.write_bytes(",script)
+        self.assertNotIn("capture_script.write_text(",script)
+        self.assertIn('reason=(out/"tls-capture-stderr.log").read_text',script)
 
     def test_hard_guard_is_whole_step_not_only_mode(self):
         y=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()

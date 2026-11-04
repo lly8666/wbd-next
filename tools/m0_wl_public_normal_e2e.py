@@ -179,12 +179,22 @@ try:
   # Raw private PCAP is never part of the published Action artifact.
   wsl("sh","-c","command -v tcpdump >/dev/null || (apt-get update -qq && apt-get install -y -qq tcpdump)",timeout=120)
   capture_script=out/"start-tls-capture.sh"
-  capture_script.write_text("#!/bin/sh\nset -eu\necho "+chr(36)*2+" > '"+result+"/tls-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+result+"/tls-firstflight.pcap' tcp port 443\n")
+  # Windows text-mode writes CRLF, which breaks WSL /bin/sh 'set -eu'.
+  # Write the exact ELF/Go server script style: binary LF-only bytes.
+  # $$ is expanded by the guest shell for its owned capture PID/Stop.
+  capture_script.write_bytes(("#!/bin/sh\nset -eu\necho "+chr(36)*2+
+    " > '"+result+"/tls-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+
+    result+"/tls-firstflight.pcap' tcp port 443\n").encode("ascii"))
   caplog=(out/"tls-capture-stderr.log").open("w");logs.append(caplog)
   tls_capture=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(capture_script)],
     stdout=subprocess.DEVNULL,stderr=caplog)
   for tick in range(120):
-   if tls_capture.poll() is not None:raise RuntimeError("real WSL2 capture exited before Windows SYN")
+   if tls_capture.poll() is not None:
+   # First actual /bin/sh or tcpdump error, bounded and redacted from logs.
+   caplog.flush()
+   reason=(out/"tls-capture-stderr.log").read_text(errors="replace")[-1600:]
+   raise RuntimeError("real WSL2 capture exited before Windows SYN"+
+     " rc="+str(tls_capture.returncode)+" stderr="+repr(reason))
    caplog.flush()
    if "listening on eth0" in (out/"tls-capture-stderr.log").read_text(errors="replace"):break
    time.sleep(.1)

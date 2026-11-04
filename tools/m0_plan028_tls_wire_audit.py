@@ -9,7 +9,7 @@ import pathlib
 import struct
 import sys
 
-def audit(raw):
+def audit(raw,server_ip=None):
     if len(raw)<24: raise AssertionError("short pcap")
     magic=raw[:4]
     if magic==b"\xd4\xc3\xb2\xa1": endian="<"
@@ -57,15 +57,21 @@ def audit(raw):
         dst=".".join(map(str,ip[16:20]))
         records.append((sec,usec,src,dst,sp,dp,int.from_bytes(tcp[4:8],"big"),payload))
     if not records:raise AssertionError("no actual TCP payload on 443")
-    clients=[r for r in records if r[3]=="10.25.0.1" and r[5]==443]
-    servers=[r for r in records if r[2]=="10.25.0.1" and r[4]==443]
-    if not clients or not servers:raise AssertionError("no two-way TLS")
-    # One original product client tuple: first SYN/ClientHello, no stitched
-    # unrelated sessions. Handle retransmissions by TCP sequence de-duplication.
-    port=clients[0][4]
-    clients=[r for r in clients if r[4]==port]
-    servers=[r for r in servers if r[5]==port]
-    if not servers:raise AssertionError("no matching server TCP tuple")
+    # Bind one genuine reverse TCP four-tuple. The WSL2 server's eth0 IP
+    # changes between native jobs; 10.25.0.1 is ONLY the older Linux netns.
+    # The caller may provide its OS-readback server IP to fail closed.
+    candidates=[r for r in records if r[5]==443 and
+                (server_ip is None or r[3]==server_ip)]
+    if not candidates:raise AssertionError("no actual client TCP payload to selected server 443")
+    _,_,client_ip,observed_server_ip,port,_,_,_=candidates[0]
+    if server_ip is not None and observed_server_ip!=server_ip:
+        raise AssertionError("unexpected original TLS target IPv4")
+    server_ip=observed_server_ip
+    clients=[r for r in candidates if r[2]==client_ip and
+             r[3]==server_ip and r[4]==port]
+    servers=[r for r in records if r[2]==server_ip and
+             r[3]==client_ip and r[4]==443 and r[5]==port]
+    if not servers:raise AssertionError("no matching server TCP reverse four-tuple")
     if (servers[0][0],servers[0][1]) < (clients[0][0],clients[0][1]):
         raise AssertionError("server emitted application payload before ClientHello")
     def reassemble(rows):
