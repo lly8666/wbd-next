@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1149",
+  "result": "FUNCTIONAL_PASS_SCOPED_ARM64_ARM64_NATIVE_FIXED6_AND_THREE_RECORD_CIPHERS",
+  "source_sha": "64c2a01c59f8e703553c6f94bdcfb8d0a686afb4",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "id": 41839185829,
+    "job_id": 126605915393,
+    "conclusion": "success",
+    "artifact_id": 13327489320,
+    "artifact_digest": "sha256:38a7deef0547579fa2a6996fe2269334910119368bda62586caf26beb8a98aa7"
+  },
+  "platform": "Genuine Linux ARM64/ARM64 original-Go TLS Rust-M4 clients and server ELF183, no QEMU or heterogeneous peer",
+  "manifest_sha256": {
+    "wbd-v4-client": "5d32f1b6ac251dacbadbe3165c07aeb57f89c51c8f84f96e41d582f88d962ded",
+    "wbd-v4-server": "5e0634f03db984fe00f1d478b71d5e68a4f375c4bdf6afa24c10df06d51b086a",
+    "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "client_record_ciphers": [
+    1,
+    2,
+    3
+  ],
+  "auth_server_generation_record_ciphers": [
+    1,
+    2,
+    3,
+    1
+  ],
+  "auth_server_generation_FEC_modes": [
+    "off",
+    "auto",
+    "fixed",
+    "off"
+  ],
+  "fixed_strength": 6,
+  "original_TLS_protected_profile_byte22": true,
+  "unchanged_steady_wire": true,
+  "shared_server_port": 443,
+  "account_devices": {
+    "distinct_auto_leases": 3,
+    "original_TLS_sessions": 4,
+    "alice_installations": 2,
+    "bob_account_independent": true
+  },
+  "outer_user_mtu_bytes": [
+    1460,
+    1460,
+    1280
+  ],
+  "real_SYN_mss_bytes": [
+    1420,
+    1420,
+    1240
+  ],
+  "actual_inner_OS_TUN_MTU_bytes": [
+    1389,
+    1375,
+    1195
+  ],
+  "shared_server_TUN_os_mtu": 1389,
+  "app": {
+    "real_udp_roundtrips": 70,
+    "server_rust_routed": 70,
+    "server_rust_unrouted": 0,
+    "backpressure": 0,
+    "old_to_new_generation_exact_Stop": true,
+    "other_account_and_same_account_sibling_stay_working": true,
+    "final_shared_TUN_Reader_Stop": true
+  },
+  "actual_Rust_owner_server_fixed6_readback": true,
+  "actual_Rust_owner_client_fixed6_readback": true,
+  "units": [
+    "TestR0V4ActualProtectedPeerHandshakeAllCiphers PASS",
+    "TestPLAN028SharedNormalPerClientFECProtectedCapability PASS",
+    "TestPLAN028OriginalProtectedNormalStrengthAndThreeRecordCiphers PASS"
+  ],
+  "independent_CI": {
+    "r0_v4_real_tls_action": 41839185983,
+    "r0_v4_real_tls": "SUCCESS",
+    "r0_v4_cold_native_action": 41839185811,
+    "r0_v4_cold_native": "SUCCESS",
+    "r0_go_control_action": 41839185593,
+    "r0_go_control": "SUCCESS"
+  },
+  "governance_fail": {
+    "action": 41839185713,
+    "reason": "active evidence_refs mixed prior H1144 SOURCEeeef with current H1148 SOURCE86a3; structure source-scoped FAIL, feature structure fail",
+    "fix": "H1150 active last_tested_source64c2 and sole evidence_ref this source; immutable old evidence retained"
+  },
+  "limitations": [
+    "Normal off/auto/fixed6 three ciphers only; simultaneous Normal+Game2/Game4 on one443 not proven.",
+    "No independent physical Wi-Fi or Android; remote ICMP and CPU causal claim not measured.",
+    "H998 historic same-connection hot MTU shrink FAIL and historic ARM64 Game4FEC Action FAIL remain.",
+    "One source-specific functional scene: no 7-mode performance/CPU aggregate."
+  ]
+}
