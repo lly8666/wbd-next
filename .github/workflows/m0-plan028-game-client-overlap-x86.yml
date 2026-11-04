@@ -44,7 +44,10 @@ jobs:
           mkdir -p fixed-build fixed-kernel-result
           python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt fixed-kernel-result/assembly.json
           test ! -e legacy/internal/realityfront/v4_route_prelude.go
-          python3 tools/m0_install_public_faketcp.py legacy
+          # Exact plan020 original-Go manifest above already installs
+          # the seven original FakeTCP MSS/packet replacements. Running the
+          # separate installer AFTER assembly would demand donor-only packet.go
+          # and reject the correctly assembled SHA; never install twice.
           python3 - <<'PY'
           import os,pathlib,json,hashlib,subprocess
           root=pathlib.Path.cwd()

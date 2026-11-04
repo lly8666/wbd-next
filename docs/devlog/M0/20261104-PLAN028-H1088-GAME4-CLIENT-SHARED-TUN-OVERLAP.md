@@ -7,3 +7,7 @@ H1087 route-key/WB-R1前导移除限定收口之后继续原PLAN028。过去 Gam
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1088 reuse Rust shared TUN native one-reader for authenticated Game client, B TLS+MTU/M4 Ready before old A exact Stop; x86/x86 Game4 native scene pending."}
 ```
+
+## H1089 原装配窄修（同产品源码）
+
+[首次定向 Action41765630079](https://github.com/lly8666/wbd-next/actions/runs/41765630079) FAIL_PRE_BUILD：源锁 `assemble.py` 成功完成原 Go manifest 后，夹具又调用 `m0_install_public_faketcp.py`，其 donor-original 检查必然拒绝已替换的 `packet.go`。只删除**重复安装**，保留原 SHA 校验/版本/场景，Rust/Go 产品文件零变更。H1089 完整原生结果仍待新 Action，未报 Game overlap PASS。
