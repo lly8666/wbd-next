@@ -96,6 +96,9 @@ type config struct{
     fecMode realityfront.FecV2Mode
     peerPersona realityfront.V4PublicNativePeerPersona
     fecProfile realityfront.FecV2Profile
+    // Each client opts into its own original authenticated V3 record AEAD.
+    // The server never supplies a process-global override for a peer.
+    recordCipher uint8
     gameLanes uint8
     gameFecEnabled bool
     gameFecProfile uint8
@@ -147,6 +150,7 @@ func parse(role string,args []string)(config,error){
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
+    cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
@@ -194,6 +198,12 @@ func parse(role string,args []string)(config,error){
     default:return c,fmt.Errorf("unsupported trusted peer persona %q",*peerPersona)
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
+    selected,e:=realityfront.ParseRecordCipherName(*cipherName)
+    if e!=nil{return c,fmt.Errorf("record-cipher must be chacha20-poly1305, aes-128-gcm or aes-256-gcm: %w",e)}
+    if role=="server"&&selected!=realityfront.CipherChaCha{
+        return c,fmt.Errorf("record-cipher is per authenticated client; server cannot force a global V4 cipher")
+    }
+    c.recordCipher=selected
     if *gameFec!="off"{
         if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
            (*gameFec)[5]<'0'||(*gameFec)[5]>'6'{
@@ -971,11 +981,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{
     case realityfront.FecV2Fixed:
-        policy,err=realityfront.FixedPolicyForClient(1,4)
+        policy,err=realityfront.PolicyForClientWithInitialAndCipher(1,"fixed",4,4,20,c.recordCipher)
     case realityfront.FecV2Auto:
-        policy,err=realityfront.PolicyForClientWithInitial(1,"auto",0,4,20)
+        policy,err=realityfront.PolicyForClientWithInitialAndCipher(1,"auto",0,4,20,c.recordCipher)
     default:
-        policy,err=realityfront.FixedPolicyForClient(1,0)
+        policy,err=realityfront.PolicyForClientWithInitialAndCipher(1,"off",0,4,20,c.recordCipher)
     }
     if err!=nil{return err}
     applyLease:=configureAuthenticatedClientIPv4(tun)

@@ -207,3 +207,50 @@ func TestPLAN028AutomaticIPAndServerMultiAccountConfiguration(t *testing.T){
         t.Fatal("world-readable multi-account credential file admitted")
     }
 }
+
+func TestPLAN028OriginalPublicRecordCipherClientScope(t *testing.T){
+    base:=[]string{
+       "--raw-interface","lo","--local-ip","192.0.2.10",
+       "--peer-ip","192.0.2.11","--local-port","50001","--peer-port","443",
+       "--tun-name","wbd4","--tun-ipv4","10.188.0.2/24",
+       "--server-name","test.example","--username","test","--password","test",
+       "--route-key-hex",strings.Repeat("ab",32),
+       "--tunnel-id","000102030405060708090a0b0c0d0e0f",
+    }
+    for _,tc:=range []struct{label string;suite uint8}{
+        {"chacha20-poly1305",realityfront.CipherChaCha},
+        {"aes-128-gcm",realityfront.CipherAES128},
+        {"aes-256-gcm",realityfront.CipherAES256},
+    }{
+        for _,mode:=range []string{"normal","fec-fixed","fec-auto","game2","game4"}{
+            args:=append(append([]string{},base...),"--mode",mode,"--record-cipher",tc.label)
+            cfg,e:=parse("client",args)
+            if e!=nil||cfg.recordCipher!=tc.suite{
+                t.Fatalf("original V4 client cipher %s/%s got %d: %v",mode,tc.label,cfg.recordCipher,e)
+            }
+        }
+    }
+    def,e:=parse("client",base)
+    if e!=nil||def.recordCipher!=realityfront.CipherChaCha{
+        t.Fatalf("default original record suite changed: %d %v",def.recordCipher,e)
+    }
+    for _,unknown:=range []string{"", "aes128", "AES-256-GCM","none","tls-psk","chacha20-poly1305-extra"}{
+        _,e:=parse("client",append(append([]string{},base...),"--record-cipher",unknown))
+        if e==nil{t.Fatalf("unsupported record cipher %q accepted",unknown)}
+    }
+    server:=[]string{
+       "--raw-interface","lo","--local-ip","192.0.2.11","--local-port","443",
+       "--tun-name","wbd4","--tun-ipv4","10.188.0.1/24",
+       "--server-name","test.example","--username","test","--password","test",
+       "--route-key-hex",strings.Repeat("ab",32),
+       "--tunnel-id","000102030405060708090a0b0c0d0e0f",
+       "--tls-cert","server.pem","--tls-key","server.key",
+    }
+    got,e:=parse("server",server)
+    if e!=nil||got.recordCipher!=realityfront.CipherChaCha{
+        t.Fatalf("server default local cipher selector invalid: %v",e)
+    }
+    if _,e:=parse("server",append(server,"--record-cipher","aes-256-gcm"));e==nil{
+        t.Fatal("server cannot override another client's original TLS-authenticated record cipher")
+    }
+}

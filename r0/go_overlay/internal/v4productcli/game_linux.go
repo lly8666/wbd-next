@@ -81,7 +81,10 @@ func runGameClient(
  connected *bool,ready chan<- struct{},
 )error{
     n:=int(c.gameLanes)
-    policy,err:=realityfront.FixedPolicyForClient(int(c.gameLanes),4)
+    // Same original protected 10-byte V3 policy as Normal; each Game
+    // client's authenticated cipher is independent of other cohorts.
+    policy,err:=realityfront.PolicyForClientWithInitialAndCipher(
+        int(c.gameLanes),"fixed",4,4,20,c.recordCipher)
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     assocs:=make([]*faketcp.ClientAssociation,0,n)
