@@ -4,8 +4,8 @@
 
 原认证共享server443/Rust TUN的Alice设备A、Alice独立安装D、Bob三条 /32 同时工作。B/D各24个真实UDP回显须**贯穿**A真实kernel route/source IPv4 10.25.0.2→10.25.0.9与出口MTU1500→1280；A在新原TLS认证后保留 /32、内层TUN MTU自动缩小并OS读回、新代5个真实UDP、旧Rust精确Stop。B/D隧道MTU不改、用户账号/IP不串。留OS route JSON、首包阶段钟点和三端Rust Stop。时间只报告物理变化命令→新代READY与READY→完成5 echo，通知到TLS和CPU/p99暂无精确资格，不填假数。
 
-仍为 SOURCE_CANDIDATE，新原生 Action 未过不能宣称完成。下个完整Linux任务按用户规定轮换原生ARM64双端；Windows真物理NIC/Npcap切网和Android独立未测。H998旧同连接热缩FAIL、旧ARM64 Game4FEC FAIL、remote ICMP、CPU因果未证保持原样。
+[H1107 Action 41794271661](https://github.com/lly8666/wbd-next/actions/runs/41794271661) completed `success`, artifact `13304363990` ZIP SHA256 `d24ea47b48c0ec9ac7ff5d9aa0899b9c7142b9779248bcf5ffe56bc62ff9ad18` inspected; ELF x86/three binary SHA256 exactly reused. Scoped native x86/x86 PASS; independent siblings' actual app start < physical change < new READY < app end was asserted, 24 echoes each. A 1389→1209 OS MTU, D/B unchanged 1389, genuine TLS new generation + 5 UDP and exact Rust Stop. [Evidence](../../evidence/M0/PLAN028-H1107-SOURCE0E47-X86-THREE-DEVICE-REAL-SWITCH-20261104.json). This does **not** prove notification→TLS, TLS-auth→first single packet, CPU/p99 or persistent inner TCP in this specific scenario.下个完整Linux任务按用户规定轮换原生ARM64双端；Windows真物理NIC/Npcap切网和Android独立未测。H998旧同连接热缩FAIL、旧ARM64 Game4FEC FAIL、remote ICMP、CPU因果未证保持原样。
 
 ```feature-impact
-{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1107 source-locked x86 original Go/Rust native physical source4 change while other Alice installation and Bob continuously send authentic UDP; proof pending."}
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1107 source-locked x86 original Go/Rust native physical source4 change while other Alice installation and Bob continuously send authentic UDP; source-locked x86 native PASS, precise timing/CPU gaps retained."}
 ```

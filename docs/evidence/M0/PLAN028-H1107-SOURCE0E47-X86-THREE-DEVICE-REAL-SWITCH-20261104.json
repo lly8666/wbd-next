@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1107",
+  "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "result": "PASS_SCOPED_NATIVE_LINUX_X86_THREE_DEVICES_SIBLING_TRAFFIC_PHYSICAL_SOURCE_SWITCH",
+  "artifact_verified": true,
+  "run": {
+    "id": 41794271661,
+    "job_id": 126454546534,
+    "artifact_id": 13304363990,
+    "conclusion": "success",
+    "workflow_head_sha": "8f8c75332133deee6f95e707e1320a64dfebff0d",
+    "product_binary_source": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+    "product_rebuilt": false
+  },
+  "binary_manifest": {
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "toolchains": {
+      "go": "1.23.12",
+      "rust": "1.85.1"
+    },
+    "linux_machine": "native_x86_64",
+    "elf_machine": 62,
+    "sha256": {
+      "wbd-v4-client": "e6f9d900a9df10074478ec0a5a8fd5c5ac121cec4cbe07310be347da10cc1985",
+      "wbd-v4-server": "2489895f0ac75fb9e9e51230ba92ebf5252ca330314c0bbe9cfe762c55956a3d",
+      "libwbd_engine.so": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "real_native_test": {
+    "platform": "Linux x86_64 client + Linux x86_64 server, five network namespaces, original Go TLS and Rust TUN",
+    "one_server_port": 443,
+    "distinct_protected_leases": 3,
+    "devices": "Alice A, independent same-account Alice D, Bob",
+    "physical_source_before": "10.25.0.2",
+    "physical_source_after": "10.25.0.9",
+    "os_route_prefsrc_after": "10.25.0.9",
+    "physical_mtu_after": 1280,
+    "configured_outer_ipv4_mtu": 1460,
+    "alice_retained_auto_lease": "10.66.0.238",
+    "client_a_os_tun_mtu_before": 1389,
+    "client_a_os_tun_mtu_after": 1209,
+    "bob_os_tun_mtu_unchanged": 1389,
+    "alice_d_os_tun_mtu_unchanged": 1389,
+    "bob_continuous_udp_echo": 24,
+    "alice_d_continuous_udp_echo": 24,
+    "both_sibling_echo_windows_span_physical_change_and_new_ready": true,
+    "new_generation_real_udp_echo": 5,
+    "new_generation_original_tls_and_rust": true,
+    "old_generation_exact_stop": true,
+    "physical_change_command_to_ready_ms": 324.43,
+    "ready_to_five_echo_completion_ms": 11703.22
+  },
+  "artifact_sha256": {
+    "zip": "d24ea47b48c0ec9ac7ff5d9aa0899b9c7142b9779248bcf5ffe56bc62ff9ad18",
+    "manifest": "8e95731e18f7a10ba6b8d3cea970ca0ac1a70fc423a3b902c0c7bc2e48bf061d",
+    "result": "0336a8f21842a78b55f50bb9223f8b346a8b9f029ebdfd247fece6ce75b787dd",
+    "route": "21abf75ba918c149d102516f70540fb0c392917283dbdd442088e573ddbb5f4c",
+    "link": "92151552a21e82857250507e396e9db9329ed15cc402b9e48ea2ddfc51478d9c",
+    "log": "d3cb2c32ef41ca2f9484caee4c7e126f85d60df7dc36e3f6109c97f649c8e5a6"
+  },
+  "not_measured": [
+    "OS notification event to TLS start",
+    "TLS authentication to first single recovered application packet",
+    "CPU utilization and p99",
+    "Real Windows physical NIC/Npcap switch",
+    "Android callbacks and real Wi-Fi/mobile",
+    "Persistent inner TCP across this particular three-device switch"
+  ],
+  "limits": [
+    "PASS only for the exact frozen x86/x86 SOURCE and test coverage, not whole PLAN028 or seven-mode matrix",
+    "H998 same-connection online physical MTU hot-shrink FAIL remains; new-generation reauthentication is separate evidence",
+    "H998 historical ARM64 Game4FEC Action FAIL, remote ICMP3/4 NOT_MEASURED, old-vs-new product CPU causality NOT_PROVEN retained",
+    "Nominal 200/500ms notification debounce is not TLS or first-business SLA"
+  ]
+}
