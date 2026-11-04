@@ -1,5 +1,5 @@
 name: M0 PLAN028 x86 Normal Auto two physical source4 changes while Game4 remains healthy
-run-name: PLAN028 H1192 x86 Normal Auto physical A-B-A TLS M4 while Game4 healthy
+run-name: PLAN028 H1194 x86 Normal Auto authentic three server cohorts and healthy Game4 full Stop
 on:
   push:
     branches: [main]

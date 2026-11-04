@@ -112,5 +112,12 @@ print("M0_PLAN028_H1192_X86_NORMAL_AUTO_REAL_PHYSICAL_TWO_REAUTH_PASS",flush=Tru
 PY_H1192
 '''
 s=s.replace(anchor,'wait "$PB" "$PC"'+chr(10)+scene+'sudo -n kill -TERM "$(cat "$TMP/bob.pid")"',1)
+# This source made three distinct genuine protected Normal TLS/Rust
+# cohorts on one443. Preserve original server check, but now require
+# precisely three actual READY receipts rather than singleton one.
+old='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==1'
+new='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3'
+assert s.count(old)==1,"original singleton baseline receipt changed"
+s=s.replace(old,new,1)
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1192_X86_NORMAL_AUTO_PHYSICAL_FIXTURE_ASSEMBLED",flush=True)

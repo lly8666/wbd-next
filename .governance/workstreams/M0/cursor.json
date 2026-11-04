@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1193,
-  "checkpoint_sha": "71b3d41075541cad73b8a5173130d78564c33162",
+  "sequence": 1194,
+  "checkpoint_sha": "0ad3f97ddeb6fb66e31aea01413239a67f105d29",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1193 next full native Linux ARM64+ARM64 shared443 Game2 off Alice real physical source4 .2→.9→.2, links1500→1280→1500, authentic Go TLS/Rust M4 Game2 generations1→2→3, exact old gen1/gen2 Stop and same original auto /32. Game4FEC6 Bob and Normal Auto Carol remain genuine original gen1 and send 24 inner UDP each across BOTH Game2 swaps, independent OS MTUs1358/1375; native final shared Rust TUN Stop. H1192 x86 Normal Auto two real physical swaps Action41907679001 independently in flight. No product/wire edits.",
-  "why_now": "PLAN028 §5 seven real mode lane replacement lacks Game2 off and Normal Auto target. H1192 x86 Normal Auto in-flight, alternation next full Linux ARM64/ARM64. Reuse source-locked already qualified original three-client shared443 native fixture, change only Alice physical NIC route/source/MTU and continuous sibling real UDP; no second recovery controller or old matrix.",
+  "current_task": "H1194 x86 Native source71b H1192 Action41907679001 FAILED only inherited singleton server READY count==1 after correctly authenticating Carol NormalAuto generation1→2→3 (server actual READY count3). Native H1192 full two real OS source4 shifts .4→.9→.4, MTU1375→1195→1195, protected /32 same, old exact Stops1/2, Game4 32 genuine UDP across EACH shift and final shared TUN Stop; H1194 adjust only generated baseline parser to expect EXACTLY three real server protected Normal cohorts, rerun source-locked one Action. H1193 ARM Game2 off independent in flight.",
+  "why_now": "H1192 artifact13361636484 SOURCE71b original Go TLS/Rust actual runtime received Game4 healthy UDP64/Normal new32, authentic Normal3 generations/2 Stops and final Rust TUN STOP. Full Action failed in original 3-device base Python assertion line6 `server.count(V4_PUBLIC_MIXED_NORMAL_READY)==1` though log actually count3. Pure false singleton test check; don't change product.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1192 x86 native Normal Auto then H1193 ARM Game2 off native from separate source/actions. Require each actual two new Go TLS/Rust generations, old exact Stop and correct per-client OS MTUs/lease with other siblings alive, no premature final shared TUN stop. If FAIL inspect first narrow native evidence. Next Linux x86, other five modes/30% remain.",
+  "next_action": "Collect H1194 actual native x86 full Action and H1193 native ARM Game2 off Action41908174617. Only promote if complete build/source/real UDP/readback/owned Stop and workflow PASS. Next Linux after H1194 x86 is ARM/ARM. Seven-mode other Normal off/fixed and Game fixed/off remains.",
   "unverified": true,
   "last_tested_source": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1193 ARM/ARM original Game2 off dual physical source4+MTU handover with Game4+Normal continuously delivering real UDP while Game2 new protected TLS/Rust gen2+3 and exact Stop; separate x86 H1192 Normal Auto in flight. 5% Game4 historical qualified, H998/Android/CPU gaps retained."
+  "partial_summary": "H1194 H1192 x86 source71b real NormalAuto gens1→2→3, Stop1/2, source4 .4→.9→.4, MTU1375→1195→1195 and Game4 UDP32 each, final Stop all genuine; Action FAIL only baseline singleton expected1 instead of actual3 Normal server READY. Fixture-only strict 3-count repair, H1193 ARM Game2 in flight."
 }

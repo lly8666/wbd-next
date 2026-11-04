@@ -1,0 +1,7 @@
+# PLAN028 H1194 — genuine Normal Auto reauth passed; baseline singleton test false red
+
+Collected [H1192 x86 Action41907679001](https://github.com/lly8666/wbd-next/actions/runs/41907679001) SOURCE71b, artifact13361636484 sha256 9484a7e9e78754808d874790a00020bea9d133e00dc912b492ff9055a90d6e02. Native Go TLS/Rust one443 actually proved Carol Normal Auto authentic generation1→2→3 with old1/2 exact Stop across OS source4 .4→.9→.4, underlay1500→1280→1500, derived inner1375→1195→1195, preserved 10.66.0.134/32, real newly authenticated UDP16+16. Independent Game4 remained on original gen1, delivered 32 real UDP across EACH Carol handover; command→new protected M4 READY 282.07/276.05ms (not notification→TLS SLA). Real final native Rust shared TUN Stop present. Overall Action **FAIL** because inherited original baseline Python test still expected exactly 1 server `V4_PUBLIC_MIXED_NORMAL_READY`; this genuinely 3-generation scene produced exactly **3** readbacks, causing assertion failure after new H1192 receipt, not a native source/TLS failure. H1194 test-only correction expects exactly3 and keeps all other base native/Stop guards; one new SOURCE Action required for full PASS. Concurrent H1193 ARM Game2 off independent native test in flight.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-specific failure evidence and strict original 3 authenticated Normal server cohort test correction; no product changes."}
+```

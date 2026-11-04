@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1194",
+  "source_sha": "71b3d41075541cad73b8a5173130d78564c33162",
+  "result": "FAIL_TEST_ONLY_ORIGINAL_SINGLETON_READY_COUNT",
+  "action": {
+    "run_id": 41907679001,
+    "job_id": 126846588273,
+    "artifact_id": 13361636484,
+    "artifact_zip_sha256": "9484a7e9e78754808d874790a00020bea9d133e00dc912b492ff9055a90d6e02",
+    "conclusion": "failure"
+  },
+  "actual": {
+    "normal_authenticated_generations": [
+      1,
+      2,
+      3
+    ],
+    "exact_old_stops": [
+      1,
+      2
+    ],
+    "real_physical_source4_sequence": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "user_outer_ipv4_mtu": 1460,
+    "os_normal_inner_mtu": [
+      1375,
+      1195,
+      1195
+    ],
+    "same_auto_lease": "10.66.0.134/32",
+    "game4_unchanged_gen1": true,
+    "game4_real_udp_per_shift": [
+      32,
+      32
+    ],
+    "normal_new_udp_per_gen": [
+      16,
+      16
+    ],
+    "physical_command_to_ready_ms": [
+      282.07,
+      276.05
+    ],
+    "server_original_Normal_READY_count": 3,
+    "server_original_shared_tun_final_Stop": true
+  },
+  "first_fail": "inherited final base fixture assumes one server Normal Ready, but this scene legitimately authenticated three protected Normal M4 generations; original final Python singleton assertion counted3 != 1",
+  "fix": "H1194 modify generated fixture final-only count from1 to strict3, no production change",
+  "h998_retained": [
+    "original live hot-MTU shrink FAIL",
+    "old ARM Game4 Action FAIL",
+    "remote ICMP/Android/CPU causal not measured"
+  ]
+}
