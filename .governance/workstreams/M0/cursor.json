@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1198,
-  "checkpoint_sha": "f78e5310385b4abb424ff52882e329783b7201e6",
+  "sequence": 1199,
+  "checkpoint_sha": "42b45572e8cd739dc3f2594986f8c01b763261b1",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1198 native x86 Normal fixed highest FEC6 H1197 Action41910122964 real 2 physical TLS/Rust cohorts beyond baseline, protected server native M4 fixed6 receipt3 and client latest effective FEC6 readback ['6']; overall H1197 FAIL fixture-only requirement >=3 client readbacks after old owners already retired. H1198 test-only accept ≥1 genuine latest client FEC6 receipt and require every observed6 + exact 3 authenticated server M4. In parallel next native ARM64/ARM64 Normal off Carol two real physical .4→.9→.4 Go TLS/Rust M4 generations1→2→3 with old exact Stops and native Rust server FECoff receipts3 while sibling Game4 fixed6 sends32 UDP each switch. Each Action separate SOURCE; no product/wire edits.",
-  "why_now": "H1197 SOURCEf78 Action41910122964 artifact13362731099 zipped baeaf842: real Normal fixed6 dual native physical scene printed PASS, server did 3 original protected Rust M4 fixed6 receipts, only client final M4 logs effective Rust profile6 once (old canceled owners do not emit final readback); strict 3 client readbacks invalid. Next Linux platform by alternation ARM/ARM Normal off.",
+  "current_task": "H1199 next complete Linux native x86/x86 Game2 fixed highest FEC6 authentic Go TLS/Rust M4 physical .2→.9→.2, two real replacements gen1→2→3 old exact Stops1+2, require original real Rust Game2 FEC applied profile6 client3/server3 protected groups, same lease/MTU narrower and 16+16 real UDP while independent Game4fixed6 and NormalAuto remain gen1 healthy with 24 real UDP each per switch. H1198 ARM Normal off Action41911004854 and x86 Fixed6 rerun Action41911004475 in flight. No product or wire edits.",
+  "why_now": "PLAN028 seven-mode gap Game2 highest fixed6; qualified H1195 ARM Game2 off dual physical x3 owner proved architecture-independent cold path, use same original native fixture to change protected per-client GameFEC6 and require live Rust M4 original fixed6 readback, not CLI guess. Linux alternates x86 after ARM H1198.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect x86 fixed6 H1198 rerun and independent ARM Normal off H1198 Action, inspect actual M4 native owner/FEC and OS MTU/owned Stop; source-qualify in evidence+feature card when completed. Next Linux x86 Game2 fixed6 or Game4 off. H998 old hot shrink/ARM Game4 FAIL retained, 30%/ICMP/CPU causal/Android open.",
+  "next_action": "Collect H1198 actual x86 Normal fixed6, ARM Normaloff, and H1199 x86 Game2 fixed6 Actions independently before any PASS. Next ARM Game4 off or high30% representative, keep old H998 FAIL, ICMP/CPU/Android unqualified. User only PLAN028, not 029/030.",
   "unverified": true,
   "last_tested_source": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1198 fixes narrow x86 Normal fixed6 false client-three-readbacks requirement; server three actual M4 FEC6 receipts remain mandatory. Starts native ARM Normal FEC off physical double switch independent; H1194 Auto/H1195 Game2off PASS retained."
+  "partial_summary": "H1199 starts x86 native Game2 fixed6 FEC strongest actual two physical authenticated source-IP handovers with sibling Game4+Normal real UDP; in parallel H1198 x86 normal fixed6 and ARM normal off running. Only scoped Action verdict can qualify."
 }
