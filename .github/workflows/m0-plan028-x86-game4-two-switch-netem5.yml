@@ -1,5 +1,5 @@
 name: M0 PLAN028 x86 Game4 two real physical swaps plus 5pct netem and measured RTT
-run-name: PLAN028 H1180 x86 Game4 actual 5pct two swaps with 120sec bounded TLS retry
+run-name: PLAN028 H1182 x86 Game4 true netem5 early 200UDP p99 plus native Normal320
 on:
   push:
     branches: [main]
@@ -128,7 +128,7 @@ jobs:
           grep -Fq "M0_PLAN028_H1162_ARM64_MIXED_NORMAL_LIVE48_GAME4_PHYSICAL_NEW32_STOP_PASS" \
             fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
           grep -Fq "M0_PLAN028_H1167_NATIVE_X86_MIXED_GAME4_TWO_PHYSICAL_REAUTH_NORMAL_LIVE64_NEW48_PASS" fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
-          grep -Fq "M0_PLAN028_H1178_X86_TWO_REAL_GAME4_SWITCHES_NETEM5_INNER_UDP_P99_PASS" fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
+          grep -Fq "M0_PLAN028_H1181_X86_GAME4_NETEM5_EARLY_200UDP_P99_NORMAL320_PASS" fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
           grep -Fq "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS" \
             fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
           python3 - <<'PY'
