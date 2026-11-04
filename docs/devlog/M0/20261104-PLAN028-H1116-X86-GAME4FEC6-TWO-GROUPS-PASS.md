@@ -7,5 +7,5 @@ On one server443, two authenticated Game4 fixed6 protected groups: Alice physica
 Windows owned Hyper-V NIC actual OS initial source selected in Action41802636798 but new source address temporarily returned network unreachable; H1116 retries actual OS state, not product Npcap PASS. Linux next full task ARM64/ARM64 if needed. H998 old same-connection hot MTU shrink FAIL, historical ARM64 Game4FEC Action FAIL, remote ICMP, Android and CPU causality remain unchanged.
 
 ```feature-impact
-{"kind":"none","ids":[],"reason":"H1116 records independently verified native x86 test evidence and Windows fixture-only correction; product Go/Rust unchanged; feature card registration follows."}
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1116 native x86 original Go/Rust Game4 fixed6 two protected groups physical source4 change, Bob continuous real UDP, exact Stop source-qualified; Windows real physical Npcap remains not run."}
 ```
