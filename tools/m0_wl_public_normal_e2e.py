@@ -394,11 +394,43 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if native_outer!="legacy1400":
   # Independently validate the numeric receipt emitted by the REAL
   # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
-  windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
+  if plan028_owned_switch:
+   # The previous single-generation receipt helper is intentionally strict.
+   # This specific authentic .1→.9 path has exactly TWO real generations.
+   # Validate BOTH separately, not a synthesized collapsed last value.
+   os_rows=re.findall(
+    r"^WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=\d+ applied=\d+ outer_config=\d+$",
+    winlog,re.MULTILINE)
+   if len(os_rows)!=2:
+    raise RuntimeError("PLAN028 original Windows generations require exactly two genuine OS MTU receipts")
+   per_gen_inner=[verified_native_windows_inner_mtu(row,configured_mtu) for row in os_rows]
+   windows_inner=per_gen_inner[-1]
+   report["plan028_actual_windows_two_generation_os_inner_mtu"]=per_gen_inner
+  else:
+   windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
   if mode=="normal":
    from m0_wl_public_mss_contract import verified_current_v4_mss
    linux_log=(out/"server.log").read_text(errors="replace")
-   budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
+   if plan028_owned_switch:
+    # The unchanged original MSS validator expects one generation's
+    # actual TCP option receipts; invoke it independently for gen1 and gen2.
+    per_gen_wire=[]
+    for gen in (1,2):
+     rows=[]
+     for line in winlog.splitlines():
+      if line.startswith(("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client",
+                          "WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client",
+                          "WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client")):
+       if "generation="+str(gen)+" " not in line:continue
+      rows.append(line)
+     verified=verified_current_v4_mss("\n".join(rows)+"\n",linux_log,configured_mtu)
+     if verified["generation"]!=gen:
+      raise RuntimeError("PLAN028 source-scoped SYN/SYNACK generation mismatch")
+     per_gen_wire.append(verified)
+    report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
+    budget_and_wire=per_gen_wire[-1]
+   else:
+    budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
    report["plan027a_real_syn_synack_mss"]=budget_and_wire
    print("PLAN027A_BOTH_REAL_SYN_SYNACK_MSS_VERIFIED "+json.dumps(budget_and_wire,sort_keys=True),flush=True)
 

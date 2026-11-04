@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1129",
+  "result": "FAIL_ONLY_AT_TEST_SINGLE_GENERATION_RECEIPT_AFTER_TRUE_TWO_GENERATION_BUSINESS",
+  "source_sha": "1bb73998a9d938d59c7963ddd454278e5284225a",
+  "platform": "Windows 2025 signed original Go Npcap/Wintun/Rust + genuine Ubuntu WSL2 Linux Rust server",
+  "run": {
+    "id": 41815388333,
+    "conclusion": "failure",
+    "native_job": 126526433720,
+    "artifact_id": 13314219968,
+    "artifact_digest": "sha256:3ef1020c027f4416ea8dd712fb345be2cc7f216097b5ec530ae424c007df21f0"
+  },
+  "actual": {
+    "shared_server_single_port": 443,
+    "manual_server_provisioned_lease4": "10.66.0.2/32",
+    "offline_route_key_bytes": 32,
+    "pre_clienthello_private_exchange": false,
+    "default_outer_ipv4_mtu_bytes": 1460,
+    "windows_physical_vEthernet_mtu_bytes": 1500,
+    "underlay_source_before": "198.19.254.1",
+    "underlay_source_after": "198.19.254.9",
+    "true_native_os_ipv4_callback": true,
+    "client_original_tls_native_ready_count": 2,
+    "server_authenticated_multi_session_ready_count": 2,
+    "client_windows_os_mtu_receipt_bytes": [
+      1389,
+      1389
+    ],
+    "actual_client_SYN_mss_bytes": [
+      1420,
+      1420
+    ],
+    "actual_peer_SYNACK_mss_bytes": [
+      1420,
+      1420
+    ],
+    "old_generation_precise_wal_rust_stop_joined": true,
+    "server_native_same_lease_replaced": true,
+    "server_final_shared_tun_stop_joined": true,
+    "new_generation_udp_receipt_increments": {
+      "windows": 12,
+      "linux": 9
+    },
+    "fixture_os_mutation_to_new_ready_observed_ms": 13421,
+    "fixture_not_kernel_event_tls_sla": true
+  },
+  "failed_at": "tools/m0_wl_native_mtu_contract.py strict original single-generation helper was invoked once on concatenated valid gen1+gen2 Windows MTU receipts and raised missing/duplicate; fixture never reached later full final TCP/app verdict.",
+  "next_fix": "H1132 test-only per-generation exact OS MTU and actual SYN/SYNACK verification; reuse identical H1129 product binaries SHA through signed workflow and rerun one complete Normal scene.",
+  "not_promoted": [
+    "Full Windows overall action PASS",
+    "physical hardware NIC qualification",
+    "precise notification→TLS and TLS Finished→single packet timings",
+    "CPU causal improvement",
+    "Android"
+  ],
+  "historical": [
+    "H998 same-connection hot-MTU FAIL",
+    "historical ARM64 Game4FEC Action FAIL",
+    "remote ICMP NOT_MEASURED"
+  ]
+}
