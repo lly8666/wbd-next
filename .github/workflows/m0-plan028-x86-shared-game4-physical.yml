@@ -1,0 +1,166 @@
+name: M0 PLAN028 x86 shared443 Game4 real source-IP switch with sibling
+run-name: PLAN028 H1160 native x86/x86 shared Game4FEC6 .2-to-.9 MTU1280 Bob healthy
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-x86-shared-game4-physical.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-x86-one443-normal-game2-game4:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Pin original Go+Rust and assemble one complete X86_64 SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test ! -e r0/go_overlay/internal/realityfront/v4_route_prelude.go
+          mkdir -p fixed-build fixed-kernel-result
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt fixed-kernel-result/assembly.json
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path.cwd(); donor=root/"legacy"
+          rec=json.loads((root/"fixed-kernel-result/assembly.json").read_text(encoding="utf-8"))
+          assert rec["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert rec["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():
+                      assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              p=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),str(dst)
+              dst.write_bytes(p.read_bytes())
+          # Test-only current-source V4 CLI config, not a second Go product.
+          src=root/"r0/go_overlay/internal/v4productcli/secret_linux_test.go"
+          dst=donor/"internal/v4productcli/secret_linux_test.go"
+          if dst.exists():
+              assert dst.read_bytes()==src.read_bytes()
+          else:
+              dst.write_bytes(src.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role)
+              dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes((root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          print("M0_PLAN028_X86_64_NATIVE_TLS_EXACT_SOURCE_ASSEMBLED source="+os.environ["GITHUB_SHA"],flush=True)
+          PY
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/rust-build.log 2>&1 || {
+            tail -110 fixed-kernel-result/rust-build.log >&2
+            exit 1
+          }
+          cp target/release/libwbd_engine.so fixed-build/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope$' ./internal/v4productcli) >>fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          for marker in \
+            "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" \
+            "--- PASS: TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy" \
+            "--- PASS: TestR0V4ActualProtectedPeerHandshakeAllCiphers" \
+            "--- PASS: TestPLAN028OriginalPublicRecordCipherClientScope";do
+            grep -Fq -- "$marker" fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()=="x86_64"
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62,name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_x86_64","go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_PLAN028_H1151_NATIVE_X86_64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
+          PY
+      - name: Native x86/x86 shared443 protected Game4 fixed6 physical source4 and Bob continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          python3 tools/m0-plan028-shared-game4-physical-fixture.py "$RUNNER_TEMP/h1160-shared-original-game4.sh"
+          bash -n "$RUNNER_TEMP/h1160-shared-original-game4.sh"
+          WBD_PLAN028_GAME_MULTI_MODE=game4 WBD_PLAN028_GAME_MULTI_FEC=fixed6 WBD_PLAN028_GAME_MULTI_PHYSICAL_SWITCH=1 \
+            bash "$RUNNER_TEMP/h1160-shared-original-game4.sh" fixed-build \
+            >fixed-kernel-result/plan028-h1160-shared-game4-source-switch.log 2>&1 || {
+              tail -175 fixed-kernel-result/plan028-h1160-shared-game4-source-switch.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_GAME4_FEC6_TWO_GROUPS_REAL_SOURCE4_CHANGE_BOB_CONTINUOUS_PASS" fixed-kernel-result/plan028-h1160-shared-game4-source-switch.log
+          grep -Fq "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS" fixed-kernel-result/plan028-h1160-shared-game4-source-switch.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]=="native_x86_64"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][name]
+          p=json.loads(pathlib.Path("fixed-kernel-result/plan028-game4-sibling-real-switch.json").read_text())
+          assert p["one_server_port"]==443 and p["per_group_lanes"]==4
+          assert p["real_source4_before"]=="10.25.0.2" and p["real_source4_after"]=="10.25.0.9"
+          assert p["outer_ipv4_user_intent"]==1460 and p["new_physical_mtu"]==1280
+          assert p["bob_udp_during_switch"]==32 and p["alice_new_udp"]==64
+          assert p["alice_tun_os_mtu_new"]<p["alice_tun_os_mtu_old"]
+          assert p["bob_tun_os_mtu_new"]==p["bob_tun_os_mtu_old"]
+          assert p["new_tls_generation_ready"] and p["old_exact_stop"]
+          assert p["notification_to_tls_start_ms"]=="NOT_MEASURED"
+          assert p["auth_to_first_single_packet_ms"]=="NOT_MEASURED"
+          print("M0_PLAN028_H1160_NATIVE_X86_SHARED_GAME4_REAUTH_REAL_SOURCE4_BOB_32_ALICE_64_PASS")
+          PY
+          cat fixed-kernel-result/plan028-game4-sibling-real-switch.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-h1160-shared-game4-physical-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/assembly.json
+            fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+            fixed-kernel-result/plan028-h1160-shared-game4-source-switch.log
+            fixed-kernel-result/plan028-game4-sibling-real-switch.json
+            fixed-kernel-result/plan028-game4-os-route.json
+            fixed-kernel-result/plan028-game4-os-link.json
+          if-no-files-found: warn
+          retention-days: 14
