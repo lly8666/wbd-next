@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1195",
+  "result": "FAIL_TEST_WORKFLOW_WRONG_LOG_PATH",
+  "source_sha": "0ad3f97ddeb6fb66e31aea01413239a67f105d29",
+  "action": {
+    "id": 41908174617,
+    "job": 126848315543,
+    "status": "failure",
+    "artifact_id": 13362410221,
+    "zip_sha256": "d20bc2995183596bb3258329eaa371528dc44f04b9c3ace962ad17c1a1d6f0eb"
+  },
+  "actual": {
+    "original_native": "ARM64 client + ARM64 server Go TLS/Rust one443",
+    "game2_off_authenticated_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_generations_exact_stop": [
+      1,
+      2
+    ],
+    "source4": [
+      "10.25.0.2",
+      "10.25.0.9",
+      "10.25.0.2"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "inner_game2_mtu": [
+      1373,
+      1193,
+      1193
+    ],
+    "same_auto_lease": "10.66.0.190/32",
+    "game4_sibling_generation_unchanged": true,
+    "normal_sibling_generation_unchanged": true,
+    "sibling_real_udp_per_switch": [
+      [
+        24,
+        24
+      ],
+      [
+        24,
+        24
+      ]
+    ],
+    "new_game2_udp": [
+      16,
+      16
+    ],
+    "physical_command_to_ready_ms": [
+      538.35,
+      784.92
+    ],
+    "native_shared_tun_final_stop": true
+  },
+  "failure": "Workflow grep looked for plan028-h1151-mixed-normal-game-arm64.log, but own runner directed stdout to plan028-h1151-mixed-normal-game-x86.log; native bash scene printed H1193 and H1151 PASS before mismatched grep",
+  "fix": "H1195 change only workflow grep to actual native log path",
+  "h998": [
+    "old same connection live MTU shrink FAIL",
+    "old ARM Game4 Action FAIL",
+    "remote ICMP Android CPU causal not proven"
+  ]
+}

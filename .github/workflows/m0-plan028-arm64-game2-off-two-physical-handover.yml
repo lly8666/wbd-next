@@ -1,5 +1,5 @@
 name: M0 PLAN028 native ARM64 Game2 off two real physical TLS/Rust changes with healthy siblings
-run-name: PLAN028 H1193 ARM64 Game2 off two source4 handovers healthy Game4 Normal
+run-name: PLAN028 H1195 ARM64 Game2 authentic two-epoch physical plus Game4 Normal native full Stop
 on:
   push:
     branches: [main]
@@ -127,7 +127,7 @@ jobs:
               tail -210 fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log >&2
               exit 1
             }
-          grep -Fq "M0_PLAN028_H1193_ARM64_GAME2_OFF_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS" fixed-kernel-result/plan028-h1151-mixed-normal-game-arm64.log
+          grep -Fq "M0_PLAN028_H1193_ARM64_GAME2_OFF_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS" fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log
           grep -Fq "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS" \
             fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log
           python3 - <<'PY'
