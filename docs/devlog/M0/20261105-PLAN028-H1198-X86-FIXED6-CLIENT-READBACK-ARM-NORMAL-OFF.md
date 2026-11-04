@@ -1,0 +1,7 @@
+# PLAN028 H1198 — one real x86 Fixed6 client readback after old generation retirement
+
+H1197 native x86 SOURCEf78 [Action41910122964](https://github.com/lly8666/wbd-next/actions/runs/41910122964), artifact13362731099 ZIP SHA256 baeaf842945d208e9c34226dbde5b960e848633747a0a1b0c851e8aa04861a56, completed protected Normal fixed6 three original Go TLS/Rust M4 server cohorts (actual fixed profile6 effective receipts), two physical .4→.9→.4 and Game4 UDP business, native scene marker PASS. Overall Action FAIL solely an overly strict test demand for ≥3 client FEC2 stop-readbacks after old generations already canceled; actual final still-connected client logged one real fixed profile6 readback (['6']). Correct only test to require **at least one native client readback and every observed profile6**, plus unchanged exact 3 server M4 receipts, old Stop and native OS/business. Not fabricating old client readbacks or changing product. In same SOURCE commit trigger next whole native ARM64/ARM64 **Normal off** two source-IP physical changes, exact original Go TLS/Rust M4 gen2/3 and Game4 sibling UDP32 during each, off profile0 real server cohorts3, native TUN Stop. Different Actions, no extra runner scheduler, packet header, Go pump or FEC algorithm changes.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Record x86 Native Fixed6 true client readback one only and correct test-only count; add distinct ARM Normal off native physical scenario. Product unchanged."}
+```

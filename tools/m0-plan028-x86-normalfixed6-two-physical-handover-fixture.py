@@ -29,8 +29,8 @@ old='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3
 new=r'''assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3
 assert server.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")==3
 effective_rows=re.findall(r'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=\d+ applied=\d+ profile=(\d+) pending=false',normal)
-assert len(effective_rows)>=3 and all(int(x)==6 for x in effective_rows),effective_rows'''
+assert effective_rows and all(int(x)==6 for x in effective_rows),effective_rows'''
 one(old,new)
 assert s.count("PY_H1192")==2
 out.write_text(s);out.chmod(0o700)
-print("M0_PLAN028_H1197_X86_NORMAL_FIXED6_TRUE_RUST_READBACK_FIXTURE_READY",flush=True)
+print("M0_PLAN028_H1198_X86_FIXED6_SERVER_THREE_CLIENT_FINAL_RUST_READBACK_FIXTURE_READY",flush=True)

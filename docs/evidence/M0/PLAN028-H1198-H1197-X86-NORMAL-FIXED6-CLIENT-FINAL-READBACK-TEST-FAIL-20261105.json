@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1198",
+  "result": "FAIL_FIXTURE_FINAL_CLIENT_ONLY_ONE_NATIVE_FEC6_READBACK",
+  "source_sha": "f78e5310385b4abb424ff52882e329783b7201e6",
+  "action": {
+    "run_id": 41910122964,
+    "job_id": 126855150863,
+    "conclusion": "failure",
+    "artifact_id": 13362731099,
+    "zip_sha256": "baeaf842945d208e9c34226dbde5b960e848633747a0a1b0c851e8aa04861a56"
+  },
+  "actually_observed": {
+    "source4_changes": 2,
+    "protected_normal_tls_m4_generations": 3,
+    "server_native_fixed6_m4_applied_count": 3,
+    "client_latest_native_effective_fixed6_readback_count": 1,
+    "client_latest_native_effective_profile": 6,
+    "normal_fixed6_scene_native_pass_marker": true
+  },
+  "first_fail": "After true native scenario Pass, original final test asserted >=3 FEC2_READBACK rows from single client log, but only latest still-connected owner emitted one 'profile=6' when older owner cancellation did not log a final readback",
+  "next": "require original protected server fixed6 receipts exactly3 and at least one actual original client native profile6 readback with all observed profile6; no product change",
+  "historical": [
+    "H998 live hot-shrink and old ARM Game4 Action FAIL",
+    "remote ICMP/CPU causal/Android not measured"
+  ]
+}

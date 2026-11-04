@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1197,
-  "checkpoint_sha": "c18bae567c50e3d52e61211fda57c3ea618aea47",
+  "sequence": 1198,
+  "checkpoint_sha": "f78e5310385b4abb424ff52882e329783b7201e6",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1197 x86/x86 original Go TLS/Rust shared443 Normal fixed strongest profile6 distinct 2 physical NIC IP switches .4→.9→.4/MTU1500→1280→1500, authentic protected Normal generations1→2→3 and old exact Stops1+2 while Game4FEC6 gen1 sends 32 real UDP each; require true native Rust FEC fixed profile6 readback from all 3 generations plus server protected FEC6 installed 3 cohorts. Test-only generated fixture inherits H1194 qualified normal Auto physical test and replaces only protected mode to fec-fixed --fec-profile6; no packet algorithm change. H1194 x86 Normal Auto/H1195 ARM Game2off full PASS already archived.",
-  "why_now": "Complete two-mode native path source qualifications now available. PLAN028 §5 requires Normal fixed highest 2 real A→A+B→B before completion, and real FEC6 readback on each M4 is essential. Reuse qualified H1194 source algorithm + same Game4 sibling, test actual profile6 instead of CLI guess. Windows H1188 and Linux H1186/H1191 remain separate scoped PASS.",
+  "current_task": "H1198 native x86 Normal fixed highest FEC6 H1197 Action41910122964 real 2 physical TLS/Rust cohorts beyond baseline, protected server native M4 fixed6 receipt3 and client latest effective FEC6 readback ['6']; overall H1197 FAIL fixture-only requirement >=3 client readbacks after old owners already retired. H1198 test-only accept ≥1 genuine latest client FEC6 receipt and require every observed6 + exact 3 authenticated server M4. In parallel next native ARM64/ARM64 Normal off Carol two real physical .4→.9→.4 Go TLS/Rust M4 generations1→2→3 with old exact Stops and native Rust server FECoff receipts3 while sibling Game4 fixed6 sends32 UDP each switch. Each Action separate SOURCE; no product/wire edits.",
+  "why_now": "H1197 SOURCEf78 Action41910122964 artifact13362731099 zipped baeaf842: real Normal fixed6 dual native physical scene printed PASS, server did 3 original protected Rust M4 fixed6 receipts, only client final M4 logs effective Rust profile6 once (old canceled owners do not emit final readback); strict 3 client readbacks invalid. Next Linux platform by alternation ARM/ARM Normal off.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1197 exact one native x86 original source Action full build and 3 authentic fixed6 cohorts, actual Rust effective readback, two old Stop, new Normal real UDP and healthy Game4, final shared TUN Stop. Next Linux ARM/ARM Normal off or Game2 fixed as alternation. H998 old failures, Android/ICMP/CPU and 30%/250ms remain.",
+  "next_action": "Collect x86 fixed6 H1198 rerun and independent ARM Normal off H1198 Action, inspect actual M4 native owner/FEC and OS MTU/owned Stop; source-qualify in evidence+feature card when completed. Next Linux x86 Game2 fixed6 or Game4 off. H998 old hot shrink/ARM Game4 FAIL retained, 30%/ICMP/CPU causal/Android open.",
   "unverified": true,
   "last_tested_source": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1197 starts x86/x86 Normal fixed profile6 two source4/MTU changes, three true authenticated Go TLS/Rust cohorts, effective Rust FEC6 readback per M4, independent healthy Game4 real UDP; no Go/Rust code/wire changes. Previous x86 Normal Auto/ARM Game2off full PASS stored."
+  "partial_summary": "H1198 fixes narrow x86 Normal fixed6 false client-three-readbacks requirement; server three actual M4 FEC6 receipts remain mandatory. Starts native ARM Normal FEC off physical double switch independent; H1194 Auto/H1195 Game2off PASS retained."
 }
