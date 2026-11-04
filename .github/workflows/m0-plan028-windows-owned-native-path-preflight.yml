@@ -1,0 +1,133 @@
+name: M0 PLAN028 Windows test-owned NIC native IPv4 notification and actual selected source proof
+run-name: PLAN028 Win real test-only HyperV source4 native event preflight ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-windows-owned-native-path-preflight.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  windows-native-owned-nic-source:
+    runs-on: windows-2025
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real Windows native route/IPv4 callbacks for owned internal NIC, no product grant
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result/plan028-win-path | Out-Null
+          $result=[ordered]@{
+            scope='REAL_WIN_NATIVE_HYPERV_OWNED_NETWORK_EVENT_ONLY_NOT_NPCAP_PRODUCT'
+            source=$env:GITHUB_SHA
+            status='NOT_RUN'
+            test_owned_nic=$null
+            selected_source_before=$null
+            selected_source_after=$null
+            native_addr_events=0
+            native_route_events=0
+            tls_authenticated='NOT_RUN'
+            npcap_rebound='NOT_RUN'
+            rust_stop='NOT_RUN'
+            cpu_p99='NOT_MEASURED'
+          }
+          $name='WBD-P028-'+$env:GITHUB_RUN_ID
+          $sw=$null
+          $listener=$null
+          try {
+            if (-not (Get-Command New-VMSwitch -ErrorAction SilentlyContinue)) {
+              $result.status='NOT_RUN_HOST_NO_HYPERV_SWITCH_CMD'
+            } else {
+              $id=[Security.Principal.WindowsIdentity]::GetCurrent()
+              if (-not ([Security.Principal.WindowsPrincipal]$id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                $result.status='NOT_RUN_ADMIN_UNAVAILABLE'
+              } else {
+                # Safe: isolated Hyper-V INTERNAL adapter, never runner's uplink,
+                # management default route, foreign source IP or whole machine DNS.
+                $sw=New-VMSwitch -Name $name -SwitchType Internal -ErrorAction Stop
+                $iface=$null
+                for ($i=0;$i -lt 40;$i++) {
+                  $iface=@(Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -eq ('vEthernet ('+$name+')') -and $_.Status -eq 'Up' }) |
+                    Select-Object -First 1
+                  if ($iface) {break}
+                  Start-Sleep -Milliseconds 100
+                }
+                if (-not $iface) {throw 'owned HyperV internal adapter not readable'}
+                $idx=[uint32]$iface[0].InterfaceIndex
+                $defaults=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop)
+                if (@($defaults | Where-Object {$_.InterfaceIndex -eq $idx}).Count -ne 0) {
+                  throw 'owned interface unexpectedly used as runner management default; refuse'
+                }
+                $result.test_owned_nic=[string]$iface[0].Name
+                New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress '198.18.246.1' -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop | Out-Null
+                Start-Sleep -Milliseconds 300
+                $selected=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
+                  Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.1'})
+                if (-not $selected) {throw 'Windows GetBestRoute source before change is not owned interface IPv4'}
+                $result.selected_source_before='198.18.246.1'
+                Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          using System.Threading;
+          public sealed class WbdP028NativeNotify : IDisposable {
+            public delegate void Notification(IntPtr context, IntPtr row, int type);
+            [DllImport("iphlpapi.dll")] static extern uint NotifyRouteChange2(ushort family, Notification cb, IntPtr context, bool initial, out IntPtr handle);
+            [DllImport("iphlpapi.dll")] static extern uint NotifyUnicastIpAddressChange(ushort family, Notification cb, IntPtr context, bool initial, out IntPtr handle);
+            [DllImport("iphlpapi.dll")] static extern uint CancelMibChangeNotify2(IntPtr handle);
+            Notification route,addr;
+            IntPtr rh, ah;
+            int routes, addrs;
+            public int Routes {get {return Interlocked.CompareExchange(ref routes,0,0);}}
+            public int Addresses {get {return Interlocked.CompareExchange(ref addrs,0,0);}}
+            public WbdP028NativeNotify() {
+              route=(a,b,c)=>Interlocked.Increment(ref routes);
+              addr=(a,b,c)=>Interlocked.Increment(ref addrs);
+              uint rc=NotifyRouteChange2(2,route,IntPtr.Zero,false,out rh);
+              if(rc!=0) throw new Exception("route subscription failed "+rc);
+              rc=NotifyUnicastIpAddressChange(2,addr,IntPtr.Zero,false,out ah);
+              if(rc!=0) {CancelMibChangeNotify2(rh);rh=IntPtr.Zero;throw new Exception("address subscription failed "+rc);}
+            }
+            public void Dispose() {
+              if(rh!=IntPtr.Zero) {CancelMibChangeNotify2(rh);rh=IntPtr.Zero;}
+              if(ah!=IntPtr.Zero) {CancelMibChangeNotify2(ah);ah=IntPtr.Zero;}
+              GC.KeepAlive(route);GC.KeepAlive(addr);
+            }
+          }
+          '@ -ErrorAction Stop
+                $listener=[WbdP028NativeNotify]::new()
+                # Actual OS mutation, not synthetic callback: add a new source,
+                # mark old SkipAsSource on ONLY our isolated test-owned NIC.
+                New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress '198.18.246.9' -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop | Out-Null
+                Set-NetIPAddress -InterfaceIndex $idx -IPAddress '198.18.246.1' -SkipAsSource $true -ErrorAction Stop
+                $changeAt=[DateTimeOffset]::UtcNow
+                $selectedAfter=$null
+                for ($i=0;$i -lt 35;$i++) {
+                  $cand=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
+                    Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.9'})
+                  if ($cand.Count -gt 0 -and $listener.Addresses -gt 0) {$selectedAfter=$cand[0];break}
+                  Start-Sleep -Milliseconds 100
+                }
+                $result.native_addr_events=$listener.Addresses
+                $result.native_route_events=$listener.Routes
+                if (-not $selectedAfter) {throw 'new source4 not OS selected or no native IPv4 callback'}
+                $result.selected_source_after='198.18.246.9'
+                $result.os_mutation_to_readback_ms=[math]::Round(([DateTimeOffset]::UtcNow-$changeAt).TotalMilliseconds,2)
+                $result.status='PASS_WINDOWS_NATIVE_OWNED_INTERFACE_IPV4_NOTIFY_AND_SOURCE_SELECTION_ONLY'
+                Write-Output 'M0_PLAN028_WINDOWS_REAL_OS_NATIVE_IPV4_NOTIFICATION_SOURCE4_READBACK_PRELIGHT_PASS'
+              }
+            }
+          } finally {
+            if ($listener) {$listener.Dispose()}
+            if ($sw) {Remove-VMSwitch -Name $name -Force -ErrorAction Stop}
+            $result | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 result/plan028-win-path/owned-nic-native-notification.json
+            Get-Content result/plan028-win-path/owned-nic-native-notification.json
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-win-owned-native-path-${{ github.run_id }}
+          path: result/plan028-win-path/
+          if-no-files-found: warn
+          retention-days: 14
