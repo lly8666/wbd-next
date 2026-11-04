@@ -37,13 +37,14 @@ jobs:
               b=(d/name).read_bytes()
               assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
               assert hashlib.sha256(b).hexdigest()==m["sha256"][name],name
-          print("M0_PLAN028_H1137_FROZEN_X86_BOTH_REAL_ELF62_SOURCE_SHA_PASS")
+          print("M0_PLAN028_H1141_FROZEN_X86_BOTH_REAL_ELF62_SOURCE_SHA_PASS")
           PY
           chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
           python3 tools/m0-plan028-mixed-outer-intent-fixture.py "$RUNNER_TEMP/h1141-original-x86.sh"
           bash -n "$RUNNER_TEMP/h1141-original-x86.sh"
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ipr      - name: Three native x86 clients, two same-account installations and Bob, real independent user outer intent and Stop
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+      - name: Three native x86 clients, two same-account installations and Bob, real independent user outer intent and Stop
         shell: bash
         run: |
           set -euo pipefail
@@ -70,7 +71,6 @@ jobs:
           print("M0_PLAN028_H1141_NATIVE_X86_THREE_CLIENT_INDEPENDENT_USER_OUTER_MTU_AND_70_UDP_PASS")
           PY
           cat fixed-kernel-result/plan028-h1141-mixed-outer.json
-37-native-rust-m2.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
