@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
-  native-arm64-mixed-game4-real-physical:
+  native-x86-mixed-game4-two-real-switches:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -99,7 +99,7 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,os,pathlib,platform,struct
           root=pathlib.Path("fixed-build")
-          assert platform.machine()=="aarch64"
+          assert platform.machine()=="x86_64"
           sha={}
           for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
               b=(root/name).read_bytes()
