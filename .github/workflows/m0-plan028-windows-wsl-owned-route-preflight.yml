@@ -1,0 +1,54 @@
+name: M0 PLAN028 Windows WSL2 native test-owned two IPv4 sources real UDP preflight
+run-name: PLAN028 Win WSL2 test-owned source4 switch and native UDP ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-windows-wsl-owned-route-preflight.yml"
+      - "tools/m0-plan028-win-wsl-owned-source-bridge.ps1"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-windows-wsl-owned-ipv4:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Genuine Ubuntu WSL2 kernel from pinned official image, not a simulator
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result/plan028-win-wsl-owned | Out-Null
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'bounded real WSL2 distro discovery failed'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.wsl'
+            $vm=Join-Path $env:RUNNER_TEMP 'plan028-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'pinned official WSL2 image mismatch'}
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
+            if($LASTEXITCODE -ne 0){throw 'real WSL2 Ubuntu import failed'}
+          }
+          & python tools/m0_wl_windows_bounded_cmd.py 40 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 Ubuntu eth0 unavailable'}
+          Write-Output 'M0_PLAN028_WSL2_REAL_UBUNTU_GUEST_ETH0_READY'
+      - name: Real owned Windows WSL2 source-IP change and source-bound genuine UDP echo
+        shell: pwsh
+        run: |
+          & ./tools/m0-plan028-win-wsl-owned-source-bridge.ps1
+          if(-not $?){throw 'Windows WSL2 owned source IPv4 bridge preflight failed'}
+          $v=Get-Content result/plan028-win-wsl-owned/dual-source-native.json -Raw | ConvertFrom-Json
+          if($v.status -ne 'PASS_TEST_OWNED_WINDOWS_WSL2_TWO_SOURCE_REAL_UDP_ONLY' -or
+             $v.source_before -ne '198.19.254.1' -or $v.source_after -ne '198.19.254.9' -or
+             -not $v.udp_before -or -not $v.udp_after -or -not $v.runner_default_route_unchanged){
+              throw 'Windows owned WSL2 OS source/UDP and preserved runner route not proven'
+          }
+          Write-Output 'M0_PLAN028_WINDOWS_REAL_WSL2_OWNED_TWO_SOURCE4_UDP_NATIVE_PASS_NOT_NPCAP'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-win-wsl2-dual-source-${{ github.run_id }}
+          path: result/plan028-win-wsl-owned/
+          if-no-files-found: warn
+          retention-days: 14
