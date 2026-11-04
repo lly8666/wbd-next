@@ -108,6 +108,15 @@ type m0WindowsPhysicalPath struct{
  ifindex uint32
  source4 netip.Addr
 }
+// The first signed WSL source is an initial trust receipt, not a permanent
+// address pin when a later cold generation follows an actual OS IPv4 path
+// change. Preserve the EXACT authenticated guest/ifindex/MAC conditions.
+func m0WindowsVerifiedGuestSourceRebound(
+ generation uint64,initial,current netip.Addr,ifindex uint32,selected m0WindowsPhysicalPath,
+)bool{
+ return generation>1&&initial.Is4()&&current.Is4()&&initial!=current&&
+  selected.ifindex==ifindex&&selected.source4==current
+}
 func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhysicalPath,error){
  var zero m0WindowsPhysicalPath
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(peer,0)
@@ -381,10 +390,22 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   onLinkGuest:=guestIP==underlay.NextHop4
   verifiedHostSelfNextHop:=underlay.NextHop4==underlay.Source4&&
    ncfg.NextHopMAC==ncfg.SourceMAC
+  source4Verified:=srcErr==nil&&sourceIP==underlay.Source4
+  if !source4Verified&&srcErr==nil&&generation>1{
+   // Reauthorize only on the actual selected OS source4 of this same
+   // physical ifindex and already verified WSL guest. No cached source
+   // or raw TLS packet can authorize a new route.
+   if selected,liveErr:=m0WindowsSelectedPhysicalPath(o.ServerIP,o.AdapterAlias);liveErr==nil&&
+    m0WindowsVerifiedGuestSourceRebound(generation,sourceIP,underlay.Source4,underlay.InterfaceIndex,selected){
+    source4Verified=true
+    fmt.Printf("WBD_PLAN028_WINDOWS_VERIFIED_NATIVE_SOURCE4_REBOUND generation=%d ifindex=%d source4=%s source=os_selected_egress_only\n",
+     generation,underlay.InterfaceIndex,underlay.Source4)
+   }
+  }
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
    guestIP!=o.ServerIP||(!onLinkGuest&&!verifiedHostSelfNextHop)||
-   sourceIP!=underlay.Source4{
+   !source4Verified{
     return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
      windowsclient.ErrN4NativeGuard,idx,underlay.InterfaceIndex,
      guestIP,o.ServerIP,underlay.NextHop4,sourceIP,underlay.Source4,

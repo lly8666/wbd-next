@@ -14,6 +14,9 @@ root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exi
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
+plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
+if plan028_owned_switch and (mode!='normal' or native_outer!='default1460'):
+ raise RuntimeError('PLAN028 owned Windows source4 switch requires one Normal/default1460 product scene')
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
@@ -158,7 +161,17 @@ try:
  ip=wsl("ip","-4","-o","addr","show","dev","eth0")
  m=re.search(r"\binet (\d+(?:\.\d+){3})/",ip)
  if not m:raise RuntimeError("WSL2 actual eth0 IPv4 missing")
- peer=m.group(1);server=unix(root/"linux-product");result=unix(out)
+ peer=m.group(1)
+ if plan028_owned_switch:
+  # The native Windows job prepared only test-owned WSL2 aliases and
+  # verified the preferred original physical source before TLS begins.
+  if '198.19.254.2/' not in ip:raise RuntimeError('original WSL guest owned server alias missing')
+  alias=json.loads((out/"plan028-owned-alias.json").read_text())
+  if alias["stage"]!="PREPARED" or alias["host_source_old"]!="198.19.254.1":
+   raise RuntimeError("test-owned Windows WSL2 source not OS-prepared")
+  peer="198.19.254.2"
+  report["plan028_owned_underlay_before"]="198.19.254.1"
+ server=unix(root/"linux-product");result=unix(out)
  game_cold_stage("COLD_WSL_IP_READY")
  # A fresh offline secret: no public constant, on-wire WB-R1, argv secret or
  # third-party KMS. WSL2 receives its own exact regular owner-only copy.
@@ -234,7 +247,7 @@ try:
  # requires first, reverse and a post-reverse packet BEFORE emitting READY.
  # No app packets, ACKs, READY or OS Applied are simulated by this harness.
  app=out/"app.py"
- app.write_text(r"""import socket,sys,time,json,pathlib
+ app.write_text(r"""import socket,sys,time,json,pathlib,os
 local,remote,ready_file=sys.argv[1:4]
 hold=float(sys.argv[4]) if len(sys.argv)>4 else 2.
 cadence=float(sys.argv[5]) if len(sys.argv)>5 else .09
@@ -253,7 +266,7 @@ sock.setblocking(False)
 seen=set()
 sent=0
 start=time.monotonic()
-deadline=start+max(35.,hold+9.)
+deadline=start+max(65. if os.environ.get("WBD_PLAN028_WSL_OWNED_SWITCH")=="1" else 35.,hold+9.)
 next_send=start
 last_diag=start
 ready_since=None
@@ -317,6 +330,59 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
        " session_id_bytes="+str(shape["session_id_length"])+
        " client_tls_record_bytes="+str(shape["client_hello_record_bytes"])+
        " server_tls_record_bytes="+str(shape["server_hello_record_bytes"]),flush=True)
+ if plan028_owned_switch:
+  # Actual native Windows source/IP mutation on the WSL virtual NIC.
+  # The old normal authenticated Rust/Wintun owner still owns live
+  # application traffic; the one existing supervisor must Stop exactly,
+  # reauthenticate a fresh original Go TLS generation and apply OS MTU.
+  assert (out/"plan028-owned-alias.json").is_file()
+  started=time.monotonic()
+  run(["pwsh","-NoProfile","-File",str(root/"tools"/"m0-plan028-win-wsl-product-owned-alias.ps1"),
+       "-Action","Switch","-Receipt",str(out/"plan028-owned-alias.json")],timeout=60)
+  alias=json.loads((out/"plan028-owned-alias.json").read_text())
+  if alias["stage"]!="SWITCHED" or alias["native_source4_after"]!="198.19.254.9":
+   raise RuntimeError("new source IPv4 from real Windows OS readback was not selected")
+  for _ in range(360):
+   win=(out/"client.log").read_text(errors="replace")
+   if ("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=2" in win and
+       "WBD_PLAN028_WINDOWS_VERIFIED_NATIVE_SOURCE4_REBOUND generation=2" in win and
+       win.count("WBD_WINDOWS_CLIENT_READY")>=2 and
+       win.count("WBD_WINDOWS_OS_APPLIED")>=2 and
+       "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1" in win):
+    break
+   if w.poll() is not None:
+    raise RuntimeError("original Windows native reauth product exited after real source change: "+win[-1500:])
+   time.sleep(.15)
+  else:raise RuntimeError("new authentic Windows TLS/Rust Npcap generation and old Stop not observed: "+win[-1500:])
+  # The two ORIGINAL live kernel UDP applications continue rather than
+  # registering a fake packet. Demand NEW receive counters after B READY.
+  def last_udp_count(role):
+   path=out/(role+"-app.log")
+   seen=[]
+   if path.exists():
+    for text in path.read_text(errors="replace").splitlines():
+     try:
+      entry=json.loads(text)
+      if entry.get("phase")=="udp_1hz":seen.append(int(entry["received"]))
+     except (ValueError,KeyError,TypeError):pass
+   return seen[-1] if seen else 0
+  before={x:last_udp_count(x) for x in ("windows","linux")}
+  for _ in range(100):
+   after={x:last_udp_count(x) for x in before}
+   if all(after[x]>before[x] for x in before):break
+   if w.poll() is not None:raise RuntimeError("new Windows path died before authenticated fresh inner UDP")
+   time.sleep(.1)
+  else:raise RuntimeError("actual Windows/Linux inner UDP did not continue beyond new authenticated generation: "+repr((before,after)))
+  report["plan028_original_native_source4_reauth"]={
+   "scope":"TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_NEW_GO_TLS_NPCAP_WINTUN_RUST",
+   "source4_before":"198.19.254.1","source4_after":"198.19.254.9",
+   "old_generation_exact_wal_stop":True,
+   "new_generation_tls_native_ready":True,
+   "new_inner_udp_receive_increments":{x:after[x]-before[x] for x in before},
+   "OS_mutation_to_new_ready_observed_ms":round((time.monotonic()-started)*1000,2),
+   "notification_to_TLS_start_ms":"NOT_MEASURED",
+   "TLS_auth_to_first_single_packet_ms":"NOT_MEASURED"}
+  print("M0_PLAN028_WINDOWS_REAL_OWNED_WSL2_SOURCE4_REAUTH_ORIGINAL_TLS_NPCAP_RUST_AND_NEW_UDP_PASS",flush=True)
  game_cold_stage("COLD_READY_COMPLETE")
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  winlog=(out/"client.log").read_text(errors="replace")

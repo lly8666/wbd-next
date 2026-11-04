@@ -187,3 +187,26 @@ func TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOr
   t.Fatal("Game dead90 retry authorization widened without OS event")
  }
 }
+
+func TestM0PLAN028VerifiedGuestSourceReboundAfterGenuineOSChangeOnly(t *testing.T){
+ original:=netip.MustParseAddr("198.19.254.1")
+ after:=netip.MustParseAddr("198.19.254.9")
+ valid:=m0WindowsPhysicalPath{ifindex:17,source4:after}
+ if m0WindowsVerifiedGuestSourceRebound(1,original,after,17,valid){
+  t.Fatal("first generation cannot use a new host source under cached WSL MAC override")
+ }
+ if !m0WindowsVerifiedGuestSourceRebound(2,original,after,17,valid){
+  t.Fatal("new cold generation must admit exactly OS selected source4 of verified ifindex")
+ }
+ for _,row:=range []m0WindowsPhysicalPath{
+  {ifindex:18,source4:after},
+  {ifindex:17,source4:original},
+ }{
+  if m0WindowsVerifiedGuestSourceRebound(2,original,after,17,row){
+   t.Fatal("stale/foreign NIC or source must not authorize the new physical path")
+  }
+ }
+ if m0WindowsVerifiedGuestSourceRebound(2,original,original,17,valid){
+  t.Fatal("unchanged source is not a verified source4 change")
+ }
+}
