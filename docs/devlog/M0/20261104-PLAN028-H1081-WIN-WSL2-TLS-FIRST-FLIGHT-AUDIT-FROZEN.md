@@ -13,3 +13,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1081 true WSL2 tcpdump source-frozen LF shell/stderr repair and exact dynamic TCP four-tuple audit, no original Go/Rust change; Windows TLS wire not qualified until real Action."}
 ```
+
+## H1082 无产品运行的 CI 语法修正
+
+H1081 [Action 41760546535](https://github.com/lly8666/wbd-next/actions/runs/41760546535) GitHub 报工作流定义失败且 jobs 数量为零。四处复用二进制的条件以裸 `if: !contains(...)` 开头，YAML 会解析成未知的标签。统一更正为 `if: (!contains(...))`，只改变 YAML 表达式起始，控制语义不变；Go/Rust产品、真实捕获LF及审计器源码未再改变。H1082新Action实际执行前继续 **WIRE_NOT_QUALIFIED**，不把配置解析失败当TLS产品失败。
