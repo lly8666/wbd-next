@@ -845,6 +845,20 @@ func runGameMultiServer(
                 _=product.Close()
                 return fmt.Errorf("shared Game original Rust outer readback: %w",e)
             }
+            // Original dedicated server emits the protected Game FEC
+            // receipt after real Rust M4 install. Same original receipt
+            // per shared cohort, never a pre-TLS or CLI-only claim.
+            if gameCfg.GameFecEnabled{
+                if _,e=product.FecCounters();e!=nil{
+                    _=product.Close()
+                    return fmt.Errorf("shared Game native FEC install readback: %w",e)
+                }
+                log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=%d auth_original_tls=1 original_M4=1",
+                    key.Lanes,gameCfg.GameFecProfile)
+            }else{
+                log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",
+                    key.Lanes)
+            }
             newPeers:=make([]faketcp.DetachedPeer,0,n)
             for _,member:=range complete{
                 peer,e:=member.DetachedPeer()
