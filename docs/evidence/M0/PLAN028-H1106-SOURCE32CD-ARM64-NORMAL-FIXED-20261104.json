@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1106",
+  "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
+  "result": "PASS_SCOPED_NATIVE_ARM64_NORMAL_FIXED1_REAL_PATH_SWITCH",
+  "artifact_verified": true,
+  "run": {
+    "id": 41790764503,
+    "job_id": 126443353161,
+    "artifact_id": 13303750480,
+    "conclusion": "success",
+    "product_binary_source": "32cd752201e01134fc53157270ce223de70a8c7a",
+    "harness_sha": "bb49739df0674c51296d8aeb8a86a0a2994edb34"
+  },
+  "binary_manifest": {
+    "sha256": "6592f1941f51d90f05442e926b92d05c49c71b530bf74666292e0bb9027fe596",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "linux_machine": "native_aarch64",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "exact_same_ELF_SHA_as_H1104": true,
+    "binaries_sha256": {
+      "wbd-v4-client": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+      "wbd-v4-server": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+      "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "original_native_test": {
+    "client_server": "ARM64+ARM64 genuine Linux netns AF_PACKET TUN original Go TLS/Rust",
+    "single_server_port": 443,
+    "mode": "Normal Fixed FEC profile1",
+    "physical_source_before": "10.25.0.2",
+    "physical_source_after": "10.25.0.3",
+    "configured_outer_mtu": 1460,
+    "new_physical_mtu": 1280,
+    "os_tun_mtu_after": 1195,
+    "client_auto_lease": "10.66.0.150",
+    "first_udp": 64,
+    "new_path_udp": 5,
+    "client_fixed_applied": true,
+    "pending": false,
+    "shared_rust_tun_routed": 69,
+    "unrouted": 0,
+    "backpressure": 0,
+    "reader_joined": true,
+    "original_TLS_new_generation": true,
+    "old_exact_stop": true
+  },
+  "logs_sha256": {
+    "native": "9d50876649b547262ac1c5246a4583b9fbaa2ba0c88e6b10ee8e7f501a53b0cb",
+    "route": "dafe4719a20c4b1ee4bcd4e55862dc30924990408064d579850dab01db43b49d",
+    "mtu": "3cffb66882762330f6be4d4343dddbd497ea7b78b4652252a8a292423cef54b6",
+    "udp": "608fdf76a9c6495047832ef11256dcfedcbf55238edd4f4ab02a2165d46a067d"
+  },
+  "historical_governance": {
+    "run": 41790764647,
+    "result": "FAIL",
+    "cause": "H1105 evidence lacked source_sha despite correct product_source_sha; H1106 fixes evidence field rather than product code"
+  },
+  "limits": [
+    "Does not qualify CPU/p99 or real Windows physical NIC change",
+    "H998 same-connection MTU hot shrink FAIL kept",
+    "Old ARM64 Game4FEC Action FAIL preserved, remote ICMP NOT_MEASURED",
+    "Short Fixed1 delivery does not prove whole seven-mode cutover by itself"
+  ]
+}

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1105,
-  "checkpoint_sha": "cb3ea36e4eff677dc66a531e300a419fff11bd02",
+  "sequence": 1106,
+  "checkpoint_sha": "bb49739df0674c51296d8aeb8a86a0a2994edb34",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1105 x86/x86 source0e47 Game4FEC6 true overlap 8 TLS ClientHello/FEC/5+5 UDP/MTU1178 Stop PASS, exact artifact verified; H1106 ARM64 fixed1 real path frozen candidate",
-  "why_now": "Action41790304416 SUCCESS after EIGHT/8 false marker repaired, original Go/Rust fixed SHA reused; real Game4 8CH and A→A+B→B, real FEC + UDP, OS1178. Next native Linux task must be ARM/ARM, use H1104 same SOURCE32cd built binaries for focused Fixed.",
+  "current_task": "H1106 native ARM64/ARM64 Normal Fixed1 original GoTLS/Rust physical source switch old64+new5 UDP, inner OS1195 and owned Stop PASS, source exact H1104 binaries; H1105 evidence source_sha repaired",
+  "why_now": "H1106 Action41790764503 artifact13303750480 SUCCESS, SHA/ELF identical H1104 source32cd, Normal Fixed1 profile1 readback and real new path UDP/Stop PASS. Governance H1105 FAIL only evidence source_sha field absent, fixed by adding matching true source0e47.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1106 native ARM64+ARM64 Normal Fixed1 physical source IP/MTU old64+new5 UDP SHA-locked artifact; no recompilation. Then address independent Windows actual NIC/IP switch and CPU/p99 measurement; do not expand old matrix.",
+  "next_action": "Next complete Linux test per rotation x86/x86 if further mode-specific missing qualification is materially necessary. Independently prioritize actual Windows physical NIC/source IPv4 change after TLS restart and notification→TLS, auth→first data timing/CPU-p99. No old matrix rerun.",
   "unverified": true,
-  "last_tested_source": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "last_tested_source": "32cd752201e01134fc53157270ce223de70a8c7a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1105-SOURCE0E47-X86-GAME4-OVERLAP-8CH-20261104.json"
+    "docs/evidence/M0/PLAN028-H1106-SOURCE32CD-ARM64-NORMAL-FIXED-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 route-key 32B offline/no WB-R1 TLS prelude verified scoped. H1092/93 Game4 FEC overlap x86/ARM, H1095 full TLS Finished baseline, H1098 Win cold retry 6 Go units+5 scoped native modes. H1100 source0e47 native ARM64 Game2 off 4CH, genuine 5+5 UDP, old/new overlap, Stop/MTU PASS. x86 Game4 8CH 5+5 UDP/MTU/FEC actual but older Action FAIL EIGHT-vs-8 string typo. H1103 source0e47 x86/x86 Normal Fixed+Auto true source IPv4 physical change 1280, OS inner1195 and old64/new5 UDP each, source SHA unchanged, client FEC Fixed1/Auto5, both Rust TUN routed69 and Stop, Actions41786697334/41786697384 PASS; Auto feedback convergence not claimed. Next native Linux ARM64/ARM64 task. H998 prior same-connection hot shrink FAIL, historical ARM64 Game4FEC Action FAIL, Win physical NIC/CPU-p99, remote ICMP, Android still NOT_RUN. H1104 ARM64/ARM64 Normal Auto authentic source4 switch 64+5 UDP MTU1195 Stop PASS Action41787602880 verified artifact13300899927; Auto feedback convergence not proven. H1105 x86 source0e47 Game4 frozen same binary requalifies false EIGHT/8 marker. H1105 source0e47 x86 original Go/Rust Game4FEC6 old/new overlapping group 8 real TLS CH, old/new 5+5 real UDP, parity, OS1178, precise Stop PASS Action41790304416 artifact13303345412 (old Action41782228876 EIGHT typo FAIL preserved). H1106 ARM/ARM Normal Fixed frozen source32cd same binary as H1104 pending."
+  "partial_summary": "H1087 route-key 32B offline/no WB-R1 TLS prelude verified scoped. H1092/93 Game4 FEC overlap x86/ARM, H1095 full TLS Finished baseline, H1098 Win cold retry 6 Go units+5 scoped native modes. H1100 source0e47 native ARM64 Game2 off 4CH, genuine 5+5 UDP, old/new overlap, Stop/MTU PASS. x86 Game4 8CH 5+5 UDP/MTU/FEC actual but older Action FAIL EIGHT-vs-8 string typo. H1103 source0e47 x86/x86 Normal Fixed+Auto true source IPv4 physical change 1280, OS inner1195 and old64/new5 UDP each, source SHA unchanged, client FEC Fixed1/Auto5, both Rust TUN routed69 and Stop, Actions41786697334/41786697384 PASS; Auto feedback convergence not claimed. Next native Linux ARM64/ARM64 task. H998 prior same-connection hot shrink FAIL, historical ARM64 Game4FEC Action FAIL, Win physical NIC/CPU-p99, remote ICMP, Android still NOT_RUN. H1104 ARM64/ARM64 Normal Auto authentic source4 switch 64+5 UDP MTU1195 Stop PASS Action41787602880 verified artifact13300899927; Auto feedback convergence not proven. H1105 x86 source0e47 Game4 frozen same binary requalifies false EIGHT/8 marker. H1105 source0e47 x86 original Go/Rust Game4FEC6 old/new overlapping group 8 real TLS CH, old/new 5+5 real UDP, parity, OS1178, precise Stop PASS Action41790304416 artifact13303345412 (old Action41782228876 EIGHT typo FAIL preserved). H1106 ARM/ARM Normal Fixed frozen source32cd same binary as H1104 pending. H1106 native ARM64 Fixed1 source32cd exact H1104 Go/Rust binaries: old64/new5 UDP, OS1195, profile1 applied and Stop PASS Action41790764503 artifact13303750480. Correct H1105 evidence source_sha alias, prior governance failed only that schema, not product."
 }
