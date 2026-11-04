@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1093",
+  "source_sha": "5760dd1c1e77367004614e1fcd44f248f47227b8",
+  "result": "SCOPED_PASS_NATIVE_ARM64_GAME4_FEC6_A_TO_AB_TO_B_AND_EIGHT_REAL_TLS_FIRST_FLIGHTS",
+  "action": {
+    "id": 41771260135,
+    "job_id": 126381230322,
+    "conclusion": "success",
+    "artifact_id": 13295106610,
+    "artifact_verified": true,
+    "source_manifest_sha256": "a8269b8b318fc580100f536920e70df5b7645af45d7fcbabe348e3fde3562ca8",
+    "assembly_receipt_sha256": "5562992fe2bb640f07fd1d4a12d51d65b5afdb0121e1551dff9fce30d563fa8f",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "architecture": "native ARM64 client and server; one native ARM host two real kernel netns",
+    "go": "1.23.12",
+    "rust": "1.85.1"
+  },
+  "binaries_sha256": {
+    "wbd-v4-client": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+    "wbd-v4-server": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+    "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "logs_sha256": {
+    "native-arm64-tls-go-unit.log": "8aab1729010f97848e34d28e14e9fb6f3c578a84cf37117d6a9155c2e748dc4f",
+    "native-arm64-game4-eight-tls.log": "e4db71b04447ac49dd927f08d533c984101905de271e4baf1d941647278de15c",
+    "native-arm64-overlap-unit.log": "5718682070d1ebb27f9c9f9f67283069b9a0893746d2dce6c27986868dcf899d",
+    "plan028-game4-tls-wire-audit.json": "45124e9ecbce16f18dc1c8d9a4b3fc9f33fd5d6b9a279bbf69b67316fff56a30",
+    "public-v4-normal-business.log": "8f11e0189fc266142d245fd5ffc4eb530f33d204eba56f1b4f72b0cf28528668",
+    "plan028-real-path-switched-business.log": "608fdf76a9c6495047832ef11256dcfedcbf55238edd4f4ab02a2165d46a067d"
+  },
+  "native_observations": {
+    "mode": "Game4 fixed6",
+    "first_and_second_generation": true,
+    "new_tls_m4_ready_before_old_group_stop": true,
+    "one_rust_tun_reader_per_side": true,
+    "old_inner_udp_echo": 5,
+    "new_inner_udp_echo": 5,
+    "game4_fec_parity_copied_both_generations": true,
+    "server_port": 443,
+    "client_old_ip": "10.25.0.2",
+    "client_new_ip": "10.25.0.3",
+    "default_outer_ipv4_mtu": 1460,
+    "new_physical_ipv4_mtu": 1280,
+    "new_inner_tun_os_readback_mtu": 1178,
+    "same_installation_protected_ip_unchanged": true,
+    "one_damaged_lane_other_healthy_delivered": true,
+    "original_tls_complete_authenticated_rust_data_plane": true
+  },
+  "tls_first_flights": {
+    "client_hello_count": 8,
+    "distinct_32byte_session_ids": 8,
+    "old_lane_ports": [
+      41031,
+      41032,
+      41033,
+      41034
+    ],
+    "new_lane_ports": [
+      56881,
+      56882,
+      56883,
+      56884
+    ],
+    "client_first_payload": "TLS ClientHello",
+    "server_first_payload": "TLS ServerHello",
+    "server_early_application_bytes": 0,
+    "client_hello_record_bytes": 667,
+    "server_hello_record_bytes": 127,
+    "tls_extension_count": 15,
+    "real_tcp_syn_and_synack_all": true,
+    "raw_pcap_not_retained": true
+  },
+  "scope_limits": [
+    "TLS first-flight only: full decrypted Certificate/CertificateVerify/Finished and reference configuration comparison OPEN",
+    "Native ARM64 true kernel same host, NOT two separate physical ARM hosts",
+    "Game4 high-health lane overlap observed here; not every seven-mode lane rotation",
+    "Windows actual NIC/IP change and Npcap rebind NOT_RUN",
+    "CPU/p99 and remote ICMP unmeasured; no SLA claim",
+    "H998 original same-connection hot MTU shrink FAIL preserved",
+    "Original ARM64 Game4FEC Action FAIL remains source-specific historical observation",
+    "Android real device NOT_RUN"
+  ],
+  "plan_status": "IN_PROGRESS"
+}
