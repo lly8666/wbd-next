@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1160",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_LINUX_X86_X86_SHARED443_GAME4_PHYSICAL_SWITCH",
+  "source_sha": "b2e9e14e12ccb446065afeeead82c04c725708b7",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "id": 41857960345,
+    "job_id": 126671600865,
+    "conclusion": "success",
+    "artifact_id": 13338008199,
+    "artifact_digest": "sha256:114f1e7e3e4a3c0f5b46b1076d65af26e8bd620da675e503fa8cf5d6d80727ae"
+  },
+  "platform": "Linux native x86_64 client+server original Go TLS and Rust M4 ELF62, isolated kernel netns, not QEMU",
+  "mode": "Game4 fixed6 2 independent authenticated cohorts on one original TLS443 Rust shared TUN",
+  "source4_before": "10.25.0.2",
+  "source4_after": "10.25.0.9",
+  "outer_user_complete_ipv4_mtu_bytes": 1460,
+  "new_physical_ipv4_mtu_bytes": 1280,
+  "alice_lease_preserved": "10.66.0.187",
+  "alice_inner_OS_mtu_old": 1358,
+  "alice_inner_OS_mtu_new": 1178,
+  "bob_inner_OS_mtu_old": 1358,
+  "bob_inner_OS_mtu_new": 1358,
+  "bob_real_udp_during_switch": 32,
+  "alice_new_path_real_udp": 64,
+  "new_protected_tls_generation_ready": true,
+  "exact_old_owner_stop": true,
+  "times": {
+    "physical_command_to_ready_ms": 1070.61,
+    "ready_to_64_echo_complete_ms": 15425.16,
+    "notification_to_tls_start": "NOT_MEASURED",
+    "auth_to_first_single_udp": "NOT_MEASURED",
+    "cpu_p99": "NOT_MEASURED"
+  },
+  "provenance": {
+    "single_complete_original_source_build": true,
+    "all_3_original_ELF62_SHA256_checked": true
+  },
+  "not_proven": [
+    "mixed Normal/Game sibling physical reauth",
+    "real physical Wi-Fi or cellular",
+    "Android native network binding",
+    "remote ICMP",
+    "H998 prior same-connection hot shrink FAIL remains",
+    "historic ARM64 Game4FEC failed Action remains",
+    "CPU causal performance gain"
+  ]
+}
