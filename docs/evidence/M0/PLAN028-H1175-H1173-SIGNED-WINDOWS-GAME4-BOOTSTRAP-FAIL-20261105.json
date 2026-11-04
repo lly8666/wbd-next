@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1175",
+  "source_sha": "cbd22f8b9e9ca463069884e48ebac02a954d1b48",
+  "status": "REAL_GAME4_SECOND_GENERATION_TLS_FAILURE",
+  "action": {
+    "run": 41877481546,
+    "job": 126743128311,
+    "artifact": 13347563152,
+    "zip_sha256": "7fbeedd493452c4f72c5d5e2e17ec7a83a913a181d50bf8b562f00764c05bb2e"
+  },
+  "initial": {
+    "original_go_tls": true,
+    "npcap_wintun_rust": true,
+    "mode": "game4-fec",
+    "real_native_udp_win": 72,
+    "real_native_udp_linux": 71,
+    "outer_mtu": 1460,
+    "inner_mtu": 1358
+  },
+  "switched": {
+    "source4_old": "198.19.254.1",
+    "source4_new": "198.19.254.9",
+    "ifindex": 25,
+    "old_game_wal_stop": true,
+    "new_tls_ready": false,
+    "failure": "faketcp bootstrap stream deadline exceeded lane1 after three retries"
+  },
+  "cause": "original one-shot manual Game server did not accept succeeding group on one443",
+  "next": "H1175 existing Game multi-group accepts server-pinned manual /32 post TLS with old generation-specific Stop",
+  "retained_h998": [
+    "original same-connection hot-shrink FAIL",
+    "old ARM Game4 Action FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "CPU causal NOT_PROVEN"
+  ]
+}

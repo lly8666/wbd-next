@@ -25,6 +25,7 @@ type V4LinuxGameProductConfig struct {
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     ConfigureLeaseIPv4 func(lease string)error // apply once before Game group Rust M4 start
     Authenticate func(username,password string)bool // server account roster
+    ServerManualLease4 string // trusted server /32; original cold TLS only
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
@@ -375,6 +376,7 @@ func V4AuthenticateLinuxGameServerLane(
         DataPlaneReady:true,Epochs:cfg.Epochs,
         ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:cfg.SharedTun!=nil,
+        ManualLease4:cfg.ServerManualLease4,
     })
     if err!=nil{return nil,err}
     lane:=&V4LinuxGameAuthenticatedLane{

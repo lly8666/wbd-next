@@ -246,7 +246,8 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     // Server auto-lease is enabled by --lease-pool, NEVER --auto-ip
     // (the latter is client-only). H1036's c.autoIP check could never be
     // reached on a valid server; use actual verified lease-pool authority.
-    if c.leasePool.IsValid(){
+    if c.leasePool.IsValid()||c.manualClientLease4.IsValid(){
+        // Reuse original protected Game multi-generation 443 listener.
         return runGameMultiServer(ctx,c,ifindex,tun,leases,epochs,connected,cert)
     }
     // Manual old one-group mode remains exactly the original dedicated
@@ -489,9 +490,12 @@ func runGameMultiServer(
     const maxLiveRustLanes=16 // Rust MAX_SESSIONS, includes candidates and successors
     const cohortTimeout=45*time.Second
     n:=int(c.gameLanes)
-    if !c.leasePool.IsValid()||leases==nil||epochs==nil||
+    autoPool:=c.leasePool.IsValid()
+    manual:=c.manualClientLease4.IsValid()
+    if autoPool==manual||epochs==nil||
+        (autoPool&&leases==nil)||(manual&&leases!=nil)||
         (!c.mixedModes&&n!=2&&n!=4)||
-        (c.mixedModes&&n!=0){return realityfront.ErrAdmissionParams}
+        (c.mixedModes&&(!autoPool||n!=0)){return realityfront.ErrAdmissionParams}
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
     // The original Go Run() owns the underlying OS TUN until the final
@@ -510,6 +514,7 @@ func runGameMultiServer(
         Game4CopyWideStagger:c.game4CopyWideStagger,
         Epochs:epochs,PeerPersona:c.peerPersona,
         Authenticate:originalV4CredentialCheck(c),
+        ServerManualLease4:func()string{if manual{return c.manualClientLease4.String()};return ""}(),
     }
     rawPersona:=faketcp.PacketPersonaLegacy
     if c.peerPersona==realityfront.V4PeerWindows11{
@@ -540,7 +545,13 @@ func runGameMultiServer(
             // Protected TLS alone may allocate the device's /32. A manual
             // tunnel, unauthenticated source tuple or a no-install ID cannot
             // enter the multi-group native shared TUN.
-            if !req.AutoLease||len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+            if len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+            if autoPool{
+                if !req.AutoLease{return realityfront.ErrAdmissionParams}
+            }else if req.AutoLease||c.tunnel==[16]byte{}||
+                string(req.TunnelID)!=string(c.tunnel[:]){
+                return realityfront.ErrAdmissionParams
+            }
             return nil
         },
     }
@@ -848,7 +859,10 @@ func runGameMultiServer(
                 gameFec:gameCfg.GameFecEnabled,
             }
             for i,l:=range complete{detached[l.Association()]=newPeers[i]}
-            older:=active[key]
+            // Epoch is part of the key; retire only the same principal and
+            // tunnel's old generation after the new authenticated M4 READY.
+            // No mutex is held across native Stop, and siblings are untouched.
+            olderSameEpoch:=active[key]
             active[key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=%d server_port=%d distinct_client_flows=%d",
@@ -856,8 +870,14 @@ func runGameMultiServer(
             log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",key.Lanes)
             log.Printf("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server server_port=%d groups=%d detached_flows=%d native_shared_tun=1",
                 c.localPort,len(active),len(detached))
-            if older!=nil{
-                if e=retire(older,"same-protected-cohort-new-generation");e!=nil{return e}
+            if olderSameEpoch!=nil{
+                if e=retire(olderSameEpoch,"same-protected-cohort-new-generation");e!=nil{return e}
+            }
+            for oldKey,oldGroup:=range active{
+                if oldKey==key||oldKey.Principal!=key.Principal||
+                    oldKey.TunnelID!=key.TunnelID{continue}
+                if e=retire(oldGroup,"same-protected-cohort-new-generation");e!=nil{return e}
+                delete(active,oldKey)
             }
         case <-ticker.C:
             now:=time.Now()

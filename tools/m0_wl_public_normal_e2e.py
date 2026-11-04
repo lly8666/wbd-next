@@ -224,7 +224,7 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if plan028_owned_switch and not is_game else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if plan028_owned_switch else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
@@ -360,6 +360,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     raise RuntimeError("original Windows native reauth product exited after real source change: "+win[-1500:])
    time.sleep(.15)
   else:raise RuntimeError("new authentic Windows TLS/Rust Npcap generation and old Stop not observed: "+win[-1500:])
+  if is_game:
+   group_log=(out/"server.log").read_text(errors="replace")
+   if "V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation" not in group_log:
+    raise RuntimeError("authenticated Game4 successor did not retire its exact old server generation")
   # The two ORIGINAL live kernel UDP applications continue rather than
   # registering a fake packet. Demand NEW receive counters after B READY.
   def last_udp_count(role):
@@ -1205,7 +1209,8 @@ print(json.dumps(result),flush=True)
     print("WL_GAME_ORIGINAL_STOP_FAILURE_"+role.upper()+"_TAIL "+content,flush=True)
   raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
- stop_marker=("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
+ stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
+  "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
   "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if plan028_owned_switch else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
