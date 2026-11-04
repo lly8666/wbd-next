@@ -52,7 +52,8 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
             TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                 TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
             ExpectedUsername:user,ExpectedPassword:"secret",ServerLimit:1400,
-        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0],perClientNormalFEC:len(allowReplacement)>1&&allowReplacement[1]})
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0],perClientNormalFEC:len(allowReplacement)>1&&allowReplacement[1],
+            perClientMixedMode:len(allowReplacement)>2&&allowReplacement[2]})
         server<-answer{s,e}
     }()
     // The shared-server fixed branch now requires an explicit protected
@@ -64,7 +65,7 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
         TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:user,Password:"secret",TunnelID:bytes.Clone(tunnel),
-        ClientLimit:1400,LaneID:lane,Policy:policy,
+        ClientLimit:1400,DesiredLanes:policy.DesiredLanes,LaneID:lane,Policy:policy,
     },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2,
         fec2Product:clientFec2&&nativeFixed,NormalFec:fixedProfile})
     select {
@@ -1237,4 +1238,49 @@ func TestPLAN028OriginalProtectedNormalStrengthAndThreeRecordCiphers(t *testing.
         GameFec:1,NormalFec:2});!errors.Is(err,ErrAdmissionUnsupported){
         t.Fatalf("conflicting Game/Normal profile accepted: %v",err)
     }
+}
+
+func TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy(t *testing.T){
+    store,err:=NewV4EpochStore(20)
+    if err!=nil{t.Fatal(err)}
+    game2,err:=FixedPolicyForClient(2,4)
+    if err!=nil{t.Fatal(err)}
+    game4,err:=FixedPolicyForClient(4,4)
+    if err!=nil{t.Fatal(err)}
+    normalOff,err:=FixedPolicyForClient(1,0)
+    if err!=nil{t.Fatal(err)}
+    normalFixed,err:=FixedPolicyForClient(1,4)
+    if err!=nil{t.Fatal(err)}
+    normalAuto,err:=PolicyForClientWithInitial(1,"auto",0,4,20)
+    if err!=nil{t.Fatal(err)}
+    cases:=[]struct{name string;p AdmissionPolicy;clientFEC2 bool;features uint16}{
+        {"normal-off",normalOff,false,v4RequiredFeatures},
+        {"normal-fixed",normalFixed,true,v4RequiredFeatures|v4FeatureFEC2},
+        {"normal-auto",normalAuto,true,v4RequiredFeatures|v4FeatureFEC2},
+        {"game2",game2,true,v4RequiredFeatures|v4FeatureFEC2},
+        {"game4",game4,true,v4RequiredFeatures|v4FeatureFEC2},
+    }
+    for i,tc:=range cases {
+        tunnel:=make([]byte,16);tunnel[0]=byte(i+1)
+        c,s,ce,se:=v4PairFeatureProbe(t,store,"alice",tunnel,1,tc.p,[16]byte{},
+            tc.clientFEC2,true,false,true,true)
+        if ce!=nil||se!=nil||c==nil||s==nil{
+            t.Fatalf("%s mixed original Go TLS policy failed client=%v server=%v",tc.name,ce,se)
+        }
+        verified,e:=s.ColdSnapshot()
+        if e!=nil||s.verifiedPolicy!=tc.p||s.negotiatedFeatures!=tc.features||
+            verified.Cipher()!=tc.p.Cipher||s.verifiedGameFec!=0{
+            t.Fatalf("%s cold peer policy mismatch: %+v err=%v",tc.name,s,e)
+        }
+        if e=store.ReleaseLaneInstance("alice",tunnel,1,s.Epoch,verified.Incarnation());e!=nil{
+            t.Fatal(e)
+        }
+    }
+    // Game must not silently lose its feature-7 support even when the
+    // protected Game fixed FEC strength is "off".
+    tunnel:=make([]byte,16);tunnel[0]=12
+    c,s,ce,se:=v4PairFeatureProbe(t,store,"alice",tunnel,1,game2,[16]byte{},
+        false,true,false,true,true)
+    if ce==nil&&se==nil{t.Fatal("Game2 missing protected capability accepted")}
+    if c!=nil||s!=nil{t.Fatal("Game2 unsupported data feature published session")}
 }

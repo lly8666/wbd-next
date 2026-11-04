@@ -143,7 +143,37 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         NormalFec:normalProfile,
     })
     if err!=nil{return nil,err}
-    // From this point the original Go server has detached the authenticated
+    return p.startAuthenticatedNormalLocked(assoc,session,bridge)
+}
+
+// AdoptAuthenticatedNormalLane transfers the EXISTING, already credential-
+// checked protected TLS/Rust prepared lane from the shared one-443 listener.
+// No second handshake, alternate key or Go steady-state pump is created.
+func (p *V4LinuxServerProduct) AdoptAuthenticatedNormalLane(
+    lane *V4LinuxGameAuthenticatedLane,
+)(*V4ServerSession,error){
+    if p==nil||lane==nil||lane.session==nil||lane.bridge==nil||lane.assoc==nil{
+        return nil,ErrAdmissionParams
+    }
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    normal,lanes,_,err:=lane.ProtectedMode()
+    if err!=nil{return nil,err}
+    if !normal||lanes!=1||lane.transferred||p.owner!=nil||p.session!=nil||p.stopped{
+        return nil,ErrAdmissionUnsupported
+    }
+    lane.transferred=true // exactly one owner now releases this generation
+    return p.startAuthenticatedNormalLocked(lane.assoc,lane.session,lane.bridge)
+}
+
+// Caller must hold p.mu. This is the SAME original M4 install path for both
+// singleton and mixed protected admission; no second resource controller.
+func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
+    assoc *faketcp.ServerAssociation,session *V4ServerSession,
+    bridge *v4EmbeddedNativeBridge,
+)(*V4ServerSession,error){
+    mode:=p.cfg.FECMode
+    if mode==""{mode=FecV2Off}
     // association and committed the Rust owner. Any driver/start error must
     // first Stop/release Rust; no system route/TUN cleanup can race that Stop.
     p.owner=bridge

@@ -217,6 +217,103 @@ func (l *V4LinuxGameAuthenticatedLane) Cohort()(
         Epoch:cold.Epoch(),Lanes:uint8(n),
     },cold.LaneID(),nil
 }
+// ProtectedMode is valid only after original TLS credential validation,
+// epoch reservation and Rust M1 Prepare/Commit. It is NOT a plaintext
+// discovery mechanism. Game profile is protected byte21 (+1), Normal fixed
+// strength is protected byte22 and is read by its original product owner.
+func (l *V4LinuxGameAuthenticatedLane) ProtectedMode()(normal bool,lanes uint8,gameFec uint8,err error){
+    if l==nil||l.session==nil||l.bridge==nil{return false,0,0,ErrAdmissionParams}
+    if _,err=l.session.ColdSnapshot();err!=nil{return false,0,0,err}
+    policy:=l.session.verifiedPolicy
+    if err=policy.SupportedNow();err!=nil{return false,0,0,err}
+    switch policy.Transport{
+    case TransportNormal:
+        if policy.DesiredLanes!=1||l.session.verifiedGameFec!=0{
+            return false,0,0,ErrAdmissionUnsupported
+        }
+        return true,1,0,nil
+    case TransportGame:
+        if (policy.DesiredLanes!=2&&policy.DesiredLanes!=4)||
+            l.session.verifiedNormalFec!=0{
+            return false,0,0,ErrAdmissionUnsupported
+        }
+        return false,policy.DesiredLanes,l.session.verifiedGameFec,nil
+    default:
+        return false,0,0,ErrAdmissionUnsupported
+    }
+}
+
+// V4AuthenticateLinuxMixedServerLane is the sole original TLS entrypoint for
+// a shared 443 listener. Credential-verified request policy chooses Normal
+// versus Game2/Game4 AFTER TLS; no first-packet mode hint, second listener,
+// untrusted SYN routing or new steady-state record format.
+func V4AuthenticateLinuxMixedServerLane(
+    ctx context.Context,assoc *faketcp.ServerAssociation,
+    base ServerAdmissionConfig,cfg V4LinuxGameProductConfig,
+)(*V4LinuxGameAuthenticatedLane,error){
+    if assoc==nil||ctx==nil||cfg.Epochs==nil||cfg.SharedTun==nil{
+        return nil,ErrAdmissionParams
+    }
+    priorAllow:=base.PolicyAllow
+    priorValidate:=base.ValidateRequest
+    base.PolicyAllow=func(policy AdmissionPolicy)error{
+        if err:=policy.SupportedNow();err!=nil{return err}
+        switch policy.Transport{
+        case TransportNormal:
+            if _,err:=v4ProtectedNormalFECFeatures(policy);err!=nil{return err}
+        case TransportGame:
+            if !validGameGroupPolicy(policy,int(policy.DesiredLanes)){
+                return ErrAdmissionUnsupported
+            }
+        default:return ErrAdmissionUnsupported
+        }
+        if priorAllow!=nil{return priorAllow(policy)}
+        return nil
+    }
+    base.ValidateRequest=func(req AdmissionRequest)error{
+        if !req.AutoLease||len(req.TunnelID)!=16{return ErrAdmissionParams}
+        if req.Policy.Transport==TransportGame{
+            if err:=v4ServerGameProtectedLaneRequest(req,int(req.DesiredLanes));err!=nil{
+                return err
+            }
+        }else if req.Policy.Transport!=TransportNormal||
+            req.DesiredLanes!=1||req.LaneID!=1{
+            return ErrAdmissionUnsupported
+        }
+        if priorValidate!=nil{return priorValidate(req)}
+        return nil
+    }
+    bridge:=&v4EmbeddedNativeBridge{}
+    session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
+        DataPlaneReady:true,Epochs:cfg.Epochs,ownerBridge:bridge,
+        fec2Product:true,perClientMixedMode:true,
+        Authenticate:cfg.Authenticate,AllowLaneReplacement:true,
+    })
+    if err!=nil{return nil,err}
+    lane:=&V4LinuxGameAuthenticatedLane{
+        session:session,bridge:bridge,assoc:assoc,
+        peerMSS:assoc.PeerTCPProfile().MSS,epochs:cfg.Epochs,
+    }
+    normal,_,_,err:=lane.ProtectedMode()
+    if err==nil&&!normal{_,_,err=lane.Cohort()}
+    if err!=nil{return nil,errors.Join(err,lane.Close())}
+    return lane,nil
+}
+
+// NormalOwnerKey excludes the epoch intentionally: a new authenticated
+// generation replaces only this principal+tunnel's Normal owner. Exact
+// incarnation and generation are still used by Rust/Go Stop internally.
+func (l *V4LinuxGameAuthenticatedLane) NormalOwnerKey()(V4LinuxGameCohortID,error){
+    var zero V4LinuxGameCohortID
+    normal,_,_,err:=l.ProtectedMode()
+    if err!=nil{return zero,err}
+    if !normal{return zero,ErrAdmissionUnsupported}
+    snap,err:=l.session.ColdSnapshot()
+    if err!=nil{return zero,err}
+    return V4LinuxGameCohortID{
+        Principal:snap.Principal(),TunnelID:snap.TunnelID(),Lanes:1,
+    },nil
+}
 func (l *V4LinuxGameAuthenticatedLane) DetachedPeer()(faketcp.DetachedPeer,error){
     if l==nil||l.assoc==nil{return faketcp.DetachedPeer{},ErrAdmissionParams}
     state,ok:=l.assoc.TransitionState()

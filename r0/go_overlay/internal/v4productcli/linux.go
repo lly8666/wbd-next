@@ -100,6 +100,9 @@ type config struct{
     // The server never supplies a process-global override for a peer.
     recordCipher uint8
     gameLanes uint8
+    // Server-only one-443 protected Normal/Game2/Game4 cold acceptor.
+    // Not serialized or present in FakeTCP/TLS prelude.
+    mixedModes bool
     gameFecEnabled bool
     gameFecProfile uint8
     game4CopyStagger bool
@@ -147,7 +150,7 @@ func parse(role string,args []string)(config,error){
     leasePool:=flags.String("lease-pool","","server memory-only 7-day IPv4 pool CIDR")
     manualLease:=flags.String("manual-client-lease4","","server-verified fixed client /32 for manual TLS generation replacement; requires tunnel-id, not a user inner MTU")
     usersFile:=flags.String("users-file","","server: 0600 JSON object username->password")
-    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
+    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4; server-only shared accepts all protected modes")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
@@ -188,6 +191,10 @@ func parse(role string,args []string)(config,error){
     case "fec-auto":c.fecMode=realityfront.FecV2Auto
     case "game2":c.gameLanes=2;c.fecMode=realityfront.FecV2Off
     case "game4":c.gameLanes=4;c.fecMode=realityfront.FecV2Off
+    case "shared":
+        if role!="server"{return c,fmt.Errorf("shared protected Normal/Game mode is server-only")}
+        c.mixedModes=true
+        c.fecMode=realityfront.FecV2Off
     default:return c,fmt.Errorf("V4 mode %q not installed in native public owner",*mode)
     }
     switch *peerPersona{
@@ -639,7 +646,7 @@ func Run(role string,args []string)(retErr error){
         }()
         log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=%d",cfg.gameLanes)
     }
-    if cfg.gameLanes!=0{
+    if cfg.gameLanes!=0||(role=="server"&&cfg.mixedModes){
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
         if role=="client"&&cfg.autoIP{

@@ -437,6 +437,7 @@ type originalGameCohortLive struct{
     product *realityfront.V4LinuxGameProduct
     members []*realityfront.V4LinuxGameAuthenticatedLane
     peers []faketcp.DetachedPeer
+    gameFec bool // actual protected per-cohort Game fixed setting
     stopped bool
 }
 func stageOriginalAuthenticatedGameLane(
@@ -479,7 +480,8 @@ func runGameMultiServer(
     const cohortTimeout=45*time.Second
     n:=int(c.gameLanes)
     if !c.leasePool.IsValid()||leases==nil||epochs==nil||
-        (n!=2&&n!=4){return realityfront.ErrAdmissionParams}
+        (!c.mixedModes&&n!=2&&n!=4)||
+        (c.mixedModes&&n!=0){return realityfront.ErrAdmissionParams}
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
     // The original Go Run() owns the underlying OS TUN until the final
@@ -544,6 +546,10 @@ func runGameMultiServer(
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
     pending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending)
     active:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
+    // Normal and Game share THIS listener, table and native TUN reader.
+    // Normal keys deliberately exclude epoch (successor replaces only same
+    // principal+tunnel), Game keys retain the complete protected cohort.
+    activeNormal:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
     var tlsWG sync.WaitGroup
     var goPostHandoffDataCopies atomic.Uint64
@@ -569,7 +575,7 @@ func runGameMultiServer(
         if rec==nil||rec.stopped{return nil}
         // Cold readback of this exact authenticated group's real M4 FEC
         // counters precedes owned Stop; do not aggregate siblings.
-        if c.gameFecEnabled{logOriginalGameFec("server",n,rec.product)}
+        if rec.gameFec{logOriginalGameFec("server",int(rec.key.Lanes),rec.product)}
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }
@@ -591,6 +597,25 @@ func runGameMultiServer(
             reason,len(detached))
         return nil
     }
+    retireNormal:=func(rec *originalV4MultiRecord,reason string)error{
+        if rec==nil||rec.product==nil||!rec.ready||rec.stopping{return nil}
+        if actual,e:=rec.product.OriginalFECReadback();e==nil{
+            log.Printf("V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=%s profile=%d requested=%d applied=%d",
+                actual.Mode,actual.Profile,actual.RequestedRevision,actual.AppliedRevision)
+        }
+        if e:=rec.product.Close();e!=nil{
+            return fmt.Errorf("mixed Normal generation native Stop %s: %w",reason,e)
+        }
+        rec.stopping=true
+        delete(detached,rec.assoc)
+        forget(rec.assoc)
+        if len(detached)>0{
+            if e:=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+        }else if e:=raw.RestoreOriginalBootstrapPortFilter();e!=nil{return e}
+        log.Printf("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=%s remaining_flows=%d",
+            reason,len(detached))
+        return nil
+    }
     defer func(){
         stopping.Store(true)
         cancel()
@@ -603,7 +628,12 @@ func runGameMultiServer(
                 retErr=errors.Join(retErr,err)
             }
         }
-        *connected=*connected||len(active)>0
+        for _,rec:=range activeNormal{
+            if err:=retireNormal(rec,"server-close");err!=nil{
+                retErr=errors.Join(retErr,err)
+            }
+        }
+        *connected=*connected||len(active)>0||len(activeNormal)>0
     }()
     go func(){
         for{
@@ -650,8 +680,12 @@ func runGameMultiServer(
             mu.Unlock()
         }
     }()
-    log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
-        c.localPort,n)
+    if c.mixedModes{
+        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=32 rust_native_slots=16 shared_rust_tun=1",c.localPort)
+    }else{
+        log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
+            c.localPort,n)
+    }
     ticker:=time.NewTicker(time.Second)
     defer ticker.Stop()
     for{
@@ -663,9 +697,15 @@ func runGameMultiServer(
             tlsWG.Add(1)
             go func(a *faketcp.ServerAssociation){
                 defer tlsWG.Done()
-                lane,e:=realityfront.V4AuthenticateLinuxGameServerLane(
-                    runCtx,a,base,cfg,n,
-                )
+                var lane *realityfront.V4LinuxGameAuthenticatedLane
+                var e error
+                if c.mixedModes{
+                    lane,e=realityfront.V4AuthenticateLinuxMixedServerLane(
+                        runCtx,a,base,cfg)
+                }else{
+                    lane,e=realityfront.V4AuthenticateLinuxGameServerLane(
+                        runCtx,a,base,cfg,n)
+                }
                 select{
                 case authenticated<-authResult{assoc:a,lane:lane,err:e}:
                 case <-runCtx.Done():
@@ -679,6 +719,59 @@ func runGameMultiServer(
                 continue
             }
             lane:=result.lane
+            normal,_,_,modeErr:=lane.ProtectedMode()
+            if modeErr!=nil{
+                rejectLane(lane)
+                continue
+            }
+            if normal{
+                // A protected Normal singleton uses the SAME existing
+                // original product M4 install after the shared TLS detach,
+                // not a second listener or Go DATA path.
+                key,e:=lane.NormalOwnerKey()
+                if e!=nil{rejectLane(lane);continue}
+                normalCfg:=realityfront.V4LinuxServerProductConfig{
+                    Epochs:epochs,NetworkInterface:c.rawInterface,
+                    NetworkIfIndex:ifindex,Tun:tun.f,TunName:c.tunName,
+                    SharedTun:shared,CleanupOwnedNetwork:func()error{return nil},
+                    PerClientNormalFEC:true,FECMode:realityfront.FecV2Off,
+                    FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
+                    PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
+                }
+                product,e:=realityfront.NewV4LinuxServerProduct(normalCfg)
+                if e!=nil{rejectLane(lane);continue}
+                session,e:=product.AdoptAuthenticatedNormalLane(lane)
+                if e!=nil{
+                    _=product.Close()
+                    rejectLane(lane)
+                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner")
+                    continue
+                }
+                lease,e:=session.AuthenticatedLeaseIPv4()
+                peer,peerErr:=lane.DetachedPeer()
+                if e!=nil||peerErr!=nil||lease==""{
+                    _=product.Close()
+                    return realityfront.ErrAdmissionParams
+                }
+                if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{peer}));e!=nil{
+                    _=product.Close()
+                    return fmt.Errorf("mixed Normal same-port kernel handoff: %w",e)
+                }
+                older:=activeNormal[key]
+                rec:=&originalV4MultiRecord{
+                    assoc:result.assoc,product:product,lease:lease,
+                    peer:peer,ready:true,
+                }
+                detached[result.assoc]=peer
+                activeNormal[key]=rec
+                *connected=true
+                log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
+                    c.localPort,len(activeNormal),len(active),len(detached))
+                if older!=nil{
+                    if e=retireNormal(older,"same-protected-normal-new-generation");e!=nil{return e}
+                }
+                continue
+            }
             key,complete,e:=stageOriginalAuthenticatedGameLane(
                 pending,lane,time.Now(),
             )
@@ -688,7 +781,32 @@ func runGameMultiServer(
                 continue
             }
             if len(complete)==0{continue}
-            product,e:=realityfront.NewV4LinuxGameServerProduct(cfg)
+            gameCfg:=cfg
+            if c.mixedModes {
+                // All lanes in this cohort must agree on the independently
+                // protected Game fixed profile; no process-level FEC guess.
+                var selected uint8
+                matching:=true
+                for i,member:=range complete{
+                    memberNormal,memberLanes,gameFec,e:=member.ProtectedMode()
+                    if e!=nil||memberNormal||memberLanes!=key.Lanes||
+                        (i!=0&&gameFec!=selected){
+                        matching=false
+                        break
+                    }
+                    selected=gameFec
+                }
+                if !matching {
+                    for _,l:=range complete{rejectLane(l)}
+                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=game_cohort_fec")
+                    continue // reject only the malformed cohort, never siblings
+                }
+                gameCfg.GameFecEnabled=selected>0
+                if selected>0{gameCfg.GameFecProfile=selected-1}
+                gameCfg.Game4CopyStagger=key.Lanes==4
+                gameCfg.Game4CopyWideStagger=key.Lanes==4
+            }
+            product,e:=realityfront.NewV4LinuxGameServerProduct(gameCfg)
             if e!=nil{
                 for _,l:=range complete{rejectLane(l)}
                 continue
@@ -717,14 +835,15 @@ func runGameMultiServer(
             }
             rec:=&originalGameCohortLive{
                 key:key,product:product,members:complete,peers:newPeers,
+                gameFec:gameCfg.GameFecEnabled,
             }
             for i,l:=range complete{detached[l.Association()]=newPeers[i]}
             older:=active[key]
             active[key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=%d server_port=%d distinct_client_flows=%d",
-                n,c.localPort,len(detached))
-            log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",n)
+                key.Lanes,c.localPort,len(detached))
+            log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",key.Lanes)
             log.Printf("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server server_port=%d groups=%d detached_flows=%d native_shared_tun=1",
                 c.localPort,len(active),len(detached))
             if older!=nil{
@@ -750,6 +869,12 @@ func runGameMultiServer(
                 if alive{continue}
                 if e=retire(group,"authenticated-rust-game-health90");e!=nil{return e}
                 delete(active,key)
+            }
+            for key,rec:=range activeNormal{
+                pulse,e:=rec.product.OriginalLoopPulse()
+                if e!=nil||!publicNativeHealthDead(pulse){continue}
+                if e=retireNormal(rec,"authenticated-rust-normal-health90");e!=nil{return e}
+                if activeNormal[key]==rec{delete(activeNormal,key)}
             }
         }
     }

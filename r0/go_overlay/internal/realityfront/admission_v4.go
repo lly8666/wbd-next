@@ -224,6 +224,10 @@ type V4ServerOptions struct {
     // authenticated TLS policy instead of its process-scoped CLI mode.
     // No new on-wire flag, no pre-TLS hint or unauthenticated admission.
     perClientNormalFEC bool
+    // One shared listener accepts both original Normal single-owner and
+    // Game2/Game4 cohorts; choose solely from credential-checked V3 policy.
+    // No TLS prelude or unauthenticated mode routing.
+    perClientMixedMode bool
     GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
     NormalFec uint8 // server-owned fixed Normal profile+1 in strict singleton mode
     Epochs *V4EpochStore // shared by all lanes of the same server instance
@@ -282,6 +286,7 @@ type V4ServerSession struct {
     coldAuthenticated bool
     authenticatedPrincipal string
     verifiedNormalFec uint8 // original credential-checked protected request
+    verifiedGameFec uint8 // independent protected Game profile byte21
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
@@ -766,37 +771,68 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     serverFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {serverFeatures |= v4FeatureFEC2}
-    if opt.perClientNormalFEC {
-        // Only the previously parsed, credential-checked protected
-        // AdmissionPolicy can select this association's existing FEC owner.
-        // A modified feature offer still fails the strict equality below.
-        serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
-        if err!=nil{
-            _=writeAdmissionFailure(tlsConn,admissionParamFail)
-            return nil,err
-        }
-    }
-    // Protected, fixed-length cold metadata: one independently chosen
-    // Normal fixed strength per authenticated installation, never from
-    // the TCP tuple/route key. No new message, TLS prefix or hot-path tag.
+    selectedGameFec:=opt.GameFec
     selectedNormalFec:=uint8(0)
-    if opt.perClientNormalFEC {
-        if _,e:=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true);e!=nil{
-            _=writeAdmissionFailure(tlsConn,admissionParamFail)
-            return nil,e
-        }
-        selectedNormalFec=offered.NormalFec
-    }else {
-        // Standalone fixed servers continue to accept historical zero
-        // profile bytes, but do not silently accept a mismatched new client.
-        if offered.NormalFec!=0&&offered.NormalFec!=opt.NormalFec {
+    if opt.perClientMixedMode {
+        // This switch runs strictly AFTER original TLS, username/password,
+        // and request integrity, never on raw SYN, tuple, or ClientHello.
+        switch req.Policy.Transport {
+        case TransportNormal:
+            if req.DesiredLanes!=1||req.LaneID!=1||
+                req.Policy.DesiredLanes!=1||offered.GameFec!=0 {
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,ErrAdmissionUnsupported
+            }
+            serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
+            if err==nil{
+                _,err=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true)
+            }
+            if err!=nil{
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,err
+            }
+            selectedNormalFec=offered.NormalFec
+            selectedGameFec=0
+        case TransportGame:
+            if (req.DesiredLanes!=2&&req.DesiredLanes!=4)||
+                req.Policy.DesiredLanes!=req.DesiredLanes||
+                req.LaneID<1||req.LaneID>req.DesiredLanes||
+                offered.NormalFec!=0 {
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,ErrAdmissionUnsupported
+            }
+            // The existing Game client always advertises FEC2 capability
+            // even when its actual Game FEC setting is off. Byte21 is the
+            // already protected per-cohort strength, not a new protocol.
+            serverFeatures=v4RequiredFeatures|v4FeatureFEC2
+            selectedGameFec=offered.GameFec
+        default:
             _=writeAdmissionFailure(tlsConn,admissionParamFail)
             return nil,ErrAdmissionUnsupported
         }
-        selectedNormalFec=offered.NormalFec
+    }else {
+        if opt.perClientNormalFEC {
+            serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
+            if err!=nil{
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,err
+            }
+            if _,err=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true);err!=nil{
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,err
+            }
+            selectedNormalFec=offered.NormalFec
+        }else{
+            // Preserve existing old standalone server fixed-strength rules.
+            if offered.NormalFec!=0&&offered.NormalFec!=opt.NormalFec{
+                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                return nil,ErrAdmissionUnsupported
+            }
+            selectedNormalFec=offered.NormalFec
+        }
     }
-    if offered.Features!=serverFeatures||offered.GameFec!=opt.GameFec||
-       (opt.GameFec!=0&&req.Policy.Transport!=TransportGame){
+    if offered.Features!=serverFeatures||offered.GameFec!=selectedGameFec||
+       (selectedGameFec!=0&&req.Policy.Transport!=TransportGame){
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,ErrAdmissionUnsupported
     }
@@ -849,7 +885,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:opt.GameFec,NormalFec:selectedNormalFec}
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:selectedGameFec,NormalFec:selectedNormalFec}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
@@ -907,7 +943,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,verifiedLease4:lease,serverOwnedManualLease4:manualLease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
-        verifiedNormalFec:selectedNormalFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
+        verifiedNormalFec:selectedNormalFec,verifiedGameFec:selectedGameFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
     },nil
 }
 
