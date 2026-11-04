@@ -9,5 +9,5 @@ Two authenticated Game4 highest FEC6 groups on one server443. Alice genuine phys
 Windows native test-owned Hyper-V OS notification Action41803548026 qualified IPv4 callback/selected source only; Windows original TLS/Npcap/Wintun/new business remains NOT_RUN. H998 old same-connection MTU hot shrink FAIL, historical old ARM64 Game4FEC Action FAIL, remote ICMP and CPU causality not proven, Android NOT_RUN kept.
 
 ```feature-impact
-{"kind":"none","ids":[],"reason":"H1119 collects native ARM64 source-locked test evidence; feature registration follows separately and no Go/Rust product source changed."}
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1119 verified native ARM64 Game4FEC6 two protected groups real source4 switch with Bob continuous UDP/old generation exact Stop; Windows OS-only proof remains not Npcap."}
 ```
