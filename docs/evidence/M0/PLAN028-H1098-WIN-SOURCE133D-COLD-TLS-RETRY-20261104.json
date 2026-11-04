@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1098",
+  "test_source_sha": "133d5e93ddbd2a311313cf8a80d3d3fc3fbb2430",
+  "product_source_sha": "0a24ca982701055c2840496d11b4d8b6bc99e62d",
+  "result": "PASS_SCOPED_WINDOWS_ORIGINAL_GO_COLD_RETRY_SIX_UNIT",
+  "win_unit": {
+    "run_id": 41778793943,
+    "job_id": 126405289039,
+    "conclusion": "success",
+    "artifact_id": 13298470749,
+    "independently_verified": true,
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "assembly_sha256": "6d8fd6f5efa5ad182571651d0481504e6aa50a93aa96b4049dbf692b86a7f299",
+    "log_sha256": "167fe8a2e3932a04b11da02fc53b2128af1832db075c38005f642f70f6f3438b",
+    "tests_executed": 6,
+    "tests_passed": 6,
+    "go_test_seconds": 0.019,
+    "scope": [
+      "native route coalesce quiet200ms/hard500ms",
+      "actual filtered OS ifindex/source4 change",
+      "old in-flight TLS cancellation and exact Stop",
+      "new path timeout bounded 2 attempts incl Game2/Game4",
+      "original rejected password including joined timeout cannot rearm",
+      "user Stop/first connect/applied owner do not rearm",
+      "Game old health90 policy unchanged"
+    ]
+  },
+  "prior_same_product_native_WAL": {
+    "run_id": 41778467840,
+    "conclusion": "success",
+    "original_go_native_wal_job": 126404241280,
+    "scoped_mode_jobs": {
+      "normal": 126406317521,
+      "fixed": 126406317569,
+      "auto": 126406317498,
+      "game2": 126406317412,
+      "game4": 126406317441
+    },
+    "all_success": true
+  },
+  "not_proven": [
+    "Actual Windows NIC/IPv4 physical switch and Npcap new link/source bind",
+    "first application packet and CPU/p99 after reconnect",
+    "all seven-mode physical rotation",
+    "real netns full decrypted TLS vs baseline",
+    "H998 old hot MTU shrink FAIL, older ARM Game4FEC source FAIL, remote ICMP, Android"
+  ]
+}
