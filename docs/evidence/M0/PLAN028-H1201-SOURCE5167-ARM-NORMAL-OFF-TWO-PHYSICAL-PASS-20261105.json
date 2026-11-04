@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1201",
+  "result": "PASS",
+  "source_sha": "51673553b9fbe0ed41f0aae4ad516f67543a9ad6",
+  "platform": "native Linux ARM64 client+server original Go TLS/Rust",
+  "action": {
+    "run_id": 41931521219,
+    "job_id": 126929330109,
+    "artifact_id": 13371992802,
+    "conclusion": "success",
+    "github_zip_sha256": "ae009a4925d2a80e9e85e6cf6a02e99371f462ab3479bc6e1f6d61406410c5d3"
+  },
+  "verified": {
+    "mode": "Normal off",
+    "one_server_port": 443,
+    "server_authenticated_original_Rust_M4_FEC_off_rows": 3,
+    "auth_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_exact_stop": [
+      1,
+      2
+    ],
+    "source_ipv4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "outer_user_ipv4_mtu": 1460,
+    "inner_os_mtu": [
+      1389,
+      1209,
+      1209
+    ],
+    "unchanged_lease": "10.66.0.212/32",
+    "new_normal_udp": [
+      16,
+      16
+    ],
+    "sibling_game4_udp_each": [
+      32,
+      32
+    ],
+    "sibling_gen1_unchanged": true,
+    "command_to_ready_ms": [
+      285.69,
+      278.36
+    ],
+    "final_shared_Rust_TUN_Stop": true
+  },
+  "artifact_caveat": "The native scenario JSON inherited a stale scope text REAL_X86_X86; original build manifest and ELF183/runner actually AARCH64. Do not infer platform from stale test label.",
+  "not_measured": [
+    "kernel loss30/250ms",
+    "exact OS-event→TLS/auth→first",
+    "CPU causality",
+    "remote ICMP",
+    "Android"
+  ],
+  "historical": [
+    "H1198 old invalid FEC off effective log assertion Action FAIL",
+    "H998 original live hot MTU/old ARM Game4 FAIL"
+  ]
+}

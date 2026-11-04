@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1201",
+  "result": "PASS",
+  "source_sha": "51673553b9fbe0ed41f0aae4ad516f67543a9ad6",
+  "platform": "native Linux x86_64 client+server original Go TLS/Rust",
+  "action": {
+    "run_id": 41931521157,
+    "job_id": 126929325774,
+    "artifact_id": 13372187144,
+    "conclusion": "success",
+    "github_zip_sha256": "dec7b8f2dcc47bd603a0ce97179a1839295bdcd9d58e3e63f9b7193372b2313d"
+  },
+  "verified": {
+    "mode": "Game2 fixed6",
+    "one_server_port": 443,
+    "actual_client_server_Game2_FEC6_applied_generations": 3,
+    "auth_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_exact_stop": [
+      1,
+      2
+    ],
+    "source_ipv4": [
+      "10.25.0.2",
+      "10.25.0.9",
+      "10.25.0.2"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "outer_user_ipv4_mtu": 1460,
+    "inner_os_mtu": [
+      1358,
+      1178,
+      1178
+    ],
+    "unchanged_lease": "10.66.0.175/32",
+    "game2_new_udp": [
+      16,
+      16
+    ],
+    "sibling_game4_and_normal_each": [
+      [
+        24,
+        24
+      ],
+      [
+        24,
+        24
+      ]
+    ],
+    "siblings_unchanged": true,
+    "command_to_ready_ms": [
+      791.23,
+      784.3
+    ],
+    "final_shared_Rust_TUN_Stop": true
+  },
+  "not_measured": [
+    "kernel loss30/250ms",
+    "exact OS-event→TLS/auth→first",
+    "CPU causality",
+    "remote ICMP",
+    "Android"
+  ],
+  "historical": [
+    "H1199 prior test wrongly ARM-labelled Action FAIL",
+    "H998 original live hot MTU/old ARM Game4 FAIL"
+  ]
+}
