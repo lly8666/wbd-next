@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1170",
+  "source_sha": "cb4cdb9a403ede0d9baa1aa515836fd3861704ba",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "PASS_SCOPED_NATIVE_X86_X86_GAME4_FIXED6_TWO_PHYSICAL_REAUTH_HANDOVERS_NORMAL_LIVE_64",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 41872756479,
+    "job_id": 126724008778,
+    "conclusion": "success",
+    "artifact_id": 13346085474,
+    "artifact_sha256": "3cfce12c961a5bcb6ccf71d1dd1d75313b87497fcd69831f6ff169fc218c2e0e"
+  },
+  "binary_provenance": {
+    "architecture": "native_linux_x86_64_ELF62",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "original_go_tls": true,
+    "client_sha256": "46b19885bef2d36c42e35ea75d96f655474a90066e6ccac47e3bb2525618def5",
+    "server_sha256": "720ca5f719bcbb45acae313a0cc26121a99ee0e563a6632da51d576f6ed65082",
+    "rust_sha256": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+  },
+  "network": {
+    "shared_server_port": 443,
+    "authenticated_clients": [
+      "Game2 off ChaCha",
+      "Game4 fixed6 AES256",
+      "Normal Auto AES128"
+    ],
+    "game4_lanes": 4,
+    "underlay_source_ipv4_sequence": [
+      "10.25.0.3",
+      "10.25.0.9",
+      "10.25.0.3"
+    ],
+    "real_physical_mtu_sequence": [
+      1500,
+      1280,
+      1500
+    ],
+    "real_kernel_second_route_readback": {
+      "dev": "mxb0",
+      "prefsrc": "10.25.0.3"
+    },
+    "real_kernel_second_physical_link_mtu_readback": 1500,
+    "outer_user_configured_default": 1460,
+    "os_tun_inner_mtu_sequence_game4": [
+      1358,
+      1178,
+      1178
+    ],
+    "os_tun_inner_mtu_healthy_normal": 1375,
+    "third_inner_conservative_due_to_second_overlap": true,
+    "game4_auto_lease_preserved": "10.66.0.131",
+    "first_switch_healthy_normal_udp_replies": 48,
+    "first_switch_new_game4_udp_replies": 32,
+    "second_switch_healthy_normal_udp_replies": 16,
+    "second_switch_new_game4_udp_replies": 16,
+    "other_client_remains_generation1": true,
+    "game4_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_generation1_exact_stop": true,
+    "old_generation2_exact_stop": true,
+    "server_shared_rust_tun_final_stop": true,
+    "game2_stop_isolated": true,
+    "first_physical_command_to_ready_ms": 558.66,
+    "second_physical_command_to_ready_ms": 543.49
+  },
+  "native_qualifier": [
+    "One genuine same-architecture Linux x86_64 client+server, real kernel netns AF_PACKET/TUN sockets; not QEMU.",
+    "Both physical IP/link changes authenticated with original Go TLS and Rust M4 on single shared443 and exact generation-scoped Stop.",
+    "The conservative third inner1178 is intentional A+B overlap limit when physical link restores to 1500; user outer1460 stays untouched.",
+    "Baseline FEC parity tested; these tests do not include 5% loss or persistent inner TCP, nor guaranteed seamless TCP after path switch."
+  ],
+  "not_measured": [
+    "exact native OS event to original TLS connect",
+    "TLS auth Finished to first single business packet",
+    "real UDP RTT p99 and CPU in this particular scene",
+    "causal old vs new CPU performance",
+    "5% low-loss stage and high-loss stage",
+    "Windows seven-mode physical double handover",
+    "Android Wi-Fi network callbacks/VPN bypass",
+    "remote ICMP3/4"
+  ],
+  "retained_history": {
+    "H1167_first_attempt": {
+      "action_id": 41872009846,
+      "result": "FAIL_PRE_NATIVE_FIXTURE_ARCH_ASSERT_AARCH64_ON_X86",
+      "not_product_fail": true
+    },
+    "H998_online_same_connection_shrink": "FAIL_RETAINED",
+    "H998_arm64_game4fec_old_action": "FAIL_RETAINED",
+    "remote_icmp": "NOT_MEASURED",
+    "cpu_old_new_causal": "NOT_PROVEN"
+  },
+  "next_linux_task": "ARM64 client and ARM64 server"
+}

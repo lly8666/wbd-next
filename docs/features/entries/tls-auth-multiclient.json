@@ -246,12 +246,19 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "e5688364894ba0f60d71edb9547ed8e441b9e48a",
    "evidence": "docs/evidence/M0/PLAN028-H1166-SOURCEE568-ARM64-MIXED-GAME4-PHYSICAL-NORMAL-LIVE-PASS-20261104.json"
+  },
+  {
+   "platform": "Linux x86_64 client+x86_64 server original Go TLS/Rust shared443",
+   "scope": "H1170 SOURCEcb4 original three protected mixed clients; Game4FEC6 two actual OS source4 .3→.9→.3 and link1500→1280→1500, new real Game4 UDP32+16 while sibling Normal Auto live48+16, inner1358→1178→1178 conservative overlap and two exact old Stop.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "cb4cdb9a403ede0d9baa1aa515836fd3861704ba",
+   "evidence": "docs/evidence/M0/PLAN028-H1170-SOURCECB4C-X86-GAME4-TWO-PHYSICAL-GEN-MIXED443-20261104.json"
   }
  ],
  "limitations": [
   "V4不保证与旧V3数据面互通。",
   "Linux task rotation: x86/x86 then ARM/ARM native, Windows excluded.",
-  "H1155/H1158 protected mixed443 baseline; H1160 x86 Game4 physical and H1166 ARM mixed Game4 physical+Normal live48 scoped PASS. Seven-mode two-turnover and precise notifier→TLS/auth→first CPU/p99 open; H998 original same-connection MTU shrink and ARM Game4 old Action FAIL retained. H1048 pre-TLS WB-R1 invalid standard wire; remote ICMP, Android, CPU causal NOT_PROVEN."
+  "H1155/H1158 mixed443 baseline, H1160 x86 first physical, H1166 ARM mixed first physical, H1170 x86 Game4 double physical overlap+MTU restore are scoped PASS. Full seven-mode/first-disconnected and Windows switching, precise notifier→TLS/auth→first CPU/p99 not certified. H998 original same-connection shrink and ARM old Game4 Action FAIL remain, remote ICMP/Android/CPU causal NOT_PROVEN."
  ],
  "promotion": null,
  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

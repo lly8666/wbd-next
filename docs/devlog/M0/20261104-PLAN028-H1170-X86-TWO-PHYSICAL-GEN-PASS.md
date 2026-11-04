@@ -1,0 +1,11 @@
+# PLAN028 H1170 — collect native x86 double physical Game4 TLS handover PASS
+
+Collected signed native [Action 41872756479](https://github.com/lly8666/wbd-next/actions/runs/41872756479), job126724008778, artifact13346085474, ZIP SHA256 `3cfce12c961a5bcb6ccf71d1dd1d75313b87497fcd69831f6ff169fc218c2e0e`. Pinned product SOURCE `cb4cdb9a403ede0d9baa1aa515836fd3861704ba`, original-Go TLS donor `a7a82db3`; binary SHA/ELF62 in [evidence](../evidence/M0/PLAN028-H1170-SOURCECB4C-X86-GAME4-TWO-PHYSICAL-GEN-MIXED443-20261104.json). Complete native three-client single443 (Game2off ChaCha, Game4fixed6 AES256, NormalAuto AES128), original Rust shared TUN, protected IDs/lease, real AF_PACKET/TUN UDP and Stop.
+
+Two authentic overlapping swaps `gen1→gen2→gen3`, real physical source IPv4 `10.25.0.3→.9→.3` and link MTU `1500→1280→1500`. Original fixed **outer user1460** unchanged; Game4 inner OS readback `1358→1178→1178` (intentionally **does not widen during the third overlapping cold install**), Carol inner1375 unaffected; Game4 /32 `10.66.0.131` preserved. Healthy Normal Auto received **48+16** real timed echo replies spanning both switches; new Game4 received **32+16**, both exact old generation Stop after new TLS/Rust M4 READY and final shared TUN Stop PASS. Physical command→ready **558.66ms/543.49ms** are end-to-end observational, NOT the 200/500ms notification budget. Exact notifier→TLS and authenticated→first packet, CPU/p99, 5% loss, persistent TCP in this scene NOT_MEASURED.
+
+Historical H1167 [Action41872009846](https://github.com/lly8666/wbd-next/actions/runs/41872009846) first FAIL was pre-native copied ARM architecture assertion and remains in the record; not an original product failure. Latest H1169 [Governance41873080069](https://github.com/lly8666/wbd-next/actions/runs/41873080069) both Governance and Feature catalog PASS. H998 original live same-connection shrink FAIL, old ARM64 Game4FEC Action FAIL, remote ICMP unknown and CPU causal NOT_PROVEN unchanged. **Next whole Linux task ARM64+ARM64**. No duplicate old matrix.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Record precise source-limited native x86 double physical handover evidence and truthful conservative restored MTU behavior."}
+```
