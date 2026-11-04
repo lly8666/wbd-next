@@ -106,12 +106,20 @@ sudo -n ip netns exec "$NSB" tc qdisc show dev mxb0 >"$ART/plan028-h1178-netem-a
 if grep -q 'netem' "$ART/plan028-h1178-netem-after.txt";then
  echo "H1178 original physical loss qdisc leaked" >&2;exit 1
 fi
-python3 - "$ART/plan028-h1178-game4-netem5-rtt.json" <<'PY_H1178_END'
-import pathlib,json,sys
+# Genuine inner packet probe ran inside Bob's root netns and wrote the
+# evidence JSON as root. Transfer ONLY this artifact's ownership to the
+# current source runner before recording proven tc removal (no chmod 777).
+sudo -n chown "$(id -u):$(id -g)" "$ART/plan028-h1178-game4-netem5-rtt.json"
+python3 - "$ART/plan028-h1178-game4-netem5-rtt.json" "$ART/plan028-h1178-netem-during.txt" <<'PY_H1178_END'
+import pathlib,json,sys,re
 p=pathlib.Path(sys.argv[1]);v=json.loads(p.read_text())
+qdisc=pathlib.Path(sys.argv[2]).read_text()
+m=re.search(r'\bdropped\s+(\d+)\b',qdisc)
+assert m and int(m.group(1))>0,"5pct physical kernel qdisc must actually drop packets"
+v["physical_qdisc_dropped_packets"]=int(m.group(1))
 v["physical_qdisc_after"]["restored"]=True;v["real_qdisc_removed"]=True
 p.write_text(json.dumps(v,indent=2)+chr(10))
-print("M0_PLAN028_H1181_X86_GAME4_NETEM5_EARLY_200UDP_P99_NORMAL320_PASS",flush=True)
+print("M0_PLAN028_H1184_X86_NETEM5_200UDP_P99_NATIVE_DROP_AND_CLEAN_STOP_PROVEN",flush=True)
 PY_H1178_END
 '''
 # Actual Game M4 Health90 retires a 90s idle group. Measure loss

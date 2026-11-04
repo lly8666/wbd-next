@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1184",
+  "source_sha": "7db81b50e0ed3f107c976a3ebbf4d931f355603b",
+  "action": {
+    "id": 41893407117,
+    "job": 126796431341,
+    "status": "FAIL_ONLY_EVIDENCE_JSON_PERMISSION_AFTER_REAL_UDP_PASS",
+    "artifact_id": 13355007767,
+    "artifact_sha256": "42137fb6e77e96a66485fbdfb38f1f0838f0043303cbc7bbfc4a11069c3a40bf"
+  },
+  "verified": {
+    "native_platform": "Linux_x86_64_client_plus_x86_64_server",
+    "original_tls_game4_successor_generation": 3,
+    "old_game4_gen2_exact_stop": true,
+    "physical_source4": [
+      "10.25.0.3",
+      "10.25.0.9",
+      "10.25.0.3"
+    ],
+    "qdisc_mode": "tc netem loss 5%",
+    "os_kernel_sent_at_qdisc": 2365,
+    "os_kernel_dropped_at_qdisc": 101,
+    "real_inner_game4_udp_sent": 200,
+    "real_inner_game4_udp_received": 200,
+    "received_only_rtt_p99_ms": 20.013,
+    "max_delivery_gap_ms": 20.003,
+    "os_qdisc_restored_readback": "qdisc noqueue 0: root refcnt 2",
+    "normal_auto_long_320_and_final_stop": "NOT_REACHED_BECAUSE_EVIDENCE_PERMISSION_FAILURE"
+  },
+  "reason": "RTT JSON was written by sudo ip netns exec Python as root; final Python script unprivileged tried to rewrite true qdisc restored and failed PermissionError",
+  "next": "H1184 sudo chown only RTT JSON to runner and require kernel drops positive before final original run/Normal320/Stop",
+  "limits": [
+    "Not full Action PASS until Native Normal320 and Stop finish",
+    "200/200 is scoped measurement, not a universal no-loss guarantee",
+    "CPU causal/remote ICMP/Android not measured",
+    "H998 original live hot-MTU and ARM old Action FAIL retained"
+  ]
+}
