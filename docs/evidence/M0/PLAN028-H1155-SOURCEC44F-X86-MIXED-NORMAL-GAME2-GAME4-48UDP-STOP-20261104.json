@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1155",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_X86_X86_ORIGINAL_MIXED_NORMAL_GAME2_GAME4_ONE443",
+  "source_sha": "c44f5533b8d734602208f419f8043b79a63ac2eb",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41853631826,
+    "job_id": 126656237684,
+    "conclusion": "success",
+    "artifact_id": 13336423623,
+    "artifact_digest": "sha256:d275d167533b76fce6a93590e4b2bc4b7de91289b93b481ef939f4485b61012d"
+  },
+  "platform": "native Ubuntu24 x86_64 original Go TLS/Rust M4 server+3 clients isolated netns, genuine ELF62, no QEMU",
+  "shared": {
+    "one_port": 443,
+    "one_Rust_TUN_reader": true,
+    "verified_IPs": [
+      "10.66.0.171",
+      "10.66.0.192",
+      "10.66.0.168"
+    ],
+    "server_OS_TUN_MTU_bytes": 1389
+  },
+  "clients": [
+    {
+      "account": "Alice",
+      "mode": "Game2 FEC off",
+      "cipher": "ChaCha20-Poly1305",
+      "os_TUN_MTU_bytes": 1373,
+      "real_UDP_echoes": 12
+    },
+    {
+      "account": "Bob",
+      "mode": "Game4 fixed6",
+      "cipher": "AES-256-GCM",
+      "os_TUN_MTU_bytes": 1358,
+      "real_UDP_echoes": 18
+    },
+    {
+      "account": "Carol",
+      "mode": "Normal auto",
+      "cipher": "AES-128-GCM",
+      "os_TUN_MTU_bytes": 1375,
+      "real_UDP_echoes": 18
+    }
+  ],
+  "real_app_udp_echoes": 48,
+  "Game2_Stop_did_not_break_Bob_or_Carol": true,
+  "final_Rust_TUN_reader_Stop": true,
+  "source_proof": {
+    "same_go_rust_source": true,
+    "manifest_sha256_verified": true,
+    "mixed_protected_normal_game_cold_unit": "PASS",
+    "three_cipher_Go_unit": "PASS",
+    "new_steady_packet_header": false,
+    "private_pre_TLS_prelude": false
+  },
+  "old_failed_action": {
+    "run_id": 41848636350,
+    "source_sha": "6e4337ad936c08050bddca797e3820cd416cba34",
+    "result": "FAIL before raw native, shared mode rejected in runGame entry; retained in separate evidence"
+  },
+  "other_actions": {
+    "game4_x86_run": 41853631789,
+    "conclusion": "success",
+    "separate_from_mixed_proof": true
+  },
+  "limits": [
+    "x86/x86 mixed one port scoped PASS, not full seven-mode handover or ARM64 mixed qualification",
+    "Physical Wi-Fi, Android, exact OS notifier-to-TLS/first packet not measured",
+    "Historical H998 same-connection MTU live shrink FAIL and old ARM Game4FEC Action FAIL preserved",
+    "No remote ICMP or old/new CPU causal comparison"
+  ]
+}
