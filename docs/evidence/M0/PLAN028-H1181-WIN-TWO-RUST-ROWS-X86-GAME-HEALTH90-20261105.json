@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1181",
+  "windows": {
+    "source_sha": "a6f740ddf453746212bb19a9a2e00849ad958c3e",
+    "run_id": 41887633021,
+    "artifact": 13351874178,
+    "conclusion": "FAIL_FIXTURE_REGEX",
+    "original_game4_tls_M4_generations": 2,
+    "windows_rust_outer_enabled1_rows": 2,
+    "linux_rust_outer_enabled1_rows": 2,
+    "true_udp_tcp_duplex": true,
+    "exact_stop": true,
+    "problem": "Python raw regex had escaped literal backslash-digit; counted0"
+  },
+  "x86": {
+    "source_sha": "be7eacd47158fa36a67135d121c41d2b6f0be85c",
+    "run_id": 41888769438,
+    "artifact": 13352673301,
+    "conclusion": "FAIL_FIXTURE_LATE_BUSINESS_AFTER_CORRECT_HEALTH90",
+    "actual_tc_netem_loss_pct": 5,
+    "real_game4_new_gen3_TLS_Rust_READY": true,
+    "old_gen2_exact_stop": true,
+    "normal_auto_128sec_udp": 320,
+    "game4_authenticated_idle_health90_stop": true,
+    "real_late_game4_probe_sent": 200,
+    "real_late_received": 0,
+    "p99": "NOT_MEASURED"
+  },
+  "fix": "Send true Game4 200 UDP+new16 immediately after auth Ready, keep original Game4 M4 Health90 with native 9s inner UDP while independent Normal320 runs; fix Windows two Python regexes, no runtime/steady-wire change.",
+  "remaining": [
+    "H998 original hot shrink FAIL",
+    "H998 ARM old Game4 Action FAIL",
+    "remote ICMP/Android NOT_RUN",
+    "CPU causal NOT_PROVEN"
+  ]
+}

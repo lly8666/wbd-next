@@ -1253,8 +1253,8 @@ print(json.dumps(result),flush=True)
    # Exactly two original Rust Game M4 receipts, not CLI intent or one
    # legacy singleton sample; this signed scene has two authenticated
    # source4 generations and the first group's bounded exact Stop.
-   wins=re.findall(r"^WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled=(\\d+) source=rust_game_outer$",windows,re.MULTILINE)
-   servers=re.findall(r"^.*V4_PUBLIC_GAME_OUTER role=server lanes=%d repair_enabled=(\\d+) "%lanes,linux,re.MULTILINE)
+   wins=re.findall(r"^WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled=(\d+) source=rust_game_outer$",windows,re.MULTILINE)
+   servers=re.findall(r"^.*V4_PUBLIC_GAME_OUTER role=server lanes=%d repair_enabled=(\d+) "%lanes,linux,re.MULTILINE)
    win_ok=len(wins)==2 and all(int(v)==expected for v in wins)
    linux_ok=len(servers)==2 and all(int(v)==expected for v in servers)
    report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,

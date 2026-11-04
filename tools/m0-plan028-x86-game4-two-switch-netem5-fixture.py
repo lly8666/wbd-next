@@ -111,10 +111,34 @@ import pathlib,json,sys
 p=pathlib.Path(sys.argv[1]);v=json.loads(p.read_text())
 v["physical_qdisc_after"]["restored"]=True;v["real_qdisc_removed"]=True
 p.write_text(json.dumps(v,indent=2)+chr(10))
-print("M0_PLAN028_H1178_X86_TWO_REAL_GAME4_SWITCHES_NETEM5_INNER_UDP_P99_PASS",flush=True)
+print("M0_PLAN028_H1181_X86_GAME4_NETEM5_EARLY_200UDP_P99_NORMAL320_PASS",flush=True)
 PY_H1178_END
 '''
-s=s.replace(anchor,anchor+measurement,1)
+# Actual Game M4 Health90 retires a 90s idle group. Measure loss
+# directly on authentic successor Ready, before the 128s Normal stream wait.
+s=s.replace(anchor,measurement+anchor,1)
+oldwait='wait "$live_restore"'+chr(10)+'''test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 320'''+chr(10)
+assert s.count(oldwait)==1,"long unrelated wait before Game M4 probe"
+s=s.replace(oldwait,"",1)
+game='send_udp "$NSB" "$IPB" GAME4_FIXED6_RESTORED_NEW_GEN3 16 "$TMP/B-restored.log"'+chr(10)
+assert s.count(game)==1,"real authenticated Game4 second-switch UDP"
+health=r'''# Maintain Game4 native original Health90 with *real* inner UDP,
+# while another independent Normal Auto owner remains continuously live.
+(
+  while kill -0 "$live_restore" 2>/dev/null;do
+    send_udp "$NSB" "$IPB" GAME4_AUTHENTICATED_KEEPALIVE 1 "$TMP/B-healthkeep.log"
+    sleep 9
+  done
+) &
+game_health_pid=$!
+wait "$live_restore"
+kill "$game_health_pid" 2>/dev/null || true
+wait "$game_health_pid" 2>/dev/null || true
+test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 320
+'''
+s=s.replace(game,game+health,1)
+assert s.count("game_health_pid=$!")==1
+
 assert s.count('for i in range(320):')==1
 s=s.replace('for i in range(320):','for i in range(1000):',1)
 # This measurement block is appended after the existing physical stage.
@@ -122,4 +146,4 @@ assert s.count('"original_tls_generation3_ready":True')==1
 s=s.replace('"original_tls_generation3_ready":True','"original_tls_successor_ready":True',1)
 assert s.count("PY_H1178")>=4 and s.count('tc qdisc replace dev mxb0 root netem loss 5%')==1
 out.write_text(s);out.chmod(0o700)
-print("M0_PLAN028_H1178_X86_NATIVE_GAME4_NETEM5_FIXTURE_ASSEMBLED",flush=True)
+print("M0_PLAN028_H1181_X86_5PCT_CORRECT_HEALTH90_FIXTURE_READY",flush=True)
