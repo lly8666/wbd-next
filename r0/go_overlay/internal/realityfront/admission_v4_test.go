@@ -59,7 +59,8 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
     // The shared-server fixed branch now requires an explicit protected
     // profile+1. Keep older pure TLS helper callers unchanged; only the
     // per-device fixed profile vector opts into the new strict contract.
-    nativeFixed:=len(allowReplacement)>1&&allowReplacement[1]&&policy.FECMode==FECFixed
+    nativeFixed:=len(allowReplacement)>1&&allowReplacement[1]&&
+        policy.Transport==TransportNormal&&policy.FECMode==FECFixed
     fixedProfile:=uint8(0)
     if nativeFixed{fixedProfile=2} // original default fixed profile1
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
