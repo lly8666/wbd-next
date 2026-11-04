@@ -55,11 +55,18 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
         },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0],perClientNormalFEC:len(allowReplacement)>1&&allowReplacement[1]})
         server<-answer{s,e}
     }()
+    // The shared-server fixed branch now requires an explicit protected
+    // profile+1. Keep older pure TLS helper callers unchanged; only the
+    // per-device fixed profile vector opts into the new strict contract.
+    nativeFixed:=len(allowReplacement)>1&&allowReplacement[1]&&policy.FECMode==FECFixed
+    fixedProfile:=uint8(0)
+    if nativeFixed{fixedProfile=2} // original default fixed profile1
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
         TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:user,Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,LaneID:lane,Policy:policy,
-    },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2})
+    },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2,
+        fec2Product:clientFec2&&nativeFixed,NormalFec:fixedProfile})
     select {
     case s:= <-server:
         return client,s.s,clientErr,s.err

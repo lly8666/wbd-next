@@ -1,11 +1,12 @@
 name: M0 PLAN028 ARM64 native protected Normal fixed FEC strength per device
-run-name: PLAN028 H1147 ARM64/ARM64 fixed6 and AES128 AES256 ChaCha same443
+run-name: PLAN028 H1148 ARM64/ARM64 fixed6 native profile retry after TLS unit correction
 on:
   push:
     branches: [main]
     paths:
       - ".github/workflows/m0-plan028-arm64-fixed-strength-three-ciphers.yml"
       - "tools/m0-plan028-three-device-fixed-strength-fixture.py"
+      - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
