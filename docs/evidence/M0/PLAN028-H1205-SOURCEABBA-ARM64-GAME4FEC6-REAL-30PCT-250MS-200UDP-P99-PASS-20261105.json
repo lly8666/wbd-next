@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1205",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
+  "platform": "native AARCH64 client+server original Go TLS/Rust port443",
+  "action": {
+    "run_id": 41933405513,
+    "job_id": 126935724677,
+    "artifact_id": 13371649337,
+    "conclusion": "success",
+    "github_zip_sha256": "fb10a58fee7cab6a0b32e62b6ad6130f648861de5de15288f924e67661233114"
+  },
+  "physical_first": {
+    "actual_NIC": "mxb0",
+    "physically_DOWN_ms": 1321.22,
+    "old_Game4_gen1_terminated_before_new_auth": true,
+    "new_Game4_gen2_original_TLS_Rust_M4_authenticated": true,
+    "physical_down_command_to_ready_ms": 1595.6,
+    "source4_before": "10.25.0.3",
+    "source4_new": "10.25.0.9",
+    "new_link_mtu": 1280,
+    "game4_inner_os_mtu": 1178,
+    "normal_sibling_os_mtu": 1375,
+    "outer_user_mtu": 1460,
+    "Normal_auto_real_udp_before_loss": 48,
+    "new_Game4_real_udp": 32,
+    "one_port": 443
+  },
+  "true_impairment": {
+    "stage": "AFTER_GAME4_GEN2_AUTHENTICATED_M4",
+    "physical_kernel_tool": "tc qdisc netem mxb0",
+    "configured_loss_pct": 30,
+    "configured_egress_delay_ms": 250,
+    "physical_qdisc_sent_packets": 1708,
+    "physical_qdisc_dropped_packets": 736,
+    "inner_udp_sent": 200,
+    "inner_udp_received": 200,
+    "no_application_retransmission": true,
+    "received_only_rtt_p99_ms": 270.013,
+    "max_delivery_gap_ms": 20.003,
+    "normal_auto_real_udp_during_loss": 16,
+    "qdisc_restored_after": true,
+    "final_native_shared_Rust_TUN_Stop": true
+  },
+  "limits": [
+    "Netem applied only AFTER genuine Game4 TLS gen2; do not claim high-loss during this TLS handshake.",
+    "200/200 refers to inner UDP; physical kernel dropped 736/1708 and no zero-loss inference.",
+    "250ms delay is kernel egress injection, not overall TLS/first-delivery SLA.",
+    "Remote ICMP, precise notifier→TLS and auth→first, CPU causal, Android not measured.",
+    "H998 original live MTU hot-shrink FAIL/old ARM Game4 Action FAIL and historical H1173 singleton gen2 TLS FAIL retained."
+  ]
+}
