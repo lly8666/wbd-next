@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1192,
-  "checkpoint_sha": "45217fe82ec6d86b6ae080573e969f259a8cccb0",
+  "sequence": 1193,
+  "checkpoint_sha": "71b3d41075541cad73b8a5173130d78564c33162",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1192 native x86_64 client/server original Go TLS/Rust shared443 Normal Auto Carol physical source4 .4→.9→.4/physical MTU1500→1280→1500. Must prove authentic Normal TLS/Rust generations1→2→3, exact old1+2 Stop, same automatic lease and OS MTU shrink, while Bob original Game4FEC6 gen1 sends 32 native UDP across EACH Carol change, untouched Game4 MTU and final shared Rust TUN Stop. Full single scene new workflow/test-only, no product edits; ARM H1191 and Windows H1188 qualified.",
-  "why_now": "PLAN028 §5 actual seven-mode replacement gap: previous H1186 and H1191 Game4 reauth proved other Normal healthy; now test reverse owner Normal Auto reauth with Game4 healthy. Reuse same mature 3-protected-client original TLS/Rust one443 fixture, only source-specific physical mxc0 changes and real UDP evidence. No 027 replay/FEC rewrite.",
+  "current_task": "H1193 next full native Linux ARM64+ARM64 shared443 Game2 off Alice real physical source4 .2→.9→.2, links1500→1280→1500, authentic Go TLS/Rust M4 Game2 generations1→2→3, exact old gen1/gen2 Stop and same original auto /32. Game4FEC6 Bob and Normal Auto Carol remain genuine original gen1 and send 24 inner UDP each across BOTH Game2 swaps, independent OS MTUs1358/1375; native final shared Rust TUN Stop. H1192 x86 Normal Auto two real physical swaps Action41907679001 independently in flight. No product/wire edits.",
+  "why_now": "PLAN028 §5 seven real mode lane replacement lacks Game2 off and Normal Auto target. H1192 x86 Normal Auto in-flight, alternation next full Linux ARM64/ARM64. Reuse source-locked already qualified original three-client shared443 native fixture, change only Alice physical NIC route/source/MTU and continuous sibling real UDP; no second recovery controller or old matrix.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1192 one native x86 Action two real Normal Auto reauth+MTU readbacks, Game4 native UDP continuous, old Stop and final shared TUN cleanup. If FAIL inspect narrow logs. Next Linux task ARM/ARM; other Normal off/fixed, Game2/Game4 off/fixed and 30% reps remain open.",
+  "next_action": "Collect H1192 x86 native Normal Auto then H1193 ARM Game2 off native from separate source/actions. Require each actual two new Go TLS/Rust generations, old exact Stop and correct per-client OS MTUs/lease with other siblings alive, no premature final shared TUN stop. If FAIL inspect first narrow native evidence. Next Linux x86, other five modes/30% remain.",
   "unverified": true,
   "last_tested_source": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1192 x86/x86 Normal Auto genuine physical two shifts and independent Game4FEC6 continuous 32 UDP per shift, original shared443 protected 3-client fixture; pending native. H1191 ARM postauth netem5 PASS and H1188 signed Windows dual TLS/FEC PASS registered."
+  "partial_summary": "H1193 ARM/ARM original Game2 off dual physical source4+MTU handover with Game4+Normal continuously delivering real UDP while Game2 new protected TLS/Rust gen2+3 and exact Stop; separate x86 H1192 Normal Auto in flight. 5% Game4 historical qualified, H998/Android/CPU gaps retained."
 }
