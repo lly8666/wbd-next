@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1118-WINDOWS-OS-ONLY",
+  "source_sha": "adc8206c840e02d9b92ee1e9906640cfaf5c8f8b",
+  "result": "PASS_SCOPED_WINDOWS_NATIVE_TEST_OWNED_HYPERV_IPv4_SOURCE_SELECTION_AND_NOTIFICATION_ONLY",
+  "artifact_verified": true,
+  "run": {
+    "id": 41803548026,
+    "job_id": 126484915541,
+    "conclusion": "success",
+    "artifact_id": 13308298396,
+    "win_test_only_harness_sha": "adc8206c840e02d9b92ee1e9906640cfaf5c8f8b"
+  },
+  "native_os": {
+    "runner": "windows-2025",
+    "owned_adapter": "vEthernet (WBD-P028-41803548026)",
+    "owned_hyperv_internal_switch_created_and_removed": true,
+    "default_runner_management_route_unmodified": true,
+    "selected_source_ipv4_before": "198.18.246.1",
+    "after": "198.18.246.9",
+    "iphlpapi_NotifyUnicastIpAddressChange_callbacks": 3,
+    "iphlpapi_NotifyRouteChange2_callbacks": 1,
+    "temporary_GetBestRoute_error": "ERROR_NETWORK_UNREACHABLE during address convergence; bounded retry",
+    "os_source_mutation_to_preferred_route_readback_ms": 3190.42
+  },
+  "artifact_sha256": {
+    "zip": "c2cfdfc7672e168f8c66862c165bbb9492ae284b2ad3278791f783a989d3d7ad",
+    "result": "5f45a0bb6b5de1e32f0653996fe28c9b14d9f31e5b8d64b22834541a3b8f891c"
+  },
+  "limits": [
+    "This is a real Windows OS native event/source readback on an owned internal vSwitch, NOT a physical hardware NIC change",
+    "No original-Go TLS, Wintun, Npcap, Rust generation, app packet, Stop or MTU was exercised in this environment preflight",
+    "3190.42ms includes Windows IPv4 address DAD/routing convergence and is not 200/500ms callback coalescer budget, TLS SLA or first packet latency",
+    "CPU/p99, real physical Windows Npcap rebind, Android and remote ICMP not tested",
+    "H998 historical MTU hot-shrink and ARM64 Game4FEC Action FAIL preserved"
+  ]
+}
