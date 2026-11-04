@@ -1,0 +1,9 @@
+# PLAN028 H1172 — collect true ARM direct-recovery partial; repair overlap-only fixture
+
+[H1171 ARM64/ARM64 run 41874655903](https://github.com/lly8666/wbd-next/actions/runs/41874655903) job126730666136 artifact13345494827 ZIP SHA `d1f7b310de6b2f81b8e74340a0d0c50b86b0d39632895db714eff72f754c5bac`, pinned SOURCE `22cae80a7328267b644ae160a9ece1dc22aca65d`, native ARM ELF183 Go/Rust built. Actual Bob physical link **DOWN ~1.3sec** then UP source4 .3→.9 + MTU1280. Logs: `V4_PUBLIC_PATH_UNAVAILABLE`, **old generation1 `V4_PUBLIC_PATH_OLD_TERMINATED` before** authentic new generation2 `V4_PUBLIC_PATH_NEW_GENERATION_READY ... old_generation=false`; lease `10.66.0.228/32` kept, new Rust MTU1178 applied. Carol NormalAuto real 48 echo replies throughout, unrelated session unaffected. Previous healthy overlap H1166 had `old_generation=true` then old exact Stop. **Different valid lifecycle**; inherited H1165 test incorrectly insisted on overlap markers for hard physical DOWN, so H1171 Action failed before checking new32 Game4 and final Stop. Neither claim complete PASS nor product reauth failure. Preserve logs and H998 old FAIL separately.
+
+H1172 replacement modifies *only* derived ARM physical-down fixture and matching workflow assertions: require OLD_TERMINATED before new original TLS generation2 READY `old_generation=false`, actual unavailable, 48 Normal and fresh Game4 32, OS MTU1178, stop. Keep original H1165 overlap fixture unmodified, no Go/Rust product/steady wire change, no second recovery controller. One Action for this distinct same-arch ARM scenario; next full Linux x86/x86 after completed ARM. Independent Windows Game4FEC6 proposed subsequent Windows task; not yet launched by this change.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-specific direct-disconnected test proof and short evidence; mature overlapping fixture and all product runtime unchanged."}
+```

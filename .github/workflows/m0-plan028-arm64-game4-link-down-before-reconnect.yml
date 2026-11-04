@@ -1,5 +1,5 @@
 name: M0 PLAN028 ARM64 Game4 physical link down then source4 recover while Normal Auto healthy
-run-name: PLAN028 H1171 ARM64 Game4 genuine physical link first down then new TLS recover
+run-name: PLAN028 H1172 ARM64 Game4 real old terminated first and new original TLS directly recovers
 on:
   push:
     branches: [main]
@@ -125,7 +125,7 @@ jobs:
               tail -200 fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log >&2
               exit 1
             }
-          grep -Fq "M0_PLAN028_H1162_ARM64_MIXED_NORMAL_LIVE48_GAME4_PHYSICAL_NEW32_STOP_PASS" \
+          grep -Fq "M0_PLAN028_H1172_ARM64_NORMAL_LIVE48_GAME4_DOWN_FIRST_DIRECT_RECOVERY_NEW32_PASS" \
             fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
           grep -Fq "M0_PLAN028_H1171_ARM64_GAME4_LINK_DOWN_BEFORE_NEW_TLS_RECOVERY_PASS" fixed-kernel-result/plan028-h1162-arm64-mixed-game4-source4.log
           grep -Fq "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS" \
@@ -151,7 +151,7 @@ jobs:
           assert proof["game4_old_inner_os_mtu"]==1358 and proof["game4_new_inner_os_mtu"]==1178
           assert proof["normal_old_inner_os_mtu"]==1375 and proof["normal_new_inner_os_mtu"]==1375
           assert proof["normal_live_udp_echoes"]==48 and proof["game4_new_udp_echoes"]==32
-          assert proof["new_tls_auth_ready"] and proof["old_exact_stop"] and proof["normal_not_reauthenticated"]
+          assert proof["new_tls_auth_ready"] and proof["old_disconnected_first"] and not proof["old_exact_stop"] and proof["normal_not_reauthenticated"]
           downfirst=json.loads(pathlib.Path("fixed-kernel-result/plan028-h1171-link-down-first.json").read_text())
           assert downfirst["link_was_physically_down"] and downfirst["down_interval_ms"]>=1200
           assert downfirst["old_link_was_up_before_new_auth"] and downfirst["new_original_TLS_generation2_ready"]
