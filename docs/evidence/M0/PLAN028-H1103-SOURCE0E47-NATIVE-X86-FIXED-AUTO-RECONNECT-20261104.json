@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1103",
+  "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "result": "PASS_SCOPED_X86_FIXED_AUTO_REAL_NETWORK_SWITCH",
+  "artifact_verified": true,
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scope": "Linux native x86_64 original Go TLS/Rust client+server two netns, source IPv4 10.25.0.2→10.25.0.3 one port 443, same protected auto /32, outer intent1460B with new physical1280B",
+  "built_once": {
+    "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+    "manifest_sha256": "8e95731e18f7a10ba6b8d3cea970ca0ac1a70fc423a3b902c0c7bc2e48bf061d",
+    "previous_run_id": 41782228876,
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "sha256": {
+      "wbd-v4-client": "e6f9d900a9df10074478ec0a5a8fd5c5ac121cec4cbe07310be347da10cc1985",
+      "wbd-v4-server": "2489895f0ac75fb9e9e51230ba92ebf5252ca330314c0bbe9cfe762c55956a3d",
+      "libwbd_engine.so": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "scenes": [
+    {
+      "mode": "normal_fixed",
+      "action_id": 41786697334,
+      "job_id": 126430364316,
+      "artifact_id": 13300844750,
+      "conclusion": "success",
+      "log_sha256": "3d57f3433f806a4b9ecedc0ff86cf5a14601bcf2e2bf97bef302b40a637c9203",
+      "first_udp_echoes": 64,
+      "new_path_udp_echoes": 5,
+      "client_FEC_applied": 1,
+      "client_FEC_profile": 1,
+      "client_pending": false,
+      "client_and_server_shared_tun_each_routed": 69,
+      "server_and_client_reader_joined": true,
+      "old_owner_Stop": true,
+      "tun_OS_mtu_after_switch": 1195
+    },
+    {
+      "mode": "normal_auto",
+      "action_id": 41786697384,
+      "job_id": 126430364345,
+      "artifact_id": 13301193007,
+      "conclusion": "success",
+      "log_sha256": "c6fd93d6b13793f41a6c0edd0b6fe9dbbd9a6319458105f36ec411aad5b1e785",
+      "first_udp_echoes": 64,
+      "new_path_udp_echoes": 5,
+      "client_FEC_applied": 1,
+      "client_FEC_profile": 5,
+      "client_pending": false,
+      "auto_quality_feedback": "NOT_QUALIFIED_UNKNOWN",
+      "client_and_server_shared_tun_each_routed": 69,
+      "server_and_client_reader_joined": true,
+      "old_owner_Stop": true,
+      "tun_OS_mtu_after_switch": 1195
+    }
+  ],
+  "preceding_failed_scoped_actions": [
+    {
+      "id": 41786081263,
+      "cause": "Old singleton server FEC effective marker was absent; valid multi-session Rust TUN and original client effective FEC were present."
+    },
+    {
+      "id": 41786081239,
+      "cause": "Same old singleton server FEC policy marker; not an application, authentication, Stop or MTU failure."
+    }
+  ],
+  "qualification_limits": [
+    "Auto short-burst profile5 does not establish matched-health convergence",
+    "Previous H998 same-connection live MTU shrink FAIL not requalified by new-session path change",
+    "Physical Windows adapter/Npcap source switch and CPU/p99 NOT_RUN",
+    "Old ARM64 Game4FEC Action FAIL retained, remote ICMP and Android not tested",
+    "Next separate Linux task ARM64/ARM64 native same-source build, not mixed ISA"
+  ]
+}

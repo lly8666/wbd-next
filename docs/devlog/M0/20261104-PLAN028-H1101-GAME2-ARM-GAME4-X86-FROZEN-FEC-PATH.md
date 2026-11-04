@@ -11,3 +11,9 @@ x86/x86 的 [Action 41782228876](https://github.com/lly8666/wbd-next/actions/run
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1101 exact source0e47 ARM Game2 native true overlap PASS, x86 Game4 overlap app/wire observed but Action marker FAIL retained; source-frozen original Go/Rust Normal Fixed and Auto x86 physical-switch tests launched independently."}
 ```
+
+## H1103 两条原生 Frozen Fixed/Auto 任务最终 PASS
+
+同原产品SOURCE `0e47d9c9532cbda9e655bd198348acf4ff4ddcd1`、原 Go donor `a7a82db3`，原 x86 Go/Rust 一次构建工件 manifest SHA256 `8e95731e...` 不变：[Fixed Action 41786697334](https://github.com/lly8666/wbd-next/actions/runs/41786697334) SUCCESS artifact13300844750，日志 SHA256 `3d57f3433f806a4b9ecedc0ff86cf5a14601bcf2e2bf97bef302b40a637c9203`；[Auto Action 41786697384](https://github.com/lly8666/wbd-next/actions/runs/41786697384) SUCCESS artifact13301193007，日志 SHA256 `c6fd93d6b13793f41a6c0edd0b6fe9dbbd9a6319458105f36ec411aad5b1e785`。均独立解包核验 manifest、OS source IPv4 readback、内层MTU和app原生日志；原 Go/TLS 新会话在物理出口1500→1280B后同安装受保护 /32 不变，old64＋new5 真实 UDP，内层OS TUN1195B，client/server Rust single TUN reader各 routed69、reader_joined、精确Stop。
+
+Fixed client effective `applied=1 profile=1 pending=false`，Auto client effective `applied=1 profile=5 pending=false`；**Auto短场景不证明长期反馈质量收敛**。前两个失败 Actions41786081263/41786081239 确因原旧单例server FEC策略marker，修正测试夹具，不重编产品。完整证据 `docs/evidence/M0/PLAN028-H1103-SOURCE0E47-NATIVE-X86-FIXED-AUTO-RECONNECT-20261104.json`。当前 Linux 同架构轮换下一包原生 ARM64 双端，新增一个 Normal Auto真实出口切换、单SOURCE构建并保存二进制。Windows真实物理网卡与CPU/p99仍需独立资格，H998在线缩窄FAIL不改判。
