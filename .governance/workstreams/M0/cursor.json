@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1091,
-  "checkpoint_sha": "b9f6c3a62567feea70b793c5da47368637827518",
+  "sequence": 1092,
+  "checkpoint_sha": "67ba10dd7f818a327041e0e5c16e5b69f9f32d0a",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1091 x86 real Game4 5+5 UDP/MTU1178/B TLS/M4 before A Stop and parity PASS observed, full Action41766426849 FAIL only false server-Go DRAINED marker; test-only correction and binary retention",
-  "why_now": "H1090 sourceb9f6 Game4 real x86 two-netns verified 10 UDP and client/server one Rust reader routed10 each, but fixture demanded non-existent Go DRAINED role=server; only Rust native reader_joined receipt emitted. Replace with actual Rust source counters and save built binaries in artifact to avoid second compilation for future fixture-only checks.",
+  "current_task": "H1092 x86/x86 source67ba Game4FEC6 A→A+B→B 5+5 genuine UDP, FEC, MTU1178 + TLS8 PASS; native ARM64/ARM64 next",
+  "why_now": "H1091 Action41767053797 success, independently inspected archive13292633595 manifest, SHA256, ELF, Native UDP/Stop+8 TCP ClientHello no prelude. Frozen Normal 41767053667 success independent source. H1087 route-key previously scoped closed.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1091 exact one Game4FEC6 overlap x86/x86 full-source Action and 8 ClientHello wire audit, independent artifact SHA. If PASS begin distinct next Linux native ARM64 client+server task, then Windows physical NIC and full TLS transcript. Preserve H998 and old ARM64 FAIL.",
+  "next_action": "Collect updated one-source native ARM64/ARM64 Game4FEC6 overlapping handover/8 CH job. Independently investigate real Windows NIC rebind and full CertificateVerify/Finished/standard TLS baseline; no repeated x86 work. Next Linux task after native ARM is x86/x86.",
   "unverified": true,
-  "last_tested_source": "b9f6c3a62567feea70b793c5da47368637827518",
+  "last_tested_source": "67ba10dd7f818a327041e0e5c16e5b69f9f32d0a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1090-SOURCEB9F6-GAME4-OVERLAP-IO-PASS-WITH-FINAL-GATE-FAIL-20261104.json"
+    "docs/evidence/M0/PLAN028-H1092-SOURCE67BA-GAME4-X86-OVERLAP-TLS8-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 32B offline route-key, no WB-R1 prehello scoped closed source7b38; full TLS Certificate/Finished/standard baseline OPEN. H1076 x86 and H1078 native ARM Game4FEC6 4+4 TLS, OS physical MTU1178/UDP/Stop PASS sequential old Stop→B. H1088 reuse one Rust shared TUN client default route + per-lane original TLS protected /32, native Game B Ready before A Stop code implemented, no Action yet. Windows physical source NIC NOT_RUN, H998 hot MTU shrink and older ARM Game4FEC workflow FAIL, remote ICMP and CPU p99 unmeasured. Linux test tasks alternate x86/x86 then native ARM/ARM. H1088 original client Game Rust reader and protected per-lane /32 source code submitted commit0015. Focused Action41765630079 FAIL_PRE_BUILD original Go FakeTCP installed twice, not product. H1089 removes duplicate installer after already SHA-verified plan020 assembly; product source files unchanged, new scoped Action pending. H1089 native Game4 first app FAIL Action41765851943, client delivered0/rejected6 after Rust shared reader. H1090 fixes one Rust role boundary: server requires authenticated client /32 inbound; client accepts authenticated server packets via AEAD without misusing own /32. No success claim before new real action. H1090 sourceb9f6 native x86 Game4 FEC6 old A→A+B→B original Go TLS and Rust one reader each verified B M4 READY before old A Stop, MTU1358→1178, same /32, 5 before and 5 after UDP, parity10 per generation. Overall Action41766426849 FAIL from mistaken server Go stop marker (Rust reader_joined=1 present), wire8 audit not reached. H1091 test-only fix, save source binaries for frozen scenarios."
+  "partial_summary": "H1087 pre-shared route-key 32B offline and WB-R1 removal scoped closed; full TLS Finished/reference baseline OPEN. H1092 x86 native Game4FEC6 real old A→A+B→B with B TLS/Rust READY before A Stop, one Rust reader per side, old/new 5+5 UDP, FEC, 1460 outer/1280 physical→1178 TUN MTU, 8 TLS first-flight CH/SH no-prelude 32B unique SID, source67ba Action41767053797 verified ZIP. Old H998 hot MTU FAIL/old ARM4FEC FAIL/Windows physical NIC/CPU p99/Android remain. Linux rotation next ARM/ARM native."
 }

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1092",
+  "source_sha": "67ba10dd7f818a327041e0e5c16e5b69f9f32d0a",
+  "result": "SCOPED_PASS_REAL_X86_GAME4_A_TO_A_PLUS_B_TO_B_AND_EIGHT_TLS_FIRST_FLIGHTS",
+  "run": {
+    "id": 41767053797,
+    "job_id": 126367742827,
+    "conclusion": "success",
+    "artifact_id": 13292633595,
+    "artifact_verified": true,
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "architecture": "x86_64 both endpoints"
+  },
+  "binary_sha256": {
+    "wbd-v4-client": "e6f9d900a9df10074478ec0a5a8fd5c5ac121cec4cbe07310be347da10cc1985",
+    "wbd-v4-server": "2489895f0ac75fb9e9e51230ba92ebf5252ca330314c0bbe9cfe762c55956a3d",
+    "libwbd_engine.so": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+  },
+  "log_sha256": "bfb201ac0e30af1ff9abdc7aaff80dd4c168b50778db43c23996dd035409e750",
+  "rust_fence_unit_log_sha256": "ff71ac3101141582699dae8f065ea6080aeed6cb857ee6f744b802ab27348400",
+  "observations": {
+    "mode": "Game4 fixed6",
+    "server_port": 443,
+    "original_TLS_to_Rust_B_READY_before_old_A_Stop": true,
+    "original_lanes_old": 4,
+    "new": 4,
+    "single_reader_per_side": true,
+    "IP_old": "10.25.0.2",
+    "IP_new": "10.25.0.3",
+    "default_outer_IP_MTU": 1460,
+    "new_physical_IP_MTU": 1280,
+    "new_inner_TUN_OS_readback": 1178,
+    "same_installation_protected_lease": true,
+    "actual_UDP_echo_before": 5,
+    "actual_UDP_echo_after": 5,
+    "FEC_parity_copied_both_generations": true,
+    "damaged_game_lane1_healthy_sibling_no_hol": true
+  },
+  "tls_eight_real_reassembled_FirstFlights": {
+    "source_ports_old": [
+      41031,
+      41032,
+      41033,
+      41034
+    ],
+    "source_ports_new": [
+      56881,
+      56882,
+      56883,
+      56884
+    ],
+    "record_bytes_ClientHello": 667,
+    "record_bytes_ServerHello": 127,
+    "client_first_payload": "TLS_Handshake_ClientHello",
+    "server_first_payload": "TLS_Handshake_ServerHello",
+    "no_server_early_data": true,
+    "session_ids_bytes_each": 32,
+    "session_ids_unique": 8,
+    "extension_count": 15,
+    "result": "REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS"
+  },
+  "other_source_normal": {
+    "run_id": 41767053667,
+    "artifact_id": 13293117812,
+    "source_sha": "d7bd355389c1233c54eaa6a4553ebadcbe0eeb70",
+    "conclusion": "success",
+    "scope": "real two-vantage TCP-reassembled Normal TLS first-flight, independent source"
+  },
+  "route_key_closed_scoped": "docs/evidence/M0/PLAN028-H1087-SOURCE7B38-ROUTE-KEY-SCOPED-CLOSEOUT-20261104.json",
+  "not_proven": [
+    "Full TLS Certificate/CertificateVerify/Finished decrypted transcript and matched baseline",
+    "all seven modes physically rotate A→A+B→B",
+    "zero loss over entire Game crossover",
+    "physical Windows NIC/IP switch",
+    "CPU causal/p99, remote ICMP, Android",
+    "H998 old same-connection live MTU shrink still FAIL",
+    "older ARM64 Game4FEC Action FAIL kept until new native ARM overlapped task"
+  ],
+  "plan_status": "IN_PROGRESS"
+}
