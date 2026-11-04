@@ -15,8 +15,8 @@ mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
-if plan028_owned_switch and (mode!='normal' or native_outer!='default1460'):
- raise RuntimeError('PLAN028 owned Windows source4 switch requires one Normal/default1460 product scene')
+if plan028_owned_switch and (mode not in ('normal','game4-fec') or native_outer!='default1460'):
+ raise RuntimeError('PLAN028 owned source4 switch requires one Normal or Game4FEC6/default1460 product scene')
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
@@ -313,7 +313,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
-   "V4_PUBLIC_MULTI_SESSION_READY role=server" if plan028_owned_switch else
+   "V4_PUBLIC_MULTI_SESSION_READY role=server" if plan028_owned_switch and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
   end_tls_capture()
@@ -350,8 +350,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
        "WBD_PLAN028_WINDOWS_VERIFIED_NATIVE_SOURCE4_REBOUND generation=2" in win and
        win.count("WBD_WINDOWS_CLIENT_READY")>=2 and
        win.count("WBD_WINDOWS_OS_APPLIED")>=2 and
-       (out/"server.log").read_text(errors="replace").count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=2 and
-       "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1" in win):
+       (out/"server.log").read_text(errors="replace").count(
+        "V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=4" if is_game else
+        "V4_PUBLIC_MULTI_SESSION_READY role=server")>=2 and
+       (("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=4 wal_restored=1 rust_stopped=1" if is_game else
+         "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1") in win)):
     break
    if w.poll() is not None:
     raise RuntimeError("original Windows native reauth product exited after real source change: "+win[-1500:])
@@ -377,7 +380,8 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    time.sleep(.1)
   else:raise RuntimeError("actual Windows/Linux inner UDP did not continue beyond new authenticated generation: "+repr((before,after)))
   report["plan028_original_native_source4_reauth"]={
-   "scope":"TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_NEW_GO_TLS_NPCAP_WINTUN_RUST",
+   "scope":("TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_GAME4FEC6_NEW_GO_TLS_NPCAP_WINTUN_RUST" if is_game else
+             "TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_NEW_GO_TLS_NPCAP_WINTUN_RUST"),
    "source4_before":"198.19.254.1","source4_after":"198.19.254.9",
    "old_generation_exact_wal_stop":True,
    "new_generation_tls_native_ready":True,
