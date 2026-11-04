@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original-Go Game4 TLS first-flights from ONE bounded real TCP PCAP.
+"""Original-Go Game2/Game4 TLS first-flights from ONE bounded real TCP PCAP.
 Inspect each lane of both OS source-IP generations. Raw PCAP is destroyed in
 the native runner; output is only non-secret record shapes / hashes.
 """
@@ -11,7 +11,9 @@ import sys
 from m0_plan028_tls_wire_audit import audit as audit_one
 
 
-def game_audit(raw):
+def game_audit(raw, lanes=4):
+    if lanes not in (2, 4):
+        raise AssertionError("invalid original Game lane count")
     if len(raw) < 24:
         raise AssertionError("empty real TCP capture")
     magic = raw[:4]
@@ -84,8 +86,8 @@ def game_audit(raw):
         if direction == "client" and len(tcp) > hlen:
             slot["segments"].append((int.from_bytes(tcp[4:8], "big"), tcp[hlen:]))
     sources = {source: sum(key[0] == source for key in sessions) for source in ("10.25.0.2", "10.25.0.3")}
-    if sources != {"10.25.0.2": 4, "10.25.0.3": 4}:
-        raise AssertionError("Game4 two generations must each expose four distinct original TCP sessions: %r" % sources)
+    if sources != {"10.25.0.2": lanes, "10.25.0.3": lanes}:
+        raise AssertionError("Game%d two generations must each expose %d distinct original TCP sessions: %r" % (lanes, lanes, sources))
     results = []
     seen_sid = set()
     baseline_extensions = None
@@ -134,15 +136,16 @@ def game_audit(raw):
                         "first_client_data": result["client_first_payload"],
                         "first_server_data": result["server_first_payload"],
                         "server_early_data_bytes": result["server_early_application_bytes"]})
-    return {"result": "REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS",
+    return {"result": "REAL_GAME%d_TWO_GENERATIONS_%d_CLIENTHELLO_NO_PRELUDE_PASS" % (lanes, 2*lanes),
             "original_tls": "real Go/FakeTCP 443", "client_generation_count": 2,
-            "lanes_per_generation": 4, "client_hello_sessions": len(results),
+            "lanes_per_generation": lanes, "client_hello_sessions": len(results),
             "distinct_session_ids": len(seen_sid),
             "source_counts": sources, "per_lane": results,
             "scope": "real original Go TLS first-flight only, not full Finished trace or public website fingerprint"}
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.exit("usage: audit.py private-ephemeral-real-tcp.pcap")
-    print(json.dumps(game_audit(pathlib.Path(sys.argv[1]).read_bytes()), sort_keys=True))
+    if len(sys.argv) not in (2, 3):
+        sys.exit("usage: audit.py private-ephemeral-real-tcp.pcap [lanes=2|4]")
+    lanes = int(sys.argv[2]) if len(sys.argv) == 3 else 4
+    print(json.dumps(game_audit(pathlib.Path(sys.argv[1]).read_bytes(), lanes), sort_keys=True))

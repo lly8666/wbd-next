@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1099,
-  "checkpoint_sha": "8db6d695ca45cec58ceba9b5ba0add594b0c0878",
+  "sequence": 1100,
+  "checkpoint_sha": "b66db557b62e7d193a98b5170a0687d01284b1a8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1099 fix cursor evidence schema H1098: exact SOURCE133d real Win original-Go six unit and same-product native WAL PASS, artifact independently reviewed; Windows physical NIC still untested",
-  "why_now": "H1098 governance Action41779432362 was BLOCKED ONLY because evidence missing standard top-level source_sha result PASS artifact_verified true; targeted tests already independently verified and feature check passed. Add exact fields, no product or test rerun.",
+  "current_task": "H1100 ARM64/ARM64 original Go/Rust Game2/off true A→A+B→B authenticated overlap; four real TCP first-flights / exact Stop / MTU readback / UDP candidate",
+  "why_now": "H1099 governance PASS source-correct. Game4 fixed6 x86/ARM overlap proven H1092/93; seven-mode Game2/off still needs equal source-locked qualification. Next Linux task native ARM64 both endpoints per user rotation. Keep product code unchanged.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect governance H1099 exact PASS; then real safe Windows NIC/source4 OS route change/Npcap TLS+MTU first UDP only if two managed physical paths; independently advance PLAN028 7-mode lane transition. Next Linux new task native ARM/ARM.",
+  "next_action": "Collect H1100 ARM64/ARM64 Game2 off native one-scenario source Action. Verify four unique real ClientHello, no private prelude, old Stop and 5+5 UDP, lease and new physical MTU readback. On first FAIL repair narrow gate. Then next Linux new task x86/x86; Windows physical Npcap switch still unqualified.",
   "unverified": true,
   "last_tested_source": "133d5e93ddbd2a311313cf8a80d3d3fc3fbb2430",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 32B offline routekey no WB-R1 scoped closed. H1092 x86 and H1093 ARM native Game4FEC6 overlap with real 8 TCP CH, 5+5 UDP, FEC and MTU1178. H1095 x86 original Go full decrypted TLS13 cert/CertificateVerify/both Finished versus matching uTLS reference. H1098 original Windows Go source133d six cold source4 transition/retry Go units pass, same product Win native Go/WAL+five modes run41778467840 pass. Actual Windows physical NIC switching, per-mode full crossover, CPU/p99, remote ICMP/Android untested; H998 old hot MTU FAIL and old ARM4FEC FAIL retained. Linux next ARM/ARM. H1099 repair only H1098 evidence expected governance JSON keys source_sha/result PASS/artifact_verified; WIN 6/6 unit + scoped five native modes proven, no new SOURCE or test."
+  "partial_summary": "H1087 32B offline routekey no WB-R1 scoped closed. H1092 x86 and H1093 ARM native Game4FEC6 overlap with real 8 TCP CH, 5+5 UDP, FEC and MTU1178. H1095 x86 original Go full decrypted TLS13 cert/CertificateVerify/both Finished versus matching uTLS reference. H1098 original Windows Go source133d six cold source4 transition/retry Go units pass, same product Win native Go/WAL+five modes run41778467840 pass. Actual Windows physical NIC switching, per-mode full crossover, CPU/p99, remote ICMP/Android untested; H998 old hot MTU FAIL and old ARM4FEC FAIL retained. Linux next ARM/ARM. H1099 repair only H1098 evidence expected governance JSON keys source_sha/result PASS/artifact_verified; WIN 6/6 unit + scoped five native modes proven, no new SOURCE or test. H1100 ARM native Game2/off two-lane overlap test-only SOURCE candidate; 4 true TCP CH plus TUN MTU/5+5 UDP/Stop. No product hot data plane/wire edit or PASS claimed."
 }

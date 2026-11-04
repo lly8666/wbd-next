@@ -13,8 +13,8 @@ if [[ "$PATH_SWITCH" != 0 && "$PATH_SWITCH" != 1 ]];then echo "invalid path swit
 if [[ "$PATH_SWITCH" == 1 && "$AUTO_IP" != 1 ]];then echo "real path switch requires protected automatic lease" >&2;exit 2;fi
 if [[ "$AUTO_IP" != 0 && "$AUTO_IP" != 1 ]];then echo "invalid auto-IP selector" >&2;exit 2;fi
 # Normal and Game4 only: reuse the SAME authenticated rtnetlink supervisor.
-if [[ "$AUTO_IP" == 1 && "$MODE" != normal && "$MODE" != game4 ]];then
-  echo "PLAN028 auto-IP fixture supports Normal and Game4" >&2;exit 2
+if [[ "$AUTO_IP" == 1 && "$MODE" != normal && "$MODE" != game4 && "$MODE" != game2 ]];then
+  echo "PLAN028 auto-IP fixture supports Normal, Game2 and Game4" >&2;exit 2
 fi
 GAME_FEC_ARG=''
 if [[ "${WBD_V4_PUBLIC_GAME_FEC:-off}" != off ]];then
@@ -140,9 +140,10 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   if [[ "$MODE" != normal ]];then
     # Eight real TLS tuples: four original Game4 lanes, then a new four
     # after OS source IPv4 changes and original old Game M4 joins.
-    [[ "$MODE" == game4 && "$AUTO_IP" == 1 && "$PATH_SWITCH" == 1 &&
-       "$GAME_FEC_ARG" == '--game-fec fixed6' ]] || {
-      echo 'wire audit supports Normal or one Game4FEC6 physical path switch' >&2
+    [[ "$AUTO_IP" == 1 && "$PATH_SWITCH" == 1 &&
+       ( "$MODE" == game4 && "$GAME_FEC_ARG" == '--game-fec fixed6' ||
+         "$MODE" == game2 && -z "$GAME_FEC_ARG" ) ]] || {
+      echo 'wire audit supports Normal, Game2/off or Game4/fixed6 physical path switch' >&2
       exit 2
     }
   fi
@@ -394,7 +395,7 @@ PY
          grep -q 'V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=2 old_generation=1 shared_tun_single_reader=1 new_tls_m4_before_old_stop=1' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
-         [[ "$(grep -c 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=4' "$TMP/client.log" || true)" -ge 2 ]] &&
+         [[ "$(grep -c "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log" || true)" -ge 2 ]] &&
          [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] &&
          grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log";then
         path_ready=1;break
@@ -439,26 +440,26 @@ finally:s.close()
   cat "$ART/plan028-real-path-switched-business.log"
   test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "$ART/plan028-real-path-switched-business.log")" -eq 5
   if [[ "$GAME" != 0 ]];then
-    grep -q 'V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=4' "$TMP/client.log"
-    python3 - "$TMP/client.log" <<'PY'
+    grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$GAME" "$TMP/client.log"
+    python3 - "$TMP/client.log" "$GAME" <<'PY'
 import re,sys,pathlib
 text=pathlib.Path(sys.argv[1]).read_text()
 ips=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\.66\.0\.[0-9]+)/32',text)
 assert len(ips)==2 and ips[0]==ips[1],ips
-print("M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS")
+print("M0_PLAN028_GAME%s_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS"%sys.argv[2])
 PY
-    python3 - "$TMP/client.log" <<'PY'
+    python3 - "$TMP/client.log" "$GAME" <<'PY'
 import pathlib,sys
 s=pathlib.Path(sys.argv[1]).read_text()
-candidate=s.index('V4_PUBLIC_PATH_CANDIDATE role=client generation=2 mode=game4')
+candidate=s.index('V4_PUBLIC_PATH_CANDIDATE role=client generation=2 mode=game'+sys.argv[2])
 new=s.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true')
 committed=s.index('V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=2 old_generation=1')
 old=s.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
 assert candidate<new<committed<old,(candidate,new,committed,old)
 assert 'V4_PUBLIC_PATH_GAME_OLD_DRAINING' not in s
-print('M0_PLAN028_GAME4_REAL_A_TO_AB_TO_B_AUTHENTICATED_OVERLAP_ORDER_PASS')
+print('M0_PLAN028_GAME'+sys.argv[2]+'_REAL_A_TO_AB_TO_B_AUTHENTICATED_OVERLAP_ORDER_PASS')
 PY
-    echo "M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS source=10.25.0.3 outer=1460 physical=1280 new_tun_readback=1 genuine_udp=5 old_game_exact_Stop=1 new_game_native_ready=1 shared_client_reader=1"
+    echo "M0_PLAN028_REAL_LINUX_GAME${GAME}_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS source=10.25.0.3 outer=1460 physical=1280 new_tun_readback=1 genuine_udp=5 old_game_exact_Stop=1 new_game_native_ready=1 shared_client_reader=1"
   else
     echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=rtnetlink_os coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
   fi
@@ -586,13 +587,13 @@ fi
 # while the server's shared TUN reader continues through both cohorts.
 if [[ "$AUTO_IP" == 1 && "$GAME" != 0 ]];then
   grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$GAME" "$TMP/server.log"
-  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=4' "$TMP/client.log"
+  grep -q "V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=$GAME" "$TMP/client.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/client.log"
   # Multi-group server shares one Rust reader but its Go manager does
   # not emit the singleton client's Go-level DRAINED marker. Require the
   # real native reader_joined=1 with routed>=10 below, not a fake log line.
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
-  python3 - "$TMP/client.log" "$TMP/server.log" "$GAME" <<'PY'
+  python3 - "$TMP/client.log" "$TMP/server.log" "$GAME" "$GAME_FEC_ARG" <<'PY'
 import pathlib,re,sys
 client=pathlib.Path(sys.argv[1]).read_text()
 server=pathlib.Path(sys.argv[2]).read_text()
@@ -607,10 +608,13 @@ for role,content in (('server',server),('client',client)):
     rows=re.findall(pattern,content)
     assert len(rows)==1 and int(rows[0][1])>=10,(role,rows)
 assert server.count('V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation')==1
-for role,log in (("client",client),("server",server)):
-    pairs=re.findall(r'V4_PUBLIC_GAME_FEC_COUNTERS role='+role+r' lanes='+str(n)+r' source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)',log)
-    assert len(pairs)==2 and all(int(s)>=5 and int(p)>0 and int(k)>0 for s,p,k in pairs),(role,pairs)
-print("M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS new_ready_before_old_stop=1 client_server_one_reader_each=1 parity_both_generations=1")
+if sys.argv[4]:
+    for role,log in (("client",client),("server",server)):
+        pairs=re.findall(r'V4_PUBLIC_GAME_FEC_COUNTERS role='+role+r' lanes='+str(n)+r' source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)',log)
+        assert len(pairs)==2 and all(int(s)>=5 and int(p)>0 and int(k)>0 for s,p,k in pairs),(role,pairs)
+    print("M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS new_ready_before_old_stop=1 client_server_one_reader_each=1 parity_both_generations=1")
+else:
+    print("M0_PLAN028_GAME2_OFF_A_TO_AB_TO_B_SHARED_TUN_PASS new_ready_before_old_stop=1 client_server_one_reader_each=1 native_udp_before_after=1")
 PY
 fi
 if [[ "$GAME" == 0 ]];then
@@ -682,10 +686,10 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   audit_script=tools/m0_plan028_tls_wire_audit.py
   audit_receipt="$ART/plan028-tls-wire-audit.json"
   expected_audit=REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS
-  if [[ "$MODE" == game4 ]];then
+  if [[ "$GAME" != 0 ]];then
     audit_script=tools/m0_plan028_tls_game_lane_wire_audit.py
-    audit_receipt="$ART/plan028-game4-tls-wire-audit.json"
-    expected_audit=REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS
+    audit_receipt="$ART/plan028-game${GAME}-tls-wire-audit.json"
+    expected_audit="REAL_GAME${GAME}_TWO_GENERATIONS_$((2*GAME))_CLIENTHELLO_NO_PRELUDE_PASS"
   fi
   for role in server client;do
     capture="$TMP/hello-$role.pcap"
@@ -695,7 +699,12 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
     # Never upload PCAP. Only packet metadata and redacted JSON results.
     sudo -n tcpdump -nn -tt -r "$capture" -c 7 2>&1 |
       grep -E 'reading from file| IP | packets' | tail -9 || true
-    if sudo -n python3 "$audit_script" "$capture" >"$TMP/tls-audit-$role.json";then
+    if [[ "$GAME" != 0 ]];then
+      audit_cmd=(sudo -n python3 "$audit_script" "$capture" "$GAME")
+    else
+      audit_cmd=(sudo -n python3 "$audit_script" "$capture")
+    fi
+    if "${audit_cmd[@]}" >"$TMP/tls-audit-$role.json";then
       selected="$role";break
     fi
     echo "M0_PLAN028_TLS_CAPTURE_NOT_QUALIFIED role=$role bytes=$size" >&2
@@ -708,8 +717,8 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
   cp "$TMP/tls-audit-$selected.json" "$audit_receipt"
   grep -Fq "$expected_audit" "$audit_receipt"
   sudo -n rm -f "$TMP/hello-server.pcap" "$TMP/hello-client.pcap"
-  if [[ "$MODE" == game4 ]];then
-    echo "M0_PLAN028_TLS_GAME4_EIGHT_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS vantage=$selected per_group=4 new_generation=1"
+  if [[ "$GAME" != 0 ]];then
+    echo "M0_PLAN028_TLS_GAME${GAME}_$((2*GAME))_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS vantage=$selected per_group=$GAME new_generation=1"
   else
     echo "M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS vantage=$selected cert_verified_by_original_TLS=1"
   fi
