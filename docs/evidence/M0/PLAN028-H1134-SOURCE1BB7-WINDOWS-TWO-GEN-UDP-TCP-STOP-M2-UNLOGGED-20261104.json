@@ -63,5 +63,6 @@
     "All native business and Stop passed before verification failure; overall Action not PASS.",
     "No physical Wi-Fi/actual hardware NIC; WSL2 test-owned virtual underlay.",
     "H998 original same-connection hot MTU FAIL; remote ICMP and Android NOT_RUN; CPU causal gain NOT_PROVEN"
-  ]
+  ],
+  "source_sha": "1bb73998a9d938d59c7963ddd454278e5284225a"
 }

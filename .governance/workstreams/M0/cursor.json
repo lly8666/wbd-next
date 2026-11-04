@@ -4,20 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1135,
-  "checkpoint_sha": "ce199e9ff73c752ac845974c71d92be31cdb1286",
+  "sequence": 1136,
+  "checkpoint_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1135 original Linux shared-manual server per-session Rust effective M2 outer-repair counters readback before exact Stop; full Windows/WSL2 source product build + one Normal owned source4 switch",
-  "why_now": "H1134 Action41820373051 product SOURCE1bb genuine Windows old/new TLS Npcap Rust/Wintun READY, physical selected .1→.9, two Windows 1389 MTU/1420 MSS, both Linux native SYNACK, 12+12 post-switch UDP receive, actual bidirectional UDP/TCP and both Rust Stop PASS. Overall Action FAIL only because shared server has no per-session Rust M2 effective outer counters; Windows both original Rust readbacks enabled1. H1135 reads actual server counters before each Stop, logs each after Stop; no CLI invented readback.",
+  "current_task": "H1136 repair active-source evidence refs only; H1135 original Windows Go/Rust full native source test Action41822046885 ongoing",
+  "why_now": "Governance H1135 gate failed only because active evidence_refs mixed Windows SOURCE1bb and historic ARM SOURCE32cd, while last_tested_source remains 1bb. H1134 evidence now has standard source_sha=1bb. Do not promote H1135 native before Action result.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1135 original Windows/WSL2 source-rebuilt one Normal Action (first full product source diff since H1129). Require real per-session Linux original Rust M2 enabled1 twice, Windows twice, genuine source4 .1→.9, two MTU/MSS receipts, app TCP+UDP, Stop and owned cleanup; if fail narrow first cause. Linux next full task x86/x86, Windows excluded.",
+  "next_action": "Collect H1135 signed Windows/Npcap/Wintun↔Linux WSL2 original source rebuild Action41822046885, two real shared Rust outer M2 enabled readbacks, real UDP/TCP, Stop. No duplicate dispatch.",
   "unverified": true,
   "last_tested_source": "1bb73998a9d938d59c7963ddd454278e5284225a",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1134-SOURCE1BB7-WINDOWS-TWO-GEN-UDP-TCP-STOP-M2-UNLOGGED-20261104.json",
-    "docs/evidence/M0/PLAN028-H1133-SOURCE1BB7-WINDOWS-TWO-GEN-MSS-LEGACY-VERIFIER-FAIL-20261104.json",
-    "docs/evidence/M0/PLAN028-H1130-SOURCE32CD-ARM64-AUTO-CPU-P99-REAL-SWITCH-20261104.json"
+    "docs/evidence/M0/PLAN028-H1133-SOURCE1BB7-WINDOWS-TWO-GEN-MSS-LEGACY-VERIFIER-FAIL-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
