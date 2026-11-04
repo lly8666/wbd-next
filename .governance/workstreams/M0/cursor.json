@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1188,
-  "checkpoint_sha": "1d6b06a27b30d044b50da933b2530b75df2cb66d",
+  "sequence": 1189,
+  "checkpoint_sha": "97bbf9a310921fbead2cb1afc829cdd86a2d3055",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1188 signed Windows Game4FEC6 real Npcap/Wintun↔WSL2 original TLS/Rust two authenticated M4 generations, Rust outer-policy 2 Windows+2 Linux, protected FEC6 applied2, genuine UDP/TCP and precise old+final Stop full PASS SOURCE65de Action41894548875. Last Linux test SOURCE5c895 x86 tc5% remains sole current cursor evidence ref; Windows source-qualified proof in immutable docs+feature card. Next full Linux ARM64/ARM64 true post-auth 5% after real physical down-first authenticated recovery.",
-  "why_now": "Signed Windows H1185 Action41894548875 native job126802931886 success, artifact13356715489 SHA28f652: new original TLS Game4 after OS .1→.9, Rust policy2 both OS and FEC6 2 actual groups, real UDP/TCP, native exact owned Stop. H1187 governance source-mixed cursor refs fixed and passed. No source/Wire adulteration.",
+  "current_task": "H1189 complete Linux platform ARM64+ARM64 original Go TLS/Rust shared443 Game4FEC6 physical link down first, old1 terminated and new gen2 authentic TLS/Rust M4 and independent NormalAuto48 proven before true tc netem loss5 applied only post-auth. Then 200 real UDP 10ms received-only RTT p99 and actual kernel drops positive, other Normal 16 genuine UDP concurrent, qdisc restore, final exact Stop. Windows signed Game4 source65de and x86 netem5 source5c895 independently qualified PASS.",
+  "why_now": "H1186 original x86 Game4 under actual loss during TLS second physical transition already PASS; H1188 signed Windows two native Game4 FEC6 groups PASS; next Linux ARM64+ARM64 needs independent real post-auth loss5 after established hard physical DOWN-first Game4 TLS recovery. Avoid falsely claiming loss during ARM TLS and re-running previous matrices; share already verified original x86 200UDP measured kernel qdisc code via test-only generator.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Next Linux ARM64 client+ARM64 server one genuine link-DOWN first original Go TLS/Rust Game4 reauth then post-auth kernel tc netem5 true drops and 200 inner UDP RTT p99; distinguish stage from loss DURING reauth. Keep old historical H998 FAIL/ICMP/Android/CPU unknown.",
+  "next_action": "Collect exactly one H1189 native ARM64+ARM64 Action and artifact: verified original DOWN/UP, new gen2+Normal48, post-auth OS tc loss5 drops>0, no-application-retry 200 UDP p99, other Normal16, qdisc removal and native final Stop. If failed isolate test stage from product. H998 old shrink/ARM failure, remote ICMP/Android/CPU causal gaps remain.",
   "unverified": true,
   "last_tested_source": "5c89564a15f4f74567977d744547b15ce6339c96",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1188 Windows SOURCE65de full PASS Action41894548875 artifact13356715489 2 protected Game4 TLS/Rust cohorts, per-OS Rust outer-policy2 each, native server FEC6 readback2, Npcap/Wintun OS1358, true UDP/TCP+Stop; previous Linux x86 SOURCE5c895 5% tc netem full PASS stays sole cursor evidence_ref. Next full Linux ARM/ARM native post-auth 5%."
+  "partial_summary": "H1189 ARM64 original direct link-DOWN protected Game4 Go TLS/Rust gen2 then post-auth only real kernel netem5, 200 UDP RTT, Normal16 and genuine tc drops; test-only derived from qualified x86 5% sender, no product edits."
 }
