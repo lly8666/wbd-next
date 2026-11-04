@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1190,
-  "checkpoint_sha": "30f60456ef7f495601d0a09058f45b2e970ff361",
+  "sequence": 1191,
+  "checkpoint_sha": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1190 test-only ARM generator native heredoc alias correction: transplanted qualified x86 original 5% probe carries PY_H1178_END delimiter, strict ARM fixture asserted zero old alias but omitted rename. Rename only that actual heredoc delimiter to PY_ARM_NETEM_END before staging, so true physical link-down Go TLS/Rust+postauth netem5 can run. H1189 old Action41897263413 already building; H1190 one new native ARM action source exact, no Go/Rust wire change.",
-  "why_now": "H1189 ARM test generator copied original x86 200-packet RTT measurement string including its two PY_H1178_END tokens; after staging it required count zero without renaming, a deterministic fixture-only assertion failure before native network. Small alias rename avoids wasting ARM native Action. Governance H1189 passed, Windows H1188 source65de and x86 H1186 source5c895 fully qualified.",
+  "current_task": "H1191 native ARM64 client/server SOURCE0b6f Action41897548949 complete original Go TLS/Rust Game4 gen2 physical down-first, real post-auth tc5% dropped115/2309, inner UDP200/200 p99 20.067ms, other Normal16, qdisc restored, final Stop PASS. Next full Linux x86_64+x86_64. Existing signed Windows and x86 5% distinct PASS preserved.",
+  "why_now": "Native ARM action source0b6f artifact13357655852 hash adde1f: down1332ms/auth gen2 after1620ms, 5% OS netem post-auth true dropped115, UDP200/200 RTT p99 20.067, independent Normal48+16 and Stop. No claim 5% during ARM TLS.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1190 native ARM/ARM 5% post-auth original Go TLS/Rust Action; require link DOWN first, new authenticated Game4 and healthy Normal48, then physical kernel 5% loss drop>0 and 200 inner UDP p99+concurrent Normal16, qdisc cleanup/final native Stop. Old H1189 Action may fail fixture-only; don't conflate. Next Windows scope already PASS.",
+  "next_action": "PLAN028 §5 seven modes actual lane A→A+B→B; next native Linux x86/x86 only; target unqualified Normal off/fixed/auto and Game2/Game4 off/fixed plus 30%/250ms reps. Independent Windows mode-specific Actions may run concurrently; do not re-run 027.",
   "unverified": true,
-  "last_tested_source": "5c89564a15f4f74567977d744547b15ce6339c96",
+  "last_tested_source": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1186-SOURCE5C895-NATIVE-X86-GAME4-NETEM5-REAL-200UDP-P99-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1191-SOURCE0B6F-ARM64-GAME4-DOWN-POSTAUTH-NETEM5-P99-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1189 ARM64 original direct link-DOWN protected Game4 Go TLS/Rust gen2 then post-auth only real kernel netem5, 200 UDP RTT, Normal16 and genuine tc drops; test-only derived from qualified x86 5% sender, no product edits. H1190 rename inherited native RTT heredoc delimiter before exact fixture assertion; no product change; ARM new Action verifies genuine post-auth loss5. Original x86+signed Windows qualified PASS maintained."
+  "partial_summary": "H1191 original ARM64+ARM64 source0b6f physical DOWN and Game4 gen2 TLS recovery with real post-auth5% tc dropped115/2309, inner UDP200/200 RTT p9920.067ms, sibling Normal16 and final Stop PASS; next Linux x86/x86, 7mode gaps; H998 FAIL and ICMP/Android/CPU unknown."
 }

@@ -242,44 +242,51 @@
   },
   {
    "platform": "Linux ARM64+ARM64 genuine original Go TLS/Rust shared443 and netns physical IPv4",
-   "scope": "H1166 SOURCEe568 Game2off+Game4fixed6+Normal Auto protected three devices; Game4 real source4 .3→.9 and MTU1280, new Game4 32 UDP, Normal live48, sibling unaffected OS MTU, exact old/new Stop and single server TUN.",
+   "scope": "H1168 native ARM shared443 Game4 physical reauth with sibling Normal live real UDP and owned Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "e5688364894ba0f60d71edb9547ed8e441b9e48a",
    "evidence": "docs/evidence/M0/PLAN028-H1166-SOURCEE568-ARM64-MIXED-GAME4-PHYSICAL-NORMAL-LIVE-PASS-20261104.json"
   },
   {
    "platform": "Linux x86_64 client+x86_64 server original Go TLS/Rust shared443",
-   "scope": "H1170 SOURCEcb4 original three protected mixed clients; Game4FEC6 two actual OS source4 .3→.9→.3 and link1500→1280→1500, new real Game4 UDP32+16 while sibling Normal Auto live48+16, inner1358→1178→1178 conservative overlap and two exact old Stop.",
+   "scope": "H1170 x86 source4 .3→.9→.3/MTU1500→1280→1500 two protected Game4 TLS handovers, UDP and Normal live.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "cb4cdb9a403ede0d9baa1aa515836fd3861704ba",
    "evidence": "docs/evidence/M0/PLAN028-H1170-SOURCECB4C-X86-GAME4-TWO-PHYSICAL-GEN-MIXED443-20261104.json"
   },
   {
    "platform": "Native Linux ARM64+ARM64 original protected Game4 and shared443",
-   "scope": "H1177 SOURCEbaa1 physical mxb0 actual DOWN1331.81ms then source4 .3→.9 and MTU1280, gen1 terminated before gen2 original TLS/Rust ready, command→ready1619.91ms, new Game4FEC6 real UDP32/healthy Normal Auto48, OS inner1178/sibling1375 and final Stop.",
+   "scope": "H1177 ARM physical DOWN1332ms original Game4 gen2 TLS direct recovery, Normal48 and native Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "baa1e9b9e1efe287108c5c151fce09d76f8ab29c",
    "evidence": "docs/evidence/M0/PLAN028-H1177-SOURCEBAA1-ARM64-GAME4-DOWN-FIRST-REAL-AUTH-PASS-20261105.json"
   },
   {
    "platform": "Native Linux x86_64 client+x86_64 server original protected Go TLS/Rust shared443",
-   "scope": "H1186 SOURCE5c895 actual OS Game4 two physical .3→.9→.3/MTU1500→1280→1500, authentic epochs1→2→4 old1+2 exact Stop, independent Normal Auto48+320 and new Game4 32+16, real kernel tc netem loss5 dropped158/2330 packets, Game4 inner real UDP200/200, received-only p99 20.033ms, qdisc restored, final native Stop.",
+   "scope": "H1186 x86 true tc5% 158/2330 dropped during Game4 reauth, inner UDP200/200 p99 20.033ms Normal320+Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "5c89564a15f4f74567977d744547b15ce6339c96",
    "evidence": "docs/evidence/M0/PLAN028-H1186-SOURCE5C895-NATIVE-X86-GAME4-NETEM5-REAL-200UDP-P99-PASS-20261105.json"
   },
   {
    "platform": "Signed Windows Npcap/Wintun↔WSL2 original Go TLS/Rust Game4FEC6",
-   "scope": "H1188 SOURCE65de same443 2 genuine Game4 M4 TLS generations after source .1→.9, Rust outer policy2 each OS + FEC6 applied2, Wintun MTU1358 both, real UDP98/98 Windows and Linux97 RX, TCP duplex and old/final Stop.",
+   "scope": "H1188 signed Windows original Game4 TLS/Rust groups2, Rust outer2 each OS, FEC6 applied2, UDP/TCP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "65deae31aec98ee4cb8b17b8b825a1ce0a4fd084",
    "evidence": "docs/evidence/M0/PLAN028-H1188-SOURCE65DE-SIGNED-WIN-GAME4-TWO-PROTECTED-M4-GENS-NATIVE-PASS-20261105.json"
+  },
+  {
+   "platform": "Native Linux ARM64+ARM64 original Go TLS/Rust Game4 shared443",
+   "scope": "H1191 SOURCE0b6f physical DOWN1332ms→authenticated gen2, Normal48+16, true post-auth netem5 dropped115/2309, UDP200/200 p99 20.067ms, original Stop.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
+   "evidence": "docs/evidence/M0/PLAN028-H1191-SOURCE0B6F-ARM64-GAME4-DOWN-POSTAUTH-NETEM5-P99-PASS-20261105.json"
   }
  ],
  "limitations": [
   "V4不保证与旧V3数据面互通。",
   "Linux task rotation: x86/x86 then ARM/ARM native, Windows excluded.",
-  "Scoped PASS: mixed443 H1155/1158; x86+ARM physical H1160/1166/H1170, ARM down-first H1177; x86 tc5% H1186 actual158 kernel drops and Game4 UDP200/200 p99 20.033ms/Normal320/Stop; signed Windows H1188 manual Game4FEC6 two TLS/Rust groups, native Rust outer 2 each OS, FEC6 applied2, UDP/TCP+Stop. Historical H1173 singleton Game4 gen2 FAIL and H998 hot MTU-shrink/old ARM Game4 Action FAIL retained. Seven-mode loss30%, Android, ICMP, exact notifier/TLS/first and CPU causal unknown."
+  "Scoped PASS: shared443, x86/ARM real physical change and signed Windows Game4FEC6 TLS×2 H1188; x86 H1186 5% during TLS reauth dropped158/2330, UDP200/200 p99 20.033ms Normal320; ARM H1191 5% AFTER TLS dropped115/2309 UDP200/200 p99 20.067ms Normal16. Historical H1173 Game4 TLS2 FAIL and H998 original MTU hot-shrink/ARM Action FAIL retained. Full 7 modes and 30%/250ms, precise event/TLS/first, CPU causal, ICMP, Android open."
  ],
  "promotion": null,
  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1191",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
+  "action": {
+    "run_id": 41897548949,
+    "job_id": 126811017805,
+    "conclusion": "success",
+    "artifact_id": 13357655852,
+    "zip_sha256": "adde1f906c5663b018466776f1b825ae66162e238adbdc68bbc36a0106df7029"
+  },
+  "native_build": {
+    "arch": "aarch64 native client/server ELF183",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "sha256": {
+      "client": "dd38f3eee7563171a3ce70119d1c470d1ee459ed01685e528e479131f310ab7e",
+      "server": "0e625902cf5475eb2510472c3d53abe61df3f5ba292b81e1ba3576a4b669a2d9",
+      "rust": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "original_TLS_Rust_path": {
+    "one443": true,
+    "physical_link_DOWN_ms": 1331.77,
+    "source_ipv4_before": "10.25.0.3",
+    "source_ipv4_after": "10.25.0.9",
+    "old_Game4_gen1_terminated_before_new_auth": true,
+    "new_Game4_gen2_authenticated": true,
+    "command_to_new_ready_ms": 1620.08,
+    "Game4_new_real_udp": 32,
+    "Normal_auto_unchanged_real_udp": 48,
+    "outer_user_mtu": 1460,
+    "Game4_OS_tun_mtu": 1178,
+    "Normal_OS_tun_mtu": 1375,
+    "owned_stop": true
+  },
+  "physical_loss": {
+    "stage": "AFTER_GAME4_GEN2_AUTHENTICATED_M4",
+    "native_tc_netem_loss_percent": 5,
+    "physical_sent": 2309,
+    "physical_dropped": 115,
+    "real_inner_UDP_sent": 200,
+    "real_inner_UDP_received": 200,
+    "no_app_retries": true,
+    "received_only_rtt_p99_ms": 20.067,
+    "max_delivery_gap_ms": 20.005,
+    "other_Normal_auto_real_UDP_while_loss": 16,
+    "qdisc_after": "noqueue",
+    "qdisc_restored": true
+  },
+  "not_claimed": [
+    "No 5% loss DURING ARM TLS: added only AFTER authentication",
+    "Inner 200/200 does not mean physical packet loss zero",
+    "Not Windows or Android / no remote ICMP / no CPU causality",
+    "No exact notification→TLS or auth→first timings, no TCP continuity within this 5% stage",
+    "Legacy x86 probe JSON field original_tls_generation3_ready incorrectly named: actual ARM authentic gen2 verified separately"
+  ],
+  "historical": [
+    "H998 original live hot-MTU shrink FAIL",
+    "H998 old ARM Game4 Action FAIL",
+    "H1173 singleton Game4 gen2 TLS FAIL"
+  ]
+}

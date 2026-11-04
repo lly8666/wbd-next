@@ -1,0 +1,9 @@
+# PLAN028 H1191 — Genuine ARM64+ARM64 5% post-auth Game4 PASS
+
+[Action41897548949](https://github.com/lly8666/wbd-next/actions/runs/41897548949) SOURCE `0b6f827f4a9e7350a25403a825674911f3e5b4f5` artifact13357655852 sha256 `adde1f906c5663b018466776f1b825ae66162e238adbdc68bbc36a0106df7029`, native ARM64 client+server (not QEMU). Actual physical link DOWN 1331.77ms, old Game4 generation1 terminated before authentic original Go TLS/Rust generation2 M4 Ready, 1620.08ms command→Ready; new physical source4 .3→.9, user outer1460, Game4 OS inner1178, sibling Normal1375, real new Game4 UDP32 and Normal48. **After** genuine new authentication, real physical `tc netem loss 5%` sent2309/dropped115 kernel packets; inner Game4 UDP **200/200** in 10ms intervals without app retry, received-only RTT p99 **20.067ms**, max gap20.005ms; independent Normal Auto16 passed with actual impairment, qdisc OS restored to noqueue and original native Stop completed. Post-auth loss only (not loss during ARM TLS). Legacy inherited x86 probe JSON's `original_tls_generation3_ready` key is misnamed: actual ARM auth generation2 is separately proved. This success is scoped; do not claim zero physical loss (115 dropped) or Android/ICMP/CPU causal/one-way network p99. Evidence `docs/evidence/M0/PLAN028-H1191-SOURCE0B6F-ARM64-GAME4-DOWN-POSTAUTH-NETEM5-P99-PASS-20261105.json`.
+
+Next whole Linux task x86/x86 and seven-mode/30% PLAN028 §5 gaps; Windows Game4 signed and x86 Game4 loss-during-TLS already source-qualified. Original H998 hot shrink/old ARM Action FAIL and H1173 old singleton Game4 gen2 FAIL retained.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Record new SOURCE-native ARM64 physical DOWN+authenticated Game4 then real post-auth kernel netem5 and measured UDP p99, sibling Normal and Stop."}
+```
