@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1205,
-  "checkpoint_sha": "600864ebe5b101ab977771a3f441025201da924d",
+  "sequence": 1206,
+  "checkpoint_sha": "9abf778a9864baa5fa07a37924eb92ae38605eac",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1205 collect native ARM64 Game4 highest FEC6 SOURCEabba Action41933405513 full original Go TLS/Rust down-first authentic gen2 THEN real tc netem loss30% delay250ms post-auth: 736/1708 OS physical packets dropped, inner UDP200/200 received-only RTT p99 270.013ms, unchanged Normal16, qdisc restored, shared Rust TUN owned Stop PASS. X86 Normal fixed6 real tc30+delay250 DURING second authentic TLS Action41933848259 SOURCE600864 independent in flight. All 7 Linux mode-specific A-B-A qualified already.",
-  "why_now": "ARM Action41933405513 artifact13371649337 SHA fb10a58f actual ARM ELF183 high-loss native kernel packet drops and stable independent real business. No 30% TLS qualification from ARM because injection is postauth. Original H998 failure remains. Source-specific cursor evidence refs ARM only; no cross-source x86 H1204 addition.",
+  "current_task": "H1206 retry exact x86/x86 Normal fixed6 real second physical Go TLS/Rust under tc netem loss30% delay250 Action41933848259 originally FAILED ONLY test generator pre-network assertion: b converts NETEM5→NETEM30 then attempted to replace old H1184 NETEM5 marker so required final H1204 receipt count0. Native kernel/UDP/TLS test never executed. Fix only test marker target to NETEM30 (existing generator sequence), keep same 128s Game4 sibling and 200 no-app-retry Normal UDP p99 and qdisc restoration. H1205 ARM Game4 high30 postauth fully PASS and source-qualified.",
+  "why_now": "Original ARM H1205 SOURCEabba high30 real dropped736/1708 and inner200/200 p99270.013 PASS archived. Distinct x86 SOURCE600864 Action41933848259 native build passed but fixture-only `assert b.count(...NETEM30...)==1` red after marker replacement path miss. Do not misdiagnose product or count as full native Linux task; rerun one source freeze with corrected marker.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1204 x86 Normal fixed6 source600864 Action41933848259, actual original TLS under real tc30/250, CPU/p99 and old owned Stop. If FAIL isolate first fixture/network cause, no repeated old weaknet matrix. Then Windows missing mode-specific physical switches, accurate notifier/auth→first timing, leave Android/ICMP and CPU causal gaps.",
+  "next_action": "Collect H1206 x86 native Normal fixed6 high30 delay250 second real TLS 128s Game4 health, actual OS drop and received-only 200UDP RTT p99, original owned Stop. If product issue isolate narrow stage. Then Windows seven physical mode qualification / native notifier→TLS and auth→first, retain H998 and Android/ICMP/CPU causal.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1205 ARM original Game4FEC6 genuine physical down-first TLS then postauth kernel netem30% delay250ms PASS, 736/1708 physical dropped, inner UDP200/200 RTT p99 270.013ms, sibling Normal16, qdisc and Stop. X86 Normalfixed6 impaired second TLS in flight, Windows and Android gap."
+  "partial_summary": "H1206 x86 high30 Normal fixed6 false-red generated NETEM5→NETEM30 marker ordering fixed before native; no product edits, ARM high30 sourceabba fully PASS stored."
 }

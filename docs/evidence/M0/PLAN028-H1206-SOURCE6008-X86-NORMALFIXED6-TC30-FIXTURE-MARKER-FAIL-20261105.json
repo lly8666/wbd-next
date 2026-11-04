@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1206",
+  "result": "FAIL_PRE_NATIVE_TEST_GENERATOR",
+  "source_sha": "600864ebe5b101ab977771a3f441025201da924d",
+  "action": {
+    "run_id": 41933848259,
+    "job_id": 126937231387,
+    "artifact_id": 13372732423,
+    "conclusion": "failure"
+  },
+  "first_failure": "Generator `b=b.replace('NETEM5','NETEM30')` applied before replacing marker `M0_PLAN028_H1184_X86_NETEM5...`, leaving old marker absent and final H1204 receipt count=0; assertion before Bash native network.",
+  "fix": "Match post-replacement H1184_NETEM30 marker, leave product, packet measurement and configured 30%/250ms unchanged",
+  "native_business": "NOT_RUN",
+  "known_earlier_pass": "H1205 ARM 30%/250ms post-auth real kernel drop736/1708 UDP200/200 p99 270.013ms PASS",
+  "limits": [
+    "H998 old hot-shrink/old ARM Game4 Action FAIL retained",
+    "Android/ICMP/CPU causal not measured"
+  ]
+}

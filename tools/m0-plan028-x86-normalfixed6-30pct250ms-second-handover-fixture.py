@@ -61,7 +61,7 @@ b=b.replace('"original_tls_generation3_ready":True','"original_tls_successor_rea
 b=b.replace("PY_H1178_END","PY_NORMAL_HIGH30_END")
 b=b.replace("H1178 original physical loss qdisc leaked","H1204 physical loss qdisc leaked")
 b=b.replace("5pct physical kernel qdisc","30pct physical kernel qdisc")
-b=b.replace("M0_PLAN028_H1184_X86_NETEM5_200UDP_P99_NATIVE_DROP_AND_CLEAN_STOP_PROVEN",
+b=b.replace("M0_PLAN028_H1184_X86_NETEM30_200UDP_P99_NATIVE_DROP_AND_CLEAN_STOP_PROVEN",
             "M0_PLAN028_H1204_X86_NORMAL_FIXED6_NETEM30_DELAY250_NATIVE_DROP_AND_CLEAN_STOP_PASS")
 assert b.count("M0_PLAN028_H1204_X86_NORMAL_FIXED6_NETEM30_DELAY250_NATIVE_DROP_AND_CLEAN_STOP_PASS")==1
 s=s.replace(old,old+chr(10)+b,1)
