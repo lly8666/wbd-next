@@ -1,0 +1,92 @@
+name: M0 PLAN028 native ARM64 Auto path CPU and p99 one frozen source
+run-name: PLAN028 H1130 ARM64 Auto physical source and 128 UDP CPU p99
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-arm64-auto-phase-cpu-frozen.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-arm64-original-auto-one-scene:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41787602880
+          github-token: ${{ github.token }}
+          name: m0-plan028-native-arm64-normal-auto-41787602880
+          path: ./
+      - name: Verify genuine frozen ARM64 ELF and one real ephemeral fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -c /dev/net/tun
+          python3 - <<'PY'
+          import hashlib,json,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert m["source_sha"]=="32cd752201e01134fc53157270ce223de70a8c7a"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["architecture"]=="native_aarch64"
+          assert m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",b,18)[0]==183
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][name]
+          print("M0_PLAN028_ARM64_CPU_P99_FROZEN_GENUINE_ELF183_SHA_VERIFIED")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 tools/m0-plan028-arm64-auto-timeline-fixture.py "$RUNNER_TEMP/arm64-native-auto-phase.sh"
+          bash -n "$RUNNER_TEMP/arm64-native-auto-phase.sh"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+      - name: One ARM64 client plus ARM64 server real Auto source4 to MTU1280 128 UDP p99 CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_V4_PUBLIC_MODE=fec-auto WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_WIRE_AUDIT=0 bash "$RUNNER_TEMP/arm64-native-auto-phase.sh" fixed-build >fixed-kernel-result/plan028-arm64-auto-phase-native.log 2>&1 || {
+            tail -130 fixed-kernel-result/plan028-arm64-auto-phase-native.log >&2
+            exit 1
+          }
+          grep -Fq "M0_PLAN028_NATIVE_ARM64_PHASE_OBSERVATION_AND_128_REAL_UDP_CPU_P99_PASS" fixed-kernel-result/plan028-arm64-auto-phase-native.log
+          grep -Fq "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS" fixed-kernel-result/plan028-arm64-auto-phase-native.log
+          grep -Fq "M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS" fixed-kernel-result/plan028-arm64-auto-phase-native.log
+          test "$(grep -c M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 128
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          s=json.loads((root/"plan028-arm64-timeline-summary.json").read_text())
+          route=json.loads((root/"plan028-effective-new-physical-route.json").read_text())[0]
+          tun=json.loads((root/"plan028-new-tun-mtu.json").read_text())[0]
+          assert s["platform"]=="native_linux_arm64_client_and_arm64_server"
+          assert s["outer_ipv4_user_intent"]==1460 and s["new_physical_ipv4_mtu"]==1280
+          assert s["real_udp_echo_count"]==128
+          assert s["real_udp_rtt_p99_ms"] is not None and s["real_udp_rtt_p99_ms"]>=0
+          assert s["client_process_cpu_pct_post_switch"]>=0
+          assert s["actual_tls_auth_finished_to_first_udp_ms"]=="NOT_MEASURED"
+          assert route["dev"]=="wbdvc0" and route["prefsrc"]=="10.25.0.3"
+          assert tun["ifname"]=="wbdvc4" and 900<=tun["mtu"]<1280
+          print("M0_PLAN028_H1130_NATIVE_ARM64_SAME_ARCH_AUTO_128_UDP_CPU_P99_OS_MTU_PASS")
+          PY
+          cat fixed-kernel-result/plan028-arm64-timeline-summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-arm64-auto-phase-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/plan028-arm64-auto-phase-native.log
+            fixed-kernel-result/plan028-arm64-phase-observer.json
+            fixed-kernel-result/plan028-arm64-udp-stats.json
+            fixed-kernel-result/plan028-arm64-timeline-summary.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+          retention-days: 14
+          if-no-files-found: warn
