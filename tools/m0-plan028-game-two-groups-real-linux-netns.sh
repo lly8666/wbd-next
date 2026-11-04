@@ -12,6 +12,8 @@ if [[ "$AUTH_NEGATIVE" == 1 && ( "$AUTO_ROUTE" != 1 || "$HANDOVER" != 1 || "$MOD
   echo "auth negative real test requires auto-route Game2 with A2" >&2;exit 2
 fi
 if [[ "$AUTO_ROUTE" != 0 && "$AUTO_ROUTE" != 1 ]];then echo "invalid pre-ClientHello route source" >&2;exit 2;fi
+PHYSICAL_SWITCH="${WBD_PLAN028_GAME_MULTI_PHYSICAL_SWITCH:-0}"
+if [[ "$PHYSICAL_SWITCH" != 0 && "$PHYSICAL_SWITCH" != 1 ]];then echo "invalid physical source4 selector" >&2;exit 2;fi
 DEAD90="${WBD_PLAN028_GAME_MULTI_DEAD90:-0}"
 if [[ "$DEAD90" != 0 && "$DEAD90" != 1 ]];then echo "invalid Health90 selector" >&2;exit 2;fi
 if [[ "$HANDOVER" != 0 && "$HANDOVER" != 1 ]];then echo "invalid Game handover selector" >&2; exit 2;fi
@@ -27,6 +29,9 @@ case "$MODE" in
 esac
 if [[ "$DEAD90" == 1 && ( "$MODE" != game2 || "$HANDOVER" != 0 || "$GAME_FEC" != off ) ]];then
   echo "natural Health90 requires Game2 two cohorts, no A2 or FEC" >&2;exit 2
+fi
+if [[ "$PHYSICAL_SWITCH" == 1 && ( "$MODE" != game4 || "$GAME_FEC" != fixed6 || "$HANDOVER" != 0 || "$DEAD90" != 0 ) ]];then
+ echo "Game4 FEC6 physical switch is one protected two-group scenario" >&2;exit 2
 fi
 ROOT="$(realpath "${1:?fixed-build source directory}")"
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
@@ -150,15 +155,18 @@ PY
 send_udp(){
  local ns="$1" source="$2" label="$3" qty="$4" target="$5"
  sudo -n ip netns exec "$ns" env GAME_SRC="$source" GAME_LABEL="$label" GAME_QTY="$qty" python3 -u -c '
-import os,socket
+import os,socket,time
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind((os.environ["GAME_SRC"],0));s.settimeout(10)
 label=os.environ["GAME_LABEL"].encode()
+print("PLAN028_GAME_APP_CLOCK label=%s started_ns=%d"%(label.decode(),time.time_ns()),flush=True)
 for i in range(int(os.environ["GAME_QTY"])):
   m=b"WBD_GAME_GROUP/"+label+b"/"+str(i).encode()
   assert s.sendto(m,("10.66.0.1",45901))==len(m)
   data,peer=s.recvfrom(4096)
   assert data==b"WBD_GAME_ECHO/"+m and peer[0]=="10.66.0.1",(label,i,data,peer)
+  if os.environ.get("GAME_DELAY_S"):time.sleep(float(os.environ["GAME_DELAY_S"]))
+print("PLAN028_GAME_APP_CLOCK label=%s finished_ns=%d"%(label.decode(),time.time_ns()),flush=True)
 print("PLAN028_GAME_REAL_APP_OK label=%s bytes=%d"%(label.decode(),int(os.environ["GAME_QTY"])),flush=True)
 ' >"$target" 2>&1
 }
@@ -184,6 +192,73 @@ if [[ "$GAME_FEC" == fixed6 ]];then
   send_udp "$NSB" "$IPB" "GAME4_FEC_B" 64 "$TMP/b_echo.log" &
   fec_b=$!
   wait "$fec_a" "$fec_b"
+fi
+if [[ "$PHYSICAL_SWITCH" == 1 ]];then
+  # Game4 fixed6 A and B already authenticated. Bob's continuous genuine
+  # inner TUN/UDP must bracket Alice's true kernel source4 route change
+  # AND the new TLS/Rust generation READY (not synthetic Go injection).
+  ART="${GITHUB_WORKSPACE:?}/fixed-kernel-result"
+  mkdir -p "$ART"
+  a_old_mtu="$(sudo -n ip -j -n "$NSA" link show wbdva4 | python3 -c 'import json,sys;print(json.load(sys.stdin)[0]["mtu"])')"
+  b_old_mtu="$(sudo -n ip -j -n "$NSB" link show wbdvb4 | python3 -c 'import json,sys;print(json.load(sys.stdin)[0]["mtu"])')"
+  GAME_DELAY_S=.5 send_udp "$NSB" "$IPB" "BOB_GAME4_DURING_A_SOURCE_SWITCH" 32 "$TMP/b_live.log" &
+  b_live=$!
+  for _ in {1..80};do
+    grep -q 'PLAN028_GAME_APP_CLOCK label=BOB_GAME4_DURING_A_SOURCE_SWITCH started_ns=' "$TMP/b_live.log" && break
+    sleep .05
+  done
+  grep -q 'PLAN028_GAME_APP_CLOCK label=BOB_GAME4_DURING_A_SOURCE_SWITCH started_ns=' "$TMP/b_live.log"
+  changed_ns="$(date +%s%N)"
+  sudo -n ip -n "$NSA" addr add 10.25.0.9/24 dev wbdva0
+  sudo -n ip -n "$NSA" link set wbdva0 mtu 1280
+  sudo -n ip -n "$NSA" route replace 10.25.0.1/32 dev wbdva0 src 10.25.0.9
+  sudo -n ip -j -n "$NSA" route get 10.25.0.1 >"$ART/plan028-game4-os-route.json"
+  sudo -n ip -j -n "$NSA" link show wbdva0 >"$ART/plan028-game4-os-link.json"
+  done_ready=0
+  for _ in {1..140};do
+    if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/A.log" &&
+       grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/A.log" &&
+       grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/A.log";then
+       done_ready=1;break
+    fi
+    sleep .25
+  done
+  [[ "$done_ready" == 1 ]] || { echo "native Game4 physical reauth/old exact Stop absent" >&2;exit 1; }
+  ready_ns="$(date +%s%N)"
+  wait "$b_live"
+  grep -q 'PLAN028_GAME_REAL_APP_OK label=BOB_GAME4_DURING_A_SOURCE_SWITCH bytes=32' "$TMP/b_live.log"
+  send_udp "$NSA" "$IPA" "A_GAME4_FEC_NEW_REAL_PATH" 64 "$TMP/a_recovered.log"
+  a_end_ns="$(date +%s%N)"
+  a_new_mtu="$(sudo -n ip -j -n "$NSA" link show wbdva4 | python3 -c 'import json,sys;print(json.load(sys.stdin)[0]["mtu"])')"
+  b_new_mtu="$(sudo -n ip -j -n "$NSB" link show wbdvb4 | python3 -c 'import json,sys;print(json.load(sys.stdin)[0]["mtu"])')"
+  [[ "$a_new_mtu" -ge 576 && "$a_new_mtu" -lt "$a_old_mtu" && "$b_new_mtu" == "$b_old_mtu" ]] ||
+     { echo "new physical Game4 budget or sibling TUN MTU mismatch" >&2;exit 1; }
+  python3 - "$TMP/A.log" "$TMP/B.log" "$TMP/b_live.log" "$changed_ns" "$ready_ns" "$a_end_ns" "$a_old_mtu" "$a_new_mtu" "$b_old_mtu" "$b_new_mtu" "$ART/plan028-game4-sibling-real-switch.json" <<'PY'
+import pathlib,json,re,sys
+a,b,c=[pathlib.Path(x).read_text() for x in sys.argv[1:4]]
+changed,ready,done=map(int,sys.argv[4:7])
+old,new,bo,bn=map(int,sys.argv[7:11])
+st=re.search(r'PLAN028_GAME_APP_CLOCK label=BOB_GAME4_DURING_A_SOURCE_SWITCH started_ns=(\d+)',c)
+end=re.search(r'PLAN028_GAME_APP_CLOCK label=BOB_GAME4_DURING_A_SOURCE_SWITCH finished_ns=(\d+)',c)
+assert st and end and int(st[1])<changed<ready<int(end[1])
+leases=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\.66\.0\.[0-9]+)/32',a)
+assert len(leases)>=2 and len(set(leases))==1,leases
+assert a.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2') < a.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
+assert 'V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6' in a
+assert 'V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6' in b
+assert changed<ready<done
+out={"scope":"NATIVE_LINUX_X86_GAME4_FIXED6_TWO_GROUPS_ALICE_REAL_SOURCE_SWITCH_BOB_CONTINUOUS",
+"one_server_port":443,"original_go_tls_rust":True,"per_group_lanes":4,"real_source4_before":"10.25.0.2",
+"real_source4_after":"10.25.0.9","outer_ipv4_user_intent":1460,"new_physical_mtu":1280,
+"alice_lease_preserved":leases[0],"alice_tun_os_mtu_old":old,"alice_tun_os_mtu_new":new,
+"bob_tun_os_mtu_old":bo,"bob_tun_os_mtu_new":bn,"bob_udp_during_switch":32,
+"alice_new_udp":64,"new_tls_generation_ready":True,"old_exact_stop":True,
+"physical_command_to_ready_ms":round((ready-changed)/1e6,2),
+"ready_to_all_64_echo_ms":round((done-ready)/1e6,2),
+"notification_to_tls_start_ms":"NOT_MEASURED","auth_to_first_single_packet_ms":"NOT_MEASURED","cpu_p99":"NOT_MEASURED"}
+pathlib.Path(sys.argv[11]).write_text(json.dumps(out,indent=2)+"\n")
+print("M0_PLAN028_GAME4_FEC6_TWO_GROUPS_REAL_SOURCE4_CHANGE_BOB_CONTINUOUS_PASS",flush=True)
+PY
 fi
 if [[ "$HANDOVER" == 1 ]];then
   # Preserve the original A process PID; the replacement is the same
@@ -300,16 +375,18 @@ if [[ "$AUTO_ROUTE" == 1 ]];then
   echo "M0_PLAN028_GAME2_PRESHARED_STANDARD_TLS_NO_PRELUDE_NATIVE_PASS same_server_port=443 accounts=2 install_successor=1 verified_server_certificate=1"
 fi
 if [[ "$GAME_FEC" == fixed6 ]];then
-  for who in A B R;do
+  fec_clients=(A B)
+  [[ "$HANDOVER" == 0 ]] || fec_clients+=(R)
+  for who in "${fec_clients[@]}";do
     grep -q "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/$who.log"
   done
   # A was retired by its precise old generation; B and A2 by server Stop.
   # All three real driver-bound Rust groups must have copied FEC parity.
-  python3 - "$TMP/server.log" <<'PY'
+  python3 - "$TMP/server.log" "$((2+HANDOVER+PHYSICAL_SWITCH))" <<'PY'
 import pathlib,re,sys
 log=pathlib.Path(sys.argv[1]).read_text()
 rows=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=server lanes=4 source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)",log)
-assert len(rows)==3,("expected old A, B, A2 FEC readbacks",rows)
+assert len(rows)==int(sys.argv[2]),("expected authenticated old/new Game FEC cohorts",rows)
 assert all(int(s)>=16 and int(p)>0 and int(k)>0 for s,p,k in rows),rows
 print("M0_PLAN028_GAME4_FEC6_TWO_COHORTS_A2_NATIVE_COUNTERS_PASS groups=3 parity_kernel_nonzero=1",flush=True)
 PY

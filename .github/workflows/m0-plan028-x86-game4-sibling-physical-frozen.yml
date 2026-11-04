@@ -1,0 +1,87 @@
+name: M0 PLAN028 x86 native Game4 FEC6 two protected groups physical source4 switch
+run-name: PLAN028 x86 Game4 FEC6 Bob continuous during Alice source4 switch ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-x86-game4-sibling-physical-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-x86-two-game4-groups:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    env:
+      PRODUCT_SOURCE: 0e47d9c9532cbda9e655bd198348acf4ff4ddcd1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41782228876
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-41782228876-1
+          path: ./
+      - name: Frozen original Go and Rust x86 ELF manifest SHA256, no product rebuild
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          bash -n tools/m0-plan028-game-two-groups-real-linux-netns.sh
+          python3 - <<'PY'
+          import json,os,hashlib,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              raw=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert hashlib.sha256(raw).hexdigest()==m["binary_sha256"][n]
+              assert raw[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",raw,18)[0]==62
+          print("M0_PLAN028_NATIVE_X86_GAME4_FEC6_SIBLING_FROZEN_SOURCE_PASS")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+      - name: One actual A source route and MTU change with Bob Game4 FEC6 genuine packets running
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_PLAN028_GAME_MULTI_MODE=game4 WBD_PLAN028_GAME_MULTI_FEC=fixed6 \
+          WBD_PLAN028_GAME_MULTI_PHYSICAL_SWITCH=1 \
+            bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-game4-sibling-source-switch.log 2>&1 || {
+              tail -175 fixed-kernel-result/plan028-game4-sibling-source-switch.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_GAME4_FEC6_TWO_GROUPS_REAL_SOURCE4_CHANGE_BOB_CONTINUOUS_PASS' fixed-kernel-result/plan028-game4-sibling-source-switch.log
+          grep -Fq 'M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS' fixed-kernel-result/plan028-game4-sibling-source-switch.log
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          d=json.loads((p/"plan028-game4-sibling-real-switch.json").read_text())
+          r=json.loads((p/"plan028-game4-os-route.json").read_text())[0]
+          l=json.loads((p/"plan028-game4-os-link.json").read_text())[0]
+          assert d["one_server_port"]==443 and d["per_group_lanes"]==4
+          assert d["real_source4_after"]==r.get("prefsrc",r.get("src"))=="10.25.0.9"
+          assert d["new_physical_mtu"]==l["mtu"]==1280 and d["outer_ipv4_user_intent"]==1460
+          assert d["alice_tun_os_mtu_new"]<d["alice_tun_os_mtu_old"]
+          assert d["bob_tun_os_mtu_old"]==d["bob_tun_os_mtu_new"]
+          assert d["bob_udp_during_switch"]==32 and d["alice_new_udp"]==64
+          assert d["new_tls_generation_ready"] and d["old_exact_stop"]
+          print("M0_PLAN028_X86_GAME4_FIXED6_TWO_REAL_GROUPS_NATIVE_SOURCE4_STOP_PASS")
+          PY
+          cat fixed-kernel-result/plan028-game4-sibling-real-switch.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-game4-fec6-physical-x86-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/plan028-game4-sibling-real-switch.json
+            fixed-kernel-result/plan028-game4-os-route.json
+            fixed-kernel-result/plan028-game4-os-link.json
+            fixed-kernel-result/plan028-game4-sibling-source-switch.log
+          if-no-files-found: warn
+          retention-days: 14
