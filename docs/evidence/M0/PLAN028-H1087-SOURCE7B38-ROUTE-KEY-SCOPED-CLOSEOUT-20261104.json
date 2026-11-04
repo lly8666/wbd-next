@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1087",
+  "source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "status": "SCOPED_CLOSED_ROUTE_KEY_AND_WB_R1_REMOVAL",
+  "basis": "H1086 Win Npcap↔WSL2 real four-tuple TCP first-flight original Go/Rust and protected business",
+  "action_id": 41761356866,
+  "artifact_id": 13290631778,
+  "artifact_verified": true,
+  "route_key": {
+    "bytes": 32,
+    "local_cs_rng_generated": true,
+    "offline_import": true,
+    "missing_local_reject": true,
+    "client_hello_session_id_bytes": 32,
+    "wb_r1": false,
+    "pre_clienthello_exchange": false,
+    "server_cert_verification": true,
+    "protected_password": true
+  },
+  "native": {
+    "client_first_record_bytes": 667,
+    "server_first_record_bytes": 127,
+    "server_early_payload": false,
+    "real_udp": "PASS",
+    "real_tcp": "PASS",
+    "owned_stop": "PASS"
+  },
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1086-SOURCE7B38-WIN-WSL2-FIRST-TLS-PASS-20261104.json",
+    "docs/evidence/M0/PLAN028-H1078-SOURCE6563-NATIVE-ARM64-GAME4-8-TLS-20261104.json",
+    "docs/evidence/M0/PLAN028-H1074-H1073-FROZEN-SOURCED7BD-X86-TLS-FIRSTFLIGHT-20261104.json"
+  ],
+  "open": [
+    "Complete TLS1.3 Certificate/CertificateVerify/Finished decrypted transcript NOT_RUN",
+    "same-SNI/cert/MTU reference Go/uTLS baseline NOT_RUN",
+    "physical Windows NIC/IP switch NOT_RUN",
+    "Game healthy A→A+B→B overlap NOT_RUN",
+    "H998 live MTU hot shrink FAIL retained",
+    "old ARM64 Game4FEC Action FAIL retained",
+    "remote ICMP and CPU/p99 unmeasured",
+    "Android NOT_RUN"
+  ],
+  "scope_note": "Route-key setup and removal of WB-R1 pre-ClientHello closed; full TLS handshake appearance qualification and PLAN028 remain open. No old source PASS promoted."
+}
