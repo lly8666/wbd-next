@@ -1211,11 +1211,28 @@ print(json.dumps(result),flush=True)
   expected=1 if outer_repair=="on" else 0
   win_text=(out/"client.log").read_text(errors="replace")
   linux_text=(out/"server.log").read_text(errors="replace")
-  win_ok=(f"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled={expected} shadow_limit=" in win_text)
-  linux_ok=(f"V4_PUBLIC_M2_OUTER role=server " in linux_text and
-            f"repair_enabled={expected} " in linux_text)
-  report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
-    "enabled":expected}
+  if plan028_owned_switch:
+   # Two *real* native Rust generations, each OS readback before Stop.
+   # The shared Linux server now snapshots each original Rust session
+   # before exact per-owner Stop; no CLI flag is accepted as readback.
+   win_rows=re.findall(
+    r"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled=(\d+) shadow_limit=(\d+) source=original_rust_owner",
+    win_text)
+   linux_rows=re.findall(
+    r"V4_PUBLIC_M2_OUTER role=server [^\n]*repair_enabled=(\d+) ",
+    linux_text)
+   win_ok=len(win_rows)==2 and all(int(enabled)==expected and int(limit)>=0 for enabled,limit in win_rows)
+   linux_ok=len(linux_rows)==2 and all(int(enabled)==expected for enabled in linux_rows)
+   report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+     "enabled":expected,"windows_generations":len(win_rows),
+     "linux_authenticated_rust_sessions":len(linux_rows),
+     "source":"REAL_PER_OWNER_RUST_COUNTERS_BEFORE_NATIVE_STOP"}
+  else:
+   win_ok=(f"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled={expected} shadow_limit=" in win_text)
+   linux_ok=(f"V4_PUBLIC_M2_OUTER role=server " in linux_text and
+             f"repair_enabled={expected} " in linux_text)
+   report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+     "enabled":expected}
   if not (win_ok and linux_ok):
    raise RuntimeError("real original two-OS outer repair effective mismatch")
  if is_game:

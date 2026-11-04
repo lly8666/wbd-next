@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1134",
+  "result": "NATIVE_WINDOWS_SECOND_GENERATION_UDP_TCP_AND_STOP_PASS_SCOPED; ACTION_FAIL_SERVER_OUTER_EFFECTIVE_RECEIPT_MISSING",
+  "product_source_sha": "1bb73998a9d938d59c7963ddd454278e5284225a",
+  "fixture_sha": "ce199e9ff73c752ac845974c71d92be31cdb1286",
+  "run": {
+    "id": 41820373051,
+    "conclusion": "failure",
+    "job_id": 126542642033,
+    "artifact_id": 13316144675,
+    "artifact_digest": "sha256:5959744402d9abe0c4b0732e2f259cc265baab5d6fd5c9bc17a0532943304ef1"
+  },
+  "platform": "Windows Server 2025 original Go TLS/Rust/Npcap/Wintun ↔ real Ubuntu WSL2 Linux original Go/Rust shared-manual server",
+  "orig_binaries": {
+    "reused_from_run": 41815388333,
+    "rebuilt": false
+  },
+  "validations": {
+    "OS_source4_before": "198.19.254.1",
+    "OS_source4_after": "198.19.254.9",
+    "real_authenticated_ready_windows_generations": 2,
+    "linux_authenticated_shared_sessions": 2,
+    "windows_inner_mtu_os_bytes": [
+      1389,
+      1389
+    ],
+    "linux_inner_mtu_os_bytes": 1389,
+    "windows_syn_mss_bytes": [
+      1420,
+      1420
+    ],
+    "linux_synack_mss_bytes": [
+      1420,
+      1420
+    ],
+    "real_tcp_option_bytes": "0204058c",
+    "shared_server_inbound_mss_log": "NOT_LOGGED_SHARED_MANUAL",
+    "original_tls_credential_and_rust_owner": true,
+    "old_exact_native_wal_stop": true,
+    "new_udp_receive_increments": {
+      "windows": 12,
+      "linux": 12
+    },
+    "real_two_os_kernel_udp": "PASS",
+    "real_two_os_kernel_tcp": "PASS",
+    "both_original_Rust_WAL_stop": "PASS"
+  },
+  "outer_repair_effective": {
+    "windows_two_generations": "REAL_RUST_PASS",
+    "linux_shared_sessions": "NOT_RECORDED",
+    "expected_enabled": 1,
+    "action_fail": "real original two-OS outer repair effective mismatch"
+  },
+  "time": {
+    "OS_mutation_to_new_READY_observed_ms": 14031,
+    "precise_notification_to_TLS": "NOT_MEASURED",
+    "precise_authenticated_TLS_to_first_inner_UDP": "NOT_MEASURED"
+  },
+  "next": "H1135 add read-only genuine Linux shared-server per-session Rust M2 outer counters before exact Stop; require two actual matching receipts; no synthetic result or protocol change.",
+  "scope": [
+    "All native business and Stop passed before verification failure; overall Action not PASS.",
+    "No physical Wi-Fi/actual hardware NIC; WSL2 test-owned virtual underlay.",
+    "H998 original same-connection hot MTU FAIL; remote ICMP and Android NOT_RUN; CPU causal gain NOT_PROVEN"
+  ]
+}

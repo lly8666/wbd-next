@@ -1359,6 +1359,10 @@ func runSharedMultiServer(
     }
     retire:=func(rec *originalV4MultiRecord,reason string)error{
         if rec==nil||rec.product==nil||!rec.ready{return nil}
+        // Read the genuine per-owner Rust M2 effective state BEFORE Stop;
+        // the shared manual server has no singleton process-wide counters.
+        // This is cold Stop only, never a packet path and never CLI intent.
+        outer,outerErr:=rec.product.OriginalOuterCounters()
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("PLAN028 Rust native per-session Stop %s: %w",reason,err)
         }
@@ -1373,8 +1377,12 @@ func runSharedMultiServer(
         mu.Unlock()
         table.Remove(rec.assoc.Flow())
         if filterErr!=nil{return filterErr}
+        logAuthenticOuter("server",outer,outerErr)
         log.Printf("V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=%s remaining=%d",
             reason,len(peers))
+        if outerErr!=nil{
+            return fmt.Errorf("PLAN028 authenticated per-session Rust outer-repair readback %s: %w",reason,outerErr)
+        }
         return nil
     }
     // Close in the invariant order: deny NEW Go admissions, join cold TLS

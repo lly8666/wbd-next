@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1133",
+  "result": "PRODUCT_TWO_GENERATION_REAL_UDP_PASS_BUT_ACTION_FAIL_MSS_LEGACY_FIXTURE",
+  "source_sha": "1bb73998a9d938d59c7963ddd454278e5284225a",
+  "fixture_sha": "353320700fd837aac2a1f732db42e22775d66923",
+  "action": {
+    "id": 41817813529,
+    "status": "completed",
+    "conclusion": "failure",
+    "job": 126533945562,
+    "artifact_id": 13315792775,
+    "artifact_digest": "sha256:3cbbb40a302704bdf32188f954c4098c1f0cb6312f5a0cf7795dea4ca89c4092"
+  },
+  "platform": "Windows Server 2025 original Go/Npcap signed Wintun Rust client + genuine Ubuntu WSL2 original Go/Rust server",
+  "binaries": {
+    "reused_from_run": 41815388333,
+    "windows_original_exe_sha256": "14b2fbe57d41c6cdb6bb955ff652caf0f74d25104c617a12ed4efde224721d27",
+    "linux_server_sha256": "01f9043f53d78f8c6a9ec1af907a823809a7feb4ded277908fbd98f2649956a0",
+    "rebuild": false
+  },
+  "true_native_observations": {
+    "os_source4_before": "198.19.254.1",
+    "os_selected_source4_after": "198.19.254.9",
+    "windows_tls_native_ready_generations": 2,
+    "windows_inner_mtu_os_receipts_bytes": [
+      1389,
+      1389
+    ],
+    "windows_tcp_syn_mss_bytes": [
+      1420,
+      1420
+    ],
+    "linux_actual_tcp_synack_mss_bytes": [
+      1420,
+      1420
+    ],
+    "linux_actual_tcp_synack_options_hex": [
+      "0204058c",
+      "0204058c"
+    ],
+    "linux_authenticated_shared_manual_session_ready_flows": [
+      1,
+      2
+    ],
+    "old_exact_wal_stop": true,
+    "new_windows_and_linux_udp_receive_increments": {
+      "windows": 11,
+      "linux": 5
+    },
+    "new_native_ready_observed_after_owned_os_mutation_ms": 11781
+  },
+  "limits": {
+    "linux_singleton_only_decoded_peer_syn_marker": "NOT_EMITTED_BY_SHARED_SERVER",
+    "full_e2e_final_app_duplex": "NOT_QUALIFIED_AFTER_FIXTURE_ABORT",
+    "final_stop": "NOT_QUALIFIED_AFTER_FIXTURE_ABORT",
+    "precise_notification_to_tls": "NOT_MEASURED",
+    "precise_tls_finished_to_first_inner_udp": "NOT_MEASURED"
+  },
+  "failure": {
+    "first_fault": "missing/conflicting Linux decoded peer SYN",
+    "classification": "STRICT_LEGACY_SINGLETON_FIXTURE_INCOMPATIBLE_WITH_SHARED_MANUAL",
+    "source": "tools/m0_wl_public_mss_contract.py",
+    "action_overall": "FAIL",
+    "cleanup_test_owned_wsl_aliases": "DONE"
+  },
+  "next": "H1134 verify both directions real TCP options with native shared-session proof; never fabricate an absent log; one exact frozen Windows replay"
+}
