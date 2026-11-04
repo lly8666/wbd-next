@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1202,
-  "checkpoint_sha": "23e3c47b50d78a5b981589b93e67956f2d965f9c",
+  "sequence": 1203,
+  "checkpoint_sha": "ea2912c8a61be36697c9d5eedcbca5d975a85430",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1202 last Linux seven-mode genuine physical network A→B→A gap: native x86_64 client+server Game4 FEC OFF, original protected Go TLS/Rust shared443, two real physical source4 .3→.9→.3 and MTU1500→1280→1500, generations1→2→3, exact old1/2 Stop and 3 original server/client Game4 FEC OFF applied M4 receipts. Game4 new UDP32+16 and unaffected Normal Auto live48+16, per-client inner MTU derived/OS readback, one shared Rust TUN final Stop; test-only derived from qualified native x86 Game4 fixed6 two-switch, no product/AEAD/wire changes. H1201 six other modes QUALIFIED.",
-  "why_now": "Two H1201 SOURCE516735 native x86 Game2Fixed6 and ARM NormalOff completed and archived full PASS. Only Game4 OFF lacks original real physical dual switch among 7 modes. Reuse proven H1170 native x86 Game4 two-switch fixture and mutable FEC policy only. Do not impose fixed6 overhead/MTU expectations; read actual OS bounds, verify server/client FEC Off receipt each M4, sibling Normal health. Next Linux platform x86/x86 by alternation.",
+  "current_task": "H1203 x86 Game4 FEC OFF sourceea29 Action41932616534 original Go TLS/Rust true physical A-B-A M4 gen1→2→3 and exact Stops1/2, native FEC Off receipts3, OS inner1373→1193, NormalAuto healthy UDP48+16, final shared TUN Stop PASS, completing all seven Linux mode-specific two physical shift scoped qualification. Next full Linux ARM64/ARM64 original Game4 highestFEC6 down-first authenticated gen2 then real post-auth OS tc netem 30% loss+250ms delay, 200 UDP received-only p99 and Normal healthy. User outer1460.",
+  "why_now": "Native x86 Game4 off full Action PASS artifact13371613710 SHA fec458, previously only unqualified seventh mode. PLAN028 high loss/250ms representative remaining and should be actual kernel tc not mock, after original M4 ready so stage clear. Reuse original ARM H1191 netem5 checked native fixture, not production wire changes.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect exactly one H1202 native x86 Game4 OFF true Go TLS/Rust Action, fix only concrete first failure. Once complete Linux seven modes A-B-A scoped, schedule representative Normal highest/Game4 highest 30%/250ms and Windows seven-mode physical handover, not 027 legacy matrix. Keep H998 hot-shrink/old ARM failure and Android/ICMP/CPU causal gaps.",
+  "next_action": "Collect H1203 ARM Game4 30%/250ms native Action qdisc drops>0, 200 native inner UDP p99/reasonable loss, Normal16, qdisc cleanup and original Stop; then next full Linux x86/x86 Normal highest fixed6 30%/250ms representative. Windows seven-mode physical and notifier/auth timing CPU/ICMP/Android incomplete.",
   "unverified": true,
-  "last_tested_source": "51673553b9fbe0ed41f0aae4ad516f67543a9ad6",
+  "last_tested_source": "ea2912c8a61be36697c9d5eedcbca5d975a85430",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1201-SOURCE5167-X86-GAME2-FIXED6-TWO-PHYSICAL-PASS-20261105.json",
-    "docs/evidence/M0/PLAN028-H1201-SOURCE5167-ARM-NORMAL-OFF-TWO-PHYSICAL-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1203-SOURCEEA29-X86-GAME4OFF-AUTH-DUAL-PHYSICAL-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1202 x86 Game4 OFF only remaining Linux 7-mode two-source-IP physical original Go TLS/Rust A-B-A; 3 exact protected M4 FECOff applied receipts, unchanged NormalAuto48+16 and owned shared TUN Stop. Prior 6 modes source-qualified complete."
+  "partial_summary": "H1203 all seven Linux real native A-B-A modes now PASS after x86 Game4Off SOURCEea29, 3 native FEC off M4 receipts and exact old Stops. ARM Game4FEC6 true high30%+250ms post-auth kernel tc now pending; historical H998 and unmeasured gaps kept."
 }

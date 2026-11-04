@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1203",
+  "result": "PASS",
+  "source_sha": "ea2912c8a61be36697c9d5eedcbca5d975a85430",
+  "platform": "native x86_64 client/server original Go TLS/Rust port443",
+  "action": {
+    "run_id": 41932616534,
+    "job_id": 126933055040,
+    "artifact_id": 13371613710,
+    "conclusion": "success",
+    "artifact_zip_sha256": "fec4583459e2ba70648a2c1cf91aeb8f9cd98ccb457311d0b6b5704734fa3ed3"
+  },
+  "verified": {
+    "mode": "Game4 FEC Off",
+    "original_authenticated_FEC_off_M4_groups": 3,
+    "generations": [
+      1,
+      2,
+      3
+    ],
+    "old_exact_stop": [
+      1,
+      2
+    ],
+    "source4": [
+      "10.25.0.3",
+      "10.25.0.9",
+      "10.25.0.3"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "user_outer_mtu": 1460,
+    "os_Game4_inner_mtu": [
+      1373,
+      1193,
+      1193
+    ],
+    "other_Normal_auto_os_inner_mtu": 1375,
+    "lease": "10.66.0.177/32",
+    "Game4_new_real_udp": [
+      32,
+      16
+    ],
+    "healthy_Normal_auto_real_udp": [
+      48,
+      16
+    ],
+    "physical_command_to_ready_ms": [
+      803.61,
+      795.53
+    ],
+    "final_shared_tun_stop": true
+  },
+  "limits": [
+    "No high-loss injected in this Game4 OFF mode",
+    "OS notifier→TLS/auth→first not measured",
+    "H998 original hot MTU / old ARM Game4 Action FAIL preserved",
+    "Android, remote ICMP and CPU causal not tested"
+  ]
+}
