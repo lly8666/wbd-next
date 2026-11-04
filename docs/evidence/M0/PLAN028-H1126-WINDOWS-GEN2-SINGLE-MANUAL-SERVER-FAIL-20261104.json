@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1126",
+  "result": "FAIL_SECOND_GENERATION_BOOTSTRAP",
+  "source_sha": "c27cd128362c13faaf4cb7417bd7dfaddab91fa4",
+  "platform": "genuine Windows Server 2025 Npcap/Wintun original Go to Linux WSL2 Rust",
+  "run_id": 41810476391,
+  "conclusion": "failure",
+  "artifact_id": 13312891151,
+  "artifact_digest": "sha256:35ac6aeaa637c4d66a4409983960a20def871b573d02919e91ed8d41d8a9607e",
+  "generation1": {
+    "original_tls_authenticated": true,
+    "signed_wintun_rust_applied": true,
+    "os_inner_mtu": 1389,
+    "real_duplex_udp": true,
+    "old_exact_stop": true
+  },
+  "path": {
+    "original_source4": "198.19.254.1",
+    "changed_os_selected_source4": "198.19.254.9",
+    "interface_index": 25,
+    "auth_restart_immediate": true
+  },
+  "generation2": {
+    "status": "FAIL_BOOTSTRAP_STREAM_DEADLINE",
+    "original_real_mss": 1420,
+    "syn_attempts": "repeated",
+    "new_tls": false,
+    "new_udp": false,
+    "source4_verified": true,
+    "cold_timeout_retries": 2
+  },
+  "cause": "WSL fixture server started single manual-IP runServer without shared lease manager; runServer ignores new SYN after handoffCommitted. Do not claim second TLS or route success.",
+  "cleanup": "owned WSL alias + HyperV rule restored",
+  "not_proven": [
+    "Windows A→A+B→B",
+    "Windows physical hardware NIC",
+    "native notification→TLS exact ms",
+    "CPU causal comparison"
+  ],
+  "historical": [
+    "H998 online original same-connection hot-MTU FAIL",
+    "historical ARM64 Game4FEC Action FAIL",
+    "remote ICMP NOT_MEASURED"
+  ]
+}

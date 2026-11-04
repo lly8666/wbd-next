@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1127",
+  "result": "FUNCTIONAL_PASS_SCOPED",
+  "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "harness_sha": "4acd6536c88549682d45536ddb1ce4903de81d9b",
+  "platform": "Linux native x86_64 client and server, no QEMU",
+  "mode": "Normal Auto, authenticated TLS/Rust",
+  "run_id": 41811668300,
+  "run_conclusion": "success",
+  "artifact_id": 13311214984,
+  "artifact_digest": "sha256:6580f7fc45d8d0b309ab199011f073e08f46a45c19129f33fc810710ca88182e",
+  "binary_sha256": {
+    "client": "e6f9d900a9df10074478ec0a5a8fd5c5ac121cec4cbe07310be347da10cc1985",
+    "server": "2489895f0ac75fb9e9e51230ba92ebf5252ca330314c0bbe9cfe762c55956a3d",
+    "rust": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+  },
+  "traffic": {
+    "before_echoes": 64,
+    "after_echoes": 128,
+    "after_received": 128,
+    "underlay_source_before": "10.25.0.2",
+    "after": "10.25.0.3",
+    "outer_default_bytes": 1460,
+    "physical_new_mtu": 1280,
+    "inner_new_OS_readback": 1195,
+    "exact_old_stop": true
+  },
+  "measurements": {
+    "command_to_new_ready_ms": 303.74,
+    "observed_path_log_to_tls_candidate_ms": 10.15,
+    "observed_second_lease_log_to_first_udp_ms": 116.71,
+    "observer_resolution_ms": 10,
+    "udp_rtt_median_ms": 0.130624,
+    "udp_rtt_p99_ms": 0.333205,
+    "client_process_cpu_percent_short_window": 49.79,
+    "actual_notification_to_tls": "NOT_MEASURED",
+    "actual_auth_finished_to_first_udp": "NOT_MEASURED",
+    "cpu_causal_improvement": "NOT_PROVEN"
+  },
+  "notes": [
+    "True native kernel UDP/socket and physical IPv4 source+MTU change, original ELF/hash reused.",
+    "Observe-only log timestamps are not exact TLS/OS notification timestamps.",
+    "H998 same-connection hot-shrink FAIL preserved; Android/Windows not qualified by this Linux run."
+  ]
+}
