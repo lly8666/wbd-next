@@ -906,7 +906,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "b031bac4ec63caf4327b164b51f58ba2b3cabc3b"
+      "result_blob": "b1b0e2f88a8f63015102235026305e60602020c9"
     },
     {
       "kind": "create",
