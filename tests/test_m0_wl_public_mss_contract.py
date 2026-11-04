@@ -23,4 +23,5 @@ class CurrentMssWire(unittest.TestCase):
    verified_current_v4_mss(w.replace("local_advertised_mss=1240","local_advertised_mss=1420"),l,1280)
   with self.assertRaises(ValueError):
    verified_current_v4_mss(w,l,1500)
+from tests.test_m0_plan028_shared_manual_mss import SharedMssTest
 if __name__=="__main__":unittest.main()

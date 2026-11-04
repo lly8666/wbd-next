@@ -409,24 +409,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   else:
    windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
   if mode=="normal":
-   from m0_wl_public_mss_contract import verified_current_v4_mss
+   from m0_wl_public_mss_contract import verified_current_v4_mss,verified_plan028_shared_manual_two_generation_v4_mss
    linux_log=(out/"server.log").read_text(errors="replace")
    if plan028_owned_switch:
-    # The unchanged original MSS validator expects one generation's
-    # actual TCP option receipts; invoke it independently for gen1 and gen2.
-    per_gen_wire=[]
-    for gen in (1,2):
-     rows=[]
-     for line in winlog.splitlines():
-      if line.startswith(("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client",
-                          "WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client",
-                          "WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client")):
-       if "generation="+str(gen)+" " not in line:continue
-      rows.append(line)
-     verified=verified_current_v4_mss("\n".join(rows)+"\n",linux_log,configured_mtu)
-     if verified["generation"]!=gen:
-      raise RuntimeError("PLAN028 source-scoped SYN/SYNACK generation mismatch")
-     per_gen_wire.append(verified)
+    per_gen_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu)
     report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
     budget_and_wire=per_gen_wire[-1]
    else:
