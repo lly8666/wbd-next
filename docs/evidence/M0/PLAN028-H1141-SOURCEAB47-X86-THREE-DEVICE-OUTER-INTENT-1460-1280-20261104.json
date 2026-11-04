@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1141",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_X86_X86_SAME_ACCOUNT_INDEPENDENT_USER_OUTER_MTU",
+  "source_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
+  "harness_sha": "0aaff3d99c7c36d2af1c29b3bd2e71914c42011e",
+  "platform": "Ubuntu native x86_64 original Go TLS+Rust M4 server and x86_64 three-client+one-generation replacement 5 netns / one server443 / single shared Rust TUN",
+  "action": {
+    "run_id": 41828537492,
+    "job_id": 126569428408,
+    "conclusion": "success",
+    "artifact_id": 13321810723,
+    "artifact_digest": "sha256:3e25996614a46649e09a8e95d2bd5efb056a60d8699548d343f85f81ae13b573"
+  },
+  "binary": {
+    "built_once_by_run": 41822046885,
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "no_rebuild": true,
+    "architecture": "ELF62_x86_64"
+  },
+  "accounts": [
+    "Alice: installation A",
+    "Bob: separate account",
+    "Alice: separate installation D",
+    "Alice A new authenticated generation R"
+  ],
+  "requested_outer_complete_ipv4_mtus_bytes": {
+    "Alice_A": 1460,
+    "Bob": 1460,
+    "Alice_D": 1280
+  },
+  "actual_TCP_SYN_MSS_bytes": {
+    "Alice_A": 1420,
+    "Bob": 1420,
+    "Alice_D": 1240
+  },
+  "actual_client_OS_TUN_MTU_bytes": {
+    "Alice_A": 1389,
+    "Bob": 1389,
+    "Alice_D": 1209
+  },
+  "actual_server_OS_shared_TUN_MTU_bytes": 1389,
+  "effective_proof": {
+    "same_account_two_distinct_verified_leases": true,
+    "distinct_auto_lease32_count": 3,
+    "one_external_port": 443,
+    "one_Rust_kernel_TUN_reader": true,
+    "no_global_server_TUN_shrink_due_to_Alice_D": true,
+    "three_client_original_TLS_protected_auth": true
+  },
+  "app": {
+    "actual_unique_UDP_roundtrips": 70,
+    "server_Rust_TUN_routed": 70,
+    "unrouted": 0,
+    "backpressure": 0,
+    "Bob_and_Alice_D_continuous_when_A_reauth": true,
+    "new_A_same_lease_before_exact_old_stop": true,
+    "all_client_shared_reader_final_Stop": true,
+    "server_shared_reader_drained": true
+  },
+  "limitations": [
+    "Entire real business scene is Normal/off on one port; simultaneous Game2/Game4 and Normal or distinct FEC/cipher policies are NOT tested and process-scoped server mode remains a known gap.",
+    "One x86/x86 native network namespace scenario, not actual physical Wi-Fi and not Android.",
+    "H998 historic same-connection MTU hot shrink FAIL remains, remote ICMP NOT_MEASURED and CPU improvement causality unproven.",
+    "The prior Action41828187039 had zero jobs due to malformed YAML; H1142 corrected workflow and this is first actual native execution."
+  ],
+  "next_linux_platform": "ARM64 native client+ARM64 native server, if distinct full Linux task"
+}
