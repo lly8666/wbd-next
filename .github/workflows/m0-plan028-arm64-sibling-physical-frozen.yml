@@ -1,0 +1,91 @@
+name: M0 PLAN028 native ARM64 three devices live sibling traffic during physical IPv4 switch
+run-name: PLAN028 native ARM64 Alice source4 switch with Bob and Alice-D continuous ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-arm64-sibling-physical-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-arm64-three-device-source-switch:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 16
+    env:
+      PRODUCT_SOURCE_SHA: 32cd752201e01134fc53157270ce223de70a8c7a
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41787602880
+          github-token: ${{ github.token }}
+          name: m0-plan028-native-arm64-normal-auto-41787602880
+          path: ./
+      - name: Verify frozen original Go Rust ARM64 product ELF and hashes, no product rebuild
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -c /dev/net/tun
+          bash -n tools/m0-plan028-sibling-physical-real-linux-netns.sh
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE_SHA"]
+          assert m["architecture"]=="native_aarch64" and m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,n
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][n],n
+          print("M0_PLAN028_NATIVE_ARM64_THREE_DEVICE_FROZEN_SOURCE_VERIFIED no_product_rebuild=1")
+          PY
+          chmod 0755 fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          # Same reviewed scenario logic as H1107; change only the platform label
+          # emitted by the fixture so ARM64 cannot be misreported as x86.
+          sed -e 's/NATIVE_X86/NATIVE_ARM64/g' -e 's/LINUX_X86/LINUX_ARM64/g'             tools/m0-plan028-sibling-physical-real-linux-netns.sh             >"$RUNNER_TEMP/m0-plan028-arm64-three-device-native.sh"
+          bash -n "$RUNNER_TEMP/m0-plan028-arm64-three-device-native.sh"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+      - name: One actual ARM64 source4 route and interface MTU change with other devices active
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          WBD_PLAN028_SIBLING_PHYSICAL_SWITCH=1             bash "$RUNNER_TEMP/m0-plan028-arm64-three-device-native.sh" fixed-build             >fixed-kernel-result/plan028-arm64-three-device-native.log 2>&1 || {
+              tail -180 fixed-kernel-result/plan028-arm64-three-device-native.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_TRUE_NATIVE_ARM64_TWO_ALICE_DEVICES_BOB_UNINTERRUPTED_DURING_A_PHYSICAL_SOURCE_SWITCH_PASS' fixed-kernel-result/plan028-arm64-three-device-native.log
+          grep -Fq 'M0_PLAN028_NATIVE_ARM64_SIBLING_SOURCE_SWITCH_EXACT_RUST_STOP_PASS' fixed-kernel-result/plan028-arm64-three-device-native.log
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          d=json.loads((p/"plan028-three-device-source-switch.json").read_text())
+          route=json.loads((p/"plan028-sibling-new-physical-route.json").read_text())[0]
+          link=json.loads((p/"plan028-sibling-new-underlay-link.json").read_text())[0]
+          assert d["one_server_port"]==443 and d["distinct_protected_leases"]==3
+          assert (d["old_source4"],d["new_source4"])==("10.25.0.2","10.25.0.9")
+          assert route.get("prefsrc",route.get("src"))=="10.25.0.9" and link["mtu"]==1280
+          assert d["outer_user_intent_ipv4"]==1460 and d["physical_new_ipv4_mtu"]==1280
+          assert d["client_a_tun_mtu_before"]==1389 and d["client_a_tun_mtu_after_os"]==1209
+          assert d["sibling_b_tun_mtu_unchanged"]==1389 and d["sibling_alice_d_tun_mtu_unchanged"]==1389
+          assert d["bob_while_A_switch_udp"]==d["second_alice_device_while_A_switch_udp"]==24
+          assert d["A_after_switch_udp"]==5 and d["new_original_tls_rust_M4"] and d["old_native_stop"]
+          assert d["native_notification_to_TLS_ms"]=="NOT_MEASURED"
+          print("M0_PLAN028_ARM64_TRUE_PHYSICAL_SOURCE4_3_DEVICES_CROSS_GEN_UDP_MTU_AND_STOP_PASS")
+          PY
+          cat fixed-kernel-result/plan028-three-device-source-switch.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-arm64-three-device-switch-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/plan028-three-device-source-switch.json
+            fixed-kernel-result/plan028-sibling-new-physical-route.json
+            fixed-kernel-result/plan028-sibling-new-underlay-link.json
+            fixed-kernel-result/plan028-arm64-three-device-native.log
+          if-no-files-found: warn
+          retention-days: 14
