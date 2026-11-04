@@ -1,0 +1,87 @@
+name: M0 PLAN028 real x86 three-device independent requested outer MTU
+run-name: PLAN028 H1141 x86/x86 real same-account two installations outer1460 vs1280
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-x86-three-device-mixed-outer-native.yml
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-x86-three-device-outer-intent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41822046885
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: linux-product
+      - name: Verify exact frozen original x86_64 Go TLS and Rust M4 SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          mkdir -p fixed-kernel-result
+          python3 - <<'PY'
+          import hashlib,json,pathlib,struct
+          d=pathlib.Path("linux-product")
+          m=json.loads((d/"manifest.json").read_text())
+          assert m["source_sha"]=="ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",m
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(d/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][name],name
+          print("M0_PLAN028_H1137_FROZEN_X86_BOTH_REAL_ELF62_SOURCE_SHA_PASS")
+          PY
+          chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
+          python3 tools/m0-plan028-mixed-outer-intent-fixture.py "$RUNNER_TEMP/h1141-original-x86.sh"
+          bash -n "$RUNNER_TEMP/h1141-original-x86.sh"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ipr      - name: Three native x86 clients, two same-account installations and Bob, real independent user outer intent and Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash "$RUNNER_TEMP/h1141-original-x86.sh" linux-product >fixed-kernel-result/plan028-h1141-native-mixed-outer-x86.log 2>&1 || {
+            tail -170 fixed-kernel-result/plan028-h1141-native-mixed-outer-x86.log >&2
+            exit 1
+          }
+          for marker in \
+            M0_PLAN028_H1141_MIXED_OUTER_USER_INTENT_THREE_ACTUAL_RUST_OS_TUN_PASS \
+            M0_PLAN028_REAL_THREE_DEVICE_SAME_ACCOUNT_TWO_INSTALLATIONS_ANOTHER_ACCOUNT_ONE_PORT_NATIVE_PASS \
+            M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS \
+            M0_PLAN028_H1141_X86_SAME_ACCOUNT_OTHER_DEVICE_CONTINUOUS_UDP_DIFFERENT_OUTER_INTENT_AND_STOP_PASS;do
+            grep -Fq "$marker" fixed-kernel-result/plan028-h1141-native-mixed-outer-x86.log
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          v=json.loads((p/"plan028-h1141-mixed-outer.json").read_text())
+          assert v["user_outer_ipv4_intent"]==[1460,1460,1280]
+          assert v["client_real_syn_mss"]==[1420,1420,1240]
+          assert v["client_inner_tun_os_mtu"]==[1389,1389,1209]
+          assert v["server_shared_tun_os_mtu"]==1389
+          assert v["same_account_two_installations_different_outer"] and v["server_global_tun_not_lowered"]
+          print("M0_PLAN028_H1141_NATIVE_X86_THREE_CLIENT_INDEPENDENT_USER_OUTER_MTU_AND_70_UDP_PASS")
+          PY
+          cat fixed-kernel-result/plan028-h1141-mixed-outer.json
+37-native-rust-m2.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1141-native-x86-mixed-user-outer-${{ github.run_id }}
+          path: |
+            linux-product/manifest.json
+            fixed-kernel-result/plan028-h1141-native-mixed-outer-x86.log
+            fixed-kernel-result/plan028-h1141-mixed-outer.json
+            fixed-kernel-result/plan028-h1141-a-inner.json
+            fixed-kernel-result/plan028-h1141-b-inner.json
+            fixed-kernel-result/plan028-h1141-d-inner.json
+            fixed-kernel-result/plan028-h1141-server-inner.json
+          retention-days: 14
+          if-no-files-found: warn
