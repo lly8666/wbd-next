@@ -1,0 +1,55 @@
+name: M0 PLAN028 x86 native Auto timeline one frozen product
+run-name: PLAN028 x86 Auto real path UDP CPU p99 ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-x86-auto-phase-cpu-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-x86-auto-phase:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41782228876
+          name: m0-plan028-game-overlap-x86-41782228876-1
+          github-token: ${{ github.token }}
+          path: ./
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          import pathlib,hashlib,json,struct
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]=="0e47d9c9532cbda9e655bd198348acf4ff4ddcd1"
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][n]
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 tools/m0-plan028-x86-auto-timeline-fixture.py "$RUNNER_TEMP/one-actual-x86.sh"
+          bash -n "$RUNNER_TEMP/one-actual-x86.sh"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iproute2 iptables openssl
+      - shell: bash
+        run: |
+          set -euo pipefail
+          WBD_V4_PUBLIC_MODE=fec-auto WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_WIRE_AUDIT=0 bash "$RUNNER_TEMP/one-actual-x86.sh" fixed-build >fixed-kernel-result/x86-auto-phase-native.log 2>&1 || {
+            tail -120 fixed-kernel-result/x86-auto-phase-native.log >&2; exit 1;
+          }
+          grep -Fq M0_PLAN028_NATIVE_X86_PHASE_OBSERVATION_AND_128_REAL_UDP_CPU_P99_PASS fixed-kernel-result/x86-auto-phase-native.log
+          grep -Fq M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS fixed-kernel-result/x86-auto-phase-native.log
+          cat fixed-kernel-result/plan028-x86-timeline-summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-x86-auto-native-phase-${{ github.run_id }}
+          path: fixed-kernel-result/
+          retention-days: 14
