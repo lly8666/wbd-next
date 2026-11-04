@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1196,
-  "checkpoint_sha": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
+  "sequence": 1197,
+  "checkpoint_sha": "c18bae567c50e3d52e61211fda57c3ea618aea47",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1196 collect native x86 H1194 Normal Auto SOURCEda8 Action41908553298 two authentic path reauth gen1→2→3, exact old1+2 Stop, same lease, OS MTU1375→1195 and independent Game4 UDP32 each switch PASS; native ARM H1195 Game2off SOURCE0747 Action41908850682 gen1→2→3, Stops1+2, OS MTU1373→1193 and two siblings each24 UDP per switch PASS. Next complete Linux x86/x86 Normal fixed highest FEC6 physical two switch, require effective original Rust FEC6 readback, no product source change.",
-  "why_now": "Source-specific real native artifacts x86 13361002629 ZIP ee95ed4b and ARM13361877030 ZIP a84b3d57; both full Action success with original TLS/Rust and one shared TUN Stop. Old H1192 and H1193 Action FAIL were only test assertions/log path and retained. Current cursor ref must only point ARM SOURCE0747; x86 evidence separate card and immutable file.",
+  "current_task": "H1197 x86/x86 original Go TLS/Rust shared443 Normal fixed strongest profile6 distinct 2 physical NIC IP switches .4→.9→.4/MTU1500→1280→1500, authentic protected Normal generations1→2→3 and old exact Stops1+2 while Game4FEC6 gen1 sends 32 real UDP each; require true native Rust FEC fixed profile6 readback from all 3 generations plus server protected FEC6 installed 3 cohorts. Test-only generated fixture inherits H1194 qualified normal Auto physical test and replaces only protected mode to fec-fixed --fec-profile6; no packet algorithm change. H1194 x86 Normal Auto/H1195 ARM Game2off full PASS already archived.",
+  "why_now": "Complete two-mode native path source qualifications now available. PLAN028 §5 requires Normal fixed highest 2 real A→A+B→B before completion, and real FEC6 readback on each M4 is essential. Reuse qualified H1194 source algorithm + same Game4 sibling, test actual profile6 instead of CLI guess. Windows H1188 and Linux H1186/H1191 remain separate scoped PASS.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Build one complete Linux x86_64 client+server Normal fixed profile6 dual physical handover based on qualified x86 NormalAuto fixture, require native FEC profile6 Rust effective readback and healthy Game4. After that alternate ARM64+ARM64 Normal off or Game2 fixed. 30%/250ms, Android, ICMP/CPU causality remain.",
+  "next_action": "Collect H1197 exact one native x86 original source Action full build and 3 authentic fixed6 cohorts, actual Rust effective readback, two old Stop, new Normal real UDP and healthy Game4, final shared TUN Stop. Next Linux ARM/ARM Normal off or Game2 fixed as alternation. H998 old failures, Android/ICMP/CPU and 30%/250ms remain.",
   "unverified": true,
   "last_tested_source": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1196 x86 NormalAuto SOURCEda8 and ARM Game2off SOURCE0747 full native A-B-A PASS; refs source-isolated. Next x86 Normal fixed6 exact actual M4/OS. H998 failures and remote ICMP Android CPU unmeasured."
+  "partial_summary": "H1197 starts x86/x86 Normal fixed profile6 two source4/MTU changes, three true authenticated Go TLS/Rust cohorts, effective Rust FEC6 readback per M4, independent healthy Game4 real UDP; no Go/Rust code/wire changes. Previous x86 Normal Auto/ARM Game2off full PASS stored."
 }
