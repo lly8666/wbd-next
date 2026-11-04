@@ -1,4 +1,5 @@
 name: M0 PLAN028 x86 native Game4 FEC6 two protected groups physical source4 switch
+# H1115 fixture-only narrow fix: propagate one paced B traffic clock into netns; no product rebuild.
 run-name: PLAN028 x86 Game4 FEC6 Bob continuous during Alice source4 switch ${{ github.sha }}
 on:
   push:

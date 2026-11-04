@@ -154,7 +154,7 @@ PY
 }
 send_udp(){
  local ns="$1" source="$2" label="$3" qty="$4" target="$5"
- sudo -n ip netns exec "$ns" env GAME_SRC="$source" GAME_LABEL="$label" GAME_QTY="$qty" python3 -u -c '
+ sudo -n ip netns exec "$ns" env GAME_DELAY_S="${GAME_DELAY_S:-0}" GAME_SRC="$source" GAME_LABEL="$label" GAME_QTY="$qty" python3 -u -c '
 import os,socket,time
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind((os.environ["GAME_SRC"],0));s.settimeout(10)

@@ -1,4 +1,5 @@
 name: M0 PLAN028 Windows test-owned NIC native IPv4 notification and actual selected source proof
+# H1115 narrow asynchronous OS preferred-source readback fix, with failing receipt.
 run-name: PLAN028 Win real test-only HyperV source4 native event preflight ${{ github.sha }}
 on:
   push:
@@ -62,10 +63,19 @@ jobs:
                 }
                 $result.test_owned_nic=[string]$iface[0].Name
                 New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress '198.18.246.1' -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop | Out-Null
-                Start-Sleep -Milliseconds 300
-                $selected=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
-                  Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.1'})
-                if (-not $selected) {throw 'Windows GetBestRoute source before change is not owned interface IPv4'}
+                # Windows can retain a tentative state after New-NetIPAddress.
+                # Compare ONLY the actual selected OS route on our internal
+                # adapter; never silently turn a source-selection miss into PASS.
+                $selected=@()
+                for ($attempt=0;$attempt -lt 50;$attempt++) {
+                  $sourceRoute=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop)
+                  $selected=@($sourceRoute | Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.1'})
+                  if ($selected.Count -gt 0) {break}
+                  Start-Sleep -Milliseconds 100
+                }
+                $result.pre_route_items=@($sourceRoute | Select-Object IPAddress,InterfaceIndex,InterfaceAlias,DestinationPrefix,AddressState,SkipAsSource)
+                $result.pre_owned_ip=@(Get-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 | Select-Object IPAddress,AddressState,SkipAsSource)
+                if (-not $selected) {throw 'Windows GetBestRoute source before change is not owned interface IPv4; native OS receipt saved'}
                 $result.selected_source_before='198.18.246.1'
                 Add-Type -TypeDefinition @'
           using System;
