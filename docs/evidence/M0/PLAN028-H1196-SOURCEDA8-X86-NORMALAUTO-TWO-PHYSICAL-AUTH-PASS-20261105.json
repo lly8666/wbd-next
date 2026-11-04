@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1196",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "da8ebc017b7af671b4b6f4187aca4cfff18b626c",
+  "action": {
+    "run_id": 41908553298,
+    "job_id": 126849659124,
+    "conclusion": "success",
+    "artifact_id": 13361002629,
+    "zip_sha256": "ee95ed4b86de2b364e82a667831e450d0ef90235c5530a395ba91a737d742c0e"
+  },
+  "native": {
+    "platform": "x86_64 client and server",
+    "original_go_rust_TLS": true,
+    "one_server_port": 443,
+    "mode": "Normal Auto",
+    "auth_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_exact_stops": [
+      1,
+      2
+    ],
+    "source4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "os_inner_mtu": [
+      1375,
+      1195,
+      1195
+    ],
+    "outer_user_mtu": 1460,
+    "same_auto_lease": "10.66.0.225/32",
+    "normal_new_udp": [
+      16,
+      16
+    ],
+    "game4_healthy_udp_during_each": [
+      32,
+      32
+    ],
+    "game4_gen1_unchanged": true,
+    "game4_inner_mtu_unchanged": 1358,
+    "command_to_ready_ms": [
+      281.26,
+      274.88
+    ],
+    "real_shared_rust_tun_final_stop": true
+  },
+  "unmeasured": [
+    "5% in Normal switch",
+    "exact physical notification→TLS",
+    "auth→first business",
+    "CPU causal",
+    "remote ICMP",
+    "Android"
+  ],
+  "legacy": [
+    "H1192 earlier Action failed only old singleton server ready count, real generation proof retained",
+    "H998 original hot-shrink/old ARM Action FAIL"
+  ]
+}

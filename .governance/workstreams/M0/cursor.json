@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1195,
-  "checkpoint_sha": "da8ebc017b7af671b4b6f4187aca4cfff18b626c",
+  "sequence": 1196,
+  "checkpoint_sha": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1195 ARM64/ARM64 H1193 Action41908174617 SOURCE0ad3 original Go TLS/Rust Game2 off actual 2 real source4 changes .2→.9→.2; auth generations1→2→3 old1/2 exact Stop, OS inner1373→1193→1193, preserved /32, Bob Game4 and Carol Normal each 24 real UDP across EACH switch and original final Rust TUN Stop. H1193 overall Action FAIL only workflow grep wrong nonexistent arm64.log though actual native output was in inherited x86.log; H1195 fix exact workflow path and requalify. H1194 x86 NormalAuto source-bound native Action in flight independently.",
-  "why_now": "H1193 artifact13362410221 SHA d20bc299 real native ARM testcase logged H1193 PASS and inherited H1151 PASS with JSON complete but workflow returned exit2 immediately after grep path used nonexistent `...arm64.log`; all native output writes `...x86.log`. Minimal test-only path fix; no production or falsified qualification.",
+  "current_task": "H1196 collect native x86 H1194 Normal Auto SOURCEda8 Action41908553298 two authentic path reauth gen1→2→3, exact old1+2 Stop, same lease, OS MTU1375→1195 and independent Game4 UDP32 each switch PASS; native ARM H1195 Game2off SOURCE0747 Action41908850682 gen1→2→3, Stops1+2, OS MTU1373→1193 and two siblings each24 UDP per switch PASS. Next complete Linux x86/x86 Normal fixed highest FEC6 physical two switch, require effective original Rust FEC6 readback, no product source change.",
+  "why_now": "Source-specific real native artifacts x86 13361002629 ZIP ee95ed4b and ARM13361877030 ZIP a84b3d57; both full Action success with original TLS/Rust and one shared TUN Stop. Old H1192 and H1193 Action FAIL were only test assertions/log path and retained. Current cursor ref must only point ARM SOURCE0747; x86 evidence separate card and immutable file.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1195 native ARM/ARM full workflow PASS and H1194 native x86 NormalAuto new exact 3-cohort test Action. Then archive distinct SOURCE evidence with correct last-tested cursor ref and verification card; do not assume pass from scene marker alone. Next Linux x86; other modes/30% remain open.",
+  "next_action": "Build one complete Linux x86_64 client+server Normal fixed profile6 dual physical handover based on qualified x86 NormalAuto fixture, require native FEC profile6 Rust effective readback and healthy Game4. After that alternate ARM64+ARM64 Normal off or Game2 fixed. 30%/250ms, Android, ICMP/CPU causality remain.",
   "unverified": true,
-  "last_tested_source": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
+  "last_tested_source": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1191-SOURCE0B6F-ARM64-GAME4-DOWN-POSTAUTH-NETEM5-P99-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1196-SOURCE0747-ARM-GAME2OFF-TWO-PHYSICAL-AUTH-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1195 H1193 native ARM Game2 authentic gen1→2→3 old Stops, OS MTU1373→1193, Game4+Normal24 each per shift, lease preserved, final TUN Stop, but overall Action FAIL wrong output log filename in test workflow; exact filepath corrected. H1194 x86 pending."
+  "partial_summary": "H1196 x86 NormalAuto SOURCEda8 and ARM Game2off SOURCE0747 full native A-B-A PASS; refs source-isolated. Next x86 Normal fixed6 exact actual M4/OS. H998 failures and remote ICMP Android CPU unmeasured."
 }

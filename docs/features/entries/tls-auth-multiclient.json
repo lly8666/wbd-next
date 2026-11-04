@@ -144,98 +144,98 @@
   },
   {
    "platform": "Linux x86_64 original Go/Rust Game4 FEC6 H1092",
-   "scope": "H1092 x86 Game4 FEC6 real source IPv4 A→A+B→B, new Ready before old Stop, UDP5+5, MTU1178, 8 TLS flights",
+   "scope": "H1092 x86 original Game4 path TLS8, FEC6 MTU/UDP Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "67ba10dd7f818a327041e0e5c16e5b69f9f32d0a",
    "evidence": "docs/evidence/M0/PLAN028-H1092-SOURCE67BA-GAME4-X86-OVERLAP-TLS8-20261104.json"
   },
   {
    "platform": "Linux native ARM64/ARM64 original Go/Rust source5760",
-   "scope": "H1093 ARM64 Game4 FEC6 real source4 A→A+B→B, genuine UDP5, MTU1178, parity, 8 TLS flights, exact Stop",
+   "scope": "H1093 ARM original Game4 source4 TLS8, FEC6 and Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "5760dd1c1e77367004614e1fcd44f248f47227b8",
    "evidence": "docs/evidence/M0/PLAN028-H1093-SOURCE5760-ARM64-GAME4-OVERLAP-TLS8-20261104.json"
   },
   {
    "platform": "Linux x86 original-Go TLS13 test H1095",
-   "scope": "H1095 Go TLS13 authentic decrypted certificate, CertificateVerify, both Finished vs uTLS Firefox120 baseline",
+   "scope": "H1095 authentic TLS13 certificate+Finished against uTLS browser.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "4106231a2a4800b8c0f8be5d1f92fae9ccc2039b",
    "evidence": "docs/evidence/M0/PLAN028-H1095-SOURCE4106-TLS13-FINISHED-SAME-UTLS-BASELINE-20261104.json"
   },
   {
    "platform": "Linux/x86_64 original Go protected TLS + Rust shared TUN both ends",
-   "scope": "H1107 x86 native one443 three leases: Alice source4/MTU shrink, Bob/Alice-D each24 UDP, new Alice5 UDP, Stop.",
+   "scope": "H1107 x86 3 leases, source4 MTU and sibling UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
    "evidence": "docs/evidence/M0/PLAN028-H1107-SOURCE0E47-X86-THREE-DEVICE-REAL-SWITCH-20261104.json"
   },
   {
    "platform": "Linux/native ARM64 client + ARM64 server",
-   "scope": "H1109 ARM source4/MTU shrink with two Alice devices/Bob one443, 24 sibling UDP each, new Alice5 UDP/Stop.",
+   "scope": "H1109 ARM 3 devices, source4 MTU and sibling UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
    "evidence": "docs/evidence/M0/PLAN028-H1109-SOURCE32CD-ARM64-THREE-DEVICE-REAL-SWITCH-20261104.json"
   },
   {
    "platform": "Linux native x86_64 client+server",
-   "scope": "H1116 x86 Game4FEC6 groups source4+MTU1358→1178, new64 UDP, old Stop; Bob32 UDP and TUN unchanged.",
+   "scope": "H1116 x86 Game4 physical MTU new64/old Stop, sibling32.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
    "evidence": "docs/evidence/M0/PLAN028-H1116-SOURCE0E47-X86-GAME4FEC6-SIBLING-PHYSICAL-20261104.json"
   },
   {
    "platform": "Linux native ARM64+ARM64",
-   "scope": "H1119 ARM Game4FEC6 source4/MTU1358→1178, new64 UDP, old Stop, Bob32 UDP unchanged.",
+   "scope": "H1119 ARM Game4 physical MTU new64/old Stop, sibling32.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
    "evidence": "docs/evidence/M0/PLAN028-H1119-SOURCE32CD-ARM64-GAME4FEC6-TWO-GROUP-PHYSICAL-20261104.json"
   },
   {
    "platform": "Windows 2025 signed Npcap/Wintun + Ubuntu WSL2",
-   "scope": "H1126 genuine gen1 TLS/Rust UDP/MTU/Stop but source4 .1→.9 gen2 repeated SYN timeout against singleton manual server",
+   "scope": "H1126 Windows initial TLS PASS, second SYN timeout against old singleton FAIL.",
    "status": "FAIL",
    "source_sha": "c27cd128362c13faaf4cb7417bd7dfaddab91fa4",
    "evidence": "docs/evidence/M0/PLAN028-H1126-WINDOWS-GEN2-SINGLE-MANUAL-SERVER-FAIL-20261104.json"
   },
   {
    "platform": "Windows 2025 original Npcap/Wintun + Ubuntu WSL2",
-   "scope": "H1135 Windows signed TLS/Rust two generations virtual source4, inner1389 MSS1420, per-owner M2, UDP/TCP and Stop.",
+   "scope": "H1135 signed Windows real two TLS/Rust generations, inner MTU, UDP/TCP Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
    "evidence": "docs/evidence/M0/PLAN028-H1135-SOURCEAB47-WINDOWS-ORIGINAL-TWO-GEN-NATIVE-PASS-20261104.json"
   },
   {
    "platform": "Native Linux ARM64/ARM64 original Go TLS and Rust M4 shared TUN",
-   "scope": "H1139 ARM original TLS/Rust source4 .2→.3, MTU1280/inner1209, 5+5 UDP, 2 original Rust M2 readbacks and Stop.",
+   "scope": "H1139 ARM original TLS source4 and Rust readback/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "eaf29401025d83aaa3c5ea6f941b475dbc13f0f8",
    "evidence": "docs/evidence/M0/PLAN028-H1139-SOURCEEAF2-ARM64-SHARED-RUST-M2-SOURCE4-REAL-UDP-20261104.json"
   },
   {
    "platform": "Linux x86_64 native original TLS/Rust",
-   "scope": "H1141 x86 distinct per-device outer1280/1460, inner1209/1389, 70 UDP/Stop.",
+   "scope": "H1141 x86 per-device outer1280/1460, OS inner1209/1389, real UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
    "evidence": "docs/evidence/M0/PLAN028-H1141-SOURCEAB47-X86-THREE-DEVICE-OUTER-INTENT-1460-1280-20261104.json"
   },
   {
    "platform": "ARM64 original Go TLS/Rust per-device Normal FEC",
-   "scope": "H1144 ARM Normal off/auto/fixed one443, 70 UDP and shared TUN Stop.",
+   "scope": "H1144 ARM Normal off/auto/fixed shared443, 70 UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "eeefed3f6ba19d98665e4e40f10d80f67469ba52",
    "evidence": "docs/evidence/M0/PLAN028-H1144-SOURCEEEEF-ARM64-NORMAL-MIXED-FEC-70-UDP-20261104.json"
   },
   {
    "platform": "Linux x86_64 original Go TLS/Rust shared443",
-   "scope": "H1155 NormalAuto+Game2off+Game4fixed6 three protected clients, 48 real UDP, distinct OS TUN 1375/1373/1358 and safe Stop.",
+   "scope": "H1155 x86 mixed NormalAuto Game2off Game4fixed6 one443 real48 UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "c44f5533b8d734602208f419f8043b79a63ac2eb",
    "evidence": "docs/evidence/M0/PLAN028-H1155-SOURCEC44F-X86-MIXED-NORMAL-GAME2-GAME4-48UDP-STOP-20261104.json"
   },
   {
    "platform": "Native ARM64 original Go TLS/Rust mixed 443",
-   "scope": "H1158 one443 Game2 off+Game4 fixed6+Normal Auto, 48 real UDP, inner1373/1358/1375 and sibling-safe Stop.",
+   "scope": "H1158 ARM mixed NormalAuto Game2off Game4fixed6 one443 real48 UDP/Stop.",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "92591445c28f2867fd1fee0a582b3a5d95c3d062",
    "evidence": "docs/evidence/M0/PLAN028-H1158-SOURCE9259-ARM64-MIXED-ORIGINAL-443-48UDP-STOP-20261104.json"
@@ -281,12 +281,26 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
    "evidence": "docs/evidence/M0/PLAN028-H1191-SOURCE0B6F-ARM64-GAME4-DOWN-POSTAUTH-NETEM5-P99-PASS-20261105.json"
+  },
+  {
+   "platform": "Native Linux x86_64 original Go TLS/Rust shared443 Normal Auto",
+   "scope": "H1196 SOURCEda8 Normal Auto physical .4→.9→.4, gen1→2→3, old Stop1/2, OS MTU1375→1195, Game4 UDP32 each, Stop.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "da8ebc017b7af671b4b6f4187aca4cfff18b626c",
+   "evidence": "docs/evidence/M0/PLAN028-H1196-SOURCEDA8-X86-NORMALAUTO-TWO-PHYSICAL-AUTH-PASS-20261105.json"
+  },
+  {
+   "platform": "Native Linux ARM64 original Go TLS/Rust shared443 Game2 off",
+   "scope": "H1196 SOURCE0747 Game2 off .2→.9→.2, gen1→2→3, old Stop1/2, MTU1373→1193, Game4+Normal24 each, Stop.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
+   "evidence": "docs/evidence/M0/PLAN028-H1196-SOURCE0747-ARM-GAME2OFF-TWO-PHYSICAL-AUTH-PASS-20261105.json"
   }
  ],
  "limitations": [
   "V4不保证与旧V3数据面互通。",
   "Linux task rotation: x86/x86 then ARM/ARM native, Windows excluded.",
-  "Scoped PASS: shared443, x86/ARM real physical change and signed Windows Game4FEC6 TLS×2 H1188; x86 H1186 5% during TLS reauth dropped158/2330, UDP200/200 p99 20.033ms Normal320; ARM H1191 5% AFTER TLS dropped115/2309 UDP200/200 p99 20.067ms Normal16. Historical H1173 Game4 TLS2 FAIL and H998 original MTU hot-shrink/ARM Action FAIL retained. Full 7 modes and 30%/250ms, precise event/TLS/first, CPU causal, ICMP, Android open."
+  "Scoped PASS: shared443/multiple clients, signed Windows Game4FEC6 two M4 gens H1188, x86 5% during Game4 TLS H1186, ARM Game4 5% post-auth H1191; x86 NormalAuto dual path H1196 and ARM Game2off dual path H1196. Historical H1173 singleton Game4 TLS2 FAIL and H998 hot MTU shrink/old ARM Action FAIL. Normal off/fixed, Game2 fixed, Game4 off, 30%/250ms, CPU/ICMP/Android/precise notification/first timing open."
  ],
  "promotion": null,
  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

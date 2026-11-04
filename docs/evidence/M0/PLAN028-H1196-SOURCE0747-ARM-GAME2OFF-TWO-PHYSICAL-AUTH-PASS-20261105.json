@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1196",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
+  "action": {
+    "run_id": 41908850682,
+    "job_id": 126850695357,
+    "conclusion": "success",
+    "artifact_id": 13361877030,
+    "zip_sha256": "a84b3d578c28595e58f7cdca1aad42be2809a489996dcb536841a8815119cb09"
+  },
+  "native": {
+    "platform": "ARM64 client and ARM64 server native ELF183",
+    "original_go_rust_TLS": true,
+    "one_server_port": 443,
+    "mode": "Game2 off ChaCha",
+    "auth_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_exact_stops": [
+      1,
+      2
+    ],
+    "source4": [
+      "10.25.0.2",
+      "10.25.0.9",
+      "10.25.0.2"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "os_inner_mtu": [
+      1373,
+      1193,
+      1193
+    ],
+    "other_game4_inner_mtu": 1358,
+    "other_normal_inner_mtu": 1375,
+    "outer_user_mtu": 1460,
+    "same_auto_lease": "10.66.0.133/32",
+    "new_game2_udp": [
+      16,
+      16
+    ],
+    "sibling_game4_and_normal_udp_per_switch": [
+      [
+        24,
+        24
+      ],
+      [
+        24,
+        24
+      ]
+    ],
+    "both_sibling_gen1_unchanged": true,
+    "command_to_ready_ms": [
+      790.52,
+      783.23
+    ],
+    "real_shared_rust_tun_final_stop": true
+  },
+  "unmeasured": [
+    "5% in Game2 switch",
+    "exact notification→TLS",
+    "auth→first business",
+    "CPU causal",
+    "remote ICMP",
+    "Android"
+  ],
+  "legacy": [
+    "H1193 earlier Action failed only wrong native-log path",
+    "H998 original hot-shrink/old ARM Action FAIL"
+  ]
+}
