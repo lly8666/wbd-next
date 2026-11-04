@@ -73,7 +73,7 @@ leases=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenti
 assert len(leases)>=2 and len(set(leases))==1,leases
 assert bob.index("V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2")<bob.index("V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1")
 assert 'V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6' in bob
-assert 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client' not in carol
+assert re.findall(r'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\d+)',carol)==['1'], 'Carol must remain on original authenticated generation'
 out={"scope":"NATIVE_ARM64_MIXED_NORMAL_GAME2_GAME4_PHYSICAL_REAUTH_SINGLE_SHARED_443",
  "source4_before":"10.25.0.3","source4_after":"10.25.0.9",
  "shared_port":443,"game4_lanes":4,"outer_user_ipv4_mtu":1460,"physical_new_mtu":1280,
@@ -89,6 +89,8 @@ pathlib.Path(sys.argv[12]).write_text(json.dumps(out,indent=2)+"\n")
 print("M0_PLAN028_H1162_ARM64_MIXED_NORMAL_LIVE48_GAME4_PHYSICAL_NEW32_STOP_PASS",flush=True)
 PY_H1162
 '''
+change('for f in server.log A.log B.log C.log echo.log A-udp.log B-udp.log C-udp.log B-after.log C-after.log;do',
+       'for f in server.log alice.log bob.log carol.log echo.log A-udp.log B-udp.log C-udp.log C-live.log B-new.log B-after.log C-after.log;do')
 change('wait "$PA" "$PB" "$PC"\ngrep -Fq "V4_PUBLIC_GAME_FEC_APPLIED',
        'wait "$PA" "$PB" "$PC"\n'+extra+'\ngrep -Fq "V4_PUBLIC_GAME_FEC_APPLIED')
 out=Path(sys.argv[1])

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1165",
+  "status": "PARTIAL_COLLECTED_NOT_PLAN_COMPLETE",
+  "commit_before_fix": "dca0d6483af9d6662a63a837da90d71a3b6e9a93",
+  "source_boundaries": {
+    "windows": "a27178d2c7d6da160d2dce3173d67392ee6858ac",
+    "arm_old": "a2c9869c629c69b6da0d4d58120dc89f99d95e88",
+    "arm_corrected_escape": "dca0d6483af9d6662a63a837da90d71a3b6e9a93",
+    "arm_next": "PENDING_NEW_SOURCE"
+  },
+  "windows": {
+    "action_id": 41864386204,
+    "job_id": 126696509699,
+    "artifact_id": 13340969052,
+    "conclusion": "PASS_ONE_NATIVE_NORMAL_SCENE",
+    "original_go_tls": true,
+    "npcap_wintun_wsl2": true,
+    "mode": "normal",
+    "client_outer_default_ipv4_ip_mtu": 1460,
+    "source_ipv4_before": "198.19.254.1",
+    "source_ipv4_after": "198.19.254.9",
+    "os_inner_mtu_generations": [
+      1389,
+      1389
+    ],
+    "syn_synack_mss_generations": [
+      [
+        1420,
+        1420
+      ],
+      [
+        1420,
+        1420
+      ]
+    ],
+    "old_generation_exact_wal_stop": true,
+    "new_generation_tls_rust_ready": true,
+    "real_kernel_udp_duplex": true,
+    "real_kernel_tcp_duplex": true,
+    "owned_stop": true,
+    "new_inner_udp_receive_increments": {
+      "windows": 8,
+      "linux": 10
+    },
+    "os_mutation_to_new_ready_observed_ms": 13110,
+    "notification_to_tls_start_ms": "NOT_MEASURED",
+    "tls_auth_to_first_packet_ms": "NOT_MEASURED",
+    "cpu_p99": "NOT_MEASURED",
+    "source_manifest_sha256": {
+      "windows_exe": "40c40e47d34e69de5481e2eb8d2f8e8e6599ae32df9821307eee3f80c754b62d",
+      "windows_dll": "e21c06abf469fd39c876beb64c4add0f9280a6bf5e9854021f34daa5fb227b7e"
+    },
+    "not_proven": "Not seven-mode or loss matrix; OS mutation→ready 13.11s includes detection, TLS/owner install and test orchestration and is not the notifier coalescing latency."
+  },
+  "arm_old": {
+    "action_id": 41863838024,
+    "job_id": 126692722788,
+    "artifact_id": 13340204112,
+    "conclusion": "FAIL_FIXTURE_PRE_NATIVE_UDP",
+    "cause": "Generated Bash escaped ${6:-0}, Python ValueError converting literal string to float; H1164 corrected escape",
+    "native_qualification": "NOT_RUN"
+  },
+  "arm_h1164": {
+    "action_id": 41864678877,
+    "job_id": 126695734458,
+    "artifact_id": 13341832441,
+    "conclusion": "FAIL_TEST_ASSERTION_BEFORE_FULL_STOP",
+    "physical_route_readback": {
+      "dev": "mxb0",
+      "prefsrc": "10.25.0.9"
+    },
+    "physical_link_mtu_readback": 1280,
+    "baseline_real_udp_acks": {
+      "game2": 12,
+      "game4": 12,
+      "normal": 12
+    },
+    "new_path_observed": true,
+    "root_cause": "Generator final Python asserted no READY in Carol log, but current path supervisor logs READY for initial generation1; correct check is exactly one initial generation1 and no generation2.",
+    "native_qualification": "PARTIAL_ONLY_NOT_PASS",
+    "full_stop_not_proven": true
+  },
+  "retained_h998": [
+    "ONLINE_SAME_CONNECTION_HOT_MTU_SHRINK_FAIL",
+    "ARM64_GAME4FEC_ACTION_FAIL",
+    "REMOTE_ICMP_3_4_NOT_MEASURED",
+    "CPU_CAUSAL_NOT_PROVEN"
+  ],
+  "linux_platform_rotation": "H1165 ARM64/ARM64 is redo of incomplete ARM task; next new complete Linux task x86_64/x86_64; Windows does not count",
+  "android": "NOT_RUN"
+}
