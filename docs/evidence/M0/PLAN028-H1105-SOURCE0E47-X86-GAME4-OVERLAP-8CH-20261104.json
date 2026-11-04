@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1105",
+  "result": "PASS_SCOPED_NATIVE_X86_GAME4_FEC6_REAL_OVERLAP_8CH",
+  "product_source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "harness_source_sha": "cb3ea36e4eff677dc66a531e300a419fff11bd02",
+  "action": {
+    "run_id": 41790304416,
+    "job_id": 126441880529,
+    "artifact_id": 13303345412,
+    "conclusion": "success",
+    "zip_downloaded_verified": true
+  },
+  "source_provenance": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "binary_source_build_run": 41782228876,
+    "build_artifact": 13299199278,
+    "manifest_sha256": "8e95731e18f7a10ba6b8d3cea970ca0ac1a70fc423a3b902c0c7bc2e48bf061d",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "same_three_elf_sha256_verified": true,
+    "elf_machine": 62,
+    "binary_sha256": {
+      "wbd-v4-client": "e6f9d900a9df10074478ec0a5a8fd5c5ac121cec4cbe07310cc1985",
+      "wbd-v4-server": "2489895f0ac75fb9e9e51230ba92ebf5252ca330314c0bbe9cfe762c55956a3d",
+      "libwbd_engine.so": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "native_scope": {
+    "both_endpoints": "Linux x86_64 real netns raw AF_PACKET/TUN",
+    "mode": "Game4 fixed6",
+    "single_server_port": 443,
+    "physical_source_ipv4_before": "10.25.0.2",
+    "after": "10.25.0.3",
+    "configured_outer_ipv4_mtu": 1460,
+    "physical_ipv4_mtu_after": 1280,
+    "inner_tun_mtu_os_readback": 1178,
+    "old_generation_udp_echoes": 5,
+    "new_generation_udp_echoes": 5,
+    "new_generation_ready_before_old_stop": true,
+    "shared_tun_one_reader_each": true,
+    "real_fec_parity_both_generations": true,
+    "same_installation_protected_lease": true,
+    "old_owner_exact_stop": true,
+    "healthy_lane_delivers_when_lane1_underlay_damaged": true
+  },
+  "tls_wire_reassembled_from_server_capture": {
+    "client_hello_sessions": 8,
+    "distinct_session_ids": 8,
+    "lanes_per_generation": 4,
+    "client_hello_source_counts": {
+      "10.25.0.2": 4,
+      "10.25.0.3": 4
+    },
+    "all_first_client_payload_tls_clienthello": true,
+    "all_first_server_payload_tls_serverhello": true,
+    "all_server_early_data_bytes": 0,
+    "all_session_id_length": 32,
+    "no_private_prelude": true,
+    "full_finished_and_identical_utls_baseline": "QUALIFIED_SEPARATELY_H1095_IN_MEMORY_ONLY"
+  },
+  "log_hashes": {
+    "native": "364a42dbeeb4cabb00a9fa0624cbc7c9ecfd8a59bf746c10b7b04a3d77336cc4",
+    "wire": "45124e9ecbce16f18dc1c8d9a4b3fc9f33fd5d6b9a279bbf69b67316fff56a30",
+    "mtu": "752d8d047a59a6de5e8d1ee697f39874348274d30287dfd61d8fe553de70de8b",
+    "route": "dafe4719a20c4b1ee4bcd4e55862dc30924990408064d579850dab01db43b49d",
+    "business": "608fdf76a9c6495047832ef11256dcfedcbf55238edd4f4ab02a2165d46a067d"
+  },
+  "prior_failures_preserved": [
+    {
+      "run": 41782228876,
+      "overall": "FAIL",
+      "reason": "workflow requested EIGHT but measured 8 while original native business/pcap passed"
+    }
+  ],
+  "limitations": [
+    "Not new product code qualification for all seven modes",
+    "H998 same connection hot shrink FAIL retained",
+    "Old ARM64 Game4FEC action FAIL historical",
+    "Windows real physical NIC/IP Npcap switch and CPU/p99 NOT_RUN",
+    "Android remote ICMP NOT_RUN"
+  ]
+}

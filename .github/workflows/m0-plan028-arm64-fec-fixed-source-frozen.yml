@@ -1,0 +1,93 @@
+name: M0 PLAN028 ARM64 Normal Fixed true source4 path, frozen product
+run-name: PLAN028 native ARM64 Fixed source32cd ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-arm64-fec-fixed-source-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  real-arm64-client-server-normal-fixed:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 14
+    env:
+      PRODUCT_SOURCE: 32cd752201e01134fc53157270ce223de70a8c7a
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41787602880
+          github-token: ${{ github.token }}
+          name: m0-plan028-native-arm64-normal-auto-41787602880
+          path: ./
+      - name: Reuse exact H1104 ARM64 original Go/Rust ELF binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -c /dev/net/tun
+          python3 - <<'PY'
+          import json,os,hashlib,struct,pathlib
+          m=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE"] and m["architecture"]=="native_aarch64"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][n],n
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183
+          print("M0_PLAN028_ARM64_FIXED_ORIGINAL_SOURCE_ELF_SHA_PASS no_rebuild=1")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 tools/m0-plan028-normal-fec-path-fixture.py "$RUNNER_TEMP/plan028-arm-fixed-native.sh"
+          bash -n "$RUNNER_TEMP/plan028-arm-fixed-native.sh"
+      - name: One real ARM64 client+server Fixed1 source4/MTU shrink 64+5 UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          WBD_V4_PUBLIC_MODE=fec-fixed WBD_V4_PUBLIC_AUTO_IP=1 \
+            WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_WIRE_AUDIT=0 \
+            bash "$RUNNER_TEMP/plan028-arm-fixed-native.sh" fixed-build \
+            >fixed-kernel-result/plan028-arm64-normal-fixed-path.log 2>&1 || {
+              tail -n 135 fixed-kernel-result/plan028-arm64-normal-fixed-path.log >&2
+              exit 1
+            }
+          for marker in \
+            "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS" \
+            "M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280" \
+            "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS" \
+            "M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS" \
+            "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=fec-fixed delivered=64" \
+            "M0_PLAN027_FEC_NATIVE_CONFIG_READBACK role=client mode=fixed applied=1";do
+              grep -Fq "$marker" fixed-kernel-result/plan028-arm64-normal-fixed-path.log
+          done
+          test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' fixed-kernel-result/plan028-arm64-normal-fixed-path.log)" -eq 5
+          python3 - <<'PY'
+          import pathlib,json
+          p=pathlib.Path("fixed-kernel-result")
+          r=json.loads((p/"plan028-effective-new-physical-route.json").read_text())
+          t=json.loads((p/"plan028-new-tun-mtu.json").read_text())
+          assert len(r)==len(t)==1
+          assert r[0]["dev"]=="wbdvc0" and r[0]["prefsrc"]=="10.25.0.3"
+          assert t[0]["ifname"]=="wbdvc4" and t[0]["mtu"]==1195
+          text=(p/"plan028-arm64-normal-fixed-path.log").read_text()
+          assert text.count("M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK")==5
+          assert "M0_PLAN027_FIXED_" in text
+          print("M0_PLAN028_ARM64_FIXED_REAL_SOURCE4_1280_TO_OS1195_64_PLUS_5_UDP_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-arm64-fixed-native-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/plan028-arm64-normal-fixed-path.log
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          if-no-files-found: warn
+          retention-days: 14
