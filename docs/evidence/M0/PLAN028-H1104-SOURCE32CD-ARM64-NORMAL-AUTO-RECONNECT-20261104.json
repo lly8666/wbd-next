@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1104",
+  "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
+  "result": "PASS_SCOPED_ARM64_NATIVE_NORMAL_AUTO_SOURCE_IPV4_SWITCH",
+  "action": {
+    "run_id": 41787602880,
+    "job_id": 126433229057,
+    "artifact_id": 13300899927,
+    "conclusion": "success",
+    "verified_zip": true
+  },
+  "binary_provenance": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "architecture": "native_aarch64",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "manifest_sha256": "6592f1941f51d90f05442e926b92d05c49c71b530bf74666292e0bb9027fe596",
+    "all_elf_machine": 183,
+    "sha256": {
+      "wbd-v4-client": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+      "wbd-v4-server": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+      "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "native_original_tls_rust": {
+    "client_server_isa": "arm64+arm64",
+    "single_server_port": 443,
+    "mode": "Normal Auto profile5",
+    "first_path_udp_echo": 64,
+    "new_path_udp_echo": 5,
+    "source_ip_before": "10.25.0.2",
+    "source_ip_after": "10.25.0.3",
+    "configured_outer_ipv4_mtu": 1460,
+    "new_physical_ip_mtu": 1280,
+    "new_tun_mtu_os_readback": 1195,
+    "same_auto_tunnel_ip": "10.66.0.133",
+    "original_tls_new_generation": true,
+    "one_rust_tun_reader_routed": 69,
+    "unrouted": 0,
+    "backpressure": 0,
+    "joined_stop": true,
+    "auto_profile_applied": 5,
+    "auto_pending": false
+  },
+  "log_sha256": {
+    "main": "d58af3ae7135523c760196f775f6386d6cff8092e71f20aaa2e99f9f9c5a9f7c",
+    "udp": "608fdf76a9c6495047832ef11256dcfedcbf55238edd4f4ab02a2165d46a067d",
+    "mtu": "3cffb66882762330f6be4d4343dddbd497ea7b78b4652252a8a292423cef54b6",
+    "route": "dafe4719a20c4b1ee4bcd4e55862dc30924990408064d579850dab01db43b49d"
+  },
+  "limits": [
+    "Auto matched-health feedback convergence NOT_QUALIFIED",
+    "H998 same-connection live hot MTU shrink FAIL retained",
+    "Windows physical NIC and CPU/p99 NOT_RUN",
+    "Old ARM64 Game4FEC Action FAIL, remote ICMP not measured"
+  ]
+}
