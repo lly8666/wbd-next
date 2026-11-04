@@ -131,7 +131,8 @@ def audit(raw):
         "extension_types":[str(x) for x in ex],
         "client_hello_sha256":hashlib.sha256(c[:cl]).hexdigest(),
         "tls_record_length_units":"TCP_reassembled",
-        "qualified_traffic":"isolated_real_ipv4_tcp_netns_443; NOT full site fingerprint impersonation"
+        "qualified_traffic":"real_kernel_ipv4_tcp_443_first_flight; NOT Finished transcript or site fingerprint",
+        "actual_tls_server_ipv4":server_ip
     }
 
 if __name__=="__main__":

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
-import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,atexit
+import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,atexit,secrets
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
@@ -130,7 +130,24 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=None;logs=[]
+route_local=route_guest=None
+# The real Windows Npcap client and the Linux WSL2 server are one scenario,
+# never an unattended seven-mode matrix or a scripted TLS clone.
+tls_wire=os.environ.get("WBD_WL_TLS_WIRE_AUDIT","0")=="1"
+if tls_wire and mode!="normal":
+ raise RuntimeError("PLAN028 Windows TLS wire audit only supports one Normal mode")
+def end_tls_capture():
+ if tls_capture is None:return
+ pid_file=out/"tls-capture.pid"
+ if pid_file.exists() and pid_file.read_text().strip().isdigit():
+  try:wsl("kill","-INT",pid_file.read_text().strip(),timeout=12)
+  except Exception:pass
+ try:tls_capture.wait(timeout=12)
+ except subprocess.TimeoutExpired:
+  tls_capture.terminate()
+  try:tls_capture.wait(timeout=4)
+  except subprocess.TimeoutExpired:tls_capture.kill()
 resource_stop=threading.Event();resource_worker=None
 try:
  cli=out/"wbd-client-embedded.exe";lib=out/"wbd_engine.dll"
@@ -143,13 +160,36 @@ try:
  if not m:raise RuntimeError("WSL2 actual eth0 IPv4 missing")
  peer=m.group(1);server=unix(root/"linux-product");result=unix(out)
  game_cold_stage("COLD_WSL_IP_READY")
- route="aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff"
+ # A fresh offline secret: no public constant, on-wire WB-R1, argv secret or
+ # third-party KMS. WSL2 receives its own exact regular owner-only copy.
+ route_local=out/"route-key-private.hex"
+ fd=os.open(route_local,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+ with os.fdopen(fd,"w",encoding="ascii") as f:f.write(secrets.token_hex(32)+"\n")
+ route_guest="/run/wbd-plan028-route-"+os.environ["GITHUB_RUN_ID"]+".hex"
+ wsl("install","-m","600",unix(route_local),route_guest)
+ report["route_key"]={"source":"offline_per_run_file","bytes":32,"online_exchange":False}
  tunnel="102030405060708090a0b0c0d0e0f001"
  user="wbd-ci-native";password="native-tls-ci-only"
  wsl("openssl","req","-x509","-newkey","rsa:2048","-sha256","-days","1","-nodes",
      "-keyout",result+"/key.pem","-out",result+"/cert.pem","-subj","/CN=wbd-v4.example.test",
      "-addext","subjectAltName=DNS:wbd-v4.example.test")
  game_cold_stage("COLD_TLS_CERT_READY")
+ if tls_wire:
+  # Bounded real WSL2 eth0 capture starts BEFORE the original Npcap SYN.
+  # Raw private PCAP is never part of the published Action artifact.
+  wsl("sh","-c","command -v tcpdump >/dev/null || (apt-get update -qq && apt-get install -y -qq tcpdump)",timeout=120)
+  capture_script=out/"start-tls-capture.sh"
+  capture_script.write_text("#!/bin/sh\nset -eu\necho $ > '"+result+"/tls-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+result+"/tls-firstflight.pcap' tcp port 443\n")
+  caplog=(out/"tls-capture-stderr.log").open("w");logs.append(caplog)
+  tls_capture=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(capture_script)],
+    stdout=subprocess.DEVNULL,stderr=caplog)
+  for tick in range(120):
+   if tls_capture.poll() is not None:raise RuntimeError("real WSL2 capture exited before Windows SYN")
+   caplog.flush()
+   if "listening on eth0" in (out/"tls-capture-stderr.log").read_text(errors="replace"):break
+   time.sleep(.1)
+  else:raise RuntimeError("WSL2 tcpdump not listening before Windows SYN")
+  report["tls_capture"]={"vantage":"WSL2_eth0_real_TCP","raw_pcap_artifact":False}
  linux=out/"start-linux.sh"
  # Original TLS-authenticated server selects the actual Windows11 carrier
  # persona before Rust M4 kernel RX; default W168 Linux legacy is unchanged.
@@ -161,11 +201,11 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
- args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
+ args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan","--outer-repair",outer_repair]
  if native_outer=="default1460":
@@ -250,6 +290,23 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
  ready(out/"server.log","V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else "V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8)
+ if tls_wire:
+  end_tls_capture()
+  from m0_plan028_tls_wire_audit import audit as audit_original_tcp
+  raw=(out/"tls-firstflight.pcap").read_bytes()
+  shape=audit_original_tcp(raw,server_ip=peer)
+  shape.update({"platform":"Windows_Npcap_original_Go_client_to_Linux_WSL2_server",
+     "source_sha":os.environ["GITHUB_SHA"],
+     "linux_binary_sha":os.environ["LINUX_BINARY_SRC"],
+     "first_payload_proof":"real_reassembled_TCP_not_segment_count",
+     "raw_pcap_retained":False,"route_key_exchange":"OFFLINE_ONLY_32B"})
+  (out/"tls-firstflight-audit.json").write_text(json.dumps(shape,indent=2)+"\n")
+  (out/"tls-firstflight.pcap").unlink()
+  report["tls_wire_first_flight"]=shape
+  print("M0_PLAN028_REAL_WINDOWS_NPCAP_TO_WSL2_FIRST_TLS_CLIENTHELLO_NO_PRELUDE_PASS"+
+       " session_id_bytes="+str(shape["session_id_length"])+
+       " client_tls_record_bytes="+str(shape["client_hello_record_bytes"])+
+       " server_tls_record_bytes="+str(shape["server_hello_record_bytes"]),flush=True)
  game_cold_stage("COLD_READY_COMPLETE")
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  winlog=(out/"client.log").read_text(errors="replace")
@@ -1128,6 +1185,14 @@ finally:
  for p in (wa,la,wt,lt):
   if p is not None and p.poll() is None:p.terminate()
  stop_windows(w);stop_linux()
+ if tls_capture is not None:
+  try:end_tls_capture()
+  except Exception:pass
+ if route_guest:
+  try:wsl("rm","-f",route_guest,timeout=10)
+  except Exception:pass
+ if route_local and route_local.exists():route_local.unlink()
+ (out/"tls-firstflight.pcap").unlink(missing_ok=True)
  if s and s.poll() is None:
   try:s.wait(timeout=4)
   except subprocess.TimeoutExpired:s.terminate()
