@@ -15,3 +15,7 @@ H1087 route-key/WB-R1前导移除限定收口之后继续原PLAN028。过去 Gam
 ## H1090 源角色边界极窄修复
 
 H1089 [Action41765851943](https://github.com/lly8666/wbd-next/actions/runs/41765851943) 原Go TLS/Game4FEC6/Rust M4 Ready，真实第一UDP回显却TIMEOUT：客户端Rust copied9/delivered0/rejected6/raw_received9/auth_rejected0；server回应已offer。新增Game客户端自身受保护/32用于**出站默认TUN路由**，误被原GameKernelOwner用作客户端**入站服务器源地址**校验，从而把合法server源10.66.0.1拒绝。本批只把 `GameKernelOwner` 的内层客户端源/32防伪限定在server角色；client仍须验证 TLS/AEAD/PN并保留自己的/32 outbound reader权限。H1089真实FAIL原证据见 docs/evidence/M0/PLAN028-H1089-SOURCE1725-GAME4-CLIENT-REVERSE-IP-FAIL-20261104.json；H1090未测，不能冒称Overlap PASS。
+
+## H1091 准确的Game服务端Stop资格断言
+
+H1090 [Action41766426849](https://github.com/lly8666/wbd-next/actions/runs/41766426849) 原生x86双端 Game4 fixed6首5和切网后5 UDP、真实OS MTU1178、相同/32、B原GoTLS/M4 READY后旧A精确Stop、双代两侧各10份FEC parity copied，全有真日志。整Action仍FAIL：旧夹具额外要求多group服务端Go层 `V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server`，但该server并不输出此字符串，其原Rust `V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=10 ... reader_joined=1` 已实际证明完成清理。H1091只修测试为真实Rust reader/route/Stop计数，并把原Go/Rust binaries纳入Action工件，后续仅修改夹具可冻结复用；不触碰成熟产品数据面。H1090真实业务和失败证据 `${ep}`；新Action未出不能上升为整场景PASS。

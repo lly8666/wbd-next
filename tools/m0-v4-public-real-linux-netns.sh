@@ -588,7 +588,10 @@ if [[ "$AUTO_IP" == 1 && "$GAME" != 0 ]];then
   grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$GAME" "$TMP/server.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=4' "$TMP/client.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/client.log"
-  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
+  # Multi-group server shares one Rust reader but its Go manager does
+  # not emit the singleton client's Go-level DRAINED marker. Require the
+  # real native reader_joined=1 with routed>=10 below, not a fake log line.
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
   python3 - "$TMP/client.log" "$TMP/server.log" "$GAME" <<'PY'
 import pathlib,re,sys
 client=pathlib.Path(sys.argv[1]).read_text()

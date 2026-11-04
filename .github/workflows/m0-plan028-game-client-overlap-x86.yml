@@ -134,6 +134,12 @@ jobs:
         with:
           name: m0-plan028-game-overlap-x86-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            # Save exact SHA-locked Go/Rust binaries once for focused
+            # fixture-only reruns. Do not rebuild a second SOURCE for
+            # script checks or relaunch the old 28-minute matrix.
+            fixed-build/wbd-v4-client
+            fixed-build/wbd-v4-server
+            fixed-build/libwbd_engine.so
             fixed-kernel-result/assembly.json
             fixed-kernel-result/manifest.json
             fixed-kernel-result/game-overlap-go-unit.log

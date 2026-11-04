@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1090",
+  "source_sha": "b9f6c3a62567feea70b793c5da47368637827518",
+  "status": "REAL_GAME4_IO_AND_OVERLAP_ORDER_PASS__ACTION_OVERALL_FAIL",
+  "run": {
+    "id": 41766426849,
+    "job_id": 126365758632,
+    "conclusion": "failure",
+    "artifact_id": 13293276302
+  },
+  "native_positive": {
+    "client_and_server_arch": "Linux/x86_64",
+    "original_tls_game4_lanes_each_generation": 4,
+    "server_port": 443,
+    "client_shared_one_Rust_reader": true,
+    "new_path_source": "10.25.0.3",
+    "old_path_source": "10.25.0.2",
+    "outer_intent_ipv4": 1460,
+    "underlay_new_ip_mtu": 1280,
+    "inner_TUN_OS_readback": 1178,
+    "same_install_lease_persisted": true,
+    "real_client_app_udp_echo_before": 5,
+    "after_new_path": 5,
+    "actual_fec_parity_offered_each_group": 10,
+    "actual_fec_parity_copied_each_group": 10,
+    "new_tls_m4_ready_before_old_exact_stop": true,
+    "old_server_group_exact_stop": "same-protected-cohort-new-generation",
+    "rust_server_reader": {
+      "routed": 10,
+      "reader_joined": 1
+    },
+    "rust_client_reader": {
+      "routed": 10,
+      "reader_joined": 1
+    }
+  },
+  "false_postcondition": "Test expects V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server, but original Go multi-group server only emits Rust V4_PUBLIC_SHARED_TUN_STOP generation=N ... reader_joined=1; actual native stop verified.",
+  "next": "H1091 fixture-only correct postcondition + save unchanged original Go/Rust binaries for later source-frozen checks; one Action one scenario",
+  "limitations": [
+    "Full source-locked workflow not PASS until new Action",
+    "8-wire ClientHello audit blocked by late fixture assertion and not yet verified for this source",
+    "No continuous Game UDP absence-of-drop, CPU/p99, Windows physical NIC, Android or full TLS transcript claim",
+    "H998 live MTU shrink FAIL retained"
+  ]
+}
