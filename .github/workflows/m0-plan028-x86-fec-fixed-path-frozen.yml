@@ -1,0 +1,95 @@
+name: M0 PLAN028 x86 original Normal fec-fixed physical source switch
+run-name: PLAN028 frozen x86 fec-fixed source0e47 ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-x86-fec-fixed-path-frozen.yml"
+      - "tools/m0-plan028-normal-fec-path-fixture.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-x86-fec-fixed-real-reconnect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    env:
+      WBD_PLAN028_ORIGINAL_BINARY_SOURCE: 0e47d9c9532cbda9e655bd198348acf4ff4ddcd1
+      WBD_PLAN028_MODE: fec-fixed
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41782228876
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-41782228876-1
+          path: ./
+      - name: Verify once-built original Go/Rust x86 SOURCE SHA/ELF
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          import json,os,hashlib,struct,pathlib
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text(encoding="utf-8"))
+          assert m["source_sha"]==os.environ["WBD_PLAN028_ORIGINAL_BINARY_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/name).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][name],name
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62,name
+          print("M0_PLAN028_FROZEN_X86_FIXED_AUTO_ORIGINAL_GO_RUST_SHA_VERIFIED no_rebuild=1")
+          PY
+          chmod 0755 fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 tools/m0-plan028-normal-fec-path-fixture.py "$RUNNER_TEMP/plan028-fec-path-native.sh"
+          bash -n "$RUNNER_TEMP/plan028-fec-path-native.sh"
+      - name: Real two x86 Linux peers fec-fixed source4 A-to-B /32, MTU and UDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          WBD_V4_PUBLIC_MODE="$WBD_PLAN028_MODE" WBD_V4_PUBLIC_AUTO_IP=1 \
+            WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_WIRE_AUDIT=0 \
+            bash "$RUNNER_TEMP/plan028-fec-path-native.sh" fixed-build \
+            >"fixed-kernel-result/plan028-fec-fixed-native-path.log" 2>&1 || {
+              tail -n 145 "fixed-kernel-result/plan028-fec-fixed-native-path.log" >&2
+              exit 1
+            }
+          for marker in \
+            "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS" \
+            "M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS physical=1280" \
+            "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS" \
+            "M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS" \
+            "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=fec-fixed delivered=64";do
+            grep -Fq "$marker" "fixed-kernel-result/plan028-fec-fixed-native-path.log"
+          done
+          test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "fixed-kernel-result/plan028-fec-fixed-native-path.log")" -eq 5
+          grep -Fq "M0_PLAN027_FIXED_" "fixed-kernel-result/plan028-fec-fixed-native-path.log"
+          python3 - <<'PY'
+          import json,pathlib
+          a=json.loads(pathlib.Path("fixed-kernel-result/plan028-effective-new-physical-route.json").read_text())
+          b=json.loads(pathlib.Path("fixed-kernel-result/plan028-new-tun-mtu.json").read_text())
+          assert len(a)==len(b)==1
+          assert a[0]["prefsrc"]=="10.25.0.3" and a[0]["dev"]=="wbdvc0"
+          assert 900<=b[0]["mtu"]<1280 and b[0]["ifname"]=="wbdvc4"
+          print("M0_PLAN028_FROZEN_X86_FIXED_SOURCE4_MTU_OS_READBACK_PASS")
+          PY
+          echo "M0_PLAN028_FROZEN_X86_FIXED_TRUE_TLS_RUST_PATH_REAUTH_AND_64_PLUS_5_UDP_PASS source=${WBD_PLAN028_ORIGINAL_BINARY_SOURCE} harness=${GITHUB_SHA}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-x86-fec-fixed-native-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/plan028-fec-fixed-native-path.log
+            fixed-kernel-result/plan028-auto-client-diagnostic.log
+            fixed-kernel-result/plan028-auto-server-diagnostic.log
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          if-no-files-found: warn
+          retention-days: 14

@@ -18,6 +18,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   one-original-go-rust-game4-x86-overlap:
+    # The H1101 commit only edits a frozen FEC fixture/marker; do not
+    # rebuild and rerun the already-qualified 8-CH Game4 product for it.
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[frozen-fixture-only]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 23
     env:
@@ -125,7 +128,7 @@ jobs:
             M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS \
             M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS \
             M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS \
-            M0_PLAN028_TLS_GAME4_EIGHT_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS;do
+            M0_PLAN028_TLS_GAME4_8_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS;do
             grep -Fq "$marker" fixed-kernel-result/game4-a-to-ab-to-b-native.log
           done
           echo M0_PLAN028_GAME4_X86_NATIVE_A_TO_AB_TO_B_SOURCE_QUALIFIED_ONE_TUN_READER=1

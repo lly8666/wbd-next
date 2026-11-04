@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1100,
-  "checkpoint_sha": "b66db557b62e7d193a98b5170a0687d01284b1a8",
+  "sequence": 1101,
+  "checkpoint_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1100 ARM64/ARM64 original Go/Rust Game2/off true A→A+B→B authenticated overlap; four real TCP first-flights / exact Stop / MTU readback / UDP candidate",
-  "why_now": "H1099 governance PASS source-correct. Game4 fixed6 x86/ARM overlap proven H1092/93; seven-mode Game2/off still needs equal source-locked qualification. Next Linux task native ARM64 both endpoints per user rotation. Keep product code unchanged.",
+  "current_task": "H1101 verified source0e47 ARM64 Game2/off true 4-CH native A→A+B→B PASS; x86 Game4 FEC6 8-CH/UDP true but Action FAIL final label; parallel x86/x86 Normal Fixed/Auto frozen binary OS source switch pending",
+  "why_now": "H1100 ARM Action41782228907 succeeded native 4 TLS first-flights and old/new Game2/off Rust/MTU/UDP; x86 Action41782228876 failed only post-business grep EIGHT vs 8. Reuse x86 same Go/Rust ELF/SHA for missing Normal Fixed/Auto whole-session physical IP switch as separate parallel Actions; do not rerun old Game4.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1100 ARM64/ARM64 Game2 off native one-scenario source Action. Verify four unique real ClientHello, no private prelude, old Stop and 5+5 UDP, lease and new physical MTU readback. On first FAIL repair narrow gate. Then next Linux new task x86/x86; Windows physical Npcap switch still unqualified.",
+  "next_action": "Collect two new SOURCE-frozen independent x86 Fixed/Auto physical source4 switch Actions and bounded FEC readback. On FAIL use first real native log; no full build repeat. Next distinct Linux task native ARM64 client+server; Windows actual physical NIC and CPU/p99 still NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "133d5e93ddbd2a311313cf8a80d3d3fc3fbb2430",
+  "last_tested_source": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1098-WIN-SOURCE133D-COLD-TLS-RETRY-20261104.json"
+    "docs/evidence/M0/PLAN028-H1101-SOURCE0E47-NATIVE-GAME2-ARM-GAME4-X86-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 32B offline routekey no WB-R1 scoped closed. H1092 x86 and H1093 ARM native Game4FEC6 overlap with real 8 TCP CH, 5+5 UDP, FEC and MTU1178. H1095 x86 original Go full decrypted TLS13 cert/CertificateVerify/both Finished versus matching uTLS reference. H1098 original Windows Go source133d six cold source4 transition/retry Go units pass, same product Win native Go/WAL+five modes run41778467840 pass. Actual Windows physical NIC switching, per-mode full crossover, CPU/p99, remote ICMP/Android untested; H998 old hot MTU FAIL and old ARM4FEC FAIL retained. Linux next ARM/ARM. H1099 repair only H1098 evidence expected governance JSON keys source_sha/result PASS/artifact_verified; WIN 6/6 unit + scoped five native modes proven, no new SOURCE or test. H1100 ARM native Game2/off two-lane overlap test-only SOURCE candidate; 4 true TCP CH plus TUN MTU/5+5 UDP/Stop. No product hot data plane/wire edit or PASS claimed."
+  "partial_summary": "H1087 32B offline routekey original TLS no WB-R1 scoped PASS; H1092/93 Game4FEC6 overlap x86/ARM, H1095 full TLS Finished baseline, H1098 Win cold retry 6 Go units/5 native modes scoped PASS. H1100 new SOURCE0e47 original ARM64 Game2/off native 4 CH A→A+B→B/5+5 UDP/1193 MTU/Stop PASS Action41782228907. x86 Game4 same source 8 CH/5+5 UDP/1178 MTU/parity true in artifact13299199278 but workflow marker EIGHT vs 8 causes original Action41782228876 FAIL. H1101 only tiny frozen-fixture x86 Fixed/Auto source0e47 tests independent pending. H998 online same-connection MTU shrink and old ARM Game4FEC Action FAIL, remote ICMP, Windows physical NIC, Android, CPU/p99 causality remain unqualified. Linux platform alternates by complete task: next x86/x86 now, following ARM64/ARM64; no QEMU mixed task."
 }
