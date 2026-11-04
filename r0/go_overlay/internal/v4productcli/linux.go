@@ -92,6 +92,7 @@ type config struct{
     autoIP bool
     installation [16]byte
     leasePool netip.Prefix
+    manualClientLease4 netip.Prefix // server-local manual /32, authenticated generations only
     fecMode realityfront.FecV2Mode
     peerPersona realityfront.V4PublicNativePeerPersona
     fecProfile realityfront.FecV2Profile
@@ -141,6 +142,7 @@ func parse(role string,args []string)(config,error){
     autoIP:=flags.Bool("auto-ip",false,"client protected automatic IPv4 assignment")
     installPath:=flags.String("installation-id-file",".wbd-next-installation-id","portable 0600 installation identity")
     leasePool:=flags.String("lease-pool","","server memory-only 7-day IPv4 pool CIDR")
+    manualLease:=flags.String("manual-client-lease4","","server-verified fixed client /32 for manual TLS generation replacement; requires tunnel-id, not a user inner MTU")
     usersFile:=flags.String("users-file","","server: 0600 JSON object username->password")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
@@ -240,8 +242,18 @@ func parse(role string,args []string)(config,error){
             }
             c.leasePool=prefix.Masked()
         }
-    }else if *usersFile!=""||*leasePool!=""{
-        return c,fmt.Errorf("users-file/lease-pool server-only")
+        if *manualLease!=""{
+            if *leasePool!=""{return c,fmt.Errorf("manual-client-lease4 and lease-pool are mutually exclusive")}
+            p,e:=netip.ParsePrefix(*manualLease)
+            if e!=nil||!p.Addr().Is4()||p.Bits()!=32||
+                p.Addr().IsUnspecified()||p.Addr().IsMulticast()||
+                p.Addr().IsLoopback()||p.Addr().IsLinkLocalUnicast(){
+                return c,fmt.Errorf("manual-client-lease4 requires one server-provisioned valid IPv4 /32")
+            }
+            c.manualClientLease4=p
+        }
+    }else if *usersFile!=""||*leasePool!=""||*manualLease!=""{
+        return c,fmt.Errorf("users-file/lease-pool/manual-client-lease4 server-only")
     }
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if role=="client"&&c.autoIP&&*tunCIDR==""{*tunCIDR="169.254.240.1/32"}
@@ -303,6 +315,12 @@ func parse(role string,args []string)(config,error){
     }
     tunPrefix,e:=netip.ParsePrefix(*tunCIDR)
     if e!=nil||!tunPrefix.Addr().Is4(){return c,fmt.Errorf("invalid tun-ipv4")}
+    if role=="server"&&c.manualClientLease4.IsValid(){
+        if !tunPrefix.Contains(c.manualClientLease4.Addr())||
+           c.manualClientLease4.Addr()==tunPrefix.Addr(){
+            return c,fmt.Errorf("manual client /32 must be distinct from server TUN IPv4 inside its owned subnet")
+        }
+    }
     if role=="server"&&c.leasePool.IsValid(){
         if !tunPrefix.Contains(c.leasePool.Addr())||
            tunPrefix.Bits()>c.leasePool.Bits()||
@@ -1080,7 +1098,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     coldReauth bool,connected *bool)(retErr error){
     if epochs==nil{return realityfront.ErrAdmissionParams}
-    if leases!=nil{
+    if leases!=nil||c.manualClientLease4.IsValid(){
         return runSharedMultiServer(ctx,c,ifindex,tun,raw,emit,leases,epochs,connected)
     }
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
@@ -1288,7 +1306,13 @@ func runSharedMultiServer(
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     connected *bool,
 )(retErr error){
-    if leases==nil||epochs==nil||connected==nil{return realityfront.ErrAdmissionParams}
+    if epochs==nil||connected==nil||
+        (leases==nil&&!c.manualClientLease4.IsValid())||
+        (leases!=nil&&c.manualClientLease4.IsValid()){
+        return realityfront.ErrAdmissionParams
+    }
+    trustedManualLease:=""
+    if c.manualClientLease4.IsValid(){trustedManualLease=c.manualClientLease4.String()}
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
@@ -1315,8 +1339,14 @@ func runSharedMultiServer(
         ExpectedUsername:c.username,ExpectedPassword:c.password,
         ServerLimit:c.recordLimit,AllocateLease:originalV4AutomaticLease(leases),
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
-            if !req.AutoLease||len(req.TunnelID)!=16||
-               req.DesiredLanes!=1||req.LaneID!=1{
+            if len(req.TunnelID)!=16||req.DesiredLanes!=1||req.LaneID!=1{
+                return realityfront.ErrAdmissionParams
+            }
+            if leases!=nil{
+                if !req.AutoLease{return realityfront.ErrAdmissionParams}
+            }else if req.AutoLease||string(req.TunnelID)!=string(c.tunnel[:]){
+                // Manual /32 is server-owned and tied to the exact
+                // configured, TLS-authenticated tunnel ID.
                 return realityfront.ErrAdmissionParams
             }
             return nil
@@ -1389,6 +1419,7 @@ func runSharedMultiServer(
             // Only real authenticated auto-lease server sessions reach
             // this path; old manual/standalone duplicate lane stays DENY.
             AllowLaneReplacement:true,
+            ManualLease4:trustedManualLease,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             // One authenticated peer cannot mutate a sibling's TUN MTU.
             // The original Rust per-session record/route budgets still apply.
@@ -1455,8 +1486,10 @@ func runSharedMultiServer(
         count:=len(detached)
         mu.Unlock()
         ever.Store(true)
-        log.Printf("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=%d active_detached_flows=%d auto_lease=1 original_TLS=1 Rust_M4=1",
-            c.localPort,count)
+        autoLease:=0
+        if leases!=nil{autoLease=1}
+        log.Printf("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=%d active_detached_flows=%d auto_lease=%d original_TLS=1 Rust_M4=1",
+            c.localPort,count,autoLease)
         for _,old:=range older{
             if err:=retire(old,"same-lease-new-generation");err!=nil{
                 select{case transportErr<-err:default:}

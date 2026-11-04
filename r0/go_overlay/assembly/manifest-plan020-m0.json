@@ -738,7 +738,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "fe209c2094aa2a687ef85232d8d7818dfb92611e"
+      "result_blob": "f41f8248f3ba986678f6bbd958b7d20ccfa6a381"
     },
     {
       "kind": "create",
@@ -1064,13 +1064,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "1bf37f6fa0813ee4d9231906a4b6ada91214105b"
+      "result_blob": "0517855bb3a0f8ff57029029d2ec4b2ce8fc1824"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "43e392458f90660b96c3c828c97f9cab875d9187"
+      "result_blob": "c046d173d6cf798e5d4260f37e1e5eab3dc797c7"
     },
     {
       "kind": "replace",
@@ -1083,7 +1083,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "37d2874519dee5c0a9f58638c776735b5d28a3b7"
+      "result_blob": "37213dc720e923ca70d14e4f92bddd1f592b7b63"
     },
     {
       "kind": "create",

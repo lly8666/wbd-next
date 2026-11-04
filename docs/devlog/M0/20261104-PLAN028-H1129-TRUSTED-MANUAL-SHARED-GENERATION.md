@@ -1,0 +1,13 @@
+# PLAN028 H1129 — trusted manual /32 original Go TLS server multigeneration bridge
+
+H1126 real Windows signed Npcap/WSL2 Action41810476391: original Windows Go TLS/Rust/Wintun first generation and real UDP/MTU/Stop qualified, real OS source4 .1→.9 notified, but second generation reached repeated genuine SYN with no SYNACK and bootstrap timeout. Root cause was fixture's singleton manually addressed Linux server: original `runServer` suppresses new SYN after Rust handoff, while auto lease server already has a working protected multi-generation single-port/shared TUN association table.
+
+Extend ONLY server's existing configuration/entry: `--manual-client-lease4` is a server-owned IPv4 /32 for its exact authenticated tunnel ID; it cannot be combined with auto lease pool, is never trusted from client packets, and must lie within the owned TUN subnet but not equal server TUN IP. First original Go credential TLS validates account + configured 16B tunnel ID, with original offline 32B route-key, SNI/certificate and session-generation contract intact. Reuse `runSharedMultiServer`, its 32 cold association slots/16 native owners, one Rust TUN reader, exact per-generation /32 routing and former-instance Stop; no second pump or global per-client MTU. Server-local manual /32 becomes session-verified routing authority only after protected admission; **do not serialize it into the legacy manual V4 TLS reply**, which has no auto-lease bytes. The on-wire V4 request/reply and warm DATA remain unchanged. Current Windows client local manual /32 is checked against any protected reply lease before Wintun OS Apply.
+
+The **same** Windows/WSL2 source-owned native fixture now configures this server manual /32 only in PLAN028 owned-switch mode, waits for two server authenticated multi-session readiness markers, actual second Windows original TLS/Npcap/Rust OS apply, real fresh duplex UDP, exact old Stop and final shared TUN server Stop. Other manual product path without `--manual-client-lease4` still uses original singleton behavior. Offline route-key, default outer IPv4 1460B, server WSL underlay unchanged. One Action/one Normal mode after full Go+Rust build and manifest pins; no helper redispatch and no Linux old matrix. Actual source native PASS pending.
+
+H998 original same-connection online MTU hot shrink FAIL, historic ARM64 Game4FEC Action FAIL, remote ICMP NOT_MEASURED, CPU causal old/new NOT_PROVEN, Android NOT_RUN retained.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1129 authenticated server-provisioned manual /32 in existing shared Rust TUN multi-generation server; original manual wire unchanged; native Windows Action pending."}
+```

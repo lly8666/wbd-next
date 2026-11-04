@@ -1115,3 +1115,24 @@ func TestR0V4PLAN028ZeroEpochAuthenticatedSameInstallOverlapAndSiblingIsolation(
     if remaining!=0{t.Fatalf("logical registry leak after exact Stop: %d",remaining)}
     t.Log("M0_PLAN028_ORIGINAL_GO_TLS_ZERO_EPOCH_SAME_INSTALL_A_TO_AB_TO_B_EXACT_STOP_PASS protected_tls=1 same_logical_epoch=1 new_incarnation=1 other_install_survives=1 third_denied=1")
 }
+
+func TestPLAN028ServerProvisionedManualIPNotClientClaimed(t *testing.T){
+ for _,ok:=range []string{"10.66.0.2/32","10.66.0.128/32"}{
+  got,err:=v4ServerCheckedManualLease4(ok,false)
+  if err!=nil||got!=ok{t.Fatalf("valid server local /32 %s got=%q err=%v",ok,got,err)}
+ }
+ for _,bad:=range []string{"10.66.0.2/24","0.0.0.0/32","127.0.0.1/32","224.0.0.1/32","169.254.1.1/32","garbage"}{
+  if v,e:=v4ServerCheckedManualLease4(bad,false);e==nil{
+   t.Fatalf("manual lease must be canonical server /32, input=%s output=%q",bad,v)
+  }
+ }
+ if x,e:=v4ServerCheckedManualLease4("10.66.0.2/32",true);e==nil{
+  t.Fatalf("manual IP cannot override automatic allocation: %q",x)
+ }
+ if x,e:=v4ServerCheckedManualLease4("",true);e!=nil||x!=""{
+  t.Fatalf("legacy auto unaffected: %q %v",x,e)
+ }
+ if x,e:=v4ServerCheckedManualLease4("",false);e!=nil||x!=""{
+  t.Fatalf("legacy manual singleton unaffected: %q %v",x,e)
+ }
+}

@@ -622,6 +622,14 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if session==nil||session.Epoch==[16]byte{}{
   return windowsclient.ErrN4NativeGuard
  }
+ // The server's manual /32 is authenticated in the EXISTING TLS reply.
+ // Reject any server-side mapping other than this client's explicitly
+ // configured Wintun lease BEFORE OS route/MTU and before native traffic.
+ if trustedLease,e:=session.AuthenticatedLeaseIPv4();e!=nil||
+  (trustedLease!=""&&trustedLease!=o.Lease4.String()){
+  return fmt.Errorf("%w: protected server manual /32 conflicts with local Wintun lease: %v",
+   windowsclient.ErrN4NativeGuard,e)
+ }
  tun,e:=windowsclient.OpenTUN(o.AdapterAlias)
  if e!=nil{return e}
  defer tun.Close()

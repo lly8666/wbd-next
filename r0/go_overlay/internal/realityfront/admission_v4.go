@@ -15,6 +15,7 @@ import (
     "errors"
     "io"
     "net"
+    "net/netip"
     "sync"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -217,6 +218,9 @@ type V4ServerOptions struct {
     // independently prove that two generations can coexist before enabling.
     // Default false preserves reject-duplicate semantics on old call sites.
     AllowLaneReplacement bool
+    // A server-owned, explicit manual /32 used ONLY for protected new
+    // generation replacement. Never obtained from client-supplied IP.
+    ManualLease4 string
     // Cold V4 only: optional server account roster, checked AFTER real TLS
     // protected request and BEFORE any epoch/lease/native owner reservation.
     // Nil uses original exact ExpectedUsername/ExpectedPassword pair.
@@ -224,6 +228,20 @@ type V4ServerOptions struct {
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
 
+// v4ServerCheckedManualLease4 accepts only an explicitly provisioned
+// server-side /32. It is evaluated AFTER credential authentication in
+// EstablishServerV4 and never grants authority based on a client packet.
+func v4ServerCheckedManualLease4(s string,auto bool)(string,error){
+    if s==""{return "",nil}
+    if auto{return "",ErrAdmissionParams}
+    p,e:=netip.ParsePrefix(s)
+    if e!=nil||!p.Addr().Is4()||p.Bits()!=32||
+       p.Addr().IsUnspecified()||p.Addr().IsMulticast()||
+       p.Addr().IsLoopback()||p.Addr().IsLinkLocalUnicast(){
+        return "",ErrAdmissionParams
+    }
+    return p.String(),nil
+}
 type V4ClientSession struct {
     *ClientAdmissionSession
     Epoch [16]byte
@@ -242,6 +260,10 @@ type V4ServerSession struct {
     *ServerAdmissionSession
     Epoch [16]byte
     verifiedLease4 string
+    // Server-local manual /32, assigned only after verified protected
+    // credentials and exact tunnel scope; NOT serialized into the legacy
+    // manual V4 TLS reply (which contains no auto-lease four-byte field).
+    serverOwnedManualLease4 string
     // Only EstablishServerV4 after credentials, protected reply and Detach may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
@@ -285,6 +307,12 @@ func (s *V4ServerSession) AuthenticatedLeaseIPv4()(string,error){
     if s==nil||s.ServerAdmissionSession==nil{return "",ErrAdmissionUnsupported}
     if _,err:=s.ColdSnapshot();err!=nil{return "",err}
     if s.Negotiated.Lease4!=s.verifiedLease4{return "",ErrAdmissionParams}
+    if s.serverOwnedManualLease4!=""{
+        // No untrusted caller can mutate the old manual reply to invent a
+        // sibling route; the /32 is server-provisioned before cold auth.
+        if s.verifiedLease4!=""{return "",ErrAdmissionParams}
+        return s.serverOwnedManualLease4,nil
+    }
     return s.verifiedLease4,nil
 }
 
@@ -716,6 +744,11 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     // commits only after protected reply and DetachTransition both succeed.
     defer finish(false)
     lease:=""
+    manualLease,manualErr:=v4ServerCheckedManualLease4(opt.ManualLease4,req.AutoLease)
+    if manualErr!=nil{
+        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        return nil,manualErr
+    }
     if req.AutoLease {
         if cfg.AllocateLease==nil {
             _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,ErrAdmissionParams
@@ -725,6 +758,8 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,errors.Join(ErrAdmissionParams,err)
         }
     }
+    // Manual provisioned /32 remains server-local, not a new wire field:
+    // legacy V4 manual reply expects zero lease bytes.
     result:=AdmissionResult{
         Lease4:lease,DesiredLanes:req.DesiredLanes,RecordVersion:V4RecordVersion,Policy:req.Policy,
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
@@ -786,7 +821,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         ServerAdmissionSession:&ServerAdmissionSession{
             TLS:&ServerSession{Hello:hello,Keys:keys},
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
-        },Epoch:epoch,verifiedLease4:lease,
+        },Epoch:epoch,verifiedLease4:lease,serverOwnedManualLease4:manualLease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
         verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
     },nil

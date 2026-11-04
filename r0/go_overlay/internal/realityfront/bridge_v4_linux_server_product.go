@@ -43,6 +43,9 @@ type V4LinuxServerProductConfig struct {
     // Cold, server-owned opt-in: same verified account+installation
     // logical lane may overlap one generation during A->A+B->B.
     AllowLaneReplacement bool
+    // The exact server-provisioned manual /32 is protected in the existing
+    // authenticated reply, never selected by an untrusted client field.
+    ManualLease4 string
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
@@ -120,6 +123,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
         Authenticate:p.cfg.Authenticate,
         AllowLaneReplacement:p.cfg.AllowLaneReplacement,
+        ManualLease4:p.cfg.ManualLease4,
         fec2Product:v4ProductFecEnabled(mode),
     })
     if err!=nil{return nil,err}

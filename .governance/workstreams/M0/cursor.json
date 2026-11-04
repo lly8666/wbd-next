@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1128,
-  "checkpoint_sha": "4acd6536c88549682d45536ddb1ce4903de81d9b",
+  "sequence": 1129,
+  "checkpoint_sha": "b1648efbce2e2df0a79dcb228f6a0d0bc349082f",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1128 native x86/x86 SOURCE0e47 Auto 64+128 real UDP MTU/CPU/p99 scoped PASS; Windows H1126 signed gen1 TLS/Rust/Wintun PASS but gen2 manual singleton server SYN cold FAIL; next manual mapped /32 shared generation fix",
-  "why_now": "Downloaded H1127 native artifact 13311214984 success, H1126 Windows failed artifact13312891151: server legacy single manual mode ignores new SYN after first handoff; governance cursor exceeded 8192 bytes.",
+  "current_task": "H1129 single original Windows/WSL2 full product SOURCE candidate: add server-authorized manual /32 with existing Rust shared TUN and exact generation-based handoff; native action pending",
+  "why_now": "H1126 Windows gen1 real Go TLS/Npcap/Wintun UDP PASS, gen2 .1->.9 SYN timeout because Linux server legacy singleton dropped new SYN after first Rust handoff; repair existing manual-IP shared server path, not Go per-packet/second owner. H1128 evidence and governance completed.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Implement server-local manual /32 protected reply and existing shared Rust TUN generation replacement, Windows WSL2 fixture opts in, one native Windows Action. Retain H998 and CPU gaps; next full Linux task ARM64/ARM64.",
+  "next_action": "Collect one H1129 native Windows original Normal signed Npcap/WSL2 Action plus Go compile/Governance; if FAIL narrow first-fault, keep SOURCE and evidence exact. H1127 Linux x86 CPU/p99 scoped PASS retained; next full Linux task ARM64/ARM64 only when distinct necessary.",
   "unverified": true,
   "last_tested_source": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
   "evidence_refs": [
@@ -30,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H998 legacy hot MTU same connection FAIL; historical ARM64 Game4FEC Action FAIL, remote ICMP NOT_MEASURED and CPU causal NOT_PROVEN. PLAN028 pre-shared 32B route-key and standard TLS qualified H1073. H1107 x86 and H1109 ARM same-account multi-device real source4/MTU sibling protected PASS. H1116 x86 and H1119 ARM Game4FEC6 two group native switch + sibling steady UDP PASS. H1122 Win WSL2 test-owned .1->.9 OS-selected and real UDP PREPRODUCT PASS. H1123 original Windows signed product pre-READY guard FAIL; H1124 route fix & owner cleanup; H1125/26 pins corrected. H1126 Windows gen1 authenticated TLS/Wintun Rust real duplex UDP inner1389 old Stop PASS; gen2 .9 callback -> repeated SYN deadline FAIL; server remains manual singleton no new admission, full Windows switch NOT_QUALIFIED. H1127 x86/x86 frozen SOURCE0e47 Auto64 warm+128 real UDP PASS Action41811668300 artifact13311214984: cmd->READY303.74ms, log observer10ms path->TLS candidate10.15ms and lease->first UDP116.71ms, RTT p99 .333205ms, client CPU49.79% only short window, physical1280 inner1195; precise native OS notification→TLS and auth→first single packet NOT_MEASURED, causal CPU unproven. Next Linux full task ARM/ARM, Windows does not count."
+  "partial_summary": "H998 legacy hot MTU same connection FAIL; historical ARM64 Game4FEC Action FAIL, remote ICMP NOT_MEASURED and CPU causal NOT_PROVEN. PLAN028 pre-shared 32B route-key and standard TLS qualified H1073. H1107 x86 and H1109 ARM same-account multi-device real source4/MTU sibling protected PASS. H1116 x86 and H1119 ARM Game4FEC6 two group native switch + sibling steady UDP PASS. H1122 Win WSL2 test-owned .1->.9 OS-selected and real UDP PREPRODUCT PASS. H1123 original Windows signed product pre-READY guard FAIL; H1124 route fix & owner cleanup; H1125/26 pins corrected. H1126 Windows gen1 authenticated TLS/Wintun Rust real duplex UDP inner1389 old Stop PASS; gen2 .9 callback -> repeated SYN deadline FAIL; server remains manual singleton no new admission, full Windows switch NOT_QUALIFIED. H1127 x86/x86 frozen SOURCE0e47 Auto64 warm+128 real UDP PASS Action41811668300 artifact13311214984: cmd->READY303.74ms, log observer10ms path->TLS candidate10.15ms and lease->first UDP116.71ms, RTT p99 .333205ms, client CPU49.79% only short window, physical1280 inner1195; precise native OS notification→TLS and auth→first single packet NOT_MEASURED, causal CPU unproven. Next Linux full task ARM/ARM, Windows does not count. H1129 complete source candidate extends server-owned manual /32 config --manual-client-lease4, rejects foreign auto/tunnel, uses current shared Rust TUN multi-generation server and no new cold/warm wire bytes (manual /32 server-local after protected auth). Windows fixture switched to real multigeneration server with two READY/Stop receipts, client retains exact local /32; native Action pending."
 }
