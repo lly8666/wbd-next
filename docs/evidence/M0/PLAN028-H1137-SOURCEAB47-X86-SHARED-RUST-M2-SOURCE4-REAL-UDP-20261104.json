@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1137",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_X86_X86_ORIGINAL_RUST_M2_TWO_GENERATIONS",
+  "source_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
+  "harness_sha": "48ee884f64a6c1d7734126229684ff0e9f2690f7",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "platform": "Ubuntu 24.04 Linux x86_64 native original Go/TLS client + Linux x86_64 native original Go/TLS server + Rust M4 original shared TUN on 2 genuine netns, not QEMU or mixed",
+  "run": {
+    "id": 41824430637,
+    "job_id": 126555431044,
+    "conclusion": "success",
+    "artifact_id": 13318412204,
+    "artifact_digest": "sha256:12760fcaf399fe1eded5ab10dd7f4d1de50be0a37a8162d7d8bde69f4d4e6230"
+  },
+  "binary_source": {
+    "prebuilt_run": 41822046885,
+    "prebuilt_artifact_id": 13317049005,
+    "no_rebuild": true,
+    "architecture": "ELF62_x86_64",
+    "sha256": {
+      "client": "09128a876d73e9893317966afd2c5c1f167447748bbca9af4f451ddadde551d2",
+      "server": "7a7aecf5cf2bb8c6d4f24f544d122d12e4fb320308a58e8898f81f1f93bdfac9",
+      "rust": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "network": {
+    "source4_before": "10.25.0.2",
+    "source4_after": "10.25.0.3",
+    "physical_new_mtu": 1280,
+    "new_inner_os_mtu": 1209,
+    "original_tls": true,
+    "one_server_port": 443,
+    "normal_fec": "off",
+    "source_switch_event": "kernel_rtnetlink_os_selected",
+    "quiet_coalesce_ms": 200,
+    "maximum_coalesce_ms": 500,
+    "new_real_udp_echoes": 5,
+    "old_real_udp_echoes": 5
+  },
+  "server_shared_rust_owner": {
+    "authenticated_ready_active_sessions": [
+      1,
+      2
+    ],
+    "original_rust_m2_outer_repair_enabled": [
+      1,
+      1
+    ],
+    "rust_first_wire_bytes": [
+      1040,
+      1050
+    ],
+    "rust_shadow_limit": [
+      65536,
+      65536
+    ],
+    "readback_before_owner_stop": true,
+    "exact_retire": [
+      {
+        "reason": "same-lease-new-generation",
+        "remaining": 1
+      },
+      {
+        "reason": "server-close",
+        "remaining": 0
+      }
+    ],
+    "final_shared_tun_reader_drained": true
+  },
+  "proofs": [
+    "Original TLS credential auth before Rust M4 generation on both sides",
+    "Original Linux real route source and actual physical MTU shrink",
+    "Two real Rust per-owner M2 effective counters, not CLI intent",
+    "Native kernel UDP on old and new original authenticated paths",
+    "Exact old-gen Stop before shared reader Close"
+  ],
+  "limitations": [
+    "Separate native x86/x86 5+5 UDP functional scene, not a throughput/CPU/p99 experiment.",
+    "No actual Windows physical NIC or Android; H1135 Windows virtual WSL2 separate scoped PASS.",
+    "H998 same-connection live MTU shrink FAIL historical; remote ICMP/CPU old-new causality NOT_PROVEN.",
+    "The complete Linux platform task alternates: after this x86/x86, next ARM64/ARM64."
+  ]
+}
