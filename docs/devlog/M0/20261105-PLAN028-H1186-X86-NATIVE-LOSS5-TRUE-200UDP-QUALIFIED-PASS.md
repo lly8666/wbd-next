@@ -1,0 +1,11 @@
+# PLAN028 H1186 — actual full x86/x86 5% original Game4 two-physical PASS
+
+Collected [Action41894255832](https://github.com/lly8666/wbd-next/actions/runs/41894255832), original Go TLS+Rust native Linux x86_64 client/server, SOURCE `5c89564a15f4f74567977d744547b15ce6339c96`, artifact13353969200 zip SHA256 `4de86f9342b3b250c5aecb80c3f0307f6f0b0e17b8053c388e13e052d2301d1c`. Same single authenticated protected server port443 mixed Game2off+Game4fixed6+Normal Auto. Game4 real physical underlay source4 `.3→.9→.3`, actual OS outer link MTU `1500→1280→1500`, user outer1460 unchanged; original protected Game4 TLS/Rust generation1→2→4 (one cold retry, not fake gen3), exact old1 and old2 Stop, same automatic lease `10.66.0.162/32`. Unaffected Normal Auto 48+320 real UDP over 128sec remained its first authentic generation. Game4 new gen2 UDP32 and new gen4 UDP16, native final shared TUN Stop.
+
+**Actual kernel 5% impairment:** `tc -s -d qdisc` counted 2330 packets sent, 158 physically dropped, then `tc qdisc del` OS readback `qdisc noqueue`. The exact original Game4 Rust M4 delivered **200/200 real inner UDP** sent 10ms apart without app retries, received-only RTT **p99=20.033ms**, maximum inter-arrival gap **20.020ms**; physical packet loss is not zero and the copies may mask a portion of it. The H1167 nested baseline proof still contains a legacy `no_5percent_impairment_in_this_scene=true` that described the earlier no-loss sub-scene; this new qualification is governed by actual H1184 qdisc readbacks and independent H1178 5% JSON, not by that inherited field. No universal lossless claim, CPU causal or TCP p99 claim. [Exact evidence](../evidence/M0/PLAN028-H1186-SOURCE5C895-NATIVE-X86-GAME4-NETEM5-REAL-200UDP-P99-PASS-20261105.json).
+
+Next full Linux native ARM64+ARM64 distinct physical link DOWN then post-auth real loss5, not an old 027/027A matrix repeat. Windows H1185 true signed Game4/FEC6 two-group Action41894548875 pending. H998 old hot shrink and ARM Game4 Action FAIL, remote ICMP/Android/CPU causal NOT_MEASURED retained.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Record SOURCE-specific fully passed native x86 original Game4 two physical TLS reauth under genuine kernel netem5, real RTT p99/Normal320/Stop without universal claims."}
+```

@@ -260,12 +260,19 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "baa1e9b9e1efe287108c5c151fce09d76f8ab29c",
    "evidence": "docs/evidence/M0/PLAN028-H1177-SOURCEBAA1-ARM64-GAME4-DOWN-FIRST-REAL-AUTH-PASS-20261105.json"
+  },
+  {
+   "platform": "Native Linux x86_64 client+x86_64 server original protected Go TLS/Rust shared443",
+   "scope": "H1186 SOURCE5c895 actual OS Game4 two physical .3→.9→.3/MTU1500→1280→1500, authentic epochs1→2→4 old1+2 exact Stop, independent Normal Auto48+320 and new Game4 32+16, real kernel tc netem loss5 dropped158/2330 packets, Game4 inner real UDP200/200, received-only p99 20.033ms, qdisc restored, final native Stop.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "5c89564a15f4f74567977d744547b15ce6339c96",
+   "evidence": "docs/evidence/M0/PLAN028-H1186-SOURCE5C895-NATIVE-X86-GAME4-NETEM5-REAL-200UDP-P99-PASS-20261105.json"
   }
  ],
  "limitations": [
   "V4不保证与旧V3数据面互通。",
   "Linux task rotation: x86/x86 then ARM/ARM native, Windows excluded.",
-  "H1155/H1158 mixed443, H1160 x86/H1166 ARM physical, H1170 x86 overlap and H1177 ARM direct recovery scoped PASS. H1179 Windows 2 actual Game4 TLS/Rust cohorts and 2 Rust outer policy rows on each OS, real UDP/TCP and Stop; H1181 fixed parser regex and H1183 now adds actual Rust GameFEC6 counters before logging dedicated-server-matching per-cohort FEC6 applied receipt; pending signed full PASS. H1180 x86 true netem5 two Game4 TLS generations and Normal320 but late post-Health90 Game4 200UDP returned0, H1181 fixes measurement timing with real Game UDP keepalive; pending 5% PASS. H1173 old single-group Game4 gen2 FAIL, H998 old online hot-MTU and ARM Action FAIL remain; seven-mode/30%/CPU/ICMP/Android open."
+  "H1155/H1158 original mixed443, H1160 x86/H1166 ARM physical, H1170 x86 healthy overlap, H1177 ARM down-first, and H1186 x86 real kernel netem5 under 2 authenticated Game4 physical changes scoped PASS (actual158 kernel drops, 200/200 inner UDP received RTT p99 20.033ms, Normal320, final Stop). H1173 legacy Windows Game4 gen2 TLS FAIL retained, H1185 signed Windows two-epoch manual FEC6 pending full Action. H998 original same-connection online MTU shrink and old ARM Game4 Action FAIL retained. Not complete 7mode/30%/Android/remote ICMP, exact notifier→TLS/auth→first or old/new CPU causality."
  ],
  "promotion": null,
  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

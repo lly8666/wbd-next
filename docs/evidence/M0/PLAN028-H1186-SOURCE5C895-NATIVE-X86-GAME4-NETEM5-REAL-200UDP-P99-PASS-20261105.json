@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1186",
+  "result": "PASS_SCOPED_NATIVE_X86_X86_GAME4_FIXED6_TWO_REAL_OS_SOURCE_CHANGES_WITH_KERNEL_NETEM5",
+  "source_sha": "5c89564a15f4f74567977d744547b15ce6339c96",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41894255832,
+    "job_id": 126799417737,
+    "conclusion": "success",
+    "artifact_id": 13353969200,
+    "artifact_zip_sha256": "4de86f9342b3b250c5aecb80c3f0307f6f0b0e17b8053c388e13e052d2301d1c"
+  },
+  "native_build": {
+    "arch": "x86_64_linux_client_server_original_ELF62",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "sha256": {
+      "client": "d349afd658ee7b67caa08f793962ebec451ada4d419f13124393e4d89df5ea6f",
+      "server": "32d398316058e61f0159cbbbb940316f1817e2b227c9ed5a4d2295c0ab43671c",
+      "rust": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "real_original_go_tls_rust": {
+    "one_listener_port": 443,
+    "simultaneous_protected_clients": [
+      "game2-off-ChaCha",
+      "game4-fixed6-AES256",
+      "normal-auto-AES128"
+    ],
+    "physical_source4_sequence": [
+      "10.25.0.3",
+      "10.25.0.9",
+      "10.25.0.3"
+    ],
+    "physical_interface_mtu_sequence": [
+      1500,
+      1280,
+      1500
+    ],
+    "configured_outer_ip_mtu": 1460,
+    "game4_os_tun_mtu_first": 1358,
+    "game4_os_tun_mtu_second": 1178,
+    "game4_os_tun_mtu_successor_conservative": 1178,
+    "sibling_normal_os_tun_mtu": 1375,
+    "auth_generation_replacements": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        4
+      ]
+    ],
+    "cold_retry_count_second_switch": 1,
+    "old_gen1_exact_stop": true,
+    "old_gen2_exact_stop": true,
+    "original_game4_auto_lease_preserved": "10.66.0.162/32",
+    "normal_sibling_original_generation_unchanged": true,
+    "normal_live_udp_first": 48,
+    "normal_live_udp_second": 320,
+    "game4_new_gen2_udp": 32,
+    "game4_new_gen4_udp": 16,
+    "shared_rust_tun_final_stop": true
+  },
+  "physical_loss": {
+    "method": "actual_kernel_tc_netem_mxb0_root",
+    "configured_loss_pct": 5,
+    "kernel_sent_packet_count": 2330,
+    "kernel_dropped_packet_count": 158,
+    "kernel_qdisc_after": "qdisc noqueue 0: root refcnt 2",
+    "qdisc_restored": true,
+    "real_game4_inner_udp_sent": 200,
+    "real_game4_inner_udp_received": 200,
+    "real_game4_inner_udp_missing": 0,
+    "received_only_rtt_p99_ms": 20.033,
+    "max_delivery_gap_ms": 20.02
+  },
+  "qualifiers": [
+    "5% is a genuine kernel physical egress impairment, 158 kernel packets dropped, despite this scene's 200 inner UDP echoes all arriving due to Game4 copies; do not claim network packet loss was zero.",
+    "The inherited H1167 nested baseline field no_5percent_impairment_in_this_scene=true belongs to the earlier no-loss baseline sub-scene, not the subsequent added H1184 tc netem stage; actual tc readbacks and H1178 JSON govern this qualification.",
+    "Linux x86/x86 only, not ARM netem5, not Windows/Android.",
+    "No cross-platform 200ms/500ms notification bound proven; second physical command to authenticated new M4 took 21480.45ms including bounded retry.",
+    "Received-only UDP RTT p99, not end-to-end TCP p99 and not old-vs-new causal CPU.",
+    "H998 same-connection online MTU shrink and old ARM Game4 Action FAIL retained."
+  ],
+  "not_measured": [
+    "precise OS event→TLS initiation",
+    "TLS auth→first business",
+    "CPU old/new causal comparison",
+    "remote ICMP3/4",
+    "Android WiFi/cellular",
+    "inner TCP persistence in this specific netem5 scene"
+  ],
+  "next_whole_linux": "ARM64 client + ARM64 server"
+}
