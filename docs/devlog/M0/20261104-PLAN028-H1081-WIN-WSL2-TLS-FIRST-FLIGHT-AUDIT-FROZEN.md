@@ -21,3 +21,7 @@ H1081 [Action 41760546535](https://github.com/lly8666/wbd-next/actions/runs/4176
 ## H1083 单个语法问题收口
 
 [Action 41760747333](https://github.com/lly8666/wbd-next/actions/runs/41760747333) 的有效工作流通过 GitHub YAML，随后在便宜 `tools/check_workflows.py` AST 阶段报 `tools/m0_wl_public_normal_e2e.py:194 IndentationError`：前次新增 `if tls_capture.poll()` 的 stderr 报告体少缩进一层。修正到合法 Python 层次，独立对同样缩进语句块调用 `compile(..., 'exec')` 通过。该 Action native job 因上游失败跳过，仍没有 Windows SYN/真实PCAP证据。与 H1080 共享同一原 Go/Rust 7b38 构建，只有抓包夹具更改。
+
+## H1084 原源锁复用条件测试补齐
+
+[Action 41760987914](https://github.com/lly8666/wbd-next/actions/runs/41760987914) 已越过 Python 语法检查，但 `tests.test_delivery_ci.test_preflight_has_no_native_runtime_or_driver_effects` 仍将 Windows 编译门禁 `if` 值同旧字符串做完全相等比较，没纳入 H1081 新增的唯一受限SOURCE复用标志。因此便宜单测先失败、native没启动。H1084 **不删这条测试**：更新旧等值期望为新增括号条件后完全等值，仍核原先 Go 编译限定、无运行时/驱动操作；再显式验证新标志同步处于 Win/Linux编译门禁和 native job，以及固定源 `7b38...`、唯一 run ID `41757222750`、原 `git diff --name-only` 校验仍在。未改 Go/Rust、PCAP证据状态维持未测。

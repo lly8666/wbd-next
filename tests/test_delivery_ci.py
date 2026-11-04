@@ -50,7 +50,7 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
+            "(!contains(github.event.head_commit.message, '[plan028-win-tls-reuse]')) && inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -60,6 +60,18 @@ class DeliveryCiTests(unittest.TestCase):
         for forbidden in ("rustup", "cargo ", "wsl.exe", "-Action Install", "m0_wl_public_normal_e2e.py"):
             self.assertNotIn(forbidden, scripts)
         self.assertNotIn("continue-on-error", job)
+        # The single PLAN028 frozen-wire marker may bypass redundant
+        # builds, but only with the already-owned exact source manifest.
+        native=self.workflow["jobs"]["native-public-two-os"]
+        marker="[plan028-win-tls-reuse]"
+        for name in ("windows-compile-preflight","linux-source-locked-public"):
+            self.assertIn(marker,self.workflow["jobs"][name]["if"])
+        self.assertIn(marker,native["if"])
+        self.assertIn("41757222750",native["env"]["WBD_WL_REUSE_RUN_ID"])
+        for name in ("WBD_WL_BINARY_SOURCE","LINUX_BINARY_SRC"):
+            self.assertIn("7b38d2baddaa41ab5e410d2533a1e8c396510745",native["env"][name])
+        self.assertIn("git diff --name-only",next(x for x in native["steps"]
+            if x.get("name","").startswith("Restore exact prebuilt"))["run"])
 
     def test_reused_rust_product_requires_source_and_binary_sha_and_real_driver(self):
         native=self.workflow["jobs"]["native-public-two-os"]
