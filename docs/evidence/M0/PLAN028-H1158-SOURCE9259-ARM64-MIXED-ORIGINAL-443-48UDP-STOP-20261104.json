@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1158",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_ARM64_ARM64_MIXED_NORMAL_GAME2_GAME4_ONE443",
+  "source_sha": "92591445c28f2867fd1fee0a582b3a5d95c3d062",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "id": 41855850826,
+    "job_id": 126664133948,
+    "conclusion": "success",
+    "artifact_id": 13337896112,
+    "artifact_digest": "sha256:23b0abf08bd1364a635eb086d079be55e0a2a248a49dbecd8800487758a2ea8b"
+  },
+  "platform": "Original Go TLS and Rust M4 native ARM64 clients+server ELF183 in real netns (no QEMU)",
+  "native_cohorts": [
+    {
+      "account": "Alice",
+      "mode": "Game2 off",
+      "cipher": "ChaCha20-Poly1305",
+      "lease": "10.66.0.193",
+      "inner_tun_os_mtu": 1373,
+      "actual_udp_echoes": 12
+    },
+    {
+      "account": "Bob",
+      "mode": "Game4 fixed6",
+      "cipher": "AES-256-GCM",
+      "lease": "10.66.0.244",
+      "inner_tun_os_mtu": 1358,
+      "actual_udp_echoes": 18
+    },
+    {
+      "account": "Carol",
+      "mode": "Normal Auto",
+      "cipher": "AES-128-GCM",
+      "lease": "10.66.0.195",
+      "inner_tun_os_mtu": 1375,
+      "actual_udp_echoes": 18
+    }
+  ],
+  "server_port": 443,
+  "shared_server_tun_os_mtu": 1389,
+  "original_rust_TUN_reader_single": true,
+  "real_udp_echo_total": 48,
+  "game2_stop_siblings_game4_and_normal_uninterrupted": true,
+  "final_Rust_reader_Stop": true,
+  "original_protected_Go_TLS_units": "PASS",
+  "all_three_ELF183_sha_verified": true,
+  "pre_TLS_private_prelude": false,
+  "steady_wire_unchanged": true,
+  "old_pre_native_failure": {
+    "run_id": 41855120789,
+    "source": "663cb7ceeab5e08c4cfec6ecdb4eed282e84d1d4",
+    "first_fault": "copied x86_64 Python assert on native aarch64, fixed workflow only in H1158",
+    "real_business": "NOT_RUN"
+  },
+  "other_x86_proof": {
+    "run": 41853631826,
+    "source": "c44f5533b8d734602208f419f8043b79a63ac2eb",
+    "result": "independent scoped PASS"
+  },
+  "limitations": [
+    "Mixed one443 ARM business not a seven-mode rotation source-IP test",
+    "Physical Wi-Fi/Android/remote ICMP/precise notification-to-TLS/CPU causality NOT_PROVEN",
+    "H998 historical hot same-connection MTU shrink FAIL and prior ARM Game4FEC Action FAIL retained"
+  ],
+  "next_linux_platform": "x86_64 client and x86_64 server"
+}
