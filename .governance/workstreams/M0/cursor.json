@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1187,
-  "checkpoint_sha": "b9da4274a23feb7352822b38eabc7f67f681db54",
+  "sequence": 1188,
+  "checkpoint_sha": "1d6b06a27b30d044b50da933b2530b75df2cb66d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1187 fix governance source-qualified cursor evidence_refs to sole x86 H1186 SOURCE5c895 real netem5 PASS; older different-source ARM proof stays archived in docs not current M0 cursor. H1185 signed Windows Game4FEC6 native two-generation Action41894548875 in flight. Next Linux ARM64/ARM64 distinct post-auth netem5.",
-  "why_now": "H1186 Action41894255832 native x86 original Go TLS/Rust Game4 5% qdisc full PASS recorded evidence SOURCE5c895, but cursor appended older ARM SOURCEbaa1 evidence_refs despite last_tested_source5c895. Governance structural check correctly blocked 'evidence is for a different SOURCE'; feature catalog validation passed internally but chained structure red. Restore exact current-source cursor evidence_refs only; do not alter true old/action SHA or evidence data.",
+  "current_task": "H1188 signed Windows Game4FEC6 real Npcap/Wintun↔WSL2 original TLS/Rust two authenticated M4 generations, Rust outer-policy 2 Windows+2 Linux, protected FEC6 applied2, genuine UDP/TCP and precise old+final Stop full PASS SOURCE65de Action41894548875. Last Linux test SOURCE5c895 x86 tc5% remains sole current cursor evidence ref; Windows source-qualified proof in immutable docs+feature card. Next full Linux ARM64/ARM64 true post-auth 5% after real physical down-first authenticated recovery.",
+  "why_now": "Signed Windows H1185 Action41894548875 native job126802931886 success, artifact13356715489 SHA28f652: new original TLS Game4 after OS .1→.9, Rust policy2 both OS and FEC6 2 actual groups, real UDP/TCP, native exact owned Stop. H1187 governance source-mixed cursor refs fixed and passed. No source/Wire adulteration.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1187 governance and feature catalog source guard PASS; collect H1185 Windows signed 2x Rust Game4 FEC6 native Action. Next complete Linux ARM64/ARM64 real post-auth 5% physical while keeping original direct-link-down Go TLS. Do not mix evidence sources in a cursor.",
+  "next_action": "Next Linux ARM64 client+ARM64 server one genuine link-DOWN first original Go TLS/Rust Game4 reauth then post-auth kernel tc netem5 true drops and 200 inner UDP RTT p99; distinguish stage from loss DURING reauth. Keep old historical H998 FAIL/ICMP/Android/CPU unknown.",
   "unverified": true,
   "last_tested_source": "5c89564a15f4f74567977d744547b15ce6339c96",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "roup Rust M4 FecCounters read before protected FEC6 receipt, mirrors existing original standalone server; Windows two authentic generations previously proved. No wire/algorithm modification, signed retest pending. H1184 H1182 x86 Action41893407117 artifact13355007767 zip42137fb native tc netem 5% dropped101, Game4 gen3 TLS READY old2 STOP, real 200/200 UDP p99 20.013ms; final root-owned evidence JSON PermissionError prevented qdisc restored receipt. Test-only chown exact file then verify dropped>0 and final real Stop; Windows H1183 separate. H1185 trigger signed Windows source with 2 per-original-Rust-Game-M4 protected FEC6 receipts; no runtime edit. H1186 SOURCE5c895 x86 original TLS/Rust two actual source4+MTU switches with kernel netem5 dropped158/2330, 200/200 real inner Game4 UDP p99 20.033ms, Normal Auto320, Gen1→2→4, two exact Stops, shared TUN final and qdisc restore; ACTION41894255832 full PASS artifact13353969200. Windows H1185 signed still in flight, next full Linux ARM/ARM. H1187 governance cross-SOURCE evidence cursor only fixed; H1186 x86 source5c895 true PASS, previous ARM sourcebaa1 evidence remains immutable separate doc. Windows native still in flight."
+  "partial_summary": "H1188 Windows SOURCE65de full PASS Action41894548875 artifact13356715489 2 protected Game4 TLS/Rust cohorts, per-OS Rust outer-policy2 each, native server FEC6 readback2, Npcap/Wintun OS1358, true UDP/TCP+Stop; previous Linux x86 SOURCE5c895 5% tc netem full PASS stays sole cursor evidence_ref. Next full Linux ARM/ARM native post-auth 5%."
 }

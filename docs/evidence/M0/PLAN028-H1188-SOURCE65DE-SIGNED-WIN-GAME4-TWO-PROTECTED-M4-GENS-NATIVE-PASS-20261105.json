@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1188",
+  "result": "PASS",
+  "artifact_verified": true,
+  "source_sha": "65deae31aec98ee4cb8b17b8b825a1ce0a4fd084",
+  "linux_binary_source": "65deae31aec98ee4cb8b17b8b825a1ce0a4fd084",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scope": "SCOPED_ACTUAL_SIGNED_WINDOWS_NPCAP_WINTUN_WSL2_GAME4_FIXED6_TWO_ORIGINAL_GO_TLS_RUST_GENERATIONS",
+  "run_id": 41894548875,
+  "job_id": 126802931886,
+  "artifact_id": 13356715489,
+  "artifact_zip_sha256": "28f652d260e274d3afef277096c455c59d3f9530082d89b7e71d25110aea7ae7",
+  "verified": {
+    "game4_fec_profile": 6,
+    "one_server_port": 443,
+    "original_TLS_Rust_server_game_cohorts_READY": 2,
+    "windows_native_Game4_ready_generations": 2,
+    "source4_old": "198.19.254.1",
+    "source4_new": "198.19.254.9",
+    "source_mutation_to_new_Ready_ms": 11921,
+    "server_owned_manual_lease": "10.66.0.2/32",
+    "windows_native_inner_MTU_each": [
+      1358,
+      1358
+    ],
+    "linux_native_inner_MTU": 1358,
+    "outer_user_MTU": 1460,
+    "Rust_outer_policy_enabled": 1,
+    "Windows_Rust_outer_policy_receipts": 2,
+    "Linux_Rust_outer_policy_receipts": 2,
+    "server_protected_Rust_GameFEC6_applied_group_receipts": 2,
+    "Windows_kernel_udp": {
+      "sent": 98,
+      "received": 98
+    },
+    "Linux_kernel_udp": {
+      "sent": 217,
+      "received": 97
+    },
+    "post_new_udp_receives": {
+      "windows": 8,
+      "linux": 6
+    },
+    "real_kernel_TCP_duplex_both_OS": true,
+    "Windows_tcp_stream_bytes": 37,
+    "Linux_tcp_stream_bytes": 37,
+    "old_server_group_exact_stop": true,
+    "final_server_group_stop": true,
+    "Windows_native_WAL_exact_stop_count": 2,
+    "offline_route_key_bytes": 32,
+    "online_route_key_exchange": false,
+    "windows_native_game_owner_tx_records": 672,
+    "windows_native_game_owner_rx_ipv4": 86
+  },
+  "measurements": {
+    "whole_windows_process_cpu_one_core_avg_pct": 2.697,
+    "observations": 22,
+    "period_seconds": 21.437,
+    "peak_working_set_bytes": 60026880,
+    "language_CPU_attribution": "UNKNOWN",
+    "calibrated_cross_OS_business_p99": "NOT_MEASURED"
+  },
+  "limits": [
+    "Signed Windows to Linux Game4FEC6 only, not Android or full seven-mode scenario.",
+    "Actual Windows physical source4 .1→.9 and new authenticated original TLS/Rust, not loss during TLS.",
+    "No calibrated one-way p99 or precise notifier→TLS/auth→first; 11921ms is mutation-to-Ready.",
+    "No original/modified CPU causal inference, remote ICMP3/4 not measured.",
+    "Independent Linux x86 SOURCE5c895 tc5% and UDP p9920.033ms not attributed to Windows.",
+    "H998 same-connection online hot shrink and old ARM Game4 Action FAIL, historical H1173 old singleton second TLS FAIL retained."
+  ]
+}
