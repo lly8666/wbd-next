@@ -11,3 +11,7 @@ H1094 待x86 Action验证，绝不先标PASS。Windows真实物理NIC/IPv4转换
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1094 one x86 original-Go TLS1.3 full Certificate/CertificateVerify/Finished authenticated decrypt in memory, configured Firefox120 baseline comparison, distinct from prior real netns ClientHello-only PCAP; Action pending."}
 ```
+
+## H1095 有效测试结果
+
+[Action 41777365763](https://github.com/lly8666/wbd-next/actions/runs/41777365763) SUCCESS，原 Go `assembly.json` SOURCE `4106231a`/donor `a7a82db`；独立工件 13297044072 完整真实loopback TCP字节流双握手：reference Firefox120与route-key HMAC SessionID版本均由Go crypto/tls/uTLS实际完成 TLS1.3 AES128GCM 0x1301，CH659B/SH127B，3/7个 TLS record，同顺序扩展，真实证书 DER/链及测试内存AEAD解密 EncryptedExtensions、Certificate、CertificateVerify、Server/client Finished 全过；Go test log SHA `1b0d1a39...`，脱敏JSON SHA `5bb47e74...`。未保存secret、keylog、原始TLS流。此为**全握手同配置本地测试资格**，与原 x86/ARM 8 lane 原生首飞抓包互补，不能冒充 Windows物理网卡或原生 PCAP 全握手解密。限定证据 `docs/evidence/M0/PLAN028-H1095-SOURCE4106-TLS13-FINISHED-SAME-UTLS-BASELINE-20261104.json`。

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1094,
-  "checkpoint_sha": "aa73f0f568e826b9992dd0f674efd387918699be",
+  "sequence": 1095,
+  "checkpoint_sha": "4106231a2a4800b8c0f8be5d1f92fae9ccc2039b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1094 x86_64 original uTLS/crypto-tls same-config full TLS1.3 Certificate/CertificateVerify/Finished decrypt/reference baseline SOURCE candidate; real Windows physical NIC rebind independent OPEN",
-  "why_now": "H1093 true native ARM/ARM Game4 overlap real TLS 8 first-flights + FEC, 5+5 UDP, MTU1178 verified Action41771260135 artifact13295106610. Remaining TLS contract requires full authentic CertificateVerify/Finished against same uTLS reference; narrow test-only source, no product rebuild.",
+  "current_task": "H1095 original Go TLS13 complete cert/certVerify/server+client Finished decrypted AEAD versus same Firefox120 baseline x86 test PASS source4106; Windows true physical IP/Npcap rebind OPEN",
+  "why_now": "H1094 Action41777365763 SUCCESS; independent ZIP13297044072 Go donor a7a8/overlay4106, original Go complete TLS13 AES128GCM test-only AEAD decrypted CertificateVerify and both Finished, authenticated chain; same configured uTLS baseline CH659/SH127 and equal extension order.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1094 one x86 Go full decrypted TLS13 in-memory secrets/reference Action, fix only first failure. In parallel review Windows original IPHelper/Npcap path observer and build a strictly scoped true physical NIC scenario only if safe runner provides two actual source paths. Next Linux distinct task after x86 is ARM64 pair.",
+  "next_action": "Investigate real Windows physical NIC/source4 change and Npcap/re-auth/MTU/first business; if safe two physical paths unavailable retain NOT_RUN. Next distinct Linux test task native ARM64/ARM64; don't rerun x86 and ARM Game4 throughput.",
   "unverified": true,
-  "last_tested_source": "5760dd1c1e77367004614e1fcd44f248f47227b8",
+  "last_tested_source": "4106231a2a4800b8c0f8be5d1f92fae9ccc2039b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1093-SOURCE5760-ARM64-GAME4-OVERLAP-TLS8-20261104.json"
+    "docs/evidence/M0/PLAN028-H1095-SOURCE4106-TLS13-FINISHED-SAME-UTLS-BASELINE-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 route-key offline32B + mandatory cert, WB-R1 removed; scoped closeout. H1092 source67ba x86/x86 native Game4 fixed6 genuine A→A+B→B TLS8 first flights, FEC & 5+5UDP, MTU1178 verified. H1093 source5760 native ARM/ARM same Game4FEC6 TLS8 full first-flights, 5+5UDP, FEC, reader join, new READY before old exact Stop, MTU1178, Action41771260135 artifact13295106610 verified. TLS full decrypted Finished/reference-baseline OPEN. Windows real NIC/Npcap rebind, CPU/p99/remote ICMP/Android not proved. Historical H998 same-connection hot MTU FAIL & older ARM64 Game4FEC FAIL remain. Linux next new task x86_64 client+server, following ARM64 pair; Windows independent. H1094 one x86 native runner TEST-ONLY full verified TLS13 Certificate→CertificateVerify→server/client Finished AEAD decrypted, same-config unmodified Firefox120 reference, no keylog artifacts. Pending CI; previous ARM native H1093 and Game4 x86 H1092 remain source-qualified."
+  "partial_summary": "H1087 route-key32B offline no WB-R1 closed; H1092 native x86/x86 and H1093 native ARM/ARM Game4FEC6 A→A+B→B with 8 real TCP CH/SH, old/new 5+5 UDP, FEC copied, TUN1178, new B READY before old A Stop. H1095 source4106 original Go full TLS13 cert/certVerify/server+client Finished decrypted in test memory vs same Firefox120 configured baseline, Action41777365763; real native pcap first flights qualified separately. Windows physical NIC change/rebind/CPU-p99 and seven-mode physical crossover remain OPEN; H998 old hot MTU FAIL, old ARM64 FEC FAIL, remote ICMP, Android untouched. Linux next ARM/ARM."
 }

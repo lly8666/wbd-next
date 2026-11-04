@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1095",
+  "source_sha": "4106231a2a4800b8c0f8be5d1f92fae9ccc2039b",
+  "result": "PASS_SCOPED_ORIGINAL_GO_FULL_TLS13_CERTIFICATE_AND_BOTH_FINISHED",
+  "action": {
+    "id": 41777365763,
+    "job_id": 126400730127,
+    "conclusion": "success",
+    "artifact_id": 13297044072,
+    "artifact_verified": true,
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "assembly_sha256": "8216a1b6d36cc9f89783b5538bd5a4825b04d4f277af34e0336483865234a861",
+    "go_test_log_sha256": "1b0d1a397b4e5c2a72a0fa2bc0b8b220171322673dd0c63db1a24d4624c1cf5a",
+    "redacted_json_sha256": "5bb47e749e57ea490889e83cc219c5057892ec27389de62b8fbc97e2f917f368"
+  },
+  "comparison": {
+    "baseline": "unmodified original uTLS Firefox120",
+    "route": "original Firefox120 with HMAC 32B compatibility SessionID",
+    "same_SNI": "target.test",
+    "same_test_certificate": true,
+    "same_trust": true,
+    "same_TLS13_server_policy": true,
+    "same_ALPN_none": true,
+    "cipher": "TLS_AES_128_GCM_SHA256",
+    "cipher_id": "0x1301",
+    "client_hello_record_bytes": {
+      "baseline": 659,
+      "route": 659
+    },
+    "server_hello_record_bytes": {
+      "baseline": 127,
+      "route": 127
+    },
+    "TLS_records_each": {
+      "client": 3,
+      "server": 7
+    },
+    "ordered_extensions_equal_normalized_GREASE": true,
+    "both_certificate_chains_verified": true,
+    "server_authenticated_messages": [
+      "EncryptedExtensions",
+      "Certificate",
+      "CertificateVerify",
+      "Finished"
+    ],
+    "client_authenticated_messages": [
+      "Finished"
+    ],
+    "decryption": "test-only RFC8446 HKDF ExpandLabel + AESGCM authenticated records",
+    "certificate_DER_matches_configured": true,
+    "no_test_secret_or_raw_stream_in_artifact": true
+  },
+  "qualified": "complete authenticated Go TLS13 stream over real loopback TCP and configured uTLS reference comparison",
+  "not_proven": [
+    "full TLS decrypted actual AF_PACKET/native-netns pcap; existing x86 and ARM Game4 native pcaps prove 8 ClientHello first flights",
+    "Windows physical NIC/sourceIPv4/Npcap rebind",
+    "CPU/p99 and all seven modes physical lane rotation",
+    "Android/remote ICMP",
+    "old H998 same-connection live hot MTU shrink FAIL and original failed ARM64 Game4FEC source preserved"
+  ],
+  "plan028": "IN_PROGRESS"
+}
