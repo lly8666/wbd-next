@@ -1,0 +1,92 @@
+name: M0 PLAN028 original Go TLS13 full Finished vs same uTLS Firefox120 reference x86
+run-name: PLAN028 x86 exact TLS13 Finished baseline ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-tls-full-finished-baseline-x86.yml"
+      - "r0/go_overlay/internal/realityfront/v4_tls_finished_baseline_test.go"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-x86-complete-authenticated-tls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Original Go source/manifest and isolated TLS transcript-only fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test ! -e r0/go_overlay/internal/realityfront/v4_route_prelude.go
+          mkdir -p result
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          src=root/"r0/go_overlay/internal/realityfront/v4_tls_finished_baseline_test.go"
+          dst=root/"legacy/internal/realityfront/v4_tls_finished_baseline_test.go"
+          assert not dst.exists()
+          dst.write_bytes(src.read_bytes())
+          receipt=json.loads((root/"result/assembly.json").read_text(encoding="utf-8"))
+          assert receipt["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert receipt["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert (root/"legacy/internal/realityfront/tls.go").read_bytes()==(root/"r0/go_overlay/internal/realityfront/tls.go").read_bytes()
+          assert b'v4AutoRoutePrelude(' not in (root/"r0/go_overlay/internal/realityfront/admission_v4.go").read_bytes()
+          print("M0_PLAN028_X86_CONFIG_MATCHED_TLS_SOURCE_ASSEMBLED",flush=True)
+          PY
+      - name: One original uTLS+crypto/tls complete authenticated transcript against configured Firefox120 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd legacy && go test -count=1 -timeout 60s -v -run '^TestPLAN028OriginalTLS13CompleteFinishedCertificateVsSameConfiguredFirefox120$' ./internal/realityfront) >result/full-finished-reference.log 2>&1 || {
+            tail -n 145 result/full-finished-reference.log >&2
+            exit 1
+          }
+          for marker in \
+            '--- PASS: TestPLAN028OriginalTLS13CompleteFinishedCertificateVsSameConfiguredFirefox120' \
+            '--- PASS: TestPLAN028OriginalTLS13CompleteFinishedCertificateVsSameConfiguredFirefox120/reference_uTLS_Firefox120' \
+            '--- PASS: TestPLAN028OriginalTLS13CompleteFinishedCertificateVsSameConfiguredFirefox120/routekey_32byte_HMAC_SessionID' \
+            'M0_PLAN028_ORIGINAL_TLS13_CONFIG_MATCHED_FULL_FINISHED_BASELINE_PASS';do
+              grep -Fq -- "$marker" result/full-finished-reference.log
+          done
+          python3 - <<'PY'
+          import json,os,pathlib,re
+          s=pathlib.Path("result/full-finished-reference.log").read_text()
+          rows=re.findall(r'PLAN028_TLS13_CERT_FINISHED_DECRYPTED route=(true|false) suite=(0x[0-9a-f]+) client_hello_bytes=(\d+) server_hello_bytes=(\d+) client_records=(\d+) server_records=(\d+) certificate=1 certificate_verify=1 server_finished=1 client_finished=1 verified_chain=1',s)
+          assert len(rows)==2 and {x[0] for x in rows}=={"true","false"},rows
+          rows.sort()
+          assert rows[0][1]==rows[1][1] and rows[0][2:4]==rows[1][2:4],rows
+          result={"source_sha":os.environ["GITHUB_SHA"],"original_go_source":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "qualification":"FULL_TLS13_REFERENCE_DECRYPTED_TEST_ONLY", "connection":"real_loopback_TCP_original_Go_TLS_not_external_netns",
+             "same_SNI_cert_MTU_and_version":True,"suite":rows[0][1],
+             "client_hello_bytes":int(rows[0][2]),"server_hello_bytes":int(rows[0][3]),
+             "full_server_messages":["ServerHello","EncryptedExtensions","Certificate","CertificateVerify","Finished"],
+             "client_finished_verified":True,"certificate_der_configured_match":True,"verified_chains":True,
+             "uTLS_reference_extension_order_match":True,"route_key_only_in_32B_HMAC_SessionID":True,
+             "raw_tls_secret_or_keylog_retained":False,
+             "remaining":"Real netns first-flight already source-qualified separately; full real-network PCAP decrypted transcript/Windows physical NIC still NOT_RUN"}
+          pathlib.Path("result/full-finished-baseline-summary.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("M0_PLAN028_ORIGINAL_GO_TLS13_FINISHED_REFERENCE_DECRYPTED_SCOPED_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-tls-finished-reference-${{ github.run_id }}
+          path: |
+            result/assembly.json
+            result/full-finished-reference.log
+            result/full-finished-baseline-summary.json
+          if-no-files-found: warn
+          retention-days: 14

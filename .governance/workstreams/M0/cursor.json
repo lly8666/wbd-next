@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1093,
-  "checkpoint_sha": "5760dd1c1e77367004614e1fcd44f248f47227b8",
+  "sequence": 1094,
+  "checkpoint_sha": "aa73f0f568e826b9992dd0f674efd387918699be",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1093 native ARM64 source5760 verified Game4 fixed6 A→A+B→B, original TLS 8 lanes, real 5+5 UDP, MTU1178, FEC PASS; next independent Linux task x86/x86 full TLS Finished/baseline, Windows real NIC remains open",
-  "why_now": "Action41771260135 native ARM64/ARM64 success: artifact13295106610 verified exact source5760 original Go/Rust SHA, 8 Game4 real TCP first-flights, old/new 5+5 UDP, FEC copied, native shared TUN single reader, new ready before old Stop, real TUN readback 1178.",
+  "current_task": "H1094 x86_64 original uTLS/crypto-tls same-config full TLS1.3 Certificate/CertificateVerify/Finished decrypt/reference baseline SOURCE candidate; real Windows physical NIC rebind independent OPEN",
+  "why_now": "H1093 true native ARM/ARM Game4 overlap real TLS 8 first-flights + FEC, 5+5 UDP, MTU1178 verified Action41771260135 artifact13295106610. Remaining TLS contract requires full authentic CertificateVerify/Finished against same uTLS reference; narrow test-only source, no product rebuild.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Implement scoped x86/x86 complete TLS CertificateVerify/Finished reference baseline qualification with test-only decrypted transcript (redact secrets), and separately advance Windows actual NIC/sourceIP rebind; no re-run old Game4 x86/ARM. CPU/p99, H998 live hot MTU and Android still open.",
+  "next_action": "Collect H1094 one x86 Go full decrypted TLS13 in-memory secrets/reference Action, fix only first failure. In parallel review Windows original IPHelper/Npcap path observer and build a strictly scoped true physical NIC scenario only if safe runner provides two actual source paths. Next Linux distinct task after x86 is ARM64 pair.",
   "unverified": true,
   "last_tested_source": "5760dd1c1e77367004614e1fcd44f248f47227b8",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 route-key offline32B + mandatory cert, WB-R1 removed; scoped closeout. H1092 source67ba x86/x86 native Game4 fixed6 genuine A→A+B→B TLS8 first flights, FEC & 5+5UDP, MTU1178 verified. H1093 source5760 native ARM/ARM same Game4FEC6 TLS8 full first-flights, 5+5UDP, FEC, reader join, new READY before old exact Stop, MTU1178, Action41771260135 artifact13295106610 verified. TLS full decrypted Finished/reference-baseline OPEN. Windows real NIC/Npcap rebind, CPU/p99/remote ICMP/Android not proved. Historical H998 same-connection hot MTU FAIL & older ARM64 Game4FEC FAIL remain. Linux next new task x86_64 client+server, following ARM64 pair; Windows independent."
+  "partial_summary": "H1087 route-key offline32B + mandatory cert, WB-R1 removed; scoped closeout. H1092 source67ba x86/x86 native Game4 fixed6 genuine A→A+B→B TLS8 first flights, FEC & 5+5UDP, MTU1178 verified. H1093 source5760 native ARM/ARM same Game4FEC6 TLS8 full first-flights, 5+5UDP, FEC, reader join, new READY before old exact Stop, MTU1178, Action41771260135 artifact13295106610 verified. TLS full decrypted Finished/reference-baseline OPEN. Windows real NIC/Npcap rebind, CPU/p99/remote ICMP/Android not proved. Historical H998 same-connection hot MTU FAIL & older ARM64 Game4FEC FAIL remain. Linux next new task x86_64 client+server, following ARM64 pair; Windows independent. H1094 one x86 native runner TEST-ONLY full verified TLS13 Certificate→CertificateVerify→server/client Finished AEAD decrypted, same-config unmodified Firefox120 reference, no keylog artifacts. Pending CI; previous ARM native H1093 and Game4 x86 H1092 remain source-qualified."
 }
