@@ -65,8 +65,8 @@ if($Action -eq 'Switch'){
  Set-NetIPAddress -InterfaceIndex $idx -IPAddress $old -SkipAsSource $true -ErrorAction Stop
  [void](Pick $idx $new)
  $d.stage='SWITCHED'
- $d.native_source4_after=$new
- $d.test_owned_source4_mutation_to_OS_selected_ms=[math]::Round(([DateTimeOffset]::UtcNow-$changed).TotalMilliseconds,2)
+ $d|Add-Member -NotePropertyName native_source4_after -NotePropertyValue $new -Force
+ $d|Add-Member -NotePropertyName test_owned_source4_mutation_to_OS_selected_ms -NotePropertyValue ([math]::Round(([DateTimeOffset]::UtcNow-$changed).TotalMilliseconds,2)) -Force
  $d|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
  Write-Output 'M0_PLAN028_WINDOWS_REAL_OWNED_WSL2_SOURCE4_CHANGED_AND_SELECTED'
  exit 0
@@ -79,7 +79,7 @@ if($d.guest_created){Guest @('ip','addr','del',($guest+'/24'),'dev','eth0')|Out-
 $now=DefaultFingerprint
 if($null -ne (Compare-Object -ReferenceObject @($d.default_before) -DifferenceObject $now)){throw 'runner default route changed outside test-owned area'}
 $d.stage='RESTORED'
-$d.test_owned_aliases_restored=$true
-$d.runner_default_route_unchanged=$true
+$d|Add-Member -NotePropertyName test_owned_aliases_restored -NotePropertyValue $true -Force
+$d|Add-Member -NotePropertyName runner_default_route_unchanged -NotePropertyValue $true -Force
 $d|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
 Write-Output 'M0_PLAN028_WINDOWS_WSL2_TEST_OWNED_IPV4_ALIASES_CLEANED'

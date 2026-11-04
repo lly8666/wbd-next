@@ -210,3 +210,34 @@ func TestM0PLAN028VerifiedGuestSourceReboundAfterGenuineOSChangeOnly(t *testing.
   t.Fatal("unchanged source is not a verified source4 change")
  }
 }
+
+func TestM0PLAN028OwnedWSLNextHopOnlyForExactNativeAlias(t *testing.T){
+ guest:=netip.MustParseAddr("198.19.254.2")
+ initial:=netip.MustParseAddr("198.19.254.1")
+ newSource:=netip.MustParseAddr("198.19.254.9")
+ old:=m0WindowsPhysicalPath{ifindex:25,source4:initial}
+ fresh:=m0WindowsPhysicalPath{ifindex:25,source4:newSource}
+ allow:=m0WindowsVerifiedOwnedWSLRoute
+ if !allow(true,1,guest,guest,initial,initial,25,old)||
+    !allow(true,2,guest,guest,initial,newSource,25,fresh){
+  t.Fatal("real native OS-selected same-owned WSL guest must be permitted")
+ }
+ for _,row:=range []struct{
+  name string;own bool;gen uint64;guest,peer,initial,current netip.Addr;idx uint32;path m0WindowsPhysicalPath
+ }{
+  {"unowned",false,2,guest,guest,initial,newSource,25,fresh},
+  {"initial_misbound",true,1,guest,guest,initial,newSource,25,fresh},
+  {"stale_new_generation",true,2,guest,guest,initial,initial,25,old},
+  {"foreign_guest",true,2,netip.MustParseAddr("198.19.254.3"),guest,initial,newSource,25,fresh},
+  {"foreign_peer",true,2,guest,netip.MustParseAddr("198.19.254.3"),initial,newSource,25,fresh},
+  {"foreign_original_source",true,2,guest,guest,newSource,newSource,25,fresh},
+  {"foreign_ifindex",true,2,guest,guest,initial,newSource,26,fresh},
+  {"stale_OS_readback",true,2,guest,guest,initial,newSource,25,old},
+ }{
+  t.Run(row.name,func(t *testing.T){
+   if allow(row.own,row.gen,row.guest,row.peer,row.initial,row.current,row.idx,row.path){
+    t.Fatal("unexpected route override")
+   }
+  })
+ }
+}
