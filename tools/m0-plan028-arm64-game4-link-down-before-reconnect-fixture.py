@@ -81,6 +81,11 @@ pathlib.Path(sys.argv[7]).write_text(json.dumps(out,indent=2)+"\n")
 print("M0_PLAN028_H1171_ARM64_GAME4_LINK_DOWN_BEFORE_NEW_TLS_RECOVERY_PASS",flush=True)
 PY_H1171
 '''
-s=s.replace(anchor,anchor+'\n'+extra,1)
+# The direct-recovery path above deliberately renamed the inherited H1162
+# success token; append AFTER the resulting marker, not the stale original.
+completed_marker='print("M0_PLAN028_H1172_ARM64_NORMAL_LIVE48_GAME4_DOWN_FIRST_DIRECT_RECOVERY_NEW32_PASS",flush=True)\\nPY_H1162'.replace('\\\\n','\\n')
+assert s.count(completed_marker)==1,"direct recovery success token missing after staging"
+s=s.replace(completed_marker,completed_marker+'\\n'+extra,1)
+assert s.count("PY_H1171")==2,"link-down timing and kernel-readback proof was not installed"
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1171_ARM64_LINK_DOWN_BEFORE_RECOVERY_GENERATOR_READY",flush=True)

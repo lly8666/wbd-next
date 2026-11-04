@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1174",
+  "source_sha": "0ab76f456e8d9d9f3a49240357d0f0c4ca56c1b9",
+  "scope": "NATIVE_ARM64_ARM64_DIRECT_DISCONNECTED_RECOVERY_COLLECT_TEST_HARNESS_INCOMPLETE",
+  "action": {
+    "run_id": 41877326739,
+    "job_id": 126740198547,
+    "status": "FAIL_TEST_ARTIFACT_MISSING_NOT_PRODUCT_FAIL",
+    "artifact_id": 13346878142,
+    "artifact_zip_sha256": "6bf87d72f412e386a4d47cfaacdb83bd4e984233b8704408c28004541b971a5d"
+  },
+  "observed": {
+    "native_elf": "AARCH64_183",
+    "underlay_mxb0_down_readback": "DOWN",
+    "real_source4_new": "10.25.0.9",
+    "real_physical_mtu": 1280,
+    "game4_os_inner_mtu": 1178,
+    "normal_os_inner_mtu": 1375,
+    "game4_new_authenticated_udp_echoes": 32,
+    "healthy_normal_auto_live_echoes": 48,
+    "game4_original_tls_second_generation_ready": true,
+    "old_generation1_terminated_before_second": true,
+    "final_owned_tun_stop": true
+  },
+  "missing": "plan028-h1171-link-down-first.json: generated fixture never appended H1171 additional Python proof because success marker was renamed first",
+  "next": "fix append ordering and run once native ARM same arch; cannot claim full timed physical down proof until new Action",
+  "windows_h1173": {
+    "action": 41877481546,
+    "status": "FAIL_GENUINE_SECOND_GAME4_TLS_BOOTSTRAP_TIMEOUT",
+    "first_generation_pass": true,
+    "second_generation_failed": true,
+    "after_source4": "198.19.254.9",
+    "claimed_pass": false
+  },
+  "retained": [
+    "H998 online same-connection MTU shrink FAIL",
+    "H998 ARM Game4 old Action FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "old/new CPU causal NOT_PROVEN"
+  ]
+}
