@@ -1249,10 +1249,22 @@ print(json.dumps(result),flush=True)
   expected=1 if outer_repair=="on" else 0
   windows=(out/"client.log").read_text(errors="replace")
   linux=(out/"server.log").read_text(errors="replace")
-  win_ok=(f"WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled={expected} " in windows)
-  linux_ok=(f"V4_PUBLIC_GAME_OUTER role=server lanes={lanes} repair_enabled={expected} " in linux)
-  report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
-    "enabled":expected,"game_lanes":lanes}
+  if plan028_owned_switch:
+   # Exactly two original Rust Game M4 receipts, not CLI intent or one
+   # legacy singleton sample; this signed scene has two authenticated
+   # source4 generations and the first group's bounded exact Stop.
+   wins=re.findall(r"^WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled=(\\d+) source=rust_game_outer$",windows,re.MULTILINE)
+   servers=re.findall(r"^.*V4_PUBLIC_GAME_OUTER role=server lanes=%d repair_enabled=(\\d+) "%lanes,linux,re.MULTILINE)
+   win_ok=len(wins)==2 and all(int(v)==expected for v in wins)
+   linux_ok=len(servers)==2 and all(int(v)==expected for v in servers)
+   report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+     "enabled":expected,"game_lanes":lanes,
+     "windows_generations":len(wins),"linux_authenticated_rust_generations":len(servers)}
+  else:
+   win_ok=(f"WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled={expected} " in windows)
+   linux_ok=(f"V4_PUBLIC_GAME_OUTER role=server lanes={lanes} repair_enabled={expected} " in linux)
+   report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+     "enabled":expected,"game_lanes":lanes}
   if not (win_ok and linux_ok):
    raise RuntimeError("original Game two-OS Rust outer repair effective mismatch")
  if scenario:

@@ -839,6 +839,12 @@ func runGameMultiServer(
                 log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=game_owner")
                 continue
             }
+            // Existing native Game M4 effective policy, checked on THIS
+            // authenticated group before its new generation becomes READY.
+            if e=logGameOuterRepair("server",int(key.Lanes),product,c.disableOuterRepair);e!=nil{
+                _=product.Close()
+                return fmt.Errorf("shared Game original Rust outer readback: %w",e)
+            }
             newPeers:=make([]faketcp.DetachedPeer,0,n)
             for _,member:=range complete{
                 peer,e:=member.DetachedPeer()

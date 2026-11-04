@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1179",
+  "source_sha": "9f9d644652fee8f941d4006075a84397dda328e9",
+  "action": {
+    "run_id": 41884844001,
+    "job_id": 126768785866,
+    "status": "FAIL_SCOPED_MISSING_SERVER_RUST_EFFECTIVE_POLICY_RECEIPT",
+    "artifact_id": 13352486054,
+    "artifact_zip_sha256": "1c715d32e853942dbf326c4c72c61ac4ed4d6148fd76ea30b6a5b73844427a04"
+  },
+  "proved": {
+    "genuine_game4_server_TLS_M4_ready_count": 2,
+    "genuine_windows_game4_TLS_M4_ready_count": 2,
+    "network_source4_before": "198.19.254.1",
+    "network_source4_after": "198.19.254.9",
+    "one_server_port": 443,
+    "user_outer_ip_mtu": 1460,
+    "wintun_os_inner_mtu": [
+      1358,
+      1358
+    ],
+    "linux_os_inner_mtu": 1358,
+    "post_new_ready_udp_recv_increments": {
+      "windows": 11,
+      "linux": 11
+    },
+    "native_kernel_udp_duplex": true,
+    "native_kernel_tcp_duplex": true,
+    "old_server_exact_group_stop": true,
+    "server_final_stop": true,
+    "old_windows_wal_stop": true,
+    "offline_private_route_key": true
+  },
+  "failure": "H1175 shared Rust Game group did not emit server-side V4_PUBLIC_GAME_OUTER effective policy row (real Rust state not yet sampled); signed fixture expected native original policy and failed despite true business",
+  "measured_but_not_causal": {
+    "windows_process_avg_one_core_pct": 4.722,
+    "peak_working_set_bytes": 59650048
+  },
+  "not_measured": [
+    "CPU causal old/new",
+    "p99 in this Windows case",
+    "notification→TLS",
+    "auth→first packet",
+    "Android/ICMP"
+  ],
+  "next": "H1179 check logGameOuterRepair per authenticated game group, two Windows/server generations must read Rust enabled1, new Action needed",
+  "h998": [
+    "original same-connection MTU hot-shrink FAIL",
+    "old ARM Game4FEC Action FAIL",
+    "remote ICMP not measured",
+    "CPU causal not proven"
+  ]
+}

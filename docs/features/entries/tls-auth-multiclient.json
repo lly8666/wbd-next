@@ -265,7 +265,7 @@
  "limitations": [
   "V4不保证与旧V3数据面互通。",
   "Linux task rotation: x86/x86 then ARM/ARM native, Windows excluded.",
-  "H1155/H1158 shared443 baseline, H1160 x86/H1166 ARM real physical Game, H1170 x86 2x overlap and H1177 ARM old-first-disconnected direct recovery scoped PASS. H1175 original Game manual /32 shared server built, Windows H1173 second-generation TLS FAIL retained until native signed retest. Seven-mode switching plus 5% low-loss/30% high-loss, precise notifier→TLS/auth→first CPU/p99 incomplete; H998 original hot shrink and ARM Action FAIL, ICMP/Android/CPU causal unknown."
+  "H1155/H1158 shared443, H1160 x86/H1166 ARM real physical, H1170 x86 double overlap and H1177 ARM direct-down recovery scoped PASS. Signed Windows H1175 Game4 manual server has 2 genuine TLS/Rust gens, kernel duplex UDP/TCP, old exact/final Stops but action FAIL solely no original shared Rust outer policy receipt; H1179 adds real per-epoch policy readback, pending native signed retest. H1173 legacy single-group Game4 gen2 FAIL retained. Seven-mode 5%/30% matrix, exact notifier→TLS/auth→first CPU/p99, ICMP/Android still incomplete; original H998 hot-shrink and ARM Action FAIL retained."
  ],
  "promotion": null,
  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
