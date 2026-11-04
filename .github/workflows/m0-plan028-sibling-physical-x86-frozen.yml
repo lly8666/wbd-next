@@ -1,0 +1,83 @@
+name: M0 PLAN028 native x86 3 devices sibling physical IPv4 switch frozen
+run-name: PLAN028 x86 Alice real IP switch while Bob and Alice-D continuous ${{ github.sha }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-sibling-physical-x86-frozen.yml"
+      - "tools/m0-plan028-sibling-physical-real-linux-netns.sh"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-x86-three-device-source-switch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    env:
+      PRODUCT_SOURCE_SHA: 0e47d9c9532cbda9e655bd198348acf4ff4ddcd1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41782228876
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-41782228876-1
+          path: ./
+      - name: Verify original Go Rust x86 product source/ELF/SHA256 only once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          bash -n tools/m0-plan028-sibling-physical-real-linux-netns.sh
+          python3 - <<'PY'
+          import json,hashlib,os,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE_SHA"],m["source_sha"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][n],n
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62,n
+          print("M0_PLAN028_NATIVE_X86_THREE_DEVICE_SOURCE_FROZEN_PASS no_product_rebuild=1")
+          PY
+          chmod 0755 fixed-build/{wbd-v4-client,wbd-v4-server}
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+      - name: One x86 real rtnetlink source IPv4 / MTU switch A with both Alice-D and Bob alive
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_PLAN028_SIBLING_PHYSICAL_SWITCH=1 \
+            bash tools/m0-plan028-sibling-physical-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/plan028-three-device-physical-switch-native.log 2>&1 || {
+              tail -180 fixed-kernel-result/plan028-three-device-physical-switch-native.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_TRUE_NATIVE_X86_TWO_ALICE_DEVICES_BOB_UNINTERRUPTED_DURING_A_PHYSICAL_SOURCE_SWITCH_PASS' fixed-kernel-result/plan028-three-device-physical-switch-native.log
+          grep -Fq 'M0_PLAN028_NATIVE_X86_SIBLING_SOURCE_SWITCH_EXACT_RUST_STOP_PASS' fixed-kernel-result/plan028-three-device-physical-switch-native.log
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path("fixed-kernel-result/plan028-three-device-source-switch.json")
+          d=json.loads(p.read_text())
+          assert d["one_server_port"]==443 and d["distinct_protected_leases"]==3
+          assert d["new_source4"]=="10.25.0.9"
+          assert d["sibling_b_tun_mtu_unchanged"]>0 and d["sibling_alice_d_tun_mtu_unchanged"]>0
+          assert d["A_after_switch_udp"]==5 and d["bob_while_A_switch_udp"]==24
+          print("M0_PLAN028_THREE_DEVICE_X86_NATIVE_OS_READBACK_AND_FIRST_BUSINESS_PASS")
+          PY
+          cat fixed-kernel-result/plan028-three-device-source-switch.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-sibling-physical-x86-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/plan028-three-device-source-switch.json
+            fixed-kernel-result/plan028-sibling-new-physical-route.json
+            fixed-kernel-result/plan028-sibling-new-underlay-link.json
+            fixed-kernel-result/plan028-three-device-physical-switch-native.log
+          if-no-files-found: warn
+          retention-days: 14
