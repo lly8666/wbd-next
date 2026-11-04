@@ -72,12 +72,27 @@ var errM0NativeV4AuthenticatedPeerDead=errors.New("Rust verified authenticated p
 // credential reject, driver error, previously applied generation or initial
 // connect failure may never be reclassified as an authorized reconnect.
 func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err error)bool{
- if !authorized||applied||retries>=2||err==nil{return false}
+ if !authorized||applied||retries>=2||err==nil||errors.Is(err,realityfront.ErrAdmissionAuth){return false}
  if errors.Is(err,context.DeadlineExceeded)||
   errors.Is(err,syscall.ETIMEDOUT)||
   errors.Is(err,faketcp.ErrBootstrapTimeout){return true}
  var ne net.Error
  return errors.As(err,&ne)&&ne.Timeout()
+}
+
+// Filtered native source IPv4/ifindex change after exact owned Stop
+// authorizes a bounded cold TLS transport retry even for Game. It does not
+// make wrong credentials, user Stop, initial connect or an applied OS owner
+// eligible. No extra watcher, periodic probe or second recovery controller.
+func m0WindowsColdPathRetryAllowed(
+ mode m0WindowsV4Mode,authenticatedDead,pathChanged,applied bool,
+ retries int,err error,
+)bool{
+ if (mode==m0WinModeGame2||mode==m0WinModeGame4)&&!pathChanged{
+  return false // keep original Game dead90 retry policy unchanged
+ }
+ return m0WindowsOriginalColdRetryAllowed(
+  authenticatedDead||pathChanged,applied,retries,err)
 }
 
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
@@ -261,6 +276,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if err!=nil{return fmt.Errorf("original Windows route/address subscription: %w",err)}
  defer stopPathWatch()
  reauthAuthorized:=false
+ pathRecoveryAuthorized:=false
  coldRetries:=0
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
@@ -274,6 +290,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // establish the next generation on a DIFFERENT physical kernel route.
   if ctx.Err()==nil&&errors.Is(err,errM0WindowsPhysicalPathChanged){
    reauthAuthorized=false
+   pathRecoveryAuthorized=true // filtered actual native OS event
    coldRetries=0
    generation++
    fmt.Printf("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=%d previous_native_joined=1 source=native_ipv4_notification_200_500\n",generation)
@@ -282,10 +299,12 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
-  if ctx.Err()==nil && o.Mode!=m0WinModeGame2 && o.Mode!=m0WinModeGame4 &&
-   m0WindowsOriginalColdRetryAllowed(reauthAuthorized,applied,coldRetries,err){
+  if ctx.Err()==nil && m0WindowsColdPathRetryAllowed(
+   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err){
    coldRetries++
-   fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout\n",generation,coldRetries)
+   authority:="authenticated_health90"
+   if pathRecoveryAuthorized{authority="native_physical_ipv4_path"}
+   fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout authority=%s previous_owner_drained=1\n",generation,coldRetries,authority)
    timer:=time.NewTimer(2*time.Second)
    select{
    case <-ctx.Done():timer.Stop();return nil
@@ -295,6 +314,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   }
   if !errors.Is(err,errM0NativeV4AuthenticatedPeerDead)||ctx.Err()!=nil{return err}
   reauthAuthorized=true
+  pathRecoveryAuthorized=false
   coldRetries=0
   fmt.Printf("WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED generation=%d old_owner_drained=1\n",generation)
   timer:=time.NewTimer(time.Second)

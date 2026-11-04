@@ -150,3 +150,40 @@ func TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject(t *testing.T)
   t.Fatalf("path event cannot turn invalid credentials into new owner: %v",err)
  }
 }
+
+func TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth(t *testing.T){
+ timeout:=fmt.Errorf("new physical path fakeTCP TLS: %w",context.DeadlineExceeded)
+ for _,mode:=range []m0WindowsV4Mode{
+  m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,m0WinModeGame2,m0WinModeGame4,
+ }{
+  if !m0WindowsColdPathRetryAllowed(mode,false,true,false,0,timeout){
+   t.Fatalf("OS-verified physical IPv4 event should permit exact stopped cold TLS timeout retry: %v",mode)
+  }
+  for _,row:=range []struct{
+   name string
+   path,applied bool
+   retries int
+   err error
+  }{
+   {"initial_attempt_without_event",false,false,0,timeout},
+   {"already_applied_owner",true,true,0,timeout},
+   {"bounded_attempts_exhausted",true,false,2,timeout},
+   {"wrong_tls_password",true,false,0,realityfront.ErrAdmissionAuth},
+   {"joined_auth_and_timeout",true,false,0,errors.Join(realityfront.ErrAdmissionAuth,context.DeadlineExceeded)},
+   {"user_stop",true,false,0,context.Canceled},
+   {"driver_failure",true,false,0,errors.New("Npcap driver error")},
+  }{
+   if m0WindowsColdPathRetryAllowed(mode,false,row.path,row.applied,row.retries,row.err){
+    t.Fatalf("mode %v case %s must not rearm old owner",mode,row.name)
+   }
+  }
+ }
+ // The existing authenticated-dead90 retries for Normal/FEC are intact,
+ // while Game health90 remains its own separate managed health policy.
+ if !m0WindowsColdPathRetryAllowed(m0WinModeNormal,true,false,false,0,timeout){
+  t.Fatal("prior authenticated Normal dead90 recovery stopped working")
+ }
+ if m0WindowsColdPathRetryAllowed(m0WinModeGame4,true,false,false,0,timeout){
+  t.Fatal("Game dead90 retry authorization widened without OS event")
+ }
+}
