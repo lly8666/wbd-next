@@ -81,7 +81,85 @@ jobs:
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestR0V4ActualProtectedPeerHandshakeAllCiphers)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers) ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope$' ./internal/v4productcli) >>fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          for marker in \
+            "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" \
+            "--- PASS: TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy" \
+            "--- PASS: TestR0V4ActualProtectedPeerHandshakeAllCiphers" \
+            "--- PASS: TestPLAN028OriginalPublicRecordCipherClientScope";do
+            grep -Fq -- "$marker" fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()=="x86_64"
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62,name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_x86_64","go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_PLAN028_H1151_NATIVE_X86_64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
+          PY
+      - name: One genuine x86/x86 original TLS443 Normal Auto + Game2 + Game4 FEC6 and exact Rust Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash -n tools/m0-plan028-mixed-normal-game-native.sh
+          bash tools/m0-plan028-mixed-normal-game-native.sh fixed-build \
+            >fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log 2>&1 || {
+              tail -210 fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS" \
+            fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]=="native_x86_64"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][name]
+          p=json.loads(pathlib.Path("fixed-kernel-result/plan028-h1151-mixed-one443.json").read_text())
+          assert p["server_port"]==443 and len(set(p["distinct_authenticated_client_ips"]))==3
+          assert p["native_peers"]==["game2-off-ChaCha","game4-fixed6-AES256","normal-auto-AES128"]
+          assert p["real_udp_echoes"]=={"game2":12,"game4":18,"normal":18}
+          assert p["game2_stop_did_not_stop_game4_or_normal"] and p["shared_rust_tun_reader_final_stop"]
+          print("M0_PLAN028_H1151_NATIVE_X86_ORIGINAL_ONE443_MIXED_COEXIST_REAL_48_UDP_SOURCE_SHA_PASS")
+          PY
+          cat fixed-kernel-result/plan028-h1151-mixed-one443.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-h1151-native-x86-mixed-normal-game-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/assembly.json
+            fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+            fixed-kernel-result/plan028-h1151-mixed-normal-game-x86.log
+            fixed-kernel-result/plan028-h1151-mixed-one443.json
+            fixed-kernel-result/plan028-h1151-alice-tun.json
+            fixed-kernel-result/plan028-h1151-bob-tun.json
+            fixed-kernel-result/plan028-h1151-carol-tun.json
+            fixed-kernel-result/plan028-h1151-server-tun.json
+          if-no-files-found: warn
+          retention-days: 14
+ ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
             tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
             exit 1
           }

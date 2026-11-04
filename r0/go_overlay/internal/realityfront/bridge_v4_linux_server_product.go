@@ -172,6 +172,7 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
     assoc *faketcp.ServerAssociation,session *V4ServerSession,
     bridge *v4EmbeddedNativeBridge,
 )(*V4ServerSession,error){
+    var err error
     mode:=p.cfg.FECMode
     if mode==""{mode=FecV2Off}
     // association and committed the Rust owner. Any driver/start error must
