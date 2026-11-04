@@ -14,6 +14,7 @@ assert setup and measure,"previous verified netem5 kernel + UDP measurement chan
 a,b=setup.group(1),measure.group(1)
 a=a.replace("plan028-h1178","plan028-h1189")
 b=b.replace("plan028-h1178","plan028-h1189")
+b=b.replace("PY_H1178_END","PY_ARM_NETEM_END")
 b=b.replace("NATIVE_X86_X86_GAME4_FIXED6_TWO_PHYSICAL_CHANGES_REAL_TC_5PCT","NATIVE_ARM64_GAME4_HARD_DOWN_RECOVERY_POST_AUTH_TC_5PCT")
 b=b.replace("M0_PLAN028_H1184_X86_NETEM5_200UDP_P99_NATIVE_DROP_AND_CLEAN_STOP_PROVEN","M0_PLAN028_H1189_ARM64_POSTAUTH_TRUE_NETEM5_200UDP_P99_PASS")
 b=b.replace('"physical_qdisc_netem_loss_pct":5','"physical_qdisc_netem_loss_pct":5,\n "loss_injection_stage":"AFTER_GAME4_GEN2_AUTHENTICATED_M4"')
