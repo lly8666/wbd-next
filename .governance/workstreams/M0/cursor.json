@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1096,
-  "checkpoint_sha": "8d258da1efdeb2f0e9c2f332aa474a325fa1b402",
+  "sequence": 1097,
+  "checkpoint_sha": "0a24ca982701055c2840496d11b4d8b6bc99e62d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1096 Windows OS-notified source4/ifindex change exact old Stop authorizes limited new TLS transport timeout retry incl Game2/4, credential/Stop/applied fail closed; new Go 6 test Action pending",
-  "why_now": "H1095 source4106 original Go TLS13 Finish/reference baseline Action41777365763 PASS. Win OS route event reauthAuthorized reset false, new path TLS timeouts terminate app; Game2/4 excluded. Patch one cold supervisor only and test source assembly.",
+  "current_task": "H1097 correct malformed H1096 Windows 6-unit workflow YAML and H1095 feature catalog allowed status; Windows actual source code unchanged, focused Action pending",
+  "why_now": "H1096 Action41778466223 failed before jobs due JS '$\\'' workflow edit duplicated tail and lost regex suffix; source0a24 Go code/manifest unchanged. Governance Action41778467976 feature catalog rejected UNIT_PASS enum for H1095 authenticated real loopback TLS; use FUNCTIONAL_PASS with strictly scoped test-only platform. Fix only fixture + metadata.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1096 Windows Go 6 focused tests/any same-source native compile without extra dispatch; inspect first error. Physical hardware Win NIC/IP Npcap rebind/MTU/first UDP remains NOT_RUN. Linux next ARM64/ARM64.",
+  "next_action": "Collect H1097 Windows six focused original-Go tests, full Windows original compile if automatically running; do not rerun x86/ARM Game. True Windows physical NIC/source4 and real Npcap after switch still unverified; next full Linux task ARM/ARM.",
   "unverified": true,
   "last_tested_source": "4106231a2a4800b8c0f8be5d1f92fae9ccc2039b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 route-key32B offline no WB-R1 closed; H1092 native x86/x86 and H1093 native ARM/ARM Game4FEC6 A→A+B→B with 8 real TCP CH/SH, old/new 5+5 UDP, FEC copied, TUN1178, new B READY before old A Stop. H1095 source4106 original Go full TLS13 cert/certVerify/server+client Finished decrypted in test memory vs same Firefox120 configured baseline, Action41777365763; real native pcap first flights qualified separately. Windows physical NIC change/rebind/CPU-p99 and seven-mode physical crossover remain OPEN; H998 old hot MTU FAIL, old ARM64 FEC FAIL, remote ICMP, Android untouched. Linux next ARM/ARM. H1096 actual Windows filtered physical route watcher new gen allowed yet first new-path TLS timeout fatal; one pathRecoveryAuthorized state now permits existing 2 limited cold retries incl Game, without authorizing initial/credential failure/user Stop or applied owner. Original Go code+manifest+six unit candidate, Windows physical hardware NOT_RUN."
+  "partial_summary": "H1087 route-key32B offline no WB-R1 closed; H1092 native x86/x86 and H1093 native ARM/ARM Game4FEC6 A→A+B→B with 8 real TCP CH/SH, old/new 5+5 UDP, FEC copied, TUN1178, new B READY before old A Stop. H1095 source4106 original Go full TLS13 cert/certVerify/server+client Finished decrypted in test memory vs same Firefox120 configured baseline, Action41777365763; real native pcap first flights qualified separately. Windows physical NIC change/rebind/CPU-p99 and seven-mode physical crossover remain OPEN; H998 old hot MTU FAIL, old ARM64 FEC FAIL, remote ICMP, Android untouched. Linux next ARM/ARM. H1096 actual Windows filtered physical route watcher new gen allowed yet first new-path TLS timeout fatal; one pathRecoveryAuthorized state now permits existing 2 limited cold retries incl Game, without authorizing initial/credential failure/user Stop or applied owner. Original Go code+manifest+six unit candidate, Windows physical hardware NOT_RUN. H1097 H1096 Windows Go source unchanged; the 6-test workflow accidentally appended a second YAML tail and lost regex terminal; corrected. Feature catalog required H1095 status FUNCTIONAL_PASS rather than invalid UNIT_PASS, with test-only scope intact. Await focused Action, then evaluate true Windows physical OS changes."
 }

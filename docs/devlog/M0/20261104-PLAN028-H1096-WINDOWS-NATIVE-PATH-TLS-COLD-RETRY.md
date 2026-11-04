@@ -9,3 +9,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1096 one Windows original cold generation supervisor permits bounded retry after filtered OS ifindex/source4 change and exact Stop, including Game2/4, with explicit auth/Stop/applied-owner denial, source-locked unit pending."}
 ```
+
+## H1097 独立夹具及feature schema修复
+
+H1096 首次[Action 41778466223](https://github.com/lly8666/wbd-next/actions/runs/41778466223) 因 Windows 六单测入口工作流错误结尾/重复YAML尾部在工作流加载前 FAIL，Go单测未运行；其他治理检查明确 `feature_catalog.py` 不接受 `UNIT_PASS` 枚举，因此将 H1095 的真实原Go TLS完整握手测试限定标为允许的 `FUNCTIONAL_PASS`（scope 仍为 test-only loopback，不是物理PCAP）。只修工作流YAML与字段，不改变产品Windows Go/Rust源码、route-key或其他Task的测试结论。新Action前H1096仍未获得单测资格。
