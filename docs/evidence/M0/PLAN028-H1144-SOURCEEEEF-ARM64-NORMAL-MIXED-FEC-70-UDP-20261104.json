@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1144",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_ARM64_MIXED_NORMAL_OFF_AUTO_FIXED_PER_DEVICE_ONE_PORT",
+  "source_sha": "eeefed3f6ba19d98665e4e40f10d80f67469ba52",
+  "pinned_original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41831799441,
+    "job_id": 126580570848,
+    "conclusion": "success",
+    "artifact_id": 13323525361,
+    "artifact_digest": "sha256:e1e1063c077b5b29f64afe091631c8fba831e0151c62d5134ff1363df115ca22"
+  },
+  "platform": "Ubuntu24.04 ARM64 original Go TLS clients and ARM64 original Go TLS/Rust server, ELF183, real 5 Linux netns, single original shared Rust TUN, no QEMU",
+  "original_build": {
+    "source_builds": 1,
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "sha256": {
+      "wbd-v4-client": "68a855278812460c0c241567088dcc2c36ba57445dcf24383cc67dfa0401ca28",
+      "wbd-v4-server": "4c91f490e5ed26b70750a3d32480e5f10d2367765554a35a89b49ef353504538",
+      "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "protected_admission": {
+    "policy_mode_source": "original Go V3 ten-byte policy inside standard certificate/password TLS",
+    "feature3_for_off": true,
+    "feature7_for_fixed_and_auto": true,
+    "no_tls_prehead_or_new_data_wire": true,
+    "unit_test": "TestPLAN028SharedNormalPerClientFECProtectedCapability",
+    "unit_test_result": "PASS",
+    "wrong_offered_feature": "REJECTED",
+    "game_or_aggressive_policy": "REJECTED_BY_NORMAL_OWNER",
+    "no_fallback_to_unverified_mode": true
+  },
+  "live_owner": {
+    "single_server_port": 443,
+    "same_account_installations": 2,
+    "distinct_accounts": 2,
+    "original_protected_TLS_sessions": 4,
+    "actual_original_Rust_M4_modes": [
+      "off",
+      "auto",
+      "fixed",
+      "off"
+    ],
+    "original_Rust_profile_default": 1,
+    "cipher_policy_per_group": "ChaCha20-Poly1305 value1 for all this trial",
+    "original_server_shared_TUN_reader_count": 1,
+    "original_Rust_shared_TUN_routed_packets": 70,
+    "unrouted": 0,
+    "backpressure": 0,
+    "same_installation_new_TLS_generation_A_to_A_plus_B_to_B": true,
+    "old_exact_Stop": true,
+    "all_clients_and_server_final_Stop": true
+  },
+  "native_OS_MTU": [
+    {
+      "client": "Alice A",
+      "user_outer_ipv4_complete_ip_bytes": 1460,
+      "real_TCP_SYN_MSS": 1420,
+      "inner_TUN_OS_readback_bytes": 1389,
+      "mode": "off"
+    },
+    {
+      "client": "Bob",
+      "user_outer_ipv4_complete_ip_bytes": 1460,
+      "real_TCP_SYN_MSS": 1420,
+      "inner_TUN_OS_readback_bytes": 1375,
+      "mode": "auto"
+    },
+    {
+      "client": "Alice second installation D",
+      "user_outer_ipv4_complete_ip_bytes": 1280,
+      "real_TCP_SYN_MSS": 1240,
+      "inner_TUN_OS_readback_bytes": 1195,
+      "mode": "fixed"
+    }
+  ],
+  "server_shared_TUN_OS_readback_bytes": 1389,
+  "application": {
+    "real_original_kernel_UDP_roundtrips": 70,
+    "bob_and_Alice_sibling_alive_during_A_reauth": true,
+    "distinct_auto_lease32": 3,
+    "synthetic_ack_or_duplicate_copy": false
+  },
+  "limitations": [
+    "Only simultaneous Normal FEC modes off/auto/fixed on original one port; Game2/4 cohorts with Normal NOT_TESTED/NOT_WIRED.",
+    "Fixed profile strength stays server-installed (profile1 in this trial); independent arbitrary FEC strength and cipher choices not proven.",
+    "No literal physical Wi-Fi/cellular or Android native, no exact OS notification→TLS or TLS Finished→first app timing.",
+    "H998 historical same-connection live MTU shrink FAIL; earlier ARM64 Game4FEC Action FAIL history retained; remote ICMP and CPU causal improvement unproven."
+  ],
+  "next_linux_platform": "x86_64 client plus x86_64 server for next distinct complete Linux task"
+}
