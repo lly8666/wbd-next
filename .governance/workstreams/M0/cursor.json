@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1089,
-  "checkpoint_sha": "0015e629e3891132cdc89258f3b202c5bb38c1df",
+  "sequence": 1090,
+  "checkpoint_sha": "17259368e9b2824cf0cc22aa847640a567d742dc",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1089 H1088 original Go/Rust Game shared client TUN code unchanged, original x86 Action41765630079 FAIL_PRE_BUILD fixture duplicated FakeTCP installer after source manifest assembly; fix only workflow and retry one scene",
-  "why_now": "H1088 focused Action41765630079 failed before source build: plan020 original-Go assembly already installed SHA-pinned FakeTCP packet.go; subsequent m0_install_public_faketcp.py demanded unchanged donor packet.go and failed. Other source jobs incl governance and ARM64 Rust cross compile passed. No original Go/Rust product rollback.",
+  "current_task": "H1090 original x86 Game4 real TLS/M4 and shared reader PASS, first UDP FAIL due client inbound source check wrongly bound to own /32; Rust server-only anti-spoof corrected, source action pending",
+  "why_now": "Action41765851943 first app timeout client delivered0 rejected6 with server echo; source wrongly enforced client own lease as inbound server source. Keep client outgoing verified shared reader /32; check inbound client source /32 only on server.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1089 x86/x86 original Go/Rust one-build Game4FEC6 A→A+B→B true Linux netns Action, inspect first failure. Then native ARM64/ARM64 task; do not rerun unrelated old traffic matrices.",
+  "next_action": "Collect single x86/x86 Game4FEC6 real first UDP→physical source-IP switch Game A+B→B, OS MTU, 4+4 no-prelude TLS and Stop. Next Linux native ARM/ARM only after this task.",
   "unverified": true,
-  "last_tested_source": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "last_tested_source": "17259368e9b2824cf0cc22aa847640a567d742dc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1087-SOURCE7B38-ROUTE-KEY-SCOPED-CLOSEOUT-20261104.json"
+    "docs/evidence/M0/PLAN028-H1089-SOURCE1725-GAME4-CLIENT-REVERSE-IP-FAIL-20261104.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1087 32B offline route-key, no WB-R1 prehello scoped closed source7b38; full TLS Certificate/Finished/standard baseline OPEN. H1076 x86 and H1078 native ARM Game4FEC6 4+4 TLS, OS physical MTU1178/UDP/Stop PASS sequential old Stop→B. H1088 reuse one Rust shared TUN client default route + per-lane original TLS protected /32, native Game B Ready before A Stop code implemented, no Action yet. Windows physical source NIC NOT_RUN, H998 hot MTU shrink and older ARM Game4FEC workflow FAIL, remote ICMP and CPU p99 unmeasured. Linux test tasks alternate x86/x86 then native ARM/ARM. H1088 original client Game Rust reader and protected per-lane /32 source code submitted commit0015. Focused Action41765630079 FAIL_PRE_BUILD original Go FakeTCP installed twice, not product. H1089 removes duplicate installer after already SHA-verified plan020 assembly; product source files unchanged, new scoped Action pending."
+  "partial_summary": "H1087 32B offline route-key, no WB-R1 prehello scoped closed source7b38; full TLS Certificate/Finished/standard baseline OPEN. H1076 x86 and H1078 native ARM Game4FEC6 4+4 TLS, OS physical MTU1178/UDP/Stop PASS sequential old Stop→B. H1088 reuse one Rust shared TUN client default route + per-lane original TLS protected /32, native Game B Ready before A Stop code implemented, no Action yet. Windows physical source NIC NOT_RUN, H998 hot MTU shrink and older ARM Game4FEC workflow FAIL, remote ICMP and CPU p99 unmeasured. Linux test tasks alternate x86/x86 then native ARM/ARM. H1088 original client Game Rust reader and protected per-lane /32 source code submitted commit0015. Focused Action41765630079 FAIL_PRE_BUILD original Go FakeTCP installed twice, not product. H1089 removes duplicate installer after already SHA-verified plan020 assembly; product source files unchanged, new scoped Action pending. H1089 native Game4 first app FAIL Action41765851943, client delivered0/rejected6 after Rust shared reader. H1090 fixes one Rust role boundary: server requires authenticated client /32 inbound; client accepts authenticated server packets via AEAD without misusing own /32. No success claim before new real action."
 }

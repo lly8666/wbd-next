@@ -3246,7 +3246,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
-        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4,
+        e.outer_repair_enabled,e.peer_persona,
+        // Client verified /32 is the shared TUN *outbound* authority; it
+        // is NOT the source address of reverse server-origin IPv4 packets.
+        // Server must continue enforcing the peer's authenticated /32
+        // on every inbound inner source. TLS/AEAD+PN remain required both ways.
+        if e.server{e.client_lease_ipv4}else{None},
         ingress,alive
     );
     let Ok(owner)=owner else{return BAD_STAGE};

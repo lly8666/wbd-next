@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1089",
+  "source_sha": "17259368e9b2824cf0cc22aa847640a567d742dc",
+  "status": "FAIL_REAL_NATIVE_GAME4_FIRST_APP",
+  "action": {
+    "run_id": 41765851943,
+    "job_id": 126363919948,
+    "artifact_id": 13292652101,
+    "conclusion": "failure"
+  },
+  "real_qualifiers": {
+    "original_go_rust_x86_both": true,
+    "Game4_FEC6_TLS_and_M4": "PASS",
+    "one_client_Rust_TUN_reader": true,
+    "lease": "10.66.0.216/32",
+    "fec6_parity_copied_both_roles": true
+  },
+  "actual_failure": {
+    "first_real_udp_echo": "TIMEOUT",
+    "client_copied": 9,
+    "client_delivered": 0,
+    "client_rejected": 6,
+    "client_raw_received": 9,
+    "client_auth_rejected": 0,
+    "client_and_server_source_offered": 1
+  },
+  "root_cause_from_source": "Game client verified own /32 added to Rust group to authorize outbound default TUN route, but same /32 erroneously passed into GameKernelOwner inbound source anti-spoof, which is only valid on server; real reverse server-origin 10.66.0.1 rejected.",
+  "minimal_fix": "Pass client_lease_ipv4 inbound-source restriction only for server role; client still must have original TLS /32 to bind SharedTun and original AEAD/PN authenticity to receive.",
+  "limits": [
+    "Product native app FAIL retained; new H1090 SOURCE test pending",
+    "No Game overlap PASS",
+    "No CPU p99 or Windows physical NIC or full TLS baseline claims",
+    "H998 hot MTU shrink FAIL retained"
+  ]
+}

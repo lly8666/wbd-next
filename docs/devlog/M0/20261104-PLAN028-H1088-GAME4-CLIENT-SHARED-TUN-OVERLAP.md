@@ -11,3 +11,7 @@ H1087 route-key/WB-R1前导移除限定收口之后继续原PLAN028。过去 Gam
 ## H1089 原装配窄修（同产品源码）
 
 [首次定向 Action41765630079](https://github.com/lly8666/wbd-next/actions/runs/41765630079) FAIL_PRE_BUILD：源锁 `assemble.py` 成功完成原 Go manifest 后，夹具又调用 `m0_install_public_faketcp.py`，其 donor-original 检查必然拒绝已替换的 `packet.go`。只删除**重复安装**，保留原 SHA 校验/版本/场景，Rust/Go 产品文件零变更。H1089 完整原生结果仍待新 Action，未报 Game overlap PASS。
+
+## H1090 源角色边界极窄修复
+
+H1089 [Action41765851943](https://github.com/lly8666/wbd-next/actions/runs/41765851943) 原Go TLS/Game4FEC6/Rust M4 Ready，真实第一UDP回显却TIMEOUT：客户端Rust copied9/delivered0/rejected6/raw_received9/auth_rejected0；server回应已offer。新增Game客户端自身受保护/32用于**出站默认TUN路由**，误被原GameKernelOwner用作客户端**入站服务器源地址**校验，从而把合法server源10.66.0.1拒绝。本批只把 `GameKernelOwner` 的内层客户端源/32防伪限定在server角色；client仍须验证 TLS/AEAD/PN并保留自己的/32 outbound reader权限。H1089真实FAIL原证据见 docs/evidence/M0/PLAN028-H1089-SOURCE1725-GAME4-CLIENT-REVERSE-IP-FAIL-20261104.json；H1090未测，不能冒称Overlap PASS。
