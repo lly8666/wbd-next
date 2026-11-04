@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1119",
+  "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
+  "result": "PASS_SCOPED_NATIVE_ARM64_ARM64_GAME4FEC6_TWO_PROTECTED_GROUPS_REAL_PHYSICAL_SOURCE_SWITCH_BOB_CONTINUOUS",
+  "artifact_verified": true,
+  "run": {
+    "id": 41804035769,
+    "job_id": 126486518525,
+    "artifact_id": 13309396449,
+    "conclusion": "success",
+    "harness_sha": "1757188157efcb59fe0bfa4737ce9e27db3f070a",
+    "product_binary_build_action": 41787602880,
+    "product_rebuilt": false
+  },
+  "original_source": {
+    "go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "machine": "aarch64",
+    "ELF": 183,
+    "go_compiler": "1.23.12",
+    "rust_compiler": "1.85.1",
+    "client_sha256": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+    "server_sha256": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+    "rust_sha256": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10",
+    "native_runner_and_hashes_verified": true
+  },
+  "native": {
+    "client_server": "ARM64/ARM64 real Linux kernel namespaces, not QEMU",
+    "server_port": 443,
+    "protected_game_groups": 2,
+    "lanes_per_group": 4,
+    "fec": "fixed6",
+    "physical_source_before": "10.25.0.2",
+    "after": 1178,
+    "user_outer_ipv4_mtu": 1460,
+    "new_physical_mtu": 1280,
+    "alice_lease": "10.66.0.159",
+    "alice_inner_OS_MTU_before": 1358,
+    "bob_inner_OS_MTU_before": 1358,
+    "bob_inner_OS_MTU_after": 1358,
+    "bob_genuine_UDP_echo_spanning_A_real_source_change_and_READY": 32,
+    "alice_new_original_TLS_Rust_real_UDP_echo": 64,
+    "old_exact_stop": true,
+    "server_one_Rust_TUN_stop": true,
+    "FEC_parity_verified": true,
+    "physical_command_to_ready_ms": 808.47,
+    "ready_to_all64_udp_finished_ms": 15816.95
+  },
+  "archive_sha256": {
+    "zip": "356b805e42adaf7ead96a32c3885ec50ad5b76986e2a8a2dbe6a5b797cd1bc1a",
+    "manifest": "6592f1941f51d90f05442e926b92d05c49c71b530bf74666292e0bb9027fe596",
+    "result": "a5cd97347ea7d71d6fbe685a1c7c4f0440bed04d1a5ccbd3379fdf8fca449e28",
+    "log": "28da2eb50b61af711d15f8304860eb929fd400b5687b9b025eb90c2839ac09ec"
+  },
+  "fixture_metadata": {
+    "uploaded_scope": "NATIVE_LINUX_X86_GAME4_FIXED6_TWO_GROUPS_ALICE_REAL_SOURCE_SWITCH_BOB_CONTINUOUS",
+    "issue": "one reused generic fixture string retained X86 even on ARM runner",
+    "ground_truth": "workflow checked native uname=aarch64 and three ELF183/product hashes; evidence corrects scope, no redundant native rerun"
+  },
+  "not_measured": [
+    "OS notification→TLS start",
+    "auth→first single packet",
+    "CPU/p99",
+    "long-lived inner TCP in this specific Game scene",
+    "real Windows Npcap source switch",
+    "Android mobile callbacks",
+    "remote ICMP3/4"
+  ],
+  "historical_limits": [
+    "H998 original same-connection MTU hot shrink FAIL retained",
+    "old ARM64 Game4FEC Action FAIL retained",
+    "old-vs-new product CPU causality unproven"
+  ]
+}
