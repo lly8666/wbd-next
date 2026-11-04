@@ -1,5 +1,5 @@
 name: M0 PLAN028 x86 original Game2 fixed6 two physical TLs cohorts with healthy Game4 Normal
-run-name: PLAN028 H1199 x86 Game2 fixed6 real physical A-B-A TLS Rust, live Game4 Normal
+run-name: PLAN028 H1200 x86 Game2 fixed6 two genuine TLS cohorts with Game4 Normal healthy
 on:
   push:
     branches: [main]

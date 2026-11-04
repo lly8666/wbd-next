@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1200",
+  "result": "FAIL_TEST_ONLY",
+  "cases": [
+    {
+      "source_sha": "42b45572e8cd739dc3f2594986f8c01b763261b1",
+      "run_id": 41911004854,
+      "artifact_id": 13362169071,
+      "artifact_sha256": "04ecdf4b911d1b9eaba86fba6cf83794c9fcd2db66303435f255f004ac83826e",
+      "native": "ARM64+ARM64 Normal Off",
+      "actual": {
+        "auth_gen": [
+          1,
+          2,
+          3
+        ],
+        "old_stops": [
+          1,
+          2
+        ],
+        "os_inner_mtu": [
+          1389,
+          1209,
+          1209
+        ],
+        "sibling_game4_udp": [
+          32,
+          32
+        ]
+      },
+      "error": "base FEC-effective assertion invalid for mode off; protected server Off M4 rows=3"
+    },
+    {
+      "source_sha": "7fb1e48c6e9408ddd0b1ae1434593488f2ad77a2",
+      "run_id": 41911356505,
+      "artifact_id": 13362607478,
+      "artifact_sha256": "b1402a05f9529f0e84fadbce1b6dc8a4359c89c5936a82771fd5a084617d9905",
+      "native": "x86_64+x86_64 Game2 Fixed6",
+      "actual": {
+        "auth_gen": [
+          1,
+          2,
+          3
+        ],
+        "old_stops": [
+          1,
+          2
+        ],
+        "os_inner_mtu": [
+          1358,
+          1178,
+          1178
+        ],
+        "sibling_game4_and_normal_real_udp_each": [
+          [
+            24,
+            24
+          ],
+          [
+            24,
+            24
+          ]
+        ]
+      },
+      "error": "generated source marker said ARM64 while native workflow matched X86; original product scenario emitted PASS"
+    }
+  ],
+  "limits": [
+    "Prior Actions remain overall FAIL, not promoted",
+    "No original Go/Rust product edits",
+    "H998 old hot shrink/old ARM Game4 FAIL retained"
+  ]
+}

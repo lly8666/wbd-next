@@ -1,0 +1,9 @@
+# PLAN028 H1200 — Normal Fixed6 native PASS; correct two test-only false reds
+
+[H1198 x86 Normal Fixed6 Action41911004475](https://github.com/lly8666/wbd-next/actions/runs/41911004475) SOURCE42b artifact13362682075 SHA2ebd2cdbbaf551269af53bc3b170410937c1e9774a79e3af70ee3860f649e8c2 success: one443 original Go TLS/Rust Normal Fixed6 generations1→2→3/old exact Stops1+2, original real Rust protected fixed6 server M4 receipts3 and latest effective client profile6, physical source4 .4→.9→.4 and OS inner1375→1195→1195 with outer user1460, stable auto /32, new UDP16+16, other Game4 gen1 true UDP32+32, final shared TUN Stop. Command→READY283.5/277.46ms (not native notifier→TLS SLA).
+
+ARM [Normal Off Action41911004854](https://github.com/lly8666/wbd-next/actions/runs/41911004854) had real native original Go TLS/Rust generations1→2→3, final Stops, three protected server Off M4 receipt and Game4 true UDP32×2 but failed the inherited final parser requiring `V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=off`, a nonexistent stream in FEC Off. Require actual three protected M4 Off receipts and no auto FEC effective instead. x86 [Game2 Fixed6 Action41911356505](https://github.com/lly8666/wbd-next/actions/runs/41911356505) had two true original TLS reauth with client+server Game2 FEC6 applied3 and real sibling Game4+Normal UDP24 each switch but test generated ARM64 marker while workflow expected X86. Correct native label and scope. Neither failing Action promoted until exact new full Action success. No packet/crypto/Go hot path edits. Historical H998 hot-shrink/old ARM Action FAIL, remote ICMP/Android and CPU causal unknown.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Collect x86 Normal fixed6 authentic Rust effective FEC6 and physical two-gen PASS; correct narrowly false ARM Off and x86 Game2 Fixed6 test-only assertions."}
+```

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1199,
-  "checkpoint_sha": "42b45572e8cd739dc3f2594986f8c01b763261b1",
+  "sequence": 1200,
+  "checkpoint_sha": "7fb1e48c6e9408ddd0b1ae1434593488f2ad77a2",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1199 next complete Linux native x86/x86 Game2 fixed highest FEC6 authentic Go TLS/Rust M4 physical .2→.9→.2, two real replacements gen1→2→3 old exact Stops1+2, require original real Rust Game2 FEC applied profile6 client3/server3 protected groups, same lease/MTU narrower and 16+16 real UDP while independent Game4fixed6 and NormalAuto remain gen1 healthy with 24 real UDP each per switch. H1198 ARM Normal off Action41911004854 and x86 Fixed6 rerun Action41911004475 in flight. No product or wire edits.",
-  "why_now": "PLAN028 seven-mode gap Game2 highest fixed6; qualified H1195 ARM Game2 off dual physical x3 owner proved architecture-independent cold path, use same original native fixture to change protected per-client GameFEC6 and require live Rust M4 original fixed6 readback, not CLI guess. Linux alternates x86 after ARM H1198.",
+  "current_task": "H1200 archive x86 Normal fixed6 source42b Action41911004475 complete full original TLS/Rust 3 authentic cohorts + native Rust FEC6 applied readback, two actual source4 handovers and exact Stops, other Game4 live, final TUN Stop PASS. ARM NormalOff source42b Action41911004854 real dual switch+3 protected Off M4 cohorts passed scene but old assertion expected impossible off-mode FEC effective log. x86 Game2fixed6 source7fb Action41911356505 genuine native protected cohorts passed scenario but emitted inherited ARM64 marker. H1200 fixes only both test generators, re-run independent native Actions; no product change.",
+  "why_now": "Original same-SOURCE artifact13362682075 proved Fixed6 and overall success. ARM artifact13362169071 actual NormalOff gen1→2→3 MTU1389→1209 and sibling Game4 32 each; only baseline off FEC stream assertion false. x86 Game2fixed6 artifact13362607478 actual authenticated Game2 gen1→2→3, applied fixed6 receipts and both siblings real24 each; workflow marker expected X86 but generated ARM64. Preserve prior Action FAIL.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1198 actual x86 Normal fixed6, ARM Normaloff, and H1199 x86 Game2 fixed6 Actions independently before any PASS. Next ARM Game4 off or high30% representative, keep old H998 FAIL, ICMP/CPU/Android unqualified. User only PLAN028, not 029/030.",
+  "next_action": "Collect H1200 separate x86 Game2fixed6 and ARM NormalOff Actions by actual SOURCE; archive full PASS only on overall success, then next full Linux ARM Game4off; representative 30%/250ms and Windows 7 modes still open. H998/ICMP/Android/CPU causal unproven.",
   "unverified": true,
-  "last_tested_source": "0747e22a3d2d32a3951c7bd0544f3e846e1f60cd",
+  "last_tested_source": "42b45572e8cd739dc3f2594986f8c01b763261b1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1196-SOURCE0747-ARM-GAME2OFF-TWO-PHYSICAL-AUTH-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1200-SOURCE42B-X86-NORMAL-FIXED6-DUAL-AUTH-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1199 starts x86 native Game2 fixed6 FEC strongest actual two physical authenticated source-IP handovers with sibling Game4+Normal real UDP; in parallel H1198 x86 normal fixed6 and ARM normal off running. Only scoped Action verdict can qualify."
+  "partial_summary": "H1200 x86 Normal Fixed6 native true 3 protected M4 profiles and real Go TLS/Rust A-B-A PASS source42b. ARM NormalOff and x86 Game2fixed6 failed only after true scenario on impossible OFF effective stream / mislabeled ARM marker; both test-only fixed and Actions re-triggered."
 }

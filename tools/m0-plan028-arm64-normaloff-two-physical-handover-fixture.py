@@ -16,7 +16,7 @@ def one(a,b):
 one("start_client \"$NSC\" mxc0 10.25.0.4 mxc4 43031 carol carol-mixed-protected fec-auto '--record-cipher aes-128-gcm'",
     "start_client \"$NSC\" mxc0 10.25.0.4 mxc4 43031 carol carol-mixed-protected normal '--record-cipher aes-128-gcm'")
 one('"V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=auto"','"V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=off profile=0"')
-one('"V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=auto"','"V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=off"')
+one('assert "V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=auto" in server','assert "V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=auto" not in server')
 one('"normal-auto-AES128"','"normal-off-AES128"')
 one('[[ "$n0" == 1375 && "$g0" == 1358 ]]','[[ "$n0" == 1389 && "$g0" == 1358 ]]')
 one('assert m0==1375 and','assert m0==1389 and')

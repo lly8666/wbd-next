@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1200",
+  "result": "PASS",
+  "source_sha": "42b45572e8cd739dc3f2594986f8c01b763261b1",
+  "platform": "native x86_64 client+server original Go TLS/Rust shared443",
+  "action": {
+    "run_id": 41911004475,
+    "job_id": 126858216989,
+    "artifact_id": 13362682075,
+    "conclusion": "success",
+    "zip_sha256": "2ebd2cdbbaf551269af53bc3b170410937c1e9774a79e3af70ee3860f649e8c2"
+  },
+  "native": {
+    "mode": "Normal fixed6",
+    "auth_generations": [
+      1,
+      2,
+      3
+    ],
+    "exact_old_stops": [
+      1,
+      2
+    ],
+    "physical_source4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "physical_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "user_outer_mtu": 1460,
+    "os_inner_mtu": [
+      1375,
+      1195,
+      1195
+    ],
+    "sibling_Game4_mtu": 1358,
+    "unchanged_lease": "10.66.0.215/32",
+    "normal_udp_new_gen": [
+      16,
+      16
+    ],
+    "Game4_healthy_real_udp_each": [
+      32,
+      32
+    ],
+    "server_authenticated_Rust_M4_fixed6_rows": 3,
+    "client_actual_effective_FEC6_readback": true,
+    "command_to_ready_ms": [
+      283.5,
+      277.46
+    ],
+    "final_shared_Rust_TUN_Stop": true
+  },
+  "limits": [
+    "No physical loss5/30% this source",
+    "No precise OS notification→TLS or auth→first timing",
+    "CPU causality, Android, remote ICMP not measured",
+    "H998 old same-connection hot MTU and old ARM Game4 Action FAIL retained"
+  ]
+}

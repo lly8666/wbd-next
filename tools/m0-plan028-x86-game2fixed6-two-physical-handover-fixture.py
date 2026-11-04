@@ -24,6 +24,8 @@ s=s.replace("GAME2_OFF","GAME2_FIXED6")
 s=s.replace("game2_off","game2_fixed6")
 s=s.replace("plan028-h1193","plan028-h1199")
 s=s.replace("H1193","H1199")
+one("M0_PLAN028_H1199_ARM64_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS","M0_PLAN028_H1199_X86_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS")
+one("NATIVE_ARM64_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH","NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH")
 old='assert gen(alice)==[1,2,3] and stops==[1,2] and gen(bob)==[1] and gen(carol)==[1]'
 new='''assert gen(alice)==[1,2,3] and stops==[1,2] and gen(bob)==[1] and gen(carol)==[1]
 assert alice.count("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=2 mode=fixed profile=6")==3'''

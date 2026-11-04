@@ -1,5 +1,5 @@
 name: M0 PLAN028 native ARM64 Normal off two physical TLS reauth with healthy Game4
-run-name: PLAN028 H1198 ARM64 Normal off two physical original TLS/Rust cohorts with Game4 health
+run-name: PLAN028 H1200 ARM Normal off two genuine original TLS cohorts with Game4 healthy
 on:
   push:
     branches: [main]
