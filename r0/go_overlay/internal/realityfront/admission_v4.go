@@ -711,7 +711,7 @@ func v4ProtectedNormalFECFeatures(p AdmissionPolicy)(uint16,error){
 // Strict shared Normal fixed profile selection from an EXISTING protected
 // 24-byte V4 extension. A new shared server does not silently guess a
 // device's fixed strength from its own process-level --fec-profile.
-func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(FecV2Profile,error){
+func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(uint8,error){
     if _,err:=v4ProtectedNormalFECFeatures(p);err!=nil{return 0,err}
     if p.FECMode!=FECFixed {
         if profile!=0{return 0,ErrAdmissionUnsupported}
@@ -722,7 +722,7 @@ func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(Fe
         return 0,nil // old strict single-session admission
     }
     if profile>7{return 0,ErrAdmissionUnsupported}
-    return FecV2Profile(profile-1),nil
+    return profile-1,nil
 }
 
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.

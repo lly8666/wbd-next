@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1148",
+  "result": "FUNCTIONAL_PASS_SCOPED_NATIVE_ARM64_ARM64_PROTECTED_FIXED6_AND_AEAD_CIPHERS",
+  "source_sha": "86a3e52694e17b346815905c0697b04cfa26c037",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41836305959,
+    "job_id": 126595986614,
+    "conclusion": "success",
+    "artifact_id": 13326810720,
+    "artifact_digest": "sha256:3ef66acc0240882abfc84afe6924fe107e52fd71980f17bfebdc20491d8e95cb"
+  },
+  "platform": "Native ubuntu-24.04-arm aarch64 Go TLS client and server, Rust M4 original product, all ELF183, no QEMU",
+  "binary_sha256": {
+    "wbd-v4-client": "7b654d7ae92bcb430c2388d527838c4ed6d21e0501c0db703bbef06ac5fb4715",
+    "wbd-v4-server": "c3b060cba3d5fa7c968d40a7aa2bab4e4a91940a7aa80fae6907d7b3ba458d6a",
+    "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "protected_original_TLS_modes": [
+    "normal-off",
+    "normal-auto",
+    "normal-fixed-profile6",
+    "normal-off new generation"
+  ],
+  "record_AEAD_ids": [
+    1,
+    2,
+    3,
+    1
+  ],
+  "real_app_udp": 70,
+  "server_rust_routed": 70,
+  "server_rust_unrouted": 0,
+  "server_rust_backpressure": 0,
+  "one_server_port": 443,
+  "client_outer_ipv4_user_intent": [
+    1460,
+    1460,
+    1280
+  ],
+  "real_client_SYN_MSS": [
+    1420,
+    1420,
+    1240
+  ],
+  "real_client_OS_TUN_MTU": [
+    1389,
+    1375,
+    1195
+  ],
+  "real_server_shared_OS_TUN_MTU": 1389,
+  "server_per_owner_original_Rust_fixed6_effective": true,
+  "client_fixed6_Rust_effective": true,
+  "original_tls_generations": 4,
+  "distinct_auto_leases": 3,
+  "same_account_other_device_uninterrupted": true,
+  "protected_reauth_before_old_exact_Stop": true,
+  "shared_TUN_reader_final_Stop": true,
+  "wire_contract": {
+    "private_TLS_prelude": false,
+    "existing_24byte_protected_V4_extension_normal_fixed_byte22": true,
+    "Game_FEC_byte21_unchanged": true,
+    "steady_record_packet_format_unchanged": true
+  },
+  "prior_action": {
+    "id": 41835573934,
+    "conclusion": "failure",
+    "first_fault": "pre-native positive shared fixed test helper missing protected byte22; corrected H1148",
+    "do_not_erase": true
+  },
+  "separate_CI_failures": {
+    "actions": [
+      41836305960,
+      41836305851
+    ],
+    "stage": "cold Go-only build",
+    "first_fault": "undefined FecV2Profile (outside files in slim test assembly)",
+    "repair_candidate": "H1149 protected Go cold helper returns uint8, only full native bridge converts FecV2Profile",
+    "native_requalified_H1149": false
+  },
+  "limitations": [
+    "H1148 is SOURCE86a3, not automatically PASS after H1149 source correction.",
+    "Actual Normal+Game2/Game4 different client cohorts on one server port NOT_PROVEN.",
+    "No physical Wi-Fi or Android; no exact notifier-to-TLS, remote ICMP, CPU causal claim.",
+    "H998 old same-session online MTU shrink historic FAIL and old ARM64 Game4 Action FAIL kept."
+  ]
+}

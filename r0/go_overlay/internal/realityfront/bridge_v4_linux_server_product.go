@@ -152,7 +152,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     if p.cfg.PerClientNormalFEC{
         selected,e:=v4ProtectedNormalFECProfile(session.verifiedPolicy,session.verifiedNormalFec,true)
         if e!=nil{return nil,errors.Join(e,p.closeLocked())}
-        profile=selected
+        profile=FecV2Profile(selected)
         switch session.verifiedPolicy.FECMode {
         case FECOff: mode=FecV2Off
         case FECFixed: mode=FecV2Fixed

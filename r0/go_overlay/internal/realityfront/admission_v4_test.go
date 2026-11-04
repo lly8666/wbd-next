@@ -1208,7 +1208,7 @@ func TestPLAN028OriginalProtectedNormalStrengthAndThreeRecordCiphers(t *testing.
             policy:=v4TestPolicy(1,cipher)
             if policy.SupportedNow()!=nil{t.Fatalf("cipher %d not supported",cipher)}
             selected,err:=v4ProtectedNormalFECProfile(policy,profile,true)
-            if err!=nil||selected!=FecV2Profile(profile-1){
+            if err!=nil||selected!=profile-1{
                 t.Fatalf("protected profile=%d cipher=%d selected=%v err=%v",profile,cipher,selected,err)
             }
             ext:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,
