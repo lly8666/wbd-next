@@ -13,3 +13,7 @@ H1078 已通过 ARM64+ARM64 Game4固定6两代共8条原TLS真正TCP首飞，**�
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1079 Windows original Go Npcap↔WSL2 real TCP TLS first-flight candidate, offline 32B route key + trusted self-signed CA + bounded actual server eth0 capture, no raw PCAP artifact; native Action pending."}
 ```
+
+## H1080 源锁测试入口第一故障修正
+
+[Action 41756961122](https://github.com/lly8666/wbd-next/actions/runs/41756961122) **FAIL_PRE_NATIVE**：便宜CI `tests.test_m0_wl_native_os_deadline.test_owned_linux_pid_script_expands_shell_pid` 抓到新增捕获进程 shell PID 生成字符串是 `echo $ >`，不是原 `echo $$ >`；原 Windows/WSL2 产品尚未进入运行。改为在Python运行时由 `chr(36)*2` 精确生成双美元shell PID，保留既有严格测试，不允许为过关删除断言。Go/Rust 产品SOURCE没有变化，Windows真实PCAP仍候选未验。

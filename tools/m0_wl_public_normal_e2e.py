@@ -179,7 +179,7 @@ try:
   # Raw private PCAP is never part of the published Action artifact.
   wsl("sh","-c","command -v tcpdump >/dev/null || (apt-get update -qq && apt-get install -y -qq tcpdump)",timeout=120)
   capture_script=out/"start-tls-capture.sh"
-  capture_script.write_text("#!/bin/sh\nset -eu\necho $ > '"+result+"/tls-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+result+"/tls-firstflight.pcap' tcp port 443\n")
+  capture_script.write_text("#!/bin/sh\nset -eu\necho "+chr(36)*2+" > '"+result+"/tls-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+result+"/tls-firstflight.pcap' tcp port 443\n")
   caplog=(out/"tls-capture-stderr.log").open("w");logs.append(caplog)
   tls_capture=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(capture_script)],
     stdout=subprocess.DEVNULL,stderr=caplog)
