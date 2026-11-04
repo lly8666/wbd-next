@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1166",
+  "source_sha": "e5688364894ba0f60d71edb9547ed8e441b9e48a",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "PASS_SCOPED_NATIVE_ARM64_ARM64_MIXED443_GAME4_PHYSICAL_REAUTH_NORMAL_CONTINUOUS",
+  "action": {
+    "run_id": 41869940865,
+    "job_id": 126713948037,
+    "conclusion": "success",
+    "artifact_id": 13344212296,
+    "artifact_sha256": "6065797430b05cb87220f174c0080b27f1ec0dc93a8e8e8c9441632aad36b5a3"
+  },
+  "provenance": {
+    "architecture": "native_aarch64_ELF183_original_go_tls_rust",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "client_sha256": "56d21047aa2f6632dc4e71081d88bc9d9153165e03923f569b10820725c634e8",
+    "server_sha256": "fa7419b31056ac93243a80261c149b1bb8261da33d165ed299b8419c61b3a4ff",
+    "rust_sha256": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+  },
+  "native": {
+    "shared_server_port": 443,
+    "three_devices": [
+      "alice Game2 off ChaCha",
+      "bob Game4 fixed6 AES256",
+      "carol Normal auto AES128"
+    ],
+    "initial_real_native_udp_echoes": {
+      "alice": 12,
+      "bob": 12,
+      "carol": 12
+    },
+    "after_game2_stop_udp_echoes": {
+      "bob": 6,
+      "carol": 6
+    },
+    "normal_healthy_replies_during_game4_change": 48,
+    "game4_new_generation_echoes": 32,
+    "underlay_source_ipv4_before": "10.25.0.3",
+    "underlay_source_ipv4_after": "10.25.0.9",
+    "real_kernel_route_readback": {
+      "dev": "mxb0",
+      "prefsrc": "10.25.0.9"
+    },
+    "real_kernel_physical_ipv4_mtu_readback": 1280,
+    "outer_user_intent_mtu": 1460,
+    "game4_tun_os_mtu_before": 1358,
+    "game4_tun_os_mtu_after": 1178,
+    "normal_tun_os_mtu_before": 1375,
+    "normal_tun_os_mtu_after": 1375,
+    "lease_game4_preserved": "10.66.0.140",
+    "carol_new_generation": false,
+    "game4_new_original_tls_rust_ready": true,
+    "old_generation_exact_stop": true,
+    "shared_rust_tun_final_stop": true,
+    "game2_stop_isolated": true,
+    "physical_command_to_new_ready_ms": 556.52
+  },
+  "measurements": {
+    "precise_notification_to_tls_start_ms": "NOT_MEASURED",
+    "tls_auth_to_first_single_business_ms": "NOT_MEASURED",
+    "real_udp_p99_ms": "NOT_MEASURED",
+    "cpu_rss": "NOT_MEASURED",
+    "old_new_cpu_causal": "NOT_PROVEN"
+  },
+  "prior_failures_retained": [
+    {
+      "run_id": 41863838024,
+      "result": "FAIL_FIXTURE_PRE_UDP_ESCAPED_OPTIONAL_DELAY"
+    },
+    {
+      "run_id": 41864678877,
+      "result": "FAIL_FIXTURE_PRE_FINAL_PROOF_CAROL_INITIAL_READY_REJECTED"
+    }
+  ],
+  "limitations": [
+    "A single native mixed protected shared443 Game4 physical source switch, not seven-mode 2x A→A+B→B turnover matrix.",
+    "Tested genuine netns/veth OS source-IP/MTU change; not Wi-Fi/Android/remote WAN PMTU.",
+    "H998 old same-connection live hot-shrink FAIL remains; this is NEW authenticated path budget, not old hot update.",
+    "H998 old ARM64 Game4FEC Actions remained FAIL on different SOURCE; remote ICMP3/4 NOT_MEASURED.",
+    "Physical-command→ready 556.52ms includes TLS/owner work, not the 200/500ms notifier processing budget."
+  ],
+  "next_linux_task": "x86_64 client and x86_64 server; Windows separate"
+}
