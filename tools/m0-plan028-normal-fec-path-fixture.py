@@ -28,6 +28,22 @@ updates = (
         'READER_MIN_PACKETS="$PACKETS"\n  if [[ "$PATH_SWITCH" == 1 ]];then READER_MIN_PACKETS=10;fi',
         'READER_MIN_PACKETS="$PACKETS"\n  if [[ "$PATH_SWITCH" == 1 ]];then READER_MIN_PACKETS=$((PACKETS+5));fi',
     ),
+    (
+        """  python3 - "$TMP" "$MODE" <<'PY'
+import pathlib,re,sys
+root=pathlib.Path(sys.argv[1]);selected=sys.argv[2]
+mode={"fec-fixed":"fixed","fec-auto":"auto"}[selected]
+for role in ("client","server"):""",
+        """  python3 - "$TMP" "$MODE" "$AUTO_IP" <<'PY'
+import pathlib,re,sys
+root=pathlib.Path(sys.argv[1]);selected=sys.argv[2]
+mode={"fec-fixed":"fixed","fec-auto":"auto"}[selected]
+# The original multi-session server owns shared Rust TUN and emits
+# per-session Stop, not a bogus singleton per-role FEC policy readback.
+# Its real 69 packets / single reader / precise Stop are asserted below.
+roles=("client",) if sys.argv[3]=="1" else ("client","server")
+for role in roles:""",
+    ),
 )
 for before, after in updates:
     if raw.count(before) != 1:
