@@ -12,7 +12,7 @@ def change(old,new):
     src=src.replace(old,new,1)
 
 change('python3 - "$addr" "$tag" "$count" >"$log" <<\'PY\'',
-       'python3 - "$addr" "$tag" "$count" "\${6:-0}" >"$log" <<\'PY\'')
+       'python3 - "$addr" "$tag" "$count" "${6:-0}" >"$log" <<\'PY\'')
 change("import socket,sys\nsrc,tag,count=sys.argv[1],sys.argv[2],int(sys.argv[3])",
        "import socket,sys,time\nsrc,tag,count=sys.argv[1],sys.argv[2],int(sys.argv[3])\ndelay=float(sys.argv[4])")
 change('  print(f"REAL_MIXED_UDP {tag} {i}",flush=True)\ns.close()',
