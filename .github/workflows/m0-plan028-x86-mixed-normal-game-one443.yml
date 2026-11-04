@@ -7,6 +7,7 @@ on:
       - ".github/workflows/m0-plan028-x86-mixed-normal-game-one443.yml"
       - "tools/m0-plan028-mixed-normal-game-native.sh"
       - "r0/go_overlay/internal/realityfront/admission_v4_test.go"
+      - "r0/go_overlay/internal/v4productcli/game_linux.go"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1154",
+  "result": "FAIL_BEFORE_NATIVE_BUSINESS_SHARED_SERVER_ENTRY_GUARD",
+  "source_sha": "6e4337ad936c08050bddca797e3820cd416cba34",
+  "run": {
+    "id": 41848636350,
+    "conclusion": "failure",
+    "job_id": 126638666170,
+    "artifact_id": 13334415224,
+    "artifact_digest": "sha256:6559e9bbe4719fe67ffaa9ab9f79fe1e18acde8d3ea6a7ac49b180c409339ec6"
+  },
+  "original_Go_TLS_policy_unit": "PASS",
+  "compiled_Go_Rust_ELF62": "PASS",
+  "server_log": "realityfront: V3 policy unsupported by this build",
+  "first_fault": "runGame rejected --mode shared server with c.gameLanes=0 before runGameServer reached existing runGameMultiServer",
+  "real_business_UDP": "NOT_RUN",
+  "two_game_cohorts": "NOT_RUN",
+  "precise_Stop": "NOT_RUN",
+  "next": "H1155 exact cold shared server guard, source-watching same one native scene; old Game2/4 unaffected"
+}

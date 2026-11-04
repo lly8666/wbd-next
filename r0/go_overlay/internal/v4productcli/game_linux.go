@@ -24,7 +24,17 @@ func gamePort(base uint16,lane int)(uint16,error){
     return uint16(value),nil
 }
 func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)error{
-    if c.gameLanes!=2&&c.gameLanes!=4{return realityfront.ErrAdmissionUnsupported}
+    // A shared listener has no process-global Game lane count: each
+    // authenticated TLS request supplies its existing protected 1/2/4
+    // policy, then runGameMultiServer groups Game cohorts independently.
+    // Normal client/server paths and existing standalone Game2/4 stay exact.
+    if c.mixedModes{
+        if c.role!="server"||c.gameLanes!=0||!c.leasePool.IsValid(){
+            return realityfront.ErrAdmissionUnsupported
+        }
+    }else if c.gameLanes!=2&&c.gameLanes!=4{
+        return realityfront.ErrAdmissionUnsupported
+    }
     if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected,nil)}
     return runGameServer(ctx,c,ifindex,tun,leases,epochs,connected)
 }
