@@ -4,7 +4,7 @@
   "checkpoint": "H1098",
   "test_source_sha": "133d5e93ddbd2a311313cf8a80d3d3fc3fbb2430",
   "product_source_sha": "0a24ca982701055c2840496d11b4d8b6bc99e62d",
-  "result": "PASS_SCOPED_WINDOWS_ORIGINAL_GO_COLD_RETRY_SIX_UNIT",
+  "result": "PASS",
   "win_unit": {
     "run_id": 41778793943,
     "job_id": 126405289039,
@@ -46,5 +46,8 @@
     "all seven-mode physical rotation",
     "real netns full decrypted TLS vs baseline",
     "H998 old hot MTU shrink FAIL, older ARM Game4FEC source FAIL, remote ICMP, Android"
-  ]
+  ],
+  "source_sha": "133d5e93ddbd2a311313cf8a80d3d3fc3fbb2430",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_ORIGINAL_WINDOWS_GO_UNIT_SIX_AND_SAME_PRODUCT_WAL_FIVE_MODES_NOT_PHYSICAL_NIC"
 }
