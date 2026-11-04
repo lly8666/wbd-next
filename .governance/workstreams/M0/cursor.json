@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1203,
-  "checkpoint_sha": "ea2912c8a61be36697c9d5eedcbca5d975a85430",
+  "sequence": 1204,
+  "checkpoint_sha": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1203 x86 Game4 FEC OFF sourceea29 Action41932616534 original Go TLS/Rust true physical A-B-A M4 gen1→2→3 and exact Stops1/2, native FEC Off receipts3, OS inner1373→1193, NormalAuto healthy UDP48+16, final shared TUN Stop PASS, completing all seven Linux mode-specific two physical shift scoped qualification. Next full Linux ARM64/ARM64 original Game4 highestFEC6 down-first authenticated gen2 then real post-auth OS tc netem 30% loss+250ms delay, 200 UDP received-only p99 and Normal healthy. User outer1460.",
-  "why_now": "Native x86 Game4 off full Action PASS artifact13371613710 SHA fec458, previously only unqualified seventh mode. PLAN028 high loss/250ms representative remaining and should be actual kernel tc not mock, after original M4 ready so stage clear. Reuse original ARM H1191 netem5 checked native fixture, not production wire changes.",
+  "current_task": "H1204 x86/x86 Normal fixed highest FEC6 30% loss and250ms physical tc DURING second real physical source4 .9→.4 Go TLS/Rust M4 reauthentication (not only post-auth), protected gen2 stable until valid successor authenticated; bounded retry accept generation>=3; original same /32 and MTU, unaffected Game4 fixed6 sibling real UDP32 then320 across both changes, 200 native inner Normal UDP at10ms no app retries, actual qdisc drops and received-only RTT p99, qdisc removed and final shared Rust TUN Stop. Source-frozen one new x86 Action. ARM Game4 highest postauth high30 Action41933405513 independently building.",
+  "why_now": "PLAN028 high30%/250ms representative Normal highest remains. Native H1197 x86 Normalfixed6 dual physical auth/readback qualified, H1186 x86 Game4 real tc no-retry UDP p99/actual qdisc proven. Test-only splice into Normal second TLS with 120s bounded real successor and Game4 128s live proof; no product AEAD/FEC/control changes.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1203 ARM Game4 30%/250ms native Action qdisc drops>0, 200 native inner UDP p99/reasonable loss, Normal16, qdisc cleanup and original Stop; then next full Linux x86/x86 Normal highest fixed6 30%/250ms representative. Windows seven-mode physical and notifier/auth timing CPU/ICMP/Android incomplete.",
+  "next_action": "Collect H1204 native x86 Normal fixed6 high30/250 second original TLS and H1203 ARM Game4 postauth high30 Action; if high-loss retries/partial delivery, capture narrow actual qdisc/auth/buckets before adjusting only justified test expectations. Then Windows 7-mode real physical gaps and exact notifier→TLS, auth→first timestamps. H998 original FAIL/Android/ICMP/CPU causal preserved.",
   "unverified": true,
   "last_tested_source": "ea2912c8a61be36697c9d5eedcbca5d975a85430",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1203 all seven Linux real native A-B-A modes now PASS after x86 Game4Off SOURCEea29, 3 native FEC off M4 receipts and exact old Stops. ARM Game4FEC6 true high30%+250ms post-auth kernel tc now pending; historical H998 and unmeasured gaps kept."
+  "partial_summary": "H1204 x86 Normal strongest fixed6 second Go TLS under true tc30% delay250 and genuine Game4 sibling UDP320, original protected M4 generation retries, actual inner UDP200 received-only p99 and tc drop cleanup. Independent ARM high30 underway."
 }
