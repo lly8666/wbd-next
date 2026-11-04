@@ -7,6 +7,37 @@ sys.argv=["tools/m0-plan028-x86-mixed-game4-two-switch-fixture.py",str(out)]
 try:runpy.run_path("tools/m0-plan028-x86-mixed-game4-two-switch-fixture.py",run_name="__main__")
 finally:sys.argv=previous
 s=out.read_text()
+# Extend only the source-locked genuine 5% loss window: native M4
+# may need original 1-30s bounded TLS retry and actual successor seq>=3.
+# One other protected NormalAuto device continues genuine UDP for 128s.
+patches=[
+ ('send_udp "$NSC" "$IPC" NORMAL_AUTO_LIVE_GAME4_RESTORE 16 "$TMP/C-restore.log" 0.4 &',
+  'send_udp "$NSC" "$IPC" NORMAL_AUTO_LIVE_GAME4_RESTORE 320 "$TMP/C-restore.log" 0.4 &'),
+ ('restored=0'+chr(10)+'for _ in {1..140};do',
+  'restored=0'+chr(10)+'for _ in {1..480};do'),
+ ("if grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=3 old_generation=true'",
+  "if grep -Eq 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=[0-9]+ old_generation=true'"),
+ ('''test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 16''',
+  '''test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 320'''),
+ ('assert len(acks)==16 and acks[0]<changed<ready<acks[-1]',
+  'assert len(acks)==320 and acks[0]<changed<ready<acks[-1]'),
+ ('"normal_live_restoration_echoes":16','"normal_live_restoration_echoes":320'),
+ ('"game4_new_gen3_echoes":16','"game4_new_successor_echoes":16'),
+ ('"generation_replacement_sequence":[[1,2],[2,3]]',
+  '"generation_replacement_sequence":[[1,2],[2,third]],"cold_retry_count":third-3'),
+ ('H1167 missing genuine generation3 ready or generation2 Stop',
+  'H1180 no authentic successor after bounded 1-30sec retry or generation2 Stop'),
+]
+for before,after in patches:
+    assert s.count(before)==1,"mature x86 bounded-retry anchor changed: "+before[:78]
+    s=s.replace(before,after,1)
+old="assert bob.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=3')<bob.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=2')"
+after=r'''successors=[int(x) for x in re.findall(r'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\d+) old_generation=true',bob) if int(x)>=3]
+assert successors,"no real original TLS-authenticated Game4 successor"
+third=successors[0]
+assert bob.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation='+str(third))<bob.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=2')'''
+assert s.count(old)==1,"original healthy gen3 proof changed"
+s=s.replace(old,after,1)
 anchor="# Second physical source4 .9→.3; MTU 1280→1500. User outer intent stays 1460."
 assert s.count(anchor)==1,"mature genuine x86 double switch changed"
 setup=r'''# Real kernel source-NIC 5% loss on Bob only; no simulated packets.
@@ -85,7 +116,10 @@ PY_H1178_END
 '''
 s=s.replace(anchor,anchor+measurement,1)
 assert s.count('for i in range(320):')==1
-s=s.replace('for i in range(320):','for i in range(700):',1)
+s=s.replace('for i in range(320):','for i in range(1000):',1)
+# This measurement block is appended after the existing physical stage.
+assert s.count('"original_tls_generation3_ready":True')==1
+s=s.replace('"original_tls_generation3_ready":True','"original_tls_successor_ready":True',1)
 assert s.count("PY_H1178")>=4 and s.count('tc qdisc replace dev mxb0 root netem loss 5%')==1
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1178_X86_NATIVE_GAME4_NETEM5_FIXTURE_ASSEMBLED",flush=True)

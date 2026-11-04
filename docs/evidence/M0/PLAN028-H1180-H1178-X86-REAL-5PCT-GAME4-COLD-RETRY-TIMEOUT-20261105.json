@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1180",
+  "source_sha": "2ad60ad8165faab3651026b8e4d10956cf56ca15",
+  "result": "FAIL_SCOPED_REAL_TC_NETEM_5PCT_NEW_TLS_NOT_READY_WITHIN_35S",
+  "action": {
+    "run_id": 41886868283,
+    "job_id": 126773560052,
+    "conclusion": "failure",
+    "artifact_id": 13352306776,
+    "artifact_zip_sha256": "1a47059b8c4ba37833b622c1e8b23cbe3d7402b78f4b4eedf9a62b4baba923e8"
+  },
+  "native": {
+    "platform": "genuine x86_64 client+server Go TLS Rust",
+    "first_source4_before": "10.25.0.3",
+    "first_source4_after": "10.25.0.9",
+    "first_game4_new_real_udp": 32,
+    "first_healthy_normal_live_udp": 48,
+    "second_physical_source4": "10.25.0.3",
+    "physical_mtu_restored": 1500,
+    "real_kernel_netem_qdisc_loss_pct": 5,
+    "tc_readback": "qdisc netem 8005: root refcnt 5 limit 1000 loss 5%",
+    "second_tls_candidate3": "timeout after 15sec",
+    "second_tls_candidate4": "timeout after 15sec",
+    "third_try_gen5": "launched at 35sec fixture timeout",
+    "old_generation2_untouched": true,
+    "unaffected_normal_still_generation1": true,
+    "new_business_after_second": "NOT_RUN",
+    "real_udp_p99": "NOT_MEASURED",
+    "final_stop": "NOT_RUN_BECAUSE_AUTH_INCOMPLETE"
+  },
+  "limitations": [
+    "35sec fixture was inadequate for true original 1-30s bounded retry after two 15s TLS timeouts; not a 5% qualified PASS.",
+    "No second source Game4 business or p99/Stop measured until genuine successor completes.",
+    "No evidence of old group being prematurely killed; original healthy old owner held by controller.",
+    "H998 same-connection online hot MTU shrink FAIL, old ARM Game4 Action FAIL, remote ICMP/CPU causal unknown retained"
+  ],
+  "next": "H1180 one bounded 120sec retry with real NormalAuto 320 UDP over128sec and any real successor seq>=3; no seed brushing or FEC reimplementation"
+}

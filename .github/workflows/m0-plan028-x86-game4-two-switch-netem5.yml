@@ -1,5 +1,5 @@
 name: M0 PLAN028 x86 Game4 two real physical swaps plus 5pct netem and measured RTT
-run-name: PLAN028 H1178 x86/x86 Game4 2 physical swaps and real kernel 5pct loss
+run-name: PLAN028 H1180 x86 Game4 actual 5pct two swaps with 120sec bounded TLS retry
 on:
   push:
     branches: [main]
@@ -157,14 +157,14 @@ jobs:
           assert low5["physical_qdisc_netem_loss_pct"]==5 and low5["native_inner_udp_sent"]==200
           assert 140<=low5["native_inner_udp_received"]<=200
           assert low5["received_only_rtt_p99_ms"]>=0 and low5["max_delivery_gap_ms"]<1500
-          assert low5["real_qdisc_removed"] and low5["original_tls_generation3_ready"]
+          assert low5["real_qdisc_removed"] and low5["original_tls_successor_ready"]
           assert low5["physical_qdisc_before"]["netem"] and low5["physical_qdisc_after"]["restored"]
           restored=json.loads(pathlib.Path("fixed-kernel-result/plan028-h1167-two-physical-switch.json").read_text())
           assert restored["source4_route_sequence"]==["10.25.0.3","10.25.0.9","10.25.0.3"]
           assert restored["physical_ipv4_mtu_sequence"]==[1500,1280,1500]
-          assert restored["generation_replacement_sequence"]==[[1,2],[2,3]]
-          assert restored["one_server_port"]==443 and restored["game4_new_gen3_echoes"]==16
-          assert restored["normal_live_restoration_echoes"]==16
+          assert restored["generation_replacement_sequence"][0]==[1,2] and restored["generation_replacement_sequence"][1][0]==2 and restored["generation_replacement_sequence"][1][1]>=3
+          assert restored["one_server_port"]==443 and restored["game4_new_successor_echoes"]==16
+          assert restored["normal_live_restoration_echoes"]==320
           assert restored["old_generation1_exact_stop"] and restored["old_generation2_exact_stop"]
           assert restored["os_mtu_third_generation_overlap_conservative"]==1178
           assert restored["sibling_normal_os_mtu"]==1375 and restored["configured_outer_intent"]==1460
