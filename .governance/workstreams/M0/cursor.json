@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1191,
-  "checkpoint_sha": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
+  "sequence": 1192,
+  "checkpoint_sha": "45217fe82ec6d86b6ae080573e969f259a8cccb0",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1191 native ARM64 client/server SOURCE0b6f Action41897548949 complete original Go TLS/Rust Game4 gen2 physical down-first, real post-auth tc5% dropped115/2309, inner UDP200/200 p99 20.067ms, other Normal16, qdisc restored, final Stop PASS. Next full Linux x86_64+x86_64. Existing signed Windows and x86 5% distinct PASS preserved.",
-  "why_now": "Native ARM action source0b6f artifact13357655852 hash adde1f: down1332ms/auth gen2 after1620ms, 5% OS netem post-auth true dropped115, UDP200/200 RTT p99 20.067, independent Normal48+16 and Stop. No claim 5% during ARM TLS.",
+  "current_task": "H1192 native x86_64 client/server original Go TLS/Rust shared443 Normal Auto Carol physical source4 .4→.9→.4/physical MTU1500→1280→1500. Must prove authentic Normal TLS/Rust generations1→2→3, exact old1+2 Stop, same automatic lease and OS MTU shrink, while Bob original Game4FEC6 gen1 sends 32 native UDP across EACH Carol change, untouched Game4 MTU and final shared Rust TUN Stop. Full single scene new workflow/test-only, no product edits; ARM H1191 and Windows H1188 qualified.",
+  "why_now": "PLAN028 §5 actual seven-mode replacement gap: previous H1186 and H1191 Game4 reauth proved other Normal healthy; now test reverse owner Normal Auto reauth with Game4 healthy. Reuse same mature 3-protected-client original TLS/Rust one443 fixture, only source-specific physical mxc0 changes and real UDP evidence. No 027 replay/FEC rewrite.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "PLAN028 §5 seven modes actual lane A→A+B→B; next native Linux x86/x86 only; target unqualified Normal off/fixed/auto and Game2/Game4 off/fixed plus 30%/250ms reps. Independent Windows mode-specific Actions may run concurrently; do not re-run 027.",
+  "next_action": "Collect H1192 one native x86 Action two real Normal Auto reauth+MTU readbacks, Game4 native UDP continuous, old Stop and final shared TUN cleanup. If FAIL inspect narrow logs. Next Linux task ARM/ARM; other Normal off/fixed, Game2/Game4 off/fixed and 30% reps remain open.",
   "unverified": true,
   "last_tested_source": "0b6f827f4a9e7350a25403a825674911f3e5b4f5",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1191 original ARM64+ARM64 source0b6f physical DOWN and Game4 gen2 TLS recovery with real post-auth5% tc dropped115/2309, inner UDP200/200 RTT p9920.067ms, sibling Normal16 and final Stop PASS; next Linux x86/x86, 7mode gaps; H998 FAIL and ICMP/Android/CPU unknown."
+  "partial_summary": "H1192 x86/x86 Normal Auto genuine physical two shifts and independent Game4FEC6 continuous 32 UDP per shift, original shared443 protected 3-client fixture; pending native. H1191 ARM postauth netem5 PASS and H1188 signed Windows dual TLS/FEC PASS registered."
 }
