@@ -15,8 +15,8 @@ mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
-if plan028_owned_switch and (mode not in ('normal','game4-fec') or native_outer!='default1460'):
- raise RuntimeError('PLAN028 owned source4 switch requires one Normal or Game4FEC6/default1460 product scene')
+if plan028_owned_switch and (mode not in ('normal','fixed','game4-fec') or native_outer!='default1460'):
+ raise RuntimeError('PLAN028 owned source4 switch supports Normal Off, Fixed6 or Game4FEC6 with default1460 only')
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1206,
-  "checkpoint_sha": "9abf778a9864baa5fa07a37924eb92ae38605eac",
+  "sequence": 1207,
+  "checkpoint_sha": "0510706bb49c2c6e7ccdda5d59ec4828bff55821",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1206 retry exact x86/x86 Normal fixed6 real second physical Go TLS/Rust under tc netem loss30% delay250 Action41933848259 originally FAILED ONLY test generator pre-network assertion: b converts NETEM5→NETEM30 then attempted to replace old H1184 NETEM5 marker so required final H1204 receipt count0. Native kernel/UDP/TLS test never executed. Fix only test marker target to NETEM30 (existing generator sequence), keep same 128s Game4 sibling and 200 no-app-retry Normal UDP p99 and qdisc restoration. H1205 ARM Game4 high30 postauth fully PASS and source-qualified.",
-  "why_now": "Original ARM H1205 SOURCEabba high30 real dropped736/1708 and inner200/200 p99270.013 PASS archived. Distinct x86 SOURCE600864 Action41933848259 native build passed but fixture-only `assert b.count(...NETEM30...)==1` red after marker replacement path miss. Do not misdiagnose product or count as full native Linux task; rerun one source freeze with corrected marker.",
+  "current_task": "H1207 signed Windows Npcap/Wintun↔WSL2 original Go TLS/Rust Normal Fixed6 two actual physical host IPv4 source4 .1→.9 authentic M4 generations, shared server443, true Rust Fixed6, two Wintun OS MTU readbacks, duplex real UDP/TCP and owned WAL Stop; only one new [plan028-win-physical-fixed6] test selection, default outer1460. H1206 native x86 Normal Fixed6 tc30/250 second actual TLS Action41934275296 independent in flight. No production/wire changes.",
+  "why_now": "Signed Windows H1188 Game4FEC6 two original M4 groups and H1135 Normal cold path already proved; harness restricts owned source4 only Normal off or Game4FEC6 despite existing original fixed6 client/server. Extend same verified OS-owned source4 guard to one Fixed6 mode and actual FEC6/TLS/MTU/UDP/TCP/Stop readbacks; no second controller or old matrix.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1206 x86 native Normal fixed6 high30 delay250 second real TLS 128s Game4 health, actual OS drop and received-only 200UDP RTT p99, original owned Stop. If product issue isolate narrow stage. Then Windows seven physical mode qualification / native notifier→TLS and auth→first, retain H998 and Android/ICMP/CPU causal.",
+  "next_action": "Collect signed Windows Fixed6 Action from exact tag commit and x86 30% impaired original TLS Action. Qualify only genuine new M4+OS MTU+Rust FEC6+UDP/TCP/Stop; on failures narrow investigate. Then remaining Windows mode-specific physical changes; H998 old FAIL, remote ICMP/Android/CPU causal remain.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1206 x86 high30 Normal fixed6 false-red generated NETEM5→NETEM30 marker ordering fixed before native; no product edits, ARM high30 sourceabba fully PASS stored."
+  "partial_summary": "H1207 signed Windows original Fixed6 explicit one-scene true source4 .1→.9 test wired, checks genuine protected new TLS/Rust/FEC6 and duplex UDP/TCP exact Stop. X86 Normal fixed6 tc30 second TLS Action independent."
 }
