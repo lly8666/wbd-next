@@ -212,6 +212,10 @@ type V4ServerOptions struct {
     DataPlaneReady bool
     fec2ProbeOnly bool // package-private, no production caller switch
     fec2Product bool // package-private genuine Linux fixed/auto owner
+    // Shared Normal server only: select EXISTING FEC2 capability per
+    // authenticated TLS policy instead of its process-scoped CLI mode.
+    // No new on-wire flag, no pre-TLS hint or unauthenticated admission.
+    perClientNormalFEC bool
     GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     // Explicit cold admission capability only. The native shared owner must
@@ -670,6 +674,25 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     },nil
 }
 
+// A shared Normal server can accept Off, Fixed or Auto per independently
+// authenticated device using the original, immutable 10-byte V3 policy.
+// It does NOT interpret an unauthenticated SYN, packet or route-key as mode.
+// The exact original feature3/feature7 extension and TLS record remain.
+func v4ProtectedNormalFECFeatures(p AdmissionPolicy)(uint16,error){
+    if p.Schema!=PolicySchemaV3||p.Transport!=TransportNormal||
+       p.DesiredLanes!=1||p.SupportedNow()!=nil{
+        return 0,ErrAdmissionUnsupported
+    }
+    switch p.FECMode{
+    case FECOff:
+        return v4RequiredFeatures,nil
+    case FECFixed,FECAuto:
+        return v4RequiredFeatures|v4FeatureFEC2,nil
+    default:
+        return 0,ErrAdmissionUnsupported
+    }
+}
+
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.
 // Epoch becomes active only after successful authenticated reply and detach.
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
@@ -711,6 +734,16 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     serverFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {serverFeatures |= v4FeatureFEC2}
+    if opt.perClientNormalFEC {
+        // Only the previously parsed, credential-checked protected
+        // AdmissionPolicy can select this association's existing FEC owner.
+        // A modified feature offer still fails the strict equality below.
+        serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
+        if err!=nil{
+            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            return nil,err
+        }
+    }
     if offered.Features!=serverFeatures||offered.GameFec!=opt.GameFec||
        (opt.GameFec!=0&&req.Policy.Transport!=TransportGame){
         _=writeAdmissionFailure(tlsConn,admissionParamFail)

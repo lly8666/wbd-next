@@ -1433,6 +1433,9 @@ func runSharedMultiServer(
             // The original Rust per-session record/route budgets still apply.
             ConfigureTunnelMTU:nil,
             FECMode:c.fecMode,FECProfile:c.fecProfile,
+            // The original TLS policy is this client's owner configuration;
+            // server process --mode is not a global FEC admission filter.
+            PerClientNormalFEC:true,
             DisableOuterRepair:c.disableOuterRepair,PeerPersona:c.peerPersona,
             Authenticate:originalV4CredentialCheck(c),
         }

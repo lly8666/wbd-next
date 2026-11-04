@@ -50,6 +50,10 @@ type V4LinuxServerProductConfig struct {
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
     FECProfile FecV2Profile
+    // Enable only for a shared authenticated Normal/32 server. Each
+    // protected device selects off/fixed/auto; the existing Rust M4/FEC
+    // owner is instantiated once per authenticated TLS association.
+    PerClientNormalFEC bool
     DisableOuterRepair bool
     // Zero interval/dead keeps original product defaults 15s/90s.
     // Dormant 0 means no automatic sleep; nonzero policy must have real
@@ -90,6 +94,9 @@ func NewV4LinuxServerProduct(cfg V4LinuxServerProductConfig)(*V4LinuxServerProdu
     if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
         !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
     if cfg.FECMode==FecV2Fixed&&!cfg.FECProfile.Valid(){return nil,ErrAdmissionParams}
+    if cfg.PerClientNormalFEC&&(cfg.SharedTun==nil||!cfg.FECProfile.Valid()){
+        return nil,ErrAdmissionParams
+    }
     return &V4LinuxServerProduct{cfg:cfg},nil
 }
 
@@ -111,8 +118,10 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     if mode==FecV2Auto{expectedWireMode=FECAuto}
     priorPolicyAllow:=cfg.PolicyAllow
     cfg.PolicyAllow=func(policy AdmissionPolicy)error{
-        if policy.Transport!=TransportNormal||policy.FECMode!=expectedWireMode||
-            policy.DesiredLanes!=1 {
+        if p.cfg.PerClientNormalFEC {
+            if _,e:=v4ProtectedNormalFECFeatures(policy);e!=nil{return e}
+        }else if policy.Transport!=TransportNormal||
+            policy.FECMode!=expectedWireMode||policy.DesiredLanes!=1 {
             return ErrAdmissionUnsupported
         }
         if priorPolicyAllow!=nil{return priorPolicyAllow(policy)}
@@ -124,7 +133,8 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         Authenticate:p.cfg.Authenticate,
         AllowLaneReplacement:p.cfg.AllowLaneReplacement,
         ManualLease4:p.cfg.ManualLease4,
-        fec2Product:v4ProductFecEnabled(mode),
+        fec2Product:v4ProductFecEnabled(mode)||p.cfg.PerClientNormalFEC,
+        perClientNormalFEC:p.cfg.PerClientNormalFEC,
     })
     if err!=nil{return nil,err}
     // From this point the original Go server has detached the authenticated
@@ -132,6 +142,14 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     // first Stop/release Rust; no system route/TUN cleanup can race that Stop.
     p.owner=bridge
     p.session=session
+    if p.cfg.PerClientNormalFEC{
+        switch session.verifiedPolicy.FECMode {
+        case FECOff: mode=FecV2Off
+        case FECFixed: mode=FecV2Fixed
+        case FECAuto: mode=FecV2Auto
+        default: return nil,errors.Join(ErrAdmissionUnsupported,p.closeLocked())
+        }
+    }
     // Freeze original authenticated source *before* returning any exported
     // mutable AdmissionResult or allowing Stop concurrently.
     verified,verifyErr:=session.ColdSnapshot()
@@ -199,6 +217,11 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         )
     }
     if p.fec!=nil{p.fec.start(bridge)}
+    if p.cfg.PerClientNormalFEC{
+        // This is an actual protected/started Rust owner, not CLI intent.
+        fmt.Printf("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=%s profile=%d cipher=%d authenticated_TLS=1 original_Rust_M4=1\n",
+            mode,p.cfg.FECProfile,verified.Cipher())
+    }
     return session,nil
 }
 // Only numeric true original M2 counters, once before Stop; never changes

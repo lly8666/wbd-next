@@ -52,7 +52,7 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
             TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                 TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
             ExpectedUsername:user,ExpectedPassword:"secret",ServerLimit:1400,
-        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0]})
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,fec2ProbeOnly:serverFec2,AllowLaneReplacement:len(allowReplacement)!=0&&allowReplacement[0],perClientNormalFEC:len(allowReplacement)>1&&allowReplacement[1]})
         server<-answer{s,e}
     }()
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
@@ -1135,4 +1135,58 @@ func TestPLAN028ServerProvisionedManualIPNotClientClaimed(t *testing.T){
  if x,e:=v4ServerCheckedManualLease4("",false);e!=nil||x!=""{
   t.Fatalf("legacy manual singleton unaffected: %q %v",x,e)
  }
+}
+
+// Existing protected ten-byte AdmissionPolicy, not a new on-wire mode flag,
+// selects the exact feature3/off or feature7/fixed/auto for THIS credential
+// authenticated client on a shared Normal server. No pre-TLS mode oracle.
+func TestPLAN028SharedNormalPerClientFECProtectedCapability(t *testing.T){
+    off,e:=FixedPolicyForClient(1,0)
+    if e!=nil{t.Fatal(e)}
+    fixed,e:=FixedPolicyForClient(1,4)
+    if e!=nil{t.Fatal(e)}
+    auto,e:=PolicyForClientWithInitial(1,"auto",0,4,20)
+    if e!=nil{t.Fatal(e)}
+    game,e:=FixedPolicyForClient(2,0)
+    if e!=nil{t.Fatal(e)}
+    policies:=[]struct{name string;p AdmissionPolicy;feature uint16;feature7 bool}{
+        {"off",off,v4RequiredFeatures,false},
+        {"fixed",fixed,v4RequiredFeatures|v4FeatureFEC2,true},
+        {"auto",auto,v4RequiredFeatures|v4FeatureFEC2,true},
+    }
+    store,e:=NewV4EpochStore(12)
+    if e!=nil{t.Fatal(e)}
+    for i,tc:=range policies{
+        want,e:=v4ProtectedNormalFECFeatures(tc.p)
+        if e!=nil||want!=tc.feature{t.Fatalf("%s native capability=%d want=%d err=%v",tc.name,want,tc.feature,e)}
+        tunnel:=make([]byte,16)
+        tunnel[0]=byte(i+1)
+        c,s,ce,se:=v4PairFeatureProbe(t,store,"alice",tunnel,1,tc.p,[16]byte{},tc.feature7,true,false,true)
+        if ce!=nil||se!=nil||c==nil||s==nil{
+            t.Fatalf("%s real protected TLS session client=%v server=%v",tc.name,ce,se)
+        }
+        clientSnap,e:=c.ColdSnapshot()
+        if e!=nil{t.Fatal(e)}
+        serverSnap,e:=s.ColdSnapshot()
+        if e!=nil||clientSnap.Cipher()!=tc.p.Cipher||serverSnap.Cipher()!=tc.p.Cipher||
+           s.verifiedPolicy!=tc.p||s.negotiatedFeatures!=tc.feature{
+            t.Fatalf("%s exact TLS verified FEC policy/capability mismatch: %v",tc.name,e)
+        }
+        if e:=store.ReleaseLaneInstance("alice",tunnel,1,s.Epoch,serverSnap.Incarnation());e!=nil{t.Fatal(e)}
+    }
+    if _,e:=v4ProtectedNormalFECFeatures(game);e==nil{t.Fatal("Game lanes cannot enter Normal shared native owner")}
+    unsupported:=fixed
+    unsupported.FECMode=FECAggressive
+    unsupported.FixedParity=0
+    unsupported.InitialParity=20
+    unsupported.MinParity=4
+    unsupported.MaxParity=20
+    unsupported.Quality=1
+    if _,e:=v4ProtectedNormalFECFeatures(unsupported);e==nil{t.Fatal("aggressive not a supported Native Normal auto mode")}
+    // Wrong advertised FEC capability is a protected reply failure, not a
+    // fallback from a client-selected fixed owner to the off owner.
+    badTunnel:=make([]byte,16);badTunnel[0]=9
+    client,server,ce,se:=v4PairFeatureProbe(t,store,"alice",badTunnel,1,fixed,[16]byte{},false,true,false,true)
+    if ce==nil&&se==nil{t.Fatal("fixed client without authenticated feature7 silently downgraded")}
+    if client!=nil||server!=nil{t.Fatal("invalid protected capability published a session")}
 }
