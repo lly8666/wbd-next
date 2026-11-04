@@ -1281,7 +1281,14 @@ print(json.dumps(result),flush=True)
   if not installed:raise RuntimeError("genuine Linux native FixedStream profile6 installed readback missing")
  if is_game and game_fixed:
   expected="V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=6"%lanes
-  if expected not in (out/"server.log").read_text(errors="replace"):
+  receipts=(out/"server.log").read_text(errors="replace").count(expected)
+  if plan028_owned_switch:
+   # Exactly two authentically adopted Game M4 cohorts, each native
+   # FecCounters() verified before its protected FEC6 receipt.
+   report["original_game_fec6_authenticated_group_receipts"]=receipts
+   if receipts!=2:
+    raise RuntimeError("original Game4 shared Rust FEC6 per-generation count mismatch")
+  elif receipts<1:
    raise RuntimeError("actual Game FEC2 protected Linux profile readback missing")
   # H814: genuine 10%-loss native packet copies are required, not merely
   # a green test launcher. Cosmetic copies NEVER create FEC recovery credit.
