@@ -17,3 +17,7 @@
 ## H1082 无产品运行的 CI 语法修正
 
 H1081 [Action 41760546535](https://github.com/lly8666/wbd-next/actions/runs/41760546535) GitHub 报工作流定义失败且 jobs 数量为零。四处复用二进制的条件以裸 `if: !contains(...)` 开头，YAML 会解析成未知的标签。统一更正为 `if: (!contains(...))`，只改变 YAML 表达式起始，控制语义不变；Go/Rust产品、真实捕获LF及审计器源码未再改变。H1082新Action实际执行前继续 **WIRE_NOT_QUALIFIED**，不把配置解析失败当TLS产品失败。
+
+## H1083 单个语法问题收口
+
+[Action 41760747333](https://github.com/lly8666/wbd-next/actions/runs/41760747333) 的有效工作流通过 GitHub YAML，随后在便宜 `tools/check_workflows.py` AST 阶段报 `tools/m0_wl_public_normal_e2e.py:194 IndentationError`：前次新增 `if tls_capture.poll()` 的 stderr 报告体少缩进一层。修正到合法 Python 层次，独立对同样缩进语句块调用 `compile(..., 'exec')` 通过。该 Action native job 因上游失败跳过，仍没有 Windows SYN/真实PCAP证据。与 H1080 共享同一原 Go/Rust 7b38 构建，只有抓包夹具更改。

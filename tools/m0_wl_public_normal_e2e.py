@@ -190,11 +190,11 @@ try:
     stdout=subprocess.DEVNULL,stderr=caplog)
   for tick in range(120):
    if tls_capture.poll() is not None:
-   # First actual /bin/sh or tcpdump error, bounded and redacted from logs.
-   caplog.flush()
-   reason=(out/"tls-capture-stderr.log").read_text(errors="replace")[-1600:]
-   raise RuntimeError("real WSL2 capture exited before Windows SYN"+
-     " rc="+str(tls_capture.returncode)+" stderr="+repr(reason))
+    # First actual /bin/sh or tcpdump error, bounded and redacted from logs.
+    caplog.flush()
+    reason=(out/"tls-capture-stderr.log").read_text(errors="replace")[-1600:]
+    raise RuntimeError("real WSL2 capture exited before Windows SYN"+
+      " rc="+str(tls_capture.returncode)+" stderr="+repr(reason))
    caplog.flush()
    if "listening on eth0" in (out/"tls-capture-stderr.log").read_text(errors="replace"):break
    time.sleep(.1)
