@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1122",
+  "source_sha": "7e7ec758b6121610f97ac14760612f07e22b14a4",
+  "result": "PASS_SCOPED_WINDOWS_WS_LINUX_TEST_OWNED_OS_SOURCE_SELECTION_AND_REAL_UDP_ONLY_NOT_WBD_PRODUCT",
+  "artifact_verified": true,
+  "run": {
+    "id": 41805849503,
+    "job_id": 126492549758,
+    "artifact_id": 13309762906,
+    "conclusion": "success",
+    "harness_sha": "7e7ec758b6121610f97ac14760612f07e22b14a4",
+    "product": "NOT_RUN"
+  },
+  "native": {
+    "windows": "Windows 2025 GitHub runner native vEthernet WSL",
+    "linux": "genuine Ubuntu WSL2 eth0 kernel",
+    "host_original_ipv4_unchanged": true,
+    "guest_original_ipv4_unchanged": true,
+    "test_owned_source4_before": "198.19.254.1",
+    "after": true,
+    "test_owned_guest_ipv4": "198.19.254.2",
+    "preferred_route_source4_before": "198.19.254.1",
+    "real_kernel_udp_echo_before": true,
+    "runner_default_routes_unchanged": true,
+    "test_owned_cleanup_attempted": true,
+    "os_mutation_to_selected_source_and_real_udp_ms": 3395.54
+  },
+  "artifact_sha256": {
+    "zip": "e563eb89d6c4caee227a74f7878b44552a3fed7ed84edf3e1d49f2bae7e07505",
+    "receipt": "430fe523ec60c8f3f39ab109164e9a266ccdfcceffaf25b4fc4048dd12ace516"
+  },
+  "not_qualified": [
+    "No original Go TLS/Npcap packet from either address",
+    "No Wintun/Rust user inner tunnel, application UDP, Stop or MTU reinstallation",
+    "No true physical hardware NIC change; test-owned alias change on real WSL vEthernet",
+    "OS measured 3395.54ms includes address convergence and echo, not 200ms quiet/500ms coalesce budget, no TLS/first packet SLA",
+    "CPU/p99, Android, remote ICMP not measured",
+    "H998 same-connection MTU hot shrink and historical ARM64 Game4FEC Action FAIL remain historical"
+  ]
+}
