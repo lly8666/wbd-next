@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1135",
+  "result": "FUNCTIONAL_PASS_SCOPED_TRUE_WINDOWS_TWO_GENERATION_PRODUCT",
+  "source_sha": "ab472db3bb8481ed3f7b0c38d303eb19c91f3fee",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "platform": "Windows Server 2025 signed Npcap/Wintun original Go TLS plus Rust to actual Ubuntu WSL2 Linux original Go/Rust shared-manual server",
+  "run": {
+    "id": 41822046885,
+    "job": 126549562362,
+    "conclusion": "success",
+    "artifact_id": 13318660497,
+    "artifact_digest": "sha256:a732954cbe445bf242161b4f1310c046d8cf8a55ebe950130a2788057834436b"
+  },
+  "binary_sha256": {
+    "windows_exe": "14b2fbe57d41c6cdb6bb955ff652caf0f74d25104c617a12ed4efde224721d27",
+    "windows_rust_dll": "b17a431b8bf96f2fc4ac7729d0073a668b0c1bbbd8b4be3b23bec408f2a9c9e5",
+    "original_go_client_source": "a7a82db31fe736ffedee330795a3234d358f1984"
+  },
+  "real_os_switch": {
+    "old_source4": "198.19.254.1",
+    "new_source4": "198.19.254.9",
+    "physical_underlay": "test-owned WSL2 Hyper-V virtual NIC",
+    "os_mutation_to_new_ready_observed_ms": 13531,
+    "precise_os_notification_to_tls": "NOT_MEASURED",
+    "precise_tls_finished_to_first_packet": "NOT_MEASURED"
+  },
+  "original_authenticated_owner": {
+    "first_ready": true,
+    "second_ready": true,
+    "one_server_port": 443,
+    "server_shared_rust_tun": true,
+    "server_authenticated_active_detached_flows": [
+      1,
+      2
+    ],
+    "old_exact_retire": true,
+    "new_lane_auth_generation": true,
+    "old_client_wal_stop": true,
+    "final_server_reader_drain": true
+  },
+  "original_true_wire_mtu": {
+    "outer_requested_ipv4_mtu": 1460,
+    "windows_inner_os_readback_generation1_bytes": 1389,
+    "windows_inner_os_readback_generation2_bytes": 1389,
+    "linux_inner_os_readback_bytes": 1389,
+    "windows_syn_mss": [
+      1420,
+      1420
+    ],
+    "linux_synack_mss": [
+      1420,
+      1420
+    ],
+    "both_actual_tcp_options_hex": "0204058c",
+    "linux_singleton_only_decoded_peer_syn_mss": "NOT_LOGGED_SHARED_MANUAL"
+  },
+  "original_rust_M2_outer_repair": {
+    "enabled": 1,
+    "windows_generation_readbacks": [
+      1,
+      1
+    ],
+    "linux_per_server_authenticated_owner_readbacks": [
+      1,
+      1
+    ],
+    "linux_first_wire_bytes": [
+      21280,
+      13345
+    ],
+    "linux_original_rust_readback_before_owner_Stop": true,
+    "not_cli_or_synthetic": true
+  },
+  "real_inner_traffic": {
+    "windows_to_linux_udp": "PASS_KERNEL_SOCKET",
+    "linux_to_windows_udp": "PASS_KERNEL_SOCKET",
+    "windows_to_linux_tcp": "PASS_KERNEL_SOCKET",
+    "linux_to_windows_tcp": "PASS_KERNEL_SOCKET",
+    "new_udp_receive_increments": {
+      "windows": 11,
+      "linux": 4
+    },
+    "synthetic_ack": false
+  },
+  "cleanup": {
+    "original_windows_rust_wal_stop": "PASS",
+    "original_linux_rust_stop": "PASS",
+    "linux_shared_tun_last_reader_drained": "PASS",
+    "test_owned_windows_wsl2_aliases": "CLEANED",
+    "npcap_post_run": "CLEANED"
+  },
+  "limitations": [
+    "Windows WSL2 virtual NIC, not independent physical Wi-Fi/cellular hardware.",
+    "No precise notification→TLS or Finished→single first app time.",
+    "No CPU causal A/B, no Android; H998 same-connection hot-MTU shrink FAIL, remote ICMP NOT_MEASURED.",
+    "Single original Normal mode 1460, outer repair on; do not infer every mode or real physical Wi-Fi.",
+    "H1126/H1129/H1133/H1134 earlier source-specific failures retained as historical scoped FAIL."
+  ]
+}
