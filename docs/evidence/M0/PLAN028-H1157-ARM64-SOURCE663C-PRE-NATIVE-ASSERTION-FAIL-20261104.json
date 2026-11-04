@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1157",
+  "result": "FAIL_PRE_NATIVE_WORKFLOW_PYTHON_PLATFORM_ASSERTION",
+  "source_sha": "663cb7ceeab5e08c4cfec6ecdb4eed282e84d1d4",
+  "action": {
+    "id": 41855120789,
+    "job_id": 126661533245,
+    "conclusion": "failure",
+    "artifact_id": 13335399622,
+    "artifact_digest": "sha256:ca6f614d06fcc230da7dea86ebd9239553697a1a6f387715d3e994ee06b4700f"
+  },
+  "native_architecture": "aarch64 ELF183 built",
+  "Go_tls_policy_units": "PASS",
+  "first_fault": "Python copied x86_64 platform assertion before manifest",
+  "real_udp": "NOT_RUN",
+  "final_Stop": "NOT_RUN",
+  "next": "H1158 correct one Python ISA check"
+}
