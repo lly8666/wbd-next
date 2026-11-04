@@ -64,8 +64,7 @@ func startOriginalClientGeneration(
     path originalLinuxUnderlay,seq uint64,overlap bool,
     previousPhysicalMTU int,
 )(*originalClientGeneration,error){
-    if !path.valid()||original.peerIP!=path.peer||
-        (original.gameLanes==0&&original.sharedTun==nil){
+    if !path.valid()||original.peerIP!=path.peer||original.sharedTun==nil{
         return nil,fmt.Errorf("native path candidate requires verified numeric physical endpoint and shared Rust TUN")
     }
     c:=original
@@ -77,8 +76,8 @@ func startOriginalClientGeneration(
         if e!=nil{return nil,e}
         c.localPort=port
     }
-    // Game has no simultaneous client-side TUN fanout; after A drains,
-    // the same installation must still retain its protected /32.
+    // The same installation keeps its verified /32 across an overlapping
+    // native Game cohort; Rust shared TUN publishes B only after M4 Ready.
     c.leaseMustStay=overlap||(c.gameLanes!=0&&seq>1)
     // New physical ceiling is read from the actual selected OS interface.
     // On overlap, do not increase an A-effective tunnel budget before A Stop:
@@ -106,15 +105,16 @@ func startOriginalClientGeneration(
     if err!=nil{return nil,err}
     if c.gameLanes!=0{
         // Reuse the original TLS/Rust Game group on the new native path.
-        // The supervisor guarantees the old group's exact Stop is joined
-        // BEFORE this call; never give two drivers the same TUN input.
+        // ONE process Rust TUN reader selects the most recent authenticated
+        // active Game group's default route. Existing A remains live until
+        // B has authenticated, installed its MTU, and published its M4 owner.
         runCtx,cancel:=context.WithCancel(parent)
         a:=&originalClientGeneration{
             seq:seq,path:path,cancel:cancel,
             ready:make(chan struct{},1),done:make(chan error,1),
         }
-        log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d mode=game%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d single_tun_owner=1",
-            seq,c.gameLanes,path.ifindex,path.mtu,c.outerMTU,cold.LocalSYNAdvertisedMSS,c.recordLimit)
+        log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d mode=game%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d shared_tun_single_reader=1 old_owner_may_overlap=%t",
+            seq,c.gameLanes,path.ifindex,path.mtu,c.outerMTU,cold.LocalSYNAdvertisedMSS,c.recordLimit,overlap)
         go func(){
             var connected bool
             a.done<-runGameClientGeneration(runCtx,c,path.ifindex,tun,&connected,a.ready)
@@ -220,19 +220,9 @@ func runOriginalLinuxClientPaths(
     launch:=func()error{
         if candidate!=nil||retiring!=nil{return nil}
         if current!=nil&&desired==current.path{return nil}
-        if c.gameLanes!=0&&current!=nil{
-            // Current Game Rust M4 owns the SINGLE client TUN reader.
-            // Unlike Normal's shared reader, Game has no client fanout
-            // to safely run two native owners at once. Retire/join A
-            // before starting B. A disconnected path recovers directly;
-            // no second Health90 timer or independent supervisor.
-            retiring=current
-            current=nil
-            retiring.cancel()
-            log.Printf("V4_PUBLIC_PATH_GAME_OLD_DRAINING role=client generation=%d lanes=%d new_physical_path=1 no_dual_tun_reader=1",
-                retiring.seq,c.gameLanes)
-            return nil
-        }
+        // Game and Normal now share one process-owned Rust TUN reader.
+        // Do NOT retire healthy A yet: start the new original-TLS/M4
+        // candidate, and retire A only in NEW_GENERATION_READY below.
         seq++
         previousMTU:=0
         if current!=nil{previousMTU=current.path.mtu}
@@ -291,6 +281,10 @@ func runOriginalLinuxClientPaths(
             log.Printf("V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=%d old_generation=%t source=real_original_TLS_Rust_M4 os_path_authority=1",
                 a.seq,previous!=nil)
             if previous!=nil{
+                if c.gameLanes!=0{
+                    log.Printf("V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=%d old_generation=%d shared_tun_single_reader=1 new_tls_m4_before_old_stop=1",
+                        a.seq,previous.seq)
+                }
                 retiring=previous
                 previous.cancel()
             }

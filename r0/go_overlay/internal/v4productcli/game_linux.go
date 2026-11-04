@@ -141,9 +141,10 @@ func runGameClient(
     }
     log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
         n,c.peerPort,len(flows))
-    // The original one process TUN is kept across COLD Game generations.
-    // Never let retired A Close() the OS fd that B must use after native
-    // M4 has joined. The single top-level CLI owns final TUN Close.
+    // The original one process TUN and shared Rust kernel reader survive
+    // simultaneous A+B native Game groups. Old A Close() must not close
+    // the TUN/reader after B has published its newer default route.
+    // The top-level CLI owns final Close after all groups drain.
     cleanup:=func()error{return tun.Close()}
     if c.autoIP{cleanup=func()error{return nil}}
     applyLease:=configureAuthenticatedClientIPv4(tun)
@@ -158,7 +159,8 @@ func runGameClient(
     native,err:=realityfront.NewV4LinuxGameClientProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:cleanup,
+            Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
+            CleanupOwnedNetwork:cleanup,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:applyLease,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,

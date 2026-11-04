@@ -387,11 +387,13 @@ PY
   path_ready=0
   for i in {1..160};do
     if [[ "$GAME" != 0 ]];then
-      # Sequential original Game M4 Stop before B TLS; no duplicate reader.
+      # A stays authenticated/flowing until B's original TLS/M4/MTU
+      # is genuinely ready; one shared native TUN reader atomically
+      # promotes B, then old A's exact Game Stop may join.
       if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
-         grep -q 'V4_PUBLIC_PATH_GAME_OLD_DRAINING role=client generation=1 lanes=4' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=2 old_generation=1 shared_tun_single_reader=1 new_tls_m4_before_old_stop=1' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
-         grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=false source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
+         grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
          [[ "$(grep -c 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=4' "$TMP/client.log" || true)" -ge 2 ]] &&
          [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] &&
          grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log";then
@@ -445,7 +447,18 @@ ips=re.findall(r'V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticat
 assert len(ips)==2 and ips[0]==ips[1],ips
 print("M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS")
 PY
-    echo "M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_OLD_STOP_NEW_AUTH_PASS source=10.25.0.3 outer=1460 physical=1280 new_tun_readback=1 genuine_udp=5 old_game_exact_Stop=1 new_game_native_ready=1 old_lane_overlap=NOT_SUPPORTED"
+    python3 - "$TMP/client.log" <<'PY'
+import pathlib,sys
+s=pathlib.Path(sys.argv[1]).read_text()
+candidate=s.index('V4_PUBLIC_PATH_CANDIDATE role=client generation=2 mode=game4')
+new=s.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true')
+committed=s.index('V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=2 old_generation=1')
+old=s.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
+assert candidate<new<committed<old,(candidate,new,committed,old)
+assert 'V4_PUBLIC_PATH_GAME_OLD_DRAINING' not in s
+print('M0_PLAN028_GAME4_REAL_A_TO_AB_TO_B_AUTHENTICATED_OVERLAP_ORDER_PASS')
+PY
+    echo "M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS source=10.25.0.3 outer=1460 physical=1280 new_tun_readback=1 genuine_udp=5 old_game_exact_Stop=1 new_game_native_ready=1 shared_client_reader=1"
   else
     echo "M0_PLAN028_REAL_LINUX_RTN_NETLINK_A_TO_AB_TO_B_PASS old_source=10.25.0.2 new_source=10.25.0.3 path_trigger=rtnetlink_os coalesce_quiet_ms=200 max_ms=500 new_physical_mtu=1280 original_TLS=1 native_Rust_M4=1 old_exact_Stop=1 new_real_udp=5"
   fi
@@ -573,23 +586,28 @@ fi
 # while the server's shared TUN reader continues through both cohorts.
 if [[ "$AUTO_IP" == 1 && "$GAME" != 0 ]];then
   grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$GAME" "$TMP/server.log"
-  grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=4' "$TMP/client.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/client.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
   python3 - "$TMP/client.log" "$TMP/server.log" "$GAME" <<'PY'
 import pathlib,re,sys
 client=pathlib.Path(sys.argv[1]).read_text()
 server=pathlib.Path(sys.argv[2]).read_text()
 n=int(sys.argv[3])
 assert client.count('V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes='+str(n))==2
-stop=client.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
 fresh=client.index('V4_PUBLIC_PATH_CANDIDATE role=client generation=2')
-assert stop<fresh,("new Game owner started before old Stop",stop,fresh)
-rows=re.findall(r'V4_PUBLIC_SHARED_TUN_STOP generation=(\d+) routed=(\d+) unrouted=(\d+) backpressure=(\d+) reader_joined=1',server)
-assert len(rows)==1 and int(rows[0][1])>=10,rows
+ready=client.index('V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true')
+stop=client.index('V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1')
+assert fresh<ready<stop,("overlap M4 must ready before old exact Stop",fresh,ready,stop)
+pattern=r'V4_PUBLIC_SHARED_TUN_STOP generation=(\d+) routed=(\d+) unrouted=(\d+) backpressure=(\d+) reader_joined=1'
+for role,content in (('server',server),('client',client)):
+    rows=re.findall(pattern,content)
+    assert len(rows)==1 and int(rows[0][1])>=10,(role,rows)
 assert server.count('V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation')==1
 for role,log in (("client",client),("server",server)):
     pairs=re.findall(r'V4_PUBLIC_GAME_FEC_COUNTERS role='+role+r' lanes='+str(n)+r' source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)',log)
     assert len(pairs)==2 and all(int(s)>=5 and int(p)>0 and int(k)>0 for s,p,k in pairs),(role,pairs)
-print("M0_PLAN028_GAME4_FEC6_EXACT_ONE_TUN_READER_STOP_AND_TWO_PARITY_COHORTS_NATIVE_PASS old_stop_before_new_tls=1 server_shared_routed="+rows[0][1]+" parity_both_generations=1")
+print("M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS new_ready_before_old_stop=1 client_server_one_reader_each=1 parity_both_generations=1")
 PY
 fi
 if [[ "$GAME" == 0 ]];then

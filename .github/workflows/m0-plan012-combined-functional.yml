@@ -58,7 +58,7 @@ jobs:
   native:
     # Bounded TLS redline has its own SOURCE-locked two-peer wire Action.
     # Do not rerun the former 28-minute FEC/Health90 matrix for that cold fix.
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[tls-cold-only]') }}
+    if: ${{ github.event_name != 'push' || (!contains(github.event.head_commit.message, '[tls-cold-only]') && !contains(github.event.head_commit.message, '[game-overlap-cold]')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 28
     env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}

@@ -3142,9 +3142,14 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
-    if !g.server||g.stopped||g.stopping||g.drivers.is_some()||
+    if g.stopped||g.stopping||g.drivers.is_some()||
         g.shared_tun.is_some(){return BAD_STAGE}
-    let Some(ip)=g.client_lease_ipv4 else{return BAD_STAGE};
+    // Server routes by its verified client's destination /32. The sole
+    // client installation instead routes ALL outbound TUN packets through
+    // the authenticated active Game generation's reserved default route.
+    // This route is published only after the actual M4 worker is installed.
+    let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
+    let ip=if g.server{lease}else{[0u8;4]};
     let generation=(group>>32) as u32;
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
     g.shared_tun=Some(SharedTunSession{

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1087,
-  "checkpoint_sha": "3e181c091c4bedb9d0e1d9764681f5cf008ea36a",
+  "sequence": 1088,
+  "checkpoint_sha": "03f2d51d572d02d6880562ea7135af93800ab36b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1087 offline route-key/no private WB-R1 first-flight scoped closed, continue PLAN028 Linux Game healthy lane overlap via one Rust shared TUN reader; TLS full transcript/reference baseline OPEN",
-  "why_now": "User asks route-key scoped closeout before continuing other PLAN028. H1086 Action41761356866 exact source7b38 true Npcap↔WSL2 CH667B/SH127B, 32B SessionID, original protected traffic/Stop PASS; no in-flight Actions.",
+  "current_task": "H1088 Linux original Go/Rust Game4 shared TUN one-reader client A→A+B→B source candidate, x86 native Action pending",
+  "why_now": "H1087 route-key/no WB-R1 scoped closeout. Original Rust already has generation-scoped default route and exact retired instance fence; Game client was missing shared reader/verified lease binding and killed A before B authenticated. Full both sides + CI now prepared.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Implement Game client TUN shared Rust ingress and generation promotion preserving A until B authenticated+MTU/readback+native Ready; native x86/x86 scoped one-source Action, next Linux ARM/ARM. TLS full transcript/baseline and physical Win NIC switch independent OPEN.",
+  "next_action": "Collect first real x86/x86 Game4FEC6 TLS 4+4, MTU/reload/UDP/Stop and source/hash Action; fix first failure. Next native ARM/ARM Linux task. Win physical NIC, full TLS transcript/baseline, sustained Game gap/CPU p99 unqualified.",
   "unverified": true,
   "last_tested_source": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H998 scoped MTU hot shrink FAIL, old ARM64 Game4FEC Action FAIL, remote ICMP/CPU p99 unproved. H104x shared 443/multiaccounts/lease, old group Stop, natural Health90 exact PASS scoped. H1076 Linux x86 and H1078 native ARM64 Game4FEC 4+4 lanes source-IP change MTU1178 real UDP/Stop PASS but sequential Game client old Stop before B TLS. H1086 exact source7b38 Windows Npcap↔WSL2 CH667B SH127B SID32 no WB-R1, protected UDP/TCP/Stop PASS Action41761356866. H1087 route-key local 32B/import/missing reject + no prelude SCOPED CLOSED; full TLS Certificate/Finished/reference baseline OPEN. Linux test rotation homogeneous x86/x86 then native ARM/ARM, Windows independent. PLAN028 still IN_PROGRESS."
+  "partial_summary": "H1087 32B offline route-key, no WB-R1 prehello scoped closed source7b38; full TLS Certificate/Finished/standard baseline OPEN. H1076 x86 and H1078 native ARM Game4FEC6 4+4 TLS, OS physical MTU1178/UDP/Stop PASS sequential old Stop→B. H1088 reuse one Rust shared TUN client default route + per-lane original TLS protected /32, native Game B Ready before A Stop code implemented, no Action yet. Windows physical source NIC NOT_RUN, H998 hot MTU shrink and older ARM Game4FEC workflow FAIL, remote ICMP and CPU p99 unmeasured. Linux test tasks alternate x86/x86 then native ARM/ARM."
 }

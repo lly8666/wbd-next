@@ -594,22 +594,10 @@ func Run(role string,args []string)(retErr error){
             }
         }
     }
-    if cfg.gameLanes!=0{
-        ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
-        defer stop()
-        if role=="client"&&cfg.autoIP{
-            // Game joins the SAME native rtnetlink path supervisor used by
-            // Normal. Its old M4 TUN reader fully Stops before new TLS/M4;
-            // this stage is explicit cold recovery, not overlapping Game.
-            return runOriginalLinuxClientPaths(ctx,cfg,tun)
-        }
-        return runGame(ctx,cfg,uint32(iface.Index),tun,leases,epochs,&connected)
-    }
+    // Both Normal and Game auto-/32 use ONE process-wide native Rust
+    // reader, even while old A and new B independently own their raw
+    // Game/Normal M4 drivers. No additional TUN fd or Go packet pump.
     if role=="client"&&cfg.autoIP{
-        // Same original physical TUN fd survives native Rust generations.
-        // No second per-generation reader may steal kernel packets before
-        // the authenticated new lane can take over the shared M1 source.
-        // Server owns its own separate process-wide shared reader already.
         shared,e:=realityfront.NewV4LinuxSharedTun(tun.f,cfg.tunName)
         if e!=nil{return e}
         cfg.sharedTun=shared
@@ -621,7 +609,17 @@ func Run(role string,args []string)(retErr error){
                 log.Printf("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client")
             }
         }()
-        log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader")
+        log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=%d",cfg.gameLanes)
+    }
+    if cfg.gameLanes!=0{
+        ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
+        defer stop()
+        if role=="client"&&cfg.autoIP{
+            // Shared native reader atomically promotes B after authenticated
+            // Game M4 Ready; A retains old business until that promotion.
+            return runOriginalLinuxClientPaths(ctx,cfg,tun)
+        }
+        return runGame(ctx,cfg,uint32(iface.Index),tun,leases,epochs,&connected)
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()

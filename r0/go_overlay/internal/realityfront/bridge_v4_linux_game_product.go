@@ -20,7 +20,7 @@ type V4LinuxGameProductConfig struct {
     NetworkIfIndex uint32
     Tun *os.File
     TunName string
-    SharedTun *V4LinuxSharedTun // optional verified server /32, one TUN reader across Game groups
+    SharedTun *V4LinuxSharedTun // verified server /32 or client default, one TUN reader across Game generations
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     ConfigureLeaseIPv4 func(lease string)error // apply once before Game group Rust M4 start
@@ -93,9 +93,12 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
     if p.server{
         if err=p.native.configurePeerPersona(p.cfg.PeerPersona);err!=nil{return err}
-        if p.cfg.SharedTun!=nil{
-            if err=p.native.bindAuthenticatedSharedTun(p.cfg.SharedTun);err!=nil{return err}
-        }
+    }
+    // The same original Rust single-reader demux is valid for client Game:
+    // client default route changes by generation only AFTER new M4 Ready.
+    // Server retains exact authenticated destination-/32 dispatch.
+    if p.cfg.SharedTun!=nil{
+        if err=p.native.bindAuthenticatedSharedTun(p.cfg.SharedTun);err!=nil{return err}
     }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
@@ -153,6 +156,13 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
                 }
             }else if lease!=effectiveLease{
                 return errors.Join(ErrAdmissionParams,p.abortLocked())
+            }
+            // Client Game shared-TUN default route is authenticated only
+            // after the original TLS-assigned /32 has been OS-applied and
+            // read back. The Rust M4 group join then sees identical verified
+            // source lease on every lane; no mutable client IP can select it.
+            if err:=bridge.bindAuthenticatedClientIPv4(lease);err!=nil{
+                return errors.Join(err,p.abortLocked())
             }
         }
         if p.cfg.ConfigureTunnelMTU!=nil {
