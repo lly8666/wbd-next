@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1086",
+  "source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "result": "PASS_SCOPED_TLS_FIRST_FLIGHT_AND_ORIGINAL_BUSINESS",
+  "artifact_verified": true,
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "unchanged_product_binary_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "harness_source_sha": "655cf4c88420dc6400c43a3b8e3595c0df2fa54f",
+  "native": {
+    "run_id": 41761356866,
+    "job_id": 126349693179,
+    "conclusion": "success",
+    "artifact_id": 13290631778,
+    "independently_inspected_files": 27,
+    "report_sha256": "dbef005548fb3f4cef169fd0c04ecbb25664599412fb080c2476f07017824801",
+    "direct_log_sha256": "1a09ab080d2826bb258905860faf235c6978780d13e185874f7e38da60b17cd6"
+  },
+  "original_binaries": {
+    "reuse_from_run_id": 41757222750,
+    "no_product_rebuild": true,
+    "windows_exe_sha256": "56cc17bdfe7d488d911abe6f96e8f39abcec5a2055f2bfc503da1e6f4d88b54d",
+    "rust_dll_sha256": "3a3a8469221a12422edd21bd5708291618fd54ae8637d99904e8c4df1cac3ff8"
+  },
+  "real_Windows_Npcap_Linux_WSL2_eth0_TCP_reassembly": {
+    "client_first_payload": "TLS_Handshake_ClientHello",
+    "server_first_payload": "TLS_Handshake_ServerHello",
+    "server_early_application_bytes": 0,
+    "client_TLS_first_record_bytes": 667,
+    "server_TLS_first_record_bytes": 127,
+    "compatibility_session_id_bytes": 32,
+    "extension_types": [
+      0,
+      23,
+      65281,
+      10,
+      11,
+      35,
+      16,
+      5,
+      34,
+      51,
+      43,
+      13,
+      45,
+      28,
+      65037
+    ],
+    "client_hello_sha256": "a9b73327fb81a38a6461ecd8010db2078e43ba61a2e3106873b5f5e59589e84a",
+    "route_key": "32B CSPRNG offline local import, no online exchange",
+    "server_certificate": "real verified with application-specific locally imported CA",
+    "WB_R1": false,
+    "private_preTLS_payload": false,
+    "raw_pcap_artifact": false
+  },
+  "business": {
+    "mode": "normal",
+    "windows_original_Go_Rust_Npcap_Wintun_ready": true,
+    "linux_WSL2_original_Go_Rust_ready": true,
+    "actual_kernel_UDP_bidirectional": "PASS",
+    "actual_kernel_TCP_bidirectional": "PASS",
+    "both_owned_Stop": "PASS"
+  },
+  "limits": {
+    "full_TLS13_Certificate_CertificateVerify_Finished_transcript": "NOT_RUN",
+    "same_cert_SNI_MTU_standard_TLS_baseline": "NOT_RUN",
+    "site_specific_DPI_fingerprint": "NOT_CLAIMED",
+    "physical_Windows_NIC_IP_switch": "NOT_RUN",
+    "healthy_Game_overlap": "NOT_RUN",
+    "H998_hot_MTU_shrink": "FAIL_RETAINED",
+    "old_ARM64_Game4FEC_Action": "FAIL_RETAINED",
+    "CPU_p99_remote_ICMP": "NOT_MEASURED",
+    "Android": "NOT_RUN",
+    "plan028": "IN_PROGRESS"
+  }
+}
