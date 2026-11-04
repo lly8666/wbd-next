@@ -1373,6 +1373,12 @@ func runSharedMultiServer(
         // the shared manual server has no singleton process-wide counters.
         // This is cold Stop only, never a packet path and never CLI intent.
         outer,outerErr:=rec.product.OriginalOuterCounters()
+        // Read the REAL per-session Rust FEC applied strength before
+        // generation-owned Stop; not the server's global CLI default.
+        if effective,e:=rec.product.OriginalFECReadback();e==nil{
+            log.Printf("V4_PUBLIC_MULTI_NATIVE_FEC_EFFECTIVE role=server mode=%s profile=%d requested=%d applied=%d pending=%t",
+                effective.Mode,effective.Profile,effective.RequestedRevision,effective.AppliedRevision,effective.Pending)
+        }
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("PLAN028 Rust native per-session Stop %s: %w",reason,err)
         }

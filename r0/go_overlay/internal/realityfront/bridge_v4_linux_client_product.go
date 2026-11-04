@@ -89,8 +89,11 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
        cfg.Policy.FECMode!=wireMode||cfg.DesiredLanes!=1{
         return nil,ErrAdmissionUnsupported
     }
+    normalProfile:=uint8(0)
+    if mode==FecV2Fixed{normalProfile=uint8(p.cfg.FECProfile)+1}
     session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{
         DataPlaneReady:true,fec2Product:v4ProductFecEnabled(mode),
+        NormalFec:normalProfile,
     })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()

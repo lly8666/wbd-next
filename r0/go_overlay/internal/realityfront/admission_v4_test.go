@@ -449,9 +449,11 @@ func TestFECGameProtectedV4ProfileWireOffAndFailClosed(t *testing.T){
     if _,err=v4Decode(raw[:]);!errors.Is(err,ErrAdmissionUnsupported){
         t.Fatalf("legacy mode accepted forged Game fixed profile: %v",err)
     }
-    raw,_=v4Encode(off);raw[22]=1
-    if _,err=v4Decode(raw[:]);!errors.Is(err,ErrAdmissionParams){
-        t.Fatalf("nonzero still-reserved byte accepted: %v",err)
+    // Protected byte22 now carries Normal fixed strength. It must NEVER
+    // coexist with the independent Game fixed strength in byte21.
+    raw,_=v4Encode(off);raw[22]=1;raw[21]=1
+    if _,err=v4Decode(raw[:]);!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("conflicting Game/Normal fixed profiles accepted: %v",err)
     }
     store,_:=NewV4EpochStore(2)
     if _,err=EstablishServerV4(context.Background(),nil,ServerAdmissionConfig{},
@@ -1189,4 +1191,43 @@ func TestPLAN028SharedNormalPerClientFECProtectedCapability(t *testing.T){
     client,server,ce,se:=v4PairFeatureProbe(t,store,"alice",badTunnel,1,fixed,[16]byte{},false,true,false,true)
     if ce==nil&&se==nil{t.Fatal("fixed client without authenticated feature7 silently downgraded")}
     if client!=nil||server!=nil{t.Fatal("invalid protected capability published a session")}
+}
+
+func TestPLAN028OriginalProtectedNormalStrengthAndThreeRecordCiphers(t *testing.T){
+    var epoch [16]byte
+    epoch[0]=21
+    for profile:=uint8(1);profile<=7;profile++{
+        for _,cipher:=range []uint8{CipherChaCha,CipherAES128,CipherAES256}{
+            policy:=v4TestPolicy(1,cipher)
+            if policy.SupportedNow()!=nil{t.Fatalf("cipher %d not supported",cipher)}
+            selected,err:=v4ProtectedNormalFECProfile(policy,profile,true)
+            if err!=nil||selected!=FecV2Profile(profile-1){
+                t.Fatalf("protected profile=%d cipher=%d selected=%v err=%v",profile,cipher,selected,err)
+            }
+            ext:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,
+                Epoch:epoch,NormalFec:profile}
+            raw,err:=v4Encode(ext)
+            if err!=nil{t.Fatal(err)}
+            if len(raw)!=24||raw[21]!=0||raw[22]!=profile||raw[23]!=0{
+                t.Fatalf("unexpected protected fixed-length grammar profile=%d",profile)
+            }
+            got,err:=v4Decode(raw[:])
+            if err!=nil||got!=ext{t.Fatalf("roundtrip %+v %+v %v",got,ext,err)}
+        }
+    }
+    p:=v4TestPolicy(1,CipherChaCha)
+    if _,err:=v4ProtectedNormalFECProfile(p,0,true);!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("shared server guessed client fixed profile: %v",err)
+    }
+    p.FECMode=FECOff;p.FixedParity=0
+    if _,err:=v4ProtectedNormalFECProfile(p,1,true);!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("off device gained fixed FEC profile: %v",err)
+    }
+    if _,err:=v4Encode(V4Extension{Features:v4RequiredFeatures,NormalFec:2});!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("unadvertised FEC2 gained fixed strength: %v",err)
+    }
+    if _,err:=v4Encode(V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,
+        GameFec:1,NormalFec:2});!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("conflicting Game/Normal profile accepted: %v",err)
+    }
 }

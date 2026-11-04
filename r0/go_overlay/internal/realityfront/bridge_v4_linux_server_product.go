@@ -127,6 +127,11 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         if priorPolicyAllow!=nil{return priorPolicyAllow(policy)}
         return nil
     }
+    // For the strict existing singleton product, the server's fixed
+    // strength is authoritative; shared 443 owners read their own verified
+    // protected per-device strength only after credentials/Detach.
+    normalProfile:=uint8(0)
+    if mode==FecV2Fixed{normalProfile=uint8(p.cfg.FECProfile)+1}
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
@@ -135,6 +140,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         ManualLease4:p.cfg.ManualLease4,
         fec2Product:v4ProductFecEnabled(mode)||p.cfg.PerClientNormalFEC,
         perClientNormalFEC:p.cfg.PerClientNormalFEC,
+        NormalFec:normalProfile,
     })
     if err!=nil{return nil,err}
     // From this point the original Go server has detached the authenticated
@@ -142,7 +148,11 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     // first Stop/release Rust; no system route/TUN cleanup can race that Stop.
     p.owner=bridge
     p.session=session
+    profile:=p.cfg.FECProfile
     if p.cfg.PerClientNormalFEC{
+        selected,e:=v4ProtectedNormalFECProfile(session.verifiedPolicy,session.verifiedNormalFec,true)
+        if e!=nil{return nil,errors.Join(e,p.closeLocked())}
+        profile=selected
         switch session.verifiedPolicy.FECMode {
         case FECOff: mode=FecV2Off
         case FECFixed: mode=FecV2Fixed
@@ -197,7 +207,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
     if err==nil{
-        p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,verified)
+        p.fec,err=v4ConfigureProductFec(bridge,mode,profile,verified)
     }
     if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
     if err==nil{
@@ -220,7 +230,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     if p.cfg.PerClientNormalFEC{
         // This is an actual protected/started Rust owner, not CLI intent.
         fmt.Printf("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=%s profile=%d cipher=%d authenticated_TLS=1 original_Rust_M4=1\n",
-            mode,p.cfg.FECProfile,verified.Cipher())
+            mode,profile,verified.Cipher())
     }
     return session,nil
 }

@@ -40,14 +40,18 @@ type V4Extension struct {
     // Exact fixed Game FEC profile+1 (1..7), 0=off. Authenticated
     // inside the existing V4 TLS request/reply; no downgrade or Auto.
     GameFec uint8
+    // Normal fixed profile+1; zero for off/auto/Game/legacy V4.
+    // Reuses previously reserved byte 22 of the existing protected record.
+    NormalFec uint8
 }
 // Exactly 3(default) or 7(private test), rejecting all unknown/partial sets.
 func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4RequiredFeatures|v4FeatureFEC2)}
 
 func v4Encode(e V4Extension) ([24]byte, error) {
     var buf [24]byte
-    if !v4KnownFeatureSet(e.Features)||e.GameFec>7||
-        (e.GameFec!=0&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
+    if !v4KnownFeatureSet(e.Features)||e.GameFec>7||e.NormalFec>7||
+        (e.GameFec!=0&&e.NormalFec!=0)||
+        ((e.GameFec!=0||e.NormalFec!=0)&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
         return buf,ErrAdmissionUnsupported
     }
     binary.BigEndian.PutUint16(buf[0:2], 1)
@@ -55,6 +59,7 @@ func v4Encode(e V4Extension) ([24]byte, error) {
     copy(buf[4:20], e.Epoch[:])
     buf[20] = v4FeedbackPages
     buf[21] = e.GameFec
+    buf[22] = e.NormalFec
     return buf, nil
 }
 
@@ -62,13 +67,15 @@ func v4Decode(raw []byte) (V4Extension,error) {
     var e V4Extension
     if len(raw)!=v4ExtensionLen { return e,ErrAdmissionParams }
     if binary.BigEndian.Uint16(raw[:2])!=1 || raw[20]!=v4FeedbackPages ||
-       raw[22]!=0 || raw[23]!=0 || raw[21]>7 { return e,ErrAdmissionParams }
+       raw[22]>7 || raw[23]!=0 || raw[21]>7 { return e,ErrAdmissionParams }
     e.Features=binary.BigEndian.Uint16(raw[2:4])
     if !v4KnownFeatureSet(e.Features) ||
-       (raw[21]!=0&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
+       (raw[21]!=0&&raw[22]!=0)||
+       ((raw[21]!=0||raw[22]!=0)&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
         return V4Extension{},ErrAdmissionUnsupported
     }
     e.GameFec=raw[21]
+    e.NormalFec=raw[22]
     copy(e.Epoch[:],raw[4:20])
     return e,nil
 }
@@ -81,6 +88,7 @@ type V4ClientOptions struct {
     fec2ProbeOnly bool // unexported and default false: no product authority
     fec2Product bool // original-Go TLS + true native Linux feature7 owner only
     GameFec uint8 // 0=off; 1..7 = fixed profile 0..6; TLS-protected
+    NormalFec uint8 // 0=off/auto/old V4, 1..7=authenticated Normal fixed profile0..6
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -217,6 +225,7 @@ type V4ServerOptions struct {
     // No new on-wire flag, no pre-TLS hint or unauthenticated admission.
     perClientNormalFEC bool
     GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
+    NormalFec uint8 // server-owned fixed Normal profile+1 in strict singleton mode
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     // Explicit cold admission capability only. The native shared owner must
     // independently prove that two generations can coexist before enabling.
@@ -255,6 +264,7 @@ type V4ClientSession struct {
     // Only EstablishClientV4 after verified protected reply and KDF may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
+    verifiedNormalFec uint8 // copied from authenticated reply; not user mutable
     // Freeze once, so caller-mutable Negotiated fields never mint new authority.
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
@@ -271,6 +281,7 @@ type V4ServerSession struct {
     // Only EstablishServerV4 after credentials, protected reply and Detach may set this.
     coldAuthenticated bool
     authenticatedPrincipal string
+    verifiedNormalFec uint8 // original credential-checked protected request
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
@@ -616,8 +627,11 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 // EstablishClientV4 preserves exactly one protected request and reply; no
 // additional RTT. This opt-in API is fail-closed until caller proves readiness.
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
-    if !opt.DataPlaneReady||opt.GameFec>7||
-       (opt.GameFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportGame)){
+    if !opt.DataPlaneReady||opt.GameFec>7||opt.NormalFec>7||
+       (opt.GameFec!=0&&opt.NormalFec!=0)||
+       (opt.GameFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportGame))||
+       (opt.NormalFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportNormal||
+         cfg.Policy.FECMode!=FECFixed)){
         return nil,ErrAdmissionUnsupported
     }
     lane:=cfg.LaneID
@@ -632,7 +646,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if cfg.Policy.Schema!=PolicySchemaV3 || cfg.Policy.SupportedNow()!=nil {return nil,ErrAdmissionUnsupported}
     offeredFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {offeredFeatures |= v4FeatureFEC2}
-    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec})
+    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec,NormalFec:opt.NormalFec})
     if err!=nil{return nil,err}
     // The route classifier secret must be provisioned BEFORE opening
     // transport. A missing key is an ordinary local config failure: no
@@ -654,7 +668,8 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     result,extension,err:=v4ReadReply(client,req)
     if err!=nil{return nil,candidateError(ctx,err)}
     // No protected reply feature downgrade/upgrade is admissible.
-    if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec || extension.Epoch==[16]byte{} ||
+    if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec ||
+       extension.NormalFec!=opt.NormalFec || extension.Epoch==[16]byte{} ||
        (opt.Epoch!=[16]byte{} && opt.Epoch!=extension.Epoch) {
         return nil,ErrAdmissionParams
     }
@@ -670,7 +685,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,verifiedLease4:result.Lease4,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
-        verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
+        verifiedNormalFec:extension.NormalFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
     },nil
 }
 
@@ -691,6 +706,23 @@ func v4ProtectedNormalFECFeatures(p AdmissionPolicy)(uint16,error){
     default:
         return 0,ErrAdmissionUnsupported
     }
+}
+
+// Strict shared Normal fixed profile selection from an EXISTING protected
+// 24-byte V4 extension. A new shared server does not silently guess a
+// device's fixed strength from its own process-level --fec-profile.
+func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(FecV2Profile,error){
+    if _,err:=v4ProtectedNormalFECFeatures(p);err!=nil{return 0,err}
+    if p.FECMode!=FECFixed {
+        if profile!=0{return 0,ErrAdmissionUnsupported}
+        return 0,nil
+    }
+    if profile==0 {
+        if shared{return 0,ErrAdmissionUnsupported}
+        return 0,nil // old strict single-session admission
+    }
+    if profile>7{return 0,ErrAdmissionUnsupported}
+    return FecV2Profile(profile-1),nil
 }
 
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.
@@ -743,6 +775,25 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             _=writeAdmissionFailure(tlsConn,admissionParamFail)
             return nil,err
         }
+    }
+    // Protected, fixed-length cold metadata: one independently chosen
+    // Normal fixed strength per authenticated installation, never from
+    // the TCP tuple/route key. No new message, TLS prefix or hot-path tag.
+    selectedNormalFec:=uint8(0)
+    if opt.perClientNormalFEC {
+        if _,e:=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true);e!=nil{
+            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            return nil,e
+        }
+        selectedNormalFec=offered.NormalFec
+    }else {
+        // Standalone fixed servers continue to accept historical zero
+        // profile bytes, but do not silently accept a mismatched new client.
+        if offered.NormalFec!=0&&offered.NormalFec!=opt.NormalFec {
+            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            return nil,ErrAdmissionUnsupported
+        }
+        selectedNormalFec=offered.NormalFec
     }
     if offered.Features!=serverFeatures||offered.GameFec!=opt.GameFec||
        (opt.GameFec!=0&&req.Policy.Transport!=TransportGame){
@@ -798,7 +849,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:opt.GameFec}
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:opt.GameFec,NormalFec:selectedNormalFec}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
@@ -856,7 +907,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,verifiedLease4:lease,serverOwnedManualLease4:manualLease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
-        verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
+        verifiedNormalFec:selectedNormalFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
     },nil
 }
 

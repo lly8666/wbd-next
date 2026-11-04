@@ -1,0 +1,9 @@
+# PLAN028 H1147 — per-authenticated-device Normal fixed strength in original encrypted V4 cold record
+
+After H1146 genuine native x86/x86 3 authenticated record ciphers one443 PASS, the distinct remaining flaw was Normal fixed strength: server used its process-global `c.fecProfile` while a client could independently configure a different `--fec-profile`. This H1147 *complete source candidate* uses the already allocated byte22 of the 24-byte existing protected V4 admission extension as fixed Normal profile+1 (1..7). Zero remains off/auto and legacy standalone fixed, byte21 remains Game fixed profile, byte23 reserved. No TLS first-flight/ClientHello/prelude change, no additional control record, no steady data/AEAD/PN packet format changes. Shared server strictly rejects fixed profile absence/invalid mode and mismatched Game; singleton with exact configured profile still accepts old zero. Client validates protected reply. Original per-device verified Go TLS profile feeds original native Rust M4 FEC configuration, and shared server reads genuine FEC applied strength before exact Stop rather than reporting CLI intention.
+
+One source-locked ARM64 client+server Action performs protected Go policy/unit and true three-device Alice off, Bob Auto/AES128, Alice-D fixed6/AES256 outer1280, Alice replacement off, original Go TLS/Rust native one443, OS MTU and 70 independent UDP plus exact Stop; SHA256 and original-Go pin must be checked. No result yet. H1146 x86/x86 was last full Linux task, H1147 is ARM64/ARM64; no QEMU/mixed, no old matrices. H998 same-connection hot MTU shrink FAIL, historical Game4 ARM Action FAIL, hardware Wi-Fi/Android and CPU causality still unqualified.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Add protected cold per-device Normal fixed profile and actual original Rust owner/readback, plus one source-locked ARM64 genuine business scenario pending."}
+```
