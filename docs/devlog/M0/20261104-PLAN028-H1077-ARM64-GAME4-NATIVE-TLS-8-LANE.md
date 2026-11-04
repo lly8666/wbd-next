@@ -9,3 +9,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1077 native ARM64 both endpoints exact original Go/Rust standard TLS Game4FEC6 eight old/new TCP ClientHello and sourceIP/MTU recovery one-source one-scenario candidate."}
 ```
+
+## H1078 原生 ARM64 SOURCE 审定
+
+[Action 41751006793](https://github.com/lly8666/wbd-next/actions/runs/41751006793) SUCCESS，工件13286615433独立解包九份文件并核SHA256（详见 `docs/evidence/M0/PLAN028-H1078-SOURCE6563-NATIVE-ARM64-GAME4-8-TLS-20261104.json`）。本地/真实ARM64原 Go TLS+Rust Game4 fixed6 两代4+4条TCP的SYN/SYNACK、ClientHello首载荷667B、ServerHello首载荷127B、各自32B互不重复SessionID、服务端提前载荷0/无WB-R1；出口源IP .2→.3、OS TUN MTU1178、5+5实际UDP、旧Stop与新组FEC均限定PASS。**仍非完整Finished/基线指纹、Windows真实网卡变更或Game健康lane重叠PASS**。下个新Linux工作包x86双端。

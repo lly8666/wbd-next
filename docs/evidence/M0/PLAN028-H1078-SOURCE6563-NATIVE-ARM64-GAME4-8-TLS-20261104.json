@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1078",
+  "result": "PASS_SCOPED_NATIVE_ARM64_GAME4_8_TLS_REAL_TCP_UDP",
+  "source_sha": "65639f9dc0388971a4f11c168ee4ddd28279f7bb",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 41751006793,
+    "job_id": 126315793748,
+    "artifact_id": 13286615433,
+    "conclusion": "success",
+    "artifact_zip_sha256": "fa59e51283b80771bd79f4f9d9f62796d7e26cca31838572a17b634478b1f2c1",
+    "artifact_independently_unpacked": true
+  },
+  "build": {
+    "manifest_sha256": "ac107db9ba3d259235231da75c01a4edc7d32ae4d004b55702d7de4250849c66",
+    "native_arch": "aarch64",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "binaries_sha256": {
+      "wbd-v4-client": "1c84043d923e9edecc25df545fc807e1668c5dbcc84d29ed7f36101f1b8b449a",
+      "wbd-v4-server": "0cc048c24f0137dd41a3b341f649cc4a4f7ce541a8662e8bdd2ef85dfd234922",
+      "libwbd_engine.so": "420f4af9ea6f036df753931fee6ed4690aa6e4d49746a1449e5c5f762f55bbd5"
+    }
+  },
+  "artifact_file_sha256": {
+    "native_log": "71775b0e415e17d14584aea4b2526ee25dfa9be5dbc6782b1bff0fa6084ad372",
+    "game4_tls_audit": "45124e9ecbce16f18dc1c8d9a4b3fc9f33fd5d6b9a279bbf69b67316fff56a30",
+    "new_mtu": "752d8d047a59a6de5e8d1ee697f39874348274d30287dfd61d8fe553de70de8b",
+    "new_app_udp": "608fdf76a9c6495047832ef11256dcfedcbf55238edd4f4ab02a2165d46a067d"
+  },
+  "real_wire": {
+    "tcp_vantage": "server Linux SLL2 reassembled, SYN/SYNACK each",
+    "mode": "Game4 fixed6",
+    "dest_port": 443,
+    "old_client_ip": "10.25.0.2",
+    "new_client_ip": "10.25.0.3",
+    "old_ports": [
+      41031,
+      41032,
+      41033,
+      41034
+    ],
+    "new_ports": [
+      56881,
+      56882,
+      56883,
+      56884
+    ],
+    "client_first": "TLS ClientHello",
+    "server_first": "TLS ServerHello",
+    "server_early_bytes": 0,
+    "pre_tls_private_bytes": 0,
+    "session_id_len": 32,
+    "distinct_session_ids": 8,
+    "client_hello_record_bytes_each": 667,
+    "server_hello_record_bytes_each": 127,
+    "extensions_per_lane": 15
+  },
+  "native_game4": {
+    "actual_client_and_server_arch": "native ARM64 and ARM64 same host real 2 netns",
+    "physical_mtu_change": 1280,
+    "outer_intent_default": 1460,
+    "client_inner_os_readback": 1178,
+    "old_exact_stop_before_new_tls": true,
+    "same_protected_lease": true,
+    "server_shared_rust_tun_reader_once": true,
+    "FEC6_parity_copied_both_generations": true,
+    "real_udp_before": 5,
+    "real_udp_after": 5
+  },
+  "limitations": [
+    "First-flight only, not full Finished/website fingerprint audit",
+    "Sequential Stop before new TLS, not overlapping healthy A+B Game handover",
+    "Windows physical NIC/source IPv4 switch NOT_RUN",
+    "H998 online hot MTU shrink FAIL and older ARM64 Game4FEC Action FAIL retained",
+    "CPU/p99, remote ICMP, Android NOT_MEASURED"
+  ],
+  "plan028": "IN_PROGRESS"
+}
