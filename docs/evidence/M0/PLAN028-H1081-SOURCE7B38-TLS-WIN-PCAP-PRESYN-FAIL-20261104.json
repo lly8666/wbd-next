@@ -55,5 +55,9 @@
     "real Windows NIC/IP switching and Game healthy overlapping lanes NOT_RUN",
     "H998 online outer MTU shrink FAIL, old ARM64 Game4FEC FAIL retained",
     "remote ICMP, CPU/p99 causal relationship unmeasured"
-  ]
+  ],
+  "source_sha": "7b38d2baddaa41ab5e410d2533a1e8c396510745",
+  "result": "FAIL_PRE_SYN_CAPTURE",
+  "artifact_verified": false,
+  "explanation": "H1080 concrete first-stage failure evidence, not a PASS; cursor unverified=true. Both source_sha and product_source_sha identify immutable original source7b38."
 }
