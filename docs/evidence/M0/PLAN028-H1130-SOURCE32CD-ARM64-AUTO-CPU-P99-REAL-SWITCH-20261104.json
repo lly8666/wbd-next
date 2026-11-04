@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1130",
+  "result": "FUNCTIONAL_PASS_SCOPED_AND_ABSOLUTE_PERFORMANCE_OBSERVED",
+  "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
+  "harness_sha": "4963906cd53937a49c07a7c3df3ac7673a6ca42c",
+  "platform": "Ubuntu 24.04 ARM64 real native client+ARM64 real native server, aarch64 ELF183 both, no QEMU",
+  "mode": "Original Go TLS/Rust Native Normal Auto single-port physical source IPv4 switch",
+  "action": {
+    "id": 41816298170,
+    "conclusion": "success",
+    "job_id": 126527780220,
+    "artifact_id": 13314762296,
+    "artifact_digest": "sha256:8981ae64c02eec187e0912f184ca8968168e980b55e4a22964691781190aac00"
+  },
+  "binary_provenance": {
+    "prebuilt_run_id": 41787602880,
+    "prebuilt_artifact_id": 13300899927,
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rebuild": false,
+    "elf_machine": 183,
+    "sha256": {
+      "wbd-v4-client": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+      "wbd-v4-server": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+      "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "network": {
+    "warm_actual_udp_echoes": 64,
+    "new_actual_udp_echoes": 128,
+    "new_received": 128,
+    "selected_underlay_before": "10.25.0.2",
+    "after": "10.25.0.3",
+    "physical_device": "wbdvc0",
+    "outer_user_default_complete_ipv4_mtu_bytes": 1460,
+    "new_physical_mtu_bytes": 1280,
+    "new_inner_tun_os_readback_bytes": 1195,
+    "old_generation_exact_stop": true
+  },
+  "measurements": {
+    "command_to_new_ready_ms": 308.42,
+    "observer_path_log_to_tls_candidate_ms": 10.19,
+    "observer_second_lease_log_to_first_actual_udp_ms": 125.41,
+    "observer_poll_interval_ms": 10,
+    "real_udp_rtt_p99_ms": 0.391313,
+    "real_udp_rtt_median_ms": 0.209904,
+    "client_go_plus_rust_process_cpu_percent_short_128_echo_window": 31.87,
+    "precise_os_notification_to_tls_start": "NOT_MEASURED",
+    "tls_finished_to_first_single_packet": "NOT_MEASURED",
+    "old_new_cpu_causal_improvement": "NOT_PROVEN"
+  },
+  "qualifications": [
+    "Original trusted 32B offline route-key, server credential TLS and Rust data path reused unchanged from frozen SOURCE32cd.",
+    "Native OS IPv4 source and mtu readback plus real socket UDP; no QEMU or cross architecture.",
+    "10ms external log observer is not kernel notification or TLS Finished, cross-host/source CPU numbers cannot be compared causally.",
+    "H998 same-connection hot MTU shrink FAIL, historic ARM64 Game4FEC Action FAIL, remote ICMP/Android untested, Windows H1129 separate pending."
+  ],
+  "next_linux_task": "x86_64 client plus x86_64 server"
+}
