@@ -1,0 +1,11 @@
+# PLAN028 H1109 — ARM64/ARM64 three-device real physical source switch
+
+Following H1107 x86/x86, the **next complete Linux task** was native ARM64 client + ARM64 server, not mixed ISA or QEMU. [Action 41797983526](https://github.com/lly8666/wbd-next/actions/runs/41797983526) completed `success`. Independently examined [artifact 13305653786](https://github.com/lly8666/wbd-next/actions/runs/41797983526/artifacts/13305653786) SHA256 `82acfeba37984a29b4ed5f69d025ada36850f85abf412292a2532ac51fc063c5`, full original Go/Rust ELF183 and SHA256 matching SOURCE `32cd752201e01134fc53157270ce223de70a8c7a` from H1104 Action 41787602880. **No new product build.** One Action = one three-device native scenario. Reviewed H1107 scenario shell reused byte-for-byte except two output platform-label substitutions in the ARM workflow; no second recovery logic.
+
+Three protected devices on one server port 443: Alice-A actual kernel source IP `10.25.0.2→10.25.0.9` and test-owned physical veth MTU `1500→1280`; Alice-D (separate same-account installation) and Bob each delivered 24 real UDP echoes with application clock bracketing the physical change and A new READY. A retained `10.66.0.242/32`, OS-readback TUN MTU `1389→1209`, new original TLS/Rust generation delivered 5 further real UDP echoes, old generation exact Stop; sibling TUN MTU each stayed 1389. Actual command→READY 315.15ms; READY→all five echoes finished 11703.94ms. These are **not** notification→TLS, auth→first single packet, or CPU/p99 (all NOT_MEASURED). See [exact evidence](../evidence/M0/PLAN028-H1109-SOURCE32CD-ARM64-THREE-DEVICE-REAL-SWITCH-20261104.json).
+
+Next Linux complete task x86/x86 per 2026-11-04 whole-platform alternation; Windows physical NIC/Npcap change remains independent NOT_RUN, Android not qualified. H998 historical original same-connection MTU hot-shrink FAIL, old ARM64 Game4FEC Action FAIL, remote ICMP and CPU causality gaps remain unchanged. PLAN028 remains IN_PROGRESS.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1109 authentic native ARM64/ARM64 three-device same-account sibling UDP spanning real physical source change PASS, exact frozen product binaries/OS MTU/Stop verified; Windows and CPU/timing gaps explicit."}
+```

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1109",
+  "source_sha": "32cd752201e01134fc53157270ce223de70a8c7a",
+  "result": "PASS_SCOPED_NATIVE_ARM64_ARM64_THREE_DEVICE_OS_SOURCE4_SWITCH_WITH_SIBLING_TRAFFIC",
+  "artifact_verified": true,
+  "run": {
+    "id": 41797983526,
+    "job_id": 126466557967,
+    "artifact_id": 13305653786,
+    "conclusion": "success",
+    "workflow_head_sha": "dbe4cc95777b6e3bcf079d2105f888a819bd7788",
+    "product_binary_source": "32cd752201e01134fc53157270ce223de70a8c7a",
+    "product_rebuilt": false,
+    "product_artifact_origin_run": 41787602880
+  },
+  "manifest": {
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "architecture": "native_aarch64",
+    "elf_machine": 183,
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "sha256": {
+      "wbd-v4-client": "e96c6d53b38251662061517e573ebfb21b77a868c73f15358fad78476dfc127d",
+      "wbd-v4-server": "87a75975797cbee472f1a7c95fb083bd4d65dd2e76eb271ffac825b8d35f444a",
+      "libwbd_engine.so": "860e40098d654384a1ae5e85f82874c7b7ba185bca022597404ac825eecd8a10"
+    }
+  },
+  "native": {
+    "client_server": "ARM64 client + ARM64 server on real Linux kernel netns and AF_PACKET/TUN",
+    "one_server_port": 443,
+    "distinct_protected_leases": 3,
+    "accounts_devices": "Alice-A, Alice-D independent installation, Bob",
+    "before_source_ipv4": "10.25.0.2",
+    "after_source_ipv4": "10.25.0.9",
+    "route_and_link_os_readback": true,
+    "new_physical_mtu": 1280,
+    "configured_outer_ipv4_mtu": 1460,
+    "alice_auto_lease": "10.66.0.242",
+    "alice_os_tun_mtu_before": 1389,
+    "alice_os_tun_mtu_after": 1209,
+    "bob_os_tun_mtu_stable": 1389,
+    "alice_d_os_tun_mtu_stable": 1389,
+    "side_devices_udp_each_while_A_changes": 24,
+    "side_device_application_time_window_brackets_physical_change_and_new_ready": true,
+    "alice_new_tls_generation_rust_m4": true,
+    "alice_new_real_udp_echo": 5,
+    "old_generation_precise_stop": true,
+    "physical_change_command_to_ready_ms": 315.15,
+    "ready_to_five_echo_completion_ms": 11703.94
+  },
+  "artifact_sha256": {
+    "zip": "82acfeba37984a29b4ed5f69d025ada36850f85abf412292a2532ac51fc063c5",
+    "manifest": "6592f1941f51d90f05442e926b92d05c49c71b530bf74666292e0bb9027fe596",
+    "result": "be886d94a0e86fa59628f6814a87420a27ced527584f27f448524a557550ad13",
+    "physical_route": "21abf75ba918c149d102516f70540fb0c392917283dbdd442088e573ddbb5f4c",
+    "physical_link": "0dc7fdba357b967cf5feaec15376886c7cfad99b3792f6e6e43fe1ed67a7cd4a",
+    "native_log": "5d10bc9e797715e51be02b1ebbdea0563a6d3ed7699a875803a6209994c80023"
+  },
+  "limits": [
+    "Only original Go TLS and Rust normal/off 3-device cross-generation UDP, this exact ARM64/ARM64 SOURCE; not same binary as x86 H1107",
+    "OS event notification-to-TLS start, authentication-to-first-single-packet, CPU/p99, persistent inner TCP in this scenario NOT_MEASURED",
+    "No real Windows NIC/Npcap physical source change, Android network callback/VPN or remote ICMP3/4 qualification",
+    "H998 old same-connection hot-MTU shrink FAIL and historical ARM64 Game4FEC Action FAIL remain; new-path TLS and MTU readback are distinct",
+    "200ms quiet / 500ms max is notification coalescer bound, not cold TLS or first-business latency SLA"
+  ]
+}
