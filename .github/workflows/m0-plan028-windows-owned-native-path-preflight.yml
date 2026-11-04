@@ -1,4 +1,5 @@
 name: M0 PLAN028 Windows test-owned NIC native IPv4 notification and actual selected source proof
+# H1116 actual OS source address DAD and temporary route unreachable bounded retry.
 # H1115 narrow asynchronous OS preferred-source readback fix, with failing receipt.
 run-name: PLAN028 Win real test-only HyperV source4 native event preflight ${{ github.sha }}
 on:
@@ -114,14 +115,25 @@ jobs:
                 $changeAt=[DateTimeOffset]::UtcNow
                 $selectedAfter=$null
                 for ($i=0;$i -lt 35;$i++) {
-                  $cand=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
-                    Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.9'})
+                  try {
+                    $cand=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
+                      Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.9'})
+                  } catch {
+                    # DAD/route convergence can be temporarily unreachable.
+                    # Never grant PASS for a failed physical OS readback.
+                    $cand=@()
+                    $result.last_transient_route_error=$_.Exception.Message
+                  }
                   if ($cand.Count -gt 0 -and $listener.Addresses -gt 0) {$selectedAfter=$cand[0];break}
                   Start-Sleep -Milliseconds 100
                 }
                 $result.native_addr_events=$listener.Addresses
                 $result.native_route_events=$listener.Routes
-                if (-not $selectedAfter) {throw 'new source4 not OS selected or no native IPv4 callback'}
+                $result.post_owned_ip=@(Get-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 |
+                  Select-Object IPAddress,AddressState,SkipAsSource)
+                $result.post_owned_routes=@(Get-NetRoute -InterfaceIndex $idx -AddressFamily IPv4 |
+                  Select-Object DestinationPrefix,InterfaceIndex,NextHop,State)
+                if (-not $selectedAfter) {throw 'new source4 not OS selected or native IPv4 notification absent; receipt saved'}
                 $result.selected_source_after='198.18.246.9'
                 $result.os_mutation_to_readback_ms=[math]::Round(([DateTimeOffset]::UtcNow-$changeAt).TotalMilliseconds,2)
                 $result.status='PASS_WINDOWS_NATIVE_OWNED_INTERFACE_IPV4_NOTIFY_AND_SOURCE_SELECTION_ONLY'

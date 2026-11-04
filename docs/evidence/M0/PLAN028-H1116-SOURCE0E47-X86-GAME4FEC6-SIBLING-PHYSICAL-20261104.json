@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1116",
+  "source_sha": "0e47d9c9532cbda9e655bd198348acf4ff4ddcd1",
+  "result": "PASS_SCOPED_NATIVE_X86_GAME4FEC6_TWO_PROTECTED_GROUPS_REAL_IP_SWITCH_BOB_CONTINUOUS",
+  "artifact_verified": true,
+  "run": {
+    "id": 41802636775,
+    "job_id": 126481863969,
+    "artifact_id": 13307314630,
+    "conclusion": "success",
+    "harness_sha": "4813615ea11aba7b54a7ee737a01d59e07c9136f",
+    "original_binary_origin_run": 41782228876,
+    "product_rebuilt": false
+  },
+  "product_manifest": {
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_elf_machine": 62,
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "exact_elf_binary_hashes_verified": true
+  },
+  "native": {
+    "client_server": "Linux x86_64+x86_64",
+    "server_port": 443,
+    "protected_game4_groups": 2,
+    "lanes_each": 4,
+    "fec": "fixed6",
+    "source4_before": "10.25.0.2",
+    "source4_after": "10.25.0.9",
+    "new_physical_mtu": 1280,
+    "configured_outer_ipv4": 1460,
+    "OS_route_and_link_readback": true,
+    "alice_lease_preserved": "10.66.0.201",
+    "alice_inner_OS_MTU_before": 1358,
+    "alice_inner_OS_MTU_after": 1178,
+    "bob_OS_MTU_unchanged": 1358,
+    "bob_udp_echo_spanning_A_switch_and_new_ready": 32,
+    "alice_new_gen_udp_echo": 64,
+    "new_original_tls_rust_m4": true,
+    "old_exact_stop": true,
+    "shared_rust_tun_stop": true,
+    "game4_fec6_parity_counters": true,
+    "physical_change_command_to_READY_ms": 1074.04,
+    "READY_to_all64_echo_finished_ms": 15230.77
+  },
+  "artifact_sha256": {
+    "zip": "fe2e9d6de9c2f054d851d6f7c5174329ef79795a3d5d3dcdb38b621b9822633c",
+    "manifest": "8e95731e18f7a10ba6b8d3cea970ca0ac1a70fc423a3b902c0c7bc2e48bf061d",
+    "result": "9aeaa97501b1addc8153a6bff404cf8fa375600c4196c9da34331b97961556f2"
+  },
+  "prior_attempt": {
+    "action": 41802289354,
+    "result": "FAIL_FIXTURE",
+    "cause": "Bash app delay was not forwarded through sudo/ip netns env, Bob UDP finished before actual switch. Product TLS/new generation/Stop observed even on failed attempt."
+  },
+  "not_measured": [
+    "OS notification to TLS",
+    "authenticated to first single packet",
+    "CPU/p99",
+    "persistent inner TCP in this scene",
+    "Windows physical Npcap",
+    "Android true network",
+    "remote ICMP3/4"
+  ],
+  "historical": [
+    "H998 original same-connection hot-shrink FAIL remains",
+    "historical ARM64 Game4FEC Action FAIL remains",
+    "CPU causality not proven"
+  ]
+}
