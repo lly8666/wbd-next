@@ -1,0 +1,10 @@
+# H1234｜Game4 真单lane自动热换：x86_64双端5%双向物理丢包（候选）
+- 用户继续当前授权PLAN028。上次H1233 tested SOURCE `814dec69f5200fa62dc63b76cb9ded1e9680a9b5`: true native ARM64+ARM64 Game4 Off/Fixed6 each 8 lane1→2→3→4 twice, 9436/9436 real no-retry TUN UDP, p99 ~0.72ms, max receipt gap ~109.5ms, single GameAdapter+FEC/Health/TUN & three TLS siblings retained. All original artifact checks green. H998 same-session live MTU shrink FAIL still retained.
+- This next *whole Linux platform task* is **native x86_64 client + x86_64 server**, not mixed/QEMU. Reuse exact source-original Go TLS and Rust M4; one SOURCE build shared by two independent native scenes: Game4 Off + Game4 Fixed6. Each scene eight serial protected hot TLS lane turns lane1→2→3→4 twice with 18s±3s jitter; one server443, three continuously authenticated clients.
+- Physically inject **Linux tc netem 5% random loss on both Bob veth egress directions** (`mxb0` in namespace and `mhb0` host), after original first Game4 READY. Require actual kernel qdisc dropped counters >=15 for each direction, preserve original tc -s readback in artifacts; Alice (Game2) and Carol (Normal Auto) are unimpeded controls. No Go packet pump, custom wire, new feedback, per-packet Python simulation or application retries.
+- Record authentic per-client sent/echoed/missed, received RTT p99, longest successful receipt gap, physical NIC/route/MTU and eight client↔server fresh TLS tuple receipts; exact one M4 owner with no other 3 lane reconnect. Each control >=99.5% no-retry UDP, Bob>=98% under actual impairment; gap<1s, p99<20ms. Actual results, including possible FAIL, rule qualification; 5% configured loss is NOT automatically 5% measured packet loss.
+- STATUS **CANDIDATE / NOT_RUN** until native Action. Scope does not grant Windows/Android/physical two-NIC switching, WAN31% or H998 online MTU rebind PASS.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"Add H1234 native x86_64 two-sided actual Linux kernel 5pct-loss Game4 independent single-lane hot rotation qualification test after H1233 native ARM64 pass; pending Action."}
+```
