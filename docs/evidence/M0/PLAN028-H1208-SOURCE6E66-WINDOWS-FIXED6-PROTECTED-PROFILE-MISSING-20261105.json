@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1208",
+  "source_sha": "6e6615ec6cdfd97b6e51608581499394680bda8a",
+  "result": "FAIL_FIRST_TLS_PROTECTED_ADMISSION",
+  "run_id": 41934866350,
+  "job_id": 126942519031,
+  "artifact_id": 13372554656,
+  "github_zip_sha256": "08c56e37b63c8a7c1aeac67c09a8ff16a47d0a01c59530dd129bb898204fd6c6",
+  "verified": {
+    "windows_original_SYN_MSS": 1420,
+    "linux_original_SYNACK_MSS": 1420,
+    "windows_outer_user": 1460,
+    "windows_inner_planned": 1375,
+    "offline_route_key": true,
+    "original_windows_signed_native": true
+  },
+  "failure": "Original client feature7 fixed was sent with opt.NormalFec=0 despite existing Windows client cold profile=maximum and server shared Normal Fixed policy requiring nonzero exact profile+1 in already encrypted V4 extension. Client got realityfront ErrAdmissionParams after real SYN/SYNACK/TLS; server V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner.",
+  "next": "Read actual client FEC2Profile (maximum=6) before TLS, pass authenticated byte22 profile+1=7; server validates independent of route-key origin; leave wire grammar/AEAD/handshake unchanged. Auto extension remains zero.",
+  "not_qualified": "two generations, Wintun OS MTU, native UDP/TCP and Stop NOT_RUN, no false PASS"
+}

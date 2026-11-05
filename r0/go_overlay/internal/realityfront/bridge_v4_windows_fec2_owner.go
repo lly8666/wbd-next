@@ -27,18 +27,20 @@ type winFec2RawDelivery struct{
 }
 func V4WindowsEstablishOriginalFEC2ClientOwner(
  ctx context.Context,library string,assoc *faketcp.ClientAssociation,
- cfg ClientAdmissionConfig,
+ cfg ClientAdmissionConfig,normalFixedProfilePlusOne uint8,
 )(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
  if ctx==nil||assoc==nil||assoc.BootstrapConn()==nil||
   cfg.Policy.Transport!=TransportNormal||
   cfg.Policy.FECMode==FECOff||
+  (cfg.Policy.FECMode==FECFixed&&(normalFixedProfilePlusOne<1||normalFixedProfilePlusOne>7))||
+  (cfg.Policy.FECMode==FECAuto&&normalFixedProfilePlusOne!=0)||
   cfg.Policy.DesiredLanes!=1||cfg.DesiredLanes!=1{
   return nil,nil,ErrAdmissionUnsupported
  }
  native,err:=newV4WindowsPrivateOwnerBridge(library)
  if err!=nil{return nil,nil,err}
  session,err:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-  V4ClientOptions{DataPlaneReady:true,fec2Product:true})
+  V4ClientOptions{DataPlaneReady:true,fec2Product:true,NormalFec:normalFixedProfilePlusOne})
  if err!=nil{return nil,nil,err}
  handoff,err:=assoc.Detach()
  if err!=nil{return nil,nil,err}

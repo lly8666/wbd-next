@@ -1,0 +1,9 @@
+# PLAN028 H1208 — narrow real Windows fixed admission and high30 test lifecycle repairs
+
+Source6e66 [Windows Fixed6 Action41934866350](https://github.com/lly8666/wbd-next/actions/runs/41934866350) actually reached original SYN/SYNACK MSS1420, TLS then returned `realityfront: invalid admission parameters`; source-artifact13372554656 shows server protected admission refused. Original Windows Fixed/Auto feature7 owner sent `V4ClientOptions{fec2Product:true,NormalFec:0}`, while shared Normal Fixed server correctly insists on authenticated exact byte22 profile+1. Connect **already selected** client `FEC2Profile` (maximum=6) into existing encrypted V4 extension, profile+1=7. Auto remains0; bad/missing profile local error, server authority unchanged. No TLS PSK exchange, new header or FEC algorithm. Signed native two-gen Fixed6 must be rerun; old Action FAIL retained.
+
+Source0510 [x86 Normal Fixed6 high30 Action41934275296](https://github.com/lly8666/wbd-next/actions/runs/41934275296) actually completed original Go TLS/Rust physical A→B→A under true `tc loss30% delay250ms`; newest generation7 after bounded retries, real Game4 sibling UDP32+320, real Normal193/200 at10ms received-only RTT p99 **550.038ms**, true kernel dropped241 and qdisc restored. **Overall Action FAIL** after native measurement, not promoted: old baseline Game2 client idle over the extended 128s Game4 witness, could auto-retire via existing 90s dead before scripted Stop. Keep this unrelated old owner alive with genuine Game2 UDP every8s, assert actual packets and rerun full owned Stop. No product FEC/steady wire change; no fabricated certificate or ready.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix original Windows Fixed protected extension strength and long highloss test real Game2 sibling health, archive failed exact SOURCE instead of promoting."}
+```

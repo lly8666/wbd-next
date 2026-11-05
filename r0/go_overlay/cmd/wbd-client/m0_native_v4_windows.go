@@ -607,7 +607,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   // Protected feature7 is real original credential TLS->Rust M1/M3,
   // not a caller-selected FEC switch. The release capability gate still
   // denies production Fixed/Auto pending genuine M2 applied revision.
-  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth)
+  // The shared server requires this device's exact fixed profile in the
+  // EXISTING credential-TLS-authenticated V4 extension byte22. Auto remains 0.
+  // Read the already validated cold client setting, never an untrusted packet.
+  fixedProfilePlusOne:=uint8(0)
+  if o.Mode==m0WinModeFixed{
+   selected,profileErr:=m0WindowsV4Profile(o.FEC2Profile)
+   if profileErr!=nil{return profileErr}
+   fixedProfilePlusOne=uint8(selected)+1
+  }
+  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne)
  }
  if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)

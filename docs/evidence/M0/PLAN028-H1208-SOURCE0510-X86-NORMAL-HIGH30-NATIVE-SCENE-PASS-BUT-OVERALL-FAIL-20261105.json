@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1208",
+  "source_sha": "0510706bb49c2c6e7ccdda5d59ec4828bff55821",
+  "result": "FAIL_POST_SCENE",
+  "run_id": 41934275296,
+  "job_id": 126938688397,
+  "artifact_id": 13373621269,
+  "zip_sha256": "19f929a9986a88d6d0a5faf43f1333a0d8a8d02f97b8b4c009364313ec5dd414",
+  "verified": {
+    "genuine_source4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "actual_normal_authenticated_generations": [
+      1,
+      2,
+      4,
+      7
+    ],
+    "old_exact_stops": [
+      1,
+      2
+    ],
+    "real_tc_loss_pct": 30,
+    "physical_delay_ms": 250,
+    "actual_qdisc_dropped_packets": 241,
+    "normal_inner_udp_received": 193,
+    "normal_inner_udp_sent": 200,
+    "received_only_p99_ms": 550.038,
+    "delivered_max_gap_ms": 39.994,
+    "qdisc_restored": true,
+    "normal_fixed6_server_M4_receipts": 3,
+    "game4_sibling_live_udp": [
+      32,
+      320
+    ],
+    "real_native_scene_marker": true
+  },
+  "not_qualified": "original whole native script stopped with code1 after scene + qdisc receipt; no overall owned Stop/PASS claim",
+  "next": "while 128s genuine Game4 high-loss witness, keep baseline Game2 owner alive via ordinary inner UDP every8s; native test rerun",
+  "historical_failures": [
+    "H998 same-connection hot-shrink FAIL",
+    "H998 ARM Game4 Action FAIL",
+    "Remote ICMP/Android/CPU causal NOT_RUN"
+  ]
+}
