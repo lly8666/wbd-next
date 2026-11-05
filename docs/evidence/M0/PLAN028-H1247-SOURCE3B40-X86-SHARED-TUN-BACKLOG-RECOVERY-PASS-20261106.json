@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1247",
+  "source_sha": "3b40388c0a1c9fa6d6d19d3368e6e9f5aafd100a",
+  "result": "PASS_SCOPED_UNIT_NATIVE_X86",
+  "workflow": "m0-plan028-shared-tun-backlog-recovery.yml",
+  "action_run_id": 42064007729,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42064007729",
+  "job_id": 127373027083,
+  "job_result": "success",
+  "artifact_id": 13432504318,
+  "artifact_name": "plan028-h1247-native-x86-shared-tun-recovery",
+  "artifact_sha256": "32924ec750266b7bb99ce462b604518478c19acc2fd9b5b826eea367077eaea9",
+  "native_runner": "Linux x86_64",
+  "command": "cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_shared_tun_ -- --test-threads=1 --nocapture",
+  "tests": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "root_cause": "Old shared TUN per-lease flush only retried 1 pending packet per loop, while TUN admits 8 new packets/loop; after temporary downstream saturation, sustained A traffic could grow or keep a full backlog despite available A channel capacity. This was a code-path risk, not a measured network loss rate.",
+  "change": {
+    "per_route_try_budget": 8,
+    "total_try_budget_per_reader_turn": 64,
+    "stop_on_full": true,
+    "queue_packets": 8,
+    "queue_bytes": 65536,
+    "age_limit_ms": 100,
+    "outer_ingress_batch": 8,
+    "wire_or_crypto_change": false
+  },
+  "observed_unit": {
+    "a_initial_blocked_turns": 2,
+    "a_initial_backlog": 8,
+    "a_expected_bounded_overflow_before_recovery": 8,
+    "a_recovered_turns": 6,
+    "a_recovered_inbox_packets": 48,
+    "a_flush_delivered_per_turn": 8,
+    "a_post_recovery_overflow": 0,
+    "b_continuous_correct_packets": 64,
+    "existing_full_a_keeps_b_and_bounded_drop": "PASS",
+    "existing_precopy_4096_age_bytes": "PASS",
+    "existing_generation_scope": "PASS"
+  },
+  "limitations": [
+    "In-memory bounded Rust mpsc inbox recovery against production enqueue/flush functions; not a live kernel dual-endpoint throughput or causal CPU benchmark.",
+    "No new ARM64 native or Windows signed path qualification for this queue-only Linux code change.",
+    "PLAN027A H998 original same-socket online MTU shrink FAIL, remote ICMP unmeasured, Windows physical seven-mode/Android partial scope unchanged.",
+    "Separate H1246 Game2 ARM64 Off/x86 Fixed6 physical generation native Actions passed under earlier SOURCE 830d5bc and are not inferred from this test."
+  ]
+}
