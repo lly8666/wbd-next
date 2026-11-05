@@ -8,10 +8,10 @@ use std::os::fd::OwnedFd;
 use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::collections::VecDeque;
-use std::sync::mpsc::{Receiver,RecvTimeoutError};
+use std::sync::mpsc::{self,Receiver,RecvTimeoutError,SyncSender};
 use crate::v4_embedded_go::OriginalTunIngress;
 use std::time::{Instant,Duration};
-use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
+use crate::v4_game_lane::{GameAdapter,GameLaneOpener,OriginalGameLaneRekey,Error as GameAdapterError};
 use crate::v4_game_cosmetic_outer::CosmeticOuter;
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::game_shared::GameError;
@@ -30,6 +30,15 @@ unsafe extern "C" {fn poll(fds:*mut GamePollFd,nfds:usize,timeout:i32)->i32;}
 struct TxLane{
     key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>,
     last_initial_id:Option<u64>
+}
+// One command to the EXISTING Game4 TX worker, never a second scheduler.
+struct TxLaneSwitch{
+    slot:usize,flow:GoFlow,seq:u64,prepared:OriginalGameLaneRekey,
+    ready:SyncSender<Result<GameLaneOpener,()>>,
+}
+struct RxLaneSwitch{
+    flow:GoFlow,raw:Arc<ScopedRawIpv4Rx>,opener:GameLaneOpener,
+    ready:SyncSender<Arc<ScopedRawIpv4Rx>>,
 }
 #[derive(Default)]
 struct RxLockSample {
@@ -72,6 +81,10 @@ pub(crate) struct GameKernelOwner{
     rx_lock_sample:Arc<RxLockSample>,tx_reasons:Arc<TxRejectReasons>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
+    tx_lane_switch:SyncSender<TxLaneSwitch>,
+    rx_lane_switch:Vec<SyncSender<RxLaneSwitch>>,
+    physical_ifname:String,physical_ifindex:u32,
+    physical_generation:u32,server:bool,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -160,6 +173,7 @@ impl GameKernelOwner{
         let scoped_cosmetic=CosmeticOuter::with_normal_feedback(
             &lanes.iter().map(|l|l.key).collect::<Vec<_>>(),
             &seqs,feedback_epoch).map_err(|_|())?;
+        let (tx_lane_switch,tx_lane_commands)=mpsc::sync_channel::<TxLaneSwitch>(1);
         let tx_adapter=Arc::clone(&adapter);
         let tx_stop=Arc::clone(&stop);
         let tx_tun=Arc::clone(&tun);
@@ -217,6 +231,41 @@ impl GameKernelOwner{
                 let mut cosmetic=scoped_cosmetic;
                 let mut observed_hints=[0u64;4];
                 while !tx_stop.load(Ordering::Acquire){
+                    // The original path supervisor admits exactly one
+                    // protected cold lane. Rekey within the existing TX
+                    // thread so a logical Game4 job cannot seal with the
+                    // old AEAD while using the new raw source 4-tuple.
+                    if let Ok(change)=tx_lane_commands.try_recv(){
+                        let slot=change.slot;
+                        let answer=if slot>=lanes.len()||
+                            lanes[slot].key.slot!=slot as u32+1||
+                            change.seq==0{
+                            Err(())
+                        }else{
+                            match tx_adapter.lock(){
+                                Ok(mut game)=>{
+                                    match game.apply_original_game_lane_tx_rekey(
+                                        change.prepared){
+                                        Ok((actual,opener)) if actual==slot=>{
+                                            lanes[slot].flow=change.flow;
+                                            lanes[slot].seq=change.seq;
+                                            lanes[slot].last_initial_id=None;
+                                            observed_hints[slot]=tx_hints[slot]
+                                                .load(Ordering::Acquire);
+                                            if cosmetic.rekey_one_lane(slot,
+                                                lanes[slot].key,change.seq,
+                                                feedback_epoch).is_ok(){
+                                                Ok(opener)
+                                            }else{Err(())}
+                                        },
+                                        _=>Err(()),
+                                    }
+                                },
+                                Err(_)=>Err(()),
+                            }
+                        };
+                        let _=change.ready.send(answer);
+                    }
                     // An A2 /32 publication revokes old A without waiting
                     // for old Rust Stop. Do not drain old A's queued ingress
                     // into original Game AEAD after the successor owns it.
@@ -648,11 +697,14 @@ impl GameKernelOwner{
                 }
             }).map_err(|_|())?;
         let mut threads=vec![tx_worker];
+        let mut rx_lane_switch=Vec::with_capacity(n);
         for i in 0..n{
             let lane=lanes_key(generation,i);
             let mut lane_opener=lane_openers.next().ok_or(())?;
-            let flow=flows[i];
-            let raw=Arc::clone(&rx[i]);
+            let mut flow=flows[i];
+            let mut raw=Arc::clone(&rx[i]);
+            let (rx_sender,rx_commands)=mpsc::sync_channel::<RxLaneSwitch>(1);
+            rx_lane_switch.push(rx_sender);
             let receiver_owner=Arc::clone(&rx_owner);
             let rx_tun=Arc::clone(&tun);
             let rx_stop=Arc::clone(&stop);
@@ -672,17 +724,26 @@ impl GameKernelOwner{
             let rx_start=epoch_clock;
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
-                let (src,dst,sp,dp)=if server{
-                    (flow.client_ip,flow.server_ip,flow.client_port,flow.server_port)
-                }else{
-                    (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
-                };
-                let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
                 let mut wire=[0u8;2048];
                 let sample_lock=std::env::var("WBD_GAME_RX_LOCK_SAMPLE")
                     .as_deref()==Ok("1");
                 let mut sampled_sequence=0u64;
                 while !rx_stop.load(Ordering::Acquire){
+                    // The very same lane worker receives the replacement
+                    // protected tuple, per-lane replay owner and kernel
+                    // socket. The other N-1 workers never stop.
+                    if let Ok(change)=rx_commands.try_recv(){
+                        let old=std::mem::replace(&mut raw,change.raw);
+                        flow=change.flow;
+                        lane_opener=change.opener;
+                        let _=change.ready.send(old);
+                    }
+                    let (src,dst,sp,dp)=if server{
+                        (flow.client_ip,flow.server_ip,flow.client_port,flow.server_port)
+                    }else{
+                        (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
+                    };
+                    let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
                     let (len,_,ack32)=match raw.recv_one_with_ack_into(
                         generation,&mut wire,tuple,peer_persona
                     ){
@@ -903,7 +964,57 @@ impl GameKernelOwner{
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
             rx_delivery_commit_failed,rx_lock_sample,tx_reasons,outer_blocked_duplicate,
-            outer_repeated_copy_sent})
+            outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
+            physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
+            physical_generation:generation,server})
+    }
+    /// A NEW real original-Go TLS+Rust M1 lane has just committed while
+    /// the remaining lanes of this GameAdapter stay LIVE. Reuse the existing
+    /// TX/RX threads; only the selected RX raw socket and lane AEAD/PN
+    /// owner are switched. This never touches shared TUN/FEC/dedup ownership.
+    pub(crate) fn replace_one_authenticated_lane(
+        &mut self,slot:usize,flow:GoFlow,seq:u64,
+        prepared:OriginalGameLaneRekey,
+    )->Result<(),()>{
+        if self.stop.load(Ordering::Acquire)||slot>=self.rx.len()||
+            slot>=self.rx_lane_switch.len()||seq==0||
+            prepared.slot!=slot{return Err(())}
+        let (src,dst,sp,dp)=if self.server{
+            (flow.client_ip,flow.server_ip,flow.client_port,flow.server_port)
+        }else{
+            (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
+        };
+        let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
+        let new_raw=Arc::new(ScopedRawIpv4Rx::open_exact_tuple(
+            &self.physical_ifname,self.physical_ifindex,
+            self.physical_generation,tuple).map_err(|_|())?);
+        let (tx_ack,tx_done)=mpsc::sync_channel(1);
+        self.tx_lane_switch.try_send(TxLaneSwitch{
+            slot,flow,seq,prepared,ready:tx_ack
+        }).map_err(|_|())?;
+        let opener=tx_done.recv_timeout(Duration::from_secs(2))
+            .map_err(|_|())??;
+        let (rx_ack,rx_done)=mpsc::sync_channel(1);
+        self.rx_lane_switch[slot].try_send(RxLaneSwitch{
+            flow,raw:Arc::clone(&new_raw),opener,ready:rx_ack
+        }).map_err(|_|())?;
+        let retired=rx_done.recv_timeout(Duration::from_secs(2))
+            .map_err(|_|())?;
+        let old=std::mem::replace(&mut self.rx[slot],new_raw);
+        // The old physical worker already handed off its LAST borrowed
+        // record/socket; exact scoped kernel shutdown is now safe.
+        old.begin_stop();
+        retired.begin_stop();
+        let deadline=Instant::now()+Duration::from_secs(2);
+        if old.stop_until(deadline)!=StopResult::Drained||
+            retired.stop_until(deadline)!=StopResult::Drained{
+            self.stop.store(true,Ordering::Release);
+            return Err(())
+        }
+        Ok(())
+    }
+    pub(crate) fn fail_closed_after_hot_rekey(&self){
+        self.stop.store(true,Ordering::Release);
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
         (self.outer_repeated_copy_sent.load(Ordering::Relaxed),

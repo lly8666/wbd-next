@@ -19,7 +19,7 @@ use std::ffi::c_int;
 use wbd_types::MonoNs;
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use crate::memory::Arena;
-use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
+use crate::cold_v4::{UntrustedColdV4,ColdIdentity,COLD_V4_LEN};
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
 use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -925,6 +925,7 @@ struct Entry{
 struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
+    original_identity:ColdIdentity,
     client_lease_ipv4:Option<[u8;4]>,
     // Game server's optional shared single-reader route is an authenticated
     // /32. One Game group owns its private receiver and Stop fence only.
@@ -2887,6 +2888,15 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     let generation=r.generation;
     r.generation=generation.checked_add(1).ok_or(FULL)?;
     let group_handle=(u64::from(generation)<<32)|0x474Du64;
+    let original_identity=locks[0].game_pending_cold.as_ref()
+        .ok_or(BAD_STAGE)?.identity();
+    let mut ordered_handles=vec![0u64;handles.len()];
+    for (i,e) in locks.iter().enumerate(){
+        let lane=usize::from(e.game_pending_cold.as_ref()
+            .ok_or(BAD_STAGE)?.identity().go_lane_id);
+        if lane==0||lane>handles.len(){return Err(INVALID)}
+        ordered_handles[lane-1]=ids[i];
+    }
     let mut cold=Vec::with_capacity(handles.len());
     for e in &mut locks{
         // Consume the sole per-lane original-Go cold authority. Failure in
@@ -2913,7 +2923,8 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
          ordered.iter().map(|v|v.2).collect::<Vec<_>>())
     };
     r.game_groups.insert(group_handle,GameGroupNative{
-        adapter:Arc::new(Mutex::new(adapter)),handles:ids,
+        adapter:Arc::new(Mutex::new(adapter)),handles:ordered_handles,
+        original_identity,
         stopped:false,stopping:false,outer_repair_enabled:true,
         client_lease_ipv4:client_lease.flatten(),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -3196,6 +3207,88 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     e.stopped=true;e.stopping=false;OK
 }
+// A fully authenticated ORIGINAL Go-TLS per-lane M1 commit may replace
+// only its exact preceding Game4 lane in the already running one Rust
+// GameAdapter. No second FEC/first-delivery owner or shared TUN registration.
+// The caller passes the expected old native handle as a compare-and-swap
+// generation fence: stale cold TLS attempts can never replace a newer lane.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
+    group:u64,lane:u32,expected_old:u64,new_handle:u64,
+)->i32{
+    if !(1..=4).contains(&lane)||new_handle==0||expected_old==new_handle{
+        return INVALID
+    }
+    let slot=(lane-1) as usize;
+    // Resolve the newly committed authority without keeping registry
+    // locked across per-session locks or native kernel worker acknowledgments.
+    let cell={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        if g.stopped||g.stopping||g.handles.len()!=4||
+           g.handles[slot]!=expected_old||g.drivers.is_none(){
+            return BAD_STAGE
+        }
+        let Some(c)=r.entries.get(&new_handle)else{return UNKNOWN};
+        Arc::clone(c)
+    };
+    let (cold,new_flow,new_seq,lease)={
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.game_joined||e.protected_features!=7||
+            e.game_pending_cold.is_none()||
+            e.workers.is_some()||e.raw_tx.is_some()||
+            e.raw_rx.is_some()||e.tun_sink.is_some()||
+            e.game_tx_boundary==0{return BAD_STAGE}
+        let id=e.game_pending_cold.as_ref().expect("cold above").identity();
+        if u32::from(id.go_lane_id)!=lane{return INVALID}
+        // New cold is consumed ONLY once by this genuinely committed
+        // original M1 handle. No independent unprotected grant exists.
+        e.game_joined=true;
+        (e.game_pending_cold.take().expect("cold above"),e.flow,
+         u64::from(e.game_tx_boundary),e.client_lease_ipv4)
+    };
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping||g.handles.len()!=4||
+       g.handles[slot]!=expected_old||g.drivers.is_none(){
+        return BAD_STAGE
+    }
+    let id=cold.identity();
+    let base=g.original_identity;
+    if id.server!=base.server||id.tunnel_id!=base.tunnel_id||
+        id.logical_epoch!=base.logical_epoch||
+        id.principal_hash!=base.principal_hash||
+        id.cipher!=base.cipher||
+        id.client_limit!=base.client_limit||
+        id.server_limit!=base.server_limit||
+        id.incarnation==base.incarnation||
+        lease!=g.client_lease_ipv4||
+        new_flow.client_ip!=g.flows[slot].client_ip||
+        new_flow.server_ip!=g.flows[slot].server_ip||
+        new_flow.server_port!=g.flows[slot].server_port||
+        new_flow.client_port==g.flows[slot].client_port{
+        return INVALID
+    }
+    let prepared={
+        let Ok(game)=g.adapter.lock()else{return BAD_STAGE};
+        match game.prepare_original_game_lane_rekey(cold,g.server){
+            Ok(p)=>p,Err(_)=>return INVALID
+        }
+    };
+    let Some(driver)=g.drivers.as_mut()else{return BAD_STAGE};
+    if driver.replace_one_authenticated_lane(slot,new_flow,new_seq,prepared).is_err(){
+        driver.fail_closed_after_hot_rekey();
+        return BAD_STAGE
+    }
+    g.handles[slot]=new_handle;
+    g.flows[slot]=new_flow;
+    g.tx_seqs[slot]=new_seq;
+    OK
+}
+
 // Existing authenticated Game M4 owner stop flag is authoritative for
 // Health90 and fatal native RX. A server with multiple groups checks this
 // at its ordinary 1s cold-maintenance turn and retires only the dead group.

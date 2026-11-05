@@ -23,11 +23,14 @@
   "code_refs": [
     "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go",
     "r0/go_overlay/internal/v4productcli/linux.go",
-    "r0/go_overlay/internal/v4productcli/game_linux.go"
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
   ],
   "doc_refs": [
     "docs/devlog/M0/20261105-H1226-SEVEN-MODE-JITTERED-GROUP-ROTATION-CANDIDATE.md",
-    "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json",
+    "docs/devlog/M0/20261105-H1231-GAME4-INDEPENDENT-SINGLE-LANE-CANDIDATE.md"
   ],
   "verification": [
     {
@@ -36,6 +39,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "0cda91575d171c1f8141e937aac91c39d6b303fc",
       "evidence": "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
+    },
+    {
+      "platform": "Linux ARM64 client+ARM64 server native",
+      "scope": "H1231 CANDIDATE true same-epoch Game4 independent 1→2→3→4 twice, other three TLS sockets not recreated, original Rust GameAdapter FEC/PN, live UDP under 18±3s; native action pending.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [

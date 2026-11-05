@@ -25,6 +25,14 @@ use wbd_codec::record_crypto::CryptoError;
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct TxLane{key:LaneKey,tx:LaneTxCrypto}
 struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
+/// One authenticated original Go-TLS rekey for one *existing* physical Game
+/// slot. The shared GameTx logical counter, all FEC windows and GameRx
+/// first-delivery state are deliberately NOT recreated.
+pub(crate) struct OriginalGameLaneRekey{
+    pub(crate) slot:usize,
+    tx:LaneTxCrypto,
+    pub(crate) opener:GameLaneOpener,
+}
 /// One original per-lane AEAD/replay owner, moved (not cloned) into its
 /// sole authenticated Linux worker before any DATA can be delivered.
 pub(crate) struct GameLaneOpener{
@@ -320,6 +328,7 @@ impl GameReceiveOwner{
 pub struct GameAdapter{
     tx:GameTx,rx_owner:Arc<Mutex<GameReceiveOwner>>,
     lanes:Vec<TxLane>,arena:Arena,stopped:bool,inner_mtu:usize,
+    original_suite:RecordSuite,
     wire_scratch:[u8;2048],
     health_origin:Instant,health:Arc<AuthenticatedActivity>,
     #[cfg(feature="fec2_product_record")]
@@ -388,6 +397,7 @@ impl GameAdapter{
             fec:None
         }));
         Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
+            original_suite:suite,
             wire_scratch:[0u8;2048],
             health_origin,health,
             #[cfg(feature="fec2_product_record")]
@@ -466,6 +476,67 @@ impl GameAdapter{
         };
         let rx_scope=GameScope{direction:FlowDirection::Rx,..tx_scope};
         Self::new(tx_scope,rx_scope,material,suite)
+    }
+    /// An existing ORIGINAL TLS/M1 committed single lane may be renewed
+    /// without a new GameAdapter or per-lane GameRx/FEC duplicate authority.
+    /// Caller MUST check group owner handle and the complete original Go
+    /// protected principal/tunnel/epoch/cipher/policy before invoking.
+    /// The slot and its GameScope/LaneKey stay stable; the new TLS exporter
+    /// provides fresh AEAD/IV/HP and a new PN/replay owner.
+    pub(crate) fn prepare_original_game_lane_rekey(
+        &self,cold:UntrustedColdV4,server:bool,
+    )->Result<OriginalGameLaneRekey,Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        let id=cold.identity();
+        let slot=usize::from(id.go_lane_id).checked_sub(1)
+            .ok_or(Error::Unauthorized)?;
+        if slot>=self.lanes.len()||id.server!=server||
+           id.logical_epoch!=self.tx.scope().epoch||
+           RecordSuite::try_from(id.cipher).ok()!=Some(self.original_suite){
+            return Err(Error::Unauthorized)
+        }
+        let key=self.lanes[slot].key;
+        if key.slot!=u32::from(id.go_lane_id)||
+           key.tunnel!=self.tx.scope().tunnel{return Err(Error::Unauthorized)}
+        // Never raise the already installed process TUN MTU or lower the
+        // existing single-GameAdapter logical budget during a hot rekey.
+        let mss=usize::from(id.client_limit.min(id.server_limit).min(2048));
+        if mss<64||mss.saturating_sub(31+16)<self.inner_mtu{
+            return Err(Error::Invalid)
+        }
+        let (c2s,s2c)=cold.internal_direction_keys();
+        let (tx,rx)=if server{(s2c,c2s)}else{(c2s,s2c)};
+        if tx.aead_key==rx.aead_key&&tx.iv==rx.iv&&tx.hp_key==rx.hp_key{
+            return Err(Error::Unauthorized)
+        }
+        let sender=LaneTxCrypto::new_for_suite(tx,mss,self.original_suite)
+            .map_err(|_|Error::Crypto)?;
+        let receiver=ReplayProtectedLaneRx::new_for_suite(
+            rx,mss,self.original_suite,
+            ReplayWindowConfig{pn_per_second:2000,cache_horizon_ms:200,
+                fec_horizon_ms:200,rtt_ms:100,metadata_budget_bytes:131072},
+        ).map_err(|_|Error::Crypto)?;
+        let owner=self.rx_owner.lock().map_err(|_|Error::Stopped)?;
+        if owner.stopped{return Err(Error::Stopped)}
+        Ok(OriginalGameLaneRekey{
+            slot,tx:sender,opener:GameLaneOpener{
+                lane:RxLane{key,rx:receiver},inner_mtu:self.inner_mtu,
+                health_origin:owner.health_origin,
+                health:Arc::clone(&owner.health),
+                last_health_record_ns:0,
+            },
+        })
+    }
+    /// Called ONLY in the existing single Game TX worker, serialized with
+    /// all fresh logical offers and queued scheduled FEC/physical copies.
+    /// RX is switched independently in its sole physical slot worker;
+    /// neither FEC logical ID nor any other lane crypto owner resets.
+    pub(crate) fn apply_original_game_lane_tx_rekey(
+        &mut self,swap:OriginalGameLaneRekey,
+    )->Result<(usize,GameLaneOpener),Error>{
+        if self.stopped||swap.slot>=self.lanes.len(){return Err(Error::Stopped)}
+        self.lanes[swap.slot].tx=swap.tx;
+        Ok((swap.slot,swap.opener))
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}

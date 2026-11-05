@@ -67,6 +67,13 @@ func NewV4LinuxGameClientProduct(cfg V4LinuxGameProductConfig)(*V4LinuxGameProdu
 func NewV4LinuxGameServerProduct(cfg V4LinuxGameProductConfig)(*V4LinuxGameProduct,error){
     return newV4LinuxGameProduct(cfg,true)
 }
+func (p *V4LinuxGameProduct) MatchesProtectedGameFec(fec uint8)bool{
+    if p==nil{return false}
+    p.mu.Lock();defer p.mu.Unlock()
+    expected:=uint8(0)
+    if p.cfg.GameFecEnabled{expected=p.cfg.GameFecProfile+1}
+    return !p.stopped&&p.connected&&fec==expected
+}
 func validGameGroupPolicy(p AdmissionPolicy,n int)bool{
     return (n==2||n==4)&&p.Schema==PolicySchemaV3&&
         p.Transport==TransportGame&&p.DesiredLanes==uint8(n)&&
@@ -176,6 +183,80 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
     if err:=p.commitGroupedOwnerLocked();err!=nil{
         return errors.Join(err,p.abortLocked())
     }
+    return nil
+}
+// The same principal/tunnel/epoch/record protection remains authoritative
+// while just ONE physical TLS/AEAD lane changes. Neither an untrusted SYN
+// tuple nor a new Go-side cohort can change which Rust M4 slot is updated.
+func sameOriginalGameLaneHotIdentity(old,next V4ColdSessionSnapshot,lane uint8)bool{
+    return lane>=1&&lane<=4&&old.server==next.server&&
+        old.laneID==lane&&next.laneID==lane&&
+        old.principal==next.principal&&old.tunnelID==next.tunnelID&&
+        old.epoch==next.epoch&&old.features==next.features&&
+        old.cipher==next.cipher&&old.clientLimit==next.clientLimit&&
+        old.serverLimit==next.serverLimit&&
+        old.incarnation!=next.incarnation&&
+        old.keys.C2S!=next.keys.C2S&&old.keys.S2C!=next.keys.S2C
+}
+
+// Fresh original TLS for lane N occurs on a new genuine FakeTCP association.
+// Its authenticated epoch MUST equal the one still owned by the other three
+// Game4 lanes. Rust swaps the selected M4 RX/AEAD/PN worker on success.
+func (p *V4LinuxGameProduct) ReplaceClientGameLane(
+    ctx context.Context,a *faketcp.ClientAssociation,
+    base ClientAdmissionConfig,lane uint8,
+)error{
+    if p==nil||p.server||ctx==nil||a==nil||lane<1||lane>4{
+        return ErrAdmissionParams
+    }
+    p.mu.Lock();defer p.mu.Unlock()
+    if p.stopped||!p.connected||p.native==nil||
+        len(p.clientSessions)!=4||len(p.bridges)!=4||
+        !validGameGroupPolicy(base.Policy,4)||base.DesiredLanes!=4{
+        return ErrAdmissionUnsupported
+    }
+    i:=int(lane)-1
+    previous:=p.clientSessions[i]
+    old,e:=previous.ColdSnapshot()
+    if e!=nil{return e}
+    base.LaneID=lane
+    fec:=uint8(0)
+    if p.cfg.GameFecEnabled{fec=p.cfg.GameFecProfile+1}
+    next,e:=EstablishClientV4(ctx,a.BootstrapConn(),base,V4ClientOptions{
+        DataPlaneReady:true,Epoch:previous.Epoch,fec2Product:true,GameFec:fec,
+    })
+    if e!=nil{return e}
+    cold,e:=next.ColdSnapshot()
+    if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane){
+        return errors.Join(ErrAdmissionParams,e)
+    }
+    handoff,e:=a.Detach()
+    if e!=nil{return e}
+    bridge:=&v4EmbeddedNativeBridge{}
+    if e=bridge.prepareAuthenticatedClient(next,handoff,a.Flow());e!=nil{
+        return e
+    }
+    abort:=func(err error)error{
+        if _,stopErr:=bridge.StopAndReleaseOriginalOwner();stopErr!=nil{
+            return errors.Join(err,stopErr)
+        }
+        return err
+    }
+    if base.AutoLease{
+        lease,e:=next.AuthenticatedLeaseIPv4()
+        previousLease,pErr:=previous.AuthenticatedLeaseIPv4()
+        if e!=nil||pErr!=nil||lease==""||lease!=previousLease{
+            return abort(errors.Join(ErrAdmissionParams,e,pErr))
+        }
+        if e=bridge.bindAuthenticatedClientIPv4(lease);e!=nil{return abort(e)}
+    }
+    oldBridge,e:=p.native.replaceAuthenticatedOriginalLane(lane,bridge)
+    if e!=nil{return abort(e)}
+    // New Rust M4 has acknowledged its original selected-slot driver
+    // replacement. Publish Go pointer only now; other slots stay unchanged.
+    p.clientSessions[i]=next
+    p.bridges[i]=bridge
+    if _,e=oldBridge.StopAndReleaseOriginalOwner();e!=nil{return e}
     return nil
 }
 // Authenticated Game cohort identity is available ONLY after original Go
@@ -456,6 +537,54 @@ func (p *V4LinuxGameProduct) AdoptServerGameLanes(
     return nil
 }
 
+// A server may receive ONE authenticated successor lane with SAME cohort
+// epoch while the other three original TLS lanes remain active. No complete
+// cohort is re-admitted and no second Rust FEC/first-delivery owner exists.
+func (p *V4LinuxGameProduct) ReplaceServerGameLane(
+    member *V4LinuxGameAuthenticatedLane,lane uint8,
+)error{
+    if p==nil||!p.server||member==nil||member.transferred||
+        lane<1||lane>4{return ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if p.stopped||!p.connected||p.native==nil||
+        len(p.serverSessions)!=4||len(p.bridges)!=4{
+        return ErrAdmissionUnsupported
+    }
+    idx:=int(lane)-1
+    oldSession:=p.serverSessions[idx]
+    old,e:=oldSession.ColdSnapshot()
+    if e!=nil{return e}
+    cold,e:=member.session.ColdSnapshot()
+    if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane)||
+        member.session.verifiedGameFec!=oldSession.verifiedGameFec||
+        !validGameGroupPolicy(member.session.verifiedPolicy,4){
+        return errors.Join(ErrAdmissionParams,e)
+    }
+    oldLease,e:=oldSession.AuthenticatedLeaseIPv4()
+    newLease,leaseErr:=member.session.AuthenticatedLeaseIPv4()
+    if e!=nil||leaseErr!=nil||oldLease!=newLease||
+        (p.cfg.SharedTun!=nil&&newLease==""){
+        return errors.Join(ErrAdmissionParams,e,leaseErr)
+    }
+    if newLease!=""{
+        if e=member.bridge.bindAuthenticatedClientIPv4(newLease);e!=nil{return e}
+    }
+    oldBridge,e:=p.native.replaceAuthenticatedOriginalLane(lane,member.bridge)
+    if e!=nil{return e}
+    member.transferred=true
+    p.serverSessions[idx]=member.session
+    p.bridges[idx]=member.bridge
+    if _,e=oldBridge.StopAndReleaseOriginalOwner();e!=nil{return e}
+    // Release only exact former incarnation. The epoch store's matching
+    // incarnation fence must preserve the just-installed successor.
+    if p.cfg.Epochs!=nil{
+        if e=p.cfg.Epochs.ReleaseLaneInstance(
+            old.principal,old.tunnelID[:],old.laneID,old.epoch,
+            old.incarnation,
+        );e!=nil{return e}
+    }
+    return nil
+}
 // The n original Go FakeTCP associations can arrive in ANY SYN order. The
 // client's protected TLS runs lane1..laneN sequentially, so processing the
 // server TLS in SYN arrival order can deadlock and wrongly bind lane IDs.

@@ -74,6 +74,22 @@ impl CosmeticOuter{
     /// Always advance actual copied TCP byte bounds; 15/16 use Normal's
     /// untracked constant-time path. Track every 16th as positive later
     /// send evidence; freeze at most ONE original PN/Seq per lane.
+    /// A fresh protected original TLS lane must not reuse the previous
+    /// TCP sequence/ACK gap index or a frozen ciphertext on a new 4-tuple.
+    /// Other three physical lanes retain their exact cosmetic state.
+    pub(crate) fn rekey_one_lane(
+        &mut self,index:usize,key:LaneKey,seq:u64,epoch:[u8;16],
+    )->Result<(),OuterAckError>{
+        let Some(l)=self.lanes.get_mut(index)else{
+            return Err(OuterAckError::WrongScope)
+        };
+        *l=Lane{
+            seen:0,not_before:0,pending:None,held:None,sent:l.sent,
+            key:Some(key),epoch,
+            ack:Some(OuterAckIndex::new(key,epoch,seq,128)?),
+        };
+        Ok(())
+    }
     pub fn on_firstsend(&mut self,index:usize,pn:u64,seq:u64,
         wire:&[u8],now_ns:u64)->Result<(),OuterAckError>{
         let Some(l)=self.lanes.get_mut(index)else{

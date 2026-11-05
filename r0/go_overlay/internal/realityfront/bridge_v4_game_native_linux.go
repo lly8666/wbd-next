@@ -9,6 +9,8 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_game_group_lane_replace(
+    uint64_t,uint32_t,uint64_t,uint64_t);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_game_group_peer_persona_set(uint64_t,uint32_t);
@@ -87,6 +89,36 @@ func (g *V4LinuxGameVerifiedGroup) joinAuthenticatedOriginalRust(
     })
     if err!=nil{return nil,err}
     return result,nil
+}
+// ONE protected same-epoch Game4 lane may replace one previously joined
+// lane in the existing Rust group. Original Go and native Rust independently
+// check the old owner, verified protected epoch/principal/lane and new M1
+// commitment. No Go DATA, wire alteration or second lane scheduler.
+func (g *v4NativeGameJoined) replaceAuthenticatedOriginalLane(
+    lane uint8,next *v4EmbeddedNativeBridge,
+)(*v4EmbeddedNativeBridge,error){
+    if g==nil||g.handle==0||g.stopped||g.verified==nil||
+        len(g.laneOwners)!=4||lane<1||lane>4||next==nil||
+        next.handle==0||!next.committed||next.stopped||
+        next.protectedLane!=lane{return nil,ErrAdmissionUnsupported}
+    slot:=int(lane)-1
+    old:=g.laneOwners[slot]
+    if old==nil||old.handle==0||old.stopped||
+        old.protectedEpoch!=next.protectedEpoch||
+        old.authenticatedPrincipal!=next.authenticatedPrincipal||
+        old.protectedFeatures!=next.protectedFeatures||
+        old.serverSide!=next.serverSide{return nil,ErrAdmissionParams}
+    phase,e:=next.state()
+    if e!=nil||phase!=2{return nil,ErrAdmissionUnsupported}
+    rc:=C.wbd_m0_embedded_go_game_group_lane_replace(
+        C.uint64_t(g.handle),C.uint32_t(lane),
+        C.uint64_t(old.handle),C.uint64_t(next.handle),
+    )
+    if rc!=0{return nil,fmt.Errorf("%w: original TLS one Game lane native rekey=%d",errV4Embedded,int(rc))}
+    // Rust's existing selected RX worker has acknowledged handoff and
+    // drained the old socket; the other three workers never stop.
+    g.laneOwners[slot]=next
+    return old,nil
 }
 // This is intentionally a two-value state: native Game crypto installed
 // is not equivalent to verified M4 drivers or kernel first packet.

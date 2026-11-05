@@ -20,7 +20,16 @@ import (
 // There is exactly ONE current owner, at most ONE pending new generation,
 // and at most ONE old generation completing exact Rust Stop. A path notifier
 // cannot drive an unbounded number of handshakes or native worker groups.
+type originalGameLaneTurn struct{
+    done chan originalGameLaneTurnResult
+}
+type originalGameLaneTurnResult struct{
+    lane uint8
+    clientPort uint16
+    err error
+}
 type originalClientGeneration struct{
+    laneRotate chan originalGameLaneTurn
     seq uint64
     path originalLinuxUnderlay
     cancel context.CancelFunc
@@ -115,11 +124,14 @@ func startOriginalClientGeneration(
             seq:seq,path:path,cancel:cancel,
             ready:make(chan struct{},1),done:make(chan error,1),
         }
+        if c.gameLanes==4&&c.rotationInterval>0{
+            a.laneRotate=make(chan originalGameLaneTurn)
+        }
         log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d mode=game%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d shared_tun_single_reader=1 old_owner_may_overlap=%t",
             seq,c.gameLanes,path.ifindex,path.mtu,c.outerMTU,cold.LocalSYNAdvertisedMSS,c.recordLimit,overlap)
         go func(){
             var connected bool
-            a.done<-runGameClientGeneration(runCtx,c,path.ifindex,tun,&connected,a.ready)
+            a.done<-runGameClientGeneration(runCtx,c,path.ifindex,tun,&connected,a.ready,a.laneRotate)
         }()
         return a,nil
     }
@@ -215,6 +227,8 @@ func runOriginalLinuxClientPaths(
     var rotationTimer *time.Timer
     var rotationCh <-chan time.Time
     var timerDue bool
+    var laneTurnCh <-chan originalGameLaneTurnResult
+    var laneTurnOwner *originalClientGeneration
     var armedRotationDelay time.Duration
     stopRotation:=func(){
         if rotationTimer!=nil{
@@ -371,6 +385,19 @@ func runOriginalLinuxClientPaths(
             if candidate==nil&&originalGenerationNeedsReplacement(current,desired,timerDue){
                 if err=launch();err!=nil{scheduleRetry("after_old_stop")}
             }
+        case answer:=<-laneTurnCh:
+            laneTurnCh=nil
+            owner:=laneTurnOwner
+            laneTurnOwner=nil
+            if owner!=current||current==nil||ctx.Err()!=nil{continue}
+            if answer.err!=nil{
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_FAILED role=client generation=%d class=%s",
+                    current.seq,nativeColdFailureClass(answer.err))
+            }else{
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_READY role=client generation=%d lane=%d new_client_port=%d unaffected_sibling_lanes=3 original_TLS_Rust_M4=1",
+                    current.seq,answer.lane,answer.clientPort)
+            }
+            armRotation()
         case <-rotationCh:
             stopRotation()
             if current==nil||ctx.Err()!=nil{continue}
@@ -381,6 +408,26 @@ func runOriginalLinuxClientPaths(
             if e!=nil||!actual.valid(){
                 log.Printf("V4_PUBLIC_TIMER_ROTATION_DEFER role=client reason=physical_path_unavailable")
                 armRotation() // no spinning and no speculative network probe
+                continue
+            }
+            // One protected lane at a time in the CURRENT Game4 group.
+            // A true NIC/IP/MTU change still uses full-group original A+B.
+            if c.gameLanes==4&&current.laneRotate!=nil&&
+                actual==current.path&&candidate==nil&&retiring==nil{
+                intent:=originalGameLaneTurn{
+                    done:make(chan originalGameLaneTurnResult,1),
+                }
+                select{
+                case current.laneRotate<-intent:
+                    laneTurnCh=intent.done
+                    laneTurnOwner=current
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_DUE role=client generation=%d unchanged_path=1 actual_delay_ms=%d jitter_max_ms=%d",
+                        current.seq,armedRotationDelay.Milliseconds(),
+                        c.rotationJitter.Milliseconds())
+                default:
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_DEFER role=client reason=existing_original_group_busy")
+                    armRotation()
+                }
                 continue
             }
             desired=actual

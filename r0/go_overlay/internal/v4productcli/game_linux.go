@@ -83,13 +83,17 @@ func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled
 func runGameClientGeneration(
  ctx context.Context,c config,ifindex uint32,tun *ownedTun,
  connected *bool,ready chan<- struct{},
+ rotation <-chan originalGameLaneTurn,
 )error{
- return runGameClient(ctx,c,ifindex,tun,connected,ready)
+ return runGameClient(ctx,c,ifindex,tun,connected,ready,rotation)
 }
 func runGameClient(
  ctx context.Context,c config,ifindex uint32,tun *ownedTun,
  connected *bool,ready chan<- struct{},
+ rotations ...<-chan originalGameLaneTurn,
 )error{
+    var rotation <-chan originalGameLaneTurn
+    if len(rotations)>0{rotation=rotations[0]}
     n:=int(c.gameLanes)
     // Same original protected 10-byte V3 policy as Normal; each Game
     // client's authenticated cipher is independent of other cohorts.
@@ -106,6 +110,33 @@ func runGameClient(
         for _,a:=range assocs{a.Close()}
     }()
     fail:=make(chan error,n)
+    retiredRX:=make([]chan struct{},0,n)
+    startRX:=func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,
+        f faketcp.ClientFlow,retired <-chan struct{}){
+        go func(){
+            for{
+                seg,_,readErr:=r.ReadSegment()
+                if readErr!=nil{
+                    select{
+                    case <-ctx.Done():return
+                    case <-retired:return
+                    default:
+                    }
+                    select{case fail<-readErr:default:}
+                    return
+                }
+                if !f.MatchesInbound(seg){continue}
+                if a.State()!=faketcp.ClientAssociationDetached{
+                    if err:=a.HandleSegment(seg,time.Now());err!=nil&&
+                        !errors.Is(err,faketcp.ErrClientDetached){
+                        select{case fail<-err:default:}
+                    }
+                }else if len(seg.Payload)!=0&&handoffCommitted.Load(){
+                    goPostHandoffDataCopies.Add(1)
+                }
+            }
+        }()
+    }
     for i:=0;i<n;i++{
         local,err:=gamePort(c.localPort,i)
         if err!=nil{return err}
@@ -127,25 +158,8 @@ func runGameClient(
         assoc,e:=faketcp.NewClientAssociation(flow,isn,time.Second,emit)
         if e!=nil{return e}
         assocs=append(assocs,assoc)
-        go func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,f faketcp.ClientFlow){
-            for{
-                seg,_,readErr:=r.ReadSegment()
-                if readErr!=nil{
-                    select{case <-ctx.Done():return;default:}
-                    select{case fail<-readErr:default:}
-                    return
-                }
-                if !f.MatchesInbound(seg){continue}
-                if a.State()!=faketcp.ClientAssociationDetached{
-                    if err:=a.HandleSegment(seg,time.Now());err!=nil&&
-                       !errors.Is(err,faketcp.ErrClientDetached){
-                        select{case fail<-err:default:}
-                    }
-                }else if len(seg.Payload)!=0 && handoffCommitted.Load(){
-                    goPostHandoffDataCopies.Add(1)
-                }
-            }
-        }(assoc,raw,flow)
+        retiredRX=append(retiredRX,make(chan struct{}))
+        startRX(assoc,raw,flow,retiredRX[i])
         if e=assoc.Start(time.Now());e!=nil{return e}
         establish,cancel:=context.WithTimeout(ctx,20*time.Second)
         e=assoc.WaitEstablished(establish)
@@ -224,7 +238,110 @@ func runGameClient(
     }else{
         log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",n)
     }
-    select{case <-ctx.Done():case err=<-fail:}
+    // This product retains ONE native M4 GameAdapter. The sole existing
+    // path supervisor delivers timer intents here; every successful intent
+    // creates exactly ONE new original TLS association in the SAME epoch,
+    // swaps only its Rust physical slot and stops only its old FakeTCP owner.
+    laneRound:=uint64(1)
+    nextLane:=0
+    rotateOne:=func()(uint8,uint16,error){
+        if n!=4{return 0,0,realityfront.ErrAdmissionUnsupported}
+        slot:=nextLane
+        lane:=uint8(slot+1)
+        laneRound++
+        first,e:=originalGenerationGamePort(c.localPort,laneRound,4)
+        if e!=nil{return lane,0,e}
+        local,e:=gamePort(first,slot)
+        if e!=nil{return lane,0,e}
+        oldFlow:=flows[slot]
+        if local==oldFlow.LocalPort{return lane,0,fmt.Errorf("Game4 hot lane source port reused")}
+        newRaw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
+            c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
+            faketcp.RawIPv4EndpointOptions{ReceivePort:local},
+        )
+        if e!=nil{return lane,0,e}
+        var committed bool
+        var newAssoc *faketcp.ClientAssociation
+        freshRetired:=make(chan struct{})
+        defer func(){
+            if !committed{
+                close(freshRetired)
+                if newAssoc!=nil{newAssoc.Close()}
+                newRaw.Close()
+            }
+        }()
+        nextFlow:=faketcp.ClientFlow{
+            LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
+            LocalPort:local,PeerPort:c.peerPort,
+        }
+        isn,e:=originalRandomISN()
+        if e!=nil{return lane,0,e}
+        emit:=func(seg faketcp.Segment)error{
+            _,e:=newRaw.WriteSegment(seg)
+            return e
+        }
+        newAssoc,e=faketcp.NewClientAssociation(nextFlow,isn,time.Second,emit)
+        if e!=nil{return lane,0,e}
+        startRX(newAssoc,newRaw,nextFlow,freshRetired)
+        if e=newAssoc.Start(time.Now());e!=nil{return lane,0,e}
+        establish,cancel:=context.WithTimeout(ctx,20*time.Second)
+        e=newAssoc.WaitEstablished(establish)
+        cancel()
+        if e!=nil{return lane,0,e}
+        dialCtx,dialCancel:=context.WithTimeout(ctx,60*time.Second)
+        e=native.ReplaceClientGameLane(dialCtx,newAssoc,cfg,lane)
+        dialCancel()
+        if e!=nil{return lane,0,e}
+        // Real Rust M4 has acknowledged selected slot handover. A fresh
+        // Go-only raw observer may no longer claim native application DATA.
+        if newAssoc.State()!=faketcp.ClientAssociationDetached{
+            return lane,0,fmt.Errorf("new Game4 lane not detached after real M4 hot replace")
+        }
+        if e=newRaw.ExcludeDetachedData(nextFlow.PeerIP,nextFlow.PeerPort);e!=nil{
+            return lane,0,e
+        }
+        oldRaw:=raws[slot]
+        oldAssoc:=assocs[slot]
+        oldRetired:=retiredRX[slot]
+        raws[slot]=newRaw
+        assocs[slot]=newAssoc
+        flows[slot]=nextFlow
+        retiredRX[slot]=freshRetired
+        committed=true
+        close(oldRetired)
+        oldRaw.Close()
+        oldAssoc.Close()
+        for sibling,flow:=range flows{
+            if sibling==slot{continue}
+            if flow.LocalPort==local{
+                return lane,0,fmt.Errorf("hot one-lane port collides with untouched sibling %d",sibling+1)
+            }
+        }
+        nextLane=(nextLane+1)%4
+        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=client generation=%d lane=%d cycle=%d old_client_port=%d new_client_port=%d unchanged_siblings=3 original_TLS_Rust_M4=1",
+            c.rotationGeneration,lane,laneRound-1,oldFlow.LocalPort,local)
+        return lane,local,nil
+    }
+    draining:=false
+    for !draining{
+        select{
+        case <-ctx.Done():draining=true
+        case err=<-fail:draining=true
+        case turn,ok:=<-rotation:
+            if !ok{rotation=nil;continue}
+            lane,local,rotateErr:=rotateOne()
+            turn.done<-originalGameLaneTurnResult{
+                lane:lane,clientPort:local,err:rotateErr,
+            }
+            if rotateErr!=nil{
+                // An uncertain half-transition is never silently retried:
+                // join the whole group and let the original one supervisor
+                // perform a fresh cold generation if necessary.
+                err=rotateErr
+                draining=true
+            }
+        }
+    }
     log.Printf("V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=client lanes=%d go_data_full_copies=%d",n,goPostHandoffDataCopies.Load())
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
@@ -458,6 +575,7 @@ type originalGameCohortLive struct{
     peers []faketcp.DetachedPeer
     gameFec bool // actual protected per-cohort Game fixed setting
     stopped bool
+    laneRotations [4]uint64
 }
 func stageOriginalAuthenticatedGameLane(
     groups map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending,
@@ -748,7 +866,7 @@ func runGameMultiServer(
                 continue
             }
             lane:=result.lane
-            normal,_,_,modeErr:=lane.ProtectedMode()
+            normal,_,gameFec,modeErr:=lane.ProtectedMode()
             if modeErr!=nil{
                 rejectLane(lane)
                 continue
@@ -799,6 +917,54 @@ func runGameMultiServer(
                 if older!=nil{
                     if e=retireNormal(older,"same-protected-normal-new-generation");e!=nil{return e}
                 }
+                continue
+            }
+            // The existing protected Go TLS admission can return exactly
+            // ONE replacement Game4 lane of a LIVE, same-epoch group.
+            // Never stage it as a fresh four-lane cohort or replace siblings.
+            coldKey,laneID,e:=lane.Cohort()
+            if e!=nil{rejectLane(lane);continue}
+            if group:=active[coldKey];group!=nil{
+                if coldKey.Lanes!=4||laneID<1||laneID>4||
+                    !group.product.MatchesProtectedGameFec(gameFec){
+                    rejectLane(lane)
+                    continue
+                }
+                idx:=int(laneID)-1
+                old:=group.members[idx]
+                if old==nil{
+                    rejectLane(lane)
+                    continue
+                }
+                newPeer,e:=lane.DetachedPeer()
+                flow:=lane.Association().Flow()
+                if e!=nil||flow.ServerIP!=c.localIP.As4()||
+                    flow.ServerPort!=c.localPort{
+                    rejectLane(lane)
+                    continue
+                }
+                if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
+                    rejectLane(lane)
+                    return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
+                }
+                if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
+                    // An indeterminate native swap must not leave a half
+                    // committed FEC/AEAD group running; only this group
+                    // is revoked, unrelated Normal/Game clients remain.
+                    if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
+                    delete(active,coldKey)
+                    rejectLane(lane)
+                    continue
+                }
+                delete(detached,old.Association())
+                forget(old.Association())
+                detached[lane.Association()]=newPeer
+                group.members[idx]=lane
+                group.peers[idx]=newPeer
+                group.laneRotations[idx]++
+                if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
+                    laneID,group.laneRotations[idx],flow.ClientPort,flow.ServerPort)
                 continue
             }
             key,complete,e:=stageOriginalAuthenticatedGameLane(
