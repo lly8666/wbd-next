@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1214",
+  "source_sha": "3775e24c51085c04858d34c99e64eaf311731c9d",
+  "result": "FAIL_OLD_SINGLETON_MSS_ASSERTION_AFTER_NATIVE_TLSSWITCH",
+  "run_id": 41938990570,
+  "job_id": 126956691935,
+  "artifact_id": 13375727095,
+  "artifact_zip_sha256": "c9054d53e507292b956ba4e6ae5103d5abe55617854dec7cc5fae63f8c1d68a1",
+  "observed": {
+    "windows_protected_tls_epochs": 2,
+    "server_native_protected_FEC6_rows": 2,
+    "windows_native_FEC6_applied_rows": 2,
+    "windows_source4": [
+      "198.19.254.1",
+      "198.19.254.9"
+    ],
+    "mss_original_SYN": 1420,
+    "mss_original_server_SYNACK": 1420,
+    "windows_os_inner_MTU": [
+      1375,
+      1375
+    ],
+    "linux_os_inner_MTU": 1375,
+    "outer_user_MTU": 1460,
+    "new_Windows_Linux_native_UDP_receive_increments": [
+      12,
+      11
+    ],
+    "original_windows_old_generation_Stop": true,
+    "server_shared_TUN_Stop": true
+  },
+  "first_false_fail": "Legacy H981 demanded V4_PUBLIC_MTU role=server record_wire/tun_mtu and V4_PUBLIC_ACTUAL_PEER_SYN_MSS, not emitted by new authentic shared server. Current shared emits real V4_PUBLIC_MTU_PREPARE, V4_PUBLIC_ACTUAL_HANDSHAKE_MSS SYNACK twice and protected per-device FEC6 M4 rows twice. Strict new proof enforces all these original values by both OS and record offer.",
+  "unqualified": [
+    "overall native Action FAIL, final TCP stage not completed",
+    "H998 old hot MTU & ARM Game4 Action FAIL retained",
+    "Android/ICMP/CPU attribution/precise notification or auth first NOT_RUN"
+  ]
+}

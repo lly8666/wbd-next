@@ -1477,6 +1477,8 @@ jobs:
             if($native.plan028_original_native_source4_reauth.new_generation_tls_native_ready -ne $true -or
                @($native.plan028_actual_windows_two_generation_os_inner_mtu).Count -ne 2 -or
                $native.fixed_linux_native_installed -ne $true -or
+               $native.fixed_windows_native_installed -ne $true -or
+               $native.plan028_fixed_shared_two_generation_authentic_mss.verified -ne $true -or
                $native.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
                $native.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
                $native.stop -ne 'PASS_BOTH_OWNED'){

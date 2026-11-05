@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1213,
-  "checkpoint_sha": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
+  "sequence": 1214,
+  "checkpoint_sha": "bc5d73a8b302dca2be19717b5a7abc5bb20a4a69",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1213 x86/x86 Normal fixed6 real physical second .9→.4 original Go TLS/Rust M4 under tc loss30% delay250ms full test. H1210 SOURCE7eee Action41939187804 failed: genuine pre-test client Game2 initial UDP12, then 128s highloss Game4 witness outlived idle Game2 original dead90; test-only attempted periodic Game2 UDP too late/not accepted, `OSError [Errno99] Cannot assign requested address` when source lease expired, no highloss result in that Action. Move the ALREADY existing Game2 owner Stop to BEFORE 128s long highloss, preserving its exact owned Stop and continuing real Game4 320 and Normal after source change; no new heartbeat/controller. Verify original FEC6 owner rows, old generation Stops, actual qdisc drop/200 UDP p99 and final shared Rust TUN Stop. Windows Fixed6/Auto/Game4off source-locked separate Actions in progress.",
-  "why_now": "Two x86 high30 attempts distinct: SOURCE0510 genuine highloss scene UDP193/200 p99 550ms qdisc241 but baseline owned Stop unqualified; SOURCE7eee added Game2 keepalive, yet after source lease expired its UDP bind failed and the first failure was `OSError errno99`, original Game2 server Health90 at 90s. Prefer ordinary exact Game2 early Stop, not reinvent heartbeat and do not weaken legacy timers.",
+  "current_task": "H1214 signed Windows original Fixed6 SOURCE3775 Action41938990570 real protected Go TLS/Rust and actual source4 .1→.9 M4 gens1→2, Win Rust Fixed6 applied2 Linux native shared M4 fixed6 receipts2, two real Wintun OS inner1375/default outer1460, new real Windows/Linux UDP increments12/11, old WAL Stop/owner cleanup and server native shared TUN final Stop observed. Overall FAIL strictly old H981 singleton MTU record / V4_PUBLIC_ACTUAL_PEER_SYN_MSS log not emitted by PLAN028 shared server, before final UDP/TCP suite. H1214 replace only scoped Fixed shared two-generation proof with genuine two Windows SYN+peer SYNACK/Go record budgets and two original server SYNACK/MTU_PREPARE, actual server/client native FEC6 receipts and OS MTU; retain legacy H981 branch unchanged for standalone. Re-trigger one signed Fixed6 Action [plan028-win-physical-fixed6]. Windows Auto/Game4off and x86 high30 separate ongoing.",
+  "why_now": "Artifacts source3775 native fixed show genuine first and second auth, OS applied, fixed6 M4, UDP increments and exact owner Stop. H981 fixed singleton required linpeer and `V4_PUBLIC_MTU role=server` which shared multi path does not output; false red cannot be fixed by weakening TLS validation. New shared case preserves real original TCP MSS and record offer cross-check plus M4 native FEC installed two, without asserting vanished log names or fake readbacks.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1213 x86 native full Action once, verify true source4/MTU/retry native auth, actual Normal200 UDP p99 and Game4 live320 plus final owned Stop; collect independently queued Windows Fixed6/Auto/Game4off exact native Actions, not promote old x86 FAIL. Next Windows Game2 modes. H998/ICMP/Android/CPU causal retained.",
+  "next_action": "Collect H1214 signed Fixed6 full Action, ensure one443, exact original Go TLS and OS two generations, real TCP/UDP and both owned Stop; collect Windows Auto/Game4off and x86 highest30 separate exact SOURCE. Any new actual product failure narrow and archive. Windows Game2 off/fixed remain, exact timing/CPU causality/remote ICMP/Android unmeasured, H998 failure preserved.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1213 native x86 Normal high30 128s original Game4 health preserves original Game2 exact Stop by executing it before long watch, removing failed test-side periodic A heartbeat; no runtime change. Windows three modes active."
+  "partial_summary": "H1214 signed Windows Fixed6 old H981 singleton MSS proof swapped only for real shared 2-generation SYN/SYNACK, protected record/FEC6 and OS readbacks, no downgrade of original Go TLS/AEAD. Prior SOURCE3775 full Action FAIL retained; new action launched."
 }

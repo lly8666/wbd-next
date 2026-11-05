@@ -443,7 +443,41 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   # H981: green alone does not qualify Fixed: old H978 1333/1333 was
   # FEC1's 56B reserve, not V4 FEC2's 14B. Check wire, peer, record,
   # both live OS TUNs and authentic physical source before acceptance.
-  if mode=="fixed" and native_outer in ("default1460","1500"):
+  if mode=="fixed" and plan028_owned_switch and native_outer=="default1460":
+   # Exact two authenticated original Go TLS/FEC6 generations share ONE
+   # server TUN. The retired singleton H981 MTU and peer-MSS log names
+   # are not emitted by shared-multi; require genuine TWO-generation
+   # client actual TCP SYN/peer SYNACK and server real SYNACK instead.
+   linuxlog=(out/"server.log").read_text(errors="replace")
+   expected=configured_mtu-40
+   option="0204"+format(expected,"04x")
+   clients=re.findall(r"WBD_WINDOWS_ACTUAL_SYN_MSS_V1[^\\n]*generation=(\\d+)[^\\n]*local_advertised_mss=(\\d+)[^\\n]*tcp_option_bytes=([0-9a-fA-F]+)",winlog)
+   servers=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1[^\\n]*side=server[^\\n]*local_advertised_mss=(\\d+)[^\\n]*tcp_option_bytes=([0-9a-fA-F]+)",linuxlog)
+   peer=re.findall(r"WBD_WINDOWS_PEER_SYNACK_MSS_V1[^\\n]*peer_advertised_mss=(\\d+)",winlog)
+   records=re.findall(r"WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED[^\\n]*client_record_offer=(\\d+)",winlog)
+   cold=re.findall(r"WBD_WINDOWS_COLD_MSS_BUDGET_V1[^\\n]*physical_outer_mtu=(\\d+)[^\\n]*effective_outer_mtu=(\\d+)[^\\n]*local_advertised_mss=(\\d+)",winlog)
+   server_preflight=re.findall(r"V4_PUBLIC_MTU_PREPARE[^\\n]*role=server[^\\n]*interface=(\\d+)[^\\n]*advertised_mss=(\\d+)[^\\n]*record_offer=(\\d+)",linuxlog)
+   source_profiles=linuxlog.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")
+   win_profiles=winlog.count("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1")
+   valid=(len(clients)>=2 and set(x[0] for x in clients)=={"1","2"} and
+          all(int(v)==expected and o.lower()==option for _,v,o in clients) and
+          len(servers)==2 and all(int(v)==expected and o.lower()==option for v,o in servers) and
+          len(peer)>=2 and all(int(v)==expected for v in peer) and
+          len(records)==2 and all(int(v)==expected for v in records) and
+          len(cold)==2 and all(int(p)>=configured_mtu and int(e)==configured_mtu and int(m)==expected for p,e,m in cold) and
+          len(server_preflight)==1 and all(int(v)==expected for v in server_preflight[0][1:]) and
+          source_profiles==2 and win_profiles==2 and
+          windows_inner==configured_mtu-85 and inner==configured_mtu-85)
+   report["plan028_fixed_shared_two_generation_authentic_mss"]={
+      "verified":valid,"windows_actual_syn_generations":sorted(set(g for g,_,_ in clients)),
+      "windows_actual_syn_count":len(clients),"linux_actual_synack_count":len(servers),
+      "windows_peer_synack_count":len(peer),"windows_tls_record_offers":len(records),
+      "original_linux_server_mtu_preflight_count":len(server_preflight),
+      "protected_server_M4_FEC6":source_profiles,"original_windows_rust_FEC6_applied":win_profiles,
+      "expected_mss":expected,"actual_windows_os_inner":windows_inner,"actual_linux_os_inner":inner}
+   if not valid:raise RuntimeError("PLAN028_SHARED_FIXED6_AUTHENTIC_TWO_GENERATION_MSS_RECORD_M4_OS_MISSING")
+   print("M0_PLAN028_SHARED_WINDOWS_FIXED6_TWO_REAL_TLS_SYN_SYNACK_MSS_RECORD_AND_M4_OS_PASS",flush=True)
+  if mode=="fixed" and not plan028_owned_switch and native_outer in ("default1460","1500"):
    linuxlog=(out/"server.log").read_text(errors="replace")
    winlimit=re.findall(r"WBD_WINDOWS_COLD_MSS_BUDGET_V1[^\n]*physical_outer_mtu=(\d+)[^\n]*effective_outer_mtu=(\d+)",winlog)
    linlimit=re.findall(r"V4_PUBLIC_MTU_PREPARE[^\n]*role=server[^\n]*interface=(\d+)[^\n]*advertised_mss=(\d+)",linuxlog)
@@ -1274,9 +1308,19 @@ print(json.dumps(result),flush=True)
   # PLAN027 legacy Fixed installation is a true native owner readback,
   # never an extra startup Quality window or retired M2 Receipt.
   linux_log=(out/"server.log").read_text(errors="replace")
-  installed="V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=1 applied=1 profile=6 pending=false" in linux_log
+  if plan028_owned_switch:
+   # The shared server prints protected per-device actual M4 capability,
+   # then its native effective owner counters at exact generational Stop.
+   installed=(linux_log.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")==2 and
+              linux_log.count("V4_PUBLIC_MULTI_NATIVE_FEC_EFFECTIVE role=server mode=fixed profile=6 requested=1 applied=1 pending=false")==2)
+   win_installed=(out/"client.log").read_text(errors="replace").count(
+     "WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1")==2
+  else:
+   installed="V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=1 applied=1 profile=6 pending=false" in linux_log
+   win_installed="NOT_INSTRUMENTED_THIS_REAL_ABI"
   report["fixed_linux_native_installed"]=installed
-  report["fixed_windows_native_installed"]="NOT_INSTRUMENTED_THIS_REAL_ABI"
+  report["fixed_windows_native_installed"]=win_installed
+  if plan028_owned_switch and not win_installed:raise RuntimeError("signed Windows actual Rust Fixed6 applied both generations missing")
   report["fixed_quality_maturity"]="NOT_MEASURED_SHORT_BURST"
   if not installed:raise RuntimeError("genuine Linux native FixedStream profile6 installed readback missing")
  if plan028_owned_switch and mode=="game4":
