@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1210,
-  "checkpoint_sha": "3775e24c51085c04858d34c99e64eaf311731c9d",
+  "sequence": 1211,
+  "checkpoint_sha": "7eeeb74c185bbd5464fb0491cc0d230aea388738",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1210 full Linux native x86 Normal highest Fixed6 high30/250 second physical TLS original Go/Rust requalification after H1208 healthy Game2 existing UDP8sec and H1209 assembly manifest exact CLI blob updated; one native source-locked Action triggered by single x86 workflow name. Windows Fixed6 signed [plan028-win-physical-fixed6] SOURCE3775 Action41938990570 independently queued; preserve failed former SOURCE6e66 admission and SOURCE0510 high30 post-scene non-Stop.",
-  "why_now": "H1209 changed only shared assembly manifest, which retriggered Windows but did NOT match x86 high30 workflow push paths. One short x86 workflow run-name update is the minimum trigger for its genuinely separate native scene, one Action per scenario and Linux whole x86 task.",
+  "current_task": "H1211 signed Windows Npcap/Wintun↔WSL2 original Normal Auto one443 true OS-owned physical .1→.9 IPv4 source switch, original Go TLS/Rust authenticated per-cohort Auto FEC ready2, Wintun OS MTU readback2 at outer default1460, real UDP/TCP and owned Stop; opt-in [plan028-win-physical-auto] one Action, reuse same existing Windows owned source4+native superivsor. H1209 Windows Fixed6 signed Action41938990570 and H1210 x86 highest30 Action41939187804 independently in progress, exact SOURCE separate. Game2 off/fixed and Game4 off remaining Windows physical modes; no product changes in H1211.",
+  "why_now": "Full Linux 7 mode-specific A-B-A qualified, signed Windows Game4FEC6 and Normal Off source switch qualified earlier; explicit Windows Fixed6 authentic admission source3775 compile in progress. Auto is strict same shared Normal feature7 original TLS, already in existing native product mode. Minimal one-scene harness flag enables real OS source4 check and original Auto FEC M4 readback without generic multi-mode replay or second controller.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect x86 H1210 real tc30/250 200 UDP p99, protected TLS successor, all independent client heartbeat and exact old/final Rust Stop; collect signed Windows Fixed6 source3775 native Go/TLS/Rust/OS/UDP/TCP/Stop. If either fails isolate narrow evidence. Next Windows other 5 mode-specific real source4.",
+  "next_action": "Collect H1211 Windows Auto distinct Action, H1209 Windows Fixed6 and H1210 x86 high30. Verify original TLS M4 cohorts, OS readback, UDP/TCP and exact Stop; if first runtime failure narrow and only fix that. Then Windows Game2off/Fixed6 and Game4off authentic physical. H998 old hot MTU+ARM Game4 FAIL, Android/ICMP/CPU causal unqualified.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1210 trigger one native x86 source-locked Normal Fixed6 high30 original TLS/Stop with real Game2/Game4 sibling health, separate from queued Windows Fixed6 signed source3775. Historic old H998/remote ICMP/Android/CPU causal gap retained."
+  "partial_summary": "H1211 Windows Normal Auto authentic native physical source4 reauth new one-scene test using existing owned WSL route/watcher and two protected FEC auto M4 receipts; independent Fixed6 and x86 high30 tests in flight."
 }
