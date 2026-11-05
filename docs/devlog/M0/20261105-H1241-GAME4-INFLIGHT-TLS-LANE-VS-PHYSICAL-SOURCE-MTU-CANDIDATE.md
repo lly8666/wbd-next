@@ -1,0 +1,11 @@
+# PLAN028 H1241 — selected Game4 TLS rekey vs REAL physical IPv4/MTU path change
+
+User grants authority to avoid repeatedly running representative already-PASS matrix. Highest remaining owner/Stop risk is **simultaneous** original Go one-lane 18s±3s rotation and full physical underlay IP/MTU change; H1237 proved lane hot with unchanged physical, older H1162 proved physical Game4 full cohort with no overlapping selected lane, but their intersection is not equivalent.
+
+One **native ARM64 client + ARM64 server** SOURCE-locked job: start authentic protected one server TCP443, concurrent Alice Game2, Bob Game4 Fixed6, Carol Normal Auto. Existing bounded Rust shared-TUN and FEC. At baseline physical `10.25.0.3/24,mxb0 MTU1500`, start two original true no-retry UDP streams Bob/Carol and 96 authenticated Normal Auto real echo checks. Add actual Linux kernel `tc netem delay 120ms` each Bob physical veth direction solely to widen original TLS in-flight window (not injection into Go/packet processing). Observe real `V4_PUBLIC_GAME_SINGLE_LANE_DUE generation=1`; **require no completed single-lane READY before changing original physical OS route**. Immediately change source to `10.25.0.9` and physical link MTU1280 using native `ip netns` / route selection. Require new whole original TLS/Rust Game4 M4 generation2 READY, old1 exact Stop, preserved authenticated lease, effective inner Game4 OS MTU1358→1178, Carol Normal Auto 1375 unchanged, her generation unchanged, both no retry streams receive true app echoes *on both sides of physical change*. Original per-stream receipt gap and p99 recorded, no M4 Health90. Mature original full server shared443 final Stop checks retained.
+
+**H1241 is CANDIDATE / NOT_RUN until GitHub native Action**, and this one representative mode does not newly qualify Windows all 7 physical Npcap modes, Android handset, exact CPU A/B or historical **H998 same socket hot physical MTU shrink FAIL**. H1237 native x86 two-way5pct Game4 slot source ac8 and H1238 Windows original Go unit/owned OS IPv4 source sourcef3c remain scoped PASS.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"H1241 adds only a focused original-source ARM64 native fixture/workflow and devlog to test previously-unqualified concurrent TLS selected-lane and physical-IP/MTU handover; product code unchanged."}
+```
