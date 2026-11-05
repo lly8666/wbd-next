@@ -4,18 +4,17 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1239,
-  "checkpoint_sha": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
+  "sequence": 1240,
+  "checkpoint_sha": "490713162d2e912f1a1c84865cc6e6c700e9e5fe",
   "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
   "current_task": "H1239 original Go TLS/Rust PLAN028 source-scoped evidence: H1237 native x86 Game4 Off/Fixed6 both real double-direction Bob tc netem5 job PASS, 8 independent hot slots each, 3 safe failed TLS candidate retries each without group Stop/Health90, 16078/16078 three-client true UDP, route/NIC/MTU unchanged. H1238 current Windows 6 native Go TLS Stop/IPv4/auth race unit PASS and native Win32 actual test-owned HyperV source4 .1->.9+3 addr/1 route notification PASS, no Npcap product in these jobs. H1239 requirement audit retains missing full Windows 7 physical mode shifts, Game4 real single-lane underlay physical overlap, long 30% TCP, current 7-day lease/manual IP/server reboot, exact CPU/OS notice timings, H998 same-socket hot MTU FAIL.",
-  "why_now": "User asks full PLAN028 testing, H1237/H1238 just reached genuine Actions success and must be recorded before new source.",
+  "why_now": "H1239 evidence settlement is multi-source: H1237 PASS source ac8 while H1238 Windows tests and audit refer to source f3c. Governance requires cursor refs to share last_tested_source and unverified=true for partial/non-PASS audit, not fabricating universal PASS.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
   "next_action": "Implement one source-locked native Linux ARM64 client+server (per alternation) genuine Game4 one-slot jitter timer colliding with real Bob physical IPv4 A->B source/MTU change while other Normal client stays live; then Windows missing signed physical modes if runner supports, high-loss TCP and lease races. Do not infer Android or H998.",
-  "unverified": false,
+  "unverified": true,
   "last_tested_source": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1237-SOURCEAC8-NATIVE-X86-GAME4-TWOWAY-NETEM5-HOTLANE-PASS-20261105.json",
     "docs/evidence/M0/PLAN028-H1238-SOURCEF3C-NATIVE-WINDOWS-ORIGINAL-COLD-RACES-OWNED-IPV4-PASS-20261105.json",
     "docs/evidence/M0/PLAN028-H1239-REQUIREMENT-LEVEL-COVERAGE-AUDIT-20261105.json"
   ],
@@ -30,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1237 native x86 true Game4 Off/Fixed6 16 independent hot lanes 16078/16078 UDP under physical Bob bidirectional 5% netem PASS; H1238 Windows 6 native Go TLS race tests and real isolated HyperV IPv4 source callback PASS. PLAN028 still partial universal scope; H1239 covers unqualified Windows physical matrix, hot timer+underlay collision, long TCP and H998 live hot MTU failure."
+  "partial_summary": "H1240 governance evidence consistency correction, not product source or new native test. H1237 real x86 Game4 two-way netem5 16 hot lanes/16078 real UDP PASS sourceac8 is preserved in independent evidence but cursor references only latest sourcef3c H1238 Windows scoped PASS and H1239 partial audit. PLAN028 incomplete universal qualification."
 }
