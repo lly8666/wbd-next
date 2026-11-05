@@ -210,7 +210,7 @@ def main():
             (out / ("h1250-" + who + "-tun.json")).write_text(run(
                 "sudo", "-n", "ip", "-n", namespaces[i], "-j", "link",
                 "show", "dev", client_tuns[i], capture=True))
-        assert len(set(leases)) == 5, leases
+        assert len(set(leases)) == len(NAMES), leases
         (out / "h1250-server-tun.json").write_text(run(
             "sudo", "-n", "ip", "-n", ns_server, "-j", "link",
             "show", "dev", server_tun, capture=True))
