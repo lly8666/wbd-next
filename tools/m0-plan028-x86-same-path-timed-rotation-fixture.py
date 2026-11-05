@@ -144,7 +144,7 @@ old=[int(x) for x in re.findall(r"V4_PUBLIC_PATH_OLD_EXACT_STOP role=client gene
 timer=[x for x in target_log.splitlines() if "V4_PUBLIC_TIMER_ROTATION_DUE role=client" in x]
 assert gen[:3]==[1,2,3] and old[:2]==[1,2],(gen,old)
 assert len(timer)>=2 and all("same_physical_interface_ipv4=true" in x and "unchanged_path=true" in x for x in timer[:2]),timer
-timer_due_unix_ms=[int(re.search(r"unix_ms=(\\d+)",x).group(1)) for x in timer[:2]]
+timer_due_unix_ms=[int(re.search(r"unix_ms=(\d+)",x).group(1)) for x in timer[:2]]
 assert timer_due_unix_ms[0]<timer_due_unix_ms[1]
 for who in ("alice","bob","carol"):
     before=json.loads(pathlib.Path(f"fixed-kernel-result/timed-before-{who}-route.json").read_text())[0]
@@ -159,7 +159,7 @@ streams={who:json.loads(pathlib.Path(f"fixed-kernel-result/timed-stream-{who}.js
          for who in ("alice","bob","carol")}
 lease_receipts={}
 for who in ("alice","bob","carol"):
-    leases=re.findall(r"V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\\.66\\.0\\.\\d+)/32",logs[who])
+    leases=re.findall(r"V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\.66\.0\.\d+)/32",logs[who])
     lease_receipts[who]=leases
     assert len(leases)>=(3 if who==target else 1),(who,leases)
     assert set(leases)=={streams[who]["physical_source"]},(who,leases,streams[who]["physical_source"])
@@ -214,7 +214,7 @@ s=s.replace(anchor,'wait "$PA" "$PB" "$PC"\n'+inject+'\ngrep -Fq "V4_PUBLIC_GAME
 final_anchor='echo "M0_PLAN028_H1151_NATIVE_X86_MIXED_ONE_PORT_ONE_RUST_TUN_PASS"'
 assert s.count(final_anchor)==1
 s=s.replace(final_anchor,
-    'for who in server alice bob carol;do cp "$TMP/$who.log" "$ART/timed-runtime-$who.log";done\\n'
+    'for who in server alice bob carol;do cp "$TMP/$who.log" "$ART/timed-runtime-$who.log";done\n'
     +final_anchor,1)
 out.write_text(s)
 out.chmod(0o700)

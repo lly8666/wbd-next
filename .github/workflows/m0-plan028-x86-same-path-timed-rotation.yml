@@ -21,6 +21,16 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      - name: Validate all complete scenario generators before expensive native SOURCE build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-x86-same-path-timed-rotation-fixture.py
+          for scene in normal-auto game2-off game4-fixed6;do
+            python3 tools/m0-plan028-x86-same-path-timed-rotation-fixture.py "$RUNNER_TEMP/preflight-$scene.sh" "$scene"
+            bash -n "$RUNNER_TEMP/preflight-$scene.sh"
+          done
+          echo "PLAN028_H1222_THREE_SCENE_SYNTAX_PREFLIGHT_PASS"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: lly8666/wobuzhidao

@@ -20,3 +20,11 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1222 native three-mode 2265 real UDP verified at exact 8a803 source; strengthen current-source authenticated lease and timestamp proof without changing steady packet wire."}
 ```
+
+## 证据增强脚本最窄修正（H1222）
+- SOURCE 08e75d8 Action41958192998: native build PASS; three enhanced scene jobs stopped at generated Bash syntax check before executing, not a product FAIL or a new source PASS. Fix three source backslash escapes: true shell newline and one-level raw regex escaping.
+- Move three full fixture `bash -n` preflights ahead of expensive original Go/Rust native compile; no product/MTU/wire change.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Evidence fixture backslash correction and early whole-scene syntax preflight; no new product changes, 08e75d8 results retained failed."}
+```
