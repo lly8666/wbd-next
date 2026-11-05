@@ -18,6 +18,9 @@ import (
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
+// Only pre-Rust-M4 original Go TLS/association failures may be retried.
+var errOriginalGameLaneColdCandidate=errors.New("new Game4 cold TLS candidate not installed")
+
 func gamePort(base uint16,lane int)(uint16,error){
     value:=int(base)+lane
     if value<1||value>65535{return 0,fmt.Errorf("Game 2/4 per-lane FakeTCP port overflow")}
@@ -242,6 +245,9 @@ func runGameClient(
     // path supervisor delivers timer intents here; every successful intent
     // creates exactly ONE new original TLS association in the SAME epoch,
     // swaps only its Rust physical slot and stops only its old FakeTCP owner.
+    // A cold TLS candidate can fail on an impaired carrier without touching
+    // the old owner. Keep all four native M4 lanes alive and retry at the
+    // ORIGINAL supervisor's next randomized timer; no second controller.
     laneRound:=uint64(1)
     nextLane:=0
     rotateOne:=func()(uint8,uint16,error){
@@ -259,7 +265,7 @@ func runGameClient(
             c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
             faketcp.RawIPv4EndpointOptions{ReceivePort:local},
         )
-        if e!=nil{return lane,0,e}
+        if e!=nil{return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)}
         var committed bool
         var newAssoc *faketcp.ClientAssociation
         freshRetired:=make(chan struct{})
@@ -281,17 +287,27 @@ func runGameClient(
             return e
         }
         newAssoc,e=faketcp.NewClientAssociation(nextFlow,isn,time.Second,emit)
-        if e!=nil{return lane,0,e}
+        if e!=nil{return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)}
         startRX(newAssoc,newRaw,nextFlow,freshRetired)
-        if e=newAssoc.Start(time.Now());e!=nil{return lane,0,e}
+        if e=newAssoc.Start(time.Now());e!=nil{
+            return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)
+        }
         establish,cancel:=context.WithTimeout(ctx,20*time.Second)
         e=newAssoc.WaitEstablished(establish)
         cancel()
-        if e!=nil{return lane,0,e}
-        dialCtx,dialCancel:=context.WithTimeout(ctx,60*time.Second)
+        if e!=nil{return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)}
+        // The original server authenticates each cold TLS lane with a
+        // 15s cap. A failed 5%-loss candidate must not hold its healthy
+        // Game4 owner for a pointless 60s before trying another port.
+        dialCtx,dialCancel:=context.WithTimeout(ctx,20*time.Second)
         e=native.ReplaceClientGameLane(dialCtx,newAssoc,cfg,lane)
         dialCancel()
-        if e!=nil{return lane,0,e}
+        if e!=nil{
+            if errors.Is(e,realityfront.ErrV4GameLaneUncommittedCold){
+                return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)
+            }
+            return lane,0,e
+        }
         // Real Rust M4 has acknowledged selected slot handover. A fresh
         // Go-only raw observer may no longer claim native application DATA.
         if newAssoc.State()!=faketcp.ClientAssociationDetached{
@@ -332,6 +348,11 @@ func runGameClient(
             lane,local,rotateErr:=rotateOne()
             turn.done<-originalGameLaneTurnResult{
                 lane:lane,clientPort:local,err:rotateErr,
+            }
+            if errors.Is(rotateErr,errOriginalGameLaneColdCandidate){
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=client lane=%d generation=%d owner_preserved=1 class=%s",
+                    lane,c.rotationGeneration,nativeColdFailureClass(rotateErr))
+                continue
             }
             if rotateErr!=nil{
                 // An uncertain half-transition is never silently retried:

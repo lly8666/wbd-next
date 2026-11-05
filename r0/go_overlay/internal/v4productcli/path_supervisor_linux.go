@@ -391,8 +391,13 @@ func runOriginalLinuxClientPaths(
             laneTurnOwner=nil
             if owner!=current||current==nil||ctx.Err()!=nil{continue}
             if answer.err!=nil{
-                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_FAILED role=client generation=%d class=%s",
-                    current.seq,nativeColdFailureClass(answer.err))
+                if errors.Is(answer.err,errOriginalGameLaneColdCandidate){
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_RETRY_ARMED role=client generation=%d class=%s current_owner_preserved=1",
+                        current.seq,nativeColdFailureClass(answer.err))
+                }else{
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_FAILED role=client generation=%d class=%s",
+                        current.seq,nativeColdFailureClass(answer.err))
+                }
             }else{
                 log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_READY role=client generation=%d lane=%d new_client_port=%d unaffected_sibling_lanes=3 original_TLS_Rust_M4=1",
                     current.seq,answer.lane,answer.clientPort)

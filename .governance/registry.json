@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "H1234 2026-11-05 follow up H1233 true Game4 per-lane ARM64 9436/9436 PASS: now next complete Linux native x86_64 client+server with existing exact H1231 Go TLS/Rust M4 hot-swap source, real 5% netem kernel drops in both physical directions of rotating Game4 client Bob only, 18s±3s eight real sequential one-lane TLS hot turnovers in Off and Fixed6, with independently healthy Alice and Carol real UDP on single server443. H1234 NOT_RUN until source-locked native artifacts. H998 live MTU FAIL retained.",
+      "goal": "H1235 fix real Game4 one-lane auto TLS/Rust rekey under impaired link: H1233 ARM64 loss0 16/16 independent swaps and 9436/9436 UDP PASS, H1234 native x86 5% two-way Bob veth Game4 Off/Fixed6 FAIL with Bob cessation after92/123s and later Health90; other clients unaffected. H1235 preserves old Rust four-lane GameAdapter/FEC owner for failed PRE-native TLS cold candidate only, retries same lane on one 18s±3s timer, aligns20s client vs15s server, while any partial native switch fails closed. H1235 true native test pending, H998 physical hot MTU FAIL retained.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

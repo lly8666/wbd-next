@@ -199,6 +199,12 @@ func sameOriginalGameLaneHotIdentity(old,next V4ColdSessionSnapshot,lane uint8)b
         old.keys.C2S!=next.keys.C2S&&old.keys.S2C!=next.keys.S2C
 }
 
+// A failed candidate original TLS handshake has not taken the current
+// GameAdapter, kernel socket, or the selected old lane's owner. It is
+// correct to keep all four live and try another cold association later.
+// NEVER tag native-M4-commit/old-Stop uncertainty with this sentinel.
+var ErrV4GameLaneUncommittedCold=errors.New("Game4 new TLS lane failed before native M4 commit")
+
 // Fresh original TLS for lane N occurs on a new genuine FakeTCP association.
 // Its authenticated epoch MUST equal the one still owned by the other three
 // Game4 lanes. Rust swaps the selected M4 RX/AEAD/PN worker on success.
@@ -225,7 +231,7 @@ func (p *V4LinuxGameProduct) ReplaceClientGameLane(
     next,e:=EstablishClientV4(ctx,a.BootstrapConn(),base,V4ClientOptions{
         DataPlaneReady:true,Epoch:previous.Epoch,fec2Product:true,GameFec:fec,
     })
-    if e!=nil{return e}
+    if e!=nil{return fmt.Errorf("%w: %w",ErrV4GameLaneUncommittedCold,e)}
     cold,e:=next.ColdSnapshot()
     if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane){
         return errors.Join(ErrAdmissionParams,e)

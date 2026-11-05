@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "checkpoint": "H1234",
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "d9828692c53d046d585e6458aabffa88adb1d816",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "run_id": 41988409506,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/41988409506",
+  "native_build": "PASS",
+  "game4_off": "FAIL",
+  "game4_fixed6": "FAIL",
+  "scope": "Native x86_64 client+server, original Go TLS/Rust Game4, Bob physical veth both egress configured Linux tc netem loss5%, other Alice+Carol unimpeded, three actual TUN no-retry UDP streams, independent lane1..4 twice never completed",
+  "scenes": [
+    {
+      "name": "game4-off",
+      "artifact_id": 13397357779,
+      "zip_sha256": "4697a14b1f945dfff2e18637502caf5688205967c509e06474c9309152856ec1",
+      "crc_pass": true,
+      "file_count": 6,
+      "alice": "2290/2290",
+      "bob": "914/1678",
+      "carol": "2290/2290",
+      "last_bob_echo_elapsed_seconds": 92.307,
+      "bob_received_p99_ms": 8.42005
+    },
+    {
+      "name": "game4-fixed6",
+      "artifact_id": 13396199722,
+      "zip_sha256": "4ad0ecb6b3d4dbb18072d1a9d3c08e7e996d04ed64c69a97b1f579e74a78930b",
+      "crc_pass": true,
+      "file_count": 6,
+      "alice": "2290/2290",
+      "bob": "1218/1814",
+      "carol": "2290/2290",
+      "last_bob_echo_elapsed_seconds": 122.595,
+      "bob_received_p99_ms": 4.791853,
+      "health90_original_group_stop": "OBSERVED"
+    }
+  ],
+  "tc_netem_initial_readback": "PASS_IN_ARTIFACT",
+  "tc_actual_final_dropped_counters": "NOT_CAPTURED_ON_EARLY_FAILURE",
+  "actual_physical_loss_measured": "NOT_MEASURED",
+  "root_cause": "PENDING_FULL_BOB_CLIENT_LOG; pre-M4 cold TLS candidate wrongly fatal is source-visible possible mechanism, not yet proven only cause",
+  "H1233_ARM64_loss0": "PASS_RETAINED",
+  "H998_live_hot_MTU_shrink": "FAIL_RETAINED"
+}

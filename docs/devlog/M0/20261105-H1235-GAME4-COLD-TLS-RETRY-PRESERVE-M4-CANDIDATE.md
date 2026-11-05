@@ -1,0 +1,9 @@
+# PLAN028 H1235 — preserve current Game4 four-lane M4 on failed uncommitted original TLS rekey
+
+H1234 source d9828692c53d046d585e6458aabffa88adb1d816 native x86/x86 under Bob both-way physical veth configured `tc netem loss 5%`: Game4 Off and Fixed6 **both failed**, Bob 914/1678 and 1218/1814 real no-retry UDP, healthy Alice+Carol each 2290/2290 per run. Fixed6 server original Rust M4 Health90 stopped Game4 group and new entire cohort bootstrapped; 8 genuine uninterrupted individual turns not proven. Full raw client tail and **final netem kernel drops not captured on early failure**; never claim 5% actual measured carrier loss. Failure ZIPs SHA+CRC checked; source-evidence `docs/evidence/M0/PLAN028-H1234-SOURCED982-X86-GAME4-NETEM5-HOT-LANE-LIVENESS-FAIL-20261105.json`.
+
+Source repair is restricted: if the candidate FakeTCP/TLS handshake failed **BEFORE the new lane native Rust M4 commit**, preserve old group, original GameAdapter/FEC/Health/other 3 live lanes, and let **same sole path supervisor** retry SAME target slot after a fresh 18s ±3s timer; client cold TLS budget20s aligned to server15s. Only provably precommit fails receive retryable sentinel. Any protected identity mismatch, native M4 partial replace or exact Stop uncertainty remains fail-closed, no forged PASS. Test fixture now snapshots all four native runtime logs and physical `tc -s` final counters even if 8 turns fail. H1235 true source-locked native x86 Off+Fixed6 evaluation **NOT_RUN until Action**. H1233 ARM64 9436/9436 scoped PASS and H998 live hot MTU FAIL retained.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter","game-lanes"],"reason":"Record authentic H1234 x86 netem liveness FAIL and safe H1235 pre-native original TLS cold retry candidate; new source native results pending."}
+```
