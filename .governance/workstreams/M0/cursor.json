@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1211,
-  "checkpoint_sha": "7eeeb74c185bbd5464fb0491cc0d230aea388738",
+  "sequence": 1212,
+  "checkpoint_sha": "b315a436f99bef1c35de928c88d6baa2d40c1c1e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1211 signed Windows Npcap/Wintun↔WSL2 original Normal Auto one443 true OS-owned physical .1→.9 IPv4 source switch, original Go TLS/Rust authenticated per-cohort Auto FEC ready2, Wintun OS MTU readback2 at outer default1460, real UDP/TCP and owned Stop; opt-in [plan028-win-physical-auto] one Action, reuse same existing Windows owned source4+native superivsor. H1209 Windows Fixed6 signed Action41938990570 and H1210 x86 highest30 Action41939187804 independently in progress, exact SOURCE separate. Game2 off/fixed and Game4 off remaining Windows physical modes; no product changes in H1211.",
-  "why_now": "Full Linux 7 mode-specific A-B-A qualified, signed Windows Game4FEC6 and Normal Off source switch qualified earlier; explicit Windows Fixed6 authentic admission source3775 compile in progress. Auto is strict same shared Normal feature7 original TLS, already in existing native product mode. Minimal one-scene harness flag enables real OS source4 check and original Auto FEC M4 readback without generic multi-mode replay or second controller.",
+  "current_task": "H1212 signed Windows original Npcap/Wintun↔WSL2 one443 Game4 FEC OFF protected double real source4 .1→.9 handover TLS/Rust M4, two actual server Game4 OFF M4 profile0 receipts, real Windows Wintun OS inner MTU twice with user outer default1460, UDP/TCP and exact Stop. Dedicated [plan028-win-physical-game4off] one scene/Action and owned OS restoration, no controller/data edit. Windows Fixed6 SOURCE3775, Auto SOURCEb315 and x86 normalfixed6 high30 SOURCE7eee Actions in flight independently. Next Windows Game2 off/fixed6.",
+  "why_now": "Previously signed Windows H1188 Game4FEC6 two M4 cohorts and Linux Game4 OFF genuine two physical source4 PASS. Game4 Off is same four-lane existing Windows product mode and native OS-owned source4/Stop contract, no special FEC stream, strict two protected server off receipts. Keep old H998 FAIL.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1211 Windows Auto distinct Action, H1209 Windows Fixed6 and H1210 x86 high30. Verify original TLS M4 cohorts, OS readback, UDP/TCP and exact Stop; if first runtime failure narrow and only fix that. Then Windows Game2off/Fixed6 and Game4off authentic physical. H998 old hot MTU+ARM Game4 FAIL, Android/ICMP/CPU causal unqualified.",
+  "next_action": "Collect separate Windows Fixed6/Auto/Game4off and x86 high30 exact SOURCE Actions. If any first true runtime fail, correct narrow source. Then Windows Game2 modes and notifier/auth→first timing; Android, remote ICMP, CPU attribution remain unmeasured.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1211 Windows Normal Auto authentic native physical source4 reauth new one-scene test using existing owned WSL route/watcher and two protected FEC auto M4 receipts; independent Fixed6 and x86 high30 tests in flight."
+  "partial_summary": "H1212 Windows signed Game4 OFF real source4 reauth native test queued; require two original Rust M4 off receipts plus per-gen OS MTU, UDP/TCP, Stop; Windows Fixed6/Auto and x86 high30 in progress."
 }
