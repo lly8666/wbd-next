@@ -144,6 +144,8 @@ old=[int(x) for x in re.findall(r"V4_PUBLIC_PATH_OLD_EXACT_STOP role=client gene
 timer=[x for x in target_log.splitlines() if "V4_PUBLIC_TIMER_ROTATION_DUE role=client" in x]
 assert gen[:3]==[1,2,3] and old[:2]==[1,2],(gen,old)
 assert len(timer)>=2 and all("same_physical_interface_ipv4=true" in x and "unchanged_path=true" in x for x in timer[:2]),timer
+timer_due_unix_ms=[int(re.search(r"unix_ms=(\\d+)",x).group(1)) for x in timer[:2]]
+assert timer_due_unix_ms[0]<timer_due_unix_ms[1]
 for who in ("alice","bob","carol"):
     before=json.loads(pathlib.Path(f"fixed-kernel-result/timed-before-{who}-route.json").read_text())[0]
     after=json.loads(pathlib.Path(f"fixed-kernel-result/timed-after-{who}-route.json").read_text())[0]
@@ -155,6 +157,17 @@ for who in ("alice","bob","carol"):
     assert "V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client" not in logs[who],who
 streams={who:json.loads(pathlib.Path(f"fixed-kernel-result/timed-stream-{who}.json").read_text())
          for who in ("alice","bob","carol")}
+lease_receipts={}
+for who in ("alice","bob","carol"):
+    leases=re.findall(r"V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=(10\\.66\\.0\\.\\d+)/32",logs[who])
+    lease_receipts[who]=leases
+    assert len(leases)>=(3 if who==target else 1),(who,leases)
+    assert set(leases)=={streams[who]["physical_source"]},(who,leases,streams[who]["physical_source"])
+first_post_ready_echo_ms={}
+for who,s in streams.items():
+    next_reply=next((x for x in s["receipts_unix_ns"] if x>ready_ns),None)
+    assert next_reply is not None,(who,"no real echo after authenticated M4 READY detection")
+    first_post_ready_echo_ms[who]=round((next_reply-ready_ns)/1e6,3)
 for who,s in streams.items():
     assert s["sent"]>=30 and s["received"]>=.70*s["sent"],(who,s)
     assert s["first_send_unix_ns"]<ready_ns<s["last_receive_unix_ns"],who
@@ -166,13 +179,25 @@ cpu_after=json.loads(pathlib.Path("fixed-kernel-result/timed-cpu-after.json").re
 cpu_ticks={who:sum(cpu_after[who][field]-cpu_before[who][field] for field in ("utime_ticks","stime_ticks"))
            for who in cpu_before}
 assert all(v>=0 for v in cpu_ticks.values())
+import os
+ticks_per_second=os.sysconf("SC_CLK_TCK")
+elapsed_s=(max(s["last_receive_unix_ns"] for s in streams.values())-
+           min(s["first_send_unix_ns"] for s in streams.values()))/1e9
+cpu_percent={who:round(100*(ticks/ticks_per_second)/elapsed_s,3)
+             for who,ticks in cpu_ticks.items()}
 result={"status":"PASS","source":"original Go TLS+Rust M4 native x86/x86",
         "mode_scene":scene,"timer_interval_seconds":12,"server_port":443,
         "physical_interface_ipv4_unchanged":True,"physical_mtu_unchanged":True,
         "target_authenticated_generations":gen[:3],"exact_old_stops":old[:2],
-        "same_tunnel_ip":True,"sibling_real_udp_live":True,
+        "same_tunnel_ip":all(len(set(x))==1 for x in lease_receipts.values()),
+        "actual_authenticated_lease_receipts":lease_receipts,
+        "sibling_real_udp_live":True,
+        "timer_due_unix_ms":timer_due_unix_ms,
+        "second_timer_due_to_third_ready_detect_ms":round(ready_ns/1e6-timer_due_unix_ms[1],3),
+        "native_READY_detect_to_first_real_echo_ms":first_post_ready_echo_ms,
         "streams":{w:{k:v for k,v in data.items() if k!="receipts_unix_ns"} for w,data in streams.items()},
         "cpu_process_ticks_during_scene":cpu_ticks,
+        "cpu_process_percent_during_scene":cpu_percent,
         "cpu_causal_comparison":"NOT_MEASURED",
         "auth_to_first_packet_ms":"NOT_MEASURED",
         "old_027A_H998_live_same_socket_mtu":"FAIL_RETAINED",
@@ -183,6 +208,14 @@ PY_ORACLE
 '''
 inject=inject.replace("@SCENE@",scene).replace("@TARGET@",who).replace("@NIC@",nic)
 s=s.replace(anchor,'wait "$PA" "$PB" "$PC"\n'+inject+'\ngrep -Fq "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/bob.log"',1)
+# Preserve raw authenticated-generation logs before the base fixture's EXIT
+# trap deletes its private namespace files. No secrets are emitted by client
+# logs, and source-generated cert/key files remain confined to TMP.
+final_anchor='echo "M0_PLAN028_H1151_NATIVE_X86_MIXED_ONE_PORT_ONE_RUST_TUN_PASS"'
+assert s.count(final_anchor)==1
+s=s.replace(final_anchor,
+    'for who in server alice bob carol;do cp "$TMP/$who.log" "$ART/timed-runtime-$who.log";done\\n'
+    +final_anchor,1)
 out.write_text(s)
 out.chmod(0o700)
 print("PLAN028 H1222 original TLS timer fixture generated:",scene)

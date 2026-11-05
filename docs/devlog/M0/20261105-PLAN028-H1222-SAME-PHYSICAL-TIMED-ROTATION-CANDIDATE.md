@@ -11,3 +11,12 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"New user-authorized opt-in unchanged-physical timed original TLS/Rust replacement and three native business scene candidates; NOT_RUN pending exact SOURCE Actions."}
 ```
+
+## 原生首轮与精度补强
+
+- SOURCE `8a803303` native [Action41957225539](https://github.com/lly8666/wbd-next/actions/runs/41957225539): 1 build PASS, three native x86/x86 independent scenes PASS, initial client TLS epoch 1 then two timer-triggered protected epochs 2/3, old exact Stop 1/2, all 2265/2265 real UDP echoes, no physical NIC/source IPv4/MTU change. Per rotating lane received-only RTT p99: Normal Auto 0.621ms, Game2 Off 3.396ms, Game4 Fixed6 17.747ms. CPU process ticks captured but not causal.
+- This follow-up narrows the proof: each generation's *actual authenticated lease* must match the concurrently responding address, and fixture exports real Go/Rust runtime logs and ready-detection→first echo metrics. The new fixture SOURCE is **NOT_RUN until its own new Action**; do not silently promote 8a803 results onto a different SHA.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1222 native three-mode 2265 real UDP verified at exact 8a803 source; strengthen current-source authenticated lease and timestamp proof without changing steady packet wire."}
+```

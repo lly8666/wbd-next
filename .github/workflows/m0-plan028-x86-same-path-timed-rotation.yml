@@ -190,5 +190,6 @@ jobs:
           path: |
             timed-${{ matrix.scene }}.log
             fixed-kernel-result/timed-*.json
+            fixed-kernel-result/timed-*.log
           if-no-files-found: warn
           retention-days: 14
