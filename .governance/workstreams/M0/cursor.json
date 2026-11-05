@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1219,
-  "checkpoint_sha": "7a223bd2779e701c62c6f0a3c2ad8ed74aabf50e",
+  "sequence": 1220,
+  "checkpoint_sha": "9f9958f456b3e932f4ea7291c234ec626b4600b7",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1219 final single Linux native x86_64 Normal Fixed6 under actual kernel tc loss30 delay250 DURING second source IPv4 original TLS reauth. H1217 Action41947118429 built real Go/Rust and native shared443 delivered all baseline real UDP; failed in first 21s because prior test-only code moved `kill Alice Game2` after long stage but left its pre-existing exact Stop wait BEFORE stage (20s timeout). Restore original Alice Stop in base, require server Game2 intentional health90 retirement after long128s Game4 witness and final distinct Game4 server-close + shared TUN Stop, instead of two server-close receipts. No product changes, H1218 governance source-matched PASS, user demands last scene then scoped closeout.",
-  "why_now": "H1217 x86 Action41947118429 native fail only before physical transition after initial Game2/4/Normal actual 12 UDP each; original Alice client Stop command accidentally removed, 80×250ms loop waited for impossible marker. Earlier H1206 long 128s scene proved real tc30/250 UDP193/200 p99 550.038 and server Game2 authenticated health90 then final Game4 server-close. The original 2-group server-close count was short-scene-only; require explicit health90 for Game2 and final server-close for Game4, not blanket bypass.",
+  "current_task": "H1220 final single native x86 Normal Fixed6 tc loss30 delay250 second original Go TLS/Rust. H1219 Action41948018824 FAILED PRE_NATIVE generator strict one() anchor: baseline original server GROUP_STOP close line has FOUR leading spaces but generator hardcoded FIVE. Exact one-character indent correction, preserve mandatory Game2 server health90 and Game4 last server-close plus Rust shared TUN Stop. H1218 source-correct governance success. User explicitly wants last scene then scoped closure; no new modes/tests.",
+  "why_now": "H1219 original source Action finished negative before native network: Python generated fixture anchor error after building product. Actual base line confirmed four leading spaces; patch one char only. No product or numeric gate change.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect exactly H1219 last native SOURCE Action and governance. If PASS archive loss30 RTT p99+physical qdisc drops, TLS successor, healthy Game4, original client old Stops and final shared Rust TUN Stop with exact evidence. If FAIL record first stage accurately and scoped close without new matrices. Do not dispatch Windows Game2, other 029/030; preserve Windows Fixed6 unfinished and Android/ICMP/CPU causal/H998 limits.",
+  "next_action": "Collect one H1220 native x86 source-locked original Go/Rust high30/250 second TLS full Action. If success archive actual kernel drop/UDP received RTT p99/Game4 healthy/owned Stop; if further failure classify honestly and perform user-directed limited closeout without additional mode scenes. Governance must stay green, retain Windows Fixed6 and Game2 unfinished, H998/ICMP/Android/CPU gaps.",
   "unverified": true,
   "last_tested_source": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1219 user final scenario native x86 original NormalFixed6 high30/250 second TLS: keep Alice original Stop, explicitly verify its server health90 and Game4 distinct final server-close plus shared TUN Stop. Previous old source H1217 failed 20s pre-network due test-only moved Stop; governance H1218 all green."
+  "partial_summary": "H1220 final x86 high30 real network qualification retrigger after exact four-space generator anchor repair; H1219 PRE_NATIVE_TEST_ASSERTION_FAIL. User directed stop after this scene with scoped closeout."
 }

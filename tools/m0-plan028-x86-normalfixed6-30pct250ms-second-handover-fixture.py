@@ -75,7 +75,7 @@ s=s.replace(old,old+chr(10)+b,1)
 # Here Game2 owner was explicitly Stop-drained before >90s high-loss traffic;
 # the server independently retires only this Game2 group by health90.
 # Require BOTH that real retirement and Game4's final server-close + TUN.
-one("""     [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 2 ]];then break;fi""",
+one("""    [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 2 ]];then break;fi""",
     """     [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 1 ]] &&
      grep -Fq "V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=authenticated-rust-game-health90" "$TMP/server.log";then break;fi""")
 one("""[[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -ge 2 ]]""",

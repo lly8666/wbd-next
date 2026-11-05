@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1220",
+  "source_sha": "9f9958f456b3e932f4ea7291c234ec626b4600b7",
+  "result": "FAIL_PRE_NATIVE_TEST_GENERATOR",
+  "action": {
+    "run_id": 41948018824,
+    "job_id": 126984954685,
+    "artifact_id": 13379747321,
+    "conclusion": "failure"
+  },
+  "cause": "H1219 original source anchor expected five spaces but base Bash line has four; Python asserts before bash-n and network",
+  "native_execution": "NOT_RUN",
+  "fix": "Exact four spaces; original 30pct/250ms, owner Stop, no product byte change",
+  "limits": [
+    "H998 live hot-shrink and old ARM Game4 FAIL retained",
+    "remote ICMP/Android/CPU causal unmeasured"
+  ]
+}
