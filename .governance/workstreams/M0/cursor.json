@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1248,
-  "checkpoint_sha": "3b40388c0a1c9fa6d6d19d3368e6e9f5aafd100a",
+  "sequence": 1249,
+  "checkpoint_sha": "a24f1c42bbac349165c22a558dfecd6f83a949fd",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1248 collect H1247 shared TUN recovery: Action42064007729 at 3b40388 x86 native Rust bounded mpsc 4/4 PASS (blocked A for two TUN turns, then six recovered 8-packet flushes; A48 forwarded after recovery, B64 correct throughout, zero A post-recovery pending overflow). Document/test/queue limits finalized; no Rust product change since H1247. Feature card compacted within repository 16KiB limit after H1247 feature-catalog FAIL; unrelated historical combined/G2 failures are not scoped queue regression.",
-  "why_now": "The new targeted test is green; archive its exact SOURCE result, repair H1247 feature-card size overrun without changing product behavior, preserve PLAN028 broader gaps and old-source H998 FAIL.",
+  "current_task": "H1249 governance-only cursor bound correction: H1248 source-scoped x86 shared-TUN recovery 4/4 PASS remains exactly SOURCE3b403/Action42064007729; feature catalog structure PASS, but H1248 combined governance failed due context_refs=9, restore <=8 without dropping historic evidence files. No Rust/product test changed.",
+  "why_now": "Preserve existing governance max-eight context_refs contract; the extra historical H1245 reference is already tracked in its own evidence/devlog and does not belong in live cursor hot read set.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Scoped queue bugfix delivered; do not re-dispatch H1247 or old PLAN027/027A matrices absent a new relevant source change. PLAN028 remaining platform and scope assessment remains separate existing M0 workstream: collect already-successful H1246 two Game2 physical runs if PLAN028 closeout is resumed, retain Windows full physical seven modes, Android, long TCP/CPU and H998 historical same-socket PMTU gap.",
+  "next_action": "User-requested shared TUN A recovery/B continuous fix delivered and scoped x86 test passed. No additional queue dispatch without relevant code changes. Existing PLAN028 broader closeout is separately pending, preserve Windows/Android/H998 and historical same-socket MTU failure.",
   "unverified": true,
   "last_tested_source": "3b40388c0a1c9fa6d6d19d3368e6e9f5aafd100a",
   "evidence_refs": [
@@ -25,9 +25,8 @@
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
-    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
-    "docs/evidence/M0/PLAN028-H1245-SOURCE2954-ARM64-GAME4-PHYSICAL-COLLISION-STRICT-PASS-20261105.json"
+    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1247 scoped shared-TUN backlog A recover/B continuous x86 native unit 4/4 PASS SOURCE3b403 with 48 A forward, 64 B correct, 0 post-recovery queue overflow; older H1246 Game2 dual-arch native Actions success SOURCE830d5bc, H1245 ARM Game4 collision PASS SOURCE2954. No live network loss fraction or CPU causality inferred. H998 original same-socket MTU FAIL retained."
+  "partial_summary": "H1247 SOURCE3b403 targeted 4/4 x86 real Rust-channel A blocked→A recovered 48 / B continues64, zero post-recovery overflow. H1248 evidence archived, feature-catalog bounded JSON passed. H1249 only reduces context_refs 9→8 for governance. No new source change or new test needed."
 }
