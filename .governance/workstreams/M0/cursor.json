@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1229,
-  "checkpoint_sha": "f8185fb35ac8d982e36c9204b95da1330d5349ab",
-  "progress": "in_progress",
+  "sequence": 1230,
+  "checkpoint_sha": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+  "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1229 H1226 seven-mode longer jitter physical-no-impairment original Go TLS/Rust native x86/x86 tests: first Action41969605343 real single build PASS and 1/7 scenes workflow PASS; 3 additional true 5-generation no-missing scene oracles wrote PASS but inherited 3-mode printer mislabels scenario (normal-fixed6,game2-fixed6,game4-off); 3 real no-retry streams had 1–2 / ~770 client UDP request misses under 4 rotations (normal-off,game2-off,game4-fixed6) with received-only p99 sub-ms and max receipt gap ~271ms. NOT hidden, not 0-packet-loss; strict-perfect gate was invalid for scoped PLAN028 per spec, now retain exact miss counts and require >=99.5%, <=3 per device and max gap<800ms. Cold 18s±3s (15..21s) and per-lane grouped 5-generation TLS tuples stay unchanged. Revised source-native workflow pending.",
-  "why_now": "First 7-mode native run41969605343 exposed a real 1–2 missing replies per ~770 during 4 no-retry rollovers (netem loss0), plus a test-only inherited mode marker. Need measure exact application misses and bounded latency instead of forcing 100% and claiming no loss; target real function is no seconds stalls and reliable burst-limited resume.",
+  "current_task": "H1230 SOURCE0cda x86_64 client + x86_64 server original Go TLS/Rust native extended unchanged physical jittered rotation completed: 7/7 modes PASS in Action41970545107 one build+7 independent scenes, 18s±3s, each 4 actual grouped generation replacements 1→5, exact Stops1..4, three concurrent real TUN UDP peers per scene 16219 correct echoes /16220 no-app-retry sends; one actual game2-off missing reply preserved, no WAN impairment injected. Game4 off/fixed6 five authenticated grouped generations ×4 distinct protected TLS lane ports each, server mapping and M4 READY/Stop verified. Crucial limitation: true sequential independent per-lane hot rotation with three siblings not restarted is NOT_IMPLEMENTED/NOT_RUN. Seven artifacts independently downloaded, sha/CRC/raw receipts verified. H998 historical FAIL retained.",
+  "why_now": "User explicitly requested longer floating timer, all 7 cases and Game4 each lane rotation with longer observations. Verified exact-source original Go TLS/Rust M4 seven modes; precise honesty about group-level vs individual lane continuity and one real missed echo.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run newly corrected true-7-mode test at unchanged current product SOURCE after H1229 fixture and workflow correction. Observe all 7 exact 5 gens/4 Stops, true mode-specific marker, per-game 5×N original authenticated TLS tuples, 99.5% app delivery and max gap<800ms; examine any misses rather than relabel. Independent single Game lane hot rotation remains NOT_IMPLEMENTED.",
-  "unverified": true,
-  "last_tested_source": "4221e96f81934fde6b89215323e37b7e6286ce25",
+  "next_action": "If continuing specifically user-requested independent Game4 lane1→lane2→lane3→lane4 hot swaps without restarting healthy siblings, implement true same-epoch per-lane original TLS cold reauth + Rust GameAdapter/kernel TX/RX lane replacement through EXISTING supervisor and shared FEC/first-delivery owner; no second controller/wire. Then native ARM64+ARM64 next complete Linux platform task per 2026-11-04 alternation; verify under real no-retry UDP, 5% and high-loss when warranted. Seven-mode grouped x86 H1230 already finished; DO NOT repeat. Keep H998 shrink FAIL.",
+  "unverified": false,
+  "last_tested_source": "0cda91575d171c1f8141e937aac91c39d6b303fc",
   "evidence_refs": [
-    "docs/evidence/M0/H1225-SOURCE4221-ARM64-NATIVE-GAME-ZERO-LOSS-P99-QUEUE-WAKE-AB-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1226 candidate implementation prepared: Go original client jitter CLI via existing sole path supervisor (18s ±3s tests), original Game client/server per-lane group-TLS/port/real Rust M4 receipts, 7-mode long native x86 real three-device UDP matrix pending build. Neither new-source PASS nor independent single-lane hot swap claimed."
+  "partial_summary": "H1230 PASS source0cda native x86/x86 7 jittered unchanged-physical modes (18s±3s), 28 whole-cohort authenticated group handovers, each mode gen1→5 Stops1..4, 16219/16220 real no-retry UDP, max success receipt gap270.8ms, Game4 2 modes × 20 genuine per-group TLS client/server lane tuples and new flow ports; no independent one-lane hot swap achieved. H1225 ARM p99 source4221 remains separate; H998 hot-MTU FAIL retained."
 }

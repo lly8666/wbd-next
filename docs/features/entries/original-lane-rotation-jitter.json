@@ -6,7 +6,9 @@
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
-  "available_on": [],
+  "available_on": [
+    "linux/amd64"
+  ],
   "defaults": {
     "rotation_interval": "0 (disabled)",
     "rotation_jitter": "0 (exact interval)",
@@ -24,20 +26,23 @@
     "r0/go_overlay/internal/v4productcli/game_linux.go"
   ],
   "doc_refs": [
-    "docs/devlog/M0/20261105-H1226-SEVEN-MODE-JITTERED-GROUP-ROTATION-CANDIDATE.md"
+    "docs/devlog/M0/20261105-H1226-SEVEN-MODE-JITTERED-GROUP-ROTATION-CANDIDATE.md",
+    "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
   ],
   "verification": [
     {
-      "platform": "native Linux x86_64 client+server",
-      "scope": "Seven independent real 3-device 443 TLS/Rust M4 scenes, 4 timed jittered group generations; Game4 each of four original authenticated lane tuples checked. Native action pending.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "platform": "native Linux x86_64 original Go TLS client + x86_64 original Go TLS server",
+      "scope": "H1230 7/7 original Go TLS/Rust M4 native seven-mode 18s±3s four real grouped rotations per scene, 16219/16220 no-retry UDP, Game4 each of 4 TLS/port lanes ×5 generations independently matched within WHOLE group; independent lane-only hot-swap NOT_IMPLEMENTED/NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+      "evidence": "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
     }
   ],
   "limitations": [
-    "Game4 one native GameAdapter and shared FEC/first-delivery owner uses complete-cohort replacement; independent lane-at-a-time rotating without restarting 3 siblings NOT_IMPLEMENTED and NOT_RUN.",
+    "Group-scope: Game4 still one authenticated 4-lane Rust GameAdapter+shared FEC dedup and one complete 4-lane replacement generation. Each lane individually has new TLS/port each group generation, but independent lane1→2→3→4 rolling hot reauth while other three remain untouched NOT_IMPLEMENTED/NOT_RUN; cannot infer from grouped PASS.",
     "No zero-loss promise on actual WAN: test has no physical impairment; high-loss/Windows/Android not qualified.",
-    "H998 hot same-socket MTU FAIL and historical ARM Game4 FAIL retained. H1225 ARM p99 prior source does not certify H1226 source."
-  ]
+    "H998 hot same-socket MTU FAIL and historical ARM Game4 FAIL retained. H1225 ARM p99 prior source does not certify H1226 source.",
+    "H1230 one actual real Game2 Off UDP missing reply in 16220 total packets across seven scenes; injected physical netem loss 0%. 99.9938% application receipts is not 100% packet reliability."
+  ],
+  "main_development_reason": "2026-11-05 用户明确在已授权PLAN028 M0 main单写者上要求增加浮动定时换代与多原生工况验证；只复用原始Go监督者和共享Rust M4，不另开传输/协议分支。"
 }

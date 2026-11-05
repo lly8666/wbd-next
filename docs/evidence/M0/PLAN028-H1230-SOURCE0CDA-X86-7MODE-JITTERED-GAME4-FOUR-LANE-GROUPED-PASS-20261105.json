@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1230",
+  "source_sha": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_NATIVE_X86_X86_SEVEN_MODES_JITTERED_SAME_PHYSICAL_NETWORK_FOUR_GROUP_REPLACEMENTS; NOT_INDEPENDENT_GAME4_ONE_LANE_HOT_SWAP",
+  "action": {
+    "run_id": 41970545107,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41970545107",
+    "status": "completed",
+    "conclusion": "success",
+    "build_artifact_id": 13389044086
+  },
+  "actual_binaries": {
+    "platform": "native Linux x86_64 client+native Linux x86_64 server",
+    "original_Go_version": "1.23.12",
+    "Rust_version": "1.85.1",
+    "original_pinned_Go_TLS_repo": "lly8666/wobuzhidao",
+    "original_Go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "single_SOURCE_build_and_artifact_sha_verified": true
+  },
+  "setup": {
+    "one_real_TLS_server_port": 443,
+    "real_repeated_authenticated_clients": [
+      "alice",
+      "bob",
+      "carol"
+    ],
+    "traffic": "3 independent 100Hz real TUN UDP echo streams, no application retries, 4 successful 18s ±3s random timer cold handovers per scene",
+    "same_OS_route_ipv4_interface_IP_and_mtu": true,
+    "physical_netem_injected_loss_percent": 0,
+    "default_outer_IPv4_MTU": "1460 bytes, L2 excluded",
+    "game4_copy_stagger": "existing mode2 0/4/50/140ms unchanged",
+    "game_fixed6": "existing authentic profile6, no algorithm or wire change"
+  },
+  "aggregate": {
+    "total_scenarios": 7,
+    "all_native_workflow_jobs_pass": true,
+    "three_concurrent_original_tls_clients_per_scenario": true,
+    "successful_authenticated_generation_group_transitions": 28,
+    "real_udp_sent": 16220,
+    "real_udp_echoed": 16219,
+    "real_udp_missing": 1,
+    "real_udp_aggregate_received_percent": 99.99383477188655,
+    "single_real_no_retry_missing_mode": "game2-off",
+    "single_missing_client": "alice",
+    "max_all_scenes_successful_delivery_gap_ms": 270.754767,
+    "all_rotation_armed_delays_between_ms": [
+      15000,
+      21000
+    ],
+    "source_default_outer_complete_IPv4_MTU_bytes": 1460,
+    "game4_authenticated_TLS_lanes_per_new_group": 4,
+    "game4_group_generations_per_mode": 5,
+    "game4_authenticated_lane_tuple_records_per_mode_each_peer": 20,
+    "game4_modes_checked": [
+      "game4-off",
+      "game4-fixed6"
+    ],
+    "game4_actual_individual_lane_hot_swap": "NOT_IMPLEMENTED_NOT_TESTED_GROUP_ONLY"
+  },
+  "scenes": [
+    {
+      "mode": "normal-off",
+      "rotated_client": "carol",
+      "artifact_id": 13389611397,
+      "job_id": 127057974836,
+      "artifact_zip_sha256": "5ec1a22d94d1dc6f7731a41e366aa088131a3d0162f39dc834d098ad6f8b5cce",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        15687,
+        16941,
+        20864,
+        20411
+      ],
+      "real_udp_sent": 2325,
+      "real_udp_echoed": 2325,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.711988,
+      "max_three_client_successful_delivery_gap_ms": 101.013259,
+      "server_sampled_cpu_percent": 1.492,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "client_server_per_lane_authenticated_flow_match": false,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "normal-fixed6",
+      "rotated_client": "carol",
+      "artifact_id": 13389184163,
+      "job_id": 127057974732,
+      "artifact_zip_sha256": "f64eb94bd51a9af8b22c7a7a1526631b40e7e794b9411945509f12c1e272d8db",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        19930,
+        16116,
+        17722,
+        19403
+      ],
+      "real_udp_sent": 2298,
+      "real_udp_echoed": 2298,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.778918,
+      "max_three_client_successful_delivery_gap_ms": 133.593607,
+      "server_sampled_cpu_percent": 1.925,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "client_server_per_lane_authenticated_flow_match": false,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "normal-auto",
+      "rotated_client": "carol",
+      "artifact_id": 13389830849,
+      "job_id": 127057974808,
+      "artifact_zip_sha256": "aa30323fb90970bf57ed64bda2116794f3f884bc67c9912445807293519b9d30",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        15809,
+        18899,
+        16297,
+        17029
+      ],
+      "real_udp_sent": 2142,
+      "real_udp_echoed": 2142,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.724685,
+      "max_three_client_successful_delivery_gap_ms": 101.596812,
+      "server_sampled_cpu_percent": 1.592,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "client_server_per_lane_authenticated_flow_match": false,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "game2-off",
+      "rotated_client": "alice",
+      "artifact_id": 13389174182,
+      "job_id": 127057974852,
+      "artifact_zip_sha256": "60f2ff387448826719b77f2a89744000a59046de5d13e1fc807c808b4989336b",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        19005,
+        19541,
+        20723,
+        19135
+      ],
+      "real_udp_sent": 2477,
+      "real_udp_echoed": 2476,
+      "real_udp_missing": 1,
+      "rotating_client_received_only_RTT_p99_ms": 0.668965,
+      "max_three_client_successful_delivery_gap_ms": 270.754767,
+      "server_sampled_cpu_percent": 2.149,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "game_lane_group_TLS_origins": 2,
+      "client_server_per_lane_authenticated_flow_match": true,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "game2-fixed6",
+      "rotated_client": "alice",
+      "artifact_id": 13389144337,
+      "job_id": 127057974751,
+      "artifact_zip_sha256": "ff2e014d06e509dc8888d5dd514faad6335716c4effba1ae0844cf478fe46a00",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        16068,
+        18065,
+        18083,
+        17937
+      ],
+      "real_udp_sent": 2229,
+      "real_udp_echoed": 2229,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.735343,
+      "max_three_client_successful_delivery_gap_ms": 101.344502,
+      "server_sampled_cpu_percent": 1.946,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "game_lane_group_TLS_origins": 2,
+      "client_server_per_lane_authenticated_flow_match": true,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "game4-off",
+      "rotated_client": "bob",
+      "artifact_id": 13389532892,
+      "job_id": 127057974841,
+      "artifact_zip_sha256": "72f3ea20fc90eb9af8549ae5e4bbfb107e12b98c4cce2fcde4af72d11cd62ed5",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        19975,
+        15724,
+        18658,
+        20230
+      ],
+      "real_udp_sent": 2370,
+      "real_udp_echoed": 2370,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.642119,
+      "max_three_client_successful_delivery_gap_ms": 101.432111,
+      "server_sampled_cpu_percent": 1.677,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "game_lane_group_TLS_origins": 4,
+      "client_server_per_lane_authenticated_flow_match": true,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    },
+    {
+      "mode": "game4-fixed6",
+      "rotated_client": "bob",
+      "artifact_id": 13389019878,
+      "job_id": 127057974838,
+      "artifact_zip_sha256": "d06a9ab60fc823596f960aa41924e743447b8b743e52058e6aa8f35ea6e1bff8",
+      "artifact_file_count": 23,
+      "rotation_actual_armed_delay_ms": [
+        20777,
+        16334,
+        17871,
+        19646
+      ],
+      "real_udp_sent": 2379,
+      "real_udp_echoed": 2379,
+      "real_udp_missing": 0,
+      "rotating_client_received_only_RTT_p99_ms": 0.50193,
+      "max_three_client_successful_delivery_gap_ms": 101.408664,
+      "server_sampled_cpu_percent": 1.297,
+      "new_authenticated_generations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "exact_old_generation_stops": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "game_lane_group_TLS_origins": 4,
+      "client_server_per_lane_authenticated_flow_match": true,
+      "same_physical_interface_and_outer_mtu": true,
+      "status": "PASS_SCOPED_REAL_ORIGINAL_TLS_RUST_M4_GROUPED",
+      "downloaded_zip_crc_and_sha256_verified": true
+    }
+  ],
+  "game4_per_lane_group_evidence": {
+    "scope": "Every original TLS Game4 lane has distinct immutable client local FakeTCP TCP source port, preserved server destination443, authenticated protected Go policy and Rust group M4 READY; both endpoints independently logged and matched across all 5 whole-group generations.",
+    "source_ports_by_group_and_lane": {
+      "1": [
+        42031,
+        42032,
+        42033,
+        42034
+      ],
+      "2": [
+        57881,
+        57882,
+        57883,
+        57884
+      ],
+      "3": [
+        49420,
+        49421,
+        49422,
+        49423
+      ],
+      "4": [
+        57339,
+        57340,
+        57341,
+        57342
+      ],
+      "5": [
+        65258,
+        65259,
+        65260,
+        65261
+      ]
+    },
+    "modes": [
+      "game4-off",
+      "game4-fixed6"
+    ],
+    "original_TLS_identical_protected_lanes_per_mode": 20,
+    "each_lane_gains_new_authenticated_tuple_in_four_group_handoffs": true,
+    "server_all_authenticated_lane_tuples_verified": true,
+    "individual_lane_at_a_time_replacement_without_recreating_three_siblings": false,
+    "reason": "Current original Go server waits for a complete 4-lane TLS cohort and installs one Rust GameAdapter+GameTx/GameRx/FEC M4 generation. No production one-lane hot-swap API. Claiming independently staggered per-lane rotation from group-level evidence would be false."
+  },
+  "native_artifact_review": {
+    "per_mode_zip_downloaded": true,
+    "per_mode_GitHub_upload_SHA256_exact_match": true,
+    "per_mode_zip_CRC_testzip": "PASS",
+    "per_mode_file_count": 23,
+    "each_original_client_server_runtime_log_present": true,
+    "raw_real_business_receipts_and_lease_route_OS_readbacks_verified": true,
+    "per_scene_evidence_json_result": "PASS",
+    "per_scene_mode_label_correct": true
+  },
+  "historical_actions_retained": [
+    {
+      "run_id": 41969205411,
+      "result": "FAIL_WORKFLOW_INVALID_YAML_ZERO_JOBS"
+    },
+    {
+      "run_id": 41969472751,
+      "result": "FAIL_FIXTURE_PREFLIGHT_NO_NATIVE_TEST"
+    },
+    {
+      "run_id": 41969605343,
+      "result": "NATIVE_BUILD_PASS; 1/7 workflow PASS; three inherited mislabeled fixture modes and 1-2 real misses under overstrict perfect delivery gate recorded as genuine misses, not historical pass"
+    }
+  ],
+  "boundaries": [
+    "0% injected physical impairment does not mean absolutely no real UDP misses: one game2-off application missing reply is recorded, 16219/16220 total.",
+    "Mode-specific target RTT p99 is received-only, not exact TLS authenticated-to-first-packet or WAN p99 and cannot be compared causally across runner scenes.",
+    "Four true new authenticated Game4 lanes per group do not prove one-lane-only independent hot replacement; this remains NOT_IMPLEMENTED/NOT_RUN.",
+    "No new SOURCE netem5/30%, live physical A->B->A and 1460->1280->1460, long TCP, Windows/Android, remote ICMP qualifications are claimed.",
+    "Previous PLAN027A H998 actual same-session live hot-MTU shrink FAIL remains FAIL; previous historical ARM Game4 Action FAIL preserved.",
+    "Process CPU percentages are standalone snapshots, not before/after causal CPU evidence."
+  ],
+  "next_required_work": "For independent four-lane asynchronous auto hot rotation, add original Go verified one-lane cold admission+bounded per-lane M4 state update inside existing Rust GameAdapter and kernel lane worker, with same epoch/dedup/FEC, no second supervisor and real business while three siblings do not restart; then test four distinct lane1..4 standalone transitions with 18±3s interval, retaining these group-scope results."
+}

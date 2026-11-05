@@ -28,3 +28,14 @@ Action [41969472751](https://github.com/lly8666/wbd-next/actions/runs/4196947275
 ```feature-impact
 {"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"Report true app misses and accurate original mode in seven-scene long no-impairment matrix; native follow-up pending, no code/wire change."}
 ```
+
+## H1230 七模式 SOURCE 锁定完成：真实native证据
+
+- `SOURCE=0cda91575d171c1f8141e937aac91c39d6b303fc` native client x86_64 + server x86_64, Action [41970545107](https://github.com/lly8666/wbd-next/actions/runs/41970545107): original pinned Go TLS + Rust M4 single native build and **seven independent scene jobs all PASS**. All 7 artifact ZIPs downloaded; their SHA256 matches upload Action, CRC+23 files each PASS. Every scene 3 simultaneous authenticated clients, true TUN UDP no-app-retry, unchanged physical NIC/IP/MTU, one443, timer 18s±3s every arm.
+- 7 modes × 4 successful authentically authenticated grouped rotations = **28 group handovers**. Each got exactly `generation1→2→3→4→5` and old group exact Stops1..4. Normal Off 2325/2325, Fixed6 2298/2298, Auto 2142/2142; Game2 Off 2476/2477 (actual one missed), Fixed6 2229/2229; Game4 Off 2370/2370, Fixed6 2379/2379. **TOTAL 16219/16220**, one actual app reply missing; no artificial carrier impairment. Largest receipt gap 270.755ms on Game2Off, all target received-only RTT p99 below0.8ms.
+- Game4 Off/FEC6: each whole-group generation has four genuine independently TLS authenticated distinct client local flows and one shared 443 server destination, all 5×4 per-mode verified against server TLS/Go cohort and native Rust M4. Per group local port tuple slots: gen1 42031–42034, gen2 57881–57884, gen3 49420–49423, gen4 57339–57342, gen5 65258–65261. **Group replacement ≠ independent hot swap:** every transition restarts all 4, not one lane while siblings remain. That requested independently rolling feature still absent, does NOT get a PASS.
+- Detailed counters, exact SHA/digest, all seven per-mode jitter delays, source-scope caveats: `docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json`. H998 same-socket physical live MTU shrink still FAIL and historical ARM Game4 Action FAIL retained. Windows/Android, remote ICMP, high-loss newly verified SOURCE, inner TCP, CPU causal improvements remain unqualified.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"H1230 one exact native source all seven genuine long randomized 4-group rotations PASS with original TLS/Rust and raw 7 artifacts; registered main_development_reason, real UDP one miss and independent Game4 single-lane NOT_IMPLEMENTED scope retained."}
+```
