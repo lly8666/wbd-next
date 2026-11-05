@@ -1,5 +1,5 @@
 name: M0 PLAN028 x86 Normal Fixed6 second physical Go TLS under real tc30 delay250, Game4 healthy
-run-name: PLAN028 H1216 x86 NormalFixed6 real 30pct second TLS and exact owned Stop
+run-name: PLAN028 H1217 last x86 NormalFixed6 30pct second real TLS and exact owned Stop
 on:
   push:
     branches: [main]

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1216,
-  "checkpoint_sha": "f3df7d6c6854647615dabbd10048e33a1a3adca2",
+  "sequence": 1217,
+  "checkpoint_sha": "afb5fe37c2007f5f107b0b587e9fa0a51eacffc1",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1216 signed Windows Normal Auto original Go TLS/Rust Action41939489419 SOURCEb315 and Game4 Off Action41939815952 SOURCE4ce both full native two physical source4 .1→.9, two authenticated cohorts, derived OS MTU1375/1373 each gen, real UDP/TCP and final Stop PASS. Windows Fixed6 SOURCEf3df real TLS2/server M4 fixed6×2/client final Rust installed×2 but early client log before async install2 caused evidence FAIL; bounded wait real second receipt then test native. X86 NormalFixed6 30%/250 SOURCEbc5 generator literal escaped newline failed pre-native; correct and rerun full scenario. H998 old failures and Android/ICMP/CPU causal still open.",
-  "why_now": "Archive two distinct full signed Windows native success and fix only two genuine test evidence errors; no product FEC/wire changes.",
+  "current_task": "H1217 user-directed FINAL scenario only. Correct single test-only Python-generated Bash comment escaped literal backslash-n that removed `for i in {1..80};do` and made unmatched `done` before native Linux. Rebuild exactly one x86/x86 Normal Fixed6 30%/250ms second physical TLS original Go/Rust Action and require packet p99 + qdisc/owned Stop. Add schema_version1 to the two previously proven signed Windows Normal Auto/Game4 Off immutable PASS evidence files so Governance/Feature/maintenance checks can read them; no business/wire change, no new Windows/Android modes.",
+  "why_now": "H1216 SOURCEafb5 Action41945075565 compiled frozen Go/Rust then Bash -n failed line181 unexpected done (real network NOT_RUN): generator line commented loop with literal `\\\\n`. Governance Action41945075621 and maintenance41945075540 fail unknown schema on two newly added Windows evidence JSON despite original source Actions already PASS. Fix exact two root causes, no extra scenarios.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect one Windows Fixed6 and one native x86 30% authentic TLS Action by exact SOURCE; then Windows Game2 Off/Fixed6 original physical source4 independently. Historical H998 and Android/ICMP/CPU causal unmeasured.",
+  "next_action": "Collect H1217 only x86 Normal Fixed6 loss30 delay250 original TLS under loss, real qdisc physical drop and inner UDP received-only RTT p99, Game4 healthy and exact shared Rust TUN Stop; verify all Governance/Feature/maintenance green. If true product failure mark scoped FAIL/NOT_RUN, do not restart 027 or issue other modes. Freeze cursor + source-specific closure; Windows Fixed6 and other unqualified scenarios remain listed, no new tests.",
   "unverified": true,
   "last_tested_source": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1216 Windows Auto and Game4 Off physical genuine source4 TLS/OS/UDP/TCP/Stop full PASS. Fixed6 late second actual FEC2 installed readback and x86 high30 generator escape fixed; actions newly triggered."
+  "partial_summary": "H1217 last x86 Normal fixed6 30%/250ms scene: fix generated shell literal escape pre-native (not TLS failure) and two Windows PASS evidence schema_version=1; no product modifications, no further mode dispatch."
 }

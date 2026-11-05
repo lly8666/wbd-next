@@ -1,4 +1,8 @@
 {
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1216",
   "result": "PASS",
   "source_sha": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
   "run_id": 41939815952,
