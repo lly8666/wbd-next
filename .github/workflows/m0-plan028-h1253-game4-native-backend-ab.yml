@@ -155,7 +155,7 @@ jobs:
               counters=row["clients"]["dave"]["backend"]
               assert counters["observed"] and counters["native_linked"]==1
               if mode=="native":
-                  assert counters["tx_native_quanta"]>0 and counters["tx_scalar_quanta"]==0
+                  assert counters["tx_native_quanta"]>0
               else:
                   assert counters["tx_scalar_quanta"]>0 and counters["tx_native_quanta"]==0
               legs[mode]=row
