@@ -305,6 +305,17 @@ func (l *V4LinuxGameAuthenticatedLane) Cohort()(
         Epoch:cold.Epoch(),Lanes:uint8(n),
     },cold.LaneID(),nil
 }
+// Expose ONLY original authenticated Go record sizes to the one server
+// cohort router. The TLS-derived AEAD keys, epoch randomizer and M1 owner
+// remain private; an untrusted source-IP packet cannot mint this witness.
+func (l *V4LinuxGameAuthenticatedLane) AuthenticatedRecordLimits()(uint16,uint16,error){
+    if l==nil||l.session==nil||l.bridge==nil{return 0,0,ErrAdmissionParams}
+    cold,e:=l.session.ColdSnapshot()
+    if e!=nil{return 0,0,e}
+    cl,sl:=cold.RecordLimits()
+    if cl==0||sl==0{return 0,0,ErrAdmissionParams}
+    return cl,sl,nil
+}
 // ProtectedMode is valid only after original TLS credential validation,
 // epoch reservation and Rust M1 Prepare/Commit. It is NOT a plaintext
 // discovery mechanism. Game profile is protected byte21 (+1), Normal fixed

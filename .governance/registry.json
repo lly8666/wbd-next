@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1243 highest-risk authenticated Game4 same-epoch collision: H1242 native ARM64 prior CI green actually Bob54/75, last real echo4.762s before gen2 Ready and old server prematurely native-rekey-failed STOP. H1243 distinguishes incoming fully protected physical NEW source/record cap as complete 4-lane group, not single selected lane; original Rust M4 old Stop only AFTER complete new. Strict ARM64 Bob postREADY+2s app UDP pending, other Normal Carol stays live. H1237/H1238 prior scoped PASS, H998 old hot MTU FAIL.",
+      "goal": "PLAN028 H1244 source Go protected TLS readonly record limits facade for H1243 Game4 same epoch full physical cohort vs single-lane hot distinction. H1242 native ARM64 CI false PASS actual Bob54/75 last echo BEFORE new Gen2 M4 and premature server native rekey failure Stop, H1243 Go compilation failed pre-run. H1244 native ARM64 strict original Go TLS/Rust test pending, no wire/FEC change, H998 live same socket MTU FAIL retained.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

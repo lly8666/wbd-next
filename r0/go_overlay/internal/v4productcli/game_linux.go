@@ -965,14 +965,12 @@ func runGameMultiServer(
                 // never a client-supplied unprotected path-change flag.
                 newFlow:=lane.Association().Flow()
                 oldFlow:=previous.Association().Flow()
-                oldCold,eOld:=previous.ColdSnapshot()
-                newCold,eNew:=lane.ColdSnapshot()
+                oldCL,oldSL,eOld:=previous.AuthenticatedRecordLimits()
+                newCL,newSL,eNew:=lane.AuthenticatedRecordLimits()
                 if eOld!=nil||eNew!=nil{
                     rejectLane(lane)
                     continue
                 }
-                oldCL,oldSL:=oldCold.RecordLimits()
-                newCL,newSL:=newCold.RecordLimits()
                 physicalGroupCandidate:=
                     newFlow.ClientIP!=oldFlow.ClientIP||
                     newFlow.ServerIP!=oldFlow.ServerIP||

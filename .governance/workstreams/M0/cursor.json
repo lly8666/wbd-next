@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1243,
-  "checkpoint_sha": "fd767e62c976fdf6e2e2e01f3d7bc3cdd1a00402",
+  "sequence": 1244,
+  "checkpoint_sha": "ff73c4f9428102564e8362f257befd863b3e88d8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1243 new source candidate fixes H1242 false-green native ARM64 Game4 in-flight selected lane vs actual Bob physical IPv4 source .3→.9 and MTU1500→1280. Archive ZIP21 files CRC+SHA confirms earlier server old cohort was prematurely STOPPED one-lane-native-rekey-failed BEFORE new gen2 M4 READY, Bob real UDP54/75 last echo4.762s BEFORE gen2 READY, Carol382/382 despite CI success. Original logical TLS epoch same across full physical reauth and hot selected lane; previous server inferred hot lane merely active same-epoch, incorrectly treated new physical full-group candidate as one-slot. H1243 server classifies actual authenticated TCP source IP/RecordLimits change as complete new protected 4-lane cohort and only stops old after full new M4 ready; unchanged selected lane stays actual native single-lane path. Strict native ARM64 test requires Bob echo at least2s AFTER gen2 Ready, server absence early native fail, normal sibling, real MTU, exact Stop. NOT_RUN pending Action.",
-  "why_now": "User authorizes efficient targeted testing; new raw artifact H1242 shows high-risk false-positive and real same-epoch Game4 physical overlap bug, outweighs redundant seven-mode tests.",
+  "current_task": "H1244 H1243 Action42041663138 Go compilation FAIL only: Go v4productcli attempted unexported realityfront.V4LinuxGameAuthenticatedLane.ColdSnapshot, no native Game runtime. H1244 narrowly exposes authenticated original TLS M1 Client/Server RecordLimits through read-only wrapper and uses this to stage full same-epoch authenticated physical source4/MTU cohort rather than selected-lane hot swap. Strict native ARM64 Bob actual UDP post-gen2 Ready+2s and no early server native-failure Stop still NOT_RUN.",
+  "why_now": "H1243 real Go build detected 2 inaccessible read-only ColdSnapshot calls; fix Go API without exposing cold crypto/epoch; no user-impact claim before strict original native test.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run H1243 native ARM64 strict source-locked collision Go TLS/Rust with Bob post-new Ready UDP + server no early unsafe one-lane failure; if test fails preserve and analyze logs. No redundant seven-mode or old 5pct stable netem reruns, retain H998.",
+  "next_action": "Run H1244 same native ARM64 Game4 in-flight selected lane vs real physical source IPv4 .3→.9, MTU1500→1280; require Bob app echo post-gen2 Ready and server full group M4 before old exact Stop, Carol normal untouched, no native Stop failure. H1237/H1238 scoped PASS, H998 fail retained.",
   "unverified": true,
   "last_tested_source": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
   "evidence_refs": [
@@ -30,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1242 CI green false business PASS: Bob 54/75 last echo BEFORE Gen2 Ready, early server old group stop; H1243 fixes full physical cohort vs single-lane same-epoch ambiguity, strict new native Action pending. H1237/H1238 true scoped PASS retained."
+  "partial_summary": "H1243 authenticated physical cohort classifier added but first native ARM64 build blocked by Go type access (no runtime test). H1244 read-only protected record limit accessor fixes compile and retains strict semantic oracle; H1242 original CI false-positive Bob54/75 and server premature retire recorded."
 }

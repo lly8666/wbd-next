@@ -9,3 +9,11 @@ H1243 ARM64 both ends original pinned Go TLS+Rust, one Game4 Fixed6 representati
 ```feature-impact
 {"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"Repair protected same-epoch full Game4 physical cohort versus isolated lane classifier, mark prior H1242 green CI as false business PASS and require actual post-gen2 UDP."}
 ```
+
+## H1244 Go native compile API visibility correction
+
+H1243 [Action42041663138](https://github.com/lly8666/wbd-next/actions/runs/42041663138) original Rust compiled, but original Go `v4productcli` build hit 2 undefined `V4LinuxGameAuthenticatedLane.ColdSnapshot` methods before any native runtime. Correct with a narrowly exported `AuthenticatedRecordLimits()` that returns only original TLS/M1 verified Client/Server uint16 budgets, not protected private keys/epoch/owner. The new same-epoch full physical group vs same-physical one-lane source classification is unchanged, still native NOT_RUN. H1242 false-green Bob outage preserved.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"Fix Go M1 authenticated read-only record limits wrapper used by H1243 true source4/MTU group distinction; no wire/crypto change, native retry pending."}
+```
