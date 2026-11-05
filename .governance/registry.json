@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "H1225 2026-11-05 user-inserted ZERO_LOSS_GAME_P99 scoped native ARM64/ARM64 success at SOURCE4221: existing Game2/4 Rust shared-TUN TX owner wake on existing channel; Game2 p99 3.027→0.706ms (-76.7%), Game4 Fixed6 18.483→0.737ms (-96.0%), 3105/3105 real UDP across A/B, preserved Normal, real TLS/M4/session/Stop. No crypto/FEC/wire change, H1223 and H998 scope retained. PLAN028 other platforms and scenarios remain separately qualified.",
+      "goal": "PLAN028 H1226 newly user-authorized longer jittered automatic unchanged-network lane/group rotation validation, after scoped H1225 ARM64 p99 76.7%/96.0% PASS. Native Linux next full task x86_64 client + x86_64 server, single original Go TLS/Rust M4 build, seven modes under 18s ±3s rotation with 4 exact gen1..5 handovers, three real UDP clients each scene, Game4 every one of four protected TLS lane tuples per group generation independently checked. Current product Game4 rotates a whole Rust GameAdapter/FEC cohort, NOT single-lane independent hot-swapping; must not claim independent per-lane capability from group data. Preserve H998 historical FAIL, outer default1460.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

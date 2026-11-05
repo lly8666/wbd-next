@@ -207,6 +207,14 @@ func runGameClient(
         }
     }
     handoffCommitted.Store(true)
+    // Each original TLS/FakeTCP association has its own kernel tuple and
+    // has passed protected cold validation before the single grouped Rust
+    // GameAdapter commits M4. Do not mislabel this as an independent hot
+    // lane replacement; all four lanes commit as ONE group today.
+    for i,flow:=range flows{
+        log.Printf("V4_PUBLIC_GAME_GROUP_LANE_READY role=client group_generation=%d lane=%d local_port=%d server_port=%d protected_TLS=1 original_Rust_M4=1 grouped_commit=1",
+            c.rotationGeneration,i+1,flow.LocalPort,flow.PeerPort)
+    }
     log.Printf("V4_PUBLIC_GAME_GO_RX_HANDOFF role=client lanes=%d filtered=%d rust_ready=1 original_send_fd_open=1",n,n)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=%d original_tls=1 rust_m4=1",n)
@@ -878,7 +886,12 @@ func runGameMultiServer(
                 key:key,product:product,members:complete,peers:newPeers,
                 gameFec:gameCfg.GameFecEnabled,
             }
-            for i,l:=range complete{detached[l.Association()]=newPeers[i]}
+            for i,l:=range complete{
+                detached[l.Association()]=newPeers[i]
+                flow:=l.Association().Flow()
+                log.Printf("V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=%d lane=%d client_port=%d server_port=%d protected_TLS=1 original_Rust_M4=1 grouped_commit=1",
+                    key.Lanes,i+1,flow.ClientPort,flow.ServerPort)
+            }
             // Epoch is part of the key; retire only the same principal and
             // tunnel's old generation after the new authenticated M4 READY.
             // No mutex is held across native Stop, and siblings are untouched.

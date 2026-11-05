@@ -7,6 +7,7 @@ import (
     "errors"
     "fmt"
     "log"
+    "math/rand"
     "time"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -68,6 +69,7 @@ func startOriginalClientGeneration(
         return nil,fmt.Errorf("native path candidate requires verified numeric physical endpoint and shared Rust TUN")
     }
     c:=original
+    c.rotationGeneration=seq
     c.rawInterface=path.iface
     c.localIP=path.src
     c.localPort=originalGenerationPort(original.localPort,seq)
@@ -145,14 +147,27 @@ func startOriginalClientGeneration(
     }()
     return a,nil
 }
-// Rotation is a cold policy, not a Health/dead timer or a per-packet probe.
-// Default zero deliberately preserves the old disabled behavior.
+// The jitter belongs to the ORIGINAL cold path supervisor only: it never
+// alters Game copy staggering, FEC deadlines, retransmission or wire bytes.
 func validateOriginalRotationInterval(role string, interval time.Duration)error{
-    if interval==0{return nil}
+    return validateOriginalRotationPolicy(role,interval,0)
+}
+func validateOriginalRotationPolicy(role string, interval,jitter time.Duration)error{
+    if interval==0{
+        if jitter!=0{return fmt.Errorf("rotation-jitter needs positive rotation-interval")}
+        return nil
+    }
     if role!="client"||interval<5*time.Second||interval>24*time.Hour{
         return fmt.Errorf("rotation-interval requires client and 5s..24h (0 disables)")
     }
+    if jitter<0||jitter>interval/3||interval-jitter<5*time.Second{
+        return fmt.Errorf("rotation-jitter requires 0..interval/3 and minimum actual interval 5s")
+    }
     return nil
+}
+func originalNextRotationDelay(interval,jitter time.Duration)time.Duration{
+    if jitter==0{return interval}
+    return interval-jitter+time.Duration(rand.Int63n(int64(2*jitter)+1))
 }
 func originalGenerationNeedsReplacement(current *originalClientGeneration,
     desired originalLinuxUnderlay,timerDue bool)bool{
@@ -200,6 +215,7 @@ func runOriginalLinuxClientPaths(
     var rotationTimer *time.Timer
     var rotationCh <-chan time.Time
     var timerDue bool
+    var armedRotationDelay time.Duration
     stopRotation:=func(){
         if rotationTimer!=nil{
             if !rotationTimer.Stop(){select{case <-rotationTimer.C:default:}}
@@ -210,7 +226,8 @@ func runOriginalLinuxClientPaths(
     armRotation:=func(){
         stopRotation()
         if c.rotationInterval>0 && current!=nil && ctx.Err()==nil{
-            rotationTimer=time.NewTimer(c.rotationInterval)
+            armedRotationDelay=originalNextRotationDelay(c.rotationInterval,c.rotationJitter)
+            rotationTimer=time.NewTimer(armedRotationDelay)
             rotationCh=rotationTimer.C
         }
     }
@@ -368,9 +385,9 @@ func runOriginalLinuxClientPaths(
             }
             desired=actual
             timerDue=true
-            log.Printf("V4_PUBLIC_TIMER_ROTATION_DUE role=client current_generation=%d same_physical_interface_ipv4=%t unchanged_path=%t interval_ms=%d unix_ms=%d",
+            log.Printf("V4_PUBLIC_TIMER_ROTATION_DUE role=client current_generation=%d same_physical_interface_ipv4=%t unchanged_path=%t interval_ms=%d actual_delay_ms=%d jitter_max_ms=%d unix_ms=%d",
                 current.seq,current.path.samePhysicalInterfaceIPv4(actual),current.path==actual,
-                c.rotationInterval.Milliseconds(),time.Now().UnixMilli())
+                c.rotationInterval.Milliseconds(),armedRotationDelay.Milliseconds(),c.rotationJitter.Milliseconds(),time.Now().UnixMilli())
             if candidate==nil&&retiring==nil{
                 if err=launch();err!=nil{scheduleRetry("timer_cold_open")}
             }

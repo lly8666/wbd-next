@@ -215,3 +215,32 @@ func TestPLAN028TimedRotationDisabledAndBoundedConfig(t *testing.T){
         t.Fatal("server timer would rotate unrelated clients")
     }
 }
+
+func TestPLAN028JitteredAutomaticColdRotationBounds(t *testing.T){
+    for _,row:=range []struct{interval,jitter time.Duration; valid bool}{
+        {0,0,true},
+        {18*time.Second,3*time.Second,true},
+        {18*time.Second,0,true},
+        {5*time.Second,0,true},
+        {18*time.Second,7*time.Second,false},
+        {18*time.Second,-time.Second,false},
+        {0,time.Second,false},
+        {6*time.Second,2*time.Second,false},
+    }{
+        e:=validateOriginalRotationPolicy("client",row.interval,row.jitter)
+        if (e==nil)!=row.valid{t.Fatalf("invalid rotation policy %v %v: %v",row.interval,row.jitter,e)}
+    }
+    if e:=validateOriginalRotationPolicy("server",18*time.Second,3*time.Second);e==nil{
+        t.Fatal("server must not rotate authenticated client lanes")
+    }
+    counts:=map[time.Duration]bool{}
+    for i:=0;i<128;i++{
+        d:=originalNextRotationDelay(18*time.Second,3*time.Second)
+        if d<15*time.Second||d>21*time.Second{t.Fatalf("unbounded jitter %v",d)}
+        counts[d/time.Millisecond]=true
+    }
+    if len(counts)<2{t.Fatal("floating rotation time was constant")}
+    if originalNextRotationDelay(18*time.Second,0)!=18*time.Second{
+        t.Fatal("disabled jitter changed previous exact interval")
+    }
+}

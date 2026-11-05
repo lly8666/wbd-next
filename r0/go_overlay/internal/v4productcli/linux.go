@@ -110,6 +110,8 @@ type config struct{
     outerMTU int
     // Cold-only timer rotation. Zero retains the legacy disabled default.
     rotationInterval time.Duration
+    rotationJitter time.Duration
+    rotationGeneration uint64
     disableOuterRepair bool
     recordLimit uint16
     innerMTU int
@@ -160,7 +162,8 @@ func parse(role string,args []string)(config,error){
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
-    rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane rotation on unchanged physical network (e.g. 5m); 0 disables")
+    rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
+    rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
@@ -237,7 +240,7 @@ func parse(role string,args []string)(config,error){
     default:return c,fmt.Errorf("game4-copy-schedule must be immediate, stagger-4-20-60 or stagger-4-50-140")
     }
     if *outerMTU<576||*outerMTU>1500{return c,fmt.Errorf("outer-mtu public IPv4 range is 576..1500; jumbo is experimental/unsupported")}
-    if err:=validateOriginalRotationInterval(role,*rotateInterval);err!=nil{return c,err}
+    if err:=validateOriginalRotationPolicy(role,*rotateInterval,*rotateJitter);err!=nil{return c,err}
     // User authorized product-owned fq600 for ALL Linux public modes:
     // Normal/off, FEC Fixed/Auto, Game2/Game4. It is applied only after
     // creating our ephemeral TUN; explicit0 remains a safe rollback.
@@ -254,6 +257,7 @@ func parse(role string,args []string)(config,error){
     }
     c.outerMTU=*outerMTU
     c.rotationInterval=*rotateInterval
+    c.rotationJitter=*rotateJitter
     c.autoIP=*autoIP
     if role=="server"{
         if c.autoIP{return c,fmt.Errorf("auto-ip client-only; configure server lease-pool")}

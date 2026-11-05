@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "original-lane-rotation-jitter",
+  "name": "原始 TLS/Rust 客户端有界浮动定时轮换",
+  "summary": "单一 Linux 原始 Go 路径 supervisor 上可配置定时轮换±jitter；Game2/4整组真实认证代际替换而非逐 lane 独立热换，记录每一 lane 的全组新五元组和 native M4 身份。",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "main",
+  "available_on": [],
+  "defaults": {
+    "rotation_interval": "0 (disabled)",
+    "rotation_jitter": "0 (exact interval)",
+    "test_interval": "18s ±3s",
+    "outer_ipv4_mtu": "1460B IPv4 complete, not L2"
+  },
+  "usage": {
+    "cli": "Linux client --rotation-interval 18s --rotation-jitter 3s; jitter must be <= interval/3, min armed delay >=5s; server rejects positive interval",
+    "config": "Original Go CLI client cold supervisor only; no on-wire field",
+    "gui": "NOT_RUN"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go"
+  ],
+  "doc_refs": [
+    "docs/devlog/M0/20261105-H1226-SEVEN-MODE-JITTERED-GROUP-ROTATION-CANDIDATE.md"
+  ],
+  "verification": [
+    {
+      "platform": "native Linux x86_64 client+server",
+      "scope": "Seven independent real 3-device 443 TLS/Rust M4 scenes, 4 timed jittered group generations; Game4 each of four original authenticated lane tuples checked. Native action pending.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "Game4 one native GameAdapter and shared FEC/first-delivery owner uses complete-cohort replacement; independent lane-at-a-time rotating without restarting 3 siblings NOT_IMPLEMENTED and NOT_RUN.",
+    "No zero-loss promise on actual WAN: test has no physical impairment; high-loss/Windows/Android not qualified.",
+    "H998 hot same-socket MTU FAIL and historical ARM Game4 FAIL retained. H1225 ARM p99 prior source does not certify H1226 source."
+  ]
+}

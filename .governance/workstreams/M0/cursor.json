@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1225,
-  "checkpoint_sha": "4221e96f81934fde6b89215323e37b7e6286ce25",
-  "progress": "partial",
+  "sequence": 1226,
+  "checkpoint_sha": "5ec0a6bf84ff4c96b51954f9c12fa8f5c61d1974",
+  "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1225 TEMP ZERO-LOSS GAME P99 FIX SCOPED NATIVE ARM64/ARM64 PASS. One real Rust Game shared TUN TX channel recv_timeout wakes owner on actual input instead of old 2ms/10ms sleep; same original Go TLS both sides, FEC/AEAD/PN/MTU/Stop unchanged. Action41964778141 single ARM64 native build source4221 with baseline40ce + candidate, same-VM sequential A/B independent Game2Off/Game4Fixed6 jobs and 3 simultaneous real clients. Game2 RTT p99 3.027→0.706ms (-76.678%); Game4 Fixed6 18.483→0.737ms (-96.015%); baseline 1521/1521 and candidate 1584/1584 UDP. Normal sibling p99 ~0.8ms, real gen1→2→3 and Stop1/2. Scoped PASS, not universal loss/CPU/Windows certification.",
-  "why_now": "Explicit 2026-11-05 user interruption resolved zero-loss Game p99 root cause. Actual ARM64/ARM64 original Go TLS/Rust source-locked action successfully measured source-only A/B. Two ZIPs downloaded and SHA256/CRC/current vs baseline real UDP and generation/Stop verified.",
+  "current_task": "H1226 NEW USER INSTRUCTION 2026-11-05: continue timed lane rotation all seven protected original TLS modes, 18s nominal ±3s bounded random, observe 5 native authenticated generations and 4 exact Stops with three simultaneous no-retry real inner UDP clients and unchanged physical OS route/MTU. On Game4 capture 5×4 client/server original TLS authenticated distinct kernel source ports and true grouped Rust M4, not forged independent hot single-lane swaps.",
+  "why_now": "User requested longer randomized auto rotation and full Game4 four-lane individual examination. Existing original Game product is a single 2/4-lane Rust GameAdapter with complete-cohort admission; no per-lane live mutation API, so honest scoped tests first, individual no-sibling-interruption remains separate functionality.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "H1225 temporary p99 repair completed in scoped native ARM64 zero-loss setting. Resume previously authorized PLAN028/029/030 only at their own package entrypoints and real registry; no repeated Game A/B, no unrequested full matrix. Next complete Linux task x86_64 client+x86_64 server per 2026-11-04 whole-task rotation (H1224 ARM task consumed ARM slot). Windows/Android, new high loss source, full CPU causality, H998 hot-MTU FAIL remain unqualified.",
-  "unverified": false,
+  "next_action": "Collect x86/x86 H1226 seven-mode Action, first code preflight and build, then four real staggered-timer whole-cohort rotations and every Game lane's independently protected tuple; do not equate four authenticated group lane members with single-lane hot swap. Diagnose failure explicitly. Following Linux full task ARM64+ARM64. Keep H1225 and H998 source qualifications.",
+  "unverified": true,
   "last_tested_source": "4221e96f81934fde6b89215323e37b7e6286ce25",
   "evidence_refs": [
     "docs/evidence/M0/H1225-SOURCE4221-ARM64-NATIVE-GAME-ZERO-LOSS-P99-QUEUE-WAKE-AB-PASS-20261105.json"
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "GAME zero-loss p99 architectural root fixed: original Rust shared TUN TX blocking channel event wake; native ARM64/ARM64 A/B Game2 3.027→0.706ms (-76.7%), Game4 Fixed6 18.483→0.737ms (-96.0%), three real simultaneous clients and 3105/3105 UDP receipts, authenticated gen and exact Stop. H1223 x86 timed tests remain source-scoped, H998 FAIL, CPU/high-loss/Windows/Android not upgraded."
+  "partial_summary": "H1226 candidate implementation prepared: Go original client jitter CLI via existing sole path supervisor (18s ±3s tests), original Game client/server per-lane group-TLS/port/real Rust M4 receipts, 7-mode long native x86 real three-device UDP matrix pending build. Neither new-source PASS nor independent single-lane hot swap claimed."
 }
