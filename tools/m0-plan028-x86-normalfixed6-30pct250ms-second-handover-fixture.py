@@ -21,22 +21,11 @@ one('game_live GAME4_HEALTH_NORMAL_CHANGE1 "$TMP/B-game-live1-ns.txt" &',
     'game_live GAME4_HEALTH_NORMAL_CHANGE1 "$TMP/B-game-live1-ns.txt" 31 &')
 one('game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" &',
     'game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &')
-# The established mixed baseline requires Alice Game2 exact owned Stop.
-# Its existing Health90 is NOT a mandatory background keepalive. Finish
-# Game2's first twelve actual UDP packets and Stop it BEFORE the extended
-# 128s high30 observation of the two still-running Normal/Game4 owners.
-# Reuse the same existing Stop, not a new controller or synthetic heartbeat.
-one('sudo -n kill -TERM "$(cat "$TMP/alice.pid")"\nfor i in {1..80};do',
-    '# Original Game2 owner already Stop-drained before extended high-loss observation\nfor i in {1..80};do')
-stop_game2='''sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
-for _ in {1..80};do
- if grep -Fq "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2" "$TMP/alice.log";then break;fi
- sleep .25
-done
-grep -Fq "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2" "$TMP/alice.log"
-'''
-one('game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &',
-    stop_game2+'game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &')
+# Keep the original base Alice Game2 Stop and its exact client Stop check.
+# This extended 128s high-loss witness naturally exceeds SERVER Game2 dead90:
+# after client Alice Stop, server Game2 must retire by authenticated health90,
+# while unaffected Game4 stays live and retires at final server-close.
+# Do not move Alice Stop or manufacture Game2 keepalive traffic.
 one('assert len(t2)==32 and t2[0]<c<d<t2[-1]',
     'assert len(t2)==320 and t2[0]<c<d<t2[-1]')
 one('ready2=0\nfor _ in {1..180};do','ready2=0\nfor _ in {1..480};do')
@@ -81,5 +70,17 @@ b=b.replace("M0_PLAN028_H1184_X86_NETEM30_200UDP_P99_NATIVE_DROP_AND_CLEAN_STOP_
             "M0_PLAN028_H1204_X86_NORMAL_FIXED6_NETEM30_DELAY250_NATIVE_DROP_AND_CLEAN_STOP_PASS")
 assert b.count("M0_PLAN028_H1204_X86_NORMAL_FIXED6_NETEM30_DELAY250_NATIVE_DROP_AND_CLEAN_STOP_PASS")==1
 s=s.replace(old,old+chr(10)+b,1)
+
+# The baseline's short-scene final check demanded TWO Game server-close rows.
+# Here Game2 owner was explicitly Stop-drained before >90s high-loss traffic;
+# the server independently retires only this Game2 group by health90.
+# Require BOTH that real retirement and Game4's final server-close + TUN.
+one("""     [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 2 ]];then break;fi""",
+    """     [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 1 ]] &&
+     grep -Fq "V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=authenticated-rust-game-health90" "$TMP/server.log";then break;fi""")
+one("""[[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -ge 2 ]]""",
+    """[[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -ge 1 ]]
+grep -Fq "V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=authenticated-rust-game-health90" "$TMP/server.log" """)
+
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1204_X86_NORMAL_FIXED6_ORIGINAL_TLS_DURING_NETEM30_FIXTURE_READY",flush=True)

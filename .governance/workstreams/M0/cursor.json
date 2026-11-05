@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1218,
-  "checkpoint_sha": "284e6c402f7e36d7bdf05dc3e1253f81b0c0cb56",
+  "sequence": 1219,
+  "checkpoint_sha": "7a223bd2779e701c62c6f0a3c2ad8ed74aabf50e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1218 governance source alignment after H1217 evidence schema. Windows Auto H1216 PASS SOURCEb315 evidence remains in immutable docs/evidence and feature card; cursor last_tested_source is SOURCE4ce Game4 Off and must cite ONLY matching H1216 Game4off evidence in evidence_refs. Governance H1217 Action41947118555 and maintenance41947118421 failed source-mismatch on old cross-SOURCE list. X86 final native Normal fixed6 high30 source284e Action41947118429 is building, source-frozen; no duplicate dispatch. User requests final scene then closeout, no new mode Actions.",
-  "why_now": "After adding schema_version1 to two H1216 Windows docs, governance now correctly checks that cursor.evidence_refs must have same source as cursor.last_tested_source. Historical two PASS actions have different frozen source b315/4ce, so retain both evidence files but list only 4ce (latest tested source) in cursor, keeping b315 card reference. No product edit.",
+  "current_task": "H1219 final single Linux native x86_64 Normal Fixed6 under actual kernel tc loss30 delay250 DURING second source IPv4 original TLS reauth. H1217 Action41947118429 built real Go/Rust and native shared443 delivered all baseline real UDP; failed in first 21s because prior test-only code moved `kill Alice Game2` after long stage but left its pre-existing exact Stop wait BEFORE stage (20s timeout). Restore original Alice Stop in base, require server Game2 intentional health90 retirement after long128s Game4 witness and final distinct Game4 server-close + shared TUN Stop, instead of two server-close receipts. No product changes, H1218 governance source-matched PASS, user demands last scene then scoped closeout.",
+  "why_now": "H1217 x86 Action41947118429 native fail only before physical transition after initial Game2/4/Normal actual 12 UDP each; original Alice client Stop command accidentally removed, 80×250ms loop waited for impossible marker. Earlier H1206 long 128s scene proved real tc30/250 UDP193/200 p99 550.038 and server Game2 authenticated health90 then final Game4 server-close. The original 2-group server-close count was short-scene-only; require explicit health90 for Game2 and final server-close for Game4, not blanket bypass.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect native H1217 x86 high30 source284e Action and Governance from this manifest-only H1218 commit. If last scene full PASS, register exact source evidence and scoped closeout; if not isolate one narrow cause or report scoped FAIL. Stop further Windows modes/029/030; mark Fixed6 Windows incomplete and H998/remote ICMP/Android/CPU causal gaps.",
+  "next_action": "Collect exactly H1219 last native SOURCE Action and governance. If PASS archive loss30 RTT p99+physical qdisc drops, TLS successor, healthy Game4, original client old Stops and final shared Rust TUN Stop with exact evidence. If FAIL record first stage accurately and scoped close without new matrices. Do not dispatch Windows Game2, other 029/030; preserve Windows Fixed6 unfinished and Android/ICMP/CPU causal/H998 limits.",
   "unverified": true,
   "last_tested_source": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1218 source-only cursor evidence refs corrected (last tested SOURCE4ce must cite only Game4off, Windows Auto SOURCEb315 still preserved in separate evidence/card); final x86 H1217 native high30 in progress, no new scenarios."
+  "partial_summary": "H1219 user final scenario native x86 original NormalFixed6 high30/250 second TLS: keep Alice original Stop, explicitly verify its server health90 and Game4 distinct final server-close plus shared TUN Stop. Previous old source H1217 failed 20s pre-network due test-only moved Stop; governance H1218 all green."
 }
