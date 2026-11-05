@@ -4174,6 +4174,10 @@ const SHARED_TUN_PENDING_BYTES_PER_ROUTE:usize=64*1024;
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const SHARED_TUN_PENDING_MAX_AGE:Duration=Duration::from_millis(100);
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const SHARED_TUN_DRAIN_PER_ROUTE:usize=8;
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const SHARED_TUN_DRAIN_PER_TURN:usize=64;
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct PendingSharedTunPacket{
     packet:OriginalTunIngress,bytes:usize,queued_at:Instant,
 }
@@ -4236,6 +4240,7 @@ fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
 ->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     let now=Instant::now();
+    let mut attempts_left=SHARED_TUN_DRAIN_PER_TURN;
     pending.retain(|_,q|if q.route.alive.load(Ordering::Acquire){true}else{
         d.retired+=q.packets.len() as u64;false
     });
@@ -4247,7 +4252,13 @@ fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
                 d.expired+=1;
             }
         }
-        if let Some(old)=q.packets.pop_front(){
+        // A recovered receiver may free a whole TUN batch per turn. Drain up
+        // to one batch for this lease, with a shared cap for all leases.
+        // Full is a cold backpressure signal: stop this lease immediately.
+        for _ in 0..SHARED_TUN_DRAIN_PER_ROUTE{
+            if attempts_left==0{break}
+            let Some(old)=q.packets.pop_front()else{break};
+            attempts_left-=1;
             q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
             match q.route.send.try_send(old.packet){
                 Ok(())=>d.delivered+=1,
@@ -4257,11 +4268,13 @@ fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
                         packet,bytes:old.bytes,queued_at:old.queued_at,
                     });
                     d.backpressure+=1;
+                    break;
                 },
                 Err(TrySendError::Disconnected(_))=>{
                     d.retired+=1+q.packets.len() as u64;
                     q.packets.clear();q.queued_bytes=0;
                     q.route.alive.store(false,Ordering::Release);
+                    break;
                 },
             }
         }
@@ -4326,6 +4339,87 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[101]),
         _=>panic!("wrong successor kind"),
     }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
+    // Real bounded mpsc inboxes model the same two leased M1 owners as the
+    // process-wide TUN reader. A stops consuming while both A and B keep
+    // receiving eight new TUN packets every turn; only A may overflow.
+    let (recycle,_recycled)=mpsc::sync_channel::<Vec<u8>>(128);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let (a_tx,a_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+    let (b_tx,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+    for n in 0..8{a_tx.try_send(packet(n)).unwrap();}
+    let ka=[10,66,0,1];let kb=[10,66,0,2];
+    let ra=SharedTunRoute{
+        generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_tx,
+    };
+    let rb=SharedTunRoute{
+        generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_tx,
+    };
+    let mut pending=HashMap::new();
+    let mut next_a=8u8;
+    let mut next_b=100u8;
+    let mut b_received=0usize;
+    // A blocked for two turns: first fills its eight-packet pending queue,
+    // second must report bounded drops; B never waits for A.
+    for turn in 0..2{
+        let _=flush_shared_tun(&mut pending);
+        let mut a_dropped=0;
+        for _ in 0..8{
+            let n=next_a;next_a+=1;
+            a_dropped+=enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(n)).overflow;
+            let n=next_b;next_b+=1;
+            assert_eq!(enqueue_shared_tun(&mut pending,kb,rb.clone(),1,||packet(n)).delivered,1);
+            match b_rx.try_recv().expect("B stays live while A blocked"){
+                OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[n]),
+                _=>panic!("B ingress kind"),
+            }
+            b_received+=1;
+        }
+        assert_eq!(a_dropped,if turn==0{0}else{8});
+    }
+    assert_eq!(pending[&ka].packets.len(),8);
+    // Unblock A. It consumes eight per turn, matching TUN ingress of eight.
+    // A one-packet flush would keep losing seven packets every turn here.
+    let mut a_received=0usize;
+    let mut last_a=None;
+    for _ in 0..6{
+        for _ in 0..8{
+            match a_rx.try_recv().expect("A drains eight after recovery"){
+                OriginalTunIngress::Shared(p)=>{
+                    let n=p.as_slice()[0];
+                    assert!(last_a.is_none_or(|old|n>old),"A FIFO order");
+                    last_a=Some(n);
+                },
+                _=>panic!("A ingress kind"),
+            }
+            a_received+=1;
+        }
+        let d=flush_shared_tun(&mut pending);
+        assert_eq!(d.delivered,8,"A must recover a full ingress batch");
+        assert_eq!((d.backpressure,d.expired,d.retired),(0,0,0));
+        let mut a_dropped=0;
+        for _ in 0..8{
+            let n=next_a;next_a+=1;
+            a_dropped+=enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(n)).overflow;
+            let n=next_b;next_b+=1;
+            assert_eq!(enqueue_shared_tun(&mut pending,kb,rb.clone(),1,||packet(n)).delivered,1);
+            match b_rx.try_recv().expect("B stays live while A recovers"){
+                OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[n]),
+                _=>panic!("B ingress kind"),
+            }
+            b_received+=1;
+        }
+        assert_eq!(a_dropped,0,"no sustained A overflow after recovery");
+        assert_eq!(pending[&ka].packets.len(),8);
+    }
+    assert_eq!(a_received,48);
+    assert_eq!(b_received,64);
+    println!("M0_PLAN028_SHARED_TUN_A_RECOVERY_B_CONTINUOUS_PASS a_recovered=48 b_continuous=64 post_recovery_drops=0");
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]

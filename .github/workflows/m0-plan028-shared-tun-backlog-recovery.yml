@@ -1,0 +1,32 @@
+name: M0 PLAN028 shared TUN backlog recovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - .github/workflows/m0-plan028-shared-tun-backlog-recovery.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-x86-bounded-a-b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Same-SOURCE Linux x86_64 bounded A backpressure/recovery, B live
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          rustup toolchain install 1.85.1 --profile minimal
+          mkdir -p fixed-kernel-result
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_shared_tun_ -- --test-threads=1 --nocapture | tee fixed-kernel-result/shared-tun-backlog-recovery.log
+          grep -Fq "M0_PLAN028_SHARED_TUN_A_RECOVERY_B_CONTINUOUS_PASS a_recovered=48 b_continuous=64 post_recovery_drops=0" fixed-kernel-result/shared-tun-backlog-recovery.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1247-native-x86-shared-tun-recovery
+          path: fixed-kernel-result/shared-tun-backlog-recovery.log
+          if-no-files-found: warn
+          retention-days: 14

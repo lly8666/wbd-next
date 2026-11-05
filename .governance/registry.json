@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "H1246 original Go TLS/Rust Game2 same-epoch full 2-lane authenticated physical A→B→A fix: narrow server active selected lane hot branch to Game4 only; old e8d4 ARM Game2 Off and x86 Game2 Fixed6 both genuine gen2 new UDP FAIL. Prior H1245 native ARM strict Game4 hot-lane vs actual source-IP+MTU collision PASS 99/104 Bob,382/382 Carol, full M4 before old exact Stop. Revalidate Game2 two modes only. PLAN028 scoped desktop closeout after pass; H998 old-socket MTU FAIL and Windows seven physical/Android untested retained.",
+      "goal": "H1247 narrow PLAN028 shared Rust TUN per-route pending drain: avoid sustained 1 flushed / 8 ingressed starvation after a briefly blocked client recovers. Limit to 8 FIFO retries per route and 64 total tries per turn; stop on Full, preserve bounded queue and B sibling. One x86 SOURCE-locked A blocked→recovers with B continuous targeted Action; H1246 two Game2 physical cases succeeded Actions 42056882489/42056882542, not yet formal evidence closeout. No wire/MTU/FEC/AEAD or cross-client rework.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

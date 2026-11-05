@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1246,
-  "checkpoint_sha": "295476d55e7aa94956af527f43092e6cf3544694",
+  "sequence": 1247,
+  "checkpoint_sha": "830d5bc86cd0093f9e420c3c8907b5a07cf24b02",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1246 fix real Game2 same-epoch whole two-lane source-IP/MTU physical generation regression: previous sourcee8d4 native ARM Game2 Off and x86 Game2 Fixed6 both initial 3-client original TLS/Rust PASS, then gen2 Ready and old1 Stop but first true Game2 new UDP failed (#0); server mistakenly sent every active cohort through Game4-only one-slot branch and rejected lanes!=4. Product changed only Go server guard to enter active one-lane branch IF lanes==4; Game2 uses existing full cohort staging. H1245 exact ARM64 strict Game4 selected lane in-flight vs Bob physical source4 .3→.9 and MTU1500→1280 PASS original21file ZIP SHA/CRC, Bob99/104 no-app-retry UDP and live until gen2 READY+17.669s, Carol382/382, new full Game4 M4 before old exact Stop; 5 misses, 5.097s gap acknowledged. H1246 x86 Game2 fixed6 + ARM Game2 Off true A→B→A post-gen2/3 UDP retest pending.",
-  "why_now": "Latest source fresh Game2 native two real failures would undermine broader Plan028; source bug caused by Game4 one-lane active group guard. User authorizes efficient targeted tests, not broad redundant full matrix, so patch only exact conditional and retest both failed real modes.",
+  "current_task": "H1247 targeted shared Rust TUN pending queue throughput recovery: after transient full A, flush up to 8 packets per lease and 64 total attempts per turn, break on downstream Full; live B remains independent. Added one same-SOURCE x86 mpsc A blocked→A recovers 8 packets/turn with B continuous, other queue tests; targeted Action on push pending. Prior H1246 Game2 physical A→B→A x86 Fixed6 and ARM Off Actions 42056882542/42056882489 both success, not yet archived as formal scope closeout.",
+  "why_now": "User identified real one-flush-versus-eight-ingress sustained-overflow risk after a temporary client backlog. Fix bounded producer-consumer balance only; not a measured drop rate and not a reason to rerun old network matrices.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe targeted H1246 native x86 Game2 Fixed6 and ARM Game2 Off physical two-source changes with true new UDP after both generations, stop, same lease and healthy sibling Game4/Normal, per-artifact SHA/CRC. Then formally source-scoped PLAN028 closeout if both PASS, retaining untested Windows full 7 Npcap modes, Android hardware, long high-loss TCP and H998 previous same-socket online MTU FAIL.",
+  "next_action": "Collect only H1247 targeted native x86 shared TUN A-blocked→recovered and B-continuous Action, inspect log/artifact exact SOURCE and queue counter witness; repair only if failure is caused by patch. Then record source-scoped result and reconcile H1246 already-successful physical Game2 Actions without duplicate dispatch. Retain PLAN028 broader Windows/Android/CPU/H998 limits.",
   "unverified": true,
   "last_tested_source": "295476d55e7aa94956af527f43092e6cf3544694",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1245 native strict Game4 physical in-flight lane source+MTU collision PASS with server full fresh M4 before old Stop; Bob99/104, Carol382/382; about5.1s transient gap. Old product Game2 Off ARM and Fixed6 x86 native physical Gen2 new UDP FAIL from Game4-only server guard rejecting active Game2, narrow code fix pending targeted two native A→B→A scenarios."
+  "partial_summary": "H1247 shared TUN finite batch flush candidate and regression workflow (test pending). H1246 Game2 Off ARM and Fixed6 x86 true physical A→B→A Actions success at 830d5bc; H1245 strict ARM Game4 collision source2954 PASS. Broader PLAN028 scope and H998 historical old-socket MTU FAIL unchanged."
 }
