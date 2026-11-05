@@ -363,6 +363,8 @@ def main():
                     p.kill()
         for ns in reversed(made_ns):
             run("sudo", "-n", "ip", "netns", "del", ns, check=False)
+        for host in ["h9" + tag, *host_nics]:
+            run("sudo", "-n", "ip", "link", "del", host, check=False)
         if bridge_made:
             run("sudo", "-n", "ip", "link", "del", bridge, check=False)
         for handle in opened:
