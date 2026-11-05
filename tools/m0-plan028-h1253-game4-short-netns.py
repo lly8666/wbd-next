@@ -89,6 +89,10 @@ def main():
     workspace = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
     out = workspace / "fixed-kernel-result"
     out.mkdir(exist_ok=True)
+    # New scalar/native leg must observe its OWN four fresh app workers.
+    for who in NAMES:
+        for side in ("s", "c"):
+            (out / f"h1250-{side}-{who}.ready").unlink(missing_ok=True)
     source = os.environ["GITHUB_SHA"]
     runid = os.environ["GITHUB_RUN_ID"]
     tag = runid[-6:]
