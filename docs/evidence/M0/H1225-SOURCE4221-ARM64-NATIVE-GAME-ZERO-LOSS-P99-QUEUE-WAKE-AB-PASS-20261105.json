@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028_TEMP_PERFORMANCE",
+  "checkpoint": "H1225",
+  "source_sha": "4221e96f81934fde6b89215323e37b7e6286ce25",
+  "baseline_source_sha": "40ce34bef0f58e4d2362d94609d91272690023ad",
+  "result": "PASS",
+  "artifact_verified": true,
+  "status": "PERFORMANCE_PASS_SCOPED_LINUX_NATIVE_ARM64_ARM64_ZERO_LOSS_P99",
+  "action_run_id": 41964778141,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/41964778141",
+  "build_artifact_id": 13386264738,
+  "source_diff_scope": "only crates/wbd-engine/src/v4_game_public_kernel.rs changes among product sources; one same current Go pinned original TLS/AEAD/FEC code for both ARM64 variants",
+  "architectural_cause": "Game M4 TX does try_recv on already-routed bounded shared TUN channel but incorrectly waits uninterruptible sleep 2ms OFF / 1..10ms Game4 FEC; request/reply tails accumulate under zero physical loss",
+  "fix": "use the ORIGINAL same per-session channel recv_timeout to wake immediately on packet arrival and hold one received ownership-scoped packet for next normal Game TX turn. Unmodified deadline-scheduled stagger/FEC, existing AEAD/PN/crypto, one kernel TUN reader, one owner, no Go pump.",
+  "platform": "native Linux ARM64 client AND native Linux ARM64 server; same VM sequential baseline→fix per scene, not QEMU, no ARM/x86 mixing",
+  "traffic": {
+    "one_server_port": 443,
+    "three_authenticated_clients_per_scene": true,
+    "real_direct_tun_udp": true,
+    "normal_auto_sibling_online": true,
+    "application_retries": 0,
+    "physical_impairment_injected_pct": 0,
+    "physical_interface_source_ipv4_mtu_unchanged": true,
+    "timer_seconds": 12,
+    "successful_authenticated_generations": [
+      1,
+      2,
+      3
+    ],
+    "exact_old_stop": [
+      1,
+      2
+    ],
+    "outer_ipv4_default_mtu_bytes": 1460
+  },
+  "scenes": [
+    {
+      "mode": "game2-off",
+      "target_device": "alice",
+      "job_id": 127039710288,
+      "artifact_id": 13387306356,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41964778141/artifacts/13387306356",
+      "artifact_zip_sha256": "051415cd10df65d3a578a15f619f1c8f7b36066dce11adb5f1364523a34540eb",
+      "zip_local_crc_test": "PASS",
+      "zip_file_count": 13,
+      "raw_Go_Rust_runtime_logs": "4 devices per baseline AND fixed",
+      "baseline_target_RTT_p99_ms": 3.0274359999964418,
+      "fixed_target_RTT_p99_ms": 0.7060660000064445,
+      "p99_improvement_percent": 76.678,
+      "normal_auto_control_RTT_p99_ms_before_after": [
+        0.8318650000020966,
+        0.8790999999916949
+      ],
+      "real_udp_sent_received_p99_by_device_before": {
+        "alice": [
+          260,
+          260,
+          3.027436
+        ],
+        "bob": [
+          239,
+          239,
+          17.604901
+        ],
+        "carol": [
+          264,
+          264,
+          0.831865
+        ]
+      },
+      "real_udp_sent_received_p99_by_device_after": {
+        "alice": [
+          264,
+          264,
+          0.706066
+        ],
+        "bob": [
+          264,
+          264,
+          0.6809
+        ],
+        "carol": [
+          264,
+          264,
+          0.8791
+        ]
+      },
+      "fixed_authenticated_same_lease_across_generations": [
+        "10.66.0.250/32",
+        "10.66.0.250/32",
+        "10.66.0.250/32"
+      ],
+      "fixed_timer_due_to_authenticated_READY_poll_observation_ms": 905.453,
+      "fixed_READY_poll_observation_to_first_real_echo_ms": 23.589,
+      "sampled_process_CPU_pct_before": {
+        "server": 1.811,
+        "alice": 0.717,
+        "bob": 1.094,
+        "carol": 0.717
+      },
+      "sampled_process_CPU_pct_after": {
+        "server": 1.815,
+        "alice": 0.756,
+        "bob": 1.172,
+        "carol": 0.643
+      },
+      "native_generation_1_2_3_and_exact_stop_1_2": "PASS_BOTH"
+    },
+    {
+      "mode": "game4-fixed6",
+      "target_device": "bob",
+      "job_id": 127039710292,
+      "artifact_id": 13387456404,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41964778141/artifacts/13387456404",
+      "artifact_zip_sha256": "a2cda83b01b24091c08b7ffc3a4f968ba1197a2fb8901ff220809511473f10e4",
+      "zip_local_crc_test": "PASS",
+      "zip_file_count": 13,
+      "raw_Go_Rust_runtime_logs": "4 devices per baseline AND fixed",
+      "baseline_target_RTT_p99_ms": 18.483482999997136,
+      "fixed_target_RTT_p99_ms": 0.7365929999991749,
+      "p99_improvement_percent": 96.015,
+      "normal_auto_control_RTT_p99_ms_before_after": [
+        0.8898859999959541,
+        0.7865350000031412
+      ],
+      "real_udp_sent_received_p99_by_device_before": {
+        "alice": [
+          259,
+          259,
+          3.917784
+        ],
+        "bob": [
+          235,
+          235,
+          18.483483
+        ],
+        "carol": [
+          264,
+          264,
+          0.889886
+        ]
+      },
+      "real_udp_sent_received_p99_by_device_after": {
+        "alice": [
+          264,
+          264,
+          0.81866
+        ],
+        "bob": [
+          264,
+          264,
+          0.736593
+        ],
+        "carol": [
+          264,
+          264,
+          0.786535
+        ]
+      },
+      "fixed_authenticated_same_lease_across_generations": [
+        "10.66.0.168/32",
+        "10.66.0.168/32",
+        "10.66.0.168/32"
+      ],
+      "fixed_timer_due_to_authenticated_READY_poll_observation_ms": 806.267,
+      "fixed_READY_poll_observation_to_first_real_echo_ms": 31.074,
+      "sampled_process_CPU_pct_before": {
+        "server": 1.849,
+        "alice": 0.793,
+        "bob": 1.132,
+        "carol": 0.679
+      },
+      "sampled_process_CPU_pct_after": {
+        "server": 1.927,
+        "alice": 0.831,
+        "bob": 1.209,
+        "carol": 0.642
+      },
+      "native_generation_1_2_3_and_exact_stop_1_2": "PASS_BOTH"
+    }
+  ],
+  "business_counts": {
+    "baseline_udp_sent": 1521,
+    "baseline_udp_received": 1521,
+    "fixed_udp_sent": 1584,
+    "fixed_udp_received": 1584,
+    "lossless_both_variants": true
+  },
+  "artifact_review": "both GitHub Action per-scene artifacts downloaded; actual ZIP SHA256 equals uploaded job log digest, CRC/testzip PASS, each 13 authentic output files including baseline/current comparison JSON and 8 raw runtime logs; source-specific generation and true application receipts read from original files",
+  "p99_scope": "received-only RTT p99 on genuine TUN UDP 100Hz per client with 2 timer rotations during each ~26s measured stage, 3 devices, sequential same ARM64 runner; not universal WAN/high-load/high-loss or exact TLS auth→first latency",
+  "cpu_scope": "sampled process utime+stime while running 3 real streams; small variations; no statistically controlled CPU causal claim",
+  "conserved": {
+    "game4_copy_stagger": "mode2 offsets 0/4/50/140ms, unchanged",
+    "game_fixed_fec": "profile6 unchanged",
+    "default_outer_ipv4_mtu": "1460B not L2",
+    "single_reader": "shared process TUN owner only",
+    "tls_route_key": "original offline 32B route-key and real protected admission",
+    "H998_live_same_socket_MTU_shrink": "FAIL_RETAINED",
+    "H998_historical_ARM_Game4_Action": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_MEASURED",
+    "new_source_high_loss_behavior": "NOT_RUN",
+    "Windows": "NOT_RUN",
+    "Android": "NOT_RUN"
+  }
+}

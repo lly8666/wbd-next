@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1224,
-  "checkpoint_sha": "40ce34bef0f58e4d2362d94609d91272690023ad",
-  "progress": "in_progress",
+  "sequence": 1225,
+  "checkpoint_sha": "4221e96f81934fde6b89215323e37b7e6286ce25",
+  "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1224 INSERTED TEMP PERFORMANCE FIX under user 2026-11-05: at genuine zero loss Game2 Off p99 ~3.7ms, Game4 Fixed6 p99 ~14.34ms vs Normal ~0.73ms on H1223 x86 native. In Rust v4_game_public_kernel shared TUN TX, existing sole reader sync_channel is polled via try_recv then thread::sleep 2ms/10ms even on incoming packet. Replace wasted sleep with bounded recv_timeout event wake, cache one packet for original same TX owner, preserve copy/FEC deadlines and Stop. Next full Linux ARM64 client+ARM64 server same-runner sequential original-vs-fixed baseline at equal genuine three-device UDP and 2 authenticated 12s generation rotations, independent Game2/Game4 jobs.",
-  "why_now": "New user explicit urgent temporary p99 repair, above scoped H1223 result is measured no-loss not universal. Root cause found in source, one Rust TX owner correction prepared. No new algorithm/controller/protocol; baseline head40ce must remain exact and locked.",
+  "current_task": "H1225 TEMP ZERO-LOSS GAME P99 FIX SCOPED NATIVE ARM64/ARM64 PASS. One real Rust Game shared TUN TX channel recv_timeout wakes owner on actual input instead of old 2ms/10ms sleep; same original Go TLS both sides, FEC/AEAD/PN/MTU/Stop unchanged. Action41964778141 single ARM64 native build source4221 with baseline40ce + candidate, same-VM sequential A/B independent Game2Off/Game4Fixed6 jobs and 3 simultaneous real clients. Game2 RTT p99 3.027→0.706ms (-76.678%); Game4 Fixed6 18.483→0.737ms (-96.015%); baseline 1521/1521 and candidate 1584/1584 UDP. Normal sibling p99 ~0.8ms, real gen1→2→3 and Stop1/2. Scoped PASS, not universal loss/CPU/Windows certification.",
+  "why_now": "Explicit 2026-11-05 user interruption resolved zero-loss Game p99 root cause. Actual ARM64/ARM64 original Go TLS/Rust source-locked action successfully measured source-only A/B. Two ZIPs downloaded and SHA256/CRC/current vs baseline real UDP and generation/Stop verified.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect generated ARM64 performance A/B workflow Action results at the new SOURCE before promoting feature. Confirm baseline and candidate ELF native SHA, one Go build/shared native pair, real TLS/M4/lease/owned Stop, zero application UDP loss in both, p99 ratio and Normal sibling. On failure inspect specific timings/reasons before further code. Following complete Linux task x86/x86 under task-alternation.",
-  "unverified": true,
-  "last_tested_source": "ed80573fb3801e64814a2d38781c44ea8f3defac",
+  "next_action": "H1225 temporary p99 repair completed in scoped native ARM64 zero-loss setting. Resume previously authorized PLAN028/029/030 only at their own package entrypoints and real registry; no repeated Game A/B, no unrequested full matrix. Next complete Linux task x86_64 client+x86_64 server per 2026-11-04 whole-task rotation (H1224 ARM task consumed ARM slot). Windows/Android, new high loss source, full CPU causality, H998 hot-MTU FAIL remain unqualified.",
+  "unverified": false,
+  "last_tested_source": "4221e96f81934fde6b89215323e37b7e6286ce25",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1223-SOURCEED805-X86-TIMED-SAME-PHYSICAL-THREE-MODES-REAL-UDP-PASS-20261105.json"
+    "docs/evidence/M0/H1225-SOURCE4221-ARM64-NATIVE-GAME-ZERO-LOSS-P99-QUEUE-WAKE-AB-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1224 source candidate rust shared-ingress event wake prepared, no native ARM test yet. Prior exact H1223 x86 timer 2267/2267 PASS stays qualified at ed805; H998 hot MTU FAIL and prior ARM Action FAIL retained. New p99 fix NOT_RUN pending native ARM AB."
+  "partial_summary": "GAME zero-loss p99 architectural root fixed: original Rust shared TUN TX blocking channel event wake; native ARM64/ARM64 A/B Game2 3.027→0.706ms (-76.7%), Game4 Fixed6 18.483→0.737ms (-96.0%), three real simultaneous clients and 3105/3105 UDP receipts, authenticated gen and exact Stop. H1223 x86 timed tests remain source-scoped, H998 FAIL, CPU/high-loss/Windows/Android not upgraded."
 }

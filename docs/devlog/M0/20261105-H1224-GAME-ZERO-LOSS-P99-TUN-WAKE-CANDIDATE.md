@@ -17,3 +17,15 @@
 ```feature-impact
 {"kind":"updated","ids":["game-lanes"],"reason":"New user-inserted zero-loss Game p99 tail latency repair changes only original Rust shared TUN TX notification, ARM native same-VM A/B not yet run."}
 ```
+
+## H1225 — ZERO LOSS Game p99 原生同VM A/B结算
+
+- <https://github.com/lly8666/wbd-next/actions/runs/41964778141> native ARM64 client/server, one Go TLS and two source-specific Rust M4 ELF SHA builds; same runner OLD 40ce34 → NEW 4221e9. Two independent Game jobs, no artificial loss; all 3 clients continuously send genuine 100Hz UDP while authenticated gen1→2→3 and old exact Stops1/2. Both jobs all steps green.
+- **Game2 OFF:** RTT received-only p99 **3.027436→0.706066ms (−76.678%)**. Normal sibling 0.832→0.879ms; base 763/763, fixed 792/792 true echoed TUN UDP.
+- **Game4 Fixed6:** RTT p99 **18.483483→0.736593ms (−96.015%)**. Normal sibling 0.890→0.787ms; base 758/758, fixed 792/792 true UDP. Preserved mode2 raw copy schedule (0/4/50/140ms), original Fixed6/profile6 FEC and actual M4 owned Stop.
+- Across both scenes, base 1521/1521 and candidate 1584/1584 no-app-retry real UDP; all compared sources and 3 devices read back, no DNS/probe/extra packet wire. Two downloaded ZIPs checked against GitHub SHA256, CRC and 13 raw/evidence files each. See `docs/evidence/M0/H1225-SOURCE4221-ARM64-NATIVE-GAME-ZERO-LOSS-P99-QUEUE-WAKE-AB-PASS-20261105.json`.
+- This is first-order architectural latency fix: *channel wake, not FEC rewrite*. No extrapolation to 30% impairment, high-load WAN, Windows/Android, remote ICMP, inner TCP, causal CPU benefit, nor old H998 live MTU FAIL. Next whole Linux test returns x86/x86 after this native ARM task.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"H1225 real native ARM zero-loss source-specific Game2/Game4 shared-TUN channel wake p99 A/B significant improvement with complete UDP/Stop/lease; retain unqualified scenarios."}
+```
