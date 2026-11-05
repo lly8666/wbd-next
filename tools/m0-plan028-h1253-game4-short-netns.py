@@ -162,10 +162,13 @@ def main():
         write_json(tmp / "users.json", users)
         os.chmod(tmp / "users.json", 0o600)
         os.chmod(tmp / "key.pem", 0o600)
-        run("env", "LD_LIBRARY_PATH=" + str(build), str(build / "wbd-v4-server"),
-            "--init-route-key-file",
-            str(tmp / "route-key.hex"))
-        assert (tmp / "route-key.hex").stat().st_mode & 0o777 == 0o600
+        key_file = tmp / "route-key.hex"
+        if not key_file.exists():
+            # Same-VM scalar/native legs deliberately share the original
+            # offline route-key, but the product MUST refuse key overwrite.
+            run("env", "LD_LIBRARY_PATH=" + str(build), str(build / "wbd-v4-server"),
+                "--init-route-key-file", str(key_file))
+        assert key_file.is_file() and key_file.stat().st_mode & 0o777 == 0o600
         selected_backend=os.environ.get("WBD_GAME_FEC_BACKEND","native")
         assert selected_backend in ("scalar","native")
         diag_env=["WBD_GAME_FEC_BACKEND="+selected_backend,
