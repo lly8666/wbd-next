@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1221",
+  "source_sha": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 41948701519,
+    "job_id": 126987204995,
+    "artifact_id": 13379609175,
+    "conclusion": "success",
+    "zip_sha256": "debc8c90711b0df71af935f6448bfb6972ff722facdfb20c4ad6ff88149d230c"
+  },
+  "native": {
+    "architecture": "native_x86_64 client+server ELF62",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go": "1.23.12",
+    "rust": "1.85.1",
+    "binary_sha256": {
+      "client": "d349afd658ee7b67caa08f793962ebec451ada4d419f13124393e4d89df5ea6f",
+      "server": "32d398316058e61f0159cbbbb940316f1817e2b227c9ed5a4d2295c0ab43671c",
+      "lib": "f8d06ef6b626decd4af3d29b47ad3fd60769ef9102c133aaabc3d36b06bde06e"
+    }
+  },
+  "physical": {
+    "source4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "underlay_mtu": [
+      1500,
+      1280,
+      1500
+    ],
+    "outer_user_ipv4_mtu": 1460,
+    "normal_inner_os_mtu": [
+      1375,
+      1195,
+      1195
+    ],
+    "independent_game4_inner_os_mtu": 1358,
+    "authenticated_original_Go_TLS_Rust_M4_generations": [
+      1,
+      2,
+      5
+    ],
+    "exact_old_normal_stops": [
+      1,
+      2
+    ],
+    "retained_tunnel_ip": "10.66.0.248/32",
+    "physical_command_to_M4_ready_ms": [
+      282.57,
+      36999.94
+    ],
+    "normal_new_UDP": [
+      16,
+      16
+    ],
+    "healthy_original_Game4_gen1_UDP": [
+      32,
+      320
+    ],
+    "game2_client_exact_stop_then_server_authenticated_health90": true,
+    "game4_final_server_close": true,
+    "shared_Rust_TUN_final_Stop": true
+  },
+  "loss": {
+    "stage": "DURING_SECOND_NORMAL_TLS_REAUTH",
+    "physical_tc": "netem loss 30% delay 250ms on mxc0",
+    "physical_packets_sent": 507,
+    "physical_packets_dropped": 200,
+    "inner_UDP_sent": 200,
+    "inner_UDP_received": 200,
+    "no_application_retry": true,
+    "received_only_RTT_p99_ms": 270.079,
+    "max_delivery_gap_ms": 27.913,
+    "qdisc_removed_and_OS_restored": true
+  },
+  "not_claimed": [
+    "Inner200/200 is not physical zero loss; tc dropped200 packets",
+    "37s command-to-READY includes impaired TLS retries, not 200/500ms notification-only budget nor auth-to-first metric",
+    "CPU causality, remote ICMP, Android underlay binding/real-device, high-loss TCP not measured",
+    "H998 same-original-connection hot MTU and ARM Game4 historical FAIL retained"
+  ]
+}

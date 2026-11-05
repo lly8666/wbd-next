@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task": "R0-M0-PLAN028-SESSION-CONFIG",
+  "closeout": "USER_DIRECTED_SCOPED_PLAN028_CLOSEOUT",
+  "scope": "SCOPED_DELIVERY_COMPLETE_WITH_EXPLICIT_NOT_QUALIFIED_GAPS",
+  "acceptance_basis": "2026-11-05 user: finish the final scenario then closeout; no more scenarios",
+  "source_sha": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
+  "product_changes_in_closeout": false,
+  "final_native": {
+    "result": "PASS",
+    "run_id": 41948701519,
+    "source_sha": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
+    "evidence": "docs/evidence/M0/PLAN028-H1221-SOURCE53C7-X86-NORMALFIXED6-TC30-250MS-SECOND-TLS-PASS-20261105.json"
+  },
+  "linux_seven_native_modes": {
+    "result": "SEVEN_SCOPED_ORIGINAL_TLS_RUST_PHYSICAL_A_B_A_MODE_PASS",
+    "normal": [
+      "off ARM64/ARM64",
+      "fixed6 x86_64/x86_64",
+      "auto x86_64/x86_64"
+    ],
+    "game2": [
+      "off ARM64/ARM64",
+      "fixed6 x86_64/x86_64"
+    ],
+    "game4": [
+      "off x86_64/x86_64",
+      "fixed6 x86_64/x86_64"
+    ],
+    "one_port": 443,
+    "real_per_client_MTU_and_generation_Stop": true
+  },
+  "actual_30_percent_250ms": {
+    "ARM_Game4_highest_post_auth": {
+      "run_id": 41933405513,
+      "source_sha": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
+      "physical_dropped": 736,
+      "physical_sent": 1708,
+      "inner_UDP_received": 200,
+      "inner_UDP_sent": 200,
+      "received_only_p99_ms": 270.013,
+      "result": "PASS"
+    },
+    "x86_Normal_Fixed6_during_second_TLS": {
+      "run_id": 41948701519,
+      "source_sha": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
+      "physical_dropped": 200,
+      "physical_sent": 507,
+      "inner_UDP_received": 200,
+      "inner_UDP_sent": 200,
+      "received_only_p99_ms": 270.079,
+      "second_physical_command_to_READY_ms": 36999.94,
+      "result": "PASS"
+    }
+  },
+  "Windows_scoped": {
+    "qualified": [
+      "Normal Auto source4 second genuine TLS/UDP/TCP/Stop Action41939489419 SOURCEb315",
+      "Game4 Off source4 second genuine TLS/UDP/TCP/Stop Action41939815952 SOURCE4ce",
+      "Game4 Fixed6 two signed native M4 cohorts H1188"
+    ],
+    "evidence": [
+      "docs/evidence/M0/PLAN028-H1216-WIN-AUTO-SOURCEB315-PASS-20261105.json",
+      "docs/evidence/M0/PLAN028-H1216-WIN-GAME4OFF-SOURCE4CE-PASS-20261105.json"
+    ],
+    "not_qualified": [
+      "Windows all seven physical mode shifts NOT_RUN",
+      "Windows Normal Fixed6 full Action FAIL at late second installed FEC readback; no overall PASS",
+      "Windows Game2 off/fixed6 physical mode changes NOT_RUN"
+    ]
+  },
+  "historical_retained": [
+    "PLAN027A H998 original same-connection live physical MTU shrink FAIL; PLAN028 succeeded via new original authenticated TLS path and cannot be backclaimed as same-socket hot update",
+    "H998 original ARM Game4 Action FAIL",
+    "H1173 historical singleton Game4 second TLS FAIL"
+  ],
+  "limits": [
+    "No Android callbacks/VPN underlay bypass/binding or real phone qualifications",
+    "Remote ICMP type3/code4 not measured",
+    "Exact OS event→TLS and authentication→first packet timing and CPU causal optimization not fully qualified",
+    "30% high-loss TCP continuity not separately measured"
+  ],
+  "full_universal_qualification": false,
+  "no_more_scenarios_without_new_authorization": true,
+  "next_packages": "029 DNS and 030 CLI independent future entries; not automatically started"
+}

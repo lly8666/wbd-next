@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 IN_PROGRESS, progress is latest cursor/evidence. User 2026-11-04 prioritizes docs/architecture/TLS_HANDSHAKE_CONTRACT.md: remove H1048 WB-R1 pre-ClientHello exchange, require preprovisioned route-key, preserve server verification, source-locked wire audit. Then resume existing single-port multi-client/config/IP, seven-mode rotation and Windows/Linux path reconnect work. Reuse mature TLS/Rust and MTU contract; retain historical scoped FAIL/NOT_RUN; do not restart 027/027A matrices.",
+      "goal": "PLAN028 USER_DIRECTED_SCOPED_CLOSED 2026-11-05: seven native Linux physical A-B-A mode tests and two real 30pct/250ms representative impairments PASS; Windows and Android/ICMP/CPU unqualified areas retained. No new PLAN028 scenarios without new request.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
