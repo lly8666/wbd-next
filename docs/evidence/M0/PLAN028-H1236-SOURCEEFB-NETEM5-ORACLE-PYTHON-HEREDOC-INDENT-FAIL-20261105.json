@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1236",
+  "source_sha": "efb96707704da8cb00ad177f3059da615c16925d",
+  "result": "FAIL_FIXTURE_ORACLE_PYTHON_INDENT",
+  "artifact_verified": true,
+  "action_run_id": 42004433967,
+  "build": "PASS",
+  "scenes": {
+    "game4_off": "FAIL_INDENTATION_ERROR_IN_NESTED_PYTHON_ORACLE",
+    "game4_fixed6": "FAIL_INDENTATION_ERROR_IN_NESTED_PYTHON_ORACLE"
+  },
+  "diagnostics": "Generated nested PY_ORACLE copied a multiline v.sent delivery assertion at column zero, then following code remained in the for who block; both jobs ran real TUN traffic and full 8/9 swaps, then failed Python `IndentationError: unexpected indent` at max_receipt_gap line.",
+  "sample_artifacts": [
+    {
+      "mode": "game4-off",
+      "artifact_id": 13403813389,
+      "zip_sha256": "416936f02e69a717fd5b95ba52cae1f7479672dca09721441d224ad73a315e6f",
+      "files": 24,
+      "crc": "PASS",
+      "real_udp": {
+        "alice": "1542/1542",
+        "bob": "1532/1532",
+        "carol": "1542/1542"
+      },
+      "bob_kernel_dropped": {
+        "client_to_server": 307,
+        "server_to_client": 303
+      },
+      "actual_hot_successes": 8
+    },
+    {
+      "mode": "game4-fixed6",
+      "artifact_id": 13403659052,
+      "zip_sha256": "bc9336afab12f00d7b23904eba6ca0cbb90bd9446452be58dce35c6d8130ae74",
+      "files": 24,
+      "crc": "PASS",
+      "real_udp": {
+        "alice": "3179/3179",
+        "bob": "3171/3171",
+        "carol": "3179/3179"
+      },
+      "bob_kernel_dropped": {
+        "client_to_server": 1974,
+        "server_to_client": 1977
+      },
+      "actual_hot_successes": 9
+    }
+  ],
+  "corrective_action": "H1237 precompile PY_ORACLE and PY_STREAM nested heredocs during first fixture-generation preflight; indent all inserted assertions; bound retry/arm count through eighth success instead of parsing a valid extra ninth auto turn after test stop trigger.",
+  "h998_live_hot_mtu": "FAIL_RETAINED"
+}

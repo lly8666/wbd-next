@@ -1,0 +1,11 @@
+# PLAN028 H1237 — compile nested native Python oracle on generation
+
+H1235 Action42001808430 true native x86 Go TLS/Rust Game4 Off and Fixed6 under REAL Bob two-way tc netem5 achieved eight authentic protected original TLS slot swaps each without rebuilding group, with three uncommitted cold TLS failures each safely retried. Original logs/ZIP SHA+CRC, actual two-sided Linux tc dropped counters and real inner UDP in docs/evidence/M0/PLAN028-H1235-SOURCEE408-X86-NETEM5-GAME4-8TRUE-LANE-HOT-REAL-UDP-ORACLE-FAIL-20261105.json. H1235 CI FAIL was incorrect success-attempt ordinal oracle, not a green workflow.
+
+H1236 [Action42004433967](https://github.com/lly8666/wbd-next/actions/runs/42004433967) again had native build PASS and actual Game4 Off 8, Fixed6 9 authentic lane hot swaps, zero Health90/group replacement, no-app-retry UDP all three peers 100% per mode while real `tc` dropped both directions. CI both scenes **FAIL** after real traffic because the *generator's nested Python heredoc* had an `IndentationError`; bash -n did not examine the Python source. Full original ZIP 24 files each SHA+CRC and physical route/link readbacks preserved; see docs/evidence/M0/PLAN028-H1236-SOURCEEFB-NETEM5-ORACLE-PYTHON-HEREDOC-INDENT-FAIL-20261105.json.
+
+H1237 changes **only test** (no product Go TLS/Rust change): require `compile()` both generated PY_ORACLE and PY_STREAM at fixture preflight before costly build/runner; fix indent of loss-aware in-loop assertion, count cold retries and timer due only up to eighth successful lane transition so a later valid ninth timer is not falsely rejected. Continue requiring exact eight authentic client and server tuples/lane round, same original Rust GameAdapter, 3 untouched siblings, no Health90, kernel tc actual drops, 15–21s jitter, real TUN no-retry UDP including mode-specific physical-loss floor, original route/IPv4/ifindex/MTU readbacks. Actual H1237 SOURCE qualification NOT_RUN until original Action. H998 live hot-MTU FAIL and Windows/Android scope unchanged.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"H1237 fix generated native PY_ORACLE indentation and include nested compile preflight; accurately report H1235/H1236 prior CI failures and raw real Game4 netem5 success."}
+```

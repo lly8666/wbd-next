@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1236,
-  "checkpoint_sha": "e408f68004bf6ec3c456318e7816605717424c47",
+  "sequence": 1237,
+  "checkpoint_sha": "efb96707704da8cb00ad177f3059da615c16925d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1236 source-locked x86_64 loss-aware native oracle after H1235 source e408. H1235 true raw artifacts each Game4 Off/Fixed6 8 independent protected client+server lane hot swaps, 3 TLS cold candidate timeouts successfully retried without group restarts/Health90. Both scenes workflow FAIL solely inherited oracle requiring TLS attempt cycle1..8, although attempts included retry indexes Off[1,2,5,7,8,9,10,11] Fixed6[1,2,3,4,6,8,9,11]. Actual two-way Bob tc netem5 kernel dropped Off551+512, Fixed6 1582+1638. No retry UDP: Off Bob2389/2626(90.97%) vs expected no-FEC two 5% directions 90.25%; Fixed6 Bob2516/2516; Alice+Carol each100%. H1236 correct oracle for attempted vs successful switches and per-mode physical loss, same PRODUCT Go/Rust unchanged; full native x86 CI pending.",
-  "why_now": "H1235 genuine eight independent Game4 lane replacements and intact FEC/other siblings were falsely failed by inherited successful-cycle oracle not accounting for 3 legitimate failed cold TLS candidate attempts; also Off no-FEC cannot promise 98% echo under 5%+5% carrier loss.",
+  "current_task": "H1237 source-locked native x86 Game4 Off/Fixed6 real kernel bidirectional Bob netem5 under original Go TLS/Rust M4. H1235 raw genuine 8 successful slot hot rotations per mode, 3 failed pre-native TLS candidates safely retried, zero group restart/Health90, kernel drops both directions, all Alice/Carol live and actual UDP, but legacy CI false oracle FAIL; H1236 attempted corrected loss-aware oracle but two CI scene FAIL after actual business due nested PY_ORACLE IndentationError. H1237 adds generated heredoc compile preflight, correct indent and bounds retry/arming evidence to eighth success to allow valid ninth later; no product code modification. TEST PENDING. Source-specific H1235/H1236 CI failures retained.",
+  "why_now": "User explicitly requests finishing PLAN028 all remaining real tests. Preceding H1236 false failure exposed Python heredoc syntax escaped from bash -n check; H1237 fixes deterministically at generator preflight and strict source-locked real x86 verification. After that audit last unresolved Windows/physical switch/collision/lease tests; no unsupported global PASS.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run H1236 native x86 Go TLS/Rust original fixed source under both real direction Bob tc netem5, two Game4 Off/Fixed6 jobs; verify 8 true lane turn client/server matches, no group restarts, 3-client no retry UDP, tc actual kernel dropped and NIC/MTU route readbacks, artifacts SHA/CRC; then settle scoped H1235/H1236 evidence and feature status. H998 original online MTU FAIL preserved.",
+  "next_action": "Observe H1237 preflight+build+two native netem5 scenes; verify 8 same-epoch Game4 selected lane turns, no extra M4 owner/Health90, actual Bob physical tc drops, real 3-client no retry UDP, route/interface MTU, zip CRC/SHA; scope current source. Then execute PLAN028 remaining risk matrix rather than redundant old-run regression; Windows gaps and H998 hot-MTU FAIL retained.",
   "unverified": true,
   "last_tested_source": "814dec69f5200fa62dc63b76cb9ded1e9680a9b5",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1235 raw native x86 completed 16 successful single-lane hot swaps despite workflow false CI FAIL due TLS attempt ordinal; 3 cold retries each, 0 Health90, real Bob netem5 Off90.97% noFEC and Fixed6 100%, healthy sibling clients. H1236 corrected loss-aware original TLS attempt-vs-success oracle pending."
+  "partial_summary": "H1235 physical loss5 Go TLS/Rust original Game4 Off/Fixed6 raw real 16 slot-only swaps and 3 safe TLS cold retries per scene; H1236 two real x86 scenes CI failed solely Python generated oracle indent although under tc loss both modes had 100% app echo in 24-file artifacts (Game4 Off 1532/1532 Bob, Fixed6 3171/3171 Bob). H1237 precompiles nested oracle, bounds eighth-turn retries, new native Action pending."
 }

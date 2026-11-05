@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1235",
+  "source_sha": "e408f68004bf6ec3c456318e7816605717424c47",
+  "result": "SCOPED_RAW_NATIVE_BUSINESS_PASS_CI_ORACLE_FAIL",
+  "artifact_verified": true,
+  "action_run_id": 42001808430,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42001808430",
+  "platform": "native Linux x86_64 client+server, real original Go TLS+Rust M4 one server443",
+  "cause": "Prior H1234 entire Game4 cohort retired after a failed new original Go TLS candidate before Rust M4; H1235 retries only precommit cold attempts on existing sole path supervisor, preserving currently authenticated Game4 owner and 3 sibling lanes. Partial/unknown M4 is still fatal.",
+  "setup": {
+    "bob_netem": "actual kernel egress loss5% each veth direction Bob mxb0 and host mhb0",
+    "others": "Alice Game2 and Carol Normal Auto no netem; original real TUN UDP echo without app retries",
+    "rotation": "Game4 original protected TLS new one-lane sourceport, 18s±3s, eight successes lane1,2,3,4 twice"
+  },
+  "scenes": [
+    {
+      "mode": "game4-off",
+      "artifact_id": 13402629153,
+      "zip_sha256": "95feec149719141751bc8fca12227eafec5ea02e623863ec722e1492ecb3af06",
+      "zip_crc": "PASS",
+      "files": 12,
+      "success_lane_sequence": [
+        1,
+        2,
+        3,
+        4,
+        1,
+        2,
+        3,
+        4
+      ],
+      "success_attempt_cycles": [
+        1,
+        2,
+        5,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "pre_m4_retryable_failed_cold_tls": 3,
+      "group_restart_count": 0,
+      "health90_count": 0,
+      "udp": {
+        "alice": {
+          "sent": 2642,
+          "received": 2642
+        },
+        "bob": {
+          "sent": 2626,
+          "received": 2389,
+          "rtt_received_p99_ms": 8.451,
+          "max_gap_ms": 154.89
+        },
+        "carol": {
+          "sent": 2642,
+          "received": 2642
+        }
+      },
+      "actual_tc_kernel_dropped": {
+        "client_to_server": 551,
+        "server_to_client": 512
+      }
+    },
+    {
+      "mode": "game4-fixed6",
+      "artifact_id": 13403485936,
+      "zip_sha256": "2868842ca43910f94a606a9eb197448d88ac52d1c8dbb7a5ad4d036f8c6612c9",
+      "zip_crc": "PASS",
+      "files": 12,
+      "success_lane_sequence": [
+        1,
+        2,
+        3,
+        4,
+        1,
+        2,
+        3,
+        4
+      ],
+      "success_attempt_cycles": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        8,
+        9,
+        11
+      ],
+      "pre_m4_retryable_failed_cold_tls": 3,
+      "group_restart_count": 0,
+      "health90_count": 0,
+      "udp": {
+        "alice": {
+          "sent": 2522,
+          "received": 2522
+        },
+        "bob": {
+          "sent": 2516,
+          "received": 2516,
+          "rtt_received_p99_ms": 2.563,
+          "max_gap_ms": 112.35
+        },
+        "carol": {
+          "sent": 2522,
+          "received": 2522
+        }
+      },
+      "actual_tc_kernel_dropped": {
+        "client_to_server": 1582,
+        "server_to_client": 1638
+      }
+    }
+  ],
+  "action_fail_cause": "CI oracle falsely demands TLS cold source-port attempt numbers be exactly 1..8 for 8 hot swaps, ignoring 3 failed cold TLS retries. Original failing fixture also required Bob>=98% echo for Off despite two 5% impaired directions. Do not report CI PASS.",
+  "notes": [
+    "Game4 Off has multiple physical copies; 0.95²=90.25% is single-copy two-direction baseline, NOT predicted achieved Game4 Off after redundancy.",
+    "No full path A→B, Windows or mobile coverage.",
+    "Original PLAN027A H998 online same-socket hot MTU shrink FAIL unchanged."
+  ]
+}
