@@ -8,7 +8,7 @@ use std::os::fd::OwnedFd;
 use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::collections::VecDeque;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver,RecvTimeoutError};
 use crate::v4_embedded_go::OriginalTunIngress;
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
@@ -202,6 +202,11 @@ impl GameKernelOwner{
                 // One bounded exceptional datagram; ordinary small IP goes
                 // first on every loop, then at most 4 IP fragments per turn.
                 let mut pending_ip_fragments=VecDeque::<Vec<u8>>::new();
+                // The shared process TUN reader already wakes its bounded
+                // per-session channel. Keep ONE received packet until this
+                // original TX owner handles it on the next turn; never let
+                // a timer consume and drop source data.
+                let mut wakeup_shared=None::<OriginalTunIngress>;
                 // Bounded local PMTU feedback: <=20 messages per 1s window,
                 // no per-flow timer/retry/extra worker. Usually Linux returns
                 // EMSGSIZE before a DF1 datagram enters this TUN owner.
@@ -230,7 +235,10 @@ impl GameKernelOwner{
                     // saturating a different group can never steal its TUN
                     // packets or block this group's original M4/FEC.
                     let size=if let Some(ingress)=shared_ingress.as_ref(){
-                        match ingress.try_recv(){
+                        let ready=if let Some(packet)=wakeup_shared.take(){
+                            Ok(packet)
+                        }else{ingress.try_recv()};
+                        match ready{
                             Ok(OriginalTunIngress::Shared(packet))=>{
                                 let bytes=packet.as_slice();
                                 if bytes.len()<=inbound.len(){
@@ -599,16 +607,34 @@ impl GameKernelOwner{
                             due.saturating_sub(start.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64));
                         let timeout=((remain.min(10_000_000)+999_999)/1_000_000) as i32;
-                        if shared_ingress.is_some(){
-                            // Polling the duplicated TUN fd here would
-                            // compete with the sole process reader.
-                            thread::sleep(Duration::from_millis(timeout.max(1) as u64));
+                        if let Some(ingress)=shared_ingress.as_ref(){
+                            // The process-wide shared TUN reader exclusively
+                            // owns read(2); its existing bounded channel is
+                            // also the source-ready notification. Sleeping
+                            // here had added an artificial 0..10ms EACH WAY
+                            // at zero packet loss (Game4 p99 tail).
+                            match ingress.recv_timeout(
+                                Duration::from_millis(timeout.max(1) as u64)){
+                                Ok(packet)=>wakeup_shared=Some(packet),
+                                Err(RecvTimeoutError::Timeout)=>{},
+                                Err(RecvTimeoutError::Disconnected)=>break,
+                            }
                         }else{
                             let mut pfd=GamePollFd{fd:tx_tun.readiness_fd(),events:1,revents:0};
                             let _=unsafe{poll(&mut pfd,1,timeout)};
                         }
                     }else if !did_business&&!parity_ready{
-                        thread::sleep(Duration::from_millis(2));
+                        if let Some(ingress)=shared_ingress.as_ref(){
+                            // Game2 OFF likewise must wake on real business,
+                            // rather than accumulate ~2ms polling each way.
+                            match ingress.recv_timeout(Duration::from_millis(2)){
+                                Ok(packet)=>wakeup_shared=Some(packet),
+                                Err(RecvTimeoutError::Timeout)=>{},
+                                Err(RecvTimeoutError::Disconnected)=>break,
+                            }
+                        }else{
+                            thread::sleep(Duration::from_millis(2));
+                        }
                     }
                     arena.drain_returns();
                 }

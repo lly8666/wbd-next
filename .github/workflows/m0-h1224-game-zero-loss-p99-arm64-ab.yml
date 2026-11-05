@@ -1,0 +1,260 @@
+name: M0 H1224 native ARM64 Game clean-network p99 same-VM original-Go TLS Rust A/B
+run-name: H1224 ARM64 two-authenticated-Game scenarios original shared TUN sleep vs event wake
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-h1224-game-zero-loss-p99-arm64-ab.yml"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - name: Validate all complete scenario generators before expensive native SOURCE build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-x86-same-path-timed-rotation-fixture.py
+          for scene in normal-auto game2-off game4-fixed6;do
+            python3 tools/m0-plan028-x86-same-path-timed-rotation-fixture.py "$RUNNER_TEMP/preflight-$scene.sh" "$scene"
+            bash -n "$RUNNER_TEMP/preflight-$scene.sh"
+          done
+          echo "PLAN028_H1222_THREE_SCENE_SYNTAX_PREFLIGHT_PASS"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Pin original Go+Rust and assemble one complete ARM64 SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test ! -e r0/go_overlay/internal/realityfront/v4_route_prelude.go
+          mkdir -p fixed-build fixed-build/baseline fixed-kernel-result
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt fixed-kernel-result/assembly.json
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path.cwd(); donor=root/"legacy"
+          rec=json.loads((root/"fixed-kernel-result/assembly.json").read_text(encoding="utf-8"))
+          assert rec["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert rec["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():
+                      assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              p=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),str(dst)
+              dst.write_bytes(p.read_bytes())
+          # Test-only current-source V4 CLI and real native route/timer
+          # unit tests: copy into the pinned temporary original Go clone.
+          for name in ("secret_linux_test.go","path_linux_test.go"):
+              src=root/"r0/go_overlay/internal/v4productcli"/name
+              dst=donor/"internal/v4productcli"/name
+              if dst.exists():
+                  assert dst.read_bytes()==src.read_bytes()
+              else:
+                  dst.write_bytes(src.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role)
+              dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes((root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          print("M0_PLAN028_ARM64_NATIVE_TLS_EXACT_SOURCE_ASSEMBLED source="+os.environ["GITHUB_SHA"],flush=True)
+          PY
+          rustup toolchain install 1.85.1 --profile minimal
+          test "$(git rev-parse HEAD^)" = "40ce34bef0f58e4d2362d94609d91272690023ad"
+          test "$(git diff --name-only HEAD^ HEAD -- crates)" = "crates/wbd-engine/src/v4_game_public_kernel.rs"
+          cp crates/wbd-engine/src/v4_game_public_kernel.rs "$RUNNER_TEMP/candidate-game-kernel.rs"
+          git show HEAD^:crates/wbd-engine/src/v4_game_public_kernel.rs >crates/wbd-engine/src/v4_game_public_kernel.rs
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/rust-baseline.log 2>&1 || {
+            tail -110 fixed-kernel-result/rust-baseline.log >&2; exit 1;
+          }
+          cp target/release/libwbd_engine.so fixed-build/baseline/
+          cp "$RUNNER_TEMP/candidate-game-kernel.rs" crates/wbd-engine/src/v4_game_public_kernel.rs
+          git diff --exit-code -- crates/wbd-engine/src/v4_game_public_kernel.rs
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/rust-fixed.log 2>&1 || {
+            tail -110 fixed-kernel-result/rust-fixed.log >&2; exit 1;
+          }
+          cp target/release/libwbd_engine.so fixed-build/
+          test "$(sha256sum fixed-build/libwbd_engine.so | cut -d' ' -f1)" != "$(sha256sum fixed-build/baseline/libwbd_engine.so | cut -d' ' -f1)"
+          echo "H1224_NATIVE_ARM64_BASE_AND_FIXED_RUST_BUILT_DIFFERENT_SOURCE"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          cp fixed-build/wbd-v4-client fixed-build/wbd-v4-server fixed-build/baseline/
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope$' ./internal/v4productcli) >>fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          for marker in \
+            "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" \
+            "--- PASS: TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy" \
+            "--- PASS: TestR0V4ActualProtectedPeerHandshakeAllCiphers" \
+            "--- PASS: TestPLAN028OriginalPublicRecordCipherClientScope";do
+            grep -Fq -- "$marker" fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()=="aarch64"
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_arm64","go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          baseline=root/"baseline"
+          old=dict(m)
+          old["source_sha"]="40ce34bef0f58e4d2362d94609d91272690023ad"
+          old["baseline_scope"]="exact base Rust kernel from HEAD^; original Go/other crate code unchanged"
+          old["sha256"]=dict(m["sha256"])
+          old["sha256"]["libwbd_engine.so"]=hashlib.sha256((baseline/"libwbd_engine.so").read_bytes()).hexdigest()
+          (baseline/"manifest.json").write_text(json.dumps(old,indent=2)+"\n")
+          assert old["sha256"]["libwbd_engine.so"]!=sha["libwbd_engine.so"]
+          print("M0_H1224_GAME_WAKE_ARM64_PAIR_NATIVE_BUILD_PASS",flush=True)
+          PY
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028TimedRotation(ReusesNativeSamePathGeneration|DisabledAndBoundedConfig)$' ./internal/v4productcli)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-h1224-arm64-game-clean-p99-pair-${{ github.sha }}
+          path: fixed-build/
+          retention-days: 7
+  scene:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [game2-off, game4-fixed6]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-h1224-arm64-game-clean-p99-pair-${{ github.sha }}
+          path: fixed-build/
+      - name: Confirm two independent native ARM64 Rust M4 libraries and exact code provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          base=pathlib.Path("fixed-build")
+          for variant,source in ((".",os.environ["GITHUB_SHA"]),("baseline","40ce34bef0f58e4d2362d94609d91272690023ad")):
+              root=base/variant
+              manifest=json.loads((root/"manifest.json").read_text())
+              assert manifest["architecture"]=="native_arm64" and manifest["source_sha"]==source
+              for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+                  b=(root/name).read_bytes()
+                  assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183
+                  assert hashlib.sha256(b).hexdigest()==manifest["sha256"][name]
+          assert (base/"libwbd_engine.so").read_bytes()!=(base/"baseline/libwbd_engine.so").read_bytes()
+          print("H1224_REAL_ARM64_GAME_BASE_AND_FIXED_BINARY_HASH_VERIFIED",flush=True)
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server fixed-build/baseline/wbd-v4-client fixed-build/baseline/wbd-v4-server
+      - name: Same runner sequential original p99 baseline and native channel wake candidate, 0 loss and 3 genuine UDP clients
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          python3 tools/m0-plan028-x86-same-path-timed-rotation-fixture.py "$RUNNER_TEMP/h1224-${{ matrix.scene }}.sh" "${{ matrix.scene }}"
+          python3 - "$RUNNER_TEMP/h1224-${{ matrix.scene }}.sh" <<'PY'
+          import pathlib,sys
+          p=pathlib.Path(sys.argv[1])
+          s=p.read_text()
+          assert s.count("original Go TLS+Rust M4 native x86/x86")==1
+          p.write_text(s.replace("original Go TLS+Rust M4 native x86/x86","original Go TLS+Rust M4 native ARM64/ARM64"))
+          PY
+          bash -n "$RUNNER_TEMP/h1224-${{ matrix.scene }}.sh"
+          mkdir -p ab-record
+          for variant in baseline fixed;do
+            rm -rf fixed-kernel-result
+            mkdir -p fixed-kernel-result
+            if [ "$variant" = baseline ];then root=fixed-build/baseline;else root=fixed-build;fi
+            bash "$RUNNER_TEMP/h1224-${{ matrix.scene }}.sh" "$root" >"ab-record/$variant-runtime.log" 2>&1 || {
+              tail -160 "ab-record/$variant-runtime.log" >&2
+              exit 1
+            }
+            grep -Fq "M0_PLAN028_H1222_TIMED_UNCHANGED_PATH_REAL_UDP_PASS ${{ matrix.scene }}" "ab-record/$variant-runtime.log"
+            cp fixed-kernel-result/timed-evidence.json "ab-record/$variant-evidence.json"
+            mkdir -p "ab-record/$variant"
+            cp fixed-kernel-result/timed-runtime-*.log "ab-record/$variant/"
+          done
+          python3 - "${{ matrix.scene }}" <<'PY'
+          import json,os,pathlib,sys
+          scene=sys.argv[1]
+          target={"game2-off":"alice","game4-fixed6":"bob"}[scene]
+          root=pathlib.Path("ab-record")
+          before=json.loads((root/"baseline-evidence.json").read_text())
+          after=json.loads((root/"fixed-evidence.json").read_text())
+          for value in (before,after):
+              assert value["status"]=="PASS" and value["mode_scene"]==scene and value["same_tunnel_ip"]
+              assert value["target_authenticated_generations"]==[1,2,3]
+              assert value["exact_old_stops"]==[1,2]
+              assert value["physical_interface_ipv4_unchanged"] and value["physical_mtu_unchanged"]
+              for device,stream in value["streams"].items():
+                  assert stream["sent"]>100 and stream["received"]==stream["sent"],(device,stream)
+                  assert len(set(value["actual_authenticated_lease_receipts"][device]))==1
+          b=before["streams"][target]["received_only_rtt_p99_ms"]
+          a=after["streams"][target]["received_only_rtt_p99_ms"]
+          control_b=before["streams"]["carol"]["received_only_rtt_p99_ms"] if target!="carol" else before["streams"]["alice"]["received_only_rtt_p99_ms"]
+          control_a=after["streams"]["carol"]["received_only_rtt_p99_ms"] if target!="carol" else after["streams"]["alice"]["received_only_rtt_p99_ms"]
+          result={"scene":scene,"baseline_source":"40ce34bef0f58e4d2362d94609d91272690023ad","candidate_source":os.environ["GITHUB_SHA"],
+                  "native_architecture":"ARM64 client and ARM64 server",
+                  "one_real_server_port":443,"physical_packet_loss_pct":0,
+                  "base_target_p99_ms":b,"event_wake_target_p99_ms":a,
+                  "p99_reduction_pct":round(100*(1-a/b),3),"independent_normal_control_p99_ms":[control_b,control_a],
+                  "before_three_device_streams":before["streams"],"after_three_device_streams":after["streams"],
+                  "before_cpu_percent":before["cpu_process_percent_during_scene"],
+                  "after_cpu_percent":after["cpu_process_percent_during_scene"],
+                  "original_TLS_Rust_three_authenticated_generations":True,
+                  "same_VirtualMachine_AB_sequential":True,
+                  "previous_H998_live_hot_MTU_FAIL":"RETAINED","CPU_causal_gain":"NOT_PROVEN"}
+          (root/"comparison.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("H1224_GAME_ZERO_LOSS_REAL_ARM64_SAME_VM_AB",json.dumps(result,sort_keys=True),flush=True)
+          assert a < b*.80,(scene,"insufficient p99 reduction",b,a)
+          assert control_a < max(5.,control_b*3.),(scene,"control regression",control_b,control_a)
+          print("H1224_NATIVE_ARM64_ZERO_LOSS_GAME_P99_IMPROVEMENT_PASS",scene,flush=True)
+          PY
+          cat ab-record/comparison.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-h1224-p99-${{ matrix.scene }}-${{ github.run_id }}
+          path: ab-record/
+          if-no-files-found: warn
+          retention-days: 14
