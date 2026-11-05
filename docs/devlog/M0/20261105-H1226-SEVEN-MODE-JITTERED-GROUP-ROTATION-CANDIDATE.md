@@ -10,3 +10,6 @@
 ```feature-impact
 {"kind":"added","ids":["original-lane-rotation-jitter"],"reason":"User explicitly wants longer randomized timer and seven authenticated mode tests, with real per-lane group identity evidence and honest independent single-lane limitation."}
 ```
+
+## H1227 CI workflow syntax correction
+Original commit 283ebf introduced an invalid workflow YAML due to a JS replacement string containing a dollar-single-quote sequence, which expanded the remainder of the workflow into the replacement. Run 41969205411 had zero jobs. This is a CI artifact construction FAIL only, not a real Go/Rust/TUN test. H1227 regenerates workflow via exact literal split/join, verifies unique build/scene sections. Product and fixtures unchanged, original source qualification NOT_RUN until native Action.
