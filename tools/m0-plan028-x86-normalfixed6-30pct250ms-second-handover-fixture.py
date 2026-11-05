@@ -21,21 +21,22 @@ one('game_live GAME4_HEALTH_NORMAL_CHANGE1 "$TMP/B-game-live1-ns.txt" &',
     'game_live GAME4_HEALTH_NORMAL_CHANGE1 "$TMP/B-game-live1-ns.txt" 31 &')
 one('game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" &',
     'game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &')
-# The original baseline later requires exact Game2 owner Stop. The 128s
-# high-loss witness must not accidentally starve this unaffected sibling past
-# its original 90s dead timer. Keep it alive with real inner UDP, never a
-# fabricated M4 heartbeat or a new control pump.
-keepalive='''(
-  while kill -0 "$game2_pid" 2>/dev/null;do
-    send_udp "$NSA" "$IPA" GAME2_REAL_SIBLING_HEALTH 1 "$TMP/A-high30-health.log"
-    sleep 8
-  done
-) &
-game2_health_pid=$!
+# The established mixed baseline requires Alice Game2 exact owned Stop.
+# Its existing Health90 is NOT a mandatory background keepalive. Finish
+# Game2's first twelve actual UDP packets and Stop it BEFORE the extended
+# 128s high30 observation of the two still-running Normal/Game4 owners.
+# Reuse the same existing Stop, not a new controller or synthetic heartbeat.
+one('sudo -n kill -TERM "$(cat "$TMP/alice.pid")"\\nfor i in {1..80};do',
+    '# Original Game2 owner already Stop-drained before extended high-loss observation\\nfor i in {1..80};do')
+stop_game2='''sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
+for _ in {1..80};do
+ if grep -Fq "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2" "$TMP/alice.log";then break;fi
+ sleep .25
+done
+grep -Fq "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=2" "$TMP/alice.log"
 '''
-one('game2_pid=$!\nfor _ in {1..120};do', 'game2_pid=$!\n'+keepalive+'for _ in {1..120};do')
-one('wait "$game2_pid"\nsend_udp "$NSC"',
-    'wait "$game2_pid"\nkill "$game2_health_pid" 2>/dev/null || true\nwait "$game2_health_pid" 2>/dev/null || true\ngrep -Fq "REAL_MIXED_UDP GAME2_REAL_SIBLING_HEALTH 0" "$TMP/A-high30-health.log"\nsend_udp "$NSC"')
+one('game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &',
+    stop_game2+'game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" 319 &')
 one('assert len(t2)==32 and t2[0]<c<d<t2[-1]',
     'assert len(t2)==320 and t2[0]<c<d<t2[-1]')
 one('ready2=0\nfor _ in {1..180};do','ready2=0\nfor _ in {1..480};do')

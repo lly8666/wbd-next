@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1213",
+  "source_sha": "7eeeb74c185bbd5464fb0491cc0d230aea388738",
+  "result": "FAIL_UNRELATED_GAME2_IDLE_IN_LONG_FIXTURE",
+  "action": {
+    "run_id": 41939187804,
+    "job_id": 126955284518,
+    "artifact_id": 13376600420,
+    "artifact_sha256": "6c3dde825175c6e409374dec2ea44402fd24df64d3b2baf7edf8971432b5d06c"
+  },
+  "actual": {
+    "initial_alice_Game2_UDP": 12,
+    "original_game2_health_dead_90_observed": true,
+    "source_before_highloss": "10.25.0.4",
+    "one_port443": true,
+    "server_native_FEC6_protected_receipts": 3
+  },
+  "first_failure": "Python native UDP background keepalive tried bind original Game2 auto lease after 90s authenticated idle expiration: OSError Errno99 Cannot assign requested address; not a valid highloss Normal fixed6 measurement in this source",
+  "narrow_fix": "Stop Alice's already completed original Game2 owned owner exact before starting 128s Normal/GAME4 witness; require same original Rust owned Stop, no new heartbeat or false healthy claim for retired owner; Game4 remains healthy",
+  "historical": [
+    "Prior SOURCE0510 193/200 normal highloss UDP but overall FAIL remains",
+    "H998 hot-MTU and old ARM FAIL retained",
+    "remote ICMP/CPU causal/Android unmeasured"
+  ]
+}
