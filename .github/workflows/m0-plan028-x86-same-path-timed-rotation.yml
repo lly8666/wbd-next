@@ -60,13 +60,15 @@ jobs:
               dst=donor/"internal/faketcp"/name
               assert not dst.exists(),str(dst)
               dst.write_bytes(p.read_bytes())
-          # Test-only current-source V4 CLI config, not a second Go product.
-          src=root/"r0/go_overlay/internal/v4productcli/secret_linux_test.go"
-          dst=donor/"internal/v4productcli/secret_linux_test.go"
-          if dst.exists():
-              assert dst.read_bytes()==src.read_bytes()
-          else:
-              dst.write_bytes(src.read_bytes())
+          # Test-only current-source V4 CLI and real native route/timer
+          # unit tests: copy into the pinned temporary original Go clone.
+          for name in ("secret_linux_test.go","path_linux_test.go"):
+              src=root/"r0/go_overlay/internal/v4productcli"/name
+              dst=donor/"internal/v4productcli"/name
+              if dst.exists():
+                  assert dst.read_bytes()==src.read_bytes()
+              else:
+                  dst.write_bytes(src.read_bytes())
           for role in ("client","server"):
               dest=donor/("cmd/wbd-v4-"+role)
               dest.mkdir(parents=True,exist_ok=True)
@@ -163,6 +165,7 @@ jobs:
           python3 tools/m0-plan028-x86-same-path-timed-rotation-fixture.py \
             "$RUNNER_TEMP/timed-${{ matrix.scene }}.sh" "${{ matrix.scene }}"
           bash -n "$RUNNER_TEMP/timed-${{ matrix.scene }}.sh"
+          mkdir -p fixed-kernel-result
           bash "$RUNNER_TEMP/timed-${{ matrix.scene }}.sh" fixed-build \
             >"timed-${{ matrix.scene }}.log" 2>&1 || {
               tail -220 "timed-${{ matrix.scene }}.log" >&2
