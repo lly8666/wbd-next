@@ -76,7 +76,8 @@
         "alice": 0.778,
         "bob": 0.972,
         "carol": 0.739
-      }
+      },
+      "artifact_zip_sha256": "7d9bd0243d182157c9678ad9eab267baba4fc519fd214ab24b371604824791a5"
     },
     {
       "mode": "game2-off",
@@ -135,7 +136,8 @@
         "alice": 0.754,
         "bob": 0.905,
         "carol": 0.603
-      }
+      },
+      "artifact_zip_sha256": "9868292d73baa9df66a01a13f2d952ae58b128cd09c8b6ff936bf11b4b152d0c"
     },
     {
       "mode": "game4-fixed6",
@@ -194,7 +196,8 @@
         "alice": 1.019,
         "bob": 1.245,
         "carol": 0.717
-      }
+      },
+      "artifact_zip_sha256": "0474223aca7929734aa5ef2e594b4b438a2e44dd0c37fe99dce3617712f519f1"
     }
   ],
   "aggregate": {
@@ -235,9 +238,9 @@
       "three real no-retry UDP streams with sent==received and authenticated per-generation lease readback"
     ],
     "checked_zip_sha256": [
-      null,
-      null,
-      null
+      "7d9bd0243d182157c9678ad9eab267baba4fc519fd214ab24b371604824791a5",
+      "9868292d73baa9df66a01a13f2d952ae58b128cd09c8b6ff936bf11b4b152d0c",
+      "0474223aca7929734aa5ef2e594b4b438a2e44dd0c37fe99dce3617712f519f1"
     ]
   }
 }
