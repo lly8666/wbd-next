@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1244",
+  "source_sha": "e8d4d306ab0d38ab5155680e8e76c4687bd10e6d",
+  "result": "FAIL_INCOMPLETE_ARTIFACT_CONTRACT",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 42042623737,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42042623737",
+    "build_job": "PASS",
+    "native_game4_fixed6_scene_job": "FAIL",
+    "artifact_id": 13422322705,
+    "zip_sha256": "cc388eff15afb27812868687e8fe4d556c18a3e54dff732ab977a9c76b004eda",
+    "zip_file_count": 9,
+    "zip_crc": "PASS"
+  },
+  "native_scope": "original Go TLS/Rust M4 client and server native ARM64, one443, Game4 Fixed6 slot rotation in-flight when Bob physical source IPv4 .3→.9 and OS link MTU1500→1280, Carol Normal Auto unaffected, 120ms each physical veth direction.",
+  "observed": "Both native Go and Rust compiled. Child generated H1243 strict semantic Python oracle printed M0_PLAN028_H1243_ARM64_GAME4_INFLIGHT_LANE_OS_MTU_STRICT_CONTINUITY_PASS, with intended checks: server full second authenticated four-lane M4 before old full group Stop, no one-lane-native-rekey-failed, Bob first→Ready+2s→last echo, Carol continuous. Outer CI THEN failed because expected `fixed-kernel-result/h1243-concurrent-physical-singlelane.json` was never written: oracle actually wrote `h1241-concurrent-physical-singlelane.json`. ZIP omitted untracked h1241 JSON and raw runtime logs due upload globs, so final evidence remains INCOMPLETE and not a reviewed product PASS.",
+  "exact_failure": "FileNotFoundError: fixed-kernel-result/h1243-concurrent-physical-singlelane.json",
+  "repair": "H1245 test-only fix generated JSON basename in strict fixture, assert file and Bob/server original logs exist before CI JSON read, upload h1241 original raw process/stream/qdisc/UDP receipts. No new product code change, no softened strict Bob post-gen2 Ready+2s requirement.",
+  "retained": {
+    "H1242_sourceFD767_true_Bob_outage": "FAIL_BOB_LAST_ECHO_4762MS_BEFORE_GEN2_READY",
+    "H1237_x86_real_netem5_independent_lane": "PASS_SCOPED",
+    "H1238_Windows_OS_unit": "PASS_SCOPED",
+    "H998_same_socket_MTU": "FAIL_RETAINED"
+  }
+}

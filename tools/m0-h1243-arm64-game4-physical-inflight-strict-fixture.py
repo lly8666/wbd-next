@@ -51,6 +51,13 @@ sub('    "lane_rekey_interrupt_outcome":"SUPERSEDED_BY_REAL_OS_PATH_CHANGE",',
     "server_no_early_one_lane_native_rekey_failure":True,
     "bob_delivered_at_least_2s_after_gen2_ready":True,
     "server_full_group_staged_new_physical_tuple":True,''')
+# H1244 native STRICT oracle printed its success marker, but wrote the
+# immutable result under the previous H1241 basename. The H1243 CI runner
+# correctly required h1243-* JSON and thus failed with FileNotFoundError.
+# Fix the artifact contract (NOT the business gate) and keep the strict
+# Bob last real echo > GEN2_READY+2s / no early M4 group Stop predicates.
+sub('$ART/h1241-concurrent-physical-singlelane.json',
+    '$ART/h1243-concurrent-physical-singlelane.json')
 sub('M0_PLAN028_H1241_ARM64_REAL_GAME4_LANE_VS_PHYSICAL_SOURCE_MTU_OVERLAP_PASS',
     'M0_PLAN028_H1243_ARM64_GAME4_INFLIGHT_LANE_OS_MTU_STRICT_CONTINUITY_PASS')
 # Test-only compile of every program embedded in the eventual shell.

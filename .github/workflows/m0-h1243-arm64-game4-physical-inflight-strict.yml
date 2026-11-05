@@ -179,6 +179,9 @@ jobs:
             exit 1
           }
           grep -Fq "M0_PLAN028_H1243_ARM64_GAME4_INFLIGHT_LANE_OS_MTU_STRICT_CONTINUITY_PASS" "hot-${{ matrix.scene }}.log"
+          test -s fixed-kernel-result/h1243-concurrent-physical-singlelane.json
+          test -s fixed-kernel-result/h1241-real-runtime-bob.log
+          test -s fixed-kernel-result/h1241-real-runtime-server.log
           python3 - <<'PY'
           import json,pathlib
           j=json.loads(pathlib.Path("fixed-kernel-result/h1243-concurrent-physical-singlelane.json").read_text())
@@ -203,6 +206,10 @@ jobs:
             fixed-kernel-result/h1243-*.json
             fixed-kernel-result/h1243-*.txt
             fixed-kernel-result/h1243-*.log
+            fixed-kernel-result/h1241-real-runtime-*.log
+            fixed-kernel-result/h1241-real-stream-*.log
+            fixed-kernel-result/h1241-*-udp.json
+            fixed-kernel-result/h1241-*-qdisc.txt
             fixed-kernel-result/plan028-h1162-*.json
             fixed-kernel-result/plan028-h1151-*.json
           if-no-files-found: warn
