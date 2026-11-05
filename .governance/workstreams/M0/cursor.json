@@ -9,15 +9,13 @@
   "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
   "current_task": "H1223 SOURCEed805 native x86_64 client + x86_64 server opt-in timed unchanged NIC/IP lane rotation: single Go TLS/Rust build, 3 independent parallel scenes NormalAuto/Game2Off/Game4Fixed6 all PASS. Real authenticated gen1→2→3 and exact Stop1/2, same lease, unmodified physical NIC/source IP/MTU, 3-device continuous UDP 2267/2267; CPU/p99 and timer→READY detection recorded. Scoped additional timer package finished, no historical matrix reopen.",
-  "why_now": "2026-11-05 new explicit user request for timer automatic lane rotation even without physical network changes with real sustained business. Final new SOURCEed805 Action41958680473 plus governance passed; predecessor 8a803 native PASS, 08e75 enhanced syntax FAIL retained separately. Old H1221 seven physical-mode SOURCE qualification remains separate.",
+  "why_now": "2026-11-05 new explicit user request for timer automatic lane rotation even without physical network changes with real sustained business. Final new SOURCEed805 Action41958680473 plus governance passed; predecessor 8a803 native PASS, 08e75 enhanced syntax FAIL retained separately. Old H1221 seven physical-mode SOURCE qualification remains separate. Final independent artifact review downloaded all three ZIPs, matched GitHub upload SHA256, verified CRC/full 23-file content and per-scene raw Go/Rust logs; evidence result PASS/artifact_verified true. H1221/H998 original evidence remains available as historical context, NOT asserted as SOURCEed805 evidence.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
   "next_action": "This H1223 scoped x86 timer work complete; no further test dispatch. Next complete Linux platform task, if within separately authorized ongoing scope, is native ARM64 client + ARM64 server per 2026-11-04 task-by-task rotation, never x86/ARM or QEMU-user. Windows timer, same-username timed multi-installation, timed inner TCP, Android, remote ICMP, exact TLS auth→first packet, CPU causality are NOT_RUN/NOT_QUALIFIED. 029 DNS / 030 CLI remain distinct module entrypoints.",
   "unverified": false,
   "last_tested_source": "ed80573fb3801e64814a2d38781c44ea8f3defac",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1223-SOURCEED805-X86-TIMED-SAME-PHYSICAL-THREE-MODES-REAL-UDP-PASS-20261105.json",
-    "docs/evidence/M0/PLAN028-H1221-USER-DIRECTED-SCOPED-CLOSEOUT-20261105.json",
-    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
+    "docs/evidence/M0/PLAN028-H1223-SOURCEED805-X86-TIMED-SAME-PHYSICAL-THREE-MODES-REAL-UDP-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",

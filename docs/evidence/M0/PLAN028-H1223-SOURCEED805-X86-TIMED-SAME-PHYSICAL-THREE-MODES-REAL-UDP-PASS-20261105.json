@@ -219,5 +219,25 @@
     "exact_TLS_auth_to_first_packet": "NOT_MEASURED",
     "CPU_causality": "NOT_PROVEN"
   },
-  "previous_source_scope": "H1221 SOURCE53c7 seven native Linux physical-change modes scoped closeout retained. Timer SOURCE8a803 2265 real UDP PASS; SOURCE08e75 enhancer bash syntax FAIL; only final SOURCEed805 2267/2267 enhanced native jobs PASS."
+  "previous_source_scope": "H1221 SOURCE53c7 seven native Linux physical-change modes scoped closeout retained. Timer SOURCE8a803 2265 real UDP PASS; SOURCE08e75 enhancer bash syntax FAIL; only final SOURCEed805 2267/2267 enhanced native jobs PASS.",
+  "result": "PASS",
+  "artifact_verified": true,
+  "artifact_review": {
+    "reviewer": "source-locked actual GitHub job artifacts locally downloaded and checked",
+    "source_sha": "ed80573fb3801e64814a2d38781c44ea8f3defac",
+    "reviewed_scenes": 3,
+    "checks": [
+      "all three GitHub artifact ZIP SHA256 equal upload job digest",
+      "ZIP CRC/testzip succeeded",
+      "exact 23 files per scene including 4 original client/server runtime logs",
+      "timed-evidence.json present and status PASS",
+      "same physical NIC/IP/MTU, exact generations 1-2-3 and old Stop 1-2",
+      "three real no-retry UDP streams with sent==received and authenticated per-generation lease readback"
+    ],
+    "checked_zip_sha256": [
+      null,
+      null,
+      null
+    ]
+  }
 }
