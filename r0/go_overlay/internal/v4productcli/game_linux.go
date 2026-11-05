@@ -946,47 +946,82 @@ func runGameMultiServer(
             coldKey,laneID,e:=lane.Cohort()
             if e!=nil{rejectLane(lane);continue}
             if group:=active[coldKey];group!=nil{
-                if coldKey.Lanes!=4||laneID<1||laneID>4||
-                    !group.product.MatchesProtectedGameFec(gameFec){
+                if coldKey.Lanes!=4||laneID<1||laneID>4{
                     rejectLane(lane)
                     continue
                 }
                 idx:=int(laneID)-1
-                old:=group.members[idx]
-                if old==nil{
+                previous:=group.members[idx]
+                if previous==nil{
                     rejectLane(lane)
                     continue
                 }
-                newPeer,e:=lane.DetachedPeer()
-                flow:=lane.Association().Flow()
-                if e!=nil||flow.ServerIP!=c.localIP.As4()||
-                    flow.ServerPort!=c.localPort{
+                // A new complete A→B physical Game4 generation shares the
+                // authenticated principal/tunnel/EPOCH with the old group.
+                // It is NOT a one-lane hot swap just because its first TLS
+                // lane arrives while the old cohort is still active.
+                // Distinguish using the independently observed real TCP
+                // source IP and the AUTHENTICATED cold record/MSS budgets,
+                // never a client-supplied unprotected path-change flag.
+                newFlow:=lane.Association().Flow()
+                oldFlow:=previous.Association().Flow()
+                oldCold,eOld:=previous.ColdSnapshot()
+                newCold,eNew:=lane.ColdSnapshot()
+                if eOld!=nil||eNew!=nil{
                     rejectLane(lane)
                     continue
                 }
-                if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
-                    rejectLane(lane)
-                    return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
-                }
-                if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
-                    // An indeterminate native swap must not leave a half
-                    // committed FEC/AEAD group running; only this group
-                    // is revoked, unrelated Normal/Game clients remain.
-                    if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
-                    delete(active,coldKey)
-                    rejectLane(lane)
+                oldCL,oldSL:=oldCold.RecordLimits()
+                newCL,newSL:=newCold.RecordLimits()
+                physicalGroupCandidate:=
+                    newFlow.ClientIP!=oldFlow.ClientIP||
+                    newFlow.ServerIP!=oldFlow.ServerIP||
+                    newFlow.ServerPort!=oldFlow.ServerPort||
+                    newCL!=oldCL||newSL!=oldSL
+                if physicalGroupCandidate{
+                    log.Printf("V4_PUBLIC_GAME_PHYSICAL_GROUP_CANDIDATE role=server lane=%d mode=authenticated_new_source_or_record_budget same_epoch=1 old_group_untouched=1",
+                        laneID)
+                    // Fall through into the EXISTING four-lane complete
+                    // cohort staging below. Only after all four original
+                    // protected TLS/M1 owners commit can the old GameAdapter
+                    // receive an exact Stop. One lane never retires it.
+                }else{
+                    if !group.product.MatchesProtectedGameFec(gameFec){
+                        rejectLane(lane)
+                        continue
+                    }
+                    newPeer,e:=lane.DetachedPeer()
+                    if e!=nil||newFlow.ServerIP!=c.localIP.As4()||
+                        newFlow.ServerPort!=c.localPort{
+                        rejectLane(lane)
+                        continue
+                    }
+                    if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
+                        rejectLane(lane)
+                        return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
+                    }
+                    if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
+                        // A possibly partially committed native crypto/RX
+                        // switch still fails closed: do not classify it as
+                        // a harmless candidate rejection.
+                        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_NATIVE_REKEY_FAILED role=server class=uncertain_native_or_stop lane=%d",
+                            laneID)
+                        if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
+                        delete(active,coldKey)
+                        rejectLane(lane)
+                        continue
+                    }
+                    delete(detached,previous.Association())
+                    forget(previous.Association())
+                    detached[lane.Association()]=newPeer
+                    group.members[idx]=lane
+                    group.peers[idx]=newPeer
+                    group.laneRotations[idx]++
+                    if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
+                        laneID,group.laneRotations[idx],newFlow.ClientPort,newFlow.ServerPort)
                     continue
                 }
-                delete(detached,old.Association())
-                forget(old.Association())
-                detached[lane.Association()]=newPeer
-                group.members[idx]=lane
-                group.peers[idx]=newPeer
-                group.laneRotations[idx]++
-                if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
-                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
-                    laneID,group.laneRotations[idx],flow.ClientPort,flow.ServerPort)
-                continue
             }
             key,complete,e:=stageOriginalAuthenticatedGameLane(
                 pending,lane,time.Now(),

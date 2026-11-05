@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1242",
+  "source_sha": "fd767e62c976fdf6e2e2e01f3d7bc3cdd1a00402",
+  "result": "FAIL_SCOPED_BUSINESS_CONTINUITY_DESPITE_CI_SUCCESS",
+  "artifact_verified": true,
+  "original_action_run_id": 42026936130,
+  "original_action_conclusion": "success",
+  "artifact_id": 13413374800,
+  "artifact_zip_sha256": "492f597750e03322980563f325085720ab3b7f330028937fa3e34963826e07f0",
+  "artifact_file_count": 21,
+  "artifact_zip_crc": "PASS",
+  "native": "Linux ARM64 client AND server original Go TLS443 + Rust M4, Game4 Fixed6 Bob and Normal Auto Carol, real physical Bob netem 120ms each direction",
+  "physical": {
+    "source_IP": [
+      "10.25.0.3",
+      "10.25.0.9"
+    ],
+    "link_MTU": [
+      1500,
+      1280
+    ],
+    "inner_OS_game4_MTU": [
+      1358,
+      1178
+    ]
+  },
+  "events": {
+    "hot_lane_due_ns": 1793881657564417500,
+    "physical_command_ns": 1793881657567232800,
+    "gen2_authenticated_M4_ready_ns": 1793881662468432000,
+    "bob_last_echo_ns": 1793881657706738400,
+    "due_to_physical_ms": 2.815338,
+    "physical_to_ready_ms": 4901.199,
+    "bob_last_echo_before_gen2_ready_ms": 4761.693
+  },
+  "real_no_app_retry_udp": {
+    "bob": {
+      "sent": 75,
+      "correct_received": 54,
+      "missing": 21,
+      "last_echo_before_authenticated_gen2_ready": true
+    },
+    "carol": {
+      "sent": 382,
+      "correct_received": 382,
+      "missing": 0
+    }
+  },
+  "observed_failure": "Original Go server STOPPED OLD Game4 reason=one-lane-native-rekey-failed while a full new SAME-EPOCH authenticated Game4 physical cohort was in flight. It misrouted first new physical source IPv4/record budget lane into hot single-lane Rust native replacement; unsafe premature server shutdown. Old client exact Stop and Gen2 READY happen later but Bob long-flow had no echo after Gen2 Ready.",
+  "false_positive_cause": "Weak test only required Bob last echo after physical command, not after Gen2 authenticated Ready or continuing 2s afterward; did not reject server early one-lane-native-rekey-failed.",
+  "next": "H1243 product routes authenticated new physical source IP/record MSS to old complete four-lane staging, not existing single-lane direct M4 replacement, preserving old until gen2 full M4 Ready. Native STRICT oracle tests post-READY genuine Bob UDP and server no early group Stop.",
+  "retained": [
+    "H1237 Game4 two-way 5pct netem real single-slot 16078/16078 PASS old same physical source",
+    "H1238 Windows native Go/OS notifier scoped PASS",
+    "H998 live same-socket physical MTU shrink FAIL"
+  ]
+}
