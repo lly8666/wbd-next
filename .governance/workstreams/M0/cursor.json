@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1214,
-  "checkpoint_sha": "bc5d73a8b302dca2be19717b5a7abc5bb20a4a69",
+  "sequence": 1215,
+  "checkpoint_sha": "6a1d269759b094b3b592d4fb933467ec1f9fb323",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1214 signed Windows original Fixed6 SOURCE3775 Action41938990570 real protected Go TLS/Rust and actual source4 .1→.9 M4 gens1→2, Win Rust Fixed6 applied2 Linux native shared M4 fixed6 receipts2, two real Wintun OS inner1375/default outer1460, new real Windows/Linux UDP increments12/11, old WAL Stop/owner cleanup and server native shared TUN final Stop observed. Overall FAIL strictly old H981 singleton MTU record / V4_PUBLIC_ACTUAL_PEER_SYN_MSS log not emitted by PLAN028 shared server, before final UDP/TCP suite. H1214 replace only scoped Fixed shared two-generation proof with genuine two Windows SYN+peer SYNACK/Go record budgets and two original server SYNACK/MTU_PREPARE, actual server/client native FEC6 receipts and OS MTU; retain legacy H981 branch unchanged for standalone. Re-trigger one signed Fixed6 Action [plan028-win-physical-fixed6]. Windows Auto/Game4off and x86 high30 separate ongoing.",
-  "why_now": "Artifacts source3775 native fixed show genuine first and second auth, OS applied, fixed6 M4, UDP increments and exact owner Stop. H981 fixed singleton required linpeer and `V4_PUBLIC_MTU role=server` which shared multi path does not output; false red cannot be fixed by weakening TLS validation. New shared case preserves real original TCP MSS and record offer cross-check plus M4 native FEC installed two, without asserting vanished log names or fake readbacks.",
+  "current_task": "H1215 precision fix H1214 test-only signed Windows Fixed6 shared two-gen original MSS+FEC6 regex source. Newly written raw Python regex patterns were double escaped `\\\\d` and `[^\\\\n]`, would never match genuine authenticated MSS/TLS receipt. Normalize exactly 26 backslash pairs in sole new `if mode==fixed and plan028_owned_switch` proof, leave old H981 and production unchanged. New signed Windows Fixed6 source Action auto triggered via [plan028-win-physical-fixed6]. Native Windows Auto source b315 Action41939489419 completed full success; Game4 Off source4ce Action41939815952 still in flight. H1213 x86 high30 sourcebc5 Action41940397723 overall FAIL inspect first evidence after this commit.",
+  "why_now": "Before expensive H1214 Windows native verdict, proactive immutable source inspection found raw Python regex literal double escaping in entirely new shared Fixed6 block. Correct only test parsing without changing packet/feature7/OS algorithm. Auto independent Windows sourceb315 now full Action success; x86 high30 latest Action needs narrow failure inspection.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1214 signed Fixed6 full Action, ensure one443, exact original Go TLS and OS two generations, real TCP/UDP and both owned Stop; collect Windows Auto/Game4off and x86 highest30 separate exact SOURCE. Any new actual product failure narrow and archive. Windows Game2 off/fixed remain, exact timing/CPU causality/remote ICMP/Android unmeasured, H998 failure preserved.",
+  "next_action": "Collect signed Windows Fixed6 H1215 rerun plus Windows Game4off source4ce; archive native Auto full source-specific evidence. Diagnose H1213 x86 high30 first failure and decide constrained test correction. Then Windows Game2 Off/Fixed6, native timing/CPU where possible; H998 original/ICMP/Android gaps maintained.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1214 signed Windows Fixed6 old H981 singleton MSS proof swapped only for real shared 2-generation SYN/SYNACK, protected record/FEC6 and OS readbacks, no downgrade of original Go TLS/AEAD. Prior SOURCE3775 full Action FAIL retained; new action launched."
+  "partial_summary": "H1215 correct 26 double-escaped regex spans in new shared-only Windows Fixed6 genuine two-generation MSS/record/FEC6 OS proof. Existing Auto signed Action full success; x86 high30 H1213 failed, diagnose exact first fault."
 }
