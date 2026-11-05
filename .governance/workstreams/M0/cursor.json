@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1241,
-  "checkpoint_sha": "9f0de221526cc8d48bbd8b74496af17033e89630",
+  "sequence": 1242,
+  "checkpoint_sha": "1c79d61c9e3b94c66bc2a8da779fdc212e85033f",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1241 PLAN028 focused highest-risk *true concurrency* native Linux ARM64 client+server original Go TLS/Rust Game4 Fixed6: sole 18s±3s one-selected-lane auto TLS rekey DUE while Bob's real physical original veth OS IPv4 source .3→.9 and MTU1500→1280 change, original supervisor authenticates fresh 4-lane Rust M4 generation2 before old1 exact Stop; unaffected Carol Normal Auto and Bob independently live no-application-retry TUN UDP while physical changes, three original users share server443. 120ms both physical directions deterministic handshake-in-flight window, kernel tc real delay (not fake Go packet pump). Only one representative scene, not repeated seven-mode matrix. SOURCE/candidate native ARM64 task NOT_RUN; H1237 x86 two-way 5pct single-lane and H1238 Windows six unit/OS callback scoped PASS retained; previous H998 same socket MTU shrink FAIL untouched.",
-  "why_now": "User grants discretion to skip already proven 7 mode and standard rotation tests. Highest-value unqualified intersection is Linux true Game4 independent single lane TLS reauth in flight when OS native source IPv4/MTU changes and existing full-group A→B wins, old Stop and healthy Normal are preserved.",
+  "current_task": "H1242 H1241 targeted native ARM64 Game4 selected lane in-flight vs physical source IPv4/MTU collision preflight had genuine test-only FAIL before product build, original generated shell cleanup anchor had doubled escaped Python literal backslash-n and did not match source; repair to correct embedded newline, retain strict due-before-READY gate. Native GO TLS/Rust task NOT_RUN until second Action.",
+  "why_now": "H1241 source Action42026614565 stopped in subsecond fixture-generator preflight, no Rust/Go build nor M4 IO occurred; correct test-only escaped pattern not relax product assertion.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Check H1241 ARM64 SOURCE build+single native Fixed6 scene: fixture-generator+heredoc preflight, exact true lane DUE before physical change and NOT previously READY, new authenticated original M4 cohort2 then old1 exact Stop, Bob/Carol actual no-retry UDP before+after OS source4/MTU readback and true original TLS/Stop; on any failure use full original Go/Rust process logs and patch race without relaxing identity/timeline check. Windows missing seven physical and exact 30pct TCP remain selective future tests; H998 fail retained.",
+  "next_action": "Run H1242 exact-source native ARM64 fixture preflight/build+real Game4 Fixed6 physical source/MTU overlap scene, verify 2 generation original TLS and old Stop, live Bob+Carol real no retry UDP. If additional fixture string drifts fix at preflight. H1237/H1238 scoped PASS remains.",
   "unverified": true,
   "last_tested_source": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1240 governance fixed source-specific H1237/H1238 mixed cursor evidence and both mandatory jobs PASS. H1241 skips prior seven-mode reruns and creates one focused native ARM64 Game4 Fixed6 single-slot TLS DUE+physical source IP & MTU collision with Normal unaffected and true no-retry UDP; NOT_RUN until Action. H1237 16078/16078 two-way5pct Game4 x86 and H1238 Win Go unit/owned OS callback PASS remain scoped."
+  "partial_summary": "H1241 source native workflow Action42026614565 FAIL_PREBUILD_FIXTURE_GEN only (literal \\n cleanup anchor mismatch), not a product regression. H1242 fixes one Python quote escape, same original Go TLS/Rust product code, single high-value ARM64 collision pending."
 }

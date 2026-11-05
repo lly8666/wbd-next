@@ -19,7 +19,7 @@ def sub(old,new,count=1):
     if s.count(old)!=count:raise AssertionError(("fixture drift",old[:120],s.count(old),count))
     s=s.replace(old,new,count)
 sub("for i in range(160):","for i in range(12000):")
-sub('  rm -rf "$TMP"\\n}', '''  mkdir -p fixed-kernel-result
+sub('  rm -rf "$TMP"\n}', '''  mkdir -p fixed-kernel-result
   for who in server alice bob carol echo;do
     if test -f "$TMP/$who.log";then
       cp "$TMP/$who.log" "fixed-kernel-result/h1241-real-runtime-$who.log"
