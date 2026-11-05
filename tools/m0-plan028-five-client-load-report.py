@@ -53,8 +53,20 @@ def netem_counters(path):
     found = {}
     for i in range(1, len(blocks), 3):
         who, direction, content = blocks[i:i+3]
-        match = re.search(r"\bdropped\s+(\d+)", content)
-        found.setdefault(who, {})[direction] = int(match.group(1)) if match else None
+        line = re.search(r"Sent\s+\d+\s+bytes\s+(\d+)\s+pkt\s+\(dropped\s+(\d+)", content)
+        limit = re.search(r"qdisc netem .*?\blimit\s+(\d+)", content)
+        if line:
+            sent, dropped = map(int, line.groups())
+            found.setdefault(who, {})[direction] = {
+                "sent_underlay_packets": sent,
+                "dropped_underlay_packets": dropped,
+                "observed_underlay_drop_fraction": round(
+                    dropped / (sent + dropped), 6) if (sent + dropped) else None,
+                "netem_qdisc_limit_packets": int(limit.group(1)) if limit else None,
+                "drop_counter_includes_random_loss_and_queue_overflow": True,
+            }
+        else:
+            found.setdefault(who, {})[direction] = None
     return found
 
 
@@ -109,6 +121,7 @@ def analyze(art, product_log):
         "tc_netem_before": net_before, "tc_netem_after": net_after,
         "shared_tun": product_counters(product_log),
         "process_cpu_rss": cpu,
+        "netem_qdisc_limit_intent": plan.get("netem_qdisc_limit_packets", "UNSPECIFIED"),
     }
     all_starts = set()
     agg = {phase: {"actual_tx_bytes": 0, "delivered_rx_bytes": 0,
@@ -130,10 +143,20 @@ def analyze(art, product_log):
             else:
                 tx, rx = server, client
             assert len(tx["stats"]["udp"]) == len(rx["stats"]["udp"]) == len(PHASES)
+        client_log = art / ("h1250-product-" + who + ".log")
+        client_owner = (product_counters(client_log) if client_log.exists()
+                        else {"status": "NOT_OBSERVED"})
         peer = {"config": spec, "directions": {}, "generator_errors": {},
-                "tc_actual_dropped_egress_packets": net_after.get(who, {}),
+                "tc_egress_counters": net_after.get(who, {}),
+                "client_shared_tun": client_owner,
                 "cpu": {key: cpu.get(key) for key in (
                     who, "s-" + who, "c-" + who)}}
+        if client_owner.get("queue_full_drops", 0) > 0:
+            result["alerts"].append({
+                "client": who, "class": "CLIENT_SHARED_TUN_QUEUE_OVERFLOW",
+                "queue_full_drops": client_owner["queue_full_drops"],
+                "note": "Direct product drop counter; cannot equate this to lost application UDP or a configured tc loss fraction.",
+            })
         for side, data in (("client", client), ("server", server)):
             peer["generator_errors"][side] = {
                 "errors": data["errors"], "socket_drops": data["socket_drops"],
@@ -189,7 +212,7 @@ def analyze(art, product_log):
                             "note": "Generator or transport backpressure; not proof of product packet loss.",
                             "actual_mbps": sent_rate, "target_mbps": requested,
                         })
-                    if proto == "udp" and actual and delivered < .65 * actual:
+                    if proto == "udp" and actual and delivered < .90 * actual:
                         result["alerts"].append({
                             "client": who, "direction": direction, "phase": name,
                             "protocol": proto, "class": "LOW_DELIVERED_FRACTION",
@@ -229,9 +252,21 @@ def analyze(art, product_log):
                         "phase": ph["name"], "class": "NO_UDP_BUSINESS_PROGRESS"})
         for direction in ("uplink", "downlink"):
             if spec["loss_pct"]:
-                count = net_after.get(who, {}).get(direction)
-                assert isinstance(count, int) and count > 0, (
+                counter = net_after.get(who, {}).get(direction)
+                assert isinstance(counter, dict) and counter["dropped_underlay_packets"] > 0, (
                     who, direction, "physical netem loss not actually observed", net_after)
+                if plan.get("netem_qdisc_limit_packets"):
+                    assert counter["netem_qdisc_limit_packets"] == plan["netem_qdisc_limit_packets"], (
+                        who, direction, "wrong installed netem queue limit", counter)
+                fraction = counter["observed_underlay_drop_fraction"]
+                if fraction is not None and fraction > (spec["loss_pct"] / 100) * 1.4 + .03:
+                    result["alerts"].append({
+                        "client": who, "direction": direction,
+                        "class": "PHYSICAL_QDISC_DROPS_EXCEED_RANDOM_LOSS",
+                        "observed_underlay_drop_fraction": fraction,
+                        "configured_random_loss_pct": spec["loss_pct"],
+                        "note": "tc dropped includes random loss plus kernel qdisc capacity overflow; cannot attribute excess to Rust.",
+                    })
         result["clients"][who] = peer
     assert len(all_starts) == 1, "non-synchronous business start"
     for name, seconds, _ in PHASES:
@@ -242,6 +277,22 @@ def analyze(art, product_log):
             vals["observed_udp_rx_packets"] / vals["observed_udp_tx_packets"], 6)
         vals["loss_interpretation"] = "INCLUDES_REAL_TC_INJECTION;_NOT_CAUSAL_PRODUCT_LOSS"
     result["aggregate"] = agg
+    if result["shared_tun"].get("queue_full_drops", 0) > 0:
+        result["alerts"].append({
+            "class": "SERVER_SHARED_TUN_QUEUE_OVERFLOW",
+            "queue_full_drops": result["shared_tun"]["queue_full_drops"],
+            "backpressure_events": result["shared_tun"].get("backpressure"),
+            "scope": "server shared TUN aggregate, not one specific client",
+        })
+    for name, duration, scale in PHASES:
+        expected = sum(2*spec["c2s_target_mbps"]*scale for spec in plan["clients"])
+        observed = agg[name]["actual_sent_mbps_both_directions"]
+        if expected > 0 and observed < .9*expected:
+            result["alerts"].append({
+                "phase": name, "class": "AGGREGATE_OFFERED_RATE_SHORTFALL",
+                "target_mbps": round(expected, 3), "actual_mbps": observed,
+                "note": "The Python load generator or downstream transport could not supply the full target; no product ceiling inferred without isolation.",
+            })
     result["alert_count"] = len(result["alerts"])
     result["performance_verdict"] = ("BOTTLENECK_OR_LOSS_ALERTS_PRESENT"
                                      if result["alerts"] else

@@ -1,0 +1,13 @@
+# PLAN028 H1251 — isolate netem default-queue confound in 370s five-client load
+
+H1250 exact SOURCE 2f87ecedf3edeb747ffa5a32736aa2245f908484, Action42075242750 SUCCESS with 370s all five native original Go TLS/Rust clients, ZIP13437439233 SHA256 4b5a2dedf99080b00f7e74beef411734c8f7719cba0dd914b195b999cac29a35 (CRC PASS). Steady 240s 189.2368Mbps actual sent /184.7428 received, overload 60s 219.7028/204.9264. All ten app endpoints completed, no scripted UDP retries. **Not a performance PASS**: server shared TUN queue_full_drops130255, backpressure327928; Game4 Dave client queue_full_drops65625, sustained DL15.184/17.805 Mbps, overloaded DL14.936/22.508 Mbps, delivered-only one-way p99273.4ms. CPU server averaged92.612% of one core across 431.5s incl setup; 95MiB RSS peak. Original reporter zero alerts was a reporter coverage miss.
+
+**Network fixture confound:** Dave configured native netem 15% random loss +100ms each direction, but default qdisc `limit 1000` and Game4 four-lane/FEC pressure caused underlay qdisc total dropped/(sent+dropped) of about **50.13% uplink /44.86% downlink**, much higher than intended 15%. Compare Bob1%, Carol5%, Erin30% near their configured physical loss. The `tc dropped` counter includes intended random loss **plus** kernel netem capacity/queue overflow. Do NOT attribute Dave's 66.866% downstream application delivery or full server shared-TUN queue to Rust alone.
+
+H1251 control changes **test tooling only**: both directional physical netem egress devices get `limit 10000` explicitly while retaining all five modes/MTUs/ciphers, same traffic.py packet sizes and rates, true 370s duration, 10 independent endpoints and all other loss/delay parameters. Reporter records actual qdisc Sent/drop fractions and installed limit, emits server+per-client Rust shared-TUN queue overflow alerts, flags physical qdisc drops above expected random loss, raises per-client UDP delivery warning to below90%, and notes insufficient offered generator rate. Alerts remain diagnostic, never auto-PASS/FAIL commercial performance.
+
+The new Action must compare native Game4 Dave delivery, 30-second time windows, qdisc actual random-vs-overflow, server and Dave queue counters, and CPU. SOURCE differs only in test scripts+governance; compare actual compiled Go/Rust binary SHA256 against H1250 artifact when making causal claims. Preserve H1250 observations and H998 previous same-socket MTU failure.
+
+```feature-impact
+{"kind":"none","reason":"Test-only netem capacity control, richer performance diagnostics and source-scoped evidence; no product runtime, wire, FEC, MTU or crypto changes."}
+```

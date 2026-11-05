@@ -223,6 +223,7 @@ def main():
             "application_load_seconds": 370, "drain_seconds": 10,
             "clients": [],
             "loss_model": "two physical veth egress qdiscs each client; no artificial app drops",
+            "netem_qdisc_limit_packets": 10000,
         }
         for i, who in enumerate(NAMES):
             cfg = {
@@ -292,11 +293,11 @@ def main():
         for i in range(1, 5):
             args = ["tc", "qdisc", "replace", "dev", client_nics[i],
                     "root", "netem", "delay", str(DELAY[i]) + "ms",
-                    "loss", str(LOSS[i]) + "%"]
+                    "loss", str(LOSS[i]) + "%", "limit", "10000"]
             run("sudo", "-n", "ip", "netns", "exec", namespaces[i], *args)
             run("sudo", "-n", "tc", "qdisc", "replace", "dev", host_nics[i],
                 "root", "netem", "delay", str(DELAY[i]) + "ms",
-                "loss", str(LOSS[i]) + "%")
+                "loss", str(LOSS[i]) + "%", "limit", "10000")
         def qdisc(stage):
             rows = []
             for i, who in enumerate(NAMES):
@@ -332,6 +333,11 @@ def main():
         run("sudo", "-n", "kill", "-TERM",
             (tmp / "server.pid").read_text().strip(), check=False)
         ready(serverlog, "V4_PUBLIC_SHARED_TUN_STOP generation=", 35)
+        # Product Stop counters are owned by each original Go/Rust process.
+        # Copy now, before the report, to expose per-client TUN queue drops.
+        for who in ("server",) + NAMES:
+            log = tmp / (who + ".log")
+            (out / ("h1250-product-" + who + ".log")).write_bytes(log.read_bytes()[-1500000:])
         run("python3", str(workspace / "tools/m0-plan028-five-client-load-report.py"),
             "--art", str(out), "--product-log", str(serverlog),
             "--output", str(out / "h1250-five-client-report.json"))

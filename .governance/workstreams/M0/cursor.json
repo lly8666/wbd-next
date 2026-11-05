@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1250,
-  "checkpoint_sha": "afb31e9ce248fdae1eeb219144c1616c2f3bd77c",
+  "sequence": 1251,
+  "checkpoint_sha": "2f87ecedf3edeb747ffa5a32736aa2245f908484",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1250 user-requested sustained 5-client original Go TLS/Rust native TUN performance bottleneck matrix: one original protected shared server443, five independent leased clients NormalOff/NormalAuto/Game2Off/Game4Fixed6/NormalFixed6, modes+ciphers+outer1460/1280 distinct, 0/1/5/15/30% true symmetric physical netem loss and RTT0/30/100/200/250ms. Ten real UDP/TCP endpoints synchronized; 10s warmup+60s initial+240s full+60s overload=370s loaded plus10s drain. Capture true sender/receiver throughput, loss, p99, backlog counters, qdisc drops, CPU/RSS and per-client fairness. Candidate workflow added on main push; no measurements until exact SOURCE Actions pass.",
-  "why_now": "User explicitly requested >5-minute simultaneous multi-client heavy load under diverse per-client loss/config to find current-program bottlenecks; H1247 bounded TUN queue correctness unit is insufficient as a high-rate native/CPU qualification.",
+  "current_task": "H1251 controlled same-370s five-client native original TLS/Rust load retest after H1250 measured server TUN queue full130255 and Game4 at15% loss/100ms downlink 66.866% overloaded, but default tc netem limit1000 caused 45-50% actual underlay qdisc loss. Change ONLY test qdisc limit to10000 and reporter queue/full/actual-qdisc alerts; retain all modes/rates/loss/delays, recompile current SOURCE and rerun. H1250 result archived, not silently declared performance PASS.",
+  "why_now": "User asks to identify new program bottlenecks, and first 370s real action found severe Game4 degradation plus true server shared TUN overflow, but a saturated default tc-netem limit1000 confounded attribution. A bounded control isolates physical qdisc artificial queue overflow before touching product scheduling.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Inspect only H1250 native x86/x86 one-SOURCE Action and download report/manifest/artifacts. If build/fixture fails, repair exact cause, keep FAIL; if completed, report per-client initial/steady/overload throughput, physical qdisc loss, packet delivery, 30-second trends, shared-TUN queue full/age, CPU/RSS and any genuine starvation separately from generator bottlenecks. No product optimizations until evidence identifies bottleneck.",
+  "next_action": "Observe exactly one H1251 same native 370s Action (push-triggered), verify original Go+Rust manifest hashes and true qdisc 10000 readback; download ZIP, inspect CRC and all per-client phases, kernel qdisc intended vs observed losses, server/client shared TUN queue counters, generator sent-to-target, 30s throughput stability, CPU/RSS. Compare to H1250 without promoting across SOURCE or claiming causal CPU gain.",
   "unverified": true,
-  "last_tested_source": "3b40388c0a1c9fa6d6d19d3368e6e9f5aafd100a",
+  "last_tested_source": "2f87ecedf3edeb747ffa5a32736aa2245f908484",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1247-SOURCE3B40-X86-SHARED-TUN-BACKLOG-RECOVERY-PASS-20261106.json"
+    "docs/evidence/M0/PLAN028-H1250-SOURCE2F87-FIVE-CLIENT-370S-DIAGNOSTIC-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1250 native product stress scenario designed and CI implementation being submitted; 5 authenticated clients, server shared443, 370s actual simultaneous 2-way traffic with 0-30% netem and independent normal/game/FEC/MTU. SOURCE-specific outcome pending. H1247 queue A blocked/recovered x86 unit 4/4 PASS at 3b40388 and prior PLAN028/H998 scope retained."
+  "partial_summary": "H1250 SOURCE2f87 original native x86 5-client 370s diagnostic complete: steady 189.24 sent/184.74 received Mbps; overload219.70/204.93; Dave Game4 15% configured overloaded downlink 66.866% delivered and server shared TUN full130255, client Dave full65625. But tc default netem limit1000 actually dropped 45-50% Dave underlay, so root-cause attribution CONFOUNDED. H1251 fixture-only netem limit10000 control + queue alerts underway; H1247 4/4 recovery unit PASS and H998 old-socket MTU FAIL retained."
 }

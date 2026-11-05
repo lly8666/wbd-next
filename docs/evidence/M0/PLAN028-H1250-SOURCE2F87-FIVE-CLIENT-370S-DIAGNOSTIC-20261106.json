@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1250",
+  "source_sha": "2f87ecedf3edeb747ffa5a32736aa2245f908484",
+  "status": "DIAGNOSTIC_COMPLETE_WITH_BOTTLENECK_AND_NETEM_QDISC_CONFOUND",
+  "scope": "native Linux x86_64 one-host 6 network namespaces, 5 independent Go TLS authenticated original protected clients, one server TCP443/shared Rust TUN, simultaneous real UDP and A/B real TCP",
+  "action_run_id": 42075242750,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42075242750",
+  "job_id": 127413590668,
+  "job_conclusion": "success",
+  "duration_offered_seconds": 370,
+  "stress_seconds": 360,
+  "drain_seconds": 10,
+  "artifact_id": 13437439233,
+  "artifact_name": "plan028-h1250-five-client-370s",
+  "artifact_zip_sha256": "4b5a2dedf99080b00f7e74beef411734c8f7719cba0dd914b195b999cac29a35",
+  "artifact_zip_crc": "PASS",
+  "artifact_entry_count": 56,
+  "loss_percent_by_client": {
+    "alice": 0,
+    "bob": 1,
+    "carol": 5,
+    "dave": 15,
+    "erin": 30
+  },
+  "delay_one_way_ms_by_client": {
+    "alice": 0,
+    "bob": 15,
+    "carol": 50,
+    "dave": 100,
+    "erin": 125
+  },
+  "exact_phases": [
+    {
+      "name": "warmup",
+      "seconds": 10,
+      "application_sent_mbps": 57.602,
+      "delivered_mbps": 57.5498
+    },
+    {
+      "name": "first_wave",
+      "seconds": 60,
+      "application_sent_mbps": 115.1998,
+      "delivered_mbps": 115.0449
+    },
+    {
+      "name": "sustained",
+      "seconds": 240,
+      "application_sent_mbps": 189.2368,
+      "delivered_mbps": 184.7428,
+      "observed_udp_delivery_fraction": 0.975248
+    },
+    {
+      "name": "overload",
+      "seconds": 60,
+      "application_sent_mbps": 219.7028,
+      "delivered_mbps": 204.9264,
+      "observed_udp_delivery_fraction": 0.927845
+    }
+  ],
+  "server_shared_rust_tun_stop": {
+    "routed": 5148159,
+    "unrouted": 0,
+    "backpressure_events": 327928,
+    "queue_full_drops": 130255,
+    "queue_age_drops": 0,
+    "retired_drops": 0
+  },
+  "client_shared_tun_queue_full_drops": {
+    "alice": 507,
+    "bob": 259,
+    "carol": 91,
+    "dave": 65625,
+    "erin": 103
+  },
+  "game4_dave_15pct": {
+    "mode": "game4 fixed6 four authenticated original TLS lanes",
+    "sustained_uplink_offered_mbps": 17.927,
+    "sustained_uplink_received_mbps": 16.341,
+    "sustained_downlink_offered_mbps": 17.805,
+    "sustained_downlink_received_mbps": 15.184,
+    "overload_uplink_offered_mbps": 22.888,
+    "overload_uplink_received_mbps": 16.284,
+    "overload_downlink_offered_mbps": 22.508,
+    "overload_downlink_received_mbps": 14.936,
+    "overload_downlink_application_udp_unique_delivery_fraction": 0.66866,
+    "sustained_downlink_delivered_only_latency_p99_ms": 266.4,
+    "overload_downlink_delivered_only_latency_p99_ms": 273.4
+  },
+  "actual_underlay_netem_qdisc": {
+    "configured_queue_limit_packets": 1000,
+    "excess_loss_makes_game4_product_loss_attribution": "CONFOUNDED_BY_TC_QDISC_OVERFLOW",
+    "bob_1pct": {
+      "up_sent": 1658369,
+      "up_dropped": 16711,
+      "down_sent": 1680783,
+      "down_dropped": 16979
+    },
+    "carol_5pct": {
+      "up_sent": 1897862,
+      "up_dropped": 100272,
+      "down_sent": 1893006,
+      "down_dropped": 99680
+    },
+    "dave_15pct": {
+      "up_sent": 3439432,
+      "up_dropped": 3457883,
+      "down_sent": 3425462,
+      "down_dropped": 2786605,
+      "total_underlay_drop_fraction_up": 0.5013,
+      "total_underlay_drop_fraction_down": 0.4486
+    },
+    "erin_30pct": {
+      "up_sent": 1436762,
+      "up_dropped": 616636,
+      "down_sent": 1410112,
+      "down_dropped": 604445
+    },
+    "caveat": "tc dropped includes intended random netem drops and netem over-capacity; observed 45-50% is NOT equivalent to only configured 15% or solely product loss."
+  },
+  "server_average_cpu_percent_of_one_core_431s_including_setup": 92.612,
+  "server_rss_peak_kib": 95268,
+  "initial_oracle_alert_count": 0,
+  "initial_oracle_caveat": "H1250 reporter had lenient <65% unique-drop cutoff and omitted shared-TUN queue overflow/netem drop excess alerts. Zero alert is not evidence of zero performance bottleneck. H1251 updates reporter.",
+  "next_control": "same 370s matrix with netem queue limit 10000 and per-client/server queue-overflow alerts; no product runtime change",
+  "limitations": [
+    "One x86 host with kernel namespaces; not external multi-host physical throughput or CPU-causal A/B.",
+    "High actual netem drop at Dave means cannot attribute 66.9% application delivery to product alone.",
+    "All success metrics are scoped to this exact SOURCE and action artifacts; no all-platform release PASS.",
+    "PLAN027A H998 original in-place MTU shrink FAIL remains historical and unrelated."
+  ]
+}
