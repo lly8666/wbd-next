@@ -8,7 +8,7 @@
 - 测试与feature状态：目前 **CODE_CANDIDATE / NOT_RUN**；等待同SOURCE原生Action真实产物才更新验证资格。
 
 ```feature-impact
-{"kind":"added","ids":["original-lane-rotation-jitter"],"reason":"User explicitly wants longer randomized timer and seven authenticated mode tests, with real per-lane group identity evidence and honest independent single-lane limitation."}
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"User explicitly wants longer randomized timer and seven authenticated mode tests, with real per-lane group identity evidence and honest independent single-lane limitation."}
 ```
 
 ## H1227 CI workflow syntax correction
@@ -39,3 +39,6 @@ Action [41969472751](https://github.com/lly8666/wbd-next/actions/runs/4196947275
 ```feature-impact
 {"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"H1230 one exact native source all seven genuine long randomized 4-group rotations PASS with original TLS/Rust and raw 7 artifacts; registered main_development_reason, real UDP one miss and independent Game4 single-lane NOT_IMPLEMENTED scope retained."}
 ```
+
+## H1230A feature catalog schema correction
+Current feature catalog accepts `kind=updated`/`none` for changed work; initial H1226 note used `kind=added` as human semantics for new feature, causing the H1230 governance Feature catalog failure. Reclassified note as `updated`, no product/fixture/evidence contents changed, native H1230 Action PASS remains exact SOURCE0cda.
