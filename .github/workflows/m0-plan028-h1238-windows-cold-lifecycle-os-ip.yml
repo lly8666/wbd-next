@@ -1,0 +1,246 @@
+name: M0 PLAN028 H1238 native Windows cold-path race and test-owned physical IPv4 notifier
+run-name: PLAN028 H1238 Win six real Go TLS lifecycle tests plus owned NIC native IPv4 callback
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1238-windows-cold-lifecycle-os-ip.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-go-windows-cold-unit:
+    runs-on: windows-2022
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble pinned original Go and exact Windows cold owner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @'
+          import pathlib,os,json,subprocess,hashlib
+          root=pathlib.Path.cwd();sha=os.environ["GITHUB_SHA"]
+          original="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert subprocess.check_output(["git","-C","legacy","rev-parse","HEAD"],text=True).strip()==original
+          m=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text(encoding="utf-8"))
+          assert m["legacy_source"]==original
+          gitblob=lambda b:hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for op in m["operations"]:
+              if op["kind"]=="replace":
+                  raw=subprocess.check_output(["git","-C","legacy","show",original+":"+op["path"]])
+                  assert gitblob(raw)==op["original_blob"],op["path"]
+                  destination=root/"legacy"/op["path"]
+                  assert destination.is_file(),op["path"]
+                  destination.write_bytes(raw)
+              if op.get("overlay_path"):
+                  raw=subprocess.check_output(["git","show",sha+":"+op["overlay_path"]])
+                  assert gitblob(raw)==op["result_blob"],op["overlay_path"]
+          print("PLAN028_WINDOWS_COLD_TEST_SOURCE_MANIFEST_VERIFIED")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'Go source mismatch'}
+          & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
+          if ($LASTEXITCODE -ne 0) {throw 'Go assembly failed'}
+          @'
+          import pathlib,os,subprocess
+          root=pathlib.Path.cwd();sha=os.environ["GITHUB_SHA"]
+          for part,names in (
+              ("realityfront",("admission_v4.go","bridge_v4_windows_private_owner.go",
+                  "bridge_v4_windows_game_group.go","bridge_v4_windows_game_server_group.go",
+                  "bridge_v4_windows_fec2_owner.go","bridge_v4_windows_wintun_lease.go",
+                  "bridge_v4_windows_scoped_client.go")),
+              ("windowsownerlease",("created_wintun_windows.go","scoped_original_tls_native_wintun_windows.go"))):
+              dest=root/"legacy/internal"/part
+              dest.mkdir(parents=True,exist_ok=True)
+              for name in names:
+                  p="r0/go_overlay/internal/"+part+"/"+name
+                  raw=subprocess.check_output(["git","show",sha+":"+p])
+                  output=dest/name
+                  if output.exists():
+                      assert name=="admission_v4.go" and output.read_bytes()==raw,p
+                  else: output.write_bytes(raw)
+          print("PLAN028_WINDOWS_COLD_UNIT_ASSEMBLY_READY")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) {throw 'Go original bridge install failed'}
+      - name: Run six original Windows cold path generation and recovery authorization tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run '^(TestM0PLAN028NativeWindowsIPv4CallbackCoalescer|TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4|TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient|TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts|TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject|TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth)$' ./cmd/wbd-client 2>&1 | Tee-Object -FilePath ../result/win-cold-go-unit.log
+            if ($LASTEXITCODE -ne 0) {throw 'original Go native path-generation unit failed'}
+          } finally {Pop-Location}
+          $log=Get-Content result/win-cold-go-unit.log -Raw
+          $names=@('TestM0PLAN028NativeWindowsIPv4CallbackCoalescer',
+                   'TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4',
+                   'TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient',
+                   'TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts',
+                   'TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject',
+                   'TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth')
+          foreach($test in $names){
+            if($log -notmatch ('--- PASS: '+[regex]::Escape($test))) {
+              throw ('Windows original Go test was not actually run: '+$test)
+            }
+          }
+          Write-Output 'M0_PLAN028_WINDOWS_NATIVE_IPV4_COLD_TLS_RETRY_AUTH_BOUNDARY_UNIT_PASS tests=6'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-win-cold-unit-${{ github.run_id }}
+          path: result/
+          if-no-files-found: warn
+          retention-days: 14
+  windows-native-owned-nic-source:
+    runs-on: windows-2025
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real Windows native route/IPv4 callbacks for owned internal NIC, no product grant
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force -Path result/plan028-win-path | Out-Null
+          $result=[ordered]@{
+            scope='REAL_WIN_NATIVE_HYPERV_OWNED_NETWORK_EVENT_ONLY_NOT_NPCAP_PRODUCT'
+            source=$env:GITHUB_SHA
+            status='NOT_RUN'
+            test_owned_nic=$null
+            selected_source_before=$null
+            selected_source_after=$null
+            native_addr_events=0
+            native_route_events=0
+            tls_authenticated='NOT_RUN'
+            npcap_rebound='NOT_RUN'
+            rust_stop='NOT_RUN'
+            cpu_p99='NOT_MEASURED'
+          }
+          $name='WBD-P028-'+$env:GITHUB_RUN_ID
+          $sw=$null
+          $listener=$null
+          try {
+            if (-not (Get-Command New-VMSwitch -ErrorAction SilentlyContinue)) {
+              $result.status='NOT_RUN_HOST_NO_HYPERV_SWITCH_CMD'
+            } else {
+              $id=[Security.Principal.WindowsIdentity]::GetCurrent()
+              if (-not ([Security.Principal.WindowsPrincipal]$id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                $result.status='NOT_RUN_ADMIN_UNAVAILABLE'
+              } else {
+                # Safe: isolated Hyper-V INTERNAL adapter, never runner's uplink,
+                # management default route, foreign source IP or whole machine DNS.
+                $sw=New-VMSwitch -Name $name -SwitchType Internal -ErrorAction Stop
+                $iface=$null
+                for ($i=0;$i -lt 40;$i++) {
+                  $iface=@(Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -eq ('vEthernet ('+$name+')') -and $_.Status -eq 'Up' }) |
+                    Select-Object -First 1
+                  if ($iface) {break}
+                  Start-Sleep -Milliseconds 100
+                }
+                if (-not $iface) {throw 'owned HyperV internal adapter not readable'}
+                $idx=[uint32]$iface[0].InterfaceIndex
+                $defaults=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop)
+                if (@($defaults | Where-Object {$_.InterfaceIndex -eq $idx}).Count -ne 0) {
+                  throw 'owned interface unexpectedly used as runner management default; refuse'
+                }
+                $result.test_owned_nic=[string]$iface[0].Name
+                New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress '198.18.246.1' -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop | Out-Null
+                # Windows can retain a tentative state after New-NetIPAddress.
+                # Compare ONLY the actual selected OS route on our internal
+                # adapter; never silently turn a source-selection miss into PASS.
+                $selected=@()
+                for ($attempt=0;$attempt -lt 50;$attempt++) {
+                  $sourceRoute=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop)
+                  $selected=@($sourceRoute | Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.1'})
+                  if ($selected.Count -gt 0) {break}
+                  Start-Sleep -Milliseconds 100
+                }
+                $result.pre_route_items=@($sourceRoute | Select-Object IPAddress,InterfaceIndex,InterfaceAlias,DestinationPrefix,AddressState,SkipAsSource)
+                $result.pre_owned_ip=@(Get-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 | Select-Object IPAddress,AddressState,SkipAsSource)
+                if (-not $selected) {throw 'Windows GetBestRoute source before change is not owned interface IPv4; native OS receipt saved'}
+                $result.selected_source_before='198.18.246.1'
+                Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          using System.Threading;
+          public sealed class WbdP028NativeNotify : IDisposable {
+            public delegate void Notification(IntPtr context, IntPtr row, int type);
+            [DllImport("iphlpapi.dll")] static extern uint NotifyRouteChange2(ushort family, Notification cb, IntPtr context, bool initial, out IntPtr handle);
+            [DllImport("iphlpapi.dll")] static extern uint NotifyUnicastIpAddressChange(ushort family, Notification cb, IntPtr context, bool initial, out IntPtr handle);
+            [DllImport("iphlpapi.dll")] static extern uint CancelMibChangeNotify2(IntPtr handle);
+            Notification route,addr;
+            IntPtr rh, ah;
+            int routes, addrs;
+            public int Routes {get {return Interlocked.CompareExchange(ref routes,0,0);}}
+            public int Addresses {get {return Interlocked.CompareExchange(ref addrs,0,0);}}
+            public WbdP028NativeNotify() {
+              route=(a,b,c)=>Interlocked.Increment(ref routes);
+              addr=(a,b,c)=>Interlocked.Increment(ref addrs);
+              uint rc=NotifyRouteChange2(2,route,IntPtr.Zero,false,out rh);
+              if(rc!=0) throw new Exception("route subscription failed "+rc);
+              rc=NotifyUnicastIpAddressChange(2,addr,IntPtr.Zero,false,out ah);
+              if(rc!=0) {CancelMibChangeNotify2(rh);rh=IntPtr.Zero;throw new Exception("address subscription failed "+rc);}
+            }
+            public void Dispose() {
+              if(rh!=IntPtr.Zero) {CancelMibChangeNotify2(rh);rh=IntPtr.Zero;}
+              if(ah!=IntPtr.Zero) {CancelMibChangeNotify2(ah);ah=IntPtr.Zero;}
+              GC.KeepAlive(route);GC.KeepAlive(addr);
+            }
+          }
+          '@ -ErrorAction Stop
+                $listener=[WbdP028NativeNotify]::new()
+                # Actual OS mutation, not synthetic callback: add a new source,
+                # mark old SkipAsSource on ONLY our isolated test-owned NIC.
+                New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress '198.18.246.9' -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop | Out-Null
+                Set-NetIPAddress -InterfaceIndex $idx -IPAddress '198.18.246.1' -SkipAsSource $true -ErrorAction Stop
+                $changeAt=[DateTimeOffset]::UtcNow
+                $selectedAfter=$null
+                for ($i=0;$i -lt 35;$i++) {
+                  try {
+                    $cand=@(Find-NetRoute -RemoteIPAddress '198.18.246.2' -ErrorAction Stop |
+                      Where-Object {$_.InterfaceIndex -eq $idx -and $_.IPAddress -eq '198.18.246.9'})
+                  } catch {
+                    # DAD/route convergence can be temporarily unreachable.
+                    # Never grant PASS for a failed physical OS readback.
+                    $cand=@()
+                    $result.last_transient_route_error=$_.Exception.Message
+                  }
+                  if ($cand.Count -gt 0 -and $listener.Addresses -gt 0) {$selectedAfter=$cand[0];break}
+                  Start-Sleep -Milliseconds 100
+                }
+                $result.native_addr_events=$listener.Addresses
+                $result.native_route_events=$listener.Routes
+                $result.post_owned_ip=@(Get-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 |
+                  Select-Object IPAddress,AddressState,SkipAsSource)
+                $result.post_owned_routes=@(Get-NetRoute -InterfaceIndex $idx -AddressFamily IPv4 |
+                  Select-Object DestinationPrefix,InterfaceIndex,NextHop,State)
+                if (-not $selectedAfter) {throw 'new source4 not OS selected or native IPv4 notification absent; receipt saved'}
+                $result.selected_source_after='198.18.246.9'
+                $result.os_mutation_to_readback_ms=[math]::Round(([DateTimeOffset]::UtcNow-$changeAt).TotalMilliseconds,2)
+                $result.status='PASS_WINDOWS_NATIVE_OWNED_INTERFACE_IPV4_NOTIFY_AND_SOURCE_SELECTION_ONLY'
+                Write-Output 'M0_PLAN028_WINDOWS_REAL_OS_NATIVE_IPV4_NOTIFICATION_SOURCE4_READBACK_PRELIGHT_PASS'
+              }
+            }
+          } finally {
+            if ($listener) {$listener.Dispose()}
+            if ($sw) {Remove-VMSwitch -Name $name -Force -ErrorAction Stop}
+            $result | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 result/plan028-win-path/owned-nic-native-notification.json
+            Get-Content result/plan028-win-path/owned-nic-native-notification.json
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-win-owned-native-path-${{ github.run_id }}
+          path: result/plan028-win-path/
+          if-no-files-found: warn
+          retention-days: 14
