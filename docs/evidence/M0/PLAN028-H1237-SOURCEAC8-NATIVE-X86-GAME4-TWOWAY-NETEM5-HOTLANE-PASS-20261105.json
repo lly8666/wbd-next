@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1237",
+  "source_sha": "ac8b869aa7353d08249db8374930990470434acd",
+  "result": "PASS",
+  "artifact_verified": true,
+  "run_id": 42009294398,
+  "build_job": "PASS",
+  "off_job": "PASS",
+  "fixed6_job": "PASS",
+  "native": "Linux x86_64 client + server original Go TLS443 Rust M4",
+  "method": "Three authenticated Alice Game2/Bob Game4/Carol Normal Auto share TUN; Bob veth both directions Linux tc netem 5pct; authentic game4 slot 1,2,3,4 twice, unchanged 3 other original TLS lanes and same Rust GameAdapter/FEC, failed cold TLS candidate preserves old owner; original 18s +/-3s stagger; no-app-retry UDP and original network/MTU before/after",
+  "scenes": [
+    {
+      "mode": "game4-off",
+      "artifact_id": 13405164945,
+      "sha256": "98accf6e1773fdc85910a6de653d9253081c17b677de4e467badb9f3c9e8dee5",
+      "files": 25,
+      "crc_pass": true,
+      "authenticated_real_slot_swaps": 8,
+      "failed_preM4_cold_tls_retry": 3,
+      "original_TLS_attempts": 11,
+      "alice": [
+        2715,
+        2715
+      ],
+      "bob": [
+        2698,
+        2698
+      ],
+      "carol": [
+        2715,
+        2715
+      ],
+      "bob_rtt_received_p99_ms": 8.489718,
+      "bob_success_gap_max_ms": 155.17125,
+      "tc_dropped_bob_to_server": 586,
+      "tc_dropped_server_to_bob": 533
+    },
+    {
+      "mode": "game4-fixed6",
+      "artifact_id": 13405714304,
+      "sha256": "7ee2ef85933715bfc16910ec173060f0fd6c35d91e93a147c6494092d279281d",
+      "files": 25,
+      "crc_pass": true,
+      "authenticated_real_slot_swaps": 8,
+      "failed_preM4_cold_tls_retry": 3,
+      "original_TLS_attempts": 11,
+      "alice": [
+        2652,
+        2652
+      ],
+      "bob": [
+        2646,
+        2646
+      ],
+      "carol": [
+        2652,
+        2652
+      ],
+      "bob_rtt_received_p99_ms": 2.99625,
+      "bob_success_gap_max_ms": 120.12584,
+      "tc_dropped_bob_to_server": 1677,
+      "tc_dropped_server_to_bob": 1702
+    }
+  ],
+  "aggregate": {
+    "app_no_retry_udp_sent": 16078,
+    "app_no_retry_udp_received": 16078,
+    "successful_independent_lane_hot_swaps": 16,
+    "preM4_failed_candidate_safe_retries": 6,
+    "Health90_group_retirement_count": 0,
+    "game_adapter_full_rebuild_count": 0,
+    "authenticated_server_client_new_port_correspondence": true,
+    "outer_ipv4_user_default_MTU": 1460,
+    "physical_route_IP_ifindex_MTU_unchanged": true
+  },
+  "limits": [
+    "Not external WAN, physical WiFi, Windows or Android. No controlled causal CPU claim.",
+    "Game4 OFF has physical copies, so .95² is single-copy physical baseline, not guaranteed expected final UDP delivery.",
+    "Prior H1234 genuine netem5 product FAIL on older SOURCE retained; H1235/H1236 false CI oracle FAIL historically retained; H998 same-socket hot MTU fail retained."
+  ]
+}

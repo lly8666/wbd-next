@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1239",
+  "source_sha": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
+  "result": "PARTIAL_ACCEPTANCE_AUDIT",
+  "universal_all_OS_all_modes_PASS": false,
+  "authority": "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md §1–§5",
+  "requirements": [
+    {
+      "requirement": "Standard protected original TLS route key / one443 multiple users",
+      "status": "PASS_SCOPED",
+      "notes": "H1087 H1095 H1155"
+    },
+    {
+      "requirement": "Linux 7 modes genuine A->B->A physical and per-device MTU",
+      "status": "PASS_SOURCE_SCOPED",
+      "notes": "H1221"
+    },
+    {
+      "requirement": "Linux 7 modes 18s+/-3s timed rotation",
+      "status": "PASS_GROUPED",
+      "notes": "H1230; old Game4 group not individual"
+    },
+    {
+      "requirement": "Game4 Off/Fixed6 4 lanes individually rotating twice, no injected loss",
+      "status": "PASS_ARM_NATIVE",
+      "notes": "H1233"
+    },
+    {
+      "requirement": "Game4 Off/Fixed6 4 lanes individually rotating twice under real 5pct each direction",
+      "status": "PASS_X86_NATIVE",
+      "notes": "H1237 genuine tc counters, safe failed TLS retry"
+    },
+    {
+      "requirement": "Normal Fixed6 + Game4 Fixed6 representative 30pct loss/250ms",
+      "status": "PASS_REPRESENTATIVE",
+      "notes": "H1205 H1221, UDP no app retry"
+    },
+    {
+      "requirement": "Windows signed original TLS Npcap/Wintun two physical gens NormalAuto/Game4Off/Fixed6",
+      "status": "PASS_OLD_SUBSET",
+      "notes": "H1135 H1188 H1216"
+    },
+    {
+      "requirement": "Windows native current Go cold Stop/auth race six cases and owned OS source-IP events",
+      "status": "PASS_SCOPED_H1238",
+      "notes": "not Npcap signed packet path"
+    },
+    {
+      "requirement": "Windows physical 7 mode full matrix including Game2 and Normal fixed/off",
+      "status": "NOT_FULLY_RUN",
+      "notes": "earlier source-specific subset only"
+    },
+    {
+      "requirement": "Simultaneous Game4 single lane periodic rotation and physical IPv4 source change",
+      "status": "NOT_RUN",
+      "notes": "H1237 fixed physical; H1221 grouped physical"
+    },
+    {
+      "requirement": "5pct/30pct high-loss persistent inner TCP during hot rotation",
+      "status": "NOT_FULLY_MEASURED",
+      "notes": "UDP high-loss representative and historic TCP but not same long scenario"
+    },
+    {
+      "requirement": "Manual IPv4 allocation collision, 7d lease injected clock and server restart on current source",
+      "status": "PARTIAL_OR_OLD_SOURCE",
+      "notes": "not universal qualified current release"
+    },
+    {
+      "requirement": "Exact native OS notice to TLS auth first business and controlled CPU/RSS A/B",
+      "status": "NOT_FULLY_MEASURED",
+      "notes": "some command-to-Ready, not four timestamps"
+    },
+    {
+      "requirement": "Remote user space ICMP 3/4 and original same-socket live MTU 1460->1280",
+      "status": "ICMP_NOT_MEASURED_H998_FAIL",
+      "notes": "H998 real hot MTU FAIL persists"
+    },
+    {
+      "requirement": "Android actual WiFi/cellular Network VPN bypass",
+      "status": "DEFERRED_ANDROID",
+      "notes": "PLAN028 §4.1 desktop interface only"
+    }
+  ],
+  "new_source_locked_evidence": [
+    "docs/evidence/M0/PLAN028-H1237-SOURCEAC8-NATIVE-X86-GAME4-TWOWAY-NETEM5-HOTLANE-PASS-20261105.json",
+    "docs/evidence/M0/PLAN028-H1238-SOURCEF3C-NATIVE-WINDOWS-ORIGINAL-COLD-RACES-OWNED-IPV4-PASS-20261105.json"
+  ],
+  "future_priorities": [
+    "Game4 one-slot live timer during true NIC/IP A->B underlay and 1460->1280 effective budget while Normal other client stays live",
+    "Windows missing signed native real seven-mode physical shifts",
+    "High-loss long TCP at representative Fixed6; current manual IPv4 collision/lease 7day clock/server reboot",
+    "precise OS event to authenticated TLS first true packet timestamps"
+  ],
+  "historical": [
+    "H1234 true x86 5pct product Game4 Health90 FAIL older source",
+    "H1235 true business but original oracle CI false FAIL",
+    "H1236 real business but nested Python indent CI FAIL",
+    "H998 physical online same-socket MTU shrink FAIL retained"
+  ]
+}

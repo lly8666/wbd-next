@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1238",
+  "source_sha": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "run_id": 42010319278,
+  "win2022_native_go_unit": {
+    "job_id": 127187377152,
+    "artifact_id": 13405679262,
+    "sha256": "98cf66a1813977f5f40e5ab0997ccb1aee129637d0ca896542b349ec9301f3ca",
+    "files": 2,
+    "crc_pass": true,
+    "tests_passed": 6,
+    "tests": [
+      "NativeWindowsIPv4CallbackCoalescer",
+      "NativeWindowsOnlyPhysicalNICSourceIPv4",
+      "WindowsNativePathChangeCancelsColdTLSNotWholeClient",
+      "WindowsUserStopDuringColdTLSNeverRestarts",
+      "WindowsNativePathChangeDoesNotOverrideAuthReject",
+      "WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth"
+    ],
+    "actual_Npcap_Wintun_packet_IO": "NOT_RUN"
+  },
+  "win2025_native_OS": {
+    "job_id": 127187377690,
+    "artifact_id": 13406906181,
+    "sha256": "1250e81cff6986e02dd00b700ec5d0742c3591c14c1c4cc55e307e46ed491f1b",
+    "files": 1,
+    "crc_pass": true,
+    "actual_owned_hyperv_source_IP_change": [
+      "198.18.246.1",
+      "198.18.246.9"
+    ],
+    "native_address_notifications": 3,
+    "native_route_notifications": 1,
+    "OS_mutation_to_readback_ms": 3138.89,
+    "original_TLS_auth": "NOT_RUN",
+    "Npcap_binding": "NOT_RUN",
+    "Rust_Stop": "NOT_RUN",
+    "runner_management_NIC_not_touched": true
+  },
+  "limits": [
+    "Original native Go Windows unit + true isolated OS callback are not a signed Npcap/Wintun 7-mode real product qualification.",
+    "No Android/WiFi physical qualification, H998 online same-socket hot-MTU FAIL retained."
+  ]
+}
