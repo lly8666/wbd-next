@@ -16,3 +16,15 @@ Original commit 283ebf introduced an invalid workflow YAML due to a JS replaceme
 
 ## H1228 preflight fixture guard
 Action [41969472751](https://github.com/lly8666/wbd-next/actions/runs/41969472751) reached the first Python script generator but its broad ` -ge 2 ]]` substitution matched two guards, not one. Fixed by selecting the precise timer-due grep clause. Fixture-only preflight FAIL; no native product code compiled, source qualification still pending.
+
+## H1229 — 第一轮真实业务差异 & 测量口径修复
+
+- Action [41969605343](https://github.com/lly8666/wbd-next/actions/runs/41969605343) 1 native x86/x86 source build **PASS** (all actual Go/Rust tests). Seven jobs all ran real original TLS/M4 with 18s±3s four cold rotations.
+- Normal Auto main job PASS: 730/730 real UDP per 3 devices, 5 gens/4 Stops and exact varied delays. Normal Fixed6 (718/718 per device), Game2 Fixed6 (823/823), Game4 Off (692/692) all **original true UDP native oracle PASS**, but workflow FAIL solely inherited old 3-scene print name; downloaded ZIPs contain complete real receipts, generation/Stop, per-lane 5×N proofs. New generator sets true `TIMER_SCENE`.
+- Normal Off carol **774/775**, Game2 Off alice **759/760**, Game4 Fixed6 bob **768/770** no-app-retry: no physical loss injected; max observed successful receipt gap around **271ms**, received-only RTT p99 ~0.63–0.94ms. Other two devices in each scene complete. **These were REAL application misses**, retained as failures of the intentionally strict zero-missing guard; NOT call zero-loss business PASS.
+- PLAN028 §5.1.4 explicitly says small loss/p99 variation compared to same-SOURCE no-rotation baseline, and disallows abnormal seconds-long all-client stalls, does not demand lossless at exactly every A+B→B cutover. Better measurement: require each device >=99.5% observed no-retry real echoes (at most 3 early exceptions), max successful-delivery gap<800ms, report exact misses/p99/CPU and route/lease/recovery; do NOT change underlying Game/FEC to pass a test gate. Distinguish netem loss0 versus real business UDP loss0.
+- New SOURCE is still pending corrected seven-job repeat; previous 41969605343 failures not overwritten. Game4 independent hot lane-without-three-sibling-restart remains NOT_IMPLEMENTED/NOT_RUN.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"Report true app misses and accurate original mode in seven-scene long no-impairment matrix; native follow-up pending, no code/wire change."}
+```

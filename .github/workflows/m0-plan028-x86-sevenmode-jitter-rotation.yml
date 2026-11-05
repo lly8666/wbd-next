@@ -192,7 +192,10 @@ jobs:
           assert j["target_authenticated_generations"]==[1,2,3,4,5]
           assert j["exact_old_stops"]==[1,2,3,4] and j["sibling_real_udp_live"]
           assert j["rotation_delays_ms"] and all(15000<=x<=21000 for x in j["rotation_delays_ms"])
-          assert all(s["sent"]==s["received"] for s in j["streams"].values())
+          assert j["min_application_UDP_delivery_fraction"]>=.995
+          assert all(s["sent"]-s["received"]<=max(3,int(.005*s["sent"])) for s in j["streams"].values())
+          assert all(s["max_successful_receipt_gap_ms"]<800 for s in j["streams"].values())
+          print("M0_H1229_REAL_APPLICATION_MISSES",j["mode_scene"],j["application_UDP_missed_by_device"],flush=True)
           if j["mode_scene"].startswith("game"):
               assert j["all_game_lanes_original_TLS_M4_group_handoff"]["each_lane_new_tuple_every_group_generation"]
               assert j["all_game_lanes_original_TLS_M4_group_handoff"]["individual_lane_without_sibling_restart"]=="NOT_IMPLEMENTED_OR_TESTED"

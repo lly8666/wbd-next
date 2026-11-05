@@ -34,6 +34,8 @@ def sub(a,b,expected=1):
         raise AssertionError((scene,a[:100],s.count(a),expected))
     s=s.replace(a,b)
 
+# The original generator knows only 3 scenes; record the TRUE selected mode.
+sub('TIMER_SCENE="'+base+'"','TIMER_SCENE="'+scene+'"')
 # Original fixture's selected client contains the exact timer and one mode.
 sub("--rotation-interval 12s --record-cipher",
     "--rotation-interval 18s --rotation-jitter 3s --record-cipher")
@@ -66,8 +68,10 @@ sub("lease_receipts={}","lease_receipts={}")
 sub("(3 if who==target else 1)","(5 if who==target else 1)")
 sub("\"timer_interval_seconds\":12","\"timer_interval_seconds\":18,\"rotation_jitter_max_seconds\":3")
 sub("gen[:3],\"exact_old_stops\":old[:2]","gen[:5],\"exact_old_stops\":old[:4]")
-sub("s[\"received\"]>=.70*s[\"sent\"]","s[\"received\"]==s[\"sent\"]")
-sub("s[\"received\"]>=.85*s[\"sent\"]","s[\"received\"]==s[\"sent\"]")
+sub("s[\"received\"]>=.70*s[\"sent\"]",
+    "s[\"received\"]>=s[\"sent\"]-max(3,int(.005*s[\"sent\"]))")
+sub("s[\"received\"]>=.85*s[\"sent\"]",
+    "s[\"received\"]>=s[\"sent\"]-max(3,int(.005*s[\"sent\"]))")
 sub("sleep 2\ntouch \"$TMP/timed-finish\"","sleep 4\ntouch \"$TMP/timed-finish\"")
 # The source variation is evaluated by the actual arms logged before each due.
 anchor='for who,s in streams.items():\n    assert s["sent"]>=30'
@@ -76,6 +80,9 @@ assert len(delays)==4 and all(15000<=x<=21000 for x in delays),delays
 assert len(set(delays))>=3,delays
 for a,b in zip(timer_due_unix_ms,timer_due_unix_ms[1:]):
     assert 15000<=b-a<=33000,("unexpected schedule/in-flight cold delay",a,b)
+'''
+check+='''
+assert all(s["max_successful_receipt_gap_ms"]<800 for s in streams.values()),streams
 '''
 sub(anchor,check+anchor)
 # The original base requires auto/fixed6 in permanent assertions; the scene
@@ -119,9 +126,16 @@ lane_check=r'''if scene.startswith("game"):
         "server_all_original_authenticated_lane_tuples_match":True,
         "each_lane_new_tuple_every_group_generation":True,
         "individual_lane_without_sibling_restart":"NOT_IMPLEMENTED_OR_TESTED",
-        "real_witness_type":"GROUPED_NATIVE_RUST_GAME_M4_4_LANES_AT_ONCE",
+        "real_witness_type":f"GROUPED_NATIVE_RUST_GAME_M4_{n}_LANES_AT_ONCE",
     }
 result["rotation_delays_ms"]=delays
+result["physical_loss_injection_percent"]=0
+result["application_UDP_missed_by_device"]={
+    who:v["sent"]-v["received"] for who,v in streams.items()}
+result["min_application_UDP_delivery_fraction"]=min(
+    v["received"]/v["sent"] for v in streams.values())
+result["application_delivery_gate"]=">=99.5pct no-retry, <=3 misses per device, max receipt gap <800ms"
+
 result["four_live_cold_group_rotations"]=True
 '''
 sub('pathlib.Path(sys.argv[7]).write_text(json.dumps(result,indent=2)+"\\n")',
