@@ -145,6 +145,20 @@ func startOriginalClientGeneration(
     }()
     return a,nil
 }
+// Rotation is a cold policy, not a Health/dead timer or a per-packet probe.
+// Default zero deliberately preserves the old disabled behavior.
+func validateOriginalRotationInterval(role string, interval time.Duration)error{
+    if interval==0{return nil}
+    if role!="client"||interval<5*time.Second||interval>24*time.Hour{
+        return fmt.Errorf("rotation-interval requires client and 5s..24h (0 disables)")
+    }
+    return nil
+}
+func originalGenerationNeedsReplacement(current *originalClientGeneration,
+    desired originalLinuxUnderlay,timerDue bool)bool{
+    return current==nil||current.path!=desired||timerDue
+}
+
 func originalPathRetry(attempt int)time.Duration{
     if attempt<1{return time.Second}
     seconds:=1<<uint(min(attempt-1,4))
@@ -167,8 +181,8 @@ func waitOriginalGenerationStop(a *originalClientGeneration)error{
 
 // Actual OS path-change client supervisor for numeric endpoints. No second
 // Health90 controller: runClient still uses the original Rust terminal pulse;
-// new generations are requested only by a changed kernel route/address or
-// after the previous owner really terminates. Path events alone never mark
+// new generations are requested only by a changed kernel route/address,
+// an explicit bounded rotation timer, or after the previous owner terminates. Path events alone never mark
 // a candidate ready or release an old authenticated owner.
 func runOriginalLinuxClientPaths(
     ctx context.Context,c config,tun *ownedTun,
@@ -183,6 +197,24 @@ func runOriginalLinuxClientPaths(
     var retry int
     var retryTimer *time.Timer
     var retryCh <-chan time.Time
+    var rotationTimer *time.Timer
+    var rotationCh <-chan time.Time
+    var timerDue bool
+    stopRotation:=func(){
+        if rotationTimer!=nil{
+            if !rotationTimer.Stop(){select{case <-rotationTimer.C:default:}}
+            rotationTimer=nil
+        }
+        rotationCh=nil
+    }
+    armRotation:=func(){
+        stopRotation()
+        if c.rotationInterval>0 && current!=nil && ctx.Err()==nil{
+            rotationTimer=time.NewTimer(c.rotationInterval)
+            rotationCh=rotationTimer.C
+        }
+    }
+    defer stopRotation()
     stopTimer:=func(){
         if retryTimer!=nil{
             if !retryTimer.Stop(){
@@ -219,7 +251,7 @@ func runOriginalLinuxClientPaths(
     }
     launch:=func()error{
         if candidate!=nil||retiring!=nil{return nil}
-        if current!=nil&&desired==current.path{return nil}
+        if !originalGenerationNeedsReplacement(current,desired,timerDue){return nil}
         // Game and Normal now share one process-owned Rust TUN reader.
         // Do NOT retire healthy A yet: start the new original-TLS/M4
         // candidate, and retire A only in NEW_GENERATION_READY below.
@@ -244,6 +276,8 @@ func runOriginalLinuxClientPaths(
             }
             if !next.valid()||next==desired{continue}
             desired=next
+            timerDue=false // a real path change supersedes the timed intent
+            stopRotation()
             retry=0
             stopTimer()
             if candidate!=nil{
@@ -276,8 +310,10 @@ func runOriginalLinuxClientPaths(
             candidate=nil
             previous:=current
             current=a
+            timerDue=false
             retry=0
             stopTimer()
+            armRotation()
             log.Printf("V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=%d old_generation=%t source=real_original_TLS_Rust_M4 os_path_authority=1",
                 a.seq,previous!=nil)
             if previous!=nil{
@@ -308,18 +344,39 @@ func runOriginalLinuxClientPaths(
             log.Printf("V4_PUBLIC_PATH_OLD_TERMINATED role=client generation=%d class=%s",
                 current.seq,nativeColdFailureClass(e))
             current=nil
+            stopRotation()
             if candidate==nil&&retiring==nil{scheduleRetry("Rust_dead_or_native_closed")}
         case e:=<-originalGenerationDone(retiring):
             if retiring==nil{continue}
             log.Printf("V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=%d class=%s",
                 retiring.seq,nativeColdFailureClass(e))
             retiring=nil
-            if candidate==nil&&(current==nil||current.path!=desired){
+            if candidate==nil&&originalGenerationNeedsReplacement(current,desired,timerDue){
                 if err=launch();err!=nil{scheduleRetry("after_old_stop")}
+            }
+        case <-rotationCh:
+            stopRotation()
+            if current==nil||ctx.Err()!=nil{continue}
+            // A timer is allowed to replace the same healthy physical path;
+            // unlike route notifications, it does NOT require NIC/IP change.
+            // Fresh cold readback still applies any smaller current MTU.
+            actual,e:=readOriginalLinuxUnderlay(c.peerIP,c.tunName)
+            if e!=nil||!actual.valid(){
+                log.Printf("V4_PUBLIC_TIMER_ROTATION_DEFER role=client reason=physical_path_unavailable")
+                armRotation() // no spinning and no speculative network probe
+                continue
+            }
+            desired=actual
+            timerDue=true
+            log.Printf("V4_PUBLIC_TIMER_ROTATION_DUE role=client current_generation=%d same_physical_interface_ipv4=%t unchanged_path=%t interval_ms=%d unix_ms=%d",
+                current.seq,current.path.samePhysicalInterfaceIPv4(actual),current.path==actual,
+                c.rotationInterval.Milliseconds(),time.Now().UnixMilli())
+            if candidate==nil&&retiring==nil{
+                if err=launch();err!=nil{scheduleRetry("timer_cold_open")}
             }
         case <-retryCh:
             stopTimer()
-            if candidate==nil&&retiring==nil&&(current==nil||current.path!=desired){
+            if candidate==nil&&retiring==nil&&originalGenerationNeedsReplacement(current,desired,timerDue){
                 if err=launch();err!=nil{scheduleRetry("path_still_unavailable")}
             }
         }

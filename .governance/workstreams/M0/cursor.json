@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1221,
-  "checkpoint_sha": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
-  "progress": "partial",
+  "sequence": 1222,
+  "checkpoint_sha": "3eb7f65b164df3058d66d39f5d2f5bebf4e1cfbb",
+  "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1221 USER_DIRECTED_SCOPED_PLAN028_CLOSEOUT: final x86 native source53c7 Action41948701519 Go TLS/Rust Normal Fixed6 30pct/250ms during second physical reauth PASS (200/200 UDP p99 270.079ms, actual qdisc drop200/507, authentic gen1→2→5, Game4 32+320 and exact owned Stop). All seven Linux native same-architecture physical mode handovers PASS; ARM Game4 high30 post-auth also PASS. Windows Auto/Game4off and earlier signed Game4fixed6 scoped PASS, Windows Fixed6 overall FAIL and Game2 shifts NOT_RUN. H998 original FAIL and Android/remote ICMP/CPU causal gaps retained. No further PLAN028 scenario dispatch.",
-  "why_now": "2026-11-05 user asked finish last scene and close. Source53c7 full Action41948701519, Governance41948701577, maintenance41948701621 all success; artifact13379609175 ZIP debc8c verified. Record exact SOURCE evidence and no universal cert. M0 registry still single owner, scoped closure marked, no new system.",
+  "current_task": "H1222 NEW USER ADDITION after H1221 scoped closeout: opt-in interval-based cold original TLS/Rust lane rotation even when physical NIC/IPv4 is unchanged. Reuse Linux shared TUN path supervisor, authenticated candidate/MTU readback and exact generation Stop; timer is disabled by default (explicit 5s..24h), no new controller/packet wire. Freeze one SOURCE and run three independent x86_64/x86_64 native scenarios Normal Auto/Game2 Off/Game4 Fixed6 with continuous real UDP all three authenticated devices, network readback unchanged, p99/CPU ticks/owned Stop. H1221 and H998 limitations stay scoped.",
+  "why_now": "User newly asks to implement scheduled rotation with unchanged network and sustained parallel real application flows; H1221 itself was user-scoped closed. Main 3eb7 contains governance-only closeout; no product delta yet. H1222 builds a new concrete requested delta, not re-opening old matrices.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "NONE for PLAN028 without new explicit authorization. 029 DNS/030 CLI are separate future entrypoints only; retained Windows/Android/ICMP/CPU/precise timing gaps are NOT_QUALIFIED.",
-  "unverified": false,
+  "next_action": "Collect new m0-plan028-x86-same-path-timed-rotation Action build and all three independent native mode jobs for exact new SOURCE. Diagnose the narrowest native failure; if pass verify artifacts/CPU/p99/old exact Stop and update feature evidence and cursor without enlarging to old physical matrix. Next full Linux task ARM64/ARM64 per 2026-11-04 rotation.",
+  "unverified": true,
   "last_tested_source": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1221-SOURCE53C7-X86-NORMALFIXED6-TC30-250MS-SECOND-TLS-PASS-20261105.json",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "USER-DIRECTED SCOPED CLOSED H1221, not universal PASS. Final x86 source53c7 original Go TLS second physical switch under tc30/250 passed UDP200/200 p99 270.079ms, physical drop200/507, Game4 healthy+Stop; Linux7 qualified, Windows subset and H998/Android/ICMP/CPU gaps explicit."
+  "partial_summary": "H1222 candidate implementation and matrix workflow staged, native SOURCE not yet qualified. H1221 source53c7 scoped PASS retained without promotion; H998 same-socket MTU FAIL, Android/ICMP/CPU causality and Windows gaps retained."
 }

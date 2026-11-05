@@ -169,3 +169,49 @@ func TestPLAN028OfflineServerRouteKeyFileCreateExclusiveNoNetwork(t *testing.T){
     if e=os.Symlink(dest,link);e!=nil{t.Fatal(e)}
     if e=initServerRouteKeyFile(link);e==nil{t.Fatal("symlink accepted as private route-key target")}
 }
+
+func TestPLAN028TimedRotationReusesNativeSamePathGeneration(t *testing.T){
+    path:=originalLinuxUnderlay{
+        iface:"eth0",ifindex:12,src:netip.MustParseAddr("192.0.2.4"),
+        peer:netip.MustParseAddr("203.0.113.9"),mtu:1500,
+    }
+    current:=&originalClientGeneration{seq:1,path:path}
+    if originalGenerationNeedsReplacement(current,path,false){
+        t.Fatal("unchanged network must not reconnect with timer disabled")
+    }
+    if !originalGenerationNeedsReplacement(current,path,true){
+        t.Fatal("timer must request a fresh authenticated generation on SAME network")
+    }
+    next:=path
+    next.mtu=1280
+    if !originalGenerationNeedsReplacement(current,next,false){
+        t.Fatal("timed/new-path cold budget must observe the effective MTU")
+    }
+    if !originalGenerationNeedsReplacement(nil,path,false){
+        t.Fatal("dead generation requires a replacement without a timer")
+    }
+}
+func TestPLAN028TimedRotationDisabledAndBoundedConfig(t *testing.T){
+    for _,role:=range []string{"client","server"}{
+        if err:=validateOriginalRotationInterval(role,0);err!=nil{
+            t.Fatalf("default disabled role %s: %v",role,err)
+        }
+    }
+    for _,interval:=range []time.Duration{
+        5*time.Second,12*time.Second,5*time.Minute,24*time.Hour,
+    }{
+        if err:=validateOriginalRotationInterval("client",interval);err!=nil{
+            t.Fatalf("valid client interval %v: %v",interval,err)
+        }
+    }
+    for _,interval:=range []time.Duration{
+        -time.Second, time.Second, 24*time.Hour+time.Second,
+    }{
+        if err:=validateOriginalRotationInterval("client",interval);err==nil{
+            t.Fatalf("invalid client interval accepted %v",interval)
+        }
+    }
+    if err:=validateOriginalRotationInterval("server",12*time.Second);err==nil{
+        t.Fatal("server timer would rotate unrelated clients")
+    }
+}
