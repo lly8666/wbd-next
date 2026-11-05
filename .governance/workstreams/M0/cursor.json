@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1208,
-  "checkpoint_sha": "6e6615ec6cdfd97b6e51608581499394680bda8a",
+  "sequence": 1209,
+  "checkpoint_sha": "f3e690c82194fbb0abfba2a94a3ea0baa304bab1",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1208 two narrow genuine fixes: Windows Fixed6 signed native source6e Action41934866350 FAIL original protected admission before first M4: Windows FEC2 client sent NormalFec0 while server shared Fixed requires exact TLS-protected profile+1 byte22; pass configured FEC2Profile+1 with no new handshake/wire. X86 Normal FEC6 high30 source0510 Action41934275296 real native physical two reauth gen1→2→4→7, OS tc loss30 delay250 241 actual drops UDP193/200 p99 550.038ms Game4 UDP32+320 qdisc restored, overall post-scene FAIL; preserve original 90s idle Game2 sibling with genuine UDP8s during 128s long stage then requalify exact final Stop. Two independent Actions to trigger from one SOURCE; no second restore/Go pump.",
-  "why_now": "Two original CI runs failed independently; profile mismatch is authentic server-policy verification not wrong certificate: client Windows ErrAdmissionParams, server rejects original TLS fixed strength absent. x86 highloss real measurement success but old baseline exact Stop unqualified (long observation outlasts Game2 dead90). Highest priority source-linked native requalification without old 027 matrix.",
+  "current_task": "H1209 exact SOURCE-frozen assembler update after H1208 runtime profile fix: full native x86 Action41938690662 and signed Windows Action41938690410 both stopped at stale r0/go_overlay/assembly/manifest-plan020-m0.json result_blob for modified CLI m0_native_v4_windows.go (old f41f8248, new source SHA3d14a0a); kernel/Go TLS not run, prior Action FAILs remain. Update only one manifest create result_blob to new SHA; H1208 Windows fixed protected profile+1 and x86 long Game2 health unchanged. Whole-source Actions automatically trigger once.",
+  "why_now": "H1208 genuine Windows FEC feature7 protected extension code introduced one deliberate product file hash change, immutable assembly manifest must match exact blob; check-only first failure `ValueError assembly blob mismatch...m0_native_v4_windows.go`. No rolling back product validation, no duplicate build per helper, one SOURCE-locked requalification.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect new signed Windows full Fixed6 native Action (actual first TLS, new generation+MTU, real UDP/TCP, Stop) and x86 Normal-high30 new native Action (true qdisc and all siblings still healthy, final owned Stop). Record all results by exact SOURCE; other Windows 5 modes still separate. Keep H998 hot shrink+ARM Game4 historical FAIL and remote ICMP/CPU causal/Android NOT_RUN.",
+  "next_action": "Collect H1209 Windows source signed Fixed6 real TLS/Rust and x86 Normalfixed6 high30 new Actions; if first error is Go type/ABI compile or native Stop isolate before additional scenes. H998 original fail, Android/ICMP/CPU causal and 5 other Windows physical modes remain.",
   "unverified": true,
   "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1208 patches real Windows Fixed6 protected normalFec=profile+1 and x86 high30 long-scene original Game2 sibling real UDP keepalive; two old Action FAILs preserved, new source authentic full native results pending."
+  "partial_summary": "H1209 update one pinned Windows CLI create blob SHA for H1208 original protected Normal fixed6 V4 byte22 code; two prior Actions stopped before native compile/handshake due manifest stale. Full tests retriggered."
 }
