@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1254,
-  "checkpoint_sha": "68146e914daf3b64ab46dfff62e0420c05214c22",
+  "sequence": 1255,
+  "checkpoint_sha": "09795c3da13603260bcb4c4294514978d235747b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1254 correct exact H1253 two-client native short A/B fixture stale assert: H1253 Action42124162759 x86 pinned ISA-L v2.31.1 archive build+real product linking + Rust late-repair regression PASS, two actual authenticated leases 10.66.0.192 and .141 ready, but fixture falsely asserted 5 unique leases after reducing workload to 2 and failed before traffic. Fix len(set(leases)) == len(NAMES) ONLY; no product Rust/Go/FEC change and no performance result from failed fixture. One targeted source-triggered native same-VM scalar/native 90s/leg workflow reattempt.",
-  "why_now": "Real native build succeeded; initial diagnostic scene stopped due to stale harness count, not a product bottleneck. Correct only the invalid five-client count without inventing backend delivery outcomes.",
+  "current_task": "H1255 native FEC Game4 scalar/native short A/B: pinned ISA-L Go/Rust product build and late parity test PASS, original Game4+Normal scalar 90s first leg SUCCESS tx_scalar_quanta86219 rx_scalar_decodes13231 late_complete_repair_skips295096. Native leg failed before traffic because test-owned server host-veth name existed after first leg. Source091b69 test-only clean host veth and fresh ready markers, latest targeted Action42126063904 awaiting proof.",
+  "why_now": "Correct first-leg owned veth leakage and ready marker reuse in test fixture only; no Game/FEC product parameters changed.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1254 exact native x86 short A/B following 2 authenticated leases; inspect per-leg actual backend counter >0 scalar/native, RX lock and Game TX sampling, true loss and Normal sibling. If new harness failure, repair it without altering product parameters. No new full five-client 370s run.",
+  "next_action": "Check latest H1255 native same-VM 90s scalar/native paired Action and compare actual backend readback, TX samples/RX lock, Normal sibling and recovery; do not trigger five-client long test.",
   "unverified": true,
   "last_tested_source": "f2dec3bf5f22c50ff8e05a9f8084c5e297086221",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1253 SOURCE68146e built pinned ISA-L static and original Go/Rust release, late FEC duplicate regression test PASS; 2 genuine authenticated leases ready, test fixture stale expected five lease assert FAIL (Action42124162759). H1254 adjusts only harness assert and reruns same 90s/leg source-triggered A/B. H1251 old 370s Game4 scalar high load bottleneck retained; H998 historical failure retained."
+  "partial_summary": "H1254 scalar90s real native Game4+Normal passed with actual scalar codec and late parity skip counters, paired native not run due fixture cleanup EEXIST. H1255 fixes only runner; backend actual native gain not yet known; historical H1251 5-client FEC bottleneck and H998 hot-MTU FAIL retained."
 }
