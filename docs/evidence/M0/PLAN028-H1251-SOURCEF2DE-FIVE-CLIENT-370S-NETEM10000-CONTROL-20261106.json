@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1251",
+  "source_sha": "f2dec3bf5f22c50ff8e05a9f8084c5e297086221",
+  "status": "NATIVE_370S_DIAGNOSTIC_COMPLETE_PRODUCT_QUEUE_AND_GAME4_DELIVERY_BOTTLENECK_OBSERVED",
+  "action_run_id": 42077824041,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42077824041",
+  "job_id": 127422632747,
+  "job_result": "success",
+  "artifact_id": 13438129814,
+  "artifact_name": "plan028-h1250-five-client-370s",
+  "artifact_zip_sha256": "ed92a3987fe9941ea8359d677a5ca4a49dbdf520061f1c96d4d9d5523aa92caf",
+  "artifact_zip_crc": "PASS",
+  "artifact_files": 56,
+  "prior_source": "2f87ecedf3edeb747ffa5a32736aa2245f908484",
+  "prior_action_run_id": 42075242750,
+  "identical_recompiled_product_binary_sha256_verified": true,
+  "exact_binary_hashes": {
+    "wbd-v4-client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "wbd-v4-server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "libwbd_engine.so": "2d0fe3b687c83b70739d052ddec1eaca7a7bcbb5a8bbcf0c33df47ae237cb947"
+  },
+  "scope": "one native x86_64 host, six Linux network namespaces, one original Go TLS shared server443, five independent authenticated Rust TUN clients, 5 two-way genuine UDP data streams and 2 real TCP paired streams",
+  "client_modes": [
+    {
+      "device": "alice",
+      "mode": "Normal Off",
+      "cipher": "AES128",
+      "outer_mtu": 1460,
+      "loss_percent": 0,
+      "delay_oneway_ms": 0
+    },
+    {
+      "device": "bob",
+      "mode": "Normal Auto",
+      "cipher": "ChaCha20",
+      "outer_mtu": 1460,
+      "loss_percent": 1,
+      "delay_oneway_ms": 15
+    },
+    {
+      "device": "carol",
+      "mode": "Game2 Off",
+      "cipher": "AES256",
+      "outer_mtu": 1460,
+      "loss_percent": 5,
+      "delay_oneway_ms": 50
+    },
+    {
+      "device": "dave",
+      "mode": "Game4 Fixed6",
+      "cipher": "ChaCha20",
+      "outer_mtu": 1460,
+      "loss_percent": 15,
+      "delay_oneway_ms": 100
+    },
+    {
+      "device": "erin",
+      "mode": "Normal Fixed6",
+      "cipher": "AES128",
+      "outer_mtu": 1280,
+      "loss_percent": 30,
+      "delay_oneway_ms": 125
+    }
+  ],
+  "simultaneous_start_monotonic_same_host": true,
+  "phases": [
+    {
+      "name": "warmup",
+      "duration_s": 10,
+      "actual_sent_mbps_both_directions": 57.6006,
+      "delivered_mbps_both_directions": 57.5572
+    },
+    {
+      "name": "first_wave",
+      "duration_s": 60,
+      "actual_sent_mbps_both_directions": 115.1931,
+      "delivered_mbps_both_directions": 115.1301
+    },
+    {
+      "name": "sustained",
+      "duration_s": 240,
+      "configured_offered_mbps": 192,
+      "actual_sent_mbps_both_directions": 182.0635,
+      "delivered_mbps_both_directions": 177.8505
+    },
+    {
+      "name": "overload",
+      "duration_s": 60,
+      "configured_offered_mbps": 249.6,
+      "actual_sent_mbps_both_directions": 208.8131,
+      "delivered_mbps_both_directions": 195.3664
+    }
+  ],
+  "draining_after_traffic_s": 10,
+  "physical_qdisc": {
+    "limit_packets": 10000,
+    "drop_counter_includes_random_and_queue": true,
+    "actual_underlay_drop_fraction": {
+      "bob_1percent": {
+        "uplink": 0.00997,
+        "downlink": 0.009913
+      },
+      "carol_5percent": {
+        "uplink": 0.049831,
+        "downlink": 0.049829
+      },
+      "dave_15percent": {
+        "uplink": 0.150045,
+        "downlink": 0.150064
+      },
+      "erin_30percent": {
+        "uplink": 0.299722,
+        "downlink": 0.300385
+      }
+    },
+    "conclusion": "Netem default limit=1000 confound eliminated in this run. Actual Dave underlay total loss is ~15.0%, not H1250 45-50%."
+  },
+  "product_shared_tun": {
+    "server": {
+      "routed": 4896213,
+      "unrouted": 0,
+      "backpressure_events": 358866,
+      "queue_full_drops": 168844,
+      "queue_byte_drops": 0,
+      "queue_age_drops": 0,
+      "retired_drops": 0
+    },
+    "client_queue_full_drops": {
+      "alice": 780,
+      "bob": 335,
+      "carol": 155,
+      "dave": 101917,
+      "erin": 446
+    },
+    "caveat": "Rust shared TUN counters are direct per-process ingress/route queue events; a queue_full count is not the same as an independently verified unique end-to-end UDP packet miss."
+  },
+  "game4_dave": {
+    "mode": "original Go TLS authenticated Game4 Fixed6 four lanes",
+    "sustained_uplink_sent_mbps": 17.4768,
+    "sustained_uplink_received_mbps": 16.1041,
+    "sustained_uplink_unique_delivery_fraction": 0.921388,
+    "sustained_downlink_sent_mbps": 17.2186,
+    "sustained_downlink_received_mbps": 14.5722,
+    "sustained_downlink_unique_delivery_fraction": 0.846466,
+    "overload_uplink_sent_mbps": 22.1392,
+    "overload_uplink_received_mbps": 16.8283,
+    "overload_uplink_unique_delivery_fraction": 0.760224,
+    "overload_downlink_sent_mbps": 21.5346,
+    "overload_downlink_received_mbps": 14.459,
+    "overload_downlink_unique_delivery_fraction": 0.671593,
+    "delivered_only_latency_sustained_downlink_p99_ms": 162.6,
+    "delivered_only_latency_overload_downlink_p99_ms": 168.2,
+    "sustained_downlink_received_mbps_every30s": [
+      14.5429,
+      14.5915,
+      14.2604,
+      14.2986,
+      14.5362,
+      14.67,
+      14.7712,
+      14.8939
+    ],
+    "diagnosis": "Persistent same-client throughput saturation and >15% missing unique business despite verified exactly15% underlay random-loss condition; high Dave client TUN queue overflow and aggregate server shared TUN overflow. Root stage among Game4 FEC scheduling, downstream owner channel and CPU/host contention NOT_ISOLATED."
+  },
+  "contrasted_clients": {
+    "alice_0pct": {
+      "sustained_downlink_unique_delivery_fraction": 0.999796,
+      "overload_downlink_unique_delivery_fraction": 0.997176
+    },
+    "bob_1pct": {
+      "sustained_downlink_unique_delivery_fraction": 0.999756,
+      "overload_downlink_unique_delivery_fraction": 0.998041
+    },
+    "carol_5pct": {
+      "sustained_downlink_unique_delivery_fraction": 0.997458,
+      "overload_downlink_unique_delivery_fraction": 0.996022
+    },
+    "erin_30pct": {
+      "sustained_downlink_unique_delivery_fraction": 0.995711,
+      "overload_downlink_unique_delivery_fraction": 0.971301
+    }
+  },
+  "resource_metrics": {
+    "server_average_one_core_cpu_percent_across_431_787s_including_setup": 93.852,
+    "server_peak_rss_kib": 94396,
+    "causal_product_cpu_gain": "NOT_MEASURED"
+  },
+  "automated_performance_alert_count": 11,
+  "findings": [
+    "All 10 genuine application endpoints and native original TLS auth and Stop finished 370s +10s drain.",
+    "No global complete client HOL; independent peers mostly retained high business delivery.",
+    "Dave/Game4 true 15%-loss 100ms link shows poor sustained/overload goodput; not explained solely by tc netem 1000 packet queue confound.",
+    "Real server shared TUN and Dave client queue full are nonzero/high after prior H1247 bounded eight-packet retry fix.",
+    "Aggregate overload actual offered208.8131Mbps <configured249.6Mbps, so cannot label 208.8Mbps as product maximum; Python/host/backpressure are confounded."
+  ],
+  "limitations": [
+    "One hosted x86_64 VM with Linux netns; no independent physical NIC/Windows/ARM multi-machine certification.",
+    "This two-run comparison has byte-identical product binaries but distinct virtual runner workloads, not deterministic causal CPU A/B.",
+    "Actual application send is denominator; configured network loss differs from unique application loss because of FEC, transport, packetization and queues.",
+    "No per-route server shared-TUN drop attribution; clients have separate product-side queue counters but not a causal stage tracing every lost UDP.",
+    "Historical PLAN027A H998 same-socket online MTU FAIL, Android and other PLAN028 platform/CPU gaps retained."
+  ]
+}

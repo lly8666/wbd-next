@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "H1251 isolate qdisc default1000 overcapacity from product congestion: H1250 native original Go TLS/Rust 5-client 370s real full Action success SOURCE2f87, server shared TUN backpressure327928/full130255, Dave Game4 15% configured overloaded downlink 66.866% delivered, but actual tc qdisc dropped 45-50% due FEC4lane+100ms+limit1000. Retest same 370s six-netns mixed mode/ciphers/outer MTU with physical netem limit10000 and strict qdisc/queue reporter. No product code change; preserve H998 old-socket MTU FAIL and Windows/Android scope.",
+      "goal": "H1252 5-client original Go TLS/Rust shared TUN 370s heterogeneous performance diagnostic delivered, source-locked H1250/H1251 native x86 actions and 3 product binary SHA identical. Netem10000 corrected Dave real 15% qdisc loss yet Game4Fixed6 steady DL84.65%/overload67.16% unique application UDP, server shared TUN queue-full168844, Dave client101917 and backpressure; test diagnostic not pass rate/CPU causality. H1247 bounded queue unit still 4/4 PASS. PLAN028 other Windows/Android/H998 original PMTU FAIL retained.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
