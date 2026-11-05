@@ -1,0 +1,11 @@
+# PLAN028 H1246 — Game2 complete cohort physical reauth not Game4 selected-slot rekey
+
+H1245 native ARM64 original Go TLS/Rust M4 strict collision Action42054331263 source 295476d55e7aa94956af527f43092e6cf3544694 fully PASS; artifact 21 file ZIP SHA7efa7d... CRC PASS. Real Bob Game4 source IP .3→.9 and link MTU1500→1280 with 120ms kernel physical netem each way, selected-lane TLS attempt in flight; new four authenticated Game4 physical lanes installed in fresh Rust M4 BEFORE old exact Stop. Bob inner UDP 99/104 (5 genuine misses), received p99 244.93ms, max gap 5097ms, lasts 17.669s beyond gen2 READY; Carol382/382 and unchanged inner MTU. Physical change→gen2 ready4.911s. This is scoped recovery, not seamless zero loss. Evidence: docs/evidence/M0/PLAN028-H1245-SOURCE2954-ARM64-GAME4-PHYSICAL-COLLISION-STRICT-PASS-20261105.json.
+
+Latest old SOURCE e8d4 native Game2 Off ARM Action42042623843 and Game2 Fixed6 x86 Action42042623852 had client gen2 READY / old1 STOP but FIRST real new Game2 UDP failed. The server Game4 one-lane active owner branch contained a `lanes!=4` reject for EVERY active cohort, incorrectly rejecting Game2 fresh two-lane same-epoch TLS replacements. Narrow fix changes only server conditional: enter hot-slot logic when active Game4 lanes==4; Game2 goes to established complete cohort staging / exact old Stop. No Rust/AEAD/FEC/wire/MTU change. Full prior fail artifact and digest: docs/evidence/M0/PLAN028-H1246-PRIOR-SOURCEE8D4-GAME2-PHYSICAL-GEN2-NO-UDP-FAIL-20261105.json.
+
+H1246 follow-up native x86 Game2 Fixed6 physical A→B→A and ARM Game2 Off physical A→B→A source-locked original TLS/Rust + other two clients, no application retries; needs true gen2/gen3 UDP echo, exact old Stop1/2 and physical source+MTU readback. Pending Action, not PASS yet.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter"],"reason":"H1245 strict ARM Game4 physical collision raw PASS; fix H1246 real Game2 full-cohort same-epoch admission rejected by Game4-only selected lane hot branch, targeted native IO pending."}
+```

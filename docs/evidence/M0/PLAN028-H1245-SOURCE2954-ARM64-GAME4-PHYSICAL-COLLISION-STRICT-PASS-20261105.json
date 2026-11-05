@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1245",
+  "source_sha": "295476d55e7aa94956af527f43092e6cf3544694",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_run_id": 42054331263,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42054331263",
+  "native_arch": "ARM64+ARM64",
+  "source_binary_build": "PASS",
+  "game4_fixed6_advanced_physical_overlap": "PASS",
+  "artifact_id": 13428411698,
+  "zip_sha256": "7efa7dafe7ad7eb158f19c7edd61c879c70a94c913aecea850456ca3440d793c",
+  "zip_files": 21,
+  "crc": "PASS",
+  "scenario": "Bob Game4 selected one-lane COLD TLS in flight, actual physical OS source4 .3→.9 and link MTU 1500→1280 with true 120ms each direction netem. New full four protected original Go TLS lane cohort committed to one new Rust M4 BEFORE old Game4 exact Stop; Carol Normal Auto unchanged. One server443; same lease.",
+  "events": {
+    "due_ns": 1793892295071534000,
+    "physical_change_ns": 1793892295074516000,
+    "new_go_TLS_rust_M4_ready_ns": 1793892299985099800,
+    "physical_to_ready_ms": 4910.584,
+    "new_server_complete_game4_native_groups": 2,
+    "server_four_new_authenticated_lanes": true,
+    "no_server_early_one_lane_native_stop": true,
+    "old_generation_exact_stop": 1,
+    "new_generation": 2,
+    "game4_client_inner_os_MTU": [
+      1358,
+      1178
+    ],
+    "normal_inner_os_MTU": 1375
+  },
+  "real_udp": {
+    "bob": {
+      "sent": 104,
+      "correct": 99,
+      "missed": 5,
+      "rtt_received_p99_ms": 244.92707,
+      "max_success_gap_ms": 5097.148804,
+      "last_real_echo_after_new_gen2_ready_ms": 17668.634
+    },
+    "carol": {
+      "sent": 382,
+      "correct": 382,
+      "missed": 0,
+      "rtt_received_p99_ms": 1.321364,
+      "max_success_gap_ms": 103.094
+    }
+  },
+  "caveats": [
+    "Bob missed 5 real no-retry requests, max 5.097s success gap under physical path change and 4.911s TLS reauthentication; not a zero-HOL lossless switch.",
+    "H998 previous same-socket live MTU shrink FAIL, this is fresh session generation instead.",
+    "Remote-WAN, Windows real driver, Android physical NOT_RUN."
+  ]
+}

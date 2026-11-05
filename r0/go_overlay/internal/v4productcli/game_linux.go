@@ -945,8 +945,14 @@ func runGameMultiServer(
             // Never stage it as a fresh four-lane cohort or replace siblings.
             coldKey,laneID,e:=lane.Cohort()
             if e!=nil{rejectLane(lane);continue}
-            if group:=active[coldKey];group!=nil{
-                if coldKey.Lanes!=4||laneID<1||laneID>4{
+            // The selected-slot hot-rekey branch applies ONLY to Game4.
+            // Game2 has no per-slot hot swap: a real same-epoch replacement
+            // is ALWAYS a fresh authenticated two-lane complete cohort.
+            // Rejecting active Game2 here prevented physical A→B Gen2
+            // server M4 admission despite client Gen2 READY/old exact Stop,
+            // leaving genuine post-READY UDP with no recipient.
+            if group:=active[coldKey];group!=nil&&coldKey.Lanes==4{
+                if laneID<1||laneID>4{
                     rejectLane(lane)
                     continue
                 }

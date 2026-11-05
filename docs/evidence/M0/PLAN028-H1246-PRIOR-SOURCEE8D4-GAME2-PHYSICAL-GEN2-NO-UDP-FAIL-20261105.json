@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1246_prior",
+  "source_sha": "e8d4d306ab0d38ab5155680e8e76c4687bd10e6d",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "observation": "Both native Go TLS+Rust Game2 physical source-IP A→B→A workflows had initial authentic multi-client G2/G4/Normal, then client generation2 READY+old1 Stop but first true new generation Game2 UDP missing. Go server branch originally introduced for Game4 per-slot hot lane entered on any ACTIVE cohort and rejected coldKey.Lanes!=4, discarding the Game2 authenticated replacement. H1246 guard now restricts this branch to active Game4 and allows Game2 full two-lane cohort staging.",
+  "scenes": [
+    {
+      "mode": "game2-off",
+      "arch": "native ARM64+ARM64",
+      "run_id": 42042623843,
+      "artifact_id": 13421958100,
+      "zip_sha256": "202635cdaf95d9e8de7f48984208db0a52a7594d28ccdb0132b83226f7bcd94a",
+      "zip_files": 8,
+      "crc": "PASS",
+      "real_failure": "GAME2_OFF_AUTH_NEW_GEN2 #0"
+    },
+    {
+      "mode": "game2-fixed6",
+      "arch": "native x86_64+x86_64",
+      "run_id": 42042623852,
+      "artifact_id": 13423151267,
+      "zip_sha256": "5ec5bbdfbe474f590992f1a328c4b5bcb715aa275b4703286072a9b3c4fd",
+      "zip_files": 8,
+      "crc": "PASS",
+      "real_failure": "GAME2_FIXED6_AUTH_NEW_GEN2 #0"
+    }
+  ],
+  "H1246_actual_retest": "NOT_RUN",
+  "historical": [
+    "H1245 original strict Game4 physical collision PASS",
+    "H1237 Game4 same physical hot lane 5pct physical loss PASS",
+    "H998 same-socket hot MTU FAIL retained"
+  ]
+}

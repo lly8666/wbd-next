@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1245,
-  "checkpoint_sha": "e8d4d306ab0d38ab5155680e8e76c4687bd10e6d",
+  "sequence": 1246,
+  "checkpoint_sha": "295476d55e7aa94956af527f43092e6cf3544694",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1245 test-only source-locked native ARM64 Go TLS/Rust Game4 true selected-lane vs Bob physical OS IPv4 source .3→.9 and MTU1500→1280 overlapping in-flight TLS; H1244 Action42042623737 full Go/Rust build and inner strict H1243 business oracle marker PASS, but outer Scene FAIL FileNotFoundError h1243 JSON because nested h1241 oracle saved old basename; ZIP9 only and omitted original Bob/server process logs. H1245 fix generated basename, CI assert JSON AND Bob/server native raw original logs and upload; preserve Bob last true UDP > new gen2 Ready+2s and server no premature one-lane-native-rekey-failed Stop, exact old group Stop after new complete server group M4. Product source e8d4 unchanged; strict renewed Action pending. Governance prior e8d4 FAILED 'evidence different SOURCE' because cursor evidence_refs contained H1242 fd767 with last_tested_source f3c; H1245 refs only exact f3c H1238/H1239; historical H1242 in devlog/feature not erased.",
-  "why_now": "User requested continue and asked when PLAN028 can close, permits skipping redundant tests. Latest H1244 actual native strict oracle marker PASS but artifact mismatch prevented reviewed CI green; repair this high-risk physical/lane collision before limited desktop acceptance closeout. Governance strict single-source refs corrected, without upgrading unreviewed H1244 to PASS.",
+  "current_task": "H1246 fix real Game2 same-epoch whole two-lane source-IP/MTU physical generation regression: previous sourcee8d4 native ARM Game2 Off and x86 Game2 Fixed6 both initial 3-client original TLS/Rust PASS, then gen2 Ready and old1 Stop but first true Game2 new UDP failed (#0); server mistakenly sent every active cohort through Game4-only one-slot branch and rejected lanes!=4. Product changed only Go server guard to enter active one-lane branch IF lanes==4; Game2 uses existing full cohort staging. H1245 exact ARM64 strict Game4 selected lane in-flight vs Bob physical source4 .3→.9 and MTU1500→1280 PASS original21file ZIP SHA/CRC, Bob99/104 no-app-retry UDP and live until gen2 READY+17.669s, Carol382/382, new full Game4 M4 before old exact Stop; 5 misses, 5.097s gap acknowledged. H1246 x86 Game2 fixed6 + ARM Game2 Off true A→B→A post-gen2/3 UDP retest pending.",
+  "why_now": "Latest source fresh Game2 native two real failures would undermine broader Plan028; source bug caused by Game4 one-lane active group guard. User authorizes efficient targeted tests, not broad redundant full matrix, so patch only exact conditional and retest both failed real modes.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run H1245 exact ARM64 SOURCE Go TLS+Rust candidate strict Game4 in-flight lane physical source IP/MTU overlap; require full artifact ZIP with h1243 JSON, raw Bob/server Go/Rust logs, true post-gen2 Bob UDP and Carol normal; check SHA/CRC and final Action PASS. Only if this gate passes, attempt limited PLAN028 desktop mainline evidence closeout with outstanding Windows 7 physical modes/high-loss persistent TCP and Android real handset specifically NOT_RUN, H998 live same-socket hot-MTU FAIL retained.",
+  "next_action": "Observe targeted H1246 native x86 Game2 Fixed6 and ARM Game2 Off physical two-source changes with true new UDP after both generations, stop, same lease and healthy sibling Game4/Normal, per-artifact SHA/CRC. Then formally source-scoped PLAN028 closeout if both PASS, retaining untested Windows full 7 Npcap modes, Android hardware, long high-loss TCP and H998 previous same-socket online MTU FAIL.",
   "unverified": true,
-  "last_tested_source": "f3c2e3b707cbcdbdcfc2318bc0001eca5d1c8b84",
+  "last_tested_source": "295476d55e7aa94956af527f43092e6cf3544694",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1238-SOURCEF3C-NATIVE-WINDOWS-ORIGINAL-COLD-RACES-OWNED-IPV4-PASS-20261105.json",
-    "docs/evidence/M0/PLAN028-H1239-REQUIREMENT-LEVEL-COVERAGE-AUDIT-20261105.json"
+    "docs/evidence/M0/PLAN028-H1245-SOURCE2954-ARM64-GAME4-PHYSICAL-COLLISION-STRICT-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1244 Go/Rust ARM64 build PASS and generated strict collision scenario marker PASS; outer Action FAIL due JSON path mismatch and omitted raw logs (ZIP 9 files) so NO reviewed product PASS. H1245 fixes output and artifact contract only; H1242 original Bob blackout FAIL retained; high-risk real physical same-epoch group-vs-hot-lane classifier awaiting source-locked reviewed Action. PLAN028 possible scoped closeout after this gate, not universal cross-OS pass."
+  "partial_summary": "H1245 native strict Game4 physical in-flight lane source+MTU collision PASS with server full fresh M4 before old Stop; Bob99/104, Carol382/382; about5.1s transient gap. Old product Game2 Off ARM and Fixed6 x86 native physical Gen2 new UDP FAIL from Game4-only server guard rejecting active Game2, narrow code fix pending targeted two native A→B→A scenarios."
 }
