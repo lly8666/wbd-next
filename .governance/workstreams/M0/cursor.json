@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1232,
+  "sequence": 1233,
   "checkpoint_sha": "814dec69f5200fa62dc63b76cb9ded1e9680a9b5",
-  "progress": "in_progress",
+  "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1231 real independent Game4 per-lane hot TLS/M4 rekey CANDIDATE: original-Go sole path supervisor emits lane rotation intents 18±3s; client authenticates same-epoch only one new original TLS/FakeTCP tuple; Rust FFI CAS old native handle swaps selected existing TX crypto/flow and RX opener/real kernel rx socket into same live group and drains only old lane; server active same-epoch cohort admits one protected new lane, replaces only indexed member. Existing GameAdapter/Tx/Rx/FEC/Health/TUN and 3 sibling lanes stay owned. ARM64 ARM64 native Game4 Off/Fixed6 8-turn fixture queued by next SOURCE. NOT_RUN until real Action. H1232 docs-only sync of game-lanes feature metadata after feature-impact assertion missing matching updated card; H1231 one ARM64 native build PASS, two real eight-turn Game4 jobs in progress.",
-  "why_now": "User explicitly directed continuation and fix true per-lane Game4 rotation gap, after H1230 demonstrated only whole-group changes. Current candidate tackles real group admission and immutable Rust worker boundary, no masquerade from grouped logging.",
+  "current_task": "H1233 ARM64+ARM64 true independent original Go TLS/Rust Game4 single-lane hot rotation SOURCE814 scoped PASS. Two source-locked native Game4 Off/Fixed6 real scenarios action41986067696 both green, each 8 turns 1→2→3→4 twice, 16 client/server independently matching fresh authenticated source 4-tuples, no Game4 grouped native restart and no TLS reauth for other 3 lanes, 18±3s sample timings, 3 concurrent real no-retry TUN UDP clients 9436/9436, max successful receipt gap109.5ms, Bob received RTT p99 0.720/0.728ms. Original ARM64 builder and ABI pass. Each ZIP SHA256/CRC and 9 original files verified. H1230 prior grouped seven modes different SOURCE; H998 physical hot-MTU FAIL retained.",
+  "why_now": "User directed repair of the remaining true independent Game4 lane gap. Same M4 adapter per-slot original Go TLS/AEAD/PN/raw RX hot replacement implemented and qualified via authentic native ARM64 client+server real traffic.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Inspect H1231 same SOURCE native ARM64 eight-turn Game4 Off/Fixed6 real UDP jobs; don't infer PASS from build. If successful, evidence SHA/CRC verify; otherwise triage first actual failure.",
-  "unverified": true,
-  "last_tested_source": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+  "next_action": "H1233 Game4 true single lane scoped ARM64 qualified. Next full Linux native platform x86_64 client/server under alternating rule for new SOURCE hot-lane with actual impairment and physical path changes where relevant, then Windows/Android/remote ICMP separately. Do not repeat ARM64 test or silently erase H998 historical hot MTU shrink FAIL.",
+  "unverified": false,
+  "last_tested_source": "814dec69f5200fa62dc63b76cb9ded1e9680a9b5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1230-SOURCE0CDA-X86-7MODE-JITTERED-GAME4-FOUR-LANE-GROUPED-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1233-SOURCE814-NATIVE-ARM64-GAME4-INDEPENDENT-LANE-HOT-REAL-UDP-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1231 first-source candidate true independent Go original TLS+Rust Game4 lane hot rotation 1→2→3→4 twice (client+server), no second controller/wire; feature NOT_RUN, ARM64/ARM64 original three-client native tests pending. H1230 seven-mode grouped x86 PASS, H998 MTU FAIL retained."
+  "partial_summary": "Game4 single lane true independent auto 18±3s is now SOURCE814 scoped native ARM64 Off/Fixed6 PASS, 16/16 new original authenticated lane+M4 swaps, 9436/9436 UDP no retry, <110ms successful receipt gap, sibling 3 TLS untouched. H1230 grouped 7 modes x86 remain prior SOURCE; H998 true live MTU fail retained."
 }

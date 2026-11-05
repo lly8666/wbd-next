@@ -15,3 +15,15 @@ H1230 七模式浮动定时**整组**换代SOURCE0cda x86/x86已真实PASS（162
 ```feature-impact
 {"kind":"updated","ids":["original-lane-rotation-jitter","game-lanes"],"reason":"H1231 user-authorized real independent Game4 same-epoch one-lane TLS/M4 hot swap across existing supervisor and M4 owner; native ARM64 business pending."}
 ```
+
+## H1233｜ARM64/ARM64 原生 Game4 单 lane 真正自动热换完成
+
+- Exact tested product SOURCE `814dec69f5200fa62dc63b76cb9ded1e9680a9b5`, original pinned Go TLS and Rust M4 native ARM64 binaries in [Action 41986067696](https://github.com/lly8666/wbd-next/actions/runs/41986067696), build plus **Game4 Off and Fixed6 two real business jobs PASS**. Supplementary native ABI run41986067687 PASS.
+- Both modes **eight separate original TLS/M4 rekeys per original Game4 group** lane1→2→3→4 twice, 16 selected actual new per-lane source ports matched client/server logs; only initial one Game4 server Rust owner, no 4-lane group re-creation, other 3 TLS sockets keep running. All 16 actual jittered delays 15–21s.
+- Three simultaneous authenticated real inner TUN UDP streams without app retries: Off alice1553/1553 bob1552/1552 carol1553/1553, Fixed6 alice1593/1593 bob1592/1592 carol1593/1593, **9436/9436 received** in these native no-injected-loss runs. Bob received-only RTT p99 Off 0.7198ms, Fixed6 0.7281ms; largest successful receipt gap109.502ms. Not a universal zero-loss WAN guarantee.
+- Both artifact ZIPs downloaded and upload SHA256 matched, CRC/testzip PASS, 9 files each, original raw 4 runtime logs and 3 actual stream receipts. See `docs/evidence/M0/PLAN028-H1233-SOURCE814-NATIVE-ARM64-GAME4-INDEPENDENT-LANE-HOT-REAL-UDP-PASS-20261105.json`; Go original StopAndRelease called before turn Ready, but no dedicated per-lane kernel stop trace exported.
+- Historical H998 true live same-socket MTU shrink FAIL and old ARM Game4 Action FAIL retained, other OS/physical switch/netem 5/30%/remote ICMP/CPU causality NOT_RUN under this exact SOURCE.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter","game-lanes"],"reason":"H1233 source814 native ARM64 original Go TLS/Rust Game4 truly independent 16 single-lane swaps with 9436/9436 no retry UDP, original verified artifacts and preserved sibling GameAdapter/FEC."}
+```

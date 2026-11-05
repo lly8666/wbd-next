@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1233",
+  "source_sha": "814dec69f5200fa62dc63b76cb9ded1e9680a9b5",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Linux ARM64 client/server ORIGINAL Go TLS + Rust M4 real independent Game4 single-lane hot 8 turns each for Off/Fixed6",
+  "action": {
+    "run_id": 41986067696,
+    "build_job_id": 127106955481,
+    "build_artifact_id": 13395404020,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41986067696",
+    "status": "success",
+    "native_abi_run_id": 41986067687
+  },
+  "origin": {
+    "go_donor": "lly8666/wobuzhidao",
+    "go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "platform": "native ARM64+ARM64 no QEMU",
+    "original_TLS_protected_clienthello": true,
+    "one_server_port": 443,
+    "outer_complete_IPv4_default_MTU_bytes": 1460
+  },
+  "architecture": "One existing Go path supervisor with 18s±3s bounded jitter sends one lane turn; genuine same-epoch original TLS/M1 client/server authentication, single Rust GameAdapter/Tx/Rx/FEC logical owner unchanged, only selected physical RAW RX worker and per-lane AEAD/PN/socket rekey; synchronous old native owner StopAndRelease before emitting new Ready. The other three lane TCP/TLS sessions do not restart. No wire/crypto/FEC algorithm or second recovery controller.",
+  "method": "Real 100ms no-retry inner TUN UDP from three simultaneously authenticated clients (Alice Game2, Bob Game4 target, Carol Normal Auto), two independent ARM64 native modes with 8 individual lane1,2,3,4,1,2,3,4 rotations each and 15..21s actual armed times; no physical loss injection, unchanged route/source/physical NIC/MTU",
+  "scenes": [
+    {
+      "mode": "game4-off",
+      "artifact_id": 13396415863,
+      "job_id": 127107772153,
+      "artifact_sha256": "1e3c90a24ebb8eb3dee66f390d31541edc1b636f89783befa75848a4d84eee8c",
+      "armed_delay_ms": [
+        17492,
+        17381,
+        18764,
+        16403,
+        17859,
+        18996,
+        18646,
+        20720
+      ],
+      "alice": [
+        1553,
+        1553,
+        0.633888,
+        100.899122
+      ],
+      "bob": [
+        1552,
+        1552,
+        0.719792,
+        108.723239
+      ],
+      "carol": [
+        1553,
+        1553,
+        0.725105,
+        102.139286
+      ],
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41986067696/artifacts/13396415863",
+      "artifact_zip_file_count": 9,
+      "zip_crc_test": "PASS",
+      "real_no_retry_udp": {
+        "alice": {
+          "sent": 1553,
+          "received": 1553,
+          "received_only_rtt_p99_ms": 0.633888,
+          "max_receipt_gap_ms": 100.899122
+        },
+        "bob": {
+          "sent": 1552,
+          "received": 1552,
+          "received_only_rtt_p99_ms": 0.719792,
+          "max_receipt_gap_ms": 108.723239
+        },
+        "carol": {
+          "sent": 1553,
+          "received": 1553,
+          "received_only_rtt_p99_ms": 0.725105,
+          "max_receipt_gap_ms": 102.139286
+        }
+      },
+      "real_client_and_server_single_lane_hot_ready": 8,
+      "server_original_game4_group_ready_count": 1,
+      "client_server_new_port_matched_all_8": true,
+      "unaffected_other_three_lanes_reauth_count": 0,
+      "game4_group_generation_during_hot_turns": 1,
+      "source_port_sequence": [
+        57881,
+        49421,
+        57341,
+        65261,
+        56797,
+        64717,
+        56257,
+        64177
+      ],
+      "conclusion": "PASS_SCOPED"
+    },
+    {
+      "mode": "game4-fixed6",
+      "artifact_id": 13396745253,
+      "job_id": 127107772052,
+      "artifact_sha256": "4d6289f20529c76cac9e79d7f0475741b24b49f690ee9b060bef149c0ea87614",
+      "armed_delay_ms": [
+        17316,
+        17361,
+        19320,
+        16808,
+        20735,
+        20284,
+        20908,
+        17723
+      ],
+      "alice": [
+        1593,
+        1593,
+        0.706114,
+        100.938066
+      ],
+      "bob": [
+        1592,
+        1592,
+        0.728064,
+        109.502057
+      ],
+      "carol": [
+        1593,
+        1593,
+        0.83537,
+        101.090919
+      ],
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41986067696/artifacts/13396745253",
+      "artifact_zip_file_count": 9,
+      "zip_crc_test": "PASS",
+      "real_no_retry_udp": {
+        "alice": {
+          "sent": 1593,
+          "received": 1593,
+          "received_only_rtt_p99_ms": 0.706114,
+          "max_receipt_gap_ms": 100.938066
+        },
+        "bob": {
+          "sent": 1592,
+          "received": 1592,
+          "received_only_rtt_p99_ms": 0.728064,
+          "max_receipt_gap_ms": 109.502057
+        },
+        "carol": {
+          "sent": 1593,
+          "received": 1593,
+          "received_only_rtt_p99_ms": 0.83537,
+          "max_receipt_gap_ms": 101.090919
+        }
+      },
+      "real_client_and_server_single_lane_hot_ready": 8,
+      "server_original_game4_group_ready_count": 1,
+      "client_server_new_port_matched_all_8": true,
+      "unaffected_other_three_lanes_reauth_count": 0,
+      "game4_group_generation_during_hot_turns": 1,
+      "source_port_sequence": [
+        57881,
+        49421,
+        57341,
+        65261,
+        56797,
+        64717,
+        56257,
+        64177
+      ],
+      "conclusion": "PASS_SCOPED"
+    }
+  ],
+  "aggregate": {
+    "native_build": 1,
+    "scenes": 2,
+    "all_scene_jobs_pass": true,
+    "individual_authenticated_game4_lane_swaps": 16,
+    "real_no_retry_udp_sent": 9436,
+    "real_no_retry_udp_echoed": 9436,
+    "app_missed_echoes": 0,
+    "max_successful_echo_gap_ms": 109.502057,
+    "game4_bob_received_only_p99_ms": {
+      "off": 0.719792,
+      "fixed6": 0.728064
+    },
+    "no_rebuilt_game4_native_groups_during_hot_rotation": true
+  },
+  "artifact_review": {
+    "downloaded_authentic_zip_count": 2,
+    "each_zip_crc_pass": true,
+    "uploaded_digest_matches_downloaded_sha256": true,
+    "zip_file_count_each": 9,
+    "each_contains_four_runtime_logs_and_three_true_app_stream_receipts": true,
+    "client_server_original_TLS_lane_and_port_and_round_correspondence_verified": true
+  },
+  "verification_boundary": [
+    "Game4 per-lane specific selected old owner Stop is synchronous in product source; test checks completed Ready, no distinct per-lane native Stop kernel trace in uploaded fixture.",
+    "No physical loss injected and no application misses in these 9436 requests: no general WAN zero-loss guarantee.",
+    "Not newly source-qualified for physical link A→B during hot lane, 5%/30% netem, Windows, Android, remote ICMP, inner long TCP or CPU causality.",
+    "Previous x86 seven-mode whole-group source0cda PASS H1230 is separate. Previous H998 true online same-socket MTU shrink FAIL and historical ARM Game4 Action FAIL retained."
+  ]
+}
