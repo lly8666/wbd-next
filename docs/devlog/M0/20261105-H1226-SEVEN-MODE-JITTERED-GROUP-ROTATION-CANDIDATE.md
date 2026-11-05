@@ -13,3 +13,6 @@
 
 ## H1227 CI workflow syntax correction
 Original commit 283ebf introduced an invalid workflow YAML due to a JS replacement string containing a dollar-single-quote sequence, which expanded the remainder of the workflow into the replacement. Run 41969205411 had zero jobs. This is a CI artifact construction FAIL only, not a real Go/Rust/TUN test. H1227 regenerates workflow via exact literal split/join, verifies unique build/scene sections. Product and fixtures unchanged, original source qualification NOT_RUN until native Action.
+
+## H1228 preflight fixture guard
+Action [41969472751](https://github.com/lly8666/wbd-next/actions/runs/41969472751) reached the first Python script generator but its broad ` -ge 2 ]]` substitution matched two guards, not one. Fixed by selecting the precise timer-due grep clause. Fixture-only preflight FAIL; no native product code compiled, source qualification still pending.
