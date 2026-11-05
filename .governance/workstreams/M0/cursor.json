@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1222,
-  "checkpoint_sha": "3eb7f65b164df3058d66d39f5d2f5bebf4e1cfbb",
-  "progress": "in_progress",
+  "sequence": 1223,
+  "checkpoint_sha": "ed80573fb3801e64814a2d38781c44ea8f3defac",
+  "progress": "partial",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1222 NEW USER ADDITION after H1221 scoped closeout: opt-in interval-based cold original TLS/Rust lane rotation even when physical NIC/IPv4 is unchanged. Reuse Linux shared TUN path supervisor, authenticated candidate/MTU readback and exact generation Stop; timer is disabled by default (explicit 5s..24h), no new controller/packet wire. Freeze one SOURCE and run three independent x86_64/x86_64 native scenarios Normal Auto/Game2 Off/Game4 Fixed6 with continuous real UDP all three authenticated devices, network readback unchanged, p99/CPU ticks/owned Stop. H1221 and H998 limitations stay scoped.",
-  "why_now": "User newly asks to implement scheduled rotation with unchanged network and sustained parallel real application flows; H1221 itself was user-scoped closed. Main 3eb7 contains governance-only closeout; no product delta yet. H1222 builds a new concrete requested delta, not re-opening old matrices.",
+  "current_task": "H1223 SOURCEed805 native x86_64 client + x86_64 server opt-in timed unchanged NIC/IP lane rotation: single Go TLS/Rust build, 3 independent parallel scenes NormalAuto/Game2Off/Game4Fixed6 all PASS. Real authenticated gen1→2→3 and exact Stop1/2, same lease, unmodified physical NIC/source IP/MTU, 3-device continuous UDP 2267/2267; CPU/p99 and timer→READY detection recorded. Scoped additional timer package finished, no historical matrix reopen.",
+  "why_now": "2026-11-05 new explicit user request for timer automatic lane rotation even without physical network changes with real sustained business. Final new SOURCEed805 Action41958680473 plus governance passed; predecessor 8a803 native PASS, 08e75 enhanced syntax FAIL retained separately. Old H1221 seven physical-mode SOURCE qualification remains separate.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect new m0-plan028-x86-same-path-timed-rotation Action build and all three independent native mode jobs for exact new SOURCE. Diagnose the narrowest native failure; if pass verify artifacts/CPU/p99/old exact Stop and update feature evidence and cursor without enlarging to old physical matrix. Next full Linux task ARM64/ARM64 per 2026-11-04 rotation.",
-  "unverified": true,
-  "last_tested_source": "53c7d47466dfe3b3d4dc5e9d97cb4748dff2ab41",
+  "next_action": "This H1223 scoped x86 timer work complete; no further test dispatch. Next complete Linux platform task, if within separately authorized ongoing scope, is native ARM64 client + ARM64 server per 2026-11-04 task-by-task rotation, never x86/ARM or QEMU-user. Windows timer, same-username timed multi-installation, timed inner TCP, Android, remote ICMP, exact TLS auth→first packet, CPU causality are NOT_RUN/NOT_QUALIFIED. 029 DNS / 030 CLI remain distinct module entrypoints.",
+  "unverified": false,
+  "last_tested_source": "ed80573fb3801e64814a2d38781c44ea8f3defac",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1221-SOURCE53C7-X86-NORMALFIXED6-TC30-250MS-SECOND-TLS-PASS-20261105.json",
-    "docs/evidence/M0/PLAN028-H1221-USER-DIRECTED-SCOPED-CLOSEOUT-20261105.json"
+    "docs/evidence/M0/PLAN028-H1223-SOURCEED805-X86-TIMED-SAME-PHYSICAL-THREE-MODES-REAL-UDP-PASS-20261105.json",
+    "docs/evidence/M0/PLAN028-H1221-USER-DIRECTED-SCOPED-CLOSEOUT-20261105.json",
+    "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1222 candidate implementation and matrix workflow staged, native SOURCE not yet qualified. H1221 source53c7 scoped PASS retained without promotion; H998 same-socket MTU FAIL, Android/ICMP/CPU causality and Windows gaps retained."
+  "partial_summary": "Exact SOURCEed805 H1223 x86/x86 three same-physical timed authentic original TLS/Rust handovers PASS, 2267/2267 actual no-retry UDP, lease and old exact Stop verified. Timer→READY observer and post-READY echo measured, CPU snapshot/p99, CPU causal/exact TLS-auth-to-packet NOT_PROVEN. Historic H1221 scope/H998 FAIL and unqualified platforms retained."
 }

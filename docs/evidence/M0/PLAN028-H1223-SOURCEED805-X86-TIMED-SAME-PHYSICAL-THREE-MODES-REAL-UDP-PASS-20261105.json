@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1223",
+  "source_sha": "ed80573fb3801e64814a2d38781c44ea8f3defac",
+  "status": "FUNCTIONAL_PASS_SCOPED_NATIVE_X86_THREE_TIMER_MODES",
+  "source_url": "https://github.com/lly8666/wbd-next/commit/ed80573fb3801e64814a2d38781c44ea8f3defac",
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/41958680473",
+  "workflow_run_id": 41958680473,
+  "build_job_id": 127019589849,
+  "shared_native_build_artifact_id": 13383884694,
+  "platform": "native Linux x86_64 client + native Linux x86_64 server (never heterogeneous/QEMU)",
+  "stack": "original pinned Go TLS/password/cert/route-key, Rust M4 actual native TUN, one shared server443 and three independent devices",
+  "source_build": "one hash-verified real x86_64 Go+Rust binary set reused by three parallel scene jobs",
+  "configuration": {
+    "rotation_interval": "12s (explicit opt-in)",
+    "rotation_default": "0 disabled",
+    "outer_complete_IPv4_MTU_default_bytes": 1460
+  },
+  "scenarios": [
+    {
+      "mode": "normal-auto",
+      "job_id": 127020231062,
+      "artifact_id": 13384740234,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41958680473/artifacts/13384740234",
+      "selected_rotating_device": "carol",
+      "authenticated_TLS_Rust_M4_generations": [
+        1,
+        2,
+        3
+      ],
+      "exact_old_generation_stop": [
+        1,
+        2
+      ],
+      "kernel_real_physical_NIC_source_IPv4_and_MTU_unchanged": true,
+      "verified_authenticated_lease_IPs_by_device_and_generation": {
+        "alice": [
+          "10.66.0.177"
+        ],
+        "bob": [
+          "10.66.0.150"
+        ],
+        "carol": [
+          "10.66.0.245",
+          "10.66.0.245",
+          "10.66.0.245"
+        ]
+      },
+      "actual_independent_TUN_UDP_streams_sent_echoed_and_received_only_RTT_p99_ms": {
+        "alice": [
+          251,
+          251,
+          3.871681
+        ],
+        "bob": [
+          230,
+          230,
+          18.494683
+        ],
+        "carol": [
+          257,
+          257,
+          0.734049
+        ]
+      },
+      "timer_due_unix_ms": [
+        1793847686360,
+        1793847698380
+      ],
+      "second_timer_fired_to_new_NATIVE_READY_poll_detect_ms": 163.656,
+      "new_NATIVE_READY_poll_detect_to_first_real_UDP_echo_ms": 60.313,
+      "process_CPU_percent_during_three_streams": {
+        "server": 1.633,
+        "alice": 0.778,
+        "bob": 0.972,
+        "carol": 0.739
+      }
+    },
+    {
+      "mode": "game2-off",
+      "job_id": 127020231204,
+      "artifact_id": 13384422310,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41958680473/artifacts/13384422310",
+      "selected_rotating_device": "alice",
+      "authenticated_TLS_Rust_M4_generations": [
+        1,
+        2,
+        3
+      ],
+      "exact_old_generation_stop": [
+        1,
+        2
+      ],
+      "kernel_real_physical_NIC_source_IPv4_and_MTU_unchanged": true,
+      "verified_authenticated_lease_IPs_by_device_and_generation": {
+        "alice": [
+          "10.66.0.213",
+          "10.66.0.213",
+          "10.66.0.213"
+        ],
+        "bob": [
+          "10.66.0.169"
+        ],
+        "carol": [
+          "10.66.0.152"
+        ]
+      },
+      "actual_independent_TUN_UDP_streams_sent_echoed_and_received_only_RTT_p99_ms": {
+        "alice": [
+          259,
+          259,
+          3.739356
+        ],
+        "bob": [
+          237,
+          237,
+          18.513596
+        ],
+        "carol": [
+          265,
+          265,
+          1.029526
+        ]
+      },
+      "timer_due_unix_ms": [
+        1793847686499,
+        1793847698545
+      ],
+      "second_timer_fired_to_new_NATIVE_READY_poll_detect_ms": 885.227,
+      "new_NATIVE_READY_poll_detect_to_first_real_UDP_echo_ms": 8.164,
+      "process_CPU_percent_during_three_streams": {
+        "server": 1.583,
+        "alice": 0.754,
+        "bob": 0.905,
+        "carol": 0.603
+      }
+    },
+    {
+      "mode": "game4-fixed6",
+      "job_id": 127020231029,
+      "artifact_id": 13384352665,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41958680473/artifacts/13384352665",
+      "selected_rotating_device": "bob",
+      "authenticated_TLS_Rust_M4_generations": [
+        1,
+        2,
+        3
+      ],
+      "exact_old_generation_stop": [
+        1,
+        2
+      ],
+      "kernel_real_physical_NIC_source_IPv4_and_MTU_unchanged": true,
+      "verified_authenticated_lease_IPs_by_device_and_generation": {
+        "alice": [
+          "10.66.0.254"
+        ],
+        "bob": [
+          "10.66.0.213",
+          "10.66.0.213",
+          "10.66.0.213"
+        ],
+        "carol": [
+          "10.66.0.135"
+        ]
+      },
+      "actual_independent_TUN_UDP_streams_sent_echoed_and_received_only_RTT_p99_ms": {
+        "alice": [
+          259,
+          259,
+          3.630031
+        ],
+        "bob": [
+          244,
+          244,
+          14.339361
+        ],
+        "carol": [
+          265,
+          265,
+          0.65397
+        ]
+      },
+      "timer_due_unix_ms": [
+        1793847690307,
+        1793847702399
+      ],
+      "second_timer_fired_to_new_NATIVE_READY_poll_detect_ms": 842.608,
+      "new_NATIVE_READY_poll_detect_to_first_real_UDP_echo_ms": 15.101,
+      "process_CPU_percent_during_three_streams": {
+        "server": 2.226,
+        "alice": 1.019,
+        "bob": 1.245,
+        "carol": 0.717
+      }
+    }
+  ],
+  "aggregate": {
+    "scenes": 3,
+    "real_tun_UDP_sent": 2267,
+    "real_tun_UDP_echoed": 2267,
+    "application_retries": 0,
+    "independent_devices_per_scene": 3
+  },
+  "timing_semantics": "Timer event→new authentic READY includes 250ms polling observation delay, not merely TLS handshake. New READY poll detected→first real UDP echo is NOT exact server TLS authentication finished→first packet. Physical network intentionally unchanged; native 200ms/500ms network-notification budget NOT_APPLICABLE, not handshake SLA.",
+  "CPU_scope": "Process utime+stime snapshot with real traffic and rotations: no controlled baseline or causal conclusion.",
+  "limits": {
+    "prior_PLAN027A_H998_live_same_connection_MTU_shrink": "FAIL_RETAINED",
+    "prior_H998_ARM_Game4_Action": "FAIL_RETAINED",
+    "prior_H1173_original_TLS": "FAIL_RETAINED",
+    "Windows_timer": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "remote_ICMP": "NOT_MEASURED",
+    "Linux_ARM64_timed": "NOT_RUN; next complete Linux task ARM64+ARM64",
+    "timed_same_account_multiple_devices": "NOT_RUN",
+    "timed_inner_TCP": "NOT_RUN",
+    "exact_TLS_auth_to_first_packet": "NOT_MEASURED",
+    "CPU_causality": "NOT_PROVEN"
+  },
+  "previous_source_scope": "H1221 SOURCE53c7 seven native Linux physical-change modes scoped closeout retained. Timer SOURCE8a803 2265 real UDP PASS; SOURCE08e75 enhancer bash syntax FAIL; only final SOURCEed805 2267/2267 enhanced native jobs PASS."
+}

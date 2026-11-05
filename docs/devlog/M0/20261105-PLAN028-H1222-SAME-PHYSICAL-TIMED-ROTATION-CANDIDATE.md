@@ -28,3 +28,15 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Evidence fixture backslash correction and early whole-scene syntax preflight; no new product changes, 08e75d8 results retained failed."}
 ```
+
+## H1223｜增强原生 SOURCE 冻结结算（2026-11-05）
+
+- [Action41958680473](https://github.com/lly8666/wbd-next/actions/runs/41958680473), SOURCE `ed80573fb3801e64814a2d38781c44ea8f3defac`: pinned original Go TLS/Rust M4 one native x86/x86 build; three parallel jobs Normal Auto, Game2 Off, Game4 Fixed6 all PASS, 12s periodic on unchanged real physical NIC/source IPv4/MTU; authentic [1,2,3] generations and exact Stop [1,2].
+- Three concurrently authenticated clients produce genuine no-app-retry UDP throughout each timer handover: Auto 738/738 (rotating p99 0.734ms), Game2Off 761/761 (3.739ms), Game4Fixed6 768/768 (14.339ms); grand 2267/2267. Per-device authenticated lease readbacks match live UDP source and stay constant across all three generations; distinct client devices remain online.
+- Second timer event→new authenticated READY poll observed: 163.656 / 885.227 / 842.608ms. READY observed→rotating device first genuine echoed UDP: 60.313 / 8.164 / 15.101ms. Includes 250ms poll cadence; NOT exact TLS auth completion→first wire packet, NOT a 200/500ms native network notification bound. Process CPU sampled in actual three-stream scene, causal CPU cost NOT_PROVEN.
+- Evidence JSON: `docs/evidence/M0/PLAN028-H1223-SOURCEED805-X86-TIMED-SAME-PHYSICAL-THREE-MODES-REAL-UDP-PASS-20261105.json`. Each job artifact includes 4 original Go/Rust runtime logs, kernel route/TUN readbacks, CPU ticks, full receipt timings, zipped artifact SHA256. No new data-wire/FEC/recovery algorithm.
+- This qualifies newly user-authorized Linux x86 timed three-mode UDP only. H1221 historic seven-mode real physical source closeout separate, H998 same-socket live MTU and historic ARM Game4 Action FAIL preserved. Windows timed, native ARM timed (next complete Linux task ARM64+ARM64), Android, remote ICMP, timed inner TCP, same-account two-device timed authentication, precise TLS-auth→first and CPU causality NOT_RUN/NOT_PROVEN.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1223 native x86 3-mode unchanged-network timer source-specific 2267/2267 UDP, lease and exact old Stop; old FAIL/NOT_RUN maintained."}
+```
