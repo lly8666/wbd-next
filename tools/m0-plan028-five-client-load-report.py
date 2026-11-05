@@ -1,0 +1,274 @@
+#!/usr/bin/env python3
+"""H1250 same-SOURCE five-client sustained load forensic report.
+
+The product's actual inner application TX is the denominator, not the
+configured offered rate. Intentional physical netem loss is independently
+counted and never reported as the product's own measured drop fraction.
+"""
+import argparse
+import json
+import math
+import pathlib
+import re
+import statistics
+
+
+PHASES = (
+    ("warmup", 10, .3), ("first_wave", 60, .6),
+    ("sustained", 240, 1.0), ("overload", 60, 1.3),
+)
+
+
+def read(path):
+    return json.loads(pathlib.Path(path).read_text())
+
+
+def mbps(byte_count, seconds):
+    return round(8 * byte_count / seconds / 1e6, 4)
+
+
+def first_nonzero(bins):
+    return next((i * 10 for i, n in enumerate(bins) if n), None)
+
+
+def windows(src, dst, start_s, seconds=240, step=30):
+    """30s bins of actual application offered/delivered bytes, same clock."""
+    rows = []
+    for offset in range(start_s, start_s + seconds, step):
+        a, b = offset * 100, (offset + step) * 100
+        tx = sum(src[a:b])
+        rx = sum(dst[a:b])
+        rows.append({
+            "window_s": [offset, offset + step],
+            "actual_offered_mbps": mbps(tx, step),
+            "delivered_mbps": mbps(rx, step),
+            "delivery_ratio": round(rx / tx, 5) if tx else None,
+        })
+    return rows
+
+
+def netem_counters(path):
+    output = pathlib.Path(path).read_text()
+    blocks = re.split(r"(?m)^== (.+?) (uplink|downlink)(?:.*?) ==$", output)
+    found = {}
+    for i in range(1, len(blocks), 3):
+        who, direction, content = blocks[i:i+3]
+        match = re.search(r"\bdropped\s+(\d+)", content)
+        found.setdefault(who, {})[direction] = int(match.group(1)) if match else None
+    return found
+
+
+def product_counters(server_log):
+    text = pathlib.Path(server_log).read_text(errors="replace")
+    lines = [x for x in text.splitlines()
+             if "V4_PUBLIC_SHARED_TUN_STOP generation=" in x]
+    if not lines:
+        return {"status": "NOT_OBSERVED"}
+    line = lines[-1]
+    counters = {}
+    for key in ("generation", "routed", "unrouted", "backpressure",
+                "queue_full_drops", "queue_byte_drops", "queue_age_drops",
+                "retired_drops"):
+        m = re.search(r"\b" + key + r"=(\d+)", line)
+        counters[key] = int(m.group(1)) if m else None
+    return {"status": "OBSERVED", **counters,
+            "scope": "server process shared TUN, aggregated across all 5 clients"}
+
+
+def analyze(art, product_log):
+    plan = read(art / "h1250-matrix-plan.json")
+    assert plan["application_load_seconds"] == 370
+    assert plan["simultaneous_stress_seconds"] == 360
+    assert len(plan["clients"]) == 5
+    net_after = netem_counters(art / "h1250-qdisc-after.txt")
+    net_before = netem_counters(art / "h1250-qdisc-before.txt")
+    cpu = read(art / "h1250-cpu-rss.json")
+    result = {
+        "schema_version": 1, "source_sha": plan["source_sha"],
+        "test_id": "M0-H1250-X86-5CLIENT-HETEROGENEOUS-370S",
+        "result": "DIAGNOSTIC_COMPLETE",
+        "qualification": "NATIVE_ORIGINAL_GO_TLS_RUST_TUN_PERFORMANCE_OBSERVATION_ONLY",
+        "network_scope": plan["network_scope"], "server_port": 443,
+        "shared_server_tun": "one true native original Rust TUN reader",
+        "start_monotonic_ns": plan["start_monotonic_ns"],
+        "stress_duration_seconds": plan["simultaneous_stress_seconds"],
+        "total_application_load_seconds": plan["application_load_seconds"],
+        "phase_seconds": {n: sec for n, sec, _ in PHASES},
+        "method": {
+            "business": "10 same-monotonic-start native TUN application workers, 5 bidirectional real UDP and 2 TCP pairs",
+            "offered_denominator": "real successful application sends, not configured Mbps",
+            "generator_quality": "actual sent vs target + send lag/backpressure, separate from tunnel delivery",
+            "loss": "tc physical underlay qdisc both egress directions, per peer; kernel counters readback",
+            "latency": "same-runner monotonic embedded send timestamps, one-way delivered-only p99; 2Hz sparse probes",
+            "no_application_retries": True,
+            "tcp_note": "TCP sizes are application framed records, not independent IP packets; TCP loss recovery is by stack",
+            "cpu": "low-frequency /proc process CPU ticks and peak RSS, no causal A/B baseline",
+            "limits": "hosted x86_64 virtualized netns, not external line-speed or Windows/ARM physical capacity",
+        },
+        "clients": {}, "alerts": [], "aggregate": {},
+        "tc_netem_before": net_before, "tc_netem_after": net_after,
+        "shared_tun": product_counters(product_log),
+        "process_cpu_rss": cpu,
+    }
+    all_starts = set()
+    agg = {phase: {"actual_tx_bytes": 0, "delivered_rx_bytes": 0,
+                   "observed_udp_tx_packets": 0, "observed_udp_rx_packets": 0}
+           for phase, _, _ in PHASES}
+    for spec in plan["clients"]:
+        who = spec["who"]
+        client = read(art / ("h1250-c-" + who + ".json"))
+        server = read(art / ("h1250-s-" + who + ".json"))
+        assert client["role"] == "client" and server["role"] == "server", who
+        assert client["start_ns"] == server["start_ns"] == plan["start_monotonic_ns"], who
+        assert client["end_ns"] - client["start_ns"] == 370_000_000_000
+        assert server["end_ns"] - server["start_ns"] == 370_000_000_000
+        assert not client["capacity_exceeded"] and not server["capacity_exceeded"], who
+        all_starts.add(client["start_ns"])
+        for direction in ("uplink", "downlink"):
+            if direction == "uplink":
+                tx, rx = client, server
+            else:
+                tx, rx = server, client
+            assert len(tx["stats"]["udp"]) == len(rx["stats"]["udp"]) == len(PHASES)
+        peer = {"config": spec, "directions": {}, "generator_errors": {},
+                "tc_actual_dropped_egress_packets": net_after.get(who, {}),
+                "cpu": {key: cpu.get(key) for key in (
+                    who, "s-" + who, "c-" + who)}}
+        for side, data in (("client", client), ("server", server)):
+            peer["generator_errors"][side] = {
+                "errors": data["errors"], "socket_drops": data["socket_drops"],
+                "effective_buffers": data["effective_buffers"],
+                "tcp_pending_at_deadline": data["tcp_pending_at_deadline"],
+            }
+        for direction in ("uplink", "downlink"):
+            tx, rx = (client, server) if direction == "uplink" else (server, client)
+            phases = []
+            for index, (name, seconds, scale) in enumerate(PHASES):
+                stats = {}
+                for proto in ("udp", "tcp"):
+                    sent = tx["stats"][proto][index]
+                    received = rx["stats"][proto][index]
+                    actual = sent["tx_packets"]
+                    delivered = received["rx_packets"]
+                    target = spec["c2s_target_mbps" if direction == "uplink"
+                                  else "s2c_target_mbps"]
+                    share = spec["udp_share"] if proto == "udp" else 1-spec["udp_share"]
+                    requested = target * share * scale
+                    sent_rate = mbps(sent["tx_bytes"], seconds)
+                    rx_rate = mbps(received["rx_bytes"], seconds)
+                    stats[proto] = {
+                        "scheduled": sent["scheduled"],
+                        "actual_sent_packets": actual,
+                        "received_unique_packets": delivered,
+                        "observed_missing_packets": max(0, actual - delivered),
+                        "observed_delivery_fraction": (
+                            round(delivered / actual, 6) if actual else None),
+                        "target_mbps": round(requested, 3),
+                        "actual_sent_mbps": sent_rate,
+                        "received_mbps": rx_rate,
+                        "generator_target_fraction": (
+                            round(sent_rate/requested, 4) if requested else None),
+                        "sender_errors": sent["send_errors"],
+                        "emsgsize": sent["emsgsize"],
+                        "sender_backpressure": sent["backpressure"],
+                        "sender_lag_p99_ms": sent["send_lag"]["p99_ms"],
+                        "delivered_only_oneway_p99_ms": received["latency"]["p99_ms"],
+                        "delivered_only_oneway_max_ms": received["latency"]["max_ms"],
+                        "received_duplicate_packets": received["duplicates"],
+                        "received_invalid_packets": received["invalid"],
+                    }
+                    agg[name]["actual_tx_bytes"] += sent["tx_bytes"]
+                    agg[name]["delivered_rx_bytes"] += received["rx_bytes"]
+                    if proto == "udp":
+                        agg[name]["observed_udp_tx_packets"] += actual
+                        agg[name]["observed_udp_rx_packets"] += delivered
+                    if requested and sent_rate < requested * .7:
+                        result["alerts"].append({
+                            "client": who, "direction": direction, "phase": name,
+                            "protocol": proto, "class": "OFFERED_RATE_NOT_ACHIEVED",
+                            "note": "Generator or transport backpressure; not proof of product packet loss.",
+                            "actual_mbps": sent_rate, "target_mbps": requested,
+                        })
+                    if proto == "udp" and actual and delivered < .65 * actual:
+                        result["alerts"].append({
+                            "client": who, "direction": direction, "phase": name,
+                            "protocol": proto, "class": "LOW_DELIVERED_FRACTION",
+                            "note": "Includes intentional qdisc loss and possible path/CPU/queue loss; inspect tc and per-process stats.",
+                            "fraction": round(delivered/actual, 5),
+                        })
+                phases.append({"name": name, "duration_seconds": seconds, "protocols": stats})
+            sent_bytes = tx["tx_bytes_bins_10ms"]["udp"]
+            got_bytes = rx["rx_bytes_bins_10ms"]["udp"]
+            assert len(sent_bytes) == len(got_bytes), who
+            sustained_windows = windows(sent_bytes, got_bytes, 70)
+            if any(w["actual_offered_mbps"] >= 1 and w["delivered_mbps"] < .25
+                   for w in sustained_windows):
+                result["alerts"].append({
+                    "client": who, "direction": direction,
+                    "phase": "sustained", "class": "SUSTAINED_30S_DELIVERY_STALL",
+                    "note": "True 30s zero/near-zero business receive while sender still offered.",
+                })
+            peer["directions"][direction] = {
+                "phases": phases,
+                "first_UDP_send_offset_ms": first_nonzero(
+                    tx["tx_bins_10ms"]["udp"]),
+                "first_UDP_receive_offset_ms": first_nonzero(
+                    rx["rx_bins_10ms"]["udp"]),
+                "sustained_30s_windows": sustained_windows,
+                "sender_probe_rtt_p99_ms": [
+                    tx["stats"]["udp"][i]["rtt"]["p99_ms"]
+                    for i in range(len(PHASES))],
+            }
+            # Fundamental diagnostic: observe at least some business in every
+            # phase/direction. An under-load stall is not a made-up success.
+            for ph in phases:
+                u = ph["protocols"]["udp"]
+                if not u["actual_sent_packets"] or not u["received_unique_packets"]:
+                    result["alerts"].append({
+                        "client": who, "direction": direction,
+                        "phase": ph["name"], "class": "NO_UDP_BUSINESS_PROGRESS"})
+        for direction in ("uplink", "downlink"):
+            if spec["loss_pct"]:
+                count = net_after.get(who, {}).get(direction)
+                assert isinstance(count, int) and count > 0, (
+                    who, direction, "physical netem loss not actually observed", net_after)
+        result["clients"][who] = peer
+    assert len(all_starts) == 1, "non-synchronous business start"
+    for name, seconds, _ in PHASES:
+        vals = agg[name]
+        vals["actual_sent_mbps_both_directions"] = mbps(vals["actual_tx_bytes"], seconds)
+        vals["delivered_mbps_both_directions"] = mbps(vals["delivered_rx_bytes"], seconds)
+        vals["observed_UDP_delivery_fraction"] = round(
+            vals["observed_udp_rx_packets"] / vals["observed_udp_tx_packets"], 6)
+        vals["loss_interpretation"] = "INCLUDES_REAL_TC_INJECTION;_NOT_CAUSAL_PRODUCT_LOSS"
+    result["aggregate"] = agg
+    result["alert_count"] = len(result["alerts"])
+    result["performance_verdict"] = ("BOTTLENECK_OR_LOSS_ALERTS_PRESENT"
+                                     if result["alerts"] else
+                                     "NO_CONFIGURED_ALERTS_IN_THIS_SCOPED_SCENE")
+    # CI success means this real workload ran and yielded inspectable evidence.
+    # It does NOT magically mean the software met every performance target.
+    result["result"] = (
+        "DIAGNOSTIC_COMPLETE_WITH_ALERTS" if result["alerts"]
+        else "DIAGNOSTIC_COMPLETE_NO_CONFIGURED_ALERTS")
+    return result
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--art", required=True)
+    ap.add_argument("--product-log", required=True)
+    ap.add_argument("--output", required=True)
+    a = ap.parse_args()
+    result = analyze(pathlib.Path(a.art), pathlib.Path(a.product_log))
+    pathlib.Path(a.output).write_text(json.dumps(result, indent=2) + "\n")
+    for phase, stats in result["aggregate"].items():
+        print(f"H1250_LOAD_{phase.upper()} sent={stats['actual_sent_mbps_both_directions']}"
+              f"Mbps received={stats['delivered_mbps_both_directions']}Mbps"
+              f" UDP_delivery={stats['observed_UDP_delivery_fraction']}", flush=True)
+    print(f"H1250_PERFORMANCE_VERDICT={result['performance_verdict']}"
+          f" alerts={result['alert_count']} source={result['source_sha']}", flush=True)
+
+
+if __name__ == "__main__":
+    main()
