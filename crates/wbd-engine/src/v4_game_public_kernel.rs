@@ -56,6 +56,22 @@ impl RxLockSample{
     }
 }
 #[derive(Default)]
+struct TxDurationSample{
+    offers:AtomicU64,offer_total_ns:AtomicU64,offer_max_ns:AtomicU64,
+    polls:AtomicU64,poll_total_ns:AtomicU64,poll_max_ns:AtomicU64,
+}
+impl TxDurationSample{
+    fn observe(&self,elapsed:Duration,offer:bool){
+        let ns=elapsed.as_nanos().min(u128::from(u64::MAX)) as u64;
+        let (samples,total,max)=if offer{
+            (&self.offers,&self.offer_total_ns,&self.offer_max_ns)
+        }else{(&self.polls,&self.poll_total_ns,&self.poll_max_ns)};
+        samples.fetch_add(1,Ordering::Relaxed);
+        total.fetch_add(ns,Ordering::Relaxed);
+        max.fetch_max(ns,Ordering::Relaxed);
+    }
+}
+#[derive(Default)]
 struct TxRejectReasons {
     offer:AtomicU64,slab:AtomicU64,record:AtomicU64,policy:AtomicU64,
     raw:AtomicU64,raw_backpressure:AtomicU64,raw_route:AtomicU64,raw_mtu:AtomicU64,
@@ -85,6 +101,8 @@ pub(crate) struct GameKernelOwner{
     rx_lane_switch:Vec<SyncSender<RxLaneSwitch>>,
     physical_ifname:String,physical_ifindex:u32,
     physical_generation:u32,server:bool,
+    diagnostic_adapter:Arc<Mutex<GameAdapter>>,
+    tx_work_sample:Arc<TxDurationSample>,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -141,6 +159,10 @@ impl GameKernelOwner{
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
         let tx_reasons=Arc::new(TxRejectReasons::default());
+        let tx_work_sample=Arc::new(TxDurationSample::default());
+        let tx_sample_worker=Arc::clone(&tx_work_sample);
+        let tx_sample_enabled=std::env::var("WBD_GAME_TX_SAMPLE")
+            .ok().as_deref()==Some("1");
         let raw_received=Arc::new(AtomicU64::new(0));
         let rx_reject=Arc::new(RxRejectReasons::default());
         let rx_driver_timeout=Arc::new(AtomicU64::new(0));
@@ -230,6 +252,8 @@ impl GameKernelOwner{
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
                 let mut observed_hints=[0u64;4];
+                let mut observed_offers=0u64;
+                let mut observed_polls=0u64;
                 while !tx_stop.load(Ordering::Acquire){
                     // The original path supervisor admits exactly one
                     // protected cold lane. Rekey within the existing TX
@@ -331,7 +355,14 @@ impl GameKernelOwner{
                             did_business=true;
                             health.on_local_business(health_origin.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64);
-                            if game.offer(&inbound[..len],now).is_err(){
+                            observed_offers+=1;
+                            let start_offer=(tx_sample_enabled&&observed_offers%128==0)
+                                .then(Instant::now);
+                            let outcome=game.offer(&inbound[..len],now);
+                            if let Some(t)=start_offer{
+                                tx_sample_worker.observe(t.elapsed(),true);
+                            }
+                            if outcome.is_err(){
                                 tx_fail.offer.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                             }
@@ -513,7 +544,14 @@ impl GameKernelOwner{
                             // long continuous TX/parity round.
                             let fec_now=MonoNs(start.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64);
-                            match game.poll_game_fec(fec_now){
+                            observed_polls+=1;
+                            let start_poll=(tx_sample_enabled&&observed_polls%128==0)
+                                .then(Instant::now);
+                            let poll_result=game.poll_game_fec(fec_now);
+                            if let Some(t)=start_poll{
+                                tx_sample_worker.observe(t.elapsed(),false);
+                            }
+                            match poll_result{
                                 Ok(0)=>break,
                                 Ok(_)=>{
                                     parity_ready=true;
@@ -966,7 +1004,8 @@ impl GameKernelOwner{
             rx_delivery_commit_failed,rx_lock_sample,tx_reasons,outer_blocked_duplicate,
             outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
-            physical_generation:generation,server})
+            physical_generation:generation,server,
+            diagnostic_adapter:adapter,tx_work_sample})
     }
     /// A NEW real original-Go TLS+Rust M1 lane has just committed while
     /// the remaining lanes of this GameAdapter stay LIVE. Reuse the existing
@@ -1043,6 +1082,32 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
+        // Readback reflects ACTUAL finished native RS16 calls, not just a
+        // Cargo feature bit or an unverified backend preference.
+        #[cfg(feature="fec2_product_record")]
+        if let Ok(game)=self.diagnostic_adapter.lock(){
+            if let Some((tx,_))=game.game_fec_counters(){
+                let rx=game.game_fec_rx_counters().unwrap_or_default();
+                eprintln!("M0_GAME_M4_FEC_BACKEND_READBACK selected={} native_linked={} tx_native_quanta={} tx_scalar_quanta={} rx_native_decodes={} rx_scalar_decodes={} late_complete_repair_skips={}",
+                    if std::env::var("WBD_GAME_FEC_BACKEND").ok().as_deref()==Some("scalar"){
+                        "scalar"
+                    }else{"prefer-native"},
+                    u8::from(cfg!(feature="native_fec_acceleration")),
+                    tx.tx_native_quanta,tx.tx_scalar_quanta,
+                    rx.rx_native_decodes,rx.rx_scalar_decodes,
+                    rx.rx_late_complete_repair_skips);
+            }
+        }
+        if self.tx_work_sample.offers.load(Ordering::Relaxed)>0||
+            self.tx_work_sample.polls.load(Ordering::Relaxed)>0{
+            eprintln!("M0_GAME_M4_TX_DURATION_SAMPLE offer_samples={} offer_total_ns={} offer_max_ns={} poll_samples={} poll_total_ns={} poll_max_ns={} stride=128",
+                self.tx_work_sample.offers.load(Ordering::Relaxed),
+                self.tx_work_sample.offer_total_ns.load(Ordering::Relaxed),
+                self.tx_work_sample.offer_max_ns.load(Ordering::Relaxed),
+                self.tx_work_sample.polls.load(Ordering::Relaxed),
+                self.tx_work_sample.poll_total_ns.load(Ordering::Relaxed),
+                self.tx_work_sample.poll_max_ns.load(Ordering::Relaxed));
+        }
         // On-owned-Stop aggregate only; rejected native copies are not WAN loss.
         eprintln!("M0_GAME_M4_TX_REJECT_BREAKDOWN offer={} slab={} record={} policy={} raw={} raw_backpressure={} raw_route={} raw_mtu={} total_rejected={}",
             self.tx_reasons.offer.load(Ordering::Relaxed),

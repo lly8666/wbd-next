@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1252,
-  "checkpoint_sha": "f2dec3bf5f22c50ff8e05a9f8084c5e297086221",
+  "sequence": 1253,
+  "checkpoint_sha": "b1954c83a6efc39dd536f07d205b85c47a81050c",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1252 close scoped user-requested 5-client 370s native stress experiment: H1250 SOURCE2f87 and H1251 SOURCEf2dec identical original Go/Rust binary hashes, two complete 370s native actions. netem limit10000 control restored Dave actual configured 15.0% physical loss, but Game4 sustained downlink 84.6466% and overload67.1593% unique app UDP delivery, Dave client shared TUN full101917, server shared full168844 with backpressure358866, other clients >97% overload DL; H1251 x86 diagnostic has 11 alerts, not product perf PASS.",
-  "why_now": "The user requested simultaneous >5 minute heterogeneous client performance bottleneck qualification. Two same-product-binary full Actions and original qdisc control establish genuine scoped Game4 overload and TUN backpressure; archive the measurements and limitations without ungrounded product redesign.",
+  "current_task": "H1253 first user-prioritized native FEC acceleration and runtime readback: product Game4 RS16 already supported PreferNative but H1250/H1251 builds omitted native_fec_acceleration. Add pinned ISA-L v2.31.1 real current-source release link, opt-in scalar diagnostic selector on same binary, actual TX parity and RX recovery backend counters at owned Game Stop; 1/128 TX offer/poll timing + existing 1/128 RX mutex wait/hold; avoid copying/parity re-decoding fully-delivered late repair. ONE native x86 same-VM sequential scalar→native 90s/leg Game4Fixed6 at real physical15%/100ms with healthy NormalOff sibling, 40s sustained/20s overload/25s recovery and 5s warmup. No 370s matrix rerun until diagnostic attribution.",
+  "why_now": "User identified highest-return fix: prior long-stress product did not link native ISA-L despite existing RS16 dispatch, and a code path copies authenticated late fully delivered FEC parity. Narrow native build and runtime instrumentation before touching FEC/game parameters, with one VM short same-binary A/B.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "User-requested H1250/H1251 multi-client load diagnostic is complete; report accurate observed bottleneck and test-environment bounds. Optional separately authorized narrow per-lease queue/owner-stage attribution + matched-rate Game4 FEC vs Normal/Off A/B can isolate cause before changing product buffering. Keep H998 historical same-socket MTU FAIL and remaining PLAN028 Windows/Android/CPU causal unqualified. Do not rerun same full 370s matrix redundantly.",
+  "next_action": "Inspect H1253 same-SOURCE native ISA-L link+late parity test build and short scalar/native Action; inspect actual backend TX/RX call witness, 1/128 TX/RX sampling, Game4/Normal real application throughput and overload→recovery. Fix only concrete compile/fixture causes; do not dispatch five-client 370s again or claim backend speedup from link-only proof.",
   "unverified": true,
   "last_tested_source": "f2dec3bf5f22c50ff8e05a9f8084c5e297086221",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1250 source2f87 370s five clients diagnostic PASS evidence with default netem limit1000 confound; H1251 sourcef2dec identical product binaries 370s five clients with netem limit10000/actual Dave15% qdisc loss, Game4 DL steady84.65%, overload67.16%, Dave client shared TUN full101917 and server full168844. x86 Action42077824041 evidence ZIP CRC/SHA valid; 11 alerts, not a product performance PASS; 0/1/5% and NormalFixed30% sibling delivery mostly high. Broader PLAN028/H998 limitations unchanged."
+  "partial_summary": "H1253 candidate actual Game4 FEC RS16 acceleration build with pinned ISA-L and runtime Stop backend readback + separate short same-VM scalar/native 2-client live stress. Previous H1251 five-client 370s showed Game4 high-loss bottleneck and shared TUN overflow but native acceleration not linked; earlier H1247 bounded backlog recovery unit 4/4 PASS; H998 old MTU FAIL stays. New SOURCE functional result pending."
 }

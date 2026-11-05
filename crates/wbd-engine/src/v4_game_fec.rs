@@ -9,7 +9,15 @@ use crate::runtime::fec2_owner::{
 use crate::fec2_staged::StagedParity;
 use crate::v4_fec2_live_rx::{Fec2LiveRx,VerifiedReceiveEpoch,ReceiveError};
 use crate::v4_game_lane::Error as GameError;
-use wbd_codec::fec_v2::{self,Profile as CodecProfile,Rs16,BackendChoice,MAX_BATCH_ROWS};
+use wbd_codec::fec_v2::{self,Profile as CodecProfile,Rs16,BackendChoice,BackendUsed,MAX_BATCH_ROWS};
+
+// A/B-only, read once when a genuine authenticated Game FEC owner is installed.
+// Production stays PreferNative: native only if ISA-L was really linked.
+fn selected_game_fec_backend()->BackendChoice{
+    if std::env::var("WBD_GAME_FEC_BACKEND").ok().as_deref()==Some("scalar"){
+        BackendChoice::Scalar
+    }else{BackendChoice::PreferNative}
+}
 use wbd_types::{ConfigRevision,MonoNs,LogicalPacketId};
 use wbd_types::buffer_contract::UniqueSealable;
 
@@ -22,6 +30,9 @@ pub(crate) struct GameFecCounters{
     // MUST NOT be conflated with a cryptographic tag failure.
     pub rx_invalid:u64,pub rx_conflict:u64,pub rx_capacity:u64,
     pub rx_codec:u64,pub rx_state:u64,pub rx_frame:u64,
+    pub tx_native_quanta:u64,pub tx_scalar_quanta:u64,
+    pub rx_native_decodes:u64,pub rx_scalar_decodes:u64,
+    pub rx_late_complete_repair_skips:u64,
 }
 struct Flight{
     job:ParityJob,prepared:StagedParity,copied:u8,
@@ -32,7 +43,7 @@ pub(crate) struct GameFecTx{
     rs:Rs16,profile:CodecProfile,math_scratch:Vec<u8>,
     repair_scratch:[Vec<u8>;MAX_BATCH_ROWS],
     source_arena:Arena,in_flight:Option<Flight>,
-    budget:usize,lanes:usize,counters:GameFecCounters,
+    budget:usize,lanes:usize,backend:BackendChoice,counters:GameFecCounters,
 }
 impl GameFecTx{
     pub(crate) fn new(profile:u8,scope:VerifiedReceiveEpoch,
@@ -62,6 +73,7 @@ impl GameFecTx{
             math_scratch:Vec::new(),
             repair_scratch:std::array::from_fn(|_|Vec::new()),
             source_arena,in_flight:None,budget,lanes,
+            backend:selected_game_fec_backend(),
             counters:GameFecCounters::default()})
     }
     pub(crate) fn max_original(&self)->usize{
@@ -170,10 +182,14 @@ impl GameFecTx{
             self.counters.expired+=1;
             return Ok(0)
         }
-        let Some((count,_))=flight.prepared.next_quantum_reuse(
-            &self.rs,self.budget,BackendChoice::default(),
+        let Some((count,used))=flight.prepared.next_quantum_reuse(
+            &self.rs,self.budget,self.backend,
             &mut self.repair_scratch
         ).map_err(|_|GameError::Invalid)? else{return Ok(0)};
+        match used{
+            BackendUsed::NativeIsaL=>self.counters.tx_native_quanta+=1,
+            BackendUsed::Scalar=>self.counters.tx_scalar_quanta+=1,
+        }
         for row in self.repair_scratch.iter().take(count){
             let mut typed=[0u8;2048];
             typed[0]=3;typed[1..1+row.len()].copy_from_slice(row);
@@ -245,10 +261,18 @@ impl GameFecRx{
         ->Option<Self>{
         if profile>6||inner_mtu<=32{return None}
         let budget=inner_mtu.checked_sub(1)?;
-        let rx=Fec2LiveRx::from_authenticated_scope(scope,budget+31).ok()?;
+        let mut rx=Fec2LiveRx::from_authenticated_scope(scope,budget+31).ok()?;
+        rx.configure_backend(selected_game_fec_backend());
         Some(Self{rx,scope,budget,counters:GameFecCounters::default()})
     }
-    pub(crate) fn counters(&self)->GameFecCounters{self.counters}
+    pub(crate) fn counters(&self)->GameFecCounters{
+        let mut c=self.counters;
+        let rx=self.rx.capacity_report();
+        c.rx_native_decodes=rx.backend_native_decodes;
+        c.rx_scalar_decodes=rx.backend_scalar_decodes;
+        c.rx_late_complete_repair_skips=rx.late_complete_repair_skips;
+        c
+    }
     pub(crate) fn receive(&mut self,data:&[u8],now:MonoNs)
         ->Result<Vec<Vec<u8>>,GameError>{
         let Some((&kind,body))=data.split_first() else{

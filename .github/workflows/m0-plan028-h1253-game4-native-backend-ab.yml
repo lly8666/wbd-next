@@ -1,0 +1,184 @@
+name: M0 PLAN028 H1253 Game4 FEC native vs scalar same VM paired
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1253-game4-native-backend-ab.yml"
+      - "tools/m0-plan028-h1253-game4-short-netns.py"
+      - "tools/m0-plan028-h1253-short-report.py"
+      - "crates/wbd-engine/src/v4_game_fec.rs"
+      - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-plan028-h1253-game4-ab
+  cancel-in-progress: false
+jobs:
+  native-x86-five-client:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile exact-SOURCE original Go TLS + Rust real raw/TUN product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          mkdir -p fixed-build fixed-kernel-result
+          python3 -m py_compile tools/m0-plan028-h1253-game4-short-netns.py tools/m0-plan028-h1253-short-report.py
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . \
+            --manifest r0/go_overlay/assembly/manifest-plan020-m0.json \
+            --receipt fixed-kernel-result/h1250-assembly.json
+          python3 - <<'PY_ASSEMBLE'
+          import json,os,pathlib
+          root=pathlib.Path.cwd();donor=root/"legacy"
+          r=json.loads((root/"fixed-kernel-result/h1250-assembly.json").read_text())
+          assert r["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert r["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              src=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),dst
+              dst.write_bytes(src.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role);dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes(
+                  (root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          print("H1250_SOURCE_LOCKED_ORIGINAL_GO_ASSEMBLY_PASS",flush=True)
+          PY_ASSEMBLE
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1253-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >fixed-kernel-result/h1253-isal-build.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1253-isal-build.log >&2
+            exit 1
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_embedded_go,fec2_product_record,native_fec_acceleration \
+            --lib m0_fec2_live_rx_late_fully_received_repair_skips_without_copy_or_decode \
+            -- --test-threads=1 --nocapture >fixed-kernel-result/h1253-fec-late-test.log 2>&1 || {
+              tail -120 fixed-kernel-result/h1253-fec-late-test.log >&2
+              exit 1
+            }
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/h1253-fec-late-test.log
+          cargo +1.85.1 build --locked --release -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            >fixed-kernel-result/h1253-rust-build.log 2>&1 || {
+              tail -120 fixed-kernel-result/h1253-rust-build.log >&2
+              exit 1
+            }
+          nm target/release/libwbd_engine.so | grep -Eq ' [tT] ec_encode_data$'
+          echo H1253_PINNED_NATIVE_ISAL_PRODUCT_LINK_AND_LATE_FEC_REGRESSION_PASS
+          cp target/release/libwbd_engine.so fixed-build/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
+          (cd legacy && go build -trimpath -buildvcs=false \
+            -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+            -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false \
+            -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+            -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          python3 - <<'PY_MANIFEST'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          checks={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              raw=(root/name).read_bytes()
+              assert raw[:4]==b"\x7fELF" and struct.unpack_from("<H",raw,18)[0]==62
+              checks[name]=hashlib.sha256(raw).hexdigest()
+          (root/"manifest.json").write_text(json.dumps({
+              "source_sha":os.environ["GITHUB_SHA"],
+              "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+              "go":"1.23.12","rust":"1.85.1","architecture":"native_x86_64",
+              "sha256":checks,"qualification":"BUILD_ONLY_UNTIL_LOAD_REPORT"},indent=2)+"\n")
+          print("H1250_NATIVE_CURRENT_SOURCE_BINARIES_BUILT_PASS",flush=True)
+          PY_MANIFEST
+      - name: Short same-VM scalar then true ISA-L 2-client Game4+Normal controlled A/B
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          for mode in scalar native;do
+            mkdir -p "fixed-kernel-result/h1253-$mode"
+            export WBD_GAME_FEC_BACKEND="$mode"
+            python3 -u tools/m0-plan028-h1253-game4-short-netns.py fixed-build \
+              >"fixed-kernel-result/h1253-$mode/run.log" 2>&1 || {
+                tail -170 "fixed-kernel-result/h1253-$mode/run.log" >&2
+                exit 1
+              }
+            grep -Fq M0_H1253_NATIVE_ORIGINAL_TLS_RUST_GAME4_SIBLING_90S_DIAGNOSTIC_COMPLETE \
+              "fixed-kernel-result/h1253-$mode/run.log"
+            cp fixed-kernel-result/h1250-* "fixed-kernel-result/h1253-$mode/"
+            cp "fixed-kernel-result/h1253-$mode/h1250-five-client-report.json" \
+              "fixed-kernel-result/h1253-$mode/leg.json"
+          done
+          python3 - <<'PY_AB'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          legs={}
+          for mode in ("scalar","native"):
+              row=json.loads((root/("h1253-"+mode)/"leg.json").read_text())
+              assert row["source_sha"]==os.environ["GITHUB_SHA"]
+              assert row["backend_choice"]==mode and row["real_load_seconds"]==90
+              assert set(row["clients"])=={"alice","dave"}
+              counters=row["clients"]["dave"]["backend"]
+              assert counters["observed"] and counters["native_linked"]==1
+              if mode=="native":
+                  assert counters["tx_native_quanta"]>0 and counters["tx_scalar_quanta"]==0
+              else:
+                  assert counters["tx_scalar_quanta"]>0 and counters["tx_native_quanta"]==0
+              legs[mode]=row
+          def goodput(mode,phase,direction):
+              return legs[mode]["clients"]["dave"]["directions"][direction][phase]["udp_delivered_mbps"]
+          summary={"result":"H1253_SCOPED_REAL_NATIVE_BACKEND_SAME_VM_AB_COMPLETE",
+              "source_sha":os.environ["GITHUB_SHA"],
+              "product_rust_so_sha256":hashlib.sha256(pathlib.Path("fixed-build/libwbd_engine.so").read_bytes()).hexdigest(),
+              "order":["scalar","native"],"seconds_per_leg":90,
+              "game4_actual_backend":{mode:legs[mode]["clients"]["dave"]["backend"] for mode in legs},
+              "game4_delivered_mbps":{mode:{direction:{
+                  p:goodput(mode,p,direction) for p in ("sustained","overload","recovery")}
+                  for direction in ("uplink","downlink")} for mode in legs},
+              "interpretation":"A/B is one same VM sequential short run, not an independently replicated CPU causal proof or a all-platform performance PASS"}
+          (root/"h1253-same-vm-summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print("M0_H1253_SAME_VM_PINNED_ISAL_GAME4_SCALAR_NATIVE_AB_REAL_READBACK_PASS",json.dumps(summary),flush=True)
+          PY_AB
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1253-game4-samevm-pinned-isal-90s
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1253-*
+          retention-days: 14
+          if-no-files-found: warn

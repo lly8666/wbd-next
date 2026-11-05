@@ -4,7 +4,7 @@
 //! emits first-delivery candidates. M4 must validate/submit each candidate.
 #![forbid(unsafe_code)]
 use std::collections::{BTreeMap,BTreeSet};
-use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
+use wbd_codec::fec_v2::{self,BackendChoice,BackendUsed,Rs16};
 // The authenticated original-owner RX opener is MOVED here; never minted
 // separately from keys, or duplicate normal/FEC PN windows could exist.
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
@@ -49,6 +49,8 @@ pub(crate) struct Fec2RxCapacityReport {
     pub rejected_capacity:u64,
     pub rejected_conflict:u64,
     pub rejected_codec:u64,
+    pub backend_scalar_decodes:u64,pub backend_native_decodes:u64,
+    pub late_complete_repair_skips:u64,
 }
 struct LiveBlock {
     touched:MonoNs,
@@ -69,7 +71,7 @@ pub(crate) struct Fec2LiveRx {
     // Optional only for standalone native tests. Background original Go
     // owner keeps the *one* moved opener and supplies AEAD-admitted frames.
     opener:Option<ReplayProtectedLaneRx>,
-    rs:Rs16,budget:usize,stopped:bool,
+    rs:Rs16,budget:usize,stopped:bool,backend:BackendChoice,
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
     // One (last genuine receive ns, block id) entry per live block.
@@ -104,10 +106,12 @@ impl Fec2LiveRx{
             .ok_or(ReceiveError::Invalid)?;
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener:None,rs:Rs16::new(),budget,
-            stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
+            stopped:false,backend:BackendChoice::default(),
+            highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
             touched_order:BTreeSet::new(),stored:0,evicted:0,
             capacity_report:Fec2RxCapacityReport::default()})
     }
+    pub(crate) fn configure_backend(&mut self,choice:BackendChoice){self.backend=choice;}
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
     /// Lost/expired old blocks are never counted as delivered or credited.
@@ -189,12 +193,12 @@ impl Fec2LiveRx{
             2=>{
                 let src=fec_v2::parse_source(payload,self.budget)
                     .map_err(|_|ReceiveError::Invalid)?;
-                (src.block_id,src.source_index,2,src.frame.to_vec(),None)
+                (src.block_id,src.source_index,2,src.frame,None)
             }
             3=>{
                 let repair=fec_v2::parse_repair(payload,self.budget)
                     .map_err(|_|ReceiveError::Invalid)?;
-                (repair.block_id,repair.parity_row,3,payload.to_vec(),
+                (repair.block_id,repair.parity_row,3,payload,
                     Some(repair.actual_k))
             }
             _=>return Err(ReceiveError::Invalid)
@@ -231,6 +235,38 @@ impl Fec2LiveRx{
             self.capacity_report.refused_bytes+=1;
             return Err(ReceiveError::Capacity)
         }
+        // Valid authenticated late repair of a fully delivered block has
+        // no missing originals to recover. Avoid allocating/copying/parsing
+        // all previously cached parity a second time. No replay shortcut:
+        // the original per-lane unique AEAD/PN and Game logical ID were
+        // already admitted before entering this function.
+        if kind==3 {
+            if let (Some(actual_k),Some(previous))=(k,self.blocks.get(&id)){
+                if previous.actual_k.is_some_and(|old|old!=actual_k){
+                    return Err(ReceiveError::ConflictingBlock)
+                }
+                if previous.sources.iter().take(actual_k as usize)
+                    .all(Option::is_some){
+                    self.capacity_report.late_complete_repair_skips+=1;
+                    return Ok(Vec::new())
+                }
+            }
+        }
+        // Reject duplicate authenticated sources and parity BEFORE copying
+        // their payload into the bounded FEC cache.
+        if let Some(previous)=self.blocks.get(&id){
+            if kind==2{
+                let idx=index as usize;
+                if previous.sources[idx].is_some()||
+                    previous.delivered & (1u16<<idx)!=0||
+                    previous.actual_k.is_some_and(|k|idx>=usize::from(k)){
+                    return Err(ReceiveError::ConflictingBlock)
+                }
+            }else if previous.repairs.contains_key(&index){
+                return Err(ReceiveError::ConflictingBlock)
+            }
+        }
+        let body=body.to_vec();
         // Mirror the last-touch semantics even if this authenticated
         // unique-PN symbol later proves to conflict with an already
         // delivered source; no stale expiry-index entries are left behind.
@@ -278,9 +314,12 @@ impl Fec2LiveRx{
                 let repairs=b.repairs.values().map(|bytes|
                     fec_v2::parse_repair(bytes,self.budget)
                 ).collect::<Result<Vec<_>,_>>().map_err(|_|ReceiveError::Codec)?;
-                let recovered=self.rs.recover_missing(id,&live,&repairs,
-                    self.budget,BackendChoice::default())
-                    .map_err(|_|ReceiveError::Codec)?.0;
+                let (recovered,used)=self.rs.recover_missing(id,&live,&repairs,
+                    self.budget,self.backend).map_err(|_|ReceiveError::Codec)?;
+                match used{
+                    BackendUsed::NativeIsaL=>self.capacity_report.backend_native_decodes+=1,
+                    BackendUsed::Scalar=>self.capacity_report.backend_scalar_decodes+=1,
+                }
                 let recovered_bytes=recovered.iter()
                     .try_fold(0usize,|total,(_,frame)|total.checked_add(frame.len()))
                     .ok_or(ReceiveError::Capacity)?;
@@ -355,6 +394,41 @@ mod tests {
         blocks.stop();
         assert_eq!(blocks.accept_authenticated(epoch(),2,&payload,MonoNs(3)),
             Err(ReceiveError::Stopped));
+    }
+    #[test]
+    fn m0_fec2_live_rx_late_fully_received_repair_skips_without_copy_or_decode(){
+        // Two AEAD-distinct authenticated source records reach the TUN
+        // candidate BEFORE a late but valid first parity row. This parity
+        // can recover nothing; it must not allocate/cache or retry RS.
+        let suite=RecordSuite::ChaCha20Poly1305;
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+        let mut rx=Fec2LiveRx::from_original_owner(
+            epoch(),opened(suite),1400).unwrap();
+        let a=vec![0x55u8;128];
+        let b=vec![0x66u8;128];
+        for (i,frame) in [a.as_slice(),b.as_slice()].iter().enumerate(){
+            let payload=fec_v2::source_owned(23,i as u8,frame,1369).unwrap();
+            let mut wire=seal(&mut tx,2,&payload);
+            let output=rx.consume(epoch(),&mut wire,MonoNs(10+i as u64)).unwrap();
+            assert_eq!(output.len(),1);
+            assert!(!output[0].recovered);
+        }
+        let before=rx.stored_bytes();
+        let repair=Rs16::new().encode_owned(
+            23,&[a.as_slice(),b.as_slice()],fec_v2::Profile::Maximum,
+            0,1,1369,BackendChoice::Scalar
+        ).unwrap().0.remove(0);
+        let mut wire=seal(&mut tx,3,&repair);
+        assert!(rx.consume(epoch(),&mut wire,MonoNs(13)).unwrap().is_empty());
+        assert_eq!(rx.capacity_report().late_complete_repair_skips,1);
+        assert_eq!(rx.capacity_report().backend_native_decodes,0);
+        assert_eq!(rx.capacity_report().backend_scalar_decodes,0);
+        assert_eq!(rx.stored_bytes(),before,"late parity must not be copied");
+        assert_eq!(rx.active_blocks(),1);
+        // A separately authenticated later source still advances normally.
+        let next=fec_v2::source_owned(24,0,&a,1369).unwrap();
+        let mut next_wire=seal(&mut tx,2,&next);
+        assert_eq!(rx.consume(epoch(),&mut next_wire,MonoNs(14)).unwrap().len(),1);
     }
     #[test]
     fn m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1(){
