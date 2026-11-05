@@ -26,7 +26,7 @@ one('game_live GAME4_HEALTH_NORMAL_CHANGE2 "$TMP/B-game-live2-ns.txt" &',
 # Game2's first twelve actual UDP packets and Stop it BEFORE the extended
 # 128s high30 observation of the two still-running Normal/Game4 owners.
 # Reuse the same existing Stop, not a new controller or synthetic heartbeat.
-one('sudo -n kill -TERM "$(cat "$TMP/alice.pid")"\\nfor i in {1..80};do',
+one('sudo -n kill -TERM "$(cat "$TMP/alice.pid")"\nfor i in {1..80};do',
     '# Original Game2 owner already Stop-drained before extended high-loss observation\\nfor i in {1..80};do')
 stop_game2='''sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
 for _ in {1..80};do

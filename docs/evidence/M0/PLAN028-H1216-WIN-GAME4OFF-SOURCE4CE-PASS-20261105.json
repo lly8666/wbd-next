@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "source_sha": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
+  "run_id": 41939815952,
+  "artifact_id": 13376911373,
+  "sha256": "fb86c4e4d60c439f3e3a0e4bec9396f4d35c8f701c736e6ebab6f3c020bdd2b2",
+  "mode": "Windows Game4 FEC Off",
+  "source4": [
+    "198.19.254.1",
+    "198.19.254.9"
+  ],
+  "tls_real_two": true,
+  "server_native_M4_off_receipts": 2,
+  "outer": 1460,
+  "inner_os": [
+    1373,
+    1373
+  ],
+  "post_new_udp": [
+    12,
+    3
+  ],
+  "real_kernel_udp_tcp": true,
+  "exact_old_and_final_stop": true,
+  "physical_command_to_ready_ms": 12563,
+  "not_measured": [
+    "notification TLS elapsed",
+    "auth to first packet",
+    "Android ICMP CPU causal"
+  ]
+}

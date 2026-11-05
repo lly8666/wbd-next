@@ -1,0 +1,7 @@
+# PLAN028 H1216 — Windows Auto+Game4Off native PASS; two isolated test corrections
+
+SOURCEb315 [Auto Action41939489419](https://github.com/lly8666/wbd-next/actions/runs/41939489419) and SOURCE4ce [Game4Off Action41939815952](https://github.com/lly8666/wbd-next/actions/runs/41939815952) fully succeeded on signed Npcap/Wintun↔WSL2 native original Go TLS/Rust shared443. Both real physical source4 .1→.9, two protected generations, old and final WAL Stop, outer1460, native OS inner 1375 or 1373 twice, actual two-OS UDP/TCP and Stop; Game4Off server FECoff M4 rows2. Mutation→Ready 12937/12563ms is not event→TLS or auth→first timing. Windows Fixed6 SOURCEf3df [Action41941085054](https://github.com/lly8666/wbd-next/actions/runs/41941085054) reported FAIL at early FEC6 receipt gate although original final Rust client log shows two installed FEC6 receipts and server two protected M4; add bounded 8s readback wait, no inferred PASS. X86 high30 SOURCEbc5 [Action41940397723](https://github.com/lly8666/wbd-next/actions/runs/41940397723) failed pre-native because generator searched literal escaped newline in original Game2 Stop. Fix single escape and rerun full independent source. H998 old hot shrink/ARM Game4 FAIL, Android/ICMP/CPU causal remain.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Two distinct fully green signed Windows original physical source4 Actions archived; narrow test-only FEC6 delayed receipt & x86 generator repair."}
+```

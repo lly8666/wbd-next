@@ -449,6 +449,12 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    # are not emitted by shared-multi; require genuine TWO-generation
    # client actual TCP SYN/peer SYNACK and server real SYNACK instead.
    linuxlog=(out/"server.log").read_text(errors="replace")
+   # FEC2 installation is async after READY; require BOTH real Rust receipts.
+   for _ in range(80):
+    winlog=(out/"client.log").read_text(errors="replace")
+    if winlog.count("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1")>=2:break
+    if w.poll() is not None:break
+    time.sleep(.1)
    expected=configured_mtu-40
    option="0204"+format(expected,"04x")
    clients=re.findall(r"WBD_WINDOWS_ACTUAL_SYN_MSS_V1[^\n]*generation=(\d+)[^\n]*local_advertised_mss=(\d+)[^\n]*tcp_option_bytes=([0-9a-fA-F]+)",winlog)

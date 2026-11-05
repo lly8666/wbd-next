@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1215,
-  "checkpoint_sha": "6a1d269759b094b3b592d4fb933467ec1f9fb323",
+  "sequence": 1216,
+  "checkpoint_sha": "f3df7d6c6854647615dabbd10048e33a1a3adca2",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1215 precision fix H1214 test-only signed Windows Fixed6 shared two-gen original MSS+FEC6 regex source. Newly written raw Python regex patterns were double escaped `\\\\d` and `[^\\\\n]`, would never match genuine authenticated MSS/TLS receipt. Normalize exactly 26 backslash pairs in sole new `if mode==fixed and plan028_owned_switch` proof, leave old H981 and production unchanged. New signed Windows Fixed6 source Action auto triggered via [plan028-win-physical-fixed6]. Native Windows Auto source b315 Action41939489419 completed full success; Game4 Off source4ce Action41939815952 still in flight. H1213 x86 high30 sourcebc5 Action41940397723 overall FAIL inspect first evidence after this commit.",
-  "why_now": "Before expensive H1214 Windows native verdict, proactive immutable source inspection found raw Python regex literal double escaping in entirely new shared Fixed6 block. Correct only test parsing without changing packet/feature7/OS algorithm. Auto independent Windows sourceb315 now full Action success; x86 high30 latest Action needs narrow failure inspection.",
+  "current_task": "H1216 signed Windows Normal Auto original Go TLS/Rust Action41939489419 SOURCEb315 and Game4 Off Action41939815952 SOURCE4ce both full native two physical source4 .1→.9, two authenticated cohorts, derived OS MTU1375/1373 each gen, real UDP/TCP and final Stop PASS. Windows Fixed6 SOURCEf3df real TLS2/server M4 fixed6×2/client final Rust installed×2 but early client log before async install2 caused evidence FAIL; bounded wait real second receipt then test native. X86 NormalFixed6 30%/250 SOURCEbc5 generator literal escaped newline failed pre-native; correct and rerun full scenario. H998 old failures and Android/ICMP/CPU causal still open.",
+  "why_now": "Archive two distinct full signed Windows native success and fix only two genuine test evidence errors; no product FEC/wire changes.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect signed Windows Fixed6 H1215 rerun plus Windows Game4off source4ce; archive native Auto full source-specific evidence. Diagnose H1213 x86 high30 first failure and decide constrained test correction. Then Windows Game2 Off/Fixed6, native timing/CPU where possible; H998 original/ICMP/Android gaps maintained.",
+  "next_action": "Collect one Windows Fixed6 and one native x86 30% authentic TLS Action by exact SOURCE; then Windows Game2 Off/Fixed6 original physical source4 independently. Historical H998 and Android/ICMP/CPU causal unmeasured.",
   "unverified": true,
-  "last_tested_source": "abbaebe75e10605510dc7a284ebeaccc6a586a1d",
+  "last_tested_source": "4ce30f32c4159b6176b78ddfa0c0dcb3f3685691",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1205-SOURCEABBA-ARM64-GAME4FEC6-REAL-30PCT-250MS-200UDP-P99-PASS-20261105.json"
+    "docs/evidence/M0/PLAN028-H1216-WIN-AUTO-SOURCEB315-PASS-20261105.json",
+    "docs/evidence/M0/PLAN028-H1216-WIN-GAME4OFF-SOURCE4CE-PASS-20261105.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1215 correct 26 double-escaped regex spans in new shared-only Windows Fixed6 genuine two-generation MSS/record/FEC6 OS proof. Existing Auto signed Action full success; x86 high30 H1213 failed, diagnose exact first fault."
+  "partial_summary": "H1216 Windows Auto and Game4 Off physical genuine source4 TLS/OS/UDP/TCP/Stop full PASS. Fixed6 late second actual FEC2 installed readback and x86 high30 generator escape fixed; actions newly triggered."
 }

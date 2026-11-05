@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "source_sha": "b315a436f99bef1c35de928c88d6baa2d40c1c1e",
+  "run_id": 41939489419,
+  "artifact_id": 13375468659,
+  "sha256": "ee186e2efe2877b8a80f704c1cd130a020202cfce4ee56f7aa00b83742e6ce6b",
+  "mode": "Windows Normal Auto",
+  "source4": [
+    "198.19.254.1",
+    "198.19.254.9"
+  ],
+  "tls_real_two": true,
+  "outer": 1460,
+  "inner_os": [
+    1375,
+    1375
+  ],
+  "post_new_udp": [
+    8,
+    9
+  ],
+  "real_kernel_udp_tcp": true,
+  "exact_old_and_final_stop": true,
+  "physical_command_to_ready_ms": 12937,
+  "not_measured": [
+    "notification TLS elapsed",
+    "auth to first packet",
+    "Android ICMP CPU causal"
+  ]
+}
