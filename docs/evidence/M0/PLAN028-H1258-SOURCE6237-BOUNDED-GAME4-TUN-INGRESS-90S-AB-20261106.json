@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1258",
+  "source_sha": "62373ee910b4d43e4660e22a6ababe863d8bc5e4",
+  "status": "NATIVE_GAME4_FEC_BOUNDED_4_SOURCE_SHARED_TUN_TX_CONSUMER_SCOPED_HIGH_OFFER_PASS",
+  "action_run_id": 42135894183,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42135894183",
+  "action_conclusion": "success",
+  "artifact_id": 13465417466,
+  "artifact_zip_sha256": "0470f0f810592517d1afb3af87278d3d44d8a890920e294c57b13dd53798aaba",
+  "artifact_zip_crc": "PASS",
+  "artifact_count": 62,
+  "product_rust_so_sha256": "e483873cdebe9ed6df3eece6500c14e6bce8354a22c82f2407d788b6dc346fbe",
+  "test_scope": "native x86_64 same VM sequential original Go TLS/Rust Game4Fixed6 scalar then ISA-L 90s/leg + independent NormalOff, separate authenticated per /32 shared TUN routes, Game4 42Mbps configured both ways, 15% real bidirectional loss, 100ms each direction netem limit10000, 5s warmup/40s steady/20s overload/25s recovery/5s drain; one-Actions SOURCE only",
+  "changes_since_H1257": "Game4 fixed6 original Rust TX owner: from 1 to max4 ready shared TUN ingress sources per turn, only when no outstanding oversized fragments. Same AEAD, M4 GameTx, FEC policy, MTU, TUN queue, shared-generation authentication, routes, timers.",
+  "actual_bounded_ingress_extra_accepted": {
+    "scalar_client": 325008,
+    "scalar_server": 324604,
+    "native_client": 339962,
+    "native_server": 339089
+  },
+  "real_isa_l_backend": {
+    "native_client_tx_quanta": 174988,
+    "native_client_rx_decodes": 29274,
+    "scalar_leg_tx_scalar_quanta": 170163,
+    "scalar_leg_rx_scalar_decodes": 28123
+  },
+  "scalar": {
+    "game4_overload_downlink_sent_mbps": 43.6817,
+    "game4_overload_downlink_received_mbps": 43.1179,
+    "game4_overload_downlink_unique_delivery_fraction": 0.987348,
+    "game4_recovery_downlink_unique_delivery_fraction": 1,
+    "server_game4_lease_pending_overflow": 2522,
+    "normal_lease_pending_overflow": 0,
+    "game4_client_copy_capacity_evicted": 0,
+    "copy_dispatch_pressure": 0,
+    "copy_deadline_expired": 10556,
+    "game4_client_cpu_percent_one_core_including_setup": 54.458,
+    "server_cpu_percent_one_core_including_setup": 66.852
+  },
+  "native": {
+    "game4_overload_downlink_sent_mbps": 43.6806,
+    "game4_overload_downlink_received_mbps": 43.2296,
+    "game4_overload_downlink_unique_delivery_fraction": 0.989862,
+    "game4_recovery_downlink_unique_delivery_fraction": 1,
+    "server_game4_lease_pending_overflow": 2189,
+    "normal_lease_pending_overflow": 0,
+    "game4_client_copy_capacity_evicted": 0,
+    "copy_dispatch_pressure": 0,
+    "copy_deadline_expired": 17626,
+    "game4_client_cpu_percent_one_core_including_setup": 50.381,
+    "server_cpu_percent_one_core_including_setup": 63.441
+  },
+  "physical_qdisc_observed_drop_fraction": {
+    "scalar_uplink": 0.150106,
+    "scalar_downlink": 0.14988,
+    "native_uplink": 0.149957,
+    "native_downlink": 0.149883
+  },
+  "normal_sibling_business": {
+    "all_phases_normal_up_and_down_unique_udp_delivery_fraction": 1
+  },
+  "comparison_to_H1257_separate_source": {
+    "prior_source_sha": "3e3eb006befdcffdbb451fec9e334478b3a17f9a",
+    "prior_action_id": 42134021298,
+    "Game4_scalar_overload_downlink_mbps_before": 26.9889,
+    "after": 2189,
+    "Game4_native_overload_downlink_mbps_before": 32.2259,
+    "server_Game4_scalar_tun_pending_overflow_before": 96630,
+    "server_Game4_native_tun_pending_overflow_before": 53037,
+    "relative_reduction_queue_full_fraction_scalar": 0.9739,
+    "relative_reduction_queue_full_fraction_native": 0.9587,
+    "note": "Two source-locked real Actions but hosted VM differs; strong scoped functional directional improvement not strict CPU causal A/B."
+  },
+  "remaining_limits": [
+    "Not yet the final five-client 5min+ simultaneous loss matrix with rate-down recovery, planned H1259.",
+    "Game4 queue full counters still nonzero (2522 and2189); cannot claim zero loss or universal capacity.",
+    "No Windows native Npcap, ARM64 multi-host or Android evidence from this Action.",
+    "Historical H998 original same-socket online MTU shrink FAIL retained.",
+    "Action green is evidence collector success, not universal performance certification."
+  ]
+}
