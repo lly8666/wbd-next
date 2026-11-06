@@ -257,6 +257,27 @@ func runGameClient(
     }
     handoffCommitted.Store(true)
     repeatOriginalDetachedTLSFinalACK(ctx,assocs...)
+    if c.rotationGeneration>1&&c.sharedTun!=nil{
+        // This new authenticated Game2/4 group may be READY locally while
+        // the remote 443 server has only committed ONE of its independent
+        // TLS lanes. Rust defers replacing A's shared TUN default route.
+        // Require genuine B Game M4 AEAD/replay + TUN delivery before
+        // promoting B; otherwise B Stop leaves A's route and workers live.
+        err=waitOriginalNativeM4PeerProof(ctx,
+            func()(realityfront.V4PublicLoopPulse,error){
+                proof,e:=native.KernelCounters()
+                if e!=nil{return realityfront.V4PublicLoopPulse{},e}
+                return realityfront.V4PublicLoopPulse{RxRecords:proof.Delivered},nil
+            },
+            native.PromoteGameAfterAuthenticatedPeerRx,5*time.Second)
+        if err!=nil{
+            log.Printf("V4_PUBLIC_GAME_REMOTE_M4_UNPROVEN role=client generation=%d lanes=%d old_tun_route_preserved=1",
+                c.rotationGeneration,n)
+            return errors.Join(err,native.Close())
+        }
+        log.Printf("V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=%d lanes=%d native_authenticated_rx=1 tun_route_promoted=1",
+            c.rotationGeneration,n)
+    }
     // Each original TLS/FakeTCP association has its own kernel tuple and
     // has passed protected cold validation before the single grouped Rust
     // GameAdapter commits M4. Do not mislabel this as an independent hot
