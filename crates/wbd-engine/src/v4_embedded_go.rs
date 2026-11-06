@@ -3389,10 +3389,16 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
         _=>return BAD_STAGE,
     };
     let Some(shared)=e.shared_tun.as_mut()else{return BAD_STAGE};
-    if !shared.publish_pending{return BAD_STAGE}
     let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    if !shared.publish_pending{
+        return if delivered>0 && routes.get(&shared.ip).is_some_and(|r|
+            r.generation==shared.generation &&
+            Arc::ptr_eq(&r.alive,&shared.alive) &&
+            r.alive.load(Ordering::Acquire)
+        ){OK}else{BAD_STAGE}
+    }
     let candidate=SharedTunRoute{
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
@@ -7929,10 +7935,20 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     if e.server_side||e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
     let received=e.counters.rx.load(Ordering::Acquire);
     let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
-    if !sh.publish_pending{return BAD_STAGE}
     let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    // The old candidate may already have stopped before this genuine
+    // cold start. In that case B legitimately published directly; still
+    // demand actual native new-generation reverse IP, but do not demand
+    // a non-existent deferred A route.
+    if !sh.publish_pending{
+        return if received>0 && routes.get(&sh.ip).is_some_and(|r|
+            r.generation==sh.generation &&
+            Arc::ptr_eq(&r.alive,&sh.alive) &&
+            r.alive.load(Ordering::Acquire)
+        ){OK}else{BAD_STAGE}
+    }
     let candidate=SharedTunRoute{
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
