@@ -28,7 +28,8 @@
     "crates/wbd-engine/src/v4_native_health.rs",
     "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
@@ -117,7 +118,8 @@
     "H533 source08069b cosmetic original Linux Rust RX ACK gap >600ms abandoned only after authenticated future data, existing ACK/SACK reused, new source live 0/30% pending, M3 business delivery and driver/Stop unchanged.",
     "H552 Linux SOURCEf031 1/5/15/30 0.1174/1.1446/4.2179/4.8735% R/F, first/Stop PASS, targets fail at1/5/30,15 rate PASS, unchanged Linux C unmeasured. New source candidate only shared Rust ReceiptState genuine-gap cadence 4/7/8/12 bounded live immutable shadows, original one 10%F quota and RX/MTU/Stop unchanged, native validation pending.",
     "PLAN027 H555 user override: source d765aef9 product code introduces genuine positive SACK bounded monotone mature-gap cursor and one-shot 50% PN sample, per-direction 32-handle FIFO deferring only BurstPaced within existing 20ms expiry; non-FEC cfg build fix. New-source original two-OS 0/1/5/15/30, CPU and owned Stop NOT_RUN at this code commit; prior SOURCEf031 1/5/30 ratio FAIL remains provenance, no strict narrow ratio tuning or invented win. Game and full lifecycle/C still open.",
-    "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference."
+    "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
+    "H1267 scoped developer-only Linux RAW TX diagnostic: cold per-original-owner SO_SNDBUF default versus request1MiB on same VM, effective kernel getsockopt/POLLOUT/SIOCOUTQ readback at open and <=128 sampled EAGAIN probes; default behavior and original no-resend/PN semantics untouched. Native original 120s/leg comparison PENDING; no production buffer fix or all-platform quality claim."
   ],
   "promotion": null
 }

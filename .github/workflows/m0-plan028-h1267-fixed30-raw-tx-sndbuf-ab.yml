@@ -1,0 +1,195 @@
+name: M0 PLAN028 H1267 Fixed30 native raw-TX socket default vs cold sendbuf A/B
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1267-fixed30-raw-tx-sndbuf-ab.yml"
+      - "crates/wbd-platform/src/linux_raw_carrier.rs"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "tools/m0-plan028-h1267-raw-sndbuf-ab-netns.py"
+      - "tools/m0-plan028-h1267-raw-sndbuf-ab-report.py"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-plan028-h1267-original-fixed30-raw-tx-socket-ab
+  cancel-in-progress: false
+jobs:
+  same-vm-native-x86-two-clients:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env: {GOTOOLCHAIN: local, CGO_ENABLED: "1"}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile exact-SOURCE original Go TLS + Rust real raw/TUN product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          mkdir -p fixed-build fixed-kernel-result
+          python3 -m py_compile tools/m0-plan028-h1267-raw-sndbuf-ab-netns.py tools/m0-plan028-h1267-raw-sndbuf-ab-report.py
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . \
+            --manifest r0/go_overlay/assembly/manifest-plan020-m0.json \
+            --receipt fixed-kernel-result/h1250-assembly.json
+          python3 - <<'PY_ASSEMBLE'
+          import json,os,pathlib
+          root=pathlib.Path.cwd();donor=root/"legacy"
+          r=json.loads((root/"fixed-kernel-result/h1250-assembly.json").read_text())
+          assert r["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert r["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              src=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),dst
+              dst.write_bytes(src.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role);dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes(
+                  (root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          print("H1250_SOURCE_LOCKED_ORIGINAL_GO_ASSEMBLY_PASS",flush=True)
+          PY_ASSEMBLE
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1259-pinned-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >fixed-kernel-result/h1259-isal-build.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1259-isal-build.log >&2;exit 1;
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+
+          cargo +1.85.1 test --locked -p wbd-platform \
+            --lib m0_plan028_raw_tx_sndbuf_cold_readback_invalid_request_is_noop \
+            -- --test-threads=1 --nocapture >fixed-kernel-result/h1267-sndbuf-unit.log 2>&1 || {
+              tail -120 fixed-kernel-result/h1267-sndbuf-unit.log >&2
+              exit 1
+            }
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/h1267-sndbuf-unit.log
+          cargo +1.85.1 build --locked --release -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            >fixed-kernel-result/h1250-rust-build.log 2>&1 || {
+              tail -120 fixed-kernel-result/h1250-rust-build.log >&2;exit 1;
+            }
+          nm target/release/libwbd_engine.so | grep -Eq ' [tT] ec_encode_data$'
+          cp target/release/libwbd_engine.so fixed-build/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
+          (cd legacy && go build -trimpath -buildvcs=false \
+            -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+            -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false \
+            -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+            -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          python3 - <<'PY_MANIFEST'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          checks={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              raw=(root/name).read_bytes()
+              assert raw[:4]==b"\x7fELF" and struct.unpack_from("<H",raw,18)[0]==62
+              checks[name]=hashlib.sha256(raw).hexdigest()
+          (root/"manifest.json").write_text(json.dumps({
+              "source_sha":os.environ["GITHUB_SHA"],
+              "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+              "go":"1.23.12","rust":"1.85.1","architecture":"native_x86_64",
+              "sha256":checks,"qualification":"BUILD_ONLY_UNTIL_LOAD_REPORT"},indent=2)+"\n")
+          print("H1250_NATIVE_CURRENT_SOURCE_BINARIES_BUILT_PASS",flush=True)
+          PY_MANIFEST
+      - name: Same-product-binary original TLS/Rust two-client 120s default then cold sendbuf same VM
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          for mode in default 1048576;do
+            export WBD_M0_AB_LEG="$mode"
+            python3 -u tools/m0-plan028-h1267-raw-sndbuf-ab-netns.py fixed-build \
+              >"fixed-kernel-result/h1267-$mode-run.log" 2>&1 || {
+                tail -180 "fixed-kernel-result/h1267-$mode-run.log" >&2
+                exit 1
+              }
+            grep -Fq M0_H1267_NATIVE_ORIGINAL_TLS_RUST_FIXED30_SOCKET_AB_120S_DIAGNOSTIC_COMPLETE \
+              "fixed-kernel-result/h1267-$mode-run.log"
+          done
+          python3 - <<'PY_H1267'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          manifest=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert manifest["source_sha"]==os.environ["GITHUB_SHA"]
+          for key,digest in manifest["sha256"].items():
+              assert hashlib.sha256((pathlib.Path("fixed-build")/key).read_bytes()).hexdigest()==digest
+          legs={}
+          for mode in ("default","1048576"):
+              folder=root/("h1267-"+mode)
+              report=json.loads((folder/"h1250-five-client-report.json").read_text())
+              assert report["source_sha"]==os.environ["GITHUB_SHA"]
+              assert report["mode"]==mode and report["application_seconds"]==120
+              assert set(report["clients"])=={"alice","erin"}
+              assert len(report["server_per_authenticated_lease_tun"])==2
+              assert report["clients"]["erin"]["original_m4_half_second"]["observed"]
+              assert report["clients"]["erin"]["socket_open"]["requested_bytes"]==(0 if mode=="default" else 1048576)
+              assert report["clients"]["erin"]["socket_stop"]["no_reseal_or_retry"]==1
+              legs[mode]=report
+          def segment(mode,direction,phase):
+              return legs[mode]["clients"]["erin"]["directions"][direction][phase]
+          summary={
+              "source_sha":os.environ["GITHUB_SHA"],
+              "product_binary_sha256":manifest["sha256"],
+              "actual_business_seconds_per_leg":120,
+              "same_vm_sequential_order":["default","1048576"],
+              "cold_original_M4_kernel_socket_sndbuf_bytes":{
+                  mode:{role:legs[mode]["clients"][role]["socket_open"]["effective_bytes"]
+                        for role in ("alice","erin")} for mode in legs},
+              "actual_30pct_fixed6_client_sendmmsg_eagain_turns":{
+                  mode:legs[mode]["clients"]["erin"]["socket_stop"]["eagain_turns"] for mode in legs},
+              "actual_30pct_fixed6_client_eagain_POLLOUT_samples":{
+                  mode:legs[mode]["clients"]["erin"]["socket_stop"] for mode in legs},
+              "fixed30_true_native_UDP":{
+                  mode:{direction:{phase:segment(mode,direction,phase)
+                                   for phase in ("sustained","overload","recovery")}
+                        for direction in ("uplink","downlink")} for mode in legs},
+              "fixed30_max_consecutive_zero_M4_copy_under_new_FEC_and_EAGAIN":{
+                  mode:legs[mode]["clients"]["erin"]["original_m4_half_second"]["max_contiguous_no_kernel_copy_while_new_FEC_source_and_EAGAIN"]
+                  for mode in legs},
+              "physical_30pct_qdisc_actual":{
+                  mode:legs[mode]["clients"]["erin"]["tc_actual"] for mode in legs},
+              "interpretation":"Cold-socket default versus bounded SO_SNDBUF test only; no resending PN, FEC/outer tuning, kernel acceptance is not app delivery; a single sequential A/B cannot certify CPU causality",
+          }
+          (root/"h1267-cold-raw-socket-samevm-summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print("M0_H1267_ORIGINAL_FIXED30_COLD_SOCKET_SAME_VM_AB_SCOPED_DIAGNOSTIC_COMPLETE "
+                +json.dumps(summary),flush=True)
+          PY_H1267
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1267-fixed30-raw-m4-sndbuf-120s-samevm
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1250-*
+            fixed-kernel-result/h1267-*
+          retention-days: 14
+          if-no-files-found: warn

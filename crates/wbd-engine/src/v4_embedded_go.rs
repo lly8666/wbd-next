@@ -4898,6 +4898,33 @@ fn loop_now()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     MonoNs(START.get_or_init(Instant::now).elapsed().as_nanos().min(u64::MAX as u128) as u64)
 }
+/// Developer original-Go/Rust Linux Normal/FEC cold socket A/B only.
+/// An effective buffer must be read from the SAME raw TX fd; Linux wmem_max
+/// may clamp a request. This never changes FEC, PN or sendmmsg retry policy.
+#[cfg(feature="fec2_product_record")]
+fn configure_original_raw_tx_ab(tx:&mut ScopedRawIpv4Tx,server:bool)
+    ->Result<(),i32>
+{
+    let enabled=std::env::var("WBD_M0_RAW_TX_SOCKET_DIAG")
+        .ok().as_deref()==Some("1");
+    let mode=std::env::var("WBD_M0_RAW_TX_SNDBUF_AB")
+        .unwrap_or_else(|_|"default".to_owned());
+    if mode!="default"&&mode!="1048576"{return Err(INVALID)}
+    if mode!="default"&&!enabled{return Err(INVALID)}
+    if mode=="1048576"{
+        tx.configure_cold_tx_sndbuf(1_048_576).map_err(|_|INVALID)?;
+    }
+    if enabled{
+        let state=tx.diagnostic_tx_socket().map_err(|_|INVALID)?;
+        eprintln!("V4_PUBLIC_RAW_TX_SOCKET_OPEN role={} mode={} requested_bytes={} effective_bytes={} poll_writable={} poll_error={} outq_bytes={}",
+            if server{"server"}else{"client"},mode,
+            if mode=="default"{0}else{1_048_576},
+            state.sndbuf_effective_bytes,u8::from(state.poll_writable),
+            u8::from(state.poll_error),
+            state.outq_bytes.map(|x|x.to_string()).unwrap_or_else(||"UNSUPPORTED".into()));
+    }
+    Ok(())
+}
 // Bounded M1 arena return servicing inside one authenticated DATA turn.
 // Only Stop/report/quiescence/control paths may drain every outstanding item;
 // an arbitrarily long backlog must not monopolize the per-session TX/RX lock.
@@ -6925,8 +6952,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let raw_fd=raw.readiness_fd();
     let tun_fd=tun.readiness_fd();
     if e.raw_tx.is_none(){
-        let Ok(tx)=ScopedRawIpv4Tx::open(&ifname,ifindex,(handle>>32) as u32)
+        let Ok(mut tx)=ScopedRawIpv4Tx::open(&ifname,ifindex,(handle>>32) as u32)
         else{return INVALID};
+        #[cfg(feature="fec2_product_record")]
+        if configure_original_raw_tx_ab(&mut tx,e.server_side).is_err(){
+            return INVALID
+        }
         let Ok(observed)=wbd_platform::linux_packet_preflight::observe_interface_mtu(
             &ifname,ifindex) else{return INVALID};
         e.raw_tx_lease_mtu=observed.kernel_mtu;
@@ -7206,6 +7237,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // TX and the dedicated FD reader hold independent Arc handles; the
     // original bounded TunSink remains one object/one generation/one FD.
     let tun_for_ingress=Arc::clone(&tun);
+    #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag=Arc::clone(e.raw_tx.as_ref().expect("original raw TX owned"));
+    #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag_enabled=std::env::var("WBD_M0_RAW_TX_SOCKET_DIAG")
+        .ok().as_deref()==Some("1");
+    #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag_role=if e.server_side{"server"}else{"client"};
+    #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag_mode=if std::env::var("WBD_M0_RAW_TX_SNDBUF_AB")
+        .ok().as_deref()==Some("1048576"){"1048576"}else{"default"};
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
@@ -7218,6 +7259,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_egress_diag=Instant::now();
             #[cfg(feature="fec2_product_record")]
             let mut diag_turn_err=[0u64;4]; // aggregate only in explicit opt-in
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_backpressure=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_sampled=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_poll_writable=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_poll_not_writable=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_outq_supported=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_outq_high_water=0i32;
+            #[cfg(feature="fec2_product_record")]
+            let mut socket_snapshot_errors=0u64;
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
@@ -7471,7 +7526,35 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
                         stats.tx_dropped.fetch_add(u64::from(done.definitely_unsent),Ordering::Relaxed);
                         stats.tx_uncertain.fetch_add(u64::from(done.uncertain),Ordering::Relaxed);
-                        if done.backpressure{stats.tx_backpressure.fetch_add(1,Ordering::Relaxed);}
+                        if done.backpressure{
+                            stats.tx_backpressure.fetch_add(1,Ordering::Relaxed);
+                            #[cfg(feature="fec2_product_record")]
+                            if raw_socket_diag_enabled{
+                                socket_backpressure=socket_backpressure.saturating_add(1);
+                                // At most 128 read-only probes per original
+                                // owner; no extra retries/PN and no syscalls
+                                // on successful M4 sends or default builds.
+                                if socket_backpressure%64==0&&socket_sampled<128{
+                                    socket_sampled+=1;
+                                    match raw_socket_diag.diagnostic_tx_socket(){
+                                        Ok(v)=>{
+                                            if v.poll_writable{socket_poll_writable+=1}
+                                            else{socket_poll_not_writable+=1}
+                                            if let Some(q)=v.outq_bytes{
+                                                socket_outq_supported+=1;
+                                                socket_outq_high_water=socket_outq_high_water.max(q);
+                                            }
+                                            eprintln!("V4_PUBLIC_RAW_TX_SOCKET_SAMPLE role={} mode={} ns={} backpressure_count={} effective_bytes={} poll_writable={} poll_error={} outq_bytes={}",
+                                                raw_socket_diag_role,raw_socket_diag_mode,
+                                                loop_now().0,socket_backpressure,v.sndbuf_effective_bytes,
+                                                u8::from(v.poll_writable),u8::from(v.poll_error),
+                                                v.outq_bytes.map(|x|x.to_string()).unwrap_or_else(||"UNSUPPORTED".into()));
+                                        },
+                                        Err(_)=>socket_snapshot_errors+=1,
+                                    }
+                                }
+                            }
+                        }
                         if done.failed{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     }
                     Err(code)=>{
@@ -7505,6 +7588,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             active_jumbo.take();
             jumbo_queue.clear();
+            #[cfg(feature="fec2_product_record")]
+            if raw_socket_diag_enabled{
+                let final_buffer=raw_socket_diag.diagnostic_tx_socket()
+                    .ok().map(|v|v.sndbuf_effective_bytes).unwrap_or(0);
+                eprintln!("V4_PUBLIC_RAW_TX_SOCKET_STOP role={} mode={} effective_bytes={} eagain_turns={} sampled={} poll_writable={} poll_not_writable={} outq_supported={} outq_high_water={} snapshot_errors={} no_reseal_or_retry=1",
+                    raw_socket_diag_role,raw_socket_diag_mode,
+                    final_buffer,socket_backpressure,socket_sampled,
+                    socket_poll_writable,socket_poll_not_writable,
+                    socket_outq_supported,socket_outq_high_water,
+                    socket_snapshot_errors);
+            }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
         })

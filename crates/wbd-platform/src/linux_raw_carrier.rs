@@ -28,6 +28,8 @@ const SOCK_CLOEXEC:c_int=0x80000;
 const IPPROTO_RAW:c_int=255;
 const IPPROTO_TCP:c_int=6;
 const POLLIN:i16=1;
+const POLLOUT:i16=4;
+const POLLERR:i16=8;
 #[repr(C)]
 struct PollFd{fd:c_int,events:i16,revents:i16}
 const IPPROTO_IP:c_int=0;
@@ -36,6 +38,8 @@ const SOL_SOCKET:c_int=1;
 const SO_BINDTODEVICE:c_int=25;
 const SO_ATTACH_FILTER:c_int=26;
 const SO_RCVBUF:c_int=8;
+const SO_SNDBUF:c_int=7;
+const SIOCOUTQ:u64=0x5411;
 // Linux doubles a SO_RCVBUF request for bookkeeping; 4 MiB requested
 // yields up to 8 MiB effective per owned raw RX socket, capped by rmem_max.
 // A 4 MiB request is ~20x the observed 212,992-byte guest default. This is
@@ -58,6 +62,7 @@ unsafe extern "C" {
     fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const c_void,len:u32)->c_int;
     fn getsockopt(fd:c_int,level:c_int,opt:c_int,value:*mut c_void,len:*mut u32)->c_int;
     fn poll(fds:*mut PollFd,nfds:usize,timeout:c_int)->c_int;
+    fn ioctl(fd:c_int,request:u64,result:*mut c_int)->c_int;
     fn recvfrom(fd:c_int,bytes:*mut c_void,len:usize,flags:c_int,
         src:*mut c_void,addr_len:*mut u32)->isize;
     fn sendto(fd:c_int,bytes:*const c_void,len:usize,flags:c_int,
@@ -84,6 +89,53 @@ fn tune_raw_rx_buffer(fd:c_int)->Result<c_int,RawTxError>{
         return Err(RawTxError::InvalidInterface)
     }
     Ok(effective)
+}
+/// Read-only kernel socket state. POLLOUT is NOT proof a nonblocking
+/// sendmmsg was accepted; SIOCOUTQ is optional for native RAW sockets.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct RawTxSocketReadback{
+    pub sndbuf_effective_bytes:i32,
+    pub poll_writable:bool,
+    pub poll_error:bool,
+    pub outq_bytes:Option<i32>,
+}
+fn read_tx_socket_state(fd:c_int)->Result<RawTxSocketReadback,RawTxError>{
+    let mut effective:c_int=0;
+    let mut n=std::mem::size_of::<c_int>() as u32;
+    let got=unsafe{getsockopt(fd,SOL_SOCKET,SO_SNDBUF,
+        (&mut effective as *mut c_int).cast(),&mut n)};
+    if got!=0{return Err(RawTxError::Kernel(errno()))}
+    if n!=4||effective<=0{return Err(RawTxError::InvalidInterface)}
+    let mut pfd=PollFd{fd,events:POLLOUT,revents:0};
+    let polled=unsafe{poll(&mut pfd,1,0)};
+    if polled<0{return Err(RawTxError::Kernel(errno()))}
+    let mut outq:c_int=0;
+    let outq_bytes=if unsafe{ioctl(fd,SIOCOUTQ,&mut outq)}==0&&outq>=0{
+        Some(outq)
+    }else{None};
+    Ok(RawTxSocketReadback{
+        sndbuf_effective_bytes:effective,
+        poll_writable:polled>0&&pfd.revents&POLLOUT!=0,
+        poll_error:polled>0&&pfd.revents&POLLERR!=0,
+        outq_bytes,
+    })
+}
+/// Restricted original-owner cold developer A/B, kernel-capped SO_SNDBUF.
+/// No sysctl, no SO_SNDBUFFORCE, no live retry or FEC buffer inflation.
+fn set_cold_tx_send_buffer(fd:c_int,requested:c_int)
+    ->Result<RawTxSocketReadback,RawTxError>
+{
+    if !(65536..=1_048_576).contains(&requested){
+        return Err(RawTxError::InvalidInterface)
+    }
+    let rc=unsafe{setsockopt(fd,SOL_SOCKET,SO_SNDBUF,
+        (&requested as *const c_int).cast(),4)};
+    if rc!=0{return Err(RawTxError::Kernel(errno()))}
+    let state=read_tx_socket_state(fd)?;
+    if state.sndbuf_effective_bytes>2_097_152{
+        return Err(RawTxError::InvalidInterface)
+    }
+    Ok(state)
 }
 /// A tuple has to be checked before indexing a Rust slice or consulting
 /// kernel link/route state. Malformed or unauthenticated tuples are not an
@@ -151,6 +203,16 @@ impl ScopedRawIpv4Tx {
             mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
             borrow:BorrowFence::default(),serialize:Mutex::new(())
         })
+    }
+    /// No packet payload, owner or socket mutation.
+    pub fn diagnostic_tx_socket(&self)->Result<RawTxSocketReadback,RawTxError>{
+        read_tx_socket_state(self.fd.as_raw_fd())
+    }
+    /// Only called by the original owner before its raw TX is published.
+    pub fn configure_cold_tx_sndbuf(&mut self,requested:i32)
+        ->Result<RawTxSocketReadback,RawTxError>
+    {
+        set_cold_tx_send_buffer(self.fd.as_raw_fd(),requested)
     }
     pub fn generation(&self)->u32{self.generation}
     pub fn is_stopping(&self)->bool{self.stopped.load(Ordering::Acquire)}
@@ -626,6 +688,26 @@ mod ready_batch_tests{
         assert_eq!(RawReadyBatch::new(32).attempted,32);
         assert_eq!(RawReadyBatch::new(33).attempted,32);
         assert_eq!(RawReadyBatch::new(33).entry(32),None);
+    }
+    #[test]
+    fn m0_plan028_raw_tx_sndbuf_cold_readback_invalid_request_is_noop(){
+        use std::net::UdpSocket;
+        let sock=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let before=read_tx_socket_state(sock.as_raw_fd()).unwrap();
+        assert!(before.sndbuf_effective_bytes>0);
+        assert!(before.poll_writable);
+        assert_eq!(set_cold_tx_send_buffer(sock.as_raw_fd(),65535),
+            Err(RawTxError::InvalidInterface));
+        assert_eq!(set_cold_tx_send_buffer(sock.as_raw_fd(),1_048_577),
+            Err(RawTxError::InvalidInterface));
+        assert_eq!(read_tx_socket_state(sock.as_raw_fd()).unwrap()
+            .sndbuf_effective_bytes,before.sndbuf_effective_bytes);
+        let adjusted=set_cold_tx_send_buffer(sock.as_raw_fd(),1_048_576)
+            .unwrap();
+        assert!(adjusted.sndbuf_effective_bytes>0);
+        assert!(adjusted.sndbuf_effective_bytes<=2_097_152);
+        assert_eq!(read_tx_socket_state(sock.as_raw_fd()).unwrap()
+            .sndbuf_effective_bytes,adjusted.sndbuf_effective_bytes);
     }
     #[test]
     fn linux_raw_rx_receive_buffer_is_bounded_and_kernel_readback_actual(){
