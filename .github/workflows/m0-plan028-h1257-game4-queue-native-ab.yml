@@ -180,6 +180,8 @@ jobs:
               "order":["scalar","native"],"seconds_per_leg":90,
               "game4_actual_backend":{mode:legs[mode]["clients"]["dave"]["backend"] for mode in legs},
               "game4_abandon_reason":{mode:legs[mode]["clients"]["dave"]["copy_abandon"] for mode in legs},
+              "game4_shared_tun_burst":{mode:legs[mode]["clients"]["dave"]["game4_shared_tun_burst"] for mode in legs},
+              "server_game4_shared_tun_burst":{mode:legs[mode]["server_game4_shared_tun_burst"] for mode in legs},
               "server_abandon_reason":{mode:legs[mode]["server_copy_abandon"] for mode in legs},
               "per_lease_server_tun":{mode:legs[mode]["per_authenticated_server_lease_shared_tun"] for mode in legs},
               "physical_netem":{mode:legs[mode]["actual_dave_physical_netem"] for mode in legs},

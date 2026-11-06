@@ -103,6 +103,7 @@ pub(crate) struct GameKernelOwner{
     physical_generation:u32,server:bool,
     diagnostic_adapter:Arc<Mutex<GameAdapter>>,
     tx_work_sample:Arc<TxDurationSample>,
+    tx_shared_burst_extra:Arc<AtomicU64>,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -161,6 +162,8 @@ impl GameKernelOwner{
         let tx_reasons=Arc::new(TxRejectReasons::default());
         let tx_work_sample=Arc::new(TxDurationSample::default());
         let tx_sample_worker=Arc::clone(&tx_work_sample);
+        let tx_shared_burst_extra=Arc::new(AtomicU64::new(0));
+        let tx_shared_burst_worker=Arc::clone(&tx_shared_burst_extra);
         let tx_sample_enabled=std::env::var("WBD_GAME_TX_SAMPLE")
             .ok().as_deref()==Some("1");
         let raw_received=Arc::new(AtomicU64::new(0));
@@ -412,6 +415,62 @@ impl GameKernelOwner{
                                 }
                             }else{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            }
+                        }
+                    }
+                    // One authenticated Game4+FEC session may empty four
+                    // already-ready original shared-TUN ingress slots per
+                    // owner turn. The old one-source-per-turn path coupled
+                    // each TUN dequeue to several FEC quanta and delayed
+                    // four-lane copies; during high offered load it left the
+                    // per-lease TUN inbox full even after ISA-L acceleration.
+                    // Every source remains an independent ordered M4/FEC
+                    // admission; preserve the one-offer/one-owner/one-scope
+                    // contract. No extra thread, Go FFI or waiting on Full.
+                    // Exceptional oversized DF0 follows its original
+                    // fragment/ICMP branch on the NEXT turn; do not overtake
+                    // an already pending fragment.
+                    if fec_enabled&&lanes.len()==4&&pending_ip_fragments.is_empty(){
+                        if let Some(ingress)=shared_ingress.as_ref(){
+                            let mut extra_accepted=0u64;
+                            for _ in 0..3{
+                                match ingress.try_recv(){
+                                    Ok(OriginalTunIngress::Shared(packet))=>{
+                                        let bytes=packet.as_slice();
+                                        if bytes.len()>inner_mtu{
+                                            wakeup_shared=Some(
+                                                OriginalTunIngress::Shared(packet));
+                                            break
+                                        }
+                                        if bytes.is_empty(){continue}
+                                        did_business=true;
+                                        health.on_local_business(
+                                            health_origin.elapsed().as_nanos()
+                                            .min(u128::from(u64::MAX)) as u64);
+                                        observed_offers+=1;
+                                        let sampled=(tx_sample_enabled&&
+                                            observed_offers%128==0).then(Instant::now);
+                                        let at=MonoNs(start.elapsed().as_nanos()
+                                            .min(u128::from(u64::MAX)) as u64);
+                                        let sent=game.offer(bytes,at);
+                                        if let Some(t)=sampled{
+                                            tx_sample_worker.observe(t.elapsed(),true);
+                                        }
+                                        if sent.is_ok(){extra_accepted+=1}else{
+                                            tx_fail.offer.fetch_add(1,Ordering::Relaxed);
+                                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                        }
+                                    },
+                                    Ok(_)=>{
+                                        tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                    Err(std::sync::mpsc::TryRecvError::Empty)=>break,
+                                    Err(std::sync::mpsc::TryRecvError::Disconnected)=>break,
+                                }
+                            }
+                            if extra_accepted!=0{
+                                tx_shared_burst_worker.fetch_add(
+                                    extra_accepted,Ordering::Relaxed);
                             }
                         }
                     }
@@ -1005,7 +1064,7 @@ impl GameKernelOwner{
             outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
             physical_generation:generation,server,
-            diagnostic_adapter:adapter,tx_work_sample})
+            diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra})
     }
     /// A NEW real original-Go TLS+Rust M1 lane has just committed while
     /// the remaining lanes of this GameAdapter stay LIVE. Reuse the existing
@@ -1082,6 +1141,8 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
+        eprintln!("M0_GAME_M4_SHARED_TUN_BURST_READBACK extra_accepted={} max_new_sources_per_turn=4 game4_fec_only=1",
+            self.tx_shared_burst_extra.load(Ordering::Relaxed));
         // Why Game4 delayed copies were abandoned is disjoint by source:
         // bounded oldest-job eviction, missed owner deadline, or a native
         // dispatch callback failing. Pre-admission MSS/queue skips are shown

@@ -153,6 +153,7 @@ def inspect(art,product_log):
             "tx_reject":fields(log,"M0_GAME_M4_TX_REJECT_BREAKDOWN"),
             "rx_stage":fields(log,"M0_GAME_M4_RX_STAGE_BOUNDARY"),
             "copy_abandon":copy_abandon_reasons(log),
+            "game4_shared_tun_burst":fields(log,"M0_GAME_M4_SHARED_TUN_BURST_READBACK"),
         }
     # Genuine Game4 stopped with at least a parity-codec call. Native
     # qualification must have real ISA-L calls, scalar an actual zero-native.
@@ -167,6 +168,10 @@ def inspect(art,product_log):
     assert observed["dave"]["tx_duration"]["observed"],"Game4 TX timing absent"
     assert observed["dave"]["rx_lock_sample"]["observed"],"Game4 RX lock timing absent"
     assert observed["dave"]["copy_abandon"]["observed"],"Game4 copy abandon causes not observed"
+    assert observed["dave"]["game4_shared_tun_burst"]["observed"],"Game4 bounded TUN burst proof missing"
+    assert observed["dave"]["game4_shared_tun_burst"]["max_new_sources_per_turn"]==4
+    assert observed["dave"]["game4_shared_tun_burst"]["extra_accepted"]>0, (
+        "no additional original Game4 TUN sources consumed")
     server_log=pathlib.Path(product_log).read_text(errors="replace")
     routes=per_lease_shared_tun(server_log)
     expected={spec["lease"] for spec in plan["clients"]}
@@ -205,6 +210,8 @@ def inspect(art,product_log):
         "diagnostic_alerts":alerts,
         "diagnostic_alert_count":len(alerts),
         "server_copy_abandon":copy_abandon_reasons(server_log),
+        "server_game4_shared_tun_burst":fields(server_log,
+            "M0_GAME_M4_SHARED_TUN_BURST_READBACK"),
         "server_fec_backend":fields(server_log,"M0_GAME_M4_FEC_BACKEND_READBACK"),
         "scope_limit":"Single native hosted x86 VM, two independently authenticated original TLS Go/Rust clients, genuine native netem/UDP and per-lease bounded shared TUN. Alerts diagnose pressure rather than test infrastructure failure; AB is not CPU causality or global throughput PASS.",
     }

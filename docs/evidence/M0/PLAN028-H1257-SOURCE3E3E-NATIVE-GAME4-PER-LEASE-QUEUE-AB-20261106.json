@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1257",
+  "source_sha": "3e3eb006befdcffdbb451fec9e334478b3a17f9a",
+  "status": "NATIVE_2CLIENT_90S_SCALAR_ISAL_HIGH_OFFER_PRESSURE_DIAGNOSTIC_COMPLETE_WITH_GAME4_BACKLOG",
+  "action_run_id": 42134021298,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42134021298",
+  "job_result": "success",
+  "artifact_id": 13464354711,
+  "artifact_name": "plan028-h1257-game4-per-lease-queue-90s-ab",
+  "artifact_sha256": "507f22c23f327562807934f6ef034d9ef3a3c5fb19391aa2f470e78cb4b8ea55",
+  "zip_crc": "PASS",
+  "files": 62,
+  "architecture": "Native x86_64 one hosted VM, 3 Linux network namespaces, one original Go TLS multi-session server443 and Rust shared Tun, two separately authenticated leases, game4 Fixed6 15% bidirectional netem loss and 100ms one-way delay plus normal Off 0% loss sibling. Same product binary SHA for scalar/native 90s/leg.",
+  "original_engine_so_sha256": "1f6c0123964aa18129ffeacb2e7d6d384d051bb8652574fb094f24bbc8c6aeff",
+  "phases_seconds": {
+    "warmup": 5,
+    "sustained": 40,
+    "overload": 20,
+    "recovery": 25,
+    "drain": 5
+  },
+  "game4_udp_application": {
+    "scalar": {
+      "sustained_downlink": {
+        "sent_mbps": 33.58,
+        "received_mbps": 26.7014,
+        "unique_fraction": 0.795
+      },
+      "overload_downlink": {
+        "sent_mbps": 43.47,
+        "received_mbps": 26.9889,
+        "unique_fraction": 0.62
+      },
+      "overload_uplink": {
+        "sent_mbps": 43.57,
+        "received_mbps": 30.6091,
+        "unique_fraction": 0.7024
+      },
+      "recovery_downlink": {
+        "sent_mbps": 20.16,
+        "received_mbps": 20.1617,
+        "unique_fraction": 0.9999
+      }
+    },
+    "native": {
+      "sustained_downlink": {
+        "sent_mbps": 33.58,
+        "received_mbps": 31.0359,
+        "unique_fraction": 0.9246
+      },
+      "overload_downlink": {
+        "sent_mbps": 43.68,
+        "received_mbps": 32.2259,
+        "unique_fraction": 0.7379
+      },
+      "overload_uplink": {
+        "sent_mbps": 43.59,
+        "received_mbps": 35.5708,
+        "unique_fraction": 0.8166
+      },
+      "recovery_downlink": {
+        "sent_mbps": 20.16,
+        "received_mbps": 20.1603,
+        "unique_fraction": 1
+      }
+    }
+  },
+  "normal_sibling": {
+    "mode": "Normal Off",
+    "loss_percent": 0,
+    "per_lease_server_pending_overflow_both_legs": 0,
+    "real_udp_unique_delivery_fraction_each_phase": 1
+  },
+  "native_product_codec_readback": {
+    "scalar": {
+      "tx_native_quanta": 0,
+      "tx_scalar_quanta": 124518,
+      "rx_native_decodes": 0,
+      "rx_scalar_decodes": 19734,
+      "late_complete_repair_skips": 402373
+    },
+    "native": {
+      "tx_native_quanta": 138108,
+      "tx_scalar_quanta": 2225,
+      "rx_native_decodes": 22824,
+      "rx_scalar_decodes": 358,
+      "late_complete_repair_skips": 460117
+    }
+  },
+  "physical_netem": {
+    "limit_packets": 10000,
+    "configured_percent": 15,
+    "configured_one_way_delay_ms": 100,
+    "scalar_observed_loss_fraction": {
+      "uplink": 0.149915,
+      "downlink": 0.149983
+    },
+    "native_observed_loss_fraction": {
+      "uplink": 0.150034,
+      "downlink": 0.150058
+    }
+  },
+  "server_shared_tun_per_lease": {
+    "scalar": {
+      "game4": {
+        "offered": 455923,
+        "direct_delivered": 314826,
+        "downstream_full": 4233,
+        "pending_overflow": 96630,
+        "pending_peak_packets": 8
+      },
+      "normal": {
+        "offered": 267581,
+        "direct_delivered": 267581,
+        "downstream_full": 0,
+        "pending_overflow": 0,
+        "pending_peak_packets": 0
+      }
+    },
+    "native": {
+      "game4": {
+        "offered": 461559,
+        "direct_delivered": 384063,
+        "downstream_full": 2210,
+        "pending_overflow": 53037,
+        "pending_peak_packets": 8
+      },
+      "normal": {
+        "offered": 268318,
+        "direct_delivered": 268316,
+        "downstream_full": 1,
+        "pending_overflow": 0,
+        "pending_peak_packets": 2
+      }
+    }
+  },
+  "game4_client_copy_abandon_rankwise": {
+    "scalar": {
+      "capacity_evicted": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "deadline_expired": [
+        333,
+        26301,
+        30202,
+        31020
+      ],
+      "dispatch_pressure": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admission_mtu_skipped": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admission_queue_skipped": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "native": {
+      "capacity_evicted": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "deadline_expired": [
+        16,
+        56872,
+        56269,
+        50024
+      ],
+      "dispatch_pressure": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admission_mtu_skipped": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admission_queue_skipped": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "interpretation": "All observed abandonments are late secondary-copy deadlines, NOT physical loss or direct lost application unique packets. Native schedules/transmits MORE logical jobs than scalar at high load; absolute deadline counts are not directly comparable without a copy-schedule denominator."
+  },
+  "product_tx_poll_samples": {
+    "stride": 128,
+    "scalar": {
+      "count": 3904,
+      "total_ns": 110801133,
+      "mean_ns": 28381
+    },
+    "native": {
+      "count": 4357,
+      "total_ns": 8842212,
+      "mean_ns": 2029
+    }
+  },
+  "game4_rx_mutex_sample_stride": 128,
+  "process_cpu_percent_one_core_including_setup": {
+    "server_scalar": 90.39,
+    "server_native": 84.83,
+    "game4_client_scalar": 70.33,
+    "game4_client_native": 64.72
+  },
+  "conclusions": [
+    "Pinned ISA-L runtime dispatch confirmed, directed FEC poll cost lower, but Game4 high-offer app loss persists at native 26.21% in overloaded downlink.",
+    "One authenticated Game4 lease accumulates true bounded shared-TUN pending count overflow 96630 scalar, 53037 native; normal sibling has zero overflow and complete business.",
+    "Physical netem actually ~15% each direction with qdisc limit10000, no repeat of old qdisc confound.",
+    "Game4 M4 has NO observed capacity eviction, raw send pressure or size-skipped new-copy slots; only secondary copy due/deadline exceeded.",
+    "Under lower offered rate in 25s recovery each game4 direction returns about100% app UDP delivery.",
+    "Cause still includes one shared Game4 owner consumption frequency; H1258 proposes finite Game4FEC shared TUN micro-batch, no FEC/protocol/MTU/queue bound tuning."
+  ],
+  "limits": [
+    "One hosted VM and sequential scalar/native workloads; not strict CPU causal proof.",
+    "Diagnostic workflow success means data collected, not high-throughput performance PASS.",
+    "Historical PLAN027A H998 same-socket online MTU shrink FAIL retained.",
+    "Five-client mixed scenarios not rerun in H1257."
+  ]
+}
