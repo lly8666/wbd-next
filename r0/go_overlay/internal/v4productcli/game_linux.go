@@ -137,6 +137,10 @@ func runGameClient(
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     assocs:=make([]*faketcp.ClientAssociation,0,n)
+    // One original client cold RTO driver per independently authenticated
+    // TLS/FakeTCP lane. All stop before M4 DATA or candidate teardown.
+    coldRTOStops:=make([]func()(uint64,error),0,n)
+    defer func(){for _,stop:=range coldRTOStops{_,_=stop()}}()
     flows:=make([]faketcp.ClientFlow,0,n)
     var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
@@ -197,9 +201,10 @@ func runGameClient(
         startRX(assoc,raw,flow,retiredRX[i])
         if e=assoc.Start(time.Now());e!=nil{return e}
         establish,cancel:=context.WithTimeout(ctx,20*time.Second)
-        e=assoc.WaitEstablished(establish)
+        e=waitForOriginalColdSYN(establish,assoc)
         cancel()
         if e!=nil{return e}
+        coldRTOStops=append(coldRTOStops,driveOriginalClientColdBootstrapRTO(ctx,assoc))
     }
     log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
         n,c.peerPort,len(flows))
@@ -242,6 +247,14 @@ func runGameClient(
     dialCtx,cancel:=context.WithTimeout(ctx,60*time.Second)
     err=native.ConnectClientGame(dialCtx,assocs,cfg)
     cancel()
+    for _,stop:=range coldRTOStops{
+        actual,rtoErr:=stop()
+        if actual>0{
+            log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=game lanes=%d actual_original_retransmissions=%d post_detach=0",
+                n,actual)
+        }
+        err=errors.Join(err,rtoErr)
+    }
     if err!=nil{_ = native.Close();return err}
     // Never filter Go TLS/bootstrap before the authenticated Rust receiver
     // and ownership transfer have both completed.
@@ -347,15 +360,22 @@ func runGameClient(
             return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)
         }
         establish,cancel:=context.WithTimeout(ctx,20*time.Second)
-        e=newAssoc.WaitEstablished(establish)
+        e=waitForOriginalColdSYN(establish,newAssoc)
         cancel()
         if e!=nil{return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)}
         // The original server authenticates each cold TLS lane with a
         // 15s cap. A failed 5%-loss candidate must not hold its healthy
         // Game4 owner for a pointless 60s before trying another port.
         dialCtx,dialCancel:=context.WithTimeout(ctx,20*time.Second)
+        stopColdRTO:=driveOriginalClientColdBootstrapRTO(dialCtx,newAssoc)
         e=native.ReplaceClientGameLane(dialCtx,newAssoc,cfg,lane)
+        actual,rtoErr:=stopColdRTO()
         dialCancel()
+        if actual>0{
+            log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=game4_hot lane=%d actual_original_retransmissions=%d post_detach=0",
+                lane,actual)
+        }
+        e=errors.Join(e,rtoErr)
         if e!=nil{
             if errors.Is(e,realityfront.ErrV4GameLaneUncommittedCold){
                 return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)
