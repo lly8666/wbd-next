@@ -1,5 +1,5 @@
 name: M0 PLAN028 H1278 ARM64 30min five-client simultaneous rotation stress
-# H1278: bounded exact final TLS reply ACK repeat after original native M4 handoff; source-locked.
+# H1278: exact original native assembly blob pin corrected, protected last-ACK guard, one 3-scene matrix.
 run-name: H1278 ARM64 original Go TLS/Rust 3 parallel 1800s five-client scenes
 on:
   push:
