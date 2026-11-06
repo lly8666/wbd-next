@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "source_sha": "ab99fa457b266bbe70809ab0f3ef754faba91afe",
+  "run_id": 42206643488,
+  "arch": "native_aarch64_original_Go_TLS_FakeTCP_Rust_M4",
+  "duration_each_sec": 1800,
+  "clients_per_scene": 5,
+  "jobs": {
+    "build": "success",
+    "baseline": "failure",
+    "heterogeneous": "failure",
+    "pressure": "failure"
+  },
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "artifacts": {
+    "baseline": {
+      "id": 13498527974,
+      "sha256": "299813861e399c18ffe7c1a45d0d97df74ae32d5ef46f2695dd0d2d1c42797ed"
+    },
+    "heterogeneous": {
+      "id": 13499200307,
+      "sha256": "9861c87dafa9d08fee7941410f57faeb63cad78709c4806b219688469dd1b20e"
+    },
+    "pressure": {
+      "id": 13498149990,
+      "sha256": "21e8276d0ee95ab91ddda88cc71c1e9efde95d34d748fab168a74114e6959c09"
+    }
+  },
+  "scenes": {
+    "baseline": {
+      "alerts": 7,
+      "avg_server_cpu_one_core_pct": 66.171,
+      "peak_rss_kib": 183588,
+      "outer_repeat_mbps": 0.82504,
+      "R_over_F_plus_R_pct": 0.70106,
+      "alice": {
+        "mode": "normal_off",
+        "injected_tc_loss_pct": 0,
+        "local_ready_gen": 27,
+        "server_m4_reject": {
+          "stage": "rust_loop_start",
+          "native_rc": 3,
+          "client_ip": "10.25.0.2",
+          "client_port": 58251,
+          "time": "2026/11/06 11:29:30"
+        },
+        "duplex_gap_ms": [
+          64240,
+          64240
+        ],
+        "server_tun_pending_overflow": 115
+      },
+      "game2_server_missing": [],
+      "game4_true_hot_success": 16
+    },
+    "heterogeneous": {
+      "alerts": 11,
+      "avg_server_cpu_one_core_pct": 83.39,
+      "peak_rss_kib": 180424,
+      "outer_repeat_mbps": 1.43139,
+      "R_over_F_plus_R_pct": 0.8169,
+      "game2": {
+        "missing_gen": 6,
+        "client_lanes_ready_at": "2026/11/06 11:06:12",
+        "server_lane2_staged_port": 57798,
+        "server_lane1_non_timeout_reject_port": 57797,
+        "server_error_class": "other",
+        "duplex_gap_ms": [
+          104600,
+          104700
+        ]
+      },
+      "game4_hot_success": 6,
+      "erin_fixed6_gap_ms": [
+        3320,
+        3310
+      ]
+    },
+    "pressure": {
+      "alerts": 12,
+      "avg_server_cpu_one_core_pct": 104.209,
+      "peak_rss_kib": 235596,
+      "outer_repeat_mbps": 2.77442,
+      "R_over_F_plus_R_pct": 0.838,
+      "game2": {
+        "missing_gen": 12,
+        "client_lanes_ready_at": "2026/11/06 11:11:52",
+        "server_lane2_staged_port": 56172,
+        "server_lane1_non_timeout_reject_port": 56171,
+        "server_error_class": "other",
+        "duplex_gap_ms": [
+          99930,
+          100020
+        ]
+      },
+      "game4_hot_success": 5,
+      "dave_server_tun_pending_overflow": 223,
+      "erin_fixed6_gap_ms": [
+        2290,
+        1260
+      ]
+    }
+  },
+  "limits": [
+    "Root substage of Rust BAD_STAGE=3 and Game2 protected_tls other rejection still unproven; do not claim typed stage enough to identify exact internal operation.",
+    "R/(F+R) accepted encrypted first and repeated record bytes only. Control C/FEC parity/IP/TCP/L2 full overhead NOT_MEASURED.",
+    "Original H998 same-socket MTU reduction FAIL and historical Fixed6 S2C stalls not closed."
+  ]
+}

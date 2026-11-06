@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1280,
+  "sequence": 1281,
   "checkpoint_sha": "22a016f1261bc00255ef5beff3983273170155cf",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1280 SOURCE5a705 H1279 Action42197650482 native ARM64 build PASSED, baseline 1800s PASS alerts0; heterogeneous FAIL alerts6 and pressure FAIL alerts8. Game4 M1 4->8 improved pressure server queue 6364->352, client 3321->121; HOWEVER pressure Alice Normal Off TC0 client gen11 local M4 READY 10:01:57, server same instant V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner; client exact old Stop, gen11 raw observed=0 while 203375 UDP sent, 73.3s bidirectional app gap until next gen. Old H1279 Normal rotation oracle erroneously PASS_SCOPED. Add typed server failure stage/native RC, source IPv4/port to successes and rejections, and source-matched independent server M4 hard gate for Normal Off/Auto/Fixed6 in new strict 3x1800s H1280 run; root cause of internal rejection UNPROVEN until new stage logs.",
-  "why_now": "Current largest outage is a 73s silent server Rust M4 install refusal, not physical TC loss nor 51 TUN queue overflow. Client local READY and exact Stop are insufficient. Source-locked server rejection+client zero raw RX is a direct commit-lifecycle invariant violation; do not solve by loosening loss thresholds, blindly raising queues or treating local Ready as remote commit.",
+  "current_task": "H1281: H1280 run42206643488 source ab99 native ARM64 build PASS but baseline/heterogeneous/pressure FAIL (7/11/12 alerts). Baseline Alice Normal Off physical TC0 gen27 client M4 Ready and old Stop; server rust_loop_start RC3 BAD_STAGE denied, real 64.24s duplex blackhole. Hetero Game2 Gen6 client local both lanes READY, server lane2 57798 staged, lane1 57797 non-timeout protected_tls other rejected 1s later, 104.7s duplex gap. Pressure Game2 Gen12 same lane2 56172 staged, lane1 56171 non-timeout reject, 100.02s duplex gap. H1281 scope: Normal and Game2/4 overlapping client cold M4 route is DEFERRED until genuine candidate native post-AEAD/replay reverse IPv4 TUN delivery; old route remains fully active on missing remote commit, new B Stop cannot retire A. Game4 same-group hot-lane unchanged. Branch ARM64 preflight builds passed first source but original Python test filename substitution caused preflight FAIL; corrected same real H1280 test path, new run pending. Do NOT treat new code as full performance PASS.",
+  "why_now": "Source-locked H1280 proves separate client-local READY vs server-native M4 commit; Rust shared_route_publish previously revoked old client default TUN route at candidate local start before server confirmation. Old owner pointer cannot deliver on revoked route. Two-phase route publication tied to real reverse authenticated packet directly addresses 64-105 second blackouts without new wire fields, arbitrary sleeps, larger queues or faking delivery.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "H1280 exact original native ARM64 build and stringent 3x1800s five-client stress: server Normal Rust M4 success/reject exact peer source IPv4/port, stage and numeric RC; oracle requires every client's local Normal Ready to map independently to server M4 commit. If rejection recurs, locate FFI failure stage and fix native owner/route/OS backend. Retain Game2 real two-lane commit, Game4 hot lane match/queue, Fixed6 gaps and physical TC, p99, CPU/RSS, record R/F; all real app alerts still FAIL. H998 live MTU FAIL and S2C intermittent remain open.",
+  "next_action": "Qualify H1281 native ARM64 preflight Rust/Go owner+fail-closed tests; push exact new SOURCE main and run strict baseline/heterogeneous/pressure each 1800s with original five clients. Verify no >=750ms app gap from missing Normal/Game2 server commit and old route not revoked; preserve exact server M4 port oracle, Game4 hot lane target >=10, Fixed6 15/30% cold TLS and real goodput, both-end per-lease TUN drops, qdisc physical, p99, CPU/RSS, record R/(F+R) only. Any app loss/Stop break remains FAIL; H998 live MTU and old S2C intermittent open.",
   "unverified": true,
-  "last_tested_source": "5a705e52abd4aa345b5a4738f5c66eb8441cc2d3",
+  "last_tested_source": "ab99fa457b266bbe70809ab0f3ef754faba91afe",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1280-H1279-SOURCE5A7-3X1800S-VERIFIED-20261106.json"
+    "docs/evidence/M0/PLAN028-H1281-H1280-ARM64-3X1800S-VERIFIED-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
