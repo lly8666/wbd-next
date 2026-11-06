@@ -3166,7 +3166,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     g.shared_tun=Some(SharedTunSession{
         router:router_handle,generation,ip,
         alive:Arc::new(AtomicBool::new(true)),sender,
-        receiver:Some(receiver),
+        receiver:Some(receiver),publish_pending:false,
     });
     OK
 }
