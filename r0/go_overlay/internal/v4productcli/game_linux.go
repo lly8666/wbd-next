@@ -882,7 +882,14 @@ func runGameMultiServer(
             }(a)
         case result:=<-authenticated:
             if result.err!=nil{
-                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=protected_tls")
+                // The old generic REJECT hid the difference between a
+                // 15s TLS timeout, a protected-policy refusal, and a native
+                // cold Commit failure. Never print credentials/keys; log
+                // only the observed source port and coarse failure class.
+                port:=uint16(0)
+                if result.assoc!=nil{port=result.assoc.Flow().ClientPort}
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=protected_tls class=%s client_port=%d",
+                    nativeColdFailureClass(result.err),port)
                 forget(result.assoc)
                 continue
             }
@@ -1027,6 +1034,12 @@ func runGameMultiServer(
                     continue
                 }
             }
+            // A client M4 local READY cannot prove this second server
+            // lane arrived. Make each independently protected arrival
+            // visible so a missing Game2 cohort can be attributed to its
+            // exact source port, rather than to a successful client banner.
+            log.Printf("V4_PUBLIC_GAME_MULTI_PROTECTED_LANE_STAGED role=server lanes=%d lane=%d client_port=%d",
+                coldKey.Lanes,laneID,lane.Association().Flow().ClientPort)
             key,complete,e:=stageOriginalAuthenticatedGameLane(
                 pending,lane,time.Now(),
             )
