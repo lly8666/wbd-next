@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1281,
+  "sequence": 1282,
   "checkpoint_sha": "22a016f1261bc00255ef5beff3983273170155cf",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1281: H1280 run42206643488 source ab99 native ARM64 build PASS but baseline/heterogeneous/pressure FAIL (7/11/12 alerts). Baseline Alice Normal Off physical TC0 gen27 client M4 Ready and old Stop; server rust_loop_start RC3 BAD_STAGE denied, real 64.24s duplex blackhole. Hetero Game2 Gen6 client local both lanes READY, server lane2 57798 staged, lane1 57797 non-timeout protected_tls other rejected 1s later, 104.7s duplex gap. Pressure Game2 Gen12 same lane2 56172 staged, lane1 56171 non-timeout reject, 100.02s duplex gap. H1281 scope: Normal and Game2/4 overlapping client cold M4 route is DEFERRED until genuine candidate native post-AEAD/replay reverse IPv4 TUN delivery; old route remains fully active on missing remote commit, new B Stop cannot retire A. Game4 same-group hot-lane unchanged. Branch ARM64 preflight builds passed first source but original Python test filename substitution caused preflight FAIL; corrected same real H1280 test path, new run pending. Do NOT treat new code as full performance PASS.",
-  "why_now": "Source-locked H1280 proves separate client-local READY vs server-native M4 commit; Rust shared_route_publish previously revoked old client default TUN route at candidate local start before server confirmation. Old owner pointer cannot deliver on revoked route. Two-phase route publication tied to real reverse authenticated packet directly addresses 64-105 second blackouts without new wire fields, arbitrary sleeps, larger queues or faking delivery.",
+  "current_task": "H1282: H1281 original Go FakeTCP TLS/Rust M4 ARM64 Action42214816445 SOURCE0eba, build + baseline PASS 0 alerts, heterogeneous FAIL 4 alerts, pressure FAIL 6. All client Normal READY matched remote M4 and Game2 22/16/17 server group cohorts no old 100s blackouts. Hetero Dave Game4 server hot=6<10, 8 cold TLS timeout; Erin Fixed6 generations8<10, 38 TLS timeouts, app gaps up2290ms/down1260ms. Pressure Dave Game4 server hot7<10, 7 TLS timeout and 50 TUN overflow; Bob 23 overflow. Erin Fixed6 generations9<10, 32 cold TLS timeout, gaps1380/2290ms. Source defect: original FakeTCP client Established TLS stage never drove existing Sender.RetransmitDue; Game initial/hot SYN bypassed existing bounded waitForOriginalColdSYN. H1282 scope only original client cold DATA RTO timer and Game SYN RTO; source-locked ARM64 + 3x1800s pending.",
+  "why_now": "15%-30% netem original TCP cold TLS candidate failures are dominated by deadline timeouts while preserved old M4 works; existing sender retransmission was never ticked after client SYN established. Invoke original bounded timer, do not extend authentication windows or loosen alerts.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Qualify H1281 native ARM64 preflight Rust/Go owner+fail-closed tests; push exact new SOURCE main and run strict baseline/heterogeneous/pressure each 1800s with original five clients. Verify no >=750ms app gap from missing Normal/Game2 server commit and old route not revoked; preserve exact server M4 port oracle, Game4 hot lane target >=10, Fixed6 15/30% cold TLS and real goodput, both-end per-lease TUN drops, qdisc physical, p99, CPU/RSS, record R/(F+R) only. Any app loss/Stop break remains FAIL; H998 live MTU and old S2C intermittent open.",
+  "next_action": "Review H1282 native ARM64 original FakeTCP unit: missing first TLS DATA must genuinely emit duplicate same seq+payload and stop after TLS, no synthetic ACK. Test exact source build+manifest+Go/Rust ABI; run baseline/hetero/pressure 1800s five clients. Compare H1281 Game4 6/7 server hot and Erin Fixed6 8/9 rotations, 8/7 and 38/32 TLS timeouts, all UDP/TCP active business gap <750ms, server independent exact M4 commits, Game2 group, per lease TUN overflow, physical TC, CPU/RSS, R/(F+R). Any real alert remains FAIL. H998 live MTU and historical S2C still unresolved.",
   "unverified": true,
-  "last_tested_source": "ab99fa457b266bbe70809ab0f3ef754faba91afe",
+  "last_tested_source": "0eba38f4835323aed4b44f00174e1127d00de048",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1281-H1280-ARM64-3X1800S-VERIFIED-20261106.json"
+    "docs/evidence/M0/PLAN028-H1282-H1281-ARM64-3X1800S-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",

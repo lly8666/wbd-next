@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "trial": "PLAN028_H1281_SOURCE0EBA_REAL_ARM64",
+  "source_sha": "0eba38f4835323aed4b44f00174e1127d00de048",
+  "run_id": 42214816445,
+  "arch": "native_aarch64_originalGoFakeTCP_TLS_Rust_M4",
+  "duration_seconds_each": 1800,
+  "build": "success",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "raw_zip": {
+    "baseline": {
+      "id": 13501888774,
+      "sha256": "9a489ab84968cdb821a4b13448bd4cdc5cc24263eddf2cd3116f7e6f00c1d085"
+    },
+    "heterogeneous": {
+      "id": 13501743941,
+      "sha256": "6cceab0d0f923942e7db6de4b41e9bd86d34c1376078172c0c2547fefacb27c1"
+    },
+    "pressure": {
+      "id": 13502692199,
+      "sha256": "a4a8d428e3c149f478321aa7ac2050b60c00d8ae01eca1bf8f36ddb854b2e4ab"
+    }
+  },
+  "scenes": {
+    "baseline": {
+      "job": "success",
+      "alerts": 0,
+      "cpu_one_core_pct": 67.456,
+      "peak_rss_kib": 180332,
+      "game2_full_server_cohorts": 22,
+      "game4_hot_server": 19,
+      "fixed6_generations": 17,
+      "fixed6_failed_cold": 2,
+      "server_tun_overflow": 0,
+      "repeat_record_mbps": 0.81873,
+      "R_over_F_plus_R_pct": 0.69536
+    },
+    "heterogeneous": {
+      "job": "failure",
+      "alerts": 4,
+      "cpu_one_core_pct": 83.355,
+      "peak_rss_kib": 187592,
+      "game2_full_server_cohorts": 16,
+      "game4_hot_server": 6,
+      "game4_cold_tls_timeout": 8,
+      "fixed6_generations": 8,
+      "fixed6_failed_cold_timeout": 38,
+      "fixed6_app_gap_up_down_ms": [
+        2290,
+        1260
+      ],
+      "server_tun_overflow": 0,
+      "repeat_record_mbps": 1.66476,
+      "R_over_F_plus_R_pct": 0.94806
+    },
+    "pressure": {
+      "job": "failure",
+      "alerts": 6,
+      "cpu_one_core_pct": 103.493,
+      "peak_rss_kib": 222288,
+      "game2_full_server_cohorts": 17,
+      "game4_hot_server": 7,
+      "game4_cold_tls_timeout": 7,
+      "fixed6_generations": 9,
+      "fixed6_failed_cold_timeout": 32,
+      "fixed6_app_gap_up_down_ms": [
+        1380,
+        2290
+      ],
+      "server_tun_overflow": {
+        "bob": 23,
+        "dave": 50
+      },
+      "repeat_record_mbps": 2.30421,
+      "R_over_F_plus_R_pct": 0.69377
+    }
+  },
+  "qualification": "BASELINE_SCOPED_PASS_HETEROGENEOUS_PRESSURE_FAIL",
+  "limits": [
+    "TCP cold RTO client sender invocation gap is source-confirmed; its share of high-loss timeout cause unproven until H1282 native retest",
+    "record R/(F+R) excludes control C FEC parity all TCP/IP/L2 and is not physical total overhead",
+    "H998 online same-socket MTU failure and old Fixed6 S2C intermittent faults remain open"
+  ]
+}
