@@ -163,6 +163,11 @@ func V4NormalM4FailureStage(err error)string{
     if errors.As(err,&stage){return stage.Stage}
     return "unclassified"
 }
+func V4NormalM4NativeCode(err error)int{
+    var status *v4EmbeddedNativeStatus
+    if errors.As(err,&status){return status.Code}
+    return -1
+}
 func normalM4Fail(stage string, cause error)error{
     return &V4NormalM4StageFailure{Stage:stage,Cause:cause}
 }
