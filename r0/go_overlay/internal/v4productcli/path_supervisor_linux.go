@@ -31,6 +31,7 @@ type originalGameLaneTurnResult struct{
 type originalClientGeneration struct{
     laneRotate chan originalGameLaneTurn
     seq uint64
+    localPort uint16 // verified original FakeTCP tuple, diagnostic only
     path originalLinuxUnderlay
     cancel context.CancelFunc
     ready chan struct{}
@@ -121,7 +122,7 @@ func startOriginalClientGeneration(
         // B has authenticated, installed its MTU, and published its M4 owner.
         runCtx,cancel:=context.WithCancel(parent)
         a:=&originalClientGeneration{
-            seq:seq,path:path,cancel:cancel,
+            seq:seq,localPort:c.localPort,path:path,cancel:cancel,
             ready:make(chan struct{},1),done:make(chan error,1),
         }
         if c.gameLanes==4&&c.rotationInterval>0{
@@ -146,7 +147,7 @@ func startOriginalClientGeneration(
     }
     runCtx,cancel:=context.WithCancel(parent)
     a:=&originalClientGeneration{
-        seq:seq,path:path,cancel:cancel,
+        seq:seq,localPort:c.localPort,path:path,cancel:cancel,
         ready:make(chan struct{},1),done:make(chan error,1),
     }
     log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d source=kernel_route_get",
@@ -345,8 +346,8 @@ func runOriginalLinuxClientPaths(
             retry=0
             stopTimer()
             armRotation()
-            log.Printf("V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=%d old_generation=%t source=real_original_TLS_Rust_M4 os_path_authority=1",
-                a.seq,previous!=nil)
+            log.Printf("V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=%d old_generation=%t source=real_original_TLS_Rust_M4 os_path_authority=1 client_ipv4=%s client_port=%d",
+                a.seq,previous!=nil,a.path.src.String(),a.localPort)
             if previous!=nil{
                 if c.gameLanes!=0{
                     log.Printf("V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=%d old_generation=%d shared_tun_single_reader=1 new_tls_m4_before_old_stop=1",
