@@ -958,7 +958,25 @@ func runGameMultiServer(
             // Rejecting active Game2 here prevented physical A→B Gen2
             // server M4 admission despite client Gen2 READY/old exact Stop,
             // leaving genuine post-READY UDP with no recipient.
-            if group:=active[coldKey];group!=nil&&coldKey.Lanes==4{
+            // Game4 single-lane reauth explicitly offers an existing
+            // protected Epoch; a fresh full-group first lane offers ZERO.
+            // Server-returned epochs are equal for both and cannot tell
+            // them apart. Once a full group has begun, its remaining
+            // explicit-epoch lanes must JOIN pending, not hot-swap A.
+            // Physical IP/MTU changes remain an independent full-group hint.
+            freshGroup,e:=lane.ProtectedFreshGroupRequested()
+            if e!=nil{rejectLane(lane);continue}
+            fullGroupPending:=pending[coldKey]!=nil
+            if freshGroup&&coldKey.Lanes==4{
+                log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PROTECTED_EPOCH_ZERO role=server lane=%d client_port=%d old_group_preserved=1",
+                    laneID,lane.Association().Flow().ClientPort)
+            }
+            if fullGroupPending&&coldKey.Lanes==4{
+                log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PENDING_JOIN role=server lane=%d client_port=%d old_group_preserved=1",
+                    laneID,lane.Association().Flow().ClientPort)
+            }
+            if group:=active[coldKey];group!=nil&&coldKey.Lanes==4&&
+                !freshGroup&&!fullGroupPending{
                 if laneID<1||laneID>4{
                     rejectLane(lane)
                     continue

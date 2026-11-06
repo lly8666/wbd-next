@@ -305,6 +305,18 @@ func (l *V4LinuxGameAuthenticatedLane) Cohort()(
         Epoch:cold.Epoch(),Lanes:uint8(n),
     },cold.LaneID(),nil
 }
+// The client's ORIGINAL offered epoch is already inside credential-verified
+// protected TLS. A ZERO request starts a full fresh Game group, including
+// same-IP/MTU recovery after an old Game4 group dies. A nonzero request
+// carries an explicit old group epoch for a one-lane hot reauth. This is
+// only available after Rust M1 Commit + frozen cold snapshot validation;
+// never trust the TCP port or a new unprotected flag as cohort authority.
+func (l *V4LinuxGameAuthenticatedLane) ProtectedFreshGroupRequested()(bool,error){
+    if l==nil||l.session==nil||l.bridge==nil{return false,ErrAdmissionParams}
+    if _,err:=l.session.ColdSnapshot();err!=nil{return false,err}
+    return l.session.verifiedRequestedFreshEpoch,nil
+}
+
 // Expose ONLY original authenticated Go record sizes to the one server
 // cohort router. The TLS-derived AEAD keys, epoch randomizer and M1 owner
 // remain private; an untrusted source-IP packet cannot mint this witness.

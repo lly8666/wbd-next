@@ -287,6 +287,11 @@ type V4ServerSession struct {
     authenticatedPrincipal string
     verifiedNormalFec uint8 // original credential-checked protected request
     verifiedGameFec uint8 // independent protected Game profile byte21
+    // AUTHENTICATED ORIGINAL REQUEST only. The server-selected Epoch
+    // differs from the client's requested zero Epoch on fresh whole-group
+    // admission; single-lane Game4 reauth explicitly offers its old Epoch.
+    // Freeze this at successful protected TLS+M1 Commit for cohort routing.
+    verifiedRequestedFreshEpoch bool
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
@@ -944,6 +949,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         },Epoch:epoch,verifiedLease4:lease,serverOwnedManualLease4:manualLease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
         verifiedNormalFec:selectedNormalFec,verifiedGameFec:selectedGameFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
+        verifiedRequestedFreshEpoch:offered.Epoch==[16]byte{},
     },nil
 }
 
