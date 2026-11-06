@@ -9,6 +9,11 @@ use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::collections::VecDeque;
 use std::sync::mpsc::{self,Receiver,RecvTimeoutError,SyncSender};
+// Bounded total source admissions per existing Game4+FEC TX owner turn.
+// H1278 native pressure: both server and client M1 shared-TUN inboxes
+// overflowed despite bounded 4-source drain while FEC parity was polled.
+// The native TUN reader already reads up to eight packets per batch.
+const GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN:usize=8;
 use crate::v4_embedded_go::OriginalTunIngress;
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,GameLaneOpener,OriginalGameLaneRekey,Error as GameAdapterError};
@@ -418,9 +423,10 @@ impl GameKernelOwner{
                             }
                         }
                     }
-                    // One authenticated Game4+FEC session may empty four
+                    // One authenticated Game4+FEC session may empty up to eight
                     // already-ready original shared-TUN ingress slots per
-                    // owner turn. The old one-source-per-turn path coupled
+                    // owner turn, matching the actual reader's eight-packet
+                    // batch. The old one-source-per-turn path coupled
                     // each TUN dequeue to several FEC quanta and delayed
                     // four-lane copies; during high offered load it left the
                     // per-lease TUN inbox full even after ISA-L acceleration.
@@ -433,7 +439,7 @@ impl GameKernelOwner{
                     if fec_enabled&&lanes.len()==4&&pending_ip_fragments.is_empty(){
                         if let Some(ingress)=shared_ingress.as_ref(){
                             let mut extra_accepted=0u64;
-                            for _ in 0..3{
+                            for _ in 0..GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN-1{
                                 match ingress.try_recv(){
                                     Ok(OriginalTunIngress::Shared(packet))=>{
                                         let bytes=packet.as_slice();
@@ -1151,7 +1157,7 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
-        eprintln!("M0_GAME_M4_SHARED_TUN_BURST_READBACK extra_accepted={} max_new_sources_per_turn=4 game4_fec_only=1",
+        eprintln!("M0_GAME_M4_SHARED_TUN_BURST_READBACK extra_accepted={} max_new_sources_per_turn=8 game4_fec_only=1",
             self.tx_shared_burst_extra.load(Ordering::Relaxed));
         // Why Game4 delayed copies were abandoned is disjoint by source:
         // bounded oldest-job eviction, missed owner deadline, or a native
@@ -1245,4 +1251,29 @@ impl GameKernelOwner{
 fn lanes_key(generation:u32,i:usize)->LaneKey{
     LaneKey{tunnel:TunnelKey{slot:14,generation},
         slot:i as u32+1,generation}
+}
+
+
+// Only the existing Game4+FEC shared-TUN ingress loop uses this cap;
+// no native thread or crypto scheduler is created. A bounded channel
+// transcript proves a full reader batch can drain in one owner turn in
+// FIFO order and the next packet is not consumed speculatively.
+#[cfg(test)]
+#[test]
+fn m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap(){
+    let (send,recv)=mpsc::sync_channel::<usize>(
+        GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN+2);
+    for n in 0..GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN+2{
+        send.try_send(n).unwrap();
+    }
+    let mut observed=Vec::new();
+    observed.push(recv.try_recv().expect("first original M1 source"));
+    for _ in 0..GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN-1{
+        observed.push(recv.try_recv().expect("bounded same-turn M1 batch"));
+    }
+    assert_eq!(observed,
+        (0..GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN).collect::<Vec<_>>());
+    assert_eq!(recv.try_recv().unwrap(),GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN);
+    assert_eq!(recv.try_recv().unwrap(),GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN+1);
+    assert!(recv.try_recv().is_err());
 }
