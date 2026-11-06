@@ -36,6 +36,7 @@ def outer_counts(log,mode):
         "original_frozen_retransmitted")
     sums={f:0 for f in fields}
     samples=0
+    per_generation=[]
     for line in log.splitlines():
         if marker not in line:
             continue
@@ -45,10 +46,15 @@ def outer_counts(log,mode):
         for key,val in values.items():
             sums[key]+=val
         samples+=1
+        per_generation.append({"retirement_ordinal":samples,
+            "accepted_repeat_record_bytes":values["copy_record_wire_bytes" if game else "repair_accepted_wire_bytes"],
+            "first_record_bytes":values["first_record_wire_bytes" if game else "first_wire_bytes"],
+            "copied_record_count":values.get("copied_appearance",values.get("original_frozen_retransmitted"))})
     first=sums["first_record_wire_bytes" if game else "first_wire_bytes"]
     repeat=sums["copy_record_wire_bytes" if game else "repair_accepted_wire_bytes"]
     return {
         "observed_retired_generations":samples,
+        "per_retired_generation_record_counters":per_generation,
         "first_record_wire_bytes":first,
         "cosmetic_accepted_repeat_record_wire_bytes":repeat,
         "uncertain_repeat_record_wire_bytes":0 if game else sums["repair_uncertain_wire_bytes"],
@@ -88,6 +94,28 @@ def minute_windows(tx,rx):
                        "delivery_fraction":round(received/first,5) if first else None})
     return result
 
+def longest_active_tx_no_rx_gap_ms(tx,rx):
+    """Real synchronized 10ms app bins; no native kernel-causality inference."""
+    assert len(tx)==len(rx)
+    current=maximum=0
+    for a,b in zip(tx,rx):
+        current=current+1 if a>0 and b==0 else 0
+        if current>maximum:
+            maximum=current
+    return maximum*10
+
+def per_lease_tun_stop_counters(server_text):
+    result={}
+    for line in server_text.splitlines():
+        if "M0_SHARED_TUN_LEASE_QUEUE_DIAG ip=" not in line:
+            continue
+        m=re.search(r"\bip=(\d+\.\d+\.\d+\.\d+)",line)
+        if m:
+            result[m.group(1)]={field:count(line,field) for field in (
+                "offered","direct_delivered","pending_overflow",
+                "pending_peak_bytes","pending_peak_packets")}
+    return result
+
 def analyze(art,server_log):
     plan=read(art/"h1250-matrix-plan.json")
     assert plan["long_scene"] in ("baseline","heterogeneous","pressure")
@@ -98,12 +126,15 @@ def analyze(art,server_log):
     assert {p["who"] for p in plan["clients"]}==set(NAMES)
     cpu=read(art/"h1250-cpu-rss.json")
     qdisc=tc_stats(art/"h1250-qdisc-after.txt")
+    server_text=pathlib.Path(server_log).read_text(errors="replace")
+    per_lease=per_lease_tun_stop_counters(server_text)
     result={
         "schema_version":1,"checkpoint":"H1274",
         "source_sha":plan["source_sha"],"scene":plan["long_scene"],
         "result":"DIAGNOSTIC_COMPLETE","architecture":"native_ARM64_client_and_server",
         "duration_seconds":1800,"clients":{},"alerts":[],
         "actual_physical_qdisc":qdisc,
+        "server_per_authenticated_lease_tun":per_lease,
         "server_cpu_rss":cpu.get("server"),
         "server_single_port":plan["server_port"],
         "limitations":[
@@ -165,6 +196,8 @@ def analyze(art,server_log):
         repeat_all+=repeat["cosmetic_accepted_repeat_record_wire_bytes"]
         first_all+=repeat["first_record_wire_bytes"]
         details={"mode":spec["mode"],"lease":spec["lease"],
+                 "server_per_lease_queue":per_lease.get(spec["lease"]),
+                 "health90_events":text.count("M0_GAME_M4_HEALTH_DEAD"),
                  "outer_intent_mtu":spec["outer_mtu"],
                  "configured_loss_pct":spec["loss_pct"],
                  "one_way_delay_ms":spec["oneway_delay_ms"],
@@ -198,23 +231,37 @@ def analyze(art,server_log):
                     result["alerts"].append({"who":who,"direction":direction,
                                              "phase":name,"kind":"RECOVERY_DELIVERY_BELOW_95PCT",
                                              "delivered_fraction":round(m/n,6)})
-            minute=minute_windows(tx["tx_bytes_bins_10ms"]["udp"],
-                                  rx["rx_bytes_bins_10ms"]["udp"])
+            tx_10ms=tx["tx_bytes_bins_10ms"]["udp"]
+            rx_10ms=rx["rx_bytes_bins_10ms"]["udp"]
+            no_receive_gap=longest_active_tx_no_rx_gap_ms(tx_10ms,rx_10ms)
+            minute=minute_windows(tx_10ms,rx_10ms)
             no_progress=[x["minute"] for x in minute
                          if x["offered_mbps"]>.5 and x["delivered_mbps"]<.25]
             if no_progress:
                 result["alerts"].append({"who":who,"direction":direction,
                                          "kind":"MINUTE_LEVEL_APP_RX_STARVATION",
                                          "minutes":no_progress})
+            if no_receive_gap>=750:
+                result["alerts"].append({"who":who,"direction":direction,
+                                          "kind":"APP_RX_GAP_WITH_ACTIVE_TX_GE750MS",
+                                          "duration_ms":no_receive_gap})
             details["directions"][direction]={
                 "phases":phases,"minute_actual_business":minute,
+                "largest_10ms_bucket_no_receive_while_sender_active_ms":no_receive_gap,
                 "true_tcp":{"framed_app_sent":sum(x["tx_packets"] for x in tx["stats"]["tcp"]),
                             "framed_app_received":sum(x["rx_packets"] for x in rx["stats"]["tcp"]),
                             "sender_pending_at_deadline":tx["tcp_pending_at_deadline"]}}
         result["clients"][who]=details
-    server=pathlib.Path(server_log).read_text(errors="replace")
+    server=server_text
     if "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443" not in server:
         result["alerts"].append({"kind":"NO_ORIGINAL_TLS_SERVER_PORT_READY"})
+    for who,item in result["clients"].items():
+        lease=item["lease"]
+        if lease not in per_lease:
+            result["alerts"].append({"who":who,"kind":"NO_SERVER_LEASE_QUEUE_RECEIPT"})
+        elif per_lease[lease].get("pending_overflow",0)>0:
+            result["alerts"].append({"who":who,"kind":"SERVER_PER_LEASE_QUEUE_OVERFLOW",
+                                     "pending_overflow":per_lease[lease]["pending_overflow"]})
     result["rotation_verdict"]="PASS_ALL_FIVE_SCOPED" if rotation_ok else "SOME_CLIENT_ROTATION_FAILURES"
     result["total_client_outer_record"]={
         "first_record_wire_bytes":first_all,
