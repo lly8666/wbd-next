@@ -3,7 +3,7 @@
   "plan": "PLAN028",
   "checkpoint": "H1263",
   "source_sha": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
-  "result": "REAL_NATIVE_180S_GAME2_OFF_OUTER_FUNCTIONAL_PASS_WITH_FIXED30_LOSS_ALERTS",
+  "result": "REAL_NATIVE_GAME2_OFF_OUTER_FUNCTIONAL_PASS_FIXED30_M4_EAGAIN_STAGE_QUALIFIED",
   "scope": "Original Go TLS authenticated 3 independently leased native x86 Linux netns clients, one shared TCP443 + Rust TUN, 180s actual load +10s drain, 10s warmup/45s sustained/35s overload/90s rate-down, bidirectional real UDP and netem 0/5/30% 0/50/125ms one-way; no app retries.",
   "action_run_id": 42145967317,
   "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42145967317",
@@ -104,7 +104,9 @@
     "actual_client_app_C2S_sent_mbps_during_gap_approximately_16": true,
     "actual_server_app_C2S_received_mbps_in_seconds_19_and_20": 0,
     "mechanism": "Original native M4 Linux sendmmsg typed EAGAIN backpressure during outgoing frozen FEC first-send, followed by no original receive/decoding on server; full packet data / kernel socket capacity cause NOT_YET_ISOLATED.",
-    "comparison_limit": "Previous H1259 opposite S2C 7sec blackout did not have 500ms FEC2 diagnostic and cannot be declared same root."
+    "comparison_limit": "Previous H1259 opposite S2C 7sec blackout did not have 500ms FEC2 diagnostic and cannot be declared same root.",
+    "stage_qualification": "CONFIRMED: kernel M4 typed EAGAIN zero copied for 2.5023s, remote raw+FEC2 unreceived 3.023s in THIS C2S same original business, kernel refusal root not isolated.",
+    "previous_h1259_opposite_direction_same_root": "NOT_PROVEN"
   },
   "cautions": [
     "No universal outer cosmetic guarantee for Normal: M2 opportunistic original authenticated gap recovery has zero expected on clean no-loss.",
@@ -113,5 +115,26 @@
     "One original action failed H1262 ca932 at py_compile typo before traffic; H1263 source corrected fixture, original H1262 FAIL remains.",
     "H1259 430s historical Original ACTION FAIL due reporter Stop race; H1260 offline replay succeeded; H998 online MTU shrink original socket FAIL retained.",
     "This result diagnoses Fixed6 temporary M4 backpressure but does not yet safely fix raw TX socket capacity without separate scoped proof."
-  ]
+  ],
+  "original_artifact_offline_replay": {
+    "action_run_id": 42149220835,
+    "action_conclusion": "success",
+    "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42149220835",
+    "artifact_id": 13471461778,
+    "artifact_name": "plan028-h1264-original180s-fixed30-backpressure-posthoc",
+    "artifact_sha256": "2c512a461a70e7732b9060f7c1edad2fd221686d8352377e23c67ef804816088",
+    "original_source_checked": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
+    "original_native_action_run_id": 42145967317,
+    "traffic_rerun": false,
+    "exact_original_go_TLS_Rust_product_manifest_verified": true,
+    "real_six_app_endpoint_180s_6_of_6_verified": true,
+    "exact_game2_off_frozen_outer_original_both_roles_1082_verified": true,
+    "existing_FEC2_RX_half_second_source_samples_used": true,
+    "proper_Rust_process_relative_rx_windows_9_of_9_nonempty": true,
+    "reported_fixed30_recovery_downlink_unique_fraction": 0.999634,
+    "reported_original_fixed30_low_delivery_alert_count": 2,
+    "typed_client_original_M4_backpressure_gap_verified": true,
+    "actual_remote_server_FEC2_zero_raw_RX_gap_verified": true,
+    "original_preceding_H1264_offline_action": "42148967705 FAIL offline parser counter-name regex omitted digits, not native result"
+  }
 }
