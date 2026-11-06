@@ -4205,6 +4205,37 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
         if let Some(old)=pending.remove(&key){d.retired+=old.packets.len() as u64}
     }
     if let Some(q)=pending.get_mut(&key){
+        // A receiver may have freed its M1 inbox since the last reader
+        // flush. Never report a full per-lease queue before trying to send
+        // its OLDEST pending packet. This is one bounded nonblocking try,
+        // not an additional worker or an unbounded backlog; sibling leases
+        // remain independent and FIFO is preserved.
+        if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE||
+            q.queued_bytes.saturating_add(bytes)>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+            if let Some(old)=q.packets.pop_front(){
+                q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+                if old.queued_at.elapsed()>=SHARED_TUN_PENDING_MAX_AGE{
+                    d.expired+=1;
+                }else{
+                    match q.route.send.try_send(old.packet){
+                        Ok(())=>d.delivered+=1,
+                        Err(TrySendError::Full(packet))=>{
+                            q.queued_bytes+=old.bytes;
+                            q.packets.push_front(PendingSharedTunPacket{
+                                packet,bytes:old.bytes,queued_at:old.queued_at,
+                            });
+                            d.backpressure+=1;
+                        },
+                        Err(TrySendError::Disconnected(_))=>{
+                            d.retired+=1+q.packets.len() as u64+1;
+                            q.packets.clear();q.queued_bytes=0;
+                            q.route.alive.store(false,Ordering::Release);
+                            return d;
+                        },
+                    }
+                }
+            }
+        }
         if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{
             d.overflow+=1;return d
         }
@@ -4340,6 +4371,49 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
         _=>panic!("wrong successor kind"),
     }
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_full_lease_opportunistic_oldest_drain_before_drop(){
+    let (recycle,_recycled)=mpsc::sync_channel::<Vec<u8>>(64);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    tx.try_send(packet(0)).unwrap();
+    let route=SharedTunRoute{
+        generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
+    };
+    let key=[10,66,0,42];let mut pending=HashMap::new();
+    for n in 1..=SHARED_TUN_PENDING_PER_ROUTE{
+        let d=enqueue_shared_tun(&mut pending,key,route.clone(),1,
+            ||packet(n as u8));
+        assert_eq!((d.overflow,d.delivered),(0,0));
+    }
+    assert_eq!(pending[&key].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+    // The old inbox is now writable, without a periodic reader flush.
+    match rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[0]),
+        _=>panic!("wrong old inbox packet"),
+    }
+    let d=enqueue_shared_tun(&mut pending,key,route.clone(),1,||packet(99));
+    assert_eq!((d.overflow,d.delivered),(0,1));
+    assert_eq!(pending[&key].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+    match rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[1]),
+        _=>panic!("oldest pending packet must win"),
+    }
+    assert_eq!(enqueue_shared_tun(&mut pending,key,route.clone(),1,
+        ||packet(100)).delivered,1);
+    match rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[2]),
+        _=>panic!("pending FIFO violated"),
+    }
+    assert_eq!(enqueue_shared_tun(&mut pending,key,route.clone(),1,
+        ||packet(101)).delivered,1);
+    assert_eq!(enqueue_shared_tun(&mut pending,key,route,1,
+        ||packet(102)).overflow,1,"still full must stay bounded");
+}
+
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
