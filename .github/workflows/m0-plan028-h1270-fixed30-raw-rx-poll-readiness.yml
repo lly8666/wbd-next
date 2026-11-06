@@ -1,11 +1,8 @@
 name: M0 PLAN028 H1270 Fixed30 original RAW RX poll readiness 120s diagnostic
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1270-fixed30-raw-rx-poll-readiness.yml"
-      - "tools/m0-plan028-h1270-fixed30-raw-rx-readiness-report.py"
-      - "crates/wbd-engine/src/v4_embedded_go.rs"
+  # SOURCE31da original Go TLS/Rust 120s packet run completed
+  # successfully as Action42157023195. Avoid an identical real network
+  # replay when only numeric diagnostic interpretation is refined.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

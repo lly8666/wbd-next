@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1270",
+  "source_sha": "31da60aff86a673c28bcf2adbd7378c30326101f",
+  "result": "NATIVE_2CLIENT_FIXED6_30PCT_RAW_RX_120S_DIAGNOSTIC_COMPLETE_RARE_1SEC_BLACKOUT_NOT_REPRODUCED",
+  "action_run_id": 42157023195,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42157023195",
+  "action_conclusion": "success",
+  "artifact_id": 13474439852,
+  "artifact_name": "plan028-h1270-original-fixed30-raw-rx-worker-poll-120s",
+  "artifact_zip_sha256": "4100db4819d868bd836fdf91414efe418874b3865e296990c338570455342285",
+  "zip_entries": 31,
+  "zip_crc": "PASS",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_binary_sha256": {
+    "client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "engine": "2d457e05c92d4f0a7d71be7836af85a820a97a1e0b46ad4010612dc7f7750b0f"
+  },
+  "native_scope": "One Ubuntu-24.04 hosted x86_64 VM, original Go TLS authentication+Rust RAW/TUN 2 independent clients, Alice NormalOff0%/12Mbps, Erin NormalFixed6 30% netem each way with 125ms one-way delay, 120s simultaneous application, 10s drain. Physical tc netem limit10000, no synthetic application retries.",
+  "phases_seconds": {
+    "warmup": 10,
+    "sustained": 30,
+    "overload": 35,
+    "recovery": 45
+  },
+  "raw_driver": {
+    "all_original_tx_sndbuf_default_effective_bytes": 212992,
+    "fixed6_raw_rx_rcvbuf_requested_bytes": 4194304,
+    "fixed6_raw_rx_rcvbuf_effective_bytes": 2097152,
+    "fixed6_client_native_sendmmsg_eagain_turns": 0,
+    "fixed6_server_native_sendmmsg_eagain_turns": 0
+  },
+  "fixed6_actual_phys_loss": {
+    "uplink": 0.299614,
+    "downlink": 0.300984
+  },
+  "fixed6_real_udp_unique_delivery_fraction": {
+    "uplink": {
+      "warmup": 0.996825,
+      "sustained": 1,
+      "overload": 0.999625,
+      "recovery": 0.999621
+    },
+    "downlink": {
+      "warmup": 0.997752,
+      "sustained": 0.999669,
+      "overload": 0.999765,
+      "recovery": 0.999594
+    }
+  },
+  "fixed6_actual_mbps": {
+    "sustained": {
+      "downlink_sent": 15.99959,
+      "downlink_received": 15.99604
+    },
+    "overload": {
+      "downlink_sent": 20.80025,
+      "downlink_received": 20.79533
+    },
+    "recovery": {
+      "downlink_sent": 15.99989,
+      "downlink_received": 15.99151
+    }
+  },
+  "normal_sibling_udp_all_four_phases_both_directions_unique_fraction": 1,
+  "original_fixed6_rx_native_500ms": {
+    "sample_count": 369,
+    "actual_RAW_kernel_receive_batches": 306555,
+    "poll_ready_count": 206499,
+    "poll_idle_count": 5503,
+    "max_loop_start_gap_ns": 10670794,
+    "max_original_rx_processing_ns": 1111947,
+    "zero_raw_progress_intervals_of_at_least_750ms": 0,
+    "fec2_RX_final": {
+      "raw_batches": 306555,
+      "rx_err": 12532,
+      "fec_source": 222394,
+      "fec_parity": 280053,
+      "fec_recovered": 93855,
+      "tun_failure": 0
+    }
+  },
+  "context_and_limits": [
+    "The only true claim is that existing opt-in RX readiness/worker timing telemetry ran under original protected network traffic. Workflow PASS is scoped diagnostic, not performance release PASS.",
+    "No ≥750ms client RAW RX no-progress span observed in this 120s source run. It does not refute prior H1268 SOURCE22c2 original 1.007s fixed6 RX stall with 1.27s application downlink gap nor H1259 430s original 7s late-run downlink blackout.",
+    "Native M4 sendmmsg EAGAIN0 in H1270. The earlier H1263 2.5s C2S M4 zero-copy EAGAIN and H1267 default 4521 typed EAGAIN remain genuine distinct source-scoped incidents.",
+    "Kernel RX requested4MiB but effective2MiB and no pressure evidence; cannot diagnose underlay queue/socket drops or worker descheduling during a different SOURCE event that did not recur.",
+    "Do not modify product default SO_SNDBUF/SO_RCVBUF, system sysctls, FEC6 redundancy, age window, original PN retry or cosmetic replay to hide intermittent blackouts.",
+    "No ARM64/Windows/Android/physical multi-host evidence in this test; old PLAN027A H998 original-socket online MTU shrink FAIL remains."
+  ],
+  "per_lease_server_shared_tun": {
+    "10.66.0.191": {
+      "offered": 311714,
+      "direct_delivered": 311714,
+      "pending_overflow": 0
+    },
+    "10.66.0.218": {
+      "offered": 233911,
+      "direct_delivered": 233911,
+      "pending_overflow": 0
+    }
+  }
+}

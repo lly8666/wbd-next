@@ -6685,6 +6685,29 @@ fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     let got=unsafe{ppoll(&mut p,1,&ts,std::ptr::null())};
     got>0 && p.revents&1!=0
 }
+#[cfg(feature="fec2_product_record")]
+fn original_raw_rx_stage_snapshot(c:&LoopCounts)->(u64,u64,u64,u64){
+    (
+        c.rx_chain[0].load(Ordering::Relaxed), // native observed raw L3 entries
+        c.rx_chain[1].load(Ordering::Relaxed), // tuple/checksum candidates
+        c.rx_chain[5].load(Ordering::Relaxed), // owner TUN-delivered IP
+        c.rx.load(Ordering::Relaxed),          // LEGACY 'raw_batches' delivered
+    )
+}
+#[cfg(all(test,feature="fec2_product_record"))]
+#[test]
+fn m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract(){
+    let c=LoopCounts::default();
+    c.rx_chain[0].store(37,Ordering::Relaxed);
+    c.rx_chain[1].store(21,Ordering::Relaxed);
+    c.rx_chain[5].store(9,Ordering::Relaxed);
+    c.rx.store(7,Ordering::Relaxed);
+    // An old 'raw_batches' zero or flat value never proves that the
+    // original IPPROTO_TCP raw socket received no bytes.
+    assert_eq!(original_raw_rx_stage_snapshot(&c),(37,21,9,7));
+    c.rx.store(0,Ordering::Relaxed);
+    assert_eq!(original_raw_rx_stage_snapshot(&c),(37,21,9,0));
+}
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -7170,7 +7193,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
                     last_egress_diag=Instant::now();
-                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={} poll_ready={} poll_idle={} processed={} max_loop_gap_ns={} max_processing_ns={} worker_cpu_ns={}",
+                    // raw_batches is a historical label for stats.rx,
+                    // which accumulates delivered IP receipts (not native
+                    // recvmmsg batch count). Actual raw packet observations
+                    // already exist in rx_chain[0], so publish both without
+                    // adding any new hot-path counter or kernel call.
+                    let (kernel_observed,tuple_candidates,tun_delivered,
+                        delivered_legacy)=original_raw_rx_stage_snapshot(&stats_rx);
+                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={} poll_ready={} poll_idle={} processed={} max_loop_gap_ns={} max_processing_ns={} worker_cpu_ns={} kernel_raw_observed={} tuple_candidates={} tun_delivered={} delivered_legacy_raw_batches={}",
                         if rx_server_side{"server"}else{"client"},
                         loop_now().0,stats_rx.rx.load(Ordering::Relaxed),
                         stats_rx.rx_error.load(Ordering::Relaxed),
@@ -7180,7 +7210,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         stats_rx.fec_rx[8].load(Ordering::Relaxed),
                         rx_poll_ready_total,rx_poll_idle_total,rx_processed_total,
                         rx_poll_worker_gap_max_ns,rx_processing_max_ns,
-                        owner_thread_cpu_ns().saturating_sub(cpu_origin));
+                        owner_thread_cpu_ns().saturating_sub(cpu_origin),
+                        kernel_observed,tuple_candidates,tun_delivered,
+                        delivered_legacy);
                 }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats_rx.rx_thread_cpu_ns.store(

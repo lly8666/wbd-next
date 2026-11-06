@@ -1,0 +1,44 @@
+name: M0 PLAN028 H1271 original raw RX actual kernel versus delivered counter unit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1271-raw-rx-true-kernel-counter.yml"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: m0-plan028-h1271-original-raw-rx-counter
+  cancel-in-progress: false
+jobs:
+  native-x86-strict-raw-rx-accounting:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact SOURCE native Rust original RAW RX counter distinction
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          mkdir -p artifact
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_embedded_go,fec2_product_record \
+            --lib m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract \
+            -- --test-threads=1 --nocapture \
+            >artifact/h1271-original-raw-rx-counter-unit.log 2>&1 || {
+              tail -160 artifact/h1271-original-raw-rx-counter-unit.log >&2
+              exit 1
+            }
+          grep -q 'test result: ok. 1 passed; 0 failed' artifact/h1271-original-raw-rx-counter-unit.log
+          printf '%s\n' "$GITHUB_SHA" >artifact/source-sha.txt
+          echo "M0_H1271_ORIGINAL_RAW_RX_KERNEL_OBSERVED_DISTINCT_FROM_DELIVERED_PASS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1271-native-true-raw-rx-stage-counters
+          path: artifact/
+          retention-days: 14
+          if-no-files-found: warn
