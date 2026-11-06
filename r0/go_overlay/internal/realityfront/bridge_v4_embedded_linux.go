@@ -28,6 +28,7 @@ extern int32_t wbd_m0_embedded_go_commit(uint64_t,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_bind_authenticated_client_ipv4(uint64_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_shared_tun_open(int32_t,const unsigned char *,size_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_shared_tun_bind(uint64_t,uint64_t);
+extern int32_t wbd_m0_embedded_go_client_shared_tun_promote_after_rx(uint64_t);
 extern int32_t wbd_m0_embedded_go_shared_tun_close(uint64_t);
 extern int32_t wbd_m0_embedded_go_abort(uint64_t);
 extern int32_t wbd_m0_embedded_go_stop(uint64_t);
@@ -228,6 +229,21 @@ func (r *V4LinuxSharedTun) Close()error{
     if rc!=0{return fmt.Errorf("%w: shared native TUN Close=%d (owned sessions must Stop first)",
         errV4Embedded,int(rc))}
     r.handle=0
+    return nil
+}
+// H1281: an overlapping Normal client may NOT revoke its previous shared
+// TUN route merely because its own TLS reply and Rust M4 Start succeeded.
+// Rust accepts this atomic promotion only after an actual new-generation
+// AEAD/replay-verified reverse IPv4 packet reached the original TUN.
+func (b *v4EmbeddedNativeBridge) promoteNormalSharedTunAfterAuthenticatedRx()error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||b.serverSide{
+        return errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_client_shared_tun_promote_after_rx(C.uint64_t(b.handle))
+    if rc!=0{
+        return fmt.Errorf("%w: authenticated Normal shared TUN promotion=%d",
+            &v4EmbeddedNativeStatus{Operation:"normal_shared_tun_auth_rx_promote",Code:int(rc)},int(rc))
+    }
     return nil
 }
 func (b *v4EmbeddedNativeBridge) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)error{
