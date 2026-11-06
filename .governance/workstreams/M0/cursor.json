@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1259,
-  "checkpoint_sha": "62373ee910b4d43e4660e22a6ababe863d8bc5e4",
+  "sequence": 1260,
+  "checkpoint_sha": "af2dc107fb9edce01db8a143295b678af6c91bcf",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1259 final user-requested multi-client over-5min validation AFTER H1258 scoped bounded 4-source Game4FEC original Rust shared TUN consumer correction: SOURCE6237 Action42135894183 90s scalar/native same-VM real original-Go TLS showed extra accepted325008/339962, verified actual15% qdisc/100ms, Game4 overloaded DL real unique app97.87%/98.99%, leased queue overflow2522/2189, Normal sibling 100%, 25s rate-down 100%. H1257 prior scalar DL62% / native73.79%, queue full96630/53037. Run exactly ONE original-GO-TLS + Rust five independent native x86 users mixed NormalOff/NormalAuto/Game2Off/Game4Fixed6/NormalFixed6 0/1/5/15/30% netem 0/15/50/100/125ms, native ISA-L pinned, one shared server443 TUN and independent client leases, 430s actual load: 10s warmup+60s first-wave+240s sustained+60s overload1.3x+60s return to prior 1.0x steady rate, then10s drain. Report true per-lease queue and post-overload UDP unique recovery, no app retry, qdisc/cpu/latency. New SOURCE unverified.",
-  "why_now": "H1258 directed short high-load exact-source tests found strong reproducible improvement in Game4 ingress throughput and lower per-lease TUN overflow without increasing buffers or changing protocol. User explicitly requested final 5min+ multi-client mixture with overload followed by real normal-rate recovery, not redundant 370s test.",
+  "current_task": "H1260 preserve H1259 true native full five-user original Go TLS/Rust x86 430s, SOURCE af2dc107 Action42137210217 and artifact13465309614 ZIP CRC55 PASS: all10 UDP/TCP app endpoints finished 430s+10s drain, qdisc loss0/1/5/15/30 actual, 5 authenticated server TUN lease pending overflow=0 and server queue-full0. Game4 Fixed6 at actual15%/100ms attained 100% UDP unique steady240s, overload60s and rate-down60s, with genuine ISA-L TX386420 and bounded extra TUN accepts548206. Residual Normal Fixed6 30%/125ms peer late recovery downlink87.644% unique; do not call full matrix perfect. Original H1259 ACTION FAILED reporter due reading client Game4 Stop before flush, archived final Stop exists. Fix per-client Stop await, make H1259 long workflow manual only, add H1260 ZERO-NETWORK OFFLINE original artifact replay to confirm modified reporter and alerts without rerunning 430s.",
+  "why_now": "User asked to continue narrow Game4 performance correction and reasonable testing. 430s full test genuinely completed and showed large Game4 improvement; only diagnostic Stop capture timing failed the job; never repeat costly original matrix to fix an evidence race, and never suppress 30% recovery downturn.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe one H1259 native x86 original Go TLS five-client 430s+10s drain Action; verify pinned ISA-L link and runtime backend readback, exact 5 individual authenticated leases, real tc qdisc 0/1/5/15/30% with limit10000 and available MTU, all 10 application workers until end, 60s sustained+overload+recovery report, per-lease TUN overflow and status, Game4 TX extra consumer+RX lock, resources. Archive scoped evidence and compare H1251 370s without asserting host-CPU causal proof; do NOT repeat unless concrete harness failure.",
+  "next_action": "Review H1260 short Actions offline replay on immutable H1259 artifact13465309614, verify original SOURCE af2dc107 and 5 original product Stops; run corrected reporter with all five lease queue counters and recovery flag for 30% Erin. If replay passes, archive new result and keep original native Action FAIL. If download/replay fails, repair ONLY evidence workflow. No repeated full 430s workload; keep PLAN027A H998 MTU historical FAIL and platform/CPU qualification separate.",
   "unverified": true,
-  "last_tested_source": "62373ee910b4d43e4660e22a6ababe863d8bc5e4",
+  "last_tested_source": "af2dc107fb9edce01db8a143295b678af6c91bcf",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1258-SOURCE6237-BOUNDED-GAME4-TUN-INGRESS-90S-AB-20261106.json"
+    "docs/evidence/M0/PLAN028-H1259-SOURCEAF2D-FIVE-CLIENT-430S-POSTHOC-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1258 SOURCE6237 genuine original Go TLS+Rust Game4 FEC + Normal x86 native 90s scalar/native high offer with actual15% physical qdisc, new max4 sources/owner turn accepted 325008/339962 extra. Overloaded DL scalar26.99→43.12Mbps, native32.23→43.23Mbps vs H1257 baseline; lease overflow96630→2522 scalar and53037→2189 native, 25s recovery100%, Normal100%, no capacity/raw copy pressure; strongest evidence owner consumption was bottleneck. H1259 one final 430s 5client heterogeneous test with 60s post-overload recovery, pending."
+  "partial_summary": "H1259 SOURCEaf2dc original Go TLS/Rust x86+ISA-L five real clients 430s original data +10s drain completed; all five server TUN lease queues zero overflow, Game4 15% physical loss steady/overload/recovery 100% app UDP unique, 249.6Mbps offered/249.474Mbps received across peers during overload. Erin NormalFixed30% recovery DL 87.644% (last20s 8.17/11.99Mbps), not overall lossless. Original Action42137210217 FAIL solely reporter client Stop race. Local independent archived ZIP SHA/CRC55 posthoc parsed; H1260 quick offline immutable artifact replay pending; historical H998 PMTU FAIL retained."
 }

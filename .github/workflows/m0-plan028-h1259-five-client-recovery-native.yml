@@ -1,11 +1,7 @@
 name: M0 PLAN028 H1259 native five-client 430s post-overload recovery
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1259-five-client-recovery-native.yml"
-      - "tools/m0-plan028-h1259-five-client-recovery-netns.py"
-      - "tools/m0-plan028-h1259-five-client-recovery-report.py"
+  # The one full 430s real workload already ran at SOURCE af2dc107.
+  # Reporter/receipt fixes must NOT auto-repeat that expensive load.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

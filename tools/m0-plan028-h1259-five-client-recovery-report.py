@@ -304,18 +304,21 @@ def analyze(art, product_log):
         # Application UDP after overloading must recover when back at
         # the SAME 1.0x steady input rate; flag failure without rewriting
         # the completed diagnostics as an Actions infrastructure failure.
-        if spec["loss_pct"]<=15:
-            for direction in ("uplink","downlink"):
-                recovery=next(p for p in peer["directions"][direction]["phases"]
-                              if p["name"]=="recovery")["protocols"]["udp"]
-                if recovery["observed_delivery_fraction"] is not None and (
-                    recovery["observed_delivery_fraction"] < .95):
-                    result["alerts"].append({
-                        "client":who,"direction":direction,"phase":"recovery",
-                        "class":"POST_OVERLOAD_RECOVERY_DELIVERY_UNDER_95PCT",
-                        "observed_fraction":recovery["observed_delivery_fraction"],
-                        "note":"Recovered application delivery at sustained 1.0x input rate; not a synthetic retransmission.",
-                    })
+        # All configured loss tiers are reported, including 30% fixed
+        # FEC2. Suppressing this tier hid a real late-run 87.64% downlink
+        # recovery result in SOURCE af2dc107. It is a diagnostic alert,
+        # not a claim that the full native stress infrastructure failed.
+        for direction in ("uplink","downlink"):
+            recovery=next(p for p in peer["directions"][direction]["phases"]
+                          if p["name"]=="recovery")["protocols"]["udp"]
+            if recovery["observed_delivery_fraction"] is not None and (
+                recovery["observed_delivery_fraction"] < .95):
+                result["alerts"].append({
+                    "client":who,"direction":direction,"phase":"recovery",
+                    "class":"POST_OVERLOAD_RECOVERY_DELIVERY_UNDER_95PCT",
+                    "observed_fraction":recovery["observed_delivery_fraction"],
+                    "note":"Recovered application delivery at sustained 1.0x input rate; not a synthetic retransmission.",
+                })
         for direction in ("uplink", "downlink"):
             if spec["loss_pct"]:
                 counter = net_after.get(who, {}).get(direction)

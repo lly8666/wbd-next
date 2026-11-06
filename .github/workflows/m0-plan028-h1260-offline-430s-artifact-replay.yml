@@ -1,0 +1,119 @@
+name: M0 PLAN028 H1260 replay original 430s five-client artifact without network rerun
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1260-offline-430s-artifact-replay.yml"
+      - "tools/m0-plan028-h1259-five-client-recovery-report.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: m0-plan028-h1260-offline-artifact-replay
+  cancel-in-progress: false
+jobs:
+  replay-original-source-native-traffic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fetch source-frozen 430s completed real traffic artifact; no product processes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p original out
+          gh api repos/lly8666/wbd-next/actions/artifacts/13465309614 --jq '.digest' |
+            grep -Fx 'sha256:c59939e82baee616ab18bdd643bb83aeb01c70fa0554f02a7ac8d9e7bf6af33f'
+          gh run download 42137210217 --repo lly8666/wbd-next \
+            --name plan028-h1259-five-client-430s-native-recovery --dir original
+          python3 - <<'PY_ASSERT_ORIGINAL'
+          import json,pathlib,re
+          p=pathlib.Path("original")
+          plan=json.loads((p/"fixed-kernel-result/h1250-matrix-plan.json").read_text())
+          manifest=json.loads((p/"fixed-build/manifest.json").read_text())
+          source="af2dc107fb9edce01db8a143295b678af6c91bcf"
+          assert plan["source_sha"]==manifest["source_sha"]==source
+          assert manifest["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert plan["application_load_seconds"]==430
+          assert plan["simultaneous_stress_seconds"]==420
+          assert len(plan["clients"])==5
+          for who in ("alice","bob","carol","dave","erin"):
+              log=(p/("fixed-kernel-result/h1250-product-"+who+".log")).read_text()
+              assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in log,who
+              for side in ("c","s"):
+                  receipt=json.loads((p/("fixed-kernel-result/h1250-"+side+"-"+who+".json")).read_text())
+                  assert receipt["start_ns"]==plan["start_monotonic_ns"]
+                  assert receipt["end_ns"]-receipt["start_ns"]==430_000_000_000
+                  assert not receipt["capacity_exceeded"] and not receipt["errors"]
+          game=(p/"fixed-kernel-result/h1250-product-dave.log").read_text()
+          assert re.search(r"M0_GAME_M4_FEC_BACKEND_READBACK.*tx_native_quanta=[1-9][0-9]*",game)
+          assert re.search(r"M0_GAME_M4_SHARED_TUN_BURST_READBACK extra_accepted=[1-9][0-9]*",game)
+          print("H1260_ORIGINAL_SOURCE_FIVE_CLIENT_ALL_430S_APPLICATION_AND_PRODUCT_STOPS_PASS")
+          PY_ASSERT_ORIGINAL
+      - name: Re-evaluate final original native logs with corrected post-overload oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-report.py
+          python3 tools/m0-plan028-h1259-five-client-recovery-report.py \
+            --art original/fixed-kernel-result \
+            --product-log original/fixed-kernel-result/h1250-product-server.log \
+            --output out/h1259-posthoc-original-real-430s.json
+          python3 - <<'PY_VERIFY'
+          import json,pathlib
+          r=json.loads(pathlib.Path("out/h1259-posthoc-original-real-430s.json").read_text())
+          assert r["source_sha"]=="af2dc107fb9edce01db8a143295b678af6c91bcf"
+          assert r["total_application_load_seconds"]==430
+          assert r["stress_duration_seconds"]==420
+          assert r["phase_seconds"]["recovery"]==60
+          assert len(r["clients"])==5
+          assert r["result"].startswith("DIAGNOSTIC_COMPLETE")
+          assert r["shared_tun"]["queue_full_drops"]==0
+          assert len(r["server_shared_tun_per_authenticated_lease"])==5
+          assert all(x["pending_overflow"]==0 for x in
+                     r["server_shared_tun_per_authenticated_lease"].values())
+          game=r["clients"]["dave"]
+          assert game["game4_backend_and_burst"]["actual_fec_backend"]["tx_native_quanta"]>0
+          assert game["game4_backend_and_burst"]["bounded_game4_tun_ingress"]["extra_accepted"]>0
+          for direction in ("uplink","downlink"):
+              phases={p["name"]:p["protocols"]["udp"] for p in game["directions"][direction]["phases"]}
+              assert phases["sustained"]["observed_delivery_fraction"]==1
+              assert phases["overload"]["observed_delivery_fraction"]==1
+              assert phases["recovery"]["observed_delivery_fraction"]==1
+          erin=r["clients"]["erin"]["directions"]["downlink"]["phases"][4]["protocols"]["udp"]
+          assert .87 < erin["observed_delivery_fraction"] < .89,erin
+          assert any(x["class"]=="POST_OVERLOAD_RECOVERY_DELIVERY_UNDER_95PCT"
+                     and x["client"]=="erin" and x["direction"]=="downlink"
+                     for x in r["alerts"]),r["alerts"]
+          # Replay success does not retroactively turn the original
+          # native Action green or promote this to a performance release PASS.
+          summary={
+             "source_sha":r["source_sha"],
+             "original_action_run_id":42137210217,
+             "original_action_conclusion":"FAIL_STOP_READBACK_ORDER_IN_REPORTER",
+             "original_artifact_id":13465309614,
+             "original_artifact_sha256":"c59939e82baee616ab18bdd643bb83aeb01c70fa0554f02a7ac8d9e7bf6af33f",
+             "native_real_business_seconds":430,
+             "all_five_authenticated_leases_and_client_products_stopped":True,
+             "per_lease_shared_tun_overflows":0,
+             "game4_uplink_downlink_sustained_overload_recovery_unique_fraction":1,
+             "erin_30pct_recovery_downlink_unique_fraction":erin["observed_delivery_fraction"],
+             "alert_count":r["alert_count"],
+             "diagnostic_not_full_product_performance_pass":True,
+          }
+          pathlib.Path("out/h1260-offline-replay-verdict.json").write_text(
+              json.dumps(summary,indent=2)+"\n")
+          print("H1260_OFFLINE_ORIGINAL_430S_REPORT_REPLAY_SCOPED_PASS "
+                +json.dumps(summary),flush=True)
+          PY_VERIFY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1260-original430s-posthoc-replay
+          path: out/
+          retention-days: 14
+          if-no-files-found: warn

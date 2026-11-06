@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1259-posthoc",
+  "original_source_sha": "af2dc107fb9edce01db8a143295b678af6c91bcf",
+  "evidence_status": "ORIGINAL_NATIVE_BUSINESS_COMPLETED_ALL_430S;_ACTION_REPORTER_FAILED_PRE_CLIENT_STOP_READ;_OFFLINE_ARCHIVE_REANALYSIS_SCOPED",
+  "action_run_id": 42137210217,
+  "action_conclusion": "failure",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42137210217",
+  "original_artifact_id": 13465309614,
+  "original_artifact_name": "plan028-h1259-five-client-430s-native-recovery",
+  "original_artifact_sha256": "c59939e82baee616ab18bdd643bb83aeb01c70fa0554f02a7ac8d9e7bf6af33f",
+  "archive_entry_count": 55,
+  "archive_crc": "PASS",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_product_sha256": {
+    "wbd-v4-client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "wbd-v4-server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "libwbd_engine.so": "e483873cdebe9ed6df3eece6500c14e6bce8354a22c82f2407d788b6dc346fbe"
+  },
+  "qualification": "ONE_HOST_NATIVE_LINUX_X86_64_SIX_NETNS_ORIGINAL_GO_TLS_RUST_TUN_DIAGNOSTIC_NOT_PRODUCT_PERFORMANCE_RELEASE_PASS",
+  "real_application_duration_seconds": 430,
+  "real_over_warmup_duration_seconds": 420,
+  "post_real_application_drain_seconds": 10,
+  "independent_original_tls_authenticated_clients": 5,
+  "all_ten_native_udp_tcp_application_endpoints_completed_true": true,
+  "all_ten_udp_endpoints_same_monotonic_start": true,
+  "client_network": [
+    {
+      "client": "alice",
+      "mode": "Normal Off",
+      "loss_percent": 0,
+      "oneway_delay_ms": 0,
+      "outer_mtu": 1460
+    },
+    {
+      "client": "bob",
+      "mode": "Normal Auto",
+      "loss_percent": 1,
+      "oneway_delay_ms": 15,
+      "outer_mtu": 1460
+    },
+    {
+      "client": "carol",
+      "mode": "Game2 Off",
+      "loss_percent": 5,
+      "oneway_delay_ms": 50,
+      "outer_mtu": 1460
+    },
+    {
+      "client": "dave",
+      "mode": "Game4 Fixed6",
+      "loss_percent": 15,
+      "oneway_delay_ms": 100,
+      "outer_mtu": 1460
+    },
+    {
+      "client": "erin",
+      "mode": "Normal Fixed6",
+      "loss_percent": 30,
+      "oneway_delay_ms": 125,
+      "outer_mtu": 1280
+    }
+  ],
+  "actual_bidirectional_app_rates": [
+    {
+      "phase": "warmup",
+      "seconds": 10,
+      "actual_sent_mbps": 57.6049,
+      "actual_received_mbps": 57.5603,
+      "udp_unique_delivery_fraction": 0.999102
+    },
+    {
+      "phase": "first_wave",
+      "seconds": 60,
+      "actual_sent_mbps": 115.1986,
+      "actual_received_mbps": 114.7429,
+      "udp_unique_delivery_fraction": 0.995587
+    },
+    {
+      "phase": "sustained",
+      "seconds": 240,
+      "actual_sent_mbps": 192.0001,
+      "actual_received_mbps": 191.8173,
+      "udp_unique_delivery_fraction": 0.998948
+    },
+    {
+      "phase": "overload",
+      "seconds": 60,
+      "actual_sent_mbps": 249.5994,
+      "actual_received_mbps": 249.4738,
+      "udp_unique_delivery_fraction": 0.999449
+    },
+    {
+      "phase": "recovery",
+      "seconds": 60,
+      "actual_sent_mbps": 191.9999,
+      "actual_received_mbps": 189.933,
+      "udp_unique_delivery_fraction": 0.988124
+    }
+  ],
+  "game4_dave": {
+    "physical_underlay_actual_dropped_fraction": {
+      "uplink": 0.14995,
+      "downlink": 0.14992
+    },
+    "shared_tun_original_server_lease_ip": "10.66.0.158",
+    "server_per_lease_shared_tun_offered": 1183990,
+    "server_per_lease_pending_overflow": 0,
+    "source_runtime_native_fec_tx_quanta": 386420,
+    "source_runtime_scalar_fec_tx_quanta": 1722,
+    "source_runtime_native_fec_rx_decodes": 61758,
+    "source_runtime_scalar_rx_decodes": 235,
+    "full_data_late_parity_skips": 1406932,
+    "real_extra_bounded_game4_shared_tun_packet_accepts": 548206,
+    "max_new_sources_per_turn": 4,
+    "downlink": {
+      "sustained_240s": {
+        "actual_sent_mbps": 18,
+        "actual_received_mbps": 18,
+        "unique_udp_delivery_fraction": 1,
+        "p99_delivered_only_oneway_ms": 106
+      },
+      "overload_60s": {
+        "actual_sent_mbps": 23.4,
+        "actual_received_mbps": 23.4,
+        "unique_udp_delivery_fraction": 1,
+        "p99_delivered_only_oneway_ms": 107
+      },
+      "recovery_60s": {
+        "actual_sent_mbps": 18,
+        "actual_received_mbps": 18,
+        "unique_udp_delivery_fraction": 1,
+        "p99_delivered_only_oneway_ms": 106.1
+      }
+    },
+    "uplink_sustained_overload_recovery_unique_udp_delivery_fraction": [
+      1,
+      1,
+      1
+    ]
+  },
+  "server_shared_tun": {
+    "routed_packets": 6389861,
+    "unrouted": 0,
+    "backpressure": 0,
+    "queue_full_drops": 0,
+    "queue_age_drops": 0,
+    "all_five_server_per_lease_pending_overflow": 0
+  },
+  "installed_netem_limit_packets": 10000,
+  "actual_underlay_drop_fractions": {
+    "bob_1percent": {
+      "uplink": 0.01003,
+      "downlink": 0.01009
+    },
+    "carol_5percent": {
+      "uplink": 0.04987,
+      "downlink": 0.04994
+    },
+    "dave_15percent": {
+      "uplink": 0.14995,
+      "downlink": 0.14992
+    },
+    "erin_30percent": {
+      "uplink": 0.29995,
+      "downlink": 0.29997
+    }
+  },
+  "residual_issue": {
+    "client": "erin",
+    "mode": "Normal Fixed6",
+    "network_loss_percent": 30,
+    "oneway_delay_ms": 125,
+    "direction": "downlink",
+    "phase": "post_overload_recovery_60s",
+    "actual_sent_mbps": 16,
+    "actual_received_mbps": 14.026,
+    "unique_udp_delivery_fraction": 0.87644,
+    "last_10s_received_mbps": [
+      16.059,
+      15.9982,
+      15.9984,
+      15.9959,
+      8.1689,
+      11.9941
+    ],
+    "actual_tx_mbps_last_10s_windows_approximately_16": true,
+    "physical_qdisc_drop_fraction_stayed_near_configured_percent": true,
+    "per_lease_server_tun_queue_full_drops": 0,
+    "conclusion": "REAL_30PCT_HIGH_LOSS_FEC2_DOWNLINK_LATE_RUN_DELIVERY_DEFICIT_NOT_CAUSALLY_ATTRIBUTED"
+  },
+  "server_process_cpu_one_core_percent_including_setup": 73.314,
+  "server_process_peak_rss_kib": 96968,
+  "original_workflow_failure_root_cause": "After all 430s app workers completed, orchestrator SIGTERM'd five clients and server but only waited for server Stop before copying each client's logs. Reporter raced client Game4 FEC Stop and asserted missing backend receipt. The final original archived product-dave.log DOES contain tx_native_quanta=386420 and shared TUN Stop; all legitimate original-run application JSON has 430s endpoints, ZIP CRC passes.",
+  "change_for_future": "Await each of five client V4_PUBLIC_SHARED_TUN_STOP markers and Game4 FEC backend receipt before copying/reporting; leave long workflow manual-only; use H1260 CI to download original artifact and replay reporter, WITHOUT running new real network traffic.",
+  "preserved_scope_limit": [
+    "Original H1259 workflow Action remains FAIL; posthoc analysis cannot change its historical status.",
+    "Game4 improvement versus H1251 has distinct product SOURCE and hosted VM; not a strict product CPU causal A/B.",
+    "30% NormalFixed FEC2 recovery downturn prevents all-five perfect-delivery conclusion.",
+    "Only Linux hosted x86 native namespace, not ARM/Windows/Android multi-host.",
+    "PLAN027A H998 original same-socket online MTU shrink FAIL retained."
+  ]
+}

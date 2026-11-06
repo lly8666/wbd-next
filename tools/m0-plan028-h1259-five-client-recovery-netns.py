@@ -338,6 +338,15 @@ def main():
         run("sudo", "-n", "kill", "-TERM",
             (tmp / "server.pid").read_text().strip(), check=False)
         ready(serverlog, "V4_PUBLIC_SHARED_TUN_STOP generation=", 35)
+        # Original Rust Game/FEC Stop is per-client. The previous 430s
+        # Action finished real traffic but copied Dave's log BEFORE his
+        # native backend readback was flushed; the report then failed.
+        # Wait for each product's OWN final shared-TUN Stop, which follows
+        # its FEC backend Stop receipts, before copying this leg's logs.
+        for who in NAMES:
+            ready(tmp / (who + ".log"),
+                  "V4_PUBLIC_SHARED_TUN_STOP generation=", 35)
+        ready(tmp / "dave.log", "M0_GAME_M4_FEC_BACKEND_READBACK", 10)
         # Product Stop counters are owned by each original Go/Rust process.
         # Copy now, before the report, to expose per-client TUN queue drops.
         for who in ("server",) + NAMES:
