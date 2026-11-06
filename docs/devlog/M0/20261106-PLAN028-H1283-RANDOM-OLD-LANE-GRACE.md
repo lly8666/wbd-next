@@ -7,7 +7,7 @@ Changes: in existing Linux original path supervisor ONLY after verified B READY 
 New deterministic bound test checks 10–20s randomized interval. New SOURCE native build/30min is mandatory before any new qualification. No p99/CPU improvement or all-business continuity claimed. H998 same-socket live MTU FAIL, ARM64 H997 old Action FAIL, remote ICMP3/4 NOT_MEASURED and causal CPU NOT_PROVEN unchanged.
 
 ```feature-impact
-{"kind":"updated","ids":["game-lanes","tls-auth-multiclient"],"reason":"H1283 bounded random 10–20s old authenticated full-generation Rust RX grace and old Game4 cold tuple retirement after actual M4 slot switch; no second M4 slot/data owner, exact Stop preserved."}
+{"kind":"updated","ids":["game-lanes"],"reason":"H1283 bounded random 10–20s old authenticated full-generation Rust RX grace and old Game4 cold tuple retirement after actual M4 slot switch; no second M4 slot/data owner, exact Stop preserved."}
 ```
 
 ## H1283 SOURCE qualification update
