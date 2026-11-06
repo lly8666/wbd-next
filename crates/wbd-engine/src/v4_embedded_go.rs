@@ -4126,6 +4126,11 @@ struct SharedTunSession{
     alive:Arc<AtomicBool>,
     sender:SyncSender<OriginalTunIngress>,
     receiver:Option<Receiver<OriginalTunIngress>>,
+    // Client overlapping Normal B has a real authenticated RX owner but
+    // must NOT revoke A's outbound route until B has received a genuine
+    // M4-authenticated reverse IPv4 delivery. Server routes and the first
+    // client generation still publish when their real owner starts.
+    publish_pending:bool,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_tun_registry()->&'static Mutex<BTreeMap<u64,Arc<SharedTunReader>>>{
@@ -4153,6 +4158,24 @@ fn shared_route_publish(
         old.alive.store(false,Ordering::Release);
     }
     true
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_route_defer_overlapping_client(
+    routes:&HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],new_generation:u32
+)->bool{
+    routes.get(&ip).is_some_and(|old|
+        old.alive.load(Ordering::Acquire)&&old.generation<new_generation)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_route_promote_authenticated_client(
+    routes:&mut HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],
+    next:SharedTunRoute,rx_delivered:u64
+)->bool{
+    // Crypto/PN/inner-TUN delivery has already happened on the exact new
+    // native owner. A local TLS reply, kernel copied TX, or TCP ACK cannot
+    // satisfy this barrier. Failure leaves old route and its alive flag.
+    rx_delivered>0&&shared_route_publish(routes,ip,next)
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_route_retire(
@@ -4325,6 +4348,47 @@ impl SharedTunReader{
     }
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
+    let (old_tx,_old_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let (new_tx,_new_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let old_live=Arc::new(AtomicBool::new(true));
+    let next_live=Arc::new(AtomicBool::new(true));
+    let ip=[0u8;4];
+    let mut routes=HashMap::new();
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:24,alive:Arc::clone(&old_live),send:old_tx.clone(),
+    }));
+    assert!(shared_route_defer_overlapping_client(&routes,ip,25));
+    assert!(!shared_route_defer_overlapping_client(&routes,ip,24));
+    assert!(!shared_route_promote_authenticated_client(
+        &mut routes,ip,SharedTunRoute{
+            generation:25,alive:Arc::clone(&next_live),send:new_tx.clone(),
+        },0
+    ));
+    // The exact H1280 baseline failure: client B READY but server B
+    // rejects M4. B Stop must leave A's 24 route alive and unmodified.
+    assert_eq!(routes[&ip].generation,24);
+    assert!(old_live.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,ip,25,&next_live);
+    assert!(old_live.load(Ordering::Acquire));
+    assert_eq!(routes[&ip].generation,24);
+    let confirmed=Arc::new(AtomicBool::new(true));
+    assert!(shared_route_promote_authenticated_client(
+        &mut routes,ip,SharedTunRoute{
+            generation:26,alive:Arc::clone(&confirmed),send:new_tx,
+        },1
+    ));
+    assert_eq!(routes[&ip].generation,26);
+    assert!(!old_live.load(Ordering::Acquire));
+    assert!(confirmed.load(Ordering::Acquire));
+    // Stale late A cannot tear down the proved B mapping.
+    shared_route_retire(&mut routes,ip,24,&old_live);
+    assert_eq!(routes[&ip].generation,26);
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(32);
@@ -4869,7 +4933,7 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
-        sender,receiver:Some(receiver),
+        sender,receiver:Some(receiver),publish_pending:false,
     });
     // Cold bind itself is not active authority. The exact native loop's
     // successful startup publishes this mapping atomically. Server uses
@@ -7784,15 +7848,29 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     }else{None};
     e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,route_events:events});
     #[cfg(target_os="linux")]
-    if let Some(sh)=e.shared_tun.as_ref(){
-        let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
-        if router.stop.load(Ordering::Acquire){return BAD_STAGE}
-        let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-        let new=SharedTunRoute{
-            generation:sh.generation,alive:Arc::clone(&sh.alive),
-            send:sh.sender.clone(),
-        };
-        if !shared_route_publish(&mut routes,sh.ip,new){return BAD_STAGE}
+    {
+        let server=e.server_side;
+        if let Some(sh)=e.shared_tun.as_mut(){
+            let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
+            if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+            let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+            let new=SharedTunRoute{
+                generation:sh.generation,alive:Arc::clone(&sh.alive),
+                send:sh.sender.clone(),
+            };
+            // A still owns the ONLY client TUN reader route while B waits
+            // for the existing native M3 AEAD/replay+TUN receipt. If the
+            // protected server M4 rejects B, close B without disturbing A.
+            // Do not defer initial client install or server /32 publication.
+            if !server && shared_route_defer_overlapping_client(
+                &routes,sh.ip,sh.generation
+            ){
+                sh.publish_pending=true;
+                eprintln!("V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED generation={} old_route_preserved=1",sh.generation);
+            }else if !shared_route_publish(&mut routes,sh.ip,new){
+                return BAD_STAGE
+            }
+        }
     }
     OK
 }
@@ -7801,6 +7879,30 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
 pub extern "C" fn wbd_m0_embedded_go_loop_start(handle:u64,ifindex:u32)->i32{
     start_loop(handle,ifindex)
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u64)->i32{
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.server_side||e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    let received=e.counters.rx.load(Ordering::Acquire);
+    let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
+    if !sh.publish_pending{return BAD_STAGE}
+    let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
+    if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    let candidate=SharedTunRoute{
+        generation:sh.generation,alive:Arc::clone(&sh.alive),
+        send:sh.sender.clone(),
+    };
+    if !shared_route_promote_authenticated_client(
+        &mut routes,sh.ip,candidate,received
+    ){return BAD_STAGE}
+    sh.publish_pending=false;
+    eprintln!("V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_rx={} old_route_revoked=1",sh.generation,received);
+    OK
+}
+
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
