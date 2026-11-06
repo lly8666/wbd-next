@@ -6,6 +6,8 @@ Exact SOURCE `79706127b58dda830702c609d9d7077afde48e30` Action42128512173 100% c
 
 Actual Game4 client TX codec quanta scalar 86045/native0 vs ISA-L native82623/scalar4166; RX decoder scalar13191/native0 vs ISA-L native12952/scalar503. Native <64B and k<=1 may validly fall back to scalar. Authenticated fully delivered late repair skipped 296503 scalar/299513 ISA-L, same source/AEAD not bypassed. 1/128 TX FEC poll mean 20.44us scalar vs1.69us native; server shared TUN full282 vs95 and average one-core CPU68.67% vs62.12% respectively *including setup*. This is a useful **directional** improvement, not causal CPU gain. Dave Game4 overloaded downlink18.6546 vs18.698Mbps, recovery8.64Mbps; Normal sibling near100% delivery. Two clients at 18Mbps Game4 do NOT recreate H1251 five-client 15%/100ms sustained and overloaded packet loss (66.9% and67.16% delivery, source/fix exact evidence retained).
 
+Feature catalog status correction: the exact H1256 product runtime backend call proof is catalogued as `FUNCTIONAL_PASS`, not an unsupported generic `PASS`; existing `feature-impact` declaration explicitly covers this same card revision.
+
 ## H1257 scope
 
 - Default OFF diagnostic `WBD_SHARED_TUN_ROUTE_DIAG=1` in **one original Rust SharedTunReader**, with one bounded per-authenticated /32 statistics row per route already held by owner: kernel TUN offered, direct accepted, first-send downstream-full, pending-count overflow and byte limit, pending peak packets and bytes. No payload/log secret, no per-packet Go FFI and no unbounded queue. Only static owned Stop logs.

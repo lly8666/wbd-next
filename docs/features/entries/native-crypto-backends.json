@@ -65,7 +65,8 @@
     "没有本次精确运行时backend读回，构建成功不能直接登记硬件加速PASS。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "H1253 native x86 Game4 FEC RS16: pinned ISA-L product link + actual TX/RX backend readback planned in one SOURCE; until native counters and same-VM short A/B run, no runtime acceleration or CPU gain PASS. scalar choice only diagnostic process env, not public user config.",
-    "H1256 SOURCE7970 native x86 original-Go TLS/Rust Game4 Fixed6: real ISA-L TX82623 and RX12952 backend uses on one VM confirmed, scalar+native 90s both recovered after overload; sampled FEC poll mean 20.44us scalar vs 1.69us native, not controlled CPU causal proof. Two-client short load is not proof that H1251 five-client backlog and Game4 >30% business loss are solved. Windows/ARM/Android backend qualification remains distinct."
+    "H1256 SOURCE7970 native x86 original-Go TLS/Rust Game4 Fixed6: real ISA-L TX82623 and RX12952 backend uses on one VM confirmed, scalar+native 90s both recovered after overload; sampled FEC poll mean 20.44us scalar vs 1.69us native, not controlled CPU causal proof. Two-client short load is not proof that H1251 five-client backlog and Game4 >30% business loss are solved. Windows/ARM/Android backend qualification remains distinct.",
+    "H1257 feature-catalog source correction: exact H1256 ISA-L real codec use is FUNCTIONAL_PASS, never generic PASS or all-platform performance PASS; original observed Actions IDs preserved."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
