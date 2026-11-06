@@ -17,6 +17,10 @@ import (
 // segment but keeps the original SYN/SYNACK. No synthetic ACK or second
 // packet owner is permitted to unstick the original Write.
 func TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound(t *testing.T){
+    // Original FakeTCP requires a native-derived, explicitly installed SYN
+    // MSS. This deterministic test uses the same legal 1460 value, not a
+    // bypass of the production guard.
+    if err:=faketcp.SetPublicV4AdvertisedMSS(1460);err!=nil{t.Fatal(err)}
     flow:=faketcp.ClientFlow{
         LocalIP:[4]byte{10,0,0,2},PeerIP:[4]byte{10,0,0,1},
         LocalPort:55043,PeerPort:443,
