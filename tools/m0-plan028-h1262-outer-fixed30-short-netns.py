@@ -216,7 +216,7 @@ def main():
         (out / "h1250-server-tun.json").write_text(run(
             "sudo", "-n", "ip", "-n", ns_server, "-j", "link",
             "show", "dev", server_tun, capture=True))
-        print(""H1262_ORIGINAL_TLS_THREE_AUTHENTICATED_LEASES_READY " + ",".join(leases), flush=True)
+        print("H1262_ORIGINAL_TLS_THREE_AUTHENTICATED_LEASES_READY " + ",".join(leases), flush=True)
 
         start_ns = time.monotonic_ns() + 55_000_000_000
         plan = {
