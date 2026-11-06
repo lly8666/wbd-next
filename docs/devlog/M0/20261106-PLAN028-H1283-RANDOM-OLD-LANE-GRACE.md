@@ -9,3 +9,11 @@ New deterministic bound test checks 10–20s randomized interval. New SOURCE nat
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","tls-auth-multiclient"],"reason":"H1283 bounded random 10–20s old authenticated full-generation Rust RX grace and old Game4 cold tuple retirement after actual M4 slot switch; no second M4 slot/data owner, exact Stop preserved."}
 ```
+
+## H1283 SOURCE qualification update
+
+Original Go and Rust ARM64 build succeeded for workflow run 42233818747. The baseline, heterogeneous, and pressure scene jobs are running and have no result yet. Prior run 42222907322 remains baseline PASS, heterogeneous FAIL, pressure FAIL. CI feature summary is bounded and this declaration is scoped to Game lanes.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"New source native build and still-pending three-scene qualification; no broad Game PASS declared."}
+```
