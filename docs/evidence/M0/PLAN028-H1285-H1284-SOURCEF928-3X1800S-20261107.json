@@ -80,5 +80,6 @@
     "Neither stage 64-overflow nor race has been proven the sole cause of live abort until H1285 trace/test",
     "Pressure per-lease bursts and Fixed6 bidirectional gaps may have distinct roots",
     "H998 physical same-socket MTU 1500->1280 failure and remote ICMP proof remain open"
-  ]
+  ],
+  "source_sha": "f92897b073713008c22f99d5c3d100f27cd2bd9f"
 }
