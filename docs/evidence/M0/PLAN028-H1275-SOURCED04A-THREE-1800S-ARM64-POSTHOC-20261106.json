@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "test_id": "PLAN028_H1275_POSTHOC_H1274_ARM64_3x1800s",
+  "source_sha": "d04ace6ce8781f5afea96e3ff76a53ac617b771e",
+  "action_run_id": 42162179000,
+  "source_qualification": "NATIVE_ARM64_ARM64_ORIGINAL_TLS_RUST_REAL_BIDIRECTIONAL_TUN_NETNS",
+  "investigation_status": "COMPLETE_WITH_REAL_FAILURES",
+  "original_run_conclusion": "failure",
+  "build_job": "success",
+  "scene_jobs": "ALL_THREE_FAILED_ON_ORIGINAL_ROTATION_ORACLE; authentic 1800s business and artifacts preserved",
+  "posthoc_method": "Offline immutable uploaded original artifacts; per-client original protected TLS generation READY/owned Stop and server native M4 matching lane TCP ports; 10ms actual application tx/rx from existing traffic.py; no rerun",
+  "scene_metrics": {
+    "baseline": {
+      "artifact_id": 13478663049,
+      "artifact_zip_sha256": "8355bd5ad99f60c658309466a31533f769d1620d138b9d02b8ccd4b771b48fde",
+      "job": "FAIL",
+      "cpu_one_core_pct": 62.269,
+      "server_peak_rss_kib": 180592,
+      "repeat_accepted_record_bytes": 184510709,
+      "repeat_mbps": 0.82005,
+      "r_over_f_plus_r_pct": 0.69662,
+      "true_group_rotations": {
+        "alice": 27,
+        "bob": 25,
+        "carol": 21,
+        "erin": 16
+      },
+      "game4_single_lane": {
+        "attempted": 19,
+        "local_success": 19,
+        "server_port_matched": 19,
+        "per_lane": {
+          "1": 5,
+          "2": 5,
+          "3": 5,
+          "4": 4
+        }
+      },
+      "game2_group_client_ready": 22,
+      "game2_both_server_lane_commit": 21,
+      "game2_missing_server_cohorts": [
+        18
+      ],
+      "real_UDP_delivery_holes_ms": {
+        "bob_uplink": 72820,
+        "bob_downlink": 72820,
+        "carol_uplink": 83490,
+        "carol_downlink": 83510
+      },
+      "server_per_lease_overflow": {
+        "bob": 52
+      },
+      "game2_recovery_unique_delivery": {
+        "uplink": 0.871421,
+        "downlink": 0.871211
+      }
+    },
+    "heterogeneous": {
+      "artifact_id": 13477848860,
+      "artifact_zip_sha256": "1cf95908e86fb6cc317e58d54921c057765d570595b30075185d9f5c64dff375",
+      "job": "FAIL",
+      "cpu_one_core_pct": 81.127,
+      "server_peak_rss_kib": 182328,
+      "repeat_accepted_record_bytes": 337685552,
+      "repeat_mbps": 1.50082,
+      "r_over_f_plus_r_pct": 0.85756,
+      "true_group_rotations": {
+        "alice": 23,
+        "bob": 20,
+        "carol": 16,
+        "erin": 10
+      },
+      "game4_single_lane": {
+        "attempted": 15,
+        "local_success": 4,
+        "server_port_matched": 3,
+        "per_lane": {
+          "1": 1,
+          "2": 1,
+          "3": 1,
+          "4": 1
+        }
+      },
+      "game2_group_client_ready": 17,
+      "game2_both_server_lane_commit": 15,
+      "game2_missing_server_cohorts": [
+        6,
+        17
+      ],
+      "real_UDP_delivery_holes_ms": {
+        "carol_uplink": 106170,
+        "carol_downlink": 106270,
+        "erin_uplink": 5370,
+        "erin_downlink": 9460
+      },
+      "server_per_lease_overflow": {},
+      "game2_recovery_unique_delivery": {
+        "uplink": 0.84361,
+        "downlink": 0.842793
+      }
+    },
+    "pressure": {
+      "artifact_id": 13478423964,
+      "artifact_zip_sha256": "2c8ff45b769a3f6e6d74717c91e773a81573d5559053e6e19d2cef5bb8c21ea0",
+      "job": "FAIL",
+      "cpu_one_core_pct": 104.943,
+      "server_peak_rss_kib": 218412,
+      "repeat_accepted_record_bytes": 623471252,
+      "repeat_mbps": 2.77098,
+      "r_over_f_plus_r_pct": 0.83192,
+      "true_group_rotations": {
+        "alice": 25,
+        "bob": 22,
+        "carol": 16,
+        "erin": 10
+      },
+      "game4_single_lane": {
+        "attempted": 15,
+        "local_success": 5,
+        "server_port_matched": 3,
+        "per_lane": {
+          "1": 2,
+          "2": 1,
+          "3": 1,
+          "4": 1
+        }
+      },
+      "game2_group_client_ready": 17,
+      "game2_both_server_lane_commit": 15,
+      "game2_missing_server_cohorts": [
+        18,
+        30
+      ],
+      "real_UDP_delivery_holes_ms": {
+        "alice_uplink": 69800,
+        "alice_downlink": 69790,
+        "carol_uplink": 99100,
+        "carol_downlink": 99180
+      },
+      "server_per_lease_overflow": {
+        "alice": 87,
+        "dave": 2461
+      },
+      "game2_recovery_unique_delivery": {
+        "uplink": 0.846489,
+        "downlink": 0.845999
+      }
+    }
+  },
+  "verified_findings": [
+    "Game4 intentionally does not advance whole group generation: one-lane live TLS/Rust rekey success has separate GAME_SINGLE_LANE_ROTATION_READY marker. Original H1274 reporter misclassified all Game4 rotations.",
+    "Failed TLS candidates consume sequence IDs: successful generation IDs must strictly increase and old Stop equal immediately prior successful owner, not require consecutive numeric IDs.",
+    "Game2 client reported group READY and retired previous generation with no matching server native two-lane group commit: 1 baseline, 2 heterogeneous, 2 pressure; overlaps app TX-without-RX 83.5-106.3s. Causality plausible, exact server protected TLS rejection vs cohort staging not fully isolated.",
+    "Game4 baseline 19/19 client single-lane rotations matched server; hetero 3/4, pressure 3/5; the other local markers lack server commits, with cold TLS deferred 11/15 and 10/15 respectively.",
+    "Existing 15s Health/90s dead alone cannot be described as preventing observed Game2 ~100s dual-direction outage.",
+    "CPU average from original /proc server samples only, not causal A/B."
+  ],
+  "metric_limits": "accepted frozen encrypted record R divided by comparable first record F + R; control C, FEC parity, full IPv4/TCP/L2, per-server-lease R attribution NOT_MEASURED. UDP p99 delivered-only; loss buckets cannot be hidden by survivor p99.",
+  "preserved_history": [
+    "PLAN027A_H998 original same-socket live MTU shrink FAIL",
+    "H1259 historic Fixed6 S2C 7s intermittent blackout",
+    "H1268 historic Fixed6 S2C 1.007s",
+    "Android and real remote ICMP NOT_RUN/NOT_MEASURED"
+  ],
+  "run_again": "NO_DUPLICATE_1800S_DISPATCH"
+}
