@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "task": "PLAN028_H1280_H1279_3X1800S_ACCEPTANCE",
+  "source_sha": "5a705e52abd4aa345b5a4738f5c66eb8441cc2d3",
+  "run_id": 42197650482,
+  "architecture": "original-Go protected TLS/FakeTCP + original Rust M4, native aarch64 3 runners, 5 clients x 1800s",
+  "source_conclusions": {
+    "build": "success",
+    "baseline": "success",
+    "heterogeneous": "failure",
+    "pressure": "failure"
+  },
+  "zip_artifacts": {
+    "baseline": {
+      "id": 13495565069,
+      "sha256": "4fee665b3188207bf5ab0eb5ab4f67e24ac6a846762a7dd931e34d1e004e2c2a"
+    },
+    "heterogeneous": {
+      "id": 13494442663,
+      "sha256": "309f8e4f4887372a906d0a8871ab0e7d50dfc77da104221732b0354e28bffcef"
+    },
+    "pressure": {
+      "id": 13494213616,
+      "sha256": "f1f43de8757911858e9fbd05d0e097b9df51e3832b934d14edba2775f51ef85e"
+    }
+  },
+  "scenes": {
+    "baseline": {
+      "alerts": 0,
+      "rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+      "server_one_core_cpu_pct": 70.27,
+      "server_peak_rss_kib": 172060,
+      "accepted_repeat_record_mbps": 0.81921,
+      "repeat_R_over_F_plus_R_pct": 0.6959
+    },
+    "heterogeneous": {
+      "alerts": 6,
+      "rotation_verdict": "SOME_CLIENT_ROTATION_FAILURES",
+      "server_one_core_cpu_pct": 84.776,
+      "server_peak_rss_kib": 170804,
+      "accepted_repeat_record_mbps": 1.52325,
+      "repeat_R_over_F_plus_R_pct": 0.86865,
+      "carol_game2_gap_up_down_ms": [
+        80,
+        180
+      ],
+      "dave_game4_hot_successes": 8,
+      "dave_game4_gap_up_down_ms": [
+        2240,
+        1120
+      ],
+      "erin_fixed6_rotations_successes": 8,
+      "erin_gap_up_down_ms": [
+        1270,
+        9460
+      ]
+    },
+    "pressure": {
+      "alerts": 8,
+      "rotation_verdict": "SOME_CLIENT_ROTATION_FAILURES",
+      "server_one_core_cpu_pct": 103.899,
+      "server_peak_rss_kib": 222856,
+      "accepted_repeat_record_mbps": 3.1185,
+      "repeat_R_over_F_plus_R_pct": 0.94485,
+      "alice_normal": {
+        "physical_TC_injected_loss_pct": 0,
+        "client_local_generations": 26,
+        "failed_candidates": 0,
+        "old_exact_stops": 25,
+        "server_m4_normal_rejection": "V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner at 10:01:57",
+        "client_gen11": "local READY at 10:01:57; old gen10 Stop",
+        "client_gen11_native_rx": "V4_PUBLIC_RX_CHAIN raw_observed=0 raw_tuple=0 data_unique=0 tun_delivered=0 at gen11 Stop 10:03:11",
+        "client_gen11_native_tx": "V4_PUBLIC_TX_CHAIN staged_udp=203375 staged_tcp=29",
+        "largest_bidirectional_gap_ms": 73300,
+        "server_route_queue_full_drops": 51,
+        "client_route_queue_full_drops": 157,
+        "conclusion": "client-local M4 Ready not an independently verified server M4 commit; exact 73s orphan source generation"
+      },
+      "bob_server_route_queue_overflow": 23,
+      "dave_game4": {
+        "rotation_successes": 9,
+        "required_minimum": 10,
+        "server_route_queue_overflow": 352,
+        "client_route_queue_overflow": 121,
+        "gap_up_down_ms": [
+          100,
+          190
+        ]
+      },
+      "erin_fixed6": {
+        "successful_rotations": 9,
+        "cold_candidates_failed": 26,
+        "gap_up_down_ms": [
+          6390,
+          250
+        ]
+      }
+    }
+  },
+  "compare_h1278": {
+    "source": "1e4ceb200c71ce5b7230212b568503c562cecf0e",
+    "run": 42191219373,
+    "pressure_dave_server_overflow_old": 6364,
+    "pressure_dave_client_overflow_old": 3321,
+    "pressure_alice_gap_old_ms": 20,
+    "pressure_alice_server_overflow_old": 2,
+    "pressure_erin_gap_old_ms": [
+      2420,
+      2300
+    ]
+  },
+  "causal_qualifications": [
+    "Game4 bounded M1 consumer 4->8 lowered pressure Dave server overflow 6364->352 and client 3321->121, does not prove improved capacity across all settings",
+    "Alice 73.3s gap correlates precisely with a locally committed Normal generation but server original Rust M4 rejected; the root cause of the rejection is not yet staged in H1279 logs. Small queue overflow (51 server/157 client) is NOT causal explanation of 73s loss",
+    "H1279 old Normal rotation reporter incorrectly accepted all client local Ready/Stop despite failed server M4; H1280 tests exact IPv4 and source port on independently confirmed server M4",
+    "Fixed6 loss 30% real gaps and Game4 under-10 rotations remain unresolved",
+    "R/(F+R) encrypted accepted record bytes only, excludes control C/FEC parity/IPv4 TCP L2",
+    "Historical H998 live same-socket MTU FAIL and H1259/H1268 S2C intermittent faults remain open"
+  ]
+}
