@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1271",
+  "source_sha": "376f5f754be17599760f3d9955543f8401bac5d3",
+  "result": "NATIVE_X86_FUNCTIONAL_COUNTER_CONTRACT_PASS_NOT_NETWORK_PERFORMANCE_PASS",
+  "action_run_id": 42158532358,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42158532358",
+  "action_conclusion": "success",
+  "job_conclusion": "success",
+  "artifact_id": 13474674369,
+  "artifact_name": "plan028-h1271-native-true-raw-rx-stage-counters",
+  "artifact_sha256": "438a7aee40ba1a27f6ba7cb2def70d174c68ce481f6c1ab99245a501de463f46",
+  "host": "GitHub Actions Ubuntu 24.04 native Linux x86_64 Rust 1.85.1",
+  "exact_unit_test": "m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract",
+  "cargo_command": "cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract -- --test-threads=1 --nocapture",
+  "result_marker": "M0_H1271_ORIGINAL_RAW_RX_KERNEL_OBSERVED_DISTINCT_FROM_DELIVERED_PASS",
+  "counter_contract": {
+    "native_raw_L3_observed_from_existing_rx_chain_0": 37,
+    "tuple_checked_candidates_from_existing_rx_chain_1": 21,
+    "tun_delivered_from_existing_rx_chain_5": 9,
+    "delivered_legacy_raw_batches_from_stats_rx": 7,
+    "independent_zero_legacy_delivered_while_real_raw_observed": {
+      "kernel_observed": 37,
+      "legacy_delivered": 0
+    }
+  },
+  "behavior": "Only developer WBD_FEC_EGRESS_DIAG=1 original RX worker 500ms readback, no new per-packet atomics, packet contents, recv logic, kernel buffer changes, FEC/protocol/PN/retry/outer changes. Previously completed H1270 native 120s scenario remains original SOURCE31da with old field label, not retroactively rewritten.",
+  "scoped_findings": [
+    "One Rust unit confirms that existing native raw L3 entries and downstream authenticated/TUN delivery are not interchangeable.",
+    "Historic V4_PUBLIC_FEC2_EGRESS_DIAG side=rx raw_batches is a legacy delivered_total statistic; zero does not prove kernel RAW RX queue had no packets.",
+    "This SOURCE was NOT run in a new original TLS native 120s workload; production data path semantics unchanged. The original H1270 120s Action42157023195 was run on SOURCE31da and diagnostic NO_STALL_REPRODUCED.",
+    "H1268 real client S2C raw RX gap and H1259 late downstream interruption remain unresolved, no permanent buffer/FEC6/PN change is justified."
+  ],
+  "historical_unresolved": [
+    "PLAN027A H998 original same-socket online MTU shrink FAIL",
+    "Fixed6 intermittent 30%-loss S2C RAW RX blackout not isolated by H1270"
+  ]
+}

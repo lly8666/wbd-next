@@ -21,6 +21,10 @@ H1271's *next-source*, strictly diagnostic-only adjustment retains the old `raw_
 
 This H1271 new source is **NOT** a demonstrated fix for the random Fixed6 RAW RX blackout. A future observed S2C gap can use the extra true kernel RX and tuple counts to distinguish "no kernel raw L3 observed", "raw L3 arrived but no tuple/checksum admission" and "tuple admitted but original Rust owner did not deliver". Do not enlarge global RX/TX buffers, change FEC2 age/parity or reuse original PN to mask a not-yet-reproduced symptom. Historical PLAN027A H998 same-socket online MTU change FAIL remains separately open.
 
+## H1272 exact-source native accounting confirmation
+
+The new-source [Action42158532358](https://github.com/lly8666/wbd-next/actions/runs/42158532358) **SUCCESS** on Linux x86 Rust1.85.1 passed `m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract` **1/1**. Exact tested SOURCE `376f5f754be17599760f3d9955543f8401bac5d3`, artifact13474674369 SHA256 `438a7aee40ba1a27f6ba7cb2def70d174c68ce481f6c1ab99245a501de463f46`; evidence `docs/evidence/M0/PLAN028-H1271-SOURCE376F-ORIGINAL-RAW-RX-TRUE-COUNTER-NATIVE-20261106.json`. This is a **native functional counter-contract unit**, not another protected live network A/B or an intermittent RX blackout fix. The earlier H1270 true original packet Action42157023195 remains tied to SOURCE31da; no ungrounded retroactive data changes.
+
 ```feature-impact
 {"kind":"updated","ids":["linux-raw-tun"],"reason":"Original-Go/Rust developer-only RAW RX egress diagnostics now expose preexisting real kernel-observed/tuple/TUN and legacy-delivered distinct counters; no data-plane or user-visible transport setting change. H1270 original Action source-qualified performance result archived without promoting rare outage to PASS."}
 ```
