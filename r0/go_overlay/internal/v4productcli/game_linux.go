@@ -957,7 +957,16 @@ func runGameMultiServer(
                 if e!=nil{
                     _=product.Close()
                     rejectLane(lane)
-                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner")
+                    // A client TLS/M4 local READY is not proof of the
+                    // server's M4 install. This hard failure previously
+                    // had no native substage or client port, masking an
+                    // entire 73s source-locked healthy-TC outage. Do not
+                    // log credentials or arbitrary error strings here.
+                    port:=uint16(0)
+                    if result.assoc!=nil{port=result.assoc.Flow().ClientPort}
+                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=%s class=%s client_port=%d",
+                        realityfront.V4NormalM4FailureStage(e),
+                        nativeColdFailureClass(e),port)
                     continue
                 }
                 lease,e:=session.AuthenticatedLeaseIPv4()
@@ -978,8 +987,8 @@ func runGameMultiServer(
                 detached[result.assoc]=peer
                 activeNormal[key]=rec
                 *connected=true
-                log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
-                    c.localPort,len(activeNormal),len(active),len(detached))
+                log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d client_port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
+                    c.localPort,peer.Port,len(activeNormal),len(active),len(detached))
                 if older!=nil{
                     if e=retireNormal(older,"same-protected-normal-new-generation");e!=nil{return e}
                 }
