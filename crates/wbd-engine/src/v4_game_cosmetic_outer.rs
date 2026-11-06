@@ -44,7 +44,8 @@ impl FrozenRecordHandle for CosmeticFrozen{
 }
 struct Lane{
     seen:u64,not_before:u64,pending:Option<(u64,CosmeticCopy)>,
-    held:Option<u64>,sent:u64,
+    held:Option<(u64,usize)>,sent:u64,
+    first_record_wire_bytes:u64,copied_record_wire_bytes:u64,
     key:Option<LaneKey>,epoch:[u8;16],ack:Option<OuterAckIndex>,
 }
 pub(crate) struct CosmeticOuter{
@@ -54,6 +55,7 @@ impl CosmeticOuter{
     pub fn new(count:usize)->Self{
         Self{lanes:(0..count).map(|_|Lane{
             seen:0,not_before:0,pending:None,held:None,sent:0,
+            first_record_wire_bytes:0,copied_record_wire_bytes:0,
             key:None,epoch:[0;16],ack:None
         }).collect()}
     }
@@ -86,6 +88,8 @@ impl CosmeticOuter{
         };
         *l=Lane{
             seen:0,not_before:0,pending:None,held:None,sent:l.sent,
+            first_record_wire_bytes:l.first_record_wire_bytes,
+            copied_record_wire_bytes:l.copied_record_wire_bytes,
             key:Some(key),epoch,
             ack:Some(OuterAckIndex::new(key,epoch,seq,128)?),
         };
@@ -107,6 +111,8 @@ impl CosmeticOuter{
         }else{
             ack.advance_untracked(seq,wire.len() as u32)?;
         }
+        // Exact protected-record bytes of successfully copied first sends.
+        l.first_record_wire_bytes=l.first_record_wire_bytes.saturating_add(wire.len() as u64);
         if sampled && l.pending.is_none() && l.held.is_none() &&
             now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE{
             l.pending=Some((now_ns.saturating_add(AFTER_FIRST_NS),
@@ -174,20 +180,30 @@ impl CosmeticOuter{
                 l.pending=None;continue
             }
             let (_,row)=l.pending.take()?;
-            l.held=Some(row.pn);
+            l.held=Some((row.pn,row.wire.len()));
             return Some(row)
         }
         None
     }
     pub fn complete(&mut self,index:usize,pn:u64,copied:bool,now_ns:u64)->bool{
         let Some(l)=self.lanes.get_mut(index)else{return false};
-        if l.held!=Some(pn){return false}
+        let Some((held_pn,record_bytes))=l.held else{return false};
+        if held_pn!=pn{return false}
         l.held=None;
         l.not_before=now_ns.saturating_add(MIN_INTERVAL_NS);
-        if copied{l.sent=l.sent.saturating_add(1)}
+        if copied{
+            l.sent=l.sent.saturating_add(1);
+            l.copied_record_wire_bytes=l.copied_record_wire_bytes.saturating_add(record_bytes as u64);
+        }
         true
     }
     pub fn sent(&self)->u64{self.lanes.iter().map(|l|l.sent).sum()}
+    pub fn copied_record_wire_bytes(&self)->u64{
+        self.lanes.iter().map(|l|l.copied_record_wire_bytes).sum()
+    }
+    pub fn first_record_wire_bytes(&self)->u64{
+        self.lanes.iter().map(|l|l.first_record_wire_bytes).sum()
+    }
 }
 #[cfg(test)]
 mod tests{
@@ -219,6 +235,8 @@ mod tests{
         assert!(c.complete(0,77,true,255_000_000));
         assert!(!c.complete(0,77,true,125_000_000));
         assert_eq!(c.sent(),1);
+        assert_eq!(c.copied_record_wire_bytes(),1290);
+        assert_eq!(c.first_record_wire_bytes(),0); // should_sample path
     }
     #[test]
     fn h812_normal_ack_targets_missing_original_not_later_sample(){
@@ -243,6 +261,8 @@ mod tests{
         assert_eq!((row.pn,row.seq),(16,250));
         assert!(c.complete(0,16,true,88_000_000));
         assert_eq!(c.sent(),1);
+        assert_eq!(c.first_record_wire_bytes(),320);
+        assert_eq!(c.copied_record_wire_bytes(),10);
         for i in 33..=48u64{
             c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
                 i*1_000_000).unwrap();
@@ -307,6 +327,8 @@ mod tests{
         assert!(outer.complete(0,16,true,266_000_000));
         assert!(!outer.complete(0,16,true,266_000_001));
         assert_eq!(outer.sent(),1);
+        assert_eq!(outer.first_record_wire_bytes(),16*wire.len() as u64);
+        assert_eq!(outer.copied_record_wire_bytes(),wire.len() as u64);
         // Cooldown protects low-rate appearance even if data is busy.
         for i in 16..32u64{
             outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
@@ -325,6 +347,7 @@ mod tests{
         assert_eq!(row.pn,9);
         assert!(c.complete(0,9,false,250_000_002));
         assert_eq!(c.sent(),0);
+        assert_eq!(c.copied_record_wire_bytes(),0);
         assert!(c.next_due().is_none());
     }
 }
