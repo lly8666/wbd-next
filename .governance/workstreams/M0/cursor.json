@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1268,
-  "checkpoint_sha": "dae5d7f5bba6120fd297458face00415bc0d9b49",
+  "sequence": 1269,
+  "checkpoint_sha": "22c296d66142adb5571750b243260adcb4903b1e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1268 isolate Fixed6 30% RAW M4 kernel socket sendbuf change to client-only. H1267 SOURCEdae5 native original Go TLS+Rust x86 2-authenticated 120s/leg same VM default vs cold1MiB ALL client+server SO_SNDBUF Action42152888809 SUCCESS; real effective default212992 vs tuned2097152, 30%-loss client M4 typed EAGAIN4521→0, sampled original 70/70 POLLOUT writable, SIOCOUTQ0, measured1.5022s zero-kernel-copied→none, overload uplink 93.8221%→99.9843% unique. BUT tuned BOTH ends had downlink recovery unique92.6635% vs default99.9912%. Do not enable globally. H1268 only test tooling: original server and Normal healthy client remain default socket all legs, only Fixed6 CLIENT requests1MiB in experimental leg; same 120s/leg native real 30%/125ms with offered and qdisc readback, no product code change or crypto resend.",
-  "why_now": "Evidence precisely ties local M4 EAGAIN suppression to a larger effective socket buffer, but H1267 experiment also changed healthy sibling and server buffers, confounding downlink recovery and presenting an adverse 7.3% business gap. Narrow socket scope before any default product behavioral change.",
+  "current_task": "H1269 archive source-scoped H1268 SOURCE22c2 completed native real x86 original Go TLS/Rust same-VM 120s default vs Fixed6 CLIENT-ONLY SO_SNDBUF1MiB, server and Normal stayed default212992 both legs; experimental Erin effective2097152. H1268 Action42154338210 SUCCESS and ZIP13474470857 SHA256 d891d000... CRC56 PASS. Both Fixed6 client M4 EAGAIN=0: NO CONTROL EVENT and NO PROOF of causal improvement. Tuned sustained downlink UDP unique95.8416% versus default99.9564%, matching 1.27sec zero app RX while real server sends and 1.007sec original client raw RX batch and FEC source/parity counter flat; server M4 EAGAIN0. Original RAW RX requested SO_RCVBUF4MiB effective2MiB kernel capped both legs; scheduler versus RX socket input/receive drops NOT_ISOLATED. Do not enable permanent client nor global SO_SNDBUF tune. NEXT: opt-in original Linux client RAW RX readiness/worker scheduling read-only diagnostics in bounded 500ms samples, one short source-locked test with Normal sibling and 30%/125ms to attribute S2C RX gap, no more full fiveclient430s.",
+  "why_now": "H1268 client-only control shows no EAGAIN in either leg, no demonstrated TX buffer benefit, yet intermittent receive-side blackout persists while server untouched. This disproves broad socket tuning as an all-path fix; archival and narrow original RX worker read-only readiness instrumentation are higher-value than speculative FEC/retry changes.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe one H1268 native original Go TLS/Rust 2-client same-VM default vs Fixed6-CLIENT-ONLY 120s/leg Action; assert same original compiled binary SHA and authoritative server+Normal SO_SNDBUF unchanged, Fixed6 real effective request2097152, no M4 EAGAIN/stalls, true 30% netem loss, both directions recovery and 0% sibling delivery. If opposite downlink regression persists or no controls matching, DO NOT promote socket default; pursue bounded per-owner diagnostic and independent repeated-run effect only as separately scoped.",
+  "next_action": "Add default-OFF bounded original M4 RX worker poll ready/idle and maximum iteration gap telemetry at existing 500ms FEC2 egress logs, together with the existing raw_batches/error/source/parity/tun_failure and thread CPU. Run ONE short x86 original-Go TLS+Rust two-authenticated-peer Fixed6 30%-loss/125ms+Normal0% native scene, extract whether a reproduced 1sec blackout is RX worker not scheduled, kernel FD not ready despite server M4 copied, or raw parser/error. If no reproduction, preserve NOT_ISOLATED. Keep H1267 original M4 EAGAIN and H1259 opposite direction blackouts as distinct. Do not change SO_SNDBUF production default, RX buffer, FEC6/parity/PN retries or 430s five-client test.",
   "unverified": true,
-  "last_tested_source": "dae5d7f5bba6120fd297458face00415bc0d9b49",
+  "last_tested_source": "22c296d66142adb5571750b243260adcb4903b1e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1267-SOURCEDAE5-FIXED30-RAW-TX-SOCKET-120S-AB-20261106.json"
+    "docs/evidence/M0/PLAN028-H1268-SOURCE22C2-FIXED30-CLIENTONLY-SNDBUF-120S-AB-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1267 SOURCEdae5 original Go TLS+Rust Native x86 two-client 120s default vs 1MiB cold SO_SNDBUF experiment complete Action42152888809; socket actual effective212992→2097152. Fixed30 client EAGAIN4521→0 and overload uplink unique93.82→99.984%, while downlink recovery regressed99.991→92.6635% when both server and client tuned. H1268 isolates ONLY Fixed30 client's original raw send buffer; server and Normal stay default. No PN/reseal/outer cosmetic changes. H1263 Game2 Off frozen outer1082 each side functional PASS, previous Fixed30 2.5s C2S outage and H998 MTU fail retained."
+  "partial_summary": "H1267 SOURCEdae5 native 120s original same-VM default vs ALL sockets1MiB effective212992→2097152: EAGAIN Fixed30 client4521→0, overload uplink93.82→99.984%, but tuned downlink recovery92.66% and 3sec RAW RX idle. H1268 SOURCE22c2 isolated Fixed30 client-only1MiB, server and Normal default: both legs EAGAIN0 (no causal TX relief proven); tuned Fixed30 downlink sustained95.8416% vs default99.9564% because 1.27sec app blackhole and 1.007sec client raw RX counters flat, server M4 EAGAIN0. Client RAW RX requested4MiB actually effective2MiB capped, kernel vs scheduling NOT isolated. H1263 Game2Off cosmetic1082 each side PASS, H998 hot MTU fail retained."
 }

@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1268",
+  "source_sha": "22c296d66142adb5571750b243260adcb4903b1e",
+  "result": "NATIVE_2CLIENT_120S_EACH_SAME_VM_CLIENT_ONLY_AB_DIAGNOSTIC_COMPLETED_NO_EAGAIN_REPRO_AND_RX_INDEPENDENT_GAP",
+  "action_run_id": 42154338210,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42154338210",
+  "action_conclusion": "success",
+  "artifact_id": 13474470857,
+  "artifact_name": "plan028-h1268-fixed30-client-only-m4-sndbuf-120s-samevm",
+  "artifact_zip_sha256": "d891d0003943997290b2b13a9c9d37708f8c64aba51fc28778a487a9d0d6e3fa",
+  "zip_crc": "PASS",
+  "zip_entry_count": 56,
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_compiled_binaries_sha256": {
+    "wbd-v4-client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "wbd-v4-server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "libwbd_engine.so": "368217dea5d8acb795500af9ace018827d0420a2fe0e9af811058a0780bcd739"
+  },
+  "scope": "one native hosted x86_64 VM three Linux netns, original Go TLS/Rust Real RAW/TUN, server+Alice NormalOff0% physical and Erin NormalFixed6 30% physical 125ms one-way, same compiled product binaries, 120s true business per leg with 10/30/35/45 warm/steady/overload/recovery plus10s drain",
+  "traffic_source": "10ms original application tx/rx histograms, independent per-client owned RAW M4 TX STOP and 500ms FEC2 RX EGRESS counters, actual kernel socket SO_SNDBUF and netem actual",
+  "raw_socket_effective_sndbuf_bytes": {
+    "default": {
+      "server": 212992,
+      "alice_client": 212992,
+      "erin_fixed6_client": 212992
+    },
+    "experimental": {
+      "server": 212992,
+      "alice_client": 212992,
+      "erin_fixed6_client": 2097152
+    }
+  },
+  "erin_fixed6_typed_m4_sendmmsg_eagain_turns": {
+    "default": 0,
+    "experimental": 0
+  },
+  "eagain_causal_ab_for_this_run": "NOT_IDENTIFIED_NO_EAGAIN_IN_EITHER_LEG",
+  "fixed6_30pct_unique_app_udp": {
+    "default": {
+      "uplink": {
+        "steady": 0.999907,
+        "overload": 0.999581,
+        "recovery": 0.999727
+      },
+      "downlink": {
+        "steady": 0.999564,
+        "overload": 0.999817,
+        "recovery": 0.999277
+      }
+    },
+    "experimental_client_only": {
+      "uplink": {
+        "steady": 0.999511,
+        "overload": 0.999677,
+        "recovery": 0.999674
+      },
+      "downlink": {
+        "steady": 0.958416,
+        "overload": 0.999808,
+        "recovery": 0.999744
+      }
+    }
+  },
+  "observed_real_30pct_qdisc_fraction": {
+    "default": {
+      "uplink": 0.301053,
+      "downlink": 0.300375
+    },
+    "experimental": {
+      "uplink": 0.299917,
+      "downlink": 0.299962
+    }
+  },
+  "new_relevant_RX_gap": {
+    "original_client_role": "erin",
+    "direction": "server_to_client_downlink",
+    "experimental_app_zero_receive_while_server_continues_sent_seconds": 1.27,
+    "experimental_app_window_from_start_seconds": [
+      32.72,
+      33.98
+    ],
+    "experimental_original_client_FEC2_half_second_RX_raw_batches_flat_seconds": 1.007371665,
+    "experimental_process_relative_raw_RX_sample_window_seconds": [
+      87.9095,
+      88.9169
+    ],
+    "default_original_client_longest_active_RAW_RX_flat_seconds": 0.50320475,
+    "experimental_original_client_FEC2_source_parity_recovered_counters_flat_during_gap": true,
+    "experimental_original_server_M4_EAGAIN_events": 0,
+    "native_original_client_RAW_RX_socket_requested_RCVBUF_bytes": 4194304,
+    "native_original_client_RAW_RX_socket_effective_RCVBUF_bytes": 2097152,
+    "effective_RCVBUF_kernel_capped": true,
+    "interpretation": "Real client native RAW RX batch ingress stalled for ~1sec while server had no M4 EAGAIN. Original RX worker scheduling versus raw kernel input queue/network timestamp not isolated. A 4MiB RCVBUF request was capped at effective2MiB in both legs, not demonstrated causal."
+  },
+  "evidence_limits": [
+    "One hosted VM, sequential cold AB; no controlled repeated multi-run statistical CI.",
+    "A client-only larger raw TX socket was ACTUALLY applied but not measured to reduce EAGAIN because control had zero too.",
+    "The tuned leg sustained S2C goodput regressed to95.84% due to intermittent receive gap despite server untouched, and no product performance PASS can follow.",
+    "Original H1267 both-sided buffer A/B had EAGAIN4521→0 and uplink overload improvement but its tuned leg downlink recovery92.66%, so do not use as unconditional default setting.",
+    "No old PN resend/reseal/extra FEC or cosmetic delivery credit; original Game2 OFF outer functional PASS unaffected.",
+    "PLAN027A H998 historical same socket MTU hot shrink FAIL, Windows ARM and Android NOT_RUN."
+  ]
+}
