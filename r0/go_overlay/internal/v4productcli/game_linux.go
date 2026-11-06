@@ -820,6 +820,10 @@ func runGameMultiServer(
     type oldNormalRetirement struct{rec *originalV4MultiRecord; due time.Time}
     var gameRetiring []oldGameRetirement
     var normalRetiring []oldNormalRetirement
+    // Error-only, once per exact cold association: a 64-record staged
+    // burst is not an auth error, while malformed sequence remains fatal.
+    // Delete on forget so long-lived shared-port servers stay bounded.
+    var preDetachFaultSeen sync.Map
     var tlsWG sync.WaitGroup
     var goPostHandoffDataCopies atomic.Uint64
     var stopping atomic.Bool
@@ -831,6 +835,7 @@ func runGameMultiServer(
     forget:=func(a *faketcp.ServerAssociation){
         if a==nil{return}
         mu.Lock();delete(seen,a);mu.Unlock()
+        preDetachFaultSeen.Delete(a)
         table.Remove(a.Flow())
     }
     rejectLane:=func(l *realityfront.V4LinuxGameAuthenticatedLane){
@@ -952,7 +957,24 @@ func runGameMultiServer(
                 continue
             }
             outcome,e:=a.HandleSegment(seg,time.Now())
-            if e!=nil{continue}
+            if e!=nil{
+                kind:=""
+                switch{
+                case errors.Is(e,faketcp.ErrTransitionOverflow):kind="bounded_pre_detach_data_overflow"
+                case errors.Is(e,faketcp.ErrTransitionOverlap):kind="bootstrap_record_boundary_overlap"
+                case errors.Is(e,faketcp.ErrTransitionConflict):kind="same_sequence_payload_conflict"
+                case errors.Is(e,faketcp.ErrTransitionRecordSize):kind="record_exceeds_wire_limit"
+                case errors.Is(e,faketcp.ErrTransitionAborted):kind="already_aborted"
+                }
+                if kind!=""{
+                    if _,logged:=preDetachFaultSeen.LoadOrStore(a,struct{}{});!logged{
+                        state,exists:=a.TransitionState()
+                        log.Printf("V4_PUBLIC_GAME_PRE_DETACH_ROUTE_ERROR role=server class=%s transition_state=%d state_exists=%t client_port=%d",
+                            kind,state,exists,a.Flow().ClientPort)
+                    }
+                }
+                continue
+            }
             if outcome.AckNeeded{
                 if e=emit(a.ACKSegment(outcome.Ack));e!=nil{
                     select{case failed<-e:default:};return

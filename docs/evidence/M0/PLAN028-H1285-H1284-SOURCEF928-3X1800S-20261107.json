@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "prior_source": "f92897b073713008c22f99d5c3d100f27cd2bd9f",
+  "prior_action": 42259087554,
+  "original_arm64_native_build": "PASS",
+  "duration_seconds_each": 1800,
+  "overall": "FAIL",
+  "scenes": {
+    "baseline": {
+      "alerts": 1,
+      "game4_client_local_hot": 19,
+      "game4_server_confirmed": 18,
+      "server_reject": [
+        {
+          "stage": "protected_reply_detach",
+          "client_port": 55545
+        }
+      ],
+      "per_client_queue_overflow": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "heterogeneous": {
+      "alerts": 3,
+      "game4_client_local_hot": 16,
+      "game4_server_confirmed": 14,
+      "server_reject": [
+        {
+          "stage": "protected_reply_detach",
+          "client_port": 51421
+        },
+        {
+          "stage": "protected_reply_detach",
+          "client_port": 65093
+        }
+      ],
+      "erin_both_direction_app_gap_ms": 1270,
+      "per_client_queue_overflow": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pressure": {
+      "alerts": 10,
+      "game4_client_local_hot": 16,
+      "game4_server_confirmed": 15,
+      "server_reject": [
+        {
+          "stage": "protected_reply_detach",
+          "client_port": 59341
+        }
+      ],
+      "per_client_queue_overflow": {
+        "alice": 751,
+        "bob": 2356,
+        "carol": 6,
+        "dave": 9734,
+        "erin": 38
+      },
+      "app_gap_ms": {
+        "dave_uplink": 2240,
+        "dave_downlink": 3270,
+        "erin_uplink": 4340,
+        "erin_downlink": 1270
+      }
+    }
+  },
+  "h1285_root_hypothesis": "Donor original FakeTCP StageTransition.Route overflow (64 early native records while server waits protected TLS reply ACK) aborts the Prepared transition and causes subsequent DetachTransition state failure. Exact classification of H1284 aborts was unavailable; H1285 error-only stage trace added to distinguish overflow from genuine conflict/overlap/oversize.",
+  "h1285_fix": "Drop surplus pre-detach records without ACK and keep bounded prior 64 and Prepared state; preserve fail-closed malformed path. Revert ineffective 16-packet shared TUN pending to 8.",
+  "h1285_validation": "PENDING_SOURCE_LOCKED_FAST_GO_TEST_AND_NATIVE_SHORT_GAME4",
+  "remaining_issues": [
+    "Neither stage 64-overflow nor race has been proven the sole cause of live abort until H1285 trace/test",
+    "Pressure per-lease bursts and Fixed6 bidirectional gaps may have distinct roots",
+    "H998 physical same-socket MTU 1500->1280 failure and remote ICMP proof remain open"
+  ]
+}

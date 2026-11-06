@@ -1,0 +1,65 @@
+name: PLAN028 H1285 bounded early M4 data cannot abort genuine FakeTCP TLS detach
+run-name: H1285 original Go authenticated TLS-to-M4 bounded transition x86 ARM64 fast proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1285-early-m4-detach-fast.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-go-faketcp:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Exact donor SHA and original approved overlay assembly
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          python3 r0/go_overlay/assembly/assemble.py \
+            --legacy-root legacy --overlay-root . \
+            --manifest r0/go_overlay/assembly/manifest-plan020-m0.json \
+            --receipt assembly-h1285.json
+          python3 - <<'PY'
+          import json,os
+          r=json.load(open("assembly-h1285.json"))
+          assert r["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert r["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          print("H1285_NATIVE_SOURCE_LOCK_ASSEMBLY_PASS",flush=True)
+          PY
+      - name: Genuine Go full FakeTCP state-machine regression plus burst-specific proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd legacy
+          go test -count=1 -v -run '^TestPLAN028PreDetach(BurstOverflowPreservesAuthenticatedSuccessor|MalformedRecordStillAborts)$' ./internal/faketcp >../h1285-early-burst-unit.log 2>&1 || {
+            cat ../h1285-early-burst-unit.log >&2; exit 1;
+          }
+          grep -Fq -- "--- PASS: TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor" ../h1285-early-burst-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028PreDetachMalformedRecordStillAborts" ../h1285-early-burst-unit.log
+          go test -count=1 ./internal/faketcp
+          echo "M0_PLAN028_H1285_EXACT_ORIGINAL_GO_PRE_DETACH_BURST_PASS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1285-original-go-early-detach-${{ matrix.runner }}-${{ github.sha }}
+          path: |
+            assembly-h1285.json
+            h1285-early-burst-unit.log
+          retention-days: 7
+          if-no-files-found: warn

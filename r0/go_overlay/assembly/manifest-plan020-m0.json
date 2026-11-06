@@ -1096,6 +1096,25 @@
       "path": "internal/realityfront/bridge_v4_windows_dual_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_dual_test.go",
       "result_blob": "55ba115d0f41f5dce78f2868a32071780daecd72"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/faketcp/transition.go",
+      "original_blob": "9cd5725f0151738ffaef7016c4ab8ea9228d8080",
+      "overlay_path": "r0/go_overlay/internal/faketcp/transition.go",
+      "result_blob": "98284e5410330805aeb0c007d616b86bcd2058bc"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/transition_h1285_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/transition_h1285_test.go",
+      "result_blob": "713fc707e7a6af2a64936613d8d6cce3b1637df4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/transition_h1285_association_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/transition_h1285_association_test.go",
+      "result_blob": "f67bffca63fc85e99f886b761e64e60ec12c81e0"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1284,
-  "checkpoint_sha": "5fb2c92abfee1777081da72e6893bd9c399220c6",
+  "sequence": 1285,
+  "checkpoint_sha": "f92897b073713008c22f99d5c3d100f27cd2bd9f",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1284: H1283 exact source a8cb original ARM64 native 3x1800: baseline FAIL1 old last generation real Stop during grace not logged; hetero FAIL3 Game4 client17/server15 protected TLS rejects + Erin fixed6 3320ms both ways; pressure FAIL5 despite rotation PASS all, Erin 2290ms and server per-lease TUN overflows Alice65 Bob62 Dave873. Implement 10-20s server old group deferred native Stop, final client Stop exact log, classified server TLS/native cold failures, Rust per-lease 8->16 pending FIFO with same 64KiB/100ms. Native new source test pending.",
-  "why_now": "True H1283 native full report disproves acceptance; old server native Stop was immediate while client delayed, final client actual Stop missed verifier, high pressure queue bursts exceed one eight-frame pending batch and Game4 two server TLS failures need phase attribution.",
+  "current_task": "H1285: H1284 SOURCEf928 true ARM64 original Go TLS/Rust three 1800s scenes build PASS but baseline FAIL1 Game4 client19/server18, heterogeneous FAIL3 client16/server14 plus Erin 1270ms both, pressure FAIL10 client16/server15 plus per-lease queue overflow Alice751 Bob2356 Carol6 Dave9734 Erin38. Native server stage=protected_reply_detach after local Game4 READY: original donor StageTransition.Route buffered 64 early M4 records, overflow aborted Prepared and thus Detach can fail. H1285 bounded overflow drops ONLY surplus before detachment (no ACK), preserves 64 buffered and authentication; malformed overlap/conflict/size still abort. Focused original ServerAssociation + StageTransition Go regression, phase fault logs; revert unhelpful Rust pending 16->8 with unchanged hard limits. Exact new source not yet measured.",
+  "why_now": "H1284 is objectively worse at pressure; do not tune queue or rerun 3x1800 without proving actual original FakeTCP transition state. Change exact candidate-breaking 64-buffer overflow path and add short native x86/ARM Go proof, then targeted Game4 before long suite.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Qualify exact H1284 code on native x86/ARM with Go final Stop/10-20s jitter and Rust per-lease FIFO bounded tests, then one exact ARM64 5-client 3x1800s loss stress. Separate client vs server Game4 native commit and actual application S2C gaps. Keep H998 live MTU FAIL and true 0-alert gate.",
+  "next_action": "Run H1285 fast source-locked original-Go FakeTCP server association + StageTransition full package tests on x86 and native ARM64; inspect whether early overflow preserved, invalid sequences abort, original 443 Go cold path compiles. Then one short native Game4 controlled-loss run to seek real stage=bounded_pre_detach_data_overflow and server commit confirmation, not another 3x1800 blind run. Full PLAN028 remains FAIL/OPEN until 0-alert long test; H998 remains.",
   "unverified": true,
-  "last_tested_source": "a8cb83c209f2c7ef647468472d7ac61c07dbc568",
+  "last_tested_source": "f92897b073713008c22f99d5c3d100f27cd2bd9f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1284-H1283-SOURCEA8CB-3X1800S-20261106.json"
+    "docs/evidence/M0/PLAN028-H1285-H1284-SOURCEF928-3X1800S-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",

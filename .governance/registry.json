@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1284: actual H1283 native ARM64 3×1800 all FAIL (baseline 1: final grace Stop accounting; heterogeneous 3: Game4 17 client vs 15 server M4, Erin 3320ms; pressure 5: Erin 2290ms, per-lease shared-TUN 65/62/873 overflows). Source-locked H1284 candidate: symmetric server old Normal/Game cohort 10–20s deferred exact Stop, real client-close Stop logging, typed cold native phase classification and 2×8 bounded Rust /32 FIFO; new native 3×1800 pending. H998/remote ICMP/CPU still OPEN.",
+      "goal": "PLAN028 H1285: H1284 exact native ARM64 build PASS 3x1800 FAIL 1/3/10, Game4 local success/server M4 commit 19/18,16/14,16/15; all missing server arrivals rejected protected_reply_detach. Original donor StageTransition pre-detach 64-record overflow aborts entire prepared authenticated candidate; H1285 code now bounded-drop excess, preserve 64 and malformed abort; exact x86/ARM fast regression before further long tests. Revert experimental shared /32 TUN pending 16->8 after pressure overflow worsened. H998 physical MTU/ICMP/CPU OPEN.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

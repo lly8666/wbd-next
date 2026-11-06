@@ -4239,10 +4239,7 @@ fn shared_route_retire(
 // Per-lease backlog has count, byte and age bounds. Materialize a packet
 // only after admission, not before discovering a full slow-client queue.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-// An original 8-frame native TUN batch can arrive while the receiver
-// seals a second 8-source Game4+FEC turn. Keep two batches, not unlimited
-// buffering; the existing 64KiB and 100ms caps remain authoritative.
-const SHARED_TUN_PENDING_PER_ROUTE:usize=16;
+const SHARED_TUN_PENDING_PER_ROUTE:usize=8;
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const SHARED_TUN_PENDING_BYTES_PER_ROUTE:usize=64*1024;
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4553,9 +4550,9 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     let mut next_a=8u8;
     let mut next_b=100u8;
     let mut b_received=0usize;
-    // Two blocked eight-packet turns fill the bounded 16 pending slots;
-    // third turn drops only A while B continues independently.
-    for turn in 0..3{
+    // A blocked for two turns: first fills its eight-packet pending queue,
+    // second must report bounded drops; B never waits for A.
+    for turn in 0..2{
         let _=flush_shared_tun(&mut pending);
         let mut a_dropped=0;
         for _ in 0..8{
@@ -4569,9 +4566,9 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
             }
             b_received+=1;
         }
-        assert_eq!(a_dropped,if turn<2{0}else{8});
+        assert_eq!(a_dropped,if turn==0{0}else{8});
     }
-    assert_eq!(pending[&ka].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+    assert_eq!(pending[&ka].packets.len(),8);
     // Unblock A. It consumes eight per turn, matching TUN ingress of eight.
     // A one-packet flush would keep losing seven packets every turn here.
     let mut a_received=0usize;
@@ -4604,10 +4601,10 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
             b_received+=1;
         }
         assert_eq!(a_dropped,0,"no sustained A overflow after recovery");
-        assert_eq!(pending[&ka].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+        assert_eq!(pending[&ka].packets.len(),8);
     }
     assert_eq!(a_received,48);
-    assert_eq!(b_received,72);
+    assert_eq!(b_received,64);
     println!("M0_PLAN028_SHARED_TUN_A_RECOVERY_B_CONTINUOUS_PASS a_recovered=48 b_continuous=64 post_recovery_drops=0");
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4631,7 +4628,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
         });
         assert_eq!(d.overflow,0);
     }
-    assert_eq!(made.get(),SHARED_TUN_PENDING_PER_ROUTE as u64);
+    assert_eq!(made.get(),8);
     for n in 0..4096{
         assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||{
             made.set(made.get()+1);packet(99,1)
@@ -4645,12 +4642,12 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
             }
         }
     }
-    assert_eq!(made.get(),SHARED_TUN_PENDING_PER_ROUTE as u64); // no extra Vec/copy.
-    assert_eq!(pending[&ka].queued_bytes,SHARED_TUN_PENDING_PER_ROUTE);
+    assert_eq!(made.get(),8); // 4096 discarded without extra Vec/copy.
+    assert_eq!(pending[&ka].queued_bytes,8);
     let expired=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-Duration::from_millis(1);
     for item in pending.get_mut(&ka).unwrap().packets.iter_mut(){item.queued_at=expired;}
     let d=flush_shared_tun(&mut pending);
-    assert_eq!(d.expired,SHARED_TUN_PENDING_PER_ROUTE as u64);assert_eq!(d.backpressure,0);
+    assert_eq!(d.expired,8);assert_eq!(d.backpressure,0);
     assert!(pending.is_empty()); // Silent A no longer wakes reader at 1ms.
     assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,
         ||packet(88,1)).backpressure,1);
@@ -4667,7 +4664,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
         made.set(made.get()+1);packet(2,30*1024)
     });
     assert_eq!(d.overflow,1);assert_eq!(d.byte_limit,1);
-    assert_eq!(made.get(),SHARED_TUN_PENDING_PER_ROUTE as u64); // bound before construction.
+    assert_eq!(made.get(),8); // byte bound rejects before construction.
     assert_eq!(pending[&large].queued_bytes,40*1024);
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
