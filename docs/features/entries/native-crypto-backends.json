@@ -35,7 +35,7 @@
     {
       "platform": "linux/x86_64",
       "scope": "H1256 exact-original-Go TLS/Rust Game4 Fixed6 native RS16 encoder+recovery actual runtime backend calls and same-VM scalar/native 90s/leg with real two-client UDP 15%/100ms; causal CPU speedup and five-client bottleneck not proven",
-      "status": "PASS",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "79706127b58dda830702c609d9d7077afde48e30",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/42128512173"
     },
