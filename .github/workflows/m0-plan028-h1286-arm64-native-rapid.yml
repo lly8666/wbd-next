@@ -1,5 +1,5 @@
 name: M0 PLAN028 H1286 ARM64 native ISA-L five-client rapid diagnosis
-# H1282: drive existing original FakeTCP client bootstrap DATA Sender RTO until verified TLS/M4 handoff; enable bounded Game SYN RTO; strict 3x1800s acceptance.
+# H1286 is a SHORT native diagnostic; no 1800-second workload, long suite remains untouched.
 run-name: H1286 original ARM64 TLS and ISA-L three 180-second short checks
 on:
   push:
@@ -95,59 +95,7 @@ jobs:
             tail -110 fixed-kernel-result/rust-build.log >&2
             exit 1
           }
-          nm target/release/libwbd_engine.so | grep -Eq ' [tT] ec_encode_data
-          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
-          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
-            tail -120 fixed-kernel-result/plan028-h1144-protected-policy-unit.log >&2
-            exit 1
-          }
-          grep -Fq -- "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
-          grep -Fq -- "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
-          grep -Fq -- "--- PASS: TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NormalM4AfterPeerRxFenceAndTimeout$' ./internal/v4productcli) >fixed-kernel-result/h1282-normal-peer-proof-unit.log 2>&1 || {
-            tail -120 fixed-kernel-result/h1282-normal-peer-proof-unit.log >&2
-            exit 1
-          }
-          grep -Fq -- "--- PASS: TestPLAN028NormalM4AfterPeerRxFenceAndTimeout" fixed-kernel-result/h1282-normal-peer-proof-unit.log
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound|TestPLAN028OriginalLaneRetirementGraceIsBetween10And20Seconds)$' ./internal/v4productcli) >fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log 2>&1 || {
-            tail -120 fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log >&2
-            exit 1
-          }
-          grep -Fq -- "--- PASS: TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound" fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,platform,struct
-          root=pathlib.Path("fixed-build")
-          assert platform.machine()=="aarch64"
-          sha={}
-          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
-              b=(root/name).read_bytes()
-              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,name
-              sha[name]=hashlib.sha256(b).hexdigest()
-          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
-             "architecture":"native_aarch64","go":"1.23.12","rust":"1.85.1",
-             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
-          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
-          print("M0_PLAN028_H1144_NATIVE_ARM64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
-          PY
-      - name: Preflight original native packet fixture/reporter and cosmetic record-byte counter
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
-          python3 -m unittest -v tools/test_m0_plan028_h1280_normal_m4_proof.py
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_full_lease_opportunistic_oldest_drain_before_drop -- --test-threads=1
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain -- --test-threads=1
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes -- --test-threads=1
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap -- --test-threads=1
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: h1286-arm64-one-isal-build-${{ github.sha }}
-          path: fixed-build/
-          retention-days: 7
+          nm target/release/libwbd_engine.so | grep -Eq ' [tT] ec_encode_data$'
           echo H1286_REAL_ARM64_NATIVE_ISAL_LINKED_PASS
           cp target/release/libwbd_engine.so fixed-build/
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
@@ -199,7 +147,7 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: h1282-native-arm64-one-build-${{ github.sha }}
+          name: h1286-arm64-one-isal-build-${{ github.sha }}
           path: fixed-build/
           retention-days: 7
   scene:
