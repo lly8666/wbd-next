@@ -146,6 +146,27 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     return p.startAuthenticatedNormalLocked(assoc,session,bridge)
 }
 
+// V4NormalM4StageFailure identifies which authenticated native boundary
+// rejected the server's new Normal generation. It is an observation only:
+// no password, TLS secret, private IP, packet content, or caller-supplied
+// string is placed in Stage. Retaining Unwrap preserves errors.Is.
+type V4NormalM4StageFailure struct {
+    Stage string
+    Cause error
+}
+func (e *V4NormalM4StageFailure) Error()string{
+    return "original authenticated Normal M4 admission rejected at "+e.Stage
+}
+func (e *V4NormalM4StageFailure) Unwrap()error{return e.Cause}
+func V4NormalM4FailureStage(err error)string{
+    var stage *V4NormalM4StageFailure
+    if errors.As(err,&stage){return stage.Stage}
+    return "unclassified"
+}
+func normalM4Fail(stage string, cause error)error{
+    return &V4NormalM4StageFailure{Stage:stage,Cause:cause}
+}
+
 // AdoptAuthenticatedNormalLane transfers the EXISTING, already credential-
 // checked protected TLS/Rust prepared lane from the shared one-443 listener.
 // No second handshake, alternate key or Go steady-state pump is created.
@@ -182,13 +203,13 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
     profile:=p.cfg.FECProfile
     if p.cfg.PerClientNormalFEC{
         selected,e:=v4ProtectedNormalFECProfile(session.verifiedPolicy,session.verifiedNormalFec,true)
-        if e!=nil{return nil,errors.Join(e,p.closeLocked())}
+        if e!=nil{return nil,errors.Join(normalM4Fail("protected_fec",e),p.closeLocked())}
         profile=FecV2Profile(selected)
         switch session.verifiedPolicy.FECMode {
         case FECOff: mode=FecV2Off
         case FECFixed: mode=FecV2Fixed
         case FECAuto: mode=FecV2Auto
-        default: return nil,errors.Join(ErrAdmissionUnsupported,p.closeLocked())
+        default: return nil,errors.Join(normalM4Fail("protected_policy",ErrAdmissionUnsupported),p.closeLocked())
         }
     }
     // Freeze original authenticated source *before* returning any exported
@@ -196,7 +217,7 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
     verified,verifyErr:=session.ColdSnapshot()
     if verifyErr!=nil{
         shutdown:=p.closeLocked()
-        return nil,errors.Join(verifyErr,shutdown)
+        return nil,errors.Join(normalM4Fail("protected_snapshot",verifyErr),shutdown)
     }
     p.principal=verified.Principal()
     p.tunnel=verified.TunnelID()
@@ -208,7 +229,7 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
     // the shared server TUN once the native kernel receiver is running.
     effective,leaseErr:=session.AuthenticatedLeaseIPv4()
     if leaseErr!=nil{
-        return nil,errors.Join(leaseErr,p.closeLocked())
+        return nil,errors.Join(normalM4Fail("lease",leaseErr),p.closeLocked())
     }
     if effective!=""{
         if leaseErr=bridge.bindAuthenticatedClientIPv4(effective);leaseErr!=nil{
@@ -219,7 +240,7 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
         // A manual-IP peer has no authenticated per-device /32 and cannot
         // share physical TUN ingress. Never mint routing authority from
         // the untrusted claimed source or the outer TCP tuple.
-        if effective==""{return nil,errors.Join(ErrAdmissionParams,p.closeLocked())}
+        if effective==""{return nil,errors.Join(normalM4Fail("shared_lease_required",ErrAdmissionParams),p.closeLocked())}
         if leaseErr=bridge.bindAuthenticatedSharedTun(p.cfg.SharedTun);leaseErr!=nil{
             return nil,errors.Join(leaseErr,p.closeLocked())
         }
@@ -229,33 +250,45 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
     if p.cfg.ConfigureTunnelMTU!=nil {
         clientLimit,serverLimit:=verified.RecordLimits()
         if err=p.cfg.ConfigureTunnelMTU(assoc.PeerTCPProfile().MSS,clientLimit,serverLimit);err!=nil{
-            return nil,errors.Join(err,p.closeLocked())
+            return nil,errors.Join(normalM4Fail("mtu",err),p.closeLocked())
         }
     }
-    if err=bridge.attachRawRxOnInterface(
-        p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,
-    );err==nil{
+    stage:="raw_rx_attach"
+    err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex)
+    if err==nil{
+        stage="tun_attach"
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
     if err==nil{
+        stage="fec_config"
         p.fec,err=v4ConfigureProductFec(bridge,mode,profile,verified)
     }
-    if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
     if err==nil{
+        stage="outer_config"
+        err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)
+    }
+    if err==nil{
+        stage="health_config"
         keepalive,dead:=p.cfg.HealthKeepaliveSeconds,p.cfg.HealthDeadAfterSeconds
         if keepalive==0{keepalive=15}
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
-    if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(p.cfg.PeerPersona))}
-    if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
+    if err==nil&&mode==FecV2Auto{
+        stage="auto_config"
+        err=bridge.enableOriginalLowRateAuto()
+    }
+    if err==nil{
+        stage="feedback_config"
+        err=bridge.armOriginalPublicM2Feedback(uint32(p.cfg.PeerPersona))
+    }
+    if err==nil{
+        stage="rust_loop_start"
+        err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)
+    }
     if err!=nil{
         shutdown:=p.closeLocked()
-        return nil,errors.Join(
-            fmt.Errorf("V4 genuine Go TLS/Rust M4 driver start: %w",err),
-            shutdown,
-        )
+        return nil,errors.Join(normalM4Fail(stage,err),shutdown)
     }
     if p.fec!=nil{p.fec.start(bridge)}
     if p.cfg.PerClientNormalFEC{
