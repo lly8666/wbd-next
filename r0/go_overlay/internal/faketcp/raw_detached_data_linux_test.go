@@ -285,7 +285,9 @@ func TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender(t *testing.T){
         t.Fatalf("lost final reply ACK barrier not restored: %v",err)
     }
     if err:=assoc.RepeatDetachedBootstrapACK();err!=nil{t.Fatal(err)}
-    if len(emitted)!=2||emitted[1]!=ack{
+    if len(emitted)!=2||emitted[1].Seq!=ack.Seq||
+        emitted[1].Ack!=ack.Ack||emitted[1].Flags!=FlagACK||
+        len(emitted[1].Payload)!=0{
         t.Fatal("the original detached duplicate ACK changed seq/ACK or emitted DATA")
     }
     assoc.mu.Lock();assoc.state=ClientAssociationClosed;assoc.mu.Unlock()
