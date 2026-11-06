@@ -3350,19 +3350,62 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);
     #[cfg(target_os="linux")]
-    if let Some(shared)=e.shared_tun.as_ref(){
-        let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
-        if router.stop.load(Ordering::Acquire){return BAD_STAGE}
-        let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-        if !shared_route_publish(&mut routes,shared.ip,SharedTunRoute{
-            generation:shared.generation,alive:Arc::clone(&shared.alive),
-            send:shared.sender.clone(),
-        }){return BAD_STAGE}
+    {
+        let server=e.server;
+        if let Some(shared)=e.shared_tun.as_mut(){
+            let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
+            if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+            let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+            let candidate=SharedTunRoute{
+                generation:shared.generation,alive:Arc::clone(&shared.alive),
+                send:shared.sender.clone(),
+            };
+            // Game2's first local complete group is not proof that the
+            // remote server received *both* protected cold lanes. Preserve
+            // old cohort's original default TUN route until real new-M4
+            // authenticated reverse IPv4 delivery proves server takeover.
+            if !server && shared_route_defer_overlapping_client(
+                &routes,shared.ip,shared.generation
+            ){
+                shared.publish_pending=true;
+                eprintln!("V4_PUBLIC_GAME_TUN_CANDIDATE_DEFERRED generation={} old_route_preserved=1",shared.generation);
+            }else if !shared_route_publish(&mut routes,shared.ip,candidate){
+                return BAD_STAGE
+            }
+        }
     }
     OK
 }
 #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(group:u64)->i32{
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if e.server||e.stopped||e.stopping{return BAD_STAGE}
+    let delivered=match e.drivers.as_ref(){
+        Some(driver) if driver.is_live()=>driver.counters().1,
+        _=>return BAD_STAGE,
+    };
+    let Some(shared)=e.shared_tun.as_mut()else{return BAD_STAGE};
+    if !shared.publish_pending{return BAD_STAGE}
+    let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
+    if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    let candidate=SharedTunRoute{
+        generation:shared.generation,alive:Arc::clone(&shared.alive),
+        send:shared.sender.clone(),
+    };
+    if !shared_route_promote_authenticated_client(
+        &mut routes,shared.ip,candidate,delivered
+    ){return BAD_STAGE}
+    shared.publish_pending=false;
+    eprintln!("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_delivered={} old_route_revoked=1",shared.generation,delivered);
+    OK
+}
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
     group:u64,copied:*mut u64,delivered:*mut u64,rejected:*mut u64,
 )->i32{
