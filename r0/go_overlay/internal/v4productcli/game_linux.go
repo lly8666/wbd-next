@@ -148,6 +148,12 @@ func runGameClient(
         for _,raw:=range raws{raw.Close()}
         for _,a:=range assocs{a.Close()}
     }()
+    // The old FakeTCP tuple may still receive delayed cold records after
+    // Rust has atomically swapped ONE hot Game4 slot. Retain that old cold
+    // observer briefly; it never transmits DATA or becomes a second M4 lane.
+    lingerCtx,lingerCancel:=context.WithCancel(ctx)
+    var lingerWG sync.WaitGroup
+    defer func(){lingerCancel();lingerWG.Wait()}()
     fail:=make(chan error,n)
     retiredRX:=make([]chan struct{},0,n)
     startRX:=func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,
@@ -399,9 +405,19 @@ func runGameClient(
         retiredRX[slot]=freshRetired
         committed=true
         repeatOriginalDetachedTLSFinalACK(ctx,newAssoc)
-        close(oldRetired)
-        oldRaw.Close()
-        oldAssoc.Close()
+        grace:=originalLaneRetirementGrace()
+        lingerWG.Add(1)
+        go func(){
+            defer lingerWG.Done()
+            timer:=time.NewTimer(grace)
+            defer timer.Stop()
+            select{case <-lingerCtx.Done():case <-timer.C:}
+            close(oldRetired)
+            oldRaw.Close()
+            oldAssoc.Close()
+        }()
+        log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=client lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
+            lane,oldFlow.LocalPort,grace.Milliseconds())
         for sibling,flow:=range flows{
             if sibling==slot{continue}
             if flow.LocalPort==local{
@@ -794,6 +810,9 @@ func runGameMultiServer(
     // principal+tunnel), Game keys retain the complete protected cohort.
     activeNormal:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
+    // Already switched Game4 slots keep the old cold association/port
+    // excluded from Go DATA until its bounded random retirement deadline.
+    hotRetiring:=make(map[*faketcp.ServerAssociation]time.Time)
     var tlsWG sync.WaitGroup
     var goPostHandoffDataCopies atomic.Uint64
     var stopping atomic.Bool
@@ -1135,8 +1154,11 @@ func runGameMultiServer(
                         rejectLane(lane)
                         continue
                     }
-                    delete(detached,previous.Association())
-                    forget(previous.Association())
+                    oldAssoc:=previous.Association()
+                    hotGrace:=originalLaneRetirementGrace()
+                    hotRetiring[oldAssoc]=time.Now().Add(hotGrace)
+                    log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=server lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
+                        laneID,oldAssoc.Flow().ClientPort,hotGrace.Milliseconds())
                     detached[lane.Association()]=newPeer
                     group.members[idx]=lane
                     group.peers[idx]=newPeer
@@ -1268,6 +1290,19 @@ func runGameMultiServer(
             now:=time.Now()
             table.Sweep(now)
             if e:=table.EmitRetransmitDue(now);e!=nil{return e}
+            removedOld:=false
+            for old,until:=range hotRetiring{
+                if now.Before(until){continue}
+                delete(hotRetiring,old)
+                delete(detached,old)
+                forget(old)
+                removedOld=true
+            }
+            if removedOld{
+                if len(detached)>0{
+                    if e:=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+                }else if e:=raw.RestoreOriginalBootstrapPortFilter();e!=nil{return e}
+            }
             for key,group:=range pending{
                 if now.Sub(group.created)<cohortTimeout{continue}
                 delete(pending,key)

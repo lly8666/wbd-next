@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1282: H1281 ARM64 3x1800s SOURCE0eba Action42214816445 baseline PASS0, heterogeneous/pressure FAIL4/6. H1281 two-phase Normal+Game M4 default-route safety held in this sample, all server commits matched; Game4 high 15%TC hot only6/7 server swaps, Erin Fixed6 30%TC only8/9 generations plus 38/32 cold TLS timeouts, 1.3-2.3s app gaps; pressure Bob/Dave queue23/50. Original client FakeTCP established TLS sender retransmit wasn't driven (SYN Normal only; Game SYN retry absent). Reuse bounded original sender RTO only during cold TLS and Game SYN, no wire/data owner/PN/FEC changes; exact ARM64 Go sender test + native 3x1800s strict qualification. H998 online MTU and historic S2C remain open.",
+      "goal": "PLAN028 H1283: user authorized reliability-first 10-20s randomized old lane/generation retirement; H1282 SOURCE16ae real ARM64 baseline PASS0/heterogeneous FAIL4/pressure FAIL3; Game4 actual client hot swaps 17/16 vs server13/14, Erin Fixed6 app gaps 7.41/6.39s. Keep healthy Game4 siblings; exact native tests and 3x1800s new SOURCE pending. H998 live MTU and old S2C remain OPEN.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

@@ -178,6 +178,12 @@ func validateOriginalRotationPolicy(role string, interval,jitter time.Duration)e
     }
     return nil
 }
+// An authenticated old generation can continue receiving while its verified
+// successor is already sending. This is a bounded COLD retirement choice,
+// never a TLS timeout or a reason to postpone explicit user Stop.
+func originalLaneRetirementGrace()time.Duration{
+    return 10*time.Second+time.Duration(rand.Int63n(int64(10*time.Second)+1))
+}
 func originalNextRotationDelay(interval,jitter time.Duration)time.Duration{
     if jitter==0{return interval}
     return interval-jitter+time.Duration(rand.Int63n(int64(2*jitter)+1))
@@ -227,6 +233,8 @@ func runOriginalLinuxClientPaths(
     var retryCh <-chan time.Time
     var rotationTimer *time.Timer
     var rotationCh <-chan time.Time
+    var retireTimer *time.Timer
+    var retireCh <-chan time.Time
     var timerDue bool
     var laneTurnCh <-chan originalGameLaneTurnResult
     var laneTurnOwner *originalClientGeneration
@@ -247,6 +255,14 @@ func runOriginalLinuxClientPaths(
         }
     }
     defer stopRotation()
+    stopRetireTimer:=func(){
+        if retireTimer!=nil{
+            if !retireTimer.Stop(){select{case <-retireTimer.C:default:}}
+            retireTimer=nil
+        }
+        retireCh=nil
+    }
+    defer stopRetireTimer()
     stopTimer:=func(){
         if retryTimer!=nil{
             if !retryTimer.Stop(){
@@ -318,9 +334,12 @@ func runOriginalLinuxClientPaths(
                 candidate.cancel()
                 continue
             }
-            if retiring==nil{
-                if err=launch();err!=nil{scheduleRetry("new_path_open")}
-            }
+            if retiring!=nil{
+                // An actual new NIC/IP supersedes the cosmetic grace. Never
+                // stall the NEXT authenticated path behind a retired one.
+                stopRetireTimer()
+                retiring.cancel()
+            }else if err=launch();err!=nil{scheduleRetry("new_path_open")}
         case <-originalGenerationReady(candidate):
             if candidate==nil{continue}
             a:=candidate
@@ -354,7 +373,17 @@ func runOriginalLinuxClientPaths(
                         a.seq,previous.seq)
                 }
                 retiring=previous
-                previous.cancel()
+                grace:=originalLaneRetirementGrace()
+                retireTimer=time.NewTimer(grace)
+                retireCh=retireTimer.C
+                log.Printf("V4_PUBLIC_PATH_OLD_RETIRE_SCHEDULED role=client new_generation=%d old_generation=%d delay_ms=%d old_rx_alive=1 new_route_active=1",
+                    a.seq,previous.seq,grace.Milliseconds())
+            }
+        case <-retireCh:
+            stopRetireTimer()
+            if retiring!=nil{
+                log.Printf("V4_PUBLIC_PATH_OLD_GRACE_ELAPSED role=client generation=%d exact_stop_requested=1",retiring.seq)
+                retiring.cancel()
             }
         case e:=<-originalGenerationDone(candidate):
             if candidate==nil{continue}
@@ -380,6 +409,7 @@ func runOriginalLinuxClientPaths(
             if candidate==nil&&retiring==nil{scheduleRetry("Rust_dead_or_native_closed")}
         case e:=<-originalGenerationDone(retiring):
             if retiring==nil{continue}
+            stopRetireTimer()
             log.Printf("V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=%d class=%s",
                 retiring.seq,nativeColdFailureClass(e))
             retiring=nil

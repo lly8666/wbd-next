@@ -244,3 +244,14 @@ func TestPLAN028JitteredAutomaticColdRotationBounds(t *testing.T){
         t.Fatal("disabled jitter changed previous exact interval")
     }
 }
+
+// A new authenticated owner may overlap an old one; its retirement is
+// jittered but bounded, never a reason to delay an explicit Stop.
+func TestPLAN028OriginalLaneRetirementGraceIsBetween10And20Seconds(t *testing.T){
+    for i:=0;i<1024;i++{
+        grace:=originalLaneRetirementGrace()
+        if grace<10*time.Second||grace>20*time.Second{
+            t.Fatalf("unbounded randomized old-lane grace %s",grace)
+        }
+    }
+}
