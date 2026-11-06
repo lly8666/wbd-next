@@ -964,8 +964,9 @@ func runGameMultiServer(
                     // log credentials or arbitrary error strings here.
                     port:=uint16(0)
                     if result.assoc!=nil{port=result.assoc.Flow().ClientPort}
-                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=%s class=%s client_port=%d",
+                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=%s native_rc=%d class=%s client_port=%d",
                         realityfront.V4NormalM4FailureStage(e),
+                        realityfront.V4NormalM4NativeCode(e),
                         nativeColdFailureClass(e),port)
                     continue
                 }
