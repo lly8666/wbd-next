@@ -4227,7 +4227,7 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
                             d.backpressure+=1;
                         },
                         Err(TrySendError::Disconnected(_))=>{
-                            d.retired+=1+q.packets.len() as u64+1;
+                            d.retired+=1+q.packets.len() as u64;
                             q.packets.clear();q.queued_bytes=0;
                             q.route.alive.store(false,Ordering::Release);
                             return d;
