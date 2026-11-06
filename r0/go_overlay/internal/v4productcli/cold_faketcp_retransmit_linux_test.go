@@ -54,26 +54,24 @@ func TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound(t *testing.T){
     if conn==nil{t.Fatal("missing original bootstrap stream")}
     payload:=[]byte("original authenticated TLS client request payload - rto")
     go func(){_,err:=conn.Write(payload);result<-err}()
-    deadline:=time.Now().Add(2800*time.Millisecond)
+    // The cold writer may independently emit multiple segments with the
+    // same content during its initial pipeline. That is NOT proof that
+    // Sender.RetransmitDue fired. Allow the original 1s RTO to mature
+    // before stopping, then require the driver's actual resend counter.
+    time.Sleep(1700*time.Millisecond)
+    n,rtoErr:=stop()
     var first *faketcp.Segment
     repeated:=false
-    for time.Now().Before(deadline){
-        mu.Lock()
-        for _,seg:=range sent{
-            if len(seg.Payload)==0{continue}
-            if first==nil{
-                s:=seg
-                first=&s
-            }else if seg.Seq==first.Seq&&bytes.Equal(seg.Payload,first.Payload){
-                repeated=true
-                break
-            }
+    mu.Lock()
+    for _,seg:=range sent{
+        if len(seg.Payload)==0{continue}
+        if first==nil{
+            first=&faketcp.Segment{Seq:seg.Seq,Payload:append([]byte(nil),seg.Payload...)}
+        }else if seg.Seq==first.Seq&&bytes.Equal(seg.Payload,first.Payload){
+            repeated=true
         }
-        mu.Unlock()
-        if repeated{break}
-        time.Sleep(25*time.Millisecond)
     }
-    n,rtoErr:=stop()
+    mu.Unlock()
     if rtoErr!=nil||n==0||first==nil||!repeated{
         t.Fatalf("original TLS sender never retried without ACK: count=%d err=%v first=%v duplicate=%v",n,rtoErr,first!=nil,repeated)
     }
