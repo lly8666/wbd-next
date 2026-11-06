@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1267",
+  "source_sha": "dae5d7f5bba6120fd297458face00415bc0d9b49",
+  "status": "SCOPED_NATIVE_SAME_VM_120S_TWO_LEG_DIAGNOSTIC_PASS_CLIENT_UPLINK_EAGAIN_ELIMINATED_BUT_DOWNLINK_RECOVERY_RESIDUAL",
+  "run_id": 42152888809,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42152888809",
+  "run_conclusion": "success",
+  "job_id": 127680073072,
+  "artifact_id": 13473901999,
+  "artifact_name": "plan028-h1267-fixed30-raw-m4-sndbuf-120s-samevm",
+  "artifact_sha256": "fcdd88b043b29f29138238340b9615a4ac723b7ad40569dbe05c2f4115d412bb",
+  "artifact_zip_crc": "PASS",
+  "artifact_zip_entries": 57,
+  "scope": "original Go TLS+Rust real RAW/TUN Linux x86_64 hosted one VM, two authenticated clients A NormalOff0%, E NormalFixed6 30% loss125ms one-way underlay netem limit10000; same product release SHA across sequential 120s per leg; 10 warm,30 sustained,35 1.3x overload,45 return,10 drain; NO PN retry/reseal",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "product_sha256": {
+    "wbd-v4-client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "wbd-v4-server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "libwbd_engine.so": "368217dea5d8acb795500af9ace018827d0420a2fe0e9af811058a0780bcd739"
+  },
+  "socket_modes": {
+    "default": {
+      "requested_bytes": 0,
+      "effective_bytes": 212992,
+      "scope": "all original RAW TX sockets",
+      "erin_client_eagain_turns": 4521,
+      "erin_client_eagain_samples": 70,
+      "at_sample_polled_writable": 70,
+      "at_sample_polled_not_writable": 0,
+      "outq_supported_samples": 70,
+      "outq_high_water_bytes": 0,
+      "longest_contiguous_no_raw_kernel_copy_under_new_FEC_and_EAGAIN_seconds": 1.5022,
+      "interval_added_FEC_sources": 4925,
+      "interval_EAGAIN": 3160
+    },
+    "requested_1MiB": {
+      "requested_bytes": 1048576,
+      "effective_bytes": 2097152,
+      "scope": "ALL original client AND server raw TX sockets, experimental",
+      "erin_client_eagain_turns": 0,
+      "erin_client_eagain_samples": 0,
+      "longest_matching_contiguous_no_copy_stall": null
+    }
+  },
+  "original_udp_fixed30": {
+    "default": {
+      "sustained": {
+        "uplink_unique_fraction": 0.999603,
+        "downlink_unique_fraction": 0.999312
+      },
+      "overload": {
+        "uplink_unique_fraction": 0.938221,
+        "downlink_unique_fraction": 0.999869,
+        "actual_uplink_sent_mbps": 20.79978,
+        "actual_uplink_received_mbps": 19.51317
+      },
+      "recovery": {
+        "uplink_unique_fraction": 0.999894,
+        "downlink_unique_fraction": 0.999912
+      }
+    },
+    "requested_1MiB": {
+      "sustained": {
+        "uplink_unique_fraction": 0.999233,
+        "downlink_unique_fraction": 0.999669
+      },
+      "overload": {
+        "uplink_unique_fraction": 0.999843,
+        "downlink_unique_fraction": 0.999407,
+        "actual_uplink_sent_mbps": 20.80025,
+        "actual_uplink_received_mbps": 20.79604
+      },
+      "recovery": {
+        "uplink_unique_fraction": 0.999489,
+        "downlink_unique_fraction": 0.926635,
+        "actual_downlink_sent_mbps": 16.00007,
+        "actual_downlink_received_mbps": 14.8272
+      }
+    }
+  },
+  "actual_30pct_qdisc_loss": {
+    "default": {
+      "uplink": 0.299692,
+      "downlink": 0.299655
+    },
+    "requested_1MiB": {
+      "uplink": 0.299645,
+      "downlink": 0.301124
+    }
+  },
+  "interpretation": [
+    "Increasing REAL effective client kernel SO_SNDBUF from212992 to2097152 suppressed 4521 typed EAGAIN and removed a measured 1.5sec zero-copied span; true 30% physical loss and actual offered overload20.8Mbps comparable.",
+    "But both clients AND server tuned; the same leg had 30%-loss downlink 92.66% unique recovery vs default99.99%. This does not prove a global buffer default safe; original H1259 opposite direction deficit may be a separate intermittent bottleneck.",
+    "70 snapshots sampled every64th EAGAIN reported POLLOUT writable even after typed M4 refusal, with outq=0; this means poll readiness / UDP-RAW socket queue state alone is not a reliable direct predictor of sendmmsg acceptance; do not invent specific kernel allocation source.",
+    "No modified default raw TX behavior under absent developer opt-in. No crypto reseal, PN retry, outer cosmetic credit, global sysctl changes."
+  ],
+  "next_control": "One H1268 120s/leg same host same product source test keeps ORIGINAL server and normal clients SO_SNDBUF default while only authenticated Fixed6 client requests1MiB; compare both uplink and downlink recovery and typed M4 EAGAIN.",
+  "limits": [
+    "One unreplicated same VM sequential load per mode, cannot assert strict causal CPU gain or all-client lossless under other runs.",
+    "Experimental kernel socket request applies only explicit diagnostics, not production release default.",
+    "Earlier H1263 Fixed6 C2S 2.5sec sendmmsg EAGAIN and H1259 opposite S2C 7sec dropout remain historical.",
+    "H998 same-socket hot MTU shrink FAIL and Windows ARM Android NOT_QUALIFIED."
+  ]
+}

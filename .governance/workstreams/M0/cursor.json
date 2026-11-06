@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1267,
-  "checkpoint_sha": "268a37d84f7a70f6efb80cfe007e39844e3eb60e",
+  "sequence": 1268,
+  "checkpoint_sha": "dae5d7f5bba6120fd297458face00415bc0d9b49",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1267 FIXED6 30% raw M4 sendmmsg EAGAIN controlled SOCKET AB diagnostics. H1263 original real 3clients 180s x86 SOURCE8ddab Game2 Off cosmetic both sides1082 PASS, Fixed630%125ms C2S client original M4 sendmmsg EAGAIN3938 in2.502s, +6317 new original FEC2 source while zero kernel copied, remote raw+FEC2 zero3.023s. Kernel buffer size/writability/tx outq not identified. H1267 default-original behavior plus cold SO_SNDBUF requested1MiB under same exact product binary, one hosted VM two authenticated original TLS normal0 healthy vs fixed630%/125ms, 120s per leg (10 warm,30 sustained,35 overload,45 recovery), no new PN/outer/FEC retries. Developer opt-in only WBD_M0_RAW_TX_SOCKET_DIAG=1 and WBD_M0_RAW_TX_SNDBUF_AB=1048576; read actual effective SO_SNDBUF/POLLOUT/outq only at cold and <=128 sampled 1/64 EAGAIN, preserve raw M4 original nonblocking sendmmsg semantics and exact 30% qdisc limit10000.",
-  "why_now": "User asks to continue solving 30%-loss Fixed6 outage after outer cosmetic fix, while same-SOURCE source-locked original logs prove M4 EAGAIN stage but do not distinguish socket sendbuf cap from qdisc/driver scheduling. First perform controlled cold socket resource/writability/readback before any permanent data-plane retry or buffer tuning.",
+  "current_task": "H1268 isolate Fixed6 30% RAW M4 kernel socket sendbuf change to client-only. H1267 SOURCEdae5 native original Go TLS+Rust x86 2-authenticated 120s/leg same VM default vs cold1MiB ALL client+server SO_SNDBUF Action42152888809 SUCCESS; real effective default212992 vs tuned2097152, 30%-loss client M4 typed EAGAIN4521→0, sampled original 70/70 POLLOUT writable, SIOCOUTQ0, measured1.5022s zero-kernel-copied→none, overload uplink 93.8221%→99.9843% unique. BUT tuned BOTH ends had downlink recovery unique92.6635% vs default99.9912%. Do not enable globally. H1268 only test tooling: original server and Normal healthy client remain default socket all legs, only Fixed6 CLIENT requests1MiB in experimental leg; same 120s/leg native real 30%/125ms with offered and qdisc readback, no product code change or crypto resend.",
+  "why_now": "Evidence precisely ties local M4 EAGAIN suppression to a larger effective socket buffer, but H1267 experiment also changed healthy sibling and server buffers, confounding downlink recovery and presenting an adverse 7.3% business gap. Narrow socket scope before any default product behavioral change.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe H1267 x86 native original Go TLS+Rust two-client 120s per-leg default vs requested1MiB SO_SNDBUF Action. Verify pin, same binary hash, exact actual kernel effective sendbuf, sampled POLLOUT/OUTQ when M4 EAGAIN, continuous loss30%+125ms actual qdisc, phase true UDP unique rates, M4 500ms zero-copied stalls and clean Normal sibling, recovery after overload. Compare same VM but do not claim strict CPU causal performance. If kernel cap unchanged or no stall repro, no global production SO_SNDBUF change; if clear improvement under effectively larger buffer, separately consider narrow bounded default change with new source-locked proof. No five-client430s rerun.",
+  "next_action": "Observe one H1268 native original Go TLS/Rust 2-client same-VM default vs Fixed6-CLIENT-ONLY 120s/leg Action; assert same original compiled binary SHA and authoritative server+Normal SO_SNDBUF unchanged, Fixed6 real effective request2097152, no M4 EAGAIN/stalls, true 30% netem loss, both directions recovery and 0% sibling delivery. If opposite downlink regression persists or no controls matching, DO NOT promote socket default; pursue bounded per-owner diagnostic and independent repeated-run effect only as separately scoped.",
   "unverified": true,
-  "last_tested_source": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
+  "last_tested_source": "dae5d7f5bba6120fd297458face00415bc0d9b49",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1263-SOURCE8DDA-GAME2-OFF-OUTER-FIXED30-180S-20261106.json"
+    "docs/evidence/M0/PLAN028-H1267-SOURCEDAE5-FIXED30-RAW-TX-SOCKET-120S-AB-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1266 established Game2Off5% both endpoints1082 actual frozen same PNSEQ appearance after FEC OFF gate fix (functionality PASS) and Fixed630% original C2S rare typed M4 EAGAIN2.5s, remote raw RX gap3.0s; independent previous H1259 opposite S2C 7s not proven same root. H1267 cold RAW TX per-fd buffer+sampled kernel writability diagnostic and 2-leg shorter native same-VM test pending; outer retransmission policy, FEC parity/age and PN retry unchanged. H998 prior same-socket MTU FAIL retained."
+  "partial_summary": "H1267 SOURCEdae5 original Go TLS+Rust Native x86 two-client 120s default vs 1MiB cold SO_SNDBUF experiment complete Action42152888809; socket actual effective212992→2097152. Fixed30 client EAGAIN4521→0 and overload uplink unique93.82→99.984%, while downlink recovery regressed99.991→92.6635% when both server and client tuned. H1268 isolates ONLY Fixed30 client's original raw send buffer; server and Normal stay default. No PN/reseal/outer cosmetic changes. H1263 Game2 Off frozen outer1082 each side functional PASS, previous Fixed30 2.5s C2S outage and H998 MTU fail retained."
 }
