@@ -6,6 +6,7 @@ import (
 	"golang.org/x/sys/unix"
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"golang.org/x/net/bpf"
 )
@@ -242,5 +243,53 @@ func TestPLAN028GameLastGroupRearmsOriginalTLSFourTuple(t *testing.T){
     }
     if n:=run(bootstrap,peer.Port,444);n!=0{
         t.Fatal("restored TLS port filter leaked unrelated server port")
+    }
+}
+
+
+// A lost final TLS reply ACK must not strand the original server's
+// ACK-barrier after the client hands the DATA RX lane to native Rust M4.
+// No raw socket privileges required: this uses the actual FakeTCP Sender
+// ACK barrier and the exported, state-gated duplicate pure ACK.
+func TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender(t *testing.T){
+    sender:=NewSender(7000,time.Second)
+    wire:=sender.Enqueue([]byte{0xaa,0xbb,0xcc},time.Now())
+    f:=ClientFlow{
+        LocalIP:[4]byte{10,50,0,2},PeerIP:[4]byte{10,50,0,1},
+        LocalPort:50123,PeerPort:443,
+    }
+    emitted:=make([]Segment,0,3)
+    assoc,err:=NewClientAssociation(f,3500,time.Second,func(s Segment)error{
+        emitted=append(emitted,s)
+        return nil
+    })
+    if err!=nil{t.Fatal(err)}
+    stream,err:=NewBootstrapStream(wire.End,
+        func([]byte)(uint32,error){return 0,nil},
+        func(uint32,time.Time)error{return nil},nil,nil)
+    if err!=nil{t.Fatal(err)}
+    assoc.mu.Lock()
+    assoc.state=ClientAssociationDetached
+    assoc.bootstrap=stream
+    assoc.mu.Unlock()
+    if err:=assoc.RepeatDetachedBootstrapACK();err!=nil{t.Fatal(err)}
+    if len(emitted)!=1{t.Fatalf("duplicate ACK count=%d",len(emitted))}
+    ack:=emitted[0]
+    if ack.Ack!=wire.End||ack.Flags!=FlagACK||len(ack.Payload)!=0||
+        ack.Seq!=assoc.sender.NextSeq()||ack.SrcPort!=f.LocalPort||
+        ack.DstPort!=f.PeerPort{
+        t.Fatalf("not an exact cumulative pre-M4 pure ACK: %+v",ack)
+    }
+    if err:=sender.AckChecked(ack.Ack,time.Now());err!=nil{t.Fatal(err)}
+    if err:=sender.WaitAck(wire.End,time.Now().Add(100*time.Millisecond));err!=nil{
+        t.Fatalf("lost final reply ACK barrier not restored: %v",err)
+    }
+    if err:=assoc.RepeatDetachedBootstrapACK();err!=nil{t.Fatal(err)}
+    if len(emitted)!=2||emitted[1]!=ack{
+        t.Fatal("the original detached duplicate ACK changed seq/ACK or emitted DATA")
+    }
+    assoc.mu.Lock();assoc.state=ClientAssociationClosed;assoc.mu.Unlock()
+    if err:=assoc.RepeatDetachedBootstrapACK();err==nil||len(emitted)!=2{
+        t.Fatal("closed native client emitted another TCP packet after exact Stop")
     }
 }

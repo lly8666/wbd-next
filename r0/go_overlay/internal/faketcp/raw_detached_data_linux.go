@@ -195,3 +195,26 @@ func (e *RawIPv4Endpoint) ExcludeDetachedDataSet(peers []DetachedPeer)error{
     program:=unix.SockFprog{Len:uint16(len(ins)),Filter:&ins[0]}
     return unix.SetsockoptSockFprog(e.recvFD,unix.SOL_SOCKET,unix.SO_ATTACH_FILTER,&program)
 }
+
+
+// RepeatDetachedBootstrapACK sends only the cumulative ACK for already
+// verified TLS reply bytes. Original FakeTCP bootstrap Write waits for this
+// ACK before the server may commit the native Rust M4 group. If the client's
+// final ACK was lost after it detached, the server retransmits the TLS reply
+// but the client's DATA RX filter correctly refuses that obsolete bootstrap
+// payload. A bounded duplicate ACK from the exact old TCP flow restores
+// that original outstanding ACK without re-entering Go DATA, opening a new
+// connection, changing PN, or accepting untrusted bytes.
+func (a *ClientAssociation) RepeatDetachedBootstrapACK()error{
+    if a==nil{return ErrClientHandshake}
+    a.mu.Lock()
+    if a.state!=ClientAssociationDetached||a.bootstrap==nil{
+        a.mu.Unlock()
+        return ErrClientDetached
+    }
+    ack:=a.ackLocked()
+    emit:=a.emit
+    a.mu.Unlock()
+    // No payload, no sequence advancement, no Rust owner or lease mutation.
+    return emit(ack)
+}

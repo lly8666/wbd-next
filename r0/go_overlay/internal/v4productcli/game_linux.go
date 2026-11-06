@@ -41,6 +41,38 @@ func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *l
     if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected,nil)}
     return runGameServer(ctx,c,ifindex,tun,leases,epochs,connected)
 }
+
+func repeatOriginalDetachedTLSFinalACK(ctx context.Context,assocs ...*faketcp.ClientAssociation){
+    // The genuine FakeTCP server Write blocks on the final TLS reply
+    // cumulative ACK. After M4 handoff the old Go filter intentionally
+    // never receives retransmitted TLS DATA. Duplicate only the frozen
+    // already-verified ACK, on the original tuple, for <=4.5 seconds.
+    // This is a finite cold-commit guard, not a new DATA/repair controller.
+    go func(){
+        previous:=time.Duration(0)
+        emitted:=0
+        for _,delay:=range [...]time.Duration{
+            80*time.Millisecond,240*time.Millisecond,560*time.Millisecond,
+            1120*time.Millisecond,2240*time.Millisecond,4480*time.Millisecond,
+        }{
+            timer:=time.NewTimer(delay-previous)
+            select{
+            case <-ctx.Done():
+                timer.Stop()
+                return
+            case <-timer.C:
+            }
+            previous=delay
+            for _,a:=range assocs{
+                if a==nil||a.State()!=faketcp.ClientAssociationDetached{continue}
+                if err:=a.RepeatDetachedBootstrapACK();err==nil{emitted++}
+            }
+        }
+        log.Printf("V4_PUBLIC_TLS_REPLY_ACK_COLD_GUARD role=client lanes=%d duplicate_pure_acks=%d window_ms=4480 new_wire_fields=0",
+            len(assocs),emitted)
+    }()
+}
+
 // Planned is the original bounded FEC owner count; sent requires at
 // least ONE definite kernel M4 copy per Game logical parity row. Recovery
 // count here is authenticated decoder candidate, not claimed TUN delivery.
@@ -224,6 +256,7 @@ func runGameClient(
         }
     }
     handoffCommitted.Store(true)
+    repeatOriginalDetachedTLSFinalACK(ctx,assocs...)
     // Each original TLS/FakeTCP association has its own kernel tuple and
     // has passed protected cold validation before the single grouped Rust
     // GameAdapter commits M4. Do not mislabel this as an independent hot
@@ -324,6 +357,7 @@ func runGameClient(
         flows[slot]=nextFlow
         retiredRX[slot]=freshRetired
         committed=true
+        repeatOriginalDetachedTLSFinalACK(ctx,newAssoc)
         close(oldRetired)
         oldRaw.Close()
         oldAssoc.Close()
@@ -888,8 +922,12 @@ func runGameMultiServer(
                 // only the observed source port and coarse failure class.
                 port:=uint16(0)
                 if result.assoc!=nil{port=result.assoc.Flow().ClientPort}
-                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=protected_tls class=%s client_port=%d",
-                    nativeColdFailureClass(result.err),port)
+                stage:="protected_tls"
+                if errors.Is(result.err,realityfront.ErrV4ProtectedReplyAckWait){
+                    stage="protected_reply_ack_wait"
+                }
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=%s class=%s client_port=%d",
+                    stage,nativeColdFailureClass(result.err),port)
                 forget(result.assoc)
                 continue
             }

@@ -1064,7 +1064,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "604bc1dd75665e2a17cf4a656f8528569b5312cf"
+      "result_blob": "4605f21aaeadd07985c86ef2880e8635605ec601"
     },
     {
       "kind": "create",

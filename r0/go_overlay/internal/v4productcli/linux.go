@@ -1049,6 +1049,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         return fmt.Errorf("Normal client receive ownership handoff: %w",e)
     }
     handoffCommitted.Store(true)
+    repeatOriginalDetachedTLSFinalACK(ctx,assoc)
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
