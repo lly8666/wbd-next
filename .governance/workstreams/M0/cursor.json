@@ -11,11 +11,11 @@
   "current_task": "H1283: User approved randomized 10-20s OLD generation/lane retirement after authenticated new native owner; H1282 exact ARM64 3x1800 SOURCE16ae baseline PASS0 alerts; heterogeneous FAIL4 and pressure FAIL3; Game4 client hot successes17/16 vs server confirmed13/14. Preserve three healthy Game4 lanes. Original Game4 hot Rust physical slot already switches before old cold tuple linger; never claim dual active M4 slots. Native retest pending.",
   "why_now": "H1282 30-min raw ZIPs show Game4 client 17/16 hot READY but only 13/14 server M4 confirmations; Erin Normal Fixed6 app RX gaps up 7.41s/6.39s; immediate previous.cancel/old FakeTCP Close discards useful overlap. User prioritizes retention 10-20s randomized grace over rapid Stop; user Stop and new path still immediate.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Verify H1283 exact native Go+Rust build/Go randomized grace unit and same SOURCE ARM64 five-client baseline/heterogeneous/pressure 1800s. Inspect raw verifier alerts, old lane scheduled/exact Stop, shared Rust single owner, Game4 per-slot server actual M4 commits, true active TX/RX gaps and queue overflow. Preserve all FAIL and H998. No duplicate dispatch.",
+  "next_action": "H1283 exact native original Go+Rust build including randomized old lane grace bound Go unit and same-source five-client ARM64 baseline/heterogeneous/pressure 1800s. Collect raw artifacts, hot per-slot server commits, old complete-generation Stop, CPU/p99, S2C gaps and queues. H998/old S2C stay OPEN.",
   "unverified": true,
   "last_tested_source": "16ae6b79d61bc4c5ecf66dbd3e5817026fe63613",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1282-H1281-ARM64-3X1800S-20261106.json"
+    "docs/evidence/M0/PLAN028-H1283-H1282-SOURCE16AE-ARM64-3X1800S-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",

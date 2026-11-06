@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1283_collect_H1282",
+  "source_sha": "16ae6b79d61bc4c5ecf66dbd3e5817026fe63613",
+  "action_run_id": 42222907322,
+  "architecture": "native_aarch64_original_Go_FakeTCP_TLS_Rust_M4",
+  "duration_s_each": 1800,
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scenes": {
+    "baseline": {
+      "job": "success",
+      "alerts": 0,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "artifact_id": 13506880576,
+      "zip_sha256": "ddfe1a45241b467a3298fd7ce8c5965e24350f178272c0742f63b09f57bfb464"
+    },
+    "heterogeneous": {
+      "job": "failure",
+      "alerts": 4,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "artifact_id": 13506895665,
+      "zip_sha256": "074272e2feb20b0cc8431cfd44fe3d1c1e9eaabb1ee2319272a00ec6fc697cb2",
+      "game4_client_hot": 17,
+      "game4_server_hot": 13,
+      "erin_uplink_gap_ms": 7410,
+      "dave_uplink_gap_ms": 2240
+    },
+    "pressure": {
+      "job": "failure",
+      "alerts": 3,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "artifact_id": 13505419825,
+      "zip_sha256": "82b3f66ccf248f8a4c89edb3218f8d10947761ab1ba00ae277465d2ecdfc70de",
+      "game4_client_hot": 16,
+      "game4_server_hot": 14,
+      "erin_downlink_gap_ms": 6390,
+      "dave_server_per_lease_tun_pending_overflow": 330
+    }
+  },
+  "conclusion": "BASELINE_PASS_TWO_LOSS_SCENES_FAIL",
+  "candidate_source_sha": "1125548201bca73375b4337846ea52e6e36a72e4",
+  "candidate_qualification": "NOT_RUN",
+  "limits": [
+    "H1283 new SOURCE still needs genuine native build and 3x1800s.",
+    "Game4 hot old Rust slot is replaced, only cold tuple retained; full generation old Rust RX grace separate.",
+    "H998 same-socket physical MTU and old H997 Action FAIL unchanged."
+  ]
+}
