@@ -120,17 +120,17 @@ def normal_m4_server_proof(server_text):
     # Only exact original protected Rust M4 Ready counts, not ordinary TLS
     # completion, local client Ready, or a guessed source port.
     commits=set((ip,int(port)) for ip,port in re.findall(
-        r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\\d.]+) client_port=(\\d+)",
+        r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\d.]+) client_port=(\d+)",
         server_text))
     rejects={(ip,int(port)):(stage,int(rc)) for stage,rc,ip,port in re.findall(
-        r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\\d+) class=[^\\s]+ client_ipv4=([\\d.]+) client_port=(\\d+)",
+        r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\d+) class=[^\s]+ client_ipv4=([\d.]+) client_port=(\d+)",
         server_text)}
     return commits,rejects
 
 
 def normal_m4_client_proof(client_text):
     return [(int(gen),ip,int(port)) for gen,ip,port in re.findall(
-        r"V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\\d+).*?client_ipv4=([\\d.]+) client_port=(\\d+)",
+        r"V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\d+).*?client_ipv4=([\d.]+) client_port=(\d+)",
         client_text)]
 
 
