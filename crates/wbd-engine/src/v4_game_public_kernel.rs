@@ -797,9 +797,9 @@ impl GameKernelOwner{
                     // copies of the ORIGINAL authenticated ciphertext:
                     // no FEC parity or new PN, and no feedback credit.
                     if fec_enabled {
-                        eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent());
+                        eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} first_record_wire_bytes={} copy_record_wire_bytes={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent(),cosmetic.first_record_wire_bytes(),cosmetic.copied_record_wire_bytes());
                     }else{
-                        eprintln!("WBD_GAME_OFF_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent());
+                        eprintln!("WBD_GAME_OFF_LINUX_NORMAL_OUTER_STOP copied_appearance={} first_record_wire_bytes={} copy_record_wire_bytes={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent(),cosmetic.first_record_wire_bytes(),cosmetic.copied_record_wire_bytes());
                     }
                 }
             }).map_err(|_|())?;
