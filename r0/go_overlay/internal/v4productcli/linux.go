@@ -943,6 +943,41 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
     }
 }
 
+// H1281 Normal two-phase original M4 handoff: a client's local protected
+// TLS and Rust Start are not a remote commit. Observe at least ONE genuine
+// native AEAD/replay-accepted reverse IPv4 delivery on the candidate's own
+// Rust generation before revoking the still-live former shared TUN route.
+// A failed server M4 leaves A intact; no Go DATA copies, new control wire,
+// unauthenticated timer ownership or unbounded overlap is authorized.
+func waitOriginalNormalM4PeerProof(
+    ctx context.Context,pulse func()(realityfront.V4PublicLoopPulse,error),
+    promote func()error,max time.Duration,
+)error{
+    if ctx==nil||pulse==nil||promote==nil||max<=0{
+        return fmt.Errorf("invalid original authenticated M4 proof barrier")
+    }
+    timer:=time.NewTimer(max)
+    ticker:=time.NewTicker(25*time.Millisecond)
+    defer timer.Stop()
+    defer ticker.Stop()
+    for{
+        status,err:=pulse()
+        if err!=nil{return fmt.Errorf("native peer M4 evidence: %w",err)}
+        if status.AuthenticatedPeerDead{
+            return fmt.Errorf("candidate native authenticated peer terminal before M4 proof")
+        }
+        if status.RxRecords>0{
+            return promote()
+        }
+        select{
+        case <-ctx.Done():return ctx.Err()
+        case <-timer.C:
+            return fmt.Errorf("remote M4 unproved: no authenticated reverse IPv4 before cold overlap deadline")
+        case <-ticker.C:
+        }
+    }
+}
+
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,
     connected *bool,ready ...chan<- struct{})error{
@@ -1050,6 +1085,21 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     handoffCommitted.Store(true)
     repeatOriginalDetachedTLSFinalACK(ctx,assoc)
+    if c.rotationGeneration>1&&c.sharedTun!=nil{
+        // The Rust candidate is ready to receive real M4 data but does
+        // NOT own the default TUN route yet. The currently working A keeps
+        // forwarding until native B proves the peer actually committed B.
+        // A timeout closes only B and preserves A's exact old mapping.
+        err=waitOriginalNormalM4PeerProof(ctx,native.OriginalLoopPulse,
+            native.PromoteNormalAfterAuthenticatedPeerRx,5*time.Second)
+        if err!=nil{
+            log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_UNPROVEN role=client generation=%d client_port=%d old_tun_route_preserved=1",
+                c.rotationGeneration,c.localPort)
+            return errors.Join(err,native.Close())
+        }
+        log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_PROVEN role=client generation=%d client_port=%d native_authenticated_rx=1 tun_route_promoted=1",
+            c.rotationGeneration,c.localPort)
+    }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
