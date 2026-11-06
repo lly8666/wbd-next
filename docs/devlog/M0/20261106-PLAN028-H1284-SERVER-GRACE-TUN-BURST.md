@@ -1,0 +1,15 @@
+# PLAN028 H1284 — Symmetric original server old owner retirement and two-batch TUN FIFO
+
+User-authorized M0 continuation, in scope PLAN028 only. Real previous H1283 ARM64 original Go+Rust Action https://github.com/lly8666/wbd-next/actions/runs/42233818747 (SOURCE a8cb83c209f2c7ef647468472d7ac61c07dbc568): native BUILD PASS, three 1800s scenes FAIL. Baseline alerts1 (Alice 29 successful local generations / 27 periodic OLD_EXACT_STOP and last previous still inside 10–20s grace at actual client-close Stop); heterogeneous alerts3 (Game4 Dave 17 client single lane local READY vs 15 server original Rust hot confirmations; server rejected protected TLS ports 59341 and 56629, class other; Erin fixed6 3320ms app gap both directions); pressure alerts5 (five-client scoped rotation PASS, Erin 2290ms active-business gap in both directions; server shared TUN per-lease pending overflow Alice65 Bob62 Dave873). H1282 previous was 0/4/3 alerts. Neither H1283 nor H1284 has a genuine all-three PASS.
+
+H1284 code changes:
+1. Original shared 443 server: after each credential-checked new Normal/Game2/Game4 cohort has committed native M4, schedule OLD per-generation product Close after randomized 10–20s via its existing one-second cold ticker instead of immediate per-cohort Stop; current route remains new. Full server shutdown joins all retiring owners synchronously, no delayed network cleanup, no worker per timer. Game4 hot SINGLE physical slot remains ONE native M4 slot: only its old Go FakeTCP cold tuple lingers as in H1283, not dual data owners.
+2. Original Linux client: a user-initiated Stop within grace already performed exact Rust Stop; log OLD_EXACT_STOP only after waitOriginalGenerationStop success. This is an accounting correction, not waived success evidence.
+3. Original credential-protected server admission: distinguish epoch reserve, native M4 prepare, post-reply FakeTCP detach, native M4 commit, and existing final ACK wait by typed static stages, then log stage and coarse class without logging TLS secrets or printing raw error strings; never add a pre-TLS exchange.
+4. Rust original shared-TUN one-reader per-authenticated-/32 FIFO: preserve current hard 64KiB/100ms and per-lease fairness, but permit 16 pending source packets (two actual 8-frame TUN batches) instead of 8, adjust bounded queue and sibling-isolation unit tests. No unbounded backlog, new packet thread, new transport, fabricated overhead credit, or QoS assertion.
+
+New H1284 exact SOURCE native build, regression and three 1800s five-client ARM64 acceptance are NOT_YET_VERIFIED here. H998 same-socket physical MTU failure, remote ICMP3/4 NOT_MEASURED, old H997 ARM64 Game/FEC failure and CPU comparison NOT_PROVEN persist.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes","linux-raw-tun","tls-auth-multiclient"],"reason":"H1284 delayed old server Stop after new authentic M4, true exact client Stop accounting, native two-eight-batch TUN queue and static protected server cold phase classification."}
+```

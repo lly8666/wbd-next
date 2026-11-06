@@ -740,6 +740,13 @@ func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(ui
 // TLS reply could not be ACKed by the peer before its cold deadline.
 // No additional wire field, private prelude, or peer-supplied authority.
 var ErrV4ProtectedReplyAckWait=errors.New("original protected TLS reply ACK wait")
+// These cold lifecycle stages contain no secret values. Distinguishing
+// post-reply native rejection from pre-credential TLS preserves truth when
+// one Game4 client thinks a new lane is already READY.
+var ErrV4ServerEpochReserve=errors.New("original protected epoch reserve")
+var ErrV4ServerOwnerPrepare=errors.New("original native M4 owner prepare")
+var ErrV4ServerDetachTransition=errors.New("original protected FakeTCP detach")
+var ErrV4ServerNativeCommit=errors.New("original native M4 owner commit")
 
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.
 // Epoch becomes active only after successful authenticated reply and detach.
@@ -868,7 +875,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     epoch,nonce,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source,opt.AllowLaneReplacement)
     if err!=nil {
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
-        return nil,err
+        return nil,fmt.Errorf("%w: %w",ErrV4ServerEpochReserve,err)
     }
     // Every unsuccessful pre-detach path MUST roll back the reserved epoch.
     // finish is idempotent; the authenticated successful branch explicitly
@@ -918,8 +925,8 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     var prepared v4PreparedOwner
     if opt.ownerBridge!=nil {
         prepared,err=opt.ownerBridge.prepare(frozen,boundary,observedPeer)
-        if err!=nil {assoc.AbortTransition();return nil,err}
-        if prepared==nil {assoc.AbortTransition();return nil,ErrAdmissionParams}
+        if err!=nil {assoc.AbortTransition();return nil,fmt.Errorf("%w: %w",ErrV4ServerOwnerPrepare,err)}
+        if prepared==nil {assoc.AbortTransition();return nil,ErrV4ServerOwnerPrepare}
         // abort is idempotent and must not destroy an already committed owner.
         defer prepared.abort()
     }
@@ -935,7 +942,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         return nil,fmt.Errorf("%w: %w",ErrV4ProtectedReplyAckWait,candidateError(ctx,err))
     }
     early,err:=assoc.DetachTransition()
-    if err!=nil{assoc.AbortTransition();return nil,err}
+    if err!=nil{assoc.AbortTransition();return nil,fmt.Errorf("%w: %w",ErrV4ServerDetachTransition,err)}
     // The exact flow at protected Prepare cannot change between routing
     // handoff and CommitAdmission. A changed association invalidates this
     // candidate; never silently attach another peer's TCP sequence space.
@@ -948,7 +955,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         // epoch, keep owner inactive and abort this candidate, not a peer lane.
         if err:=prepared.commit(early,assoc.SenderNext());err!=nil{
             prepared.abort()
-            return nil,err
+            return nil,fmt.Errorf("%w: %w",ErrV4ServerNativeCommit,err)
         }
     }
     finish(true) // Go epoch commits only after Rust prepared owner success.

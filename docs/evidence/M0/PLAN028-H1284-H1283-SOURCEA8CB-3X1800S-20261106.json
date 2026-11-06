@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1284 H1283 source-scoped native longtest",
+  "source_sha": "a8cb83c209f2c7ef647468472d7ac61c07dbc568",
+  "run_id": 42233818747,
+  "platform": "native_aarch64_original_Go_FakeTCP_TLS_Rust_M4",
+  "build": "PASS",
+  "scene_duration_seconds": 1800,
+  "scenes": {
+    "baseline": {
+      "status": "FAIL",
+      "alerts": 1,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "alert": [
+        {
+          "who": "alice",
+          "kind": "ROTATION_CONTINUITY_NOT_PROVEN"
+        }
+      ],
+      "alice_successful_generations": 29,
+      "alice_runtime_exact_old_stops": 27,
+      "alice_final_real_native_stops_observed": 29,
+      "game4_client_hot": 19,
+      "game4_server_hot": 19,
+      "artifact_id": 13515095188
+    },
+    "heterogeneous": {
+      "status": "FAIL",
+      "alerts": 3,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "game4_client_hot": 17,
+      "game4_server_hot": 15,
+      "server_rejected_game4_cold_ports": [
+        59341,
+        56629
+      ],
+      "rejected_class": "protected_tls class other",
+      "erin_uplink_gap_ms": 3320,
+      "erin_downlink_gap_ms": 3320,
+      "artifact_id": 13515205127
+    },
+    "pressure": {
+      "status": "FAIL",
+      "alerts": 5,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "game4_client_hot": 16,
+      "game4_server_hot": 16,
+      "erin_uplink_gap_ms": 2290,
+      "erin_downlink_gap_ms": 2290,
+      "server_tun_per_lease_pending_overflow": {
+        "alice": 65,
+        "bob": 62,
+        "dave": 873
+      },
+      "artifact_id": 13515260136
+    }
+  },
+  "new_h1284_qualification": "NOT_TESTED",
+  "independent_open_scopes": [
+    "H998 physical hot MTU 1500->1280 original connection FAIL",
+    "H998 remote ICMP3/4 not measured",
+    "Old H997 ARM native Game4/FEC Action FAIL",
+    "Causal old/new CPU superiority not proven"
+  ],
+  "limitation": "Not all client READY means server Game M4 hot commit; not all queue overflow avoided by queue cap increase; true 0-alert native retest required."
+}

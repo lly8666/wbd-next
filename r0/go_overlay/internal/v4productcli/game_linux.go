@@ -813,6 +813,13 @@ func runGameMultiServer(
     // Already switched Game4 slots keep the old cold association/port
     // excluded from Go DATA until its bounded random retirement deadline.
     hotRetiring:=make(map[*faketcp.ServerAssociation]time.Time)
+    // A new authentic M4 /32 succeeds before the server retires its old
+    // generation; preserve the previous Rust RX for random 10-20s.
+    // Exact old Stop remains immediate when the whole server closes.
+    type oldGameRetirement struct{group *originalGameCohortLive; due time.Time}
+    type oldNormalRetirement struct{rec *originalV4MultiRecord; due time.Time}
+    var gameRetiring []oldGameRetirement
+    var normalRetiring []oldNormalRetirement
     var tlsWG sync.WaitGroup
     var goPostHandoffDataCopies atomic.Uint64
     var stopping atomic.Bool
@@ -878,6 +885,18 @@ func runGameMultiServer(
             reason,len(detached))
         return nil
     }
+    scheduleGameRetire:=func(group *originalGameCohortLive){
+        if group==nil{return}
+        grace:=originalLaneRetirementGrace()
+        gameRetiring=append(gameRetiring,oldGameRetirement{group,time.Now().Add(grace)})
+        log.Printf("V4_PUBLIC_GAME_OLD_SERVER_RETIRE_SCHEDULED role=server lanes=%d grace_ms=%d old_m4_rx_preserved=1",group.key.Lanes,grace.Milliseconds())
+    }
+    scheduleNormalRetire:=func(rec *originalV4MultiRecord){
+        if rec==nil{return}
+        grace:=originalLaneRetirementGrace()
+        normalRetiring=append(normalRetiring,oldNormalRetirement{rec,time.Now().Add(grace)})
+        log.Printf("V4_PUBLIC_NORMAL_OLD_SERVER_RETIRE_SCHEDULED role=server grace_ms=%d old_m4_rx_preserved=1",grace.Milliseconds())
+    }
     defer func(){
         stopping.Store(true)
         cancel()
@@ -894,6 +913,12 @@ func runGameMultiServer(
             if err:=retireNormal(rec,"server-close");err!=nil{
                 retErr=errors.Join(retErr,err)
             }
+        }
+        for _,old:=range gameRetiring{
+            retErr=errors.Join(retErr,retire(old.group,"server-close-during-grace"))
+        }
+        for _,old:=range normalRetiring{
+            retErr=errors.Join(retErr,retireNormal(old.rec,"server-close-during-grace"))
         }
         *connected=*connected||len(active)>0||len(activeNormal)>0
     }()
@@ -983,8 +1008,17 @@ func runGameMultiServer(
                 port:=uint16(0)
                 if result.assoc!=nil{port=result.assoc.Flow().ClientPort}
                 stage:="protected_tls"
-                if errors.Is(result.err,realityfront.ErrV4ProtectedReplyAckWait){
+                switch{
+                case errors.Is(result.err,realityfront.ErrV4ProtectedReplyAckWait):
                     stage="protected_reply_ack_wait"
+                case errors.Is(result.err,realityfront.ErrV4ServerEpochReserve):
+                    stage="protected_epoch_reserve"
+                case errors.Is(result.err,realityfront.ErrV4ServerOwnerPrepare):
+                    stage="native_m4_prepare"
+                case errors.Is(result.err,realityfront.ErrV4ServerDetachTransition):
+                    stage="protected_reply_detach"
+                case errors.Is(result.err,realityfront.ErrV4ServerNativeCommit):
+                    stage="native_m4_commit_after_reply"
                 }
                 log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=%s class=%s client_port=%d",
                     stage,nativeColdFailureClass(result.err),port)
@@ -1056,9 +1090,7 @@ func runGameMultiServer(
                 *connected=true
                 log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d client_ipv4=%d.%d.%d.%d client_port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
                     c.localPort,peer.IP[0],peer.IP[1],peer.IP[2],peer.IP[3],peer.Port,len(activeNormal),len(active),len(detached))
-                if older!=nil{
-                    if e=retireNormal(older,"same-protected-normal-new-generation");e!=nil{return e}
-                }
+                if older!=nil{scheduleNormalRetire(older)}
                 continue
             }
             // The existing protected Go TLS admission can return exactly
@@ -1277,17 +1309,27 @@ func runGameMultiServer(
             log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",key.Lanes)
             log.Printf("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server server_port=%d groups=%d detached_flows=%d native_shared_tun=1",
                 c.localPort,len(active),len(detached))
-            if olderSameEpoch!=nil{
-                if e=retire(olderSameEpoch,"same-protected-cohort-new-generation");e!=nil{return e}
-            }
+            if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
             for oldKey,oldGroup:=range active{
                 if oldKey==key||oldKey.Principal!=key.Principal||
                     oldKey.TunnelID!=key.TunnelID{continue}
-                if e=retire(oldGroup,"same-protected-cohort-new-generation");e!=nil{return e}
+                scheduleGameRetire(oldGroup)
                 delete(active,oldKey)
             }
         case <-ticker.C:
             now:=time.Now()
+            for i:=0;i<len(gameRetiring);{
+                old:=gameRetiring[i]
+                if now.Before(old.due){i++;continue}
+                if e:=retire(old.group,"same-protected-cohort-grace-expired");e!=nil{return e}
+                gameRetiring=append(gameRetiring[:i],gameRetiring[i+1:]...)
+            }
+            for i:=0;i<len(normalRetiring);{
+                old:=normalRetiring[i]
+                if now.Before(old.due){i++;continue}
+                if e:=retireNormal(old.rec,"same-protected-normal-grace-expired");e!=nil{return e}
+                normalRetiring=append(normalRetiring[:i],normalRetiring[i+1:]...)
+            }
             table.Sweep(now)
             if e:=table.EmitRetransmitDue(now);e!=nil{return e}
             removedOld:=false

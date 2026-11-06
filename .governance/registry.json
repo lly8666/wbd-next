@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1283: user authorized reliability-first 10-20s randomized old lane/generation retirement; H1282 SOURCE16ae real ARM64 baseline PASS0/heterogeneous FAIL4/pressure FAIL3; Game4 actual client hot swaps 17/16 vs server13/14, Erin Fixed6 app gaps 7.41/6.39s. Keep healthy Game4 siblings; exact native tests and 3x1800s new SOURCE pending. H998 live MTU and old S2C remain OPEN.",
+      "goal": "PLAN028 H1284: actual H1283 native ARM64 3×1800 all FAIL (baseline 1: final grace Stop accounting; heterogeneous 3: Game4 17 client vs 15 server M4, Erin 3320ms; pressure 5: Erin 2290ms, per-lease shared-TUN 65/62/873 overflows). Source-locked H1284 candidate: symmetric server old Normal/Game cohort 10–20s deferred exact Stop, real client-close Stop logging, typed cold native phase classification and 2×8 bounded Rust /32 FIFO; new native 3×1800 pending. H998/remote ICMP/CPU still OPEN.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

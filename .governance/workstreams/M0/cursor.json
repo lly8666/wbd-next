@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1283,
-  "checkpoint_sha": "16ae6b79d61bc4c5ecf66dbd3e5817026fe63613",
+  "sequence": 1284,
+  "checkpoint_sha": "5fb2c92abfee1777081da72e6893bd9c399220c6",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1283: User approved randomized 10-20s OLD generation/lane retirement after authenticated new native owner; H1282 exact ARM64 3x1800 SOURCE16ae baseline PASS0 alerts; heterogeneous FAIL4 and pressure FAIL3; Game4 client hot successes17/16 vs server confirmed13/14. Preserve three healthy Game4 lanes. Original Game4 hot Rust physical slot already switches before old cold tuple linger; never claim dual active M4 slots. Native retest pending.",
-  "why_now": "H1282 30-min raw ZIPs show Game4 client 17/16 hot READY but only 13/14 server M4 confirmations; Erin Normal Fixed6 app RX gaps up 7.41s/6.39s; immediate previous.cancel/old FakeTCP Close discards useful overlap. User prioritizes retention 10-20s randomized grace over rapid Stop; user Stop and new path still immediate.",
+  "current_task": "H1284: H1283 exact source a8cb original ARM64 native 3x1800: baseline FAIL1 old last generation real Stop during grace not logged; hetero FAIL3 Game4 client17/server15 protected TLS rejects + Erin fixed6 3320ms both ways; pressure FAIL5 despite rotation PASS all, Erin 2290ms and server per-lease TUN overflows Alice65 Bob62 Dave873. Implement 10-20s server old group deferred native Stop, final client Stop exact log, classified server TLS/native cold failures, Rust per-lease 8->16 pending FIFO with same 64KiB/100ms. Native new source test pending.",
+  "why_now": "True H1283 native full report disproves acceptance; old server native Stop was immediate while client delayed, final client actual Stop missed verifier, high pressure queue bursts exceed one eight-frame pending batch and Game4 two server TLS failures need phase attribution.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "H1283 exact native original Go+Rust build including randomized old lane grace bound Go unit and same-source five-client ARM64 baseline/heterogeneous/pressure 1800s. Collect raw artifacts, hot per-slot server commits, old complete-generation Stop, CPU/p99, S2C gaps and queues. H998/old S2C stay OPEN.",
+  "next_action": "Qualify exact H1284 code on native x86/ARM with Go final Stop/10-20s jitter and Rust per-lease FIFO bounded tests, then one exact ARM64 5-client 3x1800s loss stress. Separate client vs server Game4 native commit and actual application S2C gaps. Keep H998 live MTU FAIL and true 0-alert gate.",
   "unverified": true,
-  "last_tested_source": "16ae6b79d61bc4c5ecf66dbd3e5817026fe63613",
+  "last_tested_source": "a8cb83c209f2c7ef647468472d7ac61c07dbc568",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1283-H1282-SOURCE16AE-ARM64-3X1800S-20261106.json"
+    "docs/evidence/M0/PLAN028-H1284-H1283-SOURCEA8CB-3X1800S-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",

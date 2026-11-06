@@ -285,7 +285,13 @@ func runOriginalLinuxClientPaths(
             }
         }
         for a:=range seen{
-            retErr=errors.Join(retErr,waitOriginalGenerationStop(a))
+            stopErr:=waitOriginalGenerationStop(a)
+            if a==retiring&&stopErr==nil{
+                // Grace was interrupted by client Stop; the exact old
+                // Rust join has completed, so this is a real retired owner.
+                log.Printf("V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=%d class=client-close grace_interrupted=1 native_joined=1",a.seq)
+            }
+            retErr=errors.Join(retErr,stopErr)
         }
     }()
     scheduleRetry:=func(stage string){
