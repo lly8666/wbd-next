@@ -7,6 +7,7 @@ package realityfront
 #include <stddef.h>
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
+extern int32_t wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_lane_replace(
@@ -243,6 +244,22 @@ func (g *v4NativeGameJoined) startNativeM4(
     lanes,ready,e:=g.originalCryptoState()
     if e!=nil{return e}
     if !ready||int(lanes)!=len(g.laneOwners){return ErrAdmissionUnsupported}
+    return nil
+}
+// The server commits a complete original Game2/4 group only after all
+// independent TLS lanes; client local grouped READY is not that receipt.
+// A real post-AEAD native M4 delivered IPv4 permits atomic default TUN
+// generation promotion without new Go DATA, control frames or keys.
+func (g *v4NativeGameJoined) promoteSharedTunAfterAuthenticatedRx()error{
+    if g==nil||g.handle==0||g.stopped||len(g.laneOwners)==0||
+        g.laneOwners[0]==nil||g.laneOwners[0].serverSide{
+        return ErrAdmissionUnsupported
+    }
+    rc:=C.wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(C.uint64_t(g.handle))
+    if rc!=0{
+        return fmt.Errorf("%w: original Game authenticated RX TUN promotion=%d",
+            &v4EmbeddedNativeStatus{Operation:"game_shared_tun_auth_rx_promote",Code:int(rc)},int(rc))
+    }
     return nil
 }
 type V4GameKernelCounters struct {
