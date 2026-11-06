@@ -24,3 +24,7 @@
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","linux-raw-tun"],"reason":"Finite original protected TLS last-ACK repeat after native M4 to avoid server pending ACK barrier; all legacy original protocol fields and native steady DATA unchanged. Existing Linux Game and Normal cold handoff implementation/limits documented."}
 ```
+
+## H1278 strict assembly and governance follow-up (metadata only)
+
+Initial H1278 Action [42190949906](https://github.com/lly8666/wbd-next/actions/runs/42190949906) stopped **PRE-BUILD** at `FEC2_ASSEMBLY_REJECTED: overlay result blob mismatch: internal/v4productcli/linux.go`; no native scenarios executed and no product PASS/FAIL inference. The pinned exact Git blob was corrected, with no bypass of assembly validation, in source `1e4ceb200c71ce5b7230212b568503c562cecf0e`. The replacement [Action 42191219373](https://github.com/lly8666/wbd-next/actions/runs/42191219373) has built successfully and its three true ARM64 1800s scenes are running; full evidence still awaited. The feature card now keeps historical H643/H635/H1277 details in this and prior devlogs rather than exceeding the repository's 16KiB machine-checked card bound. This accompanying source/feature metadata correction does not reclassify any product failure or change the frozen running-source binaries.
