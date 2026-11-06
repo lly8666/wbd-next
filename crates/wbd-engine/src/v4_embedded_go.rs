@@ -4160,7 +4160,6 @@ fn shared_route_publish(
     true
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_route_defer_overlapping_client(
     routes:&HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],new_generation:u32
 )->bool{
