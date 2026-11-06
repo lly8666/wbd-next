@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1256",
+  "source_sha": "79706127b58dda830702c609d9d7077afde48e30",
+  "scope": "Native Linux x86_64 same-host 3 netns, original Go TLS/Rust Game4 Fixed6 (15% loss, 100ms one-way) and Normal Off sibling (0% loss); 90s scalar then 90s ISA-L with same exact product binaries",
+  "action_id": 42128512173,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42128512173",
+  "job_conclusion": "success",
+  "artifact_id": 13462601419,
+  "artifact_zip_sha256": "fdf3ab03fbdf56b90f3511445508defde4f35c9920f834fb88c3e85c00c5bc15",
+  "artifact_zip_files": 61,
+  "artifact_zip_crc": "PASS",
+  "engine_so_sha256": "e3efe393cb1f26624fb48949ad6de5e2a6d9d4240f5789467201d1da00e8bdfc",
+  "native_library_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "phases_seconds": {
+    "warmup": 5,
+    "sustained": 40,
+    "overload": 20,
+    "recovery": 25,
+    "drain": 5
+  },
+  "product_readback": {
+    "scalar": {
+      "game4_tx_native_quanta": 0,
+      "game4_tx_scalar_quanta": 86045,
+      "game4_rx_native_decodes": 0,
+      "game4_rx_scalar_decodes": 13191,
+      "late_complete_repair_skips": 296503
+    },
+    "native": {
+      "game4_tx_native_quanta": 82623,
+      "game4_tx_scalar_quanta": 4166,
+      "game4_rx_native_decodes": 12952,
+      "game4_rx_scalar_decodes": 503,
+      "late_complete_repair_skips": 299513
+    }
+  },
+  "game4_udp_delivered_downlink_mbps": {
+    "scalar": {
+      "sustained": 14.4001,
+      "overload": 18.6546,
+      "recovery": 8.64
+    },
+    "native": {
+      "sustained": 14.3999,
+      "overload": 18.698,
+      "recovery": 8.6397
+    }
+  },
+  "game4_downlink_overload_unique_delivery_fraction": {
+    "scalar": 0.99652,
+    "native": 0.99881
+  },
+  "normal_off_sibling_downlink_delivery_fraction_each_phase": 1,
+  "game4_client_tx_poll_sampling": {
+    "stride": 128,
+    "scalar": {
+      "samples": 2636,
+      "total_ns": 53875178,
+      "mean_ns": 20438.23,
+      "max_ns": 1416371
+    },
+    "native": {
+      "samples": 2662,
+      "total_ns": 4491412,
+      "mean_ns": 1687.23,
+      "max_ns": 210642
+    }
+  },
+  "game4_client_rx_lock_sampling": {
+    "stride": 128,
+    "scalar": {
+      "samples": 15106,
+      "wait_total_ns": 16383431,
+      "hold_total_ns": 24238086,
+      "wait_max_ns": 2391909
+    },
+    "native": {
+      "samples": 15190,
+      "wait_total_ns": 12669614,
+      "hold_total_ns": 15039525,
+      "wait_max_ns": 975315
+    }
+  },
+  "server_shared_tun": {
+    "scalar": {
+      "backpressure": 703,
+      "queue_full_drops": 282
+    },
+    "native": {
+      "backpressure": 160,
+      "queue_full_drops": 95
+    }
+  },
+  "server_process_cpu_one_core_percent_including_setup": {
+    "scalar": 68.667,
+    "native": 62.118
+  },
+  "game4_client_cpu_one_core_percent_including_setup": {
+    "scalar": 48.649,
+    "native": 42.227
+  },
+  "physical_netem_both_directions": {
+    "configured_loss_pct": 15,
+    "one_way_delay_ms": 100,
+    "queue_limit_packets": 10000
+  },
+  "results": {
+    "actual_product_native_dispatch": "PASS",
+    "real_same_vm_short_application_load": "PASS",
+    "codec_fec_late_complete_repair_regression": "PASS",
+    "normal_sibling_independent": "PASS",
+    "five_client_high_pressure_solved": "NOT_PROVEN",
+    "causal_cpu_gain": "NOT_PROVEN",
+    "ARM64_Windows_Android": "NOT_RUN"
+  },
+  "interpretation": "Native RS16 GF encoding and decode demonstrably used; 12.1x lower sampled Game4 parity poll time is an observed paired direction-only signal, not causal CPU speedup proof; 2-client high goodput does not remove earlier 5-client high-pressure queue degradation.",
+  "retain_prior": {
+    "five_client_high_pressure_source": "f2dec3bf5f22c50ff8e05a9f8084c5e297086221",
+    "five_client_action_id": 42077824041,
+    "game4_overload_downlink_delivery_fraction": 0.671593,
+    "historical_plan027a_same_socket_mtu_shrink": "FAIL"
+  }
+}

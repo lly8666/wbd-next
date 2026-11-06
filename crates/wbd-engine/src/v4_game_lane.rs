@@ -890,6 +890,10 @@ mod tests{
         let c=game.game4_copy_schedule().unwrap();
         assert_eq!(c.scheduled,[4097;4]);
         assert!(c.abandoned.iter().sum::<u64>()>=4);
+        assert_eq!(c.capacity_evicted.iter().sum::<u64>(),
+            c.abandoned.iter().sum::<u64>());
+        assert_eq!(c.deadline_expired,[0;4]);
+        assert_eq!(c.dispatch_pressure,[0;4]);
         assert_eq!(game.tx.in_use().0,4096);
         let mut fresh_first=false;
         // Fair bounded turns progress all lane1 first copies; keep now=T0

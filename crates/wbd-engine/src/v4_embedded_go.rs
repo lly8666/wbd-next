@@ -4604,11 +4604,24 @@ fn retire_shared_tun_session(session:&SharedTunSession){
     }
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[derive(Default)]
+struct SharedTunLeaseQueueDiag {
+    offered:u64,direct_delivered:u64,downstream_full:u64,
+    pending_overflow:u64,pending_byte_limit:u64,
+    pending_peak_packets:usize,pending_peak_bytes:usize,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
     // Existing native nonblocking TUN batch API: at most 8 ready frames,
     // never wait to fill the batch. These kernel receive slots are reused.
     let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
     let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
+    // Cold diagnostic opt-in. This worker already owns the verified /32
+    // route table: no new per-packet Go bridge, timer, mutex, or unbounded
+    // packet cache. All extra accounting is disabled in normal production.
+    let lease_diag_enabled=std::env::var("WBD_SHARED_TUN_ROUTE_DIAG")
+        .ok().as_deref()==Some("1");
+    let mut lease_diag=BTreeMap::<[u8;4],SharedTunLeaseQueueDiag>::new();
     let fd=router.tun.readiness_fd();
     while !router.stop.load(Ordering::Acquire){
         if router.routes.lock().map_or(true,|routes|routes.is_empty()){
@@ -4648,7 +4661,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 continue
             };
             // Reject saturated/stale A BEFORE any Vec allocation or copy.
-            router.note_dispatch(enqueue_shared_tun(&mut pending,key,route,len,||{
+            let delta=enqueue_shared_tun(&mut pending,key,route,len,||{
                 let mut bytes=recycle_recv.try_recv()
                     .unwrap_or_else(|_|Vec::with_capacity(2048));
                 bytes.clear();
@@ -4656,7 +4669,28 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 OriginalTunIngress::Shared(SharedTunPacket{
                     bytes,recycle:router.recycle_send.clone(),
                 })
-            }));
+            });
+            if lease_diag_enabled{
+                let stats=lease_diag.entry(key).or_default();
+                stats.offered+=1;
+                stats.direct_delivered+=delta.delivered;
+                stats.downstream_full+=delta.backpressure;
+                stats.pending_overflow+=delta.overflow;
+                stats.pending_byte_limit+=delta.byte_limit;
+                if let Some(q)=pending.get(&key){
+                    stats.pending_peak_packets=stats.pending_peak_packets.max(q.packets.len());
+                    stats.pending_peak_bytes=stats.pending_peak_bytes.max(q.queued_bytes);
+                }
+            }
+            router.note_dispatch(delta);
+        }
+    }
+    if lease_diag_enabled{
+        for (ip,st) in lease_diag{
+            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={}",
+                ip[0],ip[1],ip[2],ip[3],st.offered,st.direct_delivered,
+                st.downstream_full,st.pending_overflow,st.pending_byte_limit,
+                st.pending_peak_packets,st.pending_peak_bytes);
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();

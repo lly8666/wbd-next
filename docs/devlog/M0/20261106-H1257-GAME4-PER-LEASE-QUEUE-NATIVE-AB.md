@@ -1,0 +1,19 @@
+# PLAN028 H1257 — observe Game4 ingress and copy abandonment before tuning
+
+## H1256 baseline / why another **short**, not long, test
+
+Exact SOURCE `79706127b58dda830702c609d9d7077afde48e30` Action42128512173 100% completed: real original-Go TLS/Rust native x86 3-netns Game4Fixed6 15% physical loss+100ms one-way and NormalOff 0% sibling, same binary SHA256 engine `e3efe393cb1f26624fb48949ad6de5e2a6d9d4240f5789467201d1da00e8bdfc`, 90s scalar then 90s native, 5s warmup/40s steady/20s overload/25s rate-down recovery, netem `limit10000`. ZIP 13462601419 SHA256 `fdf3ab03fbdf56b90f3511445508defde4f35c9920f834fb88c3e85c00c5bc15`, CRC PASS.
+
+Actual Game4 client TX codec quanta scalar 86045/native0 vs ISA-L native82623/scalar4166; RX decoder scalar13191/native0 vs ISA-L native12952/scalar503. Native <64B and k<=1 may validly fall back to scalar. Authenticated fully delivered late repair skipped 296503 scalar/299513 ISA-L, same source/AEAD not bypassed. 1/128 TX FEC poll mean 20.44us scalar vs1.69us native; server shared TUN full282 vs95 and average one-core CPU68.67% vs62.12% respectively *including setup*. This is a useful **directional** improvement, not causal CPU gain. Dave Game4 overloaded downlink18.6546 vs18.698Mbps, recovery8.64Mbps; Normal sibling near100% delivery. Two clients at 18Mbps Game4 do NOT recreate H1251 five-client 15%/100ms sustained and overloaded packet loss (66.9% and67.16% delivery, source/fix exact evidence retained).
+
+## H1257 scope
+
+- Default OFF diagnostic `WBD_SHARED_TUN_ROUTE_DIAG=1` in **one original Rust SharedTunReader**, with one bounded per-authenticated /32 statistics row per route already held by owner: kernel TUN offered, direct accepted, first-send downstream-full, pending-count overflow and byte limit, pending peak packets and bytes. No payload/log secret, no per-packet Go FFI and no unbounded queue. Only static owned Stop logs.
+- Original M1 `GameTx` packet-copy reasons: disjoint rank-wise `capacity_evicted` (finite slab/queued copy), `deadline_expired` (copy arrived after permitted due age), `dispatch_pressure` (native raw send callback fail), plus **separate** per-lane pre-admission `mtu_skipped` and `queue_skipped`. Existing `abandoned` must equal sum of three abandonment causes, not treated as network loss. Keep Game4 schedule and FEC actual encoding/recovery counters.
+- Existing opt-in 1/128 Game TX offer/FEC poll timing `WBD_GAME_TX_SAMPLE=1` and RX owner lock wait/hold `WBD_GAME_RX_LOCK_SAMPLE=1`. No new locks/timers on release hot path.
+- One SOURCE-locked native x86 Action for same product binaries, one VM and two independently TLS-authenticated real TUN clients; A/B **sequential 90s/leg** scalar then pinned ISA-L native, Game4 Fixed6 15% loss each direction/100ms and **higher application offered target 42Mbps** per direction vs prior18, NormalOff sibling20Mbps 0% loss, tc limit10000. 5s warmup,40s steady,20s overload,25s downshift recovery,5s drain; verify actual offered and real qdisc counters. Reporter requires exact two per-/32 TUN receipts and accountable Game4 abandonment reasons. Diagnostic alerts are not performance PASS/FAIL.
+- The retained previous H1256 workflow becomes manual-only to avoid repeating the already-known 18Mbps 90s/leg baseline when running this higher-pressure focused test. No 370s five-client rerun, no altered Game FEC profile/MTU/crypto/protocol, no unbounded queues or speculation on product tuning. Wait for narrow pressure stage receipts before any parameter change.
+
+```feature-impact
+{"kind":"updated","ids":["native-crypto-backends"],"reason":"Archive H1256 observed actual native ISA-L backend usage on x86_64 only; H1257 includes bounded diagnostic counters and scoped high-offer native Game4 plus independent Normal sibling, no protocol or user-config change."}
+```

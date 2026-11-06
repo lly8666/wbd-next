@@ -1082,6 +1082,17 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
+        // Why Game4 delayed copies were abandoned is disjoint by source:
+        // bounded oldest-job eviction, missed owner deadline, or a native
+        // dispatch callback failing. Pre-admission MSS/queue skips are shown
+        // separately; none of these is an assumed physical packet loss.
+        if let Ok(game)=self.diagnostic_adapter.lock(){
+            if let Some(c)=game.game4_copy_schedule(){
+                eprintln!("M0_GAME_M4_COPY_ABANDON_REASONS capacity_evicted={:?} deadline_expired={:?} dispatch_pressure={:?} admission_mtu_skipped={:?} admission_queue_skipped={:?} abandoned_total={:?} stop_canceled={}",
+                    c.capacity_evicted,c.deadline_expired,c.dispatch_pressure,
+                    c.mtu_skipped,c.queue_skipped,c.abandoned,c.stop_canceled);
+            }
+        }
         // Readback reflects ACTUAL finished native RS16 calls, not just a
         // Cargo feature bit or an unverified backend preference.
         #[cfg(feature="fec2_product_record")]

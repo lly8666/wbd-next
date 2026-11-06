@@ -66,6 +66,11 @@ pub struct GameCounters{
     pub lane_dispatch:u64,pub stop_canceled:u64,
     pub scheduled:[u64;4],pub sent:[u64;4],pub abandoned:[u64;4],
     pub late_max_ns:[u64;4],pub late_total_ns:[u64;4],
+    // Disjoint Game4 copy abandonment causes, not netem or remote loss.
+    pub capacity_evicted:[u64;4],pub deadline_expired:[u64;4],
+    pub dispatch_pressure:[u64;4],
+    // Lane skips before a copy is even scheduled, indexed by lane.
+    pub mtu_skipped:[u64;4],pub queue_skipped:[u64;4],
 }
 struct Job{
     buffer:UniqueBuffer,wire:Range<usize>,mode:Mode,
@@ -170,6 +175,7 @@ impl GameTx {
                     count+=1;
                     self.counters.lane_copy_drop+=1;
                     self.counters.abandoned[p.position as usize]+=1;
+                    self.counters.capacity_evicted[p.position as usize]+=1;
                 }
             }
             if count==0{break}
@@ -243,11 +249,14 @@ impl GameTx {
             if !lane.active {continue;}
             if predicted_wire>lane.info.mss{
                 self.counters.lane_copy_drop+=1;
+                self.counters.mtu_skipped[index.min(3)]+=1;
                 continue;
             }
             if lane.q.len()>=self.limits.lane_slots||
                 predicted_wire>self.limits.lane_bytes.saturating_sub(lane.bytes){
-                self.counters.lane_copy_drop+=1;continue;
+                self.counters.lane_copy_drop+=1;
+                self.counters.queue_skipped[index.min(3)]+=1;
+                continue;
             }
             choices[count]=index;count+=1;
             if mode==Mode::Normal{break;}
@@ -320,7 +329,10 @@ impl GameTx {
             let pos=entry.position as usize;
             if expired{
                 self.counters.lane_copy_drop+=1;
-                if self.staggered{self.counters.abandoned[pos]+=1;}
+                if self.staggered{
+                    self.counters.abandoned[pos]+=1;
+                    self.counters.deadline_expired[pos]+=1;
+                }
             }else{
                 let job=self.slots[entry.slot].as_mut().expect("queued job exists");
                 let view=SendView{
@@ -340,7 +352,10 @@ impl GameTx {
                     },
                     DispatchOutcome::PressureDrop=>{
                         self.counters.lane_copy_drop+=1;
-                        if self.staggered{self.counters.abandoned[pos]+=1;}
+                        if self.staggered{
+                            self.counters.abandoned[pos]+=1;
+                            self.counters.dispatch_pressure[pos]+=1;
+                        }
                     },
                 }
             }

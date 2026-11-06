@@ -1,14 +1,7 @@
 name: M0 PLAN028 H1253 Game4 FEC native vs scalar same VM paired
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1253-game4-native-backend-ab.yml"
-      - "tools/m0-plan028-h1253-game4-short-netns.py"
-      - "tools/m0-plan028-h1253-short-report.py"
-      - "crates/wbd-engine/src/v4_game_fec.rs"
-      - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
-      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
+  # H1256 AB verified and preserved as a manual comparison. New native
+  # per-lease diagnostics have their own SOURCE-locked H1257 workflow.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
