@@ -70,7 +70,7 @@ jobs:
           assert all(x["observations"]>=15 for x in rx["recovery_10s_windows"])
           assert result["clients"]["erin"]["directions"]["downlink"]["recovery"]["delivery_fraction"]>.99
           def rows(text,marker):
-              return [{k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
+              return [{k:int(v) for k,v in re.findall(r"([a-z_][a-z0-9_]*)=(\d+)",line)}
                       for line in text.splitlines() if marker in line]
           tx=rows((root/"h1250-product-erin.log").read_text(),
               "V4_PUBLIC_FEC2_EGRESS_DIAG role=client side=tx")
