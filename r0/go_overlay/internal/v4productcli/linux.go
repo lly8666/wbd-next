@@ -515,6 +515,50 @@ func waitForOriginalColdSYN(ctx context.Context,assoc *faketcp.ClientAssociation
         if _,e=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
     }
 }
+// A genuine original FakeTCP ClientAssociation drives SYN RTO while cold
+// establishing, but the synchronous protected TLS Write/Read stage also
+// needs its already-implemented Sender.RetransmitDue. A missing client
+// cumulative ACK or DATA segment otherwise waits for the 15s absolute TLS
+// deadline without a single sender retransmission under 15-30% netem loss.
+//
+// This ONLY polls the existing original sender while Established. Sender
+// chooses its own RTO, backoff, original seq/ACK/payload, peer window and
+// segment quotas. No new wire data, crypto, M4 DATA, timer owner after Detach,
+// extra controller or extended authentication deadline is introduced.
+func driveOriginalClientColdBootstrapRTO(
+    ctx context.Context,assoc *faketcp.ClientAssociation,
+)func()(uint64,error){
+    scoped,cancel:=context.WithCancel(ctx)
+    type result struct{ count uint64; err error }
+    done:=make(chan result,1)
+    go func(){
+        ticker:=time.NewTicker(100*time.Millisecond)
+        defer ticker.Stop()
+        var count uint64
+        for{
+            select{
+            case <-scoped.Done():done<-result{count:count};return
+            case <-ticker.C:
+            }
+            switch assoc.State(){
+            case faketcp.ClientAssociationDetached,faketcp.ClientAssociationClosed:
+                done<-result{count:count}
+                return
+            case faketcp.ClientAssociationEstablished:
+                resent,err:=assoc.EmitRetransmitDue(time.Now())
+                if err!=nil{done<-result{count:count,err:err};return}
+                if resent{count++}
+            }
+        }
+    }()
+    var once sync.Once
+    var out result
+    return func()(uint64,error){
+        once.Do(func(){cancel();out=<-done})
+        return out.count,out.err
+    }
+}
+
 func originalColdRetryAllowed(role string,authorized,ready bool,retries int,runErr,closeErr error)bool{
     return role=="client"&&authorized&&!ready&&retries<2&&closeErr==nil&&nativeColdTLSRetryable(runErr)
 }
@@ -1068,10 +1112,17 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
     nativeAdmissionStart:=time.Now()
-    if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{
+    stopColdRTO:=driveOriginalClientColdBootstrapRTO(dialCtx,assoc)
+    _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg)
+    resent,retryErr:=stopColdRTO()
+    if resent>0{
+        log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=%s actual_original_retransmissions=%d post_detach=0",
+            c.fecMode,resent)
+    }
+    if err!=nil||retryErr!=nil{
         // Failed cold admission still owns a constructed native product.
         // It must release its loans/socket/generation before a new attempt.
-        return errors.Join(err,native.Close())
+        return errors.Join(err,retryErr,native.Close())
     }
     // Existing client product returns only after authenticated TLS detach,
     // exact Rust M4 RX attachment and native loop start.
