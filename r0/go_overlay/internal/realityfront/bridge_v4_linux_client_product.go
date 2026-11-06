@@ -227,6 +227,16 @@ func (p *V4LinuxClientProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,err
     if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
     return p.owner.originalPublicFecTxSnapshot()
 }
+// Only the original native RX owner's delivered/authenticated reverse
+// packets can promote a replacement client generation's shared-TUN route.
+// This is NOT local TLS Ready, packet TX, Go DATA or a synthetic receipt.
+func (p *V4LinuxClientProduct) PromoteNormalAfterAuthenticatedPeerRx()error{
+    if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return ErrAdmissionUnsupported}
+    return p.owner.promoteNormalSharedTunAfterAuthenticatedRx()
+}
 func (p *V4LinuxClientProduct) OriginalLoopPulse()(V4PublicLoopPulse,error){
     if p==nil{return V4PublicLoopPulse{},ErrAdmissionParams}
     p.mu.Lock()
