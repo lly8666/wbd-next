@@ -3376,8 +3376,6 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     }
     OK
 }
-#[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-#[no_mangle]
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
@@ -3406,6 +3404,8 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
     eprintln!("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_delivered={} old_route_revoked=1",shared.generation,delivered);
     OK
 }
+#[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_kernel_counters(
     group:u64,copied:*mut u64,delivered:*mut u64,rejected:*mut u64,
 )->i32{
