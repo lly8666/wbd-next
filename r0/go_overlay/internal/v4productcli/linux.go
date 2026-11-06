@@ -949,7 +949,7 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
 // Rust generation before revoking the still-live former shared TUN route.
 // A failed server M4 leaves A intact; no Go DATA copies, new control wire,
 // unauthenticated timer ownership or unbounded overlap is authorized.
-func waitOriginalNormalM4PeerProof(
+func waitOriginalNativeM4PeerProof(
     ctx context.Context,pulse func()(realityfront.V4PublicLoopPulse,error),
     promote func()error,max time.Duration,
 )error{
@@ -1090,7 +1090,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         // NOT own the default TUN route yet. The currently working A keeps
         // forwarding until native B proves the peer actually committed B.
         // A timeout closes only B and preserves A's exact old mapping.
-        err=waitOriginalNormalM4PeerProof(ctx,native.OriginalLoopPulse,
+        err=waitOriginalNativeM4PeerProof(ctx,native.OriginalLoopPulse,
             native.PromoteNormalAfterAuthenticatedPeerRx,5*time.Second)
         if err!=nil{
             log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_UNPROVEN role=client generation=%d client_port=%d old_tun_route_preserved=1",
