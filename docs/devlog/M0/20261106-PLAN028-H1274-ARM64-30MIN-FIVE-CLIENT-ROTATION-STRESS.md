@@ -25,3 +25,7 @@ The original H1259 430s fixture remains default with no environment variable and
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","outer-opportunistic-repair"],"reason":"Exact Game appearance-only frozen record accepted byte count at existing Stop and opt-in native 30m stress harness. No hot packet/crypto/protocol/recovery decisions changed."}
 ```
+
+## H1274 initial CI receipt (source-specific)
+
+SOURCE d04ace6c ARM64 original Go TLS/Rust native one-build completed; three 1800s native matrix scene jobs started, results still IN_PROGRESS/NOT_YET_QUALIFIED (Action 42162179000). First governance run found that appended text exceeded feature-card 16KiB UTF-8 bound; cards were compacted without dropping SOURCE-specific historical failures or feature-impact scope. This is governance-only metadata correction, **not another product SOURCE or rerun**.
