@@ -107,6 +107,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
+          python3 -m unittest -v tools/test_m0_plan028_h1280_normal_m4_proof.py
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_full_lease_opportunistic_oldest_drain_before_drop -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
