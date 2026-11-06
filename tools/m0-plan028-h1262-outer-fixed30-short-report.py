@@ -68,13 +68,22 @@ def fec_egress_windows(log,start_ns):
             fields[name]=int(m.group(1))
         rows.append(fields)
     if not rows:return {"observed":False}
-    # Python time.monotonic_ns and Rust loop_now are on the same Linux VM
-    # monotonic kernel clock, even across separate network namespaces.
+    # IMPORTANT: this product's Rust loop_now() is RELATIVE to its own
+    # process-local Instant origin, NOT the absolute CLOCK_MONOTONIC ns
+    # reported by Python traffic.py. H1263's first report falsely showed
+    # zero rows in all nine windows despite 489 authentic 500ms samples.
+    # Anchor approximately to the first nonzero authenticated FEC2 source
+    # sample (true business began just before that sample), not to the
+    # unrelated Python absolute start_ns. The 10s bins are diagnostic
+    # approximately aligned, not exact sub-500ms latency evidence.
+    _ = start_ns
+    source_anchor=next((r["ns"] for r in rows if r["fec_source"]>0),None)
+    assert source_anchor is not None,"no real original FEC2 source received"
     segments=[]
     for offset in range(90,180,10):
         entries=[r for r in rows
-                 if start_ns+offset*1_000_000_000 <=r["ns"]
-                 < start_ns+(offset+10)*1_000_000_000]
+                 if source_anchor+offset*1_000_000_000 <=r["ns"]
+                 < source_anchor+(offset+10)*1_000_000_000]
         diffs={}
         if len(entries)>=2:
             diffs={k:entries[-1][k]-entries[0][k] for k in
@@ -83,7 +92,11 @@ def fec_egress_windows(log,start_ns):
             assert all(n>=0 for n in diffs.values()),"negative RX snapshots"
         segments.append({"window_s":[offset,offset+10],
                          "observations":len(entries),"counter_deltas":diffs})
+    assert all(x["observations"]>=5 for x in segments),(
+        "FEC2 500ms recovery windows not actually populated",segments)
     return {"observed":True,"sample_count":len(rows),
+            "source_first_active_ns_process_relative":source_anchor,
+            "time_alignment":"approx first positive FEC2 source; NOT Python absolute monotonic, not an exact packet timestamp",
             "recovery_10s_windows":segments,
             "scope":"client RX process original FEC2 data, not server shared TUN"}
 

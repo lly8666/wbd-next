@@ -1,13 +1,8 @@
 name: M0 PLAN028 H1262 Game2 Off outer repeat and Fixed6 30pct recovery 180s
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1262-game2-off-outer-fixed30-short.yml"
-      - "tools/m0-plan028-h1262-outer-fixed30-short-netns.py"
-      - "tools/m0-plan028-h1262-outer-fixed30-short-report.py"
-      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
-      - "crates/wbd-engine/src/v4_game_cosmetic_outer.rs"
+  # Native x86 original 180s case is already complete at SOURCE8ddab.
+  # Offline posthoc analyzer has separate H1264 workflow; avoid implicit
+  # full 180s runtime repeats for a process-clock reporting bug.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

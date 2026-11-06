@@ -1,0 +1,35 @@
+# PLAN028 H1264 — Game2 FEC OFF genuinely copies frozen outer; 30% Fixed6 pause is native M4 sendmmsg EAGAIN
+
+## Real source/outcome
+
+First H1262 SOURCE ca93235b5fd1d8a81e85bf6c35d13988226999b1 Action42145763494 did **not** reach product build or network: Python fixture SyntaxError at line219 due doubled quote. H1263 fixed only that quote, SOURCE `8ddab1219132f6206c53fca501fc972fcb5ca11b`, authentic original Go TLS + Rust raw/TUN native x86 Action [42145967317](https://github.com/lly8666/wbd-next/actions/runs/42145967317) **SUCCESS**. Pinned ISA-L v2.31.1 linked into native product. Three independent authenticated clients, one server443/shared TUN, three real duplex UDP app pairs with zero application retries, 180s app (10 warmup/45 sustained/35 overload/90 downshift recovery)+10 drain. Actual bidirectional native kernel netem on Carol5% (0.050249 up,0.049920 down,50ms one-way), Erin30% (0.299847 up,0.300430 down,125ms one-way), qdisc limit10000; Alice0% control. Both real client and server Go/Rust owned Stop and original three lease queue overflow=0. ZIP artifact13469324548 SHA256 `1332f1e2a2392d3fd31e09fa311583b1521476a350c2095d6f369a0a9e698afb`, 39 files CRC PASS, manifest exact SOURCE.
+
+**Outer presentation result:**
+
+| Client | True original frozen outer readback | Qualification |
+|---|---:|---|
+| Alice NormalOff 0% physical loss | Native M2 repair accepted **0 bytes**, policy ON | Expected on no loss; not a disabled retry path |
+| Carol Game2 Off 5% | `outer_data_retransmitted=1082` on CLIENT, `WBD_GAME_OFF_LINUX_NORMAL_OUTER_STOP copied_appearance=1082` on BOTH CLIENT and SERVER | Previously H1259 Game2 OFF 5% had 0 despite ON; **native cosmetic gate bug fixed and real bidirectional frozen PN/SEQ copies verified** |
+| Erin Normal Fixed6 30% | Native M2 accepted actual raw repeated frozen wire **65,073,727 bytes** on client, policy ON | Real opportunistic M2 repair but not the same as unique application UDP recovered |
+
+H1259 prior 430s per-client outer audit values **corrected in H1262 devlog**, as derived from exact Stop logs: Bob NormalAuto 1% **13,956,072** repeated wire bytes (13.96 MB), not 139,560; Erin Fixed6 30% **147,529,144** bytes (147.53 MB), not 147,529; Game4 Fixed6 15% **5,176** genuine cosmetic appearance sends; Game2 Off 5% **0** old SOURCE. These are BYTES vs PACKETS and different SOURCE tests; do not present old byte counts as copies or claim outer retransmission repairs unique UDP. Explicit outer OFF still gates the Game copy hooks, a frozen outer duplicate must not create new authenticated PN, FEC parity, packet or Health credit.
+
+### Fixed6 30% residual, narrowed to kernel raw TX backpressure
+
+Unlike H1259's **7s late S2C** silent RX (last recovery seconds415–422, downlink recovery unique87.6436%), H1263's **180s** test did **not** reproduce that late downlink pause: Erin 90s recovered downlink `15.9999→15.9941 Mbps`, unique99.9634%, still source-only NOT a reliability certification. BUT the short x86 run exposed a different real **early 2–3s C2S** receive blackout during sustained traffic while the native client continued accepting ~1260 FEC source symbols/500ms and business sender continued at~16Mbps. Re-check same original log RX/TX 500ms cumulative counters:
+
+- During an approximately **2.502s** contiguous client TX sample span (process-local time **73.907–76.409s**): **+6317** accepted new original FEC sources, `m4_copied` delta **0**, typed original M4 backpressure **+3938**, M4 errors **+3938**, FEC parity accepted-to-kernel count delta **0**. Total client M4 backpressure reaches4690 events. This is a REAL native `send_kernel_multimsg` typed **`KernelSendSignal::Backpressure` (`sendmmsg` returns EAGAIN)** from `crates/wbd-platform/src/linux_batch.rs`, not inferred from application loss or synthetic throttling.
+- Corresponding **server** original FEC2 RX owner (the sole FEC2 stream among Alice NormalOff and Erin Fixed6) has ~**3.023s** original raw ingress plateau (**73.917–76.940s** on its OWN process-local clock), with raw batches/source/parity/recovered/TUN errors all delta0, then resumed. Actual business C2S after first start: sender sec19 and20 remained~16Mbps, server real UDP RX both0, sec21 RX1.08Mbps, sec22~15.96Mbps. Normal and Game2 siblings were not interrupted.
+- All three original server per-authenticated-lease shared TUN overflows=0. Erin client final FEC2 RX `peak_active=38`, `age_evicted=31071`, `invalid_retired=1262`, `reject_capacity=0`, `reject_codec=0`, `tun_failed=0`. These cumulative receive stats do not causally explain the outbound kernel EAGAIN blackout. True qdisc total drop remained ~30% and no default1000 packet limit confound.
+
+**Causal scope:** For **this C2S incident**, the client original raw M4 socket failed to send for multiple seconds even as the FEC2 owner admitted fresh work; the peer had no raw/FEC symbols to decode. *Why Linux kernel socket refused sends* (socket send-buffer headroom, queue pacing, resource contention or route revalidation) remains **NOT_ISOLATED**. The earlier opposite S2C 7s H1259 incident lacked this 500ms instrumentation and cannot be declared identical. Do not lengthen FEC RX cache150ms, add fake retransmissions, or attribute EAGAIN to a decoder merely because FEC age eviction occurs.
+
+### Reporter source clock correction without new network test
+
+The H1263 report printed all nine 10s recovery FEC2 RX diagnostic windows with zero observations despite **489 authentic half-second samples**, because Rust `loop_now().0` uses a per-process `Instant` origin while Python `traffic.py` uses OS absolute `monotonic_ns`. H1264 fixes the forensic reporter to align these windows **approximately to the first positive original FEC2 source sample in the SAME process**, explicitly labels the ~subsecond alignment uncertainty, and asserts real samples per 10s window. A new **zero-network** H1264 Action replays the immutable original H1263 artifact13469324548 through that reporter and cross-validates client typed EAGAIN vs remote RX blackout. Previous H1263 Action remains original SUCCESS. The 180s native Action is changed to manual-only to avoid a duplicate full network test for clock/reporting fixes.
+
+Next product work, if required: a cold, bounded raw-TX socket send-queue/errno readback under true 30% netem with 1.0×/1.3× load and same-VM A/B; preserve original M4 “no replay of uncertain PN” and exact finite backpressure/route contracts. Do not tune `SO_SNDBUF`, FEC6 surplus/age, or replay a frozen first-send without evidence that the kernel definitely did NOT copy it. This H1264 is evidence+reporting, not a speculative packet-scheduler rewrite; H998 online MTU old-socket FAIL and Windows/ARM/Android NOT_RUN unchanged.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Document exact H1263 original-Go TLS Game2Off real 1082 frozen same-PN/SEQ cosmetic sends both endpoints and correct source-specific Normal byte counts; H1264 report replays original Fixed6 M4 EAGAIN without additional network workload or new product behavior."}
+```

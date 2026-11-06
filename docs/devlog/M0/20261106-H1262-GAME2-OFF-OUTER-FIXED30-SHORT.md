@@ -7,10 +7,10 @@ User requested continuing the unfinished 30%-loss Normal Fixed6 recovery-downlin
 | Mode/client | Physical netem | Outer ON | Actual original raw ciphertext presentation |
 |---|---:|---|---|
 | A Normal Off | 0% | yes | `V4_PUBLIC_M2_OUTER repair_accepted_wire_bytes=0` is correct for clean no-gap traffic, NOT a disabled producer |
-| B Normal Auto | 1% | yes | `repair_accepted_wire_bytes=139560` real immutable raw repeats |
+| B Normal Auto | 1% | yes | `repair_accepted_wire_bytes=13956072` real immutable raw repeats |
 | C Game2 FEC Off | 5% | yes | `V4_PUBLIC_GAME_OUTER outer_data_retransmitted=0` **FAIL/BUG of optional appearance**, despite real original two TLS lanes |
 | D Game4 Fixed6 | 15% | yes | `outer_data_retransmitted=5176`, independent `WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance=5176` |
-| E Normal Fixed6 | 30% | yes | `repair_accepted_wire_bytes=147529` real immutable raw repeats |
+| E Normal Fixed6 | 30% | yes | `repair_accepted_wire_bytes=147529144` real immutable raw repeats |
 
 This is only client-direction and observed SOURCE, not full bidirectional same-SOURCE attribution of Normal server per-client outer repeats. Original Linux Normal uses authentic M2 mature ACK gaps and limited frozen copies, no unconditional per-DATA PTO; zero on 0% is expected. Game presentation is separate from FEC and does **not** improve the UDP delivery count just because the same ciphertext reappears.
 

@@ -1,0 +1,168 @@
+name: M0 PLAN028 H1264 original Game2 outer and Fixed30 raw-TX EAGAIN offline forensics
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1264-original-fec30-offline-forensics.yml"
+      - "tools/m0-plan028-h1262-outer-fixed30-short-report.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-plan028-h1264-original-fec30-offline
+  cancel-in-progress: false
+jobs:
+  immutable-original-180s-artifact-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Download immutable H1263 original native Game2 and FEC30 180s ZIP
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p original out
+          gh api repos/lly8666/wbd-next/actions/artifacts/13469324548 --jq '.digest' |
+            grep -Fx 'sha256:1332f1e2a2392d3fd31e09fa311583b1521476a350c2095d6f369a0a9e698afb'
+          gh run download 42145967317 --repo lly8666/wbd-next \
+            --name plan028-h1262-game2-off-outer-fixed30-180s --dir original
+          python3 - <<'PY_SOURCE'
+          import json,pathlib
+          r=pathlib.Path("original/fixed-kernel-result")
+          source="8ddab1219132f6206c53fca501fc972fcb5ca11b"
+          p=json.loads((r/"h1250-matrix-plan.json").read_text())
+          m=json.loads(pathlib.Path("original/fixed-build/manifest.json").read_text())
+          assert p["source_sha"]==m["source_sha"]==source
+          assert p["application_load_seconds"]==180 and len(p["clients"])==3
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for who in ("alice","carol","erin"):
+              for side in ("c","s"):
+                  d=json.loads((r/("h1250-"+side+"-"+who+".json")).read_text())
+                  assert d["start_ns"]==p["start_monotonic_ns"]
+                  assert d["end_ns"]-d["start_ns"]==180_000_000_000
+                  assert not d["capacity_exceeded"] and not d["errors"]
+              assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in (r/("h1250-product-"+who+".log")).read_text()
+          print("H1264_ORIGINAL_NATIVE_THREE_CLIENT_180S_SOURCE_STOP_PASS")
+          PY_SOURCE
+      - name: Replay corrected process-relative 500ms RX windows without new network workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1262-outer-fixed30-short-report.py
+          python3 tools/m0-plan028-h1262-outer-fixed30-short-report.py \
+            --art original/fixed-kernel-result \
+            --product-log original/fixed-kernel-result/h1250-product-server.log \
+            --output out/h1264-original180s-corrected-report.json
+          python3 - <<'PY_FORENSICS'
+          import json,pathlib,re
+          root=pathlib.Path("original/fixed-kernel-result")
+          result=json.loads(pathlib.Path("out/h1264-original180s-corrected-report.json").read_text())
+          assert result["source_sha"]=="8ddab1219132f6206c53fca501fc972fcb5ca11b"
+          assert result["result"].startswith("DIAGNOSTIC_COMPLETE")
+          assert set(result["clients"])=={"alice","carol","erin"}
+          assert result["clients"]["carol"]["real_native_outer"]["game2_off_policy"]["outer_data_retransmitted"]>0
+          assert result["server_game2_off_cosmetic"]["copied_appearance"]>0
+          assert result["clients"]["erin"]["real_native_outer"]["normal_m2"]["repair_accepted_wire_bytes"]>0
+          rx=result["clients"]["erin"]["native_fec2_rx"]["live_half_second"]
+          assert rx["observed"] and rx["sample_count"]>=300
+          assert all(x["observations"]>=15 for x in rx["recovery_10s_windows"])
+          assert result["clients"]["erin"]["directions"]["downlink"]["recovery"]["delivery_fraction"]>.99
+          def rows(text,marker):
+              return [{k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
+                      for line in text.splitlines() if marker in line]
+          tx=rows((root/"h1250-product-erin.log").read_text(),
+              "V4_PUBLIC_FEC2_EGRESS_DIAG role=client side=tx")
+          server=rows((root/"h1250-product-server.log").read_text(),
+              "V4_PUBLIC_FEC2_EGRESS_DIAG role=server side=rx")
+          server=[x for x in server if x.get("fec_source",0)>0]
+          assert len(tx)>=300 and len(server)>=300
+          def longest_plateau(samples,flat,changing):
+              spans=[];segment=None
+              for a,b in zip(samples,samples[1:]):
+                  holds=b[flat]==a[flat]
+                  progresses=b[changing]>a[changing] if changing else holds
+                  if holds and progresses:
+                      if segment is None:segment=[a,b]
+                      else:segment[1]=b
+                  elif segment is not None:
+                      spans.append(segment);segment=None
+              if segment is not None:spans.append(segment)
+              assert spans
+              spans.sort(key=lambda x:x[1]["ns"]-x[0]["ns"],reverse=True)
+              return spans
+          tx_spans=longest_plateau(tx,"m4_copied","source_queued")
+          tx_burst=next((a,b) for a,b in tx_spans
+                        if b["ns"]-a["ns"]>=2_000_000_000 and
+                        b["backpressure"]-a["backpressure"]>=1500)
+          server_spans=longest_plateau(server,"raw_batches",None)
+          rx_burst=next((a,b) for a,b in server_spans
+                        if 2_000_000_000 <= b["ns"]-a["ns"] < 6_000_000_000
+                        and b["fec_source"]==a["fec_source"]
+                        and b["fec_parity"]==a["fec_parity"]
+                        and b["fec_recovered"]==a["fec_recovered"])
+          client=json.loads((root/"h1250-c-erin.json").read_text())
+          remote=json.loads((root/"h1250-s-erin.json").read_text())
+          business=[]
+          for second in (18,19,20,21,22):
+              sl=slice(second*100,(second+1)*100)
+              offered=sum(client["tx_bytes_bins_10ms"]["udp"][sl])*8/1e6
+              delivered=sum(remote["rx_bytes_bins_10ms"]["udp"][sl])*8/1e6
+              business.append({"app_second":second,"actual_sender_mbps":round(offered,4),
+                               "real_remote_receive_mbps":round(delivered,4)})
+          assert all(row["actual_sender_mbps"]>15.8 for row in business)
+          assert business[1]["real_remote_receive_mbps"]==business[2]["real_remote_receive_mbps"]==0
+          # Counter is the typed kernel sendmmsg EAGAIN signal,
+          # NOT successful original frozen M4 copies.
+          tx_begin,tx_end=tx_burst;rx_begin,rx_end=rx_burst
+          f={
+            "result":"ORIGINAL_SOURCE_REAL_TX_BACKPRESSURE_STAGE_ATTRIBUTED",
+            "source_sha":result["source_sha"],
+            "original_action_run_id":42145967317,
+            "original_action_conclusion":"success",
+            "artifact_id":13469324548,
+            "artifact_sha256":"1332f1e2a2392d3fd31e09fa311583b1521476a350c2095d6f369a0a9e698afb",
+            "original_three_client_real_business_seconds":180,
+            "game2_off_original_frozen_outer_client":result["clients"]["carol"]["real_native_outer"],
+            "game2_off_original_frozen_outer_server":result["server_game2_off_cosmetic"],
+            "normal_fixed6_30pct_physical_qdisc":result["clients"]["erin"]["physical_qdisc"],
+            "fixed30_recovery_downlink_fraction":result["clients"]["erin"]["directions"]["downlink"]["recovery"]["delivery_fraction"],
+            "fixed30_ingress_server_per_authenticated_lease":result["clients"]["erin"]["server_owned_tun_lease"],
+            "fixed30_original_client_raw_tx_plateau":{
+                "process_relative_ns":[tx_begin["ns"],tx_end["ns"]],
+                "duration_seconds":round((tx_end["ns"]-tx_begin["ns"])/1e9,4),
+                "new_FEC_source_queued":tx_end["source_queued"]-tx_begin["source_queued"],
+                "M4_actual_copied_delta":tx_end["m4_copied"]-tx_begin["m4_copied"],
+                "native_M4_typed_backpressure_delta":tx_end["backpressure"]-tx_begin["backpressure"],
+                "M4_errors_delta":tx_end["m4_errors"]-tx_begin["m4_errors"],
+                "native_FEC_parity_sent_delta":tx_end["fec_parity_sent"]-tx_begin["fec_parity_sent"],
+            },
+            "fixed30_original_server_raw_rx_plateau":{
+                "process_relative_ns":[rx_begin["ns"],rx_end["ns"]],
+                "duration_seconds":round((rx_end["ns"]-rx_begin["ns"])/1e9,4),
+                "raw_batches_delta":rx_end["raw_batches"]-rx_begin["raw_batches"],
+                "FEC_source_delta":rx_end["fec_source"]-rx_begin["fec_source"],
+                "FEC_parity_delta":rx_end["fec_parity"]-rx_begin["fec_parity"],
+                "FEC_recovered_delta":rx_end["fec_recovered"]-rx_begin["fec_recovered"],
+                "TUN_failure_delta":rx_end["tun_failure"]-rx_begin["tun_failure"],
+            },
+            "actual_app_C2S_seconds_18_22":business,
+            "real_client_RX_FEC2_500ms_recovery_windows":rx["recovery_10s_windows"],
+            "alerts":result["alerts"],
+            "scope":"One hosted Linux x86 native Go TLS/Rust original product; process-relative 500ms stage timestamps are not cross-process absolute timestamps",
+            "interpretation":"Typed Linux raw sendmmsg EAGAIN/backpressure prevented original Fixed6 M4 firstsend for ~2.5sec despite continuing FEC source ingress; peer authenticated FEC2 raw receive stalled ~3sec. A later opposite-direction 7sec H1259 hiccup is NOT proven identical. Do not increase FEC cache/outer repeats or assert CPU causal root.",
+          }
+          pathlib.Path("out/h1264-fixed30-backpressure-stage.json").write_text(json.dumps(f,indent=2)+"\n")
+          print("H1264_ORIGINAL_FEC30_M4_EAGAIN_PLUS_SERVER_RX_PLATEAU_OFFLINE_PASS "
+                +json.dumps({"tx":f["fixed30_original_client_raw_tx_plateau"],
+                             "rx":f["fixed30_original_server_raw_rx_plateau"],
+                             "game2_client_copies":f["game2_off_original_frozen_outer_client"]["game2_off_policy"]["outer_data_retransmitted"]}),flush=True)
+          PY_FORENSICS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1264-original180s-fixed30-backpressure-posthoc
+          path: out/
+          retention-days: 14
+          if-no-files-found: warn

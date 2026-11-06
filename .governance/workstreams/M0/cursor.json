@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1263,
-  "checkpoint_sha": "ca93235b5fd1d8a81e85bf6c35d13988226999b1",
+  "sequence": 1264,
+  "checkpoint_sha": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1263 fix H1262 ORIGINAL 3-client outer/FEC30 diagnostic fixture-only Python SyntaxError at original harness line219: doubled quote in print authentic lease marker, before any business. H1262 product Rust Game2Off cosmetics formerly gated by fec_enabled remains unchanged. Source ca932 H1262 Action42145763494 failed during py_compile in original TLS build step, no real Game2 outer or Fixed30 performance outcomes from this failed attempt. Correct only one character and rerun same native x86 180s real 0% Normal Off +5% Game2 OFF +30% Normal Fixed6 125ms with FEC2 500ms RX counters; no full five-client repeat.",
-  "why_now": "H1262 CI detected pre-start fixture SyntaxError before any original network traffic; correct reporter harness typo only and avoid interpreting test infrastructure FAIL as product behavior.",
+  "current_task": "H1264 H1263 authentic original Go TLS+Rust native x86 Game2 FEC OFF 5% cosmetic outer ON REAL bidirectional corrected: ORIGINAL frozen original PN/SEQ copies client1082/server1082, old H1259 same mode R0. Original H1263 3-client native 180s Action42145967317 SUCCESS, ZIP13469324548 sha1332f1e2 CRC39 PASS; A Normal0 outer M2 R0 expected, Erin Fixed6 30% original M2 R65073727 wire bytes. H1259 Bob1% original M2=13956072 bytes, Erin30%=147529144 (prior devlog missing last digits corrected). Erin Fixed6 genuine C2S ~2.5s original M4 sendmmsg typed EAGAIN backpressure +3938 with +6317 FEC sources while m4_copied zero; S2C client RX did not fail, server original Fixed6 RX raw/FEC frozen for 3.023s, real C2S business sec19/20 dropped to zero despite ~16Mbps actual sender. Original recovered 90s Fixed6 downlink99.9634%, old 430s S2C last7s dip87.6436% NOT re-created/not proven same root; separate 2 alerts from warmup DL87.619% and sustained UL92.654%. Correct per-process Rust `loop_now` relative vs Python monotonic clock mismatch in 500ms RX reporter, add offline exact SHA H1264 replay with native no network repeat and stage EAGAIN readback. DO NOT tune raw sndbuf, FEC age or add packet retries until matched evidence.",
+  "why_now": "Requested check each outer cosmetic and continue fixing 30% Fixed6: Game2Off had real deterministic FEC-gated outer R0 and now original native both-direction R1082; 180s original Fixed6 transient was outbound typed raw M4 kernel EAGAIN, not FEC decoder. Previous reporter incorrectly aligns process-local Rust ns with Python absolute monotonic, so quick offline same-original-zip forensics is needed without rerunning native network.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe H1263 original source-locked native x86 3client 180s Action for product Rust compile/test, both Game2Off 5%-loss client and server actual immutable appearance sends>0, Normal outer on readback, FEC2 Fixed6 30% post-overload90s 10sec window diagnostics, true netem loss and bounded Stop. If further harness syntax issue, fix only concrete cause.",
+  "next_action": "Collect H1264 quick immutable H1263 ZIP posthoc replay Action: 489 original per500ms FEC2 RX samples correctly populate recovery windows, source bound manifest/three original leases and 180s endpoints, actual Game2 Off 1082 frozen each endpoint, Fixed6 original raw TX EAGAIN plateau>2s & remote RX plateau>2s, true 30% kernel qdisc. H1263 original Action stays successful. After scoped offline data, address raw Linux sendmmsg backpressure only via separate cold bounded send socket/pacing evidence with no new PN/uncertain retries; keep old H1259 opposite-direction 7s incident unresolved and H998 PMTU FAIL.",
   "unverified": true,
-  "last_tested_source": "af2dc107fb9edce01db8a143295b678af6c91bcf",
+  "last_tested_source": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1259-SOURCEAF2D-FIVE-CLIENT-430S-POSTHOC-20261106.json"
+    "docs/evidence/M0/PLAN028-H1263-SOURCE8DDA-GAME2-OFF-OUTER-FIXED30-180S-20261106.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1259 430s client outer readback A0 R0 as expected, B1% NormalAuto R139560B, C5% Game2Off outer enabled R0 BUG, D15% Game4 Fixed6 R5176, E30% NormalFixed6 R147529B. H1262 Rust Game Off cosmetic gate candidate installed, but Action42145763494 was not a native test because Python report fixture py_compile fails at line219 doubled quote. H1263 one-char cleanup only; H1259 30% Fixed6 recovery DL87.64% remains unproven root, H998 PMTU historic FAIL retained."
+  "partial_summary": "H1263 SOURCE8ddab original Go TLS Rust 3client x86 native180s 0/5/30% source/action42145967317 PASS, Game2 OFF cosmetic true1082 CLIENT/1082 SERVER after FEC gate bug fix, A0 M2 outer0 expected, Fixed6 30% M2 accepted65073727 frozen wire bytes. Erin fixed6 C2S genuine sendmmsg EAGAIN +3938 in 2.502s while source+6317 and M4 successes0; server raw/FEC source+parity+recovered none for3.023s, app sender16Mbps/sec19-20 but remote0; recovered90s downlink99.9634% and only two phase delivery alerts. H1259 previous S2C last7s failure may differ. H1264 correct Rust relative ns reporter and offline replay pending; no native rerun. H998 PMTU FAIL preserved."
 }

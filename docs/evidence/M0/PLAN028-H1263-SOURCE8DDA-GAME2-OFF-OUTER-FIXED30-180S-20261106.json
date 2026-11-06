@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1263",
+  "source_sha": "8ddab1219132f6206c53fca501fc972fcb5ca11b",
+  "result": "REAL_NATIVE_180S_GAME2_OFF_OUTER_FUNCTIONAL_PASS_WITH_FIXED30_LOSS_ALERTS",
+  "scope": "Original Go TLS authenticated 3 independently leased native x86 Linux netns clients, one shared TCP443 + Rust TUN, 180s actual load +10s drain, 10s warmup/45s sustained/35s overload/90s rate-down, bidirectional real UDP and netem 0/5/30% 0/50/125ms one-way; no app retries.",
+  "action_run_id": 42145967317,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42145967317",
+  "action_job_id": 127657392817,
+  "action_conclusion": "success",
+  "artifact_id": 13469324548,
+  "artifact_name": "plan028-h1262-game2-off-outer-fixed30-180s",
+  "artifact_sha256": "1332f1e2a2392d3fd31e09fa311583b1521476a350c2095d6f369a0a9e698afb",
+  "artifact_crc": "PASS",
+  "artifact_files": 39,
+  "artifact_verified": true,
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "native_binary_sha256": {
+    "wbd-v4-client": "6606b73840719e118a65060023b0ece7303d12a6ba7ef8c5a5ff4c53c24e97cd",
+    "wbd-v4-server": "dd72e74a1f28de6d05fb05886a923afd543b21dd28b13be14f28515343fb7f19",
+    "libwbd_engine.so": "e759415c6d144001c2c26ab727782454cea131802fd2773d0e33abbaa7e8e944"
+  },
+  "outer_retransmission_per_original_client": {
+    "alice_normal_off_0pct": {
+      "outer_policy_enabled": true,
+      "actual_original_frozen_retransmit_wire_bytes": 0,
+      "interpretation": "clean 0% physical qdisc, 0 genuine gap retry is expected"
+    },
+    "carol_game2_off_5pct": {
+      "outer_policy_enabled": true,
+      "actual_frozen_cosmetic_original_pn_seq_client": 1082,
+      "actual_frozen_cosmetic_original_pn_seq_server": 1082,
+      "raw_client_first_lane_copied": 1041968,
+      "blocked_duplicate": 0,
+      "interpretation": "H1262 fixed FEC OFF cosmetic gate; genuine original raw copied PN/SEQ frozen appearance on both directions, no AEAD or FEC credit"
+    },
+    "erin_normal_fixed6_30pct": {
+      "outer_policy_enabled": true,
+      "actual_original_frozen_retransmit_wire_bytes": 65073727,
+      "interpretation": "real raw accepted outer repair data bytes, not business recovered unique count"
+    },
+    "h1259_historical_same_original_product_source": {
+      "source_sha": "af2dc107fb9edce01db8a143295b678af6c91bcf",
+      "bob_normal_auto_1pct_accepted_wire_bytes": 13956072,
+      "carol_game2off_5pct_cosmetic_copies": 0,
+      "dave_game4fixed6_15pct_cosmetic_copies": 5176,
+      "erin_normalfixed6_30pct_accepted_wire_bytes": 147529144
+    }
+  },
+  "physical_qdisc_actual": {
+    "carol_up": 0.050249,
+    "carol_down": 0.04992,
+    "erin_up": 0.299847,
+    "erin_down": 0.30043,
+    "netem_limit_packets": 10000
+  },
+  "native_server_shared_tun": {
+    "three_independent_lease_pending_overflows": [
+      0,
+      0,
+      0
+    ],
+    "alice_offered": 347559,
+    "carol_offered": 520975,
+    "erin_offered": 463158,
+    "all_three_pending_peak_packets": 0
+  },
+  "normal_fixed6_30pct_actual_udp_unique_fraction": {
+    "warmup_downlink": 0.87619,
+    "sustained_uplink": 0.92654,
+    "overload_downlink": 0.993102,
+    "recovery_downlink": 0.999634,
+    "recovery_downlink_actual_sent_mbps": 15.9999,
+    "recovery_downlink_actual_received_mbps": 15.9941,
+    "previous_h1259_430s_recovery_downlink_fraction": 0.876436,
+    "interpretation": "90s rate-down did NOT reproduce previous H1259 last20s downlink blackout; two performance alerts are real other-direction/phase losses, so do not promote full Fixed6 performance PASS."
+  },
+  "fixed6_native_fec2_rx": {
+    "client_stop_peak_active": 38,
+    "client_stop_age_evicted": 31071,
+    "client_stop_reorder_evicted": 0,
+    "client_stop_invalid_retired": 1262,
+    "client_stop_reject_capacity": 0,
+    "client_stop_reject_codec": 0,
+    "client_fec_source_accepted": 323646,
+    "client_fec_parity_accepted": 406373,
+    "client_fec_recovered": 138206,
+    "client_tun_failure": 0,
+    "client_fec2_500ms_sample_count": 489,
+    "original_h1263_report_defect": "Original RX 500ms ns=loop_now() per-process relative, but H1263 reporter compared with absolute Python monotonic start; its recovery 10s windows falsely showed zero observations. H1264 fixes report alignment and replays archive OFFLINE, no new network run."
+  },
+  "fixed6_sender_egress_backpressure_suspected": {
+    "observed_original_client_fec2_tx_500ms_sampled_m4_copied_zero_while_new_sources_accepted": true,
+    "actual_m4_copied_plateau_sec": 2.502,
+    "new_sources_queued_during_plateau": 6317,
+    "native_original_m4_backpressure_events_during_plateau": 3938,
+    "original_client_total_m4_backpressure_events": 4690,
+    "server_original_fixed6_raw_RX_gap_seconds": 3.023,
+    "server_raw_batches_delta": 0,
+    "server_fec_source_delta": 0,
+    "server_fec_parity_delta": 0,
+    "server_fec_recovered_delta": 0,
+    "actual_client_app_C2S_sent_mbps_during_gap_approximately_16": true,
+    "actual_server_app_C2S_received_mbps_in_seconds_19_and_20": 0,
+    "mechanism": "Original native M4 Linux sendmmsg typed EAGAIN backpressure during outgoing frozen FEC first-send, followed by no original receive/decoding on server; full packet data / kernel socket capacity cause NOT_YET_ISOLATED.",
+    "comparison_limit": "Previous H1259 opposite S2C 7sec blackout did not have 500ms FEC2 diagnostic and cannot be declared same root."
+  },
+  "cautions": [
+    "No universal outer cosmetic guarantee for Normal: M2 opportunistic original authenticated gap recovery has zero expected on clean no-loss.",
+    "Cosmetic Game outer copies are NOT application retransmission and are not FEC recovered.",
+    "Source x86 hosted netns only; not ARM Windows Android physical.",
+    "One original action failed H1262 ca932 at py_compile typo before traffic; H1263 source corrected fixture, original H1262 FAIL remains.",
+    "H1259 430s historical Original ACTION FAIL due reporter Stop race; H1260 offline replay succeeded; H998 online MTU shrink original socket FAIL retained.",
+    "This result diagnoses Fixed6 temporary M4 backpressure but does not yet safely fix raw TX socket capacity without separate scoped proof."
+  ]
+}
