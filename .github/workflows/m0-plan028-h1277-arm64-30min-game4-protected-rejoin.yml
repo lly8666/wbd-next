@@ -1,4 +1,5 @@
 name: M0 PLAN028 H1277 ARM64 30min five-client simultaneous rotation stress
+# H1277: original Go overlay blob locks regenerated for changed protected epoch/test sources.
 run-name: H1277 ARM64 original Go TLS/Rust 3 parallel 1800s five-client scenes
 on:
   push:

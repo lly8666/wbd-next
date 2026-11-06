@@ -1064,7 +1064,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "17a5993ce8e9ad5feb2e60fd977b439a6c6790d4"
+      "result_blob": "604bc1dd75665e2a17cf4a656f8528569b5312cf"
     },
     {
       "kind": "create",
@@ -1083,7 +1083,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "6877c35477b066c873625b1d12347ccee0b5fbec"
+      "result_blob": "77446339753ce1a6beb6479c2d3e9f4ddedd728f"
     },
     {
       "kind": "create",

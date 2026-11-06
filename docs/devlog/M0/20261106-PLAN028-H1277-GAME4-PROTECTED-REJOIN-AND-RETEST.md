@@ -10,7 +10,7 @@
 
 其他真实问题不得掩盖：H1276 Pressure Carol Game2 Gen8 只有客户端READY，没有匹配服务端双lane M4，双向93.3秒断流；Pressure Dave TUN overflow=3227；异构/高压 Erin 仅7次成功整组（低于10次），TLS cold候选分别40/32失败，仍有1–5秒交付空洞；Game4 异构本地7/服务端匹配5，高压9/8。Baseline Bob与Pressure Alice从H1274 ~70秒改为H1276 0–30ms只代表这次测量改善，不能证明根因消除。R实际accepted record字节baseline183.059MB、hetero432.951MB、pressure550.345MB；R/(F+R)分别0.69264/1.09642/0.73557%，不包含控制C、FEC parity、IP/TCP/L2。
 
-新 `.github/workflows/m0-plan028-h1277-arm64-30min-game4-protected-rejoin.yml` 同SOURCE原 Go TLS与Rust库原生ARM64双端、一份产物供三台并行 runner每场完整1800秒。必须实测真实 server Game4 FULL_GROUP M4 及精确旧Stop，五客户端所有30分钟业务UDP/TCP/p99/gap/TC/CPU/RSS/每租约TUN队列/表演式repeat record；**任何report alerts/换代失败都让CI失败**，不允许构建绿灯即宣布性能PASS。SOURCE尚未执行完的部分属于 NOT_RUN/UNVERIFIED。H998旧same-socket在线MTU FAIL及H1259/H1268 S2C间歇故障保留。
+新 `.github/workflows/m0-plan028-h1277-arm64-30min-game4-protected-rejoin.yml` 同SOURCE原 Go TLS与Rust库原生ARM64双端、一份产物供三台并行 runner每场完整1800秒。必须实测真实 server Game4 FULL_GROUP M4 及精确旧Stop，五客户端所有30分钟业务UDP/TCP/p99/gap/TC/CPU/RSS/每租约TUN队列/表演式repeat record；**任何report alerts/换代失败都让CI失败**，不允许构建绿灯即宣布性能PASS。首个源锁定 Action [42184053868](https://github.com/lly8666/wbd-next/actions/runs/42184053868) 在 `FEC2_ASSEMBLY_REJECTED: overlay result blob mismatch: internal/realityfront/admission_v4.go` 处拒绝 **PRE-BUILD**，三场均 SKIPPED，绝不计入1800s产品证据。H1277 追补清单中原始受保护 TLS 实现和 Go 单测对应的两个 Git blob SHA；不得放宽 Assembly 检查。新版 SOURCE 同步 workflow push filter后再次触发，结果仍 UNVERIFIED。H998旧same-socket在线MTU FAIL及H1259/H1268 S2C间歇故障保留。
 
 ```feature-impact
 {"kind":"updated","ids":["game-lanes"],"reason":"Correct original Game4 same-physical-path full authenticated cohort restart versus existing single-lane hot reauth using frozen credential-verified TLS requested epoch and original pending/M4 owner, without new wire/policy."}
