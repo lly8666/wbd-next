@@ -7136,6 +7136,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
             let mut last_egress_diag=Instant::now();
+            // Opt-in original RAW RX poll/worker telemetry. Local u64
+            // counters only, no per-packet remote API or public control.
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_poll_ready_total=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_poll_idle_total=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_processed_total=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_poll_worker_gap_max_ns=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_processing_max_ns=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_prev_loop_start=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
             #[cfg(feature="fec2_product_record")]
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
@@ -7143,24 +7157,46 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_sack_tx_ns=0u64;
             while !stop_rx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
+                if egress_diag{
+                    // Account for worker scheduling/waiting versus native
+                    // RX processing separately. These checks are absent in
+                    // the production default when opt-in env is disabled.
+                    let tick=Instant::now();
+                    rx_poll_worker_gap_max_ns=rx_poll_worker_gap_max_ns.max(
+                        tick.duration_since(rx_prev_loop_start).as_nanos()
+                            .min(u64::MAX as u128) as u64);
+                    rx_prev_loop_start=tick;
+                }
+                #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
                     last_egress_diag=Instant::now();
-                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={}",
+                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={} poll_ready={} poll_idle={} processed={} max_loop_gap_ns={} max_processing_ns={} worker_cpu_ns={}",
                         if rx_server_side{"server"}else{"client"},
                         loop_now().0,stats_rx.rx.load(Ordering::Relaxed),
                         stats_rx.rx_error.load(Ordering::Relaxed),
                         stats_rx.fec_rx[0].load(Ordering::Relaxed),
                         stats_rx.fec_rx[2].load(Ordering::Relaxed),
                         stats_rx.fec_rx[5].load(Ordering::Relaxed),
-                        stats_rx.fec_rx[8].load(Ordering::Relaxed));
+                        stats_rx.fec_rx[8].load(Ordering::Relaxed),
+                        rx_poll_ready_total,rx_poll_idle_total,rx_processed_total,
+                        rx_poll_worker_gap_max_ns,rx_processing_max_ns,
+                        owner_thread_cpu_ns().saturating_sub(cpu_origin));
                 }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats_rx.rx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                if !loop_readiness(raw_fd,&stop_rx,10){continue}
-                match background_raw_once(
+                let ready=loop_readiness(raw_fd,&stop_rx,10);
+                #[cfg(feature="fec2_product_record")]
+                if egress_diag{
+                    if ready{rx_poll_ready_total=rx_poll_ready_total.saturating_add(1)}
+                    else{rx_poll_idle_total=rx_poll_idle_total.saturating_add(1)}
+                }
+                if !ready{continue}
+                #[cfg(feature="fec2_product_record")]
+                let processing_started=if egress_diag{Some(Instant::now())}else{None};
+                let result=background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
                     rx_flow,generation,rx_server_side,rx_peer_persona,
                     rx_assigned_ip,&raw_for_rx,&tun_for_rx,
@@ -7183,8 +7219,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     original_outer_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
                     rx_health_evidence.as_ref()
-                ){
-                    Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
+                );
+                #[cfg(feature="fec2_product_record")]
+                if let Some(t)=processing_started{
+                    rx_processing_max_ns=rx_processing_max_ns.max(
+                        t.elapsed().as_nanos().min(u64::MAX as u128) as u64);
+                }
+                match result{
+                    Ok(n)=>{
+                        stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);
+                        #[cfg(feature="fec2_product_record")]
+                        if egress_diag{
+                            rx_processed_total=rx_processed_total.saturating_add(u64::from(n));
+                        }
+                    }
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }

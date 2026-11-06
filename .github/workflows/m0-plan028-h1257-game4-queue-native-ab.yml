@@ -1,15 +1,8 @@
 name: M0 PLAN028 H1257 Game4 per-lease queue and copy reason native AB
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1257-game4-queue-native-ab.yml"
-      - "tools/m0-plan028-h1257-game4-queue-netns.py"
-      - "tools/m0-plan028-h1257-queue-report.py"
-      - "crates/wbd-engine/src/runtime/game_shared.rs"
-      - "crates/wbd-engine/src/v4_game_lane.rs"
-      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
-      - "crates/wbd-engine/src/v4_embedded_go.rs"
+  # Historical native scenario already source-qualified. Preserve explicit
+  # manual replay, don't auto-dispatch expensive old workload for unrelated
+  # original RAW RX diagnostic changes.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

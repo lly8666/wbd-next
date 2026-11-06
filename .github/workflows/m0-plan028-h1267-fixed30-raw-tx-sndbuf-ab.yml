@@ -1,13 +1,8 @@
 name: M0 PLAN028 H1267 Fixed30 native raw-TX socket default vs cold sendbuf A/B
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1267-fixed30-raw-tx-sndbuf-ab.yml"
-      - "crates/wbd-platform/src/linux_raw_carrier.rs"
-      - "crates/wbd-engine/src/v4_embedded_go.rs"
-      - "tools/m0-plan028-h1267-raw-sndbuf-ab-netns.py"
-      - "tools/m0-plan028-h1267-raw-sndbuf-ab-report.py"
+  # Historical native scenario already source-qualified. Preserve explicit
+  # manual replay, don't auto-dispatch expensive old workload for unrelated
+  # original RAW RX diagnostic changes.
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:
