@@ -116,6 +116,24 @@ def per_lease_tun_stop_counters(server_text):
                 "pending_peak_bytes","pending_peak_packets")}
     return result
 
+def normal_m4_server_proof(server_text):
+    # Only exact original protected Rust M4 Ready counts, not ordinary TLS
+    # completion, local client Ready, or a guessed source port.
+    commits=set((ip,int(port)) for ip,port in re.findall(
+        r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\\d.]+) client_port=(\\d+)",
+        server_text))
+    rejects={(ip,int(port)):(stage,int(rc)) for stage,rc,ip,port in re.findall(
+        r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\\d+) class=[^\\s]+ client_ipv4=([\\d.]+) client_port=(\\d+)",
+        server_text)}
+    return commits,rejects
+
+
+def normal_m4_client_proof(client_text):
+    return [(int(gen),ip,int(port)) for gen,ip,port in re.findall(
+        r"V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\\d+).*?client_ipv4=([\\d.]+) client_port=(\\d+)",
+        client_text)]
+
+
 def analyze(art,server_log):
     plan=read(art/"h1250-matrix-plan.json")
     assert plan["long_scene"] in ("baseline","heterogeneous","pressure")
@@ -143,15 +161,7 @@ def analyze(art,server_log):
     # server rejected normal_rust_owner, so the entire 73.3s generation had
     # zero raw receive and no business. Match independently observed protected
     # server-native success by the exact physical IPv4+TCP source port.
-    server_normal_m4=set(
-        (ip,int(port)) for ip,port in re.findall(
-            r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\d.]+) client_port=(\d+)",
-            server_text))
-    server_normal_reject={
-        (ip,int(port)):(stage,int(rc)) for stage,rc,ip,port in re.findall(
-            r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\d+) class=[^\s]+ client_ipv4=([\d.]+) client_port=(\d+)",
-            server_text)
-    }
+    server_normal_m4,server_normal_reject=normal_m4_server_proof(server_text)
     result={
         "schema_version":1,"checkpoint":"H1274",
         "source_sha":plan["source_sha"],"scene":plan["long_scene"],
@@ -258,9 +268,7 @@ def analyze(art,server_log):
                 # independently observed server M4 success for every
                 # client-promoted generation; never infer it from local
                 # FakeTCP/TLS Ready or client-only exact old Stop.
-                scoped=[(int(gen),ip,int(port)) for gen,ip,port in re.findall(
-                    r"V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\d+).*?client_ipv4=([\d.]+) client_port=(\d+)",
-                    text)]
+                scoped=normal_m4_client_proof(text)
                 missing=[gen for gen,ip,port in scoped
                          if (ip,port) not in server_normal_m4]
                 failed=[{"generation":gen,"stage":server_normal_reject[(ip,port)][0],
