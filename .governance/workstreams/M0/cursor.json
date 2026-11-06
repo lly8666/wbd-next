@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1276,
+  "sequence": 1277,
   "checkpoint_sha": "22a016f1261bc00255ef5beff3983273170155cf",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1276 genuine three-scene 1800s H1274 artifact debug: Game2 client-local M4 Ready vs server incomplete protected TLS cohort produces 83-106s outages; Bob baseline/ Alice pressure 70s no-physical-loss blackouts independent. Narrow Rust bounded per-lease shared-TUN overflow fix opportunistically flushes oldest packet when M1 receiver frees inbox; protected Go TLS server now logs cold class/port and each staged real Game lane. Source-locked new ARM64 3x1800s strict rotation+performance workflow prepared but not yet completed. Do NOT claim full fix or PASS.",
-  "why_now": "Original H1274 evidence shows server lease queue overflow Bob52, pressure Alice87 Dave2461; missing Game2 server cohort commit 1/2/2 cases, plus Normal/Auto 70s outages and high-loss Game4 readiness mismatch. Test one bounded TUN queue repair and enhanced TLS cold attribution with fully source-locked original native regression; do not misclassify old false-positive rotation oracle or build success as performance.",
+  "current_task": "H1277 after H1276 exact 3x1800s native ARM64 SOURCE226b run42174970877: build success, all scenes performance FAIL. Baseline Game4 Dave uplink zero delivery minutes19-30 (775.92s active-TX-without-RX, 45.536% UDP loss) while downlink continues, confirmed client old Game4 group terminated 06:51:55 -> fresh full 4-lane local group 06:51:59, but server mistakenly hot-rekeys each 4 lanes into old GameAdapter (06:51:57-59) because same IP/record budgets. Fix server full-group admission using existing protected TLS requested ZERO epoch (fresh) vs explicit old epoch (hot) with pending full-cohort precedence. Pressure Game2 93.4s missing M4 two-lane commit remains independent FAIL; pressure Game4 server per-lease overflow 3227; high-loss Fixed6/ Game4 cold TLS timeout. New H1277 native x3 long stress workflow source-locked pending.",
+  "why_now": "H1276 severe new baseline Game4 one-way 775.9s outage has directly traceable same-path full-group mistaken for old-group hot rekey. Correct original protected epoch intent, never rely on TCP ports/IP or add a new wire flag. Keep strict 1800s delivery and old baseline regressions; fix unit and product scope first.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Observe H1276 source-locked 3x1800s ARM64 results for all 5 clients per scene, exact server M4 port match, 10ms app gaps, 30 minute UDP+TCP goodput, physical TC, p99, CPU/RSS, per-lease TUN queue, cosmetic R record bytes. If any substantive business alert remains, keep FAIL, use cold class/client port to isolate next true product fix; no changing loss thresholds or smoothing dropouts. H998 same-socket MTU FAIL and H1259/1268 S2C intermittent remain unresolved.",
+  "next_action": "Inspect exact H1277 frozen SOURCE 3x1800s ARM64 run: build native Go epoch-zero regression, then all 5 clients/scene real server Game4 full-cohort M4 logs, Game2 true two-lane port match, client Stop/IP, 30 minute UDP and TCP, p99, 10ms active TX no receive, physical TC, per-lease TUN, CPU/RSS, cosmetic R. If any failing, retain FAIL and locate cause; old H998 live same-socket MTU and historical S2C intermittence remain unresolved.",
   "unverified": true,
-  "last_tested_source": "d04ace6ce8781f5afea96e3ff76a53ac617b771e",
+  "last_tested_source": "226b3fe367a4613a38c8208441b0ca29fb2fd8c8",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1277-H1276-1800S-SOURCE226B-ACCEPTANCE-20261106.json",
     "docs/evidence/M0/PLAN028-H1275-SOURCED04A-THREE-1800S-ARM64-POSTHOC-20261106.json"
   ],
   "context_refs": [

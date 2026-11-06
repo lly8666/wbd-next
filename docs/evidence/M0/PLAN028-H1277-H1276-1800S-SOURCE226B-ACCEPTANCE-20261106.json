@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "kind": "PLAN028_H1276_ORIGINAL_NATIVE_3X1800S_ACCEPTANCE_FAIL",
+  "source_sha": "226b3fe367a4613a38c8208441b0ca29fb2fd8c8",
+  "action_run_id": 42174970877,
+  "build": "success",
+  "scenes_all": "failure",
+  "comparisons_source_sha": "d04ace6ce8781f5afea96e3ff76a53ac617b771e",
+  "previous_action_run_id": 42162179000,
+  "artifacts": {
+    "baseline": {
+      "id": 13484600859,
+      "sha256": "dc02c47dffefe3c73410b640b63b229965db0f3fb8cd6d0faef26383b1198630"
+    },
+    "heterogeneous": {
+      "id": 13484232117,
+      "sha256": "3a7e2f8f1c540f5cdf5495342b8a8419976c1cbfb09e49a84333015a78aa7522"
+    },
+    "pressure": {
+      "id": 13484680827,
+      "sha256": "2ddada67633ef9062115c12fc3fd5a3cb1129ab6c3ba85baccdb175b45d04a8f"
+    }
+  },
+  "scenes": {
+    "baseline": {
+      "alerts": 5,
+      "cpu_pct": 63.632,
+      "peak_rss_kib": 173556,
+      "cosmetic_R_bytes": 183059324,
+      "cosmetic_R_pct": 0.69264,
+      "cosmetic_R_mbps": 0.8136,
+      "client": {
+        "alice": {
+          "udp_loss_up_down_pct": [
+            0.008,
+            0.005
+          ],
+          "largest_tx_rx_gap_up_down_ms": [
+            0,
+            0
+          ],
+          "tun_overflow": 0
+        },
+        "bob": {
+          "udp_loss_up_down_pct": [
+            0.007,
+            0
+          ],
+          "largest_tx_rx_gap_up_down_ms": [
+            0,
+            0
+          ],
+          "tun_overflow": 0
+        },
+        "carol": {
+          "udp_loss_up_down_pct": [
+            0.014,
+            0.04
+          ],
+          "largest_tx_rx_gap_up_down_ms": [
+            10,
+            20
+          ],
+          "tun_overflow": 0,
+          "server_missing_cohorts": []
+        },
+        "dave": {
+          "udp_loss_up_down_pct": [
+            45.536,
+            0.378
+          ],
+          "largest_tx_rx_gap_up_down_ms": [
+            775920,
+            3050
+          ],
+          "tun_overflow": 0,
+          "local_hot": 15,
+          "server_hot": 14,
+          "client_group_generations": [
+            1,
+            2,
+            3
+          ],
+          "proof": "Client Gen1 original native owner STOP 06:51:55, Gen2 all 4 TLS lane local READY 06:51:59; server mistakenly emitted 4 V4_PUBLIC_GAME_SINGLE_LANE_READY matching Gen2 ports 59881/59882/59883/59884, no new Game4 full GROUP M4, despite sustained downlink."
+        },
+        "erin": {
+          "udp_loss_up_down_pct": [
+            0.006,
+            0.084
+          ],
+          "largest_tx_rx_gap_up_down_ms": [
+            50,
+            90
+          ],
+          "tun_overflow": 0
+        }
+      }
+    },
+    "heterogeneous": {
+      "alerts": 5,
+      "cpu_pct": 87.904,
+      "peak_rss_kib": 163976,
+      "cosmetic_R_bytes": 432951469,
+      "cosmetic_R_pct": 1.09642,
+      "cosmetic_R_mbps": 1.92423,
+      "client": {
+        "alice": {
+          "largest_tx_rx_gap_up_down_ms": [
+            20,
+            20
+          ]
+        },
+        "bob": {
+          "largest_tx_rx_gap_up_down_ms": [
+            20,
+            30
+          ]
+        },
+        "carol": {
+          "largest_tx_rx_gap_up_down_ms": [
+            50,
+            90
+          ],
+          "server_missing_cohorts": []
+        },
+        "dave": {
+          "largest_tx_rx_gap_up_down_ms": [
+            190,
+            1210
+          ],
+          "local_hot": 7,
+          "server_hot": 5
+        },
+        "erin": {
+          "largest_tx_rx_gap_up_down_ms": [
+            1140,
+            1270
+          ],
+          "successful_full_groups": 8,
+          "failed_tls_candidates": 40
+        }
+      }
+    },
+    "pressure": {
+      "alerts": 12,
+      "cpu_pct": 103.417,
+      "peak_rss_kib": 221628,
+      "cosmetic_R_bytes": 550344667,
+      "cosmetic_R_pct": 0.73557,
+      "cosmetic_R_mbps": 2.44598,
+      "client": {
+        "alice": {
+          "largest_tx_rx_gap_up_down_ms": [
+            30,
+            30
+          ],
+          "tun_overflow": 0
+        },
+        "bob": {
+          "largest_tx_rx_gap_up_down_ms": [
+            30,
+            20
+          ]
+        },
+        "carol": {
+          "largest_tx_rx_gap_up_down_ms": [
+            93310,
+            93410
+          ],
+          "server_missing_cohorts": [
+            8
+          ]
+        },
+        "dave": {
+          "largest_tx_rx_gap_up_down_ms": [
+            1220,
+            100
+          ],
+          "tun_overflow": 3227,
+          "local_hot": 9,
+          "server_hot": 8
+        },
+        "erin": {
+          "largest_tx_rx_gap_up_down_ms": [
+            2290,
+            5360
+          ],
+          "successful_full_groups": 8,
+          "failed_tls_candidates": 32
+        }
+      }
+    }
+  },
+  "limits": [
+    "30-minute phase and 30 per-minute direction bins retained in exact artifact ZIP, not condensed evidence.",
+    "R/(F+R) record accepted bytes only: C/FEC parity/IP/TCP/L2 not measured.",
+    "H1276 queue repair did not eliminate pressure Game4 overflow; do not ascribe 70s lower gaps to it causally.",
+    "H998 same-socket MTU FAIL and S2C historic outages remain open."
+  ]
+}
