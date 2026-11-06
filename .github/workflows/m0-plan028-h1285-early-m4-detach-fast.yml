@@ -52,6 +52,7 @@ jobs:
           }
           grep -Fq -- "--- PASS: TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor" ../h1285-early-burst-unit.log
           grep -Fq -- "--- PASS: TestPLAN028PreDetachMalformedRecordStillAborts" ../h1285-early-burst-unit.log
+          go test -count=1 -v -run '^TestPLAN028OriginalServerFakeTCPDetachAfterBoundedM4Burst$' ./internal/faketcp
           go test -count=1 ./internal/faketcp
           echo "M0_PLAN028_H1285_EXACT_ORIGINAL_GO_PRE_DETACH_BURST_PASS"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
