@@ -200,5 +200,20 @@
     "30% NormalFixed FEC2 recovery downturn prevents all-five perfect-delivery conclusion.",
     "Only Linux hosted x86 native namespace, not ARM/Windows/Android multi-host.",
     "PLAN027A H998 original same-socket online MTU shrink FAIL retained."
-  ]
+  ],
+  "source_sha": "af2dc107fb9edce01db8a143295b678af6c91bcf",
+  "result": "DIAGNOSTIC_COMPLETE_WITH_30PCT_RECOVERY_ALERT",
+  "artifact_verified": true,
+  "original_reporter_offline_replay": {
+    "run_id": 42141025302,
+    "status": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42141025302",
+    "output_artifact_id": 13467007746,
+    "output_artifact_sha256": "2f55d1319bdeea65c6e10a9f71526d24653a50718a6d27e99b79e2e39e7a5fd0",
+    "source_checked": "af2dc107fb9edce01db8a143295b678af6c91bcf",
+    "actual_reporter_confirmed": "H1260_OFFLINE_ORIGINAL_430S_REPORT_REPLAY_SCOPED_PASS",
+    "reported_alert_count": 2,
+    "normal_fixed6_30pct_recovery_downlink_unique_delivery_fraction": 0.876436,
+    "retroactively_overrides_original_Action_status": false
+  }
 }

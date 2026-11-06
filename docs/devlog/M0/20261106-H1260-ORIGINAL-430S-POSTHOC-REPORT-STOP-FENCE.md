@@ -26,6 +26,10 @@ H1259 SOURCE `af2dc107fb9edce01db8a143295b678af6c91bcf` Action [42137210217](htt
 2. Restore an explicit `POST_OVERLOAD_RECOVERY_DELIVERY_UNDER_95PCT` diagnostic for **every** configured client, rather than suppressing the 30% peer; this retains the exact 87.644% residual and does **not** convert diagnostic collection success to product quality PASS.
 3. Make the H1259 **long** workflow manually dispatched only. Add one **quick, zero-network** H1260 Action which downloads immutable H1259 artifact13465309614 by exact run and checks its SHA256 metadata, SOURCE and manifest; asserts all ten 430s endpoints and all five final Stops; invokes the real updated reporter against these final logs. Expect success of the offline *evidence replay*, not retroactive Action success. Do not run a second 430s matrix.
 
+## H1261 validation closeout (original SOURCE unchanged)
+
+The zero-network offline replay [Action42141025302](https://github.com/lly8666/wbd-next/actions/runs/42141025302) **PASS** downloaded the original immutable 430-second native Action artifact13465309614, validated its source+binary manifest, all ten real native application endpoint durations and all five original-Go/Rust product Stops, then re-ran the corrected original report on the final fully flushed logs. The resulting report emitted **two genuine diagnostic alerts**, including the 30%-loss NormalFixed6 recovery downlink at 87.6436% unique application UDP, and otherwise confirmed five independent per-lease TUN overflow counts of0 and Game4 15%-loss 100% unique business delivery in steady/overload/rate-down recovery. Replay artifact13467007746 SHA256 `2f55d1319bdeea65c6e10a9f71526d24653a50718a6d27e99b79e2e39e7a5fd0` stores the full report. This PASS is the **offline report replay only**. Historical original Action42137210217 remains **FAIL** due to Stop race; it is not rewritten as green. No new 430-second network job was dispatched.
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Native measurement postmortem, race-free per-client original Stop log capture and an offline immutable artifact reporter replay only. No new product or feature behavior."}
 ```
