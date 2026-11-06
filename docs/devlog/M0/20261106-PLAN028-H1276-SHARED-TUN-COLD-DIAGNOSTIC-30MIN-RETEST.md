@@ -22,5 +22,5 @@
 R/(F+R) 按加密 record 字节，**不含控制包 C、IP/TCP/L2、FEC parity**；不伪报全 IP overhead 或 R/(F+R+C)。历史 H998 原同连接在线 MTU 热切换 FAIL、H1259/H1268 Fixed6 S2C 间歇故障持续打开。此文在新 SOURCE 尚未跑完前仅为变更/测试计划，不是产品验收证明。
 
 ```feature-impact
-{"kind":"update","ids":["linux-raw-tun"],"reason":"Production Rust original shared TUN bounded per-lease backpressure FIFO correction and same-SOURCE native three-scene verification; Game protected-TLS change only adds cold attribution metadata, no mode/wire policy change."}
+{"kind":"updated","ids":["linux-raw-tun"],"reason":"Production Rust original shared TUN bounded per-lease backpressure FIFO correction and same-SOURCE native three-scene verification; Game protected-TLS change only adds cold attribution metadata, no mode/wire policy change."}
 ```
