@@ -152,7 +152,7 @@ jobs:
             >"fixed-kernel-result/h1274-${{ matrix.scene }}.log" 2>&1 || {
               tail -200 "fixed-kernel-result/h1274-${{ matrix.scene }}.log" >&2; exit 1;
             }
-          grep -Fq "M0_H1276_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE ${{ matrix.scene }}" \
+          grep -Fq "M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE ${{ matrix.scene }}" \
             "fixed-kernel-result/h1274-${{ matrix.scene }}.log"
           python3 - <<'PY_RESULT'
           import json,os,pathlib
