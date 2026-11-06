@@ -1,5 +1,6 @@
-//! Game FEC *presentation only* outer TCP replay, shared by Windows NPF
-//! and Linux raw M4. It is NOT a delivery retry, FEC source, ACK, or credit.
+//! Game FEC and Game OFF *presentation only* outer TCP replay, shared
+//! by Windows NPF and Linux raw M4. It is NOT a delivery retry,
+//! FEC source, authenticated ACK, or delivery credit.
  //! One sparse frozen ciphertext per lane; no heap work on ordinary sends,
  //! no global M2 allocator, no background thread or per-packet wall clock.
 use std::sync::Arc;
@@ -274,6 +275,44 @@ mod tests{
         assert!(!c.on_feedback(0,260,100_000_000));
         assert!(c.next_due().is_none());
         assert_eq!(c.sent(),0);
+    }
+    #[test]
+    fn m0_plan028_game2_off_policy_on_uses_same_frozen_outer_pn_seq_once(){
+        // Game2 OFF still has two original authenticated lanes. The FEC
+        // flag must not suppress a requested sparse outer appearance.
+        // One first copy per physical lane is TRACKED only on every 16th
+        // confirmed copied record, independent of FEC source ownership.
+        let first=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
+            slot:1,generation:9};
+        let second=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
+            slot:2,generation:9};
+        let mut outer=CosmeticOuter::with_normal_feedback(
+            &[first,second],&[100,900],[5;16]).unwrap();
+        let wire=b"real-original-ciphertext";
+        for i in 0..16u64{
+            outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
+                wire,(i+1)*1_000_000).unwrap();
+        }
+        assert_eq!(outer.next_due(),Some(266_000_000));
+        assert!(outer.take_due(265_999_999,&[true,true]).is_none());
+        let repeat=outer.take_due(266_000_000,&[true,true]).unwrap();
+        assert_eq!(repeat.lane,0);
+        assert_eq!(repeat.pn,16);
+        assert_eq!(repeat.seq,100+15*wire.len() as u64);
+        let frozen=repeat.frozen(first);
+        assert_eq!(frozen.bytes(),wire);
+        assert_eq!(frozen.metadata().pn,RecordPn(16));
+        assert_eq!(frozen.metadata().seq,SeqOffset(repeat.seq));
+        assert!(outer.take_due(266_000_001,&[true,true]).is_none());
+        assert!(outer.complete(0,16,true,266_000_000));
+        assert!(!outer.complete(0,16,true,266_000_001));
+        assert_eq!(outer.sent(),1);
+        // Cooldown protects low-rate appearance even if data is busy.
+        for i in 16..32u64{
+            outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
+                wire,(i+1)*1_000_000).unwrap();
+        }
+        assert!(outer.next_due().is_none());
     }
     #[test]
     fn game_fec_cosmetic_cannot_resume_retired_lane_or_double_credit(){

@@ -550,14 +550,14 @@ impl GameKernelOwner{
                             if ok {
                                 // Only the real raw first copied PN/SEQ is
                                 // eligible; most packets pay one mask test.
-                                if fec_enabled&&outer_repair_enabled{
+                                if outer_repair_enabled{
                                     // Genuine first raw kernel success only.
                                     // Normal ACK metadata is sparse; a
                                     // lost optional hint never changes M4/FEC
                                     // copied result or original sender credit.
                                     if cosmetic.on_firstsend(index,pn,item.seq,
                                         wire,due_now.0).is_err(){
-                                        eprintln!("WBD_GAME_FEC_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
+                                        eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
                                     }
                                 }
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
@@ -631,7 +631,7 @@ impl GameKernelOwner{
                     let fec_due=game.game_fec_next_due_ns(MonoNs(clock_ns));
                     let stagger=game.game4_stagger_enabled();
                     drop(flush); // release mutable cosmetic capture
-                    let cosmetic_due=if fec_enabled&&outer_repair_enabled{
+                    let cosmetic_due=if outer_repair_enabled{
                         cosmetic.next_due()
                     }else{None};
                     let next_due=copy_due.into_iter().chain(fec_due)
@@ -680,9 +680,9 @@ impl GameKernelOwner{
                                                 accepted=lane.raw.send_one(generation,&frozen,
                                                     tuple,presentation).is_ok();
                                                 if accepted{
-                                                    if fec_enabled&&outer_repair_enabled &&
+                                                    if outer_repair_enabled &&
                                                         cosmetic.on_health_copy(0,lane.seq,n).is_err(){
-                                                        eprintln!("WBD_GAME_FEC_NORMAL_OUTER_HINT_DROP lane=1 reason=health_seq");
+                                                        eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane=1 reason=health_seq");
                                                     }
                                                     lane.seq=lane.seq.saturating_add(n as u64);
                                                     tx_copy.fetch_add(1,Ordering::Relaxed);
@@ -700,12 +700,15 @@ impl GameKernelOwner{
                         ControlDue::None=>{},
                     }
                     drop(game);
-                    // Immutable ciphertext replay is solely TCP-looking.
+                    // Whether Game FEC is OFF or fixed, an enabled original
+                    // outer policy may replay one sparse frozen TCP-looking
+                    // ciphertext; neither mode may mint a second PN/source.
                     // It does not enter AEAD, GameRx/FEC, original first-send
                     // credit, Health or the authenticated delivery ledger.
-                    if fec_enabled&&outer_repair_enabled{
+                    if outer_repair_enabled{
                         // Reverse Game DATA's checksum/tuple-checked ACK
-                        // becomes eligible only AFTER AEAD opened. Read
+                        // becomes eligible only AFTER AEAD opened, including
+                        // Game2 OFF; no untrusted TCP ACK gains authority. Read
                         // the last atomic ACK per lane, bounded to 3
                         // duplicated reports per TX owner turn.
                         for (i,hint) in tx_hints.iter().enumerate(){
@@ -788,9 +791,16 @@ impl GameKernelOwner{
                     tx_fail.df0_fragments.load(Ordering::Relaxed),
                     tx_fail.icmp3_code4_sent.load(Ordering::Relaxed),
                     tx_fail.icmp3_code4_denied.load(Ordering::Relaxed));
-                if fec_enabled&&outer_repair_enabled{
-                    eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",
-                        cosmetic.sent());
+                if outer_repair_enabled{
+                    // FEC Off is a valid Game2/4 product mode. Its selected
+                    // outer policy must still produce low-rate appearance
+                    // copies of the ORIGINAL authenticated ciphertext:
+                    // no FEC parity or new PN, and no feedback credit.
+                    if fec_enabled {
+                        eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent());
+                    }else{
+                        eprintln!("WBD_GAME_OFF_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",cosmetic.sent());
+                    }
                 }
             }).map_err(|_|())?;
         let mut threads=vec![tx_worker];
@@ -865,7 +875,7 @@ impl GameKernelOwner{
                     // decode are done solely by THIS physical lane worker,
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
-                    if fec_enabled && matches!(&opened,Ok(Some(_))){
+                    if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
                         // TCP appearance is not AEAD-authenticated by
                         // itself: only actual original Game opens may
                         // nominate peer ACK gaps. This does not award
