@@ -20,7 +20,7 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
             if polls>=3{return realityfront.V4PublicLoopPulse{RxRecords:1},nil}
             return realityfront.V4PublicLoopPulse{},nil
         }
-        err:=waitOriginalNormalM4PeerProof(context.Background(),pulse,func()error{
+        err:=waitOriginalNativeM4PeerProof(context.Background(),pulse,func()error{
             promotions++
             return nil
         },time.Second)
@@ -30,7 +30,7 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
     })
     t.Run("local_TLS_READY_without_remote_M4_keeps_old_route",func(t *testing.T){
         promotions:=0
-        err:=waitOriginalNormalM4PeerProof(context.Background(),
+        err:=waitOriginalNativeM4PeerProof(context.Background(),
             func()(realityfront.V4PublicLoopPulse,error){
                 return realityfront.V4PublicLoopPulse{},nil
             },func()error{promotions++;return nil},35*time.Millisecond)
@@ -40,14 +40,14 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
     })
     t.Run("native_terminal_or_cancel_fails_closed",func(t *testing.T){
         ran:=false
-        err:=waitOriginalNormalM4PeerProof(context.Background(),
+        err:=waitOriginalNativeM4PeerProof(context.Background(),
             func()(realityfront.V4PublicLoopPulse,error){
                 return realityfront.V4PublicLoopPulse{AuthenticatedPeerDead:true},nil
             },func()error{ran=true;return nil},time.Second)
         if err==nil||ran{t.Fatal("native dead cannot promote old route")}
         ctx,cancel:=context.WithCancel(context.Background())
         cancel()
-        err=waitOriginalNormalM4PeerProof(ctx,
+        err=waitOriginalNativeM4PeerProof(ctx,
             func()(realityfront.V4PublicLoopPulse,error){
                 return realityfront.V4PublicLoopPulse{},nil
             },func()error{ran=true;return nil},time.Second)
