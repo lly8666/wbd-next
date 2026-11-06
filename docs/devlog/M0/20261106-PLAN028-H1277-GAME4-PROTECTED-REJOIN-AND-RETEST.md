@@ -15,3 +15,5 @@
 ```feature-impact
 {"kind":"updated","ids":["game-lanes"],"reason":"Correct original Game4 same-physical-path full authenticated cohort restart versus existing single-lane hot reauth using frozen credential-verified TLS requested epoch and original pending/M4 owner, without new wire/policy."}
 ```
+
+H1277 source-meta 补正：原受保护 Go TLS + 真实 Rust 组装只能在 manifest 两个 pinned Git blob 与实际文件完全一致时继续；首跑组装失败是检查生效，不能误称性能结论。当前 SOURCE ccba 的编译与场景仍需原始 Action 核验。
