@@ -138,6 +138,20 @@ def analyze(art,server_log):
         (int(lane),int(port)) for lane,port in re.findall(
             r"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=(\d+) rotation=\d+ client_port=(\d+)",
             server_text))
+    # A local client Ready/old Stop is not a remote M4 commit. H1279
+    # pressure Alice Gen11: client Ready + exact old Stop, but the original
+    # server rejected normal_rust_owner, so the entire 73.3s generation had
+    # zero raw receive and no business. Match independently observed protected
+    # server-native success by the exact physical IPv4+TCP source port.
+    server_normal_m4=set(
+        (ip,int(port)) for ip,port in re.findall(
+            r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\d.]+) client_port=(\d+)",
+            server_text))
+    server_normal_reject={
+        (ip,int(port)):(stage,int(rc)) for stage,rc,ip,port in re.findall(
+            r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\d+) class=[^\s]+ client_ipv4=([\d.]+) client_port=(\d+)",
+            server_text)
+    }
     result={
         "schema_version":1,"checkpoint":"H1274",
         "source_sha":plan["source_sha"],"scene":plan["long_scene"],
@@ -239,6 +253,32 @@ def analyze(art,server_log):
                 "native_final_stop_observed":native_stop,
                 "minimum_ten_true_successful_handoffs":enough
             }
+            if spec["mode"] not in ("game2","game4"):
+                # For all Normal Off / Auto / Fixed6 modes, require
+                # independently observed server M4 success for every
+                # client-promoted generation; never infer it from local
+                # FakeTCP/TLS Ready or client-only exact old Stop.
+                scoped=[(int(gen),ip,int(port)) for gen,ip,port in re.findall(
+                    r"V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=(\d+).*?client_ipv4=([\d.]+) client_port=(\d+)",
+                    text)]
+                missing=[gen for gen,ip,port in scoped
+                         if (ip,port) not in server_normal_m4]
+                failed=[{"generation":gen,"stage":server_normal_reject[(ip,port)][0],
+                         "native_rc":server_normal_reject[(ip,port)][1]}
+                        for gen,ip,port in scoped
+                        if (ip,port) in server_normal_reject]
+                rotation["server_normal_m4_commits_observed"]=len(scoped)-len(missing)
+                rotation["client_ready_but_server_normal_m4_missing"]=missing
+                rotation["server_normal_m4_rejections"]=failed
+                if not scoped or len(scoped)!=len(ready) or missing or failed:
+                    result["alerts"].append({
+                        "who":who,"kind":"CLIENT_NORMAL_READY_WITHOUT_SERVER_NATIVE_M4",
+                        "generation_ids":missing,
+                        "reported_client_generations":len(ready),
+                        "exact_port_proofs":len(scoped),
+                        "server_rejections":failed})
+                    passed=False
+                    rotation["result"]="FAIL_SERVER_NORMAL_M4_COMMIT_MISSING"
             if spec["mode"]=="game2":
                 # Existing authenticated Go TLS can return client READY
                 # before the other endpoint commits the two-lane M4 cohort.
