@@ -13,6 +13,7 @@ import (
     "crypto/sha256"
     "encoding/binary"
     "errors"
+    "fmt"
     "io"
     "net"
     "net/netip"
@@ -735,6 +736,11 @@ func v4ProtectedNormalFECProfile(p AdmissionPolicy,profile uint8,shared bool)(ui
     return profile-1,nil
 }
 
+// ErrV4ProtectedReplyAckWait is emitted only when the original authenticated
+// TLS reply could not be ACKed by the peer before its cold deadline.
+// No additional wire field, private prelude, or peer-supplied authority.
+var ErrV4ProtectedReplyAckWait=errors.New("original protected TLS reply ACK wait")
+
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.
 // Epoch becomes active only after successful authenticated reply and detach.
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
@@ -921,7 +927,12 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{assoc.AbortTransition();return nil,err}
     if err:=writeFull(tlsConn,reply);err!=nil{
         assoc.AbortTransition()
-        return nil,candidateError(ctx,err)
+        // The original FakeTCP TLS reply Write waits for a cumulative
+        // TCP ACK. The client may already have verified the reply and
+        // detached into Rust M4; under loss its final bootstrap ACK may
+        // never reach this server. Distinguish this precise cold stage
+        // from failure to authenticate or decode the protected request.
+        return nil,fmt.Errorf("%w: %w",ErrV4ProtectedReplyAckWait,candidateError(ctx,err))
     }
     early,err:=assoc.DetachTransition()
     if err!=nil{assoc.AbortTransition();return nil,err}
