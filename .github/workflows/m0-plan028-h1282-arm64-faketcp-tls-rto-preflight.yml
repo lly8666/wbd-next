@@ -1,5 +1,5 @@
 name: M0 PLAN028 H1282 original native two-phase M4 preflight only
-# H1282: original client FakeTCP cold TLS data retransmission; deterministic test pins validated SYN MSS on original Sender RTO under physical 15-30% TC loss; exact source ARM64 build.
+# H1282: original client FakeTCP cold TLS data retransmission; deterministic test pins validated SYN MSS and waits for the true Sender RTO on original Sender RTO under physical 15-30% TC loss; exact source ARM64 build.
 run-name: H1282 original ARM64 Go+Rust Native M4 peer-proof preflight
 on:
   push:
