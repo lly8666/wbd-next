@@ -3,7 +3,7 @@ name: M0 PLAN028 H1282 original native two-phase M4 preflight only
 run-name: H1282 original ARM64 Go+Rust Native M4 peer-proof preflight
 on:
   push:
-    branches: [work/m0-h1282-normal-proof-before-tun-switch]
+    branches: [work/m0-h1282-faketcp-client-bootstrap-retransmits]
     paths:
       - ".github/workflows/m0-plan028-h1282-arm64-faketcp-tls-rto-preflight.yml"
   workflow_dispatch:
