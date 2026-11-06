@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "source_sha": "1e4ceb200c71ce5b7230212b568503c562cecf0e",
+  "run_id": 42191219373,
+  "architecture": "original Go TLS+Rust M4 native aarch64, 3 independent 1800s five-client scenes",
+  "build": "success",
+  "artifacts": [
+    {
+      "scene": "baseline",
+      "id": 13490549200,
+      "sha256": "e8a4ed2ffbd0348535ef6f1a219628a08b6ea7912862b3dc567d98282a8d90e9"
+    },
+    {
+      "scene": "heterogeneous",
+      "id": 13491044210,
+      "sha256": "b9ea983b745de109706502f4bb9d26cbfe2bdf013d81f859a2b83095cd5f6b28"
+    },
+    {
+      "scene": "pressure",
+      "id": 13490784989,
+      "sha256": "fe8049f374741daf8bfdbe104e239e9e8302144880b6257ead3d5107e0ef8c85"
+    }
+  ],
+  "scenes": {
+    "baseline": {
+      "job": "success",
+      "alerts": 0,
+      "cpu_one_core_pct": 65.992,
+      "rss_peak_kib": 171736,
+      "first_record_bytes": 26296524675,
+      "accepted_repeat_record_bytes": 183509282,
+      "repeat_pct": 0.69301,
+      "repeat_mbps": 0.8156,
+      "game2_server_m4_commits": 22,
+      "game2_missing_server": 0,
+      "game2_gap_up_down_ms": [
+        10,
+        30
+      ],
+      "game4_local_server_hot": [
+        17,
+        17
+      ],
+      "game4_queue_overflow_server_client": [
+        0,
+        0
+      ],
+      "fixed6_rotations": 16,
+      "fixed6_gap_up_down_ms": [
+        50,
+        100
+      ]
+    },
+    "heterogeneous": {
+      "job": "failure",
+      "alerts": 5,
+      "cpu_one_core_pct": 82.515,
+      "rss_peak_kib": 173076,
+      "first_record_bytes": 39093938680,
+      "accepted_repeat_record_bytes": 382143069,
+      "repeat_pct": 0.96804,
+      "repeat_mbps": 1.69841,
+      "game2_server_m4_commits": 16,
+      "game2_missing_server": 0,
+      "game2_gap_up_down_ms": [
+        50,
+        90
+      ],
+      "game4_local_server_hot": [
+        8,
+        8
+      ],
+      "game4_deferred_tls": 8,
+      "game4_gap_up_down_ms": [
+        1110,
+        2240
+      ],
+      "game4_queue_overflow_server_client": [
+        0,
+        0
+      ],
+      "fixed6_rotations": 10,
+      "fixed6_failed_tls_candidates": 30,
+      "fixed6_gap_up_down_ms": [
+        2300,
+        7410
+      ]
+    },
+    "pressure": {
+      "job": "failure",
+      "alerts": 6,
+      "cpu_one_core_pct": 103.901,
+      "rss_peak_kib": 224532,
+      "first_record_bytes": 74062584076,
+      "accepted_repeat_record_bytes": 583680853,
+      "repeat_pct": 0.78193,
+      "repeat_mbps": 2.59414,
+      "game2_server_m4_commits": 17,
+      "game2_missing_server": 0,
+      "game2_gap_up_down_ms": [
+        70,
+        170
+      ],
+      "game4_local_server_hot": [
+        8,
+        8
+      ],
+      "game4_deferred_tls": 8,
+      "game4_queue_overflow_server_client": [
+        6364,
+        3321
+      ],
+      "game4_gap_up_down_ms": [
+        190,
+        200
+      ],
+      "fixed6_rotations": 8,
+      "fixed6_failed_tls_candidates": 34,
+      "fixed6_gap_up_down_ms": [
+        2420,
+        2300
+      ]
+    }
+  },
+  "final_reply_ack_wait_server_tag_hits": {
+    "baseline": 0,
+    "heterogeneous": 0,
+    "pressure": 0
+  },
+  "causal_limit": "Correlation with last-ACK guard, not proof all earlier incomplete Game2 cohorts were caused by that exact final ACK failure.",
+  "performance_verdict": "BASELINE_SCOPED_PASS; HETEROGENEOUS_AND_PRESSURE_FAIL",
+  "overhead_limit": "R/(F+R) counts encrypted first and accepted repeat record bytes only; control C, FEC parity and IP/TCP/L2 bytes are NOT_MEASURED",
+  "unresolved": [
+    "15%-loss Game4 hot lane target and traffic gaps",
+    "pressure Game4 server/client M1 bounded inbox overflow",
+    "30%-loss Fixed6 2.3-7.41s app gaps and TLS cold retries",
+    "H998 live same-socket MTU FAIL",
+    "H1259/1268 old intermittent S2C"
+  ]
+}
