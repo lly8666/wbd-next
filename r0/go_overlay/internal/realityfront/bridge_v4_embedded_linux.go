@@ -74,6 +74,15 @@ import (
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
 var errV4Embedded=errors.New("embedded V4 Rust control refused")
+// Numeric Rust refusal is kept behind a typed, credential-free boundary.
+// The parent remains errV4Embedded so old errors.Is semantics are intact.
+type v4EmbeddedNativeStatus struct{
+    Operation string
+    Code int
+}
+func (e *v4EmbeddedNativeStatus) Error()string{return errV4Embedded.Error()}
+func (e *v4EmbeddedNativeStatus) Unwrap()error{return errV4Embedded}
+
 type v4EmbeddedNativeBridge struct {
     handle uint64
     committed bool
@@ -229,7 +238,7 @@ func (b *v4EmbeddedNativeBridge) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)
     defer r.mu.Unlock()
     if r.handle==0{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_shared_tun_bind(C.uint64_t(b.handle),C.uint64_t(r.handle))
-    if rc!=0{return fmt.Errorf("%w: authenticated shared TUN bind=%d",errV4Embedded,int(rc))}
+    if rc!=0{return fmt.Errorf("%w: authenticated shared TUN bind=%d",&v4EmbeddedNativeStatus{Operation:"shared_tun_bind",Code:int(rc)},int(rc))}
     return nil
 }
 type v4EmbeddedPending struct{
@@ -338,7 +347,7 @@ func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex ui
         C.uint64_t(b.handle),C.uint32_t(ifindex),
         (*C.uchar)(unsafe.Pointer(&bytes[0])),C.size_t(len(bytes)))
     runtime.KeepAlive(bytes)
-    if rc!=0{return fmt.Errorf("%w: authenticated raw underlay %q/%d bind=%d",errV4Embedded,ifname,ifindex,int(rc))}
+    if rc!=0{return fmt.Errorf("%w: authenticated raw underlay %q/%d bind=%d",&v4EmbeddedNativeStatus{Operation:"raw_rx_attach",Code:int(rc)},ifname,ifindex,int(rc))}
     return nil
 }
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
@@ -347,7 +356,7 @@ func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
     rc:=C.wbd_m0_embedded_go_attach_tun(C.uint64_t(b.handle),C.int32_t(fd),
         (*C.uchar)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)))
     runtime.KeepAlive(raw)
-    if rc!=0{return fmt.Errorf("%w: bind real TUN=%d",errV4Embedded,int(rc))}
+    if rc!=0{return fmt.Errorf("%w: bind real TUN=%d",&v4EmbeddedNativeStatus{Operation:"tun_attach",Code:int(rc)},int(rc))}
     return nil
 }
 func (b *v4EmbeddedNativeBridge) receiveRawToTun()(uint32,uint32,error){
@@ -558,7 +567,7 @@ func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)
 func (b *v4EmbeddedNativeBridge) startRustOwnerLoop(ifindex uint32)error{
     if !b.committed||b.handle==0{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_loop_start(C.uint64_t(b.handle),C.uint32_t(ifindex))
-    if rc!=0{return fmt.Errorf("%w: Rust original owner loop=%d",errV4Embedded,int(rc))}
+    if rc!=0{return fmt.Errorf("%w: Rust original owner loop=%d",&v4EmbeddedNativeStatus{Operation:"rust_loop_start",Code:int(rc)},int(rc))}
     return nil
 }
 type v4EmbeddedLoopStats struct{RxOK,TxOK,RxErr,TxErr uint64}
