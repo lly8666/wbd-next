@@ -1,0 +1,294 @@
+name: M0 PLAN028 H1286 ARM64 native ISA-L five-client rapid diagnosis
+# H1282: drive existing original FakeTCP client bootstrap DATA Sender RTO until verified TLS/M4 handoff; enable bounded Game SYN RTO; strict 3x1800s acceptance.
+run-name: H1286 original ARM64 TLS and ISA-L three 180-second short checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1286-arm64-native-rapid.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Pin original Go+Rust and assemble one complete ARM64 SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test ! -e r0/go_overlay/internal/realityfront/v4_route_prelude.go
+          mkdir -p fixed-build fixed-kernel-result
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt fixed-kernel-result/assembly.json
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path.cwd(); donor=root/"legacy"
+          rec=json.loads((root/"fixed-kernel-result/assembly.json").read_text(encoding="utf-8"))
+          assert rec["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert rec["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go",
+                      "bridge_v4_normal_m4_failure_stage_linux_test.go",
+                      "normal_m4_remote_proof_linux_test.go",
+                      "cold_faketcp_retransmit_linux_test.go",
+                      "path_linux_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():
+                      assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              p=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),str(dst)
+              dst.write_bytes(p.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role)
+              dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes((root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          print("M0_PLAN028_ARM64_NATIVE_TLS_EXACT_SOURCE_ASSEMBLED source="+os.environ["GITHUB_SHA"],flush=True)
+          PY
+          (cd legacy && go test -count=1 -v -run '^TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender$' ./internal/faketcp) >fixed-kernel-result/h1282-original-faketcp-final-ack-unit.log 2>&1 || {
+            cat fixed-kernel-result/h1282-original-faketcp-final-ack-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender" fixed-kernel-result/h1282-original-faketcp-final-ack-unit.log
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4 -- --test-threads=1 >fixed-kernel-result/h1282-normal-route-proof-rust.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1282-normal-route-proof-rust.log >&2
+            exit 1
+          }
+          grep -Fq -- "test result: ok." fixed-kernel-result/h1282-normal-route-proof-rust.log
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nasm autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1286-arm64-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >fixed-kernel-result/h1286-isal-build.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1286-isal-build.log >&2; exit 1;
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration >fixed-kernel-result/rust-build.log 2>&1 || {
+            tail -110 fixed-kernel-result/rust-build.log >&2
+            exit 1
+          }
+          nm target/release/libwbd_engine.so | grep -Eq ' [tT] ec_encode_data
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1144-protected-policy-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NormalM4AfterPeerRxFenceAndTimeout$' ./internal/v4productcli) >fixed-kernel-result/h1282-normal-peer-proof-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1282-normal-peer-proof-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028NormalM4AfterPeerRxFenceAndTimeout" fixed-kernel-result/h1282-normal-peer-proof-unit.log
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound|TestPLAN028OriginalLaneRetirementGraceIsBetween10And20Seconds)$' ./internal/v4productcli) >fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound" fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()=="aarch64"
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_aarch64","go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_PLAN028_H1144_NATIVE_ARM64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
+          PY
+      - name: Preflight original native packet fixture/reporter and cosmetic record-byte counter
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
+          python3 -m unittest -v tools/test_m0_plan028_h1280_normal_m4_proof.py
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_full_lease_opportunistic_oldest_drain_before_drop -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h1286-arm64-one-isal-build-${{ github.sha }}
+          path: fixed-build/
+          retention-days: 7
+          echo H1286_REAL_ARM64_NATIVE_ISAL_LINKED_PASS
+          cp target/release/libwbd_engine.so fixed-build/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1144-protected-policy-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NormalM4AfterPeerRxFenceAndTimeout$' ./internal/v4productcli) >fixed-kernel-result/h1282-normal-peer-proof-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1282-normal-peer-proof-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028NormalM4AfterPeerRxFenceAndTimeout" fixed-kernel-result/h1282-normal-peer-proof-unit.log
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound|TestPLAN028OriginalLaneRetirementGraceIsBetween10And20Seconds)$' ./internal/v4productcli) >fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028OriginalClientFakeTCPTLSDataRTOAndDetachBound" fixed-kernel-result/h1282-original-client-tls-data-rto-unit.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()=="aarch64"
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_aarch64","go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_PLAN028_H1144_NATIVE_ARM64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
+          PY
+      - name: Preflight original native packet fixture/reporter and cosmetic record-byte counter
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
+          python3 -m unittest -v tools/test_m0_plan028_h1280_normal_m4_proof.py
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_full_lease_opportunistic_oldest_drain_before_drop -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h1282-native-arm64-one-build-${{ github.sha }}
+          path: fixed-build/
+          retention-days: 7
+  scene:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - {scene: pressure, backend: scalar}
+          - {scene: pressure, backend: native}
+          - {scene: heterogeneous, backend: native}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: h1286-arm64-one-isal-build-${{ github.sha }}
+          path: fixed-build/
+      - name: Pin exact original source/ARM64 ELF and SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="native_aarch64"
+          for name,expected in m["sha256"].items():
+              content=(root/name).read_bytes()
+              assert content[:4]==b"\x7fELF" and struct.unpack_from("<H",content,18)[0]==183
+              assert hashlib.sha256(content).hexdigest()==expected
+          print("H1286_NATIVE_ARM64_SOURCE_PINNED",flush=True)
+          PY
+      - name: Three-minute genuine five-client scalar/native source-locked business
+        shell: bash
+        env:
+          WBD_PLAN028_FAST_SCENE: ${{ matrix.scene }}
+          WBD_GAME_FEC_BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1286-rapid-report.py
+          python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build >fixed-kernel-result/h1286-run.log 2>&1 || {
+            tail -200 fixed-kernel-result/h1286-run.log >&2
+            exit 1
+          }
+          grep -Fq "M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE ${{ matrix.scene }}" fixed-kernel-result/h1286-run.log
+          python3 - <<'PY'
+          import json,os,pathlib,re
+          r=json.loads(pathlib.Path("fixed-kernel-result/h1286-rapid-report.json").read_text())
+          assert r["source_sha"]==os.environ["GITHUB_SHA"] and r["duration_seconds"]==180
+          assert r["scene"]==os.environ["WBD_PLAN028_FAST_SCENE"]
+          assert r["server_single_port"]==443 and len(r["clients"])==5
+          d=pathlib.Path("fixed-kernel-result/h1250-product-dave.log").read_text(errors="replace")
+          m=re.findall(r"M0_GAME_M4_FEC_BACKEND_READBACK selected=\S+ native_linked=(\d+) tx_native_quanta=(\d+) tx_scalar_quanta=(\d+)",d)
+          assert m,"original Rust Game4 backend Stop missing"
+          linked,native,scalar=map(int,m[-1])
+          assert linked==1,"not really linked ISA-L on native ARM64"
+          if os.environ["WBD_GAME_FEC_BACKEND"]=="native":
+              assert native>0,"native ISA-L not actually called"
+          else:
+              assert native==0 and scalar>0,"scalar comparison invalid"
+          print("H1286_NATIVE_ARM64_180S_FIVE_CLIENT",json.dumps({
+              "scene":r["scene"],"backend":os.environ["WBD_GAME_FEC_BACKEND"],
+              "native_quanta":native,"scalar_quanta":scalar,
+              "alerts":r["alerts"],"rotation":r["rotation_verdict"],
+              "per_lease":r["server_per_authenticated_lease_tun"]
+          },sort_keys=True),flush=True)
+          if r["alert_count"] or r["rotation_verdict"]!="PASS_ALL_FIVE_SCOPED":
+              raise SystemExit("SHORT_NATIVE_ERRORS_REMAIN; do not run 30-minute suites")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1286-short-${{ matrix.scene }}-${{ matrix.backend }}-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1286-*.json
+            fixed-kernel-result/h1286-*.log
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-*.txt
+            fixed-kernel-result/h1250-product-*.log
+          retention-days: 14
+          if-no-files-found: warn

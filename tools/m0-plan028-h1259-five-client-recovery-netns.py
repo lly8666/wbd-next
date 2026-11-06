@@ -39,7 +39,17 @@ LONG_SCENES={
     "heterogeneous":((0,1,5,15,30),(0,15,50,100,125),(12,12,10,9,8),(79,89,101,107,113)),
     "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
 }
+FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
+if FAST_SCENE and LONG_SCENE:
+    raise SystemExit("rapid and long scenes cannot run together")
+FAST_PHASES=(("first_wave",20,.6),("sustained",40,1.0),
+             ("overload",40,1.3),("recovery",70,1.0))
 ROTATION_SECONDS=(0,0,0,0,0)
+if FAST_SCENE:
+    if FAST_SCENE not in LONG_SCENES:
+        raise SystemExit("unknown rapid native scene")
+    LOSS,DELAY,RATE,_=LONG_SCENES[FAST_SCENE]
+    ROTATION_SECONDS=(37,41,43,29,47)
 if LONG_SCENE:
     if LONG_SCENE not in LONG_SCENES:
         raise SystemExit("invalid PLAN028 30m profile")
@@ -183,8 +193,12 @@ def main():
             "--init-route-key-file",
             str(tmp / "route-key.hex"))
         assert (tmp / "route-key.hex").stat().st_mode & 0o777 == 0o600
+        chosen_backend=os.environ.get("WBD_GAME_FEC_BACKEND","")
+        if chosen_backend and chosen_backend not in ("scalar","native"):
+            raise SystemExit("invalid native backend choice")
         diagnostic_env=["WBD_SHARED_TUN_ROUTE_DIAG=1",
-                        "WBD_GAME_TX_SAMPLE=1","WBD_GAME_RX_LOCK_SAMPLE=1"]
+                        "WBD_GAME_TX_SAMPLE=1","WBD_GAME_RX_LOCK_SAMPLE=1",
+                        *(["WBD_GAME_FEC_BACKEND="+chosen_backend] if chosen_backend else [])]
         sargs = [
             "env", "LD_LIBRARY_PATH=" + str(build), *diagnostic_env,
             str(build / "wbd-v4-server"),
@@ -212,7 +226,7 @@ def main():
                 "--auto-ip", "--installation-id-file", str(tmp / ("install-" + who)),
                 "--mode", MODES[i], *EXTRA[i],
                 *(["--rotation-interval",str(ROTATION_SECONDS[i])+"s",
-                   "--rotation-jitter","5s"] if LONG_SCENE else []),
+                   "--rotation-jitter","5s"] if (LONG_SCENE or FAST_SCENE) else []),
             ]
             proc(who, namespaces[i], args)
         leases = []
@@ -244,10 +258,13 @@ def main():
             "source_sha": source, "start_monotonic_ns": start_ns,
             "server_port": 443, "network_scope": "native Linux x86_64/x86_64 6-netns",
             "warmup_seconds": 10,
-            "simultaneous_stress_seconds":1790 if LONG_SCENE else 420,
-            "application_load_seconds":1800 if LONG_SCENE else 430,
+            "simultaneous_stress_seconds":170 if FAST_SCENE else 1790 if LONG_SCENE else 420,
+            "application_load_seconds":180 if FAST_SCENE else 1800 if LONG_SCENE else 430,
             "drain_seconds":10,"long_scene":LONG_SCENE or None,
-            "rotation_seconds":{who:ROTATION_SECONDS[i] for i,who in enumerate(NAMES)} if LONG_SCENE else {},
+            "fast_scene":FAST_SCENE or None,
+            "fec_backend_choice":chosen_backend or None,
+            "rotation_seconds":{who:ROTATION_SECONDS[i] for i,who in enumerate(NAMES)}
+                if (LONG_SCENE or FAST_SCENE) else {},
             "clients": [],
             "loss_model": "two physical veth egress qdiscs each client; no artificial app drops",
             "netem_qdisc_limit_packets": 10000,
@@ -256,7 +273,8 @@ def main():
             cfg = {
                 "seed": "H1250-" + who, "warmup_s": 10,
                 "phases": ([{"name":name,"seconds":duration,"rate_scale":scale}
-                            for name,duration,scale in LONG_PHASES] if LONG_SCENE else [
+                            for name,duration,scale in (FAST_PHASES if FAST_SCENE else LONG_PHASES)]
+                            if (LONG_SCENE or FAST_SCENE) else [
                     {"name": "first_wave", "seconds": 60, "rate_scale": 0.6},
                     {"name": "sustained", "seconds": 240, "rate_scale": 1.0},
                     {"name": "overload", "seconds": 60, "rate_scale": 1.3},
@@ -342,12 +360,12 @@ def main():
         sampler = threading.Thread(target=monitor, args=(stop, tmp, out), daemon=True)
         sampler.start()
         print(f"H1250_START_NS={start_ns}; 5 native clients simultaneously "
-              f"{1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
-              f"scenario={LONG_SCENE or 'h1259'}; actual two-way tc loss={LOSS}", flush=True)
+              f"{180 if FAST_SCENE else 1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
+              f"scenario={FAST_SCENE or LONG_SCENE or 'h1259'}; actual two-way tc loss={LOSS}", flush=True)
         for role in workers:
             p = procs[role]
             try:
-                code = p.wait(timeout=2100 if LONG_SCENE else 530)
+                code = p.wait(timeout=400 if FAST_SCENE else 2100 if LONG_SCENE else 530)
             except subprocess.TimeoutExpired as exc:
                 raise RuntimeError("traffic worker hung: " + role) from exc
             assert code == 0, f"traffic worker failed: {role}, exit={code}"
@@ -372,7 +390,7 @@ def main():
             ready(tmp / (who + ".log"),
                   "V4_PUBLIC_SHARED_TUN_STOP generation=", 35)
         ready(tmp / "dave.log", "M0_GAME_M4_FEC_BACKEND_READBACK", 10)
-        if LONG_SCENE:
+        if LONG_SCENE or FAST_SCENE:
             # Each of five client processes must terminate/flush its actual final
             # generation before final Stop and repeat counters are copied.
             for who in NAMES:
@@ -383,7 +401,11 @@ def main():
         for who in ("server",) + NAMES:
             log = tmp / (who + ".log")
             (out / ("h1250-product-" + who + ".log")).write_bytes(log.read_bytes()[-1500000:])
-        if LONG_SCENE:
+        if FAST_SCENE:
+            run("python3", str(workspace / "tools/m0-plan028-h1286-rapid-report.py"),
+                "--art", str(out), "--product-log", str(serverlog),
+                "--output", str(out / "h1286-rapid-report.json"))
+        elif LONG_SCENE:
             run("python3", str(workspace / "tools/m0-plan028-h1274-30min-report.py"),
                 "--art", str(out), "--product-log", str(serverlog),
                 "--output", str(out / "h1274-thirty-minute-report.json"))
@@ -391,7 +413,8 @@ def main():
             run("python3", str(workspace / "tools/m0-plan028-h1259-five-client-recovery-report.py"),
                 "--art", str(out), "--product-log", str(serverlog),
                 "--output", str(out / "h1250-five-client-report.json"))
-        print(("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
+        print(("M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE "+FAST_SCENE)
+              if FAST_SCENE else ("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
               if LONG_SCENE else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
               flush=True)
     finally:
