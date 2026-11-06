@@ -31,6 +31,24 @@ EXTRA = (
 )
 
 
+# The original H1259 430-second default remains unchanged. An opt-in
+# SOURCE-qualified H1274 scene extends this very same real Go TLS/Rust harness.
+LONG_SCENE=os.environ.get("WBD_PLAN028_30M_SCENE","")
+LONG_SCENES={
+    "baseline":((0,0,1,1,5),(0,0,15,20,50),(8,8,6,6,6),(67,73,83,97,109)),
+    "heterogeneous":((0,1,5,15,30),(0,15,50,100,125),(12,12,10,9,8),(79,89,101,107,113)),
+    "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
+}
+ROTATION_SECONDS=(0,0,0,0,0)
+if LONG_SCENE:
+    if LONG_SCENE not in LONG_SCENES:
+        raise SystemExit("invalid PLAN028 30m profile")
+    LOSS,DELAY,RATE,ROTATION_SECONDS=LONG_SCENES[LONG_SCENE]
+LONG_PHASES=(
+    ("first_wave",240,.6),("sustained",600,1.0),
+    ("overload",300,1.3),("recovery",650,1.0),
+)
+
 def run(*args, capture=False, check=True):
     result = subprocess.run(args, text=True, capture_output=capture, check=check)
     return result.stdout if capture else ""
@@ -193,6 +211,8 @@ def main():
                 "--username", who, "--password", users[who],
                 "--auto-ip", "--installation-id-file", str(tmp / ("install-" + who)),
                 "--mode", MODES[i], *EXTRA[i],
+                *(["--rotation-interval",str(ROTATION_SECONDS[i])+"s",
+                   "--rotation-jitter","5s"] if LONG_SCENE else []),
             ]
             proc(who, namespaces[i], args)
         leases = []
@@ -223,8 +243,11 @@ def main():
         plan = {
             "source_sha": source, "start_monotonic_ns": start_ns,
             "server_port": 443, "network_scope": "native Linux x86_64/x86_64 6-netns",
-            "warmup_seconds": 10, "simultaneous_stress_seconds": 420,
-            "application_load_seconds": 430, "drain_seconds": 10,
+            "warmup_seconds": 10,
+            "simultaneous_stress_seconds":1790 if LONG_SCENE else 420,
+            "application_load_seconds":1800 if LONG_SCENE else 430,
+            "drain_seconds":10,"long_scene":LONG_SCENE or None,
+            "rotation_seconds":{who:ROTATION_SECONDS[i] for i,who in enumerate(NAMES)} if LONG_SCENE else {},
             "clients": [],
             "loss_model": "two physical veth egress qdiscs each client; no artificial app drops",
             "netem_qdisc_limit_packets": 10000,
@@ -232,19 +255,20 @@ def main():
         for i, who in enumerate(NAMES):
             cfg = {
                 "seed": "H1250-" + who, "warmup_s": 10,
-                "phases": [
+                "phases": ([{"name":name,"seconds":duration,"rate_scale":scale}
+                            for name,duration,scale in LONG_PHASES] if LONG_SCENE else [
                     {"name": "first_wave", "seconds": 60, "rate_scale": 0.6},
                     {"name": "sustained", "seconds": 240, "rate_scale": 1.0},
                     {"name": "overload", "seconds": 60, "rate_scale": 1.3},
                     {"name": "recovery", "seconds": 60, "rate_scale": 1.0},
-                ],
+                ]),
                 "drain_s": 10, "network": {"tcp_window_profile_selected": "large"},
                 "traffic": {
                     "c2s_mbps": RATE[i], "s2c_mbps": RATE[i],
                     "udp_share": 0.8 if i < 2 else 1.0,
                     "tcp_flows": 2 if i < 2 else 0, "probe_hz": 2,
                     "burst_ms": 0, "sizes": [[256, 3], [1024, 7]],
-                    "max_packets": 2000000, "deadline_ms": 1000,
+                    "max_packets": 12000000 if LONG_SCENE else 2000000, "deadline_ms": 1000,
                     "allow_fragmentation": False, "observe_size_classes": True,
                     "observe_independent_flows": i < 2,
                     "warmup_rate_scale": 0.3,
@@ -318,11 +342,12 @@ def main():
         sampler = threading.Thread(target=monitor, args=(stop, tmp, out), daemon=True)
         sampler.start()
         print(f"H1250_START_NS={start_ns}; 5 native clients simultaneously "
-              f"430s warmup+load incl. 60s post-overload recovery, 10s drain, 0/1/5/15/30% two-way loss", flush=True)
+              f"{1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
+              f"scenario={LONG_SCENE or 'h1259'}; actual two-way tc loss={LOSS}", flush=True)
         for role in workers:
             p = procs[role]
             try:
-                code = p.wait(timeout=530)
+                code = p.wait(timeout=2100 if LONG_SCENE else 530)
             except subprocess.TimeoutExpired as exc:
                 raise RuntimeError("traffic worker hung: " + role) from exc
             assert code == 0, f"traffic worker failed: {role}, exit={code}"
@@ -347,15 +372,27 @@ def main():
             ready(tmp / (who + ".log"),
                   "V4_PUBLIC_SHARED_TUN_STOP generation=", 35)
         ready(tmp / "dave.log", "M0_GAME_M4_FEC_BACKEND_READBACK", 10)
+        if LONG_SCENE:
+            # Each of five client processes must terminate/flush its actual final
+            # generation before final Stop and repeat counters are copied.
+            for who in NAMES:
+                procs[who].wait(timeout=35)
+            procs["server"].wait(timeout=35)
         # Product Stop counters are owned by each original Go/Rust process.
         # Copy now, before the report, to expose per-client TUN queue drops.
         for who in ("server",) + NAMES:
             log = tmp / (who + ".log")
             (out / ("h1250-product-" + who + ".log")).write_bytes(log.read_bytes()[-1500000:])
-        run("python3", str(workspace / "tools/m0-plan028-h1259-five-client-recovery-report.py"),
-            "--art", str(out), "--product-log", str(serverlog),
-            "--output", str(out / "h1250-five-client-report.json"))
-        print("M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
+        if LONG_SCENE:
+            run("python3", str(workspace / "tools/m0-plan028-h1274-30min-report.py"),
+                "--art", str(out), "--product-log", str(serverlog),
+                "--output", str(out / "h1274-thirty-minute-report.json"))
+        else:
+            run("python3", str(workspace / "tools/m0-plan028-h1259-five-client-recovery-report.py"),
+                "--art", str(out), "--product-log", str(serverlog),
+                "--output", str(out / "h1250-five-client-report.json"))
+        print(("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
+              if LONG_SCENE else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
               flush=True)
     finally:
         stop.set()
