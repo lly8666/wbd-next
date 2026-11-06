@@ -1,6 +1,6 @@
-name: M0 PLAN028 H1283 original ARM64 grace 30min five-client stress
+name: M0 PLAN028 H1284 native server grace and TUN 2-batch 30min stress
 # H1282: drive existing original FakeTCP client bootstrap DATA Sender RTO until verified TLS/M4 handoff; enable bounded Game SYN RTO; strict 3x1800s acceptance.
-run-name: H1283 ARM64 original Go TLS/Rust randomized grace 3x1800s five-client scenes
+run-name: H1284 native original TLS/Rust 3x1800s five-client real packet scenes
 on:
   push:
     branches: [main]
@@ -127,6 +127,8 @@ jobs:
           python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
           python3 -m unittest -v tools/test_m0_plan028_h1280_normal_m4_proof.py
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_full_lease_opportunistic_oldest_drain_before_drop -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain -- --test-threads=1
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_game4_fec_shared_tun_eight_source_turn_fifo_and_cap -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -190,7 +192,7 @@ jobs:
           assert r["duration_seconds"]==1800 and len(r["clients"])==5
           assert r["scene"]==os.environ["WBD_PLAN028_30M_SCENE"]
           assert all(len(p["directions"]["uplink"]["minute_actual_business"])==30 for p in r["clients"].values())
-          print("H1282_TRUE_30M_METRICS",json.dumps({"scene":r["scene"],
+          print("H1284_TRUE_30M_METRICS",json.dumps({"scene":r["scene"],
                 "rotation_verdict":r["rotation_verdict"],"outer":r["total_client_outer_record"],
                 "alerts":r["alert_count"],"performance":r["performance_verdict"]},sort_keys=True),flush=True)
           assert r["server_single_port"]==443
