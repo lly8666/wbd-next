@@ -1,1 +1,119 @@
-{"schema_version":1,"reservation_revision":4,"roles":[{"id":"M0","name":"项目主开发与交付","state":"active","branch":"main","assignment_epoch":1,"global_writer":true,"allowed_paths":["*"],"owned_semantics":["governance","integration"],"prompt":"docs/prompts/M0.md","cursor":".governance/workstreams/M0/cursor.json","goal":"PLAN028 H1275: After authentic ARM64+ARM64 H1274 3x1800s native five-client stress at SOURCE d04ace6c (build success, all scene jobs failure), investigate genuine Game2 client READY/old Stop before server 2-lane native M4 commit (1/2/2 uncommitted cohorts and 83-106s duplex outages); Game4 single-lane rotations actually occurred (19 baseline; 4 hetero; 5 pressure, only 19/3/3 server-confirmed). Keep honest original R record bytes 184.5/337.7/623.5MB, CPU/p99 and physical/queue source scope, no claim of causal CPU or R/(F+R+C). Next fix narrow cold commit interface without wire/FEC/PN changes or rerun old 30min scenes; H998 live MTU FAIL and old Fixed6 S2C outages retained.","done_when":"Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.","assigned_task":"R0-M0-PLAN028-SESSION-CONFIG"},{"id":"M1","name":"运行时与内存","state":"active","branch":"work/m1-r1-runtime","assignment_epoch":1,"global_writer":false,"allowed_paths":["crates/wbd-engine/src/runtime/","crates/wbd-engine/src/memory/","crates/wbd-engine/tests/","docs/devlog/M1/","docs/evidence/M1/",".governance/workstreams/M1/cursor.json",".governance/workstreams/M1/requests/"],"owned_semantics":["runtime_owner","buffer_arena","normal_off_scheduler","game_m4_lane_runtime"],"prompt":"docs/prompts/M1.md","cursor":".governance/workstreams/M1/cursor.json","goal":"PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M1: independent bounded runtime Game2/4 per-lane kernel M4 dispatch/stop module only; consume exact M0 accepted protected TLS GameAdapter, no edits to M0 public Go/FFI/shared workflow; prior frozen Game015 remains accepted.","done_when":"Deliver M1-owned crates/wbd-engine/src/runtime/game_m4.rs (and runtime/mod.rs only for module export) with genuine M4 per-lane unique immutable frozen ciphertext dispatch, one failed lane not HOL blocking healthy source, generation-scoped Stop/loan drain; source-locked native Actions including positive/negative. No product ON; M0 owns public TLS group and CLI.","assigned_task":"R5-M1-PLAN012-GAME-REAL-LANE-016"},{"id":"M2","name":"恢复与反馈","state":"active","branch":"work/m2-r2-recovery","assignment_epoch":1,"global_writer":false,"allowed_paths":["crates/wbd-recovery/","docs/devlog/M2/","docs/evidence/M2/",".governance/workstreams/M2/cursor.json",".governance/workstreams/M2/requests/"],"owned_semantics":["receipt_state","shadow_repair","recovery_budget"],"prompt":"docs/prompts/M2.md","cursor":".governance/workstreams/M2/cursor.json","goal":"PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M2/§3/§4: within wbd-recovery derive bounded mature 2s/8s first-send denominator from actual definite kernel send and authenticated reverse receipts, coverage, unknown/censored and repair outcomes; freeze event API for M0 original owner integration. No fabricated zero-loss or second controller.","done_when":"One source-locked pure-event replay suite for covered/uncovered/lost-block/reorder/duplicate/lost-receipt/unsent/uncertain/recovery/Stop/epoch; denominator conservation and memory/time bounds; provide typed API and NOT_RUN real M0 network evidence, without RACK reindex or changing repair budget.","assigned_task":"R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011"},{"id":"M3","name":"编码与数据保护","state":"active","branch":"work/m3-r1-codec","assignment_epoch":1,"global_writer":false,"allowed_paths":["crates/wbd-codec/","docs/devlog/M3/","docs/evidence/M3/",".governance/workstreams/M3/cursor.json",".governance/workstreams/M3/requests/"],"owned_semantics":["record_crypto","link_mtu_budget","fec_codec"],"prompt":"docs/prompts/M3.md","cursor":".governance/workstreams/M3/cursor.json","goal":"M0 sole current PLAN012 missing-interface writer under docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md; M3 retains earlier accepted frozen source and role metadata for R0/G2, no concurrent edits to M0-owned product integration/release-record/Game lane files until a new explicit registry decision.","done_when":"Historic M3 accepted module evidence preserved; current PLAN012 interface reassigned to M0; no worker-source activity under this paused-in-practice package, and no fake new SOURCE or repeated tests.","assigned_task":"R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019"},{"id":"M4","name":"平台与产品接入","state":"reserved","branch":"work/m4-r1-platform","assignment_epoch":2,"global_writer":false,"allowed_paths":[],"owned_semantics":[],"prompt":"docs/prompts/M4.md","cursor":".governance/workstreams/M4/cursor.json","goal":"PLAN020 docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md §M4: user explicitly transferred all remaining Windows native WFP, default-route, UDP-driver, WinForms Applied/Disconnect and Windows2022 validation to M0. M4 worker source b53b5dac422a634cdd82178a29071f9f9f0ae5e7 and cursor H53 remain frozen historical; no new writes without a later registry reassignment.","done_when":"Role reserved; no new M4 commits to work/m4-r1-platform or its files. Previously accepted scoped source and original FAIL remain unchanged, M0 alone owns the live product gate.","assigned_task":"R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018"}]}
+{
+  "schema_version": 1,
+  "reservation_revision": 4,
+  "roles": [
+    {
+      "id": "M0",
+      "name": "项目主开发与交付",
+      "state": "active",
+      "branch": "main",
+      "assignment_epoch": 1,
+      "global_writer": true,
+      "allowed_paths": [
+        "*"
+      ],
+      "owned_semantics": [
+        "governance",
+        "integration"
+      ],
+      "prompt": "docs/prompts/M0.md",
+      "cursor": ".governance/workstreams/M0/cursor.json",
+      "goal": "PLAN028 H1276: Original H1274 ARM64 three 1800s five-client scenes ALL FAIL. Game2 server M4 2-lane cohort missing 1/2/2 clients despite local READY, real 83-106s bidirectional gaps; baseline Bob and pressure Alice zero-injection 70s gaps, high-loss Game4 server mismatch; source-specific. Repair actual observed shared-TUN per-lease overflow without widening unbounded queue (bounded opportunistic oldest drain), instrument per-cold-TLS failure class/source port and server lane staging, and rerun same three 30-minute original ARM64 scenes with strict performance gate; no completed verification until artifacts inspected. H998 original same-socket MTU FAIL and old Fixed6 S2C intermittent remain open.",
+      "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
+      "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
+    },
+    {
+      "id": "M1",
+      "name": "运行时与内存",
+      "state": "active",
+      "branch": "work/m1-r1-runtime",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-engine/src/runtime/",
+        "crates/wbd-engine/src/memory/",
+        "crates/wbd-engine/tests/",
+        "docs/devlog/M1/",
+        "docs/evidence/M1/",
+        ".governance/workstreams/M1/cursor.json",
+        ".governance/workstreams/M1/requests/"
+      ],
+      "owned_semantics": [
+        "runtime_owner",
+        "buffer_arena",
+        "normal_off_scheduler",
+        "game_m4_lane_runtime"
+      ],
+      "prompt": "docs/prompts/M1.md",
+      "cursor": ".governance/workstreams/M1/cursor.json",
+      "goal": "PLAN019 docs/decisions/M0-PLAN019-parallel-Game-public-M4-lane-product-2026-10-20.md §M1: independent bounded runtime Game2/4 per-lane kernel M4 dispatch/stop module only; consume exact M0 accepted protected TLS GameAdapter, no edits to M0 public Go/FFI/shared workflow; prior frozen Game015 remains accepted.",
+      "done_when": "Deliver M1-owned crates/wbd-engine/src/runtime/game_m4.rs (and runtime/mod.rs only for module export) with genuine M4 per-lane unique immutable frozen ciphertext dispatch, one failed lane not HOL blocking healthy source, generation-scoped Stop/loan drain; source-locked native Actions including positive/negative. No product ON; M0 owns public TLS group and CLI.",
+      "assigned_task": "R5-M1-PLAN012-GAME-REAL-LANE-016"
+    },
+    {
+      "id": "M2",
+      "name": "恢复与反馈",
+      "state": "active",
+      "branch": "work/m2-r2-recovery",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-recovery/",
+        "docs/devlog/M2/",
+        "docs/evidence/M2/",
+        ".governance/workstreams/M2/cursor.json",
+        ".governance/workstreams/M2/requests/"
+      ],
+      "owned_semantics": [
+        "receipt_state",
+        "shadow_repair",
+        "recovery_budget"
+      ],
+      "prompt": "docs/prompts/M2.md",
+      "cursor": ".governance/workstreams/M2/cursor.json",
+      "goal": "PLAN-008 docs/decisions/M0-integration-unblock-2026-10-19.md §1 M2/§3/§4: within wbd-recovery derive bounded mature 2s/8s first-send denominator from actual definite kernel send and authenticated reverse receipts, coverage, unknown/censored and repair outcomes; freeze event API for M0 original owner integration. No fabricated zero-loss or second controller.",
+      "done_when": "One source-locked pure-event replay suite for covered/uncovered/lost-block/reorder/duplicate/lost-receipt/unsent/uncertain/recovery/Stop/epoch; denominator conservation and memory/time bounds; provide typed API and NOT_RUN real M0 network evidence, without RACK reindex or changing repair budget.",
+      "assigned_task": "R2-M2-PLAN008-MATURE-FIRSTSEND-FEEDBACK-011"
+    },
+    {
+      "id": "M3",
+      "name": "编码与数据保护",
+      "state": "active",
+      "branch": "work/m3-r1-codec",
+      "assignment_epoch": 1,
+      "global_writer": false,
+      "allowed_paths": [
+        "crates/wbd-codec/",
+        "docs/devlog/M3/",
+        "docs/evidence/M3/",
+        ".governance/workstreams/M3/cursor.json",
+        ".governance/workstreams/M3/requests/"
+      ],
+      "owned_semantics": [
+        "record_crypto",
+        "link_mtu_budget",
+        "fec_codec"
+      ],
+      "prompt": "docs/prompts/M3.md",
+      "cursor": ".governance/workstreams/M3/cursor.json",
+      "goal": "M0 sole current PLAN012 missing-interface writer under docs/decisions/M0-PLAN012-M1-M3-source-takeover-2026-10-19.md; M3 retains earlier accepted frozen source and role metadata for R0/G2, no concurrent edits to M0-owned product integration/release-record/Game lane files until a new explicit registry decision.",
+      "done_when": "Historic M3 accepted module evidence preserved; current PLAN012 interface reassigned to M0; no worker-source activity under this paused-in-practice package, and no fake new SOURCE or repeated tests.",
+      "assigned_task": "R5-M3-PLAN012-FEC2-PRODUCT-RECORD-019"
+    },
+    {
+      "id": "M4",
+      "name": "平台与产品接入",
+      "state": "reserved",
+      "branch": "work/m4-r1-platform",
+      "assignment_epoch": 2,
+      "global_writer": false,
+      "allowed_paths": [],
+      "owned_semantics": [],
+      "prompt": "docs/prompts/M4.md",
+      "cursor": ".governance/workstreams/M4/cursor.json",
+      "goal": "PLAN020 docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md §M4: user explicitly transferred all remaining Windows native WFP, default-route, UDP-driver, WinForms Applied/Disconnect and Windows2022 validation to M0. M4 worker source b53b5dac422a634cdd82178a29071f9f9f0ae5e7 and cursor H53 remain frozen historical; no new writes without a later registry reassignment.",
+      "done_when": "Role reserved; no new M4 commits to work/m4-r1-platform or its files. Previously accepted scoped source and original FAIL remain unchanged, M0 alone owns the live product gate.",
+      "assigned_task": "R5-M4-PLAN013-WINDOWS-UI-NATIVE-CONNECT-018"
+    }
+  ]
+}
