@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "task": "PLAN028_H1278_FROM_H1277_REAL_ARM64",
+  "source_sha": "ccbaef36a98be86ff159f96584ddd1f5a06d474f",
+  "run_id": 42184350422,
+  "server_architecture": "native aarch64 Go original FakeTCP TLS / Rust M4 TUN",
+  "duration_per_scene_seconds": 1800,
+  "build_job": "success",
+  "scene_jobs": {
+    "baseline": "success",
+    "heterogeneous": "failure",
+    "pressure": "failure"
+  },
+  "artifact_zip": {
+    "baseline": {
+      "id": 13488253463,
+      "sha256": "3a6cd3009e07e00fcafc999a58f3cd0a7b54419ce420606a6499bd30c78003ac"
+    },
+    "heterogeneous": {
+      "id": 13488995229,
+      "sha256": "394476cab124f0c3d970c62ae1153d7c8d694f3341f4257e85a3e782106e84f4"
+    },
+    "pressure": {
+      "id": 13488437710,
+      "sha256": "6da72d10de80c2d711a88f6773d2dab16d2fe2a5037faac79c073c539644093f"
+    }
+  },
+  "metric_scope": "outer accepted record R/(F+R) only; no control C, FEC parity, full IP/TCP/L2",
+  "scenes": {
+    "baseline": {
+      "alerts": 0,
+      "server_cpu_percent_one_core": 67.911,
+      "server_peak_rss_kib": 173300,
+      "first_record_bytes": 26310424371,
+      "accepted_repeat_bytes": 184867571,
+      "repeat_mbps": 0.82163,
+      "repeat_percent": 0.69774,
+      "rotations_success": {
+        "alice": 27,
+        "bob": 25,
+        "carol": 21,
+        "dave_game4_lane_hot": 15,
+        "erin": 16
+      },
+      "game4_hot_server_matches": 15,
+      "game2_missing_server_gen": [],
+      "per_lease_overflows": {
+        "alice": 0,
+        "bob": 0,
+        "carol": 0,
+        "dave": 0,
+        "erin": 0
+      }
+    },
+    "heterogeneous": {
+      "alerts": 7,
+      "server_cpu_percent_one_core": 87.856,
+      "server_peak_rss_kib": 187924,
+      "first_record_bytes": 38777202088,
+      "accepted_repeat_bytes": 436162982,
+      "repeat_mbps": 1.9385,
+      "repeat_percent": 1.11228,
+      "rotations_success": {
+        "alice": 23,
+        "bob": 20,
+        "carol": 14,
+        "dave_game4_lane_hot": 11,
+        "erin": 10
+      },
+      "game4_hot_server_matches": 10,
+      "game2_missing_server_gen": [
+        10
+      ],
+      "game2_missing_second_lane": {
+        "generation": 10,
+        "client_port": 56714,
+        "server_last_error": "protected TLS timeout 08:07:55",
+        "client_m4_ready": "08:07:41"
+      },
+      "app_gap_ms": {
+        "carol_uplink": 103230,
+        "carol_downlink": 103320,
+        "erin_uplink": 5360,
+        "erin_downlink": 4330
+      },
+      "per_lease_overflows": {
+        "alice": 0,
+        "bob": 0,
+        "carol": 0,
+        "dave": 0,
+        "erin": 0
+      }
+    },
+    "pressure": {
+      "alerts": 10,
+      "server_cpu_percent_one_core": 103.574,
+      "server_peak_rss_kib": 230392,
+      "first_record_bytes": 74092438593,
+      "accepted_repeat_bytes": 400029429,
+      "repeat_mbps": 1.77791,
+      "repeat_percent": 0.53701,
+      "rotations_success": {
+        "alice": 25,
+        "bob": 22,
+        "carol": 16,
+        "dave_game4_lane_hot": 5,
+        "erin": 6
+      },
+      "game4_hot_server_matches": 5,
+      "game2_missing_server_gen": [
+        3,
+        11
+      ],
+      "game2_missing_second_lanes": [
+        {
+          "generation": 3,
+          "client_port": 50421,
+          "server_error": "TLS timeout at 08:02:52",
+          "client_m4_ready": "08:02:39"
+        },
+        {
+          "generation": 11,
+          "client_port": 64633,
+          "server_error": "TLS timeout at 08:09:07",
+          "client_m4_ready": "08:08:53"
+        }
+      ],
+      "app_gap_ms": {
+        "carol_uplink": 94750,
+        "carol_downlink": 94840,
+        "erin_uplink": 5370,
+        "erin_downlink": 4330
+      },
+      "per_lease_overflows": {
+        "alice": 7,
+        "bob": 0,
+        "carol": 0,
+        "dave": 6031,
+        "erin": 0
+      }
+    }
+  },
+  "qualification": "H1277_BASELINE_ONLY_SCOPED_SUCCESS_HETEROGENEOUS_AND_PRESSURE_FAIL",
+  "outstanding": [
+    "Game2 client local M4 READY but server lacks 2-lane M4 admission",
+    "high-loss Game4/Fixed6 insufficient successful protected rotations",
+    "pressure shared TUN queue overflow",
+    "H998 same-socket hot MTU historical FAIL",
+    "historical Fixed6 S2C intermittent incidents",
+    "control C and full IP overhead not measured"
+  ],
+  "root_cause_hypothesis": "Original Go FakeTCP TLS reply synchronous Write awaits final cumulative ACK. Client may have received and detached into Rust M4 before server sees ACK; Go payload filter excludes retransmitted old TLS DATA. New H1278 duplicates only final protected TLS ACK for <=4480ms; next-source runner must observe tagged reply ACK timeouts and actual M4 receipt."
+}
