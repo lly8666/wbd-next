@@ -128,6 +128,16 @@ def analyze(art,server_log):
     qdisc=tc_stats(art/"h1250-qdisc-after.txt")
     server_text=pathlib.Path(server_log).read_text(errors="replace")
     per_lease=per_lease_tun_stop_counters(server_text)
+    # Retired original real TLS groups: server native M4 commit is a
+    # separate observation from a client's local candidate READY.
+    server_game2_ports=set(
+        (int(lane),int(port)) for lane,port in re.findall(
+            r"V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=2 lane=(\d+) client_port=(\d+)",
+            server_text))
+    server_game4_hot_ports=set(
+        (int(lane),int(port)) for lane,port in re.findall(
+            r"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=(\d+) rotation=\d+ client_port=(\d+)",
+            server_text))
     result={
         "schema_version":1,"checkpoint":"H1274",
         "source_sha":plan["source_sha"],"scene":plan["long_scene"],
@@ -168,25 +178,89 @@ def analyze(art,server_log):
         timer=[l for l in text.splitlines() if "V4_PUBLIC_TIMER_ROTATION_DUE role=client" in l]
         leases=re.findall(
             r"V4_PUBLIC_LEASE_APPLIED role=client.*?os_readback=(10\.66\.0\.\d+)/32",text)
-        correct_physical=bool(timer) and all(
-            "same_physical_interface_ipv4=true" in l and "unchanged_path=true" in l
-            for l in timer)
-        sequential=bool(ready) and ready[0]==1 and all(
-            b==a+1 for a,b in zip(ready,ready[1:]))
-        accurate_stop=all(x in old for x in ready[:-1])
-        enough=len(ready)>=11 and len(old)>=10 and len(timer)>=10
         lease_stable=bool(leases) and set(leases)=={spec["lease"]}
         native_stop="V4_PUBLIC_SHARED_TUN_STOP generation=" in text
-        passed=all((correct_physical,sequential,accurate_stop,enough,lease_stable,native_stop))
+        if spec["mode"]=="game4":
+            # Game4 rotates one protected lane IN the same group. The
+            # whole-group generation deliberately remains 1, and there is
+            # no old group Stop for individual slot replacement.
+            slots=[(int(lane),int(port)) for lane,port in re.findall(
+                r"V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_READY role=client generation=\d+ lane=(\d+) new_client_port=(\d+)",
+                text)]
+            due=[line for line in text.splitlines()
+                 if "V4_PUBLIC_GAME_SINGLE_LANE_DUE role=client" in line]
+            deferred=text.count("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=client")
+            matched=sum(1 for row in slots if row in server_game4_hot_ports)
+            correct_physical=bool(due) and all("unchanged_path=1" in line for line in due)
+            enough=(len(slots)>=10 and {lane for lane,_ in slots}=={1,2,3,4})
+            passed=(ready==[1] and not old and correct_physical and enough
+                    and matched==len(slots) and len(due)==len(slots)+deferred
+                    and lease_stable and native_stop)
+            rotation={
+                "unit":"one_original_authenticated_Game4_lane_at_a_time",
+                "result":"PASS_SCOPED" if passed else "FAIL_OR_INCOMPLETE",
+                "authenticated_group_generation_sequence":ready,
+                "old_group_stop_sequence":old,
+                "single_lane_successful":len(slots),"single_lane_attempted":len(due),
+                "single_lane_deferred_cold_tls":deferred,
+                "native_server_confirmed_hot_slots":matched,
+                "per_lane_success":{str(lane):sum(1 for x,_ in slots if x==lane)
+                                    for lane in range(1,5)},
+                "same_authenticated_lease":lease_stable,
+                "physical_ipv4_unchanged":correct_physical,
+                "native_final_stop_observed":native_stop,
+                "minimum_ten_true_successful_handoffs":enough
+            }
+        else:
+            # Failed candidate TLS consumes generation IDs, but only
+            # successfully COMMITTED generations are required to increase
+            # strictly and retire the exact former owner.
+            correct_physical=bool(timer) and all(
+                "same_physical_interface_ipv4=true" in line
+                and "unchanged_path=true" in line for line in timer)
+            increasing=bool(ready) and ready[0]==1 and all(
+                b>a for a,b in zip(ready,ready[1:]))
+            exact_stop=old==ready[:-1]
+            enough=len(ready)>=11 and len(old)>=10 and len(timer)>=10
+            passed=all((correct_physical,increasing,exact_stop,enough,
+                        lease_stable,native_stop))
+            rotation={
+                "unit":"whole_group_authenticated_TLS_Rust_replacement",
+                "result":"PASS_SCOPED" if passed else "FAIL_OR_INCOMPLETE",
+                "authenticated_generation_sequence":ready,
+                "old_generation_stop_sequence":old,
+                "timer_events":len(timer),
+                "failed_cold_candidates":text.count("V4_PUBLIC_PATH_CANDIDATE_FAILED role=client"),
+                "configured_interval_s":plan["rotation_seconds"][who],
+                "strictly_increasing_successful_ids":increasing,
+                "exact_old_owner_stop":exact_stop,
+                "same_authenticated_lease":lease_stable,
+                "physical_ipv4_unchanged":correct_physical,
+                "native_final_stop_observed":native_stop,
+                "minimum_ten_true_successful_handoffs":enough
+            }
+            if spec["mode"]=="game2":
+                # Existing authenticated Go TLS can return client READY
+                # before the other endpoint commits the two-lane M4 cohort.
+                # Comparing original distinct TCP ports detects that gap
+                # without adding any new wire protocol or traffic probe.
+                groups={}
+                for gen,lane,port in re.findall(
+                    r"V4_PUBLIC_GAME_GROUP_LANE_READY role=client group_generation=(\d+) lane=(\d+) local_port=(\d+)",
+                    text):
+                    groups.setdefault(int(gen),set()).add((int(lane),int(port)))
+                missing=[gen for gen,pairs in groups.items()
+                         if len(pairs)!=2 or not pairs.issubset(server_game2_ports)]
+                rotation["native_server_cohort_commits_observed"]=len(groups)-len(missing)
+                rotation["client_ready_but_server_cohort_not_observed"]=missing
+                if missing:
+                    result["alerts"].append({
+                        "who":who,"kind":"CLIENT_GAME2_READY_WITHOUT_SERVER_NATIVE_COHORT",
+                        "generation_ids":missing,
+                        "note":"Authentic client local READY and exact old Stop are not sufficient; server never emitted both matching lane M4 commits."})
+                    passed=False
+                    rotation["result"]="FAIL_SERVER_COMMIT_MISSING"
         rotation_ok=rotation_ok and passed
-        rotation={"result":"PASS_SCOPED" if passed else "FAIL_OR_INCOMPLETE",
-                  "authenticated_generation_sequence":ready,
-                  "old_generation_stop_sequence":old,"timer_events":len(timer),
-                  "configured_interval_s":plan["rotation_seconds"][who],
-                  "same_authenticated_lease":lease_stable,
-                  "physical_ipv4_unchanged":correct_physical,
-                  "native_final_stop_observed":native_stop,
-                  "at_least_ten_true_successful_handoffs":enough}
         if not passed:
             result["alerts"].append({"who":who,"kind":"ROTATION_CONTINUITY_NOT_PROVEN"})
         game=("game4" if spec["mode"]=="game4" else "game2" if spec["mode"]=="game2" else "")
