@@ -753,6 +753,18 @@ func (p *V4LinuxGameProduct) OuterPolicy()(V4GameOuterPolicy,error){
     }
     return policy,nil
 }
+// H1281 client-only: prove the candidate's remote grouped Game2/4 M4
+// actually delivered an authenticated reverse IPv4 packet before replacing
+// A's shared-TUN default route. Rust enforces the counter and publication.
+func (p *V4LinuxGameProduct) PromoteGameAfterAuthenticatedPeerRx()error{
+    if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||p.server{
+        return ErrAdmissionUnsupported
+    }
+    return p.native.promoteSharedTunAfterAuthenticatedRx()
+}
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()
