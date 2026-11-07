@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1294,
-  "checkpoint_sha": "dcdb767c3fd3fc8fc9c6498abd7b5fe6cb4aa7b1",
+  "sequence": 1295,
+  "checkpoint_sha": "15ab651344fceff27fb81f411dcc0ff1107f4662",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1294: H1293 exact original Go TLS443/Rust M4 native ARM64 5-client 180s Action42321974912 kernel actual Alice veth physical 1500->1280 at app+70.01956s, SAME ifindex/IP, but original path_linux.go watcher `changed:=!current.samePhysicalInterfaceIPv4(next)` intentionally suppresses MTU-only RTM_NEWLINK despite changed negotiated record budget, next timer after ~73s finally sees physical1280 and native M4 Gen3 server port64791 READY; app Alice UL/DL gap73310ms and last minute fractions .611; other 4 clients PASS. H1294 replace watcher path-changed predicate with physical NIC/IP OR effective MTU, preserve 200/500ms debounce and old-owner grace, unit exact MTU-only true gateway-only false; source-locked ARM64 180s H1293 fixture rerun pending, NO 1800s. Prior H1292 high-pressure actual native FAIL5, scalar FAIL1, hetero PASS; backlog root incomplete.",
-  "why_now": "Actual authenticated 5-client source-locked physical same-interface MTU shrink showed 73.31-second app black hole and exact code condition filtered a real lower kernel MTU. Fix route-notifier decision, don't tune backoff or relax application's 750ms gap gate.",
+  "current_task": "H1295: Exact H1294 original ARM64 netlink MTU1500->1280 true 5-client native 180s SOURCE15ab Action42323270796 PASS zero alerts. Previous H1292 source50dea stress ARM64 180s native FAIL5 Erin both directions1270ms + Alice/Bob/Dave pending overflow3/12/2, scalar FAIL1 Dave overflow8. New code root: shared_route_publish prematurely set old.alive=false at fresh authenticated B route commit despite Go delaying old exact Stop 10–20s, so real Rust old M4 TX stopped and in-flight source/parity could not drain. H1295 decouple unique newest TUN route map authority from prior worker alive, only owned Stop(shared_route_retire) revokes old; tests bound old-in-flight, only new TUN, stale old cannot replace or remove current, 2 siblings unaffected. Same source 3x180s native pressure/scalar/hetero plus true physical MTU180s pending, no long 1800s.",
+  "why_now": "The old Go outer cold tuple/owner timer is not sufficient if Rust sets shared alive=false at B publication; this is an exact lifecycle violation causing old native TX to be revoked immediately, independently of ISA-L CPU. Root fix preserves old M4 in-flight without adding TUN routes, transport loops, FEC buffers or changing auth.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run H1294 true native ARM64 in-place physical MTU1500->1280 app+70s short, verify kernel readback, exact new M4 server commit and old Stop, final business UL/DL and all-zero global alerts; fix remaining concrete post-change gap if present. Investigate independently H1292 pressure native queue17 and Erin two 1270ms directional stalls; ALL short hard passes before any 1800s.",
+  "next_action": "Source-locked H1295 ARM64 native Rust dedicated real old/no-new-data/Stop unit with exactly1 passed and existing route/sibling Game4 tests, then 3×180s five-client scalar/native/hetero + actual physical live MTU1500->1280 180s regression; examine zero alerts, Erin active 10ms gaps, each /32 bounded TUN overflow and confirmed Game4 M4 server. Fix remaining short failures BEFORE ANY 1800s long; remote ICMP H998 remains.",
   "unverified": true,
-  "last_tested_source": "dcdb767c3fd3fc8fc9c6498abd7b5fe6cb4aa7b1",
+  "last_tested_source": "15ab651344fceff27fb81f411dcc0ff1107f4662",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1294-H1293-SOURCEDCDB-LIVE-MTU-180S-20261107.json"
+    "docs/evidence/M0/PLAN028-H1295-PREVIOUS-SOURCE15AB-MTU-AND-SOURCE50DE-PRESSURE-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",

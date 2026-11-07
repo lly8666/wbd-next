@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1295 prior-source proof before decoupling old Rust M4 worker lifetime and one TUN ingress route",
+  "source_sha": "15ab651344fceff27fb81f411dcc0ff1107f4662",
+  "history": {
+    "live_physical_mtu": {
+      "source_sha": "15ab651344fceff27fb81f411dcc0ff1107f4662",
+      "action": 42323270796,
+      "build": "PASS",
+      "real_180s_native_arm64_five_client": "PASS",
+      "alerts": 0,
+      "actual_same_ip_two_ends_veth_mtu": [
+        1500,
+        1280
+      ],
+      "old_new_tls_rust_m4": "CONFIRMED",
+      "cold_netlink_change": "RTM_NEWLINK effective MTU detected",
+      "offered_final_app_mbps": 6.4
+    },
+    "pressure_after_bounded_fifo": {
+      "source_sha": "50deaef577f2c07741db76e56d061ba8876e5caa",
+      "run_id": 42321635252,
+      "three_scenes_180s": true,
+      "qualification": "FAIL",
+      "native_pressure": {
+        "alerts": 5,
+        "erin_uplink_gap_ms": 1270,
+        "erin_downlink_gap_ms": 1270,
+        "per_lease_overflow": {
+          "alice": 3,
+          "bob": 12,
+          "dave": 2
+        },
+        "rotation": "PASS_ALL_FIVE_SCOPED",
+        "artifact_id": 13553537831
+      },
+      "scalar_pressure": {
+        "alerts": 1,
+        "per_lease_overflow": {
+          "dave": 8
+        },
+        "rotation": "PASS_ALL_FIVE_SCOPED",
+        "artifact_id": 13553587716
+      }
+    }
+  },
+  "source_bug": "Original Rust shared_route_publish previously set old.alive=false on replacing a /32 or client default TUN route. This Arc is also checked by the prior per-generation native M4 worker before sending in-flight protected DATA; thus original Go delay 10-20s old owner Stop did not preserve old real M4 TX, despite outer Go holding the product until exact Stop.",
+  "h1295_candidate": "Separate sole latest authenticated TUN destination map route from individual old native generation worker lifetime: publish new sole map route without killing old alive; original exact Stop shared_route_retire fences old alive by generation/Arc; stale old cannot republish or remove B, sibling unaffected. Strict old owned Stop join remains.",
+  "h1295_specific_test": "m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner: exact original old in-flight packet still accessible after B publishes; ONLY fresh packet goes to B, no second TUN owner, old exact Stop then revokes old alive and cannot unlink B, stale generation cannot seize route.",
+  "h1295_source": "NOT_TESTED",
+  "long_tests": "DO_NOT_RUN_UNTIL_KNOWN_SHORT_FAILURES_FIXED",
+  "remaining": [
+    "5-client 180s scalar/native pressure and heterogeneous under changed source still NOT_TESTED",
+    "Live physical MTU new-source 180s regression pending",
+    "Rare short Erin Fixed6 active business gaps and per-lease overflow not conclusively eliminated",
+    "H998 remote ICMP3/4 not measured and original same-socket route rebind fully unqualified",
+    "All 3x1800s long scenarios not qualified on H1295 source"
+  ]
+}

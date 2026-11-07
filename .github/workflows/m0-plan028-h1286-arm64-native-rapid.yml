@@ -1,6 +1,6 @@
 name: M0 PLAN028 H1286 ARM64 native ISA-L five-client rapid diagnosis
 # H1286 is a SHORT native diagnostic; no 1800-second workload, long suite remains untouched.
-run-name: H1292 native ARM64 bounded per-lease FIFO eager drain five-client 180-second A/B
+run-name: H1295 ARM64 old native M4 stays live through real 10-20s grace, three 180-second five-client A/B
 on:
   push:
     branches: [main]
@@ -107,6 +107,15 @@ jobs:
           }
           grep -Fq "M0_PLAN028_SHARED_TUN_PARTIAL_BACKLOG_EAGER_FIFO_8CAP_PASS" fixed-kernel-result/h1292-shared-tun-partial-fifo.log
           grep -Fq "1 passed; 0 failed;" fixed-kernel-result/h1292-shared-tun-partial-fifo.log
+          # The authenticated newest generation has the ONLY new TUN
+          # route, but Go's delayed OLD exact Stop must preserve the prior
+          # Rust M4 RX/in-flight TX until it actually joins. Without this,
+          # the old alive fence was canceled as soon as B was published.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner -- --test-threads=1 >fixed-kernel-result/h1295-old-native-grace.log 2>&1 || {
+            cat fixed-kernel-result/h1295-old-native-grace.log >&2
+            exit 1
+          }
+          grep -Fq -- "1 passed; 0 failed;" fixed-kernel-result/h1295-old-native-grace.log
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4 -- --test-threads=1 >fixed-kernel-result/h1282-normal-route-proof-rust.log 2>&1 || {
             tail -120 fixed-kernel-result/h1282-normal-route-proof-rust.log >&2
             exit 1

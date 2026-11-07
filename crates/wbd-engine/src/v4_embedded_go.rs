@@ -4207,9 +4207,15 @@ fn shared_route_publish(
         route.alive.store(false,Ordering::Release);
         return false
     }
-    if let Some(old)=routes.insert(ip,route){
-        old.alive.store(false,Ordering::Release);
-    }
+    // This authenticated destination has exactly one current TUN ingress
+    // route. Replacing that route must not revoke the old worker's shared
+    // alive fence: the fence also controls old in-flight M4 TX and raw AEAD
+    // RX. Original Go's actual 10-20s prior-generation grace was silently
+    // canceled by setting that same fence false at B's route promotion.
+    // Old raw owner retains its own authenticated in-flight work but cannot
+    // receive any NEW TUN packets: only routes[IP] owns new dispatch.
+    // Exact owned Stop calls shared_route_retire and revokes the old flag.
+    routes.insert(ip,route);
     true
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4435,11 +4441,64 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
         },1
     ));
     assert_eq!(routes[&ip].generation,26);
-    assert!(!old_live.load(Ordering::Acquire));
+    assert!(old_live.load(Ordering::Acquire));
     assert!(confirmed.load(Ordering::Acquire));
-    // Stale late A cannot tear down the proved B mapping.
+    // Stale A joined Stop finally revokes A without tearing down B.
     shared_route_retire(&mut routes,ip,24,&old_live);
+    assert!(!old_live.load(Ordering::Acquire));
     assert_eq!(routes[&ip].generation,26);
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner(){
+    let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(8);
+    let make=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let ip=[10,66,0,249];
+    let (old_tx,old_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let old_live=Arc::new(AtomicBool::new(true));
+    let new_live=Arc::new(AtomicBool::new(true));
+    let mut routes=HashMap::new();
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:41,alive:Arc::clone(&old_live),send:old_tx,
+    }));
+    // This is already owned by the old original M4 prior to handoff.
+    assert!(routes[&ip].send.try_send(make(41)).is_ok());
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:42,alive:Arc::clone(&new_live),send:new_tx,
+    }));
+    assert_eq!(routes.len(),1);
+    assert_eq!(routes[&ip].generation,42);
+    assert!(old_live.load(Ordering::Acquire)); // old exact Stop still due
+    assert!(new_live.load(Ordering::Acquire));
+    // Subsequent real TUN ingress selects B ONLY.
+    assert!(routes[&ip].send.try_send(make(42)).is_ok());
+    match new_rx.try_recv().expect("new generation is sole TUN route"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[42]),
+        _=>panic!("wrong native new TUN delivery"),
+    }
+    match old_rx.try_recv().expect("old M4 is still draining in-flight DATA"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[41]),
+        _=>panic!("old in-flight authenticated data lost"),
+    }
+    assert!(old_rx.try_recv().is_err()); // no new DATA sent to old A
+    // Old Go timer's exact native Stop is the sole authority to revoke A.
+    shared_route_retire(&mut routes,ip,41,&old_live);
+    assert!(!old_live.load(Ordering::Acquire));
+    assert_eq!(routes[&ip].generation,42);
+    assert!(new_live.load(Ordering::Acquire));
+    let (late,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let stale=Arc::new(AtomicBool::new(true));
+    assert!(!shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:41,alive:Arc::clone(&stale),send:late,
+    }));
+    assert!(!stale.load(Ordering::Acquire));
+    assert_eq!(routes[&ip].generation,42);
+    shared_route_retire(&mut routes,ip,42,&new_live);
+    assert!(routes.is_empty());
+    assert!(!new_live.load(Ordering::Acquire));
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -4742,9 +4801,10 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     shared_route_publish(&mut routes,ip_a,SharedTunRoute{
         generation:11,alive:Arc::clone(&new),send:new_send,
     });
-    assert!(!a.load(Ordering::Acquire));
+    assert!(a.load(Ordering::Acquire));
     assert!(new.load(Ordering::Acquire));
     shared_route_retire(&mut routes,ip_a,10,&a);
+    assert!(!a.load(Ordering::Acquire));
     assert_eq!(routes[&ip_a].generation,11);
     assert_eq!(routes[&ip_b].generation,20);
     shared_route_retire(&mut routes,ip_b,20,&b);
@@ -4773,8 +4833,9 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
     shared_route_publish(&mut routes,default,SharedTunRoute{
         generation:2,alive:Arc::clone(&b),send:b_send,
     });
-    assert!(!a.load(Ordering::Acquire));
+    assert!(a.load(Ordering::Acquire));
     shared_route_retire(&mut routes,default,1,&a);
+    assert!(!a.load(Ordering::Acquire));
     assert_eq!(routes[&default].generation,2);
     assert!(b.load(Ordering::Acquire));
     shared_route_retire(&mut routes,default,2,&b);
@@ -4805,9 +4866,10 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     shared_route_publish(&mut routes,a,SharedTunRoute{
         generation:30,alive:Arc::clone(&a2),send:a2tx,
     });
-    assert!(!a1.load(Ordering::Acquire));
+    assert!(a1.load(Ordering::Acquire));
     assert!(b1.load(Ordering::Acquire));
     shared_route_retire(&mut routes,a,10,&a1);
+    assert!(!a1.load(Ordering::Acquire));
     assert_eq!(routes.len(),2);
     assert_eq!(routes[&a].generation,30);
     assert_eq!(routes[&b].generation,20);
