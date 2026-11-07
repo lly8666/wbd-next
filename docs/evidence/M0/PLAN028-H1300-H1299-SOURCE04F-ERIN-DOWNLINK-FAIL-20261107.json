@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "04f318e9dd990f4a7ed6cf28b0fb4a246a601241",
+  "action": {
+    "run_id": 42334994507,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42334994507",
+    "conclusion": "failure",
+    "build": "PASS",
+    "architecture": "native ARM64 client+server original Go TLS443/Rust M4",
+    "backend": "scalar",
+    "duration_seconds": 180,
+    "artifact_id": 13558863873,
+    "artifact_sha256": "8ca7b8917f793a05339cb04348937446783e1bd52f2823ef576abd74af2f3edd",
+    "rotation": "PASS_ALL_FIVE_SCOPED",
+    "native_quanta": 0,
+    "scalar_quanta": 159131
+  },
+  "alerts": [
+    {
+      "who": "erin",
+      "kind": "APP_RX_GAP_WITH_ACTIVE_TX_GE750MS",
+      "direction": "downlink",
+      "duration_ms": 3310,
+      "app_start_seconds": 155.75,
+      "offered_bytes_during_gap": 6619648,
+      "delivered_bytes_during_gap": 0
+    },
+    {
+      "who": "bob",
+      "kind": "SERVER_PER_LEASE_QUEUE_OVERFLOW",
+      "count": 3
+    },
+    {
+      "who": "dave",
+      "kind": "SERVER_PER_LEASE_QUEUE_OVERFLOW",
+      "count": 61
+    }
+  ],
+  "boundary": {
+    "client_physical_ip": "10.25.0.6",
+    "client_generation": 2,
+    "client_port": 60872,
+    "server_generation": 18,
+    "server_port": 60872,
+    "sampling_start_ns": 935135516275,
+    "sampling_end_ns": 938139323802,
+    "server_m4_kernel_copied_delta": 17107,
+    "server_fec_source_queued_delta": 7575,
+    "client_kernel_raw_observed_delta": 0,
+    "client_fec_source_delta": 0,
+    "client_tun_delivered_delta": 0,
+    "client_reverse_m4_kernel_copied_delta": 17126,
+    "client_physical_nic_rx_packets_delta": "NOT_MEASURED",
+    "client_raw_socket_readable": "NOT_MEASURED",
+    "client_rx_worker_cpu_progress": "NOT_MEASURED"
+  },
+  "corrected_h1299_adaptation": {
+    "mistaken_action_stdout": "H1299_NO_CONSECUTIVE_EAGAIN_IN_THIS_SOURCE only searched initial client_port=45031",
+    "actual": "TRIGGERED_ON_SUCCESSOR",
+    "client_port": 60872,
+    "server_generation": 18,
+    "consecutive_eagain": 8,
+    "old_effective_sndbuf_bytes": 212992,
+    "new_effective_sndbuf_bytes": 2097152,
+    "root_cause_resolved": false
+  },
+  "interpretation": "Server per-owner M4 definite copies continued while client's own native RAW receive/FEC/TUN counters were flat; copied is NOT evidence of physical or remote delivery. Need physical NIC RX and nonconsuming raw socket poll + per-worker CPU progress on same monotonic clock before changing buffers/route/FEC.",
+  "retained_limits": [
+    "H1295 prior scalar/native/heterogeneous uplink FAIL",
+    "H1297 2160ms downlink FAIL",
+    "H1298 native pressure PASS but no server initial-port trigger",
+    "H1299 scalar pressure downlink FAIL plus bounded Bob/Dave overflows",
+    "H998 original same-socket MTU shrink FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Windows seven physical modes incomplete",
+    "Android NOT_RUN",
+    "no 1800s test before short blockers resolved"
+  ]
+}

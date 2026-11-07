@@ -1,0 +1,13 @@
+# PLAN028 H1300 — cross-generation physical NIC → raw RX boundary
+
+The revised [integration acceptance plan](../../testing/PLAN028_INTEGRATION_ACCEPTANCE.md) freezes unrelated features; H1299 native ARM64/ARM64 source `04f318e9`, Action [42334994507](https://github.com/lly8666/wbd-next/actions/runs/42334994507), is **FAIL**, not a product qualification. Its 180s scalar Game4 backend pressure scene produced Erin Fixed6 downlink 3310ms with continuous actual application sends, plus Bob/Dave shared lease pending overflows 3/61; five authenticated rotations were still PASS and native ISA-L was linked with scalar quanta>0/native quanta=0.
+
+Offline comparison of real 10ms application bins with opt-in 500ms CLOCK_MONOTONIC worker stages located the 3.31s window at app+155.75s, client gen2 exact port60872 and server gen18 port60872. The server continued 17,107 definite M4 kernel copies between two samples around the gap, while the client saw ZERO native raw socket records, ZERO FEC and ZERO TUN delivery; client reverse TX continued. **Kernel copied is not physical NIC or peer ingress proof.** No per-client NIC input or raw socket ready sampling existed.
+
+H1299's stdout `H1299_NO_CONSECUTIVE_EAGAIN_IN_THIS_SOURCE` is specifically **false across generations**: the workflow only searched initial port45031. Server successor port60872 did execute an eight-consecutive-EAGAIN adaptation with effective SO_SNDBUF 212992→2097152. Despite triggering, Erin still stalled. No permission to claim this knob resolves the root cause; do not broadly grow queues.
+
+H1300 extends the ALREADY existing opt-in independent Rust M4 500ms observer with validated **physical NIC** /sys/class/net RX, TX and RX dropped, non-consuming 0ms raw socket readiness poll, and existing RX/TX thread CPU sample. No extra packet hot-path work, no FEC, AEAD, PN, wire, TUN-reader or runtime behavior changes; no default diagnostics. The offline reporter matches ALL exact client ports and independent server generation IDs; it does not mistake the initial 45031 for the current connection. The scene keeps original H1299 strict app gap/rotation/Stop acceptance and is one native ARM64 scalar 180s test, not 1800s. The fixture's static x86 architecture label was also corrected to runtime native architecture. Failing old SOURCE and exact H998/ICMP/Android limits remain.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only disabled-by-default independent read-only diagnostic, offline failure classification, accurate native fixture label and source-locked short test; no changed user behavior or data-plane semantics."}
+```

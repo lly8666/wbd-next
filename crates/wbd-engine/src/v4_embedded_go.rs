@@ -7644,6 +7644,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
+    #[cfg(feature="fec2_product_record")]
+    let diag_ifname=ifname.clone();
     let tx_ifname=ifname;
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
@@ -8061,6 +8063,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         .ok().as_deref()==Some("1"){
         let diag_stats=Arc::clone(&e.counters);
         let diag_stop=Arc::clone(&shutdown);
+        let diag_raw=Arc::clone(&raw);
+        // Native Linux sysfs counters of the validated physical RAW NIC.
+        let diag_nic_rx=format!("/sys/class/net/{diag_ifname}/statistics/rx_packets");
+        let diag_nic_tx=format!("/sys/class/net/{diag_ifname}/statistics/tx_packets");
+        let diag_nic_drop=format!("/sys/class/net/{diag_ifname}/statistics/rx_dropped");
         let diag_port=e.flow.client_port;
         let diag_generation=e.generation;
         let diag_role=if e.server_side{"server"}else{"client"};
@@ -8074,7 +8081,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     last=Instant::now();
                     let (kernel,tuple,tun,legacy)=
                         original_raw_rx_stage_snapshot(&diag_stats);
-                    eprintln!("V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role={} client_port={} generation={} mono_ns={} kernel_raw_observed={} tuple_candidates={} fec_source={} fec_parity={} fec_recovered={} tun_delivered={} legacy_delivered={} source_queued={} m4_copied={} tx_err={} tx_backpressure={} rx_err={}",
+                    // Independent, read-only 500ms diagnostic: no socket
+                    // consumption or hot-path lock, and no per-packet work.
+                    let readable=loop_readiness_ns(
+                        diag_raw.readiness_fd(),&diag_stop,0);
+                    let physical=|path:&str|{
+                        std::fs::read_to_string(path).ok()
+                            .and_then(|s|s.trim().parse::<u64>().ok())
+                            .map(|n|n.to_string())
+                            .unwrap_or_else(||"UNAVAILABLE".to_string())
+                    };
+                    let nic_rx=physical(&diag_nic_rx);
+                    let nic_tx=physical(&diag_nic_tx);
+                    let nic_drop=physical(&diag_nic_drop);
+                    eprintln!("V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role={} client_port={} generation={} mono_ns={} kernel_raw_observed={} tuple_candidates={} fec_source={} fec_parity={} fec_recovered={} tun_delivered={} legacy_delivered={} source_queued={} m4_copied={} tx_err={} tx_backpressure={} rx_err={} rx_worker_cpu_ns={} tx_worker_cpu_ns={} raw_socket_readable={} physical_rx_packets={} physical_tx_packets={} physical_rx_dropped={}",
                         diag_role,diag_port,diag_generation,
                         original_kernel_monotonic_ns(),kernel,tuple,
                         diag_stats.fec_rx[0].load(Ordering::Relaxed),
@@ -8084,7 +8104,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         diag_stats.tx.load(Ordering::Relaxed),
                         diag_stats.tx_error.load(Ordering::Relaxed),
                         diag_stats.tx_backpressure.load(Ordering::Relaxed),
-                        diag_stats.rx_error.load(Ordering::Relaxed));
+                        diag_stats.rx_error.load(Ordering::Relaxed),
+                        diag_stats.rx_thread_cpu_ns.load(Ordering::Relaxed),
+                        diag_stats.tx_thread_cpu_ns.load(Ordering::Relaxed),
+                        u8::from(readable),nic_rx,nic_tx,nic_drop);
                 }
             }).ok()
     }else{None};

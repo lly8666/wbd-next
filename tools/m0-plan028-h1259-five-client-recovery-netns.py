@@ -282,7 +282,7 @@ def main():
         start_ns = time.monotonic_ns() + 55_000_000_000
         plan = {
             "source_sha": source, "start_monotonic_ns": start_ns,
-            "server_port": 443, "network_scope": "native Linux x86_64/x86_64 6-netns",
+            "server_port": 443, "network_scope": "native Linux "+os.uname().machine+"/"+os.uname().machine+" 6-netns",
             "warmup_seconds": 10,
             "simultaneous_stress_seconds":170 if FAST_SCENE else 1790 if LONG_SCENE else 420,
             "application_load_seconds":180 if FAST_SCENE else 1800 if LONG_SCENE else 430,

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1299,
-  "checkpoint_sha": "1729010e119a06eac044a978594a39c25b6fc459",
+  "sequence": 1300,
+  "checkpoint_sha": "8ac4832d10830963100bf5530d1e24303011867d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1299: H1298 SOURCE1729010e original ARM64 five-client native 180s Action42334170992 PASS0 alerts, all five authenticated rotation PASS, per-/32 shared TUN overflow0. Erin max UL250ms/DL120ms. Critically SERVER port45031 never saw eight consecutive EAGAIN, SO_SNDBUF adjustment NOT TRIGGERED, so causal fix NOT PROVEN. One client port60872 old generation attempted adaptation as exact Stop began and was refused Stopped (safe). H1295 prior scalar pressure Erin UL3310ms FAIL and hetero native2170ms FAIL; H1297 native Erin DL2160ms EAGAIN FAIL. H1299 run ONE source locked native ARM64 pressure scalar 180s with original strict gate and independent port/generation CLOCK_MONOTONIC RX/TX; no 1800.",
-  "why_now": "H1298 one native pressure zero alerts has no confirmed sustained server EAGAIN; cannot promote conditional kernel socket adaptation. Prior scalar pressure is independently known to FAIL on real business, so one native ARM64 scalar Game4-FEC backend 180s replicates specific unresolved condition without blind multi-scene and without changing product.",
+  "current_task": "H1300: collect H1299 SOURCE04f scalar pressure Action42334994507 FAIL (Erin real 3310ms downlink zero-receipt app+155.75..159.06; Bob queue overflow3, Dave61). New successor client port60872 server gen18 DID hit 8 genuine consecutive EAGAIN and SO_SNDBUF effective212992→2097152; H1299 stdout claiming no trigger checked only obsolete first port45031. Inside ~3.0s failure server per-port native M4 copied17107 while client same-port physical raw receive/FEC/TUN all flat; client reverse TX moved. Add only opt-in independent 500ms same-clock interface RX/drop, nonconsuming raw FD ready and RX/TX worker CPU to isolate physical/kernel-owner boundary; offline all-generation app-bin reporter and one 180s native ARM64 scalar short. No long until known failures controlled.",
+  "why_now": "Correct stale-port adaptation claim and separate true kernel accepted send from client physical receipt; neither socket growth nor shared TUN overflows explain the 3310ms flat native client RX. Existing source-locked evidence is sufficient for the narrowed next diagnostic, not more blind queue/FEC tuning or long suites.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1299 scalar pressure real original Go TLS443 / Rust ISA-L linked 180s source pinned: scalar quanta>0 native quanta=0; report exact Erin UL/DL max gap and server/client per-generation raw/EAGAIN/allocated socket readback; all five auth rotation/Stop and /32 zero overflow. If failure, target observed layer; if PASS without actual adjustment, do not claim adaptive causal proof, then consider last hetero short. No 1800 before all.",
+  "next_action": "Collect H1300 one source-locked native ARM64 180s scalar pressure with strict five-client gates. At any Erin >=750ms live-send gap compare physical client NIC rx_packets/drop, raw fd poll readiness, worker CPU progress, native raw/tuple/FEC/TUN and server M4 accepted on the exact new client_port/generation. If no symptom, mark NOT_REPRODUCED not fixed; if reproducible, patch narrow proven layer, then only targeted L0/L1 and L2 before L3 finite long.",
   "unverified": true,
-  "last_tested_source": "1729010e119a06eac044a978594a39c25b6fc459",
+  "last_tested_source": "04f318e9dd990f4a7ed6cf28b0fb4a246a601241",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1299-H1298-PRESSURE-NATIVE-PASS-NO-ADAPT-20261107.json"
+    "docs/evidence/M0/PLAN028-H1300-H1299-SOURCE04F-ERIN-DOWNLINK-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1298 Action42334170992 SOURCE1729010e native ARM64 original Go TLS/Rust M4 5-client pressure 180s PASS alerts0 all5 real rotations; Erin maximum uplink250ms/downlink120ms, per-lease shared TUN overflow0. No server Erin45031 consecutive EAGAIN/adaptation trigger, so improvement not causally validated. H1297 external independent telemetry reproduced real EAGAIN1047 and Erin DL2160ms FAIL. H1295 three prior weak-net180s FAIL UL6390/3310/2170ms maintained. H1299 only 180s scalar pressure targeted, no long."
+  "partial_summary": "H1299 SOURCE04f Action42334994507 real ARM64 180s scalar pressure FAIL 3 alerts: Erin downlink3310ms with server M4 accepted17107 per 500ms samples but client native raw0; Bob/Dave shared queue overflow3/61. Server port60872 gen18 had actual 8-consecutive EAGAIN SO_SNDBUF effective212992→2097152; Action only grepped original port45031 and misreported NOT_TRIGGERED. Rotations all five PASS, Game4 scalar159131 quanta native0. H1298 native SOURCE172 PASS ordinary but adaptation untriggered for initial port; no causal promotion. H1300 adds independent scoped diagnostic/accurate report; 1800 blocked. H998/ICMP/Android remain."
 }
