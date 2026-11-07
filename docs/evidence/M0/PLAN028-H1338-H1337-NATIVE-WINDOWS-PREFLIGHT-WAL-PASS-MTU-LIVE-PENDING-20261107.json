@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1338",
+  "source_sha": "0442c681748479b9cf0c9f61f408f8e9734fe266",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "observed_source": "0442c681748479b9cf0c9f61f408f8e9734fe266",
+  "signed_windows_wal": {
+    "action_id": 42385828730,
+    "original_go_native_wal_job": "success",
+    "scoped_real_signed_wintun_modes": {
+      "normal": "PASS",
+      "fixed": "PASS",
+      "auto": "PASS",
+      "game2": "PASS",
+      "game4": "PASS"
+    },
+    "scope": "Original Go/Rust native signed Windows local Wintun five-stage WAL/Stop; no actual same-IP MTU physical event across Windows Npcap ↔ Linux WSL2 in this Action"
+  },
+  "win_linux": {
+    "action_id": 42385828724,
+    "cheap_assembly": "PASS",
+    "native_Linux_Rust_units": "PASS",
+    "native_Windows_Rust_units": "PASS",
+    "native_Windows_Go_production_tests": "PASS",
+    "original_Go_TLS_Rust_Linux_build": "PASS",
+    "windows_native_two_os": "IN_PROGRESS",
+    "scope": "One original signed Windows Normal Off same physical NIC/IP NlMtu 1500→1280 WSL2 test: genuine actual OS path and application verdict PENDING",
+    "Windows_VM_vCPU_RSS_source": "CAPTURE_PLANNED_AT_NATIVE_STEP_NOT_AVAILABLE_YET",
+    "cross_VM_rate_comparison": "NOT_VALID"
+  },
+  "x86_other_autotriggered": {
+    "TLS_original_native_action_id": 42385828761,
+    "conclusion": "failure",
+    "game4_original_action_id": 42385828774,
+    "stage": "old workflow reports failure at run-scoped original Game4 postscript; not used as Windows MTU evidence, original FAIL retained",
+    "no_retest_requested": true
+  },
+  "original_source_manifest": {
+    "initial_b07_build_result": "FAIL_PRE_NETWORK_MANIFEST_SHA_2_FILES",
+    "corrected_in_current_source": true,
+    "donor_SHA_unmodified": true
+  },
+  "remaining": [
+    "Actual Windows native physical MTU-only notification new TLS+OS readback+real UDP/TCP+old/final owned Stop UNVERIFIED until action complete",
+    "L1 other physical path and seven full rotations not complete",
+    "L2 Game and capacity on other VM not calibrated",
+    "L3 2x1800s NOT_RUN",
+    "H998 old same socket MTU genuine historic FAIL retained",
+    "H1317 ARM64 old 5.18s active gap historic FAIL retained",
+    "Android independently physical NOT_RUN"
+  ]
+}
