@@ -17,6 +17,16 @@ import(
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
  "github.com/lly8666/wobuzhidao/internal/windowsownerlease"
 )
+// A user/parent Stop (or old generation canceled for a path change) can
+// race the same second as the 1Hz M4 MTU/Health ticker. A canceled OS
+// LiveReceipt returns (0,context.Canceled), not a real native MTU drift.
+// Keep the original 1Hz fail-closed check when the owner remains live.
+func m0WindowsGameRuntimeMTUDrift(ctx context.Context,expected,actual uint32,readErr error)error{
+ if ctx.Err()!=nil{return nil}
+ if readErr==nil&&actual==expected{return nil}
+ return fmt.Errorf("Game original M4 OS MTU drift/invalid WAL expected=%d actual=%d: %w",
+  expected,actual,errors.Join(windowsclient.ErrN4NativeGuard,readErr))
+}
 // Already-detached Game M3 ciphertext is an optional finite cold backlog.
 // Its overflow must NEVER kill a Go reader still needed by other genuine
 // per-lane TLS handshakes. Drop just this early record and keep servicing
@@ -253,14 +263,16 @@ outer:
   case runtimeErr=<-packet.Errors():break outer
   case runtimeErr=<-failed:break outer
   case <-ticker.C:
+   if ctx.Err()!=nil{break outer}
    if stateErr:=packet.HealthError(ctx);stateErr!=nil{
+    if ctx.Err()!=nil{break outer}
     runtimeErr=fmt.Errorf("real Game Rust native driver/MTU failure: %w",stateErr)
     break outer
    }
    currentMTU,mtuErr:=product.RuntimeMTU(ctx)
-   if mtuErr!=nil||currentMTU!=o.TunnelMTU{
-    runtimeErr=fmt.Errorf("Game original M4 OS MTU drift/invalid WAL expected=%d actual=%d: %w",
-     o.TunnelMTU,currentMTU,errors.Join(windowsclient.ErrN4NativeGuard,mtuErr))
+   if ctx.Err()!=nil{break outer}
+   if drift:=m0WindowsGameRuntimeMTUDrift(ctx,o.TunnelMTU,currentMTU,mtuErr);drift!=nil{
+    runtimeErr=drift
     break outer
    }
    fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+packet.Stats())

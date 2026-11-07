@@ -92,6 +92,26 @@ func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
 // Win32 MIB_IPINTERFACE_ROW is an actual x64 IP-layer NlMtu receipt,
 // unlike net.Interface.MTU (physical adapter MTU). The donor pins x/sys
 // v0.33.0 before its GetIpInterfaceEntry wrapper; verify our local ABI.
+// H1340 real Game2 Rust Join/WAL/Stop all PASS, but an OS RuntimeMTU
+// read raced caller cancellation and returned (0,context.Canceled).
+// Only a still-live owner may report MTU drift; do not waive real drift.
+func TestM0PLAN028GameNativeCanceledTickNeverMasqueradesAsMTUDrift(t *testing.T){
+ ctx,cancel:=context.WithCancel(context.Background())
+ cancel()
+ if e:=m0WindowsGameRuntimeMTUDrift(ctx,1313,0,context.Canceled);e!=nil{
+  t.Fatalf("Stop canceled OS MTU read must not falsify product failure: %v",e)
+ }
+ if e:=m0WindowsGameRuntimeMTUDrift(context.Background(),1313,0,nil);e==nil{
+  t.Fatal("live authenticated owner MTU=0 must still fail closed")
+ }
+ if e:=m0WindowsGameRuntimeMTUDrift(context.Background(),1313,1313,context.DeadlineExceeded);e==nil{
+  t.Fatal("live owner OS read failure must fail closed")
+ }
+ if e:=m0WindowsGameRuntimeMTUDrift(context.Background(),1313,1313,nil);e!=nil{
+  t.Fatalf("matching live owned MTU should be healthy: %v",e)
+ }
+}
+
 func TestM0PLAN028WindowsIPv4NlMtuMIBRowABI(t *testing.T){
  var row m0WindowsIPInterfaceRow
  if unsafe.Sizeof(row)!=176||unsafe.Offsetof(row.InterfaceLuid)!=8||

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1343",
+  "source_sha": "1c57dc1aa3cf66dd119597007e71fd770dabd1cb",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "run_id": 42395352694,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42395352694",
+    "source_sha": "1c57dc1aa3cf66dd119597007e71fd770dabd1cb",
+    "native_job_id": 128472597621,
+    "conclusion": "failure"
+  },
+  "source_locked_preflight": {
+    "go_windows_original_unit": "PASS",
+    "Go_Windows_original_build": "PASS",
+    "Linux_original_Go_TLS_Rust_build": "PASS",
+    "Rust_Windows_native_library_unit": "PASS",
+    "Rust_Linux_library_unit": "PASS",
+    "signed_Npcap_Wintun_installed": "PASS",
+    "real_WSL2_kernel": "PASS",
+    "first_original_Go_TLS_Rust_M4": "PASS",
+    "standard_TLS_original_x86_wire_action_42395352674": "PASS",
+    "Windows_original_owned_WAL_action_42395352675": "PASS"
+  },
+  "raw_artifact": {
+    "id": 13583388821,
+    "sha256": "54542feb691ba9807d91f41ddaa561aa90e68770e3ebe708908070b1252b8ea7",
+    "zip_crc": "PASS",
+    "file_count": 26,
+    "real_windows_client_log": "mode-results/normal/client.log",
+    "real_original_linux_server_log": "mode-results/normal/server.log",
+    "original_os_alias": "plan028-owned-alias.json",
+    "guest_vm_info": "plan028-native-windows-vm-capacity.json"
+  },
+  "os_event": {
+    "owned_nic": "vEthernet (WSL (Hyper-V firewall))",
+    "interface_index": 18,
+    "original_selected_IPv4": "198.19.254.1",
+    "new_selected_IPv4": "198.19.254.1",
+    "actual_OS_NlMtu_before": 1500,
+    "actual_OS_NlMtu_after": 1280,
+    "actual_owning_script_OS_mutation_readback_ms": 101.09,
+    "original_MTU_restored": true,
+    "aliases_restored": true,
+    "runner_default_route_unchanged": true
+  },
+  "originals": {
+    "first_native_Go_Rust_TLS": "PASS",
+    "generation1_original_SYN_MSS": 1420,
+    "generation1_Wintun_inner_OS_MTU": 1389,
+    "generation1_real_UDP": "PASS_SCOPED",
+    "server_M4_authenticated_generation1": 1,
+    "server_full_owned_Stop_after_failed_test": "PASS",
+    "actual_NLMTU_cold_generation1_readback": 1500,
+    "native_notify_rechecks": 4,
+    "native_notify_rechecks_reported_all_physical_mtu": 1500,
+    "post_OS_mutation_effective_recheck": "NOT_OBSERVED",
+    "native_physical_effective_marker": 0,
+    "second_TLS_credential_session": "NOT_TRIGGERED",
+    "second_SYN_MSS1240": "NOT_TRIGGERED",
+    "second_Wintun_inner1209": "NOT_TRIGGERED",
+    "business_post_B": "NOT_RUN",
+    "action_reason": "failed after 54s awaiting original TLS generation2; real WSL MTU-only OS event applied but IP interface notify did not cause effective path reauth"
+  },
+  "vm": {
+    "os": "windows-2025",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logical_vcpu": 4,
+    "exposed_physical_cores": 2,
+    "memory_GiB": 15.99,
+    "cross_VM_performance": "NOT_COMPARABLE_TO_X86_LINUX_H1334_4_VCPU_NORMAL50M"
+  },
+  "discriminator": [
+    "GetIpInterfaceEntry API itself correctly returned original1500 before real mutation, its own event checks only observed original1500; no checks proven AFTER MTU change, so cannot claim MIB read failed",
+    "selected native Windows NotifyIpInterfaceChange route/address callbacks were silent for this specific test-owned IP-interface NlMtu mutation; on-wire original TLS and Rust old owner continued",
+    "Next minimal fix/experiment: one bounded 1Hz OS IP-interface NlMtu liveness read within EXISTING watcher to detect a missing kernel notification without new poll goroutine, pushing same coalescer, no packet hot loop and no FEC/wire changes. Must log post-change effective NlMtu and confirm new original Go TLS/Rust+SYN/Windows inner OS or retain fail."
+  ],
+  "other_failure": {
+    "H1340_real_Game2_exit_failure": "Authentic Rust worker join, WAL restore and Wintun close PASS but Go runtime tick OS MTU read via canceled ctx returned (0,context.Canceled), process nonzero; H1343 targeted one Game2 Stop cancellation race correction staged, not yet validated.",
+    "H998_earlier_same_socket": "HISTORICAL_FAIL_STILL_OPEN",
+    "H1317_older_5180ms": "HISTORICAL_FAIL_RETAINED",
+    "L3_1800s": "NOT_RUN"
+  }
+}
