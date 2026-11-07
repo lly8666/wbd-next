@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "comparison": {
+    "base": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "head": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
+    "status": "ahead",
+    "delta_commits": 10,
+    "method": "GitHub exact full commit comparison and H1321/H1322 source-verified diffs",
+    "go_product_owner_files_changed": [],
+    "game4_pipeline_changed": false,
+    "affected_product_paths_unchanged": [
+      "r0/go_overlay/internal/v4productcli/game_linux.go",
+      "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
+    ],
+    "one_rust_changed_file": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "rust_diff": "3 #[cfg(feature=fec2_product_record)] guards for non-product Health accessor with cfg-not false; enabled product Health/M4 code unmodified",
+    "go_original_manifest_change": "adds Linux-cgo tagged admission test and adjusts test-only blob, no product hot wiring"
+  },
+  "reusable_exact_same_product_owner": {
+    "x86_original_network_action": 42369031512,
+    "x86_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "x86_runtime_s": 180,
+    "x86_result": "SCOPED_PASS_FIVE_CLIENT_PREDEAD_NATIVE_M4_ORIGINAL_STOP_AND_NEW_B_AFTER_AUTH",
+    "arm64_original_network_action": 42366910850,
+    "arm64_source": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+    "arm64_action_conclusion": "failure_post_network_oracle",
+    "arm64_offline_requalification_action": 42368645387,
+    "arm64_scope": "SCOPED_PASS_AUTHENTICATED_PREDEAD_A_ALIVE_B_NATIVE_READY_ALL_FIVE_180S; original CI fail preserved",
+    "caveat": "Do not use distinct source proof to declare current H1329 own exact single-hot-lane final Stop TRIGGERED"
+  },
+  "windows_product_current_mode_smoke": {
+    "action_id": 42373564637,
+    "source": "d01af5562a6ee2298722d28ae4b564704059309b",
+    "job_id": 128407392415,
+    "actual_npcap_wintun_wsl2": true,
+    "conclusion": "success",
+    "real_modes": [
+      "normal",
+      "fixed",
+      "auto",
+      "game2",
+      "game4",
+      "game2-fec",
+      "game4-fec"
+    ],
+    "per_mode_s": 9,
+    "original_TLS_and_real_duplex_UDP_TCP": true,
+    "original_owned_stop": true,
+    "scope": "SEVEN_MODE_SHORT_SMOKE_SCOPED_PASS, not two path rotations per mode, no physical independently attached device"
+  },
+  "true_new_current_arm64_data": {
+    "action_id": 42379666500,
+    "source": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+    "conclusion": "failure",
+    "reason": "test oracle wrong first server rotation expected2 actual1",
+    "server_four_original_hot_lane_IDS": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "same_rust_adapter": true,
+    "sibling_restarts": 0,
+    "real_udp_offered": 2291,
+    "real_udp_delivered": 2291,
+    "max_interreceipt_ms": 108.935931,
+    "terminal_active_send_without_reply_ms": 0,
+    "physical_route_unchanged": true,
+    "ci_full_pass": false,
+    "own_final_Exact_Stop": "NOT_TRIGGERED"
+  },
+  "retained_failures": [
+    {
+      "kind": "H1317_ARM64_NORMAL_5180MS",
+      "result": "FAIL",
+      "later_condition_specific_fix": "predead B already trigger-qualified x86/ARM64 but original fail remains"
+    },
+    {
+      "kind": "H998_original_same_connection_MTU_shrink",
+      "result": "HISTORIC_FAIL",
+      "product_scope": "existing new generation cold TLS MTU change path previously qualified only"
+    }
+  ],
+  "outstanding": [
+    "L1 current whole owner lifecycle under one source still not fully qualified for all 7 modes rotations; Windows seven smoke short",
+    "L2 capacity normal/game staged PPS and low loss/p99 not finished; near VM capacity previous real x86 fiveclient30pct250ms no heavier without calibration",
+    "L3 2x1800s frozen SOURCE NOT_RUN",
+    "Android and independent user physical hardware NOT_RUN"
+  ],
+  "no_new_network_run": true,
+  "no_new_protocol_feature": true,
+  "qualification": "SOURCE_SCOPED_REUSE_ONLY_NOT_PLAN028_EXIT"
+}
