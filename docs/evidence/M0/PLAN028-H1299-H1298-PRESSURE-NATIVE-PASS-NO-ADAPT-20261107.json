@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1299 collects genuine H1298 run, next targeted scalar",
+  "source_sha": "1729010e119a06eac044a978594a39c25b6fc459",
+  "action": {
+    "id": 42334170992,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42334170992",
+    "conclusion": "success",
+    "native_arm64_original_go_tls_rust_m4": true,
+    "build_and_unit": "PASS",
+    "one_scene": "pressure",
+    "backend": "native",
+    "duration_seconds": 180,
+    "artifact_id": 13558677317,
+    "artifact_build_id": 13559360144,
+    "alerts": 0,
+    "rotation": "PASS_ALL_FIVE_SCOPED",
+    "per_lease_tun_pending_overflow_total": 0,
+    "erin_uplink_max_gap_ms": 250,
+    "erin_downlink_max_gap_ms": 120
+  },
+  "causal_boundaries": {
+    "actual_server_erin_port_45031_adaptive_sndbuf_trigger": "NOT_TRIGGERED",
+    "server_erin_port_45031_backpressure": "NO_CONSECUTIVE_EAGAIN_TRIGGER",
+    "source_fix_causally_proven": false,
+    "exception": "Erin client old generation port60872 showed one bounded adaptation FAILED reason Stopped; exact owned Stop fence kept socket unchanged, no app alert",
+    "H1295_earlier_native_pressure": "FAIL Erin uplink6390ms",
+    "H1295_earlier_pressure_scalar": "FAIL Erin uplink3310ms",
+    "H1295_earlier_heterogeneous_native": "FAIL Erin uplink2170ms",
+    "H1297_same_type_native": "FAIL Erin downlink2160ms on per-connection server native raw EAGAIN"
+  },
+  "next_action": "One real ARM64 180s scalar backend pressure source-pinned short. Retain strict five-client app gap/rotation/Stop. If native conditional EAGAIN recurs collect exact socket trigger and post-event kernel TX/RX stage. No 3x1800 or broad matrix until short gates pass.",
+  "open": [
+    "H998 same-socket MTU shrink FAIL historical",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Windows seven physical modes incomplete",
+    "Android NOT_RUN",
+    "scalar/heterogeneous source-specific unresolved"
+  ]
+}

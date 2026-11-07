@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1298: H1297 source e410 ARM64 real5client180s FAIL Erin downlink2160ms t+8.97..11.13; server exact port45031 raw TX EAGAIN backpressure1047, Erin raw/FEC/TUN flat. All five TLS rotations PASS and shared TUN per-/32 overflow0; independent diagnostic validated. H1298 one-time per-FEC2 owner SO_SNDBUF requested1MiB only on 8 consecutive real M4 Backpressure; no global socket buffer change, no wire, no PN retry; run ONLY one native ARM64 pressure180s and later targeted short scalar/hetero if qualified. No 1800 until all shorts pass; H998/remote ICMP OPEN.",
+      "goal": "PLAN028 H1299: H1298 SOURCE1729010 native ARM64 five-client pressure180s Action42334170992 PASS0 gaps (Erin UL250/DL120ms), all five Go TLS rotations PASS, shared /32 TUN overflows 0; but server Erin45031 SO_SNDBUF adaptation NOT_TRIGGERED (no sustained EAGAIN) so no causal product fix credit. H1295 known scalar pressure Erin UL3310ms FAIL and hetero native2170ms FAIL, H1297 native downlink2160ms EAGAIN FAIL. H1299 one original native ARM64 180s pressure SCALAR test with opt-in common-clock per-port stage counts, no 3x1800 until shorts clean. H998 same-socket/remote ICMP remain OPEN.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1298,
-  "checkpoint_sha": "e41093742a47327a4c39a466a27018cc11339c7b",
+  "sequence": 1299,
+  "checkpoint_sha": "1729010e119a06eac044a978594a39c25b6fc459",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1298: H1297 original ARM64 Action42332967232 pressure180s FAIL Erin DOWNLINK2160ms from app+8.97..11.13; genuine source e410. Server per-port45031 original M4 TX kernel-copy plateau/backpressure1047, Erin client raw/FEC/TUN flat~1.5s; other clients and five TLS rotations PASS, all /32 shared TUN overflow0. H1267 all-socket1MiB AB suppressed EAGAIN but not all DL issues. Candidate: ONLY after eight consecutive actual per-FEC2-session M4 Backpressure signal, native RAW TX SO_SNDBUF bounded request1MiB once, no global default, no wire/reseal, independent client unchanged. One native ARM64 short source test first; 1800 blocked.",
-  "why_now": "Source-locked common CLOCK_MONOTONIC telemetry now points to original server's per-client socket sendmmsg EAGAIN as exact source of new Erin downlink starvation, rather than speculative shared TUN or FEC decoding. Conditional one-owner adaptation reuses H1267 observed Linux kernel socket readback with no unconditional memory tax.",
+  "current_task": "H1299: H1298 SOURCE1729010e original ARM64 five-client native 180s Action42334170992 PASS0 alerts, all five authenticated rotation PASS, per-/32 shared TUN overflow0. Erin max UL250ms/DL120ms. Critically SERVER port45031 never saw eight consecutive EAGAIN, SO_SNDBUF adjustment NOT TRIGGERED, so causal fix NOT PROVEN. One client port60872 old generation attempted adaptation as exact Stop began and was refused Stopped (safe). H1295 prior scalar pressure Erin UL3310ms FAIL and hetero native2170ms FAIL; H1297 native Erin DL2160ms EAGAIN FAIL. H1299 run ONE source locked native ARM64 pressure scalar 180s with original strict gate and independent port/generation CLOCK_MONOTONIC RX/TX; no 1800.",
+  "why_now": "H1298 one native pressure zero alerts has no confirmed sustained server EAGAIN; cannot promote conditional kernel socket adaptation. Prior scalar pressure is independently known to FAIL on real business, so one native ARM64 scalar Game4-FEC backend 180s replicates specific unresolved condition without blind multi-scene and without changing product.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1298 one original native ARM64 180s five-client pressure: exact server per-port45031 adaptation marker/effective SO_SNDBUF, no >=750ms real application gaps, all five authentic generation rotations and Stop, others unchanged; if FAIL diagnose new stage. Only then other short scalar/hetero and true MTU; no 1800 until short gates pass. Preserve H998 original same-socket FAIL, remote ICMP NOT_MEASURED.",
+  "next_action": "Collect H1299 scalar pressure real original Go TLS443 / Rust ISA-L linked 180s source pinned: scalar quanta>0 native quanta=0; report exact Erin UL/DL max gap and server/client per-generation raw/EAGAIN/allocated socket readback; all five auth rotation/Stop and /32 zero overflow. If failure, target observed layer; if PASS without actual adjustment, do not claim adaptive causal proof, then consider last hetero short. No 1800 before all.",
   "unverified": true,
-  "last_tested_source": "e41093742a47327a4c39a466a27018cc11339c7b",
+  "last_tested_source": "1729010e119a06eac044a978594a39c25b6fc459",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1298-H1297-ARM64-REAL-ERIN-BACKPRESSURE-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1299-H1298-PRESSURE-NATIVE-PASS-NO-ADAPT-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1297 source e410 Action42332967232 native ARM64 180s pressure FAIL1 Erin downlink 2160ms early app, genuine client RAW kernel tuple/FEC/TUN no progress 1.5s while original server FEC2 TX +1047 Backpressure M4 copy plateau, four peers healthy, /32 overflow0, all rotation PASS. H1295 prior Erin uplink 6390/3310/2170ms three short FAIL remain. H1298 patch conditional once request1MiB per authenticated FEC2 raw TX socket after 8 consecutive actual sendmmsg EAGAIN; source-limited short qualification pending. H998 ICMP/same socket failures unchanged."
+  "partial_summary": "H1298 Action42334170992 SOURCE1729010e native ARM64 original Go TLS/Rust M4 5-client pressure 180s PASS alerts0 all5 real rotations; Erin maximum uplink250ms/downlink120ms, per-lease shared TUN overflow0. No server Erin45031 consecutive EAGAIN/adaptation trigger, so improvement not causally validated. H1297 external independent telemetry reproduced real EAGAIN1047 and Erin DL2160ms FAIL. H1295 three prior weak-net180s FAIL UL6390/3310/2170ms maintained. H1299 only 180s scalar pressure targeted, no long."
 }
