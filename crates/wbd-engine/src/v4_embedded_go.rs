@@ -7630,6 +7630,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let raw_socket_diag=Arc::clone(e.raw_tx.as_ref().expect("original raw TX owned"));
     #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag_port=e.flow.client_port;
+    #[cfg(feature="fec2_product_record")]
+    let raw_socket_diag_generation=e.generation;
+    #[cfg(feature="fec2_product_record")]
     let raw_socket_diag_enabled=std::env::var("WBD_M0_RAW_TX_SOCKET_DIAG")
         .ok().as_deref()==Some("1");
     #[cfg(feature="fec2_product_record")]
@@ -7651,6 +7655,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut diag_turn_err=[0u64;4]; // aggregate only in explicit opt-in
             #[cfg(feature="fec2_product_record")]
             let mut socket_backpressure=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut confirmed_eagain_streak=0u8;
+            #[cfg(feature="fec2_product_record")]
+            let mut owned_sndbuf_attempted=false;
             #[cfg(feature="fec2_product_record")]
             let mut socket_sampled=0u64;
             #[cfg(feature="fec2_product_record")]
@@ -7920,6 +7928,27 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         stats.tx_uncertain.fetch_add(u64::from(done.uncertain),Ordering::Relaxed);
                         if done.backpressure{
                             stats.tx_backpressure.fetch_add(1,Ordering::Relaxed);
+                            // Only an authenticated FEC2 owner's eight
+                            // CONSECUTIVE genuine M4 sendmmsg EAGAIN turns
+                            // can grow its own kernel socket once. This is
+                            // an exceptional cold resource adaptation, not
+                            // per-packet polling, retry, PN reseal or sysctl.
+                            #[cfg(feature="fec2_product_record")]
+                            if fec_ingress_on && !owned_sndbuf_attempted {
+                                confirmed_eagain_streak=confirmed_eagain_streak.saturating_add(1);
+                                if confirmed_eagain_streak>=8{
+                                    owned_sndbuf_attempted=true;
+                                    match raw_socket_diag.adapt_confirmed_raw_tx_backpressure(){
+                                        Ok((before,after))=>eprintln!(
+                                            "V4_PUBLIC_RAW_TX_PRESSURE_BOUNDED_ADAPT role={} client_port={} generation={} consecutive_eagain=8 old_sndbuf={} effective_sndbuf={} no_reseal=1",
+                                            raw_socket_diag_role,raw_socket_diag_port,raw_socket_diag_generation,
+                                            before.sndbuf_effective_bytes,after.sndbuf_effective_bytes),
+                                        Err(error)=>eprintln!(
+                                            "V4_PUBLIC_RAW_TX_PRESSURE_BOUNDED_ADAPT_FAILED role={} client_port={} generation={} reason={:?} no_retry=1",
+                                            raw_socket_diag_role,raw_socket_diag_port,raw_socket_diag_generation,error),
+                                    }
+                                }
+                            }
                             #[cfg(feature="fec2_product_record")]
                             if raw_socket_diag_enabled{
                                 socket_backpressure=socket_backpressure.saturating_add(1);
@@ -7947,6 +7976,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 }
                             }
                         }
+                        #[cfg(feature="fec2_product_record")]
+                        if !done.backpressure {confirmed_eagain_streak=0;}
                         if done.failed{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     }
                     Err(code)=>{

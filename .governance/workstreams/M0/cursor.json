@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1297,
-  "checkpoint_sha": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
+  "sequence": 1298,
+  "checkpoint_sha": "e41093742a47327a4c39a466a27018cc11339c7b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1297: H1296 final Action42328445418 attempts 1/2 same-source native ARM64 original five-client pressure 180s PASS0 alerts/rotation all 5/zero shared TUN overflow. In-loop diag may perturb scheduling and its loop_now ns is per-process, not aligned with real app monotonic bins. H1295 prior source had Erin Fixed6 UL 6390/3310/2170ms gaps. Add opt-in low-frequency independent M4 observer (no RX/TX hot-path logging) with CLOCK_MONOTONIC cross-process timestamp and client_port/gen stage counters. Run one 180s native ARM64 pressure diagnostic, then isolate narrow stage before product fix; no long.",
-  "why_now": "H1296 two diagnostic passes cannot close a previously reproducible timing-sensitive failure. Original M4 RX/TX-in-loop eprintln changes scheduling and carries process-local loop_now while test app bins use system CLOCK_MONOTONIC; independent observation is necessary to attribute real kernel tuple/FEC/TUN stages without skewing the worker.",
+  "current_task": "H1298: H1297 original ARM64 Action42332967232 pressure180s FAIL Erin DOWNLINK2160ms from app+8.97..11.13; genuine source e410. Server per-port45031 original M4 TX kernel-copy plateau/backpressure1047, Erin client raw/FEC/TUN flat~1.5s; other clients and five TLS rotations PASS, all /32 shared TUN overflow0. H1267 all-socket1MiB AB suppressed EAGAIN but not all DL issues. Candidate: ONLY after eight consecutive actual per-FEC2-session M4 Backpressure signal, native RAW TX SO_SNDBUF bounded request1MiB once, no global default, no wire/reseal, independent client unchanged. One native ARM64 short source test first; 1800 blocked.",
+  "why_now": "Source-locked common CLOCK_MONOTONIC telemetry now points to original server's per-client socket sendmmsg EAGAIN as exact source of new Erin downlink starvation, rather than speculative shared TUN or FEC decoding. Conditional one-owner adaptation reuses H1267 observed Linux kernel socket readback with no unconditional memory tax.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Collect H1297 one source-locked ARM64 180s pressure native report + artifact: align application 10ms Erin uplink zero-receipt bins to server generation/port external monotonic raw/tuple/FEC/TUN and client TX source/M4 copied counters. If gap returns, patch only blocked original stage. If gap absent, do NOT call it root-fixed; complete scoped scalar/hetero short checks without old seed loops. Long 1800s stays blocked until short weak-net acceptance qualified.",
+  "next_action": "Collect H1298 one original native ARM64 180s five-client pressure: exact server per-port45031 adaptation marker/effective SO_SNDBUF, no >=750ms real application gaps, all five authentic generation rotations and Stop, others unchanged; if FAIL diagnose new stage. Only then other short scalar/hetero and true MTU; no 1800 until short gates pass. Preserve H998 original same-socket FAIL, remote ICMP NOT_MEASURED.",
   "unverified": true,
-  "last_tested_source": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
+  "last_tested_source": "e41093742a47327a4c39a466a27018cc11339c7b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1297-H1296-INLOOP-2PASS-RETAIN-H1295-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1298-H1297-ARM64-REAL-ERIN-BACKPRESSURE-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1296 Run42328445418 attempt1 scene artifact13556736022 and attempt2 artifact13557033896 both genuine ARM64 180s original Go TLS/Rust M4 pressure/native PASS zero alerts, all five rotation PASS and server 5 /32 queues overflow0. H1295 3/3 short prior-source fail Erin 6390/3310/2170ms; H1296 diagnostic is NOT a product fix. H1294 same-interface MTU 1500->1280 via full new authenticated generation PASS0; original H998 same-socket FAIL and remote user-space ICMP NOT_MEASURED remain."
+  "partial_summary": "H1297 source e410 Action42332967232 native ARM64 180s pressure FAIL1 Erin downlink 2160ms early app, genuine client RAW kernel tuple/FEC/TUN no progress 1.5s while original server FEC2 TX +1047 Backpressure M4 copy plateau, four peers healthy, /32 overflow0, all rotation PASS. H1295 prior Erin uplink 6390/3310/2170ms three short FAIL remain. H1298 patch conditional once request1MiB per authenticated FEC2 raw TX socket after 8 consecutive actual sendmmsg EAGAIN; source-limited short qualification pending. H998 ICMP/same socket failures unchanged."
 }

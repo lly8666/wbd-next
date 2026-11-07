@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "source_sha": "e41093742a47327a4c39a466a27018cc11339c7b",
+  "checkpoint": "H1298 intake of genuine H1297 failure",
+  "action": {
+    "id": 42332967232,
+    "conclusion": "failure",
+    "artifact_id": 13558556893,
+    "native_arm64": true,
+    "build": "PASS",
+    "pressure_scene": "FAIL",
+    "Erin_downlink_active_no_receipt_gap_ms": 2160,
+    "window_after_app_start_seconds": [
+      8.97,
+      11.13
+    ],
+    "server_real_udp_app_offered_bytes": 1973248,
+    "client_received_bytes": 0,
+    "all_five_authenticated_rotations": "PASS",
+    "all_server_per_lease_TUN_overflow": 0
+  },
+  "causal_stage": "Exact server M4 45031 source/tuple raw TX kernel copy flat as typed backpressure grew to1047, client raw ingress/FEC/TUN flat1.5sec; four other connections healthy.",
+  "prior_h1267": "All-socket 1MiB SO_SNDBUF AB eliminated measured EAGAIN4521→0 but did not prove all-mode no black hole; no global default.",
+  "candidate": "After 8 consecutive true FEC2 M4 sendmmsg Backpressure on a single authenticated original RAW TX socket, bounded once SO_SNDBUF requested1MiB, kernel effective <=2MiB, no retry/reseal/PN/other sessions.",
+  "current_source_product_qualification": "NOT_RUN_H1298",
+  "retained": [
+    "H1295 three Erin uplink FAIL",
+    "H998 same-socket live MTU FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "no 3x1800 new-source PASS"
+  ]
+}

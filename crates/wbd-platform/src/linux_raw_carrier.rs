@@ -137,6 +137,16 @@ fn set_cold_tx_send_buffer(fd:c_int,requested:c_int)
     }
     Ok(state)
 }
+// Exceptional per-owner SO_SNDBUF change; the threshold is enforced by the
+// original TX worker after real sendmmsg Backpressure. No global sysctl.
+fn grow_tx_socket_after_confirmed_eagain(fd:c_int)
+    ->Result<(RawTxSocketReadback,RawTxSocketReadback),RawTxError>
+{
+    let before=read_tx_socket_state(fd)?;
+    if before.sndbuf_effective_bytes>=1_048_576{return Ok((before,before))}
+    let after=set_cold_tx_send_buffer(fd,1_048_576)?;
+    Ok((before,after))
+}
 /// A tuple has to be checked before indexing a Rust slice or consulting
 /// kernel link/route state. Malformed or unauthenticated tuples are not an
 /// interface/MTU event and must never cause a panic or packet transmission.
@@ -213,6 +223,16 @@ impl ScopedRawIpv4Tx {
         ->Result<RawTxSocketReadback,RawTxError>
     {
         set_cold_tx_send_buffer(self.fd.as_raw_fd(),requested)
+    }
+    /// Called once by the exact original M4 TX worker on repeated actual
+    /// EAGAIN only; never touches other sockets and never retransmits PN.
+    pub fn adapt_confirmed_raw_tx_backpressure(&self)
+        ->Result<(RawTxSocketReadback,RawTxSocketReadback),RawTxError>
+    {
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        let _guard=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        grow_tx_socket_after_confirmed_eagain(self.fd.as_raw_fd())
     }
     pub fn generation(&self)->u32{self.generation}
     pub fn is_stopping(&self)->bool{self.stopped.load(Ordering::Acquire)}
@@ -708,6 +728,18 @@ mod ready_batch_tests{
         assert!(adjusted.sndbuf_effective_bytes<=2_097_152);
         assert_eq!(read_tx_socket_state(sock.as_raw_fd()).unwrap()
             .sndbuf_effective_bytes,adjusted.sndbuf_effective_bytes);
+    }
+    #[test]
+    fn m0_plan028_bounded_socket_adjustment_after_real_tx_backpressure(){
+        use std::net::UdpSocket;
+        let sock=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let (before,after)=grow_tx_socket_after_confirmed_eagain(sock.as_raw_fd()).unwrap();
+        assert!(before.sndbuf_effective_bytes>0);
+        assert!(after.sndbuf_effective_bytes>=before.sndbuf_effective_bytes);
+        assert!(after.sndbuf_effective_bytes<=2_097_152);
+        let (next,unchanged)=grow_tx_socket_after_confirmed_eagain(sock.as_raw_fd()).unwrap();
+        assert_eq!(next.sndbuf_effective_bytes,after.sndbuf_effective_bytes);
+        assert_eq!(unchanged.sndbuf_effective_bytes,after.sndbuf_effective_bytes);
     }
     #[test]
     fn linux_raw_rx_receive_buffer_is_bounded_and_kernel_readback_actual(){
