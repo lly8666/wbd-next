@@ -134,6 +134,25 @@ def normal_m4_client_proof(client_text):
         client_text)]
 
 
+def verified_capacity_workload(workload):
+    """Keep legacy 4-phase tests and ONLY the H1349 exact 5-phase 20Mbps schedule.
+
+    This is a REPORTER schema guard, not a product capacity acceptance.
+    The guest network, authentic M4, Go traffic and 10ms-binned receipts
+    must still be audited independently. H1349 original Action remains FAIL.
+    """
+    names=tuple(p[0] for p in workload)
+    if names==("first_wave","sustained","overload","recovery"):
+        return workload
+    if names==("first_wave","sustained","climb_10","overload_20","recovery"):
+        exact=(("first_wave",20,.15),("sustained",30,.25),
+               ("climb_10",30,.5),("overload_20",30,1.),
+               ("recovery",60,.5))
+        assert tuple(workload)==exact, ("invalid H1349 phase receipt",workload)
+        return workload
+    raise AssertionError(("unrecognized native capacity phase schedule",workload))
+
+
 def analyze(art,server_log):
     plan=read(art/"h1250-matrix-plan.json")
     assert plan["fast_scene"] in ("baseline","heterogeneous","pressure")
@@ -147,8 +166,7 @@ def analyze(art,server_log):
     if "capacity_phase_schedule" in plan:
         workload=[(p["name"],p["seconds"],p["rate_scale"])
                   for p in plan["capacity_phase_schedule"]]
-        assert [p[0] for p in workload]==[
-            "first_wave","sustained","overload","recovery"]
+        verified_capacity_workload(workload)
         active_phases=[("warmup",10,.3),*workload]
     else:
         active_phases=list(PHASES)

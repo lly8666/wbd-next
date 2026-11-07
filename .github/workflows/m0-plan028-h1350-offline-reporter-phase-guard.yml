@@ -1,0 +1,25 @@
+name: M0 PLAN028 H1350 offline original rapid capacity reporter phase guard
+run-name: PLAN028 H1350 offline true H1349 five phase reporter validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1350-offline-reporter-phase-guard.yml"
+      - "tools/m0-plan028-h1286-rapid-report.py"
+      - "tests/test_m0_plan028_h1350_capacity_phase_guard.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  exact-h1349-five-phase-no-network:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate only approved real four/five phase receipt; ensure no network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1286-rapid-report.py tests/test_m0_plan028_h1350_capacity_phase_guard.py
+          python3 -m unittest discover -s tests -p 'test_m0_plan028_h1350_capacity_phase_guard.py' -v
+          echo M0_PLAN028_H1350_ORIGINAL_ACTION_FAIL_PRESERVED_EXACT_FIVE_PHASE_REPORTER_UNIT_PASS

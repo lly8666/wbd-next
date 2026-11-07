@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1350",
+  "source_sha": "dd3a86aa5ac02f8216e0cc8089f6215fd1048197",
+  "result": "PARTIAL",
+  "artifact_verified": true,
+  "exact_business_result": "PASS_SCOPED_NATIVE_LINUX_X86_GAME4_FIXED6_0PCT_20MBPS_FOR_30_SECONDS_WITH_60_SECOND_10MBPS_RECOVERY",
+  "original_action": {
+    "run_id": 42420884980,
+    "job_id": 128548899985,
+    "conclusion": "failure",
+    "preflight": "PASS",
+    "frozen_native_binary_SHA": "PASS",
+    "network_scenario": "EXECUTED",
+    "first_failure": "tools/m0-plan028-h1286-rapid-report.py line150 expected only four fixed phase names, original five phase scenario was valid",
+    "original_failure_retained": true
+  },
+  "raw_artifact": {
+    "artifact_id": 13593069738,
+    "zip_sha256": "42b1ecfe543f4a3eac574aa13d81fffa1704b6528fe02afd986d89682ec93f48",
+    "crc": "PASS",
+    "files": 31,
+    "real_app_source": "h1250-c-{who}.json and h1250-s-{who}.json synchronized 10ms bins",
+    "real_kernel": "h1301-netem-clock.json",
+    "original_auth_and_stop_logs": "h1250-product-{who}.log and h1250-product-server.log",
+    "recompute_script_sha256": "c7a3e663a296478cbb88fd010a6707c5177e2eeb1b4212b66f91aef757db3ad9",
+    "recompute_receipt_sha256": "0079fc0721a012bfa573e2d8c6dd2eb50c9ecb046e10b55a78916d84b419ac48"
+  },
+  "frozen_product": {
+    "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "donor_original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "x86_native_Rust": "ISA-L",
+    "one_original_Go_TLS_server_port": 443,
+    "game4_authenticated_fec": "role=client lanes=4 mode=fixed profile=6",
+    "workflow_source_sha": "dd3a86aa5ac02f8216e0cc8089f6215fd1048197",
+    "new_head_product_build": false
+  },
+  "native_180s_scene": {
+    "platform": "true Linux x86_64 guest 4 observed logical cores, 6 native netns/veth + OS TUN",
+    "five_distinct_authenticated_clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "actual_OS_netem_loss_pct": 0,
+    "actual_OS_netem_oneway_delay_ms": 0,
+    "warmup_s": 10,
+    "app_duration_s": 180,
+    "game4_logical_targets_per_direction_mbps": [
+      3,
+      5,
+      10,
+      20,
+      10
+    ],
+    "other_four_at_peak_each_direction_mbps": 2,
+    "one_direction_aggregate_peak_mbps": 28,
+    "rotation_timer_s": 600,
+    "rotation": "NOT_TRIGGERED_BY_DESIGN"
+  },
+  "measured_game4_stages": [
+    {
+      "name": "first_wave",
+      "seconds": 20,
+      "actual_delivered_UL_DL_Mbps": [
+        3,
+        3
+      ],
+      "host_mean_busy_pct": 16.06,
+      "host_max_per_core_busy_pct": 16.44,
+      "host_softirq_pct": 3.91
+    },
+    {
+      "name": "sustained",
+      "seconds": 30,
+      "actual_delivered_UL_DL_Mbps": [
+        5,
+        5
+      ],
+      "host_mean_busy_pct": 26.65,
+      "host_max_per_core_busy_pct": 27.06,
+      "host_softirq_pct": 6.75
+    },
+    {
+      "name": "climb_10",
+      "seconds": 30,
+      "actual_delivered_UL_DL_Mbps": [
+        10,
+        10
+      ],
+      "host_mean_busy_pct": 48.11,
+      "host_max_per_core_busy_pct": 49.15,
+      "host_softirq_pct": 12.54
+    },
+    {
+      "name": "overload_20",
+      "seconds": 30,
+      "actual_delivered_UL_DL_Mbps": [
+        19.999,
+        19.999
+      ],
+      "host_mean_busy_pct": 83.08,
+      "host_max_per_core_busy_pct": 83.82,
+      "host_softirq_pct": 22.08
+    },
+    {
+      "name": "recovery",
+      "seconds": 60,
+      "actual_delivered_UL_DL_Mbps": [
+        10,
+        10
+      ],
+      "host_mean_busy_pct": 48.26,
+      "host_max_per_core_busy_pct": 49.14,
+      "host_softirq_pct": 12.54
+    }
+  ],
+  "exact_udp_app_packet_count_tx_equals_rx_each_direction": {
+    "alice": [
+      22305,
+      22305
+    ],
+    "bob": [
+      22305,
+      22305
+    ],
+    "carol": [
+      27880,
+      27880
+    ],
+    "dave": [
+      278794,
+      278796
+    ],
+    "erin": [
+      27880,
+      27880
+    ]
+  },
+  "tcp_framed_exact_receipts": {
+    "alice": "5577 sent == 5577 received per direction; 0 pending",
+    "bob": "5577 sent == 5577 received per direction; 0 pending",
+    "other_three": "UDP-only by original fixture"
+  },
+  "active_sender_no_rx_gap_max_ms": {
+    "alice": 10,
+    "bob": 10,
+    "carol": 10,
+    "dave": 0,
+    "erin": 10
+  },
+  "kernel_qdisc_Erin": {
+    "true_ul_packets": 70878,
+    "true_dl_packets": 70884,
+    "ul_drops": 0,
+    "dl_drops": 0
+  },
+  "original_final_owner": {
+    "five_client_Stop": "PASS",
+    "server_shared_TUN_Stop": "PASS",
+    "reader_joined": true,
+    "unrouted": 0,
+    "backpressure": 0,
+    "queue_full_drops": 0,
+    "per_actor_errors": "NONE",
+    "generator_capacity_exceeded": false
+  },
+  "resource_context": {
+    "four_core_peak_host_busy_pct": 83.08,
+    "peak_core_busy_pct": 83.82,
+    "peak_softirq_pct": 22.08,
+    "after_load_10Mbps_60s_host_busy_pct": 48.26,
+    "game4_peak_rss_KiB": 45344,
+    "process_only_cpu_not_causal": true,
+    "cross_VM_CPU_percentage_comparison": "PROHIBITED"
+  },
+  "authenticity": "exact original TLS/Rust M4 + authenticated per-lease real OS TUN, Game4 fixed profile6 has parity offered363285 copied363217, client native auth rejects0; no simulation or short-circuit of packet test",
+  "caveats": [
+    "Original Action FAIL preserved; offline evidence only scoped real network business PASS",
+    "Peak Game4 20Mbps sustained only 30s, not 1800s; all 5 clients original final Stop real",
+    "No true weaknet/30pct loss/250ms p99 or physical WAN/Windows/ARM64 performance qualification",
+    "Reported overall host CPU includes generators, Rust, Go, kernel; not comparable to Windows VM metrics",
+    "Not L1 two real rotations; timers explicitly parked at600s",
+    "H998 original same-socket MTU historic fail and H1317 original ARM64 5.18s old gap remain",
+    "L3 2x1800 independent tests NOT_RUN; PLAN028 in_progress"
+  ]
+}
