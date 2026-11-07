@@ -1,6 +1,6 @@
 name: M0 PLAN028 H1286 ARM64 native ISA-L five-client rapid diagnosis
 # H1286 is a SHORT native diagnostic; no 1800-second workload, long suite remains untouched.
-run-name: H1286 original ARM64 TLS and ISA-L three 180-second short checks
+run-name: H1289 original ARM64 bounded M4 64-record RX in two 32-record batches, five-client 180-second gate
 on:
   push:
     branches: [main]
@@ -77,6 +77,8 @@ jobs:
           # Require actual 1-test execution, not Cargo's permissive 0-test
           # result. Go buffers 64 original prepared DATA records, so both
           # the Rust Stage ABI and the inner EarlyRxOwner must admit 64.
+          # Real R1 RX dispatch remains 32 per owner turn. The 64-stage
+          # unit must observe two FIFO batches with all buffers released.
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_original_go_tls_native_m4_early_64_records_capacity_contract -- --test-threads=1 >fixed-kernel-result/h1288-rust-64-abi.log 2>&1 || {
             cat fixed-kernel-result/h1288-rust-64-abi.log >&2
             exit 1

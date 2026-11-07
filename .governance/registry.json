@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1288: user requires all known bugs fixed before long 1800s. Source B1E ARM64 original zero-loss H1231 Game4 OFF/F6 both FAIL at native_m4_prepare: outer Go64/Rust64 owner was blocked by forgotten R1 early_rx EarlyLimits<=32. H1288 bounded 1..64 with 65 reject and strict actual-running Rust tests in ARM64 short build; native Prepare static substage and numeric RC. H1286 true native ISA-L short 9/12/12 alerts, pre-app timer wrong and ABI64/32 disagreement addressed but 5-client recheck pending. No 1800s. H998 physical MTU and ICMP open.",
+      "goal": "PLAN028 H1289: No 1800s until known native 5-client short faults fixed. H1288 sourcecc70 ARM64 preflight contract64 PASS but 64 owner unit erroneously expected 64 records in one R1 RX batch though original RX_READY_BATCH_MAX=32. H1289 test-only fixed two 32-record bounded FIFO drains with all loans released; production 64 prepared slots and 65 refusal unchanged. Native ISA-L short pressure & heterogeneous source-locked retest pending. H998/ICMP still OPEN.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },

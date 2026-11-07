@@ -328,9 +328,26 @@ mod tests {
         drop(extra);
         assert_eq!(a.report().loaned,cap);
         s.detach(&t).unwrap();
-        let batch=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(cap)));
-        assert_eq!(batch.len(),cap);
-        drop(batch);
+        // The original R1 M1 RX owner intentionally dispatches at most
+        // RX_READY_BATCH_MAX=32 per owner turn; its 64-record prepared
+        // capacity is NOT a 64-packet data-plane dispatch contract.
+        // Confirm 64 distinct staged bytes arrive as two bounded FIFO
+        // batches, with every borrowed M1 slab eventually returned.
+        let mut first=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(cap)));
+        assert_eq!(first.len(),32);
+        for (i,p) in first.as_mut_slice().iter_mut().enumerate(){
+            assert_eq!(p.wire,0..1);
+            assert_eq!(p.wire_mut(),&[i as u8]);
+        }
+        drop(first);
+        assert_eq!(a.report().loaned,32);
+        let mut second=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(cap)));
+        assert_eq!(second.len(),cap-32);
+        for (i,p) in second.as_mut_slice().iter_mut().enumerate(){
+            assert_eq!(p.wire,0..1);
+            assert_eq!(p.wire_mut(),&[(i+32) as u8]);
+        }
+        drop(second);
         assert_eq!(a.report().loaned,0);
     }
     #[test]

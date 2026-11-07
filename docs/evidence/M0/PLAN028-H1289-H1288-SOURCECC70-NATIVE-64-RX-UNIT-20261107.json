@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "cc70b1c0272d130b7dca91c17a4f6ba0aad50ab2",
+  "run_id": 42317762450,
+  "phase": "native_ARM64_original_Go_Rust_ISA_L_build_preflight",
+  "result": "FAIL_UNIT_ONLY",
+  "long_test_started": false,
+  "verified": [
+    "Original arm64 rust unit m0_plan028_original_go_tls_native_m4_early_64_records_capacity_contract:1 passed",
+    "64-stage M1 early owner test:64 staged and 65th rejected, Rust real Detach succeeded",
+    "Shared RX data dispatch limit intentionally RX_READY_BATCH_MAX=32 per R1 owner turn"
+  ],
+  "failure": {
+    "test": "m0_plan028_protected_early_64_real_rx_owner_detach_and_bounded_overflow",
+    "file": "crates/wbd-engine/src/runtime/early_rx.rs",
+    "line": 332,
+    "expected_one_batch": 64,
+    "actual_one_batch": 32,
+    "reason": "Test incorrectly equated bounded early staging capacity64 with original runtime per-turn RX delivery cap32; no evidence of product Crypto/Prepare regression",
+    "qualification": "TEST_EXPECTATION_WRONG"
+  },
+  "h1289_remedy": "Preserve real 64-slot prepared queue/bytes/65th refused; assert 32+32 consecutive FIFO delivery batches with identity 0..63 and all M1 loaned buffers returned. Re-execute strict one passed native unit then source-locked three 180s five-client short only.",
+  "open": [
+    "H1286 five-client real short pressure scalar9/native12 hetero12 alerts, source locked",
+    "No long 1800s until all known failures short fixed",
+    "H998 physical same-socket MTU and ICMP proof open"
+  ]
+}

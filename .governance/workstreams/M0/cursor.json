@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1288,
-  "checkpoint_sha": "b1e66d9e04484ff337127d39c7345d5e583f9e44",
+  "sequence": 1289,
+  "checkpoint_sha": "cc70b1c0272d130b7dca91c17a4f6ba0aad50ab2",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1288: H1287 sourceB1E native ARM64 H1231 Game4 OFF+Fixed6 build PASS but both original 0% cases FAIL immediately native_m4_prepare. Cause previous H1287 synced Go Stage64 + Rust ProtectedScopedOwner EarlyLimits64 but overlooked runtime/early_rx.rs EarlyLimits::valid only <=32; startup Go TLS candidate can never M4 Prepare. H1288 correct R1 M1 underlying EarlyLimits range1..64 with 65 rejection, preserve 64*wire and preallocated RX capacity, include mandatory nonzero Rust tests in quick ARM64 build (prior workflow accidentally omitted those tests), expose typed native prepare substage/RC. Short 180s only, NO LONG, H1286 source240764 prior genuine short 9/12/12 alerts and before-app rotations addressed by H1287.",
-  "why_now": "A source-locked ARM64 H1231 zero-loss native Game4 and Rust source inspection isolated an immediate, deterministic R1 EarlyLimits <=32 check under the protected 64-record owner: must fix this before ANY packet performance testing. H1287 rapid build did not run newly added Rust tests; this is now a hard 1-passed gate.",
+  "current_task": "H1289: H1288 native ARM64 source cc70 action42317762450 BUILD_FAIL targeted unit, BEFORE any short scenes. Rust original M4 bounded 64 stage/65 reject/Detach reached RX; previous unit expected64 entries in ONE drain but existing R1 M1 RX_READY_BATCH_MAX=32. Fix TEST to consume two genuine FIFO 32-entry batches, verify exact byte0..63 and all M1 loans released; NO runtime change. Native source-locked 180s scalar vs ISA-L five-client and original 0-loss Game4 still OPEN; no 1800s.",
+  "why_now": "The 64-owner test explicitly produced left32 right64 after successful 64 prepared stage and detach; this is test's conflation of capacity vs per-turn RX dispatch, not new cold rejection. Correct it instead of modifying real bounded runtime or returning to blind long tests.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Verify H1288 genuine source-locked ARM64 early 64/65 and Go error-classification unit (1 test each), then 180s real original Go TLS native ISA-L five-client pressure scalar/native and heterogeneous native, plus H1231 0% Game4. Require no protected M4 Prepare/Commit divergence, no per-lease overflow, no >=750ms active-biz direction gaps before long. Never run 3x1800 in interim. H998 physical live same-socket MTU/ICMP remain open.",
+  "next_action": "Require H1289 ARM64 native Rust early 64 owner FIFO two 32-entry tests to PASS exactly 1 test, plus original TLS source-locked Go stage tests, THEN 3×180s native five-client weak-net short. Examine server Game4 hot rejection m4_substage & code, actual per-lease overflow and Bob/Erin/Dave active app gap; only long after all short failures fixed. H998 still open.",
   "unverified": true,
-  "last_tested_source": "b1e66d9e04484ff337127d39c7345d5e583f9e44",
+  "last_tested_source": "cc70b1c0272d130b7dca91c17a4f6ba0aad50ab2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1288-H1287-SOURCEB1E-M4-PREPARE-20261107.json"
+    "docs/evidence/M0/PLAN028-H1289-H1288-SOURCECC70-NATIVE-64-RX-UNIT-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
