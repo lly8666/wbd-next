@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1336,
-  "checkpoint_sha": "b07d32c7583b27acb5096d9d12b4bd3fbd3cc03d",
+  "sequence": 1337,
+  "checkpoint_sha": "32577450954e9ea243a39ee1bdbb8bc73f544671",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1336: H1335 Windows native same-NIC/source-IP MTU-only actual original Go TLS/Rust code built as sourceb07, targeted single signed Npcap/Wintun↔WSL2 Action42385505335 in-flight. Governance main PASS; feature-catalog fail only path-mtu-budget JSON 16781B > 16384B card policy. H1336 compacted new feature wording and removed duplicate pending H1335 verification row (authoritative evidence already precise NOT_RUN), preserved existing historical entries and Windows native change declaration, no product or workflow modifications. Follow original action without duplicate dispatch; per-VM Windows fingerprint vs Linux 4-core performance kept separate.",
-  "why_now": "Fix 16KiB feature catalog deterministic doc limit without touching in-flight real Windows binaries or re-dispatch; preserve exact native cold MTU source and test.",
+  "current_task": "H1337: H1335 source b07 actual Windows WIN-LINUX Action42385505335, cold-unit Action42385505354, WAL Action42385505336 all FAILED_BEFORE_NETWORK/COMPILE from exact manifest result_blob mismatch on only m0_native_v4_windows.go and m0_native_v4_reauth_windows_test.go. H1336 Feature Catalog over16KiB repaired doc-only, governance core H1335 PASS; H1337 corrected precisely two result_blob Git SHAs to existing changed code, did not loosen source donor or runtime acceptance. One new H1337 SOURCE signed native Normal Off real Windows WSL2 physical MTU-only 1500→1280 test pending auto Action, no duplicate dispatch, all original results preserved.",
+  "why_now": "Deterministic fail-closed original-Go overlay assembly rejected stale SHA for exactly two changed Go cold path files, preventing real test. Update manifest from actual Git blobs before any further test; do not diagnose as product path failure or run independent seven modes.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1335 original run42385505335, native Windows cold unit42385505354, local WAL42385505336 and H1336 fresh governance/feature catalog. Inspect first business/OS failure and only one product-causal next step. Strict same ifindex/source MTU 1500→1280, original TLS new B and genuine TCP SYN MSS1240/inner1209, pre-B old Stop, true app and native owned Restore. Track VM vCPUs and no comparison to x86 4-core rates; L3 still NOT_RUN, original H998/H1317 fail retained.",
+  "next_action": "Collect H1337 source-locked signed Windows single Normal original TLS Wintun/Npcap ↔ WSL2 path, Go native units, WAL, feature and governance after automatic push. Require source identical both sides, real selected OS same ifindex/IP physical NlMtu1500→1280 native interface notification, authenticated second original TLS with SYN MSS1240 and real Wintun inner OS1209, duplex UDP/TCP owned Stop and test-owned physical MTU restore. If no actual trigger preserve NOT_TRIGGERED; never equate distinct VM performance.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1335-WINDOWS-MTU-ONLY-COLD-PATH-PENDING-20261107.json"
+    "docs/evidence/M0/PLAN028-H1337-H1335-NATIVE-WINDOWS-EXACT-ASSEMBLY-SHA-PRENETWORK-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1335 current sourceb07 product Windows physical MTU-only watcher fix + signed one Normal original TLS/Rust real WSL test running; main governance PASS, feature card size165? above16KiB FAIL. H1336 only shortens new feature note without removing historical actual records and keeps pending test status in evidence. No new network dispatch. x86 4vCPU Normal 50Mbps host59.63% guest-specific; Windows VM fingerprint planned. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1335 Go native physicalMTU fingerprint + NotifyIpInterfaceChange cold fix sourceb07, exact one signed Windows native WSL2 MTU event scenario. Initial three Actions failed before build due two stale original overlay result_blob SHAs. H1336 feature-card size-only fix seq1336; H1337 synchronizes exactly two Go manifest result hashes, no product change, new real Action pending. H1334 x86 4-core 50Mbps source6c5 scoped PASS is VM-specific. PLAN028 IN_PROGRESS."
 }

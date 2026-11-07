@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "actual_source_sha": "b07d32c7583b27acb5096d9d12b4bd3fbd3cc03d",
+  "scope": "PRODUCT_NOT_RUN_SOURCE_MANIFEST_REFUSED_ASSEMBLY",
+  "actions": {
+    "full_native": 42385505335,
+    "cold_unit": 42385505354,
+    "wal": 42385505336
+  },
+  "first_failure": "r0/go_overlay/assembly/manifest-plan020-m0.json result_blob for changed Go source and test still pinned to previous bytes; both actual overlay files correctly staged in current source. Source assembly fail-closed before original TLS/native Npcap Wintun or OS MTU event.",
+  "exact_changes": {
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go": [
+      "3d14a0a147c2f1f741e94122f1f39c5c310f7caa",
+      "5f2688322b06ea0259c9a3a36d1235f6ae753ec8"
+    ],
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go": [
+      "b1b0e2f88a8f63015102235026305e60602020c9",
+      "67c41db7939a32fdf07b07d6edd8395a126a55a1"
+    ]
+  },
+  "donor_original_hashes": "UNCHANGED",
+  "wire_or_product_changes_this_fix": "NONE: manifest only",
+  "reason": "H1335 commit modified 2 Go source files without their exact result_blob SHA in authoritative original TLS assembly manifest; deterministic correct hard gate.",
+  "prior_h1335_scope": "H1335 source b07 still unverified native; neither this manifest fix nor earlier compilation refusal proves product behavior",
+  "retain": [
+    "H1317 authentic historical 5.18s ARM64 active gap FAIL",
+    "H998 same socket old physical MTU shrink genuine FAIL",
+    "H1334 frozen x86 4-vCPU 50Mbps no cross-VM equivalence",
+    "L3 two 1800s NOT_RUN"
+  ]
+}
