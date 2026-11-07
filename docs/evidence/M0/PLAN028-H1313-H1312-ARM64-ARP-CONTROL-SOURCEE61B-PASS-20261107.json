@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "H1312": {
+    "run_id": 42354013000,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42354013000",
+    "conclusion": "success",
+    "artifact_id": 13567256252,
+    "artifact_zip_sha256": "3986ddae8946e96c3450e3255ee5c44a86490db4928aabd96ed8ae5f9ed9a776",
+    "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "pinned_original_Go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_client_server_architecture": "ARM64/ARM64 true GoTLS443/Rust M4 FEC",
+    "duration_seconds": 180,
+    "mode_set": [
+      "normal",
+      "fec-auto",
+      "game2",
+      "game4",
+      "fec-fixed"
+    ],
+    "product_change": false,
+    "actual_arp_control": {
+      "kind": "TEST_ONLY_VETH_L2_PERMANENT",
+      "all_five_actual_peer_MACs_read_from_live_kernel": true,
+      "client_to_server_entries": 5,
+      "server_to_client_entries": 5,
+      "installed_initial_readback_PERMANENT": 10,
+      "final_after_business_readback_PERMANENT": 10,
+      "scope": "real ephemeral Linux veth in six network namespaces ONLY",
+      "prod_static_arp_feature": false
+    },
+    "original_impairment": {
+      "actual_erin_uplink_netem_loss_percent": 30.028,
+      "actual_erin_downlink_netem_loss_percent": 29.951,
+      "configured_erin_loss_percent": 30,
+      "erin_one_way_delay_ms": 125,
+      "per_egress_qdisc_limit_packets": 10000,
+      "erin_uplink_qdisc_peak_qlen_packets": 279,
+      "erin_downlink_qdisc_peak_qlen_packets": 280
+    },
+    "verified_original_app": {
+      "reported_alert_count": 0,
+      "all_five_authenticated_rotations": "PASS_ALL_FIVE_SCOPED",
+      "all_five_per_lease_shared_tun_pending_overflow": 0,
+      "max_active_send_no_receive_ms": 120,
+      "max_gap_direction": "Erin uplink/downlink startup bins",
+      "real_Game4_native_ISAL_quanta": 65418,
+      "legal_scalar_short_block_quanta": 753
+    },
+    "true_phase_cpu_and_unique_business": [
+      {
+        "scale": 0.25,
+        "active_seconds": [
+          10,
+          40
+        ],
+        "host_busy_mean_pct": 62.92,
+        "softirq_mean_pct": 8.38,
+        "Erin_uplink_offered_mbps": 4,
+        "Erin_uplink_received_mbps": 3.982,
+        "Erin_netem_max_qlen_packets": 160
+      },
+      {
+        "scale": 0.35,
+        "active_seconds": [
+          40,
+          100
+        ],
+        "host_busy_mean_pct": 77.23,
+        "softirq_mean_pct": 10.45,
+        "Erin_uplink_offered_mbps": 5.6,
+        "Erin_uplink_received_mbps": 5.585,
+        "Erin_netem_max_qlen_packets": 225
+      },
+      {
+        "scale": 0.45,
+        "active_seconds": [
+          100,
+          130
+        ],
+        "host_busy_mean_pct": 84.89,
+        "softirq_mean_pct": 11.27,
+        "Erin_uplink_offered_mbps": 7.2,
+        "Erin_uplink_received_mbps": 7.184,
+        "Erin_netem_max_qlen_packets": 279
+      },
+      {
+        "scale": 0.35,
+        "active_seconds": [
+          130,
+          180
+        ],
+        "host_busy_mean_pct": 77.08,
+        "softirq_mean_pct": 10.43,
+        "Erin_uplink_offered_mbps": 5.6,
+        "Erin_uplink_received_mbps": 5.595,
+        "Erin_netem_max_qlen_packets": 222
+      }
+    ],
+    "verdict": "SCOPED_PASS_REAL_NATIVE_ARM64_FIVE_CLIENT_WITH_TEST_CONTROLLED_UNIMPAIRED_PHYSICAL_L2_ARP_AND_REAL_30PCT_NETEM_DATA_DAMAGE",
+    "original_dynamic_neighbour_failures_retained": [
+      42346792441,
+      42348140963,
+      42350943082,
+      42351732592
+    ],
+    "direct_prior_ARP_causal_comparison": "W19 Action40100361068 original native veth root netem30% caused ARP NUD INCOMPLETE and seconds outage, W20 Action40101978371 and W21 Action40102339446 actual data netem 30% still on with static neighbour L2 control and native business PASS; different product/source, cannot retroactively assign each H1310/H1311 gap cause",
+    "not_claimed": [
+      "Not a production ARP feature or a product bugfix",
+      "Does not overwrite original H1311 native 1270ms and H1310 4330ms failures",
+      "Not Windows physical Npcap/Wintun qualification",
+      "Not remote ICMP3/4 or Android",
+      "Not PLAN028 L3 finite long"
+    ]
+  },
+  "H1313_plan": {
+    "binary_source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+    "binary_artifact_run": 42345392910,
+    "native_arch": "x86_64/x86_64",
+    "same_native_original_5_clients": true,
+    "one_server_port443": true,
+    "loss_erin_pct": 30,
+    "one_way_latency_erin_ms": 250,
+    "static_L2_test_control_only": true,
+    "capacity_phases_after_10s_warmup": [
+      [
+        30,
+        0.25
+      ],
+      [
+        60,
+        0.35
+      ],
+      [
+        30,
+        0.45
+      ],
+      [
+        50,
+        0.35
+      ]
+    ],
+    "strict_business_and_Stop_gates_unchanged": true,
+    "Go_Rust_product_rebuild": false,
+    "workflow": ".github/workflows/m0-plan028-h1313-x86-erin-30pct-250ms-frozen.yml",
+    "status": "NOT_RUN"
+  },
+  "broader_open": [
+    "Seven modes per-platform L1 full physical scope incomplete",
+    "Earlier uncontrolled dynamic ARP real app gaps retained",
+    "H998 original same-socket MTU narrower historical FAIL retained",
+    "Windows Npcap/Wintun physical 7 mode incomplete",
+    "Remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 long soak NOT_RUN"
+  ]
+}

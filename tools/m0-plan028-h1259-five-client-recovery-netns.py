@@ -64,6 +64,14 @@ if STATIC_NEIGH not in ("","1"):
     raise SystemExit("invalid test-only static veth neighbour switch")
 if STATIC_NEIGH and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
     raise SystemExit("static veth neighbour control only in short native 180s L2 scene")
+# One source-locked L2 max-impairment representative (30%/250ms) using
+# the already proven TEST-only physical L2 ARP control, not a product knob.
+ERIN_MAX_DELAY=os.environ.get("WBD_PLAN028_ERIN_MAX_DELAY","")
+if ERIN_MAX_DELAY not in ("","250"):
+    raise SystemExit("unsupported test-only Erin max one-way delay")
+if ERIN_MAX_DELAY and not (STATIC_NEIGH=="1" and FAST_SCENE=="pressure"
+                           and CAPACITY_STEPS=="2" and not LONG_SCENE):
+    raise SystemExit("max-delay test requires native short, calibrated capacity and test L2 ARP control")
 # Explicit short-only OS event. A new protected TLS+M4 generation must
 # survive the same real NIC / same IPv4 after physical 1500 -> 1280, without
 # the old PLAN027A H998 "0 of 3 small app replies" false qualification.
@@ -102,6 +110,8 @@ if LONG_SCENE:
     if LONG_SCENE not in LONG_SCENES:
         raise SystemExit("invalid PLAN028 30m profile")
     LOSS,DELAY,RATE,ROTATION_SECONDS=LONG_SCENES[LONG_SCENE]
+if ERIN_MAX_DELAY:
+    DELAY=(*DELAY[:4],int(ERIN_MAX_DELAY))
 LONG_PHASES=(
     ("first_wave",240,.6),("sustained",600,1.0),
     ("overload",300,1.3),("recovery",650,1.0),
