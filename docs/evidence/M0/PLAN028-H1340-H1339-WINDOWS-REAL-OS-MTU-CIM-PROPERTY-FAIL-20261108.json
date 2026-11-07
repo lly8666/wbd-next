@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1340",
+  "source_sha": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action": {
+    "run_id": 42387007264,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42387007264",
+    "native_job_id": 128447591425,
+    "conclusion": "failure",
+    "workflow_source_sha": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
+    "real_native_windows_2025_signed_npcap_wintun": "DRIVERS_INSTALLED_AND_BUILD_PASS",
+    "go_windows_production_and_test_compile": "PASS",
+    "windows_native_rust_units": "PASS",
+    "linux_original_go_tls_rust_native_build": "PASS",
+    "wsl2_ubuntu_real_kernel_boot": "PASS",
+    "network_job": "FAIL_BEFORE_REAL_PRODUCT_INIT"
+  },
+  "first_failure": "powershell tools/m0-plan028-win-wsl-product-owned-alias.ps1 line30 Get-NetIPInterface -InterfaceIndex 25 -AddressFamily IPv4 -IncludeAllCompartments returned exactly one IPv4 CIM record for vEthernet (WSL (Hyper-V firewall)) compartment1, but recorded NlMtuBytes data field empty, valid=0; real stage before original Go TLS/Wintun; old alias cleaned.",
+  "root_cause": "Get-NetIPInterface -NlMtuBytes is a command FILTER argument, while returned MSFT_NetIPInterface CIM data property is NlMtu (uint32); the script was reading $_.NlMtuBytes on a CimInstance, returning null. Source Microsoft https://learn.microsoft.com/en-us/windows/win32/fwp/wmi/nettcpipprov/msft-netipinterface",
+  "minimal_change": {
+    "path": "tools/m0-plan028-win-wsl-product-owned-alias.ps1",
+    "replace_only": "three .NlMtuBytes returned property references → .NlMtu",
+    "preserve": "three -NlMtuBytes cmdlet setter parameters unchanged; original physical OS readback 1500 precondition, MTU1280 mutation/verification/restore on owned WSL NIC, default OS route immutable; no product Go/Rust source change"
+  },
+  "test_outcome_scope": {
+    "OS_interface_record_exists": true,
+    "OS_property_value_before": "NOT_READ_WRONG_PROPERTY",
+    "physical_MTU_shrink": "NOT_TRIGGERED",
+    "original_Windows_TLS_auth_after_MTU": "NOT_RUN",
+    "actual_TCP_SYN_MSS_after": "NOT_RUN",
+    "new_Wintun_inner_MTU": "NOT_RUN",
+    "real_bidir_UDP_TCP_after": "NOT_RUN",
+    "native_Rust_old_and_final_Stop": "NOT_RUN",
+    "VM_capacity": "NOT_A_PERFORMANCE_MEASUREMENT"
+  },
+  "known_open": [
+    "Do not rewrite historic original Action FAIL into PASS",
+    "H998 original same-socket hot MTU shrink remains FAIL; this test examines new generation",
+    "Different VM size/architecture CPU is not comparable to H1332 x86-4vCPU 59.63%",
+    "Real physical independently located NIC, Android NOT_RUN",
+    "L2 capacity beyond exact per-host verified and L3 two 1800s pending"
+  ]
+}

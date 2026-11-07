@@ -1,0 +1,11 @@
+# PLAN028 H1340 — native Windows real OS MTU readback field, after exact CI FAIL
+
+Recovered main `c05602b236a0bb20e14b00b1b93c827fa1fa19c9`, M0 cursor H1339; latest native signed Action [42387007264](https://github.com/lly8666/wbd-next/actions/runs/42387007264) **FAILED**. Cheap source assembly, Windows Go prod/test compilation, Rust native unit, Linux Go/Rust binary and true WSL2 Ubuntu kernel boot **all PASS**. The Windows networking job reached exact owned WSL vEthernet ifindex 25, compartment 1, but `Get-NetIPInterface` returned the row with a blank scripted `NlMtuBytes` data property; line30 fail-closed. Genuine physical MTU mutation/new original TLS/M4/UDP/TCP **NOT_RUN**. OS aliases were restored. Keep original FAIL.
+
+Root cause independently verified from Microsoft `MSFT_NetIPInterface` documented CIM property: `NlMtu uint32` is the returned interface MTU. `-NlMtuBytes` is a PowerShell Get/Set *parameter*, not the instance's `NlMtuBytes` property. Thus three test-owned reads were accessing a nonexistent attribute; no evidence this Windows runner has an OS MTU restriction or product bug. Single-purpose fix: three `_.NlMtuBytes` → `_.NlMtu`; retain native `Set-NetIPInterface -NlMtuBytes` parameters and same test-owned WSL NIC selected source4/fail-closed 1500 baseline, real 1280 shrink, after verification and original MTU restore. No production TLS/Rust/Wintun/record/Go worker changes.
+
+Next one source-locked signed native Windows2025 ↔ real WSL2 Normal Off physical same ifindex/source IPv4 MTU 1500→1280 Action. Require actual OS selected before/after, true `NotifyIpInterfaceChange` → second original-Go TLS/Rust cohort, genuine Windows SYN MSS1420→1240 and Wintun inner OS1389→1209, two authentic READY, first/reverse app UDP/TCP, exact old and final owned Stop, test-owned OS MTU 1500 restored. If the host's true baseline is different, classify capacity/VM environment, **not product FAIL**. Historical H998 same socket unchanged and H1317 5.18s original gap retained. H1332 x86 four-vCPU 50Mbps CPU59.63% is guest-scoped and cannot be assumed for Windows/ARM64.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only correct existing test-owned PowerShell CIM field readback, no production data-plane/MTU/CLI/GUI behavior altered or new user setting."}
+```

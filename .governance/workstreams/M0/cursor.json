@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1339,
-  "checkpoint_sha": "30a966fdab8cfca4f153e15b9a113b2089165882",
+  "sequence": 1340,
+  "checkpoint_sha": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1339: Real Windows native signed Npcap/Wintun↔Linux WSL2 Action42385828724 for exact H1337 product0442 completed CI FAIL at test-owned PowerShell PhysicalMTU helper: queried WSL vEthernet IPv4 before owned host .1 IP added, no unique NlMtu in default compartment, stage22; real UbuntuWSL2 boot and signed driver/Go/Rust builds all PASS, 73 native Rust tests PASS, actual physical OS MTU event and new TLS/M4/UDP/TCP NOT_TRIGGERED. Historical CI FAIL retained not a product failure. H1339 only test-owned PowerShell fixture adjustment: add .1 and route pick first, then Get-NetIPInterface -IncludeAllCompartments log actual VM rows and require exactly one physical MTU, preserve true original OS MTU1500 precondition, set 1280/restore same ifindex. Add script dependency to full workflow push path with [plan028-win-physical-mtu-only] ONE Normal Off scene. No Go/Rust/record/config changes; Windows VM differs Linux x86 4vCPU 50Mbps host59.63%, do not compare universal.",
-  "why_now": "Actual Windows VM WSL NIC default IPv4 compartment lacked unique NlMtu before test-owned alias. Read after real alias and across compartments to distinguish environment from genuine MTU-only product path; no network repeat without changed observed cause, single bounded fixture correction.",
+  "current_task": "H1340: H1339 real signed native Windows2025 WSL2 Action42387007264 sourcec056 first-fault fail-closed before original product start: test-only PowerShell Get-NetIPInterface owned vEthernet ifindex25 compartment1 row exists but .NlMtuBytes data property blank; MSFT_NetIPInterface actual CIM getter is .NlMtu, while -NlMtuBytes is only command parameter. Cheap assembly/Windows Go product/Windows Rust units/Linux original build/real WSL2 boot all PASS; real OS MTU mutation, fresh Go TLS/Rust/Wintun, UDP/TCP NOT_RUN. Correct three properties test-only, retain three setter flags, no product source changes; one source-locked signed Normal Off rerun automatic via changed test script. Store VM-specific CPU/vCPU; H1332 4vCPU CPU59.63% not transferable. H998 original same-socket MTU fail historical unchanged.",
+  "why_now": "Hard failure is deterministic wrong PowerShell CIM getter, not different VM throughput or a native product bug. Correct exactly the readback field rather than rework mature Npcap/Wintun/TLS; preserve original Action failure and true model OS source.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1339 auto source original Windows signed Normal Off WSL2 Action, governance. First require real OS owned .1 source+physical MTU before and after, valid Windows VM NlMtu candidate, actual NotifyIpInterfaceChange to fresh authenticated original Go TLS B, SYN MSS 1420→1240, Wintun inner1389→1209, real UDP+TCP and old/final owned Stop, exact 1500 physical restore. If precondition still fails preserve ENV_NOT_RUN with printed real compartment/VM details and choose distinct supported physical OS probe, do not repeat unchanged. H1317/H998 retained, L3 after all gates.",
+  "next_action": "Collect one H1340 signed Windows2025 WSL2 owned same NIC/IP physical MTU 1500→1280 Action + governance. Require true OS NlMtu before/after, native NotifyIpInterfaceChange, genuine second TLS/Npcap/Rust M4 with original SYN MSS1420→1240 and Windows inner Wintun OS1389→1209, real bidirectional app UDP/TCP and old/final joined Stop, exact physical MTU restore. If different actual WSL runner baseline, classify ENV_NOT_RUN / adapt scenario by real OS, not artificial 1500. Record VM vCPU/RAM independently; L3 not yet, no duplicate network dispatch.",
   "unverified": true,
-  "last_tested_source": "0442c681748479b9cf0c9f61f408f8e9734fe266",
+  "last_tested_source": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1339-H1338-WINDOWS-WSL-IPV4-MTU-PREPREPARE-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1340-H1339-WINDOWS-REAL-OS-MTU-CIM-PROPERTY-FAIL-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1338 source0442 original Windows native local Wintun WAL 5 modes PASS, source-correct original Go/Rust compile/unit/Wsl2 boot PASS. Cross-OS Action42385828724 real physical MTU-only test CI FAIL BEFORE OWNED IPv4 ALIAS, no OS change or fresh TLS/M4; Get-NetIPInterface default compartment MTU unavailable/ambiguous. H1339 test helper moves OS selected physical MTU readback after own IPv4 alias and includes all compartments exact diagnostic, one genuine network Action pending. Product unchanged, per VM CPU/PPS separate, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1340 original signed Windows Action42387007264 sourcec056 still FAIL before product, no OS MTU-only change: genuine ifindex25 compartment1 returned, PowerShell read .NlMtuBytes property null (CIM property is .NlMtu). Test only 3 readback references repaired, no Go/Rust product change; new source native Action pending. Windows/Wsl build and Rust units PASS, aliases cleaned. H1332 x86 four-vCPU 50Mbps/dir host59.63% only that VM. PLAN028 IN_PROGRESS, H998 original hot same-socket FAIL and H1317 legacy gap preserved."
 }

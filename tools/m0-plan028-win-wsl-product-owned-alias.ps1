@@ -19,16 +19,18 @@ function Pick([uint32]$idx,[string]$want) {
 }
 function PhysicalMTU([uint32]$idx){
  # WSL vEthernet's IPv4 IP-interface can live in a non-default network
- # compartment. Probe only AFTER adding our owned real IPv4 alias; never
+ # compartment. The MSFT_NetIPInterface CIM data property is .NlMtu;
+ # -NlMtuBytes is a Set/Get cmdlet argument, NOT the data property.
+ # Probe only AFTER adding our owned real IPv4 alias; never
  # infer a fixed 1500 MTU from another runner, a Wintun or a CLI default.
  $v=@(Get-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -IncludeAllCompartments -ErrorAction Stop)
  $rows=@($v | ForEach-Object {
-   "$($_.InterfaceIndex)|$($_.InterfaceAlias)|$($_.CompartmentId)|$($_.NlMtuBytes)"
+   "$($_.InterfaceIndex)|$($_.InterfaceAlias)|$($_.CompartmentId)|$($_.NlMtu)"
  })
  Write-Host ('M0_PLAN028_WINDOWS_OWNED_WSL_IPV4_INTERFACE_MTU_CANDIDATES ifindex='+$idx+' rows='+($rows -join ';'))
- $valid=@($v | Where-Object {$_.InterfaceIndex -eq $idx -and [int]$_.NlMtuBytes -ge 576})
+ $valid=@($v | Where-Object {$_.InterfaceIndex -eq $idx -and [int]$_.NlMtu -ge 576})
  if($valid.Count -ne 1){throw ('real physical IPv4 NlMtu ambiguous/unavailable on this Windows VM; all_compartments='+$v.Count+' valid='+$valid.Count)}
- return [int]$valid[0].NlMtuBytes
+ return [int]$valid[0].NlMtu
 }
 function DefaultFingerprint(){
  return @((Get-NetRoute -DestinationPrefix '0.0.0.0/0' -AddressFamily IPv4 -ErrorAction Stop |
