@@ -4476,11 +4476,18 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     shared_route_retire(&mut routes,ip,25,&next_live);
     assert!(old_live.load(Ordering::Acquire));
     assert_eq!(routes[&ip].generation,24);
+    let verified=crate::v4_native_health::AuthenticatedActivity::default();
+    verified.record_batch(100,0,None);
+    assert!(!verified.has_verified_peer_health());
+    // Native M4's canonical Health hint is recorded only AFTER the
+    // original protected AEAD/unique PN owner; zero user IPv4 is normal.
+    verified.record_batch(120,0,Some((120,0)));
+    assert!(verified.has_verified_peer_health());
     let confirmed=Arc::new(AtomicBool::new(true));
     assert!(shared_route_promote_authenticated_client(
         &mut routes,ip,SharedTunRoute{
             generation:26,alive:Arc::clone(&confirmed),send:new_tx,
-        },1
+        },u64::from(verified.has_verified_peer_health())
     ));
     assert_eq!(routes[&ip].generation,26);
     assert!(old_live.load(Ordering::Acquire));
@@ -8180,6 +8187,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
         }
     }
+    // This is a *server* proof only AFTER real original TLS-derived M4
+    // workers and the authenticated shared-TUN /32 route are installed.
+    // Normal Off/Fixed6/Auto reuse the existing AEAD+PN Health kind0
+    // envelope: no reverse user traffic, new wire kind or Go DATA pump.
+    // Never mark client B ready from local TLS or a TCP-only ACK.
+    #[cfg(feature="fec2_product_record")]
+    if e.server_side && e.original_public_feedback_armed {
+        let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
+        clock.arm_server_cold_commit(loop_now().0);
+    }
     OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -8194,6 +8211,9 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.server_side||e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
     let received=e.counters.rx.load(Ordering::Acquire);
+    let authenticated_health=e.native_health_evidence.as_ref()
+        .is_some_and(|x|x.has_verified_peer_health());
+    let proven=received>0||authenticated_health;
     let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
     let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
@@ -8203,7 +8223,7 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     // demand actual native new-generation reverse IP, but do not demand
     // a non-existent deferred A route.
     if !sh.publish_pending{
-        return if received>0 && routes.get(&sh.ip).is_some_and(|r|
+        return if proven && routes.get(&sh.ip).is_some_and(|r|
             r.generation==sh.generation &&
             Arc::ptr_eq(&r.alive,&sh.alive) &&
             r.alive.load(Ordering::Acquire)
@@ -8214,10 +8234,10 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
         send:sh.sender.clone(),
     };
     if !shared_route_promote_authenticated_client(
-        &mut routes,sh.ip,candidate,received
+        &mut routes,sh.ip,candidate,u64::from(proven)
     ){return BAD_STAGE}
     sh.publish_pending=false;
-    eprintln!("V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_rx={} old_route_revoked=1",sh.generation,received);
+    eprintln!("V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_rx={} authenticated_health={} old_route_revoked=1",sh.generation,received,u8::from(authenticated_health));
     OK
 }
 
@@ -8256,6 +8276,24 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_authenticated_dead(
     OK
 }
 
+// Original Normal Off/Fixed/Auto cold Go reads this only during B's
+// bounded overlap. This is the candidate's own AEAD/PN-verified canonical
+// Health kind0, with no TUN payload credit, no TLS/local READY authority.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_health(
+    handle:u64,out:*mut u32
+)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    let proof= !e.server_side&&e.native_health_evidence.as_ref()
+        .is_some_and(|a|a.has_verified_peer_health());
+    unsafe{out.write(u32::from(proof))}
+    OK
+}
 // Developer-only device netlink witness; event revision is NOT MTU authority.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]

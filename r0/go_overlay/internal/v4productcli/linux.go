@@ -989,7 +989,7 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
 
 // Two-phase original M4 handoff: local protected TLS/Rust start is NOT
 // a remote native Commit. Require this exact candidate's authenticated
-// M4 reverse IPv4 TUN delivery, OR a verified canonical native Game
+// M4 reverse IPv4 TUN delivery, OR a verified canonical native Normal/Game
 // Health kind0 cold Commit receipt sent only after the server's whole
 // authenticated M4 group has installed. No synthetic TCP ACK, TLS local
 // READY, Go packet pump or new steady-state control wire is evidence.
@@ -1150,7 +1150,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 c.rotationGeneration,c.localPort)
             return errors.Join(err,native.Close())
         }
-        log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_PROVEN role=client generation=%d client_port=%d native_authenticated_rx=1 tun_route_promoted=1",
+        log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_PROVEN role=client generation=%d client_port=%d native_authenticated_control_or_ipv4=1 tun_route_promoted=1",
             c.rotationGeneration,c.localPort)
     }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}

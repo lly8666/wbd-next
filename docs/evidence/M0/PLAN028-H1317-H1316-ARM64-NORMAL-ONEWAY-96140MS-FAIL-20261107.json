@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "original_action": {
+    "id": 42359228147,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42359228147",
+    "conclusion": "failure",
+    "artifact_id": 13569066822,
+    "artifact_zip_sha256": "a009999a8f007419da209c3fd4d668fc7dc6e0650cda5e44af6e04967aea6ddf",
+    "native_arch": "ARM64/ARM64",
+    "original_go_tls443": true,
+    "native_Rust_M4_ISAL": true,
+    "application": "five independent tenants real pure UDP one-way, zero TCP/probes"
+  },
+  "actual_failure": [
+    {
+      "who": "alice",
+      "mode": "Normal Off",
+      "direction": "uplink only",
+      "active_sent_no_receive_gap_ms": 96140,
+      "original_Go_new_TLS_ready": true,
+      "new_normal_remote_M4_unproven_count": 7,
+      "old_owner_Health_dead": true
+    },
+    {
+      "who": "erin",
+      "mode": "Normal Fixed6",
+      "direction": "uplink only",
+      "active_sent_no_receive_gap_ms": 91830,
+      "new_normal_remote_M4_unproven_count": 5,
+      "old_owner_Health_dead": true
+    }
+  ],
+  "genuine_passes": {
+    "bob": "Normal Auto downlink-only rotation PASS with true reverse inner IPv4",
+    "carol": "Game2 uplink-only rotation PASS (existing cryptographic cold Health)",
+    "dave": "Game4 downlink-only qualified rotation"
+  },
+  "scope": {
+    "server_lease_queue_overflow": 0,
+    "server_only_two_receipts_after_Normal_failed": true,
+    "physical_Erin_uplink_netem_loss_pct": 29.8635,
+    "host_four_core_mean_busy_pct": {
+      "warmup": 32.41,
+      "first_wave": 28.44,
+      "sustained": 35.25,
+      "overload": 37.17,
+      "recovery": 29.85
+    },
+    "interpretation": "Low host CPU excludes runner saturation for 96s Normal no-delivery, no reverse user DATA intentionally by contract."
+  },
+  "root_cause": "Go Normal peer-proof gate already accepts V4PublicLoopPulse.AuthenticatedPeerControl, but Normal original native pulse did not populate it. Rust Normal client shared-TUN route promotion still required actual reverse USER IP delivered. Thus pure uplink renewed TLS without native remote M4 Commit proof, old generation Heartbeat/Health retired after 90s, real app lost.",
+  "candidate_H1317": {
+    "status": "PRODUCT_SOURCE_STAGED_NOT_TESTED",
+    "change": "Reuse verified existing Game bounded native AEAD/PN Health kind0 cold receipt after full Normal server M4 and per-client /32 TUN installed; candidate native RX evidence wired through new read-only FFI/Go pulse; Rust only promotes route on exact authenticated Health or real user-IP",
+    "no_new_wire": true,
+    "no_reverse_app_probe": true,
+    "no_second_tun_reader": true,
+    "no_30min": true,
+    "next": "One native same ISA ARM64 source-frozen 180s five-client real one-way, strict 750ms and positive native_rx0 authenticated_health1 for Alice and Erin."
+  },
+  "unrelated_open": [
+    "Earlier ARM64 bidirectional 1.26s–6.39s source failures remain independent",
+    "Windows seven native physical modes incomplete",
+    "H998 historical same-socket MTU fail",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 NOT_RUN"
+  ]
+}

@@ -665,7 +665,7 @@ impl GameKernelOwner{
                     // receipt; never a new framing or a Go DATA pump.
                     if server&&!server_cold_receipt_armed&&
                         tx_cold_group_committed.load(Ordering::Acquire){
-                        health.arm_game_server_cold_commit(health_now);
+                        health.arm_server_cold_commit(health_now);
                         server_cold_receipt_armed=true;
                     }
                     match health.control_due(health_now){

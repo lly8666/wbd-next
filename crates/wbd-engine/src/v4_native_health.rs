@@ -73,8 +73,8 @@ pub(crate) struct HealthClock {
     last_business:u64,
     next_health:u64,
     retry_not_before:u64,
-    // At most three already-implemented AEAD Health kind0 receipts for
-    // the *server's finished Game2/4 cold group*. Never a data probe,
+    // At most three existing AEAD Health kind0 receipts after the
+    // *server's completed Normal or Game cold original M4 owner*. Never a data probe,
     // a new wire type, or a periodic extra sender.
     cold_group_receipts_left:u8,
     peer_idle:Option<(u64,u64)>,
@@ -123,12 +123,12 @@ impl HealthClock {
     }
     /// Accepted is a synchronous definite driver copy, not remote receipt.
     /// Failed/uncertain copies do not postpone a required heartbeat for 15s.
-    // Only a full original-Go TLS Game2/4 group whose native server M4
-    // drivers are installed can request this bounded cold commit receipt.
+    // Only a completed original-Go TLS Normal or Game server whose
+    // genuine native M4 workers and shared TUN have installed may arm it.
     // The existing authenticated Health kind0 record carries it: a
     // client's verified receipt proves actual remote M4 TX, independent
     // of reverse application IPv4 being available.
-    pub(crate) fn arm_game_server_cold_commit(&mut self,at:u64){
+    pub(crate) fn arm_server_cold_commit(&mut self,at:u64){
         if self.cold_group_receipts_left==0{
             self.cold_group_receipts_left=3;
             self.next_health=at;
@@ -561,7 +561,7 @@ mod tests {
     fn game_server_cold_commit_health_is_bounded_and_never_fake_business(){
         let mut health=HealthClock::new(HealthPolicy::default_connected(),10_000_000);
         assert!(!health.tx_due(10_000_000));
-        health.arm_game_server_cold_commit(10_001_000);
+        health.arm_server_cold_commit(10_001_000);
         assert!(health.tx_due(10_001_000));
         // A failed driver copy must NOT count as a peer receipt, and
         // must retry the same existing sealed kind0 via original TX.

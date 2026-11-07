@@ -28,7 +28,7 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
             t.Fatalf("actual authenticated RX failed to promote exactly once: polls=%d promos=%d err=%v",polls,promotions,err)
         }
     })
-    t.Run("authenticated_native_Game_health_without_user_reverse_IP_proves_remote_commit",func(t *testing.T){
+    t.Run("authenticated_native_Normal_or_Game_health_without_reverse_IP_proves_remote_commit",func(t *testing.T){
         promotions:=0
         pulses:=0
         err:=waitOriginalNativeM4PeerProof(context.Background(),
@@ -43,7 +43,7 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
             },
             func()error{promotions++;return nil},time.Second)
         if err!=nil||promotions!=1||pulses!=3{
-            t.Fatalf("canonical Game native control did not promote exact route once: err=%v promotions=%d pulses=%d",err,promotions,pulses)
+            t.Fatalf("canonical Normal/Game native control did not promote exact route once: err=%v promotions=%d pulses=%d",err,promotions,pulses)
         }
     })
     t.Run("local_TLS_READY_without_remote_M4_keeps_old_route",func(t *testing.T){
