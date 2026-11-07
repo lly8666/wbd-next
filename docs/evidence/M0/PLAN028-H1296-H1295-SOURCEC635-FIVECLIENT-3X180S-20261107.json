@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1296 exact H1295 native five-client 180s and real MTU source-scoped results",
+  "source_sha": "c635edc2407a378404e4290492361996a50842c2",
+  "status": "H1295_FAST_NOT_RELEASE_QUALIFIED",
+  "h1295_source_scope": {
+    "code_fix": "shared_route_publish no longer revokes prior native M4 alive until joined exact Stop; one current TUN route, no double owner",
+    "one_original_native_arm64_build": "PASS",
+    "rust_exact_old_inflight_grace_unit": "PASS one test",
+    "game4_native_off_fixed6_hot_8_swaps": "PASS both",
+    "physical_same_veth_mtu1500_to1280_180s": "PASS 0 alerts",
+    "governance": "PASS",
+    "last_full_long": "H1284 earlier source 3×1800 all FAIL; H1295 did not run long"
+  },
+  "five_clients_180s": {
+    "action_run_id": 42327174590,
+    "pressure_native": {
+      "result": "FAIL",
+      "alerts": 1,
+      "erin_uplink_active_tx_gap_ms": 6390,
+      "downstream_max_gap_ms": 240,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "pending_overflow_all_five": 0,
+      "game4_native_tx_quanta": 161306,
+      "artifact_id": 13556078131,
+      "max_erin_gap_app_second": 42.07
+    },
+    "pressure_scalar": {
+      "result": "FAIL",
+      "alerts": 1,
+      "erin_uplink_active_tx_gap_ms": 3310,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "pending_overflow_all_five": 0,
+      "game4_scalar_tx_quanta": 159169,
+      "artifact_id": 13555773385,
+      "max_erin_gap_app_second": 144.69
+    },
+    "heterogeneous_native": {
+      "result": "FAIL",
+      "alerts": 1,
+      "erin_uplink_active_tx_gap_ms": 2170,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "pending_overflow_all_five": 0,
+      "game4_native_tx_quanta": 89135,
+      "artifact_id": 13555853390,
+      "max_erin_gap_app_second": 95.57
+    }
+  },
+  "root_isolation": "Erin Fixed6 active uplink traffic gaps occur at different business times not necessarily cold TLS/M4 rotation; other four clients max gaps within 10-100ms. Shared TUN reader queue overflow zero all; do NOT infer overall data path healthy.",
+  "next": "Enable preexisting 500ms bounded Rust M4 RX/TX opt-in diagnostic and add safe client_port/generation attribution. Compare monotonic source/recv bins to native raw kernel observed, tuple, FEC source/parity, received, TUN delivered and RX poll gaps within an actual Erin gap. Run ONLY one source-locked 180s native pressure test, do not retune queues, change wire, or trigger 1800s.",
+  "h1296_candidate": "DIAGNOSTIC_ONLY_NOT_PRODUCT_FIX",
+  "full_3x1800": "NOT_RUN_UNTIL_KNOWN_GAPS_FIXED",
+  "still_open": [
+    "Erin 30% link Fixed6 upstream packet gaps",
+    "H998 actual ICMP 3/4 and physical cross-platform qualification",
+    "Original Go/Rust same-source 3x1800 long acceptance"
+  ]
+}

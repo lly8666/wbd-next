@@ -214,6 +214,11 @@ def main():
         diagnostic_env=["WBD_SHARED_TUN_ROUTE_DIAG=1",
                         "WBD_GAME_TX_SAMPLE=1","WBD_GAME_RX_LOCK_SAMPLE=1",
                         *(["WBD_GAME_FEC_BACKEND="+chosen_backend] if chosen_backend else [])]
+        # Opt-in read-only 500ms original M4 RX/TX snapshots. Do not turn
+        # this on for default 180s or 1800s qualification (no DATA overhead),
+        # and pass explicitly into both the server and client's OS namespaces.
+        if os.environ.get("WBD_PLAN028_FEC_EGRESS_DIAG")=="1":
+            diagnostic_env.append("WBD_FEC_EGRESS_DIAG=1")
         sargs = [
             "env", "LD_LIBRARY_PATH=" + str(build), *diagnostic_env,
             str(build / "wbd-v4-server"),

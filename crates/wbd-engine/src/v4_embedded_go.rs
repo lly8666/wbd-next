@@ -7497,8 +7497,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // adding any new hot-path counter or kernel call.
                     let (kernel_observed,tuple_candidates,tun_delivered,
                         delivered_legacy)=original_raw_rx_stage_snapshot(&stats_rx);
-                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={} poll_ready={} poll_idle={} processed={} max_loop_gap_ns={} max_processing_ns={} worker_cpu_ns={} kernel_raw_observed={} tuple_candidates={} tun_delivered={} delivered_legacy_raw_batches={}",
+                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx client_port={} generation={} ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={} poll_ready={} poll_idle={} processed={} max_loop_gap_ns={} max_processing_ns={} worker_cpu_ns={} kernel_raw_observed={} tuple_candidates={} tun_delivered={} delivered_legacy_raw_batches={}",
                         if rx_server_side{"server"}else{"client"},
+                        rx_flow.client_port,generation,
                         loop_now().0,stats_rx.rx.load(Ordering::Relaxed),
                         stats_rx.rx_error.load(Ordering::Relaxed),
                         stats_rx.fec_rx[0].load(Ordering::Relaxed),
@@ -7672,18 +7673,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     let slow=tx_cell.try_lock().ok().and_then(|e|
                         e.fec2_live_tx.as_ref().map(|stream|{
                             let report=stream.report();
-                            (e.server_side,original_fec_tx_snapshot(report),
+                            (e.server_side,e.flow.client_port,e.generation,
+                                original_fec_tx_snapshot(report),
                                 report.queued_jobs,report.open_bytes,
                                 e.fec2_staged_pns.len(),e.fec2_fail_reasons,
                                 stream.next_deadline().map(|d|d.0))
                         }));
-                    if let Some((server_side,fec,queued,open,staged,reasons,next_due))=slow {
+                    if let Some((server_side,client_port,owner_generation,
+                        fec,queued,open,staged,reasons,next_due))=slow {
                         // Logging only after the owner mutex has been dropped.
                         let chain:Vec<u64>=stats.tx_chain.iter().map(|x|
                             x.load(Ordering::Relaxed)).collect();
-                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={} queued={} open_bytes={} staged={} reasons={:?} next_due={:?} turn_err={:?} chain={:?}",
+                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx client_port={} generation={} ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={} queued={} open_bytes={} staged={} reasons={:?} next_due={:?} turn_err={:?} chain={:?}",
                             if server_side{"server"}else{"client"},
-                            loop_now().0,
+                            client_port,owner_generation,loop_now().0,
                             stats.fec_m1_ingress[0].load(Ordering::Relaxed),
                             stats.fec_m1_stage[1].load(Ordering::Relaxed),
                             stats.tx.load(Ordering::Relaxed),
