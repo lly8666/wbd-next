@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1349",
+  "source_sha": "e71a53eb750ac858fff213f36ce8760366d542fd",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "run_id": 42420082312,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42420082312",
+    "native_job_id": 128546453339,
+    "conclusion": "failure",
+    "first_failure": "CI Python gate line9 asserted incorrectly declared 3 Mbps first phase, actual fixture drove 2 Mbps (.2*10)",
+    "preflight": "PASS",
+    "immutable_ELF62_sha_source": "PASS",
+    "native_five_client_180s": "EXECUTED",
+    "offline_auditor": "PASS_SCOPED_0LOSS_GAME4_FIXED6_3_5_10_5_WITH_FIVE_SIBLINGS_BUT_LABEL_FIRST_PHASE_INACCURATE",
+    "actual_workflow_gate": "FAIL_PRESERVED"
+  },
+  "artifact": {
+    "id": 13593550164,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42420082312/artifacts/13593550164",
+    "name": "plan028-h1348-native-x86-game4-0loss-capacity-42420082312",
+    "sha256": "93619131c2269e7d29070dff428a059b0c86adeb6878f9cd8a766773523952b7",
+    "zip_crc": "PASS",
+    "archive_bytes": 247237,
+    "file_count": 34,
+    "real_network_log": "h1348-native-game4-traffic.log",
+    "offline_audit": "h1348-l2-game4-zero-loss.json",
+    "original_network_plan": "h1250-matrix-plan.json",
+    "original_per_actor_app_bins": "h1250-c-{alice,bob,carol,dave,erin}.json/h1250-s-..."
+  },
+  "native": {
+    "architecture": "Linux x86_64 true ELF62, five isolated netns/veth genuine OS TUN; not QEMU",
+    "logical_cpu_cores_observed": 4,
+    "original_frozen_GO_RUST_TLS_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_Rust_backend": "ISA-L, source manifest SHA-checked",
+    "one_original_TLS_port": 443,
+    "original_distinct_authenticated_clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "original_product_source_independent_from_test_wrapper_sha": "e71a53eb750ac858fff213f36ce8760366d542fd"
+  },
+  "real_180s_load": {
+    "warmup_s": 10,
+    "active_s": 170,
+    "actual_game4_logical_Mbps_per_direction": [
+      2,
+      5,
+      10,
+      5
+    ],
+    "misleading_declared_rates": [
+      3,
+      5,
+      10,
+      5
+    ],
+    "phase_seconds": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "actual_observed_app_Game4_UL_DL_Mbps": [
+      [
+        2,
+        2
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        5,
+        5
+      ]
+    ],
+    "sender_target_fill_fraction_each_phase_and_direction": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "other_four_clients_peak_each_direction_mbps": 2,
+    "host_busy_mean_percent_per_phase": [
+      9.11,
+      16.5,
+      28.71,
+      15.58
+    ],
+    "host_max_per_core_busy_percent_peak": 29.35,
+    "host_softirq_mean_percent_per_phase": [
+      1.73,
+      4.05,
+      7.8,
+      3.93
+    ],
+    "host_logical_cpu_observed_each_phase": [
+      4,
+      4,
+      4,
+      4
+    ],
+    "real_Erin_kernel_qdisc_observed_drops": {
+      "uplink": 0,
+      "downlink": 0
+    },
+    "Erin_kernel_physical_packets": {
+      "uplink": 74603,
+      "downlink": 74627
+    },
+    "true_udp_all_actor_delivery_fraction_ge_99_percent": true,
+    "Game4_active_send_no_receive_gap_ms": {
+      "uplink": 0,
+      "downlink": 0
+    },
+    "other_four_active_send_no_receive_gap_max_ms": 10,
+    "product_original_all_5_owners_stopped": true,
+    "server_original_shared_Rust_TUN_final_stop": true,
+    "generator_capacity_exceeded": [],
+    "host_hot_core_ge_95pct": false
+  },
+  "verdict": {
+    "CI": "FAIL_PRESERVE_ORIGINAL",
+    "genuine_10Mbps_game4_0loss_business": "PASS_SCOPED_WITH_FIVE_ORIGINAL_MIXED_SIBLINGS_NATIVE_X86_ONLY",
+    "genuine_3Mbps_first_phase": "NOT_RUN_MISLABELED_2Mbps",
+    "universal_Game4_capacity_limit": "NOT_MEASURED",
+    "Windows_or_ARM64_capacity": "NOT_COMPARABLE"
+  },
+  "next_action": {
+    "specific_uncovered_hard_gate": "Game4 highest Fixed6 20Mbps capacity with real 3/5/10/20/10Mbps stages on same verified source6c5 and host separately measured",
+    "kind": "NEW_20MBPS_CAPACITY_EXPERIMENT_NOT_RERUN_OF_REPORTER_FAILURE",
+    "phase_s": [
+      20,
+      30,
+      30,
+      30,
+      60
+    ],
+    "real_Game4_target_Mbps": [
+      3,
+      5,
+      10,
+      20,
+      10
+    ],
+    "warmup_s": 10,
+    "sustained_during_load_s": 170,
+    "other_four_peak_Mbps_each_dir": 2,
+    "max_aggregate_oneway_offered_mbps": 28,
+    "fail_closed_preflight": "literal computed rate tiers must agree exactly BEFORE real network",
+    "observed_result": "NOT_RUN_UNTIL_ACTION",
+    "stop_rule": "If generator/guest/hot-core saturates, mark CAPACITY_LIMITED not PASS; do not escalate beyond20"
+  },
+  "retained_open": [
+    "H998 old same-socket live MTU genuine FAIL",
+    "H1317 ARM64 old one-way5.18s gap original FAIL",
+    "H1348 Action FAIL not rewritten despite successful offline scoped 10Mbps audit",
+    "L1 all seven modes two native handover rotations incomplete",
+    "L2 30%/250ms and Normal100/200Mbps incomplete",
+    "L3 2x1800 not run",
+    "physical hardware/Android not run"
+  ]
+}
