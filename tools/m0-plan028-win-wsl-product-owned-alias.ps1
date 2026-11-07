@@ -18,9 +18,17 @@ function Pick([uint32]$idx,[string]$want) {
  throw ('original Windows GetBestRoute did not select owned '+$want)
 }
 function PhysicalMTU([uint32]$idx){
- $v=@(Get-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -ErrorAction Stop)
- if($v.Count -ne 1 -or [int]$v[0].NlMtuBytes -lt 576){throw 'real OS physical IPv4 NlMtu invalid'}
- return [int]$v[0].NlMtuBytes
+ # WSL vEthernet's IPv4 IP-interface can live in a non-default network
+ # compartment. Probe only AFTER adding our owned real IPv4 alias; never
+ # infer a fixed 1500 MTU from another runner, a Wintun or a CLI default.
+ $v=@(Get-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -IncludeAllCompartments -ErrorAction Stop)
+ $rows=@($v | ForEach-Object {
+   "$($_.InterfaceIndex)|$($_.InterfaceAlias)|$($_.CompartmentId)|$($_.NlMtuBytes)"
+ })
+ Write-Host ('M0_PLAN028_WINDOWS_OWNED_WSL_IPV4_INTERFACE_MTU_CANDIDATES ifindex='+$idx+' rows='+($rows -join ';'))
+ $valid=@($v | Where-Object {$_.InterfaceIndex -eq $idx -and [int]$_.NlMtuBytes -ge 576})
+ if($valid.Count -ne 1){throw ('real physical IPv4 NlMtu ambiguous/unavailable on this Windows VM; all_compartments='+$v.Count+' valid='+$valid.Count)}
+ return [int]$valid[0].NlMtuBytes
 }
 function DefaultFingerprint(){
  return @((Get-NetRoute -DestinationPrefix '0.0.0.0/0' -AddressFamily IPv4 -ErrorAction Stop |
@@ -37,7 +45,7 @@ if($Action -eq 'Prepare') {
  }
  $before=(Guest @('ip','-4','-o','addr','show','dev','eth0') | Out-String)
  if($before -match [regex]::Escape($guest)){throw 'foreign guest IPv4 alias'}
- $originalMTU=PhysicalMTU $idx
+ $originalMTU=$null # IPv4 interface may not exist before owned alias
  $data=[ordered]@{owner='PLAN028_TEST_ONLY';source_sha=$env:GITHUB_SHA;wsl_host_ifindex=$idx;guest4=$guest;host_source_old=$old;host_source_new=$new;default_before=(DefaultFingerprint);stage='INIT';guest_created=$false;old_created=$false;new_created=$false;physical_ipv4_mtu_original=$originalMTU;mtu_shrink_started=$false;mtu_original_restored=$false}
  $data|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
  try {
@@ -46,7 +54,10 @@ if($Action -eq 'Prepare') {
   $data|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
   New-NetIPAddress -InterfaceIndex $idx -AddressFamily IPv4 -IPAddress $old -PrefixLength 24 -SkipAsSource $false -ErrorAction Stop|Out-Null
   $data.old_created=$true
+  $data|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
   [void](Pick $idx $old)
+  $originalMTU=PhysicalMTU $idx
+  $data.physical_ipv4_mtu_original=$originalMTU
   $data.stage='PREPARED'
   $data|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
   Write-Output 'M0_PLAN028_OWNED_WINDOWS_WSL2_UNDERLAY_PREPARED_REAL_OS_SOURCE4'
@@ -93,7 +104,7 @@ if($Action -eq 'ShrinkMTU'){
  $d.stage='MTU_SHRINK_ARMED'
  $d|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8
  $stamp=[DateTimeOffset]::UtcNow
- Set-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -NlMtuBytes 1280 -ErrorAction Stop
+ Set-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -IncludeAllCompartments -NlMtuBytes 1280 -ErrorAction Stop
  $readback=PhysicalMTU $idx
  if($readback -ne 1280){throw ('real kernel MTU narrowing not applied; readback='+$readback)}
  [void](Pick $idx $old)
@@ -116,7 +127,7 @@ if($d.mtu_shrink_started){
  if($iface.Count -ne 1){throw 'owned MTU restoration refused: physical NIC identity changed'}
  $original=[int]$d.physical_ipv4_mtu_original
  if($original -ne 1500){throw 'owned MTU restoration refused: baseline was not 1500'}
- Set-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -NlMtuBytes $original -ErrorAction Stop
+ Set-NetIPInterface -InterfaceIndex $idx -AddressFamily IPv4 -IncludeAllCompartments -NlMtuBytes $original -ErrorAction Stop
  if((PhysicalMTU $idx) -ne $original){throw 'Windows WSL original NlMtu restore readback failed'}
  $d.mtu_original_restored=$true
  $d|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $Receipt -Encoding utf8

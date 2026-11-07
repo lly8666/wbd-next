@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "0442c681748479b9cf0c9f61f408f8e9734fe266",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "checkpoint": "H1339",
+  "genuine_action": {
+    "run_id": 42385828724,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42385828724",
+    "native_job_id": 128443934460,
+    "conclusion": "failure",
+    "unit_job": "PASS",
+    "windows_rust_units": "PASS_73_TESTS",
+    "linux_native_original_tls_rust_build": "PASS",
+    "signed_npcap_wintun_drivers": "INSTALLED_AND_PRECHECKED",
+    "real_wsl2_boot": "PASS",
+    "VM_fingerprint_step": "RECORDED_NOT_CAPACITY_PASS"
+  },
+  "first_failure": "tools/m0-plan028-win-wsl-product-owned-alias.ps1:22 before test-owned host IPv4 alias exists: PhysicalMTU() Get-NetIPInterface -InterfaceIndex <WSL virtual NIC> -AddressFamily IPv4 returned 0/ambiguous or NlMtuBytes<576 in this native Windows2025 VM's default compartment.",
+  "causal_status": "ENV_TEST_OWNED_IPV4_INTERFACE_NOT_YET_PREPARED_OR_NONDEFAULT_COMPARTMENT; NOT_PRODUCT_DATA_PLANE_FAILURE; not yet differentiable from original log because previous failing guard did not print candidates",
+  "real_underlay_mutation": "NOT_TRIGGERED",
+  "original_tls_new_M4_after_mtu": "NOT_RUN",
+  "actual_new_syn_mss": "NOT_RUN",
+  "real_both_OS_kernel_app": "NOT_RUN",
+  "original_h998_same_socket": "HISTORIC_FAIL_RETAINED",
+  "test_only_fix": "Only test-owned WSL network fixture: defer physical IPv4 MTU baseline until after Add-NetIPAddress and actual GetBestRoute selects owned .1; Get-NetIPInterface -IncludeAllCompartments and log exact ifindex/alias/compartment/MTU rows; fail closed on none/ambiguous, insist real 1500→1280 and restore only that exact interface. Test helper Set-NetIPInterface includes all compartments. No production code changed.",
+  "cross_vm_note": "Windows2025 WSL2 interface may live in non-default network compartment or have no IPv4 IP interface before owned alias; previous Linux x86 four-vCPU 50Mbps CPU59.63% and Windows VM physical MTU are independent facts, never equate or assume baseline1500 without OS readback",
+  "status": "NEW_MTU_ONLY_TEST_SOURCE_PENDING_ACTUAL_NETWORK",
+  "known_open": [
+    "H1317 old ARM64 active app 5.18s historical FAIL",
+    "H998 original same-socket MTU shrink historical FAIL",
+    "Windows original OS MTU-only real Go TLS/M4 NOT_TRIGGERED",
+    "L2 Game calibrated capacity and L3 2x1800 final NOT_RUN"
+  ]
+}

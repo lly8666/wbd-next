@@ -26,6 +26,7 @@ on:
       - tests/test_m0_install_public_realityfront_tests.py
       - tests/test_m0_install_public_faketcp.py
       - tests/test_delivery_ci.py
+      - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_native_resource_sampler.py
       - tools/m0_wl_native_rx_abba.py

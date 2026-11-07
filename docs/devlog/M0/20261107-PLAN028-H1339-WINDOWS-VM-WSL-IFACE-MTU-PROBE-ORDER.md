@@ -1,0 +1,11 @@
+# PLAN028 H1339 — Windows WSL2 native VM-dependent IP interface MTU precondition
+
+H1337 exact product source 0442c681 Windows real cross-OS Action42385828724 compiled Windows original Go/Rust and Linux original TLS/Rust, signed Wintun/Npcap and real Ubuntu WSL2 boot PASS. Native Rust 73 unit tests PASS. The first and only source-scoped native scene failed **BEFORE installing any test-owned source IPv4 alias / mutating the physical MTU / new TLS**, at `m0-plan028-win-wsl-product-owned-alias.ps1:22`: `Get-NetIPInterface -InterfaceIndex <vEthernet WSL> -AddressFamily IPv4` returned no unique valid NlMtu in the default compartment. No product raw/TUN interruption was triggered; old CI FAILURE is retained. The lack of candidate readback means the actual VM cause (unprepared IPv4 row or non-default compartment) is not proved one way or another.
+
+H1339 fixes only the test-owned Windows WSL2 preparation order: create guest alias and Windows owned 198.19.254.1, use actual `Find-NetRoute` selected source, THEN obtain live NlMtu through `Get-NetIPInterface -IncludeAllCompartments`, print per-compartment candidate identity and fail closed if 0 or >1 valid; only after unique receipt can real 1500→1280 OS Set-NetIPInterface and exact 1500 restoration occur. Existing H1335 production Go watcher/NotifyIpInterfaceChange and Rust dataplane unchanged, source hashes remain frozen. Re-add this helper as a dependency of the existing original Windows full workflow push filter; one Normal Off signed Npcap/Wintun↔WSL2 scene (no seven-mode performance reruns).
+
+Per user: VM hardware/WSL network compartment/per-VM CPU/RAM/actual PPS must be measured per run. A different Windows VM exposing different physical MTU or network compartment is ENV_PRECONDITION_NOT_RUN, not product capacity failure or a reason to alter user default1460. H1334 x86 4vCPU CPU59.63% at Normal50Mbps cannot serve as native Windows or ARM64 capacity baseline. H998 original same-socket historical FAIL and L3 NOT_RUN remain.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Test-owned Windows WSL2 IPv4 alias readiness and non-default compartment MTU readback plus fail-closed diagnostics only; Go/Rust native product and user parameters unchanged."}
+```
