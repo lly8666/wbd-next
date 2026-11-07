@@ -144,6 +144,65 @@ func m0WindowsVerifiedOwnedWSLMTUShrink(owned,mtuOnly bool,generation uint64,
   selected.ifindex==ifindex&&selected.source4==current&&
   selected.physicalMTU==1280
 }
+// Go 1.23's net.Interface.MTU reads GetAdaptersAddresses adapter MTU.
+// It is NOT the IPv4 IP-interface NlMtu changed by Set-NetIPInterface.
+// Original Go pins golang.org/x/sys/windows v0.33.0, which predates its
+// GetIpInterfaceEntry wrapper; retain the documented x64 Win32 row layout
+// locally only for this COLD OS readback. No new packet / polling loop.
+type m0WindowsIPInterfaceRow struct{
+ Family uint16
+ InterfaceLuid uint64
+ InterfaceIndex uint32
+ MaxReassemblySize uint32
+ InterfaceIdentifier uint64
+ MinRouterAdvertisementInterval uint32
+ MaxRouterAdvertisementInterval uint32
+ AdvertisingEnabled uint8
+ ForwardingEnabled uint8
+ WeakHostSend uint8
+ WeakHostReceive uint8
+ UseAutomaticMetric uint8
+ UseNeighborUnreachabilityDetection uint8
+ ManagedAddressConfigurationSupported uint8
+ OtherStatefulConfigurationSupported uint8
+ AdvertiseDefaultRoute uint8
+ RouterDiscoveryBehavior uint32
+ DadTransmits uint32
+ BaseReachableTime uint32
+ RetransmitTime uint32
+ PathMtuDiscoveryTimeout uint32
+ LinkLocalAddressBehavior uint32
+ LinkLocalAddressTimeout uint32
+ ZoneIndices [16]uint32
+ SitePrefixLength uint32
+ Metric uint32
+ NlMtu uint32
+ Connected uint8
+ SupportsWakeUpPatterns uint8
+ SupportsNeighborDiscovery uint8
+ SupportsRouterDiscovery uint8
+ ReachableTime uint32
+ TransmitOffload uint32
+ ReceiveOffload uint32
+ DisableDefaultRoutes uint8
+}
+func m0WindowsPhysicalIPv4NLMTU(ifindex uint32)(uint32,error){
+ row:=m0WindowsIPInterfaceRow{Family:uint16(syscall.AF_INET),InterfaceIndex:ifindex}
+ if ifindex==0||unsafe.Sizeof(row)!=176||
+  unsafe.Offsetof(row.InterfaceIndex)!=16||
+  unsafe.Offsetof(row.NlMtu)!=152{
+  return 0,windowsclient.ErrN4NativeGuard
+ }
+ proc:=windows.NewLazySystemDLL("iphlpapi.dll").NewProc("GetIpInterfaceEntry")
+ if err:=proc.Find();err!=nil{return 0,err}
+ status,_,_:=proc.Call(uintptr(unsafe.Pointer(&row)))
+ if status!=0{return 0,syscall.Errno(status)}
+ if row.Family!=uint16(syscall.AF_INET)||
+  row.InterfaceIndex!=ifindex||row.NlMtu<576||row.NlMtu>65535{
+  return 0,windowsclient.ErrN4NativeGuard
+ }
+ return row.NlMtu,nil
+}
 func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhysicalPath,error){
  var zero m0WindowsPhysicalPath
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(peer,0)
@@ -154,7 +213,9 @@ func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhy
   strings.EqualFold(iface.Name,tunAlias){
   return zero,windowsclient.ErrN4NativeGuard
  }
- return m0WindowsPhysicalPath{ifindex:underlay.InterfaceIndex,source4:underlay.Source4,physicalMTU:uint32(iface.MTU)},nil
+ ipv4NLMTU,err:=m0WindowsPhysicalIPv4NLMTU(underlay.InterfaceIndex)
+ if err!=nil{return zero,err}
+ return m0WindowsPhysicalPath{ifindex:underlay.InterfaceIndex,source4:underlay.Source4,physicalMTU:ipv4NLMTU},nil
 }
 type m0WindowsPathCoalescer struct{first,last time.Time}
 func(c *m0WindowsPathCoalescer) push(now time.Time){
@@ -244,6 +305,11 @@ func watchM0WindowsOriginalPhysicalPath(
    if !fired{continue}
    pending.clear()
    next,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+   if os.Getenv("WBD_PLAN028_WSL_OWNED_MTU_ONLY")=="1"&&
+    os.Getenv("GITHUB_ACTIONS")=="true"{
+    fmt.Printf("WBD_WINDOWS_NATIVE_IPV4_NLMTU_EVENT_RECHECK ifindex=%d old_mtu=%d new_mtu=%d error=%t source=GetIpInterfaceEntry\n",
+     current.ifindex,current.physicalMTU,next.physicalMTU,e!=nil)
+   }
    if e!=nil||next==current{continue}
    current=next
    select{case changed<-struct{}{}:default:}
@@ -382,10 +448,14 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // The actual OS physical egress path, not the inner Wintun interface.
  // This pure Rust budget is installed BEFORE any original SYN and is
  // renewed only after the previous authenticated generation has stopped.
- physicalIface,err:=net.InterfaceByIndex(int(underlay.InterfaceIndex))
+ selected,err:=m0WindowsSelectedPhysicalPath(o.ServerIP,o.AdapterAlias)
  if err!=nil{return err}
- if physicalIface.MTU<576{return windowsclient.ErrN4NativeGuard}
- physical:=uint32(physicalIface.MTU)
+ if selected.ifindex!=underlay.InterfaceIndex||selected.source4!=underlay.Source4{
+  return windowsclient.ErrN4NativeGuard
+ }
+ physical:=selected.physicalMTU // EXACT IPv4 NlMtu also used by native path watcher
+ fmt.Printf("WBD_WINDOWS_COLD_PHYSICAL_IPV4_NLMTU_READBACK generation=%d ifindex=%d source4=%s physical_mtu=%d source=Win32_GetIpInterfaceEntry\n",
+  generation,selected.ifindex,selected.source4,physical)
  gameFEC:=(o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4)&&o.FEC2Mode=="fixed"
  cold,err:=m0WindowsV4LocalSYNBudget(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),

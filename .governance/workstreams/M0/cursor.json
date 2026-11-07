@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1341,
-  "checkpoint_sha": "a150200e9028b009e645b75d55662dcb221cd631",
+  "sequence": 1342,
+  "checkpoint_sha": "03db4cf9d0333a23439fcd82606b54509ee9543b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1341: H1340 sourcea150 Action42389587476 originally planned Windows physical same NIC/IP MTU1500→1280, but missing [plan028-win-physical-mtu-only] commit marker selected full `mode=all`, MTU_ONLY=0/outer legacy1400, target NOT_RUN. Genuine signed Npcap+Wintun real Linux WSL2 original Go TLS/Rust app UDP/TCP and owned Stop six modes Normal/Fixed/Auto/Game4Off/Game2FEC/Game4FEC PASS scoped; Game2 Off FAIL due `M4 OS MTU drift expected1313 actual0` at final exit although real Rust worker join/WAL Restore/Stop markers PASS and UDP/TCP PASS, not proven unjoined Stop. Genuine Action FAIL preserved, original 90-file artifact13581312530 verified GitHub zip sha cfd1a030. Next only one explicit marker-scoped NormalOff actual OS MTU test: add cheap preflight to prevent MTU script path change without single scene marker; retain alias and per-VM capacity receipt in artifact. Product Go/Rust untouched; prior four-vCPU Linux 50Mbps CPU not comparable.",
-  "why_now": "Observed H1340 accidental seven-mode fallback consumed real Windows VM and surfaced independent Game2 exit race; prevent repeat via source-marker preflight and run one truly intended hard L1 physical MTU-only network case, keeping true 6 positives and Game2 failure. Preserve VM configuration evidence explicitly.",
+  "current_task": "H1342: H1341 source03db [Action42391072637] native signed Windows→real WSL2 NormalOff target single mode genuine event H1341 FAIL, actual owned Windows vEthernet ifindex25 source IPv4 .1 unchanged NlMtu1500→1280 OS readback 61.44ms PASS, restored 1500 aliases/default route PASS. Original TLS/Rust gen1 ready MSS1420 Wintun1389 genuine UDP, but no watcher effective-path marker and no new original TLS gen2/actual SYN1240/inner1209, 54s timeout; artifact13582380006 zipSHA98aed937 verified CRC. Found both current Go watcher and Go Rust cold SYN budget take net.Interface.MTU=adapter GetAdaptersAddresses rather than actual IPv4 NlMtu; H1342 candidate source changes BOTH to Win32 GetIpInterfaceEntry NlMtu same selected ifindex, 176byte row offset152 ABI test, authoritative originalGo source manifest 2 hashes, single Normal signed native Action. New SOURCE NOT_RUN until real Action. VM Windows 2 physical/4 logical vCPU16GiB != Linux H1334 4vCPU capacity.",
+  "why_now": "True source-specific Windows L1 same-NIC/IP physical MTU hard gate FAILED despite OS event and clean restore; kernel IP-layer NlMtu differs from adapter MTU, and two existing code consumers both used wrong field. One native cold Win32 authoritative read fixes both, no extra Go hot control/per-packet work.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Verify H1341 new Action actual `WBD_WL_PUBLIC_MODES=normal`, `WBD_PLAN028_WSL_OWNED_MTU_ONLY=1`, outer1460 BEFORE building; one test-owned WSL vEthernet actual NlMtu1500→1280, same selected source4/ifindex, native original Go NotifyIpInterfaceChange + new TLS B, real original SYN MSS1240 and Wintun inner1209, post-B authentic UDP/TCP, owned old & final stop, restored OS NlMtu1500 and default routes, per Windows VM CPU topology file. Do not repeat H1340 seven-mode despite six scoped PASS. If new original product failure, retain first-fault; H1340 Game2 OS MTU shutdown error separate until independently addressed. L3 2x1800 only after gates.",
+  "next_action": "Collect H1342 source-locked signed Windows NormalOff WSL2 once, and cheap Go unit/manifest/WAL/governance. Require original owned interface ifindex25 source .1 same true OS 1500→1280, native OS callback+next selected Win32 NlMtu1280, Rust SYN MSS1240, Windows Wintun OS inner1209 before second auth READY, signed original TLS both and server M4, real postB UDP/TCP, exact old and final Stop, restore original interface1500. If callback absent despite MIB correct, inspect new WBD_WINDOWS_NATIVE_IPV4_NLMTU_EVENT_RECHECK log and do targeted first-fault only, not repeat seed. H1340 Game2 exit MTU readback FAIL separate, L2 capacity VM specific, L3 deferred.",
   "unverified": true,
-  "last_tested_source": "a150200e9028b009e645b75d55662dcb221cd631",
+  "last_tested_source": "03db4cf9d0333a23439fcd82606b54509ee9543b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1341-H1340-UNINTENDED-SEVEN-WIN-GAME2-MTU-EXIT-FAIL-20261108.json"
+    "docs/evidence/M0/PLAN028-H1342-H1341-WIN-NATIVE-SAME-IP-NLMTU-NO-REAUTH-SOURCE03DB-FAIL-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1340 sourcea150 real Windows/Linux Action42389587476 overall FAIL: forgot exact MTU-only marker, ran unplanned all 7 mode outer legacy1400, target same NIC/IP MTU NOT_RUN. Source artifact13581312530 ZIP SHA cfd1a verified 90 files, 6 modes real UDP/TCP+Stop functional PASS, Game2 Off exit nonzero M4 MTU drift actual0 after Rust JOIN/WAL Stop PASS, original FAIL retained. H1341 one scoped selector+cheap guard+VM/OS owned artifact retention only, no Go/Rust product edits. H1334 x86 four-vCPU 50Mbps/dir CPU59.63% guest-specific; H998 and H1317 history unchanged; PLAN028 in_progress."
+  "partial_summary": "H1341 source03db one true Windows signed native NormalOff physical same-NIC/IP MTU-only test FAILED: Win32 OS NlMtu1500→1280 and OS restore PASS but no original TLS B; gen1 real TLS/Rust/UDP PASS. H1342 fixes adapter vs IPv4 IP-interface NlMtu confusion in existing notification fingerprint and Rust cold budget via documented Win32 GetIpInterfaceEntry row ABI, SHA-locked donor manifest and Windows ABI negative unit, new scenario pending. Windows hosted VM 2physical/4logical16GiB not comparable to Linux source6c5 4vCPU 50Mbps. PLAN028 IN_PROGRESS, H998/H1317/H1340 Game2 prior fails unchanged."
 }

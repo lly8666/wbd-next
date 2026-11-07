@@ -465,7 +465,7 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'Windows authenticated-dead vs driver status classification FAIL'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN028WindowsPhysicalPath' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'PLAN028 native Windows route/IP coalescing and physical path fingerprint FAIL'}
-            & ../result/client.test.exe '-test.run=^TestM0PLAN028(NativeWindowsIPv4CallbackCoalescer|NativeWindowsOnlyPhysicalNICSourceIPv4|WindowsOwnedWSLMTUShrinkNeverAllowsForeignOrSourceRebind)$' '-test.count=1' '-test.v'
+            & ../result/client.test.exe '-test.run=^TestM0PLAN028(NativeWindowsIPv4CallbackCoalescer|NativeWindowsOnlyPhysicalNICSourceIPv4|WindowsIPv4NlMtuMIBRowABI|WindowsOwnedWSLMTUShrinkNeverAllowsForeignOrSourceRebind)$' '-test.count=1' '-test.v'
             if($LASTEXITCODE -ne 0){throw 'PLAN028 actual selected Windows physical NIC MTU-only notification/fail-closed owner contract failed'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN026GameColdHandoffQueueNeverBlocksRustJoin$' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'native Game cold queue overload regression FAIL'}

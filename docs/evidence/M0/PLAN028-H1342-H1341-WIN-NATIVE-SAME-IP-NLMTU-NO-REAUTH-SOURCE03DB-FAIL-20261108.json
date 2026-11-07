@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1342",
+  "source_sha": "03db4cf9d0333a23439fcd82606b54509ee9543b",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "run_id": 42391072637,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42391072637",
+    "source_sha": "03db4cf9d0333a23439fcd82606b54509ee9543b",
+    "conclusion": "failure",
+    "native_job_id": 128459831744
+  },
+  "source_locked_original_binary": {
+    "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust_go_assembly_compilation": "PASS",
+    "windows_go_native_product_and_tests": "PASS",
+    "linux_go_TLS_rust_build": "PASS",
+    "windows_native_signed_Npcap_Wintun": "PASS",
+    "wsl2_real_Linux_kernel": "PASS"
+  },
+  "original_artifact": {
+    "id": 13582380006,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "98aed937e21c2553d55f9e7c1ddcbfca7a7f49bdc6ecd889e76f545377296c95",
+    "zip_crc": "PASS",
+    "client_log": "mode-results/normal/client.log",
+    "server_log": "mode-results/normal/server.log",
+    "ownership": "plan028-owned-alias.json",
+    "vm": "plan028-native-windows-vm-capacity.json"
+  },
+  "triggered_real_os_event": {
+    "interface_name": "vEthernet (WSL (Hyper-V firewall))",
+    "ifindex": 25,
+    "IPv4_source_before": "198.19.254.1",
+    "IPv4_source_after": "198.19.254.1",
+    "IPv4_physical_NlMtu_before": 1500,
+    "IPv4_physical_NlMtu_after": 1280,
+    "OS_mutation_to_verified_readback_ms": 61.44,
+    "net_mutation": "TRUE_HOSTED_WINDOWS_VIRTUAL_UNDERLAY_OS",
+    "selected_ipv4_OS_readback": "PASS",
+    "real_test_owned_OS_nlMtu_restored_to": 1500,
+    "real_test_owned_IP_aliases_cleaned": true,
+    "runner_default_route_unchanged": true
+  },
+  "original_business_product": {
+    "first_credential_TLS": "PASS",
+    "first_native_client_READY": "PASS",
+    "first_original_SynMSS": 1420,
+    "first_Wintun_inner_OS_MTU": 1389,
+    "first_actual_server_authenticated_M4": "PASS",
+    "server_original_readback_generation1": true,
+    "real_native_kernel_UDP_during_gen1": "PASS_SCOPED",
+    "first_server_original_chain_tun_delivered": 741,
+    "first_windows_packet_telemetry_tx_records": 729,
+    "first_windows_rx_first_delivered_ipv4": 421,
+    "notification_to_effective_path_marker": "NOT_OBSERVED",
+    "old_exact_Stop_at_handoff": "NOT_TRIGGERED",
+    "fresh_generation2_original_TLS": "NOT_TRIGGERED",
+    "fresh_generation2_SynMSS_1240": "NOT_TRIGGERED",
+    "fresh_generation2_Wintun_inner_1209": "NOT_TRIGGERED",
+    "fresh_postB_UDP_TCP": "NOT_RUN",
+    "exit": "FAIL_TIMEOUT_WAITING_FOR_AUTHENTIC_NEW_GENERATION",
+    "final_fallback_owned_client_Stop": "PASS_AFTER_FAILED_TEST",
+    "final_server_Stop": "PASS_AFTER_FAILED_TEST",
+    "normal_L1_sameNIC_MTU": "FAIL"
+  },
+  "vm_capability": {
+    "platform": "windows-2025 hosted VM x64 OS10.0.26100.0",
+    "cpu": "AMD EPYC 9V45",
+    "physical_cores_exposed": 2,
+    "logical_vcpu": 4,
+    "memory_bytes": 17174360064,
+    "guest_cpu_vs_linux_vcpu_4_staged_50Mbps": "NOT_COMPARABLE_WITHOUT_SAME_VM_AB_AND_TRAFFIC"
+  },
+  "candidate_cause": [
+    "Current Go m0WindowsSelectedPhysicalPath took net.InterfaceByIndex.MTU from GetAdaptersAddresses link-adapter source, while real Set-NetIPInterface writes IPv4 IP-interface NlMtu; these are distinct OS objects; exact effective cold snapshot may never differ",
+    "Existing runM0NativeV4WindowsGeneration also independently took net.Interface.MTU for Rust SYN and inner Wintun cold budget, so fixing only callback detection without OS NlMtu budget would still preserve wrong 1420/1389"
+  ],
+  "candidate_fix": "H1342 source candidate uses exact GetIpInterfaceEntry(MIB_IPINTERFACE_ROW).NlMtu via Win32 for BOTH existing original Go cold path watcher and Rust budget, one API and no packet loop; pinned x/sys v0.33 lacked 2026 wrapper, local ABI self-check size176/NlMtuOffset152, Windows unit negative guard, authoritative original donor manifest two hash updates. New SOURCE real Action result pending.",
+  "hard_status": {
+    "H1341_original": "FAIL",
+    "H1342_candidate": "NOT_RUN",
+    "H998_old_original_same_socket_mtu": "HISTORIC_FAIL_RETAINED_DIFFERENT_SCOPE",
+    "H1340_original_Game2_stop_MTU_readback": "HISTORIC_FAIL_RETAINED_DIFFERENT_SCOPE",
+    "H1317_original_ARM64_predead": "HISTORIC_FAIL_RETAINED",
+    "L2_Game20Mbps": "NOT_RUN",
+    "L3_final_two_1800s": "NOT_RUN",
+    "Android_physical": "NOT_RUN"
+  }
+}

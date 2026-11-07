@@ -89,6 +89,23 @@ func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
  if c.remaining(start.Add(495*time.Millisecond))!=5*time.Millisecond||c.remaining(start.Add(500*time.Millisecond))!=0{t.Fatal("no 500ms absolute bound")}
  c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("not cleared")}
 }
+// Win32 MIB_IPINTERFACE_ROW is an actual x64 IP-layer NlMtu receipt,
+// unlike net.Interface.MTU (physical adapter MTU). The donor pins x/sys
+// v0.33.0 before its GetIpInterfaceEntry wrapper; verify our local ABI.
+func TestM0PLAN028WindowsIPv4NlMtuMIBRowABI(t *testing.T){
+ var row m0WindowsIPInterfaceRow
+ if unsafe.Sizeof(row)!=176||unsafe.Offsetof(row.InterfaceLuid)!=8||
+  unsafe.Offsetof(row.InterfaceIndex)!=16||
+  unsafe.Offsetof(row.NlMtu)!=152||
+  unsafe.Offsetof(row.DisableDefaultRoutes)!=172{
+  t.Fatalf("original Win32 MIB_IPINTERFACE_ROW layout mismatch size=%d NlMtuOffset=%d",
+   unsafe.Sizeof(row),unsafe.Offsetof(row.NlMtu))
+ }
+ if mtu,err:=m0WindowsPhysicalIPv4NLMTU(0);err==nil||mtu!=0{
+  t.Fatal("invalid physical index must fail closed without Win32 API call")
+ }
+}
+
 func TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4(t *testing.T){
  a:=m0WindowsPhysicalPath{ifindex:8,source4:netip.MustParseAddr("192.0.2.11"),physicalMTU:1500}
  b:=a;b.source4=netip.MustParseAddr("192.0.2.12");if b==a{t.Fatal("IPv4 change")}
