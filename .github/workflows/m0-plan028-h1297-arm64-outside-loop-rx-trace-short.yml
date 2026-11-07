@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-h1297-arm64-erin-rx-trace-short.yml"
+      - ".github/workflows/m0-plan028-h1297-arm64-outside-loop-rx-trace-short.yml"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
