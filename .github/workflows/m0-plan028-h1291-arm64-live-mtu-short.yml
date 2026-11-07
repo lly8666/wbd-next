@@ -76,15 +76,6 @@ jobs:
             exit 1
           }
           grep -Fq -- "--- PASS: TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender" fixed-kernel-result/h1282-original-faketcp-final-ack-unit.log
-          # H1293 proved 73.31s real in-place physical MTU black hole:
-          # rtnetlink parsed RTM_NEWLINK but discarded MTU-only intent.
-          # Run the ACTUAL platform bound in-place predicate and hard
-          # 200/500ms coalescer unit, requiring one real Go test success.
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter$' ./internal/v4productcli) >fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log 2>&1 || {
-            cat fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log >&2
-            exit 1
-          }
-          grep -Fq -- "--- PASS: TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter" fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log
           rustup toolchain install 1.85.1 --profile minimal
           # Require actual 1-test execution, not Cargo's permissive 0-test
           # result. Go buffers 64 original prepared DATA records, so both
@@ -136,6 +127,15 @@ jobs:
           cp target/release/libwbd_engine.so fixed-build/
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          # H1293 proved 73.31s real in-place physical MTU black hole:
+          # rtnetlink parsed RTM_NEWLINK but discarded MTU-only intent.
+          # Run the ACTUAL platform bound in-place predicate and hard
+          # 200/500ms coalescer unit, requiring one real Go test success.
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter$' ./internal/v4productcli) >fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log 2>&1 || {
+            cat fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter" fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
           (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets|TestPLAN028Game4OriginalM4CommitSubstageIsTypedAndSecretFree)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
