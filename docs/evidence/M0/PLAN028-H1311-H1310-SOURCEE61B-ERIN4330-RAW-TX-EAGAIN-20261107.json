@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "H1310": {
+    "run_id": 42350943082,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42350943082",
+    "conclusion": "failure",
+    "artifact_id": 13565262686,
+    "binary_source": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "fixture_source_sha": "1609599e8456fac94ebec77bef5286a2b93fcd95",
+    "architecture": "true native ARM64/ARM64 one443 five authenticated original Go/Rust sessions",
+    "strict_real_app_alerts": [
+      {
+        "who": "erin",
+        "direction": "uplink",
+        "duration_ms": 4330
+      },
+      {
+        "who": "erin",
+        "direction": "downlink",
+        "duration_ms": 1260
+      }
+    ],
+    "rotation": "PASS_ALL_FIVE_SCOPED",
+    "server_each_per_lease_pending_overflow": 0,
+    "native_ISA_L_Game4_quanta": 65357,
+    "legitimate_scalar_quanta": 738
+  },
+  "real_Erin_ul_gap": {
+    "start_app_sec": 96.62,
+    "duration_ms": 4330,
+    "offered_app_bytes": 3220992,
+    "received_app_bytes": 0,
+    "affected_original_client_port": 60872,
+    "client_generation": 2,
+    "raw_stage_in_same_window": {
+      "native_source_queued_delta": 3245,
+      "raw_M4_kernel_copied_delta": 469,
+      "tx_err_delta": 2849,
+      "tx_backpressure_delta": 2847,
+      "original_client_physical_TX_packet_delta": 0,
+      "original_client_physical_RX_packet_delta": 5195,
+      "original_client_TUN_delivered_delta": 3199
+    },
+    "network_stage_deltas": {
+      "Erin_client_uplink_netem_packets_sent": 38,
+      "Erin_client_uplink_netem_drops": 3,
+      "Erin_host_downlink_veth_RX": 109,
+      "all_five_shared_server_veth_RX": 59791,
+      "Erin_server_own_M4_RAW_observed_delta_for_original_port": 0,
+      "Erin_server_own_M4_TUN_delivered_delta": 0
+    },
+    "independent_Dave_continues": {
+      "host_Dave_downlink_netem_sent": 38241,
+      "host_Dave_veth_TX": 38149,
+      "Dave_client_veth_RX": 38208
+    },
+    "native_ARM64_host_CPU_busy_per_core_pct": [
+      69.5,
+      69.2,
+      69.7,
+      69.2
+    ],
+    "native_ARM64_host_CPU_steal_pct": 0,
+    "Erin_server_neighbor_10_25_0_6_during_gap": {
+      "REACHABLE": 8,
+      "DELAY": 1,
+      "PROBE": 0,
+      "FAILED": 0,
+      "INCOMPLETE": 0
+    },
+    "measured_boundary": "Original Erin CLIENT Rust M4 queued source but 2,847 kernel RAW Backpressure/EAGAIN while physical client TX stopped and qdisc sent 38 packets across 4.33s; server per-generation RAW receiver saw zero for original Erin port.",
+    "not_proven": [
+      "Whether default SO_SNDBUF saturates (no opt-in socket readback yet)",
+      "Whether kernel POLLOUT remains false throughout EAGAIN or SIOCOUTQ is supported",
+      "Whether qdisc backlog itself or ARP client neighbour is direct cause",
+      "Changing socket buffer will cause business recovery"
+    ]
+  },
+  "scope_H1311": {
+    "native_original_binary": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "no_product_rebuild": true,
+    "enabled_existing_opt_in": "WBD_M0_RAW_TX_SOCKET_DIAG=1",
+    "source_compatible": "WBD_PLAN028_RAW_TX_SOCKET_DIAG=1 passed only via exact fixture",
+    "original_M4_socket_obs": "Every 64 genuine EAGAIN turns, max128 per owner, native getsockopt SO_SNDBUF, poll(POLLOUT), optional SIOCOUTQ, and Stop readback; no send/retry/reseal",
+    "same_real_impairment": "Erin 30% loss/125ms and Dave 15%/100ms, 5 clients, 180s .25/.35/.45/.35",
+    "strict_business_fail_retained": true,
+    "no_1800s": true
+  },
+  "historic_open": [
+    "H1308 Erin5360 downlink true FAIL",
+    "H1309 Dave2240 downlink true FAIL",
+    "H1310 Erin4330 uplink and1260 downlink true FAIL",
+    "Windows seven physical/Android incomplete",
+    "H998 old generation same socket shrink FAIL historical",
+    "remote ICMP3/4 NOT_MEASURED",
+    "PLAN028 L3 long NOT_RUN"
+  ]
+}

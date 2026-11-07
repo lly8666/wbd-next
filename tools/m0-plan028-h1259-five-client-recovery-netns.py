@@ -320,6 +320,11 @@ def main():
             diagnostic_env.append("WBD_FEC_EGRESS_DIAG=1")
         if os.environ.get("WBD_PLAN028_EXTERNAL_STAGE_DIAG")=="1":
             diagnostic_env.append("WBD_PLAN028_EXTERNAL_STAGE_DIAG=1")
+        # Opt-in original RAW M4 Linux SO_SNDBUF/POLLOUT/SIOCOUTQ readback
+        # after 64 real EAGAIN turns; max 128 queries per owned socket.
+        # NO new default or per-record work and NO send retry/reseal.
+        if os.environ.get("WBD_PLAN028_RAW_TX_SOCKET_DIAG")=="1":
+            diagnostic_env.append("WBD_M0_RAW_TX_SOCKET_DIAG=1")
         sargs = [
             "env", "LD_LIBRARY_PATH=" + str(build), *diagnostic_env,
             str(build / "wbd-v4-server"),

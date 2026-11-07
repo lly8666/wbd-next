@@ -1,0 +1,151 @@
+name: M0 PLAN028 H1311 original ARM64 EAGAIN SO_SNDBUF/POLLOUT witness
+run-name: H1311 true native ARM64 Erin socket SO_SNDBUF under 30pct loss
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1311-arm64-raw-socket-sndbuf-witness-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-arm64-one-real-scene:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 14
+    env:
+      ORIGINAL_PRODUCT_SOURCE: e61bda8f15ffaa594a14b5a1abe711d6526bd595
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_GAME_FEC_BACKEND: native
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_ERIN_NEIGH_CLOCK_DIAG: "1"
+      WBD_PLAN028_RAW_TX_SOCKET_DIAG: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42346792441
+          github-token: ${{ github.token }}
+          name: h1286-arm64-one-isal-build-e61bda8f15ffaa594a14b5a1abe711d6526bd595
+          path: fixed-build
+      - name: Original e61b SHA256 and real native ARM64 ISA-L original Go donor
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["architecture"]=="native_aarch64"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for name,digest in m["sha256"].items():
+              raw=(pathlib.Path("fixed-build")/name).read_bytes()
+              assert raw[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",raw,18)[0]==183
+              assert hashlib.sha256(raw).hexdigest()==digest
+          print("M0_H1311_FROZEN_TRUE_ARM64_ORIGINAL_SHA256_PASS")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 -m py_compile \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py \
+            tools/m0-plan028-h1310-dave-link-witness.py \
+            tools/m0-plan028-h1310-two-path-gap-correlate.py
+      - name: One true 180s original ARM64 Erin RAW TX socket pressure with read-only Dave/Erin witnesses
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          # Non-invasive original kernel state monitor, separate from actual
+          # Go/Rust/traffic.py processes and same CLOCK_MONOTONIC.
+          python3 -u tools/m0-plan028-h1310-dave-link-witness.py \
+            --out fixed-kernel-result/h1310-dave-link-clock.json \
+            >fixed-kernel-result/h1310-dave-monitor.log 2>&1 &
+          watcher=$!
+          set +e
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1310-real-run.log 2>&1
+          result=$?
+          set -e
+          kill -TERM "$watcher" 2>/dev/null || true
+          wait "$watcher" || true
+          if [[ "$result" -ne 0 ]];then
+            tail -120 fixed-kernel-result/h1310-real-run.log >&2
+            exit "$result"
+          fi
+          test -s fixed-kernel-result/h1309-erin-neigh-clock.json
+          test -s fixed-kernel-result/h1310-dave-link-clock.json
+          test -s fixed-kernel-result/h1301-netem-clock.json
+          # Original M4 RAW TX every 64 EAGAIN: SO_SNDBUF/POLLOUT/OUTQ,
+          # bounded to 128 samples per owner. Same actual app monotonic clock.
+          python3 - <<'PY'
+          import json,pathlib,re
+          root=pathlib.Path("fixed-kernel-result")
+          client=json.loads((root/"h1250-c-erin.json").read_text())
+          server=json.loads((root/"h1250-s-erin.json").read_text())
+          tx=client["tx_bytes_bins_10ms"]["udp"]
+          rx=server["rx_bytes_bins_10ms"]["udp"]
+          spans=[];start=None
+          for i,(a,b) in enumerate(zip(tx,rx)):
+              if a>0 and b==0:
+                  if start is None:start=i
+              elif start is not None:
+                  spans.append((i-start,start,i));start=None
+          if start is not None:spans.append((len(tx)-start,start,len(tx)))
+          dur,begin,end=max(spans,default=(0,0,0))
+          lo=client["start_ns"]+begin*10000000
+          hi=client["start_ns"]+end*10000000
+          text=(root/"h1250-product-erin.log").read_text(errors="replace")
+          pattern=(r"V4_PUBLIC_RAW_TX_SOCKET_SAMPLE role=client mode=default "
+              r"ns=(\d+) backpressure_count=(\d+) effective_bytes=(\d+) "
+              r"poll_writable=(\d+) poll_error=(\d+) outq_bytes=(\S+)")
+          rows=[]
+          for m in re.finditer(pattern,text):
+              t,c,buf,writable,err,outq=m.groups()
+              rows.append({"mono_ns":int(t),"backpressure_count":int(c),
+                  "effective_sndbuf_bytes":int(buf),"poll_writable":int(writable),
+                  "poll_error":int(err),"outq_bytes":None if outq=="UNSUPPORTED" else int(outq)})
+          near=[x for x in rows if lo-300000000<=x["mono_ns"]<=hi+300000000]
+          stop=re.findall(
+              r"V4_PUBLIC_RAW_TX_SOCKET_STOP role=client mode=default effective_bytes=(\d+) "
+              r"eagain_turns=(\d+) sampled=(\d+) poll_writable=(\d+) "
+              r"poll_not_writable=(\d+) outq_supported=(\d+) outq_high_water=(\d+)",
+              text)
+          adaptations=re.findall(
+              r"V4_PUBLIC_RAW_TX_PRESSURE_BOUNDED_ADAPT(?:_FAILED)? role=client [^\n]+",
+              text)
+          result={"kind":"OBSERVATION_ONLY","scope":"original native Erin owner",
+              "gap_ms":dur*10,"offered_bytes":sum(tx[begin:end]),
+              "samples_total_all_generations":len(rows),"samples_in_worst_gap":len(near),
+              "per_sample_in_gap":near,"stop_readback":stop,
+              "bounded_adapt_events":adaptations,
+              "source_locked_product":"e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+              "no_new_records_keys_or_kernel_mutations":True}
+          (root/"h1311-raw-tx-socket.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("M0_H1311_REAL_ERIN_KERNEL_RAW_SOCKET_READBACK",json.dumps({
+              k:v for k,v in result.items() if k!="per_sample_in_gap"},sort_keys=True))
+          PY
+          python3 -u tools/m0-plan028-h1310-two-path-gap-correlate.py \
+            --art fixed-kernel-result --source "$ORIGINAL_PRODUCT_SOURCE" \
+            --out fixed-kernel-result/h1310-two-path-correlated.json | \
+            tee fixed-kernel-result/h1310-summary.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1311-original-arm64-erinsocket-dave-erin-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1310-*.json
+            fixed-kernel-result/h1310-*.log
+            fixed-kernel-result/h1311-raw-tx-socket.json
+            fixed-kernel-result/h1309-erin-neigh-clock.json
+            fixed-kernel-result/h1301-netem-clock.json
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 14
