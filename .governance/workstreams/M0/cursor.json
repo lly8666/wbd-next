@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1300,
-  "checkpoint_sha": "8ac4832d10830963100bf5530d1e24303011867d",
+  "sequence": 1301,
+  "checkpoint_sha": "806c2c910c8c1037bf4200c5d605e7ca636993e6",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1300: collect H1299 SOURCE04f scalar pressure Action42334994507 FAIL (Erin real 3310ms downlink zero-receipt app+155.75..159.06; Bob queue overflow3, Dave61). New successor client port60872 server gen18 DID hit 8 genuine consecutive EAGAIN and SO_SNDBUF effective212992→2097152; H1299 stdout claiming no trigger checked only obsolete first port45031. Inside ~3.0s failure server per-port native M4 copied17107 while client same-port physical raw receive/FEC/TUN all flat; client reverse TX moved. Add only opt-in independent 500ms same-clock interface RX/drop, nonconsuming raw FD ready and RX/TX worker CPU to isolate physical/kernel-owner boundary; offline all-generation app-bin reporter and one 180s native ARM64 scalar short. No long until known failures controlled.",
-  "why_now": "Correct stale-port adaptation claim and separate true kernel accepted send from client physical receipt; neither socket growth nor shared TUN overflows explain the 3310ms flat native client RX. Existing source-locked evidence is sufficient for the narrowed next diagnostic, not more blind queue/FEC tuning or long suites.",
+  "current_task": "H1301: collect H1300 SOURCE806c exact native ARM64 five-client scalar pressure180s Action42338102275 FAIL. Erin Fixed6 active UPLINK1260ms app+173.13s, 2.52MB/3176 UDP sent and 0 received; client gen3 port52408 original Rust M4 copied+5734 while its physical veth TX packets +1 in 1s, client incoming RX+3996, RX/TX worker CPU progresses. Server gen25 port52408 raw/FEC/TUN all +0 (siblings on shared interface active). Dave lease queue overflow6, all five TLS rotations PASS. H1300 workflow incorrectly summarized downlink120ms only, strict application failure remains. H1301 opt-in physical netem qdisc (uplink and downlink) 500ms plus per-core host jiffies in ONE native ARM64 scalar180s scene; offline BOTH directions. No product algorithm change or long tests.",
+  "why_now": "16Mbps/2521app PPS with measured outer copied ~5726/s, nominal netem125ms delay and 30% loss do not themselves explain a one-second veth egress plateau. Need same-clock qdisc backlog/sent/drop and per-core softirq/steal before changing sender buffers, recovery or FEC. No independent ICMP/WAN/Android qualification.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1300 one source-locked native ARM64 180s scalar pressure with strict five-client gates. At any Erin >=750ms live-send gap compare physical client NIC rx_packets/drop, raw fd poll readiness, worker CPU progress, native raw/tuple/FEC/TUN and server M4 accepted on the exact new client_port/generation. If no symptom, mark NOT_REPRODUCED not fixed; if reproducible, patch narrow proven layer, then only targeted L0/L1 and L2 before L3 finite long.",
+  "next_action": "Collect source-locked H1301 single ARM64 180s scalar pressure Action from auto push, read artifact exact gap: client physical qdisc netem sent/drop/qlen/backlog vs M4 kernel copied and host per-core busy/softirq/steal. If host/qdisc capacity explains the pause, model sustainable load and use staged 0.6/0.85 stable steps under L2; if not, fix only traced native kernel/interface TX stage. Keep all short failures, do not dispatch long until blockers resolved.",
   "unverified": true,
-  "last_tested_source": "04f318e9dd990f4a7ed6cf28b0fb4a246a601241",
+  "last_tested_source": "806c2c910c8c1037bf4200c5d605e7ca636993e6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1300-H1299-SOURCE04F-ERIN-DOWNLINK-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1301-H1300-SOURCE806C-SCALAR-PHYSICAL-TX-STALL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1299 SOURCE04f Action42334994507 real ARM64 180s scalar pressure FAIL 3 alerts: Erin downlink3310ms with server M4 accepted17107 per 500ms samples but client native raw0; Bob/Dave shared queue overflow3/61. Server port60872 gen18 had actual 8-consecutive EAGAIN SO_SNDBUF effective212992→2097152; Action only grepped original port45031 and misreported NOT_TRIGGERED. Rotations all five PASS, Game4 scalar159131 quanta native0. H1298 native SOURCE172 PASS ordinary but adaptation untriggered for initial port; no causal promotion. H1300 adds independent scoped diagnostic/accurate report; 1800 blocked. H998/ICMP/Android remain."
+  "partial_summary": "H1300 SOURCE806c Action42338102275 ARM64 scalar180s 2 alerts: Erin UPLINK1260ms active business gap, Dave shared TUN overflow6; 5 TLS rotations PASS, scalar Game4 quanta161770 native0. Exact port52408 client native M4 copied5734 while physical veth TX only1 over ~1s, server exact raw0, client RX live. Application offered16.01Mbps /2521pps, client original M4 copied~5726pps. Nominal netem30% delay125ms; qdisc mid-gap and host core schedule NOT_MEASURED. H1301 qdisc sidecar plus both-direction audit only, not product fix. H1299 prior DL3310ms and earlier H1295 failures remain. Legacy H998/ICMP/Android OPEN."
 }

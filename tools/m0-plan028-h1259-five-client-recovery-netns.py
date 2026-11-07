@@ -123,6 +123,44 @@ def monitor(stop, tmp, out):
     write_json(out / "h1250-cpu-rss.json", data)
 
 
+def monitor_plan028_netem_qdisc(stop,out,client_ns,client_nic,host_nic):
+    """Opt-in 500ms physical netem and host-core witness, never DATA path."""
+    rows=[]
+    while not stop.is_set():
+        stamp=time.monotonic_ns()
+        def read_qdisc(*cmd):
+            try:
+                found=json.loads(run(*cmd,capture=True))
+                root=next((q for q in found
+                           if q.get("root") and q.get("kind")=="netem"),None)
+                if root is None:return {"kind":"NOT_NETEM"}
+                return {k:root.get(k) for k in (
+                    "kind","bytes","packets","drops","overlimits","requeues",
+                    "backlog","qlen")}
+            except (OSError,ValueError,subprocess.CalledProcessError) as exc:
+                return {"kind":"NOT_MEASURED","error":type(exc).__name__}
+        uplink=read_qdisc("sudo","-n","ip","netns","exec",client_ns,
+                          "tc","-s","-j","qdisc","show","dev",client_nic)
+        downlink=read_qdisc("sudo","-n","tc","-s","-j","qdisc",
+                            "show","dev",host_nic)
+        cpu={}
+        try:
+            for line in pathlib.Path("/proc/stat").read_text().splitlines():
+                p=line.split()
+                if re.fullmatch(r"cpu[0-9]+",p[0]):
+                    cpu[p[0]]=[int(x) for x in p[1:9]]
+                elif p[0]!="cpu":
+                    break
+        except (OSError,ValueError,IndexError):
+            cpu={}
+        rows.append({"mono_ns":stamp,"client_uplink_netem":uplink,
+                     "host_downlink_netem":downlink,"host_core_jiffies":cpu})
+        stop.wait(.5)
+    write_json(out/"h1301-netem-clock.json",{
+        "scope":"Erin veth netem uplink client netns and downlink host",
+        "diagnostic":"CLOCK_MONOTONIC, tc -s -j, 500ms, no traffic modifications",
+        "samples":rows})
+
 def main():
     if len(sys.argv) != 2:
         raise SystemExit("usage: h1250-five-client-netns.py COMPILED_PRODUCT_DIR")
@@ -152,6 +190,7 @@ def main():
     bridge_made = False
     stop = threading.Event()
     sampler = None
+    qdisc_sampler = None
     mtu_worker = None
     mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
@@ -386,6 +425,11 @@ def main():
         qdisc("before")
         sampler = threading.Thread(target=monitor, args=(stop, tmp, out), daemon=True)
         sampler.start()
+        if os.environ.get("WBD_PLAN028_QDISC_CLOCK_DIAG")=="1":
+            qdisc_sampler=threading.Thread(target=monitor_plan028_netem_qdisc,
+                args=(stop,out,namespaces[4],client_nics[4],host_nics[4]),
+                daemon=True)
+            qdisc_sampler.start()
         if FAST_MTU_SHRINK:
             # The FIVE real apps are already started, and their coordinated
             # business packets start at start_ns; install the physical
@@ -455,6 +499,10 @@ def main():
             assert (out/"h1291-physical-mtu-shrink.json").is_file()
         stop.set()
         sampler.join(timeout=8)
+        if qdisc_sampler is not None:
+            qdisc_sampler.join(timeout=8)
+            assert not qdisc_sampler.is_alive(), "qdisc probe did not exit"
+            assert (out/"h1301-netem-clock.json").is_file()
         qdisc("after")
         for i, who in enumerate(NAMES):
             (out / ("h1250-" + who + "-underlay.json")).write_text(run(
@@ -505,6 +553,8 @@ def main():
         stop.set()
         if sampler is not None:
             sampler.join(timeout=6)
+        if qdisc_sampler is not None:
+            qdisc_sampler.join(timeout=6)
         if mtu_worker is not None:
             mtu_worker.join(timeout=3)
         for role in list(procs)[::-1]:
