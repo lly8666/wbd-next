@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1332",
+  "status": "OFFLINE_BASELINE_VERIFIED_NEW_NATIVE_RUN_PENDING",
+  "current_main_before_change": "8352d1615eccdc2276a76ae4f6a92e8e7c9d88b7",
+  "original_product_reference_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "source_reuse_authority": "H1331 exact GitHub compare 6c5→65b: no Go Game4/Normal shared TUN owner/path supervisor/native kernel pipeline product change; rust one cfg non-product accessor only, current head beyond65b documentation/cursor only",
+  "reuse_original_x86_binary": {
+    "action_id": 42369031512,
+    "build_artifact_id": 13572791923,
+    "Go_TLS_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "ISA_L_original_static_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "architecture": "native_x86_64",
+    "original_Go_version": "1.23.12",
+    "native_Rust_version": "1.85.1",
+    "ELF_and_sha256_checked_preflight": true
+  },
+  "existing_weaknet_baseline": {
+    "original_native_x86_action_id": 42357004090,
+    "artifact_id": 13567859136,
+    "original_source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+    "qualification": "L2_SCOPED_PASS_TEST_ONLY_STATIC_ARP_30PCT_250MS_FIVE_CLIENT",
+    "app_phases_30_60_30_50_seconds": [
+      "first_wave",
+      "sustained",
+      "overload",
+      "recovery"
+    ],
+    "x86_five_client_actual_app_Mbps_offered_per_direction": [
+      24,
+      33.6,
+      43.2,
+      33.6
+    ],
+    "x86_actual_offered_UDP_PPS_per_direction": [
+      3434,
+      4806,
+      6180,
+      4806
+    ],
+    "host_four_core_mean_busy_percent": [
+      62.86,
+      80.75,
+      89.64,
+      80.5
+    ],
+    "host_four_core_mean_softirq_percent": [
+      3.15,
+      4.93,
+      5.75,
+      4.86
+    ],
+    "note": "Actual old SOURCE mixed five-client 0/1/5/15/30 loss and 0/15/50/100/250ms; NOT standalone Normal 50M or current exact source capacity."
+  },
+  "new_scene": {
+    "workflow": ".github/workflows/m0-plan028-h1332-x86-zero-loss-normal-capacity.yml",
+    "fixture": "tools/m0-plan028-h1332-x86-normal-zero-loss-fixture.py",
+    "offline_audit": "tools/m0-plan028-h1332-x86-normal-zero-loss-audit.py",
+    "networks": "six genuine Linux x86_64 namespaces with five separately authenticated original Go TLS443/Rust M4 clients",
+    "modes": [
+      "normal-off",
+      "normal-auto",
+      "game2-off",
+      "game4-fixed6",
+      "normal-fixed6"
+    ],
+    "physical_loss_each_direction_percent": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "oneway_delay_each_direction_ms": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "no_test_static_ARP": true,
+    "application_seconds": 180,
+    "warmup_seconds": 10,
+    "active_phase_seconds": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "Normal_target_Mbps_each_direction": [
+      10,
+      25,
+      50,
+      25
+    ],
+    "other_four_siblings_peak_Mbps_per_direction": 2,
+    "total_five_client_target_Mbps_each_direction": [
+      11.6,
+      29,
+      58,
+      29
+    ],
+    "target_cpu_stop": "Report host 4core/softirq and actual generator fill; 50Mbps if host near95% or generator underfill classify CAPACITY_LIMITED, do not order100/200 without headroom.",
+    "fixed_native_timers_seconds": 600,
+    "rotations_during_app": "NOT_REQUESTED",
+    "original_user_Stop": "REQUIRED_ON_ALL_FIVE_AND_SERVER",
+    "real_kernel_TUN_and_physical_qdisc": "REQUIRED",
+    "strict_business": "True both-direction UDP/TCP sent and delivered per client, >99% UDP by phases, maximum active sender with no receiver <750ms; actual sender fill <95% reported LIMIT not PASS",
+    "oracle_prohibition": "No business PASS from workflow success without actual native app and no final L3 claim"
+  },
+  "remaining": [
+    "L2 rate upper tiers 100/200 Normal NOT_RUN",
+    "Game4 10/20 logical capacity NOT_RUN",
+    "L1 Windows source/IP/MTU timeline and all 7 full rotations NOT_RUN",
+    "L3 2x1800s frozen combined NOT_RUN",
+    "H1317 prior real 5180ms and H998 same socket MTU genuine historic FAIL retained",
+    "Android and independently attached physical hardware NOT_RUN"
+  ]
+}

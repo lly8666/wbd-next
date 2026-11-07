@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1331,
-  "checkpoint_sha": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
+  "sequence": 1332,
+  "checkpoint_sha": "8352d1615eccdc2276a76ae4f6a92e8e7c9d88b7",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1331: After H1330 offline native ARM64 Game4 four hot lanes 2291/2291 and CI FAIL wrong server hot ordinal1/2, exact SOURCE diff 6c5→65b across 10 commits shows no changes to Go Game4 owner/path supervisor/native bridge shared TUN or product FEC/record. Rust single file only guards non-product build Health fields. Reuse x86 Action42369031512 and ARM64 Action42366910850 plus offline42368645387 180s fiveclient true Normal predead authentic B and native exact Stop scoped; do not claim H1329 own final Stop triggered. Re-audited Windows d01 Action42373564637 job128407392415 all seven genuine signed Npcap/Wintun↔WSL2 9–10s modes Normal Off/Fixed/Auto Game2 Off/FEC Game4 Off/FEC UDP TCP real original owned Stop PASS scoped (no two path rotations or independent hardware). Historical H1317 5180ms and H998 same-socket fail retained; remaining L2 capacity and Windows physical lifecycle/L3 final soaks. No in-flight network after H1330, no duplicate.",
-  "why_now": "Avoid repeated native network for a failed postprocessor and preserve proven product owner source sameness; accept earlier actual limited Stop proofs only in unaffected code path. Next effort should target the most important uncovered full L1 physical lifecycle or L2 capacity, not old test reporter noise.",
+  "current_task": "H1332: Refreshed main8352 H1331 no Actions in flight. Reused H1315 authentic older 9cc5 x86 fiveclient 30%/250ms ISA-L 180s artifact13567859136: per direction 24/33.6/43.2/33.6Mbps and 3434/4806/6180/4806 real UDPpps, four-core busy 62.86/80.75/89.64/80.5%. Host reaches ~90% at 43.2Mbps mixed, so not blindly 100/200. H1331 exact compare source6c5→65b unchanged Go client/server generation/owner Rust data path. Reusing exact H1320 x86 native ISA-L 3 ELF sha product artifact13572791923 at source6c5, new fixture-only single 0loss 180s fiveclient NormalOff staged 10/25/50/25Mb/dir with other four <=2, warmup10, observed real sender/PPS/CPU/stop/health and ≤750ms app gaps; no timer rotations (600s), not L1 pass. New workflow H1332 pending auto-push; L2 true ceiling not claimed.",
+  "why_now": "H1315 mixed high-loss x86 source CPU already ~90% at 43.2Mbps/direction; 0loss staged Normal 10→25→50→25 with low-rate siblings separately bounds whether native veth x86 can safely advance to 100. Source-reuse justified by H1331 no product pipeline changes, no costly repeated Go/Rust build.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "On next recovery refresh main and existing Actions/checkpoint, then select ONE independent missing L1 Windows native Npcap effective physical MTU-only/source-IP notifier→B original TLS/M4 new IP/MTU readback→A exact Stop with actual packet continuity, OR current x86 capacity calibration if proven baseline stale; calculate PPS/BDP and runner headroom first. Never use Windows 7x short smoke to claim rotations or L3. H1329 own hot lane final Stop remains NOT_TRIGGERED; source-compatible older 180s Stop scoped reused. H1317 and H998 history visible; Android/physical not run; final L3 2x1800s after blockers.",
+  "next_action": "Collect H1332 workflow preflight, original frozen x86 sha-check and one 180s actual app; separately distinguish genuine app/latency/CPU limit vs test-code/report. Require actual per-stage app UDP+TCP offered/received, 0% configured and observed qdisc loss, five original auth/one443 exact Stop, per-client no active Tx/no Rx >=750ms. Only consider >50Mbps on fresh model if >=95% app fill with host spare capacity. Preserve H1331 Windows seven short smoke but no full source-IP/MTU timeline, H1317/H998 FAIL and Android/L3 NOT_RUN.",
   "unverified": true,
   "last_tested_source": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1331-CROSS-SOURCE-GAME4-OWNER-STOP-REUSE-AND-WINDOWS-SEVEN-20261107.json"
+    "docs/evidence/M0/PLAN028-H1332-X86-L2-NATIVE-CALIBRATION-FROZEN-BASELINE-PREFLIGHT-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1331 exact source compare proves Game4 product owner/Go path and record/FEC unchanged between latest x86 five-client true Stop PASS source6c5 and current65b; Rust only three cfg no-product compatibility guards, so source-scoped Stop reuse valid but H1329 own final Stop NOT_TRIGGERED. Windows d01 current product genuine 7-mode Npcap/Wintun WSL2 9-10s UDP/TCP/Stop PASS scoped, no full rotations. ARM64 same source Action42379666500 CI FAIL wrong server ordinal1 vs2, authentic 4 lane hot server and 2291/2291 live real UDP from existing evidence. L2 capacity and L3 final soaks still OPEN, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1332 new source source-frozen 6c5 original x86 ELF SHA H1320 builds reused; H1315 baseline measured native x86 30%/250ms 43.2Mbps per dir/6180 UDPpps at 89.64% host mean busy. One independent 0loss Normal staged 10→25→50→25Mbps/dir with four ≤2Mbps siblings via old authentic Go/Rust fiveclient workload; no rotation, precise actual CPU/softirq/gap/Stop oracle; no product changes. L2 not closed until Action. H1317,H998 remain fail; L3 after L0-L2; PLAN028 IN_PROGRESS."
 }
