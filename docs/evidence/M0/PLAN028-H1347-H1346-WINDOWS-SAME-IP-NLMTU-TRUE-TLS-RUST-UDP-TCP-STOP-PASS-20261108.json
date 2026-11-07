@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1347",
+  "source_sha": "56a5cb9a57406de9f3003d171d6f3674490a62c3",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "SCOPED_SINGLE_REAL_WINDOWS2025_X64_SIGNED_NPCAP_WINTUN_TO_NATIVE_LINUX_WSL2_NORMAL_OFF_OWNED_PHYSICAL_IPV4_MTU_ONLY_COLD_REAUTH_WITH_ORIGINAL_TLS_RUST_AND_REAL_BIDIRECTIONAL_UDP_TCP_STOP",
+  "action": {
+    "run_id": 42402571905,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42402571905",
+    "conclusion": "success",
+    "native_job_id": 128494561004,
+    "original_Go_Rust_linux_build": "PASS",
+    "windows_go_production_and_tests": "PASS",
+    "windows_rust_eligible_library": "PASS",
+    "linux_rust_eligible_library": "PASS",
+    "source_manifest": "PASS",
+    "governance_run": 42402571906,
+    "governance": "PASS",
+    "governance_maintenance_run": 42402571903,
+    "governance_maintenance": "PASS"
+  },
+  "artifact": {
+    "id": 13585798497,
+    "name": "m0-wl-full-public-normal-direct",
+    "download_url": "https://github.com/lly8666/wbd-next/actions/runs/42402571905/artifacts/13585798497",
+    "sha256": "096495e5c850fe6882513970a2238b3e89926d70d8c3b6c59611b466c5473b4d",
+    "zip_crc": "PASS",
+    "archive_bytes": 24981,
+    "file_count": 28,
+    "report": "mode-results/normal/report.json",
+    "client": "mode-results/normal/client.log",
+    "server": "mode-results/normal/server.log",
+    "native_traffic": "mode-results/normal/native-link-tcp443.log",
+    "windows_tcp": "mode-results/normal/windows-tcp-app.log",
+    "linux_tcp": "mode-results/normal/linux-tcp-app.log",
+    "owned_OS_receipt": "plan028-owned-alias.json",
+    "native_guest_vm": "plan028-native-windows-vm-capacity.json"
+  },
+  "sources": {
+    "workflow_source": "56a5cb9a57406de9f3003d171d6f3674490a62c3",
+    "windows_original_client_sha256": "4a036883e6431a65f1c7f316a83cd279e0ec5a426281b46ec3b2e263026ac5ce",
+    "original_linux_server_sha256": "7397fb2f9801fab4f43ae9a6b1605499d492206eb5542fce44a01b7b84b54b7f",
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "product_change_from_H1345": "NONE_H1346_REPORTER_AND_REGRESSION_TEST_ONLY"
+  },
+  "platform": {
+    "windows_native_OS": "windows-2025 10.0.26100.0 X64",
+    "windows_cpu": "AMD EPYC 7763",
+    "logical_vcpu": 4,
+    "exposed_physical_cores": 2,
+    "physical_memory_bytes": 17174360064,
+    "guest": "Ubuntu true WSL2 Linux raw/TUN",
+    "vm_comparison": "NO_CROSS_VM_CAPACITY_CLAIM"
+  },
+  "event": {
+    "os_owned_interface": "vEthernet (WSL (Hyper-V firewall))",
+    "ifindex": 25,
+    "source_ipv4_before_after": [
+      "198.19.254.1",
+      "198.19.254.1"
+    ],
+    "os_physical_NlMtu_before_after": [
+      1500,
+      1280
+    ],
+    "os_mutation_to_readback_ms": 102.33,
+    "existing_go_cold_1Hz_liveness": "PASS_GETIPINTERFACEENTRY_REAL_1280",
+    "same_200_500ms_coalescer": "PASS",
+    "original_source4_changed": false,
+    "test_owns_only_underlay": true,
+    "restore_stage": "RESTORED",
+    "original_os_mtu_restored_1500": true,
+    "owned_aliases_restored": true,
+    "runner_default_route_unchanged": true
+  },
+  "original_transport": {
+    "generation1": {
+      "sourceTCP": 41031,
+      "public_serverTCP": 443,
+      "windows_syn_mss": 1420,
+      "tcp_syn_options": "0204058c",
+      "byte_identical_SYN_attempts": 2,
+      "windows_wintun_os_inner_mtu": 1389,
+      "original_tls_rust_m4": "PASS"
+    },
+    "old_original_owner_exact_workers_joined": true,
+    "old_WAL_restored": true,
+    "old_stop": "PASS",
+    "generation2": {
+      "sourceTCP": 41032,
+      "public_serverTCP": 443,
+      "windows_syn_mss": 1240,
+      "tcp_syn_options": "020404d8",
+      "actual_linux_SYNACK_mss": 1420,
+      "windows_wintun_os_inner_mtu": 1209,
+      "linux_independent_physical_ip_mtu": 1500,
+      "linux_shared_tun_inner_os_mtu": 1389,
+      "original_credential_go_tls": "PASS",
+      "linux_and_windows_Rust_M4_authenticated": "PASS"
+    },
+    "server_auth_sessions": 2,
+    "server_auth_session_slots": [
+      1,
+      2
+    ],
+    "server_old_detached_session_drained": true,
+    "server_final_shared_tun_stop": "PASS",
+    "windows_final_native_stop": "PASS"
+  },
+  "business": {
+    "windows_actual_kernel_UDP": {
+      "sent": 97,
+      "received": 98,
+      "kernel_bind": "PASS",
+      "ready": true
+    },
+    "linux_actual_kernel_UDP": {
+      "sent": 228,
+      "received": 95,
+      "kernel_bind": "PASS",
+      "ready": true
+    },
+    "post_B_increment_windows": 8,
+    "post_B_increment_linux": 7,
+    "windows_actual_TCP": {
+      "server_received_bytes": 37,
+      "client_echo": true,
+      "tcp": "PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM"
+    },
+    "linux_actual_TCP": {
+      "server_received_bytes": 37,
+      "client_echo": true,
+      "tcp": "PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM"
+    },
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "cpu": {
+    "windows_native_process_1Hz_observations": 23,
+    "elapsed_s": 22.735,
+    "total_cpu_s": 1.1875,
+    "avg_one_logical_core_pct": 5.223,
+    "peak_private_bytes": 38998016,
+    "throughput_capacity": "NOT_MEASURED_SHORT_FUNCTIONAL",
+    "business_p99": "NOT_MEASURED_CLOCKS_UNCALIBRATED",
+    "no_universal_cpu_limit": true
+  },
+  "history_preserved": {
+    "H1342_action": 42395352694,
+    "result": "PASS_SCOPED_NOW_REAL_B_TCP",
+    "H1344_action": 42399364249,
+    "H1345_action": 42401062068,
+    "H1346_action": 42402571905
+  },
+  "open_hard_gates": [
+    "One Windows2025 virtualized vEthernet same-IP cold MTU contraction only; not independent physical WiFi or original same-socket hot PMTU recovery H998, retain H998 prior FAIL",
+    "Windows simultaneous distinct client local-port collision isolation NOT_RUN; deterministic successor-port arithmetic alone is not global bind allocator",
+    "Full seven mode per-client configurations, 2 actual rotations, >120-180s L1 and platform matrix NOT_COMPLETE",
+    "L2 Normal100/200Mbps and Game4 20Mbps true capacity/weaknet/stress NOT_COMPLETE; VM-specific CPU cannot be borrowed across hosts",
+    "L3 source-frozen two independent >=1800s full run NOT_RUN; Android/physical devices NOT_RUN",
+    "H1317 original ARM64 5180ms active-gap historical FAIL preserved despite later preterminal Blackhole pass; no blanket absolution",
+    "Reported 11.860s OS mutation→new READY is functional observation, NOT first-packet latency/p99 SLA, and no CLOCK calibrated app one-way timing"
+  ]
+}
