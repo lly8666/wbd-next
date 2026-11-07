@@ -117,5 +117,16 @@
     "L3 2x1800s frozen combined NOT_RUN",
     "H1317 prior real 5180ms and H998 same socket MTU genuine historic FAIL retained",
     "Android and independently attached physical hardware NOT_RUN"
-  ]
+  ],
+  "source_sha": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "source_scope_explanation": "Governance evidence owner source_sha anchors latest previously tested/compared product owner current code 65b07f829478a6c4a4f6f2da6112417fa761f9c1; this is an offline capacity design ledger, NOT an H1332 new network PASS. Actual H1332 x86 executable is older frozen 6c5fd909, separately tracked by original_product_reference_source and binary exact SHA. New action pending; no copy-over of previous owner's qualification.",
+  "governance_preceding_run": {
+    "run_id": 42382999582,
+    "result": "FAIL_SOURCE_EVIDENCE_REF_MISSING_SOURCE_SHA",
+    "artifact_id": 13578342154,
+    "reason": "cursor.evidence_refs validates evidence.source_sha===cursor.last_tested_source, old H1332 preflight JSON omitted source_sha",
+    "corrected_by": "add exact prior tested owner source and explicit result PARTIAL, leave source-frozen binary attribution separate"
+  }
 }
