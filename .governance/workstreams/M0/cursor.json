@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1325,
-  "checkpoint_sha": "f7a12dce54d803de1ee8ae51a9b73f2653c536de",
+  "sequence": 1326,
+  "checkpoint_sha": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1325: Collected H1324 source f7a12dce exact Linux-cgo+both-tag original TLS Game4 zero-epoch L0 Action42374747715. FAIL at original Go compilation before any === RUN: undefined V4LinuxGameAuthenticatedLane/v4EmbeddedNativeBridge because manifest alone didn't install entire Linux Game bridge production Go files, although tagged test staged byte-identical and native Rust product release build succeeded. Root source staging omission proven from current mature Game4 workflow. H1325 copies exactly current non-test realityfront/v4productcli Go overlay and raw_detached_data_linux Go source onto pinned original donor, preserving original TLS and no product changes. New H1325 test Action pending; Windows five-mode real signed Wintun scoped PASS, NORMAL-COMMON PASS and governance PASS retained; H1317, H998, Game4 native CI grep, PLAN026 toolchain/combined and L2/L3 outstanding.",
-  "why_now": "L0 intended test never executed, because initial test-only workflow used incomplete manifest-only Go package unlike the qualified native Game4 staging. Fix the shared staging gap instead of trying to patch phantom TLS or declaring a condition-free PASS.",
+  "current_task": "H1326: Source cfc9d00 L0 exact Linux/cgo+both product tags original Go TLS Game4 zero-epoch fresh whole-group vs explicit prior epoch hot lane TEST EXECUTED PASS, Action42375236373 jobs128411351536 artifact13575242799, native Rust product build and exact original Go donor. Former H1324 Action42374747715 FAIL before test compile on missing bridge types preserved, now fixed by test workflow source staging. H1323 Windows true signed Wintun Fixed/Auto and Rust non-fec common PASS retained, H1325 governance PASS. Next choose current material L1/L2 hard failure by actual evidence; x86 Game4 Action42373564647 trailing grep CI FAIL and native proof marker NOT_VERIFIED; separate PLAN026 combined Action42373564674 failed while rustup downloading components, actual network NOT_RUN. H1317 seconds-scale gap, H998 original MTU, capacity and final soak open.",
+  "why_now": "Only positive triggering execution of H1321-relocated Linux protected group/hot intent test closes L0 authority ambiguity; no need rerun native network. Next prioritize true end-to-end observable business/recovery missing gate over report-only log grep and infrastructure setup failure, preserving existing qualifications.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect on-push H1325 L0 new Action exactly once and governance. Require the single Game4 original TLS zero-epoch test to actually reach === RUN and --- PASS; if new compile or assertion fails, retain old failure and diagnose precise first error before more workload. No extra network seed. If PASS, record exact L0 bounded source qualification then resume real current L1/L2 blockers; L3 soaks only after prerequisites.",
+  "next_action": "Refresh main and collect any post H1326 governance. Choose first actually observed L1/L2 gap or known hard regression (H1317 capacity-contained five-second outage, H998 original same-socket MTU) and design minimum discriminating source-locked experiment using inherited accurate network evidence; avoid seed reruns and VM overload. Preserve Game4 x86 Action42373564647 CI FAIL unretained native markers, PLAN026 combined Action42373564674 FAIL in Rust toolchain setup with network NOT_RUN. Finish L0/L1/L2 hard gates and capacity before two L3 source-frozen finite 1800s tests. No 029/030 or premature done.",
   "unverified": true,
-  "last_tested_source": "f7a12dce54d803de1ee8ae51a9b73f2653c536de",
+  "last_tested_source": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1325-L0-LINUX-GAME4-BUILD-MISSING-BRIDGE-SOURCE-F7A-20261107.json"
+    "docs/evidence/M0/PLAN028-H1326-L0-ORIGINAL-GAME4-TLS-ZERO-EPOCH-EXACT-PASS-SOURCE-CFC9-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1324 source f7a L0 Action42374747715 FAIL before test run: Rust product compilation and manifest Go tagged test staging PASS, original Go compile lacks Game Linux native bridge symbols; test NOT_RUN. H1325 test workflow-only fix uses previously qualified full-package source-lock staging, awaits new Action. All prior native Windows scoped and governance successes stand; Game4 postscript CI and PLAN026 combined failure retained. 028 IN_PROGRESS."
+  "partial_summary": "H1326 source cfc9 exact original TLS Linux Game4 protected zero-vs-hot epoch request bound `=== RUN` and `--- PASS`, previous f7a staging FAIL preserved. Windows true signed Wintun fixed/auto/normal/game and Rust common feature gates qualified scoped. Remaining Game4 x86 postscript CI failure raw marker unverified, PLAN026 combo toolchain infra fail, H1317 5.18s and H998 original MTU, L1 seven-mode/L2 capacity/L3 soak, physical/Android incomplete. PLAN028 IN_PROGRESS."
 }

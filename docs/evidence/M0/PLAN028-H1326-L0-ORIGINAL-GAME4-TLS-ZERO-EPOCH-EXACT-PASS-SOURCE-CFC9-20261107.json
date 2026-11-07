@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "SCOPED_PASS_ONLY_DETERMINISTIC_L0_ORIGINAL_TLS_EPOCH_AUTHORITY",
+  "action_id": 42375236373,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/42375236373",
+  "conclusion": "success",
+  "job_id": 128411351536,
+  "artifact_id": 13575242799,
+  "runtime": "ubuntu-24.04 native x86_64 Linux cgo Go1.23.12 Rust1.85.1 native lib",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "assembly_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+  "original_go_complete_bridge_staging": "SOURCE_EQUAL_MATURE_GAME4_OVERLAY",
+  "tags": [
+    "wbd_v4_embedded_go",
+    "wbd_v4_fec2_product"
+  ],
+  "exact_test": "TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane",
+  "real_runner_markers": [
+    "=== RUN   TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane",
+    "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane (0.00s)",
+    "ok  github.com/lly8666/wobuzhidao/internal/realityfront 0.006s",
+    "M0_PLAN028_L0_ORIGINAL_TLS_PROTECTED_GAME4_ZERO_EPOCH_VS_SAME_EPOCH_SINGLE_HOT_BOUNDARY_EXECUTED_PASS"
+  ],
+  "assertions_passed": [
+    "credential-verified original cold Game4 zero-epoch request authenticates and selects a new 4-lane group",
+    "explicit old epoch requested on original protected Game4 TLS reauth authenticates as single hot lane",
+    "server replies with same epoch in both cases; code uses original authenticated request not server reply as authority",
+    "unverified session cannot mint group fresh-epoch permission",
+    "release original reserved authenticated lane/incarnation"
+  ],
+  "negative_prior_action": {
+    "action_id": 42374747715,
+    "source_sha": "f7a12dce54d803de1ee8ae51a9b73f2653c536de",
+    "conclusion": "failure",
+    "stage": "undefined Linux Game bridge types during donor compile before test executed",
+    "preserved": "FAIL_AND_TEST_NOT_RUN_BEFORE_FIX"
+  },
+  "limits": [
+    "No actual kernel raw/TUN data plane from this L0 test",
+    "No actual path switch/MTU readback or Game sibling live underlay from this test",
+    "No L1 seven-mode full set qualified",
+    "CI Game4 remote M4 raw proof Action42373564647 FAIL/NOT_VERIFIED retained",
+    "PLAN026 combined Action42373564674 failure toolchain/setup retained",
+    "H1317 5.18 second capacity-within gap remains FAIL",
+    "H998 original same-socket MTU behavior remains historic FAIL",
+    "L2 capacity/weaknet/long L3 soaks and physical/Android remain open"
+  ],
+  "final_plan028_status": "IN_PROGRESS"
+}

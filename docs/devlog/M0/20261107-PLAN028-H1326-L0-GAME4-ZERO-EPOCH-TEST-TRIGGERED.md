@@ -1,0 +1,11 @@
+# PLAN028 H1326 — L0 protected original TLS request intent actually tested
+
+SOURCE `cfc9d00e6a1e952ff08680ec8016f639a507f130` [native Linux original TLS test Action42375236373](https://github.com/lly8666/wbd-next/actions/runs/42375236373) **SUCCESS**. Exact `x86_64 Linux+cgo`, pinned original Go donor `a7a82db31fe736ffedee330795a3234d358f1984`, same source-locked complete Game4 bridge, native Rust `fec2_product_record` library, Go tags `wbd_v4_embedded_go,wbd_v4_fec2_product`. Original Go package emits `=== RUN TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane` and `--- PASS` under the target flags, plus required status marker; Go test process succeeds. Artifact 13575242799 retains assembly receipt and test log. This closes **only** the L0 deterministic authenticated original TLS request-epoch boundary: zero request represents fresh whole 4-lane group, explicit old epoch represents single hot lane even when server returns identical epoch, and an unverified session is denied.
+
+Prior H1324 Action42374747715 remains **FAIL / TEST_NOT_RUN** due to incomplete test-only donor staging; repaired by reusing existing fully source-matched production bridge staging, not modifying the data plane. No real OS path, MTU, Game4 live overlap, or business kernel packet qualification derives from this bounded result.
+
+Existing [Game4 x86 actual overlap Action42373564647](https://github.com/lly8666/wbd-next/actions/runs/42373564647) is **CI FAIL** because the top-level postscript greps native proof markers omitted from the retained summary; native full assertion markers pass, but exact original M4 proof remains **NOT_VERIFIED**. [PLAN026 Linux auto-health 42373564674](https://github.com/lly8666/wbd-next/actions/runs/42373564674) remains **FAIL** (Rustup components fail before original Go scene), not a product business failure. H1317 5.18s gap and H998 original MTU fail stand; seven-mode L1 full Windows/Linux OS unique paths, L2 capacity/weaknet, two representative L3 1800s soaks, physical/Android NOT_RUN remain. Never claim full PLAN028 complete.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-locked L0 original TLS authenticated Game4 request-epoch regression executed under correct Linux product tags. Evidence/devlog/cursor only; no product changes."}
+```
