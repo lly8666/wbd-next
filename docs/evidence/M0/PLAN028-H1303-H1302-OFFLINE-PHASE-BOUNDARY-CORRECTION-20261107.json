@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "d7830f84400e5e3162ab81b5d50218252c640c11",
+  "original_action": {
+    "run_id": 42340313642,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42340313642",
+    "conclusion": "success",
+    "backend": "native_ARM64_ARM64_scalar",
+    "duration_seconds": 180,
+    "artifact_id": 13561233518,
+    "zip_sha256": "faa8f79af6aa1a2bf6e1bb45daf9791e3d7bbc812aea0c8a0eb859a7caad6a2d",
+    "alert_count": 0,
+    "rotation": "PASS_ALL_FIVE_SCOPED",
+    "per_lease_shared_tun_overflow": "ZERO_ALL_FIVE",
+    "scalar_quanta": 138959,
+    "native_quanta": 0
+  },
+  "report_error": {
+    "file": "fixed-kernel-result/h1302-capacity-phases.json",
+    "original_phase_start_second": 0,
+    "correct_phase_start_second": 10,
+    "reason": "traffic.py start_ns has configured warmup_s=10 before the FAST_PHASES list. H1302 ledger failed to add warmup to phase windows.",
+    "original_report_is_retained": true,
+    "original_action_verdict_unchanged": true,
+    "verification": "Offline executed on the original 41-file artifact, Python compiled and actual 10ms app bins plus 500ms /proc/stat and netem reread; no new network Action."
+  },
+  "corrected_erin_directional_data": [
+    {
+      "name": "first_wave",
+      "scale": 0.6,
+      "window_seconds": [
+        10,
+        40
+      ],
+      "host_mean_cpu_busy_pct": 92.5,
+      "host_mean_softirq_pct": 13.44,
+      "erin_ul_offered_mbps": 9.6,
+      "erin_ul_received_mbps": 9.58,
+      "erin_dl_offered_mbps": 9.6,
+      "erin_dl_received_mbps": 9.575,
+      "netem_uplink_peak_qlen": 358,
+      "netem_uplink_sent_delta": 78370,
+      "netem_uplink_drop_delta": 33757
+    },
+    {
+      "name": "sustained",
+      "scale": 0.85,
+      "window_seconds": [
+        40,
+        100
+      ],
+      "host_mean_cpu_busy_pct": 98.21,
+      "host_mean_softirq_pct": 15.42,
+      "erin_ul_offered_mbps": 13.6,
+      "erin_ul_received_mbps": 13.588,
+      "erin_dl_offered_mbps": 13.6,
+      "erin_dl_received_mbps": 13.583,
+      "netem_uplink_peak_qlen": 499,
+      "netem_uplink_sent_delta": 218332,
+      "netem_uplink_drop_delta": 93630
+    },
+    {
+      "name": "overload",
+      "scale": 1,
+      "window_seconds": [
+        100,
+        130
+      ],
+      "host_mean_cpu_busy_pct": 99.01,
+      "host_mean_softirq_pct": 15.94,
+      "erin_ul_offered_mbps": 16,
+      "erin_ul_received_mbps": 15.862,
+      "erin_dl_offered_mbps": 16,
+      "erin_dl_received_mbps": 15.985,
+      "netem_uplink_peak_qlen": 567,
+      "netem_uplink_sent_delta": 127909,
+      "netem_uplink_drop_delta": 54726
+    },
+    {
+      "name": "recovery",
+      "scale": 0.85,
+      "window_seconds": [
+        130,
+        180
+      ],
+      "host_mean_cpu_busy_pct": 98.47,
+      "host_mean_softirq_pct": 15.62,
+      "erin_ul_offered_mbps": 13.6,
+      "erin_ul_received_mbps": 13.6,
+      "erin_dl_offered_mbps": 13.6,
+      "erin_dl_received_mbps": 13.604,
+      "netem_uplink_peak_qlen": 491,
+      "netem_uplink_sent_delta": 181198,
+      "netem_uplink_drop_delta": 77707
+    }
+  ],
+  "original_misaligned_cpu_means_pct": [
+    83.52,
+    97.28,
+    98.68,
+    98.54
+  ],
+  "conclusion": "The native ARM64 four-vCPU host is already 92.5% busy at 0.6x, 98.2% at 0.85x, ~99% at full load. An absence of stalls in this 180s PASS does not establish a sustainable headroom boundary or fix H1300 prior native physical TX stall. No heavier same-family test at this VM capacity.",
+  "open": [
+    "H1295 earlier real Erin uplink gaps remain",
+    "H1297 real downlink gap remains",
+    "H1299 real downlink gap and bounded per-lease overflows remain",
+    "H1300 real uplink 1260ms with client M4 accepted / physical veth TX plateau remains",
+    "x86 Game4 cold peer proof under no reverse traffic not qualified",
+    "Windows Npcap/Wintun physical coverage incomplete",
+    "H998 original same-socket MTU shrink FAIL historical",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "028 L3 finite long NOT_RUN"
+  ]
+}
