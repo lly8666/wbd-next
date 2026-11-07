@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "23bc327bdb3254a8708d44add23c5ddb7372f0d8",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action_id": 42377946485,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/42377946485",
+  "build_job_id": 128419322505,
+  "build": "PASS native ARM64 original TLS Go/Rust feature ELF183",
+  "scene_job_id": 128419707808,
+  "scene": "FAIL",
+  "artifact_id": 13576896199,
+  "original_game4_server_authenticated_hot_lanes": [
+    1,
+    2,
+    3,
+    4,
+    1,
+    2
+  ],
+  "server_original_TLSPorts": [
+    56797,
+    64717,
+    56257,
+    64177,
+    55713,
+    63633
+  ],
+  "server_one_port": 443,
+  "server_same_game_adapter": 1,
+  "server_sibling_restarts": 0,
+  "client_hot_lane_verified_in_retained_artifact": "NOT_VERIFIED",
+  "original_fixture_failed_stage": "expected four WHOLE Game4 generation replacements and V4_PUBLIC_TIMER_ROTATION_DUE but actual generation1 uses V4_PUBLIC_GAME_SINGLE_LANE_DUE, without new group",
+  "actual_app_sent": {
+    "alice": 1610,
+    "bob": 1609,
+    "carol": 1610
+  },
+  "actual_app_recv": {
+    "alice": 1322,
+    "bob": 1321,
+    "carol": 1321
+  },
+  "hard_limited_echo_accounting": {
+    "original_warmup": 36,
+    "alice": 1322,
+    "bob": 1321,
+    "carol": 1321,
+    "total": 4000,
+    "configured_echo_loop_limit": 4000,
+    "conclusion": "EXACT_TEST_ECHO_RECEIVER_EXHAUSTION_BEFORE_STREAMS_FINISHED_NOT_PROVEN_PRODUCT_BLACKOUT"
+  },
+  "old_interreceipt_max_success_only_ms": {
+    "alice": 100.780208,
+    "bob": 109.016439,
+    "carol": 100.994718
+  },
+  "terminal_send_no_receive": "approximately 28 seconds all three after echo limit, FAIL preserved, not falsely omitted",
+  "patch": "H1328 test-only same one ARM64 original scenario, echo receiver limit6500 justified by 185s*3*10pps+36 warmup, replace old whole-group expectation by real protected single-lane ids1-4, require true original TLS/Rust same adapter, no sibling restarts, native end-to-end 99.5% real app, interreceipt gap and terminal active-sender gap each <800ms, original joined Stop unchanged",
+  "new_action_status": "NOT_RUN",
+  "other_open": [
+    "H1317 genuine 5180ms Normal Fixed6 source failure historical",
+    "H998 original same-socket MTU historical failure",
+    "Windows full native Npcap seven mode + physical NOT_FULLY_RUN",
+    "L2 calibrated capacity and recovery incomplete",
+    "L3 source frozen finite long NOT_RUN",
+    "Android physical NOT_RUN"
+  ]
+}

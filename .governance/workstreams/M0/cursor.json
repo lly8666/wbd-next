@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1327,
-  "checkpoint_sha": "46fe74f1f92be7cceb6127de5e089ab6f57439a3",
+  "sequence": 1328,
+  "checkpoint_sha": "23bc327bdb3254a8708d44add23c5ddb7372f0d8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1327: Fresh main46fe checkpoint cfc9 only docs delta, all Actions collected. H1230 old source x86 seven-mode native 7/7 28 original TLS generation handovers 16219/16220 UDP and H1315 old x86 controlled-static-ARP 30%/250ms TCP/UDP 180s scoped PASS verified. H1319/H1320 actual ARM64/x86 old-A-alive Normal B-native-Health predead PASS, H1317 5.18s original FAIL; H1295 same-NIC MTU-only new-gen 180s real ARM64 PASS, H998 old same-socket FAIL retained. H1327 new single native ARM64 both ends Game4-Off four jittered 18±3s whole-group swaps and two continuous real UDP siblings on exact original TLS+M4 source. No seven-mode duplicate, no native Game4 CI report-only repeat, pending own Action.",
-  "why_now": "H1230 old exact source native x86 seven modes mature PASS, later generation/Health/shared-TUN owner changes touch Game4 path; one current ARM64 non-x86 low-loss Game4-Off four swaps discriminates late old Stop/sibling disruption without L2 capacity or subnet ARP confound.",
+  "current_task": "H1328: H1327 source23bc native ARM64 build PASS, Action42377946485 scene FAIL because new product original Game4 actual single-lane timer 1,2,3,4,1,2 within generation1 unlike obsolete whole-group oracle, and finite test echo server hard 4000 exhausted exactly after warmup36 + stream replies3964; all streams continued 28s with no reply (harness false data-plane outage). No false product fix. H1328 source-only test generator and workflow update to echo6500 for 185s*30pps, verify real protected original TLS/Rust four separate Game4 hot slots, unchanged three sibling slots, per-client 99.5% UDP and strict terminal + interreceipt <800ms; old Action FAIL retained, new Action pending.",
+  "why_now": "Native server source-locked real evidence confirms one-slot current Game4 contract and math proves 4000-message fixture echo quota, so product-level changes or repeated seed are unwarranted. Replace obsolete oracle and under-budgeted echo with current actual native original owner witness while maintaining hard business/Stop gates.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect source H1327 single native ARM64 Game4-Off Action and governance, require 5 authentic four-lane cohorts/4 old Stop and actual per-client UDP/gap, exact binary ELF183+SHA and no false independent single-lane claim. If FAIL inspect first stage; no repeat same seed or larger job. Then choose next uncovered TCP+UDP mixed/rate or Windows unique Npcap lifecycle and capacity scenario per PLAN028, protect scoped H1315 and historic H1317/H998; defer L3 2x1800s until L0-L2 complete.",
+  "next_action": "Collect H1328 corrected one ARM64 original TLS Game4 Off Action, require same native ELF183 source binary manifest, four protected client+server Game4 hot lane 1-4 original M4 commits, no sibling churn, 3 actual no-retry UDP users with >=99.5% replies AND max inter-reply AND terminal active-sending gap under800ms, preserved true final owned Stop; any unit/fixture typo fix before another network seed. Do not repeat unchanged H1327. Then Windows native unique or L2 capacity stages, retain H1317/H998 and physical/Android NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
+  "last_tested_source": "23bc327bdb3254a8708d44add23c5ddb7372f0d8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1326-L0-ORIGINAL-GAME4-TLS-ZERO-EPOCH-EXACT-PASS-SOURCE-CFC9-20261107.json"
+    "docs/evidence/M0/PLAN028-H1328-H1327-ARM64-REAL-GAME4-ECHO-ORACLE-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1326 exact L0 original TLS Game4 zero/hot PASS; prior H1230 old source x86 7/7 28 group swaps and H1315 30pct250ms TCP/UDP native controlled-static-ARP PASS reused. H1327 single ARM64 both sides Game4-Off four 18±3s timer whole-group swaps + 2 healthy siblings scheduled; no product change or rerun all 7. Native Game4 x86 trailing CI report failure raw marker still unverified, H1317 and H998 historical FAIL retained, PLAN028 IN_PROGRESS."
+  "partial_summary": "Source23bc H1327 ARM64 original product build PASS but Game4 Off scene FAIL due test-only 4000 echo limit exactly hit (36+3964) and stale whole-group generation assumption; same game adapter real server 6 hot single lanes, client not retained. H1328 real four-hot-lane oracle + echo6500 source-locked candidate pending; strict terminal gap now captured, no product changes. PLAN028 IN_PROGRESS."
 }
