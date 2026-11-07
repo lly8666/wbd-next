@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "observed_source_sha": "7a35fdfa9b41bddf3d76e6ecc2569c699cde5203",
+  "checkpoint_before": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "previously_qualified_native_scope": {
+    "x86_original_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "x86_action": 42369031512,
+    "x86_180s_five_client_reverse_health_outage": "SCOPED_PASS",
+    "arm64_original_source": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+    "arm64_offline_action": 42368645387,
+    "arm64_original_network_ci": "FAIL_RETAINED",
+    "historic_h1317_5180ms_gap": "FAIL_RETAINED"
+  },
+  "h1321_test_tag_fix_validation": {
+    "action_id": 42369951487,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42369951487",
+    "source": "7a35fdfa9b41bddf3d76e6ecc2569c699cde5203",
+    "windows_go_production_and_test_compile": "PASS",
+    "windows_go_job_id": 128395924891,
+    "actual_native_windows_2022_to_linux_wsl2": "PASS_SCOPED_NORMAL_AND_GAME4_FEC",
+    "native_job_id": 128396729140,
+    "official_wintun_npcap": "REAL",
+    "android": "NOT_RUN",
+    "full_seven_mode_windows_physical": "NOT_FULLY_RUN",
+    "relocated_linux_game4_test_under_both_tags": "NOT_VERIFIED_TO_EXECUTE"
+  },
+  "next_blockers": [
+    {
+      "scene": "M0-PLAN020-WIN-WAL",
+      "action_id": 42369951409,
+      "job_id": 128395820624,
+      "result": "FAIL_BEFORE_NATIVE_WAL_TESTS",
+      "stage": "Windows Go original windowsownerlease test compile",
+      "exact_error": "original_go_tls_fec2_windows_test.go:102 not enough arguments to V4WindowsEstablishOriginalFEC2ClientOwner (missing uint8 NormalFec)",
+      "identified_root": "Standalone protected Fixed requires identical nonzero NormalFec extension on client and server, Auto zero; stale PLAN024 Windows fixture lacked new arg.",
+      "patch": "test fixture only; Fixed Balanced profile+1 on both server V4ServerOptions and client function, Auto zero",
+      "candidate_status": "NEW_SOURCE_UNVERIFIED"
+    },
+    {
+      "scene": "M0-NORMAL-COMMON",
+      "action_id": 42369951507,
+      "job_id": 128395821023,
+      "result": "FAIL_COMPILE",
+      "stage": "Rust cargo library without fec2_product_record",
+      "exact_errors": [
+        "v4_embedded_go.rs:8214 no field native_health_evidence",
+        "v4_embedded_go.rs:8293 no field native_health",
+        "v4_embedded_go.rs:8311 no field native_health_evidence"
+      ],
+      "identified_root": "Entry native Health fields exist only with fec2_product_record; three accessor sites lacked matching cfg.",
+      "patch": "read genuine native Health only with original feature; without feature report false/zero proof, retain authenticated native RX gate; no feature-enabled product path changed",
+      "candidate_status": "NEW_SOURCE_UNVERIFIED"
+    }
+  ],
+  "no_new_network_dispatched": true,
+  "not_new_product_features": true,
+  "remaining_scopes": [
+    "Windows full native Npcap/Wintun seven-mode/path lifecycle NOT_FULLY_RUN",
+    "original H998 same-socket MTU historical FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android/physical hardware NOT_RUN",
+    "L2 capacity boundaries incomplete",
+    "L3 two 1800s source-locked soaks NOT_RUN"
+  ]
+}

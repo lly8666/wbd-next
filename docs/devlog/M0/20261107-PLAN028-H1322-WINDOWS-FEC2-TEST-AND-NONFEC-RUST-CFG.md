@@ -1,0 +1,13 @@
+# PLAN028 H1322 — H1321 Windows qualified compile; next two exact build gates
+
+On `7a35fdfa9b41bddf3d76e6ecc2569c699cde5203`, [M0-WIN-LINUX Action 42369951487](https://github.com/lly8666/wbd-next/actions/runs/42369951487) was **success**, including Windows Go production/test compilation (job 128395924891) after H1321 moved the Linux-only Game4 test; its actual Windows-2022 signed Wintun/Npcap ↔ Linux WSL2 scenes passed **scoped**, not all Windows seven-mode/host hardware acceptance. The moved `TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane` still lacks an observed exact tagged Linux execution; do not count it as run.
+
+A separate [PLAN020 native Windows/WAL Action 42369951409](https://github.com/lly8666/wbd-next/actions/runs/42369951409) is **FAIL before native WAL**: `original_go_tls_fec2_windows_test.go:102` called `V4WindowsEstablishOriginalFEC2ClientOwner` with four instead of five parameters. Current original TLS/feature7 requires a fifth Normal Fixed strength byte, mirrored by server V4 options; merely appending an arbitrary fifth argument risks a protected TLS mismatch. H1322 changes **only the Windows test fixture** to bind explicit Balanced Fixed profile+1 on both peers (or zero in Auto), preserving original signed Wintun/RS16/missing-source/Stop test and ALL original failures. No unauthenticated readiness shortcut.
+
+Separately [M0 NORMAL-COMMON Action 42369951507](https://github.com/lly8666/wbd-next/actions/runs/42369951507) **FAIL** in the non-`fec2_product_record` Rust build: `Entry.native_health(_evidence)` exists only with that feature, but three cold accessor reads were unconditional (E0609 at 8214/8293/8311). H1322 places precise Rust `cfg` boundaries around these three reads; without the product feature no native Health proof or preterminal authority can be minted. The fully feature-enabled original TLS→M4 native path and all record/FEC hot code remain unchanged. These are build-compatibility fixes **NOT VERIFIED** until fresh Actions.
+
+Source chronology: H1320 native x86 five-client 180s and H1319 source-scoped ARM64 preterminal true reverse-Health-loss proof passed; preserve H1317 real 5.18s failure. L2 capacity/failure boundaries, Windows seven-mode real device lifetime, H998 original MTU, ICMP3/4, Android/physical and L3 two finite 1800s soaks are **OPEN**. Next collect exact new SOURCE Actions first; no dispatch duplicate or claim condition-specific bug repaired on an untriggered PASS.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-only scoped Rust non-product feature compile compatibility and original Windows positive-test protected Fixed/Auto argument repair; no product TLS, FEC, record, MTU, stop, configuration or API behavior change on enabled product path."}
+```

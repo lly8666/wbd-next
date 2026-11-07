@@ -8211,8 +8211,11 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.server_side||e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
     let received=e.counters.rx.load(Ordering::Acquire);
+    #[cfg(feature="fec2_product_record")]
     let authenticated_health=e.native_health_evidence.as_ref()
         .is_some_and(|x|x.has_verified_peer_health());
+    #[cfg(not(feature="fec2_product_record"))]
+    let authenticated_health=false;
     let proven=received>0||authenticated_health;
     let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
     let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
@@ -8290,8 +8293,11 @@ pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_predead(
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
     let predead= !e.server_side && e.native_health.as_ref()
         .is_some_and(|h|h.preterminal_cold_reauth_due(loop_now().0));
+    #[cfg(not(feature="fec2_product_record"))]
+    let predead=false;
     unsafe{out.write(u32::from(predead))}
     OK
 }
@@ -8308,8 +8314,11 @@ pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_health(
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
     let proof= !e.server_side&&e.native_health_evidence.as_ref()
         .is_some_and(|a|a.has_verified_peer_health());
+    #[cfg(not(feature="fec2_product_record"))]
+    let proof=false;
     unsafe{out.write(u32::from(proof))}
     OK
 }

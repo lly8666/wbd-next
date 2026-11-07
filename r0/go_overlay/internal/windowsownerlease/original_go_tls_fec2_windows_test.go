@@ -74,8 +74,14 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  // Preserve pinned original Go policy invariants: Fixed requires nonzero
  // parity and minimum=4; Auto requires parity=0 and minimum=4.
  // No test-only relaxed policy or forged M2 Applied state.
+ // The protected Normal Fixed profile must be identical on BOTH TLS peers;
+ // Auto sends zero and remains under the original Auto policy.
  parity:=0
- if mode=="fixed"{parity=4}
+ normalFec:=uint8(0)
+ if mode=="fixed"{
+  parity=4
+  normalFec=uint8(realityfront.FecV2Balanced)+1
+ }
  policy,e:=realityfront.PolicyForClientWithInitialAndCipher(
   1,mode,parity,4,20,realityfront.CipherChaCha)
  if e!=nil{t.Fatalf("original Go policy=%s: %v",mode,e)}
@@ -95,7 +101,7 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
     },
     ExpectedUsername:"protected-owner",ExpectedPassword:"secret",
     ServerLimit:1400,
-   },realityfront.V4ServerOptions{DataPlaneReady:true,Epochs:store})
+   },realityfront.V4ServerOptions{DataPlaneReady:true,Epochs:store,NormalFec:normalFec})
   answer<-response{session:session,owner:owner,err:err}
  }()
  owner,session,clientErr:=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(
@@ -105,7 +111,7 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
    Username:"protected-owner",Password:"secret",
    TunnelID:[]byte("0123456789abcdef"),ClientLimit:1400,
    LaneID:1,DesiredLanes:1,Policy:policy,
-  })
+  },normalFec)
  var peer response
  select{
  case peer=<-answer:
