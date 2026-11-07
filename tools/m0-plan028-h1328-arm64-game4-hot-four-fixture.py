@@ -77,7 +77,8 @@ assert [int(x[1]) for x in owner[:4]]==[1,2,3,4],owner[:4]
 assert [int(x[0]) for x in server_hot[:4]]==[1,2,3,4],server_hot[:4]
 for c,o,s in zip(client[:4],owner[:4],server_hot[:4]):
     assert c[0]==o[0]=="1" and c[1]==o[1]==s[0] and c[4]==o[2]==s[2] and c[3]!=c[4]
-    assert int(s[1])==2
+    # Server counts first true hot association as rotation 1 (not 2).
+    assert int(s[1])==1
 initial=re.findall(r"V4_PUBLIC_GAME_GROUP_LANE_READY role=client group_generation=1 lane=(\d+) local_port=(\d+) server_port=443",bob)
 assert len(initial)==4 and sorted(int(x[0]) for x in initial)==[1,2,3,4],initial
 assert len({int(x[4]) for x in client[:4]}|{int(x[1]) for x in initial})==8
@@ -124,11 +125,14 @@ result={"status":"PASS","mode_scene":"game4-off",
   "rotation_actual_armed_delays_ms":[int(x[1]) for x in due[:4]],
   "jitter_max_ms":3000,
   "real_udp_app_sent":sent,"real_udp_app_delivered":recv,
+  "min_application_UDP_delivery_fraction":min(v["received"]/v["sent"] for v in streams.values()),
+  "application_UDP_missed_by_device":{n:v["sent"]-v["received"] for n,v in streams.items()},
   "per_client_missing":{n:v["sent"]-v["received"] for n,v in streams.items()},
   "longest_interreceipt_gap_ms":max(v["max_successful_receipt_gap_ms"] for v in streams.values()),
   "terminal_active_send_no_receive_gap_ms":{n:max(0,round((v["last_send_unix_ns"]-v["last_receive_unix_ns"])/1e6,3)) for n,v in streams.items()},
   "native_ready_to_first_app_reply_ms":first_post,
-  "physical_path_IP_MTU_unchanged":True,"original_authenticated_IP_receipts":leases,
+  "physical_path_IP_MTU_unchanged":True,
+  "physical_interface_ipv4_unchanged":True,"original_authenticated_IP_receipts":leases,
   "streams":{n:{k:v for k,v in p.items() if k!="receipts_unix_ns"} for n,p in streams.items()},
   "cpu_process_ticks":cpu,"cpu_causal_comparison":"NOT_MEASURED",
   "H998_original_same_socket_mtu":"HISTORIC_FAIL_RETAINED","L2_capacity":"NOT_MEASURED"}

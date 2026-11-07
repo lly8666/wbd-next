@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "source_product_original_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_action": {
+    "id": 42379666500,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42379666500",
+    "conclusion": "failure",
+    "job_id": 128424834279,
+    "artifact_id": 13577431087,
+    "artifact_zip_sha256": "393197b836b457704d5237580f98a4c8b9d3a8d11827a75396381c2724fe167d",
+    "build": "PASS native ARM64 Go/Rust ELF183"
+  },
+  "original_exact_failure": "PY_HOT oracle line20 assert int(s[1])==2 failed; true server per-lane first hot rotation=1. All earlier client/server four lane IDs, original client+server matching TLS/M4 hot port, jitter 15–21s, same group preceding assertions executed; final exact Stop check never executed.",
+  "native_original_server_hot_lanes": [
+    {
+      "lane": 1,
+      "rotation": 1,
+      "port": 57881
+    },
+    {
+      "lane": 2,
+      "rotation": 1,
+      "port": 49421
+    },
+    {
+      "lane": 3,
+      "rotation": 1,
+      "port": 57341
+    },
+    {
+      "lane": 4,
+      "rotation": 1,
+      "port": 65261
+    }
+  ],
+  "same_game_adapter": true,
+  "server_port": 443,
+  "original_TLS_and_Rust_M4": true,
+  "unaffected_sibling_restarts": 0,
+  "real_app": {
+    "count_total_offered": 2291,
+    "count_total_delivered": 2291,
+    "loss": 0,
+    "clients": {
+      "alice": {
+        "sent": 764,
+        "received": 764,
+        "max_successful_receipt_gap_ms": 100.97979,
+        "terminal_active_send_gap_ms": 0,
+        "physical_route_unchanged": true
+      },
+      "bob": {
+        "sent": 763,
+        "received": 763,
+        "max_successful_receipt_gap_ms": 108.935931,
+        "terminal_active_send_gap_ms": 0,
+        "physical_route_unchanged": true
+      },
+      "carol": {
+        "sent": 764,
+        "received": 764,
+        "max_successful_receipt_gap_ms": 100.986094,
+        "terminal_active_send_gap_ms": 0,
+        "physical_route_unchanged": true
+      }
+    },
+    "source": "archived original bounded timed UDP JSON; real single original 443 Go TLS/Rust owner, no application retries"
+  },
+  "other_stage": {
+    "client_four_lane_hot_positive_before_oracle_line20": "PROVEN_IN_MEMORY_ASSERTIONS_PRIOR_TO_FAILED_ROTATION_NUMBER_CHECK",
+    "server_all_four_original_authenticated_hot": "PASS_SCOPED",
+    "bounded_echo6500_prevents_prior4000_artifact": "TRIGGERED_WITH_REAL_2291_STREAM_AND_36_WARMUP",
+    "same_os_route_readback": "MATCHED_BEFORE_AFTER",
+    "full_test_final_stop": "NOT_TRIGGERED_ORACLE_ABORT",
+    "physical_hardware": "NOT_RUN"
+  },
+  "offline_analyzer": {
+    "method": "Python stdlib ZIP JSON/runtimelog extraction, compare exact server original M4 markers, packet offered/received and phys route readback",
+    "network_rerun": false,
+    "do_not_invent_full_action_pass": true
+  },
+  "candidate_correction": {
+    "source_changes": [
+      "fix first server lane hot rotation index to1 in source-test oracle only",
+      "add truthful legacy report alias fields derived from the exact new per-client stream counts and already verified OS readback"
+    ],
+    "workflow_changed": false,
+    "new_network_auto_dispatch": false,
+    "result": "NOT_RUN_NEW_SOURCE"
+  },
+  "previous_source_h1327_failure_retained": true,
+  "prior_H1317_5180ms_FAIL_retained": true,
+  "prior_H998_same_socket_MTU_FAIL_retained": true,
+  "scope_remaining": [
+    "Game4 four hot lanes exact final owned Stop on THIS Action NOT_TRIGGERED; other original native Stop prior source qualifications retain separately",
+    "L2 capacity controlled stress and recover incomplete",
+    "L3 two finite 30min SOURCE-frozen soaks NOT_RUN",
+    "Windows physical independent platform/Android NOT_RUN"
+  ]
+}
