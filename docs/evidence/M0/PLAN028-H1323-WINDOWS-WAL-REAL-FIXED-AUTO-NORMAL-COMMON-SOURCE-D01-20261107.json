@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "d01af5562a6ee2298722d28ae4b564704059309b",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "source_kind": "same-head-direct-action-evidence",
+  "timestamp_utc_date": "2026-11-07",
+  "prior_source": "7a35fdfa9b41bddf3d76e6ecc2569c699cde5203",
+  "windows_compile_and_native_wal": {
+    "action_id": 42373564579,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42373564579",
+    "conclusion": "success",
+    "original_go_windows_wal_job": 128406461534,
+    "original_signed_wintun_0141": "PASS_REAL_OS",
+    "original_tls_rust_m3_signed_wintun_dual_udp": "PASS_SCOPED",
+    "fixed_and_auto_triggered": {
+      "test": "TestM0PLAN024WindowsRealOriginalGoFEC2FixedAutoSignedWintunFirstReverse",
+      "fixed": "PASS_ACTUALLY_EXECUTED",
+      "auto": "PASS_ACTUALLY_EXECUTED",
+      "original_go_tls_credentials": "REAL",
+      "native_rust_m3_aeAD_PN": "REAL",
+      "signed_wintun_kernel_to_app": "REAL",
+      "missing_source_recovered_original_rs16_fixed_and_auto": "PASS_ACTUALLY_EXECUTED",
+      "output_markers": [
+        "M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_fixed_PASS_SCOPED",
+        "M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_auto_PASS_SCOPED"
+      ]
+    },
+    "simultaneously_staged_same_source_jobs": [
+      {
+        "mode": "normal",
+        "job_id": 128407826439,
+        "result": "PASS_SCOPED_REAL_WINDOWS_WINTUN"
+      },
+      {
+        "mode": "fixed",
+        "job_id": 128407826459,
+        "result": "PASS_SCOPED_REAL_WINDOWS_WINTUN"
+      },
+      {
+        "mode": "auto",
+        "job_id": 128407826471,
+        "result": "PASS_SCOPED_REAL_WINDOWS_WINTUN"
+      },
+      {
+        "mode": "game2",
+        "job_id": 128407826448,
+        "result": "PASS_SCOPED_REAL_WINDOWS_WINTUN"
+      },
+      {
+        "mode": "game4",
+        "job_id": 128407826437,
+        "result": "PASS_SCOPED_REAL_WINDOWS_WINTUN"
+      }
+    ],
+    "not_in_scope": [
+      "Natural Auto dynamic 2s/8s adaptive revision NOT_RUN in this Windows fixture",
+      "All-seven-mode 028 Windows full test NOT_RUN",
+      "global WFP default route/device crash physical NOT_RUN",
+      "M2 Applied not established by this Fixed/Auto RS16 test"
+    ]
+  },
+  "rust_nonfec_common": {
+    "action_id": 42373564694,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42373564694",
+    "conclusion": "success",
+    "job_id": 128406461545,
+    "no_fec_product_feature_compile_gate": "PASS",
+    "before_action_id": 42369951507,
+    "before_result": "FAIL_E0609",
+    "status": "FIX_CONFIRMED_AS_COMPILATION"
+  },
+  "game4_overlap_native_report": {
+    "action_id": 42373564647,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42373564647",
+    "conclusion": "failure",
+    "previous_action_id": 42369951411,
+    "previous_conclusion": "failure",
+    "native_x86_kernel_scenario_assertions": "PASS_SCOPED_IN_SCENE_SCRIPT",
+    "native_checklist": [
+      "8 genuine original Go TLS ClientHello, 4 lanes per generation, no prelude",
+      "Game4 FEC6 old/new A->A+B->B authenticated handover and scoped Stop",
+      "physical path MTU1280 / effective TUN1178 readback",
+      "10 actual UDP app deliveries across two generations",
+      "one client TUN reader, sibling-lane no HOL"
+    ],
+    "exact_failing_step": "Workflow trailing grep for V4_PUBLIC_GAME_REMOTE_M4_PROVEN and V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX in summary stdout log; these markers only written to temporary native client.log which script does not expose or retain",
+    "raw_m4_marker_capture_in_artifacts": "NOT_VERIFIED",
+    "disposition": "CI_FAIL_RETAINED; scoped original scenario positive independently, no FULL_PASS and no network rerun to satisfy report grep",
+    "native_artifact_id": 13574827428,
+    "previous_artifact_id": 13572927701
+  },
+  "governance_source_correction": {
+    "prior_action_id": 42373564591,
+    "prior_conclusion": "failure",
+    "source_error": "evidence is for a different SOURCE",
+    "cause": "H1322 evidence object used observed_source_sha but omitted required source_sha key; cursor last_tested_source 7a35",
+    "fix": "Add exact source_sha to earlier evidence and point new H1323 cursor to this new factual evidence source_sha=d01; preserve unverified true",
+    "new_governance_status": "PENDING"
+  },
+  "other_preexisting_actions": {
+    "linux_plan026_auto_health_action": 42373564674,
+    "result": "PASS",
+    "diagnosis": "Rust deterministic core unit subjob PASS; multi-scene combined job later FAILED in first build/network stage; not promoted and not part of corrected Windows fixture",
+    "x86_native_functional_action": 42373564622,
+    "arm64_game4_lane_action": 42373564676
+  },
+  "known_issues_retained": [
+    "H1317 observed 5.18 second fail still FAIL",
+    "H998 original IPv4 ICMP3/4 MTU original live scoped FAIL still open",
+    "PLAN028 moved protected Game4 zero-epoch Linux exact tagged unit NOT_VERIFIED_TO_EXECUTE",
+    "L2 capacity host-limited/weaknet not closed",
+    "L3 two source-frozen 1800s soak NOT_RUN",
+    "Android and physical NOT_RUN"
+  ],
+  "no_test_re_dispatch_for_reports": true,
+  "feature_freeze": true,
+  "exit": "IN_PROGRESS"
+}
