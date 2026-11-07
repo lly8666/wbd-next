@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "241a7e1f86a408d0c2c0db1705351fe76649dc6d",
+  "action": {
+    "id": 42339439690,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42339439690",
+    "conclusion": "success",
+    "source_sha": "241a7e1f86a408d0c2c0db1705351fe76649dc6d",
+    "architecture": "native_ARM64_client_and_server",
+    "original_go_tls_443_rust_m4": true,
+    "duration_seconds": 180,
+    "backend": "scalar",
+    "native_isal_linked": true,
+    "scalar_quanta": 161252,
+    "native_quanta": 0,
+    "artifact_id": 13561052352,
+    "artifact_zip_sha256": "6a819d8f7ddd64effcf435751425c660a26823bf8d542e2a7555773f42e6bdc1"
+  },
+  "scope_verdict": {
+    "alerts": 0,
+    "all_five_authenticated_rotations": "PASS_ALL_FIVE_SCOPED",
+    "all_five_server_per_lease_shared_tun_overflow": 0,
+    "max_erin_active_no_receive_gap_ms": 120,
+    "failures_from_prior_source_resolved": false,
+    "causal_product_fix_proven": false
+  },
+  "diagnostic": {
+    "physical_netem_client_uplink_500ms_samples": 445,
+    "normalized_client_uplink_qdisc": {
+      "loss_percent_from_counters": 29.9802,
+      "configured_loss_percent": 30,
+      "configured_delay_ms": 125,
+      "limit_packets": 10000,
+      "max_queue_packets": 741,
+      "p95_queue_packets": 704,
+      "max_backlog_bytes": 668964,
+      "high_load_qdisc_sent_stall_in_500ms_bins_s": 0
+    },
+    "physical_netem_host_downlink": {
+      "max_queue_packets": 727,
+      "p95_queue_packets": 704,
+      "max_backlog_bytes": 664250
+    },
+    "host_four_arm64_cores": {
+      "overall_mean_busy_during_active_load_percent_approx": 95,
+      "phase_mean_busy_percent": {
+        "first_wave_0_6x": 72.62,
+        "sustained_1_0x": 95.51,
+        "overload_1_3x": 99.29,
+        "recovery_1_0x": 98.65,
+        "tail_1_0x": 98.56
+      },
+      "phase_mean_softirq_percent": {
+        "first_wave_0_6x": 10.45,
+        "sustained_1_0x": 15.16,
+        "overload_1_3x": 16.62,
+        "recovery_1_0x": 15.94
+      },
+      "per_core_busy_p95_percent": "100_each_core_during_all_active_phase",
+      "observed_steal_percent": 0,
+      "inference": "1.0x and 1.3x fixture loads are at/near VM-wide CPU capacity; qdisc did not approach its 10000 packet bound during this PASS source. This is a capacity risk, not causal proof for the earlier failing H1300 source."
+    }
+  },
+  "next_target": "One new 180s native ARM64 scalar source-locked pressure scenario with explicitly PREDECLARED 0.6x/0.85x/1.0x/0.85x physical loss/delay stable. On same four-core VM, report actual per-phase sent/unique delivery, CPU per core, netem qlen/drops, rotate and owned Stop. Never turn previous H1295/H1297/H1299/H1300 FAIL into PASS; no 1800s."
+}

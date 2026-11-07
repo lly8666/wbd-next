@@ -40,6 +40,11 @@ LONG_SCENES={
     "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
+CAPACITY_STEPS=os.environ.get("WBD_PLAN028_FAST_CAPACITY_STEPS","")
+if CAPACITY_STEPS not in ("","1"):
+    raise SystemExit("invalid L2 capacity calibration flag")
+if CAPACITY_STEPS and (FAST_SCENE!="pressure" or LONG_SCENE):
+    raise SystemExit("L2 capacity calibration is short pressure only")
 # Explicit short-only OS event. A new protected TLS+M4 generation must
 # survive the same real NIC / same IPv4 after physical 1500 -> 1280, without
 # the old PLAN027A H998 "0 of 3 small app replies" false qualification.
@@ -53,6 +58,13 @@ if FAST_SCENE and LONG_SCENE:
     raise SystemExit("rapid and long scenes cannot run together")
 FAST_PHASES=(("first_wave",20,.6),("sustained",40,1.0),
              ("overload",40,1.3),("recovery",70,1.0))
+if CAPACITY_STEPS:
+    # H1301 original pressure 4-vCPU host reached 95.5% sustained and
+    # 99.3% overload busy; bounded 0.6/0.85/1.0/0.85 phase profile
+    # tests an actual recoverable capacity envelope, not higher load.
+    # Preserve the four original phase names and total active 170s.
+    FAST_PHASES=(("first_wave",30,.6),("sustained",60,.85),
+                 ("overload",30,1.0),("recovery",50,.85))
 ROTATION_SECONDS=(0,0,0,0,0)
 if FAST_SCENE:
     if FAST_SCENE not in LONG_SCENES:
@@ -335,6 +347,11 @@ def main():
             "loss_model": "two physical veth egress qdiscs each client; no artificial app drops",
             "netem_qdisc_limit_packets": 10000,
         }
+        if CAPACITY_STEPS:
+            plan["capacity_phase_schedule"]=[
+                {"name":name,"seconds":duration,"rate_scale":scale}
+                for name,duration,scale in FAST_PHASES]
+            plan["capacity_context"]="H1301 four native ARM64 cores saturated near 1.0x; 1.3x not repeated"
         for i, who in enumerate(NAMES):
             cfg = {
                 "seed": "H1250-" + who, "warmup_s": 10,
