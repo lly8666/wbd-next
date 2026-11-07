@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+  "action": {
+    "run_id": 42357004090,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42357004090",
+    "conclusion": "success",
+    "artifact_id": 13567859136,
+    "artifact_zip_sha256": "3365f5abfb3bf53b776ed8acc8ecd7ed7932a014e2af1bf2240f5d0e6bfccb0e",
+    "workflow": ".github/workflows/m0-plan028-h1314-x86-real-isal-30pct-250ms.yml"
+  },
+  "pinned_build": {
+    "original_Go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "original_Go_client_server_binary_unchanged": true,
+    "Rust_original_source": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+    "official_ISA_L_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "true_Rust_ELF_native_feature": "native_fec_acceleration",
+    "rust_engine_elf_sha256": "2c2dc9c5a5598cfd69eacf79d03ffbb719c909ec5e05ac1af943b1260603c2b4",
+    "architecture": "native_x86_64/native_x86_64"
+  },
+  "real_180s_result": {
+    "server_port": 443,
+    "mode_set": [
+      "NormalOff",
+      "NormalAuto",
+      "Game2Off",
+      "Game4Fixed6",
+      "NormalFixed6"
+    ],
+    "clients": 5,
+    "all_five_rotations": "PASS_ALL_FIVE_SCOPED",
+    "per_lease_TUN_overflows": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "alerts": 0,
+    "server_per_lease_offered_equals_direct_delivered": true,
+    "source_UDP_TCP_uses_real_transport": true,
+    "alice_and_bob_TCP_framed_sent_received_each_direction": 43317,
+    "Erin_live_send_max_zero_receive_gap_ms": 250,
+    "Erin_UDP_loss_percent_true_uplink": 30.125,
+    "Erin_UDP_loss_percent_true_downlink": 29.903,
+    "oneway_delay_ms": 250,
+    "Erin_outer_mtu": 1280,
+    "other_outer_mtu": 1460,
+    "synthetic_veth_neighbour_control": "TEST_ONLY_STATIC_10_OF_10_PERMANENT",
+    "original_Game4_backend": {
+      "selected": "prefer-native",
+      "native_linked": 1,
+      "tx_native_quanta": 65477,
+      "tx_scalar_short_blocks": 769,
+      "rx_native_decodes": 9488,
+      "rx_scalar_decodes": 114
+    }
+  },
+  "warmup_corrected_host_load": {
+    "core_count": 4,
+    "phase_from_actual_application_start_seconds": [
+      [
+        10,
+        40
+      ],
+      [
+        40,
+        100
+      ],
+      [
+        100,
+        130
+      ],
+      [
+        130,
+        180
+      ]
+    ],
+    "scale": [
+      0.25,
+      0.35,
+      0.45,
+      0.35
+    ],
+    "host_mean_cpu_busy_percent": [
+      62.86,
+      80.75,
+      89.64,
+      80.5
+    ],
+    "host_mean_softirq_percent": [
+      3.15,
+      4.93,
+      5.75,
+      4.86
+    ],
+    "meaning": "Runner spare capacity persisted in controlled static ARP network topology, no same-VM scalar-native CPU causal comparison claimed"
+  },
+  "history_retained": {
+    "H1313_same_original_Rust_without_ISAL": "Original Action42355007813 CI FAIL native feature absent (native_linked0 scalar66105), real scalar application scope separately PASS",
+    "ARM64_uncontrolled_dynamic_ARP_native_stalls": "Historical H1308-H1311 failures remain independent and NOT root-fixed by static neighbour",
+    "H1305_H1306_original_CI_failure": "Historical exact old fixture/report failures retained despite H1307 scope PASS"
+  },
+  "result": "L2_SCOPED_PASS_REAL_NATIVE_X86_FIVE_CLIENT_30PCT_250MS_TEST_CONTROLLED_STATIC_ARP",
+  "not_a_general_close": [
+    "Windows real Npcap/Wintun modes incomplete",
+    "Original same-socket MTU shrink H998 FAIL retained",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 representative long NOT_RUN"
+  ]
+}

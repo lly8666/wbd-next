@@ -140,9 +140,32 @@ def analyze(art,server_log):
     assert plan["long_scene"] is None
     assert plan["application_load_seconds"]==180
     assert plan["simultaneous_stress_seconds"]==170
-    assert sum(p[1] for p in PHASES)==180
+    # Capacity-calibrated opt-in scenarios use 30/60/30/50 seconds,
+    # not the original 20/40/40/70 profile. The original report used
+    # PHASES for *labels* and computed incorrect phase Mbps. Always
+    # record the frozen actual plan, with a separate 10s warmup.
+    if "capacity_phase_schedule" in plan:
+        workload=[(p["name"],p["seconds"],p["rate_scale"])
+                  for p in plan["capacity_phase_schedule"]]
+        assert [p[0] for p in workload]==[
+            "first_wave","sustained","overload","recovery"]
+        active_phases=[("warmup",10,.3),*workload]
+    else:
+        active_phases=list(PHASES)
+    assert sum(p[1] for p in active_phases)==180
     assert len(plan["clients"])==5
     assert {p["who"] for p in plan["clients"]}==set(NAMES)
+    oneway=plan.get("application_scene")=="strict_oneway"
+    if oneway:
+        # Only explicitly authored pre-run one-way traffic is exempt
+        # from EXPECTED reverse application progress, never an unplanned
+        # observed zero. The active leg keeps original 750ms/95% gates.
+        assert plan["application_directionality"]=={
+            "alice":"uplink","bob":"downlink","carol":"uplink",
+            "dave":"downlink","erin":"uplink"}
+        assert all(p["udp_share"]==1.0 for p in plan["clients"])
+    else:
+        assert plan.get("application_scene") in (None,"")
     cpu=read(art/"h1250-cpu-rss.json")
     qdisc=tc_stats(art/"h1250-qdisc-after.txt")
     server_text=pathlib.Path(server_log).read_text(errors="replace")
@@ -182,6 +205,9 @@ def analyze(art,server_log):
             "CPU/RSS are original process samples, not a causal before/after optimization"
         ]
     }
+    result["actual_phase_windows"]=[
+        {"phase":name,"seconds":seconds,"rate_scale":scale}
+        for name,seconds,scale in active_phases]
     repeat_all=0
     first_all=0
     rotation_ok=True
@@ -322,6 +348,14 @@ def analyze(art,server_log):
             result["alerts"].append({"who":who,"kind":"NO_REAL_OUTER_COUNTER"})
         repeat_all+=repeat["cosmetic_accepted_repeat_record_wire_bytes"]
         first_all+=repeat["first_record_wire_bytes"]
+        if oneway:
+            for leg in (source,peer):
+                # Genuine pure application UDP only, with NO TCP SYNs
+                # or synthetic probe packets on either product endpoint.
+                assert all(s["tx_packets"]==s["rx_packets"]==0
+                           for s in leg["stats"]["tcp"])
+                assert all(s["probe_sent"]==0
+                           for s in leg["stats"]["udp"])
         details={"mode":spec["mode"],"lease":spec["lease"],
                  "server_per_lease_queue":per_lease.get(spec["lease"]),
                  "health90_events":text.count("M0_GAME_M4_HEALTH_DEAD"),
@@ -332,8 +366,9 @@ def analyze(art,server_log):
                  "process_cpu_rss":cpu.get(who),"directions":{}}
         for direction in ("uplink","downlink"):
             tx,rx=(source,peer) if direction=="uplink" else (peer,source)
+            silent=oneway and plan["application_directionality"][who]!=direction
             phases=[]
-            for i,(name,duration,rate_scale) in enumerate(PHASES):
+            for i,(name,duration,rate_scale) in enumerate(active_phases):
                 sent=tx["stats"]["udp"][i]
                 got=rx["stats"]["udp"][i]
                 n=sent["tx_packets"]
@@ -351,7 +386,14 @@ def analyze(art,server_log):
                     "received_duplicates":got["duplicates"],
                     "received_invalid":got["invalid"]
                 })
-                if n==0 or m==0:
+                if silent:
+                    if (n!=0 or m!=0 or sent["tx_bytes"]!=0 or
+                        got["rx_bytes"]!=0 or sent["send_errors"]!=0):
+                        result["alerts"].append({
+                            "who":who,"direction":direction,"phase":name,
+                            "kind":"SILENT_DIRECTION_LEAKED_BUSINESS",
+                            "sent":n,"received":m})
+                elif n==0 or m==0:
                     result["alerts"].append({"who":who,"direction":direction,
                                              "phase":name,"kind":"NO_UDP_BUSINESS_PROGRESS"})
                 elif name=="recovery" and m/n<.95:
@@ -373,6 +415,7 @@ def analyze(art,server_log):
                                           "kind":"APP_RX_GAP_WITH_ACTIVE_TX_GE750MS",
                                           "duration_ms":no_receive_gap})
             details["directions"][direction]={
+                "expected_application":("NONE" if silent else "REAL_UDP"),
                 "phases":phases,"minute_actual_business":minute,
                 "largest_10ms_bucket_no_receive_while_sender_active_ms":no_receive_gap,
                 "true_tcp":{"framed_app_sent":sum(x["tx_packets"] for x in tx["stats"]["tcp"]),
@@ -389,6 +432,11 @@ def analyze(art,server_log):
         elif per_lease[lease].get("pending_overflow",0)>0:
             result["alerts"].append({"who":who,"kind":"SERVER_PER_LEASE_QUEUE_OVERFLOW",
                                      "pending_overflow":per_lease[lease]["pending_overflow"]})
+    if oneway:
+        result["application_directionality"]=plan["application_directionality"]
+        result["application_probe_policy"]="ZERO_PROBE_HZ_ALL_FIVE"
+        result["application_TCP_policy"]="ZERO_FLOWS_ALL_FIVE"
+        result["silent_direction_policy"]="NO_APP_SEND_NO_APP_RECEIVE_EXPECTED_ALL_PHASES"
     result["rotation_verdict"]="PASS_ALL_FIVE_SCOPED" if rotation_ok else "SOME_CLIENT_ROTATION_FAILURES"
     result["total_client_outer_record"]={
         "first_record_wire_bytes":first_all,

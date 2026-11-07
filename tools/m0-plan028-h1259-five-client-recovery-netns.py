@@ -59,11 +59,22 @@ if NEIGH_CLOCK_DIAG and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_S
 # both ends to retain unmodified true 30% DATA loss and 125ms delay.
 # This is NEVER product configuration, physical deployment or the
 # default/long fixture. Report original dynamic-neighbour FAIL separately.
+# Explicit L1 application-direction scene, separate from all legacy
+# two-way H1259/H1314 tests. No user UDP/TCP/probes in the silent
+# direction, but original Go TLS + Rust Health stays real and intact.
+ONEWAY_APP=os.environ.get("WBD_PLAN028_APP_ONEWAY","")
+if ONEWAY_APP not in ("","1"):
+    raise SystemExit("invalid L1 directional business switch")
+if ONEWAY_APP and not (FAST_SCENE=="pressure" and CAPACITY_STEPS=="2"
+                      and not LONG_SCENE):
+    raise SystemExit("L1 one-way only in 180s bounded capacity scene")
 STATIC_NEIGH=os.environ.get("WBD_PLAN028_STATIC_OWNED_NEIGH","")
 if STATIC_NEIGH not in ("","1"):
     raise SystemExit("invalid test-only static veth neighbour switch")
 if STATIC_NEIGH and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
     raise SystemExit("static veth neighbour control only in short native 180s L2 scene")
+if ONEWAY_APP and STATIC_NEIGH!="1":
+    raise SystemExit("one-way L1 requires test-controlled original veth ARP")
 # One source-locked L2 max-impairment representative (30%/250ms) using
 # the already proven TEST-only physical L2 ARP control, not a product knob.
 ERIN_MAX_DELAY=os.environ.get("WBD_PLAN028_ERIN_MAX_DELAY","")
@@ -476,6 +487,17 @@ def main():
                 "true Erin 30%/125ms while host can breathe"
                 if CAPACITY_STEPS=="2" else
                 "H1301 four native ARM64 cores saturated near 1.0x; 1.3x not repeated")
+        if ONEWAY_APP:
+            # All five real original Go/Rust owners run. Application DATA
+            # flows in exactly one direction; no synthetic UDP probes and
+            # no implicit TCP SYNs in the reverse leg. Cold Health is NOT
+            # application DATA. Verify both legs after the true Stop.
+            one_way=(("uplink",1,0),("downlink",0,1),
+                     ("uplink",1,0),("downlink",0,1),
+                     ("uplink",1,0))
+            plan["application_scene"]="strict_oneway"
+            plan["application_directionality"]={
+                who:one_way[i][0] for i,who in enumerate(NAMES)}
         for i, who in enumerate(NAMES):
             cfg = {
                 "seed": "H1250-" + who, "warmup_s": 10,
@@ -489,9 +511,11 @@ def main():
                 ]),
                 "drain_s": 10, "network": {"tcp_window_profile_selected": "large"},
                 "traffic": {
-                    "c2s_mbps": RATE[i], "s2c_mbps": RATE[i],
-                    "udp_share": 0.8 if i < 2 else 1.0,
-                    "tcp_flows": 2 if i < 2 else 0, "probe_hz": 2,
+                    "c2s_mbps": RATE[i] * (one_way[i][1] if ONEWAY_APP else 1),
+                    "s2c_mbps": RATE[i] * (one_way[i][2] if ONEWAY_APP else 1),
+                    "udp_share": 1.0 if ONEWAY_APP else (0.8 if i < 2 else 1.0),
+                    "tcp_flows": 0 if ONEWAY_APP else (2 if i < 2 else 0),
+                    "probe_hz": 0 if ONEWAY_APP else 2,
                     "burst_ms": 0, "sizes": [[256, 3], [1024, 7]],
                     "max_packets": 12000000 if LONG_SCENE else 2000000, "deadline_ms": 1000,
                     "allow_fragmentation": False, "observe_size_classes": True,
@@ -503,8 +527,9 @@ def main():
             plan["clients"].append({
                 "who": who, "mode": MODES[i], "cipher": EXTRA[i][-1],
                 "lease": leases[i], "loss_pct": LOSS[i],
-                "oneway_delay_ms": DELAY[i], "c2s_target_mbps": RATE[i],
-                "s2c_target_mbps": RATE[i],
+                "oneway_delay_ms": DELAY[i],
+                "c2s_target_mbps": RATE[i] * (one_way[i][1] if ONEWAY_APP else 1),
+                "s2c_target_mbps": RATE[i] * (one_way[i][2] if ONEWAY_APP else 1),
                 "outer_mtu": 1280 if i == 4 else 1460,
                 "udp_share": cfg["traffic"]["udp_share"],
                 "application_port": 47001 + 10 * i,
