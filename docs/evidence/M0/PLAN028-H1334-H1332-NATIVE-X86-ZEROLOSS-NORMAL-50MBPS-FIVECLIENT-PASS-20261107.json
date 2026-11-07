@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1334",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_L2_NATIVE_X86_SOURCE6C5_ONE_TLS443_FIVE_CLIENT_ZERO_LOSS_NORMAL_10_25_50_25MBPS_REAL_DUPLEX_180S",
+  "original_x86_product": {
+    "original_go_tls_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go_version": "1.23.12",
+    "rust_version": "1.85.1",
+    "rust_backend": "official ISA-L native feature plus bounded scalar shortblocks",
+    "architecture": "native x86_64 client and server ELF62",
+    "reuse_original_build_run": 42369031512,
+    "build_artifact_id": 13572791923,
+    "all_three_native_elf_sha256_verified": true,
+    "source_same_product_owner_basis": "H1331 exact current-to6c5 comparison unaffected original Go TLS/M4 and Game/Normal owner paths; do NOT claim new binary built from H1334 main"
+  },
+  "action": {
+    "run_id": 42382999546,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42382999546",
+    "workflow_source_sha": "af67d3d9023d76d15c710d5f5c4777afc92bddd8",
+    "preflight_job_id": 128434395797,
+    "network_job_id": 128434422669,
+    "conclusion": "success",
+    "preflight": "PASS",
+    "real_native_scene": "PASS",
+    "artifact_id": 13578766674,
+    "artifact_zip_sha256": "09d0fd93e8851e78ea28bf8d09f82d31e600aab798c3d815c985bfafb4473ce7",
+    "zip_crc_test": "PASS",
+    "artifact_files": 34,
+    "artifact_size_bytes": 342398
+  },
+  "setup": {
+    "server_listen_port": 443,
+    "original_authenticated_client_count": 5,
+    "clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "one_real_server_shared_tun": true,
+    "all_five_distinct_original_tls_authenticated_leases": true,
+    "all_five_client_original_owned_stop": true,
+    "server_original_shared_tun_final_stop": true,
+    "one_os_runner_two_native_real_endpoints": true,
+    "physical_network": "six true x86 Linux network namespaces veth bridge",
+    "true_physical_netem_config_loss_each_direction_percent": 0,
+    "true_physical_netem_delay_each_direction_ms": 0,
+    "test_static_arp": false,
+    "rotation_600s_timer_triggered": false,
+    "L1_rotation_tested": false,
+    "combined_real_udp_tcp_both_directions": true,
+    "per_mode_other_four_at_peak_mbps_each_direction": 2,
+    "normal_UDP_TCP_split": "80% UDP / 20% TCP two real flows"
+  },
+  "stages": [
+    {
+      "phase": "first_wave",
+      "seconds": [
+        10,
+        40
+      ],
+      "normal_target_offered_received_Mbps_each_direction": [
+        10,
+        10,
+        10
+      ],
+      "all_clients_offered_Mbps_one_direction": 11.6,
+      "mean_four_core_CPU_busy_percent": 17.66,
+      "mean_four_core_softirq_percent": 1.69
+    },
+    {
+      "phase": "sustained",
+      "seconds": [
+        40,
+        100
+      ],
+      "normal_target_offered_received_Mbps_each_direction": [
+        25,
+        25,
+        25
+      ],
+      "all_clients_offered_Mbps_one_direction": 29,
+      "mean_four_core_CPU_busy_percent": 32.83,
+      "mean_four_core_softirq_percent": 3.75
+    },
+    {
+      "phase": "overload",
+      "seconds": [
+        100,
+        130
+      ],
+      "normal_target_offered_received_Mbps_each_direction": [
+        50,
+        50,
+        50
+      ],
+      "all_clients_offered_Mbps_one_direction": 58,
+      "normal_real_UDP_pps_uplink": 6300.4,
+      "normal_real_UDP_pps_downlink": 6300.5,
+      "normal_app_UDP_Mbps_each_direction": 40,
+      "normal_app_TCP_Mbps_each_direction": 10,
+      "normal_peak_UDP_uplink_send_receive": [
+        189012,
+        189012
+      ],
+      "normal_peak_UDP_downlink_send_receive": [
+        189014,
+        189014
+      ],
+      "normal_received_only_oneway_UDP_p99_ms_each_direction": [
+        0.7,
+        0.7
+      ],
+      "mean_four_core_CPU_busy_percent": 59.63,
+      "mean_four_core_softirq_percent": 6.83
+    },
+    {
+      "phase": "recovery",
+      "seconds": [
+        130,
+        180
+      ],
+      "normal_target_offered_received_Mbps_each_direction": [
+        25,
+        25,
+        25
+      ],
+      "all_clients_offered_Mbps_one_direction": 29,
+      "mean_four_core_CPU_busy_percent": 32.68,
+      "mean_four_core_softirq_percent": 3.76
+    }
+  ],
+  "true_application_delivery": {
+    "all_5_clients_2_directions_unique_udp_sent": 1409531,
+    "all_5_clients_2_directions_unique_udp_received": 1409531,
+    "app_udp_missing": 0,
+    "normal_UDP_packets_uplink": [
+      592239,
+      592239
+    ],
+    "normal_UDP_packets_downlink": [
+      592238,
+      592238
+    ],
+    "client_UL_DL_active_tx_no_receive_gaps_ms": {
+      "alice": [
+        0,
+        0
+      ],
+      "bob": [
+        10,
+        10
+      ],
+      "carol": [
+        10,
+        10
+      ],
+      "dave": [
+        10,
+        10
+      ],
+      "erin": [
+        10,
+        10
+      ]
+    },
+    "tcp_alice_and_bob_both_direction_framed_records_all_received": true,
+    "shared_tun_server_per_authenticated_lease_pending_overflow": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "actual_kernel_qdisc": {
+    "erin_0pct_true_uplink_packets": 74904,
+    "erin_0pct_true_downlink_packets": 74832,
+    "erin_actual_uplink_dropped": 0,
+    "erin_actual_downlink_dropped": 0
+  },
+  "other_legacy_report": {
+    "source": "h1286-rapid-report.json",
+    "rotation_verdict": "SOME_CLIENT_ROTATION_FAILURES",
+    "alert_count": 5,
+    "interpretation": "EXPECTED_NOT_APPLICABLE: 600s configured interval deliberately did not fire during 180s true capacity scene; old reporter flags missing rotation, does not invalidate separately scoped 0%-loss data-plane audit"
+  },
+  "classification": "PASS_SCOPED_0LOSS_NORMAL_10_25_50_25_WITH_FIVE_SIBLINGS",
+  "observed_next_capacity_screen": {
+    "slope_between_29_and_58_Mbps_aggregate_one_direction": "(59.63-32.83)/(58-29)=0.924 host CPU busy percentage points per extra Mbps aggregate each direction, not causal product CPU coefficient",
+    "normal_75_Mbps_plus_siblings_aggregate_one_direction_Mbps": 83,
+    "rough_host_CPU_busy_if_linear_percent": 105.84,
+    "normal_100_Mbps_plus_siblings_aggregate_Mbps_one_direction": 108,
+    "recommendation": "Next bounded 75 Mbps native x86 single Normal candidate if continuing throughput; do NOT begin 100/200 dual-direction mixed before confirm headroom. Could instead prioritize Windows missing real native MTU/source-IP lifetime. These are screening approximations only."
+  },
+  "limits": [
+    "Exact old executable SOURCE6c5, new workflow on af67 source, later H1333 evidence-only attribution: not a new main native build",
+    "True localhost/veth 0%/0ms, no physical internet or real WAN RT",
+    "No 1/5/15/30% loss inference from zero-loss result; H1315 old 30%/250ms remains separate TEST static-ARP result",
+    "Not L1 actual two rotations, phase timers600s deliberately silent; legacy reporter alerts expected only",
+    "50Mbps/dir Normal held for 30 seconds, not 1800s or 100/200Mbps qualification",
+    "Game4 native feature available and server scoped, no Game logical 20Mbps validated",
+    "Host CPU includes kernel/generators/Go+Rust, no causal attributed process CPU reduction",
+    "Windows real NIC MTU/source-IP OS timeline incomplete; Android/physical NOT_RUN",
+    "H1317 5.18s genuine prior FAIL, H998 old same-socket MTU FAIL not reclassified",
+    "L3 two 1800s frozen source NOT_RUN"
+  ]
+}

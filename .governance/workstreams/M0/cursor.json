@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1333,
-  "checkpoint_sha": "af67d3d9023d76d15c710d5f5c4777afc92bddd8",
+  "sequence": 1334,
+  "checkpoint_sha": "68b4e9348c3c36f0465f120cce042b7c6648153c",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1333: H1332 sourceaf67 one original x86 Go TLS+Rust M4 5 real client 0loss 180s Normal staged 10/25/50/25 app test Action42382999546 preflight PASS, native Stage RUNNING (do not dispatch duplicate). H1332 governance Action42382999582 failed structure because new preflight evidence omitted source_sha field matching cursor.last_tested_source=65b; TEST-ONLY evidence schema corrected, no product/binary/script/workflow changes and no trigger repeat network. Product source reused exact frozen6c5 with H1331 current owner unchanged; result not yet known.",
-  "why_now": "Governance hard evidence attribution prevents false verified claims, fix missing preflight JSON source_sha in one scoped evidence/cursor commit while original H1332 business runs. Never conflate last current tested source65b with reused frozen x866c5 ELF source.",
+  "current_task": "H1334: H1332 original native x86 Action42382999546 SOURCE6c5 frozen full Go TLS+ISA-L Rust M4 3 verified ELF62, fixture sourceaf67, artifact13578766674 sha09d0 zipCRC verified: exact 5 authenticated clients one443 180s 0loss, Normal Off per direction 10→25→50→25Mbps offered=received, 5-client aggregate11.6→29→58→29 Mbps, all true UDP 1409531/1409531 with no user retries; active TX without RX max Alice0ms sibling10ms; per-lease pending overflow0; true Erin qdisc drop0/0; normal peak UDP ~6300pps/dir + 10Mbps TCP, p99 local one-way0.7ms. Host 4core busy17.66/32.83/59.63/32.68%, softirq1.69/3.75/6.83/3.76%; final exact owned client5+server Stop. H1332 Action SUCCESS, audit scope L2 0loss PASS. Generic reporter 5 rotation alerts deliberately 600s timers beyond180s, NOT_APPLICABLE not false product fail. H1333 governance PASS. L1 Windows actual sourceIP+MTU timeline and L3 open; historic H1317 5.18s/H998 same socket FAIL retained.",
+  "why_now": "Validate actual CPU/PPS and data-plane from downloaded original Action artifacts before extrapolating next high rate. 50Mbps true app at 59.63% four core has headroom; approximate linear screening predicts Normal75 ~83% while Normal100 mixed ~106%, so no blind 100/200 run or inflated performance claim.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1332 Action42382999546 ONCE after network, artifacts and original real Stop/app/CPU/PPS. Collect fresh H1333 governance check; if H1332 real app gap/CPU cap, preserve actual source result and choose one causal diagnostic/short targeted experiment; no duplicate seeds or L3. H1332 workflow not touched by this doc-only change. L1 Windows sourceIP/MTU full remains open.",
+  "next_action": "Select ONE next independent gap: prioritize native Windows signed Npcap/Wintun genuine effective underlay MTU/source IPv4 OS event→original TLS/M4+MTU install→first UDP/TCP→exact old Stop; alternatively before Windows, one bounded x86 0loss Normal 75Mbps (not 100) 180s staged if capacity still priority, same SHA6c5 binary source and explicit measure CPU/PPS/active app tail. Preserve source scoped 50 PASS, no repeat; do not start L3 2x1800 until L1/L2 blockers resolved, Android NOT_RUN, original H1317/H998 FAIL.",
   "unverified": true,
-  "last_tested_source": "65b07f829478a6c4a4f6f2da6112417fa761f9c1",
+  "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1332-X86-L2-NATIVE-CALIBRATION-FROZEN-BASELINE-PREFLIGHT-20261107.json"
+    "docs/evidence/M0/PLAN028-H1334-H1332-NATIVE-X86-ZEROLOSS-NORMAL-50MBPS-FIVECLIENT-PASS-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1332 old native x86 L2 calibration entered real 180s, 5 users and 0loss 10→25→50→25 Normal app; earlier partial governance FAIL due absent source_sha in new preflight evidence, not product. H1333 patches evidence.source_sha=last prior qualified owner65b while executable source6c5 explicitly separate and H1332 outcome pending. Old H1315 x86 43.2Mb/dir at host 89.64% basis; no 100/200 until calibration."
+  "partial_summary": "H1332 Action42382999546 real native x86 original Go TLS+ISA-L Rust frozen source6c5 L2 zero-loss Normal 10/25/50/25Mbps/dir plus four low-rate authenticated siblings PASS; actual 1409531/1409531 UDP all clients 0% network, max active gap10ms, 0 per-lease overflow, all final owned stops. Peak Normal UDP6300pps/dir plus 10Mbps TCP, 4-core CPU busy59.63%, recovery32.68%; source artifact13578766674 zipSHA confirmed. H1333 governance PASS; old generic rotation reporter alerts5 expected 600s timer not triggered. Next Windows physical lifetime or 75Mbps bounded x86; L3 2x1800 pending, PLAN028 IN_PROGRESS."
 }
