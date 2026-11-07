@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1346",
+  "source_sha": "fa35cfac57459bfb240ff7a1d92c0e324e00adff",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "run_id": 42401062068,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42401062068",
+    "workflow_source_sha": "fa35cfac57459bfb240ff7a1d92c0e324e00adff",
+    "native_job_id": 128489726432,
+    "conclusion": "failure",
+    "failed_step": "Launch actual WSL2 Linux and direct full public two-OS product",
+    "compile_and_source_assembly": "PASS",
+    "windows_and_linux_Rust_M1_M3_FEC2_tests": "PASS",
+    "windows_8_original_cold_path_units": "PASS",
+    "governance": "PASS",
+    "Windows_original_WAL_scoped_run": 42401062017,
+    "Windows_original_WAL_five_modes": "PASS"
+  },
+  "original_artifact": {
+    "id": 13585801074,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "6611e65a945a843d9f8f4fed853ffa7ab4c11c9f635ed3242151e134bbe45272",
+    "zip_crc": "PASS",
+    "file_count": 26,
+    "source": "fa35cfac57459bfb240ff7a1d92c0e324e00adff",
+    "raw_windows_client": "mode-results/normal/client.log",
+    "raw_linux_server": "mode-results/normal/server.log",
+    "real_underlay_tcp": "mode-results/normal/native-link-tcp443.log",
+    "windows_npf": "mode-results/normal/native-windows-npf.log",
+    "native_vm": "plan028-native-windows-vm-capacity.json",
+    "owned_alias": "plan028-owned-alias.json"
+  },
+  "actual_OS_owned_path": {
+    "platform": "Windows2025 signed Npcap/Wintun↔true Linux WSL2 raw/TUN",
+    "physical_NIC": "vEthernet (WSL (Hyper-V firewall))",
+    "selected_ifindex": 25,
+    "source_IPv4_before_after": [
+      "198.19.254.1",
+      "198.19.254.1"
+    ],
+    "physical_ipv4_NlMtu_before_after": [
+      1500,
+      1280
+    ],
+    "mutation_to_OS_readback_ms": 74.01,
+    "own_NlMtu_restored_to_1500": true,
+    "test_owned_addresses_restored": true,
+    "runner_management_default_route_unchanged": true
+  },
+  "native_triggers": {
+    "real_1Hz_getIpInterfaceEntry_after_shrink": 1280,
+    "real_native_200_500_coalescer": "PASS",
+    "old_native_Rust_workers_joined": true,
+    "old_os_WAL_restored": true,
+    "old_exact_owned_stop": true,
+    "generation1": {
+      "local_source_TCP_port": 41031,
+      "original_windows_SYN_MSS": 1420,
+      "actual_syn_tcp_option": "0204058c",
+      "raw_identical_SYN_retransmission_count": 2,
+      "original_credential_TLS": "PASS",
+      "server_one_port_443_Rust_M4": "PASS",
+      "Windows_real_Wintun_inner_OS": 1389
+    },
+    "generation2": {
+      "local_source_TCP_port": 41032,
+      "server_one_port_TCP": 443,
+      "actual_native_wire_SYN_port_41032": "OBSERVED_IN_LINUX_KERNEL_CAPTURE",
+      "original_windows_SYN_MSS": 1240,
+      "actual_syn_tcp_option": "020404d8",
+      "original_windows_peer_SYNACK_MSS": 1420,
+      "original_credential_TLS": "PASS",
+      "server_original_Go_TLS_Rust_M4": "PASS",
+      "linux_second_authenticated_session": "V4_PUBLIC_MULTI_SESSION_READY one_port=443 active_detached_flows=2",
+      "Windows_real_Wintun_inner_OS": 1209,
+      "Windows_and_linux_true_Post_B_kernel_UDP_receipt_increments": [
+        8,
+        8
+      ],
+      "post_B_application_TCP": "NOT_RUN_BECAUSE_REPORTER_FAILED_BEFORE_REAL_TCP_STEP"
+    },
+    "server_old_A_exact_native_retired": "V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason=same-lease-new-generation remaining=1",
+    "server_final_stop": "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",
+    "client_final_stop": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS / WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"
+  },
+  "first_failure": {
+    "kind": "CI_REPORTER_FALSE_REJECTION_IDENTICAL_ORIGINAL_TCP_SYN_RETRANSMISSION",
+    "actual_fixture_exception": "real Windows same-IP physical MTU original SYN budget/packet bytes wrong",
+    "raw_windows_budget_rows": [
+      [
+        "1",
+        1460,
+        1500,
+        1460,
+        1420,
+        1389
+      ],
+      [
+        "2",
+        1460,
+        1280,
+        1280,
+        1240,
+        1209
+      ]
+    ],
+    "actual_client_SYN_rows": [
+      [
+        "1",
+        1420,
+        "0204058c"
+      ],
+      [
+        "1",
+        1420,
+        "0204058c"
+      ],
+      [
+        "2",
+        1240,
+        "020404d8"
+      ]
+    ],
+    "existing_weak_reporter_requirement": [
+      [
+        "1",
+        1420,
+        "0204058c"
+      ],
+      [
+        "2",
+        1240,
+        "020404d8"
+      ]
+    ],
+    "why_old_gate_wrong": "first original FakeTCP SYN retransmits while waiting for SYNACK before credential TLS; byte-identical repetition is legitimate, not a third generation; original server authenticated exactly TWO sessions and sent TWO genuine SYNACKs",
+    "next_fix": "reuse already tested strict verified_plan028_shared_manual_two_generation_v4_mss: accepts <=8 identical SYN retransmissions per original generation, rejects conflicting MSS/options/missing generation/server SYNACK or auth, verifies OS underlay each generation, client distinct source port41031→41032, and actual Windows Wintun 1389→1209; keep real TCP business step reachable",
+    "repeated_network_justification": "NEXT one only if strictly needed to finish post-B native bidirectional TCP (NOT_RUN here). No re-run merely to make reporter green."
+  },
+  "vm": {
+    "os": "Windows2025",
+    "logical_vcpu": 4,
+    "exposed_physical_cores": 2,
+    "ram_gib": "~16",
+    "cross_vm_performance_claim": "NONE",
+    "actual_process_cpu_s": 0.375,
+    "observation_duration_s": 14.25
+  },
+  "limitations": [
+    "The original Action remains FAIL; genuine original signed native TLS/Rust/UDP/owned Stop has scoped independent proof, not overall test PASS",
+    "Post-B TCP actual kernel application is NOT_RUN",
+    "Original server port443 is single, but simultaneously independent clients with same IP/source port still L0 NOT_RUN and source-port deterministic wrap does not guarantee collision-free at scale",
+    "H1342 original callback-only MTU real FAIL, H1344 B handshake real FAIL, H1340 Game2 exit historical FAIL with H1343 later scoped real fix",
+    "H998 original same-socket hot-MTU fail and H1317 old 5.18s ARM64 gap retained",
+    "L1 full seven-mode two rotation plus game-specific path still open",
+    "L2 Normal100/200Mbps, Game4 20Mbps, 2x1800s L3, Android and physical WiFi NOT_RUN"
+  ]
+}

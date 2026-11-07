@@ -450,20 +450,37 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     # The same authenticated Linux shared-server TUN stays unchanged.
     # The Windows client alone must narrow its true NEW TCP SYN budget;
     # Linux SYNACK may legitimately advertise its own larger 1460 path.
-    budgets=re.findall(
-     r"WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=normal configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+)",
+    # Reuse the already source-tested strict two-original-TLS MSS verifier.
+    # The real FakeTCP client may retransmit generation1 SYN unchanged
+    # before SYNACK (H1345 observed two identical gen1 SYNs, one gen2).
+    # This helper admits <=8 same-generation byte-identical SYN attempts,
+    # rejects conflicting options, and requires both real Linux SYNACKs,
+    # authentic M4 server session slots 1/2, and decoded peer SYNACKs.
+    proof=verified_plan028_shared_manual_two_generation_v4_mss(
+     winlog,linux_log,configured_mtu)
+    observed=[
+     (x["generation"],x["windows_physical_ip_mtu"],
+      x["windows_local_syn_mss"],x["windows_inner_planned"],
+      x["windows_actual_syn_tcp_option_bytes"],
+      x["windows_received_peer_synack_mss"],
+      x["linux_local_synack_mss"])
+     for x in proof]
+    expected=[(1,1500,1420,1389,"0204058c",1420,1420),
+              (2,1280,1240,1209,"020404d8",1420,1420)]
+    if observed!=expected:
+     raise RuntimeError(
+      "Windows native genuine two-generation same-IP OS NlMtu/SYN/SYNACK mismatch: "
+      +repr(observed))
+    source_ports=re.findall(
+     r"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=(\d+) configured_port=(\d+) source_port=(\d+) original_peer_port=(\d+) same_ip_reauth_safe_tuple=(true|false)",
      winlog)
-    syns=re.findall(
-     r"WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=(\d+) local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",
-     winlog)
-    expected=[("1","1460","1500","1460","1420","1389"),
-              ("2","1460","1280","1280","1240","1209")]
-    if budgets!=expected or syns!=[("1","1420","0204058c"),("2","1240","020404d8")]:
-     raise RuntimeError("real Windows same-IP physical MTU original SYN budget/packet bytes wrong: "+repr((budgets,syns)))
+    expected_ports=[("1","41031","41031","443","false"),
+                    ("2","41031","41032","443","true")]
+    if source_ports!=expected_ports:
+     raise RuntimeError("genuine source-locked distinct Windows cold TLS tuples missing: "+repr(source_ports))
     if per_gen_inner!=[1389,1209]:
      raise RuntimeError("Windows real Wintun OS inner MTU did not narrow BEFORE B published: "+repr(per_gen_inner))
-    if linux_log.count("V4_PUBLIC_MULTI_SESSION_READY role=server")<2:
-     raise RuntimeError("Linux same shared TUN original second TLS cohort not ready")
+    report["plan028_verified_original_same_source_two_TLS_syn_synack"]=proof
     budget_and_wire={
      "scope":"WINDOWS_REAL_ORIGINAL_CLIENT_SYN_TWO_PHYSICAL_MTU_BUDGETS_ONLY",
      "windows_physical":[1500,1280],
