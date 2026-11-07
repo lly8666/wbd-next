@@ -1,6 +1,6 @@
 name: M0 PLAN028 H1286 ARM64 native ISA-L five-client rapid diagnosis
 # H1286 is a SHORT native diagnostic; no 1800-second workload, long suite remains untouched.
-run-name: H1290 native ARM64 180-second scalar GF256 lookup versus ISA-L original TLS+Rust
+run-name: H1292 native ARM64 bounded per-lease FIFO eager drain five-client 180-second A/B
 on:
   push:
     branches: [main]
@@ -98,6 +98,15 @@ jobs:
           }
           grep -Fq "M0_PLAN028_SCALAR_GF256_65536_EXACT_MAXIMUM20_PREPARED_4ROW_PASS" fixed-kernel-result/h1290-rust-scalar-gf-oracle.log
           grep -Fq "1 passed; 0 failed;" fixed-kernel-result/h1290-rust-scalar-gf-oracle.log
+          # H1292 fixes the exact server /32 burst race: after one OLD
+          # packet is pending, a freed original M1 receiver must accept it
+          # without waiting for the eight-packet lease queue to fill.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full -- --test-threads=1 --nocapture >fixed-kernel-result/h1292-shared-tun-partial-fifo.log 2>&1 || {
+            cat fixed-kernel-result/h1292-shared-tun-partial-fifo.log >&2
+            exit 1
+          }
+          grep -Fq "M0_PLAN028_SHARED_TUN_PARTIAL_BACKLOG_EAGER_FIFO_8CAP_PASS" fixed-kernel-result/h1292-shared-tun-partial-fifo.log
+          grep -Fq "1 passed; 0 failed;" fixed-kernel-result/h1292-shared-tun-partial-fifo.log
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4 -- --test-threads=1 >fixed-kernel-result/h1282-normal-route-proof-rust.log 2>&1 || {
             tail -120 fixed-kernel-result/h1282-normal-route-proof-rust.log >&2
             exit 1

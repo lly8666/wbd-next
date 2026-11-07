@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1290,
-  "checkpoint_sha": "f3b0e6dc50b9a809bebf0894198cc94616397b05",
+  "sequence": 1292,
+  "checkpoint_sha": "800d233adb09de598886a409d545e434da4eaed8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1290: exact native ARM64 H1289 source f3b0e6 3x180s source-lock Action42318365507 original TLS+Rust five clients real ISA-L pressure PASS0 alerts/heterogeneous PASS0, independent scalar backend pressure FAIL3 (Erin Fixed6 uplink gap2290ms, downlink1260ms, Alice Normal queue overflow10). H1289 Go64/Rust64 M4 early bounded 2x32 FIFO unit PASS, both client/server native hot M4 confirmed. H1290 scalar Game4 Fixed6 GF(256) parity optimization candidate uses one immutable 64KiB cold table instead of 3 exp/log per body byte; independent 65536 coefficient/symbol oracle + real prepared Maximum20x4 row test and source-locked same ISA-L binary 3x180s pending. No long tests.",
-  "why_now": "Fix demonstrable scalar fallback performance path rather than relying only on native ISA-L product build. H1289 true native short passed two profiles; scalar still failed 3 independently recorded alerts; software GF multiplication was an observable high-frequency hot-loop CPU cost. Maintain crypto/wire/source exact independent oracle.",
+  "current_task": "H1292: H1290 source622653 ARM64 native original Go TLS+Rust M4+ISA-L 3x180s Action42320426024 math oracle PASS but true native pressure FAIL3 (Erin fixed6 DL1270ms, Bob /32 overflow24, Dave46), scalar pressure FAIL4 (Erin DL2160ms, Alice31 Bob52 Dave104 queue overflows); hetero native PASS0. H1289 native pressure PASS0 on prior source, so intermittent. Root original run_shared_tun_reader per-lease pending1..7 FIFO does not attempt oldest route send until pending FULL8 even after M1 consumer freed. H1292 opportunistic one nonblocking oldest try_send on each arrival if backlog exists, unchanged 8/64KiB/100ms and no extra worker/queue; native bounded SyncSender unit and 3x180s real short A/B pending. H998 physical in-place MTU/remote ICMP remain OPEN. No 1800s.",
+  "why_now": "Repeated true ARM64 five-client pressure shows scalar speedup did not solve /32 queue or Fixed6 transient app holes; source inspection reveals avoidable 1-7-entry pending FIFO retention until hard full despite an available original M1 receiver. Fix that specific FIFO send timing rather than increasing queue cap or masking alerts.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Require H1290 Rust codec independent 65536 coefficient/symbol oracle and Maximum20 prepared full outputs 1 pass on native ARM64; then compare five-client 180s scalar/native pressure and native heterogeneous, all 0 alerts hard. Investigate remaining Erin gap and Alice queue overflow if scalar still fails. H998 actual same-socket MTU1500->1280 and remote ICMP still OPEN. No 3x1800 long workload until all known scoped failures solved and short tests pass.",
+  "next_action": "Run H1292 strict 1-pass bounded SyncSender partial-backlog FIFO unit, all H1284 shared TUN capacity/Stop regressions and source-locked ARM64 3×180s pressure scalar/native + hetero native. Examine original per-lease queue overflow, Erin Fixed6 DL app gap and Game4 server/client protected hot slot matches. If any FAIL, fix before longer test; then separate 180s physical same-interface MTU1500->1280 native probe. No 1800s long until all scoped short bugs fixed.",
   "unverified": true,
-  "last_tested_source": "f3b0e6dc50b9a809bebf0894198cc94616397b05",
+  "last_tested_source": "622653783c5cf4c981ffaf39225435be16d083a2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1290-H1289-SOURCEF3B-ARM64-3X180S-20261107.json"
+    "docs/evidence/M0/PLAN028-H1292-H1290-SOURCE622653-ARM64-3X180S-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",

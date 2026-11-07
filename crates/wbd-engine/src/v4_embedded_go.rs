@@ -4280,34 +4280,35 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
         if let Some(old)=pending.remove(&key){d.retired+=old.packets.len() as u64}
     }
     if let Some(q)=pending.get_mut(&key){
-        // A receiver may have freed its M1 inbox since the last reader
-        // flush. Never report a full per-lease queue before trying to send
-        // its OLDEST pending packet. This is one bounded nonblocking try,
-        // not an additional worker or an unbounded backlog; sibling leases
-        // remain independent and FIFO is preserved.
-        if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE||
-            q.queued_bytes.saturating_add(bytes)>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
-            if let Some(old)=q.packets.pop_front(){
-                q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-                if old.queued_at.elapsed()>=SHARED_TUN_PENDING_MAX_AGE{
-                    d.expired+=1;
-                }else{
-                    match q.route.send.try_send(old.packet){
-                        Ok(())=>d.delivered+=1,
-                        Err(TrySendError::Full(packet))=>{
-                            q.queued_bytes+=old.bytes;
-                            q.packets.push_front(PendingSharedTunPacket{
-                                packet,bytes:old.bytes,queued_at:old.queued_at,
-                            });
-                            d.backpressure+=1;
-                        },
-                        Err(TrySendError::Disconnected(_))=>{
-                            d.retired+=1+q.packets.len() as u64;
-                            q.packets.clear();q.queued_bytes=0;
-                            q.route.alive.store(false,Ordering::Release);
-                            return d;
-                        },
-                    }
+        // H1292 actual five-lease burst: a stalled source may have one to
+        // seven OLD packets queued while its original TX worker has already
+        // freed the M1 inbox. Previously we waited until queue FULL (8) to
+        // try that recovered receiver, so every intervening TUN batch could
+        // needlessly fill the route and overflow on its next CPU hiccup.
+        // Try the oldest ONCE for EVERY subsequent arrival while a queue
+        // exists. Zero extra calls on the ordinary zero-backlog path. This
+        // is bounded, nonblocking, generation-fenced FIFO, not a second
+        // reader, more capacity, packet retries, or a high-priority lane.
+        if let Some(old)=q.packets.pop_front(){
+            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+            if old.queued_at.elapsed()>=SHARED_TUN_PENDING_MAX_AGE{
+                d.expired+=1;
+            }else{
+                match q.route.send.try_send(old.packet){
+                    Ok(())=>d.delivered+=1,
+                    Err(TrySendError::Full(packet))=>{
+                        q.queued_bytes+=old.bytes;
+                        q.packets.push_front(PendingSharedTunPacket{
+                            packet,bytes:old.bytes,queued_at:old.queued_at,
+                        });
+                        d.backpressure+=1;
+                    },
+                    Err(TrySendError::Disconnected(_))=>{
+                        d.retired+=1+q.packets.len() as u64;
+                        q.packets.clear();q.queued_bytes=0;
+                        q.route.alive.store(false,Ordering::Release);
+                        return d;
+                    },
                 }
             }
         }
@@ -4487,6 +4488,50 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
         _=>panic!("wrong successor kind"),
     }
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full(){
+    let (recycle,_recycled)=mpsc::sync_channel::<Vec<u8>>(16);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    tx.try_send(packet(0)).unwrap();
+    let route=SharedTunRoute{generation:101,
+        alive:Arc::new(AtomicBool::new(true)),send:tx};
+    let key=[10,66,0,101];let mut pending=HashMap::new();
+    let first=enqueue_shared_tun(&mut pending,key,route.clone(),1,||packet(1));
+    assert_eq!((first.backpressure,first.overflow),(1,0));
+    assert_eq!(pending[&key].packets.len(),1);
+    // Real M1 TX worker consumed the inbox while the shared-TUN reader
+    // had only ONE queued packet; do not wait for eight to fill.
+    match rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[0]),
+        _=>panic!("wrong original M1 packet"),
+    }
+    let second=enqueue_shared_tun(&mut pending,key,route.clone(),1,||packet(2));
+    assert_eq!((second.delivered,second.overflow),(1,0));
+    assert_eq!(pending[&key].packets.len(),1);
+    match rx.try_recv().expect("oldest sent before full lease queue"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[1]),
+        _=>panic!("wrong eager FIFO packet"),
+    }
+    let third=enqueue_shared_tun(&mut pending,key,route,1,||packet(3));
+    assert_eq!((third.delivered,third.overflow),(1,0));
+    match rx.try_recv().expect("second FIFO reclaimed in next turn"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[2]),
+        _=>panic!("wrong next eager FIFO packet"),
+    }
+    assert_eq!(pending[&key].packets.len(),1);
+    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    match rx.try_recv().expect("final packet immediately flushed"){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[3]),
+        _=>panic!("wrong last FIFO packet"),
+    }
+    assert!(pending.is_empty());
+    println!("M0_PLAN028_SHARED_TUN_PARTIAL_BACKLOG_EAGER_FIFO_8CAP_PASS");
+}
+
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan028_full_lease_opportunistic_oldest_drain_before_drop(){
