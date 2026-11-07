@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+  "same_original_binary": {
+    "h1305_action": 42345392910,
+    "h1305_artifact": 13563296508,
+    "h1306_action": 42345932962,
+    "h1306_artifact": 13563737294,
+    "pinned_original_Go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "manifest_both_match_exact_source": true,
+    "all_three_SHA256_ELF_binaries": "TO_VERIFY_IN_H1307_ACTION",
+    "rebuild_in_h1307": false
+  },
+  "actual_H1305_native_crypto_proof": {
+    "new_client_generation": 2,
+    "Game4_lanes": 4,
+    "server_port": 443,
+    "Rust_cryptographic_Health_kind0_verified": 1,
+    "new_TUN_promoted_generation": 10,
+    "native_reverse_inner_ipv4_delivered": 0,
+    "old_route_revoked_after_auth_proof": true,
+    "new_original_business_UDP_echoes": 5,
+    "old_M4_raw_driver_other": 14755,
+    "CI_conclusion": "failure_fixture_only_historical_second_old_stop_reason"
+  },
+  "actual_H1306_complete_real_network": {
+    "client_ip_old": "10.25.0.2",
+    "client_ip_new": "10.25.0.3",
+    "outer_default": 1460,
+    "physical_effective": 1280,
+    "TUN_OS_readback": 1178,
+    "new_business_UDP_echoes": [
+      100,
+      101,
+      102,
+      103,
+      104
+    ],
+    "native_early_old_rx_other": 13465,
+    "old_client_native_Stop": "PASS",
+    "real_full_client_server_Game4_Stop": "PASS",
+    "source_locked_Game4_FEC6": "PASS",
+    "tls_8_independent_ClientHello_no_prelude": "PASS",
+    "tls_8_session_ids_independent": true,
+    "client_first_data_all": "TLS_Handshake_ClientHello",
+    "server_first_all": "TLS_Handshake_ServerHello",
+    "server_early_data_bytes": 0,
+    "CI_conclusion": "failure_extra_workflow_grep_on_unforwarded_product_log"
+  },
+  "real_source_scope": "Two real native x86_64/x86_64 original-Go TLS443+Rust Game4FEC6 Actions on identical SHA256 build; run A genuine native crypto proof and run B native full Stop/TLS/UDP app, no simulated/mocked data",
+  "H1307_procedure": "One offline Action using actions/download-artifact of both original Actions, exact matching 3 ELF SHA256 and manifests, verifies cryptographic Health and final network/stop/wire evidence; report SCOPED_PASS only, preserve both original CI FAILs.",
+  "cannot_promote": [
+    "H1305 and H1306 original CI overall FAIL historically",
+    "ARM64 Erin native pressure gap prior source still genuine FAIL",
+    "Windows seven physical Npcap/Wintun coverage incomplete",
+    "H998 original same-socket MTU shrink fail historically",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 original 1800s NOT_RUN"
+  ]
+}

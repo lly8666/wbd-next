@@ -1,0 +1,57 @@
+name: M0 PLAN028 H1307 original x86 Game4 same-binary dual-Action evidence
+run-name: H1307 x86 Game4 no-network original SOURCE9cc5 cold M4 + final TLS8/Stop
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1307-x86-game4-same-binary-offline.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  exact-original-source-offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42345392910
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-42345392910-1
+          path: original-cryptographic-source
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42345932962
+          github-token: ${{ github.token }}
+          name: m0-plan028-x86-game4-frozen-42345932962
+          path: complete-real-stop-and-wire
+      - name: Verify actual two real native x86 Actions match original ELF SHA256 and product gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -s original-cryptographic-source/fixed-build/libwbd_engine.so
+          test -s original-cryptographic-source/fixed-kernel-result/manifest.json
+          test -s complete-real-stop-and-wire/manifest.json
+          test -s complete-real-stop-and-wire/plan028-game4-tls-wire-audit.json
+          mkdir -p fixed-kernel-result
+          python3 -m py_compile tools/m0-plan028-h1307-x86-game4-dual-source-offline.py
+          python3 tools/m0-plan028-h1307-x86-game4-dual-source-offline.py \
+            --first original-cryptographic-source \
+            --final complete-real-stop-and-wire \
+            --out fixed-kernel-result/h1307-real-native-same-source-qualification.json \
+            | tee fixed-kernel-result/h1307-real-native-same-source-qualification.log
+          grep -Fq 'M0_PLAN028_H1307_NATIVE_X86_GAME4_SAME_SOURCE_COLD_M4_TLS8_STOP_UDP5_SCOPED_PASS' \
+            fixed-kernel-result/h1307-real-native-same-source-qualification.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1307-native-x86-game4-original-source-proof-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1307-real-native-same-source-qualification.json
+            fixed-kernel-result/h1307-real-native-same-source-qualification.log
+          retention-days: 14
+          if-no-files-found: warn
