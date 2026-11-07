@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1326,
-  "checkpoint_sha": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
+  "sequence": 1327,
+  "checkpoint_sha": "46fe74f1f92be7cceb6127de5e089ab6f57439a3",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1326: Source cfc9d00 L0 exact Linux/cgo+both product tags original Go TLS Game4 zero-epoch fresh whole-group vs explicit prior epoch hot lane TEST EXECUTED PASS, Action42375236373 jobs128411351536 artifact13575242799, native Rust product build and exact original Go donor. Former H1324 Action42374747715 FAIL before test compile on missing bridge types preserved, now fixed by test workflow source staging. H1323 Windows true signed Wintun Fixed/Auto and Rust non-fec common PASS retained, H1325 governance PASS. Next choose current material L1/L2 hard failure by actual evidence; x86 Game4 Action42373564647 trailing grep CI FAIL and native proof marker NOT_VERIFIED; separate PLAN026 combined Action42373564674 failed while rustup downloading components, actual network NOT_RUN. H1317 seconds-scale gap, H998 original MTU, capacity and final soak open.",
-  "why_now": "Only positive triggering execution of H1321-relocated Linux protected group/hot intent test closes L0 authority ambiguity; no need rerun native network. Next prioritize true end-to-end observable business/recovery missing gate over report-only log grep and infrastructure setup failure, preserving existing qualifications.",
+  "current_task": "H1327: Fresh main46fe checkpoint cfc9 only docs delta, all Actions collected. H1230 old source x86 seven-mode native 7/7 28 original TLS generation handovers 16219/16220 UDP and H1315 old x86 controlled-static-ARP 30%/250ms TCP/UDP 180s scoped PASS verified. H1319/H1320 actual ARM64/x86 old-A-alive Normal B-native-Health predead PASS, H1317 5.18s original FAIL; H1295 same-NIC MTU-only new-gen 180s real ARM64 PASS, H998 old same-socket FAIL retained. H1327 new single native ARM64 both ends Game4-Off four jittered 18±3s whole-group swaps and two continuous real UDP siblings on exact original TLS+M4 source. No seven-mode duplicate, no native Game4 CI report-only repeat, pending own Action.",
+  "why_now": "H1230 old exact source native x86 seven modes mature PASS, later generation/Health/shared-TUN owner changes touch Game4 path; one current ARM64 non-x86 low-loss Game4-Off four swaps discriminates late old Stop/sibling disruption without L2 capacity or subnet ARP confound.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Refresh main and collect any post H1326 governance. Choose first actually observed L1/L2 gap or known hard regression (H1317 capacity-contained five-second outage, H998 original same-socket MTU) and design minimum discriminating source-locked experiment using inherited accurate network evidence; avoid seed reruns and VM overload. Preserve Game4 x86 Action42373564647 CI FAIL unretained native markers, PLAN026 combined Action42373564674 FAIL in Rust toolchain setup with network NOT_RUN. Finish L0/L1/L2 hard gates and capacity before two L3 source-frozen finite 1800s tests. No 029/030 or premature done.",
+  "next_action": "Collect source H1327 single native ARM64 Game4-Off Action and governance, require 5 authentic four-lane cohorts/4 old Stop and actual per-client UDP/gap, exact binary ELF183+SHA and no false independent single-lane claim. If FAIL inspect first stage; no repeat same seed or larger job. Then choose next uncovered TCP+UDP mixed/rate or Windows unique Npcap lifecycle and capacity scenario per PLAN028, protect scoped H1315 and historic H1317/H998; defer L3 2x1800s until L0-L2 complete.",
   "unverified": true,
   "last_tested_source": "cfc9d00e6a1e952ff08680ec8016f639a507f130",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1326 source cfc9 exact original TLS Linux Game4 protected zero-vs-hot epoch request bound `=== RUN` and `--- PASS`, previous f7a staging FAIL preserved. Windows true signed Wintun fixed/auto/normal/game and Rust common feature gates qualified scoped. Remaining Game4 x86 postscript CI failure raw marker unverified, PLAN026 combo toolchain infra fail, H1317 5.18s and H998 original MTU, L1 seven-mode/L2 capacity/L3 soak, physical/Android incomplete. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1326 exact L0 original TLS Game4 zero/hot PASS; prior H1230 old source x86 7/7 28 group swaps and H1315 30pct250ms TCP/UDP native controlled-static-ARP PASS reused. H1327 single ARM64 both sides Game4-Off four 18±3s timer whole-group swaps + 2 healthy siblings scheduled; no product change or rerun all 7. Native Game4 x86 trailing CI report failure raw marker still unverified, H1317 and H998 historical FAIL retained, PLAN028 IN_PROGRESS."
 }
