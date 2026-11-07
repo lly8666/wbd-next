@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "x86_original_true_network": {
+    "action_id": 42369031512,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42369031512",
+    "conclusion": "success",
+    "build": "PASS",
+    "genuine_network_scene": "PASS",
+    "platform": "native x86_64 client/server same ISA",
+    "runtime_seconds": 180,
+    "artifact_id": 13572777330,
+    "original_Go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "server_port": 443,
+    "authenticated_clients": 5,
+    "all_five_rotations": "PASS_ALL_FIVE_SCOPED",
+    "actual_alerts": 0,
+    "unique_UDP_sent_and_delivered": {
+      "alice_up": [
+        216578,
+        216578
+      ],
+      "bob_down": [
+        216577,
+        216577
+      ],
+      "carol_up": [
+        177199,
+        176774
+      ],
+      "dave_down": [
+        177199,
+        177199
+      ],
+      "erin_up": [
+        157510,
+        157037
+      ]
+    },
+    "max_active_send_no_receive_ms": {
+      "alice": 0,
+      "bob": 10,
+      "carol": 50,
+      "dave": 100,
+      "erin": 120
+    },
+    "native_Game4": {
+      "server_tx_ISAL_quanta": 65555,
+      "server_legal_scalar_short_blocks": 1,
+      "Dave_client_ISAL_rx_decodes": 9220,
+      "Dave_client_scalar_decodes": 0,
+      "Dave_no_reverse_application": true
+    },
+    "actual_Health_blackhole": {
+      "server_to_Erin_physical_loss_percent": 100,
+      "duration_seconds": 63.657,
+      "restored_original_loss_percent": 30,
+      "Erin_client_uplink_original_loss_percent": 30,
+      "original_Hard90_dead_reconnect": "NOT_TRIGGERED",
+      "preterminal_Go_old_A_alive": true,
+      "new_B_authenticated_M4_Health_kind0": true,
+      "new_B_published_single_TUN": true
+    },
+    "product_qualification": "SCOPED_PASS_TWO_NATIVE_ARCH_ARM64_AND_X86_64_GENUINE_PREDEAD_ONEWAY",
+    "equivalent_earlier_ARM64_action": {
+      "source": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+      "offline_action_id": 42368645387,
+      "original_network_action_id": 42366910850,
+      "original_network_ci_failure_remains": true
+    }
+  },
+  "windows_compile_blocker": {
+    "prior_action_id": 42366910873,
+    "source": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+    "job": "Windows Go production and test compilation only",
+    "result": "FAIL",
+    "errors": [
+      "internal/realityfront/admission_v4_test.go:1305 undefined V4LinuxGameAuthenticatedLane",
+      "internal/realityfront/admission_v4_test.go:1306 undefined v4EmbeddedNativeBridge"
+    ],
+    "cause": "TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane referenced Linux+cgo-only Game4 bridge from untagged shared admission_v4_test.go, causing Windows Go test compile to fail before any native Npcap/Wintun proof.",
+    "patch_scope": "Move exactly this test to admission_v4_game_linux_test.go with //go:build linux && cgo && wbd_v4_embedded_go && wbd_v4_fec2_product; keep original generic admission test and helper availability for Go on Windows/Linux; pin both exact new Git blobs in existing source-authoritative Plan020 Go overlay assembly manifest.",
+    "expected_validations": "Existing real Windows-2022 workflow Windows Go production/test compile from exact pinned original Go donor; Linux test must still execute when both feature tags and native cgo are enabled.",
+    "status": "NEW_SOURCE_UNVERIFIED",
+    "not_a_product_functional_fix": true
+  },
+  "remaining_scope": [
+    "Windows actual Npcap/Wintun per seven-mode physical entry NOT_FULLY_RUN",
+    "H998 original live same-socket MTU fail historic",
+    "remote user ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "L3 two finite 1800s original source-locked NOT_RUN",
+    "prior ARM64 overloaded weaknet gaps historic"
+  ]
+}

@@ -1083,7 +1083,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "77446339753ce1a6beb6479c2d3e9f4ddedd728f"
+      "result_blob": "6877c35477b066c873625b1d12347ccee0b5fbec"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/admission_v4_game_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_game_linux_test.go",
+      "result_blob": "aef2ed4698ecf18a649d789970944fbdbca92dd3"
     },
     {
       "kind": "create",
