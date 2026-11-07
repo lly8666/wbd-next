@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1290 root evidence from H1289 three native ARM64 five-client short tests",
+  "source_sha": "f3b0e6dc50b9a809bebf0894198cc94616397b05",
+  "action_run_id": 42318365507,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42318365507",
+  "scope": "Three separate exact 180s original Go TLS443/Rust Game4 Native M4 five-client source-locked ARM64 Linux netns with actual physical per-client tc netem 0,1,5,15,30% profile and native ISA-L feature linked",
+  "native_build": {
+    "conclusion": "success",
+    "job_id": 128236550176,
+    "actual_rust_early_64_two_32_fifo_test": "1 passed",
+    "actual_rust_native_isa_l_release": "PASS",
+    "single_native_binary_manifest_for_all_scenes": true
+  },
+  "scenes": {
+    "pressure_native": {
+      "job_id": 128237612767,
+      "artifact_id": 13551114890,
+      "conclusion": "success",
+      "alert_count": 0,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "game4_native_tx_quanta": 163630,
+      "game4_scalar_tx_quanta": 721,
+      "all_five_authenticated_leases_pending_overflow": 0,
+      "observed_max_active_sender_app_rx_gap_ms": {
+        "alice": 0,
+        "bob": 10,
+        "carol": 100,
+        "dave": 100,
+        "erin": 240
+      }
+    },
+    "heterogeneous_native": {
+      "job_id": 128237612853,
+      "artifact_id": 13552197060,
+      "conclusion": "success",
+      "alert_count": 0,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "game4_native_tx_quanta": 89528,
+      "game4_scalar_tx_quanta": 775,
+      "all_five_authenticated_leases_pending_overflow": 0,
+      "observed_max_active_sender_app_rx_gap_ms": {
+        "alice": 10,
+        "bob": 10,
+        "carol": 100,
+        "dave": 100,
+        "erin": 240
+      }
+    },
+    "pressure_scalar": {
+      "job_id": 128237612831,
+      "artifact_id": 13551493360,
+      "conclusion": "failure",
+      "alert_count": 3,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "game4_native_tx_quanta": 0,
+      "game4_scalar_tx_quanta": 154820,
+      "server_per_lease_overflow": {
+        "alice": 10
+      },
+      "client_active_tx_no_rx_gap_ms": {
+        "erin_uplink": 2290,
+        "erin_downlink": 1260
+      }
+    }
+  },
+  "diagnosis": [
+    "H1289 full native ISA-L short pressure and hetero each 5 clients had no configured alerts and Game4 original hot client/server lane port matches; NOT a long-run guarantee",
+    "In scalar control same source binary and offered load, Game4 RS16 scalar k16 parity used two dependent GF log reads plus exp read for every coefficient/symbol byte. Observed server CPU82.01% vs native75.13% from one unreplicated, not proof of causal gain",
+    "H1290 optimizes only scalar GF256 byte multiply using process-wide single immutable 65,536-entry coefficient-symbol table and keeps original polynomial oracle and wire bitwise identical; native ISA-L path not changed"
+  ],
+  "H1290_new_source_test": "PENDING_SOURCE_LOCKED_NATIVE_SHORT",
+  "long_run": "NOT_RUN_BY_H1290",
+  "remaining_unverified": [
+    "Scalar fallback must pass own high-pressure short with 0 alerts before all-backend qualification",
+    "Actual 1800s 3 scenes and 10+ each rotation remain NOT_RUN on this modified source",
+    "H998 physical live same-socket MTU 1500->1280 and remote ICMP still OPEN",
+    "Windows/Android high-load test and CPU causality not proven"
+  ]
+}

@@ -59,6 +59,46 @@ fn all_rows(rs:&Rs16,block:u64,frames:&[Vec<u8>],p:Profile,limit:usize)
     out
 }
 #[test]
+fn r1_f2_scalar_prepared_lut_exact_65536_and_full_maximum_20_rows(){
+    // Untrusted wire sizes and all 256x256 mathematical pairs are checked
+    // against an independent polynomial oracle (not the optimized Gf::mul).
+    // A fast scalar parity table is NOT permission to change an AEAD bit.
+    let table=scalar_gf_multiply_table();
+    assert_eq!(table.len(),256*256);
+    for coefficient in 0..256usize{
+        for symbol in 0..256usize{
+            assert_eq!(table[(coefficient<<8)|symbol],
+                gf_ref_mul(coefficient as u8,symbol as u8),
+                "GF coefficient={coefficient} symbol={symbol}");
+        }
+    }
+    // The actual production Game4 TX uses encode_prepared_into and
+    // four-row quanta, not the legacy encode_owned path. Test the strongest
+    // legal k16/r20 output, dirty destinations and a fresh Source workspace.
+    let source=frames(16);
+    let borrowed=source.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let mut prepared=PreparedBlock::from_frames(&borrowed,2048).unwrap();
+    assert_eq!(Profile::Maximum.parity_count(16),Ok(20));
+    let symbol_len=prepared.symbol_len();
+    let codec=Rs16::new();
+    for first_row in (0..20).step_by(MAX_BATCH_ROWS){
+        let mut wires=vec![vec![0xA5;REPAIR_HEADER+symbol_len];MAX_BATCH_ROWS];
+        let used={
+            let mut out=wires.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+            codec.encode_prepared_into(777,&mut prepared,Profile::Maximum,
+                first_row,&mut out,2048,BackendChoice::Scalar).unwrap()
+        };
+        assert_eq!(used,BackendUsed::Scalar);
+        for (i,w) in wires.iter().enumerate(){
+            let repair=parse_repair(w,2048).unwrap();
+            assert_eq!(repair.parity_row, (first_row+i) as u8);
+            assert_eq!(repair.body,oracle_row(&borrowed,first_row+i));
+        }
+    }
+    println!("M0_PLAN028_SCALAR_GF256_65536_EXACT_MAXIMUM20_PREPARED_4ROW_PASS");
+}
+
+#[test]
 fn r1_f2_independent_cauchy_all_rows_and_profiles() {
     let rs=Rs16::new();
     for k in 1..=16 {

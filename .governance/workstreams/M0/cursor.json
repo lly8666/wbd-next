@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1289,
-  "checkpoint_sha": "cc70b1c0272d130b7dca91c17a4f6ba0aad50ab2",
+  "sequence": 1290,
+  "checkpoint_sha": "f3b0e6dc50b9a809bebf0894198cc94616397b05",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1289: H1288 native ARM64 source cc70 action42317762450 BUILD_FAIL targeted unit, BEFORE any short scenes. Rust original M4 bounded 64 stage/65 reject/Detach reached RX; previous unit expected64 entries in ONE drain but existing R1 M1 RX_READY_BATCH_MAX=32. Fix TEST to consume two genuine FIFO 32-entry batches, verify exact byte0..63 and all M1 loans released; NO runtime change. Native source-locked 180s scalar vs ISA-L five-client and original 0-loss Game4 still OPEN; no 1800s.",
-  "why_now": "The 64-owner test explicitly produced left32 right64 after successful 64 prepared stage and detach; this is test's conflation of capacity vs per-turn RX dispatch, not new cold rejection. Correct it instead of modifying real bounded runtime or returning to blind long tests.",
+  "current_task": "H1290: exact native ARM64 H1289 source f3b0e6 3x180s source-lock Action42318365507 original TLS+Rust five clients real ISA-L pressure PASS0 alerts/heterogeneous PASS0, independent scalar backend pressure FAIL3 (Erin Fixed6 uplink gap2290ms, downlink1260ms, Alice Normal queue overflow10). H1289 Go64/Rust64 M4 early bounded 2x32 FIFO unit PASS, both client/server native hot M4 confirmed. H1290 scalar Game4 Fixed6 GF(256) parity optimization candidate uses one immutable 64KiB cold table instead of 3 exp/log per body byte; independent 65536 coefficient/symbol oracle + real prepared Maximum20x4 row test and source-locked same ISA-L binary 3x180s pending. No long tests.",
+  "why_now": "Fix demonstrable scalar fallback performance path rather than relying only on native ISA-L product build. H1289 true native short passed two profiles; scalar still failed 3 independently recorded alerts; software GF multiplication was an observable high-frequency hot-loop CPU cost. Maintain crypto/wire/source exact independent oracle.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Require H1289 ARM64 native Rust early 64 owner FIFO two 32-entry tests to PASS exactly 1 test, plus original TLS source-locked Go stage tests, THEN 3×180s native five-client weak-net short. Examine server Game4 hot rejection m4_substage & code, actual per-lease overflow and Bob/Erin/Dave active app gap; only long after all short failures fixed. H998 still open.",
+  "next_action": "Require H1290 Rust codec independent 65536 coefficient/symbol oracle and Maximum20 prepared full outputs 1 pass on native ARM64; then compare five-client 180s scalar/native pressure and native heterogeneous, all 0 alerts hard. Investigate remaining Erin gap and Alice queue overflow if scalar still fails. H998 actual same-socket MTU1500->1280 and remote ICMP still OPEN. No 3x1800 long workload until all known scoped failures solved and short tests pass.",
   "unverified": true,
-  "last_tested_source": "cc70b1c0272d130b7dca91c17a4f6ba0aad50ab2",
+  "last_tested_source": "f3b0e6dc50b9a809bebf0894198cc94616397b05",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1289-H1288-SOURCECC70-NATIVE-64-RX-UNIT-20261107.json"
+    "docs/evidence/M0/PLAN028-H1290-H1289-SOURCEF3B-ARM64-3X180S-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",

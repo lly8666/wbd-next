@@ -229,6 +229,28 @@ impl Gf {
         Ok(aug.into_iter().map(|r|r[n..].to_vec()).collect())
     }
 }
+// Cold-created, process-wide 64KiB immutable GF(256) multiplication table.
+// The scalar Game4 Fixed6 fallback formerly performed TWO dependent GF log
+// lookups and one exp lookup PER parity byte, for every source and row. With
+// up to 16 sources × 6 repairs per block under a shared 443 server, that
+// can starve other authenticated /32 lease workers on one ARM64 core.
+// Materialize the mathematical 0x11d oracle once; each hot scalar coefficient
+// borrows exactly one immutable 256B row, no per-DATA heap, mutex or new
+// credential/protocol policy. ISA-L path is unchanged.
+static SCALAR_GF_MULTIPLY:std::sync::OnceLock<Box<[u8]>>=
+    std::sync::OnceLock::new();
+fn scalar_gf_multiply_table()->&'static [u8]{
+    SCALAR_GF_MULTIPLY.get_or_init(||{
+        let gf=Gf::new();
+        let mut table=vec![0u8;256*256];
+        for coefficient in 0..256usize {
+            for symbol in 0..256usize {
+                table[(coefficient<<8)|symbol]=gf.mul(coefficient as u8,symbol as u8);
+            }
+        }
+        table.into_boxed_slice()
+    })
+}
 #[derive(Clone,Copy,Debug,Eq,PartialEq,Ord,PartialOrd)]
 struct CacheKey {k:u8, missing:u16, selected_rows:u32}
 /// A single owned mathematical copy retained for a block, independent of
@@ -349,11 +371,19 @@ impl Rs16 {
     }
     fn scalar_row(&self,sources:&[&[u8]], row:usize, output:&mut [u8]) -> Result<(),Error>{
         output.fill(0);let k=sources.len();
+        let gf=scalar_gf_multiply_table();
         for (col,src) in sources.iter().enumerate() {
             let c=self.coefficient(row,col,k)?;
-            for (at,d) in output.iter_mut().enumerate() {
-                let b=Self::symbol_byte(src,at);
-                *d^=if c==1 {b} else {self.gf.mul(c,b)};
+            if c==1 {
+                for (at,d) in output.iter_mut().enumerate(){
+                    *d^=Self::symbol_byte(src,at);
+                }
+            }else if c!=0{
+                let offset=usize::from(c)<<8;
+                let table=&gf[offset..offset+256];
+                for (at,d) in output.iter_mut().enumerate(){
+                    *d^=table[usize::from(Self::symbol_byte(src,at))];
+                }
             }
         }
         Ok(())
@@ -498,13 +528,24 @@ impl Rs16 {
             }
         }
         if used==BackendUsed::Scalar {
+            // Original k/row-scoped coefficients are immutable for this
+            // protected FEC block. One 256B GF lookup row per source avoids
+            // the former per-byte log/exp dependency chain. Fast XOR row0
+            // remains an ordinary XOR. Preserve all symbol lengths/tails.
+            let gf=scalar_gf_multiply_table();
             for (i,o) in outputs.iter_mut().enumerate() {
                 let dst=&mut o[REPAIR_HEADER..];
                 dst.fill(0);
                 for (col,src) in prepared.symbols.chunks_exact(len).enumerate() {
                     let c=self.coefficient(first_row+i,col,k)?;
-                    for (b,&x) in dst.iter_mut().zip(src.iter()) {
-                        *b^=if c==1{x}else{self.gf.mul(c,x)};
+                    if c==1{
+                        for (b,&x) in dst.iter_mut().zip(src.iter()){*b^=x;}
+                    }else if c!=0{
+                        let offset=usize::from(c)<<8;
+                        let table=&gf[offset..offset+256];
+                        for (b,&x) in dst.iter_mut().zip(src.iter()){
+                            *b^=table[usize::from(x)];
+                        }
                     }
                 }
             }
