@@ -107,15 +107,25 @@ func TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter(t *testing.T){
         gateway:netip.MustParseAddr("192.0.2.1"),mtu:1500,
     }
     other:=original;other.mtu=1280
-    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("MTU-only change must not reauthenticate")}
+    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("MTU-only change must retain physical NIC and IPv4 identity")}
+    if !original.needsOriginalColdReauthentication(other){
+        t.Fatal("MTU-only physical link change MUST trigger fresh TLS/Rust M4, not wait until timer")
+    }
     other=original;other.gateway=netip.MustParseAddr("192.0.2.3")
-    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("gateway-only change must not reauthenticate")}
+    if !original.samePhysicalInterfaceIPv4(other){t.Fatal("gateway-only change must keep identity")}
+    if original.needsOriginalColdReauthentication(other){t.Fatal("gateway-only noise must not trigger cold reconnect")}
     other=original;other.ifindex=12
-    if original.samePhysicalInterfaceIPv4(other){t.Fatal("NIC switch not detected")}
+    if original.samePhysicalInterfaceIPv4(other)||!original.needsOriginalColdReauthentication(other){
+        t.Fatal("NIC switch not detected")
+    }
     other=original;other.src=netip.MustParseAddr("192.0.2.4")
-    if original.samePhysicalInterfaceIPv4(other){t.Fatal("IPv4 change not detected")}
+    if original.samePhysicalInterfaceIPv4(other)||!original.needsOriginalColdReauthentication(other){
+        t.Fatal("IPv4 change not detected")
+    }
     other=original;other.iface="eth1"
-    if original.samePhysicalInterfaceIPv4(other){t.Fatal("interface rename not detected")}
+    if original.samePhysicalInterfaceIPv4(other)||!original.needsOriginalColdReauthentication(other){
+        t.Fatal("interface rename not detected")
+    }
 }
 func TestPLAN028NativeLinuxRtnetlinkOnlyLinkAddrRoute(t *testing.T){
     packet:=func(kind uint16)[]byte{

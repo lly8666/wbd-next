@@ -115,13 +115,21 @@ func readOriginalLinuxUnderlay(peer netip.Addr,tunName string)(originalLinuxUnde
     return zero,fmt.Errorf("physical route source not installed on selected interface")
 }
 
-// Native IPv4 OS notifications wake cold readback; only selected physical
-// interface/source IPv4 changes request a fresh TLS epoch. Ignore TUN,
-// gateway-only and MTU-only events; still cap the next actual route MTU.
+// Native IPv4 OS notifications wake cold readback. A change in the actual
+// selected interface, source IPv4 OR effective kernel path MTU requires a
+// new protected TLS/Rust M4 generation, even with the SAME NIC/IP. H1293
+// real ARM64 veth 1500->1280 held a 73.31s app black hole because this
+// notifier deliberately discarded MTU-only RTM_NEWLINK until a later
+// unrelated timer. Ignore self TUN and gateway-only noise, not real MTU.
 func (p originalLinuxUnderlay) samePhysicalInterfaceIPv4(next originalLinuxUnderlay)bool{
     return p.ifindex==next.ifindex&&p.iface==next.iface&&p.src==next.src
 }
-
+// One actual new physical MTU also changes the maximum authenticated record
+// size and the OS TUN MTU. The 200/500ms rtnetlink coalescer sees it first;
+// a timer alone cannot be relied on to avoid a long application black hole.
+func (p originalLinuxUnderlay) needsOriginalColdReauthentication(next originalLinuxUnderlay)bool{
+    return !p.samePhysicalInterfaceIPv4(next)||p.mtu!=next.mtu
+}
 
 type originalLinuxCoalescer struct{
     first time.Time
@@ -224,17 +232,18 @@ func watchOriginalLinuxUnderlay(
                 continue
             }
             if !next.valid(){continue}
-             changed:=!current.samePhysicalInterfaceIPv4(next)
-             current=next
-             if !changed{continue}
+            changed:=current.needsOriginalColdReauthentication(next)
+            oldMTU:=current.mtu
+            current=next
+            if !changed{continue}
             // At most one latest intent: a rapid A→B→A burst is collapsed
             // to the final OS readback without unbounded goroutines/queues.
             select{case events<-next:default:
                 select{case <-events:default:}
                 select{case events<-next:default:}
             }
-            log.Printf("V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback interface=%s ifindex=%d mtu=%d coalesce_quiet_ms=200 max_ms=500",
-                next.iface,next.ifindex,next.mtu)
+            log.Printf("V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback interface=%s ifindex=%d mtu=%d previous_mtu=%d coalesce_quiet_ms=200 max_ms=500",
+                next.iface,next.ifindex,next.mtu,oldMTU)
         }
     }()
     return events,nil

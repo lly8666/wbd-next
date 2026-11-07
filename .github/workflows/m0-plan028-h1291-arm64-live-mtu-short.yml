@@ -1,12 +1,14 @@
 name: M0 PLAN028 H1291 ARM64 physical veth in-place MTU under five-client traffic
 # H1286 is a SHORT native diagnostic; no 1800-second workload, long suite remains untouched.
-run-name: H1291 ARM64 real veth MTU 1500-to-1280 under live TLS and five-client 180s
+run-name: H1294 native ARM64 rtnetlink physical MTU triggers immediate TLS M4 without 73s outage
 on:
   push:
     branches: [main]
     paths:
       - ".github/workflows/m0-plan028-h1291-arm64-live-mtu-short.yml"
       - "tools/m0-plan028-h1259-five-client-recovery-netns.py"
+      - "r0/go_overlay/internal/v4productcli/path_linux.go"
+      - "r0/go_overlay/internal/v4productcli/path_linux_test.go"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -74,6 +76,15 @@ jobs:
             exit 1
           }
           grep -Fq -- "--- PASS: TestPLAN028DetachedLastProtectedTLSAckUnblocksOriginalSender" fixed-kernel-result/h1282-original-faketcp-final-ack-unit.log
+          # H1293 proved 73.31s real in-place physical MTU black hole:
+          # rtnetlink parsed RTM_NEWLINK but discarded MTU-only intent.
+          # Run the ACTUAL platform bound in-place predicate and hard
+          # 200/500ms coalescer unit, requiring one real Go test success.
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter$' ./internal/v4productcli) >fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log 2>&1 || {
+            cat fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log >&2
+            exit 1
+          }
+          grep -Fq -- "--- PASS: TestPLAN028NativeLinuxRtnetlink200Quiet500HardPhysicalFilter" fixed-kernel-result/h1294-live-mtu-notifier-go-unit.log
           rustup toolchain install 1.85.1 --profile minimal
           # Require actual 1-test execution, not Cargo's permissive 0-test
           # result. Go buffers 64 original prepared DATA records, so both

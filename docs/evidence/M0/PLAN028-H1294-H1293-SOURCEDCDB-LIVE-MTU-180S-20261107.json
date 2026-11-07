@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1294 prior exact source live MTU failure",
+  "source_sha": "dcdb767c3fd3fc8fc9c6498abd7b5fe6cb4aa7b1",
+  "action_id": 42321974912,
+  "artifact_id": 13553876721,
+  "true_native_linux_arm64_one_tls_server_port": 443,
+  "five_original_clients_authenticated": true,
+  "app_seconds": 180,
+  "kernel_mtu": {
+    "event": "first 70.01956s into synchronized live app",
+    "nic_scope": "Alice physical veth p0 and bridge-side h0 both selected same NIC/ifindex and IPv4; no DOWN/UP nor IPv4 switch",
+    "before": [
+      1500,
+      1500
+    ],
+    "after": [
+      1280,
+      1280
+    ],
+    "original_tun_not_the_changed_device": true
+  },
+  "native_endpoints": {
+    "client_original_generation_1": {
+      "physical_mtu": 1500,
+      "client_port": 41031,
+      "ready": true
+    },
+    "client_timer_generation_2": {
+      "physical_mtu": 1500,
+      "client_port": 56872,
+      "ready": true
+    },
+    "client_late_generation_3": {
+      "physical_mtu": 1280,
+      "client_port": 64791,
+      "ready": true
+    },
+    "server_normal_m4_exact_new_port_64791": "CONFIRMED",
+    "old_generation1_exact_stop": true,
+    "old_generation2_exact_stop": true,
+    "actual_rtnetlink_mtu_only_effective_changed_notification": "ABSENT",
+    "only_new_lower_MTU_seen_when_next_timed_rotation_fired": true
+  },
+  "app_result": {
+    "verdict": "FAIL",
+    "alert_count": 5,
+    "alice_active_tx_no_rx_gap_uplink_ms": 73310,
+    "alice_active_tx_no_rx_gap_downlink_ms": 73310,
+    "alice_last_minute_uplink_delivery_fraction": 0.61085,
+    "alice_last_minute_downlink_delivery_fraction": 0.61105,
+    "alice_recovery_uplink_fraction": 0.52361,
+    "alice_recovery_downlink_fraction": 0.523766,
+    "alice_rotation_qualification": "FAIL_OR_INCOMPLETE",
+    "other_clients": [
+      "bob",
+      "carol",
+      "dave",
+      "erin"
+    ],
+    "other_four_all_rotations": "PASS_SCOPED",
+    "other_four_app_directions_zero_gap_alerts": true,
+    "server_per_lease_pending_overflow_all_five": 0
+  },
+  "source_root": {
+    "path": "r0/go_overlay/internal/v4productcli/path_linux.go",
+    "old_code": "changed:=!current.samePhysicalInterfaceIPv4(next)",
+    "effect": "MTU-only netlink RTM_NEWLINK updates current snapshot but never publishes new desired path to supervisor; same NIC/source IPv4 retains old OS TUN + original M3 record budget across actual MTU change until independent rotation timer",
+    "fix_candidate": "new originalLinuxUnderlay.needsOriginalColdReauthentication(next)=(!samePhysicalInterfaceIPv4||effective_mtu_changed); watch publishes real kernel mtu change after fixed 200ms quiet/500ms max; gateway-only noise still ignored",
+    "original_Go_TLS_and_native_Rust_M4_cryptographic_gate": "UNCHANGED",
+    "old_native_owner_10_20s_grace": "UNCHANGED",
+    "wire_fields_and_PNs": "UNCHANGED"
+  },
+  "qualification_limits": [
+    "H1294 live rerun not yet measured for this evidence",
+    "No same-socket raw generation rewire claim: H1294 uses existing FULL protected reauthentication when true effective MTU changes",
+    "H998 historical original same-socket MTU reuse remains separate unsolved unless proven via same scope",
+    "No three×1800s long test started"
+  ]
+}
