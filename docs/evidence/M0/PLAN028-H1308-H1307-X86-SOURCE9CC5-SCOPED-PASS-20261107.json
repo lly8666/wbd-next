@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+  "H1307_offline_action": {
+    "id": 42346407803,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42346407803",
+    "conclusion": "success",
+    "artifact_id": 13564025859,
+    "qualification": "SCOPED_PASS_FROM_TWO_REAL_NATIVE_X86_ACTIONS_EXACT_SAME_BINARIES",
+    "strict_verifier": "tools/m0-plan028-h1307-x86-game4-dual-source-offline.py",
+    "network_rerun": false
+  },
+  "actual_two_native_actions": [
+    {
+      "id": 42345392910,
+      "artifact_id": 13563296508,
+      "ci_conclusion": "failure",
+      "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+      "purpose": "native new Game4 B server encrypted kind0 Health server M4 commit, no reverse business, old Stop and first new UDP5"
+    },
+    {
+      "id": 42345932962,
+      "artifact_id": 13563737294,
+      "ci_conclusion": "failure",
+      "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+      "purpose": "same exact original binary final full new UDP5 FEC6 Game4 Stop physical source switch OS MTU and TLS8 wire audit"
+    }
+  ],
+  "original_SHA256": {
+    "engine": "a4cdf6f6f011008f5805dd34b2a1eab6c5d67af1f628f8252d4e1a4067b81bb6",
+    "client": "251a7d9b7f322786b0d59c5ce092e3da7d884a5814c3f671463651bc6e4e748c",
+    "server": "eba361a17d7fa7ec6b5310969e9e604c902eed3ee269c9e5c37a427c9f2bcd98"
+  },
+  "x86_Game4_full_scoped_qualification": {
+    "native_architectures": "x86_64 client/server",
+    "mode": "Game4 Fixed6",
+    "original_Go_TLS443": true,
+    "server_full_group_four_lanes": true,
+    "ClientHello_8_no_preTLS_private_bytes": true,
+    "verified_native_server_health_kind0_no_reverse_business": true,
+    "new_A_B_route_handover": true,
+    "old_generation_owned_Stop": true,
+    "final_both_Go_Rust_Stop": true,
+    "source_ipv4_old": "10.25.0.2",
+    "source_ipv4_new": "10.25.0.3",
+    "outer_user_mtu": 1460,
+    "physical_effective_mtu": 1280,
+    "OS_TUN_mtu": 1178,
+    "new_real_UDP_echoes": 5,
+    "retired_Game_raw_RX_errors_after_fix": [
+      14755,
+      13465
+    ],
+    "actual_early_loss_l1_lane": "present",
+    "result": "SCOPED_PASS"
+  },
+  "scope_open": [
+    "original individual x86 CI FAILs retained due fixture/reporting",
+    "ARM64 Erin30pct pressure H1295/H1297/H1299/H1300 business holes remain FAIL",
+    "Windows real physical seven-mode Npcap/Wintun NOT_FULLY_RUN",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 NOT_RUN"
+  ],
+  "next_H1308": {
+    "hypothesis": "Host-vCPU saturation confounded 30pct Erin loss: H1303 corrected native 4core CPU busy 92.5pct at .6x and 98.21pct .85x; no more heavy same-family until headroom evidenced",
+    "native_arch": "aarch64/aarch64",
+    "FEC_Game4_backend": "native_ISA_L",
+    "duration_seconds": 180,
+    "phase_scales": [
+      0.25,
+      0.35,
+      0.45,
+      0.35
+    ],
+    "phase_seconds": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "warmup_seconds": 10,
+    "total_app_Mbps_each_direction": [
+      24,
+      33.6,
+      43.2,
+      33.6
+    ],
+    "Erin_actual_Mbps_each_direction_planned": [
+      4,
+      5.6,
+      7.2,
+      5.6
+    ],
+    "Erin_real_loss_percent": 30,
+    "Erin_oneway_delay_ms": 125,
+    "all_five": true,
+    "strict_business_gates_unchanged": true,
+    "goal": "Show true host headroom and report any >=750ms live app hole without pretending a capacity-limited host product fix"
+  }
+}
