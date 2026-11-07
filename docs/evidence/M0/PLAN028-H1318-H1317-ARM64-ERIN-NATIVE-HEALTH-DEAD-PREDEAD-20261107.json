@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "d361c1b8d65108ee9ac3e82cbfbeb78a627a312e",
+  "prior_action": {
+    "id": 42361826788,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42361826788",
+    "build": "PASS",
+    "scene": "FAIL",
+    "artifact_id": 13570153271,
+    "backend": "native ARM64 client/server, original Go TLS443+Rust M4, true pure one-way five-client"
+  },
+  "real_failure": {
+    "who": "erin",
+    "mode": "Normal Fixed6",
+    "direction": "uplink",
+    "app_gap_ms": 5180,
+    "after_original_native_health_dead90": true,
+    "old_A_stopped_before_go_cold_B": true,
+    "host_cpu_busy_pct": [
+      28,
+      37
+    ],
+    "physical_loss_pct": 30,
+    "oneway_delay_ms": 125,
+    "interpretation": "Sparse server authenticated Health lost under real physical loss; terminating A at original dead90 before B auth caused 5.18s live UL gap; CPU headroom was real."
+  },
+  "report_false_positives": {
+    "kind": "NO_SERVER_LEASE_QUEUE_RECEIPT",
+    "who": [
+      "alice",
+      "carol",
+      "erin"
+    ],
+    "reason": "Pure uplink client has no true server outbound TUN packets/queue, but its true UDP receipt/rotation/gap gates remain strict."
+  },
+  "H1318_patch": {
+    "native_health_preterminal_at_fraction": "2/3 configured dead budget, ~60s of original hard90",
+    "native_dead90_unchanged": true,
+    "requires_authenticated_original_M4_peer_clock": true,
+    "GO_cold_B_starts_while_A_still_forwards": true,
+    "B_promote": "only after exact new B original TLS + AEAD/PN-verified server Health or true new inner IP",
+    "candidate_fail": "only B stopped",
+    "new_wire": false,
+    "new_go_packet_pump": false,
+    "new_probe": false,
+    "one_TUN_reader": true
+  },
+  "H1318_test": {
+    "native_arch": "ARM64/ARM64",
+    "duration_s": 180,
+    "one_scene": true,
+    "full_real_five_client_one_way": true,
+    "Erin_upstream_real_loss_pct": 30,
+    "Erin_physical_downlink_blackhole_pct": 100,
+    "Erin_downlink_restored_loss_pct": 30,
+    "Erin_oneway_delay_ms": 125,
+    "restoration": "app+10s",
+    "must_trigger_preterminal_B_before_dead": true,
+    "strict_original_app_gaps": true,
+    "actual_native_Game4_ISAL": true,
+    "no_long": true
+  },
+  "scope_open": [
+    "H1316 original ~96/91s active one-way gaps",
+    "H1317 genuine 5180ms old native dead gap",
+    "Earlier ARM64 weak-net overload gaps",
+    "Windows real Npcap/Wintun seven-mode incomplete",
+    "H998 historical same-socket MTU fail",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "L3 not run"
+  ],
+  "status": "NEW_SOURCE_UNVERIFIED"
+}

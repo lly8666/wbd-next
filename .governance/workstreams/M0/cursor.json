@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1317,
-  "checkpoint_sha": "60a6c37c75985387ff70beea5fefcf35d2ebb8ad",
+  "sequence": 1318,
+  "checkpoint_sha": "d361c1b8d65108ee9ac3e82cbfbeb78a627a312e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1317: collect H1316 native ARM64 Action42359228147 original SOURCEe61b true 5-client pure UL/DL app with zero probes/TCP, 180s FAIL12 alerts: Alice Normal Off uplink 96140ms gap, Erin Normal Fixed6 uplink 91830ms gap; both new TLS candidates repeatedly NORMAL_REMOTE_M4_UNPROVEN, old native Health dead after90s. Bob Normal Auto downlink and Carol Game2 uplink/Dave Game4 downlink rotated. CPU 28–37% across phases, Erin real netem loss29.86%, so NOT host saturation. Root: Original Go pulse for Normal did not populate native authenticated Health and Rust Normal route promote required reverse inner user IPv4; Game cold receipt already works. H1317 reuse original AEAD/PN Health kind0 server cold Commit after full Normal M4 plus TUN /32, expose exact candidate auth hint via CGo pulse and promote on same candidate Health or real reverse user IPv4, preserve A until proven. One new SOURCE ARM64/ARM64 rebuild and strict pure-oneway 180s Action, no 1800s.",
-  "why_now": "L1 contract explicitly requires pure uplink and no-business generation handover, not synthetic reverse probes. Latest source H1316 gives direct Normal Off/Fixed no-reverse deadlock with very large actual app outage, not CPU-bound. Extend already-qualified encrypted Game cold server Commit to original Normal on same existing Health owner, avoiding extra packet format or health timer bypass.",
+  "current_task": "H1318: H1317 SOURCE d361 original ARM64 five-client pure-oneway 180s Action42361826788 build PASS scene FAIL. Erin Normal Fixed6 source authenticated M4 Health dead90 STOPPED old A first, Go cold TLS B followed, caused real 5180ms active upstream app gap under30%/125ms native loss and only28-37% CPU. Alice Normal Off/Bob Auto/Carol Game2/Dave Game4 and Erin later normal B native cold Health did work; H1317 report 3 false NO_SERVER_LEASE_QUEUE_RECEIPT for pure-uplink Alice/Carol/Erin; preserve original FAIL. H1318 original Rust client-only authenticated preterminal Health clock at 2/3 actual dead(~60/90s) into Go current A path supervisor launches B complete TLS443/Rust M4 while A continues, new B must prove its own AEAD/PN Health before one shared TUN route promotion; candidate failure only B Stop, hard90 unchanged. Fix generic and directed report absent pure-uplink server TUN queues, not actual UDP/gap/rotation/overflow hard gates. One native ARM64/ARM64 180s one-way source-locked scene forces TRUE physical server→Erin 100% Health loss from post-auth to app+10s, restores real30%, Erin actual upstream30%/125ms unchanged; demand Go predead B before terminal, five unique UDP directions/Stop and Dave native ISA-L. No long.",
+  "why_now": "Genuine 5.18s live business hole at low host CPU follows hard90 Stop, not capacity or TLS false ready. Five sparse 15s protected Health records lost at random30% may all miss (0.3^5~.00243). Prepare cryptographically authenticated B early while A live instead of extending dead90, extra probes or modifying mature codec; force condition in one real L1 physical one-way test.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect source-locked H1317 one native ARM64 original Go TLS443 Rust M4 five-client one-way Action: all five auth/IP and owned Stop, Native Game4 ISA-L, Erin 30% physical netem/125ms, no reverse user UDP/TCP or probes, per-/32 zero TUN overflow, actual UDP gap<750ms and recovery>=95%; specifically native B Normal Off/Fixed6 promotion with native_rx=0 authenticated_health=1 exact stage. Preserve H1316 FAIL, no long until short blockers cleared.",
+  "next_action": "Collect H1318 exact SOURCE ARM64 one Action; assert actual native server→Erin physical qdisc blackout then restore by app+10s, original Go predead cold B while A live (no native dead reconnection), authenticated new Normal M4 kind0, all five rotation/real UDP app source and <750ms gap/Stop, true Game4 ISA-L, zero genuine TUN overflow. If FAIL read exact Action artifact and stage before changing code, preserve historical H1317 failure.",
   "unverified": true,
-  "last_tested_source": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "last_tested_source": "d361c1b8d65108ee9ac3e82cbfbeb78a627a312e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1317-H1316-ARM64-NORMAL-ONEWAY-96140MS-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1318-H1317-ARM64-ERIN-NATIVE-HEALTH-DEAD-PREDEAD-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1316 SOURCEe61b old 180s ARM64 one-way full real Action FAIL: Alice/Erin Normal Off/Fixed6 96.14/91.83s active business gaps after repeated protected TLS candidates but no reverse IPv4, normal M4 unproven and old 90s Health dead; Bob/Carol/Dave succeeded. Host CPU28-37%, Erin netem29.8635% loss. H1317 product patch extends existing Game authenticated Health cold group receipt to Normal M4 server/client and exact TUN owner; one original native ARM64 source build and one strict network scene. Prior high load ARM64 FAIL, Windows/H998/ICMP/Android/L3 OPEN."
+  "partial_summary": "H1317 source d361 native ARM64 180s one-way had real Erin uplink5180ms gap after native hard90 expiration despite CPU28-37%, earlier Normal encrypted B worked for Alice/Bob and Erin later generations. Original H1317 report gave fake 3 server queue alerts for pure UL; H1318 fixes only oracle gates and adds authenticated predead B before A hard90 under deterministic physical reverse Health outage, original A kept live, no new record/wire; one short ARM64 scene, long blocked."
 }

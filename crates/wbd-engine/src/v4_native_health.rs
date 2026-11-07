@@ -155,6 +155,17 @@ impl HealthClock {
     pub(crate) fn on_merged_control_sent(&mut self,at:u64,contains_health:bool){
         if contains_health {self.on_health_send_result(at,true)}
     }
+    /// Cold reauthentication *intent*, not a dead flag or permission to
+    /// withdraw A. Under 30% true one-way loss, five isolated 15s Health
+    /// frames can all be lost (0.3^5); initiating B after 2/3 of the
+    /// real authenticated dead budget leaves the final third for true
+    /// original-Go TLS and native M4, while A continues real user traffic.
+    /// An unauthenticated kernel ACK cannot refresh or trigger this clock.
+    pub(crate) fn preterminal_cold_reauth_due(&self,now:u64)->bool{
+        let from=self.last_authenticated.unwrap_or(self.attached_at);
+        !self.disconnected&&!self.peer_retired&&!self.unhealthy(now)&&
+            now.saturating_sub(from)>=self.policy.dead_ns.saturating_mul(2)/3
+    }
     pub(crate) fn unhealthy(&self,now:u64)->bool{
         let from=self.last_authenticated.unwrap_or(self.attached_at);
         !self.disconnected && (self.peer_retired ||
@@ -262,6 +273,23 @@ impl AuthenticatedActivity {
 #[cfg(test)]
 mod activity_tests {
     use super::*;
+    #[test]
+    fn preterminal_client_cold_auth_arms_before_dead_without_spoofing_health(){
+        let p=HealthPolicy::default_connected();
+        let mut h=HealthClock::new(p,10_000_000_000);
+        // Same original 15s / 90s native Health policy and hard 90s dead.
+        assert_eq!(p.dead_ns(),90_000_000_000);
+        assert!(!h.preterminal_cold_reauth_due(69_999_999_999));
+        assert!(h.preterminal_cold_reauth_due(70_000_000_000));
+        assert!(!h.unhealthy(70_000_000_000));
+        // A genuine unique original M4 AEAD-opened kind0 refreshes the
+        // clock. Raw ACK or local packet sends never call this method.
+        h.on_authenticated_control(75_000_000_000);
+        assert!(!h.preterminal_cold_reauth_due(120_000_000_000));
+        assert!(h.preterminal_cold_reauth_due(135_000_000_000));
+        assert!(!h.preterminal_cold_reauth_due(165_000_000_000));
+        assert!(h.unhealthy(165_000_000_000));
+    }
     #[test]
     fn genuine_rx_batch_only_and_idle_hint_never_imply_business(){
         let source=AuthenticatedActivity::default();

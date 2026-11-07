@@ -427,8 +427,17 @@ def analyze(art,server_log):
         result["alerts"].append({"kind":"NO_ORIGINAL_TLS_SERVER_PORT_READY"})
     for who,item in result["clients"].items():
         lease=item["lease"]
+        # The server's /32 shared-TUN queue only records *server outbound*
+        # real TUN packets. In a pure-uplink source with zero reverse user
+        # IP/TCP/probe, absence of the server queue is required by the
+        # one-way policy, not evidence that upstream delivery failed.
+        # The separate real UDP server-app receipt and authenticated
+        # rotation gates remain strict; a populated queue must never
+        # silently permit overflow even in a one-way scene.
+        no_server_outbound=oneway and plan["application_directionality"][who]=="uplink"
         if lease not in per_lease:
-            result["alerts"].append({"who":who,"kind":"NO_SERVER_LEASE_QUEUE_RECEIPT"})
+            if not no_server_outbound:
+                result["alerts"].append({"who":who,"kind":"NO_SERVER_LEASE_QUEUE_RECEIPT"})
         elif per_lease[lease].get("pending_overflow",0)>0:
             result["alerts"].append({"who":who,"kind":"SERVER_PER_LEASE_QUEUE_OVERFLOW",
                                      "pending_overflow":per_lease[lease]["pending_overflow"]})

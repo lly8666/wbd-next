@@ -577,13 +577,26 @@ func publicNativeHealthDead(p realityfront.V4PublicLoopPulse)bool{
  return p.AuthenticatedPeerDead
 }
 func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
- live func()bool,pulse func()(realityfront.V4PublicLoopPulse,error))error{
+ live func()bool,pulse func()(realityfront.V4PublicLoopPulse,error),
+ predead ...chan<- struct{})error{
  ticker:=time.NewTicker(time.Second);defer ticker.Stop()
+ predeadNotified:=false
  for{select{
  case <-ctx.Done():return nil
  case e:=<-errs:return e
  case <-ticker.C:
-  if live(){stats,e:=pulse();if e==nil&&publicNativeHealthDead(stats){return errPublicNativePeerDead}}
+  if !live(){continue}
+  stats,e:=pulse()
+  if e!=nil{continue}
+  if publicNativeHealthDead(stats){return errPublicNativePeerDead}
+  // Only original *client* preterminal Health evidence can request
+  // cold B. One notification per exact generation; it does not
+  // alter Rust Health dead90, local TLS, TUN route or native Stop.
+  if !predeadNotified&&stats.AuthenticatedPeerPreDead&&
+      len(predead)>0&&predead[0]!=nil{
+      select{case predead[0]<-struct{}{}:default:}
+      predeadNotified=true
+  }
  }}
 }
 
@@ -1165,7 +1178,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
     // Rust authenticates dead90. Observe one low-frequency terminal flag in
     // ALL Normal modes; neither ACK nor local driver errors may reauthorize TLS.
-    err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},native.OriginalLoopPulse)
+    var notifyPreDead chan<- struct{}
+    if len(ready)>1{notifyPreDead=ready[1]}
+    err=monitorPublicNativePeer(ctx,errs,
+        func()bool{return handoffCommitted.Load()},
+        native.OriginalLoopPulse,notifyPreDead)
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)

@@ -55,6 +55,7 @@ extern int32_t wbd_m0_embedded_go_public_fec2_mature_quality(uint64_t,uint64_t *
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -677,6 +678,9 @@ type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
+    // Before Native Health terminal: trigger ORIGINAL Go cold B while A
+    // still owns the route; this never grants readiness or stops A.
+    AuthenticatedPeerPreDead bool
     // Only true after exact candidate native Normal or Game AEAD/PN opened
     // the canonical server Health kind0 after full remote M4 Commit.
     AuthenticatedPeerControl bool
@@ -695,6 +699,12 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
     if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
         "%w: native authenticated Health terminal readback=%d",
         errV4Embedded,int(rc))}
+    var predead C.uint32_t
+    rc=C.wbd_m0_embedded_go_loop_authenticated_peer_predead(
+        C.uint64_t(b.handle),&predead)
+    if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
+        "%w: native authenticated Health preterminal readback=%d",
+        errV4Embedded,int(rc))}
     var authentic C.uint32_t
     rc=C.wbd_m0_embedded_go_loop_authenticated_peer_health(
         C.uint64_t(b.handle),&authentic)
@@ -706,6 +716,7 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,
         RxThreadCPUns:rx,TxThreadCPUns:tx,
         AuthenticatedPeerDead:nativeDead!=0,
+        AuthenticatedPeerPreDead:predead!=0,
         AuthenticatedPeerControl:authentic!=0,
     },nil
 }

@@ -35,6 +35,7 @@ type originalClientGeneration struct{
     path originalLinuxUnderlay
     cancel context.CancelFunc
     ready chan struct{}
+    predead chan struct{} // rust-verified Health stale BEFORE terminal dead
     done chan error
 }
 func originalGenerationDone(a *originalClientGeneration)<-chan error{
@@ -44,6 +45,10 @@ func originalGenerationDone(a *originalClientGeneration)<-chan error{
 func originalGenerationReady(a *originalClientGeneration)<-chan struct{}{
     if a==nil{return nil}
     return a.ready
+}
+func originalGenerationPreDead(a *originalClientGeneration)<-chan struct{}{
+    if a==nil{return nil}
+    return a.predead
 }
 
 // Synthetic session port is not a routing authority, but is new on every
@@ -148,13 +153,14 @@ func startOriginalClientGeneration(
     runCtx,cancel:=context.WithCancel(parent)
     a:=&originalClientGeneration{
         seq:seq,localPort:c.localPort,path:path,cancel:cancel,
-        ready:make(chan struct{},1),done:make(chan error,1),
+        ready:make(chan struct{},1),predead:make(chan struct{},1),
+        done:make(chan error,1),
     }
     log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d source=kernel_route_get",
         seq,path.ifindex,path.mtu,c.outerMTU,cold.LocalSYNAdvertisedMSS,c.recordLimit)
     go func(){
         var connected bool
-        err:=runClient(runCtx,c,path.ifindex,tun,raw,emit,seq>1,&connected,a.ready)
+        err:=runClient(runCtx,c,path.ifindex,tun,raw,emit,seq>1,&connected,a.ready,a.predead)
         err=errors.Join(err,raw.Close())
         a.done<-err
     }()
@@ -346,6 +352,17 @@ func runOriginalLinuxClientPaths(
                 stopRetireTimer()
                 retiring.cancel()
             }else if err=launch();err!=nil{scheduleRetry("new_path_open")}
+        case <-originalGenerationPreDead(current):
+            if current==nil||c.gameLanes!=0||ctx.Err()!=nil||
+               candidate!=nil||retiring!=nil||timerDue{continue}
+            // Still authenticated A is the live default route until B
+            // independently finishes original TLS, M4 and AEAD Health.
+            // A successful B retires A through the exact existing
+            // randomized grace; a failed B leaves A unaffected.
+            timerDue=true
+            stopRotation()
+            log.Printf("V4_PUBLIC_PATH_PREDEAD_AUTH_REFRESH role=client old_generation=%d authenticated_health_stale=1 old_route_preserved=1 terminal_native_dead=0",current.seq)
+            if err=launch();err!=nil{scheduleRetry("preterminal_auth_refresh")}
         case <-originalGenerationReady(candidate):
             if candidate==nil{continue}
             a:=candidate

@@ -1070,7 +1070,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "24a9ce9af74e5a0a359a3c855be7bb657353f6c9"
+      "result_blob": "a99c1647886e84e06cea1d914b3cab8814f3833a"
     },
     {
       "kind": "replace",

@@ -74,3 +74,45 @@ func TestPLAN028NormalM4AfterPeerRxFenceAndTimeout(t *testing.T){
         }
     })
 }
+
+func TestPLAN028NormalHealthPreterminalStartsOneColdIntentWithoutStoppingLiveA(t *testing.T){
+    ctx,cancel:=context.WithCancel(context.Background())
+    defer cancel()
+    notify:=make(chan struct{},1)
+    done:=make(chan error,1)
+    polls:=0
+    go func(){
+        done<-monitorPublicNativePeer(ctx,make(chan error),
+            func()bool{return true},
+            func()(realityfront.V4PublicLoopPulse,error){
+                polls++
+                // Only the original M4 authenticated last-receipt
+                // age may request a preterminal Cold B. The terminal
+                // 90s Health flag remains separate and false.
+                return realityfront.V4PublicLoopPulse{
+                    AuthenticatedPeerPreDead:true,
+                    AuthenticatedPeerDead:false,
+                },nil
+            },notify)
+    }()
+    select{
+    case <-notify:
+    case <-time.After(2500*time.Millisecond):
+        t.Fatal("real native authenticated preterminal health was not signaled")
+    }
+    select{
+    case err:=<-done:t.Fatalf("stale-but-not-dead stopped active A: %v",err)
+    default:
+    }
+    cancel()
+    select{
+    case err:=<-done:
+        if err!=nil{t.Fatalf("client Stop returned error: %v",err)}
+    case <-time.After(2*time.Second):t.Fatal("native monitor did not respect owned Stop")
+    }
+    if polls!=1{t.Fatalf("preterminal refresh emitted multiple Go cold requests: polls=%d",polls)}
+    select{
+    case <-notify:t.Fatal("preterminal generation signaled twice")
+    default:
+    }
+}

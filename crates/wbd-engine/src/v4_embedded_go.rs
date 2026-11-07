@@ -8276,6 +8276,25 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_authenticated_dead(
     OK
 }
 
+// Client-only preterminal health observation. Unlike the existing
+// terminal flag, this is a COLD intent to prepare B WHILE authenticated
+// A is still transmitting. It never stops A, promotes a route, resets
+// the native 90s deadline or treats an unauthenticated TCP ACK as evidence.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_predead(
+    handle:u64,out:*mut u32
+)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    let predead= !e.server_side && e.native_health.as_ref()
+        .is_some_and(|h|h.preterminal_cold_reauth_due(loop_now().0));
+    unsafe{out.write(u32::from(predead))}
+    OK
+}
 // Original Normal Off/Fixed/Auto cold Go reads this only during B's
 // bounded overlap. This is the candidate's own AEAD/PN-verified canonical
 // Health kind0, with no TUN payload credit, no TLS/local READY authority.

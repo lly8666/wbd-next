@@ -63,6 +63,9 @@ if NEIGH_CLOCK_DIAG and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_S
 # two-way H1259/H1314 tests. No user UDP/TCP/probes in the silent
 # direction, but original Go TLS + Rust Health stays real and intact.
 ONEWAY_APP=os.environ.get("WBD_PLAN028_APP_ONEWAY","")
+ONEWAY_HEALTH_BLACKHOLE=os.environ.get("WBD_PLAN028_ONEWAY_HEALTH_BLACKHOLE","")
+if ONEWAY_HEALTH_BLACKHOLE not in ("","1"):
+    raise SystemExit("invalid source-scoped one-way native Health blackout")
 if ONEWAY_APP not in ("","1"):
     raise SystemExit("invalid L1 directional business switch")
 if ONEWAY_APP and not (FAST_SCENE=="pressure" and CAPACITY_STEPS=="2"
@@ -75,6 +78,8 @@ if STATIC_NEIGH and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE
     raise SystemExit("static veth neighbour control only in short native 180s L2 scene")
 if ONEWAY_APP and STATIC_NEIGH!="1":
     raise SystemExit("one-way L1 requires test-controlled original veth ARP")
+if ONEWAY_HEALTH_BLACKHOLE and not ONEWAY_APP:
+    raise SystemExit("native Health preterminal test requires genuine one-way application")
 # One source-locked L2 max-impairment representative (30%/250ms) using
 # the already proven TEST-only physical L2 ARP control, not a product knob.
 ERIN_MAX_DELAY=os.environ.get("WBD_PLAN028_ERIN_MAX_DELAY","")
@@ -284,6 +289,7 @@ def main():
     sampler = None
     qdisc_sampler = None
     neigh_sampler = None
+    health_blackhole_worker = None
     mtu_worker = None
     mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
@@ -589,6 +595,47 @@ def main():
                                 "show", "dev", host_nics[i], capture=True))
             (out / ("h1250-qdisc-" + stage + ".txt")).write_text("\n".join(rows))
         qdisc("before")
+        if ONEWAY_HEALTH_BLACKHOLE:
+            # Original true veth physical server→Erin only. Erin actual
+            # uplink business and native Rust data path remain unchanged.
+            # Force missing authenticated reverse Health across 60s so
+            # the new cold B must start before the existing hard dead90.
+            # Restore normal 30% loss at app+10s, while old A still runs.
+            server_erin_egress=host_nics[4]
+            down_delay=DELAY[4]
+            assert LOSS[4]==30 and down_delay==125,(LOSS[4],down_delay)
+            start_blackhole=time.monotonic_ns()
+            run("sudo","-n","tc","qdisc","replace","dev",server_erin_egress,
+                "root","netem","delay",f"{down_delay}ms",
+                "loss","100%","limit","10000")
+            print("H1318_REAL_OWNED_SERVER_TO_ERIN_PHYSICAL_BLACKHOLE_START",
+                  start_blackhole,flush=True)
+            def restore_server_erin_health():
+                due_ns=start_ns+10_000_000_000
+                if stop.wait(max(0,(due_ns-time.monotonic_ns())/1e9)):
+                    return
+                before_restore=time.monotonic_ns()
+                run("sudo","-n","tc","qdisc","replace","dev",
+                    server_erin_egress,"root","netem",
+                    "delay",f"{down_delay}ms","loss","30%","limit","10000")
+                after_restore=time.monotonic_ns()
+                write_json(out/"h1318-erin-native-health-blackhole.json",{
+                    "type":"ORIGINAL_SERVER_TO_CLIENT_PHYSICAL_VETH_EGRESS",
+                    "host_interface":server_erin_egress,
+                    "client":"erin","application_direction":"uplink",
+                    "start_ns":start_blackhole,"restored_ns":after_restore,
+                    "planned_restore_ns":due_ns,"restore_started_ns":before_restore,
+                    "loss_during_preterminal_percent":100,
+                    "loss_after_restore_percent":30,
+                    "original_oneway_delay_ms":down_delay,
+                    "client_uplink_damage_unchanged":True,
+                    "no_user_reverse_app_or_probe":True
+                })
+                print("H1318_REAL_SERVER_TO_ERIN_HEALTH_BLACKHOLE_RESTORED",
+                      after_restore,flush=True)
+            health_blackhole_worker=threading.Thread(
+                target=restore_server_erin_health,daemon=True)
+            health_blackhole_worker.start()
         sampler = threading.Thread(target=monitor, args=(stop, tmp, out), daemon=True)
         sampler.start()
         if os.environ.get("WBD_PLAN028_QDISC_CLOCK_DIAG")=="1":
@@ -670,6 +717,11 @@ def main():
             assert (out/"h1291-physical-mtu-shrink.json").is_file()
         stop.set()
         sampler.join(timeout=8)
+        if health_blackhole_worker is not None:
+            health_blackhole_worker.join(timeout=8)
+            assert not health_blackhole_worker.is_alive()
+            assert (out/"h1318-erin-native-health-blackhole.json").is_file(), (
+                "actual server-to-Erin Health downlink impairment not restored")
         if qdisc_sampler is not None:
             qdisc_sampler.join(timeout=8)
             assert not qdisc_sampler.is_alive(), "qdisc probe did not exit"
@@ -732,6 +784,8 @@ def main():
             sampler.join(timeout=6)
         if qdisc_sampler is not None:
             qdisc_sampler.join(timeout=6)
+        if health_blackhole_worker is not None:
+            health_blackhole_worker.join(timeout=6)
         if mtu_worker is not None:
             mtu_worker.join(timeout=3)
         for role in list(procs)[::-1]:
