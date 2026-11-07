@@ -1,0 +1,220 @@
+name: M0 PLAN028 H1314 x86 genuine ISA-L native 30pct 250ms L2
+run-name: H1314 one genuine x86/x86 ISA-L Rust M4 30pct loss 250ms original TLS
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1314-x86-real-isal-30pct-250ms.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-x86-one-real-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    env:
+      ORIGINAL_PRODUCT_SOURCE: 9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_GAME_FEC_BACKEND: native
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_ERIN_NEIGH_CLOCK_DIAG: "1"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_ERIN_MAX_DELAY: "250"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42345392910
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-42345392910-1
+          path: original-x86-source
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wbd-next
+          ref: 9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3
+          path: original-engine-source
+          persist-credentials: false
+      - name: Verify pinned original x86 Go client/server ELF (no Go rebuild)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct,shutil
+          source=pathlib.Path("original-x86-source")
+          m=json.loads((source/"fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          assert set(m["binary_sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+          out=pathlib.Path("fixed-build")
+          out.mkdir(exist_ok=True)
+          for name,digest in m["binary_sha256"].items():
+              raw=(source/"fixed-build"/name).read_bytes()
+              assert raw[:4]==b"\x7fELF" and struct.unpack_from("<H",raw,18)[0]==62
+              assert hashlib.sha256(raw).hexdigest()==digest
+              shutil.copyfile(source/"fixed-build"/name,out/name)
+          (out/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_H1314_ORIGINAL_GO_BINARY_PAIR_AND_FROZEN_RUST_SOURCE_PINNED",flush=True)
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 -m py_compile \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py \
+            tools/m0-plan028-h1310-dave-link-witness.py \
+            tools/m0-plan028-h1310-two-path-gap-correlate.py
+      - name: Compile pinned original Rust M4 once with true official ISA-L static x86 archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git -C original-engine-source rev-parse HEAD)" = "$ORIGINAL_PRODUCT_SOURCE"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool nasm make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1314-original-x86-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >fixed-build/h1314-official-isal-build.log 2>&1 || {
+            tail -100 fixed-build/h1314-official-isal-build.log >&2;exit 1;
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --manifest-path original-engine-source/Cargo.toml --locked --release -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            >fixed-build/h1314-native-rust-build.log 2>&1 || {
+              tail -130 fixed-build/h1314-native-rust-build.log >&2;exit 1;
+            }
+          test -s original-engine-source/target/release/libwbd_engine.so
+          cp original-engine-source/target/release/libwbd_engine.so fixed-build/libwbd_engine.so
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          for name in ("wbd-v4-client","wbd-v4-server"):
+              b=(root/name).read_bytes()
+              assert b[:4]==b"\x7fELF" and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][name]
+          lib=(root/"libwbd_engine.so").read_bytes()
+          assert lib[:4]==b"\x7fELF" and struct.unpack_from("<H",lib,18)[0]==62
+          new_hash=hashlib.sha256(lib).hexdigest()
+          old_hash=m["binary_sha256"]["libwbd_engine.so"]
+          assert old_hash!=new_hash,"native ISA-L build unexpectedly identical to scalar build"
+          m["binary_sha256"]["libwbd_engine.so"]=new_hash
+          m["ISA_L_qualification"]="PINNED_OFFICIAL_STATIC_NATIVE_X86_BUILD_ONLY_NOT_YET_RUNTIME_TESTED"
+          m["isal_source_sha"]="c387163fcbca62701d646149564c550c78a4f985"
+          m["rust_original_source_sha"]=os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          m["harness_source_sha"]=os.environ["GITHUB_SHA"]
+          m["rust_features"]="m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration"
+          m["scalar_baseline_engine_sha256"]=old_hash
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_H1314_X86_ORIGINAL_GO_REUSED_AND_NATIVE_ISAL_ENGINE_SHA256_PINNED",
+              new_hash,flush=True)
+          PY
+          nm -D fixed-build/libwbd_engine.so | grep -Eq ' [TW] wbd_m0_embedded_go_'
+          echo M0_H1314_OFFICIAL_ISAL_V2311_X86_NATIVE_ELF_LINKED_BUILD_PASS
+      - name: One true 180s five-client x86 ISA-L-native FEC6 30pct/250ms L2
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          # Non-invasive original kernel state monitor, separate from actual
+          # Go/Rust/traffic.py processes and same CLOCK_MONOTONIC.
+          python3 -u tools/m0-plan028-h1310-dave-link-witness.py \
+            --out fixed-kernel-result/h1310-dave-link-clock.json \
+            >fixed-kernel-result/h1310-dave-monitor.log 2>&1 &
+          watcher=$!
+          set +e
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1310-real-run.log 2>&1
+          result=$?
+          set -e
+          kill -TERM "$watcher" 2>/dev/null || true
+          wait "$watcher" || true
+          if [[ "$result" -ne 0 ]];then
+            tail -120 fixed-kernel-result/h1310-real-run.log >&2
+            exit "$result"
+          fi
+          test -s fixed-kernel-result/h1309-erin-neigh-clock.json
+          test -s fixed-kernel-result/h1310-dave-link-clock.json
+          test -s fixed-kernel-result/h1301-netem-clock.json
+          # This is a controlled REAL L2 netns topology, not fake DATA.
+          # Previous W19–W21 showed 30pct egress netem also drops ARP,
+          # causing independent 2–3s NUD INCOMPLETE blackouts. Kernel
+          # owner installs real ephemeral veth peer MACs, BOTH directions,
+          # before original Go TLS. It MUST stay PERMANENT under netem.
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          plan=json.loads((root/"h1250-matrix-plan.json").read_text())
+          report=json.loads((root/"h1286-rapid-report.json").read_text())
+          assert plan["source_sha"]==report["source_sha"]=="9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3"
+          assert plan["network_scope"]=="native Linux x86_64/x86_64 6-netns"
+          erin=next(v for v in plan["clients"] if v["who"]=="erin")
+          assert (erin["loss_pct"],erin["oneway_delay_ms"],erin["outer_mtu"])==(30,250,1280)
+          assert report["rotation_verdict"]=="PASS_ALL_FIVE_SCOPED"
+          assert report["server_single_port"]==443 and len(report["clients"])==5
+          assert all(v["pending_overflow"]==0 for v in report["server_per_authenticated_lease_tun"].values())
+          for stage in ("installed","after"):
+              j=json.loads((root/f"h1312-static-neighbour-{stage}.json").read_text())
+              assert j["kind"]=="TEST_ONLY_PHYSICAL_VETH_L2_CONTROL"
+              assert j["native_owner_count"]==10 and len(j["entries"])==10
+              assert j["data_netem_unchanged"] and not j["product_or_route_key_modified"]
+              assert all(x["neighbor_state"]=="PERMANENT" and x["lladdr_present"]
+                         for x in j["entries"])
+              assert set(x["client"] for x in j["entries"])=={
+                  "alice","bob","carol","dave","erin"}
+          q=json.loads((root/"h1301-netem-clock.json").read_text())["samples"]
+          assert len(q)>100
+          loss={}
+          for d,key in (("uplink","client_uplink_netem"),
+                        ("downlink","host_downlink_netem")):
+              first,last=q[0][key],q[-1][key]
+              assert first["kind"]==last["kind"]=="netem"
+              sent=last["packets"]-first["packets"]
+              dropped=last["drops"]-first["drops"]
+              assert sent>2000 and dropped>1000
+              actual=100*dropped/(sent+dropped)
+              assert 28.0<=actual<=32.0,("actual Erin DATA loss not 30pct",d,actual)
+              loss[d]={"sent":sent,"dropped":dropped,
+                        "actual_netem_drop_percent":round(actual,3)}
+          report={"kind":"H1314_X86_REAL_NATIVE_ISAL_STATIC_FEC_BACKEND_AND_TEST_ONLY_ARP_CONTROL",
+                  "original_source":"9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+                  "all_5_client_server_L2_neighbor_pairs":"PERMANENT_BOTH_ENDS",
+                  "original_30pct_250ms_netem":loss,
+                  "original_TLS_Rust_M4_FEC":True}
+          (root/"h1314-l2-maxdelay-loss-report.json").write_text(
+              json.dumps(report,indent=2)+"\n")
+          print("M0_H1314_NATIVE_ISAL_X86_REAL_VETH_BOTH_NEIGH_PERMANENT_DATA_NETEM30PCT_250MS",json.dumps(loss,sort_keys=True),flush=True)
+          PY
+          python3 -u tools/m0-plan028-h1310-two-path-gap-correlate.py \
+            --art fixed-kernel-result --source "$ORIGINAL_PRODUCT_SOURCE" \
+            --out fixed-kernel-result/h1310-two-path-correlated.json | \
+            tee fixed-kernel-result/h1310-summary.log
+          echo M0_H1314_SOURCE_FROZEN_NATIVE_ISAL_X86_30PCT_250MS_FIVE_REAL_CLIENT_STRICT_APP_PASS=1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1314-native-isal-x86-30pct-250ms-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-build/h1314-*.log
+            fixed-kernel-result/h1310-*.json
+            fixed-kernel-result/h1312-static-neighbour-*.json
+            fixed-kernel-result/h1314-*.json
+            fixed-kernel-result/h1310-*.log
+            fixed-kernel-result/h1311-raw-tx-socket.json
+            fixed-kernel-result/h1309-erin-neigh-clock.json
+            fixed-kernel-result/h1301-netem-clock.json
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 14

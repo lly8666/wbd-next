@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+  "prior_h1313": {
+    "run_id": 42355007813,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42355007813",
+    "conclusion": "failure",
+    "failed_stage": "H1310 preexisting Game4 native ISA-L backend assertion",
+    "artifact_id": 13567435888,
+    "artifact_zip_sha256": "b062ebf9ec2d810878228793654172564391bc09b0dbc9d15af9d1a040f00bc5",
+    "product": "exact old native-x86_64 original-Go TLS443 + original Rust M4 SOURCE9cc5 three SHA256 ELF reused without rebuilding",
+    "backend_readback": {
+      "selected": "prefer-native",
+      "native_linked": 0,
+      "tx_native_quanta": 0,
+      "tx_scalar_quanta": 66105,
+      "rx_native_decodes": 0,
+      "rx_scalar_decodes": 9542
+    },
+    "reason": "The H1305 x86 source-frozen Rust library was built without native_fec_acceleration and without pinned ISA-L static library. WBD_GAME_FEC_BACKEND=native alone cannot compile native code, so H1310 script rightly refused native qualification. The source's actual fallback scalar data plane remains a valid independent L2 scope.",
+    "real_business": {
+      "duration_seconds": 180,
+      "server_single_port": 443,
+      "auth_clients": 5,
+      "real_TCP_UDP": true,
+      "alerts": 0,
+      "all_five_rotations": "PASS_ALL_FIVE_SCOPED",
+      "per_32_tun_pending_overflow_each": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "max_active_sending_no_receive_ms": 250,
+      "max_gap_client": "erin",
+      "same_source_30pct_physical_250ms": true
+    },
+    "topology": {
+      "static_test_only_arp_entries_initial": 10,
+      "static_test_only_arp_entries_after": 10,
+      "data_netem_uplink_drop_pct": 29.871,
+      "data_netem_downlink_drop_pct": 30.09,
+      "Erin_one_way_delay_ms": 250,
+      "Erin_user_outer_mtu": 1280,
+      "other_clients_loss_pct": [
+        0,
+        1,
+        5,
+        15
+      ]
+    },
+    "accurate_10s_warmup_phase_cpu": [
+      {
+        "phase": "first_wave",
+        "scale": 0.25,
+        "seconds": [
+          10,
+          40
+        ],
+        "host_cpu_busy_pct": 61.49,
+        "host_softirq_pct": 3.03,
+        "erin_uplink_sent_mbps": 4,
+        "erin_uplink_received_mbps": 3.994,
+        "netem_uplink_peak_qlen_packets": 316
+      },
+      {
+        "phase": "sustained",
+        "scale": 0.35,
+        "seconds": [
+          40,
+          100
+        ],
+        "host_cpu_busy_pct": 80.24,
+        "host_softirq_pct": 4.78,
+        "erin_uplink_sent_mbps": 5.6,
+        "erin_uplink_received_mbps": 5.585,
+        "netem_uplink_peak_qlen_packets": 429
+      },
+      {
+        "phase": "overload",
+        "scale": 0.45,
+        "seconds": [
+          100,
+          130
+        ],
+        "host_cpu_busy_pct": 89.87,
+        "host_softirq_pct": 5.53,
+        "erin_uplink_sent_mbps": 7.2,
+        "erin_uplink_received_mbps": 7.182,
+        "netem_uplink_peak_qlen_packets": 538
+      },
+      {
+        "phase": "recovery",
+        "scale": 0.35,
+        "seconds": [
+          130,
+          180
+        ],
+        "host_cpu_busy_pct": 79.87,
+        "host_softirq_pct": 4.69,
+        "erin_uplink_sent_mbps": 5.6,
+        "erin_uplink_received_mbps": 5.598,
+        "netem_uplink_peak_qlen_packets": 428
+      }
+    ],
+    "scoped_result": "OBSERVED_L2_APP_PASS_FOR_SCALAR_FALLBACK_ONLY; H1313 original CI FAIL retained. Not a linked ISA-L PASS, not an authoritative PLAN028 full closeout."
+  },
+  "next_h1314": {
+    "workflow": ".github/workflows/m0-plan028-h1314-x86-real-isal-30pct-250ms.yml",
+    "official_isal_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "Rust_original_source": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+    "original_go_pinned_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "original_x86_go_client_server_sha256_unchanged": true,
+    "new_Rust_feature": "native_fec_acceleration",
+    "new_Rust_ELF_SHA256_manifest": true,
+    "one_full_180s_native_x86_64_x86_64_scene": true,
+    "one443": true,
+    "five_real_clients": true,
+    "native_required": {
+      "native_linked": 1,
+      "tx_native_quanta": "positive",
+      "selected": "prefer-native",
+      "scalar_short_blocks": "allowed"
+    },
+    "original_all_client_business_auth_Stop_and_30pct_250ms_gates": "unchanged",
+    "status": "SOURCE_FROZEN_ACTION_PENDING"
+  },
+  "outstanding": [
+    "H1310/H1311 genuine prior ARM64 dynamic-neighbor 1.27–4.33s gaps remain original FAIL; L2 synthetic ARP test confound after static neighbors now qualified only in controlled scope",
+    "Windows Npcap/Wintun full seven physical scope incomplete",
+    "H998 same-socket original shrink historical FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 finite long NOT_RUN"
+  ]
+}
