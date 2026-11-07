@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1328,
-  "checkpoint_sha": "23bc327bdb3254a8708d44add23c5ddb7372f0d8",
+  "sequence": 1329,
+  "checkpoint_sha": "ae439320b13b83a7d4ef6a0540e78a16e94d4116",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1328: H1327 source23bc native ARM64 build PASS, Action42377946485 scene FAIL because new product original Game4 actual single-lane timer 1,2,3,4,1,2 within generation1 unlike obsolete whole-group oracle, and finite test echo server hard 4000 exhausted exactly after warmup36 + stream replies3964; all streams continued 28s with no reply (harness false data-plane outage). No false product fix. H1328 source-only test generator and workflow update to echo6500 for 185s*30pps, verify real protected original TLS/Rust four separate Game4 hot slots, unchanged three sibling slots, per-client 99.5% UDP and strict terminal + interreceipt <800ms; old Action FAIL retained, new Action pending.",
-  "why_now": "Native server source-locked real evidence confirms one-slot current Game4 contract and math proves 4000-message fixture echo quota, so product-level changes or repeated seed are unwarranted. Replace obsolete oracle and under-budgeted echo with current actual native original owner witness while maintaining hard business/Stop gates.",
+  "current_task": "H1329: H1328 source ae439 Action42379326549 native ARM64 original Go/Rust build PASS, one Game4 Off scene FAIL_BEFORE_NETWORK because generated original H1328 oracle already includes aarch64/aarch64; old workflow ephemeral source label rewrite expected one x86/x86, found0; no actual kernel/TLS/UDP network run. Fix redundant workflow-only label assertion, no product code, retain earlier H1327 Action42377946485 FAIL actual finite4000 test echo + obsolete whole-group oracle. H1329 true single hot-lane 4 slots with 3 clients, bounded echo6500 and terminal tail-gap gate pending.",
+  "why_now": "Exact current Action identifies single redundant report-only text assertion before test network; remove it instead of rerunning immutable product without changed cause. Preserve old failure statuses, do not imply condition-specific success.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1328 corrected one ARM64 original TLS Game4 Off Action, require same native ELF183 source binary manifest, four protected client+server Game4 hot lane 1-4 original M4 commits, no sibling churn, 3 actual no-retry UDP users with >=99.5% replies AND max inter-reply AND terminal active-sending gap under800ms, preserved true final owned Stop; any unit/fixture typo fix before another network seed. Do not repeat unchanged H1327. Then Windows native unique or L2 capacity stages, retain H1317/H998 and physical/Android NOT_RUN.",
+  "next_action": "Collect H1329 auto-triggered exact ARM64 current true Game4 individual hot-lane Action and governance before additional dispatch; require original client+server same adapter lanes1-4, no sibling restart, packet counts>=99.5% each, max interreceipt and terminal active-sending no-reply <800ms, owned Stop. If unexpected failure, smallest first-link diagnostic; do not claim whole-group generation. Later follow PLAN028 L2 and Windows physical lifecycle, L3 after hard gates.",
   "unverified": true,
-  "last_tested_source": "23bc327bdb3254a8708d44add23c5ddb7372f0d8",
+  "last_tested_source": "ae439320b13b83a7d4ef6a0540e78a16e94d4116",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1328-H1327-ARM64-REAL-GAME4-ECHO-ORACLE-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1329-SOURCEAE439-ARM64-GAME4-HOTLABEL-PREFLIGHT-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Source23bc H1327 ARM64 original product build PASS but Game4 Off scene FAIL due test-only 4000 echo limit exactly hit (36+3964) and stale whole-group generation assumption; same game adapter real server 6 hot single lanes, client not retained. H1328 real four-hot-lane oracle + echo6500 source-locked candidate pending; strict terminal gap now captured, no product changes. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1327 native ARM64 real scene Action42377946485 FAIL fixture obsolete group oracle and exactly 4000 echo budget accounted 36+3964; 6 actual original server hot lanes proven. H1328 Action42379326549 BUILD_PASS but scene NOT_RUN due redundant x86 label assert before network. H1329 workflow-only correction, waiting source Action to actually trigger 4 hot lanes + bounded echo6500 strict app and tail gap. PLAN028 IN_PROGRESS, other prior genuine PASS/FAIL unchanged."
 }

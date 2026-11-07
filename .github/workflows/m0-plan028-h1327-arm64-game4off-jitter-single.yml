@@ -170,12 +170,14 @@ jobs:
           python3 - "$RUNNER_TEMP/timed-game4-off.sh" <<'PY_ARM'
           import pathlib,sys
           p=pathlib.Path(sys.argv[1]);s=p.read_text()
-          for a,b in (
-              ("original Go TLS+Rust M4 native x86/x86","original Go TLS+Rust M4 native aarch64/aarch64"),
-              ("M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443","M0_PLAN028_H1151_ARM64_ORIGINAL_TLS_ONE443"),
-          ):
-              assert s.count(a)==1,(a,s.count(a))
-              s=s.replace(a,b)
+          # H1328's new oracle already declares truthful native ARM64; only
+          # the inherited H1151 mixed-scene footer still carries x86 text.
+          assert s.count("original Go TLS+Rust M4 native aarch64/aarch64")==1
+          assert "original Go TLS+Rust M4 native x86/x86" not in s
+          a="M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443"
+          b="M0_PLAN028_H1151_ARM64_ORIGINAL_TLS_ONE443"
+          assert s.count(a)==1,(a,s.count(a))
+          s=s.replace(a,b,1)
           p.write_text(s)
           PY_ARM
           bash -n "$RUNNER_TEMP/timed-game4-off.sh"

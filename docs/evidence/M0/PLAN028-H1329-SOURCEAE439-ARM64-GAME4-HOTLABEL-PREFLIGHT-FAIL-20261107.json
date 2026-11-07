@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "ae439320b13b83a7d4ef6a0540e78a16e94d4116",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action_id": 42379326549,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/42379326549",
+  "build_job_id": 128423418295,
+  "build": "PASS exact current native ARM64 ELF183 source manifest and original Go/Rust",
+  "scene_job_id": 128423815518,
+  "scene": "FAIL_BEFORE_NETWORK",
+  "failure": "generated H1328 Python/Bash base syntax PASS; redundant x86/x86-to-aarch64/aarch64 report substitution assert s.count(a)==1 failed for x86 string count0 because H1328 oracle already outputs native aarch64/aarch64",
+  "effect": "NO new original TLS, kernel UDP, Game4 lane, MTU, Stop, native business was run on this Action",
+  "fix": "delete only obsolete first label conversion; assert original new source Oracle correctly declares aarch64 and old x86 text absent; retain suffix legacy H1151 ARM64 conversion",
+  "next_candidate": "NEW_SOURCE_NOT_RUN",
+  "original_h1327_action": 42377946485,
+  "original_h1327_result": "FAIL_OLD_GROUP_ORACLE_AND_EXACT_FINITE4000_ECHO_EXHAUSTION_RETAINED",
+  "open": "L0-L3 product hard acceptance still incomplete; H1317 5.18s and H998 same-socket MTU historic FAIL"
+}
