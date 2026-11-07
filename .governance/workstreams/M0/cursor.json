@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1304,
-  "checkpoint_sha": "969b04958f671c868009abb603479aca9278ab30",
+  "sequence": 1305,
+  "checkpoint_sha": "239e28bb08ee56b1209fcc14c35ab0ccce420d50",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1304: previous x86 original Go/Rust Game4FEC6 real netns OS underlay switch Action42338102273 SOURCE806c FAIL: client B locally complete TLS+Game M4 but waits 5s for reverse IPv4 TUN delivery, while A's shared TUN route preserves B from business; server B already grouped 4 original TLS lanes+M4. Implement minimum cryptographically authenticated cold server-group receipt on existing Game Health kind0, after true all-lane M4/TUN install, three bounded copies400ms apart, no new wire/go hot pump. Client B new AEAD/PN verified kind0 OR real reverse IPv4 may promote exact /32; untrusted TCP ACK/local TLS never proof; old A stays if B fails. Rust+Go negative/positive unit and one native x86_64/x86_64 real Game4 overlap Action source-frozen. H1295/H1297/H1299/H1300 ARM64 gaps open, 4-core VM capacity limited; no more ARM64 overload or long until short blockers resolved.",
-  "why_now": "Independent L0/L1 usability defect without reverse app: B cannot take over because original 5s proof required delivered reverse user IPv4 while A owns route. Existing native Game Health AEAD/PN codec and per-cohort authenticated activity are mature; narrow cold Commit reuse avoids introducing private TLS prefix, FEC algorithm or new periodic payload/record work.",
+  "current_task": "H1305: H1304 native x86_64/x86_64 Action42344816891 SOURCE239e overall FAIL only at test's obsolete server stop reason. Real Game4 client new gen2 native M4 verified canonical encrypted kind0 server cold Commit: Rust promoted new TUN generation10 native_delivered0 authenticated_health1, old A exact Stop after 16.7s grace; server all four new TLS443 lanes M4 ready. Native old A during physical 1500→1280 produced 614101252 raw_rx other errors (18s busy loop); actual raw receive_budget before poll immediately returns RouteStale, worker Err(_) retried without pause. Fix retired Game RX error-only backoff 5ms stale/unavailable,1ms other, no hot good-path changes; fixture accepts only authenticated old group precise Stop labels same-protected-cohort-new-generation/grace-expired while requiring exact new gen, old Stop, 5 real UDP and MTU. Source lock one x86 native rerun; restore feature-impact devlog in same product change. Earlier ARM64 high-pressure failures remain OPEN.",
+  "why_now": "Remote M4 cold server proof has now been independently proven on true x86 with NO reverse inner IPv4; old fixture's stale reason aborts before new app echo. More importantly original A retained grace + real physical MTU change provokes immediate raw RouteStale before poll, re-entered 614m times and saturates native CPU. This is an actual zero-work hot spin, not hypothetical defensive programming, and must be fixed before qualifying real path recovery.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered updated m0-plan028-game-client-overlap-x86.yml one true source-locked x86_64/x86_64 Game4FEC6 path/MTU switch; must pass 3 native Rust tests, Go barrier positive/negative, real 8 TLS ClientHello/one443 and all A→A+B→B business/Stop without old group revoke. Verify exact new M4 Health proof event, no app required to commit. If still FAIL, inspect exact source Action artifact first and fix narrow Go/Rust stage; no 1800s.",
+  "next_action": "Consume automatically triggered one exact SOURCE x86_64/x86_64 native Game4FEC6 A→A+B→B Action after error-only backoff + corrected exact server old group stop label. Demand H1304 native control proof, no inner reverse delivery needed, true 8 standard TLS ClientHello, OS new route source and MTU1178, 5 real switched UDP echoes, exact client/server group Stop and old-RX-other<100000. If FAIL inspect stage/log with exact artifacts before changing protocol; no ARM64 1800s until known separate blockers fixed.",
   "unverified": true,
-  "last_tested_source": "969b04958f671c868009abb603479aca9278ab30",
+  "last_tested_source": "239e28bb08ee56b1209fcc14c35ab0ccce420d50",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1304-GAME4-COLD-COMMIT-RECEIPT-PLAN-SOURCE969B-20261107.json"
+    "docs/evidence/M0/PLAN028-H1305-H1304-X86-AUTH-CONTROL-PROVEN-OLD-RAW-RX-SPIN-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1303 source969b offline corrected H1302 true ARM64 0.6x host CPU92.5%, .85x98.21%, 1.0x99.01%, H1300 real previous Erin UPLINK1260ms physical veth TX stall and H1295/H1297/H1299 failures not fixed. H1304 targets separate x86_64 Game4 no-business handover deadlock: after server full protected TLS+M4 commit, reuse bounded existing AEAD kind0 Health cold receipt on original native Rust Game TX, verify in B original native RX, exact route promotion without reverse user IPv4. Keep A until proof; new x86 real Action forthcoming. Original x86 Action42338102273 FAIL retained."
+  "partial_summary": "H1304 SOURCE239e Action42344816891 genuine x86 original TLS+Rust Game4 B M4 cold control successfully verified/published without any reverse IPv4 business (native_delivered0 authenticated_health1), old A completed 16.7s grace and owned Stop. Workflow overall FAIL because old fixture expects retired server group reason new-generation while actual grace-expired. Same source 614,101,252 old Game M4 RX non-timeout errors after physical effective MTU shrink due RouteStale immediate return and no error backoff; H1305 patches only error path and fixture exact reason check. Old ARM64 Erin active app stalls, H998, ICMP, Android and final L3 remain OPEN."
 }

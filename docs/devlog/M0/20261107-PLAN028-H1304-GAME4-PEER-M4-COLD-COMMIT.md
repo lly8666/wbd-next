@@ -14,6 +14,15 @@ Positive/negative tests cover forged ciphertext rejection, zero reverse user IPv
 
 The earlier H1302 CPU saturation analysis (true 0.6× ARM64 four-core busy92.5%) and H1300 physical egress 1260ms gap are separate, still OPEN. No ARM64 1800s run.
 
+## H1305 — real x86 overlap proved B Commit, discovered retiring A RX busy-spin
+
+H1304 post-fix [Action 42344816891](https://github.com/lly8666/wbd-next/actions/runs/42344816891) SOURCE `239e28bb08ee56b1209fcc14c35ab0ccce420d50` completed **FAIL** overall, but the genuine x86_64/x86_64 native netns evidence now confirms the targeted cold barrier:
+`V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation=10 native_delivered=0 authenticated_health=1 old_route_revoked=1`, followed by client `V4_PUBLIC_GAME_REMOTE_M4_PROVEN generation=2 lanes=4 native_authenticated_control_or_ipv4=1`, `V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT`, new group TLS/M4 Ready and both server Game groups' genuine eight lane admissions. A only retired after its real 16.7s grace. No reverse user IPv4 or new wire kind was needed to prove B. The Action FAIL occurred because the old fixture hardcoded the obsolete server Stop reason `same-protected-cohort-new-generation`; current correct server owner says `same-protected-cohort-grace-expired remaining_flows=4`. We preserve the **FAIL** and update the readback to accept only either genuine exact group retirement reason, while still requiring B crypto proof, old exact Stop, real MTU and 5 UDP echoes.
+
+This same actual native run surfaced a **separate proven CPU defect** under real MTU switch: retired A's `M0_GAME_M4_RX_STAGE_BOUNDARY raw=24 timeout=2 other=614101252` in ~18s. `ScopedRawIpv4Rx::recv_one_with_ack_into` validates `budget.receive_budget()` **before** poll; when old physical route/budget becomes stale, `RouteStale` returns immediately. The existing Game RX worker treated all non-timeout errors as immediate `continue`, saturating a core and hurting B recovery. H1305 parks ONLY error-path RX with a 5ms retry for stale/unavailable route (1ms for other unexpected raw errors). Normal successful AEAD/PN/FEC/TUN packet path and timeout pacing stay unchanged; no new worker, no steady per-record step. The real x86 fixture asserts the original old-group driver errors no longer accumulate 100000+ before Stop. Do not claim ARM64 high-load failures fixed from this separate causal observation without a related short proof.
+
+This package preserves standard TLS first flight, bounded existing Health kind0 Commit, 1460 default outer MTU, true server one443, full four-lane Go/Rust source lock, exact old-generation ownership and owned Stop. The CI test will be one native x86_64/x86_64 real path switch, with unaffected unit build/ABI reused as appropriate; no 1800s stress.
+
 ```feature-impact
 {"kind":"modified","ids":["game-lanes"],"reason":"The existing Game2/4 cold overlap proof now uses a bounded, cryptographically authenticated native Health group-Commit receipt, preserving original wire kind0, TLS first flight, old route and Stop boundaries."}
 ```

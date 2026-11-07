@@ -885,8 +885,22 @@ impl GameKernelOwner{
                             rx_err_timeout.fetch_add(1,Ordering::Relaxed);
                             continue
                         },
-                        Err(_)=>{
+                        Err(reason)=>{
                             rx_err_other.fetch_add(1,Ordering::Relaxed);
+                            // A retired A cohort may remain alive for exact
+                            // 10-20s grace after a real NIC MTU/source switch.
+                            // Its old route budget then fails BEFORE poll(2),
+                            // so an immediate retry busy-spins hundreds of
+                            // millions of times and steals CPU from new B.
+                            // Back off only genuine raw driver errors: normal
+                            // authenticated RX and packet dispatch are intact.
+                            let pause=match reason{
+                                wbd_platform::linux_raw_carrier::RawTxError::RouteStale|
+                                wbd_platform::linux_raw_carrier::RawTxError::RouteUnavailable
+                                    =>Duration::from_millis(5),
+                                _=>Duration::from_millis(1),
+                            };
+                            thread::sleep(pause);
                             continue
                         }
                     };

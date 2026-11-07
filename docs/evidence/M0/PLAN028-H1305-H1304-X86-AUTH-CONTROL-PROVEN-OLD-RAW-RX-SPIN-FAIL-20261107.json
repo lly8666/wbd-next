@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "239e28bb08ee56b1209fcc14c35ab0ccce420d50",
+  "preceding_action": {
+    "id": 42344816891,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42344816891",
+    "conclusion": "failure",
+    "artifact_id": 13563565963,
+    "architecture": "native x86_64 both endpoints original pinned Go TLS 443 + Rust Game4 FEC6",
+    "native_units": "PASS",
+    "cross_abi": "PASS"
+  },
+  "core_fix_actual_evidence": {
+    "new_generation": 2,
+    "client_new_source_ipv4": "10.25.0.3",
+    "client_new_port_first_lane": 56881,
+    "server_4_lane_ports": [
+      56881,
+      56882,
+      56883,
+      56884
+    ],
+    "server_group_after_all_lanes": "V4_PUBLIC_GAME_MULTI_GROUP_READY",
+    "client_promotion": "V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation=10 native_delivered=0 authenticated_health=1 old_route_revoked=1",
+    "client_success": "V4_PUBLIC_GAME_REMOTE_M4_PROVEN generation=2 lanes=4 native_authenticated_control_or_ipv4=1",
+    "authenticated_reverse_ipv4_delivered": 0,
+    "client_old_exact_stop_after_grace_ms": 16733,
+    "verdict": "AUTHENTICATED_NATIVE_HEALTH_SERVER_COMMIT_PROVEN_BUT_FULL_SCENE_FAIL"
+  },
+  "observed_failure": {
+    "type": "STALE_FIXTURE_SERVER_GROUP_RETIRE_REASON",
+    "old_expected": "same-protected-cohort-new-generation",
+    "actual": "same-protected-cohort-grace-expired remaining_flows=4",
+    "test_after_failure": "real new-path post-switch 5 UDP echo NOT_RUN due premature fixture fail",
+    "qualification": "FAIL"
+  },
+  "additional_native_performance_defect": {
+    "old_group_during_true_1500_to_1280_nic_mtu_change": "M0_GAME_M4_RX_STAGE_BOUNDARY raw=24 timeout=2 other=614101252",
+    "old_grace_seconds": 18,
+    "causal_path": "Game raw receive_budget called before poll, returns immediate RouteStale/RouteUnavailable after original route invalidated; original M4 Game RX Err branch had no sleep and busy loops",
+    "expected_fix": "5ms idle on RouteStale/Unavailable, 1ms on other unexpected driver errors, no delay for success/kernel timeout; assert real owned group error count<100000 at Stop",
+    "scope": "TRUE_GAME_M4_RX_RETIRED_GROUP"
+  },
+  "retained_open": [
+    "H1295/H1297/H1299/H1300 Erin app stalls on ARM64 not causally explained by this fix",
+    "Windows Npcap/Wintun seven-mode full physical not run",
+    "H998 original same-socket MTU case scoped FAIL remains",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "028 L3 NOT_RUN"
+  ]
+}

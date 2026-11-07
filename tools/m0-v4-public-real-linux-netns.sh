@@ -397,7 +397,7 @@ PY
          grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
          [[ "$(grep -c "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log" || true)" -ge 2 ]] &&
          [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] &&
-         grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log";then
+         grep -Eq 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-(new-generation|grace-expired) remaining_flows=4' "$TMP/server.log";then
         path_ready=1;break
       fi
     else
@@ -414,6 +414,22 @@ PY
     echo 'M0_PLAN028_REAL_LINUX_NATIVE_PATH_SWITCH_NOT_READY' >&2
     grep -E 'V4_PUBLIC_PATH_|V4_PUBLIC_MTU|V4_PUBLIC_MULTI_|V4_PUBLIC_NATIVE_STOP' "$TMP/client.log" "$TMP/server.log" |tail -65 >&2 || true
     exit 1
+  fi
+  # A's correct server grace retirement can be labeled
+  # "same-protected-cohort-grace-expired" even when B is already
+  # cryptographically proven and owns the client TUN. Assert exact
+  # old-stop instead of hardcoding a defunct reason label.
+  if [[ "$GAME" != 0 ]];then
+    grep -Eq 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-(new-generation|grace-expired) remaining_flows=4' "$TMP/server.log"
+    # Driver route-stale after physical MTU changes must NEVER spin a
+    # retiring native M4 RX cohort millions of times before owned Stop.
+    python3 - "$TMP/client.log" <<'PY'
+import pathlib,re,sys
+s=pathlib.Path(sys.argv[1]).read_text()
+counts=[int(v) for v in re.findall(r'M0_GAME_M4_RX_STAGE_BOUNDARY raw=[0-9]+ timeout=[0-9]+ other=([0-9]+)',s)]
+assert counts and max(counts)<100000,("retired Game RX driver busy spin",counts)
+print("M0_PLAN028_GAME_RETIRED_RX_ERROR_BACKOFF_REAL_NATIVE_PASS",counts,flush=True)
+PY
   fi
   sudo -n ip netns exec "$NSC" ip -j link show dev wbdvc4 >"$ART/plan028-new-tun-mtu.json"
   python3 - "$ART/plan028-new-tun-mtu.json" <<'PY'
