@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1348",
+  "source_sha": "432933c45cbef427cfc0ff9aab044a023975bf54",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "status": "NEW_SOURCE_NOT_RUN_UNTIL_OWN_ACTION",
+  "target": "L2 native x86 Game4 Fixed6 0% loss per-VM first sustainable logical 3→5→10→5 Mbps each direction with one shared original TLS443/Rust TUN 5 live clients, no rotation; do not run 20Mbps before calibrated 10 and host headroom",
+  "current_main_before": "432933c45cbef427cfc0ff9aab044a023975bf54",
+  "frozen_original_product_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "frozen_binary_provenance": {
+    "prior_build_action": 42369031512,
+    "prior_artifact_id": 13572791923,
+    "original_donor_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_isa": "x86_64 ELF62 Rust ISA-L",
+    "recheck": "actual SHA256 manifest of client/server/libwbd_engine.so required at Action",
+    "source_delta": "Compared 6c5→H1347 27 commits: only Rust v4_embedded_go.rs feature-gated reads under NOT fec2_product_record, Windows Go product/runtime and Go tests changed, Linux original TLS/Rust FEC2 product hot path unchanged; no claim binary built at H1348 head"
+  },
+  "scenario": {
+    "real_native_environment": "ubuntu-24.04 hosted x86_64 netns/veth /dev/net/tun; no QEMU",
+    "shared_server_port": 443,
+    "users": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 highest Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "user_requested_game4_logical_mbps_per_direction": [
+      3,
+      5,
+      10,
+      5
+    ],
+    "phase_windows": {
+      "warmup_seconds": 10,
+      "first_wave": 30,
+      "sustained": 60,
+      "overload": 30,
+      "recovery": 50
+    },
+    "configured_client_peak_mbps_each_direction": {
+      "alice": 2,
+      "bob": 2,
+      "carol": 2,
+      "dave": 10,
+      "erin": 2
+    },
+    "max_aggregate_offered_one_direction_mbps": 18,
+    "per_client_physical_loss_percent": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "per_client_oneway_physical_delay_ms": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "kernel_qdisc_readback": "REQUIRED_TRUE_NOT_CONFIG_ONLY",
+    "app": "two-way real UDP+TCP framed for each 5 authenticated leases, one single server port and one true TUN owner",
+    "host_cpu": "dynamic vCPU count and per-core jiffies/softirq, not fixed 4",
+    "host_capacity": "report CAPACITY_LIMITED or HOT_CORE without guessing sustainable rate",
+    "rotation_interval": 600,
+    "rotations_during_180s": "NOT_TRIGGERED_BY_DESIGN",
+    "network_duration_s": 180
+  },
+  "safety": "No product/source/hot-path changes and no specious new 20Mbps target; host kernel CPU/steal/core count and PPS measured independently, prior Linux x86 H1334 and Windows2025 H1347 VM metrics never numerically normalized across VM. Stop if generator fills <95% or host/hot-core approaches limit. Hard app data loss/seconds active gap not silently passed.",
+  "prior_qualifications": [
+    "H1334 exact older x86 four-vCPU 50Mbps Normal w/ five mixed clients and 2Mbps Game4 background PASS, separate capacity axis",
+    "H1155 x86 mixed Game2/Game4/Normal one443 48 actual UDP and Stop PASS",
+    "H1158 ARM64 mixed original one443 48 actual UDP and Stop PASS",
+    "H1347 signed Windows original Normal Off real same IP MTU contraction two generations UDP/TCP/Stop PASS"
+  ],
+  "known_unverified": [
+    "H1348 native run NOT_RUN",
+    "No Game4 20Mbps or 30%/250ms from this scene",
+    "No actual 2 L1 rotations under 600s timer in 180s load",
+    "No L3 two independent 1800s",
+    "H998 old same-socket live MTU and H1317 original ARM64 gap historical FAIL retained"
+  ]
+}
