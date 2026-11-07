@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+  "H1319_audit": {
+    "action": 42368645387,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42368645387",
+    "conclusion": "success",
+    "artifact_id": 13572479413,
+    "original_network_action": {
+      "id": 42366910850,
+      "conclusion": "failure",
+      "precise_reason": "H1316 reporter assumed Dave CLIENT Game4 tx_native_quanta>0 in a strictly DOWNLINK-only scene"
+    },
+    "original_build_artifact_id": 13572515555,
+    "original_network_artifact_id": 13572551435,
+    "original_binary_sha256": {
+      "client": "e5bb2bf1fdd48efb4f6088017425193f21383aa3873c85d904158fa30e42f1fe",
+      "server": "14236be406ece3e3fdb90c5bb5c746d49bc4373c718b4400995c817866e50ffd",
+      "engine": "096366741d13642181717de2b68683f00d0d46d32fcb220e5857f90a30668b14"
+    },
+    "native_Game4_direction": {
+      "server_tx_native_quanta": 68012,
+      "server_short_scalar_blocks": 1,
+      "Dave_client_rx_native_decodes": 9380,
+      "Dave_client_rx_scalar_decodes": 0,
+      "Dave_client_tx_native_quanta": 0,
+      "Dave_reverse_user_app_UDP_TCP_probe": "ZERO_EXPECTED"
+    },
+    "genuine_original_ARM64_180s": {
+      "alert_count": 0,
+      "all_five_rotations": "PASS_ALL_FIVE_SCOPED",
+      "per_authenticated_downlink_lease_overflow": 0,
+      "normal_Erin_preterminal_refresh_while_A_active": true,
+      "new_B_original_M4_authenticated_kind0": true,
+      "terminal_hard90_dead_not_triggered": true,
+      "actual_server_to_Erin_physical_blackhole_seconds": 63.658,
+      "restoration_app_plus_seconds": 10.008,
+      "loss_during_blackhole_percent": 100,
+      "loss_after_restoration_percent": 30,
+      "Erin_uplink_data_loss_unchanged_percent": 30,
+      "max_active_sender_no_receiver_ms_by_client": {
+        "alice": 0,
+        "bob": 10,
+        "carol": 50,
+        "dave": 100,
+        "erin": 120
+      },
+      "true_business_unique_delivered": {
+        "alice_up": 216577,
+        "bob_down": 216577,
+        "carol_up": 176793,
+        "dave_down": 177199,
+        "erin_up": 157045
+      }
+    },
+    "scope": "SCOPED_L1_REAL_ARM64_FIVE_ONEWAY_PRETERMINAL_NATIVE_PASS_FROM_ORIGINAL_SOURCE",
+    "original_CI_fail_retained": true,
+    "not_promoted": [
+      "H1317 original 5180ms Erin gap remains historic",
+      "unqualified stochastic tail risk",
+      "prior ARM64 high-load pressure gaps remain",
+      "Windows real Npcap/Wintun all-mode physical incomplete",
+      "H998 same socket live MTU failure historic",
+      "remote ICMP3/4 NOT_MEASURED",
+      "Android NOT_RUN",
+      "final PLAN028 L3 NOT_RUN"
+    ]
+  },
+  "H1320_one_x86_task": {
+    "change": "Only original native reporting host ISA is taken from plan.network_scope, and a pinned x86_64/x86_64 equivalent preterminal source-locked native build/one-netns Action; original Rust/Go product unchanged.",
+    "workflow": ".github/workflows/m0-plan028-h1320-x86-five-client-preterminal-oneway.yml",
+    "architecture": "genuine native x86_64/x86_64 Go TLS443/Rust M4 Game4 ISA-L",
+    "scene_duration_seconds": 180,
+    "client_count": 5,
+    "physical_loss_up_Erin_percent": 30,
+    "temporary_server_to_Erin_loss_percent": 100,
+    "restore_at_app_plus_seconds": 10,
+    "assert": [
+      "true native Game4 server TX/dave decoder",
+      "zero fake reverse app/ping",
+      "one443 TLS auth and 5 unique IP",
+      "predead B starts with A alive",
+      "new B AEAD/PN Health then TUN",
+      "old exact Stop",
+      "all five real UDP/GAP<750ms",
+      "no true per-lease TUN overflow"
+    ],
+    "not_an_action_result_yet": true
+  }
+}

@@ -12,6 +12,13 @@ def check(root,source):
     p=read(root,"h1250-matrix-plan.json")
     r=read(root,"h1286-rapid-report.json")
     assert p["source_sha"]==r["source_sha"]==source
+    # Derive *measured* native architecture from the recorded netns
+    # fixture, never from the host doing a later offline artifact audit.
+    scope=p["network_scope"].split()
+    assert len(scope)>=3 and scope[:2]==["native","Linux"]
+    duo=scope[2].split("/")
+    assert len(duo)==2 and duo[0]==duo[1] and duo[0] in ("x86_64","aarch64")
+    architecture="ARM64" if duo[0]=="aarch64" else "X86_64"
     assert p["application_scene"]=="strict_oneway"
     assert p["application_directionality"]==r["application_directionality"]==PROFILE
     assert len(r["clients"])==5 and r["server_single_port"]==443
@@ -96,7 +103,8 @@ def check(root,source):
     # backend a scalar test. Full-block work MUST be true ISA-L.
     assert scalar_short_sent<=max(8,native_sent//100),(sx,dx)
     assert scalar_received==0 and int(dx[2])==int(dx[3])==0,(sx,dx)
-    return {"kind":"SCOPED_L1_TRUE_NATIVE_ARM64_PURE_ONEWAY_WITH_AUTH_ROTATIONS",
+    return {"kind":f"SCOPED_L1_TRUE_NATIVE_{architecture}_PURE_ONEWAY_WITH_AUTH_ROTATIONS",
+       "measured_native_architecture":duo[0],
        "source_sha":source,"original_tls_server_port":443,
        "all_five_auth_rotations":r["rotation_verdict"],
        "genuine_app_alerts":0,"per_lease_tun_overflow":0,
@@ -118,7 +126,8 @@ def main():
     p.add_argument("--out",required=True)
     x=p.parse_args();j=check(x.art,x.source)
     pathlib.Path(x.out).write_text(json.dumps(j,indent=2,sort_keys=True)+"\n")
-    print("M0_H1316_NATIVE_ARM64_FIVE_CLIENT_ONEWAY_REAL_APP_ROTATION_SCOPED_PASS",
+    native_label="ARM64" if j["measured_native_architecture"]=="aarch64" else "X86_64"
+    print(f"M0_H1316_NATIVE_{native_label}_FIVE_CLIENT_ONEWAY_REAL_APP_ROTATION_SCOPED_PASS",
           json.dumps({"loss":j["Erin_true_oneway_upstream_netem_loss_pct"],
              "native_quanta":j["native_isal_quanta"]},sort_keys=True),flush=True)
 if __name__=="__main__":main()
