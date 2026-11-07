@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "H1311_original_action": {
+    "id": 42351732592,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42351732592",
+    "conclusion": "failure",
+    "artifact_id": 13565288664,
+    "artifact_sha256": "4cb762262e3777aaac519c2ec6c1d04df1cbfab32c6e2785dad9d49f061fcb34",
+    "original_binary_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "fixture_sha": "68f6fb2f82895f51e147fc9133903a37edf7ae07",
+    "backend": "native ARM64/ARM64 ISA-L",
+    "real_client_count": 5,
+    "auth_rotation": "PASS_ALL_FIVE_SCOPED",
+    "shared_tun_overflow_each_lease": 0,
+    "native_isa_l_quanta": 65521,
+    "legitimate_small_block_scalar_quanta": 735
+  },
+  "gap": {
+    "who": "erin",
+    "direction": "uplink",
+    "app_start_seconds": 122.56,
+    "duration_ms": 1270,
+    "offered_business_bytes": 1142784,
+    "delivered_business_bytes": 0,
+    "client_generation": 2,
+    "client_port": 60872
+  },
+  "native_effective_socket": {
+    "owner": "Erin original Rust RAW TX generation 2",
+    "default_effective_sndbuf_bytes": 212992,
+    "true_eagain_consecutive_trigger": 8,
+    "new_effective_sndbuf_bytes": 2097152,
+    "socket_diag_every_n_backpressure": 64,
+    "actual_eagain_total": 8,
+    "sample_count": 0,
+    "interpretation": "The opt-in every64 EAGAIN diagnostic had no samples. Stop effective 2MiB readback is genuine, but zero samples prove NOTHING about POLLOUT/OUTQ during the 1.27s gap."
+  },
+  "gap_aligned_original_counters": {
+    "real_500ms_client_window_ns": [
+      237610000000,
+      238110000000
+    ],
+    "client_source_queued_delta": 571,
+    "client_M4_kernel_copied_delta": 1330,
+    "client_tx_backpressure_delta": 0,
+    "client_tx_err_delta": 0,
+    "client_physical_veth_tx_packets_delta": 0,
+    "client_physical_rx_packets_delta": 934,
+    "server_same_client_port_original_RAW_rx_delta": 0,
+    "netem_client_uplink_sent_delta_between_monotonic_samples": 0,
+    "netem_client_uplink_qlen_both_samples": 0,
+    "netem_host_downlink_sent_continued": true,
+    "host_per_core_busy_during_gap_percent": [
+      70.4,
+      72,
+      72.7,
+      74
+    ],
+    "consequence": "The observed live 1.27s gap is not coincident with a fresh kernel M4 EAGAIN: client M4 kernel copied continued, physical netem veth actual TX/queue froze. SO_SNDBUF had already grown once, and the 64-threshold missed the 8 EAGAIN episode."
+  },
+  "historical_directly_relevant": {
+    "original_document": "docs/evidence/fec-network-work/20261024-W19-W23-neighbour-fq600-CPU-outer-bandwidth.md",
+    "W19_action": 40100361068,
+    "observed_cause": "Original native ARM64 veth root netem 30%/300ms dropped physical ARP neighbor requests as well as DATA. During multi-second S→C blackout, client neighbor NUD INCOMPLETE probed4→6; restored REACHABLE and delivery immediately followed.",
+    "W20_action": 40101978371,
+    "controlled_change": "Test-only permanent L2 neighbor pairs with actual ephemeral veth MAC at both namespaces, data netem 30% unchanged",
+    "real_business": "PASS",
+    "W21_action": 40102339446,
+    "control_without_observer": "PASS",
+    "reuse_caution": "Prior separate test/source/network topology proves this synthetic L2 confounder exists, NOT that every H1308-H1311 Erin/Dave gap had that identical cause. Current witness only covered SERVER→Erin NUD, never Erin CLIENT→server NUD."
+  },
+  "H1312_test_only_intervention": {
+    "fixture": "tools/m0-plan028-h1259-five-client-recovery-netns.py",
+    "environment": "WBD_PLAN028_STATIC_OWNED_NEIGH=1",
+    "network_architecture": "six real native ARM64 network namespaces linked by the original physical veth Linux bridge",
+    "actual_MAC_source": "ip -j link show from the same ORIGINAL physical namespace veth per endpoint",
+    "scope": "Diagnostic TEST HARNESS underlay L2 control-plane conditioning, NOT a production static-ARP product feature; original dynamic-ARP failures retained.",
+    "traffic": "Unchanged original Go TLS443/Rust M4 user business, five authenticated clients and 0/1/5/15/30% loss with 0/15/50/100/125ms one-way delay; Erin remains30%/125ms",
+    "frozen_binary_artifact_run": 42346792441,
+    "frozen_product_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "file": ".github/workflows/m0-plan028-h1312-arm64-static-neighbor-l2-deconfound-frozen.yml",
+    "qualifications": [
+      "Actual both-direction Erin netem drops measured 28–32% against 30% configured",
+      "All ten independent neighbor slots PERMANENT at startup AND after 180s",
+      "Strict original 750ms live business gap failure remains; five client authenticated rotations, exact Stop and shared TUN queue gates unchanged",
+      "No original product build or product sysctl/socket/route-key/FEC/MTU/wire modification"
+    ],
+    "verdict": "NOT_RUN_AFTER_COMMIT"
+  },
+  "remaining_issues": [
+    "ARM64 original dynamic-neighbour high-loss source e61b genuine Erin 1.27–5.36s gaps remain FAIL",
+    "H1295/H1297/H1299/H1300 earlier original pressure gaps remain historical",
+    "Windows physical Npcap/Wintun seven modes incomplete",
+    "H998 old same-socket shrink original FAIL historical",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 finite L3 not run"
+  ]
+}

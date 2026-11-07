@@ -52,6 +52,18 @@ if NEIGH_CLOCK_DIAG not in ("","1"):
     raise SystemExit("invalid Erin physical neighbour observer")
 if NEIGH_CLOCK_DIAG and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
     raise SystemExit("Erin NUD observer only in bounded 180s headroom pressure scene")
+# Test-only veth underlay L2 control-plane deconfounding: netem at the
+# physical veth egress drops ARP broadcasts as well as protected DATA.
+# Previous native W19→W21 established ARP NUD INCOMPLETE as a 2-3s
+# synthetic blackout; install each peer's ACTUAL ephemeral veth MAC on
+# both ends to retain unmodified true 30% DATA loss and 125ms delay.
+# This is NEVER product configuration, physical deployment or the
+# default/long fixture. Report original dynamic-neighbour FAIL separately.
+STATIC_NEIGH=os.environ.get("WBD_PLAN028_STATIC_OWNED_NEIGH","")
+if STATIC_NEIGH not in ("","1"):
+    raise SystemExit("invalid test-only static veth neighbour switch")
+if STATIC_NEIGH and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
+    raise SystemExit("static veth neighbour control only in short native 180s L2 scene")
 # Explicit short-only OS event. A new protected TLS+M4 generation must
 # survive the same real NIC / same IPv4 after physical 1500 -> 1280, without
 # the old PLAN027A H998 "0 of 3 small app replies" false qualification.
@@ -255,6 +267,32 @@ def main():
     mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
 
+    def snapshot_static_neighbours(stage):
+        if not STATIC_NEIGH:return
+        rows=[]
+        for i,ns in enumerate(namespaces):
+            client_ip=f"10.25.0.{i+2}"
+            for side,namespace,iface,peer_ip in (
+                ("client",ns,client_nics[i],"10.25.0.1"),
+                ("server",ns_server,server_nic,client_ip),
+            ):
+                found=json.loads(run("sudo","-n","ip","-n",namespace,
+                    "-j","neigh","show","to",peer_ip,"dev",iface,
+                    capture=True))
+                assert len(found)==1,(stage,side,peer_ip,found)
+                neighbour=found[0]
+                assert "PERMANENT" in neighbour.get("state",[]),(
+                    stage,side,peer_ip,neighbour)
+                rows.append({"role":side,"client":NAMES[i],
+                    "physical_ip":peer_ip,"interface":iface,
+                    "neighbor_state":"PERMANENT","lladdr_present":bool(neighbour.get("lladdr"))})
+        write_json(out/("h1312-static-neighbour-"+stage+".json"),{
+            "kind":"TEST_ONLY_PHYSICAL_VETH_L2_CONTROL",
+            "source_sha":source,"phase":stage,"entries":rows,
+            "native_owner_count":len(rows),
+            "data_netem_unchanged":True,
+            "product_or_route_key_modified":False})
+
     def proc(role, ns, args, suffix="log"):
         logfile = tmp / (role + "." + suffix)
         handle = logfile.open("w")
@@ -292,6 +330,24 @@ def main():
             run("sudo", "-n", "ip", "-n", ns, "link", "set", guest, "up")
             run("sudo", "-n", "ip", "netns", "exec", ns, "iptables", "-A", "OUTPUT",
                 "-p", "tcp", "--tcp-flags", "RST", "RST", "-j", "DROP")
+        if STATIC_NEIGH:
+            def real_mac(ns,dev):
+                row=json.loads(run("sudo","-n","ip","-n",ns,"-j",
+                    "link","show","dev",dev,capture=True))
+                assert len(row)==1 and row[0].get("address")
+                return row[0]["address"]
+            # One validated existing bridge, one genuine physical veth
+            # on each namespace. Static ARP is TEST L2 setup only.
+            server_mac=real_mac(ns_server,server_nic)
+            for i,ns in enumerate(namespaces):
+                client_ip=f"10.25.0.{i+2}"
+                run("sudo","-n","ip","-n",ns,"neigh","replace",
+                    "10.25.0.1","lladdr",server_mac,"nud","permanent",
+                    "dev",client_nics[i])
+                run("sudo","-n","ip","-n",ns_server,"neigh","replace",
+                    client_ip,"lladdr",real_mac(ns,client_nics[i]),
+                    "nud","permanent","dev",server_nic)
+            snapshot_static_neighbours("installed")
         with (tmp / "cert-create.log").open("w") as certlog:
             subprocess.run(
                 ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256",
@@ -588,6 +644,8 @@ def main():
             assert not neigh_sampler.is_alive(), "Erin neighbour observer did not exit"
             assert (out/"h1309-erin-neigh-clock.json").is_file()
         qdisc("after")
+        if STATIC_NEIGH:
+            snapshot_static_neighbours("after")
         for i, who in enumerate(NAMES):
             (out / ("h1250-" + who + "-underlay.json")).write_text(run(
                 "sudo", "-n", "ip", "-n", namespaces[i], "-s", "-j",

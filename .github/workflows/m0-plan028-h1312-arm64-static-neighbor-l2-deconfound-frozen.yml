@@ -1,0 +1,144 @@
+name: M0 PLAN028 H1312 native ARM64 original L2 ARP/netem deconfound
+run-name: H1312 one native ARM64 static real veth neighbor with unchanged 30pct netem
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1312-arm64-static-neighbor-l2-deconfound-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-arm64-one-real-scene:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 14
+    env:
+      ORIGINAL_PRODUCT_SOURCE: e61bda8f15ffaa594a14b5a1abe711d6526bd595
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_GAME_FEC_BACKEND: native
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_ERIN_NEIGH_CLOCK_DIAG: "1"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42346792441
+          github-token: ${{ github.token }}
+          name: h1286-arm64-one-isal-build-e61bda8f15ffaa594a14b5a1abe711d6526bd595
+          path: fixed-build
+      - name: Original e61b SHA256 and real native ARM64 ISA-L original Go donor
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          m=json.loads(pathlib.Path("fixed-build/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["architecture"]=="native_aarch64"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for name,digest in m["sha256"].items():
+              raw=(pathlib.Path("fixed-build")/name).read_bytes()
+              assert raw[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",raw,18)[0]==183
+              assert hashlib.sha256(raw).hexdigest()==digest
+          print("M0_H1312_EXACT_ORIGINAL_ARM64_SOURCE_AND_ELF_SHA256_PASS")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 -m py_compile \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py \
+            tools/m0-plan028-h1310-dave-link-witness.py \
+            tools/m0-plan028-h1310-two-path-gap-correlate.py
+      - name: One true 180s five-client ARM64 original netem 30pct with test-only static real veth L2 control
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          # Non-invasive original kernel state monitor, separate from actual
+          # Go/Rust/traffic.py processes and same CLOCK_MONOTONIC.
+          python3 -u tools/m0-plan028-h1310-dave-link-witness.py \
+            --out fixed-kernel-result/h1310-dave-link-clock.json \
+            >fixed-kernel-result/h1310-dave-monitor.log 2>&1 &
+          watcher=$!
+          set +e
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1310-real-run.log 2>&1
+          result=$?
+          set -e
+          kill -TERM "$watcher" 2>/dev/null || true
+          wait "$watcher" || true
+          if [[ "$result" -ne 0 ]];then
+            tail -120 fixed-kernel-result/h1310-real-run.log >&2
+            exit "$result"
+          fi
+          test -s fixed-kernel-result/h1309-erin-neigh-clock.json
+          test -s fixed-kernel-result/h1310-dave-link-clock.json
+          test -s fixed-kernel-result/h1301-netem-clock.json
+          # This is a controlled REAL L2 netns topology, not fake DATA.
+          # Previous W19–W21 showed 30pct egress netem also drops ARP,
+          # causing independent 2–3s NUD INCOMPLETE blackouts. Kernel
+          # owner installs real ephemeral veth peer MACs, BOTH directions,
+          # before original Go TLS. It MUST stay PERMANENT under netem.
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          for stage in ("installed","after"):
+              j=json.loads((root/f"h1312-static-neighbour-{stage}.json").read_text())
+              assert j["kind"]=="TEST_ONLY_PHYSICAL_VETH_L2_CONTROL"
+              assert j["native_owner_count"]==10 and len(j["entries"])==10
+              assert j["data_netem_unchanged"] and not j["product_or_route_key_modified"]
+              assert all(x["neighbor_state"]=="PERMANENT" and x["lladdr_present"]
+                         for x in j["entries"])
+              assert set(x["client"] for x in j["entries"])=={
+                  "alice","bob","carol","dave","erin"}
+          q=json.loads((root/"h1301-netem-clock.json").read_text())["samples"]
+          assert len(q)>100
+          loss={}
+          for d,key in (("uplink","client_uplink_netem"),
+                        ("downlink","host_downlink_netem")):
+              first,last=q[0][key],q[-1][key]
+              assert first["kind"]==last["kind"]=="netem"
+              sent=last["packets"]-first["packets"]
+              dropped=last["drops"]-first["drops"]
+              assert sent>2000 and dropped>1000
+              actual=100*dropped/(sent+dropped)
+              assert 28.0<=actual<=32.0,("actual Erin DATA loss not 30pct",d,actual)
+              loss[d]={"sent":sent,"dropped":dropped,
+                        "actual_netem_drop_percent":round(actual,3)}
+          report={"kind":"H1312_TEST_ONLY_ARP_CONTROL_NOT_PRODUCT_CHANGE",
+                  "original_source":"e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+                  "all_5_client_server_L2_neighbor_pairs":"PERMANENT_BOTH_ENDS",
+                  "original_30pct_125ms_netem":loss,
+                  "original_TLS_Rust_M4_FEC":True}
+          (root/"h1312-l2-control-loss-report.json").write_text(
+              json.dumps(report,indent=2)+"\n")
+          print("M0_H1312_NATIVE_ARM64_REAL_VETH_BOTH_NEIGH_PERMANENT_DATA_NETEM30PCT",json.dumps(loss,sort_keys=True),flush=True)
+          PY
+          python3 -u tools/m0-plan028-h1310-two-path-gap-correlate.py \
+            --art fixed-kernel-result --source "$ORIGINAL_PRODUCT_SOURCE" \
+            --out fixed-kernel-result/h1310-two-path-correlated.json | \
+            tee fixed-kernel-result/h1310-summary.log
+          echo M0_H1312_SOURCE_FROZEN_NATIVE_ARM64_FIVE_REAL_CLIENT_L2_ARP_CONTROL_STRICT_APP_PASS=1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1312-original-arm64-static-L2-netem-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1310-*.json
+            fixed-kernel-result/h1312-*.json
+            fixed-kernel-result/h1310-*.log
+            fixed-kernel-result/h1311-raw-tx-socket.json
+            fixed-kernel-result/h1309-erin-neigh-clock.json
+            fixed-kernel-result/h1301-netem-clock.json
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 14
