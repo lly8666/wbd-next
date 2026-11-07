@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1341",
+  "source_sha": "a150200e9028b009e645b75d55662dcb221cd631",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 42389587476,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42389587476",
+    "workflow_source_sha": "a150200e9028b009e645b75d55662dcb221cd631",
+    "native_job_id": 128455142187,
+    "conclusion": "failure",
+    "source_locked_win_go_production_compile": "PASS",
+    "windows_rust_owner_tests": "PASS",
+    "linux_rust_tests": "PASS",
+    "linux_original_go_tls_rust_build": "PASS",
+    "wsl2_real_linux_boot": "PASS",
+    "signed_npcap_wintun_driver_install": "PASS",
+    "driver_owned_cleanup": "DONE_AFTER_FAILED_NETWORK"
+  },
+  "original_artifact": {
+    "id": 13581312530,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "cfd1a030fab37eee9a786102d11272dea23a0224d4cf2a121ddd9d69a4012476",
+    "github_digest": "sha256:cfd1a030fab37eee9a786102d11272dea23a0224d4cf2a121ddd9d69a4012476",
+    "zip_crc": "PASS",
+    "retained_files": 90,
+    "size_compressed_bytes": 79551,
+    "mode_batch": "mode-batch.json"
+  },
+  "scope_failure": "H1340 commit message omitted `[plan028-win-physical-mtu-only]` marker while test script path change automatically triggered mature full Windows workflow. Selected fallback PUBLIC_MODE=all; WBD_PLAN028_WSL_OWNED_MTU_ONLY=0, native_outer=legacy1400, so intended exact same NIC/IP physical MTU 1500→1280 test did NOT_RUN. This is not evidence that H1335 MTU watcher worked or failed.",
+  "actual_live_native_modes": {
+    "normal": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    },
+    "fixed": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    },
+    "auto": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    },
+    "game2": {
+      "status": "FAIL",
+      "original_tls_and_windows_ready": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "inner_windows_wintun_os_readback_bytes": 1313,
+      "server_single_external_port": 443,
+      "real_native_rust_workers": 2,
+      "actual_rust_worker_join": "PASS",
+      "actual_rust_wal_restore": "PASS",
+      "actual_native_owned_disconnect": "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=2 wal_restored=1 rust_stopped=1",
+      "application_exit": "NONZERO",
+      "original_last_error": "Game original M4 OS MTU drift/invalid WAL expected=1313 actual=0: windowsclient: crash-persistent native DNS and IPv6 guard required; context canceled",
+      "generic_reporter_stop": "NOT_RUN_BECAUSE_NONZERO_EXIT",
+      "interpretation": "genuine runtime MTU readback error or Stop/readback race after ownership cleanup; must not describe as Rust worker failed to stop. Preserve original failure and analyze separately."
+    },
+    "game4": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    },
+    "game2_fec": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    },
+    "game4_fec": {
+      "status": "FUNCTIONAL_PASS_SCOPED",
+      "original_tls": true,
+      "real_bidir_udp": true,
+      "real_bidir_tcp": true,
+      "owned_stop": true
+    }
+  },
+  "intended_one_case": {
+    "normal_mode": "NOT_RUN",
+    "real_underlay_mtu_mutation": "NOT_TRIGGERED",
+    "source4_same_ip": "NOT_TESTED",
+    "cold_original_Go_TLS_B": "NOT_RUN",
+    "actual_SYN_MSS_1240": "NOT_RUN",
+    "Wintun_inner_mtu_1209": "NOT_RUN",
+    "post_new_generation_UDP_TCP": "NOT_RUN",
+    "host_VM_capacity_comparison": "NOT_A_PERFORMANCE_TEST"
+  },
+  "corrective_next_action": "One source-scoped workflow-only commit containing exact `[plan028-win-physical-mtu-only]` marker selects Normal Off, owned source switch=1, 1460 outer; cheap preflight will reject helper changes without exact marker and refuse marker!=Normal; keep real OS owned MTU mutation+restore receipt and the actual Windows VM fingerprint in artifact. No product Go/Rust source change, no unrelated re-dispatch.",
+  "historical_limits": [
+    "H998 original same-socket path hot-MTU FAIL historic retained; 028 full-new-TLS scenario still pending",
+    "H1317 ARM64 5180ms genuine active gap original failure retained",
+    "H1340 Game2 exit FAIL retained and not automatically promoted despite six other functional PASS",
+    "0% default seven mode functional not a performance/rotation or L2 PASS",
+    "Runner VM differs previous H1334 x86-4vCPU; no universal Mbps/CPU extrapolation",
+    "Physical WiFi/Android NOT_RUN and L3 2x1800 NOT_RUN"
+  ]
+}

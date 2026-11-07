@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1340,
-  "checkpoint_sha": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
+  "sequence": 1341,
+  "checkpoint_sha": "a150200e9028b009e645b75d55662dcb221cd631",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1340: H1339 real signed native Windows2025 WSL2 Action42387007264 sourcec056 first-fault fail-closed before original product start: test-only PowerShell Get-NetIPInterface owned vEthernet ifindex25 compartment1 row exists but .NlMtuBytes data property blank; MSFT_NetIPInterface actual CIM getter is .NlMtu, while -NlMtuBytes is only command parameter. Cheap assembly/Windows Go product/Windows Rust units/Linux original build/real WSL2 boot all PASS; real OS MTU mutation, fresh Go TLS/Rust/Wintun, UDP/TCP NOT_RUN. Correct three properties test-only, retain three setter flags, no product source changes; one source-locked signed Normal Off rerun automatic via changed test script. Store VM-specific CPU/vCPU; H1332 4vCPU CPU59.63% not transferable. H998 original same-socket MTU fail historical unchanged.",
-  "why_now": "Hard failure is deterministic wrong PowerShell CIM getter, not different VM throughput or a native product bug. Correct exactly the readback field rather than rework mature Npcap/Wintun/TLS; preserve original Action failure and true model OS source.",
+  "current_task": "H1341: H1340 sourcea150 Action42389587476 originally planned Windows physical same NIC/IP MTU1500→1280, but missing [plan028-win-physical-mtu-only] commit marker selected full `mode=all`, MTU_ONLY=0/outer legacy1400, target NOT_RUN. Genuine signed Npcap+Wintun real Linux WSL2 original Go TLS/Rust app UDP/TCP and owned Stop six modes Normal/Fixed/Auto/Game4Off/Game2FEC/Game4FEC PASS scoped; Game2 Off FAIL due `M4 OS MTU drift expected1313 actual0` at final exit although real Rust worker join/WAL Restore/Stop markers PASS and UDP/TCP PASS, not proven unjoined Stop. Genuine Action FAIL preserved, original 90-file artifact13581312530 verified GitHub zip sha cfd1a030. Next only one explicit marker-scoped NormalOff actual OS MTU test: add cheap preflight to prevent MTU script path change without single scene marker; retain alias and per-VM capacity receipt in artifact. Product Go/Rust untouched; prior four-vCPU Linux 50Mbps CPU not comparable.",
+  "why_now": "Observed H1340 accidental seven-mode fallback consumed real Windows VM and surfaced independent Game2 exit race; prevent repeat via source-marker preflight and run one truly intended hard L1 physical MTU-only network case, keeping true 6 positives and Game2 failure. Preserve VM configuration evidence explicitly.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect one H1340 signed Windows2025 WSL2 owned same NIC/IP physical MTU 1500→1280 Action + governance. Require true OS NlMtu before/after, native NotifyIpInterfaceChange, genuine second TLS/Npcap/Rust M4 with original SYN MSS1420→1240 and Windows inner Wintun OS1389→1209, real bidirectional app UDP/TCP and old/final joined Stop, exact physical MTU restore. If different actual WSL runner baseline, classify ENV_NOT_RUN / adapt scenario by real OS, not artificial 1500. Record VM vCPU/RAM independently; L3 not yet, no duplicate network dispatch.",
+  "next_action": "Verify H1341 new Action actual `WBD_WL_PUBLIC_MODES=normal`, `WBD_PLAN028_WSL_OWNED_MTU_ONLY=1`, outer1460 BEFORE building; one test-owned WSL vEthernet actual NlMtu1500→1280, same selected source4/ifindex, native original Go NotifyIpInterfaceChange + new TLS B, real original SYN MSS1240 and Wintun inner1209, post-B authentic UDP/TCP, owned old & final stop, restored OS NlMtu1500 and default routes, per Windows VM CPU topology file. Do not repeat H1340 seven-mode despite six scoped PASS. If new original product failure, retain first-fault; H1340 Game2 OS MTU shutdown error separate until independently addressed. L3 2x1800 only after gates.",
   "unverified": true,
-  "last_tested_source": "c05602b236a0bb20e14b00b1b93c827fa1fa19c9",
+  "last_tested_source": "a150200e9028b009e645b75d55662dcb221cd631",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1340-H1339-WINDOWS-REAL-OS-MTU-CIM-PROPERTY-FAIL-20261108.json"
+    "docs/evidence/M0/PLAN028-H1341-H1340-UNINTENDED-SEVEN-WIN-GAME2-MTU-EXIT-FAIL-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1340 original signed Windows Action42387007264 sourcec056 still FAIL before product, no OS MTU-only change: genuine ifindex25 compartment1 returned, PowerShell read .NlMtuBytes property null (CIM property is .NlMtu). Test only 3 readback references repaired, no Go/Rust product change; new source native Action pending. Windows/Wsl build and Rust units PASS, aliases cleaned. H1332 x86 four-vCPU 50Mbps/dir host59.63% only that VM. PLAN028 IN_PROGRESS, H998 original hot same-socket FAIL and H1317 legacy gap preserved."
+  "partial_summary": "H1340 sourcea150 real Windows/Linux Action42389587476 overall FAIL: forgot exact MTU-only marker, ran unplanned all 7 mode outer legacy1400, target same NIC/IP MTU NOT_RUN. Source artifact13581312530 ZIP SHA cfd1a verified 90 files, 6 modes real UDP/TCP+Stop functional PASS, Game2 Off exit nonzero M4 MTU drift actual0 after Rust JOIN/WAL Stop PASS, original FAIL retained. H1341 one scoped selector+cheap guard+VM/OS owned artifact retention only, no Go/Rust product edits. H1334 x86 four-vCPU 50Mbps/dir CPU59.63% guest-specific; H998 and H1317 history unchanged; PLAN028 in_progress."
 }
