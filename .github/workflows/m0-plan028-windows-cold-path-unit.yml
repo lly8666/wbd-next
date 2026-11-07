@@ -73,18 +73,19 @@ jobs:
           print("PLAN028_WINDOWS_COLD_UNIT_ASSEMBLY_READY")
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'Go original bridge install failed'}
-      - name: Run seven original Windows cold path and 1Hz MTU liveness tests
+      - name: Run eight original Windows cold MTU and unique successor TCP tuple tests
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
-            & go test -count=1 -v -tags wbd_v4_embedded_go -run '^(TestM0PLAN028NativeWindowsIPv4CallbackCoalescer|TestM0PLAN028WindowsPhysicalMTULivenessOneExistingColdWatcher|TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4|TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient|TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts|TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject|TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth)$' ./cmd/wbd-client 2>&1 | Tee-Object -FilePath ../result/win-cold-go-unit.log
+            & go test -count=1 -v -tags wbd_v4_embedded_go -run '^(TestM0PLAN028NativeWindowsIPv4CallbackCoalescer|TestM0PLAN028WindowsPhysicalMTULivenessOneExistingColdWatcher|TestM0PLAN028WindowsColdNewGenerationNeverReusesOriginalClientTCPPort|TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4|TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient|TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts|TestM0PLAN028WindowsNativePathChangeDoesNotOverrideAuthReject|TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOrAuth)$' ./cmd/wbd-client 2>&1 | Tee-Object -FilePath ../result/win-cold-go-unit.log
             if ($LASTEXITCODE -ne 0) {throw 'original Go native path-generation unit failed'}
           } finally {Pop-Location}
           $log=Get-Content result/win-cold-go-unit.log -Raw
           $names=@('TestM0PLAN028NativeWindowsIPv4CallbackCoalescer',
                    'TestM0PLAN028WindowsPhysicalMTULivenessOneExistingColdWatcher',
+                   'TestM0PLAN028WindowsColdNewGenerationNeverReusesOriginalClientTCPPort',
                    'TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4',
                    'TestM0PLAN028WindowsNativePathChangeCancelsColdTLSNotWholeClient',
                    'TestM0PLAN028WindowsUserStopDuringColdTLSNeverRestarts',
@@ -95,7 +96,7 @@ jobs:
               throw ('Windows original Go test was not actually run: '+$test)
             }
           }
-          Write-Output 'M0_PLAN028_WINDOWS_NATIVE_IPV4_COLD_TLS_RETRY_AUTH_BOUNDARY_UNIT_PASS tests=7'
+          Write-Output 'M0_PLAN028_WINDOWS_NATIVE_IPV4_COLD_TLS_RETRY_AUTH_BOUNDARY_UNIT_PASS tests=8'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

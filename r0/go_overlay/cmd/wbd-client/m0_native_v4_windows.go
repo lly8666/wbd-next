@@ -239,6 +239,25 @@ func(c *m0WindowsPathCoalescer) clear(){*c=m0WindowsPathCoalescer{}}
 // Only the already selected physical NIC/IP+MTU is eligible. The cold
 // controller must still coalesce and verify a second OS read before Stop;
 // errors, missing source or our own Wintun never authorize new TLS.
+// Original NPF/TLS server owns a raw 4-tuple through detached Rust M4
+// cleanup, potentially beyond the client's exact owned Stop. A new
+// credential-TLS generation on the SAME physical IP must NOT reuse its
+// old TCP client tuple. Preserve user-configured source port on generation1;
+// only cold successor Normal/FEC starts on a new local port. No wire/ABI
+// change, server still listens on the ONE original port443.
+//
+// Wrap into the dynamic/private range rather than ever generating port0.
+// The collision/multi-client boundary remains subject to L0 coverage;
+// this helper is not a platform-wide reservation service.
+func m0WindowsOriginalColdClientPort(configured uint16,generation uint64)(uint16,error){
+ if configured==0||generation==0{return 0,windowsclient.ErrN4NativeGuard}
+ if generation==1{return configured,nil}
+ step:=(generation-1)%65535
+ candidate:=uint64(configured)+step
+ if candidate>65535{candidate=49152+(candidate-65536)%16384}
+ if candidate==uint64(configured){return 0,windowsclient.ErrN4NativeGuard}
+ return uint16(candidate),nil
+}
 func m0WindowsPhysicalPathLivenessChanged(current,next m0WindowsPhysicalPath,err error)bool{
  return err==nil&&next.ifindex!=0&&next.source4.Is4()&&
   next.physicalMTU>=576&&next!=current
@@ -497,7 +516,17 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=%v configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
   generation,o.Mode,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,
   cold.AdvertisedSynMSS,o.TunnelMTU,reason)
- ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
+ // A successor with the same source IPv4 cannot reuse the exact old
+ // detached Linux raw 4-tuple. Game already manages its own multi-lane
+ // local tuple set, so only Normal/Fixed/Auto use this cold port.
+ coldSourcePort:=o.SourcePort
+ if o.Mode!=m0WinModeGame2&&o.Mode!=m0WinModeGame4{
+  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,generation)
+  if err!=nil{return err}
+  fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t\n",
+   generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort)
+ }
+ ncfg,err:=underlay.NpcapConfig(coldSourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
  // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
  // SendARP returned the WINDOWS vEthernet source MAC for a real WSL2
@@ -604,7 +633,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  defer endpoint.Close()
  flow:=faketcp.ClientFlow{
   LocalIP:underlay.Source4.As4(),PeerIP:o.ServerIP.As4(),
-  LocalPort:o.SourcePort,PeerPort:o.ServerPort,
+  LocalPort:coldSourcePort,PeerPort:o.ServerPort,
  }
  var seed [4]byte
  if _,err=rand.Read(seed[:]);err!=nil{return err}

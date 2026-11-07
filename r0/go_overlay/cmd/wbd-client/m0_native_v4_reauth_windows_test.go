@@ -89,6 +89,40 @@ func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
  if c.remaining(start.Add(495*time.Millisecond))!=5*time.Millisecond||c.remaining(start.Add(500*time.Millisecond))!=0{t.Fatal("no 500ms absolute bound")}
  c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("not cleared")}
 }
+// A same-source-IPv4 generation B must differ in original FakeTCP 4-tuple,
+// otherwise the Linux original server may still route new SYN into A's
+// authenticated detached Rust tuple. This is a local client source-port
+// change, not a second public server port or private TLS wire extension.
+func TestM0PLAN028WindowsColdNewGenerationNeverReusesOriginalClientTCPPort(t *testing.T){
+ for _,row:=range []struct{
+  name string
+  configured uint16
+  generation uint64
+  want uint16
+ }{
+  {"first_original_configured",41031,1,41031},
+  {"second_same_source_4tuple",41031,2,41032},
+  {"third_preexisting_highwater",41031,3,41033},
+  {"maximum_private_port_wrap",65535,2,49152},
+  {"low_original_port_kept_first",443,1,443},
+  {"low_original_port_successor",443,2,444},
+ }{
+  t.Run(row.name,func(t *testing.T){
+   got,err:=m0WindowsOriginalColdClientPort(row.configured,row.generation)
+   if err!=nil||got!=row.want{
+    t.Fatalf("client cold tuple source port selected=%d expected=%d err=%v",got,row.want,err)
+   }
+  })
+ }
+ for _,row:=range []struct{port uint16;generation uint64}{
+  {0,1},{41031,0},{0,0},
+ }{
+  if _,err:=m0WindowsOriginalColdClientPort(row.port,row.generation);err==nil{
+   t.Fatal("invalid source port or generation must fail closed")
+  }
+ }
+}
+
 // An actual selected physical MTU-only mutation must be eligible even
 // if Windows supplies no IPv4 IP-interface callback. The same 200/500ms
 // cold controller verifies a second OS sample before owned Stop; a nil
