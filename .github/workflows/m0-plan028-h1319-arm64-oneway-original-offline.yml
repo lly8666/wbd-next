@@ -1,0 +1,58 @@
+name: M0 PLAN028 H1319 ARM64 one-way native proof exact original SOURCE offline
+run-name: H1319 no-network H1318 original ARM64 physical blackout preterminal B, correct Game4 native direction
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1319-arm64-oneway-original-offline.yml"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  source-locked-native-oneway-offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42366910850
+          github-token: ${{ github.token }}
+          name: h1318-native-arm64-five-client-oneway-42366910850
+          path: original-arm64-network
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42366910850
+          github-token: ${{ github.token }}
+          name: h1286-arm64-one-isal-build-4c12b5209a08a7eda4066256163f7a9f1c0cea93
+          path: original-elf-build
+      - name: Offline original ARM64 five-client one-way preterminal plus real ISA-L source proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s original-arm64-network/fixed-kernel-result/h1286-rapid-report.json
+          test -s original-arm64-network/fixed-kernel-result/h1318-erin-native-health-blackhole.json
+          test -s original-arm64-network/fixed-build/manifest.json
+          test -s original-elf-build/libwbd_engine.so
+          mkdir -p fixed-kernel-result
+          python3 -m py_compile \
+            tools/m0-plan028-h1316-oneway-native-report.py \
+            tools/m0-plan028-h1319-oneway-predead-offline.py
+          python3 tools/m0-plan028-h1319-oneway-predead-offline.py \
+            --network original-arm64-network \
+            --build original-elf-build \
+            --output fixed-kernel-result/h1319-real-native-source4c12-oneway.json \
+            | tee fixed-kernel-result/h1319-real-native-source4c12-oneway.log
+          grep -Fq M0_PLAN028_H1319_ARM64_REAL_100PCT_HEALTH_BLACKHOLE_PREDEAD_B_ONEWAY_SCOPED_PASS \
+            fixed-kernel-result/h1319-real-native-source4c12-oneway.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1319-arm64-original-oneway-qualification-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1319-real-native-source4c12-oneway.json
+            fixed-kernel-result/h1319-real-native-source4c12-oneway.log
+          if-no-files-found: warn
+          retention-days: 14

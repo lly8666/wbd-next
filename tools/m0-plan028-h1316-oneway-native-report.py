@@ -73,14 +73,37 @@ def check(root,source):
             counters[direct]={"sent":n,"delivered":m}
         cases[who]={"mode":MODE[who],"active_app_direction":active,
                     "actual_app":counters}
-    s=(root/"h1250-product-dave.log").read_text(errors="replace")
-    m=re.findall(r"M0_GAME_M4_FEC_BACKEND_READBACK selected=(\S+) native_linked=(\d+) tx_native_quanta=(\d+) tx_scalar_quanta=(\d+)",s)
-    assert m and m[-1][0]=="prefer-native" and int(m[-1][1])==1 and int(m[-1][2])>0
+    # Dave is DOWNLINK only. The genuine FEC sender is the SERVER;
+    # Dave's new-generation original Rust Game4 receives and decodes.
+    # Requiring Dave TX>0 would require synthetic reverse user traffic,
+    # violating the pure one-way scenario's own data-plane contract.
+    backend_pattern=(r"M0_GAME_M4_FEC_BACKEND_READBACK selected=(\S+) "
+        r"native_linked=(\d+) tx_native_quanta=(\d+) "
+        r"tx_scalar_quanta=(\d+) rx_native_decodes=(\d+) "
+        r"rx_scalar_decodes=(\d+)")
+    server_log=(root/"h1250-product-server.log").read_text(errors="replace")
+    dave_log=(root/"h1250-product-dave.log").read_text(errors="replace")
+    send=re.findall(backend_pattern,server_log)
+    receive=re.findall(backend_pattern,dave_log)
+    assert send and receive,"missing original server/client Game4 backend readback"
+    sx,dx=send[-1],receive[-1]
+    assert sx[0]==dx[0]=="prefer-native"
+    assert int(sx[1])==int(dx[1])==1
+    native_sent=int(sx[2]);scalar_short_sent=int(sx[3])
+    native_received=int(dx[4]);scalar_received=int(dx[5])
+    assert native_sent>1000 and native_received>0,(sx,dx)
+    # Tiny original short-block scalar fallback does not make the
+    # backend a scalar test. Full-block work MUST be true ISA-L.
+    assert scalar_short_sent<=max(8,native_sent//100),(sx,dx)
+    assert scalar_received==0 and int(dx[2])==int(dx[3])==0,(sx,dx)
     return {"kind":"SCOPED_L1_TRUE_NATIVE_ARM64_PURE_ONEWAY_WITH_AUTH_ROTATIONS",
        "source_sha":source,"original_tls_server_port":443,
        "all_five_auth_rotations":r["rotation_verdict"],
        "genuine_app_alerts":0,"per_lease_tun_overflow":0,
-       "native_isal_quanta":int(m[-1][2]),"legal_scalar_short_blocks":int(m[-1][3]),
+       "native_isal_quanta":native_sent,"legal_scalar_short_blocks":scalar_short_sent,
+       "dave_client_native_ISAL_decoded":native_received,
+       "dave_client_scalar_decoded":scalar_received,
+       "dave_client_no_reverse_FEC_tx_quanta":True,
        "Erin_true_oneway_upstream_netem_loss_pct":round(loss,3),
        "Erin_downstream_data_loss_pct":"NOT_MEASURED_NO_USER_APP",
        "test_only_ten_static_veth_mac":"PERMANENT_NEIGH",

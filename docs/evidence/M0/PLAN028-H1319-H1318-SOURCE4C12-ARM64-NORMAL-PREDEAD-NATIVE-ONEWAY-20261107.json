@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "4c12b5209a08a7eda4066256163f7a9f1c0cea93",
+  "action": {
+    "id": 42366910850,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42366910850",
+    "conclusion": "failure",
+    "failure_stage": "POST_NETWORK_ORACLE_DAVE_WRONG_DIRECTION_NATIVE_TX",
+    "build": "PASS",
+    "genuine_native_application": "PASS_zero_alerts",
+    "artifact_id": 13572551435,
+    "build_artifact_id": 13572515555,
+    "run_duration_s": 180,
+    "original_pinned_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "arch": "real_aarch64_client_and_server",
+    "no_new_network_run_for_report_fix": true
+  },
+  "actual_cryptographic_and_business": {
+    "server_port": 443,
+    "original_tls_and_native_m4": true,
+    "clients": 5,
+    "real_app_alert_count": 0,
+    "rotation": "PASS_ALL_FIVE_SCOPED",
+    "original_stop_all_scoped": true,
+    "max_active_send_no_receive_ms": {
+      "alice_up": 0,
+      "bob_down": 10,
+      "carol_up": 50,
+      "dave_down": 100,
+      "erin_up": 120
+    },
+    "true_unique_UDP_counts": {
+      "alice_up": {
+        "sent": 216577,
+        "delivered": 216577
+      },
+      "bob_down": {
+        "sent": 216577,
+        "delivered": 216577
+      },
+      "carol_up": {
+        "sent": 177199,
+        "delivered": 176793
+      },
+      "dave_down": {
+        "sent": 177199,
+        "delivered": 177199
+      },
+      "erin_up": {
+        "sent": 157510,
+        "delivered": 157045
+      }
+    },
+    "silent_user_direction_UDP_TCP_probes": "ZERO_ALL_FIVE",
+    "server_per_authenticated_lease_TUN": {
+      "downlink_bob": {
+        "offered": 216577,
+        "delivered": 216577,
+        "pending_overflow": 0
+      },
+      "downlink_dave": {
+        "offered": 177199,
+        "delivered": 177199,
+        "pending_overflow": 0
+      },
+      "uplink_only_no_server_TUN_egress_queue": "EXPECTED_NO_SYNTHETIC_DOWNLINK"
+    }
+  },
+  "true_physical_health_interruption": {
+    "blackhole_start_monotonic_ns": 105489345267,
+    "restored_monotonic_ns": 169147535230,
+    "approx_duration_seconds": 63.658,
+    "server_to_Erin_physical_loss_pct": 100,
+    "after_restoration_loss_pct": 30,
+    "client_to_server_loss_pct": 30,
+    "restore_at_app_plus_seconds": 10.008,
+    "real_oneway_delay_ms": 125,
+    "Erin_preterminal_log": "V4_PUBLIC_PATH_PREDEAD_AUTH_REFRESH role=client old_generation=1 authenticated_health_stale=1 old_route_preserved=1 terminal_native_dead=0",
+    "Erin_B_verified": "V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX generation=2 native_rx=0 authenticated_health=1 old_route_revoked=1",
+    "terminal_old_M4_dead_trigger": "NOT_TRIGGERED",
+    "result": "NATIVE_COLD_B_WITH_A_STILL_LIVE_NO_OLD_DEAD90_STALL",
+    "client_unnamed_source": "same 1460 outer intent for others, Erin 1280 explicitly"
+  },
+  "backend_oracle_corrected": {
+    "invalid_prior_check": "read Dave client tx_native_quanta>0 even though Dave was pure downlink; client legitimately has 0 outbound source",
+    "real_sender_server": {
+      "selected": "prefer-native",
+      "native_linked": 1,
+      "tx_native_quanta": 68012,
+      "tx_scalar_short_blocks": 1
+    },
+    "real_receiver_Dave": {
+      "selected": "prefer-native",
+      "native_linked": 1,
+      "rx_native_decodes": 9380,
+      "rx_scalar_decodes": 0,
+      "tx_native_quanta": 0,
+      "tx_scalar_quanta": 0
+    },
+    "correct_gate": "server genuine original native quanta>1000 and Dave genuine native decoder>0; only tiny original short-block scalar fallback (<=1%); all five pure directional app/gap/Stop gates unchanged",
+    "original_Action_status_retained": "FAIL",
+    "H1319_offline_requalification_status": "NEW_ACTION_PENDING"
+  },
+  "original_build_sha256": {
+    "client": "e5bb2bf1fdd48efb4f6088017425193f21383aa3873c85d904158fa30e42f1fe",
+    "server": "14236be406ece3e3fdb90c5bb5c746d49bc4373c718b4400995c817866e50ffd",
+    "engine": "096366741d13642181717de2b68683f00d0d46d32fcb220e5857f90a30668b14"
+  },
+  "open": [
+    "H1317 genuine Erin 5180ms active uplink stall remains historical FAIL; latest zero gap is source-scoped correction, not universal stochastic proof",
+    "earlier H1316 near 96/91s one-way gap historical",
+    "prior ARM64 weak-net pressure gaps high-load remain",
+    "Windows native Npcap/Wintun physical full seven-mode incomplete",
+    "H998 original same-socket MTU historical FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "L3 long NOT_RUN"
+  ]
+}
