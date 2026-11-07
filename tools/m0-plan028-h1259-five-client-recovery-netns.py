@@ -40,6 +40,15 @@ LONG_SCENES={
     "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
+# Explicit short-only OS event. A new protected TLS+M4 generation must
+# survive the same real NIC / same IPv4 after physical 1500 -> 1280, without
+# the old PLAN027A H998 "0 of 3 small app replies" false qualification.
+# This is NEVER enabled during the original 1800s/430s fixtures.
+FAST_MTU_SHRINK=os.environ.get("WBD_PLAN028_FAST_MTU_SHRINK","")
+if FAST_MTU_SHRINK not in ("","alice"):
+    raise SystemExit("invalid short physical MTU scenario")
+if FAST_MTU_SHRINK and (FAST_SCENE!="baseline" or LONG_SCENE):
+    raise SystemExit("physical in-place MTU shrink is a 180s baseline-only probe")
 if FAST_SCENE and LONG_SCENE:
     raise SystemExit("rapid and long scenes cannot run together")
 FAST_PHASES=(("first_wave",20,.6),("sustained",40,1.0),
@@ -143,6 +152,8 @@ def main():
     bridge_made = False
     stop = threading.Event()
     sampler = None
+    mtu_worker = None
+    mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
 
     def proc(role, ns, args, suffix="log"):
@@ -270,6 +281,7 @@ def main():
             "application_load_seconds":180 if FAST_SCENE else 1800 if LONG_SCENE else 430,
             "drain_seconds":10,"long_scene":LONG_SCENE or None,
             "fast_scene":FAST_SCENE or None,
+            "physical_in_place_mtu_shrink":bool(FAST_MTU_SHRINK),
             "fec_backend_choice":chosen_backend or None,
             "rotation_seconds":{who:ROTATION_SECONDS[i] for i,who in enumerate(NAMES)}
                 if (LONG_SCENE or FAST_SCENE) else {},
@@ -367,6 +379,58 @@ def main():
         qdisc("before")
         sampler = threading.Thread(target=monitor, args=(stop, tmp, out), daemon=True)
         sampler.start()
+        if FAST_MTU_SHRINK:
+            # The FIVE real apps are already started, and their coordinated
+            # business packets start at start_ns; install the physical
+            # bottleneck *70 seconds after active load begins*, while both
+            # original Go TLS endpoints / Rust M4 owners are still running.
+            # Change genuine veth kernel MTU at BOTH ends of Alice's physical
+            # veth, not merely a reported/configured outer MTU.
+            def physical_alice_mtu_event():
+                try:
+                    due_ns=start_ns+70_000_000_000
+                    delay=max(0,(due_ns-time.monotonic_ns())/1e9)
+                    if stop.wait(delay):
+                        return
+                    client=client_nics[0]
+                    peer=host_nics[0]
+                    ns=namespaces[0]
+                    def client_mtu():
+                        r=run("sudo","-n","ip","-n",ns,"-j","link",
+                              "show","dev",client,capture=True)
+                        return json.loads(r)[0]["mtu"]
+                    def peer_mtu():
+                        r=run("sudo","-n","ip","-j","link","show",
+                              "dev",peer,capture=True)
+                        return json.loads(r)[0]["mtu"]
+                    before=(client_mtu(),peer_mtu())
+                    assert before==(1500,1500),("non-1500 real NIC",before)
+                    stamp=time.monotonic_ns()
+                    assert stamp>start_ns+69_000_000_000,stamp
+                    run("sudo","-n","ip","-n",ns,"link","set",
+                        "dev",client,"mtu","1280")
+                    run("sudo","-n","ip","link","set",
+                        "dev",peer,"mtu","1280")
+                    after=(client_mtu(),peer_mtu())
+                    assert after==(1280,1280),after
+                    write_json(out/"h1291-physical-mtu-shrink.json",{
+                        "case":"alice_real_veth_both_ends_same_ip_no_link_down",
+                        "before_actual_kernel_link_mtu":before,
+                        "after_actual_kernel_link_mtu":after,
+                        "app_start_monotonic_ns":start_ns,
+                        "changed_monotonic_ns":stamp,
+                        "changed_seconds_into_real_application":round(
+                            (stamp-start_ns)/1e9,5),
+                        "client_ipv4":"10.25.0.2",
+                        "client_mode":"normal",
+                        "source":"real_ip_link_mtu_set_under_active_auth_tls",
+                    })
+                    print("H1291_REAL_PHYSICAL_A_LIVE_MTU_1500_TO_1280_BOTH_VETH_READBACK",
+                          stamp,flush=True)
+                except Exception as exc:
+                    mtu_faults.append(str(exc))
+            mtu_worker=threading.Thread(target=physical_alice_mtu_event,daemon=True)
+            mtu_worker.start()
         print(f"H1250_START_NS={start_ns}; 5 native clients simultaneously "
               f"{180 if FAST_SCENE else 1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
               f"scenario={FAST_SCENE or LONG_SCENE or 'h1259'}; actual two-way tc loss={LOSS}", flush=True)
@@ -377,6 +441,11 @@ def main():
             except subprocess.TimeoutExpired as exc:
                 raise RuntimeError("traffic worker hung: " + role) from exc
             assert code == 0, f"traffic worker failed: {role}, exit={code}"
+        if mtu_worker is not None:
+            mtu_worker.join(timeout=7)
+            if mtu_worker.is_alive() or mtu_faults:
+                raise RuntimeError("physical MTU fault: "+repr(mtu_faults))
+            assert (out/"h1291-physical-mtu-shrink.json").is_file()
         stop.set()
         sampler.join(timeout=8)
         qdisc("after")
@@ -429,6 +498,8 @@ def main():
         stop.set()
         if sampler is not None:
             sampler.join(timeout=6)
+        if mtu_worker is not None:
+            mtu_worker.join(timeout=3)
         for role in list(procs)[::-1]:
             p = procs[role]
             if p.poll() is None:

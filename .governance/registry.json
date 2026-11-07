@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 H1292: user orders all known issues fixed BEFORE long test. H1290 SOURCE622653 native ARM64 3x180 real 5-client scalar/new lookup pressure FAIL4 and native ISA-L pressure FAIL3 while hetero native PASS0; M4 exact ports valid but per-/32 shared TUN overflow Bob24/Dave46, Erin Fixed6 DL gap1270ms. H1292 original Rust shared TUN per-/32 bounded backlog partial FIFO now sends oldest once whenever new DATA arrives and existing backlog nonempty, not only when full8; same 8packets/64KiB/100ms, source-locked native short/unit pending. H998 physical live same-socket MTU1500->1280 and remote ICMP remain OPEN. 1800s NOT_RUN.",
+      "goal": "PLAN028 H1293: Fix all known failure sources BEFORE 1800s. H1292 original Rust shared TUN per-lease eager FIFO (8packets/64KiB/100ms unchanged) exact ARM64 3x180s five-client stress run42321635252 pending. H1293 new opt-in same-NIC/same-IP REAL physical kernel veth MTU 1500->1280 after 70s active 180s baseline + source-locked original Go TLS/Rust server-native M4 fresh generation and final business proof; historical H998 same-socket active MTU FAIL remains OPEN, do not claim fixed by hard IP DOWN/UP. No long.",
       "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
