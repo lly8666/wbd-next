@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "fixture_sha": "79df27dee381d816e9d8df528f3a757c4318986d",
+  "h1309_action": {
+    "id": 42348140963,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42348140963",
+    "conclusion": "failure",
+    "artifact_id": 13564184270,
+    "same_sha256_original_ARM64_Go_Rust_build_action": 42346792441,
+    "first_product_build_or_assembly": "NOT_RUN_frozen_original_binaries_verified"
+  },
+  "actual_native_scene": {
+    "arch": "aarch64/aarch64",
+    "duration_seconds": 180,
+    "one_server_port": 443,
+    "real_clients": 5,
+    "loss_percent_by_client": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "delay_oneway_ms_by_client": [
+      0,
+      15,
+      50,
+      100,
+      125
+    ],
+    "capacity_scales": [
+      0.25,
+      0.35,
+      0.45,
+      0.35
+    ],
+    "Game4_backend": "prefer-native",
+    "ISA_L_native_linked": true,
+    "tx_native_quanta": 65276,
+    "tx_scalar_quanta": 724,
+    "scalar_legal_for_small_blocks": true,
+    "all_5_rotations": "PASS_ALL_FIVE_SCOPED",
+    "all_5_lease_TUN_pending_overflow": 0,
+    "alert_count": 1
+  },
+  "real_blocking_gap": {
+    "who": "dave",
+    "mode": "Game4 Fixed6",
+    "loss_percent": 15,
+    "oneway_delay_ms": 100,
+    "direction": "downlink",
+    "kind": "APP_RX_GAP_WITH_ACTIVE_TX_GE750MS",
+    "start_relative_seconds": 127.1,
+    "end_relative_seconds": 129.34,
+    "duration_ms": 2240,
+    "actual_user_offered_during_gap_bytes": 2267648,
+    "received_user_bytes": 0,
+    "client_uplink_similar_gap": "NONE_ABOVE_750MS",
+    "client_Game4_lane_1_rotation_relative_seconds_about": 86,
+    "client_Game4_lane_2_rotation_relative_seconds_about": 174,
+    "physical_dave_NUD_and_veth_500ms": "NOT_MEASURED_IN_H1309"
+  },
+  "parallel_erinevidence": {
+    "who": "erin",
+    "loss_percent": 30,
+    "oneway_delay_ms": 125,
+    "downlink_max_active_gap_ms": 120,
+    "uplink_max_active_gap_ms": 250,
+    "no_Erin_GTE750ms_active_alert": true,
+    "Erin_NUD_states_over_466_samples": {
+      "REACHABLE": 342,
+      "DELAY": 96,
+      "STALE": 15,
+      "PROBE": 13,
+      "INCOMPLETE": 0,
+      "FAILED": 0
+    },
+    "note": "NUD DELAY of 4-5s periodically DOES NOT by itself establish packet/app outage",
+    "during_Dave_gap_host_Erin_netem_packets_sent_delta": 5309,
+    "during_Dave_gap_host_CPU_busy_per_core_percent": [
+      66.9,
+      67.5,
+      66.9,
+      66.8
+    ],
+    "host_steal_percent": 0
+  },
+  "failed_diagnostic_assertion": {
+    "old": "assert linked==1 and native>0 and scalar==0",
+    "actual": "linked1 native65276 scalar724",
+    "meaning": "PreferNative selected real ISA-L for suitable sizes and legitimately uses scalar on short (<64B) blocks per crates/wbd-codec/src/fec_native.rs",
+    "incorrect_as_native_backend_fail": true,
+    "real_Dave_app_gap_failure_remains": true,
+    "correlation_report_missing_due_to_old_assertion": true
+  },
+  "next_H1310": {
+    "kind": "one_source_frozen_native_short_diagnostic",
+    "binary_source": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "same_180s_one_5_client_scene": true,
+    "new_witness": "read-only Dave server NUD 10.25.0.5, server shared NIC TX, host Dave veth RX/TX, client Dave veth RX, Dave downlink/uplink tc netem every ~500ms, with independent original Erin NUD/qdisc and application 10ms bins",
+    "no_new_product_build_or_wire": true,
+    "no_probes_or_ARP_injection": true,
+    "success_gate": "NO active sender->receiver app gap >=750ms; all auth rotations and Stops, five /32 TUN overflows0; actual native ISA-L>0 regardless of valid scalar short fallback",
+    "alert_behavior": "Fail Action after persisting exact stage report, don't mark CI PASS on a different or shorter impairment sample"
+  },
+  "retained_unresolved": [
+    "Original H1308 Erin5360ms business gap still FAIL",
+    "H1309 Dave2240ms app gap FAIL",
+    "Cross-client native Game4 weak-net physical diagnosis OPEN",
+    "H998 original same-socket MTU failure retained",
+    "Windows physical seven native modes incomplete",
+    "Remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "L3 1800s long NOT_RUN"
+  ]
+}
