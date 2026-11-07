@@ -44,6 +44,25 @@ jobs:
           r=json.loads(p("fixed-kernel-result/assembly.json").read_text())
           assert r["overlay_source"]==os.environ["GITHUB_SHA"],r
           assert r["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          # The base manifest intentionally installs only the original pinned
+          # overlay operations, not every source-only Game Linux product file.
+          # Reuse the already-qualified full-package staging from the native
+          # Game4 workflow; no product branch, alternate protocol or fake owner.
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for source in (p("r0/go_overlay")/part).glob("*.go"):
+                  if source.name.endswith("_test.go"):
+                      continue
+                  target=p("legacy")/part/source.name
+                  if target.is_file():
+                      assert target.read_bytes()==source.read_bytes(),str(source)
+                  else:
+                      target.parent.mkdir(parents=True,exist_ok=True)
+                      target.write_bytes(source.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              source=p("r0/go_overlay/internal/faketcp")/name
+              target=p("legacy/internal/faketcp")/name
+              assert not target.exists(),str(target)
+              target.write_bytes(source.read_bytes())
           src=p("r0/go_overlay/internal/realityfront/admission_v4_game_linux_test.go").read_bytes()
           staged=p("legacy/internal/realityfront/admission_v4_game_linux_test.go").read_bytes()
           assert staged==src,"NOT exact assembled tagged original Go test"

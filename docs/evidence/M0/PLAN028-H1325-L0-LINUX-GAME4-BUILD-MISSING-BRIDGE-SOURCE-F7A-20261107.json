@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "f7a12dce54d803de1ee8ae51a9b73f2653c536de",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action_id": 42374747715,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/42374747715",
+  "job_id": 128409941833,
+  "artifact_id": 13575650951,
+  "stage": "native Linux x86 Go package compilation before TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane",
+  "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "assembly_test_staged_exact_bytes": "PASS",
+  "native_rust_product_feature_library_build": "PASS",
+  "go_tags": "linux+cgo+wbd_v4_embedded_go+wbd_v4_fec2_product",
+  "actual_test_execution": "NOT_RUN",
+  "first_error": "admission_v4_game_linux_test.go:26 undefined V4LinuxGameAuthenticatedLane; :27 undefined v4EmbeddedNativeBridge; repeated at 36/37/44/46",
+  "root_cause": "PLAN020 overlay manifest contains the tagged test file but intentionally does not install all Linux Game public production bridge files. The new L0 workflow used only the manifest; mature existing Game4 original-OS workflow supplements all current non-test Go realityfront/v4productcli files plus original raw detached faketcp source. Original tagged test did not reach execution.",
+  "repair_scope": "Only L0 workflow reproduces source-locked existing mature Game4 full Go package staging and keeps test-only source byte identity assertion; no product logic change, no new modes/network seed.",
+  "next_status": "PENDING_NEW_SOURCE_ACTION_TRIGGERED_BY_WORKFLOW_CHANGE",
+  "previous_valid_qualifications": "H1322 Windows signed Wintun Fixed/Auto missing original RS16, Rust nonproduct compile, H1323 governance still qualified scoped",
+  "remaining": [
+    "H1317 5.18s gap retained FAIL",
+    "H998 original MTU same-socket retained FAIL",
+    "Game4 x86 flow Action42373564647 CI FAIL native marker NOT_VERIFIED",
+    "PLAN026-LINUX-AUTO-HEALTH combined Action42373564674 FAIL toolchain setup",
+    "L2/L3 and physical Android NOT_RUN"
+  ]
+}
