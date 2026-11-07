@@ -89,6 +89,47 @@ func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
  if c.remaining(start.Add(495*time.Millisecond))!=5*time.Millisecond||c.remaining(start.Add(500*time.Millisecond))!=0{t.Fatal("no 500ms absolute bound")}
  c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("not cleared")}
 }
+// An actual selected physical MTU-only mutation must be eligible even
+// if Windows supplies no IPv4 IP-interface callback. The same 200/500ms
+// cold controller verifies a second OS sample before owned Stop; a nil
+// or failed/foreign OS read is never a cold TLS authorization.
+func TestM0PLAN028WindowsPhysicalMTULivenessOneExistingColdWatcher(t *testing.T){
+ base:=m0WindowsPhysicalPath{
+  ifindex:18,source4:netip.MustParseAddr("198.19.254.1"),physicalMTU:1500,
+ }
+ mutated:=base
+ mutated.physicalMTU=1280
+ if !m0WindowsPhysicalPathLivenessChanged(base,mutated,nil){
+  t.Fatal("same ifindex and source4, real OS NlMtu1500->1280 must arm cold recheck")
+ }
+ var c m0WindowsPathCoalescer
+ now:=time.Unix(1000,0)
+ c.push(now)
+ if c.remaining(now)!=200*time.Millisecond||
+  c.remaining(now.Add(201*time.Millisecond))!=0{
+  t.Fatal("1Hz sample must use exact existing 200ms cold coalescer")
+ }
+ c.clear()
+ if c.remaining(now)!=-1{t.Fatal("coalescer must drain before next sample")}
+ for _,row:=range []struct{
+  name string
+  path m0WindowsPhysicalPath
+  err error
+ }{
+  {"identical_selected_path",base,nil},
+  {"read_failed",mutated,errors.New("IP Helper entry failed")},
+  {"empty_selected_path",m0WindowsPhysicalPath{},nil},
+  {"foreign_ipv6",m0WindowsPhysicalPath{ifindex:18,source4:netip.MustParseAddr("2001:db8::1"),physicalMTU:1280},nil},
+  {"invalid_NlMtu",m0WindowsPhysicalPath{ifindex:18,source4:base.source4,physicalMTU:0},nil},
+ }{
+  t.Run(row.name,func(t *testing.T){
+   if m0WindowsPhysicalPathLivenessChanged(base,row.path,row.err){
+    t.Fatal("invalid/no-op physical OS sample must not rotate original TLS")
+   }
+  })
+ }
+}
+
 // Win32 MIB_IPINTERFACE_ROW is an actual x64 IP-layer NlMtu receipt,
 // unlike net.Interface.MTU (physical adapter MTU). The donor pins x/sys
 // v0.33.0 before its GetIpInterfaceEntry wrapper; verify our local ABI.

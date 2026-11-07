@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1344",
+  "source_sha": "4123cee3b538a65720593cc2e5376db8dba5cc19",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "SCOPED_REAL_WINDOWS2025_NPCAP_WINTUN_GENUINE_LINUX_WSL2_GAME2_OFF_ORIGINAL_TLS_RUST_M4_BOTH_DIRECTION_UDP_TCP_AND_EXACT_STOP",
+  "action": {
+    "run_id": 42396913782,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42396913782",
+    "conclusion": "success",
+    "linux_build_job_id": 128476818530,
+    "native_windows_linux_job_id": 128477303802,
+    "windows_cold_unit_run": 42396913731,
+    "scoped_windows_WAL_run": 42396913763
+  },
+  "artifact": {
+    "id": 13583314582,
+    "sha256": "1f602fe7b07ea8eb86c961c341316d7fcf768653b2d9120b051a264b14a039ee",
+    "zip_crc": "PASS",
+    "retained_files": 27,
+    "binary_manifest": "windows-binary-manifest.json",
+    "mode_report": "game2-report.json",
+    "mode_artifact_manifest": "mode-results/game2/artifact-manifest.json"
+  },
+  "source_locked_originals": {
+    "windows_exe_sha256": "f15b280febc4ffe2f10ab1581da905e3f7f146a6e9c8d44fda67cc69874f0145",
+    "windows_rust_dll_sha256": "9cedfb8a73dd847a9722d3a24a09642bf1b93dbd3185421a4f3218db12b5102e",
+    "linux_server_sha256": "7397fb2f9801fab4f43ae9a6b1605499d492206eb5542fce44a01b7b84b54b7f",
+    "go_donor": "a7a82db31fe736ffedee330795a3234d358f1984"
+  },
+  "native_platform": {
+    "runner": "windows-2025",
+    "os_version": "10.0.26100.0",
+    "cpu_name": "AMD EPYC 9V74 80-Core Processor",
+    "logical_vcpu": 4,
+    "physical_cores_exposed": 2,
+    "sockets": 1,
+    "guest_RAM_bytes": 17174360064,
+    "linux": "true Ubuntu WSL2 signed native peer (not simulated)",
+    "cpu_performance_cross_vm": "NOT_COMPARABLE"
+  },
+  "test": {
+    "mode": "Game2 Off only",
+    "requested_original_win_outer_mtu": 1400,
+    "physical_OS_MTU_shrink": "NOT_RUN",
+    "server_port": 443,
+    "original_windows_tls_rust_wintun_npcap_os_wal": "PASS",
+    "original_linux_ready": "PASS",
+    "actual_application_duplex_UDP": "PASS",
+    "actual_application_duplex_TCP": "PASS",
+    "owned_windows_linux_stop": "PASS",
+    "windows_real_app_UDP_sent": 24,
+    "windows_real_app_UDP_received": 23,
+    "linux_real_app_UDP_sent": 86,
+    "linux_real_app_UDP_received": 24,
+    "windows_TCP_echo_bytes": 37,
+    "linux_TCP_echo_bytes": 37,
+    "windows_process_exit": 0,
+    "windows_original_native_owner_runtime_mtu": 1313,
+    "windows_native_runtime_ticks": "OBSERVED_10_SAMPLES",
+    "other_modes": "NOT_RUN",
+    "latency_and_true_packet_loss_rate": "NOT_MEASURED_SHORT_SMOKE_NO_LOSSLESS_CLAIM",
+    "linux_WSL_source_event": "NOT_RUN",
+    "per_vm_peak_private_bytes": 44609536,
+    "per_vm_observed_cpu_seconds": 0.3594
+  },
+  "historic_failure_preserved": {
+    "original_H1340_source": "a150200e9028b009e645b75d55662dcb221cd631",
+    "original_H1340_action": 42389587476,
+    "status": "FAIL_GAME2_OFF_CLIENT_OS_MTU_ZERO_AFTER_CONTEXT_CANCELED",
+    "fixed_cause": "H1343 Go Game cold 1Hz RuntimeMTU canceled-read guard; still live MTU mismatch fails closed; only same target-unique subsequent original Windows source PASS"
+  },
+  "next_separate_unresolved": {
+    "H1342_MTU_only_action": 42395352694,
+    "status": "FAIL",
+    "real_OS_MTU": [
+      1500,
+      1280
+    ],
+    "native_notify_rechecks_before_change": 4,
+    "post_OS_change_notification_recheck": "NOT_OBSERVED",
+    "second_real_TLS": "NOT_TRIGGERED",
+    "H1344_new_cold_1Hz_liveness_source_status": "NOT_RUN_PRESERVE_DISTINCT_ABI_AND_HISTORIC_FAIL"
+  },
+  "limitations": [
+    "Not 180s seven-mode rotation or new physical WiFi",
+    "No 30%/250ms or Game logical20Mbps capacity from this short run",
+    "H1317 earlier 5180ms old ARM64 Normal failure retained",
+    "H998 original same-socket MTU shrink original FAIL retained",
+    "L3 two 1800s NOT_RUN",
+    "Native Windows 2 exposed cores/4 vCPU and ~16GiB cannot be compared to native Linux host workload CPU%/bps without same VM and packet mix"
+  ]
+}

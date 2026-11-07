@@ -99,8 +99,10 @@ func m0WindowsColdPathRetryAllowed(
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
 // PLAN028: the ONE existing cold Go generation supervisor receives actual
-// Windows route/address notifications. No polling, packet callback, new
-// Rust owner, or wire-format change. A route event is not authentication:
+// Windows route/address notifications, with one 1Hz OS interface liveness
+// sample in THIS cold watcher when virtual NICs omit MTU-only callbacks.
+// No packet callback, second controller, TLS/wire or Rust owner change.
+// An OS event or sample is not authentication:
 // compare selected physical NIC/source4/real interface IPv4 MTU after 200ms
 // quiet / 500ms max; gateway noise and our Wintun's MTU do not rotate TLS.
 var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path changed; exact owned Stop then new TLS")
@@ -232,6 +234,16 @@ func(c m0WindowsPathCoalescer) remaining(now time.Time)time.Duration{
 }
 func(c *m0WindowsPathCoalescer) clear(){*c=m0WindowsPathCoalescer{}}
 
+// Some Windows WSL2 IPv4 IP-interface NlMtu writes do not emit a native
+// NotifyIpInterfaceChange after the caller receives successful OS readback.
+// Only the already selected physical NIC/IP+MTU is eligible. The cold
+// controller must still coalesce and verify a second OS read before Stop;
+// errors, missing source or our own Wintun never authorize new TLS.
+func m0WindowsPhysicalPathLivenessChanged(current,next m0WindowsPhysicalPath,err error)bool{
+ return err==nil&&next.ifindex!=0&&next.source4.Is4()&&
+  next.physicalMTU>=576&&next!=current
+}
+
 // Native route, unicast-address, and IP-interface (including NlMtu) change
 // notifications are asynchronous IP Helper subscriptions. Their WinAPI callbacks only wake one buffered
 // channel; actual OS readback, TLS, WFP and Stop remain on ordinary Go threads.
@@ -284,6 +296,8 @@ func watchM0WindowsOriginalPhysicalPath(
   defer cancelProc.Call(interfaceHandle)
   current:=baseline
   var pending m0WindowsPathCoalescer
+  liveness:=time.NewTicker(time.Second)
+  defer liveness.Stop()
   for{
    var timer *time.Timer
    var fire <-chan time.Time
@@ -298,6 +312,21 @@ func watchM0WindowsOriginalPhysicalPath(
     return
    case <-raw:
     pending.push(time.Now())
+   case <-liveness.C:
+    // Same goroutine, cold path only: no second watcher or new callback.
+    next,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias)
+    if os.Getenv("WBD_PLAN028_WSL_OWNED_MTU_ONLY")=="1"&&
+     os.Getenv("GITHUB_ACTIONS")=="true"{
+     fmt.Printf("WBD_WINDOWS_NATIVE_IPV4_NLMTU_LIVENESS_SAMPLE ifindex=%d current_mtu=%d observed_mtu=%d observed_source4=%s error=%t source=GetIpInterfaceEntry_1Hz\n",
+      current.ifindex,current.physicalMTU,next.physicalMTU,next.source4,e!=nil)
+    }
+    if m0WindowsPhysicalPathLivenessChanged(current,next,e){
+     // A sampled MTU delta does not authorize a path: arm the SAME
+     // bounded coalescer and re-read the complete selected OS path.
+     pending.push(time.Now())
+     fmt.Printf("WBD_WINDOWS_NATIVE_IPV4_NLMTU_LIVENESS_CHANGED ifindex=%d old_mtu=%d observed_mtu=%d source=one_existing_cold_watcher\n",
+      current.ifindex,current.physicalMTU,next.physicalMTU)
+    }
    case <-fire:
     fired=true
    }
@@ -313,7 +342,7 @@ func watchM0WindowsOriginalPhysicalPath(
    if e!=nil||next==current{continue}
    current=next
    select{case changed<-struct{}{}:default:}
-   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d source4=%s physical_mtu=%d source=os_native_ipv4_interface_notification coalesce_quiet_ms=200 max_ms=500 observed_unix_ns=%d\n",
+   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d source4=%s physical_mtu=%d source=os_native_ipv4_notification_or_cold_liveness coalesce_quiet_ms=200 max_ms=500 observed_unix_ns=%d\n",
     next.ifindex,next.source4,next.physicalMTU,time.Now().UnixNano())
   }
  }()
