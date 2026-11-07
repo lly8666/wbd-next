@@ -4,7 +4,7 @@
 
 ## 1. 三包与依赖
 
-**跨包红线**：遵守[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)。预共享route-key允许导入/手填，server本地生成持久保存；禁止为“只填账号密码”发TLS前私有交换。028先修H1048前导；029配置/UI、030材料生成/导出/服务化均沿同一契约，不恢复自动线上取key。
+**跨包红线**：遵守[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)。预共享route-key允许导入/手填，server本地生成持久保存；禁止为“只填账号密码”发TLS前私有交换。028沿当前已修实现验收，H1048前导不得恢复；029配置/UI、030材料生成/导出/服务化均沿同一契约，不恢复自动线上取key。
 
 前置新增：[PLAN027A MTU统一](M0-PLAN027A-MTU-UNIFICATION-20261102.md) / [开工提示词](../prompts/M0-PLAN027A.md)。次序为027→027A→028；本页三包复用[唯一MTU契约](../architecture/MTU_CONTRACT.md)，不重新推导。已实现与SOURCE资格仍动态核，不为了先后顺序重复测试同一未变边界。
 
@@ -16,7 +16,7 @@
 | [PLAN029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md) | 服务端域名解析不被自身DNS劫持、Windows配置/UI接入、有限新流填充 | [M0-PLAN029](../prompts/M0-PLAN029.md) |
 | [PLAN030](M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md) | 最小服务端配置、中文wbd-next管理CLI、持久服务化/完整卸载、组合交付 | [M0-PLAN030](../prompts/M0-PLAN030.md) |
 
-**先冻结028配置/会话接口，再并行029与030独立部分；集成与正式客户端测试依赖028实际接通。**生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
+**2026-11-07：028功能冻结并按[集成专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)收口，尚未完成。**以下是既定分包关系；029/030独立部分只有已有明确授权时才并行，不能把本轮028收尾授权扩大为新功能开工。集成与正式客户端测试依赖028实际接通。生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
 
 网络切换范围由028§4.1–4.2统一：现在落公共会话续接/路径事件和Windows/Linux客户端接线，保留内网IP、重认证/重算MTU、休眠不唤醒；Android只在后续客户端阶段接平台网络回调、socket绑定/VPN旁路及Wi-Fi/蜂窝真机验证。不新增第二个控制器，不要求现在提前完成Android。
 
@@ -63,7 +63,7 @@
 
 ## 5. 合理验收和停止
 
-低负载功能为主：Normal每方向约5–10Mbps，Game逻辑约3Mbps；真实Windows↔Linux与Linux arm64资格按受影响后端补。弱网只选0/5/30%代表，不重跑027的10–200M全矩阵。各模式换lane按028单独列全，不用长测时间或PID活着代替。
+028以[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)为最新方法：先容量内功能（Normal每方向5–10Mbps、Game逻辑3Mbps），再按0损伤容量逐级增压，Normal上限200Mbps、Game4最高FEC20Mbps；损伤/延迟按风险配对，不跑全排列，也不只跑低负载便宣称质检完成。Linux x86/原生ARM64任务交替、Windows补独有真实驱动路径；各模式实际交接不能由PID活着或运行时长代替。后续029/030先局部功能，最终组合复用这套方法。
 
 先算实际MTU/分片、k:r/相关损伤和生成器能力，再看first delivery/p99/timeout/CPU/owned Stop；高损不用零丢、一次换代成功等不合理门。容量不足停更重同族，单核锁问题仍属产品。修有实证的问题，最多一次必要反序对照；微小噪声/无收益即停，不防御式扩框架或重复验证成熟策略。
 

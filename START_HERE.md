@@ -1,15 +1,13 @@
 # WBD Next｜main 最小接续
 
-**最新优先级（2026-11-04）：先修PLAN028 TLS建链外观。**用户已接受预共享route-key；H1048的`WB-R1`前置交换被否决，按[TLS建链契约](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)写齐修复并定向验收，再续原切网工作。历史功能PASS保留但不证明外观合格；当前产品修复状态只看最新证据。
+**当前授权（2026-11-07）：PLAN028功能冻结，进入集成可靠性专项验收与缺陷收口，仍为IN_PROGRESS。**不再围绕旧H号重开已经完成的开发；也不能把“功能基本接通”写成已交付。先收最新cursor在途结果，按[专项验收](docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md)完成已知阻断、分层回归、渐进压力与最终有限长测。M0自主选择最有效的修复/测量方式，以理论计算、实际业务和宿主容量综合判断。
 
-源码、计划、进度均在 `main`。全新 agent 先读本页、[AGENTS](AGENTS.md)、[PROJECT_CHARTER](PROJECT_CHARTER.md)、[M0长期提示](docs/prompts/M0.md)、[registry](.governance/registry.json)、[M0 cursor](.governance/workstreams/M0/cursor.json)，只核上一 checkpoint 后增量与在途 Actions；不得无故重复派发。
+源码、计划、进度均在 `main`。先读本页、[AGENTS](AGENTS.md)、[PROJECT_CHARTER](PROJECT_CHARTER.md)、[M0长期提示](docs/prompts/M0.md)、[registry](.governance/registry.json)、[M0 cursor](.governance/workstreams/M0/cursor.json)；只核checkpoint后相关增量与在途Actions，补中断遗漏，不重复派发。
 
-**当前接续状态：PLAN027A 已按用户2026-11-03明确指示限定范围收口；PLAN028 已由用户在2026-11-03本次明确调用启动，现为 IN_PROGRESS（截至H1002仅完成入场依赖审计/治理，产品进度以最新cursor和提交为准）。** 027 已先前限定结案（[H920](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)）；027A 的逐证据收口及保留失败详见 [H998](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json) 与 [H998 devlog](docs/devlog/M0/20261103-PLAN027A-H998-USER-SCOPED-CLOSEOUT-PLAN028-HANDOFF.md)。
+当前执行：[028接续提示](docs/prompts/M0-PLAN028.md) → [028功能范围](docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md) + [专项验收](docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md)。已完实现一笔带过，历史细节遇问题再查；状态/精确SOURCE以cursor及evidence为准。029/030入口在[移植总览](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)，不能因本次收尾授权自动新增功能。
 
-027A 真正已核验：同一产品SOURCE的 Windows Npcap/Wintun ↔ WSL2 Linux 11 个代表场景全部PASS，真实UDP DF0 1728/4096/65507B 至少完整重组一次且内容相等、DF1本地EMSGSIZE、64KiB TCP、真实 MSS/内层 OS MTU、Stop；ARM64 当前源 Normal1460与不对称1460/1280 PASS；H996 Normal OFF→ON 同VM性能保护和单独 Game4FEC loss0 PASS。未达到全范围技术 PASS：H995 **真实在线物理 MTU 缩窄后小流中断 FAIL**；H997 ARM64 Game4FEC两场景真实业务/FEC/Stop可见但 workflow **FAIL**（重复包计数判据）；远端用户态 ICMP3/4 NOT_MEASURED、旧/新产品 CPU 因果优化未证明。用户接受限定结案并保留上述事实，不升级全产品资格。
+**长期硬门**：[TLS建链契约](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)，真实TLS前禁止私有前导，允许预共享route-key；旧WB-R1功能PASS不证明外观合格。[MTU契约](docs/architecture/MTU_CONTRACT.md)，用户外层完整IPv4 MTU默认1460B、不含L2，1500仅显式最大值，内层由Rust派生并由OS应用/读回。同NIC/IP有效MTU变化也需进入现有重认证流程；不能恢复旧“忽略MTU变化”的提示。
 
-**当前施工任务（无需再次授权）**：[PLAN028 接续提示](docs/prompts/M0-PLAN028.md) → [028 会话/配置/网络切换](docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md)。2026-11-03用户已明确启动，状态以最新registry/cursor为准；无新冲突直接从§0.2未完成工作包写代码，不重复H1000审计。028§4.1–4.2网络切换/MTU重新协商必须把027A真实在线缩窄失败作为已知依赖，而不是已有PASS。
+历史限定收口：[027 H920](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)、[027A H998](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)。保留原在线同socket收窄FAIL、ARM64旧workflow FAIL、远端ICMP未测及CPU因果未证；后续新代重认证PASS不能改写旧结论。不因历史NOT_RUN重开整套旧矩阵，也不推广旧PASS。
 
-唯一 MTU 契约：[MTU_CONTRACT](docs/architecture/MTU_CONTRACT.md)：用户外层完整IPv4 MTU **默认1460B，不含L2**；**1500仅为显式最大值**，内层由 Rust 预算派生、OS应用/读回，只读展示。不要复制独立预算表，不把过去失败证据改成成功。
-
-功能卡：[features](docs/features/README.md)；真原生测试：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。
+功能卡：[features](docs/features/README.md)；真实测试：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。

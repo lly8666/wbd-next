@@ -10,7 +10,7 @@
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
   "current_task": "H1299: H1298 SOURCE1729010e original ARM64 five-client native 180s Action42334170992 PASS0 alerts, all five authenticated rotation PASS, per-/32 shared TUN overflow0. Erin max UL250ms/DL120ms. Critically SERVER port45031 never saw eight consecutive EAGAIN, SO_SNDBUF adjustment NOT TRIGGERED, so causal fix NOT PROVEN. One client port60872 old generation attempted adaptation as exact Stop began and was refused Stopped (safe). H1295 prior scalar pressure Erin UL3310ms FAIL and hetero native2170ms FAIL; H1297 native Erin DL2160ms EAGAIN FAIL. H1299 run ONE source locked native ARM64 pressure scalar 180s with original strict gate and independent port/generation CLOCK_MONOTONIC RX/TX; no 1800.",
   "why_now": "H1298 one native pressure zero alerts has no confirmed sustained server EAGAIN; cannot promote conditional kernel socket adaptation. Prior scalar pressure is independently known to FAIL on real business, so one native ARM64 scalar Game4-FEC backend 180s replicates specific unresolved condition without blind multi-scene and without changing product.",
-  "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
+  "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
   "next_action": "Collect H1299 scalar pressure real original Go TLS443 / Rust ISA-L linked 180s source pinned: scalar quanta>0 native quanta=0; report exact Erin UL/DL max gap and server/client per-generation raw/EAGAIN/allocated socket readback; all five auth rotation/Stop and /32 zero overflow. If failure, target observed layer; if PASS without actual adjustment, do not claim adaptive causal proof, then consider last hetero short. No 1800 before all.",
   "unverified": true,
   "last_tested_source": "1729010e119a06eac044a978594a39c25b6fc459",
@@ -22,7 +22,7 @@
     "docs/prompts/M0.md",
     "docs/prompts/M0-PLAN028.md",
     "docs/architecture/MTU_CONTRACT.md",
-    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
+    "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
