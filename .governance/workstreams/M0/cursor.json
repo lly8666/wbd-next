@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1335,
-  "checkpoint_sha": "5bb60800901fcd1c828db7074a8434a05292a0a2",
+  "sequence": 1336,
+  "checkpoint_sha": "b07d32c7583b27acb5096d9d12b4bd3fbd3cc03d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1335: exact Windows native cold product gap fixed in source but native network NOT_RUN: old watcher only compared ifindex/sourceIPv4 and subscribed route/address; same physical NIC/IP NlMtu shrink ignored. Added OS selected physicalMTU, NotifyIpInterfaceChange into existing 200/500ms coalescer, one original Go TLS/Rust generation/owned Stop. One signed Windows2025 Npcap/Wintun↔real Linux WSL2 Normal Off test-owned vEthernet same selected source .1 OS physical MTU1500→1280 new original TLS/M4, client SYN MSS1420→1240, Windows inner MTU1389→1209, original UDP/TCP/Stop and OS restore; no 7-mode repeat. Updated path-mtu and windows-native feature cards. Record Windows VM cores/logical vCPU/RAM; H1332 x86 4vCPU Normal50M host59.63% not transferable to Windows or ARM64. H998 old same socket MTU fail and H1317 old 5.18s ARM64 gap retained.",
-  "why_now": "Source inspection found specific under-implemented Windows same-NIC/IP physical MTU-only change missing native NotifyIpInterfaceChange and fingerprint; hard PLAN028 L1 barrier. Existing current Go cold controller already recomputes Rust budget per new generation, so minimal no-hot-path patch and exact single owned Windows real network scenario can resolve without broad rework.",
+  "current_task": "H1336: H1335 Windows native same-NIC/source-IP MTU-only actual original Go TLS/Rust code built as sourceb07, targeted single signed Npcap/Wintun↔WSL2 Action42385505335 in-flight. Governance main PASS; feature-catalog fail only path-mtu-budget JSON 16781B > 16384B card policy. H1336 compacted new feature wording and removed duplicate pending H1335 verification row (authoritative evidence already precise NOT_RUN), preserved existing historical entries and Windows native change declaration, no product or workflow modifications. Follow original action without duplicate dispatch; per-VM Windows fingerprint vs Linux 4-core performance kept separate.",
+  "why_now": "Fix 16KiB feature catalog deterministic doc limit without touching in-flight real Windows binaries or re-dispatch; preserve exact native cold MTU source and test.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect only H1335 source-locked full signed Windows Normal Off original TLS / Npcap / Wintun / genuine WSL2 source-unchanged physical MTU 1500→1280 Action plus Go unit, VM host fingerprint and governance. Require true OS notify, original client SYN MSS1420→1240, actual Wintun inner1389→1209, new client and server authenticated Rust M4, post-B real UDP/TCP and owned original WAL/Stop before adding PASS evidence. If fail before network classify PRECONDITION_NOT_RUN; if product fail preserve first actual boundary. Do not repeat seven modes, do not compare unlike VM performance, do not start L3 until L0-L2 hard gates closed.",
+  "next_action": "Collect H1335 original run42385505335, native Windows cold unit42385505354, local WAL42385505336 and H1336 fresh governance/feature catalog. Inspect first business/OS failure and only one product-causal next step. Strict same ifindex/source MTU 1500→1280, original TLS new B and genuine TCP SYN MSS1240/inner1209, pre-B old Stop, true app and native owned Restore. Track VM vCPUs and no comparison to x86 4-core rates; L3 still NOT_RUN, original H998/H1317 fail retained.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1334 native Linux x86 source-frozen6c5 L2 0% 50Mbps/dir 5clients genuine 1,409,531/1,409,531 UDP and host59.63% 4vCPU PASS_SCOPED only guest. H1335 new Windows selected physical IPv4 MTU same-NIC/IP original cold path bug fixed in source and signed Windows→WSL2 test prepared; real SOURCE Action pending, result NOT_RUN. Feature cards updated, default outer1460 invariant. H1317 historical active 5.18s and H998 old socket MTU fail preserved, PLAN028 still IN_PROGRESS."
+  "partial_summary": "H1335 current sourceb07 product Windows physical MTU-only watcher fix + signed one Normal original TLS/Rust real WSL test running; main governance PASS, feature card size165? above16KiB FAIL. H1336 only shortens new feature note without removing historical actual records and keeps pending test status in evidence. No new network dispatch. x86 4vCPU Normal 50Mbps host59.63% guest-specific; Windows VM fingerprint planned. PLAN028 IN_PROGRESS."
 }
