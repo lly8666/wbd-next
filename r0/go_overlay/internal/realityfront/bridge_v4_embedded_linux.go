@@ -83,6 +83,17 @@ type v4EmbeddedNativeStatus struct{
 }
 func (e *v4EmbeddedNativeStatus) Error()string{return errV4Embedded.Error()}
 func (e *v4EmbeddedNativeStatus) Unwrap()error{return errV4Embedded}
+// A cold M4 rejection has a STATIC native lifecycle substage. The Rust
+// numeric code is neither untrusted text nor a network protocol change.
+func V4OriginalNativeM4FailureStage(err error)string{
+    var failure *v4EmbeddedNativeStatus
+    if !errors.As(err,&failure){return "unclassified"}
+    switch failure.Operation{
+    case "original_early_stage","original_native_commit":
+        return failure.Operation
+    default:return "unclassified"
+    }
+}
 
 type v4EmbeddedNativeBridge struct {
     handle uint64
@@ -272,11 +283,13 @@ func (p *v4EmbeddedPending) commit(early []faketcp.TransitionPacket,tx uint32)er
         rc:=C.wbd_m0_embedded_go_stage(C.uint64_t(p.b.handle),C.uint32_t(part.Seq),
             (*C.uchar)(unsafe.Pointer(&part.Payload[0])),C.size_t(n))
         runtime.KeepAlive(part.Payload)
-        if rc!=0{return fmt.Errorf("%w: stage=%d",errV4Embedded,int(rc))}
+        if rc!=0{return fmt.Errorf("%w: original early M4 stage=%d",
+            &v4EmbeddedNativeStatus{Operation:"original_early_stage",Code:int(rc)},int(rc))}
     }
     rc:=C.wbd_m0_embedded_go_commit(C.uint64_t(p.b.handle),
         C.uint32_t(len(early)),C.uint32_t(total),C.uint32_t(tx))
-    if rc!=0{return fmt.Errorf("%w: commit=%d",errV4Embedded,int(rc))}
+    if rc!=0{return fmt.Errorf("%w: original native M4 commit=%d",
+        &v4EmbeddedNativeStatus{Operation:"original_native_commit",Code:int(rc)},int(rc))}
     // The normal build uses an inert hook. Only the separate explicit
     // wbd_v4_fec2_owner_probe build can bind after this true Go TLS/Detach
     // callback; a forged WBGH version2 is NOT permission by itself.

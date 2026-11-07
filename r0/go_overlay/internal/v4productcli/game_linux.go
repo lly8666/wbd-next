@@ -1042,8 +1042,10 @@ func runGameMultiServer(
                 case errors.Is(result.err,realityfront.ErrV4ServerNativeCommit):
                     stage="native_m4_commit_after_reply"
                 }
-                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=%s class=%s client_port=%d",
-                    stage,nativeColdFailureClass(result.err),port)
+                log.Printf("V4_PUBLIC_GAME_MULTI_ADMISSION_REJECT stage=%s class=%s m4_substage=%s native_rc=%d client_port=%d",
+                    stage,nativeColdFailureClass(result.err),
+                    realityfront.V4OriginalNativeM4FailureStage(result.err),
+                    realityfront.V4NormalM4NativeCode(result.err),port)
                 forget(result.assoc)
                 continue
             }

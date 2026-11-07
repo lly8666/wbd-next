@@ -9,6 +9,12 @@ use crate::cold_v4::{ColdV4Error, ExpectedRustOwner, UntrustedColdV4};
 use crate::memory::UniqueBuffer;
 use crate::runtime::{QueueLimits, RxOwner, RxPacket, TxOwner,TxDispatch};
 use crate::runtime::early_rx::{EarlyAccepted, EarlyError, EarlyLimits, EarlyRetirement, EarlyRxOwner};
+// Original protected Go StageTransition.MaxTransitionRecords is 64.
+// One bounded Rust M1 receiver already reserves 64 slots and 64*wire bytes.
+// This shared control-plane bound MUST match both embedded stage() and
+// protected owner Prepare, or a successful Go TLS Detach fails native M4
+// Commit after its 33rd early DATA record under loss/high throughput.
+pub(crate) const ORIGINAL_PROTECTED_EARLY_RECORDS: usize = 64;
 use crate::runtime::generation::{LoanBatch, ScopedOwner, ScopeToken};
 use std::ops::Range;
 use wbd_types::{MonoNs,RecordPn,SeqOffset};
@@ -642,14 +648,17 @@ impl ProtectedScopedOwner {
             slots:32,bytes:tx_wire.saturating_mul(32),max_age_ns:50_000_000,
         };
         let rx_limits=QueueLimits {
-            slots:64,bytes:wire.saturating_mul(64),max_age_ns:50_000_000,
+            slots:ORIGINAL_PROTECTED_EARLY_RECORDS,
+            bytes:wire.saturating_mul(ORIGINAL_PROTECTED_EARLY_RECORDS),
+            max_age_ns:50_000_000,
         };
         let tx=TxOwner::new(limits,limits).ok_or(ProtectedCryptoError::Owner)?;
         let rx=RxOwner::new(rx_limits).ok_or(ProtectedCryptoError::Owner)?;
         let inner=ScopedOwner::new(owner_id,expected.owner_generation,
             expected.lane,tx,rx).ok_or(ProtectedCryptoError::Owner)?;
         let mut rx_tx=EarlyRxOwner::new(inner,EarlyLimits{
-            slots:32,bytes:wire.saturating_mul(32),
+            slots:ORIGINAL_PROTECTED_EARLY_RECORDS,
+            bytes:wire.saturating_mul(ORIGINAL_PROTECTED_EARLY_RECORDS),
         }).ok_or(ProtectedCryptoError::Owner)?;
         let token=rx_tx.token();
         rx_tx.prepare(&token,u64::from(exact_rx_boundary))

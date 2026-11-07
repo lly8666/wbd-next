@@ -49,7 +49,11 @@ if FAST_SCENE:
     if FAST_SCENE not in LONG_SCENES:
         raise SystemExit("unknown rapid native scene")
     LOSS,DELAY,RATE,_=LONG_SCENES[FAST_SCENE]
-    ROTATION_SECONDS=(37,41,43,29,47)
+    # Source-locked app start is about 55s after initial Go/Rust Ready.
+    # Never rotate before the first actual UDP/TCP business packet: the
+    # previous 29..47s rapid schedule caused artificial 11..39s early
+    # gaps and cold retries BEFORE the coordinated stress start.
+    ROTATION_SECONDS=(97,101,103,89,107)
 if LONG_SCENE:
     if LONG_SCENE not in LONG_SCENES:
         raise SystemExit("invalid PLAN028 30m profile")
@@ -253,6 +257,10 @@ def main():
             "show", "dev", server_tun, capture=True))
         print("H1250_ORIGINAL_TLS_FIVE_AUTHENTICATED_LEASES_READY " + ",".join(leases), flush=True)
 
+        # The original 55s absolute common start allows all ten actual
+        # OS-namespace traffic endpoints to prepare, unchanged in long tests.
+        if FAST_SCENE and min(ROTATION_SECONDS) <= 80:
+            raise RuntimeError("rapid native rotation begins before real app start")
         start_ns = time.monotonic_ns() + 55_000_000_000
         plan = {
             "source_sha": source, "start_monotonic_ns": start_ns,

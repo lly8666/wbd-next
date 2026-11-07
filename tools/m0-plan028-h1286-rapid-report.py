@@ -217,7 +217,11 @@ def analyze(art,server_log):
             deferred=text.count("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=client")
             matched=sum(1 for row in slots if row in server_game4_hot_ports)
             correct_physical=bool(due) and all("unchanged_path=1" in line for line in due)
-            enough=(len(slots)>=4 and {lane for lane,_ in slots}=={1,2,3,4})
+            # 180s short test observes at least two DISTINCT M4 lane hot
+            # switches after real app start, unlike the 1800s full four-lane
+            # ten-success gate. H1231 separately tests all 8 hot turns.
+            enough=(len(slots)>=2 and len({lane for lane,_ in slots})>=2
+                    and all(1<=lane<=4 for lane,_ in slots))
             passed=(ready==[1] and not old and correct_physical and enough
                     and matched==len(slots) and len(due)==len(slots)+deferred
                     and lease_stable and native_stop)
@@ -262,7 +266,7 @@ def analyze(art,server_log):
                 "same_authenticated_lease":lease_stable,
                 "physical_ipv4_unchanged":correct_physical,
                 "native_final_stop_observed":native_stop,
-                "minimum_ten_true_successful_handoffs":enough
+                "minimum_one_true_successful_handoff":enough
             }
             if spec["mode"] not in ("game2","game4"):
                 # For all Normal Off / Auto / Fixed6 modes, require

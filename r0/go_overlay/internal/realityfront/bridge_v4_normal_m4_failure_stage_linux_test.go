@@ -34,3 +34,31 @@ func TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets(t *testing.T){
         t.Fatal("untyped failure must stay explicit unknown, never pretend native RC=0")
     }
 }
+
+// A verified Game4 replacement may fail *after* FakeTCP Detach. Distinguish
+// early 64-record Rust staging from final native Commit, never confuse a
+// client-local M4 Ready with a real server native owner.
+func TestPLAN028Game4OriginalM4CommitSubstageIsTypedAndSecretFree(t *testing.T){
+    for _,operation:=range []string{"original_early_stage","original_native_commit"}{
+        status:=&v4EmbeddedNativeStatus{Operation:operation,Code:1}
+        wrapped:=fmt.Errorf("%w: protected server native M4 refused",fmt.Errorf(
+            "%w: protected after-reply",status))
+        if V4OriginalNativeM4FailureStage(wrapped)!=operation{
+            t.Fatalf("lost exact authenticated native M4 substage: %s",operation)
+        }
+        if V4NormalM4NativeCode(wrapped)!=1||!errors.Is(wrapped,errV4Embedded){
+            t.Fatalf("lost real native refusal: %s",operation)
+        }
+        if strings.Contains(wrapped.Error(),"passphrase")||strings.Contains(wrapped.Error(),"secret"){
+            t.Fatal("native failure exposed secret-looking field")
+        }
+    }
+    if got:=V4OriginalNativeM4FailureStage(errors.New("untyped"));got!="unclassified"{
+        t.Fatalf("unknown M4 substage fabricated: %s",got)
+    }
+    if got:=V4OriginalNativeM4FailureStage(&v4EmbeddedNativeStatus{
+        Operation:"raw_rx_attach",Code:4,
+    });got!="unclassified"{
+        t.Fatalf("other native stage mislabeled as protected Commit: %s",got)
+    }
+}

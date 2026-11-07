@@ -102,13 +102,14 @@ jobs:
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane|TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets|TestPLAN028Game4OriginalM4CommitSubstageIsTypedAndSecretFree)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
             tail -120 fixed-kernel-result/plan028-h1144-protected-policy-unit.log >&2
             exit 1
           }
           grep -Fq -- "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
           grep -Fq -- "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
           grep -Fq -- "--- PASS: TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
+          grep -Fq -- "--- PASS: TestPLAN028Game4OriginalM4CommitSubstageIsTypedAndSecretFree" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
           (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028NormalM4AfterPeerRxFenceAndTimeout$' ./internal/v4productcli) >fixed-kernel-result/h1282-normal-peer-proof-unit.log 2>&1 || {
             tail -120 fixed-kernel-result/h1282-normal-peer-proof-unit.log >&2
             exit 1

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1287 source-locked prior H1286 short diagnosis",
+  "source_sha": "240764706084d5f122922b02d68470000e728fe7",
+  "action_run_id": 42314837872,
+  "native_arm64_original_go_tls_rust_isa_l_build": "PASS",
+  "five_clients_simultaneously": true,
+  "server_single_port": 443,
+  "duration_seconds_each": 180,
+  "qualification": "FAIL_ALL_THREE_SHORT",
+  "no_long_test_started": true,
+  "scenes": {
+    "pressure_scalar": {
+      "artifact_id": 13550198406,
+      "alerts": 9,
+      "rotation": "PASS_ALL_FIVE_SCOPED",
+      "game4_hot_client": 7,
+      "game4_hot_server": 7,
+      "game4_real_native_linked": 1,
+      "game4_native_fec_tx_quanta": 0,
+      "game4_scalar_fec_tx_quanta": 151519,
+      "per_lease_queue_overflow": {
+        "alice": 123,
+        "bob": 81,
+        "dave": 759
+      },
+      "early_app_gap": {
+        "alice_uplink_ms": 13330,
+        "alice_downlink_ms": 13310,
+        "carol_uplink_ms": 1620,
+        "carol_downlink_ms": 1550
+      }
+    },
+    "pressure_native": {
+      "artifact_id": 13550666397,
+      "alerts": 12,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "game4_hot_client": 8,
+      "game4_hot_server": 7,
+      "game4_real_native_linked": 1,
+      "game4_native_fec_tx_quanta": 160425,
+      "game4_scalar_fec_tx_quanta": 729,
+      "per_lease_queue_overflow": {
+        "bob": 104,
+        "dave": 17
+      },
+      "early_app_gap": {
+        "bob_uplink_ms": 32110,
+        "bob_downlink_ms": 38800,
+        "carol_uplink_ms": 28320,
+        "carol_downlink_ms": 28260
+      },
+      "exact_server_reject": {
+        "port": 58257,
+        "stage": "native_m4_commit_after_reply",
+        "pre_detach_route": "bounded_pre_detach_data_overflow"
+      }
+    },
+    "heterogeneous_native": {
+      "artifact_id": 13550726278,
+      "alerts": 12,
+      "rotation": "SOME_CLIENT_ROTATION_FAILURES",
+      "game4_hot_client": 7,
+      "game4_hot_server": 6,
+      "game4_real_native_linked": 1,
+      "game4_native_fec_tx_quanta": 89968,
+      "game4_scalar_fec_tx_quanta": 770,
+      "per_lease_queue_overflow": {
+        "all": 0
+      },
+      "early_app_gap": {
+        "alice_uplink_ms": 20110,
+        "bob_downlink_ms": 15590,
+        "carol_uplink_ms": 11140
+      },
+      "exact_server_reject": {
+        "port": 50337,
+        "stage": "native_m4_commit_after_reply",
+        "pre_detach_route": "bounded_pre_detach_data_overflow"
+      }
+    }
+  },
+  "code_root_proofs": [
+    "Original Go FakeTCP StageTransition MaxTransitionRecords=64 and H1285 preserves Prepared rather than aborts on bounded overflow",
+    "Rust original wbd_m0_embedded_go_stage and ProtectedScopedOwner early RX both had 32 slots, hard limit in v4_embedded_go.rs MAX_EARLY=32 and v4_owner_crypto.rs EarlyLimits slots32",
+    "After 32 Go-staged records, native stage returns INVALID before true Rust commit, matching observed late native_m4_commit_after_reply after Go Detach under high throughput",
+    "H1286 short FAST rotation first event at 29-47s from initial client Ready, but first real app starts approx 55s later, so source-locked short fixture rotated BEFORE real business, artificially producing early outages and unproven M4 candidates. H1287 adjusts all first rotations after app begins"
+  ],
+  "h1287_candidate": "Single Rust control constant64 for early M1 RX reservation, original Rust native stage and commit, 65th rejected by Go; keep original bounded 64slots*wire bytes. Fast rotation 89..107s only after authentic app start. Typed native error substage+numeric result for new-stage evidence. No 1800s gate run.",
+  "release_acceptance": "Strict five-client 0-alert native short then separate original 3x1800 verification only once user-relevant faults actually resolved; H998 physical same-socket MTU/ICMP remains OPEN."
+}

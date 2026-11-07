@@ -307,6 +307,29 @@ mod tests {
         assert_eq!(a.report().loaned,0);
     }
     #[test]
+    fn m0_plan028_protected_early_64_real_rx_owner_detach_and_bounded_overflow(){
+        let cap=crate::v4_owner_crypto::ORIGINAL_PROTECTED_EARLY_RECORDS;
+        assert_eq!(cap,64);
+        let mut a=arena(cap+1);
+        let mut s=early(cap,cap);
+        let t=s.token();
+        s.prepare(&t,13000).unwrap();
+        for i in 0..cap{
+            assert!(matches!(s.offer(&t,buffer(&mut a,i as u8),
+                0..1,13000+i as u64,MonoNs(0)),Ok(EarlyAccepted::Staged)));
+        }
+        assert_eq!(s.staged(),(cap,cap));
+        let extra=s.offer(&t,buffer(&mut a,64),0..1,13064,MonoNs(0));
+        assert!(matches!(extra,Err((EarlyError::Full,_))));
+        drop(extra);
+        assert_eq!(a.report().loaned,cap);
+        s.detach(&t).unwrap();
+        let batch=ready(s.drain_rx(&t,MonoNs(0),Vec::with_capacity(cap)));
+        assert_eq!(batch.len(),cap);
+        drop(batch);
+        assert_eq!(a.report().loaned,0);
+    }
+    #[test]
     fn r1_early_rx_32_cap_33rd_full_still_owned_not_free_until_drop() {
         let mut a=arena(40);let mut s=early(32,32);let t=s.token();
         s.prepare(&t,10).unwrap();

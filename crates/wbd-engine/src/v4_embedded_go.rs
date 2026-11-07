@@ -21,7 +21,9 @@ use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use crate::memory::Arena;
 use crate::cold_v4::{UntrustedColdV4,ColdIdentity,COLD_V4_LEN};
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
-use crate::v4_owner_crypto::{ProtectedScopedOwner,NormalOffReceive};
+use crate::v4_owner_crypto::{
+    ProtectedScopedOwner,NormalOffReceive,ORIGINAL_PROTECTED_EARLY_RECORDS,
+};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use crate::v4_owner_crypto::ScopedLinuxBudget;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
@@ -57,7 +59,9 @@ const BAD_STAGE:i32=3;
 const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
 const MAX_SESSIONS:usize=16;
-const MAX_EARLY:u32=32;
+// Same 64-slot native pre-detach reservation as ProtectedScopedOwner and
+// the original Go FakeTCP StageTransition. No arbitrary buffer expansion.
+const MAX_EARLY:u32=ORIGINAL_PROTECTED_EARLY_RECORDS as u32;
 const PH_PREPARED:u32=1;
 const PH_ACTIVE:u32=2;
 const PH_STOPPED:u32=3;
@@ -9263,6 +9267,17 @@ mod tests{
         }
         assert!(!original_public_fixed_row_allowed(20));
         assert!(!original_public_fixed_row_allowed(u8::MAX));
+    }
+    #[test]
+    fn m0_plan028_original_go_tls_native_m4_early_64_records_capacity_contract(){
+        // Go StageTransition.MaxTransitionRecords=64 and this Rust C ABI
+        // stage() must agree with the actual Prepared owner reservation.
+        // 65th DATA is dropped by Go without ACK, not passed to stage().
+        assert_eq!(ORIGINAL_PROTECTED_EARLY_RECORDS,64);
+        assert_eq!(MAX_EARLY,64);
+        let wire=1420usize;
+        assert_eq!(wire.saturating_mul(MAX_EARLY as usize),90_880);
+        println!("M0_PLAN028_ORIGINAL_TLS_EARLY_M4_64_GO_RUST_CONTRACT_PASS");
     }
     #[test]
     fn m0_embedded_go_private_control_rejects_unknown_and_null(){
