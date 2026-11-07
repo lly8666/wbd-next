@@ -219,6 +219,8 @@ def main():
         # and pass explicitly into both the server and client's OS namespaces.
         if os.environ.get("WBD_PLAN028_FEC_EGRESS_DIAG")=="1":
             diagnostic_env.append("WBD_FEC_EGRESS_DIAG=1")
+        if os.environ.get("WBD_PLAN028_EXTERNAL_STAGE_DIAG")=="1":
+            diagnostic_env.append("WBD_PLAN028_EXTERNAL_STAGE_DIAG=1")
         sargs = [
             "env", "LD_LIBRARY_PATH=" + str(build), *diagnostic_env,
             str(build / "wbd-v4-server"),

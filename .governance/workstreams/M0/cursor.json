@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1296,
-  "checkpoint_sha": "c635edc2407a378404e4290492361996a50842c2",
+  "sequence": 1297,
+  "checkpoint_sha": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1296: H1295 SOURCE c635 original ARM64 3×180s 5-client short RUN42327174590 true Go TLS M4 full Game4 and Normal rotation PASS all five; per-/32 server shared TUN queue overflow ALL ZERO, but Erin fixed6 active uplink app gaps pressure native 6390ms app+42.07s, pressure scalar3310ms +144.69s, hetero native2170ms +95.57s; other clients <=100ms. Game4 single lane Off/F6 8 swaps both PASS and true same-veth physical MTU1500->1280 180s PASS0. These gaps differ in time and don't consistently coincide with Erin old-generation retirement, not generalized TUN reader backlog. New H1296 opt-in existing slow native Rust 500ms RX/TX telemetry tagged client_port/generation and forwarded across product netns env; run only ONE source locked original ARM64 native ISA-L pressure 180s five-client diagnostic. No 1800s.",
-  "why_now": "All three 180s failed only due to Erin uplink gap with 0 shared TUN overflow; further blind queue/FEC/retirement tuning misses isolated native RX/TUN/inner UDP layer. Existing 500ms read-only kernel raw/tuple/FEC/TUN counters enable causal distinction; one trace scene is cheaper than another 3x180s or long tests.",
+  "current_task": "H1297: H1296 final Action42328445418 attempts 1/2 same-source native ARM64 original five-client pressure 180s PASS0 alerts/rotation all 5/zero shared TUN overflow. In-loop diag may perturb scheduling and its loop_now ns is per-process, not aligned with real app monotonic bins. H1295 prior source had Erin Fixed6 UL 6390/3310/2170ms gaps. Add opt-in low-frequency independent M4 observer (no RX/TX hot-path logging) with CLOCK_MONOTONIC cross-process timestamp and client_port/gen stage counters. Run one 180s native ARM64 pressure diagnostic, then isolate narrow stage before product fix; no long.",
+  "why_now": "H1296 two diagnostic passes cannot close a previously reproducible timing-sensitive failure. Original M4 RX/TX-in-loop eprintln changes scheduling and carries process-local loop_now while test app bins use system CLOCK_MONOTONIC; independent observation is necessary to attribute real kernel tuple/FEC/TUN stages without skewing the worker.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Check H1296 same-source one native ARM64 180s pressure with opt-in 500ms M4 RX/TX per-Gen and original client ports. Align Erin server RX kernel_raw_observed/tuple_candidates/fec_source/fec_parity/tun_delivered vs 10ms bins around 1-6s genuine active-source gap. Patch only offending original Rust M4 reception/FEC delivery stage; rerun targeted H1231 and native 180s until all 5-client pressure/hetero/scalar and physical MTU short PASS; NO 1800s before that. Remote ICMP3/4 still OPEN.",
+  "next_action": "Collect H1297 one source-locked ARM64 180s pressure native report + artifact: align application 10ms Erin uplink zero-receipt bins to server generation/port external monotonic raw/tuple/FEC/TUN and client TX source/M4 copied counters. If gap returns, patch only blocked original stage. If gap absent, do NOT call it root-fixed; complete scoped scalar/hetero short checks without old seed loops. Long 1800s stays blocked until short weak-net acceptance qualified.",
   "unverified": true,
-  "last_tested_source": "c635edc2407a378404e4290492361996a50842c2",
+  "last_tested_source": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1297-H1296-INLOOP-2PASS-RETAIN-H1295-FAIL-20261107.json",
     "docs/evidence/M0/PLAN028-H1296-H1295-SOURCEC635-FIVECLIENT-3X180S-20261107.json"
   ],
   "context_refs": [
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1271 SOURCE376f native Rust true original raw kernel packet vs delivered counter contract unit1/1 PASS Action42158532358, artifact13474674369. Old misleading raw_batches was stats.rx delivered_total; now opt-in 500ms kernel raw observed/tuple candidate/TUN delivered/legacy delivered separately without changing hot packet processing. H1270 SOURCE31da original Go TLS/Rust authentic Normal0+Fixed630% real120s success, Fixed6 DL unique99.967/99.977/99.959% steady/overload/recovery, actual qdisc≈30%, no>=750ms stall/typed EAGAIN, normal100%; independent historical H1268 RX1.007s and H1259 S2C7s symptoms NOT root-isolated. All platforms/CPU/performance release unverified; H998 original socket MTU FAIL remains."
+  "partial_summary": "H1296 Run42328445418 attempt1 scene artifact13556736022 and attempt2 artifact13557033896 both genuine ARM64 180s original Go TLS/Rust M4 pressure/native PASS zero alerts, all five rotation PASS and server 5 /32 queues overflow0. H1295 3/3 short prior-source fail Erin 6390/3310/2170ms; H1296 diagnostic is NOT a product fix. H1294 same-interface MTU 1500->1280 via full new authenticated generation PASS0; original H998 same-socket FAIL and remote user-space ICMP NOT_MEASURED remain."
 }

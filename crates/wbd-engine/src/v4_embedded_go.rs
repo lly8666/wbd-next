@@ -2745,7 +2745,8 @@ fn stop(handle:u64)->i32{
             let rx=w.rx.join();
             let tx=w.tx.join();
             let ingress=match w.ingress{Some(h)=>h.join(),None=>Ok(())};
-            if rx.is_err()||tx.is_err()||ingress.is_err(){
+            let diagnostic=match w.diagnostic{Some(h)=>h.join(),None=>Ok(())};
+            if rx.is_err()||tx.is_err()||ingress.is_err()||diagnostic.is_err(){
                 // A failed join cannot authorize driver/slab retirement.
                 return STOP_INCOMPLETE
             }
@@ -5172,6 +5173,8 @@ struct LoopWorkers{
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
     ingress:Option<JoinHandle<()>>,
+    // Opt-in read-only monitor, never a packet owner.
+    diagnostic:Option<JoinHandle<()>>,
     route_events:Arc<wbd_platform::linux_route_events::RouteEvents>,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -5180,6 +5183,15 @@ struct ClockTimespec {seconds:i64,nanoseconds:i64}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {
     fn clock_gettime(clock_id:c_int,raw:*mut ClockTimespec)->c_int;
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_kernel_monotonic_ns()->u64{
+    // Same CLOCK_MONOTONIC as Python time.monotonic_ns in the 10ms
+    // real-application bins, unlike process-relative loop_now().
+    let mut t=ClockTimespec{seconds:0,nanoseconds:0};
+    if unsafe{clock_gettime(1,&mut t)}!=0{return 0}
+    u64::try_from(t.seconds).unwrap_or(0).saturating_mul(1_000_000_000)
+        .saturating_add(u64::try_from(t.nanoseconds).unwrap_or(0))
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn owner_thread_cpu_ns()->u64{
@@ -8008,7 +8020,46 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             };
         Some(worker)
     }else{None};
-    e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,route_events:events});
+    // No logging or timer in the original M4 RX/TX loops for this probe.
+    // H1295 isolated genuine Erin app gaps; H1296's in-loop 500ms
+    // eprintln! changed scheduling and made two runs green. Observe the
+    // existing atomic stage counters from an independent, opt-in observer.
+    // Its CLOCK_MONOTONIC timestamp aligns with the real 10ms traffic bins.
+    #[cfg(feature="fec2_product_record")]
+    let diagnostic=if std::env::var("WBD_PLAN028_EXTERNAL_STAGE_DIAG")
+        .ok().as_deref()==Some("1"){
+        let diag_stats=Arc::clone(&e.counters);
+        let diag_stop=Arc::clone(&shutdown);
+        let diag_port=e.flow.client_port;
+        let diag_generation=e.generation;
+        let diag_role=if e.server_side{"server"}else{"client"};
+        thread::Builder::new().name("wbd-original-m4-observe".into())
+            .spawn(move||{
+                let mut last=Instant::now();
+                while !diag_stop.load(Ordering::Acquire){
+                    thread::sleep(Duration::from_millis(100));
+                    if diag_stop.load(Ordering::Acquire){break}
+                    if last.elapsed()<Duration::from_millis(500){continue}
+                    last=Instant::now();
+                    let (kernel,tuple,tun,legacy)=
+                        original_raw_rx_stage_snapshot(&diag_stats);
+                    eprintln!("V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role={} client_port={} generation={} mono_ns={} kernel_raw_observed={} tuple_candidates={} fec_source={} fec_parity={} fec_recovered={} tun_delivered={} legacy_delivered={} source_queued={} m4_copied={} tx_err={} tx_backpressure={} rx_err={}",
+                        diag_role,diag_port,diag_generation,
+                        original_kernel_monotonic_ns(),kernel,tuple,
+                        diag_stats.fec_rx[0].load(Ordering::Relaxed),
+                        diag_stats.fec_rx[2].load(Ordering::Relaxed),
+                        diag_stats.fec_rx[5].load(Ordering::Relaxed),tun,legacy,
+                        diag_stats.fec_m1_stage[1].load(Ordering::Relaxed),
+                        diag_stats.tx.load(Ordering::Relaxed),
+                        diag_stats.tx_error.load(Ordering::Relaxed),
+                        diag_stats.tx_backpressure.load(Ordering::Relaxed),
+                        diag_stats.rx_error.load(Ordering::Relaxed));
+                }
+            }).ok()
+    }else{None};
+    #[cfg(not(feature="fec2_product_record"))]
+    let diagnostic=None;
+    e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,diagnostic,route_events:events});
     #[cfg(target_os="linux")]
     {
         let server=e.server_side;

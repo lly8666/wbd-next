@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1297 collects H1296 completed in-flight Action",
+  "source_sha": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
+  "h1296_action": {
+    "run_id": 42328445418,
+    "conclusion": "success",
+    "attempts": [
+      {
+        "number": 1,
+        "artifact_id": 13556736022,
+        "native_180s_pressure": "PASS",
+        "alerts": 0,
+        "rotation": "PASS_ALL_FIVE_SCOPED",
+        "per_lease_pending_overflow": "ZERO_ALL_FIVE"
+      },
+      {
+        "number": 2,
+        "artifact_id": 13557033896,
+        "native_180s_pressure": "PASS",
+        "alerts": 0,
+        "rotation": "PASS_ALL_FIVE_SCOPED",
+        "per_lease_pending_overflow": "ZERO_ALL_FIVE"
+      }
+    ]
+  },
+  "inference": "H1296 changed only opt-in RX/TX diagnostic logs and source attribution, not production data path; two PASS attempts do not prove Erin starvation root fixed. per-worker loop_now ns is not shared with traffic.py monotonic_ns; in-loop logging can perturb scheduling.",
+  "historical_fail": {
+    "source_sha": "c635edc2407a378404e4290492361996a50842c2",
+    "run_id": 42327174590,
+    "Erin_Fixed6_uplink_gaps_ms": {
+      "pressure_native": 6390,
+      "pressure_scalar": 3310,
+      "heterogeneous_native": 2170
+    },
+    "server_per_lease_TUN_overflow": "ZERO_ALL_FIVE",
+    "other_clients": "healthy"
+  },
+  "h1297_plan": "Opt-in external 500ms read-only original Rust counters on independent observer, common CLOCK_MONOTONIC ns and per-port/generation; one native ARM64 180s pressure run. Not a product fix; report failing stage before editing algorithm.",
+  "cannot_promote": [
+    "H1295 Erin native/scalar/hetero original FAIL",
+    "H1284 prior long 3x1800 FAIL",
+    "full current source 3x1800 NOT_RUN",
+    "Windows physical seven modes NOT_FULLY_RUN",
+    "H998 original same socket live MTU FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN"
+  ]
+}
