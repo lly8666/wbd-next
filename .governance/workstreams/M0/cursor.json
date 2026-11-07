@@ -15,8 +15,7 @@
   "unverified": true,
   "last_tested_source": "6bf586c4a98e63f294b3dc1acfab994f5997b8fa",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1297-H1296-INLOOP-2PASS-RETAIN-H1295-FAIL-20261107.json",
-    "docs/evidence/M0/PLAN028-H1296-H1295-SOURCEC635-FIVECLIENT-3X180S-20261107.json"
+    "docs/evidence/M0/PLAN028-H1297-H1296-INLOOP-2PASS-RETAIN-H1295-FAIL-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",

@@ -258,7 +258,7 @@ jobs:
           samples=[]
           for l in (root/"h1250-product-server.log").read_text().splitlines():
               if "V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role=server client_port=45031 " in l:
-                  m=re.search(r"mono_ns=(\\d+)",l)
+                  m=re.search(r"mono_ns=([0-9]+)",l)
                   if m:samples.append(int(m.group(1)))
           assert len(samples)>30 and samples==sorted(samples)
           assert min(samples)<int(start)<max(samples)
