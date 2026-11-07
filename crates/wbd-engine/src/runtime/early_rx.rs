@@ -12,7 +12,11 @@ use super::{OfferError,RxOwner,RxPacket,TxOwner,generation::{ScopedOwner,ScopeTo
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct EarlyLimits {pub slots:usize,pub bytes:usize}
 impl EarlyLimits {
-    pub fn valid(self)->bool {self.slots>0&&self.slots<=32&&self.bytes>0}
+    // The protected original Go TLS StageTransition is bounded at 64 DATA
+    // records, and the Rust private M4 RX owner already reserves exactly
+    // 64 slots. Do not silently refuse Prepare at 33 before a single Go
+    // credential-checked session can start. Still reject 65+ or zero.
+    pub fn valid(self)->bool {self.slots>0&&self.slots<=64&&self.bytes>0}
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub enum EarlyError {
@@ -375,7 +379,7 @@ mod tests {
         assert!(EarlyRxOwner::new({
             let(tx,rx)=pair();
             ScopedOwner::new(10,1,lane(1),tx,rx).unwrap()
-        },EarlyLimits{slots:33,bytes:96}).is_none());
+        },EarlyLimits{slots:65,bytes:96}).is_none());
         let tiny=ScopedOwner::new(11,1,lane(1),
             TxOwner::new(limits(1,1),limits(1,1)).unwrap(),
             RxOwner::new(limits(1,1)).unwrap()).unwrap();

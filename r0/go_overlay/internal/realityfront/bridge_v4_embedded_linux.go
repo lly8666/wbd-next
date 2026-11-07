@@ -89,7 +89,7 @@ func V4OriginalNativeM4FailureStage(err error)string{
     var failure *v4EmbeddedNativeStatus
     if !errors.As(err,&failure){return "unclassified"}
     switch failure.Operation{
-    case "original_early_stage","original_native_commit":
+    case "original_native_prepare","original_early_stage","original_native_commit":
         return failure.Operation
     default:return "unclassified"
     }
@@ -131,7 +131,8 @@ func (b *v4EmbeddedNativeBridge) prepare(
         (*C.uchar)(unsafe.Pointer(&cold[0])),C.size_t(len(cold)),
         (*C.uchar)(unsafe.Pointer(&cmd[0])),C.size_t(len(cmd)),&h)
     runtime.KeepAlive(cold);runtime.KeepAlive(cmd)
-    if rc!=0||h==0{return nil,fmt.Errorf("%w: prepare=%d",errV4Embedded,int(rc))}
+    if rc!=0||h==0{return nil,fmt.Errorf("%w: private native M4 Prepare=%d",
+        &v4EmbeddedNativeStatus{Operation:"original_native_prepare",Code:int(rc)},int(rc))}
     b.handle=uint64(h)
     b.originalFlow=peer.flow
     b.serverSide=true

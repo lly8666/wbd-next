@@ -39,7 +39,7 @@ func TestPLAN028NormalM4StageErrorPreservesEvidenceAndSecrets(t *testing.T){
 // early 64-record Rust staging from final native Commit, never confuse a
 // client-local M4 Ready with a real server native owner.
 func TestPLAN028Game4OriginalM4CommitSubstageIsTypedAndSecretFree(t *testing.T){
-    for _,operation:=range []string{"original_early_stage","original_native_commit"}{
+    for _,operation:=range []string{"original_native_prepare","original_early_stage","original_native_commit"}{
         status:=&v4EmbeddedNativeStatus{Operation:operation,Code:1}
         wrapped:=fmt.Errorf("%w: protected server native M4 refused",fmt.Errorf(
             "%w: protected after-reply",status))

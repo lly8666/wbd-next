@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "b1e66d9e04484ff337127d39c7345d5e583f9e44",
+  "checkpoint": "H1288 prior H1287 native regression exact source",
+  "release_qualification": "FAIL_NOT_LONG",
+  "long_test_started": false,
+  "observed": {
+    "H1231_original_arm64_game4": {
+      "run_id": 42316882843,
+      "build": "PASS",
+      "game4_off": "FAIL",
+      "game4_fixed6": "FAIL",
+      "first_native_rejection_stage": "native_m4_prepare",
+      "first_rejected_ports": [
+        43031,
+        41031,
+        42031
+      ],
+      "published_evidence_artifact_ids": [
+        13551540923,
+        13551645532
+      ]
+    },
+    "H1287_ARM64_rapid": {
+      "run_id": 42316883016,
+      "original_arm64_native_isa_l_build": "PASS",
+      "native_scene_verdict": "NOT_YET_AT_THIS_CHECKPOINT"
+    }
+  },
+  "exact_root": {
+    "go_stage_capacity": "Original FakeTCP StageTransition.MaxTransitionRecords=64",
+    "rust_public_embedded_stage": "H1287 MAX_EARLY=64 via original protected shared constant",
+    "rust_protected_owner": "H1287 V4 ProtectedScopedOwner EarlyLimits slots=64",
+    "forgotten_lower_layer": "R1-M1 runtime/early_rx.rs EarlyLimits::valid restricted slots<=32, so protected owner Prepare(64) returns native refusal BEFORE TLS reply to Go",
+    "test_gap": "Prior H1287 ARM64 rapid build compiled Rust successfully but did not actually execute either new 64-record Rust unit due missing workflow lines. Fast H1231 0%-noise repro confirms real prepare fail."
+  },
+  "h1288_changes": "Raise strict R1-M1 EarlyLimits.valid maximum from32 to64 only, change old 33-invalid unit to65-invalid and run genuine 64-stage/65th-refuse/full-Detach unit with mandatory '1 passed;0 failed' checked in source-pinned short ARM64 workflow; log typed native prepare code and operations, no protocol fields or additional thread",
+  "other_unverified": [
+    "H1286 native five-client 180s pressure/hetero still FAIL and intermittent high load queue drops",
+    "H998 same-socket physical live MTU 1500->1280 still FAIL and ICMP NOT_MEASURED",
+    "no long 1800s run until short zero alerts and five-client M4 confirmations all pass"
+  ]
+}

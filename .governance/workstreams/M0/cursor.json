@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1287,
-  "checkpoint_sha": "240764706084d5f122922b02d68470000e728fe7",
+  "sequence": 1288,
+  "checkpoint_sha": "b1e66d9e04484ff337127d39c7345d5e583f9e44",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1287: H1286 3 x 180s native ARM64 source240764 original Go TLS+Rust M4 build PASS, short SCENES FAIL pressure scalar9 alerts, pressure native12, hetero native12; ISA-L real native TX160425 and Game4 per-/32 queue overflow 759 scalar ->17 native but not 0, Bob auto104. Native scene server Game4 stage=native_m4_commit_after_reply after pre_detach_64_data_overflow, although Go detached; root mismatch Go StageTransition MaxTransitionRecords64 vs Rust v4_embedded_go.rs MAX_EARLY32 + ProtectedScopedOwner EarlyLimits slots32. H1287 align Rust original early staged M1/M4 64 with Go existing bounded 64, exact 65th reject, native error typed; H1286 rapid fixture first 29-47s swaps before app start (55s post-ready), causing artificial first_wave multi-second gaps; adjust rapid rotation 89-107s after business start, 180s/zero-alert gate intact. Build/test qualification pending, NO LONG RUN.",
-  "why_now": "H1286 gives two explicit root causes rather than speculative tuning: 32 vs 64 credential-checked Go/Rust staged DATA capacity and pre-business rotation in rapid test invalidating some latency alerts. Native ISA-L indeed lowers Game4 pressure overflow but does not resolve Bob Auto/FEC or app stalls. Only source-locked SHORT retest and targeted logs can validate fixes.",
+  "current_task": "H1288: H1287 sourceB1E native ARM64 H1231 Game4 OFF+Fixed6 build PASS but both original 0% cases FAIL immediately native_m4_prepare. Cause previous H1287 synced Go Stage64 + Rust ProtectedScopedOwner EarlyLimits64 but overlooked runtime/early_rx.rs EarlyLimits::valid only <=32; startup Go TLS candidate can never M4 Prepare. H1288 correct R1 M1 underlying EarlyLimits range1..64 with 65 rejection, preserve 64*wire and preallocated RX capacity, include mandatory nonzero Rust tests in quick ARM64 build (prior workflow accidentally omitted those tests), expose typed native prepare substage/RC. Short 180s only, NO LONG, H1286 source240764 prior genuine short 9/12/12 alerts and before-app rotations addressed by H1287.",
+  "why_now": "A source-locked ARM64 H1231 zero-loss native Game4 and Rust source inspection isolated an immediate, deterministic R1 EarlyLimits <=32 check under the protected 64-record owner: must fix this before ANY packet performance testing. H1287 rapid build did not run newly added Rust tests; this is now a hard 1-passed gate.",
   "done_when": "Standard TLS handshake and no private prelude qualified under TLS_HANDSHAKE_CONTRACT; PLAN028 authenticated single-port multi-client/config/IP, seven-mode handover, Windows/Linux path reconnect/MTU/Stop and isolation evidence complete in scope. Configuration/help/features match actual behavior. SOURCE-specific failures, physical/Android NOT_RUN and PLAN027A H998 scope remain explicit.",
-  "next_action": "Run ARM64 x86 Rust bounded 64 early-owner tests and new Go static typed M4 substage; repeat source-locked 3x180s five-client native ISA-L rapid tests AFTER app-start rotations. Compare verified server-side M4 hot ports, all TUN lease overflow, actual 10ms app gaps, Native FEC counts. Fix remaining short failures before any 3x1800 long. H998 physical 1500->1280/remote ICMP still OPEN.",
+  "next_action": "Verify H1288 genuine source-locked ARM64 early 64/65 and Go error-classification unit (1 test each), then 180s real original Go TLS native ISA-L five-client pressure scalar/native and heterogeneous native, plus H1231 0% Game4. Require no protected M4 Prepare/Commit divergence, no per-lease overflow, no >=750ms active-biz direction gaps before long. Never run 3x1800 in interim. H998 physical live same-socket MTU/ICMP remain open.",
   "unverified": true,
-  "last_tested_source": "240764706084d5f122922b02d68470000e728fe7",
+  "last_tested_source": "b1e66d9e04484ff337127d39c7345d5e583f9e44",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1287-H1286-SOURCE240764-3X180S-20261107.json"
+    "docs/evidence/M0/PLAN028-H1288-H1287-SOURCEB1E-M4-PREPARE-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
