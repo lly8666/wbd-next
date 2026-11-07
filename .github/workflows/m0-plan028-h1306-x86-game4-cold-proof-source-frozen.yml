@@ -1,0 +1,100 @@
+name: M0 PLAN028 H1306 x86 original Game4 authenticated cold Commit and Stop
+run-name: H1306 x86 frozen Game4 source 9cc5b0ef TLS/M4/Stop
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1306-x86-game4-cold-proof-source-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  x86-game4-real-overlap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ORIGINAL_SOURCE: 9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42345392910
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-42345392910-1
+          path: ./
+      - name: Reuse SHA-locked original Go and Rust x86 binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib,struct
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][n]
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+          print("M0_PLAN028_H1306_X86_ORIGINAL_H1305_BINARY_SHA_PASS no_rebuild=1")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+      - name: Real x86 Game4 FEC6 A to A+B to B underlay and TLS
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables tcpdump openssl
+          WBD_V4_PUBLIC_MODE=game4 WBD_V4_PUBLIC_AUTO_IP=1 \
+          WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_GAME_FEC=fixed6 \
+          WBD_V4_PUBLIC_WIRE_AUDIT=1 \
+            bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
+            >fixed-kernel-result/game4-frozen-real.log 2>&1 || {
+              tail -n 140 fixed-kernel-result/game4-frozen-real.log >&2;exit 1
+            }
+          # Real old A M4 error backoff, new B authenticated Health kind0
+          # proof WITHOUT reverse business, and true final owned Stop.
+          grep -Fq 'M0_PLAN028_GAME_RETIRED_RX_ERROR_BACKOFF_REAL_NATIVE_PASS' fixed-kernel-result/game4-frozen-real.log
+          grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4 native_authenticated_control_or_ipv4=1' fixed-kernel-result/game4-frozen-real.log
+          grep -Fq 'V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation=' fixed-kernel-result/game4-frozen-real.log
+          grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS' fixed-kernel-result/game4-frozen-real.log
+          for token in GAME4_REAL_A_TO_AB_TO_B_AUTHENTICATED_OVERLAP_ORDER_PASS \
+            GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS \
+            GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS \
+            TLS_GAME4_8_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS \
+            REAL_NEW_PATH_MTU_READBACK_PASS;do
+              grep -Fq "M0_PLAN028_$token" fixed-kernel-result/game4-frozen-real.log
+          done
+          python3 - <<'PY'
+          import pathlib,json
+          root=pathlib.Path("fixed-kernel-result")
+          d=json.loads((root/"plan028-game4-tls-wire-audit.json").read_text())
+          assert d["result"]=="REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS"
+          assert d["client_hello_sessions"]==d["distinct_session_ids"]==8
+          assert d["client_generation_count"]==2 and d["lanes_per_generation"]==4
+          assert d["source_counts"]=={"10.25.0.2":4,"10.25.0.3":4}
+          assert len(d["per_lane"])==8
+          assert all(x["first_client_data"]=="TLS_Handshake_ClientHello" and x["first_server_data"]=="TLS_Handshake_ServerHello" and x["server_early_data_bytes"]==0 and x["session_id_bytes"]==32 for x in d["per_lane"])
+          mtu=json.loads((root/"plan028-new-tun-mtu.json").read_text())
+          route=json.loads((root/"plan028-effective-new-physical-route.json").read_text())
+          assert len(mtu)==len(route)==1
+          assert mtu[0]["mtu"]==1178 and route[0]["prefsrc"]=="10.25.0.3"
+          assert (root/"plan028-real-path-switched-business.log").read_text().count("M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK")==5
+          print("M0_PLAN028_H1306_X86_GAME4_8CH_GENUINE_OVERLAP_MTU1178_NEW_UDP5_STOP_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan028-x86-game4-frozen-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/game4-frozen-real.log
+            fixed-kernel-result/plan028-game4-tls-wire-audit.json
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          if-no-files-found: warn
+          retention-days: 14

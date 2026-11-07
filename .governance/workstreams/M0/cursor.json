@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1305,
-  "checkpoint_sha": "239e28bb08ee56b1209fcc14c35ab0ccce420d50",
+  "sequence": 1306,
+  "checkpoint_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1305: H1304 native x86_64/x86_64 Action42344816891 SOURCE239e overall FAIL only at test's obsolete server stop reason. Real Game4 client new gen2 native M4 verified canonical encrypted kind0 server cold Commit: Rust promoted new TUN generation10 native_delivered0 authenticated_health1, old A exact Stop after 16.7s grace; server all four new TLS443 lanes M4 ready. Native old A during physical 1500→1280 produced 614101252 raw_rx other errors (18s busy loop); actual raw receive_budget before poll immediately returns RouteStale, worker Err(_) retried without pause. Fix retired Game RX error-only backoff 5ms stale/unavailable,1ms other, no hot good-path changes; fixture accepts only authenticated old group precise Stop labels same-protected-cohort-new-generation/grace-expired while requiring exact new gen, old Stop, 5 real UDP and MTU. Source lock one x86 native rerun; restore feature-impact devlog in same product change. Earlier ARM64 high-pressure failures remain OPEN.",
-  "why_now": "Remote M4 cold server proof has now been independently proven on true x86 with NO reverse inner IPv4; old fixture's stale reason aborts before new app echo. More importantly original A retained grace + real physical MTU change provokes immediate raw RouteStale before poll, re-entered 614m times and saturates native CPU. This is an actual zero-work hot spin, not hypothetical defensive programming, and must be fixed before qualifying real path recovery.",
+  "current_task": "H1306: collected native x86_64 original Go TLS/Rust Game4FEC6 SOURCE9cc5 Action42345392910 overall FAIL only second obsolete fixture Python server Stop reason after exact new gen2 encrypted Health peer M4 proof (native_delivered0, authenticated_health1), old A exact Stop, 5/5 new UDP echoes and physical MTU1280/TUN1178. Old A raw RX driver error storm dropped from H1304 614101252 to H1305 14755 with 5ms RouteStale/1ms unexpected error-only pause. Final full Stop and eight-ClientHello TLS audit NOT_RUN because stale test assertion. H1306 source-locked fixture-only corrects second Stop check; reuse exact SHA256 verified original SOURCE9cc binaries artifact13563296508 in ONE new x86 real Action. Correct feature catalog kind updated and same-commit game-lanes card. No product code change, no ARM64/1800s.",
+  "why_now": "Core Game4 x86 new B native cold Commit and actual business are already proven. Two fixtures had hardcoded obsolete retirement reason; final second prevented owned Stop and TLS wire audit. Do not rebuild an unchanged mature Go/Rust SOURCE for a test-only check. Update feature catalog declaration according to its actual updated/none schema and close exact x86 scene before returning to separate Erin weak net.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Consume automatically triggered one exact SOURCE x86_64/x86_64 native Game4FEC6 A→A+B→B Action after error-only backoff + corrected exact server old group stop label. Demand H1304 native control proof, no inner reverse delivery needed, true 8 standard TLS ClientHello, OS new route source and MTU1178, 5 real switched UDP echoes, exact client/server group Stop and old-RX-other<100000. If FAIL inspect stage/log with exact artifacts before changing protocol; no ARM64 1800s until known separate blockers fixed.",
+  "next_action": "Collect H1306 exact SOURCE9cc frozen binary x86 Action after push: verify 8 true TLS ClientHello no prelude, 4+4 lane groups and genuine FEC6, 5 real post-switch UDP, original OS 1460 intent physical1280 / TUN1178, old A exact Stop and both final native Stop, raw error bound, all one443. If full scope PASS, retain previous FAIL and mark only Game4 x86 L0/L1 scoped verified, PLAN028 IN_PROGRESS. No long until known short blockers fixed.",
   "unverified": true,
-  "last_tested_source": "239e28bb08ee56b1209fcc14c35ab0ccce420d50",
+  "last_tested_source": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1305-H1304-X86-AUTH-CONTROL-PROVEN-OLD-RAW-RX-SPIN-FAIL-20261107.json"
+    "docs/evidence/M0/PLAN028-H1306-H1305-X86-5UDP-OLD-RX-14755-TAIL-FIX-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1304 SOURCE239e Action42344816891 genuine x86 original TLS+Rust Game4 B M4 cold control successfully verified/published without any reverse IPv4 business (native_delivered0 authenticated_health1), old A completed 16.7s grace and owned Stop. Workflow overall FAIL because old fixture expects retired server group reason new-generation while actual grace-expired. Same source 614,101,252 old Game M4 RX non-timeout errors after physical effective MTU shrink due RouteStale immediate return and no error backoff; H1305 patches only error path and fixture exact reason check. Old ARM64 Erin active app stalls, H998, ICMP, Android and final L3 remain OPEN."
+  "partial_summary": "H1305 SOURCE9cc5 Action42345392910 real native x86 Game4 original Go TLS443/Rust M4: core cold encrypted Health proof without reverse inner IPv4 PASS, 5/5 real B UDP PASS, client old A exact Stop and physical MTU/TUN1178 PASS; native old RX driver other down 614101252→14755. Overall FAIL because second old Python test checks only server stop reason new-generation, actual exact grace-expired. Final stop and 8 true TLS ClientHello NOT_RUN. H1306 changes fixture only, uses saved original SHA256 binaries, corrects card+feature impact updated. Prior ARM64 Erin gaps/Windows/H998/ICMP/Android/L3 OPEN."
 }

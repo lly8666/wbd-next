@@ -623,7 +623,8 @@ pattern=r'V4_PUBLIC_SHARED_TUN_STOP generation=(\d+) routed=(\d+) unrouted=(\d+)
 for role,content in (('server',server),('client',client)):
     rows=re.findall(pattern,content)
     assert len(rows)==1 and int(rows[0][1])>=10,(role,rows)
-assert server.count('V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation')==1
+retired=re.findall(r'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=(same-protected-cohort-(?:new-generation|grace-expired)) remaining_flows=4',server)
+assert len(retired)==1,("server exact old cohort retirement",retired)
 if sys.argv[4]:
     for role,log in (("client",client),("server",server)):
         pairs=re.findall(r'V4_PUBLIC_GAME_FEC_COUNTERS role='+role+r' lanes='+str(n)+r' source_offered=(\d+) parity_offered=(\d+) parity_copied=(\d+)',log)

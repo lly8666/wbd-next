@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+  "prior_action": {
+    "id": 42345392910,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42345392910",
+    "conclusion": "failure",
+    "artifact_id": 13563296508,
+    "Go_Rust_native_build": "PASS",
+    "targeted_Rust_Go_units": "PASS",
+    "architecture": "genuine native x86_64 both ends original Go TLS443 Rust Game4 Fixed6"
+  },
+  "verified_before_historical_tail_assert": {
+    "server_four_lanes_authenticated": true,
+    "client_new_generation": 2,
+    "client_native_M4_authenticated_kind0": true,
+    "native_reverse_ipv4_delivered": 0,
+    "shared_tun_promoted": true,
+    "old_client_exact_stop": true,
+    "real_UDP_new_echoes": [
+      100,
+      101,
+      102,
+      103,
+      104
+    ],
+    "auto_lease_preserved": true,
+    "physical_mtu_new": 1280,
+    "inner_OS_mtu_readback": 1178,
+    "user_outer_mtu": 1460,
+    "old_group_raw_driver_errors_previous": 614101252,
+    "old_group_raw_driver_errors_actual": 14755
+  },
+  "blocker": {
+    "kind": "obsolete post-business fixture-only server reason",
+    "old_hardcoded_reason": "same-protected-cohort-new-generation",
+    "actual": "same-protected-cohort-grace-expired remaining_flows=4",
+    "final_native_server_Stop": "NOT_RUN_AFTER_FIXTURE_ASSERT",
+    "eight_standard_TLS_ClientHello_no_private_prelude_audit": "NOT_RUN_AFTER_FIXTURE_ASSERT"
+  },
+  "next": {
+    "workflow": ".github/workflows/m0-plan028-h1306-x86-game4-cold-proof-source-frozen.yml",
+    "original_binary_source_sha": "9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3",
+    "artifact_id": 13563296508,
+    "verify": [
+      "all 3 original SHA256 ELF",
+      "pinned donor",
+      "8 real TLS ClientHello no private first flight",
+      "old/new authenticated Stop",
+      "5 true UDP echoes",
+      "real MTU",
+      "no old raw busy spin"
+    ],
+    "no_new_build": true
+  },
+  "retained_open": [
+    "H1295/H1297/H1299/H1300 genuine ARM64 Erin app stalls",
+    "Windows physical Npcap/Wintun incomplete",
+    "H998 original same-socket MTU FAIL",
+    "remote ICMP3/4 NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 NOT_RUN"
+  ]
+}

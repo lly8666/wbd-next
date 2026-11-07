@@ -23,6 +23,14 @@ This same actual native run surfaced a **separate proven CPU defect** under real
 
 This package preserves standard TLS first flight, bounded existing Health kind0 Commit, 1460 default outer MTU, true server one443, full four-lane Go/Rust source lock, exact old-generation ownership and owned Stop. The CI test will be one native x86_64/x86_64 real path switch, with unaffected unit build/ABI reused as appropriate; no 1800s stress.
 
+## H1306 — real H1305 source-locked x86 findings and final fixture tail
+
+Exact SOURCE `9cc5b0efc36a390d44154bcf7ae378eb1d30e7f3` [Action 42345392910](https://github.com/lly8666/wbd-next/actions/runs/42345392910) remained **workflow FAIL**, but achieved verified Game4 four-lane original Go TLS443/Rust M4 new B commit by existing encrypted kind0 Health (native_delivered=0, authenticated_health=1), old A exact Stop, physical source 10.25.0.3 and MTU 1280→TUN readback 1178, auto /32 unchanged, **5/5 genuine post-switch UDP echoes**, and old A Rust M4 RX error storm reduced from 614,101,252 in prior SOURCE to **14,755** in this source. No user reverse IPv4 was needed for authenticated new route.
+
+A SECOND old fixture Python assertion, executed only after successful new UDP, still demanded server reason `same-protected-cohort-new-generation`; actual current exact old-group stop uses `same-protected-cohort-grace-expired remaining_flows=4`. It aborted before full server Stop and the 8× standard TLS ClientHello/no prelude audit. The H1306 fixture now requires exactly one legitimate old server cohort stop reason with remaining_flows=4. Rather than rebuilding for a test error, H1306 native x86 downloads the actual H1305 Action artifact 13563296508, checks original Go donor, SOURCE and SHA256 of all three original ELF binaries, then executes this one original netns scene through final Stop and TLS wire audit.
+
+Feature card now explicitly documents authenticated cold Health and bounded retired RX errors. This same commit corrects feature-impact kind to valid `updated` (not old invalid `modified`) and updates that card; product source unchanged. Older failed Actions, ARM64 Erin pressure gaps, physical Windows and L3 remain open.
+
 ```feature-impact
-{"kind":"modified","ids":["game-lanes"],"reason":"The existing Game2/4 cold overlap proof now uses a bounded, cryptographically authenticated native Health group-Commit receipt, preserving original wire kind0, TLS first flight, old route and Stop boundaries."}
+{"kind":"updated","ids":["game-lanes"],"reason":"The existing Game2/4 cold overlap proof now uses a bounded, cryptographically authenticated native Health group-Commit receipt, preserving original wire kind0, TLS first flight, old route and Stop boundaries."}
 ```
