@@ -1,0 +1,133 @@
+name: M0 PLAN028 H1309 native ARM64 Erin neighbour and physical egress witness
+run-name: H1309 one frozen ARM64 Erin NUD and host qdisc
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1309-arm64-erin-neighbour-raw-egress-frozen.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  exact-original-source-native:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 13
+    env:
+      ORIGINAL_PRODUCT_SOURCE: e61bda8f15ffaa594a14b5a1abe711d6526bd595
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42346792441
+          github-token: ${{ github.token }}
+          name: h1286-arm64-one-isal-build-e61bda8f15ffaa594a14b5a1abe711d6526bd595
+          path: fixed-build
+      - name: Confirm unchanged native ARM64 source/three ELF SHA256; no rebuilding
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["architecture"]=="native_aarch64"
+          for name,expected in m["sha256"].items():
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183
+              assert hashlib.sha256(b).hexdigest()==expected
+          print("M0_H1309_FROZEN_NATIVE_ARM64_ORIGINAL_SHA256_PASS")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1300-stall-boundary.py
+      - name: One 180s original Go TLS443 Rust M4 five-client Erin 30pct loss, read-only NUD/nic 500ms
+        shell: bash
+        env:
+          WBD_PLAN028_FAST_SCENE: pressure
+          WBD_GAME_FEC_BACKEND: native
+          WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+          WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+          WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+          WBD_PLAN028_ERIN_NEIGH_CLOCK_DIAG: "1"
+          FIXTURE_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          # Fixture is current; original native product bytes are H1308.
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build >fixed-kernel-result/h1309-native-run.log 2>&1 || {
+            tail -100 fixed-kernel-result/h1309-native-run.log >&2;exit 1;
+          }
+          test -s fixed-kernel-result/h1309-erin-neigh-clock.json
+          test -s fixed-kernel-result/h1301-netem-clock.json
+          python3 tools/m0-plan028-h1300-stall-boundary.py --art fixed-kernel-result --direction uplink --output fixed-kernel-result/h1309-uplink.json
+          python3 tools/m0-plan028-h1300-stall-boundary.py --art fixed-kernel-result --direction downlink --output fixed-kernel-result/h1309-downlink.json
+          python3 - <<'PY'
+          import collections,json,os,pathlib,re
+          root=pathlib.Path("fixed-kernel-result")
+          js=lambda n:json.loads((root/n).read_text())
+          plan=js("h1250-matrix-plan.json"); report=js("h1286-rapid-report.json")
+          rows=js("h1309-erin-neigh-clock.json")["samples"]
+          ticks=js("h1301-netem-clock.json")["samples"]
+          worst=max((js("h1309-uplink.json"),js("h1309-downlink.json")),
+                    key=lambda x:x["duration_ms"])
+          assert plan["source_sha"]==report["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert [(p["seconds"],p["rate_scale"]) for p in plan["capacity_phase_schedule"]]==[(30,.25),(60,.35),(30,.45),(50,.35)]
+          assert report["duration_seconds"]==180 and report["server_single_port"]==443
+          assert len(report["clients"])==5 and len(rows)>=100 and len(ticks)>=100
+          begin,end=worst["mono_start_ns"],worst["mono_end_ns"]
+          near=[x for x in rows if begin-250000000<=x["mono_ns"]<end+250000000]
+          qnear=[x["host_downlink_netem"] for x in ticks if begin-250000000<=x["mono_ns"]<end+250000000]
+          qnear=[q for q in qnear if q.get("kind")=="netem"]
+          states=collections.Counter()
+          for x in near:
+              val=x["server_neighbor_erin"]
+              if isinstance(val,list):
+                  if not val:states["ABSENT"]+=1
+                  else:
+                      for item in val:states[str(item.get("state") or "UNKNOWN")]+=1
+              else:states["NOT_MEASURED"]+=1
+          def delta(field,kind):
+              vals=[x[field].get("tx",{}).get(kind) for x in near]
+              nums=[v for v in vals if isinstance(v,int)]
+              return nums[-1]-nums[0] if len(nums)>=2 else None
+          dave=(root/"h1250-product-dave.log").read_text(errors="replace")
+          m=re.findall(r"M0_GAME_M4_FEC_BACKEND_READBACK selected=\S+ native_linked=(\d+) tx_native_quanta=(\d+) tx_scalar_quanta=(\d+)",dave)
+          assert m
+          linked,native,scalar=map(int,m[-1])
+          assert linked==1 and native>0 and scalar==0
+          out={"original_product_sha":os.environ["ORIGINAL_PRODUCT_SOURCE"],
+               "fixture_sha":os.environ["FIXTURE_SOURCE_SHA"],"scope":"DIAGNOSTIC_ONLY",
+               "alert_count":report["alert_count"],"alerts":report["alerts"],
+               "rotation":report["rotation_verdict"],"native_quanta":native,"scalar_quanta":scalar,
+               "all_five_shared_tun_pending_overflow":{k:v["pending_overflow"] for k,v in report["server_per_authenticated_lease_tun"].items()},
+               "worst":{"direction":worst["direction"],"duration_ms":worst["duration_ms"],
+                 "port":worst["active_client_port"],"neigh_samples":len(near),
+                 "neigh_states":dict(states),
+                 "server_veth_tx_delta":delta("server_physical_veth","packets"),
+                 "host_erin_veth_tx_delta":delta("host_erin_downlink_veth","packets"),
+                 "host_downlink_netem_sent_delta":qnear[-1]["packets"]-qnear[0]["packets"] if len(qnear)>=2 else None,
+                 "native_server_M4_kernel_copy_delta":worst["server_stage"]["inside_deltas"].get("m4_copied"),
+                 "client_M4_raw_receive_delta":worst["client_stage"]["inside_deltas"].get("kernel_raw_observed")}}
+          (root/"h1309-neigh-correlated.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print("M0_H1309_NATIVE_ARM64_ERIN_READONLY_NUD_VETH_QDISC_STAGE",json.dumps(out,sort_keys=True))
+          if report["alert_count"] or report["rotation_verdict"]!="PASS_ALL_FIVE_SCOPED" or any(v>0 for v in out["all_five_shared_tun_pending_overflow"].values()):
+              raise SystemExit("STRICT_NATIVE_ERIN_APP_GAP_FAIL_RETAINED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1309-native-arm64-neigh-veth-qdisc-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1309-*.json
+            fixed-kernel-result/h1309-*.log
+            fixed-kernel-result/h1301-netem-clock.json
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 14

@@ -45,6 +45,13 @@ if CAPACITY_STEPS not in ("","1","2"):
     raise SystemExit("invalid L2 capacity calibration flag")
 if CAPACITY_STEPS and (FAST_SCENE!="pressure" or LONG_SCENE):
     raise SystemExit("L2 capacity calibration is short pressure only")
+# H1309 opt-in, external 500ms Linux NUD + veth counters ONLY.
+# The read-only observer creates no underlay packet or product control.
+NEIGH_CLOCK_DIAG=os.environ.get("WBD_PLAN028_ERIN_NEIGH_CLOCK_DIAG","")
+if NEIGH_CLOCK_DIAG not in ("","1"):
+    raise SystemExit("invalid Erin physical neighbour observer")
+if NEIGH_CLOCK_DIAG and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
+    raise SystemExit("Erin NUD observer only in bounded 180s headroom pressure scene")
 # Explicit short-only OS event. A new protected TLS+M4 generation must
 # survive the same real NIC / same IPv4 after physical 1500 -> 1280, without
 # the old PLAN027A H998 "0 of 3 small app replies" false qualification.
@@ -177,6 +184,42 @@ def monitor_plan028_netem_qdisc(stop,out,client_ns,client_nic,host_nic):
         "diagnostic":"CLOCK_MONOTONIC, tc -s -j, 500ms, no traffic modifications",
         "samples":rows})
 
+
+def monitor_plan028_erin_neighbor(stop,out,ns_server,server_nic,host_erin_nic):
+    """External 500ms native ARM64 observer: kernel neighbour/bridge handoff,
+    never a Go/Rust packet sender, ARP generator, or success oracle."""
+    rows=[]
+    def read_json(*cmd):
+        try:return json.loads(run(*cmd,capture=True))
+        except (OSError,ValueError,subprocess.CalledProcessError) as exc:
+            return {"error":type(exc).__name__}
+    def link_counters(rows):
+        if not isinstance(rows,list) or not rows:return {"status":"NOT_MEASURED"}
+        r=rows[0]
+        stat=r.get("stats64",r.get("stats",{}))
+        return {"ifname":r.get("ifname"),
+                "rx":{k:stat.get("rx",{}).get(k) for k in ("bytes","packets","dropped","errors")},
+                "tx":{k:stat.get("tx",{}).get(k) for k in ("bytes","packets","dropped","errors")}}
+    while not stop.is_set():
+        stamp=time.monotonic_ns()
+        neigh=read_json("sudo","-n","ip","-n",ns_server,"-j","-s",
+                        "neigh","show","to","10.25.0.6","dev",server_nic)
+        if isinstance(neigh,list):
+            neigh=[{k:v.get(k) for k in ("dst","state","used","confirmed","updated","probes")}
+                   for v in neigh if v.get("dst")=="10.25.0.6"]
+        server=link_counters(read_json("sudo","-n","ip","-n",ns_server,"-j","-s",
+                                       "link","show","dev",server_nic))
+        host=link_counters(read_json("sudo","-n","ip","-j","-s","link",
+                                     "show","dev",host_erin_nic))
+        rows.append({"mono_ns":stamp,"server_neighbor_erin":neigh,
+                     "server_physical_veth":server,"host_erin_downlink_veth":host})
+        stop.wait(.5)
+    write_json(out/"h1309-erin-neigh-clock.json",{
+        "scope":"server network namespace 10.25.0.6 neighbour + server veth and Erin host veth",
+        "observer":"read-only ip -j -s neigh/link every500ms, no ARP query, no DATA/control writes",
+        "samples":rows})
+
+
 def main():
     if len(sys.argv) != 2:
         raise SystemExit("usage: h1250-five-client-netns.py COMPILED_PRODUCT_DIR")
@@ -207,6 +250,7 @@ def main():
     stop = threading.Event()
     sampler = None
     qdisc_sampler = None
+    neigh_sampler = None
     mtu_worker = None
     mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
@@ -456,6 +500,11 @@ def main():
                 args=(stop,out,namespaces[4],client_nics[4],host_nics[4]),
                 daemon=True)
             qdisc_sampler.start()
+        if NEIGH_CLOCK_DIAG:
+            neigh_sampler=threading.Thread(
+                target=monitor_plan028_erin_neighbor,
+                args=(stop,out,ns_server,server_nic,host_nics[4]),daemon=True)
+            neigh_sampler.start()
         if FAST_MTU_SHRINK:
             # The FIVE real apps are already started, and their coordinated
             # business packets start at start_ns; install the physical
@@ -529,6 +578,10 @@ def main():
             qdisc_sampler.join(timeout=8)
             assert not qdisc_sampler.is_alive(), "qdisc probe did not exit"
             assert (out/"h1301-netem-clock.json").is_file()
+        if neigh_sampler is not None:
+            neigh_sampler.join(timeout=8)
+            assert not neigh_sampler.is_alive(), "Erin neighbour observer did not exit"
+            assert (out/"h1309-erin-neigh-clock.json").is_file()
         qdisc("after")
         for i, who in enumerate(NAMES):
             (out / ("h1250-" + who + "-underlay.json")).write_text(run(

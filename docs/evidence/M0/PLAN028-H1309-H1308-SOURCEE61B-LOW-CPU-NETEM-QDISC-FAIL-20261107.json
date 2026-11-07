@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+  "previous_real_action": {
+    "id": 42346792441,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42346792441",
+    "conclusion": "failure",
+    "architecture": "native_arm64_client_server",
+    "scene": "pressure",
+    "duration_seconds": 180,
+    "exact_original_go_tls443": true,
+    "native_original_rust_m4": true,
+    "native_isal_quanta": 65550,
+    "scalar_quanta": 0,
+    "pinned_original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "build": "PASS",
+    "scene_verdict": "FAIL",
+    "scene_artifact_id": 13563983281,
+    "build_artifact_id": 13564295200,
+    "all_five_rotations": "PASS_ALL_FIVE_SCOPED",
+    "server_all_five_per_authenticated_lease_pending_overflow": 0
+  },
+  "predeclared": {
+    "warmup_seconds": 10,
+    "active_seconds": 170,
+    "drain_seconds": 10,
+    "loss_percent": 30,
+    "erin_oneway_delay_ms": 125,
+    "phase_seconds": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "phase_scales": [
+      0.25,
+      0.35,
+      0.45,
+      0.35
+    ],
+    "host_mean_cpu_busy_percent_by_phase": [
+      46.14,
+      60.36,
+      70.19,
+      60.55
+    ],
+    "erin_downlink_delivery_fraction_by_phase": [
+      0.99481,
+      0.90967,
+      0.99761,
+      0.99853
+    ]
+  },
+  "true_erin_active_gap": {
+    "who": "erin",
+    "direction": "downlink",
+    "kind": "APP_RX_GAP_WITH_ACTIVE_TX_GE750MS",
+    "duration_ms": 5360,
+    "offered_user_bytes_during_gap": 3751680,
+    "received_user_bytes": 0,
+    "active_client_original_port": 60872,
+    "server_native_generation": 18,
+    "client_generation": 2,
+    "client_m4_kernel_copied_delta": 10196,
+    "server_m4_kernel_copied_delta": 10204,
+    "server_source_queued_delta": 4435,
+    "client_physical_nic_rx_packets_delta": 2,
+    "client_original_raw_observed_delta": 0,
+    "client_original_fec_source_delta": 0,
+    "client_native_tun_delivered_delta": 0,
+    "qdisc_host_erin_downlink_sent_delta": 3,
+    "qdisc_host_erin_downlink_dropped_delta": 51,
+    "qdisc_host_erin_downlink_max_queue_packets": 90,
+    "qdisc_client_uplink_sent_delta": 7441,
+    "qdisc_client_uplink_dropped_delta": 3189,
+    "qdisc_host_erin_queue_first_roughly_4_7_seconds": "zero, until late burst",
+    "host_four_core_cpu_busy_percent": [
+      57.6,
+      58.5,
+      57.6,
+      58.3
+    ],
+    "host_four_core_steal_percent": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "causal_limits": {
+    "proven": [
+      "valid original M4 kernel send acceptance is not physical egress",
+      "Erin host downlink qdisc saw nearly no packets during active 5.36s gap",
+      "client physical NIC/raw/FEC/TUN had zero relevant inbound data",
+      "4 cores at ~58% busy so mere 4-core CPU saturation is insufficient to explain this run",
+      "per-lease shared TUN overflow zero"
+    ],
+    "not_proven": [
+      "kernel AF_INET RAW route/neighbour state",
+      "neighbour/ARP failed or delayed",
+      "bridge forwarded packets or NIC queue exact 500ms stage",
+      "server per-destination virtual egress qdisc egress accounting",
+      "FEC decoder causal defect",
+      "all other modes healthy under same load"
+    ],
+    "earliest_grounded_boundary": "Server original RAW M4 kernel copied → before physical host Erin downlink qdisc ingress; requires new native read-only kernel route/neighbour/veth evidence."
+  },
+  "next_H1309": {
+    "kind": "one_source_frozen_diagnostic_only",
+    "original_product_source": "e61bda8f15ffaa594a14b5a1abe711d6526bd595",
+    "reuse_build_action": 42346792441,
+    "reuse_build_artifact_id": 13564295200,
+    "execution_architecture": "native ARM64/ARM64, exact unchanged three ELF SHA256",
+    "app_load": "same one pressure scene 180s 0.25/0.35/0.45/0.35 under actual Erin30% loss/125ms",
+    "new_read_only_witness": "500ms ip -j -s neighbour to 10.25.0.6 on server physical veth, server veth TX, Erin host veth TX and existing netem qdisc, aligned to same CLOCK_MONOTONIC and original M4 stage",
+    "changes_to_native_product": "NONE",
+    "forbidden": [
+      "no artificially proactive ARP/traffic",
+      "no new TLS firstflight/Go hot packet pump",
+      "no new FEC codec or retransmitted PN",
+      "no ARM64 1800s until short causal blocker closed",
+      "no rewriting historical FAIL"
+    ]
+  },
+  "unresolved": [
+    "H1295,H1297,H1299,H1300 original Erin live gaps",
+    "H998 original same-socket live MTU shrink failed scoped source",
+    "Windows physical Npcap/Wintun seven mode acceptance incomplete",
+    "ICMP3/4 remote NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 NOT_RUN"
+  ]
+}
