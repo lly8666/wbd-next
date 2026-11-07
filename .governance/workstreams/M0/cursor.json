@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1334,
-  "checkpoint_sha": "68b4e9348c3c36f0465f120cce042b7c6648153c",
+  "sequence": 1335,
+  "checkpoint_sha": "5bb60800901fcd1c828db7074a8434a05292a0a2",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1334: H1332 original native x86 Action42382999546 SOURCE6c5 frozen full Go TLS+ISA-L Rust M4 3 verified ELF62, fixture sourceaf67, artifact13578766674 sha09d0 zipCRC verified: exact 5 authenticated clients one443 180s 0loss, Normal Off per direction 10→25→50→25Mbps offered=received, 5-client aggregate11.6→29→58→29 Mbps, all true UDP 1409531/1409531 with no user retries; active TX without RX max Alice0ms sibling10ms; per-lease pending overflow0; true Erin qdisc drop0/0; normal peak UDP ~6300pps/dir + 10Mbps TCP, p99 local one-way0.7ms. Host 4core busy17.66/32.83/59.63/32.68%, softirq1.69/3.75/6.83/3.76%; final exact owned client5+server Stop. H1332 Action SUCCESS, audit scope L2 0loss PASS. Generic reporter 5 rotation alerts deliberately 600s timers beyond180s, NOT_APPLICABLE not false product fail. H1333 governance PASS. L1 Windows actual sourceIP+MTU timeline and L3 open; historic H1317 5.18s/H998 same socket FAIL retained.",
-  "why_now": "Validate actual CPU/PPS and data-plane from downloaded original Action artifacts before extrapolating next high rate. 50Mbps true app at 59.63% four core has headroom; approximate linear screening predicts Normal75 ~83% while Normal100 mixed ~106%, so no blind 100/200 run or inflated performance claim.",
+  "current_task": "H1335: exact Windows native cold product gap fixed in source but native network NOT_RUN: old watcher only compared ifindex/sourceIPv4 and subscribed route/address; same physical NIC/IP NlMtu shrink ignored. Added OS selected physicalMTU, NotifyIpInterfaceChange into existing 200/500ms coalescer, one original Go TLS/Rust generation/owned Stop. One signed Windows2025 Npcap/Wintun↔real Linux WSL2 Normal Off test-owned vEthernet same selected source .1 OS physical MTU1500→1280 new original TLS/M4, client SYN MSS1420→1240, Windows inner MTU1389→1209, original UDP/TCP/Stop and OS restore; no 7-mode repeat. Updated path-mtu and windows-native feature cards. Record Windows VM cores/logical vCPU/RAM; H1332 x86 4vCPU Normal50M host59.63% not transferable to Windows or ARM64. H998 old same socket MTU fail and H1317 old 5.18s ARM64 gap retained.",
+  "why_now": "Source inspection found specific under-implemented Windows same-NIC/IP physical MTU-only change missing native NotifyIpInterfaceChange and fingerprint; hard PLAN028 L1 barrier. Existing current Go cold controller already recomputes Rust budget per new generation, so minimal no-hot-path patch and exact single owned Windows real network scenario can resolve without broad rework.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Select ONE next independent gap: prioritize native Windows signed Npcap/Wintun genuine effective underlay MTU/source IPv4 OS event→original TLS/M4+MTU install→first UDP/TCP→exact old Stop; alternatively before Windows, one bounded x86 0loss Normal 75Mbps (not 100) 180s staged if capacity still priority, same SHA6c5 binary source and explicit measure CPU/PPS/active app tail. Preserve source scoped 50 PASS, no repeat; do not start L3 2x1800 until L1/L2 blockers resolved, Android NOT_RUN, original H1317/H998 FAIL.",
+  "next_action": "Collect only H1335 source-locked full signed Windows Normal Off original TLS / Npcap / Wintun / genuine WSL2 source-unchanged physical MTU 1500→1280 Action plus Go unit, VM host fingerprint and governance. Require true OS notify, original client SYN MSS1420→1240, actual Wintun inner1389→1209, new client and server authenticated Rust M4, post-B real UDP/TCP and owned original WAL/Stop before adding PASS evidence. If fail before network classify PRECONDITION_NOT_RUN; if product fail preserve first actual boundary. Do not repeat seven modes, do not compare unlike VM performance, do not start L3 until L0-L2 hard gates closed.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1334-H1332-NATIVE-X86-ZEROLOSS-NORMAL-50MBPS-FIVECLIENT-PASS-20261107.json"
+    "docs/evidence/M0/PLAN028-H1335-WINDOWS-MTU-ONLY-COLD-PATH-PENDING-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1332 Action42382999546 real native x86 original Go TLS+ISA-L Rust frozen source6c5 L2 zero-loss Normal 10/25/50/25Mbps/dir plus four low-rate authenticated siblings PASS; actual 1409531/1409531 UDP all clients 0% network, max active gap10ms, 0 per-lease overflow, all final owned stops. Peak Normal UDP6300pps/dir plus 10Mbps TCP, 4-core CPU busy59.63%, recovery32.68%; source artifact13578766674 zipSHA confirmed. H1333 governance PASS; old generic rotation reporter alerts5 expected 600s timer not triggered. Next Windows physical lifetime or 75Mbps bounded x86; L3 2x1800 pending, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1334 native Linux x86 source-frozen6c5 L2 0% 50Mbps/dir 5clients genuine 1,409,531/1,409,531 UDP and host59.63% 4vCPU PASS_SCOPED only guest. H1335 new Windows selected physical IPv4 MTU same-NIC/IP original cold path bug fixed in source and signed Windows→WSL2 test prepared; real SOURCE Action pending, result NOT_RUN. Feature cards updated, default outer1460 invariant. H1317 historical active 5.18s and H998 old socket MTU fail preserved, PLAN028 still IN_PROGRESS."
 }

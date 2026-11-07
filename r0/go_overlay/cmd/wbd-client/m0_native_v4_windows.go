@@ -101,12 +101,14 @@ func m0WindowsColdPathRetryAllowed(
 // PLAN028: the ONE existing cold Go generation supervisor receives actual
 // Windows route/address notifications. No polling, packet callback, new
 // Rust owner, or wire-format change. A route event is not authentication:
-// compare only selected physical NIC/source4 after 200ms quiet / 500ms max; gateway and MTU-only notifications do not rotate TLS.
+// compare selected physical NIC/source4/real interface IPv4 MTU after 200ms
+// quiet / 500ms max; gateway noise and our Wintun's MTU do not rotate TLS.
 var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path changed; exact owned Stop then new TLS")
 
 type m0WindowsPhysicalPath struct{
  ifindex uint32
  source4 netip.Addr
+ physicalMTU uint32 // OS-selected underlay NIC, never inner Wintun
 }
 // The first signed WSL source is an initial trust receipt, not a permanent
 // address pin when a later cold generation follows an actual OS IPv4 path
@@ -129,6 +131,19 @@ func m0WindowsVerifiedOwnedWSLRoute(owned bool,generation uint64,
  if generation==1{return current.String()=="198.19.254.1"}
  return current.String()=="198.19.254.9"
 }
+// The existing owned-WSL2 test may reauthenticate with exactly the same
+// selected host IPv4 after a real interface MTU contraction. Keep this
+// exception restricted to the GitHub-owned guest, unchanged NIC and actual
+// 1280-byte OS MTU: no broad MAC/route override for unowned interfaces.
+func m0WindowsVerifiedOwnedWSLMTUShrink(owned,mtuOnly bool,generation uint64,
+ guest,peer,initial,current netip.Addr,ifindex uint32,selected m0WindowsPhysicalPath,
+)bool{
+ return owned&&mtuOnly&&generation==2&&
+  guest.String()=="198.19.254.2"&&peer==guest&&
+  initial.String()=="198.19.254.1"&&current==initial&&
+  selected.ifindex==ifindex&&selected.source4==current&&
+  selected.physicalMTU==1280
+}
 func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhysicalPath,error){
  var zero m0WindowsPhysicalPath
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(peer,0)
@@ -139,7 +154,7 @@ func m0WindowsSelectedPhysicalPath(peer netip.Addr,tunAlias string)(m0WindowsPhy
   strings.EqualFold(iface.Name,tunAlias){
   return zero,windowsclient.ErrN4NativeGuard
  }
- return m0WindowsPhysicalPath{ifindex:underlay.InterfaceIndex,source4:underlay.Source4},nil
+ return m0WindowsPhysicalPath{ifindex:underlay.InterfaceIndex,source4:underlay.Source4,physicalMTU:uint32(iface.MTU)},nil
 }
 type m0WindowsPathCoalescer struct{first,last time.Time}
 func(c *m0WindowsPathCoalescer) push(now time.Time){
@@ -156,8 +171,8 @@ func(c m0WindowsPathCoalescer) remaining(now time.Time)time.Duration{
 }
 func(c *m0WindowsPathCoalescer) clear(){*c=m0WindowsPathCoalescer{}}
 
-// NotifyRouteChange2 and NotifyUnicastIpAddressChange are native asynchronous
-// IP Helper subscriptions. Their WinAPI callbacks only wake one buffered
+// Native route, unicast-address, and IP-interface (including NlMtu) change
+// notifications are asynchronous IP Helper subscriptions. Their WinAPI callbacks only wake one buffered
 // channel; actual OS readback, TLS, WFP and Stop remain on ordinary Go threads.
 func watchM0WindowsOriginalPhysicalPath(
  parent context.Context,peer netip.Addr,tunAlias string,
@@ -167,8 +182,9 @@ func watchM0WindowsOriginalPhysicalPath(
  dll:=windows.NewLazySystemDLL("iphlpapi.dll")
  routeProc:=dll.NewProc("NotifyRouteChange2")
  addressProc:=dll.NewProc("NotifyUnicastIpAddressChange")
+ interfaceProc:=dll.NewProc("NotifyIpInterfaceChange")
  cancelProc:=dll.NewProc("CancelMibChangeNotify2")
- for _,p:=range []*windows.LazyProc{routeProc,addressProc,cancelProc}{
+ for _,p:=range []*windows.LazyProc{routeProc,addressProc,interfaceProc,cancelProc}{
   if err=p.Find();err!=nil{return nil,nil,err}
  }
  raw:=make(chan struct{},1)
@@ -176,7 +192,7 @@ func watchM0WindowsOriginalPhysicalPath(
   select{case raw<-struct{}{}:default:}
   return 0
  })
- var routeHandle,addressHandle uintptr
+ var routeHandle,addressHandle,interfaceHandle uintptr
  // AF_INET (IPv4); FALSE: do not fake an initial OS path-change event.
  if status,_,_:=routeProc.Call(uintptr(syscall.AF_INET),cb,0,0,
   uintptr(unsafe.Pointer(&routeHandle)));status!=0{
@@ -187,7 +203,13 @@ func watchM0WindowsOriginalPhysicalPath(
   cancelProc.Call(routeHandle)
   return nil,nil,syscall.Errno(status)
  }
- // Cover route transition between baseline and native subscription setup.
+ if status,_,_:=interfaceProc.Call(uintptr(syscall.AF_INET),cb,0,0,
+  uintptr(unsafe.Pointer(&interfaceHandle)));status!=0{
+  cancelProc.Call(addressHandle)
+  cancelProc.Call(routeHandle)
+  return nil,nil,syscall.Errno(status)
+ }
+ // Cover NIC/source/MTU transition between baseline and native subscription setup.
  if latest,e:=m0WindowsSelectedPhysicalPath(peer,tunAlias);e==nil&&latest!=baseline{
   select{case raw<-struct{}{}:default:}
  }
@@ -198,6 +220,7 @@ func watchM0WindowsOriginalPhysicalPath(
   defer close(done)
   defer cancelProc.Call(routeHandle)
   defer cancelProc.Call(addressHandle)
+  defer cancelProc.Call(interfaceHandle)
   current:=baseline
   var pending m0WindowsPathCoalescer
   for{
@@ -224,8 +247,8 @@ func watchM0WindowsOriginalPhysicalPath(
    if e!=nil||next==current{continue}
    current=next
    select{case changed<-struct{}{}:default:}
-   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d source4=%s source=os_native_ipv4_notification coalesce_quiet_ms=200 max_ms=500\n",
-    next.ifindex,next.source4)
+   fmt.Printf("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED ifindex=%d source4=%s physical_mtu=%d source=os_native_ipv4_interface_notification coalesce_quiet_ms=200 max_ms=500 observed_unix_ns=%d\n",
+    next.ifindex,next.source4,next.physicalMTU,time.Now().UnixNano())
   }
  }()
  stop:=func(){cancel();<-done}
@@ -422,7 +445,10 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    parseErr==nil&&ipErr==nil&&srcErr==nil{
    if selected,e:=m0WindowsSelectedPhysicalPath(o.ServerIP,o.AdapterAlias);e==nil{
     ownedGuestOnLink=m0WindowsVerifiedOwnedWSLRoute(true,generation,
-     guestIP,o.ServerIP,sourceIP,underlay.Source4,underlay.InterfaceIndex,selected)
+     guestIP,o.ServerIP,sourceIP,underlay.Source4,underlay.InterfaceIndex,selected)||
+     m0WindowsVerifiedOwnedWSLMTUShrink(true,
+      os.Getenv("WBD_PLAN028_WSL_OWNED_MTU_ONLY")=="1",generation,
+      guestIP,o.ServerIP,sourceIP,underlay.Source4,underlay.InterfaceIndex,selected)
    }
   }
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||

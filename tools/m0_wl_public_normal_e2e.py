@@ -15,6 +15,9 @@ mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
+plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
+if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
+ raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
  raise RuntimeError('PLAN028 owned source4 switch supports Normal off, fixed6, auto, Game4 off or Game4FEC6 with default1460 only')
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
@@ -339,15 +342,25 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   # reauthenticate a fresh original Go TLS generation and apply OS MTU.
   assert (out/"plan028-owned-alias.json").is_file()
   started=time.monotonic()
+  action="ShrinkMTU" if plan028_owned_mtu_only else "Switch"
   run(["pwsh","-NoProfile","-File",str(root/"tools"/"m0-plan028-win-wsl-product-owned-alias.ps1"),
-       "-Action","Switch","-Receipt",str(out/"plan028-owned-alias.json")],timeout=60)
+       "-Action",action,"-Receipt",str(out/"plan028-owned-alias.json")],timeout=60)
   alias=json.loads((out/"plan028-owned-alias.json").read_text())
-  if alias["stage"]!="SWITCHED" or alias["native_source4_after"]!="198.19.254.9":
+  if plan028_owned_mtu_only:
+   if (alias["stage"]!="MTU_SHRUNK" or alias["host_source_old"]!="198.19.254.1" or
+       alias["mtu_only_source4_after"]!="198.19.254.1" or
+       int(alias["physical_ipv4_mtu_original"])!=1500 or
+       int(alias["physical_ipv4_mtu_after"])!=1280):
+    raise RuntimeError("same Windows physical NIC/IP 1500->1280 OS readback not verified")
+  elif alias["stage"]!="SWITCHED" or alias["native_source4_after"]!="198.19.254.9":
    raise RuntimeError("new source IPv4 from real Windows OS readback was not selected")
   for _ in range(360):
    win=(out/"client.log").read_text(errors="replace")
    if ("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=2" in win and
-       "WBD_PLAN028_WINDOWS_VERIFIED_NATIVE_SOURCE4_REBOUND generation=2" in win and
+       (("WBD_WINDOWS_NATIVE_PATH_EFFECTIVE_CHANGED" in win and
+          "physical_mtu=1280" in win and
+          "WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=2" in win) if plan028_owned_mtu_only else
+        "WBD_PLAN028_WINDOWS_VERIFIED_NATIVE_SOURCE4_REBOUND generation=2" in win) and
        win.count("WBD_WINDOWS_CLIENT_READY")>=2 and
        win.count("WBD_WINDOWS_OS_APPLIED")>=2 and
        (out/"server.log").read_text(errors="replace").count(
@@ -383,17 +396,31 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    if w.poll() is not None:raise RuntimeError("new Windows path died before authenticated fresh inner UDP")
    time.sleep(.1)
   else:raise RuntimeError("actual Windows/Linux inner UDP did not continue beyond new authenticated generation: "+repr((before,after)))
-  report["plan028_original_native_source4_reauth"]={
-   "scope":("TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_GAME4FEC6_NEW_GO_TLS_NPCAP_WINTUN_RUST" if is_game else
-             "TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_NEW_GO_TLS_NPCAP_WINTUN_RUST"),
-   "source4_before":"198.19.254.1","source4_after":"198.19.254.9",
+  new_generation={
    "old_generation_exact_wal_stop":True,
    "new_generation_tls_native_ready":True,
    "new_inner_udp_receive_increments":{x:after[x]-before[x] for x in before},
    "OS_mutation_to_new_ready_observed_ms":round((time.monotonic()-started)*1000,2),
    "notification_to_TLS_start_ms":"NOT_MEASURED",
    "TLS_auth_to_first_single_packet_ms":"NOT_MEASURED"}
-  print("M0_PLAN028_WINDOWS_REAL_OWNED_WSL2_SOURCE4_REAUTH_ORIGINAL_TLS_NPCAP_RUST_AND_NEW_UDP_PASS",flush=True)
+  if plan028_owned_mtu_only:
+   # Real OS-owned WSL vEthernet interface, unchanged source and ifindex.
+   # No synthetic callback, no modification to runner management uplink.
+   new_generation.update({
+    "scope":"TRUE_WINDOWS_WSL2_OWNED_SAME_IFINDEX_SAME_IP_PHYSICAL_MTU_ONLY_1500_TO_1280_ORIGINAL_TLS_NPCAP_WINTUN_RUST",
+    "source4_before":"198.19.254.1","source4_after":"198.19.254.1",
+    "physical_mtu_before":int(alias["physical_ipv4_mtu_original"]),
+    "physical_mtu_after":int(alias["physical_ipv4_mtu_after"]),
+    "mutated_test_owned_underlay_only":True})
+   report["plan028_original_native_mtu_only_reauth"]=new_generation
+   print("M0_PLAN028_WINDOWS_REAL_OWNED_WSL2_SAME_SOURCE_MTU_ONLY_REAUTH_ORIGINAL_TLS_NPCAP_RUST_UDP_PASS",flush=True)
+  else:
+   new_generation.update({
+    "scope":("TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_GAME4FEC6_NEW_GO_TLS_NPCAP_WINTUN_RUST" if is_game else
+             "TRUE_WINDOWS_WSL2_OWNED_EGRESS_IP4_NEW_GO_TLS_NPCAP_WINTUN_RUST"),
+    "source4_before":"198.19.254.1","source4_after":"198.19.254.9"})
+   report["plan028_original_native_source4_reauth"]=new_generation
+   print("M0_PLAN028_WINDOWS_REAL_OWNED_WSL2_SOURCE4_REAUTH_ORIGINAL_TLS_NPCAP_RUST_AND_NEW_UDP_PASS",flush=True)
  game_cold_stage("COLD_READY_COMPLETE")
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  winlog=(out/"client.log").read_text(errors="replace")
@@ -419,14 +446,42 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if mode=="normal":
    from m0_wl_public_mss_contract import verified_current_v4_mss,verified_plan028_shared_manual_two_generation_v4_mss
    linux_log=(out/"server.log").read_text(errors="replace")
-   if plan028_owned_switch:
+   if plan028_owned_mtu_only:
+    # The same authenticated Linux shared-server TUN stays unchanged.
+    # The Windows client alone must narrow its true NEW TCP SYN budget;
+    # Linux SYNACK may legitimately advertise its own larger 1460 path.
+    budgets=re.findall(
+     r"WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=normal configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+)",
+     winlog)
+    syns=re.findall(
+     r"WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=(\d+) local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",
+     winlog)
+    expected=[("1","1460","1500","1460","1420","1389"),
+              ("2","1460","1280","1280","1240","1209")]
+    if budgets!=expected or syns!=[("1","1420","0204058c"),("2","1240","020404d8")]:
+     raise RuntimeError("real Windows same-IP physical MTU original SYN budget/packet bytes wrong: "+repr((budgets,syns)))
+    if per_gen_inner!=[1389,1209]:
+     raise RuntimeError("Windows real Wintun OS inner MTU did not narrow BEFORE B published: "+repr(per_gen_inner))
+    if linux_log.count("V4_PUBLIC_MULTI_SESSION_READY role=server")<2:
+     raise RuntimeError("Linux same shared TUN original second TLS cohort not ready")
+    budget_and_wire={
+     "scope":"WINDOWS_REAL_ORIGINAL_CLIENT_SYN_TWO_PHYSICAL_MTU_BUDGETS_ONLY",
+     "windows_physical":[1500,1280],
+     "windows_effective_outer":[1460,1280],
+     "windows_actual_SYN_MSS":[1420,1240],
+     "windows_real_inner_Wintun_OS":[1389,1209],
+     "server_SYNACK_MSS":"INDEPENDENT_LINUX_PHYSICAL_PATH_NOT_ASSUMED_MATCHED"}
+    report["plan028_actual_two_generation_syn_synack_mss"]=budget_and_wire
+    print("M0_PLAN028_WINDOWS_REAL_SAME_IP_PHYSICAL_MTU_SHRUNK_ORIGINAL_SYN_AND_WINTUN_OS_PASS",flush=True)
+   elif plan028_owned_switch:
     per_gen_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu)
     report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
     budget_and_wire=per_gen_wire[-1]
    else:
     budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
    report["plan027a_real_syn_synack_mss"]=budget_and_wire
-   print("PLAN027A_BOTH_REAL_SYN_SYNACK_MSS_VERIFIED "+json.dumps(budget_and_wire,sort_keys=True),flush=True)
+   if not plan028_owned_mtu_only:
+    print("PLAN027A_BOTH_REAL_SYN_SYNACK_MSS_VERIFIED "+json.dumps(budget_and_wire,sort_keys=True),flush=True)
 
   report["plan027a_windows_os_inner_mtu_verified"]=windows_inner
   print("PLAN027A_WINDOWS_INNER_OS_READBACK",windows_inner,"outer",

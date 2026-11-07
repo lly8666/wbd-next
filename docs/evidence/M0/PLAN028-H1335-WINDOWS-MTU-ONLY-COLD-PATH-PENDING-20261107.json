@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1335",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "previous_main_source": "5bb60800901fcd1c828db7074a8434a05292a0a2",
+  "new_product_source_status": "SOURCE_BEING_COMMITTED_NATIVE_NOT_RUN",
+  "root_cause": "Previous m0WindowsPhysicalPath only contained ifindex and source4; NotifyRouteChange2 and NotifyUnicastIpAddressChange subscriptions cannot reliably detect selected real Windows NIC MTU-only change; same NIC/source change missed entire cold generation hard gate.",
+  "staged_product_fix": {
+    "what": "add actual selected physical NIC MTU to Go cold path fingerprint and NotifyIpInterfaceChange subscription, coalesce native callbacks 200ms quiet/500ms ceiling, re-use one cold TLS/Rust owner; no wire/record/steady packet loops changed",
+    "user_outer_mtu_default": 1460,
+    "auth_and_exact_owned_stop": "REQUIRED_UNVERIFIED"
+  },
+  "original_true_windows_test": {
+    "mode": "Normal Off only",
+    "runner": "Windows2025 signed native Npcap and Wintun",
+    "peer": "genuine Linux WSL2 original TLS/Rust M4",
+    "test_owned_underlay": "only WSL vEthernet, never runner uplink",
+    "os_mutation": "same selected ifindex/source IPv4 198.19.254.1; NlMtuBytes 1500→1280",
+    "restore": "exact original MTU and both original test-owned aliases, no DNS/default route change",
+    "old_new_original_TLS": "UNVERIFIED",
+    "expected_client_syn_mss": [
+      1420,
+      1240
+    ],
+    "expected_native_Wintun_inner_mtu": [
+      1389,
+      1209
+    ],
+    "expected_UDP_TCP": "TRUE_BOTH_OS_NATIVE",
+    "expected_old_and_final_stop": "REQUIRED",
+    "sourceIP_changed": false
+  },
+  "vm_discrimination": "Record actual Windows VM architecture, sockets, physical/logical vCPU, RAM; do NOT use prior native Linux 4vCPU 59.63% CPU at Normal 50Mbps to infer Windows/ARM64 throughput/capacity or causality.",
+  "prior_reusable": {
+    "H1135_source_switch_older_action": 41822046885,
+    "H1238_windows_native_unit": 42010319278,
+    "H1332_native_x86_frozen_source_action": 42382999546
+  },
+  "limitations": [
+    "This is a preflight PLAN, not an observed network PASS",
+    "H998 same original socket physical MTU shrink remains historical FAIL, fresh new auth is different scope",
+    "H1317 genuine old ARM64 Normal active 5.18s FAIL remains",
+    "Windows independently attached real WiFi/physical NIC NOT_RUN, test is WSL virtual owned physical egress",
+    "Other 6 Windows modes with 2 real path handovers NOT_RUN",
+    "L2 Game capacity and L3 two 1800s remain NOT_RUN"
+  ]
+}

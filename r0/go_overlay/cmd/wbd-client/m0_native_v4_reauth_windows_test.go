@@ -90,9 +90,13 @@ func TestM0PLAN028NativeWindowsIPv4CallbackCoalescer(t *testing.T){
  c.clear();if c.remaining(start.Add(time.Second))!=-1{t.Fatal("not cleared")}
 }
 func TestM0PLAN028NativeWindowsOnlyPhysicalNICSourceIPv4(t *testing.T){
- a:=m0WindowsPhysicalPath{ifindex:8,source4:netip.MustParseAddr("192.0.2.11")}
+ a:=m0WindowsPhysicalPath{ifindex:8,source4:netip.MustParseAddr("192.0.2.11"),physicalMTU:1500}
  b:=a;b.source4=netip.MustParseAddr("192.0.2.12");if b==a{t.Fatal("IPv4 change")}
  b=a;b.ifindex=9;if b==a{t.Fatal("NIC change")}
+ b=a;b.physicalMTU=1280;if b==a{t.Fatal("same NIC/source with real OS MTU contraction must reauthorize cold TLS")}
+ b=a;b.physicalMTU=1500;if b!=a{t.Fatal("identical physical snapshot must not reauthorize")}
+ // The selected physical NIC fingerprint must not depend on the separate
+ // Wintun inner MTU, gateway noise, other accounts or route metric alone.
  if !errors.Is(errM0WindowsPhysicalPathChanged,errM0WindowsPhysicalPathChanged){t.Fatal("native Stop")}
 }
 
@@ -185,6 +189,42 @@ func TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOr
  }
  if m0WindowsColdPathRetryAllowed(m0WinModeGame4,true,false,false,0,timeout){
   t.Fatal("Game dead90 retry authorization widened without OS event")
+ }
+}
+
+
+// Scope the real test-owned WSL MTU-only source-reuse exception to an
+// unchanged selected IPv4/NIC and exact OS-readback 1280, never a generic
+// credential, path or MAC authorization.
+func TestM0PLAN028WindowsOwnedWSLMTUShrinkNeverAllowsForeignOrSourceRebind(t *testing.T){
+ guest:=netip.MustParseAddr("198.19.254.2")
+ host:=netip.MustParseAddr("198.19.254.1")
+ selected:=m0WindowsPhysicalPath{ifindex:25,source4:host,physicalMTU:1280}
+ allow:=m0WindowsVerifiedOwnedWSLMTUShrink
+ if !allow(true,true,2,guest,guest,host,host,25,selected){
+  t.Fatal("new signed WSL generation on actual owned physical MTU shrink denied")
+ }
+ for _,row:=range []struct{
+  name string;owned,mtuOnly bool;generation uint64
+  guest,peer,initial,current netip.Addr;idx uint32;selected m0WindowsPhysicalPath
+ }{
+  {"unowned",false,true,2,guest,guest,host,host,25,selected},
+  {"no_MTU_only_intent",true,false,2,guest,guest,host,host,25,selected},
+  {"old_generation",true,true,1,guest,guest,host,host,25,selected},
+  {"foreign_guest",true,true,2,netip.MustParseAddr("198.19.254.3"),guest,host,host,25,selected},
+  {"foreign_peer",true,true,2,guest,netip.MustParseAddr("198.19.254.3"),host,host,25,selected},
+  {"wrong_initial",true,true,2,guest,guest,netip.MustParseAddr("198.19.254.9"),host,25,selected},
+  {"source_switch_not_MTU_only",true,true,2,guest,guest,host,netip.MustParseAddr("198.19.254.9"),25,selected},
+  {"foreign_ifindex",true,true,2,guest,guest,host,host,26,selected},
+  {"foreign_selected_ip",true,true,2,guest,guest,host,host,25,m0WindowsPhysicalPath{ifindex:25,source4:netip.MustParseAddr("198.19.254.9"),physicalMTU:1280}},
+  {"foreign_selected_ifindex",true,true,2,guest,guest,host,host,25,m0WindowsPhysicalPath{ifindex:26,source4:host,physicalMTU:1280}},
+  {"no_real_MTU_shrink",true,true,2,guest,guest,host,host,25,m0WindowsPhysicalPath{ifindex:25,source4:host,physicalMTU:1500}},
+ }{
+  t.Run(row.name,func(t *testing.T){
+   if allow(row.owned,row.mtuOnly,row.generation,row.guest,row.peer,row.initial,row.current,row.idx,row.selected){
+    t.Fatal("foreign or untriggered MTU-only native WSL route exception")
+   }
+  })
  }
 }
 
