@@ -987,10 +987,12 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
     }
 }
 
-// H1281 Normal two-phase original M4 handoff: a client's local protected
-// TLS and Rust Start are not a remote commit. Observe at least ONE genuine
-// native AEAD/replay-accepted reverse IPv4 delivery on the candidate's own
-// Rust generation before revoking the still-live former shared TUN route.
+// Two-phase original M4 handoff: local protected TLS/Rust start is NOT
+// a remote native Commit. Require this exact candidate's authenticated
+// M4 reverse IPv4 TUN delivery, OR a verified canonical native Game
+// Health kind0 cold Commit receipt sent only after the server's whole
+// authenticated M4 group has installed. No synthetic TCP ACK, TLS local
+// READY, Go packet pump or new steady-state control wire is evidence.
 // A failed server M4 leaves A intact; no Go DATA copies, new control wire,
 // unauthenticated timer ownership or unbounded overlap is authorized.
 func waitOriginalNativeM4PeerProof(
@@ -1010,13 +1012,13 @@ func waitOriginalNativeM4PeerProof(
         if status.AuthenticatedPeerDead{
             return fmt.Errorf("candidate native authenticated peer terminal before M4 proof")
         }
-        if status.RxRecords>0{
+        if status.RxRecords>0||status.AuthenticatedPeerControl{
             return promote()
         }
         select{
         case <-ctx.Done():return ctx.Err()
         case <-timer.C:
-            return fmt.Errorf("remote M4 unproved: no authenticated reverse IPv4 before cold overlap deadline")
+            return fmt.Errorf("remote M4 unproved: no authenticated reverse IPv4 or server M4 commit control before cold overlap deadline")
         case <-ticker.C:
         }
     }

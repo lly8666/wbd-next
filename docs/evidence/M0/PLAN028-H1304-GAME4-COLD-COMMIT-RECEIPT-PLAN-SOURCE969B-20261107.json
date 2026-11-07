@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "969b04958f671c868009abb603479aca9278ab30",
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "incident": {
+    "run_id": 42338102273,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42338102273",
+    "source_sha": "806c2c910c8c1037bf4200c5d605e7ca636993e6",
+    "conclusion": "failure",
+    "architecture": "true x86_64/x86_64 original pinned Go TLS443 Rust Game4 FEC6",
+    "owner_and_network": "new generation server all four TLS lanes and original Rust M4 ready; client fresh generation native M4 ready but shared TUN route still on old cohort",
+    "client_log": "V4_PUBLIC_GAME_REMOTE_M4_UNPROVEN generation=2 and 6 (5s no authenticated reverse IPv4), after full new TLS; old_tun_route_preserved=1",
+    "client_retry_reasons": "later protected epoch collision and Go TLS timeouts after canceled candidate",
+    "server_log": "V4_PUBLIC_GAME_GROUP_LANE_READY all four and V4_PUBLIC_GAME_MULTI_GROUP_READY; old groups still live per grace",
+    "acceptance": "FAIL_REAL_UNDERLAY_SWITCH_NOT_READY",
+    "exact_artifact_id": 13560223583
+  },
+  "observed_causal_gap": "Go client used only GameKernelCounters.Delivered>0 (reverse inner IPv4 TUN delivery) as proxy for server M4 cold commit. A new candidate has no TUN reader / new source until promotion, and no-business/pure-uplink cases need not generate reverse IPv4. Local TLS READY cannot prove all server Game lanes admitted.",
+  "change_scope": {
+    "server": "After all real original TLS Game2/4 lanes, GameAdapter M4 raw/TUN workers and shared TUN owner installed, arm bounded existing native Health kind0 cold receipt on same Rust worker (three AEAD/PN sealed controls, 400ms apart). Not before full group Commit.",
+    "client": "Read the candidate's original M4 AEAD/PN-replay-verified canonical Health kind0 activity, separate from user IPv4 delivered count. Route promotion accepts either this authenticated server receipt or genuine new-generation reverse IPv4 TUN delivery, preserving old route until proof.",
+    "exclusion": [
+      "No pre-ClientHello bytes/new TLS prelude",
+      "No new steady wire TLV or IP header",
+      "No Go hot packet pump or fake application echo",
+      "No untrusted SYN/TCP ACK/local TLS READY as authority",
+      "No second TUN reader; one /32 generation and exact Stop",
+      "No 1800s / no unrelated ARM64 repeat"
+    ],
+    "deterministic_checks": [
+      "valid Health kind0 AEAD unique opens, no TUN business, promotes",
+      "tampered ciphertext cannot create authenticated control",
+      "raw/empty candidate cannot promote",
+      "Health scheduling bounded 3 genuine kernel copies or retry and returns to normal 15s",
+      "old owner untouched until exact authenticated B receipt"
+    ],
+    "native_network_next": "One exact new SOURCE x86_64/x86_64 Game4FEC6 one443 A→A+B→B underlay actual OS path switch, true UDP5/Stop, exact first-flight TLS, and FEC readback. Same Action native build and deterministic Go/Rust units."
+  },
+  "status": "CANDIDATE_NOT_TESTED",
+  "historic_remaining": [
+    "H1295/H1297/H1299/H1300 real Erin app gaps untouched",
+    "ARM64 H1302 PASS is capacity-limited and not root fix",
+    "Windows physical Npcap/Wintun seven modes incomplete",
+    "H998 same-socket original MTU failure retained",
+    "ICMP3/4 remote NOT_MEASURED",
+    "Android NOT_RUN",
+    "PLAN028 L3 NOT_RUN"
+  ]
+}

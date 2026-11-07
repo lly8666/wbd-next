@@ -783,7 +783,15 @@ mod tests{
         let receiver=sender.receiver_handle();
         let mut guard=receiver.lock().unwrap();
         let lane=LaneKey{tunnel:TunnelKey{slot:4,generation:7},slot:1,generation:7};
+        assert!(!activity.has_verified_peer_health());
+        let mut bad=wire;
+        bad[size-1]^=1; // original AEAD tag, not a permitted fake ACK.
+        assert!(guard.prepare_receive(lane,&mut bad[..size]).is_err());
+        assert!(!activity.has_verified_peer_health());
         assert!(guard.prepare_receive(lane,&mut wire[..size]).unwrap().is_none());
+        // Genuine unique AEAD kind0 Health is a proven remote M4 TX
+        // even with NO user IPv4, FEC symbol or TUN delivery.
+        assert!(activity.has_verified_peer_health());
         let mut clock=crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),0);
         activity.absorb(&mut clock);

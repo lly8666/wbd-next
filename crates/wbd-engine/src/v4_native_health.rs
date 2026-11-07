@@ -73,6 +73,10 @@ pub(crate) struct HealthClock {
     last_business:u64,
     next_health:u64,
     retry_not_before:u64,
+    // At most three already-implemented AEAD Health kind0 receipts for
+    // the *server's finished Game2/4 cold group*. Never a data probe,
+    // a new wire type, or a periodic extra sender.
+    cold_group_receipts_left:u8,
     peer_idle:Option<(u64,u64)>,
     peer_write_closed:bool,
     peer_retired:bool,
@@ -82,7 +86,8 @@ impl HealthClock {
     pub(crate) fn new(policy:HealthPolicy,at:u64)->Self{
         Self{policy,attached_at:at,last_authenticated:None,
             last_business:at,next_health:at.saturating_add(policy.interval_ns),
-            retry_not_before:at,peer_idle:None,peer_write_closed:false,
+            retry_not_before:at,cold_group_receipts_left:0,
+            peer_idle:None,peer_write_closed:false,
             peer_retired:false,disconnected:false}
     }
     pub(crate) fn policy(&self)->HealthPolicy{self.policy}
@@ -118,9 +123,28 @@ impl HealthClock {
     }
     /// Accepted is a synchronous definite driver copy, not remote receipt.
     /// Failed/uncertain copies do not postpone a required heartbeat for 15s.
+    // Only a full original-Go TLS Game2/4 group whose native server M4
+    // drivers are installed can request this bounded cold commit receipt.
+    // The existing authenticated Health kind0 record carries it: a
+    // client's verified receipt proves actual remote M4 TX, independent
+    // of reverse application IPv4 being available.
+    pub(crate) fn arm_game_server_cold_commit(&mut self,at:u64){
+        if self.cold_group_receipts_left==0{
+            self.cold_group_receipts_left=3;
+            self.next_health=at;
+            self.retry_not_before=at;
+        }
+    }
     pub(crate) fn on_health_send_result(&mut self,at:u64,accepted:bool){
         if accepted {
-            self.next_health=at.saturating_add(next_health_delay(self.policy.interval_ns));
+            if self.cold_group_receipts_left>0{
+                self.cold_group_receipts_left-=1;
+            }
+            self.next_health=if self.cold_group_receipts_left>0{
+                at.saturating_add(400_000_000)
+            }else{
+                at.saturating_add(next_health_delay(self.policy.interval_ns))
+            };
             self.retry_not_before=at;
         }else{
             self.retry_not_before=at.saturating_add(MIN_RETRY_NS);
@@ -212,6 +236,12 @@ impl AuthenticatedActivity {
     }
     pub(crate) fn record_peer_retire(&self,at:u64){
         if at>0{self.peer_retire_at.fetch_max(at,std::sync::atomic::Ordering::Release);}
+    }
+    // This is ONLY set after native M4 replay/AEAD open of kind0 and
+    // strict canonical Health parsing, not raw TCP ACK, TLS local READY,
+    // unsigned health hints, or ordinary user IP delivery.
+    pub(crate) fn has_verified_peer_health(&self)->bool{
+        self.hint_at_ns.load(std::sync::atomic::Ordering::Acquire)>0
     }
     pub(crate) fn absorb(&self,clock:&mut HealthClock){
         use std::sync::atomic::Ordering;
@@ -527,6 +557,42 @@ mod wire_tests{
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn game_server_cold_commit_health_is_bounded_and_never_fake_business(){
+        let mut health=HealthClock::new(HealthPolicy::default_connected(),10_000_000);
+        assert!(!health.tx_due(10_000_000));
+        health.arm_game_server_cold_commit(10_001_000);
+        assert!(health.tx_due(10_001_000));
+        // A failed driver copy must NOT count as a peer receipt, and
+        // must retry the same existing sealed kind0 via original TX.
+        health.on_health_send_result(10_001_000,false);
+        assert!(!health.tx_due(10_001_000));
+        assert!(health.tx_due(10_001_000+MIN_RETRY_NS));
+        let mut now=10_001_000+MIN_RETRY_NS;
+        for index in 0..3{
+            assert!(health.tx_due(now));
+            health.on_health_send_result(now,true);
+            if index<2{
+                assert!(!health.tx_due(now+399_999_999));
+                now=now+400_000_000;
+            }else{
+                assert!(!health.tx_due(now+1_000_000_000));
+            }
+        }
+        // Cold receipt never advances application payload idle.
+        assert_eq!(health.local_idle_ns(now),now-10_000_000);
+        assert_eq!(health.cold_group_receipts_left,0);
+    }
+    #[test]
+    fn only_canonical_game_health_hint_is_cold_peer_proof(){
+        let activity=AuthenticatedActivity::default();
+        assert!(!activity.has_verified_peer_health());
+        activity.record_batch(100,0,None);
+        assert!(!activity.has_verified_peer_health());
+        activity.record_batch(101,0,Some((101,0)));
+        assert!(activity.has_verified_peer_health());
+    }
+
     const S:u64=SECOND_NS;
     fn default()->HealthClock{HealthClock::new(HealthPolicy::default_connected(),0)}
     #[test]

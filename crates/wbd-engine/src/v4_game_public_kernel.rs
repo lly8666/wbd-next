@@ -109,6 +109,12 @@ pub(crate) struct GameKernelOwner{
     diagnostic_adapter:Arc<Mutex<GameAdapter>>,
     tx_work_sample:Arc<TxDurationSample>,
     tx_shared_burst_extra:Arc<AtomicU64>,
+    // Server-only one-shot cold Commit, armed after all native RX/TX
+    // workers and the authenticated shared TUN have been published.
+    cold_group_committed:Arc<AtomicBool>,
+    // Verified kind0 Health hint from this Game cohort's OWN AEAD/PN
+    // RX lane. Kept apart from successful inner IPv4 TUN deliveries.
+    peer_health_evidence:Arc<crate::v4_native_health::AuthenticatedActivity>,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -171,6 +177,8 @@ impl GameKernelOwner{
         let tx_shared_burst_worker=Arc::clone(&tx_shared_burst_extra);
         let tx_sample_enabled=std::env::var("WBD_GAME_TX_SAMPLE")
             .ok().as_deref()==Some("1");
+        let cold_group_committed=Arc::new(AtomicBool::new(false));
+        let tx_cold_group_committed=Arc::clone(&cold_group_committed);
         let raw_received=Arc::new(AtomicU64::new(0));
         let rx_reject=Arc::new(RxRejectReasons::default());
         let rx_driver_timeout=Arc::new(AtomicU64::new(0));
@@ -232,6 +240,7 @@ impl GameKernelOwner{
         };
         let mut lane_openers=lane_openers.into_iter();
         let epoch_clock=Instant::now();
+        let tx_health_rx=Arc::clone(&health_rx);
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
@@ -239,6 +248,7 @@ impl GameKernelOwner{
                 let start=epoch_clock;
                 let mut health=HealthClock::new(HealthPolicy::default_connected(),
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+                let mut server_cold_receipt_armed=false;
                 // One full IPv4 TUN read buffer PER Game TX owner, never
                 // 64KiB per arena slab. A 2048B read irreversibly truncated
                 // actual oversized DF0 datagrams into false small packets.
@@ -645,9 +655,19 @@ impl GameKernelOwner{
                     // One authenticated Health on the existing TX worker,
                     // every ~15s after REAL copied control. Never a Game
                     // logical source/FEC symbol or new Go packet pump.
-                    health_rx.absorb(&mut health);
+                    tx_health_rx.absorb(&mut health);
                     let health_now=health_origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64;
+                    // Do not send an early "Ready" from a merely local
+                    // TLS lane. This flag is released exactly ONCE after
+                    // full original-Go protected Game group M4 startup.
+                    // Existing AEAD/PN kind0 Health is the bounded cold
+                    // receipt; never a new framing or a Go DATA pump.
+                    if server&&!server_cold_receipt_armed&&
+                        tx_cold_group_committed.load(Ordering::Acquire){
+                        health.arm_game_server_cold_commit(health_now);
+                        server_cold_receipt_armed=true;
+                    }
                     match health.control_due(health_now){
                         ControlDue::DeadPeer=>{
                             eprintln!("M0_GAME_M4_HEALTH_DEAD authenticated_idle_ns={} threshold_ns={}",
@@ -1080,7 +1100,8 @@ impl GameKernelOwner{
             outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
             physical_generation:generation,server,
-            diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra})
+            diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra,
+            cold_group_committed,peer_health_evidence:health_rx})
     }
     /// A NEW real original-Go TLS+Rust M1 lane has just committed while
     /// the remaining lanes of this GameAdapter stay LIVE. Reuse the existing
@@ -1139,6 +1160,18 @@ impl GameKernelOwner{
         (self.copied.load(Ordering::Relaxed),
          self.delivered.load(Ordering::Relaxed),
          self.rejected.load(Ordering::Relaxed))
+    }
+    // Server may arm this bounded existing authenticated kind0 Health
+    // receipt only AFTER a complete Game2/4 native owner was installed.
+    // This is not a local client readiness claim or a per-packet probe.
+    pub(crate) fn mark_server_group_committed(&self){
+        if self.server&&!self.stop.load(Ordering::Acquire){
+            self.cold_group_committed.store(true,Ordering::Release);
+        }
+    }
+    pub(crate) fn has_authenticated_peer_health(&self)->bool{
+        !self.server&&self.is_live()&&
+            self.peer_health_evidence.has_verified_peer_health()
     }
     // Split received kernel TCP data from AEAD/replay refusal. Successful
     // first kernel copy is not proof of peer raw receive or TUN delivery.

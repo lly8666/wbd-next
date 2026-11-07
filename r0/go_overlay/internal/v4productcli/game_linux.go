@@ -280,13 +280,18 @@ func runGameClient(
         // This new authenticated Game2/4 group may be READY locally while
         // the remote 443 server has only committed ONE of its independent
         // TLS lanes. Rust defers replacing A's shared TUN default route.
-        // Require genuine B Game M4 AEAD/replay + TUN delivery before
-        // promoting B; otherwise B Stop leaves A's route and workers live.
+        // Require genuine B Game M4 AEAD/replay + TUN delivery, OR the
+        // server's canonical encrypted native Health kind0 sent only after
+        // its entire B Game M4 group committed. No business or reverse
+        // user payload is needed for a no-traffic or pure-uplink switch.
         err=waitOriginalNativeM4PeerProof(ctx,
             func()(realityfront.V4PublicLoopPulse,error){
                 proof,e:=native.KernelCounters()
                 if e!=nil{return realityfront.V4PublicLoopPulse{},e}
-                return realityfront.V4PublicLoopPulse{RxRecords:proof.Delivered},nil
+                return realityfront.V4PublicLoopPulse{
+                    RxRecords:proof.Delivered,
+                    AuthenticatedPeerControl:proof.AuthenticatedPeerControl,
+                },nil
             },
             native.PromoteGameAfterAuthenticatedPeerRx,5*time.Second)
         if err!=nil{
@@ -294,7 +299,7 @@ func runGameClient(
                 c.rotationGeneration,n)
             return errors.Join(err,native.Close())
         }
-        log.Printf("V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=%d lanes=%d native_authenticated_rx=1 tun_route_promoted=1",
+        log.Printf("V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=%d lanes=%d native_authenticated_control_or_ipv4=1 tun_route_promoted=1",
             c.rotationGeneration,n)
     }
     // Each original TLS/FakeTCP association has its own kernel tuple and

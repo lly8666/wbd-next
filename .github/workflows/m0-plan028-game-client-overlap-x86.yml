@@ -6,6 +6,12 @@ on:
     paths:
       - ".github/workflows/m0-plan028-game-client-overlap-x86.yml"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_native_health.rs"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
+      - "crates/wbd-engine/src/v4_game_lane.rs"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go"
+      - "r0/go_overlay/internal/v4productcli/normal_m4_remote_proof_linux_test.go"
       - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/internal/v4productcli/game_linux.go"
       - "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go"
@@ -57,7 +63,7 @@ jobs:
           donor=root/"legacy"
           for part in ("internal/realityfront","internal/v4productcli"):
               for src in (root/"r0/go_overlay"/part).glob("*.go"):
-                  if src.name.endswith("_test.go") and src.name not in ("path_linux_test.go",):
+                  if src.name.endswith("_test.go") and src.name not in ("path_linux_test.go","normal_m4_remote_proof_linux_test.go"):
                       continue
                   target=donor/part/src.name
                   if target.is_file():
@@ -84,11 +90,19 @@ jobs:
             tail -95 fixed-kernel-result/game-overlap-route-unit.log >&2;exit 1;
           }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/game-overlap-route-unit.log
+          for proof_test in game_server_cold_commit_health_is_bounded_and_never_fake_business \
+            only_canonical_game_health_hint_is_cold_peer_proof \
+            game_health_kind0_has_authenticated_PN_but_no_game_delivery; do
+            cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record \
+              --lib "$proof_test" -- --test-threads=1 >>fixed-kernel-result/game-overlap-route-unit.log 2>&1 || {
+                tail -105 fixed-kernel-result/game-overlap-route-unit.log >&2;exit 1;
+              }
+          done
           cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/rust-build.log 2>&1 || { tail -110 fixed-kernel-result/rust-build.log >&2;exit 1; }
           cp target/release/libwbd_engine.so fixed-build/libwbd_engine.so
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028Game4RtnetlinkColdGenerationPortAndSingleServer443$' ./internal/v4productcli) >fixed-kernel-result/game-overlap-go-unit.log 2>&1 || {
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028Game4RtnetlinkColdGenerationPortAndSingleServer443|TestPLAN028NormalM4AfterPeerRxFenceAndTimeout)$' ./internal/v4productcli) >fixed-kernel-result/game-overlap-go-unit.log 2>&1 || {
             tail -90 fixed-kernel-result/game-overlap-go-unit.log >&2;exit 1;
           }
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
@@ -131,6 +145,11 @@ jobs:
             M0_PLAN028_TLS_GAME4_8_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS;do
             grep -Fq "$marker" fixed-kernel-result/game4-a-to-ab-to-b-native.log
           done
+          # B must verify new group's original M4 AEAD kind0 Health
+          # (or actual reverse user IPv4), never local TLS or raw TCP ACK.
+          grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4 native_authenticated_control_or_ipv4=1' fixed-kernel-result/game4-a-to-ab-to-b-native.log
+          grep -Fq 'V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation=' fixed-kernel-result/game4-a-to-ab-to-b-native.log
+          echo M0_PLAN028_H1304_X86_GAME4_REMOTE_NATIVE_COMMIT_AUTHENTICATED_AND_PROMOTED=1
           echo M0_PLAN028_GAME4_X86_NATIVE_A_TO_AB_TO_B_SOURCE_QUALIFIED_ONE_TUN_READER=1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

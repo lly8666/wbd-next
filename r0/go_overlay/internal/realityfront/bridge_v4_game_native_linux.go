@@ -8,6 +8,7 @@ package realityfront
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(uint64_t);
+extern int32_t wbd_m0_embedded_go_game_group_peer_authenticated_health(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_lane_replace(
@@ -247,9 +248,11 @@ func (g *v4NativeGameJoined) startNativeM4(
     return nil
 }
 // The server commits a complete original Game2/4 group only after all
-// independent TLS lanes; client local grouped READY is not that receipt.
-// A real post-AEAD native M4 delivered IPv4 permits atomic default TUN
-// generation promotion without new Go DATA, control frames or keys.
+// independent TLS lanes. On actual M4 driver install, its *existing*
+// encrypted Health kind0 carries a bounded cold Commit receipt. Either
+// this candidate's AEAD-verified control or real TUN-delivered reverse
+// IPv4 permits atomic default TUN generation promotion. No new wire kind,
+// Go DATA forwarder or unauthenticated optimistic READY is allowed.
 func (g *v4NativeGameJoined) promoteSharedTunAfterAuthenticatedRx()error{
     if g==nil||g.handle==0||g.stopped||len(g.laneOwners)==0||
         g.laneOwners[0]==nil||g.laneOwners[0].serverSide{
@@ -265,6 +268,7 @@ func (g *v4NativeGameJoined) promoteSharedTunAfterAuthenticatedRx()error{
 type V4GameKernelCounters struct {
     Copied,Delivered,Rejected uint64
     RawReceived,AuthenticatedRejected uint64
+    AuthenticatedPeerControl bool
 }
 func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
     if g==nil||g.handle==0||g.stopped{return V4GameKernelCounters{},ErrAdmissionUnsupported}
@@ -278,9 +282,14 @@ func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
         C.uint64_t(g.handle),&seen,&bad,
     )
     if rc!=0{return V4GameKernelCounters{},fmt.Errorf("%w: native Game M4 receive=%d",errV4Embedded,int(rc))}
+    var authenticatedControl C.uint32_t
+    rc=C.wbd_m0_embedded_go_game_group_peer_authenticated_health(
+        C.uint64_t(g.handle),&authenticatedControl)
+    if rc!=0{return V4GameKernelCounters{},fmt.Errorf("%w: native Game authenticated peer control=%d",errV4Embedded,int(rc))}
     return V4GameKernelCounters{
         Copied:uint64(tx),Delivered:uint64(rx),Rejected:uint64(rejected),
         RawReceived:uint64(seen),AuthenticatedRejected:uint64(bad),
+        AuthenticatedPeerControl:authenticatedControl==1,
     },nil
 }
 

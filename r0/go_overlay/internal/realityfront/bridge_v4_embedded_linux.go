@@ -676,6 +676,9 @@ type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
+    // Only true after exact candidate native Game AEAD/PN opened and
+    // decoded a canonical server Health kind0 cold Commit receipt.
+    AuthenticatedPeerControl bool
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
     if b==nil||!b.committed||b.stopped||b.handle==0 {

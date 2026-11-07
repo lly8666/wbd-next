@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1303,
-  "checkpoint_sha": "d7830f84400e5e3162ab81b5d50218252c640c11",
+  "sequence": 1304,
+  "checkpoint_sha": "969b04958f671c868009abb603479aca9278ab30",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1303: collected H1302 native ARM64 five-client scalar 180s Action42340313642 PASS0 app alerts/5 authenticated rotations/all /32 shared TUN overflow0. Fixed offline reporting error: original H1302 phase ledger started t=0 but original traffic.py always warms 10s before capacity phases. Correct 0.6x host CPU busy92.50%/Erin UL9.60Mbps, 0.85x 98.21%/13.60Mbps, 1.0x99.01%/16Mbps, recovery0.85x98.47%/13.6Mbps. Source/zip locked, no new network run. H1295/H1297/H1299/H1300 actual interruptions still OPEN. Independent x86_64 x86 Game4 route-change Action42338102273 had new TLS group but client M4 reverse IPv4 peer proof timeout and server later protected-TLS retries; next L0 cold commit barrier requires pure uplink/no reverse evidence without bypassing hard READY. Next Linux full task is x86_64 client+server, no ARM64 repeat.",
-  "why_now": "H1302 reported misleading phase CPU because it included traffic.py warmup; preserving the original report but correcting from raw artifacts avoids spending another 180s for a report bug. Four host vCPUs already >92% at the low 0.6x tier, so do NOT push longer/stronger same VM stress. PLAN028 L0 requires cold server-commit proof independent of reverse app; x86 Game4 Action 42338102273 is a separate real connection lifecycle blocker not explained by ARM64 CPU capacity.",
+  "current_task": "H1304: previous x86 original Go/Rust Game4FEC6 real netns OS underlay switch Action42338102273 SOURCE806c FAIL: client B locally complete TLS+Game M4 but waits 5s for reverse IPv4 TUN delivery, while A's shared TUN route preserves B from business; server B already grouped 4 original TLS lanes+M4. Implement minimum cryptographically authenticated cold server-group receipt on existing Game Health kind0, after true all-lane M4/TUN install, three bounded copies400ms apart, no new wire/go hot pump. Client B new AEAD/PN verified kind0 OR real reverse IPv4 may promote exact /32; untrusted TCP ACK/local TLS never proof; old A stays if B fails. Rust+Go negative/positive unit and one native x86_64/x86_64 real Game4 overlap Action source-frozen. H1295/H1297/H1299/H1300 ARM64 gaps open, 4-core VM capacity limited; no more ARM64 overload or long until short blockers resolved.",
+  "why_now": "Independent L0/L1 usability defect without reverse app: B cannot take over because original 5s proof required delivered reverse user IPv4 while A owns route. Existing native Game Health AEAD/PN codec and per-cohort authenticated activity are mature; narrow cold Commit reuse avoids introducing private TLS prefix, FEC algorithm or new periodic payload/record work.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Read original x86 Game4 source-locked Action42338102273 (old SOURCE806c) and current Go/Rust game cold commit handshake. Isolate why fresh Game4 candidate only promotes after authenticated reverse IPv4, although no-business/pure-uplink scenario need not create one; design minimum protected server Commit/Ready evidence and L0 deterministic negative+positive before one genuine x86_64/x86_64 native short path handover. Do not bypass B real readiness, add steady wire, probe or extend 5s to fake PASS. Keep long tests blocked until known blockers qualified; no other 029/030 work.",
+  "next_action": "Collect automatically triggered updated m0-plan028-game-client-overlap-x86.yml one true source-locked x86_64/x86_64 Game4FEC6 path/MTU switch; must pass 3 native Rust tests, Go barrier positive/negative, real 8 TLS ClientHello/one443 and all A→A+B→B business/Stop without old group revoke. Verify exact new M4 Health proof event, no app required to commit. If still FAIL, inspect exact source Action artifact first and fix narrow Go/Rust stage; no 1800s.",
   "unverified": true,
-  "last_tested_source": "d7830f84400e5e3162ab81b5d50218252c640c11",
+  "last_tested_source": "969b04958f671c868009abb603479aca9278ab30",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1303-H1302-OFFLINE-PHASE-BOUNDARY-CORRECTION-20261107.json"
+    "docs/evidence/M0/PLAN028-H1304-GAME4-COLD-COMMIT-RECEIPT-PLAN-SOURCE969B-20261107.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1302 SOURCE d783 Action42340313642 native ARM64 scalar five-client 180s PASS0 alerts/all auth rotations and no per-client TUN queue overflows, but its source-pinned H1302 capacity-phase ledger was 10s misaligned with real warmup. H1303 offline correction: 0.6x CPU92.5%/Erin9.6Mbps, .85x98.21%/13.6Mbps, 1.0x99.01%/16Mbps, recovery .85x98.47%. H1300 earlier genuine Erin UL1260ms client physical TX stall NOT resolved; do not run heavier four-core family/L3. Separate x86 Game4 remote native proof timeout after candidate TLS is L0 cold readiness blocker; next Linux full task x86/x86. H998 old MTU FAIL, remote ICMP, Android NOT_RUN retained."
+  "partial_summary": "H1303 source969b offline corrected H1302 true ARM64 0.6x host CPU92.5%, .85x98.21%, 1.0x99.01%, H1300 real previous Erin UPLINK1260ms physical veth TX stall and H1295/H1297/H1299 failures not fixed. H1304 targets separate x86_64 Game4 no-business handover deadlock: after server full protected TLS+M4 commit, reuse bounded existing AEAD kind0 Health cold receipt on original native Rust Game TX, verify in B original native RX, exact route promotion without reverse user IPv4. Keep A until proof; new x86 real Action forthcoming. Original x86 Action42338102273 FAIL retained."
 }

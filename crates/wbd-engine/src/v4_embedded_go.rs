@@ -3379,6 +3379,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
             }
         }
     }
+    // After *all* original TLS lanes, genuine Game M4 workers and shared
+    // TUN ownership have committed, tell the existing server TX Health
+    // owner to issue a bounded authenticated kind0 cold receipt. If any
+    // stage above failed, the client may never receive proof.
+    if e.server{
+        if let Some(driver)=e.drivers.as_ref(){
+            driver.mark_server_group_committed();
+        }else{return BAD_STAGE}
+    }
     OK
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -3389,16 +3398,24 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     if e.server||e.stopped||e.stopping{return BAD_STAGE}
-    let delivered=match e.drivers.as_ref(){
-        Some(driver) if driver.is_live()=>driver.counters().1,
+    let (delivered,authenticated_health)=match e.drivers.as_ref(){
+        Some(driver) if driver.is_live()=>(
+            driver.counters().1,driver.has_authenticated_peer_health()
+        ),
         _=>return BAD_STAGE,
     };
+    // Both alternatives require this *candidate* generation's original
+    // M4 replay/AEAD owner. Health is the canonical encrypted kind0
+    // sent only after the remote server's COMPLETE Game group starts.
+    // Unauthenticated TCP ACK, local TLS and a kernel TX copy do not
+    // satisfy the remote cold-commit barrier.
+    let verified=delivered>0||authenticated_health;
     let Some(shared)=e.shared_tun.as_mut()else{return BAD_STAGE};
     let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
     if !shared.publish_pending{
-        return if delivered>0 && routes.get(&shared.ip).is_some_and(|r|
+        return if verified && routes.get(&shared.ip).is_some_and(|r|
             r.generation==shared.generation &&
             Arc::ptr_eq(&r.alive,&shared.alive) &&
             r.alive.load(Ordering::Acquire)
@@ -3409,10 +3426,29 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
         send:shared.sender.clone(),
     };
     if !shared_route_promote_authenticated_client(
-        &mut routes,shared.ip,candidate,delivered
+        &mut routes,shared.ip,candidate,u64::from(verified)
     ){return BAD_STAGE}
     shared.publish_pending=false;
-    eprintln!("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_delivered={} old_route_revoked=1",shared.generation,delivered);
+    eprintln!("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_delivered={} authenticated_health={} old_route_revoked=1",shared.generation,delivered,u8::from(authenticated_health));
+    OK
+}
+// Cold Go polls this only in the five-second successor overlap barrier.
+ // Positive means the client's original Game M4 RX lane has AEAD/PN-opened
+ // the server's canonical Health kind0; no app TUN delivery is implied.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_peer_authenticated_health(
+    group:u64,out:*mut u32
+)->i32{
+    if out.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.server||e.stopped||e.stopping{return BAD_STAGE}
+    let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
+    if !driver.is_live(){return BAD_STAGE}
+    unsafe{out.write(u32::from(driver.has_authenticated_peer_health()));}
     OK
 }
 #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
