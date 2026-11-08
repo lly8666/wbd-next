@@ -375,7 +375,7 @@ def main():
                 print("H1417_ORIGINAL_"+role.upper()+"_COLD_STAGE "+item,flush=True)
         (out/"h1417-original-cold-stage-summary.json").write_text(
             json.dumps({"source_sha":source,"classification":"DIAGNOSTIC_NOT_PRODUCT_PASS",
-             "markers":excerpt},indent=2)+"\\n")
+             "markers":excerpt},indent=2)+"\n")
         raise
     finally:
         for name in ("A","B"):(out/("h1415-"+name+"-stop.flag")).touch()

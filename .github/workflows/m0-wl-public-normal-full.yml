@@ -33,6 +33,7 @@ on:
       - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
+      - tools/m0_plan028_h1415_windows_linux_independent_clients.py
       - tools/m0_wl_native_resource_sampler.py
       - tools/m0_wl_native_rx_abba.py
       - tools/m0_wl_native_abba_prepare.py

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1417,
-  "checkpoint_sha": "4bf483314364ccc09f278e22d5cef8b5832cba2b",
+  "sequence": 1418,
+  "checkpoint_sha": "b99ba48deb3aae5d7524d20d31fb485b4aea942f",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1417-REAL-CROSS-OS-COLD-TLS-FIRST-REJECT",
-  "current_task": "Collected original H1415 cross-OS Action42494398656 source0b485b: original single Windows signed Npcap/Wintun TLS+Rust READY true, shared Go TLS443/Rust M4 server READY, Linux netns original client received valid SYNACK/MSS1420 but eight original candidate attempts class=other before authenticated Linux READY, hence combined app/Stop NOT_RUN; Windows WAL and WSL2 bridge netns rollback PASS. Original full Action FAIL retained; don't label product PASS. H1417 changes only exact-source failed fixture to export bounded original server/Linux/Windows Go stage markers, no product changes, to discriminate global peer persona vs TLS policy and C ABI before modification.",
-  "why_now": "H1415 failed on second independent Linux client before TLS/Rust ready, while actual Windows client already Ready and physical underlay proven. Product peer persona globally windows11 is a hypothesis, not proved; raw artifact omitted server stage. One original failed-harness stage excerpt is smallest discriminating experiment, no blind repeated seed.",
+  "task_id": "PLAN028-M0-H1418-ONE-SCOPED-WIN-LINUX-REJECT-STAGE",
+  "current_task": "H1417 original diagnostics test-only code already committed but Windows original workflow push paths did not include h1415 tool, so no Windows Action started; H1418 adds exact file trigger and fixes original cold-stage sidecar JSON newline. Single new signed Windows one-instance plus separate Linux netns same-server standard TLS443 Action, original H1415 CI FAIL retained.",
+  "why_now": "Avoid fake progress: H1417 emitted no Windows Action because source-only tool file not on workflow path allowlist. Need one one-path trigger for meaningful bounded first stage, not a product code change or repeat of already passed ISA-L platform tests.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1417 one same Windows single instance + independent Linux netns client original Go TLS443 staged Action, inspect sanitized server V4_PUBLIC_MULTI_ADMISSION_REJECT stage and original Linux path/lease/FEC events, exact source and bridge teardown. If server reports peer persona/feedback or TLS reject, fix minimum original per-session wiring; preserve unchanged crypto/MTU/Stop. No extra network Actions until current one completes. H1411 3-native ISA-L seven strengths PASS and H1407 Game4 original Windows/Linux runtime native nonzero verified; no replay.",
+  "next_action": "Collect one new H1418 original signed Windows client + Linux netns client same-server Action from push. Extract original server/Windows/Linux allowed cold stage markers before any code changes. If Linux authenticated second peer fails at per-session persona, isolate least original fix, preserve A and Stop. No other network dispatch.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1415 original full cross-OS action source0b485b FAIL early Linux original SYNACK MSS1420 and candidate class=other; server and Windows native Ready, Linux second original TLS M4 NOT_READY; combined UDP/TCP and sibling Stop NOT_RUN. Strict physical network rollback and Windows WAL PASS. H1417 one bounded allowlisted cold stage fixture failure report, not telemetry framework. PLAN028 IN_PROGRESS."
+  "partial_summary": "Original H1415 source0b485b Windows signed client Ready; Linux original SYNACK then class=other, eight candidates, B not Ready, combined L1 FAIL/NOT_RUN, A WAL/bridge restored. H1417 stage logging code alone did not trigger Windows; H1418 includes source file in existing Windows workflow path. ISA-L all 7 grade native and Game4FEC runtime already positive. PLAN028 IN_PROGRESS."
 }
