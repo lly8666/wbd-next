@@ -180,5 +180,6 @@
     "No new product source or native retransmit/FEC behavior changes",
     "No Windows/ARM/Android/physical WAN equivalence; no L1 two verified rotations per seven modes and no L3 two 1800s",
     "H998 original same socket MTU shrink and H1317 historical ARM64 failure remain original FAIL, not overwritten"
-  ]
+  ],
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
 }
