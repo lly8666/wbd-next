@@ -373,10 +373,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     raise RuntimeError("original Windows native reauth product exited after real source change: "+win[-1500:])
    time.sleep(.15)
   else:raise RuntimeError("new authentic Windows TLS/Rust Npcap generation and old Stop not observed: "+win[-1500:])
-  if is_game:
-   group_log=(out/"server.log").read_text(errors="replace")
-   if "V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation" not in group_log:
-    raise RuntimeError("authenticated Game4 successor did not retire its exact old server generation")
+  # For Game4, original server deliberately retains A RX for the
+  # authenticated grace after B's full protected M4 commit. Its exact Stop
+  # is validated after B's first real app business (below), not immediately
+  # at the B-READY timestamp. Never shorten the product's retirement grace.
   # The two ORIGINAL live kernel UDP applications continue rather than
   # registering a fake packet. Demand NEW receive counters after B READY.
   def last_udp_count(role):
@@ -396,6 +396,46 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    if w.poll() is not None:raise RuntimeError("new Windows path died before authenticated fresh inner UDP")
    time.sleep(.1)
   else:raise RuntimeError("actual Windows/Linux inner UDP did not continue beyond new authenticated generation: "+repr((before,after)))
+  if is_game:
+   # Exact existing server implementation: schedule 10–20s AFTER genuine
+   # new Game M4 group COMMIT. Old group stays RX-capable during that grace.
+   # The previous test demanded a nonexistent '...new-generation' reason
+   # instantly after READY, so it always killed the server DURING grace.
+   native_server=(out/"server.log").read_text(errors="replace")
+   schedules=re.findall(
+    r"V4_PUBLIC_GAME_OLD_SERVER_RETIRE_SCHEDULED role=server lanes=4 grace_ms=(\d+) old_m4_rx_preserved=1",
+    native_server)
+   if len(schedules)!=1 or not 10000<=int(schedules[0])<=20000:
+    raise RuntimeError("exact protected Game4 server old RX grace schedule missing/invalid: "+repr(schedules))
+   grace_ms=int(schedules[0])
+   marker="V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-grace-expired"
+   # This is the EXISTING retirement grace plus bounded observation slack,
+   # not a new handshake SLA and not permission to lose B application.
+   timeout_s=min(25.,grace_ms/1000.+5.)
+   deadline=time.monotonic()+timeout_s
+   watched_start=time.monotonic()
+   while time.monotonic()<deadline:
+    log=(out/"server.log").read_text(errors="replace")
+    count=log.count(marker)
+    if count>1:
+     raise RuntimeError("duplicate exact Game4 old server retirement")
+    if count==1:break
+    if s.poll() is not None or w.poll() is not None:
+     raise RuntimeError("original server/Windows product exited before old authenticated Game4 grace retirement")
+    time.sleep(.2)
+   else:
+    raise RuntimeError("original Game4 old server RX still not retired after actual bounded grace")
+   later={x:last_udp_count(x) for x in before}
+   if time.monotonic()-watched_start>=1. and not all(later[x]>after[x] for x in before):
+    raise RuntimeError("new authenticated Game4 business stalled during old server grace: "+repr((after,later)))
+   report["plan028_game4_server_generation_grace"]={
+     "actual_server_grace_ms":grace_ms,
+     "old_rx_preserved_until_due":True,
+     "server_exact_old_retire_reason":"same-protected-cohort-grace-expired",
+     "new_both_direction_app_udp_after_B_ready":{x:after[x]-before[x] for x in before},
+     "new_both_direction_app_udp_during_grace_wait":{x:later[x]-after[x] for x in before},
+     "exact_old_server_retirement_verified":True,
+     "source":"original_protected_GO_TLS_server_Rust_M4_plus_actual_native_UDP"}
   new_generation={
    "old_generation_exact_wal_stop":True,
    "new_generation_tls_native_ready":True,
