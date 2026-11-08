@@ -1,0 +1,85 @@
+name: M0 PLAN028 H1391 signed Npcap 1.88 exact driver component recovery proof
+run-name: PLAN028 H1391 trusted official Npcap signed installer exact pinned driver no redistributed bytes
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1391-verified-npcap-driver-origin.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  recover-original-exact-signed-driver-components:
+    runs-on: windows-2025
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Test official Npcap 1.88 installer or same-SHA Wireshark mirror with immutable driver component bytes
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference="Stop"
+          New-Item -ItemType Directory -Force result/h1391 | Out-Null
+          $tmp=Join-Path $env:RUNNER_TEMP "plan028-h1391-signed-origin"
+          New-Item -ItemType Directory -Force $tmp | Out-Null
+          $installer=Join-Path $tmp "npcap-1.88.exe"
+          $out=Join-Path $tmp "expanded"
+          $e=[ordered]@{schema_version=1;source_sha=$env:GITHUB_SHA;classification="NOT_RUN";npcap_version="1.88";download_origin="";trusted_installer_sha256="a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b";signed_installer="NOT_RUN";driver_components_exact=$false;driver_installed=$false;redistributed_driver_bytes=$false;failure_reason=""}
+          try {
+            $uris=@("https://npcap.com/dist/npcap-1.88.exe","https://dev-libs.wireshark.org/windows/packages/Npcap/npcap-1.88.exe")
+            foreach($uri in $uris){
+              for($try=1;$try -le 2;$try++){
+                try {
+                  Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $installer -TimeoutSec 38 -ErrorAction Stop
+                  $got=(Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+                  if($got -ne $e.trusted_installer_sha256){throw "exact immutable official installer SHA256 changed"}
+                  $sg=Get-AuthenticodeSignature -FilePath $installer
+                  if($sg.Status -ne "Valid" -or $sg.SignerCertificate.Subject -notmatch "Nmap Software LLC"){throw "official signed installer invalid"}
+                  $e.download_origin=$uri;$e.signed_installer="VALID_NMAP_1_88";break
+                }catch{
+                  Remove-Item -LiteralPath $installer -Force -ErrorAction SilentlyContinue
+                  Write-Output ("H1391_EXTERNAL_PACKAGE_CDN_OR_HASH_DIAG origin="+$uri+" attempt="+$try+" reason="+$_.Exception.GetType().Name)
+                }
+              }
+              if($e.signed_installer -eq "VALID_NMAP_1_88"){break}
+            }
+            if($e.signed_installer -ne "VALID_NMAP_1_88"){throw "official and independently hash-pinned external mirror unavailable"}
+            New-Item -ItemType Directory -Force $out | Out-Null
+            & 7z x -y "-o$out" $installer | Out-File result/h1391/original-installer-extraction.log
+            if($LASTEXITCODE -ne 0){throw "original vendor NSIS archive extraction failed"}
+            $want=@{"NPFInstall.exe"="97bdbecd9cd9d246369d14b24a5f0c8ddaae9c8592f55566158a13e02dff2301";"npcap.sys"="13d598e277e9c7bf43688d7087ef9b944e8036561a1e7169d31d9ec1d38f9a01";"npcap.cat"="e71aee891d5374c9edcfd429445d687e0fd56832ff8681e6ab975e2bd767607b";"Packet.dll"="2793ce72f0e04d5885aaee1273a7373441d01934b2cff3886b031c13ca826345";"wpcap.dll"="d1ca7fcf9128d02a75eaf29ce9a9d85c5697377460f92420d976da187521cf39"}
+            $matched=@{}; $seen=@{}
+            foreach($name in $want.Keys){
+              $files=@(Get-ChildItem -LiteralPath $out -Recurse -File -ErrorAction Stop | Where-Object { $_.Name -ieq $name })
+              $seen[$name]=$files.Count
+              $same=@($files | Where-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -eq $want[$name] })
+              $matched[$name]=$same.Count
+              if($same.Count -gt 1){throw ("ambiguous pinned signed source "+$name)}
+            }
+            $e.component_name_counts=$seen; $e.exact_matching_sha256_component_counts=$matched
+            $missing=@($want.Keys | Where-Object { $matched[$_] -ne 1 })
+            if($missing.Count -gt 0){
+              $e.classification="NOT_REPLACEMENT_MISSING_EXACT_COMPONENTS"
+              throw ("same-hash vendor installer does not expose original pinned components: "+($missing -join ","))
+            }
+            $e.driver_components_exact=$true
+            $e.classification="PASS_SCOPED_SIGNED_ORIGINAL_NPCAP_DRIVER_BYTES_DISCOVERED_IN_OFFICIAL_INSTALLER_NO_PRODUCT_RUN"
+            Write-Output "PLAN028_H1391_OFFICIAL_EXACT_NPF_DRIVER_SYSCAT_AND_DLL_HASH_ORIGIN_PASS"
+          }catch{
+            $e.failure_reason=$_.Exception.Message
+            if($e.classification -eq "NOT_RUN"){$e.classification="NOT_RUN_EXTERNAL_OR_EXTRACT_UNAVAILABLE"}
+            Write-Output ("H1391_ORIGINAL_SIGNED_DRIVER_ORIGIN_NOT_QUALIFIED "+$e.failure_reason)
+            throw
+          }finally{
+            $e | ConvertTo-Json -Depth 7 | Out-File -Encoding utf8 result/h1391/original-signed-npcap-provenance.json
+            Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1391-npcap-signed-hash-provenance-${{ github.run_id }}
+          path: |
+            result/h1391/original-signed-npcap-provenance.json
+            result/h1391/original-installer-extraction.log
+          if-no-files-found: warn
+          retention-days: 14
