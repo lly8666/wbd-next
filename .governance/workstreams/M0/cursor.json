@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1364,
-  "checkpoint_sha": "04dbda77d0bcb85ea4e01b3c3a7ba9aae42f073a",
+  "sequence": 1365,
+  "checkpoint_sha": "4acd1a19d79e854d1c9fd53f952c0311c54a8485",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1364 source04db Windows2022/2025 original signed Npcap+Wintun <-> real Ubuntu WSL2 NORMAL Off same physical WSL NIC same IPv4 198.19.254.1, actual MTU1500->1280, authentic Go TLS443/Rust reauth, original native UDP/TCP and exact Stop. Action42448657827 launched on main, cheap source/mode preflight confirmed SOURCE_LOCKED_MODE_ENTRY normal N0=0 and explicit MTU_ONLY=1. Native result IN_FLIGHT, not PASS until original OS/app/Stop receipts.",
-  "why_now": "User explicitly confirms real completed task PASS despite reporter/fixture/config external CI false-negative. H1363 source24e five users ARM already has original business and Stop receipts. H1364 progresses real Windows Npcap/Wintun/WSL2 platform-only same-source OS MTU narrow gap (not two signed client device proof). Existing focused source-locked wrapper selected Normal not all.",
+  "current_task": "H1364 original native source04db Windows signed Npcap/Wintun to true Ubuntu WSL2 Normal same IP and same NIC 1500->1280 physical MTU, original Go TLS443/Rust M4 two generations, OS MSS1420->1240 and Wintun inner1389->1209, real UDP/TCP and both Stop PASS_SCOPED; Action42448657827 SUCCESS; original artifact13604034725 28-file SHA aa4234e8 CRC PASS; exact owned OS MTU restored1500/default route unchanged. PLAN028 IN_PROGRESS.",
+  "why_now": "H1364 authentic original native Windows platform test now fully PASS. User rule reflected in integration acceptance: real product app/owner/Stop receipts determine scoped PASS, unrelated reporter/CI/config false positives or negatives separate. New Windows original source04db must remain separate from x86 source6c5 and ARM source24e and H998 original same-socket hot-MTU blocker.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1364 Action42448657827: source04db, native signed Windows/WSL2 job, exact OS 1500->1280 readback on WSL NIC same source IP+ifindex, new TLS gen and real UDP/TCP, signed drivers, Stop and owned OS cleanup; classify real product PASS_SCOPED when original receipts satisfy actual gate even if unrelated report/CI/setup misflags; retain raw external failure separately. If product never ran due environment, mark ENVIRONMENT_BLOCKED_NOT_RUN. Afterward prioritize two genuinely independent original signed Windows Wintun authenticated devices on shared server443 and A/B isolation; L0/MTU other packet boundaries, L3 two1800s after critical blockers. Keep ARM24e vs x866c5 source distinct; cursor evidence_refs only x866c5; old H998/H1317 failures separate.",
+  "next_action": "Next unqualified Windows priority: two genuinely independent signed original Windows Npcap/Wintun clients with distinct authenticated accounts/leases on one original Go TLS443/Rust M4 server simultaneously, verify A Stop/route/MTU isolated while B business continues, exact both Stop. Do not treat H1364 one-client two-generation cold MTU or older dual native kernel-only ring as that gate. Follow with same-socket hot PMTU H998 response and remaining L0/MTU, L2 correlated blackhole cases, and final two 1800s source-frozen L3 only when hard blockers closed. Archive real native evidence for source04db in feature cards/devlog and context_refs, maintain cursor evidence_refs exclusively x866c5 source.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -29,8 +29,10 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
-    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
+    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
+    "docs/evidence/M0/PLAN028-H1364-SOURCE04DB-WINDOWS-NATIVE-SAME-IP-MTU1280-REAUTH-UDP-TCP-STOP-PASS-20261108.json",
+    "docs/devlog/M0/20261108-PLAN028-H1364-WINDOWS-MTU-REAL-NATIVE-LAUNCHED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1363 offline native original ARM64 SOURCE24e one-way 5 clients 180s 30pct125ms two true owner rotations PASS_SCOPED based on H1362 original 35 files/Stop; H1362 raw CI FAIL reporter-only retained. H1360 x86 current6c5 Normal75 capacity PASS. H1364 source04db original Windows signed Npcap/Wintun/real WSL2 NORMAL physical same-IP same-NIC 1500->1280 Action42448657827 started, preflight NORMAL verified, native currently IN_FLIGHT. True two Windows authenticated Wintun clients on same443 still OPEN. PLAN028 IN_PROGRESS. Real product evidence determines product PASS independent of late CI/reporter false negatives."
+  "partial_summary": "H1364 Action42448657827 original Windows signed Npcap/Wintun+real WSL2 Normal same-IP OS MTU1500->1280 true TLS/Rust two generations and native duplex UDP/TCP owned Stop+MTU restore PASS_SCOPED; original Zip13604034725 sha aa4234e8, 28 CRC, original Action success. H1363 ARM24e 5 strict one-way clients 180s two true owner turns scoped PASS despite H1362 reporter-only raw CI failure; x866c5 Normal75 capacity PASS. H998 old same-socket hot MTU and true dual Windows simultaneous authenticated clients OPEN. L3 2x1800s NOT_RUN. PLAN028 IN_PROGRESS."
 }

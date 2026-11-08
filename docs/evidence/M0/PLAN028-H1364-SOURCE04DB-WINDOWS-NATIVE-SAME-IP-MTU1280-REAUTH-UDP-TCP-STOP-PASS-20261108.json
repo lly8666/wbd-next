@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "id": "PLAN028-H1364-SOURCE04DB-WINDOWS-NATIVE-SAME-IP-PHYSICAL-MTU-REAUTH",
+  "date": "2026-11-08",
+  "workstream": "M0",
+  "plan": "PLAN028",
+  "classification": "PASS_SCOPED_REAL_WINDOWS_SIGNED_NPCAP_WINTUN_WSL2_NORMAL_SAME_IP_PHYSICAL_MTU_1500_TO_1280_TLS_REAUTH_UDP_TCP_STOP",
+  "product_result": "PASS_SCOPED",
+  "original_action_conclusion": "success",
+  "source_sha": "04dbda77d0bcb85ea4e01b3c3a7ba9aae42f073a",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 42448657827,
+    "attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42448657827",
+    "status": "completed",
+    "conclusion": "success",
+    "full_native_windows_linux_job": "success",
+    "windows_rust_unit": "success",
+    "linux_rust_unit": "success",
+    "windows_go_compile": "success",
+    "original_go_linux_rust_binary_build": "success",
+    "signed_windows_driver_install": "success",
+    "wsl2_real_kernel_boot": "success",
+    "genuine_native_public_two_os_process": "success",
+    "native_runner_owned_cleanup": "success"
+  },
+  "original_artifact": {
+    "id": 13604034725,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "aa4234e83dcfa1e9d80fcf376157f281412675aa6f30e9598f6fb7ca272de64e",
+    "zip_bytes": 24476,
+    "file_count": 28,
+    "crc": "PASS_ALL_28",
+    "source_file": "mode-results/normal/report.json",
+    "mtime_scope": "ORIGINAL_ZIP_NO_NETWORK_REPLAY"
+  },
+  "scope": {
+    "client": "windows-2025-x64-native-original-Go-TLS-Rust-Npcap-Wintun",
+    "server": "actual-Ubuntu-WSL2-x86_64-original-Go-TLS443-Rust-shared-TUN",
+    "mode": "normal",
+    "original_outer_repair": "on",
+    "original_outer_requested": 1460,
+    "physical_windows_underlay": "single-test-owned-WSL-vEthernet",
+    "source_ip_before": "198.19.254.1",
+    "source_ip_after": "198.19.254.1",
+    "os_interface_index": 25,
+    "original_original_tls_server_port": 443,
+    "original_linux_server_port": 443,
+    "windows_generation1_tcp_source_port": 41031,
+    "windows_generation2_tcp_source_port": 41032,
+    "signed_windows_wintun_npcap": true,
+    "original_business_window_seconds": 24,
+    "other_public_modes": "NOT_RUN",
+    "long_soak": "NOT_RUN",
+    "two_independent_authenticated_windows_clients_same_server": "NOT_RUN",
+    "android_physical_network": "NOT_RUN"
+  },
+  "native_actual_os": {
+    "windows_ipv4_nlmtu_original": 1500,
+    "windows_ipv4_nlmtu_after": 1280,
+    "original_host_ipv4_source_unchanged": true,
+    "interface_index_unchanged": true,
+    "mtu_mutation_to_os_readback_ms": 100.39,
+    "mtu_mutation_to_new_original_tls_ready_ms": 11656,
+    "windows_wintun_inner_os_mtu_by_generation": [
+      1389,
+      1209
+    ],
+    "linux_inner_os_mtu_after": 1389,
+    "original_windows_syn_mss_by_generation": [
+      1420,
+      1240
+    ],
+    "original_linux_synack_mss_by_generation": [
+      1420,
+      1420
+    ],
+    "server_physical_ipv4_mtu": 1500,
+    "saved_host_vEthernet_original_nlmtu_restored": true,
+    "returned_wsl_alias_cleanup": true,
+    "runner_default_route_unchanged": true,
+    "driver_npcap_service_original_cleanup": "PASS"
+  },
+  "native_original_application": {
+    "generation_count_original_tls": 2,
+    "tls_authenticated_rust_server_sessions": 2,
+    "old_generation_exact_owned_stop_before_new": true,
+    "new_generation_original_tls_rust_ready": true,
+    "new_generation_real_inner_udp_receive_increments": {
+      "windows": 11,
+      "linux": 4
+    },
+    "window_real_kernel_udp": {
+      "sent": 92,
+      "received": 94,
+      "kernel_bind": "PASS"
+    },
+    "linux_real_kernel_udp": {
+      "sent": 223,
+      "received": 90,
+      "kernel_bind": "PASS"
+    },
+    "udp_result": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "windows_real_kernel_tcp": {
+      "server_received": 37,
+      "client_echo": true
+    },
+    "linux_real_kernel_tcp": {
+      "server_received": 37,
+      "client_echo": true
+    },
+    "tcp_result": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "original_normal_mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE",
+    "native_stop": "PASS_BOTH_OWNED",
+    "original_linux_shared_tun_stop": {
+      "routed": 234,
+      "unrouted": 0,
+      "queue_full_drops": 0,
+      "reader_joined": true
+    },
+    "original_native_windows_npcap_ingress_local_drops": 0,
+    "original_mode_report_exit_code": 0
+  },
+  "artifact_receipt_paths": [
+    "report.json",
+    "plan028-owned-alias.json",
+    "mode-batch.json",
+    "mode-results/normal/client.log",
+    "mode-results/normal/server.log",
+    "mode-results/normal/native-link-tcp443.log",
+    "mode-results/normal/windows-original-go-rust-process-1hz.jsonl",
+    "mode-results/normal/artifact-manifest.json"
+  ],
+  "outcome_guardrails": {
+    "h1364_product_pass_scoped": "VERIFIED_ORIGINAL_NATIVE_APP_AND_SYSTEM_OS_RECEIPTS",
+    "historic_h998_same_socket_hot_mtu": "NOT_CLOSED_BY_H1364_COLD_REAUTH",
+    "two_windows_signed_clients_isolation": "NOT_RUN",
+    "seven_mode_matrix_on_source04db": "NOT_RUN",
+    "windows_gui_global_host_wfp": "NOT_RUN",
+    "source_24e_arm_oneway": "INDEPENDENT_PREVIOUS_PASS_NOT_MERGED_SOURCE",
+    "source_6c5_x86_five_user": "INDEPENDENT_PREVIOUS_PASS_NOT_MERGED_SOURCE",
+    "plan028": "IN_PROGRESS"
+  }
+}
