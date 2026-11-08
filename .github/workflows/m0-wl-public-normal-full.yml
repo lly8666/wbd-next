@@ -1,3 +1,4 @@
+# PLAN028 H1364: explicitly source-locked genuine Windows2025 signed Npcap/Wintun to WSL2 Normal physical SAME-IP 1500->1280 MTU-only, authenticated reauth, real UDP/TCP and original Stop. PASS based on native receipts; runner/setup errors tracked separately.
 # PLAN027 H833 signed original Windows NPF/Wintun Normal ON, one real 10Mbps/250ms/30pct scene; never a performance PASS from workflow success alone.
 # PLAN026 H373 source-locked one-run main full 7 real signed Windows Npcap/Wintun↔WSL2 Game4+Game2/4-FEC+Fixed+Auto+old Normal/Game2 cross-check; one build, per-mode separate artifact and truthful FAILs; user requested simultaneous remaining qualification, NOT performance PASS.
 # PLAN026 #264 SOURCEee2b Game2-only cold native hang first in scoped Game2 series; new same-source trial uses independent real WSL boot stage and unchanged Go/Rust product. This comment is an explicit source-locked signed Game2-only ACTION trigger, not a PASS claim.
