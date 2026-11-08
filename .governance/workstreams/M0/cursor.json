@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1418,
-  "checkpoint_sha": "b99ba48deb3aae5d7524d20d31fb485b4aea942f",
+  "sequence": 1419,
+  "checkpoint_sha": "042afb09761dae5705e4bb056741ed14910201aa",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1418-ONE-SCOPED-WIN-LINUX-REJECT-STAGE",
-  "current_task": "H1417 original diagnostics test-only code already committed but Windows original workflow push paths did not include h1415 tool, so no Windows Action started; H1418 adds exact file trigger and fixes original cold-stage sidecar JSON newline. Single new signed Windows one-instance plus separate Linux netns same-server standard TLS443 Action, original H1415 CI FAIL retained.",
-  "why_now": "Avoid fake progress: H1417 emitted no Windows Action because source-only tool file not on workflow path allowlist. Need one one-path trigger for meaningful bounded first stage, not a product code change or repeat of already passed ISA-L platform tests.",
+  "task_id": "PLAN028-M0-H1419-MANUAL-LINUX-B-ORIGINAL-AUTH",
+  "current_task": "Original H1418 Action42496215236 source042afb CI FAIL; Windows single signed original Go TLS/Rust A and shared server READY; Linux B repeatedly SYNACK MSS1420 then eight server V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner, no B Ready, combined UDP/TCP and A Stop B survival NOT_RUN. Deterministic H1415 harness mismatch: server --manual-client-leases-file disallows AutoLease=true, whereas Bob supplied --auto-ip; H1419 only switches Bob to manual --tun-ipv4 10.66.0.3/32 and nonzero distinct tunnel-id plus actual Linux manual Stop marker, no product code. Prior H1415 and H1418 CI FAIL preserved; H1419 own network result pending.",
+  "why_now": "Original users-file/manual account lease validation rejects AutoLease=true and requires nonzero per-user manual tunnel. H1418 server original cold stage confirms repeated pre-M4 rejection, while Windows A true Ready and WSL bridge owned cleanup true. Fixture correction is smaller and safer than speculative global peerPersona/TLS code changes.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect one new H1418 original signed Windows client + Linux netns client same-server Action from push. Extract original server/Windows/Linux allowed cold stage markers before any code changes. If Linux authenticated second peer fails at per-session persona, isolate least original fix, preserve A and Stop. No other network dispatch.",
+  "next_action": "Collect H1419 single-source actual native Windows signed one client + separately Linux netns manual Bob to same Go TLS443/Rust shared TUN; verify 2 protected users, independently owned lease /32 and original UDP+TCP, Windows A Stop while Linux B app continues, Linux B V4_PUBLIC_NATIVE_STOP_DRAINED and server shared TUN Stop plus bridge original IP/route and Windows WAL cleanup. Keep full original H1418 FAIL as fixture-mode rejection; if new first error choose targeted minimal correction, not seed reruns. ISA-L native 7 grade and H1407 Game4 runtime already PASS scoped; no retest.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Original H1415 source0b485b Windows signed client Ready; Linux original SYNACK then class=other, eight candidates, B not Ready, combined L1 FAIL/NOT_RUN, A WAL/bridge restored. H1417 stage logging code alone did not trigger Windows; H1418 includes source file in existing Windows workflow path. ISA-L all 7 grade native and Game4FEC runtime already positive. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1418 real signed Win client A and same Linux server READY; B Linux auto-ip client rejected by server manual-client-leases-file (8 server original TLS_or_owner rejection events), B not ready, combined test NOT_RUN, A WAL+bridge Stop PASS. H1419 switch fixture B to original manual /32 and independent tunnel ID (server already provisions authenticated Bob); correct Linux manual Stop receipt, one Windows client only. PLAN028 IN_PROGRESS."
 }

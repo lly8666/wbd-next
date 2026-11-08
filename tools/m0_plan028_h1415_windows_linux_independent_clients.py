@@ -274,7 +274,7 @@ def main():
              " --route-key-hex-file '"+guest["route"]+"'"
              " --tls-ca-pem '"+pwd+"/h1415-cert.pem'"
              " --username bob --password '"+keys["bob"]+"'"
-             " --auto-ip --installation-id-file '"+pwd+"/h1415-linux-install-id'"
+             " --tun-ipv4 10.66.0.3/32 --tunnel-id 102030405060708090a0b0c0d0e0f002"
              " --mode normal --record-cipher aes-128-gcm --outer-repair on\n")
         linux=start("h1415-linux",["wsl.exe","-d","Ubuntu","-u","root","--",
              "ip","netns","exec",NS,"sh",linuxcmd])
@@ -326,7 +326,7 @@ def main():
         (out/"h1415-B-stop.flag").touch()
         linapp.wait(timeout=9)
         linux_kill(out/"h1415-linux.pid")
-        marker(out/"h1415-linux.log","V4_PUBLIC_SHARED_TUN_STOP generation=",linux,32)
+        marker(out/"h1415-linux.log","V4_PUBLIC_NATIVE_STOP_DRAINED role=client",linux,32)
         linux.wait(timeout=20)
         need(linux.returncode==0,"Linux exact original Stop process exit nonzero")
         linux_kill(out/"h1415-server.pid")
