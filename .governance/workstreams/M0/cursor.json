@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1423,
-  "checkpoint_sha": "b1023f909f1eb3e19a986df313e2373fa815faff",
+  "sequence": 1424,
+  "checkpoint_sha": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1423-LAST-CANONICAL-GO-LINUX-OWNER-BLOB",
-  "current_task": "H1422 SRC b1023f exact faketcp packet/association blob lock and Go SYN unit installation passed fakeTCP check; Windows cheap job then failed prepare_windows_wiring.py --check-only: assembly blob mismatch r0/go_overlay/internal/v4productcli/linux.go. Audited git tree 4318 entries against ALL 102 canonical manifest-plan020-m0 overlay paths, only mismatch is this exact changed Linux shared TLS server Go cold per-session persona file. Old archive manifest.json has five historic unrelated differences; deliberately do not touch unrelated archived catalog. H1423 one canonical result_blob value repinned to actual blob 95df7528..., no product edits; all H1421/H1422 original Actions were pre-network FAIL and remain recorded. Need source-locked native Windows/Linux product test before claiming persona fix.",
-  "why_now": "Whole canonical assembly check first, not repeated seed: all 102 current mapped paths audited against exact git tree, exactly one remaining stale result_blob from H1421 Linux Go cold session file. Existing prepare_windows_wiring.py strictly rejects stale SHA; keep fail closed. Avoid changing 5 unrelated historical rows in legacy manifest.json (not active/current product).",
+  "task_id": "PLAN028-M0-H1424-CROSSOS-SCOPED-PASS-ORIGINAL-GAME4-CI-SPLIT",
+  "current_task": "H1423 SOURCE e6aa Action42502567549 original Windows single signed Wintun A plus separate Linux netns B same original TLS443 Go/Rust shared TUN: two protected accounts/manual /32, Windows11+Legacy per-authenticated-session RX; Windows UDP38/38/reverse36 Linux11/10/reverse9, TCP both, A Stop B UDP+10 and TCP, Bob/server owned Stop and WAL/bridge exact rollback PASS_SCOPED. Original Game4 x86 same SOURCE Action42502567485 product TLS8 overlap/new MTU1178/new UDP5/Stop PASS_SCOPED but CI FAIL last grep of unarchived M4 Go stage/nonexistent marker; independent archived remote M4 marker NOT_OBSERVED. Original failures retained. PLAN028 IN_PROGRESS.",
+  "why_now": "Latest source-locked native real Windows/Linux two-client hardware-backed business/Stop closes prior H1415–H1420 targeted per-session persona defect with actual nonzero packet receipts. Game4 report-only CI grep must be split from product function rather than rerun network for logging.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1423 Windows cheap+original Go assembly, actual new plan028 Go SYN persona positive/negative tests, then one Windows signed Npcap/Wintun A plus separate Linux netns manual B TLS/Rust two session peer-persona 1/0, UDP echoes+reverse and TCP, A WAL Stop B survival, all exact owned Stop and bridge restore. Preserve H1420 Linux echo FAIL and H1421/H1422 CI preflight failures. No new test dispatch, reuse full automatic source-locked current Action.",
+  "next_action": "Collect any jobs after evidence commit; do not redispatch. Repair future Game4 harness to capture actual Go remote M4 positive proof and remove nonexistent TUN marker without rerunning original network just for logging. Then audit L0/L1/L2 capacity and outstanding blocker evidence, build final source-frozen representative L3 two real native 1800s scenes when warranted; Android/physical NOT_RUN, historical H998 FAIL preserved; no 029/030.",
   "unverified": true,
-  "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
+  "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1411-WINDOWS-LINUX-ALL-FEC-GRADES-NATIVE-ISA-L-QUALIFICATION-20261108.json"
+    "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1421 fixed per-authenticated-session outer persona but no native test due stale code assembly SHA. H1422 installed true Go persona tests plus fakeTCP pins, but Windows preflight found Linux.go SHA drift. Exhaustive current canonical manifest 102 paths vs git tree showed sole missing linux.go. H1423 repins only this canonical blob, all product code unchanged. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1424 crossOS native single signed Windows + independent Linux netns client one original GoTLS443 original server/2 protected accounts actual UDP/TCP A Stop B live and all native Stop/WAL/bridge PASS_SCOPED under SOURCE e6aa (17 CRC zip). Same source x86 Game4 original 8 standard TLS first flights, real physical reauth/MTU1178/new business5/Stop PASS_SCOPED, CI-only final grep fails missing forwarded temp marker and nonexistent label, separate explicit proof marker NOT_OBSERVED. ISAL native 7/7 platform and Game4 real runtime old SOURCE reused. PLAN028 IN_PROGRESS."
 }

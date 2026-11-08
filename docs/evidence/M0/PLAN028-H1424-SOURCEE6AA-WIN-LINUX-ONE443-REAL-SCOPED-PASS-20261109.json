@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "e6aa4608780e9608070a7313be549a0d4524b38b",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_NATIVE_CROSS_OS_SINGLE_WINDOWS_PLUS_INDEPENDENT_LINUX_CLIENT",
+  "cross_os": {
+    "run_id": 42502567549,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42502567549",
+    "run_conclusion": "success",
+    "artifact_id": 13626452689,
+    "artifact_sha256": "b0d00cd5d2c4183e73810ef74f5181bc9cf2336df5f5335194c280b432464f8c",
+    "zip_crc": "PASS",
+    "files": 17,
+    "source_sha": "e6aa4608780e9608070a7313be549a0d4524b38b",
+    "go_tls_one443": "PASS_2_PROTECTED_ACCOUNTS_DISTINCT_MANUAL_LEASES",
+    "roles": "one signed Windows Npcap/Wintun VPN client A; independent Linux native netns/TUN client B; one Rust shared TUN Linux original server",
+    "peer_persona": "PASS_WINDOWS11_A_AND_LEGACY_B_DISTINCT_NATIVE_RX",
+    "windows_client": "10.66.0.2/32",
+    "linux_client": "10.66.0.3/32",
+    "udp": {
+      "windows_sent": 38,
+      "windows_echo": 38,
+      "windows_reverse": 36,
+      "linux_sent": 11,
+      "linux_echo": 10,
+      "linux_reverse": 9
+    },
+    "tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "windows_owned_stop_linux_survived_udp_increment": 10,
+    "linux_tcp_after_windows_stop": "PASS",
+    "stop": "PASS_BOTH_CLIENTS_EXACT_OWNED_AND_SHARED_SERVER",
+    "windows_WAL_remaining": 0,
+    "physical_bridge_veth_netns_ip_gateway_restored": true,
+    "sha256": {
+      "windows_exe": "f0c34f379bf6ff6ca265764ea84e7a1a1cc27513984a5631cd4d4acfe5f5b363",
+      "windows_rust_dll": "501fe300b1950d1ad582be6acc595e21449577903c1b502a058594a11700d15a",
+      "linux_client": "67803c8df807838b090ab1db58061aaa3d3527ecc4ce9d99352ccdb9a637eaa5",
+      "linux_server": "118165d85867f4569cc518eb3856227b26d00c1dacab1fbc5d735232f0641821",
+      "linux_rust": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6"
+    },
+    "windows_native_isal_release_feature": true,
+    "pinned_isal_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "fec_off_native_encoding": "NOT_APPLICABLE"
+  },
+  "game4_same_source": {
+    "run_id": 42502567485,
+    "run_conclusion": "failure",
+    "artifact_id": 13625972981,
+    "artifact_sha256": "a0e1d312e051abd450332c0033f30f2149e9b71c08c1ac6af027dd27ed6ead7d",
+    "zip_crc": "PASS",
+    "files": 12,
+    "product_scope": "PASS_SCOPED_TLS8_A_TO_A_PLUS_B_TO_B_FEC6_MTU_AND_REAL_NEW_PATH_UDP_STOP",
+    "real_tls_client_hello_count": 8,
+    "private_tls_prelude": false,
+    "game4_fec6_overlap_and_parity": true,
+    "new_os_tun_mtu": 1178,
+    "new_physical_mtu": 1280,
+    "new_source": "10.25.0.3",
+    "new_udp_echo_count": 5,
+    "old_owned_game_stop": true,
+    "ci_outcome": "HARNESS_OR_CI_FAILURE",
+    "ci_reason": "Last two greps demand an original temporary Go client cold marker not forwarded into saved runner summary, and a TUN_PROMOTED_AFTER_AUTH_RX label absent from current source.",
+    "separate_archived_m4_peer_proof_marker": "NOT_OBSERVED; no independent original marker artifact; new generation app and authenticated control-flow genuine",
+    "do_not_relabel_original_action": true
+  },
+  "same_source_actions": {
+    "native_go_TLS_first_flight": 42502567520,
+    "two_manual_linux_native_x86_arm64": 42502567488,
+    "windows_native_five_modes": 42502567546
+  },
+  "limitations": [
+    "No physical multi-machine WAN test and no Android test",
+    "Historical H998 same-socket hot PMTU failure not closed",
+    "L3 2x1800s ARM64 success is from older SOURCE; final frozen new source comprehensive L3 still pending",
+    "Normal Off crossOS does not prove a FEC backend triggered",
+    "Original Game4 CI FAIL and missing separately archived M4 marker both preserved"
+  ],
+  "plan028": "IN_PROGRESS"
+}
