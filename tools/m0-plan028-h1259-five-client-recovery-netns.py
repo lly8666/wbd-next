@@ -57,8 +57,9 @@ if NEIGH_CLOCK_DIAG and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_S
 # Previous native W19→W21 established ARP NUD INCOMPLETE as a 2-3s
 # synthetic blackout; install each peer's ACTUAL ephemeral veth MAC on
 # both ends to retain unmodified true 30% DATA loss and 125ms delay.
-# This is NEVER product configuration, physical deployment or the
-# default/long fixture. Report original dynamic-neighbour FAIL separately.
+# This is NEVER product configuration or physical deployment. Old dynamic
+# ARP failures remain separate. L3 may opt in to the verified veth L2
+# control without altering the original DATA netem damage.
 # Explicit L1 application-direction scene, separate from all legacy
 # two-way H1259/H1314 tests. No user UDP/TCP/probes in the silent
 # direction, but original Go TLS + Rust Health stays real and intact.
@@ -74,8 +75,10 @@ if ONEWAY_APP and not (FAST_SCENE=="pressure" and CAPACITY_STEPS=="2"
 STATIC_NEIGH=os.environ.get("WBD_PLAN028_STATIC_OWNED_NEIGH","")
 if STATIC_NEIGH not in ("","1"):
     raise SystemExit("invalid test-only static veth neighbour switch")
-if STATIC_NEIGH and (FAST_SCENE!="pressure" or CAPACITY_STEPS!="2" or LONG_SCENE):
-    raise SystemExit("static veth neighbour control only in short native 180s L2 scene")
+if STATIC_NEIGH and not (
+        (FAST_SCENE=="pressure" and CAPACITY_STEPS=="2" and not LONG_SCENE)
+        or (LONG_SCENE in LONG_SCENES and not FAST_SCENE)):
+    raise SystemExit("test-only veth neighbour control requires calibrated short or L3 scene")
 if ONEWAY_APP and STATIC_NEIGH!="1":
     raise SystemExit("one-way L1 requires test-controlled original veth ARP")
 if ONEWAY_HEALTH_BLACKHOLE and not ONEWAY_APP:
@@ -492,6 +495,7 @@ def main():
                 if (LONG_SCENE or FAST_SCENE) else {},
             "clients": [],
             "loss_model": "two physical veth egress qdiscs each client; no artificial app drops",
+            "physical_l2_arp_control": "test_only_permanent_actual_peer_mac" if STATIC_NEIGH else "dynamic_neighbour",
             "netem_qdisc_limit_packets": 10000,
         }
         if CAPACITY_STEPS:

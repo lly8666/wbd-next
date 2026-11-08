@@ -168,6 +168,7 @@ def analyze(art,server_log):
         "result":"DIAGNOSTIC_COMPLETE","architecture":"native_ARM64_client_and_server",
         "duration_seconds":1800,"clients":{},"alerts":[],
         "actual_physical_qdisc":qdisc,
+        "physical_l2_arp_control":plan.get("physical_l2_arp_control","historical_unspecified"),
         "server_per_authenticated_lease_tun":per_lease,
         "server_cpu_rss":cpu.get("server"),
         "server_single_port":plan["server_port"],
