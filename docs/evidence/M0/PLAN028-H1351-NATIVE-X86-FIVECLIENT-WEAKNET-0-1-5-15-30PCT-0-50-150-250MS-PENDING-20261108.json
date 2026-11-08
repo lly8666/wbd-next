@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1351",
+  "source_sha": "dd3a86aa5ac02f8216e0cc8089f6215fd1048197",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "status": "SOURCE_AND_TEST_PREPARED_NO_H1351_NATIVE_ACTION_RESULT_YET",
+  "previous_main": "ec481d59fd4f17b12939ca2c38848aec55b00fd2",
+  "one_network_action_expected": true,
+  "scope": "L2 native Linux x86 true original Go TLS443/Rust M4 ISA-L five authentically distinct OS TUN clients; physical OS netem impairment gradient with 0/1/5/15/30% random loss and 0/50/150/250/250ms one-way delay; 180 seconds with 10 warmup, 170 active",
+  "frozen_product": {
+    "original_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "verified_binary_build_run": 42369031512,
+    "artifact_id": 13572791923,
+    "Go_TLS_Rust_original_ELF62_ISA_L": "STRICT_SHA_REQUIRED",
+    "product_code_changed": false,
+    "fixture_revision": "NEW_H1351_UNVERIFIED"
+  },
+  "real_native_topology": {
+    "server_port": 443,
+    "clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "loss_pct_each_client": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "one_way_delay_ms_each_client": [
+      0,
+      50,
+      150,
+      250,
+      250
+    ],
+    "per_client_baseline_rate_each_direction_mbps": [
+      9,
+      9,
+      7,
+      7,
+      6
+    ],
+    "stages": [
+      {
+        "name": "first_wave",
+        "seconds": 30,
+        "scale": 0.2
+      },
+      {
+        "name": "sustained",
+        "seconds": 60,
+        "scale": 0.35
+      },
+      {
+        "name": "overload",
+        "seconds": 30,
+        "scale": 0.5
+      },
+      {
+        "name": "recovery",
+        "seconds": 50,
+        "scale": 0.35
+      }
+    ],
+    "peak_aggregate_one_direction_mbps": 19,
+    "Game4_fixed6_peak_mbps_each_direction": 3.5,
+    "Erin_normal_fixed6_30pct_250ms_peak_mbps_each_direction": 3,
+    "rotation_interval_s": 600,
+    "actual_rotations_in_180s": "NONE_REQUESTED"
+  },
+  "evidence_design": {
+    "real_native_physical_links": "five separate Linux veth underlay + OS TUN, original signed TLS and Rust M4",
+    "independent_qdisc_Erin": "kernel packet and drop delta 28–32% both real OS directions, physical intentionally loses packets",
+    "all_loss_levels": "configured per-client tc OS qdisc with raw snapshots, only Erin 30pct sampled at 500ms",
+    "true_test_arp_control": "ten PERMANENT entries from authentic ephemeral OS veth MACs, no fake data/TLS/replies, archived installed/after",
+    "app": "real original UDP all five + Alice/Bob framed TCP, independently compare genuine opposite-side app tx/rx 10ms buckets",
+    "guard": "phase UDP delivery>=95%, active sender/no-rx gap<750ms, 5 exact owned client Stop + server TUN Stop; if root product/OS fails preserve FAIL",
+    "VM_performance": "vCPU count discovered dynamically per phase from /proc/stat host_core_jiffies, softirq and per core; no cross-guest CPU normalization",
+    "capacity": "if <95% generator fill or one core >=95% classify CAPACITY_LIMITED/HOST_NEAR_LIMIT not product maximum"
+  },
+  "prior_qualifications": {
+    "H1315": "real x86 ISA-L 30pct 250ms Erin, other clients delay0/15/50/100ms, native 5 users and rotation PASS scoped Action42357004090; does NOT cover same gradient",
+    "H1350": "zero-loss Game4 20Mbps 30s +60s recovery within 4-vCPU native Linux VM, original Action FAIL reporter, scoped real data PASS",
+    "H1347": "signed Windows2025 Normal Off same source4 NlMtu1500->1280 original cold 2 TLS and duplex UDP TCP Stop scoped PASS"
+  },
+  "why_not_Windows_two_same_VM": "Product Windows acquireGUIClientSlot Win32 cross-process owner lock is deliberately exclusive to prevent duplicate Wintun/WAL/route ownership, TestPLAN010OwnerSlotIsActuallyExclusive existing; two independent devices sharing external NAT IPv4 requires two separately owned OS/VM hosts and remains NOT_RUN, not a reason to disable native ownership or assert source-port collision fixed.",
+  "open": [
+    "L0 two independently owned Windows devices behind same NAT/physical source unresolved",
+    "L1 full current seven-mode two rotations and original true physical link transitions all variants incomplete",
+    "L2 correlated blackhole, H1351 new gradient result pending, Normal100/200 per-VM capacity not run",
+    "L3 two representative source-frozen 1800s NOT_RUN",
+    "H998 old same-socket hot shrink historical FAIL, H1317 historical ARM64 5.18s true gap retained",
+    "Android/physical WiFi separate NOT_RUN"
+  ]
+}
