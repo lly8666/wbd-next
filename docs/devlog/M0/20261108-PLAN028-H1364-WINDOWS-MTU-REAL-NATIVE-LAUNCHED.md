@@ -8,6 +8,8 @@
 
 原始受控脚本在 run-scoped Stop 后恢复 `NlMtu=1500`，测试自有 Windows/WSL 别名清理且默认路由未变化；Windows Npcap 原生服务也清除。原始 ZIP artifact **13604034725**，28 文件，字节24476，SHA256 `aa4234e83dcfa1e9d80fcf376157f281412675aa6f30e9598f6fb7ca272de64e`，CRC 28/28 PASS，包含原始 OS receipt、两代 TLS/MSS、UDP/TCP应用回执、客户机/服务端日志。详细 [H1364 原物证索引](../evidence/M0/PLAN028-H1364-SOURCE04DB-WINDOWS-NATIVE-SAME-IP-MTU1280-REAUTH-UDP-TCP-STOP-PASS-20261108.json)。
 
+**索引修整**：只缩短功能卡冗长历史描述，并把 cursor 限制为原八条上下文引用，保留所有真实 source/evidence 及原失败；不重跑网络、不改动 H1364 原生 PASS。
+
 **边界**：这是短时源锁的真实物理 MTU 变化后**冷代重新认证**资格，不豁免 H998 同 socket 热 MTU 原失败；并非两个独立 Windows 客户端同时认证/隔离，也非持续压力、Android/物理 WAN 或 L3 两条1800s。H1362 原 native CI reporter KeyError 虽是外因假红，其真实 APP/Stop 仍按 H1363 原物证离线核验记 scoped PASS，历史 raw CI FAIL 另留。PLAN028 仍 IN_PROGRESS。
 
 ```feature-impact
