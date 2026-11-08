@@ -123,6 +123,23 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
     if !game.staged.is_empty(){return STOP_INCOMPLETE}
+    // One-shot COLD owned-Stop readback of the ACTUAL original protected
+    // Windows Game2/4 FEC owner, after every kernel batch was settled.
+    // No steady-state logging, new timer, Go pump, wire field or FEC fork.
+    // This proves whether the release-linked ISA-L really encoded eligible
+    // source blocks; valid tiny/k1 blocks may still fall back to scalar.
+    #[cfg(feature="fec2_product_record")]
+    if let Some((tx,_))=game.adapter.game_fec_counters(){
+        let rx=game.adapter.game_fec_rx_counters().unwrap_or_default();
+        eprintln!("M0_WINDOWS_GAME_M4_FEC_BACKEND_READBACK group={} selected={} native_linked={} tx_native_quanta={} tx_scalar_quanta={} rx_native_decodes={} rx_scalar_decodes={}",
+            h,
+            if std::env::var("WBD_GAME_FEC_BACKEND").ok().as_deref()==Some("scalar"){
+                "scalar"
+            }else{"prefer-native"},
+            u8::from(cfg!(feature="native_fec_acceleration")),
+            tx.tx_native_quanta,tx.tx_scalar_quanta,
+            rx.rx_native_decodes,rx.rx_scalar_decodes);
+    }
     game.adapter.stop();
     for lane in &game.lanes{
         let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
