@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1352",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "SCOPED_NATIVE_X86_4LOGICAL_CPU_FIVE_AUTHENTICATED_ORIGINAL_GO_TLS_RUST_ISAL_M4_OS_VETH_WEAKNET_180S_WITH_TRUE_APP_UDP_TCP_STOP_NOT_FULL_PLAN028",
+  "action": {
+    "run_id": 42430040484,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42430040484",
+    "conclusion": "success",
+    "source_wrapper_sha": "4d00c0e4c66b69a437250444f05dffddc803571d",
+    "preflight_job": 128576699499,
+    "network_job": 128576734145,
+    "native_network": "PASS",
+    "governance_run": 42430040570,
+    "governance": "PASS",
+    "governance_maintenance_run": 42430040486,
+    "governance_maintenance": "PASS"
+  },
+  "archive": {
+    "id": 13597505626,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42430040484/artifacts/13597505626",
+    "zip_sha256": "3249131e24258bb7debf079ef828449b20922db2f7b19e7a862dfe860d64c3a1",
+    "zip_crc": "PASS",
+    "files": 38,
+    "bytes": 369899,
+    "original_raw": "h1250-c-*.json/h1250-s-*.json, h1250-product-*.log, h1250-qdisc-before/after.txt, h1286-rapid-report.json, h1301-netem-clock.json, h1312-static-neighbour-installed/after.json",
+    "independent_review": "stdlib zipfile ZIP testzip, true per-side original 10ms app bins, kernel tc -s -d qdisc output, native Rust M4/lease/Stop and /proc host per-core clocks"
+  },
+  "original_product": {
+    "frozen_Rust_and_original_Go_binary_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "artifact_build_action": 42369031512,
+    "artifact_id": 13572791923,
+    "architecture": "native Linux x86_64 ELF62 / original Rust M4 static ISA-L",
+    "exact_binary_SHA_manifest": "PASS",
+    "different_wrappers_from_product_source": true,
+    "product_code_modified_this_workstream": false,
+    "one_auth_original_TLS_server_port": 443,
+    "five_independent_os_tun_leases": true,
+    "Game4_fixed6_original_auth": "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6 auth_original_tls=1 original_M4=1",
+    "Game4_fec_native_backend": {
+      "selected": "prefer-native",
+      "native_linked": 1,
+      "tx_native_quanta": 25398,
+      "tx_scalar_quanta": 3380,
+      "rx_native_decodes": 5041,
+      "rx_scalar_decodes": 480
+    }
+  },
+  "scene": {
+    "native_VM": "GitHub Ubuntu24 native x86_64, six OS netns/veth + real TUN",
+    "observed_guest_logical_cores_each_phase": [
+      4,
+      4,
+      4,
+      4
+    ],
+    "server_port": 443,
+    "clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "true_OS_netem_oneway_delay_ms": [
+      0,
+      50,
+      150,
+      250,
+      250
+    ],
+    "physical_random_loss_configured_pct": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "warmup_s": 10,
+    "active_load_s": 170,
+    "total_app_window_s": 180,
+    "phase_durations_s": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "phase_rate_scale": [
+      0.2,
+      0.35,
+      0.5,
+      0.35
+    ],
+    "peak_combined_inner_target_one_direction_mbps": 19,
+    "per_client_peak_inner_target_mbps_each_direction": [
+      4.5,
+      4.5,
+      3.5,
+      3.5,
+      3
+    ],
+    "rotation_s": 600,
+    "rotation_in_180s": "NOT_TRIGGERED_BY_DESIGN",
+    "test_only_neighbor_control": "10 real ephemeral veth MAC pairs PERMANENT before/after, no product edits; avoid ARP netem confound"
+  },
+  "true_physical_kernel_qdisc": [
+    {
+      "client": "alice",
+      "mode": "Normal Off",
+      "oneway_delay_ms": 0,
+      "nominal_loss_pct": 0,
+      "uplink": {
+        "qdisc_kind": "noqueue",
+        "observed_netem_loss_pct": "NOT_APPLICABLE"
+      },
+      "downlink": {
+        "qdisc_kind": "noqueue",
+        "observed_netem_loss_pct": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "client": "bob",
+      "mode": "Normal Auto",
+      "oneway_delay_ms": 50,
+      "nominal_loss_pct": 1,
+      "uplink": {
+        "packets_sent": 183026,
+        "packets_dropped": 1796,
+        "actual_drop_pct": 0.972
+      },
+      "downlink": {
+        "packets_sent": 183386,
+        "packets_dropped": 1826,
+        "actual_drop_pct": 0.986
+      }
+    },
+    {
+      "client": "carol",
+      "mode": "Game2 Off",
+      "oneway_delay_ms": 150,
+      "nominal_loss_pct": 5,
+      "uplink": {
+        "packets_sent": 133234,
+        "packets_dropped": 7070,
+        "actual_drop_pct": 5.039
+      },
+      "downlink": {
+        "packets_sent": 133387,
+        "packets_dropped": 6945,
+        "actual_drop_pct": 4.949
+      }
+    },
+    {
+      "client": "dave",
+      "mode": "Game4 Fixed6",
+      "oneway_delay_ms": 250,
+      "nominal_loss_pct": 15,
+      "uplink": {
+        "packets_sent": 567189,
+        "packets_dropped": 100194,
+        "actual_drop_pct": 15.013
+      },
+      "downlink": {
+        "packets_sent": 569184,
+        "packets_dropped": 100210,
+        "actual_drop_pct": 14.97
+      }
+    },
+    {
+      "client": "erin",
+      "mode": "Normal Fixed6",
+      "oneway_delay_ms": 250,
+      "nominal_loss_pct": 30,
+      "uplink": {
+        "packets_sent": 113108,
+        "packets_dropped": 47874,
+        "actual_drop_pct": 29.739
+      },
+      "downlink": {
+        "packets_sent": 112628,
+        "packets_dropped": 48445,
+        "actual_drop_pct": 30.076
+      }
+    }
+  ],
+  "actual_original_udp_application": [
+    {
+      "client": "alice",
+      "uplink": {
+        "sent": 70880,
+        "received": 70880,
+        "delivery_pct": 100
+      },
+      "downlink": {
+        "sent": 70880,
+        "received": 70880,
+        "delivery_pct": 100
+      },
+      "max_active_sender_no_rx_gap_ms": 0,
+      "recovery_recieved_only_p99_ms": 0.6
+    },
+    {
+      "client": "bob",
+      "uplink": {
+        "sent": 70880,
+        "received": 70880,
+        "delivery_pct": 100
+      },
+      "downlink": {
+        "sent": 70880,
+        "received": 70880,
+        "delivery_pct": 100
+      },
+      "max_active_sender_no_rx_gap_ms": 50,
+      "recovery_recieved_only_p99_ms": 51.1
+    },
+    {
+      "client": "carol",
+      "uplink": {
+        "sent": 68913,
+        "received": 68744,
+        "delivery_pct": 99.755
+      },
+      "downlink": {
+        "sent": 68912,
+        "received": 68762,
+        "delivery_pct": 99.782
+      },
+      "max_active_sender_no_rx_gap_ms": 150,
+      "recovery_recieved_only_p99_ms": 150.6
+    },
+    {
+      "client": "dave",
+      "uplink": {
+        "sent": 68910,
+        "received": 68910,
+        "delivery_pct": 100
+      },
+      "downlink": {
+        "sent": 68913,
+        "received": 68913,
+        "delivery_pct": 100
+      },
+      "max_active_sender_no_rx_gap_ms": 250,
+      "recovery_recieved_only_p99_ms": 255.4
+    },
+    {
+      "client": "erin",
+      "uplink": {
+        "sent": 59068,
+        "received": 58254,
+        "delivery_pct": 98.622
+      },
+      "downlink": {
+        "sent": 59068,
+        "received": 58182,
+        "delivery_pct": 98.5
+      },
+      "max_active_sender_no_rx_gap_ms": 250,
+      "recovery_recieved_only_p99_ms": 266.5
+    }
+  ],
+  "tcp_real_framed_duplex": {
+    "alice": {
+      "uplink_sent_received": [
+        17720,
+        17720
+      ],
+      "downlink_sent_received": [
+        17720,
+        17720
+      ],
+      "pending": 0
+    },
+    "bob": {
+      "uplink_sent_received": [
+        17720,
+        17720
+      ],
+      "downlink_sent_received": [
+        17720,
+        17720
+      ],
+      "pending": 0
+    },
+    "carol_dave_erin": "UDP_ONLY_BY_SCENE_DO_NOT_CLAIM_TCP_FOR_GAME"
+  },
+  "VM_cpu": {
+    "observed_logical_guest_vCPUs": 4,
+    "mean_host_busy_pct_by_phase": [
+      17.31,
+      29.28,
+      42.34,
+      29.49
+    ],
+    "max_mean_per_core_busy_pct_by_phase": [
+      17.87,
+      29.65,
+      42.86,
+      29.88
+    ],
+    "mean_softirq_pct_by_phase": [
+      0.84,
+      1.22,
+      2.1,
+      1.27
+    ],
+    "all_generator_capacity_exceeded": false,
+    "peak_19Mbps_oneway_cpu_busy_pct": 42.34,
+    "post_peak_recovery_cpu_busy_pct": 29.49,
+    "cross_VM_comparisons": "PROHIBITED, host CPU includes generators, Go, Rust and Linux netns/kernel, not product-only"
+  },
+  "original_stop": {
+    "five_exact_clients": "PASS",
+    "server_shared_single_TUN_reader": "PASS",
+    "per_lease_server_pending_overflow": "ZERO_ALL_FIVE",
+    "per_lease_server_offered_equals_direct_delivered": true,
+    "app_actor_errors": "NONE",
+    "max_active_tx_no_rx_gap_ms": 250,
+    "overall_native_result": "PASS_SCOPED_NATIVE_X86_REAL_LOSS_0_1_5_15_30_AND_DELAY_0_50_150_250"
+  },
+  "candid_limitations": [
+    "Actual original Erin Fixed6 application UDP residual missing 1.378% uplink and1.500% downlink under30%/250ms; do not call lossless despite 98.5% recovery",
+    "Latency p99 from same native hosted kernel receive-only clocks in recovery, not calibrated interdevice p99",
+    "Alice uses real noqueue physical link, not an instrumented 0% netem qdisc packet counter",
+    "Test-only static real veth ARP control isolates DATA impairment but does not qualify production dynamic neighbor recovery",
+    "Five user TLS/auth/owner Stop proved only this native x86 VM and one frozen product source, not Windows/ARM64 physical WAN or Android",
+    "600s rotation parked so this does not close L1 seven-mode each two rotations",
+    "No correlated 100% blackhole / loss burst, or normal100/200Mbps, or L3 2x1800s",
+    "Historical H998 original same-socket shrink and H1317 ARM64 5.18s old gap remain FAIL, original H1348/H1349 CI FAIL preserved separately"
+  ]
+}
