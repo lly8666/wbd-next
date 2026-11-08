@@ -1478,6 +1478,21 @@ type originalV4MultiRecord struct {
     ready bool
     stopping bool
 }
+// Validate a nonzero per-user tunnel ID only after the ORIGINAL protected
+// credential authentication, never from pre-TLS address or packet fields.
+// Legacy singleton remains exact-ID bound.
+func originalV4ManualAccountTunnelAfterAuth(c config,req realityfront.AdmissionRequest)error{
+    if req.AutoLease||len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+    if len(c.manualClientLeases4)==0{
+        if string(req.TunnelID)!=string(c.tunnel[:]){return realityfront.ErrAdmissionParams}
+        return nil
+    }
+    if _,ok:=c.manualClientLeases4[req.Username];!ok{return realityfront.ErrAdmissionParams}
+    nonzero:=false
+    for _,b:=range req.TunnelID{if b!=0{nonzero=true;break}}
+    if !nonzero{return realityfront.ErrAdmissionParams}
+    return nil
+}
 func runSharedMultiServer(
     ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
@@ -1523,10 +1538,10 @@ func runSharedMultiServer(
             }
             if leases!=nil{
                 if !req.AutoLease{return realityfront.ErrAdmissionParams}
-            }else if req.AutoLease||string(req.TunnelID)!=string(c.tunnel[:]){
-                // Manual /32 is server-owned and tied to the exact
-                // configured, TLS-authenticated tunnel ID.
-                return realityfront.ErrAdmissionParams
+            }else if err:=originalV4ManualAccountTunnelAfterAuth(c,req);err!=nil{
+                // Legacy singleton exact manual tunnel ID, or one
+                // authenticated account's nonzero manual tunnel identity.
+                return err
             }
             return nil
         },

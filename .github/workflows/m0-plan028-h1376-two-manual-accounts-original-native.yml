@@ -114,7 +114,7 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,os,pathlib,platform,struct
           root=pathlib.Path("fixed-build")
-          assert platform.machine()=="aarch64"
+          assert platform.machine()==os.environ["EXPECTED_ARCH"]
           sha={}
           for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
               b=(root/name).read_bytes()
@@ -143,6 +143,59 @@ jobs:
           grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/duplicate' fixed-kernel-result/manual-map-policy-tests.log
           grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/cross-account' fixed-kernel-result/manual-map-policy-tests.log
           grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/outside-subnet' fixed-kernel-result/manual-map-policy-tests.log
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028AccountManualProtectedTunnelIdentity
+          echo "M0_PLAN028_H1376_ACCOUNT_MANUAL_LEASE_AFTER_REAL_CREDENTIAL_AUTH_POLICY_UNIT_PASS"
+      - name: Two genuine original Go TLS443 and Rust M4 clients per-account real manual kernel TUN, A Stop B survives
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$EXPECTED_ARCH" && test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash -n tools/m0-plan028-h1376-two-manual-accounts-original-native.sh
+          bash tools/m0-plan028-h1376-two-manual-accounts-original-native.sh fixed-build             >fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log 2>&1 || {
+              tail -150 fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_H1376_TWO_REAL_AUTH_MANUAL_ACCOUNTS_ORIGINAL_TLS443_RUST_TUN_STOP_PASS" fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+          grep -Fq "M0_PLAN028_H1376_ORIGINAL_GO_TLS_MANUAL_ACCOUNT_MAP_A_B_AND_B_AFTER_A_STOP_PASS" fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          b=pathlib.Path("fixed-build"); m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="native_"+os.environ["EXPECTED_ARCH"]
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              blob=(b/n).read_bytes()
+              assert blob[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",blob,18)[0]==int(os.environ["EXPECTED_ELF"])
+              assert hashlib.sha256(blob).hexdigest()==m["sha256"][n]
+          result=json.loads(pathlib.Path("fixed-kernel-result/h1376-original-two-manual-accounts.json").read_text())
+          assert result["real_UDP_echoes"]==59 and result["actual_tls_sessions"]==3
+          assert result["real_client_kernel_TUN_addresses"]==["10.66.0.2","10.66.0.3"]
+          assert result["A_to_A_plus_B_to_B_then_A_reauth_and_stop"] and result["original_exact_all_client_Stop"]
+          assert result["server_exact_shared_tun_Stop"] and result["server_unrouted"]==0 and result["server_backpressure"]==0
+          assert result["windows_two_signed_authenticated_product_clients"]=="NOT_RUN"
+          print("M0_PLAN028_H1376_NATIVE_ORIGINAL_GO_TLS443_TWO_AUTHENTICATED_ACCOUNT_MANUAL_LEASE_AND_STOP_PASS arch="+os.environ["EXPECTED_ARCH"],flush=True)
+          PY
+          cat fixed-kernel-result/h1376-original-two-manual-accounts.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1376-${{ matrix.arch }}-original-two-authenticated-manual-leases-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/assembly.json
+            fixed-kernel-result/manual-map-policy-tests.log
+            fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+            fixed-kernel-result/h1376-original-two-manual-accounts.json
+            fixed-kernel-result/h1376-alice-native-tun-ip.json
+            fixed-kernel-result/h1376-bob-native-tun-ip.json
+          if-no-files-found: warn
+          retention-days: 30
+ ./internal/v4productcli) >>fixed-kernel-result/manual-map-policy-tests.log 2>&1 || {
+            tail -100 fixed-kernel-result/manual-map-policy-tests.log >&2;exit 1;
+          }
+          grep -Fq -- '--- PASS: TestPLAN028AccountManualProtectedTunnelIdentity' fixed-kernel-result/manual-map-policy-tests.log
           echo "M0_PLAN028_H1376_ACCOUNT_MANUAL_LEASE_AFTER_REAL_CREDENTIAL_AUTH_POLICY_UNIT_PASS"
       - name: Two genuine original Go TLS443 and Rust M4 clients per-account real manual kernel TUN, A Stop B survives
         shell: bash
