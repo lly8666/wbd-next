@@ -88,6 +88,7 @@ on:
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
       - crates/wbd-engine/src/v4_fixed_stream.rs
       - crates/wbd-engine/src/v4_windows_owner.rs
+      - crates/wbd-engine/src/v4_windows_fec2_owner.rs
       - crates/wbd-engine/src/v4_windows_native_runtime.rs
       - crates/wbd-platform/src/windows_native_io.rs
       - crates/wbd-platform/src/ipv4_tcp.rs

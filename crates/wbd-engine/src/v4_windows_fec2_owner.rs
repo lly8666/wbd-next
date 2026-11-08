@@ -185,7 +185,7 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
 fn encode_repair_entry(
     e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     block_id:u64,profile:u32,row:u32,frames:&[&[u8]],out:&mut [u8],
-)->Result<usize,i32>{
+)->Result<(usize,fec_v2::BackendUsed),i32>{
     use wbd_codec::fec_v2::{Rs16,Profile,BackendChoice};
     if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||
         e.game_group.is_some()||block_id==0||
@@ -203,9 +203,12 @@ fn encode_repair_entry(
     let required=12usize+2usize+frames.iter().map(|f|f.len()).max().ok_or(INVALID)?;
     if required>budget||out.len()<required{return Err(INVALID)}
     let mut writable=[&mut out[..required]];
-    Rs16::new().encode_into(block_id,frames,policy,row as usize,
-        &mut writable,budget,BackendChoice::Scalar).map_err(|_|INVALID)?;
-    Ok(required)
+    // This is the real authenticated Windows Fixed/Auto FEC2 C ABI path.
+    // Prefer linked native ISA-L for eligible source blocks, just like
+    // Linux/Go Game; small/k1 blocks retain the existing scalar fallback.
+    let used=Rs16::new().encode_into(block_id,frames,policy,row as usize,
+        &mut writable,budget,BackendChoice::default()).map_err(|_|INVALID)?;
+    Ok((required,used))
 }
 
 // Packed separate frame vector: 16 fixed 2048B slots and a separate
@@ -247,7 +250,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_encode_repair(
     let output=unsafe{std::slice::from_raw_parts_mut(dst,cap)};
     match encode_repair_entry(&e,epoch,luid,ifindex,block_id,
         profile,row,&frames,output){
-        Ok(n)=>{unsafe{used.write(n)};OK},
+        Ok((n,_backend_used))=>{unsafe{used.write(n)};OK},
         Err(err)=>err,
     }
 }
@@ -816,6 +819,45 @@ mod tests{
         (out[..n].to_vec(),seq,pn)
     }
     #[test]
+    fn m0_windows_original_fixed_auto_fec2_default_linked_native_isal(){
+        // Original protected Windows feature7 owner, not a naked codec:
+        // actual parity bytes must match scalar; native must REALLY run
+        // for k=2 and a 160B payload when linked in the product build.
+        let mut r=Registry{generation:989,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,997,99);
+        let ep=[2;16];
+        let mut a=vec![0u8;160];
+        a[0]=0x45;a[2..4].copy_from_slice(&160u16.to_be_bytes());
+        a[8]=64;a[9]=17;a[20..].fill(0x12);
+        let mut b=a.clone();b[20..].fill(0x34);
+        let budget=normal_off_windows_budget(&r.entries[&h].lock().unwrap())
+            .unwrap().record_payload_mtu;
+        let mut actual=[0u8;256];
+        let (n,backend)={
+            let e=r.entries[&h].lock().unwrap();
+            encode_repair_entry(&e,ep,997,99,1,5,0,
+                &[a.as_slice(),b.as_slice()],&mut actual).unwrap()
+        };
+        let oracle=wbd_codec::fec_v2::Rs16::new().encode_owned(
+            1,&[a.as_slice(),b.as_slice()],
+            fec_v2::Profile::Strong,0,1,budget,
+            fec_v2::BackendChoice::Scalar).unwrap();
+        assert_eq!(n,174);
+        assert_eq!(&actual[..n],oracle.0[0].as_slice(),
+            "ISA-L repair must match original scalar record bytes");
+        #[cfg(feature="native_fec_acceleration")]
+        assert_eq!(backend,fec_v2::BackendUsed::NativeIsaL,
+            "linked Windows release must execute native ISA-L, not scalar");
+        #[cfg(not(feature="native_fec_acceleration"))]
+        assert_eq!(backend,fec_v2::BackendUsed::Scalar,
+            "portable build is not native product qualification");
+        assert_eq!(quiesce_wintun(&mut r,h,ep,997,99),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+
+    #[test]
     fn m0_windows_auto_capacity_unknown_is_recent_only_without_lying_about_history(){
         let before=Some(MonoNs(2_000_000_000));
         assert!(!original_m2_recent_capacity(None,MonoNs(3_000_000_000)));
@@ -1125,8 +1167,16 @@ mod tests{
             // One real owner turn is intentionally capped at 256 due
             // deadlines / 200us. A delayed 9.2s backlog must catch up
             // over bounded subsequent turns, never monopolize fresh DATA.
-            for _ in 0..16{
+            // Actual owner turn is capped at 256 due or 200us. Exactly
+            // 16 turns was an invalid timing assumption on the native
+            // Windows runner (324 matured); never weaken DATA correctness
+            // or extend a SINGLE owner's 200us fairness budget.
+            for turn in 0..256{
+                let before=m.auto_quality[0]+m.auto_quality[5];
                 drain_original_auto_mature_due(m,due).unwrap();
+                let after=m.auto_quality[0]+m.auto_quality[5];
+                assert!(after>before || after==1400,
+                    "stalled actual original mature owner turn {turn}: {after}/1400");
                 if m.auto_quality[0]==700 && m.auto_quality[5]==700{break}
             }
             assert_eq!(m.auto_quality[0],700,

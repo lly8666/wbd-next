@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1398,
-  "checkpoint_sha": "e1ee3b03e7094152baeffba7f8af8d80aa869c3f",
+  "sequence": 1399,
+  "checkpoint_sha": "641e0b811b6ff37af1b7c97ecaa8c2c9e2fd4fd4",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1396-WINDOWS-MSVC-H1395-OFFLINE-REPLAY",
-  "current_task": "H1392 native ARM64 2x1800 original five-client long source444 proven L3 PASS_SCOPED with test-only ARP isolation, real 30% DATA netem, >900k ISA-L TX quanta and zero alerts (original H1389 FAIL preserved). H1395 original frozen x86 source6c5 real 8s 100% Game4 common physical blackhole: original Action42475183161 CI FAIL due 19001 vs 18000 report bins, OFFLINE re-evaluation Action42481748762 PASS_SCOPED and original owner Stop/other clients verified, first after restore 133ms UL/143ms DL. ARM original Action42475183088 source24e1 cannot fully replay because missing event JSON, original Stop true, NOT_QUALIFIED. H1396 Windows one single Wintun client original Go TLS/Rust M4 native ISA-L MSVC runner rebuild e1ee Action42481748620 IN_PROGRESS, no outcome yet.",
-  "why_now": "User prioritized real ARP L2 deconfounding, Windows one-instance scope, pinned native ISA-L. H1395 offline product evidence is now available without net rerun; H1396 Windows still running. Keep exact source/old action evidence separate. No duplicate dispatch.",
+  "task_id": "PLAN028-M0-H1397-WIN-NATIVE-FEC-BACKEND-MATURITY",
+  "current_task": "H1397 concrete Windows original Fixed/Auto FEC repair scalar hardcode changed to prefer-native; new authenticated feature7 owner k2×160 byte-identical native backend unit, original C ABI/PN/record/Stop unchanged. Source e1ee original Windows Action42481748620 genuine pinned MSVC ISA-L release static lib+Rust DLL compiled, 72/73 owner units PASS; 667pps 700 firstsend/1400 due test assumed 16 turns despite production 200us/256 event max owner turn, observed 324 after 16, NOT a Windows real product test. H1397 test requires progress every turn up to 256 fair turns and all 700 2s/700 8s/700 UNKNOWN and true Stop. Auto-trigger one Windows Game4FEC signed product Action; do not duplicate.",
+  "why_now": "Actual Windows Fixed/Auto native FEC C ABI was hardcoded Scalar despite successful ISA-L linking, real user-visible performance hotspot; and Windows CI fixture erroneously mandated 16 fair owner turns rather than complete maturity after bounded repeated turns. Existing 200us fairness is not changed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect Action42481748620 all job results, actual pinned MSVC ISA-L archive and Windows native FEC runtime (compiled native_linked + nonzero original quanta), UDP/TCP/Stop/WAL. Do not count compiler-only success as product. Only if Windows native runtime genuinely passes plan Windows+separate Linux client same server isolation with one Windows instance, without second Wintun or unowned route changes. Else isolate minimum original Windows build/product failure and preserve source/Action. ARM old blackhole missing original event JSON remains NOT_QUALIFIED, no reporting-only network rerun. H998 same-socket hot PMTU original FAIL preserved.",
+  "next_action": "Collect source H1397 Windows full original signed Npcap/Wintun Game4FEC Action: original Go TLS authenticated both ends, normal C ABI native unit parity, real Game4 native usage, OS raw packet+original TUN, UDP/TCP, Stop and WAL. If individual owner unit fails distinguish deterministic bug vs timed fixture, preserve original Action FAIL; no weakening old hard gates. Then single Windows VPN client + genuinely independent Linux client server TLS443 shared isolation; ARM x86 known qualification reuse, avoid repeated L3.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -33,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1392 full native ARM64 two L3 1800s RAW ZIP 36 each verified; actual 30% DATA-only under permanent real veth ARP, native ISA-L quanta positive, baseline/hetero max app active gap 50/120ms, zero alerts, all authentic rotations and exact Stop PASS_SCOPED. H1394 source1a47 Windows single native MSVC ISA-L fails at hardcoded 2022 Enterprise vcvars, product NOT_RUN. H1395 original H1353/H1368 short blackhole offline bin 19001 correction, ARM source artifact missing original event. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1397 fixes real Windows Normal/Fixed/Auto FEC native acceleration gap (real C ABI repair path previously Scalar), keeping portable scalar fallback and record/AEAD/PN same. H1396 original MSVC ISA-L build SUCCESS; actual Windows FEC product NOT_RUN because a 16-turn synthetic owner timing test failed after 324/1400 due, unit now allows bounded fair 256 turns with positive progress and exact 700/700 UNKNOWN and Stop. H1392 2×1800 ARM native L3 PASS_SCOPED, original dynamic ARP FAIL remains; PLAN028 IN_PROGRESS."
 }
