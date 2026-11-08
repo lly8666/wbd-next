@@ -1,0 +1,58 @@
+name: M0 PLAN028 H1356 offline source-locked H1355 real Game2 Fixed6 counter replay
+run-name: PLAN028 H1356 OFFLINE H1355 original raw Game2 Fixed6 marker correction
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1356-offline-h1355-game2-counters.yml"
+      - "tools/m0-plan028-h1356-offline-h1355-game2-counters.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-source-offline-counter-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42436151532
+          github-token: ${{ github.token }}
+          name: plan028-h1355-native-x86-game2-fixed6-rotation-42436151532
+          path: original-native-raw/
+      - name: Replay exact original H1355 36-file native raw and correct only off-vs-fixed outer marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1356-offline-h1355-game2-counters.py
+          test -s original-native-raw/h1250-product-carol.log
+          test -s original-native-raw/h1286-rapid-report.json
+          test -s original-native-raw/h1355-native-l1-owner-rotation.json
+          mkdir -p offline-replay
+          python3 tools/m0-plan028-h1356-offline-h1355-game2-counters.py \
+            --art original-native-raw/ \
+            --out offline-replay/h1356-corrected-game2-fixed6-outer.json \
+            | tee offline-replay/h1356-offline-replay.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path("offline-replay/h1356-corrected-game2-fixed6-outer.json").read_text())
+          assert r["classification"]=="PASS_SCOPED_OFFLINE_H1355_GAME2_FIXED6_ACTUAL_OUTER_COUNTS"
+          assert r["original_product_source"]=="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+          assert r["original_action"]==42436151532 and r["network_rerun"] is False
+          assert r["original_raw_artifact_id"]==13599652010
+          assert r["original_general_report_alerts_preserved"]==[{"who":"carol","kind":"NO_REAL_OUTER_COUNTER"}]
+          assert not r["corrected_general_report_alerts"]
+          assert r["original_carol_fec_stop_counter_samples"]["generation_stop_samples"]==3
+          assert r["true_fec2_per_generation_actual_counters"]["native_tx_quanta"]>0
+          assert r["true_fec2_per_generation_actual_counters"]["scalar_tx_quanta"]>0
+          print("M0_PLAN028_H1356_OFFLINE_ORIGINAL_GAME2_FIXED6_COUNTERS_CLOSURE_PASS",flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1356-original-h1355-game2-fixed6-offline-counters-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
