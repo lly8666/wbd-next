@@ -5,13 +5,6 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/m0-plan028-h1378-x86-manual-account-wrapper-fix.yml"
-      - "tools/m0-plan028-h1376-two-manual-accounts-original-native.sh"
-      - "r0/go_overlay/internal/realityfront/admission_v4.go"
-      - "r0/go_overlay/internal/realityfront/v4_manual_lease_map_test.go"
-      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
-      - "r0/go_overlay/internal/v4productcli/linux.go"
-      - "r0/go_overlay/internal/v4productcli/manual_lease_map_linux_test.go"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
