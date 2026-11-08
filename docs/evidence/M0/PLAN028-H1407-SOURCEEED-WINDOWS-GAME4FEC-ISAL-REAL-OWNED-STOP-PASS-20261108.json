@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "eed0392f588053409f5dc52870d1f2d0fd55b033",
+  "classification": "PASS_SCOPED_WINDOWS2025_GAME4_FIXED6_NATIVE_ISAL_REAL_USED_AND_TWO_GENERATION_SIGNED_PRODUCT",
+  "action": {
+    "run_id": 42487098097,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42487098097",
+    "conclusion": "success",
+    "all_six_jobs": "success",
+    "native_public_two_os": "success",
+    "artifact_id": 13619909107,
+    "artifact_zip_sha256": "ebbb95fe83047424f977be97f87f3916ac17f0f6802988466257bb491736cd6b",
+    "archive_files": 35,
+    "zip_crc": "PASS_ALL_35"
+  },
+  "provenance": {
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust_toolchain": "1.85.1",
+    "windows_feature": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "official_isa_l_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "win_isa_l_archive_sha256": "f17995596b82555d7be09faba71a5c340d42d9f7f009d4aba874f4de1835f4a2",
+    "windows_original_exe_sha256": "9e4fa612053c5ab38ffc43cae37d7c71060f405b666f8709b3454ee673f8843e",
+    "windows_rust_dll_sha256": "cb17c06928b4cf6a6807df104524a17a8010b683e117c3df7af1d23804712e51",
+    "linux_original_server_sha256": "a3f8c03d7390b49f354a6508b53b6416f91c4583f4d45024f2ab8ccb2934f64b",
+    "windows_original_client_log_sha256": "b0d6292fb80d7e9736f981d8578f72765f91486d580a14b3921cb2a03ed86aab",
+    "linux_original_server_log_sha256": "7abe210640ccdd13bbfa17af2e401689bc020ab8387f6729ee266b92a1b4972b"
+  },
+  "native_isa_l_actual_runtime": {
+    "windows_original_game4_fec6_two_generation_stop_readbacks": [
+      {
+        "group": 21474854733,
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 2,
+        "tx_scalar_quanta": 78,
+        "rx_native_decodes": 0,
+        "rx_scalar_decodes": 0
+      },
+      {
+        "group": 42949691213,
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 11,
+        "tx_scalar_quanta": 202,
+        "rx_native_decodes": 0,
+        "rx_scalar_decodes": 3
+      }
+    ],
+    "linux_server_original_game4_fec6_stop_readbacks": [
+      {
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 4,
+        "tx_scalar_quanta": 125
+      },
+      {
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 4,
+        "tx_scalar_quanta": 226
+      }
+    ],
+    "native_encode_triggered_on_windows": true,
+    "notes": "Scalar short source/k1 and low native quanta counts are legitimate; FEC Off not part of this source. Native decode requires real missing symbols and is not forced."
+  },
+  "original_product": {
+    "mode": "game4-fec",
+    "native_windows_signed_npcap_wintun": true,
+    "authentic_standard_tls_port": 443,
+    "windows_vpn_client_instances": 1,
+    "linux_peer_role": "original_go_rust_server_not_separate_linux_client",
+    "two_authenticated_source4_groups": true,
+    "source4_before": "198.19.254.1",
+    "source4_after": "198.19.254.9",
+    "outer_user_default_ipv4_mtu_bytes": 1460,
+    "windows_OS_installed_inner_mtu_bytes": [
+      1358,
+      1358
+    ],
+    "linux_OS_installed_inner_mtu_bytes": 1358,
+    "server_old_grace_actual_ms": 17453,
+    "old_rx_preserved_through_grace": true,
+    "server_retired_old_once": true,
+    "actual_new_B_UDP_received_after_B_ready": {
+      "windows": 11,
+      "linux": 9
+    },
+    "actual_new_B_UDP_received_during_grace": {
+      "windows": 134,
+      "linux": 135
+    },
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "windows_and_linux_owned_stop": "PASS_BOTH_OWNED",
+    "native_wal_cleanup": true,
+    "client_application_payload_integrity": "MATCHED_SCOPED"
+  },
+  "old_abi_other_workflow": {
+    "run_id": 42487098054,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42487098054",
+    "original_CI_result": "failure",
+    "before_failure": "74 Windows Rust original owner tests PASS + 19 health tests PASS + MSVC DLL exported C ABI native calls PASS",
+    "failure": "historical frozen M4 assembly refused already-owned destination file: exact pinned old-Go/M4 assembly already owns this file; no competing author",
+    "class": "HARNESS_OR_CI_FAILURE_AT_LEGACY_ASSEMBLY",
+    "original_go_TLS_follow_on": "NOT_RUN",
+    "not_a_product_failure_in_other_independent_native_game4_fec_source": true
+  },
+  "limits": [
+    "This is one Game4FEC Windows↔Linux server short original product scene, not calibrated L2 throughput/p99 or complete seven-mode L1 matrix.",
+    "Windows+independent Linux CLIENT same server/independent account and session ownership is NOT_RUN; WSL guest here is the server.",
+    "Native decoding can be zero without an actual source erasure; do not claim native RX FEC recovery tested in this scene.",
+    "Historical H1398 same-socket PMTU/Android/user physical WAN are not closed by source eed.",
+    "No other ISA-L mode/source is granted actual native runtime proof by this scene."
+  ],
+  "plan028": "IN_PROGRESS"
+}

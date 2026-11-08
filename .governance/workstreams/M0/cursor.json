@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1406,
-  "checkpoint_sha": "46d104874b15d7f03208e9c7e711c922789195c9",
+  "sequence": 1407,
+  "checkpoint_sha": "eed0392f588053409f5dc52870d1f2d0fd55b033",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1406-WIN-GAME4FEC-COLD-ISAL-READBACK",
-  "current_task": "H1405 true source d309 Windows signed Npcap/Wintun Game4 Fixed6 vs Linux original server achieved 2 protected M4 authenticated groups, OS applied, source4 reassignment, full original server A 18.807s grace and exact Stop, B true bidir UDP+TCP through grace, original owned Stops all PASS_SCOPED Action42485343180 original ZIP35 SHA df7065. Server real ISA-L tx_native=4. Default Windows release native_fec_acceleration and original Win Fixed/Auto NativeIsaL deterministic C ABI tests already PASS; Windows client Game2/4 actual native/scalar runtime quanta not emitted by cold Stop, so H1406 only adds original owned Stop one-shot M4 FEC backend readback, no wire/hot work. One targeted Windows signed Game4FEC source-native Action auto-triggered by changed Windows owner; no second Wintun, no L3 rerun.",
-  "why_now": "User specifically prioritizes reliable default ISA-L across platforms and modes, cannot claim an unobserved native runtime trigger; Windows original Game FEC owner already holds actual tx_native_quanta/tx_scalar_quanta in same shared GameAdapter but native Stop previously discarded counters without readback. Cold-only record is minimal and does not affect data-plane throughput or protocol.",
+  "task_id": "PLAN028-M0-H1407-WIN-GAME4-REAL-ISAL-SCOPED-QUALIFICATION",
+  "current_task": "Collected original 35-file CRC PASS raw signed Windows2025 Npcap/Wintun game4-fec source eed0392 Action42487098097: SAME SOURCE Linux original Go TLS443/Rust M4; real Windows old/new groups Stop readback native_linked=1 prefer-native actual tx_native_quanta=2 and 11; Linux server group tx_native=4 and 4. B genuine source4 reauth old server stays for 17.453s with new business, OS 1358B inner from default outer1460, two-end real UDP/TCP and complete WAL/rust/driver Stop PASS_SCOPED. Legacy m0-plan013 Windows owner ABI Action42487098054 original Rust 74/74 and native DLL C ABI PASS_SCOPED, but historical frozen old-Go/M4 assembly refused duplicate pre-existing source path; subsequent old Go test NOT_RUN. Original CI FAIL remains HARNESS_OR_CI_FAILURE, not a new product FAIL. H1407 evidence consolidated; PLAN028 IN_PROGRESS.",
+  "why_now": "Closing last unobserved Windows Game2/4 native ISA-L runtime fallback risk: H1406 one-shot cold Stop readback now actually triggered on same-source genuine signed Game4FEC after NPF and Wintun business. Windows owner ABI's separate frozen clone collision is a historical fixture/assembly conflict; true product same-source tested via newer native workflow, so no network replays or unfounded product fault.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1406 native Windows signed Wintun Game4FEC original Action exactly once; require actual original verified TLS/NPF/Wintun business and Stop plus one-shot native_linked=1/selected=prefer-native readback. If native quanta remain zero with small symbols, classify NOT_TRIGGERED and plan one k>=2 >=64B targeted original app data input; don't demand native for tiny legal blocks or loop random seeds. Independently continue PLAN028 L1 cross-platform one Windows client+separate Linux client shared server scope and existing 7-mode/weaknet/capacity report; avoid H998 same-socket hot PMTU overclaim. No 029/030.",
-  "unverified": true,
-  "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "next_action": "First check all current in-flight Actions before any new push. PLAN028 L1 most valuable remaining explicit cross-device service isolation: ONE Windows signed VPN client plus ONE separately original native Linux client on the SAME authenticated TLS443 server, distinct account/lease/independent config, concurrent real UDP+TCP, A Stop B still sends/receives, no second Windows Wintun or unowned WAL changes; work out feasible real topology rather than fake two-host with loopback, do a short discriminating deployment before any long test. Audit remaining L1/L2 sourced coverage matrix and known issue H998 same-socket hot PMTU separately; preserve existing 2x1800 L3 ARM64 credentials, Android/physical NOT_RUN. No 029/030.",
+  "unverified": false,
+  "last_tested_source": "eed0392f588053409f5dc52870d1f2d0fd55b033",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1360-SOURCE6C5-NATIVE-X86-NORMAL75-CAPACITY-STABLE-RECOVERY-20261108.json",
     "docs/evidence/M0/PLAN028-H1358-SOURCE6C5-X86-GAME2-OFF-TWO-REAL-ROTATIONS-20261108.json",
     "docs/evidence/M0/PLAN028-H1354-H1353-X86-CORRELATED-GAME4-RAW-REPLAY-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
-    "docs/evidence/M0/PLAN028-H1372-SOURCE6C5-X86-THREE-NATIVE-ACCOUNTS-INDEPENDENT-OUTER-MTU-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1372-SOURCE6C5-X86-THREE-NATIVE-ACCOUNTS-INDEPENDENT-OUTER-MTU-PASS-20261108.json",
+    "docs/evidence/M0/PLAN028-H1407-SOURCEEED-WINDOWS-GAME4FEC-ISAL-REAL-OWNED-STOP-PASS-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -33,5 +34,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1405 full original Windows signed Game4FEC two-generation 18.807s proper server old grace and real B bidirectional UDP/TCP Stop PASS_SCOPED; original H1399 false CI due invalid old Stop reason preserved. H1406 only original Windows Game2/4 FEC owned Stop cold readback native/scalar quanta, leveraging already-linked Win static official ISA-L and original GameAdapter counters; no Go pump, header or worker. Original Linux L3 source444 reused unchanged after Win-only owner changes, H1392 2×1800 PASS_SCOPED, original H1389 3.3s dynamic ARP FAIL retained. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1407 original SOURCE eed Windows2025 signed Npcap/Wintun vs original Linux WSL2 server Game4FEC, full 35 ZIP CRC and source/bin hashes verified, real Windows old/new native ISA-L tx quanta 2/11, Linux server 4/4; original TLS443, B ready and business during 17.453s old grace, OS MTU 1358 from outer default1460, real UDP/TCP, exact both Stop PASS_SCOPED. Original Windows ABI Action42487098054 failed only in historical frozen old-Go/M4 assembly duplicate path after native Rust 74/74 and DLL ABI PASS; historical fixture failure retained, no product claim for not-run old Go step. Cross Windows plus separate Linux CLIENT same server remains NOT_RUN; Android/physical unrun; PLAN028 IN_PROGRESS."
 }
