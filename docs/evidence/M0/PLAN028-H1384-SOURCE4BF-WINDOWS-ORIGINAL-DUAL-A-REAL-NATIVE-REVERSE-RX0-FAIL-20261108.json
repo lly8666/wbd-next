@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "4bf54245ba875e419e9c483b79dab51d3a0fce87",
+  "case": "H1384_ORIGINAL_TWO_SIGNED_WINDOWS_PRODUCTS_ONE_WSL2_SERVER",
+  "classification": "FAIL_ORIGINAL_NATIVE_WINDOWS_A_REVERSE_DATA_NOT_DELIVERED_CLIENT_B_NOT_STARTED",
+  "native_action": {
+    "run_id": 42464557691,
+    "attempt": 3,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42464557691",
+    "external_setup_attempt1": "Go1.23.12 CDN HTTP504/403 NOT_RUN",
+    "external_setup_attempt2": "signed Npcap GitHub attachment HTTP504 NOT_RUN",
+    "attempt3": "real original signed Npcap/Wintun/WSL2 Go TLS/Rust M4 actual native first+reverse reached"
+  },
+  "original_raw_artifact": {
+    "id": 13611722358,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_bytes": 12255,
+    "files": 19,
+    "zip_sha256": "31a5e70a9be7b35318228f4643618d1301050220dc98ef3a82099353f85f4785",
+    "zip_crc": "PASS_ALL_19",
+    "files_of_interest": [
+      "h1382-dual-report.json",
+      "h1382-server.log",
+      "h1382-client-A.log",
+      "h1382-app-A.log",
+      "h1382-echo-linux.log",
+      "direct-full.log",
+      "native-link-tcp443.log",
+      "native-windows-npf.log"
+    ]
+  },
+  "original_product_receipts": {
+    "server_one_TLS443_ready": true,
+    "server_original_Go_TLS_credential_authenticated_A": true,
+    "server_original_Rust_M4_authenticated_A": true,
+    "server_original_multi_session_count": 1,
+    "Windows_A_original_signed_Wintun_Npcap_auth_started": true,
+    "Windows_A_original_client_READY": false,
+    "Windows_B_process_started": false,
+    "original_Windows_Rust_native": {
+      "TXCopied": 48,
+      "RXDelivered": 0,
+      "TXAfterRX": 0,
+      "Rejected": 18,
+      "WorkerError": 0,
+      "Workers": 2,
+      "deadline_exceeded": true
+    },
+    "original_server_native_tun_delivered": 48,
+    "original_server_native_tun_udp": 43,
+    "original_server_native_tx_staged_udp": 0,
+    "original_server_shared_tun_Stop_drained": true,
+    "original_Windows_A_native_Stop_result": "PASS",
+    "original_WAL_remaining_A": [],
+    "original_WAL_remaining_B": [],
+    "original_normal_report": "FAIL_OR_NOT_RUN"
+  },
+  "actual_test_app_observation": {
+    "Windows_A_app_error": "WinError 10051 socket operation attempted to unreachable network, original sender exited before route ready",
+    "WSL_echo_application": "passive echo only, zero original server native outbound staged UDP",
+    "original_real_reverse_app_created": false,
+    "proof_fail_reason": "Source4bf did not provide genuine kernel reverse UDP needed by unmodified product native first+reverse readiness gate; Windows sender also exited on transient route unready."
+  },
+  "qualification": {
+    "two_simultaneous_Windows_signed_original_TLS_Rust_products": "NOT_QUALIFIED",
+    "A_ready": "FAIL",
+    "B_started": "NOT_RUN",
+    "genuine_parallel_UDP": "NOT_RUN",
+    "Windows_duplex_TCP": "NOT_RUN",
+    "B_continues_after_A_Stop": "NOT_RUN",
+    "scope": "Original source-specific full two-OS H1384 attempt3 failed first Windows A Rust reverse RX0; do not collapse to setup-only or post-report external failure."
+  },
+  "followup": {
+    "source": "d9b49b95deb30db024ede21d12a6f3a4e5804a9a",
+    "action": 42466552995,
+    "classification": "NATIVE_RETEST_IN_PROGRESS",
+    "change": "Test-owned genuine Linux TUN UDP actively sends server→A/B only when original client launched, Windows app binds verified/32 port and tolerates temporary Win32 route-not-ready; no fake packet or Ready and no original Go/Rust product modification."
+  },
+  "plan028": "IN_PROGRESS"
+}

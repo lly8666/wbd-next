@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "5538d3d33d2909e46f7033da50ed3c5656f7c0e7",
+  "case": "H1385_WINDOWS_REAL_SAME_IP_PHYSICAL_MTU_1500_TO_1280_COLD_REAUTH_RETEST",
+  "classification": "NOT_RUN_NATIVE_PRODUCT_EXTERNAL_SIGNED_NPCAP_ARCHIVE_HTTP504",
+  "action": {
+    "run_id": 42464619647,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42464619647",
+    "attempts": 3,
+    "final_conclusion": "failure",
+    "all_windows_Go_Rust_and_original_Linux_peer_built": "PASS",
+    "external_failure": "Invoke-WebRequest pinned Npcap test driver ZIP GitHub attachment returns HTTP 504 Gateway Time-out before Npcap service install"
+  },
+  "product_qualification": {
+    "Windows_true_OS_MTU_mutation": "NOT_RUN",
+    "original_TLS_Reauth": "NOT_RUN",
+    "real_Win32_UDP_TCP": "NOT_RUN",
+    "Rust_M4_Stop": "NOT_RUN",
+    "actual_historical_H1364_source04db_success": "DIFFERENT_SOURCE_NOT_QUALIFIED_NEW_RUN",
+    "original_H998_same_socket_hot_MTU": "FAIL_HISTORICAL_NOT_CLOSED"
+  },
+  "followup": {
+    "source_sha": "9a21e1288f1e7c2a099594ed6687f953d3db0c49",
+    "action": 42466674474,
+    "classification": "RETEST_IN_PROGRESS",
+    "test_owned_change": "Bounded up to 5 HTTP retries on each exact signed Npcap/Wintun vendor package, no pinned SHA256/Authenticode change or product change"
+  },
+  "plan028": "IN_PROGRESS"
+}
