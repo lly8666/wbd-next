@@ -1,3 +1,4 @@
+# PLAN028 H1384: run ACTUAL 2 independent signed Windows Wintun original Go TLS443/Rust M4 accounts on ONE WSL2 server; A Stop B alive real Win32 UDP/TCP. Dual proof has its own terminal oracle, never single-client report gate. [plan028-win-dual-original]
 # PLAN028 H1364: explicitly source-locked genuine Windows2025 signed Npcap/Wintun to WSL2 Normal physical SAME-IP 1500->1280 MTU-only, authenticated reauth, real UDP/TCP and original Stop. PASS based on native receipts; runner/setup errors tracked separately.
 # PLAN027 H833 signed original Windows NPF/Wintun Normal ON, one real 10Mbps/250ms/30pct scene; never a performance PASS from workflow success alone.
 # PLAN026 H373 source-locked one-run main full 7 real signed Windows Npcap/Wintun↔WSL2 Game4+Game2/4-FEC+Fixed+Auto+old Normal/Game2 cross-check; one build, per-mode separate artifact and truthful FAILs; user requested simultaneous remaining qualification, NOT performance PASS.
@@ -1608,7 +1609,7 @@ jobs:
               throw 'actual Windows original M2 Auto revision2 native both-OS delivery/Stop proof missing'
             }
             Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
-          } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1') {
+          } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1') {
             if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
                $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or
                $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
@@ -1616,7 +1617,7 @@ jobs:
                $result.stop -ne 'PASS_BOTH_OWNED'){
               throw 'selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof'
             }
-          } elseif($env:WBD_WL_ABBA_NATIVE -ne '1' -and $result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
+          } elseif($env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1' -and $result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
             throw 'real public original Normal product proof not emitted'
           }
           if($env:WBD_WL_RUN_N0 -eq '1' -and
@@ -1763,6 +1764,8 @@ jobs:
             result/wl-public/plan028-owned-alias.json
             result/wl-public/plan028-native-windows-vm-capacity.json
             result/wl-public/direct-full.log
+            result/wl-public/h1382-*.log
+            result/wl-public/h1382-dual-report.json
             result/wl-public/gamefec-supervisor-stack.txt
             result/wl-public/gamefec-mode-stack.txt
             result/wl-public/gamefec-e2e-stack.txt
