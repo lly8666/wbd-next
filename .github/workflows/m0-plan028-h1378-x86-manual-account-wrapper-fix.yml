@@ -1,0 +1,192 @@
+name: M0 PLAN028 H1378 frozen x86 native original TLS manual-account after wrapper ISA correction
+run-name: PLAN028 H1378 x86 original protected two-account manual lease 59 native UDP A Stop B
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1378-x86-manual-account-wrapper-fix.yml"
+      - "tools/m0-plan028-h1376-two-manual-accounts-original-native.sh"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/v4_manual_lease_map_test.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
+      - "r0/go_overlay/internal/v4productcli/manual_lease_map_linux_test.go"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-two-account-manual-lease:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64, elf: 62}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      EXPECTED_ARCH: ${{ matrix.arch }}
+      EXPECTED_ELF: ${{ matrix.elf }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Pin original Go+Rust and assemble one complete ARM64 SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test ! -e r0/go_overlay/internal/realityfront/v4_route_prelude.go
+          mkdir -p fixed-build fixed-kernel-result
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt fixed-kernel-result/assembly.json
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path.cwd(); donor=root/"legacy"
+          rec=json.loads((root/"fixed-kernel-result/assembly.json").read_text(encoding="utf-8"))
+          assert rec["overlay_source"]==os.environ["GITHUB_SHA"]
+          assert rec["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in (
+                      "admission_v4_test.go","v4_tls_handshake_contract_test.go",
+                      "manual_lease_map_linux_test.go","v4_manual_lease_map_test.go"):
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():
+                      assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              p=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),str(dst)
+              dst.write_bytes(p.read_bytes())
+          # Test-only current-source V4 CLI config, not a second Go product.
+          src=root/"r0/go_overlay/internal/v4productcli/secret_linux_test.go"
+          dst=donor/"internal/v4productcli/secret_linux_test.go"
+          if dst.exists():
+              assert dst.read_bytes()==src.read_bytes()
+          else:
+              dst.write_bytes(src.read_bytes())
+          for role in ("client","server"):
+              dest=donor/("cmd/wbd-v4-"+role)
+              dest.mkdir(parents=True,exist_ok=True)
+              (dest/"main.go").write_bytes((root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
+          assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
+          print("M0_PLAN028_H1376_ORIGINAL_GO_TLS_SOURCE_ASSEMBLED arch="+os.environ["EXPECTED_ARCH"]+" source="+os.environ["GITHUB_SHA"],flush=True)
+          PY
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record >fixed-kernel-result/rust-build.log 2>&1 || {
+            tail -110 fixed-kernel-result/rust-build.log >&2
+            exit 1
+          }
+          cp target/release/libwbd_engine.so fixed-build/
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers)$' ./internal/realityfront) >fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope$' ./internal/v4productcli) >>fixed-kernel-result/plan028-h1151-protected-policy-unit.log 2>&1 || {
+            tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
+            exit 1
+          }
+          for marker in \
+            "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" \
+            "--- PASS: TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy" \
+            "--- PASS: TestR0V4ActualProtectedPeerHandshakeAllCiphers" \
+            "--- PASS: TestPLAN028OriginalPublicRecordCipherClientScope";do
+            grep -Fq -- "$marker" fixed-kernel-result/plan028-h1151-protected-policy-unit.log
+          done
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("fixed-build")
+          assert platform.machine()==os.environ["EXPECTED_ARCH"]
+          sha={}
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/name).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==int(os.environ["EXPECTED_ELF"]),name
+              sha[name]=hashlib.sha256(b).hexdigest()
+          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
+             "architecture":"native_"+os.environ["EXPECTED_ARCH"],"go":"1.23.12","rust":"1.85.1",
+             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
+          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("M0_PLAN028_H1376_NATIVE_GO_RUST_REAL_BINARY_BUILD_PASS arch="+os.environ["EXPECTED_ARCH"],flush=True)
+          PY
+      - name: Original Go protected-account map negative policy tests (no simulated product PASS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028ServerAccountBoundManualLeaseOnlyAfterAuth$' ./internal/realityfront) >fixed-kernel-result/manual-map-policy-tests.log 2>&1 || {
+            tail -120 fixed-kernel-result/manual-map-policy-tests.log >&2;exit 1;
+          }
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028AccountBoundManualLeaseConfig$' ./internal/v4productcli) >>fixed-kernel-result/manual-map-policy-tests.log 2>&1 || {
+            tail -120 fixed-kernel-result/manual-map-policy-tests.log >&2;exit 1;
+          }
+          grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig' fixed-kernel-result/manual-map-policy-tests.log
+          grep -Fq -- '--- PASS: TestPLAN028ServerAccountBoundManualLeaseOnlyAfterAuth' fixed-kernel-result/manual-map-policy-tests.log
+          grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/duplicate' fixed-kernel-result/manual-map-policy-tests.log
+          grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/cross-account' fixed-kernel-result/manual-map-policy-tests.log
+          grep -Fq -- '--- PASS: TestPLAN028AccountBoundManualLeaseConfig/outside-subnet' fixed-kernel-result/manual-map-policy-tests.log
+          echo "M0_PLAN028_H1376_ACCOUNT_MANUAL_LEASE_AFTER_REAL_CREDENTIAL_AUTH_POLICY_UNIT_PASS"
+      - name: Two genuine original Go TLS443 and Rust M4 clients per-account real manual kernel TUN, A Stop B survives
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$EXPECTED_ARCH" && test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          bash -n tools/m0-plan028-h1376-two-manual-accounts-original-native.sh
+          bash tools/m0-plan028-h1376-two-manual-accounts-original-native.sh fixed-build             >fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log 2>&1 || {
+              tail -150 fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_H1376_TWO_REAL_AUTH_MANUAL_ACCOUNTS_ORIGINAL_TLS443_RUST_TUN_STOP_PASS" fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+          grep -Fq "M0_PLAN028_H1376_ORIGINAL_GO_TLS_MANUAL_ACCOUNT_MAP_A_B_AND_B_AFTER_A_STOP_PASS" fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          b=pathlib.Path("fixed-build"); m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="native_"+os.environ["EXPECTED_ARCH"]
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              blob=(b/n).read_bytes()
+              assert blob[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",blob,18)[0]==int(os.environ["EXPECTED_ELF"])
+              assert hashlib.sha256(blob).hexdigest()==m["sha256"][n]
+          result=json.loads(pathlib.Path("fixed-kernel-result/h1376-original-two-manual-accounts.json").read_text())
+          assert result["real_UDP_echoes"]==59 and result["actual_tls_sessions"]==3
+          assert result["real_client_kernel_TUN_addresses"]==["10.66.0.2","10.66.0.3"]
+          assert result["A_to_A_plus_B_to_B_then_A_reauth_and_stop"] and result["original_exact_all_client_Stop"]
+          assert result["server_exact_shared_tun_Stop"] and result["server_unrouted"]==0 and result["server_backpressure"]==0
+          assert result["windows_two_signed_authenticated_product_clients"]=="NOT_RUN"
+          print("M0_PLAN028_H1376_NATIVE_ORIGINAL_GO_TLS443_TWO_AUTHENTICATED_ACCOUNT_MANUAL_LEASE_AND_STOP_PASS arch="+os.environ["EXPECTED_ARCH"],flush=True)
+          PY
+          cat fixed-kernel-result/h1376-original-two-manual-accounts.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1378-${{ matrix.arch }}-original-two-authenticated-manual-leases-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/assembly.json
+            fixed-kernel-result/manual-map-policy-tests.log
+            fixed-kernel-result/plan028-h1376-auth-manual-two-real-clients.log
+            fixed-kernel-result/h1376-original-two-manual-accounts.json
+            fixed-kernel-result/h1376-alice-native-tun-ip.json
+            fixed-kernel-result/h1376-bob-native-tun-ip.json
+          if-no-files-found: warn
+          retention-days: 30
