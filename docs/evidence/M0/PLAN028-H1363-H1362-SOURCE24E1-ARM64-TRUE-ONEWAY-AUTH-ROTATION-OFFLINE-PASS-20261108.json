@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1363",
+  "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+  "result": "PASS_SCOPED_OFFLINE_H1362_NATIVE_ARM64_TWO_TRUE_COLD_NORMAL_AND_GAME4_HOT",
+  "qualification": "PASS_SCOPED_NATIVE_ARM64_ONEWAY_TWO_AUTH_OWNER_TURNS_30PCT125MS",
+  "artifact_verified": true,
+  "original_native_run": {
+    "id": 42447434096,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42447434096",
+    "conclusion": "failure",
+    "native_job": 128629240572,
+    "preflight_job": 128629209198,
+    "product_source": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+    "wrapper_source": "9d73de5c49e839d0ea707945540c36fa05748ac5",
+    "real_original_180s_network_app_and_Stop": "COMPLETE",
+    "original_general_rapid_report": "PASS_ALL_FIVE_SCOPED alerts0",
+    "failure_reason": "Post-run audit shadowed plan specialization variable spec with one client loop variable, resulting KeyError wrapper_source in return expression, after all real owner, app and Stop checks computed."
+  },
+  "original_raw_archive": {
+    "id": 13604660878,
+    "url": "https://github.com/lly866/wbd-next/actions/runs/42447434096/artifacts/13604660878",
+    "zip_sha256": "012bfd541c2f621c73e8df900eed34536040aaac7be74fc76842b895ca35f823",
+    "file_count": 35,
+    "crc": "PASS"
+  },
+  "offline_success": {
+    "id": 42447846208,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42447846208",
+    "conclusion": "success",
+    "job": 128630471550,
+    "artifact_id": 13604740958,
+    "artifact_zip_sha256": "aa1edc7d8af5acff944e521dd7915de1c6e1d7a3584ac7ed7b64c99eff6e1cc7",
+    "artifact_file_count": 2,
+    "crc": "PASS",
+    "network_rerun": false,
+    "original_CI_status_preserved": "failure"
+  },
+  "original_source": {
+    "Go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_both_ends": "Linux aarch64 real original Go TLS443 and Rust M4 five authenticated users + server",
+    "fixed_native_ARM_ELF183_sha_manifest": "PASS",
+    "product_data_plane_modified": false
+  },
+  "workload": {
+    "original_application_seconds": 180,
+    "app_10ms_bins_including_drain": 19001,
+    "original_TLS_server_port": 443,
+    "original_user_count": 5,
+    "actual_true_physical_loss_pct": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "actual_oneway_delay_ms": [
+      0,
+      15,
+      50,
+      100,
+      125
+    ],
+    "native_Erin_kernel_qdisc_actual_loss_pct": {
+      "uplink": 30.033,
+      "downlink": 30.279
+    },
+    "native_Erin_kernel_qdisc_dropped_packets": {
+      "uplink": 30283,
+      "downlink": 2449
+    },
+    "test_only_native_static_ARP": "10/10 PERMANENT",
+    "auth_timer_seconds": [
+      97,
+      101,
+      103,
+      89,
+      107
+    ],
+    "strict_user_app_direction_by_client": {
+      "alice": "uplink",
+      "bob": "downlink",
+      "carol": "uplink",
+      "dave": "downlink",
+      "erin": "uplink"
+    },
+    "reverse_user_UDP_TCP_probe_per_client": 0,
+    "peak_true_inner_app_mbps": {
+      "uplink": 5.85,
+      "downlink": 4.05
+    }
+  },
+  "original_real_owner": {
+    "alice": {
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "native_reverse_user_rx_for_new": [
+        0,
+        0
+      ],
+      "authenticated_original_M4_Health_both": [
+        1,
+        1
+      ],
+      "old_route_revoked_after_proof_both": [
+        1,
+        1
+      ],
+      "server_M4_commits": 3
+    },
+    "bob": {
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "server_M4_commits": 3
+    },
+    "carol": {
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ]
+    },
+    "dave": {
+      "owner": "one Game4 lane not whole group",
+      "server_confirmed_hot_lanes": [
+        {
+          "lane": 1,
+          "global_cycle": 1,
+          "new_original_port": 59881
+        },
+        {
+          "lane": 2,
+          "global_cycle": 2,
+          "new_original_port": 51421
+        }
+      ],
+      "healthy_sibling_lanes_not_restarted": 3
+    },
+    "erin": {
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "native_reverse_user_rx_for_new": [
+        0,
+        0
+      ],
+      "authenticated_original_M4_Health_both": [
+        1,
+        1
+      ],
+      "old_route_revoked_after_proof_both": [
+        1,
+        1
+      ],
+      "server_M4_commits": 3
+    }
+  },
+  "original_true_oneway_application": [
+    {
+      "client": "alice",
+      "direction": "uplink",
+      "actual_udp_app_sent_bytes": 38124800,
+      "received_bytes": 38124800,
+      "unique_delivery_fraction": 1,
+      "maximum_active_sender_no_rx_ms": 0
+    },
+    {
+      "client": "bob",
+      "direction": "downlink",
+      "actual_udp_app_sent_bytes": 38124800,
+      "received_bytes": 38122496,
+      "unique_delivery_fraction": 0.99994,
+      "maximum_active_sender_no_rx_ms": 10
+    },
+    {
+      "client": "carol",
+      "direction": "uplink",
+      "actual_udp_app_sent_bytes": 30500864,
+      "received_bytes": 30406144,
+      "unique_delivery_fraction": 0.996895,
+      "maximum_active_sender_no_rx_ms": 50
+    },
+    {
+      "client": "dave",
+      "direction": "downlink",
+      "actual_udp_app_sent_bytes": 30500864,
+      "received_bytes": 30482688,
+      "unique_delivery_fraction": 0.999404,
+      "maximum_active_sender_no_rx_ms": 100
+    },
+    {
+      "client": "erin",
+      "direction": "uplink",
+      "actual_udp_app_sent_bytes": 30500864,
+      "received_bytes": 29802240,
+      "unique_delivery_fraction": 0.977095,
+      "maximum_active_sender_no_rx_ms": 120
+    }
+  ],
+  "native_guest_four_vcpu_busy_mean_pct_by_phase": [
+    10.21,
+    13.95,
+    16.07,
+    14.33
+  ],
+  "hottest_core_mean_pct_by_phase": [
+    10.25,
+    14.58,
+    16.31,
+    14.75
+  ],
+  "hard_gates": {
+    "original_generic_report_alerts": 0,
+    "original_generic_report_rotation": "PASS_ALL_FIVE_SCOPED",
+    "all_five_native_client_final_Stop": true,
+    "server_final_shared_TUN_Stop": true,
+    "per_lease_queue_overflow": 0,
+    "app_or_owner_faults": [],
+    "generator_capacity_exceeded": [],
+    "guest_near_limit": []
+  },
+  "scope_limits": [
+    "Native ARM64 exact SOURCE24e one 180s strict one-way active rotation case: does not retroactively alter older SOURCEe61b H1317 genuine 96.14/91.83s FAIL or source4c12 H1319 scoped positive",
+    "Original H1362 CI FAIL retained despite complete original 35 file native app/Stop; H1363 only offline raw audit with one post-run key correction, no new network",
+    "Configured 0/1/5/15/30 pct physical veth and individual lease; not an independent real WAN, Windows two native Wintun devices, Android or L3 1800s test",
+    "Physical packet loss causes expected incomplete business, not zero delivery contract; full MTU/driver/sleep/hot-path L1 still OPEN"
+  ]
+}

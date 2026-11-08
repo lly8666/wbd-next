@@ -26,7 +26,8 @@
   "doc_refs": [
     "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json",
     "docs/devlog/arm64-main-integration-20261022.md",
-    "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json",
+    "docs/evidence/M0/PLAN028-H1363-H1362-SOURCE24E1-ARM64-TRUE-ONEWAY-AUTH-ROTATION-OFFLINE-PASS-20261108.json"
   ],
   "verification": [
     {
@@ -56,6 +57,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
       "evidence": "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json"
+    },
+    {
+      "platform": "native Linux ARM64 both real original Go TLS443/Rust M4",
+      "scope": "H1362 exact source24e five authentic 180s strict 1-way 30%125ms user app with true 2 cold Normal owner changes using authenticated Health and two independently server-confirmed Game4 hot lane changes, no >=750ms active gaps, all owned Stop; original CI FAIL reporter field shadow, H1363 offline raw scoped PASS.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+      "evidence": "docs/evidence/M0/PLAN028-H1363-H1362-SOURCE24E1-ARM64-TRUE-ONEWAY-AUTH-ROTATION-OFFLINE-PASS-20261108.json"
     }
   ],
   "limitations": [
