@@ -46,6 +46,7 @@ type V4LinuxServerProductConfig struct {
     // The exact server-provisioned manual /32 is protected in the existing
     // authenticated reply, never selected by an untrusted client field.
     ManualLease4 string
+    ManualLeases4 map[string]string // immutable account binding, looked up after credential auth
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
@@ -137,7 +138,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
         Authenticate:p.cfg.Authenticate,
         AllowLaneReplacement:p.cfg.AllowLaneReplacement,
-        ManualLease4:p.cfg.ManualLease4,
+        ManualLease4:p.cfg.ManualLease4,ManualLeases4:p.cfg.ManualLeases4,
         fec2Product:v4ProductFecEnabled(mode)||p.cfg.PerClientNormalFEC,
         perClientNormalFEC:p.cfg.PerClientNormalFEC,
         NormalFec:normalProfile,

@@ -239,6 +239,7 @@ type V4ServerOptions struct {
     // A server-owned, explicit manual /32 used ONLY for protected new
     // generation replacement. Never obtained from client-supplied IP.
     ManualLease4 string
+    ManualLeases4 map[string]string // server-owned, authenticated account -> /32, never wire-supplied
     // Cold V4 only: optional server account roster, checked AFTER real TLS
     // protected request and BEFORE any epoch/lease/native owner reservation.
     // Nil uses original exact ExpectedUsername/ExpectedPassword pair.
@@ -259,6 +260,16 @@ func v4ServerCheckedManualLease4(s string,auto bool)(string,error){
         return "",ErrAdmissionParams
     }
     return p.String(),nil
+}
+// The genuine protected username chooses this server-owned manual /32 only
+// AFTER the existing credential check. No outer source tuple or unauthenticated
+// packet may select a route, lease, or native owner.
+func v4ServerSelectedManualLease4(single string,byAccount map[string]string,username string,auto bool)(string,error){
+    if len(byAccount)==0{return v4ServerCheckedManualLease4(single,auto)}
+    if single!=""||auto{return "",ErrAdmissionParams}
+    requested,ok:=byAccount[username]
+    if !ok||requested==""{return "",ErrAdmissionParams}
+    return v4ServerCheckedManualLease4(requested,false)
 }
 type V4ClientSession struct {
     *ClientAdmissionSession
@@ -882,7 +893,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     // commits only after protected reply and DetachTransition both succeed.
     defer finish(false)
     lease:=""
-    manualLease,manualErr:=v4ServerCheckedManualLease4(opt.ManualLease4,req.AutoLease)
+    manualLease,manualErr:=v4ServerSelectedManualLease4(opt.ManualLease4,opt.ManualLeases4,req.Username,req.AutoLease)
     if manualErr!=nil{
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,manualErr

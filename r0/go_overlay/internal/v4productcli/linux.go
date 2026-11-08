@@ -88,6 +88,7 @@ type config struct{
     username string
     password string
     users map[string]string
+    manualClientLeases4 map[string]string // authenticated account -> server-owned unique /32
     tunnel [16]byte
     autoIP bool
     installation [16]byte
@@ -154,6 +155,7 @@ func parse(role string,args []string)(config,error){
     leasePool:=flags.String("lease-pool","","server memory-only 7-day IPv4 pool CIDR")
     manualLease:=flags.String("manual-client-lease4","","server-verified fixed client /32 for manual TLS generation replacement; requires tunnel-id, not a user inner MTU")
     usersFile:=flags.String("users-file","","server: 0600 JSON object username->password")
+    manualLeasesFile:=flags.String("manual-client-leases-file","","server mode-0600 JSON username->unique /32 bound only after protected auth")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4; server-only shared accepts all protected modes")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
@@ -189,6 +191,27 @@ func parse(role string,args []string)(config,error){
         for username,password:=range c.users{
             if len(username)<1||len(username)>128||strings.TrimSpace(username)!=username||
                len(password)<1||len(password)>512{return c,fmt.Errorf("invalid users-file credentials")}
+        }
+    }
+    if *manualLeasesFile!=""{
+        if role!="server"||*leasePool!=""||*manualLease!=""||*usersFile==""{
+            return c,fmt.Errorf("manual-client-leases-file requires users-file and no other lease mode")
+        }
+        raw,e:=readPrivateArgFile(*manualLeasesFile)
+        if e!=nil{return c,fmt.Errorf("manual-client-leases-file: %w",e)}
+        if e=json.Unmarshal([]byte(raw),&c.manualClientLeases4);e!=nil||
+            len(c.manualClientLeases4)==0||len(c.manualClientLeases4)!=len(c.users){
+            return c,fmt.Errorf("manual-client-leases-file must cover each configured authenticated user")
+        }
+        seen:=make(map[netip.Addr]bool,len(c.manualClientLeases4))
+        for username,lease:=range c.manualClientLeases4{
+            if _,ok:=c.users[username];!ok{return c,fmt.Errorf("manual lease account not in protected roster")}
+            p,e:=netip.ParsePrefix(lease)
+            if e!=nil||!p.Addr().Is4()||p.Bits()!=32||p.String()!=lease||
+                p.Addr().IsUnspecified()||p.Addr().IsMulticast()||
+                p.Addr().IsLoopback()||p.Addr().IsLinkLocalUnicast()||
+                seen[p.Addr()]{return c,fmt.Errorf("manual lease must be unique canonical IPv4 /32")}
+            seen[p.Addr()]=true
         }
     }
     switch *mode{
@@ -278,7 +301,7 @@ func parse(role string,args []string)(config,error){
             }
             c.manualClientLease4=p
         }
-    }else if *usersFile!=""||*leasePool!=""||*manualLease!=""{
+    }else if *usersFile!=""||*leasePool!=""||*manualLease!=""||*manualLeasesFile!=""{
         return c,fmt.Errorf("users-file/lease-pool/manual-client-lease4 server-only")
     }
     c.fecProfile=realityfront.FecV2Profile(*profile)
@@ -326,7 +349,7 @@ func parse(role string,args []string)(config,error){
         if e!=nil||len(raw)!=16{return c,fmt.Errorf("invalid manual tunnel-id")}
         copy(c.tunnel[:],raw)
     }
-    if c.tunnel==[16]byte{}&&!(role=="server"&&c.leasePool.IsValid()){
+    if c.tunnel==[16]byte{}&&!(role=="server"&&(c.leasePool.IsValid()||len(c.manualClientLeases4)>0)){
         return c,fmt.Errorf("manual tunnel-id required without auto-IP/lease-pool")
     }
     if role=="server"{
@@ -345,6 +368,14 @@ func parse(role string,args []string)(config,error){
         if !tunPrefix.Contains(c.manualClientLease4.Addr())||
            c.manualClientLease4.Addr()==tunPrefix.Addr(){
             return c,fmt.Errorf("manual client /32 must be distinct from server TUN IPv4 inside its owned subnet")
+        }
+    }
+    if role=="server"&&len(c.manualClientLeases4)>0{
+        for _,lease:=range c.manualClientLeases4{
+            p,e:=netip.ParsePrefix(lease)
+            if e!=nil||!tunPrefix.Contains(p.Addr())||p.Addr()==tunPrefix.Addr(){
+                return c,fmt.Errorf("manual per-account /32 must be inside owned TUN subnet, excluding server")
+            }
         }
     }
     if role=="server"&&c.leasePool.IsValid(){
@@ -1245,7 +1276,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     coldReauth bool,connected *bool)(retErr error){
     if epochs==nil{return realityfront.ErrAdmissionParams}
-    if leases!=nil||c.manualClientLease4.IsValid(){
+    if leases!=nil||c.manualClientLease4.IsValid()||len(c.manualClientLeases4)>0{
         return runSharedMultiServer(ctx,c,ifindex,tun,raw,emit,leases,epochs,connected)
     }
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
@@ -1454,8 +1485,9 @@ func runSharedMultiServer(
     connected *bool,
 )(retErr error){
     if epochs==nil||connected==nil||
-        (leases==nil&&!c.manualClientLease4.IsValid())||
-        (leases!=nil&&c.manualClientLease4.IsValid()){
+        (leases==nil&&!c.manualClientLease4.IsValid()&&len(c.manualClientLeases4)==0)||
+        (leases!=nil&&(c.manualClientLease4.IsValid()||len(c.manualClientLeases4)>0))||
+        (c.manualClientLease4.IsValid()&&len(c.manualClientLeases4)>0){
         return realityfront.ErrAdmissionParams
     }
     trustedManualLease:=""
@@ -1580,7 +1612,7 @@ func runSharedMultiServer(
             // Only real authenticated auto-lease server sessions reach
             // this path; old manual/standalone duplicate lane stays DENY.
             AllowLaneReplacement:true,
-            ManualLease4:trustedManualLease,
+            ManualLease4:trustedManualLease,ManualLeases4:c.manualClientLeases4,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             // One authenticated peer cannot mutate a sibling's TUN MTU.
             // The original Rust per-session record/route budgets still apply.

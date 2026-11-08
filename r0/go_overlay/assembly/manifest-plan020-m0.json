@@ -1064,13 +1064,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "404c9e56d6f982d404d10eb2680bdabdc6ec4c7e"
+      "result_blob": "4b9bd7234f598a8c251e33bbdf0a0d161676a4b3"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "a99c1647886e84e06cea1d914b3cab8814f3833a"
+      "result_blob": "c0b31d02f6c764d443b0bcf03d0bb7bc767e2cc4"
     },
     {
       "kind": "replace",
