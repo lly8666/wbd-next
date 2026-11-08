@@ -1,4 +1,4 @@
-"""Source-locked G2 authority gate must distinguish live rev3 from frozen M4."""
+"""Source-locked G2 authority gate distinguishes authorized rev4 from frozen M4."""
 import importlib.util
 import json
 import os
@@ -18,7 +18,7 @@ class G2IdentityTests(unittest.TestCase):
         self.old=os.getcwd()
         os.chdir(self.temp.name)
         self.p=Path(self.temp.name)
-        self.registry={"reservation_revision":3,"roles":[
+        self.registry={"reservation_revision":4,"roles":[
             {"id":"M0","state":"active","branch":"main","assignment_epoch":1,"global_writer":True},
             *[{"id":x,"state":"active","assignment_epoch":1,"global_writer":False} for x in ("M1","M2","M3")],
             {"id":"M4","state":"reserved","assignment_epoch":2,"allowed_paths":[],"owned_semantics":[]},
@@ -27,7 +27,7 @@ class G2IdentityTests(unittest.TestCase):
             p=self.p/f".governance/workstreams/{role['id']}/cursor.json"
             p.parent.mkdir(parents=True,exist_ok=True)
             p.write_text(json.dumps({"role_id":role["id"],"assignment_epoch":1,
-                  "reservation_revision":2 if role["id"]!="M0" else 3}))
+                  "reservation_revision":2 if role["id"]!="M0" else 4}))
         lock=self.p/"r0/source-lock.json"
         lock.parent.mkdir(parents=True)
         lock.write_text(json.dumps({"rust":{"crates":list(
@@ -41,7 +41,7 @@ class G2IdentityTests(unittest.TestCase):
         self.temp.cleanup()
     def save(self):
         (self.p/".governance/registry.json").write_text(json.dumps(self.registry))
-    def test_rev3_active_three_and_frozen_m4_accepted(self):
+    def test_rev4_active_three_and_frozen_m4_accepted(self):
         g2.identity()
     def test_m4_old_active_lease_rejected(self):
         m4=self.registry["roles"][-1]
@@ -54,9 +54,14 @@ class G2IdentityTests(unittest.TestCase):
         self.save()
         with self.assertRaisesRegex(ValueError,"G2 registry revision"):
             g2.identity()
+    def test_stale_rev3_global_lease_rejected(self):
+        self.registry["reservation_revision"]=3
+        self.save()
+        with self.assertRaisesRegex(ValueError,"G2 registry revision"):
+            g2.identity()
     def test_main_worker_snapshot_future_revision_rejected(self):
         p=self.p/".governance/workstreams/M2/cursor.json"
-        d=json.loads(p.read_text());d["reservation_revision"]=4;p.write_text(json.dumps(d))
+        d=json.loads(p.read_text());d["reservation_revision"]=5;p.write_text(json.dumps(d))
         with self.assertRaisesRegex(ValueError,"active cursor snapshot"):
             g2.identity()
     def test_frozen_m4_cursor_rewrite_rejected(self):

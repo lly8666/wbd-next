@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1401,
-  "checkpoint_sha": "e69e40f3e6da2236542d4cac9fe060f840f39c43",
+  "sequence": 1402,
+  "checkpoint_sha": "d2d516a1963a019afe6515c082836b578b5acd72",
   "progress": "in_progress",
   "task_id": "PLAN028-M0-H1399-WIN-FEC-CALLER-H1398-ARM-BLACKHOLE-RAW",
-  "current_task": "H1398 original ARM64 Game4 8.012s true 100% correlated blackhole functional PASS_SCOPED now confirmed by independent no-network Action42483793828 source e69: original stdout contains actual kernel qdisc drops uplink26109 downlink26197, original true UDP Dave zero during blackhole, both 141ms after restore, four sibling clients continuous, all five exact Stop, no queue overflow; H1395 old missing standalone JSON verdict and original Action FAIL retained. H1399 source e69 Windows original FEC unit call corrected, native build and signed single Wintun product Action42483793673 still in-flight; source98 previous Actions standalone Win WAL E0277 compile FAIL vs genuine product NOT_RUN. G2 standalone historical rev3 registry guard now exact authorized rev4, original rev2 M4 cursor still frozen.",
-  "why_now": "H1398 independent original raw console proof is now complete and user expressly authorizes scoped functional PASS despite missing standalone JSON, with old CI FAIL preserved. G2 repeatedly reports false governance revision mismatch because script pinned rev3 while authoritative registry rev4, a one-line unrelated CI guard fix avoids repeated noise.",
+  "current_task": "H1398 original ARM64 Game4 common underlay recovery PASS_SCOPED via original kernel stdout and H1398 Action42483793828 already archived; user-requested external false-negative separation done. H1399 source e69 complete Windows owner FEC native test caller corrected; Windows original Go/Rust/Npcap/Wintun Action42483793673 still building original Linux peer, Windows WAL Action42483793718 still running. G2 rev4 actual bootstrap Action42484008957 build+consume PASS; governance maintenance Action42484008956 FAIL only from its own old rev3 synthetic fixture; H1400 adjust exact fixture to rev4, test invalid rev3/future5, preserve M4 revoked original rev2 cursor.",
+  "why_now": "Authorized registry rev4 G2 implementation was fixed, but tests/test_g2_bootstrap_identity.py still uses fake rev3 as supposed valid and fake rev4 as invalid; user demands efficient externally caused false negatives, so align only deterministic fixture.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect native Windows source e69 actual Action42483793673 + one original signed Npcap/Wintun Game4FEC source lock; verify actual Windows backend native and real two-OS TLS/data/Stop if reaches scene. If not, target earliest stage separately. New G2 native bootstrap proof auto-triggered by guarded script only; no network test rerun. Then Windows single-instance + truly independent Linux co-client server isolation and other L1/L2 gaps; H998 original same-socket PMTU remains.",
+  "next_action": "Collect Windows original source e69 two in-flight Actions and native ISA-L Game4FEC release/runtime/driver/TLS/data/Stop. Collect one automatic governance test result for current fixture; no network re-dispatch. Then prioritize single Windows VPN + separate Linux co-client service isolation; current L3 ARM qualification reuse and existing prior FAIL retained.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -33,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1398 original ARM64 true 8s common 100% Game4 veth blackhole completed formal offline Action42483793828 PASS_SCOPED (event actual console kernel clocks/drops; artifact standalone JSON omission external only), source24e1 original Action FAIL retained; original 5 Stop and 141ms recovery true. H1399 source e69 Windows original FEC native valid return ABI unit correction Action in progress, no product verdict yet. G2 registry revision authorized4 vs historical script3 fixed only; PLAN028 IN_PROGRESS."
+  "partial_summary": "G2 actual rev4 five-crate proof source d2 passed both native jobs; governance synthetic regression failed because fixture still rev3, now updated true rev4/missing unauthorized rev3/future5. Original Windows e69 native signed product Action still pending. H1398 original ARM64 Game4 blackhole functional pass with original console kernel evidence under user false CI rule, exact raw standalone event JSON absent, original Action FAIL unchanged. PLAN028 IN_PROGRESS."
 }
