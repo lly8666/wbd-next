@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "e69e40f3e6da2236542d4cac9fe060f840f39c43",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 42483793718,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42483793718",
+    "conclusion": "success",
+    "jobs": "build and five scoped real TLS Wintun per-mode independently SUCCESS"
+  },
+  "functional_scope": "PASS_SCOPED_ORIGINAL_GO_CREDENTIAL_TLS_RUST_AEAD_SIGNED_WINTUN_NATIVE_KERNEL_TO_ACTUAL_UDP_APP",
+  "actual_artifacts": [
+    {
+      "mode": "normal",
+      "artifact_id": 13619051474,
+      "zip_sha256": "c46fdc560bab7f986c948413de3c616613424b4d9091adc285951e65f130bbfd",
+      "zip_crc": "PASS",
+      "files": 2,
+      "real_Go_TLS_Rust_Wintun_kernel_to_app_markers": 2,
+      "scope": "true TLS/Rust signed Wintun M3 duplex, PN+AEAD tamper and replay denied, exact scoped native stop",
+      "classification": "PASS_SCOPED"
+    },
+    {
+      "mode": "fixed",
+      "artifact_id": 13619101391,
+      "zip_sha256": "457fdb187e3c41990dfe485025614262f25e906cdacb320a626722f5e6e8353c",
+      "zip_crc": "PASS",
+      "files": 2,
+      "real_Go_TLS_Rust_Wintun_kernel_to_app_markers": 3,
+      "scope": "authenticated source+parity original RS16 recovers missing source, signed Wintun real kernel UDP",
+      "classification": "PASS_SCOPED"
+    },
+    {
+      "mode": "auto",
+      "artifact_id": 13618009493,
+      "zip_sha256": "51a7ad90b1e8d7a8abadc2ec7a13ed2ec5d2d6592147d42184df8ee4998de5bb",
+      "zip_crc": "PASS",
+      "files": 2,
+      "real_Go_TLS_Rust_Wintun_kernel_to_app_markers": 3,
+      "scope": "authenticated source+parity original RS16 recovers missing source, signed Wintun real kernel UDP; adaptive M2 applied NOT_RUN",
+      "classification": "PASS_SCOPED"
+    },
+    {
+      "mode": "game2",
+      "artifact_id": 13618667878,
+      "zip_sha256": "3e99fd5ecd6351ad6ccdc2a128b4daa6a51a8208cbf9f4ea9ae61d0d80fac63e",
+      "zip_crc": "PASS",
+      "files": 2,
+      "real_Go_TLS_Rust_Wintun_kernel_to_app_markers": 2,
+      "scope": "original two protected Game lanes, lane1 blocked, real signed-Wintun first/reverse UDP and scoped Stop",
+      "classification": "PASS_SCOPED"
+    },
+    {
+      "mode": "game4",
+      "artifact_id": 13618852301,
+      "zip_sha256": "efab11fb0746fb300713c840377a7cb781fc4831d0ec80cd5d143b4dda6fc8f2",
+      "zip_crc": "PASS",
+      "files": 2,
+      "real_Go_TLS_Rust_Wintun_kernel_to_app_markers": 2,
+      "scope": "original four protected Game lanes, lane1 blocked, real signed-Wintun first/reverse UDP and scoped Stop",
+      "classification": "PASS_SCOPED"
+    }
+  ],
+  "strict_exclusions": {
+    "sustained_10mbps": "NOT_RUN",
+    "official_public_mode_OS_applied": "NOT_RUN",
+    "host_global_WFP": "NOT_RUN",
+    "physical_auto_network_changes": "NOT_RUN",
+    "all_seven_public_modes": "NOT_RUN_IN_THIS_FIVE_MODE_ACTION",
+    "two_authenticated_rotations_per_mode": "NOT_RUN",
+    "product_release_ISAL_actual_native_quanta": "NOT_MEASURED_IN_THESE_FIVE_TINY_TRIALS"
+  },
+  "related_windows_public_single_fec": {
+    "action_id": 42483793673,
+    "source_sha": "e69e40f3e6da2236542d4cac9fe060f840f39c43",
+    "original_CI": "FAIL_EARLY_RETIRE_ORACLE",
+    "status": "2 original TLS/Rust four-lane groups and two OS Applied true; second-gen true business/old server grace retirement not fully observed before harness abort; do not count full pass",
+    "original_failure_retained": true
+  },
+  "boundaries": [
+    "Separate pure native Windows signed Wintun short packet tests are not Windows+independent-Linux shared server multi-client integration",
+    "No same-machine dual-Windows product feature assumed",
+    "Only authenticated original TLS to actual Wintun packet proof, not all performance and final Stop criteria"
+  ],
+  "plan028": "IN_PROGRESS"
+}

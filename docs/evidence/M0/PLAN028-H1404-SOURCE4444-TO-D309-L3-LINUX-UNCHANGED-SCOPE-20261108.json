@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "result": "LINUX_NATIVE_L3_PASS_SCOPED_REUSABLE_SOURCE_DELTA_ONLY_NOT_WINDOWS_FEC",
+  "verified_source_compare": {
+    "base": "4444328d7437787c461c52d29578c1908c82c8a0",
+    "target": "d30936077ca44f176d62ee84a46ed673b7c9de92",
+    "status": "ahead",
+    "delta_commits": 10,
+    "actual_product_rust_changed": [
+      "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
+    ],
+    "original_Go_product_changed": [],
+    "Linux_native_Game_FEC_and_owner_changed": [],
+    "original_Linux_runtime_entry_changed": [],
+    "other_changes": "GitHub workflow native build/test only; Python original network auditors/Windows test fixture; governance/devlog/evidence; no further Linux executable Go/Rust data-plane diff"
+  },
+  "actual_original_l3": {
+    "action_id": 42475419721,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42475419721",
+    "source_sha": "4444328d7437787c461c52d29578c1908c82c8a0",
+    "two_independent_native_aarch64_runner_1800s": true,
+    "baseline": {
+      "result": "PASS_SCOPED",
+      "max_active_app_gap_ms": 50,
+      "alerts": 0
+    },
+    "heterogeneous": {
+      "result": "PASS_SCOPED",
+      "max_active_app_gap_ms": 120,
+      "alerts": 0,
+      "erin_netem_ul_pct": 30.0034,
+      "erin_netem_dl_pct": 30.0223
+    },
+    "original_all_client_auth_rotations_and_Stop": true,
+    "original_linked_ISAL_game4_quanta_gt_zero": true,
+    "ten_original_test_only_veth_neighbours_PERMANENT_before_after": true,
+    "original_zip_crc": "PASS_ALL"
+  },
+  "limitations": [
+    "Linux ARM64 original product code unchanged between compared SOURCE, but tested old SOURCE manifest hash must be preserved; do NOT claim rebuilt newer binaries tested",
+    "Windows FEC owner changed and must have native Windows ABI, driver and actual product qualification; no cross-OS performance equivalence",
+    "Original H1389 dynamic-ARP 3310/3320ms app gaps retain original FAIL; cause not proven ARP alone",
+    "L3 two 1800s UDP-heavy five-client workload doesn't prove every L1 TCP size, OS and route event; do not close PLAN028 on this alone",
+    "Same-socket legacy H998 hot PMTU old FAIL; user physical WAN and Android NOT_RUN"
+  ],
+  "plan028": "IN_PROGRESS"
+}
