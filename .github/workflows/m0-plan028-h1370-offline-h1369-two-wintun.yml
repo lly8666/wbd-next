@@ -1,0 +1,54 @@
+name: M0 PLAN028 H1370 original Windows H1369 two signed Wintun OFFLINE independent audit
+run-name: PLAN028 H1370 offline replay original H1369 Windows two Wintun app and Stop
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1370-offline-h1369-two-wintun.yml"
+      - "tools/m0-plan028-h1370-offline-h1369-two-wintun.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  offline-original-windows-native-two-driver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42450303401
+          github-token: ${{ github.token }}
+          name: m0-plan028-h1369-two-wintun-42450303401-1
+          path: original-native-raw/
+      - name: Audit only original real Win32 Wintun and UDP/Stop receipts, no network rerun
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1370-offline-h1369-two-wintun.py
+          for name in two-wintun-native.json two-wintun-native.log assembly.json source.json; do test -s original-native-raw/$name; done
+          mkdir -p offline-replay
+          python3 tools/m0-plan028-h1370-offline-h1369-two-wintun.py --art original-native-raw --out offline-replay/h1370-original-win-two-wintun-audit.json | tee offline-replay/h1370-original-audit.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path('offline-replay/h1370-original-win-two-wintun-audit.json').read_text())
+          assert r['original_ci_run']==42450303401 and r['original_ci_conclusion']=='failure'
+          assert r['source_sha']=='5b63dffa62efcfa0642031cc80bd7c902bd46780'
+          assert r['original_artifact_id']==13605785603 and r['network_rerun'] is False
+          assert r['classification']=='PASS_SCOPED_REAL_TWO_SIGNED_WINDOWS_WINTUN_NATIVE_KERNEL_UDP_ISOLATED_STOP_NO_AUTH'
+          assert r['two_original_real_signed_windows_wintun_devices']==2
+          assert r['real_windows_udp_app_A_B_and_B_after_A_stop']
+          assert r['real_windows_udp_reverse_B_after_A_stop']
+          assert r['both_original_native_ring_stop_and_stale_denial']
+          assert r['native_copied_A_B']==[1,2] and r['real_B_ring_received']>=1
+          assert r['original_ci_fail_preserved'] and len(r['unqualified_original_product'])==5
+          print('M0_PLAN028_H1370_ORIGINAL_H1369_REAL_WIN_DUAL_DEVICE_BUSINESS_OFFLINE_PASS_CI_FALSE_RED_PRESERVED')
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1370-original-h1369-offline-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
