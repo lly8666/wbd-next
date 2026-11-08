@@ -1,7 +1,9 @@
 """Fail-fast WSL2 guard regression; pure offline tests, no Windows kernel."""
+import os
 import pathlib
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 
@@ -22,6 +24,31 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertEqual(p.returncode,124,p.stderr)
         self.assertLess(time.monotonic()-start,10)
         self.assertIn("WL_WSL2_COMMAND_TIMEOUT seconds=1",p.stderr)
+
+    def test_1800s_watchdog_opt_in_is_live_and_bounded(self):
+        # The watchdog checks its max *before* the done flag. A pre-existing
+        # sentinel exercises the actual argument parser without a 2600s wait,
+        # network mutation, or a process kill.
+        script=ROOT/"tools"/"m0_wl_windows_step_watchdog.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            done=pathlib.Path(tmp)/"finished.flag"
+            done.write_text("DONE")
+            base=[sys.executable,str(script),"54321"]
+            env=os.environ.copy()
+            env.pop("WBD_PLAN028_WIN_LINUX_L3",None)
+            def run(sec,scope):
+                cfg=env.copy()
+                if scope:cfg["WBD_PLAN028_WIN_LINUX_L3"]="1"
+                return subprocess.run(base+[str(sec),str(done)],
+                    env=cfg,text=True,capture_output=True,timeout=5)
+            self.assertEqual(run(1020,False).returncode,0)
+            self.assertNotEqual(run(2600,False).returncode,0)
+            self.assertEqual(run(2600,True).returncode,0)
+            self.assertNotEqual(run(2601,True).returncode,0)
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("$guard.Refresh()",flow)
+        self.assertIn("if($guard.HasExited)",flow)
+        self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",flow)
 
     def test_owned_linux_pid_script_expands_shell_pid(self):
         # A literal "$" leaves an invalid two-byte PID file after real UDP.

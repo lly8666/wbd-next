@@ -18,7 +18,11 @@ if len(sys.argv)!=4:
 pid=int(sys.argv[1])
 seconds=int(sys.argv[2])
 sentinel=pathlib.Path(sys.argv[3])
-assert 30<=seconds<=1500 and pid>4
+# Standard modes retain their original 1500s hard ceiling. The only
+# authorized 1800s cross-OS native qualification has 2600s outer guard.
+# Reject unmarked 2600s instead of silently starting an unguarded step.
+long_cross_os=os.environ.get("WBD_PLAN028_WIN_LINUX_L3")=="1"
+assert 30<=seconds<=(2600 if long_cross_os else 1500) and pid>4
 deadline=time.monotonic()+seconds
 while time.monotonic()<deadline:
     if sentinel.exists():
