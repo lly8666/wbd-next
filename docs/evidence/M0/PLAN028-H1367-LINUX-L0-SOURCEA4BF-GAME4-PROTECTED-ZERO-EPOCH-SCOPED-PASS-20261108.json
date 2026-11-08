@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1367_ORIGINAL_GAME4_PROTECTED_EPOCH_L0_TAGGED_LINUX",
+  "classification": "PASS_SCOPED_L0_ORIGINAL_GO_TLS_GAME4_PROTECTED_ZERO_EPOCH_VS_SINGLE_HOT_NATIVE_LINUX_UNIT",
+  "native_go_test": "TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane",
+  "native_result": "PASS",
+  "product_source_sha": "a4bfb7237be624442819a45c61c5455d4944e4e4",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 42450177765,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42450177765",
+    "native_job": "success"
+  },
+  "original_artifact": {
+    "id": 13605431584,
+    "name": "m0-plan028-l0-protected-game4-zero-epoch-42450177765-1",
+    "bytes": 6304,
+    "files": 2,
+    "zip_sha256": "5e09cf8ad1c5d01bd1737dd0e7b86749115e0a315991c4344d09a9c1543e72ac",
+    "zip_crc": "PASS_ALL_2",
+    "sources": [
+      "assembly.json",
+      "game4-zero-epoch-exact-test.log"
+    ]
+  },
+  "scope": {
+    "host": "ubuntu-24.04-x86_64-cgo",
+    "go_toolchain": "1.23.12",
+    "rust_toolchain": "1.85.1",
+    "original_go_and_rust_m4_tagged_test": true,
+    "whole_group_zero_epoch_protected_boundary": true,
+    "same_epoch_single_lane_hot_boundary": true,
+    "actual_public_UDP_TCP_online_run": "NOT_RUN",
+    "windows_driver": "NOT_RUN",
+    "game4_1800s": "NOT_RUN"
+  },
+  "original_log": [
+    "=== RUN   TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane",
+    "--- PASS: TestPLAN028Game4ProtectedEpochZeroWholeGroupVsSingleLane (0.00s)",
+    "PASS"
+  ],
+  "source_distinction": "A4BF wrapper+original Linux tagged test, not ARM24e or x866c5 runtime product qualification",
+  "plan028": "IN_PROGRESS"
+}

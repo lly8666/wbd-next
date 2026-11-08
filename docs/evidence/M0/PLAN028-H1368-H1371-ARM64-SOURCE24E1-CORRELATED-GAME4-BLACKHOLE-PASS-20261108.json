@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1368_H1371_ARM64_ORIGINAL_FIVE_AUTH_CLIENTS_ONE_REAL_100PCT_CORRELATED_GAME4_UNDERLAY",
+  "classification": "PASS_SCOPED_NATIVE_ARM64_GAME4_TRUE_SHARED_PHYSICAL_BLACKHOLE_180S_SIBLINGS_RECOVERY",
+  "product_source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+  "wrapper_source_sha": "a4bfb7237be624442819a45c61c5455d4944e4e4",
+  "actual_native_scene": {
+    "host": "ubuntu-24.04-arm-aarch64-native",
+    "platform": "real Linux netns TUN veth tc netem",
+    "original_tls443": true,
+    "original_go_rust_m4": true,
+    "clients": 5,
+    "distinct_authenticated_leases": 5,
+    "shared_server_TUN": true,
+    "game4_original_lanes": 4,
+    "duration_seconds": 180,
+    "all_physical_background_loss_pct": 0,
+    "oneway_ms_by_client": {
+      "alice": 0,
+      "bob": 50,
+      "carol": 100,
+      "dave": 150,
+      "erin": 0
+    },
+    "games_and_fec": [
+      "normal",
+      "fec-auto",
+      "game2",
+      "game4",
+      "fec-fixed"
+    ],
+    "original_turned_owner_timers_s": 600,
+    "timed_rotations": "NOT_TRIGGERED_AS_CONFIGURED",
+    "scalar_backend": "ACTUAL_SELECTED"
+  },
+  "original_action": {
+    "run_id": 42450177745,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42450177745",
+    "reason": "Post-business x86-style auditor requires exactly 18000 10ms bins but original native ARM app writes 19001 including drain; artifact glob excluded original h1353-named physical event JSON, but original event line and kernel qdisc after survived."
+  },
+  "original_raw_artifact": {
+    "id": 13605541335,
+    "name": "plan028-h1368-native-arm64-game4-correlated-blackhole-42450177745",
+    "files": 37,
+    "bytes": 228566,
+    "zip_sha256": "40479161b98ccc6a2363cf7d1a63db9b593a710065fcccd05785d0978a4b78ab",
+    "zip_crc": "PASS_ALL_37"
+  },
+  "offline_original_reaudit": {
+    "run_id": 42450749950,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42450749950",
+    "original_network_rerun": false,
+    "original_artifact_id": 13605541335,
+    "artifact_id": 13605132856,
+    "zip_bytes": 2443,
+    "files": 2,
+    "zip_sha256": "af1866c8bdd106737964a538773dbd240f0e211ed93030c2353b2bfc23553750",
+    "zip_crc": "PASS_ALL_2",
+    "classification": "PASS_SCOPED_NATIVE_ARM64_GAME4_TRUE_SHARED_PHYSICAL_BLACKHOLE_180S_SIBLINGS_RECOVERY"
+  },
+  "original_physical_blackhole": {
+    "underlay": "ONE shared Game4 four-lane veth, both directions true 100pct kernel qdisc loss",
+    "start_s": 70.0159,
+    "end_s": 78.0336,
+    "duration_s": 8.0177,
+    "exact_linux_original_traffic_marker": "H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED",
+    "qdisc_drops_during": {
+      "uplink": 26062,
+      "downlink": 26108
+    },
+    "not_independent_paths": true
+  },
+  "true_original_app": {
+    "native_10ms_bins_per_stream": 19001,
+    "all_five_clients_app_errors": 0,
+    "all_five_clients_capacity_flags": 0,
+    "game4_dave_first_receipt_after_restore_ms": {
+      "uplink": 136,
+      "downlink": 146
+    },
+    "game4_pre_and_post_delivery_fraction_scope": ">=0.97 both directions each pre/post/late",
+    "other_four_during_blackout_delivery_ratios": {
+      "alice": {
+        "uplink": 1.000457,
+        "downlink": 1
+      },
+      "bob": {
+        "uplink": 0.997718,
+        "downlink": 0.998174
+      },
+      "carol": {
+        "uplink": 1.000488,
+        "downlink": 1.000488
+      },
+      "erin": {
+        "uplink": 1,
+        "downlink": 1
+      }
+    },
+    "other_four_max_10ms_active_no_rx_gap_ms": 0,
+    "server_all_lease_queue_pending_overflow": 0,
+    "all_exact_five_client_Stop": true,
+    "server_exact_shared_tun_Stop": true,
+    "native_app_or_owner_faults": []
+  },
+  "original_generic_rapid_preserved": {
+    "verdict": "SOME_CLIENT_ROTATION_FAILURES",
+    "alerts": 7,
+    "expected_out_of_scope_non_rotation_alerts": 5,
+    "expected_real_8s_blackout_gap_alerts": 2,
+    "rotation_timer_600s_exceeds_180s": true,
+    "no_true_rotation_in_this_test": true
+  },
+  "limitations": [
+    "Real Linux ARM64 OS veth underlay, not physical WAN or 4 independent Game4 physical paths.",
+    "Expected true 8s complete blackout not continuous usable-path stall; stable pre/post and all healthy siblings checked separately.",
+    "H1362/H1363 independently proves real ARM24e owner turns; this test has 600s parked rotation, not triggered.",
+    "Original CI FAIL preserved. Product source original ARM24e distinct from x866c5 and Windows sources.",
+    "L3 two1800s, Windows simultaneous TLS-authenticated two accounts and H998 same socket hot MTU still open."
+  ],
+  "plan028": "IN_PROGRESS"
+}

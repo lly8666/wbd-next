@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1369_H1370_ORIGINAL_TWO_SIGNED_WINDOWS_NATIVE_WINTUN_KERNEL_AND_SOCKET_ISOLATION",
+  "classification": "PASS_SCOPED_REAL_TWO_SIGNED_WINDOWS_WINTUN_NATIVE_KERNEL_UDP_ISOLATED_STOP_NO_AUTH",
+  "source_sha": "5b63dffa62efcfa0642031cc80bd7c902bd46780",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_frozen_m4_assembly_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+  "original_action": {
+    "run_id": 42450303401,
+    "attempt": 1,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42450303401",
+    "native_compilation": "success",
+    "authenticode_original_wintun": "Valid",
+    "original_go_test": "TestM0PLAN028TwoSignedWindowsWintunKernelSocketIsolation",
+    "original_go_test_conclusion": "PASS",
+    "actual_native_business": "PASS",
+    "reporter_failure": "Post-business inherited PLAN020 reporter accesses r['result'] while H1369 correctly emits r['classification']; inherited source.json checks old native-udp filenames instead of new two-wintun filenames"
+  },
+  "original_raw_artifact": {
+    "id": 13605785603,
+    "name": "m0-plan028-h1369-two-wintun-42450303401-1",
+    "files": 4,
+    "bytes": 4210,
+    "zip_sha256": "0f3fe5b44e22830b67426ea3c7d7a22c32f0c29385991ecaa9c804b1d3c6b425",
+    "zip_crc": "PASS_ALL_4",
+    "original_files": [
+      "two-wintun-native.json",
+      "two-wintun-native.log",
+      "assembly.json",
+      "source.json"
+    ]
+  },
+  "offline_reaudit": {
+    "run_id": 42450547596,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42450547596",
+    "network_rerun": false,
+    "artifact_id": 13605451150,
+    "zip_bytes": 1181,
+    "files": 2,
+    "zip_sha256": "cacd0fd9c6b62040e0c62cec01003868daeb3d93421a081e9ddb1a3b1cd2b920",
+    "zip_crc": "PASS_ALL_2",
+    "scoped_result": "PASS_SCOPED_REAL_TWO_SIGNED_WINDOWS_WINTUN_NATIVE_KERNEL_UDP_ISOLATED_STOP_NO_AUTH"
+  },
+  "original_actual_windows_device_receipts": {
+    "real_signed_Wintun_device_count": 2,
+    "unique_GUID_LUID_ifindex_alias": true,
+    "separate_real_Win32_UDP_sockets_A_and_B": true,
+    "original_native_kernel_A_packet_copied": 1,
+    "original_native_kernel_B_packets_copied": 2,
+    "original_native_B_reverse_ring_packets_received": 9,
+    "A_exact_Stop_then_stale_denied": true,
+    "B_real_Win32_UDP_continues_after_A_Stop": true,
+    "B_reverse_actual_Win32_socket_to_native_ring_after_A_Stop": true,
+    "B_final_exact_Stop_then_stale_denied": true,
+    "run_owned_test_only_firewall_rules_cleaned": true,
+    "Windows_test_IP_route_is_scoped_32": true
+  },
+  "original_product_unqualified": {
+    "two_TLS_authenticated_product_clients_on_one_server443": "NOT_RUN",
+    "two_actual_product_accounts": "NOT_RUN",
+    "original_Npcap_outer_wire": "NOT_RUN",
+    "original_Rust_M4_generation_authentication": "NOT_RUN",
+    "global_default_route_WFP_Gui": "NOT_RUN"
+  },
+  "limited_scope": "Native kernel driver/sockets and isolated exact Stop. No true public TLS/Go/Rust two-account product server connection yet.",
+  "plan028": "IN_PROGRESS"
+}
