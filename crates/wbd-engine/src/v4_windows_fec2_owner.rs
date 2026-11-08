@@ -833,25 +833,35 @@ mod tests{
         let mut b=a.clone();b[20..].fill(0x34);
         let budget=normal_off_windows_budget(&r.entries[&h].lock().unwrap())
             .unwrap().record_payload_mtu;
-        let mut actual=[0u8;256];
-        let (n,backend)={
-            let e=r.entries[&h].lock().unwrap();
-            encode_repair_entry(&e,ep,997,99,1,5,0,
-                &[a.as_slice(),b.as_slice()],&mut actual).unwrap()
-        };
-        let oracle=wbd_codec::fec_v2::Rs16::new().encode_owned(
-            1,&[a.as_slice(),b.as_slice()],
-            fec_v2::Profile::Strong,0,1,budget,
-            fec_v2::BackendChoice::Scalar).unwrap();
-        assert_eq!(n,174);
-        assert_eq!(&actual[..n],oracle.0[0].as_slice(),
-            "ISA-L repair must match original scalar record bytes");
-        #[cfg(feature="native_fec_acceleration")]
-        assert_eq!(backend,fec_v2::BackendUsed::NativeIsaL,
-            "linked Windows release must execute native ISA-L, not scalar");
-        #[cfg(not(feature="native_fec_acceleration"))]
-        assert_eq!(backend,fec_v2::BackendUsed::Scalar,
-            "portable build is not native product qualification");
+        // All seven original Normal Fixed/Auto strength grades enter the
+        // SAME authenticated Windows owner C ABI path, not a codec-only
+        // oracle. Proven original product record bytes are unchanged.
+        for (grade,profile) in fec_v2::Profile::ALL.into_iter().enumerate(){
+            let mut actual=[0u8;256];
+            let block_id=1u64+grade as u64;
+            let (n,backend)={
+                let e=r.entries[&h].lock().unwrap();
+                encode_repair_entry(&e,ep,997,99,block_id,grade as u32,0,
+                    &[a.as_slice(),b.as_slice()],&mut actual).unwrap()
+            };
+            let oracle=wbd_codec::fec_v2::Rs16::new().encode_owned(
+                block_id,&[a.as_slice(),b.as_slice()],
+                profile,0,1,budget,
+                fec_v2::BackendChoice::Scalar).unwrap();
+            assert_eq!(n,174);
+            assert_eq!(&actual[..n],oracle.0[0].as_slice(),
+                "ISA-L repair changed source byte grade={grade}");
+            #[cfg(feature="native_fec_acceleration")]
+            {
+                assert_eq!(backend,fec_v2::BackendUsed::NativeIsaL,
+                    "linked Windows release must execute native ISA-L grade={grade}");
+                eprintln!("M0_PLAN028_H1409_WIN_REAL_OWNER_NATIVE_PROFILE grade={} name={} k=2 frame_len=160 native=1 scalar_match=1",
+                    grade,profile.name());
+            }
+            #[cfg(not(feature="native_fec_acceleration"))]
+            assert_eq!(backend,fec_v2::BackendUsed::Scalar,
+                "portable build is not native product qualification");
+        }
         assert_eq!(quiesce_wintun(&mut r,h,ep,997,99),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);

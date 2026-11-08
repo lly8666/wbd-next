@@ -295,6 +295,45 @@ fn r1_f2_decode_workspace_cache_65_distinct_keys_and_eviction() {
     assert_eq!(rs.cache_entries(),DECODE_CACHE_LIMIT);
 }
 
+// Freeze-period native dispatch qualification: every supported FEC grade
+// chooses the ACTUAL linked ISA-L C encoder by default when k>1 and >=64B.
+// Test both the public Windows Fixed/Auto encoder shape (encode_owned)
+// and the shared Linux Fixed/Game prepared block quantum. The same profile
+// numbering controls Normal Fixed and Auto, Game2 and Game4 Fixed.
+#[cfg(feature="native-isal")]
+#[test]
+fn r1_f2_default_native_all_seven_profiles_real_encode_prepared(){
+    let originals=(0..4usize).map(|i| {
+        (0..160usize).map(|j|((i*37+j*11+7)%251) as u8)
+            .collect::<Vec<u8>>()
+    }).collect::<Vec<_>>();
+    let refs=originals.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let codec=Rs16::new();
+    for (grade,profile) in Profile::ALL.into_iter().enumerate(){
+        let block_id=880u64+grade as u64;
+        let (oracle,scalar_used)=codec.encode_owned(block_id,&refs,
+            profile,0,1,256,BackendChoice::Scalar).unwrap();
+        assert_eq!(scalar_used,BackendUsed::Scalar);
+        let (actual,native_used)=codec.encode_owned(block_id,&refs,
+            profile,0,1,256,BackendChoice::default()).unwrap();
+        assert_eq!(native_used,BackendUsed::NativeIsaL,
+            "default must execute real linked ISA-L grade={grade}");
+        assert_eq!(actual,oracle,"native GF bytes changed grade={grade}");
+        let mut prepared=PreparedBlock::from_frames(&refs,256).unwrap();
+        let mut wire=vec![0xA5u8;oracle[0].len()];
+        let prepared_used={
+            let mut outputs=[wire.as_mut_slice()];
+            codec.encode_prepared_into(block_id,&mut prepared,profile,0,
+                &mut outputs,256,BackendChoice::default()).unwrap()
+        };
+        assert_eq!(prepared_used,BackendUsed::NativeIsaL,
+            "prepared Linux/ Game quantum must run ISA-L grade={grade}");
+        assert_eq!(wire,oracle[0],
+            "native prepared record must equal scalar wire grade={grade}");
+        eprintln!("M0_PLAN028_H1409_ISAL_NATIVE_PROFILE grade={} name={} k=4 frame_len=160 owned=native prepared=native scalar_match=1",
+            grade,profile.name());
+    }
+}
 #[cfg(feature="native-isal")]
 #[test]
 fn r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact() {
