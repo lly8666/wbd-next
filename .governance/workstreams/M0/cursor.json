@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1425,
-  "checkpoint_sha": "6d86ffa59de3d3990ef9c80e6ac4ac88a22de5da",
+  "sequence": 1426,
+  "checkpoint_sha": "3ec69cf418640c53cb8928eefda2e68007f25314",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1425-FEATURE-CATALOG-SIZE",
-  "current_task": "H1424 e6aa one signed Windows client plus independent Linux original client on same GoTLS443 server true protected UDP/TCP and Stop PASS_SCOPED; same-source Game4 original native TLS8 overlap B new UDP5 Stop PASS_SCOPED with original CI marker-only failure. H1424 feature-catalog failed 16KiB bounded card size; H1425 shortens only catalog summaries, preserves all 43 platform/status/source/evidence records. PLAN028 IN_PROGRESS.",
-  "why_now": "Native feature evidence must remain user-visible but catalog is capped at 16KiB; old full details already in referenced evidence, not deleted or rewritten.",
+  "task_id": "PLAN028-M0-H1426-CAPTURE-ACTUAL-M4-PROOF-WITHOUT-NETWORK-REPLAY",
+  "current_task": "H1424 crossOS genuine one signed Windows plus independent Linux client one TLS443 source e6aa original app/Stop PASS_SCOPED evidence and feature card. H1425 catalog card bounded 43 historic status/source/evidence entries unchanged. H1426 corrects Game4 x86 future source fixture to forward actual original Go client authenticated B M4 proof and actual new-gen READY from TMP into archived stdout before cleanup, replacing nonexistent TUN_PROMOTED marker. This is TEST ONLY, explicit [frozen-fixture-only] commit skips current Game4 network job; original H1423 Game4 CI FAIL stays, actual protected TLS8/MTU/real app/Stop PASS_SCOPED and separate positive M4 marker from historical artifact NOT_OBSERVED.",
+  "why_now": "Original x86 H1423 source e6aa Game4 product served new B real UDP5 and did exact Stop, but Action CI ended on two greps for a log stored only in temporary Go client output and a marker not present in source. Fix future observability using only actual Go authenticated proof, not a fabricated PASS and not another network seed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect governance and feature-catalog after H1425. Then fix future Game4 M4 proof receipt check without replaying original network for reporting, audit remaining L0/L1/L2 hard gates and decide final source-frozen representative L3. Physical/Android NOT_RUN and old H998 fail retained.",
+  "next_action": "Collect any automatically triggered non-network checks, no duplicate dispatch; do not claim H1426 M4 proof as triggered until a future relevant actual Game4 run archives it. Confirm Feature catalog H1425 PASS. Then select remaining PLAN028 L0/L1/L2 known defects and capacity to determine representative final L3 full SOURCE only when fixture/source freeze ready. Historical H998 same-socket MTU FAIL retained, Android/physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1425 feature card 43 verifications intact, prose summaries compacted under existing bounded JSON check. H1424 genuine cross-OS one443 TLS/UDP/TCP Stop PASS, Game4 real scoped product PASS but original Action CI FAIL for unforwarded/nonexistent proof label. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1426 Game4 future fixture requires actual Go `V4_PUBLIC_GAME_REMOTE_M4_PROVEN ... tun_route_promoted=1` and `V4_PUBLIC_PATH_NEW_GENERATION_READY` from owned TMP/client.log before temp deletion, no fabricated marker. Explicit [frozen-fixture-only] prevents running same Game4 network just for report. H1424 signed Windows A+independent Linux B real TLS+UDP/TCP+Stop PASS_SCOPED, Game4 source e6aa genuine old/new UDP/Stop PASS_SCOPED with original final grep CI FAIL retained. PLAN028 IN_PROGRESS."
 }

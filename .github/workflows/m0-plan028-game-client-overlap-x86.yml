@@ -148,8 +148,11 @@ jobs:
           done
           # B must verify new group's original M4 AEAD kind0 Health
           # (or actual reverse user IPv4), never local TLS or raw TCP ACK.
-          grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4 native_authenticated_control_or_ipv4=1' fixed-kernel-result/game4-a-to-ab-to-b-native.log
-          grep -Fq 'V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation=' fixed-kernel-result/game4-a-to-ab-to-b-native.log
+          # The original client emitted these two lines after authenticated
+          # Rust M4 peer proof and before effective generation2 READY.
+          # The source harness forwards them from its owned TMP/client.log.
+          grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4 native_authenticated_control_or_ipv4=1 tun_route_promoted=1' fixed-kernel-result/game4-a-to-ab-to-b-native.log
+          grep -Fq 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true' fixed-kernel-result/game4-a-to-ab-to-b-native.log
           echo M0_PLAN028_H1304_X86_GAME4_REMOTE_NATIVE_COMMIT_AUTHENTICATED_AND_PROMOTED=1
           echo M0_PLAN028_GAME4_X86_NATIVE_A_TO_AB_TO_B_SOURCE_QUALIFIED_ONE_TUN_READER=1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

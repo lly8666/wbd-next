@@ -456,6 +456,15 @@ finally:s.close()
   cat "$ART/plan028-real-path-switched-business.log"
   test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' "$ART/plan028-real-path-switched-business.log")" -eq 5
   if [[ "$GAME" != 0 ]];then
+    # Original Go/Rust M4 B proof is emitted only to the client process log.
+    # Surface that ACTUAL authenticated proof before TMP cleanup; never
+    # manufacture a TUN-promoted marker or grant local-TLS-only readiness.
+    m4_marker="V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=$GAME native_authenticated_control_or_ipv4=1 tun_route_promoted=1"
+    grep -Fq "$m4_marker" "$TMP/client.log"
+    grep -F "$m4_marker" "$TMP/client.log" | tail -1
+    ready_marker="V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true"
+    grep -Fq "$ready_marker" "$TMP/client.log"
+    grep -F "$ready_marker" "$TMP/client.log" | tail -1
     grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$GAME" "$TMP/client.log"
     python3 - "$TMP/client.log" "$GAME" <<'PY'
 import re,sys,pathlib
