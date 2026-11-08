@@ -9,3 +9,9 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Existing complete original recovery unit test adjusted for internal backend receipt and raw-console offline re-audit; no product wire/ABI/algorithm alteration."}
 ```
+
+## H1398 独立离线 Actions 结果（原网络没有重跑）
+
+[Action42483793828](https://github.com/lly8666/wbd-next/actions/runs/42483793828) 已结束 SUCCESS，其唯一独立 job 下载原 H1368 原始 37 文件 ZIP，直接审计真实 console 内核计数与 original 19001×10ms app bins、5 Stop；严格输出 `PASS_SCOPED_NATIVE_ARM64_GAME4_REAL_CORRELATED_BLACKHOLE_RECOVERY`，`event_provenance=ACTUAL_ORIGINAL_PROCESS_STDOUT_TC_KERNEL_WITNESS`，原 event JSON 仍缺失、不伪造。原输出 ZIP CRC PASS SHA256 `9362d2a71d3d9936fab86a285e5edf08c72d8724b335e57deb0069577be3ce54`；零故障、零容量异常、保留原 CI FAIL、正常 lane Rotation NOT_TRIGGERED。
+
+同批独立治理质量：`g2_bootstrap_bundle.py` 历史源身份校验把 registry revision 固定为 PLAN020 的3，然而当前用户 2026-11-07 授权 PLAN028 功能冻结 registry 实际为 rev4，M4 撤销/历史 rev2 cursor 并未改变。引擎源码变化本来就触发 G2 bootstrap，因此旧硬编码每次都报 `ValueError: G2 registry revision changed`，只修为精确 rev4；其五 crate/source SHA/真正测试二进制校验、所有角色/worker检查不放宽，不重新派发网络。

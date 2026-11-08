@@ -42,9 +42,10 @@ def sha(path):
 
 def identity():
     registry=json.loads(Path(".governance/registry.json").read_text())
-    # PLAN020 rev3 transfer is authoritative: M4's rev2 cursor stays frozen,
-    # but its registry lease is revoked (reserved, epoch2, zero write scope).
-    if registry["reservation_revision"]!=3:
+    # PLAN028 rev4 is the authoritative M0 freeze assignment. Preserve
+    # the PLAN020 rev3 M4 revocation and immutable historical rev2 cursor;
+    # only the global registry lease number advanced by authorized decision.
+    if registry["reservation_revision"]!=4:
         raise ValueError("G2 registry revision changed")
     roles={r["id"]:r for r in registry["roles"]}
     if set(roles)!={"M0","M1","M2","M3","M4"}:

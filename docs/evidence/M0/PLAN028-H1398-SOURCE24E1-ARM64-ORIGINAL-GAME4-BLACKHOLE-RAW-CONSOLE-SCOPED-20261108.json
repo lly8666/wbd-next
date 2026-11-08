@@ -45,7 +45,18 @@
   "functional_verdict": "PASS_SCOPED_ORIGINAL_ARM64_GAME4_COMMON_UNDERLAY_BLACKHOLE_RECOVERY_AND_SIBLING_STOP",
   "historical_h1395_json_only_verdict": "NOT_QUALIFIED_MISSING_ORIGINAL_BLACKHOLE_EVENT_ARTIFACT",
   "original_ci_verdict": "FAIL",
-  "offline_h1398_action": "NOT_RUN_UNTIL_NEW_ACTION_RECEIPT",
+  "offline_h1398_action": {
+    "id": 42483793828,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42483793828",
+    "conclusion": "success",
+    "raw_zip_crc": "PASS",
+    "raw_zip_sha256": "9362d2a71d3d9936fab86a285e5edf08c72d8724b335e57deb0069577be3ce54",
+    "artifact_id": 13618237668,
+    "formal_offline_verdict": "PASS_SCOPED_NATIVE_ARM64_GAME4_REAL_CORRELATED_BLACKHOLE_RECOVERY",
+    "kernel_witness": "ACTUAL_ORIGINAL_PROCESS_STDOUT_TC_KERNEL_WITNESS",
+    "functional_faults": 0,
+    "capacity_limited": 0
+  },
   "limitations": [
     "Original standalone kernel-event JSON absent from artifact; original stdout directly contains same real kernel observation, not synthesized",
     "Normal lane rotations in 180s blackhole short scenario were NOT_TRIGGERED by design (600s configured); no implicit rotation PASS",
