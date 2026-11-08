@@ -42,7 +42,8 @@ class ManagedUnilateral(unittest.TestCase):
   self.assertIn("H888-managed-WinC2S105-recover120",s)
   self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED",s)
   self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_EXACT_RESTORED",s)
-  self.assertIn("timeout-minutes: 24",s)
+  # The normal path still has exactly 24min; only explicit PLAN028 1800s L3 gets 52.
+  self.assertIn("timeout-minutes: ${{ contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && 52 || 24 }}",s)
   for marker in ("PLAN027_ORIGINAL_105_HOST_NET",
     "Write-Original105NetworkWitness 'before-runner-restore'",
     "Write-Original105NetworkWitness 'after-runner-restore'",
