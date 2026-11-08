@@ -80,6 +80,15 @@ if ONEWAY_APP and STATIC_NEIGH!="1":
     raise SystemExit("one-way L1 requires test-controlled original veth ARP")
 if ONEWAY_HEALTH_BLACKHOLE and not ONEWAY_APP:
     raise SystemExit("native Health preterminal test requires genuine one-way application")
+# Opt-in H1353: one common Game4 physical underlay, both directions, 100% loss.
+# Default and all prior scenarios remain byte-for-byte behavior compatible.
+CORRELATED_GAME4_BLACKHOLE=os.environ.get("WBD_PLAN028_GAME4_CORRELATED_BLACKHOLE","")
+if CORRELATED_GAME4_BLACKHOLE not in ("","1"):
+    raise SystemExit("invalid physical Game4 blackout flag")
+if CORRELATED_GAME4_BLACKHOLE and not (FAST_SCENE=="pressure"
+        and CAPACITY_STEPS=="2" and STATIC_NEIGH=="1" and not LONG_SCENE
+        and not ONEWAY_APP and not ONEWAY_HEALTH_BLACKHOLE):
+    raise SystemExit("Game4 blackout only in native 180s original duplex scene")
 # One source-locked L2 max-impairment representative (30%/250ms) using
 # the already proven TEST-only physical L2 ARP control, not a product knob.
 ERIN_MAX_DELAY=os.environ.get("WBD_PLAN028_ERIN_MAX_DELAY","")
@@ -290,6 +299,8 @@ def main():
     qdisc_sampler = None
     neigh_sampler = None
     health_blackhole_worker = None
+    game4_blackhole_worker = None
+    game4_blackhole_errors = []
     mtu_worker = None
     mtu_faults = []
     env = dict(os.environ, LD_LIBRARY_PATH=str(build) + ":" + os.environ.get("LD_LIBRARY_PATH", ""))
@@ -595,6 +606,68 @@ def main():
                                 "show", "dev", host_nics[i], capture=True))
             (out / ("h1250-qdisc-" + stage + ".txt")).write_text("\n".join(rows))
         qdisc("before")
+
+        if CORRELATED_GAME4_BLACKHOLE:
+            # Real Dave veth, common to all four Game4 lanes. tc replace
+            # counters reset; snapshot real drops BEFORE restoring netem.
+            def game4_blackhole():
+                links=(("uplink",("sudo","-n","ip","netns","exec",namespaces[3]),client_nics[3]),
+                       ("downlink",("sudo","-n"),host_nics[3]))
+                installed=False
+                try:
+                    planned_start=start_ns+70_000_000_000
+                    if stop.wait(max(0,(planned_start-time.monotonic_ns())/1e9)):
+                        return
+                    for name,prefix,nic in links:
+                        run(*prefix,"tc","qdisc","replace","dev",nic,"root","netem",
+                            "delay",str(DELAY[3])+"ms","loss","100%","limit","10000")
+                    installed=True
+                    start=time.monotonic_ns()
+                    if stop.wait(max(0,(start_ns+78_000_000_000-
+                                      time.monotonic_ns())/1e9)):
+                        raise RuntimeError("stopped during blackhole")
+                    seen={}
+                    for name,prefix,nic in links:
+                        records=json.loads(run(*prefix,"tc","-s","-j",
+                                              "qdisc","show","dev",nic,capture=True))
+                        netem=next((r for r in records if r.get("root")
+                                    and r.get("kind")=="netem"),None)
+                        assert netem is not None,(name,records)
+                        seen[name]={"drops":int(netem.get("drops",0)),
+                                    "packets":int(netem.get("packets",0))}
+                    assert all(seen[n]["drops"]>100 for n in ("uplink","downlink")),seen
+                    restore_start=time.monotonic_ns()
+                    for name,prefix,nic in links:
+                        run(*prefix,"tc","qdisc","replace","dev",nic,"root","netem",
+                            "delay",str(DELAY[3])+"ms",
+                            "loss",str(LOSS[3])+"%","limit","10000")
+                    installed=False
+                    restored=time.monotonic_ns()
+                    write_json(out/"h1353-physical-game4-blackhole.json",{
+                        "kind":"ONE_GAME4_FOUR_LANE_SHARED_VETH_BOTH_DIRECTIONS",
+                        "app_start_ns":start_ns,"blackhole_start_ns":start,
+                        "restore_start_ns":restore_start,"restored_ns":restored,
+                        "planned_blackhole_start_ns":planned_start,
+                        "planned_restore_ns":start_ns+78_000_000_000,
+                        "physical_dave_client_namespace":namespaces[3],
+                        "physical_links":{name:nic for name,_,nic in links},
+                        "actual_kernel_drops_during_100pct":seen,
+                        "original_delay_ms":DELAY[3],
+                        "original_loss_pct":LOSS[3],
+                        "other_four_links_untouched":True,
+                        "no_product_source_change":True})
+                    print("H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED",
+                          start,restored,seen,flush=True)
+                except Exception as exc:
+                    game4_blackhole_errors.append(repr(exc))
+                finally:
+                    if installed:
+                        for name,prefix,nic in links:
+                            run(*prefix,"tc","qdisc","replace","dev",nic,"root","netem",
+                                "delay",str(DELAY[3])+"ms",
+                                "loss",str(LOSS[3])+"%","limit","10000",check=False)
+            game4_blackhole_worker=threading.Thread(target=game4_blackhole,daemon=True)
+            game4_blackhole_worker.start()
         if ONEWAY_HEALTH_BLACKHOLE:
             # Original true veth physical server→Erin only. Erin actual
             # uplink business and native Rust data path remain unchanged.
@@ -715,6 +788,11 @@ def main():
             if mtu_worker.is_alive() or mtu_faults:
                 raise RuntimeError("physical MTU fault: "+repr(mtu_faults))
             assert (out/"h1291-physical-mtu-shrink.json").is_file()
+        if game4_blackhole_worker is not None:
+            game4_blackhole_worker.join(timeout=12)
+            if game4_blackhole_worker.is_alive() or game4_blackhole_errors:
+                raise RuntimeError("Game4 blackhole failed: "+repr(game4_blackhole_errors))
+            assert (out/"h1353-physical-game4-blackhole.json").is_file()
         stop.set()
         sampler.join(timeout=8)
         if health_blackhole_worker is not None:
@@ -786,6 +864,8 @@ def main():
             qdisc_sampler.join(timeout=6)
         if health_blackhole_worker is not None:
             health_blackhole_worker.join(timeout=6)
+        if game4_blackhole_worker is not None:
+            game4_blackhole_worker.join(timeout=6)
         if mtu_worker is not None:
             mtu_worker.join(timeout=3)
         for role in list(procs)[::-1]:
