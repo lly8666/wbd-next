@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1433,
-  "checkpoint_sha": "96c03541788ce3112c43a88097f4275c6dc0b1ff",
+  "sequence": 1434,
+  "checkpoint_sha": "cf98c9c0314173029998a260ba29c1fe9943165c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1433-LEGACY-GAME2-TIMEOUT-ORACLE",
-  "current_task": "User-approved H1430 signed Windows ONE VPN A+independent Linux TUN B crossOS L3 1800s pre-network Actions42507562916/42507776166/42507973848 all failed in three DIFFERENT legacy static test assertions requiring literal timeout-minutes:24, but actual new opt-in conditional preserves regular24 and long52. All three Windows native jobs SKIPPED; no Wintun/Go/Rust long network executed, not product FAIL. H1433 updates final known game2 static oracle, same source trigger enables actual Windows CI to proceed; no product changes. ARM64 existing 2x1800 source eef2 Action42505975134 running. PLAN028 IN_PROGRESS.",
-  "why_now": "Every preflight failure must remain honestly marked as CI-only and native NOT_RUN; the static tests each directly inspect the same workflow string but had independently hardcoded old 24. Conditional tests must require ordinary 24 and L3-specific 52 without weakening product contracts.",
+  "task_id": "PLAN028-M0-H1434-CROSSOS-L3-SOURCE-TRIGGER",
+  "current_task": "H1430 Windows ONE original signed Wintun/Npcap A plus independent WSL2 Linux Go/Rust TUN B co-client real 1800s native was preflight-blocked 3 times by separate historical static timeout24 test oracles (Actions42507562916,42507776166,42507973848), no product native setup. H1433 corrected third assertion but tests/test_m0_wl_scoped_game2_trigger.py not in main workflow on.push.paths so no Windows Action on cf98. H1434 adds tools/m0_plan028_h1430_windows_linux_l3.py (actual 1800s owned helper) to native workflow push path and triggers one explicit source-locked Win/Lin Action on workflow file with exact L3 marker; no product edits, no old partial PASS. Parallel ARM64 original native SOURCEeef2 two1800 Action42505975134 still in progress. PLAN028 IN_PROGRESS.",
+  "why_now": "The first three original Windows workflow runs never reached Windows native driver because obsolete offline static timeout expectations had to be updated; the final test-only change itself is not on the workflow's path filter. Add the actual L3 source harness to recognized change paths, allowing source-controlled normal trigger, not an invented dispatch or second Windows VPN.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1433 full signed native Windows Action in-flight first; native stage only after cheap tests succeed. Check Rust/Go exactly same source, 1800s real UDP/TCP/RSS and owned Stop; collect ARM64 two ongoing long scenes. Avoid duplicate dispatch and preserve all original CI failures as pre-network.",
+  "next_action": "Collect new H1434 Windows/Lin L3 Action after workflow path addition; first check cheap preflight all PASS, then signed Windows/Linux exact same-source assembly and genuine 1800s UDP/TCP and resource/Stop receipts. Collect already-running ARM64 2x1800 Action42505975134. Only original real run and artifact can qualify. Keep all earlier CI-only actions as HARNESS_OR_CI_FAILURE, no 029/030.",
   "unverified": true,
   "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1433 third literal24 static test fixed in tests/test_m0_wl_scoped_game2_trigger.py. Windows previous 3 Actions were ALL preflight-failed with signed native jobs skipped; not product test failures and no traffic/1800s claimed. New exact source Windows+independent Linux single-Win client L3 next; ARM64 L3 2 scenes existing. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1434 added long native test-only helper under workflow on.push.paths and workflow change ensures one scoped Windows 1800s Action runs. Earlier Actions42507562916/42507776166/42507973848 all failed cheap static tests with native jobs skipped; H1433 last fix commit cf98 changed test outside on.push.paths (no Windows action). Real test not yet qualified. ARM64 L3 still running. PLAN028 IN_PROGRESS."
 }
