@@ -45,6 +45,8 @@ def kill_native_child_tree(child):
     except subprocess.TimeoutExpired:pass
 
 def native_batch_deadline(env):
+    if env.get("WBD_PLAN028_WIN_LINUX_L3")=="1":
+        return 2250  # signed Wintun + independent Linux true 1800s and owned Stop
     # One functional mode has <=165s, historical four modes <=4*165s.
     # Leave substantial OS setup/owned cleanup time before the whole-step 600/1020s guard.
     if (env.get("WBD_WL_PUBLIC_MODES")=="game2-fec" and

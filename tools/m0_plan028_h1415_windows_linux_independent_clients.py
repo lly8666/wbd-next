@@ -8,6 +8,7 @@ import json,hashlib,os,pathlib,re,secrets,socket,subprocess,sys,time
 from m0_plan028_h1412_wsl_cross_os_client_preflight import (
     wsl,ip,witness,guestpath,NAME,NS,HOST,CHILD,ALIAS,PEER)
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
+L3_DURATION=1800 if os.environ.get("WBD_PLAN028_WIN_LINUX_L3")=="1" else 0
 source=os.environ["GITHUB_SHA"]
 report={"schema_version":1,"source_sha":source,
  "scene":"ONE_WINDOWS_SIGNED_CLIENT_AND_INDEPENDENT_LINUX_NETNS_CLIENT_ONE_SHARED_SERVER",
@@ -29,13 +30,21 @@ def marker(p,part,proc=None,timeout=60):
         time.sleep(.2)
     raise RuntimeError("original "+part+" not observed: "+(p.read_text(errors="replace") if p.exists() else "")[-650:])
 def udp_stats(p):
-    result={"sent":0,"received":0,"reverse_received":0}
+    result={"sent":0,"received":0,"reverse_received":0,
+            "echo_age_ms":None,"reverse_age_ms":None,
+            "max_echo_gap_ms":0.,"max_reverse_gap_ms":0.}
     if p.exists():
-        for line in p.read_text(errors="replace").splitlines():
+        with p.open("rb") as fd:
+            fd.seek(max(0,p.stat().st_size-16384))
+            lines=fd.read().decode("utf-8","replace").splitlines()
+        for line in lines:
             try:
                 item=json.loads(line)
                 if item.get("phase") in ("udp","final"):
-                    result={key:int(item.get(key,0)) for key in result}
+                    for key in ("sent","received","reverse_received"):
+                        result[key]=int(item.get(key,0))
+                    for key in ("echo_age_ms","reverse_age_ms","max_echo_gap_ms","max_reverse_gap_ms"):
+                        result[key]=item.get(key,0.)
             except (ValueError,TypeError):pass
     return result
 def count(p):
@@ -157,10 +166,12 @@ elif mode=="udp":
             if time.monotonic()>=deadline:raise
             time.sleep(.1)
     start=time.monotonic();n=0;rx=0;reverse_rx=0;last=start
+    echo_last=None;reverse_last=None;max_echo_gap=0.;max_reverse_gap=0.
+    app_limit=int(sys.argv[5]) if len(sys.argv)>5 else 150
     seen=set();reverse_seen=set();last_send_error=-10.
     echo_prefix=("WBD_H1415_REAL_UDP_%s_"%label).encode()
     reverse_prefix=("WBD_H1415_REVERSE_%s_"%label).encode()
-    while not pathlib.Path(stop).exists() and time.monotonic()-start<150:
+    while not pathlib.Path(stop).exists() and time.monotonic()-start<app_limit:
         data=echo_prefix+str(n).encode()
         try:s.sendto(data,("10.66.0.1",45901));n+=1
         except OSError as exc:
@@ -184,18 +195,34 @@ elif mode=="udp":
                 except ValueError:continue
                 if 0<=seq<n and seq not in seen:
                     seen.add(seq);rx+=1
+                    received_at=time.monotonic()
+                    if echo_last is not None:max_echo_gap=max(max_echo_gap,received_at-echo_last)
+                    echo_last=received_at
             elif got.startswith(reverse_prefix):
                 try:seq=int(got[len(reverse_prefix):])
                 except ValueError:continue
                 if seq>=0 and seq not in reverse_seen:
                     reverse_seen.add(seq);reverse_rx+=1
+                    received_at=time.monotonic()
+                    if reverse_last is not None:max_reverse_gap=max(max_reverse_gap,received_at-reverse_last)
+                    reverse_last=received_at
         if time.monotonic()-last>.5:
+            now=time.monotonic()
             print(json.dumps({"phase":"udp","label":label,"sent":n,
-                "received":rx,"reverse_received":reverse_rx}),flush=True)
-            last=time.monotonic()
+                "received":rx,"reverse_received":reverse_rx,
+                "echo_age_ms":None if echo_last is None else round((now-echo_last)*1000,2),
+                "reverse_age_ms":None if reverse_last is None else round((now-reverse_last)*1000,2),
+                "max_echo_gap_ms":round(max_echo_gap*1000,2),
+                "max_reverse_gap_ms":round(max_reverse_gap*1000,2)}),flush=True)
+            last=now
         time.sleep(.06)
+    now=time.monotonic()
     print(json.dumps({"phase":"final","label":label,"sent":n,
-        "received":rx,"reverse_received":reverse_rx}),flush=True)
+        "received":rx,"reverse_received":reverse_rx,
+        "echo_age_ms":None if echo_last is None else round((now-echo_last)*1000,2),
+        "reverse_age_ms":None if reverse_last is None else round((now-reverse_last)*1000,2),
+        "max_echo_gap_ms":round(max_echo_gap*1000,2),
+        "max_reverse_gap_ms":round(max_reverse_gap*1000,2)}),flush=True)
 elif mode=="tcp":
     local=sys.argv[2]
     s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.settimeout(7)
@@ -286,7 +313,8 @@ def main():
         win=start("h1415-windows",winargs)
         (out/"h1415-A-start.flag").touch()
         winapp=start("h1415-winapp",[sys.executable,"-u",str(app),"udp",
-                   "10.66.0.2","A",str(out/"h1415-A-stop.flag")])
+                   "10.66.0.2","A",str(out/"h1415-A-stop.flag"),
+                   str(L3_DURATION+450 if L3_DURATION else 150)])
         marker(out/"h1415-windows.log","WBD_WINDOWS_CLIENT_READY",win,75)
         osread=subprocess.run(["powershell.exe","-NoProfile","-Command",
           "(Get-NetAdapter -IncludeHidden -Name 'WBDWLMAIN' -ErrorAction Stop | Select-Object Name,InterfaceIndex,Status) | ConvertTo-Json -Compress"],
@@ -310,7 +338,8 @@ def main():
         (out/"h1415-B-start.flag").touch()
         linapp=start("h1415-linapp",["wsl.exe","-d","Ubuntu","-u","root","--",
              "ip","netns","exec",NS,"python3","-u",guestapp,"udp","10.66.0.3",
-             "B",guestpath(out/"h1415-B-stop.flag")])
+             "B",guestpath(out/"h1415-B-stop.flag"),
+             str(L3_DURATION+450 if L3_DURATION else 150)])
         marker(out/"h1415-linux.log","V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",linux,75)
         both=marker(out/"h1415-server.log","V4_PUBLIC_MULTI_SESSION_READY role=server",server,15)
         need(both.count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=2,
@@ -356,6 +385,12 @@ def main():
         need("H1415_LINUX_NATIVE_KERNEL_TCP_ECHO_PASS" in tcp.stdout,
              "Linux native netns TCP application not genuinely echoed")
         report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+        if L3_DURATION:
+            from m0_plan028_h1430_windows_linux_l3 import qualify
+            report["l3"]=qualify(out,L3_DURATION,
+               {"windows":out/"h1415-winapp.log","linux":out/"h1415-linapp.log"},
+               udp_stats,need,tcp_windows,wsl,guestapp,
+               {"windows":win,"linux":linux,"server":server,"echo":echo})
         before=count(out/"h1415-linapp.log")
         (out/"h1415-A-stop.flag").touch()
         stopwin(win)
@@ -474,6 +509,9 @@ def main():
         if report["status"].startswith("PASS"):
             (out/"normal-report.json").write_text(json.dumps({
                 **report,"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
+        if L3_DURATION and report["status"].startswith("PASS") and \
+                report.get("l3",{}).get("status")=="PASS_SCOPED_REAL_1800S_BOTH_CLIENTS":
+            print("H1430_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_1800S_NATIVE_PASS",flush=True)
         print("H1415_ONE_WINDOWS_ONE_LINUX_ORIGINAL_COCONCURRENT_REPORT "+
              json.dumps({k:report.get(k) for k in (
                 "status","app_duplex","tcp_duplex","stop",

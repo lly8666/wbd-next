@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1427,
-  "checkpoint_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+  "sequence": 1430,
+  "checkpoint_sha": "63a23503e57267b59d203ed49b5bbfeb289d0e7c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1427-FROZEN-NATIVE-L3",
-  "current_task": "H1427 current frozen product candidate SOURCE eef2a813, native ARM64 single pinned ISA-L build and 2 independent 1800s L3 scene jobs Action42505975134 in flight, baseline plus heterogeneous actual DATA tc/ARP deconfound, original five-client Go TLS/Rust M4. Not yet PASS; H1392 old-source L3 PASS remains scoped. H1424 real signed Windows one-client+independent Linux B same TLS443 UDP/TCP/owned Stop PASS_SCOPED. PLAN028 IN_PROGRESS.",
-  "why_now": "Existing L0/L1 authentic seven modes and signed Windows+Linux co-clients scoped pass; x86 weaknet 0-30%/250ms, Normal 75→50Mbps and Game4 20→10Mbps capacity recovery scoped pass. New per-session cold persona fix after old L3 source requires same-source final L3 evidence.",
+  "task_id": "PLAN028-M0-H1430-CROSSOS-SIGNED-WIN-LINUX-L3",
+  "current_task": "Per latest user ask, H1430 parallel Windows+Linux 1800s L3 native test-only signed Windows2025 Wintun/Npcap ONE VPN A + independent Linux native netns/TUN B same protected TLS443/Go/Rust shared server, actual Win11/Legacy persona. 1800s simultaneous 10Hz unique UDP/echo/reverse/500ms app receipts and >=28 bilateral native TCP probes, <=1500ms longest echo/reverse gap, >=12 RSS samples, final A owned Stop Linux B continues UDP/TCP, exact B/server Stop/WAL and WSL bridge/netns/IP route restore. All code changes restricted to test harness/workflow/timeout; source build must come from exact upcoming HEAD, no success implied. Existing ARM64 two independent 1800s source eef2 Action42505975134 active; its build SUCCESS and 2 scene native business active. PLAN028 IN_PROGRESS.",
+  "why_now": "The ARM64 L3 tests do not exercise signed Windows NIC/driver Wintun session long-term state or same-server Win11 vs Linux Legacy per-credential Rust RX, which was an actual H1420 defect; user requested parallel true 1800s Win-Linux validation.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect existing Action42505975134 first: original native ARM64 ISA-L build manifest and both 1800s independent jobs with five protected TLS clients, actual kernel qdisc/10 veth static neighbors, real Game4 native quanta, app gaps and exact Stop. Preserve any FAIL, no rerun by seed. Then file exact evidence and finalize L0-L3 coverage matrix only if hard gates complete. Android/physical NOT_RUN, H998 old same-socket MTU FAIL, no 029/030.",
+  "next_action": "On push, collect new Windows-Linux native full-workflow Action FIRST, ensure selector WBD_PLAN028_WIN_LINUX_COCLIENTS=1 and 1800=1 (no second Win client), source-locked Go/Rust binaries, real 1800s business and clean Stop. Existing ARM64 L3 Action42505975134 also inspect. Do not dispatch duplicate, classify host/CDN environment vs product, archive raw CSV/JSON, keep original failures. Current status NOT_RUN for Win/Lin1800 until actual success. After both sets, update evidence/matrix; PLAN028 still IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1427 source eef2a813 native final ARM64 2x1800 in-flight, no conclusion; existing H1424 crossOS Windows single signed A plus separate Linux client B original TLS443 and Stop PASS_SCOPED. H1426 only future Go actual Game4 proof fixture. Earlier x86 75Mbps Normal and Game4 20Mbps recover and 30%/250ms weaknet qualified, original CI fail reasons retained. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1430: user requested parallel 1800s Windows one signed native client plus independent Linux netns client; tests wired only in original GoTLS443/Rust product fixture and bounded original Windows workflow. Genuine UDP both directions 1800s, active max gap<1500ms, 60s TCP both, 120s OS process RSS, final A Stop B alive then owned cleanup, no second Wintun. ARM64 two long jobs already in progress. No product changes or premature PASS."
 }

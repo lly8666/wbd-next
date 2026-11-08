@@ -691,7 +691,7 @@ jobs:
     needs: [wiring-contract, linux-source-locked-public]
     if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && !contains(github.event.head_commit.message, '[plan027a-h941-harness]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-reuse]') || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-reuse-h1129]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
-    timeout-minutes: 38
+    timeout-minutes: ${{ contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && 75 || 38 }}
     env:
       AWS_LC_SYS_PREBUILT_NASM: "1"
       GH_TOKEN: ${{ github.token }}
@@ -716,6 +716,7 @@ jobs:
       WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h900-game4fec6-off30]') && 'scenarios/plan027-h900-game4-fec6-outer-off-10m-250ms30-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h899-native105-diag]') && 'scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h897-normal100-off]') && 'scenarios/plan027-h897-normal-off-100m-25ms0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h896-game2fec6-off30]') && 'scenarios/plan027-h896-game2-fec6-outer-off-10m-250ms30-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h892-normal50-off]') && 'scenarios/plan027-h892-normal-off-50m-25ms0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h890-normal-on300]') && 'scenarios/plan027-h890-normal-on-10m-25ms0-300s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h888-managed105]') && 'scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h886-game4-off]') && 'scenarios/plan027-h886-game4-outer-off-10m-25ms-loss5-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h884-paced-repair]') && 'scenarios/wl-outer-repair-10m-250ms-loss30-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h882-win-c2s105]') && 'scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h880-loss-pair]') && 'scenarios/wl-outer-repair-10m-250ms-loss30-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h878-game2-off]') && 'scenarios/plan027-h878-game2-outer-off-10m-25ms-loss5-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h876-normal-pair]') && 'scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h875-normal-off]') && 'scenarios/plan027-h875-windows-normal-off-10m-25ms-loss0-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-win-normal-on30]') && 'scenarios/wl-outer-repair-10m-250ms-loss30-60s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-gamefec-cosmetic-native]') && 'scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]') && 'scenarios/wl-outer-repair-50m-300ms-loss30-60s.json' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
       WBD_PLAN028_TWO_REAL_CLIENTS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && '1' || '0' }}
       WBD_PLAN028_WIN_LINUX_COCLIENTS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && '1' || '0' }}
+      WBD_PLAN028_WIN_LINUX_L3: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && '1' || '0' }}
       WBD_PLAN028_WSL_OWNED_SWITCH: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && '1' || '0' }}
       WBD_PLAN028_WSL_OWNED_MTU_ONLY: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]') && '1' || '0' }}
       WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-reuse-h1129]') && '41815388333' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-reuse]') && '41757222750' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '40693430836' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
@@ -1058,7 +1059,7 @@ jobs:
       # uploads all 43 scoped files and retains a single independent timeout.
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
-        timeout-minutes: 24
+        timeout-minutes: ${{ contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && 52 || 24 }}
         run: |
           $ErrorActionPreference='Stop'
           # Whole-step external native OS process-tree watchdog, including
@@ -1068,7 +1069,7 @@ jobs:
           $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
           $gameSingle=($env:WBD_WL_PUBLIC_MODES -like 'game*')
           $env:WBD_WL_GAME_FEC_RESCUE=if($env:WBD_WL_PUBLIC_MODES -match '^game[24]-fec$'){'1'}else{'0'}
-          $wholeLimit=if($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}
+          $wholeLimit=if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}
           $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,[string]$wholeLimit,$watchdogDone) -PassThru
           if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
           Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds='+$wholeLimit+' windows_parent_pid='+$PID)
@@ -1221,7 +1222,7 @@ jobs:
               }
             }
             if($env:WBD_PLAN028_WIN_LINUX_COCLIENTS -eq '1'){
-              & python -m py_compile tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py tools/m0_plan028_h1415_windows_linux_independent_clients.py
+              & python -m py_compile tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py tools/m0_plan028_h1415_windows_linux_independent_clients.py tools/m0_plan028_h1430_windows_linux_l3.py
               if($LASTEXITCODE -ne 0){throw 'H1415 actual cross-OS original client script syntax invalid'}
               & python -u tools/m0_wl_native_step_runner.py tools/m0_plan028_h1415_windows_linux_independent_clients.py result/wl-public/direct-full.log
             }elseif($env:WBD_PLAN028_TWO_REAL_CLIENTS -eq '1'){
@@ -1290,6 +1291,15 @@ jobs:
                  $joint.windows_stop_linux_survives.result -ne 'PASS_TRUE_LINUX_KERNEL_UDP_TCP_AFTER_WINDOWS_OWNED_STOP' -or
                  $joint.owned_l2_restored -ne $true -or @($joint.windows_wal_remaining).Count -ne 0){
                 throw 'H1415 same authentic TLS443 one Windows and independent Linux original client/lease/UDP/TCP/Stop not qualified'
+              }
+              if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){
+                if($joint.l3.status -ne 'PASS_SCOPED_REAL_1800S_BOTH_CLIENTS' -or
+                   [double]$joint.l3.duration_s -lt 1800 -or
+                   [int]$joint.l3.tcp_both_count -lt 28 -or
+                   [int]$joint.l3.resource_samples -lt 12){
+                  throw 'H1430 true 1800s signed Win plus independent Linux UDP/TCP and RSS evidence unqualified'
+                }
+                Write-Output 'M0_PLAN028_H1430_REAL_WINDOWS_ONE_PLUS_INDEPENDENT_LINUX_1800S_L3_APP_AND_STOP_PASS'
               }
               Write-Output 'M0_PLAN028_H1415_WINDOWS_ONE_SIGNED_CLIENT_PLUS_INDEPENDENT_LINUX_CLIENT_ONE_TLS443_SERVER_PASS'
             }
@@ -1866,6 +1876,9 @@ jobs:
             result/wl-public/direct-full.log
             result/wl-public/h1382-*.log
             result/wl-public/h1382-dual-report.json
+            result/wl-public/h1415-winapp.log
+            result/wl-public/h1415-linapp.log
+            result/wl-public/h1430-l3-samples.json
             result/wl-public/gamefec-supervisor-stack.txt
             result/wl-public/gamefec-mode-stack.txt
             result/wl-public/gamefec-e2e-stack.txt
