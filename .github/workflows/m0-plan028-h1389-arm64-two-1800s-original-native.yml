@@ -77,7 +77,10 @@ jobs:
             exit 1
           }
           test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
-          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >> "$GITHUB_ENV"
+          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >> "$GITHUB_ENV"
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration >fixed-kernel-result/rust-build.log 2>&1 || {
             tail -110 fixed-kernel-result/rust-build.log >&2
             exit 1
           }
@@ -218,124 +221,6 @@ jobs:
             fixed-kernel-result/h1274-*.log
             fixed-kernel-result/h1274-*.json
             fixed-kernel-result/h1312-static-neighbour-*.json
-            fixed-kernel-result/h1250-*.json
-            fixed-kernel-result/h1250-*.txt
-            fixed-kernel-result/h1250-product-*.log
-          retention-days: 14
-          if-no-files-found: warn
-
-          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >> "$GITHUB_ENV"
-          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >> "$GITHUB_ENV"
-          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration >fixed-kernel-result/rust-build.log 2>&1 || {
-            tail -110 fixed-kernel-result/rust-build.log >&2
-            exit 1
-          }
-          cp target/release/libwbd_engine.so fixed-build/
-          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
-          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028SharedNormalPerClientFECProtectedCapability$' ./internal/realityfront) >fixed-kernel-result/plan028-h1144-protected-policy-unit.log 2>&1 || {
-            tail -120 fixed-kernel-result/plan028-h1144-protected-policy-unit.log >&2
-            exit 1
-          }
-          grep -Fq -- "--- PASS: TestPLAN028SharedNormalPerClientFECProtectedCapability" fixed-kernel-result/plan028-h1144-protected-policy-unit.log
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,platform,struct
-          root=pathlib.Path("fixed-build")
-          assert platform.machine()=="aarch64"
-          sha={}
-          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
-              b=(root/name).read_bytes()
-              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==183,name
-              sha[name]=hashlib.sha256(b).hexdigest()
-          m={"source_sha":os.environ["GITHUB_SHA"],"original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
-             "architecture":"native_aarch64","go":"1.23.12","rust":"1.85.1",
-             "sha256":sha,"qualification":"BUILD_ONLY_UNTIL_MIXED_NORMAL_ORIGINAL_TLS_NATIVE_REAL_IO"}
-          (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
-          print("M0_PLAN028_H1144_NATIVE_ARM64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
-          PY
-      - name: Preflight original native packet fixture/reporter and cosmetic record-byte counter
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source -- --test-threads=1
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: h1274-native-arm64-one-build-${{ github.sha }}
-          path: fixed-build/
-          retention-days: 7
-  scene:
-    needs: build
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        scene: [baseline, heterogeneous]
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with: {persist-credentials: false}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: h1274-native-arm64-one-build-${{ github.sha }}
-          path: fixed-build/
-      - name: Verify exact source/hash and ARM64 native binary (not QEMU)
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
-          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
-          python3 - <<'PY_HASH'
-          import hashlib,json,os,pathlib,struct
-          root=pathlib.Path("fixed-build")
-          m=json.loads((root/"manifest.json").read_text())
-          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]=="native_aarch64"
-          for name,digest in m["sha256"].items():
-              b=(root/name).read_bytes()
-              assert b[:4]==b"\x7fELF" and struct.unpack_from("<H",b,18)[0]==183
-              assert hashlib.sha256(b).hexdigest()==digest
-          print("H1274_ONE_ARM64_BUILD_MANIFEST_REUSED",flush=True)
-          PY_HASH
-      - name: Five native authenticated clients for 1800s continuous lane generations and actual outer repeat bytes
-        shell: bash
-        env:
-          WBD_PLAN028_30M_SCENE: ${{ matrix.scene }}
-        run: |
-          set -euo pipefail
-          mkdir -p fixed-kernel-result
-          sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
-          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
-          python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
-            >"fixed-kernel-result/h1274-${{ matrix.scene }}.log" 2>&1 || {
-              tail -200 "fixed-kernel-result/h1274-${{ matrix.scene }}.log" >&2; exit 1;
-            }
-          grep -Fq "M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE ${{ matrix.scene }}" \
-            "fixed-kernel-result/h1274-${{ matrix.scene }}.log"
-          python3 - <<'PY_RESULT'
-          import json,os,pathlib
-          r=json.loads(pathlib.Path("fixed-kernel-result/h1274-thirty-minute-report.json").read_text())
-          assert r["source_sha"]==os.environ["GITHUB_SHA"]
-          assert r["duration_seconds"]==1800 and len(r["clients"])==5
-          assert r["scene"]==os.environ["WBD_PLAN028_30M_SCENE"]
-          assert all(len(p["directions"]["uplink"]["minute_actual_business"])==30 for p in r["clients"].values())
-          print("H1274_TRUE_30M_METRICS",json.dumps({"scene":r["scene"],
-                "rotation_verdict":r["rotation_verdict"],"outer":r["total_client_outer_record"],
-                "alerts":r["alert_count"],"performance":r["performance_verdict"]},sort_keys=True),flush=True)
-          if r["rotation_verdict"]!="PASS_ALL_FIVE_SCOPED":
-              raise SystemExit("One or more clients failed authenticated rotation continuity; evidence retained")
-          PY_RESULT
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: plan028-h1389-real-arm64-1800s-${{ matrix.scene }}-${{ github.run_id }}
-          path: |
-            fixed-build/manifest.json
-            fixed-kernel-result/h1274-*.log
-            fixed-kernel-result/h1274-*.json
             fixed-kernel-result/h1250-*.json
             fixed-kernel-result/h1250-*.txt
             fixed-kernel-result/h1250-product-*.log

@@ -5,13 +5,13 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 1393,
-  "checkpoint_sha": "645a1199ba3bde40048c12bfdf5ff7ffc5f93ada",
+  "checkpoint_sha": "71fa9c3d3d5c856e89dc94d62ea2c3e66a271cfe",
   "progress": "in_progress",
   "task_id": "PLAN028-M0-H1392-CONTROLLED-L3-ISA-L-ARP",
-  "current_task": "H1392 L3 controlled ARP-underlay and native ISA-L qualification after original H1389 1800s Erin 3310/3320ms true app FAIL. Existing short native ten real peer MAC STATIC L2 setup extended to 1800s, keep actual 30% DATA netem qdisc; official pinned ISA-L native static build and runtime Game4 quanta mandatory. User wants one Windows VPN instance per machine; native Windows+separate Linux multi-client next. Original H1387 Windows same-host dual FAIL retained, but no unrelated second-Wintun product feature.",
-  "why_now": "H1389 long workflow built Rust WITHOUT native_fec_acceleration and original fixture rejected static neighbour in LONG_SCENE, unlike successful short 30% DATA-only controlled runs. User explicitly prioritized correction of these two test qualification defects and no Windows dual-VPN scope creep.",
+  "current_task": "H1392 source71fa initially failed at workflow parsing before any job/traffic (CI YAML generated incorrectly at static-symbol regex), NOT_RUN. Corrected workflow now re-entering pinned ARM64 ISA-L build and test-only permanent veth ARP controlled 2x1800 L3, original H1389 actual Erin 3310/3320ms FAIL preserved. Keep Windows one-instance+distinct Linux scope and H1387 original same-host FAIL.",
+  "why_now": "H1392 push run42475181912 was a workflow YAML pre-job failure, NOT product. Repair generated workflow, do not re-run already valid H1389 network merely for report; this is required for causal DATA-vs-ARP and ISA-L native qualification.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "First collect automatically launched one H1392 same-source ARM64 build/two L3 native jobs: check exact manifest SHA/ISA-L pinned archive/native_linked and per-generation actual native quanta, 10/10 permanent physical veth L2 peer MAC at both stages, actual unchanged netem 30% and full original authenticated Go/Rust Stop/app receipt; preserve all genuine gaps and original failures. If H1392 performance still fails after verified L2 control, use short targeted monotonic timeline before product changes, not seed reruns. Separately implement native Windows single-instance + distinct independent Linux original client protected TLS443 server isolation, do not waive route ownership. Later ensure Windows/x86/ARM64 release manifests and observed native ISA-L usage; H998 original hot PMTU FAIL retained.",
+  "next_action": "Collect H1392 corrected workflow on new main SOURCE, first verify native ISA-L pinned build/manifest; if build fails, fix only build/preflight before network. Then collect real 1800s L3 origin raw files, 10 permanent L2 neighbors, 30% qdisc DATA and native-quanta/Go TLS/Stop/app gaps, keep original H1389 fail. Other old script-path triggered Actions are incidental existing workloads; do not dispatch them again. Windows second OS instance not target, prefer one Windows Wintun + independent Linux server co-client.",
   "unverified": true,
   "last_tested_source": "096a2d55d204c7485aa2fce7d47b3c8e31901bc4",
   "evidence_refs": [
@@ -33,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1392 test-only L3 static-veth ARP control and official ARM64 linked ISA-L requested as one full native SOURCE. Original H1389 same source before change L3 baseline true PASS scoped and heterogeneous Erin 3.31/3.32s true gap FAIL. H1387 Windows second same-host Wintun route ownership genuine FAIL but user restated Windows one-instance priority. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1392 initial CI YAML fatal (run42475181912 no jobs, no network) discovered before real build; corrected in next commit. Prior H1389 full baseline PASS scoped/Erin app 3310/3320ms FAIL unchanged; no H1392 network qualification yet. User prioritizes ARP/data separation, default native ISA-L, Windows single instance + separate Linux. PLAN028 IN_PROGRESS."
 }

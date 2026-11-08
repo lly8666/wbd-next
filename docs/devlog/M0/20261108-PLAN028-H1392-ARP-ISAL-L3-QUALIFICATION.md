@@ -11,3 +11,7 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Diagnostic native test topology and ISA-L artifact qualification only; no product/feature/config/wire changed."}
 ```
+
+## H1392 首次 Action 的离线预检错误
+
+源 `71fa9c3d` 推送后 [Action 42475181912](https://github.com/lly8666/wbd-next/actions/runs/42475181912) 直接在 workflow 解析阶段 FAIL，jobs=[]，**没有执行构建或网络，产品 NOT_RUN**。原因是生成 YAML 时文本替换把正则 `ec_encode_data$` 后面的单引号错误识别成替换特殊序列，尾部被复制；本次恢复唯一有效 workflow 及完整 `nm`、Cargo Native feature 指令，业务参数、原错误物证不变。属于 `HARNESS_OR_CI_FAILURE`，不能当 ISA-L 产品失败。同步触发的其它原有 path-filter 工作流只记独立结果，不重复 dispatch。
