@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1410,
-  "checkpoint_sha": "337dc093438ec216ef17e1761a456f80b3669a02",
+  "sequence": 1411,
+  "checkpoint_sha": "0cdea544d333d497857d3f7273455f65084f749b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1410-ISA-L-7-GRADE-WIN-NASM-HARNESS",
-  "current_task": "Original H1409 source337 actual Linux native x86_64 and ARM64 7/7 default ISA-L all FEC profiles, both `encode_owned` and `encode_prepared_into` actual C encoder + exact scalar-equivalence and pinned release engine features PASS_SCOPED; original ZIP/ELF native manifest hashes verified and evidence archived. Windows first H1409 job failed before testing: Chocolatey NASM installed, but same-step cmd/nmake sees no NASM since $GITHUB_PATH takes effect next step. H1410 only Windows current-step PATH fix, skips repeat Linux jobs on this Windows-only push, no product code changes. Old m0-fec2-main-native source337 actual 17/17 Rust tests PASS but stale expected total=16 caused CI FAIL; H1410 fixes report gate to exact required names and actual count, no network.",
-  "why_now": "H1409 returned two native Linux 7-grade actual C-encode PASS and windows pretest builder ENVIRONMENT_BLOCKED; old native codec workflow rejected valid additional test due rigid literal count. Minimal test harness repair only with strict genuine backend gates and no repeating qualified Linux native x86/ARM jobs.",
+  "task_id": "PLAN028-M0-H1411-ALL-FEC-GRADES-ISA-L-EVIDENCE",
+  "current_task": "H1411 recovered H1409 Linux x86_64 and real ARM64 seven FEC profile native C backend+prepared exact scalar bytes on real native release, and H1410 original protected Windows MSVC FEC2 owner grades 0..6 real ISA-L native C and scalar bytes. All original 3 ZIP CRC and SHA qualified. H1410 Windows job and separate 17/17 FEC2 audit PASS; original H1409 Windows NASM same-step PATH CI FAIL and original FEC2 audit 16/17 count CI FAIL remain HARNESS_ONLY with actual Windows native previous NOT_RUN, now H1410 PASS_NATIVE. Original real Game4FEC Windows TLS/Wintun/native runtime remains H1407 PASS_SCOPED, not same as seven-mode runtime. PLAN028 IN_PROGRESS.",
+  "why_now": "User prioritizes Linux↔Linux/Windows↔Linux ISA-L per-grade default correctness. Original native x86 ARM64 H1409 and Windows H1410 7/7 now verified using exact original manifests, artifacts, release hash and actual native parity bytes; no need new same-family net tests. FEC Off N/A; older Linux functional sources lacking native feature do not prove native.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "First collect H1410 Windows-only native FEC seven-grade original owner and pinned release manifest, and legacy m0-fec2-main-native exact-name gate action; investigate minimum actual failure. Keep original H1409 Windows CI FAIL and later H1410 result separate. After completed do tier matrix: Linux↔Linux Game4FEC real runtime+7 all-grade codec, Win↔Linux Game4FEC real runtime+7 native Win original owner if actually triggered, Fixed/Auto real per-mode runtime quanta still NOT_MEASURED, FEC Off N/A. Then pursue Windows one instance+independent Linux CLIENT same server, never two Win Wintun.",
+  "next_action": "Proceed to PLAN028 next unqualified L1 cross-OS simultaneous co-client isolation (ONE real Windows signed Wintun client + one independent native Linux CLIENT on ONE original Go TLS443 server, distinct account/lease). First inspect real WSL2 namespace/underlay feasibility without inventing second Windows Wintun/physical host; if test infra cannot support one server + two genuinely independent OS clients, label ENVIRONMENT_BLOCKED and preserve old multi-native Linux sessions and genuine Win+Linux server tests, do not fake PASS. Otherwise build minimal 120-180s native two-client one scenario, check independent Stop and sibling continuation. Keep necessary L2/legacy MTU H998 scope. No rerun old ISA-L seven-grade actions.",
   "unverified": true,
-  "last_tested_source": "337dc093438ec216ef17e1761a456f80b3669a02",
+  "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1409-SOURCE337-LINUX-X86-ARM64-SEVEN-REAL-ISAL-PROFILES-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1411-WINDOWS-LINUX-ALL-FEC-GRADES-NATIVE-ISA-L-QUALIFICATION-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1409 source337 Linux x86_64 7/7 and native ARM64 7/7 actual pinned ISA-L k4 160B source/prepared native C encoding scalar identical, real release engine feature; both jobs original SUCCESS and logs/hash inspected. Windows H1409 job failed *before codec test* because NASM current-step PATH not inherited by cmd/nmake despite installed; H1410 current shell PATH fix only, Linux jobs skip one Windows-only push. Historical native main codec source337 17 tests PASS, reporter hardcoded 16 -> CI fail, corrected to exact tests. Existing signed Windows Game4FEC true native quanta older SOURCE eed PASS; 7-grade signed product data per-mode still unmeasured."
+  "partial_summary": "H1411 3 real native ISA-L archives x86 Linux/ARM64/Windows MSVC all 7 strengths real native parity and byte-identical scalar; Windows authenticated Fixed/Auto actual owner 7/7, native release manifest SHA. H1410 CI SUCCESS; old H1409 Win NASM PATH fail and old m0-main-native hardcoded 16/17 test count unrelated to product, fixed H1410 17/17 audit PASS. Game4FEC H1407 actual Windows and Linux runtime tx native positive. Off no FEC; live Fixed/Auto/Game2 native quanta not observed on all actual public-mode scenarios. Two-client Windows+independent Linux same server NOT_RUN. PLAN028 IN_PROGRESS."
 }

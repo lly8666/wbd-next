@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "0cdea544d333d497857d3f7273455f65084f749b",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "All seven FEC strength profiles use real ISA-L C encoder on native Linux x86_64, native Linux ARM64, Windows MSVC native release and Windows actual protected FEC2 owner; scoped native qualification, not all-mode VPN network.",
+  "grade_names": [
+    "light",
+    "mild",
+    "medium",
+    "balanced",
+    "high",
+    "strong",
+    "maximum"
+  ],
+  "backend_policy": {
+    "default": "PreferNative",
+    "feature": "native_fec_acceleration -> wbd-codec/native-isal",
+    "upstream_isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "eligibility": "FEC k>=2 and symbol length>=64 bytes",
+    "fall_back": "k1/tiny symbols and builds without native feature use Scalar; FEC Off no encode",
+    "real_isa_l_dynamic_C_encoding": "PASS_7_PER_PLATFORM",
+    "actual_cpu_instruction_variant": "NOT_MEASURED",
+    "all_profile_repair_bytes_equal_scalar": "PASS"
+  },
+  "original_action_h1409": {
+    "run_id": 42490258856,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42490258856",
+    "run_source": "337dc093438ec216ef17e1761a456f80b3669a02",
+    "overall_ci_conclusion": "failure",
+    "reason": "Windows native assembly NASM installed but not placed in same-step cmd PATH; Windows seven-grade test NOT_RUN on this original action; Linux jobs both PASS",
+    "linux_x86_64": {
+      "job": "success",
+      "artifact_id": 13620444100,
+      "original_zip_sha256": "b0d0f9bbd1585fe91c6656db20b833cae6ae74b0348763325a0586f9fa5b12b9",
+      "zip_crc": "PASS",
+      "archive_sha256": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d",
+      "release_engine_sha256": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6",
+      "real_native_grade_count": 7,
+      "real_prepared_native_grade_count": 7,
+      "scalar_wire_identity": true
+    },
+    "linux_arm64": {
+      "job": "success",
+      "artifact_id": 13621520960,
+      "original_zip_sha256": "fd291f2eadaea47b31792db3cd791f0bc408f248709dae13dc751a5fd7916899",
+      "zip_crc": "PASS",
+      "archive_sha256": "885dff5d6c61d0f534d0cce71c741beb2b6cfcb241683b3d8a09019423b92809",
+      "release_engine_sha256": "ab016dbd87af6fb58734759a780e33e419d471e0b7c66ae5bd8f4f1808a9cfae",
+      "real_native_grade_count": 7,
+      "real_prepared_native_grade_count": 7,
+      "scalar_wire_identity": true
+    }
+  },
+  "original_action_h1410": {
+    "run_id": 42490713541,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42490713541",
+    "run_source": "0cdea544d333d497857d3f7273455f65084f749b",
+    "original_ci_conclusion": "success",
+    "windows_msvc": {
+      "job": "success",
+      "artifact_id": 13621457297,
+      "original_zip_sha256": "01c7bd4a8df3a9579f8f3bf9bef769e1e1d21f173f03c7b1b0314fa555901e96",
+      "zip_crc": "PASS",
+      "archive_sha256": "f4d2ef9517b0176f1546b8aa298c7668c0477d36b8781d6d410737df944a0201",
+      "release_engine_sha256": "dfb36921adeb0d17c9960b3d578bc2242481ea8c84d6015c288eee1c38ce1daa",
+      "real_codec_native_7": 7,
+      "original_protected_Fixed_Auto_owner_native_7": 7,
+      "scalar_wire_identity": true,
+      "original_owner_quiesce_stop_release": "PASS_SCOPE_UNDER_EXISTING_UNIT",
+      "signed_wintun_npac_network_this_action": "NOT_RUN"
+    }
+  },
+  "legacy_fec2_main_native_audit": {
+    "old_action": 42490258886,
+    "old_ci_conclusion": "failure",
+    "old_actual_17_17_codec_tests": "PASS",
+    "old_reason": "Legacy test-count 16 strict fixture after new 17th native test",
+    "new_action": 42490713558,
+    "new_conclusion": "success",
+    "actual_native_tests": 17,
+    "full_vpn": "NOT_RUN"
+  },
+  "seven_public_modes": [
+    {
+      "mode": "Normal Off",
+      "native_isa_l": "NOT_APPLICABLE_FEC_OFF",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Normal Fixed (strength 0..6)",
+      "native_isa_l": "PASS_NATIVE_CODEC_ALL_7+WINDOWS_AUTHENTICATED_OWNER_ALL_7; all-mode live VPN native quanta NOT_MEASURED",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Normal Auto (adaptive strength 0..6)",
+      "native_isa_l": "PASS_SHARED_NATIVE_CODEC_AND_WINDOWS_OWNER_ALL_7; live auto per-grade transitions/positive native quanta NOT_MEASURED",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Game2 Off",
+      "native_isa_l": "NOT_APPLICABLE_FEC_OFF",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Game2 Fixed highest FEC",
+      "native_isa_l": "PASS_SHARED_NATIVE_CODEC; live Game2 nonzero native quanta NOT_MEASURED",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Game4 Off",
+      "native_isa_l": "NOT_APPLICABLE_FEC_OFF",
+      "original_vpn_function": "PRIOR_SCOPED_PASS"
+    },
+    {
+      "mode": "Game4 Fixed highest FEC",
+      "native_isa_l": "PASS_SHARED_NATIVE_CODEC+REAL_WIN_LINUX_PRODUCT_TX_NATIVE_NONZERO",
+      "original_vpn_function": "H1407_SIGNED_WIN_LINUX_TLS_UDP_TCP_STOP_PASS_SCOPED_AND_H1392_L3_ARM64_PASS_SCOPED"
+    }
+  ],
+  "actual_game4_reference": {
+    "windows_linux_source": "eed0392f588053409f5dc52870d1f2d0fd55b033",
+    "action": 42487098097,
+    "windows_native_tx_quanta_generations": [
+      2,
+      11
+    ],
+    "linux_server_native_tx_quanta_generations": [
+      4,
+      4
+    ],
+    "original_game4_linux_arm64_1800s_action": 42475419721
+  },
+  "limitations": [
+    "Proof of real ISA-L function dispatch, not decoded data rate throughput, CPU gain or special SIMD instructions NEON/AVX selected by upstream ISA-L.",
+    "Signed Windows full VPN network is a different original SOURCE; current H1410 is native ABI/build test. Shared runtime path unchanged across test-only commits.",
+    "Older source-built Linux FEC user journeys without native_fec_acceleration remain functional-only PASS, not retroactively native.",
+    "Independent Linux CLIENT and Windows CLIENT co-resident on one server still NOT_RUN; WSL2 Linux peer in existing Windows product test was the SERVER.",
+    "Android/physical devices remain NOT_RUN and H998 legacy hot-same-socket MTU original failure preserved."
+  ],
+  "plan028": "IN_PROGRESS"
+}
