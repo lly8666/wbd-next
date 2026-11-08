@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "c42c0fe10d6057af9466f215541e0c2b30a74767",
+  "classification": "NOT_REPLACEMENT_SIGNED_NPCAP_1_88_EXTRACT_HAS_DIFFERENT_DRIVER_COMPONENT_HASHES",
+  "original_action": {
+    "id": 42472578878,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42472578878"
+  },
+  "raw_artifact": {
+    "id": 13614027178,
+    "files": 2,
+    "sha256": "a24932648f90db7e75ddce974637a50843c3c488a5b617af15dd0e02686069f4",
+    "crc": "PASS_ALL_2"
+  },
+  "actual_external_provenance": {
+    "original_vendor_installer": "https://npcap.com/dist/npcap-1.88.exe",
+    "official_exe_SHA256": "a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b",
+    "original_installer_authenticode": "VALID_NMAP_1_88",
+    "extracted_packet_dll_matches_prior_pins": true,
+    "extracted_wpcap_dll_matches_prior_pins": true,
+    "extracted_NPFInstall_exe_matches_prior_pins": false,
+    "extracted_npcap_sys_matches_prior_pins": false,
+    "extracted_npcap_cat_matches_prior_pins": false,
+    "driver_installed": false,
+    "driver_redistributed": false
+  },
+  "why_not_replacement": "The signed vendor 1.88 installer is byte verified, but original approved old driver package contains different pinned kernel driver/catalog/install bytes; cannot silently replace approved source or weaken per-file hard pins.",
+  "plan028": "IN_PROGRESS"
+}

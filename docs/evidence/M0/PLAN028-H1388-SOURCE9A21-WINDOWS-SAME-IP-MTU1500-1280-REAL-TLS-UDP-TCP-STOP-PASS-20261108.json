@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "9a21e1288f1e7c2a099594ed6687f953d3db0c49",
+  "classification": "PASS_SCOPED_REAL_WINDOWS_SIGNED_NPCAP_WINTUN_WSL2_SAME_IFINDEX_SAME_IP_NIC_MTU1500_TO1280_COLD_REAUTH_DUPLEX_UDP_TCP_STOP",
+  "original_action": {
+    "id": 42466674474,
+    "attempt": 2,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42466674474",
+    "attempt1": "EXTERNAL_SIGNED_DRIVER_CDN_504_NOT_RUN"
+  },
+  "original_artifact": {
+    "id": 13614400411,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_bytes": 24804,
+    "files": 28,
+    "sha256": "0c5d1ea08d4be46b5e5668f190bf51f295460837783486fca6fcb6a93639ae3b",
+    "zip_crc": "PASS_ALL_28"
+  },
+  "genuine_original_native": {
+    "host": "Windows2025 signed original Npcap+Wintun to Ubuntu WSL2 same-source Go TLS443/Rust M4",
+    "source4_before": "198.19.254.1",
+    "source4_after": "198.19.254.1",
+    "nic_ifindex": 25,
+    "nic_os_mtu": [
+      1500,
+      1280
+    ],
+    "original_cold_TLS_generations": 2,
+    "actual_win_SYN_MSS": [
+      1420,
+      1240
+    ],
+    "original_wintun_inner_os_MTU": [
+      1389,
+      1209
+    ],
+    "linux_separate_original_physical_MTU": 1500,
+    "linux_original_tun_MTU": 1389,
+    "old_owner_exact_Stop_before_new_READY": true,
+    "OS_mtu_mutation_to_new_ready_ms": 12406,
+    "Windows_actual_kernel_UDP": {
+      "sent": 107,
+      "received": 108,
+      "new_generation_received_increment": 12
+    },
+    "Linux_actual_kernel_UDP": {
+      "sent": 234,
+      "received": 103,
+      "new_generation_received_increment": 9
+    },
+    "actual_two_OS_TCP": {
+      "windows_echo_bytes": 37,
+      "linux_echo_bytes": 37
+    },
+    "windows_WAL_cleaned": true,
+    "linux_shared_TUN_Stop": true,
+    "windows_owned_NPCAP_service_cleaned": true,
+    "original_user_default_route_unchanged": true,
+    "actual_nic_mtu_restored1500": true
+  },
+  "scope_note": "Original Windows physical OS MTU only, same source IP and NIC, genuinely new TLS/Rust owner. This is NOT the historical H998 same-socket hot PMTU; original H998 FAIL remains.",
+  "plan028": "IN_PROGRESS"
+}

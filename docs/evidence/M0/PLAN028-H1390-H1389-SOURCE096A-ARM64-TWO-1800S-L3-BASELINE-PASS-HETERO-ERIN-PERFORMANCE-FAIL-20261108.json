@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "096a2d55d204c7485aa2fce7d47b3c8e31901bc4",
+  "id": "H1389_ORIGINAL_L3_TWO_NATIVE_ARM64_1800S_H1390_OFFLINE_VERDICT",
+  "classification": {
+    "baseline": "PASS_SCOPED_ORIGINAL_ARM64_1800S_FIVE_TLS_RUST_M4_ROTATIONS_REAL_APPS_AND_PERFORMANCE",
+    "heterogeneous": "PASS_SCOPED_ORIGINAL_ARM64_1800S_FIVE_TLS_RUST_M4_ROTATIONS_STOP_BUT_FAIL_ERIN_30PCT_APP_RX_GAP_PERFORMANCE"
+  },
+  "native_run": {
+    "run_id": 42466954711,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42466954711",
+    "source_sha": "096a2d55d204c7485aa2fce7d47b3c8e31901bc4",
+    "jobs": [
+      "build SUCCESS",
+      "scene baseline SUCCESS 1800s",
+      "scene heterogeneous SUCCESS 1800s"
+    ],
+    "two_independent_ARM64_native_runners": true,
+    "original_GO_TLS443_Rust_M4_per_scene": true,
+    "original_authenticated_clients_per_scene": 5,
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984"
+  },
+  "original_product_sha256": {
+    "client": "3d80328f9b4d94a2ba7bee2bd2fd2fdb685813942091aae32e4c7dab9b79a610",
+    "server": "df04d65f9fb2526f2ae19f3cb6aaae9673b5c9d3f0050016ec0fbc915a435ae4",
+    "rust": "04d7f36bb15526200480c74c6f5222746d4a9712cebdb2cf8e102da8fb9af477"
+  },
+  "scenes": {
+    "baseline": {
+      "original_artifact_id": 13612852570,
+      "original_raw_zip_bytes": 3189938,
+      "original_raw_files": 34,
+      "original_zip_sha256": "7c4cf6005ea025bf77455f5d1982b554bd3455e049fee29c6af119f24002ba7c",
+      "original_zip_crc": "PASS_ALL_34",
+      "actual_duration_seconds": 1800,
+      "original_rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+      "old_real_TLS_owner_handoffs": {
+        "alice": 27,
+        "bob": 25,
+        "carol": 22,
+        "dave_Game4_hot_lane": 19,
+        "erin": 16
+      },
+      "original_server_shared_Rust_TUN": {
+        "routed": 9709868,
+        "unrouted": 0,
+        "backpressure": 0,
+        "reader_joined": 1,
+        "queue_overflows": 0
+      },
+      "app_alert_count": 0,
+      "original_performance_verdict": "NO_CONFIGURED_ALERTS",
+      "qualification": "BASELINE_BUSINESS_AND_PERFORMANCE_PASS_SCOPED"
+    },
+    "heterogeneous": {
+      "original_artifact_id": 13611954544,
+      "original_raw_zip_bytes": 4902799,
+      "original_raw_files": 34,
+      "original_zip_sha256": "58fae41aa929fe9b8234f52fab070b9fe0beabad00869ff4a0a94a23fc28c851",
+      "original_zip_crc": "PASS_ALL_34",
+      "actual_duration_seconds": 1800,
+      "original_rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+      "old_real_TLS_owner_handoffs": {
+        "alice": 23,
+        "bob": 20,
+        "carol": 17,
+        "dave_Game4_hot_lane": 16,
+        "erin": 15
+      },
+      "original_server_shared_Rust_TUN": {
+        "routed": 14610542,
+        "unrouted": 0,
+        "backpressure": 0,
+        "reader_joined": 1,
+        "queue_overflows": 0
+      },
+      "configured_erin_kernel_loss_pct": 30,
+      "erin_oneway_delay_ms": 125,
+      "original_app_receive_alerts": [
+        {
+          "client": "erin",
+          "direction": "uplink",
+          "duration_ms": 3310
+        },
+        {
+          "client": "erin",
+          "direction": "downlink",
+          "duration_ms": 3320
+        }
+      ],
+      "original_performance_verdict": "ALERTS_PRESENT",
+      "configured_gap_threshold_ms": 750,
+      "performance_classification": "FAIL_TRUE_APP_RX_GAP_PERFORMANCE_NOT_WORKFLOW_ONLY",
+      "qualification": "ORIGINAL_L3_ROTATIONS_NATIVE_STOP_PASS_PERFORMANCE_FAIL"
+    }
+  },
+  "offline_independent_replay": {
+    "run_id": 42472269266,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42472269266",
+    "no_network_or_product_rerun": true,
+    "original_34_file_scenes_checked": true,
+    "baseline_artifact": {
+      "id": 13613991037,
+      "files": 2,
+      "sha256": "b8dc44f0825c1dc985064aac93952c41defac3892e5fd92157a391f585705bcb",
+      "crc": "PASS_ALL_2"
+    },
+    "heterogeneous_artifact": {
+      "id": 13613664387,
+      "files": 2,
+      "sha256": "0761fe45c1025ef04be8368fd0167cb51d5bc93f29cf4bd6b129d30d1cf70f22",
+      "crc": "PASS_ALL_2"
+    }
+  },
+  "limitations": [
+    "Not real physical WAN, Android or Windows.",
+    "Original 1800s real application was UDP, not proof of all TCP workloads.",
+    "Full L3 heterogeneous performance PASS withheld due Erin 3.31s/3.32s app receive stalls; later run needed to close.",
+    "Original L3 product source096a remains distinct from prior source8fd/9a21/d9b."
+  ],
+  "plan028": "IN_PROGRESS"
+}

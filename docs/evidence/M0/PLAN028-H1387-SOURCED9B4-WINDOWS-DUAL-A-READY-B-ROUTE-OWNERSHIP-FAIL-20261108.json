@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "d9b49b95deb30db024ede21d12a6f3a4e5804a9a",
+  "classification": "FAIL_ORIGINAL_WINDOWS_TWO_AUTHENTICATED_CLIENTS_B_SECOND_WINTUN_ROUTE_OWNERSHIP_NOT_READY",
+  "original_action": {
+    "id": 42466552995,
+    "attempt": 4,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42466552995",
+    "source_frozen": true,
+    "early_attempts": "EXTERNAL_SIGNED_DRIVER_CDN_504_NOT_RUN",
+    "attempt4_signed_drivers": "ACTUALLY_INSTALLED_CLEANED"
+  },
+  "original_raw_artifact": {
+    "id": 13614101024,
+    "name": "m0-wl-full-public-normal-direct",
+    "files": 21,
+    "sha256": "c97acdaf4b90685da0ca64aecc2649258ec2b177f06adeecd59703d20d6634c6",
+    "zip_crc": "PASS_ALL_21"
+  },
+  "original_two_OS_receipts": {
+    "original_linux_one_TLS443_server_ready": true,
+    "original_linux_server_two_protected_TLS_accounts_with_Rust_M4": true,
+    "server_multi_session_READY_count": 2,
+    "Windows_A_original_signed_Wintun_interface_index": 30,
+    "Windows_A_original_READY": true,
+    "Windows_A_real_TCP_app_echo": true,
+    "Windows_A_real_win32_UDP_app_receive_at_end": 2,
+    "Windows_A_native_Rust_RX_delivered_at_end": 1562,
+    "Windows_A_original_Stop_WAL_restored": true,
+    "Windows_B_original_process_started": true,
+    "Windows_B_original_FakeTCP_SYN_MSS": 1420,
+    "Windows_B_original_TLS_authenticated": true,
+    "Windows_B_native_worker_threads_started": true,
+    "Windows_B_actual_READY": false,
+    "Windows_B_actual_OS_UDP_app": "FAIL_WINERROR_10049_SOURCE_BIND_INVALID",
+    "Windows_B_original_native_failure": "windowsclient: route is not owned; refuse to replace",
+    "Windows_B_WAL_cleanup": "NOT_COMPLETE_OR_NOT_PROVEN",
+    "both_original_Windows_clients_simultaneously_Ready": false,
+    "A_Stop_B_actual_UDP_TCP": "NOT_RUN"
+  },
+  "scope_note": "This is a true original signed two-client Windows attempt with A real native READY/TCP and B real original protected TLS accepted by server. B route ownership/OS address activation failed, so scenario FAIL. Not a false CI reporter error. No A+B native UDP/TCP or WAL isolation PASS.",
+  "plan028": "IN_PROGRESS"
+}
