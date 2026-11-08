@@ -1,0 +1,57 @@
+name: M0 PLAN028 H1371 offline H1368 ARM64 real physical Game4 blackhole
+run-name: PLAN028 H1371 OFFLINE original ARM64 H1368 Game4 common 100pct blackout and recovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1371-offline-h1368-arm64-game4-blackhole.yml"
+      - "tools/m0-plan028-h1371-offline-h1368-arm64-game4-blackhole.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  offline-original-arm64-physical-game4:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42450177745
+          github-token: ${{ github.token }}
+          name: plan028-h1368-native-arm64-game4-correlated-blackhole-42450177745
+          path: original-native-raw/
+      - name: Recompute original ARM64 180s real 10ms apps, kernel 100pct event and five native Stop only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1371-offline-h1368-arm64-game4-blackhole.py
+          for name in h1250-matrix-plan.json h1286-rapid-report.json h1368-native-game4-correlated-traffic.log h1250-qdisc-after.txt h1250-product-server.log; do test -s original-native-raw/$name; done
+          mkdir -p offline-replay
+          python3 -u tools/m0-plan028-h1371-offline-h1368-arm64-game4-blackhole.py --art original-native-raw --out offline-replay/h1371-original-arm64-game4-blackhole-audit.json | tee offline-replay/h1371-audit.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path('offline-replay/h1371-original-arm64-game4-blackhole-audit.json').read_text())
+          assert r['original_source']=='24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73'
+          assert r['wrapper_source']=='a4bfb7237be624442819a45c61c5455d4944e4e4'
+          assert r['original_action']==42450177745 and r['original_ci_conclusion']=='failure'
+          assert r['original_artifact_id']==13605541335 and r['network_rerun'] is False
+          assert r['classification']=='PASS_SCOPED_NATIVE_ARM64_GAME4_TRUE_SHARED_PHYSICAL_BLACKHOLE_180S_SIBLINGS_RECOVERY'
+          assert r['original_server_tls_port']==443 and len(r['original_five_clients'])==5
+          assert 7.5<r['physical_100pct_both_direction_blackhole']['duration_s']<8.5
+          assert all(v['drops']>100 for v in r['physical_100pct_both_direction_blackhole']['original_kernel_qdisc_event_counts'].values())
+          assert all(r['exact_five_client_Stop'].values()) and r['server_shared_TUN_Stop']
+          assert not r['native_app_or_owner_faults']
+          assert 0<r['original_180s_10ms_app_samples']['dave']['uplink']['first_native_app_receive_after_restore_ms']<2500
+          assert 0<r['original_180s_10ms_app_samples']['dave']['downlink']['first_native_app_receive_after_restore_ms']<2500
+          assert r['original_unfiltered_generic_rapid']['untriggered_rotation_timer_seconds']==600
+          print('M0_PLAN028_H1371_ARM64_GAME4_TRUE_REAL_OS_BLACKHOLE_SIBLING_AND_RECOVERY_OFFLINE_PASS',flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1371-original-arm64-game4-blackhole-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
