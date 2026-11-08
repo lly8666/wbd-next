@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "status": "IN_PROGRESS",
+  "source_head_at_launch": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+  "windows_linux": {
+    "workflow_run_id": 42508261361,
+    "source_sha": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+    "workflow": "m0-wl-public-normal-full.yml",
+    "cheap_assembly_test": "SUCCESS",
+    "windows_signed_native_job": "PENDING_AFTER_SAME_SOURCE_GO_RUST_COMPILE",
+    "actual_1800s_business": "NOT_RUN_AS_OF_THIS_RECORD",
+    "requirements": {
+      "windows_vpn_instances": 1,
+      "linux_native_independent_netns_client": 1,
+      "server_port": 443,
+      "original_Go_TLS_Rust_M4": true,
+      "continuous_duplex_udp_sec": 1800,
+      "actual_udp_min_offered": 12500,
+      "app_echo_fraction_min": 0.97,
+      "reverse_udp_min_count": 12500,
+      "maximum_active_no_rx_gap_ms_exclusive": 1500,
+      "real_both_client_tcp_probes_min": 28,
+      "native_rss_samples_min": 12,
+      "windows_owned_Stop_then_linux_continues": true,
+      "full_windows_wal_linux_server_stop_and_owned_bridge_restore": true
+    },
+    "prior_before_native_CI_failures": [
+      {
+        "run_id": 42507562916,
+        "classification": "HARNESS_OR_CI_FAILURE_L3_TIMEOUT_TEST_LITERAL_24",
+        "native_product": "NOT_RUN"
+      },
+      {
+        "run_id": 42507776166,
+        "classification": "HARNESS_OR_CI_FAILURE_MANAGED_TEST_LITERAL_24",
+        "native_product": "NOT_RUN"
+      },
+      {
+        "run_id": 42507973848,
+        "classification": "HARNESS_OR_CI_FAILURE_GAME2_TEST_LITERAL_24",
+        "native_product": "NOT_RUN"
+      }
+    ]
+  },
+  "parallel_arm64": {
+    "run_id": 42505975134,
+    "source_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+    "native_arm64_build": "SUCCESS",
+    "scenes": [
+      {
+        "name": "baseline",
+        "seconds": 1800,
+        "status": "IN_PROGRESS"
+      },
+      {
+        "name": "heterogeneous",
+        "seconds": 1800,
+        "status": "IN_PROGRESS"
+      }
+    ],
+    "qualification": "NOT_YET_DETERMINED"
+  },
+  "source_comparability": "From eef2 to d6 only workflow, offline tests, fixtures, cursor and evidence changed; no original Go/Rust product source edits. Windows/ARM compiled artifacts are platform-specific, no cross-VM CPU A/B inference.",
+  "limits": [
+    "WSL2 Linux netns is genuinely independent Linux client process and OS stack, not a second physical computer",
+    "This one Win/Lin L3 is Normal Off and not seven-mode or multi-physical-WAN",
+    "Do not promote either in-progress network scene to PASS",
+    "H998 old same-socket hot MTU fail and Android/physical NOT_RUN retained"
+  ],
+  "plan028_status": "IN_PROGRESS"
+}
