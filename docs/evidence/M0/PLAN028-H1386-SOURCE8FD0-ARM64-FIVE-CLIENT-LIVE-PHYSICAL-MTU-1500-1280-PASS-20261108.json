@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "8fd0eb27fbc23f1491e7934baf0f4dee6a282c32",
+  "case": "H1386_NATIVE_ARM64_ORIGINAL_PRODUCT_PHYSICAL_MTU_CHANGE_LIVE_FIVE_CLIENTS_180S",
+  "classification": "PASS_SCOPED_REAL_ARM64_ORIGINAL_GO_TLS443_RUST_M4_LIVE_PHYSICAL_MTU_SHRINK_NEW_EPOCH_RECOVERY_FIVE_CLIENTS_180S",
+  "native_original_action": {
+    "run_id": 42465059734,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42465059734",
+    "conclusion": "success",
+    "build_job": "success",
+    "scene_baseline_native_job": "success"
+  },
+  "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_artifact": {
+    "id": 13611193724,
+    "name": "h1291-short-physical-baseline-42465059734",
+    "bytes": 441030,
+    "zip_sha256": "e8d7b5e9b5f4236f91376144a3628b8e4a0922268523830d718f4d027035658f",
+    "files": 35,
+    "zip_crc": "PASS_ALL_35"
+  },
+  "product_binary_manifest": {
+    "source_sha": "8fd0eb27fbc23f1491e7934baf0f4dee6a282c32",
+    "architecture": "native_aarch64",
+    "go_toolchain": "1.23.12",
+    "rust_toolchain": "1.85.1",
+    "binary_sha256": {
+      "wbd-v4-client": "3d80328f9b4d94a2ba7bee2bd2fd2fdb685813942091aae32e4c7dab9b79a610",
+      "wbd-v4-server": "df04d65f9fb2526f2ae19f3cb6aaae9673b5c9d3f0050016ec0fbc915a435ae4",
+      "libwbd_engine.so": "ab016dbd87af6fb58734759a780e33e419d471e0b7c66ae5bd8f4f1808a9cfae"
+    }
+  },
+  "platform_scope": "genuine ARM64 Linux 6 netns / veth / TUN / kernel tc; not Windows or physical WAN",
+  "actual_live_OS_mutation": {
+    "case": "alice_real_veth_both_ends_same_ip_no_link_down",
+    "role": "alice Normal",
+    "client_physical_ip": "10.25.0.2",
+    "old_and_new_original_OS_link_MTU": {
+      "before": [
+        1500,
+        1500
+      ],
+      "after": [
+        1280,
+        1280
+      ]
+    },
+    "seconds_into_app": 70.03162,
+    "source": "real_ip_link_mtu_set_under_active_auth_tls",
+    "actual_link_down": false
+  },
+  "original_TLS443_owner_readbacks": {
+    "single_original_server_TLS_port": 443,
+    "alice_original_authenticated_generations": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "alice_old_exact_stop_generations": [
+      1,
+      2,
+      3
+    ],
+    "alice_original_pre_mtu_gen": {
+      "generation": 2,
+      "physical_mtu": 1500,
+      "original_mss": 1420
+    },
+    "alice_original_post_mtu_generations": [
+      {
+        "generation": 3,
+        "physical_mtu": 1280,
+        "original_mss": 1240,
+        "server_confirmed_source_port": 64791
+      },
+      {
+        "generation": 4,
+        "physical_mtu": 1280,
+        "original_mss": 1240,
+        "server_confirmed_source_port": 56327
+      }
+    ],
+    "all_five_client_final_owned_stop": true,
+    "all_server_native_budgets": true
+  },
+  "real_original_business": {
+    "duration_s": 180,
+    "client_modes": {
+      "alice": "normal",
+      "bob": "fec-auto",
+      "carol": "game2",
+      "dave": "game4",
+      "erin": "fec-fixed"
+    },
+    "original_rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+    "original_alert_count": 0,
+    "final_minute_alice": {
+      "uplink": {
+        "offered_mbps": 6.4,
+        "delivered_mbps": 6.39986,
+        "delivery_fraction": 0.99998
+      },
+      "downlink": {
+        "offered_mbps": 6.39986,
+        "delivered_mbps": 6.39952,
+        "delivery_fraction": 0.99995
+      }
+    },
+    "middle_minute_alice_live_mutation": {
+      "uplink_delivery_fraction": 0.99502,
+      "downlink_delivery_fraction": 0.99565
+    },
+    "game4_original_lane_hot_replacements": 2,
+    "server_original_five_authenticated_lease_queues": [
+      {
+        "lease": "10.66.0.148",
+        "offered": 167996,
+        "direct_delivered": 167996,
+        "pending_overflow": 0
+      },
+      {
+        "lease": "10.66.0.152",
+        "offered": 229186,
+        "direct_delivered": 229186,
+        "pending_overflow": 0
+      },
+      {
+        "lease": "10.66.0.239",
+        "offered": 226794,
+        "direct_delivered": 226794,
+        "pending_overflow": 0
+      },
+      {
+        "lease": "10.66.0.243",
+        "offered": 167996,
+        "direct_delivered": 167996,
+        "pending_overflow": 0
+      },
+      {
+        "lease": "10.66.0.250",
+        "offered": 167995,
+        "direct_delivered": 167995,
+        "pending_overflow": 0
+      }
+    ],
+    "native_isal_linked_and_called": true,
+    "original_scalar_quanta": 1140,
+    "original_native_quanta": 61447
+  },
+  "original_log_marker": "H1291_REAL_PHYSICAL_MTU_1500_TO_1280_OLD_NEW_TLS_NATIVE_M4_APP_PASS",
+  "limitations": [
+    "This is original ARM64 Linux actual SAME-IP hot physical NIC MTU change followed by genuine protected COLD TLS reauthentication and new Rust M4 owner; it does NOT establish continuity inside the same old original TLS socket.",
+    "Historical PLAN027A H998 original ARM64 same-socket hot physical MTU failure remains preserved; H1386 is a different successful replacement-generation scope.",
+    "Does not qualify signed Windows Npcap/Wintun dual accounts, Windows physical WAN, Android, or 2 original final 1800-second L3 soaks."
+  ],
+  "plan028": "IN_PROGRESS"
+}
