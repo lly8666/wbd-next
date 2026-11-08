@@ -15,3 +15,7 @@
 ## H1392 首次 Action 的离线预检错误
 
 源 `71fa9c3d` 推送后 [Action 42475181912](https://github.com/lly8666/wbd-next/actions/runs/42475181912) 直接在 workflow 解析阶段 FAIL，jobs=[]，**没有执行构建或网络，产品 NOT_RUN**。原因是生成 YAML 时文本替换把正则 `ec_encode_data$` 后面的单引号错误识别成替换特殊序列，尾部被复制；本次恢复唯一有效 workflow 及完整 `nm`、Cargo Native feature 指令，业务参数、原错误物证不变。属于 `HARNESS_OR_CI_FAILURE`，不能当 ISA-L 产品失败。同步触发的其它原有 path-filter 工作流只记独立结果，不重复 dispatch。
+
+## cursor SOURCE 一致性修正
+
+[治理 Action 42475419694](https://github.com/lly8666/wbd-next/actions/runs/42475419694) 和 [maintenance 42475419683](https://github.com/lly8666/wbd-next/actions/runs/42475419683) 于 `4444328` 真实失败，因为当批 cursor 将 `last_tested_source` 误改为 `096a`，却保留了全部 `6c5` 来源的 `evidence_refs`，仓库守卫报告 `evidence is for a different SOURCE`。这不涉及业务或测试结果。保留两组来源独立、恢复该字段为原来 `6c5fd909...`，H1389 `096a` 放在既有独立证据，H1392 新 SOURCE 仍等待原始 Action 回执。不要为元数据不一致重跑网络。
