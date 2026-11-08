@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1422,
-  "checkpoint_sha": "e2a74d8090fc324524fed66587ec158c6af70fbc",
+  "sequence": 1423,
+  "checkpoint_sha": "b1023f909f1eb3e19a986df313e2373fa815faff",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1422-EXACT-ORIGINAL-GO-ASSEMBLY-LOCK-AND-EXECUTED-PEER-UNIT",
-  "current_task": "H1421 SOURCEe2a74d original per-authenticated-session SYN persona product cold repair candidate, but automatic CI Actions42501747637/29/49/85/83/84/44 and governance maintenance stopped before native VPN due original-go assembly manifest stale result blobs for modified packet.go/association.go. All original FAIL retained; H1421 native network NOT_RUN. H1422 syncs exact git blob SHA for both overlay files in canonical manifest-plan020-m0.json and historic mirror manifest.json; adds new Go persona unit test to actual donor assembly (not just uninstalled repo file); fixes negative test so only final SYN NOP mutates, preserved MSS/SACK/WS recognized. One SOURCE native test pending; no product code change since H1421.",
-  "why_now": "Verified build first error via exact original Action logs: FEC2_ASSEMBLY_REJECTED overlay result blob mismatch internal/faketcp/packet.go (result 82d462… stale, HEAD real 54a298…). Code in pinned donor requires exact provenance before build, never bypass. Added test existed in overlay but not manifest, hence would never run; fix that along with bad negative test whose two option bytes accidentally wiped MSS. Keep strict source policy and true unit coverage.",
+  "task_id": "PLAN028-M0-H1423-LAST-CANONICAL-GO-LINUX-OWNER-BLOB",
+  "current_task": "H1422 SRC b1023f exact faketcp packet/association blob lock and Go SYN unit installation passed fakeTCP check; Windows cheap job then failed prepare_windows_wiring.py --check-only: assembly blob mismatch r0/go_overlay/internal/v4productcli/linux.go. Audited git tree 4318 entries against ALL 102 canonical manifest-plan020-m0 overlay paths, only mismatch is this exact changed Linux shared TLS server Go cold per-session persona file. Old archive manifest.json has five historic unrelated differences; deliberately do not touch unrelated archived catalog. H1423 one canonical result_blob value repinned to actual blob 95df7528..., no product edits; all H1421/H1422 original Actions were pre-network FAIL and remain recorded. Need source-locked native Windows/Linux product test before claiming persona fix.",
+  "why_now": "Whole canonical assembly check first, not repeated seed: all 102 current mapped paths audited against exact git tree, exactly one remaining stale result_blob from H1421 Linux Go cold session file. Existing prepare_windows_wiring.py strictly rejects stale SHA; keep fail closed. Avoid changing 5 unrelated historical rows in legacy manifest.json (not active/current product).",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1422 all original automatic Actions without duplicate dispatch. Prioritize cheap Go assembler and targeted unit + signed Windows/Linux one-OS-each original Go TLS443 Rust M4. Verify per-session original SYN Windows11 A/Legacy B (real server readback), concurrent true UDP echo+independent reverse each and TCP, owned Windows A Stop Linux B continues, final Linux/server Stop, WAL and bridge cleanup. Inspect real first failure only. ISA-L x86 ARM64 Win all-seven verified; avoid network long replay.",
+  "next_action": "Collect H1423 Windows cheap+original Go assembly, actual new plan028 Go SYN persona positive/negative tests, then one Windows signed Npcap/Wintun A plus separate Linux netns manual B TLS/Rust two session peer-persona 1/0, UDP echoes+reverse and TCP, A WAL Stop B survival, all exact owned Stop and bridge restore. Preserve H1420 Linux echo FAIL and H1421/H1422 CI preflight failures. No new test dispatch, reuse full automatic source-locked current Action.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1420 original real Windows A 264/264 echoes and reverse259, Linux B only 3/236 echoes yet reverse229 despite 2 protected TLS/Rust M4 ready; global peer persona is proven product mismatch. H1421 cold per association persona fix built but CI rejected stale exact original-Go SHA manifest, no new product network. H1422 sync exact SHA and install/execute positive/negative Go unit in canonical assembly, fix test mutation. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1421 fixed per-authenticated-session outer persona but no native test due stale code assembly SHA. H1422 installed true Go persona tests plus fakeTCP pins, but Windows preflight found Linux.go SHA drift. Exhaustive current canonical manifest 102 paths vs git tree showed sole missing linux.go. H1423 repins only this canonical blob, all product code unchanged. PLAN028 IN_PROGRESS."
 }
