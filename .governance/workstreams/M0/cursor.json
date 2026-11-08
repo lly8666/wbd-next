@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1435,
-  "checkpoint_sha": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+  "sequence": 1436,
+  "checkpoint_sha": "b1dc4498b989ddadd1f4f81c456e5c3271f63c46",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1435-ARM64-AND-CROSSOS-L3-INFLIGHT",
-  "current_task": "H1435 source d6aeb646 user-approved Win2025 signed Npcap/Wintun ONE VPN A plus separate WSL2 Linux netns native client B same original Go TLS443/Rust server Action42508261361: cheap complete assembly/control/native watch tests SUCCESS, eligible Windows Go/Rust and Linux Rust jobs running; actual signed Wintun/1800s still NOT_RUN until live native job. Earlier Actions42507562916,42507776166,42507973848 all failed PRE-NETWORK static old timeout24 tests, original fail preserved, no product cause. Parallel native ARM64 SOURCEeef2a813 Action42505975134 pinned ISA-L original build SUCCESS; both 1800s independent baseline/heterogeneous jobs still in progress no L3 conclusion. No product code differences from ARM source eef2 to Win source d6, only test harness/workflow/tests/docs. PLAN028 IN_PROGRESS.",
-  "why_now": "User explicitly requested Win/Linux real 1800s parallel with ARM64; signed single-Windows+independent-Linux per-credential Win11/Legacy real 1800 test now passes cheap gate, not yet original native traffic. Record exact Actions and preflight-only failures to enable interruption-safe continuation without duplicate dispatch.",
+  "task_id": "PLAN028-M0-H1436-ORIGINAL-TWO-PLATFORM-L3-ACCEPTANCE",
+  "current_task": "Collected exact original Actions42505975134 native ARM64 and42508261361 signed Windows + independent Linux L3. ARM64 sourceeef2 one pinned ISA-L build+baseline/hetero two independent real1800s jobs all SUCCESS. Retrieved 36-file CRC PASS original artifacts both, 0 alerts, max active no-RX 50/120ms, ten PERMANENT physical veth neighbors, hetero Erin true 30.026%/30.006% DATA drops, all five protected rotations/Stop, ISA-L Game4 tx_native_quanta 616047/904315 and native decodes 5518/152541 client, server positive, no per-lease queue overflow. PASS_SCOPED. Windows source d6 signed driver, binaries, WSL2 and all precompile SUCCESS, native stage19 started but run FAIL and stage remains in_progress; no late artifact/Stop, job log 404 BlobNotFound, all other job logs available. Win1800 NOT_QUALIFIED, not product PASS or established product defect. Earlier H1424 Win+Linux real two-user UDP/TCP and Stop PASS_SCOPED preserved. PLAN028 IN_PROGRESS.",
+  "why_now": "Do not treat workflow overall green as a substitute for original app/ISA-L/Stop, and do not treat missing Windows 1800s final evidence as a product failure when the native job's own logs are missing. ARM64 passes supported by independent original raw ZIPs.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "First collect Actions42508261361 and42505975134 original jobs/artifacts, do not redispatch. For Win require native signed driver, one Windows VPN, independent Linux authenticated M4 on same443, 1800 elapsed real UDP/TCP and no >=1500ms gap, >=12 actual RSS and full A owned Stop B alive then server/Linux Stop/WAL and OS bridge restore. For ARM require full original app 30min true qdisc, 10 permanent static neighbours, native ISA-L and five rotation/Stop. Classify failures without relabeling; amend evidence and PLAN028 L0-L3 matrix; do not close 028 or start 029/030 until full native evidence.",
+  "next_action": "First investigate Windows native step19 liveness from original Actions job timeline and verified build/boot artifacts, with no blind rerun of ARM64 source or already failed identical Windows seed. Correct the minimum reliable diagnostic/owned cleanup boundary or choose one source-frozen Windows L3 attempt with original true 1800s app/Stop and visible output; if runner or management network disappears, retain NOT_QUALIFIED. Keep H1424 Windows L1 PASS; update L0-L3 matrix with recovered ARM64 L3, preserve H998 historical and Android/physical NOT_RUN. PLAN028 remains in feature freeze; no 029/030.",
   "unverified": true,
-  "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
+  "last_tested_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+    "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1435 parallel scope locked: Win source d6aeb646 Action42508261361 cheap preflight SUCCESS and Windows/Linux native product compile unit jobs in progress, 1800s NOT_RUN yet. ARM source eef2 Action42505975134 native build SUCCESS, two native 1800s scenes still running. Both in flight but no qualified long PASS. Three earlier Win Actions failed only offline historical timeout asserts before native. One Windows VPN max, Linux separate WSL2 netns, no product code changes. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1436: exact-source ARM64 native two 1800s original real app/rotations/qdisc/ISA-L/Stop PASS_SCOPED; baseline largest 50ms and hetero120ms with true Erin 30pct each way; 0 alerts, CRC originals and one ISA-L build frozen. Win-Linux one signed client Action42508261361 normal original product build+signed drivers+guest READY preflight, but native stage19 unfinished/runner or CI loss, logs 404, no 1800s or owned Stop result: NOT_QUALIFIED; historical H1424 crossOS two-user TLS/UDP/TCP/Stop PASS_SCOPED remains valid. 028 IN_PROGRESS."
 }

@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "evidence_kind": "ORIGINAL_TWO_PLATFORM_L3_ACCEPTANCE",
+  "result": "PARTIAL_SCOPED_PASS_ARM64_AND_WINDOWS_L3_UNQUALIFIED",
+  "plan_status": "IN_PROGRESS",
+  "arm64": {
+    "run_id": 42505975134,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42505975134",
+    "head_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "run_conclusion": "success",
+    "build_and_both_independent_jobs": "success",
+    "verified_artifacts": true,
+    "archive": {
+      "baseline": {
+        "artifact_id": 13628054467,
+        "sha256": "64d655e63cb7621a64e6e6c166ef22d8cb0c985af7ff11d01d941077601ad8fc",
+        "zip_entries": 36,
+        "crc": "PASS"
+      },
+      "heterogeneous": {
+        "artifact_id": 13628472837,
+        "sha256": "183dad63707561d57705ad6ed20ddfd06696009323939efeec501fe98e5c858d",
+        "zip_entries": 36,
+        "crc": "PASS"
+      }
+    },
+    "build": {
+      "architecture": "native_aarch64",
+      "go_version": "1.23.12",
+      "rust_version": "1.85.1",
+      "isa_l_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+      "native_fec_acceleration": true,
+      "static_lib_sha256": "885dff5d6c61d0f534d0cce71c741beb2b6cfcb241683b3d8a09019423b92809",
+      "binary_sha256": {
+        "client": "b5ff37526d1ec7887edec1512b82ffac0618a8a3a353a4140048fc1d6a24d64e",
+        "server": "7520d227de02e7230d758360893165931d930a222cc44187ef567b575fcda2c3",
+        "rust": "ab016dbd87af6fb58734759a780e33e419d471e0b7c66ae5bd8f4f1808a9cfae"
+      }
+    },
+    "scope": "two independent ARM64 native runner scenes, actual original Go TLS443/Rust, five authenticated clients per scene, Normal/FEC Auto/Game2/Game4/FEC Fixed, real kernel 10ms UDP active bins and framed TCP, rotation/Stop, 10 permanent test-only veth neighbors",
+    "scenes": {
+      "baseline": {
+        "duration_s": 1800,
+        "verdict": "PASS_SCOPED",
+        "configured_alerts": 0,
+        "rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+        "largest_active_10ms_no_receive_ms": 50,
+        "per_client_max_gap_ms": {
+          "alice": 0,
+          "bob": 0,
+          "carol": 10,
+          "dave": 20,
+          "erin": 50
+        },
+        "process_cpu": {
+          "server_samples": 621,
+          "server_average_one_core_cpu_percent": 65.735,
+          "server_peak_rss_kib": 180716
+        },
+        "server_per_lease_pending_overflow": 0,
+        "physical_neighbours_permanent_after": 10,
+        "game4_native": {
+          "client": {
+            "native_linked": 1,
+            "backend": "prefer-native",
+            "tx_native_quanta": 616047,
+            "rx_native_decodes": 5518
+          },
+          "server": {
+            "native_linked": 1,
+            "backend": "prefer-native",
+            "tx_native_quanta": 615620,
+            "rx_native_decodes": 5463
+          }
+        },
+        "true_weaknet": {
+          "carol_1pct": "PASS",
+          "dave_1pct": "PASS",
+          "erin_5pct": "PASS"
+        },
+        "original_stop": "PASS_ALL_FIVE"
+      },
+      "heterogeneous": {
+        "duration_s": 1800,
+        "verdict": "PASS_SCOPED",
+        "configured_alerts": 0,
+        "rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+        "largest_active_10ms_no_receive_ms": 120,
+        "per_client_max_gap_ms": {
+          "alice": 10,
+          "bob": 10,
+          "carol": 50,
+          "dave": 100,
+          "erin": 120
+        },
+        "process_cpu": {
+          "server_samples": 621,
+          "server_average_one_core_cpu_percent": 82.276,
+          "server_peak_rss_kib": 194988
+        },
+        "server_per_lease_pending_overflow": 0,
+        "physical_neighbours_permanent_after": 10,
+        "game4_native": {
+          "client": {
+            "native_linked": 1,
+            "backend": "prefer-native",
+            "tx_native_quanta": 904315,
+            "rx_native_decodes": 152541
+          },
+          "server": {
+            "native_linked": 1,
+            "backend": "prefer-native",
+            "tx_native_quanta": 903621,
+            "rx_native_decodes": 153410
+          }
+        },
+        "true_weaknet": {
+          "bob_1pct": "PASS",
+          "carol_5pct": "PASS",
+          "dave_15pct": "PASS",
+          "erin_30pct": {
+            "configured_percent": 30,
+            "actual_uplink_drop_fraction": 0.30026,
+            "actual_downlink_drop_fraction": 0.30006
+          }
+        },
+        "original_stop": "PASS_ALL_FIVE",
+        "erin_cold_candidates_failed_before_later_success": 1
+      }
+    },
+    "qualification": "PASS_SCOPED_FINAL_NATIVE_ARM64_TWO_INDEPENDENT_REAL_1800S",
+    "limitations": [
+      "Hosted native ARM64 runner network namespaces are not independently owned physical WAN hosts",
+      "Game4 native ISA-L positive readback; Normal/off is not a native FEC workload",
+      "One hetero FEC fixed 30pct candidate failed and succeeded later; not erased or reclassified",
+      "No same-socket H998 HOT MTU fix proof"
+    ]
+  },
+  "win_linux": {
+    "run_id": 42508261361,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42508261361",
+    "head_sha": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "run_conclusion": "failure",
+    "stage_results": {
+      "cheap_preflight": "SUCCESS",
+      "windows_go_compile": "SUCCESS",
+      "windows_rust_unit": "SUCCESS",
+      "linux_rust_unit": "SUCCESS",
+      "original_Go_TLS_and_Rust_Linux_build": "SUCCESS",
+      "windows_signed_ISAL_static_archive_build": "SUCCESS",
+      "windows_original_Rust_release_DLL_build": "SUCCESS",
+      "signed_Npcap_Wintun_driver_install": "SUCCESS",
+      "Linux_source_binary_reuse": "SUCCESS",
+      "real_WSL2_ubuntu_kernel_boot": "SUCCESS",
+      "native_product_step": "ABORTED_OR_RUNNER_LOST_WITHOUT_FINAL_RECEIPT",
+      "post_step_owned_cleanup": "NOT_RUN"
+    },
+    "evidence_limit": "The actual native Windows job entered the real two-OS product stage (number 19) but the GitHub job reports completed failure while its step remains in_progress, with all later upload and cleanup steps pending. Job-log endpoint returns 404 BlobNotFound; other jobs' logs are readable. No final 1800s business/Stop artifact uploaded.",
+    "observed_artifacts": [
+      "m0-plan024-linux-product",
+      "m0-wl-windows-product-binaries-d6aeb6462de5a249399b9cfbe15701df287f07d9",
+      "m0-wl-real-guest-boot-42508261361",
+      "windows-compile-preflight-42508261361",
+      "rust-owner-compile-preflight-42508261361",
+      "linux-rust-contract-preflight-42508261361"
+    ],
+    "original_native_app_1800s": "NOT_QUALIFIED_NO_FINAL_ORIGINAL_APP_COUNTERS",
+    "original_native_exact_stop": "NOT_QUALIFIED_NO_FINAL_ORIGINAL_STOP_AND_OS_WAL_READBACK",
+    "classification": "CI_OR_RUNNER_LIVENESS_OR_NATIVE_STAGE_UNKNOWN_ROOT_NOT_A_PRODUCT_PASS",
+    "legacy_L1_verified": "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json",
+    "existing_L1_status": "PASS_SCOPED_TRUE_TWO_ACCOUNT_TLS443_UDP_TCP_WINDOWS_STOP_LINUX_SURVIVES",
+    "earlier_failed_pre_network_runs": [
+      42507562916,
+      42507776166,
+      42507973848
+    ],
+    "no_implied_assertions": [
+      "Do not infer 1800s elapsed merely from long job wall time",
+      "Do not declare the Windows native 1800s true functional PASS without actual app/Stop receipts",
+      "Do not declare an original Go/Rust protocol FAIL without original packet/owner failure evidence",
+      "Do not count WSL2 network namespace as separate physical computer"
+    ]
+  },
+  "source_comparability": "Only Windows workflow/test tools, docs and governance changed between ARM64 eef2 and Win-Linux d6; Go/Rust shipping product source remained identical, but platform binaries differ and CPU figures are not directly comparable.",
+  "plan028_exit": "IN_PROGRESS_L0_L2_AND_ARM64_L3_SCOPED_PASS_WINDOWS_L3_UNQUALIFIED"
+}

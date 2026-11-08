@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "role_id": "M0",
   "date": "2026-11-09",
-  "result": "PARTIAL_ACCEPTANCE_AUDIT",
+  "result": "PARTIAL_ACCEPTANCE_ARM64_FINAL_L3_PASS_WINDOWS_LONG_INCONCLUSIVE",
   "plan_status": "IN_PROGRESS",
-  "reviewed_head": "e9013ce58b6cc5174b9041eeffa6da11c9bfe089",
+  "reviewed_head": "b1dc4498b989ddadd1f4f81c456e5c3271f63c46",
   "final_native_l3_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
   "final_l3_action": 42505975134,
   "final_l3_status_at_creation": "IN_PROGRESS_NOT_YET_QUALIFIED",
@@ -100,10 +100,13 @@
       "notes": "Baseline/hetero 0 alerts, maximum active sender gap50/120ms, 5 authentic rotations and exact Stop, real native ISA-L with test-only ARP deconfound; not new cold persona SOURCE"
     },
     "L3_final_native_ARM64_two_1800s": {
-      "status": "IN_PROGRESS",
+      "status": "PASS_SCOPED",
       "source_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
       "action": 42505975134,
-      "notes": "Original pinned ISA-L build then separate independent native ARM64 healthy and heterogeneous jobs; evaluate only raw artifacts after both jobs stop"
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json"
+      ],
+      "notes": "Actual same-SOURCE native ARM64 build and two independent baseline/hetero 1800s, 5 protected users, true qdisc 30pct, 10 permanent ARP neighbours, zero alerts and overflows, 50/120ms maximum active no RX, Game4 ISA-L native tx/rx positive, real rotations and owned Stop, original 36-entry ZIP CRC."
     },
     "legacy_H998_live_hot_socket_MTU": {
       "status": "HISTORICAL_FAIL_RETAINED",
@@ -116,8 +119,19 @@
     "new_go_feature_or_followup_029_030": {
       "status": "NOT_AUTHORIZED",
       "notes": "Do not expand scope"
+    },
+    "L3_windows_linux_single_Wintun_independent_linux_1800s": {
+      "status": "NOT_QUALIFIED_NATIVE_JOB_INCOMPLETE_OR_LOG_UNAVAILABLE",
+      "source_sha": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+      "action": 42508261361,
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json"
+      ],
+      "notes": "Original signed Windows single Npcap/Wintun and Linux netns B product build/driver/WSL2 prerequisites pass. True product stage entered but no 1800s counters, no owned Stop; native job failed, last step in_progress, later artifact/cleanup not executed; job log 404. Do not relabel as PASS or product FAIL. Short original H1424 two-client UDP/TCP Stop PASS_SCOPED remains valid."
     }
   },
-  "source_comparability": "Historical scoped PASS reused where algorithm/record/FEC remained unchanged; new per-session cold SYN Windows11/Legacy regression proven current signed Windows plus Linux at e6aa; pending final native 1800s eef. No absolute CPU comparison across different runner VMs.",
-  "ready_to_close": false
+  "source_comparability": "Historical scoped PASS reused where algorithm/record/FEC remained unchanged; new per-session cold SYN Windows11/Legacy regression proven current signed Windows plus Linux at e6aa; pending final native 1800s eef. No absolute CPU comparison across different runner VMs. Updated 2026-11-09: final native ARM64 source eef2 two 1800s PASS_SCOPED; Win-Linux d6 incomplete Action not promoted.",
+  "ready_to_close": false,
+  "verification_updated_at": "2026-11-09",
+  "final_l3_current_status": "PASS_SCOPED_ARM64_TWO_REAL_1800S"
 }
