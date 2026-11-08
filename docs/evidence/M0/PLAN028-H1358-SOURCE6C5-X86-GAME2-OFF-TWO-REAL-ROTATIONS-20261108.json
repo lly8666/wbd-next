@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1358",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "qualification": "PASS_SCOPED_NATIVE_X86_GAME2_OFF_TWO_REAL_ROTATIONS_FIVE_CLIENT",
+  "native_action": {
+    "id": 42440112109,
+    "conclusion": "success",
+    "preflight_job": 128607318478,
+    "real_network_job": 128607339319,
+    "wrapper_source": "bfd1bdf7822db4f430a7917320e16b9bda4b777c"
+  },
+  "native_archive": {
+    "id": 13601161930,
+    "zip_sha256": "705d28c82a2c0d632fe3125fd5289953f4e991ff4d61bdc177af656814e7b5de",
+    "files": 36,
+    "crc": "PASS"
+  },
+  "product": {
+    "source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "native_both_ends": "Linux x86_64 original Go TLS443/Rust M4 ISA-L",
+    "manifest_ELF62_three_SHA256": "PASS",
+    "product_modified": false
+  },
+  "physical": {
+    "real_native_six_netns": true,
+    "authenticated_client_leases": 5,
+    "single_server_port": 443,
+    "test_static_veth_neigh": "10/10 PERMANENT",
+    "two_way_random_loss_pct": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "oneway_delay_ms": [
+      0,
+      10,
+      20,
+      30,
+      0
+    ]
+  },
+  "workload": {
+    "app_s": 180,
+    "true_10ms_bins": 19001,
+    "client_mode": [
+      "normal off",
+      "normal auto",
+      "game2 off",
+      "game4 fixed6",
+      "normal fixed6"
+    ],
+    "base_inner_mbps_each_direction": [
+      4,
+      4,
+      3,
+      6,
+      3
+    ],
+    "phase_scales": [
+      0.2,
+      0.35,
+      0.5,
+      0.35
+    ],
+    "peak_sum_inner_mbps_each_direction": 10,
+    "rotation_s": [
+      97,
+      101,
+      103,
+      89,
+      107
+    ]
+  },
+  "true_client_and_server_game2_config": "V4_PUBLIC_GAME_FEC_APPLIED lanes=2 mode=off profile=0",
+  "true_owner": {
+    "alice": "gen1,2,3 oldStop1,2 server confirmed",
+    "bob": "gen1,2,3 oldStop1,2 server confirmed",
+    "carol": "Game2 gen1,2,3 oldStop1,2 server cohort confirmed",
+    "dave": "Game4 Fixed6 distinct hot lanes1,2 server confirmed, siblings not restarted",
+    "erin": "gen1,2,3 oldStop1,2 server confirmed"
+  },
+  "true_udp_unique_delivery_fraction_each_direction": {
+    "alice": [
+      1,
+      1
+    ],
+    "bob": [
+      0.99993,
+      0.99993
+    ],
+    "carol": [
+      0.99988,
+      0.99988
+    ],
+    "dave": [
+      0.99983,
+      0.99983
+    ],
+    "erin": [
+      1,
+      1
+    ]
+  },
+  "original_app_max_active_send_no_receive_gap_ms": {
+    "alice": 10,
+    "bob": 10,
+    "carol": 20,
+    "dave": 30,
+    "erin": 10
+  },
+  "real_tcp": "Alice and Bob each uplink/downlink 7877/7877 framed, pending0",
+  "hard_gates": {
+    "client_all_five_final_Stop": true,
+    "server_shared_TUN_final_Stop": true,
+    "shared_TUN_lease_queue_overflow": 0,
+    "each_offered_eq_direct_delivered": true,
+    "generator_capacity_limited": false,
+    "app_errors": []
+  },
+  "limits": [
+    "Only source6c5 native x86 L1 Game2 Off plus Game4 Fixed6 sibling; source24e1 ARM Game4 Off separately below",
+    "Original H998 same socket MTU shrink and H1317 ARM64 5.18s gap FAIL preserved",
+    "Windows physical Npcap/Wintun two independent devices, Android, physical WAN NOT_RUN; L2 Normal100/200 and L3 both1800 not closed"
+  ]
+}
