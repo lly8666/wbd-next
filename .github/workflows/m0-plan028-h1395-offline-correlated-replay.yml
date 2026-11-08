@@ -1,0 +1,102 @@
+name: M0 PLAN028 H1395 offline-only original correlated blackhole artifact review
+run-name: PLAN028 H1395 strict original short blackhole offline replay no network
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1395-offline-correlated-replay.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-x86:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42475183161
+          github-token: ${{ github.token }}
+          name: plan028-h1353-native-x86-game4-correlated-blackhole-42475183161
+          path: original-raw
+      - name: Correct only 10ms array cardinality and re-evaluate actual original app/Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1353-x86-game4-correlated-blackhole-audit.py
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('original-raw')
+          p=json.loads((root/'h1250-matrix-plan.json').read_text())
+          assert p['source_sha']=='6c5fd909b9f42d1af89c698cdaabc79bbb72e589'
+          assert (root/'h1353-physical-game4-blackhole.json').is_file()
+          for who in ('alice','bob','carol','dave','erin'):
+              t=json.loads((root/f'h1250-c-{who}.json').read_text())
+              assert len(t['tx_bytes_bins_10ms']['udp'])==19001
+          PY
+          mkdir -p replay
+          python3 tools/m0-plan028-h1353-x86-game4-correlated-blackhole-audit.py --art original-raw --out replay/h1395-x86-result.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('replay/h1395-x86-result.json'))
+          print('H1395_ORIGINAL_X86_OFFLINE_CLASSIFICATION',r['classification'],'faults',len(r['faults']),'capacity',len(r['generator_capacity_limit']))
+          assert r['original_product_source']=='6c5fd909b9f42d1af89c698cdaabc79bbb72e589'
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1395-original-x86-offline-only
+          path: replay/
+          retention-days: 14
+  original-arm64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42475183088
+          github-token: ${{ github.token }}
+          name: plan028-h1368-native-arm64-game4-correlated-blackhole-42475183088
+          path: original-raw
+      - name: Offline evidence completeness check, no manufactured blackhole event or PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p replay
+          python3 - <<'PY'
+          import json,pathlib,re
+          root=pathlib.Path('original-raw')
+          p=json.loads((root/'h1250-matrix-plan.json').read_text())
+          assert p['source_sha']=='24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73'
+          assert p['application_load_seconds']==180
+          included={x.name for x in root.iterdir()}
+          event='h1353-physical-game4-blackhole.json'
+          assert event not in included,'Unexpected original event artifact; this replay requires strict audit instead'
+          raw=(root/'h1368-native-game4-correlated-traffic.log').read_text()
+          assert 'H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED' in raw
+          summary=json.loads((root/'h1286-rapid-report.json').read_text())
+          assert summary['source_sha']==p['source_sha']
+          allstop=all('V4_PUBLIC_SHARED_TUN_STOP generation=' in
+              (root/f'h1250-product-{x}.log').read_text(errors='replace')
+              for x in ('alice','bob','carol','dave','erin'))
+          out={'classification':'NOT_QUALIFIED_MISSING_ORIGINAL_BLACKHOLE_EVENT_ARTIFACT',
+               'original_run':42475183088,'original_product_source':p['source_sha'],
+               'observed_100pct_blackhole_restore_in_original_log':True,
+               'all_original_client_stop_markers':allstop,
+               'real_UDP_app_10ms_bucket_count':19001,
+               'original_rapid_report_alerts':summary.get('alerts'),
+               'not_claimed':['Original event JSON not archived, cannot replay full kernel event contract',
+                  'No network rerun, no relabel of original Action failure as product PASS']}
+          (pathlib.Path('replay')/'h1395-arm64-limited.json').write_text(json.dumps(out,indent=2)+'\n')
+          print('H1395_ORIGINAL_ARM64_EVIDENCE_LIMITED',json.dumps({k:out[k] for k in ('classification','all_original_client_stop_markers')}))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1395-original-arm64-offline-only
+          path: replay/
+          retention-days: 14

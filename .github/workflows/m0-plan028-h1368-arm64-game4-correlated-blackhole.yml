@@ -1,9 +1,8 @@
 name: M0 PLAN028 H1368 native ARM64 correlated Game4 physical blackhole
 run-name: PLAN028 H1368 native original TLS Game4 double 100pct blackhole and siblings recovery
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/m0-plan028-h1368-arm64-game4-correlated-blackhole.yml", "tools/m0-plan028-h1259-five-client-recovery-netns.py", "tools/m0-plan028-h1368-arm64-game4-correlated-blackhole-fixture.py", "tools/m0-plan028-h1368-arm64-game4-correlated-blackhole-audit.py"]
+  # Deliberate native blackhole network tests run only when explicitly
+  # requested. Correcting a report must not relaunch the original network.
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:

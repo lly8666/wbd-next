@@ -763,11 +763,22 @@ jobs:
           if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
       - name: H1394 build official static ISA-L for real MSVC release DLL
         if: env.WBD_WL_REUSE_RUN_ID == ''
-        shell: cmd
+        shell: pwsh
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cd isa-l
-          nmake /f Makefile.nmake
+          $ErrorActionPreference='Stop'
+          # The actual Windows native runner can have a different VS edition/year.
+          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
+            Select-Object -First 1
+          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
+          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
+          & cmd.exe /d /s /c $nativeBuild
+          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
+          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
       - name: Build actual original Windows Rust M1 M2 M3 release DLL
         if: env.WBD_WL_REUSE_RUN_ID == ''
         shell: pwsh

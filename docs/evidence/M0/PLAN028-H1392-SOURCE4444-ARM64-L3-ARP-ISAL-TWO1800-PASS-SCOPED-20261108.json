@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "4444328d7437787c461c52d29578c1908c82c8a0",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 42475419721,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42475419721",
+    "conclusion": "success",
+    "jobs": [
+      "build SUCCESS native ARM64",
+      "scene baseline SUCCESS 1800s",
+      "scene heterogeneous SUCCESS 1800s"
+    ],
+    "two_independent_native_arm64_runners": true
+  },
+  "build_manifest": {
+    "architecture": "native_aarch64",
+    "rust_toolchain": "1.85.1",
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "isa_l_archive_sha256": "885dff5d6c61d0f534d0cce71c741beb2b6cfcb241683b3d8a09019423b92809",
+    "rust_native_fec_acceleration": true,
+    "client_elf_sha256": "3d80328f9b4d94a2ba7bee2bd2fd2fdb685813942091aae32e4c7dab9b79a610",
+    "server_elf_sha256": "df04d65f9fb2526f2ae19f3cb6aaae9673b5c9d3f0050016ec0fbc915a435ae4",
+    "rust_so_sha256": "ab016dbd87af6fb58734759a780e33e419d471e0b7c66ae5bd8f4f1808a9cfae"
+  },
+  "scenes": {
+    "baseline": {
+      "artifact_id": 13616091793,
+      "zip_sha256": "610ab6bef341d774f035037f353f7685d1b87e9e2ce757592fd218cf1cf67995",
+      "zip_files": 36,
+      "zip_crc": "PASS",
+      "duration_seconds": 1800,
+      "clients": 5,
+      "authenticated_rotation_and_native_stop": "PASS_ALL_FIVE_SCOPED",
+      "app_alert_count": 0,
+      "largest_active_app_no_rx_gap_ms": 50,
+      "game4_native_fec": {
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 615162,
+        "rx_native_decodes": 5416,
+        "tx_scalar_quanta": 7916
+      },
+      "test_only_static_veth_neighbours": {
+        "before": 10,
+        "after": 10,
+        "condition": "PERMANENT BOTH ENDS"
+      },
+      "app_performance": "PASS_SCOPED"
+    },
+    "heterogeneous": {
+      "artifact_id": 13615763121,
+      "zip_sha256": "a58873cdaa477262c466fcadec4cc760e102c091d39beebeb1b05d47b389bcf4",
+      "zip_files": 36,
+      "zip_crc": "PASS",
+      "duration_seconds": 1800,
+      "clients": 5,
+      "authenticated_rotation_and_native_stop": "PASS_ALL_FIVE_SCOPED",
+      "app_alert_count": 0,
+      "largest_active_app_no_rx_gap_ms": 120,
+      "erin_data_netem_actual_pct": {
+        "uplink": 30.0034,
+        "downlink": 30.0223
+      },
+      "game4_native_fec": {
+        "selected": "prefer-native",
+        "native_linked": 1,
+        "tx_native_quanta": 903019,
+        "rx_native_decodes": 153731,
+        "tx_scalar_quanta": 7249
+      },
+      "test_only_static_veth_neighbours": {
+        "before": 10,
+        "after": 10,
+        "condition": "PERMANENT BOTH ENDS"
+      },
+      "app_performance": "PASS_SCOPED"
+    }
+  },
+  "limitations": [
+    "Controlled isolated native ARM64 netns only, not real WAN or Windows/Android.",
+    "H1389 original dynamic ARP 3.31/3.32s app gaps remain genuine historical FAIL; causal attribution not isolated because both L2 environment and ISA-L native compilation differ.",
+    "Different artifact SOURCE than Windows/other Linux; L3 long UDP-heavy test not all TCP.",
+    "Outstanding Windows single native FEC release qualification, separate Linux+Windows co-client and H998 old hot same-socket MTU."
+  ],
+  "plan028": "IN_PROGRESS"
+}

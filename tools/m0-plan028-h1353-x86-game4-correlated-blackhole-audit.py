@@ -67,7 +67,9 @@ def assess(root):
         for direction,tx,rx in (("uplink",c,s),("downlink",s,c)):
             sent=tx["tx_bytes_bins_10ms"]["udp"]
             got=rx["rx_bytes_bins_10ms"]["udp"]
-            assert len(sent)==len(got)==18000
+            # traffic.py writes 180s active + 10s drain + terminal 10ms bin.
+            # Analyze original 0..180s windows; do not exclude any real gap.
+            assert len(sent)==len(got)==19001
             report={}
             for phase,a,b in (("pre",50,65),("blackhole",72,76),
                               ("post",82,102),("late",110,145)):
