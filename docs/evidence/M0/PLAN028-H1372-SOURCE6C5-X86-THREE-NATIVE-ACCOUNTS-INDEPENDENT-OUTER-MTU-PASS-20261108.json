@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1372_X86_REAL_ORIGINAL_GO_TLS_TWO_ACCOUNTS_THREE_INSTALLATIONS_AND_PER_DEVICE_MTU",
+  "classification": "PASS_SCOPED_NATIVE_X86_ORIGINAL_TLS_TWO_ACCOUNTS_THREE_REAL_DEVICES_70_UDP_INDEPENDENT_MTU_STOP",
+  "product_binary_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "wrapper_source_sha": "af73f9879331d67a2484a16d4fcce494ca6d1db9",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": {
+    "run_id": 42454413647,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42454413647"
+  },
+  "original_artifact": {
+    "id": 13606582574,
+    "name": "plan028-h1372-native-x86-mixed-user-outer-42454413647",
+    "size_bytes": 3253,
+    "files": 7,
+    "zip_sha256": "7b2d8b6c1c32d9f038046939780eecbb6ab6d15f59b89a75b22f2a79c543ee6d",
+    "zip_crc": "PASS_ALL_7"
+  },
+  "source_locked_qualified_native_business": {
+    "platform": "Ubuntu native x86_64/netns original Go TLS443/Rust M4 real TUN",
+    "tls_sessions": 4,
+    "authenticated_accounts": 2,
+    "distinct_installations": 3,
+    "distinct_leases": 3,
+    "shared_original_server_tls_port": 443,
+    "shared_rust_TUN": true,
+    "real_udp_echoes": 70,
+    "server_routed_packets": 70,
+    "server_unrouted": 0,
+    "server_backpressure": 0,
+    "exact_native_owner_Stop": true,
+    "old_same_install_owner_Stop_and_B_survival": true,
+    "user_requested_outer_MTU_per_device": [
+      1460,
+      1460,
+      1280
+    ],
+    "client_original_syn_MSS": [
+      1420,
+      1420,
+      1240
+    ],
+    "client_real_kernel_TUN_MTU": [
+      1389,
+      1389,
+      1209
+    ],
+    "server_shared_kernel_TUN_MTU": 1389,
+    "no_sibling_MTU_global_override": true
+  },
+  "original_native_sha256": {
+    "client": "f3b42cba7e3246a5b5fa324f160df0abade58d19414b7d6c43e5b389100c85ea",
+    "server": "bbfc2af8bda9965e5f9f68af0b3a3feba186eca8a5ede07043e991fdf9d97c83",
+    "rust": "ee9aaf3eeb517e4a7b5b73b739eb9b9af75638bd3d5c3e6c4945af7a28fd78f7"
+  },
+  "exact_original_log_marker": "M0_PLAN028_REAL_GO_TLS_TWO_ACCOUNTS_ONE_PORT_MULTIDEVICE_NATIVE_STOP_PASS",
+  "limitations": [
+    "This source6c5 original native Linux multi-account product does not qualify two Windows signed Npcap/Wintun clients on one server.",
+    "Independent user outer1460/1280 is not H998 Windows same-socket hot physical MTU.",
+    "Other platforms have different binary source IDs."
+  ],
+  "plan028": "IN_PROGRESS"
+}

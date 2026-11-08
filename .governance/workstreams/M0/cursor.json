@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1371,
-  "checkpoint_sha": "2b5404ce49abe66df6baf1f662eb4db12b76df4c",
+  "sequence": 1375,
+  "checkpoint_sha": "26a42e809fd244489470d6f4034a698bfd8b7c09",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1367 Linux original Go/Rust Game4 protected epoch L0 native tagged test PASS; H1368 real ARM24e 5-client Game4 100pct bidirectional correlated physical 8.0177s blackout + four unaffected siblings 180s app/Stop PASS_SCOPED from H1371 offline original 37-file re-audit; H1369 2 genuinely distinct signed Windows Wintun native kernel UDP apps and A Stop B survives PASS_SCOPED from H1370 offline original4-file re-audit. Both raw H1368 and H1369 CI FAIL only post-business reporter/archiver errors preserved. PLAN028 IN_PROGRESS.",
-  "why_now": "User requested parallel independent tasks and product-real PASS despite external CI conditions false-negative. Source-locked H1367 Linux L0, H1368 ARM24e actual physical common-underlay blackhole, H1369 signed Windows two-device kernel OS all executed on independent runners, offline only H1370/H1371 validated original untouched raw after reporter-only failures. Genuine product business success is scoped PASS; other feature gates remain.",
+  "current_task": "H1372 frozen original x86 source6c5 Go TLS443/Rust M4 2 accounts/3 installations, 4 authenticated sessions 70 actual UDP, independent original user MTU1460/1280 and SYN/TUN OS, sibling/Stop scoped PASS Action42454413647 SUCCESS. H1373 original ARM sourceaf73 authentic TLS + two physical changes started, original CI FAIL because 12.8s Game4 witness did not cover 19s cold owner readiness; H1374 exact same three product binary SHA and only 25.6s witness change: original ARM Normal source4 .4→.9→.4, MTU1500→1280→1500, true auth generations1/2/3 old Stop1/2, Game4 64+64 genuine UDP while switching, original Stop PASS Action42454761994 SUCCESS. PLAN028 IN_PROGRESS.",
+  "why_now": "Parallel original native x86 and ARM tasks. H1373 CI fixture window too short vs genuine product auth time; H1374 same exact built original product binary hash verifies scoped PASS, original CI failure remains documented.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Priority is Windows two *authenticated original Go TLS443/Rust M4 public-product* clients on SAME server with distinct account/lease and two signed Wintun Npcap owners simultaneously; verify true A->A+B->B, A Stop/lease/route/MTU leaves B UDP/TCP and exact B Stop. H1369 only native driver/Win32 socket isolation without TLS/Rust/Npcap. Also revisit known H998 same-socket hot PMTU independent of H1364 real physical cold MTU; L0 packet/MTU other gates, L2 physical correlated recovery as needed, L3 two1800s source-frozen final; no fake all-PASS. Keep ARM24e, x866c5, Windows5b63, Linux A4BF evidence segregated; cursor evidence_refs remain only x866c5.",
+  "next_action": "Next Windows 2 truly independently TLS-authenticated original Go/Rust signed Npcap/Wintun clients simultaneously on same WSL2 TLS443 server, distinct protected accounts and /32s, A Stop retains B genuine UDP/TCP. Existing Windows native manual /32 client + server single manual /32 mapping is blocker; implement server-authenticated account->owned manual lease map or Windows original AutoLease before full native business. H1369 dual OS kernels not TLS product. H998 original Windows same-socket hot physical PMTU FAIL remains. Complete pending L0/MTU, L2, and final two1800s L3 only after hard gates; no blanket PASS. Cursor evidence refs source6c5 only; ARM source26a on devlog/evidence separate.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -19,7 +19,8 @@
     "docs/evidence/M0/PLAN028-H1358-SOURCE6C5-X86-GAME2-OFF-TWO-REAL-ROTATIONS-20261108.json",
     "docs/evidence/M0/PLAN028-H1354-H1353-X86-CORRELATED-GAME4-RAW-REPLAY-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
-    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
+    "docs/evidence/M0/PLAN028-H1372-SOURCE6C5-X86-THREE-NATIVE-ACCOUNTS-INDEPENDENT-OUTER-MTU-PASS-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -32,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Parallel PASS scoped: H1367 original Linux x86 L0 Game4 zero-epoch vs same-epoch hot tagged Go/Rust native test Action42450177765 success; H1368 original ARM24e 5-client 180s real shared Game4 100pct 8.0177s blackout and native post-restoration 136/146ms, all other 4 siblings continuous and 6 Stop PASS, original CI FAIL bad 18000 vs19001 bin checked offline H1371 Action42450749950 success; H1369 original Windows 2 signed independent Wintun+Win32 UDP sockets A Stop B survives reverse ring+both Stop PASS; raw CI FAIL reporter result/classification, H1370 offline original Action42450547596 success. H1364 Windows single physical MTU 1500->1280 original Go TLS/Rust duplex Stop PASS. Windows dual authenticated product clients, same-socket hot H998, L3 2x1800s still OPEN. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1372 original x86 source6c5 one443 two protected accounts 3 installations 4 TLS sessions 70 real UDP + independent outer MTU and exact owned Stop Action42454413647 SUCCESS. H1373 native ARM sourceaf73 real two physical reauth original Action42454413776 FAIL due 32x0.4s short Game4 sample vs 19s new ready; H1374 identical original ARM Go client+server+Rust binary SHA, sample 64x0.4s actual Normal two source4/MTU handovers authgen1/2/3, oldStop1/2, sibling Game4 real 64/64 UDP + exact Stop Action42454761994 SUCCESS. Windows two authenticated product devices NOT_RUN; H998 old same socket hot FAIL retained. PLAN028 IN_PROGRESS."
 }

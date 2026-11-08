@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1373_H1374_ARM64_NORMAL_OFF_TWO_PHYSICAL_TLS_REAUTH_WITH_GAME4_SIBLING",
+  "classification": "PASS_SCOPED_NATIVE_ARM64_NORMAL_OFF_TWO_REAL_SOURCE4_CHANGES_THREE_AUTH_GENERATIONS_GAME4_SIBLING",
+  "source_h1373": "af73f9879331d67a2484a16d4fcce494ca6d1db9",
+  "source_h1374": "26a42e809fd244489470d6f4034a698bfd8b7c09",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_h1373": {
+    "action_id": 42454413776,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42454413776",
+    "artifact_id": 13606617713,
+    "files": 8,
+    "zip_sha256": "94a48443e987e45aba1cb95dd7a8fce4befaa002d7b0d59a3c97a600aba288c7",
+    "crc": "PASS_ALL_8",
+    "reason": "Test-only Game4 witness ran 32*0.4s=12.8s, shorter than genuine original Normal cold authorization ~19.064s; invariant that sample straddles the entire actual change-to-ready window failed after TLS and native setup. Raw CI FAIL preserved.",
+    "scope": "PARTIAL_BUSINESS_OBSERVED_NOT_FULL_SCOPED_QUALIFICATION"
+  },
+  "actual_h1374": {
+    "action_id": 42454761994,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42454761994",
+    "artifact_id": 13607551124,
+    "files": 10,
+    "zip_sha256": "6c0c0f044879c4330e6c2c5f8e68a11de0fe0fa8b98b1cf451d52a284a450707",
+    "crc": "PASS_ALL_10",
+    "product": "original Go TLS443/Rust M4 client+server native ARM64",
+    "authenticated_original_modes": [
+      "game2-off-ChaCha",
+      "game4-fixed6-AES256",
+      "normal-off-AES128"
+    ],
+    "server_port": 443,
+    "independent_lease_count": 3,
+    "original_normal_generations": [
+      1,
+      2,
+      3
+    ],
+    "old_normal_exact_Stops": [
+      1,
+      2
+    ],
+    "physical_selected_source_IP4": [
+      "10.25.0.4",
+      "10.25.0.9",
+      "10.25.0.4"
+    ],
+    "real_physical_NIC_MTU": [
+      1500,
+      1280,
+      1500
+    ],
+    "original_user_outer_MTU": 1460,
+    "original_Normal_real_TUN_OS_MTU": [
+      1389,
+      1209,
+      1209
+    ],
+    "original_Game4_sibling_real_TUN_OS_MTU": 1358,
+    "game4_sibling_generation_unchanged": true,
+    "game4_sibling_real_UDP_during_both_full_windows": [
+      64,
+      64
+    ],
+    "normal_new_generation_real_UDP": [
+      16,
+      16
+    ],
+    "real_OS_change_to_auth_ready_milliseconds": [
+      17535.88,
+      14235.64
+    ],
+    "initial_original_real_UDP_echoes": {
+      "game2": 12,
+      "game4": 18,
+      "normal": 18
+    },
+    "original_game2_Stop_preserves_other_clients": true,
+    "server_shared_Rust_TUN_exact_Stop": true,
+    "exact_event_to_TLS": "NOT_MEASURED",
+    "cpu_causal": "NOT_MEASURED",
+    "loss_5pct": "NOT_IN_THIS_SCENE"
+  },
+  "H1373_H1374_same_original_product_binary_sha256": {
+    "verified": true,
+    "client": "e5bb2bf1fdd48efb4f6088017425193f21383aa3873c85d904158fa30e42f1fe",
+    "server": "14236be406ece3e3fdb90c5bb5c746d49bc4373c718b4400995c817866e50ffd",
+    "rust": "04d7f36bb15526200480c74c6f5222746d4a9712cebdb2cf8e102da8fb9af477",
+    "only_fixture_change": "32 native UDP samples per physical handover → 64 native UDP samples, each at 0.4s; does not change original Go TLS/Rust product bytes"
+  },
+  "scoped_result_reason": "The original H1374 25.6s sibling app sampling overlaps BOTH actual physical source4 mutations AND both authenticated new-generation READY, with genuine native UDP, OS TUN readback, old exact Stops and final shared server Stop. H1373 raw FAIL remains recorded as witness-window false-negative.",
+  "unqualified": [
+    "Windows 2 simultaneous signed original Go TLS/Rust distinct authenticated accounts on one server NOT_RUN.",
+    "H998 Windows same-socket hot physical MTU original FAIL remains.",
+    "L3 two full 1800s source-frozen soaks NOT_RUN."
+  ],
+  "plan028": "IN_PROGRESS"
+}
