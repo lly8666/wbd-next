@@ -1,0 +1,72 @@
+name: M0 PLAN028 H1412 real WSL2 bridge Windows plus independent Linux namespace feasibility only
+run-name: PLAN028 H1412 single Windows NIC and separate Linux netns underlay bridge gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1412-wsl-bridge-co-client-preflight.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-win-wsl2-topology:
+    runs-on: windows-2025
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Check topology preflight Python syntax
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py
+          if($LASTEXITCODE -ne 0){throw 'H1412 source script invalid'}
+      - name: Boot real verified WSL2 Ubuntu guest (same first-party intake as signed product)
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'WSL2 native distribution check failed'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'original official Ubuntu image SHA mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object wsl-import-h1412.log
+            if($LASTEXITCODE -ne 0){throw 'WSL2 pinned Ubuntu import failed'}
+          }
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0
+          if($LASTEXITCODE -ne 0){throw 'actual Ubuntu eth0 guest unavailable'}
+      - name: Allow only temporary WSL HyperV guest UDP 46098 for true Windows host kernel socket probe
+        shell: pwsh
+        run: |
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'No unique WSL VM creator for exact UDP rule'}
+          $name='wbd-h1412-'+$env:GITHUB_RUN_ID
+          New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol UDP -LocalPorts @('46098') -ErrorAction Stop | Out-Null
+          $name | Set-Content h1412-firewall-owned.txt
+      - name: One real WSL bridge L2 and Windows guest vs independent Linux netns underlay experiment, strict restore
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          python -u tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 bridge experiment failed; inspect original raw receipt'}
+      - name: Remove exact temporary WSL HyperV UDP rule
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path h1412-firewall-owned.txt){
+            $name=(Get-Content h1412-firewall-owned.txt -Raw).Trim()
+            if($name -ne ('wbd-h1412-'+$env:GITHUB_RUN_ID)){throw 'foreign firewall rule refusal'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'H1412 owned rule leaked'}
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1412-real-cross-os-client-underlay-only-${{ github.run_id }}
+          path: |
+            result/wl-public/h1412-wsl-bridge-feasibility.json
+            result/wl-public/h1412-udp-server.log
+          retention-days: 14

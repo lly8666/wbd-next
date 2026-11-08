@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1411,
-  "checkpoint_sha": "0cdea544d333d497857d3f7273455f65084f749b",
+  "sequence": 1412,
+  "checkpoint_sha": "934ff1e0c7f531fdd4d33733fef9b810b2a9728b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1411-ALL-FEC-GRADES-ISA-L-EVIDENCE",
-  "current_task": "H1411 recovered H1409 Linux x86_64 and real ARM64 seven FEC profile native C backend+prepared exact scalar bytes on real native release, and H1410 original protected Windows MSVC FEC2 owner grades 0..6 real ISA-L native C and scalar bytes. All original 3 ZIP CRC and SHA qualified. H1410 Windows job and separate 17/17 FEC2 audit PASS; original H1409 Windows NASM same-step PATH CI FAIL and original FEC2 audit 16/17 count CI FAIL remain HARNESS_ONLY with actual Windows native previous NOT_RUN, now H1410 PASS_NATIVE. Original real Game4FEC Windows TLS/Wintun/native runtime remains H1407 PASS_SCOPED, not same as seven-mode runtime. PLAN028 IN_PROGRESS.",
-  "why_now": "User prioritizes Linux↔Linux/Windows↔Linux ISA-L per-grade default correctness. Original native x86 ARM64 H1409 and Windows H1410 7/7 now verified using exact original manifests, artifacts, release hash and actual native parity bytes; no need new same-family net tests. FEC Off N/A; older Linux functional sources lacking native feature do not prove native.",
+  "task_id": "PLAN028-M0-H1412-CROSS-OS-NETNS-VSWITCH-L2-PREFLIGHT",
+  "current_task": "H1412 scoped infrastructure preflight only: On original Windows2025 runner boot pinned real WSL2 Ubuntu, temporarily bridge guest eth0 retaining original MAC/IP/gateway, attach independent guest Linux client network namespace real veth, prove genuine Windows host UDP to WSL guest and guest Linux netns UDP to same bridge; exact cleanup and route restore. This discriminates physical underlay feasibility for one signed Windows VPN client plus separate Linux client sharing original TLS443 server; NOT product/test L1 PASS and no second Win Wintun. H1411 three-native ISA-L all profile grades PASS scoped + governance PASS preserved.",
+  "why_now": "Windows/Linux co-client same-server still explicit PLAN028 L1 gap, while prior same-host two Windows Wintun test is out of target. Existing WSL2 server eth0 requires both Windows vEthernet physical path and independent Linux veth to be reachable by one shared raw-interface; smallest discriminating non-VPN probe is required before large product harness changes.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Proceed to PLAN028 next unqualified L1 cross-OS simultaneous co-client isolation (ONE real Windows signed Wintun client + one independent native Linux CLIENT on ONE original Go TLS443 server, distinct account/lease). First inspect real WSL2 namespace/underlay feasibility without inventing second Windows Wintun/physical host; if test infra cannot support one server + two genuinely independent OS clients, label ENVIRONMENT_BLOCKED and preserve old multi-native Linux sessions and genuine Win+Linux server tests, do not fake PASS. Otherwise build minimal 120-180s native two-client one scenario, check independent Stop and sibling continuation. Keep necessary L2/legacy MTU H998 scope. No rerun old ISA-L seven-grade actions.",
+  "next_action": "Collect one H1412 WSL2 bridge Windows+Linux independent netns raw UDP underlay result, including eth0 IP/MAC/route restoration. If PASS, implement ONE original Go TLS443/Rust shared server with one signed Windows Wintun and separate netns Linux original client using same bridge, distinct username/lease, original UDP/TCP each, A Stop B continues, all owned Stop; one VM sequential, source-frozen; do not test second Windows VPN. If infrastructure blocked, label ENVIRONMENT_BLOCKED and keep real multi-device product NOT_RUN; continue other critical PLAN028 gaps, no false PASS.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1411 3 real native ISA-L archives x86 Linux/ARM64/Windows MSVC all 7 strengths real native parity and byte-identical scalar; Windows authenticated Fixed/Auto actual owner 7/7, native release manifest SHA. H1410 CI SUCCESS; old H1409 Win NASM PATH fail and old m0-main-native hardcoded 16/17 test count unrelated to product, fixed H1410 17/17 audit PASS. Game4FEC H1407 actual Windows and Linux runtime tx native positive. Off no FEC; live Fixed/Auto/Game2 native quanta not observed on all actual public-mode scenarios. Two-client Windows+independent Linux same server NOT_RUN. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1411 actual ISA-L seven strength 3-native-platform evidence and governance PASS scoped. H1412 one raw native WSL2 bridge L2 feasibility only, before costly complete Windows+Linux second client same server. Exact original Windows eth0 MAC/IP route restore and owned netns/veth/bridge deletion mandatory. PLAN028 IN_PROGRESS."
 }
