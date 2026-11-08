@@ -5,3 +5,5 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Only updates existing offline deadline-regression assertions to verify opt-in 1800s bounds and unchanged ordinary bounds; no product behavior changes."}
 ```
+
+H1433: Action42507973848 又于测试 `tests/test_m0_wl_scoped_game2_trigger.py` 的第三处旧字面 `timeout-minutes: 24` 判断停在原生测试前；此次同步将旧 Game2 24 分钟限定与明确 Win/Lin L3 52 分钟一起核，保留原 Action FAIL／Windows native `NOT_RUN`。不改变长测产品与实际超时；若下次真实 Windows 1800s 未执行，绝不报 PASS。

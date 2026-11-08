@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1432,
-  "checkpoint_sha": "d03cca79050531bf87091f1094c4833f66b088eb",
+  "sequence": 1433,
+  "checkpoint_sha": "96c03541788ce3112c43a88097f4275c6dc0b1ff",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1432-L3-PRENETWORK-MANAGED-ORACLE",
-  "current_task": "H1430/31 one signed Windows+native independent Linux original TLS443 two-client 1800s CI: Action42507562916 preflight FAIL historical test timeout24; next Action42507776166 after first two test corrections also preflight FAIL in tests/test_m0_plan027_managed_unilateral.py still checking literal timeout-minutes:24. Both runs native Windows jobs SKIPPED, so product NOT_RUN in both. H1432 fixes the last known legacy bound assertion to explicitly require 52/24 opt-in, without changing any product code or workflow runtime. ARM64 source eef2 Action42505975134 still real 1800 scenes. PLAN028 IN_PROGRESS.",
-  "why_now": "Ensure old 24m non-L3 watchdog preserved and new L3 opt-in allowed; previous two failures are offline test oracle incongruity, not product errors or reason to rerun network (none executed).",
+  "task_id": "PLAN028-M0-H1433-LEGACY-GAME2-TIMEOUT-ORACLE",
+  "current_task": "User-approved H1430 signed Windows ONE VPN A+independent Linux TUN B crossOS L3 1800s pre-network Actions42507562916/42507776166/42507973848 all failed in three DIFFERENT legacy static test assertions requiring literal timeout-minutes:24, but actual new opt-in conditional preserves regular24 and long52. All three Windows native jobs SKIPPED; no Wintun/Go/Rust long network executed, not product FAIL. H1433 updates final known game2 static oracle, same source trigger enables actual Windows CI to proceed; no product changes. ARM64 existing 2x1800 source eef2 Action42505975134 running. PLAN028 IN_PROGRESS.",
+  "why_now": "Every preflight failure must remain honestly marked as CI-only and native NOT_RUN; the static tests each directly inspect the same workflow string but had independently hardcoded old 24. Conditional tests must require ordinary 24 and L3-specific 52 without weakening product contracts.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1432 exact new source Windows workflow cheap tests then native build. If new preflight failure, identify exact assertion, fix minimally. If real Windows step runs, require simultaneous app 1800, actual TCP/RSS, A Stop Linux survives, B/server Stop exact owned resources. Do not duplicate Actions or call native ready a PASS. Collect existing ARM64 2x1800 concurrently.",
+  "next_action": "Collect new H1433 full signed native Windows Action in-flight first; native stage only after cheap tests succeed. Check Rust/Go exactly same source, 1800s real UDP/TCP/RSS and owned Stop; collect ARM64 two ongoing long scenes. Avoid duplicate dispatch and preserve all original CI failures as pre-network.",
   "unverified": true,
   "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1432 fixes remaining historical fixed-24-minute static test; earlier Windows Actions42507562916 and42507776166 both failed BEFORE native setup, no 1800s network traffic. Long trigger remains one Windows VPN signed Npcap/Wintun plus independent Linux client, 1800s dual UDP/TCP and Stop. ARM64 parallel jobs still running. 028 IN_PROGRESS."
+  "partial_summary": "H1433 third literal24 static test fixed in tests/test_m0_wl_scoped_game2_trigger.py. Windows previous 3 Actions were ALL preflight-failed with signed native jobs skipped; not product test failures and no traffic/1800s claimed. New exact source Windows+independent Linux single-Win client L3 next; ARM64 L3 2 scenes existing. PLAN028 IN_PROGRESS."
 }

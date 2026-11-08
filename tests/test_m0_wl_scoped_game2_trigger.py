@@ -13,7 +13,8 @@ class Game2ScopedWindowsLaunchTests(unittest.TestCase):
             self.assertIn("&& 'game2' ||",row)
             self.assertLess(row.index(trigger),row.index("inputs.public_mode"))
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",y)
-        self.assertIn("timeout-minutes: 24",y)
+        # Game2 remains a normal 24-minute mode; only 1800s Win/Linux co-client is 52.
+        self.assertIn("timeout-minutes: ${{ contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && 52 || 24 }}",y)
 
     def test_original_prompt_failing_game2_order_is_preserved(self):
         from tools.m0_wl_mode_evidence import select_source_locked_modes
