@@ -1,6 +1,6 @@
 # H1392 continuation of original H1389 L3: two native 1800s original Go TLS443/Rust M4 scenarios, verified test-only veth L2 control and pinned ISA-L native build. H1389 original Erin FAIL remains unchanged.
 name: M0 PLAN028 H1389 ARM64 TWO parallel native 1800s original five-client full L3 long tests
-run-name: PLAN028 H1392 actual static-veth-DATA-only plus pinned ISA-L 1800s qualification
+run-name: PLAN028 final source native ARM64 two independent 1800s L3 scenes
 on:
   push:
     branches: [main]
