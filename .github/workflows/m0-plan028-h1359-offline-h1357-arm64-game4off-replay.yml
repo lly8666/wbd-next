@@ -1,0 +1,61 @@
+name: M0 PLAN028 H1359 original ARM64 Game4 Off complete network raw OFFLINE replay
+run-name: PLAN028 H1359 no-network H1357 Game4 Off genuine 5-client raw app owner replay
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1359-offline-h1357-arm64-game4off-replay.yml"
+      - "tools/m0-plan028-h1359-offline-h1357-arm64-game4off-replay.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  replay-original-failed-native-arm64-artifact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42439698067
+          github-token: ${{ github.token }}
+          name: plan028-h1357-native-arm64-game4-off-rotation-42439698067
+          path: original-native-raw/
+      - name: Replay ONLY true archived H1357 five-client app, original game4 off TLS and owned Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1359-offline-h1357-arm64-game4off-replay.py
+          test -s original-native-raw/h1250-matrix-plan.json
+          test -s original-native-raw/h1250-product-server.log
+          test -s original-native-raw/h1250-product-dave.log
+          test ! -e original-native-raw/h1286-rapid-report.json
+          mkdir -p offline-replay
+          python3 tools/m0-plan028-h1359-offline-h1357-arm64-game4off-replay.py \
+            --art original-native-raw \
+            --out offline-replay/h1359-arm64-original-game4off-scoped.json \
+            | tee offline-replay/h1359-original-raw-offline.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path("offline-replay/h1359-arm64-original-game4off-scoped.json").read_text())
+          assert r["original_product_source"]=="24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73"
+          assert r["original_wrapper_source"]=="082a53b29916289e040e275ff588c97643686d95"
+          assert r["original_ci_action"]==42439698067 and r["original_ci_conclusion"]=="failure"
+          assert r["original_raw_artifact_id"]==13601276984 and not r["network_rerun"]
+          assert r["source_exact_single_port"]==443
+          assert len(r["original_game4_off_server_confirmed_two_hot_lanes"])>=2
+          assert len(set(x["lane"] for x in r["original_game4_off_server_confirmed_two_hot_lanes"]))>=2
+          assert len(r["four_other_clients_authentic_rotations"])==4
+          assert all(r["original_native_exact_owned_stop"].values()) and r["original_server_exact_shared_tun_stop"]
+          assert not r["faults"] and not r["generator_capacity_exceeded"]
+          assert r["classification"]=="PASS_SCOPED_OFFLINE_H1357_NATIVE_ARM64_GAME4_OFF_REAL_IO"
+          print("M0_PLAN028_H1359_ARM64_TRUE_GAME4_OFF_RAW_L1_SCOPED_PASS_ORIGINAL_CI_FAIL_PRESERVED",flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1359-original-h1357-arm64-offline-replay-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
