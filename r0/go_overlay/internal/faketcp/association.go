@@ -73,6 +73,8 @@ type PeerTCPProfile struct {
 	WindowScale    uint8
 	WindowScaleSet bool
 	InitialWindow  uint16
+	OriginalSYNPersona PacketPersona
+	OriginalSYNPersonaKnown bool
 }
 
 // ServerAssociation owns the short TCP-compatible establishment/fallback
@@ -125,6 +127,8 @@ func NewServerAssociation(syn Segment, serverISN uint32, initialRTO time.Duratio
 			WindowScale:    syn.WindowScale,
 			WindowScaleSet: syn.WindowScaleSet,
 			InitialWindow:  syn.Window,
+			OriginalSYNPersona: syn.OriginalSYNPersona,
+			OriginalSYNPersonaKnown: syn.OriginalSYNPersonaKnown,
 		},
 		sender:           NewSender(serverISN+1, initialRTO),
 		emit:             emit,

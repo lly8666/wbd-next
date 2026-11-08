@@ -315,6 +315,13 @@ def main():
         both=marker(out/"h1415-server.log","V4_PUBLIC_MULTI_SESSION_READY role=server",server,15)
         need(both.count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=2,
              "server did not authenticate both independent protected users")
+        # Strict per-session presentation: Windows A must keep Windows11,
+        # Linux Bob must keep Legacy; both are original post-TLS M4 owners.
+        serverlog=(out/"h1415-server.log").read_text(errors="replace")
+        need("V4_PUBLIC_MULTI_PEER_PERSONA role=server incoming=1 cold_syn_known=true actual_original_TLS_Rust_M4=1" in serverlog
+             and "V4_PUBLIC_MULTI_PEER_PERSONA role=server incoming=0 cold_syn_known=true actual_original_TLS_Rust_M4=1" in serverlog,
+             "original authenticated Windows/Linux session-specific peer persona not both applied")
+        report["per_authenticated_peer_persona"]="PASS_WINDOWS11_A_AND_LEGACY_B_DISTINCT_NATIVE_RX"
         osaddr=json.loads(ip("-n",NS,"-j","-4","addr","show","dev","wbdl1415"))
         need(any(a.get("local")=="10.66.0.3" for row in osaddr
              for a in row.get("addr_info",[])),
@@ -405,6 +412,7 @@ def main():
         # failure. No credentials, packet contents, or per-packet hot probes.
         stage_prefixes=(
           "V4_PUBLIC_MULTI_ADMISSION_","V4_PUBLIC_MULTI_SESSION_READY",
+          "V4_PUBLIC_MULTI_PEER_PERSONA",
           "V4_PUBLIC_COLD_STAGE","V4_PUBLIC_PATH_CANDIDATE",
           "V4_PUBLIC_PATH_RECONNECT_RETRY","V4_PUBLIC_NATIVE_COLD_TLS_RESULT",
           "V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS","V4_PUBLIC_NORMAL_",

@@ -1621,6 +1621,19 @@ func runSharedMultiServer(
                 table.Remove(rec.assoc.Flow())
             }
         }()
+        // A shared server may authenticate Windows and independent Linux
+        // clients simultaneously. Keep the original wire persona on this
+        // single cold association, never reuse a process-wide persona for
+        // every Rust RX owner. Unknown SYN remains the explicit CLI default.
+        profile:=rec.assoc.PeerTCPProfile()
+        nativePersona:=c.peerPersona
+        if profile.OriginalSYNPersonaKnown{
+            if profile.OriginalSYNPersona==faketcp.PacketPersonaWindows11{
+                nativePersona=realityfront.V4PeerWindows11
+            }else{
+                nativePersona=realityfront.V4PeerLegacy
+            }
+        }
         cfg:=realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
@@ -1636,7 +1649,7 @@ func runSharedMultiServer(
             // The original TLS policy is this client's owner configuration;
             // server process --mode is not a global FEC admission filter.
             PerClientNormalFEC:true,
-            DisableOuterRepair:c.disableOuterRepair,PeerPersona:c.peerPersona,
+            DisableOuterRepair:c.disableOuterRepair,PeerPersona:nativePersona,
             Authenticate:originalV4CredentialCheck(c),
         }
         p,err:=realityfront.NewV4LinuxServerProduct(cfg)
@@ -1650,6 +1663,7 @@ func runSharedMultiServer(
             log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner")
             return
         }
+        log.Printf("V4_PUBLIC_MULTI_PEER_PERSONA role=server incoming=%d cold_syn_known=%t actual_original_TLS_Rust_M4=1",nativePersona,profile.OriginalSYNPersonaKnown)
         lease,err:=sess.AuthenticatedLeaseIPv4()
         if err!=nil||lease==""{
             _=p.Close()

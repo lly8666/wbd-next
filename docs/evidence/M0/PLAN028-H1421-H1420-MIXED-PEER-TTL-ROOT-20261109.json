@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1421",
+  "original_action": {
+    "id": 42500155410,
+    "source_sha": "66fb7f29a6ec65c199b94fb541fcd2c01b5de581",
+    "conclusion": "failure",
+    "artifact_zip_id": 13625548105,
+    "zip_crc": "PASS"
+  },
+  "observations": {
+    "windows_A": {
+      "original_tls_m4": "PASS_SCOPED",
+      "udp_sent": 264,
+      "udp_echo_received": 264,
+      "server_reverse_received": 259,
+      "udp_status": "PASS_SCOPED"
+    },
+    "linux_B": {
+      "original_tls_m4": "PASS_SCOPED",
+      "server_inner_route_readback": "PASS",
+      "udp_sent": 236,
+      "udp_echo_received": 3,
+      "server_reverse_received": 229,
+      "udp_status": "FAIL"
+    },
+    "same_port_sessions": 2,
+    "windows_WAL_and_linux_owned_bridge_rollback": "PASS",
+    "TCP": "NOT_RUN",
+    "windows_A_stop_linux_B_survives": "NOT_RUN"
+  },
+  "mechanism": {
+    "server": "runSharedMultiServer currently passes one process-wide --peer-persona windows11 into both V4LinuxServerProductConfig",
+    "rust": "rx_ipv4_tcp rejects DATA when received IPv4 TTL != trusted session persona TTL, Windows11 128 versus Linux legacy 64",
+    "conclusion": "distinct Linux C2S rejected but S2C still delivered; actual application evidence excludes handshake, route and UDP oracle"
+  },
+  "proposed_fix": "original cold SYN TCP option fingerprint cached by association, apply to only its already credential-authenticated native Rust M4 owner; unknown syntax explicit configured fallback; no relaxed RX/AEAD/PN",
+  "status": "H1420_FAIL_RETAINED_H1421_PRODUCT_CANDIDATE_NOT_RUN",
+  "plan_status": "IN_PROGRESS"
+}

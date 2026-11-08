@@ -51,6 +51,11 @@ type Segment struct {
 	WindowScaleSet bool
 	SACK           [MaxSACKBlocks]SACKBlock
 	SACKN          int
+	// Original cold SYN TCP option order is captured once for per-session
+	// native receive presentation AFTER original Go credential TLS.
+	// It grants no admission, route, lease, key, or DATA authorization.
+	OriginalSYNPersona PacketPersona
+	OriginalSYNPersonaKnown bool
 	Payload        []byte
 }
 
@@ -355,7 +360,29 @@ func ParseIPv4TCP(packet []byte) (Segment, error) {
 	s.Ack = binary.BigEndian.Uint32(tcp[8:12])
 	s.Flags = tcp[13]
 	s.Window = binary.BigEndian.Uint16(tcp[14:16])
-	parseTCPOptions(tcp[20:doff], &s)
+	opts:=tcp[20:doff]
+	parseTCPOptions(opts, &s)
+	// Only the established ORIGINAL WBD client SYN layouts are recognized.
+	// These ordinary TCP option bytes already exist on the wire. Unknown
+	// peers retain the server's configured persona as a cold fallback.
+	// This is not a pre-TLS identity or protected admission decision.
+	if s.Flags==FlagSYN && len(opts)==12 &&
+		opts[0]==2 && opts[1]==4 && s.MSSSet &&
+		s.SACKPermitted && s.WindowScaleSet &&
+		s.WindowScale==DefaultWindowScale {
+		switch {
+		case opts[4]==4 && opts[5]==2 &&
+			opts[6]==3 && opts[7]==3 && opts[8]==DefaultWindowScale &&
+			opts[9]==1 && opts[10]==1 && opts[11]==1:
+			s.OriginalSYNPersona=PacketPersonaLegacy
+			s.OriginalSYNPersonaKnown=true
+		case opts[4]==1 && opts[5]==3 && opts[6]==3 &&
+			opts[7]==DefaultWindowScale && opts[8]==1 &&
+			opts[9]==1 && opts[10]==4 && opts[11]==2:
+			s.OriginalSYNPersona=PacketPersonaWindows11
+			s.OriginalSYNPersonaKnown=true
+		}
+	}
 	s.Payload = tcp[doff:]
 	return s, nil
 }
