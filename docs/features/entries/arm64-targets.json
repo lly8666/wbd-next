@@ -25,7 +25,8 @@
   ],
   "doc_refs": [
     "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json",
-    "docs/devlog/arm64-main-integration-20261022.md"
+    "docs/devlog/arm64-main-integration-20261022.md",
+    "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json"
   ],
   "verification": [
     {
@@ -48,6 +49,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "native Linux ARM64/AArch64 both original Go TLS443 + Rust M4",
+      "scope": "H1361 source24e true five user strict one-way UDP 180s with actual Erin 29.742%/29.583% physical netem and125ms delay, all unique app delivered >=97.9235%, longest sender-without-RX120ms; 5 final Stop and server Stop; 600s timers intentionally dormant.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+      "evidence": "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json"
     }
   ],
   "limitations": [

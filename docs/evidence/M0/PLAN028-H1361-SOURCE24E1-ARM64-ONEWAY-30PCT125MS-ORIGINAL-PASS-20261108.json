@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1361",
+  "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+  "result": "PASS",
+  "qualification": "PASS_SCOPED_NATIVE_ARM64_ORIGINAL_ONEWAY_30PCT125MS_FIVE_USER",
+  "artifact_verified": true,
+  "original_action": {
+    "id": 42442284471,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42442284471",
+    "conclusion": "success",
+    "native_job": 128613886129,
+    "preflight_job": 128613851887,
+    "original_native_both_jobs": "success",
+    "test_wrapper_source": "031ca5e41c17aa4f8b583e127a68873861c11036"
+  },
+  "original_raw_archive": {
+    "id": 13602256980,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42442284471/artifacts/13602256980",
+    "zip_sha256": "84f00d0586b19b7e32048fc195efb67e703d52ca8304d4d8e599b4ba1db75695",
+    "files": 36,
+    "crc": "PASS"
+  },
+  "product": {
+    "source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+    "Go_original_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "platform": "native Linux aarch64 original Go TLS443/Rust M4 5-client plus server 6 netns",
+    "binary_source_manifest": "original H1327 ARM64 native source24e1 three ELF183 files SHA checked; no new compile",
+    "original_product_code_changed": false
+  },
+  "workload": {
+    "application_seconds": 180,
+    "source_10ms_bins_including_drain": 19001,
+    "authenticated_user_clients": 5,
+    "original_server_port": 443,
+    "true_user_application_direction_by_client": {
+      "alice": "uplink",
+      "bob": "downlink",
+      "carol": "uplink",
+      "dave": "downlink",
+      "erin": "uplink"
+    },
+    "app_reverse_UDP_TCP_probe_packets_all_clients": 0,
+    "encrypted_native_Health_still_allowed": true,
+    "physical_loss_config_pct": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "oneway_delay_config_ms": [
+      0,
+      15,
+      50,
+      100,
+      125
+    ],
+    "test_veth_ARP": "10/10 valid source MAC PERMANENT installed and after",
+    "initial_inner_mbps_targets": [
+      5,
+      5,
+      4,
+      4,
+      4
+    ],
+    "active_peak_inner_uplink_mbps": 5.85,
+    "active_peak_inner_downlink_mbps": 4.05,
+    "rotation_expected": "NOT_TRIGGERED; intentional 600s timeouts"
+  },
+  "Erin_actual_kernel_netem": {
+    "uplink": {
+      "sent": 70351,
+      "dropped": 29782,
+      "dropped_fraction": 0.29742
+    },
+    "downlink": {
+      "sent": 5639,
+      "dropped": 2369,
+      "dropped_fraction": 0.29583
+    }
+  },
+  "actual_original_business": [
+    {
+      "client": "alice",
+      "direction": "uplink",
+      "sent_bytes": 38124800,
+      "unique_delivered_bytes": 38124800,
+      "fraction": 1,
+      "maximum_active_send_no_receive_ms": 0
+    },
+    {
+      "client": "bob",
+      "direction": "downlink",
+      "sent_bytes": 38124800,
+      "unique_delivered_bytes": 38122496,
+      "fraction": 0.99994,
+      "maximum_active_send_no_receive_ms": 10
+    },
+    {
+      "client": "carol",
+      "direction": "uplink",
+      "sent_bytes": 30500864,
+      "unique_delivered_bytes": 30418944,
+      "fraction": 0.997314,
+      "maximum_active_send_no_receive_ms": 50
+    },
+    {
+      "client": "dave",
+      "direction": "downlink",
+      "sent_bytes": 30500864,
+      "unique_delivered_bytes": 30482432,
+      "fraction": 0.999396,
+      "maximum_active_send_no_receive_ms": 100
+    },
+    {
+      "client": "erin",
+      "direction": "uplink",
+      "sent_bytes": 30500864,
+      "unique_delivered_bytes": 29867520,
+      "fraction": 0.979235,
+      "maximum_active_send_no_receive_ms": 120
+    }
+  ],
+  "original_native_4vcpu_mean_busy_pct": [
+    11.01,
+    15.36,
+    17.62,
+    14.94
+  ],
+  "original_native_hottest_core_mean_busy_pct": [
+    11.78,
+    15.74,
+    17.73,
+    15.5
+  ],
+  "true_owned_stop": {
+    "all_five_clients": true,
+    "server_shared_TUN": true,
+    "per_lease_overflow": 0,
+    "queue_offered_equals_direct_delivered": true
+  },
+  "faults": [],
+  "capacity_limited_clients": [],
+  "limitations": [
+    "H1317 original older SOURCEe61b 96.14/91.83s Normal one-way gap failure preserved; H1319 old SOURCE4c12 one-way rotation success separately scoped",
+    "Normal pure one-way 30pct user app at SOURCE24e with intentional 600s rotation timers shows stable baseline, not active owner renewal proof",
+    "One physical veth per user and shared TLS port, not separate physical carrier or Windows signed Npcap/Wintun/Android qualification",
+    "TCP user application suppressed by definition; no L3 1800s or cross VM product-only CPU claim"
+  ]
+}
