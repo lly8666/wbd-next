@@ -221,8 +221,14 @@ if sudo -n kill -0 "$(cat "$TMP/b.pid")" 2>/dev/null||
 fi
 grep -Fq "V4_PUBLIC_NATIVE_STOP_DRAINED role=client" "$TMP/B.log"
 grep -Fq "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" "$TMP/server.log"
+# Manual /32 original Linux client owns a private kernel TUN reader, not
+# the auto-lease process-shared reader. Exact native Stop is the real owner
+# receipt. Server owns one shared Rust TUN, separately joined above.
 for role in A B R;do
- grep -Fq "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client" "$TMP/$role.log"
+ grep -Fq "V4_PUBLIC_NATIVE_STOP_DRAINED role=client" "$TMP/$role.log"
+ if grep -Fq "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client" "$TMP/$role.log";then
+   echo "manual client incorrectly claimed auto-lease shared reader" >&2;exit 1
+ fi
 done
 python3 - "$TMP/server.log" "$ART/h1376-alice-native-tun-ip.json" "$ART/h1376-bob-native-tun-ip.json" "$ART/h1376-original-two-manual-accounts.json" <<'PY_H1376'
 import json,sys,pathlib,re
