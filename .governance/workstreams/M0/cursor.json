@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1414,
-  "checkpoint_sha": "255abea5d71c7e00404cb5aa2740e888cbdbc8dd",
+  "sequence": 1415,
+  "checkpoint_sha": "065a2ab03035e26d0cbb04d07aba515955d91c2a",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1414-EXACT-EMPTY-ETH0-IP-RESTORE",
-  "current_task": "H1413 original short WSL Action42493317201 again proved Linux netns veth real echo and Windows host WSL2 bridge real echo, but teardown FAIL only because ip -4 -j addr show dev eth0 legitimately returns [] before restoring IPv4 intentionally moved to bridge; guest liveness earlier hypothesis not proven. H1414 check real eth0 link presence via ip -j link, permit zero IPv4 on intermediate step then restore original exact IP and gateway, assert bridge/netns absent and WSL firewall rule removed. No VPN product in this preflight, so not L1 PASS. Original two Action failures unchanged.",
-  "why_now": "H1413 real kernel data path both directions PASS, cleanup still failed at address list visibility. Linux iproute2 ip -4 -j addr show returns [] on a link with no IPv4; the fixture required at least one before installing the original address and thereby blocked its own rollback. Correct before moving to product bridge path.",
+  "task_id": "PLAN028-M0-H1415-SIGNED-WIN-INDEPENDENT-LINUX-CLIENT-SHARED",
+  "current_task": "H1414 real Windows vSwitch WSL2 original eth0 bridge + independent Linux native netns veth L2 UDP both real kernel echo and exact original IP/default-route/bridge/netns rollback passed Action42493577906. H1415 one complete product scene candidate: single signed Npcap/Wintun Windows original Go client A + original independent Linux Go/Rust client B in WSL2 Linux netns to single Go TLS443/Rust shared-TUN server, distinct users/manual lease, default outer1460, full concurrent UDP/TCP each, Windows A exact WAL/Rust Stop then Linux B continues and exact original shared Stop, physical bridge ownership rollback. Product H1415 currently NOT_RUN until Action; no second Windows instance.",
+  "why_now": "User explicitly targets Windows single instance plus independent Linux client, not simultaneous 2 Windows VPNs. H1414 proved exactly the required Hyper-V real physical bridge + separate Linux netns L2 kernel path with full original route cleanup, allowing a source-locked real Go TLS/Rust product scenario instead of speculating about impossible guest network.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1414 one native L2-only Windows/WSL bridge/veth Action; verify both real echoes AND exact eth0 source IP/default route restored and owned bridge/netns deleted, HyperV firewall removed. Original H1412/H1413 CI FAIL retained as test teardown bug, product NOT_RUN. If PASS implement original one Windows Wintun + Linux netns client same shared TLS server; likely server legacy/windows11 fakeTCP persona may need one discriminating real SYN test, not speculative protocol rewrite. Do not re-dispatch original long tests.",
+  "next_action": "Collect automatically triggered SINGLE Windows native signed H1415 original Go TLS443 one Win plus independent Linux original client scene (and any unrelated Actions), exact binaries/source/manifests, real two account admitted/lease, Linux and Windows OS TUN/Wintun, simultaneous UDP+TCP, A WAL Stop B continues and B+server owned Stop, original veth bridge cleanup; do not declare PASS from H1414 L2 only. If original server windows11 persona refuses genuine Linux client B, preserve A business and first logs; inspect per-peer fakeTCP association and choose smallest distinguishing experiment, no speculative global handshake rewrite. No duplicate dispatch or L3 rerun.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1412 and H1413 same native WSL2 bridge real Windows host UDP and independent Linux netns UDP both passed; missing owned cleanup due one-line fixture assumption requiring ip -4 addr JSON nonempty before re-adding original IP. H1414 checks existing eth0 link instead, temporarily empty address legitimate, then exact original L3 restore/readback. No VPN business yet. H1411 three-native ISA-L all grades PASS scoped. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1414 underlay actual Windows and Linux netns original guest bridge dual UDP, exact owned rollback PASS_SCOPED infrastructure only. H1415 source candidate includes one true Windows VPN + independent Linux netns client on same standard Go TLS443 Go/Rust shared server, with 2 separate original users/leases, Windows A Stop B continues, TUN/WAL/physical veth restore; all hard gates pending new Action. H1411 3-native ISA-L all grades PASS_SCOPED, H1407 signed Win Game4 FEC native actual Stop PASS. PLAN028 IN_PROGRESS."
 }
