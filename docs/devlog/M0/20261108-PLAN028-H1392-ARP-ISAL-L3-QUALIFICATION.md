@@ -19,3 +19,9 @@
 ## cursor SOURCE 一致性修正
 
 [治理 Action 42475419694](https://github.com/lly8666/wbd-next/actions/runs/42475419694) 和 [maintenance 42475419683](https://github.com/lly8666/wbd-next/actions/runs/42475419683) 于 `4444328` 真实失败，因为当批 cursor 将 `last_tested_source` 误改为 `096a`，却保留了全部 `6c5` 来源的 `evidence_refs`，仓库守卫报告 `evidence is for a different SOURCE`。这不涉及业务或测试结果。保留两组来源独立、恢复该字段为原来 `6c5fd909...`，H1389 `096a` 放在既有独立证据，H1392 新 SOURCE 仍等待原始 Action 回执。不要为元数据不一致重跑网络。
+
+## H1393 跨目标原生 ISA-L release 链接资格（构建≠运行时）
+
+在现行 `.github/workflows/m0-wl-public-normal-full.yml` 读取到 Windows 正式 DLL 的 `$features='m0_v4_embedded_go,fec2_product_record'`、Linux 正式 Rust build 的 features `m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record`，均**没有** `native_fec_acceleration`；仅设置环境 `WBD_GAME_FEC_BACKEND=native` 不能改变编译期缺失，属于用户指出的默认硬件加速掉线风险。不能擅自直接让整个 Windows 多模式/双 Wintun 生产 CI 跑大矩阵。
+
+新增一条独立 H1393 build-only 工作流：原生 Linux x86 与 Windows2022 x64 MSVC 分别用官方固定 SHA `c387163fcbca62701d646149564c550c78a4f985` 的静态 ISA-L，实际 Rust wrapper C encode、`wbd-engine` release `native_fec_acceleration` 严格链接，写 target/features/SOURCE/静态档及 DLL/ELF SHA256。**不跑 Npcap/Wintun/Go TLS/任何真实数据面**，这轮只能判 build/link/scalar-fallback 装配资格，不能由此宣布所有 mode、所有操作系统的硬件加速可默认启用。等结果后才最小接入现行 release、再对真实非零 FEC/native runtime quanta 和两端业务做验收；原 ARM64 H1392 长测仍按独立冻结 SOURCE 跑。

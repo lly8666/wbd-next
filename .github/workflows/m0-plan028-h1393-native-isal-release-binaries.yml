@@ -1,0 +1,156 @@
+# H1393: independent native release-binary ISA-L linkage check ONLY.
+# H1392 already owns real ARM64 protected TLS 2x1800 L3. No Npcap/Wintun or network
+# can be inferred from compile PASS. Keep scalar fallback portable when feature absent.
+name: M0 PLAN028 H1393 pinned ISA-L x86 Linux and Windows MSVC release engine build
+run-name: PLAN028 H1393 native x86 Linux and Windows MSVC ISA-L link proof (not app)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1393-native-isal-release-binaries.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  linux-x86-native-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Pin verified official static ISA-L on real x86 Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool nasm make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1393-native-isal-x86"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >isal-build.log 2>&1 || {
+            tail -100 isal-build.log >&2; exit 1;
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          echo "WBD_ISAL_PREFIX=$WBD_ISAL_PREFIX" >> "$GITHUB_ENV"
+          echo "WBD_ISAL_SOURCE_SHA=$WBD_ISAL_SOURCE_SHA" >> "$GITHUB_ENV"
+      - name: Native wrapper selftest and actual wbd-engine release ELF linkage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.1 test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture >isal-native.log 2>&1 || {
+            tail -110 isal-native.log >&2; exit 1;
+          }
+          grep -Fq REAL_ISAL_V2311_EC_ENCODE_DATA_PASS isal-native.log
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration >engine-build.log 2>&1 || {
+            tail -130 engine-build.log >&2; exit 1;
+          }
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          assert platform.machine()=="x86_64"
+          path=pathlib.Path("target/release/libwbd_engine.so")
+          raw=path.read_bytes()
+          assert raw[:4]==b"\x7fELF" and struct.unpack_from("<H",raw,18)[0]==62
+          arc=pathlib.Path(os.environ["WBD_ISAL_PREFIX"])/"lib/libisal.a"
+          sha=lambda x:hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest()
+          result={
+            "schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
+            "platform":"native-x86_64-linux-gnu",
+            "native_isal_library_source":"c387163fcbca62701d646149564c550c78a4f985",
+            "native_static_archive_sha256":sha(arc),
+            "engine_release_binary_sha256":sha(path),
+            "engine_cargo_features":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration",
+            "safe_wrapper_native_call":"PASS",
+            "release_engine_link":"PASS",
+            "original_Go_TLS_or_TUN_product_runtime":"NOT_RUN",
+            "real_game_native_dispatch":"NOT_RUN",
+            "windows_driver_or_physical_test":"NOT_RUN"
+          }
+          pathlib.Path("h1393-linux-release-manifest.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("H1393_X86_REAL_STATIC_ISAL_ENGINE_RELEASE_LINK_PASS",json.dumps(result,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1393-x86-release-isa-build-only
+          path: |
+            h1393-linux-release-manifest.json
+            isal-native.log
+          retention-days: 14
+          if-no-files-found: warn
+  windows-x86-native-msvc-release:
+    runs-on: windows-2022
+    timeout-minutes: 38
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-pin official ISA-L and Windows MSVC prerequisite
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain failed'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'MSVC target failed'}
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM prerequisite failed'}
+          $bin=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
+            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
+          if(-not $bin){throw 'NASM executable not found'}
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L source clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'ISA-L source drift'}
+      - name: Build real official x64 static ISA-L using MSVC nmake
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd isa-l
+          nmake /f Makefile.nmake
+      - name: Native wrapper actual encode + release Windows engine DLL feature gate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
+          if(-not $archive){throw 'signed-format MSVC ISA-L static library was not built'}
+          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          cargo +1.85.1 test --manifest-path native/isal-safe/Cargo.toml --features native -- --nocapture *>&1 |
+            Tee-Object h1393-win-native.log
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L wrapper actual call failed'}
+          if(-not (Select-String -Quiet REAL_ISAL_V2311_EC_ENCODE_DATA_PASS h1393-win-native.log)){
+            throw 'no real native ISA-L C call proof'
+          }
+          $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'native-feature Windows release Rust DLL link failed'}
+          $dll='target/release/wbd_engine.dll'
+          if(-not (Test-Path $dll)){throw 'Windows release engine DLL missing'}
+          $report=[ordered]@{
+            schema_version=1
+            source_sha=$env:GITHUB_SHA
+            platform='native-x86_64-pc-windows-msvc'
+            native_isal_library_source='c387163fcbca62701d646149564c550c78a4f985'
+            native_static_archive_sha256=(Get-FileHash $archive.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            engine_release_binary_sha256=(Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
+            engine_cargo_features=$features
+            safe_wrapper_native_call='PASS'
+            release_engine_link='PASS'
+            original_Go_TLS_or_Wintun_Npcap_runtime='NOT_RUN'
+            real_game_native_dispatch='NOT_RUN'
+          }
+          $report | ConvertTo-Json -Depth 5 | Set-Content -Path h1393-windows-release-manifest.json
+          Write-Output 'H1393_WINDOWS_MSVC_REAL_STATIC_ISAL_ENGINE_RELEASE_LINK_PASS'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1393-win-msvc-release-isa-build-only
+          path: |
+            h1393-windows-release-manifest.json
+            h1393-win-native.log
+          retention-days: 14
+          if-no-files-found: warn

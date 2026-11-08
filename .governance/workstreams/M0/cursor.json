@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1394,
-  "checkpoint_sha": "4444328d7437787c461c52d29578c1908c82c8a0",
+  "sequence": 1395,
+  "checkpoint_sha": "273524f9e2ca87ec96ed51f9ff03e34054ca414a",
   "progress": "in_progress",
   "task_id": "PLAN028-M0-H1392-CONTROLLED-L3-ISA-L-ARP",
-  "current_task": "H1392 source4444328 pinned native ARM64 ISA-L plus test-only veth ARP-isolated original 1800s five-client L3 in-flight Action42475419721. Prior H1392 initial YAML invalid no jobs action42475181912 CI-only NOT_RUN; current build began. Governance source mismatch on previous cursor last_tested_source=096a while evidence_refs all source6c5; restored last_tested_source=6c5, newer source096a is historically H1389 L3 evidence distinct, H1392 pending. H1389 Erin true app 3.31/3.32s FAIL retained. Windows single native instance + independent Linux client priority; same-host H1387 original fail retained outside target.",
-  "why_now": "H1392 native Action42475419721 is in-progress (ARM64 build); governance push CI caught author-induced cursor source/evidence_refs disagreement, and this commit repairs that bookkeeping only. L3 still not qualified.",
+  "current_task": "H1392 original native ARM64 SOURCE4444328: pinned real ISA-L full native GoTLS/Rust build SUCCESS, both baseline and hetero 1800s network scenes in progress Action42475419721 (neither original business result yet qualified). H1393 independent x86 Linux and Windows MSVC native static ISA-L Rust release library/link/manifest build-only gate planned by source-trigger; not full product/runtime acceptance. Governance CI at SOURCE273524 confirmed success. Windows main full release and Linux full release previous code omit native_fec_acceleration, so cross-platform default is still a real wiring gap until linked builds, manifest and actual runtime tests validated.",
+  "why_now": "User singled out losing ISA-L default on platforms/modes. H1392 ARM64 build proved pinned static native feature, but current public Windows and Linux product release workflows still compile without native_fec_acceleration. H1393 isolates per-native-target official library+release Rust DLL/ELF build gates before touching full Windows signed driver path or declaring runtime feature.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "First collect H1392 Action42475419721 build/real two native scenes and artifact manifest (verify actual ISA-L quanta, 10 static peers, original DATA loss, Stop and app alerts); do not dispatch duplicate or claim a PASS if only build. Then Windows one native Wintun client plus independent native Linux client same protected Go TLS443 Rust M4 server route isolation, no Windows dual-device OS bypass. Keep 6c5 evidence_refs source scope and all original H1389/H1387/H998 failures.",
+  "next_action": "Collect H1392 two actual L3 results/Stop, h1393 x86 & Windows native pinned-ISA release manifests and failures. H1393 compile-only cannot establish real Game/FEC quanta, Windows Npcap/Wintun, Go bridge, or default production rollout. If passing, minimally wire actual Windows/Linux release build with pinned static ISA-L and real mode-specific readback, keep portable fallback on unsupported targets; prioritize one Windows Wintun + independent Linux original Go client server isolation. Do not duplicate already dispatched or broaden same-host dual Windows.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -33,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Current push source4444328 repaired original malformed workflow, now H1392 Action42475419721 native ARM64 build running; first source71fa failure no jobs CI_ONLY. Governance failed because last_tested_source mismatched retained 6c5 evidence_refs; now restored. Baseline H1389 old original PASS_SCOPED, heterogeneous true Erin app gap performance FAIL; H1392 new source incomplete. PLAN028 IN_PROGRESS."
+  "partial_summary": "Source273524 governance/feature checks PASS. H1392 ARM64 pinned native build PASS, 2x1800 L3 still running at source4444328. New H1393 explicit build-only x86 Linux/Windows MSVC native ISA-L release gates authored for future default and source manifest; actual runtime proof Windows/x86 is pending. Prior full Win/Linux release jobs omit native feature. PLAN028 IN_PROGRESS."
 }

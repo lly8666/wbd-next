@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "source_sha": "4444328d7437787c461c52d29578c1908c82c8a0",
+  "activity": "H1392_30M_L3_NATIVE_ARM64_PINNED_ISA_L_BUILD_AND_TWO_SCENE_COLLECTION",
+  "run_id": 42475419721,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/42475419721",
+  "build": {
+    "job_id": 128715541538,
+    "conclusion": "success",
+    "original_go_tls_rust_engine": "BUILD_PASS_WITH_PINNED_OFFICIAL_ISAL_SOURCE",
+    "artifact_id": 13614329456,
+    "artifact_name": "h1274-native-arm64-one-build-4444328d7437787c461c52d29578c1908c82c8a0",
+    "artifact_sha256": "e7ce0eacf1a8aae087bb07defec8053bcbe6b11497fd07fbbbbf84b7854b6ed9",
+    "pinned_isal_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "rust_compile_feature": "native_fec_acceleration"
+  },
+  "scene_baseline": {
+    "job_id": 128716229018,
+    "status": "IN_PROGRESS",
+    "app_result": "NOT_RUN_COMPLETE",
+    "runtime_native_quanta": "NOT_YET_VERIFIED",
+    "stop": "NOT_YET_VERIFIED"
+  },
+  "scene_heterogeneous": {
+    "job_id": 128716229204,
+    "status": "IN_PROGRESS",
+    "app_result": "NOT_RUN_COMPLETE",
+    "runtime_native_quanta": "NOT_YET_VERIFIED",
+    "netem_30percent_data": "NOT_YET_VERIFIED",
+    "underlay_static_10_neighbour_readback": "NOT_YET_VERIFIED"
+  },
+  "prior_original_H1389": {
+    "source_sha": "096a2d55d204c7485aa2fce7d47b3c8e31901bc4",
+    "baseline": "PASS_SCOPED",
+    "heterogeneous_erin_uplink_gap_ms": 3310,
+    "heterogeneous_erin_downlink_gap_ms": 3320,
+    "performance": "FAIL_ORIGINAL_PRESERVED"
+  },
+  "note": "Build proof only, source-frozen native 1800s real business still running; not product runtime ISA-L or L3 acceptance"
+}
