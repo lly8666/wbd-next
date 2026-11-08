@@ -404,6 +404,37 @@ func m0WindowsRunPathScopedGeneration(
  return err
 }
 
+// The original GUI holds one machine-wide owner. H1381 uses a strictly
+// bounded Windows CI-only exception to prove two *distinct* original native
+// product OS owners before any claim about two full signed TLS product clients.
+// No CLI flag, profile file or unauthenticated peer may enable this behavior.
+// WFP/route/WAL coexistence and actual two-client TLS remain separate gates.
+func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error){
+ if os.Getenv("GITHUB_ACTIONS")!="true"||os.Getenv("WBD_PLAN028_TWO_REAL_CLIENTS")!="1"{
+  return acquireGUIClientSlot()
+ }
+ expectedUser:=""
+ expectedLease:=""
+ switch o.AdapterAlias{
+ case "WBDWLCLIENTA":expectedUser="alice";expectedLease="10.66.0.2/32"
+ case "WBDWLCLIENTB":expectedUser="bob";expectedLease="10.66.0.3/32"
+ default:return 0,windowsclient.ErrN4NativeGuard
+ }
+ if o.Username!=expectedUser||!o.Lease4.IsValid()||o.Lease4.String()!=expectedLease||
+    len(o.StatePath)<12||!strings.HasSuffix(strings.ToLower(o.StatePath),".json")||
+    !strings.Contains(strings.ToLower(o.StatePath),strings.ToLower(o.AdapterAlias)){
+    return 0,windowsclient.ErrN4NativeGuard
+ }
+ name,e:=windows.UTF16PtrFromString("Local\\WBD-NEXT-PLAN028-ORIGINAL-V4-"+o.AdapterAlias)
+ if e!=nil{return 0,e}
+ h,e:=windows.CreateEvent(nil,1,0,name)
+ if e!=nil{
+  if h!=0{_ = windows.CloseHandle(h)}
+  return 0,errors.New("original Windows product device already owned or cleaning up")
+ }
+ fmt.Printf("WBD_PLAN028_CI_NATIVE_DEVICE_SLOT_OWNED adapter=%s lease=%s owner=one_alias_only\n",o.AdapterAlias,o.Lease4)
+ return h,nil
+}
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -426,7 +457,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
    go watchM0NativeV4AutoControl(ctx,os.Stdin,cancel,autoOperatorRequests)
   }else{go watchGUIControl(os.Stdin,cancel)}
  }
- slot,err:=acquireGUIClientSlot()
+ slot,err:=m0Plan028WindowsNativeClientSlot(o)
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
  // One native route/address watcher for all original Normal/FEC/Game modes.
