@@ -979,7 +979,7 @@
       "path": "internal/faketcp/packet.go",
       "original_blob": "6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b",
       "overlay_path": "r0/go_overlay/internal/faketcp/packet.go",
-      "result_blob": "82d462d68149449e1f2d1a0d3de76ab1a80793cf"
+      "result_blob": "54a2985692ebad78cd8c9f48bfa6a941c7f72215"
     },
     {
       "kind": "replace",
@@ -993,7 +993,7 @@
       "path": "internal/faketcp/association.go",
       "original_blob": "779cb74a9719f15615b6315ec548996951ae9138",
       "overlay_path": "r0/go_overlay/internal/faketcp/association.go",
-      "result_blob": "aa584980df88e0f034049c6a83cb1e4409f8a7d9"
+      "result_blob": "da57240c038393b8b2be3a5b6af977a4d79c8a5c"
     },
     {
       "kind": "replace",
@@ -1128,6 +1128,12 @@
       "original_blob": "4a7ef97f3dd5971d9952114b39cf18c085aa29a7",
       "overlay_path": "r0/go_overlay/internal/faketcp/transition_test.go",
       "result_blob": "a86374c83876519e4e5c785a8a3c8724f3f3d3e7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/plan028_native_peer_persona_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/plan028_native_peer_persona_test.go",
+      "result_blob": "d6e597b8c15a761bb251a840b5c2e58b65ea78b3"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

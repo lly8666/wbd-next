@@ -43,7 +43,7 @@ func TestPlan028UnknownSYNOptionsDoNotInventPersona(t *testing.T) {
     raw:=MarshalSegment(syn,2,PacketPersonaLegacy)
     // Disturb only the option ORDER, leaving MSS/SACK/WS values intact:
     // unrecognized presentations cannot silently become a Windows owner.
-    raw[40],raw[41]=1,1
+    raw[51]=0 // change one final TCP NOP to EOL; preserve MSS/SACK/WS
     parsed,err:=ParseIPv4TCP(raw)
     if err!=nil{t.Fatal(err)}
     if parsed.OriginalSYNPersonaKnown{t.Fatal("unknown SYN option layout promoted a persona")}
