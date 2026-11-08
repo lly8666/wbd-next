@@ -8,3 +8,13 @@
 - **已发现夹具最终门禁错误（不能当产品失败）**：新独立 audit 分类是 `PASS_SCOPED_NATIVE_ARM64_GAME4_OFF_TWO_REAL_ROTATIONS_FIVE_CLIENT`，workflow 最终断言意外留着 `PASS_SCOPED_NATIVE_ARM64_GAME2_FIXED6_TWO_REAL_ROTATIONS_FIVE_CLIENT`。若网测完后这一行失败，只做原 ZIP 离线重新解释，不因为报表错误重跑网络；原 CI FAIL 永远留存。精确结果待 Action 后更新。
 - 另有 [前次 47ffa governance](https://github.com/lly8666/wbd-next/actions/runs/42437397080) Feature catalog FAIL：同提交卡片变更未有 feature-impact，普通 Governance job 成功。待 H1357 真实证据收齐后，同批对受影响功能卡及其 devlog 写合法 `feature-impact`，不要伪装旧失败不存在。
 - L0 全边界、Windows 双真设备/驱动、L2 Normal 100/200Mbps/其他黑洞、L3 两个 1800s 仍待验；Android/物理仍 NOT_RUN。PLAN028 冻结但 IN_PROGRESS。
+
+
+## Feature catalog 历史红灯与同提交声明
+
+- 旧 [4b09 Feature catalog FAIL](https://github.com/lly8666/wbd-next/actions/runs/42437209599) / [47ffa FAIL](https://github.com/lly8666/wbd-next/actions/runs/42437397080) 不改判；此前压缩过长的功能卡但同提交缺少 `feature-impact`，不代表产品失败。
+- 本次只补 `game-lanes` 对 H1356 原始 Game2 Fixed6 FEC outer STOP 已验离线证据的 doc_ref；没有产品/协议/配置变更。卡片与下面声明同一提交接受后再看治理真实检查。H1357 ARM64 网测结果仍须独立收取。
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"Link independently verified H1356 original Game2 Fixed6 raw FEC outer counts to the existing Game lanes feature card; this changes evidence metadata only, not product protocol or the old reporter failure."}
+```
