@@ -146,10 +146,17 @@ def assess(root):
         r"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=(\d+) rotation=(\d+) client_port=(\d+) server_port=443 same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
         server)
     matched=[]
+    # Client cycle is the group's global hot-swap counter; server rotation
+    # counts PER physical lane. Both lane1 and lane2 may each report server
+    # rotation=1 even though client cycles are 1 then 2. The authenticated
+    # actual five-tuple port + lane is the exact cross-end identity; require
+    # BOTH, and never invent a new whole-group generation from either counter.
     for gen,lane,cycle,old,new in client_lanes:
-        if (lane,cycle,new) in server_lanes:
+        if any(server_lane==lane and server_port==new
+               for server_lane,server_rotation,server_port in server_lanes):
             matched.append({"generation":int(gen),"lane":int(lane),
-                            "cycle":int(cycle),"old_port":int(old),"new_port":int(new),
+                            "client_global_cycle":int(cycle),
+                            "old_port":int(old),"new_port":int(new),
                             "server_independently_confirmed":True})
     if len(matched)<2 or len({x["lane"] for x in matched})<2:
         faults.append({"game4_off_server_confirmed_hot_lane_shortfall":matched})
