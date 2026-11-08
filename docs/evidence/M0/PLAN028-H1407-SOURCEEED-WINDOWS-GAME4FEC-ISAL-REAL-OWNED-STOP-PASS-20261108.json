@@ -115,5 +115,7 @@
     "Historical H1398 same-socket PMTU/Android/user physical WAN are not closed by source eed.",
     "No other ISA-L mode/source is granted actual native runtime proof by this scene."
   ],
-  "plan028": "IN_PROGRESS"
+  "plan028": "IN_PROGRESS",
+  "result": "PASS",
+  "artifact_verified": true
 }
