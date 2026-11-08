@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Compile native main codec against PINNED official ISA-L, 13 F2 native oracles
+      - name: Compile main codec against pinned ISA-L and qualify exact native oracles plus all 7 profiles
         shell: bash
         run: |
           set -euo pipefail
@@ -54,8 +54,13 @@ jobs:
           # oracle and 20-row prepared block test. Keep ALL 15 frozen
           # native/codec tests and require this extra test by exact name.
           required.add("r1_f2_scalar_prepared_lut_exact_65536_and_full_maximum_20_rows")
-          assert len(names)==16 and required.issubset(names),(len(names),names)
-          assert re.search(r"test result: ok\. 16 passed; 0 failed;",log)
+          required.add("r1_f2_default_native_all_seven_profiles_real_encode_prepared")
+          # The source-locked EXACT test names are the gate, not a brittle
+          # hardcoded total that falsely red-lights an additional valid oracle.
+          assert required.issubset(names),(len(names),names)
+          summary=re.search(r"test result: ok\. (\d+) passed; 0 failed;",log)
+          assert summary and int(summary.group(1))==len(names),(summary,sorted(names))
+          assert log.count("M0_PLAN028_H1409_ISAL_NATIVE_PROFILE")==7
           h=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-codec/src/fec_v2.rs",
                   "crates/wbd-codec/src/fec_v2_tests.rs",

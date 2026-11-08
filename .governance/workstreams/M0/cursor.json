@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1409,
-  "checkpoint_sha": "6efde5b9fe9c6a3608a7008f697eb09bcdd4ca42",
+  "sequence": 1410,
+  "checkpoint_sha": "337dc093438ec216ef17e1761a456f80b3669a02",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1409-ALL-GRADE-ISA-L-NATIVE-RELEASE",
-  "current_task": "H1409 release-engine/codec exact seven FEC profile default native ISA-L qualification on Linux x86_64 Linux ARM64 and Windows MSVC; fixes missing strength 0..6 backend actual C witness, no product wire or steady-state change. Windows authenticated Fixed/Auto original owner test now executes all 7 profiles with byte-identical scalar, native branch and original Stop. Separate C codec prepared + owned native tests (native real C encode on each platform) and full release engine native_fec_acceleration manifest are required. Source pending new Actions, not yet PASS. Existing H1407 true Game4FEC Windows+Linux server Stop readback remains PASS_SCOPED; original L3 2x1800 ARM64 PASS_SCOPED; cross Windows and separately independent Linux CLIENT sharing server still NOT_RUN.",
-  "why_now": "User explicitly requests product ISA-L not silently dropped across Linux↔Linux and Win↔Linux every FEC grade. Previous older Linux fixed/Auto CI often compiled WITHOUT native feature, so old functional PASS cannot assert ISA-L; existing newest real Game4FEC gives only Game4 quanta. Same actual codec/backend applies to grades but needs executable native 7-grade gate on all targets, not another network seed.",
+  "task_id": "PLAN028-M0-H1410-ISA-L-7-GRADE-WIN-NASM-HARNESS",
+  "current_task": "Original H1409 source337 actual Linux native x86_64 and ARM64 7/7 default ISA-L all FEC profiles, both `encode_owned` and `encode_prepared_into` actual C encoder + exact scalar-equivalence and pinned release engine features PASS_SCOPED; original ZIP/ELF native manifest hashes verified and evidence archived. Windows first H1409 job failed before testing: Chocolatey NASM installed, but same-step cmd/nmake sees no NASM since $GITHUB_PATH takes effect next step. H1410 only Windows current-step PATH fix, skips repeat Linux jobs on this Windows-only push, no product code changes. Old m0-fec2-main-native source337 actual 17/17 Rust tests PASS but stale expected total=16 caused CI FAIL; H1410 fixes report gate to exact required names and actual count, no network.",
+  "why_now": "H1409 returned two native Linux 7-grade actual C-encode PASS and windows pretest builder ENVIRONMENT_BLOCKED; old native codec workflow rejected valid additional test due rigid literal count. Minimal test harness repair only with strict genuine backend gates and no repeating qualified Linux native x86/ARM jobs.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically launched H1409 Linux x86_64/ARM64 and Windows native ISA-L seven-grade real C encode and Windows authenticated owner ABI, manifest exact source/release DLL and archive hashes; isolate test harness failure without network rerun. Also collect any other auto-triggered source tests; no extra dispatch. Categorize seven public modes Off=no encode by design; Fixed/Auto native eligible iff k>=2/len>=64 and actual native feature linked; Game2/4 FEC same. Existing Game4FEC true Windows/Linux native runtime positive, Linux long Game4 native positive; other actual public mode native quantas still NEEDS_PRODUCT_RUNTIME_SAMPLE if claiming full per-mode real dispatch. Then continue one Windows instance + independent Linux client same server integration; no same-Windows dual VPN.",
+  "next_action": "First collect H1410 Windows-only native FEC seven-grade original owner and pinned release manifest, and legacy m0-fec2-main-native exact-name gate action; investigate minimum actual failure. Keep original H1409 Windows CI FAIL and later H1410 result separate. After completed do tier matrix: Linux↔Linux Game4FEC real runtime+7 all-grade codec, Win↔Linux Game4FEC real runtime+7 native Win original owner if actually triggered, Fixed/Auto real per-mode runtime quanta still NOT_MEASURED, FEC Off N/A. Then pursue Windows one instance+independent Linux CLIENT same server, never two Win Wintun.",
   "unverified": true,
-  "last_tested_source": "eed0392f588053409f5dc52870d1f2d0fd55b033",
+  "last_tested_source": "337dc093438ec216ef17e1761a456f80b3669a02",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1407-SOURCEEED-WINDOWS-GAME4FEC-ISAL-REAL-OWNED-STOP-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1409-SOURCE337-LINUX-X86-ARM64-SEVEN-REAL-ISAL-PROFILES-PASS-20261108.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "User parallel ISA-L audit: native FEC enabled release H1392 ARM64/H1393 x86/Win and H1407 Windows Game4FEC real positive encode. Past L1 Linux fixed/Auto source without native feature does not prove accelerator. Off modes N/A. H1409 new test-only per-strength native actual C encode binary equality and real Windows fixed/Auto owner, three actual native CPUs; product e2e not rerun. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1409 source337 Linux x86_64 7/7 and native ARM64 7/7 actual pinned ISA-L k4 160B source/prepared native C encoding scalar identical, real release engine feature; both jobs original SUCCESS and logs/hash inspected. Windows H1409 job failed *before codec test* because NASM current-step PATH not inherited by cmd/nmake despite installed; H1410 current shell PATH fix only, Linux jobs skip one Windows-only push. Historical native main codec source337 17 tests PASS, reporter hardcoded 16 -> CI fail, corrected to exact tests. Existing signed Windows Game4FEC true native quanta older SOURCE eed PASS; 7-grade signed product data per-mode still unmeasured."
 }

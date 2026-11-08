@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "337dc093438ec216ef17e1761a456f80b3669a02",
+  "result": "PASS",
+  "artifact_verified": true,
+  "classification": "PASS_SCOPED_REAL_NATIVE_ISAL_ALL_SEVEN_FEC_STRENGTHS_NATIVE_LINUX_X86_AND_ARM64_CODEC_AND_M4_PREPARED",
+  "action": {
+    "run_id": 42490258856,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42490258856",
+    "overall_conclusion": "failure",
+    "linux_x86_job": "success",
+    "linux_arm64_job": "success",
+    "windows_native_job": "failure before tests due environment NASM PATH missing in same step"
+  },
+  "official_isa_l_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "rust_source_before_windows_harness_repair": "337dc093438ec216ef17e1761a456f80b3669a02",
+  "native_releases": {
+    "x86_64": {
+      "artifact_id": 13620444100,
+      "zip_sha256": "b0d0f9bbd1585fe91c6656db20b833cae6ae74b0348763325a0586f9fa5b12b9",
+      "archive_sha256": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d",
+      "engine_sha256": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6",
+      "grade_test": "PASS_NATIVE_REAL_C_7_OF_7",
+      "native_engine_release_feature": true
+    },
+    "aarch64": {
+      "artifact_id": 13621520960,
+      "zip_sha256": "fd291f2eadaea47b31792db3cd791f0bc408f248709dae13dc751a5fd7916899",
+      "archive_sha256": "885dff5d6c61d0f534d0cce71c741beb2b6cfcb241683b3d8a09019423b92809",
+      "engine_sha256": "ab016dbd87af6fb58734759a780e33e419d471e0b7c66ae5bd8f4f1808a9cfae",
+      "grade_test": "PASS_NATIVE_REAL_C_7_OF_7",
+      "native_engine_release_feature": true
+    }
+  },
+  "profiles": [
+    "light",
+    "mild",
+    "medium",
+    "balanced",
+    "high",
+    "strong",
+    "maximum"
+  ],
+  "per_grade_real_native_encode_conditions": {
+    "source_count": 4,
+    "source_size_bytes": 160,
+    "native_selected": "BackendChoice::default() -> NativeIsaL",
+    "source_owned_encoder": "PASS",
+    "linux_game_prepared_encoder": "PASS",
+    "encoded_bytes_identical_to_scalar": "PASS",
+    "quanta_per_platform": 7
+  },
+  "existing_linux_product_real_tls_evidence": {
+    "game4_native_arm64_L3_source": "4444328d7437787c461c52d29578c1908c82c8a0",
+    "linux_shared_owner_game4_real_native_quanta": "PASS_SCOPED",
+    "other_fixed_auto_actual_per_client_native_quanta": "NOT_MEASURED_IN_THIS_NATIVE_ORIGINAL_TEST"
+  },
+  "windows_status": {
+    "historical_release_link_and_Game4_actual_runtime": "PASS_SCOPED_OTHER_SOURCE_eed0392",
+    "H1409_new_7_grade_native_owner_original_test": "NOT_RUN_NASM_CURRENT_STEP_PATH",
+    "reason": "Chocolatey NASM available but GITHUB_PATH only next step; nmake launched same PowerShell step"
+  },
+  "no_native_expected": [
+    "normal_off",
+    "game2_off",
+    "game4_off"
+  ],
+  "fallback_conditions": [
+    "k=1",
+    "symbol_len_less_than_64",
+    "portable build without ISA-L native feature"
+  ],
+  "scope_limits": [
+    "No new real two-ended VPN network in this all-grade codec test; existing Linux product multi-client and Game4 L3 scope reused separately.",
+    "Cross Windows+separate Linux client same TLS443 server still NOT_RUN",
+    "Old H1393 Windows compile from other workflow does not prove this seven-grade test"
+  ],
+  "plan028": "IN_PROGRESS"
+}

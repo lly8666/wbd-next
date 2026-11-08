@@ -13,3 +13,11 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Native platform FEC profile tests and release qualification only; no product protocol or user configuration change."}
 ```
+
+## H1409 首轮原始结果与 H1410 夹具定向修正
+
+[H1409 Action 42490258856](https://github.com/lly8666/wbd-next/actions/runs/42490258856)：**Linux x86_64、原生 ARM64 两 job PASS_SCOPED**。每个 grade 0..6 有真实 `owned=native prepared=native scalar_match=1` 七行；每原生平台的实际 ISA-L 静态 lib 和 release engine hash/官方 pin 均由原始 ZIP 校核，见 `docs/evidence/M0/PLAN028-H1409-SOURCE337-LINUX-X86-ARM64-SEVEN-REAL-ISAL-PROFILES-PASS-20261108.json`。两平台分别提供真实能力等级原生证据，不能把测试用的 160B/k4 解释为所有真实应用块皆 native。
+
+Windows job 原 CI FAIL 发生于 **测试前**：Chocolatey `nasm` 正常安装，`$GITHUB_PATH` 只影响下一 Action step，`cmd /c nmake` 在同一 PowerShell step 内未继承 `nasm.exe`，出现 `NMAKE fatal U1077: nasm not recognized`。H1410 在同一步写 `$env:PATH="$bin;$env:PATH"`，先 `where nasm`，再真正 `vcvars64 && where nmake && where nasm && nmake`。这一源提交的 Linux x86/ARM64 资格原始凭据直接复用，新 push 用明确 `[plan028-win-nasm-only]` 仅跳过 Linux 这两项重复原生 job；下次普通 push 仍正常对 Linux 三平台共用测试。
+
+另外原 [main FEC2 native Action 42490258886](https://github.com/lly8666/wbd-next/actions/runs/42490258886) 执行真实 Rust 17/17 全 PASS，随后历史 checker 强制 `16 passed` 导致 CI 假失败；H1410 修改仅审计器计数为实际 `test result: ok N passed; 0 failed` 和精确必需测试集合，新七挡 marker 7/7，依旧不放宽 C/GF 字节比对。修它不重跑任何网络，原失败证据保留。

@@ -9,6 +9,10 @@ on:
 permissions: {contents: read}
 jobs:
   linux-grade-native:
+    # H1410 is only Windows NASM PATH fixture remediation. Linux x86/ARM64
+    # original H1409 source 337 both completed seven real native grade tests;
+    # never rebuild them for an unrelated Windows-only wrapper fix.
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[plan028-win-nasm-only]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -94,6 +98,11 @@ jobs:
           $bin=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') | Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
           if(-not $bin){throw 'Installed NASM tool missing'}
           Add-Content -Path $env:GITHUB_PATH -Value $bin
+          # GITHUB_PATH applies to FOLLOWING steps only. The current nmake
+          # child cmd.exe needs the actual NASM directory immediately.
+          $env:PATH="$bin;$env:PATH"
+          & where.exe nasm
+          if($LASTEXITCODE -ne 0){throw 'Current MSVC ISA-L builder cannot see NASM'}
           git clone --quiet https://github.com/intel/isa-l.git isa-l
           if($LASTEXITCODE -ne 0){throw 'Official ISA-L clone failed'}
           git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
@@ -104,7 +113,7 @@ jobs:
           if(-not $vsroot){throw 'MSVC x64 tools missing'}
           $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
           if(-not (Test-Path -LiteralPath $vcvars)){throw 'MSVC vcvars64 missing'}
-          $cmd='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
+          $cmd='call "'+$vcvars+'" && where nmake && where nasm && cd isa-l && nmake /f Makefile.nmake'
           & cmd.exe /d /s /c $cmd
           if($LASTEXITCODE -ne 0){throw 'ISA-L MSVC native static build failed'}
           $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
