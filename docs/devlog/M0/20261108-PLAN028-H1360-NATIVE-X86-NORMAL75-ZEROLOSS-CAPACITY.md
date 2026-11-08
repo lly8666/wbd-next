@@ -1,0 +1,7 @@
+# PLAN028 H1360｜原生 x86 Normal 75Mbps 边界内稳定与回落
+
+- **PASS_SCOPED / PLAN028 IN_PROGRESS**。[H1360 one Action42441021254](https://github.com/lly8666/wbd-next/actions/runs/42441021254) preflight/native 双 SUCCESS，冻结产品 SOURCE `6c5fd909b9f42d1af89c698cdaabc79bbb72e589`、原始 Go donor `a7a82db31fe736ffedee330795a3234d358f1984`，复用 ELF62/manifest SHA，无产品改动。原始 artifact13600784818 34文件 ZIP SHA256 `0a353a05d4e53576b167a2e185f937ef30585463d4af019db0c5633059035b8c`，CRC PASS。真实五用户同 TLS443+各 TUN，0% netem，Normal Off Alice 25→50→75→50Mbps/方向；其余四客户端业务完整。600s轮换预先停放，**NOT_TRIGGERED** 不算L1资格。
+- 25阶段原 inner发送/交付25/25Mbps，宿主4vCPU busy29.40%/最热核心29.72%/softIRQ3.19%；50为50/50、52.05%/52.75%/5.85%；75为75/75、74.93%/77.10%/8.52%；恢复50为50/50、53.31%/53.87%/6.01%。两方向原始 apps 真实发送、交付；原始五 client最大10ms活跃发无收窗 10ms、内核 Erin real qdisc 两方向 drop0、无发生器 capacity flag、所有原 Go/Rust owned Stop PASS。
+- 大小包抽样256B:1024B=3:7，近似均值793.6B；75Mbps `75e6/(8*793.6)≈11813` 业务记录/s/方向。实测 UDP app 9450.6 + framed TCP 2362.7 =11813.3/s/方向，业务吞吐与预测一致；不把 App record PPS 当外层物理 PPS，Game副本/FEC需单独计算。最大阶段五客户端总业务实际 83Mbps/方向。
+- 该 VM 内 50→75 CPU 从52.05%到74.93%、最忙核心52.75→77.10%，线性外推 Normal100Mbps 可能逼近宿主 busy97.8%／最忙核心101.5%；**这只是预测，不是100Mbps实测瓶颈**。本轮不继续同族加到100/200撞满宿主；记 `NOT_RUN`，将测试预算用于独立的真纯单向弱网和生命周期缺陷。不会冒称跨 VM CPU 因果收益。
+- [H1332 已验前阶 Action42382999546](https://github.com/lly8666/wbd-next/actions/runs/42382999546) 原样留存，不拿不同 runner 50Mbps CPU 与本场当同VM A/B。H1358 Game2 Off x86与 H1359 ARM Game4 Off仅对应各自 L1短测资格。H998同socket MTU FAIL、H1317老 ARM 5.18s FAIL、Windows双独立Npcap/Wintun设备、L3 2×1800s仍OPEN。

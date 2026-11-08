@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1360",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "qualification": "PASS_SCOPED_0LOSS_NORMAL_25_50_75_50_WITH_FIVE_SIBLINGS",
+  "artifact_verified": true,
+  "native_action": {
+    "run_id": 42441021254,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42441021254",
+    "conclusion": "success",
+    "preflight_job": 128610074225,
+    "network_job": 128610102336,
+    "preflight": "PASS",
+    "real_network": "PASS",
+    "source_wrapper": "0ae102629e874670aa4d1ef1d53f51acc0de0650"
+  },
+  "archive": {
+    "id": 13600784818,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42441021254/artifacts/13600784818",
+    "zip_sha256": "0a353a05d4e53576b167a2e185f937ef30585463d4af019db0c5633059035b8c",
+    "file_count": 34,
+    "crc": "PASS"
+  },
+  "product": {
+    "original_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "architecture": "native Linux x86_64 both Go TLS443 and Rust ISA-L M4",
+    "frozen_binary_manifest_three_elf_sha256": "PASS",
+    "product_source_modified": false
+  },
+  "scene": {
+    "native_netns": 6,
+    "real_original_user_clients": 5,
+    "server_tls_port": 443,
+    "independent_lease_count": 5,
+    "loss_pct_both_directions": 0,
+    "oneway_delay_ms": 0,
+    "auth_modes": [
+      "Alice Normal Off",
+      "Bob Normal Auto",
+      "Carol Game2 Off",
+      "Dave Game4 Fixed6",
+      "Erin Normal Fixed6 outer1280"
+    ],
+    "physical_qdisc_erin_actual_kernel_drops": {
+      "uplink": 0,
+      "downlink": 0
+    },
+    "phase_seconds": [
+      30,
+      60,
+      30,
+      50
+    ],
+    "after_warmup_s": 10,
+    "active_business_s": 180,
+    "rotation": "NOT_TRIGGERED_BY_DESIGN_600s"
+  },
+  "original_native_actual": [
+    {
+      "phase": "first_wave",
+      "normal_inner_target_mbps_each_direction": 25,
+      "normal_actual_offered_mbps_each_direction": 25,
+      "normal_actual_delivered_mbps_each_direction": 25,
+      "real_normal_app_records_per_second_each_direction": 3937.7,
+      "guest4vCPU_mean_busy_pct": 29.4,
+      "max_core_mean_busy_pct": 29.72,
+      "host_softirq_mean_pct": 3.19,
+      "all_five_offered_one_direction_mbps": 27.668
+    },
+    {
+      "phase": "sustained",
+      "normal_inner_target_mbps_each_direction": 50,
+      "normal_actual_offered_mbps_each_direction": 50,
+      "normal_actual_delivered_mbps_each_direction": 50,
+      "real_normal_app_records_per_second_each_direction": 7875.5,
+      "guest4vCPU_mean_busy_pct": 52.05,
+      "max_core_mean_busy_pct": 52.75,
+      "host_softirq_mean_pct": 5.85,
+      "all_five_offered_one_direction_mbps": 55.332
+    },
+    {
+      "phase": "overload",
+      "normal_inner_target_mbps_each_direction": 75,
+      "normal_actual_offered_mbps_each_direction": 75,
+      "normal_actual_delivered_mbps_each_direction": 75,
+      "real_normal_app_records_per_second_each_direction": 11813.3,
+      "guest4vCPU_mean_busy_pct": 74.93,
+      "max_core_mean_busy_pct": 77.1,
+      "host_softirq_mean_pct": 8.52,
+      "all_five_offered_one_direction_mbps": 83
+    },
+    {
+      "phase": "recovery",
+      "normal_inner_target_mbps_each_direction": 50,
+      "normal_actual_offered_mbps_each_direction": 50,
+      "normal_actual_delivered_mbps_each_direction": 50,
+      "real_normal_app_records_per_second_each_direction": 7875.6,
+      "guest4vCPU_mean_busy_pct": 53.31,
+      "max_core_mean_busy_pct": 53.87,
+      "host_softirq_mean_pct": 6.01,
+      "all_five_offered_one_direction_mbps": 55.333
+    }
+  ],
+  "actual_application_hard_gates": {
+    "original_UDP_TCP_both_directions": true,
+    "normal_each_phase_target_fill": 1,
+    "actual_five_clients_app_capacity_exceeded": false,
+    "normal_UDP_delivery_fraction_in_peak": 1,
+    "all_five_app_stable": true,
+    "maximum_10ms_active_sender_no_rx_gap_ms": 10,
+    "actual_server_and_five_client_exact_owned_Stop": "PASS",
+    "abnormal_app_errors": [],
+    "original_report_real_business_stability_pass": true
+  },
+  "calculation": {
+    "app_sizes_weighted_256_30pct_1024_70pct_average_bytes": 793.6,
+    "estimated_75Mbps_one_direction_app_pps": 11813.3,
+    "observed_75Mbps_udp_plus_framed_tcp_records_per_second": 11813.3,
+    "same_VM_measured_cpu_busy_50_to_75_pct": [
+      52.05,
+      74.93
+    ],
+    "same_VM_measured_maxcore_50_to_75_pct": [
+      52.75,
+      77.1
+    ],
+    "linear_100Mbps_guest_busy_projection_pct": 97.81,
+    "linear_100Mbps_maxcore_projection_pct": 101.45,
+    "interpretation": "Caution only; linear extrapolation not measured capacity/product ceiling. 100/200 NOT_RUN on this VM; prioritize other independent failure modes rather than forcing host saturation."
+  },
+  "limitations": [
+    "Real 0% native virtual underlay not physical WAN, heterogeneous/high-loss or Windows/ARM64 CPU equivalence",
+    "App record rate includes framed TCP, is not actual outer record PPS; record headers/lane copies/FEC need separate per-outer accounting",
+    "CPU is guest total including generator, original Go+Rust and kernel, cannot attribute to product-alone",
+    "H1360 75Mbps safe on this VM, 100/200 NOT_RUN; neither higher speed qualification nor definitive product bottleneck",
+    "Timer rotation parked600s: no L1 owner/Stop handoff qualification from H1360, reuse separate H1358/H1359"
+  ]
+}
