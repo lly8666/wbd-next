@@ -50,6 +50,21 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("if($guard.HasExited)",flow)
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",flow)
 
+    def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        lease=(ROOT/"tools/m0_wl_gamefec_management_route.ps1").read_text()
+        self.assertIn("contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && '1'",flow)
+        self.assertIn("WBD_PLAN028_WIN_LINUX_COCLIENTS -eq '1'",lease)
+        self.assertIn("WBD_PLAN028_WIN_LINUX_L3 -eq '1'",lease)
+        self.assertIn("WBD_WL_PUBLIC_MODES -eq 'normal'",lease)
+        self.assertIn("$Receipt -eq 'result/wl-public/crossos1800-management-route-lease.json'",lease)
+        self.assertEqual(flow.count("'result/wl-public/crossos1800-management-route-lease.json'"),2)
+        self.assertIn("PLAN028_CROSSOS1800_RUNNER_UNDERLAY_PINNED",flow)
+        self.assertIn("PLAN028_CROSSOS1800_RUNNER_EXACT_RESTORED",flow)
+        self.assertIn("if($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){",flow)
+        self.assertLess(flow.index("PLAN028_CROSSOS1800_RUNNER_UNDERLAY_PINNED"),
+                        flow.index("tools/m0_plan028_h1415_windows_linux_independent_clients.py result/wl-public/direct-full.log"))
+
     def test_owned_linux_pid_script_expands_shell_pid(self):
         # A literal "$" leaves an invalid two-byte PID file after real UDP.
         script=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()

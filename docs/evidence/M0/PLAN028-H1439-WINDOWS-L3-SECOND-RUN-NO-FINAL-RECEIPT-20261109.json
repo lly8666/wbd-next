@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "5a41a45ad911193ed630416e9b55630928d40d1d",
+  "result": "INCONCLUSIVE",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "qualification": "WINDOWS_CROSS_OS_1800S_NOT_QUALIFIED_SECOND_ATTEMPT",
+  "run": {
+    "id": 42517812264,
+    "head_sha": "5a41a45ad911193ed630416e9b55630928d40d1d",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42517812264",
+    "conclusion": "failure",
+    "job_id": 128845725535,
+    "job_name": "native-public-two-os",
+    "job_started_at_utc": "2026-11-08T20:04:15Z",
+    "job_completed_at_utc": "2026-11-08T21:07:16Z",
+    "native_step_number": 19,
+    "native_step_started_at_utc": "2026-11-08T20:09:47Z",
+    "native_step_final_status": "in_progress_with_no_completed_at_after_job_failure"
+  },
+  "completed_before_missing_receipt": [
+    "wiring/offline contract preflight",
+    "Windows Go compile",
+    "Windows Rust library unit",
+    "Linux Rust library unit",
+    "same SOURCE Linux original-Go/Rust build",
+    "signed Windows ISA-L and release DLL build",
+    "signed Npcap/Wintun install",
+    "source SHA checked Linux binary",
+    "real Ubuntu WSL2 kernel boot and TUN prerequisite"
+  ],
+  "native_step_log": "NOT_AVAILABLE_404_BLOB_NOT_FOUND",
+  "native_1800s_app": "NOT_QUALIFIED_NO_ORIGINAL_APP_COUNTERS",
+  "native_owned_stop": "NOT_QUALIFIED_NO_FINAL_STOP_WAL_OR_OS_RECEIPT",
+  "post_native_upload": "NOT_RUN",
+  "post_native_cleanup": "NOT_RUN",
+  "related_sources": {
+    "earlier_failed_same_stage_run": 42508261361,
+    "earlier_run_source": "d6aeb6462de5a249399b9cfbe15701df287f07d9",
+    "earlier_native_log": "404_BLOB_NOT_FOUND",
+    "valid_native_cross_os_L1": "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json",
+    "valid_native_ARM64_two_1800_L3": "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json"
+  },
+  "observation": "Second test-only scoped outer watchdog was added and offline test passed; independent native job still lost at the same native step with no final receipt. Do not infer watcher fire/Stop or product fault from missing job log.",
+  "testable_hypothesis": "Unlike prior GameFEC/Normal105 sessions, this 1800s co-client marker does not request the already implemented exact GitHub Runner management peers underlay /32 lease. A long-lived Windows WAL/route installation could isolate runner reporting. This is an unproven CI/OS routing hypothesis, not a product defect or evidence of true watchdog trigger.",
+  "next_experiment": "For explicit one signed Windows plus independent Linux native L3 only, enable existing managed runner /32 route before starting original clients, save one exact owner-scoped lease, restore only it after original Stop, require live effective route and final app/Stop receipt. Avoid re-running ARM64. Failure without trigger keeps status NOT_QUALIFIED.",
+  "non_goals": [
+    "No new steady-state protocol/data plane/FEC edits",
+    "No changed 1460 outer default or app traffic requirements",
+    "No unearned conversion of either failed Windows run to product PASS",
+    "Do not infer release readiness, Android/physical remain NOT_RUN"
+  ]
+}

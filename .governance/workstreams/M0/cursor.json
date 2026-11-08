@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1438,
-  "checkpoint_sha": "5a41a45ad911193ed630416e9b55630928d40d1d",
+  "sequence": 1439,
+  "checkpoint_sha": "bb1ffbfb79d2862477f683530611dab8eac841bb",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1438-SOURCE-INDEX-CORRECTION",
-  "current_task": "H1436 native ARM64 2x1800s actual source eef2 PASS_SCOPED; Windows+independent Linux previous source d6 real native stage without 1800s/Stop report NOT_QUALIFIED. H1437 fixed broken scoped Windows watchdog and current Windows Action42517812264 is in flight (cheap gate success, native compilation); do not duplicate dispatch. Governance & feature catalog H1437 failed because new H1436 evidence record lacked top-level source_sha matching cursor.last_tested_source, even though nested arm64.head_sha was right; H1438 only adds exact original top-level ARM64 source index without altering two source results or product code.",
-  "why_now": "Fix mandatory exact evidence SOURCE index in repo governance rather than weakening check. Windows different SOURCE remains nested NOT_QUALIFIED; ARM64 true original 1800s evidence remains scoped PASS. Evidence-only commit does not match Windows native workflow path filter.",
+  "task_id": "PLAN028-M0-H1439-TEST-INFRA-RUNNER-ROUTE-DIFFERENTIAL",
+  "current_task": "Collected second previous in-flight native Windows+independent Linux 1800s Action42517812264: all Go/Rust/build/signed driver/WSL boot preflight SUCCESS, native step19 in_progress after completed FAILED job, 404 BlobNotFound and no business or Stop receipt; still NOT_QUALIFIED. Exact ARM64 eef2 two independent 1800s remain PASS_SCOPED. H1439 changes ONLY the explicit Windows-Linux L3 test harness: reuse existing exact physical runner underlay /32 management lease before WAL/product, scoped Restore after Stop, with offline scope checks. Test-only differential; no product wire change or claimed cause.",
+  "why_now": "Two consecutive Windows L3 full jobs lost native stage without raw receipt. The L3 marker did not enable the existing run-owned /32 Runner.Worker/Listener route while Windows WAL/Wintun can move default routes. Pin is the smallest already implemented discriminating experiment; no repeated ARM64 or altered network loss/seed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect governance/feature checks for H1438 and existing scoped Windows source5a41 Action42517812264; do not redispatch or change product while Windows native original 1800s underway. Validate actual app counters and Stop on result; if interrupted preserve NOT_QUALIFIED; ARM64 no retest.",
+  "next_action": "Collect the single Windows-Linux native 1800s Action triggered by this scoped commit; confirm cheap tests and management route /32 Arm effective OS readback BEFORE product, then original 1800s two-client UDP+periodic TCP/RSS and exact Stop/Restore receipts. If no 1800s original receipt, retain NOT_QUALIFIED and investigate the earliest available stage, no unchanged rerun. Review governance checks and do not touch PLAN029/030.",
   "unverified": true,
-  "last_tested_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+  "last_tested_source": "5a41a45ad911193ed630416e9b55630928d40d1d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json"
+    "docs/evidence/M0/PLAN028-H1439-WINDOWS-L3-SECOND-RUN-NO-FINAL-RECEIPT-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1438 adds top-level source_sha=eef2 on H1436 citable evidence to satisfy governance strict match with cursor.last_tested_source; win source d6 separately nested NOT_QUALIFIED unchanged. Scoped watchdog fix H1437 Action42517812264 underway with cheap suite SUCCESS. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1439: 42517812264 native Windows+Linux L3 again loses step19/job log, no 1800s or owned Stop qualification; earlier H1437 scoped watchdog fix not sufficient to establish receipt. Reuse proven runner-managed physical /32 lease ONLY for original 1800s two-OS scenario, with exact owner rollback. ARM64 eef2 final two 1800s original PASS_SCOPED preserved; plan still IN_PROGRESS."
 }
