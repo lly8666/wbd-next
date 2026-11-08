@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-08",
+  "source_sha": "b7c99ec3c103477e6ca164b0ec8d532e388e0a4b",
+  "action_id": 42476161525,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42476161525",
+  "pinned_official_isal_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "linux_x86": {
+    "job_id": 128717892289,
+    "job_result": "PASS",
+    "artifact_id": 13615303048,
+    "artifact_sha256": "4d15a51243b6aa12fbe73b06c1ad51ca37bcf6d3152b9512d11e1ba5b50206e9",
+    "native_wrapper_actual_c_encode": "PASS",
+    "wbd_engine_release_link": "PASS",
+    "archive_sha256": "033b22b9144c25036b0cb0267c273d7adf6e062241f00baa9227546c7972dc6d",
+    "engine_release_sha256": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6",
+    "original_Go_TLS_runtime": "NOT_RUN"
+  },
+  "windows_ms64": {
+    "job_id": 128717892569,
+    "job_result": "PASS",
+    "artifact_id": 13615243497,
+    "artifact_sha256": "a2b58573ee89796317e10589bb8078a822103b14eb90f477d408a0bd487d84c0",
+    "native_wrapper_actual_c_encode": "PASS",
+    "wbd_engine_release_link": "PASS",
+    "archive_sha256": "f625d6b927319c81970ca31346ab7346ad32921d4df741e20f6360473266f7bd",
+    "engine_release_sha256": "a6a2b5773404c38ca7c15310ed8faac0d5e5c35b6bc60a5d80cc6983c7b3a546",
+    "original_Go_TLS_signed_Npcap_Wintun": "NOT_RUN"
+  },
+  "scope": "Native ISA-L safe C call and Rust release dynamic engine linkage only, actual product original Go and ISA-L native quanta not proven",
+  "zero_invented_business": true
+}

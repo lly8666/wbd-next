@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1395,
-  "checkpoint_sha": "273524f9e2ca87ec96ed51f9ff03e34054ca414a",
+  "sequence": 1396,
+  "checkpoint_sha": "b7c99ec3c103477e6ca164b0ec8d532e388e0a4b",
   "progress": "in_progress",
   "task_id": "PLAN028-M0-H1392-CONTROLLED-L3-ISA-L-ARP",
-  "current_task": "H1392 original native ARM64 SOURCE4444328: pinned real ISA-L full native GoTLS/Rust build SUCCESS, both baseline and hetero 1800s network scenes in progress Action42475419721 (neither original business result yet qualified). H1393 independent x86 Linux and Windows MSVC native static ISA-L Rust release library/link/manifest build-only gate planned by source-trigger; not full product/runtime acceptance. Governance CI at SOURCE273524 confirmed success. Windows main full release and Linux full release previous code omit native_fec_acceleration, so cross-platform default is still a real wiring gap until linked builds, manifest and actual runtime tests validated.",
-  "why_now": "User singled out losing ISA-L default on platforms/modes. H1392 ARM64 build proved pinned static native feature, but current public Windows and Linux product release workflows still compile without native_fec_acceleration. H1393 isolates per-native-target official library+release Rust DLL/ELF build gates before touching full Windows signed driver path or declaring runtime feature.",
+  "current_task": "H1394 restore ISA-L native_fec_acceleration default in the actual existing Linux original Go TLS443/Rust M4 and Windows single Wintun/Npcap signed original Go release DLL build; H1393 native x86 Linux and Windows MSVC static C encode / release-engine link both PASS source b7c99, source444 H1392 native ARM64 2x1800 L3 scenes still running. H1394 existing Windows single marker plan028-win-physical-game4fec selected; NO same-host dual Windows exception, true runtime/source/Stop and native FEC usage pending. All old performance FAILs retained.",
+  "why_now": "Concrete evidence: current multi-OS original product assembly compiled scalar (Windows and x86 Linux) despite Rust default runtime PreferNative. H1393 same native target C encode + release engine compile gates passed x86/Windows, so minimal integration of pinned official ISA-L into exact product release commands is now eligible, with per-binary archive+feature source manifest. One Windows Game4FEC physical owner test only, not all modes or two Windows client instances.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1392 two actual L3 results/Stop, h1393 x86 & Windows native pinned-ISA release manifests and failures. H1393 compile-only cannot establish real Game/FEC quanta, Windows Npcap/Wintun, Go bridge, or default production rollout. If passing, minimally wire actual Windows/Linux release build with pinned static ISA-L and real mode-specific readback, keep portable fallback on unsupported targets; prioritize one Windows Wintun + independent Linux original Go client server isolation. Do not duplicate already dispatched or broaden same-host dual Windows.",
+  "next_action": "Collect one H1394 Windows existing signed Wintun+Npcap one-client Game4+FEC original TLS/Stop result (monitor OS B actual M4 and live FEC readback) and original Linux source-native archive/build SHA256; original H1392 1800s strict L3 per-scene results; no duplicate Action dispatch. If H1394 fails at prerequisites, preflight, hardware or business, fix discriminating minimum without weakening Stop/AEAD/MTU, preserve Action FAIL. Once Windows/Linux actual release product native FEC proven, assess seven modes only for FEC-using configurations, not FEC Off. Windows+independent Linux co-client server integration remains NOT_RUN, user product scope one Windows instance.",
   "unverified": true,
   "last_tested_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
   "evidence_refs": [
@@ -33,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Source273524 governance/feature checks PASS. H1392 ARM64 pinned native build PASS, 2x1800 L3 still running at source4444328. New H1393 explicit build-only x86 Linux/Windows MSVC native ISA-L release gates authored for future default and source manifest; actual runtime proof Windows/x86 is pending. Prior full Win/Linux release jobs omit native feature. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1393 compile-only x86 & Windows native ISA-L C wrapper+release engine PASS with archive SHA; H1392 ARM64 source444 original TLS 2x1800 still running; default real Windows+Linux production build previously scalar. H1394 switches only assembly paths to required pinned static ISA-L native feature and triggers single Windows Game4FEC instance (not same-host dual) for real product witness. PLAN028 IN_PROGRESS."
 }

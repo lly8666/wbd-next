@@ -600,7 +600,22 @@ jobs:
           test "$(git -C legacy rev-parse HEAD)" = "$GO_SRC"
           mkdir -p linux-product legacy/internal/v4productcli legacy/cmd/wbd-v4-server legacy/cmd/wbd-v4-client
           rustup toolchain install 1.85.1 --profile minimal
-          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          # PLAN028 H1394: native default in the actual original-Go Linux release
+          # assembly. The H1393 same-target release-link and C encode were PASS.
+          # Fail closed rather than silently reverting compiled Game FEC to scalar.
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool nasm make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1394-linux-native-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >linux-isal-build.log 2>&1 || {
+            tail -110 linux-isal-build.log >&2; exit 1;
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
           # W168 Go/Linux public TUN + outer policy requires two precise
           # original-Go FakeTCP adapters, already source-locked and exercised
           # by freeze's tools/arm64_public_go_rust_bundle.sh. The legacy Go
@@ -652,6 +667,10 @@ jobs:
               'original_go_sha':os.environ['GO_SRC'],'sha256':checks,
               'go':'1.23.12','rust':'1.85.1',
               'peer_persona':'selected_only_after_original_credential_TLS',
+              'isa_l_source':'c387163fcbca62701d646149564c550c78a4f985',
+              'isa_l_archive_sha256':hashlib.sha256((pathlib.Path(os.environ['WBD_ISAL_PREFIX'])/'lib/libisal.a').read_bytes()).hexdigest(),
+              'rust_native_fec_acceleration':True,
+              'rust_features':'m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration',
               'binary_qualification':'BUILD_ONLY_NOT_PRODUCT'
           },indent=2)+'\n')
           print('M0_PLAN024_NEW_LINUX_ORIGINAL_GO_RUST_PEER_PERSONA_SOURCE_VERIFIED')
@@ -724,6 +743,31 @@ jobs:
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'actual original-Go native CLI build FAIL'}
           } finally {Pop-Location}
+      # The existing one signed Wintun+Npcap Windows client's real DLL now
+      # selects ISA-L by default for negotiated FEC, not only for tests.
+      # No second Windows Wintun instance is created by this build wiring.
+      - name: H1394 pin official ISA-L Win64 static prerequisite
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
+            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
+          if(-not $nasm){throw 'ISA-L NASM missing after install'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
+      - name: H1394 build official static ISA-L for real MSVC release DLL
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd isa-l
+          nmake /f Makefile.nmake
       - name: Build actual original Windows Rust M1 M2 M3 release DLL
         if: env.WBD_WL_REUSE_RUN_ID == ''
         shell: pwsh
@@ -734,7 +778,11 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain missing'}
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           if($LASTEXITCODE -ne 0){throw 'actual Windows MSVC target missing'}
-          $features='m0_v4_embedded_go,fec2_product_record'
+          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
+          if(-not $archive){throw 'ISA-L static MSVC release archive missing'}
+          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
           & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
           if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
@@ -748,7 +796,10 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
-          [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;sha256=[ordered]@{
+          [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;isa_l_source='c387163fcbca62701d646149564c550c78a4f985';
+            native_fec_acceleration=$true;
+            isa_l_archive_sha256=(Get-FileHash $archive.FullName -Algorithm SHA256).Hash.ToLowerInvariant();
+            sha256=[ordered]@{
               exe=(Get-FileHash result/wl-public/wbd-client-embedded.exe -Algorithm SHA256).Hash.ToLowerInvariant()
               dll=(Get-FileHash result/wl-public/wbd_engine.dll -Algorithm SHA256).Hash.ToLowerInvariant()
             }} | ConvertTo-Json -Depth 6 | Set-Content result/wl-public/windows-binary-manifest.json
