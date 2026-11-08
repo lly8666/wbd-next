@@ -38,7 +38,10 @@ class NativeWslDeadlineTests(unittest.TestCase):
         y=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",y)
         self.assertIn("m0_wl_windows_bounded_cmd.py 180 wsl.exe --import",y)
-        self.assertIn("timeout-minutes: 24",y)
+        # Legacy scoped native step remains 24min; only real Windows+Linux
+        # 1800s L3 opts into 52min. Do not lengthen all Windows workflows.
+        self.assertIn("timeout-minutes: ${{ contains(github.event.head_commit.message, '[plan028-win-linux-1800]') && 52 || 24 }}",y)
+        self.assertIn("WBD_PLAN028_WIN_LINUX_L3 -eq '1'",y)
         # The original Windows 2025 runner can freeze *above* PowerShell,
         # defeating its on-host watchdog and the step timeout entirely.
         # A different Ubuntu Actions worker must cancel the stuck exact run.

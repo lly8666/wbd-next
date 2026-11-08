@@ -381,9 +381,9 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("kill_native_child_tree(child)",runner)
         self.assertIn("faulthandler.dump_traceback_later",runner)
         self.assertIn("$gameSingle",flow)
-        # Game FEC stays at 600s; only exact Normal105 scoped management
-        # has its own intermediate 780s outer guard. Others keep 1020s.
-        self.assertIn("$wholeLimit=if($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}",flow)
+        # Old Game remains 600s, scoped Normal105 780s, ordinary 1020s;
+        # only explicit independent Win+Linux 1800s L3 may reach 2600s.
+        self.assertIn("$wholeLimit=if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}",flow)
         self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED",flow)
 
     def test_gamefec_actual_log_observer_is_owned_by_one_pid_supervisor(self):
@@ -439,6 +439,8 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertLess(690,760)
         self.assertLess(760+160+90,1020)
         self.assertEqual(native_batch_deadline({"WBD_WL_PUBLIC_MODES":"game2"}),320)
+        self.assertEqual(native_batch_deadline({"WBD_WL_PUBLIC_MODES":"normal",
+            "WBD_PLAN028_WIN_LINUX_L3":"1"}),2250)
 
     def test_real_workflow_regular_batch_does_not_use_tee_pipeline(self):
         content=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
