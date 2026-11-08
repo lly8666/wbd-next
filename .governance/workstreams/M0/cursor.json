@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1439,
-  "checkpoint_sha": "bb1ffbfb79d2862477f683530611dab8eac841bb",
+  "sequence": 1440,
+  "checkpoint_sha": "d3bd3b473e2eb7cf30b695f1bb63d8c539763fef",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1439-TEST-INFRA-RUNNER-ROUTE-DIFFERENTIAL",
-  "current_task": "Collected second previous in-flight native Windows+independent Linux 1800s Action42517812264: all Go/Rust/build/signed driver/WSL boot preflight SUCCESS, native step19 in_progress after completed FAILED job, 404 BlobNotFound and no business or Stop receipt; still NOT_QUALIFIED. Exact ARM64 eef2 two independent 1800s remain PASS_SCOPED. H1439 changes ONLY the explicit Windows-Linux L3 test harness: reuse existing exact physical runner underlay /32 management lease before WAL/product, scoped Restore after Stop, with offline scope checks. Test-only differential; no product wire change or claimed cause.",
-  "why_now": "Two consecutive Windows L3 full jobs lost native stage without raw receipt. The L3 marker did not enable the existing run-owned /32 Runner.Worker/Listener route while Windows WAL/Wintun can move default routes. Pin is the smallest already implemented discriminating experiment; no repeated ARM64 or altered network loss/seed.",
+  "task_id": "PLAN028-M0-H1440-TEST-CHEAP-GUARD-CORRECTION",
+  "current_task": "H1439 test-only L3 runner underlay lease scoped patch triggered Action42532599409; governance + feature PASS, 1800s scope offline PASS, but older H888 fail-closed guard string assertion FAILED; no native step was dispatched. H1440 updates only stale static guard oracle, with exact crossOsL3 scope checks; new Action must PASS preflight before any real Windows+Linux L3.",
+  "why_now": "Do not waste Windows native build before cheap tests pass. Preserve actual guard, update old H888 test only for explicit third case and verify the marker-selected route /32 lease contract.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect the single Windows-Linux native 1800s Action triggered by this scoped commit; confirm cheap tests and management route /32 Arm effective OS readback BEFORE product, then original 1800s two-client UDP+periodic TCP/RSS and exact Stop/Restore receipts. If no 1800s original receipt, retain NOT_QUALIFIED and investigate the earliest available stage, no unchanged rerun. Review governance checks and do not touch PLAN029/030.",
+  "next_action": "Collect current scoped Windows+independent Linux native 1800s Action after H1440 test-only commit; first verify cheap checks pass, then true original 1800s two-client UDP/TCP/owned Stop and management route exact restore. If native stage fails/no evidence, keep Windows L3 NOT_QUALIFIED; do not repeat ARM64 or reset H998. PLAN028 IN_PROGRESS.",
   "unverified": true,
-  "last_tested_source": "5a41a45ad911193ed630416e9b55630928d40d1d",
+  "last_tested_source": "d3bd3b473e2eb7cf30b695f1bb63d8c539763fef",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1439-WINDOWS-L3-SECOND-RUN-NO-FINAL-RECEIPT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1440-CHEAP-PREFLIGHT-GUARD-STRING-FAIL-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1439: 42517812264 native Windows+Linux L3 again loses step19/job log, no 1800s or owned Stop qualification; earlier H1437 scoped watchdog fix not sufficient to establish receipt. Reuse proven runner-managed physical /32 lease ONLY for original 1800s two-OS scenario, with exact owner rollback. ARM64 eef2 final two 1800s original PASS_SCOPED preserved; plan still IN_PROGRESS."
+  "partial_summary": "H1440 corrects exact stale H888 fail-closed guard static oracle after Action42532599409 cheap failure: old test expected only GameFEC/Normal105, new explicit guarded crossOS1800 branch is third. No Windows network run occurred; prior 2 attempts NOT_QUALIFIED preserved. New native qualification only if preflight PASS; ARM64 2x1800 PASS_SCOPED unchanged."
 }

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "d3bd3b473e2eb7cf30b695f1bb63d8c539763fef",
+  "result": "INCONCLUSIVE",
+  "artifact_verified": false,
+  "status": "HARNESS_OR_CI_FAILURE_PRE_NATIVE_NO_PRODUCT_TEST",
+  "run_id": 42532599409,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42532599409",
+  "cheap_job_id": 128889878491,
+  "cheap_conclusion": "failure",
+  "native_job_status": "SKIPPED_NOT_RUN",
+  "observed": "tools/check_workflows.py and new 1800s ownership offline test passed. Legacy tests.test_m0_plan027_managed_unilateral.ManagedUnilateral.test_only_exact_management_route_lease_can_be_pinned failed on static equality of the prior exact fail-closed PowerShell guard, because an explicit additional $crossOsL3 branch changed its string. No actual Windows native binaries, signed drivers or app were exercised by this Action.",
+  "original_failure": "AssertionError 0 != 1 at tests/test_m0_plan027_managed_unilateral.py line33, expected old guard without -and -not $crossOsL3",
+  "correction": "Preserve strict fail-closed guard, update legacy static oracle to require exact three-branch clause and check explicit L3, COCLIENTS, Normal and receipt gate. No changes to native execution or traffic/MTU/owned stop.",
+  "prior_native_failures": [
+    42508261361,
+    42517812264
+  ],
+  "prior_scoped_wins": {
+    "native_arm64_l3": "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json",
+    "crossos_l1": "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+  },
+  "plan028": "IN_PROGRESS",
+  "next": "One same-scope source-frozen Windows+Linux true 1800s native Action only after cheap tests pass; no duplicate failed Action redispatch, no ARM64 replay."
+}
