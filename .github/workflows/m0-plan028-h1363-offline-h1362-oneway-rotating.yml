@@ -1,0 +1,65 @@
+name: M0 PLAN028 H1363 original failed H1362 ARM64 one-way owner OFFLINE audit
+run-name: PLAN028 H1363 OFFLINE H1362 original ARM64 5-client one-way authentic owner replay
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1363-offline-h1362-oneway-rotating.yml"
+      - "tools/m0-plan028-h1363-offline-h1362-oneway-rotating.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  offline-authenticated-original-arm64-owner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42447434096
+          github-token: ${{ github.token }}
+          name: plan028-h1362-native-arm64-oneway-live-owner-42447434096
+          path: original-native-raw/
+      - name: Only re-audit original H1362 one-way app, original server M4 proofs, exact Stop; no networking
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1363-offline-h1362-oneway-rotating.py
+          test -s original-native-raw/h1250-matrix-plan.json
+          test -s original-native-raw/h1286-rapid-report.json
+          test -s original-native-raw/h1250-product-server.log
+          test -s original-native-raw/h1250-product-erin.log
+          test ! -e original-native-raw/h1362-native-oneway-audit.json
+          mkdir -p offline-replay
+          python3 tools/m0-plan028-h1363-offline-h1362-oneway-rotating.py \
+            --art original-native-raw \
+            --out offline-replay/h1363-original-arm64-oneway-owner-replay.json \
+            | tee offline-replay/h1363-original-raw.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path("offline-replay/h1363-original-arm64-oneway-owner-replay.json").read_text())
+          assert r["original_source"]=="24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73"
+          assert r["wrapper_source"]=="9d73de5c49e839d0ea707945540c36fa05748ac5"
+          assert r["original_ci_action"]==42447434096 and r["original_ci_conclusion"]=="failure"
+          assert r["original_raw_artifact_id"]==13604660878 and r["network_rerun"] is False
+          assert r["TLS443"] and all(r["client_exact_owned_Stop"].values()) and r["server_shared_TUN_exact_Stop"]
+          assert r["generic_rotation_verdict_preserved"]=="PASS_ALL_FIVE_SCOPED"
+          assert r["genuine_original_hot_and_cold_owners"]["alice"]["new_generations"][:3]==[1,2,3]
+          assert r["genuine_original_hot_and_cold_owners"]["erin"]["new_generations"][:3]==[1,2,3]
+          assert len(r["genuine_original_hot_and_cold_owners"]["dave"]["server_confirmed_hot_lanes"])>=2
+          assert all(len(r["genuine_original_hot_and_cold_owners"][who]["original_native_Health_cold_proofs"])>=2
+                     for who in ("alice","erin"))
+          assert 28<=r["physical_erin_qdisc"]["uplink"]["loss_pct"]<=32
+          assert not r["app_or_owner_faults"] and not r["capacity_limit"] and not r["host_limit_phases"]
+          assert r["classification"]=="PASS_SCOPED_NATIVE_ARM64_ONEWAY_TWO_AUTH_OWNER_TURNS_30PCT125MS"
+          print("M0_PLAN028_H1363_OFFLINE_ORIGINAL_H1362_ONEWAY_TWO_TRUE_COLD_NORMAL_AND_GAME4_HOT_PASS_CI_FAIL_PRESERVED",flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1363-offline-original-h1362-arm64-live-owner-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
