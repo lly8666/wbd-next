@@ -1,0 +1,123 @@
+name: M0 PLAN028 H1360 x86 source6c5 true Normal bounded 25 50 75 50 Mbps
+run-name: PLAN028 H1360 native x86 true Normal 25-50-75-50 Mbps zero loss with 5 authenticated users
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1360-x86-normal75-zero-loss-capacity.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate 0-loss phase contract and Python syntax before any network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py \
+            tools/m0-plan028-h1360-x86-normal75-zero-loss-audit.py \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py \
+            tools/m0-plan028-h1286-rapid-report.py
+          python3 tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py --preflight
+          echo M0_PLAN028_H1360_0LOSS_PHASE_PREFLIGHT_PASS
+
+  native-x86-five-client-normal-capacity:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      ORIGINAL_PRODUCT_SOURCE: 6c5fd909b9f42d1af89c698cdaabc79bbb72e589
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_H1360_WRAPPER_SOURCE: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42369031512
+          github-token: ${{ github.token }}
+          name: h1286-x86-one-isal-build-6c5fd909b9f42d1af89c698cdaabc79bbb72e589
+          path: fixed-build/
+      - name: Verify frozen native x86 ELF62 original-Go and Rust ISA-L exact SHA binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          python3 - <<'PY_BIN'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["architecture"]=="native_x86_64" and m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          assert set(m["sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+          for n,digest in m["sha256"].items():
+              raw=(root/n).read_bytes()
+              assert raw[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",raw,18)[0]==62
+              assert hashlib.sha256(raw).hexdigest()==digest,n
+          print("M0_PLAN028_H1360_FROZEN_X86_ORIGINAL_TLS_NATIVE_RUST_ISAL_SHA3_PASS",flush=True)
+          PY_BIN
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: Real native 180s dual-direction kernel UDP TCP, five users, Normal 25-50-75-50 and 0pct
+        shell: bash
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u \
+            tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py fixed-build \
+            >fixed-kernel-result/h1360-native-traffic.log 2>&1 || {
+              tail -170 fixed-kernel-result/h1360-native-traffic.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_H1360_ONE_NATIVE_X86_ZERO_LOSS_SCENE_CAPTURED" \
+            fixed-kernel-result/h1360-native-traffic.log
+          python3 -u tools/m0-plan028-h1360-x86-normal75-zero-loss-audit.py \
+            --art fixed-kernel-result --out fixed-kernel-result/h1360-l2-zero-loss.json \
+            | tee fixed-kernel-result/h1360-offline-audit.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          a=json.loads(pathlib.Path("fixed-kernel-result/h1360-l2-zero-loss.json").read_text())
+          assert a["measurement_complete"] and a["auth_user_count"]==5
+          assert a["original_product_source_sha"]=="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+          assert a["server_exact_final_stop"] and a["all_five_exact_final_client_stop"]
+          assert a["normal_physical_loss_percent"]==0
+          assert a["real_business_stability_pass"],a["classification"]
+          assert a["generator_capacity_limited_clients"]==[]
+          assert a["phases"][2]["clients"]["alice"]["uplink"]["target_app_mbps"]==75
+          assert a["phases"][2]["clients"]["alice"]["downlink"]["target_app_mbps"]==75
+          assert a["phases"][2]["clients"]["alice"]["uplink"]["generation_target_fill_fraction"]>=.95
+          assert a["phases"][2]["clients"]["alice"]["downlink"]["generation_target_fill_fraction"]>=.95
+          assert a["classification"] in (
+            "PASS_SCOPED_0LOSS_NORMAL_25_50_75_50_WITH_FIVE_SIBLINGS",
+            "CAPACITY_LIMITED_OR_GENERATOR_LIMITED",
+            "HOST_NEAR_LIMIT_75MBPS_UNQUALIFIED_FOR_NEXT_STEP")
+          print("M0_PLAN028_H1360_ZERO_LOSS_NATIVE_X86_CAPACITY_RESULT",a["classification"],flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1360-native-x86-normal75-0loss-capacity-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1360-*.json
+            fixed-kernel-result/h1360-*.log
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1301-netem-clock.json
+          if-no-files-found: warn
+          retention-days: 14
