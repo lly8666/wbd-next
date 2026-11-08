@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1355",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "qualification": "PASS_SCOPED_NATIVE_X86_GAME2_FIXED6_TWO_REAL_ROTATIONS_FIVE_CLIENT",
+  "artifact_verified": true,
+  "original_native_action": {
+    "run_id": 42436151532,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42436151532",
+    "conclusion": "success",
+    "jobs": {
+      "preflight": 128595305591,
+      "native": 128595332447
+    },
+    "both_jobs": "success"
+  },
+  "original_native_artifact": {
+    "id": 13599652010,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42436151532/artifacts/13599652010",
+    "zip_sha256": "6ce2aad2c82071d63aaef12f0acbea613d634389a23799ddf0d6aa8a1b5433e5",
+    "files": 36,
+    "zip_crc": "PASS"
+  },
+  "product": {
+    "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "platform": "native Linux x86_64 client + native Linux x86_64 server, six real netns",
+    "binary": "reused original H1286 SOURCE manifest and all 3 ELF SHA checked (client,server,libwbd_engine.so)",
+    "TLS": "original Go authenticated TLS/443, no new record/header",
+    "rust": "original Rust M4 ISA-L",
+    "product_source_modified": false
+  },
+  "physical": {
+    "five_true_veth": true,
+    "actual_OS_static_ARP_10_of_10": "PERMANENT before and after",
+    "per_client_oneway_delay_ms": [
+      0,
+      10,
+      20,
+      30,
+      0
+    ],
+    "actual_two_direction_netem_random_loss_pct": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "peak_inner_offered_mbps_each_direction": 10,
+    "capacity_exceeded_clients": [],
+    "tcp_windows": "Alice/Bob framed native TCP in addition to all five duplex UDP",
+    "duration_app_s": 180,
+    "real_10ms_inclusive_bins": 19001
+  },
+  "clients": [
+    {
+      "name": "alice",
+      "mode": "Normal Off",
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "app": {
+        "up": [
+          25000192,
+          25000192,
+          1,
+          10
+        ],
+        "down": [
+          25000192,
+          25000192,
+          1,
+          10
+        ]
+      },
+      "tcp_framed_packets_per_direction": 7877
+    },
+    {
+      "name": "bob",
+      "mode": "Normal Auto",
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "app": {
+        "up": [
+          25000192,
+          24998400,
+          0.99993,
+          10
+        ],
+        "down": [
+          25000192,
+          24998400,
+          0.99993,
+          10
+        ]
+      },
+      "tcp_framed_packets_per_direction": 7877
+    },
+    {
+      "name": "carol",
+      "mode": "Game2 Fixed6",
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "app": {
+        "up": [
+          23437824,
+          23435264,
+          0.99989,
+          20
+        ],
+        "down": [
+          23437824,
+          23435008,
+          0.99988,
+          20
+        ]
+      },
+      "actual_client_mode_readback": "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=2 mode=fixed profile=6; server same",
+      "cipher": "aes-256-gcm",
+      "outer_first_record_bytes_true": 151249568,
+      "outer_cosmetic_accepted_repeat_bytes_true": 884186
+    },
+    {
+      "name": "dave",
+      "mode": "Game4 Fixed6",
+      "owner_unit": "one independent Game4 lane replacement, not whole group",
+      "generation": [
+        1
+      ],
+      "game4_live_single_lane_success": 2,
+      "actual_two_distinct_slots": [
+        1,
+        2
+      ],
+      "server_m4_confirmed": 2,
+      "app": {
+        "up": [
+          46875904,
+          46867968,
+          0.99983,
+          30
+        ],
+        "down": [
+          46875904,
+          46867968,
+          0.99983,
+          30
+        ]
+      }
+    },
+    {
+      "name": "erin",
+      "mode": "Normal Fixed6 outer1280",
+      "generation": [
+        1,
+        2,
+        3
+      ],
+      "old_exact_stop": [
+        1,
+        2
+      ],
+      "app": {
+        "up": [
+          23437824,
+          23437824,
+          1,
+          10
+        ],
+        "down": [
+          23437824,
+          23437824,
+          1,
+          10
+        ]
+      }
+    }
+  ],
+  "original_server": {
+    "port": 443,
+    "auth_tun_owner_lease_count": 5,
+    "per_lease_queue_pending_overflow": 0,
+    "per_lease_offered_equals_direct_delivered": true,
+    "final_server_shared_tun_owned_stop": true
+  },
+  "actual_hard_gates": {
+    "app_errors": 0,
+    "app_capacity_exceeded": false,
+    "all_five_final_owned_stop": true,
+    "true_both_direction_udp_app_receipts": true,
+    "minimum_udp_delivery_fraction": 0.99983,
+    "max_10ms_active_send_no_recv_gap_ms": 30,
+    "two_real_owner_handovers_each_non_game4": true,
+    "game4_two_distinct_hot_lanes_confirmed_both_ends": true,
+    "alice_bob_real_tcp_sent_received_per_direction": "7877/7877 for each of four direction/client combinations, pending0",
+    "raw_rapid_rotation": "PASS_ALL_FIVE_SCOPED"
+  },
+  "original_generic_report_alerts_preserved": [
+    {
+      "who": "carol",
+      "kind": "NO_REAL_OUTER_COUNTER"
+    }
+  ],
+  "original_generic_report_performance_verdict": "ALERTS_PRESENT",
+  "reporter_explanation": "Old shared rapid reporter incorrectly selects Game2 Off outer STOP marker for all Game2. The exact raw Game2 Fixed6 client log has 3 true FEC stop counters; H1356 replay reports those without changing network results. Original alert is archived unchanged.",
+  "offline_replay_reference": "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
+  "limits": [
+    "New source6c5 L1 one specific Game2 Fixed6 variant; not all seven modes under one current frozen source, Game4 Off current source NOT_RUN.",
+    "Two real Game4 lane replacements on slots1,2, not 4-lane full cycle; prior H1230 old source group-only and H1237 old source one-lane are separate scoped evidence.",
+    "True native x86 180s short test, not Linux ARM64 counterpart/Windows dual Wintun Npcap/Android/physical/2x1800",
+    "Original general reporter false alert preserved; backend native/scalar quanta mix and outside cosmetic repeats never count as recovered app.",
+    "Historic H998 same-socket MTU FAIL/H1317 ARM64 historic FAIL and H1353 native CI reporter FAIL preserved."
+  ]
+}

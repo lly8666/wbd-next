@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1356",
+  "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "PASS",
+  "qualification": "PASS_SCOPED_OFFLINE_H1355_GAME2_FIXED6_ACTUAL_OUTER_COUNTS",
+  "artifact_verified": true,
+  "product_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "wrapper_source_sha": "0f1aea9ca1dbf868860d9daf01aa480f75c82d17",
+  "replay_source_sha": "fc5c7f26f6ec0956a4ccd671d0bcbe69f478526b",
+  "original_native_action": {
+    "run_id": 42436151532,
+    "conclusion": "success",
+    "raw_artifact_id": 13599652010,
+    "raw_artifact_sha256": "6ce2aad2c82071d63aaef12f0acbea613d634389a23799ddf0d6aa8a1b5433e5"
+  },
+  "first_offline_action": {
+    "run_id": 42436664955,
+    "conclusion": "failure",
+    "root_cause": "incorrectly attempted whole generic reanalyze requiring unarchived h1250-qdisc-after.txt; original native 36-file ZIP intentionally lacks it. Offline fixture failure, not product."
+  },
+  "final_offline_action": {
+    "run_id": 42436971713,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42436971713",
+    "artifact_id": 13600460132,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42436971713/artifacts/13600460132",
+    "artifact_zip_sha256": "2246afcfeea3d5e9e76333b27210670aca807320c30cba406b5a4ae48c4976c8",
+    "files": 2,
+    "zip_crc": "PASS"
+  },
+  "actual_original_carol_counter_sample": {
+    "generation_stop_samples": 3,
+    "copied_appearance": 1035,
+    "first_record_wire_bytes": 151249568,
+    "copy_record_wire_bytes": 884186
+  },
+  "actual_carol_FEC2_native_readback": {
+    "source_offered": 30255,
+    "parity_offered": 57007,
+    "parity_copied": 57007,
+    "recovered_candidate": 0,
+    "tx_native_quanta": 3502,
+    "tx_scalar_quanta": 23250
+  },
+  "original_generic_report": {
+    "alert_count": 1,
+    "alerts": [
+      {
+        "who": "carol",
+        "kind": "NO_REAL_OUTER_COUNTER"
+      }
+    ],
+    "performance_verdict": "ALERTS_PRESENT",
+    "total_client_outer_record_first_bytes": 677828015,
+    "repeat_accepted_bytes": 1740280
+  },
+  "offline_corrected_counter_only": {
+    "alert_count": 0,
+    "performance_verdict": "NO_CONFIGURED_ALERTS",
+    "total_first_record_bytes": 829077583,
+    "total_cosmetic_repeat_accepted_record_bytes": 2624466,
+    "cosmetic_R_div_F_plus_R_pct": 0.31555,
+    "control_C": "NOT_MEASURED"
+  },
+  "original_rapid_report_modified": false,
+  "original_frozen_product_or_wire_modified": false,
+  "network_rerun": false,
+  "raw_original_10ms_bidir_TCP_UDP_and_owner_results_unchanged": true,
+  "limits": [
+    "Offline reparse only one outer counter chosen by original client's authenticated Game2 Fixed6 applied receipt; the true raw original false alert is preserved.",
+    "Cannot claim every FEC block is full nominal k/r or native-only: 3502 native, 23250 scalar quanta.",
+    "External cosmetic repeat cannot recover business and is not native FEC code rate; control bytes excluded.",
+    "Original H1355 action already SUCCESS on scoped L1; H1356 is reporter correction not additional native coverage."
+  ]
+}

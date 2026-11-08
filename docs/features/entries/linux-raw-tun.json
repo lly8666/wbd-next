@@ -38,7 +38,9 @@
     "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md",
     "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md",
     "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md",
-    "docs/devlog/M0/20261107-PLAN028-H1298-ERIN-SOCKET-ADAPT.md"
+    "docs/devlog/M0/20261107-PLAN028-H1298-ERIN-SOCKET-ADAPT.md",
+    "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
+    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json"
   ],
   "verification": [
     {
@@ -103,6 +105,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
       "evidence": "docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"
+    },
+    {
+      "platform": "native Linux x86_64 original Go TLS443/Rust M4 five clients same 443 shared TUN",
+      "scope": "H1355 180s source6c5 true five native leases, Game2 Fixed6/other modes, 4 whole-owner 2 authentic turnovers and Dave Game4 2 confirmed independent slots, per-lease overflow0+offered=delivered, exact 5 client+server TUN Stop, duplex UDP/TCP. H1356 only corrects old Game2 Off counter reporter marker.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+      "evidence": "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json"
     }
   ],
   "limitations": [
@@ -130,7 +139,8 @@
     "H1292 candidate: H1290 ARM64 native pressure source622653仍FAIL3(Erin下行1270ms、Bob24和Dave46共享TUN每/32队列溢出)；标量压力FAIL4；异构native PASS0。原共享TUN仅队列达到8才尝试把最老包送入已腾空的真实M1接收器，容易让低于8的瞬时积压持续到下一批。H1292在存在积压的每次新TUN到来前最多try_send一次最老包，保持8包/64KiB/100ms、每租约FIFO/独立隔离，不增线程/缓存；ARM64源码锁定180秒短测待验，不声称已通过。",
     "H1295: same /32 shared native Rust TUN has EXACTLY ONE newest authenticated route; no old worker premature alive=false on route publication. Go owns OLD native M4 RX/TX grace until exact joined Stop; old generation cannot get NEW TUN, stale cannot republish. Native five-client pressure/MTU short retest pending.",
     "H1298 original ARM64 5-client 180s candidate: H1297 SOURCEe410 Action42332967232 FAIL Erin downlink2160ms despite five rotations PASS and shared TUN overflow0. Common clock proves Erin server port45031 TX EAGAIN Backpressure1047/m4_copied plateau with client raw/FEC/TUN stalled ~1.5s. Only after eight consecutive actual FEC2 M4 sendmmsg Backpressure, increase that single session RAW SO_SNDBUF once to requested1MiB/kernel effective<=2MiB. H1267 prior all-socket 1MiB AB eliminated EAGAIN but not universal DL failures; no global default. Native H1298 qualification pending.",
-    "H1298 genuine SOURCE1729010e native ARM64 five-client 180s pressure Action42334170992 PASS0 alerts; five TLS rotations and owned Stop PASS, all server /32 overflow0, Erin max true app UL250ms/DL120ms. Server port45031 no repeated EAGAIN, native adaptive kernel SO_SNDBUF NOT_TRIGGERED; conditional product fix not causally qualified. An already-Stopping old Erin client generation refused an adaptation as designed. Historical H1295 scalar/hetero and H1297 EAGAIN FAIL remain; H1299 scalar targeted."
+    "H1298 genuine SOURCE1729010e native ARM64 five-client 180s pressure Action42334170992 PASS0 alerts; five TLS rotations and owned Stop PASS, all server /32 overflow0, Erin max true app UL250ms/DL120ms. Server port45031 no repeated EAGAIN, native adaptive kernel SO_SNDBUF NOT_TRIGGERED; conditional product fix not causally qualified. An already-Stopping old Erin client generation refused an adaptation as designed. Historical H1295 scalar/hetero and H1297 EAGAIN FAIL remain; H1299 scalar targeted.",
+    "H1355 native x86 L1 short-mode source-specific; new Windows Npcap/Wintun dual real-device owned path, Linux ARM current exact variant, L2 large capacity and L3 long-running NOT_RUN."
   ],
   "promotion": null
 }
