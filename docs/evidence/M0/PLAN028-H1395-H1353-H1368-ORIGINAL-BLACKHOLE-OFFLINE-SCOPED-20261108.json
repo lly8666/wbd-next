@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-08",
+  "offline_action": {
+    "run_id": 42481748762,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42481748762",
+    "jobs": "both_success",
+    "no_new_network": true
+  },
+  "x86_original": {
+    "run_id": 42475183161,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42475183161",
+    "conclusion": "failure",
+    "original_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "wrapper_source_sha": "71fa9c3d3d5c856e89dc94d62ea2c3e66a271cfe",
+    "original_artifact_id": 13615108225,
+    "original_artifact_sha256": "ab3aa2f7ec269310e049433cbb389927ce825d044f6d228fc963cbacf059263f",
+    "offline_artifact_id": 13617468384,
+    "offline_artifact_zip_sha256": "f8f3101a0b78304f53708aa04b5f7da315acba950f0eb2f370724237a760f844",
+    "diagnostic": "original audit hardcoded 18000 app 10ms bins but true arrays contain 19001 including 10s drain + terminal bin",
+    "offline_classification": "PASS_SCOPED_NATIVE_X86_GAME4_REAL_CORRELATED_BLACKHOLE_RECOVERY",
+    "actual_true_game4_common_blackhole": {
+      "start_s": 70.022,
+      "restore_s": 78.037,
+      "actual_kernel_uplink_dropped": 26351,
+      "actual_kernel_downlink_dropped": 26318,
+      "app_during_blackhole": "real TX positive and RX zero both directions",
+      "first_app_receive_after_restore_ms": {
+        "uplink": 133,
+        "downlink": 143
+      },
+      "after_restore_unique_delivered_fraction": {
+        "uplink": 0.99691,
+        "downlink": 0.99691
+      }
+    },
+    "healthy_siblings_continue": true,
+    "all_original_exact_stop": true,
+    "server_shared_tun_stop": true,
+    "unexplained_faults": 0,
+    "generator_capacity_limited": 0,
+    "normal_lane_rotation": "NOT_TRIGGERED",
+    "scope": "native x86 original Linux netns true common veth blackhole; not real WAN/Windows/ARM64"
+  },
+  "arm64_original": {
+    "run_id": 42475183088,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42475183088",
+    "conclusion": "failure",
+    "original_source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+    "original_artifact_id": 13614119970,
+    "original_zip_sha256": "1160b5660f01b2d0c8f273998633b7f6b6ade92e5bb303bc9f1bea9cc1c90ee4",
+    "offline_artifact_id": 13617990950,
+    "offline_artifact_zip_sha256": "6e1ccd96fd8371dfd59653af9412be8f2770d8f3325591b0d21f48a98d67f7e6",
+    "original_short_rapid_report_alerts": 7,
+    "original_stop_markers_all_clients": true,
+    "original_console_shows_blackhole_restored": true,
+    "missing_required_original_kernel_event": "h1353-physical-game4-blackhole.json",
+    "offline_classification": "NOT_QUALIFIED_MISSING_ORIGINAL_BLACKHOLE_EVENT_ARTIFACT",
+    "limits": "original Action FAIL retained; cannot claim exact event boundaries/counters from missing artifact; do not rerun original network merely to repair reporting"
+  },
+  "status": "PLAN028_IN_PROGRESS"
+}

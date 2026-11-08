@@ -11,3 +11,9 @@ Windows 仍执行用户目标：一台 Windows 一个 VPN 客户端；服务端�
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Windows native ISA-L runner MSVC discovery; blackhole analysis-only cardinality and offline evidence; original user-facing product protocol unchanged."}
 ```
+
+## H1395 原始两项离线最终分类
+
+[H1395 offline Action 42481748762](https://github.com/lly8666/wbd-next/actions/runs/42481748762) 的 x86/ARM64 两 job 均 SUCCESS，但**审计作业成功不等于两个产品测试皆 PASS**。x86 [原 Action42475183161](https://github.com/lly8666/wbd-next/actions/runs/42475183161) 测试过真实 100% Game4 四lane共同物理黑洞 t70.022–78.037s，kernel 双向实际 drop 26351/26318；在线真实客户端/服务器五身份、同源 Stop 原件已存。离线修复原 `18000` 与 `19001` 的 10ms桶断言之后，产品相关范围确实为 `PASS_SCOPED`，故障前/后原真实业务延续，黑洞内业务 TX>0/RX=0，撤损后首个 app 成功上行133ms、下行143ms，兄弟业务持续、所有原 Stop 通过。原 CI FAIL 仍记 `HARNESS_OR_CI_FAILURE`，与产品限定范围 PASS 同时保留。
+
+ARM64 [原 Action42475183088](https://github.com/lly8666/wbd-next/actions/runs/42475183088) 同样真实运行，原始控制台显示 100% 黑洞撤除、全五客户端 Stop 标记，但该原 Action ZIP **没有上传精确 `h1353-physical-game4-blackhole.json`**，因此不能严格重建内核事件/时窗检查。本轮原工件只判 `NOT_QUALIFIED_MISSING_ORIGINAL_BLACKHOLE_EVENT_ARTIFACT`；没有以报表错误为由重跑网络。精确 SOURCE/hash/资格限制见 `docs/evidence/M0/PLAN028-H1395-H1353-H1368-ORIGINAL-BLACKHOLE-OFFLINE-SCOPED-20261108.json`。
