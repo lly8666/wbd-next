@@ -1,1 +1,106 @@
-{"schema_version":1,"id":"native-crypto-backends","name":"硬件与原生加速后端","summary":"codec封装AEAD与可能的ISAL/ARM64本机后端，运行资格须区分构建特性与真实启用。","owner":"M3/ARM集成","stage":"experimental","development_branch":"work/m3-r1-codec","available_on":["integration/w168-freeze-windows-adapter-20261026"],"defaults":{"policy":"ARM64 native-first（构建策略）","runtime-backend":"未确认实际选择"},"usage":{"cli":"无已核实的公开 --force-backend 参数；取决于构建/运行时能力","config":"Cargo features/部署产物选择，不等于用户连接配置","gui":"无独立UI后端切换"},"code_refs":["crates/wbd-codec/src/record_crypto.rs","crates/wbd-codec/src/fec_native.rs","crates/wbd-codec/src/lib.rs","crates/wbd-codec/src/fec_v2.rs","crates/wbd-engine/src/v4_game_fec.rs","crates/wbd-engine/src/v4_fec2_live_rx.rs","crates/wbd-engine/src/v4_game_public_kernel.rs"],"doc_refs":["docs/architecture/MIGRATION.md","docs/devlog/arm64-main-integration-20261022.md"],"verification":[{"platform":"linux/x86_64","scope":"H1256 exact-original-Go TLS/Rust Game4 Fixed6 native RS16 encoder+recovery actual runtime backend calls and same-VM scalar/native 90s/leg with real two-client UDP 15%/100ms; causal CPU speedup and five-client bottleneck not proven","status":"FUNCTIONAL_PASS","source_sha":"79706127b58dda830702c609d9d7077afde48e30","evidence":"https://github.com/lly8666/wbd-next/actions/runs/42128512173"},{"platform":"linux/arm64","scope":"具体AES/NEON/ISAL实际分派且端到端性能对比","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"windows/x64","scope":"AES加速是否应用于所有套件","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"android/arm64","scope":"真实JNI加速","status":"NOT_RUN","source_sha":null,"evidence":null}],"limitations":["没有本次精确运行时backend读回，构建成功不能直接登记硬件加速PASS。","本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。","H1253 native x86 Game4 FEC RS16: pinned ISA-L product link + actual TX/RX backend readback planned in one SOURCE; until native counters and same-VM short A/B run, no runtime acceleration or CPU gain PASS. scalar choice only diagnostic process env, not public user config.","H1256 SOURCE7970 native x86 original-Go TLS/Rust Game4 Fixed6: real ISA-L TX82623 and RX12952 backend uses on one VM confirmed, scalar+native 90s both recovered after overload; sampled FEC poll mean 20.44us scalar vs 1.69us native, not controlled CPU causal proof. Two-client short load is not proof that H1251 five-client backlog and Game4 >30% business loss are solved. Windows/ARM/Android backend qualification remains distinct.","H1257 feature-catalog source correction: exact H1256 ISA-L real codec use is FUNCTIONAL_PASS, never generic PASS or all-platform performance PASS; original observed Actions IDs preserved.","H1290 candidate: original Game4 Fixed6 scalar GF(256) fallback now uses one immutable 64KiB process-local 0x11d coefficient×byte table instead of per-byte log/exp; ISA-L path/protocol/PN unchanged. H1289 native ARM64 five-client 180s pressure+hetero true application 0-alert PASS, scalar pressure still FAIL3 (Erin 2290/1260ms gaps, Alice 10 pending overflow). New 65,536-pair independent oracle+20 parity rows and source-locked 180s scalar/native short rerun pending; no 1800s until short qualification."],"promotion":null,"legacy_branch_reason":"对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"}
+{
+  "schema_version": 1,
+  "id": "native-crypto-backends",
+  "name": "硬件与原生加速后端",
+  "summary": "codec封装AEAD与可能的ISAL/ARM64本机后端，运行资格须区分构建特性与真实启用。",
+  "owner": "M3/ARM集成",
+  "stage": "experimental",
+  "development_branch": "work/m3-r1-codec",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
+  ],
+  "defaults": {
+    "policy": "Linux x86_64/ARM64、Windows MSVC 均以 pinned ISA-L 原生版进行优先编码；可移植开发构建未启用 feature 时 scalar fallback",
+    "runtime-backend": "FEC2 默认 PreferNative；发行二进制需链接 pinned native_fec_acceleration；k>=2且符号>=64B才真实调用ISA-L，短尾/k1合法scalar，Off无编码工作"
+  },
+  "usage": {
+    "cli": "无已核实的公开 --force-backend 参数；取决于构建/运行时能力",
+    "config": "Cargo features/部署产物选择，不等于用户连接配置",
+    "gui": "无独立UI后端切换"
+  },
+  "code_refs": [
+    "crates/wbd-codec/src/record_crypto.rs",
+    "crates/wbd-codec/src/fec_native.rs",
+    "crates/wbd-codec/src/lib.rs",
+    "crates/wbd-codec/src/fec_v2.rs",
+    "crates/wbd-engine/src/v4_game_fec.rs",
+    "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/devlog/arm64-main-integration-20261022.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/x86_64",
+      "scope": "H1256 exact-original-Go TLS/Rust Game4 Fixed6 native RS16 encoder+recovery actual runtime backend calls and same-VM scalar/native 90s/leg with real two-client UDP 15%/100ms; causal CPU speedup and five-client bottleneck not proven",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "79706127b58dda830702c609d9d7077afde48e30",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/42128512173"
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "具体AES/NEON/ISAL实际分派且端到端性能对比",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "AES加速是否应用于所有套件",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "android/arm64",
+      "scope": "真实JNI加速",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "H1409 SOURCE337d 原生发行 Rust ELF + 官方固定 ISA-L 实际 C encoder：FEC light/mild/medium/balanced/high/strong/maximum 七档 source 和 prepared M4 quantum 均确实 NativeIsaL 与 scalar 字节完全一致。旧 Linux 实际业务缺 native feature 的 PASS 不追认加速；本 Action 不跑 TLS。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "337dc093438ec216ef17e1761a456f80b3669a02",
+      "evidence": "docs/evidence/M0/PLAN028-H1411-WINDOWS-LINUX-ALL-FEC-GRADES-NATIVE-ISA-L-QUALIFICATION-20261108.json"
+    },
+    {
+      "platform": "linux/aarch64(native)",
+      "scope": "H1409 SOURCE337d 原生ARM64双端发行 Rust ELF / 官方 ISA-L，七档原生 C Encode、Prepared M4 quantum、scalar bitwise 等价均PASS；独立 H1392 原生ARM64五客户端两条1800s Game4实际非零 native quanta、真业务/Stop已验。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "337dc093438ec216ef17e1761a456f80b3669a02",
+      "evidence": "docs/evidence/M0/PLAN028-H1411-WINDOWS-LINUX-ALL-FEC-GRADES-NATIVE-ISA-L-QUALIFICATION-20261108.json"
+    },
+    {
+      "platform": "windows/x64 MSVC",
+      "scope": "H1410 SOURCE0cde 官方 pinned ISA-L 静态库+Rust release DLL；七档真正 native C 编码+original authenticated Windows Fixed/Auto FEC owner 入口七档 NativeIsaL，逐字节等价 scalar，own stop/release 单测。H1409 首个 Windows CI FAIL 是同一步 NASM PATH 漏传且功能根本未运行，此项新 SOURCE 已验证。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0cdea544d333d497857d3f7273455f65084f749b",
+      "evidence": "docs/evidence/M0/PLAN028-H1411-WINDOWS-LINUX-ALL-FEC-GRADES-NATIVE-ISA-L-QUALIFICATION-20261108.json"
+    },
+    {
+      "platform": "windows2025/x64 signed Npcap/Wintun ↔ linux/amd64 WSL2 original server",
+      "scope": "H1407 SOURCEeed real Game4FEC6 protected Go TLS443 signed Wintun↔native Linux original Go/Rust server; old/new source4 cohorts actually used Windows native TX=2/11 quanta, Linux server native TX=4/4, genuine UDP/TCP, 1358B OS inner MTU, original owned Stop PASS_SCOPED. Does not imply Normal Fixed/Auto or Game2 per-real-network native counters observed.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "eed0392f588053409f5dc52870d1f2d0fd55b033",
+      "evidence": "docs/evidence/M0/PLAN028-H1407-SOURCEEED-WINDOWS-GAME4FEC-ISAL-REAL-OWNED-STOP-PASS-20261108.json"
+    }
+  ],
+  "limitations": [
+    "没有本次精确运行时backend读回，构建成功不能直接登记硬件加速PASS。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "H1253 native x86 Game4 FEC RS16: pinned ISA-L product link + actual TX/RX backend readback planned in one SOURCE; until native counters and same-VM short A/B run, no runtime acceleration or CPU gain PASS. scalar choice only diagnostic process env, not public user config.",
+    "H1256 SOURCE7970 native x86 original-Go TLS/Rust Game4 Fixed6: real ISA-L TX82623 and RX12952 backend uses on one VM confirmed, scalar+native 90s both recovered after overload; sampled FEC poll mean 20.44us scalar vs 1.69us native, not controlled CPU causal proof. Two-client short load is not proof that H1251 five-client backlog and Game4 >30% business loss are solved. Windows/ARM/Android backend qualification remains distinct.",
+    "H1257 feature-catalog source correction: exact H1256 ISA-L real codec use is FUNCTIONAL_PASS, never generic PASS or all-platform performance PASS; original observed Actions IDs preserved.",
+    "H1290 candidate: original Game4 Fixed6 scalar GF(256) fallback now uses one immutable 64KiB process-local 0x11d coefficient×byte table instead of per-byte log/exp; ISA-L path/protocol/PN unchanged. H1289 native ARM64 five-client 180s pressure+hetero true application 0-alert PASS, scalar pressure still FAIL3 (Erin 2290/1260ms gaps, Alice 10 pending overflow). New 65,536-pair independent oracle+20 parity rows and source-locked 180s scalar/native short rerun pending; no 1800s until short qualification.",
+    "2026-11-08 H1411 三原生平台全7档实际 ISA-L 编码/产品相同 authenticated Windows Fixed/Auto owner 单测PASS，但旧来源未链接 native_fec_acceleration 的 Linux 功能 PASS 不应倒推为过去实际 ISA-L 使用。",
+    "FEC Off (Normal/Game2/Game4)无需 ISA-L，不计回退。k<2或源符号<64B走合法 scalar；Game4 Fixed6 Windows+Linux 原业务已证非零 native quanta，其他 Fixed/Auto/Game2 真网络每档实际 quanta 仍 NOT_MEASURED，不能以此宣布所有模式在全负载均硬件执行。",
+    "官方 pinned ISA-L C native dispatcher 的实际 SIMD 变种/NEON/AVX 每条指令和 CPU 性能因果不因这些成功计数而获得资格；Android/物理机/不同 Windows WinForms 应用仍单列未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}
