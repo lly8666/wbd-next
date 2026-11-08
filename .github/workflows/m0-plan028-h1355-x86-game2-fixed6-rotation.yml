@@ -1,0 +1,116 @@
+name: M0 PLAN028 H1355 native x86 source-frozen Game2 Fixed6 five-client real rotation
+run-name: PLAN028 H1355 original TLS443 Rust Game2 Fixed6 authentic timed old owner Stop
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1355-x86-game2-fixed6-rotation.yml"
+      - "tools/m0-plan028-h1355-x86-game2-fixed6-rotation-fixture.py"
+      - "tools/m0-plan028-h1355-x86-game2-fixed6-rotation-audit.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Original SOURCE exact five variant and Python syntax before any network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1355-x86-game2-fixed6-rotation-fixture.py \
+            tools/m0-plan028-h1355-x86-game2-fixed6-rotation-audit.py
+          python3 tools/m0-plan028-h1355-x86-game2-fixed6-rotation-fixture.py --preflight
+          echo M0_PLAN028_H1355_PREFLIGHT_EXACT_GAME2_FEC6_AND_2_OWNER_ROTATIONS_PASS
+  native-x86-five-client-two-plus-timed-handover:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      ORIGINAL_PRODUCT_SOURCE: 6c5fd909b9f42d1af89c698cdaabc79bbb72e589
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_H1355_WRAPPER_SOURCE: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42369031512
+          github-token: ${{ github.token }}
+          name: h1286-x86-one-isal-build-6c5fd909b9f42d1af89c698cdaabc79bbb72e589
+          path: fixed-build/
+      - name: Recheck one frozen original Go TLS/Rust ISA-L x86 source and ELF manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          python3 - <<'PY_BIN'
+          import hashlib,json,pathlib,os,struct
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["architecture"]=="native_x86_64"
+          assert set(m["sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+          for name,sha in m["sha256"].items():
+              raw=(root/name).read_bytes()
+              assert raw[:4]==b"\x7fELF" and struct.unpack_from("<H",raw,18)[0]==62
+              assert hashlib.sha256(raw).hexdigest()==sha,name
+          print("M0_PLAN028_H1355_ORIGINAL_NATIVE_X86_BINARY_SHA_PASS",flush=True)
+          PY_BIN
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: One genuine 180s low-headroom five-client source-locked L1 timed rotation scenario
+        shell: bash
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u \
+            tools/m0-plan028-h1355-x86-game2-fixed6-rotation-fixture.py fixed-build \
+            >fixed-kernel-result/h1355-native-rotating-traffic.log 2>&1 || {
+              tail -150 fixed-kernel-result/h1355-native-rotating-traffic.log >&2
+              exit 1
+            }
+          grep -Fq M0_PLAN028_H1355_NATIVE_GAME2_FIXED6_FIVE_CLIENT_REAL_ROTATION_CAPTURED \
+            fixed-kernel-result/h1355-native-rotating-traffic.log
+          python3 -u tools/m0-plan028-h1355-x86-game2-fixed6-rotation-audit.py \
+            --art fixed-kernel-result --out fixed-kernel-result/h1355-native-l1-owner-rotation.json \
+            | tee fixed-kernel-result/h1355-rotation-audit.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path("fixed-kernel-result/h1355-native-l1-owner-rotation.json").read_text())
+          assert r["source_sha"]=="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+          assert r["wrapper_source"]==__import__("os").environ["GITHUB_SHA"]
+          assert r["original_single_tls_port"]==443 and r["all_exact_final_stop"]
+          assert r["classification"]=="PASS_SCOPED_NATIVE_X86_GAME2_FIXED6_TWO_REAL_ROTATIONS_FIVE_CLIENT",r["native_app_or_owner_errors"]
+          print("M0_PLAN028_H1355_ORIGINAL_FIVE_CLIENT_GAME2_FIXED6_REAL_ROTATIONS_PASS",flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1355-native-x86-game2-fixed6-rotation-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1355-*.json
+            fixed-kernel-result/h1355-*.log
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-product-*.log
+            fixed-kernel-result/h1286-rapid-report.json
+            fixed-kernel-result/h1301-netem-clock.json
+            fixed-kernel-result/h1312-static-neighbour-*.json
+          if-no-files-found: warn
+          retention-days: 14
