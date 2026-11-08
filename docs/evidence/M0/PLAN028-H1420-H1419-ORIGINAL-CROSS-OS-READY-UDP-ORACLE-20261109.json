@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1420",
+  "date": "2026-11-09",
+  "original_action": {
+    "id": 42497568069,
+    "source_sha": "8be186b3cca1ed65ae5e4054c652109da9c090d1",
+    "conclusion": "failure",
+    "zip_artifact_id": 13624383564,
+    "zip_crc": "PASS"
+  },
+  "scope": {
+    "windows_signed_original_owner": "PASS_SCOPED",
+    "linux_independent_manual_original_owner": "PASS_SCOPED",
+    "same_443_two_sessions": "PASS_SCOPED",
+    "UDP_echo_reverse": "FAIL_OR_NOT_PROVEN",
+    "TCP": "NOT_RUN",
+    "A_Stop_B_survival": "NOT_RUN",
+    "final_owned_Stop": "NOT_RUN",
+    "bridge_netns_original_route_restored": "PASS",
+    "windows_WAL_remaining": 0
+  },
+  "offline_fixture_observation": {
+    "linux_manual_tun_prefix": "10.66.0.3/32",
+    "missing_server_inner_host_route": "10.66.0.1/32",
+    "old_echo_oracle": "compares only immediately previous send and discards delayed echo if reverse UDP interleaves",
+    "loopback_only_test_sends": 50,
+    "loopback_only_old_echo_count": 2
+  },
+  "next_h1420_test": "NOT_RUN",
+  "product_source_changed": false,
+  "plan_status": "IN_PROGRESS"
+}

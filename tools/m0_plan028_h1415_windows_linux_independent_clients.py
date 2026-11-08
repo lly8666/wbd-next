@@ -28,15 +28,18 @@ def marker(p,part,proc=None,timeout=60):
             raise RuntimeError("original "+part+" process exited "+str(proc.returncode)+" "+t[-600:])
         time.sleep(.2)
     raise RuntimeError("original "+part+" not observed: "+(p.read_text(errors="replace") if p.exists() else "")[-650:])
+def udp_stats(p):
+    result={"sent":0,"received":0,"reverse_received":0}
+    if p.exists():
+        for line in p.read_text(errors="replace").splitlines():
+            try:
+                item=json.loads(line)
+                if item.get("phase") in ("udp","final"):
+                    result={key:int(item.get(key,0)) for key in result}
+            except (ValueError,TypeError):pass
+    return result
 def count(p):
-    if not p.exists():return 0
-    nums=[]
-    for line in p.read_text(errors="replace").splitlines():
-        try:
-            x=json.loads(line)
-            if x.get("phase")=="udp":nums.append(int(x["received"]))
-        except (ValueError,KeyError,TypeError):pass
-    return nums[-1] if nums else 0
+    return udp_stats(p)["received"]
 def stopwin(p):
     if p is None or p.poll() is not None:return
     try:
@@ -146,27 +149,53 @@ if mode=="echo":
                 finally:conn.close()
 elif mode=="udp":
     local,label,stop=sys.argv[2:5]
-    s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.settimeout(.22)
+    s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     deadline=time.monotonic()+65
     while True:
         try:s.bind((local,45901));break
         except OSError:
             if time.monotonic()>=deadline:raise
             time.sleep(.1)
-    start=time.monotonic();n=0;rx=0;last=start
+    start=time.monotonic();n=0;rx=0;reverse_rx=0;last=start
+    seen=set();reverse_seen=set();last_send_error=-10.
+    echo_prefix=("WBD_H1415_REAL_UDP_%s_"%label).encode()
+    reverse_prefix=("WBD_H1415_REVERSE_%s_"%label).encode()
     while not pathlib.Path(stop).exists() and time.monotonic()-start<150:
-        data=("WBD_H1415_REAL_UDP_%s_%d"%(label,n)).encode()
+        data=echo_prefix+str(n).encode()
         try:s.sendto(data,("10.66.0.1",45901));n+=1
-        except OSError:pass
-        try:
+        except OSError as exc:
+            if time.monotonic()-last_send_error>2:
+                print(json.dumps({"phase":"send_error","label":label,
+                     "errno":getattr(exc,"errno",None)}),flush=True)
+                last_send_error=time.monotonic()
+        # Server reverse UDP and delayed echoes interleave on the same socket.
+        # Correlate actual IDs rather than only this iteration's payload;
+        # drain at most 32 datagrams/45ms from the true kernel socket.
+        end=time.monotonic()+.045
+        for _ in range(32):
+            remaining=end-time.monotonic()
+            if remaining<=0:break
+            ready,_,_=select.select([s],[],[],remaining)
+            if not ready:break
             got,addr=s.recvfrom(4096)
-            if got==data and addr[0]=="10.66.0.1":rx+=1
-        except socket.timeout:pass
+            if addr[0]!="10.66.0.1":continue
+            if got.startswith(echo_prefix):
+                try:seq=int(got[len(echo_prefix):])
+                except ValueError:continue
+                if 0<=seq<n and seq not in seen:
+                    seen.add(seq);rx+=1
+            elif got.startswith(reverse_prefix):
+                try:seq=int(got[len(reverse_prefix):])
+                except ValueError:continue
+                if seq>=0 and seq not in reverse_seen:
+                    reverse_seen.add(seq);reverse_rx+=1
         if time.monotonic()-last>.5:
-            print(json.dumps({"phase":"udp","label":label,"sent":n,"received":rx}),flush=True)
+            print(json.dumps({"phase":"udp","label":label,"sent":n,
+                "received":rx,"reverse_received":reverse_rx}),flush=True)
             last=time.monotonic()
         time.sleep(.06)
-    print(json.dumps({"phase":"final","label":label,"sent":n,"received":rx}),flush=True)
+    print(json.dumps({"phase":"final","label":label,"sent":n,
+        "received":rx,"reverse_received":reverse_rx}),flush=True)
 elif mode=="tcp":
     local=sys.argv[2]
     s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.settimeout(7)
@@ -290,15 +319,30 @@ def main():
         need(any(a.get("local")=="10.66.0.3" for row in osaddr
              for a in row.get("addr_info",[])),
              "Linux separate OS TUN lease original /32 not installed")
+        # Explicit manual /32 has no connected server subnet. Install the
+        # single server-inner host route only in Bob's owned namespace after
+        # actual protected TLS/Rust READY and native OS TUN address readback.
+        ip("-n",NS,"route","replace","10.66.0.1/32","dev","wbdl1415")
+        route=json.loads(ip("-n",NS,"-j","-4","route","get","10.66.0.1",
+                            "from","10.66.0.3"))
+        need(any(x.get("dev")=="wbdl1415" for x in route),
+             "authenticated Linux /32 route did not select own TUN")
+        report["linux_manual_inner_route"]="PASS_OS_ROUTE_GET_SERVER_32_VIA_B_TUN"
         report["two_independent_credentials"]="PASS_ORIGINAL_TLS_2_ACCOUNTS_2_DISTINCT_LEASES"
+        need(echo.poll() is None,"server genuine kernel echo actor not running")
         deadline=time.monotonic()+25
         while time.monotonic()<deadline and (count(out/"h1415-winapp.log")<8 or
                 count(out/"h1415-linapp.log")<8):
             need(win.poll() is None and linux.poll() is None,
                  "real original VPN owner quit during two concurrent client UDP")
             time.sleep(.3)
-        need(count(out/"h1415-winapp.log")>=8 and count(out/"h1415-linapp.log")>=8,
-             "both real Windows and Linux VPN kernel UDP echo not concurrent")
+        win_stats=udp_stats(out/"h1415-winapp.log")
+        linux_stats=udp_stats(out/"h1415-linapp.log")
+        report["udp_stats"]={"windows":win_stats,"linux":linux_stats}
+        need(win_stats["received"]>=8 and linux_stats["received"]>=8 and
+             win_stats["reverse_received"]>=5 and linux_stats["reverse_received"]>=5,
+             "actual two-OS UDP echo/reverse gate failed: "+
+             json.dumps(report["udp_stats"],sort_keys=True))
         report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
         tcp_windows("10.66.0.2")
         tcp=wsl("ip","netns","exec",NS,"python3","-u",guestapp,"tcp","10.66.0.3",timeout=22)
@@ -330,7 +374,7 @@ def main():
         linux.wait(timeout=20)
         need(linux.returncode==0,"Linux exact original Stop process exit nonzero")
         linux_kill(out/"h1415-server.pid")
-        marker(out/"h1415-server.log","V4_PUBLIC_SHARED_TUN_STOP generation=",server,32)
+        marker(out/"h1415-server.log","V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",server,32)
         server.wait(timeout=25)
         need(server.returncode==0 and
              "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" in
@@ -343,6 +387,17 @@ def main():
     except Exception as e:
         report["status"]="FAIL_OR_NOT_RUN"
         report["first_failure"]=str(e)[-1100:]
+        report["udp_stats_on_failure"]={
+            "windows":udp_stats(out/"h1415-winapp.log"),
+            "linux":udp_stats(out/"h1415-linapp.log")}
+        print("H1420_REAL_KERNEL_UDP_COUNTS "+
+              json.dumps(report["udp_stats_on_failure"],sort_keys=True),flush=True)
+        for role in ("winapp","linapp","echo"):
+            p=out/("h1415-"+role+".log")
+            if p.exists():
+                rows=p.read_text(errors="replace").splitlines()[-6:]
+                print("H1420_REAL_"+role.upper()+"_APP_TAIL "+
+                      json.dumps(rows,ensure_ascii=True)[-650:],flush=True)
         print("H1415_ORIGINAL_REAL_FIRST_FAILURE "+str(e)[-900:],flush=True)
         # The failed original action retained only the Linux candidate's
         # terminal class=other, not the server's actual rejection phase.
