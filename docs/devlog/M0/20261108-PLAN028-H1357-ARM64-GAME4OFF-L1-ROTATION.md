@@ -1,0 +1,10 @@
+# PLAN028 H1357｜原生 ARM64 Game4 Off 真实 L1 交接（待收网测）
+
+- **IN_PROGRESS / NOT_VERIFIED**。`main` 新增独立 [H1357 Action](https://github.com/lly8666/wbd-next/actions/runs/42439698067)，wrapper SOURCE `082a53b29916289e040e275ff588c97643686d95`，不重新派发；当前只确认已排队/执行，不能计 PASS。保留历史 H1327/H1328 raw FAIL 与 H1355 x86 Game2 Fixed6 PASS。
+- 复用原生 ARM64 已存 [H1328 旧 Actions](https://github.com/lly8666/wbd-next/actions/runs/42379666500) 的编译产物（artifact 13577690379），源 `24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73`、原 Go donor `a7a82db31fe736ffedee330795a3234d358f1984`。在 job 核 ELF183、manifest 三文件 SHA256；不重新构建，不用 QEMU。与 x86 `6c5fd909...` 非同一 SOURCE，差异为 Rust 依 `fec2_product_record` 条件编译的反向健康证明和 Go 测试文件；此 ARM 产物该特性打开时受影响的 Rust 表达式仍保留，**不能宣称字节相同**。
+- 一个独立 180s 网络场：五个真实 Linux netns/client+server，标准原 Go TLS443 + Rust M4 与各独立 TUN /32；Dave **Game4 Off** 四 lane，Carol Game2 Fixed6，其余 Normal Off/Auto/Fixed6，物理 0% loss 与 0/10/20/30/0ms 单程延迟，10 个 test-only 有效静态 ARP。97/101/103/89/107 秒周期并保留现行 jitter，必须核实至少 2 次真实 owner/lane 热换、server 真实确认、旧代 Stop、健康 sibling 非阻塞。
+- 发生器 base4/4/3/6/3Mbps/方向，乘 .2/.35/.5/.35，峰值合计 **10Mbps/方向**。Game4 逻辑 3Mbps/方向的四份原密文 lane 副本约 12Mbps/方向（不含 IP/record 开销），低于前次更重的 x86 19Mbps 聚合业务，但**不同 ARM runner 的容量仍必须看本场发生器/CPU，不能跨 VM 宣称安全**。保留 10ms 应用桶、UDP 真业务、Alice/Bob framed TCP、最后的五客户端与单共享 TUN owned Stop。
+- 原 H1327/H1328 Game4 Off 的单 lane 实际 server-Ready 不应该按整组生成数变更；旧场共享 4000 echo 次数造成 28s 后三路断收，不是已证产品黑洞。新场使用 5-client 有界业务生成器，避免同一个耗尽逻辑，仍需按本场 raw 业务证明。
+- **已发现夹具最终门禁错误（不能当产品失败）**：新独立 audit 分类是 `PASS_SCOPED_NATIVE_ARM64_GAME4_OFF_TWO_REAL_ROTATIONS_FIVE_CLIENT`，workflow 最终断言意外留着 `PASS_SCOPED_NATIVE_ARM64_GAME2_FIXED6_TWO_REAL_ROTATIONS_FIVE_CLIENT`。若网测完后这一行失败，只做原 ZIP 离线重新解释，不因为报表错误重跑网络；原 CI FAIL 永远留存。精确结果待 Action 后更新。
+- 另有 [前次 47ffa governance](https://github.com/lly8666/wbd-next/actions/runs/42437397080) Feature catalog FAIL：同提交卡片变更未有 feature-impact，普通 Governance job 成功。待 H1357 真实证据收齐后，同批对受影响功能卡及其 devlog 写合法 `feature-impact`，不要伪装旧失败不存在。
+- L0 全边界、Windows 双真设备/驱动、L2 Normal 100/200Mbps/其他黑洞、L3 两个 1800s 仍待验；Android/物理仍 NOT_RUN。PLAN028 冻结但 IN_PROGRESS。
