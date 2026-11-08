@@ -127,12 +127,29 @@ try:
  marker(out/"h1382-server.log","V4_PUBLIC_MULTI_SERVER_READY role=server port=443",server,45)
  result["server_multi_account"]="SERVER_READY_ORIGINAL_GO_RUST_SHARED_TUN"
  echoapp=out/"h1382-true-echo-linux.py"
- echoapp.write_text(String := """import socket,select,sys,time
+ echoapp.write_text("""import socket,select,sys,time,pathlib,json
 u=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);u.bind(("10.66.0.1",45901))
 t=socket.socket(socket.AF_INET,socket.SOCK_STREAM);t.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 t.bind(("10.66.0.1",45902));t.listen(8)
+owner=pathlib.Path(sys.argv[1])
+targets={"A":"10.66.0.2","B":"10.66.0.3"}
+reverse_sent={"A":0,"B":0}
+next_send=time.monotonic()
 while True:
- readable,_,_=select.select([u,t],[],[],.2)
+ now=time.monotonic()
+ if now>=next_send:
+  for label,lease in targets.items():
+   if not (owner/("h1382-client-"+label+"-started.flag")).is_file():continue
+   payload=("WBD_H1382_REAL_UDP_REVERSE_%s_%d"%(label,reverse_sent[label])).encode()
+   try:
+    u.sendto(payload,(lease,45901))
+    reverse_sent[label]+=1
+    if reverse_sent[label] in (1,16,64):
+     print(json.dumps({"event":"real_kernel_reverse_udp_sent","label":label,"count":reverse_sent[label]}),flush=True)
+   except OSError:
+    pass
+  next_send=now+.09
+ readable,_,_=select.select([u,t],[],[],.08)
  for s in readable:
   if s is u:
    data,addr=u.recvfrom(4096)
@@ -145,20 +162,27 @@ while True:
    finally:c.close()
 """,encoding="utf-8")
  f=(out/"h1382-echo-linux.log").open("w");logs.append(f)
- echo=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3","-u",unix(echoapp)],stdout=f,stderr=subprocess.STDOUT)
+ echo=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3","-u",unix(echoapp),resultdir],stdout=f,stderr=subprocess.STDOUT)
  sender=out/"h1382-true-udp-windows.py"
  sender.write_text("""import json,socket,sys,time,pathlib
 local,remote,label,stop=sys.argv[1:5];sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);sock.settimeout(.25)
 deadline=time.monotonic()+60
 while True:
- try:sock.bind((local,0));break
+ try:sock.bind((local,45901));break
  except OSError:
   if time.monotonic()>deadline:raise
   time.sleep(.15)
-sent=0;received=0;start=time.monotonic();last=start
+sent=0;received=0;start=time.monotonic();last=start;last_route_error=start-2.
 while not pathlib.Path(stop).exists() and time.monotonic()-start<150:
  msg=("WBD_H1382_REAL_UDP_%s_%d"%(label,sent)).encode()
- sock.sendto(msg,(remote,45901));sent+=1
+ try:
+  sock.sendto(msg,(remote,45901));sent+=1
+ except OSError as e:
+  # Keep a genuine app socket alive while original authenticated Windows
+  # product installs the OS /32 and route; never invent a sent packet.
+  if time.monotonic()-last_route_error>1.:
+   print(json.dumps({"phase":"kernel_route_not_ready","label":label,"winerror":getattr(e,"winerror",None)}),flush=True)
+   last_route_error=time.monotonic()
  try:
   data,src=sock.recvfrom(4096)
   if data==msg and src[0]==remote:received+=1
@@ -190,6 +214,7 @@ sock.close()
       "--fec.mode","off","--route-mode","bypass-lan","--outer-repair","on"]
   log=(out/("h1382-client-"+label+".log")).open("w");logs.append(log)
   windows[label]=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+  (out/("h1382-client-"+label+"-started.flag")).touch()
   print("H1382_REAL_ORIGINAL_WINDOWS_PRODUCT_PROCESS_STARTED "+label,flush=True)
   log=(out/("h1382-app-"+label+".log")).open("w");logs.append(log)
   senders[label]=subprocess.Popen([sys.executable,str(sender),a["ip"],"10.66.0.1",label,str(out/("h1382-stopapp-"+label+".flag"))],stdout=log,stderr=subprocess.STDOUT)
@@ -256,6 +281,7 @@ except Exception as error:
 finally:
  for label in ("A","B"):
   (out/("h1382-stopapp-"+label+".flag")).touch()
+  (out/("h1382-client-"+label+"-started.flag")).unlink(missing_ok=True)
   if label in senders:
    try:
     if senders[label].poll() is None:senders[label].terminate();senders[label].wait(timeout=5)
