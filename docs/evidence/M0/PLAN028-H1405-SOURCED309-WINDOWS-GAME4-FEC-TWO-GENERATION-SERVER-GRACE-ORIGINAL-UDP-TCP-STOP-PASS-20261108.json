@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-08",
+  "source_sha": "d30936077ca44f176d62ee84a46ed673b7c9de92",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "classification": "PASS_SCOPED_NATIVE_WINDOWS2025_SIGNED_NPCAP_WINTUN_VS_LINUX_WSL2_GAME4_FIXED6_SOURCE4_REAUTH_SERVER_OLD_GRACE_TWO_WAY_UDP_TCP_OWNED_STOP",
+  "original_action": {
+    "run_id": 42485343180,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42485343180",
+    "conclusion": "success",
+    "all_six_jobs": "success",
+    "native_public_two_os_job": "success",
+    "artifact_id": 13619452057,
+    "archive_files": 35,
+    "archive_zip_sha256": "df70657c71aabacb5aeec73707cd7dd363f70dfa4ff2ac20b24ae80f95b17b84",
+    "zip_crc": "PASS_ALL_35"
+  },
+  "same_run_provenance": {
+    "windows_original_cli_sha256": "9e4fa612053c5ab38ffc43cae37d7c71060f405b666f8709b3454ee673f8843e",
+    "windows_rust_dll_sha256": "b5fdeea29a601041e0f579c6f9f70445a5e21e6181245085f9cf8da80e3dd432",
+    "linux_original_server_sha256": "a3f8c03d7390b49f354a6508b53b6416f91c4583f4d45024f2ab8ccb2934f64b",
+    "official_ISAL_static_win64_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "official_ISAL_static_archive_sha256": "270bb0a7bee7c00898baaff0ee1858fd318203c72df060a62ef8715363dff5a3",
+    "windows_native_fec_acceleration_feature": true,
+    "original_Go_Rust_feature_same_source": true
+  },
+  "original_native_product": {
+    "original_server_port": 443,
+    "windows_native_signed_Npcap_Wintun": true,
+    "independent_real_Linux_WSL2_original_Go_Rust_server": true,
+    "one_Windows_product_instance": true,
+    "mode": "Game4 Fixed6",
+    "four_real_original_protected_TLS_lanes_each_generation": 4,
+    "original_server_native_four_lane_groups_ready": 2,
+    "original_client_Windows_OS_Applied_and_Ready_generations": 2,
+    "original_outer_ipv4_requested_default_B": 1460,
+    "original_mss_advertised_B": 1420,
+    "actual_windows_OS_tun_mtu_each_generation_B": [
+      1358,
+      1358
+    ],
+    "actual_Linux_OS_TUN_mtu_B": 1358,
+    "owned_physical_interface_index": 25,
+    "source4_ipv4_old": "198.19.254.1",
+    "source4_ipv4_new": "198.19.254.9",
+    "client_actual_owned_Stop_first_generation_before_second_client_new_ready": true,
+    "server_old_authenticated_rx_preserved_during_true_grace": true,
+    "server_original_grace_scheduled_ms": 18807,
+    "server_old_retire_actual_reason": "same-protected-cohort-grace-expired",
+    "server_old_expired_while_new_group_live": true,
+    "server_old_exact_retired_once": true,
+    "final_server_close_real_group_stop": true,
+    "true_new_generation_unique_inner_app_udp_increments_after_B_ready": {
+      "Windows": 10,
+      "Linux": 8
+    },
+    "true_new_generation_unique_inner_app_udp_increments_during_old_grace": {
+      "Windows": 169,
+      "Linux": 167
+    },
+    "actual_inner_UDP_end": {
+      "Windows": {
+        "sent": 269,
+        "received": 270
+      },
+      "Linux": {
+        "sent": 384,
+        "received": 267
+      }
+    },
+    "actual_native_kernel_TCP_both_directions": {
+      "Windows_echo_bytes": 37,
+      "Linux_echo_bytes": 37,
+      "verified_byte_equal": true
+    },
+    "original_Windows_two_generations_native_rust_worker_join": true,
+    "original_Windows_WAL_restored_both": true,
+    "Windows_final_Wintun_closed": true,
+    "original_server_shared_TUN_final_Stop": true,
+    "outer_repeat": {
+      "client_copied_appearance_packets": 230,
+      "appearance_not_fec_recovery": true
+    },
+    "server_real_Game4_ISAL_runtime_stop_readback": {
+      "selected": "prefer-native",
+      "native_linked": 1,
+      "tx_native_quanta_last_group": 4,
+      "tx_scalar_quanta_last_group": 249
+    },
+    "windows_ISAL_runtime_positive_quanta": "NOT_MEASURED_IN_PUBLIC_CLIENT_STOP_LOG",
+    "windows_ISAL_unit_encode_original_backend": "PASS_FEATURE_GATE_FROM_SAME_SOURCE_Win64_MSVC_BUILD_TEST",
+    "B_native_rx_first_delivery_records_1hz_final": 245,
+    "Windows_native_tx_records_1hz_final": 3588
+  },
+  "fixture_false_negative_separation": {
+    "previous_original_action_id": 42483793673,
+    "previous_source_sha": "e69e40f3e6da2236542d4cac9fe060f840f39c43",
+    "previous_CI_conclusion": "failure",
+    "previous_product_scope": "two authenticated generations and client Stop/first UDP delivered, but exact server old graceful Stop NOT_TRIGGERED",
+    "previous_fixture_error": "asserted impossible reason same-protected-cohort-new-generation immediately at B READY; actual server schedules originalLaneRetirementGrace() random10-20s, reason same-protected-cohort-grace-expired",
+    "previous_actual_server_grace_ms": 16297,
+    "actual_H1405_corrected_test_only": "wait true B bidirectional UDP, original real server grace schedule+5s bounded, require 1 exact old server Stop and continuing B business, no user-visible product Rust or Go changes",
+    "literal_M0_PLAN027_GAME_DUE_FAULT_send_records_entry": "first_due_entry ONE-SHOT observation only; source did not return error or fail TX"
+  },
+  "measurement_limits": [
+    "Existing OS_mutation_to_new_ready_observed_ms=26703.0 in original report incorrectly includes waiting 18.807s server old generation grace; not a handshake or failover SLA; correct standalone B-ready latency NOT_MEASURED on raw report, do not reuse numeric value",
+    "No sustained 10Mbps or calibrated physical WAN throughput/p99 in this scoped runtime",
+    "Single Windows client + Linux WSL2 SERVER (not separate Linux CLIENT), so multi-client cross-OS same server NOT_RUN",
+    "No quantified actual Windows client ISA-L native quanta in Stop log, despite pinned linked release and byte-identical native FEC unit; Linux server actual ISA-L nonzero",
+    "Original H998 same-socket hot effective MTU fail remains; physical Windows new-gen MTU separate H1388 PASS and not part of this scene",
+    "Android and independent physical LAN/WAN deployment NOT_RUN"
+  ],
+  "plan028": "IN_PROGRESS"
+}
