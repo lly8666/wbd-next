@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/m0-plan028-h1412-wsl-bridge-co-client-preflight.yml"
+      - "tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

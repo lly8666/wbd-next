@@ -23,7 +23,10 @@ def guestpath(local):
     p=pathlib.Path(local).resolve()
     return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
 def witness():
-    return json.loads(ip("-j","-4","addr","show","dev","eth0"))[0]
+    rows=json.loads(ip("-j","-4","addr","show","dev","eth0"))
+    if not rows:
+        raise RuntimeError("WSL2 eth0 absent in original L3 readback while guest anchor is live")
+    return rows[0]
 def serve_guest():
     s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     s.bind(("0.0.0.0",PORT));s.settimeout(.5)
@@ -122,13 +125,10 @@ def main():
         raise
     finally:
         try:
-            # This CI test owns only these exact names; do not alter foreign
-            # guests, DHCP leases, route owners or the Windows host default.
-            if server and server.poll() is None:
-                server.terminate()
-                try:server.wait(timeout=4)
-                except subprocess.TimeoutExpired:server.kill()
-            if file:file.close()
+            # The guest listener is the SAME-SOURCE WSL2 process anchor.
+            # Terminating it before the final eth0 readback can transiently
+            # suspend the ephemeral WSL2 distro and lose 'ip -j' visibility.
+            # Restore original L3/route while that owned guest remains live.
             ip("netns","del",NS,check=False)
             ip("link","del",HOST,check=False)
             # Restore eth0 original L3 before removing bridge master.
@@ -149,6 +149,12 @@ def main():
                 state["cleanup_failure"]="owned eth0 IPv4 / default gateway / bridge or netns mismatch"
         except Exception as e:
             state["cleanup_failure"]=type(e).__name__+":"+str(e)[-350:]
+        finally:
+            if server and server.poll() is None:
+                server.terminate()
+                try:server.wait(timeout=4)
+                except subprocess.TimeoutExpired:server.kill()
+            if file:file.close()
         REPORT.write_text(json.dumps(state,indent=2)+"\n")
         print("H1412_REAL_TOPOLOGY_RESULT "+json.dumps(state,sort_keys=True),flush=True)
         if not state["owned_l2_restored"]:raise RuntimeError("H1412 exact OS bridge cleanup failed")
