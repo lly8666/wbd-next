@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "24537be41befd4a3554a6cdd780716d04dc16670",
+  "result": "INCONCLUSIVE",
+  "artifact_verified": false,
+  "task": "PLAN028_WINDOWS_NATIVE_L3",
+  "action_id": 42532903160,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42532903160",
+  "action_status_at_write": "IN_PROGRESS",
+  "original_1800s_udp_tcp_owned_stop": "NOT_RUN_YET",
+  "preflight": {
+    "governance": "SUCCESS",
+    "feature_catalog": "SUCCESS",
+    "cheap_windows_workflow": "SUCCESS",
+    "new_crossos_1800_guard_scope": "PASS_OFFLINE",
+    "legacy_h888_scope": "PASS_OFFLINE",
+    "windows_go_compile": "IN_PROGRESS_AT_WRITE",
+    "windows_rust_library": "IN_PROGRESS_AT_WRITE",
+    "linux_rust_library": "IN_PROGRESS_AT_WRITE"
+  },
+  "native_stage": "NOT_STARTED_AT_WRITE",
+  "native_artifact": "NOT_AVAILABLE_AT_WRITE",
+  "source_scope": "H1440 only updates old fail-closed static test oracle after H1439 diagnostic runner-physical /32 management route wiring; original Go TLS, Rust native data plane, Npcap/Wintun, FEC, MTU default and Stop gates unchanged.",
+  "earlier_nonqualifying": {
+    "first_run": 42508261361,
+    "second_run": 42517812264,
+    "cheap_guard_static_failure": 42532599409,
+    "old_static_fail_closed_oracle": "CORRECTED_AND_CHEAP_PASS"
+  },
+  "existing_pass_scoped": {
+    "ARM64_2x1800": "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json",
+    "signed_windows_plus_linux_own_stop_L1": "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+  },
+  "next": "Collect only this source-locked Action. Require effective /32 management route install/readback, true original Windows Wintun + native Linux two-client TLS 443 1800s UDP and periodic TCP, resource samples and original owned Stop; restored exact route. No conditional PASS if feature never triggers. If CI job log missing and raw data absent keep NOT_QUALIFIED.",
+  "constraints": {
+    "PLAN028": "IN_PROGRESS",
+    "physical_Android": "NOT_RUN",
+    "historical_H998_same_socket_MTU": "FAIL_RETAINED",
+    "other_plan": "NOT_AUTHORIZED"
+  }
+}
