@@ -1,0 +1,58 @@
+name: M0 PLAN028 H1390 offline original two 1800s ARM64 five-client independent scoped audit
+run-name: PLAN028 H1390 original H1389 1800s two scenes offline rotation PASS vs real Erin app-gap
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1390-offline-two-1800s-raw.yml"
+      - "tools/m0-plan028-h1390-offline-two-1800s-raw.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-offline-scene:
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [baseline, heterogeneous]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42466954711
+          github-token: ${{ github.token }}
+          name: plan028-h1389-real-arm64-1800s-${{ matrix.scene }}-42466954711
+          path: original-source-raw/
+      - name: Exact original 34-file real business and original alerts offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1390-offline-two-1800s-raw.py
+          test -s original-source-raw/fixed-kernel-result/h1274-thirty-minute-report.json
+          mkdir -p h1390-audit
+          python3 -u tools/m0-plan028-h1390-offline-two-1800s-raw.py --root original-source-raw --scene "${{ matrix.scene }}" --out "h1390-audit/${{ matrix.scene }}-original-audit.json" | tee "h1390-audit/${{ matrix.scene }}-original-audit.log"
+          python3 - <<'PY'
+          import json,pathlib,os
+          scene="${{ matrix.scene }}"
+          j=json.loads(pathlib.Path("h1390-audit/"+scene+"-original-audit.json").read_text())
+          assert j["original_source_sha"]=="096a2d55d204c7485aa2fce7d47b3c8e31901bc4"
+          assert j["offline_replay_no_network_or_product_rerun"] and j["rotation_verdict"]=="PASS_ALL_FIVE_SCOPED"
+          assert j["actual_duration_seconds"]==1800 and j["original_real_authenticated_client_count"]==5
+          assert j["original_server_shared_tun"]["unrouted"]==0 and j["original_server_shared_tun"]["backpressure"]==0
+          if scene=="baseline":
+              assert not j["original_unfiltered_alerts"] and j["performance_verdict"].startswith("PASS_")
+          else:
+              assert j["performance_verdict"].startswith("FAIL_")
+              assert [x["duration_ms"] for x in j["original_unfiltered_alerts"]]==[3310,3320]
+          print("M0_PLAN028_H1390_OFFLINE_ORIGINAL_1800S_SCOPED_VERDICT_"+scene.upper()+"_PASS_AUDIT",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1390-offline-${{ matrix.scene }}-${{ github.run_id }}
+          path: h1390-audit/
+          if-no-files-found: warn
+          retention-days: 30
