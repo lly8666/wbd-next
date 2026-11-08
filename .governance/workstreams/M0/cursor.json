@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1424,
-  "checkpoint_sha": "e6aa4608780e9608070a7313be549a0d4524b38b",
+  "sequence": 1425,
+  "checkpoint_sha": "6d86ffa59de3d3990ef9c80e6ac4ac88a22de5da",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1424-CROSSOS-SCOPED-PASS-ORIGINAL-GAME4-CI-SPLIT",
-  "current_task": "H1423 SOURCE e6aa Action42502567549 original Windows single signed Wintun A plus separate Linux netns B same original TLS443 Go/Rust shared TUN: two protected accounts/manual /32, Windows11+Legacy per-authenticated-session RX; Windows UDP38/38/reverse36 Linux11/10/reverse9, TCP both, A Stop B UDP+10 and TCP, Bob/server owned Stop and WAL/bridge exact rollback PASS_SCOPED. Original Game4 x86 same SOURCE Action42502567485 product TLS8 overlap/new MTU1178/new UDP5/Stop PASS_SCOPED but CI FAIL last grep of unarchived M4 Go stage/nonexistent marker; independent archived remote M4 marker NOT_OBSERVED. Original failures retained. PLAN028 IN_PROGRESS.",
-  "why_now": "Latest source-locked native real Windows/Linux two-client hardware-backed business/Stop closes prior H1415–H1420 targeted per-session persona defect with actual nonzero packet receipts. Game4 report-only CI grep must be split from product function rather than rerun network for logging.",
+  "task_id": "PLAN028-M0-H1425-FEATURE-CATALOG-SIZE",
+  "current_task": "H1424 e6aa one signed Windows client plus independent Linux original client on same GoTLS443 server true protected UDP/TCP and Stop PASS_SCOPED; same-source Game4 original native TLS8 overlap B new UDP5 Stop PASS_SCOPED with original CI marker-only failure. H1424 feature-catalog failed 16KiB bounded card size; H1425 shortens only catalog summaries, preserves all 43 platform/status/source/evidence records. PLAN028 IN_PROGRESS.",
+  "why_now": "Native feature evidence must remain user-visible but catalog is capped at 16KiB; old full details already in referenced evidence, not deleted or rewritten.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect any jobs after evidence commit; do not redispatch. Repair future Game4 harness to capture actual Go remote M4 positive proof and remove nonexistent TUN marker without rerunning original network just for logging. Then audit L0/L1/L2 capacity and outstanding blocker evidence, build final source-frozen representative L3 two real native 1800s scenes when warranted; Android/physical NOT_RUN, historical H998 FAIL preserved; no 029/030.",
+  "next_action": "Collect governance and feature-catalog after H1425. Then fix future Game4 M4 proof receipt check without replaying original network for reporting, audit remaining L0/L1/L2 hard gates and decide final source-frozen representative L3. Physical/Android NOT_RUN and old H998 fail retained.",
   "unverified": true,
   "last_tested_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1424 crossOS native single signed Windows + independent Linux netns client one original GoTLS443 original server/2 protected accounts actual UDP/TCP A Stop B live and all native Stop/WAL/bridge PASS_SCOPED under SOURCE e6aa (17 CRC zip). Same source x86 Game4 original 8 standard TLS first flights, real physical reauth/MTU1178/new business5/Stop PASS_SCOPED, CI-only final grep fails missing forwarded temp marker and nonexistent label, separate explicit proof marker NOT_OBSERVED. ISAL native 7/7 platform and Game4 real runtime old SOURCE reused. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1425 feature card 43 verifications intact, prose summaries compacted under existing bounded JSON check. H1424 genuine cross-OS one443 TLS/UDP/TCP Stop PASS, Game4 real scoped product PASS but original Action CI FAIL for unforwarded/nonexistent proof label. PLAN028 IN_PROGRESS."
 }
