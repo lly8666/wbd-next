@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1413,
-  "checkpoint_sha": "e4ae99a1a0b5654a9b0f791b2b99aaa8f3275ed4",
+  "sequence": 1414,
+  "checkpoint_sha": "255abea5d71c7e00404cb5aa2740e888cbdbc8dd",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1413-WSL2-UNDERLAY-OWNED-RESTORE",
-  "current_task": "H1412 original Action42492980253 CI FAIL cleanup: actual Windows host -> original WSL2 eth0 bridged UDP real echo PASS; distinct independent Linux netns over veth->same bridge UDP real echo PASS. No VPN product, no second Windows client. Python terminated only live WSL2 guest process BEFORE checking restored eth0 IPv4, triggering empty ip -j addr and cleanup ownership NOT_QUALIFIED. H1413 keep original guest process alive until after native eth0/MAC+route restoration readback; restore all owned resources before terminate. One exact short bridged-underlay Action expected, not product test.",
-  "why_now": "H1412 preflight disproves alleged Windows/WSL2 vSwitch+Linux veth underlay incompatibility using actual kernel two-way packet receipts. Sole observed failure in fixture teardown owner check, which is a real safety gate and must be retested, not CI FAIL relabeled product PASS.",
+  "task_id": "PLAN028-M0-H1414-EXACT-EMPTY-ETH0-IP-RESTORE",
+  "current_task": "H1413 original short WSL Action42493317201 again proved Linux netns veth real echo and Windows host WSL2 bridge real echo, but teardown FAIL only because ip -4 -j addr show dev eth0 legitimately returns [] before restoring IPv4 intentionally moved to bridge; guest liveness earlier hypothesis not proven. H1414 check real eth0 link presence via ip -j link, permit zero IPv4 on intermediate step then restore original exact IP and gateway, assert bridge/netns absent and WSL firewall rule removed. No VPN product in this preflight, so not L1 PASS. Original two Action failures unchanged.",
+  "why_now": "H1413 real kernel data path both directions PASS, cleanup still failed at address list visibility. Linux iproute2 ip -4 -j addr show returns [] on a link with no IPv4; the fixture required at least one before installing the original address and thereby blocked its own rollback. Correct before moving to product bridge path.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1413 single short native Windows+WSL2 bridge-veth preflight, verify two distinct actual kernel UDP echo paths and ORIGINAL eth0 IP/gateway restoring plus owned WSL firewall removal; old H1412 CI FAIL retained. If PASS, the Windows-only signed Wintun client plus separately Linux netns original CLI client to shared Go TLS443 server can be implemented as one full L1 120-180s scenario, source lock both binaries, independently authenticated users/leases, A Stop B continues, OS readbacks, no second Win VPN; if fail inspect real OS link readback before product test.",
+  "next_action": "Collect H1414 one native L2-only Windows/WSL bridge/veth Action; verify both real echoes AND exact eth0 source IP/default route restored and owned bridge/netns deleted, HyperV firewall removed. Original H1412/H1413 CI FAIL retained as test teardown bug, product NOT_RUN. If PASS implement original one Windows Wintun + Linux netns client same shared TLS server; likely server legacy/windows11 fakeTCP persona may need one discriminating real SYN test, not speculative protocol rewrite. Do not re-dispatch original long tests.",
   "unverified": true,
   "last_tested_source": "0cdea544d333d497857d3f7273455f65084f749b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1412 L2 underlay original source e4ae Windows↔WSL bridge actual UDP PASS and netns Linux↔bridge actual UDP PASS, but restore failed due stopping sole WSL2 resident before eth0 queried. H1413 moves server termination AFTER original eth0 IPV4/default gateway and owned bridge/netns absent readback. Original H1412 cleanup FAIL preserved, product NOT_RUN, H1411 ISA-L native seven all platforms PASS scoped. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1412 and H1413 same native WSL2 bridge real Windows host UDP and independent Linux netns UDP both passed; missing owned cleanup due one-line fixture assumption requiring ip -4 addr JSON nonempty before re-adding original IP. H1414 checks existing eth0 link instead, temporarily empty address legitimate, then exact original L3 restore/readback. No VPN business yet. H1411 three-native ISA-L all grades PASS scoped. PLAN028 IN_PROGRESS."
 }

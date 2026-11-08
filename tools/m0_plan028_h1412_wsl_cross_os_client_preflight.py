@@ -133,8 +133,16 @@ def main():
             ip("link","del",HOST,check=False)
             # Restore eth0 original L3 before removing bridge master.
             ip("link","set","dev","eth0","nomaster",check=False)
-            eth=witness()
-            live=[a["local"]+"/"+str(a["prefixlen"]) for a in eth["addr_info"] if a["family"]=="inet"]
+            # ip -4 -j addr returns [] on an existing link with NO IPv4.
+            # This is expected: our bridge setup deliberately moved that
+            # address off eth0. Check the link separately, then restore L3.
+            present_link=json.loads(ip("-j","link","show","dev","eth0"))
+            if len(present_link)!=1:
+                raise RuntimeError("original physical WSL eth0 link absent during rollback")
+            addresses=json.loads(ip("-j","-4","addr","show","dev","eth0"))
+            live=[a["local"]+"/"+str(a["prefixlen"])
+                  for row in addresses for a in row.get("addr_info",[])
+                  if a["family"]=="inet"]
             if orig not in live:ip("addr","add",orig,"dev","eth0")
             ip("route","replace","default","via",gateway,"dev","eth0")
             ip("link","del",NAME,check=False)
