@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "result": "PARTIAL_ACCEPTANCE_AUDIT",
+  "plan_status": "IN_PROGRESS",
+  "reviewed_head": "e9013ce58b6cc5174b9041eeffa6da11c9bfe089",
+  "final_native_l3_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+  "final_l3_action": 42505975134,
+  "final_l3_status_at_creation": "IN_PROGRESS_NOT_YET_QUALIFIED",
+  "statuses": {
+    "L0_go_tls_standard_and_credential_negative": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "https://github.com/lly8666/wbd-next/actions/runs/42502567520",
+        "https://github.com/lly8666/wbd-next/actions/runs/42502567544",
+        "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+      ],
+      "notes": "Authentic no private prelude, one TLS443, wrong password rejects while other protected sessions remain"
+    },
+    "L0_lease_7day_injected_clock": {
+      "status": "PASS_UNIT_ONLY",
+      "source": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+      "test": "internal/logicaltunnel/lease_registry_test.go::TestAutomaticLeasesSharedCredentialsUniqueBoundedAndSevenDays",
+      "notes": "Exact injected 7-day clock, active BeforeExpire veto, inactive release, identity/address renewal; not 7 real days on public product"
+    },
+    "L1_seven_public_modes_original_linux": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1239-REQUIREMENT-LEVEL-COVERAGE-AUDIT-20261105.json",
+        "docs/evidence/M0/PLAN028-H1352-H1351-NATIVE-X86-REAL-WEAKNET-0-1-5-15-30PCT-0-50-150-250MS-PASS-20261108.json"
+      ],
+      "notes": "Grouped actual 7 modes and two actual rotations, original Go TLS/Rust, native x86 and representative ARM64"
+    },
+    "L1_native_windows_signed_modes": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1404-SOURCEE69-REAL-WINDOWS-FIVE-MODE-SIGNED-WINTUN-SCOPED-20261108.json",
+        "docs/evidence/M0/PLAN028-H1407-SOURCEEED-WINDOWS-GAME4FEC-ISAL-REAL-OWNED-STOP-PASS-20261108.json"
+      ],
+      "notes": "Signed Npcap/Wintun real original TLS/UDP and Stop, Game4FEC real ISA-L native quanta; do not claim all 7 mode physical transitions in same run"
+    },
+    "L1_cross_os_separate_clients_one_server": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+      ],
+      "notes": "One Windows Wintun plus distinct Linux netns client, independently authenticated 2 users/manual /32, two-way UDP/TCP, Windows Stop Bob continues, exact owned Stop and WSL veth route restoration"
+    },
+    "L1_physical_source_MTU_reauth_and_owned_stop": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1388-SOURCE9A21-WINDOWS-SAME-IP-MTU1500-1280-REAL-TLS-UDP-TCP-STOP-PASS-20261108.json",
+        "docs/evidence/M0/PLAN028-H1373-H1374-SOURCE26A4-ARM64-NORMALOFF-TWO-PHYSICAL-REAUTH-GAME4-SIBLING-PASS-20261108.json"
+      ],
+      "notes": "Actual new generation reauthentication after MTU change, Windows true signed driver; historical same-socket H998 HOT shrink remains FAIL"
+    },
+    "L1_game4_authenticated_remote_M4_proof": {
+      "status": "PARTIAL",
+      "evidence": [
+        "https://github.com/lly8666/wbd-next/actions/runs/42502567485"
+      ],
+      "notes": "Original TLS8/new MTU1178/new UDP5 and exact owned Stop PASS_SCOPED; CI original FAIL due archived marker mismatch, separate positive remote-M4 log receipt NOT_OBSERVED; H1426 harness now forwards real original peer M4 marker only on future actual run"
+    },
+    "L2_calibrated_normal_5client_and_recovery": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1360-SOURCE6C5-NATIVE-X86-NORMAL75-CAPACITY-STABLE-RECOVERY-20261108.json"
+      ],
+      "notes": "Real 25→50→75→50Mbps each direction, 75 reached, CPU guest 74.93%/max core77.1%, back to 50 steady; 100/200 NOT_RUN host projection only"
+    },
+    "L2_game4_capacity_and_recovery": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1350-H1349-NATIVE-GAME4-20MBPS-RAW-OFFLINE-PASS-ORIGINAL-CI-FAIL-20261108.json"
+      ],
+      "notes": "Real 3→5→10→20→10Mbps Game4, 20 reached for30s, CPU guest83.08%, 60s recovery, original report CI FAIL retained"
+    },
+    "L2_real_random_weaknet": {
+      "status": "PASS_SCOPED",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1352-H1351-NATIVE-X86-REAL-WEAKNET-0-1-5-15-30PCT-0-50-150-250MS-PASS-20261108.json"
+      ],
+      "notes": "Actual kernel tc 0/1/5/15/30% and 0/50/150/250ms, real DATA-only test control for ARP, 5 clients, native ISA-L Game4, UDP/TCP subsets, exact owner Stop; Erin 30% application residual missing real, not lossless"
+    },
+    "L2_correlated_blackhole_and_unilateral": {
+      "status": "PASS_SCOPED_WITH_LIMITS",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1395-H1353-H1368-ORIGINAL-BLACKHOLE-OFFLINE-SCOPED-20261108.json",
+        "docs/evidence/M0/PLAN028-H1361-SOURCE24E1-ARM64-ONEWAY-30PCT125MS-ORIGINAL-PASS-20261108.json"
+      ],
+      "notes": "Original x86 Game4 true common 100% underlay 8s blackhole and recovery offline scoped PASS; ARM original kernel event artifact missing NOT_QUALIFIED for full replay; 1-way representative true native Linux scoped"
+    },
+    "L3_previous_ARM64_two_1800s": {
+      "status": "PASS_SCOPED_OLDER_SOURCE",
+      "evidence": [
+        "docs/evidence/M0/PLAN028-H1392-SOURCE4444-ARM64-L3-ARP-ISAL-TWO1800-PASS-SCOPED-20261108.json"
+      ],
+      "notes": "Baseline/hetero 0 alerts, maximum active sender gap50/120ms, 5 authentic rotations and exact Stop, real native ISA-L with test-only ARP deconfound; not new cold persona SOURCE"
+    },
+    "L3_final_native_ARM64_two_1800s": {
+      "status": "IN_PROGRESS",
+      "source_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+      "action": 42505975134,
+      "notes": "Original pinned ISA-L build then separate independent native ARM64 healthy and heterogeneous jobs; evaluate only raw artifacts after both jobs stop"
+    },
+    "legacy_H998_live_hot_socket_MTU": {
+      "status": "HISTORICAL_FAIL_RETAINED",
+      "notes": "Older same-socket online shrink original FAIL; new-generation reauth success is different mechanism"
+    },
+    "Android_and_user_physical": {
+      "status": "NOT_RUN",
+      "notes": "Not substituted by WSL2 or native Linux Actions; do not deploy without user instruction"
+    },
+    "new_go_feature_or_followup_029_030": {
+      "status": "NOT_AUTHORIZED",
+      "notes": "Do not expand scope"
+    }
+  },
+  "source_comparability": "Historical scoped PASS reused where algorithm/record/FEC remained unchanged; new per-session cold SYN Windows11/Legacy regression proven current signed Windows plus Linux at e6aa; pending final native 1800s eef. No absolute CPU comparison across different runner VMs.",
+  "ready_to_close": false
+}
