@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1354",
+  "result": "PASS_SCOPED_NATIVE_ARM64_180S_INPLACE_PHYSICAL_MTU_CHANGE_AND_NEW_TLS_NATIVE_M4",
+  "trigger": "INCIDENTAL_PUSH_PATH_DEPENDENCY_NOT_DISPATCHED_EXPLICITLY",
+  "source_sha": "104a5213c10e4869f948069071d8af4311403e91",
+  "native_action": {
+    "run_id": 42435004153,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42435004153",
+    "conclusion": "success",
+    "build_job": 128591854523,
+    "scene_job": 128592453347,
+    "build": "PASS",
+    "scene": "PASS"
+  },
+  "raw_artifacts": [
+    {
+      "id": 13599417441,
+      "name": "h1291-short-physical-baseline-42435004153"
+    },
+    {
+      "id": 13598961964,
+      "name": "h1291-arm64-one-isal-build-104a5213c10e4869f948069071d8af4311403e91"
+    }
+  ],
+  "actual_physical_change": {
+    "client": "alice Normal",
+    "scope": "same physical NIC and original source IPv4, original shared veth both ends",
+    "time_s_into_real_application": 70.02412,
+    "kernel_link_mtu_before_both": [
+      1500,
+      1500
+    ],
+    "kernel_link_mtu_after_both": [
+      1280,
+      1280
+    ],
+    "new_conservative_tls_rust_m4_generation": "PASS",
+    "server_confirmed_after_ports": [
+      "64791",
+      "56327"
+    ],
+    "old_exact_generation_1_stop": "PASS"
+  },
+  "actual_application": {
+    "five_client_native_180s": "PASS",
+    "all_five_rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+    "final_minute_alice_uplink_mbps_offered": 6.4,
+    "final_minute_alice_uplink_mbps_received": 6.39986,
+    "final_minute_alice_downlink_mbps_offered": 6.40014,
+    "final_minute_alice_downlink_mbps_received": 6.39942,
+    "original_report_alerts": 0,
+    "all_five_server_lease_pending_overflow": 0,
+    "dave_game4_isa_l_native_tx_quanta": 61550,
+    "dave_game4_scalar_quanta": 1160
+  },
+  "limits": [
+    "Native ARM64 Linux native namespaces, not Windows Wintun/Npcap or physical WAN",
+    "Original H998 same-socket in-place shrink FAIL preserved; this proves new-generation reauthentication only",
+    "Source/build is ARM64 104a workflow wrapper, not equivalent CPU to x86 source locked 6c5",
+    "This incidental old workflow is not a new independent dispatched requirement or full PLAN028 acceptance"
+  ]
+}

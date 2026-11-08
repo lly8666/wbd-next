@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1354",
+  "result": "PASS_SCOPED_NATIVE_X86_GAME4_COMMON_PHYSICAL_UNDERLAY_BLACKHOLE_AND_RECOVERY_OFFLINE_REPLAY",
+  "original_ci_conclusion": "FAIL_PRESERVED",
+  "original_ci_error": "Original H1353 reporter assert len(sent)==len(got)==18000, but 19001 real 10ms bins include the 10s drain; original network test and raw artifacts were already complete. Do not change original FAIL or rerun network.",
+  "original_product_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "h1353_fixture_source_sha": "104a5213c10e4869f948069071d8af4311403e91",
+  "h1354_offline_audit_source_sha": "d0ec794f7ff4114ef2ce09733cbd92a207b3d502",
+  "native_action": {
+    "run_id": 42435004151,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42435004151",
+    "conclusion": "failure",
+    "preflight": "PASS",
+    "sha_and_native_elf": "PASS",
+    "network_scenario_complete": true,
+    "failed_job": 128591896534,
+    "failed_stage": "OFFLINE_AUDITOR_18000_BINS_EXPECTATION"
+  },
+  "native_raw_artifact": {
+    "id": 13599765309,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42435004151/artifacts/13599765309",
+    "zip_sha256": "d36bda92c7428fc80f2d98671fe1cb0ed7f61190c3c5bfcc405a9a9e8d02e65b",
+    "zip_crc": "PASS",
+    "files": 38
+  },
+  "offline_replay_action": {
+    "run_id": 42435645489,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42435645489",
+    "conclusion": "success",
+    "job_id": 128593780375,
+    "network_rerun": false,
+    "raw_artifact_digest_verified": true
+  },
+  "offline_result_artifact": {
+    "id": 13599621869,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42435645489/artifacts/13599621869",
+    "zip_sha256": "b46baab01970b8f08b09c4fd8d5a0217660165f67e913148594e22ab8766984e",
+    "zip_crc": "PASS",
+    "files": 2
+  },
+  "original_native_scene": {
+    "platform": "native Linux x86_64 4 guest logical vCPUs; 6 OS netns, 5 real TUN clients, one true Go TLS443 server, Rust M4 ISA-L",
+    "active_app_seconds": 180,
+    "app_drain_seconds": 10,
+    "actual_inclusive_10ms_bins": 19001,
+    "clients": [
+      "alice Normal Off",
+      "bob Normal Auto",
+      "carol Game2 Off",
+      "dave Game4 Fixed6",
+      "erin Normal Fixed6"
+    ],
+    "base_inner_mbps_each_direction": [
+      4,
+      4,
+      3,
+      6,
+      3
+    ],
+    "peak_aggregate_each_direction_mbps": 10,
+    "phase_schedule": [
+      [
+        "first_wave",
+        30,
+        0.2
+      ],
+      [
+        "sustained",
+        60,
+        0.35
+      ],
+      [
+        "overload",
+        30,
+        0.5
+      ],
+      [
+        "recovery",
+        50,
+        0.35
+      ]
+    ],
+    "per_client_oneway_os_delay_ms": [
+      0,
+      50,
+      100,
+      150,
+      0
+    ],
+    "all_physical_baseline_random_loss_pct": 0,
+    "static_test_only_neighbours": "10/10 PERMANENT installed and after; preserves original veth DATA impairment, no product config change",
+    "rotation_seconds": 600,
+    "rotation": "NOT_TRIGGERED_BY_DESIGN"
+  },
+  "real_game4_common_physical_blackhole": {
+    "attack_type": "100% OS tc netem both physical egress directions for same Dave veth; all four Game4 lanes share ONE underlay, not independent paths",
+    "real_start_seconds_into_app": 70.017,
+    "real_restore_seconds_into_app": 78.029,
+    "actual_during_kernel_drop_packets": {
+      "uplink": 26653,
+      "downlink": 26657
+    },
+    "dave_original_app_during_window_s": [
+      72,
+      76
+    ],
+    "original_app_udp_uplink_tx_bytes": 1050112,
+    "original_app_udp_uplink_rx_bytes": 0,
+    "original_app_udp_downlink_tx_bytes": 1050112,
+    "original_app_udp_downlink_rx_bytes": 0,
+    "original_rapid_report_dave_active_sender_no_rx_gap_ms": {
+      "uplink": 8010,
+      "downlink": 8000
+    },
+    "original_app_first_rx_after_real_restore_ms": {
+      "uplink": 141,
+      "downlink": 141
+    },
+    "post_restore_app_window_s": [
+      82,
+      102
+    ],
+    "post_restore_udp_delivery_fraction": {
+      "uplink": 0.99691,
+      "downlink": 0.99691
+    },
+    "late_app_window_s": [
+      110,
+      145
+    ],
+    "late_active_gap_ms_both": 0,
+    "triggered": "PASS_real_100pct_egress_loss_outage_and_recovery"
+  },
+  "healthy_sibling_while_game4_blacked_out": {
+    "clients": [
+      "alice",
+      "bob",
+      "carol",
+      "erin"
+    ],
+    "window_seconds": [
+      72,
+      76
+    ],
+    "all_four_actual_duplex_udp_tx_rx_nonzero": true,
+    "max_10ms_active_send_without_receive_gap_ms_all_directions": 0,
+    "result": "PASS_SCOPED_NO_BROTHER_CROSS_HOL"
+  },
+  "ownership_and_capacity": {
+    "each_native_client_final_exact_Stop": true,
+    "server_shared_TUN_final_Stop": true,
+    "per_lease_auth_count": 5,
+    "per_lease_pending_overflow": 0,
+    "per_lease_offered_equals_direct_delivered": true,
+    "app_generator_errors": "NONE",
+    "generator_capacity_exceeded": false,
+    "host_busy_mean_pct_by_phase": [
+      7.31,
+      11.21,
+      15.64,
+      11.89
+    ],
+    "observed_guest_cpu_cores": 4,
+    "observation": "host total busy includes original product plus test generators and kernel, not a product-only CPU causal comparison"
+  },
+  "original_raw_report_alerts_preserved": {
+    "expected_outage_gaps_two": [
+      "dave uplink 8010ms",
+      "dave downlink 8000ms"
+    ],
+    "rotation_continuity_not_proven_count": 5,
+    "note": "The old general rapid report shows seven alerts. Four-lane physical blackout is deliberately 100% and must not be treated as zero-loss, and 600s rotation is NOT_TRIGGERED."
+  },
+  "scope_limits": [
+    "L2 correlated BLACKHOLE of common veth only; no independent lane/path loss proof",
+    "Original H1353 CI FAIL still preserved; true native business re-audited OFFLINE from original source-locked 38-file archive",
+    "No new product source or native retransmit/FEC behavior changes",
+    "No Windows/ARM/Android/physical WAN equivalence; no L1 two verified rotations per seven modes and no L3 two 1800s",
+    "H998 original same socket MTU shrink and H1317 historical ARM64 failure remain original FAIL, not overwritten"
+  ]
+}
