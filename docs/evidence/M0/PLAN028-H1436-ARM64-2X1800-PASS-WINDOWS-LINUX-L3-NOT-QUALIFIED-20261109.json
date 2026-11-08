@@ -187,5 +187,8 @@
     ]
   },
   "source_comparability": "Only Windows workflow/test tools, docs and governance changed between ARM64 eef2 and Win-Linux d6; Go/Rust shipping product source remained identical, but platform binaries differ and CPU figures are not directly comparable.",
-  "plan028_exit": "IN_PROGRESS_L0_L2_AND_ARM64_L3_SCOPED_PASS_WINDOWS_L3_UNQUALIFIED"
+  "plan028_exit": "IN_PROGRESS_L0_L2_AND_ARM64_L3_SCOPED_PASS_WINDOWS_L3_UNQUALIFIED",
+  "source_sha": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+  "artifact_verified": true,
+  "source_scope": "Primary citable tested source ARM64 eef2; Windows later source d6 recorded separately as NOT_QUALIFIED, no cross-OS PASS promoted"
 }

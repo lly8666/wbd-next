@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1437,
-  "checkpoint_sha": "2d9a53d9e49f66379dbb130696ed27cfd122daae",
+  "sequence": 1438,
+  "checkpoint_sha": "5a41a45ad911193ed630416e9b55630928d40d1d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1437-CROSSOS-L3-SCOPED-WATCHDOG-LIVENESS",
-  "current_task": "H1436 two-platform original L3 audited: ARM64 frozen source eef2 native baseline and hetero independent 1800s real GO TLS/Rust/ISA-L/owned Stop PASS_SCOPED with zero alerts and 50/120ms maximum active no-RX, orig 36-file ZIPs CRC. Windows+independent Linux Action42508261361 source d6 cheap Go/Rust, signed drivers, WSL2 boot SUCCESS, but real native step19 incomplete (job FAIL, log BlobNotFound, no 1800s app/Stop artifact) NOT_QUALIFIED. H1437 located deterministic TEST-INFRA mismatch: tools/m0_wl_windows_step_watchdog.py rejects >1500 while workflow L3 sets 2600; Start-Process returned PID object but no alive check, so outer process liveness guard immediately died and long native stage remained unbounded. Scoped fix permits 2600 only when WBD_PLAN028_WIN_LINUX_L3=1, checks Process.HasExited at startup and adds real subprocess offline 1020/2600/2601 tests. Original Windows run root of longer hang still unknown; this repair only removes proven missing guard. Source test-only product unchanged; one resumed exact Windows-Linux L3 Action pending. PLAN028 IN_PROGRESS.",
-  "why_now": "Do not label Windows 1800s PASS without original app/Stop; do not blindly rerun unchanged seed. Before a single targeted recovery, fix proven guardian upper-limit assertion that otherwise silently disables long-run watchdog. Preserve regular 1500s ceiling and ordinary 24-minute modes.",
+  "task_id": "PLAN028-M0-H1438-SOURCE-INDEX-CORRECTION",
+  "current_task": "H1436 native ARM64 2x1800s actual source eef2 PASS_SCOPED; Windows+independent Linux previous source d6 real native stage without 1800s/Stop report NOT_QUALIFIED. H1437 fixed broken scoped Windows watchdog and current Windows Action42517812264 is in flight (cheap gate success, native compilation); do not duplicate dispatch. Governance & feature catalog H1437 failed because new H1436 evidence record lacked top-level source_sha matching cursor.last_tested_source, even though nested arm64.head_sha was right; H1438 only adds exact original top-level ARM64 source index without altering two source results or product code.",
+  "why_now": "Fix mandatory exact evidence SOURCE index in repo governance rather than weakening check. Windows different SOURCE remains nested NOT_QUALIFIED; ARM64 true original 1800s evidence remains scoped PASS. Evidence-only commit does not match Windows native workflow path filter.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect newly triggered one-Windows+independent Linux L3 Action after H1437 scoped watchdog fix: cheap offline tests must PASS and actual guard start stay alive at2600, then true original signed Npcap/Wintun Go/Rust/WSL2 two-client sustained 1800s app/periodic TCP/RSS and all owned Stop. If native exits FAIL, original logs/artifacts and first app age indicate product vs fixture; no seed repeat without diagnostic. ARM64 already formally PASS_SCOPED, do NOT repeat. Preserve H998 and Android/physical gaps. PLAN028 IN_PROGRESS.",
+  "next_action": "Collect governance/feature checks for H1438 and existing scoped Windows source5a41 Action42517812264; do not redispatch or change product while Windows native original 1800s underway. Validate actual app counters and Stop on result; if interrupted preserve NOT_QUALIFIED; ARM64 no retest.",
   "unverified": true,
   "last_tested_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1437 identifies verified silent watchdog death in Windows L3: script asserted max1500, workflow passed2600, and did not check immediate process exit; Windows Action42508261361 lost stage log/result and cannot qualify 1800s. Only test-infra scoped repair allows 2600 for explicit L3, all other modes<=1500, proves guard alive via PowerShell HasExited and offline matrix test. ARM64 two real 1800s PASS_SCOPED original ZIP and FEC native proof already archived. 028 IN_PROGRESS."
+  "partial_summary": "H1438 adds top-level source_sha=eef2 on H1436 citable evidence to satisfy governance strict match with cursor.last_tested_source; win source d6 separately nested NOT_QUALIFIED unchanged. Scoped watchdog fix H1437 Action42517812264 underway with cheap suite SUCCESS. PLAN028 IN_PROGRESS."
 }
