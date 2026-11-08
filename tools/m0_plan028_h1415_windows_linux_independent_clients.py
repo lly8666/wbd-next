@@ -344,6 +344,38 @@ def main():
         report["status"]="FAIL_OR_NOT_RUN"
         report["first_failure"]=str(e)[-1100:]
         print("H1415_ORIGINAL_REAL_FIRST_FAILURE "+str(e)[-900:],flush=True)
+        # The failed original action retained only the Linux candidate's
+        # terminal class=other, not the server's actual rejection phase.
+        # Copy a bounded allowlist of product-owned stage markers ONLY on
+        # failure. No credentials, packet contents, or per-packet hot probes.
+        stage_prefixes=(
+          "V4_PUBLIC_MULTI_ADMISSION_","V4_PUBLIC_MULTI_SESSION_READY",
+          "V4_PUBLIC_COLD_STAGE","V4_PUBLIC_PATH_CANDIDATE",
+          "V4_PUBLIC_PATH_RECONNECT_RETRY","V4_PUBLIC_NATIVE_COLD_TLS_RESULT",
+          "V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS","V4_PUBLIC_NORMAL_",
+          "V4_PUBLIC_GO_RX_HANDOFF","V4_PUBLIC_LEASE_APPLIED",
+          "V4_ORIGINAL_GO_CLIENT_NATIVE_READY","V4_PUBLIC_M2_",
+          "V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO")
+        excerpt={}
+        for role in ("server","linux","windows"):
+            p=out/("h1415-"+role+".log")
+            if not p.is_file():continue
+            rows=[]
+            for raw in p.read_text(errors="replace").splitlines():
+                # Recognize exact product stage tags, never arbitrary raw Go
+                # errors or passwords from TLS/CLI output.
+                at=raw.find("V4_PUBLIC_")
+                if at<0:at=raw.find("V4_ORIGINAL_GO_CLIENT_NATIVE_READY")
+                if at<0:continue
+                item=raw[at:at+250]
+                if not item.startswith(stage_prefixes):continue
+                rows.append(item)
+            excerpt[role]=rows[-24:]
+            for item in excerpt[role]:
+                print("H1417_ORIGINAL_"+role.upper()+"_COLD_STAGE "+item,flush=True)
+        (out/"h1417-original-cold-stage-summary.json").write_text(
+            json.dumps({"source_sha":source,"classification":"DIAGNOSTIC_NOT_PRODUCT_PASS",
+             "markers":excerpt},indent=2)+"\\n")
         raise
     finally:
         for name in ("A","B"):(out/("h1415-"+name+"-stop.flag")).touch()
