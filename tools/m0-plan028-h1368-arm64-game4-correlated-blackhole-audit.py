@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """H1368 ARM64: true kernel 100% correlated impairment vs actual original app recovery."""
-import argparse,json,pathlib
+import argparse,ast,json,pathlib,re
 SOURCE="24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73"
 NAMES=("alice","bob","carol","dave","erin")
 def load(p):return json.loads(p.read_text())
@@ -26,15 +26,44 @@ def assess(root):
         assert neighbours["native_owner_count"]==10
         assert len(neighbours["entries"])==10
         assert all(x["neighbor_state"]=="PERMANENT" for x in neighbours["entries"])
-    event=load(root/"h1353-physical-game4-blackhole.json")
-    assert event["kind"]=="ONE_GAME4_FOUR_LANE_SHARED_VETH_BOTH_DIRECTIONS"
-    assert event["original_delay_ms"]==150 and event["original_loss_pct"]==0
-    assert event["other_four_links_untouched"] and event["no_product_source_change"]
-    start=(event["blackhole_start_ns"]-plan["start_monotonic_ns"])/1e9
-    end=(event["restored_ns"]-plan["start_monotonic_ns"])/1e9
+    # H1368 original Action archived all app/tun/Stop logs but missed the
+    # separately named event JSON. The SAME original process stdout still
+    # records exact CLOCK_MONOTONIC start, restore, and tc -s kernel counters.
+    # Audit that first-class witness directly; do NOT forge an event JSON.
+    event_file=root/"h1353-physical-game4-blackhole.json"
+    if event_file.is_file():
+        event=load(event_file)
+        assert event["kind"]=="ONE_GAME4_FOUR_LANE_SHARED_VETH_BOTH_DIRECTIONS"
+        assert event["original_delay_ms"]==150 and event["original_loss_pct"]==0
+        assert event["other_four_links_untouched"] and event["no_product_source_change"]
+        start_ns=event["blackhole_start_ns"]
+        restored_ns=event["restored_ns"]
+        drops=event["actual_kernel_drops_during_100pct"]
+        event_provenance="ORIGINAL_EVENT_JSON"
+    else:
+        raw=(root/"h1368-native-game4-correlated-traffic.log").read_text(
+            errors="replace")
+        prefix="H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED "
+        lines=[line for line in raw.splitlines() if line.startswith(prefix)]
+        assert len(lines)==1,("missing/ambiguous actual original restore",len(lines))
+        match=re.fullmatch(
+            r"H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED "
+            r"(\d+) (\d+) (\{[^\n]+\})",lines[0])
+        assert match,lines[0][:200]
+        start_ns,restored_ns=map(int,match.group(1,2))
+        drops=ast.literal_eval(match.group(3))
+        assert "H1368_NATIVE_GAME4_CORRELATED_REAL_BLACKHOLE_CAPTURED" in raw
+        assert plan["h1368_specialization"]["100pct_physical_loss"]==(
+            "app t=70..78s Dave client+host veth both egress")
+        event_provenance="ACTUAL_ORIGINAL_PROCESS_STDOUT_TC_KERNEL_WITNESS"
+    start=(start_ns-plan["start_monotonic_ns"])/1e9
+    end=(restored_ns-plan["start_monotonic_ns"])/1e9
     assert 70<=start<71 and 78<=end<79,(start,end)
-    drops=event["actual_kernel_drops_during_100pct"]
-    assert drops["uplink"]["drops"]>100 and drops["downlink"]["drops"]>100,drops
+    assert set(drops)=={"uplink","downlink"},drops
+    assert all(set(v)=={"drops","packets"} and
+               type(v["drops"]) is int and v["drops"]>100 and
+               type(v["packets"]) is int and v["packets"]>100
+               for v in drops.values()),drops
     prior=load(root/"h1286-rapid-report.json")
     assert prior["source_sha"]==SOURCE and prior["server_single_port"]==443
     server=(root/"h1250-product-server.log").read_text(errors="replace")
@@ -105,7 +134,9 @@ def assess(root):
        "original_TLS_port":443,"original_clients":list(NAMES),
        "game4_common_underlay_real_blackhole_start_s":round(start,3),
        "game4_real_underlay_restore_s":round(end,3),
-       "kernel_drops_during":drops,"original_app_10ms_windows":app,
+       "kernel_drops_during":drops,"event_provenance":event_provenance,
+       "original_event_json_archived":event_file.is_file(),
+       "original_app_10ms_windows":app,
        "original_exact_all_client_stop":stop_ok,"server_shared_tun_stop":True,
        "per_lease_queue":queue,"faults":failures,"generator_capacity_limit":capacity,
        "scope":["one physical veth shared across four Game4 lanes, not independent paths",

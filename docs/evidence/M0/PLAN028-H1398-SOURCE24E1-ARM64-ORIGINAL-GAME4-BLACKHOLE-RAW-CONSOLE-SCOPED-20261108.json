@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role": "M0",
+  "date": "2026-11-08",
+  "original_source_sha": "24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73",
+  "original_action": {
+    "id": 42475183088,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42475183088",
+    "original_conclusion": "failure",
+    "artifact_id": 13614119970,
+    "artifact_zip_sha256": "1160b5660f01b2d0c8f273998633b7f6b6ade92e5bb303bc9f1bea9cc1c90ee4",
+    "original_artifact_files": 37
+  },
+  "original_wrapper_source": "71fa9c3d3d5c856e89dc94d62ea2c3e66a271cfe",
+  "original_event_source": "H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED printed by ORIGINAL in-run kernel qdisc observer",
+  "missing_archive_only": "h1353-physical-game4-blackhole.json",
+  "no_synthetic_event_json": true,
+  "monotonic_times_relative_to_original_app_seconds": {
+    "start": 70.017064115,
+    "restored": 78.028772934,
+    "duration": 8.011708819
+  },
+  "actual_kernel_drops_during_100pct": {
+    "uplink": 26109,
+    "downlink": 26197
+  },
+  "true_udp_business": {
+    "game4_dave": {
+      "uplink_blackhole_app_tx_bytes": 1050112,
+      "uplink_blackhole_app_rx_bytes": 0,
+      "downlink_blackhole_app_tx_bytes": 1050112,
+      "downlink_blackhole_app_rx_bytes": 0,
+      "after_restore_first_app_uplink_ms": 141,
+      "after_restore_first_app_downlink_ms": 141,
+      "post_window_delivery_fraction_both": 0.99691
+    },
+    "healthy_four_siblings_continued_both_directions": true,
+    "all_five_original_client_stop": true,
+    "server_shared_tun_stop": true,
+    "original_per_lease_queue_overflows": 0,
+    "app_bins_each_direction": 19001,
+    "actual_physical_veth_neighbours_installed_and_after_each": 10
+  },
+  "functional_verdict": "PASS_SCOPED_ORIGINAL_ARM64_GAME4_COMMON_UNDERLAY_BLACKHOLE_RECOVERY_AND_SIBLING_STOP",
+  "historical_h1395_json_only_verdict": "NOT_QUALIFIED_MISSING_ORIGINAL_BLACKHOLE_EVENT_ARTIFACT",
+  "original_ci_verdict": "FAIL",
+  "offline_h1398_action": "NOT_RUN_UNTIL_NEW_ACTION_RECEIPT",
+  "limitations": [
+    "Original standalone kernel-event JSON absent from artifact; original stdout directly contains same real kernel observation, not synthesized",
+    "Normal lane rotations in 180s blackhole short scenario were NOT_TRIGGERED by design (600s configured); no implicit rotation PASS",
+    "Scoped native ARM64 original 6-netns not physical WAN, Windows, Android or full PLAN028"
+  ]
+}

@@ -935,7 +935,7 @@ mod tests{
         assert_eq!(first[0].recovered,0);
         let frames=[a.as_slice(),b.as_slice()];
         let mut symbol=[0u8;2048];
-        let count={
+        let (count,backend)={
             let entry=registry.entries[&c].lock().unwrap();
             assert_eq!(encode_repair_entry(&entry,[3;16],401,41,
                 88,3,0,&frames,&mut symbol),Err(INVALID));
@@ -944,6 +944,11 @@ mod tests{
             encode_repair_entry(&entry,[2;16],401,41,
                 88,3,0,&frames,&mut symbol).unwrap()
         };
+        #[cfg(feature="native_fec_acceleration")]
+        assert_eq!(backend,fec_v2::BackendUsed::NativeIsaL,
+            "existing original Windows repair path must use linked ISA-L");
+        #[cfg(not(feature="native_fec_acceleration"))]
+        assert_eq!(backend,fec_v2::BackendUsed::Scalar);
         assert_eq!(fec_v2::parse_repair(&symbol[..count],budget.record_payload_mtu)
             .unwrap().actual_k,2);
         let (parity,repair_seq,_)=send(&mut registry,c,401,41,3,&symbol[..count]);

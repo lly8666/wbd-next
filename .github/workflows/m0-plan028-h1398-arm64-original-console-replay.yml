@@ -1,0 +1,56 @@
+name: M0 PLAN028 H1398 original ARM64 raw-log kernel blackhole replay (offline only)
+run-name: PLAN028 H1398 exact original 100pct physical kernel stdout and real app scoped audit
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1398-arm64-original-console-replay.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  original-raw:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42475183088
+          github-token: ${{ github.token }}
+          name: plan028-h1368-native-arm64-game4-correlated-blackhole-42475183088
+          path: original-raw
+      - name: Strict original process kernel-event, two-way app, brother survival and Stop replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1368-arm64-game4-correlated-blackhole-audit.py
+          test ! -e original-raw/h1353-physical-game4-blackhole.json
+          grep -Fq H1353_REAL_GAME4_TWO_DIRECTION_100PCT_BLACKHOLE_RESTORED original-raw/h1368-native-game4-correlated-traffic.log
+          mkdir -p evidence
+          python3 tools/m0-plan028-h1368-arm64-game4-correlated-blackhole-audit.py \
+            --art original-raw --out evidence/h1398-original-arm64-raw-console-audit.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('evidence/h1398-original-arm64-raw-console-audit.json'))
+          assert r['classification']=='PASS_SCOPED_NATIVE_ARM64_GAME4_REAL_CORRELATED_BLACKHOLE_RECOVERY'
+          assert r['event_provenance']=='ACTUAL_ORIGINAL_PROCESS_STDOUT_TC_KERNEL_WITNESS'
+          assert r['original_event_json_archived'] is False
+          assert r['original_exact_all_client_stop'] and r['server_shared_tun_stop']
+          assert not r['faults'] and not r['generator_capacity_limit']
+          assert set(r['kernel_drops_during'])=={'uplink','downlink'}
+          assert 70<=r['game4_common_underlay_real_blackhole_start_s']<71
+          assert 78<=r['game4_real_underlay_restore_s']<79
+          for d in ('uplink','downlink'):
+              assert r['kernel_drops_during'][d]['drops']>1000
+              x=r['original_app_10ms_windows']['dave'][d]
+              assert x['blackhole']['rx_bytes']==0 and x['blackhole']['tx_bytes']>1_000_000
+              assert x['first_app_receive_after_restore_ms']<2500
+          print('H1398_REAL_ARM64_ORIGINAL_KERNEL_APP_STOP_SCOPED_PASS',r['event_provenance'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h1398-original-arm64-stdout-kernel-evidence
+          path: evidence/
+          retention-days: 14
