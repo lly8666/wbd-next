@@ -1,0 +1,61 @@
+name: M0 PLAN028 H1354 offline-only original H1353 reporter replay
+run-name: PLAN028 H1354 OFFLINE original failed CI artifact replay no network
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1354-offline-h1353-replay.yml"
+      - "tools/m0-plan028-h1354-offline-h1353-replay.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42435004151
+          github-token: ${{ github.token }}
+          name: plan028-h1353-native-x86-game4-correlated-blackhole-42435004151
+          path: original-failed-artifact/
+      - name: Only replay H1353 frozen real native artifact with inclusive 10ms drain bins
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1354-offline-h1353-replay.py
+          test -s original-failed-artifact/h1353-physical-game4-blackhole.json
+          test -s original-failed-artifact/h1286-rapid-report.json
+          test -s original-failed-artifact/h1250-c-dave.json
+          test -s original-failed-artifact/h1250-s-dave.json
+          mkdir -p offline-replay
+          python3 tools/m0-plan028-h1354-offline-h1353-replay.py \
+            --art original-failed-artifact \
+            --out offline-replay/h1354-h1353-offline-result.json \
+            | tee offline-replay/h1354-replay.log
+          python3 - <<'PY_GATE'
+          import json,pathlib
+          r=json.loads(pathlib.Path("offline-replay/h1354-h1353-offline-result.json").read_text())
+          assert r["original_ci_action"]==42435004151
+          assert r["original_ci_conclusion"]=="failure"
+          assert r["original_artifact_id"]==13599765309
+          assert r["original_product_source"]=="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+          assert r["wrapper_source"]=="104a5213c10e4869f948069071d8af4311403e91"
+          assert r["true_10ms_bins_including_drain"]==19001
+          assert r["original_TLS_port"]==443 and len(r["original_clients"])==5
+          assert r["original_exact_all_client_stop"] and r["server_shared_tun_stop"]
+          assert r["kernel_drops_during"]["uplink"]["drops"]>100
+          assert r["kernel_drops_during"]["downlink"]["drops"]>100
+          assert r["classification"]=="PASS_SCOPED_NATIVE_X86_GAME4_REAL_CORRELATED_BLACKHOLE_RECOVERY",r["faults"]
+          print("M0_PLAN028_H1354_OFFLINE_SOURCE_LOCKED_GAME4_PHYSICAL_BLACKHOLE_APPLICATION_RECOVERY_PASS_CI_FAILURE_PRESERVED",flush=True)
+          PY_GATE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1354-offline-h1353-original-failure-replay-${{ github.run_id }}
+          path: offline-replay/
+          if-no-files-found: warn
+          retention-days: 14
