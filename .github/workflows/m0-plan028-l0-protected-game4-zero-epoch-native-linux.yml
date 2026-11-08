@@ -1,4 +1,4 @@
-name: M0 PLAN028 L0 protected Game4 original TLS request-intent boundary
+name: M0 PLAN028 H1367 protected Game4 original TLS request-intent boundary
 run-name: PLAN028 L0 native Linux tagged original TLS Game4 zero-epoch vs hot ${{ github.sha }}
 on:
   push:
