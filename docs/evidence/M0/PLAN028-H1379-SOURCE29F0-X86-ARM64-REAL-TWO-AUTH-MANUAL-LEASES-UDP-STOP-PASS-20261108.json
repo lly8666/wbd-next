@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "date": "2026-11-08",
+  "id": "H1379_GENUINE_TWO_ACCOUNT_PROTECTED_SERVER_MANUAL_IPV4_TWO_NATIVE_ISAS",
+  "source_sha": "29f0c0f432ee8ce292910399be41077a4c838d37",
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "classification": "PASS_SCOPED_REAL_LINUX_X86_AND_ARM64_TWO_AUTHENTICATED_MANUAL_ACCOUNT_ORIGINAL_GO_TLS443_RUST_M4_NATIVE_UDP_STOP",
+  "result": "PASS",
+  "artifact_verified": true,
+  "plan028": "IN_PROGRESS",
+  "native_run": {
+    "run_id": 42459434353,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/42459434353",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-24.04-x86_64": "success",
+      "ubuntu-24.04-arm-aarch64": "success"
+    },
+    "runner_independence": "two separate native OS GitHub runners in one matrix, not simulated multi-platform"
+  },
+  "original_product_receipts": {
+    "real_original_go_tls443_authentication_sessions": 3,
+    "account_users": [
+      "alice",
+      "bob"
+    ],
+    "distinct_authenticated_server_owned_manual_leases4": {
+      "alice": "10.66.0.2/32",
+      "bob": "10.66.0.3/32"
+    },
+    "original_real_client_OS_TUN_address_and_mtu": [
+      {
+        "name": "alice",
+        "address4": "10.66.0.2/32",
+        "mtu": 1389
+      },
+      {
+        "name": "bob",
+        "address4": "10.66.0.3/32",
+        "mtu": 1389
+      }
+    ],
+    "original_server_tls443": true,
+    "original_shared_server_rust_TUN": true,
+    "original_clients_manual_mode_not_auto_shared_reader": true,
+    "true_kernel_UDP_exact_application_echo": 59,
+    "real_server_routed": 59,
+    "real_server_unrouted": 0,
+    "real_server_backpressure": 0,
+    "topology": "A authenticated, B authenticated concurrently, A exact Stop, B survives, new A genuinely reauthenticates while B alive, new A exact Stop, B survives, B Stop then shared server TUN exact Stop",
+    "original_all_client_native_Stop_drained": true,
+    "original_shared_server_TUN_Stop_drained": true,
+    "original_server_multi_session_ready_count": 3,
+    "wrong_account_duplicate_or_outside_manual_lease_rejected": true,
+    "original_go_rust_business_errors": 0,
+    "manual_configuration_lease_ip_not_client_wire_supplied": true
+  },
+  "x86_64": {
+    "artifact": {
+      "id": 13608239527,
+      "name": "plan028-h1376-x86_64-original-two-authenticated-manual-leases-42459434353",
+      "zip_bytes": 8867,
+      "files": 7,
+      "zip_sha256": "bd3a5a8841110dc293b3f87a8de26ec84282d0c030a14823688756a3b0ee3a31",
+      "crc": "PASS_ALL_7"
+    },
+    "elf_machine": 62,
+    "binary_sha256": {
+      "client": "fbf1a051811996c5c72a00813eec7189fdd732c1932986138ebc703e299c46ec",
+      "server": "af92d7237e0db44b8f111a0b1759db2eab8b3e39bec6ce92f87920a6ec1597ad",
+      "rust": "ce1c02e6976eaabe70951eafa951c846d6f33696be46370869ef97aa3692f71b"
+    }
+  },
+  "aarch64": {
+    "artifact": {
+      "id": 13608692410,
+      "name": "plan028-h1376-aarch64-original-two-authenticated-manual-leases-42459434353",
+      "zip_bytes": 8868,
+      "files": 7,
+      "zip_sha256": "0b5d57cc5d33b42b40ead2e29fc2d8113fd472ab8c356341a4965e3b24d7edd5",
+      "crc": "PASS_ALL_7"
+    },
+    "elf_machine": 183,
+    "binary_sha256": {
+      "client": "3d80328f9b4d94a2ba7bee2bd2fd2fdb685813942091aae32e4c7dab9b79a610",
+      "server": "df04d65f9fb2526f2ae19f3cb6aaae9673b5c9d3f0050016ec0fbc915a435ae4",
+      "rust": "04d7f36bb15526200480c74c6f5222746d4a9712cebdb2cf8e102da8fb9af477"
+    }
+  },
+  "source_frozen_failure_separation": {
+    "previous_full_real_business_action": {
+      "run_id": 42459202785,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/42459202785",
+      "conclusion": "failure",
+      "source_sha": "504463caafedf148f6ec8a0ca91192a069d5f998",
+      "root_cause": "post-business test fixture wrongly required auto-lease SharedTun client STOP marker on manual /32 clients, despite their real V4_PUBLIC_NATIVE_STOP_DRAINED; 59 actual UDP and all real owner Stop already completed",
+      "business_classification": "PASS_SCOPED_TRUE_ORIGINAL_APP_RECORDED_RAW_CI_FAIL_ONLY_FIXTURE"
+    },
+    "previous_original_raw_x86": {
+      "artifact_id": 13609271499,
+      "zip_sha256": "f7eb635b1e675544cc8bfe27f51b2f4e7c8bce4f00d85664d59fdb90778d9317",
+      "files": 6,
+      "zip_crc": "PASS_ALL_6",
+      "real_native_udp_app_marker_count": 6,
+      "real_routed": 59
+    },
+    "previous_original_raw_arm64": {
+      "artifact_id": 13608259165,
+      "zip_sha256": "e00947bc53af9c5bb6820578a9788a9500c9ce89499531f259ab58a9d6afcd20",
+      "files": 6,
+      "zip_crc": "PASS_ALL_6",
+      "real_native_udp_app_marker_count": 6,
+      "real_routed": 59
+    },
+    "previous_red_same_original_product_sha256_as_current_green": {
+      "x86": true,
+      "arm64": true,
+      "all_three_Go_client_Go_server_Rust_so_exact_hash_equal": true
+    },
+    "only_postbusiness_fixture_scope_change": "manual client exact native Stop vs incorrect shared-lease reader marker",
+    "product_binary_modified_between_red_and_green": false
+  },
+  "prior_first_attempts": [
+    {
+      "run_id": 42458575147,
+      "result": "FAIL",
+      "reasons": [
+        "x86 fixture ISA mistakenly asserted ARM",
+        "ARM old manual singleton tunnel-ID guard rejected per-account independent manual tunnels"
+      ],
+      "product_qualification": "NOT_QUALIFIED_AT_THAT_SOURCE"
+    },
+    {
+      "run_id": 42458826122,
+      "result": "FAIL",
+      "reason": "old original source before authenticated per-account tunnel ID guard was revised",
+      "product_qualification": "NOT_QUALIFIED_AT_THAT_SOURCE"
+    }
+  ],
+  "security_boundary": {
+    "manual_leases_read_from_owner_only_mode0600_regular_non_symlink_file": true,
+    "authentication_before_account_mapping": true,
+    "valid_account_full_roster_required": true,
+    "duplicate_manual_ip_rejected": true,
+    "manual_ip_outside_owned_server_TUN_rejected": true,
+    "zero_tunnel_id_rejected": true,
+    "auto_lease_and_manual_map_mutually_exclusive": true,
+    "legacy_single_manual_exact_tunnel_id_preserved": true,
+    "original_TLS_record_format_unchanged": true,
+    "original_Rust_M4_data_wire_unchanged": true
+  },
+  "explicit_not_qualified": {
+    "windows_two_simultaneous_signed_Npcap_Wintun_original_TLS443_Rust_M4_authenticated_product_clients": "NOT_RUN",
+    "windows_A_Stop_B_survives_full_product": "NOT_RUN",
+    "old_Windows_H998_same_socket_hot_physical_MTU": "FAIL_HISTORICAL_NOT_CLOSED",
+    "android": "NOT_RUN",
+    "physical_WAN": "NOT_RUN",
+    "L3_two_full_1800s_final_soaks": "NOT_RUN"
+  }
+}
