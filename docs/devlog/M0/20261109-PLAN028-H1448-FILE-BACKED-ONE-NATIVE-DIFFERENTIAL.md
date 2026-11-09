@@ -1,0 +1,9 @@
+# PLAN028 H1448 — one source-locked Win+Linux native L3 after bounded OS PIPE fix
+
+Old Action42540960361 SOURCEdeb2 completed FAILURE with stage19 still in_progress, 404 BlobNotFound and no original app1800/Stop; do not convert to product FAIL or PASS. Different previous app last minutes 600/720/960 and now360, root event unproven. The confirmed test harness bug was recurring Windows `subprocess.run(capture_output=True,timeout)` calls to wsl.exe/PowerShell; Windows TimeoutExpired can block without deadline waiting for descendant pipe EOF. The owned file-backed command plus PID/tree kill rc124 passes inherited descendant holder 1s offline test; Windows/Linus Rust/Go unit/compile and genuine H1412 WSL2 bridged topology gate succeeded under source bf430, and offline-only workflow native was SKIPPED. Governance correction cce6 PASS. Product unchanged.
+
+This is **one** necessary differential original signed Windows Npcap/Wintun + one separately authenticated Linux client 1800s, with exactly preserved TLS443/UDP/TCP/RSS active 1500ms gap, 1800s, owned Stop, WAL and physical lease recovery gates. The new H1448 marker proves test harness file-backed OS child calls and independent L3 idle watchdog are enabled, not a pass claim. Observe added and repaired Runner /32 separately; if all logs stop again without a parent idle marker and original tail is unavailable, classify Runner/CI/host UNKNOWN and stop identical replays pending truly independent OS witness. No 029/030 work, Android/physical NOT_RUN, historic H998 hot MTU failure preserved, ARM64 eef2 two real 1800s PASS_SCOPED reused.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only PLAN028 Windows-native L3 harness stdout marker to distinguish file-backed OS command supervision from previous source; product frozen."}
+```

@@ -53,6 +53,7 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     begin=time.monotonic();next_check=begin+5;next_tcp=begin+30
     next_resources=begin+90;next_mgmt=begin+8
     sample=[];rss=[];tcps=0;management=[];added_peers=0;repaired_routes=0
+    print("H1448_L3_OS_COMMANDS_FILE_BACKED_BOUNDED_AND_PARENT_IDLE_WITNESS_ARMED",flush=True)
     print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN",flush=True)
     while time.monotonic()-begin<seconds:
         now=time.monotonic();elapsed=now-begin

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1447,
-  "checkpoint_sha": "cce6b485f15e85d8934bcd0d9eca6d77c7f1fb95",
+  "sequence": 1448,
+  "checkpoint_sha": "202ad6ed28ab94a90b98a3bfe2138d47e135316d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1447-BOUNDED-WINDOWS-OS-I-O-OFFLINE-PASS",
-  "current_task": "H1447 source bf430867 test-only Windows child-tree file-backed I/O fix: Linux cheap workflow tests SUCCESS, exact inherited-PIPE descendant 1s timeout unit SUCCESS, Window Go+Rust and Linux Rust compilation/unit SUCCESS. H1412 WSL2 native underlay-only Action42546119090 SUCCESS with 844-byte artifact13643955231 (NOT VPN product L3); governance follow-up Action42546307358 SUCCESS. Source bf430 marked [plan028-harness-offline-only] so Windows 1800s native remains unrun and old Action42540960361 source deb2 after user 360s real app still native stage19 IN_PROGRESS; no terminal original Stop. Known Windows unbounded communicate() code defect fixed but real cause of this run not proven. PLAN028 IN_PROGRESS.",
-  "why_now": "Three historical variable 600/720/960s last stdout and current 360s last stdout are compatible with unbounded Windows inherited output PIPE waits. Reproduction of code-level hazard and file-backed bounded fix passed offline and dedicated live WSL2 underlay gate, but root cause for any specific source remains unproven without native owner heartbeat/stack. Keep old Action state separated from new source.",
+  "task_id": "PLAN028-M0-H1448-ONE-SOURCE-FROZEN-WINLINUX-L3-PIPE-BOUND-DIFFERENTIAL",
+  "current_task": "H1448 previous source deb2 Windows 1800s Action42540960361 now completed FAILURE native step19 still in_progress and 404 BlobNotFound, no original final Stop. Test-only fixed source bf430 file-backed bounded WSL and PowerShell and 20s parent output-idle witness: cheap+Windows Go/Rust/Linux Rust SUCCESS, real signed WSL2 underlay H1412 Action42546119090 SUCCESS, native L3 intentionally SKIPPED, governance source correction SUCCESS. Starting exactly ONE new source-locked Windows signed Npcap/Wintun + independent Linux 1800s differential after confirmed code-level timeout defect and offline validation, not blind repetition; no product changes. PLAN028 IN_PROGRESS.",
+  "why_now": "Random 360/600/720/960s silent output despite native step unresolved is consistent with Windows Python run(capture_output=True,timeout) indefinite post-timeout pipe communicate; new owned child file-backed timeout has 1s orphan stdout regression PASS and live H1412 WSL2 gate. Need next one actual same-SOURCE 1800s to distinguish original app completion vs remaining Runner transport failure via independent parent alive/idle heartbeat.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect original Action42540960361 final native job step/log/artifacts. Collect offline-only Action42546119207 end: native job MUST be SKIPPED by [plan028-harness-offline-only]; no other full native L3 dispatch while original remains in progress. When old concludes, decide exactly one source-frozen differential L3 with file-backed WSL/PowerShell and independent parent idle heartbeat to distinguish child stall from GitHub Runner/log loss. Reuse eef2 ARM64 2x1800 PASS_SCOPED and e6aa Windows L1; historic H998 FAIL; Android/physical NOT_RUN. No PLAN029/030.",
+  "next_action": "Collect one H1448 exact-source Action from push markers [plan028-win-linux-co-client] [plan028-win-linux-1800]; no second dispatch. Check cheap and binaries/real Windows signed driver and WSL2, H1448_L3_OS_COMMANDS_FILE_BACKED_BOUNDED..., 10s owned management readbacks, 20s parent idle witness if child fails to log, 1800s real Windows+Linux UDP/TCP/RSS/Stop/WAL/restore. Do not promote without terminal original app and Stop; if stale and no parent idle heartbeat mark Runner/CI transport unresolved, no further 1800s until independent host observation. Original H998 FAIL Android/physical NOT_RUN; ARM64 2x1800 eef2 PASS_SCOPED retained.",
   "unverified": true,
   "last_tested_source": "bf430867badc343b150f4d78bc32db5501769926",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1447: code-level Windows subprocess.run after-timeout inherited PIPE EOF hang fixed in test harness; 1s orphan holder fixture returned124, cheap CI, Go/WindowsRust/LinuxRust and real H1412 WSL underlay PASS_SCOPED; original deb2 360s native stage19 still IN_PROGRESS without final Stop, event cause unproven. No new Windows native 1800s; offline-only source bf430. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1448 new single differential Windows L3 after fixed inherited-pipe child-tree OS deadlines and independent output-idle heartbeat offline/underlay PASS. Old deb2 final failure native step19 never finalized 404; not product FAIL. Current shipping product unchanged; strict business and owned Stop unchanged. PLAN028 IN_PROGRESS."
 }
