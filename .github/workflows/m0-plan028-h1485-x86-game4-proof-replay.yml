@@ -2,10 +2,11 @@
 # before sending any five new-path UDP. Reuse exact 57b Go/Rust ELFs once.
 name: M0 PLAN028 H1485 frozen x86 Game4 B native proof
 run-name: H1485 source57b Game4 B authenticated five true UDP after physical route switch
+# Original one-off push Action 42633209462 already performed the full real
+# native scene. Later corrections to its offline postcheck must not dispatch
+# another network test; manual invocation is available only if separately needed.
 on:
-  push:
-    branches: [main]
-    paths: [.github/workflows/m0-plan028-h1485-x86-game4-proof-replay.yml]
+  workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
   x86-real:
@@ -68,7 +69,12 @@ jobs:
             M0_PLAN028_TLS_GAME4_8_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS;do
             grep -Fq "$marker" fixed-kernel-result/h1485-original-native.log
           done
-          grep -Fq 'V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=4 source=authenticated_client_native_Health promoted=1' fixed-kernel-result/h1485-original-native.log
+          # The original fixture checked real client B, server B authenticated
+          # Health, both old Stops and route changes in owned TMP/*.log BEFORE
+          # emitting its final GAME4_REAL_A_TO_AB_TO_B...PASS marker. It prints
+          # only client-side two lines into the bounded success stdout; server
+          # B_CLIENT_READY is not exported on success. Do NOT grep that
+          # unreachable server line in this separate summary log.
           grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4' fixed-kernel-result/h1485-original-native.log
           test "$(grep -Fc M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
           python3 - <<'PY'

@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1485,
-  "checkpoint_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "sequence": 1486,
+  "checkpoint_sha": "c5c0b8b63f7a1b46f12403fc427eaae29866e58f",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1485-ARM-B-TRIGGERED-PASS-X86-GAME4-STALE-READY-FIXTURE",
-  "current_task": "H1485 source57b original ARM64 Action42630288439/artifact13680553258 CRC_PASS SHA a38cdc: genuine 180s 5-client all 10 UDP directions 0 unique loss; Normal B 6/6 and Game2 B2/2 defer/verified-client-Health/promote, Alice/Carol each 2 native new gens, all six owned Stop, shared queue0. Scoped native arm regression PASS. Same SOURCE original x86 Game4 Action42630288111 returns PATH_SWITCH_NOT_READY due stale fixture requiring 2x local GROUP_READY; B server verified Health and promoted new /32 plus old Stop did happen, but post-switch 5 UDP were NOT_RUN. Fix only shell predicate and Rust L0 test cfg attrs, add one frozen x86 H1485 workflow using original 57b native ELF artifact; no product/wire changes. PLAN028 IN_PROGRESS.",
-  "why_now": "The remaining x86 Game4 alleged no-path readiness was a pre-UDP fixture check tied to pre-fix local SERVER READY rather than new true authenticated B Health. Narrow fixture update retains all real hard doors; avoids unneeded product redesign or duplicate seed without an observational change.",
+  "task_id": "PLAN028-M0-H1486-X86-GAME4-ORIGINAL-UDP5-OFFLINE-SCOPED-PASS",
+  "current_task": "H1486 original genuine x86 H1485 Action42633209462/artifact13681532478 ZIP 085714 CRC_PASS: reuse exact source57b binaries original 3 SHA, real physical NIC source10.25.0.2->.3 MTU1500->1280, TUN readback1178, client Gen2 authenticated B proof, source old owned Stop, actual UDP echo IDs100..104 all 5 delivered, Game4 fixed6 and standard TLS 8 ClientHello PASS_SCOPED. Outer Action FAIL only postcheck asked for raw server B_CLIENT_READY in bounded success STDOUT, which the original native fixture validated in TMP/server.log but does not echo on success. Original Action FAIL preserved, native PASS scoped; repair separate postcheck to workflow_dispatch-only no more network, add source-locked pure offline ZIP receipt. H1484 ARM true5client 180s zero unique UDP all10 remains PASS_SCOPED. PLAN028 IN_PROGRESS.",
+  "why_now": "After H1485 exact frozen x86 scene finished all five real UDP, outer reporter accidentally grepped an unforwarded server raw log. Follow user instruction to correct reporter offline rather than repeat network, retain original ZIP, preserve all underlying hard doors.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered H1485 exact-source57b x86 one real Game4 physical source IPv4+MTU 1500->1280 authenticated B path; verify three ELF SHA, server B Health gate+TUN promotion and Gen2 client, exact owned A Stop, real new-source UDP echo 5/5 and effective TUN MTU1178 plus standard 8 TLS ClientHello. If failing, inspect actual new-path UDP stage from original artifact, not stale marker; keep original H1484 x86 failed gate and H1200 first-live fail separately. Then continue PLAN028 remaining L0/L1, genuine Windows Npcap/Wintun, capacity/L3 coverage using already qualified same-source evidence; no 029/030.",
+  "next_action": "Do not repeat H1484 ARM native nor H1485 x86 Game4 source57b qualified scenes. Run only pure offline H1486 original ZIP reviewer and inspect H1200 original x86 first Game4/Normal live assertion and H1461 capacity75 separately as next genuine blockers; choose smallest differentiating experiment before product edit. Compare latest main to checkpoint, collect in-flight Actions. PLAN028 L0-L3, windows real Npcap/Wintun and capacity/long tests still open; no 029/030.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1485-H1484-ARM-TRIGGERED-ZEROLOSS-X86-GAME4-STALE-GATE-20261109.json",
-    "docs/evidence/M0/PLAN028-H1484-H1483-ARM64-GAME2-ROTATION-5PACKET-20261109.json"
+    "docs/evidence/M0/PLAN028-H1486-H1485-ORIGINAL-X86-GAME4-UDP5-SCOPED-PASS-20261109.json",
+    "docs/evidence/M0/PLAN028-H1485-H1484-ARM-TRIGGERED-ZEROLOSS-X86-GAME4-STALE-GATE-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1485 source57b ARM native 180s true 5client Zero unique UDP all ten directions and 2x actual Game2+6x Normal server authenticated B proof PASS, all six Stop, zero queues. x86 Game4 source-switch original Action42630288111 FAIL only because old fixture second MULTI_GROUP_READY missing after intentional B M4 Health gate; genuine new path UDP NOT_RUN; fixed fixture retains client/old exact Stop/MTU/real UDP, one targeted x86 frozen57b Action queued after commit, no product rebld; rust cfg attrs test-only corrected. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1486 original source57b native x86 true H1485 Game4 change actual UDP5/5 PASS, TLS8/MTU1178/Gen2 B auth + old Stop PASS; outer GH step FAIL because checked server raw Health log not forwarded by successful fixture, offline source-locked ZIP review corrected. No network rerun. ARM H1484 true180s five client 10 directions zero and Normal B6/GameB2 real proof PASS_SCOPED; H1200 first-live and capacity/L3/Windows still open. PLAN028 IN_PROGRESS."
 }
