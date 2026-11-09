@@ -1,0 +1,73 @@
+# H1492: one independent real ARM64 five-client 1800s heterogeneous L3.
+# Parallel to H1491 only on DIFFERENT isolated VMs. No product rebuild.
+# Provisional L3 until independent capacity and Windows blockers close.
+name: PLAN028 H1492 frozen ARM64 five-client heterogeneous 1800
+run-name: PLAN028 H1492 native ARM64 1800s authentic 0-30pct weaknet and rotation
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1492-arm64-1800-heterogeneous-source57b.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  original-1800s:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      FROZEN_SOURCE: "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+      WBD_PLAN028_30M_SCENE: heterogeneous
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify native ARM64 existing product source57b original Go TLS and Rust ISA-L once
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          mkdir -p fixed-build fixed-kernel-result frozen
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13679879171/zip \
+            -o frozen/source57b-native-arm64.zip
+          python3 -m py_compile tools/m0_plan028_h1491_frozen_arm_manifest.py tools/m0_plan028_h1492_1800_arm_hetero_gate.py tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py
+          python3 tools/m0_plan028_h1491_frozen_arm_manifest.py --zip frozen/source57b-native-arm64.zip --out fixed-build
+          echo H1492_REAL_BOTH_END_NATIVE_ARM64_ISAL_SOURCE57B_FROZEN
+      - name: One full 1800s real original Go TLS/Rust 5client 0-30pct independent two-way netem and authenticated rotation
+        shell: bash
+        timeout-minutes: 43
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          GITHUB_SHA="$FROZEN_SOURCE" python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1492-real-1800-native.log 2>&1 || {
+              echo H1492_1800_REAL_ORIGINAL_TLS_M4_OR_REPORT_FAILED >&2
+              tail -170 fixed-kernel-result/h1492-real-1800-native.log >&2
+              exit 1
+            }
+          grep -Fq "M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE heterogeneous" fixed-kernel-result/h1492-real-1800-native.log
+          python3 -u tools/m0_plan028_h1492_1800_arm_hetero_gate.py \
+            --art fixed-kernel-result --out fixed-kernel-result/h1492-strict-verdict.json \
+            | tee fixed-kernel-result/h1492-gate.log
+          echo H1492_TRUE_NATIVE_ORIGINAL_TLS_FIVECLIENT_1800S_STOP_AND_LOWLOSS_VERIFIED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1492-arm64-native-1800-heterogeneous-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1492-*.log
+            fixed-kernel-result/h1492-*.json
+            fixed-kernel-result/h1274-*.json
+            fixed-kernel-result/h1274-*.log
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-*.txt
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 30

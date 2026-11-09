@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "frozen_product_source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "review_checkpoint": "b565c7ea15a9b0df8aac8b643ea8dfdcdd97da85",
+  "original_native_arm64": {
+    "action_id": 42630288439,
+    "artifact_id": 13679879171,
+    "zip_sha256": "343b330d2b5f19fd77c8a5bbdd0d70533f51fda1bbbf86cae627d54f244c45cd",
+    "archive_files": [
+      "manifest.json",
+      "wbd-v4-client",
+      "wbd-v4-server",
+      "libwbd_engine.so"
+    ],
+    "zip_crc": "PASS",
+    "architecture": "native_aarch64",
+    "native_fec_acceleration": true,
+    "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "sha256": {
+      "wbd-v4-client": "f8d3151578b062dc7213981efcd81e6adecfc708d6157ebb5c6a80172de615d8",
+      "wbd-v4-server": "b804aee80801f902b085546c2e853062e083f1fd927d25136c461516406ff77d",
+      "libwbd_engine.so": "05f7b94befa3e37adc01c8de55e8bf155c8457ec85c0d08e1796f07ebe2f116c"
+    }
+  },
+  "parallel_design": {
+    "scenarios": [
+      {
+        "id": "H1491",
+        "workflow": ".github/workflows/m0-plan028-h1491-arm64-native-samevm-capacity.yml",
+        "platform": "true_native_ARM64_both_ends",
+        "distinct_VM": true,
+        "scope": "L2",
+        "steps": [
+          "capacity50 180s 5 authenticated original Go TLS/Rust TUN zero physical loss, one 50Mbps each-direction Normal inner average256x3+1024x7",
+          "read 500ms actual host per-core CPU/softirq qdisc, exact M3 per-client shared TUN 8slot queue, CPU RSS, 10ms business unique UDP and all six owned Stop",
+          "75Mbps original mixed 30/50/75/50 180s only if 50 not host>=85 mean/max>=95 or server process >=95 one core and zero-unique-loss, queue and >=95% load hard gates pass"
+        ],
+        "reason": "50Mbps=~7875.5 app packets/s;75=~11813.3; 8 slots ideal1.016/0.677ms, not outer traffic PPS; stop on capacity knee"
+      },
+      {
+        "id": "H1492",
+        "workflow": ".github/workflows/m0-plan028-h1492-arm64-1800-heterogeneous-source57b.yml",
+        "platform": "true_native_ARM64_both_ends",
+        "distinct_VM": true,
+        "scope": "L3_provisional",
+        "steps": [
+          "1800s 5-client combined native UDP/TCP sizes, 0/1/5/15/30% two-way netem, 0/15/50/100/125ms one-way, actual M4 rotations, unique zero on 0%-loss Alice and full exact Stop"
+        ],
+        "reason": "Current Game B authenticated route promotion now present; detect prior source66fb 1800s Alice351 zero physical loss"
+      },
+      {
+        "id": "H1493",
+        "workflow": ".github/workflows/m0-plan028-h1493-arm64-1800-baseline-source57b.yml",
+        "platform": "true_native_ARM64_both_ends",
+        "distinct_VM": true,
+        "scope": "L3_provisional",
+        "steps": [
+          "1800s five-client healthy/low-loss 0/0/1/1/5% native 0/0/15/20/50ms, original TLS, authenticated rotations, TCP/UDP and owned Stop",
+          "Zero configured loss Alice+Bob both directions zero unique missing"
+        ],
+        "reason": "L3 healthy/low-loss independent representative, avoids averaging over 30% impaired clients"
+      }
+    ],
+    "all_workflows": "one GitHub Action per independent network scenario, separate ARM64 hosted VMs; H1491 within VM 50 then conditional75 sequential; all same immutable product binary manifest; no new product source or TLS record/FEC/MTU changes",
+    "preflight": "Native original SHA/CRC+ELF183 verification and Python py_compile BEFORE network; scope-specific strict original App and Stop receipts; bounded artifacts",
+    "original_known_fail_preserved": [
+      "H1461_source66fb_600s_75Mbps_32Alice_DL_45server_overflow",
+      "H1461_source66fb_1800s_351Alice_DL_server_queue0",
+      "H1483_old_Carol5_handover",
+      "H998_old_hot_MTU"
+    ],
+    "plan": "IN_PROGRESS",
+    "limits": [
+      "Current Windows real Npcap/Wintun full L3 NOT_QUALIFIED",
+      "Android/external physical real WAN NOT_RUN",
+      "L3 scenarios provisional if new L2 defect or new code fix changes frozen SOURCE"
+    ]
+  },
+  "at_commit": {
+    "L2": "NOT_RUN",
+    "L3_heterogeneous": "NOT_RUN",
+    "L3_healthy_low": "NOT_RUN",
+    "new_native_network_actions": "PENDING_AUTO_TRIGGER",
+    "product_code_modified": false
+  }
+}

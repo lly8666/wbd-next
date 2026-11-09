@@ -166,7 +166,10 @@ if MID600:
 # H1467 four independent read-only AB diagnostics on IDENTICAL H1461 product.
 # Existing 430/600/1800 and all old FAST_SCENE runs are not modified.
 H1467_CASE=os.environ.get("WBD_PLAN028_H1467_CASE","")
-H1467_CASES=("capacity_mixed","capacity_large","static12","rotating12")
+# H1491: a true 50Mbps same-VM CONTROL at unchanged packet mix and
+# zero underlay loss, before the existing calibrated 30/50/75/50 trial.
+# No old scene or native Go/Rust worker changes.
+H1467_CASES=("capacity_mixed","capacity_large","static12","rotating12","capacity50")
 if H1467_CASE:
     if H1467_CASE not in H1467_CASES:
         raise SystemExit("unsupported H1467 explicit 180s diagnostic")
@@ -176,10 +179,15 @@ if H1467_CASE:
         raise SystemExit("H1467 diagnostic requires isolated genuine 180s netns")
     LOSS=(0,0,0,0,0)
     DELAY=(0,0,0,0,0)
-    if H1467_CASE.startswith("capacity_"):
-        RATE=(75,2,2,2,2)
-        FAST_PHASES=(("first_wave",30,.4),("sustained",60,2/3),
-                     ("overload",30,1.0),("recovery",50,2/3))
+    if H1467_CASE.startswith("capacity"):
+        if H1467_CASE=="capacity50":
+            RATE=(50,2,2,2,2)
+            FAST_PHASES=(("first_wave",30,.6),("sustained",60,1.0),
+                         ("overload",30,1.0),("recovery",50,1.0))
+        else:
+            RATE=(75,2,2,2,2)
+            FAST_PHASES=(("first_wave",30,.4),("sustained",60,2/3),
+                         ("overload",30,1.0),("recovery",50,2/3))
     else:
         RATE=(12,2,2,2,2)
         FAST_PHASES=(("first_wave",30,1.),("sustained",60,1.),

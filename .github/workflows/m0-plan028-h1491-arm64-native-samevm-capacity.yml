@@ -1,0 +1,99 @@
+# H1491 one real native ARM64 same-VM two-stage source57b capacity
+name: PLAN028 H1491 ARM64 native sameVM Normal50 then conditional Normal75
+run-name: PLAN028 H1491 native ARM64 5client 50Mbps control then conditional 75Mbps
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1491-arm64-native-samevm-capacity.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  capacity:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 19
+    env:
+      FROZEN_SOURCE: "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify immutable original ARM64 native ISA-L source57b three ELF and manifest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          mkdir -p frozen fixed-build result
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13679879171/zip \
+            -o frozen/source57b-native-arm64.zip
+          python3 -m py_compile tools/m0_plan028_h1491_frozen_arm_manifest.py tools/m0_plan028_h1491_capacity_arm_gate.py tools/m0_plan028_h1467_fiveclient_ab_netns.py
+          python3 tools/m0_plan028_h1491_frozen_arm_manifest.py --zip frozen/source57b-native-arm64.zip --out fixed-build
+          echo H1491_FIXED_SOURCE_ARM64_NATIVE_ISAL_NO_REBUILD
+      - name: True 50Mbps CPU queue baseline, conditional 75Mbps same VM no parallel competition
+        shell: bash
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          mkdir -p paired result fixed-kernel-result
+          WBD_PLAN028_H1467_CASE=capacity50 GITHUB_SHA="$FROZEN_SOURCE" \
+            python3 -u tools/m0_plan028_h1467_fiveclient_ab_netns.py fixed-build \
+            >fixed-kernel-result/h1491-native-driver.log 2>&1 || {
+              tail -110 fixed-kernel-result/h1491-native-driver.log >&2
+              mv fixed-kernel-result paired/capacity50
+              exit 1
+            }
+          grep -Fq "M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE pressure" fixed-kernel-result/h1491-native-driver.log
+          mv fixed-kernel-result paired/capacity50
+          python3 tools/m0_plan028_h1491_capacity_arm_gate.py --art paired/capacity50 \
+            --case capacity50 --out result/h1491-control.json | tee result/h1491-control.log
+          if [[ "$(python3 -c 'import json;print(int(json.load(open("result/h1491-control.json"))["75Mbps_may_run_after_control"]))')" != 1 ]];then
+            echo H1491_75MBPS_NOT_RUN_BASELINE_PRODUCT_OR_HOST_CAPACITY_LIMIT
+            exit 0
+          fi
+          mkdir -p fixed-kernel-result
+          WBD_PLAN028_H1467_CASE=capacity_mixed GITHUB_SHA="$FROZEN_SOURCE" \
+            python3 -u tools/m0_plan028_h1467_fiveclient_ab_netns.py fixed-build \
+            >fixed-kernel-result/h1491-native-driver.log 2>&1 || {
+              tail -110 fixed-kernel-result/h1491-native-driver.log >&2
+              mv fixed-kernel-result paired/capacity_mixed
+              exit 1
+            }
+          grep -Fq "M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE pressure" fixed-kernel-result/h1491-native-driver.log
+          mv fixed-kernel-result paired/capacity_mixed
+          python3 tools/m0_plan028_h1491_capacity_arm_gate.py --art paired/capacity_mixed \
+            --case capacity_mixed --out result/h1491-75.json | tee result/h1491-75.log
+          python3 - <<'PY'
+          import json
+          a=json.load(open("result/h1491-control.json"))
+          b=json.load(open("result/h1491-75.json"))
+          assert a["source_sha"]==b["source_sha"]
+          assert a["classification"]=="PASS_SCOPED_ZEROLOSS_TRUE_ORIGINAL_NATIVE"
+          assert b["case"]=="capacity_mixed"
+          assert b["classification"]=="PASS_SCOPED_ZEROLOSS_TRUE_ORIGINAL_NATIVE",b["classification"]
+          print("H1491_SAME_VM_ORIGINAL_NATIVE_50_TO75_UDP_ZERO_QUEUE_ZERO_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1491-arm64-native-capacity-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            result/h1491-*.json
+            result/h1491-*.log
+            paired/**/*.json
+            paired/**/h1491-native-driver.log
+            paired/**/h1250-product-*.log
+            paired/**/h1250-qdisc-*.txt
+            fixed-kernel-result/h1491-native-driver.log
+          if-no-files-found: warn
+          retention-days: 21

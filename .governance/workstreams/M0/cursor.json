@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1490,
-  "checkpoint_sha": "6fb7b9d2f665658da97425a8f513370f6a782e25",
+  "sequence": 1491,
+  "checkpoint_sha": "b565c7ea15a9b0df8aac8b643ea8dfdcdd97da85",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1490-H1489-NATIVE-OFFLINE-COLLECT-AND-L2-CAPACITY-NEXT",
-  "current_task": "H1490 collect latest H1489 pure offline original ZIP reviewer Action42639985741 artifact13683558839 SHA631d... CRC PASS. Two original authentic native x86 Game2 fixed6 source57b/222a dual-physical tests both PASS_SCOPED for actual UDP80 sibling each wave, Game2 16+16 each, three TLS generations exact Stop 1/2 and all owners; original GH Actions FAIL retained outer report-only. No new network; H1488/H1200 workflows now dispatch-only. Next unresolved separate L2 75Mbps 600s (Alice DL32, queue overflow45) vs L3 1800s Alice DL351 but queue0. At avg793.6B app packet 50=7875.5pps,75=11813.3pps, queue8 ideal time 1.016/0.677ms before FEC and scheduling; no VM causation claimed. PLAN028 IN_PROGRESS.",
-  "why_now": "New H1489 offline Action has confirmed original Game2 scene without repeat network; next current product blocker is distinct L2 capacity and long weaknet/rotation qualification, not old H1488 reporter.",
+  "task_id": "PLAN028-M0-H1491-H1493-THREE-PARALLEL-ARM64-CAPACITY-1800S-L3",
+  "current_task": "H1491–H1493 preflight after main b565: no in-flight network Actions; latest H1490 source57b restored. New 3 independent ARM64 native Go TLS/Rust ISA-L source57b artifact13679879171 SHA343b... reused, no build. H1491 capacity 180s 50Mbps host CPU/queue/product per-client app zero-loss control, then only if headroom another 180s 75Mbps (same VM sequential). H1492 independent ARM64 real1800 hetero 0-30% weaknet and rotations, H1493 another ARM64 real1800 healthy/low 0-5%, both provisional until L2 and Windows qualify. At authoring all NOT_RUN pending push; retain old 600/1800/source66fb original fails. PLAN028 IN_PROGRESS.",
+  "why_now": "User explicitly requested parallel acceleration; latest main had no network in flight, two final L3 original-source 1800s representative scenarios and independent bounded L2 can run on separate native ARM64 VMs without confounding same-VM capacity, minimizing wall time while reusing immutable original hash manifest.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Plan and execute one bounded source57b x86 same-VM Normal50→75 zero-config-loss diagnostic (180s per level, sequential, original TLS 5clients), collecting actual per-client app and outer/M3 throughput, 10ms gap, host CPU/softirq/product worker time, server queue_full/age/retired and exact six Stop; first check host knee and stop 75 if 50 already saturated. Keep original H1461 600/1800 FAIL; if capacity-in bounds then qualify one current-source representative finite L3 mixed rotation+weaknet native, later Windows actual Npcap/Wintun L3. Reuse previously compiled manifest with SHA checks. Do NOT rerun H1484/H1485/H1488 or repeat arbitrary seeds. Android physical NOT_RUN.",
+  "next_action": "Collect H1491/H1492/H1493 auto-triggered actions independently; first ensure original pinned ZIP CRC, ELF SHA/ARM64 and native ISAL manifest preflight; classify H1491 50 capacity control and conditional75 based actual host CPU/generator/queue/unique-UDP, do not call skipped75 PASS. For H1492/1493 1800s check every account/gen/Stop, true 10-dir TCP+UDP, low-loss unique-first, qdisc actual damage and recovery. Keep original failed Actions, if native reporter fails post-hoc offline repair. Then Windows real Npcap/Wintun-specific missing qualifications and remaining PLAN028 coverage, do not start 029/030.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1490-H1489-TWO-X86-GAME2-OFFLINE-PASS-CAPACITY-NEXT-20261109.json",
-    "docs/evidence/M0/PLAN028-H1489-H1488-TWO-ORIGINAL-X86-GAME2-80SIBLING-UDP32-20261109.json"
+    "docs/evidence/M0/PLAN028-H1491-H1493-SOURCE57B-THREE-INDEPENDENT-ARM64-NATIVE-ACCEPTANCE-20261110.json",
+    "docs/evidence/M0/PLAN028-H1490-H1489-TWO-X86-GAME2-OFFLINE-PASS-CAPACITY-NEXT-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1490 H1489 offline Action42639985741 SUCCESS immutable ZIP631d5cf CRC PASS, two original x86 Game2 fixed6/Normal/Game4 authenticated two-source and MTU scenes both native PASS_SCOPED with 80/80 sibling echo per wave, 16/16 new Game2, three generations, old exact Stop1/2 and all final Stop; original parent Actions FAIL retained reporter-only; no new network actions. L2 capacity math 50 Mbps~7875 pps => 8 queue1.02ms,75Mbps~11813 => .68ms, distinct historical VM/CPU and 600/1800 FAIL not waived; plan current-source same-VM bounded capacity diagnostic before L3. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1491–H1493 parallel launch candidate, current original SOURCE57b native ARM64 ISAL Go+Rust SHA fixed. H1491 50/conditional75 2x180 same guest and 500ms actual CPU/queue; H1492 hetero real1800, H1493 low-loss real1800 each separate native ARM64 VM. All require true authenticated M4, first-unique UDP/TCP progress, exact Stop, 0-loss directions strict; H1492/1493 provisional until L2/windows gates. New Actions not yet collected. PLAN028 IN_PROGRESS."
 }
