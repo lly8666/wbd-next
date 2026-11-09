@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "check_kind": "OFFLINE_REPARSE_ORIGINAL_NATIVE_ARCHIVES",
+  "result": "TWO_ORIGINAL_NATIVE_SOAKS_FINISHED_FAILED_OFFLINE_RECHECK_PENDING",
+  "unverified": true,
+  "original_action": {
+    "run_id": 42578056120,
+    "status": "completed",
+    "conclusion": "failure",
+    "native_product_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "one_exact_native_x86_go_rust_isal_build": "SUCCESS",
+    "rust_fifo_unit_and_three_regressions": "SUCCESS"
+  },
+  "native_600": {
+    "original_job_id": 129031068927,
+    "original_artifact_id": 13656024788,
+    "original_artifact_crc": "PASS",
+    "original_six_owned_Stop": "OBSERVED",
+    "true_application_s": 600,
+    "true_5_authenticated_clients": 5,
+    "capacity_mbps_alice_actual": [
+      24.9997,
+      50.0001,
+      75.0004,
+      49.9999
+    ],
+    "alice_downlink_original_unique_udp_missing": 32,
+    "missing_only_overload_75mbps": true,
+    "server_per_lease_pending8_overflows": 45,
+    "outcome": "FAIL_SCOPED_REAL_ZEROLOSS_75MBPS_32_MISSING_45_OVERFLOWS",
+    "original_report_defect": "phases=[] due overwritten phase_specs; false NO_GENUINE_UDP on all clients"
+  },
+  "native_1800": {
+    "original_job_id": 129031068987,
+    "original_artifact_id": 13657785615,
+    "original_artifact_crc": "PASS",
+    "true_application_s": 1800,
+    "true_5_authenticated_clients": 5,
+    "original_six_owned_Stop": "OBSERVED",
+    "original_authenticated_rotation": "PASS_ALL_FIVE_SCOPED",
+    "original_configured_alert_count": 0,
+    "server_per_lease_pending8_overflows": 0,
+    "alice_zero_loss_configured_downlink_original_unique_udp_missing": 351,
+    "alice_missing_by_phase": [
+      0,
+      22,
+      142,
+      118,
+      69
+    ],
+    "outcome": "PASS_SCOPED_1800_CONTINUITY_AND_STOP_BUT_FAIL_SCOPED_ZEROLOSS_ALICE_DOWNLINK",
+    "workflow_failure": "H1461 custom verdict IndexError stages[-1] because report phases overwritten to []"
+  },
+  "offline_rejudge": {
+    "new_workflow": ".github/workflows/m0-plan028-h1464-two-original-soaks-offline-replay.yml",
+    "source_locked_original_artifacts": [
+      13656024788,
+      13657785615
+    ],
+    "zero_native_reruns": true,
+    "parser_patch": "tools/m0-plan028-h1274-30min-report.py phase_specs versus per-direction phases",
+    "reviewer_separate_source_sha": true,
+    "native_stop_and_UDP_TCP_and_server_M4_read_from_original_archives": true,
+    "status": "NOT_RUN_PENDING_TRIGGER"
+  },
+  "preservation": {
+    "previous_548_normal75": "FAIL_SCOPED_28_MISSING_5_OVERFLOW",
+    "previous_548_Windows600": "PASS_SCOPED",
+    "old_ARM64_two1800": "PASS_SCOPED",
+    "Windows_Wintun_1800_L3": "NOT_QUALIFIED",
+    "H998_hot_MTU": "HISTORICAL_FAIL",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}

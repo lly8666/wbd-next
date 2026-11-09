@@ -143,7 +143,7 @@ def analyze(art,server_log):
     duration=plan["application_load_seconds"]
     assert duration in (600,1800)
     midsix=duration==600
-    phases=MID600_PHASES if midsix else PHASES
+    phase_specs=MID600_PHASES if midsix else PHASES
     if midsix:
         assert plan.get("H1461_600s_capacity75_profile")=="EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION"
         assert plan["simultaneous_stress_seconds"]==590
@@ -151,7 +151,7 @@ def analyze(art,server_log):
         assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[75,2,2,2,2]
     else:
         assert plan["simultaneous_stress_seconds"]==1790
-    assert sum(p[1] for p in phases)==duration
+    assert sum(p[1] for p in phase_specs)==duration
     assert len(plan["clients"])==5
     assert {p["who"] for p in plan["clients"]}==set(NAMES)
     cpu=read(art/"h1250-cpu-rss.json")
@@ -365,7 +365,7 @@ def analyze(art,server_log):
         for direction in ("uplink","downlink"):
             tx,rx=(source,peer) if direction=="uplink" else (peer,source)
             phases=[]
-            for i,(name,phase_seconds,rate_scale) in enumerate(phases):
+            for i,(name,phase_seconds,rate_scale) in enumerate(phase_specs):
                 sent=tx["stats"]["udp"][i]
                 got=rx["stats"]["udp"][i]
                 n=sent["tx_packets"]
@@ -390,6 +390,8 @@ def analyze(art,server_log):
                     result["alerts"].append({"who":who,"direction":direction,
                                              "phase":name,"kind":"RECOVERY_DELIVERY_BELOW_95PCT",
                                              "delivered_fraction":round(m/n,6)})
+            assert len(phases)==len(phase_specs), "all original app phases required"
+            assert sum(x["seconds"] for x in phases)==duration, "source time-varying load cannot be empty"
             tx_10ms=tx["tx_bytes_bins_10ms"]["udp"]
             rx_10ms=rx["rx_bytes_bins_10ms"]["udp"]
             no_receive_gap=longest_active_tx_no_rx_gap_ms(tx_10ms,rx_10ms)

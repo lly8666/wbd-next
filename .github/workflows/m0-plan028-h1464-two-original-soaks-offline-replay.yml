@@ -1,0 +1,57 @@
+name: PLAN028 H1464 immutable original 600 and 1800 offline source-locked replay
+run-name: H1464 true five-client original 600/1800 phase and Stop offline rejudge
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1464-two-original-soaks-offline-replay.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  replay-original-two-archives:
+    name: H1464 two original true native five-client archives offline ONLY
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Zero-native-offline parser unit and source provenance guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0-plan028-h1274-30min-report.py tools/m0_plan028_h1461_five_client_soak_verdict.py tools/m0_plan028_h1464_offline_replay.py
+          python3 -m unittest -v tests.test_m0_plan028_h1464_offline_replay
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42578056120
+          github-token: ${{ github.token }}
+          name: plan028-h1461-real-fiveclient-600s-capacity75-42578056120
+          path: input/600
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42578056120
+          github-token: ${{ github.token }}
+          name: plan028-h1461-real-fiveclient-1800s-heterogeneous-42578056120
+          path: input/1800
+      - name: Original SOURCE66fb exact product SHA and two original five-client Stop replay, no new network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan028_h1464_offline_replay.py \
+            --input input --out review --reviewer "$GITHUB_SHA" \
+            | tee review-run.log
+          test -s review/h1464-original-two-soak-replay.json
+          echo H1464_ORIGINAL_TWO_SOAKS_GENUINE_STOP_AND_STRICT_NEGATIVE_REPLAYED_WITHOUT_NATIVE_NETWORK
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1464-original-600-1800-immutable-offline-replay-${{ github.run_id }}
+          path: |
+            review/h1464-original-two-soak-replay.json
+            review/reparsed-600/fixed-kernel-result/h1461-six-hundred-report.json
+            review/reparsed-600/fixed-kernel-result/h1461-native-verdict.json
+            review/reparsed-1800/fixed-kernel-result/h1274-thirty-minute-report.json
+            review/reparsed-1800/fixed-kernel-result/h1461-native-verdict.json
+            review-run.log
+          retention-days: 30
+          if-no-files-found: warn

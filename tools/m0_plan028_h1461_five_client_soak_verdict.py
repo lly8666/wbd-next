@@ -14,7 +14,9 @@ def read(p):
 
 def report(art,duration,source,wrapper):
     assert duration in (600,1800) and len(source)==40 and len(wrapper)==40
-    assert source==wrapper
+    # Original producer SOURCE is immutable; offline replayer has its own
+    # distinct harness SHA. Never call a reviewed new parser the old binary.
+    assert len(source)==len(wrapper)==40
     plan=read(art/"h1250-matrix-plan.json")
     path=art/("h1461-six-hundred-report.json" if duration==600 else "h1274-thirty-minute-report.json")
     full=read(path)
@@ -65,9 +67,13 @@ def report(art,duration,source,wrapper):
             if not sent or not recv:errors.append(who+"_"+direction+"_NO_GENUINE_UDP")
             if leg["largest_10ms_bucket_no_receive_while_sender_active_ms"]>=750:
                 errors.append(who+"_"+direction+"_ACTIVE_GAP_GE750MS")
+            if not stages or sum(s["seconds"] for s in stages)!=duration:
+                errors.append(who+"_"+direction+"_MISSING_REAL_PHASE_COUNTS")
+            if duration==1800 and recv!=sent and next(p for p in plan["clients"] if p["who"]==who)["loss_pct"]==0:
+                errors.append(who+"_"+direction+"_NO_CONFIGURED_LOSS_UDP_MISSING_"+str(sent-recv))
             if duration==600 and recv!=sent:
                 errors.append(who+"_"+direction+"_ZERO_LOSS_MISSING_"+str(sent-recv))
-            if duration==1800 and stages[-1]["actual_delivery_fraction"] is not None and stages[-1]["actual_delivery_fraction"]<.95:
+            if duration==1800 and stages and stages[-1]["actual_delivery_fraction"] is not None and stages[-1]["actual_delivery_fraction"]<.95:
                 errors.append(who+"_"+direction+"_RECOVERY_BELOW95PCT")
             actual.append({"client":who,"direction":direction,
                            "actual_original_udp_sent":sent,"unique_udp_received":recv,
@@ -101,6 +107,7 @@ def report(art,duration,source,wrapper):
         status="PASS_SCOPED_ORIGINAL_5CLIENT_1800S_HETEROGENEOUS_AND_STOP"
     result={
         "schema_version":1,"source_sha":source,"wrapper_sha":wrapper,
+        "original_producer_and_reviewer_source_distinct":source!=wrapper,
         "duration_s":duration,"status":status,"original_five_clients":5,
         "single_original_TLS443_Rust_native_TUN":True,
         "windows_Wintun_L3_1800s":"NOT_QUALIFIED",
