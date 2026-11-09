@@ -36,10 +36,10 @@ def refresh_runner_management():
     p=subprocess.run(cmd,text=True,capture_output=True,timeout=18)
     if p.returncode:
         raise RuntimeError("L3 managed Runner /32 refresh failed (test infrastructure): "+p.stderr[-420:])
-    m=re.search(r"PLAN028_CROSSOS1800_MGMT_REFRESH observed=(\d+) added=(\d+) total=(\d+)",p.stdout)
+    m=re.search(r"PLAN028_CROSSOS1800_MGMT_REFRESH observed=(\d+) added=(\d+) total=(\d+) repaired=(\d+)",p.stdout)
     if not m:
         raise RuntimeError("L3 managed Runner /32 refresh readback absent: "+p.stdout[-300:])
-    return {"observed":int(m[1]),"added":int(m[2]),"total":int(m[3])}
+    return {"observed":int(m[1]),"added":int(m[2]),"total":int(m[3]),"repaired":int(m[4])}
 
 def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     need(seconds==1800 and len(paths)==2 and len(owners)==4,
@@ -50,7 +50,7 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
              who+" L3 not yet authenticated app-ready")
     begin=time.monotonic();next_check=begin+5;next_tcp=begin+30
     next_resources=begin+90;next_mgmt=begin+8
-    sample=[];rss=[];tcps=0;management=[];added_peers=0
+    sample=[];rss=[];tcps=0;management=[];added_peers=0;repaired_routes=0
     print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN",flush=True)
     while time.monotonic()-begin<seconds:
         now=time.monotonic();elapsed=now-begin
@@ -60,11 +60,14 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
             managed=refresh_runner_management()
             management.append({"elapsed_s":round(elapsed,2),**managed})
             added_peers+=managed["added"]
-            if managed["added"] or len(management)%6==0:
+            repaired_routes+=managed["repaired"]
+            if managed["added"] or managed["repaired"] or len(management)%6==0:
                 print("H1430_REAL_RUNNER_MANAGEMENT "+
                       json.dumps({"elapsed_s":round(elapsed,1),
                        "new_peer_routes":managed["added"],
                        "cumulative_new_routes":added_peers,
+                       "repaired_owned_routes":managed["repaired"],
+                       "cumulative_repairs":repaired_routes,
                        "current_runner_targets":managed["observed"],
                        "owned_routes":managed["total"]}),flush=True)
             next_mgmt=time.monotonic()+10
@@ -118,11 +121,13 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
         "source_sha":os.environ["GITHUB_SHA"],"duration_s":round(elapsed,2),
         "tcp_both_count":tcps,"before":initial,"after":after,
         "samples":sample,"resources":rss,"runner_management":management,
-        "runner_new_peer_routes":added_peers},indent=2)+"\n")
+        "runner_new_peer_routes":added_peers,
+        "runner_repaired_owned_routes":repaired_routes},indent=2)+"\n")
     return {"status":"PASS_SCOPED_REAL_1800S_BOTH_CLIENTS",
         "duration_s":round(elapsed,2),"tcp_both_count":tcps,
         "resource_samples":len(rss),"runner_refresh_samples":len(management),
-        "runner_new_peer_routes":added_peers,"actual_udp_delta":delta,
+        "runner_new_peer_routes":added_peers,
+        "runner_repaired_owned_routes":repaired_routes,"actual_udp_delta":delta,
         "maximum_echo_gap_ms":{x:after[x]["max_echo_gap_ms"] for x in paths},
         "maximum_reverse_gap_ms":{x:after[x]["max_reverse_gap_ms"] for x in paths},
         "windows_peak_rss_bytes":max(x["windows_rss_bytes"] for x in rss)}

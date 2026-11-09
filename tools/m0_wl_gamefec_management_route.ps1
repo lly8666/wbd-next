@@ -63,8 +63,21 @@ if($Action -eq 'Refresh'){
  $targets=@(Get-NetTCPConnection -ErrorAction Stop | Where-Object {
    ($runner -contains [uint32]$_.OwningProcess) -and ($_.State -in @('Established','SynSent'))
   } | ForEach-Object {$_.RemoteAddress} | Where-Object {$_ -match '^\d{1,3}(\.\d{1,3}){3}$' -and $_ -notmatch '^(127\.|169\.254\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)'} | Sort-Object -Unique)
+ $repaired=0
  foreach($entry in @($lease.routes)){
-  if((Exact-Route ([string]$entry.prefix) ([int]$lease.interface_index) ([string]$lease.next_hop)).Count -ne 1){throw 'OWNED_MANAGEMENT_ROUTE_LOST'}
+  $prefix=[string]$entry.prefix
+  if($prefix -notmatch '^\d{1,3}(\.\d{1,3}){3}/32$'){throw 'BAD_HOST_ROUTE'}
+  $present=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $prefix -ErrorAction SilentlyContinue)
+  $ours=@($present|Where-Object {$_.InterfaceIndex -eq [int]$lease.interface_index -and $_.NextHop -eq [string]$lease.next_hop})
+  if($present.Count -ne $ours.Count -or $ours.Count -gt 1){throw 'OWNED_MANAGEMENT_ROUTE_LOST_FOREIGN_OR_AMBIGUOUS'}
+  if($ours.Count -eq 0){
+   # Reassert only the exact missing saved /32 with original physical underlay.
+   $underlay=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop|Where-Object {$_.InterfaceIndex -eq [int]$lease.interface_index -and $_.NextHop -eq [string]$lease.next_hop})
+   if($underlay.Count -ne 1){throw 'ORIGINAL_MANAGEMENT_UNDERLAY_CHANGED'}
+   New-NetRoute -DestinationPrefix $prefix -InterfaceIndex ([int]$lease.interface_index) -NextHop ([string]$lease.next_hop) -RouteMetric 1 -PolicyStore ActiveStore -ErrorAction Stop|Out-Null
+   if((Exact-Route $prefix ([int]$lease.interface_index) ([string]$lease.next_hop)).Count -ne 1){throw 'MANAGEMENT_REARM_READBACK_FAIL'}
+   $repaired++
+  }
  }
  $before=@($lease.routes).Count
  foreach($ip in $targets){
@@ -79,7 +92,7 @@ if($Action -eq 'Refresh'){
   $lease.routes[-1].state='owned'
   Save-Lease $lease
  }
- Write-Output ('PLAN028_CROSSOS1800_MGMT_REFRESH observed='+$targets.Count+' added='+(@($lease.routes).Count-$before)+' total='+@($lease.routes).Count)
+ Write-Output ('PLAN028_CROSSOS1800_MGMT_REFRESH observed='+$targets.Count+' added='+(@($lease.routes).Count-$before)+' total='+@($lease.routes).Count+' repaired='+$repaired)
  exit 0
 }
 if(Test-Path -LiteralPath $p){throw 'EXISTING_MANAGEMENT_LEASE'}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "87bc0bc79f5a881fe9d8edcf4d1479cefc24d021",
+  "run_id": 42538681178,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42538681178",
+  "status": "NOT_QUALIFIED_L3_HARNESS_FIRST_REFRESH_FAILURE",
+  "artifact_verified": true,
+  "artifact_id": 13640797852,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42538681178/artifacts/13640797852",
+  "native_job_id": 128910177949,
+  "first_error": "tools/m0_wl_gamefec_management_route.ps1 line67 OWNED_MANAGEMENT_ROUTE_LOST at first Refresh about 8 seconds into real L3",
+  "original_app_before_failure": {
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "credentials": 2,
+    "authenticated_tls443": "PASS",
+    "windows_udp_sent": 118,
+    "windows_udp_received": 118,
+    "linux_udp_sent": 96,
+    "linux_udp_received": 95,
+    "win_max_echo_gap_ms": 141,
+    "linux_max_echo_gap_ms": 108.44
+  },
+  "native_1800": "NOT_RUN",
+  "normal_owned_Stop": "NOT_RUN",
+  "test_only_lease_restore": "GAMEFEC_MGMT_ROUTE_EXACT_RESTORE_PASS",
+  "original_host_route_before": "14:10.1.0.1:1",
+  "original_host_route_after": "14:10.1.0.1:1",
+  "dns": "RESOLVED_A",
+  "l2_restore": true,
+  "npcap_driver_restore": "PASS",
+  "h1444_differential": "If original lease route wholly absent, source and owner match and original physical default still exists, reassert only owned management /32 and OS readback; any foreign route/ambiguous route/underlay change fail closed; count repaired separately from new Runner peers.",
+  "carry_forward": [
+    "Android/physical NOT_RUN",
+    "H998 historical hot socket MTU FAIL",
+    "ARM64 eef2 2x1800 PASS_SCOPED preserved"
+  ]
+}

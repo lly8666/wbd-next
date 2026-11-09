@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1443,
-  "checkpoint_sha": "87bc0bc79f5a881fe9d8edcf4d1479cefc24d021",
+  "sequence": 1444,
+  "checkpoint_sha": "7d5eb0ffeff6fd2500fdfccdc74604f31343aa0a",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1443-SOURCE87BC-CROSSOS1800-DYNAMIC-PEER-ACTION",
-  "current_task": "Windows signed source87bc dynamic Runner /32 refresh Action42538681178 launched exactly once after reading old in-flight Action42532903160, which has native 960.2s real app 8925/8971 RX but no final owned Stop and no job completion at checkpoint. New Action cheap functional/contract tests SUCCESS, source-pinned Windows Go/Rust and Linux Rust builds currently in progress. Exactly the test-only management refresh path is touched; no product Go/Rust/wire/MTU/Stop changes. ARM64 frozen eef2 final 2x1800 PASS_SCOPED reuse.",
-  "why_now": "Two old Windows 1800s jobs ended FAILURE after ~62-63min with native step still in_progress and logs 404; 960s third continued real traffic until stdout absent. Baseline pinned only initial 4 Runner peers and did not cover TCP endpoint re-selection. Current diagnostic actively refreshes exact /32 live Worker/Listener endpoints with original lease and reports actual trigger. Cause not yet established.",
+  "task_id": "PLAN028-M0-H1444-CROSSOS-OWNED-MGMT-REASSERT",
+  "current_task": "Completed diagnostic Action42538681178 source87bc ended native stage19 failed by first harness Refresh OWNED_MANAGEMENT_ROUTE_LOST (not product) after actual two independent TLS443 clients, Windows UDP118/118+Linux95/96 and both native TCP PASS; no 1800s or normal Stop. 20-file artifact ID13640797852; exact management Restore/physical default 14:10.1.0.1 DNS and L2 cleanup PASS. Scoped Refresh now reasserts only missing saved owner /32 on original NIC/nextHop with no foreign conflict and counts repaired separately from added Runner peers; product unchanged. PLAN028 IN_PROGRESS.",
+  "why_now": "First differential test proved original /32 readback can fail after Wintun client setup while original physical default remains unchanged; test-only fail blocked any L3 duration. An exact, non-foreign owner lease reassert and effective counts distinguish management host loss from new peer selection.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect Action42538681178: cheap PASS confirmed, next Windows/Linux builds and real signed drivers, true 1800s active UDP/TCP+RSS/1500ms gate, every 10s scoped Runner management refresh (added routes>0 only if triggered), all original owned Stop/WAL and exact host routes cleanup. Also collect old Action42532903160 final status when it finishes, never relabel missing Stop a PASS; no new duplicate dispatch. If dynamic change absent and job fails, switch independent host timeline rather than repeating identical native tests. PLAN028 IN_PROGRESS.",
+  "next_action": "Collect exactly new H1444 source-frozen 1800s Windows plus independent Linux Action auto-started by markers. Check first Refresh repaired count if triggered, added peers separately, original 1800s active UDP/TCP/RSS/no-RX gaps/normal Stop and WAL cleanup. Do not dispatch duplicates; if failure inspect raw job/artifact first error. ARM64 existing pass retained, Android/physical NOT_RUN, historic H998 fail retained; no PLAN029/030.",
   "unverified": true,
   "last_tested_source": "87bc0bc79f5a881fe9d8edcf4d1479cefc24d021",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1443-SOURCE87BC-CROSSOS1800-INFLIGHT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1444-87BC-FIRST-REFRESH-OWNED-ROUTE-LOSS-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1443: exact-source87bc Windows-Linux diagnostic Action42538681178 cheap PASS/building. Prior source24537 app native real RX 8925/8971 at960s, missing final 1800/Stop; prior 2 complete failed jobs log404. Test-only scoped PID-owned Runner TCP SynSent/Established /32 Refresh CAS instrumented with effective count; NOT_TRIGGERED until real new IP. Native ARM64 eef2 2x1800 PASS_SCOPED unchanged. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1444 first true Windows/Linux L3 Refresh aborted at ~8s by test-only missing owned management route, raw 20-file artifact proved original UDP/TCP healthy and original /32 lease restore. Scoped reassert only missing exact original owned /32 with unchanged underlay and no foreign conflict; instrument repaired vs added; no 1800s/Stop pass. ARM64 2x1800 PASS_SCOPED preserved, physical/Android NOT_RUN, H998 old fail."
 }
