@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1480,
-  "checkpoint_sha": "19525bf7f6a100ce421f7aa52e468a4b54e30a30",
+  "sequence": 1481,
+  "checkpoint_sha": "5f10af69a682c6735220b0e256bae936589c1b51",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1480-SERVER-B-CLIENT-AUTH-READY-PENDING-NATIVE",
-  "current_task": "H1480 candidate complete Linux Normal server/client cold A->B handover fix: defer B shared TUN /32 until new client B native RX started and a single existing authenticated AEAD kind0 cold receipt arrives at server; server requires proven client Health not plain uplink, holds A and only stops A after B proven. L0 Rust+Go tests + one source build real native ARM64/x86 dual end five-client 180s rotating12 job. Not yet proven; H1478 original native FAIL 10 and 114967 matched outer physical preserved. PLAN028 IN_PROGRESS.",
-  "why_now": "H1478 original network physically matched but low-rate app DL ten unique UDP lost precisely at B cold TLS start, server B published/retired A with no true client receiver readiness; hard contract asymmetric. User authorized minimal repair. Triggered original failure, no arbitrary dual-send. Need L0 plus source-frozen ARM64 true native B proof before judging.",
+  "task_id": "PLAN028-M0-H1481-ARM64-WORKFLOW-PREPARSE-REPAIR",
+  "current_task": "H1480 fix SOURCE 5f10... cold authenticated client M4 receipt/server old A route pending code committed. Auto Action42623129084 workflow failure before jobs (invalid YAML due JS replace $' injected original workflow suffix); no native build or network, product not FAIL. H1481 restores 207-line YAML clean using callback (no product code changes); await new auto-triggered workflow source SHA, exact ARM64 dual end build, true 180s rotated B L0 proof/Stop, all UDP unique zero. PLAN028 IN_PROGRESS.",
+  "why_now": "Workflow syntax invalid prior to any job. Fix workflow offline, preserve original failure artifact; no reason to run same network or alter product until real staged compile/test. Only H1480 actual readiness conditional trigger can qualify candidate.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered H1480 native ARM64 Action preflight/build/180s result and artifacts first (do not redispatch). Check Rust L0 ready Health and server old route guards, Go tests, Go/Rust native manifest+SHA and true two B ready logs (server deferred/auth client Health/promoted, client matched), Alice and other 4 unique UDP both directions and all owned Stop. If compiler/cold fixture defect repair same package. If H1480 fails business, preserve and inspect first socket RAW underlay post client B. Then subsequent affected Linux x86/Windows unique paths per PLAN028, no new 029/030.",
+  "next_action": "Collect new YAML-fixed ARM64 real Action after push, inspect jobs and test failure first. If Rust or Go compile fails, repair exact code/unit and re-run one complete-source platform build; if native network runs, classify trigger vs loss/Stop honestly. Product still not source-qualified and H1478 original FAIL remains. No double DATA, no duplicated Actions or source seed retries.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1480 candidate server B old A retained until real AEAD peer Health kind0 after client B native RAW RX; cold-only one receipt, no user config/steady DATA wire change or double DATA. Product candidate SOURCE not yet qualified, ARM64 one 180s 5client real Action triggered with code commit; original H1478 true 10 loss retained. Last verified source66fb."
+  "partial_summary": "H1481 H1480 initial Action42623129084 preparse FAIL no jobs/no network. Rebuilt workflow from known ARM64 one-build template, fixed JS replace '$\\'' accidental suffix substitution; 207-line valid expected clean, source code unchanged. New main commit triggers one fresh Action; pre-existing 25 auto CI runs at first code push exist but this fix only changes workflow/cursor/log. Preserve original H1478 FAIL and source66fb last tested."
 }
