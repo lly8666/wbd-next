@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "result": "ORIGINAL_LOSS_ONSET_RECHECK_LOCAL_VERIFIED_OFFLINE_ACTION_NOT_RUN_YET",
+  "unverified": true,
+  "original_native": {
+    "run": 42595013191,
+    "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "artifact_id": 13663646307,
+    "zip_crc": "PASS",
+    "original_five_clients_and_six_owned_Stops": true
+  },
+  "local_observations": {
+    "reverse_rotating12": {
+      "alice_DL_10ms_permanent_missing": 13,
+      "alice_onsets_s": [
+        39.39,
+        39.4,
+        132.85,
+        132.86
+      ],
+      "alice_onset_packet_deltas": [
+        5,
+        3,
+        4,
+        1
+      ],
+      "carol_DL_missing": 3,
+      "server_per_lease_overflow": 0
+    },
+    "following_static12": {
+      "alice_DL_missing": 0,
+      "other_clients_missing": 0,
+      "server_per_lease_overflow": 0
+    },
+    "alice_first_M4_500ms_samples_new_generation_relative_s": [
+      39.9,
+      133.37
+    ],
+    "onset_to_sample_seconds_approx": [
+      0.51,
+      0.52
+    ],
+    "original_alice_server_TUN_offered_rotating": 331225,
+    "original_alice_M3_native_TUN_delivered_rotating": 331210,
+    "delta": 15,
+    "original_alice_M2_first_wire_rotating_B": 294216166,
+    "original_alice_M2_first_wire_static_B": 294143551,
+    "difference_pct": 0.024687,
+    "original_M2_repair_accepted_bytes": 0,
+    "original_M2_frozen_retransmissions": 0
+  },
+  "comparison_limits": [
+    "Original app 10ms bin permanent deficit is not packet capture first-drop timestamp.",
+    "Native M4 first 500ms stage sample is after real M4 activation, not exact commit.",
+    "M3 native tun delivered counts include app UDP and TCP and control, not 1:1 UDP deficit.",
+    "Lifetime first-wire bytes cannot exclude brief overlap millisecond microburst."
+  ],
+  "new_script": "tools/m0_plan028_h1475_rotation_boundary_replay.py",
+  "new_workflow": ".github/workflows/m0-plan028-h1475-rotation-10ms-original-offline.yml",
+  "new_CI_status": "NOT_RUN_AT_COMMIT_PRELAUNCH",
+  "no_native_network_or_product_rebuild": true,
+  "preserve": {
+    "source66fb_true600": "FAIL_SCOPED_ALICE32_QUEUE45",
+    "source66fb_true1800": "PASS_SCOPED_ROTATION_STOP_FAIL_SCOPED_ALICE351_ZEROLOSS",
+    "Windows_original_1800_L3": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "PLAN028": "IN_PROGRESS"
+  }
+}

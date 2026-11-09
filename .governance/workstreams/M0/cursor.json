@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1474,
-  "checkpoint_sha": "e83d5f98d59b63c2a506db42ef248d1fadbdecdf",
+  "sequence": 1475,
+  "checkpoint_sha": "3876e0ff840a54c27769ecf10ece790cc11d655c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1474-REVERSE-ROTATION-AND-NO-DOUBLE-TRAFFIC-ORIGINAL-FORENSICS",
-  "current_task": "H1474 source66fb exact compiled original native x86 5 authenticated clients per case: H1472 Action42595376932 offline 8x180 original four CRC verified ZIPs, strict 5 PASS_SCOPED 3 FAIL_SCOPED with no network rerun. H1473 Action42595013191 original same VM reversed rotating12->static12 both completed SUCCESS six Stop; rotating12 real authenticated five M4 and Alice DL13 CarolDL3 missing, server queue0 FAIL_SCOPED; static12 all five directions zero missing and queue0 PASS_SCOPED. Prior forward static12 zero->rotating12 25DL missing with same source and queue0. Real original M2 Alice cumulative first_wire_bytes 294216166 over rotated three gens vs static 294143551 single gen, +0.0247%; repair accepted0 and frozen retransmission0; no observed full traffic double, but microbursts unexcluded. Go one TUN reader route promotion to single B after M4; A old receives for bounded 10-20sec. Reversed loss supports rotation-sensitive ownership/RAW handoff not generic 12Mbps capacity. Older 600 32loss/queue45 and 1800 Alice351loss/queue0 retained. PLAN028 IN_PROGRESS.",
-  "why_now": "User asked whether overlapping A/B generation doubles traffic and creates bottleneck, and to continue PLAN028 RCA. Exact source code proves one shared TUN reader/new TUN route, bounded prior RX grace; H1473 reverse same-machine original authentic experiment and H1472 offline original artifacts now finished. Aggregate original M2 first copy wire bytes demonstrates <0.1pct difference, rotation loss corroborated despite very low load and no queue overflow.",
+  "task_id": "PLAN028-M0-H1475-ORIGINAL-10MS-BUCKET-M4-GEN-BOUNDARY-REPLAY",
+  "current_task": "H1475 no new native stress. Exactly SOURCE66fb original H1473 reverse rotating12->static12 true 2x180s five client ZIP13663646307 CRC_PASS. Original server/client Alice app starts same monotonic time, 19001 10ms UDP TX/RX bins. Future suffix-min of cumulative TX−RX confirms persistent original missing13 only rotating at t39.39(+5)39.40(+3)132.85(+4)132.86(+1); static all five 0. New Gen2/3 first 500ms client M4 samples at t39.90/133.37 (both 0.51–0.52s after missing onset), queue0 and six Stop, no exact packet drop/commit timestamp. Original M2 aggregate Alice first-wire rotating294216166 static294143551 +0.0247pct, original repair0/retrans0; not 2x steady business, but microbursts and dual resources possible. Server TUN offered331225 versus client M3 TUN-delivered331210 gap15 across UDP+TCP, no attribution yet. Offline scripted H1475 source-locked rerun only original ZIP with 10ms fixed unit, pending actual Action qualification. PLAN028 IN_PROGRESS.",
+  "why_now": "User specifically asks generation whether traffic doubles as bottleneck; original code says one TUN sender and old RX grace. H1473 reverse original five client artifact carries complete 19001 native application 10ms bins plus M4 half-second mono timestamps, enough to localize real missing to M4 activation at low 12Mbps without another expensive 180s network trial.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Investigate first lost packet boundary during genuine Gen1->2 and Gen2->3 at original client/source server using source-locked per-generation M2 TX, kernel RAW socket RX, authenticated M3 TUN, and generation Stop/grace timestamps. Quantify per 100ms around each M4 promotion, actual outbound vs per-gen dual, CPU/softirq. Prefer targeted short instrumented same-source A/B; do not blindly expand per-lease queue or retry 600/1800. No 029/030. Windows original L3 1800 remains NOT_QUALIFIED. SOURCE66fb 600 32/45 FAIL and 1800 351/no queue FAIL strict retained.",
+  "next_action": "Source-locked H1475 offline Action replay original H1473 reverse ZIP 13663646307; inspect exact app bucket deficit and M4 stage times, scope only correlation. Then instrument one small native test with per-generation packet/RAW socket/kernel RX and M3 deliver around ~40 and ~133 second M4 promotions, without changing crypto/wire/queue caps. Do not blame bandwidth doubling or enlarge FIFO. Previous H1461 600 32/45 and 1800 zero-loss351/queue0 remain strict FAIL, formal Windows L3 1800 NOT_QUALIFIED, H998 hot MTU FAIL, Android physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1474-H1472-EIGHT-PLUS-H1473-REVERSE-GEN-NO-DOUBLE-20261109.json"
+    "docs/evidence/M0/PLAN028-H1475-10MS-M4-ORIGINAL-REPLAY-PRELAUNCH-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1474 H1472 offline 8 original native 180s scopes 5 strict PASS 3 FAIL; H1473 true original reverse rotating12->static12 on SAME VM: rotating real M4 Alice13DL+Carol3DL lost no server queue overflow, static all zero, six Stop each. Forward original static0 rotating25 loss. M2 Alice aggregate original first_wire rotating 294216166 vs static 294143551 +0.0247%, no M2 repair copies: two generation owner overlap != double sustained business TX. Next packet-level 100ms timeline after M4. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1475 source66fb H1473 authentic sameVM rotating12->static12 original ZIP CRC_PASS: static 0 UDP loss, rotation Alice13+Carol3 loss serverqueue0; Alice 10ms permanent loss first t39.39/39.40 second132.85/132.86 immediately prior new generation first 500ms M4 sample39.90/133.37. Original M2 first-wire accumulated rot294216166 vs static294143551 only +0.0247%, no full double traffic. H1475 new offline no product/rerun, result pending. PLAN028 IN_PROGRESS, long Windows original1800 unqualified."
 }

@@ -1,0 +1,48 @@
+# H1475: read-only source66fb original 2x180s five-client rotated/static
+# 10ms application bin vs 500ms M4 owner first sample, NO native network.
+name: PLAN028 H1475 true original 10ms generation loss boundary offline
+run-name: H1475 SOURCE66fb rotated/static original 10ms permanent loss and M4 stage
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1475-rotation-10ms-original-offline.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  source-locked-original:
+    name: H1475 replay H1473 original 10ms actual UDP + generation 500ms
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fail-closed offline source and 10ms suffix-low-water unit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1475_rotation_boundary_replay.py
+          python3 -m unittest -v tests.test_m0_plan028_h1475_rotation_boundary
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42595013191
+          github-token: ${{ github.token }}
+          name: plan028-h1473-source66fb-reverse-generation-42595013191
+          path: input/
+      - name: Reparse untouched actual 2x180s five-client originals and align loss with M4
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan028_h1475_rotation_boundary_replay.py \
+            --root input --output review/h1475-rotation-10ms-source66fb.json \
+            --reviewer "$GITHUB_SHA" | tee review-run.log
+          test -s review/h1475-rotation-10ms-source66fb.json
+          echo H1475_OFFLINE_ONLY_TRUE_ROTATION_LOSS_BOUNDARY_SCOPED_NO_NEW_NATIVE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1475-original-rotation-10ms-${{ github.run_id }}
+          path: |
+            review/
+            review-run.log
+          retention-days: 30
+          if-no-files-found: warn
