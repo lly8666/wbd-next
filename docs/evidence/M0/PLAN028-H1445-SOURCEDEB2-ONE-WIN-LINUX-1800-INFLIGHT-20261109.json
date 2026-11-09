@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "result": "INCONCLUSIVE_INFLIGHT_NO_NATIVE_1800S",
+  "source_sha": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
+  "action_id": 42540960361,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42540960361",
+  "action_status_at_checkpoint": "in_progress",
+  "action_conclusion_at_checkpoint": null,
+  "preflight_jobs_at_checkpoint": [
+    {
+      "id": 128915539212,
+      "name": "Cheap workflow and current assembly checks",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128915679637,
+      "name": "Windows Rust eligible library unit tests (special M1 separate)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128915679699,
+      "name": "Windows Go production and test compilation only",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128915679746,
+      "name": "Linux Rust eligible library unit tests (special M1 separate)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128916360015,
+      "name": "Build true original Go and new Linux Rust peer persona from same SOURCE",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "actual_go_rust_product_delta": "NONE; only run-owned Windows runner external /32 host route repair and test observer counters since eef2 ARM64 baseline and e6aa Windows L1 positive",
+  "trigger_and_hard_gate": {
+    "first_trigger": "Exact previously leased Runner management /32 missing under original physical default; repair count only if observed",
+    "management_route_new_targets": "count added positive only if actual new Runner peer",
+    "lease_restoration": "require exact owner/source and verified OS readback",
+    "real_independent_Windows_Linux_clients": "required not yet observed on this SOURCE",
+    "actual_1800_UDP_TCP_RSS": "NOT_RUN_AT_CHECKPOINT",
+    "real_original_Stop_WAL": "NOT_RUN_AT_CHECKPOINT"
+  },
+  "legacy_original_failure": {
+    "previous_action": 42538681178,
+    "original_conclusion": "failure",
+    "first_fault": "OWNED_MANAGEMENT_ROUTE_LOST first Refresh",
+    "original_artifact_id": 13640797852,
+    "real_windows_udp_received": 118,
+    "real_linux_udp_received": 95,
+    "both_clients_TCP": "PASS_SCOPED_SETUP_ONLY",
+    "original_final_1800s": "NOT_QUALIFIED"
+  },
+  "existing_qualified": {
+    "ARM64_2x1800_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+    "ARM64_action": 42505975134,
+    "ARM64_verdict": "PASS_SCOPED_TWO_SOURCE_LOCKED_NATIVE_SAMPLES",
+    "Windows_L1_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
+    "Windows_L1_action": 42502567549,
+    "Windows_L1_verdict": "PASS_SCOPED_ONE_WIN_ONE_LINUX_TWO_AUTHENTICATED_WITH_STOP"
+  },
+  "open_acceptance_scopes": {
+    "crossOS_Windows_L3": "IN_PROGRESS",
+    "separately_archived_game4_remote_M4_marker": "NOT_OBSERVED_IN_H1428_SCOPED_AUDIT",
+    "Android_physical": "NOT_RUN",
+    "H998_old_same_socket_hot_MTU": "HISTORICAL_FAIL_RETAINED"
+  },
+  "rules": "Do not promote CI preflight green to native PASS, do not equate test-owned management host /32 repair with product route correctness. Observe effective repairs and any explicit new Runner peer before cause claim; real Windows/Linux 1800+owned Stop required. No duplicate dispatch."
+}
