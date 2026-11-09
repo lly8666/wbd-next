@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "reviewer_checkpoint_sha": "857fbfcd349288ec90f7de6fd56226a162046ae4",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "result": "PASS_SCOPED_OFFLINE_CAUSE_EXCLUSION_NO_PRODUCT_CHANGE_ROTATION_ZEROLOSS_STILL_FAIL",
+  "original_native_action_id": 42595013191,
+  "original_native_artifact_id": 13663646307,
+  "original_zip_sha256": "fdae6e22edb906bd09c84e015012402457b9193afeaed4643f42e6f5e989cbe8",
+  "original_zip_crc": "PASS",
+  "original_case": "same VM x86 five clients, rotating12 then static12, 180s each, original 10ms monotonic app counters; not a new native test",
+  "original_server_shared_tun": {
+    "rotating12": {
+      "alice_offered": 331225,
+      "alice_direct_delivered": 331225,
+      "alice_pending_overflow": 0,
+      "alice_pending_peak_packets": 0,
+      "queue_full_drops": 0,
+      "retired_drops": 0,
+      "queue_byte_drops": 0,
+      "queue_age_drops": 0
+    },
+    "static12": {
+      "alice_offered": 330143,
+      "alice_direct_delivered": 330143,
+      "alice_pending_overflow": 0,
+      "alice_pending_peak_packets": 0,
+      "queue_full_drops": 0,
+      "retired_drops": 0,
+      "queue_byte_drops": 0,
+      "queue_age_drops": 0
+    }
+  },
+  "original_client_alice_native": {
+    "rotating12_m3_tun_delivered_total": 331210,
+    "rotating12_per_generation_tun_delivered": [
+      61896,
+      178817,
+      90497
+    ],
+    "static12_m3_tun_delivered": 330143,
+    "rotating12_per_generation_tun_failed": 0,
+    "rotating12_per_generation_replay_duplicate": 0,
+    "rotating12_per_generation_replay_retired": 0
+  },
+  "original_rotating_application": {
+    "alice_s2c_missing": 13,
+    "carol_s2c_missing": 3,
+    "static12_all_direction_missing": 0
+  },
+  "new_generation_first_M4_500ms_sample_comparison": {
+    "gen2_server_mono_ns": 196173154687,
+    "gen2_client_mono_ns": 196180153649,
+    "gen2_sample_gap_ms": 6.999,
+    "gen3_server_mono_ns": 289634298393,
+    "gen3_client_mono_ns": 289642693610,
+    "gen3_sample_gap_ms": 8.395,
+    "caveats": [
+      "First 500ms sample is not actual B promotion/first RAW TX timestamp; 515/517ms after first app deficit onset cannot be interpreted as the client taking 515ms longer to be ready.",
+      "500ms counters are cumulative and cannot establish exact per-packet causal boundary or equate different stage counters one-for-one.",
+      "Service log retained capped tail; available first-generation snapshots are not full per-packet trace."
+    ]
+  },
+  "code_review": {
+    "current_normal": "crates/wbd-engine/src/v4_embedded_go.rs shared_route_publish/retire: one IP->one TUN sender; old alive flag maintained for RX/in-flight, exact owned Stop; no double-send of NEW TUN ingress",
+    "current_grace": "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go originalLaneRetirementGrace(): 10s + uniform random [0,10s] OLD RX lifetime; not random 10-20s dual DATA TX",
+    "server_retire": "r0/go_overlay/internal/v4productcli/linux.go runSharedMultiServer: new authenticated /32 route published, same-lease older records promptly exact-Stop",
+    "legacy_game": "lly8666/wobuzhidao dev/wbd-raw-fec-v2 internal/gamelane/gamelane.go WrapCopies: one shared logical PacketID, lane-specific wrapped copy, Decoder.Add first-delivery dedup. This documents simultaneous copies within one Game logical session, not randomized A/B generation handover."
+  },
+  "determination": "No code-based justification to double-send fresh data across old/new crypto generations. Distinct per-generation AEAD/PN does not itself provide cross-generation application dedup. Random retirement grace already exists. Next read-only bounded packet-stage diagnostic should identify first RAW TX/RAW RX/AEAD/TUN boundary before selecting smallest fix; retain observed FAIL.",
+  "preserved": {
+    "source66fb_rotating12": "FAIL_SCOPED_16_S2C_UNIQUE_MISSING",
+    "source66fb_static12": "PASS_SCOPED_ZEROLOSS",
+    "source66fb_600_Alice": "FAIL_32_MISSING_45_QUEUE_OVERFLOW",
+    "source66fb_1800_Alice": "FAIL_351_MISSING_ZERO_SERVER_QUEUE_OVERFLOW_WITH_LIFECYCLE_PASS_SCOPED",
+    "Windows_L3_original1800": "NOT_QUALIFIED",
+    "hot_MTU_H998": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  },
+  "new_actions_dispatched": 0,
+  "new_native_tests": 0,
+  "product_modified": false
+}
