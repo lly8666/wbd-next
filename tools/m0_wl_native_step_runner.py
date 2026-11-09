@@ -136,7 +136,7 @@ def _inspect(state, data):
             print("WL_DIAG_FIRST_ERROR marker=" + _safe(state["first_error"]) +
                   " stage=" + _safe(state["stage"]), flush=True)
 
-def _diagnostic_tail(output, stop, game):
+def _diagnostic_tail(output, stop, game, child_pid):
     # All file reads, text parsing, stdout and GitHub CLI are isolated from
     # the only PID deadline. A blocked stdout PIPE or filesystem cannot hold
     # the process owner. No second watchdog or product worker is introduced.
@@ -150,6 +150,9 @@ def _diagnostic_tail(output, stop, game):
              "tx":"UNKNOWN","rx":"UNKNOWN","wal":"UNKNOWN"}
     offset = 0
     last_trace = 0.0
+    l3 = os.environ.get('WBD_PLAN028_WIN_LINUX_L3')=='1'
+    last_data = time.monotonic()
+    last_idle = last_data
     while True:
         now = time.monotonic()
         if trace and now - last_trace >= 2:
@@ -163,6 +166,7 @@ def _diagnostic_tail(output, stop, game):
             data = b""
         offset += len(data)
         if data:
+            last_data = now
             _inspect(state, data)
             if game:
                 for line in data.decode("utf-8","replace").splitlines():
@@ -174,6 +178,11 @@ def _diagnostic_tail(output, stop, game):
             else:
                 sys.stdout.write(data.decode("utf-8","replace"))
                 sys.stdout.flush()
+        if l3 and not data and not stop.is_set() and now-last_data>=20 and now-last_idle>=20:
+            print("WL_NATIVE_L3_TEST_OUTPUT_IDLE_OWNER_ALIVE child_pid="+
+                  str(child_pid)+" no_output_s="+str(round(now-last_data,1)),
+                  flush=True)
+            last_idle=now
         if stop.is_set():
             # One final bounded file read is enough; on normal success the
             # immutable full log remains on disk for postmortem inspection.
@@ -220,7 +229,7 @@ def main() -> int:
                     name="game-fec-independent-stages",daemon=True)
                 reporter.start()
             diagnostic = threading.Thread(
-                target=_diagnostic_tail, args=(output,stop,game),
+                target=_diagnostic_tail, args=(output,stop,game,child.pid),
                 name="game-fec-diagnostics" if game else "native-diagnostics",
                 daemon=True)
             diagnostic.start()

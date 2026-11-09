@@ -10,6 +10,40 @@ import subprocess
 import sys
 import tempfile
 
+
+def run_captured(command, seconds, max_output_bytes=131072):
+    """Deadline on the owned OS PID, never an inherited Windows PIPE EOF."""
+    import os
+    import signal
+    if not 1 <= seconds <= 600:
+        raise ValueError("bounded OS command seconds must be 1..600")
+    with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
+        child=subprocess.Popen(command,stdin=subprocess.DEVNULL,
+            stdout=output,stderr=errors,
+            creationflags=getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0),
+            start_new_session=(os.name!="nt"))
+        try:
+            rc=child.wait(timeout=seconds)
+        except subprocess.TimeoutExpired:
+            if os.name=="nt":
+                try:
+                    subprocess.run(["taskkill.exe","/PID",str(child.pid),"/T","/F"],
+                        stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,timeout=15,check=False)
+                except (OSError,subprocess.TimeoutExpired):pass
+            else:
+                try:os.killpg(child.pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+            if child.poll() is None:child.kill()
+            try:child.wait(timeout=5)
+            except subprocess.TimeoutExpired:pass
+            rc=124
+        output.seek(0);errors.seek(0)
+        stdout=output.read(max_output_bytes).decode("utf-8","replace")
+        stderr=errors.read(max_output_bytes).decode("utf-8","replace")
+        if rc==124:stderr+="\nWL_FILE_BACKED_CHILD_TREE_TIMEOUT seconds="+str(seconds)
+        return subprocess.CompletedProcess(command,rc,stdout,stderr)
+
 def main():
     if len(sys.argv)<4:raise SystemExit("usage: bounded_cmd.py <seconds> <binary> [args...]")
     seconds=int(sys.argv[1])

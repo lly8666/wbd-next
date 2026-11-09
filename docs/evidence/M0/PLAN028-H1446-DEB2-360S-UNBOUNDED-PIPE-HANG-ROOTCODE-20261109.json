@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "status": "CONFIRMED_TEST_HARNESS_UNBOUNDED_PIPE_TIMEOUT_BUG_EVENT_ROOT_UNPROVEN",
+  "source_under_observation": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
+  "action_id": 42540960361,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42540960361",
+  "action_status_at_review": "IN_PROGRESS_NATIVE_STEP19_IN_PROGRESS",
+  "last_user_visible_app_elapsed_s": 360,
+  "win_l3_1800s": "NOT_QUALIFIED_NO_FINAL_RECEIPT",
+  "owned_stop": "NOT_QUALIFIED_NO_FINAL_RECEIPT",
+  "historical_runs": {
+    "ids": [
+      42508261361,
+      42517812264,
+      42532903160
+    ],
+    "last_real_app_s": [
+      600,
+      720,
+      960
+    ],
+    "native_step_completed_at": null,
+    "job_logs": "404 BlobNotFound"
+  },
+  "confirmed_code_failure_mechanism": "PLAN028 H1412::wsl and H1430::resources/refresh_runner_management used subprocess.run(capture_output=True,timeout=N) for repeated wsl.exe/PowerShell Windows children. CPython Windows TimeoutExpired kills immediate process then runs unbounded communicate() to collect inherited PIPE stdout/stderr; WSL child/grandchild that retains handle can cause hang after timeout. Pre-existing m0_wl_windows_bounded_cmd.py was already introduced explicitly for same issue but missed these repeated L3 callers.",
+  "actual_hang_cause": "NOT_PROVEN_WITHOUT_ORIGINAL_CHILD_STACK_OR_PARENT_HEARTBEAT",
+  "fix": "Introduce run_captured using temp output files and bounded OS PID/tree wait, route repeated WSL and PowerShell calls, emit L3 parent-alive when child test log idle >=20s. No product changes; original 1800/Stop/gap threshold unchanged.",
+  "offline_reproduction": {
+    "kind": "spawn child with descendant inheriting stdout, wait 1s, kill exact owned process group, 124",
+    "measured_local_elapsed_s": 1.02,
+    "result": "PASS_OFFLINE_FILE_BACKED; NO WINDOWS_NETWORK_TEST"
+  },
+  "acceptance_preserved": [
+    "ARM64 eef2 2x1800 PASS_SCOPED",
+    "Windows short dual independent e6aa PASS_SCOPED",
+    "H998 historical hot socket MTU FAIL",
+    "Android and physical NOT_RUN",
+    "PLAN028 IN_PROGRESS"
+  ],
+  "action_policy": "[plan028-harness-offline-only] prevents native-public-two-os, no duplicate 1800s while original deb2 Action in progress."
+}

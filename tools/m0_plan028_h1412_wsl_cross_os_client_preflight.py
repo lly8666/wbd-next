@@ -4,13 +4,16 @@ Linux network namespace underlay capability. NO VPN product or PASS claims.
 All changes are owned on this ephemeral CI VM and restored in finally.
 """
 import json,os,pathlib,socket,subprocess,sys,time,traceback
+from m0_wl_windows_bounded_cmd import run_captured
 NAME="wbdp1412"; NS="wbdn1412"; HOST="wbdv1412"; CHILD="wbdc1412"
 PORT=46098; ALIAS="10.26.250.1"; PEER="10.26.250.2"
 OUT=pathlib.Path("result/wl-public");OUT.mkdir(parents=True,exist_ok=True)
 REPORT=OUT/"h1412-wsl-bridge-feasibility.json"
 def wsl(*argv,timeout=30,check=True):
-    p=subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--",*argv],
-        text=True,capture_output=True,timeout=timeout)
+    p=run_captured(["wsl.exe","-d","Ubuntu","-u","root","--",*argv],timeout)
+    if p.returncode==124:
+        raise RuntimeError("H1412_REAL_WSL_COMMAND_TREE_TIMEOUT seconds="+str(timeout)+
+            " argv="+repr(argv[:6]))
     if check and p.returncode:
         raise RuntimeError("guest command failed "+repr(argv[:6])+" rc="+str(p.returncode)+
             " stderr="+p.stderr[-480:]+" out="+p.stdout[-350:])

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1445,
-  "checkpoint_sha": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
+  "sequence": 1446,
+  "checkpoint_sha": "8650d7749c79b0f6472a5b7504366b45bc19bd1f",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1445-SOURCEDEB2-WINDOWS-L3-MGMT-REASSERT-ACTION",
-  "current_task": "H1445 source deb2c693 unique Action42540960361: cheap workflow PASS and Linux/Windows Rust unit PASS, Windows Go compile in progress; same-SOURCE original Go+Linux Rust build and signed driver/WSL2/native 1800s still future at checkpoint. H1444 first precise management /32 lease Refresh failed at 8s after actual native Windows/Linux TLS/UDP/TCP passed; artifact13640797852 and original job FAILURE retained, normal Stop NOT_RUN. Test-only scoped exact original underlay /32 reassert now queued/in progress; need actual repaired count, dynamic new peers count, true 1800s/Stop. PLAN028 IN_PROGRESS.",
-  "why_now": "Final first-fault recovered from native Action42538681178 with 20 raw files and full logs; unlike previous 3 missing logs it conclusively shows test management route readback failure after Wintun set-up. Corrected only exact own management host routes when fully missing; preserve product/Stop and 1500ms business requirements and source lock.",
+  "task_id": "PLAN028-M0-H1446-WINDOWS-L3-PIPE-TIMEOUT-ROOT-CODE",
+  "current_task": "User reports latest source deb2 Action42540960361 reached actual dual-client 360s then no new stdout; GitHub native step19 IN_PROGRESS, final 1800s/Stop unqualified. Recovered confirmed code defect: Windows subprocess.run(capture_output=True, timeout=N) kills immediate WSL/PowerShell parent on timeout but then unbounded communicate() awaits inherited grandchild PIPE EOF; repeated H1412 wsl(), H1430 RSS and management Refresh bypass pre-existing file-backed bounded child helper. Route +/32 theory unproven as root cause. Add test-only file-backed exact child-tree bounded capture to these callers and 20s L3 parent alive when original child stdout idle. Offline orphan/stdout fixture returns 124 in 1.02s. Commit offline-only without dispatching another native L3 while original Action in flight.",
+  "why_now": "Stalls at 360/600/720/960s are variable, original app stdout stops without explicit UDP failure; old jobs end after long native step in_progress with logs404. Windows Python subprocess.run inherited-pipe timeout bug is verified from code and existing dedicated workaround; need prove with bounded child process before another long test.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect existing Action42540960361 only; native prereqs then first Refresh repaired/added/total under exact physical route lease; 1800s Windows plus independent Linux app UDP/TCP RSS/periodic traffic and original Windows Stop Linux sibling survives both; exact WAL cleanup. If no final native result, NOT_QUALIFIED, do not repeat; if new route fix not triggered record NOT_TRIGGERED. Audit remaining Game4 original remote M4 proof, Android/physical NOT_RUN and H998 old same-socket MTU FAIL; do not start 029/030.",
+  "next_action": "Review H1446 offline/cheap tests only and verify native job SKIPPED by source marker; monitor original Action42540960361 to conclusion and retrieve original logs if possible. When it ends, consider one differential source-frozen L3 with parent idle heartbeat and bounded OS children to distinguish child-hang vs GitHub log transport; do not dispatch before. ARM64 two 1800 PASS_SCOPED, Windows L1 PASS_SCOPED, H998 FAIL and Android/physical NOT_RUN retained.",
   "unverified": true,
   "last_tested_source": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1445-SOURCEDEB2-ONE-WIN-LINUX-1800-INFLIGHT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1446-DEB2-360S-UNBOUNDED-PIPE-HANG-ROOTCODE-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1445 unique deb2 SOURCE Windows L3 Action42540960361 in flight: cheap PASS, Windows+Linux Rust tests PASS, Windows Go compilation continuing; no native 1800 or Stop verdict yet. Previous 87bc first-Refresh failure recovered with raw artifact shows management /32 mismatch while original dual-client UDP/TCP good. Same original product Go/Rust and all native hard gates retained. ARM64 two 1800s PASS_SCOPED, Windows L1 PASS_SCOPED, H998 FAIL/Android physical NOT_RUN."
+  "partial_summary": "H1446: original Windows L3 deb2 Action42540960361 silent after user 360s, in progress/no final receipt. Verified Windows child/grandchild PIPE EOF timeout defect in H1412 direct WSL and H1430 PowerShell recurring helpers; file-backed exact PID/tree timeout fix with deterministic orphan stdout 1s regression plus independent L3 output-idle parent heartbeat. No new native Action while predecessor active; not yet proof that this exact hang used the code path. PLAN028 IN_PROGRESS."
 }

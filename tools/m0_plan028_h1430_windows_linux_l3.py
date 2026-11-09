@@ -5,12 +5,14 @@ This test-only observer does not own VPN, change wire, or synthesize receipts.
 """
 import json, os, pathlib, re, subprocess, time
 from m0_plan028_h1412_wsl_cross_os_client_preflight import NS
+from m0_wl_windows_bounded_cmd import run_captured
 
 def resources(out,win,wsl):
     cmd=("$p=Get-Process -Id "+str(win.pid)+" -ErrorAction Stop;"
          "@{rss_bytes=$p.WorkingSet64;cpu_seconds=$p.CPU}|ConvertTo-Json -Compress")
-    x=subprocess.run(["powershell.exe","-NoProfile","-Command",cmd],
-        text=True,capture_output=True,timeout=14,check=True)
+    x=run_captured(["powershell.exe","-NoProfile","-Command",cmd],14)
+    if x.returncode:
+        raise RuntimeError("Windows original VPN RSS OS sample failed: "+x.stderr[-400:])
     w=json.loads(x.stdout)
     if int(w["rss_bytes"])<=0:raise RuntimeError("Windows original VPN RSS not readable")
     ids=[]
@@ -33,7 +35,7 @@ def refresh_runner_management():
     cmd=["powershell.exe","-NoProfile","-NonInteractive","-File",str(script),
          "-Action","Refresh","-Receipt",
          "result/wl-public/crossos1800-management-route-lease.json"]
-    p=subprocess.run(cmd,text=True,capture_output=True,timeout=18)
+    p=run_captured(cmd,18)
     if p.returncode:
         raise RuntimeError("L3 managed Runner /32 refresh failed (test infrastructure): "+p.stderr[-420:])
     m=re.search(r"PLAN028_CROSSOS1800_MGMT_REFRESH observed=(\d+) added=(\d+) total=(\d+) repaired=(\d+)",p.stdout)

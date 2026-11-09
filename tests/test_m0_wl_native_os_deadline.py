@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 SCRIPT=ROOT/"tools"/"m0_wl_windows_bounded_cmd.py"
@@ -24,6 +25,38 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertEqual(p.returncode,124,p.stderr)
         self.assertLess(time.monotonic()-start,10)
         self.assertIn("WL_WSL2_COMMAND_TIMEOUT seconds=1",p.stderr)
+
+    def test_file_backed_capture_inherited_pipe_descendant_has_real_deadline(self):
+        # Do not let descendant stdout inherited from wsl.exe keep Windows
+        # subprocess.run(timeout=) blocked forever in communicate() after kill.
+        sys.path.insert(0,str(ROOT/"tools"))
+        from m0_wl_windows_bounded_cmd import run_captured
+        code=("import subprocess,sys,time;"
+              "subprocess.Popen([sys.executable,'-c','import time;time.sleep(9)']);"
+              "print('L3_PARENT_READY',flush=True);time.sleep(20)")
+        started=time.monotonic()
+        r=run_captured([sys.executable,"-c",code],1)
+        self.assertEqual(r.returncode,124)
+        self.assertIn("WL_FILE_BACKED_CHILD_TREE_TIMEOUT seconds=1",r.stderr)
+        self.assertIn("L3_PARENT_READY",r.stdout)
+        self.assertLess(time.monotonic()-started,8)
+        ok=run_captured([sys.executable,"-c",
+            "import sys;print('OK_STDOUT');print('OK_STDERR',file=sys.stderr)"],4)
+        self.assertEqual(ok.returncode,0)
+        self.assertIn("OK_STDOUT",ok.stdout)
+        self.assertIn("OK_STDERR",ok.stderr)
+
+    def test_real_l3_periodic_os_commands_use_file_backed_pid_deadline(self):
+        guest=(ROOT/"tools/m0_plan028_h1412_wsl_cross_os_client_preflight.py").read_text()
+        l3=(ROOT/"tools/m0_plan028_h1430_windows_linux_l3.py").read_text()
+        native=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
+        self.assertIn("from m0_wl_windows_bounded_cmd import run_captured",guest)
+        self.assertIn("from m0_wl_windows_bounded_cmd import run_captured",l3)
+        self.assertNotIn('p=subprocess.run(["wsl.exe"',guest)
+        self.assertNotIn('capture_output=True,timeout=18',l3)
+        self.assertIn("p=run_captured(cmd,18)",l3)
+        self.assertIn("WL_NATIVE_L3_TEST_OUTPUT_IDLE_OWNER_ALIVE",native)
+        self.assertIn("args=(output,stop,game,child.pid)",native)
 
     def test_1800s_watchdog_opt_in_is_live_and_bounded(self):
         # The watchdog checks its max *before* the done flag. A pre-existing
@@ -49,6 +82,7 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("$guard.Refresh()",flow)
         self.assertIn("if($guard.HasExited)",flow)
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",flow)
+        self.assertIn("[plan028-harness-offline-only]",flow)
 
     def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
