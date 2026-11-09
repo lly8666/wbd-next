@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "result": "H1472_8X180_VERIFIED_5_PASS_3_FAIL_AND_H1473_REVERSE_ROTATION_TRUE_FAIL",
+  "unverified": true,
+  "original_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "reference_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "source_checked": {
+    "H1472": {
+      "run": 42595376932,
+      "conclusion": "success",
+      "artifact_id": 13663121694,
+      "artifact_zip_crc": "PASS",
+      "input_native_runs": [
+        42590018240,
+        42590601995
+      ],
+      "actual_original_5authenticated_clients_each": true,
+      "all_six_original_Stop_each": true,
+      "scopes": 8,
+      "strict_scoped_pass": 5,
+      "strict_scoped_fail": 3,
+      "original_action_red_due_to_posttest_wrong_path": true,
+      "no_new_network_rerun": true
+    },
+    "H1473": {
+      "run": 42595013191,
+      "conclusion": "success",
+      "source_wrapper": "434294c8dd6eadc03ddc099a98fc48a41fbee3ad",
+      "artifact_id": 13663646307,
+      "artifact_zip_crc": "PASS",
+      "exact_source_pinned_real_product": true,
+      "original_two_180s_five_authenticated_clients": true,
+      "all_six_original_Stop": true,
+      "actual_order": [
+        "rotating12",
+        "static12"
+      ],
+      "same_runner": true,
+      "rotating12": {
+        "all_original_five_rotations": "PASS_SCOPED",
+        "alice_down_missing": 13,
+        "carol_down_missing": 3,
+        "other_directions_missing": 0,
+        "server_queue_overflow": 0,
+        "strict": "FAIL_SCOPED"
+      },
+      "static12": {
+        "all_directions_all_clients_missing": 0,
+        "server_queue_overflow": 0,
+        "rotations": "NOT_REQUESTED",
+        "strict": "PASS_SCOPED"
+      }
+    },
+    "prior_forward_comparison": {
+      "original_action": 42590018240,
+      "static12_all_0": true,
+      "rotating12_total_down_missing": 25,
+      "server_queue_overflow": 0,
+      "alice_down_missing": 16,
+      "bob_down_missing": 4,
+      "carol_down_missing": 4,
+      "erin_down_missing": 1
+    },
+    "actual_first_wire_alice_M2": {
+      "rotating12_three_generations_total_bytes": 294216166,
+      "static12_single_generation_bytes": 294143551,
+      "percent_delta": 0.024687,
+      "rotating_original_frozen_retransmitted": 0,
+      "static_original_frozen_retransmitted": 0,
+      "repair_accepted_wire_bytes_both": 0,
+      "scope_warning": "Aggregate lifetime first_wire_bytes not per-10ms burst bandwidth; cannot rule out microburst or CPU contention from 2 live owner generations"
+    },
+    "code_grounding": {
+      "go": "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go",
+      "rust": "crates/wbd-engine/src/v4_embedded_go.rs",
+      "single_client_TUN_reader": true,
+      "at_most_one_current_one_candidate_one_retiring": true,
+      "authenticated_successor_promotion_after_native_M4": true,
+      "old_generation_RX_grace_seconds_range": [
+        10,
+        20
+      ],
+      "no_steady_state_double_full_business_TUN_dispatch": true
+    }
+  },
+  "causal_inference": "Two same-source same-VM 180s A/B and B/A comparisons corroborate rotation-associated real zero-loss downlink loss at 12Mbps and server pending queue0; total extra first-wire bytes 0.0247pct not doubled; packet-level first boundary unknown. 75Mbps server queue overflow intermittent and not version deterministic, independent issue.",
+  "strict_carryforward": {
+    "source66fb_native600_75Mbps": "FAIL_SCOPED_32_UNIQUE_DOWN_MISSING_AND_45_QUEUE_OVERFLOW",
+    "source66fb_native1800": "PASS_SCOPED_LIFECYCLE_ROTATION_STOP_FAIL_SCOPED_ZEROLOSS_ALICE351",
+    "windows_hosted_native1800": "NOT_QUALIFIED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "arm64_2x1800": "PASS_SCOPED",
+    "PLAN028": "IN_PROGRESS"
+  }
+}
