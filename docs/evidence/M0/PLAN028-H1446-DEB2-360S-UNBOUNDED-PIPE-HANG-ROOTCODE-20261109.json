@@ -40,5 +40,6 @@
     "Android and physical NOT_RUN",
     "PLAN028 IN_PROGRESS"
   ],
-  "action_policy": "[plan028-harness-offline-only] prevents native-public-two-os, no duplicate 1800s while original deb2 Action in progress."
+  "action_policy": "[plan028-harness-offline-only] prevents native-public-two-os, no duplicate 1800s while original deb2 Action in progress.",
+  "source_sha": "deb2c693897a93a9884a40b1a6b74b32c5db6362"
 }
