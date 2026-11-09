@@ -2024,7 +2024,7 @@ jobs:
               continue
             fi
             jq -cn --arg timestamp "$stamp" --argjson jobs "$statuses" \
-              '{time:$timestamp,watched:[$jobs.jobs[]|select(.name=="native-public-two-os" or .name=="H1453 clean Windows Runner 750s no VPN control")|{name,id,status,conclusion,started_at,completed_at,latest_step:([.steps[]?|{name,status,conclusion}]|last)}],product:"UNKNOWN_NOT_OBSERVED"}' \
+              '{time:$timestamp,watched:[$jobs.jobs[]|select(.name=="native-public-two-os" or .name=="H1453 clean Windows Runner 750s no VPN control")|{name,id,status,conclusion,started_at,completed_at,active_step:([.steps[]?|select(.status=="in_progress")|{name,status,conclusion,number}]|first // {status:"NONE"}),last_completed_step:([.steps[]?|select(.status=="completed")|{name,status,conclusion,number}]|last // {status:"NONE"})}],product:"UNKNOWN_NOT_OBSERVED"}' \
               >>plan028-600-ubuntu-witness/samples.jsonl
             native="$(jq -r '[.jobs[]|select(.name=="native-public-two-os")|.status]|first // "missing"' <<<"$statuses")"
             clean="$(jq -r '[.jobs[]|select(.name=="H1453 clean Windows Runner 750s no VPN control")|.status]|first // "missing"' <<<"$statuses")"

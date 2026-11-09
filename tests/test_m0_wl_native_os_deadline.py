@@ -147,6 +147,17 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("\n  plan028-600-external-linux-witness:",flow)
         self.assertNotIn("\nplan028-600-clean-runner-control:",flow)
 
+    def test_h1457_offhost_witness_reports_actual_active_step_not_last_pending(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        # The initial H1453 watcher sampled the final post-checkout step,
+        # which was PENDING throughout native step 19. Never relabel it active.
+        self.assertIn('active_step:([.steps[]?|select(.status=="in_progress")',flow)
+        self.assertIn('last_completed_step:([.steps[]?|select(.status=="completed")',flow)
+        self.assertNotIn('latest_step:([.steps[]?|{name,status,conclusion}]|last)',flow)
+        self.assertIn('product:"UNKNOWN_NOT_OBSERVED"',flow)
+        self.assertIn("H1453_OFFHOST_METADATA_ONLY_NOT_NATIVE_APP_PASS",flow)
+        self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",flow)
+
     def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         lease=(ROOT/"tools/m0_wl_gamefec_management_route.ps1").read_text()

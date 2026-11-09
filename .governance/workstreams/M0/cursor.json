@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1456,
-  "checkpoint_sha": "22427f18c75210a76ecc8ac6e2b0bff2a3a490bc",
+  "sequence": 1457,
+  "checkpoint_sha": "b5e10081e477347024d78beb60a4390d285fdcdb",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1456-SOURCE548-CLEAN750-CONTROL-PASS-NATIVE600-INPROGRESS",
-  "current_task": "H1456 one SOURCE548a Action42555320138 simultaneous tri-arm actual. Independent clean Windows2025 control job128961150470 SUCCESS, downloaded original artifact13648260573 report.json verified 750.2s, 50 heartbeat snapshots, PASS_SCOPED_CONTROL_ONLY; original clean job log confirms PASS and upload. Native signed original Win Wintun+Linux WSL2 600 job128961150368 still step19 IN_PROGRESS and no 600 app/owned Stop receipt; independent Ubuntu GH status witness job128961150381 still collecting. Same original product machine code across short e6aa PASS, failed long724 CI, current600; PE DLL 28 bytes only time/PDB metadata. No shipping code change. PLAN028 IN_PROGRESS.",
-  "why_now": "User asks efficient multi-perspective diagnosis: simultaneous clean Windows control has now completed 750s successfully, excluding a trivial generic Windows-hosted CI 750-second timer but not VM-specific or VPN interaction; should commit this real artifact before in-flight native/Ubuntu result and preserve distinct evidence scope.",
+  "task_id": "PLAN028-M0-H1457-SOURCE548-REAL600-NATIVE-STOP-PASS",
+  "current_task": "H1457 SOURCE548a Action42555320138 all three independent hosted jobs complete SUCCESS. Raw original native artifact13647552726 CRC-verified 23 files: authentic 600s signed Windows Wintun Alice + WSL2 Linux netns Bob same original Go TLS443/Rust M4, actual UDP Win sent/echo/reverse5575/5575/5590 Linux5590/5590/5590, >=97% receipt, gaps125/188ms Windows, 118.69/115.46ms Linux, dual TCP10, resources5, managed CAS53 add/repair0. Original Windows Stop then Linux authentic TCP/UDP +10 and both client/server Stop, WAL none, WSL2 L2 restored, Npcap clean. Distinct PASS_SCOPED_REAL_600S_BOTH_CLIENTS only, NOT 1800 L3. Different clean Win VM750.2s/50 heartbeat PASS; independent Ubuntu metadata artifact13648435192 70 rows observed native success03:38:06Z and clean success03:32:41Z. Actual offered app UDP ~9.3pps NOT 100pps; correct misleading 10ms claims. Windows handles323->317, threads15->14, private bytes38080512->38137856, Linux RSS modest+320/+36KiB, no obvious 600s growth. Ubuntu old latest_step was final pending instead of active; H1457 improves future watcher field only. Official Windows1800 L3 still NOT_QUALIFIED; old failed native step19 and Blob404 preserved. PLAN028 IN_PROGRESS.",
+  "why_now": "One simultaneous 600s actual app, clean Win 750, Ubuntu outside job all terminated successfully and raw artifacts downloaded. Source-to-short/long product machine code identical. User requested efficient multivariable real product diagnostics and evidence-grounded bug checks. Important distinction: successful 600s rules out deterministic time-based 360/600 death and obvious 600s leak, does not explain random old 1800 lost Runner; actual app packet cadence ~9.3pps, no invented 100pps performance pass.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Follow exact Action42555320138 ONLY: wait for native job128961150368 real 600 original app/Stop and meaningful fail/timeout; collect Ubuntu job128961150381 timeline and artifacts. Do not claim 600 PASS if no terminal original app/Stop, or infer product failure from Github step19 hang. No additional 1800 hosted native; official L3 NOT_QUALIFIED until isolated A/B/C. ARM64 two 1800 scoped PASS, e6aa Windows short scoped PASS, H998 old FAIL, Android physical NOT_RUN; no PLAN029/030.",
+  "next_action": "Do not resubmit 600 nor old hosted 1800. Preserve H1457 original23-file artifact and independent GH timelines with honest rate. Continue isolated Windows DUT B / external Linux peer C + off-host controller A planning and actual Find-NetRoute for live management peers, targeted short cause test then 1 true qualified 1800 if resources available. Old failed SOURCE724a native step19 and BlobNotFound remain unexplained, not product FAIL. Retain ARM64 eef2 2x1800 PASS_SCOPED, e6aa Windows L1 PASS_SCOPED, H998 old hot MTU FAIL, Android/physical NOT_RUN. No PLAN029/030.",
   "unverified": true,
   "last_tested_source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1455-SAME-BINARY-CODE-SHORT-LONG-600-20261109.json",
-    "docs/evidence/M0/PLAN028-H1456-SOURCE548-CLEAN-WINDOWS-750-PASS-NATIVE600-AWAIT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1457-SOURCE548-WIN-LINUX-REAL-600S-STOP-PASS-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1456 clean Windows750 baseline on separate VM SUCCESS: original artifact13648260573 report 750.2 sec and 50 heartbeat snapshots PASS_SCOPED_CONTROL_ONLY. Native Win Wintun+Linux original600 and Ubuntu witness still IN_PROGRESS; app/Stop NOT_QUALIFIED; no duplicates. Byte-identical product machine code between short pass/long CI failure/current 600. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1457 true signed Windows+Linux Go/Rust 600s and owned Stop verified PASS_SCOPED_REAL_600S_BOTH_CLIENTS original Action42555320138 artifact13647552726, Win5575/5575 Linux5590/5590, TCP10 and 5 RSS +53 management, Win Stop sibling Linux survives; no Win WAL, L2/Npcap restored. Separate clean Win750s and Ubuntu independently observe native success. All three archives CRC pass. Actual traffic ~9.3pps (not 10ms/100pps), no obvious 600s leak. Old 1800 runner failure remains unexplained/NOT_QUALIFIED, maintain H998 old FAIL, Android NOT_RUN."
 }
