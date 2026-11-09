@@ -1956,7 +1956,7 @@ jobs:
             Write-Output 'GITHUB_MANAGEMENT_LEASE_POST_ARTIFACT_RESTORED_NOT_PRODUCT_WAL'
           }
 
-plan028-600-clean-runner-control:
+  plan028-600-clean-runner-control:
     name: H1453 clean Windows Runner 750s no VPN control
     needs: [wiring-contract, linux-source-locked-public]
     if: github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-600]') && needs.wiring-contract.result == 'success' && needs.linux-source-locked-public.result == 'success'

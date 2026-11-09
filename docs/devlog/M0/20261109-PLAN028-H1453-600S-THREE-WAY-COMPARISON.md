@@ -16,3 +16,5 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"PLAN028 exact 600s short differential and control/observer jobs, Windows/Linux resource diagnostics; shipping product and protocol untouched."}
 ```
+
+**H1453 preflight correction:** first source `7cc35bea93ec5eb8674bf937b48a4bb091734d7a` Action42554932109 ended `FAILURE` with **zero jobs**: newly appended `plan028-600-clean-runner-control` YAML job key had no leading whitespace rather than required two under `jobs:`. No product or 600s test ran. Fix indentation, add explicit regression of both new job key levels, dispatch once under new immutable SOURCE; preserve original failed workflow metadata separately.

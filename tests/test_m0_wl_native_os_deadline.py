@@ -140,6 +140,12 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("return 940",runner)
         self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",flow)
         self.assertIn("H1430_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_1800S_NATIVE_PASS",client)
+        # Earlier source 7cc had an unindented appended job key and zero
+        # workflow jobs. Prove both Windows control and Ubuntu observer
+        # stay exact two-space direct children of jobs.
+        self.assertIn("\n  plan028-600-clean-runner-control:",flow)
+        self.assertIn("\n  plan028-600-external-linux-witness:",flow)
+        self.assertNotIn("\nplan028-600-clean-runner-control:",flow)
 
     def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
