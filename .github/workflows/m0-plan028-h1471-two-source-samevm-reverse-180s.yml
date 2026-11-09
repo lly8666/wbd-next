@@ -1,0 +1,164 @@
+name: PLAN028 H1471 historical x86 original source A-B and B-A native five-user 75Mbps
+run-name: H1471 source6c5 versus source66fb exact same VM reversed order authentic 180s
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1471-two-source-samevm-reverse-180s.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  versions:
+    name: H1471 real fiveuser x86 original source old-new versus new-old ${{ matrix.order }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - order: oldnew
+            first: old
+            second: new
+          - order: newold
+            first: new
+            second: old
+    env:
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_FEC_EGRESS_DIAG: "1"
+      WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+      WBD_PLAN028_RAW_TX_SOCKET_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_PLAN028_H1467_CASE: capacity_mixed
+      AB_ORDER: ${{ matrix.order }}
+      AB_FIRST: ${{ matrix.first }}
+      AB_SECOND: ${{ matrix.second }}
+      OLD_SOURCE: "6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+      NEW_SOURCE: "66fb6b4454b1ce4297ab04efa20c7f931ff12383"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Python original five-client real x86 preflight, no network yet
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1467_fiveclient_ab_netns.py
+          python3 -m unittest -v tests.test_m0_plan028_h1467_parallel_short_ab
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42369031512
+          name: h1286-x86-one-isal-build-6c5fd909b9f42d1af89c698cdaabc79bbb72e589
+          github-token: ${{ github.token }}
+          path: input-old/
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42578056120
+          name: h1461-x86-one-patched-build-66fb6b4454b1ce4297ab04efa20c7f931ff12383
+          github-token: ${{ github.token }}
+          path: input-new/
+      - name: Verify TWO exact original product build bytes and different actual source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p paired fixed-build output
+          python3 - <<'PY_LOCK'
+          import hashlib,json,os,pathlib,struct
+          sources={'old':os.environ['OLD_SOURCE'],'new':os.environ['NEW_SOURCE']}
+          expects={
+            'old':{'wbd-v4-client':'f3b42cba7e3246a5b5fa324f160df0abade58d19414b7d6c43e5b389100c85ea',
+                   'wbd-v4-server':'bbfc2af8bda9965e5f9f68af0b3a3feba186eca8a5ede07043e991fdf9d97c83',
+                   'libwbd_engine.so':'ee9aaf3eeb517e4a7b5b73b739eb9b9af75638bd3d5c3e6c4945af7a28fd78f7'},
+            'new':{'wbd-v4-client':'c2c5531168dfcd62624bd0910b52a606a413bad1eced3f69ce6ac577d66442c1',
+                   'wbd-v4-server':'3ddbde8284fc1fcfa1af8097e3c8f6724e8f247367676d47f49553f8b293cf42',
+                   'libwbd_engine.so':'c15070d091e8d45c6c1cccacaa49c2c374a409c4718f2fc7c9370df59d6392b7'}}
+          for key in ('old','new'):
+              p=pathlib.Path('input-'+key)
+              m=json.loads((p/'manifest.json').read_text())
+              assert m['source_sha']==sources[key]
+              assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+              assert m['architecture']=='native_x86_64' and m['go']=='1.23.12' and m['rust']=='1.85.1'
+              assert m['sha256']==expects[key]
+              for name,expected in expects[key].items():
+                  b=(p/name).read_bytes()
+                  assert b[:4]==b'\x7fELF' and struct.unpack_from('<H',b,18)[0]==62
+                  assert hashlib.sha256(b).hexdigest()==expected
+          print('H1471_TWO_REAL_DISTINCT_FROZEN_GO_RUST_ISAL_PRODUCTS_SHA_VERIFIED',flush=True)
+          PY_LOCK
+      - name: Execute two real 180s five-client original products in declared reversed order
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          for version in "$AB_FIRST" "$AB_SECOND"; do
+            export WBD_PLAN028_H1469_AB_SLOT="$version"
+            if [[ "$version" == old ]]; then active="$OLD_SOURCE"; else active="$NEW_SOURCE"; fi
+            cp "input-$version/wbd-v4-client" "input-$version/wbd-v4-server" "input-$version/libwbd_engine.so" "input-$version/manifest.json" fixed-build/
+            chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+            mkdir -p fixed-kernel-result
+            echo "H1471_ORIGINAL_PRODUCT_RUN_BEGIN version=$version source=$active order=$AB_ORDER"
+            GITHUB_SHA="$active" python3 -u tools/m0_plan028_h1467_fiveclient_ab_netns.py fixed-build >fixed-kernel-result/h1471-real-driver.log 2>&1 || {
+              echo "H1471_ORIGINAL_VERSION_SCENE_FAILED_NOT_PASS $version" >&2
+              tail -160 fixed-kernel-result/h1471-real-driver.log >&2
+              mv fixed-kernel-result "paired/$version"
+              exit 1
+            }
+            grep -Fq 'M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE pressure' fixed-kernel-result/h1471-real-driver.log
+            for role in alice bob carol dave erin server; do
+              grep -Fq 'V4_PUBLIC_SHARED_TUN_STOP generation=' "fixed-kernel-result/h1250-product-$role.log"
+            done
+            mv fixed-kernel-result "paired/$version"
+            cp "input-$version/manifest.json" "paired/$version/manifest.json"
+            echo "H1471_ORIGINAL_FIVE_USERS_SOURCE_SCOPE_STOP_FINISHED version=$version"
+          done
+          python3 - <<'PY_REVIEW'
+          import json,os,pathlib,re
+          root=pathlib.Path('paired')
+          expected={'old':os.environ['OLD_SOURCE'],'new':os.environ['NEW_SOURCE']}
+          results={}
+          for version,source in expected.items():
+              p=root/version/'fixed-kernel-result'
+              plan=json.loads((p/'h1250-matrix-plan.json').read_text())
+              assert plan['source_sha']==source and plan['application_load_seconds']==180
+              assert plan['h1467_short_ab_case']=='capacity_mixed'
+              assert len(plan['clients'])==5 and all(v['loss_pct']==0 for v in plan['clients'])
+              assert [v['s2c_target_mbps'] for v in plan['clients']]==[75,2,2,2,2]
+              logs={v:(p/('h1250-product-'+v+'.log')).read_text(errors='replace') for v in ('server','alice','bob','carol','dave','erin')}
+              assert all('V4_PUBLIC_SHARED_TUN_STOP generation=' in v for v in logs.values())
+              al=json.loads((p/'h1250-c-alice.json').read_text()); sv=json.loads((p/'h1250-s-alice.json').read_text())
+              assert al['end_ns']-al['start_ns']==sv['end_ns']-sv['start_ns']==180000000000
+              stages=[{'phase':t['phase'],'sent':t['tx_packets'],'received':r['rx_packets'],'missing':t['tx_packets']-r['rx_packets']}
+                      for t,r in zip(sv['stats']['udp'],al['stats']['udp'])]
+              assert len(stages)==5
+              lease=plan['clients'][0]['lease']
+              rx=re.search(r'M0_SHARED_TUN_LEASE_QUEUE_DIAG ip='+re.escape(lease)+r' [^\n]*?downstream_full=(\d+) pending_overflow=(\d+)',logs['server'])
+              assert rx,lease
+              cpu=json.loads((p/'h1250-cpu-rss.json').read_text())
+              results[version]={'source_sha':source,'six_original_Stop':True,'actual_alice_downlink':stages,
+                 'alice_total_missing':sum(x['missing'] for x in stages),'server_original_lease_full':int(rx[1]),
+                 'server_original_lease_overflow':int(rx[2]),'server_average_onecore_cpu_pct':cpu['server']['average_one_core_cpu_percent']}
+          out={'schema_version':1,'test':'H1471_source_6c5_vs_66fb_sameVM_reverse_order_original_fiveclient_180',
+               'order':os.environ['AB_ORDER'],'old_source':expected['old'],'new_source':expected['new'],
+               'original_results':results,'no_false_inference':'Even AB/BA two VMs may have noise; keep SOURCE-specific PASS/FAIL',
+               'windows_original_1800':'NOT_QUALIFIED'}
+          pathlib.Path('output/source-ab.json').write_text(json.dumps(out,indent=2)+'\n')
+          print('H1471_TWO_ORIGINAL_PRODUCT_SOURCES_TRUE_180S_AB',json.dumps({k:[v['alice_total_missing'],v['server_original_lease_overflow'],v['server_average_onecore_cpu_pct']] for k,v in results.items()},sort_keys=True),flush=True)
+          PY_REVIEW
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1471-old6c5-new66fb-paired-${{ matrix.order }}-${{ github.run_id }}
+          path: |
+            output/
+            paired/**/*.json
+            paired/**/h1250-product-*.log
+            paired/**/h1471-real-driver.log
+            paired/**/h1250-qdisc-*.txt
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "historical_comparator_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "NOT_RUN_H1471_TWO_HOST_AB_BA_OLD_NEW_180S_EACH_PENDING",
+  "original_builds": {
+    "old": {
+      "source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+      "action": 42369031512,
+      "artifact": 13572791923
+    },
+    "new": {
+      "source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+      "action": 42578056120,
+      "artifact": 13656371098
+    },
+    "same_original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "all_source_manifest_SHA256_checked": true,
+    "native_ISAL_code_present_in_both_ELF": true
+  },
+  "design": {
+    "workflow": ".github/workflows/m0-plan028-h1471-two-source-samevm-reverse-180s.yml",
+    "hosts": 2,
+    "parallel": true,
+    "each_host_sequential_true_180s": 2,
+    "order_by_host": [
+      "oldnew",
+      "newold"
+    ],
+    "same_workload": "Original true 5 independent Go TLS443/native Rust M4 Linux x86_64 6netns, Alice 75Mbps 256B3:1024B7, 4 sibling 2Mbps, 0% physical netem, no rotations, six original owned Stop",
+    "original_product_engine_diff": true,
+    "original_same_host_CPU_comparison_possible": true,
+    "raw_original_app_udp_by_phase": true,
+    "not_identity_or_pure_code_causation_if_hosts_have_different_CPU": true
+  },
+  "known_previous": {
+    "old_source_native75_H1360": "PASS_SCOPED_ZERO_LOSS_DIFFERENT_VM",
+    "new_source600_H1461": "FAIL_SCOPED_32_UDP_MISSING_AND_45_QUEUE_OVERFLOW",
+    "new_source1800_H1461": "FAIL_SCOPED_ZERO_LOSS_ALICE351_WITH_ZERO_SERVER_QUEUE_OVERFLOW",
+    "new_source_H1467_first_180_capacity_mixed": "PASS_SCOPED_ZERO_LOSS_ON_ONE_HOST",
+    "new_source_H1467_first_180_static12": "PASS_SCOPED_ZERO_LOSS_ON_DIFFERENT_HOST",
+    "new_source_H1470_same_source_PAIRS": "IN_PROGRESS"
+  },
+  "qualification": {
+    "real_new_version_pair_tests": "NOT_RUN",
+    "original_wintun_windows1800": "NOT_QUALIFIED",
+    "PLAN028": "IN_PROGRESS",
+    "H998_old_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN"
+  }
+}

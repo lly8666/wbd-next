@@ -1,0 +1,11 @@
+# PLAN028 H1471 | 75 Mbps old 6c5 vs new 66fb actual same-host AB and BA
+
+Source6c5 native original x86 Normal75 0%-loss five-user H1360 Action42441021254 was zero loss on a different VM/earlier compiled source; current source66fb 600s exact75 peak lost Alice DL32 and server lease queue45 but one recent native source66fb short capacity_mixed 180s on another VM lost0/overflow0. Thus not defensible to declare a product regression or declare peak75 fixed from those different VMs and durations. H1467 historical notes also identify kernel RAW socket overrun and softirq/scheduler as plausible distinct external causes.
+
+H1471 one workflow, two independently hosted x86_64 Linux Runner jobs in parallel, each executes two genuine 180s five-user actual Go TLS443/Rust native TUN programs on same machine sequentially. VM1 order old6c5→new66fb, VM2 new66fb→old6c5. Both original immutable native binary artifacts from exact Actions42369031512/42578056120 directly zip SHA256 manifests and real ELF code three-file checks, original Go donor identical a7a82, original Intel ISA-L native symbol present in both. Same new H1467 scoped cloned harness, Alice Normal75 mixed weighted256/1024, other four each2Mbps; netem0%, source-affinity test L2 veth static neighbor, no cold rotations. Both original 6 owned Stop + ten application worker real180 seconds, per-stage actual UDP and original server queue full/overflow and CPU are read before classifying. This must be interpreted as two same-host source A/B directional comparisons; reversing order partially controls warmup, but two heterogeneous VM host instances still add variance.
+
+Old and new SOURCE are genuinely different Go/Rust ELF bytes. Never label this result a 'same product binary' comparison or turn results of different source into source66fb historical PASS. Short original H1470 source66fb packet mix versus large and static12 versus rotating12 pairs are separately running; this H1471 adds version-vs-host causality, no production code changes and no Windows hosted1800.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-locked old/new immutable Go/Rust comparative original five-user native x86 short A-B and reverse B-A tests; no product code, wire, queues or Windows long run."}
+```
