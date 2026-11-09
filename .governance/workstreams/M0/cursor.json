@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1481,
-  "checkpoint_sha": "5f10af69a682c6735220b0e256bae936589c1b51",
+  "sequence": 1482,
+  "checkpoint_sha": "4ed169b6ad35b58588cffa18350102d7c42d1361",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1481-ARM64-WORKFLOW-PREPARSE-REPAIR",
-  "current_task": "H1480 fix SOURCE 5f10... cold authenticated client M4 receipt/server old A route pending code committed. Auto Action42623129084 workflow failure before jobs (invalid YAML due JS replace $' injected original workflow suffix); no native build or network, product not FAIL. H1481 restores 207-line YAML clean using callback (no product code changes); await new auto-triggered workflow source SHA, exact ARM64 dual end build, true 180s rotated B L0 proof/Stop, all UDP unique zero. PLAN028 IN_PROGRESS.",
-  "why_now": "Workflow syntax invalid prior to any job. Fix workflow offline, preserve original failure artifact; no reason to run same network or alter product until real staged compile/test. Only H1480 actual readiness conditional trigger can qualify candidate.",
+  "task_id": "PLAN028-M0-H1482-ARM64-ASSEMBLY-MANIFEST-EXACT-REPIN",
+  "current_task": "H1482 H1480 candidate unchanged. ARM64 Action42623579875 build FAIL before Rust/Go/native because exact assembler manifest result_blob for changed r0/go_overlay/internal/v4productcli/linux.go remained 95df... while actual new source 3617b125.... scene SKIPPED / NOT_RUN, prior H1480 YAML preparse Action42623129084 no jobs also CI FAILURE. Correct 111-op manifest source git blob pin and workflow comment auto-trigger only one new ARM64 H1480 build and 180s 5client rotating12. Need collect. Original source66fb H1478 10 missing and 114967 physical matched FAIL retained; PLAN028 IN_PROGRESS.",
+  "why_now": "New Go cold server authenticated M4 readiness logic changed created overlay file but full package assembly manifest pinned old blob. Strict source lock correctly rejected it; fix manifest, no product code changes. Preserve CI causes separately.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new YAML-fixed ARM64 real Action after push, inspect jobs and test failure first. If Rust or Go compile fails, repair exact code/unit and re-run one complete-source platform build; if native network runs, classify trigger vs loss/Stop honestly. Product still not source-qualified and H1478 original FAIL remains. No double DATA, no duplicated Actions or source seed retries.",
+  "next_action": "Collect newly auto-triggered H1480 ARM64 Action after H1482 repin; check assembler/Go Rust compile/L0 tests first, fix only concrete failures. If real scene executes, verify actual 2× server B deferred/promoted after client authenticated kind0, real five-client 180s all directions unique UDP and exact Stop; classify PASS/FAIL/NOT_TRIGGERED. No duplicate network dispatch. Next x86 or Windows specific after ARM result, PLAN028 still open.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1481 H1480 initial Action42623129084 preparse FAIL no jobs/no network. Rebuilt workflow from known ARM64 one-build template, fixed JS replace '$\\'' accidental suffix substitution; 207-line valid expected clean, source code unchanged. New main commit triggers one fresh Action; pre-existing 25 auto CI runs at first code push exist but this fix only changes workflow/cursor/log. Preserve original H1478 FAIL and source66fb last tested."
+  "partial_summary": "H1482 exact original-Go overlay assembler 111 op source lock refreshed only linux.go kind create result_blob 3617b125..., no product changes; previous two H1480 Actions 42623129084 YAML no jobs and 42623579875 assembler failed before build, no real test. New workflow comment triggers one H1480 ARM64 build/5client real scene. No PASS yet; preserve original H1478 FAIL."
 }
