@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "result": "NOT_RUN_FOUR_NATIVE_180S_AB_SCENES_PENDING_ONE_ACTION",
+  "unverified": true,
+  "severity": "MODERATE_RELATIVE_TO_PRODUCT_SYSTEM; STRONG_STRICT_ZEROLOSS_L2_BLOCKER; NO_PROVEN_ARCHITECTURE_FAILURE",
+  "engineering_feasibility": "YES_WITH_SCOPE: original x86 5client Normal75 was once zero-drop with ~75pct CPU on old SOURCE6c5; same architecture SRC66fb actually sustained 600/1800 and authentic Stop/generation; cannot prove zero loss on all VMs or all states",
+  "original_failures": {
+    "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "original_action": 42578056120,
+    "real_600": {
+      "alice_dl_missing": 32,
+      "total_dl_sent": 3745396,
+      "loss_ppm": 8.54,
+      "server_queue_overflow": 45,
+      "server_downstream_full": 120,
+      "strict": "FAIL_SCOPED"
+    },
+    "real_1800": {
+      "alice_dl_missing": 351,
+      "total_dl_sent": 2701954,
+      "loss_ppm": 129.91,
+      "server_queue_overflow": 0,
+      "authentic_lifecycle": "PASS_SCOPED",
+      "strict": "FAIL_SCOPED"
+    }
+  },
+  "historical_development": [
+    "20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION: 100Mbps kernel RAW socket dropped1800, app missing1779, qdisc/UDP-socket drops0",
+    "20261028-PLAN026-RUST-RAW-RXBUF-100M-PASS-150M-REUSE: owned 4MiB SO_RCVBUF request effective8MiB, real100Mbps RAW drops0 source-scoped",
+    "20261107-PLAN028-H1292-SHARED-TUN-PARTIAL-FIFO-EAGER-DRAIN: known partial FIFO scheduling hole, higher load still intermittent",
+    "20261107-PLAN028-H1298-ERIN-SOCKET-ADAPT and H1300-NIC-RAW-BOUNDARY: separate RAW TX EAGAIN vs no RX progress, per generation ports",
+    "20261107-PLAN028-H1302-FOURCORE-CAPACITY-PHASES: ARM host near99pct CPU and high softirq",
+    "20261108-PLAN028-H1360-NATIVE-X86-NORMAL75-ZEROLOSS-CAPACITY: old source real x86 5client 75Mbps zero loss, host74.93pct, cross-source not causal comparison"
+  ],
+  "test_design": {
+    "product_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "source_binary_from_run": 42578056120,
+    "same_go_rust_native_isal_manifest_sha_verified": true,
+    "independent_linux_runner_pairs": 2,
+    "real_authenticated_clients_each": 5,
+    "source_locked_original_TLS443_Rust_TUN_and_6_Stop": true,
+    "actual_s_each": 180,
+    "diagnostics": "Existing default-OFF 500ms RAW RX/M4 stage and raw TX socket plus original qdisc/CPU per scenario",
+    "pairs": [
+      {
+        "name": "capacity",
+        "same_runner_sequential": [
+          "capacity_mixed",
+          "capacity_large"
+        ],
+        "alice_speed_target_mbps": 75,
+        "alice_sizes": [
+          "3x256B+7x1024B",
+          "1024B only"
+        ],
+        "four_siblings_mbps_each": 2,
+        "physical_loss_pct": 0,
+        "rotation": false,
+        "question": "PPS vs byte/s and M1/host CPU"
+      },
+      {
+        "name": "generation",
+        "same_runner_sequential": [
+          "static12",
+          "rotating12"
+        ],
+        "alice_speed_target_mbps": 12,
+        "four_siblings_mbps_each": 2,
+        "physical_loss_pct": 0,
+        "only_second_true_M4_rotations": true,
+        "question": "Generation/raw handoff vs constant lower PPS"
+      }
+    ],
+    "alternatives_not_prematurely_applied": [
+      "M1 consumer nonblocking batch/service fairness",
+      "socket exact-inode RX drop / raw readiness and kernel queue",
+      "generation in-flight old-packet grace after actual M4 commit",
+      "same-source host CPU softirq and generator"
+    ],
+    "status": "WAIT_ACTION_TRUE_ORIGINAL_STOP; no code/protocol/resource default changed; no 600/1800 rerun"
+  },
+  "preserve": {
+    "Windows_official_L3_1800": "NOT_QUALIFIED",
+    "old_source548_75": "FAIL_SCOPED",
+    "new_source66fb_600_and_1800_zero_loss": "FAIL_SCOPED",
+    "new_source66fb_1800_continuity": "PASS_SCOPED",
+    "ARM64_two_1800": "PASS_SCOPED",
+    "H998_live_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}

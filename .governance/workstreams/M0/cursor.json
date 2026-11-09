@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1466,
-  "checkpoint_sha": "87cfe4e1f5d832a16e2925f1e90be151a7ad0b19",
+  "sequence": 1467,
+  "checkpoint_sha": "80ee710213370c4cb4e7f0ffe7f3e1df02dbc19c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1466-SOURCE66FB-TWO-SOAKS-IMMUTABLE-NEGATIVES-VERIFIED",
-  "current_task": "Original Action42578056120 SOURCE66fb complete. Both x86 Linux native five-client 600s/1800s ran to original 6 owned Stop each; build + Rust queue unit PASS. 600 Alice real 25/50/75/50 Mbps, 0% loss, 32 missing DL UDP only 75Mbps peak, server per-lease overflow45 and downstream Full120; server Alice offered4776424 vs client authenticated M3 unique delivered4776379 exact45. 1800 original five-client M4 rotations PASS_SCOPED and 6 Stop, server queue overflow0, but zero-loss Alice DL missing351; original M3 delivered3498919 vs server offered3499378 (459 difference; exact attribution unproven). H1461 Python phase_specs shadow produced false empty-phase audit and IndexError; source-locked original two-artifact offline Action42584453380 SUCCESS with all phases and true original Stop, demonstrates both strict FAIL_SCOPED, 1800 continuity PASS_SCOPED, not new native reruns. PLAN028 IN_PROGRESS.",
-  "why_now": "User requested repair and real concurrent 600 and 1800 five-client stress. Both genuine runs completed, reveal separate true loss domains, source-bound replay now SUCCESS. Preserve strict failure rather than product PASS due green offline.",
+  "task_id": "PLAN028-M0-H1467-ORIGINAL-HISTORY-AND-TWO-PAIRED-AB",
+  "current_task": "H1467 user asked objective severity/feasibility plus historical search and multiple candidate avenues. Source66fb native real600 Alice DL32/3745396 loss, server queue overflow45 Full120, real1800 Alice DL351/2701954 loss with queue0, original all5 M4 rotations/sixStop PASS_SCOPED; strict zero loss FAIL_SCOPED for both. Historical PLAN026 RAW RX100 loss1779 correlated exact socket RAW drops1800, source-specific owned 4MiB RCVBUF fix; H1292 pending FIFO local timing partial; H1298/H1300 raw EAGAIN/RX stalls; H1302 ARM softirq host99; H1360 old6c5 x86 75Mbps0loss at74.93% host proves feasible but not same SOURCE/VM. One new no-prod-change workflow H1467 uses exact old source66fb 3 ELF binaries and 2 independent Ubuntu hosts concurrently, each same-host sequential two true180s five-client original native Go TLS/Rust M4/UDP/TCP/sixStop: capacity75 mixed-vs1024-only sameMbps, static12-vs-rotating12 sameMbps, default-off 500ms original RAW/M4 RX/TX diagnostic. No Windows hosted 1800, no blanket PASS. PLAN028 IN_PROGRESS.",
+  "why_now": "Objective data reflect moderate reliability/performance defect blocking strict zero-loss L2 but not architecture impossibility; repeated FIFO fixes failed and server queue overflow0 yet Alice1800 loses351, so isolate independent PPS/byte and rotation/native RAW fault families using paired same host and exact compiled original source66fb.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "No duplicate expensive long run until source-locked targeted 180s same-host differential isolates 600 server original SyncSender Full->queue overflow (probe M1 worker service/scheduler/CPU) versus 1800 client raw RX/rotation-induced DL loss without server queue overflow. Keep no-loss Alice strict FAIL, authentic 1800 lifecycle scoped PASS, Windows original hosted L3 1800 NOT_QUALIFIED, H998 old MTU FAIL, Android/physical NOT_RUN. No PLAN029/030.",
+  "next_action": "Check H1467 preflight Python static/dynamic four source-locked cases and two paired jobs, collect four original180s clients/Stop and per-phase UDP, M1 queue and RAW/M4 500ms read-only samples/CPU. Attribute first failing stage and choose minimal targeted product correction; material A/B benefit may merit reverse-order before claiming cause. Do not rerun 600/1800 blindly or increase queue. Historic source548 75 FAIL, source66fb 600/1800 zero-loss FAIL retained, 1800 rotation PASS scoped; Win formal1800 NOT_QUALIFIED, H998 MTU FAIL, Android physical NOT_RUN. No PLAN029/030.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1466-SOURCE66FB-TWO-SOAKS-VERIFIED-20261109.json"
+    "docs/evidence/M0/PLAN028-H1467-HISTORY-TWO-PAIRED-AB-SOURCE66FB-PENDING-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1466 SRC66fb five authentic Linux clients genuine600 and1800 both six original owned Stop. 600 Alice real75 Mbps:32 DL UDP missing, server backlog8 overflow45; server offered minus client M3 delivered exactly45=>real FAIL. 1800 genuine all M4 rotations PASS_SCOPED & queue overflow0, but zero-loss Alice DL351 missing=>strict FAIL; likely different domain. H1464 offline replay Action42584453380 SUCCESS, artifact13658711312 CRC_PASS, original 2 artifacts 13656024788/13657785615, complete per-phase source-locked rejudge; no native reruns. Original two-archive negative evidence is verified; PLAN028 full scope remains unverified due scoped FAIL."
+  "partial_summary": "H1467 user high-level: moderate strict L2 reliability blocker, no evidence architecture impossible; source66fb true600 32/3.745m DL missing queue45, true1800 351/2.702m DL missing queue0 although all5 rotations+Stop pass; historical RAW RX overrun and partial FIFO/host saturation match. Preparing one two-runner two-same-host sequential A/B source66fb immutable original Go/Rust: 75Mbps mixed packet PPS vs1024-only, and 12Mbps static vs M4 rotation, four180s native original clients+sixStop. PLAN028 ongoing."
 }

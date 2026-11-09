@@ -1,0 +1,125 @@
+name: PLAN028 H1467 four genuine 180s fiveclient capacity and generation paired diagnostics
+run-name: H1467 exact source66fb same-VM packet-rate and generation A-B
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1467-source66fb-paired-four-short-differentials.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  preflight:
+    name: H1467 cheap four-source-locked original fixture contract and Python compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: No native network before source and original contract check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1467_fiveclient_ab_netns.py tools/m0_plan028_h1467_ab_audit.py
+          python3 -m unittest -v tests.test_m0_plan028_h1467_parallel_short_ab
+          echo H1467_FOUR_SHORT_SCENE_AB_SOURCE_PREFLIGHT_PASS_NO_PRODUCT
+  paired:
+    name: H1467 original native fiveuser 2x180s ${{ matrix.pair }} same VM A-B
+    needs: preflight
+    if: needs.preflight.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - pair: capacity
+            a: capacity_mixed
+            b: capacity_large
+          - pair: generation
+            a: static12
+            b: rotating12
+    env:
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_PLAN028_FEC_EGRESS_DIAG: "1"
+      WBD_PLAN028_EXTERNAL_STAGE_DIAG: "1"
+      WBD_PLAN028_RAW_TX_SOCKET_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+      ORIGINAL_PRODUCT_SOURCE: "66fb6b4454b1ce4297ab04efa20c7f931ff12383"
+      AB_PAIR: ${{ matrix.pair }}
+      AB_A: ${{ matrix.a }}
+      AB_B: ${{ matrix.b }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42578056120
+          github-token: ${{ github.token }}
+          name: h1461-x86-one-patched-build-66fb6b4454b1ce4297ab04efa20c7f931ff12383
+          path: input/
+      - name: Reuse EXACT x86 original Go TLS/Rust M4 native ISA-L SHA package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          mkdir -p fixed-build paired output
+          cp input/fixed-build/* fixed-build/
+          python3 - <<'PY_SHA'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path("fixed-build");m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["architecture"]=="native_x86_64" and m["native_fec_acceleration"] is True
+          assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert set(m["sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+          for name,h in m["sha256"].items():
+              b=(p/name).read_bytes()
+              assert b[:4]==b"\x7fELF" and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==h,name
+          print("H1467_EXACT_SOURCE66FB_SAME_BINARY_THREE_ELF_NATIVE_ISAL_SHA_PASS",flush=True)
+          PY_SHA
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: Execute TWO original five-client genuine 180s TCP UDP TUN workloads sequentially on SAME VM
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          for scene in "$AB_A" "$AB_B"; do
+            export WBD_PLAN028_H1467_CASE="$scene"
+            mkdir -p fixed-kernel-result
+            echo "H1467_REAL_FIVECLIENT_EXPERIMENT_BEGIN scene=$scene product=$ORIGINAL_PRODUCT_SOURCE"
+            GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u tools/m0_plan028_h1467_fiveclient_ab_netns.py fixed-build >fixed-kernel-result/h1467-original-driver.log 2>&1 || {
+              echo "H1467_TRUE_NATIVE_SCENE_FAIL_OR_ENVIRONMENT_BLOCKED $scene" >&2
+              tail -160 fixed-kernel-result/h1467-original-driver.log >&2
+              mv fixed-kernel-result "paired/$scene"
+              exit 1
+            }
+            grep -Fq "M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE pressure" fixed-kernel-result/h1467-original-driver.log
+            test -s fixed-kernel-result/h1286-rapid-report.json
+            for role in alice bob carol dave erin server; do
+              grep -Fq 'V4_PUBLIC_SHARED_TUN_STOP generation=' "fixed-kernel-result/h1250-product-$role.log"
+            done
+            mv fixed-kernel-result "paired/$scene"
+            echo "H1467_TRUE_ORIGINAL_FIVECLIENT_180S_FINAL_STOP $scene"
+          done
+          python3 -u tools/m0_plan028_h1467_ab_audit.py --root paired --pair "$AB_PAIR" --out output/source66fb-paired.json | tee output/h1467-audit.log
+          test -s output/source66fb-paired.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1467-source66fb-paired-${{ matrix.pair }}-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            paired/**/*.json
+            paired/**/h1467-original-driver.log
+            paired/**/h1250-product-*.log
+            paired/**/h1250-qdisc-*.txt
+            output/
+          retention-days: 30
+          if-no-files-found: warn
