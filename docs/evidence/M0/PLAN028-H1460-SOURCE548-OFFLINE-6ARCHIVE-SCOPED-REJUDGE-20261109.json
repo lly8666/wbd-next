@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "THREE_PASS_SCOPED_ONE_FAIL_SCOPED_ZEROLOSS_NORMAL75_AND_HISTORICAL_CI_FAIL",
+  "artifact_verified": true,
+  "source_locked_offline": {
+    "action_id": 42569573991,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42569573991",
+    "wrapper_sha": "2dc21867d9e7c93cd7b1bc7bace116618a6d8c2c",
+    "run_status": "completed",
+    "conclusion": "success",
+    "job_id": 129003585931,
+    "artifact_id": 13652915541,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42569573991/artifacts/13652915541",
+    "local_archive_sha256": "87ccf62ca988bbf0e5542a690fbc5cc65170c320b74c62ae4f1cb2787d05a407",
+    "crc": "PASS",
+    "original_artifacts_downloaded": 6,
+    "primary_result_file": "h1459-review.json",
+    "test_name": "tests.test_m0_plan028_h1459_offline_rejudge",
+    "native_network_rerun": "NONE",
+    "signed_original_receipts_preserved": true
+  },
+  "test_result_source548": {
+    "normal50": {
+      "strict": "PASS_SCOPED_0LOSS_NORMAL_10_25_50_25_WITH_FIVE_SIBLINGS",
+      "actual_peak_mbps": 50,
+      "source_artifact": 13652491486,
+      "real_udp_missing": 0,
+      "server_lease_overflow": 0,
+      "peak_host_busy_pct": 41.26
+    },
+    "normal75": {
+      "strict": "FAIL_SCOPED_ZEROLOSS_UDP_MISSING_OR_SERVER_LEASE_QUEUE_OVERFLOW",
+      "source_artifact": 13652407002,
+      "real_udp_missing": 28,
+      "alice_uplink_missing": 25,
+      "alice_downlink_missing": 3,
+      "server_pending_overflow": 5,
+      "peak_pending_packets": 8,
+      "source_ci_job": "SUCCESS",
+      "original_capacity_audit": "PASS_SCOPED_FALSE_GREEN_CONTRACT",
+      "actual_peak_mbps": 75.001,
+      "all_28_missing_phase": "overload",
+      "overload_duration_s": 30,
+      "no_missing_in_phases": [
+        "warmup",
+        "first_wave_25Mbps",
+        "sustained_50Mbps",
+        "recovery_50Mbps"
+      ],
+      "peak_host_busy_pct": 90.03,
+      "peak_core_busy_pct": 90.36,
+      "exact_root_cause": "UNKNOWN"
+    },
+    "game4fec20": {
+      "strict": "PASS_SCOPED_0LOSS_GAME4_FIXED6_3_5_10_20_10_WITH_FIVE_SIBLINGS",
+      "source_artifact": 13652311455,
+      "actual_peak_mbps": 20,
+      "zero_loss_udp_missing": 0,
+      "server_lease_overflow": 0,
+      "peak_host_busy_pct": 46.45
+    },
+    "weaknet30": {
+      "strict": "PASS_SCOPED_180S_MIXED_0_TO30PCT_REAL_NETEM",
+      "source_artifact": 13651628558,
+      "erin_kernel_drop_uplink_fraction": 0.299313,
+      "erin_kernel_drop_downlink_fraction": 0.29835,
+      "expected_configured_loss_udp_not_received": 1852,
+      "server_lease_overflow": 0,
+      "original_rotation_pass": true,
+      "rapid_alert_count": 0
+    }
+  },
+  "source_Code_mechanism": {
+    "path": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "reader": "run_shared_tun_reader (around lines4960-5044): one real Linux TUN kernel reader; per-lease pending queue accounting enabled by WBD_SHARED_TUN_ROUTE_DIAG",
+    "queue": "enqueue_shared_tun (around lines4321-4392): if existing pending queue at 8 packets and old try_send remains Full, increments overflow and returns without enqueuing new packet",
+    "verified_by_raw_counter": "M0_SHARED_TUN_LEASE_QUEUE_DIAG ip=10.66.0.149 offered=1402924 direct_delivered=1402889 pending_overflow=5 pending_peak_packets=8 pending_peak_bytes=8392",
+    "unit_regression_already_present": "m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop explicitly expects overflow 1 on 9th packet while a saturated",
+    "direct_mechanism_confirmed": "At least five new TUN ingress packets were dropped at enforced per-lease pending route queue cap",
+    "cause_of_downstream_receiver_full": "NOT_PROVEN",
+    "why_28_missing_exceeds_5": "UNATTRIBUTED_APP_PACKET_DROP_COMPONENTS; no one-to-one assertion"
+  },
+  "historical_reference": {
+    "normal75_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "normal75_action": 42441021254,
+    "raw_artifact": 13652166717,
+    "original_UDP_missing": 0,
+    "server_pending_overflow": 0,
+    "peak_busy_pct": 74.93,
+    "different_VM_and_binaries": true,
+    "version_regression": "NOT_PROVEN",
+    "game4_action": 42567898293,
+    "original_CI_conclusion": "failure",
+    "business": "PASS_SCOPED_0LOSS_GAME4_FIXED6_3_5_10_20_10_WITH_FIVE_SIBLINGS",
+    "original_owned_six_Stop": "PASS",
+    "root": "STALE_CI_EXPECTED_ENUM_MISSING_20MBPS",
+    "CI_failure_retained": true
+  },
+  "governance": {
+    "action_id": 42569573968,
+    "conclusion": "failure",
+    "maintenance_action_id": 42569573953,
+    "reason": "PRE_EXISTING_M4_COMPAT_MANIFEST_TEST_FAILURE_SEPARATE_FROM_M0"
+  },
+  "remaining": {
+    "product_fix": "NOT_APPLIED_WITHOUT_PROVEN_SOURCE_OF_DOWNSTREAM_STALL",
+    "same_SOURCE_same_VM_high_load_causal_compare": "NOT_RUN",
+    "Windows_hosted_1800_L3": "NOT_QUALIFIED",
+    "Windows_source548_600": "PASS_SCOPED",
+    "ARM64_eef2_2x1800": "PASS_SCOPED",
+    "H998_old_same_socket_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS",
+    "PLAN029_030": "NOT_STARTED"
+  }
+}
