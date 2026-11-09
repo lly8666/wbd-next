@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "result": "INCONCLUSIVE_SINGLE_DIFFERENTIATING_L3_INFLIGHT",
+  "artifact_verified": false,
+  "action_id": 42546907707,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42546907707",
+  "status_at_checkpoint": "in_progress",
+  "conclusion_at_checkpoint": null,
+  "scope": "One real signed Windows Npcap/Wintun plus independent Linux netns TUN two-account one TLS443 server native true 1800-second L3; new file-backed OS PID bounded WSL/PowerShell and native parent-alive when child stdout idle",
+  "why_not_blind_replay": {
+    "fixed_code_failure_mode": "Windows subprocess.run capture_output timeout may block forever in unbounded post-kill communicate() while WSL descendant inherits PIPE",
+    "local_deadline_fixture": "1s descendant holder terminated rc124 in ~1.02s",
+    "verified_previous_source": "bf430867badc343b150f4d78bc32db5501769926",
+    "offline_action": 42546119207,
+    "offline_status": "success",
+    "offline_native": "skipped",
+    "underlay_action": 42546119090,
+    "underlay_status": "success",
+    "underlay_artifact_id": 13643955231,
+    "governance_corrected_action": 42546307358,
+    "governance": "success"
+  },
+  "prior_run": {
+    "run_id": 42540960361,
+    "source_sha": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
+    "conclusion": "failure",
+    "step19": "in_progress even though job closed",
+    "native_logs": "404 BlobNotFound",
+    "app_last_user_seen_s": 360,
+    "real_l3_app_stop": "NOT_QUALIFIED"
+  },
+  "hard_requirements": {
+    "new_harness_marker": "H1448_L3_OS_COMMANDS_FILE_BACKED_BOUNDED_AND_PARENT_IDLE_WITNESS_ARMED",
+    "original_l3_1800s": "NOT_RUN_YET",
+    "all_original_udp_tcp_rss": "NOT_RUN_YET",
+    "actual_windows_stop_linux_sibling_survives": "NOT_RUN_YET",
+    "original_OS_WAL_lease_restore": "NOT_RUN_YET",
+    "conditional_route_trigger": "Only PASS mitigation if real repaired or added counters positive, not just green CI",
+    "parent_idle": "When child test log no longer emits for >=20s, separate native supervisor writes WL_NATIVE_L3_TEST_OUTPUT_IDLE_OWNER_ALIVE. If neither arrives, Runner transport/source execution unresolved, no network PASS."
+  },
+  "status": "PLAN028_IN_PROGRESS",
+  "unchanged": [
+    "Original Go/Rust shipping product unchanged",
+    "ARM64 source eef2 independent two 1800s PASS_SCOPED",
+    "Windows source e6aa dual-client L1 PASS_SCOPED",
+    "Historical H998 same socket hot MTU FAIL",
+    "Android/physical NOT_RUN",
+    "No PLAN029/030"
+  ]
+}
