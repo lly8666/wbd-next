@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "reviewer_source_sha": "87cfe4e1f5d832a16e2925f1e90be151a7ad0b19",
+  "unverified": false,
+  "result": "STRICT_ZEROLOSS_BOTH_FAIL_1800_CONTINUITY_PASS",
+  "original_run": 42578056120,
+  "original_600": {
+    "duration_s": 600,
+    "job_id": 129031068927,
+    "artifact_id": 13656024788,
+    "zip_crc": "PASS",
+    "six_owned_Stop": "PASS",
+    "five_authenticated_clients": true,
+    "normal_alice_actual_mbps": [
+      24.9997,
+      50.0001,
+      75.0004,
+      49.9999
+    ],
+    "zero_loss_alice_down_udp_missing": 32,
+    "only_75mbps_overload": true,
+    "original_server_lease_overflow": 45,
+    "original_server_downstream_full": 120,
+    "server_offered": 4776424,
+    "client_M3_tun_delivered": 4776379,
+    "strict_verdict": "FAIL_SCOPED"
+  },
+  "original_1800": {
+    "duration_s": 1800,
+    "job_id": 129031068987,
+    "artifact_id": 13657785615,
+    "zip_crc": "PASS",
+    "six_owned_Stop": "PASS",
+    "five_authenticated_clients": true,
+    "all_authentic_M4_rotations": "PASS_ALL_FIVE_SCOPED",
+    "alice_confirmed_generations": 24,
+    "alice_exact_old_Stop": 23,
+    "server_queue_overflow": 0,
+    "alice_zero_loss_down_udp_missing": 351,
+    "missing_by_phase": [
+      0,
+      22,
+      142,
+      118,
+      69
+    ],
+    "server_offered": 3499378,
+    "client_M3_tun_delivered": 3498919,
+    "continuity_verdict": "PASS_SCOPED",
+    "strict_zero_loss": "FAIL_SCOPED"
+  },
+  "offline": {
+    "run": 42584453380,
+    "result": "SUCCESS",
+    "artifact_id": 13658711312,
+    "artifact_crc": "PASS",
+    "zip_sha256": "e699eaff0d3b0fe54a4b2b4cda01b2681e8e90e044e7884f4fe66227b45d1c40",
+    "no_native_replay": true,
+    "full_five_phase_per_user_per_direction": true,
+    "600_hard_faults": [
+      "ORIGINAL_SERVER_8_SLOT_QUEUE_OVERFLOW_45",
+      "alice_downlink_ZERO_LOSS_MISSING_32"
+    ],
+    "1800_hard_faults": [
+      "alice_downlink_NO_CONFIGURED_LOSS_UDP_MISSING_351"
+    ]
+  },
+  "root_cause": "NOT_PROVEN; 600 server queue Full versus 1800 no server queue overflow yet downlink loss; distinct paths to isolate",
+  "other_scopes": {
+    "Windows_hosted_original_L3_1800": "NOT_QUALIFIED",
+    "old_source548_native75": "FAIL_SCOPED",
+    "ARM64_two_1800": "PASS_SCOPED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}

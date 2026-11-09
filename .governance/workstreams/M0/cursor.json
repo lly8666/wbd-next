@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1464,
-  "checkpoint_sha": "38f567691e5741d7b7e51f95a15394267ea23764",
+  "sequence": 1466,
+  "checkpoint_sha": "87cfe4e1f5d832a16e2925f1e90be151a7ad0b19",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1464-ORIGINAL-600-1800-REPORTER-BUG-REAL-DROPS-OFFLINE-SCOPED",
-  "current_task": "H1464 Original Action42578056120 SOURCE66fb finished. One Go/Rust/ISA-L x86 product build and urgent FIFO queue regression PASS. Original native600 realfive clients/6 Stop, Alice offered25/50/75/50Mbps, 32 actual Alice downlink unique UDP lost only 75Mbps peak, native shared per-lease 8-cap overflow45 => real FAIL_SCOPED. Original native1800 realfive clients/6Stop, authentic M4 all five rotations PASS_ALL_FIVE_SCOPED, server all per-/32 queue overflow0, original H1274 alerts0; nevertheless no-loss Alice downlink missing351 actual unique UDP => strict zero-loss FAIL_SCOPED. H1461 new reporting phase_specs shadowed by per-direction phases=[]: custom 600 false all-client NO_GENUINE_UDP, custom 1800 IndexError. H1464 source-preserving offline fixed parser replays both exact archived originals without new native product run. Historic SOURCE548 Normal75 28 loss5overflow FAIL remains; PLAN028 IN_PROGRESS.",
-  "why_now": "User requested real 600s/1800s five-client parallel stress and product queue repair. The actual original binary was executed to completion on both; two real negative reliability observations plus a definite Python report bug should be corrected and source-reviewed independently, not another blind long rerun.",
+  "task_id": "PLAN028-M0-H1466-SOURCE66FB-TWO-SOAKS-IMMUTABLE-NEGATIVES-VERIFIED",
+  "current_task": "Original Action42578056120 SOURCE66fb complete. Both x86 Linux native five-client 600s/1800s ran to original 6 owned Stop each; build + Rust queue unit PASS. 600 Alice real 25/50/75/50 Mbps, 0% loss, 32 missing DL UDP only 75Mbps peak, server per-lease overflow45 and downstream Full120; server Alice offered4776424 vs client authenticated M3 unique delivered4776379 exact45. 1800 original five-client M4 rotations PASS_SCOPED and 6 Stop, server queue overflow0, but zero-loss Alice DL missing351; original M3 delivered3498919 vs server offered3499378 (459 difference; exact attribution unproven). H1461 Python phase_specs shadow produced false empty-phase audit and IndexError; source-locked original two-artifact offline Action42584453380 SUCCESS with all phases and true original Stop, demonstrates both strict FAIL_SCOPED, 1800 continuity PASS_SCOPED, not new native reruns. PLAN028 IN_PROGRESS.",
+  "why_now": "User requested repair and real concurrent 600 and 1800 five-client stress. Both genuine runs completed, reveal separate true loss domains, source-bound replay now SUCCESS. Preserve strict failure rather than product PASS due green offline.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "One H1464 offline-only Action replays original 600+1800 source66fb archives IDs13656024788/13657785615 and verifies phase 5/true clocks/6 original Stops and strict 32/45 and 351/0 negative. Record exact 0% missing without turning 1800 legacy zero-alert into full reliability PASS. After replay, target separate server M1 downstream Full and separate client raw RX/host loss path using source-locked 180s/CPU/sockets diagnostics. No duplicate 600/1800 now; Windows formal 1800 still NOT_QUALIFIED, Android/physical NOT_RUN, historical H998 FAIL. No PLAN029/030.",
-  "unverified": true,
+  "next_action": "No duplicate expensive long run until source-locked targeted 180s same-host differential isolates 600 server original SyncSender Full->queue overflow (probe M1 worker service/scheduler/CPU) versus 1800 client raw RX/rotation-induced DL loss without server queue overflow. Keep no-loss Alice strict FAIL, authentic 1800 lifecycle scoped PASS, Windows original hosted L3 1800 NOT_QUALIFIED, H998 old MTU FAIL, Android/physical NOT_RUN. No PLAN029/030.",
+  "unverified": false,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1464-SOURCE66FB-TWO-ORIGINAL-SOAKS-CONTINUITY-AND-ZEROLOSS-20261109.json"
+    "docs/evidence/M0/PLAN028-H1466-SOURCE66FB-TWO-SOAKS-VERIFIED-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1464 original SOURCE66fb five-client Linux native 600s and 1800s really ran and all six owned Stop; x86 one frozen build PASS. 600 true peak75 Alice DL missing32, server 8-cap overflow45 => FAIL_SCOPED even after Rust urgent FIFO. 1800 original five M4 rotations/Stop PASSED and queue0, but 0-loss Alice DL missing351 => strict reliability FAIL. Both custom gates failed due reporter phases variable shadow; offline source-locked replay pending. No additional native long run."
+  "partial_summary": "H1466 SRC66fb five authentic Linux clients genuine600 and1800 both six original owned Stop. 600 Alice real75 Mbps:32 DL UDP missing, server backlog8 overflow45; server offered minus client M3 delivered exactly45=>real FAIL. 1800 genuine all M4 rotations PASS_SCOPED & queue overflow0, but zero-loss Alice DL351 missing=>strict FAIL; likely different domain. H1464 offline replay Action42584453380 SUCCESS, artifact13658711312 CRC_PASS, original 2 artifacts 13656024788/13657785615, complete per-phase source-locked rejudge; no native reruns."
 }
