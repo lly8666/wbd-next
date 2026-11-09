@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "24537be41befd4a3554a6cdd780716d04dc16670",
+  "result": "INCONCLUSIVE",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "run_id": 42532903160,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/42532903160",
+  "run_status_at_review": "IN_PROGRESS_NATIVE_STEP19_NO_FINAL_APP_OR_STOP_RECEIPT",
+  "evidence_origin": "User supplied actual Action live native stdout through 960s, cross-checked job id 128892086786 and prior two job timelines through GitHub",
+  "positive_windows_rust_native_stage": {
+    "owner_ip_route_start": "GAMEFEC_MGMT_PEERS_PINNED_UNDERLAY count=4",
+    "driver": "SIGNED_NPCAP_WINTUN_INSTALLED",
+    "tls": "REAL_NATIVE_BOTH_CLIENTS_APP_READY",
+    "business_elapsed_s_last_report": 960.2,
+    "windows_udp_received": 8925,
+    "linux_udp_received": 8971,
+    "minute_business_counters_monotonic": true,
+    "tcp_and_gap": "No test assertion failure was emitted through 960.2s; cannot claim final 1800s, Stop or unexplained timeout-free history after last known minute."
+  },
+  "prior_truncated_jobs": [
+    {
+      "action": 42508261361,
+      "native_job_start": "2026-11-08T18:10:50Z",
+      "native_job_end": "2026-11-08T19:12:52Z",
+      "result": "failure",
+      "native_step_end": null
+    },
+    {
+      "action": 42517812264,
+      "native_job_start": "2026-11-08T20:04:15Z",
+      "native_job_end": "2026-11-08T21:07:16Z",
+      "result": "failure",
+      "native_step_end": null
+    }
+  ],
+  "failure_boundary": "Previous two jobs ended 62-63 minutes after job start with native step still in_progress/BlobNotFound, not a normal product test exit. Third original 960s native log ends without final receipt. Existing management route only Arm'd established peers once, not new service connections.",
+  "distinguishing_hypothesis": "If Runner.Worker/Listener opens new remote IPv4 after Wintun/WAL route install, original four snapshot /32s do not protect it; early real business remains healthy while GitHub control channel disconnects. Not proven until refresh observes new peer targets/actual owned route installation and full completion.",
+  "next_experiment": "One scoped source-frozen 1800s Windows+Linux Action with existing exact owner lease Refresh, selected Runner.Worker/Listener Established/SynSent, positive effective /32 readback, observed new-peers count, and original UDP/TCP/RSS/owned Stop. No FEC/record/TLS/MTU changes and no ARM64 repetition.",
+  "nonqualified": [
+    "Action current original 1800s and Stop not yet proven",
+    "New-connection condition NOT_TRIGGERED until observed",
+    "Android and user physical devices NOT_RUN; historical H998 same-socket MTU FAIL retained"
+  ]
+}

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1441,
-  "checkpoint_sha": "24537be41befd4a3554a6cdd780716d04dc16670",
+  "sequence": 1442,
+  "checkpoint_sha": "90042e5c5a8db247638f3b94e3bd44a684a4ef4f",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1441-SOURCE24537-WINDOWS-CROSSOS1800-INFLIGHT",
-  "current_task": "H1440 source 24537be4 Actions42532903160: governance and feature catalog SUCCESS, cheap Windows workflow checks SUCCESS including both new explicit crossOS1800 management lease and legacy Normal105 static guard regression; Windows Go/Rust and Linux Rust compilation in progress as of last check. This is ONE original signed Windows+independent Linux 1800s source-frozen run; native 1800s/Stop not yet executed or verified. No additional dispatch, no ARM64 replay. PLAN028 IN_PROGRESS.",
-  "why_now": "A prior diagnostic L3 source d3bd3 had a cheap test-only stale old guard string assertion, skipped all native jobs; corrected offline check and now new source passed cheap. Preserve earlier Windows-native two NOT_QUALIFIED and already qualified ARM64 eef2 2x1800 original evidence.",
+  "task_id": "PLAN028-M0-H1442-CROSSOS-RUNNER-PEER-REFRESH",
+  "current_task": "H1442 recovered native Action42532903160 source24537 through 960.2s real two-client UDP RX 8925/8971 and 4 run-owned runner peers initial pinned, but no final 1800s app/Stop receipt (native stage19 still in_progress at last check). Previous two Windows L3 native jobs FAILED after 62-63min while stage19 never finalized/log unavailable. One differentiating test-only source changes exactly managed Runner /32 refresh and 1800s witness on real Windows with stdout counters, preserve Go/Rust product and all original gates. PLAN028 IN_PROGRESS.",
+  "why_now": "Startup snapshot of 4 Runner management IPv4 peers cannot protect a newly opened GitHub Worker/Listener TCP peer after Wintun route changes; not proven actual fault. Need observe same running OS's new SynSent/Established PID-owned targets and exact CAS route readback, instead of stretching 2600s watchdog or rerunning unchanged seed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect Action42532903160 only, first observe exact /32 physical management lease armed/read back before original app, then source-locked 1800s Windows+independent Linux UDP/TCP+RSS/owned Stop+route restore. If fail read native first error/finite artifacts; if stage log unavailable mark NOT_QUALIFIED, no blind rerun. Audit remaining acceptance hard gates before any completion claim; physical/Android NOT_RUN, H998 historical FAIL retained.",
+  "next_action": "Collect one source-frozen actual Windows+independent Linux L3 Action triggered by H1442 explicit two markers (not an ARM64 retest). Check cheap preflight, Windows executable/driver/native bins, live /32 Refresh count and positive new-peers only if triggered, 1800s actual UDP/TCP/RSS and exact owned Stop; if Runner still unobservable retain NOT_QUALIFIED and switch to independent host timeline rather than repeating. Existing Action42532903160 remains separate pending/FAIL per actual result.",
   "unverified": true,
   "last_tested_source": "24537be41befd4a3554a6cdd780716d04dc16670",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1441-WINDOWS-CROSSOS1800-CURRENT-SOURCE-IN-FLIGHT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1442-CROSSOS-960S-RUNNER-MGMT-GAP-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1441: 24537be4 Governance/Feature and cheap preflight PASS, real native Windows L3 Action42532903160 building. Only explicit 1800s crossOS /32 owned runner management lease was added to harness; product unchanged. ARM64 eef2 two exact 1800s PASS_SCOPED and H1424 signed crossOS L1 PASS_SCOPED reused. Windows L3 no original business/Stop verdict yet. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1442: original 24537 crossOS L3 960s real UDP RX 8925/8971 and pinned 4 physical runner /32, no final Stop; old two job logs 404/step19 in_progress after ~62m FAILURE. Hypothesis dynamic runner TCP peers not covered by startup-only lease. Scoped test-only Refresh learns PID-owned live new target route with OS readback, records trigger, preserves product and all L3 hard gates. ARM64 eef2 2x1800 PASS_SCOPED unchanged."
 }

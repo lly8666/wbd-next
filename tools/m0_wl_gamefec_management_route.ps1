@@ -1,6 +1,6 @@
 # Only live GitHub runner management IPv4 peers, on their already-owned
 # underlay. GameFEC, Normal105, or explicit PLAN028 cross-OS L3 only; never product WAL or foreign cleanup.
-param([Parameter(Mandatory=$true)][ValidateSet('Arm','Restore')][string]$Action,
+param([Parameter(Mandatory=$true)][ValidateSet('Arm','Refresh','Restore')][string]$Action,
       [string]$Receipt='result/wl-public/gamefec-management-route-lease.json')
 $ErrorActionPreference='Stop'
 $longNative=($env:WBD_WL_RUNNER_MGMT_PIN -eq '1' -and
@@ -47,6 +47,39 @@ if($Action -eq 'Restore'){
  Undo-Lease $lease
  Remove-Item -LiteralPath $p -Force -ErrorAction Stop
  Write-Output 'GAMEFEC_MGMT_ROUTE_EXACT_RESTORE_PASS'
+ exit 0
+}
+# Only the explicit two-client L3 may add NEW live Runner endpoints.
+# Keep the original Arm and Restore behavior of GameFEC/Normal105 intact.
+if($Action -eq 'Refresh'){
+ if(-not $crossOsL3){throw 'MANAGEMENT_REFRESH_L3_ONLY'}
+ if(-not (Test-Path -LiteralPath $p)){throw 'MANAGEMENT_REFRESH_NO_OWNED_LEASE'}
+ $lease=Get-Content -LiteralPath $p -Raw|ConvertFrom-Json
+ if($lease.schema -ne 'm0-gamefec-management-peers/v1' -or $lease.owner -ne $owner -or $lease.source -ne $env:GITHUB_SHA){throw 'FOREIGN_MANAGEMENT_LEASE'}
+ $runner=@(Get-CimInstance Win32_Process -Filter "Name='Runner.Worker.exe' OR Name='Runner.Listener.exe'" | ForEach-Object {[uint32]$_.ProcessId})
+ if(-not $runner.Count){throw 'RUNNER_MANAGEMENT_PID_NOT_FOUND'}
+ # Include SynSent: new GitHub service peers may not yet be Established
+ # when a default-tunnel route captures the first SYN.
+ $targets=@(Get-NetTCPConnection -ErrorAction Stop | Where-Object {
+   ($runner -contains [uint32]$_.OwningProcess) -and ($_.State -in @('Established','SynSent'))
+  } | ForEach-Object {$_.RemoteAddress} | Where-Object {$_ -match '^\d{1,3}(\.\d{1,3}){3}$' -and $_ -notmatch '^(127\.|169\.254\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)'} | Sort-Object -Unique)
+ foreach($entry in @($lease.routes)){
+  if((Exact-Route ([string]$entry.prefix) ([int]$lease.interface_index) ([string]$lease.next_hop)).Count -ne 1){throw 'OWNED_MANAGEMENT_ROUTE_LOST'}
+ }
+ $before=@($lease.routes).Count
+ foreach($ip in $targets){
+  $prefix="$ip/32"
+  if(@($lease.routes|Where-Object {$_.prefix -eq $prefix}).Count){continue}
+  if(@($lease.routes).Count -ge 24){throw 'MANAGEMENT_L3_MAX_OWNED_ROUTES'}
+  if(@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $prefix -ErrorAction SilentlyContinue).Count){throw 'FOREIGN_OR_AMBIGUOUS_HOST_ROUTE'}
+  $lease.routes+=@([ordered]@{prefix=$prefix;state='intent'})
+  Save-Lease $lease
+  New-NetRoute -DestinationPrefix $prefix -InterfaceIndex ([int]$lease.interface_index) -NextHop ([string]$lease.next_hop) -RouteMetric 1 -PolicyStore ActiveStore -ErrorAction Stop|Out-Null
+  if((Exact-Route $prefix ([int]$lease.interface_index) ([string]$lease.next_hop)).Count -ne 1){throw 'MANAGEMENT_HOST_ROUTE_READBACK_FAIL'}
+  $lease.routes[-1].state='owned'
+  Save-Lease $lease
+ }
+ Write-Output ('PLAN028_CROSSOS1800_MGMT_REFRESH observed='+$targets.Count+' added='+(@($lease.routes).Count-$before)+' total='+@($lease.routes).Count)
  exit 0
 }
 if(Test-Path -LiteralPath $p){throw 'EXISTING_MANAGEMENT_LEASE'}

@@ -3,7 +3,7 @@
 
 This test-only observer does not own VPN, change wire, or synthesize receipts.
 """
-import json, os, pathlib, subprocess, time
+import json, os, pathlib, re, subprocess, time
 from m0_plan028_h1412_wsl_cross_os_client_preflight import NS
 
 def resources(out,win,wsl):
@@ -27,6 +27,20 @@ def resources(out,win,wsl):
             "windows_cpu_s":float(w.get("cpu_seconds") or 0),
             "linux_rss_kib":{v[0]:int(v[1]) for v in rows}}
 
+def refresh_runner_management():
+    """Cold test-only CAS /32 refresh; no VPN packets, wire, or product owner."""
+    script=pathlib.Path("tools/m0_wl_gamefec_management_route.ps1").resolve()
+    cmd=["powershell.exe","-NoProfile","-NonInteractive","-File",str(script),
+         "-Action","Refresh","-Receipt",
+         "result/wl-public/crossos1800-management-route-lease.json"]
+    p=subprocess.run(cmd,text=True,capture_output=True,timeout=18)
+    if p.returncode:
+        raise RuntimeError("L3 managed Runner /32 refresh failed (test infrastructure): "+p.stderr[-420:])
+    m=re.search(r"PLAN028_CROSSOS1800_MGMT_REFRESH observed=(\d+) added=(\d+) total=(\d+)",p.stdout)
+    if not m:
+        raise RuntimeError("L3 managed Runner /32 refresh readback absent: "+p.stdout[-300:])
+    return {"observed":int(m[1]),"added":int(m[2]),"total":int(m[3])}
+
 def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     need(seconds==1800 and len(paths)==2 and len(owners)==4,
          "L3 requires 1800s exactly, two clients and one server/echo")
@@ -35,12 +49,25 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
         need(entry["received"]>=8 and entry["reverse_received"]>=5,
              who+" L3 not yet authenticated app-ready")
     begin=time.monotonic();next_check=begin+5;next_tcp=begin+30
-    next_resources=begin+90;sample=[];rss=[];tcps=0
+    next_resources=begin+90;next_mgmt=begin+8
+    sample=[];rss=[];tcps=0;management=[];added_peers=0
     print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN",flush=True)
     while time.monotonic()-begin<seconds:
         now=time.monotonic();elapsed=now-begin
         for who,p in owners.items():
             need(p.poll() is None,"real "+who+" exited during 1800s")
+        if now>=next_mgmt:
+            managed=refresh_runner_management()
+            management.append({"elapsed_s":round(elapsed,2),**managed})
+            added_peers+=managed["added"]
+            if managed["added"] or len(management)%6==0:
+                print("H1430_REAL_RUNNER_MANAGEMENT "+
+                      json.dumps({"elapsed_s":round(elapsed,1),
+                       "new_peer_routes":managed["added"],
+                       "cumulative_new_routes":added_peers,
+                       "current_runner_targets":managed["observed"],
+                       "owned_routes":managed["total"]}),flush=True)
+            next_mgmt=time.monotonic()+10
         if now>=next_check:
             cur={who:stats(p) for who,p in paths.items()}
             for who,v in cur.items():
@@ -84,15 +111,18 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
                     "max_echo_gap_ms","max_reverse_gap_ms"):
             need(v[key] is not None and float(v[key])<1500,
                  who+" terminal no-RX gap >=1500ms: "+key)
+    need(len(management)>=60,"L3 runner management dynamic /32 refresh not actually exercised")
     need(elapsed>=1800 and tcps>=28 and len(rss)>=12,
          "true 1800s duration/dual TCP/resource samples missing")
     (out/"h1430-l3-samples.json").write_text(json.dumps({
         "source_sha":os.environ["GITHUB_SHA"],"duration_s":round(elapsed,2),
         "tcp_both_count":tcps,"before":initial,"after":after,
-        "samples":sample,"resources":rss},indent=2)+"\n")
+        "samples":sample,"resources":rss,"runner_management":management,
+        "runner_new_peer_routes":added_peers},indent=2)+"\n")
     return {"status":"PASS_SCOPED_REAL_1800S_BOTH_CLIENTS",
         "duration_s":round(elapsed,2),"tcp_both_count":tcps,
-        "resource_samples":len(rss),"actual_udp_delta":delta,
+        "resource_samples":len(rss),"runner_refresh_samples":len(management),
+        "runner_new_peer_routes":added_peers,"actual_udp_delta":delta,
         "maximum_echo_gap_ms":{x:after[x]["max_echo_gap_ms"] for x in paths},
         "maximum_reverse_gap_ms":{x:after[x]["max_reverse_gap_ms"] for x in paths},
         "windows_peak_rss_bytes":max(x["windows_rss_bytes"] for x in rss)}

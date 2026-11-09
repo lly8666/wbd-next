@@ -43,7 +43,7 @@ class ManagedUnilateral(unittest.TestCase):
   self.assertEqual(text.count("function Save-Lease($v){"),1)
   self.assertEqual(text.count("function Undo-Lease($v){"),1)
   self.assertEqual(text.count("if($env:GITHUB_ACTIONS -ne"),1)
-  self.assertLess(len(text.splitlines()),85)
+  self.assertLess(len(text.splitlines()),135)
   self.assertNotIn("'^game[24]-fec\\n",text)
  def test_workflow_does_not_call_native_before_management_pin(self):
   s=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
