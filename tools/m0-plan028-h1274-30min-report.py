@@ -12,6 +12,9 @@ import re
 NAMES=("alice","bob","carol","dave","erin")
 PHASES=(("warmup",10,.3),("first_wave",240,.6),("sustained",600,1.0),
         ("overload",300,1.3),("recovery",650,1.0))
+MID600_PHASES=(("warmup",10,.3),("first_wave",90,1/3),
+               ("sustained",180,2/3),("overload",90,1.),
+               ("recovery",230,2/3))
 
 def read(path):
     return json.loads(pathlib.Path(path).read_text())
@@ -23,7 +26,7 @@ def count(line,name):
 def mbps(bytes_count,seconds):
     return round(8*bytes_count/(seconds*1e6),5)
 
-def outer_counts(log,mode):
+def outer_counts(log,mode,duration=1800):
     if mode=="game4":
         marker="WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP"
     elif mode=="game2":
@@ -60,7 +63,7 @@ def outer_counts(log,mode):
         "uncertain_repeat_record_wire_bytes":0 if game else sums["repair_uncertain_wire_bytes"],
         "copied_original_record_count":sums.get("copied_appearance",sums.get("original_frozen_retransmitted")),
         "cosmetic_R_div_F_plus_R_pct":round(100*repeat/(first+repeat),5) if first+repeat else None,
-        "cosmetic_accepted_repeat_mbps_over_1800s":mbps(repeat,1800),
+        "cosmetic_accepted_repeat_mbps_over_1800s":mbps(repeat,duration),
         "denominator_scope":"original accepted protected record wire bytes, excludes IPv4/TCP/L2 and control C",
         "R_div_F_plus_R_plus_C":"NOT_MEASURED_CONTROL_C",
         "raw_original_counters":sums
@@ -86,7 +89,7 @@ def tc_stats(path):
 def minute_windows(tx,rx):
     assert len(tx)==len(rx)
     result=[]
-    for minute in range(30):
+    for minute in range(len(tx)//6000):
         a,b=minute*6000,(minute+1)*6000
         first=sum(tx[a:b]); received=sum(rx[a:b])
         result.append({"minute":minute+1,"offered_mbps":mbps(first,60),
@@ -137,9 +140,18 @@ def normal_m4_client_proof(client_text):
 def analyze(art,server_log):
     plan=read(art/"h1250-matrix-plan.json")
     assert plan["long_scene"] in ("baseline","heterogeneous","pressure")
-    assert plan["application_load_seconds"]==1800
-    assert plan["simultaneous_stress_seconds"]==1790
-    assert sum(p[1] for p in PHASES)==1800
+    duration=plan["application_load_seconds"]
+    assert duration in (600,1800)
+    midsix=duration==600
+    phases=MID600_PHASES if midsix else PHASES
+    if midsix:
+        assert plan.get("H1461_600s_capacity75_profile")=="EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION"
+        assert plan["simultaneous_stress_seconds"]==590
+        assert plan["long_scene"]=="baseline"
+        assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[75,2,2,2,2]
+    else:
+        assert plan["simultaneous_stress_seconds"]==1790
+    assert sum(p[1] for p in phases)==duration
     assert len(plan["clients"])==5
     assert {p["who"] for p in plan["clients"]}==set(NAMES)
     cpu=read(art/"h1250-cpu-rss.json")
@@ -163,10 +175,10 @@ def analyze(art,server_log):
     # server-native success by the exact physical IPv4+TCP source port.
     server_normal_m4,server_normal_reject=normal_m4_server_proof(server_text)
     result={
-        "schema_version":1,"checkpoint":"H1274",
+        "schema_version":1,"checkpoint":"H1461_600" if midsix else "H1274",
         "source_sha":plan["source_sha"],"scene":plan["long_scene"],
-        "result":"DIAGNOSTIC_COMPLETE","architecture":"native_ARM64_client_and_server",
-        "duration_seconds":1800,"clients":{},"alerts":[],
+        "result":"DIAGNOSTIC_COMPLETE","architecture":plan["network_scope"],
+        "duration_seconds":duration,"clients":{},"alerts":[],
         "actual_physical_qdisc":qdisc,
         "physical_l2_arp_control":plan.get("physical_l2_arp_control","historical_unspecified"),
         "server_per_authenticated_lease_tun":per_lease,
@@ -191,8 +203,8 @@ def analyze(art,server_log):
         peer=read(art/("h1250-s-"+who+".json"))
         assert source["role"]=="client" and peer["role"]=="server"
         assert source["start_ns"]==peer["start_ns"]==plan["start_monotonic_ns"]
-        assert source["end_ns"]-source["start_ns"]==1800_000_000_000
-        assert peer["end_ns"]-peer["start_ns"]==1800_000_000_000
+        assert source["end_ns"]-source["start_ns"]==duration*1_000_000_000
+        assert peer["end_ns"]-peer["start_ns"]==duration*1_000_000_000
         if source["capacity_exceeded"] or peer["capacity_exceeded"]:
             result["alerts"].append({"who":who,"kind":"GENERATOR_PACKET_CAP_REACHED"})
         text=(art/("h1250-product-"+who+".log")).read_text(errors="replace")
@@ -205,7 +217,31 @@ def analyze(art,server_log):
             r"V4_PUBLIC_LEASE_APPLIED role=client.*?os_readback=(10\.66\.0\.\d+)/32",text)
         lease_stable=bool(leases) and set(leases)=={spec["lease"]}
         native_stop="V4_PUBLIC_SHARED_TUN_STOP generation=" in text
-        if spec["mode"]=="game4":
+        if midsix:
+            # This 600s capacity experiment deliberately parks L1 timers
+            # at 3600s. Never mistake a missing rotation for an 1800s L3
+            # handoff PASS; verify the genuine initial native server M4.
+            if spec["mode"]=="game2":
+                committed=bool(server_game2_ports)
+            elif spec["mode"]=="game4":
+                # Initial authenticated 4-lane group uses the original M4
+                # cohort, not the later per-lane hot-rotation witness.
+                committed=("V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=4" in server_text
+                           or "V4_PUBLIC_GAME_SINGLE_LANE_READY role=server" in server_text)
+            else:
+                initial=normal_m4_client_proof(text)
+                committed=(bool(initial) and all((ip,port) in server_normal_m4
+                           for _,ip,port in initial))
+            passed=(ready==[1] and not old and not timer and lease_stable
+                    and native_stop and committed)
+            rotation={"unit":"NO_ROTATION_BY_DESIGN_600S_ONLY",
+                      "result":"PASS_SCOPED" if passed else "FAIL_OR_INCOMPLETE",
+                      "native_final_stop_observed":native_stop,
+                      "authenticated_initial_server_M4":committed,
+                      "same_authenticated_lease":lease_stable,
+                      "no_timer_events":len(timer)==0,
+                      "h1461_full_1800s_handoff":"NOT_QUALIFIED"}
+        elif spec["mode"]=="game4":
             # Game4 rotates one protected lane IN the same group. The
             # whole-group generation deliberately remains 1, and there is
             # no old group Stop for individual slot replacement.
@@ -313,7 +349,7 @@ def analyze(art,server_log):
         if not passed:
             result["alerts"].append({"who":who,"kind":"ROTATION_CONTINUITY_NOT_PROVEN"})
         game=("game4" if spec["mode"]=="game4" else "game2" if spec["mode"]=="game2" else "")
-        repeat=outer_counts(text,game)
+        repeat=outer_counts(text,game,duration)
         if repeat["observed_retired_generations"]==0:
             result["alerts"].append({"who":who,"kind":"NO_REAL_OUTER_COUNTER"})
         repeat_all+=repeat["cosmetic_accepted_repeat_record_wire_bytes"]
@@ -329,17 +365,17 @@ def analyze(art,server_log):
         for direction in ("uplink","downlink"):
             tx,rx=(source,peer) if direction=="uplink" else (peer,source)
             phases=[]
-            for i,(name,duration,rate_scale) in enumerate(PHASES):
+            for i,(name,phase_seconds,rate_scale) in enumerate(phases):
                 sent=tx["stats"]["udp"][i]
                 got=rx["stats"]["udp"][i]
                 n=sent["tx_packets"]
                 m=got["rx_packets"]
                 phases.append({
-                    "phase":name,"seconds":duration,
+                    "phase":name,"seconds":phase_seconds,
                     "actual_udp_sent":n,"unique_udp_delivered":m,
                     "actual_delivery_fraction":round(m/n,6) if n else None,
-                    "actual_udp_sent_mbps":mbps(sent["tx_bytes"],duration),
-                    "actual_udp_delivered_mbps":mbps(got["rx_bytes"],duration),
+                    "actual_udp_sent_mbps":mbps(sent["tx_bytes"],phase_seconds),
+                    "actual_udp_delivered_mbps":mbps(got["rx_bytes"],phase_seconds),
                     "received_only_one_way_p99_ms":got["latency"]["p99_ms"],
                     "received_only_one_way_max_ms":got["latency"]["max_ms"],
                     "generator_send_errors":sent["send_errors"],
@@ -389,7 +425,7 @@ def analyze(art,server_log):
     result["total_client_outer_record"]={
         "first_record_wire_bytes":first_all,
         "cosmetic_accepted_repeat_record_wire_bytes":repeat_all,
-        "cosmetic_repeat_mbps_over_1800s":mbps(repeat_all,1800),
+        "cosmetic_repeat_mbps_over_1800s":mbps(repeat_all,duration),
         "cosmetic_R_div_F_plus_R_pct":round(100*repeat_all/(first_all+repeat_all),5)
                                     if first_all+repeat_all else None,
         "R_div_F_plus_R_plus_C":"NOT_MEASURED",

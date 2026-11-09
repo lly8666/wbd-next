@@ -4337,27 +4337,64 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
         // exists. Zero extra calls on the ordinary zero-backlog path. This
         // is bounded, nonblocking, generation-fenced FIFO, not a second
         // reader, more capacity, packet retries, or a high-priority lane.
-        if let Some(old)=q.packets.pop_front(){
+        // H1461 peak75: if a recovered M1 owner made several inbox slots
+        // available, forwarding only ONE oldest packet before admitting
+        // the next burst left up to seven stale packets in the 8-slot
+        // queue. Drain at most the already-authorized batch (8), ONLY
+        // when this lease is near full. The normal empty/partial path
+        // still does one attempt; no new capacity, thread, wait or crypto.
+        let urgent=q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE-2;
+        let quota=if urgent{SHARED_TUN_DRAIN_PER_ROUTE}else{1};
+        for _ in 0..quota{
+            let Some(old)=q.packets.pop_front()else{break};
             q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
             if old.queued_at.elapsed()>=SHARED_TUN_PENDING_MAX_AGE{
                 d.expired+=1;
-            }else{
-                match q.route.send.try_send(old.packet){
-                    Ok(())=>d.delivered+=1,
-                    Err(TrySendError::Full(packet))=>{
-                        q.queued_bytes+=old.bytes;
-                        q.packets.push_front(PendingSharedTunPacket{
-                            packet,bytes:old.bytes,queued_at:old.queued_at,
-                        });
-                        d.backpressure+=1;
-                    },
-                    Err(TrySendError::Disconnected(_))=>{
-                        d.retired+=1+q.packets.len() as u64;
-                        q.packets.clear();q.queued_bytes=0;
-                        q.route.alive.store(false,Ordering::Release);
-                        return d;
-                    },
-                }
+                continue
+            }
+            match q.route.send.try_send(old.packet){
+                Ok(())=>d.delivered+=1,
+                Err(TrySendError::Full(packet))=>{
+                    q.queued_bytes+=old.bytes;
+                    q.packets.push_front(PendingSharedTunPacket{
+                        packet,bytes:old.bytes,queued_at:old.queued_at,
+                    });
+                    d.backpressure+=1;
+                    break
+                },
+                Err(TrySendError::Disconnected(_))=>{
+                    d.retired+=1+q.packets.len() as u64;
+                    q.packets.clear();q.queued_bytes=0;
+                    q.route.alive.store(false,Ordering::Release);
+                    return d
+                },
+            }
+        }
+        // Preserve FIFO: only bypass a once-full queue after *every*
+        // older item has left it. Do not needlessly occupy one of the
+        // eight pending slots when the original M1 receiver is writable.
+        if q.packets.is_empty(){
+            match q.route.send.try_send(make()){
+                Ok(())=>{d.delivered+=1;return d},
+                Err(TrySendError::Full(packet))=>{
+                    d.backpressure+=1;
+                    if bytes>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+                        // Even when a previously-full queue just drained,
+                        // NEVER retain an over-budget jumbo packet.
+                        d.overflow+=1;d.byte_limit+=1;
+                        return d
+                    }
+                    q.queued_bytes=bytes;
+                    q.packets.push_back(PendingSharedTunPacket{
+                        packet,bytes,queued_at:Instant::now(),
+                    });
+                    return d
+                },
+                Err(TrySendError::Disconnected(_))=>{
+                    d.retired+=1;
+                    q.route.alive.store(false,Ordering::Release);
+                    return d
+                },
             }
         }
         if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{
@@ -4764,6 +4801,68 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     assert_eq!(b_received,64);
     println!("M0_PLAN028_SHARED_TUN_A_RECOVERY_B_CONTINUOUS_PASS a_recovered=48 b_continuous=64 post_recovery_drops=0");
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
+    let (recycle,_r)=mpsc::sync_channel::<Vec<u8>>(32);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let (a_tx,a_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+    let (b_tx,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+    let (a_live,b_live)=(Arc::new(AtomicBool::new(true)),
+                          Arc::new(AtomicBool::new(true)));
+    for i in 0..8{a_tx.try_send(packet(i)).unwrap();}
+    let (ka,kb)=([10,66,0,2],[10,66,0,3]);
+    let (ra,rb)=(
+        SharedTunRoute{generation:10,alive:a_live,send:a_tx},
+        SharedTunRoute{generation:20,alive:b_live,send:b_tx},
+    );
+    let mut pending=HashMap::new();
+    for i in 8..16{
+        let d=enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(i));
+        assert_eq!(d.overflow,0);
+    }
+    assert_eq!(pending[&ka].packets.len(),8);
+    // Original M1 worker consumes eight from the 64-slot owner inbox;
+    // here a smaller eight-slot owner fixture forces tight bursts.
+    for i in 0..8{
+        match a_rx.try_recv().unwrap(){
+            OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[i]),
+            _=>panic!("wrong original M1 ingress kind"),
+        }
+    }
+    let d=enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(16));
+    // Eight older packets fill the receiver, and the newest stays
+    // in ONE bounded pending slot instead of being dropped at queue=8.
+    assert_eq!((d.delivered,d.overflow,d.backpressure),(8,0,1));
+    assert_eq!(pending[&ka].packets.len(),1);
+    for i in 8..16{
+        match a_rx.try_recv().unwrap(){
+            OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[i]),
+            _=>panic!("older pending FIFO packet lost or reordered"),
+        }
+    }
+    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert!(pending.is_empty());
+    match a_rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[16]),
+        _=>panic!("new source packet wrong"),
+    }
+    let d=enqueue_shared_tun(&mut pending,ka,ra,1,||packet(17));
+    assert_eq!((d.delivered,d.overflow),(1,0));
+    match a_rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[17]),
+        _=>panic!("next direct packet wrong"),
+    }
+    assert_eq!(enqueue_shared_tun(&mut pending,kb,rb,1,||packet(77)).delivered,1);
+    match b_rx.try_recv().unwrap(){
+        OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[77]),
+        _=>panic!("sibling original route affected"),
+    }
+    println!("H1461_URGENT_FIFO_EIGHT_SLOT_BOUNDED_DRAIN_NO_OVERFLOW_PASS");
+}
+
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){

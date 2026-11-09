@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "NOT_RUN_NEW_PRODUCT_SOURCE_COMMIT_PENDING",
+  "artifact_verified": false,
+  "old_failed_original": {
+    "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+    "normal75_action": 42567898270,
+    "case": "FAIL_SCOPED_75MBPS_ZEROLOSS",
+    "peak_missing_udp": 28,
+    "server_8slot_queue_overflows": 5
+  },
+  "fix": {
+    "code": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "behavior": "At pending >=6 of 8, drain up to 8 oldest original packets into recovered M1 inbox before admitting newest, never reorder; no unbounded/retry/crypto change",
+    "max_packets": 8,
+    "max_bytes": 65536,
+    "max_age_ms": 100,
+    "proven_by_real_stress": false
+  },
+  "new_single_workflow": ".github/workflows/m0-plan028-h1461-fixed-five-client-600-1800.yml",
+  "source_policy": "Build patched Go/Rust ISA-L once at exact triggered commit, SHA-lock both native jobs",
+  "jobs": [
+    {
+      "duration_s": 600,
+      "clients": 5,
+      "physical_loss_pct": 0,
+      "normal_alice_targets_mbps": [
+        25,
+        50,
+        75,
+        50
+      ],
+      "phases_s": [
+        90,
+        180,
+        90,
+        230
+      ],
+      "warmup_s": 10,
+      "server_m4_and_all_six_original_Stop": "REQUIRED",
+      "original_zero_loss_udp_missing_allowed": 0,
+      "server_queue_overflow_allowed": 0,
+      "rotation": "NOT_REQUESTED_BY_DESIGN"
+    },
+    {
+      "duration_s": 1800,
+      "clients": 5,
+      "loss_pct": [
+        0,
+        1,
+        5,
+        15,
+        30
+      ],
+      "delay_ms": [
+        0,
+        15,
+        50,
+        100,
+        125
+      ],
+      "authenticated_original_Go_TLS_Rust_M4_rotations": "REQUIRED",
+      "all_six_original_Stop": "REQUIRED"
+    }
+  ],
+  "current_status": {
+    "new_600": "NOT_RUN",
+    "new_1800": "NOT_RUN",
+    "official_Windows_1800_L3": "NOT_QUALIFIED",
+    "old_SOURCE548_Windows_600": "PASS_SCOPED",
+    "ARM64_two_1800": "PASS_SCOPED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  },
+  "restrictions": [
+    "No Windows hosted 1800 rerun",
+    "Not a product PASS before real exact clocks and owner Stop",
+    "No PLAN029/030"
+  ]
+}

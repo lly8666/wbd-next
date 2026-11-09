@@ -33,13 +33,18 @@ EXTRA = (
 
 # The original H1259 430-second default remains unchanged. An opt-in
 # SOURCE-qualified H1274 scene extends this very same real Go TLS/Rust harness.
-LONG_SCENE=os.environ.get("WBD_PLAN028_30M_SCENE","")
+# The 600s H1461 profile is a TRUE five-client app duration, never a
+# truncated 430s run or a silently abbreviated 1800s qualification.
+MID600=os.environ.get("WBD_PLAN028_600S_SCENE","")
+LONG_SCENE=os.environ.get("WBD_PLAN028_30M_SCENE","") or ("baseline" if MID600 else "")
 LONG_SCENES={
     "baseline":((0,0,1,1,5),(0,0,15,20,50),(8,8,6,6,6),(67,73,83,97,109)),
     "heterogeneous":((0,1,5,15,30),(0,15,50,100,125),(12,12,10,9,8),(79,89,101,107,113)),
     "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
+if MID600 and (MID600!="capacity75" or FAST_SCENE or os.environ.get("WBD_PLAN028_30M_SCENE")):
+    raise SystemExit("H1461 exact 600s only capacity75; cannot mix 1800s or FAST")
 CAPACITY_STEPS=os.environ.get("WBD_PLAN028_FAST_CAPACITY_STEPS","")
 if CAPACITY_STEPS not in ("","1","2"):
     raise SystemExit("invalid L2 capacity calibration flag")
@@ -138,12 +143,25 @@ if LONG_SCENE:
     if LONG_SCENE not in LONG_SCENES:
         raise SystemExit("invalid PLAN028 30m profile")
     LOSS,DELAY,RATE,ROTATION_SECONDS=LONG_SCENES[LONG_SCENE]
+if MID600:
+    # Same true mixed-mode TLS443/Rust endpoints, baseline physical 0%.
+    # 75 Mbps normal Alice + four 2 Mbps sibling clients; no rotations
+    # requested inside the 600s capacity diagnostic (unlike true 1800).
+    LOSS=(0,0,0,0,0)
+    DELAY=(0,0,0,0,0)
+    RATE=(75,2,2,2,2)
+    ROTATION_SECONDS=(3600,3600,3600,3600,3600)
 if ERIN_MAX_DELAY:
     DELAY=(*DELAY[:4],int(ERIN_MAX_DELAY))
 LONG_PHASES=(
     ("first_wave",240,.6),("sustained",600,1.0),
     ("overload",300,1.3),("recovery",650,1.0),
 )
+if MID600:
+    # Exactly 10s warmup +590s four actual application phases.
+    LONG_PHASES=(("first_wave",90,1/3),("sustained",180,2/3),
+                 ("overload",90,1.0),("recovery",230,2/3))
+    assert sum(duration for _,duration,_ in LONG_PHASES)==590
 
 def run(*args, capture=False, check=True):
     result = subprocess.run(args, text=True, capture_output=capture, check=check)
@@ -485,8 +503,9 @@ def main():
             "source_sha": source, "start_monotonic_ns": start_ns,
             "server_port": 443, "network_scope": "native Linux "+os.uname().machine+"/"+os.uname().machine+" 6-netns",
             "warmup_seconds": 10,
-            "simultaneous_stress_seconds":170 if FAST_SCENE else 1790 if LONG_SCENE else 420,
-            "application_load_seconds":180 if FAST_SCENE else 1800 if LONG_SCENE else 430,
+            "simultaneous_stress_seconds":170 if FAST_SCENE else 590 if MID600 else 1790 if LONG_SCENE else 420,
+            "application_load_seconds":180 if FAST_SCENE else 600 if MID600 else 1800 if LONG_SCENE else 430,
+            "H1461_600s_capacity75_profile":"EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION" if MID600 else None,
             "drain_seconds":10,"long_scene":LONG_SCENE or None,
             "fast_scene":FAST_SCENE or None,
             "physical_in_place_mtu_shrink":bool(FAST_MTU_SHRINK),
@@ -778,12 +797,12 @@ def main():
             mtu_worker=threading.Thread(target=physical_alice_mtu_event,daemon=True)
             mtu_worker.start()
         print(f"H1250_START_NS={start_ns}; 5 native clients simultaneously "
-              f"{180 if FAST_SCENE else 1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
+              f"{180 if FAST_SCENE else 600 if MID600 else 1800 if LONG_SCENE else 430}s warmup+load, 10s drain, "
               f"scenario={FAST_SCENE or LONG_SCENE or 'h1259'}; actual two-way tc loss={LOSS}", flush=True)
         for role in workers:
             p = procs[role]
             try:
-                code = p.wait(timeout=400 if FAST_SCENE else 2100 if LONG_SCENE else 530)
+                code = p.wait(timeout=400 if FAST_SCENE else 870 if MID600 else 2100 if LONG_SCENE else 530)
             except subprocess.TimeoutExpired as exc:
                 raise RuntimeError("traffic worker hung: " + role) from exc
             assert code == 0, f"traffic worker failed: {role}, exit={code}"
@@ -851,14 +870,17 @@ def main():
         elif LONG_SCENE:
             run("python3", str(workspace / "tools/m0-plan028-h1274-30min-report.py"),
                 "--art", str(out), "--product-log", str(serverlog),
-                "--output", str(out / "h1274-thirty-minute-report.json"))
+                "--output", str(out / ("h1461-six-hundred-report.json" if MID600
+                                      else "h1274-thirty-minute-report.json")))
         else:
             run("python3", str(workspace / "tools/m0-plan028-h1259-five-client-recovery-report.py"),
                 "--art", str(out), "--product-log", str(serverlog),
                 "--output", str(out / "h1250-five-client-report.json"))
         print(("M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE "+FAST_SCENE)
               if FAST_SCENE else ("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
-              if LONG_SCENE else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
+              if LONG_SCENE and not MID600 else
+              "H1461_NATIVE_X86_FIVE_CLIENT_REAL_600S_CAPACITY75_COMPLETE" if MID600
+              else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
               flush=True)
     finally:
         stop.set()
