@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "bf430867badc343b150f4d78bc32db5501769926",
+  "result": "PASS_SCOPED_HARNESS_OFFLINE_ONLY_NOT_NATIVE_1800S",
+  "artifact_verified": false,
+  "classification": "HARNESS_REGRESSION_AND_REAL_UNDERLAY_PRECONDITION_ONLY",
+  "original_go_rust_product_changes": "NONE",
+  "fix_commit": "bf430867badc343b150f4d78bc32db5501769926",
+  "evidence_repair_commit": "cce6b485f15e85d8934bcd0d9eca6d77c7f1fb95",
+  "verified": {
+    "linux_cheap_job": {
+      "run_id": 42546119207,
+      "job_name": "Cheap workflow and current assembly checks",
+      "conclusion": "success",
+      "specific_unittests": [
+        "test_file_backed_capture_inherited_pipe_descendant_has_real_deadline",
+        "test_real_l3_periodic_os_commands_use_file_backed_pid_deadline"
+      ],
+      "inherited_stdout_orphan_fixture": {
+        "deadline_s": 1,
+        "exit_code": 124,
+        "result": "PASS_SCOPED_TEST_COMMAND_BOUNDED"
+      }
+    },
+    "WindowsGoCompile": "success",
+    "WindowsRustUnit": "success",
+    "LinuxRustUnit": "success",
+    "real_H1412_WSL2_topology": {
+      "run_id": 42546119090,
+      "conclusion": "success",
+      "artifact_id": 13643955231,
+      "artifact_type": "REAL_BRIDGED_WSL_UNDERLAY_ONLY_NO_PRODUCT_OR_1800S_PROOF"
+    },
+    "governance_after_source_correction": {
+      "run_id": 42546307358,
+      "conclusion": "success"
+    }
+  },
+  "old_original_L3": {
+    "source_sha": "deb2c693897a93a9884a40b1a6b74b32c5db6362",
+    "action_id": 42540960361,
+    "status_at_checkpoint": "IN_PROGRESS_NATIVE_STEP19",
+    "last_user_visible_real_app_seconds": 360,
+    "final_app_duration": "NOT_QUALIFIED",
+    "owned_stop": "NOT_QUALIFIED",
+    "real_cause": "UNKNOWN_REQUIRES_ORIGINAL_STACK_OR_PARENT_STILL_ALIVE_WITNESS"
+  },
+  "no_1800_dispatch_new_source": true,
+  "scope": "No new full 1800s Windows native Action started. Offline-only marker excludes native-public-two-os; original run remains source-pinned and separately tracked.",
+  "outstanding": [
+    "Current source bf430 original Windows and independent Linux 1800 seconds/Stop NOT_RUN",
+    "Existing old source deb2 360s live native app followed by missing stdout, no final conclusion",
+    "Windows Python subprocess inherited-pipe failure mode fixed offline, actual old hang causality still unproven",
+    "H998 historic hot socket MTU FAIL",
+    "Android and user physical NOT_RUN"
+  ],
+  "carry_forward": {
+    "native_ARM64_source": "eef2a81383fec3e10a78d9e2dda29af799a11d90",
+    "native_ARM64_two1800": "PASS_SCOPED",
+    "WindowsL1_source": "e6aa4608780e9608070a7313be549a0d4524b38b",
+    "Windows_L1": "PASS_SCOPED"
+  }
+}
