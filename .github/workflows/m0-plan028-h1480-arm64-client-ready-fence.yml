@@ -1,3 +1,6 @@
+# H1484: same one real ARM64 scene now requires *both* mixed Normal B and
+# Game2 whole-group server B client-native authenticated proof. Preserve
+# H1483 original Carol 5-packet Game2 rotation loss as FAIL.
 # H1483: same one true ARM64 scene tests mixed Normal B async authenticated proof wiring; prior product FAIL retained.
 # H1482: exact PLAN028 server-B cold-gate overlay SHA repinned in assembly manifest; no duplicate scenario.
 # H1480 one real native ARM64 180s rotating12 original Go TLS/Rust M4 server B/client cold auth readiness fence.
@@ -126,6 +129,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile tools/m0_plan028_h1467_fiveclient_ab_netns.py tools/m0_plan028_h1480_ready_verdict.py
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4 -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib m0_plan028_server_b_waits_real_client_cold_health_before_replacing_a -- --test-threads=1
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib replacement_client_one_existing_health_without_extra_periodic_probe -- --test-threads=1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

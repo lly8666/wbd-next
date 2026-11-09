@@ -824,6 +824,15 @@ func runGameMultiServer(
     }
     normalPending:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
     normalProofReady:=make(chan normalProofResult,32)
+    // Same cold-only readiness fence for Game2/4 whole-group replacement.
+    // Hot Game4 single-lane swap never uses this group-level route.
+    type gameProofResult struct{
+        key realityfront.V4LinuxGameCohortID
+        rec *originalGameCohortLive
+        err error
+    }
+    gameProofPending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
+    gameProofReady:=make(chan gameProofResult,32)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
     // Already switched Game4 slots keep the old cold association/port
     // excluded from Go DATA until its bounded random retirement deadline.
@@ -923,6 +932,9 @@ func runGameMultiServer(
         tlsWG.Wait() // no TLS or cold B proof may outlive Stop
         for _,rec:=range normalPending{
             retErr=errors.Join(retErr,retireNormal(rec,"server-close-unproven-B"))
+        }
+        for _,group:=range gameProofPending{
+            retErr=errors.Join(retErr,retire(group,"server-close-unproven-Game-B"))
         }
         for _,group:=range pending{
             for _,lane:=range group.lanes{rejectLane(lane)}
@@ -1370,10 +1382,50 @@ func runGameMultiServer(
                 log.Printf("V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=%d lane=%d client_port=%d server_port=%d protected_TLS=1 original_Rust_M4=1 grouped_commit=1",
                     key.Lanes,i+1,flow.ClientPort,flow.ServerPort)
             }
-            // Epoch is part of the key; retire only the same principal and
-            // tunnel's old generation after the new authenticated M4 READY.
-            // No mutex is held across native Stop, and siblings are untouched.
-            olderSameEpoch:=active[key]
+            // Game B's grouped local TLS and M4 are not client-B RX proof.
+            // Preserve the currently authenticated A /32 until this exact
+            // candidate's client Health is AEAD/PN verified on server M4.
+            // The old B remains the only TUN sender, and its RX grace is
+            // unchanged. Do not tie Game4 hot one-lane rekeys to this gate.
+            duplicatePending:=false
+            for existing:=range gameProofPending{
+                if existing.Principal==key.Principal&&existing.TunnelID==key.TunnelID{
+                    duplicatePending=true;break
+                }
+            }
+            if duplicatePending{
+                if err:=retire(rec,"Game-B-already-pending");err!=nil{return err}
+                log.Printf("V4_PUBLIC_GAME_B_REJECT role=server reason=candidate_pending old_route_preserved=1")
+                continue
+            }
+            hasA:=false
+            for oldKey:=range active{
+                if oldKey.Principal==key.Principal&&oldKey.TunnelID==key.TunnelID{
+                    hasA=true;break
+                }
+            }
+            if hasA{
+                gameProofPending[key]=rec
+                tlsWG.Add(1)
+                go func(k realityfront.V4LinuxGameCohortID,b *originalGameCohortLive){
+                    defer tlsWG.Done()
+                    proofErr:=waitOriginalNativeServerClientM4Ready(runCtx,
+                        func()(realityfront.V4PublicLoopPulse,error){
+                            counters,err:=b.product.KernelCounters()
+                            if err!=nil{return realityfront.V4PublicLoopPulse{},err}
+                            return realityfront.V4PublicLoopPulse{
+                                AuthenticatedPeerControl:counters.AuthenticatedPeerControl,
+                            },nil
+                        },func()error{return nil},5*time.Second)
+                    select{
+                    case gameProofReady<-gameProofResult{k,b,proofErr}:
+                    case <-runCtx.Done():
+                    }
+                }(key,rec)
+                log.Printf("V4_PUBLIC_GAME_SERVER_B_PENDING role=server lanes=%d client_port=%d old_route_preserved=1 authenticated_client_M4_required=1",
+                    key.Lanes,newPeers[0].Port)
+                continue
+            }
             active[key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=server lanes=%d server_port=%d distinct_client_flows=%d",
@@ -1381,10 +1433,32 @@ func runGameMultiServer(
             log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",key.Lanes)
             log.Printf("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server server_port=%d groups=%d detached_flows=%d native_shared_tun=1",
                 c.localPort,len(active),len(detached))
+        case proof:=<-gameProofReady:
+            rec:=gameProofPending[proof.key]
+            if rec==nil||rec!=proof.rec{continue}
+            delete(gameProofPending,proof.key)
+            if proof.err!=nil||runCtx.Err()!=nil{
+                log.Printf("V4_PUBLIC_GAME_SERVER_B_UNPROVEN role=server lanes=%d old_route_preserved=1 class=%s",
+                    proof.key.Lanes,nativeColdFailureClass(proof.err))
+                if err:=retire(rec,"client-Game-B-M4-unproven");err!=nil{return err}
+                continue
+            }
+            if err:=rec.product.PromoteServerGameAfterAuthenticatedClientRx();err!=nil{
+                log.Printf("V4_PUBLIC_GAME_SERVER_B_PROMOTE_REJECT role=server lanes=%d old_route_preserved=1",proof.key.Lanes)
+                if stopErr:=retire(rec,"client-Game-B-M4-proof-rejected");stopErr!=nil{return stopErr}
+                continue
+            }
+            // One event-loop owner publishes the exact confirmed B. Later
+            // Stop of A is generation-fenced in the existing shared TUN.
+            olderSameEpoch:=active[proof.key]
+            active[proof.key]=rec
+            *connected=true
             if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
+            log.Printf("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=%d source=authenticated_client_native_Health promoted=1 old_route_preserved_until_proof=1",
+                proof.key.Lanes)
             for oldKey,oldGroup:=range active{
-                if oldKey==key||oldKey.Principal!=key.Principal||
-                    oldKey.TunnelID!=key.TunnelID{continue}
+                if oldKey==proof.key||oldKey.Principal!=proof.key.Principal||
+                    oldKey.TunnelID!=proof.key.TunnelID{continue}
                 scheduleGameRetire(oldGroup)
                 delete(active,oldKey)
             }

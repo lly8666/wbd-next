@@ -8,6 +8,7 @@ package realityfront
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(uint64_t);
+extern int32_t wbd_m0_embedded_go_game_group_server_promote_after_client_health(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_peer_authenticated_health(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
@@ -262,6 +263,20 @@ func (g *v4NativeGameJoined) promoteSharedTunAfterAuthenticatedRx()error{
     if rc!=0{
         return fmt.Errorf("%w: original Game authenticated RX TUN promotion=%d",
             &v4EmbeddedNativeStatus{Operation:"game_shared_tun_auth_rx_promote",Code:int(rc)},int(rc))
+    }
+    return nil
+}
+// Only the server may publish a deferred Game B after its own native
+// M4 RX verifies client B's post-start AEAD Health. No Go DATA copies.
+func (g *v4NativeGameJoined) promoteServerSharedTunAfterAuthenticatedClientHealth()error{
+    if g==nil||g.handle==0||g.stopped||len(g.laneOwners)==0||
+        g.laneOwners[0]==nil||!g.laneOwners[0].serverSide{
+        return ErrAdmissionUnsupported
+    }
+    rc:=C.wbd_m0_embedded_go_game_group_server_promote_after_client_health(C.uint64_t(g.handle))
+    if rc!=0{
+        return fmt.Errorf("%w: original Game server B authenticated client Health promotion=%d",
+            &v4EmbeddedNativeStatus{Operation:"game_server_auth_client_health_promote",Code:int(rc)},int(rc))
     }
     return nil
 }

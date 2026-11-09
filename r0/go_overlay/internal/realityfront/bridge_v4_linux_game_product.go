@@ -765,6 +765,18 @@ func (p *V4LinuxGameProduct) PromoteGameAfterAuthenticatedPeerRx()error{
     }
     return p.native.promoteSharedTunAfterAuthenticatedRx()
 }
+// A Game server's replacement B may not steal A's /32 on local M4
+// START. The underlying Rust group must have authenticated client B's
+// own post-M4-start Health; exact shared-TUN publication is server-only.
+func (p *V4LinuxGameProduct) PromoteServerGameAfterAuthenticatedClientRx()error{
+    if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||!p.server{
+        return ErrAdmissionUnsupported
+    }
+    return p.native.promoteServerSharedTunAfterAuthenticatedClientHealth()
+}
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()

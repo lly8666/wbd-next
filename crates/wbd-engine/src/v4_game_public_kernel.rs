@@ -109,8 +109,8 @@ pub(crate) struct GameKernelOwner{
     diagnostic_adapter:Arc<Mutex<GameAdapter>>,
     tx_work_sample:Arc<TxDurationSample>,
     tx_shared_burst_extra:Arc<AtomicU64>,
-    // Server-only one-shot cold Commit, armed after all native RX/TX
-    // workers and the authenticated shared TUN have been published.
+    // One-shot protected cold M4 acknowledgment on each side, armed only
+    // after that side's complete Game group RAW RX/TX workers start.
     cold_group_committed:Arc<AtomicBool>,
     // Verified kind0 Health hint from this Game cohort's OWN AEAD/PN
     // RX lane. Kept apart from successful inner IPv4 TUN deliveries.
@@ -248,7 +248,7 @@ impl GameKernelOwner{
                 let start=epoch_clock;
                 let mut health=HealthClock::new(HealthPolicy::default_connected(),
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
-                let mut server_cold_receipt_armed=false;
+                let mut cold_receipt_armed=false;
                 // One full IPv4 TUN read buffer PER Game TX owner, never
                 // 64KiB per arena slab. A 2048B read irreversibly truncated
                 // actual oversized DF0 datagrams into false small packets.
@@ -658,15 +658,16 @@ impl GameKernelOwner{
                     tx_health_rx.absorb(&mut health);
                     let health_now=health_origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64;
-                    // Do not send an early "Ready" from a merely local
-                    // TLS lane. This flag is released exactly ONCE after
-                    // full original-Go protected Game group M4 startup.
+                    // Do not send an early "Ready" from a local TLS lane.
+                    // Client B sends ONE existing kind0 only after its full
+                    // RAW RX and TX workers start; server B likewise proves
+                    // its complete group. No new record kind or timer pump.
                     // Existing AEAD/PN kind0 Health is the bounded cold
                     // receipt; never a new framing or a Go DATA pump.
-                    if server&&!server_cold_receipt_armed&&
+                    if !cold_receipt_armed&&
                         tx_cold_group_committed.load(Ordering::Acquire){
                         health.arm_server_cold_commit(health_now);
-                        server_cold_receipt_armed=true;
+                        cold_receipt_armed=true;
                     }
                     match health.control_due(health_now){
                         ControlDue::DeadPeer=>{
@@ -1175,16 +1176,16 @@ impl GameKernelOwner{
          self.delivered.load(Ordering::Relaxed),
          self.rejected.load(Ordering::Relaxed))
     }
-    // Server may arm this bounded existing authenticated kind0 Health
-    // receipt only AFTER a complete Game2/4 native owner was installed.
+    // Each endpoint may arm one bounded existing AEAD kind0 Health on
+    // complete Game2/4 M4 install; never an extra steady-state probe.
     // This is not a local client readiness claim or a per-packet probe.
-    pub(crate) fn mark_server_group_committed(&self){
-        if self.server&&!self.stop.load(Ordering::Acquire){
+    pub(crate) fn mark_group_committed(&self){
+        if !self.stop.load(Ordering::Acquire){
             self.cold_group_committed.store(true,Ordering::Release);
         }
     }
     pub(crate) fn has_authenticated_peer_health(&self)->bool{
-        !self.server&&self.is_live()&&
+        self.is_live()&&
             self.peer_health_evidence.has_verified_peer_health()
     }
     // Split received kernel TCP data from AEAD/replay refusal. Successful

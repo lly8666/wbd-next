@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "base_head_sha": "c7c8e3da877a0c8f28152b766ffccd3d3baadb0c",
+  "original_native_action_id": 42626731886,
+  "original_native_artifact_id": 13679196436,
+  "original_zip_sha256": "041fa9fca98b239c1945049a6650003c17f46bdc571450e835f61a1e6450e500",
+  "original_zip_crc": "PASS",
+  "original_product_source": "c7c8e3da877a0c8f28152b766ffccd3d3baadb0c",
+  "platform": "native_ARM64_two_endpoints_5client_180s_normal_auto_game2_game4_fixed6",
+  "original_status": "FAIL_SCOPED_5_CAROL_GAME2_DOWNLINK_UNIQUE_ZEROLOSS_REQUIREMENT",
+  "proof_trigger": {
+    "normal_server_B_deferred": 6,
+    "normal_server_B_peer_health_promoted": 6,
+    "normal_mixed_go_proof": 6,
+    "alice_client_gen_starts": 3,
+    "alice_client_gen_promotes": 2,
+    "alice_downlink_missing": 0,
+    "bob_downlink_missing": 0,
+    "carol_downlink_missing": 5,
+    "dave_downlink_missing": 0,
+    "erin_downlink_missing": 0,
+    "all_uplink_missing": 0,
+    "carol_first_persistent_loss_onsets_app_s": [
+      {
+        "time_s": 51.7,
+        "missing": 3
+      },
+      {
+        "time_s": 159.41,
+        "missing": 2
+      }
+    ],
+    "carol_game2_new_groups": 2,
+    "carol_game2_authenticated_client_route_promotions": 2,
+    "carol_server_before_patch_published_B_direct_on_local_group_M4": true,
+    "server_shared_tun_readback": {
+      "queue_full_drops": 0,
+      "retired_drops": 0,
+      "queue_age_drops": 0,
+      "carol_pending_peak_packets": 0
+    },
+    "all_six_exact_owner_stop": true
+  },
+  "root_hypothesis": "Game2/4 server Rust group loop_start published replacement B destination /32 upon local native start, while client B raw RX not yet authenticated as alive. Unlike fixed Normal B, Game B had no server-side client-native cold Health barrier. Carol missing exclusively at two whole-Game2 generation promotions, consistent with this race; precise lost packet stage not yet verified.",
+  "minimum_fix_not_yet_tested": {
+    "files": [
+      "crates/wbd-engine/src/v4_game_public_kernel.rs",
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+      "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+      "r0/go_overlay/internal/v4productcli/game_linux.go"
+    ],
+    "changes": [
+      "Use existing AEAD kind0 cold Commit ONCE from client after complete two/four-lane Game M4 start (not a fixed or steady probe); server retains same existing cold Commit",
+      "Server whole-group B defers unique /32 TUN route while A is alive; neither Go TLS nor local M4 start promotes",
+      "Same five-second read-only Go proof mechanism waits for server-native AEAD-authenticated client B Health; one mixed-listener event loop publishes exact B and schedules same-epoch + other epoch A owned Stop only after proof",
+      "Proof failure/timeout retires B only; Game4 hot single-lane and healthy cohorts untouched",
+      "Per-generation original ciphertext/PN, TUN single reader, immutable 1460 outer intent, FEC and Game record unchanged"
+    ],
+    "l0_new_test": "m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4",
+    "required_real_trigger": "actual Game2 B group SERVER defer>=2, server Health promote>=2, mixed Go Game proof>=2, Carol client new Game group authenticated promotions>=2, Normal B>=2, all six Stop and all unique UDP both directions 0",
+    "next_native": "NOT_RUN_AT_COMMIT_CREATION"
+  },
+  "preserved_previous": {
+    "H1480_before_normal_caller_fix": "FAIL_183170_TOTAL_MISSING",
+    "H1478_x86_original": "FAIL_10_ALICE_DL_ZEROLOSS",
+    "H1473_x86_original": "FAIL_13_ALICE_3_CAROL_DL",
+    "H1461_600_75M": "FAIL_32_AND_QUEUE_OVERFLOW45",
+    "H1461_1800": "FAIL_351_ALICE",
+    "H998_MTU": "FAIL_RETAINED",
+    "Windows_L3_1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

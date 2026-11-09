@@ -3365,15 +3365,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
                 generation:shared.generation,alive:Arc::clone(&shared.alive),
                 send:shared.sender.clone(),
             };
-            // Game2's first local complete group is not proof that the
-            // remote server received *both* protected cold lanes. Preserve
-            // old cohort's original default TUN route until real new-M4
-            // authenticated reverse IPv4 delivery proves server takeover.
-            if !server && shared_route_defer_live_replacement(
+            // Local Game2/4 whole-group M4 start on EITHER side is not
+            // proof of its counterpart's RAW RX. Preserve A's unique
+            // TUN route while B awaits existing authenticated kind0,
+            // and never retire A merely from completed local TLS.
+            if shared_route_defer_live_replacement(
                 &routes,shared.ip,shared.generation
             ){
                 shared.publish_pending=true;
-                eprintln!("V4_PUBLIC_GAME_TUN_CANDIDATE_DEFERRED generation={} old_route_preserved=1",shared.generation);
+                eprintln!("V4_PUBLIC_GAME_TUN_CANDIDATE_DEFERRED role={} generation={} old_route_preserved=1",if server{"server"}else{"client"},shared.generation);
             }else if !shared_route_publish(&mut routes,shared.ip,candidate){
                 return BAD_STAGE
             }
@@ -3383,11 +3383,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     // TUN ownership have committed, tell the existing server TX Health
     // owner to issue a bounded authenticated kind0 cold receipt. If any
     // stage above failed, the client may never receive proof.
-    if e.server{
-        if let Some(driver)=e.drivers.as_ref(){
-            driver.mark_server_group_committed();
-        }else{return BAD_STAGE}
-    }
+    if let Some(driver)=e.drivers.as_ref(){
+        driver.mark_group_committed();
+    }else{return BAD_STAGE}
     OK
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -3432,6 +3430,35 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
     eprintln!("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX generation={} native_delivered={} authenticated_health={} old_route_revoked=1",shared.generation,delivered,u8::from(authenticated_health));
     OK
 }
+
+// Server-only exact Game2/4 B: local TLS/M4 is insufficient; a genuine
+// AEAD/PN-verified client-B kind0, emitted after client RAW RX/TX start,
+// must precede replacement of A's shared /32 TX route. This cannot use
+// client-side delivery counters, a FakeTCP ACK or an untrusted ready flag.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_server_promote_after_client_health(group:u64)->i32{
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if !e.server||e.stopped||e.stopping{return BAD_STAGE}
+    let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
+    if !driver.is_live()||!driver.has_authenticated_peer_health(){return BAD_STAGE}
+    let Some(shared)=e.shared_tun.as_mut()else{return BAD_STAGE};
+    if !shared.publish_pending{return BAD_STAGE}
+    let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
+    if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    let candidate=SharedTunRoute{
+        generation:shared.generation,alive:Arc::clone(&shared.alive),
+        send:shared.sender.clone(),
+    };
+    if !shared_route_publish(&mut routes,shared.ip,candidate){return BAD_STAGE}
+    shared.publish_pending=false;
+    eprintln!("V4_PUBLIC_GAME_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX generation={} verified_client_cold_health=1 old_route_preserved_until_proof=1",shared.generation);
+    OK
+}
 // Cold Go polls this only in the five-second successor overlap barrier.
  // Positive means the client's original Game M4 RX lane has AEAD/PN-opened
  // the server's canonical Health kind0; no app TUN delivery is implied.
@@ -3451,9 +3478,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_peer_authenticated_health(
     if e.stopped||e.stopping{return BAD_STAGE}
     let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
     if !driver.is_live(){return BAD_STAGE}
-    unsafe{out.write(u32::from(
-        !e.server&&driver.has_authenticated_peer_health()
-    ));}
+    unsafe{out.write(u32::from(driver.has_authenticated_peer_health()));}
     OK
 }
 #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4487,6 +4512,45 @@ impl SharedTunReader{
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
+    let (atx,_arx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let (btx,_brx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let alive_a=Arc::new(AtomicBool::new(true));
+    let alive_b=Arc::new(AtomicBool::new(true));
+    let ip=[10,66,0,194];
+    let mut routes=HashMap::new();
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:17,alive:Arc::clone(&alive_a),send:atx,
+    }));
+    // Group B local TLS/native M4 starts; neither its own first TX
+    // nor the server's first Health allows it to steal A's /32.
+    assert!(shared_route_defer_live_replacement(&routes,ip,18));
+    let client=crate::v4_native_health::AuthenticatedActivity::default();
+    client.record_batch(100,0,None);
+    assert!(!client.has_verified_peer_health());
+    assert!(!shared_route_promote_authenticated_client(&mut routes,ip,
+        SharedTunRoute{generation:18,alive:Arc::clone(&alive_b),send:btx.clone()},
+        u64::from(client.has_verified_peer_health())));
+    assert_eq!(routes[&ip].generation,17);
+    assert!(alive_a.load(Ordering::Acquire));
+    // Only a real AEAD-verified kind0 from client B AFTER both native
+    // workers start makes server promotion eligible; still no dual TX.
+    client.record_batch(120,0,Some((120,0)));
+    assert!(client.has_verified_peer_health());
+    assert!(shared_route_promote_authenticated_client(&mut routes,ip,
+        SharedTunRoute{generation:18,alive:Arc::clone(&alive_b),send:btx},
+        u64::from(client.has_verified_peer_health())));
+    assert_eq!(routes[&ip].generation,18);
+    assert!(alive_a.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,ip,17,&alive_a);
+    assert!(!alive_a.load(Ordering::Acquire));
+    assert!(alive_b.load(Ordering::Acquire));
+    assert_eq!(routes[&ip].generation,18);
+}
 #[test]
 fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     let (old_tx,_old_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);

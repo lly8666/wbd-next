@@ -38,6 +38,11 @@ def classify(root,source):
     standalone_go_ready=server.count("V4_PUBLIC_MULTI_SERVER_B_CLIENT_READY")
     server_go_ready=mixed_go_ready+standalone_go_ready
     alice_proven=client.count("V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX")
+    carol=(root/"h1250-product-carol.log").read_text(errors="replace")
+    game_server_deferred=server.count("V4_PUBLIC_GAME_TUN_CANDIDATE_DEFERRED role=server")
+    game_server_proven=server.count("V4_PUBLIC_GAME_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX")
+    game_server_go_ready=server.count("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY")
+    carol_proven=carol.count("V4_PUBLIC_GAME_TUN_PROMOTED_AFTER_AUTH_RX")
     assert "V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN" not in server
     total={}
     for who in NAMES:
@@ -60,7 +65,9 @@ def classify(root,source):
     # side. Local TLS READY, first startup and absence of physical loss
     # never suffice for the conditional-fix gate.
     triggered=(server_deferred>=2 and server_proven>=2 and
-               server_go_ready>=2 and alice_proven>=2 and alice_gen>=3)
+               server_go_ready>=2 and alice_proven>=2 and alice_gen>=3 and
+               game_server_deferred>=2 and game_server_proven>=2 and
+               game_server_go_ready>=2 and carol_proven>=2)
     misses=[row[direction]["unique_missing"] for row in total.values()
             for direction in ("downlink","uplink")]
     missing=sum(misses)
@@ -76,6 +83,10 @@ def classify(root,source):
         "mixed_server_go_proof_barrier_count":mixed_go_ready,
         "standalone_go_proof_barrier_count":standalone_go_ready,
         "alice_client_authenticated_generation_promotions":alice_proven,
+        "carol_game_client_authenticated_promotions":carol_proven,
+        "game_server_B_deferred_count":game_server_deferred,
+        "game_server_auth_client_cold_proven_count":game_server_proven,
+        "game_server_go_proof_barrier_count":game_server_go_ready,
         "alice_client_generation_starts":alice_gen,
         "two_actual_server_B_gates_triggered":triggered,
         "per_user_original_udp":total,"original_unique_missing_all_directions":missing,
