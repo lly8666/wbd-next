@@ -1,3 +1,4 @@
+# H1468: source66fb build artifact13656371098 contains exactly four ROOT files, not fixed-build/ prefix; no native before this guard.
 name: PLAN028 H1467 four genuine 180s fiveclient capacity and generation paired diagnostics
 run-name: H1467 exact source66fb same-VM packet-rate and generation A-B
 on:
@@ -67,7 +68,8 @@ jobs:
           test "$(uname -m)" = x86_64
           test -c /dev/net/tun
           mkdir -p fixed-build paired output
-          cp input/fixed-build/* fixed-build/
+          cp input/wbd-v4-client input/wbd-v4-server input/libwbd_engine.so input/manifest.json fixed-build/
+          echo H1468_GITHUB_ORIGINAL_ARTIFACT_FLAT_FOUR_ROOT_FILES_EXACT_COPY
           python3 - <<'PY_SHA'
           import hashlib,json,os,pathlib,struct
           p=pathlib.Path("fixed-build");m=json.loads((p/"manifest.json").read_text())
