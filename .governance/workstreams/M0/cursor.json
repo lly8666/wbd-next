@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1478,
-  "checkpoint_sha": "3fe5e412f8b150541289c882f0652252ff949b49",
+  "sequence": 1479,
+  "checkpoint_sha": "d8759e0598c4ad900f876224322859e9b4b27818",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1478-ORIGINAL-WIRE-HEADER-SOURCE66FB-DIAGNOSTIC",
-  "current_task": "H1478 targeted one genuine original SOURCE66fb x86/x86 5-client rotating12 180s underlay AF_PACKET physical header comparison around 28-60/119-151 seconds via new isolated workflow; exact old binary manifest SHA, raw PCAP temp only, unchanged source/Stop. Need collect Action and analyzer results; original low-rate rotation FAIL retained, PLAN028 IN_PROGRESS.",
-  "why_now": "H1477 excludes zero-backlog shared-TUN retired drops; existing first 500ms M4 timing cannot localize first loss. Independent native physical header observation distinguishes server physical egress/client physical ingress before deciding Rust socket/AEAD/TUN instrumentation or any fix. Existing x86 source exact to reproduced failure; next independent Linux platform ARM64.",
+  "task_id": "PLAN028-M0-H1479-ORIGINAL-PHYSICAL-HEADER-MATCH-ALICE-DL-FAIL",
+  "current_task": "H1479 H1478 genuine Linux x86 5client original 180s Action42619474139 source66fb PASS_SCOPED execution; ALICE DL unique UDP FAIL 10 (7 at36.97-36.99, 3 at135.39-135.40). 114967 server->Alice physical TCP DATA header copies all matched at client across two 32s windows observer kernel drop0; server lease TUN queue0; all6 owned Stop. Native server B publishes new /32 on its own M4 start, retires A before proof client B RAW RX ready; client B uses authenticated peer proof. Root plausible asymmetric readiness but exact server TX->socket->AEAD first packet yet unproven. PLAN028 IN_PROGRESS.",
+  "why_now": "Triggered original zero-loss rotating FAIL while physical underlay all matched; no basis double-send. Repair identifiable server B premature publication/old Stop contract via smallest existing authenticated cold Health receipt and proven generation, not arbitrary randomized overlap.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1478 single-workflow genuine native Action and artifact first; check original source manifest SHA/5 clients/two rotations/all owned Stop/observer dropped packets; correlate per-generation 2x32s header mismatches with Alice 10ms original application permanent deficits and 500ms M4 stage; if underlay match but app still missing, next bounded Rust M4 RAW socket->AEAD/TUN-only diagnostic. No duplicate dispatch/seed, no dual DATA. Preserve original source66fb capacity and L3 failures, H998 and Windows/Android qualifications. Then ARM64 next independent Linux task.",
+  "next_action": "Implement/test L0 server B shared-route deferred until authenticated client B true native M4 ready, with bounded one-time existing AEAD Health receipt from client after RAW RX attach; preserve old A until proof, fail B restores A, exact Stop. Check current Rust Health, Go pulse and shared route code then one complete two-side native build+ARM64 real network stage, not re-run original x86 seed. If complexity cannot fit, first add bounded per-generation socket/raw counters and do not prematurely claim fix. No new steady-state header or dual DATA. Preserve other FAIL/NOT_RUN and follow PLAN028 L0-L3.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1477-ORIGINAL-QUEUE-EXCLUDED-LEGACY-CROSSLANE-20261109.json",
-    "docs/evidence/M0/PLAN028-H1476-H1475-ORIGINAL-10MS-M4-BOUNDARY-CONFIRMED-20261109.json"
+    "docs/evidence/M0/PLAN028-H1479-H1478-ORIGINAL-NATIVE-PHYSICAL-HEADER-ROTATION-20261109.json",
+    "docs/evidence/M0/PLAN028-H1477-ORIGINAL-QUEUE-EXCLUDED-LEGACY-CROSSLANE-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1478 source-locked one-scene x86 real 5client rotating12 180s pending native result: read-only external two 32s AF_PACKET header windows on server/client physical Alice flow, pcap64 temporary (deleted), header counters+observer drop and original 10ms app for first defect stage. No product code/byte/OS config changed. No known new Actions as of pre-dispatch, original static PASS/rotation FAIL, plan IN_PROGRESS."
+  "partial_summary": "H1479 original native H1478 exact SOURCE66fb 5client180 rotating12 10 Alice downlink unique UDP missing in 2 actual B startup windows; 114967 outer header egress->ingress copies match, 0 observer lost, server TUN queue0, no replay/tun failures, owned Stop ALL. True physical network data loss in windows excluded; server too-early B publish before client readiness is proven by source review, next minimal authenticated Health cold barrier. Do not conclude client raw socket loss solely from this result. no product changes yet."
 }

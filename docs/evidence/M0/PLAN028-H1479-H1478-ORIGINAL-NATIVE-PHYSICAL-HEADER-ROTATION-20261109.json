@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "reviewer_source_sha": "d8759e0598c4ad900f876224322859e9b4b27818",
+  "original_product_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "native_workflow_run_id": 42619474139,
+  "original_artifact_id": 13675097130,
+  "original_artifact_sha256": "567d281542f2ac96f577a7a85ba9af11009fedc77efcf427b750388ecf8b4ee1",
+  "original_zip_crc": "PASS",
+  "action_conclusion": "success",
+  "original_business_verdict": "FAIL_SCOPED_10_ALICE_DL_UNIQUE_MISSING",
+  "scope": "Native Linux x86_64 server/client same VM six real netns, five authenticated clients, genuine Original Go TLS443 plus Rust RAW/TUN 180s rotating12 and owned Stop, loss0, static veth neighbour",
+  "manifest_source_verified": true,
+  "alice_application_udp_downlink_persistent_missing": 10,
+  "alice_10ms_orig_permanent_events": [
+    {
+      "s": 36.97,
+      "n": 1
+    },
+    {
+      "s": 36.98,
+      "n": 1
+    },
+    {
+      "s": 36.99,
+      "n": 5
+    },
+    {
+      "s": 135.39,
+      "n": 2
+    },
+    {
+      "s": 135.4,
+      "n": 1
+    }
+  ],
+  "physical_header_captures": [
+    {
+      "window_app_s": [
+        28,
+        60
+      ],
+      "trim_edges_s": 1,
+      "server_captured": 59414,
+      "client_captured": 59410,
+      "matched_old_41031": 15306,
+      "matched_new_56872": 42196,
+      "unmatched_s2c": 0,
+      "observer_server_kernel_dropped": 0,
+      "observer_client_kernel_dropped": 0
+    },
+    {
+      "window_app_s": [
+        119,
+        151
+      ],
+      "trim_edges_s": 1,
+      "server_captured": 61108,
+      "client_captured": 61109,
+      "matched_old_56872": 29501,
+      "matched_new_64791": 27964,
+      "unmatched_s2c": 0,
+      "observer_server_kernel_dropped": 0,
+      "observer_client_kernel_dropped": 0
+    }
+  ],
+  "verified_outer_data_interior_matched": 114967,
+  "original_server_shared_tun": {
+    "alice_offered": 331513,
+    "alice_direct_delivered": 331513,
+    "pending_overflow": 0,
+    "pending_peak_packets": 0,
+    "queue_full_drops": 0,
+    "retired_drops": 0,
+    "age_drops": 0
+  },
+  "original_client_raw_chain": {
+    "gen1": {
+      "port": 41031,
+      "observed": 57533,
+      "unique": 57523,
+      "tun_delivered": 57523,
+      "failed": 0,
+      "replay_duplicate": 0
+    },
+    "gen2": {
+      "port": 56872,
+      "observed": 188525,
+      "unique": 188516,
+      "tun_delivered": 188516,
+      "failed": 0,
+      "replay_duplicate": 0
+    },
+    "gen3": {
+      "port": 64791,
+      "observed": 85468,
+      "unique": 85463,
+      "tun_delivered": 85463,
+      "failed": 0,
+      "replay_duplicate": 0
+    }
+  },
+  "original_server_m4_last_500ms_m4_copied": {
+    "port41031": 57533,
+    "port56872": 188533,
+    "port64791": 85473
+  },
+  "client_handoff": {
+    "gen2_remote_proven": true,
+    "gen3_remote_proven": true,
+    "gen2_old_rx_grace_ms": 17948,
+    "gen3_old_rx_grace_ms": 19034,
+    "old_rust_owners_stopped": true,
+    "all_five_clients_and_server_stopped": true
+  },
+  "source_review": {
+    "server_new_lane": "r0/go_overlay/internal/v4productcli/linux.go runSharedMultiServer marks new rec.ready, server shared TUN /32 route publishes in Rust start_loop; then immediately Stop old same-lease generation, without remote B M4 receive proof",
+    "server_rust": "crates/wbd-engine/src/v4_embedded_go.rs start_loop shared_route_publish directly for server after native start",
+    "client_new_lane": "r0/go_overlay/internal/v4productcli/linux.go waitOriginalNativeM4PeerProof requires client B receives authenticated server Health or business before client shared TUN route promotion",
+    "initial_readiness_asymmetry": "server B start is not evidence client B raw socket is already attached; first missing 10ms bins coincide with TLS reauth start, 40ms cold M4",
+    "health_existing": "crates/wbd-engine/src/v4_native_health.rs HealthClock supports bounded one-time server cold kind0 receipt; client native Health defaults ~15s, cannot be used as fast B readiness proof unless deliberately armed"
+  },
+  "conclusion": "Original 114967 outer headers all reach client physical capture, with zero tcpdump observer kernel drops; this rejects physical underlay loss within the trimmed observer windows. Does NOT prove all original inner UDP packets were emitted on wire nor that client raw socket/AEAD accepted them. Proven server-client readiness asymmetry merits bounded generation-specific proof barrier; avoid dual sends.",
+  "limits": [
+    "Header digest plus IP ID/seq used to match header copies, not decrypted logical packet IDs; duplicate header keys counted as multiset.",
+    "Two 32s windows guard first/last 1s, no continuous 180s packet trace; no pcap or data content retained.",
+    "Last original 500ms M4 counters across server and client not synchronized final packet-level receipts; do not equate approximate diffs with 10 app missing.",
+    "One triggered original source run, not a repair or full PLAN028 qualification.",
+    "Windows L3 original1800 NOT_QUALIFIED, physical/Android NOT_RUN."
+  ],
+  "preserved": {
+    "source66fb_original_rotating13_plus3": "FAIL_PRESERVED",
+    "source66fb_current_rotating_alice10": "FAIL",
+    "source66fb_original_static_zero": "PASS_SCOPED",
+    "original600_75mbps": "FAIL_32_ALICE_45_OVERFLOW",
+    "original1800_alice": "FAIL_351_ALICE_ZERO_QUEUE",
+    "hot_mtu_H998": "FAIL_PRESERVED",
+    "Windows1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}
