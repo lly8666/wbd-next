@@ -1,3 +1,4 @@
+# H1470: original 2x180 paired scenarios now have independent runtime temp directory/route-key, not shared init key. No product change.
 # H1468: source66fb build artifact13656371098 contains exactly four ROOT files, not fixed-build/ prefix; no native before this guard.
 name: PLAN028 H1467 four genuine 180s fiveclient capacity and generation paired diagnostics
 run-name: H1467 exact source66fb same-VM packet-rate and generation A-B
