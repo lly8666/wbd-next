@@ -45,7 +45,7 @@ class OriginalTwoSoakReplay(unittest.TestCase):
         self.assertIn('==[0,0,0,32,0]',s)
         self.assertIn('verdict["total_true_queue_overflow"]==0',s)
         self.assertIn('alice_down==351',s)
-        self.assertIn('"ZERO_LOSS_MISSING_"',VERDICT.read_text())
+        self.assertIn('"_ZERO_LOSS_MISSING_"',VERDICT.read_text())
         self.assertIn('"_NO_CONFIGURED_LOSS_UDP_MISSING_"',VERDICT.read_text())
 
     def test_original_durations_six_Stops_and_phase_time_checked(self):

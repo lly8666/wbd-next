@@ -1,3 +1,4 @@
+# H1465: offline-only retry after exact literal unit-test typo; original Action42578056120 immutably reused.
 name: PLAN028 H1464 immutable original 600 and 1800 offline source-locked replay
 run-name: H1464 true five-client original 600/1800 phase and Stop offline rejudge
 on:
