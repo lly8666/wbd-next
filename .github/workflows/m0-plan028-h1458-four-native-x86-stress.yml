@@ -1,0 +1,160 @@
+name: M0 PLAN028 H1458 four independent native x86 stress scenarios
+run-name: PLAN028 H1458 same SOURCE548 binary 4 real native 5-user scenes
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1458-four-native-x86-stress.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  contract:
+    name: H1458 four source-locked stress fixtures preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      WBD_PLAN028_H1458_PRODUCT_SOURCE: "548a47cc708d82d45e1722540b6677342f3c8c5b"
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_H1349_WRAPPER_SOURCE: ${{ github.sha }}
+      WBD_H1360_WRAPPER_SOURCE: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Check source SHA, four scenes and Python compile before any network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v tests.test_m0_plan028_h1458_stress_contract
+          python3 -m py_compile \
+            tools/m0-plan028-h1332-x86-normal-zero-loss-fixture.py \
+            tools/m0-plan028-h1332-x86-normal-zero-loss-audit.py \
+            tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py \
+            tools/m0-plan028-h1360-x86-normal75-zero-loss-audit.py \
+            tools/m0-plan028-h1349-x86-game4-fixed6-20mbps-fixture.py \
+            tools/m0-plan028-h1349-x86-game4-fixed6-20mbps-audit.py \
+            tools/m0-plan028-h1259-five-client-recovery-netns.py \
+            tools/m0-plan028-h1286-rapid-report.py \
+            tools/m0_plan028_h1458_stress_verdict.py
+          python3 tools/m0-plan028-h1332-x86-normal-zero-loss-fixture.py --preflight
+          python3 tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py --preflight
+          python3 tools/m0-plan028-h1349-x86-game4-fixed6-20mbps-fixture.py --preflight
+          echo H1458_EXACT_SOURCE_FOUR_SCENES_PREFLIGHT_PASS_NOT_PRODUCT
+  pressure:
+    name: H1458 x86 true five-client stress ${{ matrix.scene }}
+    needs: contract
+    if: needs.contract.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 19
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - scene: normal50
+            fixture: tools/m0-plan028-h1332-x86-normal-zero-loss-fixture.py
+            audit: tools/m0-plan028-h1332-x86-normal-zero-loss-audit.py
+          - scene: normal75
+            fixture: tools/m0-plan028-h1360-x86-normal75-zero-loss-fixture.py
+            audit: tools/m0-plan028-h1360-x86-normal75-zero-loss-audit.py
+          - scene: game4fec20
+            fixture: tools/m0-plan028-h1349-x86-game4-fixed6-20mbps-fixture.py
+            audit: tools/m0-plan028-h1349-x86-game4-fixed6-20mbps-audit.py
+          - scene: weaknet30
+            fixture: tools/m0-plan028-h1259-five-client-recovery-netns.py
+            audit: NONE
+    env:
+      WBD_PLAN028_H1458_PRODUCT_SOURCE: "548a47cc708d82d45e1722540b6677342f3c8c5b"
+      ORIGINAL_PRODUCT_SOURCE: "548a47cc708d82d45e1722540b6677342f3c8c5b"
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_H1349_WRAPPER_SOURCE: ${{ github.sha }}
+      WBD_H1360_WRAPPER_SOURCE: ${{ github.sha }}
+      STRESS_SCENE: ${{ matrix.scene }}
+      STRESS_FIXTURE: ${{ matrix.fixture }}
+      STRESS_AUDIT: ${{ matrix.audit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42555320138
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: fixed-build/
+      - name: Verify native x86_64 ELF62 and exact signed-source Linux original Go TLS Rust ISA-L SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          python3 - <<'PY_HASH'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path("fixed-build")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["go"]=="1.23.12" and m["rust"]=="1.85.1"
+          assert m["rust_native_fec_acceleration"] is True
+          assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          expect={"wbd-v4-client":"67803c8df807838b090ab1db58061aaa3d3527ecc4ce9d99352ccdb9a637eaa5",
+                  "wbd-v4-server":"118165d85867f4569cc518eb3856227b26d00c1dacab1fbc5d735232f0641821",
+                  "libwbd_engine.so":"ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6"}
+          assert m["sha256"]==expect
+          for name,digest in expect.items():
+              raw=(p/name).read_bytes()
+              assert raw[:4]==bytes.fromhex("7f454c46")
+              assert struct.unpack_from("<H",raw,18)[0]==62
+              assert hashlib.sha256(raw).hexdigest()==digest
+          print("H1458_SOURCE548_NATIVE_X86_GO_TLS_RUST_ISAL_MANIFEST_SHA_PASS",flush=True)
+          PY_HASH
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: Genuine 180s five clients six netns original TLS443 Rust TUN two-way UDP/TCP throughput and loss
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          if [[ "$STRESS_SCENE" == weaknet30 ]]; then
+            export WBD_PLAN028_STATIC_OWNED_NEIGH=1
+            echo H1458_WEAKNET_ORIGINAL_DATA_NETEM_TEST_ONLY_STATIC_VETH_NEIGHBOR
+          else
+            unset WBD_PLAN028_STATIC_OWNED_NEIGH
+          fi
+          echo "H1458_NATIVE_FIVE_AUTH_CLIENTS_BEGIN scene=$STRESS_SCENE product=$ORIGINAL_PRODUCT_SOURCE wrapper=$GITHUB_SHA"
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u "$STRESS_FIXTURE" fixed-build \
+            >fixed-kernel-result/h1458-native-traffic.log 2>&1 || {
+              echo H1458_REAL_PRODUCT_OR_HOST_SCENE_EXECUTION_FAIL_NOT_PASS >&2
+              tail -150 fixed-kernel-result/h1458-native-traffic.log >&2
+              exit 1
+            }
+          test -s fixed-kernel-result/h1286-rapid-report.json
+          for role in alice bob carol dave erin server; do
+            grep -Fq 'V4_PUBLIC_SHARED_TUN_STOP generation=' "fixed-kernel-result/h1250-product-$role.log" ||
+              { echo "H1458_ORIGINAL_OWNED_STOP_MISSING $role" >&2; exit 1; }
+          done
+          if [[ "$STRESS_AUDIT" != NONE ]]; then
+            python3 -u "$STRESS_AUDIT" --art fixed-kernel-result \
+              --out fixed-kernel-result/h1458-capacity-audit.json \
+              | tee fixed-kernel-result/h1458-capacity-audit.log
+          fi
+          python3 -u tools/m0_plan028_h1458_stress_verdict.py --scene "$STRESS_SCENE" \
+            --art fixed-kernel-result --product-source "$ORIGINAL_PRODUCT_SOURCE" \
+            --wrapper-source "$GITHUB_SHA" \
+            | tee fixed-kernel-result/h1458-verdict.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1458-${{ matrix.scene }}-native-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/*.json
+            fixed-kernel-result/h1458-*.log
+            fixed-kernel-result/h1250-product-*.log
+            fixed-kernel-result/h1250-traffic-*.log
+            fixed-kernel-result/h1250-qdisc-*.txt
+          if-no-files-found: warn
+          retention-days: 30

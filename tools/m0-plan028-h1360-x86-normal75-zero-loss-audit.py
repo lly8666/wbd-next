@@ -7,13 +7,15 @@ TCP 'packet' counters are framed-app records, not physical TCP segments.
 """
 import argparse
 import json
+import os
 import pathlib
 import re
 import statistics
 
 NAMES=("alice","bob","carol","dave","erin")
 MODES=("normal","fec-auto","game2","game4","fec-fixed")
-SOURCE="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+SOURCE=os.environ.get("WBD_PLAN028_H1458_PRODUCT_SOURCE","6c5fd909b9f42d1af89c698cdaabc79bbb72e589")
+assert SOURCE in ("6c5fd909b9f42d1af89c698cdaabc79bbb72e589","548a47cc708d82d45e1722540b6677342f3c8c5b"), "unsupported source pin for H1458 opt-in"
 PHASES=(("first_wave",30,1/3),("sustained",60,2/3),
         ("overload",30,1.),("recovery",50,2/3))
 
@@ -167,9 +169,9 @@ def record(root):
         "schema_version":1,"kind":"M0_PLAN028_H1360_NATIVE_X86_L2_ZERO_LOSS_NORMAL_CALIB",
         "original_product_source_sha":SOURCE,
         "native_binaries":{"arch":"x86_64 ELF62",
-                           "provenance":"original Go TLS donor a7a82; Rust native_fec_acceleration ISA-L from H1320 Action42369031512",
-                           "reused_artifact_id":13572791923,
-                           "validated_unchanged_product_owner_against_main":"H1331 exact source compare"},
+                           "provenance":("original Go TLS donor a7a82; Rust ISA-L native source 548a47cc708d82d45e1722540b6677342f3c8c5b Action42555320138" if SOURCE=="548a47cc708d82d45e1722540b6677342f3c8c5b" else "original Go TLS donor a7a82; Rust native_fec_acceleration ISA-L from H1320 Action42369031512"),
+                           "reused_artifact_id":(13646553865 if SOURCE=="548a47cc708d82d45e1722540b6677342f3c8c5b" else 13572791923),
+                           "validated_unchanged_product_owner_against_main":("H1455 cross-SOURCE executable machine-code identity" if SOURCE=="548a47cc708d82d45e1722540b6677342f3c8c5b" else "H1331 exact source compare")},
         "traffic":"one real original TLS server443 and five separate native x86 clients with actual OS TUN and original Rust M4",
         "normal_physical_loss_percent":0,"other_four_physical_loss_percent":0,
         "auth_user_count":5,"all_five_exact_final_client_stop":all(stop.values()),

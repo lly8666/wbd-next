@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "NOT_RUN_FOUR_NATIVE_STRESS_PENDING_ACTION",
+  "artifact_verified": false,
+  "product": {
+    "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+    "from_original_WinLinux_600_ACTION": 42555320138,
+    "artifact_name": "m0-plan024-linux-product",
+    "archive_artifact_id": 13646553865,
+    "original_legacy_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "actual_client_server_rust_sha256": {
+      "client": "67803c8df807838b090ab1db58061aaa3d3527ecc4ce9d99352ccdb9a637eaa5",
+      "server": "118165d85867f4569cc518eb3856227b26d00c1dacab1fbc5d735232f0641821",
+      "rust": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6"
+    },
+    "native_isa_l": true,
+    "arch": "x86_64 ELF62"
+  },
+  "run_design": {
+    "workflow": ".github/workflows/m0-plan028-h1458-four-native-x86-stress.yml",
+    "same_workflow_commit_and_product_frozen": true,
+    "independent_runner_per_scene": true,
+    "stages_s": 180,
+    "original_six_linux_network_namespaces": true,
+    "authenticated_clients_per_scene": 5,
+    "original_single_Go_TLS_443_server_per_scene": 1,
+    "original_Rust_TUN_and_UDP_TCP": true,
+    "owned_final_Stop_all_six_required": true,
+    "cases": [
+      {
+        "id": "normal50",
+        "mode": "normal",
+        "physical_loss_pct": 0,
+        "mix": 5,
+        "phases_mbps_each_direction": [
+          10,
+          25,
+          50,
+          25
+        ]
+      },
+      {
+        "id": "normal75",
+        "mode": "normal",
+        "physical_loss_pct": 0,
+        "mix": 5,
+        "phases_mbps_each_direction": [
+          25,
+          50,
+          75,
+          50
+        ]
+      },
+      {
+        "id": "game4fec20",
+        "mode": "game4-fec6",
+        "physical_loss_pct": 0,
+        "mix": 5,
+        "phases_mbps_each_direction": [
+          3,
+          5,
+          10,
+          20,
+          10
+        ]
+      },
+      {
+        "id": "weaknet30",
+        "mode": "five_modes_mixed",
+        "client_loss_pct": [
+          0,
+          1,
+          5,
+          15,
+          30
+        ],
+        "delays_oneway_ms": [
+          0,
+          15,
+          50,
+          100,
+          125
+        ],
+        "product_payload_no_mock": true,
+        "test_only_veth_static_neighbour": true
+      }
+    ]
+  },
+  "strictness": {
+    "before_network_python_unit_preflight": true,
+    "actual_artifact_SHA256_check": true,
+    "native_5user_application_RX_and_original_Stop": true,
+    "missing_run_or_product_Stop": "FAIL_OR_INCOMPLETE",
+    "capacity_limited": "CAPACITY_LIMITED_NOT_PRODUCT_PASS",
+    "target_rate_without_offered_rate": "NOT_QUALIFIED_PERFORMANCE",
+    "host_95percent_saturation": "HOST_NEAR_LIMIT_NOT_PERFORMANCE_MAX_PASS",
+    "real_l3_1800": "NOT_RUN"
+  },
+  "prior_results": {
+    "genuine_600_SOURCE548": "PASS_SCOPED_REAL_600S_BOTH_CLIENTS_AND_ORIGINAL_STOP",
+    "clean_Windows_750": "PASS_SCOPED_CONTROL_ONLY",
+    "official_Windows_L3_1800": "NOT_QUALIFIED",
+    "ARM64_eef2_two_1800": "PASS_SCOPED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN"
+  },
+  "caveats": [
+    "Native x86 Linux 6netns, not Windows Wintun or physical WAN",
+    "Four independent runners differ in vCPU/host, no cross-run CPU percent speedup",
+    "Same pre-built SOURCE548 product but new fixture and runner wrapper SRC is new commit",
+    "No Android or PLAN029/030 work"
+  ]
+}

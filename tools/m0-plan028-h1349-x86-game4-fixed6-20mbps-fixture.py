@@ -11,7 +11,8 @@ import pathlib
 import runpy
 import sys
 
-ORIGINAL="6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+ORIGINAL=os.environ.get("WBD_PLAN028_H1458_PRODUCT_SOURCE","6c5fd909b9f42d1af89c698cdaabc79bbb72e589")
+assert ORIGINAL in ("6c5fd909b9f42d1af89c698cdaabc79bbb72e589","548a47cc708d82d45e1722540b6677342f3c8c5b"), "unsupported source pin for H1458 opt-in"
 PHASES=(("first_wave",20,.15),("sustained",30,.25),
         ("climb_10",30,.5),("overload_20",30,1.0),("recovery",60,.5))
 RATES=(2,2,2,20,2)
