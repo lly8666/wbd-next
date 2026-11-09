@@ -381,9 +381,12 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("kill_native_child_tree(child)",runner)
         self.assertIn("faulthandler.dump_traceback_later",runner)
         self.assertIn("$gameSingle",flow)
-        # Old Game remains 600s, scoped Normal105 780s, ordinary 1020s;
-        # only explicit independent Win+Linux 1800s L3 may reach 2600s.
-        self.assertIn("$wholeLimit=if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}",flow)
+        # Old Game remains 600s, scoped Normal105 780s, ordinary 1020s.
+        # Only original 1800s L3 may reach 2600s; authorized diagnostic
+        # SOURCE-matched 600s has a SHORTER 1280s whole-step guard.
+        self.assertIn("$wholeLimit=if($env:WBD_PLAN028_WIN_LINUX_600 -eq '1'){1280}elseif($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}",flow)
+        self.assertIn("WBD_PLAN028_WIN_LINUX_600: ",flow)
+        self.assertIn("H1453_REAL_600S_TWO_OS_AUTHENTIC_APP_AND_OWNED_STOP_PASS_SCOPED",flow)
         self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED",flow)
 
     def test_gamefec_actual_log_observer_is_owned_by_one_pid_supervisor(self):
