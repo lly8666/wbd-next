@@ -326,7 +326,7 @@ def main():
     source = os.environ["GITHUB_SHA"]
     runid = os.environ["GITHUB_RUN_ID"]
     tag = runid[-6:]
-    tmp = pathlib.Path(os.environ["RUNNER_TEMP"]) / ("h1250-" + runid + ("-" + H1467_CASE if H1467_CASE else ""))
+    tmp = pathlib.Path(os.environ["RUNNER_TEMP"]) / ("h1250-" + runid + ("-" + H1467_CASE if H1467_CASE else "") + ("-" + os.environ["WBD_PLAN028_H1469_AB_SLOT"] if os.environ.get("WBD_PLAN028_H1469_AB_SLOT") in ("old","new") else ""))
     tmp.mkdir(mode=0o700, exist_ok=True)
     ns_server = "sv" + tag
     server_nic = "p9" + tag
