@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1486,
-  "checkpoint_sha": "c5c0b8b63f7a1b46f12403fc427eaae29866e58f",
+  "sequence": 1488,
+  "checkpoint_sha": "a1e66eae5866ca1e1460afbc71c3fd1653972cea",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1486-X86-GAME4-ORIGINAL-UDP5-OFFLINE-SCOPED-PASS",
-  "current_task": "H1486 original genuine x86 H1485 Action42633209462/artifact13681532478 ZIP 085714 CRC_PASS: reuse exact source57b binaries original 3 SHA, real physical NIC source10.25.0.2->.3 MTU1500->1280, TUN readback1178, client Gen2 authenticated B proof, source old owned Stop, actual UDP echo IDs100..104 all 5 delivered, Game4 fixed6 and standard TLS 8 ClientHello PASS_SCOPED. Outer Action FAIL only postcheck asked for raw server B_CLIENT_READY in bounded success STDOUT, which the original native fixture validated in TMP/server.log but does not echo on success. Original Action FAIL preserved, native PASS scoped; repair separate postcheck to workflow_dispatch-only no more network, add source-locked pure offline ZIP receipt. H1484 ARM true5client 180s zero unique UDP all10 remains PASS_SCOPED. PLAN028 IN_PROGRESS.",
-  "why_now": "After H1485 exact frozen x86 scene finished all five real UDP, outer reporter accidentally grepped an unforwarded server raw log. Follow user instruction to correct reporter offline rather than repeat network, retain original ZIP, preserve all underlying hard doors.",
+  "task_id": "PLAN028-M0-H1488-X86-GAME2-FIXED6-DUAL-PHYSICAL-SIBLING-PROBE-WINDOW",
+  "current_task": "H1488 refreshed main a1e66e... H1487 Action42634436099 pure offline native x86 Game4 original ZIP qualified PASS_SCOPED, zero new network. H1200 original Action42630288227 source57b x86 GAME2 fixed6 2 physical scene FAIL due fixture monitoring 24*.4=9.6s but requires after OLD exact Stop 10-20s grace + TLS; all first sibling probes actual success, Game2 B authentic server proof2; full dual switch NOT_QUALIFIED. Fixture corrected to 80*.4=32s (max 20s grace+5s cold proof+7s slack) and echo server capacity 640; new exactly one x86 native H1488 workflow reuses immutable source57b three Go/Rust ELF from artifact13679959152, no rebuild, scenario NOT_RUN until result. PLAN028 IN_PROGRESS.",
+  "why_now": "Latest H1487 offline already qualified Game4 true5/5; new original failure H1200 has provably impossible 9.6s sibling watchdog over ≥10s old RX retirement, not business loss; finish missing actual x86 two-physical test with bounded low-rate sibling sampling using already built exact source.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Do not repeat H1484 ARM native nor H1485 x86 Game4 source57b qualified scenes. Run only pure offline H1486 original ZIP reviewer and inspect H1200 original x86 first Game4/Normal live assertion and H1461 capacity75 separately as next genuine blockers; choose smallest differentiating experiment before product edit. Compare latest main to checkpoint, collect in-flight Actions. PLAN028 L0-L3, windows real Npcap/Wintun and capacity/long tests still open; no 029/030.",
+  "next_action": "Collect auto-triggered H1488 exact native x86 Game2 two-source/MTU switch Action first; verify artifact ZIP manifest/CRC and 80/80 sibling real echoes each wave, authenticated Gen1/2/3 and exact oldStop1/2, inner MTU/readback/lease, Game2 new16+16 UDP, final shared Stop. If FAIL distinguish harness/admission/real packet stage without seed retries. Then prioritize H1461 75Mbps & 1800 existing original limited capacity and Windows real Npcap/Wintun; L2/L3 remains. H1487 no new network; H1484/5 qualification reuse.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1486-H1485-ORIGINAL-X86-GAME4-UDP5-SCOPED-PASS-20261109.json",
-    "docs/evidence/M0/PLAN028-H1485-H1484-ARM-TRIGGERED-ZEROLOSS-X86-GAME4-STALE-GATE-20261109.json"
+    "docs/evidence/M0/PLAN028-H1488-H1487-OFFLINE-PASS-X86-GAME2-OLD-STOP-WINDOW-20261109.json",
+    "docs/evidence/M0/PLAN028-H1486-H1485-ORIGINAL-X86-GAME4-UDP5-SCOPED-PASS-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1486 original source57b native x86 true H1485 Game4 change actual UDP5/5 PASS, TLS8/MTU1178/Gen2 B auth + old Stop PASS; outer GH step FAIL because checked server raw Health log not forwarded by successful fixture, offline source-locked ZIP review corrected. No network rerun. ARM H1484 true180s five client 10 directions zero and Normal B6/GameB2 real proof PASS_SCOPED; H1200 first-live and capacity/L3/Windows still open. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1488 retrieved H1487 original offline Game4 x86 verified Action PASS, unchanged source57b. Scoped H1200 x86 Game2 fixed6 original ERROR 'first Game4/Normal live' is 24*0.4=9.6s monitoring cutoff before minimum10s oldStop grace, despite 24 sibling echoes and server Game2 B authentic proof2. Fix x86 fixture 80*0.4=32s and echo cap640, source57b exact three ELF reuse one new real x86 dual physical Action, candidate NOT_RUN; original failures preserved, PLAN028 IN_PROGRESS."
 }

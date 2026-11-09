@@ -1,0 +1,108 @@
+# H1488 one affected real x86 x86 Game2 fixed6 dual physical change, no rebuild.
+# Frozen product is exact H1484 source57b full original Go/Rust x86 binary
+# artifact 13679959152. Old H1200 failed its 24*.4s sibling window
+# before a minimum 10s old-generation Stop, so Gen2/3 scene was unverified.
+name: M0 PLAN028 H1488 exact x86 Game2 two physical authenticated handovers
+run-name: PLAN028 H1488 x86 Game2 Fixed6 2 physical source changes 80 sibling probes
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1488-x86-game2-two-physical-source57b.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  x86-original-real-two-switch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Reuse immutable full native x86 original TLS Go and Rust source57b binary package
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          mkdir -p frozen fixed-build fixed-kernel-result
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13679959152/zip \
+            -o frozen/original-source57b.zip
+          python3 - <<'PY'
+          import hashlib,zipfile,json,struct,pathlib
+          p=pathlib.Path("frozen/original-source57b.zip")
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=="1228dbeea002869c1a9f94fa17324174e330f1a758bb3236ad4552079a23778a"
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read("fixed-kernel-result/manifest.json"))
+              assert m["source_sha"]=="57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+              assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+              assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+              assert set(m["binary_sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+              for name,sha in m["binary_sha256"].items():
+                  b=z.read("fixed-build/"+name)
+                  assert hashlib.sha256(b).hexdigest()==sha
+                  assert b[:4]==bytes.fromhex("7f454c46")
+                  assert struct.unpack_from("<H",b,18)[0]==62
+              z.extract("fixed-kernel-result/manifest.json")
+              for n in m["binary_sha256"]: z.extract("fixed-build/"+n)
+          print("H1488_ONE_SOURCE57B_3_NATIVE_X86_ELF_SHA_CRC_PASS no_rebuild=1",flush=True)
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          bash -n tools/m0-plan028-mixed-normal-game-native.sh
+          python3 -m py_compile tools/m0-plan028-arm64-game2-off-two-physical-handover-fixture.py tools/m0-plan028-x86-game2fixed6-two-physical-handover-fixture.py
+      - name: One true x86 dual endpoint, two physical source/MTU switches with healthy Game4 and Normal
+        shell: bash
+        timeout-minutes: 11
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          python3 tools/m0-plan028-x86-game2fixed6-two-physical-handover-fixture.py "$RUNNER_TEMP/h1488-real-x86-game2.sh"
+          bash -n "$RUNNER_TEMP/h1488-real-x86-game2.sh"
+          bash "$RUNNER_TEMP/h1488-real-x86-game2.sh" fixed-build \
+            >fixed-kernel-result/h1488-real-x86-native.log 2>&1 || {
+              tail -110 fixed-kernel-result/h1488-real-x86-native.log >&2
+              exit 1
+            }
+          grep -Fq "M0_PLAN028_H1199_X86_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS" fixed-kernel-result/h1488-real-x86-native.log
+          grep -Fq "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS" fixed-kernel-result/h1488-real-x86-native.log
+          python3 - <<'PY'
+          import pathlib,json
+          root=pathlib.Path("fixed-kernel-result")
+          a=json.loads((root/"plan028-h1199-game2-two-physical.json").read_text())
+          b=json.loads((root/"plan028-h1151-mixed-one443.json").read_text())
+          assert a["scope"]=="NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH"
+          assert a["game2_authenticated_generations"]==[1,2,3]
+          assert a["game2_exact_old_stops"]==[1,2]
+          assert a["physical_source4_sequence"]==["10.25.0.2","10.25.0.9","10.25.0.2"]
+          assert a["physical_mtu_sequence"]==[1500,1280,1500]
+          assert a["outer_user_mtu"]==1460
+          assert a["game2_new_udp"]==[16,16]
+          assert a["sibling_udp_each_switch"]==[[80,80],[80,80]]
+          assert a["sibling_game4_stable"] and a["sibling_normal_stable"] and a["tunnel_ip_preserved"]
+          assert 1100<=a["game2_new_inner_mtu"]<a["game2_initial_inner_mtu"]<=1373
+          assert a["other_game4_inner_mtu"]==1358 and a["other_normal_inner_mtu"]==1375
+          assert a["one_server_port"]==b["server_port"]==443
+          assert b["native_peers"]==["game2-fixed6-ChaCha","game4-fixed6-AES256","normal-auto-AES128"]
+          assert b["real_udp_echoes"]=={"game2":12,"game4":18,"normal":18}
+          assert b["game2_stop_did_not_stop_game4_or_normal"]
+          assert b["shared_rust_tun_reader_final_stop"]
+          print("H1488_ORIGINAL_X86_GAME2_TWO_REAL_GENERATIONS_SIBLINGS_80_EACH_FULL_STOP_PASS",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1488-x86-game2-dualphysical-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/h1488-real-x86-native.log
+            fixed-kernel-result/plan028-h1199-game2-two-physical.json
+            fixed-kernel-result/plan028-h1151-mixed-one443.json
+            fixed-kernel-result/plan028-h1151-*-tun.json
+            fixed-kernel-result/plan028-h1199-game2-route-*.json
+          if-no-files-found: warn
+          retention-days: 21

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "base_head_sha": "a1e66eae5866ca1e1460afbc71c3fd1653972cea",
+  "collected_H1487": {
+    "action_id": 42634436099,
+    "conclusion": "success",
+    "artifact_id": 13682611946,
+    "scenario": "PURE_OFFLINE_UNCHANGED_ORIGINAL_X86_GAME4",
+    "product_source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+    "original_native_action_id": 42633209462,
+    "original_native_action_conclusion": "FAIL_RETAINED_OUTER_POSTCHECK",
+    "status": "PASS_SCOPED_ORIGINAL_GAME4_AFTER_SWITCH_FIVE_UDP_ZERO_NOT_REPEAT_NETWORK"
+  },
+  "original_H1200": {
+    "action_id": 42630288227,
+    "artifact_id": 13681045719,
+    "source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+    "native_arch": "linux_x86_64_dual_endpoint",
+    "reported": "FAIL",
+    "old_assertion": "assert len(t1)==24 and t1[0]<a<b<t1[-1]",
+    "actual_sibling_probe_log": {
+      "first_group_game4_udp": 12,
+      "first_group_normal_udp": 12,
+      "monitor_samples": 24
+    },
+    "new_generation_proof": {
+      "game2_server_B_deferred": 2,
+      "game2_server_B_auth_client_ready": 2,
+      "game2_server_B_tun_promoted": 2
+    },
+    "failure": "first Game4/Normal live: monitor 24 probes * 400ms = 9.6s cannot enclose old A owned Stop minimum 10s randomized RX grace, plus TLS/5s proof. Initial three-client live UDP success not enough to complete dual-physical test; later scene and old Stop NOT_QUALIFIED.",
+    "classification": "FAIL_HARNESS_EARLY_MONITOR_DEADLINE_WITH_PRODUCT_GO_NORMAL_NEW_B_PROOF_OBSERVED",
+    "preserve_original": "FAIL_ACTION_AND_INCOMPLETE_PHYSICAL_TWO_HANDOVER_SCENE"
+  },
+  "bounded_work": {
+    "product_modified": false,
+    "wire_modified": false,
+    "new_source_product": "NONE_EXACT_PREVIOUS_SOURCE57B",
+    "source_artifact_id": 13679959152,
+    "source_native_run_id": 42630288111,
+    "immutable_source_zip_sha256": "1228dbeea002869c1a9f94fa17324174e330f1a758bb3236ad4552079a23778",
+    "original_three_binary_elf_sha256": {
+      "wbd-v4-client": "a5360594851707d1e9783ca553a8e5e71bbfa4745c703bc8a2f1e7b781f42d7b",
+      "wbd-v4-server": "652b7cd22bd232944c5a3cac2ca64c7680d6a7900965d956dffd5fc39e8083c8",
+      "libwbd_engine.so": "909f0ace9a95ca2ef16132969edef8c6cf768143f4102bcd276a46c86147ebf6"
+    },
+    "reason_calculation": "minimum old RX retirement grace=10s, maximum=20s, cold authenticated B proof bounded<=5s and OS/fixture margin~7s. 80 probes *0.4s=32s, vs obsolete24*0.4=9.6s. At most 2 sibling echos per probe *2 switches *80=320, plus initial36/new A32/after-stop12~=400; raise fixture echo accept bound 360->640. At 0.4s each 2 sibling probes consume only ~5 business packet pairs/sec and cannot stress product capacity.",
+    "edited": "tools/m0-plan028-x86-game2fixed6-two-physical-handover-fixture.py",
+    "new_workflow": ".github/workflows/m0-plan028-h1488-x86-game2-two-physical-source57b.yml",
+    "purpose": "One true x86 original TLS Go/Rust Game2 fixed6 two physical source/IP/MTU changes and owned old Stop while Game4/Normal siblings deliver all 80 each switch. Do not rebuild product or dispatch 600/1800.",
+    "expected": "verify source binary SHA/ZIP CRC, 3 authenticated Game2 generations/2 exact old Stop, both source changes, FEC applied, other client unchanged and TUN MTU readbacks, 16 Game2 UDP each new generation and 80/80 sibling Game4/Normal UDP each switch, final shared Stop, one TLS443; new test NOT_RUN_UNTIL_ACTION"
+  },
+  "preserved": {
+    "H1484_ARM54_180": "PASS_SCOPED_ZERO_UDP_TRIGGERED_NORMAL_B6_GAME_B2",
+    "H1485_GAME4_X86": "PASS_SCOPED_ORIGINAL_REAL_5_POST_SWITCH_UDP",
+    "H1200_original": "FAIL_HARNESS_SCOPED",
+    "H1483_original": "FAIL_CAROL5",
+    "H1461_SOURCE66FB_600": "FAIL_75MBPS_UDP32_OVERFLOW45",
+    "H1461_SOURCE66FB_1800": "FAIL_351_ALICE_0_QUEUE",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Windows_L3": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

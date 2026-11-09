@@ -26,6 +26,16 @@ s=s.replace("plan028-h1193","plan028-h1199")
 s=s.replace("H1193","H1199")
 one("M0_PLAN028_H1199_ARM64_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS","M0_PLAN028_H1199_X86_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS")
 one("NATIVE_ARM64_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH","NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH")
+# Existing old-A exact Stop uses a uniform 10–20s RX grace, while H1199
+# monitored siblings only 24*.4=9.6s. That cannot cover an owned Stop
+# even with instant B TLS. 80*.4=32s covers 5s cold proof + 20s grace
+# with 7s fixture/scheduler slack, still only 2 sibling UDP probes/turn.
+# The local native UDP echo service must accept the extra 2*2*80 first
+# probes plus initial 36, replaced-A 32 and bounded retries.
+one("for i in range(360):","for i in range(640):")
+one("for i in $(seq 0 23);do","for i in $(seq 0 79);do")
+one("assert len(t1)==24 and t1[0]<a<b<t1[-1]","assert len(t1)==80 and t1[0]<a<b<t1[-1]")
+one("assert len(t2)==24 and t2[0]<c<d<t2[-1]","assert len(t2)==80 and t2[0]<c<d<t2[-1]")
 old='assert gen(alice)==[1,2,3] and stops==[1,2] and gen(bob)==[1] and gen(carol)==[1]'
 new='''assert gen(alice)==[1,2,3] and stops==[1,2] and gen(bob)==[1] and gen(carol)==[1]
 assert alice.count("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=2 mode=fixed profile=6")==3'''
