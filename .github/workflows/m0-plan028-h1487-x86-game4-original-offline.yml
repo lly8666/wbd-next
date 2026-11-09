@@ -1,0 +1,50 @@
+# H1487: ONLY offline original source57b H1485 ZIP review, no native network.
+# Product executable never rebuilt, prior original FAIL outer wrapper retained.
+name: M0 PLAN028 H1487 original H1485 x86 Game4 ZIP offline readback
+run-name: H1487 original x86 Game4 true UDP5 ZIP SHA CRC and fixture offline
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1487-x86-game4-original-offline.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Download EXACT original H1485 ZIP by immutable artifact ID, verify ZIP and rerun pure offline verdict
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p offline/
+          curl -fsSL --retry 2 --max-time 90 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13681532478/zip \
+            -o offline/h1485-original-42633209462.zip
+          python3 -m py_compile tools/m0_plan028_h1486_game4_x86_offline_receipt.py
+          python3 tools/m0_plan028_h1486_game4_x86_offline_receipt.py \
+            --zip offline/h1485-original-42633209462.zip \
+            --fixture tools/m0-v4-public-real-linux-netns.sh \
+            --output offline/h1487-original-verdict.json \
+            | tee offline/h1487-offline.log
+          python3 - <<'PY'
+          import json,pathlib
+          v=json.loads(pathlib.Path("offline/h1487-original-verdict.json").read_text())
+          assert v["classification"]=="OFFLINE_PASS_REAL_NATIVE_X86_GAME4_PATH_UDP5_CORRECT_POSTCHECK_NO_NETWORK_RERUN"
+          assert v["real_udp_echo_after_handover"]==v["required_real_udp_echo"]==5
+          assert v["original_action_id"]==42633209462
+          assert v["product_source_sha"]=="57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+          print("H1487_ORIGINAL_X86_GAME4_NO_NEW_NETWORK_OFFLINE_PASS_NATIVE_UDP5")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1487-x86-game4-original-offline-${{ github.run_id }}
+          path: offline/h1487-*.json
+          if-no-files-found: warn
+          retention-days: 21
