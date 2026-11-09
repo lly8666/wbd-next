@@ -4,11 +4,11 @@
 # before a minimum 10s old-generation Stop, so Gen2/3 scene was unverified.
 name: M0 PLAN028 H1488 exact x86 Game2 two physical authenticated handovers
 run-name: PLAN028 H1488 x86 Game2 Fixed6 2 physical source changes 80 sibling probes
+# Original H1488 native scene already executed all UDP and Stop; only
+# outer report scope suffix was wrong. Reuse original ZIP offline.
+# Keep manual forensic access; NEVER auto-repeat network on this edit.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1488-x86-game2-two-physical-source57b.yml"
+  workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
   x86-original-real-two-switch:
@@ -75,7 +75,7 @@ jobs:
           root=pathlib.Path("fixed-kernel-result")
           a=json.loads((root/"plan028-h1199-game2-two-physical.json").read_text())
           b=json.loads((root/"plan028-h1151-mixed-one443.json").read_text())
-          assert a["scope"]=="NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH"
+          assert a["scope"]=="NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH_WITH_GAME4_AND_NORMAL_HEALTHY"
           assert a["game2_authenticated_generations"]==[1,2,3]
           assert a["game2_exact_old_stops"]==[1,2]
           assert a["physical_source4_sequence"]==["10.25.0.2","10.25.0.9","10.25.0.2"]

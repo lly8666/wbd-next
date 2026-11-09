@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1488,
-  "checkpoint_sha": "a1e66eae5866ca1e1460afbc71c3fd1653972cea",
+  "sequence": 1489,
+  "checkpoint_sha": "222a03eb53064771620e5821d82478969f8ee93b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1488-X86-GAME2-FIXED6-DUAL-PHYSICAL-SIBLING-PROBE-WINDOW",
-  "current_task": "H1488 refreshed main a1e66e... H1487 Action42634436099 pure offline native x86 Game4 original ZIP qualified PASS_SCOPED, zero new network. H1200 original Action42630288227 source57b x86 GAME2 fixed6 2 physical scene FAIL due fixture monitoring 24*.4=9.6s but requires after OLD exact Stop 10-20s grace + TLS; all first sibling probes actual success, Game2 B authentic server proof2; full dual switch NOT_QUALIFIED. Fixture corrected to 80*.4=32s (max 20s grace+5s cold proof+7s slack) and echo server capacity 640; new exactly one x86 native H1488 workflow reuses immutable source57b three Go/Rust ELF from artifact13679959152, no rebuild, scenario NOT_RUN until result. PLAN028 IN_PROGRESS.",
-  "why_now": "Latest H1487 offline already qualified Game4 true5/5; new original failure H1200 has provably impossible 9.6s sibling watchdog over ≥10s old RX retirement, not business loss; finish missing actual x86 two-physical test with bounded low-rate sibling sampling using already built exact source.",
+  "task_id": "PLAN028-M0-H1489-TWO-X86-GAME2-NATIVE-ORIGINAL-ZIP-SCOPED-PASS",
+  "current_task": "H1489 both real x86 Action42638378892 artifact13684650590 SOURCE57b and historical duplicate Action42638378870 artifact13684297738 SOURCE222a completed native x86 original mixed Game2-Fixed6/NormalAuto/Game4-Fixed6 2 source/MTU changes, full 80/80 sibling UDP each wave and new A 16+16, exact owner Stop 1/2 + all final Stop; native shell PASS, both ZIP SHA CRC_PASS, 3 original Go/Rust ELF hashes identical. Outer Actions remain FAIL solely postcheck expected scope suffix and old24 sample; offline qualifies original native as PASS_SCOPED not new network. Fix both outer postchecks, make both workflow_dispatch-only to prevent duplicate auto re-runs, H1489 only offline new Action NOT_RUN until push. PLAN028 IN_PROGRESS.",
+  "why_now": "User wants continue from newest facts. H1488 source-locked native dual physical and accidental old workflow rebuild both actually satisfied all authentic business/Stop hard gates, but outer report-only check failed after completion. Source-locked ZIP offline replay can close without violating no-repeat network rule and old workflows must stop automatically duplicating scenes.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered H1488 exact native x86 Game2 two-source/MTU switch Action first; verify artifact ZIP manifest/CRC and 80/80 sibling real echoes each wave, authenticated Gen1/2/3 and exact oldStop1/2, inner MTU/readback/lease, Game2 new16+16 UDP, final shared Stop. If FAIL distinguish harness/admission/real packet stage without seed retries. Then prioritize H1461 75Mbps & 1800 existing original limited capacity and Windows real Npcap/Wintun; L2/L3 remains. H1487 no new network; H1484/5 qualification reuse.",
+  "next_action": "Collect single auto-triggered H1489 OFFLINE original two ZIP reviewer; zero network/Go Rust builds; confirm source/artifact hashes and PASS_SCOPED while retaining original Action failure. Then choose genuinely still unqualified L2/L3: H1461 600 Alice75 queue overflow45 versus 1800 Alice351/no overflow, Windows real Npcap/Wintun L3 1800 NOT_QUALIFIED. Use capacity PPS / measured host first, smaller cause-separating experiment, do not re-dispatch H1484/H1485/H1488 Game handovers. Android/physical NOT_RUN explicit.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1488-H1487-OFFLINE-PASS-X86-GAME2-OLD-STOP-WINDOW-20261109.json",
-    "docs/evidence/M0/PLAN028-H1486-H1485-ORIGINAL-X86-GAME4-UDP5-SCOPED-PASS-20261109.json"
+    "docs/evidence/M0/PLAN028-H1489-H1488-TWO-ORIGINAL-X86-GAME2-80SIBLING-UDP32-20261109.json",
+    "docs/evidence/M0/PLAN028-H1488-H1487-OFFLINE-PASS-X86-GAME2-OLD-STOP-WINDOW-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1488 retrieved H1487 original offline Game4 x86 verified Action PASS, unchanged source57b. Scoped H1200 x86 Game2 fixed6 original ERROR 'first Game4/Normal live' is 24*0.4=9.6s monitoring cutoff before minimum10s oldStop grace, despite 24 sibling echoes and server Game2 B authentic proof2. Fix x86 fixture 80*0.4=32s and echo cap640, source57b exact three ELF reuse one new real x86 dual physical Action, candidate NOT_RUN; original failures preserved, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1489 collected 2 separate genuine native x86 Game2fixed6 dual physical 32s sibling windows: Action42638378892 source57b and auto-triggered H1200 Action42638378870 source222a; three ELF hashes exactly same. Both native shell PASS, 80/80 Game4/Normal sibling per transition, 16/16 Game2 new UDP, authenticated Game2 3 gens 2 old Stops, TUN/physical MTU valid, final all Stop. Original GH Actions FAIL due only reporter scope suffix / 24 expected versus 80 actual, preserve. Correct both postchecks and disable their push duplicate, H1489 one offline ZIP reviewer pending, no product changes. L2/L3/windows/capacity still open."
 }

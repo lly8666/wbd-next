@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "review_checkpoint_sha": "222a03eb53064771620e5821d82478969f8ee93b",
+  "original_product_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "result": "PASS_SCOPED_TWO_NATIVE_X86_GAME2_DUAL_PHYSICAL_BUSINESS_PRESERVE_ORIGINAL_ACTION_FAIL",
+  "original_real_trials": [
+    {
+      "source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+      "native_action_id": 42638378892,
+      "original_artifact_id": 13684650590,
+      "zip_sha256": "0f004276205331efd7165bcfb893bf649b20421370df99c340e29d44faddbd68",
+      "zip_crc": "PASS",
+      "action_conclusion": "failure",
+      "action_failure": "OUTER_PY_SCOPE_STRING_SUFFIX_ONLY_AFTER_REAL_NATIVE_PASS",
+      "actual_original_native_result": "PASS_SCOPED",
+      "actual_all_sibling_udp_each_transition": [
+        [
+          80,
+          80
+        ],
+        [
+          80,
+          80
+        ]
+      ],
+      "actual_game2_new_generation_udp": [
+        16,
+        16
+      ],
+      "client_epochs": [
+        1,
+        2,
+        3
+      ],
+      "old_owned_stops": [
+        1,
+        2
+      ],
+      "command_to_old_stop_ms": [
+        19915.02,
+        10985.83
+      ]
+    },
+    {
+      "source_sha": "222a03eb53064771620e5821d82478969f8ee93b",
+      "native_action_id": 42638378870,
+      "original_artifact_id": 13684297738,
+      "zip_sha256": "c2837a8d3334f2596256ec3df67228d6ff7ec43672e5804eb6aa9d2d64dca7e6",
+      "zip_crc": "PASS",
+      "action_conclusion": "failure",
+      "action_failure": "OUTER_PY_EXPECTED_24_SIBLING_SAMPLES_WHILE_ACTUAL_PASS_80_AFTER_NATIVE_SUCCESS",
+      "actual_original_native_result": "PASS_SCOPED",
+      "actual_all_sibling_udp_each_transition": [
+        [
+          80,
+          80
+        ],
+        [
+          80,
+          80
+        ]
+      ],
+      "actual_game2_new_generation_udp": [
+        16,
+        16
+      ],
+      "client_epochs": [
+        1,
+        2,
+        3
+      ],
+      "old_owned_stops": [
+        1,
+        2
+      ],
+      "command_to_old_stop_ms": [
+        19677.41,
+        18658.79
+      ]
+    }
+  ],
+  "two_immutable_original_zip_verifications": {
+    "native_product_three_original_ELF_sha256_same_in_both_manifests": {
+      "wbd-v4-client": "a5360594851707d1e9783ca553a8e5e71bbfa4745c703bc8a2f1e7b781f42d7b",
+      "wbd-v4-server": "652b7cd22bd232944c5a3cac2ca64c7680d6a7900965d956dffd5fc39e8083c8",
+      "libwbd_engine.so": "909f0ace9a95ca2ef16132969edef8c6cf768143f4102bcd276a46c86147ebf6"
+    },
+    "output_scope": "NATIVE_X86_X86_GAME2_FIXED6_TWO_SOURCE_IP_REAUTH_WITH_GAME4_AND_NORMAL_HEALTHY",
+    "native_shell_emitted": [
+      "M0_PLAN028_H1199_X86_GAME2_FIXED6_TWO_PHYSICAL_HEALTHY_SIBLINGS_PASS",
+      "M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS"
+    ],
+    "physical_sources": [
+      "10.25.0.2",
+      "10.25.0.9",
+      "10.25.0.2"
+    ],
+    "physical_MTU": [
+      1500,
+      1280,
+      1500
+    ],
+    "user_outer_MTU_intent": 1460,
+    "game2_real_TUN_MTU": [
+      1358,
+      1178,
+      1178
+    ],
+    "siblings_inner_TUN_MTU": {
+      "Game4": 1358,
+      "Normal": 1375
+    },
+    "three_clients_auth_same_one_TLS_port": 443,
+    "same_authenticated_lease_across_Game2_successor": true,
+    "sibling_unmodified_auth_generations": true,
+    "original_mixed_initial_udp": {
+      "game2": 12,
+      "game4": 18,
+      "normal": 18
+    },
+    "exact_all_owner_Stop": true,
+    "note": "command_to_old_stop_ms includes the intentionally randomized 10-20s OLD RX Stop grace and is NOT 200/500ms netlink SLA, TLS handshake or product time-to-first."
+  },
+  "housekeeping": {
+    "two_extra_automatic_same_scenario_actions": "H1488 new source57b targeted push and historical H1200 rebuild push both triggered because original workflow watches the x86 fixture; no user/manual duplicate dispatch",
+    "original_fail_kept": true,
+    "correction": "Fix H1488 offline-only outer scope expected full string; fix H1200 old expected 24->80; make BOTH historical native workflows workflow_dispatch-only and do not rerun.",
+    "new_pure_offline_review": "tools/m0_plan028_h1489_x86_game2_dualphysical_offline.py and .github/workflows/m0-plan028-h1489-game2-x86-two-zip-offline.yml",
+    "new_offline_action_status_at_commit": "NOT_RUN_PENDING_PUSH",
+    "any_product_modified": false,
+    "any_new_network_actions_after_original_duo": false
+  },
+  "preserved": {
+    "ARM64_H1484_180s": "PASS_SCOPED_TRIGGERED_NORMAL_B6_GAME_B2_ALL10UDP_ZERO",
+    "x86_Game4_H1487": "PASS_SCOPED_SOURCE57B_REAL_5_POSTPATH_UDP",
+    "H1483_original_carol5": "FAIL_RETAINED",
+    "H1461_600_75": "FAIL_32_ALICE_DL_45_QUEUE",
+    "H1461_1800": "FAIL_351_ALICE_DL_0_SERVER_QUEUE",
+    "H998_MTU": "FAIL_RETAINED",
+    "Windows_L3_1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

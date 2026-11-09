@@ -1,0 +1,55 @@
+# H1489: Download and verify TWO immutable true-native x86 original
+# archives; original network Actions remain FAIL from external report-only
+# expected 24 instead of actual 80, and a scoped suffix mismatch.
+# No network namespace, OS TUN or second native build.
+name: PLAN028 H1489 x86 Game2 two original native ZIP receipts offline
+run-name: H1489 original two x86 Game2 physical trials offline CRC and true UDP
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1489-game2-x86-two-zip-offline.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Read two original exact ZIPs, replay strict source-locked REAL business verdict with no network
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p offline
+          for tuple in "13684650590 frozen" "13684297738 rebuilt"; do
+            read -r id name <<< "$tuple"
+            curl -fsSL --retry 2 --max-time 90 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/$id/zip" \
+              -o "offline/$name-original.zip"
+          done
+          python3 -m py_compile tools/m0_plan028_h1489_x86_game2_dualphysical_offline.py
+          python3 tools/m0_plan028_h1489_x86_game2_dualphysical_offline.py \
+            --frozen offline/frozen-original.zip --rebuilt offline/rebuilt-original.zip \
+            --out offline/h1489-verdict.json
+          python3 - <<'PY'
+          import json,pathlib
+          v=json.loads(pathlib.Path("offline/h1489-verdict.json").read_text())
+          assert v["classification"]=="OFFLINE_PASS_TWO_ORIGINAL_NATIVE_X86_GAME2_TWO_PHYSICAL_NO_NEW_NETWORK"
+          assert len(v["cases"])==2 and v["original_fails_preserved"]
+          assert all(c["actual_udp_gen2_gen3"]==[16,16] and
+                     c["actual_sibling_game4_normal_each_wave"]==[[80,80],[80,80]]
+                     for c in v["cases"])
+          print("H1489_NATIVE_X86_TWO_REAL_GAME2_TWO_PHYSICAL_REVIEW_PASS_NO_NETWORK")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1489-x86-two-original-offline-${{ github.run_id }}
+          path: offline/h1489-verdict.json
+          if-no-files-found: warn
+          retention-days: 21
