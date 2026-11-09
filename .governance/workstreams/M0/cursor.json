@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1461,
-  "checkpoint_sha": "f439754ae4fb3b98c8fff85136b794a740e83b65",
+  "sequence": 1462,
+  "checkpoint_sha": "f9c7e869e28e1dfe14cf7ea27f8abe93f1f8493d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1461-FIX-URGENT-FIFO-TRUE-600-1800-FIVECLIENT",
-  "current_task": "H1461 source code and workload pending commit: repair Rust original shared TUN 8pkt pending FIFO at near-full (>=6), try at most 8 oldest on recovered M1 receiver, respect 64KiB 100ms and sibling isolation; Rust urgent and legacy unit regressions. User requested true 600 and 1800 five authenticated original Go TLS443/Rust native Linux x86 clients. New single one-build one-SOURCE workflow should build patched Rust and Go once, then independent 600s normal75 no-loss (10s warmup +90/180/90/230 at 25/50/75/50Mbps) and 1800s heterogeneous 0/1/5/15/30pct + true rotations. All six original owned Stop required. No real run or measured PASS yet. Preserve SOURCE548 historical 75Mbps 28 lost UDP and 5 true queue overflows FAIL_SCOPED; PLAN028 IN_PROGRESS.",
-  "why_now": "User explicitly authorized fix plus parallel real five-client 600/1800 pressure. Old 75Mbps queue failure confirmed; targeted product scheduling fix with bounded original M1 FIFO, no buffer increase. Existing 430s fixture extended to genuine 600 business duration rather than relabel, 1800 original rotations retained.",
+  "task_id": "PLAN028-M0-H1462-BOUNDED-FEATURE-CARD-SAME-COMMIT-CATALOG-CORRECTION",
+  "current_task": "H1462 documentation-only feature governance corrective commit. linux-raw-tun card compact <16KiB and changed alongside required devlog feature-impact. H1461 actual patched-product SOURCE66fb Action42578056120 has build SUCCESS and parallel 600sec Normal75 and 1800sec heterogeneous five authenticated Linux clients IN_PROGRESS. Historical old SOURCE548 Normal75 28 missing UDP and 5 native server pending queue overflow FAIL_SCOPED retained; no native terminal Stop verdict yet.",
+  "why_now": "H1461 feature catalog failed first because modified Rust product was not accompanied by feature card same commit; separate card fix pretty printed >16KiB then compact-only fix omitted same commit feature-impact devlog. Need same-commit compact card+updated declaration to satisfy catalog while preserving immutable tested source66fb.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Push exactly one source-locked H1461 workflow and check Python contract, Rust urgent FIFO and 3 existing queue unit tests, exact Go+Rust+native ISA-L x86 build. Once build SUCCESS two independent Linux Runner 600/1800 jobs start concurrently. Download original owner Stop, UDP/actual Mbps, queue overflow, 5 client M4 and 1800 rotations; classify separately. Never equate Linux 1800 with Windows official L3, never claim PASS before original terminal receipt. Preserve H998 old FAIL, Android NOT_RUN, ARM64 original 2x1800 scoped PASS, Win600 scoped PASS. No 029/030.",
+  "next_action": "Check H1462 feature catalog and Governance CI, H1461 600/1800 native job original reports and Stop artifacts under SOURCE66fb. Do not retrigger running jobs. If both succeed, verify real offered/delivered 75 peak and original per-/32 overflow=0 vs historical 28/5 FAIL, and real 1800 5user rotations+six Stop, preserve separate Windows L3 NOT_QUALIFIED. No PLAN029/030.",
   "unverified": true,
-  "last_tested_source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1461-PATCHED-FIVECLIENT-600-1800-PRELAUNCH-20261109.json"
   ],
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1461 targeted native Rust per-lease 8-slot queue urgent FIFO drain candidate; new exact-source Go/Rust/ISA-L single-build parallel native Linux five-client 600s normal75 capacity and 1800s heterogeneous weaknet; both true app duration and original owned Stop; until Action source starts all NOT_RUN; historical SOURCE548 75Mbps fail remains."
+  "partial_summary": "H1462 compact+same-commit feature-impact bookkeeping; no new product or native run. SOURCE66fb build SUCCESS and concurrent original native Linux 600/1800 five-client jobs active, verdict NOT_QUALIFIED until Stop. SOURCE548 Normal75 historical FAIL_SCOPED retained."
 }
