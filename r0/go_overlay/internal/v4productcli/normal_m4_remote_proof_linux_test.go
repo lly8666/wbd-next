@@ -116,3 +116,38 @@ func TestPLAN028NormalHealthPreterminalStartsOneColdIntentWithoutStoppingLiveA(t
     default:
     }
 }
+
+func TestPLAN028ServerBNeedsAuthenticatedClientNativeHealthNotJustUplink(t *testing.T){
+    t.Run("B_native_RX_or_local_start_without_authenticated_client_Health_keeps_A",func(t *testing.T){
+        promotions:=0
+        err:=waitOriginalNativeServerClientM4Ready(context.Background(),
+            func()(realityfront.V4PublicLoopPulse,error){
+                // Authenticated UDP uplink proves client TX, not the new
+                // client's RAW RX socket and delivery route are installed.
+                return realityfront.V4PublicLoopPulse{RxRecords:100},nil
+            },func()error{promotions++;return nil},30*time.Millisecond)
+        if err==nil||promotions!=0{
+            t.Fatalf("server B promoted without exact client receiver proof: %v promotions=%d",err,promotions)
+        }
+    })
+    t.Run("B_real_client_native_cold_Health_promotes_once",func(t *testing.T){
+        pulses,promotions:=0,0
+        err:=waitOriginalNativeServerClientM4Ready(context.Background(),
+            func()(realityfront.V4PublicLoopPulse,error){
+                pulses++
+                if pulses<3{return realityfront.V4PublicLoopPulse{RxRecords:200},nil}
+                return realityfront.V4PublicLoopPulse{AuthenticatedPeerControl:true},nil
+            },func()error{promotions++;return nil},500*time.Millisecond)
+        if err!=nil||pulses!=3||promotions!=1{
+            t.Fatalf("authenticated client cold receipt did not promote server B once: err=%v pulses=%d promotions=%d",err,pulses,promotions)
+        }
+    })
+    t.Run("terminal_client_fails_closed",func(t *testing.T){
+        called:=false
+        err:=waitOriginalNativeServerClientM4Ready(context.Background(),
+            func()(realityfront.V4PublicLoopPulse,error){
+                return realityfront.V4PublicLoopPulse{AuthenticatedPeerDead:true},nil
+            },func()error{called=true;return nil},time.Second)
+        if err==nil||called{t.Fatalf("dead client cannot steal A: err=%v",err)}
+    })
+}

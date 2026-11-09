@@ -29,6 +29,7 @@ extern int32_t wbd_m0_embedded_go_bind_authenticated_client_ipv4(uint64_t,const 
 extern int32_t wbd_m0_embedded_go_shared_tun_open(int32_t,const unsigned char *,size_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_client_shared_tun_promote_after_rx(uint64_t);
+extern int32_t wbd_m0_embedded_go_server_shared_tun_promote_after_rx(uint64_t);
 extern int32_t wbd_m0_embedded_go_shared_tun_close(uint64_t);
 extern int32_t wbd_m0_embedded_go_abort(uint64_t);
 extern int32_t wbd_m0_embedded_go_stop(uint64_t);
@@ -260,6 +261,22 @@ func (b *v4EmbeddedNativeBridge) promoteNormalSharedTunAfterAuthenticatedRx()err
     }
     return nil
 }
+ // Server-only replacement /32 promotion. Rust refuses it while A still
+ // routes the lease unless this B generation AEAD-opened the client's
+ // canonical one-shot native Health (after B's RX socket and workers start).
+ // Initial generations with no A are already published by Rust.
+func (b *v4EmbeddedNativeBridge) promoteNormalServerSharedTunAfterAuthenticatedRx()error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||!b.serverSide {
+        return errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_server_shared_tun_promote_after_rx(C.uint64_t(b.handle))
+    if rc!=0{
+        return fmt.Errorf("%w: authenticated Normal server route promotion=%d",
+            &v4EmbeddedNativeStatus{Operation:"normal_server_shared_tun_auth_rx_promote",Code:int(rc)},int(rc))
+    }
+    return nil
+}
+
 func (b *v4EmbeddedNativeBridge) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)error{
     if b==nil||b.handle==0||!b.committed||r==nil{
         return errV4Embedded

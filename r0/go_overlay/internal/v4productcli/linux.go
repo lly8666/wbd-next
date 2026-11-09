@@ -1068,6 +1068,39 @@ func waitOriginalNativeM4PeerProof(
     }
 }
 
+// Server B may not steal A's downlink from local TLS/native START alone.
+// Unlike the client proof barrier, ordinary B uplink records are NOT enough:
+// only its authenticated native client Health kind0, sent after B's RAW RX
+// socket and worker start, proves the new remote receiver is present.
+func waitOriginalNativeServerClientM4Ready(
+    ctx context.Context,pulse func()(realityfront.V4PublicLoopPulse,error),
+    promote func()error,max time.Duration,
+)error{
+    if ctx==nil||pulse==nil||promote==nil||max<=0{
+        return fmt.Errorf("invalid original server client-native M4 readiness barrier")
+    }
+    timer:=time.NewTimer(max)
+    ticker:=time.NewTicker(25*time.Millisecond)
+    defer timer.Stop()
+    defer ticker.Stop()
+    for{
+        status,err:=pulse()
+        if err!=nil{return fmt.Errorf("new client M4 readiness evidence: %w",err)}
+        if status.AuthenticatedPeerDead{
+            return fmt.Errorf("candidate client native terminal before cold readiness")
+        }
+        if status.AuthenticatedPeerControl{
+            return promote()
+        }
+        select{
+        case <-ctx.Done():return ctx.Err()
+        case <-timer.C:
+            return fmt.Errorf("client B native M4 receiver not proven before bounded overlap deadline")
+        case <-ticker.C:
+        }
+    }
+}
+
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,
     connected *bool,ready ...chan<- struct{})error{
@@ -1691,6 +1724,42 @@ func runSharedMultiServer(
             mu.Unlock()
             _=p.Close()
             log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=kernel_filter")
+            return
+        }
+        mu.Unlock()
+        // Initial server session publishes its /32 route directly. In an
+        // overlap, Rust kept A's exact route: authenticate client B's
+        // one-shot cold Health before server B can receive NEW TUN DATA.
+        // No registry lock is held across proof polling or native Stop.
+        if proofErr:=p.PromoteNormalServerAfterAuthenticatedPeerRx();proofErr!=nil{
+            proofErr=waitOriginalNativeServerClientM4Ready(runCtx,
+                p.OriginalLoopPulse,p.PromoteNormalServerAfterAuthenticatedPeerRx,
+                5*time.Second)
+            if proofErr!=nil{
+                mu.Lock()
+                delete(detached,rec.assoc)
+                peers:=peersLocked()
+                var restoreErr error
+                if len(peers)>0{restoreErr=raw.ExcludeDetachedDataSet(peers)}
+                mu.Unlock()
+                closeErr:=p.Close()
+                log.Printf("V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN port=%d old_route_preserved=1 reason=%v",
+                    flow.ClientPort,proofErr)
+                if restoreErr!=nil||closeErr!=nil{
+                    select{case transportErr<-errors.Join(restoreErr,closeErr):default:}
+                }
+                return
+            }
+            log.Printf("V4_PUBLIC_MULTI_SERVER_B_CLIENT_READY port=%d source=authenticated_client_native_Health old_route_promoted=1",
+                flow.ClientPort)
+        }
+        mu.Lock()
+        if stopping||runCtx.Err()!=nil{
+            delete(detached,rec.assoc)
+            peers:=peersLocked()
+            if len(peers)>0{_ = raw.ExcludeDetachedDataSet(peers)}
+            mu.Unlock()
+            _=p.Close()
             return
         }
         rec.lease=lease

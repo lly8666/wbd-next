@@ -371,6 +371,16 @@ func (p *V4LinuxServerProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,err
     if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
     return p.owner.originalPublicFecTxSnapshot()
 }
+// This cold operation never sends DATA or treats local TLS as remote ready.
+// A replacement server B may publish its per-lease TUN route only after
+// its own authenticated client B Health confirms the client native RX owner.
+func (p *V4LinuxServerProduct) PromoteNormalServerAfterAuthenticatedPeerRx()error{
+    if p==nil{return ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return ErrAdmissionUnsupported}
+    return p.owner.promoteNormalServerSharedTunAfterAuthenticatedRx()
+}
 func (p *V4LinuxServerProduct) OriginalLoopPulse()(V4PublicLoopPulse,error){
     if p==nil{return V4PublicLoopPulse{},ErrAdmissionParams}
     p.mu.Lock()

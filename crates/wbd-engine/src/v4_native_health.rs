@@ -135,6 +135,16 @@ impl HealthClock {
             self.retry_not_before=at;
         }
     }
+    /// An overlapping client B has installed its original authenticated
+    /// M4 RAW RX socket and worker. Send exactly one existing AEAD kind0
+    /// to the server so it can publish B only after real peer readiness.
+    pub(crate) fn arm_client_cold_ready(&mut self,at:u64){
+        if self.cold_group_receipts_left==0{
+            self.cold_group_receipts_left=1;
+            self.next_health=at;
+            self.retry_not_before=at;
+        }
+    }
     pub(crate) fn on_health_send_result(&mut self,at:u64,accepted:bool){
         if accepted {
             if self.cold_group_receipts_left>0{
@@ -838,4 +848,19 @@ mod tests {
         assert!(parse_authenticated_control(&tamper).is_err());
     }
 
+}
+
+#[cfg(test)]
+mod m0_plan028_client_ready_cold_tests{
+    use super::*;
+    #[test]
+    fn replacement_client_one_existing_health_without_extra_periodic_probe(){
+        let mut clock=HealthClock::new(HealthPolicy::default_connected(),100_000_000);
+        assert!(!clock.tx_due(100_000_000),"first generation unchanged");
+        clock.arm_client_cold_ready(200_000_000);
+        assert!(clock.tx_due(200_000_000),"B sends native authenticated kind0");
+        clock.on_health_send_result(201_000_000,true);
+        assert!(!clock.tx_due(202_000_000),"only one cold readiness receipt");
+        assert!(clock.next_tx_deadline().unwrap()>202_000_000);
+    }
 }

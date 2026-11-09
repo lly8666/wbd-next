@@ -3369,7 +3369,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
             // remote server received *both* protected cold lanes. Preserve
             // old cohort's original default TUN route until real new-M4
             // authenticated reverse IPv4 delivery proves server takeover.
-            if !server && shared_route_defer_overlapping_client(
+            if !server && shared_route_defer_live_replacement(
                 &routes,shared.ip,shared.generation
             ){
                 shared.publish_pending=true;
@@ -4221,10 +4221,9 @@ struct SharedTunSession{
     alive:Arc<AtomicBool>,
     sender:SyncSender<OriginalTunIngress>,
     receiver:Option<Receiver<OriginalTunIngress>>,
-    // Client overlapping Normal B has a real authenticated RX owner but
-    // must NOT revoke A's outbound route until B has received a genuine
-    // M4-authenticated reverse IPv4 delivery. Server routes and the first
-    // client generation still publish when their real owner starts.
+    // Replacement B on EITHER side keeps authenticated A's per-IP route
+    // until B's genuine remote M4 readiness proof. Initial generations
+    // publish directly; only exact owner Stop revokes an alive generation.
     publish_pending:bool,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4261,7 +4260,7 @@ fn shared_route_publish(
     true
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn shared_route_defer_overlapping_client(
+fn shared_route_defer_live_replacement(
     routes:&HashMap<[u8;4],SharedTunRoute>,ip:[u8;4],new_generation:u32
 )->bool{
     routes.get(&ip).is_some_and(|old|
@@ -4499,8 +4498,8 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
         generation:24,alive:Arc::clone(&old_live),send:old_tx.clone(),
     }));
-    assert!(shared_route_defer_overlapping_client(&routes,ip,25));
-    assert!(!shared_route_defer_overlapping_client(&routes,ip,24));
+    assert!(shared_route_defer_live_replacement(&routes,ip,25));
+    assert!(!shared_route_defer_live_replacement(&routes,ip,24));
     assert!(!shared_route_promote_authenticated_client(
         &mut routes,ip,SharedTunRoute{
             generation:25,alive:Arc::clone(&next_live),send:new_tx.clone(),
@@ -4533,6 +4532,43 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     shared_route_retire(&mut routes,ip,24,&old_live);
     assert!(!old_live.load(Ordering::Acquire));
     assert_eq!(routes[&ip].generation,26);
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_server_b_waits_real_client_cold_health_before_replacing_a(){
+    let ip=[10,66,0,224];
+    let (old_tx,_old_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let (new_tx,_new_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);
+    let old_live=Arc::new(AtomicBool::new(true));
+    let new_live=Arc::new(AtomicBool::new(true));
+    let mut routes=HashMap::new();
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+        generation:7,alive:Arc::clone(&old_live),send:old_tx,
+    }));
+    assert!(shared_route_defer_live_replacement(&routes,ip,8));
+    let evidence=crate::v4_native_health::AuthenticatedActivity::default();
+    let b=SharedTunRoute{
+        generation:8,alive:Arc::clone(&new_live),send:new_tx,
+    };
+    // B's local TLS/RAW Start without client B's M4 response cannot
+    // authorize a server-TUN handover or Stop old A.
+    assert!(!evidence.has_verified_peer_health());
+    assert!(!shared_route_promote_authenticated_client(
+        &mut routes,ip,b.clone(),u64::from(evidence.has_verified_peer_health())
+    ));
+    assert_eq!(routes[&ip].generation,7);
+    assert!(old_live.load(Ordering::Acquire));
+    // Authenticated unique peer Health kind0 after client B's RAW RX bind.
+    evidence.record_batch(140,0,Some((140,0)));
+    assert!(evidence.has_verified_peer_health());
+    assert!(shared_route_promote_authenticated_client(
+        &mut routes,ip,b,u64::from(evidence.has_verified_peer_health())
+    ));
+    assert_eq!(routes[&ip].generation,8);
+    assert!(old_live.load(Ordering::Acquire),"old in-flight still alive");
+    shared_route_retire(&mut routes,ip,7,&old_live);
+    assert_eq!(routes[&ip].generation,8);
+    assert!(new_live.load(Ordering::Acquire));
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -8276,11 +8312,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             // for the existing native M3 AEAD/replay+TUN receipt. If the
             // protected server M4 rejects B, close B without disturbing A.
             // Do not defer initial client install or server /32 publication.
-            if !server && shared_route_defer_overlapping_client(
+            if shared_route_defer_live_replacement(
                 &routes,sh.ip,sh.generation
             ){
                 sh.publish_pending=true;
-                eprintln!("V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED generation={} old_route_preserved=1",sh.generation);
+                eprintln!("V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED role={} generation={} old_route_preserved=1",
+                    if server{"server"}else{"client"},sh.generation);
             }else if !shared_route_publish(&mut routes,sh.ip,new){
                 return BAD_STAGE
             }
@@ -8295,6 +8332,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.server_side && e.original_public_feedback_armed {
         let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
         clock.arm_server_cold_commit(loop_now().0);
+    }else if !e.server_side && e.original_public_feedback_armed &&
+        e.shared_tun.as_ref().is_some_and(|s|s.publish_pending){
+        // Only an overlapping client B sends ONE existing authenticated
+        // Health kind0 on native M4 start. This proves its RAW RX socket
+        // and worker exist before the server replaces A's downlink route.
+        let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
+        clock.arm_client_cold_ready(loop_now().0);
     }
     OK
 }
@@ -8343,6 +8387,45 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     OK
 }
 
+// Server-only cold B replacement: unlike initial native M4 Start,
+ // publication of a replacement shared TUN /32 is authorized ONLY by the
+ // new client generation's AEAD/PN-opened canonical Health kind0. The
+ // client arms exactly one such existing control after its RAW RX socket
+ // and worker have been installed. A remains routed while B is pending.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_server_shared_tun_promote_after_rx(handle:u64)->i32{
+    let Ok(cell)=session(handle)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if !e.server_side||e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    let proof=e.native_health_evidence.as_ref()
+        .is_some_and(|a|a.has_verified_peer_health());
+    #[cfg(not(feature="fec2_product_record"))]
+    let proof=false;
+    let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
+    let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
+    if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    if !sh.publish_pending{
+        // Initial server owners have no A to protect and publish directly.
+        return if routes.get(&sh.ip).is_some_and(|r|
+            r.generation==sh.generation &&
+            Arc::ptr_eq(&r.alive,&sh.alive) &&
+            r.alive.load(Ordering::Acquire)
+        ){OK}else{BAD_STAGE}
+    }
+    let next=SharedTunRoute{
+        generation:sh.generation,alive:Arc::clone(&sh.alive),
+        send:sh.sender.clone(),
+    };
+    if !shared_route_promote_authenticated_client(
+        &mut routes,sh.ip,next,u64::from(proof)
+    ){return BAD_STAGE}
+    sh.publish_pending=false;
+    eprintln!("V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX generation={} verified_client_cold_health=1 old_route_preserved_until_proof=1",sh.generation);
+    OK
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
@@ -8400,9 +8483,9 @@ pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_predead(
     unsafe{out.write(u32::from(predead))}
     OK
 }
-// Original Normal Off/Fixed/Auto cold Go reads this only during B's
-// bounded overlap. This is the candidate's own AEAD/PN-verified canonical
-// Health kind0, with no TUN payload credit, no TLS/local READY authority.
+// Both original Normal Off/Fixed/Auto cold peers can read this during B's
+// bounded overlap. It is their candidate's own AEAD/PN-verified canonical
+// Health kind0; it never turns TLS/local READY or TCP ACK into proof.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
@@ -8414,7 +8497,7 @@ pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_health(
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.workers.is_none(){return BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
-    let proof= !e.server_side&&e.native_health_evidence.as_ref()
+    let proof=e.native_health_evidence.as_ref()
         .is_some_and(|a|a.has_verified_peer_health());
     #[cfg(not(feature="fec2_product_record"))]
     let proof=false;
