@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "MIXED_PASS_SCOPED_AND_FAIL_SCOPED_ZEROLOSS_75MBPS",
+  "artifact_verified": true,
+  "original_four_action": {
+    "run_id": 42567898270,
+    "source_wrapper_sha": "e2e82a846f55b7dddd7e30c9dcbcc6b54c3c6b49",
+    "conclusion": "success",
+    "case_jobs": {
+      "normal50": 128998392867,
+      "normal75": 128998392900,
+      "game4fec20": 128998392818,
+      "weaknet30": 128998392893
+    },
+    "product_source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+    "real_auth_accounts": 5,
+    "real_linux_netns": 6,
+    "original_TLS443_Rust_TUN_TCP_UDP": true,
+    "seconds": 180,
+    "all_six_original_Stops_per_case": true
+  },
+  "case_results": {
+    "normal50": {
+      "original_artifact_id": 13652491486,
+      "sha256": "dbca6ddcdc0bfaf80c951d10cb212fb0c3d852d5043e0af06a61c87e91a24904",
+      "original_action": "success",
+      "strict_result": "PASS_SCOPED_0LOSS_NORMAL_10_25_50_25_WITH_FIVE_SIBLINGS",
+      "target_and_measured_peak_Mbps_each_direction": 50,
+      "peak_aggregate_Mbps_each_direction": 58,
+      "host_busy_pct": 41.26,
+      "real_udp_missing": 0,
+      "server_lease_pending_overflow": 0,
+      "rotations_180s": "NOT_TRIGGERED"
+    },
+    "normal75": {
+      "original_artifact_id": 13652407002,
+      "sha256": "326288389a7db6331c35f96a542b0bebdc15a7e4effbf7f4b3006306e7c1a5ef",
+      "original_action": "success",
+      "original_capacity_audit": "PASS_SCOPED_0LOSS_NORMAL_25_50_75_50_WITH_FIVE_SIBLINGS",
+      "strict_result": "FAIL_SCOPED_ZEROLOSS_UDP_MISSING_OR_SERVER_LEASE_QUEUE_OVERFLOW",
+      "measured_peak_Mbps_Alice_each_direction": 75,
+      "peak_aggregate_Mbps_each_direction": 83,
+      "host_busy_pct": 90.03,
+      "peak_core_busy_pct": 90.36,
+      "alice_original_udp_uplink_sent": 1099425,
+      "alice_original_udp_uplink_received": 1099400,
+      "alice_original_udp_downlink_sent": 1099423,
+      "alice_original_udp_downlink_received": 1099420,
+      "actual_unique_udp_missing_total": 28,
+      "server_alice_lease": "10.66.0.149",
+      "server_alice_lease_offered": 1402924,
+      "server_alice_lease_direct_delivered": 1402889,
+      "server_lease_pending_overflow": 5,
+      "server_lease_peak_packets": 8,
+      "actual_client_UDP_not_delivered": "28 real packets missing with zero physical configured loss; not waived as 99.99% success",
+      "cause": "NOT_PROVEN_HOST_PRESSURE_VS_RUST_TUN_QUEUE_OR_BUSINESS_BACKPRESSURE",
+      "host_cpu_from_distinct_VM": "NOT_APPLICABLE"
+    },
+    "game4fec20": {
+      "original_artifact_id": 13652311455,
+      "sha256": "a9a8c49d8f00024225f3c87573cbf0952d482178e5e4039c88236a3b7f9351f8",
+      "original_action": "success",
+      "strict_result": "PASS_SCOPED_0LOSS_GAME4_FIXED6_3_5_10_20_10_WITH_FIVE_SIBLINGS",
+      "peak_game4_Mbps_direction": 20,
+      "peak_aggregate_Mbps_direction": 28,
+      "host_busy_pct": 46.45,
+      "real_udp_missing": 0,
+      "server_lease_pending_overflow": 0,
+      "rotation_180s": "NOT_TRIGGERED"
+    },
+    "weaknet30": {
+      "original_artifact_id": 13651628558,
+      "sha256": "72c77aef1041ab00743f5337110818ec922074689209243d9449f25f4cbd617c",
+      "original_action": "success",
+      "strict_result": "PASS_SCOPED_180S_MIXED_0_TO30PCT_REAL_NETEM",
+      "loss_pct_by_client": [
+        0,
+        1,
+        5,
+        15,
+        30
+      ],
+      "oneway_delay_ms_by_client": [
+        0,
+        15,
+        50,
+        100,
+        125
+      ],
+      "erin_true_kernel_drop_uplink_fraction": 0.299313,
+      "erin_true_kernel_drop_downlink_fraction": 0.29835,
+      "rapid_alerts": 0,
+      "all_five_actual_rotations": true,
+      "real_UDP_loss_due_to_configured_netem": "EXPECTED_LEGITIMATE_NOT_ZEROLOSS_FAILURE",
+      "original_owned_Stops": "PASS"
+    }
+  },
+  "historical_comparators": {
+    "normal75_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "normal75_action": 42441021254,
+    "normal75_artifact_id": 13600784818,
+    "zip_sha256": "0a353a05d4e53576b167a2e185f937ef30585463d4ab019db0c5633059035b8c",
+    "normal75_actual_unique_udp_missing": 0,
+    "normal75_server_pending_overflow": 0,
+    "normal75_peak_host_busy_pct": 74.93,
+    "different_host_and_binaries": true,
+    "not_proof_of_reproducible_regression": true,
+    "game4_action": 42567898293,
+    "game4_old_source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+    "game4_original_CI_conclusion": "failure",
+    "game4_artifact_id": 13652166717,
+    "game4_zip_sha256": "58c45daa7863b806bd2d1ed91ca29afbbe37305e3cd21d647f930b3a8d47f1c1",
+    "game4_native_business": "PASS_SCOPED_0LOSS_GAME4_FIXED6_3_5_10_20_10_WITH_FIVE_SIBLINGS",
+    "game4_CI_failure_cause": "STALE_EXPECTED_ENUM_3_5_10_5_MISSING_20",
+    "game4_own_six_Stop": "PASS",
+    "historic_CI_failure_preserved": true
+  },
+  "offline_second_judge": {
+    "workflow": ".github/workflows/m0-plan028-h1459-offline-rejudge.yml",
+    "script": "tools/m0_plan028_h1459_offline_rejudge.py",
+    "test": "tests/test_m0_plan028_h1459_offline_rejudge.py",
+    "expected": "Download six exact immutable artifacts; recompute zero loss loss/queue overflow, weaknet impaired policy and historical CI label; no OS native tests",
+    "new_workflow_action": "NOT_RUN_AT_PREPARATION",
+    "code_regression_fixture": "ZEROLOSS_MISSING_OR_PENDING_OVERFLOW_NEVER_GREEN",
+    "original_four_green_action_retained": true
+  },
+  "bounded_claims": [
+    "No original Windows Wintun 1800s from these Linux-only netns stress scenes",
+    "No host-independent 75Mbps product capacity ceiling proof",
+    "Different actual binary bytes between old6c5 and new548; no cross-source host CPU causal inference",
+    "Normal75 original green audit overridden by strict negative, not falsely rewritten",
+    "Weaknet configured physical loss does not require zero unreceived UDP",
+    "All four source548 Linux jobs SUCCESS even when stricter product result 75Mbps FAIL_SCOPED"
+  ],
+  "carry_forward": {
+    "PLAN028": "IN_PROGRESS",
+    "Windows1800_L3": "NOT_QUALIFIED",
+    "source548_Win_Linux_real600": "PASS_SCOPED",
+    "ARM64_eef2_two1800": "PASS_SCOPED",
+    "H998_hot_socket_MTU": "FAIL",
+    "Android_physical": "NOT_RUN",
+    "PLAN029_030": "NOT_STARTED"
+  }
+}

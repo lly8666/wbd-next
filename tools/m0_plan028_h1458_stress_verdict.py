@@ -48,6 +48,17 @@ def verdict(scene,root,source,wrapper):
                              "actual_ratio":round(got/sent,5) if sent else None,
                              "max_active_tx_no_rx_gap_ms":leg["largest_10ms_bucket_no_receive_while_sender_active_ms"]})
             if sent<=0 or got<=0:hard.append(who+" "+direction+" NO_GENUINE_UDP")
+    # H1459: native 75Mbps original UDP dropped 28 datagrams and server
+    # per-lease pending overflowed five times while the old capacity audit
+    # returned PASS. Zero-loss cannot accept this as a functional PASS.
+    # 30% loss scenes have a DIFFERENT capacity/impairment denominator.
+    queue_overflow=sum(int(v.get("pending_overflow") or 0)
+                       for v in rapid["server_per_authenticated_lease_tun"].values())
+    unreceived=sum(max(0,x["actual_sent_udp_packets"]-x["actual_received_udp_packets"])
+                   for x in measured)
+    if scene!="weaknet30" and (queue_overflow or unreceived):
+        hard.append("ZERO_LOSS_ORIGINAL_APP_MISSING="+str(unreceived)+
+                    " SERVER_LEASE_PENDING_OVERFLOW="+str(queue_overflow))
     if scene=="weaknet30":
         configured=[int(v["loss_pct"]) for v in plan["clients"]]
         assert configured==SCENES[scene]["loss_pct"],configured
@@ -83,7 +94,13 @@ def verdict(scene,root,source,wrapper):
         "qualification_scope":"x86_64 Linux only, 180 seconds, no Windows Wintun 1800s",
         "duration_s":180,"actual_udp":measured,"original_six_owned_final_Stops":stopped,
         "capacity":capacity,"rapid_alert_count":rapid["alert_count"],
-        "rapid_alerts":rapid["alerts"],"classification":classification,
+        "rapid_alerts":rapid["alerts"],
+        "underlying_capacity_audit_classification":classification,
+        "server_pending_queue_overflow":queue_overflow,
+        "zero_or_weaknet_unreceived_udp_packets":unreceived,
+        "classification":("FAIL_SCOPED_ZEROLOSS_SERVER_QUEUE_OR_APP_MISSING"
+                          if scene!="weaknet30" and (queue_overflow or unreceived)
+                          else classification),
         "hard_faults":hard,
         "cannot_claim":["Windows Wintun 1800s","physical WAN/Android",
                         "cross-VM CPU speedup","100 PPS based on target Mbps"]

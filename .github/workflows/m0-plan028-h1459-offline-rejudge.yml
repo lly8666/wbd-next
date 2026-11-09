@@ -1,0 +1,80 @@
+name: PLAN028 H1459 offline source-locked pressure artifact rejudge
+run-name: H1459 original x86 4 stress and 2 historical artifacts OFFLINE ONLY
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1459-offline-rejudge.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  six-sources-offline-rejudge:
+    name: H1459 immutable evidence offline 6 archives, zero network workload
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-locked original protocol verdict unit tests (no VPN)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v tests.test_m0_plan028_h1459_offline_rejudge
+          python3 -m py_compile tools/m0_plan028_h1459_offline_rejudge.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42567898270
+          github-token: ${{ github.token }}
+          name: plan028-h1458-normal50-native-42567898270
+          path: input/normal50
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42567898270
+          github-token: ${{ github.token }}
+          name: plan028-h1458-normal75-native-42567898270
+          path: input/normal75
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42567898270
+          github-token: ${{ github.token }}
+          name: plan028-h1458-game4fec20-native-42567898270
+          path: input/game4fec20
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42567898270
+          github-token: ${{ github.token }}
+          name: plan028-h1458-weaknet30-native-42567898270
+          path: input/weaknet30
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42441021254
+          github-token: ${{ github.token }}
+          name: plan028-h1360-native-x86-normal75-0loss-capacity-42441021254
+          path: input/old-normal75
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42567898293
+          github-token: ${{ github.token }}
+          name: plan028-h1349-native-x86-game4-0loss-capacity-42567898293
+          path: input/old-game4
+      - name: Recompute immutable six original reports, never rerun real network
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python3 -u tools/m0_plan028_h1459_offline_rejudge.py \
+            --root input --repo . --out output/h1459-review.json \
+            | tee output/h1459-review.log
+          test -s output/h1459-review.json
+          echo H1459_NO_NATIVE_NETWORK_RERUN_OR_PRODUCT_STOP_INVENTION
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1459-immutable-artifact-rejudge-${{ github.run_id }}
+          path: output/
+          if-no-files-found: warn
+          retention-days: 30
