@@ -1,0 +1,68 @@
+# PLAN028 H1472: zero original native products, exact four immutable source artifacts.
+name: PLAN028 H1472 immutable eight five-client 180s offline rejudge
+run-name: PLAN028 H1472 original source66fb and old6c5 real eight 180s offline
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1472-eight-immutable-180s-offline-rejudge.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  eight-offline:
+    name: Original 8 full180s five-client source and six-Stop offline-only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Cheap pure Python regression and source/Stop contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1472_eight_short_original_offline.py
+          python3 -m unittest -v tests.test_m0_plan028_h1472_eight_offline_source
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42590018240
+          github-token: ${{ github.token }}
+          name: plan028-h1467-source66fb-paired-capacity-42590018240
+          path: input/capacity
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42590018240
+          github-token: ${{ github.token }}
+          name: plan028-h1467-source66fb-paired-generation-42590018240
+          path: input/generation
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42590601995
+          github-token: ${{ github.token }}
+          name: plan028-h1471-old6c5-new66fb-paired-oldnew-42590601995
+          path: input/oldnew
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42590601995
+          github-token: ${{ github.token }}
+          name: plan028-h1471-old6c5-new66fb-paired-newold-42590601995
+          path: input/newold
+      - name: Rejudge eight genuine 180s five original client/Stop outputs and all per-lease queue receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan028_h1472_eight_short_original_offline.py \
+            --root input --out review/h1472-eight-native-original-scoped.json \
+            --reviewer "$GITHUB_SHA" | tee review-run.log
+          test -s review/h1472-eight-native-original-scoped.json
+          echo H1472_NO_NEW_NETWORK_EIGHT_ORIGINAL_NATIVE_SOURCE_SCOPED_VERIFIED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1472-original-eight-180s-offline-${{ github.run_id }}
+          path: |
+            review/*.json
+            review-run.log
+          if-no-files-found: warn
+          retention-days: 30

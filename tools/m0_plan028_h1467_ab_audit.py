@@ -53,11 +53,17 @@ def main():
     a.add_argument("--root",type=pathlib.Path,required=True)
     a.add_argument("--pair",choices=("capacity","generation"),required=True)
     a.add_argument("--out",type=pathlib.Path,required=True)
+    a.add_argument("--execution-order",choices=("static12,rotating12","rotating12,static12","capacity_mixed,capacity_large"),default=None)
     args=a.parse_args()
     cases=("capacity_mixed","capacity_large") if args.pair=="capacity" else ("static12","rotating12")
-    outcomes={k:inspect(args.root/k/"fixed-kernel-result",k) for k in cases}
+    # The native driver moves the COMPLETE fixed-kernel-result folder to
+    # paired/<case>/ directly; do NOT look for a nested fixed-kernel-result.
+    # Both previous source-locked Actions executed the full genuine test and
+    # failed only on the now-corrected nonexistent nested path.
+    assert args.execution_order is None or set(args.execution_order.split(","))==set(cases)
+    outcomes={k:inspect(args.root/k,k) for k in cases}
     result={"schema_version":1,"source_sha":SRC,"paired_control":args.pair,"same_runner_sequential_original_binary":True,
-            "order":list(cases),"observations":outcomes,"classification":{
+            "order":list(cases),"actual_runtime_order":(args.execution_order.split(",") if args.execution_order else list(cases)),"observations":outcomes,"classification":{
                 k:("PASS_SCOPED_180S" if v["all_zero_loss_complete"] and v["alice_original_queue_overflow"]==0 else "FAIL_SCOPED_180S")
                 for k,v in outcomes.items()},"restriction":"Not a causal proof until reverse order/CPU state replicated. No 600/1800 source qualification."}
     args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(json.dumps(result,indent=2)+"\n")

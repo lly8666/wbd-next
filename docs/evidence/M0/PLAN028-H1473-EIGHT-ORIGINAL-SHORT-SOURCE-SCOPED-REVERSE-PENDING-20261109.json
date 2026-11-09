@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "comparator_original_source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+  "result": "EIGHT_REAL_NATIVE_180S_ORIGINAL_COMPLETED_BUT_STRICT_PER_SCENE_MIXED;_OFFLINE_ACTION_AND_REVERSED_GENERATION_NOT_RUN_YET",
+  "zip_crc_verified": true,
+  "full_original_real_five_authenticated_go_tls443_rust_ISAL_client_and_six_Owned_Stop": true,
+  "native_sources": {
+    "new": {
+      "sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+      "source_locked_original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "original_binary_sha256": {
+        "client": "c2c5531168dfcd62624bd0910b52a606a413bad1eced3f69ce6ac577d66442c1",
+        "server": "3ddbde8284fc1fcfa1af8097e3c8f6724e8f247367676d47f49553f8b293cf42",
+        "rust": "c15070d091e8d45c6c1cccacaa49c2c374a409c4718f2fc7c9370df59d6392b7"
+      }
+    },
+    "old": {
+      "sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+      "original_binary_sha256": {
+        "client": "f3b42cba7e3246a5b5fa324f160df0abade58d19414b7d6c43e5b389100c85ea",
+        "server": "bbfc2af8bda9965e5f9f68af0b3a3feba186eca8a5ede07043e991fdf9d97c83",
+        "rust": "ee9aaf3eeb517e4a7b5b73b739eb9b9af75638bd3d5c3e6c4945af7a28fd78f7"
+      }
+    }
+  },
+  "original_artifacts": [
+    {
+      "action": 42590018240,
+      "id": 13661277093,
+      "zip_sha256": "aa25c612ffcc84d2ed43f3e17ce0ef05e61bd73029b6aa1547d738afcc254e6e",
+      "cases": [
+        "capacity_mixed",
+        "capacity_large"
+      ],
+      "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383"
+    },
+    {
+      "action": 42590018240,
+      "id": 13660868907,
+      "zip_sha256": "5ccdcc7040becb140bcd258ac333a8b1914fd2e2db97069f3c06f4723414c8b5",
+      "cases": [
+        "static12",
+        "rotating12"
+      ],
+      "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383"
+    },
+    {
+      "action": 42590601995,
+      "id": 13661168078,
+      "zip_sha256": "1650cc938f484958694fa3e8fb1b3f085d1ef9ab227533d9f825f3a936974a21",
+      "cases": [
+        "old",
+        "new"
+      ],
+      "source_sha_by_case": {
+        "old": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+        "new": "66fb6b4454b1ce4297ab04efa20c7f931ff12383"
+      }
+    },
+    {
+      "action": 42590601995,
+      "id": 13660943781,
+      "zip_sha256": "44eb133d91e910242764cdb99e50b4a7704621f2079b6eb2432ff99ef80ed40a",
+      "cases": [
+        "new",
+        "old"
+      ],
+      "source_sha_by_case": {
+        "new": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+        "old": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589"
+      }
+    }
+  ],
+  "local_independent_recheck": {
+    "h1467_capacity": [
+      {
+        "scene": "new_mixed75",
+        "actual_udp_missing": 0,
+        "server_lease_overflow": 0,
+        "server_avg_1core_cpu_pct": 28.6,
+        "classification": "PASS_SCOPED_TRUE_180S_NOT_FULL_600"
+      },
+      {
+        "scene": "new_1024B75",
+        "actual_udp_missing": 0,
+        "server_lease_overflow": 0,
+        "server_avg_1core_cpu_pct": 26,
+        "classification": "PASS_SCOPED_TRUE_180S_NOT_PPS_CAUSAL_PROOF"
+      }
+    ],
+    "h1467_generation": [
+      {
+        "scene": "new_static12",
+        "actual_udp_missing": 0,
+        "server_lease_overflow": 0,
+        "server_avg_1core_cpu_pct": 33.5,
+        "rotation_status": "NOT_REQUESTED",
+        "classification": "PASS_SCOPED"
+      },
+      {
+        "scene": "new_rotating12",
+        "actual_udp_missing": 25,
+        "loss_by_user": {
+          "alice_downlink": 16,
+          "bob_downlink": 4,
+          "carol_downlink": 4,
+          "dave_downlink": 0,
+          "erin_downlink": 1
+        },
+        "alice_missing_by_stage": [
+          0,
+          7,
+          0,
+          0,
+          9
+        ],
+        "server_lease_overflow": 0,
+        "server_avg_1core_cpu_pct": 33.7,
+        "original_all_five_M4_rotation": "PASS_ALL_FIVE_SCOPED",
+        "classification": "FAIL_SCOPED_STRICT_ZEROLOSS"
+      }
+    ],
+    "h1471_oldnew": [
+      {
+        "source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+        "actual_udp_missing": 0,
+        "server_overflow": 0,
+        "classification": "PASS_SCOPED_ONE_VM_ONE_180S"
+      },
+      {
+        "source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+        "actual_udp_missing": 0,
+        "server_overflow": 0,
+        "classification": "PASS_SCOPED_ONE_VM_ONE_180S"
+      }
+    ],
+    "h1471_newold": [
+      {
+        "source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+        "actual_udp_missing": 0,
+        "server_overflow": 32,
+        "server_alice_downstream_full": 93,
+        "classification": "FAIL_SCOPED_SERVER_ORIGINAL_QUEUE_HARD_GATE_WITHOUT_APP_MISSING"
+      },
+      {
+        "source": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+        "actual_udp_missing": 73,
+        "alice_DL_missing": 57,
+        "alice_UL_missing": 16,
+        "server_overflow": 78,
+        "server_alice_downstream_full": 130,
+        "classification": "FAIL_SCOPED_STRICT_ZEROLOSS"
+      }
+    ]
+  },
+  "initial_H1467_original_CI": "FAIL_HARNESS_ONLY_AFTER_FOUR_REAL_COMPLETED_SCENES_missing_nested_fixed_kernel_result",
+  "initial_H1471_original_CI": "FAIL_HARNESS_ONLY_AFTER_FOUR_REAL_COMPLETED_SCENES_missing_nested_fixed_kernel_result",
+  "reviewed_archives_result": "LOCAL_ZIP_CRC_AND_DIRECT_NATIVE_JSON_REPLAY",
+  "new_H1472_offline_workflow": ".github/workflows/m0-plan028-h1472-eight-immutable-180s-offline-rejudge.yml",
+  "new_H1473_one_reverse_native_pair": ".github/workflows/m0-plan028-h1473-reverse-generation-only-180.yml",
+  "eight_original_audited": {
+    "five_strict_pass": 5,
+    "three_strict_fail": 3
+  },
+  "cautions": [
+    "No source66fb 600s failure erased",
+    "Static L1 rotations explicitly NOT_REQUESTED: old H1286 alert label is expected stale scorer, not a genuine rotation failure",
+    "Correlation of 12Mbps loss stage with original generation events not timestamp-exact packet proof",
+    "Source OLD and NEW compared on same VM reversed order, cannot attribute all intermittent failures to producer code",
+    "No Windows Wintun 1800 qualification; native Linux 180s distinct"
+  ],
+  "preserved": {
+    "H1461_real_600": "FAIL_SCOPED_Alice32_downlink_server45_overflow",
+    "H1461_real_1800": "LIFECYCLE_PASS_SCOPED_ZEROLOSS_FAIL_SCOPED_Alice351_downlink",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Windows_original_L3_1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}
