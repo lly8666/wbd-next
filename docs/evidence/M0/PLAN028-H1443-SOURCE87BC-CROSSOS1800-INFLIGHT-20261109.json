@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "87bc0bc79f5a881fe9d8edcf4d1479cefc24d021",
+  "result": "INCONCLUSIVE",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "action_id": 42538681178,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42538681178",
+  "scope": "NATIVE_SIGNED_WINDOWS_AND_INDEPENDENT_LINUX_TRUE_1800S_DYNAMIC_RUNNER_PEERS_EXACT_RUN_OWNED",
+  "current_stage_at_checkpoint": "CHEAP_PREFLIGHT_PASS_NATIVE_PREBUILDS_IN_PROGRESS_NOT_YET_RUN",
+  "jobs_at_checkpoint": [
+    {
+      "name": "Cheap workflow and current assembly checks",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows Go production and test compilation only",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "name": "Windows Rust eligible library unit tests (special M1 separate)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Linux Rust eligible library unit tests (special M1 separate)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "source_lock": {
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "windows_linux_product": "built_from_action_source_only; binaries pending verification",
+    "harness_change": "No product code/FEC/record/TLS/MTU change; only existing exact runner management route lease gains explicit L3 Refresh and the real L3 observer calls it."
+  },
+  "original_ongoing_action": {
+    "id": 42532903160,
+    "source_sha": "24537be41befd4a3554a6cdd780716d04dc16670",
+    "status_at_checkpoint": "completed",
+    "conclusion_at_checkpoint": "failure",
+    "observed_real_app_last_second": 960.2,
+    "observed_udp_unique_receipts": {
+      "windows": 8925,
+      "linux": 8971
+    },
+    "last_known_live_stage": "native step19",
+    "final_app_stop_result": "NOT_QUALIFIED_NO_FINAL_RECEIPT"
+  },
+  "required_trigger_witness": {
+    "route_guard_start": "GAMEFEC_MGMT_PEERS_PINNED_UNDERLAY",
+    "refresh": "PLAN028_CROSSOS1800_MGMT_REFRESH",
+    "monitored_client": "H1430_REAL_RUNNER_MANAGEMENT",
+    "dynamic_new_remote_targets": "NOT_TRIGGERED_UNTIL_ADDED_COUNT_GT_ZERO",
+    "target_os_route_effective": "CAS readback from precise source/own lease",
+    "original_app_1800s": "NOT_RUN_AS_OF_CHECKPOINT",
+    "original_signed_driver_stop": "NOT_RUN_AS_OF_CHECKPOINT"
+  },
+  "qualification_rules": "No generic CI green => product PASS. If no new route appears, mark condition NOT_TRIGGERED despite original app PASS or FAIL. Original owned Stop and OS/WAL Restore readback required. If still loses Runner live stdout, do not seed-repeat; switch to independently owned host event observability.",
+  "accepted_source_scoped": {
+    "native_ARM64_two_1800": "docs/evidence/M0/PLAN028-H1436-ARM64-2X1800-PASS-WINDOWS-LINUX-L3-NOT-QUALIFIED-20261109.json",
+    "windows_L1_two_original_clients": "docs/evidence/M0/PLAN028-H1424-SOURCEE6AA-WIN-LINUX-ONE443-REAL-SCOPED-PASS-20261109.json"
+  },
+  "carry_forward": [
+    "Historic H998 same-socket hot MTU failure remains FAIL",
+    "Android and user physical devices NOT_RUN",
+    "PLAN029/030 not authorized"
+  ]
+}
