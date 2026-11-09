@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "date": "2026-11-09",
+  "source_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "result": "NOT_QUALIFIED_CI_RUNNER_OR_TEST_HOST_FAULT_DOMAIN_UNRESOLVED",
+  "artifact_verified": false,
+  "action_id": 42546907707,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42546907707",
+  "last_observation": {
+    "origin": "User-supplied original live native stdout",
+    "elapsed_s": 720.2,
+    "windows_unique_app_received": 6698,
+    "linux_unique_app_received": 6771,
+    "management": {
+      "observed_live_runner_tcp_targets": 2,
+      "original_owned_host_routes": 4,
+      "added": 0,
+      "repaired": 0
+    },
+    "independent_native_supervisor_idle_20_40": "EXPECTED_FROM_60S_LOGGING_NO_DIAGNOSIS",
+    "final_1800s": "NOT_QUALIFIED",
+    "final_original_owned_Stop": "NOT_QUALIFIED"
+  },
+  "status_at_review": {
+    "run_status": "IN_PROGRESS",
+    "native_job": 128934947739,
+    "native_stage19": "IN_PROGRESS",
+    "native_full_app_artifact": "ABSENT"
+  },
+  "prior_history": {
+    "actions": [
+      42508261361,
+      42517812264,
+      42532903160,
+      42540960361
+    ],
+    "issue": "Past native L3 job ended FAILURE, stage19 never completed, 404 BlobNotFound, final app and Stop absent",
+    "historical_app_last_seen_s": [
+      600,
+      720,
+      960,
+      360
+    ]
+  },
+  "previous_hypotheses": {
+    "original_runner_host_route_lost": "NOT_TRIGGERED_THIS_SOURCE_AS_OF_720S",
+    "new_runner_management_peer": "NOT_TRIGGERED_THIS_SOURCE_AS_OF_720S",
+    "windows_subprocess_inherited_pipe_defect": "CODE_DEFECT_FIXED_AND_OFFLINE_TEST_PASS_BUT_SPECIFIC_EVENT_CAUSAL_LINK_UNPROVEN",
+    "hosted_runner_os_or_control_path_loss": "SUSPECTED_BUT_NOT_PROVEN",
+    "data_plane_product_failure": "NOT_OBSERVED_THROUGH_720S_UNKNOWABLE_AFTER_LAST_LOG"
+  },
+  "architecture_issue": {
+    "runner_and_windows_dut_colocated": "CONFIRMED_BY_WORKFLOW",
+    "linux_peer_inside_same_windows_WSL2": "CONFIRMED_BY_H1415",
+    "independent_out_of_band_controller": "NOT_PRESENT",
+    "independent_linux_client_host": "NOT_PRESENT",
+    "effective_github_dynamic_route_proof": "NOT_COLLECTED",
+    "default_route_0_0_readback_insufficient": "Cannot exclude more specific routes or other service endpoints"
+  },
+  "external_comparator": {
+    "source": "https://github.com/actions/runner/issues/4632",
+    "published": "2026-08-13",
+    "symptom": "Windows hosted runner loses communication, delayed timeout, BlobNotFound; non-VPN reproduction",
+    "direct_proof_this_action": false
+  },
+  "decision": {
+    "old_hosted_windows_1800": "FUTURE_DISPATCH_BLOCKED_IN_NATIVE_JOB",
+    "new_topology": "External Linux controller A plus isolated Windows DUT B with separate management + separate Linux peer C",
+    "next_experiment": "Short out-of-band cause differentiation before any additional Windows 1800s; requires independent DUT infrastructure",
+    "repeat_actions_without_new_host": "DO_NOT_DISPATCH"
+  },
+  "carry_forward": {
+    "ARM64_2x1800": "PASS_SCOPED source eef2",
+    "windows_short_Win_Linux": "PASS_SCOPED source e6aa",
+    "H998_hot_socket_MTU": "FAIL retained",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

@@ -84,6 +84,15 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",flow)
         self.assertIn("[plan028-harness-offline-only]",flow)
 
+    def test_plan028_l3_never_uses_its_own_github_hosted_windows_controller(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        job=flow.split("  native-public-two-os:",1)[1]
+        header=job.split("    runs-on: windows-2025",1)[0]
+        # Keeping runner control on the same OS as native Wintun is NOT
+        # isolated even if a handful of /32 service routes are pinned.
+        self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",header)
+        self.assertIn("independent controller + Windows DUT + Linux peer",header)
+
     def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         lease=(ROOT/"tools/m0_wl_gamefec_management_route.ps1").read_text()

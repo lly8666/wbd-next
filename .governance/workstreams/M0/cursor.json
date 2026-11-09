@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1449,
-  "checkpoint_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "sequence": 1450,
+  "checkpoint_sha": "b41218d331d7c19ee6248f766bf77d88bed52d62",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1449-SOURCE724A-WINLINUX-L3-BOUNDED-IO-INFLIGHT",
-  "current_task": "One authorized test-only new exact-source Windows signed Npcap/Wintun plus independent Linux client real 1800s L3 Action42546907707 has started from source724a5b74 following verified file-backed OS child process 1s deadline, cheap CI/underlay source bf PASS, and original deb2 360s run final FAILURE no stage19 completion/404 logs. Current Action in cheap preflight at checkpoint; native NOT_RUN. No product wire/protocol changes; hard business + owned Stop unchanged. Native parent idle log witness intended to distinguish WSL/PowerShell child stdout hang from GitHub Runner transport. PLAN028 IN_PROGRESS.",
-  "why_now": "CPython Windows subprocess.run inherited pipe TimeoutExpired post-kill communicate bug was confirmed in actual L3 periodic source calls and repaired; offline fixture/Windows/Linux compile+unit/WSL2 short underlay passed. Old 360s Action ended without final native receipt; after conclusion permitted exactly one differentiated source-frozen true L3 experiment to test whether bound OS calls resolve timing while preserving original business/Stop or reveal Runner loss.",
+  "task_id": "PLAN028-M0-H1450-ISOLATE-WINDOWS-L3-CONTROL-AND-DUT",
+  "current_task": "H1450 user rightly challenges repeated same-topology 1800s Windows host tests. SOURCE724a Action42546907707 original native logs to720.2s show real Windows/Linux UDP RX6698/6771, hosted Runner management route refresh added0/repaired0, normal 60s business and 20/40s independent idleness expected; native step19 still IN_PROGRESS and no final Stop/artifact at checkpoint. Existing GitHub-hosted Windows runner and Windows Wintun/OS route/WFP are SAME host; Linux peer inside same Windows WSL2; no out-of-band fault domain, so cannot separate product vs Windows host/Runner failures. Github actions/runner issue #4632 reports same 404 BlobNotFound Windows-hosted runner failure absent VPN, not causal proof. Freeze any future hosted Windows L3 via native job marker guard. PLAN028 IN_PROGRESS.",
+  "why_now": "The 4th+ Windows 1800s source repeatedly loses terminal receipts at varying times while real app stays healthy through last line; /32 management refresh did not trigger and 20/40s idle witness just follows 60s reporting. Those are NOT validated causes. New architecture must separate independent Linux controller, non-Runner Windows DUT, independent Linux peer and preserve evidence even if DUT dies; repeated hosted Windows tests cannot answer root cause.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect Action42546907707 only, do not auto-dispatch another: cheap check, same-source signed Windows/WSL2 binaries and original native. Verify H1448 bounded IOS marker, management /32 added/repaired counts, every 60s true client UDP+TCP, 120s RSS, 20s parent idle witness if no child stdout, terminal 1800s actual traffic and exact original Windows/Linux owned Stop/WAL. If logs cease again with no independent parent idle, mark CI/Runner unqualified rather than blaming product; seek truly independent OS heartbeat before any repeat. ARM64 eef2 2x1800 PASS_SCOPED and Windows e6aa L1 PASS_SCOPED reuse; H998 old FAIL, Android physical NOT_RUN.",
+  "next_action": "NO additional source-frozen full 1800s on hosted windows-2025. Collect existing Action42546907707 terminal status/logs without rerun or product PASS; migration design docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md. Verify gated workflow cheap/static only, native must SKIP for future [plan028-win-linux-1800]. Before resuming L3 obtain truly independent Windows DUT management+test isolation and Linux independent peer, short external A/B/C cause test with live route selection/OS status and out-of-band counts, only then one full genuine Windows 1800 plus exact owned Stop. Other valid ARM64 eef2 2x1800 and Windows e6aa L1 PASS_SCOPED persist; historic H998 FAIL and Android/physical NOT_RUN. No PLAN029/030.",
   "unverified": true,
   "last_tested_source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1449-SOURCE724A-WINDOWS-L3-BOUNDED-IO-ONE-ACTION-INFLIGHT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1450-720S-COLOCATED-RUNNER-L3-UNQUALIFIED-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1449: exact source724a Action42546907707 single new Windows Linux 1800s diagnostic after deb2 360s original Action failure no logs. File-backed bounded wsl/PowerShell and parent idle witness tested cheap/underlay prior bf source; now one native run in progress. No product delta, no long PASS until actual 1800+Stop. ARM64 2x1800 scoped pass, Windows L1 scoped pass, H998 fail Android physical not-run."
+  "partial_summary": "H1450 architecture STOP: Windows Runner.Worker and tested Wintun share hosted OS, Linux peer shares Windows WSL2, no independent observer. User log 720s Windows/Linux RX6698/6771 healthy, management added/repaired 0; idle parent every20/40 is normal. CI logs/Stop missing after arbitrary 360/600/720/960s, similar independent hosted runner issue #4632 not proof. Freeze future same topology 1800 native, design isolated A controller/B independent Windows DUT/C separate Linux server-client host. PLAN028 IN_PROGRESS, no product changes."
 }
