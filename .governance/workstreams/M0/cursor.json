@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1453,
-  "checkpoint_sha": "babe24b1ae65da3d707c4b797b9ef7f19254699b",
+  "sequence": 1454,
+  "checkpoint_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1453-ONE-600S-VPN-CLEAN-WINDOWS-AND-UBUNTU-TRIARM",
-  "current_task": "User asks high-speed multi-perspective debug and authorizes a real 600s application trial in parallel with Actions changes. H1453 code wires one native exact-source 600s original signed Windows client plus Linux TUN client same TLS443, preserves strict 1500ms gap, 97% receipt, proportional >4167 UDP both directions, >9 TCP both, >4 RSS samples, >20 managed route CAS, real Windows Stop Linux sibling survives, all owner WAL/underlay cleanup. Same Action adds independent clean Windows2025 no-VPN 750s control and Ubuntu separate-host GitHub control-plane observer; measure native handles/threads/private bytes and Linux CPU/RSS. Exclusive marker [plan028-win-linux-600] permits ONE source-pinned differential while legacy [plan028-win-linux-1800] remains hard SKIPPED. New native outcome only PASS_SCOPED_600, no L3 1800 promotion. PLAN028 IN_PROGRESS.",
-  "why_now": "Short H1415 never exercises sustained H1430 every5s/10s/60s/120s loop or long same-VM Wintun/Runner/WSL2 lifetime. Old 1800 often CI job fails with stage19 unfinished and Blob404 after variable user business lines; code defects, Windows host-Runner loss and product resource issues were conflated. User-approved 600 tri-arm comparison supplies faster independent simultaneous evidence instead of another 1800.",
+  "task_id": "PLAN028-M0-H1454-SOURCE548-600S-NATIVE-WIN750-UBUNTU-COMPARISON",
+  "current_task": "H1454 user-approved efficient same-SOURCE three-arm comparison: source548a run42555320138 cheap, Windows Go/Rust unit/build, Linux Rust unit and true original Go+Rust build all SUCCESS. Independent jobs have started: real signed Windows Wintun + separate WSL2 Linux Go/Rust 600s job128961150368, separate clean windows-2025 no-Wintun/WSL 750s control job128961150470, separate Ubuntu-24.04 metadata monitor job128961150381; all currently IN_PROGRESS, terminal product/Stop NOT_QUALIFIED. Prior 7cc workflow YAML zero jobs and a5a cheap historical watchdog assertion fail consumed ZERO native trials; errors corrected. Source compare short e6aa to failed long724a showed ZERO changed Go/Rust product files. PLAN028 IN_PROGRESS.",
+  "why_now": "Short L1 skips sustained H1430 5/10/60/120 second observer/management loop, shared Runner+Wintun+WSL2 OS lifetime. Three simultaneous but different-host jobs can distinguish native-only vs clean hosted Windows instability and inspect cumulative memory/threads/handles without running another 1800s.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Single push-source Action from [plan028-win-linux-co-client] [plan028-win-linux-600]: verify cheap scripts unit + Windows/Rust/Linux build, then inspect native 600 app+original Stop vs clean Windows 750 control and independent Ubuntu job metadata. Analyze product Windows RSS/private/handles/threads and Linux RSS/CPU slopes; classify only exact SOURCE scopes. No duplicate 600/1800 dispatch. If original app stops/Runner stalls, do not infer product fail without original logs and external observation. Official 1800 Windows L3 still awaits genuine separate DUT/controller/Linux peer. ARM64 eef2 2x1800 PASS_SCOPED, e6aa short L1, H998 historical FAIL, Android/physical NOT_RUN. No PLAN029/030.",
+  "next_action": "Collect exactly Action42555320138 native actual real 600s/Stop and original WAL receipts, Windows 750s no-VPN control, Ubuntu independent metadata plus all SOURCE/hash artifacts. If product stops, classify first native fault with logs and resource slopes; if Runner loses completion compare clean and Ubuntu but do not claim actual route. 600 result only PASS_SCOPED_REAL_600S not 1800s. Official Windows L3 NOT_QUALIFIED pending independent A/B/C. Preserve ARM64 eef2 2x1800 PASS_SCOPED, Windows e6aa L1 PASS_SCOPED, H998 historical FAIL, Android physical NOT_RUN, no PLAN029/030.",
   "unverified": true,
-  "last_tested_source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "last_tested_source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1453-600S-THREE-ARM-EXPERIMENT-PREFLIGHT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1454-SOURCE548-TRIARM-600-750-CONTROL-INFLIGHT-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1453 authorized one Windows+Linux 600s true business+Stop with proportional original hard thresholds, parallel 750s clean Windows Runner and separate Ubuntu GitHub witness; richer Windows memory/handles/thread/Linux RSS/CPU logs. Old 1800 hard blocked, no user product/wire changes, 600 results not yet observed. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1454 run42555320138 SOURCE548a includes original signed Windows+Linux 600 native job128961150368, clean Windows 750 control job128961150470 and independent Ubuntu API witness job128961150381; all source preflight/compile passed and three arms active. Strict authentic UDP/TCP/RSS/Stop threshold retained; no 1800 pass. Short e6aa to long 724a Go/Rust source code diff zero. PLAN028 remains IN_PROGRESS."
 }

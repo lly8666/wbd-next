@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "IN_PROGRESS_NO_NATIVE_APP_TERMINAL_RECEIPT",
+  "artifact_verified": false,
+  "action_id": 42555320138,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42555320138",
+  "preflight": {
+    "cheap": "success",
+    "windows_go": "success",
+    "windows_rust": "success",
+    "linux_rust": "success",
+    "linux_source_locked_go_rust_build": "success"
+  },
+  "arms": {
+    "real": {
+      "job_id": 128961150368,
+      "platform": "windows-2025",
+      "duration_scope_s": 600,
+      "status_at_checkpoint": "in_progress",
+      "original_app_and_Stop": "NOT_QUALIFIED"
+    },
+    "control": {
+      "job_id": 128961150470,
+      "platform": "different windows-2025",
+      "duration_scope_s": 750,
+      "without_VPN_or_WSL": true,
+      "status_at_checkpoint": "in_progress"
+    },
+    "observer": {
+      "job_id": 128961150381,
+      "platform": "ubuntu-24.04",
+      "same_action_source_locked": true,
+      "status_at_checkpoint": "in_progress",
+      "kind": "GitHub API metadata only"
+    }
+  },
+  "native_requirements": {
+    "UDP_offered_and_reverse_each_at_least": 4167,
+    "echo_ratio_at_least": 0.97,
+    "max_continuous_active_gap_ms": 1500,
+    "actual_dual_TCP_rounds_at_least": 9,
+    "resource_samples_at_least": 4,
+    "management_refresh_samples_at_least": 20,
+    "normal_owned_Stop_and_Linux_sibling_survival": "REQUIRED",
+    "WAL_and_underlay_clean": "REQUIRED"
+  },
+  "prior_non_product_runs": {
+    "invalid_YAML_zero_jobs": 42554932109,
+    "failed_cheap_historical_watchdog_assertion_native_skipped": 42555146581
+  },
+  "short_to_long_product_code_changes": 0,
+  "old_long_run": {
+    "source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+    "action_id": 42546907707,
+    "conclusion": "failure",
+    "step19": "in_progress",
+    "native_logs": "404 BlobNotFound",
+    "original_Stop": "NOT_QUALIFIED"
+  },
+  "classification": {
+    "real_600": "NOT_YET_QUALIFIED",
+    "official_windows_1800": "NOT_QUALIFIED",
+    "arm64_two_1800": "PASS_SCOPED",
+    "windows_short_e6aa": "PASS_SCOPED",
+    "H998_old_MTU": "FAIL",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}
