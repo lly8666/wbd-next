@@ -814,6 +814,16 @@ func runGameMultiServer(
     // Normal keys deliberately exclude epoch (successor replaces only same
     // principal+tunnel), Game keys retain the complete protected cohort.
     activeNormal:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
+    // Normal B is a COLD authenticated candidate, NOT the active per-/32
+    // server route. Only this event loop publishes the exact B after its
+    // own native M4 observes an authenticated client-B Health kind0.
+    type normalProofResult struct{
+        key realityfront.V4LinuxGameCohortID
+        rec *originalV4MultiRecord
+        err error
+    }
+    normalPending:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
+    normalProofReady:=make(chan normalProofResult,32)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
     // Already switched Game4 slots keep the old cold association/port
     // excluded from Go DATA until its bounded random retirement deadline.
@@ -910,7 +920,10 @@ func runGameMultiServer(
     defer func(){
         stopping.Store(true)
         cancel()
-        tlsWG.Wait() // no TLS goroutine may create a native owner after Stop
+        tlsWG.Wait() // no TLS or cold B proof may outlive Stop
+        for _,rec:=range normalPending{
+            retErr=errors.Join(retErr,retireNormal(rec,"server-close-unproven-B"))
+        }
         for _,group:=range pending{
             for _,lane:=range group.lanes{rejectLane(lane)}
         }
@@ -1105,21 +1118,51 @@ func runGameMultiServer(
                     _=product.Close()
                     return realityfront.ErrAdmissionParams
                 }
+                older:=activeNormal[key]
+                if normalPending[key]!=nil{
+                    // One cold B per authenticated logical Normal owner.
+                    // Do not let a later TLS candidate supersede pending B
+                    // or withdraw A while the first B proves real peer RX.
+                    _=product.Close()
+                    forget(result.assoc)
+                    log.Printf("V4_PUBLIC_MIXED_NORMAL_B_REJECT reason=candidate_already_pending client_port=%d old_route_preserved=1",peer.Port)
+                    continue
+                }
                 if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{peer}));e!=nil{
                     _=product.Close()
                     return fmt.Errorf("mixed Normal same-port kernel handoff: %w",e)
                 }
-                older:=activeNormal[key]
                 rec:=&originalV4MultiRecord{
                     assoc:result.assoc,product:product,lease:lease,
                     peer:peer,ready:true,
                 }
                 detached[result.assoc]=peer
+                if older!=nil{
+                    // Rust kept A's only /32 send route. Client B may be
+                    // receiving this server's authenticated Health, but a
+                    // local B TLS/M4 START is NOT proof of client B's native
+                    // RX socket. Wait off this listener's event loop: a
+                    // broken device must not block other accounts/Game.
+                    normalPending[key]=rec
+                    tlsWG.Add(1)
+                    go func(k realityfront.V4LinuxGameCohortID,b *originalV4MultiRecord){
+                        defer tlsWG.Done()
+                        proofErr:=waitOriginalNativeServerClientM4Ready(runCtx,
+                            b.product.OriginalLoopPulse,func()error{return nil},
+                            5*time.Second)
+                        select{
+                        case normalProofReady<-normalProofResult{k,b,proofErr}:
+                        case <-runCtx.Done():
+                        }
+                    }(key,rec)
+                    log.Printf("V4_PUBLIC_MIXED_NORMAL_B_PENDING role=server client_port=%d old_route_preserved=1 authenticated_client_M4_required=1",
+                        peer.Port)
+                    continue
+                }
                 activeNormal[key]=rec
                 *connected=true
                 log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d client_ipv4=%d.%d.%d.%d client_port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
                     c.localPort,peer.IP[0],peer.IP[1],peer.IP[2],peer.IP[3],peer.Port,len(activeNormal),len(active),len(detached))
-                if older!=nil{scheduleNormalRetire(older)}
                 continue
             }
             // The existing protected Go TLS admission can return exactly
@@ -1345,6 +1388,32 @@ func runGameMultiServer(
                 scheduleGameRetire(oldGroup)
                 delete(active,oldKey)
             }
+        case proof:=<-normalProofReady:
+            rec:=normalPending[proof.key]
+            if rec==nil||rec!=proof.rec{continue}
+            delete(normalPending,proof.key)
+            if proof.err!=nil||runCtx.Err()!=nil{
+                // B timeout/terminal only returns B's resources. A remains
+                // the unique live /32 until its OWN native Health expires.
+                log.Printf("V4_PUBLIC_MIXED_NORMAL_B_UNPROVEN role=server client_port=%d old_route_preserved=1 class=%s",
+                    rec.peer.Port,nativeColdFailureClass(proof.err))
+                if e:=retireNormal(rec,"client-B-M4-unproven");e!=nil{return e}
+                continue
+            }
+            // The proof worker only polls: the actual Rust publication
+            // happens here after checking the exact current candidate.
+            // No stale B may publish after replacement or final Stop.
+            if e:=rec.product.PromoteNormalServerAfterAuthenticatedPeerRx();e!=nil{
+                log.Printf("V4_PUBLIC_MIXED_NORMAL_B_PROMOTE_REJECT role=server client_port=%d old_route_preserved=1",rec.peer.Port)
+                if stopErr:=retireNormal(rec,"client-B-M4-proof-rejected");stopErr!=nil{return stopErr}
+                continue
+            }
+            older:=activeNormal[proof.key]
+            activeNormal[proof.key]=rec
+            *connected=true
+            log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",
+                rec.peer.Port,len(activeNormal))
+            if older!=nil{scheduleNormalRetire(older)}
         case <-ticker.C:
             now:=time.Now()
             for i:=0;i<len(gameRetiring);{

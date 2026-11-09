@@ -31,7 +31,12 @@ def classify(root,source):
     client=text["alice"]
     server_deferred=server.count("V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED role=server")
     server_proven=server.count("V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX")
-    server_go_ready=server.count("V4_PUBLIC_MULTI_SERVER_B_CLIENT_READY")
+    # The actual five-client fixture uses the mixed Normal/Game 443
+    # listener. Count the real mixed-server proof event, and retain
+    # compatibility with the standalone multi-Normal admission path.
+    mixed_go_ready=server.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY")
+    standalone_go_ready=server.count("V4_PUBLIC_MULTI_SERVER_B_CLIENT_READY")
+    server_go_ready=mixed_go_ready+standalone_go_ready
     alice_proven=client.count("V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX")
     assert "V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN" not in server
     total={}
@@ -68,6 +73,8 @@ def classify(root,source):
         "server_replacement_deferred_count":server_deferred,
         "server_auth_client_cold_proven_count":server_proven,
         "server_go_proof_barrier_count":server_go_ready,
+        "mixed_server_go_proof_barrier_count":mixed_go_ready,
+        "standalone_go_proof_barrier_count":standalone_go_ready,
         "alice_client_authenticated_generation_promotions":alice_proven,
         "alice_client_generation_starts":alice_gen,
         "two_actual_server_B_gates_triggered":triggered,

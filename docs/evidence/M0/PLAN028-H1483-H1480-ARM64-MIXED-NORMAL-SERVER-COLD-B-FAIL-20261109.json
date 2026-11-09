@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "original_candidate_source_sha": "cea267bd4c9b2323a19093308401580fe3123605",
+  "source_of_native_code_change": "5f10af69a682c6735220b0e256bae936589c1b51",
+  "action_id": 42624321547,
+  "original_native_artifact_id": 13677857794,
+  "original_native_zip_sha256": "ca1190721dd2c47a3cf3ad8fe69fe19fb3e7f3f08d785983fd0606167b942568",
+  "original_zip_crc": "PASS",
+  "platform": "native_aarch64_dual_endpoint_same_host",
+  "execution_result": "FAIL_REAL_ORIGINAL_BUSINESS_NOT_TRIGGERED_SERVER_B_PROOF",
+  "original_real_assessment": {
+    "source_manifest_sha": "cea267bd4c9b2323a19093308401580fe3123605",
+    "native_go_rust_build_and_assembly": "PASS",
+    "l0_go_and_rust_readiness_tests": "PASS",
+    "scenario_original_TLS_443_Rust_RAW_TUN": "EXECUTED",
+    "true_clients": 5,
+    "app_duration_seconds": 180,
+    "network_loss_pct": 0,
+    "server_B_shared_TUN_route_deferred": 3,
+    "server_B_authenticated_client_health_promotion": 0,
+    "standalone_server_B_go_proof_ready": 0,
+    "alice_client_authenticated_M4_route_promotions": 2,
+    "alice_client_gens_started": 3,
+    "server_actual_normal_entry": "runOriginalGameMultiServer mixedModes in r0/go_overlay/internal/v4productcli/game_linux.go",
+    "preserved_all_six_owned_stop": true,
+    "unique_UDP_app_missing": {
+      "Alice_downlink": 129677,
+      "Bob_downlink": 22480,
+      "Carol_downlink": 1,
+      "Dave_downlink": 0,
+      "Erin_downlink": 31012,
+      "all_uplinks_total_missing": 0,
+      "total_missing_all_directions": 183170
+    },
+    "classification": "PRODUCT_FAIL_NOT_CAPACITY_NOT_FIX_PASS",
+    "notes": [
+      "Original runner native business was real, all six Stop true, and packet deficits are actual unique app misses, not report-only artifact.",
+      "Rust B route deferral ran in the mixed Normal server. The Go mixed server still accepted B and scheduled A retirement after random grace without calling server B authenticated promotion; therefore old A Stop left no B TUN route for downstream.",
+      "Original client B locally promoted after verified server Health; this alone does not prove client B cold Health reached the server, because mixed Go never checked server-native proof.",
+      "Severe sustained loss is product regression and must not be explained as VM overload or reframed as NOT_RUN.",
+      "The prior YAML preparse Action42623129084 and assembler prebuild Action42623579875 were separate harness/CI failures with real native scene NOT_RUN."
+    ]
+  },
+  "minimal_fix_package": {
+    "target": "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "design": "mixed Normal ready event pending; one proof waiter for exact authenticated cold B, no event-loop blocking during TLS/5s proof, client M4 kind0/peer receipt via existing Rust state, then main loop atomically publishes server B and schedules A retire; candidate timeout only Stop B; Game cohorts untouched",
+    "client_Health_wire": "Existing encrypted kind0 only, 1 cold B receipt; no new steady header / TUN duplicate",
+    "source_marker": "V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY",
+    "strict_next_native_trigger": "At least two server deferred and client health promoted events, two client promotions and three client gens, all five original UDP both directions no missing, genuine all owner Stop",
+    "new_test_result": "NOT_RUN_UNTIL_ACTION"
+  },
+  "preserved": {
+    "H1478_source66fb_original_x86_rotating12": "FAIL_10_UDP_ALICE_DL_114967_PHYSICAL_OUTER_MATCH",
+    "H1473_original_x86_rotating12": "FAIL_13_ALICE_DL_3_CAROL_DL",
+    "H1473_static": "PASS_SCOPED_ZEROLOSS",
+    "original_source66fb_600_75mbps": "FAIL_32_ALICE_DL_45_SERVER_OVERFLOW",
+    "original_source66fb_1800": "FAIL_351_ALICE_ZERO_QUEUE",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Windows_L3_1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

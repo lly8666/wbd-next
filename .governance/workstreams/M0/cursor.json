@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1482,
-  "checkpoint_sha": "4ed169b6ad35b58588cffa18350102d7c42d1361",
+  "sequence": 1483,
+  "checkpoint_sha": "cea267bd4c9b2323a19093308401580fe3123605",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1482-ARM64-ASSEMBLY-MANIFEST-EXACT-REPIN",
-  "current_task": "H1482 H1480 candidate unchanged. ARM64 Action42623579875 build FAIL before Rust/Go/native because exact assembler manifest result_blob for changed r0/go_overlay/internal/v4productcli/linux.go remained 95df... while actual new source 3617b125.... scene SKIPPED / NOT_RUN, prior H1480 YAML preparse Action42623129084 no jobs also CI FAILURE. Correct 111-op manifest source git blob pin and workflow comment auto-trigger only one new ARM64 H1480 build and 180s 5client rotating12. Need collect. Original source66fb H1478 10 missing and 114967 physical matched FAIL retained; PLAN028 IN_PROGRESS.",
-  "why_now": "New Go cold server authenticated M4 readiness logic changed created overlay file but full package assembly manifest pinned old blob. Strict source lock correctly rejected it; fix manifest, no product code changes. Preserve CI causes separately.",
+  "task_id": "PLAN028-M0-H1483-MIXED-NORMAL-B-AUTH-PROOF-WIRING",
+  "current_task": "H1483 H1480 original real ARM64 Action42624321547 SOURCEcea267 genuine fiveclient 180s mixed Normal/Game native dual end, Go/Rust build and L0 PASS, six Stop PASS but critical PRODUCT FAIL 183170 total DL unique UDP (Alice129677 Bob22480 Carol1 Erin31012), UL0; server B defer3, AUTH HEALTH server promoted0, Alice client promoted2. Root: actual mixed Go server game_linux.go old activeNormal assignment + 10-20s old Stop bypasses existing server B proof in linux.go; Rust defer now leaves no /32 route after A Stop. New candidate patches mixed callback with per-key pendingB + bounded async 5s client M4 proof and event-loop promotion before A retire, Rollback only B; strict verifier recognizes mixed Go events; new SOURCE NOT_RUN pending ARM scene. PLAN028 IN_PROGRESS.",
+  "why_now": "Triggered honest severe native regression proves integration missing in mixed real 443 entry, not VM or offline script. Fix actual caller instead of random dual-lane resend or buffer; preserve origin and failure.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect newly auto-triggered H1480 ARM64 Action after H1482 repin; check assembler/Go Rust compile/L0 tests first, fix only concrete failures. If real scene executes, verify actual 2× server B deferred/promoted after client authenticated kind0, real five-client 180s all directions unique UDP and exact Stop; classify PASS/FAIL/NOT_TRIGGERED. No duplicate network dispatch. Next x86 or Windows specific after ARM result, PLAN028 still open.",
+  "next_action": "Collect next auto-triggered original-native ARM64 five-client H1480 source after H1483; verify exact manifest and true mixed Go server proof=2+, Rust client health promoted, Alice 3 generations, all UDP unique/delivery & owned Stop. If FAIL, inspect physical vs native and original newly logged marker by generation; don't repeat seed. Then affected x86 platform regression and Windows-specific paths per PLAN028, preserve H998, 600/1800, Android physical not-run.",
   "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1483-H1480-ARM64-MIXED-NORMAL-SERVER-COLD-B-FAIL-20261109.json",
     "docs/evidence/M0/PLAN028-H1479-H1478-ORIGINAL-NATIVE-PHYSICAL-HEADER-ROTATION-20261109.json"
   ],
   "context_refs": [
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1482 exact original-Go overlay assembler 111 op source lock refreshed only linux.go kind create result_blob 3617b125..., no product changes; previous two H1480 Actions 42623129084 YAML no jobs and 42623579875 assembler failed before build, no real test. New workflow comment triggers one H1480 ARM64 build/5client real scene. No PASS yet; preserve original H1478 FAIL."
+  "partial_summary": "H1483 artifact13677857794 CRC PASS sha ca1190: current SOURCE cea267 original ARM64 180s real mixed only severe product downstream FAIL183170 due Rust shared server B deferred but mixed Go server never promotes and stops old after 10-20s. Exact fix in game_linux.go uses bounded async cold M4 proof; oldA only stops after real B, failure only closes candidate, no DATA duplicate/wire change; test NOT_RUN until new ARM native Action. Preserve previous original x86 loss and scoped qualification."
 }
