@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "reviewer_sha": "8162f42ffc11a8987b6f8a129fa4f0b84c24444e",
+  "result": "PASS_SCOPED_OFFLINE_10MS_ROTATION_BOUNDARY_PROOF_REAL_PRODUCT_ZEROLOSS_STILL_FAIL",
+  "verified_original_archives": true,
+  "native_run_id": 42595013191,
+  "native_original_artifact_id": 13663646307,
+  "offline_action_id": 42598966200,
+  "offline_conclusion": "success",
+  "offline_artifact_id": 13664108971,
+  "offline_artifact_sha256": "51acd2423bcd238bf41bb977f0707830cd14c70efd3be19d2961794da7ed67d2",
+  "offline_artifact_crc": "PASS",
+  "original_5client_scope": {
+    "true_180_seconds_both": true,
+    "genuine_all_six_owned_Stop_both": true,
+    "exact_source_sha": true,
+    "original_100ms_application_windows": 1900,
+    "original_10ms_bins": 19001,
+    "reverse_order": [
+      "rotating12",
+      "static12"
+    ],
+    "rotating_12mbps": {
+      "all_original_M4_rotations": "PASS_SCOPED",
+      "alice_down_missing": 13,
+      "carol_down_missing": 3,
+      "other_users_missing": 0,
+      "server_queue_overflow": 0,
+      "alice_persistent_deficit_onsets": [
+        {
+          "app_s": 39.39,
+          "missing": 5
+        },
+        {
+          "app_s": 39.4,
+          "missing": 3
+        },
+        {
+          "app_s": 132.85,
+          "missing": 4
+        },
+        {
+          "app_s": 132.86,
+          "missing": 1
+        }
+      ],
+      "new_generation_first_500ms_M4_sample_s": [
+        39.905,
+        133.367
+      ],
+      "first_onset_before_first_500ms_sample_s": [
+        0.515,
+        0.517
+      ],
+      "server_alice_TUN_offered": 331225,
+      "client_alice_M3_native_tun_delivered": 331210,
+      "not_1to1_with_udp_packet_missing": 15
+    },
+    "static_12mbps": {
+      "all_10_client_directions_unique_udp_missing": 0,
+      "server_queue_overflow": 0,
+      "server_alice_TUN_offered": 330143,
+      "client_alice_M3_native_tun_delivered": 330143
+    }
+  },
+  "traffic_not_doubled": {
+    "rotated_Alice_M2_cumulative_first_copy_wire_B": 294216166,
+    "static_Alice_M2_cumulative_first_copy_wire_B": 294143551,
+    "difference_bytes": 72615,
+    "difference_percent": 0.02469,
+    "original_M2_repair_bytes_both": 0,
+    "original_frozen_retransmitted_both": 0,
+    "single_Rust_TUN_reader_and_route_after_authenticated_M4": true,
+    "old_Rust_raw_owner_RX_grace_seconds_min": 10,
+    "old_Rust_raw_owner_RX_grace_seconds_max": 20,
+    "caveat": "Measured across 180s, not instantaneous 10ms peak; overlapping two native generations temporarily use more CPU, sockets and buffer budget."
+  },
+  "hard_limits": [
+    "Correlation of first 10ms persistent-deficit onset with first 500ms M4 sample is not packet trace proof of exact first loss code.",
+    "M3 TUN delivered includes original UDP and TCP, not one-to-one unique UDP deficit.",
+    "RAW physical_rx_dropped=0 does not rule out socket skb backlog or delayed retire.",
+    "No product source changed, no new Linux native/stress run. Windows original 1800 L3 remains NOT_QUALIFIED."
+  ],
+  "preserved": {
+    "SOURCE66FB_real600_Alice": "FAIL_SCOPED_32_DL_MISSING_45_SERVER_OVERFLOW",
+    "SOURCE66FB_real1800_Alice": "PASS_SCOPED_LIFECYCLE_ZEROLOSS_FAIL_351_DL_MISSING",
+    "H1472_8x180": "FIVE_PASS_THREE_FAIL",
+    "H1473_rotating12": "FAIL_SCOPED_16_DL_TOTAL",
+    "H1473_static12": "PASS_SCOPED_ZERO_LOSS",
+    "Windows_hosted_original_1800_L3": "NOT_QUALIFIED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}
