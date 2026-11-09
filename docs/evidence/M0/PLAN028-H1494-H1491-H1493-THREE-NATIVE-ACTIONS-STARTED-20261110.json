@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "wrapper_commit_sha": "44334db5d5a77e68b7d32f6149800a17dd5c83ec",
+  "in_flight": [
+    {
+      "id": "H1491",
+      "run_id": 42660921771,
+      "job_id": 129311951242,
+      "scope": "native_ARM64_fiveclient_L2_sameVM_50_then_if_headroom75",
+      "status": "IN_PROGRESS",
+      "native_source_elf_manifest_preflight": "PASS",
+      "original_network_verdict": "NOT_YET_REPORTED"
+    },
+    {
+      "id": "H1492",
+      "run_id": 42660921499,
+      "job_id": 129311949928,
+      "scope": "native_ARM64_fiveclient_1800s_0_1_5_15_30pct_heterogeneous",
+      "status": "IN_PROGRESS",
+      "native_source_elf_manifest_preflight": "PASS",
+      "original_network_verdict": "NOT_YET_REPORTED"
+    },
+    {
+      "id": "H1493",
+      "run_id": 42660921629,
+      "job_id": 129311951009,
+      "scope": "native_ARM64_fiveclient_1800s_0_0_1_1_5pct_baseline",
+      "status": "IN_PROGRESS",
+      "native_source_elf_manifest_preflight": "PASS",
+      "original_network_verdict": "NOT_YET_REPORTED",
+      "note": "GitHub run-name retained generic 0-30pct wording, actual checked WBD_PLAN028_30M_SCENE=baseline, do not confuse with H1492"
+    }
+  ],
+  "no_duplicate_original_scenarios": true,
+  "Windows_1800_full_Npcap_Wintun": "NOT_QUALIFIED_INDEPENDENT_MANAGED_DUT_REQUIRED",
+  "Windows_previous_600": "PASS_SCOPED_DIFFERENT_SOURCE548_BUT_NOT_L3",
+  "Windows_previous_hosted_1800": "FAIL_ENVIRONMENT_RUNNER_DISAPPEARED_NO_FINAL_OWNED_STOP",
+  "no_new_product_changes": true,
+  "PLAN028": "IN_PROGRESS"
+}

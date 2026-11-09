@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1491,
-  "checkpoint_sha": "b565c7ea15a9b0df8aac8b643ea8dfdcdd97da85",
+  "sequence": 1494,
+  "checkpoint_sha": "44334db5d5a77e68b7d32f6149800a17dd5c83ec",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1491-H1493-THREE-PARALLEL-ARM64-CAPACITY-1800S-L3",
-  "current_task": "H1491–H1493 preflight after main b565: no in-flight network Actions; latest H1490 source57b restored. New 3 independent ARM64 native Go TLS/Rust ISA-L source57b artifact13679879171 SHA343b... reused, no build. H1491 capacity 180s 50Mbps host CPU/queue/product per-client app zero-loss control, then only if headroom another 180s 75Mbps (same VM sequential). H1492 independent ARM64 real1800 hetero 0-30% weaknet and rotations, H1493 another ARM64 real1800 healthy/low 0-5%, both provisional until L2 and Windows qualify. At authoring all NOT_RUN pending push; retain old 600/1800/source66fb original fails. PLAN028 IN_PROGRESS.",
-  "why_now": "User explicitly requested parallel acceleration; latest main had no network in flight, two final L3 original-source 1800s representative scenarios and independent bounded L2 can run on separate native ARM64 VMs without confounding same-VM capacity, minimizing wall time while reusing immutable original hash manifest.",
+  "task_id": "PLAN028-M0-H1494-PARALLEL-THREE-NATIVE-INFLIGHT-RECEIPTS",
+  "current_task": "H1494 after main44334 original frozen SOURCE57b three native ARM64 Actions H1491 42660921771 (job129311951242, capacity50 then conditional75 sequential), H1492 42660921499 (job129311949928, hetero1800), H1493 42660921629 (job129311951009, baseline1800). All exact archived ARM64 Go/Rust+ISA-L native ELF SHA/CRC preflight PASS, real network running (NOT_YET_REPORTED); H1493 actual baseline 0/0/1/1/5 despite generic run-name 0-30 label. No product or additional network Actions. Old source66fb 600/1800 FAIL retain, Windows native 1800 managed DUT unavailable/NOT_QUALIFIED. PLAN028 IN_PROGRESS.",
+  "why_now": "Three native independent Actions are in flight and have verified source; persistent cursor must retain true Action IDs, actual H1493 baseline config and Windows external blocker so next interruption collects instead of re-dispatching.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1491/H1492/H1493 auto-triggered actions independently; first ensure original pinned ZIP CRC, ELF SHA/ARM64 and native ISAL manifest preflight; classify H1491 50 capacity control and conditional75 based actual host CPU/generator/queue/unique-UDP, do not call skipped75 PASS. For H1492/1493 1800s check every account/gen/Stop, true 10-dir TCP+UDP, low-loss unique-first, qdisc actual damage and recovery. Keep original failed Actions, if native reporter fails post-hoc offline repair. Then Windows real Npcap/Wintun-specific missing qualifications and remaining PLAN028 coverage, do not start 029/030.",
+  "next_action": "Collect H1491/1492/1493 Actions and original artifacts, not branch push status only. For H1491 require true native 50Mbps original fiveclient 10-way UDP/TCP/CPU/queue and six Stops; conditional75 may be NOT_RUN if baseline CPU/product limit. For H1492/H1493 validate true1800 generator timing, App unique first across original 10 directions, actual loss/physical kernel qdisc, authenticated rotations, owned Stops, CPU/RSS, output H1492/H1493 strict verifier. Preserve failures and report-only failures offline. Do not modify workload or duplicate network while running. Windows independent native 1800 Npcap/Wintun still NOT_QUALIFIED without independent managed DUT; do not use ARM alternative. PLAN028 still IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1491-H1493-SOURCE57B-THREE-INDEPENDENT-ARM64-NATIVE-ACCEPTANCE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1490-H1489-TWO-X86-GAME2-OFFLINE-PASS-CAPACITY-NEXT-20261109.json"
+    "docs/evidence/M0/PLAN028-H1494-H1491-H1493-THREE-NATIVE-ACTIONS-STARTED-20261110.json",
+    "docs/evidence/M0/PLAN028-H1491-H1493-SOURCE57B-THREE-INDEPENDENT-ARM64-NATIVE-ACCEPTANCE-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1491–H1493 parallel launch candidate, current original SOURCE57b native ARM64 ISAL Go+Rust SHA fixed. H1491 50/conditional75 2x180 same guest and 500ms actual CPU/queue; H1492 hetero real1800, H1493 low-loss real1800 each separate native ARM64 VM. All require true authenticated M4, first-unique UDP/TCP progress, exact Stop, 0-loss directions strict; H1492/1493 provisional until L2/windows gates. New Actions not yet collected. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1494 recorded three parallel native ARM64 Actions real in-progress H1491 42660921771 / H1492 42660921499 / H1493 42660921629, source57b original Go TLS/Rust ISAL native ZIP/ELF hashes all preflight PASS. Real traffic and 1800s Stop outcomes pending. H1493 actual BASELINE low loss 0/0/1/1/5 not generic run-name. Windows hosted old 1800 NOT_QUALIFIED; separate managed Windows DUT needed. No duplicate tests or new product. PLAN028 IN_PROGRESS."
 }
