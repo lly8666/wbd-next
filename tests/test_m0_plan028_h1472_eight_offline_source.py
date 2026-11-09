@@ -59,6 +59,8 @@ class EightOriginalSourceOffline(unittest.TestCase):
                        'original_total_unique_UDP_missing'):
             self.assertIn(marker,s)
         self.assertIn('assert len(q)==5',s)
+        self.assertIn("NO_ORIGINAL_TLS_SERVER_PORT_READY",s)
+        self.assertNotIn('assert "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443" in original_logs["server"]',s)
         self.assertIn('alloverflow',s)
         self.assertIn('assert sum(x[1] for x in phase_plan)==180',s)
 

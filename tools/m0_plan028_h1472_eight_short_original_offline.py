@@ -88,7 +88,9 @@ def case_inspect(root,folder,source,case):
         assert logfile.is_file(),logfile
         original_logs[who]=logfile.read_text(errors="replace")
         assert STOP in original_logs[who],("six original owned final Stop required",who,folder)
-    assert "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443" in original_logs["server"]
+    # Only the last 1.5MiB original server log survives archiving.
+    # Full-file original TLS READY was checked by the on-host H1286
+    # report, whose verified source and no-READY-alert gate follow.
     assert "M0_GAME_M4_FEC_BACKEND_READBACK selected=prefer-native native_linked=1" in original_logs["dave"], (
         "Original source-specific native FEC2/ISA-L runtime readback absent",source,folder)
     raw_queue=QUEUE_RE.findall(original_logs["server"])
@@ -102,6 +104,9 @@ def case_inspect(root,folder,source,case):
     cpu=read(art/"h1250-cpu-rss.json")
     rapid=read(art/"h1286-rapid-report.json")
     assert rapid["source_sha"]==source and rapid["duration_seconds"]==180
+    assert rapid["server_single_port"]==443
+    assert not any(x["kind"]=="NO_ORIGINAL_TLS_SERVER_PORT_READY" for x in rapid["alerts"]), (
+        "full-log original TLS443 server READY was not proven",folder)
     if intended_rotations:
         assert rapid["rotation_verdict"]=="PASS_ALL_FIVE_SCOPED" and rapid["alert_count"]==0
     else:
