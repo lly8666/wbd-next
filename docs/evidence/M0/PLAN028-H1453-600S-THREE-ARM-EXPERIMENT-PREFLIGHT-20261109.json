@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "result": "NOT_RUN_AT_PREFLIGHT_NEW_DIFFERENTIAL_SOURCE_PENDING",
+  "artifact_verified": false,
+  "why_now": "Short L1 skips L3 periodic loop and sustained Runner/WSL2 OS lifetime, old 1800 L3 GitHub-controlled Windows VM lost final step/log with healthy original app through last user-visible line.",
+  "approved_by_user": "ONE 600s true product while fixing Actions, multiple angles in parallel",
+  "prepared_jobs": {
+    "native": "Original signed Windows+Linux netns 600s genuine app+owned stop",
+    "control": "Separate clean windows-2025 Runner 750s no Wintun/WSL2",
+    "observer": "Separate Ubuntu-24.04 job read-only action metadata"
+  },
+  "business_gates": {
+    "duration_s": 600,
+    "per_client_actual_udp_sent_at_least": 4167,
+    "per_client_actual_reverse_at_least": 4167,
+    "actual_echo_ratio_at_least": 0.97,
+    "max_active_echo_and_reverse_gap_ms": "<1500",
+    "two_sided_original_tcp_rounds_at_least": 9,
+    "RSS_samples_at_least": 4,
+    "runner_mgmt_cas_at_least": 20,
+    "original_windows_Stop_linux_sibling_survives": "MUST_PASS",
+    "original_WAL_and_L2_restore": "MUST_PASS"
+  },
+  "other_diagnostics": [
+    "Windows RSS and private bytes",
+    "Windows thread and handle count",
+    "Linux client/server RSS and CPU",
+    "Windows control baseline sustained alive",
+    "Independent GitHub statuses"
+  ],
+  "source_discipline": "new source SHA will be recorded in H1454 after automatic push creates actual run. This preflight refs last actually tested original source724a only, NOT a 600s pass.",
+  "unchanged": [
+    "Original 1800s L3 NOT_QUALIFIED",
+    "ARM64 eef2 2x1800 PASS_SCOPED",
+    "Windows e6aa scoped L1 PASS_SCOPED",
+    "H998 old hot socket MTU FAIL",
+    "Android/physical NOT_RUN",
+    "PLAN028 IN_PROGRESS"
+  ]
+}

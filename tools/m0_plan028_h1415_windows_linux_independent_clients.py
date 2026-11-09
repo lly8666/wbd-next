@@ -8,7 +8,7 @@ import json,hashlib,os,pathlib,re,secrets,socket,subprocess,sys,time
 from m0_plan028_h1412_wsl_cross_os_client_preflight import (
     wsl,ip,witness,guestpath,NAME,NS,HOST,CHILD,ALIAS,PEER)
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
-L3_DURATION=1800 if os.environ.get("WBD_PLAN028_WIN_LINUX_L3")=="1" else 0
+L3_DURATION=(600 if os.environ.get("WBD_PLAN028_WIN_LINUX_600")=="1" else 1800) if os.environ.get("WBD_PLAN028_WIN_LINUX_L3")=="1" else 0
 source=os.environ["GITHUB_SHA"]
 report={"schema_version":1,"source_sha":source,
  "scene":"ONE_WINDOWS_SIGNED_CLIENT_AND_INDEPENDENT_LINUX_NETNS_CLIENT_ONE_SHARED_SERVER",
@@ -239,6 +239,8 @@ else:raise SystemExit("unknown native product application stage")
 """
     p=out/"h1415-real-kernel-app.py";p.write_text(script,encoding="utf-8");return p,guestpath(p)
 def main():
+    need(os.environ.get("WBD_PLAN028_WIN_LINUX_600")!="1" or L3_DURATION==600,
+         "600s trial must enable original L3 managed route+full product setup")
     cli=out/"wbd-client-embedded.exe";win_dll=out/"wbd_engine.dll"
     serverbin=root/"linux-product"/"wbd-v4-server"
     clientbin=root/"linux-product"/"wbd-v4-client"
@@ -509,9 +511,11 @@ def main():
         if report["status"].startswith("PASS"):
             (out/"normal-report.json").write_text(json.dumps({
                 **report,"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
-        if L3_DURATION and report["status"].startswith("PASS") and \
-                report.get("l3",{}).get("status")=="PASS_SCOPED_REAL_1800S_BOTH_CLIENTS":
-            print("H1430_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_1800S_NATIVE_PASS",flush=True)
+        if L3_DURATION and report["status"].startswith("PASS"):
+            if report.get("l3",{}).get("status")=="PASS_SCOPED_REAL_1800S_BOTH_CLIENTS":
+                print("H1430_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_1800S_NATIVE_PASS",flush=True)
+            elif report.get("l3",{}).get("status")=="PASS_SCOPED_REAL_600S_BOTH_CLIENTS":
+                print("H1453_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_600S_NATIVE_PASS_SCOPED",flush=True)
         print("H1415_ONE_WINDOWS_ONE_LINUX_ORIGINAL_COCONCURRENT_REPORT "+
              json.dumps({k:report.get(k) for k in (
                 "status","app_duplex","tcp_duplex","stop",

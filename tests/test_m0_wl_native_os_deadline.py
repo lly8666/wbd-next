@@ -120,6 +120,27 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",header)
         self.assertIn("independent controller + Windows DUT + Linux peer",header)
 
+    def test_h1453_600s_genuine_product_and_parallel_diagnostic_boundary(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        client=(ROOT/"tools/m0_plan028_h1415_windows_linux_independent_clients.py").read_text()
+        long=(ROOT/"tools/m0_plan028_h1430_windows_linux_l3.py").read_text()
+        runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
+        for required in ("[plan028-win-linux-600]","WBD_PLAN028_WIN_LINUX_600:",
+                         "plan028-600-clean-runner-control:","plan028-600-external-linux-witness:",
+                         "H1453_CLEAN_WINDOWS_RUNNER_750S_BEGIN","SOURCE_MISMATCH_REFUSE"):
+            self.assertIn(required,flow)
+        self.assertIn("PASS_SCOPED_REAL_600S_BOTH_CLIENTS",client)
+        self.assertIn("PASS_SCOPED_REAL_600S_BOTH_CLIENTS",long)
+        self.assertIn("min_packets=12500 if seconds==1800 else 4167",long)
+        self.assertIn("received>=int(sent*.97)",long)
+        self.assertIn("float(v[key])<1500",long)
+        self.assertIn("min_tcp=28 if seconds==1800 else 9",long)
+        self.assertIn("min_rss=12 if seconds==1800 else 4",long)
+        self.assertIn("else len(management)>=20",long)
+        self.assertIn("return 940",runner)
+        self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",flow)
+        self.assertIn("H1430_REAL_SIGNED_WINDOWS_AND_SEPARATE_LINUX_1800S_NATIVE_PASS",client)
+
     def test_crossos_1800_runner_management_lease_is_exact_and_owned(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         lease=(ROOT/"tools/m0_wl_gamefec_management_route.ps1").read_text()

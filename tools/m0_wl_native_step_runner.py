@@ -45,6 +45,10 @@ def kill_native_child_tree(child):
     except subprocess.TimeoutExpired:pass
 
 def native_batch_deadline(env):
+    if env.get("WBD_PLAN028_WIN_LINUX_600")=="1":
+        if env.get("WBD_PLAN028_WIN_LINUX_L3")!="1":
+            raise ValueError("600s Windows+Linux trial must keep L3 original/route contract")
+        return 940  # genuine 600s + bounded original Stop; not 1800s evidence
     if env.get("WBD_PLAN028_WIN_LINUX_L3")=="1":
         return 2250  # signed Wintun + independent Linux true 1800s and owned Stop
     # One functional mode has <=165s, historical four modes <=4*165s.

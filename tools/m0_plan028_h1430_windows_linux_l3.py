@@ -9,7 +9,7 @@ from m0_wl_windows_bounded_cmd import run_captured
 
 def resources(out,win,wsl):
     cmd=("$p=Get-Process -Id "+str(win.pid)+" -ErrorAction Stop;"
-         "@{rss_bytes=$p.WorkingSet64;cpu_seconds=$p.CPU}|ConvertTo-Json -Compress")
+         "@{rss_bytes=$p.WorkingSet64;private_bytes=$p.PrivateMemorySize64;windows_handles=$p.HandleCount;windows_threads=$p.Threads.Count;cpu_seconds=$p.CPU}|ConvertTo-Json -Compress")
     x=run_captured(["powershell.exe","-NoProfile","-Command",cmd],14)
     if x.returncode:
         raise RuntimeError("Windows original VPN RSS OS sample failed: "+x.stderr[-400:])
@@ -26,8 +26,12 @@ def resources(out,win,wsl):
     if len(rows)!=2 or any(len(v)<3 or int(v[1])<=0 for v in rows):
         raise RuntimeError("Linux original server/client RSS unavailable")
     return {"windows_rss_bytes":int(w["rss_bytes"]),
+            "windows_private_bytes":int(w["private_bytes"]),
+            "windows_handles":int(w["windows_handles"]),
+            "windows_threads":int(w["windows_threads"]),
             "windows_cpu_s":float(w.get("cpu_seconds") or 0),
-            "linux_rss_kib":{v[0]:int(v[1]) for v in rows}}
+            "linux_rss_kib":{v[0]:int(v[1]) for v in rows},
+            "linux_cpu_pct":{v[0]:float(v[2]) for v in rows}}
 
 def refresh_runner_management():
     """Cold test-only CAS /32 refresh; no VPN packets, wire, or product owner."""
@@ -44,8 +48,11 @@ def refresh_runner_management():
     return {"observed":int(m[1]),"added":int(m[2]),"total":int(m[3]),"repaired":int(m[4])}
 
 def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
-    need(seconds==1800 and len(paths)==2 and len(owners)==4,
-         "L3 requires 1800s exactly, two clients and one server/echo")
+    need(seconds in (600,1800) and len(paths)==2 and len(owners)==4,
+         "L3 requires exact 600s diagnostic OR 1800s, two original clients and server/echo")
+    min_packets=12500 if seconds==1800 else 4167
+    min_tcp=28 if seconds==1800 else 9
+    min_rss=12 if seconds==1800 else 4
     initial={who:stats(p) for who,p in paths.items()}
     for who,entry in initial.items():
         need(entry["received"]>=8 and entry["reverse_received"]>=5,
@@ -54,7 +61,8 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     next_resources=begin+90;next_mgmt=begin+8
     sample=[];rss=[];tcps=0;management=[];added_peers=0;repaired_routes=0
     print("H1448_L3_OS_COMMANDS_FILE_BACKED_BOUNDED_AND_PARENT_IDLE_WITNESS_ARMED",flush=True)
-    print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN",flush=True)
+    print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN" if seconds==1800 else
+          "H1453_REAL_600S_CROSS_OS_NATIVE_APP_BEGIN_NOT_1800S",flush=True)
     while time.monotonic()-begin<seconds:
         now=time.monotonic();elapsed=now-begin
         for who,p in owners.items():
@@ -98,8 +106,11 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
                  "Linux authenticated TCP failed during cross-OS L3")
             tcps+=1;next_tcp+=60
         if now>=next_resources:
-            rss.append({"elapsed_s":round(elapsed,2),
-                        **resources(out,owners["windows"],wsl)})
+            observed={"elapsed_s":round(elapsed,2),
+                      **resources(out,owners["windows"],wsl)}
+            rss.append(observed)
+            print("H1453_NATIVE_RESOURCE_SNAPSHOT "+
+                  json.dumps(observed,sort_keys=True),flush=True)
             next_resources+=120
         time.sleep(.25)
     elapsed=time.monotonic()-begin
@@ -111,22 +122,25 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
         received=v["received"]-b["received"]
         reverse=v["reverse_received"]-b["reverse_received"]
         delta[who]={"sent":sent,"received":received,"reverse_received":reverse}
-        need(sent>=12500 and received>=int(sent*.97) and reverse>=12500,
-             who+" true 1800s UDP offered/echo/reverse below contract: "+str(delta[who]))
+        need(sent>=min_packets and received>=int(sent*.97) and reverse>=min_packets,
+             who+" true "+str(seconds)+"s UDP offered/echo/reverse below contract: "+str(delta[who]))
         for key in ("echo_age_ms","reverse_age_ms",
                     "max_echo_gap_ms","max_reverse_gap_ms"):
             need(v[key] is not None and float(v[key])<1500,
                  who+" terminal no-RX gap >=1500ms: "+key)
-    need(len(management)>=60,"L3 runner management dynamic /32 refresh not actually exercised")
-    need(elapsed>=1800 and tcps>=28 and len(rss)>=12,
-         "true 1800s duration/dual TCP/resource samples missing")
+    need((len(management)>=60 if seconds==1800 else len(management)>=20),
+         "L3 runner management dynamic /32 refresh not actually exercised")
+    need(elapsed>=seconds and tcps>=min_tcp and len(rss)>=min_rss,
+         "true "+str(seconds)+"s duration/dual TCP/resource samples missing")
     (out/"h1430-l3-samples.json").write_text(json.dumps({
         "source_sha":os.environ["GITHUB_SHA"],"duration_s":round(elapsed,2),
         "tcp_both_count":tcps,"before":initial,"after":after,
         "samples":sample,"resources":rss,"runner_management":management,
         "runner_new_peer_routes":added_peers,
-        "runner_repaired_owned_routes":repaired_routes},indent=2)+"\n")
-    return {"status":"PASS_SCOPED_REAL_1800S_BOTH_CLIENTS",
+        "runner_repaired_owned_routes":repaired_routes,
+        "duration_scope_s":seconds,"min_actual_udp_packets":min_packets},indent=2)+"\n")
+    return {"status":("PASS_SCOPED_REAL_1800S_BOTH_CLIENTS" if seconds==1800
+                       else "PASS_SCOPED_REAL_600S_BOTH_CLIENTS"),
         "duration_s":round(elapsed,2),"tcp_both_count":tcps,
         "resource_samples":len(rss),"runner_refresh_samples":len(management),
         "runner_new_peer_routes":added_peers,

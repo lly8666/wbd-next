@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1452,
-  "checkpoint_sha": "558e480d427422c348fa149b49bc42f690e9c3f8",
+  "sequence": 1453,
+  "checkpoint_sha": "babe24b1ae65da3d707c4b797b9ef7f19254699b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1452-EXTERNAL-UBUNTU-WITNESSED-WINDOWS-CI-DEATH",
-  "current_task": "H1452 old SOURCE724a Action42546907707 final FAILURE: native job128934947739 completed 02:48:19Z but step19 still IN_PROGRESS with no completed_at, later artifact/owned Stop not reached and original log404 BlobNotFound. Separate Ubuntu Action42552910438 source558e SUCCESS, its downloaded 1017-byte artifact13646665009 independently shows 02:48:11 Windows job/run in progress, 02:48:32 completed/failure but step19 still in_progress; confirms GitHub control-plane failure not native product FAIL. Original user stdout through app elapsed720.2s Win RX6698 Linux RX6771 and new/repaired /32=0. Interval to failure cannot be precisely measured from app elapsed due unknown app wallclock. Future hosted Windows 1800 quarantined. PLAN028 IN_PROGRESS.",
-  "why_now": "New independent-source-locked Linux control plane observer returned original final CI metadata even when Windows job log BlobNotFound. Eliminates mistaken inference of product exit, validates old co-host architecture problem is observability and loss of Runner completion. Does not establish actual Windows /1 route or cause and cannot replace independent DUT.",
+  "task_id": "PLAN028-M0-H1453-ONE-600S-VPN-CLEAN-WINDOWS-AND-UBUNTU-TRIARM",
+  "current_task": "User asks high-speed multi-perspective debug and authorizes a real 600s application trial in parallel with Actions changes. H1453 code wires one native exact-source 600s original signed Windows client plus Linux TUN client same TLS443, preserves strict 1500ms gap, 97% receipt, proportional >4167 UDP both directions, >9 TCP both, >4 RSS samples, >20 managed route CAS, real Windows Stop Linux sibling survives, all owner WAL/underlay cleanup. Same Action adds independent clean Windows2025 no-VPN 750s control and Ubuntu separate-host GitHub control-plane observer; measure native handles/threads/private bytes and Linux CPU/RSS. Exclusive marker [plan028-win-linux-600] permits ONE source-pinned differential while legacy [plan028-win-linux-1800] remains hard SKIPPED. New native outcome only PASS_SCOPED_600, no L3 1800 promotion. PLAN028 IN_PROGRESS.",
+  "why_now": "Short H1415 never exercises sustained H1430 every5s/10s/60s/120s loop or long same-VM Wintun/Runner/WSL2 lifetime. Old 1800 often CI job fails with stage19 unfinished and Blob404 after variable user business lines; code defects, Windows host-Runner loss and product resource issues were conflated. User-approved 600 tri-arm comparison supplies faster independent simultaneous evidence instead of another 1800.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Do not launch another GitHub hosted Windows Wintun 1800s. Confirm exact artifact13646665009 and cheap preflight, retain original source/lost log. For actual cause test require external A Linux control and independent B Windows machine without GitHub Worker on tested OS and C independent Linux peer. On B read OS effective Github management route by Find-NetRoute before/after original Wintun; A/C preserve evidence when B fails. Only then one source-locked 1800s with real owned Stop. Carry ARM64 2x1800 PASS_SCOPED, Windows L1 e6aa PASS_SCOPED, historic H998 FAIL, Android physical NOT_RUN. No PLAN029/030.",
+  "next_action": "Single push-source Action from [plan028-win-linux-co-client] [plan028-win-linux-600]: verify cheap scripts unit + Windows/Rust/Linux build, then inspect native 600 app+original Stop vs clean Windows 750 control and independent Ubuntu job metadata. Analyze product Windows RSS/private/handles/threads and Linux RSS/CPU slopes; classify only exact SOURCE scopes. No duplicate 600/1800 dispatch. If original app stops/Runner stalls, do not infer product fail without original logs and external observation. Official 1800 Windows L3 still awaits genuine separate DUT/controller/Linux peer. ARM64 eef2 2x1800 PASS_SCOPED, e6aa short L1, H998 historical FAIL, Android/physical NOT_RUN. No PLAN029/030.",
   "unverified": true,
   "last_tested_source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1452-EXTERNAL-UBUNTU-WINDOWS-RUNNER-DEATH-20261109.json"
+    "docs/evidence/M0/PLAN028-H1453-600S-THREE-ARM-EXPERIMENT-PREFLIGHT-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1452 external Ubuntu source558e watcher action42552910438 artifact13646665009 independently observed Windows source724a job/run FAILURE after step19 stayed in_progress, no final native app/Stop, original job logs Blob404. User product traffic good to720s; failure moment/Windows effective routes still UNKNOWN. No more hosted Windows native L3; isolated A/B/C needed."
+  "partial_summary": "H1453 authorized one Windows+Linux 600s true business+Stop with proportional original hard thresholds, parallel 750s clean Windows Runner and separate Ubuntu GitHub witness; richer Windows memory/handles/thread/Linux RSS/CPU logs. Old 1800 hard blocked, no user product/wire changes, 600 results not yet observed. PLAN028 IN_PROGRESS."
 }
