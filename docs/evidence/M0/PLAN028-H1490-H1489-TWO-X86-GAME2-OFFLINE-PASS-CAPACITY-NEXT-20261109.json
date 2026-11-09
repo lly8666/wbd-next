@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "review_main_before_commit": "6fb7b9d2f665658da97425a8f513370f6a782e25",
+  "H1489_offline": {
+    "run_id": 42639985741,
+    "job_id": 129238212014,
+    "conclusion": "success",
+    "artifact_id": 13683558839,
+    "artifact_zip_sha256": "631d5cf144cb925153a8447ae93fb3cf767ecb4a833db26d1496b4777cb0ee88",
+    "zip_crc": "PASS",
+    "verdict": "OFFLINE_PASS_TWO_ORIGINAL_NATIVE_X86_GAME2_TWO_PHYSICAL_NO_NEW_NETWORK",
+    "two_original_ids": [
+      42638378892,
+      42638378870
+    ],
+    "two_original_actions": "FAIL_RETAINED_OUTER_POSTCHECK_ONLY",
+    "unique_original_artifacts": [
+      13684650590,
+      13684297738
+    ],
+    "exact_native_ELF_SHA_same": true,
+    "both_native_result": "PASS_SCOPED_3_GENS_2_AUTHENTICATED_COLD_REPLACEMENTS_2_EXACT_OLD_STOP",
+    "two_new_physical_sources_verified": true,
+    "each_true_new_generation_Game2_UDP": [
+      16,
+      16
+    ],
+    "each_rotation_sibling_game4_and_normal_UDP": [
+      [
+        80,
+        80
+      ],
+      [
+        80,
+        80
+      ]
+    ],
+    "whole_owner_Stop": true,
+    "qualification": "PASS_SCOPED_ONLY_NO_NETWORK_REPLAY",
+    "status": "PASS"
+  },
+  "separate_L2_L3_calculation": {
+    "original_H1461_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "avg_app_bytes_assumed_by_fixture": "0.3*256+0.7*1024=793.6",
+    "normal_app_rate_each_direction_mbps": {
+      "baseline": 50,
+      "high": 75
+    },
+    "approximate_app_records_per_second_each_direction": {
+      "baseline_50Mbps": 7875.5,
+      "high_75Mbps": 11813.3
+    },
+    "eight_slot_queue_ideal_coverage_ms_per_direction": {
+      "baseline_50Mbps": 1.016,
+      "high_75Mbps": 0.677
+    },
+    "caution": "This is inner-app packet arrival clock only, not actual outer PPS, FEC symbols, game repeat copies, process scheduling or actual queue service; use real host + Rust worker readback before causal claim.",
+    "historical_good_same_type_other_source": {
+      "H1360_source6c5_75Mbps": "PASS_SCOPED_ZEROLOSS_0_QUEUE",
+      "H1360_peak_guest_busy_pct": 74.93,
+      "H1459_source548_75Mbps": "FAIL_SCOPED_28_MISSING_5_QUEUE",
+      "H1459_guest_busy_pct": 90.03
+    },
+    "unresolved_same_source": {
+      "H1461_600_75Mbps": "FAIL_32_ALICE_DL_45_SERVER_PENDING_OVERFLOW",
+      "duration_s": 1800,
+      "H1461_1800": "FAIL_351_ALICE_DL_QUEUE_OVERFLOW0_BUT_LIFECYCLE_AND_STOP_PASS_SCOPED",
+      "H1472_180_source66fb_75Mbps": "SOME_PASSES_AND_FAILURES_ON_DIFFERENT_RUNNERS_HARD_GATES_RETAINED"
+    },
+    "implication": "Do not infer 75Mbps product-only ceiling or clean success from distinct VM 74.9% versus90% CPU; now source57b reduced native rotation loss to zero in 180s but has NOT had current-source 600/1800 strict long-soak. Distinguish host near-capacity L2 from L3 generation boundary first.",
+    "next_experiment_selection": "Use exact frozen current product source57b full native manifest. Small targeted same-VM x86 Normal50 then Normal75 sequential 180s with actual host CPU/softirq and per-client queue age/full/first-delivery, unless host already capacity-saturated at50. Do not rerun same seed just for another PASS; if host full, stop heavier family. Only then finite representative current-source L3 long mixed rotating scenario; original 351 FAIL unchanged."
+  },
+  "retained": {
+    "H1484_180_ARM64": "PASS_SCOPED_ALL10_ZEROLOSS_NORMAL_B6_GAME_B2",
+    "H1487_Game4_x86": "PASS_SCOPED_REAL5UDP",
+    "H1488_2x_game2": "PASS_SCOPED_FROM_ORIGINAL_NATIVE_BOTH_OUTER_CI_FAIL_RETAINED",
+    "H1461_600": "FAIL_RETAINED",
+    "H1461_1800": "FAIL_RETAINED",
+    "H998_hot_MTU": "FAIL_RETAINED",
+    "Windows_L3": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  },
+  "new_network_actions": 0,
+  "product_changed": false
+}
