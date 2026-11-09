@@ -12,7 +12,7 @@
   "why_now": "User requested repair and real concurrent 600 and 1800 five-client stress. Both genuine runs completed, reveal separate true loss domains, source-bound replay now SUCCESS. Preserve strict failure rather than product PASS due green offline.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
   "next_action": "No duplicate expensive long run until source-locked targeted 180s same-host differential isolates 600 server original SyncSender Full->queue overflow (probe M1 worker service/scheduler/CPU) versus 1800 client raw RX/rotation-induced DL loss without server queue overflow. Keep no-loss Alice strict FAIL, authentic 1800 lifecycle scoped PASS, Windows original hosted L3 1800 NOT_QUALIFIED, H998 old MTU FAIL, Android/physical NOT_RUN. No PLAN029/030.",
-  "unverified": false,
+  "unverified": true,
   "last_tested_source": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1466-SOURCE66FB-TWO-SOAKS-VERIFIED-20261109.json"
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1466 SRC66fb five authentic Linux clients genuine600 and1800 both six original owned Stop. 600 Alice real75 Mbps:32 DL UDP missing, server backlog8 overflow45; server offered minus client M3 delivered exactly45=>real FAIL. 1800 genuine all M4 rotations PASS_SCOPED & queue overflow0, but zero-loss Alice DL351 missing=>strict FAIL; likely different domain. H1464 offline replay Action42584453380 SUCCESS, artifact13658711312 CRC_PASS, original 2 artifacts 13656024788/13657785615, complete per-phase source-locked rejudge; no native reruns."
+  "partial_summary": "H1466 SRC66fb five authentic Linux clients genuine600 and1800 both six original owned Stop. 600 Alice real75 Mbps:32 DL UDP missing, server backlog8 overflow45; server offered minus client M3 delivered exactly45=>real FAIL. 1800 genuine all M4 rotations PASS_SCOPED & queue overflow0, but zero-loss Alice DL351 missing=>strict FAIL; likely different domain. H1464 offline replay Action42584453380 SUCCESS, artifact13658711312 CRC_PASS, original 2 artifacts 13656024788/13657785615, complete per-phase source-locked rejudge; no native reruns. Original two-archive negative evidence is verified; PLAN028 full scope remains unverified due scoped FAIL."
 }
