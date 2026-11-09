@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "PASS_SCOPED_BINARY_IDENTITY_FORENSICS_ONLY_NO_NATIVE_600_VERDICT",
+  "artifact_verified": true,
+  "comparison_sources": {
+    "short_pass": "e6aa4608780e9608070a7313be549a0d4524b38b",
+    "long_ci_fail": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+    "current_live_600": "548a47cc708d82d45e1722540b6677342f3c8c5b"
+  },
+  "original_artifacts": {
+    "short_win": 13626686328,
+    "short_app_report": 13626452689,
+    "long_win": 13643991561,
+    "long_linux": 13644320209,
+    "current_win": 13647566029,
+    "current_linux": 13646553865
+  },
+  "sha256_equal_all_three": {
+    "Windows_Go_executable": "f0c34f379bf6ff6ca265764ea84e7a1a1cc27513984a5631cd4d4acfe5f5b363",
+    "Linux_Go_client": "67803c8df807838b090ab1db58061aaa3d3527ecc4ce9d99352ccdb9a637eaa5",
+    "Linux_Go_server": "118165d85867f4569cc518eb3856227b26d00c1dacab1fbc5d735232f0641821",
+    "Linux_Rust_library": "ef63fa8cf08667a7b1b1961c1804a7b11aa0fe715a65b9eee83d66580f4ccad6"
+  },
+  "windows_Rust_DLL": {
+    "file_sizes_bytes": [
+      2453504,
+      2453504,
+      2453504
+    ],
+    "whole_file_sha256": {
+      "short": "501fe300b1950d1ad582be6acc595e21449577903c1b502a058594a11700d15a",
+      "failed_long": "f894a8e159a86cd637f540b21c6b504d85171a93fd8901bddf82d787e2146117",
+      "current_600": "1175c14eadc38042c930e4b06eb2e08ae2634505fd03f082dd710e08fd600732"
+    },
+    "machine_code_text_sha256_all_three": "d37a05cd64ac1a25ae12742ae76ccd56e791eb80fa35209314ad9e23c87f693d",
+    "static_data_pdata_reloc_sha256_identical_all_three": true,
+    "raw_difference_short_vs_long_bytes": 28,
+    "raw_difference_short_vs_600_bytes": 28,
+    "changed_offsets_and_roles": [
+      "PE COFF TimeDateStamp bytes at 0x108..0x10a",
+      "Three PE debug directory timestamp copies 0x21ee14/0x21ee30/0x21ee4c each 3 bytes",
+      "PDB RSDS debug GUID bytes 0x21ef7c..0x21ef8b (16 bytes)"
+    ],
+    "read_only_rdata_hash_diff_explained_by_debug_timestamp_and_PDB_GUID": true,
+    "no_executable_text_difference": true
+  },
+  "original_product_go_rust_file_changes_short_to_failed_long": 0,
+  "limits": "Hash identity of original client/server executables and Windows Rust executable machine code does NOT prove time-dependent Windows Wintun+WSL stability or control plane. PE metadata differs; logs/traffic after last original app line unknown.",
+  "qualification": {
+    "short_original": "PASS_SCOPED e6aa",
+    "long_original": "FAILURE Action42546907707 stage19 unresolved; 1800/Stop NOT_QUALIFIED",
+    "current_600": "IN_PROGRESS Action42555320138, original app/Stop not yet verified",
+    "official_Windows_L3": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "H998_old_same_socket_MTU": "FAIL"
+  },
+  "causal_implication": "The same executable machine code for all compared original VPN endpoints was used. Failures are not caused by a shipping product source or machine-code revision; prioritize duration-dependent runtime state, native host/WSL2 and test infrastructure differential.",
+  "source_scope": "Original raw product binary manifests/artifacts downloaded and checked with SHA256 plus Windows PE section byte comparisons."
+}
