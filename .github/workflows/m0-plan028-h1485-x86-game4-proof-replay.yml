@@ -1,0 +1,96 @@
+# H1485 old x86 Game4 source switch artifact failed ONLY the old server READY label
+# before sending any five new-path UDP. Reuse exact 57b Go/Rust ELFs once.
+name: M0 PLAN028 H1485 frozen x86 Game4 B native proof
+run-name: H1485 source57b Game4 B authenticated five true UDP after physical route switch
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-h1485-x86-game4-proof-replay.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  x86-real:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ORIGINAL_PRODUCT_SOURCE: "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42630288111
+          github-token: ${{ github.token }}
+          name: m0-plan028-game-overlap-x86-42630288111-1
+          path: input/
+      - name: SHA verify original x86 three ELFs and corrected script; no build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          mkdir -p fixed-build fixed-kernel-result
+          cp input/fixed-build/wbd-v4-client input/fixed-build/wbd-v4-server input/fixed-build/libwbd_engine.so fixed-build/
+          cp input/fixed-kernel-result/manifest.json fixed-kernel-result/
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib,struct
+          m=json.loads(pathlib.Path("fixed-kernel-result/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["toolchains"]=={"go":"1.23.12","rust":"1.85.1"}
+          assert set(m["binary_sha256"])=={"wbd-v4-client","wbd-v4-server","libwbd_engine.so"}
+          for n,h in m["binary_sha256"].items():
+              b=(pathlib.Path("fixed-build")/n).read_bytes()
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
+              assert hashlib.sha256(b).hexdigest()==h,n
+          print("H1485_PRODUCT57B_NATIVE_X86_THREE_ELF_HASH_PASS_NO_REBUILD")
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+          grep -Fq 'V4_PUBLIC_GAME_SERVER_B_CLIENT_READY' tools/m0-v4-public-real-linux-netns.sh
+      - name: Real original Game4 FEC6 x86 physical source IP MTU and 5 new-path UDP
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables tcpdump openssl
+          WBD_V4_PUBLIC_MODE=game4 WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_GAME_FEC=fixed6 WBD_V4_PUBLIC_WIRE_AUDIT=1 \
+            bash tools/m0-v4-public-real-linux-netns.sh fixed-build >fixed-kernel-result/h1485-original-native.log 2>&1 || {
+              tail -150 fixed-kernel-result/h1485-original-native.log >&2
+              exit 1
+            }
+          for marker in \
+            M0_PLAN028_GAME4_REAL_A_TO_AB_TO_B_AUTHENTICATED_OVERLAP_ORDER_PASS \
+            M0_PLAN028_REAL_LINUX_GAME4_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS \
+            M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS \
+            M0_PLAN028_GAME4_SAME_INSTALLATION_LEASE_RETAINED_NATIVE_PASS \
+            M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS \
+            M0_PLAN028_TLS_GAME4_8_REAL_TCP_CLIENTHELLOS_NO_PRELUDE_PASS;do
+            grep -Fq "$marker" fixed-kernel-result/h1485-original-native.log
+          done
+          grep -Fq 'V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=4 source=authenticated_client_native_Health promoted=1' fixed-kernel-result/h1485-original-native.log
+          grep -Fq 'V4_PUBLIC_GAME_REMOTE_M4_PROVEN role=client generation=2 lanes=4' fixed-kernel-result/h1485-original-native.log
+          test "$(grep -Fc M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("fixed-kernel-result")
+          route=json.loads((root/"plan028-effective-new-physical-route.json").read_text())
+          mtu=json.loads((root/"plan028-new-tun-mtu.json").read_text())
+          assert len(route)==len(mtu)==1
+          assert route[0]["prefsrc"]=="10.25.0.3"
+          assert mtu[0]["mtu"]==1178
+          print("H1485_TRUE_POST_HANDOVER_UDP5_AND_EFFECTIVE_MTU1178_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1485-x86-frozen57b-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/manifest.json
+            fixed-kernel-result/h1485-original-native.log
+            fixed-kernel-result/plan028-game4-tls-wire-audit.json
+            fixed-kernel-result/plan028-new-tun-mtu.json
+            fixed-kernel-result/plan028-effective-new-physical-route.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          retention-days: 21
+          if-no-files-found: warn

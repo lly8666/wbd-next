@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "review_base_head_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "immutable_native_ARM64": {
+    "source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+    "action_id": 42630288439,
+    "artifact_id": 13680553258,
+    "original_zip_sha256": "a38cdc13da3bf984c08ab3d8d82d31a322910926e31c86c01360ea4ffc6dd6f1",
+    "zip_crc": "PASS",
+    "platform": "genuine_native_aarch64_both_original_TLS_Rust_RAW_TUN",
+    "duration_seconds": 180,
+    "clients": 5,
+    "loss_pct": 0,
+    "qualification": "PASS_SCOPED_TRIGGERED_SERVER_B_READY_AND_ZERO_UNIQUE_UDP_LOSS",
+    "normal_server_b_route_deferred": 6,
+    "normal_server_verified_client_health": 6,
+    "normal_go_proven": 6,
+    "game_server_b_route_deferred": 2,
+    "game_server_verified_client_health": 2,
+    "game_go_proven": 2,
+    "alice_client_promotions": 2,
+    "carol_client_promotions": 2,
+    "all_ten_directions_unique_missing": 0,
+    "all_six_exact_stop": true,
+    "client_udp_each_direction": {
+      "alice": 261595,
+      "bob": 43599,
+      "carol": 54497,
+      "dave": 54497,
+      "erin": 54497
+    },
+    "server_shared_tun": {
+      "unrouted": 0,
+      "queue_full_drops": 0,
+      "retired_drops": 0,
+      "queue_age_drops": 0
+    },
+    "reason_scoped": "Actual same 180s native five-client original TLS and M4, BOTH Normal and Game conditional B proof triggered and all app directions zero unique loss. No cross-generation DATA duplicates."
+  },
+  "immutable_x86_original_failure": {
+    "action_id": 42630288111,
+    "artifact_id": 13679959152,
+    "source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+    "zip_sha256": "1228dbeea002869c1a9f94fa17324174e330f1a758bb3236ad4552079a23778a",
+    "zip_crc": "PASS",
+    "result": "FAIL_SCOPED_HARNESS_STALE_READINESS_MARKER_BEFORE_NEW_PATH_UDP",
+    "actual_original_evidence": {
+      "client_gen2_native_Ready": true,
+      "game_server_B_deferred": true,
+      "server_B_authenticated_client_health": true,
+      "server_B_TUN_promoted": true,
+      "client_generation1_exact_Stop": true,
+      "server_old_group_exact_Stop": true,
+      "readback_new_physical_route_src_ipv4": "10.25.0.3",
+      "underlay_mtu": 1280,
+      "post_switch_udp": "NOT_RUN",
+      "legacy_harness_condition": "grep count(V4_PUBLIC_GAME_MULTI_GROUP_READY role=server)>=2",
+      "new_authenticated_B_event": "V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=4 source=authenticated_client_native_Health promoted=1",
+      "reason": "After H1484 B is intentionally only published after verified client-B M4; server no longer logs a second local Game GROUP_READY. All other native guard items present in bounded original diagnostic; test aborted before sending five post-switch UDP."
+    },
+    "repaired_fixture": "tools/m0-v4-public-real-linux-netns.sh accepts original >=2 local ready or initial+authenticated B Game TUN and Go proof, keeps exact native A Stop & path readbacks and real five UDP hard gate.",
+    "next_one_real_action": "New .github/workflows/m0-plan028-h1485-x86-game4-proof-replay.yml, reuses EXACT source57b x86 original three ELF SHA manifest from Action42630288111 artifact13679959152, only network scene; NO source rebuild. Fresh result NOT_RUN until Action."
+  },
+  "extra_original_x86": {
+    "action_id": 42630288227,
+    "classification": "FAIL_PREVIOUSLY_FAILING_SHORT_GAME2_FIRST_LIVE_FIX_NOT_YET_QUALIFIED",
+    "note": "Separate short Game2 fixed6 first Game4/Normal live fixture failure; B client Health proof events not equivalent to this scenario PASS."
+  },
+  "nonproduct_changes": [
+    "Correct test-only Rust cfg/test annotation for L0 Game replacement and preserve original Normal test Linux guard",
+    "Update Game4 physical path script stale readiness evidence gate; do not bypass new client/old exact Stop/MTU/UDP",
+    "Add only one new real x86 source-locked workflow; reuse previously native built package. No product code or wire changes."
+  ],
+  "preserved_failures": {
+    "H1483_original_carol5": "FAIL_RETAINED",
+    "H1478_original_x86_alice10": "FAIL_RETAINED",
+    "H1473_original_x86_alice13_carol3": "FAIL_RETAINED",
+    "H1461_600_75M": "FAIL_RETAINED",
+    "H1461_1800": "FAIL_RETAINED",
+    "H998_MTU": "FAIL_RETAINED",
+    "Windows_L3_1800": "NOT_QUALIFIED",
+    "Android_physical": "NOT_RUN",
+    "plan": "IN_PROGRESS"
+  }
+}

@@ -4509,9 +4509,6 @@ impl SharedTunReader{
         if d.retired!=0{self.retired_drops.fetch_add(d.retired,Ordering::Relaxed);}
     }
 }
-#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-#[test]
-#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[cfg(all(test,target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
@@ -4551,6 +4548,9 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     assert!(alive_b.load(Ordering::Acquire));
     assert_eq!(routes[&ip].generation,18);
 }
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     let (old_tx,_old_rx)=mpsc::sync_channel::<OriginalTunIngress>(2);

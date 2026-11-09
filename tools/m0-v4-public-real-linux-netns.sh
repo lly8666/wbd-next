@@ -391,12 +391,25 @@ PY
       # A stays authenticated/flowing until B's original TLS/M4/MTU
       # is genuinely ready; one shared native TUN reader atomically
       # promotes B, then old A's exact Game Stop may join.
+      #
+      # H1484 Game2/4 server B now intentionally does NOT log its old
+      # "MULTI_GROUP_READY" immediately after local M4 start. Only
+      # AEAD/PN-verified client-B kind0 may promote B's server /32.
+      # Preserve historical two-READY fixtures, but count the newer
+      # deferred->authenticated-proof->promoted route instead of
+      # rejecting a genuinely working group before UDP is attempted.
+      game_server_b_ready=0
+      if [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] ||
+         { grep -Fq "V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=$GAME source=authenticated_client_native_Health promoted=1" "$TMP/server.log" &&
+           grep -Fq 'V4_PUBLIC_GAME_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX' "$TMP/server.log"; };then
+        game_server_b_ready=1
+      fi
       if grep -q 'V4_PUBLIC_PATH_EFFECTIVE_CHANGED role=client source=rtnetlink_os_readback' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT role=client new_generation=2 old_generation=1 shared_tun_single_reader=1 new_tls_m4_before_old_stop=1' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' "$TMP/client.log" &&
          grep -q 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=2 old_generation=true source=real_original_TLS_Rust_M4 os_path_authority=1' "$TMP/client.log" &&
          [[ "$(grep -c "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$GAME" "$TMP/client.log" || true)" -ge 2 ]] &&
-         [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge 2 ]] &&
+         [[ "$game_server_b_ready" == 1 ]] &&
          grep -Eq 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-(new-generation|grace-expired) remaining_flows=4' "$TMP/server.log";then
         path_ready=1;break
       fi

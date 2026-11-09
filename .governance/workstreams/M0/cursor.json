@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1484,
-  "checkpoint_sha": "c7c8e3da877a0c8f28152b766ffccd3d3baadb0c",
+  "sequence": 1485,
+  "checkpoint_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1484-ARM64-GAME2-SERVER-COLD-B-CLIENT-HEALTH-BARRIER",
-  "current_task": "H1484 read actual H1483 original ARM64 Action42626731886/artifact13679196436 ZIP CRC_PASS: fixed Normal B client Health gate triggered 6x, Alice/Bob/Dave/Erin zero UDP, Carol Game2 DL 5 permanent missing (3 at 51.70s,2 at159.41s) exactly two Game2 cold handovers, global shared TUN queue_full/retired/age0, six Stop PASS. Game server B still publish-on-local-group-M4 before client B RX unlike Normal. Complete minimal cross Go/Rust group client post-M4 one-shot existing kind0 Health, server B route defer/5s authenticated proof/mixed GO exact promotion/owned old Stop; new candidate NOT_RUN until native ARM Action. Strict verifier demands 2 Game B gates plus Normal and all unique UDP zero. PLAN028 IN_PROGRESS.",
-  "why_now": "Only residual true zero-loss FAIL in new ARM same SOURCE is Game2 at both exact cold handovers; old Game server local M4 premature route publish is concrete current code gap. Do not mask with random dual DATA or repeat failed seed.",
+  "task_id": "PLAN028-M0-H1485-ARM-B-TRIGGERED-PASS-X86-GAME4-STALE-READY-FIXTURE",
+  "current_task": "H1485 source57b original ARM64 Action42630288439/artifact13680553258 CRC_PASS SHA a38cdc: genuine 180s 5-client all 10 UDP directions 0 unique loss; Normal B 6/6 and Game2 B2/2 defer/verified-client-Health/promote, Alice/Carol each 2 native new gens, all six owned Stop, shared queue0. Scoped native arm regression PASS. Same SOURCE original x86 Game4 Action42630288111 returns PATH_SWITCH_NOT_READY due stale fixture requiring 2x local GROUP_READY; B server verified Health and promoted new /32 plus old Stop did happen, but post-switch 5 UDP were NOT_RUN. Fix only shell predicate and Rust L0 test cfg attrs, add one frozen x86 H1485 workflow using original 57b native ELF artifact; no product/wire changes. PLAN028 IN_PROGRESS.",
+  "why_now": "The remaining x86 Game4 alleged no-path readiness was a pre-UDP fixture check tied to pre-fix local SERVER READY rather than new true authenticated B Health. Narrow fixture update retains all real hard doors; avoids unneeded product redesign or duplicate seed without an observational change.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered exact NEW-SOURCE ARM64 H1480 one 180s genuine original TLS five-client Action from H1484 workflow; first confirm Go+Rust native build/L0 new Rust test PASS, Game2 server B route defer and authenticated client kind0 receipt/promotion actually TRIGGERED twice and all six Stop, and 10ms all-direction unique UDP zero; if fail inspect first Game2 authentic control & raw/TUN edge rather than rerun same seed. Then x86 affected rotation regression on reused manifest, Windows Npcap/Wintun platform-only, capacity/L3 evidence under PLAN028. Retain H1483 original 5 packets FAIL and all old failures.",
+  "next_action": "Collect auto-triggered H1485 exact-source57b x86 one real Game4 physical source IPv4+MTU 1500->1280 authenticated B path; verify three ELF SHA, server B Health gate+TUN promotion and Gen2 client, exact owned A Stop, real new-source UDP echo 5/5 and effective TUN MTU1178 plus standard 8 TLS ClientHello. If failing, inspect actual new-path UDP stage from original artifact, not stale marker; keep original H1484 x86 failed gate and H1200 first-live fail separately. Then continue PLAN028 remaining L0/L1, genuine Windows Npcap/Wintun, capacity/L3 coverage using already qualified same-source evidence; no 029/030.",
   "unverified": true,
-  "last_tested_source": "c7c8e3da877a0c8f28152b766ffccd3d3baadb0c",
+  "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1484-H1483-ARM64-GAME2-ROTATION-5PACKET-20261109.json",
-    "docs/evidence/M0/PLAN028-H1483-H1480-ARM64-MIXED-NORMAL-SERVER-COLD-B-FAIL-20261109.json"
+    "docs/evidence/M0/PLAN028-H1485-H1484-ARM-TRIGGERED-ZEROLOSS-X86-GAME4-STALE-GATE-20261109.json",
+    "docs/evidence/M0/PLAN028-H1484-H1483-ARM64-GAME2-ROTATION-5PACKET-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1484 source c7c8 original Action42626731886 native ARM64 build/L0 PASS, six Stop, Normal B server Health proof6 triggered, Alice/Bob/Erin/Dave both UDP zero, Carol Game2 DL5 (3 at 51.70s,2 at159.41s) in exact cold transitions; Game2 server B prematurely publishes /32 on local M4. In one candidate code package require actual client-B post-complete-M4 native authenticated kind0 before server B route promotion and old A Stop; existing cold control only, no new steady packet/dual-send; test NOT_RUN pending new ARM action, strict Game2 markers. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1485 source57b ARM native 180s true 5client Zero unique UDP all ten directions and 2x actual Game2+6x Normal server authenticated B proof PASS, all six Stop, zero queues. x86 Game4 source-switch original Action42630288111 FAIL only because old fixture second MULTI_GROUP_READY missing after intentional B M4 Health gate; genuine new path UDP NOT_RUN; fixed fixture retains client/old exact Stop/MTU/real UDP, one targeted x86 frozen57b Action queued after commit, no product rebld; rust cfg attrs test-only corrected. PLAN028 IN_PROGRESS."
 }
