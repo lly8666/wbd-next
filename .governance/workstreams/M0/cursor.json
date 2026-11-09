@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1455,
-  "checkpoint_sha": "cca0a32afa8e0707b6e60b090000a702444f9b2a",
+  "sequence": 1456,
+  "checkpoint_sha": "22427f18c75210a76ecc8ac6e2b0bff2a3a490bc",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1455-THREE-SOURCE-SAME-PRODUCT-MACHINE-CODE-FORENSICS",
-  "current_task": "H1455 while genuine SOURCE548a tri-arm Action42555320138 runs native Windows 600/control clean Win750/Ubuntu watcher, independent original product binary forensic compares short e6aa SUCCESS, long 724a CI failure, current548 600. Exact Windows Go EXE SHA256 all three identical; Linux Go client/server and Rust .so exact SHA256 all three identical. Windows Rust DLL whole sha varies only 28 bytes (short vs long/current) in PE timestamps/debug PDB GUID, 1,669,632 byte executable .text segment SHA d37a05cd... identical all three, .data/.pdata/.reloc identical; source product Go/Rust file diff zero. Confirms actual compiled machine code unchanged, so shorter PASS vs longer CI loss is not a code revision. Still potential time-dependent Windows runtime and CI host interaction, no proof product 600/Stop until it finishes. PLAN028 IN_PROGRESS.",
-  "why_now": "User demanded fast multi-angle causal diagnosis. Source compare alone insufficient when binaries can vary with rebuild. Downloaded signed Windows artifact archives and Linux product manifests from exact runs show binary-level identity, removing a major competing hypothesis while A/B/C comparative experiment runs in parallel.",
+  "task_id": "PLAN028-M0-H1456-SOURCE548-CLEAN750-CONTROL-PASS-NATIVE600-INPROGRESS",
+  "current_task": "H1456 one SOURCE548a Action42555320138 simultaneous tri-arm actual. Independent clean Windows2025 control job128961150470 SUCCESS, downloaded original artifact13648260573 report.json verified 750.2s, 50 heartbeat snapshots, PASS_SCOPED_CONTROL_ONLY; original clean job log confirms PASS and upload. Native signed original Win Wintun+Linux WSL2 600 job128961150368 still step19 IN_PROGRESS and no 600 app/owned Stop receipt; independent Ubuntu GH status witness job128961150381 still collecting. Same original product machine code across short e6aa PASS, failed long724 CI, current600; PE DLL 28 bytes only time/PDB metadata. No shipping code change. PLAN028 IN_PROGRESS.",
+  "why_now": "User asks efficient multi-perspective diagnosis: simultaneous clean Windows control has now completed 750s successfully, excluding a trivial generic Windows-hosted CI 750-second timer but not VM-specific or VPN interaction; should commit this real artifact before in-flight native/Ubuntu result and preserve distinct evidence scope.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Observe exactly Action42555320138 native job128961150368 actual 600s and owned Stop, clean job128961150470 750s no VPN, Linux witness job128961150381 independent GH status. Examine Windows RSS/private/handles/threads and Linux RSS CPU slopes. Do not dispatch another native action. Report only PASS_SCOPED_600 if entire 600 original business and Stop terminal receipts; Windows 1800 L3 remains NOT_QUALIFIED until isolated DUT/control. Carry ARM64 eef2 2x1800 PASS_SCOPED, e6aa short L1 PASS_SCOPED, H998 FAIL, Android physical NOT_RUN, no 029/030.",
+  "next_action": "Follow exact Action42555320138 ONLY: wait for native job128961150368 real 600 original app/Stop and meaningful fail/timeout; collect Ubuntu job128961150381 timeline and artifacts. Do not claim 600 PASS if no terminal original app/Stop, or infer product failure from Github step19 hang. No additional 1800 hosted native; official L3 NOT_QUALIFIED until isolated A/B/C. ARM64 two 1800 scoped PASS, e6aa Windows short scoped PASS, H998 old FAIL, Android physical NOT_RUN; no PLAN029/030.",
   "unverified": true,
   "last_tested_source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1454-SOURCE548-TRIARM-600-750-CONTROL-INFLIGHT-20261109.json",
-    "docs/evidence/M0/PLAN028-H1455-SAME-BINARY-CODE-SHORT-LONG-600-20261109.json"
+    "docs/evidence/M0/PLAN028-H1455-SAME-BINARY-CODE-SHORT-LONG-600-20261109.json",
+    "docs/evidence/M0/PLAN028-H1456-SOURCE548-CLEAN-WINDOWS-750-PASS-NATIVE600-AWAIT-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1455 source-locked raw Win/Linux binary forensic: short e6aa PASS, long724 CI FAILURE, current548 tri-arm actual product Go executable and Linux Go+Rust .so exact SHA identical; Windows Rust DLL PE .text/.data/.pdata/.reloc identical, only time/PDB debug metadata 28 bytes differ. Thus no actual compiled machine-code change; focus on time-dependent product state vs Windows hosted Runner Wintun/WSL2 fault domain. Genuine600 experiment still in progress, no product Stop receipt."
+  "partial_summary": "H1456 clean Windows750 baseline on separate VM SUCCESS: original artifact13648260573 report 750.2 sec and 50 heartbeat snapshots PASS_SCOPED_CONTROL_ONLY. Native Win Wintun+Linux original600 and Ubuntu witness still IN_PROGRESS; app/Stop NOT_QUALIFIED; no duplicates. Byte-identical product machine code between short pass/long CI failure/current 600. PLAN028 IN_PROGRESS."
 }

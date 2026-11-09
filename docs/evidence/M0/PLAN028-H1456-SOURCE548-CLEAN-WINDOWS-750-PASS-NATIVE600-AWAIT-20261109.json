@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+  "result": "PASS_SCOPED_CLEAN_WINDOWS_CONTROL_750_ONLY_NATIVE600_UNQUALIFIED",
+  "artifact_verified": true,
+  "action_id": 42555320138,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42555320138",
+  "control": {
+    "job_id": 128961150470,
+    "name": "H1453 clean Windows Runner 750s no VPN control",
+    "status": "completed",
+    "conclusion": "success",
+    "artifact_id": 13648260573,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42555320138/artifacts/13648260573",
+    "artifact_content_path": "report.json",
+    "artifact_content": {
+      "elapsed_s": 750.2,
+      "source": "548a47cc708d82d45e1722540b6677342f3c8c5b",
+      "status": "PASS_SCOPED_CONTROL_ONLY",
+      "observations": 50
+    },
+    "original_job_log_marker": "H1453_CLEAN_RUNNER_750S_PASS_NOT_VPN_PRODUCT",
+    "does_not_test": [
+      "Wintun",
+      "WSL2",
+      "original VPN product"
+    ],
+    "control_different_VM": true
+  },
+  "native": {
+    "job_id": 128961150368,
+    "stage": "Launch actual WSL2 Linux and direct full public two-OS product",
+    "status_at_checkpoint": "in_progress",
+    "native_original_600_s": "NOT_QUALIFIED_PENDING_END_AND_STOP",
+    "native_artifact": "NOT_UPLOADED_AS_OF_CHECKPOINT",
+    "original_products_source_locked": true
+  },
+  "Ubuntu": {
+    "job_id": 128961150381,
+    "status_at_checkpoint": "in_progress",
+    "kind": "GitHub metadata only",
+    "original_application": "NOT_MEASURED"
+  },
+  "comparison": {
+    "confirmed_different_host_clean_windows_survives_750_seconds": true,
+    "rules_out": "Generic every-Windows2025-job-always-dies-within-750s hypothesis",
+    "does_not_rule_out": [
+      "Individual Windows2025 VM instability",
+      "WSL2-induced host issue",
+      "Windows VPN route/WFP management interactions",
+      "Time-dependent original VPN product resource/Stop failure"
+    ],
+    "binary_machine_code_same_as_short_success": true
+  },
+  "formal_status": {
+    "Windows_L3_1800": "NOT_QUALIFIED",
+    "Windows_600": "NOT_QUALIFIED_AS_OF_CHECKPOINT",
+    "ARM64_2x1800": "PASS_SCOPED",
+    "H998_hot_MTU": "FAIL",
+    "Android_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  },
+  "followup": "Collect native real 600 original final receipt and Ubuntu independently captured job timestamps, no duplicate experiment."
+}
