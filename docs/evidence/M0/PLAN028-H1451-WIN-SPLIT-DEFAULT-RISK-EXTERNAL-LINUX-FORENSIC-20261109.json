@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "result": "NOT_QUALIFIED_L3_EXTERNAL_CI_OBSERVER_ONLY",
+  "artifact_verified": false,
+  "observed_action_id": 42546907707,
+  "observed_source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "observed_status_at_checkpoint": "IN_PROGRESS_NATIVE_STEP19",
+  "last_user_real_app_s": 720.2,
+  "windows_udp_received": 6698,
+  "linux_udp_received": 6771,
+  "owned_Stop": "NOT_QUALIFIED",
+  "old_hosted_native_dispatch_gate": {
+    "source": "1b60a367697900017ddab8fc9aefdfb1bac58e98",
+    "action": 42550925082,
+    "conclusion": "success",
+    "native_job": "skipped",
+    "governance_action": 42550925135,
+    "governance": "success"
+  },
+  "source_route_code": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+  "source_known_prefixes": [
+    "0.0.0.0/1",
+    "128.0.0.0/1"
+  ],
+  "actual_OS_installed_route_during_failure": "UNKNOWN",
+  "effective_public_service_route_during_failure": "UNKNOWN",
+  "counterexample": "original physical 0/0 retained + protected old service/32 physical + new public service via Wintun /1",
+  "external_controller_scope": "Linux-only watcher of exact source/run Github job metadata; not product native traffic/Windows OS; no rerun or cancel",
+  "observer_workflow": ".github/workflows/m0-plan028-independent-runner-forensic.yml",
+  "env_blocker": "No independent Windows DUT separate from Runner.Worker and Linux peer separate from Windows WSL2 available",
+  "open_scopes": [
+    "Windows L3 original1800+Stop NOT_QUALIFIED",
+    "ARM64 eef2 two 1800 PASS_SCOPED retained",
+    "e6aa Windows L1 PASS_SCOPED retained",
+    "H998 hot MTU FAIL retained",
+    "Android/physical NOT_RUN",
+    "PLAN028 IN_PROGRESS"
+  ]
+}

@@ -35,3 +35,9 @@
 当前连接的 GitHub-hosted Windows Runner **不具备可证明的隔离条件**；没有可用的独立 Windows DUT/远程管理地址和Linux物理/独立虚机资源证据，不能从此聊天擅自创建/声称该设备存在。因此 legacy `[plan028-win-linux-1800]` 在原 `native-public-two-os` hosted job 显式 SKIP。隔离平台/授权到位之前只允许不改变 Windows 主机网络的离线验收与已通过短测；PLAN028保持 `IN_PROGRESS`，Windows L3 `NOT_QUALIFIED`。
 
 保留 H998 同socket热MTU旧FAIL；Android/用户物理设备 NOT_RUN；ARM64 eef2 两个独立1800s PASS_SCOPED 和 Windows+独立Linux e6aa 短测 PASS_SCOPED 均按原SOURCE复用。PLAN029/030不启动。
+
+## 6. H1451：半默认路由选路和外部只读CI观察
+
+原Windows恢复源码 `r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go` 明确检查 `0.0.0.0/1`、`128.0.0.0/1` 原捕获路由不得遗留。这**不能证明SOURCE724a失联时实际安装了/1**，但若安装，Windows最长前缀选路会用/1覆盖仍存在的物理/0；原来的默认网关还在并不代表Github新增服务IP一定走物理NIC。H1451纯离线回归展示物理/0不变、已固定旧Github服务IP/32走物理、未固定新IP走Wintun/1的明确反例。真实被测Windows必须用 `Find-NetRoute -RemoteIPAddress <当时服务IP>` 与实际接口/源地址及/1、/32读回判断；无法读回标 `EFFECTIVE_EGRESS_UNKNOWN`。
+
+新增 `.github/workflows/m0-plan028-independent-runner-forensic.yml`，从另一台ubuntu-24.04 Runner按旧run ID+SHA锁定、每20秒只读Github API状态至Linux自身产物。不能取消旧任务、不重派Windows、不改路由；可证明的是外部CI控制面元数据是否可读，**不能证明Windows OS、真实Linux对端业务或Stop**。故仍须外部A控制者、独立Windows B DUT、独立Linux C对端，先短因果对照才准新1800s。

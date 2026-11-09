@@ -1,0 +1,91 @@
+# PLAN028 H1451: off-Windows Linux CI metadata only, never native PASS.
+name: PLAN028 Linux read-only forensic of old Windows native action
+on:
+  workflow_dispatch:
+    inputs:
+      target_run_id:
+        description: "Exact existing run ID"
+        type: string
+        required: true
+      target_sha:
+        description: "Exact original SOURCE SHA"
+        type: string
+        required: true
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan028-independent-runner-forensic.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[plan028-observe-legacy]'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TARGET_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.target_run_id || '42546907707' }}
+      TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || '724a5b74f94b7bd802155368b77bec53279d6c8e' }}
+    steps:
+      - name: Independently record immutable existing run metadata without touching Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p plan028-external-ci
+          [[ "$TARGET_ID" =~ ^[1-9][0-9]{5,16}$ ]] || exit 2
+          [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 2
+          first="$(timeout 15s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID")"
+          if [[ "$(jq -r .head_sha <<<"$first")" != "$TARGET_SHA" ]] ||
+             [[ "$(jq -r '.repository.full_name' <<<"$first")" != "$GH_REPO" ]]; then
+            echo SOURCE_MISMATCH_REFUSE >&2
+            exit 2
+          fi
+          jq -cn --arg id "$TARGET_ID" --arg source "$TARGET_SHA" --arg observer "$GITHUB_RUN_ID" \
+            '{schema:"plan028-h1451-external-run-metadata/v1",target_id:$id,source_sha:$source,observer_id:$observer,product:"NOT_RUN",qualification:"NOT_QUALIFIED"}' \
+            >plan028-external-ci/identity.json
+          echo 'Independent GitHub run metadata only: no original Windows route/UDP/TCP/Stop evidence.' >plan028-external-ci/README.txt
+          for i in $(seq 1 40); do
+            stamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            if ! run="$(timeout 15s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" 2>/dev/null)"; then
+              printf '{"time":"%s","run_status":"API_UNAVAILABLE_NOT_PRODUCT_FAIL"}\n' "$stamp" >>plan028-external-ci/samples.jsonl
+              sleep 20
+              continue
+            fi
+            [[ "$(jq -r .head_sha <<<"$run")" = "$TARGET_SHA" ]] || { echo SOURCE_MISMATCH_REFUSE; exit 2; }
+            status="$(jq -r .status <<<"$run")"
+            conclusion="$(jq -r '.conclusion // "NONE"' <<<"$run")"
+            if jobs="$(timeout 15s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID/jobs?per_page=100" 2>/dev/null)"; then
+              native="$(jq -c '[.jobs[]|select(.name=="native-public-two-os")|{id,status,conclusion,started_at,completed_at,step:([.steps[]?|select(.name=="Launch actual WSL2 Linux and direct full public two-OS product")|{status,conclusion,started_at,completed_at}]|first)}]|first // {"status":"NOT_YET_OBSERVED"}' <<<"$jobs")"
+            else
+              native='{"status":"JOBS_API_UNAVAILABLE"}'
+            fi
+            jq -cn --arg stamp "$stamp" --arg status "$status" --arg conclusion "$conclusion" --argjson job "$native" \
+              '{time:$stamp,run_status:$status,run_conclusion:$conclusion,native_job:$job,original_product:"UNKNOWN"}' \
+              >>plan028-external-ci/samples.jsonl
+            echo "H1451_EXTERNAL_CI tick=$i run=$status native=$(jq -r .status <<<"$native")"
+            if [[ "$status" = completed ]]; then
+              job_id="$(jq -r '.id // empty' <<<"$native")"
+              if [[ "$job_id" =~ ^[1-9][0-9]{5,16}$ ]]; then
+                if timeout 15s gh api "repos/$GH_REPO/actions/jobs/$job_id/logs" >/dev/null 2>plan028-external-ci/error.tmp; then
+                  echo '{"log_status":"AVAILABLE_NO_NATIVE_PASS"}' >plan028-external-ci/log-status.json
+                elif grep -Eqi '404|BlobNotFound' plan028-external-ci/error.tmp; then
+                  echo '{"log_status":"BLOB_404_NOT_PRODUCT_FAIL"}' >plan028-external-ci/log-status.json
+                else
+                  echo '{"log_status":"UNAVAILABLE_NOT_PRODUCT_FAIL"}' >plan028-external-ci/log-status.json
+                fi
+                rm -f plan028-external-ci/error.tmp
+              fi
+              break
+            fi
+            sleep 20
+          done
+          echo H1451_INDEPENDENT_GH_METADATA_ONLY_NOT_NATIVE_PASS
+      - name: Persist off-Windows watcher artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan028-h1451-external-ci-${{ github.run_id }}
+          path: plan028-external-ci/
+          if-no-files-found: warn
+          retention-days: 30

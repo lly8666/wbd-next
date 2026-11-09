@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1450,
-  "checkpoint_sha": "b41218d331d7c19ee6248f766bf77d88bed52d62",
+  "sequence": 1451,
+  "checkpoint_sha": "1b60a367697900017ddab8fc9aefdfb1bac58e98",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1450-ISOLATE-WINDOWS-L3-CONTROL-AND-DUT",
-  "current_task": "H1450 user rightly challenges repeated same-topology 1800s Windows host tests. SOURCE724a Action42546907707 original native logs to720.2s show real Windows/Linux UDP RX6698/6771, hosted Runner management route refresh added0/repaired0, normal 60s business and 20/40s independent idleness expected; native step19 still IN_PROGRESS and no final Stop/artifact at checkpoint. Existing GitHub-hosted Windows runner and Windows Wintun/OS route/WFP are SAME host; Linux peer inside same Windows WSL2; no out-of-band fault domain, so cannot separate product vs Windows host/Runner failures. Github actions/runner issue #4632 reports same 404 BlobNotFound Windows-hosted runner failure absent VPN, not causal proof. Freeze any future hosted Windows L3 via native job marker guard. PLAN028 IN_PROGRESS.",
-  "why_now": "The 4th+ Windows 1800s source repeatedly loses terminal receipts at varying times while real app stays healthy through last line; /32 management refresh did not trigger and 20/40s idle witness just follows 60s reporting. Those are NOT validated causes. New architecture must separate independent Linux controller, non-Runner Windows DUT, independent Linux peer and preserve evidence even if DUT dies; repeated hosted Windows tests cannot answer root cause.",
+  "task_id": "PLAN028-M0-H1451-EXTERNAL-LINUX-CI-FORENSIC-SPLIT-DEFAULT",
+  "current_task": "H1451 H1450 guarded Action42550925082 all CI success native-public-two-os SKIPPED; governance42550925135 SUCCESS. Original SOURCE724a Action42546907707 still native step19 IN_PROGRESS and no final 1800/Stop, last user native RX Win6698 Linux6771 through720s. Windows original ghost-route recovery code explicitly handles 0.0.0.0/1 + 128.0.0.0/1; existing physical /0 readback cannot prove true effective route for new Github management services if /1 installed; actual /1 at failure UNKNOWN. New deterministic offline /0-/1-/32 counterexample + Ubuntu-only independent GH run/job watcher exact old run ID/source metadata; no Windows product run or cancel. PLAN028 IN_PROGRESS.",
+  "why_now": "Current hosted Windows/WSL test OS and GitHub Runner share fault domain and fail without original completed logs. Independent Linux GitHub API observer stays separate, plus code-backed prefix demonstration invalidates default-route-only safety assumption. Neither proves actual root without separate Windows DUT and real OS effective-route readback.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "NO additional source-frozen full 1800s on hosted windows-2025. Collect existing Action42546907707 terminal status/logs without rerun or product PASS; migration design docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md. Verify gated workflow cheap/static only, native must SKIP for future [plan028-win-linux-1800]. Before resuming L3 obtain truly independent Windows DUT management+test isolation and Linux independent peer, short external A/B/C cause test with live route selection/OS status and out-of-band counts, only then one full genuine Windows 1800 plus exact owned Stop. Other valid ARM64 eef2 2x1800 and Windows e6aa L1 PASS_SCOPED persist; historic H998 FAIL and Android/physical NOT_RUN. No PLAN029/030.",
+  "next_action": "Collect one Linux-only H1451 GitHub watcher action and cheap offline test, old source724a terminal status/BlobNotFound if eventually available. Do not dispatch hosted Windows 1800s. For real A/B/C short causality obtain independent Windows DUT without GitHub Worker on tested OS and Linux peer outside Windows WSL2; read Windows Find-NetRoute for live service endpoints then qualify Stop and one 1800s. Preserve ARM64 2x1800 PASS_SCOPED, Windows L1 PASS_SCOPED, H998 historical FAIL, Android/physical NOT_RUN; no PLAN029/030.",
   "unverified": true,
   "last_tested_source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1450-720S-COLOCATED-RUNNER-L3-UNQUALIFIED-20261109.json"
+    "docs/evidence/M0/PLAN028-H1451-WIN-SPLIT-DEFAULT-RISK-EXTERNAL-LINUX-FORENSIC-20261109.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1450 architecture STOP: Windows Runner.Worker and tested Wintun share hosted OS, Linux peer shares Windows WSL2, no independent observer. User log 720s Windows/Linux RX6698/6771 healthy, management added/repaired 0; idle parent every20/40 is normal. CI logs/Stop missing after arbitrary 360/600/720/960s, similar independent hosted runner issue #4632 not proof. Freeze future same topology 1800 native, design isolated A controller/B independent Windows DUT/C separate Linux server-client host. PLAN028 IN_PROGRESS, no product changes."
+  "partial_summary": "H1451 separate Ubuntu read-only external CI metadata witness for original Windows L3 stuck Action SOURCE724a; Windows Wintun /1 code presence and offline longest-prefix counterexample show physical 0/0 unchanged is insufficient to conclude new GitHub egress safe; actual failing OS route UNKNOWN. H1450 hosted long native SKIP gate proven; Windows L3 NOT_QUALIFIED, ARM64 scoped pass preserved."
 }

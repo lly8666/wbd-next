@@ -84,6 +84,33 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",flow)
         self.assertIn("[plan028-harness-offline-only]",flow)
 
+    def test_h1451_split_default_route_counterexample(self):
+        from ipaddress import ip_address, ip_network
+        source=(ROOT/"r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go").read_text()
+        self.assertIn('"0.0.0.0/1","128.0.0.0/1"',source)
+        # A preserved physical 0/0 cannot protect a NEW public service IP
+        # from a /1 VPN capture route; older pinned /32 remains physical.
+        routes=[("0.0.0.0/0","physical"),("0.0.0.0/1","wintun"),
+                ("128.0.0.0/1","wintun"),("20.11.1.1/32","physical")]
+        def selected(addr):
+            return max((ip_network(p).prefixlen,iface)
+                       for p,iface in routes if ip_address(addr) in ip_network(p))[1]
+        self.assertEqual(selected("20.11.1.1"),"physical")
+        self.assertEqual(selected("20.11.1.2"),"wintun")
+        self.assertEqual(selected("200.20.30.40"),"wintun")
+        self.assertIn("Find-NetRoute",(ROOT/"docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md").read_text())
+
+    def test_h1451_independent_observer_is_read_only_and_off_windows_host(self):
+        w=(ROOT/".github/workflows/m0-plan028-independent-runner-forensic.yml").read_text()
+        self.assertIn("runs-on: ubuntu-24.04",w)
+        self.assertIn("actions: read",w)
+        self.assertIn("SOURCE_MISMATCH_REFUSE",w)
+        self.assertIn("TARGET_SHA",w)
+        self.assertIn("actions/upload-artifact@",w)
+        self.assertIn("NOT_QUALIFIED",w)
+        for banned in ("/force-cancel","/cancel","taskkill.exe","wsl.exe","New-NetRoute"):
+            self.assertNotIn(banned,w)
+
     def test_plan028_l3_never_uses_its_own_github_hosted_windows_controller(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         job=flow.split("  native-public-two-os:",1)[1]
