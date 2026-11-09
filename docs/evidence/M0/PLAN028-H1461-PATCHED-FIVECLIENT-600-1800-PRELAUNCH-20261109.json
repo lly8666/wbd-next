@@ -3,8 +3,8 @@
   "role_id": "M0",
   "plan": "PLAN028",
   "date": "2026-11-09",
-  "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
-  "result": "NOT_RUN_NEW_PRODUCT_SOURCE_COMMIT_PENDING",
+  "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+  "result": "IN_PROGRESS_PATCHED_BUILD_PASS_TWO_NATIVE_JOBS_NOT_QUALIFIED",
   "artifact_verified": false,
   "old_failed_original": {
     "source_sha": "548a47cc708d82d45e1722540b6677342f3c8c5b",
@@ -68,8 +68,8 @@
     }
   ],
   "current_status": {
-    "new_600": "NOT_RUN",
-    "new_1800": "NOT_RUN",
+    "new_600": "IN_PROGRESS_FINAL_BUSINESS_AND_STOP_NOT_QUALIFIED",
+    "new_1800": "IN_PROGRESS_FINAL_BUSINESS_AND_STOP_NOT_QUALIFIED",
     "official_Windows_1800_L3": "NOT_QUALIFIED",
     "old_SOURCE548_Windows_600": "PASS_SCOPED",
     "ARM64_two_1800": "PASS_SCOPED",
@@ -81,5 +81,23 @@
     "No Windows hosted 1800 rerun",
     "Not a product PASS before real exact clocks and owner Stop",
     "No PLAN029/030"
-  ]
+  ],
+  "actual_source_build": {
+    "source_sha": "66fb6b4454b1ce4297ab04efa20c7f931ff12383",
+    "action": 42578056120,
+    "job": 129030144388,
+    "conclusion": "success",
+    "rust_urgent_fifo_test": "PASS",
+    "three_existing_saturation_fifo_tests": "PASS",
+    "linux_x86_Rust_Go_ISAL_full_build": "PASS",
+    "build_artifact_id": 13656371098
+  },
+  "actual_native_arms": {
+    "native_600_job": 129031068927,
+    "native_1800_job": 129031068987,
+    "both_jobs_status_at_checkpoint": "IN_PROGRESS",
+    "final_600_UDP_overflow_and_Stop": "NOT_QUALIFIED",
+    "final_1800_weaknet_rotation_and_Stop": "NOT_QUALIFIED"
+  },
+  "notes": "H1463 evidence origin/source reconciliation: cursor.last_tested_source currently 66fb; this document's top-level source_sha must exactly match it for governance. Historical source548 is separately pinned in old_failed_original; do not rewrite history or claim post-build app pass."
 }
