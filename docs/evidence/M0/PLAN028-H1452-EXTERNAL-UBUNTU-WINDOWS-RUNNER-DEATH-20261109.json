@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-09",
+  "source_sha": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+  "result": "PASS_SCOPED_INDEPENDENT_CI_METADATA_ONLY_NATIVE_L3_NOT_QUALIFIED",
+  "artifact_verified": true,
+  "original": {
+    "action_id": 42546907707,
+    "job_id": 128934947739,
+    "source": "724a5b74f94b7bd802155368b77bec53279d6c8e",
+    "run_conclusion": "failure",
+    "job_completed_at": "2026-11-09T02:48:19Z",
+    "step19_started_at": "2026-11-09T01:50:47Z",
+    "step19_final_status": "in_progress",
+    "step19_completed_at": null,
+    "original_1800s": "NOT_QUALIFIED",
+    "normal_owned_Stop": "NO_FINAL_RECEIPT",
+    "native_log": "404 BlobNotFound",
+    "post_step_artifact": "ABSENT",
+    "later_cleanup": "PENDING"
+  },
+  "observer": {
+    "action_id": 42552910438,
+    "source_sha": "558e480d427422c348fa149b49bc42f690e9c3f8",
+    "run_conclusion": "success",
+    "platform": "ubuntu-24.04 DIFFERENT HOST",
+    "artifact_id": 13646665009,
+    "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42552910438/artifacts/13646665009",
+    "downloaded_files": [
+      "identity.json",
+      "samples.jsonl",
+      "log-status.json",
+      "README.txt"
+    ],
+    "samples": [
+      {
+        "time": "2026-11-09T02:48:11Z",
+        "run": "in_progress",
+        "native_job": "in_progress",
+        "step19": "in_progress"
+      },
+      {
+        "time": "2026-11-09T02:48:32Z",
+        "run": "completed",
+        "run_conclusion": "failure",
+        "native_job": "completed",
+        "native_conclusion": "failure",
+        "step19": "in_progress",
+        "step19_completed_at": null
+      }
+    ],
+    "log_status": "BLOB_404_NOT_PRODUCT_FAIL",
+    "windows_OS_route_observed": false,
+    "linux_product_business_observed": false,
+    "did_not_cancel_or_rerun": true
+  },
+  "user_original_business": {
+    "elapsed_s": 720.2,
+    "windows_udp_rx": 6698,
+    "linux_udp_rx": 6771,
+    "management_routes_new": 0,
+    "management_routes_repaired": 0
+  },
+  "time_limit": {
+    "source": "GitHub stage19 began 01:50:47Z, actual H1430 app began later",
+    "earliest_possible_720s_sample": "2026-11-09T02:02:47.200Z",
+    "maximum_gap_to_job_failure_seconds": 2731.8,
+    "exact_lost_heartbeat_at": "UNKNOWN",
+    "notes": "Do not claim 45m32s precise disconnect timeout; original app start wallclock unavailable"
+  },
+  "route_mechanism": {
+    "source_file": "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+    "split_routes": [
+      "0.0.0.0/1",
+      "128.0.0.0/1"
+    ],
+    "physical_0_0_still_present_does_not_prove_effective_egress": true,
+    "actual_route_installed_at_failure": "UNKNOWN"
+  },
+  "validated": {
+    "cheap_test_run": 42552910460,
+    "cheap_job": "success",
+    "offline_prefix_counterexample": "PASS_SCOPED",
+    "independent_watcher_test": "PASS_SCOPED",
+    "governance_run": 42552910469,
+    "governance_conclusion": "success",
+    "hosted_windows_long_run_quarantine_action": 42550925082,
+    "native_job": "skipped"
+  },
+  "next": "No hosted Windows 1800s replay. Independently managed Windows DUT, Linux C and off-host A observation needed; use Find-NetRoute for actual live target; short cause test then one full long business and owned Stop.",
+  "statuses": [
+    "Windows L3 NOT_QUALIFIED",
+    "ARM64 eef2 2x1800 PASS_SCOPED",
+    "Windows L1 e6aa PASS_SCOPED",
+    "H998 historical hot MTU FAIL",
+    "Android/physical NOT_RUN",
+    "PLAN028 IN_PROGRESS"
+  ]
+}
