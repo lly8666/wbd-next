@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "commit": "4af9af0725dcd909995daad92968affb71b996d8",
+  "first_action": 42764980969,
+  "conclusion": "FAIL_CHEAP_PREFLIGHT_NO_NATIVE_RUN",
+  "first_failure": "tests.test_m0_wl_native_step_runner H778 tests exact old `name: m0-wl-full-public-normal-direct` literal; conditional dynamic name removed literal",
+  "remedy": "Keep exact original named upload for legacy, create distinct H1506 uploads for loss0/loss30, avoid shared v4 artifact name",
+  "real_Windows5_loss0": "NOT_RUN",
+  "real_Windows5_loss30": "NOT_RUN",
+  "product_change": false,
+  "PLAN028": "IN_PROGRESS"
+}
