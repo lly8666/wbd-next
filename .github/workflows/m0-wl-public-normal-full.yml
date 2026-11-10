@@ -1291,7 +1291,7 @@ jobs:
           # may change default routes. Business packets still use Wintun.
           # This is a run-scoped management /32 lease, NOT full WAL Recover.
           if($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){
-            $managed105=if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){'result/wl-public/crossos1800-management-route-lease.json'}else{'result/wl-public/normal105-management-route-lease.json'}
+            $managed105=if($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')){'result/wl-public/h1549-mixed-management-route-lease.json'}elseif($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){'result/wl-public/crossos1800-management-route-lease.json'}else{'result/wl-public/normal105-management-route-lease.json'}
             & ./tools/m0_wl_gamefec_management_route.ps1 -Action Arm -Receipt $managed105
             if(-not $? -or -not (Test-Path -LiteralPath $managed105)){
               throw 'Normal105 exact runner management underlay pin not owned; refuse product start'
@@ -1511,7 +1511,7 @@ jobs:
             # runner socket may be recreated at a different IP; the receipt
             # is an original exact /32 lease, never a guessed default route.
             if($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){
-              $managed105=if($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){'result/wl-public/crossos1800-management-route-lease.json'}else{'result/wl-public/normal105-management-route-lease.json'}
+              $managed105=if($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')){'result/wl-public/h1549-mixed-management-route-lease.json'}elseif($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){'result/wl-public/crossos1800-management-route-lease.json'}else{'result/wl-public/normal105-management-route-lease.json'}
               if(Test-Path -LiteralPath $managed105){
                 & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore -Receipt $managed105
                 if(-not $? -or (Test-Path -LiteralPath $managed105)){

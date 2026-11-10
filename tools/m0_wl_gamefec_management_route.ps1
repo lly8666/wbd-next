@@ -13,7 +13,12 @@ $crossOsL3=($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1' -and
   $env:WBD_WL_RUNNER_MGMT_PIN -eq '1' -and
   $env:WBD_WL_PUBLIC_MODES -eq 'normal' -and
   $Receipt -eq 'result/wl-public/crossos1800-management-route-lease.json')
-if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative -and -not $crossOsL3){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}
+$mixedWin1Linux4=($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30') -and
+  $env:WBD_WL_RUNNER_MGMT_PIN -eq '1' -and $env:WBD_WL_PUBLIC_MODES -eq 'normal' -and
+  $env:WBD_PLAN028_FIVE_REAL_CLIENTS -eq '0' -and
+  $env:WBD_WL_NATIVE_OUTER_MTU_REQUEST -eq 'default1460' -and
+  $Receipt -eq 'result/wl-public/h1549-mixed-management-route-lease.json')
+if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative -and -not $crossOsL3 -and -not $mixedWin1Linux4){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows'){throw 'HOSTED_WINDOWS_ONLY'}
 $owner="$($env:GITHUB_RUN_ID):$($env:GITHUB_RUN_ATTEMPT)"
 if($owner -notmatch '^\d{8,15}:\d+$'){throw 'OWNER_ID_MISSING'}

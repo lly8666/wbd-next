@@ -29,7 +29,7 @@ class ManagedUnilateral(unittest.TestCase):
    self.assertIn(literal,text)
   # H889 native run caught a PowerShell ParserError only *after* signed
   # NPF/WSL boot: detect truncated regex/quoted guard at cheap preflight.
-  guard="if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative -and -not $crossOsL3){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}"
+  guard="if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative -and -not $crossOsL3 -and -not $mixedWin1Linux4){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}"
   self.assertEqual(text.splitlines().count(guard),1)
   # L3 can only enable the existing runner-owned lease after both exact gates;
   # legacy H888 and GameFEC behavior/route scope remain unchanged.
@@ -39,6 +39,13 @@ class ManagedUnilateral(unittest.TestCase):
     "$env:WBD_WL_PUBLIC_MODES -eq 'normal'"):
    self.assertIn(clause,text)
   self.assertEqual(text.count("$crossOsL3=("),1)
+  # H1549 is solely a same-source signed Windows1+Linux4 exact run.
+  for token in ("$mixedWin1Linux4=(", "WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')",
+    "$env:WBD_PLAN028_FIVE_REAL_CLIENTS -eq '0'",
+    "$env:WBD_WL_NATIVE_OUTER_MTU_REQUEST -eq 'default1460'",
+    "$Receipt -eq 'result/wl-public/h1549-mixed-management-route-lease.json'"):
+   self.assertIn(token,text)
+  self.assertEqual(text.count("$mixedWin1Linux4=("),1)
   self.assertEqual(text.count("MANAGEMENT_ROUTE_SCOPE_REFUSED"),1)
   self.assertEqual(text.count("function Save-Lease($v){"),1)
   self.assertEqual(text.count("function Undo-Lease($v){"),1)

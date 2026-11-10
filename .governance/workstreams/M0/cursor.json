@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1548,
-  "checkpoint_sha": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+  "sequence": 1549,
+  "checkpoint_sha": "faa66cc3ad5c3d5f780a9780384db21d735d2b8a",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1548-WINDOWS1-LINUX4-SHARED-600S-200MS-250-300-DUAL-SCENE",
-  "current_task": "Latest user superseded requirement five Windows same OS: now exactly ONE signed Windows Wintun Alice + FOUR independent WSL2 Linux netns Bob Auto Carol Game2 Dave Game4 Erin Fixed6, ONE source-locked Linux Go/Rust TLS443 shared server, 200ms each way 0/30pct, 600s, outer two-way aggregate true kernel 250-300Mbps, real UDP/TCP and original M4/Stop. New source7370d2 includes one new H1548 mixed original OS supervisor, real 600s traffic tool, offline unit contract and existing Windows workflow two independent Windows VMs. Action42852209993 H1548 cheap source preflight PASS, Linux/Windows Go/Rust builds currently running, original 600s scenes NOT_RUN yet. Old Linux-only x86 0loss333.930 and30loss304.271 scoped passes accepted. Original five-Windows-one-host WFP route conflict historical only, not current user acceptance. PLAN028 IN_PROGRESS.",
-  "why_now": "Original five-Windows Wintun global owner collision unnecessary after user changes scope; tested H1415 one signed Windows and independent Linux real native known-good; extend four Linux separate netns and measure true sum of Windows eth0 IFB and Linux per-veth both directions. Preserve safe owner cleanup, no product changes.",
+  "task_id": "PLAN028-M0-H1549-MIXED-WIN1-LINUX4-HOSTED-RUNNER-MGMT-OWNED-UNDERLAY-SCOPE",
+  "current_task": "Latest user needs ONE signed Windows Wintun Alice plus four WSL2 Linux netns Bob Auto/Carol Game2/Dave Game4/Erin Fixed6, one Go/Rust Linux shared TLS443 server, 200ms each way 0/30 loss separate Windows VM, real kernel full outer 250-300Mbps 600s and original M4/Stop. H1548 Action42852209993 Go/Rust source7370 Linux+Windows build and cheap checks PASS, both native jobs failed before TLS at runner management PS1 line16 MANAGEMENT_ROUTE_SCOPE_REFUSED (loss0 job129958228890, loss30 job129958228970); original app/bandwidth NOT_RUN. H1549 adds exact mixed scene scoped PIN receipt and job Arm/Restore, source/owner fail closed, tests. One new Action [plan028-h1548-win1-linux4-600] on this source to collect without duplicate. Prior x86 Linux original fully scoped source9b260 loss0 333.930, sourceed965 loss30 304.271 PASS; historical Windows5 not required by changed user scope.",
+  "why_now": "Management script CI scope omitted new mixed scenario despite exact runner management pin; first failure before product. Add narrow owner receipt path only, retain foreign route /32 rejection and cleanup.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "COLLECT source7370 Action42852209993 jobs (new H1548 mixed-loss0 and mixed-loss30), check first error from true Windows/WSL 1 Wintun+4 netns native readiness, 5 lease TLS/M4 and true UDP/TCP, 10s kernel real full outer 250..300, six native Stop/WAL and original L2/netem rollback. Do not redispatch same scene until original job/artifact analyzed. If preflight/fixture fail, minimal fix with hard safety; if host saturated label CAPACITY_LIMITED; real product root found must fix source. Physical source switch in this bridge scenario NOT_TRIGGERED, remain PLAN028 IN_PROGRESS.",
+  "next_action": "Collect new one Windows+four Linux Action after H1549 patch loss0/loss30 jobs, first original product readiness/OS failures and 10s actual kernel 250-300; no invented performance until source. If parent management scope now passes, inspect true source-locked mixed app/netns/TLS M4 and Stop. Preserve pre-native fail in H1548 original and any governance static fail separately. PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1549-MIXED-WIN1-LINUX4-ROOT-MGMT-SCOPE-PRE-NATIVE-20261110.json",
     "docs/evidence/M0/PLAN028-H1548-WINDOWS1-LINUX4-200MS-250-300-DUAL-600S-INFLIGHT-20261110.json",
     "docs/evidence/M0/PLAN028-H1547-FOUR-PLATFORM-CURRENT-SOURCE-LINUX300-350-PASS-20261110.json",
     "docs/evidence/M0/PLAN028-H1545-FOUR-PLATFORM-CURRENT-SOURCE-DEFAULT-ASSEMBLY-AUDIT-20261110.json"
@@ -30,5 +31,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1548 user-directed Win1+Linux4 real native shared 600s 200ms both directions, physical loss0/30, outer kernel250-300Mbps in two independent Windows2025 runners Action42852209993 new code source7370d2. Cheap default assembly/contract passed, compile prerequisites running, native still NOT_RUN; preserve prior Linux x86 fully scoped x86 loss0/30 passed and historical Windows5 issue superseded, no unsafe WFP relax. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1549 new H1548 Win1+Linux4 user scope source7370 cheap Windows/Linux Go+Rust PASS; original Action42852209993 failed both jobs BEFORE real native due management route lease scope refused, real 600s 250-300 NOT_RUN. Precisely allow mixed 0/30 with one Wintun, runner pin, normal, MTU1460, unique exact receipt in Arm/Restore. Retain old Linux x86 scoped PASS and user-excluded Windows5. PLAN028 IN_PROGRESS."
 }

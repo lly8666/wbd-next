@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1549",
+  "date_utc": "2026-11-10",
+  "original_scenario_source_sha": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+  "prior_tests": {
+    "action_id": 42852209993,
+    "scenes": [
+      {
+        "scene": "loss0",
+        "job_id": 129958228890,
+        "conclusion": "FAIL_PRE_NATIVE_SCOPE",
+        "initial_source_lock_builds": "PASS",
+        "original_client_linux_server_ready": "NOT_RUN",
+        "actual_600s_250_to_300": "NOT_RUN"
+      },
+      {
+        "scene": "loss30",
+        "job_id": 129958228970,
+        "conclusion": "FAIL_PRE_NATIVE_SCOPE",
+        "initial_source_lock_builds": "PASS",
+        "original_client_linux_server_ready": "NOT_RUN",
+        "actual_600s_250_to_300": "NOT_RUN"
+      }
+    ],
+    "independently_passed_steps": [
+      "Cheap original Go/Rust source tests",
+      "Windows original Go actual compilation",
+      "Linux original Go and Rust dual native release assembly",
+      "Windows Rust and Linux Rust unit tests",
+      "WSL2 signed driver and Hyper-V port firewall setup"
+    ],
+    "first_error": "tools/m0_wl_gamefec_management_route.ps1:16 MANAGEMENT_ROUTE_SCOPE_REFUSED; WBD_PLAN028_MIXED_SCENE=loss0 or loss30 and WBD_WL_RUNNER_MGMT_PIN=1 but narrow management script only allowed GameFEC, Normal105 exact, old crossOsL3.",
+    "original_cleanup": "original owned Hyper-V firewall, guest MAC neighbor and WSL scoped rule cleanup executed after pre-native refusal"
+  },
+  "correction": {
+    "scope_only": "Allow Arm/Restore exclusively when WBD_PLAN028_MIXED_SCENE in loss0/loss30, one Windows Wintun (five-real-windows bypass OFF), runner management pin ON, Normal mode, default1460 outer, exact H1549 receipt file, Windows hosted GITHUB_ACTIONS verified, current source SHA and runner run/attempt owner bound.",
+    "receipt": "result/wl-public/h1549-mixed-management-route-lease.json",
+    "workflow": "First and only one existing native-public-two-os job uses exact receipt for parent Arm and Restore; single source permit, no relaxed WFP or foreign route ownership.",
+    "guards_unchanged": [
+      "one unambiguous physical underlay route",
+      "existing management Runner.Worker/Listener IPv4 TCP connections only",
+      "reject any preexisting/foreign /32",
+      "atomically save intended routes to same-source owned receipt",
+      "exact route/ifindex/NextHop readback",
+      "Restore fail closed for foreign/ambiguous owner",
+      "no 0.0.0.0 wildcard business binding",
+      "no multi-Wintun same-host"
+    ],
+    "unit_contracts": [
+      "tests/test_m0_plan027_managed_unilateral.py",
+      "tests/test_m0_plan028_h1548_win1_linux4_scope.py"
+    ],
+    "real_nic_or_600s_result": "NOT_RUN_BEFORE_NEW_ACTION"
+  },
+  "user_acceptance": "One signed Windows Wintun Alice Normal plus four Linux Bob Auto Carol Game2 Dave Game4 Erin Fixed6 sharing one native Go/Rust Linux TLS443 server; dual full outer kernel 250..300Mbps 600s; separate 0%,30% loss; 200ms per direction, real UDP+TCP, independently authenticated per-client M4 and owner Stop",
+  "historic_results_preserved": {
+    "native_linux_x86_0pct_300_350": "PASS_SCOPED_333_930",
+    "native_linux_x86_30pct_300_350": "PASS_SCOPED_304_271",
+    "windows5_same_OS": "NOT_REQUIRED_USER_CHANGED_SCOPE"
+  },
+  "plan_status": "IN_PROGRESS",
+  "physical_wan": "NOT_RUN",
+  "android": "NOT_RUN"
+}
