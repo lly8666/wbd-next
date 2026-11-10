@@ -47,8 +47,9 @@ LONG_SCENES={
     "budgeted":((0,1,5,15,30),(0,15,50,100,125),(7,7,6,6,5),(79,89,101,107,113)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
-H1520_OUTER_600=MID600 in ("outer100to150-loss0","outer100to150-loss30")
-if MID600 and (MID600 not in ("capacity75","outer100to150-loss0","outer100to150-loss30")
+H1531_OUTER_600=MID600 in ("outer300to350-loss0","outer300to350-loss30")
+H1520_OUTER_600=MID600 in ("outer100to150-loss0","outer100to150-loss30") or H1531_OUTER_600
+if MID600 and (MID600 not in ("capacity75","outer100to150-loss0","outer100to150-loss30","outer300to350-loss0","outer300to350-loss30")
                or FAST_SCENE or os.environ.get("WBD_PLAN028_30M_SCENE")):
     raise SystemExit("600s scenario must be capacity75 or H1520 outer loss0/loss30, not 1800/FAST")
 CAPACITY_STEPS=os.environ.get("WBD_PLAN028_FAST_CAPACITY_STEPS","")
@@ -157,6 +158,8 @@ if MID600:
         LOSS=(physical_loss,)*5
         DELAY=(200,)*5
         RATE=(12,8,6,3,6)
+        if H1531_OUTER_600:
+            RATE=(20,14,10,6,10) if physical_loss==0 else (28,20,14,6,14)
         ROTATION_SECONDS=(97,109,103,117,127)
     else:
         # Historical H1461 75Mbps Alice / four 2Mbps clients unchanged.
@@ -530,9 +533,12 @@ def main():
             "simultaneous_stress_seconds":170 if FAST_SCENE else 590 if MID600 else 1790 if LONG_SCENE else 420,
             "application_load_seconds":180 if FAST_SCENE else 600 if MID600 else 1800 if LONG_SCENE else 430,
             "H1461_600s_capacity75_profile":"EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION" if MID600=="capacity75" else None,
-            "H1520_outer_600_profile":MID600 if H1520_OUTER_600 else None,
-            "H1520_outer_target_mbps_total_both_directions":[100,150] if H1520_OUTER_600 else None,
-            "H1520_inner_base_mbps_each_direction":list(RATE) if H1520_OUTER_600 else None,
+            "H1520_outer_600_profile":MID600 if H1520_OUTER_600 and not H1531_OUTER_600 else None,
+            "H1520_outer_target_mbps_total_both_directions":[100,150] if H1520_OUTER_600 and not H1531_OUTER_600 else None,
+            "H1520_inner_base_mbps_each_direction":list(RATE) if H1520_OUTER_600 and not H1531_OUTER_600 else None,
+            "H1531_outer_600_profile":MID600 if H1531_OUTER_600 else None,
+            "H1531_outer_target_mbps_total_both_directions":[300,350] if H1531_OUTER_600 else None,
+            "H1531_inner_base_mbps_each_direction":list(RATE) if H1531_OUTER_600 else None,
             "H1520_200ms_both_egress_qdiscs":H1520_OUTER_600,
             "drain_seconds":10,"long_scene":LONG_SCENE or None,
             "fast_scene":FAST_SCENE or None,
@@ -600,7 +606,7 @@ def main():
                     "tcp_flows": 0 if ONEWAY_APP else (2 if i < 2 else 0),
                     "probe_hz": 0 if ONEWAY_APP else 2,
                     "burst_ms": 0, "sizes": [[256, 3], [1024, 7]],
-                    "max_packets": 12000000 if LONG_SCENE else 2000000, "deadline_ms": 1000,
+                    "max_packets": 12000000 if (LONG_SCENE or H1531_OUTER_600) else 2000000, "deadline_ms": 1000,
                     "allow_fragmentation": False, "observe_size_classes": True,
                     "observe_independent_flows": i < 2,
                     "warmup_rate_scale": 0.3,
@@ -922,8 +928,8 @@ def main():
         print(("M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE "+FAST_SCENE)
               if FAST_SCENE else ("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
               if LONG_SCENE and not MID600 else
-              ("H1520_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_100_150_COMPLETE "+
-               MID600) if H1520_OUTER_600 else
+              ("H1531_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_300_350_COMPLETE "+MID600) if H1531_OUTER_600 else
+              ("H1520_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_100_150_COMPLETE "+MID600) if H1520_OUTER_600 else
               "H1461_NATIVE_X86_FIVE_CLIENT_REAL_600S_CAPACITY75_COMPLETE" if MID600
               else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
               flush=True)

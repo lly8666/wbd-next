@@ -102,6 +102,18 @@ class H1506OriginalFiveWindowsScope(unittest.TestCase):
         self.assertIn("WBD_PLAN028_WSL_OWNED_SWITCH:",flow)
         self.assertIn("V4_PUBLIC_SHARED_TUN_STOP generation=",(
             TOOLS/"m0_plan028_h1506_windows_five_native_600.py").read_text())
+    def test_h1530_parent_once_owned_source_prepare_and_two_phase_restore(self):
+        child=(TOOLS/"m0_plan028_h1506_windows_five_native_600.py").read_text()
+        parent=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn('alias=OUT/"plan028-owned-alias.json"',child)
+        self.assertNotIn('os_script("Prepare",alias)',child)
+        self.assertIn('rd.get("source_sha")==source',child)
+        self.assertIn('rd.get("old_created")',child)
+        self.assertIn('os_script("Restore",alias)',child)
+        self.assertIn('H1530_FIVE_NATIVE_SOURCE4_ALREADY_RESTORED_BY_EXACT_CHILD',parent)
+        self.assertIn("if($state.stage -eq 'RESTORED')",parent)
+        self.assertIn("contains(github.event.head_commit.message, '[plan028-h1510-win5-loss0]')",parent)
+
     def test_all_new_test_only_python_is_syntax_valid(self):
         for name in ("m0_plan028_h1506_windows_five_native_600.py",
                      "m0_plan028_h1506_win5_real_app.py",

@@ -1939,13 +1939,22 @@ jobs:
             Write-Output 'WL_REAL_GUEST_MAC_NEIGHBOR_OWNER_CLEARED'
           }else{Write-Output 'WL_GUEST_MAC_NEIGHBOR_NOT_CREATED'}
       - name: Restore only PLAN028 owned WSL2 host/guest aliases after original Stop
-        if: always() && (contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') || contains(github.event.head_commit.message, '[plan028-win-physical-auto]') || contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') || (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) || contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]'))
+        if: always() && (contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') || contains(github.event.head_commit.message, '[plan028-win-physical-auto]') || contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') || (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) || contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') || contains(github.event.head_commit.message, '[plan028-h1510-win5-loss0]') || contains(github.event.head_commit.message, '[plan028-h1506-win5-600]'))
         shell: pwsh
         run: |
           $owned='result/wl-public/plan028-owned-alias.json'
           if(Test-Path -LiteralPath $owned){
-            & ./tools/m0-plan028-win-wsl-product-owned-alias.ps1 -Action Restore -Receipt $owned
-            if(-not $?){throw 'PLAN028 exact owned WSL2 source4 restore failed'}
+            $state=Get-Content -LiteralPath $owned -Raw | ConvertFrom-Json
+            if($state.stage -eq 'RESTORED'){
+              if($state.owner -ne 'PLAN028_TEST_ONLY' -or $state.source_sha -ne $env:GITHUB_SHA -or
+                 $state.test_owned_aliases_restored -ne $true -or $state.runner_default_route_unchanged -ne $true){
+                throw 'PLAN028 prior original Windows source4 restore not verified'
+              }
+              Write-Output 'H1530_FIVE_NATIVE_SOURCE4_ALREADY_RESTORED_BY_EXACT_CHILD'
+            }else{
+              & ./tools/m0-plan028-win-wsl-product-owned-alias.ps1 -Action Restore -Receipt $owned
+              if(-not $?){throw 'PLAN028 exact owned WSL2 source4 restore failed'}
+            }
           } else {
             Write-Output 'PLAN028_NO_OWNED_ALIAS_PREPARED_BEFORE_FAILURE'
           }

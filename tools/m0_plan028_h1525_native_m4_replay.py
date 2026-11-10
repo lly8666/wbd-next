@@ -7,12 +7,20 @@ import argparse,json,pathlib,re
 NAMES=("alice","bob","carol","dave","erin")
 NORMAL=("alice","bob","erin")
 def load(p):return json.loads(p.read_text())
-def proof(art,scene,source):
+def proof(art,scene,source,band_min=100):
     plan=load(art/"h1250-matrix-plan.json")
     result=load(art/"h1461-six-hundred-report.json")
-    measured=load(art/"h1520-verdict.json")
-    assert plan["source_sha"]==result["source_sha"]==source
-    assert plan["H1520_outer_600_profile"]=="outer100to150-"+scene
+    measured_file=art/"h1520-verdict.json"
+    measured=load(measured_file) if measured_file.is_file() else None
+    observer=load(art/"h1520-outer-observer.json")
+    assert plan["source_sha"]==result["source_sha"]==observer["original_product_source_sha"]==source
+    assert observer["status"]=="MEASURED_REAL_KERNEL"
+    assert band_min in (100,300)
+    if band_min==300:
+        assert plan["H1531_outer_600_profile"]=="outer300to350-"+scene
+        assert plan["H1531_outer_target_mbps_total_both_directions"]==[300,350]
+    else:
+        assert plan["H1520_outer_600_profile"]=="outer100to150-"+scene
     assert result["duration_seconds"]==600
     server=(art/"h1250-product-server.log").read_text(errors="replace")
     lines=server.splitlines()
@@ -84,20 +92,28 @@ def proof(art,scene,source):
              a.get("who") in NORMAL and reviewed[a["who"]]["fully_auth_server_M4"]):continue
         if k=="RECOVERY_DELIVERY_BELOW_95PCT" and loss==30:continue
         faults.append("unexplained_original_alert_"+str(a))
-    mean=measured["actual_kernel_full_outer_total_both_direction_mbps"]["steady_mean_mbps"]
-    fraction=measured["actual_kernel_full_outer_total_both_direction_mbps"]["within_target_fraction"]
-    band=(100<=mean<=150 and fraction>=.7)
+    samples=[json.loads(x) for x in (art/"h1520-outer-10s.jsonl").read_text().splitlines() if x.strip()]
+    steady=[x for x in samples if x["phase"] in ("sustained","recovery") and x["sample_seconds"]>=8]
+    if len(steady)<28:faults.append("insufficient_original_kernel_outer_10s_receipts")
+    mean=round(sum(x["total_outer_mbps"] for x in steady)/len(steady),3) if steady else 0
+    in_band=sum(band_min<=x["total_outer_mbps"]<=band_min+50 for x in steady)
+    fraction=in_band/len(steady) if steady else 0
+    band=(band_min<=mean<=band_min+50 and fraction>=.7)
+    if not any(x["up_mbps"]>=40 and x["down_mbps"]>=40 for x in steady):
+        faults.append("original_outer_physical_duplex_not_substantive")
     classification=("FAIL_REAL_NATIVE_OWNER_OR_BUSINESS" if faults else
-      "PASS_SCOPED_REAL_NATIVE_600S_BUSINESS_AND_OUTER_100_150" if band else
-      "PASS_SCOPED_REAL_NATIVE_600S_BUSINESS_BUT_OUTER_OVERSHOOT")
+      "PASS_SCOPED_REAL_NATIVE_600S_BUSINESS_AND_OUTER_"+str(band_min)+"_"+str(band_min+50) if band else
+      "PASS_SCOPED_REAL_NATIVE_600S_BUSINESS_OUTER_TARGET_UNMET")
     return {"scene":scene,"source_sha":source,"classification":classification,
-      "real_full_outer_both_directions_mean_mbps":mean,"band_100_150_pass":band,
+      "real_full_outer_both_directions_mean_mbps":mean,"band_target":[band_min,band_min+50],
+      "band_100_150_pass":band if band_min==100 else None,"target_band_pass":band,
+      "steady_10s_kernel_windows":len(steady),"windows_in_target":in_band,
       "server_B_pending_total":sum(len(x) for x in pending.values()),
       "server_B_authenticated_M4_confirmed_total":sum(len(x) for x in confirmed.values()),
       "normal_client_per_generation_original_Health_proof":reviewed,
       "original_udp_tcp_delivery":progress,"all_six_stop":stops,
       "hard_faults":faults,
-      "original_false_reporter_hard_errors_preserved":measured["hard_errors"],
+      "original_false_reporter_hard_errors_preserved":measured["hard_errors"] if measured else None,
       "original_reporter_alerts_preserved":result.get("alerts"),
       "not_real_network_rerun":True}
 if __name__=="__main__":
@@ -106,8 +122,10 @@ if __name__=="__main__":
     ap.add_argument("--scene",required=True,choices=("loss0","loss30"))
     ap.add_argument("--source",required=True)
     ap.add_argument("--out",type=pathlib.Path,required=True)
+    ap.add_argument("--band-min",type=int,choices=(100,300),default=100)
+    ap.add_argument("--strict-band",action="store_true")
     a=ap.parse_args()
-    x=proof(a.art,a.scene,a.source)
+    x=proof(a.art,a.scene,a.source,a.band_min)
     a.out.parent.mkdir(exist_ok=True,parents=True)
     a.out.write_text(json.dumps(x,indent=2)+"\n")
     print("H1525_EXACT_NATIVE_SERVER_HEALTH_M4_REPLAY "+json.dumps({
@@ -116,4 +134,4 @@ if __name__=="__main__":
         "server_B_proof":{n:{"ok":z["fully_auth_server_M4"],
           "count":len(z["B_promotions"])} for n,z in x["normal_client_per_generation_original_Health_proof"].items()},
         "hard_faults":x["hard_faults"],"six_stop":x["all_six_stop"]},sort_keys=True),flush=True)
-    if x["hard_faults"]:raise SystemExit(1)
+    if x["hard_faults"] or (a.strict_band and not x["target_band_pass"]):raise SystemExit(1)

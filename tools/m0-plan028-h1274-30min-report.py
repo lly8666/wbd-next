@@ -146,16 +146,22 @@ def analyze(art,server_log):
     duration=plan["application_load_seconds"]
     assert duration in (600,1800)
     midsix=duration==600
-    h1520=plan.get("H1520_outer_600_profile") in (
-        "outer100to150-loss0","outer100to150-loss30")
+    h1531=plan.get("H1531_outer_600_profile") in ("outer300to350-loss0","outer300to350-loss30")
+    h1520=(plan.get("H1520_outer_600_profile") in (
+        "outer100to150-loss0","outer100to150-loss30")) or h1531
     phase_specs=(H1520_OUTER_PHASES if h1520 else MID600_PHASES) if midsix else PHASES
     if midsix:
         assert plan["simultaneous_stress_seconds"]==590
         assert plan["long_scene"]=="baseline"
         if h1520:
-            assert plan["H1520_outer_target_mbps_total_both_directions"]==[100,150]
-            assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[12,8,6,3,6]
-            loss=30 if plan["H1520_outer_600_profile"].endswith("loss30") else 0
+            if h1531:
+                assert plan["H1531_outer_target_mbps_total_both_directions"]==[300,350]
+                expected=(28,20,14,6,14) if plan["H1531_outer_600_profile"].endswith("loss30") else (20,14,10,6,10)
+            else:
+                assert plan["H1520_outer_target_mbps_total_both_directions"]==[100,150]
+                expected=(12,8,6,3,6)
+            assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==list(expected)
+            loss=30 if (plan["H1531_outer_600_profile"] if h1531 else plan["H1520_outer_600_profile"]).endswith("loss30") else 0
             assert [v["loss_pct"] for v in plan["clients"]]==[loss]*5
             assert [v["oneway_delay_ms"] for v in plan["clients"]]==[200]*5
         else:

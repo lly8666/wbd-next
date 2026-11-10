@@ -48,9 +48,10 @@ def main():
     ap.add_argument("--pid",type=int,required=True)
     ap.add_argument("--art",type=pathlib.Path,required=True)
     ap.add_argument("--scene",choices=("loss0","loss30"),required=True)
+    ap.add_argument("--band-min",type=int,choices=(100,300),default=100)
     a=ap.parse_args()
     a.art.mkdir(exist_ok=True,parents=True)
-    meta={"schema_version":1,"scene":a.scene,"status":"NOT_RUN",
+    meta={"schema_version":1,"scene":a.scene,"target_outer_both_way_mbps":[a.band_min,a.band_min+50],"status":"NOT_RUN",
           "producer":"tc -s -j qdisc show: each of ten real veth netem qdiscs",
           "scope":"both directions, five physical client veths, complete outer IP not inner application"}
     try:
@@ -61,7 +62,9 @@ def main():
             if time.monotonic()>deadline:raise RuntimeError("real original netem fixtures not ready")
             time.sleep(.5)
         plan=json.loads(plan_path.read_text())
-        assert plan["H1520_outer_600_profile"]=="outer100to150-"+a.scene
+        profile="outer"+str(a.band_min)+"to"+str(a.band_min+50)+"-"+a.scene
+        key="H1531_outer_600_profile" if a.band_min==300 else "H1520_outer_600_profile"
+        assert plan[key]==profile,("original exact 600s outer profile mismatch",plan.get(key),profile)
         assert plan["application_load_seconds"]==600
         assert [v["oneway_delay_ms"] for v in plan["clients"]]==[200]*5
         assert [v["loss_pct"] for v in plan["clients"]]==([30 if a.scene=="loss30" else 0]*5)

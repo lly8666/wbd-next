@@ -158,7 +158,7 @@ def main():
     result["binary_sha256"]={k:hashlib.sha256(v.read_bytes()).hexdigest() for k,v in
        {"windows_cli":cli,"windows_engine":OUT/"wbd_engine.dll",
         "linux_server":linux/"wbd-v4-server","linux_engine":linux/"libwbd_engine.so"}.items()}
-    alias=OUT/"h1506-owned-alias.json"
+    alias=OUT/"plan028-owned-alias.json"
     key=OUT/"h1506-route-private.hex"
     users=OUT/"h1506-users-private.json"
     leases=OUT/"h1506-manual-leases-private.json"
@@ -171,10 +171,16 @@ def main():
     all_net=[];VM=[];fail=None
     try:
         physical=True
-        os_script("Prepare",alias)
+        check(os.environ.get("WBD_PLAN028_WSL_OWNED_SWITCH")=="1",
+              "native five Windows must reuse exact parent owned OS source4")
         rd=json.loads(alias.read_text(encoding="utf-8-sig"))
-        check(rd["stage"]=="PREPARED" and rd["host_source_old"]==SRC,
-              "owned OS source not genuinely selected")
+        check(rd.get("owner")=="PLAN028_TEST_ONLY" and
+              rd.get("source_sha")==source and rd.get("stage")=="PREPARED" and
+              rd.get("host_source_old")==SRC and rd.get("guest4")==DEST and
+              rd.get("host_source_new")=="198.19.254.9" and
+              rd.get("old_created") and rd.get("guest_created"),
+              "native five Windows parent original source receipt unverified")
+        print("H1530_REUSE_SINGLE_ORIGINAL_SOURCE4_PREPARE "+alias.name,flush=True)
         key.write_text(os.urandom(32).hex()+"\n")
         users.write_text(json.dumps({name:"h1506-real-user-"+name for name in NAMES})+"\n")
         leases.write_text(json.dumps({name:INNER[i]+"/32" for i,name in enumerate(NAMES)})+"\n")
