@@ -45,6 +45,18 @@ def kill_native_child_tree(child):
     except subprocess.TimeoutExpired:pass
 
 def native_batch_deadline(env):
+    # Exactly one signed Windows Wintun plus four independent Linux
+    # client namespaces, one shared original TLS443 Go/Rust server.
+    # Never inherit the 320s single-Normal stopwatch for a TRUE 600s
+    # five-client mixed OS soak. Its only owner is the selected runner
+    # with exact underlay management lease, default outer MTU, and no
+    # multi-Windows GUI singleton bypass. Not an 1800s qualification.
+    if (env.get("WBD_PLAN028_MIXED_SCENE") in ("loss0","loss30") and
+        env.get("WBD_WL_RUNNER_MGMT_PIN")=="1" and
+        env.get("WBD_WL_PUBLIC_MODES")=="normal" and
+        env.get("WBD_PLAN028_FIVE_REAL_CLIENTS")=="0" and
+        env.get("WBD_WL_NATIVE_OUTER_MTU_REQUEST")=="default1460"):
+        return 940
     if env.get("WBD_PLAN028_WIN_LINUX_600")=="1":
         if env.get("WBD_PLAN028_WIN_LINUX_L3")!="1":
             raise ValueError("600s Windows+Linux trial must keep L3 original/route contract")

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1551",
+  "source_sha": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+  "date_utc": "2026-11-10",
+  "scenario": "one signed Windows native Wintun Alice + four true Linux WSL2 netns Bob/Carol/Dave/Erin and one Go/Rust Linux shared server, real 600s, physical 200ms each direction, 0 or 30% physical loss, kernel 250..300Mbps full two-way combined",
+  "original_runner_source": "b6287d04b31e776f4a59e469cf77b312628445a8",
+  "ongoing_original_workflow": {
+    "run_id": 42857999491,
+    "status": "IN_PROGRESS_AT_PATCH_TIME",
+    "builds": "Linux Rust/Windows Rust/Windows Go/source-locked Linux product all succeeded",
+    "native_windows_jobs": [
+      129979722757,
+      129979722785
+    ],
+    "real_600s_and_kernel_outer": "NOT_YET_VERIFIED"
+  },
+  "first_future_bound_discovered_source": "tools/m0_wl_native_step_runner.py native_batch_deadline falls through Normal selected -> 320s when mixed-scene has WIN_LINUX_600=0 and WIN_LINUX_L3=0; Windows separate whole-step watchdog picks RUNNER_MGMT_PIN 780s, insufficient reliably for entire true five-client netns 600s startup and Stop. This is harness time-budget bug, not product packet failure.",
+  "targeted_correction": {
+    "native_owning_pid_deadline_seconds": 940,
+    "outer_windows_whole_WSL2_guard_seconds": 1180,
+    "exact_scoped_conditions": [
+      "WBD_PLAN028_MIXED_SCENE is loss0 or loss30",
+      "WBD_WL_RUNNER_MGMT_PIN=1",
+      "WBD_WL_PUBLIC_MODES=normal",
+      "WBD_PLAN028_FIVE_REAL_CLIENTS=0",
+      "WBD_WL_NATIVE_OUTER_MTU_REQUEST=default1460"
+    ],
+    "legacy_guards_unmodified": true,
+    "original_wal_route_and_auth_protection_unmodified": true,
+    "code_paths": [
+      "tools/m0_wl_native_step_runner.py",
+      ".github/workflows/m0-wl-public-normal-full.yml"
+    ],
+    "new_negative_and_positive_tests": "tests/test_m0_plan028_h1548_win1_linux4_scope.py",
+    "claim": "TEST_HARNESS_REPAIRED_ONLY_NATIVE_600S_UNQUALIFIED_UNTIL_ACTUAL_JOB"
+  },
+  "historical_linux_passes": {
+    "loss0_outer_333_930": "PASS_SCOPED_LEGACY_SOURCE",
+    "loss30_outer_304_271": "PASS_SCOPED_SOURCE_ED965"
+  },
+  "windows_five_same_OS": "OUT_OF_USER_ACCEPTANCE_SCOPE",
+  "PLAN028": "IN_PROGRESS",
+  "physical_cross_machine": "NOT_RUN",
+  "android": "NOT_RUN"
+}

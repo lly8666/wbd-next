@@ -1160,7 +1160,7 @@ jobs:
           $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
           $gameSingle=($env:WBD_WL_PUBLIC_MODES -like 'game*')
           $env:WBD_WL_GAME_FEC_RESCUE=if($env:WBD_WL_PUBLIC_MODES -match '^game[24]-fec$'){'1'}else{'0'}
-          $wholeLimit=if($env:WBD_PLAN028_WIN_LINUX_600 -eq '1'){1280}elseif($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}
+          $wholeLimit=if($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')){1180}elseif($env:WBD_PLAN028_WIN_LINUX_600 -eq '1'){1280}elseif($env:WBD_PLAN028_WIN_LINUX_L3 -eq '1'){2600}elseif($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}
           $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,[string]$wholeLimit,$watchdogDone) -PassThru
           if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
           # H1436: Start-Process can return a valid Process object even when

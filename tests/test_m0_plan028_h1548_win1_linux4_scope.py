@@ -63,6 +63,25 @@ class Plan028MixedNativeWinLinux(unittest.TestCase):
             self.assertIn(clause,text)
         self.assertNotIn('route-mode","all-through"',text)
         self.assertNotIn('0.0.0.0",45910',APP.read_text())
+    def test_600s_mixed_owner_deadline_is_not_single_normal_320s(self):
+        from tools.m0_wl_native_step_runner import native_batch_deadline
+        base={"WBD_PLAN028_MIXED_SCENE":"loss0",
+              "WBD_WL_RUNNER_MGMT_PIN":"1",
+              "WBD_WL_PUBLIC_MODES":"normal",
+              "WBD_PLAN028_FIVE_REAL_CLIENTS":"0",
+              "WBD_WL_NATIVE_OUTER_MTU_REQUEST":"default1460"}
+        for scene in ("loss0","loss30"):
+            self.assertEqual(native_batch_deadline({**base,
+                            "WBD_PLAN028_MIXED_SCENE":scene}),940)
+        for key,value in (("WBD_WL_RUNNER_MGMT_PIN","0"),
+                          ("WBD_WL_PUBLIC_MODES","game4"),
+                          ("WBD_PLAN028_FIVE_REAL_CLIENTS","1"),
+                          ("WBD_WL_NATIVE_OUTER_MTU_REQUEST","legacy1400"),
+                          ("WBD_PLAN028_MIXED_SCENE","unsupported")):
+            self.assertEqual(native_batch_deadline({**base,key:value}),320)
+        wf=YAML.read_text()
+        self.assertIn("$wholeLimit=if($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')){1180}",wf)
+        self.assertIn("m0_wl_native_step_runner.py tools/m0_plan028_h1548_one_windows_four_linux_600.py",wf)
     def test_one_source_two_independent_windows_runner_scenes(self):
         text=YAML.read_text()
         self.assertEqual(text.count("  native-public-two-os:"),1)
