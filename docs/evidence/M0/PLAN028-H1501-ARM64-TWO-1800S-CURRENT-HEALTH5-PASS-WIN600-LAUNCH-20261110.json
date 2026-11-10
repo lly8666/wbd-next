@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "base_commit_sha": "3cbe6032b0786ffc280b282483be15ea342a0046",
+  "current_product_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "native_arm64_long_originals": [
+    {
+      "id": "H1498",
+      "action": 42738333653,
+      "artifact": 13729227737,
+      "original_zip_sha256": "2bfbf211c516b0991f4791e9b504250fdaff7a13f81ea20a518368add42b3fef",
+      "zip_crc": "PASS",
+      "source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+      "seconds": 1800,
+      "underlay_loss": [
+        0,
+        1,
+        5,
+        15,
+        30
+      ],
+      "verdict": "PASS_SCOPED_TRUE_NATIVE_1800S_HETEROGENEOUS",
+      "verified_normal_B_promotions": 58,
+      "B_unproven": 0,
+      "zero_damage_clients_unique_loss": 0,
+      "Erin_30pct_unique_missing": {
+        "uplink": 2982,
+        "downlink": 3091
+      },
+      "Carol_5pct_unique_missing": {
+        "uplink": 6964,
+        "downlink": 6948
+      },
+      "all_six_original_Stop": true,
+      "verdict_errors": []
+    },
+    {
+      "id": "H1499",
+      "action": 42738333604,
+      "artifact": 13729287748,
+      "original_zip_sha256": "12eb98c02bbc80a7d1e6d938765821fdef227673a7a558239a553d3c52e861ac",
+      "zip_crc": "PASS",
+      "source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+      "seconds": 1800,
+      "underlay_loss": [
+        0,
+        0,
+        1,
+        1,
+        5
+      ],
+      "verdict": "PASS_SCOPED_TRUE_NATIVE_1800S_BASELINE",
+      "verified_normal_B_promotions": 69,
+      "B_unproven": 0,
+      "zero_damage_clients_unique_loss": 0,
+      "Carol_1pct_unique_missing": {
+        "uplink": 176,
+        "downlink": 149
+      },
+      "all_six_original_Stop": true,
+      "verdict_errors": []
+    }
+  ],
+  "current_windows_600": {
+    "at_commit": "NOT_RUN_PENDING_AUTOMATIC_PUSH_ACTION",
+    "workload_seconds": 600,
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "required_commit_message_tags": [
+      "[plan028-win-linux-co-client]",
+      "[plan028-win-linux-600]"
+    ],
+    "product_source": "NEW_GITHUB_SHA_NOT_OLD_H1457_SOURCE548",
+    "physical_client": "original signed Npcap 1.88 + Wintun 0.14.1 Windows Go TLS/Rust on windows-2025",
+    "sibling_client": "independent account native WSL2 Linux Rust TUN, same TLS443 server",
+    "hard_gates": [
+      "each client genuine UDP >=4167 and receive ratio >=97pct",
+      "max 1500ms echo/reverse gaps",
+      "both OS TCP >=9 rounds",
+      "Windows resource >=4 samples",
+      "route management >=20 refreshes",
+      "Windows exact owned Stop then Linux sibling real UDP+TCP survives",
+      "Linux/server Stop Windows WAL0 WSL2 bridge+default restoration and Npcap cleanup"
+    ],
+    "extra_controls": [
+      "separate clean windows-2025 750s no native drivers",
+      "separate Ubuntu offhost GitHub job lifecycle witness"
+    ],
+    "scope_warning": "previous H1457 true rate 9.3pps, not 100pps or sustained high-PPS",
+    "Windows_1800_independent_DUT": "NOT_QUALIFIED_NO_SEPARATE_MANAGED_DEVICE"
+  },
+  "old_H1457_original_windows600": "PASS_SCOPED_DIFFERENT_SOURCE_RETAINED",
+  "old_H1492_Erin30_health1": "FAIL_12_B_UNPROVEN_RETAINED",
+  "H998_hot_MTU": "FAIL_RETAINED",
+  "Android_physical": "NOT_RUN",
+  "new_product_change": false,
+  "PLAN028": "IN_PROGRESS"
+}

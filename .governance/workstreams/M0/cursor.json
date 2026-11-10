@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1500,
-  "checkpoint_sha": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "sequence": 1501,
+  "checkpoint_sha": "3cbe6032b0786ffc280b282483be15ea342a0046",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1500-ARM64-ONE-HEALTH5-BUILD-TWO-TRUE-1800S-ACTIONS",
-  "current_task": "H1500 H1497 ARM64 original Go SOURCE57b unchanged and new Rust HealthClock client cold5 compile once Action42737661070 artifact13726859228 ZIP SHA528821... CRC PASS, native ISA-L exact, three real ELF183 SHA, ARM Rust one deterministic L0 PASS. Build PRODUCT source1211fd51...; compile no network. New H1498 H1499 each different Action native ARM64 real1800 scenario hetero vs healthy low loss, both same exact frozen build ZIP and new strict original client-port/server-Health B correlation preflight using old H1493 original ZIP. At commit new 1800 Actions NOT_RUN pending auto trigger. Prior H1496 x86 30pct 180s Erin B proof2/2 zero timeout PASS_SCOPED; original H1492 Erin 12 B_UNPROVEN128.9s FAIL retained. Windows independent managed 1800 and Android/physical open. PLAN028 IN_PROGRESS.",
-  "why_now": "Native original x86 highloss Health5 short L0+two B proofs PASS, one real native ARM64 product build now fully qualified and immutable; independently parallel two full 1800s scenes without repeat builds is fastest rigorous new-source L3 validation.",
+  "task_id": "PLAN028-M0-H1501-ARM64-TWO-1800-PASS-WIN600-CURRENT-HEALTH5",
+  "current_task": "H1501 original H1498/H1499 two ARM64 native Health5 source1211fd51 1800s fiveclient Actions42738333653/42738333604 both completed/success raw ZIP CRC PASS SHA2bfb/12eb, strict original gated PASSED: 58/69 exact authenticated Normal B, B_UNPROVEN=0, all six Stop; H1498 Erin30 residual up/down2982/3091 and Carol5 up/down6964/6948 honestly retained. No ARM repeat. Trigger one current-source signed Npcap/Wintun Windows original Go TLS/Rust+independent WSL2 Linux native TUN 600s full actual UDP/TCP/Stop via existing workflow + two controls, commit tokens [plan028-win-linux-co-client] [plan028-win-linux-600]. New Windows at commit NOT_RUN. PLAN028 IN_PROGRESS.",
+  "why_now": "User asks ARM long in parallel with Windows600; ARM long already complete and raw verified, so activate proven Windows600 signed native workflow on NEW Health5 source, not re-run ARM or reuse H1457 older source.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1498/H1499 two automatically triggered real Actions. First confirm original old H1493 ZIP exact 69 B native positive control and immutable H1497 ARM three ELF SHA/CRC preflight, then each actual 1800s source1211fd51 fiveclient service/auth/rotation/Stop/UDP, fail on B_UNPROVEN or long active gap and zero-damage UDP lost. Do not duplicate these long scenes; preserve original H1492 FAIL. If error in offline gate, analyze original artifact and fix reporter ONLY without rerunning native. Then Windows independent managed DUT Npcap/Wintun L3 and remaining hot-MTU/Android physical classification.",
+  "next_action": "Collect new Windows m0-wl-public-normal-full workflow Action from current commit. Require Linux-source-locked-public exact SHA and Windows original Npcap/Wintun new SHA, genuine 600s two-account independent WSL2 TUN clients, each >=4167 unique UDP and >=97pct echo, maxgap<1500ms, TCP>=9, resources>=4, management refresh>=20, Windows Stop Linux UDP/TCP survives, full server/WSL Stop, Wintun WAL0 Npcap clean bridge/default restore. Collect clean Windows750 and Ubuntu offhost witness if started; source/runner failure separate from product FAIL. Do not duplicate long tests; current ARM H1498/H1499 full1800 PASS_SCOPED retained; Windows independent DUT full1800 NOT_QUALIFIED, Android/physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1500-H1497-NATIVE-ARM64-ONEBUILD-H1498-H1499-1800-PARALLEL-20261110.json",
-    "docs/evidence/M0/PLAN028-H1497-H1495-OFFLINE-H1496-X86-ERIN30-HEALTH5-PASS-20261110.json"
+    "docs/evidence/M0/PLAN028-H1501-ARM64-TWO-1800S-CURRENT-HEALTH5-PASS-WIN600-LAUNCH-20261110.json",
+    "docs/evidence/M0/PLAN028-H1500-H1497-NATIVE-ARM64-ONEBUILD-H1498-H1499-1800-PARALLEL-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1500 source1211fd51 frozen ARM original Go unchanged/new Rust native ISA-L compiled ONCE H1497 Action42737661070 artifact13726859228 sha528821 ZIP CRC_PASS ARM L0 PASS and all three ELF183 SHA exact; two independent native ARM64 H1498/H1499 1800s hetero30 and healthy low loss will reuse identical bundle and first replay original H1493 old source positive control for new Health-B exact port matcher. New source 1800 NOT_RUN pending Actions; former source57b H1492 Erin30 12 B_UNPROVEN true FAIL, candidate short x86 H1496 true proof2/2 PASS only. Windows independent and Android/physical remain unqualified; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1501 collected 2 real native ARM64 Health5 1800 full original ZIP CRC/SHA PASS: H1498 58 verified B,0 unproved, Erin residual2982/3091, strict PASS; H1499 69 B,0 unproved, strict PASS, six Stop each. User wants signed Windows600: existing historical successful full native workflow trigger on current new source using two exact commit tags, clean Windows750 + Ubuntu witness. New Windows not yet run until push. PLAN028 IN_PROGRESS."
 }
