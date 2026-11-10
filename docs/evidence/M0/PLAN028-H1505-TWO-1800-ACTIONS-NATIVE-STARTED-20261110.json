@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "wrapper_commit_sha": "b11271784fc8836c47a1752371f47915b96f3d8e",
+  "frozen_product_source_sha": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "actual_started_native_1800": [
+    {
+      "id": "H1505",
+      "run_id": 42754002932,
+      "workflow": ".github/workflows/m0-plan028-h1505-arm64-1800-budgeted-fiveclient.yml",
+      "status": "IN_PROGRESS_TRUE_NATIVE_ARM64_PRODUCT_SCENE",
+      "preflight": "FROZEN_NATIVE_ISAL_ELF_SHA_and_OLD_POSITIVE_CONTROL_PASSED",
+      "actual_original_app_verdict": "NOT_YET_REPORTED",
+      "VM": "separate_ubuntu_arm64_runner"
+    },
+    {
+      "id": "H1504",
+      "run_id": 42754003143,
+      "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+      "status": "IN_PROGRESS_WINDOWS_GO_BUILD_AFTER_LINUX_AND_WINDOWS_RUST_UNIT_PASS",
+      "preflight": "CHEAP_WORKFLOW_AND_LINUX_WINDOWS_RUST_UNIT_PASSED",
+      "signed_driver_1800": "NOT_YET_STARTED",
+      "actual_original_app_verdict": "NOT_YET_REPORTED",
+      "VM": "independent_windows2025_with_its_own_WSL2_Linux"
+    }
+  ],
+  "prior_original_actions": {
+    "Win600": 42743477869,
+    "Win600_PASSED_SCOPE": true,
+    "ARM64_H1498": 42738333653,
+    "ARM64_H1499": 42738333604,
+    "ARM64_prior_two_1800_PASSED_SCOPE": true
+  },
+  "first_attempt_preflight_failure": {
+    "run_id": 42753442675,
+    "classification": "FAIL_TEST_WIRING_PRE_NETWORK",
+    "failed_tests": 3,
+    "real_Windows_native_network": "NOT_RUN"
+  },
+  "capacity_guards": {
+    "Linux": "10s host mean85% maxcore97% MemAvailable<0.75GiB for three samples SIGINT original cleanup",
+    "Windows": "Win32 host total85pct or freeRAM<0.75GiB for six consecutive 5s samples",
+    "if_trigger": "CAPACITY_LIMITED_NOT_PRODUCT_PASS"
+  },
+  "required_final_evidence": [
+    "exact SOURCE SHA/CRC and native original signed drivers",
+    "actual1800 elapsed and multi-stage real unique UDP/TCP",
+    "per user/generation AEAD authenticated B and no B_UNPROVEN",
+    "CPU/memory and app gaps and physical qdisc queue",
+    "all exact Stop and product / runner owned restoration",
+    "Windows 1950s clean control and independent Ubuntu GH watcher, witness not packet oracle"
+  ],
+  "condition_watch": {
+    "automation_id": "Automation_37d8e992a1c881918732000184566083",
+    "enabled": true,
+    "frequency": "HOURLY",
+    "only_report_after_both_final": true,
+    "no_rerun": true
+  },
+  "limits": [
+    "Windows WSL2 peer on hosted same VM, not separate managed Windows DUT",
+    "Windows underlay loss deliberately not injected on management interface; Linux independent real 0/1/5/15/30% loss covers representative impairment",
+    "Previous H1492 original 30pct B_UNPROVEN and H998 hot MTU failures retained",
+    "PLAN028 IN_PROGRESS"
+  ]
+}
