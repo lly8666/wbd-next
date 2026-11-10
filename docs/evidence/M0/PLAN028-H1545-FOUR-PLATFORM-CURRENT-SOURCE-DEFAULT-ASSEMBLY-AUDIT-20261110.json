@@ -80,5 +80,44 @@
     "WAN": "NOT_RUN",
     "Android": "NOT_RUN"
   },
-  "no_unsafe_global_default_changes": true
+  "no_unsafe_global_default_changes": true,
+  "source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+  "current_runners": {
+    "arm64": {
+      "run_id": 42825317709,
+      "job_id": 129860985818,
+      "status": "PASS_SCOPED_BUILD_ONLY",
+      "evidence": "H1546_CURRENT_ARM64_REAL_ORIGINAL_GO_X2_AND_RUST_NATIVE_ISAL_BUILD_PASS_NO_IO"
+    },
+    "windows_go": {
+      "run_id": 42825317732,
+      "job_id": 129861350783,
+      "status": "PASS_SCOPED_COMPILE_AND_OFFLINE_UNIT",
+      "true_units": [
+        "TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots",
+        "TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots"
+      ]
+    },
+    "linux_rust": {
+      "run_id": 42825317732,
+      "job_id": 129861350818,
+      "status": "PASS_UNIT"
+    },
+    "windows_rust": {
+      "run_id": 42825317732,
+      "job_id": 129861350836,
+      "status": "PASS_UNIT"
+    },
+    "default_source_assembly": {
+      "run_id": 42825317732,
+      "job_id": 129860985224,
+      "status": "PASS_SCOPED_STATIC"
+    },
+    "linux30_native": {
+      "run_id": 42825317650,
+      "job_id": 129860984872,
+      "status": "IN_PROGRESS_AT_RECORD_TIME"
+    }
+  },
+  "governance": "Earlier cursor evidence_refs=12 exceeds max_cursor_refs=8. Only current exact-source evidence retained in cursor; old Git evidence/devlogs unchanged."
 }

@@ -4,29 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1545,
-  "checkpoint_sha": "304ca72bac7dfa08b94e9fbc28f40e27fc61b928",
+  "sequence": 1546,
+  "checkpoint_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1545-FOUR-PLATFORM-DEFAULT-SOURCE-AUDIT-WINDOWS-TESTS-CURRENT-ARM64",
-  "current_task": "User asks re-audit recent fixes default on x86/ARM64/Linux/Windows. H1545 current source audit found seven Windows Go bridge/owner/native account tests existed but were omitted from active prepare_windows_wiring.py 112 canonical source+17 extras; patched six current windows test files into source-locked EXTRA_BRIDGES and H1381 cmd native duo test into EXTRA_CLI_TESTS; Windows default Go preflight now compiles actual windowsownerlease and windowsclient test packages and executes offline duo owner slot unit (besides existing 5 slot). Default audit checks all 94 current Windows overlay Go files covered except dangerous plan020_local_mss_windows_test.go global MSS override; ci preroute OS harness excluded. ARM original frozen Action uses old140a and cannot prove main; H1546 distinct native ARM64 current Github.SHA Go x2/Rust ISA-L BUILD_ONLY real ubuntu ARM action added. x86/arm current Go copies full v4productcli, realityfront, 11 H1285 fakeTCP pinned source; Rust always real current code and pinned ISA-L, Linux 0%333.930 scoped PASS. H1541 last h1544 unit Game2 PASS and Game465535 false neg fixed; H1541 one real loss30 600s pending new source/path trigger; Windows full five route/WFP ownership real fail retained. PLAN028 IN_PROGRESS.",
-  "why_now": "Second audit locates actual omitted Windows test source/CI default coverage and old historical ARM64 binary validator mistaken for current; build provenance must be source SHA, not historical action name. Existing Go source fixes remain current by default, no widening ownership or feature defaults.",
+  "task_id": "PLAN028-M0-H1546-ARM64-WINDOWS-REAL-BUILD-AND-BOUNDED-GOVERNANCE-REFS",
+  "current_task": "H1545 current source ed965 actual ARM64 native Go client/server plus Rust ISA-L ELF183 SHA BUILD-ONLY PASS Action42825317709, Windows source Go ownerlease/windowsclient test compilation and two+five owner OS events PASS job129861350783, Windows/Linux Rust unit and four-platform current-source static audit PASS Action42825317732. H1541 source ed965 30loss 600s running Action42825317650, no verdict yet. Governance role/structure failed because cursor evidence_refs=12 while policy max8; H1546 keeps just one current-source H1545 exact evidence ref, old docs/evidence and devlogs untouched. Original five Windows WFP/route multi-owner fails, ARM network IO NOT_RUN; PLAN028 IN_PROGRESS.",
+  "why_now": "Default x86/ARM64/Linux/Windows source build PASS scoped; governance failure is bounded cursor reference violation, not a product failure.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Verify H1545 main cheap source coverage 94 Windows files plus 11 Go H1285 hashes and real Windows Go ownerlease/windowsclient test compile, dual owner slot execution, Windows/ARM Rust source; verify unique H1546 ARM64 current Go+Rust ISA-L ELF183 SHA256 build-only Action and H1541 sole loss30 600s real original Go native M4, Game2/4, five bidirectional UDP/TCP, six Stop, tc kernel outer300-350. On concrete compile/test FAIL fix earliest minimal cause without duplicating workloads. Maintain PLAN028 IN_PROGRESS and native Windows five NOT_QUALIFIED.",
+  "next_action": "Collect real H1541 loss30 original 600s source ed965 all 5 account native M4, Game2 cold per generation, Game4 hot, 300-350 actual kernel outer bandwidth, bidirectional UDP/TCP, six native Stop. Verify default Win Linux final builds and governance structure recheck. No duplicate dispatch. Windows multi-Wintun WFP route still FAIL and ARM64 business IO NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "304ca72bac7dfa08b94e9fbc28f40e27fc61b928",
+  "last_tested_source": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1545-FOUR-PLATFORM-CURRENT-SOURCE-DEFAULT-ASSEMBLY-AUDIT-20261110.json",
-    "docs/evidence/M0/PLAN028-H1544-H1541-ORIGINAL-GO-VALID-PORT65535-TEST-CORRECTION-20261110.json",
-    "docs/evidence/M0/PLAN028-H1543-TRUE-H1541-FIRST-PRE-NATIVE-SHELL127-20261110.json",
-    "docs/evidence/M0/PLAN028-H1541-LINUX30-GAME2-CROSS-COLD-COHORT-DEFAULT-SOURCE-AUDIT-20261110.json",
-    "docs/evidence/M0/PLAN028-H1540-SOURCE-LOCK-LINUX-M4-EARLY-DATA-ASSEMBLY-CORRECTION-20261110.json",
-    "docs/evidence/M0/PLAN028-H1537-LINUX-333-930-PASS-303-027-GAME4-UNPROVEN-WINDOWS-ROUTE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1532-WIN-SINGLE-OWNER-LINUX-OUTER300-350-DUAL-RUNNER-20261110.json",
-    "docs/evidence/M0/PLAN028-H1527-LINUX-100-150-600S-LOSS30-PASS-LOSS0-OVERSHOOT-WINDOWS-ALIAS-20261110.json",
-    "docs/evidence/M0/PLAN028-H1522-LINUX-OUTER100-150-DUAL-ACTIONS-WINDOWS-FAIL-20261110.json",
-    "docs/evidence/M0/PLAN028-H1519-SOURCE9B260-WIN5-SOURCE-LOCKED-INFLIGHT-20261110.json",
-    "docs/evidence/M0/PLAN028-H1516-SOURCE0D3-WIN-ASSEMBLY-PIN-COLD-REGRESSION-20261110.json",
-    "docs/evidence/M0/PLAN028-H1515-WIN5-SOURCEADD537-EARLIEST-CLIENT-GUARDS-20261110.json"
+    "docs/evidence/M0/PLAN028-H1545-FOUR-PLATFORM-CURRENT-SOURCE-DEFAULT-ASSEMBLY-AUDIT-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -39,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1545 second audit all four: latest Windows product compiled but 7 test-only source overlays absent actual original-Go compiled test package; patched test-only source-locked extras and preflight compile, audited 94 current Windows overlays (except dangerous MSS1420 init). Old ARM frozen source140a not latest; new current Git SHA ARM64 Ubuntu native build+Go/Rust ISA-L provenance action, build-only. Linux x86+arm original all-current Go and H1285 11files; H1541 source Game2 cold pairing unit passed, corrected Game4 valid65535 test, one loss30 strict original 600s targeted; previous loss0 333.930 PASS. Windows five route/WFP unresolved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1546 source ed965 ARM64 actual ARM runner current Go2+Rust ISA-L native compile PASS build only; Windows compiled all sourced tests, two+five kernel owner events PASS; x86/Windows Rust and default source guard PASS. H1541 real Linux30 600s running. Governance refs12 exceeded max8 fixed keeping single current-source evidence; old evidence preserved. PLAN028 IN_PROGRESS."
 }
