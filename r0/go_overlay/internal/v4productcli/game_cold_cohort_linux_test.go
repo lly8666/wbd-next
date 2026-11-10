@@ -61,8 +61,15 @@ func TestPLAN028OriginalGame4ColdPortCohortAndForeignScope(t *testing.T){
     foreign.ServerPort=444
     k,err=originalGameColdFlowIdentity(key,2,foreign)
     if err!=nil||k==group{t.Fatal("different server TCP destination was admitted into group")}
+    // Port 65535 is legitimate for the LAST lane when the base and
+    // all preceding lanes remain within 1..65535. The OUT-OF-RANGE
+    // case must instead use 65535 for lane2 of a four-lane group.
+    edge,e:=originalGameColdFlowIdentity(key,4,gameColdTestFlow(65535))
+    if e!=nil||edge.firstClientPort!=65532 {
+        t.Fatalf("valid last original Game4 lane port=65535 incorrectly rejected: %+v %v",edge,e)
+    }
     for _,tc:=range []struct{lanes,id uint8;port uint16}{
-        {2,0,41000},{2,3,41000},{4,2,1},{4,4,65535},{3,1,44000},
+        {2,0,41000},{2,3,41000},{4,2,1},{4,2,65535},{3,1,44000},
     }{
         different:=key;different.Lanes=tc.lanes
         if _,err:=originalGameColdFlowIdentity(different,tc.id,gameColdTestFlow(tc.port));err==nil{

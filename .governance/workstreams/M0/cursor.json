@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1543,
-  "checkpoint_sha": "6ad468d714a22a86e0cf1fb94e5933b9c3583dcf",
+  "sequence": 1544,
+  "checkpoint_sha": "f7ba28fafa280ca32026944ce9f47ba2fe36a665",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1543-H1541-BASH127-PRENATIVE-SHELL-FIX",
-  "current_task": "H1541 first real-target Action42809134116 source6ad468d Go pinned 11-file pre-detach original unit PASS, frozen Rust .so SHA PASS, but workflow shell exited 127 at line after tee because standalone literal 'h1541-original-Go-v4productcli.log' inserted; product Game2 Go test, builds and real 600s NOT_RUN. H1543 corrects exact single shell line, retains artifact log path, enforces in default CI static audit tests. Main product Game2 candidate grouping+ARM default source unchanged from 0c02. Historical H1540 true Game4 server hot5 PASS and Carol Game2 false grouped traffic FAIL; PLAN028 still IN_PROGRESS.",
-  "why_now": "True earliest blocker was test harness command-not-found before native build, not actual Game2 regression. Fix one accidental filename command and rerun only still-unrun H1541 loss30.",
+  "task_id": "PLAN028-M0-H1544-H1541-ORIGINAL-GAME4-BOUNDARY-VALID-65535-NEGATIVE-TEST",
+  "current_task": "H1541 second source f7ba Action42809653484 original Go source-locked H1285 11 file tests PASS and H1541 Game2 stale49336/new57255+57256 exact disjoint protected-epoch regression PASS. New Game4 negative test erroneously expected last lane4 port65535 to overflow (valid first port65532); Go unit FAIL before product compile/600s; native scene NOT_RUN. H1544 change only Go unit negative to lane2 port65535 overflow and add positive last lane4 port65535, original Game2 product code unchanged, one H1541 30loss 600s after correction. Cross-source x86/ARM64 default source audit PASS, Windows five WFP/route still FAIL. PLAN028 IN_PROGRESS.",
+  "why_now": "Keep original source Go 65535 port boundary valid and reject only true later-lane overflow; fix test-only false negative before native 600s; no product code/rust change.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1541 corrected exact original-Go Game2 cold TCP cohort unit tests, Go+Rust binary manifest, then 600s native 200ms 30loss outer300-350 original traffic and per-lane server M4, five original source accounts, six Stop. If unit compilation failure, fix current main minimal and retain first fault. Do not duplicate dispatch.",
+  "next_action": "Read H1541 corrected original Go tests (Game2 stale+fresh isolation, Game4 boundary), exact source-built ELF and 600s 30%/200ms actual mean outer 300-350 with Game2 per-generation remote exact M4, Game4 hot5, 5 authentic clients bidirectional UDP/TCP and 6 native Stop. Do not rerun 0loss. Windows WFP unchanged.",
   "unverified": true,
-  "last_tested_source": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
+  "last_tested_source": "f7ba28fafa280ca32026944ce9f47ba2fe36a665",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1544-H1541-ORIGINAL-GO-VALID-PORT65535-TEST-CORRECTION-20261110.json",
     "docs/evidence/M0/PLAN028-H1543-TRUE-H1541-FIRST-PRE-NATIVE-SHELL127-20261110.json",
     "docs/evidence/M0/PLAN028-H1541-LINUX30-GAME2-CROSS-COLD-COHORT-DEFAULT-SOURCE-AUDIT-20261110.json",
     "docs/evidence/M0/PLAN028-H1540-SOURCE-LOCK-LINUX-M4-EARLY-DATA-ASSEMBLY-CORRECTION-20261110.json",
@@ -37,5 +38,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1543 correction: H1541 original Action42809134116 didn't reach native 600s due shell127 stray artifact filename after Go FakeTCP unit PASS; removed stray line, new unit negative guard and one exact Action. Product default x86/ARM current fix source intact, Windows5 WFP/route unresolved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1544 original Go Game2 cold disjoint epoch+5tuple unit proved PASS on sourcef7ba, but Game4 negative test erroneously denied valid last lane port65535, so native 600s NOT_RUN. Test-only fix correct positive last lane and negative lane2 overflow; product unchanged. Source audit x86+ARM current GO default PASS; Windows global WFP not fixed; PLAN028 IN_PROGRESS."
 }

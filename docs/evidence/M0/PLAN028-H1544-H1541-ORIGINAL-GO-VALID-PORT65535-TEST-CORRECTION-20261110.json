@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1544",
+  "date": "2026-11-10",
+  "original_action": {
+    "run_id": 42809653484,
+    "job_id": 129807576602,
+    "artifact_id": 13762122308,
+    "source": "f7ba28fafa280ca32026944ce9f47ba2fe36a665",
+    "original_go_faketcp_test_11_file": "PASS",
+    "original_game2_stale_vs_fresh_group_unit": "PASS",
+    "original_game4_5tuple_negative_unit": "FAIL_TEST_ASSERTION_INVALID_LAST_LANE_PORT",
+    "error": "game_cold_cohort_linux_test.go:69: invalid cold port scope allowed: {lanes:4 id:4 port:65535}",
+    "linux_600s_native": "NOT_RUN",
+    "strict_status": "FAIL_UNIT_TEST_FIXTURE_ONLY_NOT_PRODUCT",
+    "invariant": "Game4 client base source port65532 plus lane offsets 0..3 ends at65535: this is valid, not overflow."
+  },
+  "minimal_test_fix": {
+    "path": "r0/go_overlay/internal/v4productcli/game_cold_cohort_linux_test.go",
+    "before": "{4,4,65535} wrongly expected denied",
+    "after": "positive lane4+65535 must be admitted; negative lane2+65535 must reject because later lane4 would overflow",
+    "original_go_game2_implementation_unchanged": true,
+    "auth_WFP_opaque": false
+  },
+  "next": "Re-run only one source-locked x86 30% 600s original native scenario under source-corrected Go test, no Game2 code/Rust changes.",
+  "plan028": "IN_PROGRESS",
+  "physical": "NOT_RUN",
+  "Android": "NOT_RUN"
+}

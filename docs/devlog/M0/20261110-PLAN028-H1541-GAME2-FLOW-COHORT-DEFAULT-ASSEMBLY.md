@@ -28,3 +28,8 @@
 
 - [H1541 首次 Action42809134116](https://github.com/lly8666/wbd-next/actions/runs/42809134116)：11原始Go FakeTCP source锁安装 **PASS**，原 `TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor` 与畸形负测及 Rust ISA-L SHA **PASS**；但该 workflow 的 `tee h1541-real-original-Go-faketcp.log` 下一行误插入独立 `h1541-original-Go-v4productcli.log`，bash 以命令127失败，尚未执行新Game2分组 Go test/原生600s，因此 **NOT_RUN**。不是 native 修复失败，也不是可以伪认 native PASS。
 - 本次仅删这条误执行文件名（artifact 路径仍保留），`tests/test_m0_plan028_default_assembly.py` 加精确永续防误插入/工作流唯一有效过滤器检查。主线五客户端默认源不变，只复验之前未运行的一个loss30源锁原生场景。
+
+### H1544 Go 原始单测合法最高端口纠错（未改产品行为）
+
+- [H1541 第二次 Action42809653484](https://github.com/lly8666/wbd-next/actions/runs/42809653484) ZIP13762122308：**全部 H1285原生 Go TLS→M4 11文件正反单测 PASS、Game2 H1541 旧49336 vs 新57255/57256禁止混组 PASS**；仅新增 Game4 端口反面 fixture 因错误断言 `lane=4, port=65535` 必须FAIL（实际上可合法对应源基础65532+3）使整个 `go test ./internal/v4productcli` FAIL。该单元测试错误在实际 Go build 和网络前触发，真实600s = **NOT_RUN**。
+- 本次仅给有效端口 `65535` 在最后lane加正测，把负测改为 `lane2=65535`，因后续四lane组必超过65535必须拒绝。产品 `game_linux.go` 分组、原始TLS、Rust ABI、FEC/MTU/Stop均未变。目标 H1541 Action 只在负测修好后重新跑，保留同一个原生30%场景。
