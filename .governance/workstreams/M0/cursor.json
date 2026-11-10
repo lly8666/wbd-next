@@ -4,20 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1551,
-  "checkpoint_sha": "77250eaa173f37576aa78793750c84f136bacb80",
+  "sequence": 1552,
+  "checkpoint_sha": "4388c00ac6b20615ce7749259c73827fa31f0716",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1551-MIXED-WIN1-LINUX4-EXACT-600S-NATIVE-SUPERVISOR-DEADLINE",
-  "current_task": "H1551 user Win1 signed Windows Wintun Alice+4 WSL2 Linux native namespaces Bob Auto Carol Game2 Dave Game4 Erin Fixed6 one Linux Go/Rust shared server, 200ms 0/30 physical loss 600s, actual kernel full outer 250-300Mbps, real M4 TCP/UDP six Stop. Source b628 route management exact scope fixed and all cheap original Go/Rust builds PASS Action42857999491, native Windows jobs compile in progress; static inspection found native_batch_deadline fell to single Normal 320s and parent whole WSL watchdog 780s. H1551 source-scoped exact mixed mode proper PID 940s and whole watchdog 1180s, test positive and negative; new meaningful source run triggered once, previous Action remains original evidence, not PASS. Old full Linux x86 333.930/304.271 scoped PASS accepted. PLAN028 IN_PROGRESS.",
-  "why_now": "Corrected route pin management was necessary but insufficient to meet 600s; true old native process owner expires at 320 seconds. Narrow original scope deadline change prevents false product failures and avoids loosening any other user mode or route/Stop hard gates.",
+  "task_id": "PLAN028-M0-H1552-WIN1-LINUX4-OPENSSL-RDN-AND-NATIVE-600S-PREFLIGHT-TEST",
+  "current_task": "Latest Win1 signed Windows Wintun plus four real WSL2 Linux netns clients, one Linux original Go/Rust TLS443 server, 600s 200ms physical loss0/loss30 target kernel full outer250-300Mbps. Old source b628 Action42857999491 actual original Windows jobs loss0/30 failed before native TLS at OpenSSL -subj /CN/wbd-v4.example.test missing '=', no business or outer measured. H1551 source4388 Action42859887928 cheap failed old static wholeLimit assertion expected pre-1180 prefix; no native run. H1552 correct -subj /CN=wbd-v4.example.test and old watcher test to require exact 1180 mixed branch and identical legacy budget tail, preserve source-scoped 940 original PID budget. New source one action trigger. Separate governance Action42858615672 / latest4388 governance PASS. Prior old Linux-only passes accepted but not mixed.",
+  "why_now": "First original H1549 true error in OpenSSL RDN test-only certificate before TLS, and H1551 cheap unit stale expected wholeLimit text blocked new source. Both exact earliest wiring defects now known, do not duplicate old scene or label product FAIL.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1551 one real Win1 Linux4 mixed loss0 and loss30 native Action, verify original shared TLS server READY, five account leases and M4/owned Stop, true Windows OS Wintun OS IPv4 binding, Linux netns OS TUN, direct framed TCP+unique UDP, 600s, 10s kernel 250..300 Mbps and 30s host capacity, WSL/netem/Windows WAL rollback. Preserve old b628 run as superseded pre-existing inadequate 320s harness; no further duplicated dispatch until first actual full logs.",
+  "next_action": "Collect one new H1552 mixed true Win1 Linux4 Action from exact source with matched 0/30 Windows2025 VM jobs. Validate cheap gates, genuine Go/Rust and WSL cert generation, one Windows Wintun and four native Linux netns, real 10s qdisc 250..300Mbps 600s, per-client authenticated server M4, real framed TCP/unique UDP both ways, six owned Stop and OS/WAL resource rollback. On new first failure fix minimal and preserve log; no PLAN029/030.",
   "unverified": true,
-  "last_tested_source": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+  "last_tested_source": "4388c00ac6b20615ce7749259c73827fa31f0716",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1551-WIN1-LINUX4-600S-DEADLINE-SCOPE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1549-MIXED-WIN1-LINUX4-ROOT-MGMT-SCOPE-PRE-NATIVE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1548-WINDOWS1-LINUX4-200MS-250-300-DUAL-600S-INFLIGHT-20261110.json"
+    "docs/evidence/M0/PLAN028-H1552-MIXED-ORIGINAL-OPENSSL-RDN-AND-DEADLINE-CONTRACT-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -30,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1551 fixed true Win1+Linux4 original 600s native owner time budget: old Normal320s and wholeWSL780 inadequate, new exact conditional 940 and1180, positive/negative contract checks; previous original source b628 Action42857999491 still running, cannot qualify by it; H1551 source run with two separate Windows VMs 0/30 only. Exact management /32 source guard and historical x86 passes preserved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1552 original H1549 source b628 action42857999491 Windows jobs fail before TLS at test-only OpenSSL DN missing '=', 600s NOT_RUN, H1551 source4388 cheap failed old source watcher expected no mixed1180 branch, 600s NOT_RUN; both corrected on main source, new one loss0/loss30 action. Current governance old source scope PASS, no mixed real 600s qualified. PLAN028 IN_PROGRESS."
 }

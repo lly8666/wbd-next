@@ -205,7 +205,7 @@ def main():
         wsl("openssl","req","-x509","-newkey","rsa:2048","-sha256",
             "-days","1","-nodes","-keyout",guestpath(private["key"]),
             "-out",guest_root+"/h1548-cert.pem",
-            "-subj","/CN/wbd-v4.example.test",
+            "-subj","/CN=wbd-v4.example.test",
             "-addext","subjectAltName=DNS:wbd-v4.example.test",timeout=42)
         need(wsl("ip","link","show","dev",NAME,check=False).returncode!=0,
              "foreign WSL owned Linux bridge name; refuse network takeover")

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "checkpoint": "H1552",
+  "date_utc": "2026-11-10",
+  "source_sha": "4388c00ac6b20615ce7749259c73827fa31f0716",
+  "scope": "one signed Windows Wintun Alice plus four independent WSL2 Linux native clients Bob Auto Carol Game2 Dave Game4 Erin Fixed6, one native Linux Go/Rust shared TLS443 server, 200ms one way both directions, physical 0pct/30pct loss, real 600s, actual total full outer 250-300 Mbps in both directions, complete UDP/TCP/M4/six Stop",
+  "first_older_source_fail": {
+    "source_sha": "b6287d04b31e776f4a59e469cf77b312628445a8",
+    "original_action_id": 42857999491,
+    "loss30_job": 129979722757,
+    "loss0_job": 129979722785,
+    "conclusion": "FAIL_PRE_NATIVE_TEST_FIXTURE",
+    "native_600s": "NOT_RUN",
+    "source_and_native_build": "PASS",
+    "original_first_error": "OpenSSL req: Missing '=' after RDN type string 'CN/wbd-v4.example.test' in subject name string",
+    "real_origin": "tools/m0_plan028_h1548_one_windows_four_linux_600.py provided -subj /CN/wbd-v4.example.test; not a Go/Rust/TLS protocol or business first error",
+    "cleanup": "original Windows HyperV rule and WSL guest MAC owned cleanup completed; original app was never started",
+    "outer_bytes_250_300": "NOT_MEASURED"
+  },
+  "first_current_source_fail": {
+    "source_sha": "4388c00ac6b20615ce7749259c73827fa31f0716",
+    "original_action_id": 42859887928,
+    "cheap_job_id": 129982854292,
+    "result": "FAIL_CHEAP_ASSERTION",
+    "native_600s": "NOT_RUN",
+    "error": "tests/test_m0_wl_native_step_runner.py:405 expected historical $wholeLimit prefix without new 1180s exact mixed scope branch; actual prefix only changed to include new scenario and preserved old tail",
+    "source_scoped_940_and_1180_budgets": "INSTALLED_BUT_NOT_NATIVE_PROVEN"
+  },
+  "fix": {
+    "new_source_at_commit": "NEXT_COMMIT_SHA_NOT_YET_TESTED",
+    "tls_cert_generation": "Correct -subj /CN=wbd-v4.example.test with real OpenSSL RDN CN field; preserve -addext subjectAltName=DNS:wbd-v4.example.test, fresh test-specific key, TLS certificate source paths",
+    "tests": [
+      "tests/test_m0_plan028_h1548_win1_linux4_scope.py exact positive CN= and negative slash legacy",
+      "tests/test_m0_wl_native_step_runner.py exact 1180 mixed-only branch plus unchanged 1280/2600/600/780/1020 tail"
+    ],
+    "owner_and_route_guards": "unchanged: exact original Windows /32 Runner management route lease and foreign WAL/route refusal; one Wintun no singleton bypass",
+    "parent_and_native_pid_budget": "940s PID 1180s Windows parent; scenario 600s strict",
+    "not_waived": "actual native M4, 0/30 loss, physical both-way 200ms, 250-300Mbps measured qdisc, five OS /32, real two-way UDP/TCP, six owned Stop"
+  },
+  "historical_success_preserved": {
+    "linux_x86_loss0_333_930": "PASS_SCOPED_DIFFERENT_SOURCE",
+    "linux_x86_loss30_304_271": "PASS_SCOPED_DIFFERENT_SOURCE"
+  },
+  "result": "NOT_RUN_CORRECTED_SOURCE_BEFORE_FRESH_ACTION",
+  "full_PLAN028": "IN_PROGRESS",
+  "physical_wan": "NOT_RUN",
+  "android": "NOT_RUN"
+}

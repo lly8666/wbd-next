@@ -27,6 +27,8 @@ class Plan028MixedNativeWinLinux(unittest.TestCase):
         self.assertIn('game2',text)
         self.assertIn('game4',text)
         self.assertIn('fec-fixed',text)
+        self.assertIn('"-subj","/CN=wbd-v4.example.test"',text)
+        self.assertNotIn('"-subj","/CN/wbd-v4.example.test"',text)
         self.assertIn("V4_PUBLIC_MIXED_MULTI_SERVER_READY",text)
         self.assertIn("V4_PUBLIC_GAME_GROUP_LANE_READY role=server",text)
     def test_real_kernel_duplex_bytes_delay_loss_and_600s_sources(self):
