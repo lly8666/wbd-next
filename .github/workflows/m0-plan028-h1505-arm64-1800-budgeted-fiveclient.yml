@@ -15,7 +15,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-h1505-arm64-1800-budgeted-health5.yml"
+      - ".github/workflows/m0-plan028-h1505-arm64-1800-budgeted-fiveclient.yml"
 permissions: {contents: read, actions: read}
 jobs:
   original-native-1800:

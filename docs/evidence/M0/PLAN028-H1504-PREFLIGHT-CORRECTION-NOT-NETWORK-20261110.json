@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "failed_wrapper_source_sha": "87d12ef01b3e67e0e70d0ee5c9827616dd715c44",
+  "windows_original_action": {
+    "id": 42753442675,
+    "conclusion": "failure",
+    "stage": "CHEAP_PYTHON_UNIT_TESTS_BEFORE_NATIVE",
+    "failures": [
+      "test_crossos_1800_runner_management_lease_is_exact_and_owned expected legacy literal old marker&&1",
+      "test_h1453_600s_genuine_product_and_parallel_diagnostic_boundary required unchanged original H1453_CLEAN_WINDOWS_RUNNER_750S_BEGIN",
+      "test_hard_guard_is_whole_step_not_only_mode required legacy exact timeout-minutes oldmarker52||24"
+    ],
+    "Windows_real_driver_installed": false,
+    "product_app_1800_started": false,
+    "actual_native_result": "NOT_RUN_NOT_PRODUCT_FAIL"
+  },
+  "Linux_H1505_original_Action": "NOT_TRIGGERED",
+  "reason": "new workflow filename budgeted-fiveclient.yml but on.push.paths budgeted-health5.yml",
+  "correction": {
+    "Windows": "preserve old exact 1800 native timeout/health/clean label literal, explicitly allow just newly tagged H1504 budgeted one hosted run via conjunction old+new markers; old standalone 1800 still fail closed",
+    "Linux": "point H1505 on.push.paths to exact committed workflow filename",
+    "next_markers": [
+      "[plan028-win-linux-co-client]",
+      "[plan028-win-linux-1800]",
+      "[plan028-h1504-win1800-budgeted]"
+    ]
+  },
+  "unrelated_short": {
+    "action": 42753442676,
+    "scene": "H1295 real ARM64 180s physical MTU",
+    "note": "triggered automatically by modified fiveclient fixture, not the new 1800; no second automatic trigger on workflow-only fix"
+  },
+  "original_product_source_SHA": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "old_Win600_action": 42743477869,
+  "old_Win600_PASS": true,
+  "PLAN028": "IN_PROGRESS"
+}
