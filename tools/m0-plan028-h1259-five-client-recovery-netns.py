@@ -41,6 +41,10 @@ LONG_SCENES={
     "baseline":((0,0,1,1,5),(0,0,15,20,50),(8,8,6,6,6),(67,73,83,97,109)),
     "heterogeneous":((0,1,5,15,30),(0,15,50,100,125),(12,12,10,9,8),(79,89,101,107,113)),
     "pressure":((0,1,5,15,30),(0,15,50,100,125),(22,22,18,18,16),(73,83,97,109,127)),
+    # H1504 current-source L3 capacity-safe fifth-client profile: each
+    # client's ORIGINAL real two-way netem is distinct; product and wire
+    # remain frozen. Rates are <60% of the source-verified H1498 load.
+    "budgeted":((0,1,5,15,30),(0,15,50,100,125),(7,7,6,6,5),(79,89,101,107,113)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
 if MID600 and (MID600!="capacity75" or FAST_SCENE or os.environ.get("WBD_PLAN028_30M_SCENE")):
@@ -157,6 +161,13 @@ LONG_PHASES=(
     ("first_wave",240,.6),("sustained",600,1.0),
     ("overload",300,1.3),("recovery",650,1.0),
 )
+if LONG_SCENE=="budgeted":
+    # 10s real warmup +1790s application. 4 conditions are 0.55,
+    # 0.70, 0.95 and recovery0.70 of a conservative 31Mbps per-leg mix.
+    # No 1.3x overload on the already CPU-expensive hosted ARM64 VM.
+    LONG_PHASES=(("first_wave",300,.55),("sustained",600,.70),
+                 ("overload",240,.95),("recovery",650,.70))
+    assert sum(duration for _,duration,_ in LONG_PHASES)==1790
 if MID600:
     # Exactly 10s warmup +590s four actual application phases.
     LONG_PHASES=(("first_wave",90,1/3),("sustained",180,2/3),
@@ -517,6 +528,21 @@ def main():
             "physical_l2_arp_control": "test_only_permanent_actual_peer_mac" if STATIC_NEIGH else "dynamic_neighbour",
             "netem_qdisc_limit_packets": 10000,
         }
+        if LONG_SCENE=="budgeted":
+            plan["capacity_phase_schedule"]=[
+                {"name":name,"seconds":duration,"rate_scale":scale}
+                for name,duration,scale in LONG_PHASES]
+            plan["budgeted_1800s"]={
+                "kind":"NATIVE_LINUX_ORIGINAL_FIVE_CLIENT_4_PHASE_5_REAL_UNDERLAY_CONDITIONS",
+                "reference":"H1498 actual 1800s server CPU ~78.26pct of one core at base 12+12+10+9+8Mbps",
+                "base_rate_mbps_each_direction":list(RATE),
+                "max_case_load_mbps_per_direction":round(sum(RATE)*.95,3),
+                "app_mix_bytes":[256,1024],
+                "real_l2_loss_pct":list(LOSS),
+                "real_oneway_delay_ms":list(DELAY),
+                "physical_netem_unchanged_within_each_original_client":True,
+                "no_hidden_business_retransmission":True,
+                "cpu_and_memory_abort_external_guard":True}
         if CAPACITY_STEPS:
             plan["capacity_phase_schedule"]=[
                 {"name":name,"seconds":duration,"rate_scale":scale}

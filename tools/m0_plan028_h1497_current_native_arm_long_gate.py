@@ -18,13 +18,14 @@ NORMAL=("alice","bob","erin")
 PHYSICAL={
  "baseline":([0,0,1,1,5],[0,0,15,20,50]),
  "heterogeneous":([0,1,5,15,30],[0,15,50,100,125]),
+ "budgeted":([0,1,5,15,30],[0,15,50,100,125]),
 }
 def read(p):return json.loads(p.read_text())
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--art",required=True,type=pathlib.Path)
     parser.add_argument("--source",required=True)
-    parser.add_argument("--scene",choices=("baseline","heterogeneous"),required=True)
+    parser.add_argument("--scene",choices=("baseline","heterogeneous","budgeted"),required=True)
     parser.add_argument("--out",required=True,type=pathlib.Path)
     a=parser.parse_args();root=a.art
     p=read(root/"h1250-matrix-plan.json")
@@ -38,6 +39,17 @@ def main():
     loss,delay=PHYSICAL[a.scene]
     assert [x["loss_pct"] for x in p["clients"]]==loss
     assert [x["oneway_delay_ms"] for x in p["clients"]]==delay
+    if a.scene=="budgeted":
+        # The new VM-safe 1800s uses the identical real original sender,
+        # but reduces peak to 29.45Mbps/direction over five active users.
+        want=[("first_wave",300,.55),("sustained",600,.70),
+              ("overload",240,.95),("recovery",650,.70)]
+        actual=p.get("capacity_phase_schedule")
+        assert actual==[{"name":n,"seconds":sec,"rate_scale":scale}
+                        for n,sec,scale in want],actual
+        assert [x["c2s_target_mbps"] for x in p["clients"]]==[7,7,6,6,5]
+        assert [x["s2c_target_mbps"] for x in p["clients"]]==[7,7,6,6,5]
+        assert p["budgeted_1800s"]["max_case_load_mbps_per_direction"]==29.45
     original=read(root/"h1274-thirty-minute-report.json")
     assert original["source_sha"]==a.source and original["duration_seconds"]==1800
     logs={who:(root/f"h1250-product-{who}.log").read_text(errors="replace")
@@ -133,6 +145,7 @@ def main():
        "actual_original_app_udp_all_clients":all_udp,
        "original_server_per_lease_queue":queue,
        "original_cpu_rss":read(root/"h1250-cpu-rss.json"),
+       "budgeted_four_phase_load_receipt":p.get("capacity_phase_schedule") if a.scene=="budgeted" else None,
        "all_owned_native_Stop":not any("STOP" in e for e in errors),
        "hard_gate_errors":errors,
        "classification":"PASS_SCOPED_TRUE_NATIVE_1800S_"+a.scene.upper() if not errors else

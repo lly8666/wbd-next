@@ -3,7 +3,7 @@
 
 This test-only observer does not own VPN, change wire, or synthesize receipts.
 """
-import json, os, pathlib, re, subprocess, time
+import ctypes, json, os, pathlib, re, subprocess, time
 from m0_plan028_h1412_wsl_cross_os_client_preflight import NS
 from m0_wl_windows_bounded_cmd import run_captured
 
@@ -47,6 +47,27 @@ def refresh_runner_management():
         raise RuntimeError("L3 managed Runner /32 refresh readback absent: "+p.stdout[-300:])
     return {"observed":int(m[1]),"added":int(m[2]),"total":int(m[3]),"repaired":int(m[4])}
 
+def vm_budget_tick():
+    """Real Windows host CPU/load and free memory. Read-only Win32 APIs."""
+    class FT(ctypes.Structure):
+        _fields_=[("lo",ctypes.c_uint32),("hi",ctypes.c_uint32)]
+    class MS(ctypes.Structure):
+        _fields_=[("length",ctypes.c_uint32),("load",ctypes.c_uint32),
+                  ("total_phys",ctypes.c_uint64),("avail_phys",ctypes.c_uint64),
+                  ("total_page",ctypes.c_uint64),("avail_page",ctypes.c_uint64),
+                  ("total_virtual",ctypes.c_uint64),("avail_virtual",ctypes.c_uint64),
+                  ("avail_extended",ctypes.c_uint64)]
+    kernel32=ctypes.windll.kernel32
+    idle=FT();kernel=FT();user=FT()
+    if not kernel32.GetSystemTimes(ctypes.byref(idle),ctypes.byref(kernel),ctypes.byref(user)):
+        raise RuntimeError("Windows host CPU readback GetSystemTimes unavailable")
+    mem=MS();mem.length=ctypes.sizeof(MS)
+    if not kernel32.GlobalMemoryStatusEx(ctypes.byref(mem)):
+        raise RuntimeError("Windows VM GlobalMemoryStatusEx unavailable")
+    val=lambda ft:(int(ft.hi)<<32)|int(ft.lo)
+    return {"idle":val(idle),"kernel":val(kernel),"user":val(user),
+            "avail_gib":round(mem.avail_phys/2**30,3),"load_pct":int(mem.load)}
+
 def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     need(seconds in (600,1800) and len(paths)==2 and len(owners)==4,
          "L3 requires exact 600s diagnostic OR 1800s, two original clients and server/echo")
@@ -60,6 +81,9 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
     begin=time.monotonic();next_check=begin+5;next_tcp=begin+30
     next_resources=begin+90;next_mgmt=begin+8
     sample=[];rss=[];tcps=0;management=[];added_peers=0;repaired_routes=0
+    budgeted=(os.environ.get("WBD_PLAN028_WIN_LINUX_1800_BUDGETED")=="1")
+    need(not budgeted or seconds==1800,"budgeted mixed DATA must run all 1800s")
+    vm_samples=[];vm_prev=vm_budget_tick() if budgeted else None;vm_bad=0
     print("H1448_L3_OS_COMMANDS_FILE_BACKED_BOUNDED_AND_PARENT_IDLE_WITNESS_ARMED",flush=True)
     print("H1430_REAL_1800S_CROSS_OS_NATIVE_APP_BEGIN" if seconds==1800 else
           "H1453_REAL_600S_CROSS_OS_NATIVE_APP_BEGIN_NOT_1800S",flush=True)
@@ -92,6 +116,21 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
                          who+" real app "+key+" >=1500ms at "+str(round(elapsed,1)))
             sample.append({"elapsed_s":round(elapsed,2),
                            "windows":cur["windows"],"linux":cur["linux"]})
+            if budgeted:
+                vm_now=vm_budget_tick()
+                dt=vm_now["kernel"]+vm_now["user"]-vm_prev["kernel"]-vm_prev["user"]
+                idle=vm_now["idle"]-vm_prev["idle"]
+                load=round(100*(1-idle/dt),2) if dt>0 else 0.
+                vm_prev=vm_now
+                vm_bad=(vm_bad+1 if load>=85 or vm_now["avail_gib"]<.75 else 0)
+                point={"elapsed_s":round(elapsed,2),"host_busy_pct":load,
+                       "mem_available_gib":vm_now["avail_gib"],
+                       "memory_load_pct":vm_now["load_pct"],
+                       "capacity_bad_consecutive":vm_bad}
+                vm_samples.append(point)
+                if len(vm_samples)%12==0:
+                    print("H1504_WINDOWS_VM_CPU_MEMORY_BUDGET "+json.dumps(point),flush=True)
+                need(vm_bad<6,"H1504_CAPACITY_LIMITED_HOST30S_"+json.dumps(point))
             if len(sample)%12==0:
                 print("H1430_REAL_NATIVE_L3_MINUTE "+
                       json.dumps({"elapsed_s":round(elapsed,1),
@@ -128,6 +167,30 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
                     "max_echo_gap_ms","max_reverse_gap_ms"):
             need(v[key] is not None and float(v[key])<1500,
                  who+" terminal no-RX gap >=1500ms: "+key)
+    app_phase_receipts={}
+    if budgeted:
+        for who,path in paths.items():
+            stages=[]
+            for line in path.read_text(errors="replace").splitlines():
+                try:v=json.loads(line)
+                except (TypeError,ValueError):continue
+                if v.get("phase")=="budget_switch":stages.append(v)
+            need([x.get("stage") for x in stages]==["warm","mixed","higher","recovery"],
+                 who+" four genuine bounded pacing stages missing "+str(stages))
+            need([x.get("payload_bytes") for x in stages]==[128,256,1024,512],
+                 who+" original app data length phases not exercised")
+            # Count the real OS-app accepted sends in EVERY bounded
+            # stage, not only a terminal 1800s sum that hides one stalled hour.
+            counters=[int(x["sent_packets_at_start"]) for x in stages]
+            actual=[counters[1]-counters[0],counters[2]-counters[1],
+                    counters[3]-counters[2],after[who]["sent"]-counters[3]]
+            minimum=[1500,3000,1500,1500]
+            need(all(a>=m for a,m in zip(actual,minimum)),
+                 who+" one real mixed UDP phase stalled: "+str(actual))
+            app_phase_receipts[who]={"markers":stages,
+                                     "real_sent_by_stage":dict(zip(
+                                         ["warm","mixed","higher","recovery"],actual))}
+        need(len(vm_samples)>=320,"true Windows host 5s CPU/memory budget sample incomplete")
     need((len(management)>=60 if seconds==1800 else len(management)>=20),
          "L3 runner management dynamic /32 refresh not actually exercised")
     need(elapsed>=seconds and tcps>=min_tcp and len(rss)>=min_rss,
@@ -138,6 +201,9 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
         "samples":sample,"resources":rss,"runner_management":management,
         "runner_new_peer_routes":added_peers,
         "runner_repaired_owned_routes":repaired_routes,
+        "windows_host_budget_5s":vm_samples,
+        "real_application_mixed_size_phase_receipts":app_phase_receipts,
+        "is_budgeted_1800":budgeted,
         "duration_scope_s":seconds,"min_actual_udp_packets":min_packets},indent=2)+"\n")
     return {"status":("PASS_SCOPED_REAL_1800S_BOTH_CLIENTS" if seconds==1800
                        else "PASS_SCOPED_REAL_600S_BOTH_CLIENTS"),
@@ -147,4 +213,7 @@ def qualify(out,seconds,paths,stats,need,win_tcp,wsl,guestapp,owners):
         "runner_repaired_owned_routes":repaired_routes,"actual_udp_delta":delta,
         "maximum_echo_gap_ms":{x:after[x]["max_echo_gap_ms"] for x in paths},
         "maximum_reverse_gap_ms":{x:after[x]["max_reverse_gap_ms"] for x in paths},
-        "windows_peak_rss_bytes":max(x["windows_rss_bytes"] for x in rss)}
+        "windows_peak_rss_bytes":max(x["windows_rss_bytes"] for x in rss),
+        "budgeted_multi_condition_1800":budgeted,
+        "windows_host_5s_budget_samples":len(vm_samples),
+        "original_app_phase_names":[x["stage"] for x in app_phase_receipts.get("windows",{}).get("markers",[])]}

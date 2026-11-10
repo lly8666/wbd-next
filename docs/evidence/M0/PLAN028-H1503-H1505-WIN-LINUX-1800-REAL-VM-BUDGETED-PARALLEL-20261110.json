@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "parent": "12bf695623800fa9df962c9369ea0320779ec076",
+  "user_request": "Both Windows and Linux native 1800s real original product multi-condition stress, protect limited hosted VM capacity, find correctness bugs.",
+  "product_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "latest_win600": {
+    "action": 42743477869,
+    "artifact_id": 13731432078,
+    "zip_sha256": "8a5ac3f765e085c4c52799731e1f6e3081ad2ae85f94c4feba220e434ba64f22",
+    "crc": "PASS",
+    "source": "282a17d6a6fbbc783730dc2cf713cec320ff2205",
+    "status": "PASS_SCOPED_SIGNED_WINDOWS_AND_INDEPENDENT_WSL2_LINUX_REAL_600S",
+    "runtime_seconds": 600.23,
+    "app_datagrams": {
+      "windows": {
+        "sent": 5572,
+        "unique_echo": 5572,
+        "reverse": 5591
+      },
+      "linux": {
+        "sent": 5595,
+        "unique_echo": 5595,
+        "reverse": 5595
+      }
+    },
+    "tcp_both_rounds": 10,
+    "route_management_samples": 53,
+    "resource_samples": 5,
+    "max_echo_ms": {
+      "windows": 156,
+      "linux": 114.48
+    },
+    "windows_owned_stop_linux_udp_after": 10,
+    "final_owned_Stop_and_Npcap_cleanup": true,
+    "clean_windows_control": {
+      "artifact": 13731237120,
+      "zip_sha256": "04566267968ba65cb6516d5c212337f4c650fac90fcf93e73249859e4da916e5",
+      "runtime_s": 750.2,
+      "heartbeat_samples": 50,
+      "classification": "PASS_SCOPED_CONTROL_ONLY"
+    },
+    "offhost_ubuntu_witness": {
+      "artifact": 13731497229,
+      "zip_sha256": "00adcb07aaad24bfbb876b938b5b3f8c50b2656cd6da30e5ef4a3ce418223752",
+      "crc": "PASS",
+      "scope": "GH_ACTION_JOB_STATUS_ONLY"
+    },
+    "real_app_rate_pps_per_client_600": "~9.3pps, not throughput/PPS qualification"
+  },
+  "native_linux_budgeted1800": {
+    "workflow": ".github/workflows/m0-plan028-h1505-arm64-1800-budgeted-fiveclient.yml",
+    "status_at_commit": "NOT_RUN_PENDING_PUSH",
+    "on_different_vm_from_windows": true,
+    "arch": "aarch64 native both Go+Rust + pinned ISA-L",
+    "uses_frozen_original_artifact": {
+      "action": 42737661070,
+      "artifact_id": 13726859228,
+      "sha256": "528821894b8aa3101f47f97c87d0cee7b7e79276f6fb6cf8ec922da7f80a80bc",
+      "original_prod_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453"
+    },
+    "clients": [
+      "Alice Normal AES-128",
+      "Bob Auto ChaCha",
+      "Carol Game2 AES-256",
+      "Dave Game4 fixed6 ChaCha",
+      "Erin Fixed6 AES-128"
+    ],
+    "real_physical_loss_percent": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "real_oneway_delay_ms": [
+      0,
+      15,
+      50,
+      100,
+      125
+    ],
+    "real_app_payload_sizes_bytes": [
+      256,
+      1024
+    ],
+    "base_rate_mbps_each_direction": [
+      7,
+      7,
+      6,
+      6,
+      5
+    ],
+    "phase_schedule": [
+      {
+        "name": "first_wave",
+        "seconds": 300,
+        "scale": 0.55
+      },
+      {
+        "name": "sustained",
+        "seconds": 600,
+        "scale": 0.7
+      },
+      {
+        "name": "overload",
+        "seconds": 240,
+        "scale": 0.95
+      },
+      {
+        "name": "recovery",
+        "seconds": 650,
+        "scale": 0.7
+      }
+    ],
+    "true_app_duration_s": 1800,
+    "peak_total_mbps_per_direction": 29.45,
+    "reference_H1498_1800": {
+      "source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+      "server_average_one_core_cpu_percent": 78.26,
+      "base_total_mbps_per_direction": 51,
+      "peak_load_mbps_per_direction": 66.3,
+      "classification": "PASS_SCOPED"
+    },
+    "cpu_and_memory_guard": {
+      "sample_every_seconds": 10,
+      "abort_when_30s_sustained_host_mean_busy_pct_at_least": 85,
+      "or_one_host_core_busy_pct_at_least": 97,
+      "or_mem_available_gib_below": 0.75,
+      "signal": "SIGINT_to_fixture_parent_then_original_finally_own_stop",
+      "if_abort": "CAPACITY_LIMITED_NOT_PRODUCT_PASS"
+    },
+    "hard_gates": [
+      "real 5 authenticated accounts per lease",
+      "10 original UDP/TCP directions and phase ledger",
+      "all Normal B actual server authenticated Health proof, no B_UNPROVEN",
+      "original Game2/Game4 group rotation",
+      "real kernel qdisc damage and CPU/RSS, zero damaged Alice no loss, no >=15s active receiver blackout",
+      "8slot server shared lease no overflow",
+      "all six exact owned Stop"
+    ]
+  },
+  "native_windows_budgeted1800": {
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "status_at_commit": "NOT_RUN_PENDING_PUSH",
+    "exact_commit_marker": "[plan028-h1504-win1800-budgeted]",
+    "real_product_compile_source": "NEW_GITHUB_SHA_WITH_SAME_GO_RUST_PRODUCT_AS_282A17D_NOT_OLD_W600",
+    "host_arch": "windows-2025 Windows Npcap1.88 Wintun0.14.1 actual driver + native Ubuntu WSL2 separate auth client on one hosted Windows VM",
+    "underlay_constraints": "No new loss injection on GitHub-hosted Windows management NIC/WSL bridge; keep exact private /32 runner management CAS. This is exploratory hosted 1800s and NOT independent Windows DUT.",
+    "true_app_duration_s": 1800,
+    "per_client_four_real_data_phases": [
+      {
+        "stage": "warm",
+        "interval_ms_approx": 105,
+        "payload_bytes": 128,
+        "seconds": 450
+      },
+      {
+        "stage": "mixed",
+        "interval_ms_approx": 55,
+        "payload_bytes": 256,
+        "seconds": 600
+      },
+      {
+        "stage": "higher",
+        "interval_ms_approx": 40,
+        "payload_bytes": 1024,
+        "seconds": 300
+      },
+      {
+        "stage": "recovery",
+        "interval_ms_approx": 65,
+        "payload_bytes": 512,
+        "seconds": 450
+      }
+    ],
+    "actual_sender_rate_note": "Measured per-phase acceptance is gated in real app logs; Windows UDP peer expected 9-25pps per client, not Mbps load claims. Linux physical 30% impairment is separate VM.",
+    "cpu_and_memory_guard": {
+      "read_only": "Win32 GetSystemTimes + GlobalMemoryStatusEx, every 5s",
+      "abort_when_30s_sustained_host_busy_pct_ge": 85,
+      "or_free_ram_gib_below": 0.75
+    },
+    "control_windows_clean_duration_s": 1950,
+    "separate_ubuntu_offhost_witness_duration_approx_s": 3105,
+    "hard_gates": [
+      "real Windows signed NPF/Wintun+Linux WSL2 independent account Go TLS443/Rust M4",
+      "four exact DATA sizes/stages and positive actual OS UDP offered each",
+      "1800s 2-way genuine UDP echo+reverse>=97pct and no >=1500ms gap",
+      "min 28 real TCP rounds and 12 RSS and60 runner management refresh",
+      "Win original Stop then Linux sibling TCP/UDP survival, final server Stop, Win WAL0 Npcap/WSL route restoration"
+    ],
+    "qualification_limits": [
+      "Both product OS clients are on same Windows-hosted VM/WSL2, Linux peer NOT a second independently managed physical host",
+      "Hosted Runner can disappear if VPN affects management. Offhost witness only sees GitHub job metadata, not OS app bytes.",
+      "Full PLAN028 Windows independent managed DUT long qualification still NOT_QUALIFIED",
+      "No Windows high loss/delay injected because it could destabilize Runner management"
+    ]
+  },
+  "prior_native_ARM_current_source": {
+    "H1498": {
+      "action": 42738333653,
+      "seconds": 1800,
+      "status": "PASS_SCOPED",
+      "B_proven": 58,
+      "B_unproven": 0
+    },
+    "H1499": {
+      "action": 42738333604,
+      "seconds": 1800,
+      "status": "PASS_SCOPED",
+      "B_proven": 69,
+      "B_unproven": 0
+    }
+  },
+  "preserved_prior_fail": [
+    "H1492 original client Health1 12 B_UNPROVEN Erin 128.9s blackout",
+    "H998 old hot MTU fail",
+    "Windows prior hosted1800 Runner loss no full Stop"
+  ],
+  "new_user_product_code_changes": false,
+  "Android_physical": "NOT_RUN",
+  "PLAN028": "IN_PROGRESS"
+}

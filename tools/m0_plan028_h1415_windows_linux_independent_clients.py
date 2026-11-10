@@ -171,8 +171,30 @@ elif mode=="udp":
     seen=set();reverse_seen=set();last_send_error=-10.
     echo_prefix=("WBD_H1415_REAL_UDP_%s_"%label).encode()
     reverse_prefix=("WBD_H1415_REVERSE_%s_"%label).encode()
+    budgeted=(len(sys.argv)>6 and sys.argv[6]=="h1504budget")
+    old_phase=None
     while not pathlib.Path(stop).exists() and time.monotonic()-start<app_limit:
-        data=echo_prefix+str(n).encode()
+        elapsed=time.monotonic()-start
+        # H1504 genuine application data in four bounded stages. No
+        # new control kind, custom VPN retransmission, or server loop.
+        if budgeted:
+            if elapsed<450:phase="warm";recv_window=.045;sleep_s=.060;body_size=128
+            elif elapsed<1050:phase="mixed";recv_window=.025;sleep_s=.030;body_size=256
+            elif elapsed<1350:phase="higher";recv_window=.020;sleep_s=.020;body_size=1024
+            else:phase="recovery";recv_window=.030;sleep_s=.035;body_size=512
+            if old_phase!=phase:
+                old_phase=phase
+                print(json.dumps({"phase":"budget_switch","label":label,
+                    "stage":phase,"elapsed_s":round(elapsed,3),
+                    "sent_packets_at_start":n,"received_packets_at_start":rx,
+                    "reverse_packets_at_start":reverse_rx,
+                    "payload_bytes":body_size,"recv_window_ms":round(recv_window*1000),
+                    "sleep_ms":round(sleep_s*1000)}),flush=True)
+            header=echo_prefix+str(n).encode()+b"|"
+            data=header+b"Q"*max(0,body_size-len(header))
+        else:
+            recv_window=.045;sleep_s=.060
+            data=echo_prefix+str(n).encode()
         try:s.sendto(data,("10.66.0.1",45901));n+=1
         except OSError as exc:
             if time.monotonic()-last_send_error>2:
@@ -182,7 +204,7 @@ elif mode=="udp":
         # Server reverse UDP and delayed echoes interleave on the same socket.
         # Correlate actual IDs rather than only this iteration's payload;
         # drain at most 32 datagrams/45ms from the true kernel socket.
-        end=time.monotonic()+.045
+        end=time.monotonic()+recv_window
         for _ in range(32):
             remaining=end-time.monotonic()
             if remaining<=0:break
@@ -191,7 +213,7 @@ elif mode=="udp":
             got,addr=s.recvfrom(4096)
             if addr[0]!="10.66.0.1":continue
             if got.startswith(echo_prefix):
-                try:seq=int(got[len(echo_prefix):])
+                try:seq=int(got[len(echo_prefix):].split(b"|",1)[0])
                 except ValueError:continue
                 if 0<=seq<n and seq not in seen:
                     seen.add(seq);rx+=1
@@ -215,7 +237,7 @@ elif mode=="udp":
                 "max_echo_gap_ms":round(max_echo_gap*1000,2),
                 "max_reverse_gap_ms":round(max_reverse_gap*1000,2)}),flush=True)
             last=now
-        time.sleep(.06)
+        time.sleep(sleep_s)
     now=time.monotonic()
     print(json.dumps({"phase":"final","label":label,"sent":n,
         "received":rx,"reverse_received":reverse_rx,
@@ -297,6 +319,9 @@ def main():
         server=start("h1415-server",["wsl.exe","-d","Ubuntu","-u","root","--","sh",servercmd])
         marker(out/"h1415-server.log","V4_PUBLIC_MULTI_SERVER_READY role=server port=443",server,50)
         report["shared_server"]="REAL_GO_TLS443_SHARED_RUST_TUN_READY"
+        budgeted1800=os.environ.get("WBD_PLAN028_WIN_LINUX_1800_BUDGETED")=="1"
+        need(not budgeted1800 or L3_DURATION==1800,
+             "H1504 mixed-length bounded pacing requires actual 1800s")
         app,guestapp=product_app()
         echo=start("h1415-echo",["wsl.exe","-d","Ubuntu","-u","root","--",
                                  "python3","-u",guestapp,"echo",pwd])
@@ -316,7 +341,8 @@ def main():
         (out/"h1415-A-start.flag").touch()
         winapp=start("h1415-winapp",[sys.executable,"-u",str(app),"udp",
                    "10.66.0.2","A",str(out/"h1415-A-stop.flag"),
-                   str(L3_DURATION+450 if L3_DURATION else 150)])
+                   str(L3_DURATION+450 if L3_DURATION else 150),
+                   "h1504budget" if budgeted1800 else "original"])
         marker(out/"h1415-windows.log","WBD_WINDOWS_CLIENT_READY",win,75)
         osread=subprocess.run(["powershell.exe","-NoProfile","-Command",
           "(Get-NetAdapter -IncludeHidden -Name 'WBDWLMAIN' -ErrorAction Stop | Select-Object Name,InterfaceIndex,Status) | ConvertTo-Json -Compress"],
@@ -341,7 +367,8 @@ def main():
         linapp=start("h1415-linapp",["wsl.exe","-d","Ubuntu","-u","root","--",
              "ip","netns","exec",NS,"python3","-u",guestapp,"udp","10.66.0.3",
              "B",guestpath(out/"h1415-B-stop.flag"),
-             str(L3_DURATION+450 if L3_DURATION else 150)])
+             str(L3_DURATION+450 if L3_DURATION else 150),
+             "h1504budget" if budgeted1800 else "original"])
         marker(out/"h1415-linux.log","V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",linux,75)
         both=marker(out/"h1415-server.log","V4_PUBLIC_MULTI_SESSION_READY role=server",server,15)
         need(both.count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=2,
