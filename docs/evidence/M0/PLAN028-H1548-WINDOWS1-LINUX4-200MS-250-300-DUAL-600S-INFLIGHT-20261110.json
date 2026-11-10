@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "date_utc": "2026-11-10",
+  "checkpoint": "H1548",
+  "source_sha": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+  "latest_user_scope": "ONE signed Windows Wintun original client and FOUR independent WSL2 Linux netns Go/Rust TUN clients, ONE original Go/Rust TLS443 Linux shared server. Supersedes previous five Windows native simultaneous cases for current acceptance.",
+  "expected_clients": [
+    {
+      "name": "alice",
+      "os": "Windows 2025",
+      "mode": "Normal Off",
+      "inner4": "10.66.0.2/32",
+      "wintun": "WBDWLMAIN"
+    },
+    {
+      "name": "bob",
+      "os": "Linux WSL2 netns 1",
+      "mode": "Auto",
+      "inner4": "10.66.0.3/32"
+    },
+    {
+      "name": "carol",
+      "os": "Linux WSL2 netns 2",
+      "mode": "Game2 Off",
+      "inner4": "10.66.0.4/32"
+    },
+    {
+      "name": "dave",
+      "os": "Linux WSL2 netns 3",
+      "mode": "Game4 Off",
+      "inner4": "10.66.0.5/32"
+    },
+    {
+      "name": "erin",
+      "os": "Linux WSL2 netns 4",
+      "mode": "Fixed6",
+      "inner4": "10.66.0.6/32",
+      "outer_user_explicit_mtu": 1280
+    }
+  ],
+  "source_contract": {
+    "Go_Rust_Windows_and_Linux_binaries": "one compiled GITHUB_SHA 7370d2bc, genuine original TLS and Rust/ISA-L native; Windows signed Npcap/Wintun one owner only, Python traffic source same SHA",
+    "lease_model": "five original identities, shared server manual client /32 independent credentials, single Windows /32 WFP route owner no second Wintun",
+    "original_MTUs": "outer default 1460B, Erin explicit 1280B; derive inner and OS readback",
+    "NAT_and_traffic": "one WSL2 real eth0 bridge with four true independently named netns and veth, kernel netem Windows on eth0 IFB+egress 443..446 and Linux four veth both egress"
+  },
+  "traffic_plan": {
+    "duration_s_per_scene": 600,
+    "physical_delay_ms_each_direction": 200,
+    "loss_scenes_pct": [
+      0,
+      30
+    ],
+    "outer_total_target_both_directions_mbps": [
+      250,
+      300
+    ],
+    "normal_0pct_base_inner_mbps_per_direction_by_client": [
+      8,
+      14,
+      11,
+      6,
+      9
+    ],
+    "loss30_base_inner_mbps_per_direction_by_client": [
+      10,
+      22,
+      18,
+      10,
+      14
+    ],
+    "normal_total_inner_mbps_per_direction": 48,
+    "loss30_total_inner_mbps_per_direction": 74,
+    "prior_empirical_linux_0pct_multiplier": {
+      "outer_mbps": 333.93,
+      "inner_mbps_each_way": 60,
+      "expected_outer_for_new_mix_mbps": 267.144
+    },
+    "prior_empirical_linux_30pct_multiplier": {
+      "outer_mbps": 304.271,
+      "inner_mbps_each_way": 82,
+      "expected_outer_for_new_mix_mbps": 274.585
+    },
+    "model_not_evidence": "Prior Linux-only multiplier is only initial load calibration, not a Windows+Linux throughput claim",
+    "BDP_inner_per_direction_200ms_each_way_mbyte": {
+      "loss0": 2.4,
+      "loss30": 3.7
+    },
+    "effective_app_packets": "256/1120B mix, approx mean 904B, actual socket send/unique receive/TCP framed readback, no proxy echo",
+    "physical_kernel_10s": true,
+    "rate_adjustment": "bounded original test-only multiplier 0.65..1.35 based on actual kernel bytes before steady target, no VPN data or wire source mutations",
+    "success_gate": "at least 28 real steady/recovery >=8s kernel observation windows, >=70% in250..300, average in250..300, both directions substantive; five true UDP unique and bidirectional framed TCP, authenticated original server M4, six exact Stop and OS/WAL/netem/bridge cleanup; host CPU/memory guard",
+    "failure_classification": "no completed native scene means NOT_RUN. Any genuine M4/route/data/Stop or bandwidth failure remains FAIL/CAPACITY_LIMITED, no false green"
+  },
+  "action": {
+    "run_id": 42852209993,
+    "platform": "windows-2025 x2 matrix jobs independent VMs",
+    "source_lock": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
+    "status": "CHEAP_PREFLIGHT_PASS_BUILD_PREREQS_RUNNING",
+    "native_0pct": "NOT_RUN",
+    "native_30pct": "NOT_RUN",
+    "job_ids": "query when jobs start",
+    "no_duplicate_dispatch": true
+  },
+  "scope_limits": {
+    "co_hosted_wintun5": "SUPERSEDED_BY_USER_NOT_REQUIRED",
+    "physical_real_source_IP_flip": "NOT_TRIGGERED_in current shared bridge path, distinct from old H1506 four physical Windows source flips",
+    "physical_cross_machine_WAN": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "ARM64_current_source_5_client_600s": "NOT_RUN",
+    "full_PLAN028": "IN_PROGRESS"
+  },
+  "prior_accepted_scope": {
+    "linux5_original_x86_0pct_outer_mbps": 333.93,
+    "linux5_original_x86_30pct_outer_mbps": 304.271,
+    "qualification": "PASS_SCOPED preserved with own exact native SOURCE"
+  },
+  "security": "Never adopt foreign routes/Windows WFP, single Wintun only; only delete own verified L2/netns/qdisc/credential fixtures; original first-error and logs retained."
+}
