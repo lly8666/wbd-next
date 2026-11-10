@@ -49,6 +49,12 @@ jobs:
                   "report":report["original_rotation"],"alerts":report["original_alerts"],
                   "raw_counts":{k:{side:len(lines) for side,lines in v.items()} for k,v in raw.items()},
                   "band_mbps":report["actual_outer_mbps"]},sort_keys=True),flush=True)
+          print("H1533_EXACT_CLIENT_SERVER_LANE_PORTS "+json.dumps({
+            "client_hot":raw["V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_READY"]["client"],
+            "server_hot":raw["V4_PUBLIC_GAME_SINGLE_LANE_READY"]["server"],
+            "client_due":raw["V4_PUBLIC_GAME_SINGLE_LANE_DUE"]["client"],
+            "server_log_bytes":len(srv),"server_log_head":srv[:240],
+            "client_log_bytes":len(cli),"client_log_head":cli[:240]},sort_keys=True),flush=True)
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
