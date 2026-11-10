@@ -6,3 +6,7 @@
 - 最小修复：同一个 Go 冷共享端口复用已实现的 `originalV4ManualAccountTunnelAfterAuth` 和 `v4ServerSelectedManualLease4`；只允许受保护身份认领事先配置的唯一/32，启动时一项地址 authority（pool、单例或 per-account），在既有 `EstablishServerV4` 后绑定 Rust owned /32。现有 Game / Normal M4 路由、TUN 分发、MTU、后续 Stop 原封复用。未改密文/record/FEC/热路由。
 - 添加真正调用 `runGame` 的无网络冷入口测试以及夹具接线静态回归；只覆盖入口与编译，必须原生 Linux 侧 build/test + Windows2025 实际故障触发后才可升级产品资格。
 - 下个区分实验：先确认精确 SOURCE 的原生 Linux Go 测试与 build 通过，再使用**一场** loss0 Windows5 真实原生 Action 验证 server READY→五账户 TLS→双端 M4→MTU→业务→物理轮换→Stop；如 loss0 过硬门再独立 loss30。原失败不删除；原 ARM H1505 1800s 业务可复用 `PASS_SCOPED`，其 reporter enum 的 Action FAIL 保留。028 整体仍 **IN_PROGRESS**，Android/物理未跑另列。
+
+```feature-impact
+{"kind":"updated","reason":"PLAN028 shared TLS443 protected per-account manual /32 routing is a tracked multiclient capability; record the original pre-READY FAIL and the as-yet-unverified new Linux Go cold owner connection in the existing feature card, without promoting qualification.","ids":["tls-auth-multiclient"]}
+```

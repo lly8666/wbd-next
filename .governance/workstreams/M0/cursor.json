@@ -4,21 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1510,
-  "checkpoint_sha": "182b40ed303391654e7769ebb313dda11174e580",
+  "sequence": 1511,
+  "checkpoint_sha": "07312d6e1743d5c28ff839fd2c9eb277c99744ed",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1510-WIN5-MANUAL-ACCOUNT-SHARED-COLD-GATE",
-  "current_task": "Recovered original H1506 Windows Action42765555239: loss0 job129662640456 and loss30 job129662640430 both FAIL before Linux server V4_PUBLIC_MIXED_MULTI_SERVER_READY (V3 policy unsupported). No actual five-client TLS/data/600s triggered; application NOT_RUN. Root cause exact Go cold shared/manual account route + after-TLS lease map not wired. Minimal Go cold-path fix and regression tests staged on main; native qualification still UNVERIFIED. Earlier ARM H1505 substantive 1800s raw proof PASS_SCOPED, original reporter FAIL retained. PLAN028 IN_PROGRESS.",
-  "why_now": "Both in-flight Windows Actions collected. Actual first fault precedes real TLS/M4, not a perf false-positive. Reuse manual-account protected /32 owner already shipped in Normal, and test one original Windows5 scenario after source build before increasing loss/load.",
+  "task_id": "PLAN028-M0-H1511-ONE-WIN5-LOSS0-SOURCE-STARTED",
+  "current_task": "H1510 Go shared/manual-account cold wiring candidate SOURCE07312d6e1743d5c28ff839fd2c9eb277c99744ed integrated main. Action42768853063: offline wiring PASS; Windows Go compile/test PASS; Linux/Windows Rust library tests PASS. Native Linux original Go/Rust build job129672664597 IN_PROGRESS; ONE loss0 Windows5 native scene pending that dependency, not a product PASS. Governance Action42768853118 failed source/card bookkeeping: feature-impact and mixed-source cursor evidence refs; H1511 repaired docs only, no source Go changes, no duplicate network dispatch. Original H1506 Windows loss0+loss30 FAIL source8e5, 600s NOT_RUN preserved; ARM H1505 raw PASS_SCOPED with reporter FAIL. PLAN028 IN_PROGRESS.",
+  "why_now": "Current Action has real compile PASS and one source-pinned loss0 scene pending dependency, while governance checks exposed document linkage mistakes. Keep one evidence source in cursor, update feature card with original FAIL plus explicit untested new-source status, and revalidate without re-running network.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "After new main SHA, collect cheap Linux Go/Rust build/unit and new one-scenario Windows5 loss0 native Action if triggered. Check exact build SHA and real service READY then five credential TLS, Rust data plane, MTU, 600s duplex outer rates, physical change and owned Stop; classify first failure and artifacts. Loss30 remains NOT_RUN on fixed source until separate authorized native Action; no repeat of source8e5 failed matrix. Do not duplicate in-flight dispatch. Correct old H1505 offline reporter enum without re-running network if needed.",
+  "next_action": "Collect Linux original Go/Rust compile+unit job129672664597 then sole Windows5 loss0 native job of Action42768853063. Determine first precise contract stage server READY, protected accounts/MTU, Rust M4, real UDP/TCP 600s, 4 genuine source change, owned Stop. Do NOT dispatch loss30 while loss0 is pending or until new root facts. If Action fails, retain original ZIP and fix only proven fault. Governance H1511 docs-only correction has no network source change. H1505 original ARM positives PASS_SCOPED; reporter enum offline repair, no network rerun.",
   "unverified": true,
   "last_tested_source": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1510-WIN5-MANUAL-SHARED-COLD-GATE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1506-WIN5-REAL-200MS-LOSS0-LOSS30-TWO-600-20261110.json",
-    "docs/evidence/M0/PLAN028-H1503-H1505-WIN-LINUX-1800-REAL-VM-BUDGETED-PARALLEL-20261110.json",
-    "docs/evidence/M0/PLAN028-H1501-ARM64-TWO-1800S-CURRENT-HEALTH5-PASS-WIN600-LAUNCH-20261110.json"
+    "docs/evidence/M0/PLAN028-H1510-WIN5-MANUAL-SHARED-COLD-GATE-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -31,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1510 collected Action42765555239 Windows loss0/loss30 first failure pre-server READY V3 policy unsupported; original 600s NOT_RUN, infrastructure preflight PASS. Found exact 5-step mixed/manual account Go cold owner wiring gap. Minimal original-Go shared per-account /32 auth mapping fix staged with unit and source regression, Windows one-scene new SOURCE pending validation. Prior H1505 ARM 1800s original positive PASS_SCOPED; reporter Action FAIL preserved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1511 docs-governance correction: cursor evidence_refs only H1510 original FAIL source8e5, prior heterogeneous SOURCE proof preserved in devlog/card; new mixed manual account Go cold fix SOURCE07312 integrated. Action42768853063 cheap+both Rust+Win Go PASS, Linux Go/Rust source locked build in_progress; exact one Windows5 loss0 native scenario next; no loss30 dispatched. PLAN028 IN_PROGRESS."
 }
