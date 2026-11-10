@@ -1,0 +1,54 @@
+# H1524: offline only; the original 600-second native Linux network MUST NOT
+# run again to diagnose a reporter's generation count. Two artifact replays,
+# source-locked to the exact earlier actions, separate jobs and metadata.
+name: PLAN028 H1524 offline original Linux 100-150Mbps raw triage
+run-name: "PLAN028 H1524 replay exact prior 600s Linux evidence, NO network"
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-h1524-offline-linux-outer-raw.yml
+permissions: {contents: read, actions: read}
+jobs:
+  raw-facts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scene: loss0
+            run_id: 42781585712
+          - scene: loss30
+            run_id: 42781585834
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: ${{ matrix.run_id }}
+          github-token: ${{ github.token }}
+          name: plan028-h1520-linux-${{ matrix.scene }}-real-native-600s-${{ matrix.run_id }}
+          path: original/
+      - name: Read true original six native owner logs, five receiver ledgers and hard gates, no network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1524_offline_linux_outer_raw.py
+          mkdir -p raw-facts
+          test -s original/fixed-kernel-result/h1250-product-server.log
+          test -s original/fixed-kernel-result/h1461-six-hundred-report.json
+          python3 -u tools/m0_plan028_h1524_offline_linux_outer_raw.py \
+            --art original/fixed-kernel-result \
+            --scene "${{ matrix.scene }}" \
+            --original-product-source "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da" \
+            --out raw-facts/h1524-${{ matrix.scene }}-original.json
+          echo "H1524_OFFLINE_NO_NETWORK_OR_COMPILE_FINAL"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1524-${{ matrix.scene }}-original-raw-${{ github.run_id }}
+          path: raw-facts/
+          retention-days: 30
+          if-no-files-found: warn
