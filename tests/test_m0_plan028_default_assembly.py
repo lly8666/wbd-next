@@ -10,6 +10,7 @@ import subprocess
 import unittest
 
 from tools.m0_install_public_faketcp import ROOT, REPLACE, CREATE, blob, expected_rows
+from tools.prepare_windows_wiring import EXTRA_BRIDGES, EXTRA_CLI_TESTS
 
 MANIFEST = ROOT / "r0/go_overlay/assembly/manifest-plan020-m0.json"
 X86 = ROOT / ".github/workflows/m0-wl-public-normal-full.yml"
@@ -85,6 +86,49 @@ class Plan028DefaultAssembly(unittest.TestCase):
         self.assertIn("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY", script)
         self.assertIn("PromoteServerGameAfterAuthenticatedClientRx", script)
         self.assertIn("ProtectedFreshGroupRequested()", script)
+    def test_all_current_windows_product_and_guard_test_overlays_compiled_by_default(self):
+        spec=json.loads(MANIFEST.read_text())
+        paths={r["path"] for r in spec["operations"]}
+        for part,names in EXTRA_BRIDGES.items():
+            for name in names:
+                paths.add("internal/"+part+"/"+name)
+        for name in EXTRA_CLI_TESTS:
+            paths.add("cmd/wbd-client/"+name)
+        expected=set()
+        for part in ("cmd/wbd-client","internal/windowsclient","internal/windowsownerlease"):
+            expected.update(x.relative_to(ROOT/"r0/go_overlay").as_posix()
+                            for x in (ROOT/"r0/go_overlay"/part).glob("*.go"))
+        expected.update(x.relative_to(ROOT/"r0/go_overlay").as_posix()
+                        for x in (ROOT/"r0/go_overlay/internal/realityfront").glob("bridge_v4_windows_*.go"))
+        # Intentionally EXCLUDED, not a missing product repair:
+        # unsafe test-only init() forces global 1420 MSS on entire process.
+        excluded={"internal/windowsownerlease/plan020_local_mss_windows_test.go"}
+        self.assertFalse(excluded & paths)
+        self.assertFalse(expected-paths-excluded,
+                         "Uncompiled current Windows Go overlay(s): "+repr(expected-paths-excluded))
+        script=(ROOT/"tools/prepare_windows_wiring.py").read_text()
+        self.assertIn("for name in EXTRA_CLI_TESTS:",script)
+        self.assertIn('need(not target.exists() and not target.is_symlink()',script)
+        self.assertIn("original_go_tls_join_windows_test.go",EXTRA_BRIDGES["windowsownerlease"])
+        self.assertIn("native_two_wintun_isolation_windows_test.go",EXTRA_BRIDGES["windowsclient"])
+        workflow=X86.read_text()
+        for phrase in ("windowsownerlease.test.exe","windowsclient.test.exe",
+                       "TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots",
+                       "TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots"):
+            self.assertIn(phrase,workflow)
+        self.assertNotIn("plan020_local_mss_windows_test.go",str(EXTRA_BRIDGES))
+    def test_arm64_current_main_native_build_checks_latest_not_frozen_binary(self):
+        path=ROOT/".github/workflows/m0-plan028-h1546-arm64-current-default-bundle.yml"
+        text=path.read_text()
+        self.assertIn("runs-on: ubuntu-24.04-arm",text)
+        self.assertIn("bash tools/arm64_public_go_rust_bundle.sh",text)
+        self.assertIn('assert m["source_sha"]==os.environ["GITHUB_SHA"]',text)
+        self.assertIn("H1546_CURRENT_ARM64_REAL_ORIGINAL_GO_X2_AND_RUST_NATIVE_ISAL_BUILD_PASS_NO_IO",text)
+        self.assertIn('"r0/go_overlay/internal/v4productcli/*.go"',text)
+        self.assertIn('"crates/wbd-engine/src/*.rs"',text)
+        self.assertNotIn("WBD_ARM64_FROZEN_SOURCE",text)
+        # Old ARM64 workflow intentionally remains a historical source140a
+        # exercise, NEVER a current Go binary accepted by this test.
     def test_one_exact_h1541_native_workflow_has_executable_go_test_and_real_file_trigger(self):
         w=(ROOT/".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml").read_text()
         self.assertIn("- .github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml",w)

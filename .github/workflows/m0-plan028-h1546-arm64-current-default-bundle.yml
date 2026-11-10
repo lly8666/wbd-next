@@ -1,0 +1,85 @@
+# H1546 current-source ARM64 build-only; the existing 140a frozen workflow
+# retains its immutable historical artifact and MUST NOT stand in for main.
+name: PLAN028 H1546 current main ARM64 original-Go Rust native bundle
+run-name: "PLAN028 H1546 ARM64 current-Go x64-equivalent 11-file M4+Game2 / ISA-L build-only"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1546-arm64-current-default-bundle.yml"
+      - "tools/arm64_public_go_rust_bundle.sh"
+      - "tools/m0_install_public_faketcp.py"
+      - "tools/m0_install_public_realityfront_tests.py"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
+      - "r0/go_overlay/internal/v4productcli/*.go"
+      - "r0/go_overlay/internal/realityfront/*.go"
+      - "r0/go_overlay/internal/faketcp/*.go"
+      - "crates/wbd-engine/src/*.rs"
+      - "crates/wbd-platform/src/*.rs"
+permissions: {contents: read}
+concurrency:
+  group: plan028-h1546-current-arm64-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  current-native-arm64-compile:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: "1.23.12"
+          cache: false
+      - name: Install pinned ARM64 native Go/Rust ISA-L build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ pkg-config
+          bash -n tools/arm64_public_go_rust_bundle.sh
+          python3 -m unittest tests.test_m0_plan028_default_assembly tests.test_m0_install_public_faketcp -v
+          echo H1546_ARM64_CURRENT_SAME_DEFAULT_SOURCE_CHECKS_PASS
+      - name: Compile original ARM64 Go x2 plus Rust accelerated ISA-L using all CURRENT main repairs
+        shell: bash
+        timeout-minutes: 36
+        run: |
+          set -euo pipefail
+          mkdir -p h1546-original-receipts
+          bash tools/arm64_public_go_rust_bundle.sh 2>&1 |
+            tee h1546-original-receipts/source-locked-arm64-build.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,struct
+          root=pathlib.Path("arm64-public-bundle")
+          m=json.loads((root/"manifest.json").read_text())
+          assert platform.machine()=="aarch64"
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          assert m["rust_native_fec_acceleration"] is True
+          assert m["original_go_faketcp"]=="11-source-locked-records"
+          assert m["original_go_native_client_and_server"]=="all-current-v4productcli-overlay-files"
+          assert m["native_server_cold_cohort"]=="exact protected epoch PLUS original adjacent 5tuple"
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(root/n).read_bytes()
+              assert len(b)>100000 and b[:4]==b"\x7fELF"
+              assert struct.unpack_from("<H",b,18)[0]==183
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][n]
+          assert m["raw_tun_tls_app_stop"]=="NOT_RUN"
+          print("H1546_CURRENT_ARM64_REAL_ORIGINAL_GO_X2_AND_RUST_NATIVE_ISAL_BUILD_PASS_NO_IO",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1546-arm64-current-native-build-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            h1546-original-receipts/
+            arm64-public-bundle/manifest.json
+            arm64-public-bundle/SHA256SUMS

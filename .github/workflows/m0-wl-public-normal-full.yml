@@ -46,6 +46,10 @@ on:
       - tests/test_m0_install_public_faketcp.py
       - tests/test_m0_plan028_default_assembly.py
       - tools/arm64_public_go_rust_bundle.sh
+      - 'r0/go_overlay/internal/windowsclient/*.go'
+      - 'r0/go_overlay/internal/windowsownerlease/*.go'
+      - 'r0/go_overlay/cmd/wbd-client/*.go'
+      - 'r0/go_overlay/internal/realityfront/bridge_v4_windows_*.go'
       - r0/go_overlay/internal/v4productcli/game_linux.go
       - r0/go_overlay/internal/v4productcli/game_cold_cohort_linux_test.go
       - tests/test_delivery_ci.py
@@ -512,6 +516,12 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'Windows client TEST compile preflight FAIL'}
             & go test -c -tags wbd_v4_embedded_go -o ../result/realityfront.test.exe ./internal/realityfront
             if($LASTEXITCODE -ne 0){throw 'Windows bridge TEST compile preflight FAIL'}
+            # H1545: compile signed Windows owner/M4 and two-Wintun tests,
+            # do not auto-run device-requiring tests on a shared runner.
+            & go test -c -tags wbd_v4_embedded_go -o ../result/windowsownerlease.test.exe ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'Windows original owner TLS/Game/Wintun test compile FAIL'}
+            & go test -c -tags wbd_v4_embedded_go -o ../result/windowsclient.test.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'Windows two signed Wintun native test compile FAIL'}
             # Execute the already-compiled original Go shared controller,
             # no second build, signed driver, WSL or Normal full-path run.
             & ../result/realityfront.test.exe '-test.run=TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions' '-test.count=1'
@@ -525,6 +535,8 @@ jobs:
             # H1518: native Windows five CI-only owner slots, real named kernel events.
             & ../result/client.test.exe '-test.run=^TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots' '-test.count=1' '-test.v'
             if($LASTEXITCODE -ne 0){throw 'PLAN028 five distinct native Windows owned event slots failed'}
+            & ../result/client.test.exe '-test.run=^TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots$' '-test.count=1' '-test.v'
+            if($LASTEXITCODE -ne 0){throw 'PLAN028 two Windows native owner slot regression FAIL'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN028(NativeWindowsIPv4CallbackCoalescer|NativeWindowsOnlyPhysicalNICSourceIPv4|WindowsIPv4NlMtuMIBRowABI|GameNativeCanceledTickNeverMasqueradesAsMTUDrift|WindowsOwnedWSLMTUShrinkNeverAllowsForeignOrSourceRebind)$' '-test.count=1' '-test.v'
             if($LASTEXITCODE -ne 0){throw 'PLAN028 actual selected Windows physical NIC MTU-only notification/fail-closed owner contract failed'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN026GameColdHandoffQueueNeverBlocksRustJoin$' '-test.count=1'

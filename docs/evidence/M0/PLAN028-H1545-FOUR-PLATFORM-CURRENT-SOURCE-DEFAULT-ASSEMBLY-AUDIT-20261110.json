@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "checkpoint": "H1545",
+  "date_utc": "2026-11-10",
+  "user_request": "Continue and review recent days fixes default source wiring on x86 ARM Linux Windows",
+  "audited_head": "304ca72bac7dfa08b94e9fbc28f40e27fc61b928",
+  "source_period": "2026-11-08 to 2026-11-10",
+  "original_Go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "ISA_L_source": "c387163fcbca62701d646149564c550c78a4f985",
+  "rust_version": "1.85.1",
+  "go_version": "1.23.12",
+  "status": "CURRENT_SOURCE_AUDIT_IMPLEMENTED_BUILD_AND_ORIGINAL_IO_VERIFICATION_PENDING",
+  "platforms": {
+    "linux_x86": {
+      "status": "DEFAULT_CURRENT_GO_AND_RUST_SOURCE_WIRED",
+      "source": "r0/go_overlay/internal/v4productcli/*.go and current realityfront + H1285 original FakeTCP exact 11 manifest hash",
+      "last_original_native_full_both_outer_mbps": {
+        "zero_loss": 333.93,
+        "thirty_loss_old": 303.015
+      },
+      "original_loss0_user_accepted": "PASS_SCOPED",
+      "original_loss30_at_H1540": "FAIL_SCOPED_CAROL_GAME2_MIXED_STALE_LANE",
+      "h1541_product_code": "originalGameColdFlowKey protected owner epoch PLUS exact original 5tuple adjacent ports",
+      "h1541_source_unit": [
+        "Game2 stale49336 vs new 57255/57256 PASS original H1544",
+        "Game4 last lane65535 valid test fixed"
+      ],
+      "next_real_test": "ONLY loss30 600s 200ms 300-350 Mbps; strict server M4, five UDP/TCP clients, six Stop"
+    },
+    "linux_arm64": {
+      "status": "CURRENT_DEFAULT_BUILD_ENTRY_CREATED_TEST_NOT_YET_RUN",
+      "old_frozen_workflow": ".github/workflows/m0-plan028-arm64-native-frozen.yml",
+      "old_frozen_binary_source": "140a06622a97251863c6959c1290a0dd11b7a38b",
+      "explanation": "frozen historical binary may PASS old source but does NOT prove current ARM64 current-Go fixes",
+      "current_source_bundle": "tools/arm64_public_go_rust_bundle.sh",
+      "new_action": ".github/workflows/m0-plan028-h1546-arm64-current-default-bundle.yml",
+      "required": "actual ubuntu-24.04-arm builds current GITHUB_SHA two original Go TLS+Rust+ISA-L native bin ELF183 with exact SHA256, all 11 pinned FakeTCP original/repaired blobs and H1541 Game2 source; build-only NOT network IO"
+    },
+    "windows_x86_64": {
+      "status": "PRODUCT_GO_AND_RUST_BUILD_PASS_HISTORICAL_SCOPE",
+      "latest_success_action": 42810065262,
+      "latest_windows_original_Go_build": "PASS",
+      "latest_windows_Rust_unit": "PASS",
+      "frozen_go_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+      "source_manifest_ops": 112,
+      "default_extra_original_Go_files_pre_audit": 17,
+      "default_extra_after_audit": 23,
+      "default_current_Windows_overlay_files": 94,
+      "previously_missing_default_compile_guards": [
+        "cmd/wbd-client/m0_plan028_dual_native_slot_windows_test.go",
+        "internal/windowsclient/native_two_wintun_isolation_windows_test.go",
+        "internal/realityfront/bridge_v4_windows_private_owner_test.go",
+        "internal/windowsownerlease/created_wintun_windows_test.go",
+        "internal/windowsownerlease/original_go_tls_join_windows_test.go",
+        "internal/windowsownerlease/original_go_tls_game_windows_test.go",
+        "internal/windowsownerlease/original_go_tls_fec2_windows_test.go"
+      ],
+      "new_wiring": "tools/prepare_windows_wiring.py EXTRA_BRIDGES and source locked EXTRA_CLI_TESTS plus compile windowsownerlease/windowsclient tests by default, execute offline old 2-device owner slot regression; protect actual signed driver-dependent tests from auto-execution.",
+      "allowed_explicit_test_only_exclusion": "internal/windowsownerlease/plan020_local_mss_windows_test.go has init() forcing global MSS1420, incompatible with native original product; not a shipping fix.",
+      "another_nonproduct_test": "r0/go_overlay/ci/native_admin_preroute_real_crash_windows_test.go is standalone CI harness, not original-Go package.",
+      "source_coverage_check": "94 current Windows Go overlay files, 112 canonical manifest ops +23 extra explicit bridge+owner test files and1 CLI, only test-only global MSS override excluded",
+      "five_native_windows_original": "NOT_QUALIFIED: 4 route is not owned, Bob RX0; global /32 and two /1 WFP exclusivity unresolved, never autoenable unsafe ownership"
+    }
+  },
+  "defaults_guard": {
+    "new_test": "tests/test_m0_plan028_default_assembly.py checks Windows all shipping overlay coverage and exclusions, ARM latest-source action not frozen140a, 11 original Go FakeTCP hash, x86+ARM same overlay, H1541 source Game2 flow-identity",
+    "main_workflow": ".github/workflows/m0-wl-public-normal-full.yml preflight go test -c original ownerlease+windowsclient and two-account owner event test",
+    "linux_target_workflow": ".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml will trigger on current Game2 source, tests and workflow, only loss30 original native, not duplicate loss0"
+  },
+  "strict_status": {
+    "h1544_Game2_unit": "PASS",
+    "h1544_Game4_bad_boundary_test": "FIXED_TEST_SOURCE_NOT_NATIVE_600S",
+    "linux_H1541_loss30_original_after_h1544": "NOT_RUN",
+    "windows_five": "FAIL",
+    "ARM64_latest_native_build": "NOT_RUN",
+    "linux_loss0_333930": "PASS_SCOPED",
+    "PLAN028": "IN_PROGRESS",
+    "WAN": "NOT_RUN",
+    "Android": "NOT_RUN"
+  },
+  "no_unsafe_global_default_changes": true
+}

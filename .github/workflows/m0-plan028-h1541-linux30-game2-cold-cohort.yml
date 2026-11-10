@@ -12,6 +12,10 @@ on:
     branches: [main]
     paths:
       - .github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml
+      - r0/go_overlay/internal/v4productcli/game_linux.go
+      - r0/go_overlay/internal/v4productcli/game_cold_cohort_linux_test.go
+      - tools/m0_install_public_faketcp.py
+      - tests/test_m0_plan028_default_assembly.py
 permissions: {contents: read, actions: read}
 jobs:
   one-original-linux-loss30:

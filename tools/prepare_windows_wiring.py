@@ -25,14 +25,30 @@ EXTRA_BRIDGES = {
         "bridge_v4_windows_fec2_owner.go", "bridge_v4_windows_fixed_stream_test.go",
         "bridge_v4_windows_wintun_lease.go", "bridge_v4_windows_wintun_lease_test.go",
         "bridge_v4_windows_scoped_client.go",
+        # Recent original-Go private owner guard must compile in Windows
+        # preflight, but NEVER auto-run the DLL/hardware-required test.
+        "bridge_v4_windows_private_owner_test.go",
         "bridge_v4_windows_m2_batch_preflight_test.go",
         "bridge_v4_windows_open_validated_test.go",
         "bridge_v4_windows_m2_effective_test.go",
     ),
     "windowsownerlease": (
         "created_wintun_windows.go", "scoped_original_tls_native_wintun_windows.go",
+        # Test-only source: cross-joined real TLS/M4 Game2/FEC2 and Wintun
+        # identity. Compile by default, execute only with signed OS and
+        # exact native DLL proof. Do not install plan020_local_mss init()
+        # which would silently change the test-only global MSS to 1420.
+        "created_wintun_windows_test.go",
+        "original_go_tls_join_windows_test.go",
+        "original_go_tls_game_windows_test.go",
+        "original_go_tls_fec2_windows_test.go",
+    ),
+    "windowsclient": (
+        # H1369 source existed but was never compiled in default Windows Go.
+        "native_two_wintun_isolation_windows_test.go",
     ),
 }
+EXTRA_CLI_TESTS = ("m0_plan028_dual_native_slot_windows_test.go",)
 
 
 def need(ok, message):
@@ -171,6 +187,19 @@ def prepare(root, legacy, output, source, spec):
                 continue
             need(not target.exists(), "competing original/overlay owner: " + relative)
             target.write_bytes(data)
+    # The original H1381 two native Windows account slots test is a
+    # separate command package. Keep this explicit and source-pinned; never
+    # install a second copy or alter the production GUI singleton.
+    for name in EXTRA_CLI_TESTS:
+        relative = "r0/go_overlay/cmd/wbd-client/" + name
+        data = git(root, "show", source + ":" + relative)
+        need(data.startswith(b"//go:build windows") and
+             b"TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots" in data,
+             "invalid original Windows two-account guard: " + name)
+        target = legacy / "cmd" / "wbd-client" / name
+        need(not target.exists() and not target.is_symlink(),
+             "competing Windows native client guard: " + name)
+        target.write_bytes(data)
     for path in ("internal/windowsownerlease/original_tls_native_product_windows.go",
                  "internal/windowsclient/native_real_product_service_windows.go",
                  "internal/windowsclient/native_udp_kernel_driver_windows.go"):
