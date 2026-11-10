@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1547",
+  "date_utc": "2026-11-10",
+  "audit_scope": "2026-11-08 through 2026-11-10 source changes and default Go/Rust x86/ARM64/Linux/Windows shipping assembly, not a blanket completed L3 acceptance",
+  "main_sha_at_audit": "e6485a0db134ff5e653d048eb1f8c341a412eccb",
+  "latest_product_source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+  "main_delta_from_product_source": "one documentation/governance-only commit, zero production source modifications",
+  "linux_x86": {
+    "loss30": {
+      "original_action_id": 42825317650,
+      "original_job_id": 129860984872,
+      "original_artifact_id": 13768194541,
+      "original_product_source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+      "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "original_rust_source_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+      "original_product_go_client_sha256": "fd33f4ae7d87ed2da5e71c6d29821b47e2200eaf48442cce39ea99cdf743fd1a",
+      "original_product_go_server_sha256": "6fc4ff717387602c771669ba2d47061bc54f1c6f6ffddf6ad07cefdc5d367502",
+      "original_product_rust_library_sha256": "e8ac9668e53dbc31837fdb34c959fd686783d0f471ee4dc3cd499c9adce2be0a",
+      "original_action_result": "SUCCESS",
+      "real_linux_native_6_netns_5_accounts_600s": "PASS_SCOPED",
+      "real_kernel_netem_physical_each_direction_ms": 200,
+      "physical_loss_percent_each_leg": 30,
+      "actual_kernel_outer_both_directions_steady_mbps": 304.271,
+      "target_band_mbps": [
+        300,
+        350
+      ],
+      "qualifying_10s_steady_windows": 40,
+      "total_10s_steady_windows": 42,
+      "real_original_five_client_both_direction_udp_progress": "PASS",
+      "real_original_framed_tcp_alice_bob_both_directions": "PASS",
+      "original_game2_server_whole_group_commits": 6,
+      "original_game2_client_ready_without_server_group": [],
+      "original_game4_server_hot_m4_commits": 5,
+      "original_game4_client_hot_success": 5,
+      "normal_server_authenticated_B_M4_count": {
+        "alice": 6,
+        "bob": 5,
+        "erin": 4
+      },
+      "normal_server_authenticated_B_M4_total": 15,
+      "max_active_original_recv_gap_ms_all_ten_legs": 200,
+      "original_6_owned_stop": {
+        "server": true,
+        "alice": true,
+        "bob": true,
+        "carol": true,
+        "dave": true,
+        "erin": true
+      },
+      "host_capacity_guard_exit": 0,
+      "original_native_fixture_exit": 0,
+      "kernel_observer_exit": 0,
+      "strict_offline_native_verifier": "PASS_SCOPED_REAL_NATIVE_600S_BUSINESS_AND_OUTER_300_350",
+      "strict_verifier_hard_faults": [],
+      "legacy_reporter_first_error_retained": "H1274 misclassifies Normal B because it matches initial M4 not server after-authenticated-Health B promotion; assumes physical 30% loss recovery stage must receive >=95%. All original alerts preserved in source report and source-locked artifact.",
+      "claim": "PASS_SCOPED only native x86 five-account 600s under 200ms/30% at 304.271 real Mbps; not multi machine physical WAN or Android"
+    },
+    "loss0": {
+      "original_run_id": 42788212678,
+      "source_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+      "original_native_600s_mbps": 333.93,
+      "qualification": "PASS_SCOPED_PRIOR_SOURCE",
+      "not_automatically_a_current_source_loss0_retest": true
+    },
+    "default_assembly": "original Go current v4productcli/*.go + realityfront/*.go exact parent guard + source-locked 11-file FakeTCP installer, x86 current main automated cheap source guard PASS, Go original rebuilt @ed965, Rust source 9b260 bin SHA256 equal to no-Rust-source-delta revision range"
+  },
+  "linux_arm64": {
+    "current_action_id": 42825317709,
+    "current_job_id": 129860985818,
+    "source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+    "real_os": "ubuntu-24.04-arm ARM64 ELF e_machine=183",
+    "current_two_original_Go_Rust_ISA_L_build": "PASS_SCOPED_BUILD_ONLY",
+    "source_manifest_sha256": "VERIFIED",
+    "current_full_Go_overlay": "PASS_11_FILES_ALL_GO_FILES",
+    "Rust_native_fec_acceleration": "PASS",
+    "Rust_game_lane_tests": "22 PASS",
+    "Rust_fec2_live_tests": "7 PASS",
+    "network_600s_current_source": "NOT_RUN",
+    "physical_five_clients_current_source": "NOT_RUN",
+    "stop_current_source": "NOT_RUN",
+    "stale_frozen_ARM64_140a_source_not_current": "NOT_ACCEPTED_AS_LATEST_BUILD"
+  },
+  "windows_x86_64": {
+    "current_source_action_id": 42825317732,
+    "windows_Go_build_job_id": 129861350783,
+    "native_two_OS_job_id": 129864030756,
+    "source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+    "current_go_rust_canonical_manifest": "PASS_112_SOURCE_LOCKED_OPERATIONS",
+    "current_windows_overlay_coverage": "PASS_94_SOURCE_FILES_CANONICAL_PLUS_23_CONTROLLED_EXTRAS_AND_ONE_CLI_TEST",
+    "windowsownerlease_and_windowsclient_go_test_compile": "PASS",
+    "real_Windows_named_OS_event_2_slots": "PASS_UNIT",
+    "real_Windows_named_OS_event_5_slots": "PASS_UNIT",
+    "Windows_Rust_current_source_test": "PASS_UNIT",
+    "normal_Windows_WSL2_Linux_same_source_7_modes_kernel_two_way_udp_tcp_and_stop": "PASS_SCOPED_ONE_WINDOWS_CLIENT_AT_A_TIME",
+    "original_7_modes": [
+      "normal",
+      "fixed",
+      "auto",
+      "game2",
+      "game4",
+      "game2-fec",
+      "game4-fec"
+    ],
+    "five_Wintun_same_Windows_host_original_run": 42788212994,
+    "five_Wintun_same_Windows_host": "FAIL_NOT_QUALIFIED",
+    "original_first_product_blocker": "each independent Wintun default capture /1 and server /32 original Windows route CAS/WFP rule collide with other native client's authenticated route ownership; 4 route is not owned, Bob native RX=0, no Win5 READY",
+    "allowed_default_action": "KEEP_FAIL_CLOSED_THIRD_PARTY_ROUTE_WAL_AND_WFP; do not silently enable unsafe global multiprocess shared route policy",
+    "no_claim_of_five_Windows_real_business_pass": true
+  },
+  "cross_platform_source_diff": {
+    "compare": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da...ed965f2dd93bc5520d9a17f211ff39029d4d6594",
+    "changed_files_total": 49,
+    "rust_rs_or_crates_or_Cargo_changes": 0,
+    "reason_frozen_rust_in_loss30_native_replay": "no Rust source change in this exact comparison, binary SHA validated",
+    "HEAD_product_diff": "e6485a0d adds only docs/governance after ed965"
+  },
+  "governance": {
+    "current_main_run": 42826575132,
+    "governance": "PASS",
+    "feature_catalog": "PASS",
+    "evidence_ref_limit": 8
+  },
+  "hard_gate_status": {
+    "linux_x86_loss30_300_350": "PASS_SCOPED",
+    "linux_x86_loss0_300_350": "PASS_SCOPED_PRIOR_SOURCE",
+    "linux_arm64_current_binary": "PASS_BUILD_ONLY",
+    "linux_arm64_current_recovery_network": "NOT_RUN",
+    "windows_x86_seven_modes_one_client": "PASS_SCOPED",
+    "windows_five_same_host": "FAIL",
+    "physical_cross_machine": "NOT_RUN",
+    "android": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  },
+  "next_work": "Windows signed Wintun five-client requires machine-scoped route/WFP owner coordination with verified leases and foreign route protection, plus real retest. ARM64 current-source real native five-client 600s under netem remains untested, although current binary already compiled. No new PLAN029/030."
+}
