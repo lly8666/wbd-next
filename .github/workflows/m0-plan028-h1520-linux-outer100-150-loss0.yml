@@ -49,7 +49,7 @@ jobs:
           assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
           for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
               b=(p/name).read_bytes()
-              assert b[:4]==b"\\x7fELF" and struct.unpack_from("<H",b,18)[0]==62
+              assert b[:4]==bytes.fromhex("7f454c46") and struct.unpack_from("<H",b,18)[0]==62
               assert len(b)>100000
               assert hashlib.sha256(b).hexdigest()==m["sha256"][name]
           print("H1520_ORIGINAL_GO_RUST_NATIVE_LINUX_X86_SOURCE_MANIFEST_SHA_PASS",flush=True)
