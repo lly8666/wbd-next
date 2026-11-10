@@ -27,7 +27,7 @@ jobs:
           mkdir -p result
           python3 - <<'PY'
           import pathlib,json
-          root=pathlib.Path("original/result/wl-public")
+          root=pathlib.Path("original")
           names=("alice","bob","carol","dave","erin")
           flags=("WBD_WINDOWS_CLIENT_READY","V4_PUBLIC_MIXED_NORMAL_READY",
             "WBD_WINDOWS_GAME_NATIVE_APPLIED","V4_PUBLIC_LEASE_APPLIED",
