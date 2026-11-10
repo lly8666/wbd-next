@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "project": "M0 PLAN028",
+  "checkpoint": "H1537",
+  "date_utc": "2026-11-10",
+  "user_instruction": "Continue Windows five-client and increase Linux actual full-outer both directions 300-350 Mbps; accept previous scoped tests",
+  "immutable_linux_product_source_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "h1531_wrapper_sha": "0a7d771d127223167ff20f6738d19f0d5cac6571",
+  "linux_high_outer_original_action": {
+    "run_id": 42788212678,
+    "scope": "Two separate ubuntu x86_64 hosts, true 6 netns each, one original Go TLS443/Rust ISA-L server and five actual clients modes Normal/Auto/Game2/Game4/Fixed6, physical tc netem one-way200ms on all ten physical veth legs, true bidirectional UDP/TCP for 600s plus owned Stop, 10s tc outer byte counters. Not Windows/Android/WAN.",
+    "scenes": [
+      {
+        "scene": "loss0",
+        "job_id": 129734687736,
+        "original_zip_artifact_id": 13750603031,
+        "action_conclusion": "SUCCESS",
+        "inner_offer_mbps_per_direction": 60,
+        "actual_steady_kernel_full_outer_both_direction_mbps": 333.93,
+        "target_outer_mbps": [
+          300,
+          350
+        ],
+        "bandwidth_gate": "PASS",
+        "native_product_business": "PASS_SCOPED",
+        "five_account_two_way_udp_tcp": "PASS",
+        "all_exact_client_server_M4": "PASS",
+        "original_normal_B_auth_health_proofs": {
+          "alice": 6,
+          "bob": 5,
+          "erin": 5
+        },
+        "all_six_owned_stop": "PASS",
+        "max_active_gap_threshold": "<750ms",
+        "vm_guard": "NORMAL_MONITOR_EXIT"
+      },
+      {
+        "scene": "loss30",
+        "job_id": 129734688202,
+        "original_zip_artifact_id": 13749983094,
+        "action_conclusion": "FAIL_HARD_GAME4_PROOF",
+        "inner_offer_mbps_per_direction": 82,
+        "actual_steady_kernel_full_outer_both_direction_mbps": 303.027,
+        "target_outer_mbps": [
+          300,
+          350
+        ],
+        "bandwidth_gate": "MEAN_IN_RANGE",
+        "native_product_business": "FAIL_SCOPED_M4_UNPROVEN_DAVE_GAME4",
+        "client_native_600s_exit": 0,
+        "kernel_monitor_exit": 0,
+        "vm_guard_exit": 0,
+        "all_six_owned_stop": "PASS",
+        "original_normal_B_auth_health_proofs": {
+          "alice": 6,
+          "bob": 5,
+          "erin": 4
+        },
+        "game4_client_hot_events": 5,
+        "game4_server_exact_authenticated_hot_ready": 3,
+        "client_hot_port_without_server_M4_promotion": [
+          {
+            "lane": 3,
+            "source_port": 59341,
+            "client_time_utc": "2026-11-10T09:14:55"
+          },
+          {
+            "lane": 4,
+            "source_port": 50881,
+            "client_time_utc": "2026-11-10T09:17:04"
+          }
+        ],
+        "server_hot_confirmed_ports": [
+          59881,
+          51421,
+          58797
+        ],
+        "original_server_log_bytes": 165149,
+        "original_server_log_begins_at": "2026-11-10T09:08:55",
+        "not_artifact_tail_truncation": true,
+        "original_dave_rotations_client_ready": true,
+        "original_dave_all_four_lanes_attempted": true,
+        "qualification": "NOT_PASS_PRODUCT_GAME4_M4_DESPITE_REAL_OUTER_MEAN_303_027"
+      }
+    ],
+    "offline_exact_highloss_dave_evidence": {
+      "first_action": 42790215773,
+      "detail_action": 42790451307,
+      "classification": "ORIGINAL_IMMUTABLE_ZIP_OFFLINE_READ_ONLY",
+      "network_replayed": false
+    }
+  },
+  "windows_original": {
+    "action_id": 42788212994,
+    "job_id": 129737306072,
+    "artifact_id": 13751392741,
+    "source_sha": "0a7d771d127223167ff20f6738d19f0d5cac6571",
+    "built_go_rust_original_native": "PASS",
+    "real_wsl_npcap_wintun_setup": "PASS",
+    "fixed_duplicate_parent_source_prepare": "PASS",
+    "original_single_198_19_254_1_receipt_reused": true,
+    "original_tc_netem_cleanup": "PASS",
+    "original_owned_host_guest_source_restore": "PASS",
+    "no_wal_leftover_all_five": true,
+    "server_exact_owned_stop": "PASS",
+    "actual_five_windows_original_ready_count": {
+      "alice": 0,
+      "bob": 0,
+      "carol": 0,
+      "dave": 0,
+      "erin": 0
+    },
+    "first_fixture_exception": "WinError 10049: attempted bind 10.66.0.2..0.6 before those Windows Wintun inner OS addresses were ready",
+    "substantive_original_product_fault": "windowsclient: route is not owned; refuse to replace on Alice/Carol/Dave/Erin; Bob Rust native RX=0, context deadline. This is not cured by increasing app bind timeout.",
+    "failure_classification": "WINDOWS_FIVE_NATIVE_NOT_QUALIFIED_ROUTE_OWNERSHIP_CONFLICT_AND_NO_APP_READY",
+    "prior_independent_dual_client_source": "H1387 d9b49b95 original signed A ready B own route FAIL, same route stage",
+    "offline_original_zip_inspection": {
+      "action_id": 42790915867,
+      "success": true,
+      "network_replayed": false
+    },
+    "explicit_no_route_guard_waiver": true
+  },
+  "prior_accepted_scoped_history": [
+    {
+      "scene": "H1520 loss0",
+      "original_action": 42781585712,
+      "outer_both_mbps": 185.352,
+      "five_client_original_business_M4_Stop": "PASS_SCOPED",
+      "historical_100_150_band": "OVERSHOOT",
+      "user_accepts_prior_baseline": true
+    },
+    {
+      "scene": "H1520 loss30",
+      "original_action": 42781585834,
+      "outer_both_mbps": 136.511,
+      "five_client_original_business_M4_Stop": "PASS_SCOPED",
+      "historical_100_150_band": "PASS",
+      "user_accepts_prior_baseline": true
+    }
+  ],
+  "plan_status": "IN_PROGRESS",
+  "physical_wan": "NOT_RUN",
+  "android": "NOT_RUN",
+  "next_steps": [
+    "Do NOT rerun high-loss0: full native outer333.930 PASS.",
+    "Do not falsely qualify 303.027 loss30 Game4: investigate missing exact server M4 for lanes3/4 using original log, no retries that change seed for a green result.",
+    "Windows requires genuine per-interface/per-owner Windows Wintun route isolation before 5 active accounts share one OS and server, not a wildcard app socket, not bypassing route ownership guard. Subsequent native run only after original route collision root fixed and offline unit/contract tests."
+  ],
+  "no_fabricated_or_retrospective_product_pass": true
+}
