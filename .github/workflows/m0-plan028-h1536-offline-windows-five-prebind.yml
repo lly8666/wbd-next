@@ -1,0 +1,65 @@
+name: PLAN028 H1536 original Windows five early bind source evidence
+run-name: "PLAN028 H1536 read original Windows/WSL first fault only, NO native run"
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-h1536-offline-windows-five-prebind.yml
+permissions: {contents: read, actions: read}
+jobs:
+  read-original-zip:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42788212994
+          github-token: ${{ github.token }}
+          name: m0-wl-full-public-normal-direct-h1506-loss0-42788212994
+          path: original/
+      - name: Inspect exact five signed native Windows client TLS and shared WSL server failures before app socket bind
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p result
+          python3 - <<'PY'
+          import pathlib,json
+          root=pathlib.Path("original/result/wl-public")
+          names=("alice","bob","carol","dave","erin")
+          flags=("WBD_WINDOWS_CLIENT_READY","V4_PUBLIC_MIXED_NORMAL_READY",
+            "WBD_WINDOWS_GAME_NATIVE_APPLIED","V4_PUBLIC_LEASE_APPLIED",
+            "V4_PUBLIC_PATH","admission","FAIL","error","Error","timeout",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED","REJECT","RST","SOCKET","Network")
+          results={}
+          for role in ("server","windows-app","linux-app")+tuple("client-"+n for n in names):
+              path=root/("h1506-"+role+".log")
+              data=path.read_text(errors="replace") if path.is_file() else ""
+              marks=[x[:320] for x in data.splitlines() if any(y in x for y in flags)]
+              results[role]={"file_exists":path.is_file(),"bytes":len(data),
+                 "first_lines":data.splitlines()[:12],"last_lines":data.splitlines()[-22:],
+                 "important_events":marks[:15]+marks[-25:] if len(marks)>40 else marks}
+          report=json.loads((root/"h1506-loss0-strict-real-report.json").read_text())
+          result={"immutable_original_run":42788212994,
+            "source_sha":"0a7d771d127223167ff20f6738d19f0d5cac6571",
+            "original_status":report.get("status"),
+            "root_first_error":report.get("first_failure"),
+            "original_logs":results,"network_replayed":False}
+          pathlib.Path("result/h1536-original-windows-first-fault.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("H1536_EXACT_WINDOWS_FIVE_BEFORE_APP_BIND "+json.dumps({
+            "source":result["source_sha"],"first_error":result["root_first_error"],
+            "clients":{n:{"bytes":results["client-"+n]["bytes"],
+              "head":results["client-"+n]["first_lines"][:3],
+              "last":results["client-"+n]["last_lines"][-5:]} for n in names},
+            "server":results["server"]["last_lines"][-12:],
+            "windows_app":results["windows-app"]["last_lines"][-10:]},sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1536-original-windows-five-${{ github.run_id }}
+          path: result/
+          retention-days: 30
+          if-no-files-found: warn
