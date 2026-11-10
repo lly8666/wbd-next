@@ -135,5 +135,6 @@
     "android": "NOT_RUN",
     "PLAN028": "IN_PROGRESS"
   },
-  "next_work": "Windows signed Wintun five-client requires machine-scoped route/WFP owner coordination with verified leases and foreign route protection, plus real retest. ARM64 current-source real native five-client 600s under netem remains untested, although current binary already compiled. No new PLAN029/030."
+  "next_work": "Windows signed Wintun five-client requires machine-scoped route/WFP owner coordination with verified leases and foreign route protection, plus real retest. ARM64 current-source real native five-client 600s under netem remains untested, although current binary already compiled. No new PLAN029/030.",
+  "source_sha": "ed965f2dd93bc5520d9a17f211ff39029d4d6594"
 }
