@@ -9,3 +9,5 @@
 ```feature-impact
 {"kind":"none","reason":"H1516 repairs only exact source assembly manifest and executes already-authored CI native-Windows owner-slot unit test; five-client product owner change and tls-auth-multiclient impact were recorded in H1515.","ids":[]}
 ```
+
+- H1518 离线核实 H1516/H1517 产生重复 `native-public-two-os` job（两个同名定义，复制了 1623 行）；Action42774222921 / 42774715117 均无 jobs，原生业务仍 **NOT_RUN**。完整恢复到已解析的 0d3 工作流原版，只追加真实 Windows 原 Go 测试执行命令和退出码检查；GitHub Git blob 写入/读取逐字节相等、一个 shared job、一个前置 job，检查失败则不推 main。不修改任何产品源码。

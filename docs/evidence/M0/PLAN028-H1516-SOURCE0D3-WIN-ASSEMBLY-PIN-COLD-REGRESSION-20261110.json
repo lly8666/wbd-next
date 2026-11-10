@@ -35,5 +35,16 @@
     "first_error": "unclosed Windows client.test.exe -test.run PowerShell YAML line; no native started",
     "classification": "HARNESS_SYNTAX_FAIL_NATIVE_NOT_RUN",
     "repair": "Close test command and run existing executable with explicit $LASTEXITCODE check; preserve old source manifest hash"
+  },
+  "subsequent_workflow_invalid_second": {
+    "source_sha": "f9eddc08623b317fc835c0bfc29806aa45ee0e44",
+    "action_id": 42774715117,
+    "conclusion": "failure",
+    "jobs": 0,
+    "root_cause": "file had 2 copies of native-public-two-os: and 1623 duplicated job lines; not just test-line syntax",
+    "original_valid_source": "0d3fbec30095d949aa759725dd7dff5e88e51522",
+    "corrected_blob_sha": "4831c18b69d23059f0704869b8e8f5d24a14dc87",
+    "verified_blob_bytes": 178739,
+    "kind": "HARNESS_DUPLICATE_YAML_JOB_NO_NATIVE"
   }
 }
