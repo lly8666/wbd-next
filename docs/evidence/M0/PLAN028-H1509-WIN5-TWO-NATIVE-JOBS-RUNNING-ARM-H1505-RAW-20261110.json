@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "test_source_sha": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
+  "Win5": {
+    "run": 42765555239,
+    "gates": {
+      "cheap_full_tests": "PASS",
+      "windows_go_compile": "PASS",
+      "windows_rust_units": "PASS",
+      "linux_rust_units": "PASS",
+      "linux_go_rust_native_build": "PASS"
+    },
+    "jobs": [
+      {
+        "loss_pct": 0,
+        "id": 129662640456,
+        "status": "IN_PROGRESS_NATIVE_WINDOWS_NOT_FULL_600S_PASS"
+      },
+      {
+        "loss_pct": 30,
+        "id": 129662640430,
+        "status": "IN_PROGRESS_NATIVE_WINDOWS_NOT_FULL_600S_PASS"
+      }
+    ],
+    "completion_monitor": "Automation_8dd0a0a0330481918576c3e0b38b3b92"
+  },
+  "prior_preflight_only_fail_runs": [
+    42764980969,
+    42765313830
+  ],
+  "ARM_H1505_original": {
+    "run": 42754002932,
+    "artifact_id": 13736022044,
+    "sha256": "4c785a18250905dff0880760b1b0347dd804e0d336f3c15a21666f1034633b90",
+    "crc": "PASS",
+    "actual_5client_app_s": 1800,
+    "server_mean_one_core_cpu_pct": 48.532,
+    "server_B_authenticated_normal": 59,
+    "server_B_authenticated_game": 18,
+    "B_UNPROVEN": 0,
+    "per_lease_queue_overflow": 0,
+    "server_own_Stop": {
+      "reader_joined": 1,
+      "queue_full_drops": 0
+    },
+    "all_5_client_native_Stop": true,
+    "app_unique_missing": {
+      "alice": {
+        "uplink": 0,
+        "downlink": 0
+      },
+      "bob": {
+        "uplink": 0,
+        "downlink": 0
+      },
+      "carol": {
+        "uplink": 3005,
+        "downlink": 2953
+      },
+      "dave": {
+        "uplink": 0,
+        "downlink": 0
+      },
+      "erin": {
+        "uplink": 8385,
+        "downlink": 8719
+      }
+    },
+    "kernel_loss_profile_pct": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "old_action_status": "FAIL_LEGACY_REPORTER_SCENE_ENUM_REJECTED_BUDGETED",
+    "full_qualification": "NOT_DECLARED_FROM_PARTIAL_RAW_LEDGER"
+  },
+  "PLAN028": "IN_PROGRESS"
+}

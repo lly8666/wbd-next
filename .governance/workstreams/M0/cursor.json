@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1508,
-  "checkpoint_sha": "370f354a4c29650401d385507fec059e3acd8bc6",
+  "sequence": 1509,
+  "checkpoint_sha": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1508-KEEP-UPLOAD-ALWAYS-H778-HABBA",
-  "current_task": "H1506 first source4af Action42764980969 CHEAP_FAIL H778 expected original named artifact; no network. H1507 source370 Action42765313830 CHEAP_FAIL tests.test_delivery_ci.test_same_windows_runner_rust_native_abba_is_exact_source_only expects the original native full uploader with `if: always()` to preserve failed original ABBA artifact, and first repair had conditional if, so no network. H1508 minimal one-file workflow adjustment restores original `if: always()` exact step and source prefix name `m0-wl-full-public-normal-direct` for legacy, appending an evaluated per-scene unique suffix ONLY for new H1506 loss0/loss30 matrix so no v4 collision; remove duplicate H1506 artifact step. New push marker H1506 again will run cheap original H778 + ABBA then source locked two Windows original 600. Product/test fixture unchanged. PLAN028 IN_PROGRESS.",
-  "why_now": "Preserve historic H778 upload identity and historic A/B always-on failure artifact while allowing unique loss0/loss30 parallel artifact names in single upload step.",
+  "task_id": "PLAN028-M0-H1509-WINDOWS5-TWO-NATIVE-JOBS-STARTED",
+  "current_task": "H1506 exact source8e5f313fdb40c9ecf55c052db85c7abf3819306c Action42765555239 cheap offline full suite PASS, Windows Go compile/test PASS, Windows Rust unit PASS, Linux Rust unit PASS, Linux original Go/Rust peer build PASS; TWO independently hosted Windows2025 native jobs loss0 job129662640456 and loss30 job129662640430 running current original Go/Rust/NPF/Wintun 600s preflight, business NOT_YET_VERIFIED. Automated condition check Automation_8dd0a0a0330481918576c3e0b38b3b92 active hourly for final original ZIP, no re-dispatch. Prior two source4af and370 actions only cheap CI FAIL, zero native network. H1505 ARM original zip13736022044 SHA256 4c785a18250905dff0880760b1b0347dd804e0d336f3c15a21666f1034633b90 CRC PASS, original true app 1800s and server mean48.532% core, Normal B59 and Game B18 actual proof, zero B_UNPROVEN, 5 lease queue overflow0, all native TUN Stop, but original h1274 reporter rejects new budgeted scene so action FAIL retained and full L3 not unilaterally reclassified. PLAN028 IN_PROGRESS.",
+  "why_now": "Both requested Windows5 loss0/30 original native matrix jobs now in progress after all preflight gates. Persist exact job IDs, original artifact ledger and condition watch for next turn without repeat dispatch.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect next Windows H1506 two-matrix Action after cheap preflight, run new H1506 python 6 unit tests and py_compile then native signed Windows five clients, 200ms loss0 vs30 each original600s. If new cheap fails no product inference or duplicate unqualified launch. When network runs, assess real kernel outer sum70..100Mbps, 4 original physical lane 100-130s changes, M4/Stop, host capacity.",
+  "next_action": "Collect github Action42765555239 jobs loss0 129662640456 and loss30 129662640430. Both must finish actual 600s, original source hash lock, native signed 5 separate Win Wintun accounts and one Linux server, 200ms kernel tc0/30, real outer TC 70..100 combined, 4 genuine Windows OS source changes randomized100..130s, new M4 all Game lanes, all unique per-user DATA, host CPU/RAM guard and stop/NPF/WAL0/WSL and runner route restoration; categorize first raw errors product/capacity/CI. Automation_8dd0a0a0330481918576c3e0b38b3b92 must not duplicate runs. H1505 ARM raw source data positive but legacy enum wrapper original FAIL, retain.",
   "unverified": true,
   "last_tested_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
   "evidence_refs": [
@@ -30,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1508 first 4af cheap H778 artifact literal, second 370 cheap test_delivery_ci A/B always() uploader; BOTH were PRE_NATIVE, 0/30 Windows five clients NOT_RUN. One full artifact step now exactly legacy if always + original prefix, per scene append unique suffix. New commit retest cheap gate, original product unchanged. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1509 Action42765555239 cheap+all Go/Rust builds PASS, two independent Windows native job IDs 129662640456 loss0 and129662640430 loss30 now RUNNING, actual 600s business pending. Win5 true outer 70..100 combined from tc,200ms and four 100..130s real lane group changes. Completion watch Automation_8dd0a0a0330481918576c3e0b38b3b92 on. Prior ARM H1505 original1800 ZIP CRC PASS shows five clients data, 77 real authenticated B promos, queue0, CPU48.532pct core, original action still FAIL reporter budgeted enum; not full close. PLAN028 IN_PROGRESS."
 }
