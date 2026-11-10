@@ -24,13 +24,13 @@ func TestPLAN028MixedManualAccountReachesTLSCertificateStage(t *testing.T) {
         tlsCert:filepath.Join(t.TempDir(),"h1510-missing-cert.pem"),
         tlsKey:"h1510-missing-key.pem",
     }
-    err:=runGame(context.Background(),c,0,nil,nil,nil,nil,nil)
+    err:=runGame(context.Background(),c,0,nil,nil,nil,nil)
     if err==nil||errors.Is(err,realityfront.ErrAdmissionUnsupported)||
        !strings.Contains(err.Error(),"h1510-missing-cert.pem"){
         t.Fatalf("manual mixed server should reach genuine cold TLS cert loading: %v",err)
     }
     c.manualClientLeases4=nil
-    err=runGame(context.Background(),c,0,nil,nil,nil,nil,nil)
+    err=runGame(context.Background(),c,0,nil,nil,nil,nil)
     if !errors.Is(err,realityfront.ErrAdmissionUnsupported){
         t.Fatalf("shared server without protected address authority must reject: %v",err)
     }

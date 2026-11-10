@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1512,
-  "checkpoint_sha": "db866cdc712caa4ec617d73990e879125dd5f18e",
+  "sequence": 1513,
+  "checkpoint_sha": "d1bb7f3a8aba83cc680a4c1ba551888b23ea33c8",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1512-FEATURE-CARD-BOUND-AND-WIN5-LOSS0-IN_FLIGHT",
-  "current_task": "SOURCE07312 candidate real Windows5 loss0 Action42768853063 IN_PROGRESS; cheap workflow and source assembly PASS; Windows Go compile, Linux Rust and Windows Rust PASS; Linux original Go/Rust peer build job129672664597 in progress. Governance Action42769315340 structure PASS, feature catalog FAIL solely because expanded feature card exceeds 16KiB, H1512 compact JSON corrected without code change. Exact old loss0/loss30 source8e5 original FAIL preserved as pre-server-READY/real business NOT_RUN. PLAN028 IN_PROGRESS.",
-  "why_now": "Current Action has real compile PASS and one source-pinned loss0 scene pending dependency, while governance checks exposed document linkage mistakes. Keep one evidence source in cursor, update feature card with original FAIL plus explicit untested new-source status, and revalidate without re-running network.",
+  "task_id": "PLAN028-M0-H1513-CORRECT-GO-TEST-ARITY-RETRY-LOSS0",
+  "current_task": "SOURCE07312 Action42768853063: offline Windows Go, Rust Win/Linux PASS; Linux native Rust release successfully built but original Go v4productcli test compile failed only because new test mixed_manual_scope_linux_test.go called runGame(ctx,c,0,nil,nil,nil,nil,nil), which has one nil too many (expects seven args); exact Go source logic compiled, Windows native loss0 SKIPPED, business NOT_RUN. H1513 fix-only corrected arity; one loss0 retry eligible, no loss30 yet. Governance d1bb Action42769546998 PASS. Prior 8e5 loss0/loss30 pre-READY original FAIL preserved; ARM H1505 raw PASS_SCOPED. PLAN028 IN_PROGRESS.",
+  "why_now": "Original Linux Go source-locked test compile failure precedes native execution, not a product TLS/M4 failure. Repair a single wrong call arity in new regression test, retain old Action fail, and allow exact one targeted loss0 source build+native run.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect Linux original Go/Rust compile+unit job129672664597 then sole Windows5 loss0 native job of Action42768853063. Determine first precise contract stage server READY, protected accounts/MTU, Rust M4, real UDP/TCP 600s, 4 genuine source change, owned Stop. Do NOT dispatch loss30 while loss0 is pending or until new root facts. If Action fails, retain original ZIP and fix only proven fault. Governance H1511 docs-only correction has no network source change. H1505 original ARM positives PASS_SCOPED; reporter enum offline repair, no network rerun.",
+  "next_action": "Collect new H1513 Action single loss0 Windows5 post-compile native test: original Linux Go v4productcli unit, Rust M4 build, manifest/hashes, real Linux server shared READY, five protected Windows Npcap/Wintun TLS and per-account /32, 200ms loss0, 70..100Mbps combined outer, four OS changes, owned Stop. Do not run loss30 unless latest evidence and pass allow. Other auto workflows may be redundant; do not manually repeat. Preserve old Action42768853063 compile FAIL and native NOT_RUN.",
   "unverified": true,
   "last_tested_source": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1512 compacted tracked tls-auth-multiclient feature card below 16KiB, original source8e5 FAIL and current untested Go cold fix 07312 retained. Governance previous structure PASS, only catalog bound repaired. Current one-scenario Action42768853063 Linux source Go build pending, native Win5 loss0 not yet triggered. No new net action or protocol work. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1513: original source07312 Linux Rust build PASS, Go compile failed only test-invocation arity, native Windows loss0 SKIPPED. Corrected two extra-nil calls, no product runtime/FEC/wire changes. Governance d1bb PASS. One source-locked loss0 retry prepared; no loss30. 028 IN_PROGRESS."
 }

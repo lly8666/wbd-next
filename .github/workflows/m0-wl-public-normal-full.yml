@@ -1,3 +1,6 @@
+# H1513 fix-only retry: SOURCE07312 loss0 did not start a native scenario;
+# original-Go test build refused a test-only extra runGame(nil) argument.
+# This source is a single loss0 scenario after Go compile; no loss30 yet.
 # H1504 one explicitly user-requested, VM-budgeted 1800s signed Windows+WSL2 case.
 # Not a substitute for independent Windows DUT qualification: host also owns GitHub Runner.
 # Real 4-phase 128/256/1024/512B native UDP DATA, TCP, Win32 CPU/memory safety stop,
