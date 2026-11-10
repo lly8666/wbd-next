@@ -15,6 +15,9 @@ PHASES=(("warmup",10,.3),("first_wave",240,.6),("sustained",600,1.0),
 MID600_PHASES=(("warmup",10,.3),("first_wave",90,1/3),
                ("sustained",180,2/3),("overload",90,1.),
                ("recovery",230,2/3))
+H1520_OUTER_PHASES=(("warmup",10,.3),("first_wave",90,.6),
+                    ("sustained",180,1.0),("overload",90,1.10),
+                    ("recovery",230,1.0))
 
 def read(path):
     return json.loads(pathlib.Path(path).read_text())
@@ -143,12 +146,21 @@ def analyze(art,server_log):
     duration=plan["application_load_seconds"]
     assert duration in (600,1800)
     midsix=duration==600
-    phase_specs=MID600_PHASES if midsix else PHASES
+    h1520=plan.get("H1520_outer_600_profile") in (
+        "outer100to150-loss0","outer100to150-loss30")
+    phase_specs=(H1520_OUTER_PHASES if h1520 else MID600_PHASES) if midsix else PHASES
     if midsix:
-        assert plan.get("H1461_600s_capacity75_profile")=="EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION"
         assert plan["simultaneous_stress_seconds"]==590
         assert plan["long_scene"]=="baseline"
-        assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[75,2,2,2,2]
+        if h1520:
+            assert plan["H1520_outer_target_mbps_total_both_directions"]==[100,150]
+            assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[12,8,6,3,6]
+            loss=30 if plan["H1520_outer_600_profile"].endswith("loss30") else 0
+            assert [v["loss_pct"] for v in plan["clients"]]==[loss]*5
+            assert [v["oneway_delay_ms"] for v in plan["clients"]]==[200]*5
+        else:
+            assert plan.get("H1461_600s_capacity75_profile")=="EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION"
+            assert [round(v["c2s_target_mbps"],3) for v in plan["clients"]]==[75,2,2,2,2]
     else:
         assert plan["simultaneous_stress_seconds"]==1790
     assert sum(p[1] for p in phase_specs)==duration
@@ -217,7 +229,7 @@ def analyze(art,server_log):
             r"V4_PUBLIC_LEASE_APPLIED role=client.*?os_readback=(10\.66\.0\.\d+)/32",text)
         lease_stable=bool(leases) and set(leases)=={spec["lease"]}
         native_stop="V4_PUBLIC_SHARED_TUN_STOP generation=" in text
-        if midsix:
+        if midsix and not h1520:
             # This 600s capacity experiment deliberately parks L1 timers
             # at 3600s. Never mistake a missing rotation for an 1800s L3
             # handoff PASS; verify the genuine initial native server M4.
@@ -253,7 +265,8 @@ def analyze(art,server_log):
             deferred=text.count("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=client")
             matched=sum(1 for row in slots if row in server_game4_hot_ports)
             correct_physical=bool(due) and all("unchanged_path=1" in line for line in due)
-            enough=(len(slots)>=10 and {lane for lane,_ in slots}=={1,2,3,4})
+            enough=(len(slots)>=(4 if h1520 else 10)
+                    and {lane for lane,_ in slots}=={1,2,3,4})
             passed=(ready==[1] and not old and correct_physical and enough
                     and matched==len(slots) and len(due)==len(slots)+deferred
                     and lease_stable and native_stop)
@@ -270,7 +283,8 @@ def analyze(art,server_log):
                 "same_authenticated_lease":lease_stable,
                 "physical_ipv4_unchanged":correct_physical,
                 "native_final_stop_observed":native_stop,
-                "minimum_ten_true_successful_handoffs":enough
+                "minimum_ten_true_successful_handoffs":enough if not h1520 else None,
+                "minimum_four_true_successful_handoffs":enough if h1520 else None
             }
         else:
             # Failed candidate TLS consumes generation IDs, but only
@@ -282,7 +296,8 @@ def analyze(art,server_log):
             increasing=bool(ready) and ready[0]==1 and all(
                 b>a for a,b in zip(ready,ready[1:]))
             exact_stop=old==ready[:-1]
-            enough=len(ready)>=11 and len(old)>=10 and len(timer)>=10
+            minimum=4 if h1520 else 10
+            enough=len(ready)>=minimum+1 and len(old)>=minimum and len(timer)>=minimum
             passed=all((correct_physical,increasing,exact_stop,enough,
                         lease_stable,native_stop))
             rotation={
@@ -298,7 +313,8 @@ def analyze(art,server_log):
                 "same_authenticated_lease":lease_stable,
                 "physical_ipv4_unchanged":correct_physical,
                 "native_final_stop_observed":native_stop,
-                "minimum_ten_true_successful_handoffs":enough
+                "minimum_ten_true_successful_handoffs":enough if not h1520 else None,
+                "minimum_four_true_successful_handoffs":enough if h1520 else None
             }
             if spec["mode"] not in ("game2","game4"):
                 # For all Normal Off / Auto / Fixed6 modes, require

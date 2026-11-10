@@ -47,8 +47,10 @@ LONG_SCENES={
     "budgeted":((0,1,5,15,30),(0,15,50,100,125),(7,7,6,6,5),(79,89,101,107,113)),
 }
 FAST_SCENE=os.environ.get("WBD_PLAN028_FAST_SCENE","")
-if MID600 and (MID600!="capacity75" or FAST_SCENE or os.environ.get("WBD_PLAN028_30M_SCENE")):
-    raise SystemExit("H1461 exact 600s only capacity75; cannot mix 1800s or FAST")
+H1520_OUTER_600=MID600 in ("outer100to150-loss0","outer100to150-loss30")
+if MID600 and (MID600 not in ("capacity75","outer100to150-loss0","outer100to150-loss30")
+               or FAST_SCENE or os.environ.get("WBD_PLAN028_30M_SCENE")):
+    raise SystemExit("600s scenario must be capacity75 or H1520 outer loss0/loss30, not 1800/FAST")
 CAPACITY_STEPS=os.environ.get("WBD_PLAN028_FAST_CAPACITY_STEPS","")
 if CAPACITY_STEPS not in ("","1","2"):
     raise SystemExit("invalid L2 capacity calibration flag")
@@ -148,13 +150,20 @@ if LONG_SCENE:
         raise SystemExit("invalid PLAN028 30m profile")
     LOSS,DELAY,RATE,ROTATION_SECONDS=LONG_SCENES[LONG_SCENE]
 if MID600:
-    # Same true mixed-mode TLS443/Rust endpoints, baseline physical 0%.
-    # 75 Mbps normal Alice + four 2 Mbps sibling clients; no rotations
-    # requested inside the 600s capacity diagnostic (unlike true 1800).
-    LOSS=(0,0,0,0,0)
-    DELAY=(0,0,0,0,0)
-    RATE=(75,2,2,2,2)
-    ROTATION_SECONDS=(3600,3600,3600,3600,3600)
+    if H1520_OUTER_600:
+        # Five genuine native TLS/Rust DATA owners, 35Mbps inner per way;
+        # measure actual outer via both directions' ten kernel tc qdiscs.
+        physical_loss=30 if MID600.endswith("loss30") else 0
+        LOSS=(physical_loss,)*5
+        DELAY=(200,)*5
+        RATE=(12,8,6,3,6)
+        ROTATION_SECONDS=(97,109,103,117,127)
+    else:
+        # Historical H1461 75Mbps Alice / four 2Mbps clients unchanged.
+        LOSS=(0,0,0,0,0)
+        DELAY=(0,0,0,0,0)
+        RATE=(75,2,2,2,2)
+        ROTATION_SECONDS=(3600,3600,3600,3600,3600)
 if ERIN_MAX_DELAY:
     DELAY=(*DELAY[:4],int(ERIN_MAX_DELAY))
 LONG_PHASES=(
@@ -170,8 +179,12 @@ if LONG_SCENE=="budgeted":
     assert sum(duration for _,duration,_ in LONG_PHASES)==1790
 if MID600:
     # Exactly 10s warmup +590s four actual application phases.
-    LONG_PHASES=(("first_wave",90,1/3),("sustained",180,2/3),
-                 ("overload",90,1.0),("recovery",230,2/3))
+    if H1520_OUTER_600:
+        LONG_PHASES=(("first_wave",90,.6),("sustained",180,1.0),
+                     ("overload",90,1.10),("recovery",230,1.0))
+    else:
+        LONG_PHASES=(("first_wave",90,1/3),("sustained",180,2/3),
+                     ("overload",90,1.0),("recovery",230,2/3))
     assert sum(duration for _,duration,_ in LONG_PHASES)==590
 
 def run(*args, capture=False, check=True):
@@ -516,7 +529,11 @@ def main():
             "warmup_seconds": 10,
             "simultaneous_stress_seconds":170 if FAST_SCENE else 590 if MID600 else 1790 if LONG_SCENE else 420,
             "application_load_seconds":180 if FAST_SCENE else 600 if MID600 else 1800 if LONG_SCENE else 430,
-            "H1461_600s_capacity75_profile":"EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION" if MID600 else None,
+            "H1461_600s_capacity75_profile":"EXACT_600S_FIVE_CLIENT_ZEROLOSS_25_50_75_50_NO_ROTATION" if MID600=="capacity75" else None,
+            "H1520_outer_600_profile":MID600 if H1520_OUTER_600 else None,
+            "H1520_outer_target_mbps_total_both_directions":[100,150] if H1520_OUTER_600 else None,
+            "H1520_inner_base_mbps_each_direction":list(RATE) if H1520_OUTER_600 else None,
+            "H1520_200ms_both_egress_qdiscs":H1520_OUTER_600,
             "drain_seconds":10,"long_scene":LONG_SCENE or None,
             "fast_scene":FAST_SCENE or None,
             "physical_in_place_mtu_shrink":bool(FAST_MTU_SHRINK),
@@ -635,7 +652,7 @@ def main():
 
         # TLS established BEFORE netem; start all ten business streams under
         # genuine 0/1/5/15/30% network impairment at the exact same instant.
-        for i in range(1, 5):
+        for i in range(0 if H1520_OUTER_600 else 1, 5):
             args = ["tc", "qdisc", "replace", "dev", client_nics[i],
                     "root", "netem", "delay", str(DELAY[i]) + "ms",
                     "loss", str(LOSS[i]) + "%", "limit", "10000"]
@@ -905,6 +922,8 @@ def main():
         print(("M0_H1286_NATIVE_ARM64_FIVE_CLIENT_180S_DIAGNOSTIC_COMPLETE "+FAST_SCENE)
               if FAST_SCENE else ("M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE "+LONG_SCENE)
               if LONG_SCENE and not MID600 else
+              ("H1520_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_100_150_COMPLETE "+
+               MID600) if H1520_OUTER_600 else
               "H1461_NATIVE_X86_FIVE_CLIENT_REAL_600S_CAPACITY75_COMPLETE" if MID600
               else "M0_H1259_NATIVE_ORIGINAL_TLS_RUST_FIVE_CLIENT_RECOVERY_430S_DIAGNOSTIC_COMPLETE",
               flush=True)
