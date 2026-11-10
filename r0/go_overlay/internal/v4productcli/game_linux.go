@@ -683,6 +683,36 @@ many independently authenticated groups. All untrusted packets are still
 delivered only to the original Go FakeTCP cold handler; native Rust owns
 all detached DATA. No new transport, FEC or per-packet Go forwarding.
 */
+// A protected epoch identifies the logical Game owner, not a cold attempt.
+// After a lossy original TLS reply a former attempt may leave a single
+// authenticated lane pending while a later generation starts with the SAME
+// principal/tunnel/epoch. Grouping only by the protected owner could pair
+// stale lane 1 with a new lane 2 and announce a false native M4 cohort.
+// Original Linux and Windows Game2/4 clients bind n consecutive source
+// ports for ONE attempt. Use that observed TCP tuple as an additional
+// *joining constraint*, never as authentication or native owner authority.
+type originalGameColdFlowKey struct {
+    cohort realityfront.V4LinuxGameCohortID
+    clientIP [4]byte
+    serverIP [4]byte
+    serverPort uint16
+    firstClientPort uint16
+}
+func originalGameColdFlowIdentity(
+    cohort realityfront.V4LinuxGameCohortID,id uint8,flow faketcp.ServerFlow,
+)(originalGameColdFlowKey,error){
+    n:=int(cohort.Lanes)
+    ordinal:=int(id)
+    first:=int(flow.ClientPort)-ordinal+1
+    if (n!=2&&n!=4)||ordinal<1||ordinal>n||
+        first<1||first+n-1>65535||flow.ServerPort==0 {
+        return originalGameColdFlowKey{},realityfront.ErrAdmissionParams
+    }
+    return originalGameColdFlowKey{
+        cohort:cohort,clientIP:flow.ClientIP,serverIP:flow.ServerIP,
+        serverPort:flow.ServerPort,firstClientPort:uint16(first),
+    },nil
+}
 type originalGameCohortPending struct{
     created time.Time
     lanes map[uint8]*realityfront.V4LinuxGameAuthenticatedLane
@@ -697,7 +727,7 @@ type originalGameCohortLive struct{
     laneRotations [4]uint64
 }
 func stageOriginalAuthenticatedGameLane(
-    groups map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending,
+    groups map[originalGameColdFlowKey]*originalGameCohortPending,
     lane *realityfront.V4LinuxGameAuthenticatedLane,now time.Time,
 )(realityfront.V4LinuxGameCohortID,[]*realityfront.V4LinuxGameAuthenticatedLane,error){
     var zero realityfront.V4LinuxGameCohortID
@@ -706,12 +736,17 @@ func stageOriginalAuthenticatedGameLane(
     if err!=nil{return zero,nil,err}
     n:=int(key.Lanes)
     if n!=2&&n!=4{return zero,nil,realityfront.ErrAdmissionUnsupported}
-    group:=groups[key]
+    // Different source-port generations MUST NOT share this pending slot,
+    // even if their already-protected epoch and principal are identical.
+    // A stale lane may expire independently without poisoning a fresh pair.
+    cold,err:=originalGameColdFlowIdentity(key,id,lane.Association().Flow())
+    if err!=nil{return key,nil,err}
+    group:=groups[cold]
     if group==nil{
         group=&originalGameCohortPending{
             created:now,lanes:make(map[uint8]*realityfront.V4LinuxGameAuthenticatedLane,n),
         }
-        groups[key]=group
+        groups[cold]=group
     }
     // A simultaneous same-identity successor carrying an already occupied
     // lane cannot be distinguished using SYN order. Reject the ambiguity,
@@ -724,7 +759,7 @@ func stageOriginalAuthenticatedGameLane(
         if group.lanes[uint8(id)]==nil{return key,nil,realityfront.ErrAdmissionParams}
         ordered[id-1]=group.lanes[uint8(id)]
     }
-    delete(groups,key)
+    delete(groups,cold)
     return key,ordered,nil
 }
 func runGameMultiServer(
@@ -818,7 +853,7 @@ func runGameMultiServer(
     failed:=make(chan error,1)
     var mu sync.Mutex
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
-    pending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortPending)
+    pending:=make(map[originalGameColdFlowKey]*originalGameCohortPending)
     active:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
     // Normal and Game share THIS listener, table and native TUN reader.
     // Normal keys deliberately exclude epoch (successor replaces only same
@@ -1206,7 +1241,10 @@ func runGameMultiServer(
             // Physical IP/MTU changes remain an independent full-group hint.
             freshGroup,e:=lane.ProtectedFreshGroupRequested()
             if e!=nil{rejectLane(lane);continue}
-            fullGroupPending:=pending[coldKey]!=nil
+            fullGroupPending:=false
+            for candidate:=range pending{
+                if candidate.cohort==coldKey{fullGroupPending=true;break}
+            }
             if freshGroup&&coldKey.Lanes==4{
                 log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PROTECTED_EPOCH_ZERO role=server lane=%d client_port=%d old_group_preserved=1",
                     laneID,lane.Association().Flow().ClientPort)

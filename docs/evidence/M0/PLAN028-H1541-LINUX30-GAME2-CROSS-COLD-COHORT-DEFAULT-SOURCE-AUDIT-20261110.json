@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "checkpoint": "H1541",
+  "date": "2026-11-10",
+  "current_parent_source": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
+  "trigger": "User requested recent-fixes default application and continuation",
+  "evaluation": "SOURCE_CURRENT_AND_ORIGINAL_NATIVE_ARTIFACT_PROVENANCE_ONLY",
+  "original_h1540": {
+    "source_sha": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
+    "action_id": 42798005082,
+    "job_id": 129768022940,
+    "artifact_id": 13754549150,
+    "native_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust_native_library_original_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+    "duration_seconds": 600,
+    "full_outer_300_to_350_loss30_actual_mbps": 303.015,
+    "outer_band_pass": true,
+    "server_linux_original_tls443": true,
+    "original_six_owned_stop": true,
+    "faketcp_h1285_real_current_go_11file_verified": true,
+    "faketcp_go_positive_and_malformed_negative_tests": "PASS",
+    "game4_client_hot_rotation5_server_original_true_M4_count": 5,
+    "game4_lane3_pre_detach_early_overflow": {
+      "source_port": 59341,
+      "transition_state": 1,
+      "classification": "BOUNDED_PRE_DETACH_OVERFLOW_NOT_ABORT",
+      "subsequent_server_native_M4_ready": true
+    },
+    "carol_game2_actual_failure": {
+      "classification": "FAIL_REAL_NATIVE_CROSS_COLD_COHORT_MIX",
+      "server_utc": "2026-11-10T10:27:52",
+      "server_same_protected_principal_epoch": {
+        "stale_failed_candidate_lane1_port": 49336,
+        "fresh_generation8_expected_lane1_port": 57255,
+        "fresh_generation8_lane2_port": 57256,
+        "actual_server_mistaken_group_ports": [
+          49336,
+          57256
+        ],
+        "matched_client_generation8_ports": [
+          57255,
+          57256
+        ]
+      },
+      "client_generation8_ready": true,
+      "server_generation8_exact_M4_cohort": false,
+      "business_max_uplink_receive_gap_ms": 154170,
+      "business_max_downlink_receive_gap_ms": 144290,
+      "business_TCP_app_received": {
+        "uplink": 0,
+        "downlink": 0
+      },
+      "classification_strict": "FAIL_NOT_FALSE_REPORT"
+    },
+    "original_h1540_verdict": "FAIL_REAL_NATIVE_OWNER_OR_BUSINESS"
+  },
+  "source_audit": {
+    "window": "2026-11-08 through 2026-11-10 recent native repairs",
+    "previously_fixed_and_proven": {
+      "source": "H1285 64-packet bounded early handoff original Go code now included by installer all11",
+      "original_positive_negative_go_tests": "PASS",
+      "H1540_game4_server_m4": "PASS_SCOPED",
+      "linux_0loss_333_930": "PASS_SCOPED_OLD_SOURCE"
+    },
+    "newly_found": {
+      "linux_game2_cross_attempt_cohort": "one protected owner epoch does not distinguish consecutive source TCP port groups under loss30: original real evidence",
+      "arm64_native_default_bundle": "hand-maintained stale fixed-file copy list skipped recently added Go cold fixes, file trailing broken duplicated unclosed command"
+    },
+    "corrected_product_paths": [
+      "r0/go_overlay/internal/v4productcli/game_linux.go",
+      "tools/arm64_public_go_rust_bundle.sh",
+      ".github/workflows/m0-wl-public-normal-full.yml",
+      ".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml"
+    ],
+    "guardrails": {
+      "GO_game_grouping": "source TCP 5tuple+consecutive lane base is a COHORT JOIN constraint only, never an authentication/lease/route authority",
+      "ARM64": "all current Go v4productcli files, all current realityfront Go files, 11-source-locked FakeTCP overlay, same as Linux x86 default",
+      "WINDOWS": "current canonical original-Go Windows manifest-plan020 pinned and CI compile, keep global WFP+routes exclusive; never autoenable unsafe ownership",
+      "RUST": "main-source Rust native code unchanged; H1541 reuses byte-identical old Rust library ONLY if verified SHA256 and source, not a current-Rust compile claim"
+    }
+  },
+  "new_test": {
+    "workflow": ".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml",
+    "source_sha": "ACTION_HEAD_AFTER_PUSH",
+    "test_default_preflight": "tests.test_m0_plan028_default_assembly",
+    "test_actual_go": {
+      "game2": "TestPLAN028Game2ColdRetryCannotMixStaleProtectedEpochLanes",
+      "game4": "TestPLAN028OriginalGame4ColdPortCohortAndForeignScope",
+      "faketcp": "TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor and malformed negative"
+    },
+    "real_scene": "ONE exact source newly compiled both original Go client/server, Linux x86 200ms 30pct outer300-350Mbps 600s, 6 original Stop",
+    "status": "NOT_RUN_BEFORE_PUSH",
+    "hard_gates": "5 real signed/OS accounts, native client and server M4 exact lanes, 10s real outer band and original bidirectional TCP/UDP, 6 owned native Stop, host capacity",
+    "source_provenance": "original Go a7a82 checkout + latest new overlay from one sha; Rust prebuilt lib from original 9b260 SHA256 verified"
+  },
+  "unresolved": {
+    "Windows5": "FAIL_EXCLUSIVE_WFP_ROUTE_POLICY_FOR_MULTIPLE_SAME_HOST_WINTUN; NOT_PROMOTED",
+    "ARM64_live_original": "NOT_RUN",
+    "real_multi_machine_physical": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "full_PLAN028": "IN_PROGRESS"
+  }
+}

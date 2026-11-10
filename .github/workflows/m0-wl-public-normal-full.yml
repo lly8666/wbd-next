@@ -44,6 +44,10 @@ on:
       - tools/m0_install_public_realityfront_tests.py
       - tests/test_m0_install_public_realityfront_tests.py
       - tests/test_m0_install_public_faketcp.py
+      - tests/test_m0_plan028_default_assembly.py
+      - tools/arm64_public_go_rust_bundle.sh
+      - r0/go_overlay/internal/v4productcli/game_linux.go
+      - r0/go_overlay/internal/v4productcli/game_cold_cohort_linux_test.go
       - tests/test_delivery_ci.py
       - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
@@ -383,6 +387,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
       - run: python -m unittest tests.test_m0_install_public_faketcp -v
+      - run: python -m unittest tests.test_m0_plan028_default_assembly -v
       - run: python -m unittest tests.test_m0_install_public_realityfront_tests -v
       - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v

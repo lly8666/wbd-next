@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1540,
-  "checkpoint_sha": "9def6ca849d312ef25d5d3a1b0645add7cbf615e",
+  "sequence": 1541,
+  "checkpoint_sha": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1540-H1285-ORIGINAL-GO-TRANSITION-ASSEMBLY-MISSING-LINUX30-ONLY-REBUILD",
-  "current_task": "H1537 source9b260 Linux 30loss native 303.027Mbps scene original Action42788212678 loss30 failure real Dave hot M4 lane3 port59341 and lane4 port50881 server preDetach overflow TransitionAborted (old original-Go StageTransition at 65th native ciphertext). Existing correct source H1285 transition.go already present and manifest-plan020 pinned but tools/m0_install_public_faketcp.py assembled only 7 source-locked FakeTCP files, omitted transition.go/transition_test.go and two H1285 tests -> old original Go abort unexpectedly. H1540 changes Linux/ARM64 source-locked installer to all 11 existing manifest rows; triggers ONE true 30loss native Go rebuilt x86 600s/200ms outer300..350 with immutable Rust/ISA-L binary hash. Windows multiple independent Wintun global route and WFP per-interface exclusion incompatible; five client Action42788212994 still NOT_QUALIFIED and needs safe shared owner or proper separate OS. Linux 0loss333.930 PASS_SCOPED preserve. PLAN028 IN_PROGRESS.",
-  "why_now": "Found a missing original-Go Linux assembly file rather than an algorithm bug; do not rewrite already-correct existing code or waive overflow/route security. Targeted Go product rebuild only one failed loss30 scene, reuse exact Rust SHA256; native hard gates unchanged.",
+  "task_id": "PLAN028-M0-H1541-RECENT-REPAIR-DEFAULT-PRODUCT-ASSEMBLY-ARM64-LINUX-GAME2-COHORT",
+  "current_task": "After latest H1540 original 600s Linux 30loss Action42798005082 source9a0efb6 Go H1285 fix REAL PASS Game4 hot5, six native Stop, physical outer303.015Mbps. Overall FAIL Carol Game2 generation8 server true grouped cold mixed stale port49336 lane1 from prior failed candidate with fresh lane2 57256 instead of fresh lane1 57255; real 154170ms/144290ms bidirectional app RX gaps and TCP RX0. New H1541 original Go game_linux.go pending map keys by protected cohort PLUS actual original client/server TCP 5tuple with SAME consecutive 2/4 source ports, not trust for auth, no native Rust or wire changes, new 2-case regression. User requested last days fixes applied by default: audit found ARM64 hand-maintained overlay list missing recent Go fixes and malformed duplicate end; replaced with exact x86 original Go all-current file installer+realityfront source locks, all11 H1285 FakeTCP; added tests/test_m0_plan028_default_assembly.py as every-main cheap gate, canonical Windows manifest provenance unchanged. One H1541 exact x86 loss30 original 600s 300-350Mbps real Action auto-trigger workflow. Linux loss0 source9b260 333.930 PASS_SCOPED, Windows five WFP/routes global policy FAIL, PLAN028 IN_PROGRESS.",
+  "why_now": "H1540 ZIP directly proves upstream H1285 real original Go fix and same-epoch Game2 server grouping defect; ARM64 production packaging also stale/broken. Must default install only qualified source fixes while never weakening real Windows shared WFP/route fail-closed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1540 source-locked Linux original-Go rebuild and Go pre-detach 64/65 positive+negative test, 30% 600s real server Game4 5 hot M4/Stop/outer300..350, no loss0 rerun. For Windows design safe machine-owned single shared captured route/WFP scope with per-identity Wintun leases or independent Windows VM contexts; never adopt foreign route or relax per-process WFP. Original Windows five Ready0 until true driver/route sharing. Keep PLAN028 IN_PROGRESS.",
+  "next_action": "Read H1541 single original x86 Linux loss30 job and full raw artifact; ensure exact current source Go native tests PASS and all Game2/4 server M4 + five-client UDP/TCP 600s+outer 300-350 + six owned Stop; on failure preserve first fault. Verify default m0-wl cheap source audit and ARM bash -n; review Windows5 machine-wide WFP/route policy without relaxing foreign ownership. ARM64 actual production binary build NOT_RUN until native action. Remain PLAN028 IN_PROGRESS.",
   "unverified": true,
-  "last_tested_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "last_tested_source": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1541-LINUX30-GAME2-CROSS-COLD-COHORT-DEFAULT-SOURCE-AUDIT-20261110.json",
     "docs/evidence/M0/PLAN028-H1540-SOURCE-LOCK-LINUX-M4-EARLY-DATA-ASSEMBLY-CORRECTION-20261110.json",
     "docs/evidence/M0/PLAN028-H1537-LINUX-333-930-PASS-303-027-GAME4-UNPROVEN-WINDOWS-ROUTE-20261110.json",
     "docs/evidence/M0/PLAN028-H1532-WIN-SINGLE-OWNER-LINUX-OUTER300-350-DUAL-RUNNER-20261110.json",
@@ -35,5 +36,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1540 precise Linux 30-loss 303.027Mbps Game4 M4 failure due original Go cold pre-detach 64/65 overflow ABORT from wbd-next installer only7 files: corrected H1285 transition files already in manifest but not installed. 11-file source locked fix and full Go rebuild/frozen Rust exact SHA256 one loss30 600s scene initiated by workflow. Prior loss0 333.930 scoped PASS retained; Windows 5 Wintun global route/WFP no safe shared owner, Ready0 original FAIL. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1541 default current-source audit: H1540 actual 303.015 Mbps 600s 30loss five Windows? No: FIVE LINUX original Go clients; genuine native Game4 hot5 service PASS scoped after H1285 11-file assembler fix, six Stop PASS; Carol Game2 false cohort mixing stale 49336+fresh57256 makes true app FAIL. Fix pending keyed by original TCP 5tuple + consecutive ports and all source now default on ARM64 (previous malformed/hand-stale script), x86 and canonical Windows manifest. New cheap full assembly drift checks and exact H1541 one loss30 600s run; PLAN028 IN_PROGRESS."
 }
