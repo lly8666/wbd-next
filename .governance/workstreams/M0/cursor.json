@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1516,
-  "checkpoint_sha": "0d3fbec30095d949aa759725dd7dff5e88e51522",
+  "sequence": 1517,
+  "checkpoint_sha": "e17ae539f92f7d6a296456ad077c2b69e02ba43c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1516-WINDOWS-ASM-MANIFEST-AND-NATIVE-FIVE-OWNER-PREFLIGHT",
-  "current_task": "After H1515 true pre-TLS Windows guard remediation on SOURCE 0d3fbec30095d949aa759725dd7dff5e88e51522, Action42772317994 cheap contract FAIL because Windows Go m0_native_v4_windows.go changed but manifest expected old blob. New SHA 099d2d811dad2805945e6074bf3802f79ef2d0a2. Updated exact-source assembly manifest, includes H1515 true Windows OS five-slot regression as assembled test file and runs compiled original Windows client.test.exe before any native Windows network test. Old Action fail preserved. One source-locked loss0 native test eligible after preflight; loss30 not dispatched. PLAN028 IN_PROGRESS.",
-  "why_now": "Manifest hash mismatch blocks all product builds before five original-Windows slot code is compiled. Fix existing immutable assembly pin and execute real Windows named OS event unit before one discriminating native loss0, instead of another unvalidated run.",
+  "task_id": "PLAN028-M0-H1517-WIN5-WORKFLOW-COMPILE-SYNTAX-REPAIR",
+  "current_task": "H1516 SOURCE e17ae539f92f7d6a296456ad077c2b69e02ba43c workflow Actions42774222921 invalid workflow no jobs: new client.test.exe -test.run line truncated after TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots, absent closing quote and $LASTEXITCODE guard. Product Windows5 NOT_RUN. H1517 repaired single YAML line + explicit error guard, no product changes, preserve H1516 original Action and run one actual loss0 after cheap/preflight. All preflight run ids from other auto-actions are separately qualified. PLAN028 IN_PROGRESS.",
+  "why_now": "New CI-only source assembly exact pins are validated structurally, but a malformed test command prevented GitHub from scheduling actual native run. Correct only the harness invocation, no repeat seeds or production owner changes.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new SOURCE one-scenario Windows5 loss0 workflow Action after manifest+Windows Go slot test, Linux Go/Rust and Windows Rust builds. If cheap compile fails, fix missing first error without 600s native. Once native real, inspect earliest client TLS, Wintun IP, server protected multi-M4 Ready, MTU, true data and Stop; source lock. Loss30 still NOT_RUN; do not re-dispatch same condition. Preserve original H1506 and 0d3 manifest FAIL.",
+  "next_action": "Collect H1517 one loss0 Windows2025 Action. Require manifest cheap PASS and actual compiled Windows OS five slot test PASS and Linux Go/Rust native build PASS before observing original WSL2 server READY, five separate Windows credentials and Wintun IP, true native M4, UDP/TCP 600s and Stop. If failure preserve earliest stage. Do not start loss30 or duplicate native run.",
   "unverified": true,
-  "last_tested_source": "0d3fbec30095d949aa759725dd7dff5e88e51522",
+  "last_tested_source": "e17ae539f92f7d6a296456ad077c2b69e02ba43c",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1516-SOURCE0D3-WIN-ASSEMBLY-PIN-COLD-REGRESSION-20261110.json",
     "docs/evidence/M0/PLAN028-H1515-WIN5-SOURCEADD537-EARLIEST-CLIENT-GUARDS-20261110.json"
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1516 Action42772317994 failed in cheap assembly only: stale result_blob after real Windows five CI slot product change; no M4 or Windows native triggered, source0d3 original failed. Repair the exact manifest blob and register five-slot test in assembled original Go, execute compiled Windows unit before native; one loss0 source-locked Action eligible. Prior sourceadd537 first native Linux server READY but Windows client pre-TLS failed, preserved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1517 exact YAML test invocation truncated in H1516 e17ae original workflow Action42774222921 with zero jobs; five Windows original TEST NOT_RUN. Original Linux mixed shared server Ready on prior add537 remains PASS_SCOPED, previous Windows pre-TLS guard fail remains. Repair one malformed line + exit guard and reattempt single loss0 under source-locked build. PLAN028 IN_PROGRESS."
 }

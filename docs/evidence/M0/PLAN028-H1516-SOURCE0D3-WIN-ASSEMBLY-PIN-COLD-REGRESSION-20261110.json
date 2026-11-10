@@ -26,5 +26,14 @@
   },
   "next": "One loss0 real Windows 2025 Npcap/Wintun+WSL2 exact-source scene only after assembled original Go unit/test and both Rust builds; loss30 untriggered",
   "status": "FAIL_ASSEMBLY_PREBUILD_APPLICATION_NOT_RUN",
-  "overall_plan": "IN_PROGRESS"
+  "overall_plan": "IN_PROGRESS",
+  "subsequent_workflow_invalid": {
+    "source_sha": "e17ae539f92f7d6a296456ad077c2b69e02ba43c",
+    "action_id": 42774222921,
+    "conclusion": "failure",
+    "jobs": 0,
+    "first_error": "unclosed Windows client.test.exe -test.run PowerShell YAML line; no native started",
+    "classification": "HARNESS_SYNTAX_FAIL_NATIVE_NOT_RUN",
+    "repair": "Close test command and run existing executable with explicit $LASTEXITCODE check; preserve old source manifest hash"
+  }
 }

@@ -519,7 +519,8 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'PLAN028 native Windows route/IP coalescing and physical path fingerprint FAIL'}
             # H1516: REAL compiled original Windows Go test executable,
             # five independent OS event slots plus duplicate/foreign/default rejection.
-            & ../result/client.test.exe '-test.run=^TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots
+            & ../result/client.test.exe '-test.run=^TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots' '-test.count=1' '-test.v'
+            if($LASTEXITCODE -ne 0){throw 'PLAN028 actual five independent Windows OS client owner slot isolation FAIL'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN028(NativeWindowsIPv4CallbackCoalescer|NativeWindowsOnlyPhysicalNICSourceIPv4|WindowsIPv4NlMtuMIBRowABI|GameNativeCanceledTickNeverMasqueradesAsMTUDrift|WindowsOwnedWSLMTUShrinkNeverAllowsForeignOrSourceRebind)$' '-test.count=1' '-test.v'
             if($LASTEXITCODE -ne 0){throw 'PLAN028 actual selected Windows physical NIC MTU-only notification/fail-closed owner contract failed'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN026GameColdHandoffQueueNeverBlocksRustJoin$' '-test.count=1'
