@@ -1,0 +1,108 @@
+# H1497 single SOURCE/architecture build-only; 0 product network.
+# H1496 short x86 real Erin30 B proof 2/2 and client Health5 L0 already PASS.
+# Reuse frozen original-Go ARM64 ELF binaries; ONLY compile updated Rust M4
+# once on native ARM64 ISA-L, so independent H1498/H1499 L3 Actions share
+# the *exact* binary/manifest SHA and cannot confound source differences.
+name: PLAN028 H1497 one native ARM64 Rust cold Health5 candidate build only
+run-name: PLAN028 H1497 ARM64 one Rust source build Go unchanged no network
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1497-arm64-frozen-onebuild-health5.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  build-once:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Recover exact original Go ARM64 source57b no rebuild and compile native Rust once
+        shell: bash
+        timeout-minutes: 24
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          mkdir -p fixed-build result frozen
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13679879171/zip \
+            -o frozen/original-ARM64-Go-source57b.zip
+          python3 tools/m0_plan028_h1491_frozen_arm_manifest.py \
+            --zip frozen/original-ARM64-Go-source57b.zip --out fixed-build
+          mv fixed-build/manifest.json fixed-build/original-Go-ARM64-source57b-manifest.json
+          rustup toolchain install 1.85.1 --profile minimal
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          test "$(git -C isa-l rev-parse HEAD)" = c387163fcbca62701d646149564c550c78a4f985
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/h1497-native-aarch64-isal"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
+          (cd isa-l && ./autogen.sh && ./configure --prefix="$WBD_ISAL_PREFIX" --disable-shared --enable-static && make -j2 && make install) >result/h1497-isal-build.log 2>&1 || {
+            tail -100 result/h1497-isal-build.log >&2
+            exit 1
+          }
+          test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
+          nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            --lib client_cold_m4_receiver_proof_is_bounded_five_existing_kind0 -- --test-threads=1 \
+            >result/h1497-health5-native-ARM64-L0.log 2>&1 || {
+              tail -120 result/h1497-health5-native-ARM64-L0.log >&2
+              exit 1
+            }
+          grep -Fq 'test v4_native_health::tests::client_cold_m4_receiver_proof_is_bounded_five_existing_kind0 ... ok' result/h1497-health5-native-ARM64-L0.log
+          echo H1497_TRUE_NATIVE_ARM64_COLD_HEALTH5_L0_PASS
+          cargo +1.85.1 build --locked --release -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            >result/h1497-release-Rust-M4.log 2>&1 || {
+              tail -130 result/h1497-release-Rust-M4.log >&2
+              exit 1
+            }
+          cp target/release/libwbd_engine.so fixed-build/
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct,subprocess
+          p=pathlib.Path("fixed-build")
+          old=json.loads((p/"original-Go-ARM64-source57b-manifest.json").read_text())
+          assert old["source_sha"]=="57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+          sha={}
+          for n in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(p/n).read_bytes()
+              assert b[:4]==b"\x7fELF" and struct.unpack_from("<H",b,18)[0]==183,n
+              sha[n]=hashlib.sha256(b).hexdigest()
+          for n in ("wbd-v4-client","wbd-v4-server"):
+              assert sha[n]==old["sha256"][n],n
+          assert sha["libwbd_engine.so"]!=old["sha256"]["libwbd_engine.so"],"old Rust accidentally reused"
+          blob=subprocess.check_output(["git","rev-parse","HEAD:crates/wbd-engine/src/v4_native_health.rs"],text=True).strip()
+          m={"product_source_sha":os.environ["GITHUB_SHA"],
+             "original_go_source_sha":old["source_sha"],
+             "original_go_donor_sha":old["original_go_sha"],
+             "architecture":"native_aarch64",
+             "binary_sha256":sha,
+             "rust_native_health_cold5_blob_sha1":blob,
+             "native_ISAL_source_sha":"c387163fcbca62701d646149564c550c78a4f985",
+             "original_arm64_go_executables_unchanged":True,
+             "rust_features":"m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration",
+             "L0_native_cold_health5":"PASS",
+             "scope":"BUILD_ONLY_UNTIL_SEPARATE_REAL_1800S_L3_ACTIONS"}
+          (p/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("H1497_ONE_SOURCE_NATIVE_ARM64_GO_UNCHANGED_RUST_HEALTH5_SHA_ISAL_L0_BUILD_PASS",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1497-native-ARM64-once-source-${{ github.sha }}
+          path: |
+            fixed-build/wbd-v4-client
+            fixed-build/wbd-v4-server
+            fixed-build/libwbd_engine.so
+            fixed-build/manifest.json
+            fixed-build/original-Go-ARM64-source57b-manifest.json
+            result/h1497-*.log
+          if-no-files-found: warn
+          retention-days: 30

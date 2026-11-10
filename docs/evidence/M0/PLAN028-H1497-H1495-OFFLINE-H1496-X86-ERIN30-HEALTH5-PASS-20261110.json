@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "base_head": "71f56156a8d872083503b9892233b24184d8e261",
+  "original_product_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "H1495": {
+    "action_id": 42736045723,
+    "job_id": 129565423183,
+    "artifact_id": 13726493912,
+    "sha256": "d0d53e6c8b95b08d713cb280d294837fe37e551531f810e6ed6f0dacd3d35203",
+    "CRC": "PASS",
+    "result": "PASS_INDEPENDENT_IMMUTABLE_ORIGINAL_THREE_ZIP_AUDIT",
+    "original_H1491": "PASS_SCOPED_REAL_50_THEN_75_ZERO_UDP",
+    "original_H1493": "PASS_SCOPED_NATIVE_ARM64_BASELINE_1800_69_B_CLIENT_HEALTH_AUTH",
+    "original_H1492": "FAIL_30PCT_ERIN_12_B_UNPROVEN_128940MS_GAP",
+    "H1492_and_H1493_original_Action_FAIL_preserved": true
+  },
+  "H1496": {
+    "action_id": 42736045736,
+    "job_id": 129565426017,
+    "artifact_id": 13727835794,
+    "zip_sha256": "2ff8268bbffa5c8a1073f61ed7287d9e710bf89893e1ed8634489c5fe1264e7c",
+    "zip_crc": "PASS",
+    "conclusion": "success",
+    "candidate_source_sha": "71f56156a8d872083503b9892233b24184d8e261",
+    "native_arch": "x86_64_two_endpoints_5real_clients_180s",
+    "original_Go_ELF_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+    "unchanged_GO_SHA256": {
+      "client": "a5360594851707d1e9783ca553a8e5e71bbfa4745c703bc8a2f1e7b781f42d7b",
+      "server": "652b7cd22bd232944c5a3cac2ca64c7680d6a7900965d956dffd5fc39e8083c8"
+    },
+    "new_native_ISAL_Rust_SHA256": "e8ac9668e53dbc31837fdb34c959fd686783d0f471ee4dc3cd499c9adce2be0a",
+    "Rust_cold_health5_L0": "PASS_1_OF_1",
+    "physical_loss_pct": [
+      0,
+      1,
+      5,
+      15,
+      30
+    ],
+    "one_way_delay_ms": [
+      0,
+      15,
+      50,
+      100,
+      125
+    ],
+    "Erin_B_authenticated_client_server_ports": [
+      60872,
+      52408
+    ],
+    "Erin_B_unproven_ports": [],
+    "two_true_B_promotions": 2,
+    "actual_UDP_unique_missing": {
+      "alice": [
+        0,
+        0
+      ],
+      "bob": [
+        0,
+        0
+      ],
+      "carol": [
+        437,
+        454
+      ],
+      "dave": [
+        0,
+        0
+      ],
+      "erin": [
+        492,
+        604
+      ]
+    },
+    "server_all_five_lease_queue_overflow": 0,
+    "all_six_Stop": true,
+    "result": "PASS_SCOPED_SINGLE_SHORT_TRUE_HIGHLOSS_B_PROOF_NOT_1800",
+    "loss_30pct_not_erased": true
+  },
+  "H1497_builder": {
+    "workflow": ".github/workflows/m0-plan028-h1497-arm64-frozen-onebuild-health5.yml",
+    "source": "this_next_commit",
+    "old_Go_ARM_native_artifact": 13679879171,
+    "new_Rust_native_ISAL_L0_required": true,
+    "Go_original_unchanged": true,
+    "real_network": "NOT_RUN",
+    "next": "Collect native ARM builder artifact and pass; freeze exact ZIP hash and dispatch two separate 1800s ARM64 Actions in parallel using same binary artifact"
+  },
+  "known_unqualified": [
+    "new candidate ARM64 1800s heterogeneous",
+    "new candidate ARM64 1800s low loss",
+    "Windows managed original Npcap/Wintun 1800s",
+    "Android/physical WAN"
+  ],
+  "PLAN028": "IN_PROGRESS"
+}
