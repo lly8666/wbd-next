@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1527,
-  "checkpoint_sha": "39207ffc2ec4ccded502991395fc095d78f48587",
+  "sequence": 1532,
+  "checkpoint_sha": "0a7d771d127223167ff20f6738d19f0d5cac6571",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1527-LINUX-30LOSS-OUTER100-150-NATIVE-PASS0LOSS-CAL-PENDING-WIN-DOUBLE-PREPARE",
-  "current_task": "Source9b260 original Linux five native x86 clients one TLS443 shared server 200ms/dir 600s fully completed: loss30 Action42781585834 original FAIL reporter, immutable original 10s kernel outer136.511Mbps, H1525 offline Action42784346466 native B pending->authenticated Health M4 exact unique per-client port proof (Alice6 Bob5 Erin4), six owned Stop, all real duplex UDP/TCP, scoped PASS. loss0 Action42781585712 exact original 185.352Mbps above desired150, all five native service/Stop business scoped PASS, throughput target FAIL_OVERSHOOT; one calibrated26Mbps/dir retest NOT_RUN. Windows sourcec9963 Action42782566007 first actual early failure reused host source198.19.254.1 prepared by parent but five fixture double Prepare using different receipt, preTLS NOT_RUN and alias cleanup unverified. Full PLAN028 IN_PROGRESS.",
-  "why_now": "Both native Actions finished; confirm real business PASS if substantive, not punish legacy M4 reporter false negatives. Rate miss is an actual target overshoot, reduce next zero-loss offer from35 to26Mbps/dir. Windows first failure before TLS traced exact duplicate Prepare; do not remove owned-source guard.",
+  "task_id": "PLAN028-M0-H1532-WINDOWS-NATIVE-SINGLE-OWNER-LINUX-300-350-TWO-SCENES-INFLIGHT",
+  "current_task": "User accepts earlier scoped Linux original five-client results. Source9b260 native Linux x86 original 600s 200ms loss0/loss30 new 300-350Mbps FULL actual outer two-way target running in independent matrix hosts Action42788212678 jobs129734687736 and129734688202 at wrapper0a7d771; inner per direction offered target 60Mbps(loss0) and82Mbps(loss30), must read tc actual kernel and exact M4/owned Stop; NOT PASS until complete. Windows native signed Wintun loss0 source0a7d771 Action42788212994 cheap preflight succeeded, child reuses parent's original owned WSL2 physical source4 receipt, no duplicate Prepare, exact Restore parent guard. Prior Linux loss0 185.352Mbps scoped functional PASS but historical 100-150 bandwidth exceeded, loss30 136.511Mbps scoped all PASS. PLAN028 IN_PROGRESS.",
+  "why_now": "Parallel two real x86 original 600s Linux 300-350 full outer loads scheduled; Windows single-owner 198.19.254.1 physical source fix tested cheap and source-locked actual native job being built. Need collect without relaunch, not substitute configured Mbps for measured tc.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Do not repeat Linux loss30: preserve H1525 original exact M4 native scoped PASS and 136.511Mbps outer. For loss0 only source-pinned one x86 native 600s with 26Mbps/dir inner baseline (expected ~137.7Mbps outer by measured prior scaling), real 10s outer+UDP/TCP+all Stop; never waive hard product gates. For Windows repair exactly one parent source4 Prepare+receipt reused by five clients and exact owned Restore after failed/successful product, preflight code/test; one 0% source-locked Windows native to verify real TLS/M4 before 30%, don't duplicate. Existing ZIP preserves original Windows FAIL. Physical and Android NOT_RUN. PLAN028 remains IN_PROGRESS.",
+  "next_action": "Collect Action42788212678 Linux loss0/loss30 native jobs and strict original B auth-Health M4 / six exact owned Stop / 10s actual full outer, classify PASS only measured 300..350 and all hard gates, capacity guard if present. Collect Windows Action42788212994 real native child first failure or authentic TLS/M4/UDP/TCP/owned Restore; no duplicate Windows. Preserve prior H1527 results and original H1520 FAIL reporter errors. No physical WAN or Android yet. Keep PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1532-WIN-SINGLE-OWNER-LINUX-OUTER300-350-DUAL-RUNNER-20261110.json",
     "docs/evidence/M0/PLAN028-H1527-LINUX-100-150-600S-LOSS30-PASS-LOSS0-OVERSHOOT-WINDOWS-ALIAS-20261110.json",
     "docs/evidence/M0/PLAN028-H1522-LINUX-OUTER100-150-DUAL-ACTIONS-WINDOWS-FAIL-20261110.json",
     "docs/evidence/M0/PLAN028-H1519-SOURCE9B260-WIN5-SOURCE-LOCKED-INFLIGHT-20261110.json",
@@ -32,5 +33,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1527 Linux 30loss 136.511Mbps 600s actual source9b260 true 5 client/one server TLS443, M4 B authenticated native Health fully verified by H1525 exact server original log replay, 6 owned Stops and real TCP/UDP 10ms max gap200ms PASS_SCOPED. Linux 0loss same substantive business PASS_SCOPED but actual outer185.352 >150, calibrated26Mbps/dir target NOT_RUN. Original Actions are FAIL_REPORTER preserved. Windows latest c9963 failure before TLS parent Prepare 198.19.254.1 duplicate child Prepare different receipt; cleanup missing, NOT_RUN. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1532 2 Linux source9b260 600s x86 native original same five modes 200ms loss0/30 running new user-requested kernel outer aggregate300..350 Mbps via Action42788212678 (rate inner60/82 per direction), Windows five true Wintun/WSL source0a7d771 loss0 Action42788212994 with single parent owned source4 receipt and fail-closed cleanup launched. Earlier loss0 185.352 actual and loss30 136.511 actual scoped business/M4/Stop accepted; only loss30 hit prior 100-150 band, no forged bandwidth PASS. All current new actions awaiting results."
 }

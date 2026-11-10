@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "project": "M0 PLAN028",
+  "date_utc": "2026-11-10",
+  "checkpoint": "H1532",
+  "user_instruction": "Continue Windows native; Linux raise real outer duplex aggregate to 300-350Mbps, keep earlier tests accepted",
+  "product_source_linux_frozen": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "harness_wrapper_source": "0a7d771d127223167ff20f6738d19f0d5cac6571",
+  "prior_results_preserved": [
+    {
+      "original_action": 42781585712,
+      "loss_pct": 0,
+      "full_outer_mbps": 185.352,
+      "real_five_client_business_m4_stop": "PASS_SCOPED",
+      "historical_band_100_150": "NOT_PASS_OVER_150",
+      "user_acceptance": "ACCEPT_PRIOR_SCOPED_FUNCTIONAL_RESULT"
+    },
+    {
+      "original_action": 42781585834,
+      "loss_pct": 30,
+      "full_outer_mbps": 136.511,
+      "real_five_client_business_m4_stop": "PASS_SCOPED",
+      "historical_band_100_150": "PASS",
+      "user_acceptance": "ACCEPT_PRIOR_SCOPED_RESULT"
+    }
+  ],
+  "new_linux": {
+    "real_x86_one_native_server_and_five_native_clients": true,
+    "real_tls443_go_rust_tun": true,
+    "source_locked_binary_artifact": {
+      "run": 42775103187,
+      "id": 13744140576
+    },
+    "action": 42788212678,
+    "status": "RUNNING_ORIGINAL_600S_AT_RECORD_TIME",
+    "loss0_job": 129734687736,
+    "loss30_job": 129734688202,
+    "two_separate_ubuntu_vms": true,
+    "one_way_physical_netem_ms": 200,
+    "loss_percent": [
+      0,
+      30
+    ],
+    "app_base_mbps_each_direction_by_client": {
+      "loss0": [
+        20,
+        14,
+        10,
+        6,
+        10
+      ],
+      "loss30": [
+        28,
+        20,
+        14,
+        6,
+        14
+      ]
+    },
+    "inner_total_mbps_each_way": {
+      "loss0": 60,
+      "loss30": 82
+    },
+    "target_kernel_outer_mbps_total_both_directions": [
+      300,
+      350
+    ],
+    "evidence": "10s tc -s -j on ten actual veth, six original Stop, five real UDP+TCP, exact Normal server native B authenticated Health promoted, Game2/Game4, maximum active no receive gap, VM 30s read-only CPU/RSS guard",
+    "status_criteria": "PASS_SCOPED only when actual steady 300-350 Mbps with >=70pct windows in band and all hard owner/business/Stop gates; configured load never counts as measured rate",
+    "result": "NOT_YET_AVAILABLE"
+  },
+  "new_windows": {
+    "action": 42788212994,
+    "status": "CHEAP_PREFLIGHT_PASS_BUILD_STEPS_IN_PROGRESS_AT_RECORD_TIME",
+    "source_sha": "0a7d771d127223167ff20f6738d19f0d5cac6571",
+    "scene": "loss0",
+    "product_scope": "five actual signed Windows Npcap Wintun original native clients, one real WSL2 Linux server 200ms both directions",
+    "h1527_first_real_error": "Parent original Windows outer Action had already created owned physical 198.19.254.1 source with plan028-owned-alias.json, child five-client script ran second Prepare on its own h1506-owned-alias.json and failed BEFORE TLS; parent did not own cleanup on this trigger",
+    "change": "Child reuses exactly prior source-locked parent receipt; refuses mismatch, DOES NOT second Prepare; child exact Restore on exit; parent always cleanup for h1510/h1506, recognizes exact already-restored receipts to avoid duplicate delete",
+    "hard_guard": "No foreign alias/management interface overwrite; reject missing/foreign signed source receipt, preserve child first error",
+    "result": "NOT_YET_AVAILABLE"
+  },
+  "failed_or_uncertain": "Cannot reinterpret 0pct 185.352 Mbps as historical 100-150 target passed; old product IO pass retained. New 300-350 pending until real qdisc evidence. Windows before real source underlay fail preserved.",
+  "overall": "IN_PROGRESS",
+  "physical_wan": "NOT_RUN",
+  "android": "NOT_RUN"
+}
