@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "source_sha": "add5377be702a1b4a79b8418255f550bf0a0eeac",
+  "scene": "one source-locked true Windows2025 Npcap/Wintun five users + Linux WSL2 mixed Normal/Game shared443, 200ms physical, loss0, 600s",
+  "observed_at_utc": "2026-11-10",
+  "status": "BUILD_PASS_NATIVE_IN_PROGRESS",
+  "result": "NOT_RUN",
+  "result_scope": "real five-client application 600s not yet completed",
+  "qualification": "BUILD_ONLY",
+  "action": {
+    "run_id": 42769807553,
+    "source_sha": "add5377be702a1b4a79b8418255f550bf0a0eeac",
+    "run_status": "in_progress",
+    "preflight_job_id": 129674697336,
+    "windows_go_compile_job_id": 129674863551,
+    "linux_rust_test_job_id": 129674863598,
+    "windows_rust_test_job_id": 129674863791,
+    "linux_original_go_rust_build_job_id": 129675680429,
+    "windows5_loss0_native_job_id": 129676593518
+  },
+  "proven_success": [
+    "cheap scope and source-syntax suite",
+    "Windows Go production and test caller compile",
+    "Linux Rust original lib unit",
+    "Windows Rust original lib unit",
+    "Linux original Go v4productcli unit tests",
+    "Linux original Go server/client+Rust release build and ISA-L source-lock"
+  ],
+  "build_artifact": {
+    "id": 13741571651,
+    "name": "m0-plan024-linux-product",
+    "size_bytes": 13697677,
+    "consumer_hash_readback": "PENDING_CONSUMER_BUILD_STAGE"
+  },
+  "original_failures_preserved": [
+    {
+      "source_sha": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
+      "action": 42765555239,
+      "issue": "manual account map not routed into mixed shared Go owner",
+      "windows_native_business": "NOT_RUN"
+    },
+    {
+      "source_sha": "07312d6e1743d5c28ff839fd2c9eb277c99744ed",
+      "action": 42768853063,
+      "issue": "new Go cold test extra nil compile error",
+      "windows_native_business": "NOT_RUN"
+    }
+  ],
+  "not_yet_qualified": [
+    "server mixed READY",
+    "five identity+original TLS",
+    "five shared owned /32 Rust M4",
+    "MTU installation and readback",
+    "200ms netem",
+    "70..100 Mbps true combined outer both directions",
+    "real UDP/TCP unique deliveries",
+    "four native OS physical changes",
+    "owned all-client Stop and sibling survival"
+  ],
+  "next_action": "Collect Action42769807553 native Windows5 loss0 job129676593518; do not rerun or dispatch loss30 while in flight. Inspect exact first event, original ZIP, per-stage proofs; capacity guard and any 'not triggered' remain distinct.",
+  "overall_plan": "IN_PROGRESS"
+}

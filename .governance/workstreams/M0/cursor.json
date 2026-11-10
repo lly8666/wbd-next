@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1513,
-  "checkpoint_sha": "d1bb7f3a8aba83cc680a4c1ba551888b23ea33c8",
+  "sequence": 1514,
+  "checkpoint_sha": "add5377be702a1b4a79b8418255f550bf0a0eeac",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1513-CORRECT-GO-TEST-ARITY-RETRY-LOSS0",
-  "current_task": "SOURCE07312 Action42768853063: offline Windows Go, Rust Win/Linux PASS; Linux native Rust release successfully built but original Go v4productcli test compile failed only because new test mixed_manual_scope_linux_test.go called runGame(ctx,c,0,nil,nil,nil,nil,nil), which has one nil too many (expects seven args); exact Go source logic compiled, Windows native loss0 SKIPPED, business NOT_RUN. H1513 fix-only corrected arity; one loss0 retry eligible, no loss30 yet. Governance d1bb Action42769546998 PASS. Prior 8e5 loss0/loss30 pre-READY original FAIL preserved; ARM H1505 raw PASS_SCOPED. PLAN028 IN_PROGRESS.",
-  "why_now": "Original Linux Go source-locked test compile failure precedes native execution, not a product TLS/M4 failure. Repair a single wrong call arity in new regression test, retain old Action fail, and allow exact one targeted loss0 source build+native run.",
+  "task_id": "PLAN028-M0-H1514-SOURCEADD537-TRUE-WIN5-LOSS0-NATIVE-INFLIGHT",
+  "current_task": "SOURCE add5377be702a1b4a79b8418255f550bf0a0eeac Action42769807553 Linux original Go/Rust native server/client exact source build+v4productcli units PASS job129675680429, Linux build artifact13741571651, Windows Go compile PASS job129674863551, Linux Rust library PASS job129674863598, Windows Rust library PASS job129674863791, workflow cheap gates PASS job129674697336. One Windows5 real signed Npcap/Wintun native loss0 job129676593518 RUNNING; 600s and service READY/TLS/M4/MTU/data/Stop all PENDING. Prior source07312 Go test-arity FAIL, old source8e5 two pre-ready original FAIL, all business NOT_RUN preserved. H1505 ARM historical raw substantive PASS_SCOPED+reporter FAIL. PLAN028 IN_PROGRESS.",
+  "why_now": "Current candidate Go and Rust source-locked build now genuine PASS after test-only arity correction; active Windows loss0 cannot be counted until real native original logs/ZIP. Keep exact source, artifacts, job ids in cursor/evidence and avoid duplicate dispatch.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1513 Action single loss0 Windows5 post-compile native test: original Linux Go v4productcli unit, Rust M4 build, manifest/hashes, real Linux server shared READY, five protected Windows Npcap/Wintun TLS and per-account /32, 200ms loss0, 70..100Mbps combined outer, four OS changes, owned Stop. Do not run loss30 unless latest evidence and pass allow. Other auto workflows may be redundant; do not manually repeat. Preserve old Action42768853063 compile FAIL and native NOT_RUN.",
+  "next_action": "Collect sole true Windows2025 loss0 job129676593518 in Action42769807553 SOURCEadd537. Require original Linux shared-server READY, five credential TLS, per-account/32 Rust M4 and MTU readback, true dual-direction app 600s with 200ms and measured 70..100Mbps outer, real source rotations and owned Stop. If failure, preserve first raw original stage and fix minimum; don't dispatch loss30 until after source-locked loss0 outcome. Existing hourly monitor was for old Action42765555239, do not treat its notification as sourceadd537 result. L1/L2/L3 not closed.",
   "unverified": true,
-  "last_tested_source": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
+  "last_tested_source": "add5377be702a1b4a79b8418255f550bf0a0eeac",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1510-WIN5-MANUAL-SHARED-COLD-GATE-20261110.json"
+    "docs/evidence/M0/PLAN028-H1514-SOURCEADD537-NATIVE-LINUX-BUILD-AND-WIN5-LOSS0-INFLIGHT-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1513: original source07312 Linux Rust build PASS, Go compile failed only test-invocation arity, native Windows loss0 SKIPPED. Corrected two extra-nil calls, no product runtime/FEC/wire changes. Governance d1bb PASS. One source-locked loss0 retry prepared; no loss30. 028 IN_PROGRESS."
+  "partial_summary": "H1514 SOURCEadd537 exact Linux original Go/Rust build+unit PASS, Rust Win/Linux libs PASS and Windows Go compile PASS. True Windows5 loss0 job129676593518 running; native business NOT_RUN/IN_PROGRESS. Prior original server V3 unsupported source8e5 and new-test arity source07312 FAIL preserved. No loss30 sourceadd537 dispatched. PLAN028 IN_PROGRESS."
 }
