@@ -4,7 +4,7 @@
 The Windows assembly manifest is the sole list of original/result Git blobs.
 Never duplicate checked-in SHA constants: doing so previously blocked H968
 Linux while the exact same Windows Go source had passed byte-level tests.
-Writes happen only after ALL seven original and result blobs pass verification.
+Writes happen only after ALL eleven original and result blobs pass verification.
 """
 from pathlib import Path
 import hashlib
@@ -14,8 +14,8 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 MANIFEST=ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json"
 ORIGINAL_SOURCE="a7a82db31fe736ffedee330795a3234d358f1984"
-REPLACE=("packet.go","client_association.go","association.go","association_test.go")
-CREATE=("public_v4_mss.go","public_v4_mss_test.go","public_v4_mss_byte_test.go")
+REPLACE=("packet.go","client_association.go","association.go","association_test.go","transition.go","transition_test.go")
+CREATE=("public_v4_mss.go","public_v4_mss_test.go","public_v4_mss_byte_test.go","transition_h1285_test.go","transition_h1285_association_test.go")
 
 def blob(data:bytes)->str:
     return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()

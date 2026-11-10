@@ -1,0 +1,184 @@
+# H1540: one native Linux 600s/30pct reproduction after correcting ORIGINAL
+# Go assembly omission. No source9b260 Linux binaries are silently reused:
+# both Go endpoints are freshly rebuilt at github.sha; frozen Rust M4/ISA-L
+# ABI library reused by SHA256 from source9b260 and declared independently.
+name: PLAN028 H1540 source-locked Linux 30pct real Game4 M4 overflow fix
+run-name: "PLAN028 H1540 patched real Go FakeTCP pre-detach + frozen Rust x86 600s 30pct 300-350Mbps"
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-h1540-linux30-pre-detach-source-fixed.yml
+permissions: {contents: read, actions: read}
+jobs:
+  one-original-linux-loss30:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      ORIGINAL_GO_SHA: a7a82db31fe736ffedee330795a3234d358f1984
+      FROZEN_RUST_SOURCE_SHA: 9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da
+      WBD_PLAN028_600S_SCENE: outer300to350-loss30
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42775103187
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: frozen-rust/
+      - name: Check correct original Go 11-blob set and identical frozen Rust native accelerated ISA-L
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C legacy rev-parse HEAD)" = "$ORIGINAL_GO_SHA"
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          python3 -m py_compile tools/m0_install_public_faketcp.py tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0_plan028_h1520_linux_outer_monitor.py tools/m0_plan028_h1525_native_m4_replay.py
+          python3 -m unittest tests.test_m0_install_public_faketcp tests.test_m0_plan028_h1531_outer300_350 -v
+          python3 tools/m0_install_public_faketcp.py --check-only
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          root=pathlib.Path("frozen-rust")
+          old=json.loads((root/"manifest.json").read_text())
+          assert old["source_sha"]==os.environ["FROZEN_RUST_SOURCE_SHA"]
+          assert old["original_go_sha"]==os.environ["ORIGINAL_GO_SHA"]
+          assert old["rust_native_fec_acceleration"] is True
+          assert old["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          lib=(root/"libwbd_engine.so").read_bytes()
+          assert len(lib)>100000 and lib[:4]==bytes.fromhex("7f454c46")
+          assert struct.unpack_from("<H",lib,18)[0]==62
+          assert hashlib.sha256(lib).hexdigest()==old["sha256"]["libwbd_engine.so"]
+          print("H1540_FROZEN_RUST_ISAL_IDENTICAL_SHA256_PASS original_rust_source="+old["source_sha"],flush=True)
+          PY
+      - name: Rebuild original-Go source with all 11 exact FakeTCP records including previous H1285 bounded early M4 test
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          mkdir -p product legacy/internal/v4productcli legacy/cmd/wbd-v4-server legacy/cmd/wbd-v4-client
+          python3 tools/m0_install_public_faketcp.py legacy
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/
+          python3 tools/m0_install_public_realityfront_tests.py legacy
+          for f in r0/go_overlay/internal/realityfront/*.go; do
+            name="$(basename "$f")"
+            case "$name" in
+              tls_test.go|wire_qualification_test.go) continue ;;
+              tls.go)
+                test "$(git -C legacy hash-object internal/realityfront/tls.go)" = 518a18104803baf75c703fd8b038f2126beb8d64
+                cp "$f" legacy/internal/realityfront/tls.go
+                continue;;
+            esac
+            test ! -e "legacy/internal/realityfront/$name"
+            cp "$f" "legacy/internal/realityfront/$name"
+          done
+          cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
+          (cd legacy && go test -count=1 -v ./internal/faketcp -run 'TestPLAN028PreDetach|TestStageTransition|TestDetachedDataKernelFilterPreservesHandshakeAndControl|TestV4PublicSYNAndSYNACKRealEncodedOptionsAndFrozenRetries') | tee h1540-real-original-Go-faketcp.log
+          grep -Fq -- '--- PASS: TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor' h1540-real-original-Go-faketcp.log
+          grep -Fq -- '--- PASS: TestPLAN028PreDetachMalformedRecordStillAborts' h1540-real-original-Go-faketcp.log
+          grep -Fq -- '--- PASS: TestStageTransitionBoundsCountAndWireSize' h1540-real-original-Go-faketcp.log
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/frozen-rust -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/frozen-rust:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/product/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/product/wbd-v4-server" ./cmd/wbd-v4-server)
+          cp frozen-rust/libwbd_engine.so product/
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("product")
+          names=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
+          old=json.loads(pathlib.Path("frozen-rust/manifest.json").read_text())
+          checks={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
+          assert all((p/n).stat().st_size>100000 for n in names)
+          assert checks["libwbd_engine.so"]==old["sha256"]["libwbd_engine.so"]
+          source=os.environ["GITHUB_SHA"]
+          p.joinpath("manifest.json").write_text(json.dumps({
+            "schema_version":1,"source_sha":source,
+            "original_go_sha":os.environ["ORIGINAL_GO_SHA"],
+            "rust_source_sha":os.environ["FROZEN_RUST_SOURCE_SHA"],
+            "sha256":checks,"go":"1.23.12","rust":"1.85.1",
+            "peer_persona":"selected_only_after_original_credential_TLS",
+            "rust_native_fec_acceleration":True,
+            "isa_l_source":old["isa_l_source"],
+            "early_M4_64_slot_not_abort":"11_source_locked_Go_FakeTCP_tests_verified",
+            "source_provenance":"Go exact current wrapper, Rust frozen source+identical binary SHA256",
+            "binary_qualification":"BUILD_ONLY_NO_PRODUCT_CLAIM"
+          },indent=2)+"\n")
+          print("H1540_NEW_GO_BOTH_ENDPOINTS_FROZEN_RUST_EXACT_SHA_PASS source="+source,flush=True)
+          PY
+          chmod +x product/wbd-v4-client product/wbd-v4-server
+      - name: One original 600s native 30pct high outer test, real Game4 5 hot M4, bandwidth and six Stop
+        shell: bash
+        timeout-minutes: 22
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          mkdir -p fixed-kernel-result
+          echo "H1540_SOURCE_LOCKED_ONE_NATIVE_LOSS30_START source=$GITHUB_SHA origin_rust=$FROZEN_RUST_SOURCE_SHA"
+          python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py product \
+            >fixed-kernel-result/h1540-original-native.log 2>&1 &
+          native_pid=$!
+          python3 -u tools/m0_plan028_h1520_linux_outer_monitor.py \
+            --pid "$native_pid" --art fixed-kernel-result --scene loss30 --band-min 300 \
+            >fixed-kernel-result/h1540-outer-monitor.log 2>&1 &
+          meter_pid=$!
+          python3 -u tools/m0_plan028_h1504_vm_safety_guard.py \
+            --pid "$native_pid" --out fixed-kernel-result/h1540-vm-guard-10s.jsonl \
+            >fixed-kernel-result/h1540-vm-guard.log 2>&1 &
+          guard_pid=$!
+          set +e
+          wait "$native_pid"; native_rc=$?
+          wait "$meter_pid"; meter_rc=$?
+          wait "$guard_pid"; guard_rc=$?
+          set -e
+          echo "H1540_NATIVE_OS_ORIGINAL_STATUS native=$native_rc tc10s=$meter_rc capacity_guard=$guard_rc"
+          if [[ "$native_rc" -ne 0 || "$meter_rc" -ne 0 || "$guard_rc" -ne 0 ]]; then
+            tail -85 fixed-kernel-result/h1540-original-native.log >&2 || true
+            tail -25 fixed-kernel-result/h1540-outer-monitor.log >&2 || true
+            exit 1
+          fi
+          grep -Fq "H1531_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_300_350_COMPLETE outer300to350-loss30" fixed-kernel-result/h1540-original-native.log
+          test -s fixed-kernel-result/h1520-outer-10s.jsonl
+          python3 -u tools/m0_plan028_h1525_native_m4_replay.py \
+            --art fixed-kernel-result --scene loss30 --band-min 300 --strict-band \
+            --source "$GITHUB_SHA" --out fixed-kernel-result/h1540-real-native-verdict.json \
+            | tee fixed-kernel-result/h1540-verdict.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1540-linux-loss30-go-fixed-real-native-600s-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            product/manifest.json
+            h1540-real-original-Go-faketcp.log
+            fixed-kernel-result/h1540-*
+            fixed-kernel-result/h1520-*
+            fixed-kernel-result/h1461-six-hundred-report.json
+            fixed-kernel-result/h1250-matrix-plan.json
+            fixed-kernel-result/h1250-cpu-rss.json
+            fixed-kernel-result/h1250-qdisc-*.txt
+            fixed-kernel-result/h1250-product-*.log
+            fixed-kernel-result/h1250-c-*.json
+            fixed-kernel-result/h1250-s-*.json
+            fixed-kernel-result/h1312-static-neighbour-*.json

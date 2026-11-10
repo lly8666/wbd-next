@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "project": "PLAN028",
+  "checkpoint": "H1540",
+  "date_utc": "2026-11-10",
+  "original_failure": {
+    "run": 42788212678,
+    "job": 129734688202,
+    "artifact_id": 13749983094,
+    "source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+    "scene": "x86 Linux native five account TLS443 200ms each direction 30pct loss 600s full outer300-350Mbps",
+    "outer_kernel_steady_mean_mbps": 303.027,
+    "band_target": [
+      300,
+      350
+    ],
+    "six_native_owned_stop": true,
+    "status": "FAIL_GAME4_EXACT_REMOTE_M4",
+    "original_true_client_game4_hot_ready_count": 5,
+    "original_server_game4_hot_m4_count": 3,
+    "original_server_early_data_abort": [
+      {
+        "lane": 3,
+        "port": 59341,
+        "log_kind": "bounded_pre_detach_data_overflow",
+        "transition_state": "TransitionAborted",
+        "server_real_utc": "2026-11-10T09:14:55",
+        "stage": "protected_reply_detach"
+      },
+      {
+        "lane": 4,
+        "port": 50881,
+        "log_kind": "bounded_pre_detach_data_overflow",
+        "transition_state": "TransitionAborted",
+        "server_real_utc": "2026-11-10T09:17:04",
+        "stage": "protected_reply_detach"
+      }
+    ]
+  },
+  "root_cause_proven": "Original Go base internal/faketcp/transition.go from wobuzhidao a7a82 aborts transition on 65th legitimate early native ciphertext while protected final TLS ACK pending. Existing wbd-next source9b260 r0/go_overlay/internal/faketcp/transition.go H1285 already preserves prepared bounded 64 records, but tools/m0_install_public_faketcp.py REPLACE listed only 4 old FakeTCP files, not transition.go nor transition_test.go. H1531 Linux binaries compiled using partial seven-file install; manifest-plan020 had correct transition and H1285 guard but installer omitted, so original Go runtime did not have H1285 fix.",
+  "fixed_scope": "Add existing exact source-pinned transition.go + transition_test.go REPLACE and H1285 two bounded positive/negative tests CREATE, 11 total (previously7) to existing m0_install_public_faketcp. Preserve manifest-plan020 immutable original/result hashes, existing H1285 code unchanged, no wire format/MTU/FEC/native Rust, preserve max64 records+bytes, excess not ACKed not queued, illegal seq/size still hard abort.",
+  "new_product_provenance": {
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "go_product_new_commit": "TO_BE_ACTION_HEAD_AFTER_PUSH",
+    "frozen_rust_library_binary_sha256": "e8ac9668e53dbc31837fdb34c959fd686783d0f471ee4dc3cd499c9adce2be0a",
+    "rust_original_product_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+    "original_isal_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "verified_baseline_rust_native_acceleration": true
+  },
+  "new_targeted_test": {
+    "workflow": ".github/workflows/m0-plan028-h1540-linux30-pre-detach-source-fixed.yml",
+    "network_scene": "ONLY loss30",
+    "duration_seconds": 600,
+    "full_outer_target_both_directions_mbps": [
+      300,
+      350
+    ],
+    "app_inner_each_direction_mbps": 82,
+    "source_compose": "recompile both original Go endpoints current exact assembly at github.sha, reuse ONLY byte-identical Rust .so ABI original artifact by SHA256, all bundled files hash-verified",
+    "status": "NOT_RUN_BEFORE_PUSH",
+    "hard_gates": "real server Game4 exact all 5 hot M4, normal B native Health, physical real tc 10s, five real clients bidirectional UDP/TCP, six owned Stop, CPU guard"
+  },
+  "windows_unresolved": "One Windows OS five native Wintun sessions each attempts install identical physical server /32 and two /1 captured routes through per-process fail-closed CAS WAL and mutually-blocking WFP LUID!= interface rules; requires coordinated shared policy or qualified separate OS, not route guard bypass. Original Windows Action42788212994 fiveReady0 and preBind WinError10049 secondary; NOT_QUALIFIED.",
+  "historic_pass_preserved": {
+    "source9b260_loss0_outer_mbps": 333.93,
+    "loss0_qual": "PASS_SCOPED_FULL_ORIGINAL",
+    "source9b260_loss30_outer_mbps": 303.027,
+    "loss30_qual": "FAIL_GAME4_M4"
+  },
+  "plan028": "IN_PROGRESS",
+  "physical": "NOT_RUN",
+  "android": "NOT_RUN"
+}
