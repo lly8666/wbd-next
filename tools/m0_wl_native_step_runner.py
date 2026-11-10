@@ -140,6 +140,17 @@ def _inspect(state, data):
             print("WL_DIAG_FIRST_ERROR marker=" + _safe(state["first_error"]) +
                   " stage=" + _safe(state["stage"]), flush=True)
 
+def _native_console_fragment(data):
+    """Preserve exact original log bytes on disk; ONLY the optional console
+    relay escapes characters the Windows runner's cp1252 cannot encode.
+    Never let a replacement glyph terminate first-fault observation.
+    """
+    text=data.decode("utf-8","replace")
+    encoding=getattr(sys.stdout,"encoding",None)
+    if encoding:
+        text=text.encode(encoding,"backslashreplace").decode(encoding)
+    return text
+
 def _diagnostic_tail(output, stop, game, child_pid):
     # All file reads, text parsing, stdout and GitHub CLI are isolated from
     # the only PID deadline. A blocked stdout PIPE or filesystem cannot hold
@@ -180,7 +191,7 @@ def _diagnostic_tail(output, stop, game, child_pid):
                                        "WL_GAME_DUE_DIAGNOSTIC_FINAL")):
                         print("WL_GAME_BOUNDED_NATIVE_RESULT "+line[:420], flush=True)
             else:
-                sys.stdout.write(data.decode("utf-8","replace"))
+                sys.stdout.write(_native_console_fragment(data))
                 sys.stdout.flush()
         if l3 and not data and not stop.is_set() and now-last_data>=20 and now-last_idle>=20:
             print("WL_NATIVE_L3_TEST_OUTPUT_IDLE_OWNER_ALIVE child_pid="+

@@ -15,6 +15,24 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 RUNNER=ROOT/"tools/m0_wl_native_step_runner.py"
 
 class NativeChildStdoutLifetimeTests(unittest.TestCase):
+    def test_h1523_real_cp1252_native_first_fault_relay_keeps_original_log(self):
+        # The native source writes UTF-8 bytes, Windows runner stdout may
+        # advertise cp1252. The optional log relay must not crash on U+FFFD.
+        from tools import m0_wl_native_step_runner as native
+        raw=(b"H1506_ORIGINAL_NATIVE_FIVE_FIRST_ERROR "+
+             b"pre_tls_client=alice bad_utf8=\\xff\n")
+        raw=raw.replace(b"\\xff",bytes([255]))
+        stream=io.BytesIO()
+        writer=io.TextIOWrapper(stream,encoding="cp1252",write_through=True)
+        with mock.patch.object(native.sys,"stdout",writer):
+            rendered=native._native_console_fragment(raw)
+            writer.write(rendered)
+        output=stream.getvalue().decode("cp1252")
+        self.assertIn("H1506_ORIGINAL_NATIVE_FIVE_FIRST_ERROR",output)
+        self.assertIn("pre_tls_client=alice",output)
+        self.assertIn(r"\\ufffd",output)
+        self.assertEqual(raw.split(b"bad_utf8=")[1],bytes([255,10]))
+
     def test_old_pipe_collection_waits_for_unrelated_inherited_writer(self):
         with tempfile.TemporaryDirectory() as d:
             code=pathlib.Path(d)/"child.py"
