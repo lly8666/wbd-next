@@ -8398,9 +8398,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         clock.arm_server_cold_commit(loop_now().0);
     }else if !e.server_side && e.original_public_feedback_armed &&
         e.shared_tun.as_ref().is_some_and(|s|s.publish_pending){
-        // Only an overlapping client B sends ONE existing authenticated
-        // Health kind0 on native M4 start. This proves its RAW RX socket
-        // and worker exist before the server replaces A's downlink route.
+        // Only an overlapping client B sends a bounded five-copy burst of
+        // existing authenticated Health kind0 on native M4 start. Each
+        // accepted record has a fresh AEAD PN. The server still requires
+        // actual verified peer RX before promoting B's single TUN route.
         let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
         clock.arm_client_cold_ready(loop_now().0);
     }

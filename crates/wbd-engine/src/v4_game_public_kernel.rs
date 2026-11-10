@@ -659,9 +659,10 @@ impl GameKernelOwner{
                     let health_now=health_origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64;
                     // Do not send an early "Ready" from a local TLS lane.
-                    // Client B sends ONE existing kind0 only after its full
-                    // RAW RX and TX workers start; server B likewise proves
-                    // its complete group. No new record kind or timer pump.
+                    // Client B sends a bounded five-copy cold kind0 burst
+                    // only AFTER its full RAW RX/TX workers start; server B
+                    // keeps its existing 3-copy cold proof. No new record
+                    // kind, steady Health rate or Go/data pump.
                     // Existing AEAD/PN kind0 Health is the bounded cold
                     // receipt; never a new framing or a Go DATA pump.
                     if !cold_receipt_armed&&

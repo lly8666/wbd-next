@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1494,
-  "checkpoint_sha": "44334db5d5a77e68b7d32f6149800a17dd5c83ec",
+  "sequence": 1495,
+  "checkpoint_sha": "8ba7d46efa617ddc083bd6ff038da1f6dae3a090",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1494-PARALLEL-THREE-NATIVE-INFLIGHT-RECEIPTS",
-  "current_task": "H1494 after main44334 original frozen SOURCE57b three native ARM64 Actions H1491 42660921771 (job129311951242, capacity50 then conditional75 sequential), H1492 42660921499 (job129311949928, hetero1800), H1493 42660921629 (job129311951009, baseline1800). All exact archived ARM64 Go/Rust+ISA-L native ELF SHA/CRC preflight PASS, real network running (NOT_YET_REPORTED); H1493 actual baseline 0/0/1/1/5 despite generic run-name 0-30 label. No product or additional network Actions. Old source66fb 600/1800 FAIL retain, Windows native 1800 managed DUT unavailable/NOT_QUALIFIED. PLAN028 IN_PROGRESS.",
-  "why_now": "Three native independent Actions are in flight and have verified source; persistent cursor must retain true Action IDs, actual H1493 baseline config and Windows external blocker so next interruption collects instead of re-dispatching.",
+  "task_id": "PLAN028-M0-H1495-H1496-ERIN30-COLD-CLIENT-HEALTH-BUDGET-FIX",
+  "current_task": "H1495 retrieved H1491/1492/1493 original immutable ARM64 ZIPs (SHA/CRC). H1491 50→75 sameVM 180 each real Alice actual30/50/74.999/50Mbps, 5client 10dir zero unique UDP and all Stop, CPU~47% and server8slot overflow0 PASS_SCOPED. H1493 genuine 1800 baseline 0/0/1/1/5% all 69 server Normal B authenticated client Health promotions, zero B_UNPROVEN, all zero-damage users zero unique loss; old reporter initial-only M4 marker false-red Action, original-source PASS_SCOPED from exact port proof. H1492 true 1800 hetero 30% Erin 21 client generation Ready but 12 explicit server B_UNPROVEN after5s, severe 907435/839580 unique loss, 72740/128940ms active no receive, recovery 65/70% FAIL_RETAINED. Rust native HealthClock server cold3 but client one kind0 only. Candidate fix client B same existing authenticated kind0 cold send up to5 over1.6s only, server3 unchanged, no DATA dup/new wire, L0 + H1496 one native x86 true lossy 180s pending. H1495 independent offline 3 ZIP rejudge pending. PLAN028 IN_PROGRESS.",
+  "why_now": "Original H1492 highloss failures are 12 explicit server B authentication-timeout ports not report-only; old H1493 reporter searches only server initial M4 and misclassifies all69 B authentic promotions. Client B sends only 1 kind0 on start vs server3; bounded retries under loss target first direct cause, no speculative user data duplication. User requested continue.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1491/1492/1493 Actions and original artifacts, not branch push status only. For H1491 require true native 50Mbps original fiveclient 10-way UDP/TCP/CPU/queue and six Stops; conditional75 may be NOT_RUN if baseline CPU/product limit. For H1492/H1493 validate true1800 generator timing, App unique first across original 10 directions, actual loss/physical kernel qdisc, authenticated rotations, owned Stops, CPU/RSS, output H1492/H1493 strict verifier. Preserve failures and report-only failures offline. Do not modify workload or duplicate network while running. Windows independent native 1800 Npcap/Wintun still NOT_QUALIFIED without independent managed DUT; do not use ARM alternative. PLAN028 still IN_PROGRESS.",
+  "next_action": "Collect automatically triggered H1495 pure offline Action (three immutable SHA ZIP, H1491 capacityPASS/H1493 original-L3 PASS_SCOPED/H1492 Erin realFAIL). Collect H1496 true native x86 Rust L0 and candidate 180s highloss Erin: verify immutable Go ELF source57b, new Rust .so/ISA-L native SHA, L0 five cold kind0 exact, Erin actual client B pending->auth Health server promotion, no B_UNPROVEN, 0%-underlay Alice both UDP zero, all six Stop; if any fail inspect raw log first stage without repeated seed. If short candidate triggers and PASS, one targeted current-source native ARM64 1800 30% hetero long regression (original source57b Action FAIL retained), and eventual current-source L3 baseline final. Windows independent managed 1800 Wintun/Npcap still NOT_QUALIFIED, Android/physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1494-H1491-H1493-THREE-NATIVE-ACTIONS-STARTED-20261110.json",
-    "docs/evidence/M0/PLAN028-H1491-H1493-SOURCE57B-THREE-INDEPENDENT-ARM64-NATIVE-ACCEPTANCE-20261110.json"
+    "docs/evidence/M0/PLAN028-H1495-H1496-THREE-ORIGINAL-ARM64-L3-ERIN30-CLIENT-COLD-KIND0-20261110.json",
+    "docs/evidence/M0/PLAN028-H1494-H1491-H1493-THREE-NATIVE-ACTIONS-STARTED-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1494 recorded three parallel native ARM64 Actions real in-progress H1491 42660921771 / H1492 42660921499 / H1493 42660921629, source57b original Go TLS/Rust ISAL native ZIP/ELF hashes all preflight PASS. Real traffic and 1800s Stop outcomes pending. H1493 actual BASELINE low loss 0/0/1/1/5 not generic run-name. Windows hosted old 1800 NOT_QUALIFIED; separate managed Windows DUT needed. No duplicate tests or new product. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1495 current main8ba: three original ARM64 native ZIP CRC/SHA verified, H1491 50/75 sameVM PASS all ten 0 lost; H1493 1800 baseline native PASS 69/69 authenticated Normal B (old reporter false FAIL); H1492 1800 Erin30 true 12 B_UNPROVEN out of21, >128s gap, >1.7m lost FAIL. Candidate new Rust HealthClock overlapping client B existing encrypted kind0 send1→5 cold success budget 400ms, unchanged steady and server3; L0 + one new real x86 180s highloss verification and pure offline reviewer Actions pending; no double user data. PLAN028 IN_PROGRESS."
 }

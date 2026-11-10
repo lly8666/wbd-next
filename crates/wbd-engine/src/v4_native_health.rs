@@ -73,9 +73,9 @@ pub(crate) struct HealthClock {
     last_business:u64,
     next_health:u64,
     retry_not_before:u64,
-    // At most three existing AEAD Health kind0 receipts after the
-    // *server's completed Normal or Game cold original M4 owner*. Never a data probe,
-    // a new wire type, or a periodic extra sender.
+    // At most 3 server or 5 client existing AEAD Health kind0 receipts,
+    // armed ONLY after completed original Normal/Game cold M4. Never
+    // business DATA, a new wire kind, or a periodic extra sender.
     cold_group_receipts_left:u8,
     peer_idle:Option<(u64,u64)>,
     peer_write_closed:bool,
@@ -136,11 +136,14 @@ impl HealthClock {
         }
     }
     /// An overlapping client B has installed its original authenticated
-    /// M4 RAW RX socket and worker. Send exactly one existing AEAD kind0
-    /// to the server so it can publish B only after real peer readiness.
+    /// M4 RAW RX socket and worker. Re-send only the SAME authenticated
+    /// Health KIND (fresh AEAD PN per accepted copy), at most five times
+    /// over 1.6s. A 30% lossy underlay must not turn one dropped kind0
+    /// into a silent 5s server B proof timeout after client B promotes.
+    /// This never extends or changes the steady 15s Health period.
     pub(crate) fn arm_client_cold_ready(&mut self,at:u64){
         if self.cold_group_receipts_left==0{
-            self.cold_group_receipts_left=1;
+            self.cold_group_receipts_left=5;
             self.next_health=at;
             self.retry_not_before=at;
         }
@@ -620,6 +623,39 @@ mod tests {
         // Cold receipt never advances application payload idle.
         assert_eq!(health.local_idle_ns(now),now-10_000_000);
         assert_eq!(health.cold_group_receipts_left,0);
+    }
+    #[test]
+    fn client_cold_m4_receiver_proof_is_bounded_five_existing_kind0(){
+        let at=5_000_000_000;
+        let mut h=HealthClock::new(HealthPolicy::default_connected(),at);
+        assert!(!h.tx_due(at));
+        h.arm_client_cold_ready(at);
+        assert_eq!(h.cold_group_receipts_left,5);
+        assert_eq!(h.control_due(at),ControlDue::Health);
+        // Native TX rejection is never counted as a remotely received
+        // readiness proof, and does not silently enter a 15s idle phase.
+        h.on_health_send_result(at,false);
+        assert!(!h.tx_due(at+MIN_RETRY_NS-1));
+        assert_eq!(h.control_due(at+MIN_RETRY_NS),ControlDue::Health);
+        let mut now=at+MIN_RETRY_NS;
+        for sent in 0..5 {
+            assert_eq!(h.control_due(now),ControlDue::Health);
+            h.on_health_send_result(now,true);
+            assert_eq!(h.cold_group_receipts_left,4-sent);
+            if sent<4 {
+                assert!(!h.tx_due(now+399_999_999));
+                now+=400_000_000;
+            }
+        }
+        assert_eq!(now-(at+MIN_RETRY_NS),1_600_000_000);
+        assert_eq!(h.cold_group_receipts_left,0);
+        assert!(!h.tx_due(now+1_000_000_000));
+        assert!(h.next_tx_deadline().is_some_and(|due|
+            due>=now+13_500_000_000 && due<=now+16_500_000_000));
+        assert_eq!(h.local_idle_ns(now),now-at);
+        // Re-arm is not a recurring tick: only a brand-new authenticated
+        // group calls the cold arming point. A late app frame cannot do it.
+        assert_eq!(h.policy().interval_ns(),15_000_000_000);
     }
     #[test]
     fn only_canonical_game_health_hint_is_cold_peer_proof(){

@@ -1,0 +1,56 @@
+# H1495: all three IMMUTABLE native ARM64 original Actions are final.
+# Replay true Action ZIP SHA/CRC and client/server Native B proof port timeline;
+# original failed reports retained, no network and no product rebuild.
+name: PLAN028 H1495 original three ARM64 immutable ZIP offline truth
+run-name: PLAN028 H1495 offline 50-75 PASS baseline1800 PASS hetero1800 ErinB FAIL
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1495-three-native-arm64-original-offline.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  offline-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fetch exact original three native ARM64 Actions (no new network/Go/Rust)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p receipt
+          for tuple in '13695371981 capacity' '13697040991 heterogeneous' '13697290581 baseline';do
+            read -r artifact name <<< "$tuple"
+            curl -fsSL --retry 2 --max-time 120 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/$artifact/zip" \
+              -o "receipt/$name-original.zip"
+          done
+          python3 -m py_compile tools/m0_plan028_h1495_three_native_arm64_original_offline.py
+          python3 tools/m0_plan028_h1495_three_native_arm64_original_offline.py \
+            --capacity receipt/capacity-original.zip \
+            --heterogeneous receipt/heterogeneous-original.zip \
+            --baseline receipt/baseline-original.zip \
+            --out receipt/h1495-3-original-native-scopes.json
+          python3 - <<'PY'
+          import json
+          v=json.load(open("receipt/h1495-3-original-native-scopes.json"))
+          assert [r["classification"] for r in v["original_runs"]]==[
+              "PASS_SCOPED_SAME_VM_SEQUENTIAL_50_AND_75_REAL_NATIVE_ZEROLOSS",
+              "FAIL_PRODUCT_30PCT_ERIN_NORMAL_FIXED6_CLIENT_SERVER_B_DESYNC",
+              "PASS_SCOPED_REAL_1800S_NATIVE_ARM64_BASELINE_ALL_NORMAL_GAME_HANDOFFS"]
+          assert v["all_zip_crc_sha_checked"] and v["new_network_tests"]==0
+          print("H1495_ORIGINAL_3_ARM64_NATIVE_ARTIFACTS_INDEPENDENT_FORENSIC_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1495-native-arm64-three-original-offline-${{ github.run_id }}
+          path: receipt/h1495-3-original-native-scopes.json
+          if-no-files-found: warn
+          retention-days: 30

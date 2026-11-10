@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "review_base_head": "8ba7d46efa617ddc083bd6ff038da1f6dae3a090",
+  "product_original_source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "original_three_native_arch": "aarch64_both_ends",
+  "native_accelerator": "pinned_ISAL",
+  "immutable_original_actions": [
+    {
+      "id": "H1491",
+      "run_id": 42660921771,
+      "job_id": 129311951242,
+      "artifact_id": 13695371981,
+      "original_zip_sha256": "b6f47708245416255edd92239d964956b057171edde64d101675f827a791f431",
+      "zip_crc": "PASS",
+      "original_action_conclusion": "success",
+      "qualification": "PASS_SCOPED_NATIVE_50_AND_75_CAPACITY_ZERO_UNIQUE_UDP",
+      "actual_alice_downlink_unique_missing_50_75": [
+        0,
+        0
+      ],
+      "actual_alice_uplink_unique_missing_50_75": [
+        0,
+        0
+      ],
+      "all_ten_udp_unique_missing_50_75": 0,
+      "alice_actual_offered_mbps_75_phase": [
+        30,
+        50,
+        74.999,
+        50
+      ],
+      "host_mean_busy_pct_50_75": [
+        47.96,
+        46.51
+      ],
+      "host_max_core_busy_pct_50_75": [
+        48.3,
+        46.77
+      ],
+      "server_process_one_core_busy_pct_50_75": [
+        47.13,
+        45.517
+      ],
+      "server_per_lease_8slot_overflow_50_75": 0,
+      "all_six_original_Stop_both": true,
+      "old_h1286_rapid_report_rotation_alert": "FALSE_ALERT_NO_ROTATION_BY_DESIGN_3600S_L2_QUALIFIED"
+    },
+    {
+      "id": "H1492",
+      "run_id": 42660921499,
+      "job_id": 129311949928,
+      "artifact_id": 13697040991,
+      "original_zip_sha256": "8f4a91e701d08647cd85bab3975c40176d7a4ec5fba295d8588c5c679a712437",
+      "zip_crc": "PASS",
+      "original_action_conclusion": "failure",
+      "original_app_seconds": 1800,
+      "loss_pct": [
+        0,
+        1,
+        5,
+        15,
+        30
+      ],
+      "oneway_delay_ms": [
+        0,
+        15,
+        50,
+        100,
+        125
+      ],
+      "zero_damage_alice_unique_missing_both": 0,
+      "bob_unique_missing_both": 0,
+      "original_erin_client_B_ready": 21,
+      "original_erin_B_server_unproven": 12,
+      "original_erin_B_server_authenticated_commits": 9,
+      "H1492_normal_total_server_B_auth_promoted": 47,
+      "old_normal_reporter_false_missing_due_legacy_initial_only": true,
+      "erin_actual_unique_missing": {
+        "uplink": 907435,
+        "downlink": 839580
+      },
+      "erin_max_active_sender_no_rx_ms": {
+        "uplink": 72740,
+        "downlink": 128940
+      },
+      "erin_recovery_delivered_fraction": {
+        "uplink": 0.650661,
+        "downlink": 0.706474
+      },
+      "old_lease_queue_overflow": 0,
+      "owned_Stop": "PASS",
+      "original_true_classification": "FAIL_SCOPED_30PCT_ERIN_CLIENT_READY_SERVER_B_UNPROVEN_REPEATED_BLACKOUT"
+    },
+    {
+      "id": "H1493",
+      "run_id": 42660921629,
+      "job_id": 129311951009,
+      "artifact_id": 13697290581,
+      "original_zip_sha256": "0ab86404895523f58f6c9f09690eac7c477460176c44f1683ac7768dd4408477",
+      "zip_crc": "PASS",
+      "original_action_conclusion": "failure",
+      "original_app_seconds": 1800,
+      "loss_pct": [
+        0,
+        0,
+        1,
+        1,
+        5
+      ],
+      "oneway_delay_ms": [
+        0,
+        0,
+        15,
+        20,
+        50
+      ],
+      "zero_loss_users": [
+        "alice",
+        "bob"
+      ],
+      "actual_zero_loss_both_other_users": [
+        "dave",
+        "erin"
+      ],
+      "carol_1pct_config_original_unique_missing": {
+        "uplink": 153,
+        "downlink": 182
+      },
+      "server_normal_B_authenticated_promotions": 69,
+      "normal_B_unproven": 0,
+      "all_client_normal_ready_promotions_native_proven": true,
+      "original_server_TUN_8slot_overflow": 0,
+      "owned_Stop": "PASS",
+      "original_true_classification": "PASS_SCOPED_NATIVE_1800S_0_0_1_1_5PCT_REAL_HANDOFF",
+      "old_reporter_failure": "MIXED_NORMAL_READY_ONLY_INITIAL_USED_TO_INCORRECTLY_REJECT_ALL_69_TRUE_AUTH_B_PROMOTIONS"
+    }
+  ],
+  "verified_original_zip_CRC_and_SHA": true,
+  "verified_real_binary_manifest_source": true,
+  "exact_original_normal_B_proof_matching": "Server initial M4 by client_ip+port; B by AEAD client Health per original client port, only when all normal client READY ports globally unique. Server B_UNPROVEN explicit and counted, no guessed readiness.",
+  "current_repair_hypothesis": {
+    "source_before": "Rust HealthClock client M4 cold kind0 successful TX budget=1, server cold=3, native B proof deadline 5s",
+    "observed_30pct_failing_mechanism": "12 distinct Erin B client READY ports had explicit server B_UNPROVEN; candidate B not published for these, causing large app gaps although client moved and A retired",
+    "candidate_fix": "Existing Rust v4_native_health::HealthClock arm_client_cold_ready accepted-copy budget 1->5 at 0,400,800,1200,1600ms, still AEAD kind0 with fresh PN; failed driver send waits existing >=1s retry; stop after count exhaustion and resume ~15s Health; server cold unchanged 3",
+    "product_files_changed": [
+      "crates/wbd-engine/src/v4_native_health.rs"
+    ],
+    "adjacent_comment_updates": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "crates/wbd-engine/src/v4_game_public_kernel.rs"
+    ],
+    "no_new_wire_type": true,
+    "no_user_DATA_duplication": true,
+    "no_fixed_steady_probe": true,
+    "no_go_data_pump": true,
+    "l0_test": "client_cold_m4_receiver_proof_is_bounded_five_existing_kind0",
+    "next_restricted_original_network": "One real x86 native dual-end 180s Erin30%, same immutable original Go ELF source57b, rebuild ONLY Rust native ISA-L Health candidate, assert actual server B verified and Alice zero loss and exact Stop",
+    "deterministic_l0_status_at_commit": "NOT_RUN_PENDING_ACTION",
+    "native_short_status_at_commit": "NOT_RUN_PENDING_ACTION"
+  },
+  "offline_rejudge": {
+    "workflow": ".github/workflows/m0-plan028-h1495-three-native-arm64-original-offline.yml",
+    "script": "tools/m0_plan028_h1495_three_native_arm64_original_offline.py",
+    "action_status_at_commit": "NOT_RUN_PENDING_ACTION",
+    "no_new_network": true,
+    "expected_original_only": [
+      "H1491_PASS_SCOPED",
+      "H1492_FAIL_TRUE",
+      "H1493_PASS_SCOPED_ORIGINAL_SOURCE57B"
+    ]
+  },
+  "retained_old_results": {
+    "H1461_600_75MBPS": "FAIL_32_ALICE_DL_45_QUEUE_OVERFLOW",
+    "H1461_1800": "FAIL_351_ALICE_DL_0_OVERFLOW",
+    "H1492_original_30pct": "FAIL_12_B_UNPROVEN_AND_BLACKOUT",
+    "H998_hot_mtu": "FAIL_RETAINED",
+    "H1484_original_180_ARM64": "PASS_SCOPED",
+    "H1488_Game2_x86": "PASS_SCOPED_2_NATIVE_FROM_ORIGINAL_ZIPS",
+    "Windows_full_1800_Npcap_Wintun": "NOT_QUALIFIED_INDEPENDENT_MANAGED_DUT_REQUIRED",
+    "Android_external_physical": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}
