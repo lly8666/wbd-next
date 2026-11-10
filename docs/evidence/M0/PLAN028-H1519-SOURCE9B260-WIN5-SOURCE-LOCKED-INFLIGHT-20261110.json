@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "source_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "action_id": 42775103187,
+  "source_locked": true,
+  "observed_prereq": [
+    {
+      "job_id": 129691649373,
+      "scope": "cheap_exact_manifest_contract",
+      "status": "PASS"
+    },
+    {
+      "job_id": 129691839453,
+      "scope": "Linux Rust library original",
+      "status": "PASS"
+    },
+    {
+      "job_id": 129691839500,
+      "scope": "Windows Go original product compiled plus executed TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots and physical path/MTU OS tests",
+      "status": "PASS"
+    },
+    {
+      "job_id": 129691839567,
+      "scope": "Windows Rust library original",
+      "status": "PASS"
+    },
+    {
+      "job_id": 129692648523,
+      "scope": "Linux original Go/Rust native peer release build",
+      "status": "PASS"
+    }
+  ],
+  "native_windows": {
+    "job_id": 129693456709,
+    "scene": "loss0",
+    "real_windows_2025": "RUNNING",
+    "actual_business_600s": "NOT_YET_VERIFIED",
+    "authenticated_m4": "NOT_YET_VERIFIED",
+    "owned_stop": "NOT_YET_VERIFIED"
+  },
+  "loss30": "NOT_RUN",
+  "prior_fail_preserved": [
+    "8e5 server shared/manual guard",
+    "add537 Windows preTLS WSL/GUI owner",
+    "0d3 manifest stale hash",
+    "e17 and f9 invalid duplicate YAML workflow"
+  ],
+  "classification": "PRETEST_PASSED_NATIVE_INFLIGHT",
+  "full_plan": "IN_PROGRESS"
+}

@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1518,
-  "checkpoint_sha": "f9eddc08623b317fc835c0bfc29806aa45ee0e44",
+  "sequence": 1519,
+  "checkpoint_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1518-REPAIR-DUPLICATE-WINDOWS-WORKFLOW",
-  "current_task": "Previous H1516/H1517 H1506 Windows one-scene Action42774222921 and 42774715117 invalid workflow with zero jobs; checked full GitHub blob: accidental 1623 duplicated native-public-two-os lines, two same job IDs. Valid prior source0d3 workflow exact 178412 bytes; H1518 reconstructs only original + verified 327-byte new real Windows named-event Go test command, 178739 bytes one native-public-two-os, one wiring-contract, source blob SHA4831c18b69d23059f0704869b8e8f5d24a14dc87 readback identical. Linux shared/manual product fix and source0d3 Windows native owner fix retained. Native 600s remains NOT_RUN at these invalid Actions. One loss0 native new-source if workflow correctly scheduled, no loss30 yet. PLAN028 IN_PROGRESS.",
-  "why_now": "Invalid workflow due duplicate job block was preventable source packaging error. Restore known-good exact workflow bytes with minimum test command only, verify create_blob/readback and structure, then let one source-locked Actions run. Never count parsing/compile as business.",
+  "task_id": "PLAN028-M0-H1519-WIN5-ONE-NATIVE-ACTION-INFLIGHT-SOURCE9B260",
+  "current_task": "SOURCE 9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da Action42775103187 cheap workflow/manifest PASS job129691649373, Linux Rust lib PASS job129691839453, original Windows Go production + assembled genuine five-owner OS named-event/strict reject and path MTU tests PASS job129691839500, Windows Rust lib PASS job129691839567, Linux original Go/Rust native build PASS job129692648523. ONE native Windows2025 real loss0 job129693456709 IN_PROGRESS assembling/driver/WSL2 before actual five signed Npcap/Wintun TLS/M4/600s. No loss30 dispatched. Original source8e5 pre-server READY, add537 pre-Windows TLS, 0d3 manifest, e17/f9 invalid workflow FAIL preserved. PLAN028 IN_PROGRESS.",
+  "why_now": "All genuine source-locked prereqs PASSED incl real compiled original Windows OS kernel named-event unit; stage one Windows loss0 native action already running, no duplicate. Preserve source and job IDs for interrupt resume.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new H1518 one-source loss0 Actions status, cheap assembly and actual Windows compiled TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots, Linux original build, Windows Go/Rust and native five clients. If native reaches authentic TLS/M4 inspect owned Wintun/MTU/app/rotation/Stop and real 200ms outer. If failure check original first error, no unconditional loss30 or seed loop.",
+  "next_action": "COLLECT Action42775103187 native Windows5 loss0 job129693456709. Check original same SOURCE and signed binaries Npcap/Wintun+WSL2 one Linux shared TLS443 server, exact 5 native Wintun /32 accounts, authenticated M4 and MTU, 200ms tc0, 600s actual duplex/70..100 outer, four physical OS flips, old A/Stop and Bob sibling. On first failure inspect raw original log and classify PASS_SCOPED/FAIL/NOT_RUN/NOT_TRIGGERED/CAPACITY_LIMITED. Do not re-dispatch same SOURCE; only if loss0 substantive proven consider separate loss30. Prior failures retained; Android/physical NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "f9eddc08623b317fc835c0bfc29806aa45ee0e44",
+  "last_tested_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1519-SOURCE9B260-WIN5-SOURCE-LOCKED-INFLIGHT-20261110.json",
     "docs/evidence/M0/PLAN028-H1516-SOURCE0D3-WIN-ASSEMBLY-PIN-COLD-REGRESSION-20261110.json",
     "docs/evidence/M0/PLAN028-H1515-WIN5-SOURCEADD537-EARLIEST-CLIENT-GUARDS-20261110.json"
   ],
@@ -29,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1518 discovered H1516 workflow blob unexpectedly duplicated native-public-two-os job block, H1516/H1517 GitHub invalid workflow zero jobs (no native qualification). Rebuild from last valid 0d3 exact YAML plus two test lines; 178739-byte SHA4831c18 verified same returned GitHub blob. One loss0 scope; no product change. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1519 SOURCE9b260 Action42775103187 cheap/manifest and original Go Windows5 named-event test and Linux/Windows Rust and Linux original Go/Rust build all actual PASS. Exactly ONE native Windows2025 loss0 job129693456709 currently in progress, real 600s business NOT_YET_VERIFIED; no loss30. Original FAIL source evidence retained and false CI workflow issues corrected; PLAN028 IN_PROGRESS."
 }
