@@ -55,7 +55,8 @@ class H1506OriginalFiveWindowsScope(unittest.TestCase):
                     "real_OS_cohort_change_intervals_s",
                     "WBD_WINDOWS_CLIENT_READY",
                     "WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=",
-                    "WBDWL5","V4_PUBLIC_MULTI_SESSION_READY",
+                    "WBDWL5","V4_PUBLIC_MIXED_NORMAL_READY",
+                    "V4_PUBLIC_GAME_MULTI_GROUP_READY",
                     "first_Stop_sibling_real_UDP_TCP"):
             self.assertIn(tag,s)
         flip=(TOOLS/"m0_plan028_h1506_windows_owned_source_flip.ps1").read_text()
@@ -89,6 +90,18 @@ class H1506OriginalFiveWindowsScope(unittest.TestCase):
         self.assertIn("m0_plan028_h1415_windows_linux_independent_clients.py",s)
         self.assertIn("native-public-two-os:",s)
         self.assertIn("!contains(github.event.head_commit.message, '[plan028-win-linux-1800]')",s)
+    def test_five_native_windows_ci_only_real_owner_scope_and_wsl_guard(self):
+        native=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go").read_text()
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        for tag in ("WBD_PLAN028_FIVE_REAL_CLIENTS","GITHUB_ACTIONS",
+                    "h1506-owned-","WBDWL5A0","WBDWL5B1",
+                    "WBDWL5C2","WBDWL5D3","WBDWL5E4",
+                    "acquireGUIClientSlot()"):
+            self.assertIn(tag,native)
+        self.assertIn("WBD_PLAN028_FIVE_REAL_CLIENTS:",flow)
+        self.assertIn("WBD_PLAN028_WSL_OWNED_SWITCH:",flow)
+        self.assertIn("V4_PUBLIC_SHARED_TUN_STOP generation=",(
+            TOOLS/"m0_plan028_h1506_windows_five_native_600.py").read_text())
     def test_all_new_test_only_python_is_syntax_valid(self):
         for name in ("m0_plan028_h1506_windows_five_native_600.py",
                      "m0_plan028_h1506_win5_real_app.py",

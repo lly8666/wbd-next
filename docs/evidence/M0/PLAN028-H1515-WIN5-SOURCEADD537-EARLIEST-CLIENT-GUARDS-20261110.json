@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "observed_at_utc": "2026-11-10",
+  "source_sha": "add5377be702a1b4a79b8418255f550bf0a0eeac",
+  "action": {
+    "run_id": 42769807553,
+    "scene": "loss0",
+    "job_id": 129676593518,
+    "action_conclusion": "failure",
+    "artifact_id": 13741214591,
+    "artifact_name": "m0-wl-full-public-normal-direct-h1506-loss0-42769807553"
+  },
+  "binary_sha256": {
+    "windows_cli": "f0c34f379bf6ff6ca265764ea84e7a1a1cc27513984a5631cd4d4acfe5f5b363",
+    "windows_engine": "def8e9f073b00cb2196283ae590c0af7c889bdb1d68b4b109fcca5284448a150",
+    "linux_server": "50d39ee6b910f3f99de6b0f4cda783df9e5511f4892b0dc37c6996fc558be77d",
+    "linux_engine": "e8ac9668e53dbc31837fdb34c959fd686783d0f471ee4dc3cd499c9adce2be0a"
+  },
+  "validated_pass": [
+    "Linux original Go/Rust native build, Linux Go units, Windows Go compile and Rust Linux/Win library tests",
+    "true Linux shared server V4_PUBLIC_MIXED_MULTI_SERVER_READY before original TLS",
+    "Linux outer IPv4 default 1460 and budget tun_planned 1389",
+    "true Npcap/Wintun available on hosted native Windows2025; WSL2 actual guest",
+    "real 200ms 0% tc qdisc armed and cleanup PASS",
+    "source-signed Linux-side OS UDP app bound 10.66.0.1",
+    "Windows route and owned host underlay restored; no leftover owned client WAL files"
+  ],
+  "original_first_product_errors": [
+    "Alice: Npcap guest MAC override guard refused unscoped WSL2 host next hop 172.29.0.1 due WBD_PLAN028_WSL_OWNED_SWITCH=0 despite exact CI-owned guest/ifindex/source readback",
+    "Bob,Carol,Dave,Erin: another Windows client is running or cleaning up due old process-global GUI singleton; existing prior CI two-client exception only aliases WBDWLCLIENTA/B"
+  ],
+  "secondary_failure": "WinError 10049 OS app bind 10.66.0.2..6 after 60s because none of five Windows Wintun clients had applied a /32. Not independent app bug.",
+  "original_windows_tls_ready_counts": {
+    "alice": 0,
+    "bob": 0,
+    "carol": 0,
+    "dave": 0,
+    "erin": 0
+  },
+  "actual_app_600": "NOT_RUN",
+  "windows_FEC_M4": "NOT_TRIGGERED",
+  "real_physical_flip": "NOT_TRIGGERED",
+  "poststop_sibling": "NOT_TRIGGERED",
+  "root_cause_fix_candidate": "Set CI-only existing WSL2 verified owned-switch scope for five scene, and extend existing named-event CI two-client slot to exact five account/alias/lease/WAL tuple, retaining production global mutex. Correct post-600 mixed server and exact TUN Stop reporter markers to real observed source, never fake PASS.",
+  "next_test": "One exact source-signed Windows2025 loss0 native scene after Go/Rust build and five-per-account CI owner guards. No loss30 until loss0 root event. Preserve all failures.",
+  "classification": "FAIL_PRE_TLS_WINDOWS_COLD_GUARDS_APPLICATION_NOT_RUN",
+  "overall_plan": "IN_PROGRESS"
+}

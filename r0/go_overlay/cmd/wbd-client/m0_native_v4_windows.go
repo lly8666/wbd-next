@@ -404,25 +404,40 @@ func m0WindowsRunPathScopedGeneration(
  return err
 }
 
-// The original GUI holds one machine-wide owner. H1381 uses a strictly
-// bounded Windows CI-only exception to prove two *distinct* original native
-// product OS owners before any claim about two full signed TLS product clients.
-// No CLI flag, profile file or unauthenticated peer may enable this behavior.
-// WFP/route/WAL coexistence and actual two-client TLS remain separate gates.
+// Production GUI remains one machine-wide original native owner. The prior
+// H1381 two-Wintun witness and H1515 five-Wintun witness are disjoint,
+// GitHub-Actions-only named OS event scopes. An account, independent /32,
+// exact adapter alias and owned WAL filename must ALL agree before TLS.
+// There is no CLI/config or remote-peer bypass of the production singleton.
 func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error){
- if os.Getenv("GITHUB_ACTIONS")!="true"||os.Getenv("WBD_PLAN028_TWO_REAL_CLIENTS")!="1"{
-  return acquireGUIClientSlot()
- }
+ ci:=os.Getenv("GITHUB_ACTIONS")=="true"
+ two:=ci&&os.Getenv("WBD_PLAN028_TWO_REAL_CLIENTS")=="1"
+ five:=ci&&!two&&os.Getenv("WBD_PLAN028_FIVE_REAL_CLIENTS")=="1"
+ if !two&&!five{return acquireGUIClientSlot()}
  expectedUser:=""
  expectedLease:=""
- switch o.AdapterAlias{
- case "WBDWLCLIENTA":expectedUser="alice";expectedLease="10.66.0.2/32"
- case "WBDWLCLIENTB":expectedUser="bob";expectedLease="10.66.0.3/32"
- default:return 0,windowsclient.ErrN4NativeGuard
+ if two{
+  switch o.AdapterAlias{
+  case "WBDWLCLIENTA":expectedUser="alice";expectedLease="10.66.0.2/32"
+  case "WBDWLCLIENTB":expectedUser="bob";expectedLease="10.66.0.3/32"
+  default:return 0,windowsclient.ErrN4NativeGuard
+  }
+ }else{
+  switch o.AdapterAlias{
+  case "WBDWL5A0":expectedUser="alice";expectedLease="10.66.0.2/32"
+  case "WBDWL5B1":expectedUser="bob";expectedLease="10.66.0.3/32"
+  case "WBDWL5C2":expectedUser="carol";expectedLease="10.66.0.4/32"
+  case "WBDWL5D3":expectedUser="dave";expectedLease="10.66.0.5/32"
+  case "WBDWL5E4":expectedUser="erin";expectedLease="10.66.0.6/32"
+  default:return 0,windowsclient.ErrN4NativeGuard
+  }
  }
- if o.Username!=expectedUser||!o.Lease4.IsValid()||o.Lease4.String()!=expectedLease||
-    len(o.StatePath)<12||!strings.HasSuffix(strings.ToLower(o.StatePath),".json")||
-    !strings.Contains(strings.ToLower(o.StatePath),strings.ToLower(o.AdapterAlias)){
+ state:=strings.ToLower(o.StatePath)
+ if o.Username!=expectedUser||!o.Lease4.IsValid()||
+    o.Lease4.String()!=expectedLease||len(o.StatePath)<12||
+    !strings.HasSuffix(state,".json")||
+    (two&&!strings.Contains(state,strings.ToLower(o.AdapterAlias)))||
+    (five&&!strings.EqualFold(filepath.Base(state),"h1506-owned-"+expectedUser+".json")){
     return 0,windowsclient.ErrN4NativeGuard
  }
  name,e:=windows.UTF16PtrFromString("Local\\WBD-NEXT-PLAN028-ORIGINAL-V4-"+o.AdapterAlias)

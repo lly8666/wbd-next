@@ -394,8 +394,13 @@ def main():
                   last["actual_ingress_windows_to_linux"]["drops"]>0,
                   "actual bidirectional netem 30pct kernel drops NOT_OBSERVED")
         server_txt=serverlog.read_text(errors="replace")
-        check(server_txt.count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=5,
-              "server original authenticated five separate users not proven")
+        # H1515: this is the one mixed Normal/Game listener, NOT the
+        # auto-only /multi Normal listener. Count only actual post-TLS M4
+        # owner readiness (three Normal and two complete Game cohorts).
+        mixed_normal=server_txt.count("V4_PUBLIC_MIXED_NORMAL_READY role=server")
+        mixed_game=server_txt.count("V4_PUBLIC_GAME_MULTI_GROUP_READY role=server")
+        check(mixed_normal>=3 and mixed_game>=2,
+              "server mixed original M4 Normal/Game groups not all proven")
         ready_counts={}
         for name in NAMES:
             contents=(OUT/("h1506-client-"+name+".log")).read_text(errors="replace")
@@ -407,7 +412,7 @@ def main():
             z=(OUT/("h1506-client-"+name+".log")).read_text(errors="replace")
             check(z.count("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=")>=5,
                   "real Game2/4 protected whole-group M4 not proven after four OS route events: "+name)
-        result["observed_server_authenticated_M4_count"]=server_txt.count("V4_PUBLIC_MULTI_SESSION_READY role=server")
+        result["observed_server_authenticated_M4_count"]=mixed_normal+mixed_game
         result["classification"]="PASS_SCOPED_REAL_5_WINDOWS_AUTH_TLS443_600S_OUTER_70_100_MBPS_"+a.scene.upper()
         # First Stop then separate fresh actual Bob TCP and UDP packets.
         stop_win(windows["alice"])
@@ -448,7 +453,10 @@ def main():
             except subprocess.TimeoutExpired:sv.terminate()
         if (OUT/"h1506-server.log").exists():
             t=(OUT/"h1506-server.log").read_text(errors="replace")
-            result["server_shared_tun_exact_original_stop"]="V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" in t
+            shared_stops=[line for line in t.splitlines()
+                          if "V4_PUBLIC_SHARED_TUN_STOP generation=" in line
+                          and "reader_joined=1" in line]
+            result["server_shared_tun_exact_original_stop"]=len(shared_stops)==1
         if physical:
             try:os_script("Restore",alias);result["owned_windows_underlay_restored"]=True
             except BaseException as e:result["alias_restore_issue"]=repr(e)
