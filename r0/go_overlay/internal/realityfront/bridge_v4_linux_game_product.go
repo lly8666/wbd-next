@@ -26,6 +26,7 @@ type V4LinuxGameProductConfig struct {
     ConfigureLeaseIPv4 func(lease string)error // apply once before Game group Rust M4 start
     Authenticate func(username,password string)bool // server account roster
     ServerManualLease4 string // trusted server /32; original cold TLS only
+    ServerManualLeases4 map[string]string // authenticated account -> provisioned /32, no new wire field
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
@@ -382,7 +383,10 @@ func V4AuthenticateLinuxMixedServerLane(
         return nil
     }
     base.ValidateRequest=func(req AdmissionRequest)error{
-        if !req.AutoLease||len(req.TunnelID)!=16{return ErrAdmissionParams}
+        if len(req.TunnelID)!=16||
+            (!req.AutoLease&&len(cfg.ServerManualLeases4)==0){
+            return ErrAdmissionParams
+        }
         if req.Policy.Transport==TransportGame{
             if err:=v4ServerGameProtectedLaneRequest(req,int(req.DesiredLanes));err!=nil{
                 return err
@@ -399,6 +403,7 @@ func V4AuthenticateLinuxMixedServerLane(
         DataPlaneReady:true,Epochs:cfg.Epochs,ownerBridge:bridge,
         fec2Product:true,perClientMixedMode:true,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:true,
+        ManualLeases4:cfg.ServerManualLeases4,
     })
     if err!=nil{return nil,err}
     lane:=&V4LinuxGameAuthenticatedLane{
@@ -487,6 +492,7 @@ func V4AuthenticateLinuxGameServerLane(
         ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:cfg.SharedTun!=nil,
         ManualLease4:cfg.ServerManualLease4,
+        ManualLeases4:cfg.ServerManualLeases4,
     })
     if err!=nil{return nil,err}
     lane:=&V4LinuxGameAuthenticatedLane{

@@ -17,6 +17,20 @@ class H1506OriginalFiveWindowsScope(unittest.TestCase):
                     "max_interdelivery_ms","barrier"):
             self.assertIn(tag,s)
         self.assertNotIn("fake_delivery",s)
+    def test_mixed_manual_account_original_tls_to_rust_owner_wiring(self):
+        # H1510 regression: H1506's manual five-account server must not
+        # be confused with the distinct automatic lease-pool authority.
+        fixture=(TOOLS/"m0_plan028_h1506_windows_five_native_600.py").read_text()
+        game=(ROOT/"r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
+        owner=(ROOT/"r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go").read_text()
+        admission=(ROOT/"r0/go_overlay/internal/realityfront/admission_v4.go").read_text()
+        self.assertIn(" --manual-client-leases-file '",fixture)
+        self.assertIn("len(c.manualClientLeases4)>0",game)
+        self.assertIn("originalV4ManualAccountTunnelAfterAuth(c,req)",game)
+        self.assertIn("ServerManualLeases4:c.manualClientLeases4",game)
+        self.assertIn("ManualLeases4:cfg.ServerManualLeases4",owner)
+        self.assertIn("v4ServerSelectedManualLease4(",admission)
+
     def test_two_exact_real_200ms_zero_thirty_bidirectional_owned_qdiscs(self):
         s=(TOOLS/"m0_plan028_h1506_win5_owned_netem.py").read_text()
         self.assertIn("choices=(0,30)",s)

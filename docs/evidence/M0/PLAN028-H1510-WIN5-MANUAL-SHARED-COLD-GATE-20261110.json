@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "observed_at_utc": "2026-11-10",
+  "status": "FAIL_PRESERVED_COLD_SERVICE_START",
+  "source_sha": "8e5f313fdb40c9ecf55c052db85c7abf3819306c",
+  "action": {
+    "run_id": 42765555239,
+    "conclusion": "failure",
+    "loss0": {
+      "job_id": 129662640456,
+      "conclusion": "failure",
+      "application": "NOT_RUN",
+      "first_server_stage": "before V4_PUBLIC_MIXED_MULTI_SERVER_READY",
+      "error": "realityfront: V3 policy unsupported by this build"
+    },
+    "loss30": {
+      "job_id": 129662640430,
+      "conclusion": "failure",
+      "application": "NOT_RUN",
+      "first_server_stage": "before V4_PUBLIC_MIXED_MULTI_SERVER_READY",
+      "error": "realityfront: V3 policy unsupported by this build"
+    }
+  },
+  "proven_preflight": [
+    "Windows original Go test and Rust build",
+    "Linux original Go/Rust build",
+    "Windows Npcap/Wintun and WSL2 startup",
+    "Linux TUN MTU/TXQLEN/fq preparation"
+  ],
+  "not_triggered": [
+    "native TLS authentication",
+    "server/client native M4 Ready",
+    "five user UDP/TCP",
+    "200ms tc netem",
+    "four physical reauths",
+    "70-100Mbps full-duplex outer",
+    "per-user Stop and sibling alive"
+  ],
+  "root_cause_proven_from_source": [
+    "H1506 uses --mode shared with --manual-client-leases-file and five manual client tunnel IDs",
+    "runGame mixed gate demanded c.leasePool.IsValid",
+    "runGameServer did not dispatch manual account map",
+    "runGameMultiServer and protected request validator rejected manual account IDs",
+    "V4AuthenticateLinuxMixedServerLane did not carry server-owned ManualLeases4 into EstablishServerV4"
+  ],
+  "minimal_fix_scope": [
+    "one existing Go cold shared server Game/Normal route",
+    "reuse existing manual-account validated helper and protected after-auth per-account /32",
+    "no wire/protocol/FEC/Rust steady-state modification"
+  ],
+  "local_checks": "NOT_RUN_UNTIL_SOURCE_BUILD",
+  "native_condition_retest": "NOT_TRIGGERED",
+  "full_plan_status": "IN_PROGRESS",
+  "artifacts": [
+    13740605118,
+    13740296088
+  ]
+}

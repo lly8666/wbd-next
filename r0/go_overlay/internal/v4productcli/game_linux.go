@@ -32,7 +32,8 @@ func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *l
     // policy, then runGameMultiServer groups Game cohorts independently.
     // Normal client/server paths and existing standalone Game2/4 stay exact.
     if c.mixedModes{
-        if c.role!="server"||c.gameLanes!=0||!c.leasePool.IsValid(){
+        if c.role!="server"||c.gameLanes!=0||
+            (!c.leasePool.IsValid()&&len(c.manualClientLeases4)==0){
             return realityfront.ErrAdmissionUnsupported
         }
     }else if c.gameLanes!=2&&c.gameLanes!=4{
@@ -488,7 +489,8 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     // Server auto-lease is enabled by --lease-pool, NEVER --auto-ip
     // (the latter is client-only). H1036's c.autoIP check could never be
     // reached on a valid server; use actual verified lease-pool authority.
-    if c.leasePool.IsValid()||c.manualClientLease4.IsValid(){
+    if c.leasePool.IsValid()||c.manualClientLease4.IsValid()||
+       len(c.manualClientLeases4)>0{
         // Reuse original protected Game multi-generation 443 listener.
         return runGameMultiServer(ctx,c,ifindex,tun,leases,epochs,connected,cert)
     }
@@ -735,10 +737,16 @@ func runGameMultiServer(
     n:=int(c.gameLanes)
     autoPool:=c.leasePool.IsValid()
     manual:=c.manualClientLease4.IsValid()
-    if autoPool==manual||epochs==nil||
-        (autoPool&&leases==nil)||(manual&&leases!=nil)||
+    manualAccounts:=len(c.manualClientLeases4)>0
+    // Exactly one server-owned address authority: pool, one manual /32,
+    // or the existing credential-bound per-account /32 roster.
+    if epochs==nil||
+        (autoPool&&(leases==nil||manual||manualAccounts))||
+        (!autoPool&&(leases!=nil||manual==manualAccounts))||
         (!c.mixedModes&&n!=2&&n!=4)||
-        (c.mixedModes&&(!autoPool||n!=0)){return realityfront.ErrAdmissionParams}
+        (c.mixedModes&&(n!=0||manual||(!autoPool&&!manualAccounts))){
+        return realityfront.ErrAdmissionParams
+    }
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
     // The original Go Run() owns the underlying OS TUN until the final
@@ -758,6 +766,7 @@ func runGameMultiServer(
         Epochs:epochs,PeerPersona:c.peerPersona,
         Authenticate:originalV4CredentialCheck(c),
         ServerManualLease4:func()string{if manual{return c.manualClientLease4.String()};return ""}(),
+        ServerManualLeases4:c.manualClientLeases4,
     }
     rawPersona:=faketcp.PacketPersonaLegacy
     if c.peerPersona==realityfront.V4PeerWindows11{
@@ -791,9 +800,10 @@ func runGameMultiServer(
             if len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
             if autoPool{
                 if !req.AutoLease{return realityfront.ErrAdmissionParams}
-            }else if req.AutoLease||c.tunnel==[16]byte{}||
-                string(req.TunnelID)!=string(c.tunnel[:]){
-                return realityfront.ErrAdmissionParams
+            }else if err:=originalV4ManualAccountTunnelAfterAuth(c,req);err!=nil{
+                // Nonzero manual tunnel identity and exact account roster
+                // remain protected-TLS checks, never pre-TLS tuple authority.
+                return err
             }
             return nil
         },
