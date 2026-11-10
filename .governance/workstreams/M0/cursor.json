@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1519,
-  "checkpoint_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "sequence": 1522,
+  "checkpoint_sha": "4a8bc5faa47769b58d08cf1b3ae3880a6c126810",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1519-WIN5-ONE-NATIVE-ACTION-INFLIGHT-SOURCE9B260",
-  "current_task": "SOURCE 9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da Action42775103187 cheap workflow/manifest PASS job129691649373, Linux Rust lib PASS job129691839453, original Windows Go production + assembled genuine five-owner OS named-event/strict reject and path MTU tests PASS job129691839500, Windows Rust lib PASS job129691839567, Linux original Go/Rust native build PASS job129692648523. ONE native Windows2025 real loss0 job129693456709 IN_PROGRESS assembling/driver/WSL2 before actual five signed Npcap/Wintun TLS/M4/600s. No loss30 dispatched. Original source8e5 pre-server READY, add537 pre-Windows TLS, 0d3 manifest, e17/f9 invalid workflow FAIL preserved. PLAN028 IN_PROGRESS.",
-  "why_now": "All genuine source-locked prereqs PASSED incl real compiled original Windows OS kernel named-event unit; stage one Windows loss0 native action already running, no duplicate. Preserve source and job IDs for interrupt resume.",
+  "task_id": "PLAN028-M0-H1522-LINUX-FIVE-CLIENT-100-150-200MS-TWO-NATIVE-ACTIONS-INFLIGHT",
+  "current_task": "User requests concurrently Linux native client/server stress same five Normal/Auto/Game2/Game4/Fixed6 + two-way UDP/TCP, full outer (both directions aggregate) 100-150 Mbps. Original verified source9b260 binary artifact13744140576 reused; H1520 opt-in current wrapper4a8bc5 600s 200ms physical tc both directions 0% and 30% in TWO independent Ubuntu x86 runner Actions42781585712 job129712651623 and42781585834 job129712651870 both RUNNING native. Previous Action42781392677/42781392774 cheap ELF-escaped literal FAIL no network; original retained. Windows previous source9b native job129693456709 Action42775103187 FAIL, real first error not determined due cp1252 diagnostic relay thread crash; original ZIP13743658475 preserved. 028 IN_PROGRESS.",
+  "why_now": "Both Linux native 600s separate VM scenes now running after all source/ELF/SHA and py_compile/unit checks passed. Cold owner and measurement original, no synthetic PASS. Need collect and avoid duplicate dispatch; Windows old false console error cannot hide original failure.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "COLLECT Action42775103187 native Windows5 loss0 job129693456709. Check original same SOURCE and signed binaries Npcap/Wintun+WSL2 one Linux shared TLS443 server, exact 5 native Wintun /32 accounts, authenticated M4 and MTU, 200ms tc0, 600s actual duplex/70..100 outer, four physical OS flips, old A/Stop and Bob sibling. On first failure inspect raw original log and classify PASS_SCOPED/FAIL/NOT_RUN/NOT_TRIGGERED/CAPACITY_LIMITED. Do not re-dispatch same SOURCE; only if loss0 substantive proven consider separate loss30. Prior failures retained; Android/physical NOT_RUN.",
+  "next_action": "COLLECT Linux Action42781585712 loss0 job129712651623 and Action42781585834 loss30 job129712651870 from ORIGINAL fixture logs + 10s qdisc full outer ledger, 600s five-mode dual UDP/TCP, M4, MTU, four rotations per non-Game4 plus lane hot, true six Stop and VM 30s guard. Classify target100..150 and actual loss/gaps separately, not product pass on CI green. Preserve H1520 first two cheap FAIL. Separately examine Windows Action42775103187 original ZIP/artifact for actual first native product error; cp1252 relay Unicode error is diagnostic-only and must not hide business first fault. If script bug offline correct no network rerun; do not duplicate dispatch. PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1522-LINUX-OUTER100-150-DUAL-ACTIONS-WINDOWS-FAIL-20261110.json",
     "docs/evidence/M0/PLAN028-H1519-SOURCE9B260-WIN5-SOURCE-LOCKED-INFLIGHT-20261110.json",
     "docs/evidence/M0/PLAN028-H1516-SOURCE0D3-WIN-ASSEMBLY-PIN-COLD-REGRESSION-20261110.json",
     "docs/evidence/M0/PLAN028-H1515-WIN5-SOURCEADD537-EARLIEST-CLIENT-GUARDS-20261110.json"
@@ -30,5 +31,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1519 SOURCE9b260 Action42775103187 cheap/manifest and original Go Windows5 named-event test and Linux/Windows Rust and Linux original Go/Rust build all actual PASS. Exactly ONE native Windows2025 loss0 job129693456709 currently in progress, real 600s business NOT_YET_VERIFIED; no loss30. Original FAIL source evidence retained and false CI workflow issues corrected; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1522 Linux full native x86 five client 600s 200ms 0/30 loss, target actual kernel outer total both ways 100..150 Mbps (base 35Mbps inner/way), 2 independent Actions 42781585712 and 42781585834 IN_PROGRESS, exact product source9b260 manifest reuse. Standalone tc10s+CPU guard; cheap ELF literal typo initial failures preserved. Windows source9b native Action42775103187 FAIL, cp1252 diagnostic relay exception obscures true first product error; no business PASS. PLAN028 IN_PROGRESS."
 }

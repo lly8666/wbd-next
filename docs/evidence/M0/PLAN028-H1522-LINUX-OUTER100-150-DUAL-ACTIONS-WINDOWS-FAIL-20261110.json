@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "date_utc": "2026-11-10",
+  "product_source_sha": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "harness_source_sha": "4a8bc5faa47769b58d08cf1b3ae3880a6c126810",
+  "original_linux_product_artifact": {
+    "source_run_id": 42775103187,
+    "artifact_id": 13744140576,
+    "name": "m0-plan024-linux-product",
+    "manifest": "m0-plan024 Linux original Go Rust ISA-L release exact-source SHA256, Linux and Windows Go/Rust preflight PASS"
+  },
+  "scope": "Linux x86_64 both endpoints, 6 real namespaces 5 accounts Normal, Auto, Game2, Game4, Fixed6; 600s 200ms each way, dual UDP/TCP, timed authenticated generations, final owned Stop. Not OS source flip, not Windows.",
+  "inputs": {
+    "logical_business_mbps_each_direction": [
+      12,
+      8,
+      6,
+      3,
+      6
+    ],
+    "logical_business_total_both_direction_mbps": 70,
+    "physical_kernel_outer_target_both_directions_mbps": [
+      100,
+      150
+    ],
+    "oneway_ms_each_direction": 200,
+    "loss_scenes_percent": [
+      0,
+      30
+    ],
+    "app_packet_classes": [
+      256,
+      1024
+    ],
+    "phase_seconds": {
+      "warmup": 10,
+      "first_wave": 90,
+      "sustained": 180,
+      "overload": 90,
+      "recovery": 230
+    },
+    "phase_rate_scales": {
+      "warmup": 0.3,
+      "first_wave": 0.6,
+      "sustained": 1,
+      "overload": 1.1,
+      "recovery": 1
+    },
+    "conservative_PPS_estimate_at_full_logical_rate_each_direction": 5512
+  },
+  "measurement": {
+    "kernel_source": "ten real veth tc netem qdisc Sent bytes and drops, 10s intervals",
+    "target": "combined outer uplink+downlink 100..150 Mbps in sustained+recovery",
+    "native_receipts": "original five clients+one server 600s UDP/TCP and M4 authenticated proof, six exact Stop, server per-IP shared TUN queue, max active 10ms bucket first RX gap",
+    "vm_guard": "original H1504 read-only Linux per-core CPU and available memory 30s overload abort, VM full not product PASS",
+    "warnings": "control traffic and ARP included in dedicated veth counts, no speculative R/F+R+C or Game copy recovery"
+  },
+  "action_history": [
+    {
+      "action_id": 42781392677,
+      "scene": "loss0",
+      "status": "FAIL_CHEAP_PREFLIGHT",
+      "native": "NOT_RUN",
+      "reason": "wrong escaped Python ELF magic literal",
+      "job_id": 129712026083
+    },
+    {
+      "action_id": 42781392774,
+      "scene": "loss30",
+      "status": "FAIL_CHEAP_PREFLIGHT",
+      "native": "NOT_RUN",
+      "reason": "same ELF literal, no network",
+      "job_id": 129712026441
+    },
+    {
+      "action_id": 42781585712,
+      "scene": "loss0",
+      "job_id": 129712651623,
+      "status": "RUNNING_NATIVE_NETWORK",
+      "business": "NOT_YET_VERIFIED"
+    },
+    {
+      "action_id": 42781585834,
+      "scene": "loss30",
+      "job_id": 129712651870,
+      "status": "RUNNING_NATIVE_NETWORK",
+      "business": "NOT_YET_VERIFIED"
+    }
+  ],
+  "windows_ongoing_closeout": {
+    "action_id": 42775103187,
+    "job_id": 129693456709,
+    "status": "FAIL",
+    "original_zip_artifact": 13743658475,
+    "preflight": "PASS",
+    "original_real_wintun_business": "NOT_VERIFIED",
+    "diagnostic_error": "UnicodeEncodeError in cp1252 native-diagnostics file-to-console thread; not sufficient to determine original first product fault; previous underlying source8e5/add537 failure preserved"
+  },
+  "hard_stop": "NO_EARLY_QUALIFICATION",
+  "overall_plan": "IN_PROGRESS",
+  "physical_android": "NOT_RUN"
+}
