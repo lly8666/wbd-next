@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1507,
-  "checkpoint_sha": "4af9af0725dcd909995daad92968affb71b996d8",
+  "sequence": 1508,
+  "checkpoint_sha": "370f354a4c29650401d385507fec059e3acd8bc6",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1507-PRESERVE-ORIGINAL-H778-ARTIFACT-CI-0-30-600",
-  "current_task": "First H1506 commit4af9af0 Action42764980969 FAIL cheap offline tests only; tests.test_m0_wl_native_step_runner H778 requires exact legacy literal `name: m0-wl-full-public-normal-direct` and ordering after native game cleanup. H1506 matrix code had changed legacy artifact name to conditional expression; cheap test stopped 5 Windows network from starting, no driver/UDP sent. Minimal workflow-only fix restores original literal and exact legacy upload step for matrix legacy, adds separate H1506 loss0/loss30 native artifact uploader with unique per-scene name, preserving raw logs/CRC. Next push includes single H1506 marker for two independent real matrix jobs, no product or test source modifications. Original H1505 budgeted arm1800 legacy reviewer enum failure and H1504 win1800 hosted failure retain originals, PLAN028 IN_PROGRESS.",
-  "why_now": "First H1506 action never reached signed Windows native due old literal artifact H778 CI contract; keep historical test valid and give matrix loss0/loss30 unique names rather than weakening validation.",
+  "task_id": "PLAN028-M0-H1508-KEEP-UPLOAD-ALWAYS-H778-HABBA",
+  "current_task": "H1506 first source4af Action42764980969 CHEAP_FAIL H778 expected original named artifact; no network. H1507 source370 Action42765313830 CHEAP_FAIL tests.test_delivery_ci.test_same_windows_runner_rust_native_abba_is_exact_source_only expects the original native full uploader with `if: always()` to preserve failed original ABBA artifact, and first repair had conditional if, so no network. H1508 minimal one-file workflow adjustment restores original `if: always()` exact step and source prefix name `m0-wl-full-public-normal-direct` for legacy, appending an evaluated per-scene unique suffix ONLY for new H1506 loss0/loss30 matrix so no v4 collision; remove duplicate H1506 artifact step. New push marker H1506 again will run cheap original H778 + ABBA then source locked two Windows original 600. Product/test fixture unchanged. PLAN028 IN_PROGRESS.",
+  "why_now": "Preserve historic H778 upload identity and historic A/B always-on failure artifact while allowing unique loss0/loss30 parallel artifact names in single upload step.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect second H1506 main source and exact Action after marker, first cheap all unit tests including H1506 scope, then Windows Go/Rust and Linux Go/Rust build, then two separate 600s original Npcap/Wintun matrix jobs loss0/30. If cheap fails again, fix minimal test-only issue; do not claim real network PASS. Need preserve old Step first-error and raw artifact.",
+  "next_action": "Collect next Windows H1506 two-matrix Action after cheap preflight, run new H1506 python 6 unit tests and py_compile then native signed Windows five clients, 200ms loss0 vs30 each original600s. If new cheap fails no product inference or duplicate unqualified launch. When network runs, assess real kernel outer sum70..100Mbps, 4 original physical lane 100-130s changes, M4/Stop, host capacity.",
   "unverified": true,
   "last_tested_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
   "evidence_refs": [
@@ -30,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1507 existing first H1506 Action42764980969 red solely cheap H778 expected old literal artifact name, native Windows never ran and dependent jobs SKIPPED. Restore immutable legacy full upload name and create separate per-scene H1506 native 0/30 original ZIP upload. Next push retries preflight once; product unchanged, REAL_600 NOT_RUN until jobs start. H1505 ARM long wrapper budgeted enum FAIL, Win1800 previous FAIL remain."
+  "partial_summary": "H1508 first 4af cheap H778 artifact literal, second 370 cheap test_delivery_ci A/B always() uploader; BOTH were PRE_NATIVE, 0/30 Windows five clients NOT_RUN. One full artifact step now exactly legacy if always + original prefix, per scene append unique suffix. New commit retest cheap gate, original product unchanged. PLAN028 IN_PROGRESS."
 }

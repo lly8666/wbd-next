@@ -1960,9 +1960,9 @@ jobs:
           if(Test-Path result/wl-public/report.json){Write-Output ('WL_N0='+$result.WL_N0)}
           Write-Output 'WL_N1_N5=NOT_RUN'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always() && matrix.win5_scene == 'legacy'
+        if: always()
         with:
-          name: m0-wl-full-public-normal-direct
+          name: m0-wl-full-public-normal-direct${{ matrix.win5_scene == 'legacy' && '' || format('-h1506-{0}-{1}',matrix.win5_scene,github.run_id) }}
           path: |
             result/wl-public/plan028-owned-alias.json
             result/wl-public/plan028-native-windows-vm-capacity.json
@@ -2021,28 +2021,6 @@ jobs:
             result/wl-public/linux-eth0.json
             result/wl-public/hyperv-rule.json
             result/wl-public/native-wsl-neighbor-owner.json
-          retention-days: 30
-          if-no-files-found: warn
-      - name: H1506 separate immutable five-client actual original source artifacts
-        if: always() && matrix.win5_scene != 'legacy'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: plan028-h1506-${{ matrix.win5_scene }}-five-real-Windows-${{ github.run_id }}
-          path: |
-            result/wl-public/h1506-*.log
-            result/wl-public/h1506-*.json
-            result/wl-public/h1506-*-app.json
-            result/wl-public/direct-full.log
-            result/wl-public/report.json
-            result/wl-public/native-link-tcp443.log
-            result/wl-public/native-windows-npf.log
-            result/wl-public/native-windows-npf-stderr.log
-            result/wl-public/npcap-cleanup.log
-            result/wl-public/windows-adapters.json
-            result/wl-public/windows-route.json
-            result/wl-public/windows-route-after.json
-            result/wl-public/linux-eth0.json
-            result/wl-public/windows-binary-manifest.json
           retention-days: 30
           if-no-files-found: warn
       # Fallback ONLY: the current native step normally retired its run-

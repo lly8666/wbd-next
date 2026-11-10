@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "source": "370f354a4c29650401d385507fec059e3acd8bc6",
+  "first": {
+    "run": 42764980969,
+    "fail": "H778 original uploader name literal",
+    "actual_native_traffic": "NOT_RUN"
+  },
+  "second": {
+    "run": 42765313830,
+    "fail": "ABBA `if: always()` original uploader invariant",
+    "actual_native_traffic": "NOT_RUN"
+  },
+  "repair": "Single original uploader `if: always()` and legacy literal name with per-scope H1506 loss0/loss30 unique suffix, no duplicate uploader",
+  "Go_Rust_product_changed": false,
+  "PLAN028": "IN_PROGRESS"
+}
