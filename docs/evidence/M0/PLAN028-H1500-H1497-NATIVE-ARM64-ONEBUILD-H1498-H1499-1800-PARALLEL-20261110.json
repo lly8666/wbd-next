@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "frozen_product_source_sha": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "go_original_source_sha": "57b0d0cded995cf26b6f8ea43a3d4588e6e61d27",
+  "native_ARM64_build": {
+    "action_id": 42737661070,
+    "job_id": 129570724497,
+    "artifact_id": 13726859228,
+    "zip_sha256": "528821894b8aa3101f47f97c87d0cee7b7e79276f6fb6cf8ec922da7f80a80bc",
+    "zip_crc": "PASS",
+    "conclusion": "success",
+    "architecture": "native_aarch64",
+    "native_ISAL_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "Rust_cold_health5_blob_sha1": "6f8f4afa45a365bae3d7505614222a1bd7a08a84",
+    "old_Go_ELF_original_unchanged": true,
+    "Go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "binary_sha256": {
+      "wbd-v4-client": "f8d3151578b062dc7213981efcd81e6adecfc708d6157ebb5c6a80172de615d8",
+      "wbd-v4-server": "b804aee80801f902b085546c2e853062e083f1fd927d25136c461516406ff77d",
+      "libwbd_engine.so": "eca948acf18d7f793209c415181933851b798719e4cb27ad4982c8ca8a7894db"
+    },
+    "native_Rust_H1496_client_cold5_L0": "PASS_ONE_REAL_ARM64_TEST",
+    "original_build_scope": "BUILD_ONLY_NO_PRODUCT_NETWORK"
+  },
+  "two_independent_jobs_preflight_and_network": [
+    {
+      "id": "H1498",
+      "workflow": ".github/workflows/m0-plan028-h1498-arm64-1800-heterogeneous-health5.yml",
+      "scope": "NATIVE_ARM64_1800_HETEROGENEOUS",
+      "loss_pct": [
+        0,
+        1,
+        5,
+        15,
+        30
+      ],
+      "oneway_delay_ms": [
+        0,
+        15,
+        50,
+        100,
+        125
+      ],
+      "committed_status": "NOT_RUN_PENDING_WORKFLOW_AUTO_TRIGGER"
+    },
+    {
+      "id": "H1499",
+      "workflow": ".github/workflows/m0-plan028-h1499-arm64-1800-baseline-health5.yml",
+      "scope": "NATIVE_ARM64_1800_HEALTHY_LOW_LOSS",
+      "loss_pct": [
+        0,
+        0,
+        1,
+        1,
+        5
+      ],
+      "oneway_delay_ms": [
+        0,
+        0,
+        15,
+        20,
+        50
+      ],
+      "committed_status": "NOT_RUN_PENDING_WORKFLOW_AUTO_TRIGGER"
+    }
+  ],
+  "concurrency_policy": "two independent native ARM64 VM network Actions, each one true five-client scene, reuse same exact ARM64 Go/Rust ELF source artifact from H1497; no on-run native recompile, no competing tests on one VM",
+  "wrapper_source_sha_at_commit": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+  "preflight_prevents_repeat_if_false": [
+    "Exact immutable source artifact ZIP SHA256/CRC",
+    "Three actual ELF183 SHA256 and ARM Go unchanged, native ISA-L Rust",
+    "Existing L0 cold Health5 actually PASS",
+    "Original source57b ARM H1493 baseline 1800s ZIP offline strict H1497 new client/Health B port matcher must PASS BEFORE any network"
+  ],
+  "strict_new_product_native_gates": [
+    "One true 1800s original TCP+UDP five authenticated clients and six owner Stops",
+    "All Normal B generations exact client port match initial native M4 or authenticated client Health B server proof; B_UNPROVEN always FAIL",
+    "Normal own exact old generation Stop, Game2 grouped/ Game4 hot slots actual native rotations",
+    "Zero configured physical impairment users must have no unique UDP missing",
+    "Any user original active sending no receiver >=15s FAIL; real 1-30% packet loss residual counted, not hidden",
+    "No user DATA duplicate or invalid packet, no server shared TUN queue overflow",
+    "Original source H1492 30% Erin 12 B_UNPROVEN 128s blackout FAIL retained"
+  ],
+  "previous_qualifications": {
+    "H1491_50_to75": "PASS_SCOPED_NATIVE_ARM64_ZEROLOSS",
+    "old_H1493_source57b_baseline1800": "PASS_SCOPED_NATIVE_ORIGINAL_69_AUTH_B",
+    "old_H1492_source57b_hetero1800": "FAIL_12_B_UNPROVEN",
+    "H1496_x86_erincold30_short": "PASS_SCOPED_2_AUTH_B_0_UNPROVEN"
+  },
+  "unfinished": {
+    "Windows_independent_Wintun_Npcap_1800": "NOT_QUALIFIED",
+    "H998_hot_MTU": "HISTORICAL_FAIL_RETAINED",
+    "Android_external_physical": "NOT_RUN",
+    "L3_current_product": "PENDING_TWO_1800_ACTIONS"
+  },
+  "PLAN028": "IN_PROGRESS"
+}

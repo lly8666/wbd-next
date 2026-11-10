@@ -1,0 +1,128 @@
+# H1499: independent 1800s native ARM64. Product Go original + new
+# Rust/ISA-L was compiled ONCE by H1497. Never build on this scenario VM.
+# Preflight offline replay of H1493 frozen 1800s native original sample
+# checks new exact client-Port to server verified B-Health regression gate
+# BEFORE this Action creates a network namespace.
+name: PLAN028 H1499 native ARM64 original 1800s baseline Health5 candidate
+run-name: PLAN028 H1499 true ARM64 source Health5 1800s baseline
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1499-arm64-1800-baseline-health5.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  original-native-1800:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 46
+    env:
+      FROZEN_PRODUCT_SHA: "1211fd51dcc8b835eb18dc3dafaf1f833eb36453"
+      WBD_PLAN028_30M_SCENE: "baseline"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_GAME_FEC_BACKEND: native
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Immutable H1497 exactly one ARM64 Go/Rust native ISA-L binary package and offline judge-positive control
+        shell: bash
+        timeout-minutes: 6
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64 && test -c /dev/net/tun
+          mkdir -p frozen fixed-build fixed-kernel-result preflight
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13726859228/zip" \
+            -o frozen/h1497-frozen-native-arm64.zip
+          python3 - <<'PY'
+          import hashlib,json,zipfile,struct,pathlib,os
+          zpath=pathlib.Path("frozen/h1497-frozen-native-arm64.zip")
+          assert hashlib.sha256(zpath.read_bytes()).hexdigest()=="528821894b8aa3101f47f97c87d0cee7b7e79276f6fb6cf8ec922da7f80a80bc","immutable artifact"
+          names=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
+          with zipfile.ZipFile(zpath) as z:
+              assert z.testzip() is None,"original native ZIP CRC"
+              m=json.loads(z.read("fixed-build/manifest.json"))
+              assert m["product_source_sha"]==os.environ["FROZEN_PRODUCT_SHA"]=="1211fd51dcc8b835eb18dc3dafaf1f833eb36453"
+              assert m["original_go_source_sha"]=="57b0d0cded995cf26b6f8ea43a3d4588e6e61d27"
+              assert m["original_go_donor_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+              assert m["architecture"]=="native_aarch64"
+              assert m["native_ISAL_source_sha"]=="c387163fcbca62701d646149564c550c78a4f985"
+              assert m["L0_native_cold_health5"]=="PASS"
+              assert m["rust_features"].endswith(",native_fec_acceleration")
+              assert set(m["binary_sha256"])==set(names)
+              for n in names:
+                  b=z.read("fixed-build/"+n)
+                  assert hashlib.sha256(b).hexdigest()==m["binary_sha256"][n],n
+                  assert b[:4]==b"\x7fELF" and struct.unpack_from("<H",b,18)[0]==183,n
+                  p=pathlib.Path("fixed-build")/n
+                  p.write_bytes(b)
+                  if n.startswith("wbd-v4-"):p.chmod(0o755)
+              assert m["binary_sha256"]["wbd-v4-client"]=="f8d3151578b062dc7213981efcd81e6adecfc708d6157ebb5c6a80172de615d8"
+              assert m["binary_sha256"]["wbd-v4-server"]=="b804aee80801f902b085546c2e853062e083f1fd927d25136c461516406ff77d"
+              assert m["binary_sha256"]["libwbd_engine.so"]!="05f7b94befa3e37adc01c8de55e8bf155c8457ec85c0d08e1796f07ebe2f116c"
+              pathlib.Path("fixed-build/manifest.json").write_text(json.dumps(m,indent=2)+"\n")
+          print("PLAN028_H1499_ONE_FROZEN_NATIVE_ARM64_GO_RUST_ISAL_SHA_CRC_PASS",flush=True)
+          PY
+          python3 -m py_compile tools/m0_plan028_h1497_current_native_arm_long_gate.py tools/m0-plan028-h1259-five-client-recovery-netns.py
+          curl -fsSL --retry 2 --max-time 120 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/lly8666/wbd-next/actions/artifacts/13697290581/zip \
+            -o preflight/h1493-original-low-loss.zip
+          python3 - <<'PY'
+          import zipfile,hashlib,pathlib
+          zpath=pathlib.Path("preflight/h1493-original-low-loss.zip")
+          assert hashlib.sha256(zpath.read_bytes()).hexdigest()=="0ab86404895523f58f6c9f09690eac7c477460176c44f1683ac7768dd4408477"
+          with zipfile.ZipFile(zpath) as z:
+              assert z.testzip() is None
+              for n in z.namelist():
+                  if n.startswith("fixed-kernel-result/"):z.extract(n,"preflight")
+          PY
+          python3 tools/m0_plan028_h1497_current_native_arm_long_gate.py \
+            --art preflight/fixed-kernel-result \
+            --scene baseline \
+            --source 57b0d0cded995cf26b6f8ea43a3d4588e6e61d27 \
+            --out preflight/h1493-original-source-scope.json \
+            | tee preflight/h1493-original-source-scope.log
+          grep -Fq 'PASS_SCOPED_TRUE_NATIVE_1800S_BASELINE' preflight/h1493-original-source-scope.log
+          echo PLAN028_H1499_OFFLINE_LONG_JUDGE_REAL_69_B_SERVER_PROOFS_PASS_BEFORE_NETWORK
+      - name: One actual native ARM64 both-end original TLS/Rust five client 1800s and exact Stop
+        shell: bash
+        timeout-minutes: 43
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          GITHUB_SHA="$FROZEN_PRODUCT_SHA" \
+            python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1499-true-1800-native.log 2>&1 || {
+              tail -170 fixed-kernel-result/h1499-true-1800-native.log >&2
+              exit 1
+            }
+          grep -Fq 'M0_H1274_NATIVE_ARM64_FIVE_CLIENT_1800S_DIAGNOSTIC_COMPLETE baseline' fixed-kernel-result/h1499-true-1800-native.log
+          python3 -u tools/m0_plan028_h1497_current_native_arm_long_gate.py \
+            --art fixed-kernel-result --scene baseline --source "$FROZEN_PRODUCT_SHA" \
+            --out fixed-kernel-result/h1499-strict-native-verdict.json \
+            | tee fixed-kernel-result/h1499-strict-native-verdict.log
+          echo PLAN028_H1499_TRUE_NATIVE_1800S_ORIGINAL_GO_RUST_ISAL_STOP_AND_AUTH_PROOF_PASS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1499-source-1211fd51-arm64-1800-baseline-${{ github.run_id }}
+          path: |
+            fixed-build/manifest.json
+            preflight/h1493-original-source-scope.json
+            preflight/h1493-original-source-scope.log
+            fixed-kernel-result/h1499-*.log
+            fixed-kernel-result/h1499-*.json
+            fixed-kernel-result/h1274-*.json
+            fixed-kernel-result/h1250-*.json
+            fixed-kernel-result/h1250-*.txt
+            fixed-kernel-result/h1250-product-*.log
+          if-no-files-found: warn
+          retention-days: 30

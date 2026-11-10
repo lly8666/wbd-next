@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1497,
-  "checkpoint_sha": "71f56156a8d872083503b9892233b24184d8e261",
+  "sequence": 1500,
+  "checkpoint_sha": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1497-X86-HEALTH5-REAL-ERIN30-PASS-ONE-ARM64-BUILD",
-  "current_task": "H1497 H1495 offline 3 original ARM64 immutable ZIPs rejudged Action42736045723 SUCCESS H1491 50/75 PASS, H1493 1800 baseline original source PASS_SCOPED 69 normal B, H1492 1800 hetero Erin 12 B_UNPROVEN+128.94s gap true FAIL retained. H1496 new candidate source71f HealthClock client cold kind0 1->5 native x86 real 180s Action42736045736 artifact13727835794 ZIP CRC PASS, Rust L0 1/1, original Go ELF unchanged, Erin 2/2 server authenticated B promotions and 0 unproven, Alice/Bob/Dave zero unique loss, Erin 492/604 residual actually counted, server overflow0, all six Stop PASS_SCOPED only. H1497 ARM native single-build workflow and current-source 1800 verifier ready, auto build NOT_RUN yet; no new product changes.",
-  "why_now": "A real 30% lossy B proof regression on fixed Rust cold kind0 five-send budget triggered 2/2 without a B timeout; L3 baseline/hetero must both rerun only once on a single frozen ARM64 native Rust source, reusing original Go and not multiplying builds.",
+  "task_id": "PLAN028-M0-H1500-ARM64-ONE-HEALTH5-BUILD-TWO-TRUE-1800S-ACTIONS",
+  "current_task": "H1500 H1497 ARM64 original Go SOURCE57b unchanged and new Rust HealthClock client cold5 compile once Action42737661070 artifact13726859228 ZIP SHA528821... CRC PASS, native ISA-L exact, three real ELF183 SHA, ARM Rust one deterministic L0 PASS. Build PRODUCT source1211fd51...; compile no network. New H1498 H1499 each different Action native ARM64 real1800 scenario hetero vs healthy low loss, both same exact frozen build ZIP and new strict original client-port/server-Health B correlation preflight using old H1493 original ZIP. At commit new 1800 Actions NOT_RUN pending auto trigger. Prior H1496 x86 30pct 180s Erin B proof2/2 zero timeout PASS_SCOPED; original H1492 Erin 12 B_UNPROVEN128.9s FAIL retained. Windows independent managed 1800 and Android/physical open. PLAN028 IN_PROGRESS.",
+  "why_now": "Native original x86 highloss Health5 short L0+two B proofs PASS, one real native ARM64 product build now fully qualified and immutable; independently parallel two full 1800s scenes without repeat builds is fastest rigorous new-source L3 validation.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto H1497 one native ARM64 Go-unchanged Rust-new ISA-L build-only Action and SHA/cold Health5 L0. If valid, create two independent push-only H1498 heterogeneous and H1499 baseline native ARM64 1800s Actions with exact immutable source/artifact manifest/hash reused, no compilation; use new strict tools/m0_plan028_h1497_current_native_arm_long_gate.py for normal server B proven exact unique ports, Game2/4 authentic rotations, 0% users zero UDP, Erin 30% no B_UNPROVEN or >=15s gap, all six Stop and full 1800s. Original H1492 FAIL retained; Windows independent DUT 1800 NOT_QUALIFIED; physical Android NOT_RUN.",
+  "next_action": "Collect H1498/H1499 two automatically triggered real Actions. First confirm original old H1493 ZIP exact 69 B native positive control and immutable H1497 ARM three ELF SHA/CRC preflight, then each actual 1800s source1211fd51 fiveclient service/auth/rotation/Stop/UDP, fail on B_UNPROVEN or long active gap and zero-damage UDP lost. Do not duplicate these long scenes; preserve original H1492 FAIL. If error in offline gate, analyze original artifact and fix reporter ONLY without rerunning native. Then Windows independent managed DUT Npcap/Wintun L3 and remaining hot-MTU/Android physical classification.",
   "unverified": true,
-  "last_tested_source": "71f56156a8d872083503b9892233b24184d8e261",
+  "last_tested_source": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1497-H1495-OFFLINE-H1496-X86-ERIN30-HEALTH5-PASS-20261110.json",
-    "docs/evidence/M0/PLAN028-H1495-H1496-THREE-ORIGINAL-ARM64-L3-ERIN30-CLIENT-COLD-KIND0-20261110.json"
+    "docs/evidence/M0/PLAN028-H1500-H1497-NATIVE-ARM64-ONEBUILD-H1498-H1499-1800-PARALLEL-20261110.json",
+    "docs/evidence/M0/PLAN028-H1497-H1495-OFFLINE-H1496-X86-ERIN30-HEALTH5-PASS-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1497 native source71f client cold Health5 x86 real 30% Erin 180s L0 PASS and two B Health promotions/0 unproven, all six Stops, no configured loss Alice/Bob/Dave zero UDP. H1495 original three ARM64 Actions immutable offline PASS, baseline1800 originally scoped PASS and hetero1800 Erin true FAIL12 unproven. Building native ARM64 Rust once for two separate same-binary current-source parallel 1800s Actions; builder NOT_RUN at checkpoint, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1500 source1211fd51 frozen ARM original Go unchanged/new Rust native ISA-L compiled ONCE H1497 Action42737661070 artifact13726859228 sha528821 ZIP CRC_PASS ARM L0 PASS and all three ELF183 SHA exact; two independent native ARM64 H1498/H1499 1800s hetero30 and healthy low loss will reuse identical bundle and first replay original H1493 old source positive control for new Health-B exact port matcher. New source 1800 NOT_RUN pending Actions; former source57b H1492 Erin30 12 B_UNPROVEN true FAIL, candidate short x86 H1496 true proof2/2 PASS only. Windows independent and Android/physical remain unqualified; PLAN028 IN_PROGRESS."
 }
