@@ -1,0 +1,50 @@
+# Offline-only replay of BOTH preserved H1520 true native 600s artifacts.
+name: PLAN028 H1525 original Linux authenticated B M4 replay
+run-name: "PLAN028 H1525 proof original B server M4, no fresh traffic"
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-h1525-offline-native-m4.yml
+permissions: {contents: read, actions: read}
+jobs:
+  original-evidence-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scene: loss0
+            original_run: 42781585712
+          - scene: loss30
+            original_run: 42781585834
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: ${{ matrix.original_run }}
+          github-token: ${{ github.token }}
+          name: plan028-h1520-linux-${{ matrix.scene }}-real-native-600s-${{ matrix.original_run }}
+          path: original/
+      - name: Exact original server B TLS authenticated native M4 and real UDP TCP Stop offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_plan028_h1525_native_m4_replay.py
+          mkdir -p checked
+          python3 -u tools/m0_plan028_h1525_native_m4_replay.py \
+            --art original/fixed-kernel-result \
+            --scene "${{ matrix.scene }}" \
+            --source 9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da \
+            --out checked/h1525-${{ matrix.scene }}-scoped.json
+          echo H1525_OFFLINE_NO_NETWORK_REPLAY_FINISHED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1525-${{ matrix.scene }}-verified-${{ github.run_id }}
+          path: checked/
+          retention-days: 30
+          if-no-files-found: warn
