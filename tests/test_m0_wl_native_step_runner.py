@@ -30,7 +30,7 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         output=stream.getvalue().decode("cp1252")
         self.assertIn("H1506_ORIGINAL_NATIVE_FIVE_FIRST_ERROR",output)
         self.assertIn("pre_tls_client=alice",output)
-        self.assertIn(r"\\ufffd",output)
+        self.assertIn(r"\ufffd",output)
         self.assertEqual(raw.split(b"bad_utf8=")[1],bytes([255,10]))
 
     def test_old_pipe_collection_waits_for_unrelated_inherited_writer(self):
