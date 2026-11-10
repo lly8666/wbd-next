@@ -85,6 +85,19 @@ class Plan028DefaultAssembly(unittest.TestCase):
         self.assertIn("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY", script)
         self.assertIn("PromoteServerGameAfterAuthenticatedClientRx", script)
         self.assertIn("ProtectedFreshGroupRequested()", script)
+    def test_one_exact_h1541_native_workflow_has_executable_go_test_and_real_file_trigger(self):
+        w=(ROOT/".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml").read_text()
+        self.assertIn("- .github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml",w)
+        self.assertIn("go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli",w)
+        self.assertIn("TestPLAN028Game2ColdRetryCannotMixStaleProtectedEpochLanes",w)
+        self.assertIn("TestPLAN028OriginalGame4ColdPortCohortAndForeignScope",w)
+        self.assertIn("--strict-band",w)
+        self.assertIn("H1531_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_300_350_COMPLETE",w)
+        self.assertIn("h1541-original-Go-v4productcli.log",w)
+        # Do not accidentally execute a filename: H1541's first Action
+        # failed in 10s with shell127 after source Go FakeTCP had passed.
+        self.assertNotIn("\\n            h1541-original-Go-v4productcli.log\\n          grep",w)
+        self.assertEqual(w.count("  one-original-linux-loss30:"),1)
     def test_arm64_bundle_is_one_valid_shell_not_truncated_duplicated_harness(self):
         completed=subprocess.run(["bash","-n",str(ARM)],
                                  capture_output=True,text=True)

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1543",
+  "date": "2026-11-10",
+  "source_sha": "6ad468d714a22a86e0cf1fb94e5933b9c3583dcf",
+  "original_action": {
+    "id": 42809134116,
+    "job_id": 129805810184,
+    "artifact_id": 13761166821,
+    "conclusion": "failure",
+    "source_checks": "PASS",
+    "frozen_rust_SHA256": "PASS",
+    "original_go_faketcp_11_pinned_install": "PASS",
+    "H1285_pre_detach_positive_negative": "PASS",
+    "real_go_game2_5tuple_tests": "NOT_RUN",
+    "original_linux_600s_data": "NOT_RUN",
+    "original_server_M4_B": "NOT_RUN",
+    "original_stop": "NOT_RUN",
+    "actual_first_error": "Run bash 127 /home/runner/work/_temp/...sh: line 23: h1541-original-Go-v4productcli.log: command not found",
+    "classification": "FAIL_TEST_HARNESS_SHELL_PRE_NATIVE_NOT_PRODUCT_NATIVE_FAIL"
+  },
+  "fix": {
+    "workflow": ".github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml",
+    "correction": "Remove one standalone artifact filename inserted after tee in compile shell. File remains once as artifact path, not an executable command.",
+    "cheap_regression": "tests/test_m0_plan028_default_assembly.py asserts valid original-Go test and no standalone filename command",
+    "product_code_unchanged": true
+  },
+  "unqualified": {
+    "H1541_real_loss30": "NOT_RUN_UNTIL_ONE_CORRECTED_ACTION",
+    "Windows5": "FAIL_GLOBAL_ROUTE_WFP_OWNER_UNRESOLVED",
+    "ARM64_real": "NOT_RUN",
+    "PLAN028": "IN_PROGRESS"
+  }
+}

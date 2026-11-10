@@ -23,3 +23,8 @@
 ### H1542 触发路径纠正（仅CI工作流，不动产品SOURCE）
 
 原H1541新增workflow内 `on.push.paths` 误写成历史重命名路径 `m0-plan028-h1541-linux30-pre-detach-source-fixed.yml`；H1541主线commit **确实启动既有源码触发的常规回归**，但唯一指定的 loss30 600s **NOT_TRIGGERED**，不是失败也不是通过。已将过滤器精确指向真实 `m0-plan028-h1541-linux30-game2-cold-cohort.yml`，此修订自动触发**一场** H1541 定向原生场景。此前 [main Action42808628492](https://github.com/lly8666/wbd-next/actions/runs/42808628492) Cheap current assembly gate/job129804103164 **PASS**，含永续默认装配一致性审计；后续必查真正原始 Go/Rust 测试输出，不能拿这里的静态 PASS 冒充原生600s。
+
+### H1543 仅修定向原生工作流 shell127，保留原始先验结果
+
+- [H1541 首次 Action42809134116](https://github.com/lly8666/wbd-next/actions/runs/42809134116)：11原始Go FakeTCP source锁安装 **PASS**，原 `TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor` 与畸形负测及 Rust ISA-L SHA **PASS**；但该 workflow 的 `tee h1541-real-original-Go-faketcp.log` 下一行误插入独立 `h1541-original-Go-v4productcli.log`，bash 以命令127失败，尚未执行新Game2分组 Go test/原生600s，因此 **NOT_RUN**。不是 native 修复失败，也不是可以伪认 native PASS。
+- 本次仅删这条误执行文件名（artifact 路径仍保留），`tests/test_m0_plan028_default_assembly.py` 加精确永续防误插入/工作流唯一有效过滤器检查。主线五客户端默认源不变，只复验之前未运行的一个loss30源锁原生场景。

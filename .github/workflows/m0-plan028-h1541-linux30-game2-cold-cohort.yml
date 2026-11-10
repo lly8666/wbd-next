@@ -96,7 +96,6 @@ jobs:
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
           cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
           (cd legacy && go test -count=1 -v ./internal/faketcp -run 'TestPLAN028PreDetach|TestStageTransition|TestDetachedDataKernelFilterPreservesHandshakeAndControl|TestV4PublicSYNAndSYNACKRealEncodedOptionsAndFrozenRetries') | tee h1541-real-original-Go-faketcp.log
-            h1541-original-Go-v4productcli.log
           grep -Fq -- '--- PASS: TestPLAN028PreDetachBurstOverflowPreservesAuthenticatedSuccessor' h1541-real-original-Go-faketcp.log
           grep -Fq -- '--- PASS: TestPLAN028PreDetachMalformedRecordStillAborts' h1541-real-original-Go-faketcp.log
           grep -Fq -- '--- PASS: TestStageTransitionBoundsCountAndWireSize' h1541-real-original-Go-faketcp.log
