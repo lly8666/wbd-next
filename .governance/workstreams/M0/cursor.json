@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1541,
-  "checkpoint_sha": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
+  "sequence": 1542,
+  "checkpoint_sha": "0c02e2156caf65352c883af4a769d620a72e3d6a",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1541-RECENT-REPAIR-DEFAULT-PRODUCT-ASSEMBLY-ARM64-LINUX-GAME2-COHORT",
-  "current_task": "After latest H1540 original 600s Linux 30loss Action42798005082 source9a0efb6 Go H1285 fix REAL PASS Game4 hot5, six native Stop, physical outer303.015Mbps. Overall FAIL Carol Game2 generation8 server true grouped cold mixed stale port49336 lane1 from prior failed candidate with fresh lane2 57256 instead of fresh lane1 57255; real 154170ms/144290ms bidirectional app RX gaps and TCP RX0. New H1541 original Go game_linux.go pending map keys by protected cohort PLUS actual original client/server TCP 5tuple with SAME consecutive 2/4 source ports, not trust for auth, no native Rust or wire changes, new 2-case regression. User requested last days fixes applied by default: audit found ARM64 hand-maintained overlay list missing recent Go fixes and malformed duplicate end; replaced with exact x86 original Go all-current file installer+realityfront source locks, all11 H1285 FakeTCP; added tests/test_m0_plan028_default_assembly.py as every-main cheap gate, canonical Windows manifest provenance unchanged. One H1541 exact x86 loss30 original 600s 300-350Mbps real Action auto-trigger workflow. Linux loss0 source9b260 333.930 PASS_SCOPED, Windows five WFP/routes global policy FAIL, PLAN028 IN_PROGRESS.",
-  "why_now": "H1540 ZIP directly proves upstream H1285 real original Go fix and same-epoch Game2 server grouping defect; ARM64 production packaging also stale/broken. Must default install only qualified source fixes while never weakening real Windows shared WFP/route fail-closed.",
+  "task_id": "PLAN028-M0-H1542-H1541-WORKFLOW-EXACT-PUSH-PATH-TRIGGER",
+  "current_task": "H1541 product Go Game2 source-cohort exact real TCP flow fix and ARM64 default full current source copy in parent0c02. Active main cheap native source-lock check Action42808628492 job129804103164 PASS; running Windows/Rust compiled source regressions without extra dispatch. H1541 real 600s loss30 native scene NOT_TRIGGERED because newly created workflow push.paths contained old renamed filename; this is trigger wiring, not product build/test fail. H1542 corrects actual .github/workflows/m0-plan028-h1541-linux30-game2-cold-cohort.yml push path and will start ONE real x86 Linux 30loss 600s repro. Original H1540 five Game4 server M4 PASS scoped, Carol Game2 stale/fresh port mix FAIL original.",
+  "why_now": "H1541 workflow push trigger path typo stopped required real loss30 despite cheap source audit PASS. Correct exact path only, no product Go/Rust change and no redundant scene.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Read H1541 single original x86 Linux loss30 job and full raw artifact; ensure exact current source Go native tests PASS and all Game2/4 server M4 + five-client UDP/TCP 600s+outer 300-350 + six owned Stop; on failure preserve first fault. Verify default m0-wl cheap source audit and ARM bash -n; review Windows5 machine-wide WFP/route policy without relaxing foreign ownership. ARM64 actual production binary build NOT_RUN until native action. Remain PLAN028 IN_PROGRESS.",
+  "next_action": "Wait for actual H1541 Linux loss30 600s original native source Action on corrected workflow path, collect exact job logs/artifact. Source current 0c02 product unchanged except wrapper/cursor; require original Go Game2 cold key unit, 600s true 300-350Mbps, no cross candidate, five M4, six Stop, real TCP/UDP. Keep Windows five global route/WFP unresolved.",
   "unverified": true,
   "last_tested_source": "9a0efb6cb22a50af9fe8d86d1e4031957d503023",
   "evidence_refs": [
@@ -36,5 +36,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1541 default current-source audit: H1540 actual 303.015 Mbps 600s 30loss five Windows? No: FIVE LINUX original Go clients; genuine native Game4 hot5 service PASS scoped after H1285 11-file assembler fix, six Stop PASS; Carol Game2 false cohort mixing stale 49336+fresh57256 makes true app FAIL. Fix pending keyed by original TCP 5tuple + consecutive ports and all source now default on ARM64 (previous malformed/hand-stale script), x86 and canonical Windows manifest. New cheap full assembly drift checks and exact H1541 one loss30 600s run; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1541 main source0c02 has Game2 cold 5tuple key and same x86/ARM64 full Go default assembly. Common m0-wl cheap source audit PASS job129804103164. H1541 target native scene initially NOT_TRIGGERED due workflow paths filename typo; H1542 corrects exact path; real PASS still NOT_RUN. Original H1540 Game4 hot5 PASS scoped, Carol game2 actual mixed fail; PLAN028 IN_PROGRESS."
 }

@@ -19,3 +19,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Fix original Go same-protected-epoch Game2/4 cross-generation cohort mixing by exact observed TCP 5tuple and consecutive source port grouping; include every current Go TLS/M4 repair by default in ARM64 and Linux x86 original-source product assembly, with CI source-lock audit; preserve existing authentication, AEAD, 64-packet bound, WFP fail-closed, 1460 outer default."}
 ```
+
+### H1542 触发路径纠正（仅CI工作流，不动产品SOURCE）
+
+原H1541新增workflow内 `on.push.paths` 误写成历史重命名路径 `m0-plan028-h1541-linux30-pre-detach-source-fixed.yml`；H1541主线commit **确实启动既有源码触发的常规回归**，但唯一指定的 loss30 600s **NOT_TRIGGERED**，不是失败也不是通过。已将过滤器精确指向真实 `m0-plan028-h1541-linux30-game2-cold-cohort.yml`，此修订自动触发**一场** H1541 定向原生场景。此前 [main Action42808628492](https://github.com/lly8666/wbd-next/actions/runs/42808628492) Cheap current assembly gate/job129804103164 **PASS**，含永续默认装配一致性审计；后续必查真正原始 Go/Rust 测试输出，不能拿这里的静态 PASS 冒充原生600s。
