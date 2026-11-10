@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "date": "2026-11-10",
+  "parent_sha": "ecb8eb9c24e335e061d77975c0bdcf7c531d0d49",
+  "status": "SOURCE_PREPARED_NOT_RUN",
+  "two_new_windows_vm_scenes": [
+    "loss0",
+    "loss30"
+  ],
+  "duration_seconds_per_scene": 600,
+  "real_original_product": {
+    "Windows_clients": 5,
+    "Linux_shared_servers": 1,
+    "modes": [
+      "normal",
+      "auto",
+      "game2",
+      "game4",
+      "fixed6"
+    ],
+    "native_Wintun_and_Npcap": true,
+    "actual_TLS443_and_original_Rust_M4": true
+  },
+  "real_network": {
+    "oneway_delay_ms": 200,
+    "loss_pct": [
+      0,
+      30
+    ],
+    "original_TCP_outer_ports": [
+      443,
+      444,
+      445,
+      446
+    ],
+    "original_tc_ifb_bidirectional": true,
+    "runner_management_excluded": true,
+    "client_inner_mbps_per_direction": [
+      8,
+      5,
+      4,
+      2,
+      4
+    ],
+    "app_payload_bytes": 1120,
+    "inner_offered_total_both_directions_mbps": 46,
+    "measured_outer_combined_mbps_goal": [
+      70,
+      100
+    ],
+    "kernel_counter_source": "two original WSL tc qdiscs on TCP443..446",
+    "rate_scale_min": 0.35,
+    "rate_scale_max": 1.7
+  },
+  "lane_changes": {
+    "count": 4,
+    "interval_seconds_integer_random": [
+      100,
+      130
+    ],
+    "real_Windows_OS_source4": [
+      "198.19.254.1",
+      "198.19.254.9"
+    ],
+    "scope": "correlated five cohorts on ONE Windows WSL2 physical egress, not independent per-client NICs",
+    "real_M4_Game_group_required": true,
+    "original_native_owner_slot_count": 16,
+    "potential_simultaneous_lanes": 18
+  },
+  "hard_gates": [
+    "five distinct original authenticated users and actual signed Wintun adapters",
+    "real 600 second separate Windows and Linux OS-app numbered UDP directions",
+    "loss0 exact unique first delivery, loss30 unique >=40% and actual tc drops",
+    "no >=15s active receive blackout per authenticated user",
+    "real outer 70..100Mbps >=70% steady 10s kernel samples",
+    "original 4 true OS source changes and 5 Ready per user including Game group",
+    "VM CPU mean <85 sustained30s, available host memory >=0.75GiB",
+    "true Alice Stop then Bob surviving native Win32 UDP+TCP, all five WAL zero and shared Linux TUN Stop",
+    "owned WSL tc/IFB, physical alias and runner management precise cleanup"
+  ],
+  "prior_arm1800": {
+    "run": 42754002932,
+    "status": "WRAPPER_FAIL",
+    "first_failure": "report enum excludes budgeted after true 31min run",
+    "vm_guard": "NORMAL_MONITOR_EXIT samples186",
+    "business": "UNVERIFIED"
+  },
+  "prior_win1800": {
+    "run": 42754003143,
+    "status": "FAIL_NO_ORIGINAL_NATIVE_ARTIFACT",
+    "clean_control": "SUCCESS",
+    "offhost_witness": "SUCCESS",
+    "product_cause": "UNKNOWN"
+  },
+  "legacy_Win600": {
+    "run": 42743477869,
+    "verdict": "PASS_SCOPED_TWO_CLIENT_LOW_PPS"
+  },
+  "source_only_no_Go_Rust_prod_changes": true,
+  "PLAN028": "IN_PROGRESS"
+}
