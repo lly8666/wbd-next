@@ -10,3 +10,7 @@
 ```feature-impact
 {"kind":"none","reason":"Scoped CI-only management runner route lease authorization for exactly one signed Windows plus four Linux original-client 600s scenes; no user-facing feature or product protocol/Rust/Go change, retain all foreign-route protections."}
 ```
+
+### H1550 治理 SOURCE 证据引用修正（不触发新 Windows 网络运行）
+
+`tools/governance.py` 对 `.governance/workstreams/M0/cursor.json` 的每个 `evidence_refs` 约束是**该证据顶层 `source_sha` 必须等于 `last_tested_source`**。H1549 文件没有顶层键，旧 H1547/H1545 原源 `ed965f2d` 被误包含在当前 `7370d2bc` 引用里，会先于其它治理检查触发 `evidence is for a different SOURCE`。本次只补 H1549 的源 SHA `7370d2bc`，收窄当前 `evidence_refs` 至 H1548 和 H1549 同一来源；历史 Linux/ARM64 原证据仍留仓库，不改任何测试成绩、业务协议或性能场景。新 H1549 native Action 已经运行，本次文档提交没有 H1548 场景触发 token。

@@ -4,21 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1549,
-  "checkpoint_sha": "faa66cc3ad5c3d5f780a9780384db21d735d2b8a",
+  "sequence": 1550,
+  "checkpoint_sha": "b6287d04b31e776f4a59e469cf77b312628445a8",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1549-MIXED-WIN1-LINUX4-HOSTED-RUNNER-MGMT-OWNED-UNDERLAY-SCOPE",
-  "current_task": "Latest user needs ONE signed Windows Wintun Alice plus four WSL2 Linux netns Bob Auto/Carol Game2/Dave Game4/Erin Fixed6, one Go/Rust Linux shared TLS443 server, 200ms each way 0/30 loss separate Windows VM, real kernel full outer 250-300Mbps 600s and original M4/Stop. H1548 Action42852209993 Go/Rust source7370 Linux+Windows build and cheap checks PASS, both native jobs failed before TLS at runner management PS1 line16 MANAGEMENT_ROUTE_SCOPE_REFUSED (loss0 job129958228890, loss30 job129958228970); original app/bandwidth NOT_RUN. H1549 adds exact mixed scene scoped PIN receipt and job Arm/Restore, source/owner fail closed, tests. One new Action [plan028-h1548-win1-linux4-600] on this source to collect without duplicate. Prior x86 Linux original fully scoped source9b260 loss0 333.930, sourceed965 loss30 304.271 PASS; historical Windows5 not required by changed user scope.",
-  "why_now": "Management script CI scope omitted new mixed scenario despite exact runner management pin; first failure before product. Add narrow owner receipt path only, retain foreign route /32 rejection and cleanup.",
+  "task_id": "PLAN028-M0-H1550-CURRENT-SOURCE-ONLY-VERIFIABLE-EVIDENCE-REFS",
+  "current_task": "Latest user needs ONE signed Windows Wintun Alice plus four WSL2 Linux netns Bob Auto/Carol Game2/Dave Game4/Erin Fixed6, one Go/Rust Linux shared TLS443 server, 200ms each way 0/30 loss separate Windows VM, real kernel full outer 250-300Mbps 600s and original M4/Stop. H1548 Action42852209993 Go/Rust source7370 Linux+Windows build and cheap checks PASS, both native jobs failed before TLS at runner management PS1 line16 MANAGEMENT_ROUTE_SCOPE_REFUSED (loss0 job129958228890, loss30 job129958228970); original app/bandwidth NOT_RUN. H1549 adds exact mixed scene scoped PIN receipt and job Arm/Restore, source/owner fail closed, tests. One new Action [plan028-h1548-win1-linux4-600] on this source to collect without duplicate. Prior x86 Linux original fully scoped source9b260 loss0 333.930, sourceed965 loss30 304.271 PASS; historical Windows5 not required by changed user scope. H1550 governance fix: evidence_refs only two exact source7370 context; H1549 missing top-level source_sha corrected. Historical Linux x86 scoped PASS evidence still exists in main devlog and old file, not incorrectly attached as same SOURCE evidence.",
+  "why_now": "Governance tests required every current M0 evidence_refs source_sha to equal last_tested_source=7370; previous attached old ed965 artifacts and new H1549 lacked top-level source_sha. Keep history but do not conflate source. User's mixed tests on H1549 new source are still running and remain separate.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect new one Windows+four Linux Action after H1549 patch loss0/loss30 jobs, first original product readiness/OS failures and 10s actual kernel 250-300; no invented performance until source. If parent management scope now passes, inspect true source-locked mixed app/netns/TLS M4 and Stop. Preserve pre-native fail in H1548 original and any governance static fail separately. PLAN028 IN_PROGRESS.",
+  "next_action": "Collect H1549 mixed Windows1 Linux4 Action42857999491 loss0/loss30 native results after exact route-scope preflight. Source-lock initial H1548 pre-native failures, no duplicate dispatch. If governance still fails, inspect original first source error; no artificial product PASS.",
   "unverified": true,
   "last_tested_source": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1549-MIXED-WIN1-LINUX4-ROOT-MGMT-SCOPE-PRE-NATIVE-20261110.json",
-    "docs/evidence/M0/PLAN028-H1548-WINDOWS1-LINUX4-200MS-250-300-DUAL-600S-INFLIGHT-20261110.json",
-    "docs/evidence/M0/PLAN028-H1547-FOUR-PLATFORM-CURRENT-SOURCE-LINUX300-350-PASS-20261110.json",
-    "docs/evidence/M0/PLAN028-H1545-FOUR-PLATFORM-CURRENT-SOURCE-DEFAULT-ASSEMBLY-AUDIT-20261110.json"
+    "docs/evidence/M0/PLAN028-H1548-WINDOWS1-LINUX4-200MS-250-300-DUAL-600S-INFLIGHT-20261110.json"
   ],
   "context_refs": [
     "START_HERE.md",

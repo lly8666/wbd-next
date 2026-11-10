@@ -63,5 +63,6 @@
   },
   "plan_status": "IN_PROGRESS",
   "physical_wan": "NOT_RUN",
-  "android": "NOT_RUN"
+  "android": "NOT_RUN",
+  "source_sha": "7370d2bc6c4ad5963e735d2c885df8edb7fec7a9"
 }
