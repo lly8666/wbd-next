@@ -10,3 +10,5 @@
 ```feature-impact
 {"kind":"updated","reason":"PLAN028 shared TLS443 protected per-account manual /32 routing is a tracked multiclient capability; record the original pre-READY FAIL and the as-yet-unverified new Linux Go cold owner connection in the existing feature card, without promoting qualification.","ids":["tls-auth-multiclient"]}
 ```
+
+H1512 目录格式修正：按既有 feature catalog 限制收回紧凑 JSON 存储（保留 H1506 原 FAIL 和 H1510 未验候选）；未修改业务代码、测试或 SOURCE07312 的实际网络 Action。

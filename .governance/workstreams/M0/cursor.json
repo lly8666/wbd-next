@@ -4,11 +4,11 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1511,
-  "checkpoint_sha": "07312d6e1743d5c28ff839fd2c9eb277c99744ed",
+  "sequence": 1512,
+  "checkpoint_sha": "db866cdc712caa4ec617d73990e879125dd5f18e",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1511-ONE-WIN5-LOSS0-SOURCE-STARTED",
-  "current_task": "H1510 Go shared/manual-account cold wiring candidate SOURCE07312d6e1743d5c28ff839fd2c9eb277c99744ed integrated main. Action42768853063: offline wiring PASS; Windows Go compile/test PASS; Linux/Windows Rust library tests PASS. Native Linux original Go/Rust build job129672664597 IN_PROGRESS; ONE loss0 Windows5 native scene pending that dependency, not a product PASS. Governance Action42768853118 failed source/card bookkeeping: feature-impact and mixed-source cursor evidence refs; H1511 repaired docs only, no source Go changes, no duplicate network dispatch. Original H1506 Windows loss0+loss30 FAIL source8e5, 600s NOT_RUN preserved; ARM H1505 raw PASS_SCOPED with reporter FAIL. PLAN028 IN_PROGRESS.",
+  "task_id": "PLAN028-M0-H1512-FEATURE-CARD-BOUND-AND-WIN5-LOSS0-IN_FLIGHT",
+  "current_task": "SOURCE07312 candidate real Windows5 loss0 Action42768853063 IN_PROGRESS; cheap workflow and source assembly PASS; Windows Go compile, Linux Rust and Windows Rust PASS; Linux original Go/Rust peer build job129672664597 in progress. Governance Action42769315340 structure PASS, feature catalog FAIL solely because expanded feature card exceeds 16KiB, H1512 compact JSON corrected without code change. Exact old loss0/loss30 source8e5 original FAIL preserved as pre-server-READY/real business NOT_RUN. PLAN028 IN_PROGRESS.",
   "why_now": "Current Action has real compile PASS and one source-pinned loss0 scene pending dependency, while governance checks exposed document linkage mistakes. Keep one evidence source in cursor, update feature card with original FAIL plus explicit untested new-source status, and revalidate without re-running network.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
   "next_action": "Collect Linux original Go/Rust compile+unit job129672664597 then sole Windows5 loss0 native job of Action42768853063. Determine first precise contract stage server READY, protected accounts/MTU, Rust M4, real UDP/TCP 600s, 4 genuine source change, owned Stop. Do NOT dispatch loss30 while loss0 is pending or until new root facts. If Action fails, retain original ZIP and fix only proven fault. Governance H1511 docs-only correction has no network source change. H1505 original ARM positives PASS_SCOPED; reporter enum offline repair, no network rerun.",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1511 docs-governance correction: cursor evidence_refs only H1510 original FAIL source8e5, prior heterogeneous SOURCE proof preserved in devlog/card; new mixed manual account Go cold fix SOURCE07312 integrated. Action42768853063 cheap+both Rust+Win Go PASS, Linux Go/Rust source locked build in_progress; exact one Windows5 loss0 native scenario next; no loss30 dispatched. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1512 compacted tracked tls-auth-multiclient feature card below 16KiB, original source8e5 FAIL and current untested Go cold fix 07312 retained. Governance previous structure PASS, only catalog bound repaired. Current one-scenario Action42768853063 Linux source Go build pending, native Win5 loss0 not yet triggered. No new net action or protocol work. PLAN028 IN_PROGRESS."
 }
