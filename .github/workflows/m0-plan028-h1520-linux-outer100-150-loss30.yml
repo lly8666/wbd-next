@@ -1,0 +1,114 @@
+# PLAN028 H1520: exactly one real Linux x86_64/x86_64 six-netns 600s
+# five-client native Go TLS/Rust/ISA-L outer-rate scenario in THIS Action.
+# The opposite loss runs in a separate Action/VM; no repeated binary build.
+name: PLAN028 H1520 native Linux 100-150Mbps outer 200ms 30pct
+run-name: "PLAN028 H1520 x86 original Linux five client 600s 200ms loss30 | SOURCE 9b260553"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan028-h1520-linux-outer100-150-loss30.yml"
+permissions: {contents: read, actions: read}
+jobs:
+  real-five-client-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    env:
+      ORIGINAL_PRODUCT_SOURCE: "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da"
+      WBD_PLAN028_600S_SCENE: "outer100to150-loss30"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+      TEST_SCENE: "loss30"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 42775103187
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: fixed-build/
+      - name: Validate exact existing Linux x86 original Go+Rust ISA-L binary package and scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1274-30min-report.py tools/m0_plan028_h1520_linux_outer_monitor.py tools/m0_plan028_h1520_linux_outer_verdict.py
+          python3 -m unittest tests.test_m0_plan028_h1520_linux_outer -v
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path("fixed-build")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["ORIGINAL_PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["rust_native_fec_acceleration"] is True
+          assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
+              b=(p/name).read_bytes()
+              assert b[:4]==b"\\x7fELF" and struct.unpack_from("<H",b,18)[0]==62
+              assert len(b)>100000
+              assert hashlib.sha256(b).hexdigest()==m["sha256"][name]
+          print("H1520_ORIGINAL_GO_RUST_NATIVE_LINUX_X86_SOURCE_MANIFEST_SHA_PASS",flush=True)
+          PY
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+      - name: Original five Linux clients and server TLS443 200ms 30pct 600s dual traffic, measured outer 100-150Mbps and exact Stop
+        shell: bash
+        timeout-minutes: 22
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          mkdir -p fixed-kernel-result
+          echo "H1520_START_REAL_NATIVE_LINUX_FIVE_200MS_loss30 source=$ORIGINAL_PRODUCT_SOURCE wrapper=$GITHUB_SHA"
+          # Same SHA-pinned Linux product on BOTH ends; the new wrapper is
+          # only scenario/observer code, not a changed Go/Rust business binary.
+          GITHUB_SHA="$ORIGINAL_PRODUCT_SOURCE" python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build \
+            >fixed-kernel-result/h1520-original-native.log 2>&1 &
+          native_pid=$!
+          python3 -u tools/m0_plan028_h1520_linux_outer_monitor.py \
+            --pid "$native_pid" --art fixed-kernel-result --scene "$TEST_SCENE" \
+            >fixed-kernel-result/h1520-outer-monitor.log 2>&1 &
+          meter_pid=$!
+          python3 -u tools/m0_plan028_h1504_vm_safety_guard.py \
+            --pid "$native_pid" --out fixed-kernel-result/h1520-host-10s-budget.jsonl \
+            >fixed-kernel-result/h1520-vm-guard.log 2>&1 &
+          guard_pid=$!
+          set +e
+          wait "$native_pid"; native_rc=$?
+          wait "$meter_pid"; meter_rc=$?
+          wait "$guard_pid"; guard_rc=$?
+          set -e
+          echo "H1520_NATIVE_AND_MONITOR_STATUS native=$native_rc meter=$meter_rc guard=$guard_rc"
+          if [[ "$native_rc" -ne 0 || "$meter_rc" -ne 0 || "$guard_rc" -ne 0 ]]; then
+            tail -100 fixed-kernel-result/h1520-original-native.log >&2 || true
+            tail -40 fixed-kernel-result/h1520-outer-monitor.log >&2 || true
+            tail -15 fixed-kernel-result/h1520-vm-guard.log >&2 || true
+            exit 1
+          fi
+          grep -Fq "H1520_NATIVE_LINUX_FIVE_CLIENT_REAL_600S_OUTER_100_150_COMPLETE outer100to150-loss30" fixed-kernel-result/h1520-original-native.log
+          test -s fixed-kernel-result/h1520-outer-10s.jsonl
+          python3 -u tools/m0_plan028_h1520_linux_outer_verdict.py \
+            --art fixed-kernel-result --scene "$TEST_SCENE" \
+            --source "$ORIGINAL_PRODUCT_SOURCE" --wrapper "$GITHUB_SHA" \
+            | tee fixed-kernel-result/h1520-verdict.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1520-linux-loss30-real-native-600s-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            fixed-build/manifest.json
+            fixed-kernel-result/h1520-*
+            fixed-kernel-result/h1461-six-hundred-report.json
+            fixed-kernel-result/h1250-matrix-plan.json
+            fixed-kernel-result/h1250-cpu-rss.json
+            fixed-kernel-result/h1250-qdisc-*.txt
+            fixed-kernel-result/h1250-product-*.log
+            fixed-kernel-result/h1250-c-*.json
+            fixed-kernel-result/h1250-s-*.json
+            fixed-kernel-result/h1312-static-neighbour-*.json
