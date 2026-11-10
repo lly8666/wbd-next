@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "source_sha": "0d3fbec30095d949aa759725dd7dff5e88e51522",
+  "action": {
+    "run_id": 42772317994,
+    "conclusion": "failure",
+    "failed_job": 129682750461,
+    "failed_step": "python tools/prepare_windows_wiring.py --check-only"
+  },
+  "first_failure": "ValueError: assembly blob mismatch: r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+  "evidence": "genuine changed native Windows five-owner CI-only product owner slot not in exact pinned assembler",
+  "observed_windows_native": "NOT_RUN",
+  "observed_linux_server": "NOT_RUN",
+  "observed_five_client_data": "NOT_RUN",
+  "prior_validated": [
+    "SOURCE add537 original Linux shared manual /32 server READY",
+    "original Windows Linux Go/Rust and Windows Rust preflight builds PASS"
+  ],
+  "prior_fail_retained": true,
+  "repair": {
+    "source_blob": "099d2d811dad2805945e6074bf3802f79ef2d0a2",
+    "new_assembled_test_blob": "7b9f6bfe3e3a45bc916ec8e0e9ccf1a53bb15270",
+    "run_real_original_windows_test": "TestPLAN028H1515FiveOriginalWindowsNativeDeviceSlots",
+    "scope": "SOURCE_LOCK_AND_WINDOWS_NATIVE_OS_EVENT_TEST_ONLY_NO_PRODUCT_SAFETY_BYPASS"
+  },
+  "next": "One loss0 real Windows 2025 Npcap/Wintun+WSL2 exact-source scene only after assembled original Go unit/test and both Rust builds; loss30 untriggered",
+  "status": "FAIL_ASSEMBLY_PREBUILD_APPLICATION_NOT_RUN",
+  "overall_plan": "IN_PROGRESS"
+}

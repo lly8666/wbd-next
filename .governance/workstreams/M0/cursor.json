@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1515,
-  "checkpoint_sha": "ff58fd5ee901bb87b1e96517d92f1004e8411af1",
+  "sequence": 1516,
+  "checkpoint_sha": "0d3fbec30095d949aa759725dd7dff5e88e51522",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1515-TRUE-WIN5-PRETLS-OWNER-GUARDS",
-  "current_task": "Source add537 Action42769807553 true Windows5 loss0 job129676593518 FAIL; real first original product errors before app: Alice WSL guest MAC override guard rejects due CI verified WSL owned switch not enabled, Bob/Carol/Dave/Erin global Windows GUI singleton prevents distinct clients. Therefore no Windows Wintun lease and dependent UDP app WinError10049. Original real Windows5 TLS/M4/600s NOT_RUN; actual Linux shared server READY, Go/Rust builds, 200ms tc arm and owned cleanup PASS. Artifact13741214591 original ZIP plus original hashes in H1515 evidence. H1515 exact CI-only five Windows named native owner and existing verified WSL switch candidate + offline mixed reporter marker correction staged, one true loss0 native Action to trigger; loss30 not launched. PLAN028 IN_PROGRESS.",
-  "why_now": "Raw original ZIP proves server cold fix triggered and latest first client faults pre-TLS, not app binder. Address only scoped original Windows WSL verified route + exact per-account native OS event slots, never remove prod singleton or Npcap neighbor trust. Correct fake post600 old marker offline now so do not waste valid native run.",
+  "task_id": "PLAN028-M0-H1516-WINDOWS-ASM-MANIFEST-AND-NATIVE-FIVE-OWNER-PREFLIGHT",
+  "current_task": "After H1515 true pre-TLS Windows guard remediation on SOURCE 0d3fbec30095d949aa759725dd7dff5e88e51522, Action42772317994 cheap contract FAIL because Windows Go m0_native_v4_windows.go changed but manifest expected old blob. New SHA 099d2d811dad2805945e6074bf3802f79ef2d0a2. Updated exact-source assembly manifest, includes H1515 true Windows OS five-slot regression as assembled test file and runs compiled original Windows client.test.exe before any native Windows network test. Old Action fail preserved. One source-locked loss0 native test eligible after preflight; loss30 not dispatched. PLAN028 IN_PROGRESS.",
+  "why_now": "Manifest hash mismatch blocks all product builds before five original-Windows slot code is compiled. Fix existing immutable assembly pin and execute real Windows named OS event unit before one discriminating native loss0, instead of another unvalidated run.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect one new SOURCE Windows2025 native loss0 after Linux/Windows native original Go/Rust compile+unit and manifest; require five CI-only distinct owner slots+WSL underlay OS source check, original TLS443 and protected manual /32 M4, Wintun live IP, actual 600s and STOP. Do not launch loss30 unless discriminating source loss0 has evidence. Preserve Action42769807553 FAIL and pre-TLS NOT_RUN; inspect next true earliest stage rather than tuning VM/seed.",
+  "next_action": "Collect new SOURCE one-scenario Windows5 loss0 workflow Action after manifest+Windows Go slot test, Linux Go/Rust and Windows Rust builds. If cheap compile fails, fix missing first error without 600s native. Once native real, inspect earliest client TLS, Wintun IP, server protected multi-M4 Ready, MTU, true data and Stop; source lock. Loss30 still NOT_RUN; do not re-dispatch same condition. Preserve original H1506 and 0d3 manifest FAIL.",
   "unverified": true,
-  "last_tested_source": "add5377be702a1b4a79b8418255f550bf0a0eeac",
+  "last_tested_source": "0d3fbec30095d949aa759725dd7dff5e88e51522",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1516-SOURCE0D3-WIN-ASSEMBLY-PIN-COLD-REGRESSION-20261110.json",
     "docs/evidence/M0/PLAN028-H1515-WIN5-SOURCEADD537-EARLIEST-CLIENT-GUARDS-20261110.json"
   ],
   "context_refs": [
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1515 collected run42769807553 original ZIP 13741214591: Linux mixed server READY PASS, native Windows Alice denied protected WSL MAC override (scope env0), Bob-E others denied global GUI singleton. Five Windows OS IP not installed; app WinError10049 secondary. Windows TLS/M4/600s NOT_RUN; Linux original builds PASS. Exact CI-only native five original owner slots and WSL verified owned-switch scoped; fixed false mixed M4/Stop report markers offline; single loss0 candidate next, no loss30. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1516 Action42772317994 failed in cheap assembly only: stale result_blob after real Windows five CI slot product change; no M4 or Windows native triggered, source0d3 original failed. Repair the exact manifest blob and register five-slot test in assembled original Go, execute compiled Windows unit before native; one loss0 source-locked Action eligible. Prior sourceadd537 first native Linux server READY but Windows client pre-TLS failed, preserved. PLAN028 IN_PROGRESS."
 }
