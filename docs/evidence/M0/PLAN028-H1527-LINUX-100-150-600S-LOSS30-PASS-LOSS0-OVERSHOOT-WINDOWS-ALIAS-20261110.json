@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "task": "PLAN028",
+  "observed_date_utc": "2026-11-10",
+  "source_frozen_product": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+  "native_evaluation": "COMPLETE_REAL_600S",
+  "x86_linux_dual_native": {
+    "source": "9b2605538d9e05af5b0c2a93bc7a7bc8495ed8da",
+    "original_scope": "six true netns, one shared protected TLS443 server, five real Linux Go/Rust clients Normal/Auto/Game2/Game4/Fixed6, two-way real UDP/TCP, 256/1024 mix, physical per-leg tc 200ms 0/30 loss, 10s real outer kernel bytes",
+    "original_go_rust_binary_artifact": 13744140576,
+    "results": [
+      {
+        "scene": "loss0",
+        "original_action": 42781585712,
+        "original_job": 129712651623,
+        "original_artifact": 13747485465,
+        "original_action_result": "FAIL_STRICT_VERDICT",
+        "native_six_process_600s": "PASS_SCOPED",
+        "cpu_guard": "PASS_NO_VM_CAPACITY_CANCEL",
+        "actual_outer_full_both_directions_mean_mbps": 185.352,
+        "outer_bandwidth_100_150": "FAIL_OVERSHOOT",
+        "actual_app_data_and_owned_stop": "PASS_SCOPED",
+        "actual_max_active_udp_no_delivery_gap_ms_each_leg": 200,
+        "original_server_B_native_health_promoted_by_client": {
+          "alice": 6,
+          "bob": 5,
+          "erin": 5
+        },
+        "original_six_owned_stop": true,
+        "actual_real_receiver_duplex_tcp_udp": true,
+        "reporter_false_failure": "H1274 only matched initial Normal M4, did not match authenticated server B_CLIENT_READY; H1525 offline proved every B unique source port, pending -> native Health promotion"
+      },
+      {
+        "scene": "loss30",
+        "original_action": 42781585834,
+        "original_job": 129712651870,
+        "original_artifact": 13746917073,
+        "original_action_result": "FAIL_LEGACY_REPORTER_ONLY",
+        "native_six_process_600s": "PASS_SCOPED",
+        "cpu_guard": "PASS_NO_VM_CAPACITY_CANCEL",
+        "actual_outer_full_both_directions_mean_mbps": 136.511,
+        "outer_bandwidth_100_150": "PASS_SCOPED",
+        "steady_window_within_target": 39,
+        "steady_window_total": 42,
+        "actual_app_data_and_owned_stop": "PASS_SCOPED",
+        "actual_max_active_udp_no_delivery_gap_ms_each_leg": 200,
+        "original_server_B_native_health_promoted_by_client": {
+          "alice": 6,
+          "bob": 5,
+          "erin": 4
+        },
+        "original_six_owned_stop": true,
+        "actual_real_receiver_duplex_tcp_udp": true,
+        "reporter_false_failure": "H1274 fails to recognize server B_CLIENT_READY; legacy RECOVERY_DELIVERY_BELOW_95PCT in sustained physical 30% loss incorrectly assumes loss was removed; not an actual recovery stage"
+      }
+    ],
+    "offline_first_fault_action": {
+      "run_id": 42783540447,
+      "conclusion": "success",
+      "scope": "original zipped logs only, no network rerun"
+    },
+    "offline_causal_replay": {
+      "run_id": 42784346466,
+      "loss0_job": 129721741558,
+      "loss30_job": 129721741166,
+      "conclusion": "success",
+      "artifacts": {
+        "loss0": 13748061159,
+        "loss30": 13747417604
+      },
+      "method": "enforce unique client IPv4/TCP source port, server initial M4, Normal B_PENDING then server native authenticated Health B_CLIENT_READY, no reject, client old exact Stop, Game2/4 rotated, real UDP TCP, six original Stop and kernel actual tc bandwidth"
+    },
+    "measurement_limits": "Both ends share one Ubuntu x86 runner/VM; real veth and netns but not external WAN, Windows Npcap or Android. Physical path IPv4 changes not part of this Linux 600s; timer Go TLS reauth real."
+  },
+  "windows_native": {
+    "source": "c9963c28061730f9b079bf01544f0d1903ffe25f",
+    "action": 42782566007,
+    "job": 129718122740,
+    "action_result": "FAIL",
+    "verified_preconditions": "Go/Rust/ISA-L builds, signed Npcap and Wintun drivers, Ubuntu WSL2 startup",
+    "first_error": "original Windows WSL physical source Prepare (second call) refused: owned source already in use 198.19.254.1",
+    "cause_source": "parent Actions step already performed original secure Prepare using result/wl-public/plan028-owned-alias.json, child five-client script attempted second Prepare using distinct h1506-owned-alias.json",
+    "original_source_stage": "BEFORE_TLS_AND_FIVE_NATIVE_WINTUN_IP",
+    "business_600s": "NOT_RUN",
+    "native_game_m4": "NOT_TRIGGERED",
+    "original_owner_stop": "NOT_TRIGGERED",
+    "cleanup": "FAIL_UNVERIFIED_ORIGINAL_ALIAS_RESTORE: fixture had no h1506-owned-alias.json receipt; parent cleanup workflow not triggered on H1506-only commit",
+    "original_zip_artifact": 13747736171,
+    "incident_not_explained_by": "formerly cp1252 diagnostic-only crash, now fixed so first error visible"
+  },
+  "followup": {
+    "zero_loss_calibrated_proposed_inner_mbps_each_way": 26,
+    "original_35_mbps_to_actual_185_mbps_extrapolated_26_mbps_outer_mbps": 137.7,
+    "new_real_zero_loss_calibrated_600s": "NOT_RUN",
+    "no_loss30_duplicate": "REUSE_VALID_ORIGINAL_136_511",
+    "windows": "repair duplicate Prepare by reusing exactly one source-locked prepared receipt with exact owned cleanup and after-step verification; keep fail-closed physical path and production GUI singleton"
+  },
+  "old_failures_retained": true,
+  "plan_status": "IN_PROGRESS",
+  "physical_android": "NOT_RUN"
+}
