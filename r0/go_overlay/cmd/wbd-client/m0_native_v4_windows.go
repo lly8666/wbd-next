@@ -662,13 +662,13 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    config.NextHopMAC=ncfg.NextHopMAC
    return faketcp.OpenNpcapEndpoint(config)
   }
-  planForGame:=func()(windowsclient.NetworkPlan,error){
+  planForGame:=func(verifiedLease netip.Prefix)(windowsclient.NetworkPlan,error){
    physical,e:=underlay.PhysicalPath()
    if e!=nil{return windowsclient.NetworkPlan{},e}
    if guestMAC!=""&&(physical.NextHop4==underlay.Source4||ownedGuestOnLink){physical.NextHop4=o.ServerIP}
    return windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
     AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
-    Lease4:o.Lease4,Server4:o.ServerIP,Physical:physical,
+    Lease4:verifiedLease,Server4:o.ServerIP,Physical:physical,
     DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
     Direct4:append([]netip.Prefix(nil),o.Direct4...),
     Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
@@ -855,7 +855,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  }else if trustedLease!=""&&trustedLease!=o.Lease4.String(){
   return fmt.Errorf("%w: server protected lease conflicts with configured manual Wintun /32",windowsclient.ErrN4NativeGuard)
  }
- fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%s auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
+ fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%v auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
   o.Mode,o.AutoLease,o.Lease4,snapshot.Cipher())
  tun,e:=windowsclient.OpenTUN(o.AdapterAlias)
  if e!=nil{return e}

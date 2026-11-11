@@ -197,7 +197,7 @@ func runM0NativeV4WindowsGame(
  }else if trustedLease!=""&&trustedLease!=o.Lease4.String(){
   return fmt.Errorf("%w: Game protected manual /32 conflicts with configured Wintun",windowsclient.ErrN4NativeGuard)
  }
- fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%s auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
+ fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%v auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
   o.Mode,o.AutoLease,o.Lease4,appliedCipher)
  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d client_record_offer=%d requested_tun_mtu=%d\n",count,fecMode,cfg.ClientLimit,o.TunnelMTU)
  fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER")

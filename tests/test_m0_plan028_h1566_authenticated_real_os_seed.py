@@ -45,7 +45,7 @@ class OriginalNativeColdServerSource(unittest.TestCase):
             'tests.test_m0_plan028_h1566_authenticated_real_os_seed',
         ):
             self.assertIn(token,wf)
-        self.assertIn('if report["status"].startswith("PASS") and not probe:',s)
+        self.assertIn('if report["status"].startswith("PASS") and (not probe or l1_150):',s)
         self.assertIn('while time.monotonic()-t0<602:',s)
         self.assertIn('PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS',s)
         self.assertIn('Windows_original_WAL_leftover',s)

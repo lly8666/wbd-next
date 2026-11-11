@@ -45,6 +45,8 @@ class WindowsNativeAutoCipherSource(unittest.TestCase):
         self.assertIn('assigned,parseErr:=netip.ParsePrefix(trustedLease)',game)
         self.assertIn('Lease4:o.Lease4',normal)
         self.assertIn('plan,err:=makePlan(o.Lease4)',game)
+        self.assertIn('planForGame:=func(verifiedLease netip.Prefix)',normal)
+        self.assertIn('Lease4:verifiedLease,Server4:o.ServerIP',normal)
         self.assertIn('AuthenticatedNetworkSelection()',grouped)
         self.assertIn('lease!=g.authenticatedLease||snap.Cipher()!=g.authenticatedCipher',grouped)
         self.assertIn('WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1',normal)

@@ -50,7 +50,7 @@ class H1571GenuineLinuxBobPort(unittest.TestCase):
             '600s NOT_RUN',
         ):self.assertIn(mark,w)
         self.assertIn('netem("clean",loss)',s)
-        self.assertIn('if report["status"].startswith("PASS") and not probe:',s)
+        self.assertIn('if report["status"].startswith("PASS") and (not probe or l1_150):',s)
         self.assertIn('while time.monotonic()-t0<602:',s)
 
 if __name__=="__main__":

@@ -47,7 +47,7 @@ class H1570BobFirstRealIPv4(unittest.TestCase):
             'h1570_bob_alone_native_udp_echoes',
         ):
             self.assertIn(mark,w)
-        self.assertIn('if report["status"].startswith("PASS") and not probe:',s)
+        self.assertIn('if report["status"].startswith("PASS") and (not probe or l1_150):',s)
         self.assertIn('while time.monotonic()-t0<602:',s)
         self.assertIn('netem("clean",loss)',s)
         self.assertIn("600s NOT_RUN",w)
