@@ -1,0 +1,9 @@
+# PLAN028 H1553 | mixed Windows/WSL2 shell LF first fault (2026-11-11)
+
+Latest main `76d5319c12f614d072ca83a24d9c5578311f091d` Action [42860982489](https://github.com/lly8666/wbd-next/actions/runs/42860982489) finished. Cheap contract, Linux Rust tests, Windows Go/Rust compile, Linux Go/Rust original pair build **PASS scoped**; loss0 job `129990086813` and loss30 job `129990088767` both exited before server TLS/any native business: `h1548-server.sh: 2: set: Illegal option -`. Both original FAIL retained; 600s and outer bytes **NOT_RUN**. WSL bridge and owned HyperV rule restored, no Windows WAL leftover recorded.
+
+Root cause narrowed at real fixture boundary: `make_linux_script()` used `Path.write_text(body)` from Windows, which converts LF to CRLF by default. In dash `set -eu\r` yields precisely the observed first fault (isolated local LF/CRLF reproduction: CRLF exit2, LF exit0). Correct one shared generator for server and four Linux launchers with `write_bytes(body.encode("utf-8"))`. No product data plane, FEC, owner, route, TLS or wire change. Added offline AST-extracted generator test forbidding text mode and checking exact on-disk LF bytes; cheap tests still required to actually execute in triggered Action.
+
+The single source commit has marker `[plan028-h1548-win1-linux4-600]`, so existing workflow will run its exact source-scoped 0/30 Windows2025 WSL2 scene jobs. No independent dispatch, no repeat seeds. Do not infer native PASS until logs show authentic Go/Rust server+client handshake, OS MTU, actual UDP/TCP and 600s 250–300Mbps full outer physical counters plus six owned Stop. Original H1552 source tests do not provide those qualifications. Android/physical WAN NOT_RUN; PLAN028 remains IN_PROGRESS.
+
+Evidence: [H1553](../evidence/M0/PLAN028-H1553-MIXED-WSL-LF-FIX-20261111.json).

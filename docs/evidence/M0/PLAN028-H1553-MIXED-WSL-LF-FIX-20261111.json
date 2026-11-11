@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "workstream": "M0",
+  "checkpoint": "H1553",
+  "date_local": "2026-11-11",
+  "previous_source_sha": "76d5319c12f614d072ca83a24d9c5578311f091d",
+  "original_action_id": 42860982489,
+  "original_action_url": "https://github.com/lly8666/wbd-next/actions/runs/42860982489",
+  "jobs": {
+    "loss0": 129990086813,
+    "loss30": 129990088767
+  },
+  "original_status": "FAIL_ACTION_PRE_TLS_FIXTURE",
+  "actual_native_business": "NOT_RUN",
+  "build_results": "PASS_SCOPED_CHEAP_LINUX_RUST_WINDOWS_GO_RUST_AND_LINUX_GO_RUST_BUILD",
+  "first_error": "RuntimeError('original V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443 process exited 2 .../h1548-server.sh: 2: set: Illegal option -')",
+  "cause": "Windows Python Path.write_text newline=None translates generated LF shell script to CRLF; /bin/sh in WSL2 dash interprets set -eu\\r as invalid option (confirmed with local isolated dash repro)",
+  "fix": {
+    "file": "tools/m0_plan028_h1548_one_windows_four_linux_600.py",
+    "change": "make_linux_script() Path.write_bytes(body.encode('utf-8')) to retain generated LF unchanged for server and four client launchers",
+    "test": "tests/test_m0_plan028_h1548_win1_linux4_scope.py",
+    "offline_guard": "extract actual function via AST; forbid Path.write_text with mock; require exact LF bytes and zero CR"
+  },
+  "original_cleanup": {
+    "windows_WAL_leftover": [],
+    "wsl_bridge_restored": true,
+    "owned_hyperv_rule_removed": true
+  },
+  "source_under_test": "commit containing this file; exact SHA to be read from triggered Action",
+  "new_source_result": "NOT_RUN_BEFORE_ACTION",
+  "hard_gates_not_waived": [
+    "standard TLS and authentication",
+    "both native data planes and server admission",
+    "actual MTU install/readback",
+    "A to A+B to B and six exact owned Stops",
+    "one Wintun plus four Linux netns, actual two-way UDP/TCP",
+    "loss0 and loss30 600s 200ms 250-300Mbps full physical outer bytes"
+  ],
+  "full_plan028": "IN_PROGRESS",
+  "android": "NOT_RUN",
+  "physical_WAN": "NOT_RUN"
+}

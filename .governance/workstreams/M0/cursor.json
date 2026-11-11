@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1552,
-  "checkpoint_sha": "4388c00ac6b20615ce7749259c73827fa31f0716",
+  "sequence": 1553,
+  "checkpoint_sha": "76d5319c12f614d072ca83a24d9c5578311f091d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1552-WIN1-LINUX4-OPENSSL-RDN-AND-NATIVE-600S-PREFLIGHT-TEST",
-  "current_task": "Latest Win1 signed Windows Wintun plus four real WSL2 Linux netns clients, one Linux original Go/Rust TLS443 server, 600s 200ms physical loss0/loss30 target kernel full outer250-300Mbps. Old source b628 Action42857999491 actual original Windows jobs loss0/30 failed before native TLS at OpenSSL -subj /CN/wbd-v4.example.test missing '=', no business or outer measured. H1551 source4388 Action42859887928 cheap failed old static wholeLimit assertion expected pre-1180 prefix; no native run. H1552 correct -subj /CN=wbd-v4.example.test and old watcher test to require exact 1180 mixed branch and identical legacy budget tail, preserve source-scoped 940 original PID budget. New source one action trigger. Separate governance Action42858615672 / latest4388 governance PASS. Prior old Linux-only passes accepted but not mixed.",
-  "why_now": "First original H1549 true error in OpenSSL RDN test-only certificate before TLS, and H1551 cheap unit stale expected wholeLimit text blocked new source. Both exact earliest wiring defects now known, do not duplicate old scene or label product FAIL.",
+  "task_id": "PLAN028-M0-H1553-MIXED-WSL-SHELL-LF-FIRST-ERROR",
+  "current_task": "Collected H1552 new source 76d5319 Action42860982489 completed. Cheap checks and Linux/Windows build PASS; both Windows2025 mixed-loss0/30 real WSL2 server exited before TLS: h1548-server.sh line2 'set: Illegal option -', matched POSIX dash CRLF reproduction. Windows Path.write_text translated LF to CRLF on /mnt/d; modify only make_linux_script to write UTF-8 bytes verbatim; keep native owner, TLS, throughput and Stop unchanged. New source from this commit NOT_YET_TESTED.",
+  "why_now": "Latest original Action first fault is a Windows fixture-to-WSL LF boundary, not TLS or Rust product failure. Both scenes failed before business; prior OpenSSL subject and stale source watcher gates now pass. Fix earliest first fault once, not seed repetition.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect one new H1552 mixed true Win1 Linux4 Action from exact source with matched 0/30 Windows2025 VM jobs. Validate cheap gates, genuine Go/Rust and WSL cert generation, one Windows Wintun and four native Linux netns, real 10s qdisc 250..300Mbps 600s, per-client authenticated server M4, real framed TCP/unique UDP both ways, six owned Stop and OS/WAL resource rollback. On new first failure fix minimal and preserve log; no PLAN029/030.",
+  "next_action": "Collect auto-triggered exact-source [plan028-h1548-win1-linux4-600] loss0/loss30 Actions/jobs on main; confirm cheap offline LF regression and real WSL shell starts, then TLS authentication -> native both data planes -> MTU -> replacement/Stop. 600s traffic, 250-300Mbps both ways, loss0/30 remain NOT_RUN until actual verified. If further first error, targeted smallest distinction before any rerun; preserve original failures. No PLAN029/030.",
   "unverified": true,
-  "last_tested_source": "4388c00ac6b20615ce7749259c73827fa31f0716",
+  "last_tested_source": "76d5319c12f614d072ca83a24d9c5578311f091d",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1553-MIXED-WSL-LF-FIX-20261111.json",
     "docs/evidence/M0/PLAN028-H1552-MIXED-ORIGINAL-OPENSSL-RDN-AND-DEADLINE-CONTRACT-20261110.json"
   ],
   "context_refs": [
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1552 original H1549 source b628 action42857999491 Windows jobs fail before TLS at test-only OpenSSL DN missing '=', 600s NOT_RUN, H1551 source4388 cheap failed old source watcher expected no mixed1180 branch, 600s NOT_RUN; both corrected on main source, new one loss0/loss30 action. Current governance old source scope PASS, no mixed real 600s qualified. PLAN028 IN_PROGRESS."
+  "partial_summary": "Action42860982489 source76d completed failure: Linux/Win cheap+compile PASS, loss0 job129990086813 & loss30 job129990088767 both die at WSL h1548-server.sh:2 set: Illegal option - before TLS. Windows Path.write_text CRLF vs POSIX dash; H1553 patches LF bytes and adds offline guard. New SOURCE pending; native throughput/Stop NOT_RUN; PLAN028 IN_PROGRESS."
 }

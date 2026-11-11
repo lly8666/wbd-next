@@ -135,7 +135,7 @@ def stop_guard(p):
     except subprocess.TimeoutExpired:p.kill()
 
 def make_linux_script(name,body):
-    local=OUT/name;local.write_text(body)
+    local=OUT/name;local.write_bytes(body.encode("utf-8"))
     return guestpath(local)
 
 def main():

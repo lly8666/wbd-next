@@ -3,7 +3,8 @@
 This is an offline deployment/fixture contract; no user traffic/OS PASS until
 the two actual Windows 2025 + WSL2 x86 Actions finish and artifacts qualify.
 """
-import ast,pathlib,re,unittest
+import ast,pathlib,re,tempfile,unittest
+from unittest import mock
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 APP=ROOT/"tools/m0_plan028_h1548_mixed_os_app.py"
 SUP=ROOT/"tools/m0_plan028_h1548_one_windows_four_linux_600.py"
@@ -84,6 +85,22 @@ class Plan028MixedNativeWinLinux(unittest.TestCase):
         wf=YAML.read_text()
         self.assertIn("$wholeLimit=if($env:WBD_PLAN028_MIXED_SCENE -in @('loss0','loss30')){1180}",wf)
         self.assertIn("m0_wl_native_step_runner.py tools/m0_plan028_h1548_one_windows_four_linux_600.py",wf)
+    def test_wsl_shell_is_written_as_lf_bytes_on_windows(self):
+        # Windows Path.write_text() defaults to CRLF, which makes dash parse
+        # 'set -eu\\r' as an illegal shell option in the real WSL2 guest.
+        tree=ast.parse(SUP.read_text(),filename=str(SUP))
+        owner=next(node for node in tree.body if isinstance(node,ast.FunctionDef)
+                   and node.name=="make_linux_script")
+        with tempfile.TemporaryDirectory() as d:
+            scope={"OUT":pathlib.Path(d),"guestpath":lambda p:str(p)}
+            exec(compile(ast.Module(body=[owner],type_ignores=[]),str(SUP),"exec"),scope)
+            body="#!/bin/sh\\nset -eu\\nexit 0\\n"
+            with mock.patch.object(pathlib.Path,"write_text",
+                                   side_effect=AssertionError("WSL scripts must not use Windows text mode")):
+                path=scope["make_linux_script"]("lf-owner.sh",body)
+            raw=pathlib.Path(path).read_bytes()
+            self.assertEqual(raw,body.encode("utf-8"))
+            self.assertNotIn(b"\\r",raw)
     def test_one_source_two_independent_windows_runner_scenes(self):
         text=YAML.read_text()
         self.assertEqual(text.count("  native-public-two-os:"),1)
