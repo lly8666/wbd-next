@@ -9,6 +9,7 @@ root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 out.mkdir(parents=True,exist_ok=True)
 source=os.environ["GITHUB_SHA"]
+h1587=os.environ.get("WBD_PLAN028_WIN_MANUAL_AES128_CHA")=="1"
 result={"schema_version":1,"source_sha":source,"scene":"H1382_WINDOWS_TWO_REAL_ORIGINAL_TLS_RUST_PRODUCTS",
         "status":"NOT_RUN","windows_two_clients":"NOT_RUN","server_multi_account":"NOT_RUN",
         "app_udp":"NOT_RUN","tcp_echo":"NOT_RUN","A_Stop_B_survival":"NOT_RUN",
@@ -202,6 +203,7 @@ sock.close()
       "alias":"WBDWLCLIENTB","port":41032,"tunnel":"102030405060708090a0b0c0d0e0f002",
       "installation":"445566778899aabbccddeeff00112244"}}
  result["window_client_owners"]={}
+ if h1587:result["h1587_client_native_cipher_readback"]={}
  for label in ("A","B"):
   a=config[label]
   wal=out/(a["alias"]+"-owned.json")
@@ -212,6 +214,8 @@ sock.close()
       "--installation-id",a["installation"],"--lease4",a["lease"],"--adapter",a["alias"],
       "--state-path",str(wal),"--lanes","1","--fec-mode","off",
       "--fec.mode","off","--route-mode","bypass-lan","--outer-repair","on"]
+  if h1587:args+=["--record-cipher",
+                 "aes-128-gcm" if label=="A" else "chacha20-poly1305"]
   log=(out/("h1382-client-"+label+".log")).open("w");logs.append(log)
   windows[label]=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
   (out/("h1382-client-"+label+"-started.flag")).touch()
@@ -219,12 +223,26 @@ sock.close()
   log=(out/("h1382-app-"+label+".log")).open("w");logs.append(log)
   senders[label]=subprocess.Popen([sys.executable,str(sender),a["ip"],"10.66.0.1",label,str(out/("h1382-stopapp-"+label+".flag"))],stdout=log,stderr=subprocess.STDOUT)
   marker(out/("h1382-client-"+label+".log"),"WBD_WINDOWS_CLIENT_READY",windows[label],80)
+  if h1587:
+   cid=2 if label=="A" else 1
+   verified="WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=normal auto_lease=false lease="+a["lease"]+" cipher="+str(cid)+" source=original_TLS_Rust_snapshot"
+   need(verified in (out/("h1382-client-"+label+".log")).read_text(errors="replace"),
+        "H1587 exact Windows protected TLS/Rust AEAD or explicit manual /32 not applied "+label)
+   result["h1587_client_native_cipher_readback"][label]=cid
+   print("H1587_REAL_WINDOWS_CLIENT_MANUAL_AEAD_APPLIED label="+label+" cipher="+str(cid)+" lease="+a["lease"],flush=True)
   result["window_client_owners"][label]=inspect_real_win_adapter(a["alias"])
   tcp_echo(a["ip"],"10.66.0.1",label+"-INITIAL")
   print("H1382_REAL_WINDOWS_ACCOUNT_AUTHENTICATED_READY_AND_TCP "+label,flush=True)
  marker(out/"h1382-server.log","V4_PUBLIC_MULTI_SESSION_READY role=server",server,10)
  need((out/"h1382-server.log").read_text(errors="replace").count("V4_PUBLIC_MULTI_SESSION_READY role=server")>=2,
       "second original protected independent account not admitted on shared server")
+ if h1587:
+  server_log=(out/"h1382-server.log").read_text(errors="replace")
+  for cipher in (1,2):
+   need("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=off profile=0 cipher="+str(cipher) in server_log,
+        "H1587 Linux shared server did not install per-client Rust cipher "+str(cipher))
+  result["h1587_server_per_client_cipher_ids"]=[1,2]
+  print("H1587_REAL_LINUX_SERVER_PER_CLIENT_CHACHA_AES128_RUST_M4_PASS",flush=True)
  ainfo=result["window_client_owners"]["A"];binfo=result["window_client_owners"]["B"]
  need(str(ainfo["InterfaceGuid"])!=str(binfo["InterfaceGuid"]) and ainfo["InterfaceIndex"]!=binfo["InterfaceIndex"],
       "two aliases are not two actual OS Wintun devices")
@@ -272,6 +290,14 @@ sock.close()
  result["both_owned_stop"]="PASS_TWO_WINDOWS_RUST_WAL_AND_ONE_SHARED_LINUX_TUN"
  result["original_synchronous_windows_tunnel"]="PASS_TWO_AUTHENTICATED_ORIGINAL_PRODUCTS_BOTH_TRUE_OS"
  result["status"]="PASS_SCOPED_WINDOWS_TWO_REAL_SIGNED_WINTUN_ORIGINAL_TLS443_RUST_M4"
+ if h1587:
+  need(result["h1587_client_native_cipher_readback"]=={"A":2,"B":1}
+       and result["h1587_server_per_client_cipher_ids"]==[1,2]
+       and result["app_udp"]=="PASS_ACTUAL_TWO_WINDOWS_KERNEL_UDP_EACH_LEASE"
+       and result["tcp_echo"]=="PASS_REAL_WINDOWS_TCP_ECHO_A_B_AND_B_AFTER_A_STOP"
+       and result["both_owned_stop"]=="PASS_TWO_WINDOWS_RUST_WAL_AND_ONE_SHARED_LINUX_TUN",
+       "H1587 exact two per-client AEADs and owned Stop lost before PASS")
+  print("H1587_WINDOWS_A_AES128_B_CHACHA_MANUAL_TWO_SIGNED_WINTUN_UDP_TCP_STOP_PASS_SCOPED",flush=True)
  print("M0_PLAN028_H1382_TWO_ORIGINAL_WINDOWS_GO_TLS_RUST_SIGNED_WINTUN_A_STOP_B_STILL_UDP_TCP_PASS",flush=True)
 except Exception as error:
  result["status"]="FAIL_OR_NOT_RUN"

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1586,
-  "checkpoint_sha": "9ba9edf88a88039dfe7bfc71b27abe45c72ccc31",
+  "sequence": 1587,
+  "checkpoint_sha": "dd82db7ea529cfb7ed162ca665174c5df95a2ead",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1586-WORKFLOW-PATH-SOURCE-CORRECTED-NATIVE-RETEST",
-  "current_task": "H1584 SOURCE6e907a Action42999532461 FAIL cheap H1581 old cold-seed scope assert; no native network. H1585 SOURCE9ba9edf fixed assertion but only tests/docs/cursor changed, existing M0 workflow push.paths did NOT include H1581 new test file, so Windows network Action NOT_DISPATCHED. H1586 fixes only exact existing workflow trigger inclusion, preserving one mixed-loss0 150s genuine Windows auto/AES256 + Linux4 per source and real kernel cold UDP; previous H1583 30pct Action42996888234 failed no reverse seed and separate corrected scene NOT_RUN. PLAN028 still IN_PROGRESS.",
-  "why_now": "User requires real native source-locked validation. Fix the actual missing workflow path trigger rather than assume a test was dispatched on a documentation-only commit. Existing strict OS, data, lifecycle gates remain unchanged.",
+  "task_id": "PLAN028-M0-H1587-WINDOWS-DUAL-AES128-CHACHA-MANUAL-SIGNED-SCENE",
+  "current_task": "H1586 SOURCEdd82 Action43000134310 actual signed Windows auto AES256 + Linux4 original150s in flight; source/WIN-GO-Rust/Linux build PASS, do NOT duplicate. Independent H1587 exact original native two Windows manual /32 (A AES128 cipher2, B ChaCha cipher1) + Linux shared Rust server, genuine UDP/TCP, Alice Stop Bob continues, two WAL/one server Stop; stage one separate Action tagged [plan028-win-dual-original] [plan028-h1587-win-dual-manual-aes128]. Existing H1382 test-only script extended, not product protocol. True Windows same-account cross-terminal and real corrected 30pct cold remain NOT_RUN. PLAN028 IN_PROGRESS.",
+  "why_now": "User requires Windows native three per-client AES/ChaCha choices and manual/automatic configurations, shared server isolation. H1586 independently covers Windows auto AES256; H1587 adds Windows manual AES128 with simultaneous ChaCha sibling using proven original dual-Wintun harness, one Action one scene. Distinct Windows VMs independent. No more premature reported PASS.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Receive and inspect H1586 triggered M0-WIN-LINUX native Action exactly once: source-locked build+genuine signed Win2025 Npcap/Wintun, protected auto /32, AES256, real Linux kernel UDP before first+reverse, five 150s TCP/UDP, Alice Stop/Bob continues, shared server complete Stop and WAL/WSL cleanup. If it fails classify product vs fixture at exact first stage. Then independent corrected 30pct cold scene and remaining Windows AES128/manual, modes, lifecycle, L3. No 029/030.",
+  "next_action": "Collect H1586 source dd82 in-flight real Win auto AES256 + 4 Linux 150s and H1587 new independent manual AES128/ChaCha two Windows genuine OS/Stop. Preserve exact-source reports, binary hashes, CPU/RSS and failed first stage. If mode permits, then verify same account independent install across Windows/Linux, corrected genuine 30pct cold TLS, affected Game/Auto and L3 representative, not expand029/030.",
   "unverified": true,
   "last_tested_source": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/architecture/MTU_CONTRACT.md",
-    "docs/devlog/M0/20261111-PLAN028-H1581-WINDOWS-AUTO-AES-MIXED-REAL-150S.md",
-    "docs/devlog/M0/20261111-PLAN028-H1584-NATIVE-KERNEL-AUTO-REVERSE-SOURCE.md"
+    "docs/devlog/M0/20261111-PLAN028-H1584-NATIVE-KERNEL-AUTO-REVERSE-SOURCE.md",
+    "docs/devlog/M0/20261111-PLAN028-H1587-WIN-DUAL-MANUAL-CIPHER-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1585 static H1581 test guard fixed but no M0 Action because workflow push.paths omitted test file; H1586 adds exact path. Both earlier H1582 0loss AES and H1583 30pct manual ChaCha authentic original TLS/Rust M4, first reverse needed actual Linux kernel source missing, not yet E2E. H1586 native pending, PLAN028 IN_PROGRESS."
+  "partial_summary": "H1586 dd82 source native Windows AutoLease/AES256 0loss200ms five 150s Action43000134310 under way; all builds PASS, full native still running. H1587 independent Windows2025 two signed Wintun A manual AES128/B manual ChaCha shared Linux original Go TLS/Rust, genuine UDP/TCP/Windows A Stop/B continues/dual WAL & server Stop; source staged only, NOT_RUN pending new Action. Old 30pct and original 0loss first reverse failures retained. PLAN028 IN_PROGRESS."
 }
