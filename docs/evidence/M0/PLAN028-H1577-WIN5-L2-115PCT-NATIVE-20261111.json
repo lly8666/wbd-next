@@ -49,5 +49,31 @@
   "original_job_id": 130398561054,
   "original_action_conclusion": "FAIL_PRE_NETWORK_ONLY",
   "preflight": "18/19 offline unit tests PASS; remaining H1572 stale assertion demanded nonexistent server Go text although H1576 source uses verified Rust Stop generation; Windows native actual NOT_RUN",
-  "actual_115pct_native": "NOT_RUN"
+  "actual_115pct_native": "NOT_RUN",
+  "follow_up_completed_20261111": {
+    "source_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
+    "action": 42983815178,
+    "original_job_id": 130401919265,
+    "action_conclusion": "FAIL",
+    "genuine_native_verdict": "PASS_SCOPED_150S_SIX_OS_ACTORS_115PCT_LOSS0_200MS_GENUINE_TCP_UDP_AND_OWNED_STOP",
+    "stdout_gates": [
+      "H1577_REAL_FIVE_OS_APPS_115PCT_OFFER_RATE_TRIGGERED",
+      "H1574_TRUE_FIVE_NATIVE_150S_UDP_TCP_CLIENTS_VERIFIED_PASS",
+      "H1574_REAL_150S_FIVE_TRUE_TCP_UDP_AND_EXACT_ALL_SIX_OWNED_STOP_PASS",
+      "H1576_ACTUAL_RUST_SHARED_TUN_SERVER_GENERATION_STOP_READER_JOINED_PASS"
+    ],
+    "resources": {
+      "Windows_original_WAL_leftover": [],
+      "original_WSL_bridge_restored": true,
+      "windows_eth0_original_netem_clean": "PASS"
+    },
+    "failure_after_native_success": "Workflows Copy-Item result/wl-public/normal-report.json failed because H1548 report generator emits compatibility file only when not probe, while full 150s l1_150 uses probe; native result and cleanups printed before missing report.",
+    "repair": "H1580 SOURCE37f2c8fc/813e4c5c generator now writes scoped normal-report only if real final PASS and (not probe or l1_150), with TRUE_150S_FIVE_CLIENTS_NOT_600S label. This repair not native retested and does not convert old Action to PASS.",
+    "no_claim": [
+      "600s stress",
+      "Windows 30pct cold TLS",
+      "new-source Windows automatic IP and AES",
+      "1800s long test at this source"
+    ]
+  }
 }

@@ -3,7 +3,7 @@
 本目录回答：有什么、怎么用、默认值、在哪个分支、哪些平台测过。
 `.governance/registry.json` 仍管工位权限/语义归属；这里不派任务、不授予写权限。
 
-先读 [inventory.json](inventory.json) 的完整性。NOT_INITIALIZED/PARTIAL 不是没有功能；
+先读 [inventory.json](inventory.json) 的完整性；PLAN028 本轮源码/正式入口/测试范围快速参见 [M0配置与覆盖表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md)。NOT_INITIALIZED/PARTIAL 不是没有功能；
 COMPLETE_FOR_SCOPE 仅表示指定 SOURCE 已盘点，不表示全部功能/平台 PASS。
 
 接手运行 `python tools/feature_catalog.py list` 获取简表，或 `list --query fec`，按任务读卡片。

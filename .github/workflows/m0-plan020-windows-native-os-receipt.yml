@@ -208,14 +208,33 @@ jobs:
               # be on the opt-in V4 trial execution path.
               if "if e=windowsclient.N4NativeNetworkReady(ctx)" in src:
                   raise AssertionError("unconditional old Windows product gate still active")
-          # PLAN022: assert that Windows public V4 is actually restricted to
-          # one authenticated Normal/off lane until a native Windows
-          # FEC2/Game owner has been wired and positively tested.
-          # Do not turn CLI parser acceptance into a fake runtime success.
-          assert 'realityfront.FixedPolicyForClient(1,0)' in src
-          assert 'DesiredLanes:1' in src
-          assert 'product.Apply(ctx)' in src
-          print("M0_PLAN022_WINDOWS_V4_OFF_WIRED_FEC2_GAME_NOT_YET_WIRED_HONEST")
+          # PLAN028 source-only contract. The old PLAN022 one-mode gate is
+          # obsolete: Normal off/fixed/Auto and Game2/4 now run the original
+          # per-client TLS/Rust owner, with authenticated auto/manual IP and
+          # the three per-client record AEAD choices. This is NOT network PASS.
+          for anchor in (
+              'PolicyForClientWithInitialAndCipher(',
+              '1,"off",0,4,20,o.RecordCipher',
+              '1,"fixed",4,4,20,o.RecordCipher',
+              '1,"auto",0,4,20,o.RecordCipher',
+              'AutoLease:o.AutoLease,DesiredLanes:1',
+              'session.AuthenticatedLeaseIPv4()',
+              'snapshot.Cipher()!=o.RecordCipher',
+              'planForGame:=func(verifiedLease netip.Prefix)',
+              'Lease4:verifiedLease,Server4:o.ServerIP',
+              'product.Apply(ctx)',
+          ):
+              assert anchor in src,anchor
+          game=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_game_windows.go").read_text()
+          for anchor in (
+              'AutoLease:o.AutoLease,DesiredLanes:uint8(count)',
+              'count,"fixed",4,4,20,o.RecordCipher',
+              'group.AuthenticatedNetworkSelection()',
+              'plan,err:=makePlan(o.Lease4)',
+              'product.Apply(ctx)',
+          ):
+              assert anchor in game,anchor
+          print("M0_PLAN028_WINDOWS_AUTH_LEASE_CIPHER_SEVEN_MODES_OS_SOURCE_PASS_NOT_NETWORK")
           controller=pathlib.Path("legacy/internal/windowsclient/native_product_activation_windows.go").read_text()
           for anchor in ("c.txn.Apply(ctx)","c.txn.VerifyLiveOSApplied(ctx)",
                          "c.proof.VerifyBidirectionalAuthenticatedFirstDelivery(ctx,id)",

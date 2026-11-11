@@ -11,3 +11,5 @@
 7. **完成完整目标再停止。**证据/devlog/功能卡/cursor沿现有体系，精确区分PASS/FAIL/NOT_RUN/NOT_TRIGGERED/CAPACITY_LIMITED。已有有效资格复用，原失败保留；028必需覆盖、已知阻断回归、容量边界和有限长测齐才交付。Android/物理未跑单列，不能藏技术阻断。已完后重复提示仅核新事实并说明完成，不自创新目标；后续029/030只有明确授权才继续。
 
 本提示词只指路；具体方法、公式、覆盖和退出口径唯一维护在专项验收计划。运行SOURCE、待收结果及下一步仅在cursor/evidence，不把瞬时H号重新塞回长期提示。
+
+**H1580接续导航（不把瞬时Action写成永久结论）：**按 [028覆盖与逐键配置表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md) 阅读已用正式入口、SOURCE、原始失败、源码修复和独立剩余验证。Windows V4正式CLI已默认native，GUI走同exe；这不等于AES/自动租约已在新SOURCE实网通过。先收当前Actions、读实证据/receipt再派发，仍禁扩029/030。

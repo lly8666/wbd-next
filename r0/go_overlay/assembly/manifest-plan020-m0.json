@@ -259,7 +259,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "5c7ffdf4f8aeacc620dbfb3542d174e312a53174",
+      "result_blob": "eba74af4b08e625160c3d3c8f70adcb8a7410f90",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -328,6 +328,10 @@
         {
           "find": "                if (line == \"WBD_WINDOWS_CLIENT_READY\") { if (connectedId!=null && session.Active) ShowState(\"已连接 · \" + (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\")); line = \"隧道已就绪，网络配置已应用。\"; }",
           "replace": "                // A live client process or a READY log line is not Windows\n                // Applied: only the independently verified five-stage OS\n                // receipt AND same-generation authenticated Rust owner may\n                // cause the product to emit WBD_WINDOWS_OS_APPLIED.\n                if (line == \"WBD_WINDOWS_CLIENT_READY\") {\n                    if (connectedId != null && session.Active) ShowState(\"待验证 · 原生系统 Applied 未确认\");\n                    line = \"进程已启动，但不能代替 WFP/路由/DNS/MTU 内核回读。\";\n                }\n                if (line == \"WBD_WINDOWS_OS_APPLIED\") {\n                    // The Go producer must first verify real OS five-stage\n                    // state and authenticated Rust/kernel first delivery.\n                    if (connectedId != null && session.Active)\n                        ShowState(\"已连接 · 系统 Applied · \" +\n                            (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\"));\n                    line = \"客户端报告系统 Applied；停止时还必须验证 WAL/CAS 全部清理。\";\n                }"
+        },
+        {
+          "find": "new Choice(\"aes-128-gcm\", \"AES-128-GCM（真实网络已验）\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM（真实网络已验）\")",
+          "replace": "new Choice(\"aes-128-gcm\", \"AES-128-GCM（V3 已验；V4 原生待验）\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM（V3 已验；V4 原生待验）\")"
         }
       ]
     },

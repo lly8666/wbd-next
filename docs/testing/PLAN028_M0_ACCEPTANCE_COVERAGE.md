@@ -1,0 +1,58 @@
+# PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
+
+**状态：IN_PROGRESS，不是收口证明。**此页是接续导航，规范门槛仍以 [PLAN028_INTEGRATION_ACCEPTANCE](PLAN028_INTEGRATION_ACCEPTANCE.md) 为准。功能卡见 [inventory](../features/inventory.json)。旧证据不被新源码重新标记为 PASS；失败 Action 原样保留。历史矩阵仅按所列 SOURCE/平台/场景有效。不得开展 PLAN029 DNS/填充新能力或 PLAN030 服务管理。
+
+## 当前入口、产物与证据规则
+
+- **Linux x86_64 / ARM64：**原始 Go credential TLS443 冷协商、`r0/go_overlay/internal/v4productcli/linux.go` 的当前 CLI、`crates/wbd-engine` Rust M4 和原生 raw/TUN。Windows/Linux 开发源码在 `main`、原始 Go 固定 donor `lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984`；`r0/go_overlay/assembly/manifest-plan020-m0.json` 固定每一正式替换/新增 Go blob。ARM64 **不**能只凭仓库存在文件：要核正式 H1546 11 文件装配 + 实际后端与 binary receipt。
+- **Windows x86_64：**正式 `wbd-client.exe` 默认 `--native-v4-product=true`；WinForms `windows/gui/Portable.cs` 经当前 manifest 组装后显式启动同一 `--native-v4-product --control-stdin --config` 子进程。默认 false 的旧隐含入口已取消，显式关闭不会自动退回旧 V3。正规装配为 `tools/prepare_windows_wiring.py` + `r0/go_overlay/assembly/assemble.py` + manifest；`EXTRA_BRIDGES` 明列 Game group 和原生认证附加桥。Go只负责认证/冷路径，Rust为收发/记录/FEC稳态；签名 Npcap/Wintun/OS WAL 为真实产品硬门。
+- **当前接线 SOURCE：**`813e4c5c71fe2a1f2442bfda0ce19c205a398d03`（H1580 代码/装配/静态回归，后续文档与预检修复不得重写此标识）。它已经有 Windows-Go 正式装配编译 / Windows/Linux Rust 单元 / Linux ARM64 构建，以及 x86_64/ARM64 原生两账号手动 /32 网络检查，见 Action `42987762859`、`42987762189`、`42987762119`、`42987762898`、`42987762319`、`42987762229`。**不存在该 SOURCE 对 Windows 自动IP × 3 cipher 独立真实驱动正向验收**；不可凭源码配置的已接通宣称网络已验。
+- **二进制/装配指纹：**H1376 同源码 x86_64 artifact ZIP `sha256:fb36ebb74b02251afd152dc83e0945d3ff40ba83c2ec7f88e8cc4e11598ca5a9`；ARM64 `sha256:1aa746cc6b6a8d44d52437ce3cf9ea1e95a63f6f9c693074138766b98b2c108c`。H1546 ARM64 构建收据 artifact ZIP `sha256:38afc2fdd7c645e90e49305c802f90c480de3df5a89bc817c90d1c3444ea98a1`。这些是**artifact ZIP digest，不可冒充 exe/dll/rust .so 的单文件 SHA256**；逐文件 hash 与后端以 artifact 内 receipt 为准，未核的单文件字段标 NOT_READ。
+- **不混淆容量/范围：**H1577 `cd5dfa3b7688167eebfc12020e0180a9fa8df8f4` Action `42983815178` 曾真实完成 Windows+4 Linux 150s 1.15× 六角色 UDP/TCP、Windows先退出后 Linux继续、六个 native Stop/WAL/WSL/netem 清理（`PASS_SCOPED`）；Action 整体 **FAIL** 是后续复制缺失 `normal-report.json`。新脚本仅在真实完整场景成功且所有资源恢复后导出带 `TRUE_150S_FIVE_CLIENTS_NOT_600S` 的兼容报告。原始失败必须保留；**未跑 600s，不等于新 SOURCE 813 的网络 PASS**。另有较早外层约 304 Mbps **双向总量**弱网证据，不能解释成单客户端内层 304 Mbps。
+- `42984484136` 治理 12 FAIL、`42987330788` 3 FAIL 均保留；更正旧断言后的 `42987762293` 治理回归 **PASS**。旧 `42987762872` Windows WAL 因 PLAN022 过期仅Normal/off 文本门而 FAIL（原 Go native 构建与测试实际通过），修复后的 SOURCE 回归仍应核对。
+
+## 配置核对表（默认≠自动开启）
+
+| 功能 | 当前默认 | 正式入口及实际传递点 | effective/OS 读回 | 支持与当前资格 |
+|---|---|---|---|---|
+| 传输模式 / lanes | Normal 1；Game2/4需显式 | Linux `--mode normal/game2/game4`；Windows `lanes=1/2/4` / GUI传输→原Go `m0ParseWindowsV4Mode`→受保护TLS→Rust owner | `DesiredLanes`、Rust group lanes、ready/owned Stop、物理包与server按lane验 | x86/ARM/Linux原生资格有 SOURCE813 代表；Win 7 模式原生旧SOURCE `b6b964...` / `33ed20...`，新源各组合 NOT_RUN |
+| FEC Off / 固定 / Auto | **Off**，不是全部开启 | Linux/Windows `fec-mode` 默认 `legacy` 且 `fec-parity=0`，显式固定最高R20、Normal Auto；Game2/4固定最高；GUI已有 `fec.mode` 旧新选择映射需辨别 | 原 TLS FEC policy→Rust actual FEC parity/profile 和真实mode，not GUI save | 七覆盖模式：Normal Off/Fixed max/Auto，Game2 Off/max，Game4 Off/max；旧源码证据可复用未变组件，Windows新入口组合需补 |
+| record cipher | **ChaCha20-Poly1305** | CLI / JSON / GUI `record-cipher=chacha20-poly1305|aes-128-gcm|aes-256-gcm`；`main_windows.go` patch→`RecordCipher:suite`→`PolicyForClientWithInitialAndCipher`→原始TLS | Windows Normal `session.ColdSnapshot().Cipher()`、Game每lane `group.AuthenticatedNetworkSelection()` 与请求值一致；拒绝未知组合 | Linux历史三套真实验证；SOURCE813 Windows新三套 signed-driver 应用 NOT_RUN，GUI AES已标V4待验 |
+| 自动 / 手动 IPv4 | 客户端 `lease4` 留空=自动；显式 `a.b.c.d/32`=手动 | Windows 原Go CLI/JSON `autoLease`→每组受保护 `ClientAdmissionConfig.AutoLease`，Linux复用成熟服务端lease池/手动映射 | `AuthenticatedLeaseIPv4()` 获取受保护真实 /32→ `o.Lease4`→Wintun NetworkPlan/OS WAL；手动验证租约匹配；Linux OS readback | Linux x86/ARM SOURCE813 两真实账号手动/32 PASS，Windows旧手动PASS；新 Windows auto/manual/同账号多设备三套cipher混跑仍 NOT_RUN |
+| 用户外层 MTU | **1460 B** 完整IPv4 IP（不含L2）；1500只显式 | Linux `--outer-mtu`，Windows `--mtu`/JSON/GUI当前默认1460；Rust `path_budget` 针对实际封装/FEC/peer限制作唯一冷预算 | Rust实际outer/inner/MSS，Linux TUN及Windows Wintun `RuntimeMTU` OS读回；不得拿1500/9000旧示例当默认 | 已有旧SOURCE正常/1280/近边界分场证据；SOURCE813新auto/AES边界 NOT_RUN |
+| 外层机会式重传 | **on**；不承诺业务可靠性 | 双端 `outer-repair on|off` 原生Go→Rust bounded ciphertext shadow | Rust generation/ciphertext固定、实际 repair candidates/发送，保持健康与FEC独立 | 老源码真实差异及压力有有界证据；不恢复TCP全重传、不伪称损包必达 |
+| lane 轮换 | **Linux interval=0**；Windows `rotate-min/max=0/0` | 显式成对区间/真实已有 lifecycle controller 和 Health | A→A+B→B 切换、失败保留A、Game兄弟业务持续、old generation Stop/资源CAS | SOURCE813 x86 Game4 overlap Action `42987762898` PASS；Windows auto/cipher新配置回归未齐 |
+| keepalive 与 dead | **Windows 15s / 90s** | `keepalive-interval` / `dead-after` JSON/CLI→原Rust Health/Go重认证；服务端按自身配置 | Rust实际 authenticated health/dead、原生 reconnect 和 owner Stop；不能把TCP ACK当Health | 历史Linux失联真实105s/106s黑洞复原可复用未改组件；SOURCE813 Windows认证修改后的代表场景 NOT_RUN |
+| idle / 业务唤醒 | **Windows idle-dormant=0**（不自动休眠） | 显式 `idle-dormant`，真业务刷新payload idle，Health不可刷新 | 双边auth idle→Dormant；真业务 WakeDemand→新TLS/Rust，显式Stop不复活 | 历史Linux100s零业务后新UDP PASS；Windows新源真实idle/Wake NOT_RUN |
+| 原生路径变更 | 仅真实物理出口/源IPv4/有效MTU变化触发（不默认频繁轮换） | 原生 Linux netlink/Windows NotifyIpInterfaceChange→200ms静默/500ms上限去抖→新代原TLS/Rust和OS计划 | 冷OS三项实际读回、new owner ready后old generation CAS Stop；同NIC实MTU降低亦处理 | x86 Game4新源代表PASS，Windows真实NPF/OS path及同addr-MTU缩小旧源 scoped；新源auto未验证 |
+| DNS/分流/IPv6兼容 | 保持既定当前产品默认，不新增029能力 | Windows已有 `dns4`, `direct4`, `route-mode`、IPv6拦截；Linux路由沿现有CLI | owned OS/WAL DNS route readback 与退出恢复；当前测试只做兼容冒烟 | SOURCE813新认证/租约受影响路径须短测；029新增域名/DNS策略和030服务管理 **范围外** |
+
+所有表中“default”与运行“effective”分别由 `--check-config` 配置值、原TLS协商、Rust snapshot、原生 OS WAL/MTU 和真实数据收发读回支撑。**`--check-config` 或 GUI保存≠成功安装 OS/业务首发**。当前没有一份新源码覆盖所有路径且含字节/后台 backend/p99/队列/CPU/RSS 的综合报告。
+
+## 028 收口覆盖表（保留 hard gate）
+
+| 功能/场景 | 平台 | 正式入口/默认 | 精确 SOURCE / Actions / 证据 | 当前结果与限制 |
+|---|---|---|---|---|
+| 标准TLS443/无私有前置消息/账户绑定 | Linux x86_64 / ARM64 Go TLS+Rust | 原生服务端/客户端；单端口 | `813e4c5c...` Actions `42987762909`,`42987762119`,`42987762125` | 单场真实原TLS和两账号手动独立 `PASS_SCOPED`；不等于Windows全部cipher |
+| 多账号手动/32、A退出B续收及 Stop | Linux x86_64 + ARM64 | server共享Rust TUN，客户端手动 | `813e4c5c...` Action `42987762119` 双平台 | `PASS_SCOPED`，真实 native Go TLS/Rust、账户手动地址隔离 |
+| Game4 A→A+B→B / 中途MTU | Linux x86_64 | Game4显式，FEC profile按场景 | `813e4c5c...` Action `42987762898` | `PASS_SCOPED` 共享单TUN、真实TLS、切换/Readback；不是Win新Auto |
+| Windows Npcap/Wintun normal+四Linux 150s 1.15x | Win2025 + Linux WSL2 | Native V4，手动/ChaCha测试专用 | `cd5dfa3b7688167eebfc12020e0180a9fa8df8f4`, Action `42983815178`，H1577 devlog及原artifact | 真实 UDP/TCP/六owner stop `PASS_SCOPED`，**Action FAIL**（报表复制文件缺失），修复后的新SOURCE尚未重跑 |
+| Windows自动/手动IP、三AEAD不同终端同服 | Win2025 signed driver ↔ Linux shared | V4默认；`lease4`空/32、`record-cipher`默认ChaCha | `813e4c5c...` 新source assembly + Windows Go/Rust preflight；`tests/test_m0_plan028_h1580_windows_auto_cipher_source.py` | **SOURCE/BUILD_PASS；真实组合 NOT_RUN；目前阻断收口** |
+| 七模式产品正向 | Windows/Linux x86_64 + ARM64 | Normal Off/max/Auto、Game2 Off/max、Game4 Off/max，FEC默认Off | 旧 `b6b964afa7ffec5795f2c11c6e0620f223e684ac` Action40560287417、旧 `33ed20...`；新的Win编译813 | 老源七模式真实正向可复用非改动组件；Win新源模式/cipher搭配 NOT_RUN |
+| Windows可用B前不得退休A、Game兄弟不断 | Win2025 | Native有界轮换 | Windows历史source与813 source-mode tests；`42987762319`双独立原生owner槽 | SOURCE813 Windows owner/生命周期 unit PASS，整机Path/Auto runtime未验 |
+| keepalive/idle/dead与真正payload唤醒 | Linux x86_64 | 15/90 Windows，Linux实配；默认idle0 | 老 `134914f4263f905047b1096c771609558bcdde82` 真黑洞/新TLS恢复；原计划原证据 | 历史 Linux `PASS_SCOPED`；Win新SOURCE组合代表 NOT_RUN |
+| ARM64持久、30%丢包/轮换 | Linux ARM64 双端 | Native Rust, Go TLS | `24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73` H1361/H1363及历史长测 | 老源码受未改组件可复用，SOURCE813 arm64正向手动租约PASS、ISA-L构建PASS；不冒充new 1800s |
+| Windows 30%物理损伤单个冷TLS | Win2025/WSL2 | Native首次ColdTLS，不要求全负载 | 更早 SOURCE620真实Pre-TLS FAIL；`7ee5c5fc...` Action `42984484582`预检FAIL，实际30% cold没触发 | **仍未有效复验**；高损环境先验证真实认证，再上应用 |
+| Linux/Windows数据、CPU/RSS、p99、PPS、连续空洞、队列年龄 | x86_64/ARM64/Win | 压力只到平台能力、同 VM A/B | H1577 `cd5d` 150s、ARM64旧30m证据、旧外层304Mbps双向总量 | 现源码代表容量及一套新配置全链指标未齐；不能以成功包p99代替未交付 |
+| 完整单端Stop、原始网络恢复、共享server退出 | Win+Linux | 客户端仅回收自有网卡/路由/WAL | H1576 `c3e60772...`、H1577 `cd5d` Action42983815178 | 真实Stop资源 PASS_SCOPED，但报表/夹具 Action FAIL 原样留；新源码认证改动后代表复测未齐 |
+| DNS、分流、IPv6、近MTU小/大包兼容冒烟 | Win/Linux | 沿已有默认，不开发029 | 历史兼容烟测 + Rust budget code | SOURCE813新auto组合未完整验证 |
+| Android、物理公网、029新增DNS/填充、030服务 | Android/物理/未来 | 不接入本轮 | 无本SOURCE资格 | **范围外/NOT_RUN，不能作为已验** |
+
+## 优先收口顺序（防止重刷同类）
+
+1. 收完新 SOURCE Actions 的实际结果、提取产物文件 SHA256/后端和 OS readback；工作流自身文本门过期要修，但不能降低原生业务门槛。日志和旧失败保持可追。
+2. 在真实 Win2025 Npcap+Wintun、原始Linux共享服务端上先做自动IP、手动IP、ChaCha/AES128/AES256互异客户端同账号独立安装ID，强制同时验证TLS受保护返回IP、Rust cipher、真实OS /32/MTU和 UDP/TCP；未知组合拒绝。首选真实短场，再有必要才 L2 负载。
+3. 针对改动生命周期做代表 A→A+B→B、候选失败保留A、idle/keepalive/唤醒与一客户端退出其他继续；按原 L2 渐进压力和能力实测。对受影响的 Win 30% cold TLS 在网络容量和认证门允许后再做业务。
+4. 冻结通过的新源码，复用旧 ARM64未改组件的30m结果，**只给认证/租约/Windows新路径补代表综合真实场景**。写完整源和每binary hash/backend、功能卡与devlog/状态；所有阻断关闭前不得把 PLAN028 改 Completed。
+
+**本页不改变任何硬门或既定产品默认。**历史失败记录应保留并按产品/夹具/宿主进行诊断，不把局部业务 PASS 写成整场 PASS。

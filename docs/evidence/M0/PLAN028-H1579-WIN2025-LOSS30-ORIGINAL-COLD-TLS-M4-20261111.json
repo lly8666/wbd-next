@@ -43,7 +43,18 @@
     {
       "action": 42983815178,
       "scope": "H1578 one distinct Win1+Linux4 0loss200ms 1.15x L2 capacity, separate VM",
-      "status": "IN_FLIGHT"
+      "status": "COMPLETED_ACTION_FAIL_AFTER_SCOPED_REAL_150S_PASS",
+      "source_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
+      "reference": "docs/evidence/M0/PLAN028-H1577-WIN5-L2-115PCT-NATIVE-20261111.json"
     }
-  ]
+  ],
+  "subsequent_action_20261111": {
+    "action": 42984484582,
+    "source_sha": "7ee5c5fc20ff9b0dcd848905b496c8e2e14436f7",
+    "action_conclusion": "FAIL",
+    "failure_scope": "Cheap preflight source regression/guard; no real signed Windows 30pct cold TLS network stage entered",
+    "real_30pct_native_run": "NOT_RUN",
+    "diagnosis": "Do not count old SOURCE620 observed cold TLS failure as a new run, and do not infer a product fix from stale regression edits.",
+    "follow_up": "After Windows SOURCE813 current assembly and feature catalog repair, dispatch exactly one 30pct cold authentication scene when not already running, preserve real SYN/TLS/Ready/OS/Stop status and stop before heavier family if first TLS fails."
+  }
 }

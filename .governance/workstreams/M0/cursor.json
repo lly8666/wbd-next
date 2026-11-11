@@ -4,18 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1579,
-  "checkpoint_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
+  "sequence": 1580,
+  "checkpoint_sha": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1579-WINDOWS-30PCT-REAL-COLD-TLS-M4-FIRST-FAULT",
-  "current_task": "H1578 SOURCEcd5dfa Win1+Linux4 150s 1.15x 0loss200ms Action42983815178 cheap PASS, native compilation in flight (do not re-dispatch). Prior source620 Win2025/WSL2 original 30pct physical loss 200ms per side SYN/SYNACK MSS1420 seen but protected FakeTCP TLS timed out before native M4. H1579 adds ONE DIFFERENT Windows2025/WSL2 Action at physical30pct and 200ms one way, original signed Npcap+Wintun+TLS443 Windows Alice alone before siblings: require genuine credential TLS/native M4 Windows READY, OS Wintun10.66.0.2/32 installed, original Linux authenticated server M4, exact Windows/Go/Rust Stop and WAL/WSL/netem restored. Full five-client 30pct business and 600s remain NOT_RUN; no FEC rewrite or old seed duplication.",
-  "why_now": "User requests efficient L2 weak-net; historical initial 30pct Windows TLS first-fault remains independently open. Do not run old 600s full five-client when TLS cold reliability not proven; minimal single-client first handshake at same physical damage distinguishes cold TLS capability from multi-session/throughput. H1578 capacity trial on separate Action/VM concurrently.",
-  "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect in-flight H1578 true capacity Action and new H1579 genuine original Win2025 30pct cold TLS; keep per-job SOURCE exact and don't conflate. On H1579 failure inspect earliest SYN/TLS stage, preserve original. On cold TLS pass, extend to representative 30pct multi-client app with capacity-safe rate (no 4/4 zero-loss requirement); then L3 2x1800s after frozen candidate. PLAN028 IN_PROGRESS.",
+  "task_id": "PLAN028-M0-H1580-WINDOWS-AUTO-IP-CIPHER-GENUINE-NATIVE-CLOSEOUT",
+  "current_task": "SOURCE813 native Windows Go CLI default V4, AutoLease/three cipher through authenticated Normal/Game TLS, Rust ColdSnapshot+game group, verified /32 to Wintun/OS plan. WindowsGo/Rust compile PASS; H1376 x86+ARM true two manual accounts TLS/Rust kernel PASS; x86 Game4 A->AB->B PASS. H1577 SOURCEcd5d 1.15x true Win1+Linux4 150s UDP/TCP six owned Stop PASS_SCOPED but Action42983815178 FAIL on missing normal-report compatibility; H1580 report repair code committed, no network rerun yet. H1579 Win30cold actual NOT_RUN (preflight failed). Workflows old PLAN022 static gate fixed in pending docs/source commit. New SOURCE813 Windows signed auto/manual AES128/256 coexisting net business NOT_RUN; PLAN028 remains IN_PROGRESS.",
+  "why_now": "User explicit takeover: complete 028 last wiring, real-source native validation and artifact/docs audit. Do not claim old SOURCE network pass for 813, don't re-dispatch already running. Keep former failures and strict credential/MTU/generation/Stop hard gates.",
+  "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
+  "next_action": "Collect current 813 no-scene Windows build and new next SOURCE WAL/governance. Check compiled Windows native auto/cipher admission actual business; add ONE true signed Windows Npcap/Wintun + Linux shared server mixed manual+auto and ChaCha/AES128/AES256 short UDP/TCP scenario (different independent actions if distinct). Verify Rust Cipher/lease OS /32/MTU real readback and owned Stop; if blocked record exact stage and fix. Then 30pct true cold TLS and representative life-cycle plus mode/pressure/soak as user requires. Stop before declaring complete when NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
+  "last_tested_source": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1579-WIN2025-LOSS30-ORIGINAL-COLD-TLS-M4-20261111.json"
+    "docs/evidence/M0/PLAN028-H1577-WIN5-L2-115PCT-NATIVE-20261111.json",
+    "docs/evidence/M0/PLAN028-H1579-WIN2025-LOSS30-ORIGINAL-COLD-TLS-M4-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md",
+    "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +31,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1579 new source candidate Windows2025 genuine 30pct/200ms one-way original FakeTCP/TLS443+Rust M4 cold authentication / owner Stop. Earlier source620 fail pre-TLS M4 retained, no full UDP/TCP claimed by this experiment. H1578 1.15x 0loss capacity native Action still in flight, separate VM. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1580 native Windows SOURCE813 Go/Rust/ARM64 compilation and Linux x86/ARM two-account manual plus x86 Game4 native app PASS, but Windows auto/3 cipher signed-network and L3 still NOT_RUN. H1577 cd5d 150s 1.15x genuine app and owned Stop PASS_SCOPED, original Action FAIL report path; H1580 export fixed source-only. Repaired stale PLAN022 WAL source guard and feature-impact/cards pending next workflow evidence. 028 IN_PROGRESS."
 }

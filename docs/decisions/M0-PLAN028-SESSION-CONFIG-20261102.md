@@ -1,6 +1,6 @@
 # PLAN028｜简化认证、单端口多客户端与配置接线
 
-IN_PROGRESS（2026-11-07：功能冻结，集成可靠性专项验收与缺陷收口）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
+IN_PROGRESS（2026-11-11：功能冻结、原生Windows AutoLease/三套cipher接线和治理回归已推进，仍需新SOURCE真实签名驱动与综合生命周期验收，不得标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
 
 ## 0. 施工边界：补接入与交接，不重做架构协议
 
@@ -104,3 +104,9 @@ M0有现场决策权：依据实际PPS/BDP、FEC恢复模型、相关丢包和�
 ## 2026-11-04修订：H1048前置交换方案废止
 
 H1048曾引入server先发`WB-R1`及每向37B X25519数据，再进入ClientHello。该实现虽有功能/认证测试PASS，但违反用户标准建链外观红线，**不再是有效设计**。历史devlog/evidence原样保留，仅限其SOURCE功能事实；不标外观PASS。现在以[TLS建链唯一契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)的预共享方案及有限验收为准，代码修复状态以最新cursor/evidence为准；本次文档更正不等于产品已修好。
+
+## 2026-11-11 H1580 接线与SOURCE证明导航
+
+已追补旧Windows native CLI `--native-v4-product` 默认false的歧义（默认true，GUI仍显式加），原TLS请求不再硬编码 `AutoLease:false`/ChaCha。Normal Off/Fixed/Auto 与 Game2/4分别经原Go受保护TLS绑定每client cipher/自动或手动 /32，Rust ColdSnapshot/Game组核有效值，Wintun OS事务只接已认证的租约；校验错误失败而非静默降级。GUI 只对已有选择更正 V3 AES 与 V4 待验区分，不做029/030。
+
+本次源码、Linux x86_64/ARM64原生手动两账号真实业务/Stop、Windows源码装配/Go Rust编译、Game4 overlap、Windows Npcap/Wintun 旧SOURCE150s局部资格、原历史失败及新源码 NOT_RUN，一律以 [028覆盖表与默认配置](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md) 和 [H1580 devlog](../devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md) 的**精确 SOURCE、平台和入口**为准。特别保留 H1577 Action42983815178 overall FAIL与原native `PASS_SCOPED`；修复兼容报表不等于同场重跑。外层MTU1460、FEC默认Off、Windows15s/90s/idle0、Linux默认不轮换均保持。
