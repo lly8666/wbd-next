@@ -37,7 +37,7 @@ jobs:
           s=read_scenario(path)
           original=read_scenario('scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json')
           assert original['tun_mtu']==1400 and original['lifecycle_idle_s']==105
-          s.pop('scenario_sha256'); original.pop('scenario_sha256')
+          native_scenario_sha=s.pop('scenario_sha256'); original.pop('scenario_sha256')
           original['scenario_id']='plan028-h1621-normal-idle105-outer1460-10m25ms0-60s'
           original['tun_mtu']=1460
           assert s==original,'H1621 exact old source-locked 105s scene plus only ID/MTU1460'
@@ -60,7 +60,7 @@ jobs:
               d=s[direction]
               assert d['offered_mbps']==10 and d['delay_ms']==25 and d['loss_pct']==0
               assert max(p['udp_payload_bytes'] for p in d['packet_mix'])==1200
-          print('H1618_SINGLE_WINDOWS_LINUX_REAL_IDLE105_SCENE_SOURCE_LOCK_PASS',s['scenario_sha256'],flush=True)
+          print('H1622_WINDOWS_LINUX_REAL_IDLE105_SCENE_SOURCE_LOCK_PASS',native_scenario_sha,flush=True)
           PY
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REUSE_SUCCESSFUL_ACTION/artifacts?per_page=100" |
             python3 -c 'import json,sys; d=json.load(sys.stdin); a={z["name"] for z in d["artifacts"] if not z["expired"]};assert "m0-plan024-linux-product" in a and any(n.startswith("m0-wl-windows-product-binaries-") for n in a),a'

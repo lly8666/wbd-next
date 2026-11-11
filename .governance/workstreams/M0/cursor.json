@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1621,
-  "checkpoint_sha": "6fba40b176d5290636eb8e787be018d4750ca07f",
+  "sequence": 1622,
+  "checkpoint_sha": "fc9173c31e357c79f3b54d31b308b0fd7f645bf1",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1621-TRUE_WINDOWS_IDLE105_OUTER1460_SOURCELOCK_SEVENMODE_AUDIT",
-  "current_task": "H1620 SOURCE6fba Action43066195581 overall FAIL before TLS/Rust/native application: exactly H1600 source8a signed Windows EXE/DLL + Linux Go/Rust ISA-L product manifest/SHA verified, signed Npcap driver installed and genuine Ubuntu WSL2 TUN boot PASS. First failure in tools/m0_wl_native_mtu_contract.py: ValueError outer MTU selector/source scenario mismatch, old immutable idle105 scenario tun_mtu1400 with explicit default outer1460. Original action artifact13876720931 ZIPsha ba9f0a87..., guest boot artifact13876690824 sha90f7d7... retained; original native business NOT_RUN. H1621 cloned scenario with ONLY distinct scenario_id and tun_mtu1460; all other fields exactly same via source-locked wrapper preflight, invoke real configured_native_test_mtu() positive 1460/1460 and negative 1460/1400. One Windows+Linux original native target will reuse H1600 prebuilt Win exe/dll + Linux client/server/native ISA-L, no Go/Rust rebuild, no user-skipped multiWintun/nearMTU. Separate seven-mode/config source audit H1621 evidence; old source0cda 7 mode tests not same-source current full seven.",
-  "why_now": "Original Windows native product/source/OS prereqs reached until compatible scenario contract; change only v2 scene ID and MTU to original product default1460, not product, and prove configuration contract before dispatch. Maintain independent same-source mode coverage truth.",
+  "task_id": "PLAN028-M0-H1622-WRAPPER_SCENARIO_SHA_PRINT_ONLY",
+  "current_task": "H1621 SOURCEfc9173 copied original Windows real idle105 scene with only scenario_id and tun_mtu1400->1460, product source8a formal Windows/Linux binary reuse zero diff; exact old/new scene equality and default1460/1460 positive + mismatch1400 negative preflight passed, but wrapper Action43109798583 FAIL BEFORE dispatch because original JSON read_scenario() adds scenario_sha256, H1621 stripped it for dict compare and then printed s['scenario_sha256'], raising KeyError. No Windows OS or TLS or business launched. H1622 only captures computed SHA before pop and prints capture, leaving exact two-field test scene and source gates unchanged; wrapper triggers one original Windows signed Wintun+WSL2 native 105s idle target only, no compile. Historical H1620 native Action43066195581 pre-business 1400/1460 reject remains; previous H1616 Normal and H1615 Game2 standalone x86 PASS_SCOPED unaffected.",
+  "why_now": "Avoid blaming product or repeating expensive native tasks for one post-proof stdout KeyError in wrapper. Keep explicit source-locked actual scenario SHA without reinserting hash into full dict comparison.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1621 wrapper/target Actions and original raw artifact; require Windows Npcap+Wintun/real WSL2 native Go TLS443 Rust M4, 105s true no app followed by 60s 10Mbps25ms0loss duplex original unique UDP and final owned Stop. If failure after OS or app, preserve original result, avoid uncontrolled repeated full test. Audit seven-mode per source as H1621, no redundant Linux Game2/Normal retest. Windows separate DUT L3 still NOT_QUALIFIED, user excludes nearMTU+multiple same-host Wintuns.",
+  "next_action": "Collect H1622 wrapper and exactly one target native Action, verify verified H1600 Windows EXE/DLL + Linux Go/Rust ISA-L SHA/real signed Wintun+WSL2, original Go TLS/Rust M4 and 105s no app then 60s 10Mbps duplex true UDP, original Stop. If native fails record first cause and no repeated blind retries. No nearMTU or multiple same-host Wintuns, independent Windows L3 still NOT_QUALIFIED.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -26,7 +26,7 @@
     "docs/evidence/M0/PLAN028-H1617-SOURCECF03-PREBUILT-NORMAL-FAILED-B-A-LIVE-GAME2-OFF-20261112.json",
     "docs/evidence/M0/PLAN028-H1621-SEVENMODE-DEFAULTS-SOURCE-AUDIT-20261112.json",
     "docs/devlog/M0/20261112-PLAN028-H1621-ONE-WINDOWS-IDLE105-1460-AND-SEVENMODE-AUDIT.md",
-    "docs/devlog/M0/20261112-PLAN028-H1619-WINDOWS-PREBUILT-ISA-L-MANIFEST-RECOVERY.md"
+    "docs/devlog/M0/20261112-PLAN028-H1622-ONE-WRAPPER-SHA-PRINT-FIX-NO-NATIVE-RERUN.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."
