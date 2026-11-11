@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1561",
+  "date_local": "2026-11-11",
+  "source_sha": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "source0a_results": {
+    "governance": 42952219692,
+    "manual_two_accounts_x86_arm64": 42952219651,
+    "wrong_password_native_x86_arm64": 42952219332,
+    "mixed_x86_normal_game2_game4": 42952219511,
+    "mixed_arm64_normal_game2_game4": 42952219612,
+    "scoped_PASS": "Governance; exact Go/Rust x86/ARM64 manual/manual native TLS, 59 UDP and all Stop; wrong-password while sibling alive; independent original mixed mode (non manual/auto combined)",
+    "manual_auto_one_server": "NOT_RUN at source0a",
+    "failures_preserved": [
+      {
+        "run": 42952219558,
+        "reason": "Windows H1381 original assembly PASS but test-injection assertion duplicate target, product NOT_RUN"
+      },
+      {
+        "run": 42952219610,
+        "reason": "CI rustup component download failed; product NOT_RUN"
+      },
+      {
+        "run": 42952219437,
+        "reason": "Game4 32 true UDP delivered but timestamp 17.56s violates fixture 1st window; scenario FAIL, not full PASS"
+      },
+      {
+        "run": 42952219599,
+        "reason": "Game4 second 32 delivered but timestamp 18.0s violates window, scenario FAIL"
+      }
+    ]
+  },
+  "h1559_original_peer_health": {
+    "source": "0a1dd",
+    "real_independent_normal_server_proof": "PASS_SCOPED visible V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX generation=11 in failed combined x86/ARM A/B scenarios",
+    "full_handovers": "FAIL (later generation/Stop/time restrictions)"
+  },
+  "new_h1561_source_qualification": "NOT_RUN",
+  "new_test": {
+    "architecture": "Linux native x86_64 two real kernels namespace clients on one server",
+    "Alice": "manual TLS account-bound 10.66.0.2/32",
+    "Bob": "auto TLS account bob distinct device and stable installation, pool 10.66.0.128/25",
+    "dual_activity": "59 true UDP echo first unique arrival, A+B, B survives A/R Stop",
+    "cleanup": "original Go/Rust owned Stop per client + shared server TUN reader joined",
+    "source_manifest": "pinned Go original + Rust native x86 SHA256",
+    "triggers": "new workflow only, no existing manual/manual workflow repeat"
+  },
+  "unverified": true,
+  "plan_status": "IN_PROGRESS"
+}

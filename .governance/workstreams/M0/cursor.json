@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1560,
-  "checkpoint_sha": "dc608f20bdfb5976eba4e73f81041d7d35f8ddaa",
+  "sequence": 1561,
+  "checkpoint_sha": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1560-SIMPLE-SERVER-STATIC-AUTO-LEASE-COEXIST",
-  "current_task": "Resumed H1559 source dc608f Actions: current x86 Game4, ARM64 Game4, Win/Linux baseline and governance PASS_SCOPED; source620 Win/WSL loss0 native reverse RXDelivered0 and loss30 cold TLS timeout FAIL, preserved. User requested server simple defaults and simultaneous manual/automatic. H1560 code/manifest includes original shared Normal+Game routing selector and real manual-map test; server defaults shared443, default TUN 10.66.0.1/24, optional partial per-user fixed IP map with disjoint auto pool; auto pool always keyed by installation even if same account static sibling; credentials and TLS unchanged. Candidate source not yet tested.",
-  "why_now": "Current original Go CLI and shared Normal/Game validators wrongly exclude automatic+fixed IP simultaneously and require extra server flags; previous Go game_linux and manual test not assembled in main manifest, corrected this round.",
+  "task_id": "PLAN028-M0-H1561-TRUE-STATIC-AUTO-SAME-SERVER-ONE443-NATIVE-QUALIFICATION",
+  "current_task": "H1560 source0a main no new commits. Original Go x86/ARM64 manual/manual genuine TLS+M4/59 UDP exact Stop and wrong-password sibling isolation PASS_SCOPED. Current 0a mixed Game2/4 x86+ARM PASS scoped, H1194/H1197 individual 32-UDP actual delivery but 17-19s time-window FAIL, Windows H1381 test injection duplicate target CI failure, PLAN012 rustup download external. Full static+auto real native same443 NOT_RUN. H1561 adds ONE distinct source-locked x86 real netns scenario Alice fixed 10.66.0.2 Bob auto pool10.66.0.128/25 with H1376 invariant source but no replay of manual/manual. Validate protected Go unit positive+negative actually execute and all original native Stop; no new steady protocol.",
+  "why_now": "User specified standard default manual+auto coexist; H1560 only unit verification and manual/manual native evidence do not trigger mixed condition, so one distinct genuine scenario required. Existing H1376 remains untouched to avoid duplicate dispatch.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered H1560 exact SOURCE; first ensure Go shared Game/Normal file and new manual map test actually assemble and x86/ARM tests trigger. Preserve original failed Actions and no repeat Windows mixed seeds before targeted native reverse/cold TLS differential test. H1559 independent B authenticated kind0 true handoff still OPEN.",
+  "next_action": "Collect auto-triggered new H1561 workflow on actual SOURCE with x86 both real installed clients, check 59 app echo/OS /32/source-locked binary SHA/unique Go-Rust owner Stop; if fails inspect exact first stage and do minimal fix. Preserve old H1560 CI and timestamp failures. Check in-flight 0a 600s loss30 and seven modes before rerun. Continue Windows first+reverse RXDelivered0 and 30% cold TLS separately only after targeted distinction.",
   "unverified": true,
-  "last_tested_source": "dc608f20bdfb5976eba4e73f81041d7d35f8ddaa",
+  "last_tested_source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1560-SERVER-MANUAL-AUTO-CONFIG-20261111.json"
+    "docs/evidence/M0/PLAN028-H1561-MANUAL-AUTO-NATIVE-FIRST-REAL-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1560 pending exact-source actual validation: server shared443, default owned TUN and collision-free auto pool plus static /32 subset, manual only authorized users, auto derived per install. Added missing game_linux/manual-map-test to assembly and updated manifest hashes. Full mixed Windows 600s NOT_RUN; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1561 new independent native Linux x86 two-device mixed static+auto original same443, strict real TLS TUN, 59 UDP, Stop + selected unit triggers; scenario not yet run. Existing original true manual/manual x86+ARM PASS scoped, auto+manual still NOT_RUN until new action. PLAN028 IN_PROGRESS."
 }
