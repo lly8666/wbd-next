@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1618,
-  "checkpoint_sha": "9b57f92ce89441924cf25817d8f4a66b2efde2e1",
+  "sequence": 1619,
+  "checkpoint_sha": "2244dc9df05c4f7eab52bcb938f53f6c6661b94c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1618-ONE-WINDOWS-LINUX-NATIVE-IDLE105-FROZEN_PREBUILT",
-  "current_task": "H1617 exact original signed source8a Go/Rust ISA-L x86 two independent Linux native success proofs and original failure hashes committed main9b57; all governance/maintenance current success. H1618 dispatches exactly ONE independent single-signed-Windows-Wintun+Linux WSL2 native original-Go TLS/Rust 105s zero app then reawaken, using already verified H1600 run43027983611 Windows exe/dll + Linux client/server/so SOURCE8a313 and same code source diff zero. Reuses preexisting plan027-b-normal-idle-wake 60s two-way 10Mbps 25ms loss0 scenario, explicitly selected product outer MTU default1460, legacy scenario tun_mtu1400 generator NOT product default. Wrapper is source-locked no native network itself, dispatch target existing m0-wl-public-normal-full.yml one public_mode=normal one scene; no compile, no multiWintun, not skipped H1602 nearMTU or L3. Actual signed OS / ownership/business action results pending, do not call PASS.",
-  "why_now": "Windows current-auth native idle/wake remains distinct hardware/platform gap; existing sanctioned single signed native scenario plus verified same product binaries can be run once without rebuilding. Keep real feature results and controlled platform environment failure separate.",
+  "task_id": "PLAN028-M0-H1619-EXACT_H1600_PREBUILT_WINDOWS_ACCEL_MANIFEST-ONE_IDLE105",
+  "current_task": "H1618 dispatcher Action43064747860 SUCCESS, actual single native Win/Linux idle105 Action43064784361 overall FAIL before Npcap/WSL/TLS/UDP/Stop at Windows prebuilt manifest old two-feature assert; original source8a H1600 actual officially accelerated Windows exe/dll has third native_fec_acceleration feature, source product diff 0 and official artifact download pass. NO Windows business run; H1618 FAILURE retained. H1619 changes existing reuse manifest to accept accelerated release only when RUN_ID43027983611 and binary SOURCE/manifest sha are exact 8a313, with strict 3 features, native_fec_acceleration=true and fixed actual EXE63b4a24 and DLL7c8ddd8 hashes. Other legacy releases still two features exact. Only one Win idle105 wrapper re-dispatched, current real evidence pending; no product recompilation, user excludes nearMTU/multiWintun.",
+  "why_now": "Old generic two-feature manifest incorrectly rejects authentic verified ISA-L third feature H1600, before product runtime. Correct exact source/run/sha fixture oracle not product; avoid repeated rebuild or other scenario.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1618 wrapper and dispatched workflow_dispatch target Action, confirm exact SOURCE8a binary SHA and Npcap/Wintun signs/WSL2 genuine kernel, actual 105s no-business wake 10Mbps both ways + final original owner Stop, not just 60s. If pre-business WSL host fails do NOT repeat same hosted CI blindly, record first error/original report. In parallel finish configuration/effective seven mode and product build evidence document updates. No dualWintun/nearMTU/029/030; Windows independently controlled 1800s L3 missing.",
+  "next_action": "Collect one H1619 target Action signed Npcap/Wintun actual Windows+Linux peer real 105s no business then 60s two-way UDP 10Mbps25ms, verified native owned Stop; if WSL pre-business external fails retain first error, no repeated same unstable host. Continue source-locked sevenmode config audit, keep PLAN028 IN_PROGRESS absent independent Windows L3; no user-skipped nearMTU/multiWintun.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -26,7 +26,7 @@
     "docs/evidence/M0/PLAN028-H1617-SOURCECF03-PREBUILT-NORMAL-FAILED-B-A-LIVE-GAME2-OFF-20261112.json",
     "docs/evidence/M0/PLAN028-H1613-IDLE100-DEAD106-PREBUILT-X86-NATIVE-SCOPED-20261111.json",
     "docs/devlog/M0/20261112-PLAN028-H1618-SINGLE-WINDOWS-SIGNED-IDLE105-PREBUILT-DISPATCH.md",
-    "docs/devlog/M0/20261112-PLAN028-H1617-COLLECT-TWO-PREBUILT-OS-NATIVE-SCOPED-PASS-AND-7MODE-AUDIT.md"
+    "docs/devlog/M0/20261112-PLAN028-H1619-WINDOWS-PREBUILT-ISA-L-MANIFEST-RECOVERY.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

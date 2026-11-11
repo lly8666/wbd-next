@@ -462,6 +462,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_os_deadline -v
       - run: python -m unittest tests.test_m0_plan028_tls_wire_audit -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
+      - run: python -m unittest tests.test_m0_plan028_h1619_exact_accelerated_prebuilt_manifest -v
       - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tests/test_m0_plan027_managed_unilateral.py
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
@@ -1099,7 +1100,10 @@ jobs:
           p=pathlib.Path('result/wl-public')
           m=json.loads((p/'windows-binary-manifest.json').read_text())
           assert m['source_sha']==os.environ['WBD_WL_BINARY_SOURCE']
-          if os.environ.get('WBD_WL_NATIVE_ACCEL_REUSE')=='1':
+          frozen_h1600=(os.environ.get('WBD_WL_REUSE_RUN_ID')=='43027983611' and
+                        os.environ.get('WBD_WL_BINARY_SOURCE')=='8a31375e36bb6a93860c5579e64b4a39d0b6e346' and
+                        m['source_sha']=='8a31375e36bb6a93860c5579e64b4a39d0b6e346')
+          if os.environ.get('WBD_WL_NATIVE_ACCEL_REUSE')=='1' or frozen_h1600:
               assert m['features']=='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
               assert m['native_fec_acceleration'] is True
               assert m['sha256']['exe']=='63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c'
