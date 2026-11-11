@@ -149,6 +149,12 @@ def main():
     bob_normal=os.environ.get("WBD_PLAN028_BOB_NORMAL_DIFFERENTIAL")=="1"
     mixed_persona=os.environ.get("WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST")=="1"
     l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1"
+    h1577=os.environ.get("WBD_PLAN028_WIN_L2_CAPACITY_115")=="1"
+    offered_scale=float(os.environ.get("WBD_PLAN028_WIN_150S_SCALE","1.0"))
+    need(.99<=offered_scale<=1.20 and
+         (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")) and
+         (not h1577 or abs(offered_scale-1.15)<.000001),
+         "H1577 real 115pct one-stage Win1+Linux4 capacity trial only")
     need(not l1_150 or (mixed_persona and probe and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
          "H1574 sustained 150s only after actual H1573 mixed persona and Bob Auto proof")
     need(not mixed_persona or (probe and cold_seed and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
@@ -190,6 +196,8 @@ def main():
        "h1572_bob_mode_differential":"normal_off" if bob_normal else "unchanged_fec_auto",
        "h1573_original_mixed_per_association_persona":mixed_persona,
        "h1574_native_five_tcp_udp_150s":l1_150,
+       "h1577_real_one_stage_capacity_115":h1577,
+       "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
@@ -217,7 +225,7 @@ def main():
     for p in list(private.values())[:3]:os.chmod(p,0o600)
     guestsecret={name:"/run/wbd-h1548-"+os.environ["GITHUB_RUN_ID"]+"-"+name for name in ("route","users","leases")}
     barrier=OUT/"h1548-start.flag";control=OUT/"h1548-rate-control.json"
-    control.write_text(json.dumps({"scale":1.0})+"\n")
+    control.write_text(json.dumps({"scale":offered_scale})+"\n")
     barrier.unlink(missing_ok=True)
     report_path=OUT/("h1548-"+a.scene+"-strict-native-report.json")
     app_py=guestpath(ROOT/"tools/m0_plan028_h1548_mixed_os_app.py")
@@ -637,6 +645,12 @@ s.close()
                 need(all(o["status"]=="COMPLETE_TRUE_150S_ORIGINAL_GO_RUST_INNER_APPLICATION"
                          and o["elapsed_s"]>=150 for o in observed.values()),
                      "H1574 required 150s true original OS apps incomplete")
+                if h1577:
+                    real_app_scales={who:observed[who]["last_pace_scale"] for who in apps}
+                    need(all(abs(v-offered_scale)<.00001 for v in real_app_scales.values()),
+                         "H1577 actual five native OS app rate control did not trigger "+repr(real_app_scales))
+                    report["h1577_actual_all_six_apps_scale"]=real_app_scales
+                    print("H1577_REAL_FIVE_OS_APPS_115PCT_OFFER_RATE_TRIGGERED",flush=True)
                 report["h1574_true_five_native_150s_udp_tcp"]=checks
                 report["h1574_capacity_status"]="PASS_WITHIN_HOST_BUDGET_NO_30S_FULL_CPU_RAM"
                 report["h1574_150s_stage"]="verified_five_UDP_TCP_business_before_owned_Stop"

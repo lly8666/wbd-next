@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1577",
+  "date_local": "2026-11-11",
+  "source_sha": "4bc6d4b0a597184c6279ea41c9c25cca69631c19",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "baseline": {
+    "source": "c3e60772c2f99e5d7fa1cadb0284b3e1addca1d4",
+    "action": 42979705842,
+    "artifact": 13837473065,
+    "result": "PASS_SCOPED_150S_REAL_UDP_TCP_ALL_SIX_OWNED_STOP",
+    "outer_total_mbps": 151.809,
+    "inner_each_direction_mbps": 24,
+    "windows_CPU_busy_peak_pct": 77.7,
+    "free_RAM_floor_GiB": 10.677,
+    "unique_C2S": 454642,
+    "unique_S2C": 454643,
+    "max_gap_ms": 65.62,
+    "physical_one_way_delay_ms": 200,
+    "loss_percent": 0
+  },
+  "new_test": {
+    "marker": "[plan028-h1577-win5-capacity-115]",
+    "mode": "true original Windows2025 Npcap+Wintun one + WSL2 Linux4 TLS443 Rust M4",
+    "duration_s": 150,
+    "loss_percent": 0,
+    "physical_one_way_delay_ms": 200,
+    "outer_IPV4_MTU": 1460,
+    "actual_six_OS_actors_scale": 1.15,
+    "inner_mbps_each_direction": 27.6,
+    "approx_packets_per_second_each_direction_at900B": 3833,
+    "nominal_RTT_BDP_MiB_each_direction": 1.316,
+    "quality_gates": "original >=98pct unique UDP both directions, max gap<3s, >=60 valid TCP frames both directions",
+    "saturation_guard": "Windows CPU>=98pct or freeRAM<1GiB for >=30s means CAPACITY_LIMITED",
+    "hard_Stop": "Windows Alice owned Stop, Bob actual4 UDP after Alice Stop, all 4 Linux Normal/Game owned Stops, server original Rust generation reader_joined1 and WAL/WSL/netem cleaned"
+  },
+  "not_qualified": {
+    "full600_250_300Mbps": "NOT_RUN",
+    "Windows_loss30": "NOT_RUN",
+    "L3_1800s_x2": "NOT_RUN",
+    "physical_WAN": "NOT_RUN",
+    "Android": "NOT_RUN"
+  },
+  "principle": "One Action one real native scenario, 15pct additional offer based on actual capacity sample, no historical mandatory250-300 jump, no same-VM A/B optimization claim"
+}
