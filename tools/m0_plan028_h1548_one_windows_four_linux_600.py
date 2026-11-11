@@ -144,7 +144,8 @@ def main():
     a=ap.parse_args()
     h1581=os.environ.get("WBD_PLAN028_WIN_AUTO_AES_MIXED_150")=="1"
     h1596=os.environ.get("WBD_PLAN028_WIN_LINUX_SAME_ACCOUNT_150")=="1"
-    probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1" or h1581
+    h1602=os.environ.get("WBD_PLAN028_WIN_NEAR_MTU_SMOKE")=="1"
+    probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1" or h1581 or h1602
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
     bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
@@ -163,6 +164,10 @@ def main():
            (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")))) and
          (not h1577 or abs(offered_scale-1.15)<.000001),
          "only H1596 test-only 70pct or existing H1577 115pct rate allowed")
+    need(not h1602 or (probe and not h1581 and not h1596 and not l1_150
+         and not h1577 and not h1579 and not mixed_persona and not bob_probe
+         and not bob_listener and not cold_seed and a.scene=="loss0"),
+         "H1602 one signed Windows Wintun + Linux4 real inner-MTU short probe only")
     need(not h1596 or (h1581 and l1_150 and probe and a.scene=="loss0"
          and not h1577 and not h1579 and not mixed_persona
          and not bob_probe and not bob_listener),
@@ -218,10 +223,12 @@ def main():
        "h1579_real_original_Windows30_cold_TLS":h1579,
        "h1581_real_Windows_auto_AES256_Linux_three_AEAD_150s":h1581,
        "h1596_real_one_Windows_one_Linux_same_account_distinct_installations":h1596,
+       "h1602_real_signed_Win1_Linux4_near_inner_mtu_probe":h1602,
        "h1596_test_only_offered_scale":offered_scale if h1596 else None,
        "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
        "600s_outer_capacity": ("NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else
+            "NOT_RUN_H1602_NEAR_MTU_SHORT_NATIVE" if h1602 else
             "NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE" if h1581 else
             "NOT_RUN_H1574_TRUE_150S_FIVE_NATIVE" if l1_150 else
             "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548")}
@@ -305,6 +312,10 @@ while time.monotonic()<end:
          "H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED"),flush=True)
  try:data,peer=s.recvfrom(4096)
  except socket.timeout:continue
+ if data.startswith(b"H1602_REAL_NEAR_MTU/"):
+  # Exact-size original IP echo. Adding the H1565 prefix here would exceed MTU.
+  s.sendto(data,peer)
+  continue
  if not data.startswith(b"H1565_NATIVE_APP/"):continue
  s.sendto(b"H1565_NATIVE_REPLY/"+data,peer)
  print("H1565_SERVER_REAL_TUN_ECHO peer="+peer[0],flush=True)
@@ -323,6 +334,43 @@ for i in range(count):
 print("H1565_REAL_NATIVE_APP_OK label="+label+" delivered="+str(count)+" source="+local,flush=True)
 s.close()
 """
+    near_mtu_client_py="""import json,socket,sys
+src,label,mtu=sys.argv[1],sys.argv[2],int(sys.argv[3])
+assert 576<=mtu<=1500,mtu
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind((src,0));s.settimeout(8)
+delivered=[]
+for ipv4_total in (mtu-1,mtu):
+ for seq in range(2):
+  length=ipv4_total-28  # IPv4 20B + UDP 8B, not outer MTU
+  prefix=("H1602_REAL_NEAR_MTU/"+label+"/"+str(seq)+"/"+str(ipv4_total)+"/").encode()
+  assert length>=len(prefix)
+  data=prefix+bytes(length-len(prefix))
+  assert s.sendto(data,("10.66.0.1",45941))==len(data)
+  reply,peer=s.recvfrom(4096)
+  assert reply==data and peer[0]=="10.66.0.1",(label,ipv4_total,len(reply),peer)
+  delivered.append(ipv4_total)
+df1="OPTION_NOT_AVAILABLE"
+try:
+ if sys.platform=="win32":
+  option=getattr(socket,"IP_DONTFRAGMENT",None)
+  if option is not None:s.setsockopt(socket.IPPROTO_IP,option,1)
+ else:
+  option=getattr(socket,"IP_MTU_DISCOVER",10)
+  s.setsockopt(socket.IPPROTO_IP,option,2)
+ if option is not None:
+  beyond=mtu-27
+  data=b"H1602_REAL_NEAR_MTU/"+bytes(beyond-len(b"H1602_REAL_NEAR_MTU/"))
+  try:
+   s.sendto(data,("10.66.0.1",45941))
+   df1="OS_ACCEPTED_MTU_PLUS_ONE_NO_DELIVERY_CLAIM"
+  except OSError as err:df1="OS_REJECTED_MTU_PLUS_ONE:"+str(err.errno)
+except OSError as err:df1="DF_OPTION_UNSUPPORTED:"+str(err.errno)
+print("H1602_REAL_NEAR_MTU_ECHO_OK "+json.dumps({
+ "who":label,"os_inner_mtu_budget":mtu,"exact_IP_lengths_delivered":delivered,
+ "mtu_plus_one_DF1_os_observation":df1},sort_keys=True,separators=(",",":")),flush=True)
+s.close()
+"""
     def spawn_real_echo_client(label,source_ip,count,namespace=None):
         prefix=(["wsl.exe","-d","Ubuntu","-u","root","--",
                  "ip","netns","exec",namespace,"python3"] if namespace else [sys.executable])
@@ -333,6 +381,57 @@ s.close()
         need(p.returncode==0 and
              "H1565_REAL_NATIVE_APP_OK label="+label+" delivered="+str(count) in log,
              "real native Wintun/TUN UDP echo failed "+label+" "+log[-500:])
+
+    def h1602_actual_OS_near_MTU_trial(windows_ip,auto_os_ips,names):
+        # Read actual signed Wintun/IP interfaces and native Linux TUN
+        # AFTER protected TLS/Rust M4, not a static headroom estimate.
+        ps=("$a=Get-NetAdapter -IncludeHidden -Name 'WBDWLMAIN' -ErrorAction Stop;"+
+            "$i=Get-NetIPInterface -InterfaceIndex $a.ifIndex -AddressFamily IPv4 -ErrorAction Stop;"+
+            "@{mtu=[int]$i.NlMtu}|ConvertTo-Json -Compress")
+        got=subprocess.run(["powershell.exe","-NoProfile","-NonInteractive","-Command",ps],
+             capture_output=True,text=True,timeout=20)
+        need(got.returncode==0,"H1602 actual Wintun OS MTU readback failed "+got.stderr[-500:])
+        window_mtu=int(json.loads(got.stdout)["mtu"])
+        shared=json.loads(ip("-j","link","show","dev","wbdwl48"))
+        need(len(shared)==1,"H1602 actual shared server TUN MTU readback missing")
+        server_mtu=int(shared[0]["mtu"])
+        perOS={"alice":window_mtu}
+        for i,who in enumerate(names[1:]):
+            tun="wbd48"+who[0]
+            links=json.loads(ip("-n",NS4[i],"-j","link","show","dev",tun))
+            need(len(links)==1,"H1602 original Linux TUN OS readback missing "+who)
+            perOS[who]=int(links[0]["mtu"])
+        need(576<=server_mtu<=1500 and all(576<=v<=1500 for v in perOS.values()),
+             "H1602 OS-reported inner MTU invalid "+repr(perOS))
+        # Shared TUN and each peer's OS interface must both carry the
+        # datagram. Inner full IPv4 length, never outer 1460 or UDP payload.
+        budgets={who:min(server_mtu,perOS[who]) for who in names}
+        results={}
+        for i,who in enumerate(names):
+            cmd=([sys.executable,"-u","-c"] if i==0 else
+                ["wsl.exe","-d","Ubuntu","-u","root","--",
+                 "ip","netns","exec",NS4[i-1],"python3","-u","-c"])
+            src=windows_ip if who=="alice" else auto_os_ips[who]
+            proc=spawn("h1602-real-near-"+who,
+                cmd+[near_mtu_client_py,src,who,str(budgets[who])])
+            proc.wait(timeout=30)
+            log=(OUT/("h1602-real-near-"+who+".log")).read_text(errors="replace")
+            match=re.search(r"H1602_REAL_NEAR_MTU_ECHO_OK (\{[^\n]+\})",log)
+            need(proc.returncode==0 and match is not None,
+                 "H1602 real OS / MTU echo process failed "+who+" "+log[-600:])
+            obj=json.loads(match.group(1))
+            want=[budgets[who]-1,budgets[who]-1,budgets[who],budgets[who]]
+            need(obj["exact_IP_lengths_delivered"]==want,
+                 "H1602 near-inner-MTU real kernel echo count/content mismatch "+who)
+            results[who]=obj
+        need(len(results)==5,"H1602 signed Windows + Linux4 near MTU missing")
+        return {"status":"PASS_FIVE_ORIGINAL_REAL_OS_NEAR_INNER_MTU_20_ECHOES",
+                "Windows_signed_Wintun_NlMtu":window_mtu,
+                "server_shared_TUN_os_mtu":server_mtu,
+                "per_client_real_OS_inner_MTU":perOS,
+                "per_peer_bidirectional_real_OS_MTU":budgets,
+                "actual_UDP_kernel_IP_MTU_minus_1_and_exact":results,
+                "DF1_MTU_plus_1":"OS_RESULT_PER_PEER_NOT_A_DELIVERY_CLAIM"}
 
     def require_real_original_server_owner_stop(proc):
         # Original Rust shared-TUN Stop, not a nonexistent Go text marker.
@@ -680,6 +779,10 @@ s.close()
             for who,p in tasks.items():require_real_echo(who,p,8)
             report["h1565_five_genuine_os_udp_echoes"]=40
             print("H1565_FIVE_ORIGINAL_TLS_NATIVE_WINTUN_TUN_APP_40_OF_40_PASS",flush=True)
+            if h1602:
+                report["h1602_real_OS_near_inner_MTU"]=h1602_actual_OS_near_MTU_trial(
+                    windows_ip,auto_os_ips,names)
+                print("H1602_REAL_ORIGINAL_SIGNED_WIN1_LINUX4_NEAR_INNER_MTU_ECHOES_VERIFIED",flush=True)
             if l1_150:
                 # 150s L1 actual UDP/TCP is NOT the 600s/250-300Mbps H1548
                 # capacity claim. One source lock, one shared server, 5 OSes,
@@ -857,6 +960,11 @@ s.close()
                     print("H1596_REAL_WIN_LINUX_SAME_ACCOUNT_TWO_AUTO_OS_IPS_150S_UDP_TCP_WINDOWS_STOP_BOB_SURVIVES_PASS_SCOPED",flush=True)
                 print("H1581_REAL_WINDOWS2025_AUTO_AES256_LINUX_MIXED_THREE_AEAD_150S_ALL_SIX_OWNED_STOP_PASS_SCOPED",flush=True)
             else:
+                if h1602:
+                    need(report.get("h1602_real_OS_near_inner_MTU",{}).get("status")==
+                         "PASS_FIVE_ORIGINAL_REAL_OS_NEAR_INNER_MTU_20_ECHOES",
+                         "H1602 true OS-budgeted near-MTU UDP not proven")
+                    report["h1602_real_near_inner_MTU_and_all_Stop"]="PASS_5_REAL_NATIVE_OS_MTU_20_ECHO_AND_6_OWNED_STOP"
                 report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
             return
         # Give each account its OWN direct client socket and one of five
