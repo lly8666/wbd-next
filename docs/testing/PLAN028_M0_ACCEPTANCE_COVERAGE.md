@@ -169,3 +169,14 @@ H1605 Action`43040746444`原Linux和Windows正式构件/ISA-L SHA复用PASS、Np
 ## H1607 最新近MTU真实结果：原生环境阻断，不是产品PASS/FAIL
 
 SOURCE `c3a4690782a84df167fc496d61f2fe02979b2d7e` H1606 Action [43042125895](https://github.com/lly8666/wbd-next/actions/runs/43042125895) 整体 **FAIL**；同源治理和治理维护 `43042125801`/`43042125943`均SUCCESS。原始官方镜像备用成功并经SHA校验，WSL2真实guest探针PASS；但下一步Linux underlay RST配置调用`wsl.exe`挂起120s、原native job`130598171269`失败。**真实TLS/Rust、签名Wintun OS、近derived MTU 20次真UDP、六owner Stop全部未开始/NOT_RUN**。已核实本次 Windows/Linux 原生ISA-L产物与旧SOURCE8a对应、Go/Rust正式源码无差异，Npcap安装与最终cleanup通过；它们仅是构建/环境preflight，不是近MTU业务通过。原始ZIP `13866116591` 和 `13866761087` 单文件hash、第一失败、环境收敛及停止重复派发决策见 [H1607 evidence](../evidence/M0/PLAN028-H1607-SOURCEC3A-WIN-WSL-RST-CONTROL-TIMEOUT-NOTRUN-20261111.json)。同一宿主重试已超性价比，**停止同族反复派发**；原 H1601 150s、H1604源锁轮换和旧ARM64两场1800s正向不作新源码无据晋级。Windows L3需独立控制器/DUT、GUI人机与部分路径恢复及nearMTU仍限制。PLAN028 **IN_PROGRESS**。
+
+## H1609: Two real, independent parallel Linux native path-change Actions from identical prebuilt Go/Rust
+
+User skips H1602 near-inner-MTU true datagram scene. Near-MTU remains NOT_RUN/environment blocked; it is not a product pass. H1608 ran two separate Ubuntu x86_64 Actions with the same genuine source8a313 prebuilt Go TLS/Rust ISA-L client/server/so, no Go/Cargo compilation and a zero source diff on Go/Rust/fixture. Full originals and SHA in [H1609 evidence](../evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json).
+
+| Real native scene | Action, original artifact | First-pass evidence and true scoped verdict |
+|---|---|---|
+| Normal / FEC Off / Auto IP, real source4 and MTU migration | `43046531699` SUCCESS; ZIP artifact `13866924204`, SHA256 `2899cdea221be37b2669cf3cb03869ee0554575b810cf4c3d4b6ec1c38e8615f` | `.2→.3`, physical MTU1280, derived TUN OS MTU1209; authenticated Auto OS lease `10.66.0.153`, TLS/Rust new B before A exact Stop; 5 original + 5 post-switch kernel UDP and shared Rust one-reader `10/0/0/join1`: **PASS_SCOPED Linux x86_64** |
+| Game4 / explicitly fixed6 / Auto IP, real source4 and MTU migration | `43046531950` SUCCESS; ZIP artifact `13866424747`, SHA256 `c14ba91a95d1d6bba3ece7725230452ce409b0a4f597d2e3003fc5e24679229e` | `.2→.3`, physical MTU1280, derived TUN OS MTU1178; genuine 8 standard TLS ClientHello (two generations ×4), B remote Rust M4 authenticated before old A exact Stop, parity both generations, single reader and 5+5 kernel UDP: **PASS_SCOPED Linux x86_64** |
+
+Game4 fixed6 was test-only explicit; product FEC default is Off. These are not Windows Wintun, new inner-MTU-boundary actual datagrams, independent Windows L3 or 30%/250ms pressure. Retain earlier failures and exact SOURCE. PLAN028 remains IN_PROGRESS.

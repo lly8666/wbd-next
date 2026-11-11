@@ -21,3 +21,5 @@
 历史风险与此前未关闭的027A同socket在线收窄属于历史范围，不拿新认证路径结果改写原FAIL；深查旧日志前先看当前cursor引用。
 
 **H1607最新失败分账**：`c3a4690782a84df167fc496d61f2fe02979b2d7e` Action`43042125895` 原镜像DNS失败→官方同SHA镜像成功、真实WSL2 guest预检通过，但真实Linux RST控制 `wsl.exe`120s timeout，原生业务尚未启动，近MTU `ENVIRONMENT_BLOCKED_NOT_RUN`；已核ISA-L/Go/Rust原构件与源码零diff，Npcap clean PASS。原FAIL保留，不在同类hosted VM再跑相同场景。独立Windows DUT/外带控制器未提供，L3未验，仍不宣称028收口。见H1607 evidence/devlog。
+
+H1609 final two independent real Linux x86 original Go TLS/Rust native path Actions43046531699 Normal-Off and43046531950 Game4 explicit fixed6 both SUCCESS, prebuilt H1600 native ISA-L exact 3 binary SHA. Normal real source4 migration MTU1280->TUN1209/5 post-swap real UDP; Game4 MTU1280->TUN1178, 8 real TLS ClientHello and FEC parity/old Stop/5 post-swap UDP. Original ZIP hashes, scope and restrictions in H1609 evidence. User skipped nearMTU; Windows L3 independent DUT and current idle/wake unqualified; PLAN028 stays IN_PROGRESS.

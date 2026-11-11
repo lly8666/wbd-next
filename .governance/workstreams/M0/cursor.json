@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1608,
-  "checkpoint_sha": "1b04526fd05a16d84fd888973025563f15ba4e92",
+  "sequence": 1609,
+  "checkpoint_sha": "196d3420244998323b8708f1ca63338763707cda",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1608-FAST-PARALLEL-SOURCE_LOCKED-NATIVE-PATH",
-  "current_task": "User skips H1602 nearMTU due H1607 hosted WSL underlay RST timeout. H1608 push creates two independent Linux x86_64 Actions: Normal Off AutoIP path change and Game4 fixed6 AutoIP path/4lane TLS overlap. Each its own runner/real OS netns scene; reuse same H1600 original Go/Rust ISA-L binary artifact exact SOURCE8a313, SHA256 and current code+fixture diff guards; no recompile or multi-Wintun. Both results pending until original Action and artifact readback.",
-  "why_now": "User explicitly requests binary reuse and parallel tests, avoid unstable Windows hosted WSL; same native Go/Rust binaries and real kernel path fixture unchanged since H1600.",
+  "task_id": "PLAN028-M0-H1609-VALIDATED-PARALLEL-PREBUILT-NATIVE-PATHS",
+  "current_task": "H1609 TWO independent Actions 43046531699 Normal Off Auto and43046531950 Game4 explicitly fixed6 Auto SUCCESS with original raw ZIP SHA and native logs. Used identical precompiled H1600 Go/Rust ISA-L source8a313, SHA256 x3 and Go/Rust/fixture source diff 0; no rebuild, independent Ubuntu VMs. Normal real source4 .2->.3 physical MTU1280 TUN1209 OS protected lease10.66.0.153 actual 5+5 native UDP, new authenticated TLS/Rust B old Stop, single joined reader. Game4 physical MTU1280 TUN1178 2x4 real standard TLS ClientHello, original remote B Rust M4, both gen FEC parity and A+B->B/old exact Stop 5+5 native UDP. H1608 report artifacts independently rehashed; accurate PASS_SCOPED. Same-source governance43046532286 and maintenance43046531614 SUCCESS. User skips nearMTU true packet and multiWintun; old H1607 environmental preproduct failure retained, PLAN028 still IN_PROGRESS.",
+  "why_now": "Two separate real native jobs complete using reused product binaries, no heavy Windows hosted WSL replays; commit their original hashes, actual OS and cryptographic business receipts. User requests efficiency and parallelism.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect two independent H1608 Actions (not H1602) and original receipts for real source change, TLS and M4 authenticated B, 5 post-switch UDP replies and exact old/new Stop; if build environment fails record first cause, no duplicate. Audit coverage/docs and other remaining Windows idle/L3 limits without accidental tests.",
+  "next_action": "Do not re-dispatch H1608 or skipped H1602. Review remaining Windows new-source idle/path L1 evidence and 7-mode/default/effective config coverage; independent Windows DUT 1800s L3 unqualified and no repeated hosted runner. Keep truthful PLAN028 IN_PROGRESS unless all hard gates qualified.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -25,8 +25,8 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
     "docs/evidence/M0/PLAN028-H1607-SOURCEC3A-WIN-WSL-RST-CONTROL-TIMEOUT-NOTRUN-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1604-REUSE-H1600-REAL-LIFECYCLE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1608-PARALLEL-PREBUILT-PATHS.md"
+    "docs/evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1609-COLLECT-PARALLEL-PREBUILT-PATHS.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."
