@@ -1,0 +1,134 @@
+name: PLAN028 H1608 one prebuilt original Linux Go Rust path scenario
+on:
+  workflow_call:
+    inputs:
+      public_mode: {type: string, required: true}
+      game_fec: {type: string, required: true}
+      wire_audit: {type: string, required: true}
+permissions: {contents: read, actions: read}
+jobs:
+  one-native-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    env:
+      PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      PRODUCT_RUN_ID: "43027983611"
+      PUBLIC_MODE: ${{ inputs.public_mode }}
+      GAME_FEC: ${{ inputs.game_fec }}
+      WIRE_AUDIT: ${{ inputs.wire_audit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43027983611
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: linux-product/
+      - name: Validate exact previous success SOURCE and accelerated Go Rust executable SHA with zero product delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$GITHUB_REF_NAME" = main
+          test -c /dev/net/tun
+          test "$PUBLIC_MODE/$GAME_FEC/$WIRE_AUDIT" = normal/off/0 -o "$PUBLIC_MODE/$GAME_FEC/$WIRE_AUDIT" = game4/fixed6/1
+          python3 -m unittest tests.test_m0_plan028_h1608_parallel_prebuilt -v
+          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0-v4-public-real-linux-netns.sh)"
+          test -z "$delta" || { echo "H1608 source changed; refuse binary reuse: $delta" >&2; exit 1; }
+          python3 - <<'PY'
+          import os,json,hashlib,struct,pathlib
+          p=pathlib.Path('linux-product')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['PRODUCT_SOURCE']
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert m['rust_native_fec_acceleration'] is True
+          assert m['isa_l_source']=='c387163fcbca62701d646149564c550c78a4f985'
+          assert m['binary_qualification']=='BUILD_ONLY_NOT_PRODUCT'
+          expected={
+              'wbd-v4-client':'7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1',
+              'wbd-v4-server':'9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71',
+              'libwbd_engine.so':'2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc'
+          }
+          for name,sha in expected.items():
+              data=(p/name).read_bytes()
+              assert len(data)>100000 and data[:4]==b'\x7fELF'
+              assert struct.unpack_from('<H',data,18)[0]==62
+              assert hashlib.sha256(data).hexdigest()==m['sha256'][name]==sha
+          print('H1608_THREE_ORIGINAL_GO_RUST_ELF_NATIVE_ISAL_SHA256_SAME_PRODUCT_SOURCE_PASS')
+          PY
+          chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+      - name: Real netns prerequisites (environment preflight not business)
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=""
+          for x in ip tc iptables openssl;do command -v "$x" >/dev/null || missing="$missing $x";done
+          if test "$WIRE_AUDIT" = 1;then command -v tcpdump >/dev/null || missing="$missing tcpdump";fi
+          if test -n "$missing";then
+            echo "H1608_MISSING_REAL_LINUX_OS_DEPENDENCIES:$missing"
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables tcpdump openssl
+          fi
+          sudo -n ip netns list >/dev/null
+          echo H1608_NATIVE_OS_NETNS_PREREQUISITES_PASS
+      - name: One actual two-generation original Go TLS Rust real kernel network scene and exact Stop
+        shell: bash
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          export WBD_V4_PUBLIC_MODE="$PUBLIC_MODE"
+          export WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1
+          export WBD_V4_PUBLIC_GAME_FEC="$GAME_FEC" WBD_V4_PUBLIC_WIRE_AUDIT="$WIRE_AUDIT"
+          timeout --signal=INT --kill-after=12s 540s bash tools/m0-v4-public-real-linux-netns.sh linux-product             >fixed-kernel-result/h1608-native.log 2>&1 || {
+              tail -135 fixed-kernel-result/h1608-native.log >&2
+              echo H1608_REAL_NATIVE_SCENE_FAILED_PRESERVE_ARTIFACT
+              exit 1
+            }
+          grep -Fq 'M0_PLAN028_ACTUAL_LINUX_NEW_ROUTE_READBACK_PASS' fixed-kernel-result/h1608-native.log
+          grep -Fq 'M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS' fixed-kernel-result/h1608-native.log
+          test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
+          if test "$PUBLIC_MODE" = game4;then
+            grep -Fq 'M0_PLAN028_GAME4_FEC6_A_TO_AB_TO_B_SHARED_TUN_AND_PARITY_PASS' fixed-kernel-result/h1608-native.log
+            python3 - <<'PY'
+          import json,pathlib
+          obj=json.loads(pathlib.Path('fixed-kernel-result/plan028-game4-tls-wire-audit.json').read_text())
+          assert obj['result']=='REAL_GAME4_TWO_GENERATIONS_8_CLIENTHELLO_NO_PRELUDE_PASS'
+          assert obj['client_hello_sessions']==obj['distinct_session_ids']==8
+          assert obj['client_generation_count']==2 and obj['lanes_per_generation']==4
+          print('H1608_GAME4_TWO_REAL_TLS_FOUR_LANE_GENERATIONS_PASS')
+          PY
+          else
+            grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/h1608-native.log
+          fi
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib
+          p=pathlib.Path('fixed-kernel-result')
+          log=(p/'h1608-native.log').read_bytes()
+          data={'schema_version':1,'result':'PASS_SCOPED_SINGLE_REAL_NATIVE_PATH_AFTER_OS_CHANGE',
+            'product_source_sha':os.environ['PRODUCT_SOURCE'],'test_source_sha':os.environ['GITHUB_SHA'],
+            'run_id':int(os.environ['GITHUB_RUN_ID']),'prior_compiled_run_id':int(os.environ['PRODUCT_RUN_ID']),
+            'mode':os.environ['PUBLIC_MODE'],'fec':os.environ['GAME_FEC'],
+            'auto_ip':True,'new_physical_source_and_mtu_readback':True,
+            'new_authenticated_tls_rust_owner_before_old_stop':True,'post_switch_real_os_udp_echoes':5,
+            'source_log_sha256':hashlib.sha256(log).hexdigest(),
+            'scope_exclusions':['Windows Wintun','near-inner-MTU boundary','1800s L3','30pct loss']}
+          (p/'h1608-result.json').write_text(json.dumps(data,indent=2)+'\n')
+          print('H1608_ONE_PREBUILT_REAL_NATIVE_PATH_PASS_SCOPED mode='+data['mode'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1608-one-${{ inputs.public_mode }}-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1608-*.log
+            fixed-kernel-result/h1608-*.json
+            fixed-kernel-result/plan028-*.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+          retention-days: 21
+          if-no-files-found: warn

@@ -1,0 +1,13 @@
+name: PLAN028 H1608 Game4 fixed6 auto-IP real x86 path from prebuilt Go Rust
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1608-game4-fixed6-path.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  one-independent-native-scenario:
+    uses: ./.github/workflows/m0-plan028-h1608-prebuilt-native-path.yml
+    with:
+      public_mode: game4
+      game_fec: fixed6
+      wire_audit: "1"
