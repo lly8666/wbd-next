@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "date_local": "2026-11-11",
+  "checkpoint": "H1555",
+  "source_sha": "fe5a8fa56a72cd41a35424e1ade5536f7afad6d8",
+  "original_action_id": 42938018017,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/42938018017",
+  "scene_jobs": {
+    "loss0": 130254719324,
+    "loss30": 130254719354
+  },
+  "results": {
+    "cheap_windows_lf_regression": "PASS",
+    "linux_original_two_end_build": "PASS",
+    "linux_and_windows_rust_unit": "PASS",
+    "windows_go_build": "PASS",
+    "loss0_native": "FAIL_PRE_CLIENT_ALL_READY",
+    "loss30_native": "FAIL_PRE_CLIENT_ALL_READY",
+    "loss0_original_windows_tls_verified": "PASS",
+    "loss0_original_server_M4_Normal_initial": "PASS",
+    "loss30_tls": "FAIL_TIMEOUT",
+    "all_four_linux_original_tls": "FAIL_MANUAL_VS_AUTO_POLICY",
+    "MTU_applied_windows": "NOT_RUN",
+    "app_600s": "NOT_RUN",
+    "full_outer_250_300": "NOT_RUN",
+    "all_six_owned_Stop": "NOT_RUN",
+    "loss0_windows_WAL_stop_on_failure": "PASS",
+    "both_WSL_bridge_restored": "PASS"
+  },
+  "original_observations": {
+    "loss0_server": "MIXED_NORMAL_READY role=server client_port=41031 ... original_TLS=1 Rust_M4=1; Linux source ports 43031/44031/45031/46031 were rejected protected_tls class=other",
+    "loss0_windows": "original Go TLS record cap authenticated, then native first+reverse deadline TXCopied=38 RXDelivered=0; no WBD_WINDOWS_CLIENT_READY",
+    "loss30_windows": "SYN/SYNACK then faketcp: bootstrap stream deadline exceeded under genuine 200ms/30% cold path",
+    "linux_clients": "All four use --auto-ip but server used --manual-client-leases-file with credential bound alice..erin map; `originalV4ManualAccountTunnelAfterAuth` rejects AutoLease and v4ServerSelectedManualLease4 rejected auto for map"
+  },
+  "causal_hypothesis": "Proven server/client contract mismatch explains Linux authentication refusal, independent from Windows reverse proof and lossy cold TLS timeout; latter remain separate unverified issues.",
+  "proposed_minimal_fix": "After verified TLS username, map static roster /32 to existing auto lease field; no new wire, pool, FEC, external header, retry or product steady Go loop; retain singleton manual auto rejection. Runtime still unverified until genuine original underlay.",
+  "strict_status": "IN_PROGRESS",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "evidence_original_artifacts": [
+    "https://github.com/lly8666/wbd-next/actions/runs/42938018017/artifacts/13818659531",
+    "https://github.com/lly8666/wbd-next/actions/runs/42938018017/artifacts/13820111152"
+  ]
+}

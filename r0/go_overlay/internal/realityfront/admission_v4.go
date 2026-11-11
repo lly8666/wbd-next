@@ -266,7 +266,10 @@ func v4ServerCheckedManualLease4(s string,auto bool)(string,error){
 // packet may select a route, lease, or native owner.
 func v4ServerSelectedManualLease4(single string,byAccount map[string]string,username string,auto bool)(string,error){
     if len(byAccount)==0{return v4ServerCheckedManualLease4(single,auto)}
-    if single!=""||auto{return "",ErrAdmissionParams}
+    if single!=""{return "",ErrAdmissionParams}
+    // An authenticated per-account server roster may provision the EXISTING
+    // automatic protected reply lease field, even beside manual Windows
+    // devices. Legacy singleton/manual-only /32 remains non-auto.
     requested,ok:=byAccount[username]
     if !ok||requested==""{return "",ErrAdmissionParams}
     return v4ServerCheckedManualLease4(requested,false)
@@ -899,12 +902,21 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         return nil,manualErr
     }
     if req.AutoLease {
-        if cfg.AllocateLease==nil {
-            _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,ErrAdmissionParams
-        }
-        lease,err=cfg.AllocateLease(req)
-        if err!=nil || lease=="" {
-            _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,errors.Join(ErrAdmissionParams,err)
+        if manualLease!="" {
+            // The server-owned credential roster selects a stable /32 only
+            // after protected authentication. Carry it in the ALREADY
+            // EXISTING auto-lease reply field; never publish a manual-only
+            // server lease alongside a nonempty negotiated auto lease.
+            lease=manualLease
+            manualLease=""
+        }else{
+            if cfg.AllocateLease==nil {
+                _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,ErrAdmissionParams
+            }
+            lease,err=cfg.AllocateLease(req)
+            if err!=nil || lease=="" {
+                _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,errors.Join(ErrAdmissionParams,err)
+            }
         }
     }
     // Manual provisioned /32 remains server-local, not a new wire field:

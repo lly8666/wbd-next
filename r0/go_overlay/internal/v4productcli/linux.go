@@ -1515,7 +1515,9 @@ type originalV4MultiRecord struct {
 // credential authentication, never from pre-TLS address or packet fields.
 // Legacy singleton remains exact-ID bound.
 func originalV4ManualAccountTunnelAfterAuth(c config,req realityfront.AdmissionRequest)error{
-    if req.AutoLease||len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
+    // Only a credential-bound roster may assign an existing protected auto
+    // lease; a legacy singleton manual /32 still rejects auto admission.
+    if len(req.TunnelID)!=16||(req.AutoLease&&len(c.manualClientLeases4)==0){return realityfront.ErrAdmissionParams}
     if len(c.manualClientLeases4)==0{
         if string(req.TunnelID)!=string(c.tunnel[:]){return realityfront.ErrAdmissionParams}
         return nil
