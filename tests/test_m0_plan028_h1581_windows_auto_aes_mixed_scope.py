@@ -17,6 +17,7 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         marker="[plan028-h1581-win-auto-aes-mixed-150s]"
         self.assertIn("win5_scene: ${{ fromJSON(contains(github.event.head_commit.message, '"+marker+"') && '[\"mixed-loss0\"]'",w)
         self.assertIn("WBD_PLAN028_WIN_AUTO_AES_MIXED_150:",w)
+        self.assertIn("WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '"+marker+"') && 'normal'",w)
         self.assertIn("H1581_REAL_WINDOWS_AUTO_AES256_LINUX_THREE_AEAD_150S_UDP_TCP_SIX_OWNER_STOP_PASS_SCOPED",w)
         self.assertIn("H1581 signed Windows actual auto lease/AES256 plus Linux three AEAD 150s TCP/UDP/Stop NOT_PROVEN",w)
         self.assertIn('h1581=os.environ.get("WBD_PLAN028_WIN_AUTO_AES_MIXED_150")=="1"',h)
@@ -38,6 +39,12 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         self.assertIn('h1581_windows_protected_auto_lease',h)
         self.assertIn('windows_ip in json.loads(readback.stdout).get("ip",[])',h)
         self.assertIn('h1581_windows_actual_signed_wintun_os_ip',h)
+        app=(ROOT/"tools/m0_plan028_h1548_mixed_os_app.py").read_text()
+        self.assertIn('ap.add_argument("--windows-auto-ip",action="store_true"',app)
+        self.assertIn('if a.windows_auto_ip:',app)
+        self.assertIn('assert a.duration==150 and a.scene=="loss0"',app)
+        self.assertIn('assert actual[0]=="10.66.0.2"',app)
+        self.assertIn('*(["--windows-auto-ip"] if h1581 else [])',h)
         self.assertIn('auto_os_ips.values() and inner[0]!=windows_ip',h)
     def test_five_real_os_udp_tcp_owners_and_final_cleanup(self):
         h=HARNESS.read_text()

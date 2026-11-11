@@ -622,7 +622,8 @@ s.close()
                 report["h1574_150s_stage"]="real_sustained_udp_tcp"
                 csv_ips=",".join([windows_ip]+[auto_os_ips[n] for n in names[1:]])
                 app_args=["--scene","loss0","--barrier",guestpath(barrier),
-                          "--control",guestpath(control),"--duration","150","--inner-ips",csv_ips]
+                          "--control",guestpath(control),"--duration","150","--inner-ips",csv_ips,
+                          *(["--windows-auto-ip"] if h1581 else [])]
                 apps={}
                 apps["server"]=spawn("h1574-app-server",[
                     "wsl.exe","-d","Ubuntu","-u","root","--","env","GITHUB_SHA="+source,
@@ -633,6 +634,7 @@ s.close()
                     "--role","windows","--index","0",
                     "--scene","loss0","--barrier",str(barrier),
                     "--control",str(control),"--duration","150","--inner-ips",csv_ips,
+                    *(["--windows-auto-ip"] if h1581 else []),
                     "--out",str(OUT/"h1574-app-alice.json")])
                 for i,who in enumerate(names[1:],1):
                     apps[who]=spawn("h1574-app-"+who,[

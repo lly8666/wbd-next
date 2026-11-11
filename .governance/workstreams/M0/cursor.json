@@ -4,17 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1581,
-  "checkpoint_sha": "cfe8b3b40791eed13669f8209a123490136b5a42",
+  "sequence": 1582,
+  "checkpoint_sha": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1581-REAL-WIN-AUTO-AES-LINUX-THREE-CIPHER-150S",
-  "current_task": "H1580 SOURCE813 native Go Windows AutoLease/cipher wiring compiled; H1580 docs governance cfe8b3 FeatureCatalog+Governance PASS; next one exact H1581 Windows2025 signed Wintun automatic TLS-issued /32 AES256 plus four Linux clients multiple AEAD, 150s genuine UDP/TCP and six owned Stops at 200ms0loss. Additional Windows suites/manual and lifecycle pressure/30pct cold remain.",
-  "why_now": "Original current feature catalog/governance repaired at cfe8b3 with historical row/source retained; H1581 is next genuine signed network qualification of newly wired AutoLease/AES independent-client selection. No 029/030 scope expansion.",
+  "task_id": "PLAN028-M0-H1582-H1581-AUTO-AES-MIXED-REAL-FIXTURE-RECOVERY",
+  "current_task": "H1581 SOURCEca9b744e Action42992510288 WindowsGo/Rust+Linux assembly PASS but native networking NOT_RUN due MANAGEMENT_ROUTE_SCOPE_REFUSED before original TLS. H1582 now explicitly sets WBD_WL_PUBLIC_MODES normal, keeps scoped management owner guard intact; the true H1581 150s producer supports TLS-authenticated dynamic Alice auto /32 through explicit H1581-only --windows-auto-ip; old manual H1570/H1576 source tests repaired, and 600s hard test unchanged. Need next exact-source signed Windows network ACTION results, not yet PASS. PLAN028 IN_PROGRESS.",
+  "why_now": "H1581 runtime encountered test-only runner underlay scope guard and generator hardcoded former manual Alice IP; both must be fixed before any product AES256/AutoLease conclusion. No duplicate in-flight scenario as first Action completed FAIL.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1581 exact SOURCE Actions; confirm real signed Windows auto /32 protected TLS/Rust Cipher/OS readback and five true client UDP/TCP/Stop, fix first product/fixture issue if failed; then per-client Windows AES128/ChaCha manual/auto, 30pct real cold TLS, representative lifecycle/modes/L3, artifacts binary hashes. Do not duplicate running H1581 scene, retain old failures; PLAN028 IN_PROGRESS.",
+  "next_action": "On next source with [plan028-h1581-win-auto-aes-mixed-150s] collect cheap/Windows compile, route guard, real Windows original TLS/Rust auto /32/cipher/OS, then five true native UDP/TCP150s and six-owner Stop. If first error occurs fix actual product/fixture with exact logs; don't repeat passed source or re-dispatch in-flight. Next Windows independent AES128/ChaCha/manual and true 30% cold TLS/L3 representative as resources allow. Still IN_PROGRESS.",
   "unverified": true,
-  "last_tested_source": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
-  "evidence_refs": [],
+  "last_tested_source": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1581-WIN-AUTO-AES-MIXED-20261111.json"
+  ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
@@ -26,5 +28,5 @@
     "docs/devlog/M0/20261111-PLAN028-H1581-WINDOWS-AUTO-AES-MIXED-REAL-150S.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1580 cfe8b3 governance/feature catalog both SUCCESS (42992147851). SOURCE813 original Go/Rust Windows assembly compile, Linux x86+ARM original TLS two manual users and x86 Game4 overlap genuine scoped PASS. H1577 cd5d 1.15x genuine Win+Linux4 six Stop PASS_SCOPED while Action FAIL due missing report. H1581 dedicated true Win auto /32 AES256 versus Linux three AEAD real 150s TCP/UDP one scene newly armed; outcome not yet checked. PLAN028 IN_PROGRESS, avoid 029/030 and source promotion."
+  "partial_summary": "Original H1581 auto AES real signed Windows network NOT_RUN: SOURCEca9b Action42992510288 FAIL pre-TLS management-route scope (Windows/Linux builds passed). H1582 adds explicit normal mode + H1581-only real dynamic-IP app validation, fixes two stale governance guard cases. Existing SOURCE813 Linux x86/ARM manual/32 original true TLS/Rust PASS, H1577 cd5d Win+Linux4 150s true app+Stop PASS_SCOPED despite overall reporting FAIL; exact-source hard gates remain."
 }

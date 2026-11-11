@@ -18,3 +18,12 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H1581 only adds one source-scoped native test harness/workflow and records the exact not-yet-run acceptance; no product code or feature stage/default changed."}
 ```
+
+## H1581 第一场原始失败与 H1582 修正（2026-11-11）
+
+- 精确 SOURCE `ca9b744e34a24cb2d7637ee7396a1806473fe3ee`，Action `42992510288` **FAIL**，Windows Go、Windows/Linux Rust 和 Linux 原Go/Rust装配编译 PASS；Windows2025真实带宽场尚未进入。`tools/m0_wl_gamefec_management_route.ps1:21` 在保护 GitHub Runner 管理地址时抛出 `MANAGEMENT_ROUTE_SCOPE_REFUSED`。这不是自动租约/AES产品网络失败，也不是端到端业务PASS。原始Action不改写。
+- 真实根因：新 marker 仅设置了 `WBD_WL_RUNNER_MGMT_PIN=1` 和 `WBD_WL_NATIVE_OUTER_MTU_REQUEST=default1460`，遗漏旧管理路由保护所要求的 `WBD_WL_PUBLIC_MODES=normal`。H1582只把单独H1581 marker明确映射 normal，**不**放宽旧管理路由脚本的owner/underlay/source/恢复硬门。
+- 同场发现真实夹具兼容缺口：`tools/m0_plan028_h1548_mixed_os_app.py` 以前无条件断言 Alice 为 `10.66.0.2`；H1581必须使用TLS核实的自动池 `/32`。新加仅H1581 150s/loss0传入的 `--windows-auto-ip`，且只允许Windows Alice合法服务器自动池IP、所有client仍不重复；其他手动Alice场景**继续**要求 `10.66.0.2`，600s和旧剧本不改默认。Windows和WSL2进程均显式接收这一夹具参数，不能读主机环境猜测。
+- 治理 `42992510203` **FAIL** 两个历史H1570/H1576测试仍查找 `tasks=...IPS[0]`、`csv_ips=...IPS[0]` 源文本；新代码引用已认证 `windows_ip` 变量是必要真实改动。相应改为检查动态调用点和旧手动默认不被丢弃，维护单元不能代替现场收发。`42992510182` 主治理 SUCCESS。
+- 修订的真实 H1581 同一 Action只派 `mixed-loss0`，200ms单程0损、真实签名Npcap/Wintun + 原Go TLS/Rust + 4 Linux TUN/共享Rust服务端，五个客户端真双向UDP/TCP150s、Alice退后Bob业务继续、六owner Stop/恢复；完成后按原始strict-native-report和源码+内核实际读回判断。细节见 [H1581 first-failure evidence](../../evidence/M0/PLAN028-H1581-WIN-AUTO-AES-MIXED-20261111.json)。
+- **状态依然 NOT_RUN（修复提交前）**。任何后续 Action 的 FAIL/PASS 按那个实际 SOURCE+Job 写回；本 devlog 不预写完成。

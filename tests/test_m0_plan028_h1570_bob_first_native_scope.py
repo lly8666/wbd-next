@@ -31,7 +31,7 @@ class H1570BobFirstRealIPv4(unittest.TestCase):
         ):
             self.assertIn(mark,s)
         self.assertLess(s.index('report["h1570_bob_alone_native_udp_echoes"]=4'),
-                        s.index('tasks={"alice":spawn_real_echo_client("alice",IPS[0],8)}'))
+                        s.index('tasks={"alice":spawn_real_echo_client("alice",windows_ip,8)}'))
         self.assertNotIn("fake_m3",s)
     def test_one_loss0_200ms_only_bounded_native_and_artifact_logs(self):
         w=WF.read_text();s=SCRIPT.read_text()

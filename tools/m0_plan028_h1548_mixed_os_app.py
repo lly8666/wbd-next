@@ -113,14 +113,21 @@ def main():
     ap.add_argument("--out",type=pathlib.Path,required=True)
     ap.add_argument("--duration",type=int,default=600)
     ap.add_argument("--inner-ips",default="")
+    ap.add_argument("--windows-auto-ip",action="store_true",
+                    help="H1581: allow server-authenticated Windows auto /32")
     a=ap.parse_args()
     assert a.duration in (150,600) and len(os.environ["GITHUB_SHA"])==40
     # Real account-scoped OS /32, never the stale manual fixture addresses,
     # must reach UDP/TCP sockets for both 150s and 600s.
     assert a.inner_ips and (a.duration!=150 or a.scene=="loss0")
     actual=a.inner_ips.split(",")
-    assert len(actual)==5 and actual[0]=="10.66.0.2" and len(set(actual))==5
+    assert len(actual)==5 and len(set(actual))==5
     pool=ipaddress.ip_network("10.66.0.128/25")
+    if a.windows_auto_ip:
+        assert a.duration==150 and a.scene=="loss0"
+        assert ipaddress.ip_address(actual[0]) in pool and actual[0]!="10.66.0.2"
+    else:
+        assert actual[0]=="10.66.0.2"
     assert all(ipaddress.ip_address(x) in pool for x in actual[1:])
     global IPS
     IPS=tuple(actual)

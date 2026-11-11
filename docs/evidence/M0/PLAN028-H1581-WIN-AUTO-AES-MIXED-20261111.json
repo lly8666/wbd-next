@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1581",
+  "date_local": "2026-11-11",
+  "plan_status": "IN_PROGRESS",
+  "attempts": [
+    {
+      "source_sha": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
+      "action_id": 42992510288,
+      "run_conclusion": "FAIL",
+      "job_id": 130430875259,
+      "native_builds": "PASS_WINDOWS_GO_RUST_LINUX_ORIGINAL_GO_RUST",
+      "first_failure": "MANAGEMENT_ROUTE_SCOPE_REFUSED tools/m0_wl_gamefec_management_route.ps1:21 before any original TLS/OS/network app",
+      "product_network": "NOT_RUN",
+      "real_windows_auto_lease": "NOT_RUN",
+      "real_aes256": "NOT_RUN",
+      "root_cause": "H1581 marker configured WBD_WL_RUNNER_MGMT_PIN=1 and outer-mtu default1460 but failed to set WBD_WL_PUBLIC_MODES=normal, which the existing scoped management route guard correctly requires",
+      "separate_governance": {
+        "action_id": 42992510203,
+        "conclusion": "FAIL",
+        "reason": "two stale offline fixture expectations forced Alice fixed IPS[0] in H1570/H1576; revised to distinguish default manual .2 versus H1581 authenticated Windows dynamic /32"
+      },
+      "governance_main": {
+        "action_id": 42992510182,
+        "conclusion": "SUCCESS"
+      }
+    }
+  ],
+  "next_candidate": {
+    "source_sha": "UNSET_UNTIL_COMMIT",
+    "planned_scene": "ONE Windows2025 signed Npcap+Wintun auto /32 AES256 with 4 Linux native ChaCha/AES128/AES256, 150s real UDP+TCP, 0loss 200ms one-way, all 6 owners Stop",
+    "status": "NOT_RUN",
+    "expected_corrections": [
+      "explicit WBD_WL_PUBLIC_MODES normal while WBD_WL_RUNNER_MGMT_PIN=1",
+      "H1581-only --windows-auto-ip app input with actual TLS-verified source /32; legacy scenarios still hard-pin 10.66.0.2",
+      "update H1570/H1576 source guards to dynamic-variable callsites"
+    ]
+  },
+  "no_claims": [
+    "Windows AES256 native product pass",
+    "H1581 150s actual traffic",
+    "600s",
+    "Windows 30pct cold TLS",
+    "L3 2x1800s"
+  ]
+}
