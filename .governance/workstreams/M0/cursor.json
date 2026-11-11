@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1555,
-  "checkpoint_sha": "f0858f7ae54847ec806b8a4b9d94ed894190cde6",
+  "sequence": 1556,
+  "checkpoint_sha": "19f6340df9a0cf2f4aa79376296a8f120d4b5696",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1555-MIXED-MANUAL-ROSTER-AUTO-LEASE-REPAIR",
-  "current_task": "Collected both fe5a8fa exact-source Windows2025 real WSL2 loss0/loss30 original Action42938018017. loss0 confirmed Windows TLS+server Normal M4 but Windows first+reverse RXDelivered=0, Linux all four protected TLS rejected because manual server account roster forbids auto Linux clients. loss30 fails loss30 cold TLS timeout earlier. Apply bounded authenticated named-lease auto interop using existing protected reply field; preserve Windows manual and native lanes, original failures and separate Windows reverse/30% timeout blockers. New SOURCE NOT_RUN.",
-  "why_now": "Original real two-OS logs pinpoint untriggered cause instead of guessing last native deadline. Single manual/auto admission mismatch is proven by source and exact source ports; repair only credential-authenticated per-account lease selection, protect singleton and unknown accounts.",
+  "task_id": "PLAN028-M0-H1556-OVERLAY-SHA-AND-FEATURE-IMPACT-CLOSURE",
+  "current_task": "H1555 source19f6340 mixed auto/manual lease native NOT_RUN: H1376/H1383 x86 ARM failed assembly pre-build due overlay result_blob hash mismatch admission_v4.go; feature catalog failed missing feature-impact. H1556 updates exact hashes for admission_v4.go/linux.go, includes actual new manual-map unit test in assembly, updates feature card/devlog. No product code change from 19f. Triggered Actions auto only; no repeated manually dispatched scenario.",
+  "why_now": "Complete same-source two-platform assembly/test/feature metadata before any native qualification. Original H1555 pre-build source failures preserved; do not confuse governance feature card error with product regression.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect next exact-source auto-triggered mixed-loss0/loss30 true Windows WSL Actions once; if real Linux protected TLS and M4 now trigger PASS, then independently isolate Windows native first+reverse 0 (possible data readiness/app startup circularity) and loss30 genuine cold retransmit under 200ms/30% before any further code change. Do not reinterpret no-business as full PASS. No repeated manual dispatch.",
+  "next_action": "Collect automatically triggered source including H1556 overlay manifest and feature card; verify feature catalog and Linux x86/ARM64/Windows original-Go assembly before interpreting native loss0/30; catch real admission test if failure. Then isolate Windows first+reverse and loss30 cold TLS based on actual new logs; no seed repetition and no PASS for NOT_TRIGGERED.",
   "unverified": true,
-  "last_tested_source": "fe5a8fa56a72cd41a35424e1ade5536f7afad6d8",
+  "last_tested_source": "19f6340df9a0cf2f4aa79376296a8f120d4b5696",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1555-MIXED-NATIVE-LEASE-ROOT-20261111.json"
+    "docs/evidence/M0/PLAN028-H1556-OVERLAY-MANIFEST-SOURCE-CLOSURE-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Original Action42938018017 complete: Windows LF 6/6 and two-platform Go/Rust builds PASS; loss0 server accepted Windows Alice TLS and installed M4, Windows M3 RXDelivered=0; four Linux auto-ip clients rejected by manual account lease policy. loss30 real cold TLS bootstrap timeout. H1555 source edits fix only credential-bound named manual roster -> existing AutoLease reply, no new protocol; true business not yet tested."
+  "partial_summary": "19f H1555 failed fixed Go overlay result blob SHA gate and feature-impact metadata before executable network; H1556 only updates manifest (admission_v4.go/linux.go exact git blobs + unit test create), feature card, devlog. Native and throughput not yet exercised under that source. Existing fe5 loss0/30 original failures remain H1555 evidence."
 }

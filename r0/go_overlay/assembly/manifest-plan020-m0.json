@@ -1070,13 +1070,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "4b9bd7234f598a8c251e33bbdf0a0d161676a4b3"
+      "result_blob": "32863cecb6f4b612af567ab2df7cc8c665301277"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "3617b125eaf317f50423a84fae220216538b8d9d"
+      "result_blob": "6a69f674608af003a116cd02a7a77c0cb00f911c"
     },
     {
       "kind": "replace",
@@ -1140,6 +1140,12 @@
       "path": "internal/faketcp/plan028_native_peer_persona_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/plan028_native_peer_persona_test.go",
       "result_blob": "d6e597b8c15a761bb251a840b5c2e58b65ea78b3"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_manual_lease_map_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_manual_lease_map_test.go",
+      "result_blob": "d53478e20a127e1272429b70fe91dad552825183"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

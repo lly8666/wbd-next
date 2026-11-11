@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "checkpoint": "H1556",
+  "date_local": "2026-11-11",
+  "plan": "PLAN028",
+  "source_sha": "19f6340df9a0cf2f4aa79376296a8f120d4b5696",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "observed_ci_runs": [
+    42940982220,
+    42940982196,
+    42940982227
+  ],
+  "observations": {
+    "h1376_x86_and_arm64": "FAIL_PRE_BUILD FEC2_ASSEMBLY_REJECTED: overlay result blob mismatch internal/realityfront/admission_v4.go",
+    "h1383_x86_and_arm64": "FAIL_PRE_BUILD same overlay result blob mismatch",
+    "governance": "PASS",
+    "feature_catalog": "FAIL product change requires a feature-impact block in its changed devlog",
+    "native_loss0_and_loss30": "NOT_RUN_ON_THIS_SOURCE_BECAUSE_ASSEMBLY_PRECHECK_BLOCKS",
+    "actual_code_fix": "Unverified: server per-account roster maps auto to existing verified TLS reply lease; no success assumed"
+  },
+  "fix": "Sync two changed overlay result_blob SHA values and include new manual lease regression test as a create operation; update tls-auth-multiclient feature card and new devlog feature-impact declaration; no product changes to H1555 logic.",
+  "scope": "ASSEMBLY_ONLY",
+  "original_loss0_30": "Preserved on exact fe5a8fa source in H1555 evidence; originals not reassigned.",
+  "plan_status": "IN_PROGRESS"
+}
