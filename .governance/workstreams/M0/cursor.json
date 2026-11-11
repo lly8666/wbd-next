@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1593,
-  "checkpoint_sha": "2c59b9755c5983572a02bbfa659d522c1c7f7403",
+  "sequence": 1594,
+  "checkpoint_sha": "7f492b459067d8270529bf74e2fbf645756a4149",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1593-REAL-BINARY-REHASH-MANIFEST-AND-FEATURE-CATALOG",
-  "current_task": "H1593 downloaded genuine Windows exe/dll and Linux x86 Go client/server/Rust .so from SOURCEfd473 Actions build artifact and locally independently SHA256 rehashed; all agree manifests. ARM64 native real TLS two-account TUN 59 UDP via CI source-locked manifest, ARM64 ISA-L separate accelerated build SHA receipt only; runtime NEON NOT_RUN. Corrected feature card live branch/old H1590 pending and PLAN028 table. Source 8c0421c H1581 Win autoAES+fourLinux mixed 150s Action43014043726 in_progress at handoff; avoid second launch. H1587 dual-Windows route ownership remains open.",
-  "why_now": "True latest action result was missing from cursor and mixed tool generic report had materially false 600s qualification. Per-Windows native OS concurrent route ownership H1587 remains a hard gate and must be solved without taking foreign routes.",
+  "task_id": "PLAN028-M0-H1594-SOURCE8C-TRUE-150S-MIXED-NATIVE-AND-ROUTE-GATE",
+  "current_task": "Source8c0421 Action43014043726 overall SUCCESS, native job130502884187 genuine Windows signed auto /32 AES256/Rust3 + Linux four three-AEAD all real kernel UDP/TCP 150s, Windows Stop then Bob still live and all six Stop, Wintun MTU1389/WAL/netem/WSL restored. Outer both-dir aggregate pre-saturation median151.96Mbps, late123Mbps with VM host CPU92.6%: do not escalate 250-300Mbps or 600s on same host. Correct 150s strict 600s scope metadata mislabeled H1565 first-fault (report-only fix) and retain hard H1587 double independent Windows OS route owner FAIL.",
+  "why_now": "Previously unrecorded successful SOURCE8c true Win+Linux150s run became complete at 2026-11-11T11:57:22Z. Product qualification explicitly spans real business and Stop, while global Windows full-tunnel /1 route owner remains blocking concurrent two signed Wintuns. Host near CPU capacity means refuse heavier same-family without per-worker/generator evidence.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Recheck 43014043726 native job and strict report/action overall, do not count if no full 150s TCPUDP/sibling-survival/all stop; update SOURCE evidence. Then safe route-owner H1587 proof, calibrated one-stage L2 and impacted representative L3. Keep PLAN028 IN_PROGRESS until true hard gates qualified.",
+  "next_action": "Do not rerun passed 150s or 30pct cold TLS. H1587 dual-Windows independent Wintun OS routes require a genuinely safe coexistence design (global /1+server /32 overlap; existing CAS must not be disabled) and signed real B business+A Stop test; additional same-account/nearMTU/idle/rotation representative L1 and L3 unproven. Do not launch heavier hosted 250-300Mbps while 4-vCPU CPU peak92.6%; investigate worker/host separately if necessary. PLAN028 IN_PROGRESS, no 029/030.",
   "unverified": true,
-  "last_tested_source": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
+  "last_tested_source": "8c0421c33a4fcb9309be3530b3eec0100fc38d9d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json"
+    "docs/evidence/M0/PLAN028-H1594-SOURCE8C042-WIN-AUTO-AES-LINUX-FOUR-REAL-150S-PASS-SCOPED-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1592-COLD-SCOPE-AND-OS-ISOLATION.md",
-    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1593-REAL-BINARY-REHASH-AND-CATALOG.md"
+    "docs/devlog/M0/20261111-PLAN028-H1594-WIN-AUTO-AES-MIXED150-ACTUAL-PASS-AND-HOST-CAPACITY.md",
+    "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1592 recovered true fd4732ec cold-TLS 30pct scoped PASS and original 600s scope bug; no 600s or L3. H1586 dd82 genuine 150s older-source PASS_SCOPED; current-source 150s scheduled via distinct marker; H1587 dual-Windows route owner FAIL unresolved. PLAN028 IN_PROGRESS. H1587 historical different SOURCE only in context_refs to preserve strict same-SOURCE governance evidence invariant."
+  "partial_summary": "H1594 source8c Action43014043726 actual Win2025 native auto AES256+Linux four heterogeneous cipher UDP/TCP150s+Windows Stop Bob UDP+six exact Stop PASS_SCOPED; throughput outer duplex median151.96Mbps late123Mbps host CPU92.6%, heavier same VM capacity paused. H1592 fd473 true 30pct cold TLS RTO+M4+OS+Stop PASS_SCOPED only. H1587 dual Win Wintun OS WAL route FAIL unclosed, 600s/representative L3/other impacted L1 not fully qualified; PLAN028 IN_PROGRESS."
 }

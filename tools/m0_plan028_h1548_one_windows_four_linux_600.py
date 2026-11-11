@@ -212,7 +212,10 @@ def main():
        "h1581_real_Windows_auto_AES256_Linux_three_AEAD_150s":h1581,
        "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
-       "600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
+       "600s_outer_capacity": ("NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else
+            "NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE" if h1581 else
+            "NOT_RUN_H1574_TRUE_150S_FIVE_NATIVE" if l1_150 else
+            "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548")}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
                x["family"]=="inet" and x.get("scope")=="global"]

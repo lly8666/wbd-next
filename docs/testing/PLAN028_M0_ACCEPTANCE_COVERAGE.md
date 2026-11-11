@@ -6,7 +6,7 @@
 
 - **Linux x86_64 / ARM64：**原始 Go credential TLS443 冷协商、`r0/go_overlay/internal/v4productcli/linux.go` 的当前 CLI、`crates/wbd-engine` Rust M4 和原生 raw/TUN。Windows/Linux 开发源码在 `main`、原始 Go 固定 donor `lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984`；`r0/go_overlay/assembly/manifest-plan020-m0.json` 固定每一正式替换/新增 Go blob。ARM64 **不**能只凭仓库存在文件：要核正式 H1546 11 文件装配 + 实际后端与 binary receipt。
 - **Windows x86_64：**正式 `wbd-client.exe` 默认 `--native-v4-product=true`；WinForms `windows/gui/Portable.cs` 经当前 manifest 组装后显式启动同一 `--native-v4-product --control-stdin --config` 子进程。默认 false 的旧隐含入口已取消，显式关闭不会自动退回旧 V3。正规装配为 `tools/prepare_windows_wiring.py` + `r0/go_overlay/assembly/assemble.py` + manifest；`EXTRA_BRIDGES` 明列 Game group 和原生认证附加桥。Go只负责认证/冷路径，Rust为收发/记录/FEC稳态；签名 Npcap/Wintun/OS WAL 为真实产品硬门。
-- **最新实际测试源码：**`fd4732ec4adffa442a0bc25a145ed6ea1d1259a8`（H1592实网/二进制），`813e4c5c71fe2a1f2442bfda0ce19c205a398d03` 为最初Windows自动IP/三cipher接线源码、不是最新HEAD。`fd4732ec` Action `43009320538` 实Windows30%冷TLS+M4+签名OS+Stop成功（**仅冷建链**），`43009320436` Linux x86/ARM手动两账号真实TUN/Stop成功，`43009320389` Windows各模式/WAL scoped通过；旧SOURCE `dd82db7e` Action `43000134310` 真实Windows自动AES256+四Linux三cipher150s严格报告PASS_SCOPED（Action整体后置FAIL）。**Windows单宿主双独立Wintun路由H1587仍FAIL、新SOURCE自动AES/150s在 Action `43014043726` 复验中，不能写全组合均通过。**
+- **最新实际测试源码：**`fd4732ec4adffa442a0bc25a145ed6ea1d1259a8`（H1592实网/二进制），`813e4c5c71fe2a1f2442bfda0ce19c205a398d03` 为最初Windows自动IP/三cipher接线源码、不是最新HEAD。`fd4732ec` Action `43009320538` 实Windows30%冷TLS+M4+签名OS+Stop成功（**仅冷建链**），`43009320436` Linux x86/ARM手动两账号真实TUN/Stop成功，`43009320389` Windows各模式/WAL scoped通过；旧SOURCE `dd82db7e` Action `43000134310` 真实Windows自动AES256+四Linux三cipher150s严格报告PASS_SCOPED（Action整体后置FAIL）。**Windows单宿主双独立Wintun路由H1587仍FAIL；SOURCE `8c0421c3` Action `43014043726` Windows自动AES256/四Linux三AEAD真150s/六owner Stop已PASS_SCOPED，不能写全组合均通过。**
 - **二进制/装配指纹：**H1376 同源码 x86_64 artifact ZIP `sha256:fb36ebb74b02251afd152dc83e0945d3ff40ba83c2ec7f88e8cc4e11598ca5a9`；ARM64 `sha256:1aa746cc6b6a8d44d52437ce3cf9ea1e95a63f6f9c693074138766b98b2c108c`。H1546 ARM64 构建收据 artifact ZIP `sha256:38afc2fdd7c645e90e49305c802f90c480de3df5a89bc817c90d1c3444ea98a1`。这些是**artifact ZIP digest，不可冒充 exe/dll/rust .so 的单文件 SHA256**；逐文件 hash 与后端以 artifact 内 receipt 为准，未核的单文件字段标 NOT_READ。
 - **不混淆容量/范围：**H1577 `cd5dfa3b7688167eebfc12020e0180a9fa8df8f4` Action `42983815178` 曾真实完成 Windows+4 Linux 150s 1.15× 六角色 UDP/TCP、Windows先退出后 Linux继续、六个 native Stop/WAL/WSL/netem 清理（`PASS_SCOPED`）；Action 整体 **FAIL** 是后续复制缺失 `normal-report.json`。新脚本仅在真实完整场景成功且所有资源恢复后导出带 `TRUE_150S_FIVE_CLIENTS_NOT_600S` 的兼容报告。原始失败必须保留；**未跑 600s，不等于新 SOURCE 813 的网络 PASS**。另有较早外层约 304 Mbps **双向总量**弱网证据，不能解释成单客户端内层 304 Mbps。
 - `42984484136` 治理 12 FAIL、`42987330788` 3 FAIL 均保留；更正旧断言后的 `42987762293` 治理回归 **PASS**。旧 `42987762872` Windows WAL 因 PLAN022 过期仅Normal/off 文本门而 FAIL（原 Go native 构建与测试实际通过），修复后的 SOURCE 回归仍应核对。
@@ -36,15 +36,15 @@
 | 标准TLS443/无私有前置消息/账户绑定 | Linux x86_64 / ARM64 Go TLS+Rust | 原生服务端/客户端；单端口 | `813e4c5c...` Actions `42987762909`,`42987762119`,`42987762125` | 单场真实原TLS和两账号手动独立 `PASS_SCOPED`；不等于Windows全部cipher |
 | 多账号手动/32、A退出B续收及 Stop | Linux x86_64 + ARM64 | server共享Rust TUN，客户端手动 | `813e4c5c...` Action `42987762119` 双平台 | `PASS_SCOPED`，真实 native Go TLS/Rust、账户手动地址隔离 |
 | Game4 A→A+B→B / 中途MTU | Linux x86_64 | Game4显式，FEC profile按场景 | `813e4c5c...` Action `42987762898` | `PASS_SCOPED` 共享单TUN、真实TLS、切换/Readback；不是Win新Auto |
-| Windows Npcap/Wintun normal+四Linux 150s 1.15x | Win2025 + Linux WSL2 | Native V4，手动/ChaCha测试专用 | `cd5dfa3b7688167eebfc12020e0180a9fa8df8f4`, Action `42983815178`，H1577 devlog及原artifact | 真实 UDP/TCP/六owner stop `PASS_SCOPED`，**Action FAIL**（报表复制文件缺失），修复后的新SOURCE尚未重跑 |
-| Windows自动/手动IP、三AEAD不同终端同服 | Win2025 signed driver ↔ Linux shared | V4默认；`lease4`空/32、`record-cipher`默认ChaCha | `dd82db7e` H1586 Action`43000134310`，`3b6d53c3` H1587 Action`43001721886`，`fd4732ec` H1592 Action`43009320538` | Win自动AES256+Linux3套AEAD真150s **PASS_SCOPED老源**；Win手动AES128 A OS/业务PASS，B ChaCha真TLS/Rust但**同宿主route WAL FAIL**；新源30%手动ChaCha仅冷建链PASS，不能冒充双WindowsOS共存 |
+| Windows Npcap/Wintun normal+四Linux 150s 1.15x | Win2025 + Linux WSL2 | Native V4，原测试显式1.15× | `cd5dfa3b7688167eebfc12020e0180a9fa8df8f4`, Action `42983815178`；新`8c0421c3` Action`43014043726` 真实1.0×150s | 旧1.15× UDP/TCP/六owner scoped PASS但Action后置FAIL；**新 SOURCE** 1.0×150s五客户端UDP/TCP/Alice先Stop Bob继续/全Stop **Action SUCCESS、业务PASS_SCOPED**，不是旧1.15×压力重跑 |
+| Windows自动/手动IP、三AEAD不同终端同服 | Win2025 signed driver ↔ Linux shared | V4默认；`lease4`空/32、`record-cipher`默认ChaCha | 新`8c0421c3` Action`43014043726` [H1594证据](../evidence/M0/PLAN028-H1594-SOURCE8C042-WIN-AUTO-AES-LINUX-FOUR-REAL-150S-PASS-SCOPED-20261111.json)；另`fd4732ec`30%手动冷场；`3b6d53c3`双Win路由失败 | **Win自动AES256+Linux三AEAD真实150s+全Stop PASS_SCOPED**；fd473 Win手动ChaCha30%冷TLS/OS PASS_SCOPED；同主机第二Windows路由冲突FAIL，同账号两独立设备全部OS场未验 |
 | 七模式产品正向 | Windows/Linux x86_64 + ARM64 | Normal Off/max/Auto、Game2 Off/max、Game4 Off/max，FEC默认Off | 旧 `b6b964afa7ffec5795f2c11c6e0620f223e684ac` Action40560287417、旧 `33ed20...`；新的Win编译813 | 老源七模式真实正向可复用非改动组件；Win新源模式/cipher搭配 NOT_RUN |
 | Windows可用B前不得退休A、Game兄弟不断 | Win2025 | Native有界轮换 | Windows历史source与813 source-mode tests；`42987762319`双独立原生owner槽 | SOURCE813 Windows owner/生命周期 unit PASS，整机Path/Auto runtime未验 |
 | keepalive/idle/dead与真正payload唤醒 | Linux x86_64 | 15/90 Windows，Linux实配；默认idle0 | 老 `134914f4263f905047b1096c771609558bcdde82` 真黑洞/新TLS恢复；原计划原证据 | 历史 Linux `PASS_SCOPED`；Win新SOURCE组合代表 NOT_RUN |
 | ARM64持久、30%丢包/轮换 | Linux ARM64 双端 | Native Rust, Go TLS | `24e1fe6c4eab2a1abb7fb8a6d2093abaf57c0f73` H1361/H1363及历史长测 | 老源码受未改组件可复用，SOURCE813 arm64正向手动租约PASS、ISA-L构建PASS；不冒充new 1800s |
 | Windows 30%物理损伤单个冷TLS | Win2025/WSL2 | Native首次ColdTLS，不要求全负载 | `fd4732ec` Action`43009320538` + [H1592 evidence](../evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json) | **PASS_SCOPED冷建链**：原Go RTO3次、TLS/Rust、签名Wintun实际/32 MTU1389、Linux真反向源、双方owned Stop；30%五客户端150/600s与L3 **NOT_RUN**，旧source失败不改写 |
 | Linux/Windows数据、CPU/RSS、p99、PPS、连续空洞、队列年龄 | x86_64/ARM64/Win | 压力只到平台能力、同 VM A/B | H1577 `cd5d` 150s、ARM64旧30m证据、旧外层304Mbps双向总量 | 现源码代表容量及一套新配置全链指标未齐；不能以成功包p99代替未交付 |
-| 完整单端Stop、原始网络恢复、共享server退出 | Win+Linux | 客户端仅回收自有网卡/路由/WAL | H1576 `c3e60772...`、H1577 `cd5d` Action42983815178 | 真实Stop资源 PASS_SCOPED，但报表/夹具 Action FAIL 原样留；新源码认证改动后代表复测未齐 |
+| 完整单端Stop、原始网络恢复、共享server退出 | Win+Linux | 客户端仅回收自有网卡/路由/WAL | `8c0421c3` H1594 Action`43014043726`；旧H1576 `c3e6`, H1577 `cd5d`失败记录 | **新源真实五客户端150s Windows精确退出→Bob再收4 UDP→Linux四端和共享server Stop/WAL/netem/WSL恢复 PASS_SCOPED**；旧Action FAIL保留；双Windows同宿主 Stop隔离 H1587仍FAIL |
 | DNS、分流、IPv6、近MTU小/大包兼容冒烟 | Win/Linux | 沿已有默认，不开发029 | 历史兼容烟测 + Rust budget code | SOURCE813新auto组合未完整验证 |
 | Android、物理公网、029新增DNS/填充、030服务 | Android/物理/未来 | 不接入本轮 | 无本SOURCE资格 | **范围外/NOT_RUN，不能作为已验** |
 
@@ -105,3 +105,18 @@
 
 以上 checksum 均是具体二进制 SHA256，**不是ZIP的hash**；ZIP SHA见H1592 evidence。不同 Rust库hash分别对应普通原生与加速构建，不混用、不得将BUILD_ONLY写成ISA-L业务真测。Windows本源15s/90s参数/MTU readback、真实签名驱动入链的场景以H1592原始Strict报告为准。
 
+
+
+## H1594 最新原始 Windows2025 五客户端150s 实测（SOURCE8c0421c）
+
+Action [43014043726](https://github.com/lly8666/wbd-next/actions/runs/43014043726) 和native Job`130502884187`均 **SUCCESS**；从artifact`13852862215` 原始strict report/原始Windows/Linux日志复核，ZIP SHA256 `75db8322f08830f2d5c11a300ab4f7a10bff731862bc68f5fcffcb366164562d`；严格报告SHA256 `f3229ac51e5b33d4e36097343e63ad70d65b1920ac3191c6f2bc719286098f3b`，详细[H1594 evidence](../evidence/M0/PLAN028-H1594-SOURCE8C042-WIN-AUTO-AES-LINUX-FOUR-REAL-150S-PASS-SCOPED-20261111.json)。
+
+| 轴 | 新源真实入口/有效值 | 收口范围 |
+|---|---|---|
+| Windows原Go TLS+Rust+OS | Alice auto真正受保护`10.66.0.192/32`、`--record-cipher aes-256-gcm`→Rust cipher3、签名Wintun实际/32、outer1460→inner MTU1389；Linux同server bob/carol/dave/erin四独立IPv4与ChaCha/AES128/AES256 | **PASS_SCOPED** Windows自动+Linux异构真实受保护配置和OS；未验双Windows同宿主路由/同账号两个设备 |
+| 真业务150s | Alice UDP C2S113657/113657、S2C113661/113661，TCP144双端；Bob113662/113662、113661/113661、TCP147；Carol56830/56830双向、TCP143；Dave56830/56830双向、TCP145；Erin113662/113662、113661/113661、TCP143。TCP invalid0；每端最大活跃UDP空洞不超过60.48ms | **PASS_SCOPED** kernel socket双向UDP+TCP五客户端全场；UDP合计909284首次唯一到达、TCP双端记录1444帧；不以成功包p99冒充残损/队列年龄（未测） |
+| Stop | Windows自身WAL/Rust退出、真实server echo始终存活；Alice Stop后Bob额外4 UDP回声、Linux四客户端及server Stop；server TUN `routed=456217 unrouted=0 backpressure=0 reader_joined=1`、所有队列drop0；Windows WAL留存0、WSL bridge与netem恢复、Npcap cleanup PASS | **PASS_SCOPED** 真五客户端和共享OS生命周期；同Windows物理宿主双Wintun独立Stop仍H1587 FAIL |
+| 容量边界 | 单程200ms、0%丢包、宿主4逻辑vCPU/2核；实际**outer双向总量**典型151.96Mbps，CPU整体忙碌末段最高92.6%，late速率跌至约123Mbps，host可用RAM低点10.638GiB | 五端功能PASS，后续同宿主250–300Mbps重L2/600s不派发；**容量CAPACITY_LIMITED，未测每worker/进程RSS及队列p99**，不能判产品/宿主根因 |
+| 报表资格 | `qualification_scope=TRUE_150S_FIVE_CLIENTS_NOT_600S`；原strict `600s_outer_capacity=NOT_RUN_H1565_SHORT_FIRST_FAULT`，H1594最小修正后新报表会写`NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE` | **150s业务PASS_SCOPED**、600s/30%五客户端业务/L3/GUI真实人机均NOT_RUN；报告字段修正不需要重测已经合格的原始产品 |
+
+硬失败阻断H1587：每个Wintun原生plan都申请两条Windows全局`/1`捕获与同一TLS服务器物理`/32`逃逸，`native_unified_stage_routes_windows.go`保留精确owner CAS，不能借共享路径误删前一实例。复用当前架构没有已验证按进程/源IP隔离的Windows路由域；此处不为刷绿引入029/030服务或禁掉保护。PLAN028仍 **IN_PROGRESS**，L1必要额外组合及可独立量测的L3尚未全部完成。

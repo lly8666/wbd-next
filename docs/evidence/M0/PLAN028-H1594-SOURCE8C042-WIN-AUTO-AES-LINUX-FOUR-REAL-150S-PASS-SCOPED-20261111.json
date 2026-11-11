@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1594",
+  "source_sha": "8c0421c33a4fcb9309be3530b3eec0100fc38d9d",
+  "plan_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "action_id": 43014043726,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43014043726",
+  "action_overall": "SUCCESS",
+  "native_job_id": 130502884187,
+  "native_job_conclusion": "SUCCESS",
+  "artifact_id": 13852862215,
+  "artifact_zip_sha256": "75db8322f08830f2d5c11a300ab4f7a10bff731862bc68f5fcffcb366164562d",
+  "strict_report_name": "h1548-loss0-strict-native-report.json",
+  "strict_report_sha256": "f3229ac51e5b33d4e36097343e63ad70d65b1920ac3191c6f2bc719286098f3b",
+  "strict_report_status": "PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S",
+  "generic_report": {
+    "status": "PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S",
+    "qualification_scope": "TRUE_150S_FIVE_CLIENTS_NOT_600S",
+    "mode_public": "PASS_MIXED_FIVE_ORIGINAL_150S",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "scenario": {
+    "Windows_real_signed_Wintun_Npcap": 1,
+    "Linux_kernel_netns_original_TLS_Rust": 4,
+    "shared_original_TLS443_Rust_TUN_server": 1,
+    "real_application_duration_s": 150,
+    "physical_loss_pct": 0,
+    "physical_oneway_delay_ms": 200,
+    "requested_outer_mtu": 1460,
+    "inner_OS_mtu_applied": 1389
+  },
+  "identity_cipher_ip": {
+    "Windows_Alice": {
+      "auto_lease": true,
+      "authenticated_ipv4": "10.66.0.192/32",
+      "os_readback_ipv4": "10.66.0.192",
+      "requested_record_cipher": "aes-256-gcm",
+      "real_rust_cipher_id": 3
+    },
+    "Linux_clients": {
+      "Bob": {
+        "ipv4": "10.66.0.136/32",
+        "record_cipher": "chacha20-poly1305"
+      },
+      "Carol": {
+        "ipv4": "10.66.0.191/32",
+        "record_cipher": "aes-256-gcm"
+      },
+      "Dave": {
+        "ipv4": "10.66.0.239/32",
+        "record_cipher": "chacha20-poly1305"
+      },
+      "Erin": {
+        "ipv4": "10.66.0.187/32",
+        "record_cipher": "aes-128-gcm"
+      }
+    }
+  },
+  "real_business_150s": {
+    "status": "PASS_FIVE_OS_KERNEL_APPS_BIDIRECTIONAL",
+    "unique_udp_c2s_and_s2c": {
+      "Alice": {
+        "c2s": [
+          113657,
+          113657
+        ],
+        "s2c": [
+          113661,
+          113661
+        ]
+      },
+      "Bob": {
+        "c2s": [
+          113662,
+          113662
+        ],
+        "s2c": [
+          113661,
+          113661
+        ]
+      },
+      "Carol": {
+        "c2s": [
+          56830,
+          56830
+        ],
+        "s2c": [
+          56830,
+          56830
+        ]
+      },
+      "Dave": {
+        "c2s": [
+          56830,
+          56830
+        ],
+        "s2c": [
+          56830,
+          56830
+        ]
+      },
+      "Erin": {
+        "c2s": [
+          113662,
+          113662
+        ],
+        "s2c": [
+          113661,
+          113661
+        ]
+      }
+    },
+    "tcp_duplex_received_frames": {
+      "Alice": 144,
+      "Bob": 147,
+      "Carol": 143,
+      "Dave": 145,
+      "Erin": 143
+    },
+    "tcp_invalid_total": 0,
+    "max_active_udp_gap_ms": {
+      "Alice": {
+        "client": 47,
+        "server": 60.48
+      },
+      "Bob": {
+        "client": 42.73,
+        "server": 34.25
+      },
+      "Carol": {
+        "client": 38.13,
+        "server": 45.76
+      },
+      "Dave": {
+        "client": 46.07,
+        "server": 49.08
+      },
+      "Erin": {
+        "client": 55.25,
+        "server": 41.22
+      }
+    },
+    "note": "Five client UDP unique counters match exactly in both directions and each TCP client/server pair matches; per-client 150s app COMPLETE. TCP counts each one direction echoed; not throughput MBps."
+  },
+  "owned_lifecycle": {
+    "windows_exit": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "alive_Linux_after_windows_stop": true,
+    "real_Bob_post_exit_udp_echoes": 4,
+    "real_Bob_post_exit_status": "PASS_4_REAL_OS_UDP",
+    "Linux_four_clients_exact_stop": true,
+    "shared_server_rust_stop": "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=456217 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+    "netem_restored": "PASS",
+    "WSL_bridge_restored": true,
+    "Windows_owned_WAL_leftover": [],
+    "Npcap_driver_cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS"
+  },
+  "measured_host_capacity": {
+    "guest": "Windows2025 GitHub Runner with WSL2 Linux peer; AMD EPYC 7763, 4 vCPU / 2 exposed physical cores, guest RAM about 16GiB",
+    "outer_kernel_both_directions_combined_mbps_median_pre_saturation": 151.96,
+    "pre_saturation_duration_sample_window_seconds": "elapsed 20..114",
+    "largest_10s_sample_outer_both_direction_mbps": 152.831,
+    "late_outer_both_direction_mbps": [
+      122.981,
+      123.329
+    ],
+    "windows_host_cpu_busy_pct_peak": 92.6,
+    "windows_host_memory_available_min_GiB": 10.638,
+    "outer_10s_sample_count": 15,
+    "total_unique_business_udp_arrivals_both_directions": 909284,
+    "has_process_thread_CPU_breakdown": false,
+    "host_saturation_classification": "CAPACITY_LIMITED_FOR_MORE_HEAVY_SAME_VM",
+    "decision": "No 250-300Mbps / 600s or loss30 larger-load replay on same near-saturated hosted VM; this functional 150s remains PASS_SCOPED, not a peak capacity or new L3 PASS",
+    "notes": "Steady outer duplex aggregate is not one client inner goodput. Busy 92.6% and late throughput decline are host-capacity signals but do not by themselves isolate product worker/lock vs VM or generator. CPU p99/process RSS/queue age not measured."
+  },
+  "product_binary_sha256": {
+    "Windows_x64_Go_exe": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "Windows_x64_Rust_dll": "c290a1c229c3949a20c9421061662490057cdb8d6a3c933718c16c6384c21250",
+    "Windows_signed_Wintun": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "Linux_x64_Go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "Linux_x64_Go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "Linux_x64_Rust_so": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "actual_backends": {
+    "Windows": "original Go standard authenticated TLS443 + Rust M4 native Wintun/Npcap and exact owned WAL",
+    "Linux": "original Go TLS443 + Rust M4 raw/TUN",
+    "Windows_native_FEC_acceleration": true
+  },
+  "reporting_defect": {
+    "original_source_report_field": "600s_outer_capacity: NOT_RUN_H1565_SHORT_FIRST_FAULT",
+    "true_scope": "TRUE_150S_FIVE_CLIENTS_NOT_600S",
+    "h1594_corrected_future_report_field": "NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE",
+    "network_rerun_for_metadata": "NOT_NEEDED",
+    "original_artifact_unchanged": true
+  },
+  "hard_blockers": [
+    {
+      "id": "H1587",
+      "source_sha": "3b6d53c30531f6820c220f9e6c23f8a23480227c",
+      "action_id": 43001721886,
+      "description": "two independent signed Wintun clients on same Windows host conflict on global /1 capture + underlay server /32; B route owned WAL CAS refuses takeover, B OS app and A Stop B continuity NOT_PASSED"
+    }
+  ],
+  "not_proven": [
+    "same_account_two_Windows_independent_OS_routes",
+    "seven_modes_full_current_source_real_mixed",
+    "representative_current_source_L3_long_soak",
+    "mixed_30pct_loss_five_client_UDP_TCP_business",
+    "heavy_600s_250_300_outer_duplex",
+    "UDP_TCP_near_derived_MTU_boundary_new_auto_cipher",
+    "runtime_ARM64_NEON_dispatch",
+    "GUI_actual_interactive_OS",
+    "per_worker_CPU_or_CPU_per_GiB_and_RSS",
+    "Android",
+    "physical_WAN",
+    "PLAN029",
+    "PLAN030"
+  ]
+}

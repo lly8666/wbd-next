@@ -75,6 +75,11 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         self.assertIn('Windows_original_WAL_leftover',h)
         self.assertIn('"PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S"',h)
         self.assertIn('if report["status"].startswith("PASS") and (not probe or l1_150)',h)
+        # H1594: a genuine 150s pass cannot be summarized as a generic
+        # first-fault probe, and is never 600s outer capacity.
+        self.assertIn('"NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE" if h1581 else',h)
+        self.assertIn('"NOT_RUN_H1574_TRUE_150S_FIVE_NATIVE" if l1_150 else',h)
+        self.assertIn('"NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else',h)
 
 if __name__=="__main__":
     unittest.main()
