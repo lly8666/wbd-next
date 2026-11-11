@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1603,
-  "checkpoint_sha": "d84b6e3b149142782e1100eb5b92d0474e68a6f1",
+  "sequence": 1604,
+  "checkpoint_sha": "09ea2c659323181fa7ed3e469c897a001eae0cf6",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1603-H1602-REAL-NATIVE-SOURCE-PREFLIGHT-CORRECTION",
-  "current_task": "H1602 source d84b6e Action43035399302 one signed Windows Wintun + four real Linux TUN actual near inner-MTU -1/exact 20 OS echo scenario running; do not relaunch. Governance-maintenance43035399828 fails solely because added H1602 static test used stale name h1565_bob_post_Alice_stop_real_udp instead of existing h1565_bob_after_win_owned_stop_real_udp. H1603 corrects source token and ensures H1602 marker enters H1565 source preflight gate, offline-only. H1601 crossOS same-account 150s source8a PASS_SCOPED and H1587 dual Win owner FAIL/user excluded remain recorded.",
-  "why_now": "Original H1600 five-client 150s only exercises 256 and 1120 byte UDP (vs Windows derived MTU1389), so one short near-actual-inner-MTU current-source native test gives needed uncovered boundary with no repeated 150s/600s pressure.",
+  "task_id": "PLAN028-M0-H1604-SOURCE8A-LIFECYCLE-RAW-RECEIPT-REUSE",
+  "current_task": "H1604 recovered H1600 same source8a313 true Go/Rust owner logs: Bob and Erin Normal gen2 real TLS Health before old route revoke and old exact Stops (17.773s/10.109s); Carol Game2 gen2 two-lane M4 real A+B overlap before A Stop; Dave Game4 one-lane real rotation old45031/new60881 with 3 siblings unchanged, server reports sibling_lane_restarts=0. Existing 150s five real clients UDP636494 unique, TCP1458 invalid0 gap63ms; no rerun needed. H1602 source d84b native near MTU Action43035399302 still pending, H1603 offline source compatibility patch 09ea governance-maintenance43035735075 SUCCESS. User excludes multi-Wintun, H1587 historical FAIL retained. New-source failed candidate retaining A NOT_TRIGGERED; Windows rotate default0.",
+  "why_now": "H1600 original logs qualified actual lifecycle on same_SOURCE without extra Wintun/CPU test; separating original event receipts from test-only source assert avoids unnecessary Action. H1602 still in-flight independently.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect current H1602 Action43035399302 completion and original strict report; inspect actual OS innerMTU per Win/Linux +20 unique echoes +6 owner Stop and scope. Do not dispatch duplicate while running. Collect H1603 governance after offline fix, note H1602 preflight originally skipped due selector as harness CI issue, not real network PASS/FAIL. No dual Wintun scene.",
+  "next_action": "Collect single genuine H1602 Action43035399302 strict native near OS innerMTU real echoes and six Stop, then mark accurate PASS/FAIL/NOT_RUN; no duplicate network scene while running. Follow-up L3 Windows independent DUT requirements and user-excluded multiWintun limitation; ARM64 old dual1800s qualified only unchanged components. PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json",
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
   ],
   "context_refs": [
@@ -25,7 +26,8 @@
     "docs/devlog/M0/20261111-PLAN028-H1601-RECOVER-H1596-TRUE-WIN-LINUX-SAMEACCOUNT-150S.md",
     "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
     "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1602-ONE-WINTUN-FIVE-ACTUAL-OS-NEAR-MTU.md"
+    "docs/devlog/M0/20261111-PLAN028-H1602-ONE-WINTUN-FIVE-ACTUAL-OS-NEAR-MTU.md",
+    "docs/devlog/M0/20261111-PLAN028-H1604-REUSE-H1600-REAL-LIFECYCLE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1601 SOURCE8a31375 action43027983611 signed single Windows Wintun+Linux4 150s same username different original-Go installations auto independent addresses AES256/three Linux AEAD true TCP/UDP and Alice Stop Bob survives all six Stop PASS_SCOPED. Test-only 0.7: outer duplex median108.834Mbps/CPUpeak52.7%. Windows30% cold sourcefd473 PASS_SCOPED only. Linux ARM64 old2x1800s reusable unchanged components, Win-L3/nearMTU/path/idle outstanding. No dual Wintun per user; H1587 old FAIL retained as unsupported. PLAN028 IN_PROGRESS."

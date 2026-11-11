@@ -12,6 +12,8 @@
 
 **H1601 真同账号跨OS完成**：SOURCE`8a31375e` Action`43027983611`整体成功，一Windows签名Wintun+四Linux中Bob与Windows同用户名不同真实安装，双方独立受保护auto `/32`：Win`10.66.0.203/32`、Bob`10.66.0.130/32`，五客户端真150s双向UDP/TCP零未交付，Alice先Stop Bob继续4包，六owner Stop/WAL/WSL净退出。测试专用负载0.7，外层双向总量中位108.834Mbps、Win Host CPU最高52.7%；仅有256/1120 UDP、尚缺近derived MTU与L3。详情H1601 evidence。
 
+**同源真实生命周期（H1604）**：复核H1600原始客户端/server日志，Bob/Erin Normal A→A+B→B、Carol Game2两lane旧新组重叠、Dave Game4仅lane1更新三兄弟不重启；在五端150s全业务/全Stop下证实，见H1604原始日志hash索引。没有再次派发轮换测试，B失败留A非本SOURCE触发。
+
 **用户最新范围**：不要跑同一Windows宿主两个Wintun。H1587旧真实route/WAL FAIL保留为同宿主多个全隧道未支持组合，不能以Windows+Linux成功冒充；本轮只需一Wintun+独立Linux设备同账号验收。H1596 SOURCE496 Action43024873684早期同账号真实TLS/两OS独立Auto IP/40 UDP和Stop局部PASS、后段150s**FAIL_TEST_FIXTURE**（误配0.6低于真实app最小0.65），原Action整体FAIL；修正0.7后H1600 Action43027983611整场成功，原0.6失败保留。不得改产品默认。
 
 **限制不冒充PASS**：用户明确不跑同宿主双Wintun，旧H1587 `43001721886` route/WAL保护性 FAIL 留存，不借跨OS同账号成功跳过CAS或宣称此组合已支持。原报告误将30%冷建链标为600s，H1592修正报表及源门，不修改实测结果。本源受影响认证/生命周期150s代表场已PASS_SCOPED；但L2更重容量受同VM CPU边界约束、必要L1与代表L3仍不齐，不可将150s当L3。Android/物理公网/029/030范围外。

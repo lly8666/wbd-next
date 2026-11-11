@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1604",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "plan_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED_SOURCE8A_GENUINE_LINUX_ROTATION_WITH_WINDOWS_SIBLING_LIVE",
+  "from_existing_action": 43027983611,
+  "raw_artifact_id": 13861275233,
+  "original_zip_sha256": "4a5e88ea353015487a5d2f3249b8b30522d5e3e57fcbd99e76c0cd48df39b61d",
+  "new_network_test_dispatched": false,
+  "read_method": "Source-locked original Go/Rust Linux client+server raw logs recovered directly from H1600 artifact, no source test promotion",
+  "client_logs_sha256": {
+    "Bob": "54a95af221512c8f14b5954cec8d057a865454916c4e97d5cf5510b795e436c9",
+    "Carol": "b08da3b48c2511405c992f266f891f8e20c0a775b48c67c75205405e63df180b",
+    "Dave": "ab5200ac8ff0a057a8081eea51a74fe562968c4e411aa1aaf82f542c5a8f08bc",
+    "Erin": "daae53b7555300724f4bb2ba4ad4f685e4d15ed13c015261c9f4a5d558292b10",
+    "shared_server": "84063994e41b06a5b3485bd4538d5dd0bf56e8da57be756f61bd2274f309cb55"
+  },
+  "real_lifecycle": {
+    "Bob_Normal_FEC_Auto": {
+      "same_account_as_Windows_Alice": true,
+      "rotated_from_generation": 1,
+      "rotated_to_generation": 2,
+      "configured_interval_ms": 109000,
+      "actual_due_ms": 113319,
+      "old_route_preserved_until_authenticated_B": true,
+      "candidate_deferred": "V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED generation=2 old_route_preserved=1",
+      "B_ready": "V4_PUBLIC_NORMAL_TUN_PROMOTED_AFTER_AUTH_RX generation=2 authenticated_health=1 old_route_revoked=1",
+      "new_generation_ready": true,
+      "old_retire_delay_ms": 17773,
+      "old_generation_exact_Stop": true
+    },
+    "Carol_Game2": {
+      "from_group_generation": 1,
+      "to_group_generation": 2,
+      "configured_interval_ms": 103000,
+      "actual_due_ms": 98086,
+      "old_route_preserved_until_authenticated_B": true,
+      "B_Rust_M4_proven": true,
+      "lanes_1_2_ready_on_server_port_443": true,
+      "old_group_overlap_commit": "V4_PUBLIC_PATH_GAME_OVERLAP_COMMIT new_generation=2 old_generation=1 shared_tun_single_reader=1 new_tls_m4_before_old_stop=1",
+      "old_retire_delay_ms": 14500,
+      "old_generation_exact_Stop": true
+    },
+    "Dave_Game4": {
+      "generation": 1,
+      "single_lane_rotation": true,
+      "rotated_lane": 1,
+      "old_client_port": 45031,
+      "new_client_port": 60881,
+      "configured_single_lane_interval_ms": 117000,
+      "observed_due_ms": 116746,
+      "unaffected_sibling_lanes": 3,
+      "service_owner_server_receipt": "V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=1 rotation=1 client_port=60881 server_port=443 same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
+      "original_game_TLSto_Rust_M4": true
+    },
+    "Erin_Normal_FEC_Fixed": {
+      "requested_outer_mtu": 1280,
+      "from_generation": 1,
+      "to_generation": 2,
+      "configured_interval_ms": 127000,
+      "actual_due_ms": 128541,
+      "old_route_preserved_until_authenticated_B": true,
+      "B_authenticated_health": true,
+      "old_retire_delay_ms": 10109,
+      "old_generation_exact_Stop": true
+    }
+  },
+  "application_consistency": {
+    "full_original_real_UDP_TCP_150s_scoped": "PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S",
+    "all_clients_real_unique_UDP_first_delivery_both_directions": 636494,
+    "missing_unique_UDP_count": 0,
+    "all_client_duplex_TCP_valid": 1458,
+    "tcp_invalid": 0,
+    "max_active_UDP_gap_ms": 63,
+    "Windows_Alice_sibling_no_auto_rotate_by_default": true,
+    "Windows_Alice_eventual_owned_Stop_after_150s": true,
+    "Linux_Bob_same_account_after_windows_Stop_four_real_UDP": true,
+    "all_six_Owned_Stop": true
+  },
+  "fec_runtime_observation_Dave_Game4": {
+    "source_offered": 40079,
+    "parity_offered": 64685,
+    "parity_copied": 64685,
+    "systematic_candidate": 40075,
+    "recovered_candidate": 3,
+    "expired": 0,
+    "failed": 6,
+    "rplanned": 64693,
+    "rsent": 64685,
+    "fec_rx_conflict": 6,
+    "interpretation": "Actual log counters; do not infer IID recovery guarantee or zero conflicts from 0pct configured loss. Application's byte-validated TCP and unique UDP still qualified; FEC conflicts warrant context, not automatically proof of data corruption."
+  },
+  "limits": [
+    "Windows native auto authenticated re-rotation not exercised; Windows default rotate0 is honored",
+    "Candidate B failure preserve A was not triggered on this 150s source; older ARM64 1800s heterogeneous candidate FAIL then later recovery is previous SOURCE only",
+    "No same Windows host two Wintuns per user; old H1587 route CAS FAIL retained",
+    "No source8a representative Windows1800s native L3",
+    "Observed 0percent configured loss, one-way delay200ms, test-only pace0.7, not 30percent Game4 recovery"
+  ]
+}
