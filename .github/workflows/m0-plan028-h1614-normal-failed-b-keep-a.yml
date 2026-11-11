@@ -10,3 +10,4 @@ jobs:
     with:
       scene: samepath_failed_b_keep_a
 # H1615 differentiated retry: candidate gen2 cold TLS blocked on unchanged physical NIC, A still live.
+# H1616 one final isolated same-path B failure retry: interval30 > maximum original A grace20, no B4 competing during final real UDP.

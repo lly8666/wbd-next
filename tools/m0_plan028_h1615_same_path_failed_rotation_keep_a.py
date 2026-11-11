@@ -17,7 +17,7 @@ def build():
     once('s.bind(("10.66.0.1",45901));s.settimeout(55 if os.environ.get("WBD_REAL_COUNT")=="10" else 28)',
          's.bind(("10.66.0.1",45901));s.settimeout(225)')
     once('--mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/client.log" 2>&1 &',
-         '--mode "$MODE" --fec-profile 1 $GAME_FEC_ARG --rotation-interval 5s" >"$TMP/client.log" 2>&1 &')
+         '--mode "$MODE" --fec-profile 1 $GAME_FEC_ARG --rotation-interval 30s" >"$TMP/client.log" 2>&1 &')
     before='# Startup uses exactly the production binaries and unmodified original Go'
     deny=r'''# Pure same-physical-network cold rotation: no NIC/IP/MTU/route change.
 # Only the original A FakeTCP source port 41031 may traverse TLS443.
@@ -125,7 +125,7 @@ grep -E 'V4_PUBLIC_PATH_|V4_ORIGINAL_GO_CLIENT_NATIVE_READY|V4_PUBLIC_NATIVE_STO
 '''
     once(before_end,capture+before_end)
     assert s.count("H1615_FAILED_B_OLD_A_NEW_TRUE_KERNEL_UDP_DELIVERED_PASS")==1
-    assert "rotation-interval 5s" in s
+    assert "rotation-interval 30s" in s
     return s
 
 if len(sys.argv)==2 and sys.argv[1]=="--preflight":
