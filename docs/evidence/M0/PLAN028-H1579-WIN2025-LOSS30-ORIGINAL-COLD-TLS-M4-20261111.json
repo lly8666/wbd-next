@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1579",
+  "date_local": "2026-11-11",
+  "source_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "task": "Distinct real Windows2025 original Npcap/Wintun first authenticated TLS+Rust M4 over 30% physical loss/200ms one-way before Linux siblings",
+  "first_failure_to_retest": {
+    "source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+    "action": 42942358907,
+    "scope": "Windows2025+4 WSL2 30pct initial original FakeTCP TLS bootstrap under physical delay",
+    "result": "FAIL genuine SYN+SYNACK MSS1420 but authenticated TLS bootstrap deadline timeout before native READY"
+  },
+  "new_native_test": {
+    "marker": "[plan028-h1579-win30-cold-auth]",
+    "original_go_tls_and_Rust_M4": true,
+    "real_signed_windows_Npcap_Wintun": true,
+    "original_Linux_server_WSL2_native": true,
+    "physical_loss_percent": 30,
+    "delay_each_direction_ms": 200,
+    "outer_ipv4_mtu": 1460,
+    "one_actual_Windows_client_before_Linux_siblings": true,
+    "valid_standard_TLS_cert_account_and_lease": "REQUIRED",
+    "genuine_Windows_Wintun_OS_ipv4_readback": "10.66.0.2/32",
+    "authenticated_server_M4_and_Windows_READY": "REQUIRED",
+    "posthandshake_Windows_owned_Stop_and_real_Rust_server_TUN_join": "REQUIRED",
+    "real_netem_WAL_bridge_restore": "REQUIRED",
+    "deadline": "160s test bounded readiness observation, not 200/500ms handshake SLA"
+  },
+  "not_covered": {
+    "five_clients_simultaneous_loss30": "NOT_RUN",
+    "loss30_business_UDP_TCP": "NOT_RUN",
+    "full600_250_300Mbps": "NOT_RUN",
+    "L3_two_1800s": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "physical_WAN": "NOT_RUN"
+  },
+  "classification": "Test will not infer data-plane recovery from TLS+M4 success; no packet probes or new product protocol/steady pumps.",
+  "other_actions_in_flight": [
+    {
+      "action": 42983815178,
+      "scope": "H1578 one distinct Win1+Linux4 0loss200ms 1.15x L2 capacity, separate VM",
+      "status": "IN_FLIGHT"
+    }
+  ]
+}

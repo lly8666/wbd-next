@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1578,
-  "checkpoint_sha": "d3d9955e58c8a551c893e16522c267e2022071c9",
+  "sequence": 1579,
+  "checkpoint_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1578-REPAIR-STALE-H1572-H1576-OFFLINE-STOP-ASSERTIONS",
-  "current_task": "Collected source d3d995 H1577 Action42983313447: cheap/offline 18 of 19 tests PASS but H1572 historical source guard expected nonexistent Go 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server'; H1576 tested Rust owner emits canonical V4_PUBLIC_SHARED_TUN_STOP generation= reader_joined1. No Windows native payload executed, product NOT_RUN; original CI FAIL preserved. H1578 only updates H1572/H1576 stale offline marker assertions, adds H1576 suite to cheap test, retains one 1.15x Windows2025+Linux4 150s rate trial trigger. Real result pending.",
-  "why_now": "Do not rerun network for offline failure, correct cheap test before first H1577 actual original Win1/Linux4 capacity run. H1576 verified 150s data/Stop qualification remains unaffected.",
+  "task_id": "PLAN028-M0-H1579-WINDOWS-30PCT-REAL-COLD-TLS-M4-FIRST-FAULT",
+  "current_task": "H1578 SOURCEcd5dfa Win1+Linux4 150s 1.15x 0loss200ms Action42983815178 cheap PASS, native compilation in flight (do not re-dispatch). Prior source620 Win2025/WSL2 original 30pct physical loss 200ms per side SYN/SYNACK MSS1420 seen but protected FakeTCP TLS timed out before native M4. H1579 adds ONE DIFFERENT Windows2025/WSL2 Action at physical30pct and 200ms one way, original signed Npcap+Wintun+TLS443 Windows Alice alone before siblings: require genuine credential TLS/native M4 Windows READY, OS Wintun10.66.0.2/32 installed, original Linux authenticated server M4, exact Windows/Go/Rust Stop and WAL/WSL/netem restored. Full five-client 30pct business and 600s remain NOT_RUN; no FEC rewrite or old seed duplication.",
+  "why_now": "User requests efficient L2 weak-net; historical initial 30pct Windows TLS first-fault remains independently open. Do not run old 600s full five-client when TLS cold reliability not proven; minimal single-client first handshake at same physical damage distinguishes cold TLS capability from multi-session/throughput. H1578 capacity trial on separate Action/VM concurrently.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect one auto H1578 SOURCE H1577 native Windows2025 0loss200ms 1.15x offer Action; verify all six actual rate control, 150s UDP TCP quality, host capacity and all Stops. Original H1577 prebuild CI FAIL retained. Stop heavier if capacity-limited; then weaknet30 representative and two L3 frozen 1800s if remaining correctness gates close.",
+  "next_action": "Collect in-flight H1578 true capacity Action and new H1579 genuine original Win2025 30pct cold TLS; keep per-job SOURCE exact and don't conflate. On H1579 failure inspect earliest SYN/TLS stage, preserve original. On cold TLS pass, extend to representative 30pct multi-client app with capacity-safe rate (no 4/4 zero-loss requirement); then L3 2x1800s after frozen candidate. PLAN028 IN_PROGRESS.",
   "unverified": true,
-  "last_tested_source": "d3d9955e58c8a551c893e16522c267e2022071c9",
+  "last_tested_source": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1577-WIN5-L2-115PCT-NATIVE-20261111.json",
-    "docs/evidence/M0/PLAN028-H1578-CAPACITY-PREFLIGHT-REPAIR-20261111.json"
+    "docs/evidence/M0/PLAN028-H1579-WIN2025-LOSS30-ORIGINAL-COLD-TLS-M4-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1578 preflight-only repair H1577 source d3d995 native NOT_RUN, 18/19 offline tests passed, one obsolete server Go Stop string now replaced by canonical original Rust reader_joined. New source triggers same one 1.15x test; L2/L3 still pending."
+  "partial_summary": "H1579 new source candidate Windows2025 genuine 30pct/200ms one-way original FakeTCP/TLS443+Rust M4 cold authentication / owner Stop. Earlier source620 fail pre-TLS M4 retained, no full UDP/TCP claimed by this experiment. H1578 1.15x 0loss capacity native Action still in flight, separate VM. PLAN028 IN_PROGRESS."
 }

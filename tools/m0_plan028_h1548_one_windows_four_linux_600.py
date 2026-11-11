@@ -150,6 +150,10 @@ def main():
     mixed_persona=os.environ.get("WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST")=="1"
     l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1"
     h1577=os.environ.get("WBD_PLAN028_WIN_L2_CAPACITY_115")=="1"
+    h1579=os.environ.get("WBD_PLAN028_WIN_30PCT_COLD_TLS")=="1"
+    need(not h1579 or (a.scene=="loss30" and not probe and not cold_seed
+         and not bob_probe and not l1_150 and not h1577),
+         "H1579 exactly one original Windows2025 native 30pct cold TLS trial, no invented UDP recovery")
     offered_scale=float(os.environ.get("WBD_PLAN028_WIN_150S_SCALE","1.0"))
     need(.99<=offered_scale<=1.20 and
          (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")) and
@@ -197,9 +201,10 @@ def main():
        "h1573_original_mixed_per_association_persona":mixed_persona,
        "h1574_native_five_tcp_udp_150s":l1_150,
        "h1577_real_one_stage_capacity_115":h1577,
+       "h1579_real_original_Windows30_cold_TLS":h1579,
        "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
-       "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
+       "600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
                x["family"]=="inet" and x.get("scope")=="global"]
@@ -359,6 +364,33 @@ s.close()
             "--lanes","1","--fec-mode","off","--fec.mode","off",
             "--route-mode","bypass-lan","--outer-repair","on"]
         window=spawn("h1548-windows-alice",winargs,with_input=True)
+        if h1579:
+            # Only cold TLS + M4 owner under actual 30pct physical loss and
+            # 200ms per direction. Prior mixed 30pct failure happened before
+            # Windows certificate authentication, so do not make this a
+            # bogus 4/4 zero-loss UDP or full 600s PASS.
+            report["h1579_actual_stage"]="Windows_original_TCP443_certificate_TLS_M4_30pct"
+            marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,160)
+            marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_NORMAL_READY role=server",serverproc,30)
+            out=subprocess.run(["powershell.exe","-NoProfile","-NonInteractive",
+                "-Command",
+                "$a=Get-NetAdapter -IncludeHidden -Name 'WBDWLMAIN' -ErrorAction Stop;"+
+                "$ips=Get-NetIPAddress -InterfaceIndex $a.ifIndex -AddressFamily IPv4 -ErrorAction Stop;"+
+                "@{guid=[string]$a.InterfaceGuid;ip=@($ips|ForEach-Object IPAddress)}|ConvertTo-Json -Compress"],
+                capture_output=True,text=True,timeout=20)
+            need(out.returncode==0 and "10.66.0.2" in json.loads(out.stdout).get("ip",[]),
+                 "H1579 actual signed native Wintun authenticated Windows /32 not installed")
+            report["h1579_actual_Windows_signed_Wintun_OS_lease"]="10.66.0.2/32"
+            report["h1579_real_original_TLS_M4_both_sides"]="PASS"
+            stopwin(window)
+            marker(OUT/"h1548-windows-alice.log",
+                   "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",window,40)
+            linux_kill(OUT/"h1548-server.pid")
+            report["h1579_real_original_Rust_server_Stop"]=require_real_original_server_owner_stop(serverproc)
+            report["h1579_actual_stage"]="Windows_30pct_real_TLS_M4_and_owners_finished"
+            report["status"]="PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP"
+            print("H1579_ORIGINAL_WINDOWS2025_NPCAP_WINTUN_30PCT_REAL_TLS_M4_AND_OWNED_STOP_PASS_SCOPED",flush=True)
+            return
         if probe:
             # Unlike H1548, prove the signed Windows Npcap/Wintun native
             # first+reverse BEFORE any Linux sibling authenticates. This
