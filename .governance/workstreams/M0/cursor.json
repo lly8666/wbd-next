@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1622,
-  "checkpoint_sha": "fc9173c31e357c79f3b54d31b308b0fd7f645bf1",
+  "sequence": 1623,
+  "checkpoint_sha": "0577bb29844375535b0a79955d49e409df604b55",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1622-WRAPPER_SCENARIO_SHA_PRINT_ONLY",
-  "current_task": "H1621 SOURCEfc9173 copied original Windows real idle105 scene with only scenario_id and tun_mtu1400->1460, product source8a formal Windows/Linux binary reuse zero diff; exact old/new scene equality and default1460/1460 positive + mismatch1400 negative preflight passed, but wrapper Action43109798583 FAIL BEFORE dispatch because original JSON read_scenario() adds scenario_sha256, H1621 stripped it for dict compare and then printed s['scenario_sha256'], raising KeyError. No Windows OS or TLS or business launched. H1622 only captures computed SHA before pop and prints capture, leaving exact two-field test scene and source gates unchanged; wrapper triggers one original Windows signed Wintun+WSL2 native 105s idle target only, no compile. Historical H1620 native Action43066195581 pre-business 1400/1460 reject remains; previous H1616 Normal and H1615 Game2 standalone x86 PASS_SCOPED unaffected.",
-  "why_now": "Avoid blaming product or repeating expensive native tasks for one post-proof stdout KeyError in wrapper. Keep explicit source-locked actual scenario SHA without reinserting hash into full dict comparison.",
+  "task_id": "PLAN028-M0-H1623-COLLECT-H1622-SIGNED-WINDOWS-IDLE105-SOURCE8A_PREBUILT",
+  "current_task": "H1623 verified one exact original Windows 2025 signed Npcap single Wintun+true Linux Ubuntu WSL2 ORIGINAL TLS/Rust M4 Normal FECOff H1622 TARGET Action43110135433 job130824120705 overall SUCCESS; wrapper43110104696 SUCCESS. Harness source0577, unchanged official H1600 product binary SOURCE8a Go/Rust/ISA-L Windows EXE63b4.. DLL7c8.. Linux client7f34.. server9188.. so2947.. sha verified. Original full artifact13895333759 ZIPsha49d03fc3... 37 CRC-valid files report SHA0a6b9d; signed driver install and genuine WSL2/inner Windows+Linux OS MTU1389 outer1460, original Go TLS443 Rust M4 both. Manual authenticated lease10.66.0.2/32, NOT Windows autoIP. 105s requested app idle actual108.48s owner alive, both genuine UDP wake; 60s 10Mbps25ms0% bidirectional native windows sent99497 linux received99497 linux sent99551 windows received99551, duplicates0 invalid0, real TCP duplex and BOTH native Stop/WAL restore and Npcap cleanup success. Health count NOT explicitly measured, no p99 or long L3. Previous H1618/19/20/21 preproduct fixture FAIL retained; H1616 Linux failed B2 preserved A and H1615 Game2 Off path positive remain. All SOURCE8a binaries reused, no Go/Rust rebuild. Governance main0577 Action43110104542 and maintenance43110104317 SUCCESS; Plan028 still IN_PROGRESS because independent Windows DUT L3 and source-specific other modes missing. H1621 seven-mode static audit SOURCE0cda 7-mode not equivalent current.",
+  "why_now": "Original Action and CRC-complete raw artifact now prove a new same-SOURCE Windows signed real no-payload 105s wake, duplex kernel 60s and exact Stop; commit safe whitelist evidence and feature/coverage so next work does not repeat expensive prebuilt native scene.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1622 wrapper and exactly one target native Action, verify verified H1600 Windows EXE/DLL + Linux Go/Rust ISA-L SHA/real signed Wintun+WSL2, original Go TLS/Rust M4 and 105s no app then 60s 10Mbps duplex true UDP, original Stop. If native fails record first cause and no repeated blind retries. No nearMTU or multiple same-host Wintuns, independent Windows L3 still NOT_QUALIFIED.",
+  "next_action": "Do NOT rerun H1622 Win signed idle105, H1616 Normal failed B A live or H1615 Game2 Off. Next qualify distinct missing Windows/ARM representative modes or independent Windows DUT L3 only with reliable controller and exact unchanged source product/reused binaries; no automatic 600/1800s hosted same-VM fake L3. Keep SOURCE8a Game2Fixed6/Game4Off Windows Auto-IP/physical path gaps scoped NOT_QUALIFIED and legacy 7-mode evidence old SOURCE0cda. User skips nearMTU and multiple Wintuns same host. PLAN029/030 not started.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json",
-    "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
+    "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
+    "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -25,8 +26,8 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1617-SOURCECF03-PREBUILT-NORMAL-FAILED-B-A-LIVE-GAME2-OFF-20261112.json",
     "docs/evidence/M0/PLAN028-H1621-SEVENMODE-DEFAULTS-SOURCE-AUDIT-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1621-ONE-WINDOWS-IDLE105-1460-AND-SEVENMODE-AUDIT.md",
-    "docs/devlog/M0/20261112-PLAN028-H1622-ONE-WRAPPER-SHA-PRINT-FIX-NO-NATIVE-RERUN.md"
+    "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
+    "docs/devlog/M0/20261112-PLAN028-H1623-WINDOWS-SIGNED-WINTUN-IDLE105-TWO-OS-PREBUILT-PASS.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1623",
+  "plan_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED_WINDOWS_SIGNED_ONE_WINTUN_PLUS_LINUX_WSL2_ORIGINAL_GO_RUST_NATIVE_IDLE105_WAKE_DUPLEX_STOP",
+  "test_harness_source_sha": "0577bb29844375535b0a79955d49e409df604b55",
+  "actual_prebuilt_product_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "reused_product_build_action": 43027983611,
+  "recompiled_product_in_target": false,
+  "source_code_changed_since_prebuilt_product": [],
+  "target_action": {
+    "id": 43110135433,
+    "job_id": 130824120705,
+    "event": "workflow_dispatch",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43110135433"
+  },
+  "source_locked_dispatch_wrapper_action": {
+    "id": 43110104696,
+    "conclusion": "success",
+    "native_business_in_wrapper": false
+  },
+  "raw_artifact": {
+    "id": 13895333759,
+    "name": "m0-wl-full-public-normal-direct-h1506-legacy-43110135433",
+    "zip_sha256": "49d03fc3a5020af8484ca1b41dd8452f74fb5906bcf74cce0c8aa6a838286e13",
+    "zip_crc_all_members_verified": true,
+    "file_count": 37,
+    "report_json_sha256": "0a6b9d0cb1d5dde9a52871690dd7f099f7eb8a9eb1cb82dd80d5050bbb6d0c55",
+    "mode_batch_json_sha256": "d73f836bb49c63ad4253a17d1d7bbbf9924e608eaf47493229eefb82bc39797e",
+    "windows_app_json_sha256": "227aa88618601b5b87b9dc0749da02fd52c0bd17546fc1c7ee5694d5d730b33f",
+    "linux_app_json_sha256": "f998071662a20b7729d9b250c5dffd53fe282560c84876ea45c9f1ee7404c22a",
+    "raw_secret_bearing_logs_not_copied_to_evidence": true
+  },
+  "guest_boot_artifact": {
+    "id": 13896036874,
+    "zip_sha256": "afb5af108d605f3c6b2fef1aad737d6ac179797fff594e6b58428bd0c06e7042"
+  },
+  "original_binary_backend": {
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "windows_rust_dll_manifest_features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "isa_l_enabled": true,
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "windows_exe_sha256": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "windows_dll_sha256": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "linux_client_sha256": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "linux_rust_so_sha256": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "real_os_and_auth": {
+    "windows_host": "Windows 2025 hosted VM official signed Npcap 1.88, one owned Wintun, OS WAL applied and restored",
+    "linux_peer": "genuine Ubuntu WSL2 kernel, Linux original Go server native Rust M4 and real TUN",
+    "linux_guest_preflight": "PASS",
+    "windows_native_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_native_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "device_lease4": "10.66.0.2/32",
+    "auto_lease": false,
+    "record_cipher_id": 1,
+    "normal_fec": "Off",
+    "original_tls443_peer_verified": true,
+    "protocol_wire_pcap_audit_this_run": "NOT_RUN",
+    "final_npcap_driver_cleanup": "PASS",
+    "windows_owned_wal_restored": true,
+    "windows_rust_stopped": true
+  },
+  "real_mtu": {
+    "configured_outer_complete_ipv4": 1460,
+    "physical_ip_mtu_each": 1500,
+    "windows_os_inner_mtu_actual": 1389,
+    "linux_os_inner_mtu_actual": 1389,
+    "local_client_mss": 1420,
+    "server_synack_mss": 1420,
+    "verified_actual_original_cold_tls": true
+  },
+  "test_scenario": {
+    "path": "scenarios/plan028-h1621-normal-idle105-outer1460-10m25ms0-60s.json",
+    "scenario_id": "plan028-h1621-normal-idle105-outer1460-10m25ms0-60s",
+    "scenario_sha256": "7ec8f4957edb57ee79a5b6c6adfa5654c0497aca2813932572fc7c15abdce8b6",
+    "mode": "normal",
+    "initial_native_kernel_udp_smoke": "PASS",
+    "idle_requested_seconds": 105,
+    "idle_actual_seconds": 108.48,
+    "original_both_owners_remained_alive": true,
+    "postidle_genuine_kernel_udp": "PASS_BOTH_KERNEL_DIRECTIONS",
+    "actual_authenticated_health_count": "NOT_EXPLICITLY_MEASURED",
+    "measurement_seconds": 60,
+    "drain_seconds": 5,
+    "outer_repair": "on",
+    "bidirectional_offered_mbps_requested": 10,
+    "kernel_delay_ms_each_direction": 25,
+    "kernel_loss_percent_configured": 0,
+    "udp_payload_max_bytes": 1200
+  },
+  "true_kernel_application_delivery": {
+    "measurement_type": "ORIGINAL_WINDOWS_WINTUN_NPF_AND_LINUX_TUN_REAL_OS_FIRST_DELIVERY_60S",
+    "windows_sent_udp_unique": 99497,
+    "linux_received_first_from_windows": 99497,
+    "linux_sent_udp_unique": 99551,
+    "windows_received_first_from_linux": 99551,
+    "first_delivery_fraction_windows": 1,
+    "first_delivery_fraction_linux": 1,
+    "duplicate_packets_both": 0,
+    "invalid_packets_both": 0,
+    "windows_sent_payload_mbps": 9.9973,
+    "linux_sent_payload_mbps": 10,
+    "windows_received_payload_mbps": 10,
+    "linux_received_payload_mbps": 9.9973,
+    "real_kernel_tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "original_application_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "linux_kernel_tun_rx_dropped_delta": 0,
+    "linux_kernel_tun_tx_dropped_delta": 0,
+    "linux_kernel_tun_fq_drops_delta": 0,
+    "original_both_owner_stop": "PASS_BOTH_OWNED"
+  },
+  "qualification_limitations": [
+    "one hosted Windows signed Wintun and one Linux WSL2 peer; not a second independent physical DUT",
+    "test has manual source /32 lease; Windows auto-IP not exercised here",
+    "Health counts during idle were not explicitly measured; owner liveness and true wake were proven",
+    "no path-switch or failure injection during this Windows idle scenario",
+    "this run does not measure one-way p99, current user CPU/RSS capacity, 30 percent/250ms or full 600/1800s L3",
+    "true near-derived-inner-MTU payload and second Wintun on same Windows host explicitly skipped by user",
+    "not an all seven modes same-SOURCE qualification nor an ARM/Android test"
+  ],
+  "history_preserved": [
+    {
+      "action": 43064784361,
+      "result": "FAIL_ORIGINAL_PRE_WINDOWS_NATIVE_TWO_VS_THREE_FEATURE_MANIFEST_TEST"
+    },
+    {
+      "action": 43065811114,
+      "result": "FAIL_ORIGINAL_CHEAP_STATIC_SHA_TEST_ORACLE"
+    },
+    {
+      "action": 43066195581,
+      "result": "FAIL_ORIGINAL_1400_VS_1460_NATIVE_SCENARIO_CONTRACT_BEFORE_BUSINESS"
+    },
+    {
+      "action": 43109798583,
+      "result": "FAIL_ORIGINAL_WRAPPER_SHA_PRINT_KEYERROR_BEFORE_DISPATCH"
+    }
+  ],
+  "source_reuse_scope": "PASS_SCOPED_THIS_EXACT_WINDOWS_ORIGINAL_TLS_RUST_NATIVE_105S_IDLE_60S_DUPLEX_AND_STOP_ONLY"
+}
