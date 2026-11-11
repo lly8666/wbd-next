@@ -68,6 +68,7 @@ on:
       - tests/test_m0_plan028_h1574_five_150s_scope.py
       - tests/test_m0_plan028_h1577_win5_l2_capacity_scope.py
       - tests/test_m0_plan028_h1579_win30_cold_auth_scope.py
+      - tests/test_m0_plan028_h1581_windows_auto_aes_mixed_scope.py
       - tools/m0_plan028_h1548_mixed_os_app.py
       - tools/m0_plan028_h1430_windows_linux_l3.py
       - tools/m0_wl_native_resource_sampler.py

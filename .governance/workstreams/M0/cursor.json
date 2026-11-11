@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1585,
-  "checkpoint_sha": "6e907a32b95c138dcbd22e8f95d24063c4ce1f88",
+  "sequence": 1586,
+  "checkpoint_sha": "9ba9edf88a88039dfe7bfc71b27abe45c72ccc31",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1585-H1584-STABLE-SOURCE-NATIVE-RETEST",
-  "current_task": "H1584 SOURCE6e907a Action42999532461 cheap H1581 source-only test FAIL (old exact cold seed condition was two flags; H1579 third legit true source added); Windows real network NOT_RUN, governance42999532288 PASS, maintenance42999532289 FAIL only same stale assertion. H1585 updates source test exactly, preserving true after-TLS Linux kernel UDP and native Windows Rust first+reverse/OS/Stop gates. Next single distinct H1581 actual signed Win2025 AutoLease AES256+Linux4 150s source should run; H1583 30pct Action42996888234 FAIL first+reverse without real seed, separate corrected 30pct still NOT_RUN. PLAN028 IN_PROGRESS.",
-  "why_now": "Old H1577 genuine native Windows READY was achieved only with source-locked real Linux kernel cold reverse UDP to manually configured /32; both recent first-reverse failures lacked a real after-TLS app sender. Restore required real payload for automated tests before attributing to AES or genuine 30pct product failure. Do not silently downgrade or weaken Rust native RXDelivered gate.",
+  "task_id": "PLAN028-M0-H1586-WORKFLOW-PATH-SOURCE-CORRECTED-NATIVE-RETEST",
+  "current_task": "H1584 SOURCE6e907a Action42999532461 FAIL cheap H1581 old cold-seed scope assert; no native network. H1585 SOURCE9ba9edf fixed assertion but only tests/docs/cursor changed, existing M0 workflow push.paths did NOT include H1581 new test file, so Windows network Action NOT_DISPATCHED. H1586 fixes only exact existing workflow trigger inclusion, preserving one mixed-loss0 150s genuine Windows auto/AES256 + Linux4 per source and real kernel cold UDP; previous H1583 30pct Action42996888234 failed no reverse seed and separate corrected scene NOT_RUN. PLAN028 still IN_PROGRESS.",
+  "why_now": "User requires real native source-locked validation. Fix the actual missing workflow path trigger rather than assume a test was dispatched on a documentation-only commit. Existing strict OS, data, lifecycle gates remain unchanged.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1585 next exact-source Action: cheap+all native builds then real Windows2025 signed/Wintun automatic AES256 first+reverse via actual Linux kernel UDP to authenticated 10.66.0.128/25 /32 and 4 Linux real 150s TCP/UDP, all owners Stop. On product failure inspect raw stage; no repeated running scene. Subsequently corrected independent H1579 30pct cold scene with genuine kernel source, Windows manual/AES128 and lifecycle representative, then L3/evidence/close.",
+  "next_action": "Receive and inspect H1586 triggered M0-WIN-LINUX native Action exactly once: source-locked build+genuine signed Win2025 Npcap/Wintun, protected auto /32, AES256, real Linux kernel UDP before first+reverse, five 150s TCP/UDP, Alice Stop/Bob continues, shared server complete Stop and WAL/WSL cleanup. If it fails classify product vs fixture at exact first stage. Then independent corrected 30pct cold scene and remaining Windows AES128/manual, modes, lifecycle, L3. No 029/030.",
   "unverified": true,
   "last_tested_source": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261111-PLAN028-H1584-NATIVE-KERNEL-AUTO-REVERSE-SOURCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1584 Action42999532461 cheap one stale assertion FAIL before real network. H1585 test guard fixed; old real 0loss H1582 and 30pct H1583 had true TLS and Rust M4 but zero reverse because no source app, so record FAIL not product crypto verdict; new fixture seeds real Linux kernel after authenticated TLS without forged receipt. Governance cursor limited refs8 and passed. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1585 static H1581 test guard fixed but no M0 Action because workflow push.paths omitted test file; H1586 adds exact path. Both earlier H1582 0loss AES and H1583 30pct manual ChaCha authentic original TLS/Rust M4, first reverse needed actual Linux kernel source missing, not yet E2E. H1586 native pending, PLAN028 IN_PROGRESS."
 }

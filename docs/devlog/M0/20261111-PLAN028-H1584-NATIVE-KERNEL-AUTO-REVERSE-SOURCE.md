@@ -20,3 +20,7 @@
 ## H1584 原始预检结果及 H1585 唯一精确断言修复
 
 `6e907a32b95c138dcbd22e8f95d24063c4ce1f88` Action `42999532461` overall **FAIL_PRE_NETWORK_ONLY**：H1581  cheap unittest 的历史文本门仍要求 `"1" if (cold_seed or h1581) else "0"`，而修复代码在独立H1579真实冷TLS也启用绑定Linux内核后向UDP，此精确字符串已变成 `"1" if (cold_seed or h1581 or h1579) else "0"`。运行器未进入Windows编译/真实I/O，不能说产品通过/失败。原 `42999532288` 治理 **PASS**，维护 `42999532289` 全551仅这一条旧断言FAIL。H1585仅修复测试所检查的真实三条件，真实Linux内核包/认证/首反向/OS Stop门完全保留；新SOURCE的 H1581单场待实际Action收集。不能删原失败。
+
+## H1585 missed workflow dispatch / H1586 exact trigger repair
+
+`9ba9edf88a88039dfe7bfc71b27abe45c72ccc31` 修复H1581三条件源断言，但**仅提交了测试/文档/cursor**；现有 `.github/workflows/m0-wl-public-normal-full.yml` 的 `push.paths` 列了H1579而漏了 `tests/test_m0_plan028_h1581_windows_auto_aes_mixed_scope.py`，因此本次没有新 M0 Windows 网络 Action，不可冒称运行。H1586在**原有**真实Windows/Linux CI工作流路径过滤器补齐该测试文件，依然只通过现有 `[plan028-h1581-win-auto-aes-mixed-150s]` 标记选择单一 `mixed-loss0` 场景；不另造治理框架、不顺带派发30%场。H1586提交后的实际结果需要严格等待原Action和raw报告，保留所有旧FAIL。
