@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1567,
-  "checkpoint_sha": "7532f361cfb030227aa83c275dce4becf3340ce7",
+  "sequence": 1568,
+  "checkpoint_sha": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1567-H1566-CI-POWER-SHELL-GUARD-ASSERTION-FIX",
-  "current_task": "H1566 source7532 Action42960126194 failed cheap Windows fixture preflight only: one incorrect assertIn 'if($env...' while actual conditional is '($env... -eq 1)' under existing if; no production product native network executed. H1567 corrects literal and watches test path in same workflow, no runtime/Go/Rust/TUN modifications. Prior source8f2 H1565 real Windows alone loss0 200ms first/reverse still FAIL before Linux4; new genuine authenticated Linux kernel server→Alice UDP H1566 trial pending SOURCE H1567.",
-  "why_now": "Cannot attribute cheap fixture assertion failure to original Windows product. Keep the exact failed run and execute one corrected source-locked genuine OS test, never blind repeat 600s or loss30.",
+  "task_id": "PLAN028-M0-H1568-WINDOWS-NATIVE-TWO-ACCOUNT-SLOT-EXACT-ASSEMBLY",
+  "current_task": "In parallel with source5fcc H1567 dedicated Windows-first Linux real UDP active (no outcome yet), fix one independent Windows2025 H1381 original account-bound two device owned Windows named event test that source0a Action42952219558 failed pre-network: after prepare_windows_wiring existing test file present, workflow erroneously asserts absent and reinjects. H1568 source-locked exact identical file accepted, different bytes reject, missing file add test-only. This is actual Windows kernel named event/alias/credential/account lease/WAL scope not two signed Wintun app clients; standalone Action from its own workflow, never full Windows/Linux 600s.",
+  "why_now": "The existing original Windows two-account true kernel named owner slot test did not execute due to contradictory duplicate assembled test file precondition. Repair minimal source lock avoids false CI failures without touching production or rerunning Windows H1548 loss0/30.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect source H1567 one original Windows2025 WSL2 Linux server OS UDP post protected TLS, fail closed before Linux4 if Windows RXDelivered still0; otherwise test four automatic Linux clients' OS lease and 40+4 genuine UDP, all owner Stop. Fix only first true failure and keep failures/capacity histories.",
+  "next_action": "Collect H1568 dedicated Windows original Go kernel named event two-account source-locked test, assert both named-event and legacy singleton tests truly execute, explicitly product two signed TLS clients NOT_RUN. Separately collect the already-running source5fcc Windows2025 genuine server UDP first/reverse H1567: do not promote from compile. Subsequent Windows 1+4 actual network only if first/reverse passes.",
   "unverified": true,
-  "last_tested_source": "7532f361cfb030227aa83c275dce4becf3340ce7",
+  "last_tested_source": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1566-WINDOWS-AUTH-REAL-OS-COLD-SEED-20261111.json",
-    "docs/evidence/M0/PLAN028-H1567-WINDOWS-SERVER-OS-UDP-PREFLIGHT-20261111.json"
+    "docs/evidence/M0/PLAN028-H1568-H1381-WINDOWS-DUAL-ACCOUNT-NATIVE-SLOTS-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1567 test-only preflight assertion corrected; genuine H1566 Windows first+reverse Linux server OS UDP 200ms loss0 NOT_RUN, original H1565 Windows solo native FAIL and old Windows 600s/loss30 NOT_RUN remain. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1568 test harness-only Windows original two account owner-slot source pin duplicate fix prepared; real Windows OS named event proof unrun. Source5fcc main H1567 separate Windows+WSL2 first/reverse original app network still pending. PLAN028 IN_PROGRESS."
 }

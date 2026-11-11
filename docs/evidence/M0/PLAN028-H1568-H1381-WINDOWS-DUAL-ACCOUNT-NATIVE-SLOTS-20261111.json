@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1568",
+  "source_sha": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
+  "date_local": "2026-11-11",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "prior": {
+    "source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+    "action": 42952219558,
+    "stage": "PRE_NETWORK_ASSEMBLY",
+    "result": "FAIL",
+    "cause": "H1381 source test injection `assert not dest.exists()` although current original-Go assembly already provisioned same source-locked file. Actual Windows named-event tests NOT_RUN."
+  },
+  "fix": "If real assembled Windows test exists demand byte-exact match to same immutable Git SHA; do not overwrite; if missing install exact current source. Keep original-Go pinned donor SHA and test-run marker, no product code change.",
+  "scope": {
+    "test1": "TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots — real Windows kernel event A,B distinct alias/user /32/WAL, cross-account and duplicate rejected",
+    "test2": "TestPLAN010OwnerSlotIsActuallyExclusive — legacy singleton retained",
+    "full_original_signed_windows_Wintun_TLS443_two_apps": "NOT_RUN",
+    "H1548_windows1_linux4_600s": "NOT_RUN",
+    "Windows2025_OS_account_slot": "NOT_RUN_SOURCE_H1568"
+  },
+  "not_qualified": [
+    "actual two signed Windows Wintun/TLS application devices",
+    "Windows Linux4 shared native first/reverse under 200ms",
+    "full 600s and 30% cases"
+  ],
+  "status": "NOT_RUN"
+}

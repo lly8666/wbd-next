@@ -43,11 +43,19 @@ jobs:
           source="r0/go_overlay/cmd/wbd-client/m0_plan028_dual_native_slot_windows_test.go"
           exact=subprocess.check_output(["git","show",sha+":"+source])
           dest=pathlib.Path("legacy/cmd/wbd-client/m0_plan028_dual_native_slot_windows_test.go")
-          assert not dest.exists()
-          dest.write_bytes(exact)
+          # Current prepare_windows_wiring already installs this immutable
+          # test in the original Go clone. Existing identical bytes are
+          # source-locked proof, not a duplicate injection failure.
+          if dest.exists():
+            assert dest.read_bytes()==exact,"original Windows account-slot test source mismatched pinned SOURCE"
+            installation="ALREADY_ASSEMBLED_IDENTICAL"
+          else:
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            dest.write_bytes(exact)
+            installation="PINNED_TEST_ONLY_ADDED"
           pathlib.Path("result/h1381/source.json").write_text(json.dumps({
             "source_sha":sha,"original_go_donor":"a7a82db31fe736ffedee330795a3234d358f1984",
-            "exact_test_added_after_original_assembly":source,
+            "exact_test_source_locked":source,"installation":installation,
             "original_windows_tls443_two_product_clients":"NOT_RUN",
             "signed_two_Wintun_product_application":"NOT_RUN",
             "test_scope":"REAL_WINDOWS_NAMED_EVENT_OWNER_AND_ACCOUNT_STATE_FENCE_ONLY"
