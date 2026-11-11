@@ -15,6 +15,11 @@ class CrossOSOriginalGoSameAccount(unittest.TestCase):
         self.assertIn('h1596=os.environ.get("WBD_PLAN028_WIN_LINUX_SAME_ACCOUNT_150")=="1"',h)
         self.assertIn("(.69<=offered_scale<=.71) if h1596",h)
         self.assertIn("no GUI singleton bypass: this case has exactly ONE Windows Wintun",h)
+        header=next(s for s in w.splitlines() if s.startswith("run-name:"))
+        mtulabel=header.split("|outer=",1)[1]
+        self.assertEqual(mtulabel.count("("),mtulabel.count(")"))
+        self.assertIn("H1596-1Win4Linux-SameAccount-150s",header)
+        self.assertIn("default1460",mtulabel)
     def test_protected_credential_independent_installation_and_native_lease(self):
         h=H.read_text()
         for key in ('"--username",("alice" if h1596 and who=="bob" else who)',
