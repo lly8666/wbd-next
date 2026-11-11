@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1577,
-  "checkpoint_sha": "4bc6d4b0a597184c6279ea41c9c25cca69631c19",
+  "sequence": 1578,
+  "checkpoint_sha": "d3d9955e58c8a551c893e16522c267e2022071c9",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1577-WIN5-TRUE-150S-L2-115PCT-CALIBRATION",
-  "current_task": "Source4bc6 H1576 reviewed genuine original Win1/Linux4 TLS443/Rust M4 150s native UDP/TCP and all owner Stops PASS_SCOPED, no product source change. H1577 new single Windows2025/WSL2 150s 0loss200ms capacity pilot at 1.15x previously verified original inner 24Mbps per direction, 27.6Mbps each, ~3833pps and BDP1.316MiB per direction; actual real six OS apps must use rate control1.15 and satisfy existing >=98pct unique UDP both ways, maxgap<3s, valid TCP both, 30s full-host capacity stop, Bob4 post Windows Stop and all actual owned Stop. New SOURCE native NOT_RUN.",
-  "why_now": "Calibrate stable observed 150Mbps combined and CPU77.7pct before increasing load; do not blindly require old 250-300Mbps full600 or repeat qualified 150s same seed.",
+  "task_id": "PLAN028-M0-H1578-REPAIR-STALE-H1572-H1576-OFFLINE-STOP-ASSERTIONS",
+  "current_task": "Collected source d3d995 H1577 Action42983313447: cheap/offline 18 of 19 tests PASS but H1572 historical source guard expected nonexistent Go 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server'; H1576 tested Rust owner emits canonical V4_PUBLIC_SHARED_TUN_STOP generation= reader_joined1. No Windows native payload executed, product NOT_RUN; original CI FAIL preserved. H1578 only updates H1572/H1576 stale offline marker assertions, adds H1576 suite to cheap test, retains one 1.15x Windows2025+Linux4 150s rate trial trigger. Real result pending.",
+  "why_now": "Do not rerun network for offline failure, correct cheap test before first H1577 actual original Win1/Linux4 capacity run. H1576 verified 150s data/Stop qualification remains unaffected.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered one H1577 Windows2025 native 0loss200ms pilot; compare absolute capacity and host busy within same source/VM only, preserve original failures. If capacity-limited, stop heavier same family. Then representative 30pct weak-net plus L3 two source-frozen 1800s when unresolved correctness cases close. PLAN028 IN_PROGRESS.",
+  "next_action": "Collect one auto H1578 SOURCE H1577 native Windows2025 0loss200ms 1.15x offer Action; verify all six actual rate control, 150s UDP TCP quality, host capacity and all Stops. Original H1577 prebuild CI FAIL retained. Stop heavier if capacity-limited; then weaknet30 representative and two L3 frozen 1800s if remaining correctness gates close.",
   "unverified": true,
-  "last_tested_source": "4bc6d4b0a597184c6279ea41c9c25cca69631c19",
+  "last_tested_source": "d3d9955e58c8a551c893e16522c267e2022071c9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1577-WIN5-L2-115PCT-NATIVE-20261111.json"
+    "docs/evidence/M0/PLAN028-H1577-WIN5-L2-115PCT-NATIVE-20261111.json",
+    "docs/evidence/M0/PLAN028-H1578-CAPACITY-PREFLIGHT-REPAIR-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1577 pending one native Windows2025+Linux4 150s real original TLS/Rust M4 capacity step at x1.15 (27.6Mbps inner each dir), unchanged business and owned Stop; all original L1 150s 454642 C2S+454643 S2C PASS retained, no unnecessary repeat. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1578 preflight-only repair H1577 source d3d995 native NOT_RUN, 18/19 offline tests passed, one obsolete server Go Stop string now replaced by canonical original Rust reader_joined. New source triggers same one 1.15x test; L2/L3 still pending."
 }

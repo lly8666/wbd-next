@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1578",
+  "date_local": "2026-11-11",
+  "source_sha": "d3d9955e58c8a551c893e16522c267e2022071c9",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "prior_action": 42983313447,
+  "prior_source": "d3d9955e58c8a551c893e16522c267e2022071c9",
+  "prior_result": "FAIL_PRE_NETWORK",
+  "prior_root": "Tests/test_m0_plan028_h1572_bob_normal_differential_scope.py still expected nonexistent Go V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server; canonical Rust V4_PUBLIC_SHARED_TUN_STOP generation=... now used correctly. H1576 actual auto lease 600s offline check had same stale string.",
+  "fix": "Only replace two offline assertions with actual original Rust server stop receipt; execute complete H1576+H1577 source checks in cheap stage. No product logic, throughput, FEC, TLS, MTU, Stop, protocol changes.",
+  "next_network": "Same one originally selected Windows2025 plus Linux4 150s 1.15x real inner capacity pilot on fresh exact SOURCE; no previous source actually ran network, so this is not duplicate seed."
+}

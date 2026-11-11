@@ -3,7 +3,7 @@
   "plan": "PLAN028",
   "checkpoint": "H1577",
   "date_local": "2026-11-11",
-  "source_sha": "4bc6d4b0a597184c6279ea41c9c25cca69631c19",
+  "source_sha": "d3d9955e58c8a551c893e16522c267e2022071c9",
   "result": "NOT_RUN",
   "artifact_verified": false,
   "plan_status": "IN_PROGRESS",
@@ -44,5 +44,10 @@
     "physical_WAN": "NOT_RUN",
     "Android": "NOT_RUN"
   },
-  "principle": "One Action one real native scenario, 15pct additional offer based on actual capacity sample, no historical mandatory250-300 jump, no same-VM A/B optimization claim"
+  "principle": "One Action one real native scenario, 15pct additional offer based on actual capacity sample, no historical mandatory250-300 jump, no same-VM A/B optimization claim",
+  "original_action_id": 42983313447,
+  "original_job_id": 130398561054,
+  "original_action_conclusion": "FAIL_PRE_NETWORK_ONLY",
+  "preflight": "18/19 offline unit tests PASS; remaining H1572 stale assertion demanded nonexistent server Go text although H1576 source uses verified Rust Stop generation; Windows native actual NOT_RUN",
+  "actual_115pct_native": "NOT_RUN"
 }

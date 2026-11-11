@@ -38,7 +38,7 @@ class BobModeControlScope(unittest.TestCase):
             'H1572_BOB_REAL_OS_ROUTE_SELECTED',
             'H1572_BOB_OS_KERNEL_TUN_COUNTERS_CAPTURED',
             '"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',
-            'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server',
+            'V4_PUBLIC_SHARED_TUN_STOP generation=',
             'Windows_original_WAL_leftover',
             'netem("clean",loss)',
         ):

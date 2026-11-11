@@ -46,7 +46,7 @@ class SourceLocked600sActualAutoLeases(unittest.TestCase):
             'if loss==0:',
             'up==up_rx and down==down_rx',
             "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
-            "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",
+            "V4_PUBLIC_SHARED_TUN_STOP generation=",
         ):
             self.assertIn(token,h+"\n"+a)
         self.assertIn('[plan028-h1548-win1-linux4-600]',w)
