@@ -70,3 +70,15 @@
 | `813e4c5c` Windows x86_64 `42987762859` | `NOT_READ` | 不适用此client编译Job | `NOT_READ` | Windows-Go/Rust **compile PASS**，artifact未附可独立验证的exe/DLL SHA，待新H1582 signed-OS strict report |
 
 `assembly.json.actual_product_engine="NOT_WIRED"` 是通用 assembler 收据自己的阶段，不是H1376之后原始Go/Rust/TUN运行时后端判定；不能反向当全平台 product NOT_WIRED，也不能把H1546的静态ISA-L链入误当NEON实跑。H1581 SOURCE `ca9b744e` Action `42992510288` 首次仅成功编译，管理路由fail-closed后产品未跑；H1582 `3f82fad8` 的真业务、当前exe/DLL SHA仍应读它自己的原始报表，SOURCE813数字不得移植为新源码二进制。
+
+
+## H1589 真正 Windows2025 后续重验（以原始 SOURCE 和作用范围区分）
+
+| SOURCE / Action | 真产品证据（不是编译） | 严格范围及未过门 |
+|---|---|---|
+| `dd82db7e` H1586 `43000134310` | **原始strict-native-report PASS_SCOPED**：Alice Windows自动 `10.66.0.207/32` + AES256/Rust3 + 签名Wintun OS；Bob/Carol/Dave/Erin四Linux各独立/32及ChaCha/AES128/AES256，五真正kernel UDP/TCP双向150s；Alice Stop后Bob仍UDP、六owner Stop、Linux Rust TUN `reader_joined=1`；见 `docs/evidence/M0/PLAN028-H1586-SOURCEDD82-WIN-AUTO-AES150-NATIVE-PASS-SCOPED-20261111.json` | **Action overall FAIL**：仅旧Normal专用两OS后置报告误套；H1589限定后置分支修正。真正600s、250–300Mbps双向外层、loss30、L3仍NOT_RUN，不能宣称全PLAN通过 |
+| `3b6d53c3` H1587 `43001721886` | A Windows手动AES128 TLS+Rust+OS Ready+双向业务；B Windows手动ChaCha TLS+Rust、Linux共享server分别见cipher2、cipher1 | **FAIL**：B route/WAL `route is not owned; refuse to replace`，B独立OS /32/双业务、A Stop B继续、双WAL安全Stop未通过；需修原生 OS route owner设计，不能松guard |
+| `5f0ac32b` H1588 `43002178705` | 真30%双向netem/200ms单程，Npcap原始TCP SYN/SYNACK、MSS1420，原Linux server TLS443和真Linux UDP sender已启动 | **FAIL**：15s FakeTCP bootstrap deadline；证书TLS未过、Rust M4/Windows OS/反向包NOT_RUN，不能混入之前H1583曾完成TLS而未完成反向的不同SOURCE |
+
+所含逐文件Windows Go/Rust、Linux Go/Rust和签名Wintun SHA256按 **每次Action原始artifact** 使用；同一次CODE里旧Windows Go hash偶然相同不授权跨SOURCE产品证明。新H1589源级修订不会重写 dd82 Action overall；所有其他功能卡/工况仍等待正确范围内真实回归。
+

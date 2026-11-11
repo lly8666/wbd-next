@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1586",
+  "result": "PASS_SCOPED",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "dd82db7ea529cfb7ed162ca665174c5df95a2ead",
+  "action_id": 43000134310,
+  "native_job_id": 130456547588,
+  "action_overall": "FAIL_DOWNSTREAM_HISTORIC_NORMAL_TWO_OS_REPORT_GATE",
+  "raw_artifact_id": 13846582275,
+  "raw_zip_sha256": "39962ca1be96761fcd3a136f2083911f0a76b381b8bf5c4a0702e8d466fb5425",
+  "raw_path": "h1548-loss0-strict-native-report.json",
+  "artifact_verified": true,
+  "product_stage": "ORIGINAL_GO_CERTIFICATE_TLS443_RUST_M4_TWO_SIDES_SIGNED_NPCAP_WINTUN_REAL_APP_AND_OWNED_STOP",
+  "real_bilateral_physical_condition": {
+    "loss_pct": 0,
+    "one_way_delay_ms": 200
+  },
+  "actual_duration_s": 150,
+  "clients_count": 5,
+  "original_owner_total": 6,
+  "windows": {
+    "account": "alice",
+    "auto_ipv4": "10.66.0.207/32",
+    "cipher": "aes-256-gcm",
+    "rust_cipher_id": 3,
+    "signed_wintun_os_ipv4": "10.66.0.207",
+    "true_first_reverse_kernel_udp": 4
+  },
+  "linux_client_ips": {
+    "bob": "10.66.0.138",
+    "carol": "10.66.0.187",
+    "dave": "10.66.0.233",
+    "erin": "10.66.0.132"
+  },
+  "linux_ciphers": {
+    "bob": "chacha20-poly1305",
+    "carol": "aes-256-gcm",
+    "dave": "chacha20-poly1305",
+    "erin": "aes-128-gcm"
+  },
+  "real_os_app_udp_c2s_sent_received": {
+    "alice": [
+      113657,
+      113657
+    ],
+    "bob": [
+      113662,
+      113662
+    ],
+    "carol": [
+      56830,
+      56830
+    ],
+    "dave": [
+      56831,
+      56831
+    ],
+    "erin": [
+      113661,
+      113661
+    ]
+  },
+  "real_os_app_udp_s2c_sent_received": {
+    "alice": [
+      113662,
+      113662
+    ],
+    "bob": [
+      113662,
+      113662
+    ],
+    "carol": [
+      56831,
+      56831
+    ],
+    "dave": [
+      56831,
+      56831
+    ],
+    "erin": [
+      113662,
+      113662
+    ]
+  },
+  "true_tcp_all_clients": "TRUE_BILATERAL_SENT_RECEIVED_AND_ZERO_INVALID",
+  "ten_second_actual_full_outer_sample_mbps": {
+    "up": 24.901,
+    "down": 24.912,
+    "both": 49.814
+  },
+  "six_owner_stop": "PASS_WINDOWS_AND_LINUX4_AND_SERVER_SHARED_RUST_TUN",
+  "server_native_rust_tun": "generation=1 routed=456217 unrouted=0 reader_joined=1",
+  "bob_after_windows_alice_stop_real_kernel_udp": 4,
+  "cleanup": {
+    "windows_wal_leftover": [],
+    "windows_netem": "PASS",
+    "wsl_bridge_restored": true
+  },
+  "strict_report_status": "PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S",
+  "workflow_downstream_first_failure": "existing generic Normal-only two-OS report gate requires mode=normal and PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal and PASS_ACTUAL_TWO_OS_KERNEL_UDP/TCP, although source-specific stricter five-client native gate passed; fix H1589 scoped final post-gate preserving strict checks",
+  "genuine_binary_sha256": {
+    "windows_go": "45780ab5531739740ef7e535384830a4c03eb5ad595171338d8babca27748056",
+    "windows_rust": "da1efbdff9be8e81e46b93f4fede62ae0d58722297f301de57db7ce203e9b9eb",
+    "signed_wintun": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "linux_go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "linux_go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1"
+  },
+  "not_proven": [
+    "overall Action success",
+    "600s",
+    "250-300 Mbps full physical both directions",
+    "loss30 150/600s",
+    "Windows true dual concurrent OS",
+    "30pct cold TLS",
+    "1800s L3",
+    "all lifecycle/rotation/network changes",
+    "ISA-L ARM64 runtime dispatch",
+    "Android",
+    "physical public internet"
+  ]
+}

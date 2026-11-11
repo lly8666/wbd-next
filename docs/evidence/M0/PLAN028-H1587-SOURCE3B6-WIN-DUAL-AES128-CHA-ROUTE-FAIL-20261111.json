@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1587",
+  "result": "FAIL",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "3b6d53c30531f6820c220f9e6c23f8a23480227c",
+  "action_id": 43001721886,
+  "job_id": 130461332320,
+  "artifact_id": 13846773203,
+  "artifact_zip_sha256": "9558964fefd575f64a40d62bedd6cdf05ea3295d77ecbfa151ab3b031dfcc8a9",
+  "artifact_verified": true,
+  "client_A": {
+    "manual_ipv4": "10.66.0.2/32",
+    "authenticated_aead_id": 2,
+    "windows_go_tls": "PASS",
+    "windows_rust_m4": "PASS",
+    "signed_wintun_os": "WBD_WINDOWS_CLIENT_READY",
+    "true_udp_tcp_before_B": "PASS_SCOPED_ACCOUNT_A",
+    "native_owned_stop": "PASS"
+  },
+  "client_B": {
+    "manual_ipv4": "10.66.0.3/32",
+    "authenticated_aead_id": 1,
+    "windows_go_tls": "PASS",
+    "windows_rust_m4": "PASS",
+    "first_reverse_rx": 5,
+    "signed_wintun_os_applied": "NOT_PROVEN",
+    "failure": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_disconnect result=FAIL error=windowsclient: route is not owned; refuse to replace"
+  },
+  "original_linux_shared_server": {
+    "authenticated_client_ciphers": [
+      2,
+      1
+    ],
+    "two_sessions": "PASS_RUST_M4",
+    "shared_tun_stop": "reader_joined=1"
+  },
+  "app_B_udp_tcp": "NOT_RUN_FAIL_WINERROR_10049_AFTER_MISSING_OS_LEASE",
+  "A_stop_B_survives": "NOT_RUN",
+  "both_owned_stop": "NOT_PROVEN",
+  "cleanup_B": "FAIL_ROUTE_OWNER_OR_RECOVERY_UNVERIFIED",
+  "first_fault": "Second concurrently signed Windows instance cannot safely own shared OS route/WAL after A is active; do not relax route owner guard, delete foreign route, or promote TLS-only to B OS ready."
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1588",
+  "result": "FAIL",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "5f0ac32ba0b5d933337ed88f0b33f54da579ac9c",
+  "action_id": 43002178705,
+  "job_id": 130463033678,
+  "artifact_id": 13847342578,
+  "artifact_zip_sha256": "bcb9af65b5d42646b36c319e1683a1fb0c9091c9e7d9678f1ac6042438132bb0",
+  "artifact_verified": true,
+  "physical_netem": {
+    "both_directions_loss_pct": 30,
+    "oneway_delay_ms": 200,
+    "readback": "real_linux_and_windows_tc",
+    "cleanup": "PASS"
+  },
+  "original_windows": {
+    "signed_npcap_transport": "SYN_AND_SYNACK_ORIGINAL_MSS1420_OBSERVED",
+    "client_syn_repeated": 2,
+    "server_synack_observed": 4,
+    "auth_tls": "FAIL_BOOTSTRAP_DEADLINE",
+    "rust_m4": "NOT_RUN",
+    "wintun_os": "NOT_APPLIED",
+    "manual_ipv4": "10.66.0.2/32"
+  },
+  "server": {
+    "original_go_tls443_listening": "PASS",
+    "shared_rust_tun": "reader_joined=1,routed=0"
+  },
+  "kernel_reverse_fixture": "BOUND_REAL_LINUX_10.66.0.1_45941_BUT_PROTECTED_TLS_NOT_READY_SO_NO_POST_AUTH_SEND_EXPECTED",
+  "native_first_failure": "original credential TLS→mode-specific native Rust V4 owner rejected: faketcp: bootstrap stream deadline exceeded",
+  "original_cold_tls_timeout": "15 seconds per candidate each endpoint, configured by original Go source",
+  "windows_wal_leftover": [],
+  "wsl_bridge_restored": true,
+  "not_proven": [
+    "30pct protected TLS authentication",
+    "Rust M4",
+    "true signed Wintun OS applied",
+    "real after-TLS reverse",
+    "30pct TCP/UDP app",
+    "any 600s throughput"
+  ],
+  "next": "Investigate original FakeTCP handshake retransmission and explicit scoped bounded cold TLS budget; do not forge a server READY or lower authenticated product gate. Historical previous 30pct H1583 TLS succeeded at sourcee207 but failed genuine first/reverse due no kernel seed; 30pct not universally broken."
+}

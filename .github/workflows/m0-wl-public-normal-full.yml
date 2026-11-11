@@ -1975,7 +1975,25 @@ jobs:
             }
             Write-Output 'M0_PLAN028_SIGNED_WINDOWS_GAME4_OFF_TWO_ACTUAL_TLS_RUST_SOURCE4_GENERATIONS_AND_STOP_PASS'
           }
-          if($env:WBD_PLAN028_WIN5_SCENE -in @('loss0','loss30')){
+          # Only the already-verified ORIGINAL strict native report can
+          # qualify this H1581/H1579 scoped result. The historic Normal-only
+          # two-OS mode summary is a DIFFERENT scene and must not veto the
+          # five-client 150s signed result or replace its hard evidence.
+          if($env:WBD_PLAN028_WIN_AUTO_AES_MIXED_150 -eq '1'){
+            if($result.source_sha -ne $env:GITHUB_SHA -or
+               $result.status -ne 'PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S' -or
+               $result.mode_public -ne 'PASS_MIXED_FIVE_ORIGINAL_150S'){
+              throw 'H1586 scoped signed Windows auto AES256 150s report missing or source mismatch'
+            }
+            Write-Output 'H1589_SCOPED_H1586_ORIGINAL_FIVE_NATIVE_RESULT_POSTGATE_PASS'
+          }elseif($env:WBD_PLAN028_WIN_30PCT_COLD_TLS -eq '1'){
+            if($result.source_sha -ne $env:GITHUB_SHA -or
+               $result.status -ne 'PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP' -or
+               $result.mode_public -ne 'PASS_MIXED_FIVE_ORIGINAL'){
+              throw 'H1589 scoped actual Windows30 cold TLS report missing or source mismatch'
+            }
+            Write-Output 'H1589_SCOPED_H1579_COLD_TLS_POSTGATE_PASS_FULL_DATA_NOT_RUN'
+          }elseif($env:WBD_PLAN028_WIN5_SCENE -in @('loss0','loss30')){
             if($result.h1506_original_scene -ne $env:WBD_PLAN028_WIN5_SCENE -or
                $result.status -notlike 'PASS_SCOPED_REAL_5_WINDOWS_*' -or
                $result.stop -ne 'PASS_ALL_FIVE_OWNED'){

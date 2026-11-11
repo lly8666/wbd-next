@@ -19,6 +19,14 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         self.assertIn("WBD_PLAN028_WIN_AUTO_AES_MIXED_150:",w)
         self.assertIn("WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '"+marker+"') && 'normal'",w)
         self.assertIn("H1581_REAL_WINDOWS_AUTO_AES256_LINUX_THREE_AEAD_150S_UDP_TCP_SIX_OWNER_STOP_PASS_SCOPED",w)
+        # Historic Normal two-OS metadata must not veto a genuinely verified
+        # 5-client signed/Wintun strict report after all owners Stop.
+        self.assertIn("if($env:WBD_PLAN028_WIN_AUTO_AES_MIXED_150 -eq '1'){",w)
+        self.assertIn("H1589_SCOPED_H1586_ORIGINAL_FIVE_NATIVE_RESULT_POSTGATE_PASS",w)
+        self.assertIn("$result.source_sha -ne $env:GITHUB_SHA",w)
+        self.assertIn("$result.status -ne 'PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S'",w)
+        self.assertIn("$result.mode_public -ne 'PASS_MIXED_FIVE_ORIGINAL_150S'",w)
+        self.assertIn("selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof",w)
         self.assertIn("H1581 signed Windows actual auto lease/AES256 plus Linux three AEAD 150s TCP/UDP/Stop NOT_PROVEN",w)
         self.assertIn('h1581=os.environ.get("WBD_PLAN028_WIN_AUTO_AES_MIXED_150")=="1"',h)
         self.assertIn('l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1" or h1581',h)
