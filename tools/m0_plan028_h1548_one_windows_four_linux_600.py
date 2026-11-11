@@ -144,6 +144,9 @@ def main():
     a=ap.parse_args()
     probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1"
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
+    bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
+    need(not bob_probe or (probe and cold_seed and a.scene=="loss0"),
+         "H1570 Bob auto first real OS UDP only after Windows genuine cold proof")
     need(not cold_seed or probe,"H1566 genuine OS cold seed cannot bypass scoped Windows probe")
     need(not probe or (a.scene=="loss0" and os.environ.get("GITHUB_ACTIONS")=="true"),
          "H1565 only one source-locked real 200ms loss0 Windows-first native OS trial")
@@ -171,6 +174,7 @@ def main():
        "physical_source_IP_switch_while_WSL_bridge_active":"NOT_TRIGGERED_IN_THIS_SCOPE",
        "h1565_windows_first_five_probe":probe,
        "h1566_genuine_authenticated_server_os_udp_cold_seed":cold_seed,
+       "h1570_bob_auto_native_first_udp":bob_probe,
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -387,6 +391,34 @@ s.close()
             # capacity/soak is expressly NOT_RUN by this short first-fault.
             report["h1565_probe_stage"]="five_original_native_ready_real_udp"
             report["h1565_auto_os_tun_ips"]=dict(auto_os_ips)
+            if bob_probe:
+                # Make Bob's FIRST reverse and forward real OS path observable
+                # before the five-client simultaneous workload. It is normal
+                # authenticated Linux-server UDP, never forged M3/Health.
+                report["h1565_probe_stage"]="bob_auto_first_reverse_before_five"
+                bob_kernel_py="""import socket,sys,time
+bob=sys.argv[1]
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind(("10.66.0.1",45943))
+for i in range(24):
+ data=b"H1570_REAL_LINUX_KERNEL_BOB_PRE/"+str(i).encode()
+ assert s.sendto(data,(bob,45944))==len(data)
+ time.sleep(.15)
+print("H1570_AUTHENTICATED_NATIVE_SERVER_BOB_KERNEL_UDP_SENT count=24 destination="+bob,flush=True)
+s.close()
+"""
+                seed_proc=spawn("h1570-bob-kernel-first",["wsl.exe","-d","Ubuntu","-u","root","--",
+                    "python3","-u","-c",bob_kernel_py,auto_os_ips["bob"]])
+                seed_proc.wait(timeout=24)
+                seedlog=(OUT/"h1570-bob-kernel-first.log").read_text(errors="replace")
+                need(seed_proc.returncode==0 and
+                     "H1570_AUTHENTICATED_NATIVE_SERVER_BOB_KERNEL_UDP_SENT count=24" in seedlog,
+                     "H1570 real Linux server kernel->Bob UDP source failed "+seedlog[-350:])
+                report["h1570_bob_server_kernel_source_sent"]=24
+                bobfirst=spawn_real_echo_client("bob_alone_before_five",auto_os_ips["bob"],4,NS4[0])
+                require_real_echo("bob_alone_before_five",bobfirst,4)
+                report["h1570_bob_alone_native_udp_echoes"]=4
+                print("H1570_ORIGINAL_TLS_NATIVE_AUTO_BOB_FIRST_REVERSE_4_REAL_UDP_PASS",flush=True)
             tasks={"alice":spawn_real_echo_client("alice",IPS[0],8)}
             for i,who in enumerate(names[1:],1):
                 tasks[who]=spawn_real_echo_client(who,auto_os_ips[who],8,NS4[i-1])

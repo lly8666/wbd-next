@@ -2,10 +2,10 @@
   "schema_version": 1,
   "plan": "PLAN028",
   "checkpoint": "H1567",
-  "source_sha": "7532f361cfb030227aa83c275dce4becf3340ce7",
+  "source_sha": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
   "date_local": "2026-11-11",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "prior": {
     "action": 42960126194,
@@ -17,5 +17,36 @@
   "new_action": "NOT_RUN",
   "target": "One signed original Windows native first/reverse under 200ms loss0 with verified real server Linux kernel UDP only after credential TLS; if ready add Linux4 real auto IP clients, 40 original OS UDP, Bob after Win Stop, all owned Stop",
   "full_600s": "NOT_RUN",
-  "loss30": "NOT_RUN"
+  "loss30": "NOT_RUN",
+  "original_action_id": 42960548812,
+  "original_job_id": 130327344987,
+  "original_artifact_id": 13829615973,
+  "actual_network_result": "FAIL_REAL_LINUX_AUTO_BOB_FIRST_UDP",
+  "first_fault": {
+    "stage": "five_original_native_ready_real_udp",
+    "triggered_H1566_real_server_OS_cold_UDP": true,
+    "windows_original_first_reverse": "PASS_RX_FIRST_DELIVERED74",
+    "windows_native_client_ready": "PASS",
+    "windows_before_linux_real_udp4": "PASS",
+    "linux_four_genuine_TLS_Rust_M4_ready": "PASS",
+    "auto_os_addresses": {
+      "bob": "10.66.0.222/32",
+      "carol": "10.66.0.148/32",
+      "dave": "10.66.0.183/32",
+      "erin": "10.66.0.190/32"
+    },
+    "bob_first_real_native_UDP_echo": "FAIL_TIMEOUT_8S",
+    "linux_bob_native_tun_routed": 1,
+    "linux_bob_m4_auto_fec_accepted": 1,
+    "linux_bob_native_tun_delivered": 0,
+    "original_Windows_5_app_40": "NOT_COMPLETED",
+    "full_600s": "NOT_RUN",
+    "loss30": "NOT_RUN"
+  },
+  "cleanup": {
+    "Windows_wal_leftover": 0,
+    "WSL_bridge_restored": true,
+    "windows_eth0_netem_clean": "PASS"
+  },
+  "classification": "ACTUAL_5_READY_BUT_BOB_APP_TIMEOUT"
 }

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1570",
+  "date_local": "2026-11-11",
+  "source_sha": "cb8c1427e070a02c010209471963da65464ac848",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "prior_action": {
+    "id": 42960548812,
+    "artifact_id": 13829615973,
+    "source": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
+    "observed": "Windows original TLS443/Rust signed Wintun genuine native first+reverse and 4 app echoes PASS after authenticated Linux server OS packets; 4 Linux distinct auto pools+4 native TLS/M4 READY; five simultaneous first Bob UDP echo timed out after one kernel TUN ingress; 40/40 and six Stop NOT_QUALIFIED",
+    "reason_for_new_test": "Need distinguish Bob Normal auto first+reverse under 200ms from five-socket contention; preserve individual app logs which old artifact omitted."
+  },
+  "scope": {
+    "trigger": "[plan028-h1570-bob-first-real-os-udp]",
+    "native": "single Windows2025 signed original Npcap/Wintun+4 original-Go Linux netns clients, shared one TLS443 and Rust native TUN",
+    "first_Windows": "keep H1566 post-auth real Linux server OS UDP Alice seed, Windows first+reverse, 4 genuine Windows UDP",
+    "Linux_four": "exact independent installation-backed authentic auto /32 OS readbacks in disjoint server-owned pool",
+    "Bob_diagnostic": "After all five original protected TLS/M4 READY but before five simultaneous app sockets, send exactly 24 real OS UDP from server kernel 10.66.0.1:45943 to authenticated Bob auto OS lease port45944; then require Bob-alone 4 real UDP app echoes",
+    "five_traffic": "only on Bob-alone real PASS, then 5 actual OS sockets 40 UDP, 4 Bob after Windows owned Stop, full Stop and cleanup",
+    "artifacts": "Upload h1565-*.log and h1570-*.log, original client/server and strict report to pinpoint first failure",
+    "forbidden": "no fake ACK, no M3/Health injection, no new wire fields or Go/Rust DATA path",
+    "scenario": "0% loss/200ms each direction, default1460, bounded short first fault",
+    "long_600": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "Windows5_same_host": "NOT_RUN",
+    "physical_WAN": "NOT_RUN",
+    "android": "NOT_RUN"
+  },
+  "new_source": "NOT_RUN"
+}
