@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1617",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "cf03ab6b59b63c5f7b247a81826bc465fec6947f",
+  "result": "TWO_DISTINCT_REAL_LINUX_X86_NATIVE_SCENES_PASS_SCOPED; HISTORIC_FAILS_PRESERVED",
+  "compiled_binary_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source_locked_original_build_run": 43027983611,
+  "original_native_backend": "pinned original Go TLS/FakeTCP443 cold + Rust M4 steady with native ISA-L",
+  "no_recompile": true,
+  "product_and_original_netns_fixture_diff_since_binary_source": [],
+  "exact_binary_sha256": {
+    "wbd-v4-client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "wbd-v4-server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "libwbd_engine.so": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "game2_off_true_path": {
+    "tested_harness_source": "9148b784254bd7552ea7b60f81578a1f484d4c3d",
+    "action": 43061710360,
+    "job": 130665733298,
+    "overall": "SUCCESS",
+    "artifact_id": 13874290798,
+    "artifact_zip_sha256": "eca91b8eefa411113522e23e08908bf3da4167f12886723779e12b8c5432aa86",
+    "native_log_sha256": "ff6282311b2b79ed4354edafb8ecce3d2d2216a64847d055723fd2eef67c2106",
+    "receipt_json_sha256": "98552448e6031d3c4e5c4f8994d62ca97d284d8bc67d017ad994f137ef9be511",
+    "wire_audit_json_sha256": "567dd2f0562db8c450f7d9537a2c4dc5d962d7d6682577835eaa93112ff6ddf4",
+    "mode": "Game2",
+    "fec": "Off default",
+    "auto_ip": true,
+    "physical_source4_before": "10.25.0.2",
+    "physical_source4_after": "10.25.0.3",
+    "user_configured_outer_ipv4_mtu": 1460,
+    "real_physical_after_mtu": 1280,
+    "actual_OS_TUN_readback_mtu": 1193,
+    "original_go_TLS_clienthellos": 4,
+    "tls_groups": 2,
+    "lanes_per_group": 2,
+    "distinct_session_ids": 4,
+    "original_server_first": "TLS ServerHello",
+    "client_no_private_prelude": true,
+    "old_group_kept_until_new_rust_M4_ready": true,
+    "old_group_exact_Stop": true,
+    "shared_Rust_TUN_single_reader": true,
+    "true_initial_kernel_UDP_echoes": 5,
+    "true_post_source_change_kernel_UDP_echoes": 5,
+    "original_final_two_owned_Stop": true,
+    "qualification": "PASS_SCOPED_LINUX_X86_64_SOURCE8A_GAME2_OFF_PHYSICAL_PATH"
+  },
+  "normal_same_physical_candidate_failure_A_live": {
+    "tested_harness_source": "cf03ab6b59b63c5f7b247a81826bc465fec6947f",
+    "action": 43062378203,
+    "job": 130668093193,
+    "overall": "SUCCESS",
+    "artifact_id": 13874281596,
+    "artifact_zip_sha256": "9043c81357df699d77590e16f30d524b1ae4e1f9ec1421ad452d42d1da734fb2",
+    "native_log_sha256": "c66663eb1601317892b1e6e94fce8d3fa5e8c5b1229cf33246996864caf8f04c",
+    "receipt_json_sha256": "c5e9462388aba18602609e7519e9d8b0ead9ed3c0ea99c9a90bb5857f8c15066",
+    "original_client_event_log_sha256": "b4baf35ae28f0d5b4592960cc89f5077930c46b7723ce2ed9e255323ae82ef8a",
+    "native_B_TCP_kernel_drop_log_sha256": "14fe82c97ecbc1e436c286339a676ff242842d07b88e95cbe1706e540b272d8c",
+    "A_live_real_UDP_log_sha256": "d6f8ce64802ead596d4d0fee12c03b5c9afe26a65d06007c9e8e9f507b6528e1",
+    "post_B_authenticated_UDP_log_sha256": "f5ab29233fb1abde7498f20331f0170fe959ed8c59d53b5a7f99c2a67d01c6cf",
+    "mode": "Normal",
+    "fec": "Off",
+    "auto_ip": true,
+    "real_kernel_TUN": true,
+    "original_physical_IP": "10.25.0.2 unchanged",
+    "actual_physical_MTU": 1500,
+    "user_outer_ipv4_mtu_config": 1460,
+    "authenticated_lease": "10.66.0.183/32",
+    "test_only_rotation_interval_seconds": 30,
+    "product_default_rotation_interval_seconds": 0,
+    "original_B2_TLS_source_port": 56872,
+    "kernel_B_only_TCP_drop_packets": 1,
+    "original_Go_B2_failed": "V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=2 class=other old_untouched=true superseded_by_new_OS_path=false",
+    "original_A_not_stopped_during_B2_failure": true,
+    "one_new_byte_verified_kernel_UDP_echo_on_A_during_B_rejection": 1,
+    "original_B3_real_TLS_Rust_M4_ready": true,
+    "client_B3_new_source_port": 64791,
+    "original_A_exact_retirement_grace_ms": 16872,
+    "original_A_exact_native_Stop": true,
+    "post_authenticated_B3_true_kernel_UDP_echoes": 5,
+    "final_original_client_and_server_Stop": true,
+    "application_initial_true_echoes": 5,
+    "total_new_native_UDP_echoes_after_first_set": 6,
+    "qualification": "PASS_SCOPED_ORIGINAL_GO_RUST_NATIVE_SINGLE_PHYSICAL_B_FAILURE_A_ALIVE_AND_B3_RECOVERY"
+  },
+  "retained_original_failures": [
+    {
+      "action": 43060138936,
+      "source": "9a5d4531904c9d124da77037bce969b8cc70c6be",
+      "artifact_zip_sha256": "7775560eb4212f5ee4ebbdb7a812213b18e6fce6280897a4fa10b0efcbe223d1",
+      "result": "FAIL original physical .2->.3 then B2 blocked, A UDP timed out before B unblock/Stop; distinct physical A viability limitation"
+    },
+    {
+      "action": 43060138947,
+      "source": "9a5d4531904c9d124da77037bce969b8cc70c6be",
+      "artifact_zip_sha256": "660665987ee6dbc4fb4e51ec329a5cee74c990941aacc6bc98e61acc6dcf3d8c",
+      "result": "FAIL test inherited Game4 remaining_flows4 assertion; real Game2 B ready and old Stop partial only"
+    },
+    {
+      "action": 43061710140,
+      "source": "9148b784254bd7552ea7b60f81578a1f484d4c3d",
+      "artifact_zip_sha256": "6cf1b8d0c2269da00bcf546c3155e138c52fc714b96e2c21a7833a88cb1d6095",
+      "result": "FAIL 5s test timer initiated unintended B4 before final new UDP; B2 fail, true A UDP, B3 ready oldStop partial only"
+    }
+  ],
+  "old_seven_mode_evidence": {
+    "source": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+    "action": 41970545107,
+    "scope": "OLD_SOURCE native Linux x86_64 seven modes 7 independent real scenes / 4 successful cold rotations each, 16220 real UDP sent 16219 echoed, one Game2 Off undelivered; not equivalent to current frozen source8a direct seven full pass",
+    "list": [
+      "Normal Off",
+      "Normal Fixed6",
+      "Normal Auto",
+      "Game2 Off",
+      "Game2 Fixed6",
+      "Game4 Off",
+      "Game4 Fixed6"
+    ],
+    "current_binary_real_direct_representative": {
+      "Normal Off": [
+        "H1608 Action43046531699",
+        "H1616 Action43062378203"
+      ],
+      "Normal fixed": [
+        "H1604 Erin source8a real fixed mode, maximum profile not captured in H1604 receipt"
+      ],
+      "Normal Auto": [
+        "H1613 idle100/blackhole106 source8a binary"
+      ],
+      "Game2 Off": [
+        "H1615 Action43061710360"
+      ],
+      "Game2 Fixed6": [
+        "H1230 OLD_SOURCE ONLY - no new source-scoped separate direct scene"
+      ],
+      "Game4 Off": [
+        "H1230 OLD_SOURCE ONLY - no new source-scoped separate direct scene"
+      ],
+      "Game4 Fixed6": [
+        "H1608 Action43046531950"
+      ]
+    }
+  },
+  "not_qualified": [
+    "Windows current signed Wintun same-source idle and physical path/candidate failure",
+    "Windows independent-DUT 1800s native L3 and 600s representative pressure",
+    "near-derived-MTU true payload explicitly user-skipped; NOT_RUN",
+    "old H1587 same-Windows-host multiple full-tunnel Wintuns unsupported per user scope",
+    "Android physical WAN PLAN029 PLAN030 out of scope",
+    "no new CPU A/B p99 queue age or 250ms/30percent in these functional short scenes"
+  ],
+  "governance": {
+    "game2_source9148_action": 43061709862,
+    "game2_maintenance": 43061710076,
+    "candidate_sourcecf03_action": 43062378244,
+    "candidate_maintenance": 43062378175,
+    "all_success": true
+  }
+}

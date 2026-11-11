@@ -205,3 +205,14 @@ H1615目标是**两条独立Action、各一个网络场景、各复用完全相�
 ## H1616 Game2真实原生完整通过；same-path候选失败保留A仍待定向收尾
 
 SOURCE`9148b784254bd7552ea7b60f81578a1f484d4c3d` Action`43061710360` Game2 Off Auto/两lane×两代 **SUCCESS/PASS_SCOPED**：来源S8a原Go/Rust ISA-L正式产物无编译；原artifact`13874290798` ZIP SHA`eca91b8eefa411113522e23e08908bf3da4167f12886723779e12b8c5432aa86`，真实四条标准TLS ClientHello/ServerHello无私有前置、两IP各2、B原Rust M4 authenticated、旧A精确Stop、物理MTU1280→TUN OS1193、前后5+5 UDP及最终所有owner Stop。旧H1614 Game2 `43060138947` 因原夹具误用Game4剩余流数断言FAIL仍保留。Normal候选B同物理`43061710140` **FAIL**：真B2冷TLS内核丢弃、A保持并交付新增UDP、解禁后B3真TLS/Rust Ready/A精确Stop，但测试意外5s又触发B4，最后UDP超时，尚未全通过；原ZIP`13872369891` SHA`6cf1b8d0c2269da00bcf546c3155e138c52fc714b96e2c21a7833a88cb1d6095`。H1616仅把该测试显式轮换interval设30s（原默认仍0）一次，防止B4与10-20s退休期重叠，**新Action未结束前NOT_RUN**。详见[H1616 devlog](../devlog/M0/20261112-PLAN028-H1616-RETAIN-B3-B4-INTERFERENCE-ONE-FINAL-TIMER30-NATIVE.md)。用户跳过近MTU、多Wintun，独立Windows L3仍未验。
+
+## H1617 原生B失败保留A闭环＋Game2 Off物理path两lane（原binary SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346`）
+
+完整[原始artifact SHA、TLS标准握手、原native kernel UDP、Stop和历史FAIL证据](../evidence/M0/PLAN028-H1617-SOURCECF03-PREBUILT-NORMAL-FAILED-B-A-LIVE-GAME2-OFF-20261112.json)。
+
+| 组件/正式入口/默认 | 真实原生资格与精确源码/Action | 限制 |
+|---|---|---|
+| Normal Off Auto IP，**仅测试显式**30s同物理源Cold轮换（Linux正式interval默认0） | H1616 harness`cf03ab6b59b63c5f7b247a81826bc465fec6947f`，原bin`8a31375e36bb6a93860c5579e64b4a39d0b6e346` Action`43062378203` **SUCCESS**；原ZIP`13874281596` SHA`9043c81357df699d77590e16f30d524b1ae4e1f9ec1421ad452d42d1da734fb2`。源4未改、内核仅B2真实TLS DROP1、Go候选失败old_untouched、A仍真kernel UDP；解禁B3真实TLS/Rust Ready、旧A grace16872ms后精确Stop、B3再5/5真UDP、双方最终Stop。 | **PASS_SCOPED Linux native同物理A可达条件**；未解决原SOURCE9a旧物理改变时A新UDP不达的失败；不是Windows或L3。 |
+| Game2 Off Auto IP / 两lane / 原 outer1460 → 物理1280的真实路径预算 | H1615 harness`9148b784`、原bin`8a31375e36bb6a93860c5579e64b4a39d0b6e346` Action`43061710360` **SUCCESS**；artifact`13874290798` ZIP`eca91b8eefa411113522e23e08908bf3da4167f12886723779e12b8c5432aa86`。原TLS443四ClientHello（两代各2、无私有前置）、真实OS TUN1193、B组remote M4后A+B→B、前后5+5真UDP、所有owner Stop。 | **PASS_SCOPED Linux native Game2 Off**，旧H1614 Game4流数断言误判FAIL保留，不是Fixed6模式。 |
+
+七模式：旧SOURCE`0cda9157` Action`41970545107`七场/28次认证轮换总投递`16220`收到`16219`（Game2 Off丢1），**旧SOURCE scoped**；当前产品源`8a31375e`已有Normal Off/Auto、Game2 Off、Game4 Fixed6及Normal Fixed代表正证；**Game2 Fixed6、Game4 Off和本源Normal Fixed6最高强度未以相同新源码全复测**，按既有未改组件证据限定复用，不把缺的模式标PASS。此条不是新七场矩阵任务，不扩展029/030。用户跳过近innerMTU、多Wintun，Windows idle/物理path和独立DUT L3仍NOT_QUALIFIED。028 IN_PROGRESS。
