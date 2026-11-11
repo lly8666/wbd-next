@@ -1,6 +1,6 @@
 # PLAN028｜简化认证、单端口多客户端与配置接线
 
-IN_PROGRESS（2026-11-11：功能冻结、原生Windows AutoLease/三套cipher接线和治理回归已推进，仍需新SOURCE真实签名驱动与综合生命周期验收，不得标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
+IN_PROGRESS（2026-11-11：SOURCE8c0421 Windows自动AES256与四Linux三套cipher真实150s和六owner Stop PASS_SCOPED；用户明确不需运行同Windows宿主多Wintun，H1587原始route/WAL FAIL保留为该组合未支持限制；同账号跨OS独立安装真测试和最终综合质检仍进行中，不得标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
 
 ## 0. 施工边界：补接入与交接，不重做架构协议
 

@@ -158,11 +158,11 @@ def main():
          "H1579 exactly one original Windows2025 native 30pct cold TLS trial, no invented UDP recovery")
     offered_scale=float(os.environ.get("WBD_PLAN028_WIN_150S_SCALE","1.0"))
     need(
-         ((.59<=offered_scale<=.61) if h1596 else
+         ((.69<=offered_scale<=.71) if h1596 else
           (.99<=offered_scale<=1.20 and
            (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")))) and
          (not h1577 or abs(offered_scale-1.15)<.000001),
-         "only H1596 test-only 60pct or existing H1577 115pct rate allowed")
+         "only H1596 test-only 70pct or existing H1577 115pct rate allowed")
     need(not h1596 or (h1581 and l1_150 and probe and a.scene=="loss0"
          and not h1577 and not h1579 and not mixed_persona
          and not bob_probe and not bob_listener),

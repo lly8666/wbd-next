@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1595,
-  "checkpoint_sha": "5c26b91d910dd657c4d3b4ede68c27a427bc123b",
+  "sequence": 1597,
+  "checkpoint_sha": "496309022f2b1f9d39c1b2d7db80770a49321886",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1595-FIVE-STALE-L1-SCOPE-UNIT-GATES-FIX",
-  "current_task": "Recovered true source8c Win+Linux4 real native150s Action43014043726 SUCCESS; report metadata-only 600s NOT_RUN scenario attribution fixed H1594. Governance 43017421450 SUCCESS but governance-maintenance43017422031 five old exact-literal source assertions failed; H1595 updates every old H1565/H1572/H1573/H1574/H1577 assertion to check all four correct 600s-scope branches and retains original failure. Same host dual Windows route WAL H1587 FAIL unclosed. CPU host near92.6% at outer duplex150Mbps prevents further heavier same-VM capacity.",
-  "why_now": "Previously unrecorded successful SOURCE8c true Win+Linux150s run became complete at 2026-11-11T11:57:22Z. Product qualification explicitly spans real business and Stop, while global Windows full-tunnel /1 route owner remains blocking concurrent two signed Wintuns. Host near CPU capacity means refuse heavier same-family without per-worker/generator evidence.",
+  "task_id": "PLAN028-M0-H1597-H1596-TEST-PACE-SAFETY",
+  "current_task": "Source496309 H1596 one-Wintun + Linux same-account 150s selected (Action43024873684 in progress), governance43024873618 and comprehensive regression43024873825 SUCCESS. Independent static read of original apps tools/m0_plan028_h1548_mixed_os_app.py discovered test-only pace0.6 violates existing real app .65..1.35 safety envelope; first SOURCE496309 network may FAIL_FIXTURE once reached (not product). H1597 corrects test-only pace to 0.7 across harness/workflow/strict source test before re-dispatch, offline-only no duplicate while first action active. Earlier H1594 source8c true five-client different-account 150s PASS_SCOPED; user explicitly says do not run multi-Wintun, retain H1587 historical same-host route FAIL as unsupported.",
+  "why_now": "Actual first h1596 source passed unit tests but test-only requested rate0.6 violates pre-existing original real OS app hard lower bound0.65; must fix source rather than lower generator integrity gate or blame product/host.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1595 follow-up governance-maintenance and source tests, update current action status only; no duplicate network run. H1587 native same-host two-Wintun /1 route global owner still needs safe coexistence and real A Stop B survival. Other impacted L1/L3 incomplete, PLAN028 stays IN_PROGRESS; do not widen to 029/030.",
+  "next_action": "First collect SOURCE496309 Action43024873684 terminal actual stage and raw failure once completed; do not initiate H1596 second network while first runs. After first terminal, dispatch only corrected H1597 source with [plan028-h1596-same-account-win-linux-150s] one scenario and test actual 0.7 six-app readback, two unique auto OS /32, 150s TCPUDP and Bob after Alice Stop. No multi-Wintun. Additional L1/lifecycle/MTU/L3 not all done; PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "8c0421c33a4fcb9309be3530b3eec0100fc38d9d",
   "evidence_refs": [
@@ -24,8 +24,9 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/devlog/M0/20261111-PLAN028-H1594-WIN-AUTO-AES-MIXED150-ACTUAL-PASS-AND-HOST-CAPACITY.md",
     "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
-    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1597-FIX-TEST-PACE-GUARD.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1594 source8c Action43014043726 actual Win2025 native auto AES256+Linux four heterogeneous cipher UDP/TCP150s+Windows Stop Bob UDP+six exact Stop PASS_SCOPED; throughput outer duplex median151.96Mbps late123Mbps host CPU92.6%, heavier same VM capacity paused. H1592 fd473 true 30pct cold TLS RTO+M4+OS+Stop PASS_SCOPED only. H1587 dual Win Wintun OS WAL route FAIL unclosed, 600s/representative L3/other impacted L1 not fully qualified; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1594 source8c Action43014043726 actual Win2025 native auto AES256+Linux four heterogeneous cipher UDP/TCP150s+Windows Stop Bob UDP+six exact Stop PASS_SCOPED; throughput outer duplex median151.96Mbps late123Mbps host CPU92.6%, heavier same VM capacity paused. H1592 fd473 true 30pct cold TLS RTO+M4+OS+Stop PASS_SCOPED only. H1587 dual Win Wintun OS WAL route FAIL unclosed, 600s/representative L3/other impacted L1 not fully qualified; PLAN028 IN_PROGRESS. H1596 new cross OS same-account original fixture source496309 in progress but discovered .6 app pace BELOW real generator .65 minimum, H1597 corrects test-only rate to .7, no lowered guard or duplicate scene; not product failure."
 }

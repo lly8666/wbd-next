@@ -834,7 +834,7 @@ jobs:
       WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST: ${{ github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) && '1' || '0' }}
       WBD_PLAN028_WIN_FIVE_150S_TCPUDP: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) && '1' || '0' }}
       WBD_PLAN028_WIN_L2_CAPACITY_115: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') && '1' || '0' }}
-      WBD_PLAN028_WIN_150S_SCALE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]') && '0.6' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') && '1.15' || '1.0' }}
+      WBD_PLAN028_WIN_150S_SCALE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]') && '0.7' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') && '1.15' || '1.0' }}
       WBD_PLAN028_WIN_AUTO_AES_MIXED_150: ${{ (contains(github.event.head_commit.message, '[plan028-h1581-win-auto-aes-mixed-150s]') || contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]')) && '1' || '0' }}
       WBD_PLAN028_WIN_LINUX_SAME_ACCOUNT_150: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]') && '1' || '0' }}
       WBD_PLAN028_WIN_30PCT_COLD_TLS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1579-win30-cold-auth]') && '1' || '0' }}
@@ -1470,7 +1470,7 @@ jobs:
                 if($mixed.h1596_real_one_Windows_one_Linux_same_account_distinct_installations -ne $true -or
                    $twins.account -ne 'alice' -or
                    $twins.Windows_signed_Wintun -eq $twins.Linux_Bob_kernel_TUN -or
-                   [double]$mixed.h1596_test_only_offered_scale -ne 0.6 -or
+                   [double]$mixed.h1596_test_only_offered_scale -ne 0.7 -or
                    $mixed.h1596_same_account_150s_and_sibling_stop -ne 'PASS_NATIVE_ONE_WIN_ONE_LINUX_SAME_LOGIN_DISTINCT_AUTO_IP_150S_STOP' -or
                    @($mixed.h1596_actual_all_six_OS_apps_scale.PSObject.Properties).Count -ne 6){
                   throw 'H1596 two independent same-login installations and real 150s Windows Stop Bob continued NOT_PROVEN'

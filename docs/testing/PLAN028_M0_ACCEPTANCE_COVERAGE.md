@@ -120,3 +120,9 @@ Action [43014043726](https://github.com/lly8666/wbd-next/actions/runs/4301404372
 | 报表资格 | `qualification_scope=TRUE_150S_FIVE_CLIENTS_NOT_600S`；原strict `600s_outer_capacity=NOT_RUN_H1565_SHORT_FIRST_FAULT`，H1594最小修正后新报表会写`NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE` | **150s业务PASS_SCOPED**、600s/30%五客户端业务/L3/GUI真实人机均NOT_RUN；报告字段修正不需要重测已经合格的原始产品 |
 
 硬失败阻断H1587：每个Wintun原生plan都申请两条Windows全局`/1`捕获与同一TLS服务器物理`/32`逃逸，`native_unified_stage_routes_windows.go`保留精确owner CAS，不能借共享路径误删前一实例。复用当前架构没有已验证按进程/源IP隔离的Windows路由域；此处不为刷绿引入029/030服务或禁掉保护。PLAN028仍 **IN_PROGRESS**，L1必要额外组合及可独立量测的L3尚未全部完成。
+
+## H1596/H1597用户新范围与0.7倍同账号跨OS验证
+
+用户2026-11-11明确不要求跑**同Windows宿主多个Wintun**，H1587第二Wintun全局/1路由+WAL失败作为历史真实FAIL/未支持组合保留，不再派发；**不等于修复、也不把该组合说成PASS**。替代直接验用户承诺同账号多设备：单个真正签名Win2025 Wintun Alice + 独立Linux Bob同原TLS账户、各自原Go安装ID与不同server auto/32，其他三个Linux异构AEAD，同一共享TLS443/Rust服务器；真实150s双向UDP/TCP、Windows退出后Bob仍真实UDP与六owner Stop均须新源严格证据。
+
+H1596 SOURCE`49630902` Action `43024873684`进行时，前置源码回归`43024873825`与治理`43024873618`成功，但离线发现其测试业务pace选择0.6**低于已有真实app的0.65下限**（`tools/m0_plan028_h1548_mixed_os_app.py`）。H1597调为**仅夹具/CI显式0.7**，严格保留发生器有效值界限与六端pace读回，避免此前4vCPU宿主原负载CPU92.6%再撞高压；原H1596 Action结果单独留存，不在它运行中重复派发。H1597尚无真网络结果，**NOT_RUN**。产品默认仍1460/Normal-Off/ChaCha/outer重传on/Linux rotate0/Windows15s-90s-idle0；不能将夹具pace0.7推广成产品全局默认。
