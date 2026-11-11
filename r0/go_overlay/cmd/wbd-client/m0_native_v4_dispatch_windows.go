@@ -21,6 +21,9 @@ type m0NativeV4Options struct {
  TunnelID [16]byte
  Installation [16]byte
  Lease4 netip.Prefix
+ // For AutoLease, Lease4 is 0.0.0.0/32 until the protected TLS reply.
+ AutoLease bool
+ RecordCipher uint8 // exact per-client protected V4 AEAD, never a server-global switch
  AdapterAlias,StatePath string
  DNSServers4 []netip.Addr
  Direct4,Bypass4 []netip.Prefix

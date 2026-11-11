@@ -34,6 +34,8 @@ type V4WindowsAuthenticatedGameGroup struct{
  members []*V4WindowsAuthenticatedClientOwner
  sessions []*V4ClientSession
  epoch [16]byte
+ authenticatedLease string
+ authenticatedCipher uint8
  joined uint64
  stageProc,receiveProc,offFinishProc,joinProc,stopProc,effectiveMtuProc *syscall.Proc
  maxIPv4 int
@@ -91,6 +93,15 @@ func V4WindowsEstablishOriginalGameClientGroup(
   if e!=nil{return fail(e)}
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
+  lease,leaseErr:=session.AuthenticatedLeaseIPv4()
+  snap,snapErr:=session.ColdSnapshot()
+  if leaseErr!=nil||snapErr!=nil||snap.Cipher()!=base.Policy.Cipher{
+   return fail(fmt.Errorf("Game protected per-lane network selection mismatch: %w",ErrAdmissionUnsupported))
+  }
+  if i==0{g.authenticatedLease=lease;g.authenticatedCipher=snap.Cipher()
+  }else if lease!=g.authenticatedLease||snap.Cipher()!=g.authenticatedCipher{
+   return fail(ErrAdmissionUnsupported)
+  }
   handoff,e:=assoc.Detach()
   if e!=nil{return fail(e)}
   if e=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{
@@ -106,6 +117,17 @@ func V4WindowsEstablishOriginalGameClientGroup(
   g.sessions=append(g.sessions,session)
  }
  return g,nil
+}
+// AuthenticatedNetworkSelection is read only after all sibling TLS lanes
+// commit the SAME protected address and cipher. It is not a Wintun grant.
+func(g *V4WindowsAuthenticatedGameGroup) AuthenticatedNetworkSelection()(string,uint8,error){
+ if g==nil{return "",0,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||len(g.sessions)!=len(g.members)||
+  (len(g.members)!=2&&len(g.members)!=4)||g.authenticatedCipher==0{
+  return "",0,errV4WindowsOwner
+ }
+ return g.authenticatedLease,g.authenticatedCipher,nil
 }
 // BindAndJoinOriginalWintun can only use a SAME-process M4-issued native
 // device, checked separately for all original TLS lane epochs. There is

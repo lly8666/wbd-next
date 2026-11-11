@@ -434,7 +434,8 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  }
  state:=strings.ToLower(o.StatePath)
  if o.Username!=expectedUser||!o.Lease4.IsValid()||
-    o.Lease4.String()!=expectedLease||len(o.StatePath)<12||
+    !(o.Lease4.String()==expectedLease||
+      (o.AutoLease&&o.Lease4.String()=="0.0.0.0/32"))||len(o.StatePath)<12||
     !strings.HasSuffix(state,".json")||
     (two&&!strings.Contains(state,strings.ToLower(o.AdapterAlias)))||
     (five&&!strings.EqualFold(filepath.Base(state),"h1506-owned-"+expectedUser+".json")){
@@ -459,7 +460,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   o.ServerName==""||len(o.RouteKey)!=32||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
   !o.Lease4.IsValid()||!o.Lease4.Addr().Is4()||o.Lease4.Bits()!=32||
-  o.Lease4.Addr().IsUnspecified()||o.TunnelMTU<576||o.TunnelMTU>1500||
+  (o.AutoLease!=o.Lease4.Addr().IsUnspecified())||
+  (o.RecordCipher!=realityfront.CipherChaCha&&o.RecordCipher!=realityfront.CipherAES128&&o.RecordCipher!=realityfront.CipherAES256)||
+  o.TunnelMTU<576||o.TunnelMTU>1500||
   o.ConnectionMTU<576||o.ConnectionMTU>1500||o.TunnelMTU>o.ConnectionMTU{
   return windowsclient.ErrN4NativeGuard
  }
@@ -768,16 +771,17 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  var policy realityfront.AdmissionPolicy
  switch o.Mode{
  case m0WinModeNormal:
-  policy,err=realityfront.FixedPolicyForClient(1,0)
+  policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   1,"off",0,4,20,o.RecordCipher)
  case m0WinModeFixed:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
    // Frozen Linux original-Go V3 carrier envelope uses fixed parity 4;
    // this is NOT W168 FEC2 Maximum profile 6. Native Rust FixedStream
    // independently selects profile6 under authenticated feature7.
-   1,"fixed",4,4,20,realityfront.CipherChaCha)
+   1,"fixed",4,4,20,o.RecordCipher)
  case m0WinModeAuto:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
-   1,"auto",0,4,20,realityfront.CipherChaCha)
+   1,"auto",0,4,20,o.RecordCipher)
  default:
   return windowsclient.ErrN4NativeGuard
  }
@@ -792,7 +796,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
     RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
-  AutoLease:false,DesiredLanes:1,InstallationID:o.Installation[:],
+  AutoLease:o.AutoLease,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:recordOffer,
   LaneID:1,Policy:policy,
@@ -831,14 +835,28 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if session==nil||session.Epoch==[16]byte{}{
   return windowsclient.ErrN4NativeGuard
  }
- // The server's manual /32 is authenticated in the EXISTING TLS reply.
- // Reject any server-side mapping other than this client's explicitly
- // configured Wintun lease BEFORE OS route/MTU and before native traffic.
- if trustedLease,e:=session.AuthenticatedLeaseIPv4();e!=nil||
-  (trustedLease!=""&&trustedLease!=o.Lease4.String()){
-  return fmt.Errorf("%w: protected server manual /32 conflicts with local Wintun lease: %v",
-   windowsclient.ErrN4NativeGuard,e)
+ // A protected server reply is the ONLY source of an automatic /32.
+ // The manual path still pins the explicit OS lease. No unverified local
+ // lease may ever reach the owned Wintun/WFP/route transaction.
+ trustedLease,e:=session.AuthenticatedLeaseIPv4()
+ if e!=nil{return fmt.Errorf("protected Windows lease readback: %w",e)}
+ snapshot,e:=session.ColdSnapshot()
+ if e!=nil||snapshot.Cipher()!=o.RecordCipher{
+  return fmt.Errorf("%w: protected Windows per-client record cipher mismatch: %v",windowsclient.ErrN4NativeGuard,e)
  }
+ if o.AutoLease{
+  assigned,parseErr:=netip.ParsePrefix(trustedLease)
+  if parseErr!=nil||!assigned.IsValid()||!assigned.Addr().Is4()||
+   assigned.Bits()!=32||assigned.Addr().IsUnspecified()||
+   assigned.Addr().IsMulticast(){
+   return fmt.Errorf("%w: server did not authenticate a usable auto IPv4 /32: %v",windowsclient.ErrN4NativeGuard,parseErr)
+  }
+  o.Lease4=assigned
+ }else if trustedLease!=""&&trustedLease!=o.Lease4.String(){
+  return fmt.Errorf("%w: server protected lease conflicts with configured manual Wintun /32",windowsclient.ErrN4NativeGuard)
+ }
+ fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%s auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
+  o.Mode,o.AutoLease,o.Lease4,snapshot.Cipher())
  tun,e:=windowsclient.OpenTUN(o.AdapterAlias)
  if e!=nil{return e}
  defer tun.Close()

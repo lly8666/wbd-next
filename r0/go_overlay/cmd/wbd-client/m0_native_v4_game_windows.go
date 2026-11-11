@@ -9,6 +9,7 @@ import(
  "encoding/binary"
  "errors"
  "fmt"
+ "net/netip"
  "path/filepath"
  "sync"
  "time"
@@ -57,7 +58,7 @@ func m0WindowsGameOriginalClientFlow(
 func runM0NativeV4WindowsGame(
  ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
- makePlan func()(windowsclient.NetworkPlan,error),
+ makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
  pathChanged <-chan struct{},
 )error{
  count:=2;if o.Mode==m0WinModeGame4{count=4}
@@ -158,7 +159,7 @@ func runM0NativeV4WindowsGame(
    }
   }
  }
- policy,err:=realityfront.FixedPolicyForClient(count,4)
+ policy,err:=realityfront.PolicyForClientWithInitialAndCipher(count,"fixed",4,4,20,o.RecordCipher)
  if err!=nil{return err}
  recordOffer,err:=m0WindowsV4ColdRecordOffer(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
@@ -169,7 +170,7 @@ func runM0NativeV4WindowsGame(
   TLS:realityfront.ClientConfig{
    ServerName:o.ServerName,RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second,
   },
-  AutoLease:false,DesiredLanes:uint8(count),
+  AutoLease:o.AutoLease,DesiredLanes:uint8(count),
   InstallationID:o.Installation[:],Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:recordOffer,Policy:policy,
  }
@@ -182,6 +183,22 @@ func runM0NativeV4WindowsGame(
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
   ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
  if err!=nil{return err}
+ trustedLease,appliedCipher,selectionErr:=group.AuthenticatedNetworkSelection()
+ if selectionErr!=nil||appliedCipher!=o.RecordCipher{
+  return fmt.Errorf("%w: Game protected group network selection invalid: %v",windowsclient.ErrN4NativeGuard,selectionErr)
+ }
+ if o.AutoLease{
+  assigned,parseErr:=netip.ParsePrefix(trustedLease)
+  if parseErr!=nil||!assigned.IsValid()||!assigned.Addr().Is4()||
+   assigned.Bits()!=32||assigned.Addr().IsUnspecified()||assigned.Addr().IsMulticast(){
+   return fmt.Errorf("%w: Game server did not authenticate a usable auto IPv4 /32: %v",windowsclient.ErrN4NativeGuard,parseErr)
+  }
+  o.Lease4=assigned
+ }else if trustedLease!=""&&trustedLease!=o.Lease4.String(){
+  return fmt.Errorf("%w: Game protected manual /32 conflicts with configured Wintun",windowsclient.ErrN4NativeGuard)
+ }
+ fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%s auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
+  o.Mode,o.AutoLease,o.Lease4,appliedCipher)
  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d client_record_offer=%d requested_tun_mtu=%d\n",count,fecMode,cfg.ClientLimit,o.TunnelMTU)
  fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER")
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
@@ -191,7 +208,7 @@ func runM0NativeV4WindowsGame(
  // ring loan pins the original TUN active-call fence until full Join.
  // A failed OS WAL/Stop must return its actual error, not block in Close.
  fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_ENTER")
- plan,err:=makePlan()
+ plan,err:=makePlan(o.Lease4)
  if err!=nil{return err}
  fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_DONE")
  packet:=&m0WinRustGamePeer{

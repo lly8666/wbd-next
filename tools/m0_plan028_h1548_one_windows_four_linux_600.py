@@ -944,8 +944,15 @@ s.close()
                   "kernel_outer_250_300_result","all_six_original_owned_Stop",
                   "Windows_original_WAL_leftover","original_WSL_bridge_restored",
                   "windows_eth0_original_netem_clean")},sort_keys=True),flush=True)
-        if report["status"].startswith("PASS") and not probe:
+        # A real 150s five-client probe has a complete scoped raw report.
+        # The workflow must not fail by copying a nonexistent compatibility
+        # file AFTER all native packets and exact six-owner Stops pass.
+        # Do not promote the 40-echo short diagnostic or any FAILED run,
+        # and never relabel this 150s scene as the 600s capacity soak.
+        if report["status"].startswith("PASS") and (not probe or l1_150):
             (OUT/"normal-report.json").write_text(json.dumps({
-              "source_sha":source,"mode_public":"PASS_MIXED_FIVE_ORIGINAL",
+              "source_sha":source,
+              "mode_public":"PASS_MIXED_FIVE_ORIGINAL_150S" if l1_150 else "PASS_MIXED_FIVE_ORIGINAL",
+              "qualification_scope":"TRUE_150S_FIVE_CLIENTS_NOT_600S" if l1_150 else "ORIGINAL_600S",
               "status":report["status"],"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
 if __name__=="__main__":main()
