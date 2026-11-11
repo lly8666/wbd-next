@@ -161,3 +161,7 @@ H1600 Action`43027983611` SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346` 原�
 ## H1605 近MTU历史失败与一场新测试
 
 H1602三条原生Actions `43034982111/43035399302/43035735021`均在Ubuntu安装NASM时遇到外部包仓库DNS故障，**真网络NOT_RUN**。此后只按已核实SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346`成功Action`43027983611`原Windows与Linux正式原生ISA-L构件复用，前置校验完整Action/SOURCE/两SOURCE产品零diff、五实际binary SHA。下一Action的新Harness源码与旧Binary SOURCE分别留痕，原默认outer1460/内层OS预算不变；它是20次短真UDP near MTU+Stop，不是150/600s新负载，更不运行多Wintun。具体原因/H1605新凭据见 [devlog](../devlog/M0/20261111-PLAN028-H1605-RECOVER-CI-AND-REUSE-VERIFIED-BINARIES.md)。
+
+## H1606 WSL主源DNS短路后的同SHA镜像回退
+
+H1605 Action`43040746444`原Linux和Windows正式构件/ISA-L SHA复用PASS、Npcap安装及退出清理PASS，但Windows hosted runner下载`releases.ubuntu.com` Ubuntu24.04.5 WSL镜像时报告`No such host is known`，真业务/OS MTU场 **NOT_RUN**。新SOURCE仅对H1602一个测试加官方Ubuntu镜像备选，继续使用原24.04.5签名分发文件的精确 SHA256 `bb415d8248...64ac6039e`，下载失败不得跳过校验或造假。镜像是否可下载须以新Action实测结果判断，不扩展为Windows与Linux客户端功能结论。H1596/H1601已通过原真实150s仍可复用，用户排除双Wintun不变。

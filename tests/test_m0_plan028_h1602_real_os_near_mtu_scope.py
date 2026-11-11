@@ -31,6 +31,14 @@ class H1602ActualOSInnerMTUScope(unittest.TestCase):
            "WBD_WL_TUN_MTU:",
            "H1602-Win1Linux4-RealOS-InnerMTU"):
             self.assertIn(token,w)
+    def test_h1606_pinned_wsl_same_sha_mirror_only_after_dns_failure(self):
+        w=WF.read_text()
+        self.assertIn("H1606_WSL_UPSTREAM_DNS_BLOCKED_OFFICIAL_MIRROR_WITH_SAME_SHA256",w)
+        self.assertIn("https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl",w)
+        self.assertIn("https://mirror.cpsc.ucalgary.ca/mirror/ubuntu.com/releases/24.04.5/ubuntu-24.04.5-wsl-amd64.wsl",w)
+        self.assertIn("if($env:WBD_PLAN028_WIN_NEAR_MTU_SMOKE -ne '1'){throw}",w)
+        self.assertIn("bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e",w)
+        self.assertIn("throw 'official Ubuntu WSL image integrity mismatch'",w)
     def test_requires_real_OS_mtu_and_true_byte_identical_udp_with_full_Stop(self):
         h=H.read_text()
         for token in ('Get-NetAdapter -IncludeHidden -Name \'WBDWLMAIN\'',

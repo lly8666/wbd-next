@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1605,
-  "checkpoint_sha": "1289fd8ac36742cea9e16ec5b1e89f4823fb2cc1",
+  "sequence": 1606,
+  "checkpoint_sha": "cee5ced946d4111fd69fe51e6f03fb949edaf550",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1605-REUSE-PROVEN-PRODUCT-BINARIES-AFTER-UBUNTU-DNS-FAIL",
-  "current_task": "H1602 genuine nearMTU NOT_RUN: three Actions 43034982111/43035399302/43035735021 failed before native scene on Ubuntu24.04 apt install nasm DNS outage (Temporary failure resolving azure.archive.ubuntu.com). Windows native jobs SKIPPED, do not classify product fail. Latest governance43036467255 FAIL only because context_refs count9 vs policy max8; fix references keeping history. Downloaded H1600 SOURCE8a313 official Action43027983611 original Windows EXE/DLL + Linux Go client/server Rust so artifacts, rehashed all five exactly match CI sha and native_fec_acceleration true. Product compare8a313..1289 had ZERO changes under crates/r0/Cargo/assembly. H1605 workflow reuses frozen Go/Rust binaries with exact SHA, GitHub Action source success, unchanged product tree for only one H1602 marker. This commit triggers one short genuine single-Wintun+Linux4 inner nearMTU scenario; no multi-Wintun.",
-  "why_now": "Avoid re-running blocked Ubuntu package source thrice or rebuilding binaries compiled with unchanged product source; existing verified exact binaries and secure reuse facility support one minimal true native H1602 regression, without ISA-L downgrade or H1596 150s repetition. Cursor max8 enforced rather than weakened.",
+  "task_id": "PLAN028-M0-H1606-REAL-WINDOWS-WSL-HOST-DNS-IMAGE-FALLBACK",
+  "current_task": "H1605 real nearMTU Action43040746444 overall FAIL at Windows WSL2 Ubuntu distro image download BEFORE kernel boot: releases.ubuntu.com Invoke-WebRequest No such host is known. Product not run and nearMTU NOT_RUN; preflight Go/Rust and Linux source8a accelerated Go/Rust binary SHA reuse PASS, Windows signed original Go/Rust EXE DLL reuse and Npcap install PASS, clean Npcap uninstall PASS. Governance43040746448 and maintenance43040746447 SUCCESS. H1606 only H1602 marker adds a single official University of Calgary Ubuntu release mirror fallback on upstream DNS error with SAME pinned canonical SHA; no new product, no dual Wintun. Prior three apt DNS blocked Actions still retained.",
+  "why_now": "External Ubuntu-hosted DNS failure blocks Windows Runner WSL distro import, not product. A single official Ubuntu mirror already carries exact image with known pinned SHA; existing image integrity check remains unchanged. This is one bounded differentiated retry, not seed brushing.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1605 new H1602 Action and strict original reports (all five OS inner MTU readback, 20 true exact UDP echoes and A Stop Bob alive, all six Stop) plus governance and maintenance. Never duplicate while running. Then remaining Windows idle/path representative and independent-DUT L3 blocker, clear accepted scope accurately without H1587 multi Wintun.",
+  "next_action": "Collect H1606 one native H1602 Action; if upstream+mirror both DNS blocked, retain ENVIRONMENT_BLOCKED and STOP re-dispatching the same nearMTU scene; preserve H1601 true 150s. If native starts, verify actual signed Wintun/Linux TUN OS inner readbacks, 20 true UDP echo size MTU-1/MTU, DF+1 observed, Windows Stop Bob live six owners clean. Still need Windows idle/path and L3 independent DUT or explicit scoped limit; no multi Wintun.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1602-ONE-WINTUN-FIVE-ACTUAL-OS-NEAR-MTU.md",
+    "docs/devlog/M0/20261111-PLAN028-H1605-RECOVER-CI-AND-REUSE-VERIFIED-BINARIES.md",
     "docs/devlog/M0/20261111-PLAN028-H1604-REUSE-H1600-REAL-LIFECYCLE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1605-RECOVER-CI-AND-REUSE-VERIFIED-BINARIES.md"
+    "docs/devlog/M0/20261111-PLAN028-H1606-REAL-WSL-GUEST-DNS-MIRROR-PINNED.md"
   ],
   "open_requests": [],
   "partial_summary": "H1601 SOURCE8a31375 action43027983611 signed single Windows Wintun+Linux4 150s same username different original-Go installations auto independent addresses AES256/three Linux AEAD true TCP/UDP and Alice Stop Bob survives all six Stop PASS_SCOPED. Test-only 0.7: outer duplex median108.834Mbps/CPUpeak52.7%. Windows30% cold sourcefd473 PASS_SCOPED only. Linux ARM64 old2x1800s reusable unchanged components, Win-L3/nearMTU/path/idle outstanding. No dual Wintun per user; H1587 old FAIL retained as unsupported. PLAN028 IN_PROGRESS."

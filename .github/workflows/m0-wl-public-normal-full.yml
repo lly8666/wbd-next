@@ -1242,7 +1242,17 @@ jobs:
             # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
             $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
             $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
-            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            try {
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img -ErrorAction Stop
+          } catch {
+            if($env:WBD_PLAN028_WIN_NEAR_MTU_SMOKE -ne '1'){throw}
+            # H1606 only: temporary hosted-runner Ubuntu DNS failure. Mirror
+            # is an official Ubuntu release mirror; the exact original SHA
+            # is STILL verified below before WSL imports any byte.
+            Write-Output 'H1606_WSL_UPSTREAM_DNS_BLOCKED_OFFICIAL_MIRROR_WITH_SAME_SHA256'
+            Remove-Item -LiteralPath $img -Force -ErrorAction SilentlyContinue
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://mirror.cpsc.ucalgary.ca/mirror/ubuntu.com/releases/24.04.5/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img -ErrorAction Stop
+          }
             if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
             New-Item -ItemType Directory -Force $vm | Out-Null
             & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
