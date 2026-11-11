@@ -157,3 +157,7 @@ H1597 SOURCE`7f84a518e8fbcc6c9e53a34072bb4ea5923831c2`已把**仅测试夹具**�
 ## H1604 当前同源真实轮换与Game兄弟持续（原Action复用）
 
 H1600 Action`43027983611` SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346` 原生日志比原150s Strict报告多给出真实 A→A+B→B 与单lane证据：Bob Normal Auto B gen2先authenticated Health/route promote，A grace17.773s后exact Stop；Carol Game2新两lane都原TLS/Rust M4到位后overlap commit，旧组14.5s后Stop；Dave Game4仅换lane1，server `sibling_lane_restarts=0` 与其它三lane保持，Erin outer1280 Normal新B ready后老A 10.109s后Stop。各事件的原始日志SHA256/实际触发时钟见 [H1604证据](../evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json)。全程五客户端真UDP/TCP持续收件/0 invalid/最大活跃UDP间隔63ms，最终六owner Stop；**一场已成功的原网络材料离线重算，未新增Action**。Windows默认轮换0没有被本场开启，不拿Linux轮换代替Windows轮换；候选B失败保A本源未触发，老ARM64 hetero 1800s source`1211fd51`部分按未改组件复用，不移植产品二进制hash或结论。
+
+## H1605 近MTU历史失败与一场新测试
+
+H1602三条原生Actions `43034982111/43035399302/43035735021`均在Ubuntu安装NASM时遇到外部包仓库DNS故障，**真网络NOT_RUN**。此后只按已核实SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346`成功Action`43027983611`原Windows与Linux正式原生ISA-L构件复用，前置校验完整Action/SOURCE/两SOURCE产品零diff、五实际binary SHA。下一Action的新Harness源码与旧Binary SOURCE分别留痕，原默认outer1460/内层OS预算不变；它是20次短真UDP near MTU+Stop，不是150/600s新负载，更不运行多Wintun。具体原因/H1605新凭据见 [devlog](../devlog/M0/20261111-PLAN028-H1605-RECOVER-CI-AND-REUSE-VERIFIED-BINARIES.md)。

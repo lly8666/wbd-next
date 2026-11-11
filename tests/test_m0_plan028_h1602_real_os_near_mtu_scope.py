@@ -21,6 +21,16 @@ class H1602ActualOSInnerMTUScope(unittest.TestCase):
             'h1602_real_near_inner_MTU_and_all_Stop',
             'no GUI singleton bypass: this case has exactly ONE Windows Wintun'):
             self.assertIn(token,h)
+    def test_h1605_unchanged_verified_isa_l_binaries_and_default1460(self):
+        w=WF.read_text()
+        for token in ("FROZEN_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346","FROZEN_RUN_ID: \"43027983611\"",
+           'git diff --name-only "$FROZEN_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py',
+           "H1605_LINUX_SOURCE_QUALIFIED_SAME_BINARY_ISAL_SHA256_PASS",
+           "WBD_WL_NATIVE_ACCEL_REUSE:",
+           "WBD_WL_NATIVE_OUTER_MTU_REQUEST:",
+           "WBD_WL_TUN_MTU:",
+           "H1602-Win1Linux4-RealOS-InnerMTU"):
+            self.assertIn(token,w)
     def test_requires_real_OS_mtu_and_true_byte_identical_udp_with_full_Stop(self):
         h=H.read_text()
         for token in ('Get-NetAdapter -IncludeHidden -Name \'WBDWLMAIN\'',
