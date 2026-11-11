@@ -264,6 +264,15 @@ func v4ServerCheckedManualLease4(s string,auto bool)(string,error){
 // The genuine protected username chooses this server-owned manual /32 only
 // AFTER the existing credential check. No outer source tuple or unauthenticated
 // packet may select a route, lease, or native owner.
+// A real pool handles every automatic device, including a second device
+// under an account with a static reservation for a manual sibling.
+func v4ServerSelectedAdmissionLease4(single string,byAccount map[string]string,username string,auto,pool bool)(string,error){
+ if auto&&pool{
+  if single!=""{return "",ErrAdmissionParams}
+  return "",nil
+ }
+ return v4ServerSelectedManualLease4(single,byAccount,username,auto)
+}
 func v4ServerSelectedManualLease4(single string,byAccount map[string]string,username string,auto bool)(string,error){
     if len(byAccount)==0{return v4ServerCheckedManualLease4(single,auto)}
     if single!=""{return "",ErrAdmissionParams}
@@ -896,7 +905,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     // commits only after protected reply and DetachTransition both succeed.
     defer finish(false)
     lease:=""
-    manualLease,manualErr:=v4ServerSelectedManualLease4(opt.ManualLease4,opt.ManualLeases4,req.Username,req.AutoLease)
+    manualLease,manualErr:=v4ServerSelectedAdmissionLease4(opt.ManualLease4,opt.ManualLeases4,req.Username,req.AutoLease,cfg.AllocateLease!=nil)
     if manualErr!=nil{
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,manualErr

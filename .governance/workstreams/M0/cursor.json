@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1559,
-  "checkpoint_sha": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+  "sequence": 1560,
+  "checkpoint_sha": "dc608f20bdfb5976eba4e73f81041d7d35f8ddaa",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1559-AUTHENTICATED-INDEPENDENT-CLIENT-COLD-M4-HEALTH",
-  "current_task": "H1558 source620 original-Go assembly/negative manual auth tests PASS on x86+ARM, source620 H1376/H1383 native A/B UDP/TLS has scoped PASS but independent same-/32 Alice R cannot prove server B native receiver within5s; server preserves A correctly. Rust native client cold Health kind0 mistakenly armed only if client's LOCAL shared TUN publish_pending; independent R local TUN has no overlap but server old A /32 route does. H1559 arm already-existing bounded native client Health kind0 after every authenticated M4 initial start. No fake probes/new wire/Go pump. H1558 mixed Windows loss0/30 still IN_FLIGHT, do not dispatch duplicates.",
-  "why_now": "Both native x86 and ARM independent R fail same 5s barrier, whereas normal Health first interval15s. Modify only proven existing cold control arming condition, not 5s SLA or server readiness hard gate.",
+  "task_id": "PLAN028-M0-H1560-SIMPLE-SERVER-STATIC-AUTO-LEASE-COEXIST",
+  "current_task": "Resumed H1559 source dc608f Actions: current x86 Game4, ARM64 Game4, Win/Linux baseline and governance PASS_SCOPED; source620 Win/WSL loss0 native reverse RXDelivered0 and loss30 cold TLS timeout FAIL, preserved. User requested server simple defaults and simultaneous manual/automatic. H1560 code/manifest includes original shared Normal+Game routing selector and real manual-map test; server defaults shared443, default TUN 10.66.0.1/24, optional partial per-user fixed IP map with disjoint auto pool; auto pool always keyed by installation even if same account static sibling; credentials and TLS unchanged. Candidate source not yet tested.",
+  "why_now": "Current original Go CLI and shared Normal/Game validators wrongly exclude automatic+fixed IP simultaneously and require extra server flags; previous Go game_linux and manual test not assembled in main manifest, corrected this round.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect source620 in-flight Win/WSL2 mixed native actions; separately collect source containing H1559 Linux x86/ARM H1376/H1383 actual server client-Health proof and A→B business/Stop; require triggering, otherwise NOT_TRIGGERED. No Windows duplicate dispatch until original action done. Preserve all original statuses, then fix Windows first+reverse/30% cold only from actual logs.",
+  "next_action": "Collect automatically triggered H1560 exact SOURCE; first ensure Go shared Game/Normal file and new manual map test actually assemble and x86/ARM tests trigger. Preserve original failed Actions and no repeat Windows mixed seeds before targeted native reverse/cold TLS differential test. H1559 independent B authenticated kind0 true handoff still OPEN.",
   "unverified": true,
-  "last_tested_source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+  "last_tested_source": "dc608f20bdfb5976eba4e73f81041d7d35f8ddaa",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1559-COLD-INDEPENDENT-CLIENT-HEALTH-20261111.json"
+    "docs/evidence/M0/PLAN028-H1560-SERVER-MANUAL-AUTO-CONFIG-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE620 Go hard auth regression closed: x86+ARM manual negative PASS, real two-account app UDP PASS scoped, but reauth R server M4 Health proof FAIL at 5s on both arch (old A survives). H1559 minimal Rust cold client kind0 arm independent of LOCAL TUN publish pending, must be verified true x86/ARM. Windows source620 scenes still in flight."
+  "partial_summary": "H1560 pending exact-source actual validation: server shared443, default owned TUN and collision-free auto pool plus static /32 subset, manual only authorized users, auto derived per install. Added missing game_linux/manual-map-test to assembly and updated manifest hashes. Full mixed Windows 600s NOT_RUN; PLAN028 IN_PROGRESS."
 }

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1560",
+  "date_local": "2026-11-11",
+  "source_sha": "dc608f20bdfb5976eba4e73f81041d7d35f8ddaa",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "observed_original": {
+    "source_dc608f": {
+      "actions": {
+        "governance": 42943547250,
+        "linux_windows_baseline": 42943547354,
+        "x86_Game4": 42943547093,
+        "arm64_Game4": 42943547333
+      },
+      "result": "PASS_SCOPED"
+    },
+    "source_6207858": {
+      "action": 42942358907,
+      "loss0": "FAIL actual Windows authenticated TLS and Rust TXCopied42 RXDelivered0; no 600s",
+      "loss30": "FAIL actual Windows 30% FakeTCP cold TLS timeout; no 600s"
+    }
+  },
+  "root": "server CLI disallowed simultaneous fixed per-account /32 and 7-day auto pool, required mapping for all users, defaulted port0 and normal mode. Authenticated account fixed assignment also captured auto clients of same user, breaking device/IP isolation.",
+  "change": "Default server shared443 and owned TUN 10.66.0.1/24, derive aligned collision-free default pool inside chosen TUN; 0600 manual-account file can map subset; validate static/pool disjoint. Manual clients map to fixed /32 only if credential-bound; auto clients always use existing derived-installation/7-day allocator even for mapped same username.",
+  "scope": "original Go cold CLI + admission selector + shared Normal/Game original server; no new TLS, record, FEC, MTU, steady worker or Go hot pump",
+  "assembled_tests": [
+    "internal/v4productcli/manual_lease_map_linux_test.go",
+    "internal/realityfront/v4_manual_lease_map_test.go"
+  ],
+  "new_source": "NOT_RUN",
+  "open": [
+    "source620 Windows native first+reverse RXDelivered0",
+    "source620 loss30 Windows cold TLS timeout",
+    "H1559 independent B server receiver proof true x86/ARM still not confirmed",
+    "PLAN028 L2 capacities, L3 2 representative soaks"
+  ],
+  "android": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "plan_status": "IN_PROGRESS"
+}

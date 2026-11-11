@@ -14,3 +14,19 @@ func TestPLAN028ServerAccountBoundManualLeaseOnlyAfterAuth(t *testing.T){
  if _,err:=v4ServerSelectedManualLease4("",nil,"alice",false);err!=nil{t.Fatal(err)}
  if got,err:=v4ServerSelectedManualLease4("10.66.0.9/32",nil,"alice",false);err!=nil||got!="10.66.0.9/32"{t.Fatalf("legacy explicit lease changed: %q %v",got,err)}
 }
+
+func TestPLAN028BoundStaticManualAndPoolAutoSelection(t *testing.T){
+ static:=map[string]string{"alice":"10.66.0.2/32"}
+ for _,c:=range []struct{who string;auto,pool bool;want string;deny bool}{
+  {"alice",false,true,"10.66.0.2/32",false},
+  {"alice",true,true,"",false},
+  {"bob",true,true,"",false},
+  {"bob",false,true,"",true},
+  {"alice",true,false,"10.66.0.2/32",false},
+  {"bob",true,false,"",true},
+ }{
+  got,e:=v4ServerSelectedAdmissionLease4("",static,c.who,c.auto,c.pool)
+  if (e!=nil)!=c.deny||(!c.deny&&got!=c.want){t.Fatalf("lease selector %+v got %q error %v",c,got,e)}
+ }
+ if _,e:=v4ServerSelectedAdmissionLease4("10.66.0.9/32",static,"alice",true,true);e==nil{t.Fatal("singleton/pool mode mixing accepted")}
+}

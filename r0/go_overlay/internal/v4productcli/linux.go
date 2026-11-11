@@ -128,6 +128,35 @@ type config struct{
     tunFqMaxrateMbps int
     tunTxQLenPackets int
 }
+// Cold default uses a contiguous pool wholly within the owned TUN, disjoint
+// from server and explicitly reserved static /32 addresses. LeaseRegistry
+// remains sole owner of 7-day device lease allocation, renewal and expiry.
+func defaultV4ServerLeasePool(tun netip.Prefix,statics map[string]string)(netip.Prefix,error){
+ if !tun.IsValid()||!tun.Addr().Is4()||tun.Bits()>29{return netip.Prefix{},fmt.Errorf("server TUN too small for disjoint automatic IPv4 pool")}
+ lo:=uint64(binary.BigEndian.Uint32(tun.Masked().Addr().AsSlice()))
+ end:=lo+(uint64(1)<<uint(32-tun.Bits()))
+ blocked:=[]uint64{uint64(binary.BigEndian.Uint32(tun.Addr().AsSlice()))}
+ for _,v:=range statics{
+  fixed,e:=netip.ParsePrefix(v)
+  if e!=nil||!fixed.Addr().Is4()||fixed.Bits()!=32{return netip.Prefix{},fmt.Errorf("invalid fixed /32")}
+  blocked=append(blocked,uint64(binary.BigEndian.Uint32(fixed.Addr().AsSlice())))
+ }
+ bits:=24
+ if tun.Bits()>=bits{bits=tun.Bits()+1}
+ for ;bits<=30;bits++{
+  size:=uint64(1)<<uint(32-bits)
+  for i:=uint64(0);i<4096&&size*(i+1)<=end-lo;i++{
+   at:=end-size*(i+1);free:=true
+   for _,v:=range blocked{if v>=at&&v<at+size{free=false;break}}
+   if !free{continue}
+   var raw [4]byte
+   binary.BigEndian.PutUint32(raw[:],uint32(at))
+   return netip.PrefixFrom(netip.AddrFrom4(raw),bits),nil
+  }
+ }
+ return netip.Prefix{},fmt.Errorf("no disjoint automatic IPv4 pool within server TUN")
+}
+
 func parse(role string,args []string)(config,error){
     var c config
     c.role=role
@@ -136,10 +165,14 @@ func parse(role string,args []string)(config,error){
     iface:=flags.String("raw-interface","","real Linux underlay device")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
-    port:=flags.Uint("local-port",0,"original FakeTCP local port")
+    defaultPort:=uint(0)
+    if role=="server"{defaultPort=443}
+    port:=flags.Uint("local-port",defaultPort,"original FakeTCP local port (server default 443)")
     remotePort:=flags.Uint("peer-port",0,"remote FakeTCP port (client)")
     tunName:=flags.String("tun-name","wbdv40","owned original Linux TUN name")
-    tunCIDR:=flags.String("tun-ipv4","","owned real TUN IPv4 CIDR")
+    defaultTun:=""
+    if role=="server"{defaultTun="10.66.0.1/24"}
+    tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
     route:=flags.String("route-key-hex","","pre-shared 32-byte route key hex (64 characters); no on-wire key exchange")
     caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
@@ -156,7 +189,9 @@ func parse(role string,args []string)(config,error){
     manualLease:=flags.String("manual-client-lease4","","server-verified fixed client /32 for manual TLS generation replacement; requires tunnel-id, not a user inner MTU")
     usersFile:=flags.String("users-file","","server: 0600 JSON object username->password")
     manualLeasesFile:=flags.String("manual-client-leases-file","","server mode-0600 JSON username->unique /32 bound only after protected auth")
-    mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4; server-only shared accepts all protected modes")
+    defaultMode:="normal"
+    if role=="server"{defaultMode="shared"}
+    mode:=flags.String("mode",defaultMode,"normal, fec-fixed, fec-auto, game2, game4; server defaults shared")
     peerPersona:=flags.String("peer-persona","legacy","expected original Go TLS peer envelope: legacy or windows11 (server-only)")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
@@ -169,6 +204,10 @@ func parse(role string,args []string)(config,error){
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
+    modeGiven,autoGiven:=false,false
+    flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
+    if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}
+    if role=="client"&&*tunCIDR==""&&*tunnel==""&&!autoGiven{*autoIP=true}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
         value,e:=readPrivateArgFile(*passFile)
@@ -194,14 +233,14 @@ func parse(role string,args []string)(config,error){
         }
     }
     if *manualLeasesFile!=""{
-        if role!="server"||*leasePool!=""||*manualLease!=""||*usersFile==""{
-            return c,fmt.Errorf("manual-client-leases-file requires users-file and no other lease mode")
+        if role!="server"||*manualLease!=""||*usersFile==""{
+            return c,fmt.Errorf("manual-client-leases-file requires users-file, not singleton lease")
         }
         raw,e:=readPrivateArgFile(*manualLeasesFile)
         if e!=nil{return c,fmt.Errorf("manual-client-leases-file: %w",e)}
         if e=json.Unmarshal([]byte(raw),&c.manualClientLeases4);e!=nil||
-            len(c.manualClientLeases4)==0||len(c.manualClientLeases4)!=len(c.users){
-            return c,fmt.Errorf("manual-client-leases-file must cover each configured authenticated user")
+            len(c.manualClientLeases4)==0||len(c.manualClientLeases4)>len(c.users){
+            return c,fmt.Errorf("manual-client-leases-file must be a nonempty authenticated-user subset")
         }
         seen:=make(map[netip.Addr]bool,len(c.manualClientLeases4))
         for username,lease:=range c.manualClientLeases4{
@@ -349,7 +388,13 @@ func parse(role string,args []string)(config,error){
         if e!=nil||len(raw)!=16{return c,fmt.Errorf("invalid manual tunnel-id")}
         copy(c.tunnel[:],raw)
     }
-    if c.tunnel==[16]byte{}&&!(role=="server"&&(c.leasePool.IsValid()||len(c.manualClientLeases4)>0)){
+    if role=="client"&&!c.autoIP&&*tunnel==""{
+        install,e:=logicaltunnel.ResolveInstallation("",*installPath,false)
+        if e!=nil{return c,fmt.Errorf("installation-id-file: %w",e)}
+        c.installation=install
+        c.tunnel=logicaltunnel.DerivedTunnelID(c.username,install)
+    }
+    if c.tunnel==[16]byte{}&&!(role=="server"&&(c.leasePool.IsValid()||len(c.manualClientLeases4)>0||c.mixedModes)){
         return c,fmt.Errorf("manual tunnel-id required without auto-IP/lease-pool")
     }
     if role=="server"{
@@ -364,6 +409,10 @@ func parse(role string,args []string)(config,error){
     }
     tunPrefix,e:=netip.ParsePrefix(*tunCIDR)
     if e!=nil||!tunPrefix.Addr().Is4(){return c,fmt.Errorf("invalid tun-ipv4")}
+    if role=="server"&&c.mixedModes&&!c.leasePool.IsValid(){
+        c.leasePool,e=defaultV4ServerLeasePool(tunPrefix,c.manualClientLeases4)
+        if e!=nil{return c,e}
+    }
     if role=="server"&&c.manualClientLease4.IsValid(){
         if !tunPrefix.Contains(c.manualClientLease4.Addr())||
            c.manualClientLease4.Addr()==tunPrefix.Addr(){
@@ -375,6 +424,9 @@ func parse(role string,args []string)(config,error){
             p,e:=netip.ParsePrefix(lease)
             if e!=nil||!tunPrefix.Contains(p.Addr())||p.Addr()==tunPrefix.Addr(){
                 return c,fmt.Errorf("manual per-account /32 must be inside owned TUN subnet, excluding server")
+            }
+            if c.leasePool.IsValid()&&c.leasePool.Contains(p.Addr()){
+                return c,fmt.Errorf("manual account /32 collides with automatic pool")
             }
         }
     }
@@ -1514,6 +1566,21 @@ type originalV4MultiRecord struct {
 // Validate a nonzero per-user tunnel ID only after the ORIGINAL protected
 // credential authentication, never from pre-TLS address or packet fields.
 // Legacy singleton remains exact-ID bound.
+// The username+nonzero persistent installation determines an auto tunnel ID,
+// never an unauthenticated packet address or caller-chosen manual ID.
+func originalV4VerifiedAutoTunnelAfterAuth(req realityfront.AdmissionRequest)error{
+ if !req.AutoLease||req.Username==""||len(req.TunnelID)!=16||len(req.InstallationID)!=16{return realityfront.ErrAdmissionParams}
+ var install logicaltunnel.InstallationID
+ copy(install[:],req.InstallationID)
+ if install==[16]byte{}{return realityfront.ErrAdmissionParams}
+ id:=logicaltunnel.DerivedTunnelID(req.Username,install)
+ if string(req.TunnelID)!=string(id[:]){return realityfront.ErrAdmissionParams}
+ return nil
+}
+func originalV4SharedLeaseRequestAfterAuth(c config,req realityfront.AdmissionRequest,hasPool bool)error{
+ if hasPool&&req.AutoLease{return originalV4VerifiedAutoTunnelAfterAuth(req)}
+ return originalV4ManualAccountTunnelAfterAuth(c,req)
+}
 func originalV4ManualAccountTunnelAfterAuth(c config,req realityfront.AdmissionRequest)error{
     // Only a credential-bound roster may assign an existing protected auto
     // lease; a legacy singleton manual /32 still rejects auto admission.
@@ -1524,15 +1591,7 @@ func originalV4ManualAccountTunnelAfterAuth(c config,req realityfront.AdmissionR
     }
     if _,ok:=c.manualClientLeases4[req.Username];!ok{return realityfront.ErrAdmissionParams}
     if req.AutoLease{
-        // A named /32 is chosen ONLY after credential TLS. Automatic clients
-        // must still prove their installation-derived tunnel identity; an
-        // arbitrary manual tunnel ID with the auto bit is never authority.
-        if len(req.InstallationID)!=16{return realityfront.ErrAdmissionParams}
-        var install logicaltunnel.InstallationID
-        copy(install[:],req.InstallationID)
-        if install==[16]byte{}{return realityfront.ErrAdmissionParams}
-        expected:=logicaltunnel.DerivedTunnelID(req.Username,install)
-        if string(req.TunnelID)!=string(expected[:]){return realityfront.ErrAdmissionParams}
+        if err:=originalV4VerifiedAutoTunnelAfterAuth(req);err!=nil{return err}
     }
     nonzero:=false
     for _,b:=range req.TunnelID{if b!=0{nonzero=true;break}}
@@ -1547,8 +1606,7 @@ func runSharedMultiServer(
 )(retErr error){
     if epochs==nil||connected==nil||
         (leases==nil&&!c.manualClientLease4.IsValid()&&len(c.manualClientLeases4)==0)||
-        (leases!=nil&&(c.manualClientLease4.IsValid()||len(c.manualClientLeases4)>0))||
-        (c.manualClientLease4.IsValid()&&len(c.manualClientLeases4)>0){
+        (c.manualClientLease4.IsValid()&&(leases!=nil||len(c.manualClientLeases4)>0)){
         return realityfront.ErrAdmissionParams
     }
     trustedManualLease:=""
@@ -1582,13 +1640,7 @@ func runSharedMultiServer(
             if len(req.TunnelID)!=16||req.DesiredLanes!=1||req.LaneID!=1{
                 return realityfront.ErrAdmissionParams
             }
-            if leases!=nil{
-                if !req.AutoLease{return realityfront.ErrAdmissionParams}
-            }else if err:=originalV4ManualAccountTunnelAfterAuth(c,req);err!=nil{
-                // Legacy singleton exact manual tunnel ID, or one
-                // authenticated account's nonzero manual tunnel identity.
-                return err
-            }
+            if err:=originalV4SharedLeaseRequestAfterAuth(c,req,leases!=nil);err!=nil{return err}
             return nil
         },
     }

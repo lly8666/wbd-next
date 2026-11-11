@@ -773,11 +773,12 @@ func runGameMultiServer(
     autoPool:=c.leasePool.IsValid()
     manual:=c.manualClientLease4.IsValid()
     manualAccounts:=len(c.manualClientLeases4)>0
-    // Exactly one server-owned address authority: pool, one manual /32,
-    // or the existing credential-bound per-account /32 roster.
+    // Authenticated static account reservations and a disjoint automatic
+    // device pool coexist on one shared native TUN.
     if epochs==nil||
-        (autoPool&&(leases==nil||manual||manualAccounts))||
-        (!autoPool&&(leases!=nil||manual==manualAccounts))||
+        (autoPool!=(leases!=nil))||
+        (manual&&(autoPool||manualAccounts))||
+        (!autoPool&&!manual&&!manualAccounts)||
         (!c.mixedModes&&n!=2&&n!=4)||
         (c.mixedModes&&(n!=0||manual||(!autoPool&&!manualAccounts))){
         return realityfront.ErrAdmissionParams
@@ -833,13 +834,7 @@ func runGameMultiServer(
             // tunnel, unauthenticated source tuple or a no-install ID cannot
             // enter the multi-group native shared TUN.
             if len(req.TunnelID)!=16{return realityfront.ErrAdmissionParams}
-            if autoPool{
-                if !req.AutoLease{return realityfront.ErrAdmissionParams}
-            }else if err:=originalV4ManualAccountTunnelAfterAuth(c,req);err!=nil{
-                // Nonzero manual tunnel identity and exact account roster
-                // remain protected-TLS checks, never pre-TLS tuple authority.
-                return err
-            }
+            if err:=originalV4SharedLeaseRequestAfterAuth(c,req,autoPool);err!=nil{return err}
             return nil
         },
     }
