@@ -1,0 +1,68 @@
+name: PLAN028 H1618 single Windows signed Wintun plus Linux prebuilt original TLS idle105 dispatch
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan028-h1618-win-idle105-prebuilt-dispatch.yml
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-one-real-scenario-dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FROZEN_PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      REUSE_SUCCESSFUL_ACTION: "43027983611"
+      REAL_SCENE: scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify frozen same product, real 105s native scenario and prior successful binaries, do not build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = main
+          git fetch --quiet --depth=1 origin "$FROZEN_PRODUCT_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$FROZEN_PRODUCT_SOURCE"
+          changes="$(git diff --name-only "$FROZEN_PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json)"
+          test -z "$changes" || { echo "H1618 rejected changed actual product or scene source: $changes" >&2;exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REUSE_SUCCESSFUL_ACTION" |
+            python3 -c 'import json,sys,os; x=json.load(sys.stdin);assert x["head_sha"]==os.environ["FROZEN_PRODUCT_SOURCE"];assert x["conclusion"]=="success" and x["status"]=="completed"'
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          import os,pathlib
+          path=pathlib.Path(os.environ['REAL_SCENE'])
+          assert path.parent.as_posix()=='scenarios'
+          s=read_scenario(path)
+          assert s['public_mode']=='normal' and s['lifecycle_idle_s']==105
+          assert s['duration_s']==60 and s['warmup_s']==5 and s['drain_s']==5
+          assert s['tun_mtu']==1400 # explicit legacy generator vector, NOT product outer default
+          for direction in ('windows_to_linux','linux_to_windows'):
+              d=s[direction]
+              assert d['offered_mbps']==10 and d['delay_ms']==25 and d['loss_pct']==0
+              assert max(p['udp_payload_bytes'] for p in d['packet_mix'])==1200
+          print('H1618_SINGLE_WINDOWS_LINUX_REAL_IDLE105_SCENE_SOURCE_LOCK_PASS',s['scenario_sha256'],flush=True)
+          PY
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REUSE_SUCCESSFUL_ACTION/artifacts?per_page=100" |
+            python3 -c 'import json,sys; d=json.load(sys.stdin); a={z["name"] for z in d["artifacts"] if not z["expired"]};assert "m0-plan024-linux-product" in a and any(n.startswith("m0-wl-windows-product-binaries-") for n in a),a'
+      - name: Dispatch exactly one separate original signed Windows plus Linux native scenario with prebuilt binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A wrapper dispatch is not business evidence. The target's
+          # genuine signed Wintun/Npcap, original Go TLS, Rust and OS/Stop
+          # strict report must be collected separately.
+          old="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            python3 -c 'import json,sys,os; d=json.load(sys.stdin); h=os.environ["GITHUB_SHA"]; print(next((str(x["id"]) for x in d["workflow_runs"] if x.get("head_sha")==h and x.get("status") in ("in_progress","queued","completed") and "normal" in x.get("display_title","")), ""))')"
+          if test -n "$old";then
+            echo "H1618_EXISTING_SOURCE_LOCKED_NATIVE_ACTION_NO_DUPLICATE run=$old"
+            exit 0
+          fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f public_mode=normal -f native_outer_mtu=default1460 \
+            -f run_n0=false -f outer_repair=on \
+            -f "perf_scenario_file=$REAL_SCENE" \
+            -f "perf_reuse_run_id=$REUSE_SUCCESSFUL_ACTION" \
+            -f "perf_binary_source_sha=$FROZEN_PRODUCT_SOURCE"
+          echo H1618_DISPATCH_ONE_WINDOWS_REAL_NPF_WINTUN_IDLE105_ORIGINAL_GO_RUST_SOURCE_LOCKED_NOT_YET_PASS
