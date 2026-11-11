@@ -54,12 +54,23 @@
         "linux_original_go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
         "linux_original_rust": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
       }
+    },
+    {
+      "source_sha": "6e907a32b95c138dcbd22e8f95d24063c4ce1f88",
+      "action_id": 42999532461,
+      "run_conclusion": "FAIL_PRE_NETWORK_ONLY",
+      "cheap_preflight": "FAIL_1_STALE_TEST_H1581_EXPECTED_COLD_SEED_TWO_FLAGS_WHEN_H1579_WAS_ADDED",
+      "native_builds": "NOT_RUN",
+      "product_network": "NOT_RUN",
+      "governance_main": "PASS",
+      "governance_maintenance": "FAIL_SAME_ONE_TEST",
+      "repair": "Replace stale exact assertion with cold_seed or h1581 or h1579; real physical cold sender remains same signed native Linux UDP, no product gate changed"
     }
   ],
   "next_candidate": {
     "source_sha": "UNSET_UNTIL_COMMIT",
     "status": "NOT_RUN",
-    "planned_scene": "H1584 actual server-owned Linux kernel UDP cold first/reverse to verified auto /32 then 150s five actual OS TCP+UDP and owned Stop; do not spoof Rust ACK."
+    "planned_scene": "One signed Windows2025 auto AES256 plus Linux4 authentic 150s 0loss200ms with real kernel server UDP to protected dynamic /32, all six owners Stop"
   },
   "no_claims": [
     "Windows AES256 native product pass",

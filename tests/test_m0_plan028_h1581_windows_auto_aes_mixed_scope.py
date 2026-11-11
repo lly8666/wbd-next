@@ -41,7 +41,7 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         self.assertIn('s.sendto(data,(target,45942))',h)
         self.assertIn('target="10.66.0.2"',h)
         self.assertIn('if auto_seed:',h)
-        self.assertIn('"1" if (cold_seed or h1581) else "0"',h)
+        self.assertIn('"1" if (cold_seed or h1581 or h1579) else "0"',h)
         self.assertIn('guest_root+"/h1548-windows-alice.log"',h)
         self.assertIn('h1581_windows_protected_auto_lease',h)
         self.assertIn('windows_ip in json.loads(readback.stdout).get("ip",[])',h)

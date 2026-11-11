@@ -16,3 +16,7 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H1584 fixes exact source-locked native test fixture to provide required real after-TLS Linux kernel UDP into original Rust first/reverse for auto-IP and loss30; no product source/default/GUI/feature control changes."}
 ```
+
+## H1584 原始预检结果及 H1585 唯一精确断言修复
+
+`6e907a32b95c138dcbd22e8f95d24063c4ce1f88` Action `42999532461` overall **FAIL_PRE_NETWORK_ONLY**：H1581  cheap unittest 的历史文本门仍要求 `"1" if (cold_seed or h1581) else "0"`，而修复代码在独立H1579真实冷TLS也启用绑定Linux内核后向UDP，此精确字符串已变成 `"1" if (cold_seed or h1581 or h1579) else "0"`。运行器未进入Windows编译/真实I/O，不能说产品通过/失败。原 `42999532288` 治理 **PASS**，维护 `42999532289` 全551仅这一条旧断言FAIL。H1585仅修复测试所检查的真实三条件，真实Linux内核包/认证/首反向/OS Stop门完全保留；新SOURCE的 H1581单场待实际Action收集。不能删原失败。

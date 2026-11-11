@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1584,
-  "checkpoint_sha": "e207fa95bf861cc63a8bf3b0007db2dae644c7dc",
+  "sequence": 1585,
+  "checkpoint_sha": "6e907a32b95c138dcbd22e8f95d24063c4ce1f88",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1584-TRUE-LINUX-KERNEL-REVERSE-AUTO-LEASE-SOURCE",
-  "current_task": "H1582 SOURCE3f82 Action42995018223 actual TLS both cipher3 AES256, server auto lease10.66.0.130/32, Rust M4 started; native first reverse FAIL TXCopied44 RXDelivered0, no application150s; signed OS/WAL cleanup, artifact13844306585. H1583 SOURCEe207 Action42996888234 actual manual ChaCha TLS+Rust M4 under physical30pct200ms, first reverse FAIL TXCopied42 RXDelivered0, no Linux kernel reverse seed, artifact13845650574. H1584 fixes fixture only: genuine Linux server TUN UDP after TLS to authenticated Windows auto pool /32; enables same genuine kernel seed in later independent 30pct cold scene, no fake M3/ACK/Ready, keeps hard gates. H1584 loss0 auto AES mixed real150s NOT_RUN until new Action; PLAN028 IN_PROGRESS.",
+  "task_id": "PLAN028-M0-H1585-H1584-STABLE-SOURCE-NATIVE-RETEST",
+  "current_task": "H1584 SOURCE6e907a Action42999532461 cheap H1581 source-only test FAIL (old exact cold seed condition was two flags; H1579 third legit true source added); Windows real network NOT_RUN, governance42999532288 PASS, maintenance42999532289 FAIL only same stale assertion. H1585 updates source test exactly, preserving true after-TLS Linux kernel UDP and native Windows Rust first+reverse/OS/Stop gates. Next single distinct H1581 actual signed Win2025 AutoLease AES256+Linux4 150s source should run; H1583 30pct Action42996888234 FAIL first+reverse without real seed, separate corrected 30pct still NOT_RUN. PLAN028 IN_PROGRESS.",
   "why_now": "Old H1577 genuine native Windows READY was achieved only with source-locked real Linux kernel cold reverse UDP to manually configured /32; both recent first-reverse failures lacked a real after-TLS app sender. Restore required real payload for automated tests before attributing to AES or genuine 30pct product failure. Do not silently downgrade or weaken Rust native RXDelivered gate.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Receive exactly one H1584 0loss200ms original signed Windows auto AES256 Linux mixed 150s native Action with real kernel server cold reverse. Verify protected /32 and Rust cipher3, OS Wintun /32/MTU, actual UDP/TCP/Windows-owned Stop and Linux siblings. Source/fixture or product fail recorded exactly. Distinct corrected 30pct cold TLS scene only in later separately tagged Action, not simultaneously repeated. Correct governance source/cursor and preserve original Action FAILs. Remaining Windows AES128/manual, same-account multi-installation, lifecycle/l3 and caps.",
+  "next_action": "Collect H1585 next exact-source Action: cheap+all native builds then real Windows2025 signed/Wintun automatic AES256 first+reverse via actual Linux kernel UDP to authenticated 10.66.0.128/25 /32 and 4 Linux real 150s TCP/UDP, all owners Stop. On product failure inspect raw stage; no repeated running scene. Subsequently corrected independent H1579 30pct cold scene with genuine kernel source, Windows manual/AES128 and lifecycle representative, then L3/evidence/close.",
   "unverified": true,
   "last_tested_source": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261111-PLAN028-H1584-NATIVE-KERNEL-AUTO-REVERSE-SOURCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE3f82 AES256 auto /32 10.66.0.130 TLS+Rust M4 succeeded but first reverse missing actual Linux source, RXDelivered0, 150s NOT_RUN; SOURCEe207 30pct manual ChaCha same missing kernel reverse and first-reverse FAIL, true cold TLS/credentials did pass. H1584 supplies real Linux TUN UDP after protected original TLS to certified auto /32 (or fixed manual .2 for later 30pct), never forged product/ACK, Actions pending. Cursor max refs bounded8; coverage/docs remain. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1584 Action42999532461 cheap one stale assertion FAIL before real network. H1585 test guard fixed; old real 0loss H1582 and 30pct H1583 had true TLS and Rust M4 but zero reverse because no source app, so record FAIL not product crypto verdict; new fixture seeds real Linux kernel after authenticated TLS without forged receipt. Governance cursor limited refs8 and passed. PLAN028 IN_PROGRESS."
 }
