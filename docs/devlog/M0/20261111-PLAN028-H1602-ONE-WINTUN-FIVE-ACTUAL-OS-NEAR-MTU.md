@@ -7,3 +7,7 @@ SOURCE尚待本次提交Action确认为准。沿已有H1565一个Windows签名Np
 ```feature-impact
 {"kind":"none","reason":"Only source-locked test harness and workflow/strict field checks for one actual OS inner-MTU smoke, no product/GUI/default change."}
 ```
+
+## H1603 preflight compatibility source correction
+
+H1602初次独立Action `43035399302` 已经派发并仍运行；同源 governance-maintenance `43035399828` FAIL **仅**因为新源码测试误拼旧的Bob Stop计数字段（真实原脚本为`h1565_bob_after_win_owned_stop_real_udp`），不意味着真实业务FAIL。H1603将断言改为实际原字段并把H1602新marker纳入H1565原native前置source预检条件；原FAIL和当前在途Action都保留、**不重复派发网络场**。这次提交只做offline-only、不会改变正运行产品/fixture。

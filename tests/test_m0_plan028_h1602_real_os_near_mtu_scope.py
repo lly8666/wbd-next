@@ -35,7 +35,7 @@ class H1602ActualOSInnerMTUScope(unittest.TestCase):
             'df1="OS_ACCEPTED_MTU_PLUS_ONE_NO_DELIVERY_CLAIM"',
             'H1602_REAL_NEAR_MTU_ECHO_OK',
             'PASS_FIVE_ORIGINAL_REAL_OS_NEAR_INNER_MTU_20_ECHOES',
-            'h1565_bob_post_Alice_stop_real_udp',
+            'h1565_bob_after_win_owned_stop_real_udp',
             'require_real_original_server_owner_stop(serverproc)',
             'Windows_original_WAL_leftover','original_WSL_bridge_restored'):
             self.assertIn(token,h)
