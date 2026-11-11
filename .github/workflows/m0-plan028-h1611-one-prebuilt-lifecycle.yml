@@ -84,8 +84,18 @@ jobs:
           s=p.read_text()
           before="echo 'M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS old_processes_preserved=1'\nexit 0\n"
           assert s.count(before)==1,'H1611 old early exit would skip original native owned Stop'
-          p.write_text(s.replace(before,before.replace('exit 0\n',''),1))
-          print('H1611_NATIVE_DEAD106_ORIGINAL_STOP_NOW_REQUIRED_NO_EARLY_EXIT',flush=True)
+          s=s.replace(before,before.replace('exit 0\n',''),1)
+          old='WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s'
+          new='WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=authenticated_dead_or_peer_retired'
+          rust=pathlib.Path('crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+          assert old not in rust and new in rust,'unexpected product Health terminal event'
+          assert s.count(old)==1,'PLAN026 source oracle changed'
+          s=s.replace(old,new,1)
+          exit_line="  rm -rf \"$TMP\""
+          assert s.count(exit_line)==1,'original native cleanup changed'
+          s=s.replace(exit_line,"  if [[ \"${H1612_TRACE_HEALTH:-0}\" == 1 ]];then\n    for role in client server;do\n      if [[ -f \"$TMP/$role.log\" ]];then\n        grep -E 'WBD_M0_NATIVE_HEALTH_TIMEOUT|V4_PUBLIC_COLD_STAGE|V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED|V4_PUBLIC_NATIVE_RECONNECT_TRIGGER|V4_ORIGINAL_GO_(CLIENT|SERVER)_NATIVE_READY|V4_PUBLIC_NATIVE_STOP_DRAINED' \"$TMP/$role.log\" | tail -160 >\"$ART/h1612-$role-health.log\" || true\n      fi\n    done\n  fi\n  rm -rf \"$TMP\"",1)
+          p.write_text(s)
+          print('H1612_CURRENT_RUST_NATIVE_PEER_DEAD_EXACT_ORACLE_PASS',flush=True)
           PY
           fi
           bash -n h1611-result/one-real-native.sh
@@ -109,6 +119,7 @@ jobs:
         run: |
           set -euo pipefail
           export WBD_V4_PUBLIC_MODE=fec-auto WBD_V4_PUBLIC_KERNEL_LOSS=0 WBD_V4_PUBLIC_AUTO_IP=0 WBD_V4_PUBLIC_PATH_SWITCH=0
+          if [[ "$LIFE_SCENE" == dead106 ]];then export H1612_TRACE_HEALTH=1;fi
           timeout --signal=INT --kill-after=10s 365s bash h1611-result/one-real-native.sh linux-product             >h1611-result/h1611-native.log 2>&1 || {
               tail -145 h1611-result/h1611-native.log >&2
               echo H1611_ORIGINAL_NATIVE_OR_STOP_FAIL_SEE_RAW_LOG
@@ -147,5 +158,6 @@ jobs:
             h1611-result/*.log
             fixed-kernel-result/public-v4-normal-business.log
             fixed-kernel-result/reconnect-new-flow.log
+            fixed-kernel-result/h1612-*-health.log
           if-no-files-found: warn
           retention-days: 21

@@ -9,3 +9,4 @@ jobs:
     uses: ./.github/workflows/m0-plan028-h1611-one-prebuilt-lifecycle.yml
     with:
       scene: dead106
+# H1612 targeted retest: updated exact current Rust peer-dead log oracle, still two-role Health, real TLS/UDP/Stop.
