@@ -15,16 +15,16 @@
   "unverified": true,
   "last_tested_source": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
-    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1592-COLD-SCOPE-AND-OS-ISOLATION.md"
+    "docs/devlog/M0/20261111-PLAN028-H1592-COLD-SCOPE-AND-OS-ISOLATION.md",
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1592 recovered true fd4732ec cold-TLS 30pct scoped PASS and original 600s scope bug; no 600s or L3. H1586 dd82 genuine 150s older-source PASS_SCOPED; current-source 150s scheduled via distinct marker; H1587 dual-Windows route owner FAIL unresolved. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1592 recovered true fd4732ec cold-TLS 30pct scoped PASS and original 600s scope bug; no 600s or L3. H1586 dd82 genuine 150s older-source PASS_SCOPED; current-source 150s scheduled via distinct marker; H1587 dual-Windows route owner FAIL unresolved. PLAN028 IN_PROGRESS. H1587 historical different SOURCE only in context_refs to preserve strict same-SOURCE governance evidence invariant."
 }
