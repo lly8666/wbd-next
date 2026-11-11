@@ -4,7 +4,7 @@
   "checkpoint": "H1563",
   "date_local": "2026-11-11",
   "source_sha": "8302e55726fe0290ee758665b1aeacdc57eab08b",
-  "result": "PASS_SCOPED",
+  "result": "PASS",
   "artifact_verified": true,
   "original_action_id": 42953971625,
   "original_job_id": 130304564060,
@@ -77,5 +77,8 @@
     "Android": "NOT_RUN",
     "physical_WAN": "NOT_RUN"
   },
-  "plan_status": "IN_PROGRESS"
+  "plan_status": "IN_PROGRESS",
+  "qualified_scope": "PASS_SCOPED_LINUX_X86_ORIGINAL_TLS443_MANUAL_ALICE_AUTO_BOB_59_REAL_UDP_OWNED_STOP",
+  "result_classification": "PASS_SCOPED",
+  "provenance_review": "Exact job130304564060 success; artifact13825963487 manually reviewed h1561-original-manual-auto.json and 4 original Go unit PASS markers; not overall PLAN028"
 }

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1563,
-  "checkpoint_sha": "8302e55726fe0290ee758665b1aeacdc57eab08b",
+  "sequence": 1564,
+  "checkpoint_sha": "7de95f39b26d12a6b90a490732d9399b8eb971eb",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1563-TRUE-LINUX-MANUAL-STATIC-AUTO-ONE443-NATIVE-PASS",
-  "current_task": "Collected H1562 candidate SOURCE8302e557 Action42953971625 PASS with original pinned Go and true x86 Rust M4 on OS netns: Alice TLS manual 10.66.0.2/32, Bob independently installed authenticated auto pool 10.66.0.144/32, 3 real TLS sessions, 59/59 actual UDP echoes, server routed59 unrouted0 backpressure0, Alice Stop Bob stays, Alice R real reauth, Bob and server shared TUN original owned Stop PASS. All four selective positive/negative Go config/ID tests truly executed PASS. H1561 source d5c6 initial independent workflow Go source assembly FAIL_PRE_NETWORK preserved, not product. H1563 records scoped success and feature card, no new network dispatch.",
-  "why_now": "User requested default same-server manual+auto, H1560 parser-only proof was insufficient; H1562 exact source real API/OS test fully triggered and succeeded. Record true observed pass and clear non-covered platforms/long tests without promoting whole PLAN028.",
+  "task_id": "PLAN028-M0-H1564-GOVERNANCE-SCOPED-NATIVE-PASS-RECEIPT",
+  "current_task": "H1563 true x86 native SOURCE8302 Action42953971625 and artifact13825963487 conclusively PASS scoped: Alice manual10.66.0.2 Bob auto10.66.0.144, 3 credential TLS sessions, 59/59 real UDP, server routed59, zero unrouted/backpressure, joined owner Stops, four named positive/negative Go unit tests. H1563 governance Action42954586580 failed solely evidence.result='PASS_SCOPED' not allowed for verified cursor; H1564 corrects evidence.result='PASS', separate qualified_scope and cursor verified=true (unverified=false). PLAN028 remains IN_PROGRESS with other known failures.",
+  "why_now": "Repository schema enumerates PASS but not PASS_SCOPED for evidence.result; false governance failure should not downgrade real verified scoped product PASS. Preserve exact failed Action and no network rerun.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Treat Linux x86 genuine one443 static Alice+auto Bob as PASS_SCOPED, no repeat. Latest unresolved: Windows Npcap/Wintun loss0 native first+reverse RXDelivered0 and 30% cold FakeTCP TLS timeout from SOURCE620; x86/ARM rotation and timed handover Action failures from source0a (B server authenticated Health partly triggers but subsequent generation/Stop/timing FAIL). Select minimal stage-discriminating test of Windows real RX pipeline and lifecycle before heavier platform L2/L3. H1541 source0a loss30 600s native_rc0 tc10s0 but capacity_guard2 remains unqualified; never hide capacity. No PLAN029/030.",
+  "next_action": "Collect docs-only H1564 governance PASS; continue real Windows Npcap/Wintun first+reverse RXDelivered0 and loss30 cold TLS, x86/ARM sustained rotation/generation Stop failures. No static+auto Linux x86 retry; old full platform/soak/capacity gaps remain.",
   "unverified": false,
   "last_tested_source": "8302e55726fe0290ee758665b1aeacdc57eab08b",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1563 SOURCE8302 real x86 original Go TLS443 + Rust M4 PASS_SCOPED simultaneous Alice fixed10.66.0.2 and Bob auto10.66.0.144, 59 UDP, 3 TLS auth, route59 no loss, exact Stops; 4 hard identity/default unit tests PASS. Linux ARM true mixed, Win dual OS, 600s loss30 capacity and final L3 still NOT_RUN/OPEN. PLAN028 remains IN_PROGRESS."
+  "partial_summary": "H1564 governance metadata-only correction: recognized PASS exact scoped Linux x86 manual+auto original Go TLS443 Rust M4 and 59 UDP with A/B Stop. Feature card holds source8302 FUNCTIONAL_PASS. No whole PLAN028 closure, other source and platform blockers remain."
 }
