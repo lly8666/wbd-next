@@ -146,6 +146,9 @@ def main():
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
     bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
+    bob_normal=os.environ.get("WBD_PLAN028_BOB_NORMAL_DIFFERENTIAL")=="1"
+    need(not bob_normal or (probe and cold_seed and bob_probe and bob_listener and a.scene=="loss0"),
+         "H1572 only Normal-vs-Auto after Bob actual authenticated OS UDP RX")
     need(not bob_listener or bob_probe,"H1571 Bob genuine socket may only listen in authenticated Bob-first native probe")
     need(not bob_probe or (probe and cold_seed and a.scene=="loss0"),
          "H1570 Bob auto first real OS UDP only after Windows genuine cold proof")
@@ -178,6 +181,7 @@ def main():
        "h1566_genuine_authenticated_server_os_udp_cold_seed":cold_seed,
        "h1570_bob_auto_native_first_udp":bob_probe,
        "h1571_bob_real_kernel_udp_receiver":bob_listener,
+       "h1572_bob_mode_differential":"normal_off" if bob_normal else "unchanged_fec_auto",
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -345,7 +349,7 @@ s.close()
               "--tls-ca-pem",guest_root+"/h1548-cert.pem",
               "--username",who,"--password",users[who],
               "--auto-ip","--installation-id-file","/run/wbd-h1548-"+os.environ["GITHUB_RUN_ID"]+"-install-"+who,
-              "--mode",MODES[i],*EXTRAS[who],
+              "--mode",("normal" if bob_normal and who=="bob" else MODES[i]),*EXTRAS[who],
               "--rotation-interval",str((97,109,103,117,127)[i])+"s",
               "--rotation-jitter","5s"]
             script=make_linux_script("h1548-linux-"+who+".sh",
@@ -394,6 +398,12 @@ s.close()
             # capacity/soak is expressly NOT_RUN by this short first-fault.
             report["h1565_probe_stage"]="five_original_native_ready_real_udp"
             report["h1565_auto_os_tun_ips"]=dict(auto_os_ips)
+            if bob_normal:
+                bob_log=(OUT/"h1548-linux-bob.log").read_text(errors="replace")
+                need("V4_PUBLIC_GO_RX_HANDOFF role=client mode=off " in bob_log,
+                     "H1572 original protected Bob Normal/off native handoff NOT_TRIGGERED")
+                report["h1572_bob_original_normal_mode_proven"]=True
+                print("H1572_BOB_NORMAL_OFF_PROTECTED_RUST_HANDOFF_TRUE",flush=True)
             if bob_probe:
                 # Make Bob's FIRST reverse and forward real OS path observable
                 # before the five-client simultaneous workload. It is normal
@@ -456,8 +466,28 @@ s.close()
                          "H1571 real Bob OS kernel UDP not received 24/24 "+recvlog[-700:])
                     report["h1571_bob_kernel_app_rx"]=24
                     print("H1571_BOB_AUTHENTICATED_REAL_TUN_KERNEL_UDP_24_OF_24_PASS",flush=True)
+                if bob_normal:
+                    # In shared-TUN mode the dedicated read_ipv4 counter is
+                    # deliberately zero. Inspect the actual Bob OS /32 route
+                    # and owned interface before inferring missing ingress.
+                    route=json.loads(ip("-n",NS4[0],"-j","-4","route","get",
+                                        "10.66.0.1","from",auto_os_ips["bob"]))
+                    need(len(route)==1 and route[0].get("dev")=="wbd48b",
+                         "H1572 Bob original OS kernel route not the owned TUN "+repr(route))
+                    report["h1572_bob_kernel_route"]=route[0]
+                    report["h1572_bob_tun_kernel_before"]=json.loads(
+                        ip("-n",NS4[0],"-j","-s","link","show","dev","wbd48b"))
+                    print("H1572_BOB_REAL_OS_ROUTE_SELECTED "+json.dumps({
+                        "dev":route[0]["dev"],"prefsrc":route[0].get("prefsrc"),
+                        "src":route[0].get("src")},sort_keys=True),flush=True)
                 bobfirst=spawn_real_echo_client("bob_alone_before_five",auto_os_ips["bob"],4,NS4[0])
-                require_real_echo("bob_alone_before_five",bobfirst,4)
+                try:
+                    require_real_echo("bob_alone_before_five",bobfirst,4)
+                finally:
+                    if bob_normal:
+                        report["h1572_bob_tun_kernel_after"]=json.loads(
+                            ip("-n",NS4[0],"-j","-s","link","show","dev","wbd48b"))
+                        print("H1572_BOB_OS_KERNEL_TUN_COUNTERS_CAPTURED",flush=True)
                 report["h1570_bob_alone_native_udp_echoes"]=4
                 print("H1570_ORIGINAL_TLS_NATIVE_AUTO_BOB_FIRST_REVERSE_4_REAL_UDP_PASS",flush=True)
             tasks={"alice":spawn_real_echo_client("alice",IPS[0],8)}

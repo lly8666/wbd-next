@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1571",
   "date_local": "2026-11-11",
-  "source_sha": "72919c66ad7168807bce582c0f1f38b11652dc34",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "952fa6e5d295173a66c326bff83ce1fa9b3a162e",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "prior_real_run": {
     "action": 42962325425,
@@ -28,5 +28,29 @@
     "artifact_scope": "original H1548 server, signed Windows and four Linux logs plus h1565, h1570, h1571 app/kernel logs; clear first fault, never synthetic ACK or simulated READY",
     "reuse_guard": "New source-locked one short targeted los0/200ms ONLY, 600s and loss30 NOT_RUN. Original 600s predicate intact and short test cannot write old full-performance report."
   },
-  "state": "NOT_RUN"
+  "state": "NOT_RUN",
+  "action_id": 42964335744,
+  "job_id": 130339714793,
+  "artifact_id": 13830549060,
+  "actual_status": "FAIL_REAL_BOB_AUTO_CLIENT_TO_SERVER_FIRST_APP_UDP",
+  "observed": {
+    "windows_original_TLS_Npcap_Rust_Wintun_real_first_reverse": "PASS",
+    "windows_native_real_app_udp": "PASS_4_OF_4",
+    "linux_four_authenticated_original_modes": "PASS_SCOPED",
+    "bob_actual_auto_ipv4": "10.66.0.139/32",
+    "bob_real_server_to_client_authenticated_Rust_TUN_udp": "PASS_24",
+    "bob_real_kernel_udp_socket_receive": "PASS_24_OF_24",
+    "bob_to_server_native_UDP_echo": "FAIL_TIMEOUT",
+    "server_echo_log_Bob_received": 0,
+    "shared_tun_reader_outbound_packets_routed": 1,
+    "bob_FEC_TX_accepted_sources": 1,
+    "bob_FEC_TX_k1": 1,
+    "bob_first_wire_bytes": 302,
+    "bob_native_FEC_RX_systematic_TUN": 24,
+    "original_exact_network_cleanup": "PASS_WAL_NETEM_WSL_ROUTE",
+    "five_parallel_app_UDP": "NOT_RUN",
+    "full_600s_capacity": "NOT_RUN"
+  },
+  "corrected_interpretation": "Bob shared-TUN reader routed=1 and FEC source accepted=1 with M4 copied proves kernel-to-Rust forwarding occurred; dedicated per-fd FEC2_M1_INGRESS read_ipv4=0 and TX_CHAIN tun_udp=0 are not shared-TUN ingress counters and cannot establish no packets. Root cause of absent server business delivery remains OPEN.",
+  "next_test": "H1572 change ONLY Bob mode fec-auto to normal/off while retaining authenticated auto-IP and other four peers; read real kernel /32 route and TUN stats. If Normal first echo succeeds FEC Auto or its c2s configuration is implicated; if fails investigate common outer/receiver path. No old seed repetition."
 }
