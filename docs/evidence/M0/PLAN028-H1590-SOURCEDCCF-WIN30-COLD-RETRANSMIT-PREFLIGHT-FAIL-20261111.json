@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1590",
+  "source_sha": "dccf323b8ab82f192bcd759df2e94ec85a3a7979",
+  "result": "NOT_RUN",
+  "plan_status": "IN_PROGRESS",
+  "artifact_verified": false,
+  "attempt": {
+    "action_id": 43008382596,
+    "conclusion": "FAIL",
+    "first_failed_job_id": 130481493600,
+    "stage": "CHEAP_PREFLIGHT_BEFORE_WINDOWS_PRODUCT_BUILD_OR_NATIVE_NETWORK",
+    "first_error": "ValueError: assembly blob mismatch: r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go at tools/prepare_windows_wiring.py check_spec; manifest result_blob still old code hash",
+    "separate_feature_catalog": {
+      "action_id": 43008382493,
+      "conclusion": "FAIL",
+      "first_error": "feature card must be bounded regular JSON: docs/features/entries/windows-native-transport.json > 16KiB (original source card pretty JSON)"
+    },
+    "governance": {
+      "action_id": 43008382493,
+      "scope": "governance_identity_and_structure",
+      "conclusion": "SUCCESS"
+    },
+    "signed_windows_30pct_network": "NOT_RUN",
+    "real_faketcp_tls_retransmit": "NOT_RUN",
+    "actual_wintun": "NOT_RUN",
+    "rust_m4": "NOT_RUN",
+    "related_inflight_other_workflows": [
+      43008382448,
+      43008382672,
+      43008382568,
+      43008382599
+    ]
+  },
+  "recovery_planned": {
+    "checkpoint": "H1591",
+    "assembly_manifest": "Update exact result_blob Git SHA to new original Windows Go overlay blob 0a201e6c45b99e862f2a39aba4cb03dba13cbe33 while keeping pinned ORIGINAL source",
+    "feature_card": "compact valid JSON to <=16KiB preserving H1586 source-scoped positive and H1590 NOT_RUN, 9 bounded top-level historical doc refs; all code refs/verifications retained",
+    "real_native": "One new source-locked genuine Windows2025 30pct bilateral loss 200ms one-way source marker, no duplicate if running; real Go TLS 15s and M3/OS/Stop hard gates unchanged"
+  },
+  "never_promote": [
+    "H1590 network PASS",
+    "Windows30 cold TLS",
+    "H1587 dual-Windows OS",
+    "PLAN028 Completed"
+  ]
+}

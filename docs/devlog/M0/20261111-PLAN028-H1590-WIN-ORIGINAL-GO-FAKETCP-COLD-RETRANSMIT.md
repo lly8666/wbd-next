@@ -22,3 +22,11 @@
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport"],"reason":"H1590 changes the actual Windows original-Go protected cold TCP/TLS lifetime to keep the existing FakeTCP Sender/RTO active until credential authentication/Rust detach, then join before the original Rust data path; updates the Windows native transport feature entry without changing default TLS deadline or crypto."}
 ```
+
+## H1590 第一轮精确SOURCE fail-closed 与 H1591 装配与功能卡收口
+
+原始 `dccf323b8ab82f192bcd759df2e94ec85a3a7979` Action `43008382596` **FAIL** 于廉价预检 `tools/prepare_windows_wiring.py --check-only`：原Windows Go overlay文件实际改动，但 `r0/go_overlay/assembly/manifest-plan020-m0.json` 的 `result_blob` 仍是上一版 `f13530d1af375faaa604c9859bddf9aef0277dc3`，与新 Go blob `0a201e6c45b99e862f2a39aba4cb03dba13cbe33` 不符；生产源码锁的拒绝正确，**真实30%网络NOT_RUN**。同期 `43008382493` 的 feature目录拒绝 `docs/features/entries/windows-native-transport.json` 非<=16KiB常规JSON（新增受限验证后格式化过大），结构治理本身SUCCESS。原始失败不改写，证据 `docs/evidence/M0/PLAN028-H1590-SOURCEDCCF-WIN30-COLD-RETRANSMIT-PREFLIGHT-FAIL-20261111.json`。
+
+H1591只将装配清单**单个** result_blob更新到真实已提交Go文件的 Git blob SHA，原来 `legacy_source`、其余117条安装步骤/密码/ABI/WAL规则不变；功能卡恢复紧凑JSON至16KiB之下，保留所有26条分源验证、所有17项产品代码引用与H1586和H1590作用范围，仅从hot目录条目移走9条可在历史Git查到的PLAN026低层debug devlog，保留9条原理/验收与最新文档引用。功能目录安全大小上限原样保留，不改catalog工具。
+
+随后唯一标记 `[plan028-h1579-win30-cold-auth]` + `[plan028-h1590-win30-cold-retransmit]` 将在 **下一SOURCE** 再派发单一物理30%/200ms冷TLS、真正Npcap/WinTun和Linux内核反向，不能把修清单当实际产品验证；也不能因新的产品代码命中其他独立编译/OS测试而冒充该损包场结果。当前PLAN028继续IN_PROGRESS。

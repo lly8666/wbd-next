@@ -742,7 +742,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "f13530d1af375faaa604c9859bddf9aef0277dc3"
+      "result_blob": "0a201e6c45b99e862f2a39aba4cb03dba13cbe33"
     },
     {
       "kind": "create",
