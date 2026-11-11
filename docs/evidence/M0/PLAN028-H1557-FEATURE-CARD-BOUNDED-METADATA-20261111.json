@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1557",
+  "date_local": "2026-11-11",
+  "source_sha": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "metadata_gate": {
+    "feature_catalog": "FAIL before fix: card exceeds 16KiB",
+    "governance": "PASS"
+  },
+  "fix": "UTF-8 16296B minified JSON, remove two newly duplicated verification rows; existing multi-client NOT_RUN and original H1555 source failure in standalone evidence are retained",
+  "source_under_test": "693ec6f original Go manifest Actions in flight; not replayed",
+  "plan_status": "IN_PROGRESS"
+}

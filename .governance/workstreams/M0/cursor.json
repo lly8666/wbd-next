@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1556,
-  "checkpoint_sha": "19f6340df9a0cf2f4aa79376296a8f120d4b5696",
+  "sequence": 1557,
+  "checkpoint_sha": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1556-OVERLAY-SHA-AND-FEATURE-IMPACT-CLOSURE",
-  "current_task": "H1555 source19f6340 mixed auto/manual lease native NOT_RUN: H1376/H1383 x86 ARM failed assembly pre-build due overlay result_blob hash mismatch admission_v4.go; feature catalog failed missing feature-impact. H1556 updates exact hashes for admission_v4.go/linux.go, includes actual new manual-map unit test in assembly, updates feature card/devlog. No product code change from 19f. Triggered Actions auto only; no repeated manually dispatched scenario.",
-  "why_now": "Complete same-source two-platform assembly/test/feature metadata before any native qualification. Original H1555 pre-build source failures preserved; do not confuse governance feature card error with product regression.",
+  "task_id": "PLAN028-M0-H1557-BOUNDED-FEATURE-CARD-ONLY",
+  "current_task": "Source693 Go original manifest native Actions in flight. Feature catalog failed size 19728B>16384; H1557 compresses to 16296B UTF-8; retains existing general multi-client NOT_RUN and H1555 separate FAIL evidence. No product/network script changes.",
+  "why_now": "Current 16KiB card gate needs metadata-only closure without re-dispatch",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered source including H1556 overlay manifest and feature card; verify feature catalog and Linux x86/ARM64/Windows original-Go assembly before interpreting native loss0/30; catch real admission test if failure. Then isolate Windows first+reverse and loss30 cold TLS based on actual new logs; no seed repetition and no PASS for NOT_TRIGGERED.",
+  "next_action": "Collect exact-source693 in-flight native/assembly and feature catalog after H1557 docs fix; do not repeat native seeds; retain H1555 original fe5 network FAIL, H1556 19f assembly FAIL and H1557 693 feature metadata FAIL separately. If Go tests fail, correct first real source blocker.",
   "unverified": true,
-  "last_tested_source": "19f6340df9a0cf2f4aa79376296a8f120d4b5696",
+  "last_tested_source": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1556-OVERLAY-MANIFEST-SOURCE-CLOSURE-20261111.json"
+    "docs/evidence/M0/PLAN028-H1557-FEATURE-CARD-BOUNDED-METADATA-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "19f H1555 failed fixed Go overlay result blob SHA gate and feature-impact metadata before executable network; H1556 only updates manifest (admission_v4.go/linux.go exact git blobs + unit test create), feature card, devlog. Native and throughput not yet exercised under that source. Existing fe5 loss0/30 original failures remain H1555 evidence."
+  "partial_summary": "SOURCE693 Go overlay manifest fixed; docs card had excess bytes, H1557 only compacts card <16KiB. Product mixed native 600s and true multi mode still NOT_RUN; no network redeploy."
 }
