@@ -60,6 +60,7 @@ on:
       - tools/m0_plan028_h1548_one_windows_four_linux_600.py
       - tools/m0_plan028_h1548_mixed_os_app.py
       - tests/test_m0_plan028_h1548_win1_linux4_scope.py
+      - tests/test_m0_plan028_h1566_authenticated_real_os_seed.py
       - tools/m0_plan028_h1430_windows_linux_l3.py
       - tools/m0_wl_native_resource_sampler.py
       - tools/m0_wl_native_rx_abba.py

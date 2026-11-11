@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1567",
+  "source_sha": "7532f361cfb030227aa83c275dce4becf3340ce7",
+  "date_local": "2026-11-11",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "prior": {
+    "action": 42960126194,
+    "stage": "CI_PREFLIGHT_ONLY",
+    "result": "FAIL",
+    "product": "NOT_RUN"
+  },
+  "change": "Only fix exact Python test string to actual PowerShell guard subexpression, and add H1566 scope test filename to Windows source-change watched paths; H1566 true OS UDP sender, Go/Rust binaries, 200ms loss0 conditions unchanged",
+  "new_action": "NOT_RUN",
+  "target": "One signed original Windows native first/reverse under 200ms loss0 with verified real server Linux kernel UDP only after credential TLS; if ready add Linux4 real auto IP clients, 40 original OS UDP, Bob after Win Stop, all owned Stop",
+  "full_600s": "NOT_RUN",
+  "loss30": "NOT_RUN"
+}

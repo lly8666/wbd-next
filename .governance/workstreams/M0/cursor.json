@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1566,
-  "checkpoint_sha": "8f2b15592ce2cfc872240c03d18b9f4d917fb82a",
+  "sequence": 1567,
+  "checkpoint_sha": "7532f361cfb030227aa83c275dce4becf3340ce7",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1566-WINDOWS-AUTHENTICATED-REAL-SERVER-OS-UDP-FIRST-REVERSE",
-  "current_task": "H1565 exact source8f2 Action42957807750 x86 original Windows2025/WLS2 native failed before Linux siblings: Windows credential TLS and server protected Normal M4 READY, Npcap actual bidirectional TCP443 39 outbound/10 inbound but Windows Rust RXDelivered0 and server TUN routed0, Windows native first+reverse deadline; original WSL/netem/WAL cleanup PASS. New H1566 one source-locked real network differentiation keeps same original signed Windows and real WSL2 kernel but after server TLS authenticated M4 sends at most70 150ms spaced true Linux kernel UDP from 10.66.0.1 to Alice 10.66.0.2, expecting genuine authenticated Rust RX and OS Wintun Ready before starting four auto Linux peers; no new TLS or Rust hot path, no fake ACK; only one loss0/200ms short trial. 600s and loss30 NOT_RUN.",
-  "why_now": "H1565 proves Windows first/reverse problem independent of concurrent Linux4 and no routed server inner traffic; a real server-kernel UDP is needed to separate a cold-start proof traffic deadlock from encrypted record parsing/NPF receiver failures without synthetic acknowledgement. H1565 short PASS status erroneously could write full PASS_MIXED_FIVE_ORIGINAL normal-report.json, H1566 guard fixes false oracle.",
+  "task_id": "PLAN028-M0-H1567-H1566-CI-POWER-SHELL-GUARD-ASSERTION-FIX",
+  "current_task": "H1566 source7532 Action42960126194 failed cheap Windows fixture preflight only: one incorrect assertIn 'if($env...' while actual conditional is '($env... -eq 1)' under existing if; no production product native network executed. H1567 corrects literal and watches test path in same workflow, no runtime/Go/Rust/TUN modifications. Prior source8f2 H1565 real Windows alone loss0 200ms first/reverse still FAIL before Linux4; new genuine authenticated Linux kernel server→Alice UDP H1566 trial pending SOURCE H1567.",
+  "why_now": "Cannot attribute cheap fixture assertion failure to original Windows product. Keep the exact failed run and execute one corrected source-locked genuine OS test, never blind repeat 600s or loss30.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Review H1566 exact one Windows2025 WSL2 Action: preflight TRUE native, first proof H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED, then Windows original RXDelivered/Ready. If not, read actual server shared TUN tx/rx/native Windows NPF stage and refuse 600s; if yes, qualify 4 real original Linux automatic OS leases and five 40/40 UDP, Bob after Alice Stop and clean WAL/TUN. No duplicate loss30 or full throughput. Maintain PLAN028 IN_PROGRESS.",
+  "next_action": "Collect source H1567 one original Windows2025 WSL2 Linux server OS UDP post protected TLS, fail closed before Linux4 if Windows RXDelivered still0; otherwise test four automatic Linux clients' OS lease and 40+4 genuine UDP, all owner Stop. Fix only first true failure and keep failures/capacity histories.",
   "unverified": true,
-  "last_tested_source": "8f2b15592ce2cfc872240c03d18b9f4d917fb82a",
+  "last_tested_source": "7532f361cfb030227aa83c275dce4becf3340ce7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1565-WINDOWS1-LINUX4-FIRST-REVERSE-SHORT-20261111.json",
-    "docs/evidence/M0/PLAN028-H1566-WINDOWS-AUTH-REAL-OS-COLD-SEED-20261111.json"
+    "docs/evidence/M0/PLAN028-H1566-WINDOWS-AUTH-REAL-OS-COLD-SEED-20261111.json",
+    "docs/evidence/M0/PLAN028-H1567-WINDOWS-SERVER-OS-UDP-PREFLIGHT-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1566 prepared one short genuine OS server-UDP first/reverse test on Windows2025/WSL2 0%/200ms: 70 real kernel packets only after protected auth, no fake ACK, then five real OS clients conditionally; H1565 original Windows-first failure persisted with cleanup PASS. 600s and loss30 NOT_RUN."
+  "partial_summary": "H1567 test-only preflight assertion corrected; genuine H1566 Windows first+reverse Linux server OS UDP 200ms loss0 NOT_RUN, original H1565 Windows solo native FAIL and old Windows 600s/loss30 NOT_RUN remain. PLAN028 IN_PROGRESS."
 }

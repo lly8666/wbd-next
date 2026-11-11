@@ -41,7 +41,7 @@ class OriginalNativeColdServerSource(unittest.TestCase):
             'WBD_PLAN028_WIN_FIRST_REVERSE_PROBE:',
             'WBD_PLAN028_WIN_REAL_COLD_SEED:',
             'H1566-Win1-real-OS-server-cold-UDP-loss0-200ms',
-            'if($env:WBD_PLAN028_WIN_REAL_COLD_SEED',
+            "($env:WBD_PLAN028_WIN_REAL_COLD_SEED -eq '1'",
             'tests.test_m0_plan028_h1566_authenticated_real_os_seed',
         ):
             self.assertIn(token,wf)

@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1566",
   "date_local": "2026-11-11",
-  "source_sha": "8f2b15592ce2cfc872240c03d18b9f4d917fb82a",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "7532f361cfb030227aa83c275dce4becf3340ce7",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "previous_action": {
     "id": 42957807750,
@@ -38,5 +38,16 @@
     "SOURCE8f2 H1565 Windows alone same 200ms loss0 native first/reverse fails (no Linux peers)",
     "SOURCE0a sequential Windows/Linux native normal 25/26 UDP success only without H1548 native timing/outer configuration"
   ],
-  "result_classification": "NOT_RUN_SOURCE_H1566"
+  "result_classification": "NOT_RUN_SOURCE_H1566",
+  "original_action_id": 42960126194,
+  "original_job_id": 130324411701,
+  "first_fault": {
+    "scope": "CI_ONLY_PRE_NETWORK",
+    "stage": "H1566 cheap Windows preflight",
+    "type": "single incorrect offline PowerShell text substring assertion",
+    "detail": "Test expected if($env:WBD_PLAN028_WIN_REAL_COLD_SEED whereas workflow guards with ($env:WBD_PLAN028_WIN_REAL_COLD_SEED -eq '1' inside an existing if",
+    "executed": "3 prior H1565 contract tests PASS, 1 H1566 cold kernel OS sender test PASS; second H1566 workflow string assertion FAIL",
+    "product": "NOT_RUN",
+    "windows_native": "NOT_RUN"
+  }
 }
