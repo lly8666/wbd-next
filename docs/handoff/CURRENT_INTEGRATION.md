@@ -10,6 +10,8 @@
 
 **新真实150s**：SOURCE`8c0421c3` Action`43014043726`整体成功，签名Windows自动`10.66.0.192/32`+AES256/Rust3、MTU1389与四Linux三AEAD业务150s全端双向UDP/TCP，Alice Stop后Bob仍4 UDP、六owner清理全PASS_SCOPED。内层平均不等于outer；原始kernel outer双向总量151.96Mbps左右，末段Windows Host CPU92.6%且速率下滑，同VM暂停更重压力。详情看H1594 evidence，**600s/30%全业务仍未跑**。
 
+**用户最新范围**：不要跑同一Windows宿主两个Wintun。H1587旧真实route/WAL FAIL保留为同宿主多个全隧道未支持组合，不能以Windows+Linux成功冒充；本轮只需一Wintun+独立Linux设备同账号验收。H1596 SOURCE496 Action43024873684早期同账号真实TLS/两OS独立Auto IP/40 UDP和Stop局部PASS、后段150s**FAIL_TEST_FIXTURE**（误配0.6低于真实app最小0.65），原Action整体FAIL；修正0.7后单场复验见cursor。不得改产品默认。
+
 **未完成硬门**：双Windows独立签名Wintun同主机不同账号/租约/AEAD的OS路由隔离 H1587 `43001721886` FAIL；不能借TLS+Rust成功跳过CAS/route/WAL。原报告误将30%冷建链标为600s，H1592修正报表及源门，不修改实测结果。本源受影响认证/生命周期150s代表场已PASS_SCOPED；但L2更重容量受同VM CPU边界约束、必要L1与代表L3仍不齐，不可将150s当L3。Android/物理公网/029/030范围外。
 
 历史风险与此前未关闭的027A同socket在线收窄属于历史范围，不拿新认证路径结果改写原FAIL；深查旧日志前先看当前cursor引用。

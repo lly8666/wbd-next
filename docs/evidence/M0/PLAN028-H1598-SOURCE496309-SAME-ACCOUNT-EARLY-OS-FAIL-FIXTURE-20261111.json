@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1598",
+  "source_sha": "496309022f2b1f9d39c1b2d7db80770a49321886",
+  "action_id": 43024873684,
+  "action_overall": "FAILURE",
+  "native_job_id": 130539482919,
+  "artifact_id": 13857197465,
+  "artifact_zip_sha256": "8dd77f2776abf360c5ae5a69698f41ed6948b504ca2c6bd89cbb815d2c752afc",
+  "strict_report_sha256": "7077c9834ac835f575c3c276e8948fbaaf7781dce6181a4c319a3f334486591d",
+  "strict_report_status": "FAIL_OR_NOT_RUN_TRUE_ORIGINAL_OS",
+  "first_error": "RuntimeError('H1574 native app exited before real 150s server')",
+  "first_fault_classification": "HARNESS_OR_CONFIG_ERROR_BAD_0_6_TEST_PACE_OUTSIDE_EXISTING_APP_RANGE",
+  "original_app_rate_boundary": "0.65<=scale<=1.35",
+  "injected_test_only_pace": 0.6,
+  "strict_150s_UDP_TCP": "NOT_COMPLETED",
+  "scoped_success": {
+    "Windows_real_signed_Wintun": true,
+    "Windows_auto_protected_IP": "10.66.0.132/32",
+    "Windows_requested_cipher": "aes-256-gcm",
+    "Windows_Rust_cipher_readback": 3,
+    "WinOS_IP_matches_authenticated_TLS": true,
+    "MacLinux_shared_server_original_TLS_Rust": true,
+    "Linux_Bob_same_username": "alice",
+    "Linux_Bob_independent_installation_ID": "Go 0600 independent installation-id-file",
+    "Linux_Bob_actual_OS_auto_IP": "10.66.0.173/32",
+    "distinct_auto_IPs": true,
+    "three_other_linux_clients_real_OS_TUN_ready": true,
+    "real_five_client_initial_UDP_echoes": 40,
+    "Windows_Stop": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "Windows_WAL_leftover": [],
+    "Windows_netem_restored": "PASS",
+    "Linux_bridge_restored": true
+  },
+  "source_locked_binaries": {
+    "Windows_Go_SHA256": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "Windows_Rust_SHA256": "327742fc515b9b7edc52cfe81147187141bcfc5879dcc28827fb5ef138217018",
+    "Windows_signed_Wintun_SHA256": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "Linux_Go_client_SHA256": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "Linux_Go_server_SHA256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "Linux_Rust_SHA256": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "fix": {
+    "source_sha": "7f84a518e8fbcc6c9e53a34072bb4ea5923831c2",
+    "fixture_only_rate": 0.7,
+    "existing_generator_guard_unchanged": true,
+    "network_rerun": "ONE_AFTER_FIRST_TERMINAL"
+  },
+  "known_limits": {
+    "sameWindowsHost_multiWintun": "NOT_REQUESTED_H1587_FAIL_RETAINED",
+    "full_150s_same_account": "NOT_COMPLETED_ON_FAILED_SOURCE",
+    "near_derived_MTU": "NOT_RUN",
+    "Windows_L3_1800s": "NOT_QUALIFIED"
+  }
+}
