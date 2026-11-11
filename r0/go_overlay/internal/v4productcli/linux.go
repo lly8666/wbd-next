@@ -1523,6 +1523,17 @@ func originalV4ManualAccountTunnelAfterAuth(c config,req realityfront.AdmissionR
         return nil
     }
     if _,ok:=c.manualClientLeases4[req.Username];!ok{return realityfront.ErrAdmissionParams}
+    if req.AutoLease{
+        // A named /32 is chosen ONLY after credential TLS. Automatic clients
+        // must still prove their installation-derived tunnel identity; an
+        // arbitrary manual tunnel ID with the auto bit is never authority.
+        if len(req.InstallationID)!=16{return realityfront.ErrAdmissionParams}
+        var install logicaltunnel.InstallationID
+        copy(install[:],req.InstallationID)
+        if install==[16]byte{}{return realityfront.ErrAdmissionParams}
+        expected:=logicaltunnel.DerivedTunnelID(req.Username,install)
+        if string(req.TunnelID)!=string(expected[:]){return realityfront.ErrAdmissionParams}
+    }
     nonzero:=false
     for _,b:=range req.TunnelID{if b!=0{nonzero=true;break}}
     if !nonzero{return realityfront.ErrAdmissionParams}

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1557,
-  "checkpoint_sha": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
+  "sequence": 1558,
+  "checkpoint_sha": "ce8647e142e4f630acc90f35ed6acebad075efb5",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1557-BOUNDED-FEATURE-CARD-ONLY",
-  "current_task": "Source693 Go original manifest native Actions in flight. Feature catalog failed size 19728B>16384; H1557 compresses to 16296B UTF-8; retains existing general multi-client NOT_RUN and H1555 separate FAIL evidence. No product/network script changes.",
-  "why_now": "Current 16KiB card gate needs metadata-only closure without re-dispatch",
+  "task_id": "PLAN028-M0-H1558-RESTORE-MANUAL-ROSTER-AUTO-AUTH-TUNNEL-DERIVATION",
+  "current_task": "Collected original H1556 SOURCE693 Actions: standard TLS x86 Action42941393679 and x86 Game4 overlap Action42941394034 genuinely PASS. But H1376/H1383 x86+ARM & mixed Linux true original-Go build fail preserved pre-existing negative TestPLAN028AccountManualProtectedTunnelIdentity because H1555 admitted AutoLease with arbitrary manual tunnel-id. H1558 enforce username+nonzero installation derived tunnel ID only for named AutoLease after TLS, add explicit valid positive and six negative tests, include in immutable manifest. New native NOT_RUN; no manual dispatch.",
+  "why_now": "Credential and owner identity hard gate outranks all throughput and no conditionally untriggered tests can count as PASS.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect exact-source693 in-flight native/assembly and feature catalog after H1557 docs fix; do not repeat native seeds; retain H1555 original fe5 network FAIL, H1556 19f assembly FAIL and H1557 693 feature metadata FAIL separately. If Go tests fail, correct first real source blocker.",
+  "next_action": "Collect auto-triggered H1558 source original Go protected/manual negative+new positive Go test first, x86/ARM and Windows original assembly. If both PASS, collect native mixed loss0/30 and isolate Windows reverse proof and 30% TLS based on actual logs. No seed repeat, no premature full qualification.",
   "unverified": true,
   "last_tested_source": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1557-FEATURE-CARD-BOUNDED-METADATA-20261111.json"
+    "docs/evidence/M0/PLAN028-H1558-MANUAL-ROSTER-AUTO-IDENTITY-BOUNDARY-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE693 Go overlay manifest fixed; docs card had excess bytes, H1557 only compacts card <16KiB. Product mixed native 600s and true multi mode still NOT_RUN; no network redeploy."
+  "partial_summary": "H1556 source693 true x86 TLS and Game4 scoped PASS; source693 H1376/H1383 x86/ARM and Windows mixed build FAIL negative auth identity test. H1558 closes verified identity bypass without modifying TLS wire/data plane. Native two-OS 600s still NOT_RUN."
 }

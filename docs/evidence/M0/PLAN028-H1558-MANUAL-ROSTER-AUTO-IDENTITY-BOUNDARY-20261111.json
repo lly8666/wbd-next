@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1558",
+  "source_sha": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "date_local": "2026-11-11",
+  "failed_original": [
+    {
+      "action_id": 42941393732,
+      "scope": "Linux native x86 and ARM64 true two-account manual-lease negative policy",
+      "first_error": "TestPLAN028AccountManualProtectedTunnelIdentity unverified manual identity accepted {AutoLease:true, InstallationID:[], manually-provided TunnelID}",
+      "result": "FAIL",
+      "network": "NOT_RUN_PRE_TEST"
+    },
+    {
+      "action_id": 42941393768,
+      "scope": "Linux native x86 and ARM64 wrong-password manual map",
+      "first_error": "same pre-existing AutoLease/manual TunnelID deny test",
+      "result": "FAIL",
+      "network": "NOT_RUN_PRE_TEST"
+    },
+    {
+      "action_id": 42941393682,
+      "scope": "Windows/WSL2 mixed-loss0/30 new auto/manual source",
+      "first_error": "native Linux shared build gate blocked on the same existing negative manual tunnel identity test",
+      "result": "FAIL_PRE_NETWORK",
+      "network": "NOT_RUN"
+    },
+    {
+      "action_id": 42941393692,
+      "scope": "ARM64 compile",
+      "first_error": "Go protected manual tunnel negative test (after Rust-only PASS)",
+      "result": "FAIL_PRE_NETWORK",
+      "network": "NOT_RUN"
+    }
+  ],
+  "scoped_pass": [
+    {
+      "action_id": 42941393679,
+      "scope": "Linux x86 original standard TLS pre-shared wire",
+      "result": "PASS"
+    },
+    {
+      "action_id": 42941394034,
+      "scope": "Linux x86 original Game4 overlap A-to-A+B-to-B",
+      "result": "PASS"
+    },
+    {
+      "action_id": 42941804561,
+      "scope": "governance + feature card <=16KiB",
+      "result": "PASS"
+    }
+  ],
+  "fix": "After credential roster lookup, require 16-byte nonzero installation and username+installation DerivedTunnelID equality for AutoLease; reject manually forged IDs and cross-account identity, preserving existing manual-only expectations. Add source-assembled true positive+negative Go regression.",
+  "qualification": "new source not tested yet, no PASS claim",
+  "plan_status": "IN_PROGRESS"
+}

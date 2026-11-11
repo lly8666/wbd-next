@@ -1,0 +1,13 @@
+# PLAN028 H1558 — restore original protected auto-lease identity hard gate (2026-11-11)
+
+**Actual regression discovered, not cosmetic:** H1556 source `693ec6f7f81ae27a451805a1bbab3344bacac79d` x86/ARM Go true original tests [H1376](https://github.com/lly8666/wbd-next/actions/runs/42941393732) and [H1383](https://github.com/lly8666/wbd-next/actions/runs/42941393768) failed the pre-existing negative `TestPLAN028AccountManualProtectedTunnelIdentity`: a caller-supplied manual `TunnelID` with `AutoLease:true` and no installation was erroneously accepted after H1555 named-roster interop. The Linux-Go build gate in [mixed Win/WSL2 Action42941393682](https://github.com/lly8666/wbd-next/actions/runs/42941393682) failed on this same negative before any new native loss0/30. **Do not** weaken that negative or label either native scenario PASS.
+
+The existing Linux automatic client already sets a *stable 16-byte installation* and `logicaltunnel.DerivedTunnelID(username, installation)`. It is safe to permit the server's same protected account-bound stable /32 only when the same derived identity is verified **after credential TLS**, with nonzero installation. In `originalV4ManualAccountTunnelAfterAuth` reject arbitrary manual tunnel-ID used as auto, missing/zero installation, cross-account identity, unknown accounts and singleton auto. Keep distinct manual-only Windows clients and their server-provisioned /32 valid. New source-assembled unit test requires the positive valid derived case *and* every negative case, while legacy negative unchanged. No new TLS fields, record format, steady headers, probes, FEC, MTU or Rust owner changes.
+
+SOURCE693 actual [standard x86 protected TLS pre-share Action42941393679](https://github.com/lly8666/wbd-next/actions/runs/42941393679) **PASS scoped** and [x86 Game4 exact overlap Action42941394034](https://github.com/lly8666/wbd-next/actions/runs/42941394034) **PASS scoped**; retain them independent of failed source693 native mixed build. H1557 [governance/feature card Action42941804561](https://github.com/lly8666/wbd-next/actions/runs/42941804561) PASS. The next exact source is NOT_RUN until its Action. No manual duplicate dispatch.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Restore the pre-existing credential-bound derived tunnel identity denial for invalid AutoLease manual IDs within the already-recorded TLS multi-client feature; externally intended capability, protected lease wire and feature card remain unchanged."}
+```
+
+Evidence [H1558](../evidence/M0/PLAN028-H1558-MANUAL-ROSTER-AUTO-IDENTITY-BOUNDARY-20261111.json). PLAN028 IN_PROGRESS; Android and physical WAN NOT_RUN.
