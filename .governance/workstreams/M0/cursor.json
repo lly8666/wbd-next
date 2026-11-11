@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1592,
-  "checkpoint_sha": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
+  "sequence": 1593,
+  "checkpoint_sha": "2c59b9755c5983572a02bbfa659d522c1c7f7403",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1592-COLD-SOURCE-RECEIPT-SCOPE-AND-SIGNED-WINDOWS-ISOLATION",
-  "current_task": "Recovered fd4732ec Action43009320538 Windows2025 genuine loss30/200ms original Go cold TLS retransmit copied3, TLS/Rust M4/signed Wintun manual /32 readback/owned Stop PASS_SCOPED and action SUCCESS. Governance 43009320451 and Windows WAL 43009320389 and Linux x86/ARM manual Action43009320436 SUCCESS. Old H1590 preflight FAIL retained. Corrected H1592 short cold report falsely tagged ORIGINAL_600S, added source gate. H1587 simultaneous two signed Windows clients route/WAL owner FAIL remains critical.",
+  "task_id": "PLAN028-M0-H1593-REAL-BINARY-REHASH-MANIFEST-AND-FEATURE-CATALOG",
+  "current_task": "H1593 downloaded genuine Windows exe/dll and Linux x86 Go client/server/Rust .so from SOURCEfd473 Actions build artifact and locally independently SHA256 rehashed; all agree manifests. ARM64 native real TLS two-account TUN 59 UDP via CI source-locked manifest, ARM64 ISA-L separate accelerated build SHA receipt only; runtime NEON NOT_RUN. Corrected feature card live branch/old H1590 pending and PLAN028 table. Source 8c0421c H1581 Win autoAES+fourLinux mixed 150s Action43014043726 in_progress at handoff; avoid second launch. H1587 dual-Windows route ownership remains open.",
   "why_now": "True latest action result was missing from cursor and mixed tool generic report had materially false 600s qualification. Per-Windows native OS concurrent route ownership H1587 remains a hard gate and must be solved without taking foreign routes.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect source-locked H1592 one genuine Win auto AES256 + Linux four-client three-cipher 150s result once, do not dispatch duplicate; investigate H1587 exact shared destination /1 and server /32 route ownership and implement safe per-client OS coexistence with signed-Wintun native A/B real regression if feasible; then targeted L2/L3 only. No PLAN029/030. Keep Plan028 IN_PROGRESS until hard gates met.",
+  "next_action": "Recheck 43014043726 native job and strict report/action overall, do not count if no full 150s TCPUDP/sibling-survival/all stop; update SOURCE evidence. Then safe route-owner H1587 proof, calibrated one-stage L2 and impacted representative L3. Keep PLAN028 IN_PROGRESS until true hard gates qualified.",
   "unverified": true,
   "last_tested_source": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
   "evidence_refs": [
@@ -23,7 +23,8 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/devlog/M0/20261111-PLAN028-H1592-COLD-SCOPE-AND-OS-ISOLATION.md",
-    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1593-REAL-BINARY-REHASH-AND-CATALOG.md"
   ],
   "open_requests": [],
   "partial_summary": "H1592 recovered true fd4732ec cold-TLS 30pct scoped PASS and original 600s scope bug; no 600s or L3. H1586 dd82 genuine 150s older-source PASS_SCOPED; current-source 150s scheduled via distinct marker; H1587 dual-Windows route owner FAIL unresolved. PLAN028 IN_PROGRESS. H1587 historical different SOURCE only in context_refs to preserve strict same-SOURCE governance evidence invariant."

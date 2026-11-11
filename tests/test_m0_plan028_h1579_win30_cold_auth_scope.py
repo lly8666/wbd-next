@@ -72,6 +72,10 @@ class WindowsThirtyPercentColdOriginalM4(unittest.TestCase):
         self.assertIn('[plan028-h1548-win1-linux4-600]',w)
         self.assertIn('["mixed-loss0","mixed-loss30"]',w)
         self.assertIn('while time.monotonic()-t0<602:',h)
+        self.assertIn('"qualification_scope":("TRUE_150S_FIVE_CLIENTS_NOT_600S" if l1_150 else',h)
+        self.assertIn('"COLD_TLS_M4_STOP_ONLY_NOT_600S" if h1579 else',h)
+        self.assertIn('"SHORT_FIRST_FAULT_PROBE_NOT_600S" if probe else "ORIGINAL_600S"',h)
+        self.assertIn("$result.qualification_scope -ne 'COLD_TLS_M4_STOP_ONLY_NOT_600S'",w)
 
 
 if __name__=="__main__":

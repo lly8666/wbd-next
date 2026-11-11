@@ -57,7 +57,7 @@
     "rust_steady": "Rust_M4",
     "native_fec_acceleration": true,
     "isa_l_archive_sha256": "635b8484820689535d627e4b352f16e5f064370b4f8062067ffb5a610df2123a",
-    "caveat": "CI-computed per-file hashes in artifact manifest; originals not packaged in small test artifact for independent rehash"
+    "caveat": "Windows EXE/DLL + Linux x86_64 Go client/server and Rust SO downloaded from GitHub Actions build artifacts and independently rehashed: byte-for-byte match respective manifests. ARM64 product artifacts contain only CI SHA256SUMS/manifest, so arm64 hashes are receipt-only; no independent ARM64 executable rehash and no ISA-L NEON runtime proof."
   },
   "reporting_defect": {
     "original_generic_report_qualification_scope": "ORIGINAL_600S",
@@ -86,5 +86,38 @@
     "Android",
     "PLAN029",
     "PLAN030"
-  ]
+  ],
+  "original_binaries_rehashed_independently_from_raw_build_artifact_zip": true,
+  "original_binary_artifacts": {
+    "windows_x86_64": {
+      "artifact_id": 13850805988,
+      "zip_sha256": "dd0a41298d6e693aebac5453e9a4d1b40158d84c52fd53597080f3e5b5909b79",
+      "actual_exe_and_dll_bytes_present": true
+    },
+    "linux_x86_64": {
+      "artifact_id": 13849279449,
+      "zip_sha256": "bb5718968de557572d0cff0f7d7f96e990221ad85f36e12478292369a79d36b9",
+      "actual_client_server_rust_bytes_present": true
+    },
+    "linux_arm64_native": {
+      "artifact_id": 13850260737,
+      "zip_sha256": "8ba8017e3a59aabdbcf19744c7fad981bb97f8b97c28a95a9f2562354ccb99ca",
+      "binary_bytes_present": false,
+      "real_two_client_kernel_tun_result": "PASS_SCOPED_59_REAL_UDP_SERVER_STOP"
+    },
+    "linux_arm64_isa_l": {
+      "artifact_id": 13850715104,
+      "zip_sha256": "1cbd97ad6ae3023d11d35b78a1268ba2bceb976eabf0ba6428557536ab0f8e61",
+      "binary_bytes_present": false,
+      "link_build": "PASS",
+      "real_neon_runtime": "NOT_RUN"
+    }
+  },
+  "additional_linux_arm64_ci_manifest_sha256": {
+    "native_go_client": "4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f",
+    "native_go_server": "a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890",
+    "native_rust": "8e10f70a819e2d9f3f9aa45588ddcc91976b243d851c32d3bc63c663ea7c56e1",
+    "isa_l_rust": "ed53bfa10502fb3015b69150bf45e87926924a5d05b2985c0dcd48aa9bf71547",
+    "comment": "CI generated SHA256SUMS from built product, ARM64 ZIP contains receipts and native real kernel test output but not executable bytes; original Go overlay 11-source verified, ARM64 ISA-L dispatch runtime not exercised here."
+  }
 }
