@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1573",
   "date_local": "2026-11-11",
-  "source_sha": "bbc4ca6525abf7f0b556475755d71222b2183db1",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "task": "Correct per-original-association TCP persona in authenticated Normal/Game one443 shared owner; qualify Windows1+Linux4 real UDP first delivery",
   "prior_original": {
@@ -63,5 +63,28 @@
     42964335744,
     42968297190,
     42942358907
-  ]
+  ],
+  "original_action_id": 42971568281,
+  "original_job_id": 130363221950,
+  "original_artifact_id": 13834390793,
+  "original_failure": "Harness wrongly demanded Normal client Stop marker on Game2, which actually emitted valid V4_PUBLIC_GAME_NATIVE_STOP_DRAINED and process exit0; five app true UDP40 already PASS, server Stop gate not reached",
+  "actual_pass": {
+    "per_original_SYN_persona": "Windows41031=1, Linux Bob43031=0, Game2/4=0; all known and authenticated",
+    "Windows_pre_udp_echo": 4,
+    "Bob_Auto_server_to_client_kernel_UDP": 24,
+    "Bob_Auto_first_client_to_server_udp_echo": 4,
+    "five_concurrent_native_udp_echo": 40,
+    "Bob_survives_Windows_owned_Stop_udp_echo": 4,
+    "Windows_native_owned_Stop": "PASS",
+    "Linux4_original_native_Stop": "PASS_NORMAL_AND_GAME",
+    "WSL_bridge": "PASS",
+    "tc_netem": "PASS",
+    "Windows_WAL_leaks": 0
+  },
+  "not_qualified": {
+    "server_exact_final_shared_TUN_Stop": "NOT_VERIFIED",
+    "sustained_150s_TCPUDP": "NOT_RUN",
+    "full_600s_capacity": "NOT_RUN",
+    "loss30": "OPEN"
+  }
 }

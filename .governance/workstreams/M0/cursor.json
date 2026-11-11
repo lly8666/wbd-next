@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1573,
-  "checkpoint_sha": "bbc4ca6525abf7f0b556475755d71222b2183db1",
+  "sequence": 1574,
+  "checkpoint_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1573-SHARED-MIXED-WIN-LINUX-PER-ASSOC-ORIGINAL-SYN-PERSONA",
-  "current_task": "Collected H1572 SOURCEbbc4 Action42968297190 real Windows+Linux4 FAIL: original Windows 4 UDP and Bob server->client OS UDP24 PASS; Bob explicitly Normal/off + autoIP10.66.0.215, route via native wbd48b, kernel TUN TX1/68B, Rust M1 staged_udp1 M4 first wire139B, Bob c2s first business echo FAIL. Refutes FEC Auto-only hypothesis. Shared Normal server selects persona per genuine association SYN; combined Normal/Game shared server passed process-global c.peerPersona Windows11 to all Rust owners including Linux. H1573 applies mature post-TLS cold selection for shared Normal and Game cohorts; adds genuine SYN Go test, manifest and one strict native Windows2025/WSL2 loss0 200ms scenario requiring persona trigger, Bob original FEC Auto c2s, 5 UDP and Stop. New source and network NOT_RUN.",
-  "why_now": "Both genuine H1571 Auto and H1572 Normal fail Bob c2s despite authenticated downlink and actual kernel route/Rust M4 outgoing, excluding Auto-specific encoder. Concrete mixed server per-peer original SYN persona gap proven by comparison with mature Normal shared server; minimal cold owner correction before more tests.",
+  "task_id": "PLAN028-M0-H1574-PER-SYN-WIN5-REAL-UDP-PASS-AND-150S-TCPUDP-OWNER-STOP",
+  "current_task": "Collected H1573 sourcefa1d original Windows2025+4 Linux/WSL2 TLS443 Action42971568281: actual postauth Windows SYN persona1 and Linux Normal/Game persona0; Windows pre4, Bob Auto 24 server->client +4 real client echo, five true concurrent UDP40, Bob4 after Windows Stop, total52 app echoes and 24 one-way genuine kernel; all four Linux Normal/Game actual client Stops and shared reader join, Windows WAL Stop, WSL+netem restoration. Original Action FAIL solely fixture expected Normal Stop text for Game2 though Rust correctly emitted Game2/4 native Stop; preserve as original FAIL, separate H1574 reviewed business PASS_SCOPED. Server final shared TUN Stop NOT_VERIFIED because harness aborted. H1574 harness fixes Game Stop variant and adds ONE 150s 5-device native UDP 256/1120+TCP bidirectional workload at 6/6/3/3/6Mbps each way, dynamic OS IPs, VM budget and max-gap, full owned Stop. New SOURCE 150s NOT_RUN.",
+  "why_now": "User wants real substantive pass despite cosmetic report failures. H1573 demonstrated actual formerly failing Bob Auto uplink and five clients. Need controlled step-up to sustained TCP/UDP and server exact owned Stop; not repeat short UDP-only seed.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto H1573 exact-source Go unit, assembly and single Windows2025/WSL2 genuine loss0 200ms Action. Verify Windows41031 selected1 and Linux Bob43031/Game2+Game4 selected0 from known original SYN and actual M4, Bob24 downlink and Bob4 uplink, five40 and Stops. If markers not triggered, NOT_TRIGGERED. If still fails inspect server RX/tuple/AEAD source without blind repeat; full 600s,30% OPEN.",
+  "next_action": "Collect automatically triggered H1574 Windows2025/WSL2 150s native Action; verify actual all-five 150s UDP+TCP real delivery, 3s max gap, source hash, CPU/RAM, Bob after Windows Stop, Linux Game and server exact owned Stop. Original H1573 FAIL preserved with qualified real business PASS. Continue capacity calibration and 600s/30pct once L1 qualifies.",
   "unverified": true,
-  "last_tested_source": "bbc4ca6525abf7f0b556475755d71222b2183db1",
+  "last_tested_source": "fa1d938761a79ed88d4233d872c259932920bc2b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1572-BOB-NORMAL-VS-FEC-AUTO-TRUE-NATIVE-20261111.json",
-    "docs/evidence/M0/PLAN028-H1573-MIXED-SESSION-ORIGINAL-SYN-PERSONA-20261111.json"
+    "docs/evidence/M0/PLAN028-H1573-MIXED-SESSION-ORIGINAL-SYN-PERSONA-20261111.json",
+    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-PER-ASSOC-UDP-REAL-PASS-20261111.json",
+    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-150S-TCPUDP-REAL-NATIVE-NOTRUN-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +30,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1573 candidate NOT_RUN: H1572 Bob Normal also failed upstream though TUN/M4 sends proven; shared mixed server per-original-association persona fix with exact original-SYN Go test and genuine Windows+Linux4 0loss200ms Action pending. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1574 H1573 original fa1d Action failed only wrong Game2 Stop marker after real Win1+4Linux per-SYN persona, Bob Auto up4/down24, concurrent five UDP40, Bob after Windows Stop4; all Linux client Stops true. Verified real functional PASS_SCOPED; server exact Stop not tested; H1574 new 150s five OS bidirectional UDP/TCP/Stop NOT_RUN. PLAN028 IN_PROGRESS."
 }

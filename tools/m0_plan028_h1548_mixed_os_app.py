@@ -8,19 +8,25 @@ application data, verifies first unique delivery and runs framed TCP both
 directions concurrently. Kernel outer bytes, not these logical offers, are
 the bandwidth qualification. One 600s common barrier, 200ms/0 or 30% loss.
 """
-import argparse,json,os,pathlib,select,socket,struct,threading,time
+import argparse,ipaddress,json,os,pathlib,select,socket,struct,threading,time
 NAMES=("alice","bob","carol","dave","erin")
 IPS=("10.66.0.2","10.66.0.3","10.66.0.4","10.66.0.5","10.66.0.6")
 MAGIC=b"WBD1548A"
 HEADER=struct.Struct("!8sBQ")
 TCP_HEAD=struct.Struct("!5sBBQ")
 BASES={0:(8,14,11,6,9),30:(10,22,18,10,14)}
+L1_BASES=(6,6,3,3,6) # inner Mbps per direction, actual Linux/Windows sockets
 PHASES=(("warmup",10,.30),("first_wave",90,.60),
         ("sustained",180,1.),("overload",90,1.10),("recovery",230,1.))
 assert sum(x[1] for x in PHASES)==600
 MAX_SEQ=3600000
 
-def phase(t):
+def phase(t,duration=600):
+    if duration==150:
+        if t<10:return "warmup",.30
+        if t<120:return "sustained",1.
+        if t<150:return "recovery",.80
+        return "drain",0
     elapsed=0
     for label,sec,mult in PHASES:
         elapsed+=sec
@@ -40,7 +46,7 @@ def bind_udp(ip,port):
     s.setblocking(False)
     return s
 
-def tcp_exchange(index,is_server,local,remote,barrier,done,counters,errors):
+def tcp_exchange(index,is_server,local,remote,barrier,done,duration,counters,errors):
     sock=None;listener=None
     try:
         if is_server:
@@ -69,9 +75,9 @@ def tcp_exchange(index,is_server,local,remote,barrier,done,counters,errors):
             time.sleep(.05)
         start=time.monotonic();next_send=start
         received=bytearray();seq=0
-        while not done.is_set() and time.monotonic()-start<605:
+        while not done.is_set() and time.monotonic()-start<duration+5:
             now=time.monotonic()
-            if now>=next_send and now-start<600:
+            if now>=next_send and now-start<duration:
                 # Source-separated TCP frames; real Windows or WSL sockets.
                 frame=TCP_HEAD.pack(b"W15TC",index,1 if is_server else 0,seq)
                 try:
@@ -106,8 +112,20 @@ def main():
     ap.add_argument("--control",type=pathlib.Path,required=True)
     ap.add_argument("--out",type=pathlib.Path,required=True)
     ap.add_argument("--duration",type=int,default=600)
+    ap.add_argument("--inner-ips",default="")
     a=ap.parse_args()
-    assert a.duration==600 and len(os.environ["GITHUB_SHA"])==40
+    assert a.duration in (150,600) and len(os.environ["GITHUB_SHA"])==40
+    if a.duration==150:
+        # Authenticated OS lease readbacks, not stale preselected addresses.
+        assert a.scene=="loss0" and a.inner_ips
+        actual=a.inner_ips.split(",")
+        assert len(actual)==5 and actual[0]=="10.66.0.2" and len(set(actual))==5
+        pool=ipaddress.ip_network("10.66.0.128/25")
+        assert all(ipaddress.ip_address(x) in pool for x in actual[1:])
+        global IPS
+        IPS=tuple(actual)
+    else:
+        assert not a.inner_ips
     loss=0 if a.scene=="loss0" else 30
     assert (a.role=="windows" and a.index==0 or
             a.role=="linux-client" and 1<=a.index<=4 or
@@ -122,7 +140,7 @@ def main():
     done=threading.Event();errors=[]
     tcp={i:{"sent":0,"received":0,"invalid":0} for i in indices}
     threads=[threading.Thread(target=tcp_exchange,args=(
-       i,a.role=="server",ip,peer(i),a.barrier,done,tcp[i],errors),daemon=True)
+       i,a.role=="server",ip,peer(i),a.barrier,done,a.duration,tcp[i],errors),daemon=True)
        for i in indices]
     for thread in threads:thread.start()
     until=time.monotonic()+120
@@ -140,19 +158,19 @@ def main():
     credit={i:0 for i in indices};last_credit=start
     last_print=start;state="NOT_RUN";last_control=start-10;scale=1.0
     try:
-        while time.monotonic()-start<604:
+        while time.monotonic()-start<a.duration+4:
             now=time.monotonic();elapsed=now-start
-            label,mult=phase(elapsed)
+            label,mult=phase(elapsed,a.duration)
             if now-last_control>=5:
                 rate_cfg=json.loads(a.control.read_text())
                 scale=float(rate_cfg["scale"])
                 if not .65<=scale<=1.35:raise RuntimeError("unsafe or foreign original stress rate")
                 last_control=now
-            if elapsed<600:
+            if elapsed<a.duration:
                 dt=min(.10,max(0,now-last_credit))
                 last_credit=now
                 for i in indices:
-                    rate=BASES[loss][i]*1e6/8*mult*scale
+                    rate=(L1_BASES if a.duration==150 else BASES[loss])[i]*1e6/8*mult*scale
                     credit[i]=min(rate*.055,credit[i]+dt*rate)
                     batch=0
                     while credit[i]>=256 and batch<48:
@@ -194,7 +212,8 @@ def main():
                    "phase":label,"scale":scale,"sent":sent,"unique_rx":got,
                    "tcp":tcp},separators=(",",":")),flush=True)
                 last_print=now
-        state="COMPLETE_TRUE_600S_ORIGINAL_GO_RUST_INNER_APPLICATION"
+        state=("COMPLETE_TRUE_150S_ORIGINAL_GO_RUST_INNER_APPLICATION" if a.duration==150
+               else "COMPLETE_TRUE_600S_ORIGINAL_GO_RUST_INNER_APPLICATION")
     except BaseException as e:
         state="FAIL_OR_CAPACITY_LIMITED"
         errors.append(repr(e))
@@ -205,9 +224,9 @@ def main():
         for so in sockets.values():so.close()
         result={"schema_version":1,"source_sha":os.environ.get("GITHUB_SHA"),
           "role":a.role,"index":a.index,"scene":a.scene,
-          "real_native_os_inner_bind":ip,"duration_required_s":600,
+          "real_native_os_inner_bind":ip,"duration_required_s":a.duration,
           "elapsed_s":round(time.monotonic()-start,3),"last_pace_scale":scale,
-          "status":state,"base_mbps_per_direction":BASES[loss],
+          "status":state,"base_mbps_per_direction":L1_BASES if a.duration==150 else BASES[loss],
           "actual_udp_kernel_send":{NAMES[i]:sent[i] for i in indices},
           "actual_udp_unique_received":{NAMES[i]:got[i] for i in indices},
           "duplicates":{NAMES[i]:duplicates[i] for i in indices},

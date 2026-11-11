@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1574",
+  "date_local": "2026-11-11",
+  "source_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualified_scope": "PASS_SCOPED_WINDOWS2025_ORIGINAL_NPCAP_WINTUN_PLUS_FOUR_NATIVE_WSL2_CREDENTIAL_TLS443_RUST_M4_FIVE_CLIENT_REAL_UDP",
+  "result_classification": "PASS_SCOPED",
+  "plan_status": "IN_PROGRESS",
+  "original_action_id": 42971568281,
+  "original_job_id": 130363221950,
+  "original_artifact_id": 13834390793,
+  "original_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42971568281/artifacts/13834390793",
+  "artifact_zip_sha256": "98cfb372eed98cebff883fa59bb0197b728bdc965128f0a20e988ab3fa575f42",
+  "original_action_result": "FAIL_HARNESS_STOP_MARKER_ONLY",
+  "original_workflow_failure_preserved": true,
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "overlay": "fa1d938761a79ed88d4233d872c259932920bc2b",
+    "genuine_Windows2025_Npcap_Wintun": true,
+    "WSL2_Linux_netns": 4,
+    "Rust_M4": true,
+    "one_server_port": 443
+  },
+  "observed": {
+    "Windows_original_SYN": {
+      "port": 41031,
+      "persona": 1,
+      "known": true
+    },
+    "Bob_Linux_original_SYN": {
+      "port": 43031,
+      "persona": 0,
+      "known": true
+    },
+    "Game2_Linux_original_SYN": {
+      "lanes": 2,
+      "persona": 0,
+      "known": true
+    },
+    "Game4_Linux_original_SYN": {
+      "lanes": 4,
+      "persona": 0,
+      "known": true
+    },
+    "inner_actual_IPv4": {
+      "Alice": "10.66.0.2/32",
+      "Bob": "10.66.0.168/32",
+      "Carol": "10.66.0.138/32",
+      "Dave": "10.66.0.223/32",
+      "Erin": "10.66.0.242/32"
+    },
+    "physical_delay_each_direction_ms": 200,
+    "loss_pct": 0,
+    "outer_ipv4_MTU": 1460,
+    "Windows_pre_five_real_UDP_echo": 4,
+    "Bob_24_real_server_to_client_UDP": 24,
+    "Bob_real_first_upstream_UDP_echo": 4,
+    "five_concurrent_real_UDP_echoes": {
+      "Alice": 8,
+      "Bob": 8,
+      "Carol": 8,
+      "Dave": 8,
+      "Erin": 8,
+      "total": 40
+    },
+    "Bob_real_UDP_echo_after_Windows_Owned_Stop": 4,
+    "verified_app_echoes_total": 52,
+    "client_owned_Stop": {
+      "Windows": "PASS",
+      "Bob_NormalAuto": "PASS",
+      "Carol_Game2": "PASS",
+      "Dave_Game4": "PASS",
+      "Erin_Fixed": "PASS"
+    },
+    "per_client_shared_TUN_reader_Stop": {
+      "Bob": "PASS",
+      "Carol": "PASS",
+      "Dave": "PASS",
+      "Erin": "PASS"
+    },
+    "Windows_WAL_leftovers": 0,
+    "WSL_bridge_restored": "PASS",
+    "tc_netem_restored": "PASS"
+  },
+  "unqualified": {
+    "server_final_shared_TUN_Stop": "NOT_VERIFIED_fix_only_early_fixture_abort",
+    "five_native_150s_TCPUDP": "NOT_RUN",
+    "five_native_600s_outer_250_300": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "physical_WAN": "NOT_RUN"
+  },
+  "original_failures_retained": [
+    42964335744,
+    42968297190,
+    42971568281
+  ]
+}

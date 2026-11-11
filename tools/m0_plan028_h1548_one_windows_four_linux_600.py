@@ -148,6 +148,9 @@ def main():
     bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
     bob_normal=os.environ.get("WBD_PLAN028_BOB_NORMAL_DIFFERENTIAL")=="1"
     mixed_persona=os.environ.get("WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST")=="1"
+    l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1"
+    need(not l1_150 or (mixed_persona and probe and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
+         "H1574 sustained 150s only after actual H1573 mixed persona and Bob Auto proof")
     need(not mixed_persona or (probe and cold_seed and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
          "H1573 only true original mixed Windows/Linux association persona repair probe")
     need(not bob_normal or (probe and cold_seed and bob_probe and bob_listener and a.scene=="loss0"),
@@ -186,6 +189,8 @@ def main():
        "h1571_bob_real_kernel_udp_receiver":bob_listener,
        "h1572_bob_mode_differential":"normal_off" if bob_normal else "unchanged_fec_auto",
        "h1573_original_mixed_per_association_persona":mixed_persona,
+       "h1574_native_five_tcp_udp_150s":l1_150,
+       "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -517,6 +522,106 @@ s.close()
             for who,p in tasks.items():require_real_echo(who,p,8)
             report["h1565_five_genuine_os_udp_echoes"]=40
             print("H1565_FIVE_ORIGINAL_TLS_NATIVE_WINTUN_TUN_APP_40_OF_40_PASS",flush=True)
+            if l1_150:
+                # 150s L1 actual UDP/TCP is NOT the 600s/250-300Mbps H1548
+                # capacity claim. One source lock, one shared server, 5 OSes,
+                # actual per-device authenticated /32 kernel readbacks.
+                report["h1574_150s_stage"]="real_sustained_udp_tcp"
+                csv_ips=",".join([IPS[0]]+[auto_os_ips[n] for n in names[1:]])
+                app_args=["--scene","loss0","--barrier",guestpath(barrier),
+                          "--control",guestpath(control),"--duration","150","--inner-ips",csv_ips]
+                apps={}
+                apps["server"]=spawn("h1574-app-server",[
+                    "wsl.exe","-d","Ubuntu","-u","root","--","env","GITHUB_SHA="+source,
+                    "python3","-u",app_py,"--role","server",*app_args,
+                    "--out",guest_root+"/h1574-app-server.json"])
+                apps["alice"]=spawn("h1574-app-alice",[
+                    sys.executable,"-u",str(ROOT/"tools/m0_plan028_h1548_mixed_os_app.py"),
+                    "--role","windows","--index","0",
+                    "--scene","loss0","--barrier",str(barrier),
+                    "--control",str(control),"--duration","150","--inner-ips",csv_ips,
+                    "--out",str(OUT/"h1574-app-alice.json")])
+                for i,who in enumerate(names[1:],1):
+                    apps[who]=spawn("h1574-app-"+who,[
+                        "wsl.exe","-d","Ubuntu","-u","root","--",
+                        "ip","netns","exec",NS4[i-1],"env","GITHUB_SHA="+source,
+                        "python3","-u",app_py,"--role","linux-client","--index",str(i),
+                        *app_args,"--out",guest_root+"/h1574-app-"+who+".json"])
+                for who,p in apps.items():
+                    marker(OUT/("h1574-app-"+who+".log"),
+                           "H1548_REAL_INNER_OS_APP_BOUND",p,55)
+                baseline=source_snap(loss)
+                prev_budget=vm_budget_tick()
+                barrier.write_text("PLAN028_H1574_150S_TRUE_FIVE_CLIENT_UDP_TCP_"+source+"\n")
+                started=time.monotonic();snapshots=[];capacity_seconds=0.
+                while time.monotonic()-started<151:
+                    elapsed=time.monotonic()-started
+                    for who,p in apps.items():
+                        need(p.poll() is None or elapsed>149,
+                             "H1574 native app exited before real 150s "+who)
+                    for name in ("h1548-server","h1548-windows-alice",
+                                 "h1548-linux-bob","h1548-linux-carol",
+                                 "h1548-linux-dave","h1548-linux-erin"):
+                        need(owners[name].poll() is None,
+                             "H1574 authenticated native owner died early "+name)
+                    time.sleep(9.7)
+                    latest=source_snap(loss);one=delta(baseline,latest)
+                    baseline=latest
+                    b=vm_budget_tick()
+                    total=b["kernel"]+b["user"]-prev_budget["kernel"]-prev_budget["user"]
+                    idle=b["idle"]-prev_budget["idle"]
+                    busy=100*(1-idle/total) if total>0 else None
+                    prev_budget=b
+                    one.update({"elapsed_s":round(time.monotonic()-started,2),
+                        "windows_host_cpu_busy_pct":round(busy,1) if busy is not None else None,
+                        "windows_available_gib":b["avail_gib"]})
+                    if busy is not None and busy>=98 or b["avail_gib"]<1:
+                        capacity_seconds+=one["sample_s"]
+                    else:capacity_seconds=0
+                    need(capacity_seconds<30,
+                         "CAPACITY_LIMITED Windows 150s original native host 30s full CPU/low RAM")
+                    snapshots.append(one)
+                    print("H1574_REAL_FIVE_NATIVE_KERNEL_OUTER_10S "+
+                          json.dumps(one,separators=(",",":")),flush=True)
+                report["h1574_150s_outer_and_host_samples"]=snapshots
+                for who,p in apps.items():
+                    p.wait(timeout=55)
+                    need(p.returncode==0,
+                         "H1574 original native 150s app failed "+who+" "+
+                         (OUT/("h1574-app-"+who+".log")).read_text(errors="replace")[-500:])
+                observed={who:json.loads((OUT/("h1574-app-"+who+".json")).read_text())
+                          for who in apps}
+                serverapp=observed["server"];checks={}
+                for i,who in enumerate(names):
+                    cliapp=observed[who]
+                    sent=cliapp["actual_udp_kernel_send"][who]
+                    recv=serverapp["actual_udp_unique_received"][who]
+                    downstream=serverapp["actual_udp_kernel_send"][who]
+                    received=cliapp["actual_udp_unique_received"][who]
+                    tcp_client=cliapp["tcp_real_frames"][who]
+                    tcp_server=serverapp["tcp_real_frames"][who]
+                    checks[who]={"udp_c2s":[sent,recv],
+                        "udp_s2c":[downstream,received],"tcp_client":tcp_client,
+                        "tcp_server":tcp_server,
+                        "max_udp_gap_client_ms":cliapp["max_active_udp_interarrival_ms"][who],
+                        "max_udp_gap_server_ms":serverapp["max_active_udp_interarrival_ms"][who]}
+                    need(min(sent,recv,downstream,received)>100 and
+                         recv/sent>=.98 and received/downstream>=.98,
+                         "H1574 zero-loss real UDP 150s weak delivery "+who)
+                    need(max(checks[who]["max_udp_gap_client_ms"],
+                             checks[who]["max_udp_gap_server_ms"])<3000,
+                         "H1574 seconds-scale business blackout "+who)
+                    need(min(tcp_client["sent"],tcp_client["received"],
+                             tcp_server["sent"],tcp_server["received"])>=60 and
+                         tcp_client["invalid"]==tcp_server["invalid"]==0,
+                         "H1574 genuine bidirectional framed TCP sustained delivery missing "+who)
+                need(all(o["status"]=="COMPLETE_TRUE_150S_ORIGINAL_GO_RUST_INNER_APPLICATION"
+                         and o["elapsed_s"]>=150 for o in observed.values()),
+                     "H1574 required 150s true original OS apps incomplete")
+                report["h1574_true_five_native_150s_udp_tcp"]=checks
+                report["h1574_capacity_status"]="PASS_WITHIN_HOST_BUDGET_NO_30S_FULL_CPU_RAM"
+                report["h1574_150s_stage"]="verified_five_UDP_TCP_business_before_owned_Stop"
+                print("H1574_TRUE_FIVE_NATIVE_150S_UDP_TCP_CLIENTS_VERIFIED_PASS",flush=True)
             stopwin(window)
             marker(OUT/"h1548-windows-alice.log",
                    "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",window,40)
@@ -527,11 +632,23 @@ s.close()
             report["h1565_bob_after_win_owned_stop_real_udp"]=4
             for who in names[1:]:linux_kill(OUT/("h1548-"+who+".pid"))
             for who in names[1:]:
+                # Game's real original Rust group Stop has its own marker,
+                # NOT the Normal singleton marker. The old H1573 real app
+                # and four client Stops passed but the fixture wrongly
+                # demanded Normal text for a correctly stopped Game2 peer.
+                stop_mark=("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes="+
+                           ("2" if who=="carol" else "4")) if who in ("carol","dave") else "V4_PUBLIC_NATIVE_STOP_DRAINED role=client"
                 marker(OUT/("h1548-linux-"+who+".log"),
-                       "V4_PUBLIC_NATIVE_STOP_DRAINED role=client",owners["h1548-linux-"+who],40)
+                       stop_mark,owners["h1548-linux-"+who],40)
+                marker(OUT/("h1548-linux-"+who+".log"),
+                       "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client",
+                       owners["h1548-linux-"+who],40)
             linux_kill(OUT/"h1548-server.pid")
             marker(OUT/"h1548-server.log","V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",serverproc,40)
             report["h1565_original_owned_stop"]="PASS_WINDOWS_AND_LINUX4_AND_SERVER_SHARED_RUST_TUN"
+            if l1_150:
+                report["h1574_150s_stage"]="verified_true_five_150s_udp_tcp_exact_owners_stopped"
+                print("H1574_REAL_150S_FIVE_TRUE_TCP_UDP_AND_EXACT_ALL_SIX_OWNED_STOP_PASS",flush=True)
             report["h1565_probe_stage"]="true_os_app_and_owners_finished"
             report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
             return

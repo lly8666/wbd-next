@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1574",
+  "date_local": "2026-11-11",
+  "source_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "task": "Actual Win1+Linux4 five native clients 150 seconds bidirectional UDP 256/1120B plus framed TCP and exact owned Stops",
+  "trigger": "[plan028-h1574-win5-native-150s]",
+  "prior_success": {
+    "source": "fa1d938761a79ed88d4233d872c259932920bc2b",
+    "original_action_id": 42971568281,
+    "Windows_4_udp": "PASS",
+    "Bob_Auto_up4_down24": "PASS",
+    "five_udp40": "PASS",
+    "Bob_post_Windows_Stop4": "PASS",
+    "Linux_clients_Stop": "PASS",
+    "server_exact_Stop": "NOT_VERIFIED"
+  },
+  "calibration": {
+    "duration_s": 150,
+    "physical_each_direction_delay_ms": 200,
+    "loss_pct": 0,
+    "outer_mtu": 1460,
+    "inner_Mbps_per_direction": {
+      "Windows_Alice": 6,
+      "Linux_Bob_Auto": 6,
+      "Linux_Carol_Game2": 3,
+      "Linux_Dave_Game4_Fixed6": 3,
+      "Linux_Erin_Fixed6": 6
+    },
+    "sum_inner_one_direction_Mbps": 24,
+    "nominal_RTT_ms": 400,
+    "nominal_BDP_MiB": 1.145,
+    "approx_packets_per_sec_per_direction_at_900B": 3333,
+    "note": "Small real L1 within hosted Windows capacity before L2 250-300Mbps. Game/FEC copies and queue RTT require wire measurement, no assumed bandwidth pass."
+  },
+  "hard_gates": [
+    "Same true original TLS443 server with 5 installed OS clients and per-association Windows/Linux SYN persona",
+    "Actual server-authorized OS auto leases used by each UDP and TCP socket, not stale manual IP",
+    "150s two-direction UDP source + first-unique delivery >=98pct each of five, max observed first-receive gap <3 seconds",
+    "150s both real client and server framed TCP >=60 received and sent per session, zero invalid",
+    "Actual Windows CPU>=98pct or free memory under1GiB for 30s => CAPACITY_LIMITED, stop heavier same host",
+    "Windows owned Stop and Bob still sends four real UDP, four Linux Normal/Game proper native Stop and per-client reader join",
+    "Original shared server TUN reader exact owner Stop, physical WSL bridge, Npcap/Wintun WAL and netem restored"
+  ],
+  "not_equivalent_to": {
+    "full_600s_two_directions_250_300_Mbps": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "L3_soak": "NOT_RUN"
+  }
+}
