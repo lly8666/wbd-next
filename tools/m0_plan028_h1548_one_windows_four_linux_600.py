@@ -142,13 +142,14 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--scene",choices=("loss0","loss30"),default=os.environ.get("WBD_PLAN028_MIXED_SCENE"))
     a=ap.parse_args()
-    probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1"
+    h1581=os.environ.get("WBD_PLAN028_WIN_AUTO_AES_MIXED_150")=="1"
+    probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1" or h1581
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
     bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
     bob_normal=os.environ.get("WBD_PLAN028_BOB_NORMAL_DIFFERENTIAL")=="1"
     mixed_persona=os.environ.get("WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST")=="1"
-    l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1"
+    l1_150=os.environ.get("WBD_PLAN028_WIN_FIVE_150S_TCPUDP")=="1" or h1581
     h1577=os.environ.get("WBD_PLAN028_WIN_L2_CAPACITY_115")=="1"
     h1579=os.environ.get("WBD_PLAN028_WIN_30PCT_COLD_TLS")=="1"
     need(not h1579 or (a.scene=="loss30" and not probe and not cold_seed
@@ -159,8 +160,14 @@ def main():
          (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")) and
          (not h1577 or abs(offered_scale-1.15)<.000001),
          "H1577 real 115pct one-stage Win1+Linux4 capacity trial only")
-    need(not l1_150 or (mixed_persona and probe and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
-         "H1574 sustained 150s only after actual H1573 mixed persona and Bob Auto proof")
+    need(not l1_150 or (
+         (mixed_persona and probe and bob_probe and bob_listener and not bob_normal and a.scene=="loss0") or
+         (h1581 and probe and not mixed_persona and not bob_probe and not cold_seed and a.scene=="loss0")),
+         "H1574 prior mixed persona / H1581 authenticated auto-AES are separate real 150s native scenes")
+    need(not h1581 or (probe and l1_150 and not h1577 and not h1579 and
+         not mixed_persona and not bob_probe and not bob_listener and
+         not bob_normal and not cold_seed and a.scene=="loss0"),
+         "H1581 exactly one 0loss 200ms original Windows auto AES256 + four Linux three-AEAD 150s scene")
     need(not mixed_persona or (probe and cold_seed and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
          "H1573 only true original mixed Windows/Linux association persona repair probe")
     need(not bob_normal or (probe and cold_seed and bob_probe and bob_listener and a.scene=="loss0"),
@@ -202,6 +209,7 @@ def main():
        "h1574_native_five_tcp_udp_150s":l1_150,
        "h1577_real_one_stage_capacity_115":h1577,
        "h1579_real_original_Windows30_cold_TLS":h1579,
+       "h1581_real_Windows_auto_AES256_Linux_three_AEAD_150s":h1581,
        "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
        "600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
@@ -226,7 +234,9 @@ def main():
        "key":OUT/"h1548-private-tls-key.pem"}
     private["route"].write_text(secrets.token_hex(32)+"\n")
     private["users"].write_text(json.dumps(users)+"\n")
-    private["leases"].write_text(json.dumps({who:IPS[i]+"/32" for i,who in enumerate(names)})+"\n")
+    # Real automatic Alice: no server-side manual /32 mapping for this user.
+    private["leases"].write_text(json.dumps({who:IPS[i]+"/32" for i,who in enumerate(names)
+                         if not(h1581 and who=="alice")})+"\n")
     for p in list(private.values())[:3]:os.chmod(p,0o600)
     guestsecret={name:"/run/wbd-h1548-"+os.environ["GITHUB_RUN_ID"]+"-"+name for name in ("route","users","leases")}
     barrier=OUT/"h1548-start.flag";control=OUT/"h1548-rate-control.json"
@@ -357,13 +367,15 @@ s.close()
             "--route-key-hex-file",str(private["route"]),
             "--tls-ca-pem",str(OUT/"h1548-cert.pem"),
             "--username","alice","--password",users["alice"],
-            "--tunnel-id","102030405060708090a0b0c0d0e0f001",
+            *([] if h1581 else ["--tunnel-id","102030405060708090a0b0c0d0e0f001"]),
             "--installation-id","445566778899aabbccddeeff00112233",
-            "--lease4","10.66.0.2/32","--adapter","WBDWLMAIN",
+            *(["--record-cipher","aes-256-gcm"] if h1581 else ["--lease4","10.66.0.2/32"]),
+            "--adapter","WBDWLMAIN",
             "--state-path",str(OUT/"h1548-win-owner.json"),
             "--lanes","1","--fec-mode","off","--fec.mode","off",
             "--route-mode","bypass-lan","--outer-repair","on"]
         window=spawn("h1548-windows-alice",winargs,with_input=True)
+        windows_ip=IPS[0]
         if h1579:
             # Only cold TLS + M4 owner under actual 30pct physical loss and
             # 200ms per direction. Prior mixed 30pct failure happened before
@@ -403,7 +415,25 @@ s.close()
                 need("H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED" in cold_log,
                      "H1566 no real server UDP emitted after protected TLS")
                 report["h1566_real_server_os_cold_udp_started"]=True
-            pre=spawn_real_echo_client("alice_pre",IPS[0],4)
+            if h1581:
+                # Original protected TLS/Rust is the only source of Alice's
+                # genuine server-assigned /32, never the test's static .2.
+                win_log=(OUT/"h1548-windows-alice.log").read_text(errors="replace")
+                selected=re.search(
+                    r"WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=\S+ auto_lease=true lease=([0-9.]+/32) cipher=([0-9]+) source=original_TLS_Rust_snapshot",
+                    win_log)
+                need(selected is not None,
+                     "H1581 Windows original TLS/Rust auto AES256 selection not verified "+win_log[-850:])
+                assigned=ipaddress.ip_interface(selected.group(1))
+                pool=ipaddress.ip_network("10.66.0.128/25")
+                need(assigned.ip in pool and str(assigned.ip)!=IPS[0],
+                     "H1581 Windows server allocation not a genuine /32 pool lease")
+                windows_ip=str(assigned.ip)
+                report["h1581_windows_protected_auto_lease"]=selected.group(1)
+                report["h1581_windows_rust_cipher_readback"]=int(selected.group(2))
+                report["h1581_windows_cli_requested_cipher"]="aes-256-gcm"
+                print("H1581_REAL_WINDOWS_PROTECTED_TLS_RUST_AUTO_AES256_SELECTED lease="+selected.group(1),flush=True)
+            pre=spawn_real_echo_client("alice_pre",windows_ip,4)
             require_real_echo("alice_pre",pre,4)
             report["windows_pre_sibling_real_udp_echoes"]=4
             print("H1565_ORIGINAL_WIN_NPF_WINTUN_FIRST_REVERSE_PRE_SIBLINGS_PASS",flush=True)
@@ -436,8 +466,12 @@ s.close()
             "@{guid=[string]$a.InterfaceGuid;ip=@($ip|ForEach-Object IPAddress)}|ConvertTo-Json -Compress"],
             capture_output=True,text=True,timeout=20)
         need(readback.returncode==0 and
-             "10.66.0.2" in json.loads(readback.stdout).get("ip",[]),
-             "actual signed Windows Wintun Alice IPv4 /32 OS readback failed")
+             windows_ip in json.loads(readback.stdout).get("ip",[]),
+             "actual signed Windows Wintun authenticated Alice IPv4 /32 OS readback failed")
+        if h1581:
+            report["h1581_windows_actual_signed_wintun_os_ip"]=windows_ip
+            need(report.get("h1581_windows_protected_auto_lease")==windows_ip+"/32",
+                 "H1581 Windows protected lease differs from signed Wintun OS /32")
         original_ready["alice"]="REAL_SIGNED_WINTUN_NATIVE_TLS443_READY_OS_IP"
         auto_os_ips={}
         for i,who in enumerate(names[1:],1):
@@ -454,7 +488,7 @@ s.close()
             # long 600s path, where stale .3-.6 would bind the wrong socket.
             pool=ipaddress.ip_network("10.66.0.128/25")
             need(len(inner)==1 and ipaddress.ip_address(inner[0]) in pool
-                 and inner[0] not in auto_os_ips.values() and inner[0]!=IPS[0],
+                 and inner[0] not in auto_os_ips.values() and inner[0]!=windows_ip,
                  "Linux automatic lease must be unique and inside configured server-owned pool "+who+repr(inner))
             auto_os_ips[who]=inner[0]
             ip("-n",NS4[i-1],"route","replace","10.66.0.1/32","dev","wbd48"+who[0])
@@ -575,7 +609,7 @@ s.close()
                         print("H1572_BOB_OS_KERNEL_TUN_COUNTERS_CAPTURED",flush=True)
                 report["h1570_bob_alone_native_udp_echoes"]=4
                 print("H1570_ORIGINAL_TLS_NATIVE_AUTO_BOB_FIRST_REVERSE_4_REAL_UDP_PASS",flush=True)
-            tasks={"alice":spawn_real_echo_client("alice",IPS[0],8)}
+            tasks={"alice":spawn_real_echo_client("alice",windows_ip,8)}
             for i,who in enumerate(names[1:],1):
                 tasks[who]=spawn_real_echo_client(who,auto_os_ips[who],8,NS4[i-1])
             for who,p in tasks.items():require_real_echo(who,p,8)
@@ -586,7 +620,7 @@ s.close()
                 # capacity claim. One source lock, one shared server, 5 OSes,
                 # actual per-device authenticated /32 kernel readbacks.
                 report["h1574_150s_stage"]="real_sustained_udp_tcp"
-                csv_ips=",".join([IPS[0]]+[auto_os_ips[n] for n in names[1:]])
+                csv_ips=",".join([windows_ip]+[auto_os_ips[n] for n in names[1:]])
                 app_args=["--scene","loss0","--barrier",guestpath(barrier),
                           "--control",guestpath(control),"--duration","150","--inner-ips",csv_ips]
                 apps={}
@@ -684,6 +718,17 @@ s.close()
                     report["h1577_actual_all_six_apps_scale"]=real_app_scales
                     print("H1577_REAL_FIVE_OS_APPS_115PCT_OFFER_RATE_TRIGGERED",flush=True)
                 report["h1574_true_five_native_150s_udp_tcp"]=checks
+                if h1581:
+                    need(len(checks)==5 and all(who in checks for who in names),
+                         "H1581 native Windows AES256 + Linux ChaCha/AES128/AES256 heterogeneous apps missing")
+                    report["h1581_windows_auto_three_AEAD_150s_real_udp_tcp"]="PASS_FIVE_OS_KERNEL_APPS_BIDIRECTIONAL"
+                    report["h1581_linux_per_client_cipher"]={
+                        who:EXTRAS[who][EXTRAS[who].index("--record-cipher")+1]
+                        for who in names[1:]}
+                    need(set(report["h1581_linux_per_client_cipher"].values())==
+                         {"chacha20-poly1305","aes-128-gcm","aes-256-gcm"},
+                         "H1581 Linux three original record cipher selections not all present")
+                    print("H1581_REAL_WINDOWS_AUTO_AES256_PLUS_LINUX_THREE_CIPHERS_TCP_UDP_150S_PASS",flush=True)
                 report["h1574_capacity_status"]="PASS_WITHIN_HOST_BUDGET_NO_30S_FULL_CPU_RAM"
                 report["h1574_150s_stage"]="verified_five_UDP_TCP_business_before_owned_Stop"
                 print("H1574_TRUE_FIVE_NATIVE_150S_UDP_TCP_CLIENTS_VERIFIED_PASS",flush=True)
@@ -724,13 +769,23 @@ s.close()
                 report["h1574_150s_stage"]="verified_true_five_150s_udp_tcp_exact_owners_stopped"
                 print("H1574_REAL_150S_FIVE_TRUE_TCP_UDP_AND_EXACT_ALL_SIX_OWNED_STOP_PASS",flush=True)
             report["h1565_probe_stage"]="true_os_app_and_owners_finished"
-            report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
+            if h1581:
+                need(report.get("h1581_windows_auto_three_AEAD_150s_real_udp_tcp")==
+                     "PASS_FIVE_OS_KERNEL_APPS_BIDIRECTIONAL" and
+                     report.get("h1565_original_owned_stop")==
+                     "PASS_WINDOWS_AND_LINUX4_AND_SERVER_SHARED_RUST_TUN" and
+                     report.get("h1581_windows_actual_signed_wintun_os_ip")==windows_ip,
+                     "H1581 true native auto-AES 150s mixed apps and six-owner Stop not proven")
+                report["status"]="PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S"
+                print("H1581_REAL_WINDOWS2025_AUTO_AES256_LINUX_MIXED_THREE_AEAD_150S_ALL_SIX_OWNED_STOP_PASS_SCOPED",flush=True)
+            else:
+                report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
             return
         # Give each account its OWN direct client socket and one of five
         # independent server app sockets; 600s both real UDP and framed TCP.
         # The 600s native application must bind the genuine OS readback
         # /32 for all four authenticated Auto devices on shared TLS443.
-        csv_ips=",".join([IPS[0]]+[auto_os_ips[n] for n in names[1:]])
+        csv_ips=",".join([windows_ip]+[auto_os_ips[n] for n in names[1:]])
         serverApp=spawn("h1548-app-server",["wsl.exe","-d","Ubuntu","-u","root","--","env",
             "GITHUB_SHA="+source,"python3","-u",app_py,
             "--role","server","--scene",a.scene,
