@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1562,
-  "checkpoint_sha": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
+  "sequence": 1563,
+  "checkpoint_sha": "8302e55726fe0290ee758665b1aeacdc57eab08b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1562-H1561-ORIGINAL-GO-COLD-ASSEMBLY-PREFLIGHT-REPAIR",
-  "current_task": "Collected H1561 source d5c6 Action42953589939 original Go build failed before unit/network: H1561 workflow omitted mature H1376 current source overlays for original realityfront/faketcp native types. Pure workflow fix H1562 reuse same exact original-Go source copy, all hash/manifest protections retained. No product source or H1561 real OS scenario changed. Prior manual x86/ARM and wrong password original PASS; mixed static+auto native NOT_RUN.",
-  "why_now": "Cannot attribute undefined Go symbols from incomplete independently authored test assembly to product, first preflight failure unblocks exact one new scene; no repeat manual/manual scenarios or blind retry.",
+  "task_id": "PLAN028-M0-H1563-TRUE-LINUX-MANUAL-STATIC-AUTO-ONE443-NATIVE-PASS",
+  "current_task": "Collected H1562 candidate SOURCE8302e557 Action42953971625 PASS with original pinned Go and true x86 Rust M4 on OS netns: Alice TLS manual 10.66.0.2/32, Bob independently installed authenticated auto pool 10.66.0.144/32, 3 real TLS sessions, 59/59 actual UDP echoes, server routed59 unrouted0 backpressure0, Alice Stop Bob stays, Alice R real reauth, Bob and server shared TUN original owned Stop PASS. All four selective positive/negative Go config/ID tests truly executed PASS. H1561 source d5c6 initial independent workflow Go source assembly FAIL_PRE_NETWORK preserved, not product. H1563 records scoped success and feature card, no new network dispatch.",
+  "why_now": "User requested default same-server manual+auto, H1560 parser-only proof was insufficient; H1562 exact source real API/OS test fully triggered and succeeded. Record true observed pass and clear non-covered platforms/long tests without promoting whole PLAN028.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered H1562 Action for same dedicated mixed static/auto true Linux x86 scene; confirm unit positive/negative actual execution then genuine 59 unique UDP and Stop. If next real first fault in product, fix minimal actual chain; preserve prebuild H1561 fail and source0a original failures. Don't dispatch old windows/loss0/30 seeds.",
-  "unverified": true,
-  "last_tested_source": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
+  "next_action": "Treat Linux x86 genuine one443 static Alice+auto Bob as PASS_SCOPED, no repeat. Latest unresolved: Windows Npcap/Wintun loss0 native first+reverse RXDelivered0 and 30% cold FakeTCP TLS timeout from SOURCE620; x86/ARM rotation and timed handover Action failures from source0a (B server authenticated Health partly triggers but subsequent generation/Stop/timing FAIL). Select minimal stage-discriminating test of Windows real RX pipeline and lifecycle before heavier platform L2/L3. H1541 source0a loss30 600s native_rc0 tc10s0 but capacity_guard2 remains unqualified; never hide capacity. No PLAN029/030.",
+  "unverified": false,
+  "last_tested_source": "8302e55726fe0290ee758665b1aeacdc57eab08b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1562-H1561-ORIGINAL-GO-ASSEMBLY-PREFLIGHT-20261111.json"
+    "docs/evidence/M0/PLAN028-H1563-MANUAL-AUTO-SAME-SERVER-NATIVE-PASS-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1561 source d5c6 dedicated mixed static+auto did NOT_RUN product: Go assembly omitted H1376 current Linux support types, causing undefined symbols. H1562 only corrects workflow assembly using mature source-aware copy. Candidate new SOURCE tests pending."
+  "partial_summary": "H1563 SOURCE8302 real x86 original Go TLS443 + Rust M4 PASS_SCOPED simultaneous Alice fixed10.66.0.2 and Bob auto10.66.0.144, 59 UDP, 3 TLS auth, route59 no loss, exact Stops; 4 hard identity/default unit tests PASS. Linux ARM true mixed, Win dual OS, 600s loss30 capacity and final L3 still NOT_RUN/OPEN. PLAN028 remains IN_PROGRESS."
 }

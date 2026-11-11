@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1563",
+  "date_local": "2026-11-11",
+  "source_sha": "8302e55726fe0290ee758665b1aeacdc57eab08b",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "original_action_id": 42953971625,
+  "original_job_id": 130304564060,
+  "original_action_url": "https://github.com/lly8666/wbd-next/actions/runs/42953971625",
+  "original_artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/42953971625/artifacts/13825963487",
+  "artifact_id": 13825963487,
+  "artifact_zip_sha256": "35d7f41543b3df95f06d932c1f1559d57acfbbebe5c2fde00f36d5698c325f33",
+  "test": "H1561 original pinned Go/Rust x86 kernel netns 1 server 2 clients Alice manual Bob auto same443",
+  "source_lock": {
+    "go_legacy": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "overlay": "8302e55726fe0290ee758665b1aeacdc57eab08b",
+    "architecture": "native x86_64",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "original_rust_m4": true,
+    "manifest_blob_hashes_verified": true,
+    "binary_sha256_verified": true
+  },
+  "observed": {
+    "standard_tls_original_authenticated_sessions": 3,
+    "server_port": 443,
+    "server_shared_native_tun": true,
+    "manual_credential_account": "alice",
+    "manual_server_owned_lease": "10.66.0.2/32",
+    "auto_credential_account": "bob",
+    "auto_client_os_applied_address": "10.66.0.144/32",
+    "auto_lease_pool": "10.66.0.128/25",
+    "auto_installed_identity_verified": true,
+    "manual_IP_conflict_or_auth_bypass": "NOT_OBSERVED",
+    "unique_application_udp_echoes": 59,
+    "server_routed": 59,
+    "server_unrouted": 0,
+    "server_backpressure": 0,
+    "alice_stop_bob_still_live": "PASS",
+    "alice_reauthentication_after_owned_stop": "PASS",
+    "bob_final_native_Stop": "PASS",
+    "server_shared_tun_reader_joined": "PASS"
+  },
+  "actual_unit_positive_and_negative": {
+    "TestPLAN028SimpleSharedServerAutoAndManualDefaults": "PASS",
+    "TestPLAN028BoundStaticManualAndPoolAutoSelection": "PASS",
+    "TestPLAN028NamedRosterAutoIPRequiresDerivedAuthenticatedTunnel": "PASS",
+    "TestPLAN028AccountManualProtectedTunnelIdentity": "PASS"
+  },
+  "original_failures_preserved": [
+    {
+      "source": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
+      "action": 42953589939,
+      "classification": "HARNESS_OR_ASSEMBLY_FAILURE first Go native undefined source files, product NOT_RUN"
+    },
+    {
+      "source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+      "action": 42942358907,
+      "classification": "real Windows loss0 native RXDelivered0 / loss30 cold TLS timeout; full mixed Windows 600s NOT_RUN"
+    },
+    {
+      "source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+      "action": 42952219497,
+      "classification": "600s 30% actual native=0 tc10s=0 PASS_SCOPED, capacity_guard=2 not qualified; original Action FAIL"
+    }
+  ],
+  "not_qualified": {
+    "same_account_two_manual_devices": "NOT_RUN",
+    "Windows_Npcap_Wintun_manual_auto_same_server": "NOT_RUN",
+    "Windows_original_five_clients_600s": "NOT_RUN",
+    "loss30_full_capacity": "NOT_RUN",
+    "Linux_ARM64_true_manual_auto_coexist": "NOT_RUN",
+    "PLAN028_L2_global": "IN_PROGRESS",
+    "PLAN028_L3_frozen_soaks": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "physical_WAN": "NOT_RUN"
+  },
+  "plan_status": "IN_PROGRESS"
+}
