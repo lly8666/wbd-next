@@ -143,6 +143,7 @@ def main():
     ap.add_argument("--scene",choices=("loss0","loss30"),default=os.environ.get("WBD_PLAN028_MIXED_SCENE"))
     a=ap.parse_args()
     h1581=os.environ.get("WBD_PLAN028_WIN_AUTO_AES_MIXED_150")=="1"
+    h1596=os.environ.get("WBD_PLAN028_WIN_LINUX_SAME_ACCOUNT_150")=="1"
     probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1" or h1581
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
@@ -156,10 +157,16 @@ def main():
          and not bob_probe and not l1_150 and not h1577),
          "H1579 exactly one original Windows2025 native 30pct cold TLS trial, no invented UDP recovery")
     offered_scale=float(os.environ.get("WBD_PLAN028_WIN_150S_SCALE","1.0"))
-    need(.99<=offered_scale<=1.20 and
-         (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")) and
+    need(
+         ((.59<=offered_scale<=.61) if h1596 else
+          (.99<=offered_scale<=1.20 and
+           (offered_scale==1.0 or (h1577 and l1_150 and a.scene=="loss0")))) and
          (not h1577 or abs(offered_scale-1.15)<.000001),
-         "H1577 real 115pct one-stage Win1+Linux4 capacity trial only")
+         "only H1596 test-only 60pct or existing H1577 115pct rate allowed")
+    need(not h1596 or (h1581 and l1_150 and probe and a.scene=="loss0"
+         and not h1577 and not h1579 and not mixed_persona
+         and not bob_probe and not bob_listener),
+         "H1596 only one signed Wintun and Linux4 same-login 150s scenario")
     need(not l1_150 or (
          (mixed_persona and probe and bob_probe and bob_listener and not bob_normal and a.scene=="loss0") or
          (h1581 and probe and not mixed_persona and not bob_probe and not cold_seed and a.scene=="loss0")),
@@ -210,6 +217,8 @@ def main():
        "h1577_real_one_stage_capacity_115":h1577,
        "h1579_real_original_Windows30_cold_TLS":h1579,
        "h1581_real_Windows_auto_AES256_Linux_three_AEAD_150s":h1581,
+       "h1596_real_one_Windows_one_Linux_same_account_distinct_installations":h1596,
+       "h1596_test_only_offered_scale":offered_scale if h1596 else None,
        "h1577_actual_inner_rate_scale":offered_scale,
        "h1574_capacity_status":"NOT_RUN" if not l1_150 else "PENDING_REAL_NATIVE",
        "600s_outer_capacity": ("NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else
@@ -487,7 +496,11 @@ s.close()
               "--server-name","wbd-v4.example.test",
               "--route-key-hex-file",guestsecret["route"],
               "--tls-ca-pem",guest_root+"/h1548-cert.pem",
-              "--username",who,"--password",users[who],
+              # H1596: Bob uses Alice's protected credential, but his
+              # Linux own installation-id-file persists a DIFFERENT
+              # physical device ID. Only ONE Windows Wintun is created.
+              "--username",("alice" if h1596 and who=="bob" else who),
+              "--password",(users["alice"] if h1596 and who=="bob" else users[who]),
               "--auto-ip","--installation-id-file","/run/wbd-h1548-"+os.environ["GITHUB_RUN_ID"]+"-install-"+who,
               "--mode",("normal" if bob_normal and who=="bob" else MODES[i]),*EXTRAS[who],
               "--rotation-interval",str((97,109,103,117,127)[i])+"s",
@@ -533,6 +546,19 @@ s.close()
             ip("-n",NS4[i-1],"route","replace","10.66.0.1/32","dev","wbd48"+who[0])
             original_ready[who]="REAL_LINUX_NAMESPACE_NATIVE_TLS443_RUST_TUN_OS_IP"
         report["original_OS_ready"]=original_ready
+        if h1596:
+            # Independent actual signed Win32 Wintun and Linux kernel TUN
+            # OS /32 readback, not CLI string or synthetic packet.
+            need(windows_ip!=auto_os_ips["bob"] and
+                 all(ipaddress.ip_address(v) in ipaddress.ip_network("10.66.0.128/25")
+                     for v in (windows_ip,auto_os_ips["bob"])),
+                 "H1596 same account does not own two different auto OS /32")
+            report["h1596_distinct_same_account_auto_OS_IPs"]={
+                "account":"alice",
+                "Windows_signed_Wintun":windows_ip+"/32",
+                "Linux_Bob_kernel_TUN":auto_os_ips["bob"]+"/32",
+                "same_original_TLS_private_roster_credentials":True,
+                "distinct_installation_id_sources":"Windows explicit 16B; Linux own 0600 generated file"}
         if probe:
             # Five *actual* native OS application sockets, one real Windows
             # Wintun plus four distinct Linux kernel TUNs. Full H1548 600s
@@ -759,6 +785,11 @@ s.close()
                     report["h1577_actual_all_six_apps_scale"]=real_app_scales
                     print("H1577_REAL_FIVE_OS_APPS_115PCT_OFFER_RATE_TRIGGERED",flush=True)
                 report["h1574_true_five_native_150s_udp_tcp"]=checks
+                if h1596:
+                    actual_scales={who:observed[who]["last_pace_scale"] for who in apps}
+                    need(all(abs(value-offered_scale)<.00001 for value in actual_scales.values()),
+                         "H1596 true six-app reduced pace not actually applied")
+                    report["h1596_actual_all_six_OS_apps_scale"]=actual_scales
                 if h1581:
                     need(len(checks)==5 and all(who in checks for who in names),
                          "H1581 native Windows AES256 + Linux ChaCha/AES128/AES256 heterogeneous apps missing")
@@ -818,6 +849,12 @@ s.close()
                      report.get("h1581_windows_actual_signed_wintun_os_ip")==windows_ip,
                      "H1581 true native auto-AES 150s mixed apps and six-owner Stop not proven")
                 report["status"]="PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S"
+                if h1596:
+                    need(report.get("h1575_bob_post_Alice_stop_on_real_live_echo")=="PASS_4_REAL_OS_UDP"
+                         and report.get("h1596_distinct_same_account_auto_OS_IPs"),
+                         "H1596 Bob same-account real UDP after Windows Stop missing")
+                    report["h1596_same_account_150s_and_sibling_stop"]="PASS_NATIVE_ONE_WIN_ONE_LINUX_SAME_LOGIN_DISTINCT_AUTO_IP_150S_STOP"
+                    print("H1596_REAL_WIN_LINUX_SAME_ACCOUNT_TWO_AUTO_OS_IPS_150S_UDP_TCP_WINDOWS_STOP_BOB_SURVIVES_PASS_SCOPED",flush=True)
                 print("H1581_REAL_WINDOWS2025_AUTO_AES256_LINUX_MIXED_THREE_AEAD_150S_ALL_SIX_OWNED_STOP_PASS_SCOPED",flush=True)
             else:
                 report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
@@ -1052,5 +1089,8 @@ s.close()
               "qualification_scope":("TRUE_150S_FIVE_CLIENTS_NOT_600S" if l1_150 else
                   "COLD_TLS_M4_STOP_ONLY_NOT_600S" if h1579 else
                   "SHORT_FIRST_FAULT_PROBE_NOT_600S" if probe else "ORIGINAL_600S"),
-              "status":report["status"],"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
+              "status":report["status"],"stop":"PASS_BOTH_OWNED",
+              "h1596_same_account_native_stop_pass":(
+                  report.get("h1596_same_account_150s_and_sibling_stop")==
+                  "PASS_NATIVE_ONE_WIN_ONE_LINUX_SAME_LOGIN_DISTINCT_AUTO_IP_150S_STOP")},indent=2)+"\n")
 if __name__=="__main__":main()
