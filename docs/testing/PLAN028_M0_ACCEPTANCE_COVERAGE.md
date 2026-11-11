@@ -165,3 +165,7 @@ H1602三条原生Actions `43034982111/43035399302/43035735021`均在Ubuntu安装
 ## H1606 WSL主源DNS短路后的同SHA镜像回退
 
 H1605 Action`43040746444`原Linux和Windows正式构件/ISA-L SHA复用PASS、Npcap安装及退出清理PASS，但Windows hosted runner下载`releases.ubuntu.com` Ubuntu24.04.5 WSL镜像时报告`No such host is known`，真业务/OS MTU场 **NOT_RUN**。新SOURCE仅对H1602一个测试加官方Ubuntu镜像备选，继续使用原24.04.5签名分发文件的精确 SHA256 `bb415d8248...64ac6039e`，下载失败不得跳过校验或造假。镜像是否可下载须以新Action实测结果判断，不扩展为Windows与Linux客户端功能结论。H1596/H1601已通过原真实150s仍可复用，用户排除双Wintun不变。
+
+## H1607 最新近MTU真实结果：原生环境阻断，不是产品PASS/FAIL
+
+SOURCE `c3a4690782a84df167fc496d61f2fe02979b2d7e` H1606 Action [43042125895](https://github.com/lly8666/wbd-next/actions/runs/43042125895) 整体 **FAIL**；同源治理和治理维护 `43042125801`/`43042125943`均SUCCESS。原始官方镜像备用成功并经SHA校验，WSL2真实guest探针PASS；但下一步Linux underlay RST配置调用`wsl.exe`挂起120s、原native job`130598171269`失败。**真实TLS/Rust、签名Wintun OS、近derived MTU 20次真UDP、六owner Stop全部未开始/NOT_RUN**。已核实本次 Windows/Linux 原生ISA-L产物与旧SOURCE8a对应、Go/Rust正式源码无差异，Npcap安装与最终cleanup通过；它们仅是构建/环境preflight，不是近MTU业务通过。原始ZIP `13866116591` 和 `13866761087` 单文件hash、第一失败、环境收敛及停止重复派发决策见 [H1607 evidence](../evidence/M0/PLAN028-H1607-SOURCEC3A-WIN-WSL-RST-CONTROL-TIMEOUT-NOTRUN-20261111.json)。同一宿主重试已超性价比，**停止同族反复派发**；原 H1601 150s、H1604源锁轮换和旧ARM64两场1800s正向不作新源码无据晋级。Windows L3需独立控制器/DUT、GUI人机与部分路径恢复及nearMTU仍限制。PLAN028 **IN_PROGRESS**。

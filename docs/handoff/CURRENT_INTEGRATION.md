@@ -19,3 +19,5 @@
 **限制不冒充PASS**：用户明确不跑同宿主双Wintun，旧H1587 `43001721886` route/WAL保护性 FAIL 留存，不借跨OS同账号成功跳过CAS或宣称此组合已支持。原报告误将30%冷建链标为600s，H1592修正报表及源门，不修改实测结果。本源受影响认证/生命周期150s代表场已PASS_SCOPED；但L2更重容量受同VM CPU边界约束、必要L1与代表L3仍不齐，不可将150s当L3。Android/物理公网/029/030范围外。
 
 历史风险与此前未关闭的027A同socket在线收窄属于历史范围，不拿新认证路径结果改写原FAIL；深查旧日志前先看当前cursor引用。
+
+**H1607最新失败分账**：`c3a4690782a84df167fc496d61f2fe02979b2d7e` Action`43042125895` 原镜像DNS失败→官方同SHA镜像成功、真实WSL2 guest预检通过，但真实Linux RST控制 `wsl.exe`120s timeout，原生业务尚未启动，近MTU `ENVIRONMENT_BLOCKED_NOT_RUN`；已核ISA-L/Go/Rust原构件与源码零diff，Npcap clean PASS。原FAIL保留，不在同类hosted VM再跑相同场景。独立Windows DUT/外带控制器未提供，L3未验，仍不宣称028收口。见H1607 evidence/devlog。

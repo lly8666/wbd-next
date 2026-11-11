@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1607",
+  "source_sha": "c3a4690782a84df167fc496d61f2fe02979b2d7e",
+  "product_binary_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "plan_status": "IN_PROGRESS",
+  "result": "ENVIRONMENT_BLOCKED_PRE_PRODUCT; NEAR_DERIVED_MTU_NOT_RUN",
+  "action_id": 43042125895,
+  "action_overall": "FAILURE",
+  "native_job_id": 130598171269,
+  "native_conclusion": "FAILURE",
+  "governance_action": 43042125801,
+  "governance_conclusion": "SUCCESS",
+  "governance_maintenance_action": 43042125943,
+  "governance_maintenance_conclusion": "SUCCESS",
+  "first_failed_step": "Launch actual WSL2 Linux and direct full public two-OS product",
+  "first_error": "WL_WSL2_COMMAND_TIMEOUT seconds=120 binary=wsl.exe; Linux kernel underlay RST control unavailable",
+  "original_log_first_error_time_utc": "2026-11-11T14:55:48Z",
+  "stage_results": {
+    "workflow_assembly_and_H1602_source_guards": "PASS",
+    "Windows_Go_compile_test": "PASS",
+    "Windows_Rust_test": "PASS",
+    "Linux_Rust_test": "PASS",
+    "frozen_linux_product_reuse_sha_isa_l": "H1605_LINUX_SOURCE_QUALIFIED_SAME_BINARY_ISAL_SHA256_PASS",
+    "frozen_Windows_product_exe_dll_SHA": "WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS",
+    "signed_Npcap_installed": "PASS",
+    "Ubuntu_primary_image": "NO_SUCH_HOST",
+    "Ubuntu_exact_official_mirror": "PASS_PINNED_SHA256",
+    "WSL2_real_distribution_import": "PASS",
+    "WSL2_real_guest_kernel_preflight": "PASS_GENUINE_WSL2_GUEST_PRECONDITION_ONLY",
+    "Linux_RST_precondition": "FAIL_WSL_EXE_TIMEOUT_120_S",
+    "real_original_Go_credential_TLS": "NOT_RUN",
+    "real_Rust_M4": "NOT_RUN",
+    "signed_Wintun_OS_ip_inner_mtu": "NOT_RUN",
+    "near_inner_mtu_UDP_20_true_echoes": "NOT_RUN",
+    "Windows_owned_WAL_Stop": "NOT_APPLICABLE_PRODUCT_NEVER_STARTED",
+    "WSL_network_cleanup": "RST_NOT_INSTALLED",
+    "Npcap_owned_cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS"
+  },
+  "original_artifacts": [
+    {
+      "id": 13866761087,
+      "name": "m0-wl-full-public-normal-direct-h1506-mixed-loss0-43042125895",
+      "zip_sha256": "8206909df6cf7dedf85da108c724ee5a4deca4501d2464dbad17d6b66e84924f",
+      "entries": [
+        "npcap-cleanup.log",
+        "plan028-native-windows-vm-capacity.json",
+        "windows-binary-manifest.json"
+      ],
+      "strict_native_business_report_present": false
+    },
+    {
+      "id": 13866116591,
+      "name": "m0-wl-real-guest-boot-43042125895",
+      "zip_sha256": "5647a1261914fb322a33ea5dfa450f0f8cf744cccaecabd06a78f53a03a8c2fe",
+      "entries": [
+        "wsl2-real-guest-probe.json",
+        "wsl-import.log"
+      ],
+      "guest_probe_file_sha256": "4d1a1cc801e0fe30e96bf1b67fd39d14bf94418f0bd8746526a35d8721c15a49"
+    }
+  ],
+  "windows_product_manifest": {
+    "features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "native_fec_acceleration": true,
+    "original_go_exe_sha256": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "rust_dll_sha256": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "isa_l_archive_sha256": "a7605b22f59dbd3595fa292e8d2659d8b1eb8c3a9688e68b0ed2bcd0f604a8d2"
+  },
+  "previous_near_mtu_actions": [
+    {
+      "id": 43034982111,
+      "classification": "PRE_NATIVE_UBUNTU_APT_DNS_BLOCK"
+    },
+    {
+      "id": 43035399302,
+      "classification": "PRE_NATIVE_UBUNTU_APT_DNS_BLOCK"
+    },
+    {
+      "id": 43035735021,
+      "classification": "PRE_NATIVE_UBUNTU_APT_DNS_BLOCK"
+    },
+    {
+      "id": 43040746444,
+      "classification": "PRE_NATIVE_UBUNTU_IMAGE_PRIMARY_DNS_BLOCK"
+    }
+  ],
+  "risk_decision": "STOP_RETRYING_SAME_HOST_NEAR_MTU: external DNS, WSL guest launch and kernel RST underlay preconditions unstable; do not relax exact native-FakeTCP RST hard gate or claim product MTU fail/pass.",
+  "retained_scoped_positives": [
+    {
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "action_id": 43027983611,
+      "scope": "SIGNED_SINGLE_WINDOWS_WINTUN_PLUS_LINUX4_SAME_ACCOUNT_150S_TRUE_UDP_TCP_ALL_SIX_STOP_PASS_SCOPED"
+    },
+    {
+      "source_sha": "1211fd51dcc8b835eb18dc3dafaf1f833eb36453",
+      "actions": [
+        42738333653,
+        42738333604
+      ],
+      "scope": "OLD_SOURCE_ARM64_TWO_1800S_NATIVE_PASS_SCOPED_ON_UNCHANGED_COMPONENTS"
+    }
+  ],
+  "user_exclusions": [
+    "NO_SAME_WINDOWS_HOST_MULTI_WINTUN_SCENARIO",
+    "PLAN029_030_OOS",
+    "ANDROID_PHYSICAL_WAN_OOS"
+  ],
+  "still_not_qualified": [
+    "H1602_current_source_real_inner_MTU_boundary",
+    "Windows_current_auth_auto_path_idle_wakeup_blackhole",
+    "Windows_real_native_L3_with_independent_out_of_band_DUT",
+    "complete_source_locked_seven_mode_config_effective_reconciliation"
+  ]
+}
