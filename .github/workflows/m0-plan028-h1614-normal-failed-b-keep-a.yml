@@ -8,4 +8,5 @@ jobs:
   one-native-scenario:
     uses: ./.github/workflows/m0-plan028-h1614-one-prebuilt-native.yml
     with:
-      scene: normal_failed_b_keep_a
+      scene: samepath_failed_b_keep_a
+# H1615 differentiated retry: candidate gen2 cold TLS blocked on unchanged physical NIC, A still live.

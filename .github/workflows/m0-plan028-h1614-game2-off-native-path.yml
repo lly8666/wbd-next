@@ -9,3 +9,4 @@ jobs:
     uses: ./.github/workflows/m0-plan028-h1614-one-prebuilt-native.yml
     with:
       scene: game2_off_path
+# H1615 targeted fix: clone original tested native Game2 fixture with actual two old flows, not Game4 four.

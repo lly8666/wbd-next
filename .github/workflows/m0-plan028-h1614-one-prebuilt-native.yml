@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$SCENE" = normal_failed_b_keep_a -o "$SCENE" = game2_off_path
+          test "$SCENE" = samepath_failed_b_keep_a -o "$SCENE" = game2_off_path
           test "$(uname -m)" = x86_64
           test "$GITHUB_REF_NAME" = main
           test -c /dev/net/tun
@@ -53,8 +53,8 @@ jobs:
           print('H1614_FROZEN_SAME_GO_RUST_ACCELERATED_THREE_BINARY_SHA256_PASS',flush=True)
           PY
           chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
-          python3 -m py_compile tools/m0_plan028_h1614_candidate_b_fail_keep_a.py
-          python3 tools/m0_plan028_h1614_candidate_b_fail_keep_a.py --preflight
+          python3 -m py_compile tools/m0_plan028_h1615_same_path_failed_rotation_keep_a.py
+          python3 tools/m0_plan028_h1615_same_path_failed_rotation_keep_a.py --preflight
           bash -n tools/m0-v4-public-real-linux-netns.sh
       - name: Kernel namespace dependencies or truthful environment blocker
         shell: bash
@@ -80,30 +80,44 @@ jobs:
           mkdir -p fixed-kernel-result
           export WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_KERNEL_LOSS=0
           FIXTURE=tools/m0-v4-public-real-linux-netns.sh
-          if test "$SCENE" = normal_failed_b_keep_a;then
-            export WBD_V4_PUBLIC_MODE=normal WBD_V4_PUBLIC_GAME_FEC=off WBD_V4_PUBLIC_WIRE_AUDIT=0
-            python3 tools/m0_plan028_h1614_candidate_b_fail_keep_a.py fixed-kernel-result/h1614-negative-one-native.sh
+          if test "$SCENE" = samepath_failed_b_keep_a;then
+            export WBD_V4_PUBLIC_MODE=normal WBD_V4_PUBLIC_GAME_FEC=off WBD_V4_PUBLIC_WIRE_AUDIT=0 WBD_V4_PUBLIC_PATH_SWITCH=0
+            python3 tools/m0_plan028_h1615_same_path_failed_rotation_keep_a.py fixed-kernel-result/h1614-negative-one-native.sh
             FIXTURE=fixed-kernel-result/h1614-negative-one-native.sh
           else
             export WBD_V4_PUBLIC_MODE=game2 WBD_V4_PUBLIC_GAME_FEC=off WBD_V4_PUBLIC_WIRE_AUDIT=1
+            # The frozen base fixture's shared two-lane stop oracle still
+            # hardcodes Game4 remaining_flows=4 in three places; derive
+            # only the Game2 fixture's actual old-generation flow count 2.
+            python3 - <<'PY'
+          from pathlib import Path
+          src=Path('tools/m0-v4-public-real-linux-netns.sh').read_text()
+          assert src.count('remaining_flows=4')==3,'Frozen original Game4 fixture changed'
+          out=Path('fixed-kernel-result/h1615-game2-source-locked-native.sh')
+          out.write_text(src.replace('remaining_flows=4','remaining_flows=2'))
+          out.chmod(0o755)
+          print('H1615_GAME2_ONLY_REMAINING_TWO_ACTUAL_FLOWS_ORACLE_CORRECTED')
+          PY
+            FIXTURE=fixed-kernel-result/h1615-game2-source-locked-native.sh
           fi
+          bash -n "$FIXTURE"
           timeout --signal=INT --kill-after=12s 600s bash "$FIXTURE" linux-product             >fixed-kernel-result/h1614-native.log 2>&1 || {
               tail -160 fixed-kernel-result/h1614-native.log >&2
               echo H1614_ONE_NATIVE_SCENE_OR_STOP_FAILED_RETAIN_ARTIFACT >&2
               exit 1
             }
-          grep -Fq M0_PLAN028_ACTUAL_LINUX_NEW_ROUTE_READBACK_PASS fixed-kernel-result/h1614-native.log
-          grep -Fq M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS fixed-kernel-result/h1614-native.log
-          test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
-          if test "$SCENE" = normal_failed_b_keep_a;then
-            grep -Fq H1614_KERNEL_ONLY_B_TCP_BLOCK_CONFIRMED fixed-kernel-result/h1614-native.log
-            grep -Fq H1614_REAL_FAILED_B_OLD_A_KERNEL_UDP_PASS fixed-kernel-result/h1614-old-a-business.log
-            grep -Fq H1614_FAILED_B_NEW_GEN3_REAL_TLS_RUST_AND_EXACT_A_STOP_PASS fixed-kernel-result/h1614-native.log
+          if test "$SCENE" = samepath_failed_b_keep_a;then
+            grep -Fq H1615_SAME_ROUTE_COLD_B_GENUINE_TCP_KERNEL_DROP_PASS fixed-kernel-result/h1614-native.log
+            grep -Fq H1615_FAILED_B_OLD_A_NEW_TRUE_KERNEL_UDP_DELIVERED_PASS fixed-kernel-result/h1615-original-a-live-udp.log
+            grep -Fq H1615_FAILED_CANDIDATE_KEPT_A_THEN_RECOVERED_REAL_TLS_RUST_PASS fixed-kernel-result/h1614-native.log
+            test "$(grep -c 'H1615_NEW_POST_B_FAILURE_NATIVE_UDP_ECHO_PASS' fixed-kernel-result/h1615-new-original-tls-business.log)" -eq 5
             grep -Fq M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS fixed-kernel-result/h1614-native.log
-            grep -Fq 'V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=2' fixed-kernel-result/h1614-client-path-events.log
-            grep -Fq 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=3 old_generation=true' fixed-kernel-result/h1614-client-path-events.log
-            grep -Fq 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' fixed-kernel-result/h1614-client-path-events.log
+            grep -Fq 'V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=2' fixed-kernel-result/h1615-original-client-events.log
+            grep -Fq 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' fixed-kernel-result/h1615-original-client-events.log
           else
+            grep -Fq M0_PLAN028_ACTUAL_LINUX_NEW_ROUTE_READBACK_PASS fixed-kernel-result/h1614-native.log
+            grep -Fq M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS fixed-kernel-result/h1614-native.log
+            test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
             grep -Fq M0_PLAN028_GAME2_OFF_A_TO_AB_TO_B_SHARED_TUN_PASS fixed-kernel-result/h1614-native.log
             grep -Fq M0_PLAN028_REAL_LINUX_GAME2_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS fixed-kernel-result/h1614-native.log
             python3 - <<'PY'
@@ -128,8 +142,9 @@ jobs:
              'this_action':int(os.environ['GITHUB_RUN_ID']),
              'one_native_network_scene':True,'no_compilation':True,
              'auto_lease_installed_in_real_kernel':True,
-             'physical_source4_changed':'10.25.0.2 -> 10.25.0.3',
-             'physical_mtu_actual':1280,'postchange_real_kernel_udp_echoes':5,
+             'physical_source4_changed':('not_changed_true_original_A' if scene=='samepath_failed_b_keep_a' else '10.25.0.2 -> 10.25.0.3'),
+             'physical_mtu_actual':(1500 if scene=='samepath_failed_b_keep_a' else 1280),
+             'post_event_real_kernel_udp_echoes':5,
              'native_go_tls_rust_m4':True,
              'old_owner_Stop':'verified by unmodified original native fixture',
              'native_log_sha256':hashlib.sha256(log).hexdigest(),
@@ -146,6 +161,8 @@ jobs:
             fixed-kernel-result/h1614-*.log
             fixed-kernel-result/h1614-*.json
             fixed-kernel-result/h1614-*.txt
+            fixed-kernel-result/h1615-*.log
+            fixed-kernel-result/h1615-*.txt
             fixed-kernel-result/plan028-*.json
             fixed-kernel-result/plan028-real-path-switched-business.log
             fixed-kernel-result/public-v4-normal-business.log

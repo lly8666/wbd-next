@@ -195,3 +195,9 @@ H1602近MTU用户要求跳过，保留原NOT_RUN；双Wintun不跑；Linux本轮
 ## H1614 高效并行真实Native验收入口（本段不是测试PASS）
 
 **仅两个独立场景**，均复用已签SOURCE`8a31375e`正式Linux x86原Go client/server＋Rust ISA-L三件、每文件SHA及当前产品/原OS夹具零源码差校验，绝不再次Go/Rust编译。新增独立push Action：`m0-plan028-h1614-normal-failed-b-keep-a.yml`（Normal Off Auto IP；只阻断B的新物理源`.3` TCP443/要求内核drop计数、B确实失败且A发一个新的真UDP回声，放开后新B3 TLS/Rust M4、A精确Stop，5次切后UDP及OS TUN MTU）、`m0-plan028-h1614-game2-off-native-path.yml`（Game2 Off Auto，真物理源/MTU变化，标准4条两代TLS ClientHello、2lane A+B→B/真UDP/Stop）。两Action分别一场、不同Runner并行；其他Normal/Game4成功场不重跑；当前源码、测试产物SOURCE分别留痕。**实际Action/原始报告未结束前NOT_RUN**。详见[H1614 devlog](../devlog/M0/20261112-PLAN028-H1614-REUSE-PARALLEL-NORMAL-FAILED-B-AND-GAME2-PATH.md)。用户跳过nearMTU及多Wintun，Windows独立DUT L3仍未验，默认outer1460/FEC Off不变。
+
+## H1615 两场 H1614 原FAIL精确分账及不同条件复验
+
+当前测试源码`9a5d4531904c9d124da77037bce969b8cc70c6be` 两独立原生Action均整体**FAIL**：`43060138936` Normal 同时切物理源`.2→.3`、B2新源真实内核TCP阻断1 packet/原Go候选失败old_untouched，旧A PID存活但新增内核UDP超时，故**A业务不通过**且未解禁/未Stop，不能当“候选失败留A”PASS（物理首选出口改变使旧A并非已证健康）；原ZIP`13873157272` SHA`7775560eb4212f5ee4ebbdb7a812213b18e6fce6280897a4fa10b0efcbe223d1`。`43060138947` Game2 Off真实两代2×2 Go TLS/Rust、新B ready与旧A精确Stop部分通过，却因旧原夹具Game4 `remaining_flows=4` 错套Game2真`2`，后续新真实UDP与最终Stop **NOT_RUN**，原ZIP`13872947708` SHA`660665987ee6dbc4fb4e51ec329a5cee74c990941aacc6bc98e61acc6dcf3d8c`。原失败均保留。
+
+H1615目标是**两条独立Action、各一个网络场景、各复用完全相同H1600 source8a三件 Go/Rust ISA-L 已校验二进制且产品零diff无重编译**：Normal仅**相同原物理路径**下显式5s冷轮换，定向拒绝B2/Bn新TLS端口、原A真实UDP必须在拒绝期收到，之后解禁并二次原TLS/Rust M4、A精确Stop及新业务；Game2只在临时脚本精确改3处旧Game4流数断言为2，仍要求真实物理路径迁移/四条标准TLS ClientHello/MTU/前后UDP/所有Stop。新Action结束前两场均**NOT_RUN**。用户跳过nearMTU及双Wintun，默认FEC Off/轮换0/outer1460不变；见[H1615 devlog](../devlog/M0/20261112-PLAN028-H1615-REAL-FAILURE-RETAIN-AND-DIFFERENTIATED-PREBUILT-RETEST.md)。
