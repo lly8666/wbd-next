@@ -82,3 +82,12 @@
 
 所含逐文件Windows Go/Rust、Linux Go/Rust和签名Wintun SHA256按 **每次Action原始artifact** 使用；同一次CODE里旧Windows Go hash偶然相同不授权跨SOURCE产品证明。新H1589源级修订不会重写 dd82 Action overall；所有其他功能卡/工况仍等待正确范围内真实回归。
 
+
+## H1592 接手真实结果与修正测试资格（SOURCE锁）
+
+- **冷 TLS 30% 正向**：`fd4732ec4adffa442a0bc25a145ed6ea1d1259a8`，Action [43009320538](https://github.com/lly8666/wbd-next/actions/runs/43009320538) 整体 **SUCCESS**，原生 Win2025/WSL2 job `130487172012` strict-native `PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP`。有真实双向 netem 丢包30%、单程200ms、原Go冷TLS重传 **copied=3 / joined_before_Rust_M3=1**、证书/凭据受保护TLS、Rust M4双方、Linux真实kernel反向UDP、签名Npcap+Wintun手动 `10.66.0.2/32`、有效内层MTU **1389 OS读回**、Windows 15s/90s/idle0 readback、server `reader_joined=1` 与 Wintun/WAL/netem/WSL Stop清理。原始artifact ZIP SHA256 `79f241b2537e2e78e8b41791ccc28b43dfd9637394cd45e48d8da62d6c89fee8`；逐构件 hash 见 [H1592 evidence](../evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json)。**未运行**30%五客户端150s业务、600s容量及1800s综合长测，不以冷建链通过代表它们。
+- 同 SOURCE 的治理与feature目录 Action `43009320451` 整体SUCCESS；原Go Windows WAL/Normal/Auto/Game2/Game4/Fixed scoped Action `43009320389` SUCCESS；Linux x86/ARM两账号手动地址原生 Action `43009320436` SUCCESS。先前 `42979705842`、`42979705889`、`43008382596`、`43008382493` FAIL 原始记录不变。
+- **发现真实报告缺陷并修复**：上述成功的原 `normal-report.json` 将短冷建链的 `qualification_scope` 错写为 `ORIGINAL_600S`，尽管严格原报告显示 `600s_outer_capacity=NOT_RUN_H1579_SHORT_30PCT_COLD_TLS`。H1592将字段改为 `COLD_TLS_M4_STOP_ONLY_NOT_600S`，收紧既有后置scope检查并补源级测试；不更改真实场景、硬门或产品，不拿报表修复充当网络再验。
+- **仍阻断收口**：H1587 SOURCE `3b6d53c30531f6820c220f9e6c23f8a23480227c` Action `43001721886` 双Windows真实签名/同宿主共享路由第二实例 WAL `route is not owned; refuse to replace`，B的独立OS /32/双向业务及A Stop后B存活未证；禁止删除不属于B的捕获路由或弱化CAS。当前Windows本宿主两套默认 `/1` 捕获与server `/32` escape路由需要明确安全共享/路由策略，单纯 TLS+Rust 鉴权无法证明OS同时隔离。
+- **下一代表业务**：新源码文档/报告修订后仅对变更过Windows冷建链的自动AES256+四Linux三cipher 150s实网安排一场独立 `[plan028-h1581-win-auto-aes-mixed-150s]`，完成后再更新精确SOURCE/Action（无真报告时标NOT_RUN）。L2容量/断流/CPU RSS及最终L3、双Windows并行仍须按专项硬门取证，PLAN028仍 **IN_PROGRESS**。
+

@@ -1998,6 +1998,7 @@ jobs:
           }elseif($env:WBD_PLAN028_WIN_30PCT_COLD_TLS -eq '1'){
             if($result.source_sha -ne $env:GITHUB_SHA -or
                $result.status -ne 'PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP' -or
+                $result.qualification_scope -ne 'COLD_TLS_M4_STOP_ONLY_NOT_600S' -or
                $result.mode_public -ne 'PASS_MIXED_FIVE_ORIGINAL'){
               throw 'H1589 scoped actual Windows30 cold TLS report missing or source mismatch'
             }

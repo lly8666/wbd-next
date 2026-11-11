@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1592",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
+  "result": "PASS_SCOPED_COLD_TLS_M4_OS_STOP_ONLY",
+  "action_id": 43009320538,
+  "action_overall": "SUCCESS",
+  "native_job_id": 130487172012,
+  "raw_artifact_id": 13849694203,
+  "artifact_zip_sha256": "79f241b2537e2e78e8b41791ccc28b43dfd9637394cd45e48d8da62d6c89fee8",
+  "raw_report_path": "h1548-loss30-strict-native-report.json",
+  "real_platform": "Windows2025 signed Npcap/Wintun + WSL2 original Linux Rust M4 server",
+  "conditions": {
+    "loss_pct": 30,
+    "one_way_delay_ms": 200,
+    "outer_ipv4_mtu": 1460
+  },
+  "actual_cold_retransmit": {
+    "original_go_faketcp_copied": 3,
+    "joined_before_rust_m3": true
+  },
+  "authenticated": {
+    "original_standard_certificate_tls443": true,
+    "credentials": true,
+    "manual_ipv4": "10.66.0.2/32",
+    "cipher": "chacha20-poly1305",
+    "rust_cipher_id": 1
+  },
+  "actual_os": {
+    "signed_wintun": true,
+    "inner_mtu_planned": 1389,
+    "inner_mtu_applied": 1389,
+    "keepalive_seconds": 15,
+    "dead_after_seconds": 90,
+    "idle_dormant_seconds": 0
+  },
+  "actual_reverse_linux_kernel_udp": true,
+  "owned_stop": {
+    "windows": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+    "rust_server": "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=32 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+    "windows_wal_leftover": [],
+    "netem_restored": "PASS",
+    "wsl_bridge_restored": true
+  },
+  "product_binary_sha256": {
+    "windows_original_go": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "windows_original_rust": "f68c286f23c92ca3b45ec76eb484265e8559c576a3af493cadd0fa34a6957048",
+    "windows_signed_wintun": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "linux_original_go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "linux_original_go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "linux_original_rust": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "build_backend": {
+    "go_cold": "original_GO_TLS_FakeTCP",
+    "rust_steady": "Rust_M4",
+    "native_fec_acceleration": true,
+    "isa_l_archive_sha256": "635b8484820689535d627e4b352f16e5f064370b4f8062067ffb5a610df2123a",
+    "caveat": "CI-computed per-file hashes in artifact manifest; originals not packaged in small test artifact for independent rehash"
+  },
+  "reporting_defect": {
+    "original_generic_report_qualification_scope": "ORIGINAL_600S",
+    "actual_strict_600s_scope": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS",
+    "h1592_fix": "COLD_TLS_M4_STOP_ONLY_NOT_600S",
+    "network_rerun_for_reporting_only": "NOT_REQUIRED"
+  },
+  "other_same_source_actions": {
+    "governance": 43009320451,
+    "win_wal_and_scoped_modes": 43009320389,
+    "x86_arm64_manual_ip": 43009320436
+  },
+  "known_hard_blocker": {
+    "source": "3b6d53c30531f6820c220f9e6c23f8a23480227c",
+    "action": 43001721886,
+    "error": "windowsclient: route is not owned; refuse to replace",
+    "two_windows_concurrent_owned_route": "FAIL"
+  },
+  "not_proven": [
+    "full_30pct_five_client_UDP_TCP_150s",
+    "600s_pressure",
+    "single_host_two_Windows_wintun_route_isolation",
+    "all_new_SOURCE_seven_modes_dynamic",
+    "new_SOURCE_L3_1800s",
+    "physical_WAN",
+    "Android",
+    "PLAN029",
+    "PLAN030"
+  ]
+}

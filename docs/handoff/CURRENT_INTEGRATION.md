@@ -1,19 +1,13 @@
-# main 当前工作导航
+# main 当前集成接续（PLAN028，2026-11-11）
 
-本页保留大致逻辑，不保存每轮日志。先刷新 main；实时 next_action/在途 run 读 M0 cursor，当前施工包读 registry.goal。
+**实时状态先读** [M0 cursor](../../.governance/workstreams/M0/cursor.json)、[PLAN028统一覆盖/配置/精确SOURCE表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md) 和 [专项验收硬门](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)。旧PLAN026入口不是现在待施工计划。用户已授权M0直接main修复/验收，PLAN028仍IN_PROGRESS；不得因单个短场成功标记完成或扩张029/030。
 
-## 已经建立的基础
-原 Go 建连/控制层 + 同进程 Rust 数据引擎；Windows 使用原生 Npcap/Wintun 和 owned 网络事务，Linux 使用 raw/TUN。Normal off、Fixed、Auto、Game2/4 off/FEC 的双向真实 UDP/TCP/Stop 已有 main 同源功能正例。自然 Auto 健康降档有独立来源正例。FEC 工位历史工作已结束，不重开旧接线工程。
+**当前正式入口**：Linux x86_64/ARM64 原Go TLS认证与 Linux Rust raw/TUN M4（配置见 `r0/go_overlay/internal/v4productcli/linux.go`）；Windows x86_64 `wbd-client.exe` 默认原生V4、WinForms GUI显式使用相同V4原 Go 冷TLS→Rust Wintun/Npcap稳态→WFP/route/MTU/WAL OS；由 `r0/go_overlay/assembly/manifest-plan020-m0.json` 与 `tools/prepare_windows_wiring.py` 固定正式装配。不要将CLI/GUI的保存、测试fixture或库编译等同正式OS生效。
 
-## 最新施工优先级：PLAN026（设计，待实现）
-Windows Go 保留FakeTCP/TLS、WFP/DNS/route/Wintun创建和GUI，Rust NativeOwner 将独占业务 Wintun/Npcap、M2/FEC/Game/Health；Normal/off一次写齐/真实Stop+同机CPU/内存/首次到达A/B后迁其他模式和 Make-Before-Break lane。见 [PLAN026](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)。当前 M0 cursor 的旧 N0 `produced=0 ready=4` 及在途Actions必须先结算为真实回归；**本次文档不代表新增产品PASS**。
+**默认**：外层完整IPv4 MTU **1460**（1500仅显式最大）、内层Rust封装派生并OS读回；FEC **Off**、Normal 1 lane、加密默认ChaCha20-Poly1305、lease空自动/手动`/32`、机会式外层重传on；Linux默认不轮换，Windows keepalive15s/dead90s/idle0且rotate0。Game2/Game4、固定FEC/Normal Auto、AES128/AES256、轮换/休眠需显式。所有完整参数与SOURCE见覆盖表。
 
-## 旧收尾（风险仍需保留）
-[旧PLAN025整改包](../decisions/M0-MAIN-CLOSEOUT-20261028.md)仍保存旧SOURCE问题，不能因新任务自然宣告解决：偶发零损建连失败、Windows N0 稳定性/本地 drop、高 RTT 下机会式重传状态寿命、质量/receipt/keepalive 协议外观，以及正确的限速和性能验收。旧 Windows 施工单的未完成项须逐项差异核对，不能整单重新执行。
+**当下验证**：`fd4732ec` Windows30%丢包/200ms单程 Action `43009320538` 整体成功，原Go冷TLS真实RTO三次、双方Rust M4、签名Wintun、手动/32/MTU1389、真实Linux内核反向源与原生Stop已证，仅**冷建链 scoped**；Linux x86/ARM两账号手动 Action `43009320436`、Windows五模式WAL Action `43009320389`、治理 `43009320451` 成功。旧 `dd82db7e` 真实Windows自动AES256+Linux四客户端150s UDP/TCP、Windows退出后Bob继续、六owner Stop仅PASS_SCOPED（Action overall FAIL后置报表），不可升格新SOURCE。旧 `c3e60772` 150s与治理失败亦保留。
 
-Game4 独立损伤和共同黑洞是不同问题；延迟副本导致的尾延迟不自动等于 HOL。高压 FEC 结果有效但部分用旧 ARM64 包和损后限速，不能推广成当前 Windows 或严格物理线路资格。
+**未完成硬门**：双Windows独立签名Wintun同主机不同账号/租约/AEAD的OS路由隔离 H1587 `43001721886` FAIL；不能借TLS+Rust成功跳过CAS/route/WAL。原报告误将30%冷建链标为600s，H1592修正报表及源门，不修改实测结果。新SOURCE受影响认证/生命周期 150s真实场、渐进L2容量及代表L3长测仍须凭原始报告决定。Android/物理公网/029/030范围外。
 
-## 日后再补的产品能力
-单公共端口/多客户端配置、认证简化、全部旧生命周期/GUI/DNS/分流/IPv6 等按功能卡迁移。现有已接线能力应做保护，未接线处明确 UNWIRED；不要借本批“收尾”无限扩包。历史 80 秒中断仍未凭本轮证明关闭。
-
-源码/夹具/进度都回 main；旧分支只作来源档案。[历史检索地图](../history/2026-10-28-M0-MAIN-HANDOFF.md)保存查找路径和关键来源，不需要新 agent 通读日志。
+历史风险与此前未关闭的027A同socket在线收窄属于历史范围，不拿新认证路径结果改写原FAIL；深查旧日志前先看当前cursor引用。

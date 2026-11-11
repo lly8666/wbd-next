@@ -4,29 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1591,
-  "checkpoint_sha": "dccf323b8ab82f192bcd759df2e94ec85a3a7979",
+  "sequence": 1592,
+  "checkpoint_sha": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1591-ORIGINAL-WINDOWS-COLD-SENDER-ASSEMBLY-AND-CARD-BOUNDS",
-  "current_task": "H1590 SOURCEdccf Action43008382596 real Windows30 native NOT_RUN: cheap preflight failed exact assembly manifest result_blob still f13530... but new m0_native_v4_windows.go blob0a201e6...; H1590 feature catalog 43008382493 FAIL card above16KiB, while governance structure PASS. Separate original-Go-wal/Windows cold unit/two-slot and maintenance also fail same stale blob. H1591 updates only exact manifest pointer and compacts card below16KiB, preserves source lock and old 15s TLS. New H1591 signed Windows2025 true30pct/200ms must run and prove actual original Go retransmit, Rust M4, OS and Stop. PLAN028 IN_PROGRESS.",
-  "why_now": "True original Windows FakeTCP Sender RTO cold retransmit cannot be validated until required source-locked Go overlay assembly hash points to exact updated product code and feature-card remains bounded. Old fail must be kept; no fake native PASS or lowered gate.",
+  "task_id": "PLAN028-M0-H1592-COLD-SOURCE-RECEIPT-SCOPE-AND-SIGNED-WINDOWS-ISOLATION",
+  "current_task": "Recovered fd4732ec Action43009320538 Windows2025 genuine loss30/200ms original Go cold TLS retransmit copied3, TLS/Rust M4/signed Wintun manual /32 readback/owned Stop PASS_SCOPED and action SUCCESS. Governance 43009320451 and Windows WAL 43009320389 and Linux x86/ARM manual Action43009320436 SUCCESS. Old H1590 preflight FAIL retained. Corrected H1592 short cold report falsely tagged ORIGINAL_600S, added source gate. H1587 simultaneous two signed Windows clients route/WAL owner FAIL remains critical.",
+  "why_now": "True latest action result was missing from cursor and mixed tool generic report had materially false 600s qualification. Per-Windows native OS concurrent route ownership H1587 remains a hard gate and must be solved without taking foreign routes.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Dispatch H1591 marker [plan028-h1579-win30-cold-auth] + [plan028-h1590-win30-cold-retransmit] as one real Windows2025 loss30 200ms scene, collect Windows Go/Rust builds, actual SYN/TLS retransmits, certified credentials, actual M4, signed Wintun manual /32, genuine Linux kernel after-auth UDP, exact Stop and clean WAL/WSL/netem; if preflight or product FAIL diagnose first exact logs before retry. H1586 dd82 remains scoped genuine150s PASS under old overall workflow FAIL. H1587 dual Windows B route owner FAIL unresolved. 600s capacity / 1800s L3 remain NOT_RUN.",
+  "next_action": "Collect source-locked H1592 one genuine Win auto AES256 + Linux four-client three-cipher 150s result once, do not dispatch duplicate; investigate H1587 exact shared destination /1 and server /32 route ownership and implement safe per-client OS coexistence with signed-Wintun native A/B real regression if feasible; then targeted L2/L3 only. No PLAN029/030. Keep Plan028 IN_PROGRESS until hard gates met.",
   "unverified": true,
-  "last_tested_source": "dccf323b8ab82f192bcd759df2e94ec85a3a7979",
+  "last_tested_source": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1590-SOURCEDCCF-WIN30-COLD-RETRANSMIT-PREFLIGHT-FAIL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
-    "docs/prompts/M0-PLAN028.md",
-    "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
-    "docs/architecture/MTU_CONTRACT.md",
-    "docs/devlog/M0/20261111-PLAN028-H1589-AFTER-RUN-TRUE-NATIVE-RESULT-GATE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1590-WIN-ORIGINAL-GO-FAKETCP-COLD-RETRANSMIT.md"
+    "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
+    "docs/devlog/M0/20261111-PLAN028-H1592-COLD-SCOPE-AND-OS-ISOLATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCEdccf H1590 original Go cold RTO product fix was rejected before network by exact Windows overlay assembly blob mismatch and oversized feature card; Windows native30pct NOT_RUN, original commits fail retained. H1591 manifest points to true code blob0a201e6, card compressed<=16KiB no changed verification gates. H1586 source dd82 five client150s genuine PASS_SCOPED; H1587 B dual route owner FAIL; H1588 loss30 original Go TLS 15s no ClientHello retransmit. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1592 recovered true fd4732ec cold-TLS 30pct scoped PASS and original 600s scope bug; no 600s or L3. H1586 dd82 genuine 150s older-source PASS_SCOPED; current-source 150s scheduled via distinct marker; H1587 dual-Windows route owner FAIL unresolved. PLAN028 IN_PROGRESS."
 }

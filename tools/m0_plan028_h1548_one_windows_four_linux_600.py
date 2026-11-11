@@ -1046,6 +1046,8 @@ s.close()
             (OUT/"normal-report.json").write_text(json.dumps({
               "source_sha":source,
               "mode_public":"PASS_MIXED_FIVE_ORIGINAL_150S" if l1_150 else "PASS_MIXED_FIVE_ORIGINAL",
-              "qualification_scope":"TRUE_150S_FIVE_CLIENTS_NOT_600S" if l1_150 else "ORIGINAL_600S",
+              "qualification_scope":("TRUE_150S_FIVE_CLIENTS_NOT_600S" if l1_150 else
+                  "COLD_TLS_M4_STOP_ONLY_NOT_600S" if h1579 else
+                  "SHORT_FIRST_FAULT_PROBE_NOT_600S" if probe else "ORIGINAL_600S"),
               "status":report["status"],"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
 if __name__=="__main__":main()

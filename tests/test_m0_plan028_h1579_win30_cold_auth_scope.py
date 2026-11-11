@@ -44,6 +44,9 @@ class WindowsThirtyPercentColdOriginalM4(unittest.TestCase):
         self.assertIn('h1579_real_original_TLS_M4_both_sides',s)
         self.assertIn('h1579_actual_Windows_signed_Wintun_OS_lease',s)
         self.assertIn('h1579_real_original_Rust_server_Stop',s)
+        # A cold-auth source-scoped PASS cannot inherit the long-soak label.
+        self.assertIn('"COLD_TLS_M4_STOP_ONLY_NOT_600S" if h1579 else',s)
+        self.assertIn('"SHORT_FIRST_FAULT_PROBE_NOT_600S" if probe else "ORIGINAL_600S"',s)
 
     def test_hard_real_original_owner_and_cleanup_not_fake_600s(self):
         h=SCRIPT.read_text()
@@ -64,6 +67,7 @@ class WindowsThirtyPercentColdOriginalM4(unittest.TestCase):
         self.assertIn('H1579_ORIGINAL_WINDOWS2025_REAL_30PCT_COLD_TLS_M4_AND_STOP_PASS_SCOPED_FULL_DATA_NOT_RUN',w)
         self.assertIn("H1589_SCOPED_H1579_COLD_TLS_POSTGATE_PASS_FULL_DATA_NOT_RUN",w)
         self.assertIn("$result.status -ne 'PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP'",w)
+        self.assertIn("$result.qualification_scope -ne 'COLD_TLS_M4_STOP_ONLY_NOT_600S'",w)
         self.assertIn("$result.mode_public -ne 'PASS_MIXED_FIVE_ORIGINAL'",w)
         self.assertIn('[plan028-h1548-win1-linux4-600]',w)
         self.assertIn('["mixed-loss0","mixed-loss30"]',w)
