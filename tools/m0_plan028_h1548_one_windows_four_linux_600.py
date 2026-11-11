@@ -143,6 +143,8 @@ def main():
     ap.add_argument("--scene",choices=("loss0","loss30"),default=os.environ.get("WBD_PLAN028_MIXED_SCENE"))
     a=ap.parse_args()
     probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1"
+    cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
+    need(not cold_seed or probe,"H1566 genuine OS cold seed cannot bypass scoped Windows probe")
     need(not probe or (a.scene=="loss0" and os.environ.get("GITHUB_ACTIONS")=="true"),
          "H1565 only one source-locked real 200ms loss0 Windows-first native OS trial")
     need(a.scene in ("loss0","loss30"),"unqualified new mixed scene")
@@ -168,6 +170,7 @@ def main():
        "superseded_Windows5_one_host":"NOT_REQUIRED_BY_LATEST_USER",
        "physical_source_IP_switch_while_WSL_bridge_active":"NOT_TRIGGERED_IN_THIS_SCOPE",
        "h1565_windows_first_five_probe":probe,
+       "h1566_genuine_authenticated_server_os_udp_cold_seed":cold_seed,
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -206,17 +209,30 @@ def main():
         return p
     # H1565: real OS UDP datagrams through the original TLS/Rust Npcap
     # and Wintun TUN. No injected owner ACK, synthetic packet, or fake READY.
-    server_echo_py="""import socket,time
+    server_echo_py="""import pathlib,socket,sys,time
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-s.bind(("10.66.0.1",45941));s.settimeout(2)
+s.bind(("10.66.0.1",45941));s.settimeout(.125)
 print("H1565_REAL_LINUX_TUN_ECHO_BOUND",flush=True)
-end=time.monotonic()+135
+server_log=pathlib.Path(sys.argv[1]);seed=sys.argv[2]=="1"
+end=time.monotonic()+150
+cold_count=0;next_cold=time.monotonic()
 while time.monotonic()<end:
+ now=time.monotonic()
+ # A bounded REAL Linux kernel UDP socket only starts COLD source traffic
+ # after the original protected server logs Alice's authenticated M4 route.
+ # This is not an injected TCP ACK, M2/M3 receipt or fake readiness.
+ if seed and cold_count<70 and now>=next_cold and server_log.is_file():
+  if "V4_PUBLIC_MIXED_NORMAL_READY role=server" in server_log.read_text(errors="replace"):
+   data=b"H1566_REAL_LINUX_KERNEL_APP_COLD/"+str(cold_count).encode()
+   if s.sendto(data,("10.66.0.2",45942))!=len(data):raise RuntimeError("real server UDP failed")
+   cold_count+=1;next_cold=now+.15
+   if cold_count==1:print("H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED",flush=True)
  try:data,peer=s.recvfrom(4096)
  except socket.timeout:continue
  if not data.startswith(b"H1565_NATIVE_APP/"):continue
  s.sendto(b"H1565_NATIVE_REPLY/"+data,peer)
  print("H1565_SERVER_REAL_TUN_ECHO peer="+peer[0],flush=True)
+print("H1566_REAL_SERVER_OS_UDP_COLD_SENT count="+str(cold_count),flush=True)
 s.close()
 """
     client_echo_py="""import socket,sys
@@ -273,7 +289,8 @@ s.close()
         if probe:
             report["h1565_probe_stage"]="real_echo_server"
             echo=spawn("h1565-server-echo",["wsl.exe","-d","Ubuntu","-u","root",
-                "--","python3","-u","-c",server_echo_py])
+                "--","python3","-u","-c",server_echo_py,
+                guest_root+"/h1548-server.log","1" if cold_seed else "0"])
             marker(OUT/"h1565-server-echo.log","H1565_REAL_LINUX_TUN_ECHO_BOUND",echo,25)
         # Windows protected TCP443 must be impaired before the original SYN.
         netem("arm",loss);owns_win_netem=True
@@ -297,7 +314,13 @@ s.close()
             # first+reverse BEFORE any Linux sibling authenticates. This
             # distinguishes a cold transport/RX problem from concurrency.
             report["h1565_probe_stage"]="Windows_original_native_before_siblings"
+            if cold_seed:report["h1565_probe_stage"]="Windows_original_native_after_server_kernel_UDP"
             marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,105)
+            if cold_seed:
+                cold_log=(OUT/"h1565-server-echo.log").read_text(errors="replace")
+                need("H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED" in cold_log,
+                     "H1566 no real server UDP emitted after protected TLS")
+                report["h1566_real_server_os_cold_udp_started"]=True
             pre=spawn_real_echo_client("alice_pre",IPS[0],4)
             require_real_echo("alice_pre",pre,4)
             report["windows_pre_sibling_real_udp_echoes"]=4
@@ -597,7 +620,7 @@ s.close()
                   "kernel_outer_250_300_result","all_six_original_owned_Stop",
                   "Windows_original_WAL_leftover","original_WSL_bridge_restored",
                   "windows_eth0_original_netem_clean")},sort_keys=True),flush=True)
-        if report["status"].startswith("PASS"):
+        if report["status"].startswith("PASS") and not probe:
             (OUT/"normal-report.json").write_text(json.dumps({
               "source_sha":source,"mode_public":"PASS_MIXED_FIVE_ORIGINAL",
               "status":report["status"],"stop":"PASS_BOTH_OWNED"},indent=2)+"\n")
