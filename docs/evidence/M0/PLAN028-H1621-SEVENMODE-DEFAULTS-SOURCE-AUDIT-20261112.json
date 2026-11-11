@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1621",
+  "kind": "CODE_DEFAULT_MODE_AUDIT_NOT_NEW_NETWORK_PASS",
+  "pre_audit_main": "6fba40b176d5290636eb8e787be018d4750ca07f",
+  "product_binary_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "source_paths": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+    "tools/m0_wl_native_mtu_contract.py",
+    "tools/m0_wl_perf_v2_config.py"
+  ],
+  "modes": [
+    {
+      "public": "normal",
+      "linux": "normal (Off)",
+      "windows": "lanes1 FEC off"
+    },
+    {
+      "public": "fixed",
+      "linux": "fec-fixed profile6 explicit",
+      "windows": "lanes1 FEC fixed, V3 carrier fixed parity4 required"
+    },
+    {
+      "public": "auto",
+      "linux": "fec-auto explicit",
+      "windows": "lanes1 FEC auto"
+    },
+    {
+      "public": "game2",
+      "linux": "game2 game-fec off",
+      "windows": "lanes2 FEC off"
+    },
+    {
+      "public": "game2-fec",
+      "linux": "game2 game-fec fixed6 explicit",
+      "windows": "lanes2 FEC fixed"
+    },
+    {
+      "public": "game4",
+      "linux": "game4 game-fec off",
+      "windows": "lanes4 FEC off"
+    },
+    {
+      "public": "game4-fec",
+      "linux": "game4 game-fec fixed6 explicit",
+      "windows": "lanes4 FEC fixed"
+    }
+  ],
+  "default_readback_from_linux_flags": {
+    "outer_complete_IPv4_MTU_bytes": 1460,
+    "Normal_FEC": "off",
+    "Game_FEC": "off",
+    "Go_cold_rotation_interval": "0 disabled",
+    "Go_cold_rotation_jitter": "0",
+    "outer_repair": "on",
+    "record_cipher": "chacha20-poly1305",
+    "TUN_tx_queue_packets": 2048,
+    "TUN_fq_maxrate_mbps": 600,
+    "Game4_default_stagger_ms": [
+      0,
+      4,
+      50,
+      140
+    ],
+    "Game_FEC_Auto": "unsupported"
+  },
+  "legacy_seven_mode_original_proof": {
+    "binary_source": "0cda91575d171c1f8141e937aac91c39d6b303fc",
+    "action": 41970545107,
+    "status": "PASS_SCOPED_REAL_X86_7_SEPARATE_NETWORK_SCENES_28_COLD_REPLACEMENTS",
+    "actual_udp_offered": 16220,
+    "actual_udp_echoed": 16219,
+    "one_missing_game2_off": true,
+    "not_current_binary_source": true
+  },
+  "source8a_representative_original_real_native": {
+    "Normal_Off": "Action43062378203 A alive during B2 failed, B3 authenticated/Stop",
+    "Normal_Fixed": "H1604 Erin fixed original runtime; max fixed6 profile not independently extracted",
+    "Normal_Auto": "H1613 Action43050188977 idle100 and Action43053067266 dead106",
+    "Game2_Off": "Action43061710360 2x2 standard TLS, physical MTU/UDP/Stop",
+    "Game2_Fixed6": "no independent current-source standalone network PASS claimed",
+    "Game4_Off": "no independent current-source standalone network PASS claimed",
+    "Game4_Fixed6": "H1608 Action43046531950 original native physical path"
+  },
+  "Windows_H1620": {
+    "harness_source": "6fba40b176d5290636eb8e787be018d4750ca07f",
+    "action": 43066195581,
+    "conclusion": "FAIL",
+    "first_error": "outer MTU selector/source scenario mismatch",
+    "original_full_artifact_id": 13876720931,
+    "original_zip_sha256": "ba9f0a87b778601de85a5d5da5c68cc2cf1e6ddbf5fa5935eca4027a3f4e47f4",
+    "guest_kernel_boot_artifact_id": 13876690824,
+    "guest_zip_sha256": "90f7d7ab18fd190e93bc97c110e6d4d0ca1f8fdcd35cc4b49653267f265659f5",
+    "preflight_verified": [
+      "exact SOURCE8a Windows EXE/DLL and Linux Go/Rust ISA-L artifact SHA256",
+      "official signed Npcap running",
+      "genuine WSL2 Ubuntu kernel and tun"
+    ],
+    "original_TLS_native_business": "NOT_RUN"
+  },
+  "H1621_corrected_one_native_vector": {
+    "original_scene": "scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json",
+    "new_scene": "scenarios/plan028-h1621-normal-idle105-outer1460-10m25ms0-60s.json",
+    "only_changed_fields": [
+      "scenario_id",
+      "tun_mtu from 1400 to 1460"
+    ],
+    "native_outer_selector": "default1460",
+    "one_real_network_scene": true,
+    "life_idle_seconds": 105,
+    "post_wake_bidi_seconds": 60,
+    "offered_mbps_each_direction": 10,
+    "one_way_requested_delay_ms": 25,
+    "configured_kernel_loss_percent": 0,
+    "application_max_udp_payload_bytes": 1200,
+    "reused_action": 43027983611,
+    "compiled_source_unchanged": true,
+    "run_result": "NOT_RUN_PENDING_ACTION",
+    "not_user_skipped_near_mtu": true
+  },
+  "known_unqualified": [
+    "Windows independent-DUT 1800s L3",
+    "Windows new true 105s idle business until target evidence",
+    "same-host 2 signed Wintuns user-excluded",
+    "true near-derived-MTU user-excluded",
+    "PLAN029/030 outside M0"
+  ],
+  "plan_status": "IN_PROGRESS"
+}

@@ -13,7 +13,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       FROZEN_PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
       REUSE_SUCCESSFUL_ACTION: "43027983611"
-      REAL_SCENE: scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json
+      REAL_SCENE: scenarios/plan028-h1621-normal-idle105-outer1460-10m25ms0-60s.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -35,9 +35,27 @@ jobs:
           path=pathlib.Path(os.environ['REAL_SCENE'])
           assert path.parent.as_posix()=='scenarios'
           s=read_scenario(path)
+          original=read_scenario('scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json')
+          assert original['tun_mtu']==1400 and original['lifecycle_idle_s']==105
+          s.pop('scenario_sha256'); original.pop('scenario_sha256')
+          original['scenario_id']='plan028-h1621-normal-idle105-outer1460-10m25ms0-60s'
+          original['tun_mtu']=1460
+          assert s==original,'H1621 exact old source-locked 105s scene plus only ID/MTU1460'
           assert s['public_mode']=='normal' and s['lifecycle_idle_s']==105
           assert s['duration_s']==60 and s['warmup_s']==5 and s['drain_s']==5
-          assert s['tun_mtu']==1400 # explicit legacy generator vector, NOT product outer default
+          assert s['tun_mtu']==1460
+          from tools.m0_wl_native_mtu_contract import configured_native_test_mtu
+          os.environ['WBD_WL_NATIVE_OUTER_MTU_REQUEST']='default1460'
+          os.environ['WBD_WL_TUN_MTU']='1460'
+          assert configured_native_test_mtu()==1460
+          os.environ['WBD_WL_TUN_MTU']='1400'
+          try:
+              configured_native_test_mtu()
+          except ValueError as error:
+              assert str(error)=='outer MTU selector/source scenario mismatch'
+          else:
+              raise AssertionError('legacy1400 improperly accepted as default1460')
+          os.environ['WBD_WL_TUN_MTU']='1460'
           for direction in ('windows_to_linux','linux_to_windows'):
               d=s[direction]
               assert d['offered_mbps']==10 and d['delay_ms']==25 and d['loss_pct']==0
@@ -68,3 +86,5 @@ jobs:
           echo H1618_DISPATCH_ONE_WINDOWS_REAL_NPF_WINTUN_IDLE105_ORIGINAL_GO_RUST_SOURCE_LOCKED_NOT_YET_PASS
 # H1619 one bounded source-locked retry: accept only exact H1600 signed ISA-L Windows release third feature.
 # H1620 source static-test exact original len+SHA expression; no Windows product change; one original native idle retry.
+
+# H1621 true original Linux + signed Windows same H1600 product; only new scenario ID/MTU1460, not compiled source.

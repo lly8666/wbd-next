@@ -216,3 +216,9 @@ SOURCE`9148b784254bd7552ea7b60f81578a1f484d4c3d` Action`43061710360` Game2 Off A
 | Game2 Off Auto IP / 两lane / 原 outer1460 → 物理1280的真实路径预算 | H1615 harness`9148b784`、原bin`8a31375e36bb6a93860c5579e64b4a39d0b6e346` Action`43061710360` **SUCCESS**；artifact`13874290798` ZIP`eca91b8eefa411113522e23e08908bf3da4167f12886723779e12b8c5432aa86`。原TLS443四ClientHello（两代各2、无私有前置）、真实OS TUN1193、B组remote M4后A+B→B、前后5+5真UDP、所有owner Stop。 | **PASS_SCOPED Linux native Game2 Off**，旧H1614 Game4流数断言误判FAIL保留，不是Fixed6模式。 |
 
 七模式：旧SOURCE`0cda9157` Action`41970545107`七场/28次认证轮换总投递`16220`收到`16219`（Game2 Off丢1），**旧SOURCE scoped**；当前产品源`8a31375e`已有Normal Off/Auto、Game2 Off、Game4 Fixed6及Normal Fixed代表正证；**Game2 Fixed6、Game4 Off和本源Normal Fixed6最高强度未以相同新源码全复测**，按既有未改组件证据限定复用，不把缺的模式标PASS。此条不是新七场矩阵任务，不扩展029/030。用户跳过近innerMTU、多Wintun，Windows idle/物理path和独立DUT L3仍NOT_QUALIFIED。028 IN_PROGRESS。
+
+## H1621 Windows idle105 场景MTU纠错与七模式源锁核对
+
+H1620 Win/WSL2原生Action`43066195581`整体 **FAIL**，原二进制SOURCE8a Windows＋Linux正式Go/Rust/ISA-L SHA、签名Npcap、真实WSL2内核TUN先决条件通过，但原105s场景`tun_mtu=1400`与本次`native_outer_mtu=default1460`冲突，原生MTU契约正确拒绝，原Go TLS/Rust业务**NOT_RUN**。保留原artifact`13876720931` ZIPsha`ba9f0a87b778601de85a5d5da5c68cc2cf1e6ddbf5fa5935eca4027a3f4e47f4`和guest ZIP`13876690824` SHA`90f7d7ab18fd190e93bc97c110e6d4d0ca1f8fdcd35cc4b49653267f265659f5`。H1621新测试场景只改`scenario_id`和`tun_mtu 1400→1460`，原旧测试场景与正式产品源保持不变。包装校验完整逐字段来源锁克隆，原MTU契约default1460/1460 PASS、default1460/1400必须FAIL；独立单场Windows signed Wintun+WSL2 native仍复用H1600预构件、无需重编译，正式业务/Stop待原始目标Action而不能因包装成功记PASS。
+
+[H1621七模式/默认值SOURCE审计](../evidence/M0/PLAN028-H1621-SEVENMODE-DEFAULTS-SOURCE-AUDIT-20261112.json)为**静态源代码覆盖**而非新原生网络测试：Linux默认外层IPv4 MTU1460、Normal和Game FEC Off、rotation0、Game4默认copy stagger0/4/50/140ms；Windows的七项normal/fixed/auto/game2/game4/game2-fec/game4-fec对应Linux五种基本mode和Game固定6开关。旧`0cda`七模式28次交接/16220投递16219回声仅旧SOURCE PASS_SCOPED；当前产品SOURCE8a并无每项独立七模全新组合资格，严格保留不足，028 IN_PROGRESS。
