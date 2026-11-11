@@ -15,3 +15,7 @@
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport"],"reason":"Add exact independent native 150s automatic AES256 + Linux three cipher PASS_SCOPED source and capacity bound; adjust source-scoped reporting metadata only, no product default/protocol changes."}
 ```
+
+## H1595治理回归：五个旧source-exact单测适配精确场景标签
+
+H1594源报告`600s_outer_capacity`按H1579/H1581/H1574/纯probe/600s分别记资格，但旧H1565/H1572/H1573/H1574/H1577五个源级测试仍将报告初版的一整行误当永远不变字符串，导致 [43017422031](https://github.com/lly8666/wbd-next/actions/runs/43017422031) governance-maintenance **FAIL（5个源码字面断言）**。这些是**测试治理回归兼容失败**，Action原结论保留，不把任何产品UDP/TCP判FAIL，也不删除这些测试。H1595把它们改为**同时验证字段名及四个有序分支的真实source片段**（含纯probe及600s未测），原被测产品和真实业务完全不变，不重派已经通过的150s网络场景。

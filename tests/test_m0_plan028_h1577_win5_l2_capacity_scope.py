@@ -61,7 +61,11 @@ class FiveOriginalNativeL2SingleStep(unittest.TestCase):
         self.assertIn("if duration==150:",a)
         self.assertIn('["mixed-loss0"]',wf)
         self.assertIn('[plan028-h1548-win1-linux4-600]',wf)
-        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',h)
+        self.assertIn('"600s_outer_capacity": (',h)
+        self.assertIn('"NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else',h)
+        self.assertIn('"NOT_RUN_H1581_TRUE_150S_FIVE_NATIVE" if h1581 else',h)
+        self.assertIn('"NOT_RUN_H1574_TRUE_150S_FIVE_NATIVE" if l1_150 else',h)
+        self.assertIn('"NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',h)
         # H1577 SOURCE cd5dfa3b: genuine native/app/Stop PASS, old Action
         # failed only while copying absent normal-report.json. Gate export
         # on the same final PASS+owned cleanup, not a guessed business PASS.
