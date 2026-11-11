@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1571",
+  "date_local": "2026-11-11",
+  "source_sha": "72919c66ad7168807bce582c0f1f38b11652dc34",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "prior_real_run": {
+    "action": 42962325425,
+    "artifact": 13830312047,
+    "result": "FAIL",
+    "Windows_first_reverse_and_4_real_UDP": "PASS_SCOPED",
+    "Linux4_auth_unique_auto_lease": "PASS_SCOPED",
+    "Bob_24_native_authenticated_RX_TUN_delivery": "PASS_SCOPED",
+    "Bob_first_real_app_echo": "FAIL",
+    "original_600s": "NOT_RUN",
+    "unbound_Bob_UDP_port_caused_ICMP": "LIKELY_FROM_OS_BEHAVIOR_NOT_YET_SOURCE_ACCOUNTED"
+  },
+  "new_scope": {
+    "marker": "[plan028-h1571-bob-real-kernel-listener]",
+    "one_network": "Windows2025 genuine signed Npcap/Wintun+4 WSL2 original Linux peers one protected TLS443 0% outer loss 200ms each direction, default1460",
+    "predicate": "require Windows true postauth kernel UDP native first+4 app, 4 Linux original TLS/M4 and source-locked distinct 7day auto lease /32 OS readback",
+    "new_condition": "Start genuine Bob OS socket bound to its authenticated dynamic IP:45944 INSIDE Bob Linux netns before server sends any of 24 source UDP packets; marker confirms bind; require Bob app socket receives all 24 real kernel UDP from 10.66.0.1 and validates unique indices. No ICMP-to-closed-port generated on successful path.",
+    "next_condition": "Require Bob client standalone 4 actual kernel UDP echoes to original server TUN 10.66.0.1:45941, server real OS response, before five simultaneous start.",
+    "conditional_followup": "If above PASS, five true native OS app sockets 40 real UDP, Bob 4 survive Windows exact owned Stop and all Rust TUN/Go Stop cleanup.",
+    "artifact_scope": "original H1548 server, signed Windows and four Linux logs plus h1565, h1570, h1571 app/kernel logs; clear first fault, never synthetic ACK or simulated READY",
+    "reuse_guard": "New source-locked one short targeted los0/200ms ONLY, 600s and loss30 NOT_RUN. Original 600s predicate intact and short test cannot write old full-performance report."
+  },
+  "state": "NOT_RUN"
+}

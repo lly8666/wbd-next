@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1570",
   "date_local": "2026-11-11",
-  "source_sha": "cb8c1427e070a02c010209471963da65464ac848",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "72919c66ad7168807bce582c0f1f38b11652dc34",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "prior_action": {
     "id": 42960548812,
@@ -30,5 +30,35 @@
     "physical_WAN": "NOT_RUN",
     "android": "NOT_RUN"
   },
-  "new_source": "NOT_RUN"
+  "new_source": "NOT_RUN",
+  "original_action_id": 42962325425,
+  "original_job_id": 130332950404,
+  "original_artifact_id": 13830312047,
+  "reviewed_actual_network": {
+    "Windows_original_native_TLS_and_Wintun_ready": "PASS",
+    "Windows_4_real_pre_sibling_udp": "PASS",
+    "five_original_OS_tls_m4_ready": "PASS",
+    "Bob_original_installed_auto_lease": "10.66.0.220/32",
+    "other_installed_auto_leases": {
+      "carol": "10.66.0.160/32",
+      "dave": "10.66.0.253/32",
+      "erin": "10.66.0.223/32"
+    },
+    "server_real_kernel_UDP_to_Bob": "24 packets sent",
+    "Bob_rust_verified_RX_and_kernel_TUN_delivered": 24,
+    "Bob_UDP_port45944_app_receiver": "ABSENT in old diagnostic",
+    "Bob_linux_original_shared_tun_routed": 10,
+    "Bob_kernel_UDP_app_echo_first": "FAIL_TIMEOUT",
+    "server_real_echo_received_from_Bob": 0,
+    "full_five_UDP40": "NOT_RUN",
+    "all_genuine_Stops": "NOT_COMPLETED",
+    "full_600s": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "Windows_WAL_leftovers": 0,
+    "WSL_bridge_restored": true,
+    "windows_outer_netem_clean": "PASS"
+  },
+  "classification": "TRUE_ORIGINAL_NATIVE_FAIL_BOB_APPLICATION_OUTBOUND_AFTER_TRUE_NATIVE_24_REVERSE",
+  "root_hypothesis": "H1570 24 test packets were deliberately sent to unbound Bob UDP port45944, generating legitimate OS ICMP destination-unreachable and shared-TUN routed10; cannot isolate Bob true outbound data-plane without an actual app listener. Do not claim product root cause proven.",
+  "new_action": "H1571 real Bob kernel UDP listener and actual receipt first, then independently Bob 4 real UDP application echoes; only then five concurrent app, no old 600s replay"
 }

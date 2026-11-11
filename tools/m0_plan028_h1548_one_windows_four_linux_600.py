@@ -145,6 +145,8 @@ def main():
     probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1"
     cold_seed=os.environ.get("WBD_PLAN028_WIN_REAL_COLD_SEED")=="1"
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
+    bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
+    need(not bob_listener or bob_probe,"H1571 Bob genuine socket may only listen in authenticated Bob-first native probe")
     need(not bob_probe or (probe and cold_seed and a.scene=="loss0"),
          "H1570 Bob auto first real OS UDP only after Windows genuine cold proof")
     need(not cold_seed or probe,"H1566 genuine OS cold seed cannot bypass scoped Windows probe")
@@ -175,6 +177,7 @@ def main():
        "h1565_windows_first_five_probe":probe,
        "h1566_genuine_authenticated_server_os_udp_cold_seed":cold_seed,
        "h1570_bob_auto_native_first_udp":bob_probe,
+       "h1571_bob_real_kernel_udp_receiver":bob_listener,
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -396,6 +399,36 @@ s.close()
                 # before the five-client simultaneous workload. It is normal
                 # authenticated Linux-server UDP, never forged M3/Health.
                 report["h1565_probe_stage"]="bob_auto_first_reverse_before_five"
+                # H1570 emitted 24 OS UDP packets into an UNBOUND Bob port:
+                # Linux legitimately generated ICMP Port Unreachable, which
+                # polluted Bob's native M1 source accounting. H1571 binds a
+                # genuine Bob namespace kernel UDP application first and
+                # verifies actual delivery, never a forged control receipt.
+                bob_listener_proc=None
+                if bob_listener:
+                    bob_listener_py="""import socket,sys,time
+ip=sys.argv[1]
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind((ip,45944));s.settimeout(4)
+print("H1571_BOB_REAL_OS_UDP_LISTENER_READY lease="+ip,flush=True)
+seen=set()
+deadline=time.monotonic()+22
+while time.monotonic()<deadline and len(seen)<24:
+ try:payload,peer=s.recvfrom(4096)
+ except socket.timeout:continue
+ if peer[0]!="10.66.0.1" or not payload.startswith(b"H1570_REAL_LINUX_KERNEL_BOB_PRE/"):continue
+ ordinal=int(payload.rsplit(b"/",1)[1])
+ assert 0<=ordinal<24,ordinal
+ seen.add(ordinal)
+assert seen==set(range(24)),("missing actual Bob native kernel app UDP",len(seen),sorted(seen))
+print("H1571_BOB_REAL_OS_UDP_RX_VERIFIED count=24 lease="+ip,flush=True)
+s.close()
+"""
+                    bob_listener_proc=spawn("h1571-bob-real-udp-listener",[
+                        "wsl.exe","-d","Ubuntu","-u","root","--","ip","netns","exec",NS4[0],
+                        "python3","-u","-c",bob_listener_py,auto_os_ips["bob"]])
+                    marker(OUT/"h1571-bob-real-udp-listener.log",
+                           "H1571_BOB_REAL_OS_UDP_LISTENER_READY",bob_listener_proc,30)
                 bob_kernel_py="""import socket,sys,time
 bob=sys.argv[1]
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -415,6 +448,14 @@ s.close()
                      "H1570_AUTHENTICATED_NATIVE_SERVER_BOB_KERNEL_UDP_SENT count=24" in seedlog,
                      "H1570 real Linux server kernel->Bob UDP source failed "+seedlog[-350:])
                 report["h1570_bob_server_kernel_source_sent"]=24
+                if bob_listener:
+                    bob_listener_proc.wait(timeout=29)
+                    recvlog=(OUT/"h1571-bob-real-udp-listener.log").read_text(errors="replace")
+                    need(bob_listener_proc.returncode==0 and
+                         "H1571_BOB_REAL_OS_UDP_RX_VERIFIED count=24" in recvlog,
+                         "H1571 real Bob OS kernel UDP not received 24/24 "+recvlog[-700:])
+                    report["h1571_bob_kernel_app_rx"]=24
+                    print("H1571_BOB_AUTHENTICATED_REAL_TUN_KERNEL_UDP_24_OF_24_PASS",flush=True)
                 bobfirst=spawn_real_echo_client("bob_alone_before_five",auto_os_ips["bob"],4,NS4[0])
                 require_real_echo("bob_alone_before_five",bobfirst,4)
                 report["h1570_bob_alone_native_udp_echoes"]=4
