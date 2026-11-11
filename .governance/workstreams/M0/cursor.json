@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1553,
-  "checkpoint_sha": "76d5319c12f614d072ca83a24d9c5578311f091d",
+  "sequence": 1554,
+  "checkpoint_sha": "fe5a8fa56a72cd41a35424e1ade5536f7afad6d8",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1553-MIXED-WSL-SHELL-LF-FIRST-ERROR",
-  "current_task": "Collected H1552 new source 76d5319 Action42860982489 completed. Cheap checks and Linux/Windows build PASS; both Windows2025 mixed-loss0/30 real WSL2 server exited before TLS: h1548-server.sh line2 'set: Illegal option -', matched POSIX dash CRLF reproduction. Windows Path.write_text translated LF to CRLF on /mnt/d; modify only make_linux_script to write UTF-8 bytes verbatim; keep native owner, TLS, throughput and Stop unchanged. New source from this commit NOT_YET_TESTED.",
-  "why_now": "Latest original Action first fault is a Windows fixture-to-WSL LF boundary, not TLS or Rust product failure. Both scenes failed before business; prior OpenSSL subject and stale source watcher gates now pass. Fix earliest first fault once, not seed repetition.",
+  "task_id": "PLAN028-M0-H1554-MIXED-ORIGINAL-LF-INFLIGHT-AND-GOVERNANCE-SOURCE-INDEX",
+  "current_task": "Exact-source H1553 LF fix fe5a8fa56a72cd41a35424e1ade5536f7afad6d8 native original Action42938018017 still in progress; cheap 6/6 incl LF real-extracted function PASS, original 76d loss0/loss30 failed pre-TLS at CRLF shell. Governance push42938017973 failed own metadata because H1553 evidence lacked source_sha and cursor also referenced older 4388 evidence; H1554 corrects only evidence/cursor SOURCE coherence, no product or harness runtime changes.",
+  "why_now": "Do not repeat in-flight loss0/loss30 native Action. Repo's governance.py validate_repo requires every cursor evidence_refs source_sha == last_tested_source, even for unverified; prior new index was invalid, corrected without touching runtime.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered exact-source [plan028-h1548-win1-linux4-600] loss0/loss30 Actions/jobs on main; confirm cheap offline LF regression and real WSL shell starts, then TLS authentication -> native both data planes -> MTU -> replacement/Stop. 600s traffic, 250-300Mbps both ways, loss0/30 remain NOT_RUN until actual verified. If further first error, targeted smallest distinction before any rerun; preserve original failures. No PLAN029/030.",
+  "next_action": "Collect in-flight Action42938018017 from exact candidate fe5a8fa (do not re-dispatch); verify build, Linux server WSL LF startup and genuine TLS -> both native M4 -> MTU -> actual 600s UDP/TCP and outer counters -> exact Stop for loss0/30. Preserve original failures; new technical blockers get targeted minimal fixes. Governance maintenance old unrelated failures separately accounted; do not relabel product.",
   "unverified": true,
   "last_tested_source": "76d5319c12f614d072ca83a24d9c5578311f091d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1553-MIXED-WSL-LF-FIX-20261111.json",
-    "docs/evidence/M0/PLAN028-H1552-MIXED-ORIGINAL-OPENSSL-RDN-AND-DEADLINE-CONTRACT-20261110.json"
+    "docs/evidence/M0/PLAN028-H1553-MIXED-WSL-LF-FIX-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Action42860982489 source76d completed failure: Linux/Win cheap+compile PASS, loss0 job129990086813 & loss30 job129990088767 both die at WSL h1548-server.sh:2 set: Illegal option - before TLS. Windows Path.write_text CRLF vs POSIX dash; H1553 patches LF bytes and adds offline guard. New SOURCE pending; native throughput/Stop NOT_RUN; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1553 original source76d Action42860982489 loss0/loss30 failed pre-TLS shell CRLF; fe5a8fa candidate LF fix cheap checks PASS, native Action42938018017 in progress. H1554 only aligns evidence.source_sha=original 76d with cursor.last_tested_source and removes old H1552 mismatched evidence pointer; no new network dispatch. PLAN028 IN_PROGRESS."
 }
