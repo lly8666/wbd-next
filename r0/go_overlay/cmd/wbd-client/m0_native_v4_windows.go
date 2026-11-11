@@ -803,24 +803,74 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  }
  dll:=filepath.Join(windowsExecutableDir(),"wbd_engine.dll")
  if !filepath.IsAbs(dll){return windowsclient.ErrN4NativeGuard}
+ // The SYN retransmission tick above used to STOP being consumed when
+ // WaitEstablished succeeded. During original credential TLS the FakeTCP
+ // sender can still have unacknowledged real ClientHello/admission bytes.
+ // On a physically lossy 200ms path, a lost bootstrap payload otherwise
+ // never gets RetransmitDue and the old 15s candidate deadline expires.
+ // Drive the SAME original association/Sender, not another TCP stack,
+ // while protected TLS runs. Stop/join before Rust Detach/native M3 takes
+ // over the encrypted data path. Default TLS deadline stays 15s.
+ coldPumpStop:=make(chan struct{})
+ coldPumpDone:=make(chan struct{})
+ coldPumpError:=make(chan error,1)
+ var coldRetransmits uint32
+ go func(){
+  defer close(coldPumpDone)
+  for{
+   select{
+   case <-ctx.Done():return
+   case <-coldPumpStop:return
+   case <-ticker.C:
+    if assoc.State()!=faketcp.ClientAssociationEstablished{return}
+    resent,e:=assoc.EmitRetransmitDue(time.Now())
+    if e!=nil{
+     select{case coldPumpError<-e:default:}
+     assoc.Close() // Fail closed and unblock genuine TLS on kernel TX failure.
+     return
+    }
+    if resent{coldRetransmits++}
+   }
+  }
+ }()
+ coldPumpStopped:=false
+ stopColdPump:=func(){
+  if !coldPumpStopped{
+   close(coldPumpStop)
+   <-coldPumpDone
+   coldPumpStopped=true
+  }
+ }
+ defer stopColdPump()
+ // Validate Fixed profile BEFORE entering the protected TLS call; no
+ // early-return path may leave the original cold retransmit pump alive.
+ fixedProfilePlusOne:=uint8(0)
+ if o.Mode==m0WinModeFixed{
+  selected,profileErr:=m0WindowsV4Profile(o.FEC2Profile)
+  if profileErr!=nil{return profileErr}
+  fixedProfilePlusOne=uint8(selected)+1
+ }
  var owner *realityfront.V4WindowsAuthenticatedClientOwner
  var session *realityfront.V4ClientSession
  if o.Mode==m0WinModeNormal{
   owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
  }else{
-  // Protected feature7 is real original credential TLS->Rust M1/M3,
-  // not a caller-selected FEC switch. The release capability gate still
-  // denies production Fixed/Auto pending genuine M2 applied revision.
-  // The shared server requires this device's exact fixed profile in the
-  // EXISTING credential-TLS-authenticated V4 extension byte22. Auto remains 0.
-  // Read the already validated cold client setting, never an untrusted packet.
-  fixedProfilePlusOne:=uint8(0)
-  if o.Mode==m0WinModeFixed{
-   selected,profileErr:=m0WindowsV4Profile(o.FEC2Profile)
-   if profileErr!=nil{return profileErr}
-   fixedProfilePlusOne=uint8(selected)+1
-  }
+  // Protected feature7 and the server's exact authenticated profile are
+  // unchanged; this worker only retransmits original Go bootstrap segments.
   owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne)
+ }
+ stopColdPump()
+ fmt.Printf("WBD_WINDOWS_ORIGINAL_TLS_COLD_FAKETCP_RETRANSMIT copied=%d joined_before_Rust_M3=1 source=original_Go_Sender_RTO\n",coldRetransmits)
+ select{
+ case retryErr:=<-coldPumpError:
+  var stopErr error
+  if owner!=nil{
+   stop,c:=context.WithTimeout(context.Background(),15*time.Second)
+   stopErr=owner.StopScopedOwner(stop)
+   c()
+  }
+  return errors.Join(err,fmt.Errorf("original Windows cold TLS FakeTCP retransmit kernel failure: %w",retryErr),stopErr)
+ default:
  }
  if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)

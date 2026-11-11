@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1589,
-  "checkpoint_sha": "5f0ac32ba0b5d933337ed88f0b33f54da579ac9c",
+  "sequence": 1590,
+  "checkpoint_sha": "841a76e6bf83709a013814cb76ead14c4d15720c",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1589-TRUE-H1586-STRICT-PASS-POSTGATE-AND-COLD-TLS-FAULT",
-  "current_task": "H1586 SOURCEdd82db7e Action43000134310 original signed Windows auto IPv4 10.66.0.207/32 AES256 cipher3 + Linux4 all three AEAD actual 150s 0loss200ms UDP/TCP 5OS + six-owner Stop PASS_SCOPED in real strict native report, but Action overall FAIL from later unrelated Normal 2OS generic report gate; H1589 adds source/status/mode_public-specific postgate without relaxing original strict entry. H1587 SOURCE3b6d Action43001721886 two Win A AES128 true OS Ready but B ChaCha authentic TLS/Rust then route ownership FAIL and B app NOT_RUN. H1588 SOURCE5f0 Action43002178705 true 30pct 200ms physical cold TLS FAIL faketcp bootstrap stream deadline before protected TLS/Rust. All Actions retain conclusions. PLAN028 IN_PROGRESS.",
-  "why_now": "Raw ZIPs have been downloaded and read per SOURCE. Must recognize genuine H1586 150s scoped product PASS separately from erroneous downstream Normal-only generic verdict, while preserving H1587 actual route ownership fail-closed and H1588 actual 15s cold bootstrap failure, not restage already passed dd82 product.",
+  "task_id": "PLAN028-M0-H1590-REAL-FAKETCP-COLD-TLS-SENDER-RETRANSMIT",
+  "current_task": "H1589 SOURCE841a Action43006336947 native product builds source-only PASS, governance43006337044 SUCCESS, maintenance43006336973 SUCCESS, deliberate no repeated dd82 H1586 signed150s. H1590 new PRODUCT FIX required: H1588 5f0 true loss30/200ms original Windows Npcap saw SYNACK and one real ClientHello PSH but no original TLS payload retransmit; code tick only calls ClientAssociation.EmitRetransmitDue during SYN and stops consuming while protected TLS blocks. H1590 keeps same FakeTCP Sender RTO active through real credential TLS, joins before Rust M3, no changed 15s default or synthetic packets. Distinct signed Windows30 H1579 source-locked real Action needed. Dual signed Windows B route owner fail stays OPEN. PLAN028 IN_PROGRESS.",
+  "why_now": "H1588 genuine physical30pct cold Go TLS did not complete within original 15s; original-Go source shows no retransmit tick during blocking certificate/credential exchange. Fix actual retransmit scheduling instead of extending security timeout or faking ACK. Existing Linux server timer continuously retransmits. Keep original fail artifact and signed 0loss 150s SOURCEdd82 positive scoped.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "First validate H1589 scoped postgate through source-only unit+governance without duplicate H1586 150s; collect resulting CI source status. Then isolate Windows dual route/WAL owner conflict from actual B OS in H1587 without weakening foreign-route guards, and separately instrument/repair 30pct cold TLS candidate/retransmit timeout before next distinct signed Windows native verification. Remaining same-account two installations, Windows modes/MTU/idle lifecycle, 600s real250-300Mbps, representative1800s L3, ARM64 ISA-L dispatch; all P028 incomplete, 029/030 not started.",
+  "next_action": "Run new H1590 source marker alongside existing H1579 single mixed-loss30 on genuine Windows2025/WSL2 with Windows native Go/Rust compile, original Go FakeTCP retransmit counter joined, real cert/credential TLS, Rust M4, signed Wintun OS /32, authenticated kernel reverse UDP and exact owned Stop. Collect actual first failure if still 15s expires; no loop until root known. H1587 dual Windows B route collision unresolved fail-closed. Later same-account multi-installations, Windows modes/MTU/idle, 600s/250-300Mbps, 1800s L3 and no premature 029/030.",
   "unverified": true,
   "last_tested_source": "5f0ac32ba0b5d933337ed88f0b33f54da579ac9c",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/architecture/MTU_CONTRACT.md",
-    "docs/devlog/M0/20261111-PLAN028-H1587-WIN-DUAL-MANUAL-CIPHER-TEST.md",
-    "docs/devlog/M0/20261111-PLAN028-H1589-AFTER-RUN-TRUE-NATIVE-RESULT-GATE.md"
+    "docs/devlog/M0/20261111-PLAN028-H1589-AFTER-RUN-TRUE-NATIVE-RESULT-GATE.md",
+    "docs/devlog/M0/20261111-PLAN028-H1590-WIN-ORIGINAL-GO-FAKETCP-COLD-RETRANSMIT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Raw H1586 dd82 Source direct original strict native 150s auto-IP AES256 Windows signed + 4 Linux mixed 3 AEAD true UDP/TCP and all six owned Stop PASS_SCOPED; Action overall failed only historic Normal 2OS postgate. H1589 source-gates exact PASS instead of Normal path. H1587 3b6d true Windows B ChaCha authenticated Rust but route-is-not-owned before B Wintun OS, A AES128 ready; FAIL. H1588 5f0 true30pct200ms SYN/SYNACK but 15s fakeTCP bootstrap deadline FAIL before TLS, kernel reverse cannot yet start. Full600s/250-300, dual coexist, 30pct TLS, L3 etc not completed; keep PLAN028 IN_PROGRESS."
+  "partial_summary": "H1586 SOURCEdd82 signed Windows auto AES256+4 Linux three-AEAD true 150s 0loss200ms five UDP/TCP all six Stop PASS_SCOPED, prior Action overall FAIL only postgate; H1589 SOURCE841a all CI+governance+maintenance succeeded with no duplicate native. H1587 dual Windows ChaCha B TLS/Rust succeeded but route ownership FAIL. H1588 true30pct200ms TLS bootstrap deadline after real ClientHello with no client TLS DATA retransmit. H1590 original Windows Go cold FakeTCP Sender RTO fix joined before Rust M3, keeps15s default, needs true signed native Action; PLAN028 IN_PROGRESS."
 }

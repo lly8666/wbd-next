@@ -417,6 +417,14 @@ jobs:
           python -m unittest tests.test_m0_plan028_h1581_windows_auto_aes_mixed_scope -v
           python -m py_compile tools/m0_plan028_h1548_one_windows_four_linux_600.py
           echo H1581_SOURCE_ONLY_NATIVE_AUTO_AES_MIXED_PREFLIGHT_NOT_REAL_NETWORK
+      - name: H1590 Windows original cold TLS FakeTCP sender retransmit while protected credential TLS is active
+        if: contains(github.event.head_commit.message, '[plan028-h1590-win30-cold-retransmit]')
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest tests.test_m0_plan028_h1590_windows_original_cold_retransmit -v
+          python -m py_compile tools/m0_plan028_h1548_one_windows_four_linux_600.py
+          echo H1590_REAL_ORIGINAL_FAKETCP_COLD_RETRY_SOURCE_ONLY_NOT_SIGNED_NETWORK
       - name: H1587 Windows dual manual AES128/ChaCha one real native source contract
         if: contains(github.event.head_commit.message, '[plan028-h1587-win-dual-manual-aes128]')
         shell: bash
@@ -1462,6 +1470,7 @@ jobs:
               if($mixed.status -ne 'PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP' -or
                  $mixed.h1579_real_original_Windows30_cold_TLS -ne $true -or
                  $mixed.h1579_real_original_TLS_M4_both_sides -ne 'PASS' -or
+                 $null -eq $mixed.h1590_original_windows_cold_tls_real_retransmits -or
                  $mixed.h1579_real_linux_kernel_reverse_seed -ne $true -or
                  $mixed.h1579_actual_Windows_signed_Wintun_OS_lease -ne '10.66.0.2/32' -or
                  -not $mixed.h1579_real_original_Rust_server_Stop.Contains('reader_joined=1') -or

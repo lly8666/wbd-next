@@ -400,6 +400,14 @@ s.close()
             # bogus 4/4 zero-loss UDP or full 600s PASS.
             report["h1579_actual_stage"]="Windows_original_TCP443_certificate_TLS_M4_30pct"
             marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,160)
+            # This readback comes from actual original Go Sender RTO, joined
+            # before Rust M3; a source-only test or fake ACK cannot populate it.
+            cold_log=(OUT/"h1548-windows-alice.log").read_text(errors="replace")
+            matched=re.search(
+                r"WBD_WINDOWS_ORIGINAL_TLS_COLD_FAKETCP_RETRANSMIT copied=(\d+) joined_before_Rust_M3=1 source=original_Go_Sender_RTO",
+                cold_log)
+            need(matched is not None,"H1590 genuine original Go cold FakeTCP retransmit worker did not join")
+            report["h1590_original_windows_cold_tls_real_retransmits"]=int(matched.group(1))
             marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_NORMAL_READY role=server",serverproc,30)
             # Windows native Ready requires first + reverse real encrypted
             # DATA; the separate Linux kernel sender must have actually
