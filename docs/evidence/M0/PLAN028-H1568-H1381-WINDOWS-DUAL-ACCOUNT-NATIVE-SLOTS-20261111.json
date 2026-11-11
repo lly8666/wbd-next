@@ -2,10 +2,10 @@
   "schema_version": 1,
   "plan": "PLAN028",
   "checkpoint": "H1568",
-  "source_sha": "5fcc6f940ff94fb34840294fc2cbfe20a48ded1e",
+  "source_sha": "a4b8d842167a804341c45bc40794cb8761c8872d",
   "date_local": "2026-11-11",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "result": "PASS",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "prior": {
     "source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
@@ -27,5 +27,26 @@
     "Windows Linux4 shared native first/reverse under 200ms",
     "full 600s and 30% cases"
   ],
-  "status": "NOT_RUN"
+  "status": "PASS_SCOPED_WINDOWS_KERNEL_OWNER_EVENTS_NOT_PRODUCT_TWO_CLIENTS",
+  "qualified_scope": "PASS_SCOPED_REAL_WINDOWS2025_KERNEL_NAMED_EVENT_ACCOUNT_OWNER_SLOTS_ONLY",
+  "result_classification": "PASS_SCOPED_NOT_TWO_SIGNED_TLS_WINTUN_APPLICATIONS",
+  "action_id": 42960901908,
+  "job_id": 130326931191,
+  "artifact_id": 13829740132,
+  "original_donor_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "reviewed_product_logs": {
+    "original_windows_file_pin": "ALREADY_ASSEMBLED_IDENTICAL",
+    "test1": "TestPLAN028H1381RealWindowsTwoOriginalNativeDeviceSlots PASS",
+    "test2": "TestPLAN010OwnerSlotIsActuallyExclusive PASS",
+    "windows_actual_named_events": [
+      "WBDWLCLIENTA 10.66.0.2/32",
+      "WBDWLCLIENTB 10.66.0.3/32"
+    ],
+    "cross_user_alias_reject": true,
+    "duplicate_device_reject": true,
+    "wrong_WAL_reject": true,
+    "legacy_singleton_reject": true,
+    "original_Windows_TLS443_two_devices": "NOT_RUN",
+    "signed_two_Wintun_real_apps": "NOT_RUN"
+  }
 }
