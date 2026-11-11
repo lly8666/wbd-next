@@ -234,7 +234,13 @@ s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45941));s.settimeout(.125)
 print("H1565_REAL_LINUX_TUN_ECHO_BOUND",flush=True)
 server_log=pathlib.Path(sys.argv[1]);seed=sys.argv[2]=="1"
-end=time.monotonic()+150
+# A 150s full app phase begins only AFTER original Windows+Linux startup,
+# per-association TLS, initial socket echoes and authenticated Bob reverse.
+# The helper must remain live through the independent Windows Stop/Bob
+# survival hard gate; it is still a bounded test-only OS UDP application.
+echo_lifetime=int(sys.argv[3])
+assert 150<=echo_lifetime<=480
+end=time.monotonic()+echo_lifetime
 cold_count=0;next_cold=time.monotonic()
 while time.monotonic()<end:
  now=time.monotonic()
@@ -310,7 +316,8 @@ s.close()
             report["h1565_probe_stage"]="real_echo_server"
             echo=spawn("h1565-server-echo",["wsl.exe","-d","Ubuntu","-u","root",
                 "--","python3","-u","-c",server_echo_py,
-                guest_root+"/h1548-server.log","1" if cold_seed else "0"])
+                guest_root+"/h1548-server.log","1" if cold_seed else "0",
+                "480" if l1_150 else "150"])
             marker(OUT/"h1565-server-echo.log","H1565_REAL_LINUX_TUN_ECHO_BOUND",echo,25)
         # Windows protected TCP443 must be impaired before the original SYN.
         netem("arm",loss);owns_win_netem=True
@@ -622,14 +629,23 @@ s.close()
                 report["h1574_capacity_status"]="PASS_WITHIN_HOST_BUDGET_NO_30S_FULL_CPU_RAM"
                 report["h1574_150s_stage"]="verified_five_UDP_TCP_business_before_owned_Stop"
                 print("H1574_TRUE_FIVE_NATIVE_150S_UDP_TCP_CLIENTS_VERIFIED_PASS",flush=True)
+                report["h1575_real_kernel_echo_alive_after_150s"]=echo.poll() is None
+                need(report["h1575_real_kernel_echo_alive_after_150s"],
+                     "H1575 real kernel echo service exited before Alice owned Stop")
             stopwin(window)
             marker(OUT/"h1548-windows-alice.log",
                    "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",window,40)
             need(all(owners["h1548-linux-"+who].poll() is None for who in names[1:]),
                  "H1565 Alice native Stop stopped surviving Linux sibling")
+            if l1_150:
+                report["h1575_real_kernel_echo_alive_post_windows_stop"]=echo.poll() is None
+                need(report["h1575_real_kernel_echo_alive_post_windows_stop"],
+                     "H1575 test UDP echo owner exited before Bob post-Alice Stop probe")
             survive=spawn_real_echo_client("bob_survives_alice",auto_os_ips["bob"],4,NS4[0])
             require_real_echo("bob_survives_alice",survive,4)
             report["h1565_bob_after_win_owned_stop_real_udp"]=4
+            if l1_150:
+                report["h1575_bob_post_Alice_stop_on_real_live_echo"]="PASS_4_REAL_OS_UDP"
             for who in names[1:]:linux_kill(OUT/("h1548-"+who+".pid"))
             for who in names[1:]:
                 # Game's real original Rust group Stop has its own marker,

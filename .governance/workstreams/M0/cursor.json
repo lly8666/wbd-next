@@ -4,20 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1574,
-  "checkpoint_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
+  "sequence": 1575,
+  "checkpoint_sha": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1574-PER-SYN-WIN5-REAL-UDP-PASS-AND-150S-TCPUDP-OWNER-STOP",
-  "current_task": "Collected H1573 sourcefa1d original Windows2025+4 Linux/WSL2 TLS443 Action42971568281: actual postauth Windows SYN persona1 and Linux Normal/Game persona0; Windows pre4, Bob Auto 24 server->client +4 real client echo, five true concurrent UDP40, Bob4 after Windows Stop, total52 app echoes and 24 one-way genuine kernel; all four Linux Normal/Game actual client Stops and shared reader join, Windows WAL Stop, WSL+netem restoration. Original Action FAIL solely fixture expected Normal Stop text for Game2 though Rust correctly emitted Game2/4 native Stop; preserve as original FAIL, separate H1574 reviewed business PASS_SCOPED. Server final shared TUN Stop NOT_VERIFIED because harness aborted. H1574 harness fixes Game Stop variant and adds ONE 150s 5-device native UDP 256/1120+TCP bidirectional workload at 6/6/3/3/6Mbps each way, dynamic OS IPs, VM budget and max-gap, full owned Stop. New SOURCE 150s NOT_RUN.",
-  "why_now": "User wants real substantive pass despite cosmetic report failures. H1573 demonstrated actual formerly failing Bob Auto uplink and five clients. Need controlled step-up to sustained TCP/UDP and server exact owned Stop; not repeat short UDP-only seed.",
+  "task_id": "PLAN028-M0-H1575-REAL-150S-FIVE-CLIENT-EXPIRED-TEST-UDP-SERVER-STOP",
+  "current_task": "Collected SOURCE d447 Action42974796792: five genuine Windows2025 Npcap/Wintun plus Linux4 original TLS/M4 all real 150s UDP256/1120+framed TCP each way app 150s PASS and 98pct/maxgap<3s/tcp>=60, real kernel outer ~75Mbps each direction (~150 total), Windows CPU peak80.3% RAM >=10.6GiB. Original Action FAIL only Bob after Windows Stop live UDP timed out, because H1565 test UDP echo owner started before setup with fixed +150s deadline, necessarily terminated by end of 150s workload. H1575 extends bounded test-only echo to 480s for 150s, asserts alive before/after Windows Stop; no product code/threshold changes, 150s full lifecycle must still be requalified exact-source. Historic failure retained.",
+  "why_now": "Close one clear test-fixture lifecycle blocker without inventing product defect. Need real Bob post-Alice Stop and full Linux Game/Normal + server owner Stop proof after 150s actual load; 150s app success independently recorded.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect automatically triggered H1574 Windows2025/WSL2 150s native Action; verify actual all-five 150s UDP+TCP real delivery, 3s max gap, source hash, CPU/RAM, Bob after Windows Stop, Linux Game and server exact owned Stop. Original H1573 FAIL preserved with qualified real business PASS. Continue capacity calibration and 600s/30pct once L1 qualifies.",
+  "next_action": "Collect auto SOURCE H1575 one Windows2025/WSL2 0loss200ms full five 150s actual UDP/TCP and Bob4 after Windows Stop/live echo, four original owned Stop and one server reader Stop. Exact same-Go/Rust protocol; no duplicate loss30/full600 seed. Upon PASS qualify L1 scope, then L2 capacity scale and 600s representative weak network with source freeze; retain capacity boundary, no false global completion.",
   "unverified": true,
-  "last_tested_source": "fa1d938761a79ed88d4233d872c259932920bc2b",
+  "last_tested_source": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1573-MIXED-SESSION-ORIGINAL-SYN-PERSONA-20261111.json",
-    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-PER-ASSOC-UDP-REAL-PASS-20261111.json",
-    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-150S-TCPUDP-REAL-NATIVE-NOTRUN-20261111.json"
+    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-150S-TCPUDP-REAL-NATIVE-NOTRUN-20261111.json",
+    "docs/evidence/M0/PLAN028-H1575-WIN-150S-ECHO-LIFETIME-STOP-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -30,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1574 H1573 original fa1d Action failed only wrong Game2 Stop marker after real Win1+4Linux per-SYN persona, Bob Auto up4/down24, concurrent five UDP40, Bob after Windows Stop4; all Linux client Stops true. Verified real functional PASS_SCOPED; server exact Stop not tested; H1574 new 150s five OS bidirectional UDP/TCP/Stop NOT_RUN. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1575 only fixture repair pending: SOURCE d447 H1574 genuine five 150s native UDP+TCP and 150Mbps outer PASSED business, original action FAIL from expired test echo before Bob post-WinStop. New fixture bounded 480s echo+liveness witnesses, must actually trigger Bob4 and all six owner Stop; PLAN028 IN_PROGRESS."
 }

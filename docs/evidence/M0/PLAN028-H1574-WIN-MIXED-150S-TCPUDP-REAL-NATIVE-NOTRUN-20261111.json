@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1574",
   "date_local": "2026-11-11",
-  "source_sha": "fa1d938761a79ed88d4233d872c259932920bc2b",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "task": "Actual Win1+Linux4 five native clients 150 seconds bidirectional UDP 256/1120B plus framed TCP and exact owned Stops",
   "trigger": "[plan028-h1574-win5-native-150s]",
@@ -50,5 +50,29 @@
     "full_600s_two_directions_250_300_Mbps": "NOT_RUN",
     "loss30": "NOT_RUN",
     "L3_soak": "NOT_RUN"
-  }
+  },
+  "original_action_id": 42974796792,
+  "original_job_id": 130373058512,
+  "original_artifact_id": 13836015389,
+  "classification": "ORIGINAL_JOB_FAIL_AFTER_SUCCESSFUL_150S_APP_DUE_EXPIRED_TEST_ECHO",
+  "actual_scope": {
+    "Windows2025_Npcap_Wintun_plus_four_original_Linux_WSL2_clients": "PASS",
+    "five_OS_original_TLS_Rust_M4_personas": "PASS",
+    "five_unique_real_udp_senders_and_framed_TCP_each_way_150s": "PASS",
+    "two_direction_actual_kernel_sample_mbps_range": "~58-76 Mbps each direction",
+    "stable_total_outer_both_mbps": "~150 Mbps",
+    "max_windows_host_busy_pct_observed": 80.3,
+    "available_memory_min_GiB_observed": 10.618,
+    "capacity_in_host_budget": "PASS_NO_30S_FULL_CPU_OR_LOWMEM",
+    "app_quality_gates": "PASS 98pct UDP >=60 TCP frames <3s per-client max-gap all asserted by source",
+    "windows_Alice_Stop": "PASS",
+    "Bob_after_Windows_Stop": "FAIL_TEST_ECHO_LIFETIME_EXPIRED_AT_POST_150S",
+    "all_linux_owners_Stop": "NOT_RUN_AT_THIS_SOURCE",
+    "server_exact_shared_tun_Stop": "NOT_RUN_AT_THIS_SOURCE",
+    "full_600s_l2_l3": "NOT_RUN",
+    "loss30": "NOT_RUN"
+  },
+  "first_fault": "fixture server_echo_py used end=time.monotonic()+150 starting before original TLS, Bob and 150s workload. Successful real 150s app completes only after that deadline; post-Stop echo had no listening server, Bob UDP timed out. This is an actual post-Stop test defect, not evidence of production Bob route loss.",
+  "preserve": "Original Action remains FAIL, individual business PASS_scoped; do not relabel whole lifecycle PASS",
+  "fix": "H1575 fixture-only extend echo app bounded lifetime to 480s for the 150s path, verify actual OS process alive after sustained traffic and after Alice Stop before Bob live-UDP proof. Existing 150s source workload thresholds and device inputs unchanged."
 }

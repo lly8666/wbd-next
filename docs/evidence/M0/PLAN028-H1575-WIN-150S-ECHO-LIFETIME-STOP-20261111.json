@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1575",
+  "date_local": "2026-11-11",
+  "source_sha": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "preceding_action": 42974796792,
+  "original_first_fault": "150s real UDP+TCP five-client business PASS, test UDP echo service deadline expired before Bob survives Alice Stop; original Action failed post-business",
+  "repair": "Only H1574 test echo lifetime: bounded 480s for 150s application, original <=150s on cheap first-fault probes; new positive liveness checks before/after Windows Stop and real Bob4 UDP, original server all6 Stop hard gates still required",
+  "product_changes": "NONE",
+  "source_locked_network": "One actual Windows2025+Linux4 original TLS443/Rust M4 and five 150s real UDP/TCP under 200ms loss0; automatic build matrix must qualify exact SOURCE",
+  "requirements": {
+    "five_client_150s_bidirectional_udp_tcp": "NOT_RUN_ON_NEW_SOURCE",
+    "kernel_both_direction_10s_sample": "NOT_RUN_ON_NEW_SOURCE",
+    "Bob_after_Windows_Stop_4_udp": "NOT_RUN",
+    "four_Linux_owned_Stop": "NOT_RUN",
+    "server_shared_tun_Stop": "NOT_RUN",
+    "physical_WSL_Npcap_WAL_restored": "NOT_RUN",
+    "capacity_250_300_mbps_600s": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "L3": "NOT_RUN",
+    "Android": "NOT_RUN",
+    "physical_WAN": "NOT_RUN"
+  }
+}

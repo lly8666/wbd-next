@@ -65,6 +65,16 @@ class FiveOriginalNative150sScope(unittest.TestCase):
         self.assertIn("original_WSL_bridge_restored",h)
         self.assertIn("Windows_original_WAL_leftover",h)
         self.assertIn('netem("clean",loss)',h)
+        self.assertIn('echo_lifetime=int(sys.argv[3])',h)
+        self.assertIn('assert 150<=echo_lifetime<=480',h)
+        self.assertIn('"480" if l1_150 else "150"',h)
+        self.assertIn('"h1575_real_kernel_echo_alive_after_150s"',h)
+        self.assertIn('"h1575_real_kernel_echo_alive_post_windows_stop"',h)
+        self.assertIn('"h1575_bob_post_Alice_stop_on_real_live_echo"',h)
+        self.assertLess(h.index('H1574_TRUE_FIVE_NATIVE_150S_UDP_TCP_CLIENTS_VERIFIED_PASS'),
+                        h.index('h1575_real_kernel_echo_alive_after_150s'))
+        self.assertLess(h.index('h1575_real_kernel_echo_alive_post_windows_stop'),
+                        h.index('bob_survives_alice'))
 
 
 if __name__=="__main__":
