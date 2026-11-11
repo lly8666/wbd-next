@@ -1131,17 +1131,26 @@ func runGameMultiServer(
                 // not a second listener or Go DATA path.
                 key,e:=lane.NormalOwnerKey()
                 if e!=nil{rejectLane(lane);continue}
+                // Mixed one443 has Windows AND Linux original SYN styles.
+                // Never apply one process-global NPF persona to every
+                // independently authenticated Normal native Rust owner.
+                actualPersona,personaKnown:=originalV4ColdAssocPeerPersona(
+                    lane.Association(),c.peerPersona)
                 normalCfg:=realityfront.V4LinuxServerProductConfig{
                     Epochs:epochs,NetworkInterface:c.rawInterface,
                     NetworkIfIndex:ifindex,Tun:tun.f,TunName:c.tunName,
                     SharedTun:shared,CleanupOwnedNetwork:func()error{return nil},
                     PerClientNormalFEC:true,FECMode:realityfront.FecV2Off,
                     FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
-                    PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
+                    PeerPersona:actualPersona,Authenticate:originalV4CredentialCheck(c),
                 }
                 product,e:=realityfront.NewV4LinuxServerProduct(normalCfg)
                 if e!=nil{rejectLane(lane);continue}
                 session,e:=product.AdoptAuthenticatedNormalLane(lane)
+                if e==nil{
+                    log.Printf("V4_PUBLIC_MIXED_NORMAL_PEER_PERSONA role=server client_port=%d selected=%d cold_syn_known=%t authenticated_TLS=1 original_Rust_M4=1",
+                        lane.Association().Flow().ClientPort,actualPersona,personaKnown)
+                }
                 if e!=nil{
                     _=product.Close()
                     rejectLane(lane)
@@ -1345,6 +1354,31 @@ func runGameMultiServer(
             if len(complete)==0{continue}
             gameCfg:=cfg
             if c.mixedModes {
+                // A Game cohort is one authenticated logical device, but
+                // each original lane SYN is independently observed. Select
+                // one peer persona from known real SYN option layouts and
+                // refuse a mixed-layout cohort instead of corrupting a
+                // healthy sibling's Rust reader.
+                selectedPersona:=c.peerPersona
+                personaKnown:=false
+                personaConflict:=false
+                for _,member:=range complete{
+                    peer,known:=originalV4ColdAssocPeerPersona(
+                        member.Association(),selectedPersona)
+                    if !known{continue}
+                    if personaKnown&&peer!=selectedPersona{
+                        personaConflict=true;break
+                    }
+                    selectedPersona=peer;personaKnown=true
+                }
+                if personaConflict{
+                    for _,member:=range complete{rejectLane(member)}
+                    log.Printf("V4_PUBLIC_MIXED_ADMISSION_REJECT stage=game_cohort_peer_persona")
+                    continue
+                }
+                gameCfg.PeerPersona=selectedPersona
+                log.Printf("V4_PUBLIC_GAME_MULTI_PEER_PERSONA role=server lanes=%d selected=%d cold_syn_known=%t authenticated_TLS=1 cohort=original_game",
+                    key.Lanes,selectedPersona,personaKnown)
                 // All lanes in this cohort must agree on the independently
                 // protected Game fixed profile; no process-level FEC guess.
                 var selected uint8

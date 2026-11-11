@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1573",
+  "date_local": "2026-11-11",
+  "source_sha": "bbc4ca6525abf7f0b556475755d71222b2183db1",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "task": "Correct per-original-association TCP persona in authenticated Normal/Game one443 shared owner; qualify Windows1+Linux4 real UDP first delivery",
+  "prior_original": {
+    "h1571": {
+      "action": 42964335744,
+      "artifact": 13830549060,
+      "mode": "Bob_FEC_Auto",
+      "s2c_Bob24": "PASS",
+      "c2s_Bob": "FAIL",
+      "shared_tun_routed": 1,
+      "M4_FEC_source": 1
+    },
+    "h1572": {
+      "action": 42968297190,
+      "artifact": 13833215617,
+      "mode": "Bob_Normal_off_auto_IP",
+      "Windows_pre_first4": "PASS",
+      "Bob_s2c_UDP24": "PASS",
+      "Bob_kernel_route": "10.66.0.1 via original wbd48b",
+      "Bob_kernel_TUN_TX": "one real 68B",
+      "Bob_Rust_staged_UDP": 1,
+      "Bob_M4_first_wire_bytes": 139,
+      "Bob_c2s_first_echo": "FAIL",
+      "all_cleanup": "PASS",
+      "five_real_40": "NOT_RUN",
+      "full_600s": "NOT_RUN"
+    }
+  },
+  "root_cause_candidate": "Mixed Normal/Game server v4productcli/game_linux.go used c.peerPersona (one process-wide Windows11) for authenticated Linux Normal and Game cohorts. Mature shared Normal server uses per-association PeerTCPProfile detected from original SYN options. Native causal qualification pending.",
+  "fix": "Reuse existing original-Go association PeerTCPProfile SYN persona only AFTER authenticated TLS lane. Factor pure cold helper with explicit fallback if unknown. Apply to shared Normal per lane and Game2/4 cohorts with identical-known-persona safety, reuse original Rust M4, no wire changes or Go steady packet pump. Add Go exact SYN-byte unit; source manifest includes test. Real job must show Windows selected1/Linux selected0 from known original SYN, then Bob Auto 24 downlink +4 uplink, five40 and all exact Stop.",
+  "source_lock": {
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "source_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "platform": "Windows2025 genuine Npcap/Wintun and Linux WSL2 native 4 tenants same TLS443",
+    "outer_ipv4_mtu_default": 1460,
+    "latency_each_direction_ms": 200,
+    "loss_pct": 0
+  },
+  "scope": {
+    "Go_per_assoc_Syn_Unit": "NOT_RUN",
+    "Native_persona_real_trigger": "NOT_RUN",
+    "Windows_4_UDP": "NOT_RUN",
+    "Bob_24_s2c_udp": "NOT_RUN",
+    "Bob_4_c2s_udp": "NOT_RUN",
+    "five_clients_40_udp": "NOT_RUN",
+    "Bob_postWindowsStop_4": "NOT_RUN",
+    "all_owned_Stop": "NOT_RUN",
+    "full_600s": "NOT_RUN",
+    "loss30": "NOT_RUN",
+    "capacity": "NOT_RUN",
+    "physical_WAN": "NOT_RUN",
+    "Android": "NOT_RUN"
+  },
+  "original_failures_preserved": [
+    42964335744,
+    42968297190,
+    42942358907
+  ]
+}

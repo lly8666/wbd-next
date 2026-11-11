@@ -1076,7 +1076,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "bd669e1ce56718927f69e37adeca8f1fa16a2338"
+      "result_blob": "6bc76d5ccc58ac0022bfcdc48054527b2bea88a2"
     },
     {
       "kind": "replace",
@@ -1157,13 +1157,19 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "9095d3075037cef54e7816a68a78a398ca0181a7"
+      "result_blob": "4935a31ba4f98ee136f7a56f9d61ff597375764b"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/manual_lease_map_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/manual_lease_map_linux_test.go",
       "result_blob": "c29ed0fc5cc7ca8cab3183415d28c89eeaff5a30"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/mixed_peer_persona_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/mixed_peer_persona_linux_test.go",
+      "result_blob": "8d43a15a97f9085d4496e1ecf5b8019d9203962a"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

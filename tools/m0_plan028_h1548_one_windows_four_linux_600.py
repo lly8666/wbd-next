@@ -147,6 +147,9 @@ def main():
     bob_probe=os.environ.get("WBD_PLAN028_BOB_FIRST_GENUINE_NATIVE_UDP")=="1"
     bob_listener=os.environ.get("WBD_PLAN028_BOB_REAL_KERNEL_SOCKET")=="1"
     bob_normal=os.environ.get("WBD_PLAN028_BOB_NORMAL_DIFFERENTIAL")=="1"
+    mixed_persona=os.environ.get("WBD_PLAN028_MIXED_ASSOC_PERSONA_TEST")=="1"
+    need(not mixed_persona or (probe and cold_seed and bob_probe and bob_listener and not bob_normal and a.scene=="loss0"),
+         "H1573 only true original mixed Windows/Linux association persona repair probe")
     need(not bob_normal or (probe and cold_seed and bob_probe and bob_listener and a.scene=="loss0"),
          "H1572 only Normal-vs-Auto after Bob actual authenticated OS UDP RX")
     need(not bob_listener or bob_probe,"H1571 Bob genuine socket may only listen in authenticated Bob-first native probe")
@@ -182,6 +185,7 @@ def main():
        "h1570_bob_auto_native_first_udp":bob_probe,
        "h1571_bob_real_kernel_udp_receiver":bob_listener,
        "h1572_bob_mode_differential":"normal_off" if bob_normal else "unchanged_fec_auto",
+       "h1573_original_mixed_per_association_persona":mixed_persona,
        "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
@@ -398,6 +402,23 @@ s.close()
             # capacity/soak is expressly NOT_RUN by this short first-fault.
             report["h1565_probe_stage"]="five_original_native_ready_real_udp"
             report["h1565_auto_os_tun_ips"]=dict(auto_os_ips)
+            if mixed_persona:
+                # This is evidence of the actual authenticated mixed Game
+                # branch, not a standalone Normal-only server path. Windows
+                # and Linux associations must each select their true SYN
+                # presentation before the native owner claims readiness.
+                log=(OUT/"h1548-server.log").read_text(errors="replace")
+                required=(
+                    "V4_PUBLIC_MIXED_NORMAL_PEER_PERSONA role=server client_port=41031 selected=1 cold_syn_known=true",
+                    "V4_PUBLIC_MIXED_NORMAL_PEER_PERSONA role=server client_port=43031 selected=0 cold_syn_known=true",
+                    "V4_PUBLIC_GAME_MULTI_PEER_PERSONA role=server lanes=2 selected=0 cold_syn_known=true",
+                    "V4_PUBLIC_GAME_MULTI_PEER_PERSONA role=server lanes=4 selected=0 cold_syn_known=true",
+                )
+                need(all(k in log for k in required),
+                     "H1573 per-original-association native mixed Windows/Linux persona not actually triggered "+
+                     repr([k for k in required if k not in log]))
+                report["h1573_original_persona_M4_triggered"]=True
+                print("H1573_ORIGINAL_MIXED_WIN_PERSONA1_LINUX_PERSONA0_TLS_RUST_M4_TRIGGERED",flush=True)
             if bob_normal:
                 bob_log=(OUT/"h1548-linux-bob.log").read_text(errors="replace")
                 need("V4_PUBLIC_GO_RX_HANDOFF role=client mode=off " in bob_log,

@@ -4,19 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1572,
-  "checkpoint_sha": "952fa6e5d295173a66c326bff83ce1fa9b3a162e",
+  "sequence": 1573,
+  "checkpoint_sha": "bbc4ca6525abf7f0b556475755d71222b2183db1",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1572-BOB-AUTO-IP-NORMAL-VS-FEC-AUTO-UPLINK-DIFFERENTIAL",
-  "current_task": "Collected last SOURCE952fa H1571 Win1+Linux4 Action42964335744 FAIL: Windows original native TLS/Rust/Wintun app4 PASS, Bob autoIP10.66.0.139 real protected 24 server->client authentic FEC sysUDP/TUN and OS UDP listener24 PASS, but Bob first client->server echo TIMEOUT, no server Bob app packet. Original shared-TUN reader routed1 and FEC TX accepted1 (k1) first wire bytes302: prior dedicated per-FD TX_CHAIN/read_ipv4=0 cannot prove absent TUN ingress; correction recorded. H1572 only test-conditional Bob mode original Normal/off instead of FEC Auto, retain authenticated dynamic IP and remaining peers; actual OS route+TUN counters captured before/after, 4 Bob UDP first then 40 all peers and owned Stop conditional. New SOURCE/Windows actual NOT_RUN.",
-  "why_now": "Two prior Win1+Linux4 H1570/H1571 genuine Auto Bob app TX failure despite server->Bob validated; mode differential is cheaper discriminating hypothesis than rewriting FEC or repeating 600s loss0/loss30. Shared-TUN counts establish Bob outbound packet entered original Rust source owner; Auto uplink vs common outer/data delivery remains OPEN.",
+  "task_id": "PLAN028-M0-H1573-SHARED-MIXED-WIN-LINUX-PER-ASSOC-ORIGINAL-SYN-PERSONA",
+  "current_task": "Collected H1572 SOURCEbbc4 Action42968297190 real Windows+Linux4 FAIL: original Windows 4 UDP and Bob server->client OS UDP24 PASS; Bob explicitly Normal/off + autoIP10.66.0.215, route via native wbd48b, kernel TUN TX1/68B, Rust M1 staged_udp1 M4 first wire139B, Bob c2s first business echo FAIL. Refutes FEC Auto-only hypothesis. Shared Normal server selects persona per genuine association SYN; combined Normal/Game shared server passed process-global c.peerPersona Windows11 to all Rust owners including Linux. H1573 applies mature post-TLS cold selection for shared Normal and Game cohorts; adds genuine SYN Go test, manifest and one strict native Windows2025/WSL2 loss0 200ms scenario requiring persona trigger, Bob original FEC Auto c2s, 5 UDP and Stop. New source and network NOT_RUN.",
+  "why_now": "Both genuine H1571 Auto and H1572 Normal fail Bob c2s despite authenticated downlink and actual kernel route/Rust M4 outgoing, excluding Auto-specific encoder. Concrete mixed server per-peer original SYN persona gap proven by comparison with mature Normal shared server; minimal cold owner correction before more tests.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect H1572 one auto-trigger Windows2025/WSL2 original Action after build. Check Bob mode truly Normal/off and route via kernel wbd48b. If Bob4 echo and full5 passes, retain scoped Normal PASS but Auto c2s specific FAIL; minimally inspect Auto M4 record/source receiver. If Normal also fails, use real source-kernel counters plus receiver/outer controls to isolate shared Linux ingress. Keep H1571 FAIL, H1563 Linux x86 true manual+auto PASS and 600s NOT_RUN. Do not dispatch legacy seeds.",
+  "next_action": "Collect auto H1573 exact-source Go unit, assembly and single Windows2025/WSL2 genuine loss0 200ms Action. Verify Windows41031 selected1 and Linux Bob43031/Game2+Game4 selected0 from known original SYN and actual M4, Bob24 downlink and Bob4 uplink, five40 and Stops. If markers not triggered, NOT_TRIGGERED. If still fails inspect server RX/tuple/AEAD source without blind repeat; full 600s,30% OPEN.",
   "unverified": true,
-  "last_tested_source": "952fa6e5d295173a66c326bff83ce1fa9b3a162e",
+  "last_tested_source": "bbc4ca6525abf7f0b556475755d71222b2183db1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1571-WIN1-LINUX4-BOB-REAL-OS-UDP-RECEIVER-20261111.json",
-    "docs/evidence/M0/PLAN028-H1572-BOB-NORMAL-VS-FEC-AUTO-TRUE-NATIVE-20261111.json"
+    "docs/evidence/M0/PLAN028-H1572-BOB-NORMAL-VS-FEC-AUTO-TRUE-NATIVE-20261111.json",
+    "docs/evidence/M0/PLAN028-H1573-MIXED-SESSION-ORIGINAL-SYN-PERSONA-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -29,5 +29,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1572 source candidate NOT_RUN: H1571 true Windows first+Bob24 s2c delivered, Bob first c2s Auto FEC timeout. Correction: shared-TUN routed1/FEC src1 means not missing TUN packet. One genuine source-locked Windows normal/off Bob control with auto-IP, unchanged Game siblings, OS route and counters; no product rewrite and no full 600s; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1573 candidate NOT_RUN: H1572 Bob Normal also failed upstream though TUN/M4 sends proven; shared mixed server per-original-association persona fix with exact original-SYN Go test and genuine Windows+Linux4 0loss200ms Action pending. PLAN028 IN_PROGRESS."
 }

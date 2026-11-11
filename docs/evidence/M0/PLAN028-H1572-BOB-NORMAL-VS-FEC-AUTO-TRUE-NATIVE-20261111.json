@@ -3,9 +3,9 @@
   "plan": "PLAN028",
   "checkpoint": "H1572",
   "date_local": "2026-11-11",
-  "source_sha": "952fa6e5d295173a66c326bff83ce1fa9b3a162e",
-  "result": "NOT_RUN",
-  "artifact_verified": false,
+  "source_sha": "bbc4ca6525abf7f0b556475755d71222b2183db1",
+  "result": "FAIL",
+  "artifact_verified": true,
   "plan_status": "IN_PROGRESS",
   "task": "Win1+Linux4 source-locked native short differential Bob Normal/off vs failing Auto/FEC uplink",
   "trigger": "[plan028-h1572-bob-normal-control]",
@@ -50,5 +50,35 @@
     "Android": "NOT_RUN",
     "physical_WAN": "NOT_RUN"
   },
-  "test_strategy": "One bounded genuine Windows2025 Action on fresh SOURCE; no loss30 or 600s, no Linux solved-scene retry. Preserve original failure, condition-only PASS cannot close FEC Auto issue."
+  "test_strategy": "One bounded genuine Windows2025 Action on fresh SOURCE; no loss30 or 600s, no Linux solved-scene retry. Preserve original failure, condition-only PASS cannot close FEC Auto issue.",
+  "original_action_id": 42968297190,
+  "original_job_id": 130352251499,
+  "original_artifact_id": 13833215617,
+  "classification": "FAIL_PROVED_BOB_NORMAL_C2S_FIRST_APPLICATION_ECHO_WITH_200MS",
+  "actual_trigger": {
+    "Windows_native_first_reverse": "PASS",
+    "Windows_real_UDP_echoes": 4,
+    "linux_four_original_tls_native": "PASS",
+    "bob_original_mode": "normal_off_actual_Go_Rust",
+    "bob_dynamic_auto_os_ip": "10.66.0.215/32",
+    "bob_real_downlink_socket_udp": 24,
+    "bob_kernel_route": "10.66.0.1 via wbd48b",
+    "bob_tun_kernel_tx_before": {
+      "packets": 0,
+      "bytes": 0
+    },
+    "bob_tun_kernel_tx_after": {
+      "packets": 1,
+      "bytes": 68
+    },
+    "bob_original_Rust_M1_staged_udp": 1,
+    "bob_actual_M4_first_send_bytes": 139,
+    "bob_real_OS_UDP_reply": "FAIL_TIMEOUT",
+    "server_first_Bob_app_receive": 0,
+    "auth_source_FEC_specific_only_hypothesis": "REFUTED",
+    "five_parallel_udp40": "NOT_RUN",
+    "full_600s": "NOT_RUN",
+    "network_owned_cleanup": "PASS"
+  },
+  "interpretation": "Shared Rust sender and real kernel route are working for Bob both Normal and Auto; failure lies in common post-M4 transmit / server actual RX and delivery, not solely FEC Auto or missing TUN ingress. Current mixed Normal/Game shared Go path applied process-global Windows11 peer persona to Linux original associations; H1573 per-original association correction is unverified."
 }

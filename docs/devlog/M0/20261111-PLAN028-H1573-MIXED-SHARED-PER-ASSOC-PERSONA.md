@@ -1,0 +1,11 @@
+# PLAN028 H1573 | Mixed TLS443 per-original-association peer persona
+
+[H1572 original Action42968297190](https://github.com/lly8666/wbd-next/actions/runs/42968297190), [artifact13833215617](https://github.com/lly8666/wbd-next/actions/runs/42968297190/artifacts/13833215617): Bob original Normal/off (not Auto FEC), actual auto IP 10.66.0.215, kernel route via wbd48b, TUN TX grew 0→1 packet/68B, Rust M1 staged one UDP and M4 copied first outer139B, but first Bob client→server real UDP echo still timed out. Windows signed original TLS/Rust/Wintun UDP4/4 and Bob real server→native Rust/TUN→kernel UDP24/24 PASS_SCOPED. Thus not FEC Auto-only, not no packet at TUN. Five simultaneous application UDP and full 600s NOT_RUN, Stop cleanup PASS; keep original Action FAIL.
+
+Actual code-chain difference: mature `runSharedMultiServer` resolves Windows/Linux original TCP SYN option order per cold association AFTER protected TLS; shared combined Normal/Game `runGameMultiServer` incorrectly passed one process-global Windows11 `c.peerPersona` to Linux native owner(s). Smallest cold wiring fix: factor the mature per-association SYN lookup with fallback for unknown, apply to authenticated Normal lane M4 and to Game2/4 cohort consistently, reject conflicting known persona within cohort only. No new TLS records, packet header, Go hot DATA, FEC/Auto rewrite. Update original Go/manifest, exact option-byte SYN positive/negative tests. H1573 source-locked Windows2025 Npcap/Wintun + four Linux netns on one TLS443 at physical 0loss/200ms each side, default full IPv4 outer MTU1460, with actual Windows persona1 / Linux Normal+Game persona0 trigger demanded. Only real Bob Auto 4 upstream UDP and five real native40 UDP and Bob4 after Windows owned Stop plus owned cleanup will qualify the new repair. If actual condition not observed, NOT_TRIGGERED even if ordinary path passes.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Original TLS association-specific Windows/Linux peer SYN persona at shared Normal/Game Rust M4 handoff; preserve original protocol and per-session isolation."}
+```
+
+Evidence [H1572](../evidence/M0/PLAN028-H1572-BOB-NORMAL-VS-FEC-AUTO-TRUE-NATIVE-20261111.json) and [H1573](../evidence/M0/PLAN028-H1573-MIXED-SESSION-ORIGINAL-SYN-PERSONA-20261111.json). PLAN028 IN_PROGRESS.

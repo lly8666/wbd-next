@@ -157,6 +157,22 @@ func defaultV4ServerLeasePool(tun netip.Prefix,statics map[string]string)(netip.
  return netip.Prefix{},fmt.Errorf("no disjoint automatic IPv4 pool within server TUN")
 }
 
+// This SYN presentation was observed by the original FakeTCP association,
+// not supplied by credentials. Use it ONLY after protected TLS authenticates
+// the lane; never turn an untrusted pre-TLS hint into account authority.
+// Shared Normal and Game owners must not all inherit the Windows CLI fallback.
+func originalV4ColdAssocPeerPersona(assoc *faketcp.ServerAssociation,
+ fallback realityfront.V4PublicNativePeerPersona,
+)(realityfront.V4PublicNativePeerPersona,bool){
+ if assoc==nil{return fallback,false}
+ profile:=assoc.PeerTCPProfile()
+ if !profile.OriginalSYNPersonaKnown{return fallback,false}
+ if profile.OriginalSYNPersona==faketcp.PacketPersonaWindows11{
+  return realityfront.V4PeerWindows11,true
+ }
+ return realityfront.V4PeerLegacy,true
+}
+
 func parse(role string,args []string)(config,error){
     var c config
     c.role=role
@@ -1723,15 +1739,7 @@ func runSharedMultiServer(
         // clients simultaneously. Keep the original wire persona on this
         // single cold association, never reuse a process-wide persona for
         // every Rust RX owner. Unknown SYN remains the explicit CLI default.
-        profile:=rec.assoc.PeerTCPProfile()
-        nativePersona:=c.peerPersona
-        if profile.OriginalSYNPersonaKnown{
-            if profile.OriginalSYNPersona==faketcp.PacketPersonaWindows11{
-                nativePersona=realityfront.V4PeerWindows11
-            }else{
-                nativePersona=realityfront.V4PeerLegacy
-            }
-        }
+        nativePersona,personaKnown:=originalV4ColdAssocPeerPersona(rec.assoc,c.peerPersona)
         cfg:=realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
@@ -1761,7 +1769,7 @@ func runSharedMultiServer(
             log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner")
             return
         }
-        log.Printf("V4_PUBLIC_MULTI_PEER_PERSONA role=server incoming=%d cold_syn_known=%t actual_original_TLS_Rust_M4=1",nativePersona,profile.OriginalSYNPersonaKnown)
+        log.Printf("V4_PUBLIC_MULTI_PEER_PERSONA role=server incoming=%d cold_syn_known=%t actual_original_TLS_Rust_M4=1",nativePersona,personaKnown)
         lease,err:=sess.AuthenticatedLeaseIPv4()
         if err!=nil||lease==""{
             _=p.Close()
