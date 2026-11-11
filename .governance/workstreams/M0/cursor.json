@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1582,
-  "checkpoint_sha": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
+  "sequence": 1583,
+  "checkpoint_sha": "3f82fad808e5ee5a76624c3d47a2c42701c5b62b",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1582-H1581-AUTO-AES-MIXED-REAL-FIXTURE-RECOVERY",
-  "current_task": "H1581 SOURCEca9b744e Action42992510288 WindowsGo/Rust+Linux assembly PASS but native networking NOT_RUN due MANAGEMENT_ROUTE_SCOPE_REFUSED before original TLS. H1582 now explicitly sets WBD_WL_PUBLIC_MODES normal, keeps scoped management owner guard intact; the true H1581 150s producer supports TLS-authenticated dynamic Alice auto /32 through explicit H1581-only --windows-auto-ip; old manual H1570/H1576 source tests repaired, and 600s hard test unchanged. Need next exact-source signed Windows network ACTION results, not yet PASS. PLAN028 IN_PROGRESS.",
-  "why_now": "H1581 runtime encountered test-only runner underlay scope guard and generator hardcoded former manual Alice IP; both must be fixed before any product AES256/AutoLease conclusion. No duplicate in-flight scenario as first Action completed FAIL.",
+  "task_id": "PLAN028-M0-H1583-WIN30-COLD-TLS-PARALLEL-DISTINCT-NATIVE-SCENE",
+  "current_task": "H1582 SOURCE3f82 signed Windows real auto /32 AES256 plus Linux 3 AEAD, 150s 0loss200ms original TLS/Rust/Wintun on Action42995018223 is in progress; preflight/WindowsGo-Rust/Linux compilation PASS, no real result yet. H1583 separately triggers exactly one 30pct physical loss/200ms true original Windows manual/ChaCha cold TLS/M4 OS/Stop first-fault in another Windows2025 Action, no 5-client data claim. H1582 governance maintenance regression found old H1574 source literal and H1581 evidence lacked source_sha top-level; queued accurate fix in this source. Product 028 still IN_PROGRESS.",
+  "why_now": "Independent cold TLS 30pct first fault remains real known blocker since SOURCE620; H1582 loss0 150s is already running on distinct Action/VM, so H1583 can run independent minimal 30pct auth/Stop without repeating existing source or broad stress. No 029/030.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD, seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "On next source with [plan028-h1581-win-auto-aes-mixed-150s] collect cheap/Windows compile, route guard, real Windows original TLS/Rust auto /32/cipher/OS, then five true native UDP/TCP150s and six-owner Stop. If first error occurs fix actual product/fixture with exact logs; don't repeat passed source or re-dispatch in-flight. Next Windows independent AES128/ChaCha/manual and true 30% cold TLS/L3 representative as resources allow. Still IN_PROGRESS.",
+  "next_action": "Collect live H1582 0loss 150s Action42995018223 and independent H1583 30pct cold Action; do not re-dispatch either while active. Inspect exact first TLS/OS/Stop stage and strict report. Require real output and per binary hashes. Later Windows manual AES128/ChaCha, same-account multiple installations, lifecycle, affected mode/MTU/idle, representative L3. Always keep original fails.",
   "unverified": true,
   "last_tested_source": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
   "evidence_refs": [
@@ -25,8 +25,9 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md",
-    "docs/devlog/M0/20261111-PLAN028-H1581-WINDOWS-AUTO-AES-MIXED-REAL-150S.md"
+    "docs/devlog/M0/20261111-PLAN028-H1581-WINDOWS-AUTO-AES-MIXED-REAL-150S.md",
+    "docs/devlog/M0/20261111-PLAN028-H1583-WIN30-COLD-TLS-INDEPENDENT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Original H1581 auto AES real signed Windows network NOT_RUN: SOURCEca9b Action42992510288 FAIL pre-TLS management-route scope (Windows/Linux builds passed). H1582 adds explicit normal mode + H1581-only real dynamic-IP app validation, fixes two stale governance guard cases. Existing SOURCE813 Linux x86/ARM manual/32 original true TLS/Rust PASS, H1577 cd5d Win+Linux4 150s true app+Stop PASS_SCOPED despite overall reporting FAIL; exact-source hard gates remain."
+  "partial_summary": "H1582 SOURCE3f82 preflight builds PASS and true H1581 Windows auto/AES256 0loss200ms signed network still in progress. H1583 separately arms original signed Windows2025 single cold TLS/M4 at real 30pct200ms; original 620 failure retained, original H1579 preflight failure did not network. H1582 static/feature governance errors due evidence source root and H1574 stale assertion fixed in H1583 source. PLAN028 IN_PROGRESS."
 }

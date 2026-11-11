@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1580",
+  "result": "PASS_SCOPED_BUILD_ARTIFACT_RECEIPT_NOT_ALL_NETWORK",
+  "source_sha": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "provenance": "Extracted exact JSON SHA256 fields from GitHub Actions archived manifests. These are CI-generated per-file hashes of built products. ZIP itself contains receipts rather than product binaries; independently rehashing the raw exe/so from ZIP was not possible.",
+  "entries": [
+    {
+      "platform": "linux/x86_64",
+      "action": 42987762119,
+      "artifact_id": 13840192768,
+      "artifact_zip_sha256": "fb36ebb74b02251afd152dc83e0945d3ff40ba83c2ec7f88e8cc4e11598ca5a9",
+      "artifact_manifest": "fixed-build/manifest.json",
+      "compiled_backend": "original Go 1.23.12 TLS443 + Rust 1.85.1 native M4 shared TUN",
+      "product_sha256": {
+        "wbd-v4-client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+        "wbd-v4-server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+        "libwbd_engine.so": "4516b999a4b7cc2882439383faf5e73e711cc4b1a6197257b3751e192bc2e679"
+      },
+      "genuine_scope": "H1376 true two authenticated manual accounts, 59 real Linux kernel UDP echoes, one Rust shared TUN and all owners Stop PASS_SCOPED; does not prove Windows"
+    },
+    {
+      "platform": "linux/aarch64 baseline",
+      "action": 42987762119,
+      "artifact_id": 13841305408,
+      "artifact_zip_sha256": "1aa746cc6b6a8d44d52437ce3cf9ea1e95a63f6f9c693074138766b98b2c108c",
+      "artifact_manifest": "fixed-build/manifest.json",
+      "compiled_backend": "original Go 1.23.12 TLS443 + Rust 1.85.1 native M4 baseline; ISA-L runtime dispatch not inferred",
+      "product_sha256": {
+        "wbd-v4-client": "4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f",
+        "wbd-v4-server": "a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890",
+        "libwbd_engine.so": "8e10f70a819e2d9f3f9aa45588ddcc91976b243d851c32d3bc63c663ea7c56e1"
+      },
+      "genuine_scope": "H1376 true two authenticated manual accounts, original shared Rust TUN and Stop PASS_SCOPED"
+    },
+    {
+      "platform": "linux/aarch64 ISA-L-capable build",
+      "action": 42987762189,
+      "artifact_id": 13840546506,
+      "artifact_zip_sha256": "38afc2fdd7c645e90e49305c802f90c480de3df5a89bc817c90d1c3444ea98a1",
+      "artifact_manifest": "arm64-public-bundle/manifest.json and arm64-public-bundle/SHA256SUMS",
+      "compiled_backend": "ISA-L c387163fcbca62701d646149564c550c78a4f985 static libisal.a built/linked for aarch64; Rust 1.85.1; Go 1.23.12 11-file exact overlay",
+      "product_sha256": {
+        "wbd-v4-client": "4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f",
+        "wbd-v4-server": "a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890",
+        "libwbd_engine.so": "ed53bfa10502fb3015b69150bf45e87926924a5d05b2985c0dcd48aa9bf71547"
+      },
+      "actual_isa_l_or_neon_runtime_dispatch": "NOT_RUN",
+      "genuine_scope": "BUILD_PASS_ONLY; not the same Rust .so as H1376 arm64 baseline"
+    },
+    {
+      "platform": "windows/x86_64 source locked compile",
+      "action": 42987762859,
+      "artifact_id": 13840073314,
+      "artifact_zip_sha256": "d83af2a7868ca4dbfe394d7ddbff8f2447e4186cf6fb62a1b19190c4f1e3d66d",
+      "artifact_manifest": "preflight.json and windows-npcap-ring-source.json",
+      "compiled_backend": "original Go Windows V4 + Rust DLL code compile PASS, real Npcap/Wintun OS product NOT_RUN by this build-only job",
+      "product_sha256": null,
+      "patched_source_sha256": {
+        "internal/faketcp/npcap.go": "ac3ac45ecd53c33df62a8042a97e13b2bbbeb7d06cd9ce7621a561d16c90a9ee",
+        "internal/faketcp/npcap_windows.go": "6a00772dd966bdfbb68620a283d634bf0423f7a22ec5ef587df3c6cf0a08f41c",
+        "internal/faketcp/npcap_native_handoff_windows.go": "88af07ef13ca9a458c8c88101901b6790d21e8e54c14a29dfc3ca3b6ad87364a"
+      },
+      "genuine_scope": "Compile-only; wait for H1582 native strict runtime report Windows exe/DLL/Wintun single-file hashes"
+    }
+  ],
+  "note": "Assembly receipts actual_product_engine=NOT_WIRED/physical=NOT_RUN describe that manifest application step only; the separate H1376 native end-to-end report and original Rust generation reader provide the limited runtime evidence. Do not promote assembly receipt to live ISA-L backend.",
+  "limitations": [
+    "No exact Windows .exe/DLL hash in compile-only artifact",
+    "No ISA-L arm64 runtime dispatch proof",
+    "No claim of new-source Windows auto/AES native business PASS",
+    "No cross-source binary requalification"
+  ]
+}

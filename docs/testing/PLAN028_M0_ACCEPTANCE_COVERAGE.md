@@ -56,3 +56,17 @@
 4. 冻结通过的新源码，复用旧 ARM64未改组件的30m结果，**只给认证/租约/Windows新路径补代表综合真实场景**。写完整源和每binary hash/backend、功能卡与devlog/状态；所有阻断关闭前不得把 PLAN028 改 Completed。
 
 **本页不改变任何硬门或既定产品默认。**历史失败记录应保留并按产品/夹具/宿主进行诊断，不把局部业务 PASS 写成整场 PASS。
+
+
+## H1582 构建产物校核补遗（不越界宣称）
+
+原始 Action 内 `fixed-build/manifest.json` 和 `arm64-public-bundle/{manifest.json,SHA256SUMS}` 经下载读取，逐文件 **SHA256是CI生成的实际build-output hash**，ZIP只带收据而未带原始二进制，故本地无法独立重算二进制本体。完整原始凭据留 [SOURCE813 per-binary evidence](../evidence/M0/PLAN028-H1580-SOURCE813-PRODUCT-BINARY-SHA256-20261111.json)。
+
+| 精确 SOURCE / 平台 / Action | Go client SHA256 | Go server SHA256 | Rust库 SHA256 | backend/限制 |
+|---|---|---|---|---|
+| `813e4c5c` Linux x86_64 `42987762119` | `7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1` | `9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71` | `4516b999a4b7cc2882439383faf5e73e711cc4b1a6197257b3751e192bc2e679` | Go1.23.12 TLS+Rust1.85.1 M4；两账号原生TUN业务/Stop已按H1376范围PASS |
+| `813e4c5c` Linux ARM64 H1376 `42987762119` | `4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f` | `a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890` | `8e10f70a819e2d9f3f9aa45588ddcc91976b243d851c32d3bc63c663ea7c56e1` | 基线 Rust 1.85.1 原生TUN业务/Stop H1376 PASS；不等同ISA-L版本 |
+| `813e4c5c` Linux ARM64 H1546 `42987762189` | `4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f` | `a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890` | `ed53bfa10502fb3015b69150bf45e87926924a5d05b2985c0dcd48aa9bf71547` | ISA-L aarch64 static链接、11源Go overlay完成，**运行时NEON分派未验**，此套只BUILD_PASS |
+| `813e4c5c` Windows x86_64 `42987762859` | `NOT_READ` | 不适用此client编译Job | `NOT_READ` | Windows-Go/Rust **compile PASS**，artifact未附可独立验证的exe/DLL SHA，待新H1582 signed-OS strict report |
+
+`assembly.json.actual_product_engine="NOT_WIRED"` 是通用 assembler 收据自己的阶段，不是H1376之后原始Go/Rust/TUN运行时后端判定；不能反向当全平台 product NOT_WIRED，也不能把H1546的静态ISA-L链入误当NEON实跑。H1581 SOURCE `ca9b744e` Action `42992510288` 首次仅成功编译，管理路由fail-closed后产品未跑；H1582 `3f82fad8` 的真业务、当前exe/DLL SHA仍应读它自己的原始报表，SOURCE813数字不得移植为新源码二进制。

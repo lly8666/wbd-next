@@ -43,5 +43,9 @@
     "600s",
     "Windows 30pct cold TLS",
     "L3 2x1800s"
-  ]
+  ],
+  "source_sha": "ca9b744e34a24cb2d7637ee7396a1806473fe3ee",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "why_source_sha": "This is the source of the first pre-TLS H1581 attempted Action, not a qualification of the H1582 fix or later network."
 }
