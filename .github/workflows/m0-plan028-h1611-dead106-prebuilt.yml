@@ -1,0 +1,11 @@
+name: PLAN028 H1611 independent Linux prebuilt original TLS Rust dead106
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1611-dead106-prebuilt.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  one-independent-real-native-scene:
+    uses: ./.github/workflows/m0-plan028-h1611-one-prebuilt-lifecycle.yml
+    with:
+      scene: dead106

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1610,
-  "checkpoint_sha": "0d68d8e2f597057a242d6af0a16dafb6231803a5",
+  "sequence": 1611,
+  "checkpoint_sha": "f25e31366ee0f39818ae059b662f3807590c21c5",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1610-BOUNDED-FEATURE-CARD-REPAIR",
-  "current_task": "H1609 source0d68 raw receipts for parallel prebuilt Linux Normal/Game4 SUCCESS. Governance43048031044 Feature catalog FAIL only: feature JSON card >16384 UTF8 bytes due H1609 pretty serialization, no product/test failure. H1610 compacts cards below max, keeps all prior verification arrays and evidence links and concise new H1609 verified record, removes duplicated new limit, clarifies old Windows SOURCE813 nearMTU NOT_RUN. Both source196d native actions43046531699/43046531950 and maintenance43046531614 SUCCESS. No new test.",
-  "why_now": "Retain historical artifacts but restore existing 16KiB feature-card hard gate; avoid re-running successful native tests.",
+  "task_id": "PLAN028-M0-H1611-REAL_NATIVE_REUSED_IDLE100_AND_DEAD106_PARALLEL",
+  "current_task": "H1610 Governance+catalog sourcef25e restored 16KiB card limits; H1611 prepares two independent parallel original native Linux x86 scenarios reusing unchanged H1600 Go/Rust ISA-L binaries source8a: FEC Auto explicit idle100 wake, dead106 100pct both underlay -> new real UDP and second original TLS, original owner Stop required (fix old temporary helper's early exit). No shipping code changes, no rebuild or Windows/multiWintun/nearMTU. H1608 two real Normal/Game4 path Actions already PASS_SCOPED exact artifacts and H1609 evidence committed. New H1611 Action results pending.",
+  "why_now": "Two independent missing lifecycle mechanisms benefit from current source compiled binary reuse and can be run parallel in separate Ubuntu hosts, rather than repeat old Win/WSL hosted broken scene.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1610 governance/catalog result; then audit remaining config/default/source and Windows idle/path/L3 constraints; user skipped nearMTU, no multiWintun.",
+  "next_action": "Collect two H1611 Actions, original raw log and proof of real 100s idle wake or 106s 100pct dead + new original TLS/M4 + exact owner Stop. If fixture/CI fail, record first error not product; no seed brushing; then update coverage and limited feature cards.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -26,7 +26,7 @@
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
     "docs/evidence/M0/PLAN028-H1607-SOURCEC3A-WIN-WSL-RST-CONTROL-TIMEOUT-NOTRUN-20261111.json",
     "docs/evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1609-COLLECT-PARALLEL-PREBUILT-PATHS.md"
+    "docs/devlog/M0/20261111-PLAN028-H1611-PARALLEL-REUSED-NATIVE-LIFECYCLE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

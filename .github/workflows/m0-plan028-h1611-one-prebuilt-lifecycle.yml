@@ -1,0 +1,151 @@
+name: PLAN028 H1611 one prebuilt Linux original Go TLS Rust FEC Auto lifecycle
+on:
+  workflow_call:
+    inputs:
+      scene: {type: string, required: true}
+permissions: {contents: read, actions: read}
+jobs:
+  one-real-native-lifecycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    env:
+      FROZEN_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      LIFE_SCENE: ${{ inputs.scene }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43027983611
+          name: m0-plan024-linux-product
+          github-token: ${{ github.token }}
+          path: linux-product/
+      - name: Prebuilt original Go Rust ISA-L and exact source/fixture no-change gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          test "$LIFE_SCENE" = idle100 -o "$LIFE_SCENE" = dead106
+          git fetch --quiet --depth=1 origin "$FROZEN_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$FROZEN_SOURCE"
+          delta="$(git diff --name-only "$FROZEN_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0-v4-public-real-linux-netns.sh)"
+          test -z "$delta" || { echo "H1611 refused changed product or native base fixture: $delta" >&2; exit 1; }
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path('linux-product')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['FROZEN_SOURCE']
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert m['rust_native_fec_acceleration'] is True
+          assert m['isa_l_source']=='c387163fcbca62701d646149564c550c78a4f985'
+          expect={
+            'wbd-v4-client':'7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1',
+            'wbd-v4-server':'9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71',
+            'libwbd_engine.so':'2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc'
+          }
+          for n,h in expect.items():
+            data=(p/n).read_bytes()
+            assert len(data)>100000 and data[:4]==b'\x7fELF' and struct.unpack_from('<H',data,18)[0]==62
+            assert hashlib.sha256(data).hexdigest()==m['sha256'][n]==h
+          print('H1611_VERIFIED_SAME_THREE_NATIVE_ISAL_BINARIES_SHA256_NO_COMPILE',flush=True)
+          PY
+          chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
+      - name: Adapt only current legacy source-locked native fixture for independent idle/dead probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h1611-result fixed-kernel-result
+          python3 - <<'PY'
+          import os,pathlib
+          base=pathlib.Path('tools/m0-v4-public-real-linux-netns.sh').read_text()
+          def once(old,new):
+            global base
+            assert base.count(old)==1,('H1611 native fixture drift',old[:75])
+            base=base.replace(old,new,1)
+          once('s.bind(("10.66.0.1",45901));s.settimeout(55 if os.environ.get("WBD_REAL_COUNT")=="10" else 28)',
+               's.bind(("10.66.0.1",45901));s.settimeout(28)')
+          once('env WBD_REAL_COUNT="$ECHO_PACKETS" python3 -u -c ',
+               'env WBD_REAL_COUNT="$PACKETS" python3 -u -c ')
+          compat=pathlib.Path('h1611-result/h1611-compat-source.sh')
+          compat.write_text(base)
+          print('H1611_EXACT_NATIVE_BASE_OLD_HELPER_ANCHORS_COMPAT_SOURCE_PASS',flush=True)
+          PY
+          if test "$LIFE_SCENE" = idle100;then
+            python3 tools/m0_plan026_linux_real_idle_keepalive.py h1611-result/h1611-compat-source.sh h1611-result/one-real-native.sh
+          else
+            python3 tools/m0_plan026_linux_real_reconnect_after_dead.py h1611-result/h1611-compat-source.sh h1611-result/one-real-native.sh
+            # Original PLAN026 helper returned early before Stop. Here it must
+            # resume the EXISTING trusted original native Stop and owner join.
+            python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path('h1611-result/one-real-native.sh')
+          s=p.read_text()
+          before="echo 'M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS old_processes_preserved=1'\nexit 0\n"
+          assert s.count(before)==1,'H1611 old early exit would skip original native owned Stop'
+          p.write_text(s.replace(before,before.replace('exit 0\n',''),1))
+          print('H1611_NATIVE_DEAD106_ORIGINAL_STOP_NOW_REQUIRED_NO_EARLY_EXIT',flush=True)
+          PY
+          fi
+          bash -n h1611-result/one-real-native.sh
+          echo H1611_ONLY_EPHEMERAL_FIXTURE_CHANGED_SHIPPING_PRODUCT_UNMODIFIED
+      - name: Real native netns prerequisites (environment gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=""
+          for x in ip tc iptables openssl;do command -v "$x" >/dev/null || missing="$missing $x";done
+          if test -n "$missing";then
+            echo "H1611_NATIVE_OS_PREREQUISITES_MISSING:$missing"
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          fi
+          sudo -n ip netns list >/dev/null
+          echo H1611_NATIVE_KERNEL_NETNS_REAL_PREREQUISITES_PASS
+      - name: One original TLS Rust real Health idle or dead new app, all original Stop
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          export WBD_V4_PUBLIC_MODE=fec-auto WBD_V4_PUBLIC_KERNEL_LOSS=0 WBD_V4_PUBLIC_AUTO_IP=0 WBD_V4_PUBLIC_PATH_SWITCH=0
+          timeout --signal=INT --kill-after=10s 365s bash h1611-result/one-real-native.sh linux-product             >h1611-result/h1611-native.log 2>&1 || {
+              tail -145 h1611-result/h1611-native.log >&2
+              echo H1611_ORIGINAL_NATIVE_OR_STOP_FAIL_SEE_RAW_LOG
+              exit 1
+            }
+          if test "$LIFE_SCENE" = idle100;then
+            grep -Fq M0_PLAN026_LINUX_REAL_TLS_RUST_HEALTH_IDLE_100S_KERNEL_APP_RESUME_PASS fixed-kernel-result/public-v4-normal-business.log
+          else
+            grep -Fq M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS h1611-result/h1611-native.log
+            grep -Fq M0_PLAN026_RECONNECT_NEW_REAL_APP_UDP_PASS fixed-kernel-result/reconnect-new-flow.log
+          fi
+          grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=fec-auto delivered=64' fixed-kernel-result/public-v4-normal-business.log
+          grep -Fq 'M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_CONFIG_READBACK_QUALITY_UNQUALIFIED' h1611-result/h1611-native.log
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          log=pathlib.Path('h1611-result/h1611-native.log')
+          obj={'schema_version':1,'plan':'PLAN028',
+            'result':'PASS_SCOPED_SINGLE_ORIGINAL_LINUX_GO_RUST_NATIVE_LIFECYCLE',
+            'source_sha':os.environ['GITHUB_SHA'],'product_source_sha':os.environ['FROZEN_SOURCE'],
+            'reused_native_build_run':43027983611,'native_action':int(os.environ['GITHUB_RUN_ID']),
+            'scenario':os.environ['LIFE_SCENE'],'mode':'Normal FEC Auto explicitly configured',
+            'initial_real_kernel_UDP':64,'post_event_true_kernel_UDP':1,
+            'real_original_go_tls_rust_m4':True,
+            'end_original_client_and_server_Stop':'ENFORCED_BY_UNMODIFIED_NATIVE_BASE',
+            'log_sha256':hashlib.sha256(log.read_bytes()).hexdigest(),
+            'not_measured':['Windows Wintun','near innerMTU boundary','L3','CPU AB']}
+          pathlib.Path('h1611-result/receipt.json').write_text(json.dumps(obj,indent=2)+'\n')
+          print('H1611_REAL_NATIVE_LIFECYCLE_PASS_SCOPED '+obj['scenario'],flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1611-${{ inputs.scene }}-${{ github.run_id }}
+          path: |
+            h1611-result/*.json
+            h1611-result/*.log
+            fixed-kernel-result/public-v4-normal-business.log
+            fixed-kernel-result/reconnect-new-flow.log
+          if-no-files-found: warn
+          retention-days: 21
