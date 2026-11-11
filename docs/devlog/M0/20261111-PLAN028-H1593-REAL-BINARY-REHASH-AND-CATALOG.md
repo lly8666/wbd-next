@@ -9,5 +9,7 @@ PLAN028 **IN_PROGRESS**。基于本源 `fd4732ec4adffa442a0bc25a145ed6ea1d1259a8
 新SOURCE `8c0421c3` H1581独立 Windows自动AES256+四Linux三套AEAD 150s `43014043726` 在途；**绝不在本H1593构建/文档更改里重新派发网络场景**（commit marker `[plan028-harness-offline-only]`）。原 H1587 FAIL、L2/最终L3/物理公网/Android NOT_RUN不改判。治理基线 `2c59b975` Action `43014262368` feature/governance均SUCCESS；原8c治理失败保留。
 
 ```feature-impact
-{"kind":"existing","features":["windows-native-transport"],"reason":"Corrects live M0/main ownership, source-locked scoped Windows30% success and true dual-Windows blocker; no new product feature or default."}
+{"kind":"updated","ids":["windows-native-transport"],"reason":"Corrected live M0/main ownership, source-locked 30pct scoped success and still-failing dual-Windows owner; no changed product behavior or default; old evidence retained."}
 ```
+
+治理跟进：H1593卡首次长度超上限，按UTF‑8 16384字节限制收紧重复的卡片历史描述并继续保留旧devlog；单独更新卡片时未在同提交提供带`kind:updated, ids:[windows-native-transport]`的devlog审计声明。现同提交更正两项；原FAIL不删除。
