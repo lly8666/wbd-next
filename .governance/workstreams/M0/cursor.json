@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1564,
-  "checkpoint_sha": "7de95f39b26d12a6b90a490732d9399b8eb971eb",
+  "sequence": 1565,
+  "checkpoint_sha": "b14e5aecf066b138ce4342987cfb78582aa20033",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1564-GOVERNANCE-SCOPED-NATIVE-PASS-RECEIPT",
-  "current_task": "H1563 true x86 native SOURCE8302 Action42953971625 and artifact13825963487 conclusively PASS scoped: Alice manual10.66.0.2 Bob auto10.66.0.144, 3 credential TLS sessions, 59/59 real UDP, server routed59, zero unrouted/backpressure, joined owner Stops, four named positive/negative Go unit tests. H1563 governance Action42954586580 failed solely evidence.result='PASS_SCOPED' not allowed for verified cursor; H1564 corrects evidence.result='PASS', separate qualified_scope and cursor verified=true (unverified=false). PLAN028 remains IN_PROGRESS with other known failures.",
-  "why_now": "Repository schema enumerates PASS but not PASS_SCOPED for evidence.result; false governance failure should not downgrade real verified scoped product PASS. Preserve exact failed Action and no network rerun.",
+  "task_id": "PLAN028-M0-H1565-WIN-FIRST-THEN-FOUR-REAL-REVERSE-DIFFERENTIAL",
+  "current_task": "Restore Win multicli from source b14. Old source620 H1548 one genuine Windows plus 4 WSL2 original Go/Rust common TLS443 loss0 Npcap monitor 49 real TCP443 in/out and credential TLS succeeded, Windows TXCopied42 RXDelivered0; loss30 real SYNACK MSS then FakeTCP TLS bootstrap deadline. Source0a latest sequential Windows/Linux normal native valid 25/26 UDP proves native client can deliver in small scope. H1565 targeted one real loss0/200ms differential Action: start Windows first, require real native receiver/4 UDP before any Linux sibling; then 4 Linux auto clients read OS pool IPv4, verify 40 authentic UDP, Windows Stop Bob 4 UDP and full owned Stop; no 600s. Original H1548 600s unchanged and NOT_RUN. New source not yet qualified.",
+  "why_now": "Avoid blind rerunning failed loss0/loss30 600s. First Windows native reverse vs four-client competition is decisive; H1560 changed Linux auto IP semantics so old H1548 hardcoded .3-.6 would now invalidate genuine new pool even when correct.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect docs-only H1564 governance PASS; continue real Windows Npcap/Wintun first+reverse RXDelivered0 and loss30 cold TLS, x86/ARM sustained rotation/generation Stop failures. No static+auto Linux x86 retry; old full platform/soak/capacity gaps remain.",
-  "unverified": false,
-  "last_tested_source": "8302e55726fe0290ee758665b1aeacdc57eab08b",
+  "next_action": "Collect H1565 auto-triggered SOURCE x86 original Win2025/WSL2 exact Action: require preflight, Windows first-stage Npcap+Rust RX proof, authenticated Linux4 true OS IP pool and 48 end-to-end UDP, all owned Stop; if fails inspect first-stage telemetry/NPF and only then modify minimal path. Preserve prior actual 620 FAIL, H1563 Linux PASS. No full 600s or loss30 dispatch until cold first+reverse isolated.",
+  "unverified": true,
+  "last_tested_source": "b14e5aecf066b138ce4342987cfb78582aa20033",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1563-MANUAL-AUTO-SAME-SERVER-NATIVE-PASS-20261111.json"
+    "docs/evidence/M0/PLAN028-H1565-WINDOWS1-LINUX4-FIRST-REVERSE-SHORT-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1564 governance metadata-only correction: recognized PASS exact scoped Linux x86 manual+auto original Go TLS443 Rust M4 and 59 UDP with A/B Stop. Feature card holds source8302 FUNCTIONAL_PASS. No whole PLAN028 closure, other source and platform blockers remain."
+  "partial_summary": "H1565 targeted Windows multi-client first-fault staged test NOT_RUN on new SOURCE: Windows alone at 200ms loss0/4 native UDP, then Linux4 with auto OS pool/40 UDP, Windows Stop Bob 4 UDP, exact Stop. Existing original 5-client H1548 600s and loss30 unqualified; PLAN028 IN_PROGRESS."
 }

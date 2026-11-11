@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1565",
+  "date_local": "2026-11-11",
+  "source_sha": "b14e5aecf066b138ce4342987cfb78582aa20033",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "plan_status": "IN_PROGRESS",
+  "reason": "Resume the previously requested original Windows multi-client actual network, not repeat Linux manual/auto 59 UDP. Old Windows+Linux1+4 loss0 completed credential TLS and Rust TXCopied42 but RXDelivered0, with 49 genuine Npcap TCP443 frames including inbound; loss30 original FakeTCP TLS bootstrap timeout after SYNACK. Current source0a Windows/Linux one-mode real baseline original M4 and UDP succeeded, so compare cold Windows first+reverse with siblings vs first alone.",
+  "prior_observed": {
+    "loss0": {
+      "source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+      "action": 42942358907,
+      "artifact": 13821548312,
+      "result": "FAIL",
+      "windows": "credential TLS succeeded, native Rust RXDelivered0 while TXCopied42; Npcap monitor inbound and outbound TCP443",
+      "linux": "4 native clients selected and ready",
+      "six_hundred": "NOT_RUN"
+    },
+    "loss30": {
+      "source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+      "action": 42942358907,
+      "artifact": 13821059527,
+      "result": "FAIL",
+      "windows": "SYNACK MSS1420 observed, FakeTCP initial protected TLS stream deadline exceeded",
+      "six_hundred": "NOT_RUN"
+    },
+    "current_baseline": {
+      "source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+      "action": 42952219446,
+      "artifact": 13826566135,
+      "scope": "Windows/Linux sequential normal true native first/reverse, Windows UDP delivered25/26 in normal mode; full five simultaneous NOT_RUN"
+    }
+  },
+  "new_action_scope": {
+    "trigger": "[plan028-h1565-winfirst-five-native]",
+    "native": "Windows2025 one signed Wintun plus 4 real WSL2 Linux netns clients, one original-Go TLS443 shared Rust TUN",
+    "scene": "loss0 only physical delay 200ms each direction, no reused full 600s seed",
+    "first_phase": "Windows alone must finish real Npcap/Wintun/OS owner first+reverse and 4/4 OS UDP echoes BEFORE Linux peers start",
+    "second_phase": "4 Linux independent original auto leases from owned pool 10.66.0.128/25 OS readback, then all 5 native sockets concurrent 40 real UDP",
+    "poststop": "Alice exact owned Stop; Bob survives and delivers 4 actual UDP; Linux4 all native Stops; shared TUN reader joined; Npcap/WSL/netem/WAL fully restored",
+    "source_lock": "source-locked new original Go and native Rust+Windows build; existing H1548 original server and client code, no Go packet owner replacement"
+  },
+  "gates": {
+    "native_first_reverse": "NOT_RUN",
+    "Windows_pre_siblings_UDP4": "NOT_RUN",
+    "five_native_UDP40": "NOT_RUN",
+    "Bob_postWinStop_UDP4": "NOT_RUN",
+    "allStop_clean": "NOT_RUN",
+    "original_tls": "NOT_RUN"
+  },
+  "not_in_scope": {
+    "loss30": "NOT_RUN",
+    "five_Windows_same_host": "NOT_RUN",
+    "full_600s": "NOT_RUN",
+    "outer_250_300_Mbps": "NOT_RUN",
+    "Windows_automatic_lease": "NOT_RUN",
+    "physical_WAN": "NOT_RUN",
+    "Android": "NOT_RUN"
+  },
+  "fixture_only": true
+}

@@ -8,7 +8,7 @@ Full physical outer bytes include WSL eth0 IFB+egress and eight Linux
 veth qdiscs, never calculated from application target or FEC copies.
 All setup must be owned, source-locked, finally-restored. No mock network.
 """
-import argparse,hashlib,json,os,pathlib,re,secrets,shlex,subprocess,sys,time
+import argparse,hashlib,ipaddress,json,os,pathlib,re,secrets,shlex,subprocess,sys,time
 from m0_plan028_h1415_windows_linux_independent_clients import (
     l2_setup,l2_restore,marker,stopwin,linux_kill,guestpath,ip,wsl,
     NAME,NS,HOST,CHILD,ALIAS,PEER,witness)
@@ -142,6 +142,9 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--scene",choices=("loss0","loss30"),default=os.environ.get("WBD_PLAN028_MIXED_SCENE"))
     a=ap.parse_args()
+    probe=os.environ.get("WBD_PLAN028_WIN_FIRST_REVERSE_PROBE")=="1"
+    need(not probe or (a.scene=="loss0" and os.environ.get("GITHUB_ACTIONS")=="true"),
+         "H1565 only one source-locked real 200ms loss0 Windows-first native OS trial")
     need(a.scene in ("loss0","loss30"),"unqualified new mixed scene")
     source=os.environ["GITHUB_SHA"];need(len(source)==40,"wrong original source")
     need(os.environ.get("LINUX_BINARY_SRC")==source,"Go/Rust Windows/Linux SOURCE mismatch")
@@ -163,7 +166,9 @@ def main():
        "base_inner_offer_each_direction_mbps":[8,14,11,6,9] if loss==0 else [10,22,18,10,14],
        "original_product_binary_sha256":hashes,
        "superseded_Windows5_one_host":"NOT_REQUIRED_BY_LATEST_USER",
-       "physical_source_IP_switch_while_WSL_bridge_active":"NOT_TRIGGERED_IN_THIS_SCOPE"}
+       "physical_source_IP_switch_while_WSL_bridge_active":"NOT_TRIGGERED_IN_THIS_SCOPE",
+       "h1565_windows_first_five_probe":probe,
+       "600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"}
     before=witness()
     addresses=[x for x in before.get("addr_info",[]) if
                x["family"]=="inet" and x.get("scope")=="global"]
@@ -199,6 +204,44 @@ def main():
           stdout=f,stderr=subprocess.STDOUT,text=with_input)
         owners[name]=p
         return p
+    # H1565: real OS UDP datagrams through the original TLS/Rust Npcap
+    # and Wintun TUN. No injected owner ACK, synthetic packet, or fake READY.
+    server_echo_py="""import socket,time
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind(("10.66.0.1",45941));s.settimeout(2)
+print("H1565_REAL_LINUX_TUN_ECHO_BOUND",flush=True)
+end=time.monotonic()+135
+while time.monotonic()<end:
+ try:data,peer=s.recvfrom(4096)
+ except socket.timeout:continue
+ if not data.startswith(b"H1565_NATIVE_APP/"):continue
+ s.sendto(b"H1565_NATIVE_REPLY/"+data,peer)
+ print("H1565_SERVER_REAL_TUN_ECHO peer="+peer[0],flush=True)
+s.close()
+"""
+    client_echo_py="""import socket,sys
+local,label,count=sys.argv[1],sys.argv[2],int(sys.argv[3])
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.bind((local,0));s.settimeout(8)
+for i in range(count):
+ data=("H1565_NATIVE_APP/"+label+"/"+str(i)).encode()
+ assert s.sendto(data,("10.66.0.1",45941))==len(data)
+ got,peer=s.recvfrom(4096)
+ assert got==b"H1565_NATIVE_REPLY/"+data and peer[0]=="10.66.0.1",(label,i,got,peer)
+print("H1565_REAL_NATIVE_APP_OK label="+label+" delivered="+str(count)+" source="+local,flush=True)
+s.close()
+"""
+    def spawn_real_echo_client(label,source_ip,count,namespace=None):
+        prefix=(["wsl.exe","-d","Ubuntu","-u","root","--",
+                 "ip","netns","exec",namespace,"python3"] if namespace else [sys.executable])
+        return spawn("h1565-app-"+label,prefix+["-u","-c",client_echo_py,source_ip,label,str(count)])
+    def require_real_echo(label,p,count):
+        p.wait(timeout=55)
+        log=(OUT/("h1565-app-"+label+".log")).read_text(errors="replace")
+        need(p.returncode==0 and
+             "H1565_REAL_NATIVE_APP_OK label="+label+" delivered="+str(count) in log,
+             "real native Wintun/TUN UDP echo failed "+label+" "+log[-500:])
+
     try:
         for name in guestsecret:
             wsl("install","-m","600",guestpath(private[name]),guestsecret[name])
@@ -227,6 +270,11 @@ def main():
           " --mode shared --peer-persona windows11 --outer-repair on\n")
         serverproc=spawn("h1548-server",["wsl.exe","-d","Ubuntu","-u","root","--","sh",server])
         marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443",serverproc,80)
+        if probe:
+            report["h1565_probe_stage"]="real_echo_server"
+            echo=spawn("h1565-server-echo",["wsl.exe","-d","Ubuntu","-u","root",
+                "--","python3","-u","-c",server_echo_py])
+            marker(OUT/"h1565-server-echo.log","H1565_REAL_LINUX_TUN_ECHO_BOUND",echo,25)
         # Windows protected TCP443 must be impaired before the original SYN.
         netem("arm",loss);owns_win_netem=True
         # Windows signed original one-client native owner: no GUI singleton
@@ -244,6 +292,16 @@ def main():
             "--lanes","1","--fec-mode","off","--fec.mode","off",
             "--route-mode","bypass-lan","--outer-repair","on"]
         window=spawn("h1548-windows-alice",winargs,with_input=True)
+        if probe:
+            # Unlike H1548, prove the signed Windows Npcap/Wintun native
+            # first+reverse BEFORE any Linux sibling authenticates. This
+            # distinguishes a cold transport/RX problem from concurrency.
+            report["h1565_probe_stage"]="Windows_original_native_before_siblings"
+            marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,105)
+            pre=spawn_real_echo_client("alice_pre",IPS[0],4)
+            require_real_echo("alice_pre",pre,4)
+            report["windows_pre_sibling_real_udp_echoes"]=4
+            print("H1565_ORIGINAL_WIN_NPF_WINTUN_FIRST_REVERSE_PRE_SIBLINGS_PASS",flush=True)
         # Add all four true Linux TUNs, identities and unique source
         # ports; the same original Linux server authentically decides.
         for i,who in enumerate(names[1:],1):
@@ -276,6 +334,7 @@ def main():
              "10.66.0.2" in json.loads(readback.stdout).get("ip",[]),
              "actual signed Windows Wintun Alice IPv4 /32 OS readback failed")
         original_ready["alice"]="REAL_SIGNED_WINTUN_NATIVE_TLS443_READY_OS_IP"
+        auto_os_ips={}
         for i,who in enumerate(names[1:],1):
             p=owners["h1548-linux-"+who]
             marker_name=("V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes="+
@@ -285,10 +344,50 @@ def main():
                                   "dev","wbd48"+who[0]))
             inner=[entry["local"] for row in current for entry in row.get("addr_info",[])
                    if entry.get("family")=="inet"]
-            need(IPS[i] in inner,"Linux actual native TUN /32 OS readback missing "+who)
+            if probe:
+                # H1560 service policy: --auto-ip is authoritative per
+                # installed identity and no longer inherits the user's
+                # manual-account /32. Read the actual Linux OS TUN address.
+                pool=ipaddress.ip_network("10.66.0.128/25")
+                need(len(inner)==1 and ipaddress.ip_address(inner[0]) in pool
+                     and inner[0] not in auto_os_ips.values() and inner[0]!=IPS[0],
+                     "Linux automatic lease must be unique and inside configured server-owned pool "+who+repr(inner))
+                auto_os_ips[who]=inner[0]
+            else:
+                need(IPS[i] in inner,"Linux actual native TUN /32 OS readback missing "+who)
             ip("-n",NS4[i-1],"route","replace","10.66.0.1/32","dev","wbd48"+who[0])
             original_ready[who]="REAL_LINUX_NAMESPACE_NATIVE_TLS443_RUST_TUN_OS_IP"
         report["original_OS_ready"]=original_ready
+        if probe:
+            # Five *actual* native OS application sockets, one real Windows
+            # Wintun plus four distinct Linux kernel TUNs. Full H1548 600s
+            # capacity/soak is expressly NOT_RUN by this short first-fault.
+            report["h1565_probe_stage"]="five_original_native_ready_real_udp"
+            report["h1565_auto_os_tun_ips"]=dict(auto_os_ips)
+            tasks={"alice":spawn_real_echo_client("alice",IPS[0],8)}
+            for i,who in enumerate(names[1:],1):
+                tasks[who]=spawn_real_echo_client(who,auto_os_ips[who],8,NS4[i-1])
+            for who,p in tasks.items():require_real_echo(who,p,8)
+            report["h1565_five_genuine_os_udp_echoes"]=40
+            print("H1565_FIVE_ORIGINAL_TLS_NATIVE_WINTUN_TUN_APP_40_OF_40_PASS",flush=True)
+            stopwin(window)
+            marker(OUT/"h1548-windows-alice.log",
+                   "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",window,40)
+            need(all(owners["h1548-linux-"+who].poll() is None for who in names[1:]),
+                 "H1565 Alice native Stop stopped surviving Linux sibling")
+            survive=spawn_real_echo_client("bob_survives_alice",auto_os_ips["bob"],4,NS4[0])
+            require_real_echo("bob_survives_alice",survive,4)
+            report["h1565_bob_after_win_owned_stop_real_udp"]=4
+            for who in names[1:]:linux_kill(OUT/("h1548-"+who+".pid"))
+            for who in names[1:]:
+                marker(OUT/("h1548-linux-"+who+".log"),
+                       "V4_PUBLIC_NATIVE_STOP_DRAINED role=client",owners["h1548-linux-"+who],40)
+            linux_kill(OUT/"h1548-server.pid")
+            marker(OUT/"h1548-server.log","V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",serverproc,40)
+            report["h1565_original_owned_stop"]="PASS_WINDOWS_AND_LINUX4_AND_SERVER_SHARED_RUST_TUN"
+            report["h1565_probe_stage"]="true_os_app_and_owners_finished"
+            report["status"]="PASS_SCOPED_H1565_WIN_FIRST_THEN_FOUR_ORIGINAL_LINUX_LOSS0_200MS"
+            return
         # Give each account its OWN direct client socket and one of five
         # independent server app sockets; 600s both real UDP and framed TCP.
         serverApp=spawn("h1548-app-server",["wsl.exe","-d","Ubuntu","-u","root","--","env",
