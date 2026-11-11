@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1601",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "plan_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED_ONE_WINDOWS_WINTUN_FOUR_LINUX_REAL_150S",
+  "action_id": 43027983611,
+  "action_overall": "SUCCESS",
+  "native_job_id": 130550174873,
+  "native_job": "SUCCESS",
+  "governance_action": 43027983689,
+  "governance_maintenance_action": 43027983768,
+  "artifact_id": 13861275233,
+  "artifact_zip_sha256": "4a5e88ea353015487a5d2f3249b8b30522d5e3e57fcbd99e76c0cd48df39b61d",
+  "strict_report_name": "h1548-loss0-strict-native-report.json",
+  "strict_report_sha256": "cb790d21612e4b99725b93fb3cb983b681c7ae48b16e5473ff0bcbdf4e615fcb",
+  "strict_status": "PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S",
+  "compatibility_report_sha256": "218eda8807ac1575da26c4749721b30b61b0f0200f2f405cb959a8c2cd10758d",
+  "compatibility_scope": "TRUE_150S_FIVE_CLIENTS_NOT_600S",
+  "network": {
+    "underlay_oneway_delay_ms": 200,
+    "underlay_loss_pct": 0,
+    "real_inner_application_s": 150,
+    "real_signing_windows": "Npcap + Wintun",
+    "Windows_wintun_instances": 1,
+    "Linux_TUN_clients": 4,
+    "shared_Linux_TUN_server": 1,
+    "external_mtu_ipv4": 1460,
+    "actual_Windows_inner_mtu_from_native_log": 1389
+  },
+  "protected_identity_and_cipher": {
+    "Windows_Alice": {
+      "username": "alice",
+      "client_type": "Windows Npcap + Wintun",
+      "installation": "explicit nonzero unique per-host",
+      "auto_lease": "10.66.0.203/32",
+      "os_readback": "10.66.0.203",
+      "cipher": "aes-256-gcm",
+      "rust_cipher_id": 3
+    },
+    "Linux_Bob": {
+      "username": "alice",
+      "client_type": "Linux original-Go + Rust TUN",
+      "installation": "independent 0600 generated installation-id-file",
+      "auto_lease": "10.66.0.130/32",
+      "os_readback": "10.66.0.130",
+      "cipher": "chacha20-poly1305"
+    },
+    "other_Linux_clients": {
+      "Carol": {
+        "username": "carol",
+        "auto_lease": "10.66.0.170/32",
+        "cipher": "aes-256-gcm"
+      },
+      "Dave": {
+        "username": "dave",
+        "auto_lease": "10.66.0.209/32",
+        "cipher": "chacha20-poly1305",
+        "fec": "Game4 fixed6 explicit"
+      },
+      "Erin": {
+        "username": "erin",
+        "auto_lease": "10.66.0.183/32",
+        "cipher": "aes-128-gcm",
+        "outer_mtu": 1280
+      }
+    }
+  },
+  "all_authenticated_auto_lease_IPs_distinct": true,
+  "per_client_150s": {
+    "Alice": {
+      "udp_c2s": [
+        79560,
+        79560
+      ],
+      "udp_s2c": [
+        79562,
+        79562
+      ],
+      "tcp_each_way": 143,
+      "max_active_udp_gap_ms": 63
+    },
+    "Bob": {
+      "udp_c2s": [
+        79562,
+        79562
+      ],
+      "udp_s2c": [
+        79562,
+        79562
+      ],
+      "tcp_each_way": 143,
+      "max_active_udp_gap_ms": 30.55
+    },
+    "Carol": {
+      "udp_c2s": [
+        39781,
+        39781
+      ],
+      "udp_s2c": [
+        39781,
+        39781
+      ],
+      "tcp_each_way": 150,
+      "max_active_udp_gap_ms": 31.84
+    },
+    "Dave": {
+      "udp_c2s": [
+        39781,
+        39781
+      ],
+      "udp_s2c": [
+        39781,
+        39781
+      ],
+      "tcp_each_way": 143,
+      "max_active_udp_gap_ms": 31.75
+    },
+    "Erin": {
+      "udp_c2s": [
+        79562,
+        79562
+      ],
+      "udp_s2c": [
+        79562,
+        79562
+      ],
+      "tcp_each_way": 150,
+      "max_active_udp_gap_ms": 29.43
+    }
+  },
+  "actual_unique_udp_first_delivered_combined_both_directions": 636494,
+  "undelivered_udp_count": 0,
+  "tcp_client_double_direction_frames_total": 1458,
+  "tcp_invalid": 0,
+  "lifecycle": {
+    "windows_Alice_owned_Stop": "PASS",
+    "Linux_Bob_real_after_windows_owned_Stop_UDP": 4,
+    "all_four_Linux_owned_Stop": "PASS",
+    "shared_Linux_Rust_TUN_Stop": "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=319702 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+    "original_WSL_bridge_restored": true,
+    "netem_clean": "PASS",
+    "Windows_WAL_leftover": [],
+    "signed_Npcap_cleanup": "PASS"
+  },
+  "capacity_and_scope": {
+    "test_only_scale": 0.7,
+    "all_six_original_os_app_effective_scale": 0.7,
+    "outer_total_duplex_mbps_median_elapsed20_to121": 108.834,
+    "outer_total_duplex_mbps_range_elapsed20_to121": [
+      107.374,
+      109.466
+    ],
+    "windows_VM_host_CPU_busy_max_percent": 52.7,
+    "host_available_RAM_min_GiB": 10.762,
+    "actual_inner_UDP_lengths_bytes": [
+      256,
+      1120
+    ],
+    "TCP_frames_real": true,
+    "near_derived_MTU_max_payload": "NOT_RUN",
+    "per_process_CPU_or_RSS": "NOT_RECORDED",
+    "end_to_end_latency_p99": "NOT_RECORDED",
+    "queue_age": "NOT_RECORDED",
+    "final_600s_pressure": "NOT_RUN",
+    "final_1800s_L3_Windows": "NOT_RUN",
+    "untrusted_old_h1598_bad_test_pace_0_6": "RETAINED_ACTION_FAILURE_43024873684"
+  },
+  "original_product_binary_sha256": {
+    "Windows_Go_exe": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "Windows_Rust_DLL": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "signed_Wintun_DLL": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "Linux_Go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "Linux_Go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "Linux_Rust_so": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "backend": "original-Go standard TLS443 cold + per-client Rust steady shared-TUN M4; signed Windows Npcap/Wintun; ISA-L native static link reported on Win binary manifest",
+  "separate_same_Windows_host_multiWintun": {
+    "user_excluded_testing": true,
+    "original_action_43001721886": "FAIL_ROUTE_WAL_OWNER",
+    "status": "UNSUPPORTED_UNVERIFIED_NOT_A_PASS"
+  },
+  "remaining": [
+    "representative_current_Windows_L3_1800s",
+    "near_derived_MTU_boundary_on_affected_auto_AES_entry",
+    "Windows_idle_wake_real_native_for_new_auth",
+    "Windows_path_change_native_on_this_SOURCE",
+    "process_CPU_RSS_queue_age",
+    "30pct_full_five_client_business",
+    "Android_and_physical_WAN_out_of_scope",
+    "PLAN029_030_out_of_scope"
+  ]
+}

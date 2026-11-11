@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1600,
-  "checkpoint_sha": "798762d9c3111b36aa0945fa199e21873abd7099",
+  "sequence": 1601,
+  "checkpoint_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1600-WORKFLOW-EXPRESSION-FIX-REAL-RETRIAL",
-  "current_task": "H1599 SOURCE798762d9 intended to trigger corrected native H1596 but GitHub Actions workflow validation 43027647645 FAILED before any network because run-name outer label extension had one excessive closing parenthesis. H1600 fixes literal expression and adds static parenthesis balance+H1596 outer1460 run-name test. Earlier invalid test pace source496309 Action43024873684 failed at 150s app start but real original TLS/independent auto OS IPs/40 genuine UDP echoes/owned cleanup passed scoped; source7f84 valid pace0.7 and governance all passed. This commit triggers one real corrected Win signed single Wintun+Linux4 shared-server same-login 150s scene; no multi-Wintun test.",
-  "why_now": "GitHub workflow rejected a syntax-only run-name expression; not a product or test-network failure. Correct after counting 13 opens vs14 closes. Existing GitHub workflow push.paths now includes exact H1596 test so this update will trigger.",
+  "task_id": "PLAN028-M0-H1601-RECOVER-SAME-LOGIN-REAL-150S-BINARY-HASH",
+  "current_task": "H1601 recovered H1600 source8a31375 Action43027983611 overall/native SUCCESS: signed Windows one Wintun Alice auto10.66.0.203/32 AES256 cipher3 and separate Linux TUN Bob same account independently auto10.66.0.130/32, four Linux total with heterogeneous AEAD/FEC and one shared server. 150s real bidirectional UDP first-unique arrivals636494 zero undelivered, TCP1458 frames invalid0, max active gap63ms, Win Stop then Bob additional4 real UDP, all six native Stop and network/WAL cleaned; test-only scale0.7 outer both-directions median108.834Mbps, VM CPU max52.7%. Same-SOURCE governance43027983689 and maintenance43027983768 SUCCESS. ZIP 13861275233 SHA4a5e..., strict report SHA cb790... recorded. User excluded multiple Win Wintun; old H1587 FAIL remains historical unverified limitation.",
+  "why_now": "H1600 full native 150s Action completed but cursor still said pending. Exact raw product/OS receipt demonstrates same-login independent installation+address/Stop for one Windows Wintun+four Linux real TUNs. Future targeted near derived MTU and lifecycle should avoid rerun of this already passed 150s.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1600 Action first strict native Windows+Linux same-account OS readbacks, original Go AES, 150s UDP/TCP & six Stop, no new same scene until conclusion. Preserve 43027647645 workflow schema FAIL and 43024873684 pace0.6 fixture FAIL in audit. User excluded same-host multi-Wintun test; don't run it.",
+  "next_action": "No multi-Wintun action per user. Reuse already actual one Win+Linux mixed 150s source8a and old ARM64 two 1800s by unchanged component; next targeted real native current-source near derived inner MTU boundary and affected idle/rotation on one signed Win Wintun+Linux, preferably a single small scoped scene each, no duplicate same-login150s. Avoid product default changes. Full Windows L3 with independent DUT controller remains NOT_QUALIFIED; keep PLAN028 IN_PROGRESS.",
   "unverified": true,
-  "last_tested_source": "496309022f2b1f9d39c1b2d7db80770a49321886",
+  "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1598-SOURCE496309-SAME-ACCOUNT-EARLY-OS-FAIL-FIXTURE-20261111.json"
+    "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/devlog/M0/20261111-PLAN028-H1598-H1596-FAIL-AND-VALID-PACE-RETRIAL.md",
-    "docs/evidence/M0/PLAN028-H1594-SOURCE8C042-WIN-AUTO-AES-LINUX-FOUR-REAL-150S-PASS-SCOPED-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1601-RECOVER-H1596-TRUE-WIN-LINUX-SAMEACCOUNT-150S.md",
     "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
     "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
   ],
   "open_requests": [],
-  "partial_summary": "User excluded multi-Wintun scenario. H1598 source496 H1596 initial one signed Wintun + Linux same-account native original TLS/Rust/OS true auto leases 10.66.0.132 vs10.66.0.173 + 40 real echoes PASS_SCOPED, but 150s NOT_RUN/FAIL_FIXTURE because generator rejected test-only pace0.6 (<.65). All OS/netem/WAL restored. Source7f84 fixed .7 valid; this commit launches one targeted corrected 150s, NOT prematurely PASS. Old H1587 FAIL remains not-supported/untested same-Windows-host multiple Wintuns. H1594 150s full different-user PASS and ARM64 two 1800s older source remain inherited with source caveats."
+  "partial_summary": "H1601 SOURCE8a31375 action43027983611 signed single Windows Wintun+Linux4 150s same username different original-Go installations auto independent addresses AES256/three Linux AEAD true TCP/UDP and Alice Stop Bob survives all six Stop PASS_SCOPED. Test-only 0.7: outer duplex median108.834Mbps/CPUpeak52.7%. Windows30% cold sourcefd473 PASS_SCOPED only. Linux ARM64 old2x1800s reusable unchanged components, Win-L3/nearMTU/path/idle outstanding. No dual Wintun per user; H1587 old FAIL retained as unsupported. PLAN028 IN_PROGRESS."
 }
