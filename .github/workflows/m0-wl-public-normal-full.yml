@@ -1432,6 +1432,7 @@ jobs:
                  $mixed.status -ne 'PASS_SCOPED_H1581_WIN_AUTO_AES256_LINUX_THREE_CIPHER_TCP_UDP_150S' -or
                  $mixed.h1581_real_Windows_auto_AES256_Linux_three_AEAD_150s -ne $true -or
                  $mixed.h1581_windows_cli_requested_cipher -ne 'aes-256-gcm' -or
+                 $mixed.h1584_actual_linux_kernel_auto_cold_reverse -ne $mixed.h1581_windows_protected_auto_lease -or
                  [int]$mixed.h1581_windows_rust_cipher_readback -le 0 -or
                  $mixed.h1581_windows_actual_signed_wintun_os_ip -ne $mixed.h1581_windows_protected_auto_lease.Replace('/32','') -or
                  $mixed.h1581_windows_auto_three_AEAD_150s_real_udp_tcp -ne 'PASS_FIVE_OS_KERNEL_APPS_BIDIRECTIONAL' -or
@@ -1450,6 +1451,7 @@ jobs:
               if($mixed.status -ne 'PASS_SCOPED_H1579_WIN30_COLD_TLS_M4_OWNED_STOP' -or
                  $mixed.h1579_real_original_Windows30_cold_TLS -ne $true -or
                  $mixed.h1579_real_original_TLS_M4_both_sides -ne 'PASS' -or
+                 $mixed.h1579_real_linux_kernel_reverse_seed -ne $true -or
                  $mixed.h1579_actual_Windows_signed_Wintun_OS_lease -ne '10.66.0.2/32' -or
                  -not $mixed.h1579_real_original_Rust_server_Stop.Contains('reader_joined=1') -or
                  $mixed.original_WSL_bridge_restored -ne $true -or

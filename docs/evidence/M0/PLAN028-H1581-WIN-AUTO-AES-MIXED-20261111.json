@@ -25,17 +25,41 @@
         "action_id": 42992510182,
         "conclusion": "SUCCESS"
       }
+    },
+    {
+      "source_sha": "3f82fad808e5ee5a76624c3d47a2c42701c5b62b",
+      "action_id": 42995018223,
+      "job_id": 130439153194,
+      "artifact_id": 13844306585,
+      "run_conclusion": "FAIL",
+      "native_builds": "PASS_SOURCE_LOCKED_WINDOWS_GO_RUST_LINUX_GO_RUST",
+      "product_stage": "ORIGINAL_GO_TLS_CERT_AUTHENTICATED_AND_RUST_M4_STARTED_BEFORE_WINTUN_OS_APPLIED",
+      "authenticated_cipher": "AES-256-GCM_ID3_BOTH_SIDES",
+      "authenticated_auto_lease": "10.66.0.130/32",
+      "actual_packet_evidence": "REAL_NPCAP_GENUINE_BIDIRECTIONAL_TCP443_PSH_ACK",
+      "failure": "Rust native first+reverse context deadline exceeded TXCopied44 RXDelivered0 TXAfterRX0 Rejected18 WorkerError0",
+      "server_rust_shared_tun": "reader_joined=1 routed=0",
+      "actual_150s_udp_tcp": "NOT_RUN",
+      "cleanup": {
+        "windows_wal_leftover": [],
+        "windows_netem_clean": "PASS",
+        "wsl_bridge_restored": true
+      },
+      "first_fault_hypothesis": "The H1581 harness set cold_seed=false and provided no real server-to-client kernel UDP before VerifyPeerFirstAndReverse requires RXDelivered>=1; old H1577 genuine 150s had cold_seed=true with real UDP source. No product AEAD verdict inferred. H1584 will seed only genuine Linux kernel UDP to original TLS-authenticated /32.",
+      "binary_sha256": {
+        "windows_original_go": "45780ab5531739740ef7e535384830a4c03eb5ad595171338d8babca27748056",
+        "windows_original_rust": "f9cd13d3f84e182dfeca889809e3be630d261218477e42398117517ed3ffad1a",
+        "windows_signed_wintun": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+        "linux_original_go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+        "linux_original_go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+        "linux_original_rust": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+      }
     }
   ],
   "next_candidate": {
     "source_sha": "UNSET_UNTIL_COMMIT",
-    "planned_scene": "ONE Windows2025 signed Npcap+Wintun auto /32 AES256 with 4 Linux native ChaCha/AES128/AES256, 150s real UDP+TCP, 0loss 200ms one-way, all 6 owners Stop",
     "status": "NOT_RUN",
-    "expected_corrections": [
-      "explicit WBD_WL_PUBLIC_MODES normal while WBD_WL_RUNNER_MGMT_PIN=1",
-      "H1581-only --windows-auto-ip app input with actual TLS-verified source /32; legacy scenarios still hard-pin 10.66.0.2",
-      "update H1570/H1576 source guards to dynamic-variable callsites"
-    ]
+    "planned_scene": "H1584 actual server-owned Linux kernel UDP cold first/reverse to verified auto /32 then 150s five actual OS TCP+UDP and owned Stop; do not spoof Rust ACK."
   },
   "no_claims": [
     "Windows AES256 native product pass",

@@ -252,11 +252,12 @@ def main():
         return p
     # H1565: real OS UDP datagrams through the original TLS/Rust Npcap
     # and Wintun TUN. No injected owner ACK, synthetic packet, or fake READY.
-    server_echo_py="""import pathlib,socket,sys,time
+    server_echo_py="""import ipaddress,pathlib,re,socket,sys,time
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45941));s.settimeout(.125)
 print("H1565_REAL_LINUX_TUN_ECHO_BOUND",flush=True)
 server_log=pathlib.Path(sys.argv[1]);seed=sys.argv[2]=="1"
+auto_seed=sys.argv[4]=="auto";alice_log=pathlib.Path(sys.argv[5])
 # A 150s full app phase begins only AFTER original Windows+Linux startup,
 # per-association TLS, initial socket echoes and authenticated Bob reverse.
 # The helper must remain live through the independent Windows Stop/Bob
@@ -272,10 +273,24 @@ while time.monotonic()<end:
  # This is not an injected TCP ACK, M2/M3 receipt or fake readiness.
  if seed and cold_count<70 and now>=next_cold and server_log.is_file():
   if "V4_PUBLIC_MIXED_NORMAL_READY role=server" in server_log.read_text(errors="replace"):
-   data=b"H1566_REAL_LINUX_KERNEL_APP_COLD/"+str(cold_count).encode()
-   if s.sendto(data,("10.66.0.2",45942))!=len(data):raise RuntimeError("real server UDP failed")
-   cold_count+=1;next_cold=now+.15
-   if cold_count==1:print("H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED",flush=True)
+   # A genuine Linux kernel UDP app targets the protected auto-lease.
+   # No synthetic M3, ACK or product readiness is generated.
+   target="10.66.0.2"
+   if auto_seed:
+    selected=re.search(
+      r"WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=\S+ auto_lease=true lease=([0-9.]+)/32 cipher=3 source=original_TLS_Rust_snapshot",
+      alice_log.read_text(errors="replace") if alice_log.is_file() else "")
+    target=selected.group(1) if selected else ""
+    if target:
+     assert ipaddress.ip_address(target) in ipaddress.ip_network("10.66.0.128/25")
+     assert target!="10.66.0.2"
+   if target:
+    data=b"H1566_REAL_LINUX_KERNEL_APP_COLD/"+str(cold_count).encode()
+    if s.sendto(data,(target,45942))!=len(data):raise RuntimeError("real server UDP failed")
+    cold_count+=1;next_cold=now+.15
+    if cold_count==1:
+     print(("H1584_REAL_SERVER_AUTO_IPV4_COLD_UDP_AFTER_TLS_STARTED lease="+target+"/32" if auto_seed else
+         "H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED"),flush=True)
  try:data,peer=s.recvfrom(4096)
  except socket.timeout:continue
  if not data.startswith(b"H1565_NATIVE_APP/"):continue
@@ -350,12 +365,14 @@ s.close()
           " --mode shared --peer-persona windows11 --outer-repair on\n")
         serverproc=spawn("h1548-server",["wsl.exe","-d","Ubuntu","-u","root","--","sh",server])
         marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443",serverproc,80)
-        if probe:
+        if probe or h1579:
             report["h1565_probe_stage"]="real_echo_server"
             echo=spawn("h1565-server-echo",["wsl.exe","-d","Ubuntu","-u","root",
                 "--","python3","-u","-c",server_echo_py,
-                guest_root+"/h1548-server.log","1" if cold_seed else "0",
-                "480" if l1_150 else "150"])
+                guest_root+"/h1548-server.log","1" if (cold_seed or h1581 or h1579) else "0",
+                "260" if h1579 else ("480" if l1_150 else "150"),
+                "auto" if h1581 else "manual",
+                guest_root+"/h1548-windows-alice.log"])
             marker(OUT/"h1565-server-echo.log","H1565_REAL_LINUX_TUN_ECHO_BOUND",echo,25)
         # Windows protected TCP443 must be impaired before the original SYN.
         netem("arm",loss);owns_win_netem=True
@@ -384,6 +401,13 @@ s.close()
             report["h1579_actual_stage"]="Windows_original_TCP443_certificate_TLS_M4_30pct"
             marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,160)
             marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_NORMAL_READY role=server",serverproc,30)
+            # Windows native Ready requires first + reverse real encrypted
+            # DATA; the separate Linux kernel sender must have actually
+            # emitted authenticated-route UDP even for the cold TLS test.
+            kernel_log=(OUT/"h1565-server-echo.log").read_text(errors="replace")
+            need("H1566_REAL_SERVER_OS_UDP_AFTER_AUTH_STARTED" in kernel_log,
+                 "H1579 real Linux kernel reverse after protected TLS missing")
+            report["h1579_real_linux_kernel_reverse_seed"]=True
             out=subprocess.run(["powershell.exe","-NoProfile","-NonInteractive",
                 "-Command",
                 "$a=Get-NetAdapter -IncludeHidden -Name 'WBDWLMAIN' -ErrorAction Stop;"+
@@ -432,6 +456,10 @@ s.close()
                 report["h1581_windows_protected_auto_lease"]=selected.group(1)
                 report["h1581_windows_rust_cipher_readback"]=int(selected.group(2))
                 report["h1581_windows_cli_requested_cipher"]="aes-256-gcm"
+                echo_log=(OUT/"h1565-server-echo.log").read_text(errors="replace")
+                need("H1584_REAL_SERVER_AUTO_IPV4_COLD_UDP_AFTER_TLS_STARTED lease="+selected.group(1) in echo_log,
+                     "H1584 genuine Linux kernel auto-lease cold UDP missing before Windows READY")
+                report["h1584_actual_linux_kernel_auto_cold_reverse"]=selected.group(1)
                 print("H1581_REAL_WINDOWS_PROTECTED_TLS_RUST_AUTO_AES256_SELECTED lease="+selected.group(1),flush=True)
             pre=spawn_real_echo_client("alice_pre",windows_ip,4)
             require_real_echo("alice_pre",pre,4)

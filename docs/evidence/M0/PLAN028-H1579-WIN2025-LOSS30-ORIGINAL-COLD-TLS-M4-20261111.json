@@ -56,5 +56,33 @@
     "real_30pct_native_run": "NOT_RUN",
     "diagnosis": "Do not count old SOURCE620 observed cold TLS failure as a new run, and do not infer a product fix from stale regression edits.",
     "follow_up": "After Windows SOURCE813 current assembly and feature catalog repair, dispatch exactly one 30pct cold authentication scene when not already running, preserve real SYN/TLS/Ready/OS/Stop status and stop before heavier family if first TLS fails."
+  },
+  "actual_h1583_20261111": {
+    "source_sha": "e207fa95bf861cc63a8bf3b0007db2dae644c7dc",
+    "action": 42996888234,
+    "job_id": 130445340525,
+    "artifact_id": 13845650574,
+    "action_conclusion": "FAIL",
+    "plan_status": "IN_PROGRESS",
+    "original_go_protected_TLS": "PASS_STANDARD_CLIENTHELLO_CERT_CREDENTIALS",
+    "rust_m4": "PASS_BOTH_SIDES_STARTED",
+    "true_manual_ipv4": "10.66.0.2/32",
+    "authenticated_cipher": "CHACHA20_POLY1305_ID1_BOTH_SIDES",
+    "first_delivery": "FAIL_REAL_RUST_FIRST_REVERSE_RXDelivered0_TXCopied42_TXAfterRX0_Rejected17_WorkerError0",
+    "original_server_tun": "reader_joined=1,routed=0",
+    "first_failure_classification": "TRUE_PRODUCT_STARTUP_NOT_READY_BUT_NO_REAL_LINUX_KERNEL_REVERSE_SEED_WAS_DISPATCHED; fixture omitted echo helper entirely when h1579 and probe=false. Need one corrected real 30pct first/reverse scene with after-TLS actual Linux TUN UDP to manual /32. Does not conclude original TLS failed.",
+    "cleanup": {
+      "windows_owned_wal_leftover": [],
+      "windows_eth0_netem_clean": "PASS",
+      "original_wsl_bridge_restored": true
+    },
+    "not_proven": [
+      "Windows M4 first+reverse",
+      "Wintun OS Applied/MTU",
+      "30pct UDP/TCP business",
+      "150s",
+      "600s"
+    ],
+    "repair_source_h1584": "Enable real bound Linux OS UDP helper on the h1579 first-fault scene; require genuine post-TLS kernel source and original Rust first+reverse before OS readback; no forged control or lower hard gate. Run as separate subsequent Action not mixed with H1584 auto AES loss0."
   }
 }
