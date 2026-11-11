@@ -115,17 +115,15 @@ def main():
     ap.add_argument("--inner-ips",default="")
     a=ap.parse_args()
     assert a.duration in (150,600) and len(os.environ["GITHUB_SHA"])==40
-    if a.duration==150:
-        # Authenticated OS lease readbacks, not stale preselected addresses.
-        assert a.scene=="loss0" and a.inner_ips
-        actual=a.inner_ips.split(",")
-        assert len(actual)==5 and actual[0]=="10.66.0.2" and len(set(actual))==5
-        pool=ipaddress.ip_network("10.66.0.128/25")
-        assert all(ipaddress.ip_address(x) in pool for x in actual[1:])
-        global IPS
-        IPS=tuple(actual)
-    else:
-        assert not a.inner_ips
+    # Real account-scoped OS /32, never the stale manual fixture addresses,
+    # must reach UDP/TCP sockets for both 150s and 600s.
+    assert a.inner_ips and (a.duration!=150 or a.scene=="loss0")
+    actual=a.inner_ips.split(",")
+    assert len(actual)==5 and actual[0]=="10.66.0.2" and len(set(actual))==5
+    pool=ipaddress.ip_network("10.66.0.128/25")
+    assert all(ipaddress.ip_address(x) in pool for x in actual[1:])
+    global IPS
+    IPS=tuple(actual)
     loss=0 if a.scene=="loss0" else 30
     assert (a.role=="windows" and a.index==0 or
             a.role=="linux-client" and 1<=a.index<=4 or

@@ -4,18 +4,17 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1575,
-  "checkpoint_sha": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
+  "sequence": 1576,
+  "checkpoint_sha": "c3e60772c2f99e5d7fa1cadb0284b3e1addca1d4",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1575-REAL-150S-FIVE-CLIENT-EXPIRED-TEST-UDP-SERVER-STOP",
-  "current_task": "Collected SOURCE d447 Action42974796792: five genuine Windows2025 Npcap/Wintun plus Linux4 original TLS/M4 all real 150s UDP256/1120+framed TCP each way app 150s PASS and 98pct/maxgap<3s/tcp>=60, real kernel outer ~75Mbps each direction (~150 total), Windows CPU peak80.3% RAM >=10.6GiB. Original Action FAIL only Bob after Windows Stop live UDP timed out, because H1565 test UDP echo owner started before setup with fixed +150s deadline, necessarily terminated by end of 150s workload. H1575 extends bounded test-only echo to 480s for 150s, asserts alive before/after Windows Stop; no product code/threshold changes, 150s full lifecycle must still be requalified exact-source. Historic failure retained.",
-  "why_now": "Close one clear test-fixture lifecycle blocker without inventing product defect. Need real Bob post-Alice Stop and full Linux Game/Normal + server owner Stop proof after 150s actual load; 150s app success independently recorded.",
+  "task_id": "PLAN028-M0-H1576-REVIEWED-WIN5-150S-REAL-DATA-AND-FULL-OWNED-STOP",
+  "current_task": "Reviewed SOURCEc3e607 Action42979705842 original ZIP13837473065: actual Win2025 Npcap/Wintun + four WSL2 independent original TLS443/Rust M4 native sessions, 150s real UDP 454642 C2S +454643 S2C unique perfect, framed TCP each min144, max active gap65.62ms, outer~151.809Mbps both, Windows CPU peak77.7%/free10.677GiB. Alice owned Stop PASS; real Bob 4/4 after Windows Stop with test echo alive; Linux Normal/Game all owned Stop/reader join PASS; original server Rust V4_PUBLIC_SHARED_TUN_STOP generation1 routed456261 reader_joined1 unrouted0/backpressure0; Go sessions remaining_flows0, process exit0. Original Action FAIL only fake Go text marker, reviewed native PASS_SCOPED. H1576 test-only canonical Rust Stop and full600 actual auto /32 socket wiring pending, no extra network dispatch.",
+  "why_now": "Evidence shows entire required L1 Windows mixed 150s business+Stop genuinely completed; preserve original CI report FAIL and avoid rerun. Legacy 600s native app still binds stale manual .3-.6 rather than protected auto pool; must fix fixture before L2 qualification.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto SOURCE H1575 one Windows2025/WSL2 0loss200ms full five 150s actual UDP/TCP and Bob4 after Windows Stop/live echo, four original owned Stop and one server reader Stop. Exact same-Go/Rust protocol; no duplicate loss30/full600 seed. Upon PASS qualify L1 scope, then L2 capacity scale and 600s representative weak network with source freeze; retain capacity boundary, no false global completion.",
-  "unverified": true,
-  "last_tested_source": "d447d68533f97097e4e5bc0928e3e35ffb7cf1bc",
+  "next_action": "Collect governance/source tests for H1576 offline only. Next run only justified L2 capacity calibrated step using 150s~151.8 aggregate CPU77.7%, plus representative 30pct weak path, then freeze SOURCE after known blockers and run two independent 1800s L3. Preserve all original failed x86 ARM rotation and Windows actions. Do not blindly launch old strict250-300Mbps 600s or re-run qualified 150s.",
+  "unverified": false,
+  "last_tested_source": "c3e60772c2f99e5d7fa1cadb0284b3e1addca1d4",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1574-WIN-MIXED-150S-TCPUDP-REAL-NATIVE-NOTRUN-20261111.json",
     "docs/evidence/M0/PLAN028-H1575-WIN-150S-ECHO-LIFETIME-STOP-20261111.json"
   ],
   "context_refs": [
@@ -29,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1575 only fixture repair pending: SOURCE d447 H1574 genuine five 150s native UDP+TCP and 150Mbps outer PASSED business, original action FAIL from expired test echo before Bob post-WinStop. New fixture bounded 480s echo+liveness witnesses, must actually trigger Bob4 and all six owner Stop; PLAN028 IN_PROGRESS."
+  "partial_summary": "H1576 full Win1+Linux4 150s original TLS/Rust M4 true UDP/TCP and all six owner Stops PASS_SCOPED proven by raw artifact despite false reporter Action FAIL; 454642 C2S+454643 S2C perfect, no sec gap, Bob post-WinStop 4/4, server reader joined. Offline 600s real auto /32 socket bind and Stop marker correction only. PLAN028 IN_PROGRESS."
 }

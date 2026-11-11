@@ -284,6 +284,21 @@ s.close()
              "H1565_REAL_NATIVE_APP_OK label="+label+" delivered="+str(count) in log,
              "real native Wintun/TUN UDP echo failed "+label+" "+log[-500:])
 
+    def require_real_original_server_owner_stop(proc):
+        # Original Rust shared-TUN Stop, not a nonexistent Go text marker.
+        proc.wait(timeout=40)
+        log=(OUT/"h1548-server.log").read_text(errors="replace")
+        rows=[line for line in log.splitlines()
+              if line.startswith("V4_PUBLIC_SHARED_TUN_STOP generation=")]
+        need(proc.returncode==0 and rows and
+             all(token in rows[-1] for token in (
+                 "reader_joined=1","unrouted=0","backpressure=0",
+                 "queue_full_drops=0","retired_drops=0")) and
+             "V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close remaining_flows=0" in log,
+             "real server Rust shared TUN owned Stop and Go auth drain unproven")
+        print("H1576_ACTUAL_RUST_SHARED_TUN_SERVER_GENERATION_STOP_READER_JOINED_PASS "+rows[-1],flush=True)
+        return rows[-1]
+
     try:
         for name in guestsecret:
             wsl("install","-m","600",guestpath(private[name]),guestsecret[name])
@@ -394,17 +409,14 @@ s.close()
                                   "dev","wbd48"+who[0]))
             inner=[entry["local"] for row in current for entry in row.get("addr_info",[])
                    if entry.get("family")=="inet"]
-            if probe:
-                # H1560 service policy: --auto-ip is authoritative per
-                # installed identity and no longer inherits the user's
-                # manual-account /32. Read the actual Linux OS TUN address.
-                pool=ipaddress.ip_network("10.66.0.128/25")
-                need(len(inner)==1 and ipaddress.ip_address(inner[0]) in pool
-                     and inner[0] not in auto_os_ips.values() and inner[0]!=IPS[0],
-                     "Linux automatic lease must be unique and inside configured server-owned pool "+who+repr(inner))
-                auto_os_ips[who]=inner[0]
-            else:
-                need(IPS[i] in inner,"Linux actual native TUN /32 OS readback missing "+who)
+            # Per-installation Auto /32 is chosen by authenticated server,
+            # not an obsolete literal fixture. This is also required in the
+            # long 600s path, where stale .3-.6 would bind the wrong socket.
+            pool=ipaddress.ip_network("10.66.0.128/25")
+            need(len(inner)==1 and ipaddress.ip_address(inner[0]) in pool
+                 and inner[0] not in auto_os_ips.values() and inner[0]!=IPS[0],
+                 "Linux automatic lease must be unique and inside configured server-owned pool "+who+repr(inner))
+            auto_os_ips[who]=inner[0]
             ip("-n",NS4[i-1],"route","replace","10.66.0.1/32","dev","wbd48"+who[0])
             original_ready[who]="REAL_LINUX_NAMESPACE_NATIVE_TLS443_RUST_TUN_OS_IP"
         report["original_OS_ready"]=original_ready
@@ -660,7 +672,7 @@ s.close()
                        "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client",
                        owners["h1548-linux-"+who],40)
             linux_kill(OUT/"h1548-server.pid")
-            marker(OUT/"h1548-server.log","V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",serverproc,40)
+            report["h1576_actual_server_Rust_TUN_Stop"]=require_real_original_server_owner_stop(serverproc)
             report["h1565_original_owned_stop"]="PASS_WINDOWS_AND_LINUX4_AND_SERVER_SHARED_RUST_TUN"
             if l1_150:
                 report["h1574_150s_stage"]="verified_true_five_150s_udp_tcp_exact_owners_stopped"
@@ -670,22 +682,27 @@ s.close()
             return
         # Give each account its OWN direct client socket and one of five
         # independent server app sockets; 600s both real UDP and framed TCP.
+        # The 600s native application must bind the genuine OS readback
+        # /32 for all four authenticated Auto devices on shared TLS443.
+        csv_ips=",".join([IPS[0]]+[auto_os_ips[n] for n in names[1:]])
         serverApp=spawn("h1548-app-server",["wsl.exe","-d","Ubuntu","-u","root","--","env",
             "GITHUB_SHA="+source,"python3","-u",app_py,
             "--role","server","--scene",a.scene,
             "--barrier",guestpath(barrier),"--control",guestpath(control),
+            "--inner-ips",csv_ips,
             "--out",guest_root+"/h1548-app-server.json"])
         winApp=spawn("h1548-app-windows",[
             sys.executable,"-u",str(ROOT/"tools/m0_plan028_h1548_mixed_os_app.py"),
             "--role","windows","--index","0","--scene",a.scene,
             "--barrier",str(barrier),"--control",str(control),
+            "--inner-ips",csv_ips,
             "--out",str(OUT/"h1548-app-windows.json")])
         for i,who in enumerate(names[1:],1):
             spawn("h1548-app-"+who,["wsl.exe","-d","Ubuntu","-u","root","--",
                "ip","netns","exec",NS4[i-1],"env","GITHUB_SHA="+source,
                "python3","-u",app_py,"--role","linux-client","--index",str(i),
                "--scene",a.scene,"--barrier",guestpath(barrier),
-               "--control",guestpath(control),
+               "--control",guestpath(control),"--inner-ips",csv_ips,
                "--out",guest_root+"/h1548-app-"+who+".json"])
         for who in ("server","windows","bob","carol","dave","erin"):
             marker(OUT/("h1548-app-"+who+".log"),"H1548_REAL_INNER_OS_APP_BOUND",
@@ -811,10 +828,14 @@ s.close()
         report["windows_exact_original_Stop"]="PASS_WINTUN_WAL_RUST_DISCONNECTED"
         for who in names[1:]:linux_kill(OUT/("h1548-"+who+".pid"))
         for who in names[1:]:
+            mark=("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes="+
+                  ("2" if who=="carol" else "4")) if who in ("carol","dave") else "V4_PUBLIC_NATIVE_STOP_DRAINED role=client"
             marker(OUT/("h1548-linux-"+who+".log"),
-                   "V4_PUBLIC_NATIVE_STOP_DRAINED role=client",owners["h1548-linux-"+who],35)
+                   mark,owners["h1548-linux-"+who],35)
+            marker(OUT/("h1548-linux-"+who+".log"),
+                   "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client",owners["h1548-linux-"+who],35)
         linux_kill(OUT/"h1548-server.pid")
-        marker(OUT/"h1548-server.log","V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",serverproc,40)
+        report["h1576_actual_server_Rust_TUN_Stop"]=require_real_original_server_owner_stop(serverproc)
         report["all_six_original_owned_Stop"]="PASS_EXACT_SIGNED_WIN_ONE_PLUS_FOUR_LINUX_AND_SHARED_SERVER"
         report["status"]="PASS_SCOPED_REAL_WIN1_LINUX4_600S_OUTER_250_300_"+a.scene.upper()
     except BaseException as e:

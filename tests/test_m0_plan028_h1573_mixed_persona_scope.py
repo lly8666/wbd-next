@@ -61,7 +61,7 @@ class MixedPersonaOriginalTLS(unittest.TestCase):
         self.assertIn('["mixed-loss0"]',wf)
         self.assertIn('"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',script)
         self.assertIn("Windows_original_WAL_leftover",script)
-        self.assertIn("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",script)
+        self.assertIn("V4_PUBLIC_SHARED_TUN_STOP generation=",script)
 
 
 if __name__=="__main__":

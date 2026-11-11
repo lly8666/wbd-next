@@ -45,7 +45,7 @@ class WindowsFirstThenFourLinux(unittest.TestCase):
             'WBD_WINDOWS_CLIENT_READY',
             'WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1',
             'V4_PUBLIC_NATIVE_STOP_DRAINED role=client',
-            'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server',
+            'V4_PUBLIC_SHARED_TUN_STOP generation=',
             'report["h1565_bob_after_win_owned_stop_real_udp"]=4',
             '"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',
             'report["h1565_five_genuine_os_udp_echoes"]=40',

@@ -45,7 +45,7 @@ class Plan028MixedNativeWinLinux(unittest.TestCase):
         self.assertIn('"all_six_original_owned_Stop"',text)
         self.assertIn('"source_sha":source',text)
         self.assertIn('"--duration",type=int,default=600',app)
-        self.assertIn('assert a.duration==600',app)
+        self.assertIn('assert a.duration in (150,600)',app)
         self.assertIn('TCP_HEAD.pack(',app)
         self.assertIn('"tcp_real_frames"',app)
         self.assertIn("MAX_SEQ=3600000",app)
@@ -57,7 +57,7 @@ class Plan028MixedNativeWinLinux(unittest.TestCase):
            'l2_setup(ipv4,prefix,mac,gateway)',
            'original_WSL_bridge_restored',
            'WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1',
-           'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server',
+           'V4_PUBLIC_SHARED_TUN_STOP generation=',
            'netem("clean",loss)',
            'Windows_original_WAL_leftover',
            'original_file(p)',

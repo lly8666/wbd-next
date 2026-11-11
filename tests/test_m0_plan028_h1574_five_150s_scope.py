@@ -60,7 +60,7 @@ class FiveOriginalNative150sScope(unittest.TestCase):
         self.assertIn("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=",h)
         self.assertIn("V4_PUBLIC_NATIVE_STOP_DRAINED role=client",h)
         self.assertIn("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client",h)
-        self.assertIn("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",h)
+        self.assertIn("V4_PUBLIC_SHARED_TUN_STOP generation=",h)
         self.assertIn("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",h)
         self.assertIn("original_WSL_bridge_restored",h)
         self.assertIn("Windows_original_WAL_leftover",h)
