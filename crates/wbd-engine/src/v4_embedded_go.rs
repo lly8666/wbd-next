@@ -8396,12 +8396,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.server_side && e.original_public_feedback_armed {
         let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
         clock.arm_server_cold_commit(loop_now().0);
-    }else if !e.server_side && e.original_public_feedback_armed &&
-        e.shared_tun.as_ref().is_some_and(|s|s.publish_pending){
-        // Only an overlapping client B sends a bounded five-copy burst of
-        // existing authenticated Health kind0 on native M4 start. Each
-        // accepted record has a fresh AEAD PN. The server still requires
-        // actual verified peer RX before promoting B's single TUN route.
+    }else if !e.server_side && e.original_public_feedback_armed {
+        // An independent reauthenticated client B may own a separate local
+        // TUN while the SERVER still holds old A's /32 route. The client
+        // cannot infer that server-side overlap from local publish_pending.
+        // After this genuine M4 RX/TX startup, send the existing bounded
+        // five-copy authenticated Health kind0 cold receipt. The server
+        // still requires its actual AEAD/PN-opened Health before promoting
+        // B; no application DATA, new wire type or steady worker is added.
         let Some(clock)=e.native_health.as_mut()else{return BAD_STAGE};
         clock.arm_client_cold_ready(loop_now().0);
     }

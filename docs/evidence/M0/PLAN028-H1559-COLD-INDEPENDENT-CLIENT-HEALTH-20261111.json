@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1559",
+  "source_sha": "6207858bac1d2a74bd560f7e2b7f649df887c066",
+  "date_local": "2026-11-11",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_results": [
+    {
+      "action_id": 42942359031,
+      "platforms": [
+        "Linux native x86_64",
+        "Linux native aarch64"
+      ],
+      "scope": "H1376 independent account A/B then Alice reauth R same /32 while old A remains",
+      "preflight_policy": "PASS (existing manual identity negative now enforced)",
+      "original_go_rust_binary": "PASS",
+      "actual_tls_rust_m4_two_clients": "PASS",
+      "app_real_udp_a_only_and_a_plus_b_and_b_after_stop": "PASS_SCOPED",
+      "reauth_R": "FAIL server B-client-unproven at 5s; old A route preserved, no source scope full PASS",
+      "first_error": "V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN port=43031 reason=client B native M4 receiver not proven before bounded overlap deadline"
+    },
+    {
+      "action_id": 42942358876,
+      "scope": "H1383 wrong-password with real A/B",
+      "result": "FAIL native B proof after original Go policy PASS"
+    },
+    {
+      "action_id": 42942358907,
+      "scope": "mixed Windows/WSL2 loss0/loss30",
+      "result": "IN_FLIGHT currently SOURCE620; do not dispatch or claim qualification"
+    }
+  ],
+  "cause": "Cold Health kind0 sent immediately from original Rust Normal client start only when client's OWN shared TUN has publish_pending; separate independent reauth owns its own TUN, so never arms. Server owns previously active /32 route, requires authenticated kind0 before routing B and correctly times out after 5s; client's ordinary Health defaults 15s. On x86 and ARM same failure and preserved A.",
+  "minimal_fix": "At genuine authenticated Rust M4 Normal client loop start, arm existing bounded cold 5-copy Health kind0 regardless of local shared TUN pending, no new wire, fixed app probes, steady controls, Go pump or A retirement bypass. Server still only promotes after AEAD/PN verified client kind0.",
+  "fix_test": "Original x86/ARM H1376 and H1383 automatic source-locked real tests must actually observe server V4_PUBLIC_MULTI_SERVER_B_CLIENT_READY and B real traffic; static compile/Health unit PASS alone not enough.",
+  "candidate_source": "pending commit",
+  "plan_status": "IN_PROGRESS",
+  "unverified": true
+}

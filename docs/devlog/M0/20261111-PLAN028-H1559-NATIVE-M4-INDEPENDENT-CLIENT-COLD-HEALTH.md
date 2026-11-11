@@ -1,0 +1,13 @@
+# PLAN028 H1559 | independent cold client B canonical native Health (2026-11-11)
+
+Collected exact source `6207858bac1d2a74bd560f7e2b7f649df887c066` [H1376 x86+ARM Action42942359031](https://github.com/lly8666/wbd-next/actions/runs/42942359031) and [H1383 wrong password Action42942358876](https://github.com/lly8666/wbd-next/actions/runs/42942358876). Both architectures assemble and execute old negative manual identity tests **PASS**, proving H1558 did not bypass the original hard identity boundary. Actual protected A/B native M4/TLS, app UDP echoes 5/12/12/12 on x86 **PASS_SCOPED**, but independent Alice R (separate local TUN, server still owns old Alice A /32) fails the **real server receiver proof**: `V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN port=43031` after 5s; the old A route correctly remains. Whole H1376/H1383 scenarios **FAIL**, not waived by prior app success. Source620 Windows mixed loss0/30 [Action42942358907](https://github.com/lly8666/wbd-next/actions/runs/42942358907) still in flight; do not dispatch duplicate.
+
+Actual chain: `runSharedMultiServer` waits for *this specific* B's verified native M4 client Health kind0 before replacing old /32 route. Original Rust Normal `start_loop` armed the existing bounded five-copy Health only if `client.shared_tun.publish_pending` — true for same-local-TUN B but **false for independent fresh R**, even when the SERVER has an overlapping old route. The next ordinary Health is 15s, beyond the 5s protected overlap deadline. Same result on x86 and ARM rules out merely reinterpreting runner capacity. Preserve 5s server gate; never promote based on local TLS/data ACK.
+
+**One conditional fix:** after authentic original M4 client workers have started, arm the *already existing* bounded five-copy AEAD/PN Health kind0 on every initial Normal client startup, not just a local-TUN overlap. No new Health wire, steady probes, poller, Go hot pump or forged RX. The server still requires genuine received authenticated client Health to promote B. The named condition must trigger in actual x86/ARM R reauth with native B app traffic/Stop; a routine test PASS without trigger is NOT_TRIGGERED. No marker for mixed Windows 600s in commit, so source620 ongoing Windows scenes are NOT duplicated.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Restore the already-specified authenticated peer M4 cold readiness/owned generation handover for independent native client process; reuse existing bounded kind0 Health wire without changing feature surface or advertised steady behavior."}
+```
+
+Evidence [H1559](../evidence/M0/PLAN028-H1559-COLD-INDEPENDENT-CLIENT-HEALTH-20261111.json). PLAN028 IN_PROGRESS.

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1558,
-  "checkpoint_sha": "ce8647e142e4f630acc90f35ed6acebad075efb5",
+  "sequence": 1559,
+  "checkpoint_sha": "6207858bac1d2a74bd560f7e2b7f649df887c066",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1558-RESTORE-MANUAL-ROSTER-AUTO-AUTH-TUNNEL-DERIVATION",
-  "current_task": "Collected original H1556 SOURCE693 Actions: standard TLS x86 Action42941393679 and x86 Game4 overlap Action42941394034 genuinely PASS. But H1376/H1383 x86+ARM & mixed Linux true original-Go build fail preserved pre-existing negative TestPLAN028AccountManualProtectedTunnelIdentity because H1555 admitted AutoLease with arbitrary manual tunnel-id. H1558 enforce username+nonzero installation derived tunnel ID only for named AutoLease after TLS, add explicit valid positive and six negative tests, include in immutable manifest. New native NOT_RUN; no manual dispatch.",
-  "why_now": "Credential and owner identity hard gate outranks all throughput and no conditionally untriggered tests can count as PASS.",
+  "task_id": "PLAN028-M0-H1559-AUTHENTICATED-INDEPENDENT-CLIENT-COLD-M4-HEALTH",
+  "current_task": "H1558 source620 original-Go assembly/negative manual auth tests PASS on x86+ARM, source620 H1376/H1383 native A/B UDP/TLS has scoped PASS but independent same-/32 Alice R cannot prove server B native receiver within5s; server preserves A correctly. Rust native client cold Health kind0 mistakenly armed only if client's LOCAL shared TUN publish_pending; independent R local TUN has no overlap but server old A /32 route does. H1559 arm already-existing bounded native client Health kind0 after every authenticated M4 initial start. No fake probes/new wire/Go pump. H1558 mixed Windows loss0/30 still IN_FLIGHT, do not dispatch duplicates.",
+  "why_now": "Both native x86 and ARM independent R fail same 5s barrier, whereas normal Health first interval15s. Modify only proven existing cold control arming condition, not 5s SLA or server readiness hard gate.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered H1558 source original Go protected/manual negative+new positive Go test first, x86/ARM and Windows original assembly. If both PASS, collect native mixed loss0/30 and isolate Windows reverse proof and 30% TLS based on actual logs. No seed repeat, no premature full qualification.",
+  "next_action": "Collect source620 in-flight Win/WSL2 mixed native actions; separately collect source containing H1559 Linux x86/ARM H1376/H1383 actual server client-Health proof and A→B business/Stop; require triggering, otherwise NOT_TRIGGERED. No Windows duplicate dispatch until original action done. Preserve all original statuses, then fix Windows first+reverse/30% cold only from actual logs.",
   "unverified": true,
-  "last_tested_source": "693ec6f7f81ae27a451805a1bbab3344bacac79d",
+  "last_tested_source": "6207858bac1d2a74bd560f7e2b7f649df887c066",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1558-MANUAL-ROSTER-AUTO-IDENTITY-BOUNDARY-20261111.json"
+    "docs/evidence/M0/PLAN028-H1559-COLD-INDEPENDENT-CLIENT-HEALTH-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1556 source693 true x86 TLS and Game4 scoped PASS; source693 H1376/H1383 x86/ARM and Windows mixed build FAIL negative auth identity test. H1558 closes verified identity bypass without modifying TLS wire/data plane. Native two-OS 600s still NOT_RUN."
+  "partial_summary": "SOURCE620 Go hard auth regression closed: x86+ARM manual negative PASS, real two-account app UDP PASS scoped, but reauth R server M4 Health proof FAIL at 5s on both arch (old A survives). H1559 minimal Rust cold client kind0 arm independent of LOCAL TUN publish pending, must be verified true x86/ARM. Windows source620 scenes still in flight."
 }
