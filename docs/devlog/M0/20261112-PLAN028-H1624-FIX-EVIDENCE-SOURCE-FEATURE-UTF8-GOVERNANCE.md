@@ -1,0 +1,11 @@
+# PLAN028 H1624 | Governance-only correction after true Windows signed native H1623 functional PASS
+
+The original H1623 source65e commit itself preserves true original signed Windows single-Wintun+Ubuntu WSL2 network Action43110135433 SUCCESS, reused official H1600 SOURCE8a Go TLS/Rust ISA-L, manual/32, outer1460/OS inner1389, actual108.48s no-app then real both-side wake, 60s 99,497 Windows->Linux and 99,551 Linux->Windows all first-delivered, real native TCP and both owned Stop. Archive 13895333759 ZIPsha 49d03fc3a5020af8484ca1b41dd8452f74fb5906bcf74cce0c8aa6a838286e13 with 37 CRC-verified members. The actual native Action is NOT rerun.
+
+Original H1623 governance Action43112296390 **FAIL** (retained) for two precise metadata violations. (1) Feature-catalog check `tools/feature_catalog.py` requires each feature JSON actual UTF-8 bytes <=16KiB, but new idle-rotation card was 17,081 bytes (not 15,787 JS character count). H1624 reduces it to 16,129 UTF-8 bytes by source-scoped concise phrasing for some verbose old candidate/FAIL limitations and new H1623 lines, preserving all 20 verification objects, 23 limitations and all cited historical evidence. (2) Governance structure output `evidence is for a different SOURCE` because current cursor's `evidence_refs` includes H1623 native evidence but that JSON had only `actual_prebuilt_product_source_sha` and `test_harness_source_sha` rather than required top-level `source_sha`. H1624 adds top-level `source_sha=8a31375e36bb6a93860c5579e64b4a39d0b6e346` matching `cursor.last_tested_source`, and `artifact_verified=true` based on original ZIP SHA256 and member CRC; distinct Harness `0577bb29` remains explicit. No lower-level qualification or code change.
+
+H1624 needs ONLY fresh cheap feature-catalog/governance/maintenance checks. Preserve original H1623 governance failure; the functional native Action remains PASS_SCOPED and overall PLAN028 remains IN_PROGRESS pending independent-DUT Windows L3, other modes/Auto-IP/physical path. No nearMTU/multiWintun/PLAN029/030.
+
+```feature-impact
+{"kind":"updated","ids":["idle-rotation-keepalive"],"reason":"Shrink repeated text under actual UTF-8 feature-card limit without losing historical scopes; preserve native result and correct evidence binary SOURCE governance schema, no product change."}
+```
