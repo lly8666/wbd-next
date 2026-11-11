@@ -1,0 +1,153 @@
+name: PLAN028 H1614 one original-Go TLS Rust ISA-L prebuilt real native scenario
+on:
+  workflow_call:
+    inputs:
+      scene: {type: string, required: true}
+permissions: {contents: read, actions: read}
+jobs:
+  exactly-one-native-kernel-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    env:
+      FROZEN_PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      SCENE: ${{ inputs.scene }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43027983611
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: linux-product/
+      - name: Original product SOURCE zero diff, exact 3 ELF SHA and native ISA-L (no build)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$SCENE" = normal_failed_b_keep_a -o "$SCENE" = game2_off_path
+          test "$(uname -m)" = x86_64
+          test "$GITHUB_REF_NAME" = main
+          test -c /dev/net/tun
+          git fetch --quiet --depth=1 origin "$FROZEN_PRODUCT_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$FROZEN_PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$FROZEN_PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0-v4-public-real-linux-netns.sh)"
+          test -z "$delta" || { echo "H1614 reject new product or base fixture against frozen binary: $delta" >&2;exit 1; }
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,struct
+          p=pathlib.Path('linux-product'); m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['FROZEN_PRODUCT_SOURCE']
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert m['rust_native_fec_acceleration'] is True
+          assert m['isa_l_source']=='c387163fcbca62701d646149564c550c78a4f985'
+          assert m['binary_qualification']=='BUILD_ONLY_NOT_PRODUCT'
+          expect={
+           'wbd-v4-client':'7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1',
+           'wbd-v4-server':'9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71',
+           'libwbd_engine.so':'2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc'
+          }
+          for n,h in expect.items():
+           data=(p/n).read_bytes()
+           assert len(data)>100000 and data[:4]==b'\x7fELF' and struct.unpack_from('<H',data,18)[0]==62
+           assert hashlib.sha256(data).hexdigest()==m['sha256'][n]==h
+          print('H1614_FROZEN_SAME_GO_RUST_ACCELERATED_THREE_BINARY_SHA256_PASS',flush=True)
+          PY
+          chmod +x linux-product/wbd-v4-client linux-product/wbd-v4-server
+          python3 -m py_compile tools/m0_plan028_h1614_candidate_b_fail_keep_a.py
+          python3 tools/m0_plan028_h1614_candidate_b_fail_keep_a.py --preflight
+          bash -n tools/m0-v4-public-real-linux-netns.sh
+      - name: Kernel namespace dependencies or truthful environment blocker
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=""
+          for cmd in ip tc iptables openssl tcpdump;do
+            command -v "$cmd" >/dev/null || missing="$missing $cmd"
+          done
+          if test -n "$missing";then
+            echo "H1614_EXTERNAL_KERNEL_DEPENDENCIES_MISSING:$missing"
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y iproute2 iptables openssl tcpdump
+          fi
+          sudo -n ip netns list >/dev/null
+          test -c /dev/net/tun
+          echo H1614_LINUX_REAL_KERNEL_NETNS_READY
+      - name: One true signed-source Go TLS Rust M4 OS path or candidate failure with final Stop
+        shell: bash
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          export WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_PATH_SWITCH=1 WBD_V4_PUBLIC_KERNEL_LOSS=0
+          FIXTURE=tools/m0-v4-public-real-linux-netns.sh
+          if test "$SCENE" = normal_failed_b_keep_a;then
+            export WBD_V4_PUBLIC_MODE=normal WBD_V4_PUBLIC_GAME_FEC=off WBD_V4_PUBLIC_WIRE_AUDIT=0
+            python3 tools/m0_plan028_h1614_candidate_b_fail_keep_a.py fixed-kernel-result/h1614-negative-one-native.sh
+            FIXTURE=fixed-kernel-result/h1614-negative-one-native.sh
+          else
+            export WBD_V4_PUBLIC_MODE=game2 WBD_V4_PUBLIC_GAME_FEC=off WBD_V4_PUBLIC_WIRE_AUDIT=1
+          fi
+          timeout --signal=INT --kill-after=12s 600s bash "$FIXTURE" linux-product             >fixed-kernel-result/h1614-native.log 2>&1 || {
+              tail -160 fixed-kernel-result/h1614-native.log >&2
+              echo H1614_ONE_NATIVE_SCENE_OR_STOP_FAILED_RETAIN_ARTIFACT >&2
+              exit 1
+            }
+          grep -Fq M0_PLAN028_ACTUAL_LINUX_NEW_ROUTE_READBACK_PASS fixed-kernel-result/h1614-native.log
+          grep -Fq M0_PLAN028_REAL_NEW_PATH_MTU_READBACK_PASS fixed-kernel-result/h1614-native.log
+          test "$(grep -c 'M0_PLAN028_REAL_PATH_SWITCH_UDP_ECHO_OK' fixed-kernel-result/plan028-real-path-switched-business.log)" -eq 5
+          if test "$SCENE" = normal_failed_b_keep_a;then
+            grep -Fq H1614_KERNEL_ONLY_B_TCP_BLOCK_CONFIRMED fixed-kernel-result/h1614-native.log
+            grep -Fq H1614_REAL_FAILED_B_OLD_A_KERNEL_UDP_PASS fixed-kernel-result/h1614-old-a-business.log
+            grep -Fq H1614_FAILED_B_NEW_GEN3_REAL_TLS_RUST_AND_EXACT_A_STOP_PASS fixed-kernel-result/h1614-native.log
+            grep -Fq M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS fixed-kernel-result/h1614-native.log
+            grep -Fq 'V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=2' fixed-kernel-result/h1614-client-path-events.log
+            grep -Fq 'V4_PUBLIC_PATH_NEW_GENERATION_READY role=client generation=3 old_generation=true' fixed-kernel-result/h1614-client-path-events.log
+            grep -Fq 'V4_PUBLIC_PATH_OLD_EXACT_STOP role=client generation=1' fixed-kernel-result/h1614-client-path-events.log
+          else
+            grep -Fq M0_PLAN028_GAME2_OFF_A_TO_AB_TO_B_SHARED_TUN_PASS fixed-kernel-result/h1614-native.log
+            grep -Fq M0_PLAN028_REAL_LINUX_GAME2_NATIVE_RTN_NETLINK_A_TO_AB_TO_B_PASS fixed-kernel-result/h1614-native.log
+            python3 - <<'PY'
+          import json,pathlib
+          d=json.loads(pathlib.Path('fixed-kernel-result/plan028-game2-tls-wire-audit.json').read_text())
+          assert d['result']=='REAL_GAME2_TWO_GENERATIONS_4_CLIENTHELLO_NO_PRELUDE_PASS'
+          assert d['client_hello_sessions']==d['distinct_session_ids']==4
+          assert d['client_generation_count']==2 and d['lanes_per_generation']==2
+          assert sorted(d['source_counts'].values())==[2,2]
+          print('H1614_GAME2_TWO_NATIVE_AUTHENTICATED_COHORTS_FOUR_REAL_TLS_CLIENTHELLO_PASS')
+          PY
+          fi
+          python3 - <<'PY'
+          import os,hashlib,json,pathlib
+          p=pathlib.Path('fixed-kernel-result'); scene=os.environ['SCENE']
+          log=(p/'h1614-native.log').read_bytes()
+          d={'schema_version':1,'plan':'PLAN028',
+             'result':'PASS_SCOPED_REAL_ORIGINAL_GO_RUST_NATIVE_'+scene.upper(),
+             'scene':scene,'harness_source':os.environ['GITHUB_SHA'],
+             'actual_go_rust_binary_source':os.environ['FROZEN_PRODUCT_SOURCE'],
+             'reused_prebuilt_action':43027983611,
+             'this_action':int(os.environ['GITHUB_RUN_ID']),
+             'one_native_network_scene':True,'no_compilation':True,
+             'auto_lease_installed_in_real_kernel':True,
+             'physical_source4_changed':'10.25.0.2 -> 10.25.0.3',
+             'physical_mtu_actual':1280,'postchange_real_kernel_udp_echoes':5,
+             'native_go_tls_rust_m4':True,
+             'old_owner_Stop':'verified by unmodified original native fixture',
+             'native_log_sha256':hashlib.sha256(log).hexdigest(),
+             'not_evidence_for':['Windows signed Wintun','user skipped near-inner-MTU true datagram',
+                                 'real 30-minute independent-Windows L3','30%/250ms stress','CPU/p99/RSS']}
+          (p/'h1614-receipt.json').write_text(json.dumps(d,indent=2)+'\n')
+          print('H1614_ONE_ACTUAL_NATIVE_BUSINESS_AND_STOP_PASS_SCOPED '+scene,flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1614-${{ inputs.scene }}-${{ github.run_id }}
+          path: |
+            fixed-kernel-result/h1614-*.log
+            fixed-kernel-result/h1614-*.json
+            fixed-kernel-result/h1614-*.txt
+            fixed-kernel-result/plan028-*.json
+            fixed-kernel-result/plan028-real-path-switched-business.log
+            fixed-kernel-result/public-v4-normal-business.log
+          retention-days: 21
+          if-no-files-found: warn

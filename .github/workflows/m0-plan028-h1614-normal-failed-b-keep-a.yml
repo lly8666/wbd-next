@@ -1,0 +1,11 @@
+name: PLAN028 H1614 independent normal_failed_b_keep_a original Go Rust prebuilt kernel
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1614-normal-failed-b-keep-a.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  one-native-scenario:
+    uses: ./.github/workflows/m0-plan028-h1614-one-prebuilt-native.yml
+    with:
+      scene: normal_failed_b_keep_a

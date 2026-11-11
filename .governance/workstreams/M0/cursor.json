@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1613,
-  "checkpoint_sha": "44593a822f29d2d87b896349b0b9a41159de1a18",
+  "sequence": 1614,
+  "checkpoint_sha": "8110b787af7d4ee20b036c81e2561b10acf67b3d",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1613-TWO-PREBUILT-NATIVE-LIFECYCLE-PASS-SCOPED",
-  "current_task": "H1613 collected original independent artifacts: H1611 idle100 sourcec066 Action43050188977 overall SUCCESS source8a prebuilt Go/Rust ISA-L, 64 original kernel UDP+100sec no business+1 kernel wake UDP and original Stop, ZIP SHAe3a61b. H1611 dead106 sourcec066 Action43050188879 FAIL old PLAN026 fixture stale Rust terminal log marker, first64 genuine UDP then grep fail before postdead, historical ZIP SHA5482d7 retained. H1612 source44593 exact ephemeral oracle fix Action43053067266 overall SUCCESS, ZIP SHA b44657c6: original both client/server WBD_M0_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_or_peer_retired after real bidirectional 100pct qdisc loss106s, old M4 exact Stop, original Go PID survives, new TUN data triggers second Go TLS/Rust READY on both, 1 real app echo, final two Stop, safe native client/server log hashes. Both tests reused unchanged H1600 SOURCE8a same verified three native x86 ISA-L binaries, no compile. Governance43053067330 and maintenance43053067352 SUCCESS. H1602 user skipped; Windows independent-DUT L3/current native idle remains outstanding.",
-  "why_now": "Two different genuine lifecycle defects/behaviors verified on same product source via prebuilt binary; stale fixture oracle repaired without lowering Health/business/Stop gates and original failures preserved.",
+  "task_id": "PLAN028-M0-H1614-PARALLEL-PREBUILT-FAILED-CANDIDATE-A-LIVE-AND-GAME2",
+  "current_task": "H1613 latest 8110b787 evidence+docs for source8a313 unchanged product native x86 two independent real FEC Auto lifecycle: idle100 Action43050188977 PASS_SCOPED and dead106 corrected actual Rust authenticated Health original TLS/Rust gen2 + 1 true UDP Action43053067266 PASS_SCOPED; old stale oracle FAIL43050188879 retained. Governance43054034543 and maintenance43054034032 SUCCESS. H1614 prepares TWO separate independent Linux native Actions with EXACT same prebuilt H1600 source8a Go TLS/Rust ISA-L (3 ELF SHA and diff guard): Normal Auto FECOff true B generation2 TLS blocked .3-only, A true kernel UDP preserved then B gen3 authenticated and old A exact Stop; Game2 Off Auto true OS physical A→B two lanes, 4 standard ClientHello, 5+5 kernel UDP and exact Stop. Separate original network scenes/Actions and Ubuntu runners in parallel; new results pending. User excludes nearMTU/multiWintun, no new product build.",
+  "why_now": "Two remaining unique fault/mode coverage gaps can be differentiated on unchanged tested product binaries with different independent OS scenes, avoiding repeated Windows WSL or compiling identical ISA-L twice.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "No rerun H1611/H1612 or earlier H1608/H1602. Continue targeted PLAN028 seven-mode+configuration current effect audit and source-locked Windows current-source native idle/path evidence where hosted DUT stable; independent L3 controller unavailable, keep NOT_RUN not green. Close docs/cursor with exact platform qualification only; no 029/030 or multiWintun.",
+  "next_action": "Collect both H1614 independent Actions, original raw artifacts and first cause; do not dispatch duplicates while in progress. Confirm candidate B actually failed (kernel .3 TCP drop and original Go failed event) with live A kernel UDP and NO premature A stop, then B generation3 ready and A exact Stop. Game2 must have original four TLS ClientHello, both 2-lane cohorts, real UDP and exact Stop. Preserve all fails. Then reconcile seven-mode/entry coverage using existing evidence, no skipped MTU or multiWintun.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json",
-    "docs/evidence/M0/PLAN028-H1607-SOURCEC3A-WIN-WSL-RST-CONTROL-TIMEOUT-NOTRUN-20261111.json",
     "docs/evidence/M0/PLAN028-H1613-IDLE100-DEAD106-PREBUILT-X86-NATIVE-SCOPED-20261111.json",
-    "docs/devlog/M0/20261111-PLAN028-H1613-COLLECT-IDLE100-DEAD106-REAL-ORIGINAL-LIFECYCLE.md"
+    "docs/devlog/M0/20261112-PLAN028-H1614-REUSE-PARALLEL-NORMAL-FAILED-B-AND-GAME2-PATH.md",
+    "docs/devlog/M0/20261111-PLAN028-H1612-FIX-RUST-HEALTH-LOG-ORACLE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

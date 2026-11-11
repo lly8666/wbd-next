@@ -191,3 +191,7 @@ H1611/12 Linux x86_64、正式二进制SOURCE`8a31375e36bb6a93860c5579e64b4a39d0
 | Normal FEC Auto显式，双边100%真实丢包106s、Health90终止后原业务重认证 | 初始`c066edd4` `43050188879` **FAIL**（过时测试字符串，原ZIP保留）；修正临时fixture测试`44593a822f29d2d87b896349b0b9a41159de1a18` `43053067266` **SUCCESS**，ZIP`13870247251` SHA`b44657c62ff05f27a7f06a52d031048b87b1e7c74fa5271a0ea26cb33c89ffe2` | 两端native `authenticated_dead_or_peer_retired`、旧owner先Stop、新真TUN流触发第二Go TLS/Rust M4 `NATIVE_READY`、恢复1真UDP回声、双端最终Stop。双边qdisc实际drop正数由原夹具assert、绝对值未导出。**PASS_SCOPED Linux x86**，没有新Windows/L3资格。 |
 
 H1602近MTU用户要求跳过，保留原NOT_RUN；双Wintun不跑；Linux本轮两场成功不代表028全收口。
+
+## H1614 高效并行真实Native验收入口（本段不是测试PASS）
+
+**仅两个独立场景**，均复用已签SOURCE`8a31375e`正式Linux x86原Go client/server＋Rust ISA-L三件、每文件SHA及当前产品/原OS夹具零源码差校验，绝不再次Go/Rust编译。新增独立push Action：`m0-plan028-h1614-normal-failed-b-keep-a.yml`（Normal Off Auto IP；只阻断B的新物理源`.3` TCP443/要求内核drop计数、B确实失败且A发一个新的真UDP回声，放开后新B3 TLS/Rust M4、A精确Stop，5次切后UDP及OS TUN MTU）、`m0-plan028-h1614-game2-off-native-path.yml`（Game2 Off Auto，真物理源/MTU变化，标准4条两代TLS ClientHello、2lane A+B→B/真UDP/Stop）。两Action分别一场、不同Runner并行；其他Normal/Game4成功场不重跑；当前源码、测试产物SOURCE分别留痕。**实际Action/原始报告未结束前NOT_RUN**。详见[H1614 devlog](../devlog/M0/20261112-PLAN028-H1614-REUSE-PARALLEL-NORMAL-FAILED-B-AND-GAME2-PATH.md)。用户跳过nearMTU及多Wintun，Windows独立DUT L3仍未验，默认outer1460/FEC Off不变。

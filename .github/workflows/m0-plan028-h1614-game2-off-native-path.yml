@@ -1,0 +1,11 @@
+name: PLAN028 H1614 independent game2_off_path original Go Rust prebuilt kernel
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1614-game2-off-native-path.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  one-native-scenario:
+    uses: ./.github/workflows/m0-plan028-h1614-one-prebuilt-native.yml
+    with:
+      scene: game2_off_path
