@@ -180,3 +180,14 @@ User skips H1602 near-inner-MTU true datagram scene. Near-MTU remains NOT_RUN/en
 | Game4 / explicitly fixed6 / Auto IP, real source4 and MTU migration | `43046531950` SUCCESS; ZIP artifact `13866424747`, SHA256 `c14ba91a95d1d6bba3ece7725230452ce409b0a4f597d2e3003fc5e24679229e` | `.2→.3`, physical MTU1280, derived TUN OS MTU1178; genuine 8 standard TLS ClientHello (two generations ×4), B remote Rust M4 authenticated before old A exact Stop, parity both generations, single reader and 5+5 kernel UDP: **PASS_SCOPED Linux x86_64** |
 
 Game4 fixed6 was test-only explicit; product FEC default is Off. These are not Windows Wintun, new inner-MTU-boundary actual datagrams, independent Windows L3 or 30%/250ms pressure. Retain earlier failures and exact SOURCE. PLAN028 remains IN_PROGRESS.
+
+## H1613 复用正式Go/Rust产物的两条原生生命周期场景（不同Action）
+
+H1611/12 Linux x86_64、正式二进制SOURCE`8a31375e36bb6a93860c5579e64b4a39d0b6e346`、原Go TLS＋Rust ISA-L三个实际文件hash均核，未重新编译。原始 [H1613 Evidence](../evidence/M0/PLAN028-H1613-IDLE100-DEAD106-PREBUILT-X86-NATIVE-SCOPED-20261111.json) 及 [devlog](../devlog/M0/20261111-PLAN028-H1613-COLLECT-IDLE100-DEAD106-REAL-ORIGINAL-LIFECYCLE.md)。
+
+| 功能/入口/默认 | SOURCE / 独立Action / 原始artifact | 真实读回/结果/限制 |
+|---|---|---|
+| Normal FEC Auto**显式**、100s零业务再唤醒（默认FEC Off） | 测试`c066edd4`，`43050188977` **SUCCESS**，ZIP`13869171897` SHA`e3a61b7382fcdfc16b28ce640d1e00e0eb8a6579882f270fedd187b2b0b57e0b` | 真原TLS/Rust、64首交付、两端Auto applied profile5，100秒无业务后1真UDP回声＋双端owned Stop。**PASS_SCOPED Linux x86**；不是Windows idle。 |
+| Normal FEC Auto显式，双边100%真实丢包106s、Health90终止后原业务重认证 | 初始`c066edd4` `43050188879` **FAIL**（过时测试字符串，原ZIP保留）；修正临时fixture测试`44593a822f29d2d87b896349b0b9a41159de1a18` `43053067266` **SUCCESS**，ZIP`13870247251` SHA`b44657c62ff05f27a7f06a52d031048b87b1e7c74fa5271a0ea26cb33c89ffe2` | 两端native `authenticated_dead_or_peer_retired`、旧owner先Stop、新真TUN流触发第二Go TLS/Rust M4 `NATIVE_READY`、恢复1真UDP回声、双端最终Stop。双边qdisc实际drop正数由原夹具assert、绝对值未导出。**PASS_SCOPED Linux x86**，没有新Windows/L3资格。 |
+
+H1602近MTU用户要求跳过，保留原NOT_RUN；双Wintun不跑；Linux本轮两场成功不代表028全收口。
