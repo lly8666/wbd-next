@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1561,
-  "checkpoint_sha": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+  "sequence": 1562,
+  "checkpoint_sha": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1561-TRUE-STATIC-AUTO-SAME-SERVER-ONE443-NATIVE-QUALIFICATION",
-  "current_task": "H1560 source0a main no new commits. Original Go x86/ARM64 manual/manual genuine TLS+M4/59 UDP exact Stop and wrong-password sibling isolation PASS_SCOPED. Current 0a mixed Game2/4 x86+ARM PASS scoped, H1194/H1197 individual 32-UDP actual delivery but 17-19s time-window FAIL, Windows H1381 test injection duplicate target CI failure, PLAN012 rustup download external. Full static+auto real native same443 NOT_RUN. H1561 adds ONE distinct source-locked x86 real netns scenario Alice fixed 10.66.0.2 Bob auto pool10.66.0.128/25 with H1376 invariant source but no replay of manual/manual. Validate protected Go unit positive+negative actually execute and all original native Stop; no new steady protocol.",
-  "why_now": "User specified standard default manual+auto coexist; H1560 only unit verification and manual/manual native evidence do not trigger mixed condition, so one distinct genuine scenario required. Existing H1376 remains untouched to avoid duplicate dispatch.",
+  "task_id": "PLAN028-M0-H1562-H1561-ORIGINAL-GO-COLD-ASSEMBLY-PREFLIGHT-REPAIR",
+  "current_task": "Collected H1561 source d5c6 Action42953589939 original Go build failed before unit/network: H1561 workflow omitted mature H1376 current source overlays for original realityfront/faketcp native types. Pure workflow fix H1562 reuse same exact original-Go source copy, all hash/manifest protections retained. No product source or H1561 real OS scenario changed. Prior manual x86/ARM and wrong password original PASS; mixed static+auto native NOT_RUN.",
+  "why_now": "Cannot attribute undefined Go symbols from incomplete independently authored test assembly to product, first preflight failure unblocks exact one new scene; no repeat manual/manual scenarios or blind retry.",
   "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
-  "next_action": "Collect auto-triggered new H1561 workflow on actual SOURCE with x86 both real installed clients, check 59 app echo/OS /32/source-locked binary SHA/unique Go-Rust owner Stop; if fails inspect exact first stage and do minimal fix. Preserve old H1560 CI and timestamp failures. Check in-flight 0a 600s loss30 and seven modes before rerun. Continue Windows first+reverse RXDelivered0 and 30% cold TLS separately only after targeted distinction.",
+  "next_action": "Collect auto-triggered H1562 Action for same dedicated mixed static/auto true Linux x86 scene; confirm unit positive/negative actual execution then genuine 59 unique UDP and Stop. If next real first fault in product, fix minimal actual chain; preserve prebuild H1561 fail and source0a original failures. Don't dispatch old windows/loss0/30 seeds.",
   "unverified": true,
-  "last_tested_source": "0a1dd457208782c0f0ce7ab37701b4e91af9df32",
+  "last_tested_source": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1561-MANUAL-AUTO-NATIVE-FIRST-REAL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1562-H1561-ORIGINAL-GO-ASSEMBLY-PREFLIGHT-20261111.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,5 +28,5 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1561 new independent native Linux x86 two-device mixed static+auto original same443, strict real TLS TUN, 59 UDP, Stop + selected unit triggers; scenario not yet run. Existing original true manual/manual x86+ARM PASS scoped, auto+manual still NOT_RUN until new action. PLAN028 IN_PROGRESS."
+  "partial_summary": "H1561 source d5c6 dedicated mixed static+auto did NOT_RUN product: Go assembly omitted H1376 current Linux support types, causing undefined symbols. H1562 only corrects workflow assembly using mature source-aware copy. Candidate new SOURCE tests pending."
 }

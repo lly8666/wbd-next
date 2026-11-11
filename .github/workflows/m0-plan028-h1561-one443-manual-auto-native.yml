@@ -40,6 +40,39 @@ jobs:
           required={"internal/v4productcli/linux.go","internal/v4productcli/game_linux.go","internal/v4productcli/manual_lease_map_linux_test.go","internal/realityfront/admission_v4.go","internal/realityfront/v4_manual_lease_map_test.go"}
           assert required.issubset({x["path"] for x in v["files"]})
           PY
+          # The mature H1376 original-Go original TLS/Rust assembly uses
+          # CURRENT source overlays for all Linux cold runtime interfaces,
+          # not only the manifest create list. Reuse its exact bounded copy.
+          python3 - <<'PY'
+          import pathlib
+          root=pathlib.Path.cwd()
+          donor=root/"legacy"
+          allowed_tests={"admission_v4_test.go","v4_tls_handshake_contract_test.go",
+              "manual_lease_map_linux_test.go","v4_manual_lease_map_test.go",
+              "manual_lease_auto_proof_linux_test.go"}
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and src.name not in allowed_tests:
+                      continue
+                  dst=donor/part/src.name
+                  if dst.exists():
+                      assert dst.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              src=root/"r0/go_overlay/internal/faketcp"/name
+              dst=donor/"internal/faketcp"/name
+              assert not dst.exists(),str(dst)
+              dst.write_bytes(src.read_bytes())
+          src=root/"r0/go_overlay/internal/v4productcli/secret_linux_test.go"
+          dst=donor/"internal/v4productcli/secret_linux_test.go"
+          if dst.exists():
+              assert dst.read_bytes()==src.read_bytes()
+          else:
+              dst.write_bytes(src.read_bytes())
+          print("PLAN028_H1562_MATURE_H1376_EXACT_CURRENT_GO_LINUX_COLD_SOURCE_ASSEMBLED",flush=True)
+          PY
           for role in client server;do
             mkdir -p "legacy/cmd/wbd-v4-$role"
             cp "r0/go_overlay/cmd/wbd-v4-$role/main.go" "legacy/cmd/wbd-v4-$role/main.go"

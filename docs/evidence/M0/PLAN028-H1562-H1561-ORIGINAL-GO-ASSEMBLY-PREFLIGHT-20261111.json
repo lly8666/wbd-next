@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "checkpoint": "H1562",
+  "date_local": "2026-11-11",
+  "source_sha": "d5c6fb767a91985c0271fa744339f7953d5d8bf2",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action_id": 42953589939,
+  "original_job_id": 130303348707,
+  "original_status": "FAIL_PRE_NETWORK",
+  "failure_stage": "original-Go build first",
+  "first_fault": "internal/v4productcli/game_linux.go: undefined realityfront.V4LinuxGameCohortID/AuthenticatedLane; original Go source overlay cold runtime files missing in new H1561 CI setup",
+  "product_behavior": "NOT_RUN",
+  "reason": "H1561 new x86 original-Go workflow applied pinned manifest and called go build without the additional current Linux realityfront/faketcp source copy used by mature H1376. Not a new production compiler defect; original mature H1376 x86/ARM source0a success proves this assembly delta.",
+  "fix": "Reuse exact H1376 selective copy from CURRENT r0/go_overlay/internal/realityfront and v4productcli plus two detached raw faketcp files and secret test. No product, FEC, TLS, Stop, test scenario or network flags changed; only source wiring in H1561 Action.",
+  "source_pinned_original": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "actual_native_h1561": "NOT_RUN",
+  "new_source_qualification": "NOT_RUN",
+  "outstanding": [
+    "real mixed static+auto same-server x86 Source H1562",
+    "Windows reverse native RXDelivered0 and 30% cold bootstrap",
+    "remaining PLAN028 L1-L3 and true handover Stop failures"
+  ],
+  "plan_status": "IN_PROGRESS"
+}
