@@ -149,3 +149,7 @@ H1597 SOURCE`7f84a518e8fbcc6c9e53a34072bb4ea5923831c2`已把**仅测试夹具**�
 
 本源真实所有客户端与服务端二进制哈希见H1601字段，Go/Rust原产品后端有真实TLS/Rust M4/内核实际输出。不把原失败`43024873684` 0.6发生器参数错误、`43027647645`工作流YAML错误归产品，也不抹掉Action FAIL；仍不能据此宣布028全覆盖。用户已明确多Wintun场景不跑，**其历史FAIL不等于新平台已通过**。
 
+
+## H1602 当前SOURCE真实内层MTU短场（Action在途、不能提前判PASS）
+
+只补 H1601 150秒业务中缺失的近inner MTU包型：**一台Windows signed Wintun＋四Linux真实TUN**，loss0/单程200ms、已认证真实IP/OS MTU readback，五客户端各`min(client,shared server)inner OS MTU-1`、`MTU`的真实IPv4/UDP总长两次（20次原字节回声）；DF1`MTU+1`仅观察OS errno/发送，不能虚称业务首次到达。仍需Windows先owned Stop、Bob仍能真实内核UDP、全六owner Stop、WAL/netem/WSL恢复。源标记`[plan028-h1602-near-mtu-five-native]`，本源 Action 与原始artifact未收前 **NOT_RUN**。不重跑同账号150s/30%冷场，不测多Wintun，原H1587历史FAIL限制仍保留。

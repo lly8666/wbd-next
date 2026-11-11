@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1601,
-  "checkpoint_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "sequence": 1602,
+  "checkpoint_sha": "e17a1729114ea4cb179d0eda97cd5fcb5fa831e4",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1601-RECOVER-SAME-LOGIN-REAL-150S-BINARY-HASH",
-  "current_task": "H1601 recovered H1600 source8a31375 Action43027983611 overall/native SUCCESS: signed Windows one Wintun Alice auto10.66.0.203/32 AES256 cipher3 and separate Linux TUN Bob same account independently auto10.66.0.130/32, four Linux total with heterogeneous AEAD/FEC and one shared server. 150s real bidirectional UDP first-unique arrivals636494 zero undelivered, TCP1458 frames invalid0, max active gap63ms, Win Stop then Bob additional4 real UDP, all six native Stop and network/WAL cleaned; test-only scale0.7 outer both-directions median108.834Mbps, VM CPU max52.7%. Same-SOURCE governance43027983689 and maintenance43027983768 SUCCESS. ZIP 13861275233 SHA4a5e..., strict report SHA cb790... recorded. User excluded multiple Win Wintun; old H1587 FAIL remains historical unverified limitation.",
-  "why_now": "H1600 full native 150s Action completed but cursor still said pending. Exact raw product/OS receipt demonstrates same-login independent installation+address/Stop for one Windows Wintun+four Linux real TUNs. Future targeted near derived MTU and lifecycle should avoid rerun of this already passed 150s.",
+  "task_id": "PLAN028-M0-H1602-SINGLE-WIN-REAL-OS-NEAR-INNER-MTU",
+  "current_task": "H1601 recovered H1600 exact source8a313 one Windows signed Wintun + four Linux TUN same account actual150s/Stop PASS_SCOPED. H1602 adds a distinct SHORT mixed-loss0 real native scene with only one Windows Wintun and four Linux clients, after true authenticated OS readback test IPv4 UDP size actual minimum(inner client OS MTU, shared server OS MTU)-1 and exact MTU, 4 per client 20 genuine echoes plus DF1 MTU+1 observational only. Still requires Alice Stop Bob UDP survives, all six Stop/netem/WAL/WSL clean. No product default changes or multi Wintun. Old H1587 fail retained. H1602 real result pending.",
+  "why_now": "Original H1600 five-client 150s only exercises 256 and 1120 byte UDP (vs Windows derived MTU1389), so one short near-actual-inner-MTU current-source native test gives needed uncovered boundary with no repeated 150s/600s pressure.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "No multi-Wintun action per user. Reuse already actual one Win+Linux mixed 150s source8a and old ARM64 two 1800s by unchanged component; next targeted real native current-source near derived inner MTU boundary and affected idle/rotation on one signed Win Wintun+Linux, preferably a single small scoped scene each, no duplicate same-login150s. Avoid product default changes. Full Windows L3 with independent DUT controller remains NOT_QUALIFIED; keep PLAN028 IN_PROGRESS.",
+  "next_action": "Collect H1602 one native Action and report h1602_real_OS_near_inner_MTU, exact per-client IP packet sizes/deliveries, DF1 +1 observed, Wintun/Go/Rust/readback/owned six Stop and original network restoration; if fail inspect fixture versus product first error and fix; no second Wintun. Then audit remaining representative idle/path L1 and Windows L3, keep PLAN028 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -24,7 +24,8 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/devlog/M0/20261111-PLAN028-H1601-RECOVER-H1596-TRUE-WIN-LINUX-SAMEACCOUNT-150S.md",
     "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json",
-    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
+    "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json",
+    "docs/devlog/M0/20261111-PLAN028-H1602-ONE-WINTUN-FIVE-ACTUAL-OS-NEAR-MTU.md"
   ],
   "open_requests": [],
   "partial_summary": "H1601 SOURCE8a31375 action43027983611 signed single Windows Wintun+Linux4 150s same username different original-Go installations auto independent addresses AES256/three Linux AEAD true TCP/UDP and Alice Stop Bob survives all six Stop PASS_SCOPED. Test-only 0.7: outer duplex median108.834Mbps/CPUpeak52.7%. Windows30% cold sourcefd473 PASS_SCOPED only. Linux ARM64 old2x1800s reusable unchanged components, Win-L3/nearMTU/path/idle outstanding. No dual Wintun per user; H1587 old FAIL retained as unsupported. PLAN028 IN_PROGRESS."
