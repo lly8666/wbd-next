@@ -26,7 +26,7 @@ class H1461FixedNativeSoaks(unittest.TestCase):
     def test_600_duration_true_original_five_clients_no_fake_1800(self):
         s=FIXTURE.read_text()
         self.assertIn('MID600=os.environ.get("WBD_PLAN028_600S_SCENE","")',s)
-        self.assertIn('MID600!="capacity75"',s)
+        self.assertIn('if MID600 and (MID600 not in ("capacity75",',s)
         self.assertIn('RATE=(75,2,2,2,2)',s)
         self.assertIn('ROTATION_SECONDS=(3600,3600,3600,3600,3600)',s)
         self.assertIn('("first_wave",90,1/3)',s)
@@ -38,7 +38,7 @@ class H1461FixedNativeSoaks(unittest.TestCase):
     def test_report_distinguishes_600_no_rotation_and_1800_real_handoffs(self):
         s=REPORT.read_text()
         self.assertIn('MID600_PHASES=(("warmup",10,.3)',s)
-        self.assertIn('phases=MID600_PHASES if midsix else PHASES',s)
+        self.assertIn('phase_specs=(H1520_OUTER_PHASES if h1520 else MID600_PHASES) if midsix else PHASES',s)
         self.assertIn('assert duration in (600,1800)',s)
         self.assertIn('"NO_ROTATION_BY_DESIGN_600S_ONLY"',s)
         self.assertIn('elif spec["mode"]=="game4":',s)

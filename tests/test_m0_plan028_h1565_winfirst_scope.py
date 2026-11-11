@@ -47,7 +47,7 @@ class WindowsFirstThenFourLinux(unittest.TestCase):
             'V4_PUBLIC_NATIVE_STOP_DRAINED role=client',
             'V4_PUBLIC_SHARED_TUN_STOP generation=',
             'report["h1565_bob_after_win_owned_stop_real_udp"]=4',
-            '"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',
+            '"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',
             'report["h1565_five_genuine_os_udp_echoes"]=40',
             'original_WSL_bridge_restored',
             'Windows_original_WAL_leftover',

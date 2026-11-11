@@ -61,7 +61,7 @@ class FiveOriginalNativeL2SingleStep(unittest.TestCase):
         self.assertIn("if duration==150:",a)
         self.assertIn('["mixed-loss0"]',wf)
         self.assertIn('[plan028-h1548-win1-linux4-600]',wf)
-        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',h)
+        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',h)
 
 
 if __name__=="__main__":

@@ -27,7 +27,7 @@ class FiveOriginalNative150sScope(unittest.TestCase):
             "h1574_150s_stage -ne 'verified_true_five_150s_udp_tcp_exact_owners_stopped'",
         ):
             self.assertIn(token,w)
-        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',h)
+        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',h)
         self.assertIn("not bob_normal and a.scene==\"loss0\"",h)
         self.assertIn('["mixed-loss0","mixed-loss30"]',w)
 

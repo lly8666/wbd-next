@@ -37,7 +37,7 @@ class BobModeControlScope(unittest.TestCase):
             'h1572_bob_tun_kernel_after',
             'H1572_BOB_REAL_OS_ROUTE_SELECTED',
             'H1572_BOB_OS_KERNEL_TUN_COUNTERS_CAPTURED',
-            '"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',
+            '"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',
             'V4_PUBLIC_SHARED_TUN_STOP generation=',
             'Windows_original_WAL_leftover',
             'netem("clean",loss)',

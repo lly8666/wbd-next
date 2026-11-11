@@ -20,7 +20,7 @@ def load_module(name,path):
 class OriginalTwoSoakReplay(unittest.TestCase):
     def test_reporter_iterates_phase_specs_not_its_empty_output_list(self):
         s=REPORT.read_text()
-        self.assertIn("phase_specs=MID600_PHASES if midsix else PHASES",s)
+        self.assertIn("phase_specs=(H1520_OUTER_PHASES if h1520 else MID600_PHASES) if midsix else PHASES",s)
         self.assertIn("for i,(name,phase_seconds,rate_scale) in enumerate(phase_specs):",s)
         self.assertIn('assert len(phases)==len(phase_specs)',s)
         self.assertNotIn("for i,(name,phase_seconds,rate_scale) in enumerate(phases):",s)

@@ -26,7 +26,7 @@ class H1506OriginalFiveWindowsScope(unittest.TestCase):
         admission=(ROOT/"r0/go_overlay/internal/realityfront/admission_v4.go").read_text()
         self.assertIn(" --manual-client-leases-file '",fixture)
         self.assertIn("len(c.manualClientLeases4)>0",game)
-        self.assertIn("originalV4ManualAccountTunnelAfterAuth(c,req)",game)
+        self.assertIn("manualAccounts:=len(c.manualClientLeases4)>0",game)
         self.assertIn("ServerManualLeases4:c.manualClientLeases4",game)
         self.assertIn("ManualLeases4:cfg.ServerManualLeases4",owner)
         self.assertIn("v4ServerSelectedManualLease4(",admission)

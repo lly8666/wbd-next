@@ -59,7 +59,7 @@ class MixedPersonaOriginalTLS(unittest.TestCase):
         self.assertIn('h1573_original_persona_M4_triggered',wf)
         self.assertIn("h1572_bob_mode_differential -ne 'unchanged_fec_auto'",wf)
         self.assertIn('["mixed-loss0"]',wf)
-        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1565_SHORT_FIRST_FAULT"',script)
+        self.assertIn('"600s_outer_capacity": "NOT_RUN_H1579_SHORT_30PCT_COLD_TLS" if h1579 else "NOT_RUN_H1565_SHORT_FIRST_FAULT" if probe else "PENDING_H1548"',script)
         self.assertIn("Windows_original_WAL_leftover",script)
         self.assertIn("V4_PUBLIC_SHARED_TUN_STOP generation=",script)
 

@@ -24,7 +24,7 @@ class WindowsThirtyPercentColdOriginalM4(unittest.TestCase):
         self.assertIn("h1579=os.environ.get",s)
         self.assertIn('a.scene=="loss30" and not probe',s)
         self.assertIn('not bob_probe and not l1_150 and not h1577',s)
-        self.assertIn("H1579 only one original Windows2025 native 30pct cold TLS trial",s)
+        self.assertIn("H1579 exactly one original Windows2025 native 30pct cold TLS trial, no invented UDP recovery",s)
         self.assertIn("netem(\"arm\",loss)",s)
         self.assertIn('marker(OUT/"h1548-windows-alice.log","WBD_WINDOWS_CLIENT_READY",window,160)',s)
         self.assertIn('marker(OUT/"h1548-server.log","V4_PUBLIC_MIXED_NORMAL_READY role=server",serverproc,30)',s)
