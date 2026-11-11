@@ -67,3 +67,4 @@ jobs:
             -f "perf_binary_source_sha=$FROZEN_PRODUCT_SOURCE"
           echo H1618_DISPATCH_ONE_WINDOWS_REAL_NPF_WINTUN_IDLE105_ORIGINAL_GO_RUST_SOURCE_LOCKED_NOT_YET_PASS
 # H1619 one bounded source-locked retry: accept only exact H1600 signed ISA-L Windows release third feature.
+# H1620 source static-test exact original len+SHA expression; no Windows product change; one original native idle retry.

@@ -13,6 +13,6 @@ class H1619ExactManifest(unittest.TestCase):
             "assert m['sha256']['exe']=='63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c'",
             "assert m['sha256']['dll']=='7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d'",
             "assert m['features']=='m0_v4_embedded_go,fec2_product_record'",
-            "assert hashlib.sha256(b).hexdigest()==m['sha256'][key]"):
+            "assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]"):
             self.assertIn(val,y)
 if __name__=="__main__":unittest.main()
