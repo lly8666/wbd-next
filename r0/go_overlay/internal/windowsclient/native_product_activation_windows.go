@@ -78,10 +78,10 @@ func(c *N4WindowsNativeProductController)Connect(ctx context.Context)(N4NativeLi
   c.state="applied";return applied,nil
  }
  if err==nil{err=ErrN4NativeGuard}
- // Cancelled startup is not permission to skip durable WFP cleanup.
+ // Cancelled startup is not permission to skip exact-owned native WAL cleanup.
  rollbackCtx,cancel:=context.WithTimeout(context.Background(),45*time.Second);defer cancel()
  drainErr:=c.proof.DrainCryptoAndKernelLoans(rollbackCtx,id)
- if drainErr==nil{drainErr=c.txn.n4RecoverQualifiedGuardOnlyIntent(rollbackCtx)}
+ if drainErr==nil{drainErr=c.recoverOwnedBySchema(rollbackCtx)}
  if drainErr==nil{drainErr=c.txn.VerifyLiveOSDisconnected(rollbackCtx)}
  if drainErr!=nil{
   c.state="recovery_required"
@@ -91,14 +91,22 @@ func(c *N4WindowsNativeProductController)Connect(ctx context.Context)(N4NativeLi
  c.state="requested";return empty,err
 }
 
-// Stop may not release the original Wintun reservation until native WFP,
+// v2 never calls legacy guard-only intent recovery. Legacy v1 retains it
+// strictly for already-existing exact-owned WFP WAL cleanup.
+func(c *N4WindowsNativeProductController)recoverOwnedBySchema(ctx context.Context)error{
+ if c==nil||c.txn==nil{return ErrN4NativeGuard}
+ if c.txn.noLegacyWFP{return c.txn.Recover(ctx)}
+ return c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx)
+}
+
+// Stop may not release the original Wintun reservation until native OS
 // routes, lease, MTU and DNS are retired. Foreign/stale objects retain WAL.
 func(c *N4WindowsNativeProductController)Disconnect(ctx context.Context)error{
  if c==nil||ctx==nil||c.txn==nil||c.proof==nil{return ErrN4NativeGuard}
  if c.state!="applied"&&c.state!="recovery_required"{return ErrN4JournalConflict}
  id:=c.txn.Identity
  if err:=c.proof.DrainCryptoAndKernelLoans(ctx,id);err!=nil{c.state="recovery_required";return err}
- if err:=c.txn.n4RecoverQualifiedGuardOnlyIntent(ctx);err!=nil{c.state="recovery_required";return err}
+ if err:=c.recoverOwnedBySchema(ctx);err!=nil{c.state="recovery_required";return err}
  if err:=c.txn.VerifyLiveOSDisconnected(ctx);err!=nil{c.state="recovery_required";return err}
  c.state="disconnected";return nil
 }

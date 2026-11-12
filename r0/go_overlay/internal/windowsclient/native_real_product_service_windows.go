@@ -76,8 +76,8 @@ type N4RealWindowsProduct struct {
 }
 
 // N4PrepareRealWindowsProduct performs the entire original owner -> signed
-// native kernel -> persistent WFP/compact-route/DNS/MTU WAL assembly with
-// zero network writes. It is a concrete entry into the 5 original OS stages,
+// native kernel -> no-WFP lease/MTU/DNS/routes WAL assembly with
+// zero network writes. This entry requires four genuine v2 stages,
 // not an assemblyOnly shortcut, and requires a real original-TLS live owner.
 // The caller MUST call Apply and Stop, including after a partial Apply.
 func N4PrepareRealWindowsProduct(
@@ -91,6 +91,12 @@ func N4PrepareRealWindowsProduct(
  if err:=owner.VerifyOriginalCredentialAndKernelOwner(ctx,id);err!=nil{
   return nil,err
  }
+ // PLAN029: new sessions must select only the four-stage no-WFP v2
+ // assembler. Refuse its present assemblyOnly qualification barrier BEFORE
+ // claiming the packet ring or mutating the OS; never fall back to v1 WFP.
+ txn,err:=n4AssembleWindowsNoWFPNativeTxn(ctx,tun,plan,id)
+ if err!=nil{return nil,err}
+ if txn.assemblyOnly{return nil,ErrN4NativeGuard}
  // Real signed-Wintun PnP, generation and exclusive native ring readback;
  // the created ring lease is held until ALL native host changes are gone.
  kernel,err:=n4CreateOriginalKernelPacketLease(ctx,tun,id)
@@ -100,13 +106,8 @@ func N4PrepareRealWindowsProduct(
  if err=owner.BindOriginalNativePacketRing(ctx,id,kernel);err!=nil{
   return nil,errors.Join(err,kernel.Stop(context.Background()))
  }
- guard:=&n4WindowsPersistentWFPGuard{
-  InstallationID:id.Installation,WintunLUID:id.WintunLUID,
-  ExclusiveSingleWintun:true,
- }
- controller,err:=n4AssembleWindowsQualifiedFullTxn(
-  ctx,tun,plan,id,guard,owner,
- )
+ // One v2 txn only; its original Go TLS + Rust owner is still required.
+ controller,err:=n4NewWindowsNativeProductController(txn,owner)
  if err!=nil{
   // No host network writes occurred; do not stop someone else's Rust
   // or network owner. Release only OUR new ring claim.
@@ -120,7 +121,7 @@ func N4PrepareRealWindowsProduct(
 }
 
 // Apply publishes a live OS receipt only AFTER complete persistent
-// WFP/lease/MTU/DNS/routes WAL activation, authenticated Rust first and
+// no-WFP lease/MTU/DNS/routes WAL activation, authenticated Rust first and
 // reverse native kernel app delivery, and an independent OS readback.
 // A partial failure is NEVER Converted to product Applied. The owner and
 // ring remain held for recovery while WAL could still exist.
@@ -138,7 +139,7 @@ func(s *N4RealWindowsProduct) Apply(
  receipt,err:=s.controller.Connect(ctx)
  if err!=nil{return empty,err}
  if !receipt.AllNativeOSApplied{return empty,ErrN4NativeGuard}
- // If the original Rust/Wintun generation vanished while OS route/WFP
+ // If the original Rust/Wintun generation vanished while OS route
  // activation ran, NEVER return a positive receipt, and preserve WAL
  // for the caller's immediate owned Stop/Recover handling.
  if err=s.owner.VerifyOriginalNativeHold(ctx,s.identity);err!=nil{

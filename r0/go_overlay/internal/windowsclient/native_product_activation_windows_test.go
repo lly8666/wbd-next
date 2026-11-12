@@ -35,3 +35,32 @@ func TestM0PLAN020NativeProductOSOwnerPacketConnectAndStop(t *testing.T){
  if _,err:=os.Stat(txn.Path);!errors.Is(err,os.ErrNotExist){t.Fatal(err)}
  if err:=c.Disconnect(ctx);!errors.Is(err,ErrN4JournalConflict){t.Fatal(err)}
 }
+
+func TestPlan029NoWFPControllerUsesFourOwnedStagesWithoutLegacyGuard(t *testing.T){
+ ctx:=context.Background()
+ txn,st,trace:=p029DryNoWFP(t)
+ proof:=&n4ProductTestProof{}
+ controller,err:=n4NewWindowsNativeProductController(txn,proof)
+ if err!=nil{t.Fatal(err)}
+ receipt,err:=controller.Connect(ctx)
+ if err!=nil||receipt.Schema!=N4NativeLiveOSSchemaNoWFP||
+  receipt.GuardOwned||!receipt.AllNativeOSApplied{
+  t.Fatalf("v2 pure fixture falsely denied/qualified: %+v %v",receipt,err)
+ }
+ if err:=controller.Disconnect(ctx);err!=nil{t.Fatal(err)}
+ for i:=0;i<4;i++{
+  if st[i].state!=N4UnifiedAbsent||st[i].undoCount!=1{
+   t.Fatalf("v2 stage %d not retired once: %+v",i,st[i])
+  }
+ }
+ for _,line:=range *trace{
+  if line=="apply:guard"||line=="undo:guard"{
+   t.Fatalf("v2 controller touched old WFP guard: %s",line)
+  }
+ }
+ if proof.drain!=1{t.Fatalf("v2 Stop not drained exactly once: %+v",proof)}
+ txn.assemblyOnly=true
+ if _,err:=n4NewWindowsNativeProductController(txn,proof);!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("v2 unqualified assemblyOnly promoted: %v",err)
+ }
+}

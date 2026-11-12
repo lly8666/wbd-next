@@ -15,13 +15,13 @@ import (
 type N4ProductPreflight struct {
     Schema string `json:"schema"`
     NativeAPIs bool `json:"native_apis"`
-    WFPLayersReadable bool `json:"wfp_layers_readable"`
+    WFPLayersReadable bool `json:"wfp_layers_readable"` // retired under v2
     Elevated bool `json:"elevated"`
     DiskState string `json:"disk_state"`
     NativeWAL bool `json:"native_wal"`
     RouteIntent bool `json:"route_intent"`
     Ready bool `json:"ready"`
-    WFPInstallQualified bool `json:"wfp_install_qualified"`
+    WFPInstallQualified bool `json:"wfp_install_qualified"` // retired under v2
     Blockers []string `json:"blockers"`
 }
 
@@ -30,7 +30,7 @@ const N4ProductPreflightSchema = "wbd-native-product-preflight/v1"
 // N4ReadOnlyProductPreflight checks the real Win32 privilege and system API
 // availability, plus the existing exact disk inspector. It MUST NEVER open
 // a Wintun session, create a firewall filter, alter DNS or install routes.
-// Until the original Go authenticated Stop, WFP Arm and owned rollback are
+// Until the original Go authenticated Stop, four no-WFP stages and rollback are
 // proven together, Ready and WFPInstallQualified are always false.
 func N4ReadOnlyProductPreflight(ctx context.Context, statePath string)(N4ProductPreflight,error){
     p:=N4ProductPreflight{
@@ -57,16 +57,14 @@ func N4ReadOnlyProductPreflight(ctx context.Context, statePath string)(N4Product
     _,capErr:=N4ScriptlessWindowsCapability()
     p.NativeAPIs=capErr==nil
     if capErr!=nil{p.Blockers=append(p.Blockers,"native_windows_api_unavailable")}
-    // WFP layer open/get is a READ-ONLY engine query. A successful layer
-    // read DOES NOT prove rule matching or that filters are installed.
-    layerErr:=(N4NativeWFPReader{}).VerifyLayers()
-    p.WFPLayersReadable=layerErr==nil
-    if layerErr!=nil{p.Blockers=append(p.Blockers,"wfp_layer_read_unavailable")}
+    // No old-WFP API read or guard is a PLAN029 prerequisite. Keep the
+    // legacy JSON field for compatible CLI reads, always false.
+    p.WFPLayersReadable=false
     p.Elevated=windows.GetCurrentProcessToken().IsElevated()
     if !p.Elevated{p.Blockers=append(p.Blockers,"requires_elevated_original_client")}
     // Never interpret lack of these blockers as readiness. This final
     // production gate is unconditional until end-to-end real native proof.
-    p.Blockers=append(p.Blockers,"wfp_guard_and_authenticated_stop_not_qualified")
+    p.Blockers=append(p.Blockers,"no_wfp_four_stage_and_authenticated_stop_not_qualified")
     if len(p.Blockers)==0{return p,fmt.Errorf("%w: missing production blocker",ErrN4NativeGuard)}
     return p,ctx.Err()
 }

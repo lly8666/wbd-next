@@ -979,7 +979,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
-      "result_blob": "226e4bc0bcb97b85f249d27d14b8f2498da72566"
+      "result_blob": "72a3693c72e207f2a2fe72e957c27a871ab5291b"
     },
     {
       "kind": "create",
@@ -1030,13 +1030,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_preflight_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
-      "result_blob": "bfe2eb69305b1599b0798b92aa38a3ff282ea529"
+      "result_blob": "7e9aaaed417a363bc6a5fc7b60d75bb66b691d57"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_preflight_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go",
-      "result_blob": "e13390c864e6631c619139a919d54632e9296147"
+      "result_blob": "8603ab9a3974c1146a0437c2c44ba878bc7c4b39"
     },
     {
       "kind": "create",
@@ -1066,19 +1066,19 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_activation_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
-      "result_blob": "4d026bd5ce40535f928ebef862b81644996e5ee6"
+      "result_blob": "1038a7d7c72b5794331b108ef2977ac93bf75a8e"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_activation_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go",
-      "result_blob": "852fff70466da2486b860e466509f9b2615a110b"
+      "result_blob": "7e462bbdd03a135a26948e6e9109da6c425c28b0"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "742be1997939a5417c020e2c971aaf099c3256be"
+      "result_blob": "de01342e34b6c1da00fd23b06029fb848de856c9"
     },
     {
       "kind": "create",

@@ -14,13 +14,12 @@ import (
 )
 
 // N4NativeNetworkReady is the product admission barrier. Never promote the
-// donor's assemblyOnly transaction by a command-line flag: production WFP
-// installation is still refused in native_wfp_guard_windows.go until its
-// real owner/OS policy checks have independent native evidence.
+// v2 assemblyOnly transaction by a command-line flag; old WFP is not a new-session dependency.
+// Actual four-stage Win32 and signed Wintun Rust/Stop require independent evidence.
 func N4NativeNetworkReady(ctx context.Context) error {
     if ctx==nil {return ErrNetworkPlan}
     if err:=ctx.Err();err!=nil{return err}
-    return fmt.Errorf("%w: production native WFP Apply and authenticated Stop have not been qualified", ErrN4NativeGuard)
+    return fmt.Errorf("%w: no-WFP four-stage Win32 Apply, Rust ingress and authenticated Stop have not been qualified", ErrN4NativeGuard)
 }
 
 // N4NativeRecoverState is invoked only by the same original Go executable

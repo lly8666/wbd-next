@@ -26,8 +26,11 @@ func TestPLAN010NativeOriginalProductPreflightReadOnlyDenied(t *testing.T){
         for _,v:=range r.Blockers{if v==key{return true}}
         return false
     }
-    if !hasBlocker(r,"wfp_guard_and_authenticated_stop_not_qualified"){
-        t.Fatal("WFP/Stop product hard gate disappeared")
+    if !hasBlocker(r,"no_wfp_four_stage_and_authenticated_stop_not_qualified"){
+        t.Fatal("no-WFP four-stage and authenticated Stop hard gate disappeared")
+    }
+    if hasBlocker(r,"wfp_layer_read_unavailable")||r.WFPLayersReadable{
+        t.Fatal("retired WFP layer check became PLAN029 admission dependency")
     }
     legacy:=[]byte(`{"old_network_script":true}`)
     if err:=os.WriteFile(p,legacy,0600);err!=nil{t.Fatal(err)}

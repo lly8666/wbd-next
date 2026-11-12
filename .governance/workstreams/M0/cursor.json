@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1690,
-  "checkpoint_sha": "c9e91fc2a22ca13a3dc11ac01552e9f27469229d",
+  "sequence": 1692,
+  "checkpoint_sha": "354f0d156ca263c871a6481675875bed3e6f2311",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1690: H1687 exact-current Rust DLL/WinForms/CLI single DNS+MTU config scoped PASS; H1689 signed Wintun injected UDP no kernel delivery and TCP SYNACK no frames FAIL. No old WFP; no-FWP 4-stage assembler disabled; all native DNS/Direct/FakeIP, OS Ready/Stop, startup padding, D1-D5/P1-P2 still open.",
-  "why_now": "Collected completed signed Wintun diagnostic and original artifact rather than repeat gate; Governance cursor source/hot refs corrected at c9e91fc and passed Action43244785508; preserve original TCP and GUI failures.",
+  "current_task": "PLAN029 H1692: source-locked H1691a Windows Go pure v2 receipt TEST PASS at 354f0d; now removing legacy WFP requirement from actual public Windows product preparation, preflight and schema-specific controller cleanup. v2 assemblyOnly stays true pending real OS qualification; H1690 real signed kernel UDP/TCP ingress still FAIL.",
+  "why_now": "H1691a exact-reviewed assembly manifest Windows Action43246996766 pure v2 tests PASS; real N4PrepareRealWindowsProduct still constructed old WFP guard. Remove new-session dependency without falsely enabling product.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Investigate kernel/Wintun injected inbound packet boundary without firewall or WFP changes; do not assume TCP-only failure or select smoltcp without a confirmed feasibility boundary. Then qualify exactly one Direct TCP backend, OS no-WFP owned route crash/recovery/legacy migration and Rust DNS/Direct Wintun ingress; complete product GUI/padding and D1-D5/P1-P2. Do not start 030.",
+  "next_action": "Observe one SOURCE-locked Go Windows compile/Plan029 controller+preflight tests for H1692. If green, still require signed Windows Wintun kernel/Direct TCP viability decision, v2 actual Win32 Apply/Stop+owned crash migration and native Rust DNS/Direct/FakeIP/padding D1-D5/P1-P2. No repeated 028 matrix or 030.",
   "unverified": true,
   "last_tested_source": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
   "evidence_refs": [
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1690 Action43243971440 signed Wintun UDP control NO_MATCHING_NATIVE_DELIVERY and original TCP SYNACK absent real FAIL; native UDP/TCP local self tests passed but not Wintun. Read-only netsh firewall defaults BlockInbound, not causal proof. H1688 GUI/CLI exact current DLL PASS is scoped and kept in history. OS no-WFP assembler assemblyOnly; Direct DNS/TCP/UDP/FakeIP/padding/D1-D5/P1-P2 remain NOT_RUN. Governance at c9e91fc PASS."
+  "partial_summary": "H1691a Action43246996766 source-locked Windows Go native assembly + TestPlan029NoWFPV2LiveReceiptChecksFourStagesAndPreservesHardGate PASS, not network. H1692 code closes new-session legacy WFP constructor and preflight probe but production no-WFP assembler remains assemblyOnly, so OS Applied NOT_RUN. H1690 signed Wintun UDP/TCP no delivery real FAIL retained; product 029 IN_PROGRESS."
 }
