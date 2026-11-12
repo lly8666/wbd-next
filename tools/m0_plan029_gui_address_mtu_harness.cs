@@ -38,12 +38,18 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    p.Values["mtu"]=1460;
    p.Values["fec.mode"]="off";
    p.Values["lanes"]=1;
+   p.Values["dns.direct"]="223.5.5.5";
+   p.Values["dns.tunnel"]="1.1.1.1";
    store.Save();
 
    Need(store.Fields.Single(f=>f.Key=="server-ip").Label.Contains("域名"),"address_visible_DNS_label");
    Need(store.Fields.Single(f=>f.Key=="mtu").Label=="外层 MTU（字节，上限）","one_editable_outer_MTU_label");
    Need(Convert.ToInt32(store.Fields.Single(f=>f.Key=="mtu").Default)==1460,"outer_default1460_not1500");
    Need(!store.Fields.Any(f=>f.Key=="derived-inner-tun-mtu"||f.Key=="inner-mtu"),"no_editable_inner_MTU");
+   Need(store.Fields.Single(f=>f.Key=="dns.direct").Section=="网络","one_visible_direct_DNS");
+   Need(store.Fields.Single(f=>f.Key=="dns.tunnel").Section=="网络","one_visible_tunnel_DNS");
+   Need(store.Fields.Single(f=>f.Key=="dns4").Managed,"retired_legacy_dns4_not_editable");
+   Need(!store.Effective(p).ContainsKey("dns4"),"new_profile_has_no_legacy_dns4");
 
    using(var cli=new ClientSession(store))
    using(var form=new MainForm(store,cli,()=>Dependencies.Detect(store))){
@@ -56,10 +62,15 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("server-ip","EDGE.Example.Test.");
     form.SetEditor("server-name","borrow.example.org");
     form.SetEditor("mtu","1460");
+    form.SetEditor("dns.direct","223.5.5.5");
+    form.SetEditor("dns.tunnel","1.1.1.1");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-name","borrow.example.org");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"mtu","1460");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.direct","223.5.5.5");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.tunnel","1.1.1.1");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"dns4","");
     var n=Check(store,p,"data/h1663-normal.json",cli);
     int inner=Convert.ToInt32(n["derived-inner-tun-mtu"]);
     Need(inner>0&&inner<1460,"native_Rust_inner_derived_only_no_GUI_rewrite");
@@ -90,11 +101,32 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(Convert.ToInt32(p.Values["mtu"])==1460,"bad_inner_import_not_mutate_outer");
     form.Capture(store.InRoot("h1663-domain-mtu-winforms.png"));
    }
+   var legacy=new Dictionary<string,object>(store.Effective(p));
+   legacy.Remove("dns.tunnel");
+   legacy["dns4"]="9.9.9.9,8.8.8.8";
+   store.ImportValues(p,legacy);
+   store.Save();
+   Need(Convert.ToString(p.Values["dns.tunnel"])=="9.9.9.9","legacy_first_migrates_to_single_tunnel_DNS");
+   Need(!p.Values.ContainsKey("dns4"),"legacy_backup_never_persisted");
+   using(var cli2=new ClientSession(store)){
+     var migrated=Check(store,p,"data/h1663-migrated.json",cli2);
+     Correct(migrated,"dns.direct","223.5.5.5");
+     Correct(migrated,"dns.tunnel","9.9.9.9");
+     Correct(migrated,"dns4","");
+   }
+   var conflict=new Dictionary<string,object>(store.Effective(p));
+   conflict["dns4"]="8.8.8.8";
+   bool rejected=false;
+   try{store.ImportValues(p,conflict);}catch(InvalidDataException){rejected=true;}
+   Need(rejected,"old_dns4_conflict_rejected");
    var reopen=new PortableStore(root);
    var saved=reopen.Book.Profiles.Single(x=>x.Id==p.Id);
    Need(Convert.ToInt32(saved.Values["mtu"])==1460,"reopen_retains_outer1460");
    Need(Convert.ToString(saved.Values["server-ip"])=="EDGE.Example.Test.","reopen_retains_server_domain");
    Need(Convert.ToString(saved.Values["server-name"])=="borrow.example.org","reopen_preserves_separate_verified_TLS_SNI");
+   Need(Convert.ToString(saved.Values["dns.direct"])=="223.5.5.5","reopen_single_direct_DNS");
+   Need(Convert.ToString(saved.Values["dns.tunnel"])=="9.9.9.9","reopen_migrated_single_tunnel_DNS");
+   Need(!saved.Values.ContainsKey("dns4"),"reopen_never_restores_backup_DNS");
    Need(!File.Exists(store.InRoot("data/network-state.json")),"no_fake_OS_Applied_or_WAL");
    Console.WriteLine("PLAN029_H1663_WINFORMS_REAL_CLI_EFFECTIVE_BUILD_SCOPED_PASS_NO_DRIVER_NETWORK");
    return 0;

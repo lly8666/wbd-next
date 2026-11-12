@@ -84,7 +84,8 @@
     "2026-11-12用户授权IP＋域名/单DNS设计；选择性CN FakeIP、Rust Direct TCP内核接入/UDP与两DNS实际出口尚未实现验收，不借已有bootstrap编译或旧Go分流PASS关闭。旧主备DNS描述被新契约替代。",
     "2026-11-12最新用户决定不接入旧WFP体系：029需解除旧guard/stage/Ready/Stop依赖，只保留精确owned历史清理；无WFP下系统DNS与被捕获流量可分流，但不得宣称拦截所有on-link/物理绑定/加密DNS。IPv6实际覆盖另验；Wintun buffer生命周期/提交顺序保留。设计更新，产品修复NOT_RUN。",
     "PLAN029 H1667源码仅实施两个可配置单DNS值及旧dns4首项迁移；原Windows DNS网络Stage目前只获单个隧道DNS，Rust Wintun中QNAME分发、IP+CN域名FakeIP、Direct TCP/UDP与去旧WFP stage仍未实现，D1–D5/P1–P2未验。",
-    "H1669 真实签名Windows Wintun Direct TCP内核接入能力门已提交独立Action，仅测试SYN/ACK/数据/逆向/FIN及一条临时owned /32；不创本程序WFP guard/防火墙规则；待OS结果，不代表Rust TCP/UDP双出口已实现。"
+    "H1669 真实签名Windows Wintun Direct TCP内核接入能力门已提交独立Action，仅测试SYN/ACK/数据/逆向/FIN及一条临时owned /32；不创本程序WFP guard/防火墙规则；待OS结果，不代表Rust TCP/UDP双出口已实现。",
+    "H1669 SOURCE bd82a8 签名Windows Wintun Direct TCP能力门FAIL：一条owned /32可建立，但无WFP/Defender修改时注入SYN六秒无SYN-ACK，尚不能区分Windows入站过滤和本机TCP接入不可行。原失败保留，未选smoltcp后备。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
