@@ -34,6 +34,7 @@ NATIVE_RUST_PREFIXES = (
     "crates/wbd-engine/src/v4_windows_",
     "crates/wbd-engine/src/v4_game_",
     "crates/wbd-engine/src/v4_fixed_",
+    "crates/wbd-engine/src/v4_direct_",
 )
 EXPLICIT_NATIVE_MARKERS = (
     "[wiring-full]", "[m0-native-smoke]", "[m0-real-game-fec]",
@@ -49,6 +50,8 @@ def is_native_path(path: str) -> bool:
         path in NATIVE_EXACT
         or any(path.startswith(prefix) for prefix in NATIVE_PREFIXES)
         or any(path.startswith(prefix) and path.endswith(".rs") for prefix in NATIVE_RUST_PREFIXES)
+        or (path.startswith("crates/wbd-platform/src/windows_") and path.endswith(".rs"))
+        or path.startswith("r0/go_overlay/cmd/wbd-client/m0_native_v4_direct")
         or path.startswith("r0/go_overlay/internal/windowsclient/native_unified_")
         or path.startswith("r0/go_overlay/internal/windowsclient/native_original_kernel_")
     )
