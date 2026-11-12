@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "gui-config-feedback",
   "name": "配置/CLI/WinForms状态回执",
-  "summary": "当前原生V4 Windows GUI配置/有效值：Normal Off默认、Fixed6/Auto显式pending_native_auth、Game2/4 Off/Fixed6、三套AEAD各自选择，真实OS Applied独立读回；Windows VM字段/按钮结果持续补验。",
+  "summary": "Windows 正式 V4 WinForms 配置与CLI有效回读；H1647 传输页只保留原生 FEC Off/Fixed/Normal Auto，固定七级强度和需用时显示的自动策略，旧载体配置自动推导（源锁VM验收中）。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -21,7 +21,7 @@
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。",
-    "gui": "正式assembled PortableStore/MainForm 的53项参数保存进入原Go V4 CLI的--check-config；支持Normal Off/Fixed6/Auto、Game2/4 Off/Fixed6；不展示Game3。显式AES选择在旧fec-mode=legacy+parity0下使用完全相同的受保护Off载体，回显effective-original-carrier-fec-mode=off；不改变cipher也不打开FEC。只有真实WBD_WINDOWS_OS_APPLIED和Rust/OS证据可宣称连接，FakeSession按钮事件不代表起网。"
+    "gui": "传输页用户只选择Normal1/Game2/Game4、FEC关闭/固定/Normal自动、固定7档（轻12.5%至最高125% r/k）、自动策略与起步档（仅Normal自动显示）、三AEAD和外层重传；原Go仅用由此派生的内部冷载体值：Normal Fixed->fixed/parity4，其余->off/parity0；真实--check-config有效值可回读pending_native_auth≠OS Applied；不做旧GUI兼容，不对不支持的Game Auto静默降级。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -72,7 +72,8 @@
     "GUI AES显示更新为V3已验/V4原生待验；V4真实GUI credential/租约/内核Apply/Disconnect和全部平台组合尚无当前SOURCE端到端证据，不能凭配置回显宣称已生效。",
     "H1638发现并补齐GUI原生outer-repair显式on/off配置映射；正式装配参数表默认MTU1460已存在，原始donor 1500非正式GUI。H1638 VM原生编译/全部字段CLI只读校验/WinForms按钮事件与native真实连接必须按各自结果分账，当前尚未测出结果，不冒充PASS。",
     "H1643定位真实GUI问题：旧Go cold check-config对已准入V4 Fixed/Auto误报fec.status=rejected，MainForm因此阻止连接；本批正式装配改为pending_native_auth（不冒充Applied），并删除未支持Game3选择。H1642 Windows VM GUI失败来自旧测试用16B route-key被V4正确拒绝；正式VM测试结果未出，不能宣称全部按钮实际执行成功或真实GUI起网。",
-    "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。"
+    "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。",
+    "H1647 GUI精简：四个旧fec-mode/fec-parity/fec-min-parity/fec-start-parity不再展示为可调项；原生Rust固定档7级ratio依次1/8、1/4、3/8、1/2、3/4、1、5/4，r=ceil(k*rho)且受MAX_R上限，比例非实际带宽占比；关闭FEC仍是默认。正式Windows VM编译/CLI全档及按钮结果需按最终Action验证，不等价物理GUI-origin signed network。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

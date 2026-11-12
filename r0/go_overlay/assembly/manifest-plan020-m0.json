@@ -239,7 +239,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "01ec45c530b9854cde25cebe22643698fe4bd02b",
+      "result_blob": "b2688af2ff3d810af8ff3751c08a465f01aa8b79",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -276,6 +276,58 @@
         {
           "find": "Normal 使用 1 条；Game 使用 2–4 条竞速，会增加带宽开销",
           "replace": "Normal 单lane，Game仅2或4 lanes；3 lanes原生V4不支持，校验时明确拒绝"
+        },
+        {
+          "find": "Normal 单lane，Game仅2或4 lanes；3 lanes原生V4不支持，校验时明确拒绝",
+          "replace": "Normal 1 lane；Game 2 或 4 lanes。同一服务器可使用不同客户端参数，切换需重新建链。"
+        },
+        {
+          "find": "off（默认）|fixed|auto；未接真实 native applied 时拒绝开启",
+          "replace": "关闭（默认）／固定强度／自动调节（仅 Normal）。配置校验仅证明可准入，最终以原生 Rust/OS 应用回执为准。"
+        },
+        {
+          "find": "FEC2 固定七档",
+          "replace": "固定纠错强度"
+        },
+        {
+          "find": "light / mild / medium / balanced / high / strong / maximum",
+          "replace": "七个原生档：r/k 约 12.5%／25%／37.5%／50%／75%／100%／125%，实际分片数按块向上取整并受预算限制。该比例不是总体带宽占比或交付保证。"
+        },
+        {
+          "find": "FEC2 自动政策",
+          "replace": "自动调节策略"
+        },
+        {
+          "find": "normal 或 aggressive，激进只在普通目标上加一档",
+          "replace": "只在 Normal 自动模式出现；普通／积极（目标增强一级），需真实服务端确认。"
+        },
+        {
+          "find": "FEC2 自动起步档",
+          "replace": "自动起始强度"
+        },
+        {
+          "find": "默认 strong；激进在起步档上再加一级",
+          "replace": "仅在 Normal 自动模式出现，初始档默认 strong；之后依观测决定发送档位。"
+        },
+        {
+          "find": "默认 ChaCha20-Poly1305；AES-128/256 各自通过真实无损V3双向网络功能测试；有损/CPU及Windows原生驱动仍待最终验收。仅更改记录加密，不会改变伪装 TLS 套件",
+          "replace": "默认 ChaCha20-Poly1305；可独立选择 AES-128-GCM 或 AES-256-GCM。与外层标准 TLS 伪装不同，实际协商/应用状态须在连接后校验。"
+        },
+        {
+          "find": "仅兼容、固定模式使用；自动模式必须设为关闭（0），具体由下方范围动态选档",
+          "replace": "内部受保护冷建链载体参数，由 V4 模式自动推导，GUI 不直接选择。"
+        },
+        {
+          "find": "兼容旧配置 / 固定 / 关闭 / Normal 自动 / Normal 激进自动；Game 不支持自动",
+          "replace": "内部原 Go 冷建链策略，由 V4 原生 FEC 选择映射，GUI 不直接选择；无旧版配置兼容要求。"
+        },
+        {
+          "find": "Normal 自动下可选 R0 / R4 / R8 / R10 / R12 / R16 / R20；R0 必须配合普通自动起步R0",
+          "replace": "内部旧载体参数；不代表 Rust V4 自动 FEC，GUI 不直接配置。"
+        },
+        {
+          "find": "默认 R20，最低R4；仅普通Normal自动+最低R0可显式选择起步R0",
+          "replace": "内部旧载体参数；V4 实际起步档仅由 fec.auto_start_profile 控制。"
         }
       ]
     },
@@ -283,7 +335,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "2825f7a08ad0c63d66de9ea1b1c9ee89b533dd03",
+      "result_blob": "7bb0335224dd13a9cfcb6cff06d325f8cb718165",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -368,6 +420,54 @@
         {
           "find": "new Choice(\"3\", \"Game · 3 lanes\"), ",
           "replace": ""
+        },
+        {
+          "find": "        readonly Dictionary<string, Control> editors = new Dictionary<string, Control>();",
+          "replace": "        readonly Dictionary<string, Control> editors = new Dictionary<string, Control>();\n        readonly Dictionary<string, Control[]> fecRows = new Dictionary<string, Control[]>();\n        readonly Label fecGuidance = new Label();"
+        },
+        {
+          "find": "                foreach (Field f in store.Fields.Where(f => f.Section == section)) {\n                    Control c = Editor(f); editors.Add(f.Key, c); AddRow(fields, f.Label, c, f.Hint);\n                }",
+          "replace": "                foreach (Field f in store.Fields.Where(f => f.Section == section && !PortableStore.IsNativeCarrierField(f.Key))) {\n                    Control c = Editor(f); editors.Add(f.Key, c);\n                    Control[] row = AddRow(fields, f.Label, c, f.Hint);\n                    if (f.Key.StartsWith(\"fec.\", StringComparison.Ordinal)) fecRows.Add(f.Key,row);\n                    if (f.Key==\"lanes\" || f.Key==\"fec.mode\")\n                        ((ComboBox)c).SelectedIndexChanged += (sender,e) => UpdateNativeFecFields();\n                }"
+        },
+        {
+          "find": "                    AddWide(fields, Note(\"固定冗余只用于兼容/固定模式；普通 Normal 自动可设置最低 R0 并显式从 R0 起步。其他自动默认从 R20 起步，最大 R20；Game 只允许固定或关闭。AES-128/256 已通过各自独立的真实无损V3双向网络功能验证；仍未完成有损/CPU与Windows实机验收。默认继续ChaCha，手动选择AES不会静默回退；记录加密与外层TLS伪装密码套件相互独立。\"));",
+          "replace": "                    fecGuidance.AutoSize=true;\n                    fecGuidance.MaximumSize=new Size(700,0);\n                    fecGuidance.ForeColor=Color.FromArgb(75,85,99);\n                    AddWide(fields,fecGuidance);\n                    AddWide(fields, Note(\"纠错仅使用原生 V4：默认关闭；固定档是源数据比例 r/k（按实际块大小向上取整且受上限约束），不是总带宽占比或丢包恢复保证。Normal 可选自动；Game2/4 仅关闭或固定。旧载体参数由程序内部推导。\"));"
+        },
+        {
+          "find": "        static void AddRow(TableLayoutPanel table, string text, Control c, string hint) {\n            int row = table.RowCount++; c.Dock = DockStyle.Fill; c.Margin = new Padding(0, 6, 6, 0); c.MinimumSize = new Size(120, 28);\n            table.Controls.Add(new Label { Text = text, AutoSize = true, Padding = new Padding(0, 9, 0, 0) }, 0, row); table.Controls.Add(c, 1, row);\n            AddWide(table, new Label { Text = hint, AutoSize = true, MaximumSize = new Size(720, 0), ForeColor = Color.FromArgb(113, 125, 142), Font = new Font(\"Microsoft YaHei UI\", 8.2F), Margin = new Padding(155, 4, 6, 13) });\n        }",
+          "replace": "        static Control[] AddRow(TableLayoutPanel table, string text, Control c, string hint) {\n            int row = table.RowCount++; c.Dock = DockStyle.Fill; c.Margin = new Padding(0, 6, 6, 0); c.MinimumSize = new Size(120, 28);\n            var title = new Label { Text = text, AutoSize = true, Padding = new Padding(0, 9, 0, 0) };\n            var help = new Label { Text = hint, AutoSize = true, MaximumSize = new Size(720, 0), ForeColor = Color.FromArgb(113, 125, 142), Font = new Font(\"Microsoft YaHei UI\", 8.2F), Margin = new Padding(155, 4, 6, 13) };\n            table.Controls.Add(title, 0, row); table.Controls.Add(c, 1, row); AddWide(table, help);\n            return new Control[] { title, c, help };\n        }\n        static string SelectedValue(Control control) {\n            Choice c=(control as ComboBox)?.SelectedItem as Choice;\n            return c == null ? \"\" : c.Value;\n        }\n        void UpdateNativeFecFields() {\n            if (!editors.ContainsKey(\"fec.mode\") || !editors.ContainsKey(\"lanes\")) return;\n            string mode=SelectedValue(editors[\"fec.mode\"]);\n            string lanes=SelectedValue(editors[\"lanes\"]);\n            bool fixedMode=mode==\"fixed\", autoMode=mode==\"auto\", normal=lanes==\"1\";\n            foreach(var pair in fecRows) {\n                bool show=pair.Key==\"fec.mode\" || (pair.Key==\"fec.profile\" && fixedMode) ||\n                    ((pair.Key==\"fec.auto_policy\" || pair.Key==\"fec.auto_start_profile\") && autoMode && normal);\n                foreach(Control item in pair.Value) item.Visible=show;\n            }\n            fecGuidance.ForeColor=autoMode && !normal ? Color.Firebrick : Color.FromArgb(75,85,99);\n            fecGuidance.Text=autoMode && !normal ? \"Game2/4 不支持自动 FEC，请明确改为关闭或固定，保存后校验会拒绝该组合。\" :\n                fixedMode ? \"固定档只控制 Rust FEC2 的 r/k 冗余比例，档位需要认证后实际应用；不代表必能恢复相同比例的丢包。\" :\n                autoMode ? \"自动策略与起步档仅 Normal 有效；已保存/本地校验不等于已应用，真实发送档以会话回执为准。\" :\n                \"FEC 关闭（默认）。不会发送 FEC 冗余；外层机会重传不负责业务可靠性。\";\n        }"
+        },
+        {
+          "find": "new Choice(\"aes-128-gcm\", \"AES-128-GCM（V3 已验；V4 原生待验）\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM（V3 已验；V4 原生待验）\")",
+          "replace": "new Choice(\"aes-128-gcm\", \"AES-128-GCM\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM\")"
+        },
+        {
+          "find": "if (f.Key == \"fec.mode\") c.Items.AddRange(new[] { new Choice(\"off\",\"关闭（未启用FEC2）\"), new Choice(\"fixed\",\"固定档（需native应用）\"), new Choice(\"auto\",\"自动档（需native应用）\") });",
+          "replace": "if (f.Key == \"fec.mode\") c.Items.AddRange(new[] { new Choice(\"off\",\"关闭（默认）\"), new Choice(\"fixed\",\"固定强度\"), new Choice(\"auto\",\"自动调节（仅 Normal）\") });"
+        },
+        {
+          "find": "if (f.Key == \"fec.profile\" || f.Key == \"fec.auto_start_profile\") c.Items.AddRange(new[] { new Choice(\"light\",\"light · 12.5%\"), new Choice(\"mild\",\"mild · 25%\"), new Choice(\"medium\",\"medium · 37.5%\"), new Choice(\"balanced\",\"balanced · 50%\"), new Choice(\"high\",\"high · 75%\"), new Choice(\"strong\",\"strong · 100%\"), new Choice(\"maximum\",\"maximum · 125%\") });",
+          "replace": "if (f.Key == \"fec.profile\" || f.Key == \"fec.auto_start_profile\") c.Items.AddRange(new[] {\n                    new Choice(\"light\",\"一级 · 轻量（r/k ≈ 12.5%）\"),\n                    new Choice(\"mild\",\"二级 · 温和（r/k ≈ 25%）\"),\n                    new Choice(\"medium\",\"三级 · 中等（r/k ≈ 37.5%）\"),\n                    new Choice(\"balanced\",\"四级 · 均衡（r/k ≈ 50%）\"),\n                    new Choice(\"high\",\"五级 · 加强（r/k ≈ 75%）\"),\n                    new Choice(\"strong\",\"六级 · 高强度（r/k ≈ 100%）\"),\n                    new Choice(\"maximum\",\"七级 · 最高（r/k ≈ 125%）\")\n                });"
+        },
+        {
+          "find": "            foreach (Field f in store.Fields.Where(f => !f.Managed)) {\n                object v; if (!editing.Values.TryGetValue(f.Key, out v)) v = f.Default;\n                SetEditor(f.Key, v);\n            }\n        }",
+          "replace": "            foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key))) {\n                object v; if (!editing.Values.TryGetValue(f.Key, out v)) v = f.Default;\n                SetEditor(f.Key, v);\n            }\n            UpdateNativeFecFields();\n        }"
+        },
+        {
+          "find": "            store.Save(); servers.Invalidate();\n        }\n        public Profile AddProfile()",
+          "replace": "            PortableStore.NormalizeNativeCarrier(editing.Values);\n            store.Save(); servers.Invalidate();\n        }\n        public Profile AddProfile()"
+        },
+        {
+          "find": "if (f.Key == \"outer-repair\" || f.Key == \"route-mode\" || f.Key == \"fec-parity\" || f.Key == \"fec-mode\" || f.Key == \"fec.mode\" || f.Key == \"fec.profile\" || f.Key == \"fec.auto_policy\" || f.Key == \"fec.auto_start_profile\" || f.Key == \"fec-min-parity\" || f.Key == \"fec-start-parity\" || f.Key == \"record-cipher\" || f.Key == \"lanes\")",
+          "replace": "if (f.Key == \"outer-repair\" || f.Key == \"route-mode\" || f.Key == \"fec.mode\" || f.Key == \"fec.profile\" || f.Key == \"fec.auto_policy\" || f.Key == \"fec.auto_start_profile\" || f.Key == \"record-cipher\" || f.Key == \"lanes\")"
+        },
+        {
+          "find": "                if (f.Key == \"fec-parity\") c.Items.AddRange(new[] { new Choice(\"0\", \"关闭\"), new Choice(\"4\", \"20:4\"), new Choice(\"8\", \"20:8\"), new Choice(\"10\", \"20:10\"), new Choice(\"12\", \"20:12\"), new Choice(\"16\", \"20:16\"), new Choice(\"20\", \"20:20\") });\n",
+          "replace": ""
+        },
+        {
+          "find": "                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {\n                    new Choice(\"legacy\", \"兼容旧配置 · 固定或关闭\"),\n                    new Choice(\"fixed\", \"固定 FEC\"),\n                    new Choice(\"off\", \"关闭 FEC\"),\n                    new Choice(\"auto\", \"Normal 自动 · 保守\"),\n                    new Choice(\"auto-aggressive\", \"Normal 自动 · 激进\")\n                });\n                if (f.Key == \"fec-min-parity\") c.Items.AddRange(new[] {\n                    new Choice(\"0\", \"关闭 R0（仅普通自动）\"), new Choice(\"4\", \"R4（默认）\"),\n                    new Choice(\"8\", \"R8\"), new Choice(\"10\", \"R10\"), new Choice(\"12\", \"R12\"),\n                    new Choice(\"16\", \"R16\"), new Choice(\"20\", \"R20\")\n                });\n                if (f.Key == \"fec-start-parity\") c.Items.AddRange(new[] {\n                    new Choice(\"20\", \"R20（默认保护）\"), new Choice(\"0\", \"R0（需普通自动 + 最低R0）\")\n                });\n",
+          "replace": ""
         }
       ]
     },
@@ -375,7 +475,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "11ff864790df59c96025caed4cda5fe447a9cdb7",
+      "result_blob": "9e66f7cb9b39700be1e31767af89efbdff7c3d1d",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -464,6 +564,62 @@
         {
           "find": "                        Assert(Convert.ToString(actualSuite[\"record-cipher\"]) == suite,\n                               \"Windows Go --check-config accepts explicit V4 suite \" + suite);",
           "replace": "                        Assert(Convert.ToString(actualSuite[\"record-cipher\"]) == suite,\n                               \"Windows Go --check-config accepts explicit V4 suite \" + suite);\n                        Assert(Convert.ToString(actualSuite[\"effective-original-carrier-fec-mode\"]) ==\n                            (suite == \"chacha20-poly1305\" ? \"legacy\" : \"off\"),\n                            \"V4 AES maps only old legacy FEC-off carrier; cipher never silently changes \" + suite);"
+        },
+        {
+          "find": "                    foreach (Field f in store.Fields.Where(f => !f.Managed)) {",
+          "replace": "                    foreach (string oldKey in new[] {\"fec-mode\",\"fec-parity\",\"fec-min-parity\",\"fec-start-parity\"}) {\n                        bool hidden=false;\n                        try {configForm.SetEditor(oldKey,0);} catch(KeyNotFoundException) {hidden=true;}\n                        Assert(hidden,\"legacy FEC carrier has no visible GUI control \"+oldKey);\n                    }\n                    foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key))) {"
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=(string)mode[2];\n                        p.Values[\"fec-parity\"]=(int)mode[3];\n                        p.Values[\"fec.profile\"]=(string)mode[0]==\"fixed\"?\"maximum\":\"strong\";\n                        store.WriteAtomic(\"data/mode.json\",store.Json.Serialize(store.Effective(p)));",
+          "replace": "                        p.Values[\"fec.profile\"]=(string)mode[0]==\"fixed\"?\"maximum\":\"strong\";\n                        var native=store.Effective(p);\n                        Assert(Convert.ToString(native[\"fec-mode\"])==(string)mode[2]==\"legacy\"?\"off\":(string)mode[2],\n                               \"native original-Go carrier is derived from V4 selected mode\");\n                        Assert(Convert.ToInt32(native[\"fec-parity\"])==(int)mode[3],\n                               \"native carrier parity derived from selected Normal fixed or Game FEC\");\n                        store.WriteAtomic(\"data/mode.json\",store.Json.Serialize(native));"
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=(string)bad[2];p.Values[\"fec-parity\"]=(int)bad[3];\n                        store.WriteAtomic(\"data/invalid-mode.json\",store.Json.Serialize(store.Effective(p)));",
+          "replace": "                        var invalid=store.Effective(p);\n                        invalid[\"fec-mode\"]=(string)bad[2];invalid[\"fec-parity\"]=(int)bad[3];\n                        store.WriteAtomic(\"data/invalid-mode.json\",store.Json.Serialize(invalid));"
+        },
+        {
+          "find": "                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    p.Values[\"fec-mode\"]=\"legacy\";p.Values[\"fec-parity\"]=0;p.Values[\"fec.profile\"]=\"strong\";",
+          "replace": "                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    p.Values[\"fec.profile\"]=\"strong\";"
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=legacyAuto;\n                        store.WriteAtomic(\"data/legacy-auto.json\",store.Json.Serialize(store.Effective(p)));",
+          "replace": "                        var invalid=store.Effective(p);\n                        invalid[\"fec-mode\"]=legacyAuto;\n                        store.WriteAtomic(\"data/legacy-auto.json\",store.Json.Serialize(invalid));"
+        },
+        {
+          "find": "                    p.Values[\"fec-mode\"]=\"legacy\";\n                    p.Values[\"fec.mode\"]=\"auto\";p.Values[\"fec.auto_start_profile\"]=\"light\";",
+          "replace": "                    p.Values[\"fec.mode\"]=\"auto\";p.Values[\"fec.auto_start_profile\"]=\"light\";"
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=\"legacy\"; p.Values[\"fec.mode\"]=\"off\"; p.Values[\"fec-min-parity\"]=4; p.Values[\"fec-start-parity\"]=20;",
+          "replace": "                        p.Values[\"fec.mode\"]=\"off\";"
+        },
+        {
+          "find": "(suite == \"chacha20-poly1305\" ? \"legacy\" : \"off\")",
+          "replace": "\"off\""
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=(string)badPolicy[0];p.Values[\"lanes\"]=badPolicy[1];\n                        p.Values[\"fec-parity\"]=badPolicy[2];p.Values[\"fec-min-parity\"]=badPolicy[3];\n                        p.Values[\"fec-start-parity\"]=badPolicy[4];\n                        store.WriteAtomic(\"data/invalid-policy.json\",store.Json.Serialize(store.Effective(p)));",
+          "replace": "                        p.Values[\"lanes\"]=badPolicy[1];\n                        var invalid=store.Effective(p);\n                        invalid[\"fec-mode\"]=(string)badPolicy[0];\n                        invalid[\"fec-parity\"]=badPolicy[2];\n                        invalid[\"fec-min-parity\"]=badPolicy[3];\n                        invalid[\"fec-start-parity\"]=badPolicy[4];\n                        store.WriteAtomic(\"data/invalid-policy.json\",store.Json.Serialize(invalid));"
+        },
+        {
+          "find": "                    p.Values[\"fec-mode\"]=\"legacy\";p.Values[\"lanes\"]=1;p.Values[\"fec-parity\"]=0;\n                    p.Values[\"fec-min-parity\"]=4;p.Values[\"fec-start-parity\"]=20;",
+          "replace": "                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;"
+        },
+        {
+          "find": "{\"fec-parity\",7}",
+          "replace": "{\"fec.profile\",\"unsupported-grade\"}"
+        },
+        {
+          "find": "{\"fec-parity\",0},{\"lanes\",4}",
+          "replace": "{\"fec.mode\",\"off\"},{\"lanes\",4}"
+        },
+        {
+          "find": "Assert(Convert.ToString(native[\"fec-mode\"])==(string)mode[2]==\"legacy\"?\"off\":(string)mode[2],",
+          "replace": "Assert(Convert.ToString(native[\"fec-mode\"])==((string)mode[2]==\"legacy\"?\"off\":(string)mode[2]),"
+        },
+        {
+          "find": "                    // Unsupported native V4 combos must error before TLS or OS mutation.",
+          "replace": "                    // One compiled UI + real current Go cold CLI tests every\n                    // actual Rust FEC2 profile for every supported native lane\n                    // count; this proves config propagation, NOT OS/Rust Applied.\n                    using (var grades=new MainForm(store,new FakeSession(),\n                        () => new DependencyState { Admin=true,Npcap=true,Wintun=true,NpcapVersion=\"grades-ui\" })) {\n                    foreach (int lane in new[]{1,2,4})\n                    foreach (string profile in new[]{\"light\",\"mild\",\"medium\",\"balanced\",\"high\",\"strong\",\"maximum\"}) {\n                        p.Values[\"fec.mode\"]=\"fixed\"; p.Values[\"lanes\"]=lane;\n                        p.Values[\"fec.profile\"]=profile;\n                        grades.LoadEditor();\n                        grades.SetEditor(\"fec.profile\",profile);\n                        grades.SaveEditor();\n                        var requested=store.Effective(p);\n                        Assert(Convert.ToString(requested[\"fec-mode\"])==(lane==1?\"fixed\":\"off\") &&\n                               Convert.ToInt32(requested[\"fec-parity\"])==(lane==1?4:0),\n                               \"GUI derives native original protected cold carrier grade=\"+profile+\" lanes=\"+lane);\n                        store.WriteAtomic(\"data/fixed-grade.json\",store.Json.Serialize(requested));\n                        var got=Wait(real.ValidateAsync(store.InRoot(\"data/fixed-grade.json\")));\n                        Assert(Convert.ToString(got[\"fec.profile\"])==profile &&\n                               Convert.ToString(got[\"fec.status\"])==\"pending_native_auth\" &&\n                               Convert.ToString(got[\"fec.applied_profile\"])==\"unknown\",\n                               \"seven actual Rust FEC2 fixed grade selectors travel GUI->Go pending only \"+profile+\" lanes=\"+lane);\n                    }\n                    }\n                    // Unsupported native V4 combos must error before TLS or OS mutation."
         }
       ]
     },
@@ -689,9 +845,29 @@
         {
           "find": "                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");",
           "replace": "                if (process.ExitCode != 0)\n                    throw new IOException(\"原始客户端异常退出；不能宣称驱动或 owned 网络已经清理。\");\n                if (nativeApplied && !nativeStopped)\n                    throw new IOException(\"已 Applied 的原生 Windows 网络缺少真实 WAL CAS/Rust Stop 回执，拒绝显示已断开。\");"
+        },
+        {
+          "find": "        public Dictionary<string, object> Effective(Profile p) {",
+          "replace": "        // Native V4 has one user-facing FEC system. The original Go protected\n        // admission still needs its internal cold-carrier flags, which are\n        // derived rather than offered as competing user-configurable modes.\n        public static bool IsNativeCarrierField(string key) {\n            return key==\"fec-mode\" || key==\"fec-parity\" ||\n                   key==\"fec-min-parity\" || key==\"fec-start-parity\";\n        }\n        public Dictionary<string, object> Effective(Profile p) {"
+        },
+        {
+          "find": "            string china = (string)values[\"china-ip-file\"];",
+          "replace": "            string nativeMode=Convert.ToString(values[\"fec.mode\"]);\n            int lanes=Convert.ToInt32(values[\"lanes\"]);\n            // These flags are strictly transport-internal, not FEC2 parity.\n            // Normal Fixed6 requires original-Go cold fixed4 admission; all\n            // other V4 modes use protected FEC-off original carrier. Rust is\n            // the only steady-state native FEC owner.\n            bool coldFixed=(nativeMode==\"fixed\" && lanes==1);\n            values[\"fec-mode\"]=coldFixed ? \"fixed\" : \"off\";\n            values[\"fec-parity\"]=coldFixed ? 4 : 0;\n            values[\"fec-min-parity\"]=4;\n            values[\"fec-start-parity\"]=20;\n            string china = (string)values[\"china-ip-file\"];"
+        },
+        {
+          "find": "        public Dictionary<string, object> Effective(Profile p) {",
+          "replace": "        public static void NormalizeNativeCarrier(Dictionary<string, object> values) {\n            string nativeMode=Convert.ToString(values[\"fec.mode\"]);\n            int lanes=Convert.ToInt32(values[\"lanes\"]);\n            // No exposed legacy transport setting: only a strict internal\n            // admission carrier, derived from native Mode + lane count.\n            bool coldFixed=(nativeMode==\"fixed\" && lanes==1);\n            values[\"fec-mode\"]=coldFixed ? \"fixed\" : \"off\";\n            values[\"fec-parity\"]=coldFixed ? 4 : 0;\n            values[\"fec-min-parity\"]=4;\n            values[\"fec-start-parity\"]=20;\n        }\n        public Dictionary<string, object> Effective(Profile p) {"
+        },
+        {
+          "find": "            string nativeMode=Convert.ToString(values[\"fec.mode\"]);\n            int lanes=Convert.ToInt32(values[\"lanes\"]);\n            // These flags are strictly transport-internal, not FEC2 parity.\n            // Normal Fixed6 requires original-Go cold fixed4 admission; all\n            // other V4 modes use protected FEC-off original carrier. Rust is\n            // the only steady-state native FEC owner.\n            bool coldFixed=(nativeMode==\"fixed\" && lanes==1);\n            values[\"fec-mode\"]=coldFixed ? \"fixed\" : \"off\";\n            values[\"fec-parity\"]=coldFixed ? 4 : 0;\n            values[\"fec-min-parity\"]=4;\n            values[\"fec-start-parity\"]=20;",
+          "replace": "            NormalizeNativeCarrier(values);"
+        },
+        {
+          "find": "            foreach (Field f in Fields.Where(f => !f.Managed)) if (values.ContainsKey(f.Key)) p.Values[f.Key] = values[f.Key];",
+          "replace": "            // Existing programmatically exported native config may contain\n            // the internal carrier flags. They must already agree with the\n            // visible V4 selection, or reject instead of silently downgrading.\n            var requested=new Dictionary<string, object>(p.Values);\n            foreach (Field f in Fields.Where(f => !f.Managed))\n                if (values.ContainsKey(f.Key)) requested[f.Key]=values[f.Key];\n            var expected=new Dictionary<string, object>(requested);\n            NormalizeNativeCarrier(expected);\n            foreach (string key in new[]{\"fec-mode\",\"fec-parity\",\"fec-min-parity\",\"fec-start-parity\"})\n                if (values.ContainsKey(key) && Convert.ToString(values[key])!=Convert.ToString(expected[key]))\n                    throw new InvalidDataException(\"配置包含与原生 FEC 不一致的旧载体参数 \"+key+\"；请通过 FEC 模式和固定强度选择。\");\n            foreach (Field f in Fields.Where(f => !f.Managed)) if (values.ContainsKey(f.Key)) p.Values[f.Key] = values[f.Key];\n            NormalizeNativeCarrier(p.Values);"
         }
       ],
-      "result_blob": "e95cc78740b347278ab5550613f1e26ea9c8ad0f"
+      "result_blob": "080f91444c4ca0ef1906ba084cbfe8ef307fe8d8"
     },
     {
       "kind": "create",

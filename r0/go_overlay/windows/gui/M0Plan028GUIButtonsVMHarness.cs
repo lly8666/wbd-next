@@ -100,6 +100,34 @@ public static class M0Plan028GUIButtonsVMHarness {
      "原生系统预检（只读）"};
     foreach(string name in names)FindButton(form,name);
     Need(Walk(form).OfType<TabPage>().Count()>=6,"all_six_gui_pages");
+    var allEditors=(Dictionary<string,Control>)typeof(MainForm).GetField("editors",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(form);
+    foreach(string old in new[]{"fec-mode","fec-parity","fec-min-parity","fec-start-parity"})
+      Need(!allEditors.ContainsKey(old),"no_legacy_visible_FEC_"+old);
+    var tabs=Walk(form).OfType<TabControl>().Single();
+    tabs.SelectedTab=tabs.TabPages.Cast<TabPage>().Single(t=>t.Text=="传输");
+    Application.DoEvents();
+    form.SetEditor("lanes","1");
+    form.SetEditor("fec.mode","off");
+    Application.DoEvents();
+    Need(!allEditors["fec.profile"].Visible && !allEditors["fec.auto_policy"].Visible,"FEC_Off_compact_only_mode");
+    form.SetEditor("fec.mode","fixed");Application.DoEvents();
+    Need(allEditors["fec.profile"].Visible && !allEditors["fec.auto_policy"].Visible,"FEC_Fixed_shows_only_seven_grades");
+    var grades=(ComboBox)allEditors["fec.profile"];
+    Need(grades.Items.Count==7,"FEC_Fixed_seven_real_Rust_ratios");
+    form.SetEditor("fec.profile","maximum");
+    Click(form,"保存配置");
+    Need(Convert.ToString(p.Values["fec.profile"])=="maximum" &&
+      Convert.ToString(book.Effective(p)["fec-mode"])=="fixed" &&
+      Convert.ToInt32(book.Effective(p)["fec-parity"])==4,"FEC_Normal_maximum_maps_correct_internal_carrier");
+    form.SetEditor("fec.mode","auto");Application.DoEvents();
+    Need(!allEditors["fec.profile"].Visible && allEditors["fec.auto_policy"].Visible &&
+      allEditors["fec.auto_start_profile"].Visible,"FEC_Normal_Auto_only_relevant_controls");
+    form.SetEditor("lanes","4");Application.DoEvents();
+    var hint=(Label)typeof(MainForm).GetField("fecGuidance",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(form);
+    Need(hint.Text.Contains("不支持自动") && !allEditors["fec.auto_start_profile"].Visible &&
+      Convert.ToString(((Choice)((ComboBox)allEditors["fec.mode"]).SelectedItem).Value)=="auto","Game_auto_warns_instead_of_silent_downgrade");
+    form.SetEditor("fec.mode","off");form.SetEditor("lanes","1");Application.DoEvents();
+    Need(!allEditors["fec.profile"].Visible,"FEC_Off_keeps_default");
     form.SetEditor("mtu","1460");
     form.SetEditor("outer-repair","off");
     form.SetEditor("record-cipher","aes-128-gcm");
