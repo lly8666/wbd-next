@@ -1,6 +1,22 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1650｜当前SOURCE527正式Windows七模式真网络与精简GUI验收（2026-11-12）
+
+最新已签名产品源码 `52767d183b61eaf2621d967b16e85e644b1de428`，不同于更早损伤压力 SOURCE8a；产品 [Action43161652596](https://github.com/lly8666/wbd-next/actions/runs/43161652596) 原样 **SUCCESS**，正式 Windows Go EXE SHA256 `edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582`、正式 Windows Rust ISA-L DLL `3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357`，Linux 原Go/Rust 服务 `9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71`。正式二进制ZIP artifact13918442816 SHA `8ac85ea203c6e04513579176b33a67d9694c692cebbaf8468e9cc5f135118dbd`、真业务原ZIP artifact13918732161 SHA `d787a140e7aa0907b91c9baf01ffc3936293101388470a29fa0915d01b987ece`，91项CRC全部验真。
+
+| 当前 SOURCE527 模式 | 签名 Windows Npcap/Wintun＋Linux Rust TLS M4 | 双向真内核 UDP/TCP | 双方 owned Stop | 范围限制 |
+|---|---|---|---|---|
+| Normal Off、Normal Fixed6、Normal Auto | 原始报告均 `PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL` | 均PASS | 均PASS | 当前源码无损短功能场，不是损伤强度压力 |
+| Game2 Off／Fixed6、Game4 Off／Fixed6 | 原始报告均PASS | 均PASS | 均PASS | 与前行同一自动触发Action内顺序7种模式，而非7个独立场 |
+
+当前 SOURCE527 **确实重新编译** Windows Go、Rust及Linux真实产品并做了七模式原生签名网络业务；绝不把旧 SOURCE8a 七场当此源码结果。当前标准自动工作流选择测试专用 `legacy1400`，不能用它宣称**正式默认outer1460**的新源码有损综合通过；该部分更长30%/250ms真实弱网仍保留旧 SOURCE8a范围。见 [H1650原始hash/7模式结构化证据](../evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json)。
+
+当前 [GUI Windows2025 Action43161652534](https://github.com/lly8666/wbd-next/actions/runs/43161652534) 亦**整场SUCCESS**，GUI编译出的**当前Go EXE SHA与正式签名产品完全相同**。GUI自身使用原SOURCE8a 冻结Rust DLL `7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d`，**不同于当前正式产品Rust DLL**，不能合成相同二进制。原ZIP artifact13918331845 SHA `f03b3d3ae7c635036acb2ef5da19ffb47479182b6a78f298f3ed22f8b599a0f4` 7项CRC全过。真实WinForms与当前Go `--check-config` 共 **354项PASS**：49个可见配置字段逐项保存／有效回读、七模式、固定七档×Normal/Game2/Game4 **21组合**、三AEAD、非法值拒绝、动态FEC收展、原生Go只读网络状态和Win32预检按钮、导出/导入JSON、安全退出/WAL防误报，另有固定/自动模式截图。FEC默认**Off**；固定七档r/k依次 1/8、1/4、3/8、1/2、3/4、1、5/4，内部旧载体四参数自动派生不呈现；Game Auto不支持时明确拒绝。见 [H1650 GUI正式证据](../evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json)。
+
+**严格边界：**GUI按钮采用模拟会话验证 UI/存盘/OS Applied门限，虽然当前Go相同且独立CLI七模式已真实跑通，**没有**证明“用户从GUI点击连接→真实TLS443和签名Npcap/Wintun→Rust M4和OS Applied→GUI断开→恢复”同一贯通场。缺独立Windows控制器/DUT/Linux三机1800s环境、用户排除近内层MTU/同Win双Wintun均未跑；新SOURCE527的默认1460高损多客户端压力以及失败包包含的端到端一向p99还未验。**PLAN028仍在进行中**，不扩029/030。旧Action [43161652575](https://github.com/lly8666/wbd-next/actions/runs/43161652575) 治理主检查PASS、功能目录因卡内非法 `PASS_SCOPED` 枚举FAIL；H1650仅改为目录允许的 `FUNCTIONAL_PASS`，把范围限制写进scope，不降治理标准，原失败保留。
+
+
 ## H1649 GUI原生FEC简化｜正式Windows2025 VM H1648已354项全场通过，新补按钮待本轮结果
 
 H1648 [WinForms 真实 VM Action43160679063](https://github.com/lly8666/wbd-next/actions/runs/43160679063) **SUCCESS**，正式source `d32ac61ddffbd14acc0b07afc895dc26abe8d295`（原Go donor `a7a82db...` 装配、Rust DLL SOURCE8a、**新Go EXE SHA256 `edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582`**）；原ZIP artifact13917194780 SHA256 `cf53c2b5bd2297a9c51fc4699c98c2bfd71d0c1f30116be959b918b3382792e3` CRC全5成员验证。原Windows VM编译、49项可见配置各自GUI保存/真实原Go V4 `--check-config` 读回、源锁 **七原生模式＋7强度×Normal/Game2/Game4共21组合**、三AEAD、非法值/旧模式拒绝、WAL安全和WinForms按钮（FakeSession）合计 **354条检查PASS**。旧H1647 Action43160277750因测试fixture C# `using` 作用域报错FAIL原样保留。H1648治理43160679121全PASS，旧失败不改写。

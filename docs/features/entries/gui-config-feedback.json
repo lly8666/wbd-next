@@ -2,12 +2,11 @@
   "schema_version": 1,
   "id": "gui-config-feedback",
   "name": "配置/CLI/WinForms状态回执",
-  "summary": "Windows 原生 V4 WinForms 用户只配 Off（默认）/七档固定/Normal 自动，历史载体参数不展示而内部推导；当前实编译VM 354项Go配置及按钮测试PASS_SCOPED，非GUI真实驱动连接。",
+  "summary": "Windows 原生 V4 WinForms 单一 FEC 模式（默认Off / 固定七档 / Normal Auto）、三AEAD/外层1460、参数读回和原生只读系统按钮已在真实Windows2025 VM验354项。GUI发起真实签名Wintun联网独立未验。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026",
     "main"
   ],
   "defaults": {
@@ -21,7 +20,7 @@
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。",
-    "gui": "实际 Windows2025 VM 已验证 FEC Off 时固定/自动字段收起；Fixed 显示七个真实Rust r/k (12.5%至125%)；Normal Auto 只显自动策略/起步，Game Auto给出错误不静默回退；Go原生--check-config 21档×lane只读有效回读、三AEAD、WAL/Stop安全与按钮事件。H1649补主标签「丢包纠错 FEC」和真实只读按钮及导入路径冒烟。外部网站/Npcap下载安装、真人签名GUI起网未验。"
+    "gui": "当前正式 WinForms 仅展示FEC Off（默认）/七级固定强度r/k 12.5%至125%/Normal Auto；旧原Go冷载体4个选项不暴露，从原生mode+lanes内部推导。49可见设置由GUI保存、当前原Go --check-config有效值读回，Fixed/Auto仅pending_native_auth，不能声称 Rust/OS Applied。GUI按钮真WinForms事件、JSON导出/导入、read-only磁盘状态/Win32预检在Windows2025 VM验证，连接仍为模拟会话。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -65,10 +64,17 @@
     },
     {
       "platform": "windows/x64 VM",
-      "scope": "H1648 compiled current native-Go EXE + pinned original Rust DLL with actual WinForms, 354 exact checks; seven native modes, 21 fixed tier x lane effective CLI, three AEAD, dynamic FEC UI, fake-session buttons/owned-WAL not fake OS Applied",
-      "status": "PASS_SCOPED",
+      "scope": "H1648 compiled current native-Go EXE + pinned original Rust DLL with actual WinForms, 354 exact checks; seven native modes, 21 fixed tier x lane effective CLI, three AEAD, dynamic FEC UI, fake-session buttons/owned-WAL not fake OS Applied; FUNCTIONAL_PASS仅UI/Go CLI不含真实签名网卡网络",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "d32ac61ddffbd14acc0b07afc895dc26abe8d295",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43160679063"
+    },
+    {
+      "platform": "windows/x64 VM",
+      "scope": "H1649真实编译当前原生Go/WinForms 354项及独立WinForms按钮事件：49可见字段Go只读有效回读、七模式/21固定强度组合、三AEAD、JSON导出导入、native磁盘/Win32只读预检、owned-WAL Stop；模拟child并非真实登录/签名Wintun OS Apply",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+      "evidence": "docs/evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json"
     }
   ],
   "limitations": [
@@ -81,7 +87,8 @@
     "H1643定位真实GUI问题：旧Go cold check-config对已准入V4 Fixed/Auto误报fec.status=rejected，MainForm因此阻止连接；本批正式装配改为pending_native_auth（不冒充Applied），并删除未支持Game3选择。H1642 Windows VM GUI失败来自旧测试用16B route-key被V4正确拒绝；正式VM测试结果未出，不能宣称全部按钮实际执行成功或真实GUI起网。",
     "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。",
     "H1647 GUI精简：四个旧fec-mode/fec-parity/fec-min-parity/fec-start-parity不再展示为可调项；原生Rust固定档7级ratio依次1/8、1/4、3/8、1/2、3/4、1、5/4，r=ceil(k*rho)且受MAX_R上限，比例非实际带宽占比；关闭FEC仍是默认。正式Windows VM编译/CLI全档及按钮结果需按最终Action验证，不等价物理GUI-origin signed network。",
-    "H1648完整Windows2025 VM compiled GUI Action43160679063 SUCCESS，原始artifact13917194780 CRC验证；354项字段/真实Go CLI/按钮为范围内PASS，GUI起网真Npcap/Wintun与同源码真实应用流仍未验。H1649仅UI可用性标签与少数读操作/导入按钮补烟，新的测试结果需再收集。"
+    "H1648完整Windows2025 VM compiled GUI Action43160679063 SUCCESS，原始artifact13917194780 CRC验证；354项字段/真实Go CLI/按钮为范围内PASS，GUI起网真Npcap/Wintun与同源码真实应用流仍未验。H1649仅UI可用性标签与少数读操作/导入按钮补烟，新的测试结果需再收集。",
+    "H1650 接手核对最新Action43161652534及7项原始ZIP CRC、354项GUI自检全PASS（含49可见配置、21原生固定档、三AEAD）和真实read-only Win32/WAL按钮事件。功能目录verification只能用FUNCTIONAL_PASS等固定枚举，状态的限定scope不包含GUI起真实签名网络；旧 H1648 PASS_SCOPED 标签纠正为合法FUNCTIONAL_PASS，原Action和旧错误均保留。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

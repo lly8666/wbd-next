@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1650",
+  "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "plan_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED_CURRENT_GO_AND_RUST_SIGNED_WINDOWS_LINUX_SEVEN_MODES_TRUE_KERNEL_TCP_UDP_AND_OWNED_STOP",
+  "action_id": 43161652596,
+  "action_conclusion": "success",
+  "native_job_id": 130995867080,
+  "product_build_and_native_in_one_action": true,
+  "original_native_artifact_id": 13918732161,
+  "original_zip_sha256": "d787a140e7aa0907b91c9baf01ffc3936293101388470a29fa0915d01b987ece",
+  "original_zip_members": 91,
+  "zip_crc_ok": true,
+  "binary_artifact_id": 13918442816,
+  "binary_zip_sha256": "8ac85ea203c6e04513579176b33a67d9694c692cebbaf8468e9cc5f135118dbd",
+  "binary_zip_members": 3,
+  "binary_zip_crc_ok": true,
+  "binaries": {
+    "windows_original_go_sha256": "edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582",
+    "windows_rust_isa_l_sha256": "3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "native_isa_l_enabled": true,
+    "isa_l_static_archive_sha256": "02b7cb715c3f079c308800c25beb47ff64b4f160853c00cee4b975bdd64b49dd",
+    "current_source_compiled_no_prior_binary_reuse": true,
+    "gui_h1649_same_source_original_go_sha_equal": true,
+    "gui_h1649_rust_dll_is_frozen_prior_source": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "note": "The GUI-only VM reuses source8a Rust DLL, but current formal signed product built new Rust DLL SHA3973. Do not merge those artifacts under one shared binary hash."
+  },
+  "mode_results": [
+    {
+      "mode": "normal",
+      "result": "PASS",
+      "windows_udp_rx": 25,
+      "linux_udp_rx": 26
+    },
+    {
+      "mode": "fixed",
+      "result": "PASS",
+      "windows_udp_rx": 24,
+      "linux_udp_rx": 25,
+      "windows_specific_fixed_install_receipt": "WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1 source=original_rust_owner"
+    },
+    {
+      "mode": "auto",
+      "result": "PASS",
+      "windows_udp_rx": 25,
+      "linux_udp_rx": 26
+    },
+    {
+      "mode": "game2",
+      "result": "PASS",
+      "windows_udp_rx": 24,
+      "linux_udp_rx": 24
+    },
+    {
+      "mode": "game2-fec",
+      "result": "PASS",
+      "windows_udp_rx": 23,
+      "linux_udp_rx": 24
+    },
+    {
+      "mode": "game4",
+      "result": "PASS",
+      "windows_udp_rx": 24,
+      "linux_udp_rx": 25
+    },
+    {
+      "mode": "game4-fec",
+      "result": "PASS",
+      "windows_udp_rx": 24,
+      "linux_udp_rx": 25
+    }
+  ],
+  "real_net_receipts": "All seven report PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL / PASS_REAL_AFTER_ORIGINAL_TLS / PASS_ACTUAL_TWO_OS_KERNEL_UDP / PASS_ACTUAL_TWO_OS_KERNEL_TCP / PASS_BOTH_OWNED",
+  "actual_test_settings": {
+    "native_outer_selector": "legacy1400",
+    "client_requested_outer_mtu": 1400,
+    "outer_repair": "on",
+    "real_two_os_udp": true,
+    "real_two_os_tcp": true,
+    "loss_and_delay": "NO_SCENE; not a 30pct/250ms throughput validation",
+    "per_mode_duration": "Short hosted Windows2025 VM native functional smoke",
+    "server_outer_preparation_mtu": 1460,
+    "normal_example_client_inner_tun_mtu": 1329
+  },
+  "limits": [
+    "Existing push workflow automatically exercised all seven modes sequentially in one Action; not seven independent scenario Actions, no new duplication dispatched.",
+    "Current source differs from earlier frozen SOURCE8a; new Go EXE hash matches H1649 GUI-VM Go, but Rust DLL differs between formal native build and GUI VM.",
+    "Legacy1400 selector and short functional kernel UDP/TCP do not prove product default outer1460 under 30% loss/250ms, 200Mbps normal/20Mbps game4 cap, same-machine A/B CPU or failure-inclusive one-way p99.",
+    "GUI-originated click using real signed networking still not proven; H1649 GUI button suite uses FakeSession despite real native Go config readback.",
+    "Existing signed source8a 30%/250ms seven one-mode Actions and Linux 5-client180s (offline rejudged) retain own source scope, cannot be re-labeled as current 527 weaknet.",
+    "Independent Windows A/B/C L3 1800s absent; user excluded near-inner-MTU and two Wintuns on same host; 029/030 OOS"
+  ]
+}

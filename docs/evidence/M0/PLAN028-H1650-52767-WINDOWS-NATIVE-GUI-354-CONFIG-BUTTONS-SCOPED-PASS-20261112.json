@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1650",
+  "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "product_status": "IN_PROGRESS",
+  "result": "PASS_SCOPED_ACTUAL_WINDOWS2025_GUI_NATIVE_GO_CLI_AND_WINFORMS_EVENTS_NOT_SIGNED_OS_NETWORK",
+  "vm_action": 43161652534,
+  "vm_action_conclusion": "success",
+  "job_id": 130994043189,
+  "vm_platform": "windows-2025 x86_64",
+  "donor_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "frozen_native_rust_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "compiled_go_native_v4_exe_sha256": "edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582",
+  "native_rust_isa_l_dll_sha256": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+  "original_artifact_id": 13918331845,
+  "original_zip_sha256": "f03b3d3ae7c635036acb2ef5da19ffb47479182b6a78f298f3ed22f8b599a0f4",
+  "original_zip_members": 7,
+  "zip_crc_ok": true,
+  "gui_test_result_sha256": "9c93628048a09a11672feffd626496755f9cb31c514ee5318586231fe1964cd5",
+  "gui_test_status": "PASS",
+  "gui_test_check_count": 354,
+  "original_assembly_manifest_sha256": "ab3dc35ce7efc88f23217bdd9ad4f75cd9ee899156664c0fa87a797f6409395a",
+  "screenshots_sha256": {
+    "off": "371b571af6b9fced3c7ec41a0432d7e9652e970bd2542b89e52f6c88b2673301",
+    "fixed": "1b97e523bfac299066f6dab193f3ac3d4ac715cd77c84fb547404e575ff01b1b",
+    "auto": "1b27c0f2224fc99466da35cb147eb0bb089269d419307d9538248bb3befd7506",
+    "buttons": "a46843b1a1aec0e3ca0b8946b15c9177839aed359eb25ced6f8edd56379b28b3"
+  },
+  "coverage": {
+    "visible_user_editable_config_fields": 49,
+    "original_go_read_only_check_config": "PASS_ALL_VISIBLE_FIELDS_SAVE_AND_EFFECTIVE",
+    "native_mode_admission": "PASS_ALL_SEVEN_MODES",
+    "fixed_profile_selections": "PASS_7_GRADES_EACH_NORMAL1_GAME2_GAME4_TOTAL21",
+    "fixed_ratios": "1/8 1/4 3/8 1/2 3/4 1/1 5/4 source/k, ceil and capped",
+    "cipher_selection": [
+      "chacha20-poly1305",
+      "aes-128-gcm",
+      "aes-256-gcm"
+    ],
+    "default_fec": "off",
+    "outer_mtu_default": 1460,
+    "hide_legacy_carrier_ui": [
+      "fec-mode",
+      "fec-parity",
+      "fec-min-parity",
+      "fec-start-parity"
+    ],
+    "native_carrier_derived": "normal/fixed=>fixed parity4; all other supported modes=>off parity0",
+    "read_only_fec_state": "pending_native_auth; applied_profile unknown until native OS and Rust readback",
+    "normal_auto_only_and_game_auto_rejected": "PASS",
+    "winforms_ui_buttons": "PASS_ACTUAL_COMPILED_PERFORMCLICK_WITH_FAKE_SESSION",
+    "real_json_export_import": "PASS_FILE_AND_STORE_CRUD_VALIDATION",
+    "read_only_disk_state_click": "PASS_GO_NATIVE_ABSENT",
+    "read_only_win32_preflight_click": "PASS_QUALIFIED_FALSE_NO_OS_WAL",
+    "owned_stop_wal_guard": "PASS_DO_NOT_CLAIM_DISCONNECTED_WITH_RESIDUAL_OWNED_WAL",
+    "sensitive_input_redaction": "PASS"
+  },
+  "unexecuted": [
+    "GUI-originated actual authenticated original-Go TLS443 signed Npcap/Wintun + Rust M4 OS Apply and Stop (still NOT_RUN)",
+    "External Npcap website/install and real explorer/open file chooser user-selection not clicked for safety and no external environment",
+    "GUI real-source end-to-end AES per-device auth/rust/lease requires separate native signed run; H1600 frozen binary results do not upgrade the newly compiled Go source",
+    "Independent Windows A/B/C 1800s missing; near-inner-MTU and same-Windows two Wintun excluded by user; no PLAN029/030"
+  ],
+  "historical_failure_still_retained": [
+    "H1647 Action43160277750 compiler fixture lexical using scope failed before UI; next H1648/H1649 succeeded",
+    "H1642 original five Linux 180s action43148997176 FAILURE, strict same original raw offline rejudge Action43152631016 success scoped"
+  ]
+}
