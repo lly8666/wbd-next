@@ -55,7 +55,8 @@
     "当前为原物理Npcap直发 DNS A 报文，无单独DNS bootstrap Winsock/IP_UNICAST_IF socket、WFP例外及OS出口实机回执；不能按PLAN029 §2认定已完成。",
     "DNS多A返回只选择第一个，候选回退/TTL、CNAME/TCP回退、NXDOMAIN高级诊断待完成；不承诺独立服务器间无缝会话迁移。",
     "GUI域名解析实时状态、server-address规范键及别名迁移、实际OS/MTU只读反馈尚未端到端验证。",
-    "外层IPv6不支持，内层IPv6安全策略不放宽。"
+    "外层IPv6不支持，内层IPv6安全策略不放宽。",
+    "PLAN029 H1665 Windows physical DNS wire parser现支持受限CNAME链和无关A拒绝、Npcap小包接收门，后续以真实Windows NPF/WFP/OS对照测，当前源码仍NOT_QUALIFIED。"
   ],
   "promotion": null
 }

@@ -100,20 +100,40 @@ func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsme
   !strings.EqualFold(q.Name.String(),name.String()){return nil,false}
  if e=p.SkipAllQuestions();e!=nil{return nil,false}
  if h.RCode!=dnsmessage.RCodeSuccess{return nil,true}
- var out []netip.Addr
- for len(out)<8 {
+ // A records for unrelated owners are not valid answers to this query.
+ // Follow only CNAME links rooted at the exact requested QNAME; a public
+ // DNS resolver may return unrelated additional names. Bounded 16 RRs.
+ var answers []dnsmessage.Resource
+ for i:=0;i<=16;i++{
   a,e:=p.Answer()
   if e==dnsmessage.ErrSectionDone{break}
-  if e!=nil{return nil,false}
-  if a.Header.Type!=dnsmessage.TypeA||a.Header.Class!=dnsmessage.ClassINET{continue}
+  if e!=nil||i==16{return nil,false}
+  answers=append(answers,a)
+ }
+ allowed:=map[string]bool{strings.ToLower(name.String()):true}
+ for depth:=0;depth<8;depth++{
+  grown:=false
+  for _,a:=range answers{
+   if a.Header.Class!=dnsmessage.ClassINET||a.Header.Type!=dnsmessage.TypeCNAME||
+      !allowed[strings.ToLower(a.Header.Name.String())]{continue}
+   cname,ok:=a.Body.(*dnsmessage.CNAMEResource);if !ok{return nil,false}
+   key:=strings.ToLower(cname.CNAME.String())
+   if !allowed[key]{allowed[key]=true;grown=true}
+  }
+  if !grown{break}
+ }
+ var out []netip.Addr
+ for _,a:=range answers{
+  if len(out)>=8{break}
+  if a.Header.Type!=dnsmessage.TypeA||a.Header.Class!=dnsmessage.ClassINET||
+     !allowed[strings.ToLower(a.Header.Name.String())]{continue}
   body,ok:=a.Body.(*dnsmessage.AResource)
   if !ok{continue}
   addr:=netip.AddrFrom4(body.A)
-  if !addr.IsUnspecified()&&!addr.IsMulticast()&&!addr.IsLoopback() {
-   duplicate:=false
-   for _,v:=range out{if v==addr{duplicate=true;break}}
-   if !duplicate{out=append(out,addr)}
-  }
+  if addr.IsUnspecified()||addr.IsMulticast()||addr.IsLoopback(){continue}
+  duplicate:=false
+  for _,v:=range out{if v==addr{duplicate=true;break}}
+  if !duplicate{out=append(out,addr)}
  }
  return out,true
 }
@@ -154,6 +174,13 @@ func LookupPhysicalServerA(ctx context.Context,c PhysicalDNSConfig,host string)(
  defer procs["pcap_close"].Call(handle)
  if typ,_,_:=procs["pcap_datalink"].Call(handle);int32(typ)!=pcapDLTEthernet{
   return nil,fmt.Errorf("%w: physical device must be Ethernet",ErrPhysicalDNS)
+ }
+ // Small DNS replies must wake the NPF capture ring immediately; reuse
+ // the exact legacy Npcap low-latency receive setting. No polling worker.
+ if setMin,e:=dll.FindProc("pcap_setmintocopy");e==nil{
+  if rc,_,_:=setMin.Call(handle,1);int32(rc)!=0{
+   return nil,fmt.Errorf("%w: Npcap minimum RX copy: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
+  }
  }
  if ret,_,_:=procs["pcap_setmode"].Call(handle,npcapModeSendToRxClear);int32(ret)!=0{
   return nil,fmt.Errorf("%w: Npcap receive policy: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))

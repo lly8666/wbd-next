@@ -1499,13 +1499,13 @@
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
-      "result_blob": "f50f0eda379e81a906b755e15509ea4ba7f7ead7"
+      "result_blob": "1bd00e1da7c59155d23dfb20228d53a7544aa84d"
     },
     {
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows_test.go",
-      "result_blob": "ccce2996192d26367b7b313608a5dcca0d978423"
+      "result_blob": "92129be5a386d49e67744de22a9590edc93b5448"
     },
     {
       "kind": "create",

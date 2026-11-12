@@ -54,3 +54,50 @@ func TestPlan029PhysicalDNSRejectedOffPathAndWrongTransaction(t *testing.T){
  frame[26]=1
  if _,ok:=physicalDNSReply(frame,c,52000,77,name);ok{t.Fatal("off-path source accepted")}
 }
+
+
+func plan029PhysicalReplyFrame(t *testing.T,query dnsmessage.Name,answers []dnsmessage.Resource) ([]byte,PhysicalDNSConfig){
+ t.Helper()
+ c:=PhysicalDNSConfig{Device:"\\Device\\NPF_{12345678-1234-1234-1234-123456789abc}",
+ SourceMAC:[6]byte{1,2,3,4,5,6},NextHopMAC:[6]byte{7,8,9,10,11,12},
+ Source4:netip.MustParseAddr("192.168.1.2"),Resolver4:netip.MustParseAddr("192.168.1.1")}
+ resp,e:=(&dnsmessage.Message{Header:dnsmessage.Header{ID:99,Response:true,RecursionAvailable:true},
+ Questions:[]dnsmessage.Question{{Name:query,Type:dnsmessage.TypeA,Class:dnsmessage.ClassINET}},
+ Answers:answers}).Pack()
+ if e!=nil{t.Fatal(e)}
+ inverse:=c
+ inverse.Source4,inverse.Resolver4=c.Resolver4,c.Source4
+ inverse.SourceMAC,inverse.NextHopMAC=c.NextHopMAC,c.SourceMAC
+ frame,e:=physicalDNSFrame(inverse,50000,resp,99)
+ if e!=nil{t.Fatal(e)}
+ binary.BigEndian.PutUint16(frame[34:36],53)
+ binary.BigEndian.PutUint16(frame[36:38],50000)
+ binary.BigEndian.PutUint16(frame[40:42],0)
+ src,dst:=inverse.Source4.As4(),inverse.Resolver4.As4()
+ sum:=physicalDNSChecksumFold(physicalDNSPseudoSum(src[:],dst[:],frame[34:]))
+ if sum==0{sum=0xffff}
+ binary.BigEndian.PutUint16(frame[40:42],sum)
+ return frame,c
+}
+
+func TestPlan029PhysicalCNAMEChainAndUnrelatedAProtection(t *testing.T){
+ name,_:=dnsmessage.NewName("vpn.example.")
+ alias,_:=dnsmessage.NewName("edge.example.")
+ unrelated,_:=dnsmessage.NewName("unrelated.example.")
+ answers:=[]dnsmessage.Resource{
+  {Header:dnsmessage.ResourceHeader{Name:unrelated,Type:dnsmessage.TypeA,Class:dnsmessage.ClassINET,TTL:60},
+   Body:&dnsmessage.AResource{A:[4]byte{203,0,113,99}}},
+  {Header:dnsmessage.ResourceHeader{Name:name,Type:dnsmessage.TypeCNAME,Class:dnsmessage.ClassINET,TTL:60},
+   Body:&dnsmessage.CNAMEResource{CNAME:alias}},
+  {Header:dnsmessage.ResourceHeader{Name:alias,Type:dnsmessage.TypeA,Class:dnsmessage.ClassINET,TTL:30},
+   Body:&dnsmessage.AResource{A:[4]byte{203,0,113,7}}},
+ }
+ wire,c:=plan029PhysicalReplyFrame(t,name,answers)
+ ips,ok:=physicalDNSReply(wire,c,50000,99,name)
+ if !ok||len(ips)!=1||ips[0]!=netip.MustParseAddr("203.0.113.7"){
+  t.Fatalf("want linked CNAME A only, got %v valid=%v",ips,ok)
+ }
+ wire,c=plan029PhysicalReplyFrame(t,name,answers[:1])
+ ips,ok=physicalDNSReply(wire,c,50000,99,name)
+ if !ok||len(ips)!=0{t.Fatalf("unrelated DNS A must not be endpoint: %v %v",ips,ok)}
+}
