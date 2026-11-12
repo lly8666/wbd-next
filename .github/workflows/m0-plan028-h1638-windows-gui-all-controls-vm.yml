@@ -1,0 +1,124 @@
+name: PLAN028 H1638 Windows VM real WinForms GUI settings and buttons
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1638-windows-gui-all-controls-vm.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  gui-compiled-vm:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43027983611
+          github-token: ${{ github.token }}
+          name: m0-wl-windows-product-binaries-8a31375e36bb6a93860c5579e64b4a39d0b6e346
+          path: prebuilt
+      - name: Assemble exact current WinForms and verify frozen original Go Rust
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984'){throw 'old Go donor mismatch'}
+          $delta=@(git diff --name-only $env:PRODUCT_SOURCE $env:GITHUB_SHA -- crates Cargo.lock Cargo.toml r0/go_overlay/cmd r0/go_overlay/internal tools/prepare_windows_wiring.py)
+          if($delta.Count -gt 0){throw ('compiled source changed '+($delta -join ','))}
+          $m=Get-Content prebuilt/windows-binary-manifest.json -Raw|ConvertFrom-Json
+          if($m.source_sha -ne $env:PRODUCT_SOURCE -or -not $m.native_fec_acceleration){throw 'wrong native ISA-L product'}
+          foreach($spec in @(@('wbd-client-embedded.exe','exe','63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c'),@('wbd_engine.dll','dll','7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d'))){
+            $hash=(Get-FileHash ('prebuilt/'+$spec[0]) -Algorithm SHA256).Hash.ToLower()
+            if($hash -ne $spec[2] -or $hash -ne $m.sha256.($spec[1])){throw "Go/Rust binary hash mismatch $($spec[0])"}
+          }
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'formal assembly failed'}
+          @'
+          import json,pathlib
+          root=pathlib.Path('legacy')
+          p=json.loads((root/'docs/PARAMETERS.json').read_text())
+          w=p['targets']['client-windows']
+          fields=json.loads((root/'windows/gui/fields.json').read_text())
+          assert w['mtu']['default_expression']=='1460'
+          assert w['outer-repair']['default_expression']=='"on"'
+          assert w['fec.mode']['default_expression']=='"off"'
+          assert w['lease4']['default_expression']=='""'
+          assert set(fields)==set(k for k,v in w.items() if v['json'] or k in fields)
+          assert fields['outer-repair'][0]=='传输'
+          print('H1638_ASSEMBLED_GUI_DEFAULTS_AND_FIELDS_PASS',len(fields))
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'GUI catalog defaults check failed'}
+      - name: Build actual GUI executable once with frozen native CLI and Rust DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & legacy/scripts/build_windows_gui.ps1 -OutputDirectory result/gui-portable -SourceSHA $env:GITHUB_SHA -Version plan028-h1638
+          if($LASTEXITCODE -ne 0){throw 'actual WinForms release compiler failed'}
+          Copy-Item prebuilt/wbd-client-embedded.exe result/gui-portable/wbd-client.exe
+          Copy-Item prebuilt/wbd_engine.dll result/gui-portable/wbd_engine.dll
+          foreach($name in @('gui-self','gui-authority','gui-buttons')){
+            New-Item -ItemType Directory -Force ('result/'+$name) | Out-Null
+            Copy-Item result/gui-portable/* ('result/'+$name) -Recurse -Force
+          }
+          Write-Output H1638_ONE_NATIVE_GUI_COMPILATION_GO_RUST_PREBUILT
+      - name: Run compiled GUI actual all-field CLI --check-config selftest
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $path=(Resolve-Path result/gui-self/WBD.exe).Path
+          $p=Start-Process -FilePath $path -ArgumentList @('--self-test') -WorkingDirectory (Resolve-Path result/gui-self).Path -PassThru
+          try {
+            if(-not $p.WaitForExit(420000)){$p.Kill();throw 'GUI full selftest hung'}
+            $p.Refresh()
+            if($p.ExitCode -ne 0){throw ("GUI selftest FAILED exit="+$p.ExitCode)}
+          } finally {$p.Dispose()}
+          $rec=Get-Content result/gui-self/gui-test-result.json -Raw|ConvertFrom-Json
+          if($rec.result -ne 'PASS' -or -not(Test-Path result/gui-self/gui-screenshot.png)){throw 'GUI status/field/screenshots incomplete'}
+          Write-Output H1638_VM_COMPILED_WINFORMS_ALL_GUI_FIELDS_REAL_CLI_CHECK_CONFIG_PASS
+      - name: Verify real GUI Applied receipt and orphan WAL Stop denial
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          $csc='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/Roslyn/csc.exe'
+          if(-not(Test-Path $csc)){throw 'Windows GUI Roslyn missing'}
+          $fw='C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
+          $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fw ($_.ToString()+'.dll'))}
+          & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /utf8output /codepage:65001 ('/out:'+(Resolve-Path result/gui-authority).Path+'/Authority.exe') @refs ('/reference:'+(Resolve-Path result/gui-authority/WBD.exe).Path) r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs
+          if($LASTEXITCODE -ne 0){throw 'GUI receipt harness compile failed'}
+          & result/gui-authority/Authority.exe
+          if($LASTEXITCODE -ne 0){throw 'GUI OS Applied/Stop guard FAIL'}
+      - name: PerformClick real WinForms UI buttons in Windows VM
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $csc='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/Roslyn/csc.exe'
+          $fw='C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
+          $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fw ($_.ToString()+'.dll'))}
+          & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /utf8output /codepage:65001 ('/out:'+(Resolve-Path result/gui-buttons).Path+'/Buttons.exe') @refs ('/reference:'+(Resolve-Path result/gui-buttons/WBD.exe).Path) r0/go_overlay/windows/gui/M0Plan028GUIButtonsVMHarness.cs
+          if($LASTEXITCODE -ne 0){throw 'GUI buttons VM harness compile failed'}
+          $dir=(Resolve-Path result/gui-buttons).Path
+          $p=Start-Process -FilePath (Join-Path $dir 'Buttons.exe') -ArgumentList @($dir) -WorkingDirectory $dir -PassThru -Wait -NoNewWindow
+          if($p.ExitCode -ne 0 -or -not(Test-Path result/gui-buttons/gui-buttons-vm.png)){throw 'actual WinForms button event VM test FAILED'}
+          Write-Output H1638_ACTUAL_WINFORMS_GUI_BUTTON_EVENTS_PASSED_NOT_NATIVE_APPLIED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1638-win-gui-vm-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            result/assembly.json
+            result/gui-self/gui-test-result.json
+            result/gui-self/gui-screenshot.png
+            result/gui-buttons/gui-buttons-vm.png

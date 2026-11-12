@@ -1,1 +1,76 @@
-{"schema_version":1,"id":"gui-config-feedback","name":"配置/CLI/WinForms状态回执","summary":"区分requested/pending/applied/rejected与本地保存，真实OS Applied前不得宣称ready。","owner":"M0 takeover/历史M4","stage":"experimental","development_branch":"work/m4-r1-platform","available_on":["integration/w168-freeze-windows-adapter-20261026","main"],"defaults":{"FEC mode":"off生产默认","GUI-ready":"必须有真实OS_APPLIED","MTU":"1460 B 完整外层IPv4 IP MTU，1500只能显式；Rust派生内层只读","native-v4-product":"CLI默认 true，GUI携同一 --native-v4-product","record-cipher":"chacha20-poly1305，AES显式选择/未有当前V4原生验收"},"usage":{"cli":"Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）","config":"GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。","gui":"原 WinForms MainForm 传输页 lease4留空自动/手动/32、record-cipher三种（AES标注V4待验）、lanes/FEC；real Ready要 WBD_WINDOWS_CLIENT_READY 与 native OS receipt，GUI假child不能等同产品PASS。"},"code_refs":["r0/go_overlay/assembly/manifest.json","r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs","r0/go_overlay/internal/configfile/fec2_product_test.go","r0/go_overlay/assembly/manifest-plan020-m0.json","r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go"],"doc_refs":["docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json","docs/architecture/MIGRATION.md","docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md","docs/architecture/MTU_CONTRACT.md","docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md","docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md"],"verification":[{"platform":"windows/2022","scope":"真实WinForms构建+FAKE child状态机，非UI全栈功能","status":"BUILD_PASS","source_sha":"249b7af42fdcc84d6e064ada36a2b7ec331c12d3","evidence":"docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json"},{"platform":"windows/x64","scope":"GUI真实TLS/驱动/操作系统应用与断开","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"linux/amd64","scope":"Linux CLI无本GUI适用入口","status":"NOT_RUN","source_sha":null,"evidence":null}],"limitations":["保存或校验成功不是Native FEC Applied；组装后的旧GUI配置完整参数未逐个核验。","本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。","PLAN029仅规划域名/DNS及统一参数的真实UI/effective接线；不将旧fake-child UI资格推广到原生网络。","PLAN029后续约定：只编辑外层MTU，默认1460；有效外层、自动内层与OS应用状态只读，保存/重连不得把内层值写回外层配置。本次未实现UI。","GUI AES显示更新为V3已验/V4原生待验；V4真实GUI credential/租约/内核Apply/Disconnect和全部平台组合尚无当前SOURCE端到端证据，不能凭配置回显宣称已生效。"],"promotion":null,"legacy_branch_reason":"对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"}
+{
+  "schema_version": 1,
+  "id": "gui-config-feedback",
+  "name": "配置/CLI/WinForms状态回执",
+  "summary": "当前Windows WinForms正式装配字段/默认/原生CLI配置回读，区分requested/OS Applied/owned Stop。H1638补outer-repair on/off显式选择及WinVM实际控件事件回归（验收前不得标通过）。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
+  ],
+  "defaults": {
+    "FEC mode": "off生产默认",
+    "GUI-ready": "必须有真实OS_APPLIED",
+    "MTU": "1460B为正式装配后的参数清单默认（原Go donor旧1500不能代表产品）",
+    "native-v4-product": "CLI默认 true，GUI携同一 --native-v4-product",
+    "record-cipher": "chacha20-poly1305，AES显式选择/未有当前V4原生验收",
+    "outer-repair": "on（默认），GUI可显式on/off选择；仅外层密文机会发送，不负责业务可靠性"
+  },
+  "usage": {
+    "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
+    "config": "GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。",
+    "gui": "当前源锁正式WinForms MainForm 传输页含outer-repair on/off、lease4空自动/显式/32、三AEAD、lanes及FEC；保存后CLI --check-config读回，原始OS Applied与Stop另以真实回执判定。H1638虚拟机按钮点击为模拟会话，不能替代真实GUI发起的签名网络连接。"
+  },
+  "code_refs": [
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs",
+    "r0/go_overlay/internal/configfile/fec2_product_test.go",
+    "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/windows/gui/M0Plan028GUIButtonsVMHarness.cs",
+    ".github/workflows/m0-plan028-h1638-windows-gui-all-controls-vm.yml"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json",
+    "docs/architecture/MIGRATION.md",
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/architecture/MTU_CONTRACT.md",
+    "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
+    "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/2022",
+      "scope": "真实WinForms构建+FAKE child状态机，非UI全栈功能",
+      "status": "BUILD_PASS",
+      "source_sha": "249b7af42fdcc84d6e064ada36a2b7ec331c12d3",
+      "evidence": "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "GUI真实TLS/驱动/操作系统应用与断开",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "Linux CLI无本GUI适用入口",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "保存或校验成功不是Native FEC Applied；组装后的旧GUI配置完整参数未逐个核验。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "PLAN029仅规划域名/DNS及统一参数的真实UI/effective接线；不将旧fake-child UI资格推广到原生网络。",
+    "PLAN029后续约定：只编辑外层MTU，默认1460；有效外层、自动内层与OS应用状态只读，保存/重连不得把内层值写回外层配置。本次未实现UI。",
+    "GUI AES显示更新为V3已验/V4原生待验；V4真实GUI credential/租约/内核Apply/Disconnect和全部平台组合尚无当前SOURCE端到端证据，不能凭配置回显宣称已生效。",
+    "H1638发现并补齐GUI原生outer-repair显式on/off配置映射；正式装配参数表默认MTU1460已存在，原始donor 1500非正式GUI。H1638 VM原生编译/全部字段CLI只读校验/WinForms按钮事件与native真实连接必须按各自结果分账，当前尚未测出结果，不冒充PASS。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

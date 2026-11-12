@@ -223,7 +223,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "9b37736a1ed584e78e4411054c2613968907a48e",
+      "result_blob": "722a8878cc16e36154f73a4cd191546599c3a5b5",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -252,6 +252,10 @@
         {
           "find": "  \"route-key-hex\": [\n    \"服务器\",\n    \"路由密钥\",\n    \"服务端提供的十六进制密钥\"\n  ],\n",
           "replace": "  \"route-key-hex\": [\n    \"服务器\",\n    \"路由密钥\",\n    \"服务端提供的十六进制密钥\"\n  ],\n  \"route-key-hex-file\": [\n    \"服务器\",\n    \"离线路由密钥文件\",\n    \"在程序目录 data 内导入32字节十六进制密钥文件；和上方密钥文本只能填一种，不进行网络取key\"\n  ],\n  \"tls-ca-pem\": [\n    \"服务器\",\n    \"服务器证书信任文件\",\n    \"导入本服务器证书/CA PEM路径；留空只信Windows系统证书，不会忽略验证\"\n  ],\n"
+        },
+        {
+          "find": "  \"mtu\": [",
+          "replace": "  \"outer-repair\": [\n    \"传输\",\n    \"外层机会式重传\",\n    \"默认开启；只维持TLS外观，不保证业务可靠性。需重连后生效\"\n  ],\n  \"mtu\": ["
         }
       ]
     },
@@ -259,7 +263,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "eba74af4b08e625160c3d3c8f70adcb8a7410f90",
+      "result_blob": "a17a19e441b847461fdb58b9a73018e49b39d4db",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -332,6 +336,14 @@
         {
           "find": "new Choice(\"aes-128-gcm\", \"AES-128-GCM（真实网络已验）\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM（真实网络已验）\")",
           "replace": "new Choice(\"aes-128-gcm\", \"AES-128-GCM（V3 已验；V4 原生待验）\"), new Choice(\"aes-256-gcm\", \"AES-256-GCM（V3 已验；V4 原生待验）\")"
+        },
+        {
+          "find": "f.Key == \"route-mode\" ||",
+          "replace": "f.Key == \"outer-repair\" || f.Key == \"route-mode\" ||"
+        },
+        {
+          "find": "if (f.Key == \"record-cipher\") c.Items.AddRange",
+          "replace": "if (f.Key == \"outer-repair\") c.Items.AddRange(new[] { new Choice(\"on\", \"开启（默认）\"), new Choice(\"off\", \"关闭（仅显式配置）\") });\n                if (f.Key == \"record-cipher\") c.Items.AddRange"
         }
       ]
     },
@@ -339,7 +351,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "0ba459b8793f4e986a3d0d34a43f72e3e312377a",
+      "result_blob": "ba55b64eb63c056b9bd74a77ea234dd4fd93cfad",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -384,6 +396,14 @@
         {
           "find": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");",
           "replace": "                    Assert(read.Result==\"legacy_journal\",\"GUI original Go detects old script state without migration\");\n                    preflight = diskForm.ReadNativeProductPreflightAsync(); Wait((Task)preflight);\n                    Assert(preflight.Result==\"legacy_journal\",\"GUI native preflight preserves legacy WAL as blocked\");"
+        },
+        {
+          "find": "{\"mtu\",1280},{\"client-record-limit\",1250}",
+          "replace": "{\"mtu\",1280},{\"outer-repair\",\"off\"},{\"client-record-limit\",1250}"
+        },
+        {
+          "find": "{\"route-key-hex\",\"aabbccddeeff00112233445566778899\"},{\"tunnel-id\"",
+          "replace": "{\"route-key-hex\",\"aabbccddeeff00112233445566778899\"},{\"route-key-hex-file\",\"\"},{\"tls-ca-pem\",\"\"},{\"tunnel-id\""
         }
       ]
     },
@@ -391,7 +411,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "8c1244219c39b8c31090e423ebb319a93aac4944",
+      "result_blob": "64a84ce5ccbc9e8150002abd2e69a4182b46fd9e",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -422,6 +442,10 @@
         {
           "find": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
           "replace": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"route-key-hex-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"client native V4 offline imported 32B route-key hex file; exclusive with route-key-hex\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"tls-ca-pem\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"client native V4 server-specific certificate trust PEM path; empty uses Windows system trust; never disable verification\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n"
+        },
+        {
+          "find": "      \"native-state-json\": {",
+          "replace": "      \"outer-repair\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"on\\\"\",\n        \"help\": \"on|off; native V4 opportunistic outer ciphertext retransmission, does not guarantee business delivery\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"native-state-json\": {"
         }
       ]
     },
