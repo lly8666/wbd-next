@@ -1,6 +1,14 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1644 原始五客户端180秒严格复判完成；Windows GUI 当前编译接续（2026-11-12）
+
+**五客户端当期SOURCE** `8a31375e36bb6a93860c5579e64b4a39d0b6e346`；原始单一真实原Go TLS/Rust ISA-L Linux x86 kernel/netns业务 [Action43148997176](https://github.com/lly8666/wbd-next/actions/runs/43148997176) 仍 **FAIL**（旧报表不识别服务端B代已认证M4提交）。原始ZIP13912204248及report/server/cpu/qdisc各SHA保留。[H1643严格离线复判 Action43152631016](https://github.com/lly8666/wbd-next/actions/runs/43152631016) **SUCCESS**：对原始ZIP八项SHA匹配、四组缺/错/重放负例、六个真正服务端B端口的5环节M4/Health/OS接管顺序和五端旧代精确Stop逐项核验，不重跑180秒网络，`rotation_verdict=PASS_ALL_FIVE_SCOPED`，`alerts=0`。五客户端真实送出**1,716,864 UDP**、首次唯一收到**1,714,925（99.8871%）**，真实未到**1,939**；Alice/Bob原双向TCP每向帧43317/43317。内核真实损伤各客户端0/1/5/15/**30%**，单程0/15/50/100/**250ms**，**仅Erin**最高，不能称五端全为30%/250ms；其他四端outer1460，Erin显式outer1280；跑的是30/60/30/50s有界容量阶梯，非600s高压/Windows独立DUT L3。原服务器CPU平均单核54.478%，峰RSS127052KiB，仍未得失包包含的一向p99；详细 [H1644结构化原证据](../evidence/M0/PLAN028-H1644-ORIGINAL-H1642-FIVE-NATIVE-180S-STRICT-M4-OFFLINE-PASS-20261112.json)。原Action失败与旧报表保留，结果只能记 **PASS_SCOPED_OFFLINE_REJUDGED**。
+
+**GUI 当前正式装配原生问题与待验：**本批修复旧V4 `--check-config` 对已支持的Fixed/Auto误报 `fec.status=rejected`、导致GUI误挡连接的实际缺口；源锁Go新 `fec.status=pending_native_auth`（`fec.applied_profile=unknown`）只代表通过配置校验，**绝非认证/OS Applied**。原生GUI不再提供3 lane，Game Auto/旧V3 legacy auto明确拒绝，Normal最高Fixed6需原Go冷carrier fixed4；默认仍Off、outer1460、outer-repair on。GUI真实Windows2025 VM [Action43152631015](https://github.com/lly8666/wbd-next/actions/runs/43152631015) 最新整体**FAIL**：正式装配和新原Go EXE/WinForms编译成功，字段自检中旧测试fixture仍含16B route-key，被原生V4正确拒绝（原始FAIL保留），**按钮尚未执行**。H1644将两处fixture都真正装入最终manifest 32B，并加构建前源字节校验，新GUI独立Action结果待收。即使VM按钮通过，真实GUI发起的签名OS/Wintun会话仍独立NOT_RUN。
+
+**治理：**H1643 [Action43152630949](https://github.com/lly8666/wbd-next/actions/runs/43152630949) 原FAIL：热文件总32839超过32768 **71B**，本批仅缩短M0 cursor而不放宽预算；需本批治理Action重新通过。用户排除/缺环境的独立Windows A/B/C 1800s、近innerMTU、多Wintun维持NOT_RUN；029/030不进入。
+
 ## H1639 Windows 七模式正式SOURCE8a 每模式真实原生独立场已齐（2026-11-12）
 
 **正式二进制SOURCE** `8a31375e36bb6a93860c5579e64b4a39d0b6e346`（H1600 build43027983611），Windows签名Npcap/Wintun＋Ubuntu WSL2 Linux 原Go标准TLS443/Rust原生业务；每个独立Action真实30% loss／单程250ms、双向各10Mbps、60秒，外层1460、最终双向TCP/UDP和owned Stop，原始ZIP/37项CRC和单文件Go SHA核对。H1637其余三场：

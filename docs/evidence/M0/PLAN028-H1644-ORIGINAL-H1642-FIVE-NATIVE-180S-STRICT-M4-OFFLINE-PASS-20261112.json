@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1644",
+  "result": "PASS_SCOPED_ORIGINAL_180S_FIVE_NATIVE_BUSINESS_STRICT_SERVER_M4_OFFLINE_REJUDGED",
+  "plan_status": "IN_PROGRESS",
+  "platform": "Linux x86_64 Ubuntu 24.04 native netns",
+  "product_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "original_harness_sha": "393a44d8a503eb7dd17c0b1ef459b3032cc543d9",
+  "product_source_recompiled": false,
+  "original_native_action_id": 43148997176,
+  "original_action_conclusion": "failure",
+  "original_failure_classification": "STRICT_REPORT_ORACLE_MISSING_VERIFIED_GENERATION_B_SERVER_NATIVE_HEALTH_COMMIT",
+  "original_alerts_count": 6,
+  "original_artifact_id": 13912204248,
+  "original_zip_sha256": "05e2dc5579b36c40374c2c4d4dbaba320edea7b18530d2f7d5545a162b0eefdd",
+  "original_report_sha256": "7df44a884c8e771730d763dccc7770e8d2f686950cb7fdff3de3488cd8e5cd85",
+  "original_server_log_sha256": "9d37ccc38fdd55383955e57fbca2b10714ec93fa30862382e9cbb3aacea30cf5",
+  "offline_rejudge_action_id": 43152631016,
+  "offline_action_conclusion": "success",
+  "offline_artifact_id": 13914208734,
+  "offline_zip_sha256": "f81f64288959b151b166e7a23c29aa4978751c4557a14e6e5cb596b6c5a5c766",
+  "offline_negative_tests": "PASS strict initial+5-part B commit/unique port, fail missing/out-of-order/wrong-native-health/foreign identity/dupe port/native rejection",
+  "app_duration_s": 180,
+  "group_clients": 5,
+  "original_go_protected_tls443": true,
+  "original_rust_native_isa_l": true,
+  "client_modes": [
+    "normal-off",
+    "normal-auto",
+    "game2-off",
+    "game4-fixed6",
+    "normal-fixed6"
+  ],
+  "per_client_loss_pct": [
+    0,
+    1,
+    5,
+    15,
+    30
+  ],
+  "per_client_oneway_delay_ms": [
+    0,
+    15,
+    50,
+    100,
+    250
+  ],
+  "outer_intent_mtu": [
+    1460,
+    1460,
+    1460,
+    1460,
+    1280
+  ],
+  "load_phase_target_scales": [
+    0.25,
+    0.35,
+    0.45,
+    0.35
+  ],
+  "original_app_udp_sent": 1716864,
+  "original_unique_app_udp_received": 1714925,
+  "original_app_udp_never_received": 1939,
+  "original_udp_first_delivery_fraction": 0.9988706,
+  "original_tcp_alice_bob_framed_sent_received_per_direction": 43317,
+  "all_client_os_owned_stop": true,
+  "shared_server_os_owned_stop": true,
+  "all_client_rotation_verdict": "PASS_ALL_FIVE_SCOPED",
+  "three_normal_clients_generations": [
+    1,
+    2,
+    3
+  ],
+  "old_generations_stopped": [
+    1,
+    2
+  ],
+  "auth_b_commit_ports": {
+    "alice": [
+      56872,
+      64791
+    ],
+    "bob": [
+      57872,
+      49408
+    ],
+    "erin": [
+      60872,
+      52408
+    ]
+  },
+  "verified_original_server_b_proof": [
+    "V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY authenticated_TLS=1 original_Rust_M4=1",
+    "V4_PUBLIC_MIXED_NORMAL_PEER_PERSONA same_port authenticated_TLS=1 original_Rust_M4=1",
+    "V4_PUBLIC_MIXED_NORMAL_B_PENDING same_port authenticated_client_M4_required=1",
+    "V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX verified_client_cold_health=1",
+    "V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY same_port authenticated_client_native_Health promoted=1"
+  ],
+  "original_server_cpu_average_one_core_pct": 54.478,
+  "original_server_peak_rss_kib": 127052,
+  "original_app_max_10ms_no_receive_while_active_ms": 250,
+  "reporter_alerts_after": 0,
+  "original_netem_erin_drops": {
+    "up": 121948,
+    "down": 121741
+  },
+  "limits": [
+    "A scope-specific offline adjudication of one original real Linux x86 network Action; original Action FAIL retained, no new native load run",
+    "Only Erin at max loss30 and delay250, not all five peers nor Windows five client highloss",
+    "No calibrated failure-inclusive one-way p99; successful p99 does not include 1939 never-delivered UDP",
+    "Outer first-byte appearance repeat excluded from app recovery credit; cannot causally compare CPU across VM hosts",
+    "The original h1286 report's legacy architecture label says native_ARM64, but this specific H1642 workflow explicitly verified uname x86_64 and three x86 ELF e_machine62 hashes; corrected here, historical report not rewritten",
+    "Not independent A/B/C Windows DUT1800 L3 or physical WAN; unavailable/explicitly skipped work remains NOT_RUN"
+  ]
+}

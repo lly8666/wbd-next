@@ -58,7 +58,12 @@ jobs:
           assert w['lease4']['default_expression']=='""'
           assert set(fields)==set(k for k,v in w.items() if v['json'] or k in fields)
           assert fields['outer-repair'][0]=='传输'
-          print('H1638_ASSEMBLED_GUI_DEFAULTS_AND_FIELDS_PASS',len(fields))
+          import re
+          gui_src=(root/'windows/gui/GuiTests.cs').read_text(encoding='utf-8')
+          routes=re.findall(r'"route-key-hex"\s*,\s*"([a-f0-9]+)"',gui_src)
+          assert len(routes)>=2 and all(len(x)==64 for x in routes[:2]),"test-only V4 key fixture must be 32 bytes"
+          assert 'pending_native_auth' in (root/'cmd/wbd-client/main_windows.go').read_text(encoding='utf-8')
+          print('H1644_ASSEMBLED_GUI_DEFAULTS_32B_V4_ROUTE_KEYS_AND_COLD_PENDING_PASS',len(fields))
           '@ | python -
           if($LASTEXITCODE -ne 0){throw 'GUI catalog defaults check failed'}
       - name: Build CURRENT assembled native V4 original-Go cold entry once and compile WinForms

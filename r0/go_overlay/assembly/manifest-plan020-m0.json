@@ -367,7 +367,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "6989d40a5608ad3ab4b935612a1e2c4c26fcf188",
+      "result_blob": "329ad89a588c2119a470044a369e870acc785c83",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -444,6 +444,14 @@
         {
           "find": "{\"fec-parity\",20},{\"lanes\",4}",
           "replace": "{\"fec-parity\",0},{\"lanes\",4}"
+        },
+        {
+          "find": "\"112233445566778899aabbccddeeff00\"",
+          "replace": "\"112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00\""
+        },
+        {
+          "find": "\"aabbccddeeff00112233445566778899\"",
+          "replace": "\"aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899\""
         }
       ]
     },
