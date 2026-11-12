@@ -475,7 +475,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "9e66f7cb9b39700be1e31767af89efbdff7c3d1d",
+      "result_blob": "ae536fe95ef7f1003127f933063fff4691b03eec",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -620,6 +620,14 @@
         {
           "find": "                    // Unsupported native V4 combos must error before TLS or OS mutation.",
           "replace": "                    // One compiled UI + real current Go cold CLI tests every\n                    // actual Rust FEC2 profile for every supported native lane\n                    // count; this proves config propagation, NOT OS/Rust Applied.\n                    using (var grades=new MainForm(store,new FakeSession(),\n                        () => new DependencyState { Admin=true,Npcap=true,Wintun=true,NpcapVersion=\"grades-ui\" })) {\n                    foreach (int lane in new[]{1,2,4})\n                    foreach (string profile in new[]{\"light\",\"mild\",\"medium\",\"balanced\",\"high\",\"strong\",\"maximum\"}) {\n                        p.Values[\"fec.mode\"]=\"fixed\"; p.Values[\"lanes\"]=lane;\n                        p.Values[\"fec.profile\"]=profile;\n                        grades.LoadEditor();\n                        grades.SetEditor(\"fec.profile\",profile);\n                        grades.SaveEditor();\n                        var requested=store.Effective(p);\n                        Assert(Convert.ToString(requested[\"fec-mode\"])==(lane==1?\"fixed\":\"off\") &&\n                               Convert.ToInt32(requested[\"fec-parity\"])==(lane==1?4:0),\n                               \"GUI derives native original protected cold carrier grade=\"+profile+\" lanes=\"+lane);\n                        store.WriteAtomic(\"data/fixed-grade.json\",store.Json.Serialize(requested));\n                        var got=Wait(real.ValidateAsync(store.InRoot(\"data/fixed-grade.json\")));\n                        Assert(Convert.ToString(got[\"fec.profile\"])==profile &&\n                               Convert.ToString(got[\"fec.status\"])==\"pending_native_auth\" &&\n                               Convert.ToString(got[\"fec.applied_profile\"])==\"unknown\",\n                               \"seven actual Rust FEC2 fixed grade selectors travel GUI->Go pending only \"+profile+\" lanes=\"+lane);\n                    }\n                    }\n                    // Unsupported native V4 combos must error before TLS or OS mutation."
+        },
+        {
+          "find": "                    using (var configForm = new MainForm(store, new FakeSession(), () => new DependencyState { Admin=true, Npcap=true, Wintun=true, NpcapVersion=\"config-test\" }))\n                    foreach (string oldKey",
+          "replace": "                    using (var configForm = new MainForm(store, new FakeSession(), () => new DependencyState { Admin=true, Npcap=true, Wintun=true, NpcapVersion=\"config-test\" })) {\n                    foreach (string oldKey"
+        },
+        {
+          "find": "                        p.Values = saved;\n                    }\n                    // Every 028 native supported GUI mode",
+          "replace": "                        p.Values = saved;\n                    }\n                    }\n                    // Every 028 native supported GUI mode"
         }
       ]
     },
