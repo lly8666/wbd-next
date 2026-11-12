@@ -1555,7 +1555,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
-      "result_blob": "e3bc50dcdb2686010e5d9c9e7092398c21657220"
+      "result_blob": "e58280c2f4dc1f989bc96096df665c8ef8fa1539"
     },
     {
       "kind": "create",

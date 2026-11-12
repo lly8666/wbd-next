@@ -6,6 +6,16 @@ package windowsclient
 // resolver is also the physical route-selection target; no NIC DNS list,
 // static probe IP, extra resolver or tunnel/system DNS fallback. Actual A
 // queries are bounded physical NPF packets, not Winsock/TUN.
+import (
+ "context"
+ "errors"
+ "fmt"
+ "net"
+ "net/netip"
+ "time"
+ "github.com/lly8666/wobuzhidao/internal/faketcp"
+)
+
 var ErrServerBootstrapDNS=errors.New("windowsclient: physical server DNS bootstrap unavailable")
 
 type PhysicalServerResolution struct{
@@ -17,8 +27,6 @@ type PhysicalServerResolution struct{
  QueriedAt time.Time
 }
 
-// Query only the configured SERVER address. It cannot resolve ordinary
-// business DNS and creates no app-global WFP permit or OS route mutation.
 // Query only the configured SERVER address, using exactly its direct DNS
 // endpoint to discover the original physical interface and next-hop. It never
 // queries the system/NIC DNS list or another route-probe address.
