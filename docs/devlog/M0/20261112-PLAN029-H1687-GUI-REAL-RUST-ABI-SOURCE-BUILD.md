@@ -1,0 +1,10 @@
+# PLAN029 H1687｜真实CLI拒绝缺失Rust DLL，按SOURCE重建而非绕过
+
+- H1686 SOURCE `9e803d8c9a6f79e9e0e8a25d0d1a5c2866b7cc68` [real GUI+Go CLI Action43239063021](https://github.com/lly8666/wbd-next/actions/runs/43239063021) **FAIL**. Actual source-locked original Go and WinForms compiled. Harness initially verified editable domain, outer1460, visible direct/tunnel single DNS, no editable inner MTU. It then invoked real Go `--check-config` and correctly rejected missing runtime `wbd_engine.dll`. The assumption that this config path did not load Rust was wrong; this is the first actual failure, not a network regression.
+- Cannot copy frozen H1663 SOURCE527 Rust DLL while current `lib.rs/v4_client_split.rs` has changed, nor skip the real CLI loader. H1687 builds the Rust cdylib on **the same Windows2025 VM from exact `GITHUB_SHA`** using locked Rust 1.85.1 and `m0_v4_embedded_go,fec2_product_record`, then assembles original Go CLI and compiles/runs WinForms harness with only its matching local DLL.
+- Receipt captures actual `rust_sha256`, `rust_source_sha=GITHUB_SHA`, exact Go SHA and explicitly `rust_abi_scope=CURRENT_SOURCE_CONFIG_CHECK_ONLY`. No borrowed product binary, unsigned shortcut, mocked DLL, no app-network Ready or signed TCP/UDP claim. Current SOURCE GUI result pending the next Action. Guard-free WAL and Rust Direct DNS/TCP/UDP remain independently unqualified.
+- H1686 governance [43239062924](https://github.com/lly8666/wbd-next/actions/runs/43239062924), maintenance [43239063099](https://github.com/lly8666/wbd-next/actions/runs/43239063099) and fast compile [43239063051](https://github.com/lly8666/wbd-next/actions/runs/43239063051) SUCCESS; no broad seven-mode rerun. The H1685 actual native two-OS scene in [43238034430](https://github.com/lly8666/wbd-next/actions/runs/43238034430) remains separate and was in-progress at this snapshot, not a PLAN029 D1–D5 result.
+
+```feature-impact
+{"kind":"updated","ids":["gui-config-feedback"],"reason":"Actual real WinForms/Go CLI validation demonstrated Rust DLL loader dependency; rebuild matching same-SOURCE Rust ABI rather than skipping or reusing old-source DLL."}
+```

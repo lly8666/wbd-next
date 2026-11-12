@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1687",
+  "source_sha": "9e803d8c9a6f79e9e0e8a25d0d1a5c2866b7cc68",
+  "result": "FAIL_REAL_CLI_VALIDATION_MISSING_RUST_DLL",
+  "date": "2026-11-12",
+  "run": {
+    "id": 43239063021,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43239063021",
+    "conclusion": "failure"
+  },
+  "observed": [
+    "source-locked current original-Go CLI built",
+    "real WinForms compiled",
+    "real GUI labels/1460 outer/dual single DNS/no inner override initial checks passed",
+    "Go CLI --check-config refused to proceed because runtime loader required wbd_engine.dll"
+  ],
+  "first_causal_error": "Failed to load result/gui/wbd_engine.dll: The specified module could not be found.",
+  "effect": "Proves current Go check-config requires Rust ABI library; cannot omit it merely because the scope is configuration",
+  "not_run": [
+    "full GUI validation/reopen end receipt",
+    "signed Wintun GUI business network",
+    "actual Rust Direct/Tunnel DNS",
+    "no-WFP four-stage product Ready/Stop"
+  ],
+  "fix": "build cdylib exact same GITHUB_SHA with cargo 1.85.1 locked release and real m0_v4_embedded_go,fec2_product_record feature; keep hash, no old SOURCE527"
+}

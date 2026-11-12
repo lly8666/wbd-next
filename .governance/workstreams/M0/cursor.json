@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1686,
-  "checkpoint_sha": "3e6897631d2f425aa38c0c9a311b9a091b42e4d1",
+  "sequence": 1687,
+  "checkpoint_sha": "9e803d8c9a6f79e9e0e8a25d0d1a5c2866b7cc68",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1686: H1685 four genuine no-WFP Win32 stages + exact owner v2 preflight-only assembler compiled PASS_SCOPED, route intent crash ownership unresolved. H1686 repair stale SOURCE527 DLL in GUI-only WinForms/Go config CI, new action pending. Real v2 OS Applied/Stop and Rust DNS/Direct/padding OPEN.",
+  "current_task": "PLAN029 H1687: H1686 real WinForms/Go config test reached CLI but FAIL missing Rust dll; H1687 rebuild exact same SOURCE Rust cdylib in Windows GUI Action, result pending. H1685 no-WFP four Win32 stages source compiled, assembler remains hard-disabled; per-route crash ownership/Ready/Stop, Rust direct DNS/TCP/UDP still OPEN.",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect current H1686 WinForms+real Go config Action and H1685 M0-WIN-LINUX result; preserve failures. Then add per-route durable v2 ownership progress to SAME WAL (no fake guard), real exact-owned old WFP migration and generation-bound v2 product Apply/Stop, focused signed OS qualification; Rust single Wintun ingress CN IP+domain Direct TCP/UDP/DNS only after real feasibility. No old 028 matrix/no 030.",
+  "next_action": "Collect H1687 source-locked Rust DLL/current Go/WinForms Action; preserve real failure if any. Then continue same-WAL per-route durability/route intent crash recovery, exact-owned legacy WFP migration and v2 product Ready/Stop; qualified real signed Windows network; shared Rust single Wintun DNS/CN Direct TCP UDP/FakeIP. No old matrix/030 activation.",
   "unverified": true,
-  "last_tested_source": "3e6897631d2f425aa38c0c9a311b9a091b42e4d1",
+  "last_tested_source": "9e803d8c9a6f79e9e0e8a25d0d1a5c2866b7cc68",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1685-NOWFP-FOUR-WIN32-STAGES-SOURCE-20261112.json"
+    "docs/evidence/M0/PLAN029-H1686-WINFORMS-REAL-CLI-MISSING-CURRENT-RUST-DLL-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1685 SOURCE3e689 true Windows Go four stage source build 43238034263 SUCCESS, governance 43238034232, maintenance 43238034367 SUCCESS, native signed product NOT qualified and assemblyOnly true. H1663 old GUI Action43238034241 FAIL because pinned SOURCE527 Rust DLL inconsistent with new pure module. H1686 config-only WinForms/Go check removes old DLL entirely and narrows triggers, no Rust native product claimed. H1672 signed kernel TCP no-SYNACK unresolved. v2 route partial crash proof, WFP migration, Ready/Stop and Rust Direct/DNS/FakeIP/padding remain OPEN."
+  "partial_summary": "H1685 SOURCE3e689 true Win32 four-stage Go source compile 43238034263+maintenance43238034367+governance43238034232 PASS; actual v2 OS Applied not run and assemblyOnly. H1686 SOURCE9e803 real GUI runner43239063021 compiled Go+WinForms and initial labels but FAIL at Go --check-config missing required wbd_engine.dll. H1687 builds Rust DLL from matching source to retry without old SRC527. H1672 Wintun real kernel TCP SYNACK absent; no DNS/Direct/P1P2/padding product PASS."
 }
