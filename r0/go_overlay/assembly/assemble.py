@@ -108,14 +108,33 @@ def plan(legacy: Path, overlay: Path, spec: dict) -> tuple[list, dict]:
         else:
             raise ValueError("unknown manifest operation")
         got = blob_sha(result)
-        if "donor_blob" in e and got != e["donor_blob"]:
-            raise ValueError("Windows exact pinned donor blob mismatch: " + target)
+        derived = False
+        if "donor_blob" in e:
+            # The 12-file donor stays exact by default. PLAN029 changes ONE
+            # frozen transaction file; it must carry an immutable copy of
+            # the ORIGINAL donor bytes and an explicit single-path MAIN
+            # derivation marker. Never repin donor_blob to the new output.
+            if "main_owned_derivative" in e:
+                expected = ("internal/windowsclient/native_unified_network_transaction.go",
+                            "PLAN029_NO_WFP_TXN_V2",
+                            "r0/go_overlay/assembly/donor_baselines/native_unified_network_transaction.go")
+                if (target, e["main_owned_derivative"], e.get("donor_base_overlay_path")) != expected:
+                    raise ValueError("unreviewed Windows donor derivation: " + target)
+                baseline = within(overlay, expected[2]).read_bytes()
+                if blob_sha(baseline) != e["donor_blob"] or got == e["donor_blob"]:
+                    raise ValueError("main-owned donor derivation baseline mismatch: " + target)
+                derived = True
+            elif got != e["donor_blob"]:
+                raise ValueError("Windows exact pinned donor blob mismatch: " + target)
+        elif "main_owned_derivative" in e or "donor_base_overlay_path" in e:
+            raise ValueError("unowned donor derivation metadata: " + target)
         if got != e["result_blob"]:
             raise ValueError("overlay result blob mismatch: " + target)
         staged.append((dst, result))
         receipts.append(dict(path=target, kind=e["kind"], original_blob=prior,
                              result_blob=got, bytes=len(result),
-                             donor_blob=e.get("donor_blob")))
+                             donor_blob=e.get("donor_blob"),
+                             main_owned_derivative=derived))
     return staged, dict(schema_version=1, legacy_source=spec["legacy_source"],
                         overlay_source=actual, rust_source=spec["rust_source"],
                         rust_source_note="reference_only_not_actual_linked_ABI",

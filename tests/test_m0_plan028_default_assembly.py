@@ -43,6 +43,27 @@ class Plan028DefaultAssembly(unittest.TestCase):
             "transition.go", "transition_test.go",
             "transition_h1285_test.go", "transition_h1285_association_test.go",
         }.issubset(rows))
+    def test_plan029_one_explicit_main_derivative_preserves_pinned_windows_donor(self):
+        manifest = json.loads(MANIFEST.read_text())
+        donor = [op for op in manifest["operations"] if "donor_blob" in op]
+        self.assertEqual(len(donor), 12)
+        derived = [op for op in donor if "main_owned_derivative" in op]
+        self.assertEqual(len(derived), 1)
+        row = derived[0]
+        self.assertEqual(row["path"], "internal/windowsclient/native_unified_network_transaction.go")
+        self.assertEqual(row["main_owned_derivative"], "PLAN029_NO_WFP_TXN_V2")
+        self.assertEqual(row["donor_base_overlay_path"],
+                         "r0/go_overlay/assembly/donor_baselines/native_unified_network_transaction.go")
+        self.assertEqual(blob((ROOT / row["donor_base_overlay_path"]).read_bytes()),
+                         row["donor_blob"])
+        self.assertNotEqual(row["result_blob"], row["donor_blob"])
+        self.assertEqual(blob((ROOT / row["overlay_path"]).read_bytes()),
+                         row["result_blob"])
+        for frozen in donor:
+            if frozen is row:
+                continue
+            self.assertEqual(frozen["donor_blob"], frozen["result_blob"], frozen["path"])
+
     def test_x86_and_arm64_always_assemble_exact_same_current_original_go_files(self):
         x86, arm = X86.read_text(), ARM.read_text()
         install = "python3 tools/m0_install_public_faketcp.py legacy"

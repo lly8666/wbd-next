@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1680,
-  "checkpoint_sha": "0a40c2a2931efda62326c3c17583760fb7faed92",
+  "sequence": 1681,
+  "checkpoint_sha": "1266805a6788bb445c177802fe25f12b87ae76ba",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1680: PR34 merged and H1679 CI scoped success; one unified Windows owned WAL now staged for v2 four-stage no-WFP grammar with pure tests pending. Legacy v1 WFP preserved for exact recovery. Actual v2 OS writers, native product Ready/Stop, Rust Direct DNS/TCP/UDP and padding still OPEN; H1672 signed TCP failure retained.",
+  "current_task": "PLAN029 H1681: H1680 v2 WAL code source failed exact 12-file frozen Windows donor assembly (and old pinned GUI Rust DLL), preserve FAIL; H1681 explicit SHA-locked one-file MAIN derivative of original donor + source CI test pending, true no-WFP Win32 writers and Direct DNS/TCP/UDP still OPEN.",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First inspect new SOURCE Windows Go/regression + manifest Actions, retain any failures. Then implement generation-bound guard-free native OS writers and v2 product entry/Stop/OS readback, exact owned old WFP one-shot retirement; connect Rust single Wintun native ingress and real Direct DNS/UDP/TCP only after focused signed Windows TCP feasibility. No fake applied, no old 028 suite and no 030 activation.",
+  "next_action": "Collect new H1681 donor provenance assembly/Windows Go WAL pure tests and no full-signed network PASS. If compiled, implement actual no-legacy-WFP generation-owned lease/MTU/DNS/routes v2 stage writers/receipt and exact owned old WFP cleanup; connect Rust native single ingress and Direct DNS/UDP/TCP. Do not circumvent donor gate or pinned Rust ABI, no 028 re-run, no 030.",
   "unverified": true,
-  "last_tested_source": "0a40c2a2931efda62326c3c17583760fb7faed92",
+  "last_tested_source": "1266805a6788bb445c177802fe25f12b87ae76ba",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1679-TIERED-CI-MERGE-SOURCE-20261112.json"
+    "docs/evidence/M0/PLAN029-H1680-UNIFIED-V2-DONOR-INTEGRITY-FAIL-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "PR #34 merged 530af9a. H1679 SOURCE0a40 fast CI Action43229611167 SUCCESS, heavy native scene SKIPPED as required. H1680 source edits: v2 no-old-WFP lease/MTU/DNS/routes grammar shares existing fsynced journal and v1 CAS, no guard fifth stage; tests software-only, no real native Applied/Stop. Actual four native writers + true Rust Direct/Tunnel and DNS FakeIP still unfinished. H1672 signed Wintun SYNACK FAIL remains."
+  "partial_summary": "H1680 SOURCE126680 H1661 Action43231539978/WAL Action43231539865 failed exact pinned Windows donor blob; GUI Action43231539754 failed old Rust DLL source mismatch, neither proves native network fail. H1681 main-owned variant records original donor blob and separate baseline snapshot with distinct result blob, no fake repin. H1679 fast CI fully success, PR34 merged. New Windows source verification pending, actual v2 four OS stages/unified owner and Rust Direct/Tunnel E2E not implemented; H1672 signed TCP SYNACK failure retained."
 }

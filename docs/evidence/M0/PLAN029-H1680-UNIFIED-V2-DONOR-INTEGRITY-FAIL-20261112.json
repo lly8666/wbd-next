@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1680",
+  "source_sha": "1266805a6788bb445c177802fe25f12b87ae76ba",
+  "result": "FAIL_ASSEMBLY_DONOR_PROVENANCE",
+  "observed_on": "2026-11-12",
+  "failing_runs": [
+    {
+      "run_id": 43231539978,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43231539978",
+      "first_error": "FEC2_ASSEMBLY_REJECTED Windows exact pinned donor blob mismatch internal/windowsclient/native_unified_network_transaction.go"
+    },
+    {
+      "run_id": 43231539865,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43231539865",
+      "first_error": "same Windows donor exact source mismatch; signed native OS WAL test did not begin"
+    },
+    {
+      "run_id": 43231539754,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43231539754",
+      "first_error": "old pinned Rust DLL-source difference in lib.rs,v4_client_split.rs; no current full Rust GUI product qualified"
+    }
+  ],
+  "observed": [
+    "H1680 modified original donor-locked transaction file but only updated manifest result_blob; assembler also compares donor_blob",
+    "original donor snapshot SHA 1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f must remain immutable",
+    "not a failing Win32 TCP or four-stage WAL functional result"
+  ],
+  "qualifications_not_run": [
+    "v2 pure Go WAL tests (assembly prevented)",
+    "real Windows four-stage no-WFP Win32 Apply/Stop",
+    "new Rust DNS/Direct application egress"
+  ]
+}
