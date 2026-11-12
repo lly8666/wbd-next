@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1634",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "harness_source_sha": "c40eade60a01f23f8379c134f28d494b11c51ce0",
+  "result": "PASS_SCOPED_ONE_SIGNED_WINDOWS_NPCAP_WINTUN_NORMAL_FEC_AUTO_30PCT_250MS_60S_REAL_KERNEL_APP_BOTH_STOP",
+  "native_action_id": 43138301038,
+  "native_action_conclusion": "success",
+  "native_job_id": 130919083520,
+  "wrapper_action_id": 43138276386,
+  "raw_artifact_id": 13909095948,
+  "raw_artifact_zip_sha256": "9243cfb017e6c3ad0789b539a0b010073ff4926cc8883b5d25f1cdc5405f4e4f",
+  "raw_report_json_sha256": "b15c2e84cd092f71e3398db9618dd517df2fa880517fe6b35b19812ea3f30f0b",
+  "zip_members": 37,
+  "zip_crc_all_members_verified": true,
+  "product_build_action": 43027983611,
+  "binary_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "product_recompiled": false,
+  "windows_binary_sha256": {
+    "original_go_exe": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "native_rust_isa_l_dll": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d"
+  },
+  "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_isa_l_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "native_scope": "One hosted Windows2025 signed Npcap1.88 Wintun + real WSL2 Ubuntu original Go TLS443 Rust M4 and native kernel UDP/TCP; one scene only",
+  "scenario_id": "plan028-h1632-auto-on-10m250ms30-outer1460-60s",
+  "scenario_sha256": "9a04181b20945ecdcda10e98832a24ec1d57736388538173ad17e43905fdc995",
+  "configured_outer_mtu": 1460,
+  "windows_os_inner_mtu": 1375,
+  "linux_os_inner_mtu": 1375,
+  "user_default_fec_remains_off": true,
+  "explicit_test_fec_auto": true,
+  "outer_repair": "on",
+  "damage": {
+    "duration_seconds": 60,
+    "offered_mbps_each_direction": 10,
+    "oneway_delay_ms_each_direction": 250,
+    "loss_percent_each_direction": 30,
+    "real_linux_qdisc_eth0_packets_dropped": 68839,
+    "real_linux_ifb_packets_dropped": 69937
+  },
+  "native_mode_and_applied_readback": {
+    "windows_original_runtime_telemetry": {
+      "mode": "fec-auto",
+      "auto_requested_revision": 2,
+      "auto_applied_revision": 2,
+      "auto_requested_profile": 6
+    },
+    "linux_server_original_readback": {
+      "mode": "auto",
+      "requested_revision": 2,
+      "applied_revision": 2,
+      "profile": 6,
+      "pending": false
+    },
+    "per_packet_FEC_recovery_vs_outer_TCP_presentation": "NOT_CAUSALLY_ATTRIBUTED_NO_SEPARATE_COUNTERS"
+  },
+  "application_60s": {
+    "windows_sender": {
+      "unique_packets": 99498,
+      "payload_bytes": 74980800,
+      "offered_mbps": 9.9974
+    },
+    "linux_sender": {
+      "unique_packets": 99551,
+      "payload_bytes": 74999760,
+      "offered_mbps": 10
+    },
+    "windows_receives_linux": {
+      "first_received_packets": 99382,
+      "never_first_delivered_packets": 169,
+      "first_delivered_mbps": 9.9853,
+      "first_delivery_fraction": 0.998302,
+      "duplicates": 0,
+      "invalid": 0,
+      "max_interarrival_between_successful_deliveries_ms": 16
+    },
+    "linux_receives_windows": {
+      "first_received_packets": 99380,
+      "never_first_delivered_packets": 118,
+      "first_delivered_mbps": 9.9896,
+      "first_delivery_fraction": 0.998814,
+      "duplicates": 0,
+      "invalid": 0,
+      "max_interarrival_between_successful_deliveries_ms": 60
+    },
+    "true_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "true_kernel_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "both_exact_owners_stop": "PASS_BOTH_OWNED",
+    "true_same_origin_udp_rtt_p99_ms": {
+      "windows": 532,
+      "linux": 534.145
+    },
+    "same_origin_udp_rtt_sent_replied": {
+      "windows": [
+        549,
+        524
+      ],
+      "linux": [
+        600,
+        566
+      ]
+    },
+    "rtt_not_returned": {
+      "windows": 25,
+      "linux": 34
+    },
+    "failed_packet_oneway_latency_p99": "NOT_MEASURED_UNCALIBRATED_CROSS_OS_CLOCKS",
+    "failure_inclusive_p99": "NOT_MEASURED"
+  },
+  "resources": {
+    "windows_original_go_plus_rust_1hz_samples": 74,
+    "windows_original_go_plus_rust_total_cpu_seconds": 2.6875,
+    "windows_original_go_plus_rust_elapsed_seconds": 74.61,
+    "windows_original_go_plus_rust_peak_working_set_bytes": 44625920,
+    "windows_original_go_plus_rust_peak_private_bytes": 39333888,
+    "windows_native_host_logical_vcpu": 4,
+    "linux_original_server_resources": "PARTIAL_NOT_FULL_PROCESS_COUNTER",
+    "server_fec2_rx_capacity_peak_active": 27,
+    "server_fec2_rx_capacity_peak_bytes": 367336,
+    "server_fec2_rx_age_evicted": 7505
+  },
+  "previous_baseline": {
+    "action_id": 43136758689,
+    "mode": "normal FEC Off",
+    "first_delivery_windows": 0.722825,
+    "first_delivery_linux": 0.722986,
+    "comparison_limit": "Different Windows hosted VMs and native runtime conditions; correlation only, not controlled causality or system-level efficiency claim"
+  },
+  "prior_failure_preserved": {
+    "wrapper_action_id": 43138076757,
+    "conclusion": "failure",
+    "classification": "pre-dispatch Auto scenario expected-ID typo, no Windows native scene launched, not product failure"
+  },
+  "interpretation": [
+    "Strong observed in-scope Auto first delivery (~99.83% Windows, ~99.88% Linux) under configured authentic 30pct one-way kernel loss and 250ms each direction with profile6 applied, valid signed Windows/Linux original-Go+Rust NPF/Wintun/TUN, real UDP/TCP and both owned Stop.",
+    "Do not replace the 169 and 118 never-delivered source packets with success; returned RTT p99 excludes nonreturns; 30pct 'reliability pass' beyond the exact 60s one sender and two endpoint scene not claimed.",
+    "Auto vs Off is two independent VMs, not same-machine paired benchmark; no causal attribution of every recovered packet to FEC/outer repair or proof of full five-user capacity, 600s sustained CPU/RSS/p99.",
+    "FEC Off remains the public product default; only Auto scene explicitly selects Auto."
+  ],
+  "excluded": [
+    "Windows independent controller A + Windows DUT B + separate Linux peer C 1800s L3 environment unavailable, skip",
+    "User-skipped same-Windows-host dual Wintun and near-derived inner MTU, do not rerun",
+    "Full current-source Windows seven modes, five-client saturated highloss250ms, Windows Auto-IP physical reauth, GUI interaction, ARM64 affected modes and infrastructure p99 still incomplete",
+    "PLAN029/030 not started"
+  ],
+  "artifact_verified": true
+}

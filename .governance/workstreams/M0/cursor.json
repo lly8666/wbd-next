@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1633,
-  "checkpoint_sha": "872fb8c9bd41f3d862a180bc4db9f999c8d6f95a",
+  "sequence": 1634,
+  "checkpoint_sha": "c40eade60a01f23f8379c134f28d494b11c51ce0",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1633-RETAIN-WRAPPER-FAIL-FIX-ONE-AUTO-SCENARIO-ID-AND-RETEST",
-  "current_task": "H1633: H1632 Auto source-locked preflight wrapper Action43138076757 FAIL before dispatch due expected clone scenario_id remained '...normal...' while actual valid Auto scene uses '...auto...'; no native business ran, product not blamed. Corrected only exact expected ID, retained SOURCE/MTU/mode/diff contract; new wrapper and target native still NOT_RUN before observed. H1631 Windows signed Normal Off loss30 250ms successful with only 72.3% first delivery, recorded H1632 evidence. x86 seven-mode three gap Actions SUCCESS. Plan IN_PROGRESS.",
-  "why_now": "Avoid silently treating a preflight name mismatch as product FEC failure, and run the intended exact one Auto weaknet real source-locked scenario only once after targeted ID correction.",
+  "task_id": "PLAN028-H1634-WIN-AUTO-30PCT250-SIGNED-PASS-AND-GAME2-GAME4-FEC6-PARALLEL",
+  "current_task": "H1634: H1633 target original signed Windows Wintun Npcap + real WSL2 SOURCE8a Auto FEC 30pct/250ms each 60s Action43138301038 SUCCESS, exact ZIP13909095948 SHA verified. Native Windows Auto rev2 profile6 and server applied2 profile6, 99.8302% first Windows and 99.8814% Linux, 169/118 missing, real qdisc drops 68839/69937, TCP/UDP/Stop success, success-only RTT p99 ~532-534ms, owner CPU2.6875s/74.61s RSS44.6MB; other distinct VM Off72.3%, no causal claim. H1632 predispatch typo FAIL retained. H1634 now separately path-triggers one Game2 FEC6 and one Game4 FEC6 source-locked signed Windows+Linux 30%/250ms 60s genuine native Action using H1600 formal prebuilt; wrappers NOT business. No product changes.",
+  "why_now": "Auto exact current-SOURCE signed Windows real weaknet documented; Game2/Game4 damaged FEC6 have eligible supported native Windows VM and can execute independently in parallel without independent 1800s DUT. Avoid duplicate H1631 Off and H1633 Auto.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect new H1633 wrapper and single target Windows signed Auto FEC 30pct250ms real native Action/report/ZIP, quantify original true delivered/failed/Auto FEC actual applied/Stop/resources. No extra rollout if environment blocked; preserve original Action43138076757 FAIL. Independent Windows L3 rig absent and user skips near-MTU/multi-Wintun; no 029/030.",
+  "next_action": "Find and verify both H1634 wrapper Actions and their two separate Windows signed native targets. Collect original ZIP, report, FEC6 effective parity/readback, first delivery/missing, kernel qdisc, TCP/UDP/owned Stop and finite resource summaries; preserve actual failures, don't invent Pass from wrappers. Then report remaining current Windows AutoIP physical, 5-client 30pct250ms load, p99 and GUI. Skip absent independent A/B/C Windows1800 L3 and user-skipped near-MTU/two-Wintun, no 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json",
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
     "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json",
     "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
-    "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json"
+    "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
+    "docs/evidence/M0/PLAN028-H1634-SOURCE8A-WIN-LINUX-NORMAL-AUTO-LOSS30-250-PASS-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -30,8 +30,8 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
     "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1632-WINDOWS-30PCT250-NORMAL-REAL-AND-AUTO-SINGLE-SCENE.md",
-    "docs/devlog/M0/20261112-PLAN028-H1633-AUTO-WEAKNET-SCENE-ID-ONLY-PREFLIGHT.md"
+    "docs/evidence/M0/PLAN028-H1634-SOURCE8A-WIN-LINUX-NORMAL-AUTO-LOSS30-250-PASS-20261112.json",
+    "docs/devlog/M0/20261112-PLAN028-H1634-WINDOWS-AUTO-LOSS30-NATIVE-PASS-AND-TWO-GAMEFEC-WEAKNET-PARALLEL.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."
