@@ -1,9 +1,11 @@
 //go:build windows
 package windowsclient
-import ("net/netip";"testing")
-func TestPlan029BootstrapDNSBoundedPhysicalCandidates(t *testing.T){
- a,b:=netip.MustParseAddr("192.168.1.1"),netip.MustParseAddr("1.1.1.1")
- var got []netip.Addr
- for _,x:=range []netip.Addr{a,b,a,netip.IPv6Loopback(),b}{got=appendBootstrapDNSUnique(got,x)}
- if len(got)!=2||got[0]!=a||got[1]!=b{t.Fatalf("wanted only distinct original DNS4: %v",got)}
+import ("context";"errors";"net/netip";"testing")
+func TestPlan029BootstrapRejectsMissingSingleDirectDNSWithoutNetwork(t *testing.T){
+ for _,dns:=range []netip.Addr{{},netip.MustParseAddr("127.0.0.1"),
+ netip.MustParseAddr("224.0.0.1"),netip.MustParseAddr("0.0.0.0"),
+ netip.MustParseAddr("fe80::1"),netip.MustParseAddr("169.254.2.4")}{
+  _,err:=ResolveServerAFromOriginalPhysical(context.Background(),"server.example","WBD",dns)
+  if !errors.Is(err,ErrServerBootstrapDNS){t.Fatalf("resolver %s unexpectedly passed to physical IO: %v",dns,err)}
+ }
 }

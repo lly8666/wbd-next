@@ -57,7 +57,8 @@
     "GUI域名解析实时状态、server-address规范键及别名迁移、实际OS/MTU只读反馈尚未端到端验证。",
     "外层IPv6不支持，内层IPv6安全策略不放宽。",
     "PLAN029 H1665 Windows physical DNS wire parser现支持受限CNAME链和无关A拒绝、Npcap小包接收门，后续以真实Windows NPF/WFP/OS对照测，当前源码仍NOT_QUALIFIED。",
-    "PLAN029 H1667源码将Windows服务器域名物理bootstrap固定到显式dns.direct一项223.5.5.5默认，不再网卡DNS或备用DNS轮询。尚无真Wintun/物理出口/owned Stop实网验证，不能当作D1 PASS。"
+    "PLAN029 H1667源码将Windows服务器域名物理bootstrap固定到显式dns.direct一项223.5.5.5默认，不再网卡DNS或备用DNS轮询。尚无真Wintun/物理出口/owned Stop实网验证，不能当作D1 PASS。",
+    "H1674 Windows源码将服务器域名原物理出口选择从硬编码9.9.9.9改为唯一dns.direct本身，冷建链只一次物理NPF A请求并明确空结果；当前SOURCE真OS出口/重连唤醒还需验证。"
   ],
   "promotion": null
 }

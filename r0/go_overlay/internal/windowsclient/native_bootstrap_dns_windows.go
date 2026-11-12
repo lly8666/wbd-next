@@ -2,19 +2,10 @@
 
 package windowsclient
 
-// PLAN029 cold-only physical DNS bootstrap. Route lookup selects the
-// original NIC, source IPv4, next-hop MAC and the NIC's DNS servers.
-// The actual DNS query is a bounded physical NPF packet, not Winsock/TUN.
-import (
- "context"
- "errors"
- "fmt"
- "net"
- "net/netip"
- "time"
- "github.com/lly8666/wobuzhidao/internal/faketcp"
-)
-
+// PLAN029 cold-only physical DNS bootstrap. The single configured direct
+// resolver is also the physical route-selection target; no NIC DNS list,
+// static probe IP, extra resolver or tunnel/system DNS fallback. Actual A
+// queries are bounded physical NPF packets, not Winsock/TUN.
 var ErrServerBootstrapDNS=errors.New("windowsclient: physical server DNS bootstrap unavailable")
 
 type PhysicalServerResolution struct{
@@ -26,43 +17,40 @@ type PhysicalServerResolution struct{
  QueriedAt time.Time
 }
 
-func appendBootstrapDNSUnique(dst []netip.Addr,v netip.Addr)[]netip.Addr{
- if !v.Is4()||v.IsUnspecified()||v.IsMulticast()||v.IsLoopback(){return dst}
- for _,old:=range dst{if old==v{return dst}}
- return append(dst,v)
-}
-
 // Query only the configured SERVER address. It cannot resolve ordinary
 // business DNS and creates no app-global WFP permit or OS route mutation.
+// Query only the configured SERVER address, using exactly its direct DNS
+// endpoint to discover the original physical interface and next-hop. It never
+// queries the system/NIC DNS list or another route-probe address.
 func ResolveServerAFromOriginalPhysical(ctx context.Context,host,alias string,
  resolver netip.Addr)(PhysicalServerResolution,error){
- if ctx.Err()!=nil||host==""||alias==""||!resolver.Is4()||resolver.IsUnspecified()||resolver.IsMulticast()||resolver.IsLoopback(){return PhysicalServerResolution{},ErrServerBootstrapDNS}
+ if ctx==nil||ctx.Err()!=nil||host==""||alias==""||
+  !resolver.Is4()||!resolver.IsGlobalUnicast()||
+  resolver.IsLoopback()||resolver.IsMulticast()||resolver.IsLinkLocalUnicast(){
+  return PhysicalServerResolution{},ErrServerBootstrapDNS
+ }
  var excluded uint32
  if itf,e:=net.InterfaceByName(alias);e==nil&&itf.Index>0{excluded=uint32(itf.Index)}
- // This probe only reads the default IPv4 physical route and gateway ARP.
- physical,e:=DiscoverPhysicalUnderlay(netip.MustParseAddr("9.9.9.9"),excluded)
- if e!=nil{return PhysicalServerResolution{},fmt.Errorf("%w: original physical route: %v",ErrServerBootstrapDNS,e)}
- if physical.InterfaceIndex==excluded||!physical.Source4.Is4(){return PhysicalServerResolution{},ErrServerBootstrapDNS}
+ // Exclude the owned Wintun from actual selected routes even after /1
+ // capture; the underlay owns this source IP and packet device.
+ physical,e:=DiscoverPhysicalUnderlay(resolver,excluded)
+ if e!=nil{return PhysicalServerResolution{},fmt.Errorf("%w: original physical route for dns.direct %s: %v",ErrServerBootstrapDNS,resolver,e)}
+ if physical.InterfaceIndex==0||physical.InterfaceIndex==excluded||
+  !physical.Source4.Is4()||physical.PacketDevice==""{
+  return PhysicalServerResolution{},ErrServerBootstrapDNS
+ }
  itf,e:=net.InterfaceByIndex(int(physical.InterfaceIndex))
  if e!=nil||itf==nil||itf.Name==alias{return PhysicalServerResolution{},ErrServerBootstrapDNS}
- // Exactly ONE configured dns.direct; no NIC DNS, no fallback list.
- servers:=[]netip.Addr{resolver}
- var last error
- for _,d:=range servers{
-  if e:=ctx.Err();e!=nil{return PhysicalServerResolution{},e}
-  u,e:=DiscoverPhysicalUnderlay(d,excluded)
-  if e!=nil{last=e;continue}
-  if u.InterfaceIndex!=physical.InterfaceIndex||u.Source4!=physical.Source4{
-   last=ErrServerBootstrapDNS;continue
-  }
-  ips,e:=faketcp.LookupPhysicalServerA(ctx,faketcp.PhysicalDNSConfig{
-   Device:u.PacketDevice,SourceMAC:u.SourceMAC,NextHopMAC:u.NextHopMAC,
-   Source4:u.Source4,Resolver4:d},host)
-  if e!=nil{last=e;continue}
-  return PhysicalServerResolution{
-   Selected4:ips[0],Candidate4:ips,Resolver4:d,
-   PhysicalSource4:u.Source4,PhysicalIfIndex:u.InterfaceIndex,QueriedAt:time.Now(),
-  },nil
- }
- return PhysicalServerResolution{},fmt.Errorf("%w: hostname %q: %v",ErrServerBootstrapDNS,host,last)
+ if e:=ctx.Err();e!=nil{return PhysicalServerResolution{},e}
+ ips,e:=faketcp.LookupPhysicalServerA(ctx,faketcp.PhysicalDNSConfig{
+  Device:physical.PacketDevice,SourceMAC:physical.SourceMAC,
+  NextHopMAC:physical.NextHopMAC,Source4:physical.Source4,
+  Resolver4:resolver},host)
+ if e!=nil{return PhysicalServerResolution{},fmt.Errorf("%w: %s via single dns.direct %s: %v",ErrServerBootstrapDNS,host,resolver,e)}
+ if len(ips)==0{return PhysicalServerResolution{},fmt.Errorf("%w: %s via dns.direct %s returned no usable A",ErrServerBootstrapDNS,host,resolver)}
+ return PhysicalServerResolution{
+  Selected4:ips[0],Candidate4:ips,Resolver4:resolver,
+  PhysicalSource4:physical.Source4,PhysicalIfIndex:physical.InterfaceIndex,
+  QueriedAt:time.Now(),
+ },nil
 }

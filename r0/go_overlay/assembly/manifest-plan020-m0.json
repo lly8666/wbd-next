@@ -1555,13 +1555,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
-      "result_blob": "1e66ceb9d363ad57a414e365c3d7899ee189ef88"
+      "result_blob": "e3bc50dcdb2686010e5d9c9e7092398c21657220"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows_test.go",
-      "result_blob": "2007f952da6cba7996007d2b922413dd8c721a3d"
+      "result_blob": "d6e0e577c915cf0f8a9680c319edfed995b8bf58"
     },
     {
       "kind": "create",
