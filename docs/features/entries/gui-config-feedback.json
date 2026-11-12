@@ -20,7 +20,7 @@
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。",
-    "gui": "当前正式 WinForms 仅展示FEC Off（默认）/七级固定强度r/k 12.5%至125%/Normal Auto；旧原Go冷载体4个选项不暴露，从原生mode+lanes内部推导。49可见设置由GUI保存、当前原Go --check-config有效值读回，Fixed/Auto仅pending_native_auth，不能声称 Rust/OS Applied。GUI按钮真WinForms事件、JSON导出/导入、read-only磁盘状态/Win32预检在Windows2025 VM验证，连接仍为模拟会话。"
+    "gui": "当前正式 WinForms 仅展示FEC Off（默认）/七级固定强度r/k 12.5%至125%/Normal Auto；旧原Go冷载体4个选项不暴露，从原生mode+lanes内部推导。49可见设置由GUI保存、当前原Go --check-config有效值读回，Fixed/Auto仅pending_native_auth，不能声称 Rust/OS Applied。GUI按钮真WinForms事件、JSON导出/导入、read-only磁盘状态/Win32预检在Windows2025 VM验证，连接仍为模拟会话。 H1653正式便携构建要求Go和Rust库都与同SOURCE527签名产品原始二进制hash相等，独立编译Go后仍以正式产物实际打包；版本/源标签不能借文档提交漂移。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -88,7 +88,8 @@
     "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。",
     "H1647 GUI精简：四个旧fec-mode/fec-parity/fec-min-parity/fec-start-parity不再展示为可调项；原生Rust固定档7级ratio依次1/8、1/4、3/8、1/2、3/4、1、5/4，r=ceil(k*rho)且受MAX_R上限，比例非实际带宽占比；关闭FEC仍是默认。正式Windows VM编译/CLI全档及按钮结果需按最终Action验证，不等价物理GUI-origin signed network。",
     "H1648完整Windows2025 VM compiled GUI Action43160679063 SUCCESS，原始artifact13917194780 CRC验证；354项字段/真实Go CLI/按钮为范围内PASS，GUI起网真Npcap/Wintun与同源码真实应用流仍未验。H1649仅UI可用性标签与少数读操作/导入按钮补烟，新的测试结果需再收集。",
-    "H1650 接手核对最新Action43161652534及7项原始ZIP CRC、354项GUI自检全PASS（含49可见配置、21原生固定档、三AEAD）和真实read-only Win32/WAL按钮事件。功能目录verification只能用FUNCTIONAL_PASS等固定枚举，状态的限定scope不包含GUI起真实签名网络；旧 H1648 PASS_SCOPED 标签纠正为合法FUNCTIONAL_PASS，原Action和旧错误均保留。"
+    "H1650 接手核对最新Action43161652534及7项原始ZIP CRC、354项GUI自检全PASS（含49可见配置、21原生固定档、三AEAD）和真实read-only Win32/WAL按钮事件。功能目录verification只能用FUNCTIONAL_PASS等固定枚举，状态的限定scope不包含GUI起真实签名网络；旧 H1648 PASS_SCOPED 标签纠正为合法FUNCTIONAL_PASS，原Action和旧错误均保留。",
+    "H1653发现正式GUI VM打包曾使用旧SOURCE8a Rust DLL SHA7c8ddd，虽然GUI Go同当前正式edbb；H1653将WinForms产物绑到SOURCE527正式签名产品Action43161652596的Go edbb及Rust ISA-L DLL SHA3973cd，加入源码目录/二进制双hash硬门。当前改装配的Windows VM终端结果待核实，禁止把旧H1649签名DLL说成最新。真实GUI-origin Npcap/Wintun业务依旧NOT_RUN。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
