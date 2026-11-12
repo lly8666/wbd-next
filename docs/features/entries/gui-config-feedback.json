@@ -83,6 +83,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 real WinForms + original Go CLI + exact-source Rust DLL",
+      "scope": "H1687 SOURCE0d89843 current-config build + actual WinForms profile/CLI --check-config, server DNS domain/SNI, single direct+tunnel resolver, legacy dns4 migration, outer1460/explicit1500, no inner MTU writeback, reopen; no signed driver/app network",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0d89843b6d2243945a81f45bb413be16ca7a97eb",
+      "evidence": "docs/evidence/M0/PLAN029-H1688-CURRENT-SOURCE-REAL-GUI-CLI-PASS-NO-NETWORK-20261112.json"
     }
   ],
   "limitations": [
@@ -104,7 +111,8 @@
     "PLAN029 H1667 WinForms将旧dns4迁移为新dns.tunnel并隐藏旧键，新界面可编辑单一dns.direct和dns.tunnel；真实GUI检查/当前有效原生DNS出口尚未通过Actions，不以保存为Applied。",
     "H1670新增现有真实WinForms+Go CLI两个单DNS值及dns4首项迁移/冲突拒绝/portable reopen独立验收；仅测试准备，待当前SOURCE Windows Action返回，不代表两个DNS真实网络出口。",
     "H1686 H1663 GUI workflow previous fixed Rust DLL source mismatch was an inappropriate precondition for WinForms/Go config-only test. The new SOURCE will build current Go and real WinForms without linking Rust DLL, with explicit NOT_BUILT_OR_LINKED; signed Rust GUI and actual applied owner remain NOT_RUN until new Action result.",
-    "H1686 true GUI compile succeeded but real Go --check-config requires Rust DLL; lack of DLL caused Action43239063021 FAIL at config validation (original source pin, not GUI labels). H1687 builds same-source Rust ABI release DLL before rerun; signed GUI packet path still NOT_RUN."
+    "H1686 true GUI compile succeeded but real Go --check-config requires Rust DLL; lack of DLL caused Action43239063021 FAIL at config validation (original source pin, not GUI labels). H1687 builds same-source Rust ABI release DLL before rerun; signed GUI packet path still NOT_RUN.",
+    "H1688 collects H1687 Action43240195695 success with exact-source Go/Rust SHA256 and real WinForms/Go config readback. This does not qualify actual OS Applied, signed Wintun, Rust DNS direct/tunnel exits, Direct TCP/UDP or startup-padding. Original H1686 missing Rust DLL FAIL remains."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

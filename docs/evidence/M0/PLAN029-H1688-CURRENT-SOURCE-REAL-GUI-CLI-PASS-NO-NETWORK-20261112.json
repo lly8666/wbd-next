@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1688",
+  "observed_at": "2026-11-12",
+  "source_sha": "0d89843b6d2243945a81f45bb413be16ca7a97eb",
+  "result": "FUNCTIONAL_PASS_SCOPED_CURRENT_WINFORMS_GO_CLI_CONFIG_ONLY",
+  "action": {
+    "run_id": 43240195695,
+    "job_id": 131258220166,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43240195695"
+  },
+  "artifact": {
+    "id": 13954571876,
+    "name": "plan029-h1663-gui-domain-mtu-43240195695",
+    "zip_sha256": "f707c9b6ecfe25b8d41d15e1354a6bfa4bd984a741f395a34b34cbff84f160ed",
+    "go_sha256": "813727ce184770be1895c6f24081045f04aeb640b5a312cd05c54e816eda7c9c",
+    "rust_sha256": "6ddd97f5e5a6992177cf4f5f0f0f815a99866a85fe3f1c3a79c89bced693f3ac",
+    "rust_source_sha": "0d89843b6d2243945a81f45bb413be16ca7a97eb",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "scope": "CURRENT_SOURCE_CONFIG_CHECK_ONLY"
+  },
+  "observed": [
+    "Windows2025 compiled exact-source Rust cdylib and original Go CLI; compiled real WinForms and ran profile/save/reopen harness",
+    "real --check-config effective readback validated independent server-ip domain and server-name SNI, default outer MTU1460 with Rust-derived inner read-only",
+    "GUI presents exactly one editable direct DNS and one tunnel DNS; retired dns4 never persists; old dns4 first value migrates to tunnel and rejects conflicting legacy/new",
+    "explicit MTU1500 only when user selects; Game4/Normal mode switch does not rewrite outer MTU; profile reopen preserves domain, SNI, resolver and MTU",
+    "prior H1686 Action43239063021 failed at missing Rust DLL; H1687 repaired test dependency by compiling matching DLL, without rewriting historical failure"
+  ],
+  "excluded": [
+    "signed Wintun GUI-origin connect/data/Stop",
+    "actual OS network Applied and no-WFP migration",
+    "native Rust DNS53 QNAME dispatcher and two physical/tunnel exits",
+    "CN IP/domain FakeIP Direct TCP/UDP full wire",
+    "startup-padding flows",
+    "D1-D5/P1-P2 performance and lifecycle exits"
+  ],
+  "related_action": {
+    "run_id": 43238034430,
+    "conclusion": "success",
+    "scope": "separate historical two-OS source network suite; not PLAN029 split or D1-D5"
+  },
+  "caveat": "This receipt upgrades only real config/GUI check on SOURCE; CLI check != runtime network effective nor signed OS Applied."
+}
