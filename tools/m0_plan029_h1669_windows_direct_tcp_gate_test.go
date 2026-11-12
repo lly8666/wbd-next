@@ -54,6 +54,28 @@ func p029TCP4(src,dst [4]byte,sport,dport uint16,seq,ack uint32,flags byte,paylo
  binary.BigEndian.PutUint16(tcp[16:18],check)
  return b
 }
+// H1689 targeted control: UDP IPv4 has no mandatory L4 checksum. Test
+// whether the *same signed Wintun injection path* can deliver any UDP payload
+// to a genuine Windows listener before interpreting the TCP SYNACK absence.
+// This is read-only with respect to host firewall/WFP; no policy bypass.
+func p029UDP4(src,dst [4]byte,sport,dport uint16,payload []byte)[]byte{
+ plen:=20+8+len(payload)
+ b:=make([]byte,plen)
+ b[0]=0x45;b[8]=64;b[9]=17
+ binary.BigEndian.PutUint16(b[2:4],uint16(plen))
+ binary.BigEndian.PutUint16(b[4:6],0x4929)
+ binary.BigEndian.PutUint16(b[6:8],0x4000)
+ copy(b[12:16],src[:]);copy(b[16:20],dst[:])
+ binary.BigEndian.PutUint16(b[10:12],p029Sum(b[:20]))
+ udp:=b[20:]
+ binary.BigEndian.PutUint16(udp[0:2],sport)
+ binary.BigEndian.PutUint16(udp[2:4],dport)
+ binary.BigEndian.PutUint16(udp[4:6],uint16(8+len(payload)))
+ copy(udp[8:],payload)
+ // UDP checksum zero is valid specifically for IPv4, not IPv6.
+ return b
+}
+
 func p029AwaitTCP(ctx context.Context,ring *N4OriginalKernelPacketLease,src,dst [4]byte,sport,dport uint16,flags byte,payload []byte)(uint32,error){
  var b [65535]byte
  observed:=0
@@ -182,6 +204,62 @@ func TestPlan029RealSignedWintunKernelTCPListenerFeasibility(t *testing.T){
  if e!=nil{t.Fatalf("real owned signed native ring: %v",e)}
  t.Cleanup(func(){cl,done:=context.WithTimeout(context.Background(),10*time.Second);defer done();if e:=ring.Stop(cl);e!=nil{t.Errorf("owned ring Stop: %v",e)}})
  s,d:=remote.As4(),local.As4()
+ // H1689 one bounded native control on this already-created signed Wintun.
+ // If UDP also fails, cannot ascribe missing TCP SYNACK to a TCP-only issue;
+ // if UDP arrives but TCP fails, narrow follow-up to Windows TCP admission.
+ // Never turn UDP diagnostic PASS into full Direct UDP qualification.
+ udpLocal,udpErr:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IP(local.AsSlice()),Port:0})
+ if udpErr!=nil{
+  receipt["signed_wintun_udp_ingress_control"]="FAIL_BIND"
+  t.Logf("PLAN029_H1689_UDP_CONTROL_BIND_FAIL error=%v",udpErr)
+ }else{
+  defer udpLocal.Close()
+  nativeProbe,e:=net.DialUDP("udp4",nil,udpLocal.LocalAddr().(*net.UDPAddr))
+  if e==nil{
+   _,e=nativeProbe.Write([]byte("native-udp-listener-probe"))
+   nativeProbe.Close()
+  }
+  var buf [100]byte
+  if e==nil{_ = udpLocal.SetReadDeadline(time.Now().Add(2*time.Second))
+   n,_,readErr:=udpLocal.ReadFromUDP(buf[:])
+   if readErr!=nil||string(buf[:n])!="native-udp-listener-probe"{
+    e=fmt.Errorf("native UDP listener self-probe read=%v bytes=%d",readErr,n)
+   }
+  }
+  if e!=nil{
+   receipt["signed_wintun_udp_ingress_control"]="FAIL_NATIVE_LISTENER_SELF_PROBE"
+   t.Logf("PLAN029_H1689_UDP_CONTROL_NATIVE_PROBE_FAIL error=%v",e)
+  }else{
+   packet:=p029UDP4(s,d,46132,uint16(udpLocal.LocalAddr().(*net.UDPAddr).Port),[]byte("signed-wintun-inbound-udp"))
+   written,sendErr:=tun.WritePacket(packet)
+   if sendErr!=nil||written!=len(packet){
+    receipt["signed_wintun_udp_ingress_control"]="FAIL_WINTUN_PACKET_WRITE"
+    t.Logf("PLAN029_H1689_UDP_CONTROL_WINTUN_WRITE_FAIL n=%d err=%v",written,sendErr)
+   }else{
+    _ = udpLocal.SetReadDeadline(time.Now().Add(3*time.Second))
+    n,from,readErr:=udpLocal.ReadFromUDP(buf[:])
+    if readErr==nil && n==len("signed-wintun-inbound-udp") &&
+     string(buf[:n])=="signed-wintun-inbound-udp" &&
+     from.IP.Equal(net.IP(s[:])){
+     receipt["signed_wintun_udp_ingress_control"]="PASS_NATIVE_KERNEL_UDP_DELIVERY"
+     t.Log("PLAN029_H1689_SIGNED_WINTUN_UDP_CONTROL_NATIVE_DELIVERY_PASS_TCP_STILL_INDEPENDENT")
+    }else{
+     receipt["signed_wintun_udp_ingress_control"]="NO_MATCHING_NATIVE_DELIVERY"
+     t.Logf("PLAN029_H1689_SIGNED_WINTUN_UDP_CONTROL_NO_DELIVERY bytes=%d from=%v err=%v",n,from,readErr)
+    }
+   }
+  }
+ }
+ // Independent read-only firewall profile fallback: PowerShell/net cmdlets
+ // were unavailable in H1672; no rule install, enable/disable or profile edit.
+ firewallCtx,firewallCancel:=context.WithTimeout(ctx,3*time.Second)
+ firewallOutput,firewallErr:=exec.CommandContext(firewallCtx,"netsh","advfirewall","show","allprofiles").CombinedOutput()
+ firewallCancel()
+ if firewallErr==nil{
+  if len(firewallOutput)>1800{firewallOutput=firewallOutput[:1800]}
+  receipt["netsh_firewall_readonly_excerpt"]=string(firewallOutput)
+  t.Logf("PLAN029_H1689_READONLY_NETSH_FIREWALL_CONTEXT %q",string(firewallOutput))
+ }else{t.Logf("PLAN029_H1689_READONLY_NETSH_FIREWALL_UNKNOWN error=%v",firewallErr)}
  const sport uint16=46131
  const clientSeq uint32=0x23011000
  send:=func(seq,ack uint32,flags byte,payload []byte){
