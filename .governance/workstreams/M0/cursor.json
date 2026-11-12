@@ -4,30 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1657,
-  "checkpoint_sha": "d700b5337380d7133dfc9306ca47844175c797d7",
-  "progress": "paused",
-  "task_id": "PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT",
-  "current_task": "PLAN028 scoped delivery CLOSED for this user-authorized handoff; no general product/L3/ACK signoff; PLAN029 awaits fresh agent activation.",
-  "why_now": "Latest formal SOURCE527 signed Auto default1460 highloss native Action43171331954 SUCCESS; prior seven modes, GUI and heterogeneous client MTU scoped evidence already available; avoid unbounded repeat matrix.",
-  "done_when": "SCOPED_CLOSED recorded; full product acceptance NOT_QUALIFIED for ACK, GUI-origin OS, independent Windows L3, one-way p99. New PLAN029 task must be separately activated by user.",
-  "next_action": "Do not redispatch 028. Fresh agent for PLAN029 reads H1657 evidence, START_HERE and M0-PLAN029, then atomically assigns 029 in registry/cursor when user activates it.",
+  "sequence": 1658,
+  "checkpoint_sha": "921da2bafab873dc871db476d8754d279c9c6ed3",
+  "progress": "in_progress",
+  "task_id": "PLAN029-H1658-USER-ACTIVATED",
+  "current_task": "PLAN029 Windows domain bootstrap DNS, configuration/GUI and bounded new-flow padding",
+  "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
+  "done_when": "PLAN029 exit in docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md: original signed DNS-hijacked Windows Normal/Game4 re-resolution/wake/reconnect, actual CLI/GUI/effective outer MTU1460 persistence and owned Stop, safe bounded flows TCP/UDP padding cost verified with source-locked Actions. Preserve 028 scoped limits and unmeasured items.",
+  "next_action": "Inspect current canonical config/schema/Windows network and DNS/WFP bypass/GUI and Rust record padding callers; reuse old native paths; develop only missing edges, freeze source and run focused Action per scene.",
   "unverified": true,
   "last_tested_source": "52767d183b61eaf2621d967b16e85e644b1de428",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
-    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json",
-    "docs/evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json"
+    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json"
   ],
   "context_refs": [
-    "START_HERE.md",
-    "docs/prompts/M0-PLAN029.md",
-    "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
-    "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md",
-    "docs/devlog/M0/20261112-PLAN028-H1657-USER-SCOPED-CLOSEOUT-PLAN029-HANDOFF.md"
+    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
+    "docs/architecture/MTU_CONTRACT.md",
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/prompts/M0-PLAN029.md"
   ],
   "open_requests": [],
-  "partial_summary": "USER_AUTHORIZED_SCOPED_CLOSED, not L0-L3 full PASS. Current SOURCE527 real signed 7 modes short and default1460 Normal Auto 30%/250ms PASS_SCOPED; formal GUI identical signed Go/Rust 354 checks FAKE network, GUI-origin E2E NOT_RUN. Older SOURCE8a mixed Windows/Linux 1460/1280 and 5-client weaknet PASS_SCOPED. ACK OPEN; independent Windows L3 unavailable; near-innerMTU and same-Win dual Wintun user-excluded. 029 pending fresh agent."
+  "partial_summary": "H1658 user-activated PLAN029; no PLAN029 implementation/real test yet. Baseline main 921da2bafab873dc871db476d8754d279c9c6ed3; 028 SOURCE527 PASS_SCOPED cannot cover ACK/independent Win L3/GUI-origin signed E2E. Keep normal outer1460 and route-key+certificate TLS, no private prelude."
 }
