@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1683,
-  "checkpoint_sha": "596a49d480e22c5d128fabebc705cbdd0a306203",
+  "sequence": 1684,
+  "checkpoint_sha": "20c9d13da2d468a975008aacd0b3da8912c3f741",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1683: H1681 Win Go source/4 pure v2 WAL tests PASS_SCOPED; H1682 governance PASS, maintenance FAIL from stale frozen M4 fixture for two explicitly reviewed product files; exact fixture repaired. Begin real no-WFP Win32 stage wiring (one owner, no old WFP).",
+  "current_task": "PLAN029 H1684: H1683 governance/maintenance SUCCESS; added first concrete no-WFP v2 Windows /32 IPHelper lease stage with creator-generation/PnP and persisted WAL intent/owned gate, manifest+software negative tests. Source compile pending; not yet a four-stage product.",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1683 maintenance; then implement concrete no-WFP lease/MTU/DNS/routes Win32 transactional stage writers backed by actual created Wintun generation and machine gate, one-shot exact-owned old WFP retirement, product Ready/Stop and real Windows Action. Do not bypass source/ABI gate or represent pure WAL tests as real IO.",
+  "next_action": "Collect scoped current SOURCE Windows Go source/manifest and native WAL pure Action, fix real compile failures. Continue no-WFP MTU/DNS/routes Win32 stage writer and generation-owned v2 product assembler/Stop; then focused signed Windows real network validation. No fake guard, no automatic 028 matrix, no 030 activation.",
   "unverified": true,
-  "last_tested_source": "26816d9d51ece05aa877e0addfc2307ccf454f22",
+  "last_tested_source": "20c9d13da2d468a975008aacd0b3da8912c3f741",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1681-NO-WFP-V2-WAL-PURE-AND-DONOR-20261112.json"
+    "docs/evidence/M0/PLAN029-H1683-FROZEN-REVIEWED-PROVENANCE-CI-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "Current MAIN SOURCE596a H1682 governance PASS, maintenance Action43233940407 FAIL only two old M4 fixture comparisons (native_product_entry/status). H1683 checks exact MAIN replacement pins separately while frozen M4 manifest stays untouched. H1681 SOURCE26816 Go Windows source v2 WAL pure 4 tests PASS_SCOPED, GUI old Rust DLL fixed SOURCE mismatch remains FAIL. H1672 Wintun kernel SYNACK failure unchanged. Real four-stage OS writers + Rust ingress/DNS/FakeIP/Direct TCP+UDP/padding OPEN."
+  "partial_summary": "H1683 SOURCE20c9 governance Action43235392559 and maintenance43235391683 SUCCESS; preserved immutable M4. H1684 adds actual Win32 no-old-WFP /32 lease stage (source not qualified yet), WAL stage-specific pre-write and pre-delete authorization plus original owner/pnp/readback DAD, pure test; MTU/DNS/routes/real product OS Ready+Stop still OPEN; H1672 signed TCP SYNACK FAIL unresolved, Rust Direct/DNS/FakeIP and padding open."
 }

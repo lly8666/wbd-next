@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1684",
+  "source_sha": "20c9d13da2d468a975008aacd0b3da8912c3f741",
+  "status": "PASS_SCOPED_GOVERNANCE_ONLY",
+  "observed_on": "2026-11-12",
+  "actions": [
+    {
+      "run_id": 43235392559,
+      "conclusion": "success",
+      "scope": "governance",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43235392559"
+    },
+    {
+      "run_id": 43235391683,
+      "conclusion": "success",
+      "scope": "governance-maintenance 578 frozen/legacy source assertions",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43235391683"
+    }
+  ],
+  "previous_fails": [
+    {
+      "run_id": 43233940407,
+      "scope": "old frozen M4 test fixture compared live PLAN029 files against historic M4 SHA"
+    }
+  ],
+  "unverified": [
+    "new Win32 noWFP lease stage newly authored, not compiled/tested yet",
+    "true v2 four stage OS Apply/Stop",
+    "real Rust Direct TCP/UDP/DNS FakeIP",
+    "signed native TCP SYNACK still unresolved"
+  ]
+}

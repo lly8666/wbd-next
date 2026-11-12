@@ -1588,6 +1588,18 @@
       "path": "internal/windowsclient/native_plan029_no_wfp_v2_wal_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_v2_wal_test.go",
       "result_blob": "e632ffdb2bf6447500f4ef8a9341754d35053bbd"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_lease_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_lease_windows.go",
+      "result_blob": "ce91a7f741b7234a977486984ff33254770c1a5a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_lease_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_lease_windows_test.go",
+      "result_blob": "2ed4958a808f75908bcfbd7ad3a843e53bc8e0d3"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -69,7 +69,8 @@
     "H1680 same N4NativeUnifiedTxn now has independently versioned no-old-WFP v2 four-stage lease/MTU/DNS/routes WAL grammar and truthful v2 readback schema, preserving five-stage v1 recovery; source build + software grammar tests pending. Existing production writers still require old WFP: NOT real OS Applied, NOT Direct network qualified; legacy exact WFP removal migrator remains open.",
     "H1680 donor-pinned 12-file Windows source verifier correctly rejected changed WAL file with stale donor blob (Actions 43231539978, 43231539865): H1681 retains immutable original donor file snapshot hash and explicitly marks only MAIN-owned v2 derivation for further source-locked validation; not a native OS/WFP bypass PASS.",
     "H1681 SOURCE26816d9 H1661 Action43233031946 verified original Go assembly Windows build and four pure v2 SHA-owned WAL tests PASS; m0-wl compile+units Action43233032264 PASS, signed native scene skipped. H1682 updates frozen M4 comparison to check separately reviewed live hashes with archived SHA immutable; legacy real Win32 four-stage OS network still NOT_RUN.",
-    "H1683 repaired outdated frozen-M4 assertion for two reviewed PLAN029 live product files; original frozen M4 hash/manifest remain unchanged. This is only CI source provenance, not actual v2 native OS Applied."
+    "H1683 repaired outdated frozen-M4 assertion for two reviewed PLAN029 live product files; original frozen M4 hash/manifest remain unchanged. This is only CI source provenance, not actual v2 native OS Applied.",
+    "H1684 new Windows-only no-WFP lease stage uses real IPHelper /32 Create/Delete under exact generation/PnP + durable WAL intent and reverse-owned confirmation; software negative tests only, real signed OS v2 native stage and product Ready/Stop NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
