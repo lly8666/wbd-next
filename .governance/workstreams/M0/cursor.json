@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1684,
-  "checkpoint_sha": "20c9d13da2d468a975008aacd0b3da8912c3f741",
+  "sequence": 1685,
+  "checkpoint_sha": "8dab6cb94db171af9ef63825198d4c5f2ee6ee92",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1684: H1683 governance/maintenance SUCCESS; added first concrete no-WFP v2 Windows /32 IPHelper lease stage with creator-generation/PnP and persisted WAL intent/owned gate, manifest+software negative tests. Source compile pending; not yet a four-stage product.",
+  "current_task": "PLAN029 H1685: H1684 real Win32 no-WFP lease source compile PASS, no OS Apply. Added bounded MTU/DNS/routes Win32 stages and four-stage v2 no-WFP assemblyOnly composition, route ambiguous intent fail-closed; full Windows compile pending. Rust Direct/DNS/padding and product Ready/Stop OPEN.",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect scoped current SOURCE Windows Go source/manifest and native WAL pure Action, fix real compile failures. Continue no-WFP MTU/DNS/routes Win32 stage writer and generation-owned v2 product assembler/Stop; then focused signed Windows real network validation. No fake guard, no automatic 028 matrix, no 030 activation.",
+  "next_action": "Collect H1685 source-locked Win native Go compile/CI. Resolve real route-intent crash per-entry owned receipt with SAME WAL, old exact-owned WFP one-shot removal, genuine generation-pinned v2 owner Apply/Stop OS readback, and independent native tests before exposing product. Then Rust single ingress DNS/Direct TCP/UDP QNAME mapping, bounded padding. Never override GUI pinned DLL without exact current Rust source.",
   "unverified": true,
-  "last_tested_source": "20c9d13da2d468a975008aacd0b3da8912c3f741",
+  "last_tested_source": "8dab6cb94db171af9ef63825198d4c5f2ee6ee92",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1683-FROZEN-REVIEWED-PROVENANCE-CI-20261112.json"
+    "docs/evidence/M0/PLAN029-H1684-NOWFP-LEASE-SOURCE-COMPILE-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1683 SOURCE20c9 governance Action43235392559 and maintenance43235391683 SUCCESS; preserved immutable M4. H1684 adds actual Win32 no-old-WFP /32 lease stage (source not qualified yet), WAL stage-specific pre-write and pre-delete authorization plus original owner/pnp/readback DAD, pure test; MTU/DNS/routes/real product OS Ready+Stop still OPEN; H1672 signed TCP SYNACK FAIL unresolved, Rust Direct/DNS/FakeIP and padding open."
+  "partial_summary": "H1684 source 8dab6cb Win original Go source 43236167690 success, CI 43236167378 success, role 43236167427 success, GUI 43236167478 FAIL pinned stale Rust DLL. H1685 no-old-WFP native v2 same WAL four stages (lease/MTU/DNS/routes) and preflight-only assembler, real writes not permitted by product yet; route crash intent ambiguous needs per-route proof. H1672 signed Windows TCP no SYNACK unresolved, Rust direct DNS/TCP/UDP/FakeIP/P1/P2/padding OPEN."
 }

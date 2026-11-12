@@ -29,6 +29,8 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
             "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+            "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_dns_windows.go",
             "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
             "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
             "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",

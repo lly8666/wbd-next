@@ -1600,6 +1600,36 @@
       "path": "internal/windowsclient/native_plan029_no_wfp_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_lease_windows_test.go",
       "result_blob": "2ed4958a808f75908bcfbd7ad3a843e53bc8e0d3"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_mtu_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_mtu_windows.go",
+      "result_blob": "82de56119e9a2a51cd5d84deaf93867a89290494"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_dns_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_dns_windows.go",
+      "result_blob": "555c774b17cc23f46f9187f887577b5c1243aa50"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
+      "result_blob": "b3f3fdeadb4e642be0395ff31ce8b142c4c8985e"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
+      "result_blob": "858dfda0e298ee71f46dcd2a5ee50338ca4b3ed0"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_no_wfp_stage_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_stage_windows_test.go",
+      "result_blob": "a6a5bca3df94c168ed67fb369f3535c0e6acc969"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

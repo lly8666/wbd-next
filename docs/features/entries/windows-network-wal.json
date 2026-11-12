@@ -25,7 +25,12 @@
     "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
     "r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows.go",
     "r0/go_overlay/internal/windowsclient/native_original_route_recover_windows.go",
-    "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
+    "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_mtu_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_dns_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_stage_windows_test.go"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json",
@@ -59,6 +64,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
       "evidence": "docs/evidence/M0/PLAN027-H672-SOURCE6ECE-REAL-WINDOWS-LOCAL-WAL-AND-MODES-20261101.json"
+    },
+    {
+      "platform": "Windows2025 original Go current overlay",
+      "scope": "H1684 original Go Windows assembly, source compile and software-only no-WFP lease journal permission; no actual Win32 v2 Apply/Stop",
+      "status": "BUILD_PASS",
+      "source_sha": "8dab6cb94db171af9ef63825198d4c5f2ee6ee92",
+      "evidence": "docs/evidence/M0/PLAN029-H1684-NOWFP-LEASE-SOURCE-COMPILE-20261112.json"
     }
   ],
   "limitations": [
@@ -70,7 +82,8 @@
     "H1680 donor-pinned 12-file Windows source verifier correctly rejected changed WAL file with stale donor blob (Actions 43231539978, 43231539865): H1681 retains immutable original donor file snapshot hash and explicitly marks only MAIN-owned v2 derivation for further source-locked validation; not a native OS/WFP bypass PASS.",
     "H1681 SOURCE26816d9 H1661 Action43233031946 verified original Go assembly Windows build and four pure v2 SHA-owned WAL tests PASS; m0-wl compile+units Action43233032264 PASS, signed native scene skipped. H1682 updates frozen M4 comparison to check separately reviewed live hashes with archived SHA immutable; legacy real Win32 four-stage OS network still NOT_RUN.",
     "H1683 repaired outdated frozen-M4 assertion for two reviewed PLAN029 live product files; original frozen M4 hash/manifest remain unchanged. This is only CI source provenance, not actual v2 native OS Applied.",
-    "H1684 new Windows-only no-WFP lease stage uses real IPHelper /32 Create/Delete under exact generation/PnP + durable WAL intent and reverse-owned confirmation; software negative tests only, real signed OS v2 native stage and product Ready/Stop NOT_RUN."
+    "H1684 new Windows-only no-WFP lease stage uses real IPHelper /32 Create/Delete under exact generation/PnP + durable WAL intent and reverse-owned confirmation; software negative tests only, real signed OS v2 native stage and product Ready/Stop NOT_RUN.",
+    "H1685 no-old-WFP MTU/DNS/routes real Win32 stages added beside H1684 lease, shared v2 WAL, exact generation/PnP and per-stage WAL write authorization; route partial-intent crash retains unresolved WAL. Four-stage product assembler hardwired assemblyOnly=true. SOURCE compile pending, real signed OS Apply/Stop and two DNS exits NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

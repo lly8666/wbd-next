@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1685",
+  "source_sha": "8dab6cb94db171af9ef63825198d4c5f2ee6ee92",
+  "result": "BUILD_PASS_ONLY_TRUE_WIN32_LEASE_SOURCE_UNINVOKED",
+  "observed_at": "2026-11-12",
+  "actions": [
+    {
+      "run_id": 43236167690,
+      "status": "success",
+      "scope": "actual original Go Windows overlay assemble / production Go compile / pure unit",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43236167690"
+    },
+    {
+      "run_id": 43236167378,
+      "status": "success",
+      "scope": "cheap source/assembly checks, Windows Go compile, Linux and Windows Rust build+unit; expensive signed native network job SKIPPED",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43236167378"
+    },
+    {
+      "run_id": 43236167427,
+      "status": "success",
+      "scope": "role governance and feature catalog",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43236167427"
+    }
+  ],
+  "still_failed": [
+    {
+      "run_id": 43236167478,
+      "reason": "WinForms old pinned Rust dll source does not match new Rust lib.rs and v4_client_split.rs; no ABI waiver"
+    }
+  ],
+  "not_run": [
+    "actual Win32 no-WFP lease Create/Delete driven through v2 product WAL",
+    "no-WFP MTU DNS route real signed OS",
+    "v2 four-stage product Ready/Stop",
+    "real DNS/Direct TCP+UDP/FakeIP signed network",
+    "H1672 TCP SYNACK failure unresolved"
+  ]
+}

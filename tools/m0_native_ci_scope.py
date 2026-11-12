@@ -33,7 +33,7 @@ NATIVE_EXACT = frozenset({
 # Go native Windows OS mutations and lifetime wiring MUST NOT be treated as
 # cold-only configuration. Keep the DNS bootstrap source outside this list.
 NATIVE_WINDOWSCLIENT_STEMS = (
-    "native_unified_", "native_product_", "native_real_product_",
+    "native_unified_", "native_product_", "native_plan029_no_wfp_", "native_real_product_",
     "native_qualified_guard_", "native_original_", "native_lease_",
     "native_mtu_", "native_dns_write_", "native_route_", "native_wfp_",
     "native_orphan_", "native_owned_", "native_m0_runtime_",
