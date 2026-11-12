@@ -73,6 +73,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Ubuntu 24.04 original five-crate Rust source-locked workspace",
+      "scope": "H1676 5 unit tests sorted CN IPv4 intervals, 3 modes/DNS purpose, FakeIP CDN isolation, domain suffix and flow decision; no Wintun/native network",
+      "status": "UNIT_PASS_ONLY",
+      "source_sha": "a5ef2cd0108946e380599895558b377f8686a208",
+      "evidence": "docs/evidence/M0/PLAN029-H1676-RUST-SHARED-SPLIT-UNIT-SOURCE-20261112.json"
     }
   ],
   "limitations": [
@@ -87,7 +94,8 @@
     "H1669 真实签名Windows Wintun Direct TCP内核接入能力门已提交独立Action，仅测试SYN/ACK/数据/逆向/FIN及一条临时owned /32；不创本程序WFP guard/防火墙规则；待OS结果，不代表Rust TCP/UDP双出口已实现。",
     "H1669 SOURCE bd82a8 签名Windows Wintun Direct TCP能力门FAIL：一条owned /32可建立，但无WFP/Defender修改时注入SYN六秒无SYN-ACK，尚不能区分Windows入站过滤和本机TCP接入不可行。原失败保留，未选smoltcp后备。",
     "H1672 only focused Windows2025 source-locked real signed Wintun Direct TCP diagnostic: read-only profile/default inbound policy, real native listener selfconnect/accept before raw SYN, matching TCP flags counts, NO firewall or WFP mutation; H1669 original 6s no SYNACK FAIL remains, no stack chosen until causal result.",
-    "H1676 Rust v4_client_split pure module: sorted/merged IPv4 intervals + log search, Normal/Game shared route-mode and exact DNS purpose, only selective FakeIP maps to Direct; unknown FakeIP rejects, flow decision pins; domain trie exact/suffix with explicit unsupported regex/keyword error, no silent conversion. NOT yet passed through real Rust Wintun ingress, no physical Direct IO or v2fly full list/regex support. G2 scoped pure tests pending."
+    "H1676 Rust v4_client_split pure module: sorted/merged IPv4 intervals + log search, Normal/Game shared route-mode and exact DNS purpose, only selective FakeIP maps to Direct; unknown FakeIP rejects, flow decision pins; domain trie exact/suffix with explicit unsupported regex/keyword error, no silent conversion. NOT yet passed through real Rust Wintun ingress, no physical Direct IO or v2fly full list/regex support. G2 scoped pure tests pending.",
+    "H1676 G2 Action43222375840 Rust pure unit 5/5 PASS, not real Windows ingress or Direct/Tunnel; H1677 corrects cursor hot-reference overflow without deleting historical failure evidence."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

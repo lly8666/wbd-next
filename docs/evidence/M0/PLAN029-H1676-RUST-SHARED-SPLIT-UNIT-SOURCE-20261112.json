@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1677",
+  "source_sha": "a5ef2cd0108946e380599895558b377f8686a208",
+  "date": "2026-11-12",
+  "result": "PASS_SCOPED_PURE_RUST_SPLIT_DECISION_TESTS_ONLY",
+  "action": {
+    "run_id": 43222375840,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43222375840",
+    "conclusion": "success",
+    "linux_workspace_compile": true,
+    "rust_engine_source_only": true
+  },
+  "verified_tests": [
+    "v4_client_split::tests::plan029_split_cidr_merge_and_binary_search_not_os_route_explosion",
+    "v4_client_split::tests::plan029_split_flow_pinned_for_relay_until_owned_stop_not_rotation",
+    "v4_client_split::tests::plan029_split_domain_trie_exact_and_boundary_no_guess_sni",
+    "v4_client_split::tests::plan029_split_three_modes_and_internal_dns_direction_wins_over_ip",
+    "v4_client_split::tests::plan029_split_selective_fake_cdn_isolation_and_unknown_fake_drop"
+  ],
+  "test_output": "5 passed; 0 failed; 198 filtered out",
+  "caveats": [
+    "Pure Ranges/DomainIndex/SplitPolicy/FlowPin not yet connected to Wintun native source worker",
+    "Keyword/regex domain rules explicitly rejected, v2fly complete rule snapshot not present",
+    "FakeIP mapping not persisted/announced by actual DNS dispatcher",
+    "Real DNS QNAME/Direct UDP/TCP kernel physical IO not qualified",
+    "No legacy WFP production exit not implemented",
+    "H1672 signed Windows TCP no-SYNACK failure remains",
+    "Additional legacy M0 PLAN012 workflow failed while downloading Rust 1.85.1 components (no PLAN029 network qualification)"
+  ],
+  "previous_go_gui_scoped": "https://github.com/lly8666/wbd-next/actions/runs/43221547196",
+  "original_028_scope": "H1657 scoped only; ACK/independent Win L3/human signed GUI not promoted"
+}
