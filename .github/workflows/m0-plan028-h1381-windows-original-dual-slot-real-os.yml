@@ -4,10 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-h1381-windows-original-dual-slot-real-os.yml"
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
       - "r0/go_overlay/cmd/wbd-client/m0_plan028_dual_native_slot_windows_test.go"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

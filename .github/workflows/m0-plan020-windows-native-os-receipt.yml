@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan020-windows-native-os-receipt.yml"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_unified_live_os_receipt_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
@@ -34,7 +33,6 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_wfp_m0_qualified_arm_windows_test.go"
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go"
       - "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
       - "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go"
       - "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go"
       - "docs/devlog/M0/PLAN020-S598-exact-parallel-Windows-action-trigger-20261021.md"

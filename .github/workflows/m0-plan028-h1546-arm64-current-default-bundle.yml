@@ -6,11 +6,9 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-h1546-arm64-current-default-bundle.yml"
       - "tools/arm64_public_go_rust_bundle.sh"
       - "tools/m0_install_public_faketcp.py"
       - "tools/m0_install_public_realityfront_tests.py"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
       - "r0/go_overlay/internal/v4productcli/*.go"
       - "r0/go_overlay/internal/realityfront/*.go"
       - "r0/go_overlay/internal/faketcp/*.go"

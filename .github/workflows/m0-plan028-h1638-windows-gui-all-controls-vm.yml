@@ -1,11 +1,6 @@
 name: PLAN028 H1638 Windows VM real WinForms GUI settings and buttons
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/m0-plan028-h1638-windows-gui-all-controls-vm.yml"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
 permissions: {contents: read, actions: read}
 jobs:
   gui-compiled-vm:

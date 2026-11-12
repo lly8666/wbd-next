@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-game-client-overlap-x86.yml"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_native_health.rs"
       - "crates/wbd-engine/src/v4_game_public_kernel.rs"

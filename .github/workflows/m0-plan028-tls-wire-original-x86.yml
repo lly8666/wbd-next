@@ -4,12 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/m0-plan028-tls-wire-original-x86.yml"
       - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/tls.go"
       - "r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go"
       - "r0/go_overlay/internal/v4productcli/linux.go"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
       - "tools/m0_plan028_tls_wire_audit.py"
   workflow_dispatch:
 permissions: {contents: read}

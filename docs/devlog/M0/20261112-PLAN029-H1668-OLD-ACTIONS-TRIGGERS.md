@@ -1,0 +1,4 @@
+# PLAN029 H1668｜legacy PLAN028 frozen Actions scope cleanup
+
+- Shared `r0/go_overlay/assembly/manifest-plan020-m0.json` triggers many historical 028-specific workflows after every 029 CLI/UI change, including fixed SOURCE527 H1638 which correctly fails on later sources. Remove ONLY that blanket manifest trigger and the workflow-self-edit push trigger from 8 nonfrozen workflows; retain all genuinely affected Go/Rust/fixture path triggers and existing explicit workflow_dispatch. Frozen H1638 becomes manual only. Windows H1661/H1663 remain the new 029 source-locked builders.
+- H1667 push already queued legacy 028 Actions on 0aeaf9d. Do not rewrite or cancel their observed results, and never present that work as 029 D1–D5 qualification. No feature/ABI/product change in this batch; no new 028 test planned.
