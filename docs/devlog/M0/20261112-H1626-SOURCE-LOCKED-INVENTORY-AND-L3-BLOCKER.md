@@ -9,3 +9,11 @@ L3隔离控制硬前置见 `docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md`�
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport"],"reason":"Recovered source-locked Windows signed idle/auto-IP/AES business receipts and corrected outdated feature catalog metadata; no production or default change."}
 ```
+
+## H1627: Collect H1626 new Actions and separate two historical negative regressions
+
+HEAD `0949ef5143d07d2099011d2d4bfdb601a56a1baa` H1626 [Feature Catalog + Governance Action43129899096](https://github.com/lly8666/wbd-next/actions/runs/43129899096) both **SUCCESS** and [governance-maintenance Action43129899162](https://github.com/lly8666/wbd-next/actions/runs/43129899162) **SUCCESS**; no new product source, binary or network Action. Correct the historical failure classification: Action43112296390 Feature Catalog separately rejected an over-bounded regular-JSON card, while Action43112296446 governance-maintenance regression actually failed its negative tests because missing original product evidence source_sha caused a wrong-SOURCE exception before expected stale-epoch/authorization failures. They are two distinct old FAILs, not both card-size failures. H1624/H1625 corrected metadata and subsequent checks passed without overriding original results. H1575 complete native Action42979705842 remained FAIL after local 150s true business stage, current scoped H1601/H1623 remain PASS_SCOPED. PLAN028 still IN_PROGRESS pending independent real Windows DUT L3/other listed scopes; do not run 029/030.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only accurate classification of two historical CI failures and collection of H1626 successful catalog/governance regressions; no new product or feature behavior."}
+```

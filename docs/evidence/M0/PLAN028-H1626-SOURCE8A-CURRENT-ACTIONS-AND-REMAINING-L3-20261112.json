@@ -23,9 +23,14 @@
       "actual": "Governance old static tests failed, original preserved."
     },
     {
+      "id": 43112296390,
+      "status": "FAIL",
+      "actual": "Same prior source separate Feature Catalog job failed source card regular JSON <=16KiB gate; Governance also failed evidence schema. The first card failure does not explain the independent maintenance negative-drill failure."
+    },
+    {
       "id": 43112296446,
       "status": "FAIL",
-      "actual": "Old H1623 feature card 17081 UTF8 >16KiB and evidence missing top-level product source; subsequent H1624 metadata fixed, original failure preserved."
+      "actual": "Actual maintenance regression two negative governance drills FAIL because missing product top-level evidence source_sha caused wrong-SOURCE rejection before expected stale writer epoch/product-authorization assertion. Original maintenance job failure retained; not the feature-card size failure."
     }
   ],
   "subsequent_results": [
@@ -98,5 +103,30 @@
   ],
   "artifact_verified": true,
   "artifact_verified_scope": "H1601/H1623 original evidence ZIP and binaries checked earlier; not freshly downloaded in H1626",
-  "plan_complete": false
+  "plan_complete": false,
+  "post_H1626_verification": [
+    {
+      "id": 43129899096,
+      "source_sha": "0949ef5143d07d2099011d2d4bfdb601a56a1baa",
+      "status": "SUCCESS",
+      "jobs": [
+        "Feature catalog success",
+        "Governance success"
+      ],
+      "result": "H1626 inventory, existing feature card and evidence passed current main catalog/governance"
+    },
+    {
+      "id": 43129899162,
+      "source_sha": "0949ef5143d07d2099011d2d4bfdb601a56a1baa",
+      "status": "SUCCESS",
+      "jobs": [
+        "regression success"
+      ],
+      "result": "Full governance-maintenance regression after H1626 evidence/cursor/catalog rewrite passed"
+    }
+  ],
+  "historical_failure_reason_verified_by_jobs": {
+    "43112296390": "Feature Catalog bounded regular JSON and governance evidence schema",
+    "43112296446": "governance negative tests expected stale writer/unauthorized but got evidence different SOURCE"
+  }
 }
