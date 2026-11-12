@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "e7f0fd1a2925499aed852679b49d345ab7d9afb5",
+      "result_blob": "d1db483fe8e7d1b9e17fd47fb7d487b0b63365ef",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -188,6 +188,14 @@
         {
           "find": "ServerName:*serverName,RouteKey:routeKey,Username:*username,Password:*password,",
           "replace": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,Username:*username,Password:*password,"
+        },
+        {
+          "find": "\tif *checkConfig {\n\t\tout := map[string]string{\"derived-inner-tun-mtu\": fmt.Sprint(tunMTU)}",
+          "replace": "\t// The public native product rejects unsupported repair selectors even in\n\t// read-only GUI/CLI check-config; no silent runtime-only downgrade.\n\tif *nativeV4Product && *outerRepair!=\"on\" && *outerRepair!=\"off\" {\n\t\treturn errors.New(\"outer-repair must be on or off\")\n\t}\n\tif *checkConfig {\n\t\tout := map[string]string{\"derived-inner-tun-mtu\": fmt.Sprint(tunMTU)}"
+        },
+        {
+          "find": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n        // The standalone historical FEC2 adapter describes non-off modes as\n        // unwired. The current original-Go native V4 branch has already\n        // verified m0ParseWindowsV4Mode and the Rust MTU budget above.\n        // It is admitted but not authenticated/OS-Applied until Start: the\n        // GUI must not block a real native Fixed/Auto based on stale V3 text.\n        if *nativeV4Product && *fec2Selection.Mode!=\"off\" {\n            out[\"fec.status\"]=\"pending_native_auth\"\n            out[\"fec.applied_profile\"]=\"unknown\"\n            out[\"fec.reject_reason\"]=\"\"\n        }\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
         }
       ]
     },
@@ -223,7 +231,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "722a8878cc16e36154f73a4cd191546599c3a5b5",
+      "result_blob": "01ec45c530b9854cde25cebe22643698fe4bd02b",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -256,6 +264,10 @@
         {
           "find": "  \"mtu\": [",
           "replace": "  \"outer-repair\": [\n    \"传输\",\n    \"外层机会式重传\",\n    \"默认开启；只维持TLS外观，不保证业务可靠性。需重连后生效\"\n  ],\n  \"mtu\": ["
+        },
+        {
+          "find": "Normal 使用 1 条；Game 使用 2–4 条竞速，会增加带宽开销",
+          "replace": "Normal 单lane，Game仅2或4 lanes；3 lanes原生V4不支持，校验时明确拒绝"
         }
       ]
     },
@@ -263,7 +275,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "a17a19e441b847461fdb58b9a73018e49b39d4db",
+      "result_blob": "2825f7a08ad0c63d66de9ea1b1c9ee89b533dd03",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -344,6 +356,10 @@
         {
           "find": "if (f.Key == \"record-cipher\") c.Items.AddRange",
           "replace": "if (f.Key == \"outer-repair\") c.Items.AddRange(new[] { new Choice(\"on\", \"开启（默认）\"), new Choice(\"off\", \"关闭（仅显式配置）\") });\n                if (f.Key == \"record-cipher\") c.Items.AddRange"
+        },
+        {
+          "find": "new Choice(\"3\", \"Game · 3 lanes\"), ",
+          "replace": ""
         }
       ]
     },
@@ -351,7 +367,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "ba55b64eb63c056b9bd74a77ea234dd4fd93cfad",
+      "result_blob": "6989d40a5608ad3ab4b935612a1e2c4c26fcf188",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -404,6 +420,30 @@
         {
           "find": "{\"route-key-hex\",\"aabbccddeeff00112233445566778899\"},{\"tunnel-id\"",
           "replace": "{\"route-key-hex\",\"aabbccddeeff00112233445566778899\"},{\"route-key-hex-file\",\"\"},{\"tls-ca-pem\",\"\"},{\"tunnel-id\""
+        },
+        {
+          "find": "{\"fec-parity\",20},{\"fec-min-parity\",4}",
+          "replace": "{\"fec-parity\",0},{\"fec-min-parity\",4}"
+        },
+        {
+          "find": "                    foreach (int fec in new[] {0,4,8,10,12,16,20}) foreach (int lane in new[] {1,2,3,4}) {\n                        p.Values[\"fec-parity\"] = fec; p.Values[\"lanes\"] = lane;\n                        store.WriteAtomic(\"data/field-check.json\", store.Json.Serialize(store.Effective(p))); var result = Wait(real.ValidateAsync(store.InRoot(\"data/field-check.json\")));\n                        Assert(Convert.ToInt32(result[\"fec-parity\"]) == fec && Convert.ToInt32(result[\"lanes\"]) == lane, \"FEC/lane selector core acceptance \" + fec + \"/\" + lane);\n                    }\n                    p.Values[\"fec-parity\"] = 0; p.Values[\"lanes\"] = 1;\n                    // Real original Go --check-config distinguishes saved\n                    // request from Rust-applied state without a fake ACK.\n                    foreach (string mode2 in new[]{\"fixed\",\"auto\"}) {\n                        p.Values[\"fec.mode\"]=mode2;\n                        store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                        var fec2Result=Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));\n                        Assert(Convert.ToString(fec2Result[\"fec.status\"])==\"rejected\" &&\n                               Convert.ToString(fec2Result[\"fec.applied_profile\"])==\"unknown\",\n                               \"native GUI FEC2 requested but unwired remains rejected/unknown\");\n                    }\n                    p.Values[\"fec.mode\"]=\"auto\"; p.Values[\"lanes\"]=2;\n                    store.WriteAtomic(\"data/fec2-check.json\",store.Json.Serialize(store.Effective(p)));\n                    bool gameAutoRejected=false;\n                    try {Wait(real.ValidateAsync(store.InRoot(\"data/fec2-check.json\")));}catch{gameAutoRejected=true;}\n                    Assert(gameAutoRejected,\"Game auto FEC2 explicitly rejected by original Go client\");\n                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    // Native Go admission is the only source of truth: the GUI\n                    // writes the exact same fields for Normal V3 auto, with\n                    // no hidden fixed FEC or unsupported Game policy.\n                    foreach (string mode in new[] {\"auto\", \"auto-aggressive\"}) {\n                        p.Values[\"fec-mode\"]=mode;\n                        p.Values[\"fec-min-parity\"]=4;\n                        p.Values[\"fec-start-parity\"]=20;\n                        store.WriteAtomic(\"data/auto.json\",store.Json.Serialize(store.Effective(p)));\n                        var effectiveAuto=Wait(real.ValidateAsync(store.InRoot(\"data/auto.json\")));\n                        Assert(Convert.ToString(effectiveAuto[\"fec-mode\"])==mode &&\n                               Convert.ToInt32(effectiveAuto[\"fec-start-parity\"])==20,\n                               \"GUI Normal validated auto mode \" + mode);\n                    }\n                    p.Values[\"fec-mode\"]=\"auto\";p.Values[\"fec-min-parity\"]=0;p.Values[\"fec-start-parity\"]=0;\n                    store.WriteAtomic(\"data/auto.json\",store.Json.Serialize(store.Effective(p)));\n                    var offStart=Wait(real.ValidateAsync(store.InRoot(\"data/auto.json\")));\n                    Assert(Convert.ToInt32(offStart[\"fec-start-parity\"])==0 && Convert.ToInt32(offStart[\"fec-min-parity\"])==0,\n                           \"GUI Normal explicit ordinary auto off-start supported\");",
+          "replace": "                    // Every 028 native supported GUI mode is checked by the\n                    // ACTUAL original Go V4 --check-config. FEC only pending\n                    // authentication: a local configuration check is never OS Applied.\n                    foreach (var mode in new[] {\n                        new object[]{\"off\",1,\"legacy\",0},          // Normal Off\n                        new object[]{\"fixed\",1,\"fixed\",4},        // Normal Fixed6 needs original-Go carrier\n                        new object[]{\"auto\",1,\"legacy\",0},        // Normal Auto\n                        new object[]{\"off\",2,\"legacy\",0},         // Game2 Off\n                        new object[]{\"fixed\",2,\"legacy\",0},       // Game2 Fixed6\n                        new object[]{\"off\",4,\"legacy\",0},         // Game4 Off\n                        new object[]{\"fixed\",4,\"legacy\",0}        // Game4 Fixed6\n                    }) {\n                        p.Values[\"fec.mode\"]=(string)mode[0];\n                        p.Values[\"lanes\"]=(int)mode[1];\n                        p.Values[\"fec-mode\"]=(string)mode[2];\n                        p.Values[\"fec-parity\"]=(int)mode[3];\n                        p.Values[\"fec.profile\"]=(string)mode[0]==\"fixed\"?\"maximum\":\"strong\";\n                        store.WriteAtomic(\"data/mode.json\",store.Json.Serialize(store.Effective(p)));\n                        var effective=Wait(real.ValidateAsync(store.InRoot(\"data/mode.json\")));\n                        Assert(Convert.ToInt32(effective[\"lanes\"])==(int)mode[1] &&\n                               Convert.ToString(effective[\"fec.mode\"])==(string)mode[0],\n                               \"native GUI V4 seven mode admissible \"+string.Join(\"-\",mode));\n                        Assert(Convert.ToString(effective[\"fec.status\"])==\n                                   ((string)mode[0]==\"off\"?\"disabled\":\"pending_native_auth\") &&\n                               Convert.ToString(effective[\"fec.applied_profile\"])==\"unknown\",\n                               \"native GUI correct pending-not-applied FEC state \"+string.Join(\"-\",mode));\n                    }\n                    // Unsupported native V4 combos must error before TLS or OS mutation.\n                    foreach (var bad in new[] {\n                        new object[]{\"auto\",2,\"legacy\",0},\n                        new object[]{\"off\",3,\"legacy\",0},\n                        new object[]{\"off\",1,\"legacy\",20},\n                        new object[]{\"fixed\",1,\"legacy\",0}\n                    }) {\n                        p.Values[\"fec.mode\"]=(string)bad[0];p.Values[\"lanes\"]=(int)bad[1];\n                        p.Values[\"fec-mode\"]=(string)bad[2];p.Values[\"fec-parity\"]=(int)bad[3];\n                        store.WriteAtomic(\"data/invalid-mode.json\",store.Json.Serialize(store.Effective(p)));\n                        bool denied=false;\n                        try {Wait(real.ValidateAsync(store.InRoot(\"data/invalid-mode.json\")));}catch{denied=true;}\n                        Assert(denied,\"unsupported V4 mode fails closed \"+string.Join(\"-\",bad));\n                    }\n                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"lanes\"]=1;\n                    p.Values[\"fec-mode\"]=\"legacy\";p.Values[\"fec-parity\"]=0;p.Values[\"fec.profile\"]=\"strong\";\n                    // V3 auto selections are not V4 native auto: reject them\n                    // rather than accepting a saved UI value and silently downgrading.\n                    foreach (string legacyAuto in new[]{\"auto\",\"auto-aggressive\"}) {\n                        p.Values[\"fec-mode\"]=legacyAuto;\n                        store.WriteAtomic(\"data/legacy-auto.json\",store.Json.Serialize(store.Effective(p)));\n                        bool denied=false;\n                        try {Wait(real.ValidateAsync(store.InRoot(\"data/legacy-auto.json\")));}catch{denied=true;}\n                        Assert(denied,\"unsupported legacy auto cannot be silently accepted \"+legacyAuto);\n                    }\n                    p.Values[\"fec-mode\"]=\"legacy\";\n                    p.Values[\"fec.mode\"]=\"auto\";p.Values[\"fec.auto_start_profile\"]=\"light\";\n                    p.Values[\"fec.auto_policy\"]=\"normal\";\n                    store.WriteAtomic(\"data/auto.json\",store.Json.Serialize(store.Effective(p)));\n                    var nativeAuto=Wait(real.ValidateAsync(store.InRoot(\"data/auto.json\")));\n                    Assert(Convert.ToString(nativeAuto[\"fec.auto_start_profile\"])==\"light\" &&\n                           Convert.ToString(nativeAuto[\"fec.status\"])==\"pending_native_auth\",\n                           \"V4 Normal auto-start selected but OS Applied remains unknown\");\n                    p.Values[\"fec.mode\"]=\"off\";p.Values[\"fec.auto_start_profile\"]=\"strong\";"
+        },
+        {
+          "find": "                        p.Values[\"fec-mode\"]=\"auto\"; p.Values[\"fec-min-parity\"]=4; p.Values[\"fec-start-parity\"]=20;",
+          "replace": "                        p.Values[\"fec-mode\"]=\"legacy\"; p.Values[\"fec.mode\"]=\"off\"; p.Values[\"fec-min-parity\"]=4; p.Values[\"fec-start-parity\"]=20;"
+        },
+        {
+          "find": "\"Windows Go --check-config accepts explicit V3 suite \" + suite",
+          "replace": "\"Windows Go --check-config accepts explicit V4 suite \" + suite"
+        },
+        {
+          "find": "{\"lanes\",5},{\"fec-parity\",7}",
+          "replace": "{\"lanes\",5},{\"outer-repair\",\"invalid\"},{\"fec-parity\",7}"
+        },
+        {
+          "find": "{\"fec-parity\",20},{\"lanes\",4}",
+          "replace": "{\"fec-parity\",0},{\"lanes\",4}"
         }
       ]
     },

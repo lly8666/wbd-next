@@ -117,15 +117,41 @@ def per_lease_tun_stop_counters(server_text):
     return result
 
 def normal_m4_server_proof(server_text):
-    # Only exact original protected Rust M4 Ready counts, not ordinary TLS
-    # completion, local client Ready, or a guessed source port.
+    # Initial M4 includes the authenticated source IPv4 and port. During
+    # A+B->B, the original server instead logs a 5-line ordered protected
+    # sequence, ending in authenticated client-native Health and OS promotion.
+    # Never equate cold TLS, B_PENDING or a client's local READY to M4.
     commits=set((ip,int(port)) for ip,port in re.findall(
         r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=([\d.]+) client_port=(\d+)",
         server_text))
+    committed_b_ports=set()
+    lines=server_text.splitlines()
+    for i,line in enumerate(lines):
+        ready=re.search(
+            r"V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=(\d+) source=authenticated_client_native_Health promoted=1",
+            line)
+        if not ready or i < 4:
+            continue
+        port=ready.group(1)
+        fec,persona,pending,promoted=lines[i-4:i]
+        if (re.search(r"V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY .*authenticated_TLS=1 original_Rust_M4=1",fec)
+            and re.search(r"V4_PUBLIC_MIXED_NORMAL_PEER_PERSONA role=server client_port="+port+r" selected=0 cold_syn_known=true authenticated_TLS=1 original_Rust_M4=1",persona)
+            and re.search(r"V4_PUBLIC_MIXED_NORMAL_B_PENDING role=server client_port="+port+r" old_route_preserved=1 authenticated_client_M4_required=1",pending)
+            and re.search(r"V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX generation=\d+ verified_client_cold_health=1 old_route_preserved_until_proof=1",promoted)):
+            committed_b_ports.add(int(port))
     rejects={(ip,int(port)):(stage,int(rc)) for stage,rc,ip,port in re.findall(
         r"V4_PUBLIC_MIXED_ADMISSION_REJECT stage=normal_rust_owner m4_stage=([a-z_]+) native_rc=(-?\d+) class=[^\s]+ client_ipv4=([\d.]+) client_port=(\d+)",
         server_text)}
-    return commits,rejects
+    return commits,committed_b_ports,rejects
+
+
+def normal_m4_proven(ip,port,initial,committed_b_ports,client_port_counts):
+    # B server records intentionally omit source IP. A source-unique client
+    # port, an initial server-authenticated IPv4 identity and the FULL ordered
+    # B commit must all match; a port reused by another original client fails.
+    return ((ip,port) in initial or
+        (ip in {known_ip for known_ip,_ in initial} and
+         client_port_counts.get(port,0)==1 and port in committed_b_ports))
 
 
 def normal_m4_client_proof(client_text):
@@ -203,7 +229,16 @@ def analyze(art,server_log):
     # server rejected normal_rust_owner, so the entire 73.3s generation had
     # zero raw receive and no business. Match independently observed protected
     # server-native success by the exact physical IPv4+TCP source port.
-    server_normal_m4,server_normal_reject=normal_m4_server_proof(server_text)
+    server_normal_m4,server_normal_b,server_normal_reject=normal_m4_server_proof(server_text)
+    # Match all client-origin physical ports, not only the owner under test.
+    # A different authenticated client reusing a port cannot take this proof.
+    normal_port_counts={}
+    for spec in plan["clients"]:
+        if spec["mode"] in ("game2","game4"):
+            continue
+        for _gen,_ip,port in normal_m4_client_proof(
+                (art/("h1250-product-"+spec["who"]+".log")).read_text(errors="replace")):
+            normal_port_counts[port]=normal_port_counts.get(port,0)+1
     result={
         "schema_version":1,"checkpoint":"H1286",
         "source_sha":plan["source_sha"],"scene":plan["fast_scene"],
@@ -319,7 +354,8 @@ def analyze(art,server_log):
                 # FakeTCP/TLS Ready or client-only exact old Stop.
                 scoped=normal_m4_client_proof(text)
                 missing=[gen for gen,ip,port in scoped
-                         if (ip,port) not in server_normal_m4]
+                         if not normal_m4_proven(ip,port,server_normal_m4,
+                                                server_normal_b,normal_port_counts)]
                 failed=[{"generation":gen,"stage":server_normal_reject[(ip,port)][0],
                          "native_rc":server_normal_reject[(ip,port)][1]}
                         for gen,ip,port in scoped

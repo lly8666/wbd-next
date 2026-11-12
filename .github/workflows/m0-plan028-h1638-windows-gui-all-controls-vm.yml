@@ -26,6 +26,8 @@ jobs:
           github-token: ${{ github.token }}
           name: m0-wl-windows-product-binaries-8a31375e36bb6a93860c5579e64b4a39d0b6e346
           path: prebuilt
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
       - name: Assemble exact current WinForms and verify frozen original Go Rust
         shell: pwsh
         run: |
@@ -59,19 +61,32 @@ jobs:
           print('H1638_ASSEMBLED_GUI_DEFAULTS_AND_FIELDS_PASS',len(fields))
           '@ | python -
           if($LASTEXITCODE -ne 0){throw 'GUI catalog defaults check failed'}
-      - name: Build actual GUI executable once with frozen native CLI and Rust DLL
+      - name: Build CURRENT assembled native V4 original-Go cold entry once and compile WinForms
         shell: pwsh
+        timeout-minutes: 12
         run: |
           $ErrorActionPreference='Stop'
-          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory result/gui-portable -SourceSHA $env:GITHUB_SHA -Version plan028-h1640
+          New-Item -ItemType Directory -Force result | Out-Null
+          Push-Location legacy
+          try {
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/current-wbd-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'assembled current original-Go native V4 build failed'}
+          } finally {Pop-Location}
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory result/gui-portable -SourceSHA $env:GITHUB_SHA -Version plan028-h1643
           if($LASTEXITCODE -ne 0){throw 'actual WinForms release compiler failed'}
-          Copy-Item prebuilt/wbd-client-embedded.exe result/gui-portable/wbd-client.exe
+          Copy-Item result/current-wbd-client.exe result/gui-portable/wbd-client.exe
           Copy-Item prebuilt/wbd_engine.dll result/gui-portable/wbd_engine.dll
+          $goSHA=(Get-FileHash result/gui-portable/wbd-client.exe -Algorithm SHA256).Hash.ToLower()
+          $rustSHA=(Get-FileHash result/gui-portable/wbd_engine.dll -Algorithm SHA256).Hash.ToLower()
+          if($rustSHA -ne '7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d'){throw 'Rust unchanged release DLL differs'}
+          [ordered]@{go_assembly_source_sha=$env:GITHUB_SHA;go_sha256=$goSHA; rust_binary_source_sha=$env:PRODUCT_SOURCE;rust_sha256=$rustSHA; original_go_donor='a7a82db31fe736ffedee330795a3234d358f1984'} |
+            ConvertTo-Json | Set-Content -Encoding UTF8 result/gui-portable/h1643-compiled-gui-source.json
+          Write-Output "H1643_REAL_NATIVE_GO_GUI_PRODUCT_SOURCE=$env:GITHUB_SHA SHA256=$goSHA"
           foreach($name in @('gui-self','gui-authority','gui-buttons')){
             New-Item -ItemType Directory -Force ('result/'+$name) | Out-Null
             Copy-Item result/gui-portable/* ('result/'+$name) -Recurse -Force
           }
-          Write-Output H1638_ONE_NATIVE_GUI_COMPILATION_GO_RUST_PREBUILT
+          Write-Output H1643_ONE_NATIVE_GO_CURRENT_GUI_COMPILATION_RUST_PINNED
       - name: Run compiled GUI actual all-field CLI --check-config selftest
         shell: pwsh
         timeout-minutes: 10
@@ -125,3 +140,4 @@ jobs:
             result/gui-self/gui-test-result.json
             result/gui-self/gui-screenshot.png
             result/gui-buttons/gui-buttons-vm.png
+            result/gui-portable/h1643-compiled-gui-source.json

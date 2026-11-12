@@ -1,0 +1,109 @@
+name: PLAN028 H1643 OFFLINE original H1642 180s five client M4 strict rejudge
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1643-five-native-original-offline-verified.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  exact-raw-original-server-M4-commits:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43148997176
+          github-token: ${{ github.token }}
+          name: plan028-h1642-five-native-x86-source8a-180s-43148997176
+          path: original
+      - name: Strict negative gates for authenticated server B commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -v -s tests -p test_m0_plan028_h1643_normal_m4_commit.py
+      - name: Reparse raw same-runner original SOURCE8a five-client 180s without network rerun
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path("original")
+          checks={
+            "h1250-product-server.log":"9d37ccc38fdd55383955e57fbca2b10714ec93fa30862382e9cbb3aacea30cf5",
+            "h1286-rapid-report.json":"7df44a884c8e771730d763dccc7770e8d2f686950cb7fdff3de3488cd8e5cd85",
+            "h1250-matrix-plan.json":"5d83b3beccf1df0a2fa53ffe208d3cc4792f60b42ae6fce728c257511fb1ad3a",
+            "h1250-product-alice.log":"33a0e6055611712927f6ecac6092c5738e35598a671a3c7ca6db8cf108010bce",
+            "h1250-product-bob.log":"78c053ced9c78d725b73146115e4ab694bf18098008ff54a5a85a0636159c48f",
+            "h1250-product-erin.log":"b1f3e4c4ef1b3906ca8792916f2d40e8a1ed1891946591e6c6a6d1f85b71c8d3",
+            "h1250-qdisc-after.txt":"ff85a7e06bdfadfb64e4543c93ee66eec7ad7215b9bc5825c997adeb4bf397fe",
+            "h1250-cpu-rss.json":"209fe431fa7fb597d6ca359a944870860970bb4843ce3777194fb589e297170c"
+          }
+          for n,digest in checks.items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==digest,n
+          m=json.loads((p/"h1250-matrix-plan.json").read_text())
+          assert m["source_sha"]=="393a44d8a503eb7dd17c0b1ef459b3032cc543d9" and m["fast_scene"]=="pressure"
+          assert m["fec_backend_choice"]=="native" and m["application_load_seconds"]==180
+          assert [c["loss_pct"] for c in m["clients"]]==[0,1,5,15,30]
+          assert [c["oneway_delay_ms"] for c in m["clients"]]==[0,15,50,100,250]
+          old=json.loads((p/"h1286-rapid-report.json").read_text())
+          assert old["rotation_verdict"]=="SOME_CLIENT_ROTATION_FAILURES"
+          assert old["alert_count"]==6
+          assert {x["kind"] for x in old["alerts"]}=={"CLIENT_NORMAL_READY_WITHOUT_SERVER_NATIVE_M4","ROTATION_CONTINUITY_NOT_PROVEN"}
+          print("H1643_EXACT_FAILING_RAW_ORIGINAL_LOG_HASHES_AND_STABLE_PRE_FIX_FAILURE_VERIFIED")
+          PY
+          mkdir -p rejudge
+          python3 tools/m0-plan028-h1286-rapid-report.py --art original --product-log original/h1250-product-server.log --output rejudge/h1643-verified.json
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("original")
+          r=json.loads(pathlib.Path("rejudge/h1643-verified.json").read_text())
+          assert r["rotation_verdict"]=="PASS_ALL_FIVE_SCOPED",r["rotation_verdict"]
+          assert r["alert_count"]==0 and not r["alerts"] and r["performance_verdict"]=="NO_CONFIGURED_ALERTS",r["alerts"]
+          assert set(r["clients"])=={"alice","bob","carol","dave","erin"}
+          for who,item in r["clients"].items():
+              assert item["rotation"]["result"]=="PASS_SCOPED",who
+              assert item["rotation"]["native_final_stop_observed"] and item["rotation"]["same_authenticated_lease"],who
+              if who in ("alice","bob","erin"):
+                  assert item["rotation"]["server_normal_m4_commits_observed"]==3,who
+                  assert not item["rotation"]["client_ready_but_server_normal_m4_missing"],who
+              for direction,info in item["directions"].items():
+                  assert all(x["unique_udp_delivered"] and x["actual_udp_sent"] for x in info["phases"]), (who,direction)
+                  assert info["largest_10ms_bucket_no_receive_while_sender_active_ms"]<750,(who,direction)
+          for who in r["clients"]:
+              data=(p/("h1250-product-"+who+".log")).read_text(errors="replace")
+              assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in data,who
+          assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in (p/"h1250-product-server.log").read_text(errors="replace")
+          raw=json.loads((p/"h1286-rapid-report.json").read_text())
+          assert all(raw["clients"][who]["rotation"]["authenticated_generation_sequence"]==[1,2,3] for who in ("alice","bob","erin"))
+          sent=delivered=0
+          for c in r["clients"].values():
+              for direction in c["directions"].values():
+                  for phase in direction["phases"]:
+                      sent+=phase["actual_udp_sent"];delivered+=phase["unique_udp_delivered"]
+          assert (sent,delivered)==(1716864,1714925)
+          result={"scope":"OFFLINE_REJUDGE_OF_ORIGINAL_H1642_NATIVE_ACTION_43148997176_NOT_A_NEW_NETWORK_RUN",
+                  "product_source_sha":"8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+                  "harness_source_sha":"393a44d8a503eb7dd17c0b1ef459b3032cc543d9",
+                  "original_action_conclusion":"FAIL_UNCHANGED",
+                  "original_report_fail_count":6,
+                  "rejudge_result":"PASS_SCOPED_ORIGINAL_REAL_NATIVE_BUSINESS_AND_AUTHENTICATED_SERVER_B_COMMITS",
+                  "window_seconds":180,
+                  "actual_first_udp_sent":sent,"unique_udp_received":delivered,
+                  "first_udp_fraction":round(delivered/sent,7),
+                  "rotation":"PASS_ALL_FIVE_SCOPED",
+                  "alerts":r["alerts"],
+                  "limitations":["x86 Linux five netns original product; NOT Windows independent L3/physical public",
+                                 "five heterogeneous 0/1/5/15/30% peers, only Erin 250ms/30% not all at max",
+                                 "successful one-way p99 excludes never-delivered packets; no failure-inclusive p99",
+                                 "reporter previously counted only initial generation, ignored verified authenticated server B events"]}
+          pathlib.Path("rejudge/h1643-scoped-evidence.json").write_text(json.dumps(result,indent=2)+"\n")
+          print("H1643_ORIGINAL_5CLIENT_ONE_NET_SCENE_REJUDGED_STRICT_PASS_SCOPED",sent,delivered,flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1643-original-offline-5native-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: rejudge/
