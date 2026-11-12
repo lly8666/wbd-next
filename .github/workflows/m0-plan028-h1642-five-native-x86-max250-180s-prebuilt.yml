@@ -1,0 +1,86 @@
+name: PLAN028 H1642 one Linux x86 five authentic clients 180s max loss30 one-way250 prebuilt
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1642-five-native-x86-max250-180s-prebuilt.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  five-original-go-rust-clients:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      WBD_PLAN028_FAST_SCENE: pressure
+      WBD_PLAN028_FAST_CAPACITY_STEPS: "2"
+      WBD_PLAN028_STATIC_OWNED_NEIGH: "1"
+      WBD_PLAN028_ERIN_MAX_DELAY: "250"
+      WBD_GAME_FEC_BACKEND: native
+      WBD_SHARED_TUN_ROUTE_DIAG: "1"
+      WBD_PLAN028_QDISC_CLOCK_DIAG: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43027983611
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: fixed-build
+      - name: Verify one exact source8a native original-Go Rust ISA-L ELF and max-delay scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main && test "$(uname -m)" = x86_64 && test -c /dev/net/tun
+          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates Cargo.lock Cargo.toml r0/go_overlay/cmd r0/go_overlay/internal tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1286-rapid-report.py)"
+          # Newer test-only fixture/report code may change: exact product must not.
+          changed_product="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates Cargo.lock Cargo.toml r0/go_overlay/cmd r0/go_overlay/internal)"
+          test -z "$changed_product" || { echo "H1642 refuse frozen product changed: $changed_product" >&2; exit 1; }
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib,struct
+          p=pathlib.Path("fixed-build");m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["rust_native_fec_acceleration"] is True
+          assert m["isa_l_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          checks={"wbd-v4-client":"7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1","wbd-v4-server":"9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71","libwbd_engine.so":"2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"}
+          for n,s in checks.items():
+              data=(p/n).read_bytes()
+              assert data[:4]==b"\x7fELF" and struct.unpack_from("<H",data,18)[0]==62
+              assert hashlib.sha256(data).hexdigest()==m["sha256"][n]==s
+          assert os.environ["WBD_PLAN028_ERIN_MAX_DELAY"]=="250"
+          assert os.environ["WBD_PLAN028_FAST_CAPACITY_STEPS"]=="2" and os.environ["WBD_PLAN028_STATIC_OWNED_NEIGH"]=="1"
+          print("H1642_SOURCE8A_ONE_FIVE_NATIVE_ACCELERATED_BUILD_HASHES_PASS",flush=True)
+          PY
+          mkdir -p fixed-kernel-result
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 -m py_compile tools/m0-plan028-h1259-five-client-recovery-netns.py tools/m0-plan028-h1286-rapid-report.py
+      - name: One genuine five-client 180s source4 transport+health+FEC/heterogeneous damaged business
+        shell: bash
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0-plan028-h1259-five-client-recovery-netns.py fixed-build 2>&1 | tee fixed-kernel-result/h1642-5native-run.log
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("fixed-kernel-result")
+          r=json.loads((p/"h1286-rapid-report.json").read_text())
+          assert r["source_sha"] and len(r["clients"])==5
+          assert r["rotation_verdict"]=="PASS_ALL_FIVE_SCOPED",r["rotation_verdict"]
+          for name in ("alice","bob","carol","dave","erin"):
+              text=(p/("h1250-product-"+name+".log")).read_text(errors="replace")
+              assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in text,name
+          assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in (p/"h1250-product-server.log").read_text(errors="replace")
+          (p/"h1642-scoped-verdict.json").write_text(json.dumps({"source_sha":r["source_sha"],"result":"PASS_SCOPED" if r["alert_count"]==0 else "ALERTS_PRESENT_NOT_PASS","alerts":r["alerts"],"rotation_verdict":r["rotation_verdict"],"scope":"One 180s five-native Linux x86, hetero 0/1/5/15/30% and Erin single-leg 250ms; NOT Windows 5-user full loss30 250ms or long L3"},indent=2))
+          assert r["alert_count"]==0, "real app/report alerts preserved; do not pass under loss or queue overflow"
+          print("H1642_180S_REAL_FIVE_CLIENT_CURRENT_SOURCE_FIRST_DELIVERY_AND_STOP_PASS_SCOPED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan028-h1642-five-native-x86-source8a-180s-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: fixed-kernel-result/

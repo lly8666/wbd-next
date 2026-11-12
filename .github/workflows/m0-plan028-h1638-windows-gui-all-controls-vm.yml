@@ -31,7 +31,10 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           if((git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984'){throw 'old Go donor mismatch'}
+          git fetch --quiet --depth=1 origin $env:PRODUCT_SOURCE
+          if($LASTEXITCODE -ne 0 -or (git rev-parse FETCH_HEAD).Trim() -ne $env:PRODUCT_SOURCE){throw 'immutable Go Rust product source not fetched'}
           $delta=@(git diff --name-only $env:PRODUCT_SOURCE $env:GITHUB_SHA -- crates Cargo.lock Cargo.toml r0/go_overlay/cmd r0/go_overlay/internal tools/prepare_windows_wiring.py)
+          if($LASTEXITCODE -ne 0){throw 'Go Rust git diff source guard failed'}
           if($delta.Count -gt 0){throw ('compiled source changed '+($delta -join ','))}
           $m=Get-Content prebuilt/windows-binary-manifest.json -Raw|ConvertFrom-Json
           if($m.source_sha -ne $env:PRODUCT_SOURCE -or -not $m.native_fec_acceleration){throw 'wrong native ISA-L product'}

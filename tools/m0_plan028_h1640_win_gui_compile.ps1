@@ -17,7 +17,7 @@ $csc=[IO.Path]::GetFullPath($csc[0])
 $fx=Join-Path $pf86 'Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
 if(-not(Test-Path (Join-Path $fx 'System.Windows.Forms.dll'))){throw 'VM missing .NET Framework 4.8 assemblies'}
 $gen=Join-Path $out 'SourceInfo.cs'
-$info='namespace Wbd.Gui { static class SourceInfo { public const string SHA = "{0}"; public const string Version = "{1}"; } }' -f $SourceSHA,$Version
+$info='namespace Wbd.Gui {{ static class SourceInfo {{ public const string SHA = "{0}"; public const string Version = "{1}"; }} }}' -f $SourceSHA,$Version
 [IO.File]::WriteAllText($gen,$info,[Text.UTF8Encoding]::new($false))
 $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fx ($_.ToString()+'.dll'))}
 $source=@('Portable.cs','MainForm.cs','GuiTests.cs')|ForEach-Object {Join-Path $root ('windows/gui/'+$_)}
