@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1686",
+  "source_sha": "3e6897631d2f425aa38c0c9a311b9a091b42e4d1",
+  "date": "2026-11-12",
+  "result": "BUILD_PASS_ONLY_TRUE_WIN32_FOUR_STAGE_SOURCE_ASSEMBLY_HARD_DISABLED",
+  "actions": [
+    {
+      "run_id": 43238034263,
+      "conclusion": "success",
+      "scope": "exact frozen original Go plus 4 native Win32 stage source and Go test compile",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43238034263"
+    },
+    {
+      "run_id": 43238034367,
+      "conclusion": "success",
+      "scope": "historical M4 source maintenance and 029 scoped tests",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43238034367"
+    },
+    {
+      "run_id": 43238034232,
+      "conclusion": "success",
+      "scope": "M0 governance + feature gate",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43238034232"
+    }
+  ],
+  "partial_action": {
+    "run_id": 43238034430,
+    "scopes_completed": [
+      "cheap original Go source and assembly",
+      "Windows Go compilation",
+      "Linux Rust library/unit",
+      "Windows Rust library/unit"
+    ],
+    "real_network_job": "IN_PROGRESS_AT_OBSERVATION"
+  },
+  "prior_failure": {
+    "run_id": 43238034241,
+    "reason": "old H1663 GUI attempts pinned Rust DLL from SOURCE527, current Rust lib.rs and v4_client_split.rs differ; before GUI/CLI test"
+  },
+  "excluded": [
+    "no WFP v2 actual OS Apply/Stop",
+    "no route per-entry crash ownership proof",
+    "no signed native Windows Wintun product Direct TCP/UDP/DNS",
+    "no human GUI signature",
+    "no P1/P2 speed A/B"
+  ]
+}

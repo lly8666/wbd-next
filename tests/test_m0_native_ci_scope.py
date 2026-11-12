@@ -76,6 +76,21 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertIn("python -m unittest tests.test_m0_native_ci_scope -v", workflow)
         self.assertIn("- r0/go_overlay/assembly/manifest-plan020-m0.json", workflow)
 
+    def test_plan029_real_gui_config_source_does_not_borrow_old_rust_dll(self):
+        gui = (Path(__file__).resolve().parents[1] /
+               ".github/workflows/m0-plan029-h1663-gui-domain-mtu-vm.yml").read_text()
+        self.assertIn("tools/m0_plan029_gui_address_mtu_harness.cs", gui)
+        self.assertIn("m0_plan029_*.go", gui)
+        self.assertIn("workflow_dispatch:", gui)
+        self.assertIn("python tools/prepare_windows_wiring.py", gui)
+        self.assertIn("current-plan029-native.exe", gui)
+        self.assertIn('rust_product_dll="NOT_BUILT_OR_LINKED"', gui)
+        self.assertNotIn("PINNED_RUST_PRODUCT", gui)
+        self.assertNotIn("actions/download-artifact@", gui)
+        self.assertNotIn("pinned-rust/wbd_engine.dll", gui)
+        # Whole manifest changes no longer cause a stale Rust product check.
+        self.assertNotIn('      - "r0/go_overlay/assembly/manifest-plan020-m0.json"', gui)
+
     def test_unknown_diff_fails_open_to_native(self):
         self.assertTrue(requires_native_smoke("push", []))
         self.assertTrue(requires_native_smoke("unknown", ["docs/README.md"]))

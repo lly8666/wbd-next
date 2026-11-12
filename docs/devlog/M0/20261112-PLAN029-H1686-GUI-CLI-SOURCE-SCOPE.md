@@ -1,0 +1,12 @@
+# PLAN029 H1686｜旧H1663 GUI来源测试的作用域修正
+
+- H1685 source `3e6897631d2f425aa38c0c9a311b9a091b42e4d1` Windows original Go compile [43238034263](https://github.com/lly8666/wbd-next/actions/runs/43238034263), source/feature/maintenance governance [43238034367](https://github.com/lly8666/wbd-next/actions/runs/43238034367) and [43238034232](https://github.com/lly8666/wbd-next/actions/runs/43238034232) SUCCESS. No v2 OS Apply/Stop; actual native Windows signed networking not qualified. H1685 M0-WIN-LINUX fast cross-platform component jobs passed; expensive network job still in progress at recording.
+- Old [GUI 43238034241](https://github.com/lly8666/wbd-next/actions/runs/43238034241) failed BEFORE any GUI execution because it fetched a frozen H1663 Rust DLL SOURCE527, then demanded no Rust changes since that source. H1676 deliberately added `v4_client_split.rs`, so the stale artifact cannot honestly qualify current binary. H1686 no longer downloads, links or claims that Rust DLL. The **actual test is ONLY current exact original-Go `--check-config` + real WinForms profile/editor/save/reopen**, not Rust native product or signed OS packet path.
+- Exact current `GITHUB_SHA` Go original overlay assembles and compiles, WinForms compiles, C# harness launches and checks canonical server address ≠ borrowed TLS SNI, two single DNS, default outer MTU1460 and no inner write-back. Receipt explicitly says `rust_product_dll=NOT_BUILT_OR_LINKED` and retains all native E2E NOT_RUN. No mock network and no stale ABI waiver.
+- Narrow workflow push trigger to its own source, GUI harness, original WinForms compile script and relevant `m0_plan029_*.go` CLI/config sources; remove blanket Go overlay manifest fanout that repeatedly runs this now-unrelated config test on every native WAL change. Keep manual `workflow_dispatch`. Source-locked scoped test asserts all of these constraints.
+- New WinForms Action must actually return before GUI scoped result is upgraded. For Rust signed GUI or app network, use an independently rebuilt exact-SOURCE Rust DLL rather than reusing SOURCE527.
+- No change to TLS route-key pre-shared policy or OS firewall; no PLAN028 seven-mode rerun.
+
+```feature-impact
+{"kind":"updated","ids":["gui-config-feedback"],"reason":"Scope PLAN029 current WinForms/Go CLI config Action to real controls only, remove old Rust DLL source mismatch and irrelevant manifest trigger; real signed Rust GUI still NOT_RUN."}
+```
