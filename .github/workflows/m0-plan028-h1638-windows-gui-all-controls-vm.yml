@@ -44,9 +44,9 @@ jobs:
           @'
           import json,pathlib
           root=pathlib.Path('legacy')
-          p=json.loads((root/'docs/PARAMETERS.json').read_text())
+          p=json.loads((root/'docs/PARAMETERS.json').read_text(encoding='utf-8'))
           w=p['targets']['client-windows']
-          fields=json.loads((root/'windows/gui/fields.json').read_text())
+          fields=json.loads((root/'windows/gui/fields.json').read_text(encoding='utf-8'))
           assert w['mtu']['default_expression']=='1460'
           assert w['outer-repair']['default_expression']=='"on"'
           assert w['fec.mode']['default_expression']=='"off"'

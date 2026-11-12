@@ -1,6 +1,20 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1639 Windows 七模式正式SOURCE8a 每模式真实原生独立场已齐（2026-11-12）
+
+**正式二进制SOURCE** `8a31375e36bb6a93860c5579e64b4a39d0b6e346`（H1600 build43027983611），Windows签名Npcap/Wintun＋Ubuntu WSL2 Linux 原Go标准TLS443/Rust原生业务；每个独立Action真实30% loss／单程250ms、双向各10Mbps、60秒，外层1460、最终双向TCP/UDP和owned Stop，原始ZIP/37项CRC和单文件Go SHA核对。H1637其余三场：
+
+| 模式 | Windows首次交付 | Linux首次交付 | 精确native Action/原ZIP SHA256 | 限制 |
+|---|---:|---:|---|---|
+| Normal Fixed6最高 | **99.9728%** | **99.9280%** | [43145185794](https://github.com/lly8666/wbd-next/actions/runs/43145185794) **SUCCESS** `c292572edeba8db409301290c448fa99fbaa6f85ff2306908983767d9bfc6a4b` | Linux Fixed6 installed=true，Windows Rust mode=fec-fixed；Win端固定档单独installed bool本场未打点，不冒认 |
+| Game2 Off | **90.9529%** | **90.9705%** | [43145182267](https://github.com/lly8666/wbd-next/actions/runs/43145182267) **SUCCESS** `27f86b6e1fe15ef84df11c2d6b59fb1a0c836a09e74dbcf6d8bd51c3d3deba8c` | 两lane Off和真实残损，不是近全交付保证 |
+| Game4 Off | **99.1598%** | **99.1571%** | [43145187468](https://github.com/lly8666/wbd-next/actions/runs/43145187468) **SUCCESS** `d4eff024f19a8f116ede75f045e228df86579f4a90810a78e343a9293ba69c39` | 四lane Off下真实剩余损失，不是固定FEC |
+
+源锁原始report和每进程CPU/RSS详情 [H1639 evidence](../evidence/M0/PLAN028-H1639-SOURCE8A-WIN-THREE-REMAINING-MODES-SIGNED-REAL-LOSS30-20261112.json)。连同之前Normal Off/Auto、Game2/4 Fixed6，**Win七模式各一短真实业务代表场PASS_SCOPED，Linux x86亦七场**，不是同源Win五端满压、1800s独立DUT或全设置排列验证。CPU不同VM不得用于因果比较；单向/失败包完整p99未测。
+
+**GUI资格按层分账：**正式组装清单outer1460和FEC Off已确认，旧Go donor1500不代表产品。H1638补齐正式GUI漏映射的 `outer-repair=on/off`（默认on），新增真实编译WinForms全字段check-config和按钮点击VM工作流；第一次 [GUI Action43147117898](https://github.com/lly8666/wbd-next/actions/runs/43147117898)在正式装配PASS后、UI执行前Python CP1252读取中文UTF8失败：原Action **FAIL/HARNESS_FAILURE**、GUI本次仍NOT_RUN。H1639精准改UTF-8后另派；即使UI模拟session事件PASS，也不能当GUI真实签名Wintun/OS端到端连接PASS。不可用A/B/C独立长测、用户跳过的近innerMTU及多Wintun仍保持NOT_RUN。
+
 ## H1636 当前SOURCE8a签名Windows Game2/Game4 固定最高FEC6双场同时完成
 
 两项独立的 [Game2 FEC6 Action43139768028](https://github.com/lly8666/wbd-next/actions/runs/43139768028)、[Game4 FEC6 Action43139771735](https://github.com/lly8666/wbd-next/actions/runs/43139771735) **均整体SUCCESS**，各自签名Windows2025 Npcap/Wintun＋Linux WSL2原Go标准TLS443／Rust M4真实内核UDP/TCP，60秒双向各10Mbps、每向真实tc30%丢包／单程250ms、outer1460／inner1358、两端各自Stop。保留两个原始ZIP，CRC均无误，来源为正式产品构件SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`，独立 [H1636证据](../evidence/M0/PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-250-PASS-20261112.json)。
