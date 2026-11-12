@@ -30,7 +30,8 @@ class DeliveryCiTests(unittest.TestCase):
 
     def test_plain_staging_push_does_not_launch_full_product(self):
         job = self.workflow["jobs"]["linux-source-locked-public"]
-        self.assertEqual(job["needs"], ["windows-compile-preflight"])
+        self.assertEqual(job["needs"], ["wiring-contract", "windows-compile-preflight"])
+        self.assertIn("needs.wiring-contract.outputs.native_smoke == 'true'", job["if"])
         # Normal staging still cannot run full product; only an explicit,
         # source-verified Rust-only reuse bypasses separate compiler jobs.
         for guard in ("github.event_name == 'workflow_dispatch'", "github.ref_name == 'main'",
@@ -41,6 +42,7 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("[plan026-coding]", job["if"])
         self.assertIn("[plan026-coding]", native["if"])
         self.assertEqual(native["needs"], ["wiring-contract","linux-source-locked-public"])
+        self.assertIn("needs.wiring-contract.outputs.native_smoke == 'true'", native["if"])
         for guard in ("always()", "needs.wiring-contract.result == 'success'",
                       "needs.linux-source-locked-public.result == 'success'",
                       "inputs.perf_reuse_run_id != ''", "[plan026-rust-reuse-150]", "[plan026-rust-reuse-100]"):

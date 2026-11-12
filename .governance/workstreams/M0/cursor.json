@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1678,
-  "checkpoint_sha": "a5ef2cd0108946e380599895558b377f8686a208",
+  "sequence": 1679,
+  "checkpoint_sha": "530af9abdfc8269c7c45235994fda1d849736187",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1678: H1676 Rust split pure 5/5 G2 PASS, source feature catalog status normalized to BUILD_PASS, H1677 governance scope PASS; old Windows signed SYNACK FAIL retained, no-WFP native owned OS stages and Rust real split pending",
+  "current_task": "PLAN029 H1679: PR34 tiered native smoke merged 530af9a, direct-output dependency and native owner coverage fixed; merged SOURCE cheap CI test assertion legacy mismatch, H1679 updating test; H1676 Rust pure split 5/5 scoped PASS, real Direct/DNS/native no-WFP owner remains OPEN.",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First collect governance H1677 and source-locked Rust follow-on Actions; then implement exact no-legacy-WFP owned lease/MTU/DNS/routes v2 txn with normal product Ready/Stop and one-time old owned WFP cleanup, and Rust single Wintun ingress Direct UDP/TCP/DNS FakeIP with real signed Windows feasibility. Don't replay old SYN-only H1672 or PLAN028 full matrix; no PLAN030 activation.",
+  "next_action": "Collect H1679 current-source cheap/go/GUI/CI results first. Then implement real four-stage no-WFP generation-bound Windows network transaction/Ready/Stop and one-shot old WFP exact-owned removal; connect shared Rust classifier into sole native Wintun ingress and real Direct DNS/TCP/UDP, focused signed scenarios. Preserve H1672 TCP no-SYNACK evidence, do not dispatch 028 matrix or 030.",
   "unverified": true,
   "last_tested_source": "a5ef2cd0108946e380599895558b377f8686a208",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1676 SOURCE a5ef Rust 5 pure unit tests PASS in G2 action43222375840, source-only; H1677 governance check PASS but feature catalog failed because added non-schema UNIT_PASS_ONLY status. H1678 remaps row to BUILD_PASS with exact pure scope, no inflated Direct product PASS. Windows Go+GUI SOURCEcc4 H1675 scoped PASS; H1672 signed Wintun TCP no-SYNACK unresolved. Four-stage no-WFP native release, actual DNS QNAME/FakeIP mapping, TCP/UDP physical egress and flows padding remain OPEN."
+  "partial_summary": "H1678 governance feature catalog+role PASS. PR34 source 31f353 corrected two defects (Linux job direct needs wiring-contract; native Windows owner paths), merged main at 530af9a. PR merge CI cheap Action43229065132 failed only obsolete test_delivery_ci needs assertion; H1679 updates that fixture and asserts native_smoke direct dependency without weakening gate. Rust H1676 pure classifier G2 5/5 remains source-only. H1672 no-WFP Wintun TCP SYNACK FAIL unresolved; no 029 D1–D5/P1–P2 product PASS."
 }
