@@ -1,6 +1,14 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1632 Windows签名真实30%/250ms短场（Normal Off）已完成；显式Auto下一独立场待原始结果
+
+**当前产品二进制SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`**，测试源码 `12d2c2378846ee34737a5f38555533d98c13cbbc`，单签名Windows Npcap/Wintun→真实Ubuntu WSL2共享Linux Go/Rust，独立[Action43136758689](https://github.com/lly8666/wbd-next/actions/runs/43136758689)整场native job **SUCCESS**，原ZIP artifact13907294714 SHA `59ca2be8ad7d08a429726e52bfc8c7bbe735818ba3b5e2f2be77e62b8902493c`、37文件CRC/原报表SHA核实；[全部原始数字和限制](../evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json)。
+
+真正双向tc30%/单程250ms/每向10Mbps/60s、小包64/128至1200B，双侧真内核每向发99,551：Windows首次收到Linux **71,958（72.2825%，7.2147Mbps）**、Linux首次收到Windows **71,974（72.2986%，7.2087Mbps）**，各有**27,593/27,577未交付**，实际ifb/eth0内核drops33,651/33,718，invalid0 duplicate0。源锁标准TLS、Rust M4、真UDP/TCP、outer repair**on**、FEC **Off（仍是默认）**，Windows/Linux OS内层MTU1389及双方owned Stop、Npcap cleanup均通过，**功能/资源PASS_SCOPED，绝非高损“可靠交付”PASS**。Windows Go+Rust原进程样本74个，74.672s CPU累计1.9375s、单核均值2.595%、工作集峰43.95MB；应用单向p99/失败包逾期与全队列年龄未测；成功包间隔45/234ms不能替代失败包p99。尚非五客户端150/600s高损容量或独立DUT 1800s L3。
+
+H1632单独将FEC **Auto显式**选中，同一业务量/包型、损伤等级、outer1460/正式SOURCE8a重用，创建 **另一个 Action**，在其真实Report/Stop结束前标 **NOT_RUN/PENDING**，只用于该受影响入口是否有效、自适应FEC首次交付和处理代价，**不同VM不得算CPU对照**。无独立A/B/C环境的Windows L3、此前用户跳过的近innerMTU与同宿主双Wintun仍不测；029/030不扩展。
+
 ## H1631 当期 Linux x86 七模式补缺已全部完成（2026-11-12）
 
 **产品二进制SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`，原Go TLS443＋Rust ISA-L共享TUN真实Linux x86 kernel；没有重编译。**此前H1621静态审计列出的三个**当期SOURCE**单项实网缺项，已经由三个独立Action真实结束并校验原ZIP/CRC及完整3个ELF hash；新[H1631源锁证据](../evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json)。历史第一/二次夹具FAIL原始Action仍保留，不改写。

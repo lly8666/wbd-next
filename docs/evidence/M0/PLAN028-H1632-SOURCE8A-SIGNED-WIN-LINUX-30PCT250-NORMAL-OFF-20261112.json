@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1632",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "harness_source_sha": "12d2c2378846ee34737a5f38555533d98c13cbbc",
+  "result": "PASS_SCOPED_ONE_WINDOWS_SIGNED_WINTUN_PLUS_REAL_LINUX_NORMAL_FEC_OFF_30PCT250MS_60S_GENUINE_KERNEL_UDP_TCP_AND_BOTH_STOP",
+  "wrapper_dispatch_action_id": 43136734670,
+  "wrapper_only_status": "SUCCESS_NOT_BUSINESS",
+  "target_native_action": {
+    "id": 43136758689,
+    "conclusion": "success",
+    "job_id": 130914053318,
+    "event": "workflow_dispatch",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43136758689"
+  },
+  "product_build_action": 43027983611,
+  "recompiled_original_product_in_target": false,
+  "original_binary": {
+    "win_original_go_exe_sha256": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "win_rust_isa_l_dll_sha256": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "linux_original_go_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "original_go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "rust_features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "native_accel_manifest_sha256": "004f91a142ae154cd68ab862bc0fc889234212ae0a5f12ef3e065931c01c24b8"
+  },
+  "raw_artifact": {
+    "id": 13907294714,
+    "name": "m0-wl-full-public-normal-direct-h1506-legacy-43136758689",
+    "zip_sha256": "59ca2be8ad7d08a429726e52bfc8c7bbe735818ba3b5e2f2be77e62b8902493c",
+    "original_report_json_sha256": "012ae88e1528dfa2585ef0854d5efa05c691b87226035b615c1e8b64cc685ce9",
+    "scenario_sha256": "f5833da5888f261e32781c428944771e31b255882b2ad16526fdcd9ce22705d2",
+    "crc_all_37_members_verified": true,
+    "original_full_secret_bearing_logs_not_copied_to_git": true
+  },
+  "native_os_scope": {
+    "windows": "Windows2025 hosted VM, genuine signed Npcap1.88 and owned Wintun, OS WAL",
+    "linux": "original Ubuntu WSL2 kernel raw/TUN native, single original Go TLS443 shared server",
+    "original_tls_before_business": true,
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "record_cipher": "chacha20-poly1305 default",
+    "manual_lease4": "10.66.0.2/32",
+    "auto_lease": false,
+    "outer_complete_ipv4_mtu": 1460,
+    "windows_os_inner_mtu": 1389,
+    "linux_os_inner_mtu": 1389,
+    "actual_windows_syn_mss": 1420,
+    "actual_linux_synack_mss": 1420,
+    "normal_fec": "Off default",
+    "original_outer_repair_effective": {
+      "windows": true,
+      "linux": true
+    },
+    "npcap_final_cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS",
+    "windows_owned_stop": "PASS_BOTH_OWNED",
+    "linux_owned_stop": "PASS_BOTH_OWNED"
+  },
+  "genuine_kernel_impairment": {
+    "loss_pct_requested_each": 30,
+    "delay_ms_requested_oneway_each": 250,
+    "windows_to_linux_netem_ifb": {
+      "packets_departed": 78148,
+      "packets_dropped": 33651,
+      "overlimits": 0,
+      "backlog_end": 0
+    },
+    "linux_to_windows_netem_eth0": {
+      "packets_departed": 78437,
+      "packets_dropped": 33718,
+      "overlimits": 0,
+      "backlog_end": 0
+    },
+    "two_sided_actual_kernel_counters_nonzero": true,
+    "configured_iid_random_loss_not_claim_of_end_to_end_delivery": true
+  },
+  "business_60s": {
+    "packet_mix_bytes": [
+      64,
+      128,
+      512,
+      1200
+    ],
+    "offered_mbps_each_direction": 10,
+    "windows_sending": {
+      "unique_sent": 99551,
+      "payload_sent_bytes": 74999760,
+      "offered_mbps": 10
+    },
+    "linux_sending": {
+      "unique_sent": 99551,
+      "payload_sent_bytes": 74999760,
+      "offered_mbps": 10
+    },
+    "windows_receiving_from_linux": {
+      "first_received": 71958,
+      "first_payload_mbps": 7.2147,
+      "first_delivery_fraction": 0.722825,
+      "never_first_delivered": 27593,
+      "duplicates": 0,
+      "invalid": 0,
+      "max_gap_between_successful_arrivals_ms": 45
+    },
+    "linux_receiving_from_windows": {
+      "first_received": 71974,
+      "first_payload_mbps": 7.2087,
+      "first_delivery_fraction": 0.722986,
+      "never_first_delivered": 27577,
+      "duplicates": 0,
+      "invalid": 0,
+      "max_gap_between_successful_arrivals_ms": 234
+    },
+    "real_kernel_tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "real_udp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "true_unique_first_delivery_reliability": "APPROX_72PCT_AT_30PCT_LOSS_FEC_OFF_NOT_RELIABILITY_GATE_PASS",
+    "business_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "failure_inclusive_tail_wait": "NOT_MEASURED; gaps between successful arrivals cannot substitute for undelivered packets"
+  },
+  "cpu_and_memory": {
+    "windows_original_go_plus_rust_process": {
+      "samples": 74,
+      "sample_elapsed_seconds": 74.672,
+      "cpu_total_seconds": 1.9375,
+      "avg_pct_one_logical_core": 2.595,
+      "peak_working_set_bytes": 43954176,
+      "peak_private_bytes": 39747584
+    },
+    "linux_original_rust_process_cpu": "NOT_FULLY_SAMPLED",
+    "rust_queue_age": "old server log outer repair max_queue_age_us 191440; not full application queue p99",
+    "windows_rust_lock_wait": "NOT_MEASURED",
+    "windows_vm_logical_vcpu": 4,
+    "hosted_vm_performance_not_physical_dut": true
+  },
+  "interpretation": [
+    "The real 30%/250ms source-locked Windows/Linux network test whole Action succeeded, with both genuine UDP/TCP and owned Stop. This is PASS_SCOPED_FUNCTIONAL, NOT a high-loss near-lossless application qualification.",
+    "Normal FEC Off and opportunistic outer ciphertext retransmission on cannot guarantee true business reliability; both first-delivery fractions only about 72.3% and missing originals count as actual undelivered.",
+    "Actual linux qdisc drops 33718 and 33651 and first delivered windows71958,linux71974 are measured. Do not invoke IID to promise correlated blackhole safety, nor successful packet p99 as all-packet p99.",
+    "No evidence of VM overload at test load 10Mbps each: windows process CPU ~2.6% one logical core, RSS44MB; this is not whole 5-client 30%/250ms capacity or independent 1800s L3."
+  ],
+  "remaining_not_qualified": [
+    "Windows independent A control/B nonrunner signed DUT/C independent Linux 1800s L3 environment blocked, skip",
+    "Windows AutoIP physical path and all same-source Win mode-specific native real qualification",
+    "Five-client sustained 30%/250ms at current SOURCE plus per-process CPU/RSS, queue-age, failure-inclusive p99",
+    "Current original source ARM64 ISA-L runtime affected cipher/mode/CPU scoped not all qualified",
+    "Near-innerMTU and same-Windows-host dual Wintun excluded by user; old H1587 FAIL retained",
+    "GUI human interactive, Android, physical internet and PLAN029/030 out of scope or unqualified"
+  ],
+  "artifact_verified": true
+}

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1631,
-  "checkpoint_sha": "4b6b13097f004855c99fea5a21076ace06d4245f",
+  "sequence": 1632,
+  "checkpoint_sha": "12d2c2378846ee34737a5f38555533d98c13cbbc",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1631-X86-SEVEN-MODE-SOURCE8A-SCOPED-PASS-AND-ONE-WIN30-250-SIGNED-DISPATCH",
-  "current_task": "H1631: After two targeted source-locked fixture repairs, current SOURCE8a x86 native Normal Fixed6 Action43135302816, Game2 Fixed6 Action43133373054, Game4 Off Action43135302756 each separate SUCCESS, exact zip CRC+SHA and all old generation/true OS path, sibling UDP and Stop pass; older four original test Actions remain FAIL. Current-SOURCE x86 7-mode representative covered with H1613/H1617/H1609. H1630 governance Action43135302735 and maintenance43135302796 SUCCESS. New H1631 one independent signed Windows+Linux 60s 30%loss/250ms/outer1460 Normal Off test using H1600 source8a prebuilt wrapper will dispatch on push, not PASS until target Action and report verified. No product change.",
-  "why_now": "User requested all feasible environments parallel targeted tests; source8a x86 mode gaps qualified; separate available Windows signed short damaged native business challenge remains distinct from missing independent 1800s L3 setup.",
+  "task_id": "PLAN028-H1632-COLLECT-WINDOWS-30PCT250-NORMAL-PASS-AND-DISPATCH-AUTO-FEC-SHORT",
+  "current_task": "H1632: Current formal SOURCE8a prebuilt real signed Win Wintun Npcap+WSL2 original Linux native Normal Off 30% loss/250ms both, genuine kernel TCP+UDP and Stop Action43136758689 completed SUCCESS; 99551 sent each, only 71958/71974 first delivered 72.3%, no lossless claim, CPU1.9375s/74.672s peak working set44MB. Exact original ZIP and report SHA recorded. H1632 one new independent explicit Normal Auto FEC 30%/250ms same 10Mbps profile source-locked wrapper will dispatch; not PASS before target. H1631 x86 seven-mode three gaps PASS_SCOPED, no product/default change.",
+  "why_now": "Normal Off at 30% loss is deliberately not a reliability PASS; one feasible short explicit FEC Auto test on identical nominal packet mix checks actual recovery under current Windows signed source while skipping independent-DUT L3.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1631 wrapper and target workflow_dispatch Windows signed Npcap/Wintun + Linux original Rust true 30pct250ms kernel app result, report first-delivery/missing/time p99/CPU RSS when available; distinguish true product loss vs host/fixture, Stop. Do not call wrapper success native PASS. Other Win auto-IP path/GUI and pressure envelope need explicitly scoped evidence, but independent Windows L3 A/B/C unavailable skip. User skips near inner MTU and 2 same-host Wintun. Preserve original failures and 029/030 OOS.",
+  "next_action": "Collect H1632 wrapper and its separate target signed Windows Normal Auto original source8a action (60s 10Mbps 250ms30 loss), strict report and zip; verify Auto mode applied, true delivered/missing, per-process CPU/RSS, duplicates/invalid, OS/WAL/Stop. Do NOT call wrapper success business. No repeated Windows runner L3 with missing A/B/C. Keep current SOURCE5client 30%/250ms and AutoIP physical path/Windows full sevenmode and GUI labelled OPEN if untested; user skip near-innerMTU/multiWintun; no 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -20,17 +20,18 @@
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
     "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json",
     "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
-    "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json"
+    "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
+    "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
     "docs/prompts/M0.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1630-FROZEN-BIN-NATIVE-MODE-ORACLES-AND-CURSOR.md",
-    "docs/devlog/M0/20261112-PLAN028-H1631-CURRENT-SOURCE-X86-SEVENMODE-AND-ONE-WIN30-WEAKNET.md"
+    "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
+    "docs/devlog/M0/20261112-PLAN028-H1631-CURRENT-SOURCE-X86-SEVENMODE-AND-ONE-WIN30-WEAKNET.md",
+    "docs/devlog/M0/20261112-PLAN028-H1632-WINDOWS-30PCT250-NORMAL-REAL-AND-AUTO-SINGLE-SCENE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."
