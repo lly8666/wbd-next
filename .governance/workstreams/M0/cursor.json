@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1682,
-  "checkpoint_sha": "26816d9d51ece05aa877e0addfc2307ccf454f22",
+  "sequence": 1683,
+  "checkpoint_sha": "596a49d480e22c5d128fabebc705cbdd0a306203",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1682: H1681 original pinned Go Windows source+4 no-WFP v2 WAL pure tests PASS_SCOPED; H1681 M4 frozen fixture needs explicit live derivative SHA, GUI still old Rust DLL SOURCE mismatch. Actual four Win32 writers/product Ready+Stop and Rust DNS/Direct still OPEN.",
+  "current_task": "PLAN029 H1683: H1681 Win Go source/4 pure v2 WAL tests PASS_SCOPED; H1682 governance PASS, maintenance FAIL from stale frozen M4 fixture for two explicitly reviewed product files; exact fixture repaired. Begin real no-WFP Win32 stage wiring (one owner, no old WFP).",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1682 current source maintenance/governance then implement four real no-old-WFP native Win32 lease/MTU/DNS/route writers, guarded only by exact owned generation + machine gate, actual product Ready/Stop, old exact-owned WFP migration. Native signed focused Windows only once stage compiled, then Rust Wintun split/Direct IO and D1-D5. GUI pinned Rust DLL mismatch must be resolved by exact compiled SOURCE not suppress checks.",
+  "next_action": "Collect H1683 maintenance; then implement concrete no-WFP lease/MTU/DNS/routes Win32 transactional stage writers backed by actual created Wintun generation and machine gate, one-shot exact-owned old WFP retirement, product Ready/Stop and real Windows Action. Do not bypass source/ABI gate or represent pure WAL tests as real IO.",
   "unverified": true,
   "last_tested_source": "26816d9d51ece05aa877e0addfc2307ccf454f22",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1681 SOURCE26816: H1661 43233031946 PASS original Go pinned overlay and 4/4 PLAN029 v2 pure WAL tests, M0-WL 43233032264 PASS compile/unit while expensive signed scene SKIPPED, governance 43233032219 SUCCESS. Maintenance 43233031805 FAIL outdated immutable M4 compare against reviewed current PLAN029 files; H1682 adds explicit live hashes without touching archived M4 expected. GUI 43233031857 FAIL source mismatch old Rust DLL; preserve. No genuine no-WFP Win32 4-stage product Apply/Stop or D1-D5/P1-P2 qualified; H1672 signed TCP SYNACK FAIL still."
+  "partial_summary": "Current MAIN SOURCE596a H1682 governance PASS, maintenance Action43233940407 FAIL only two old M4 fixture comparisons (native_product_entry/status). H1683 checks exact MAIN replacement pins separately while frozen M4 manifest stays untouched. H1681 SOURCE26816 Go Windows source v2 WAL pure 4 tests PASS_SCOPED, GUI old Rust DLL fixed SOURCE mismatch remains FAIL. H1672 Wintun kernel SYNACK failure unchanged. Real four-stage OS writers + Rust ingress/DNS/FakeIP/Direct TCP+UDP/padding OPEN."
 }

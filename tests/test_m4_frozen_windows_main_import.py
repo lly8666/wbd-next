@@ -161,11 +161,22 @@ class M4FrozenOverlay(unittest.TestCase):
                 # The original M4 result_blob remains exact in the unchanged
                 # manifest; PLAN020 assembly uses a separately pinned M0
                 # overlay blob only for these three superseded live files.
-                if path in M0_AUTHORIZED_CURRENT:
+                if path in M0_AUTHORIZED_CURRENT or path in M0_PLAN029_REVIEWED_CURRENT:
                     self.assertIn(path, live_creates)
-                    self.assertEqual(live_creates[path]["result_blob"],
-                                     M0_AUTHORIZED_CURRENT[path])
-                expected = M0_AUTHORIZED_CURRENT.get(path, row["result_blob"])
+                    approved = M0_PLAN029_REVIEWED_CURRENT.get(
+                        path, M0_AUTHORIZED_CURRENT.get(path))
+                    self.assertEqual(live_creates[path]["result_blob"], approved)
+                    # This is only a live PLAN020 override. The archived M4
+                    # row remains byte-exact, and only these two reviewed
+                    # product adapters may differ from its frozen snapshot.
+                    if path in M0_PLAN029_REVIEWED_CURRENT:
+                        self.assertIn(path, {
+                            "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+                            "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
+                        })
+                        self.assertEqual(row["result_blob"], PINNED_FILES[path])
+                expected = M0_PLAN029_REVIEWED_CURRENT.get(
+                    path, M0_AUTHORIZED_CURRENT.get(path, row["result_blob"]))
                 self.assertEqual(object_sha((ROOT / path).read_bytes()), expected)
         native = (ROOT / "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text()
         self.assertIn("func N4NativeNetworkReady(", native)
