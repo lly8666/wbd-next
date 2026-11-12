@@ -1,6 +1,12 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1645 Windows GUI 53项和七模式实际VM已有251步；显式AES冷路径接线待新源复验
+
+[H1644 Windows2025实际GUI编译/配置 Action43153401230](https://github.com/lly8666/wbd-next/actions/runs/43153401230) 整体 **FAIL** 原样保留；正式WinForms与新original-Go V4 EXE均真实编译，新Go单文件 SHA `f9996e5bddebba015646b54f88d8a25fe9366c64686bebee53ab063abfc58553`（该次测试源码3caf5b70，不是旧H1600 Go hash）、Rust ISA-L DLL原SHA `7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d`。保留原始GUI JSON receipt artifact13914906742：**251条逐项检查成功**，包括53字段的编辑→保存→真实原Go CLI `--check-config` 有效值回读、七个V4合法模式和非法模式、FEC Fixed/Auto pending-not-Applied、ChaCha；实际在 AES128-GCM 且旧carrier `fec-mode=legacy` 时拒绝 `realityfront: invalid admission parameters`，故**GUI三AEAD整体尚未通过**，按钮后续阶段未执行，不能以251局部PASS替代全场。确认原因是旧Go V3保护层明确拒绝 legacy+非ChaCha，而旧GUI默认 legacy 实际表示FEC Off。H1645仅对 `--native-v4-product=true && legacy && parity=0 && AES显式` 使用相同原Go认证 **off** carrier，配置读回新增 `effective-original-carrier-fec-mode=off`，不更换cipher或FEC、不改变历史V3和不支持组合。等待新SOURCE正式组装Go+WinForms真实VM结果；**新Go冷认证源码已改变，不能复用旧SOURCE8a网络AES结果当本源码验收**。独立真正GUI点击后签名Wintun起网仍须另一真实网络场景；FakeSession的按钮验收只限UI事件。
+
+H1644治理与maintenance 原FAIL原因是新五客户端证据缺 `source_sha` 顶层字段（原本正确的product_source_sha已经存在）；H1645补原正式SOURCE8a，保留原失败Action和原报告，不变验证阈值。五客户端H1643真实原始离线复判成功资格与七模式历史SOURCE证据无变化。
+
 ## H1644 原始五客户端180秒严格复判完成；Windows GUI 当前编译接续（2026-11-12）
 
 **五客户端当期SOURCE** `8a31375e36bb6a93860c5579e64b4a39d0b6e346`；原始单一真实原Go TLS/Rust ISA-L Linux x86 kernel/netns业务 [Action43148997176](https://github.com/lly8666/wbd-next/actions/runs/43148997176) 仍 **FAIL**（旧报表不识别服务端B代已认证M4提交）。原始ZIP13912204248及report/server/cpu/qdisc各SHA保留。[H1643严格离线复判 Action43152631016](https://github.com/lly8666/wbd-next/actions/runs/43152631016) **SUCCESS**：对原始ZIP八项SHA匹配、四组缺/错/重放负例、六个真正服务端B端口的5环节M4/Health/OS接管顺序和五端旧代精确Stop逐项核验，不重跑180秒网络，`rotation_verdict=PASS_ALL_FIVE_SCOPED`，`alerts=0`。五客户端真实送出**1,716,864 UDP**、首次唯一收到**1,714,925（99.8871%）**，真实未到**1,939**；Alice/Bob原双向TCP每向帧43317/43317。内核真实损伤各客户端0/1/5/15/**30%**，单程0/15/50/100/**250ms**，**仅Erin**最高，不能称五端全为30%/250ms；其他四端outer1460，Erin显式outer1280；跑的是30/60/30/50s有界容量阶梯，非600s高压/Windows独立DUT L3。原服务器CPU平均单核54.478%，峰RSS127052KiB，仍未得失包包含的一向p99；详细 [H1644结构化原证据](../evidence/M0/PLAN028-H1644-ORIGINAL-H1642-FIVE-NATIVE-180S-STRICT-M4-OFFLINE-PASS-20261112.json)。原Action失败与旧报表保留，结果只能记 **PASS_SCOPED_OFFLINE_REJUDGED**。

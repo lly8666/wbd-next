@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "d1db483fe8e7d1b9e17fd47fb7d487b0b63365ef",
+      "result_blob": "81614f2f80d0a703c053eb8d34a421a6c517ca42",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -196,6 +196,14 @@
         {
           "find": "\t\tfec2Selection.CheckConfigStatus(out)\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
           "replace": "\t\tfec2Selection.CheckConfigStatus(out)\n        // The standalone historical FEC2 adapter describes non-off modes as\n        // unwired. The current original-Go native V4 branch has already\n        // verified m0ParseWindowsV4Mode and the Rust MTU budget above.\n        // It is admitted but not authenticated/OS-Applied until Start: the\n        // GUI must not block a real native Fixed/Auto based on stale V3 text.\n        if *nativeV4Product && *fec2Selection.Mode!=\"off\" {\n            out[\"fec.status\"]=\"pending_native_auth\"\n            out[\"fec.applied_profile\"]=\"unknown\"\n            out[\"fec.reject_reason\"]=\"\"\n        }\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "\tsuite, err := realityfront.ParseRecordCipherName(*recordCipher)\n\tif err != nil { return err }\n\trequestedPolicy, err := realityfront.PolicyForClientWithInitialAndCipher(*lanes, *fecMode, *fecParity, *fecMinParity, *fecStartParity, suite)",
+          "replace": "\tsuite, err := realityfront.ParseRecordCipherName(*recordCipher)\n\tif err != nil { return err }\n\t// The original V3 legacy carrier uses ChaCha-only semantics; native V4\n\t// deliberately supports independently negotiated AES per installation.\n\t// Legacy with parity0 already means FEC Off: use that SAME authenticated\n\t// original-Go Off policy for native AES, never substitute a cipher or\n\t// reinterpret an explicitly requested nonzero parity.\n\tcarrierFECMode := *fecMode\n\tif *nativeV4Product && carrierFECMode==\"legacy\" && *fecParity==0 &&\n\t\tsuite!=realityfront.CipherChaCha {\n\t\tcarrierFECMode=\"off\"\n\t}\n\trequestedPolicy, err := realityfront.PolicyForClientWithInitialAndCipher(*lanes, carrierFECMode, *fecParity, *fecMinParity, *fecStartParity, suite)"
+        },
+        {
+          "find": "\t\tout := map[string]string{\"derived-inner-tun-mtu\": fmt.Sprint(tunMTU)}",
+          "replace": "\t\tout := map[string]string{\"derived-inner-tun-mtu\": fmt.Sprint(tunMTU),\n\t\t\t\"effective-original-carrier-fec-mode\": carrierFECMode}"
         }
       ]
     },
@@ -367,7 +375,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "329ad89a588c2119a470044a369e870acc785c83",
+      "result_blob": "11ff864790df59c96025caed4cda5fe447a9cdb7",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -452,6 +460,10 @@
         {
           "find": "\"aabbccddeeff00112233445566778899\"",
           "replace": "\"aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899\""
+        },
+        {
+          "find": "                        Assert(Convert.ToString(actualSuite[\"record-cipher\"]) == suite,\n                               \"Windows Go --check-config accepts explicit V4 suite \" + suite);",
+          "replace": "                        Assert(Convert.ToString(actualSuite[\"record-cipher\"]) == suite,\n                               \"Windows Go --check-config accepts explicit V4 suite \" + suite);\n                        Assert(Convert.ToString(actualSuite[\"effective-original-carrier-fec-mode\"]) ==\n                            (suite == \"chacha20-poly1305\" ? \"legacy\" : \"off\"),\n                            \"V4 AES maps only old legacy FEC-off carrier; cipher never silently changes \" + suite);"
         }
       ]
     },

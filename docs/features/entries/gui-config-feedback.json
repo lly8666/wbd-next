@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "gui-config-feedback",
   "name": "配置/CLI/WinForms状态回执",
-  "summary": "当前 Windows 原生 WinForms 配置与CLI状态：V4 FEC Fixed/Auto只读校验必须 pending_native_auth（非 Applied），Game3不支持，outer-repair on/off已接线，完整VM待本轮实际Action验收。",
+  "summary": "当前原生V4 Windows GUI配置/有效值：Normal Off默认、Fixed6/Auto显式pending_native_auth、Game2/4 Off/Fixed6、三套AEAD各自选择，真实OS Applied独立读回；Windows VM字段/按钮结果持续补验。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -15,13 +15,13 @@
     "GUI-ready": "必须有真实OS_APPLIED",
     "MTU": "1460B为正式装配后的参数清单默认（原Go donor旧1500不能代表产品）",
     "native-v4-product": "CLI默认 true，GUI携同一 --native-v4-product",
-    "record-cipher": "chacha20-poly1305，AES显式选择/未有当前V4原生验收",
+    "record-cipher": "ChaCha20-Poly1305；AES128/256独立显式选择不改变外层TLS，Native V4旧legacy parity0 carrier映射为受保护FEC off并给出effective-original-carrier-fec-mode只读回执",
     "outer-repair": "on（默认），GUI可显式on/off选择；仅外层密文机会发送，不负责业务可靠性"
   },
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "GUI Portable.Effective()写扁平JSON，--config 经 configfile.ApplyFile 进入当前Go原生 admission，出站实际密文和/32需TLS及Rust/OS effective 读回；不会自行改写用户MTU。",
-    "gui": "正式 assembled MainForm/PortableStore 打开源锁PARAMETERS/gui-fields，保存/校验直接进入同一原Go --native-v4-product 默认true；Normal Off/Fixed6/Auto、Game2/4 Off/Fixed6选择有实际 V4 规则，Fixed6 Normal需原Go冷carrier fixed4，Game3不展示，Game auto/旧V3 auto严格拒绝；读取 pending_native_auth 并不等于OS Applied；网络和Rust须独立读回，FakeSession按钮测试只能判UI事件。"
+    "gui": "正式assembled PortableStore/MainForm 的53项参数保存进入原Go V4 CLI的--check-config；支持Normal Off/Fixed6/Auto、Game2/4 Off/Fixed6；不展示Game3。显式AES选择在旧fec-mode=legacy+parity0下使用完全相同的受保护Off载体，回显effective-original-carrier-fec-mode=off；不改变cipher也不打开FEC。只有真实WBD_WINDOWS_OS_APPLIED和Rust/OS证据可宣称连接，FakeSession按钮事件不代表起网。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -71,7 +71,8 @@
     "PLAN029后续约定：只编辑外层MTU，默认1460；有效外层、自动内层与OS应用状态只读，保存/重连不得把内层值写回外层配置。本次未实现UI。",
     "GUI AES显示更新为V3已验/V4原生待验；V4真实GUI credential/租约/内核Apply/Disconnect和全部平台组合尚无当前SOURCE端到端证据，不能凭配置回显宣称已生效。",
     "H1638发现并补齐GUI原生outer-repair显式on/off配置映射；正式装配参数表默认MTU1460已存在，原始donor 1500非正式GUI。H1638 VM原生编译/全部字段CLI只读校验/WinForms按钮事件与native真实连接必须按各自结果分账，当前尚未测出结果，不冒充PASS。",
-    "H1643定位真实GUI问题：旧Go cold check-config对已准入V4 Fixed/Auto误报fec.status=rejected，MainForm因此阻止连接；本批正式装配改为pending_native_auth（不冒充Applied），并删除未支持Game3选择。H1642 Windows VM GUI失败来自旧测试用16B route-key被V4正确拒绝；正式VM测试结果未出，不能宣称全部按钮实际执行成功或真实GUI起网。"
+    "H1643定位真实GUI问题：旧Go cold check-config对已准入V4 Fixed/Auto误报fec.status=rejected，MainForm因此阻止连接；本批正式装配改为pending_native_auth（不冒充Applied），并删除未支持Game3选择。H1642 Windows VM GUI失败来自旧测试用16B route-key被V4正确拒绝；正式VM测试结果未出，不能宣称全部按钮实际执行成功或真实GUI起网。",
+    "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

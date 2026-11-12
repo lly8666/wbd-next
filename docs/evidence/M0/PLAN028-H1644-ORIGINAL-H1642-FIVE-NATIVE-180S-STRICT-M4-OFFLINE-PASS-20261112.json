@@ -113,5 +113,6 @@
     "Outer first-byte appearance repeat excluded from app recovery credit; cannot causally compare CPU across VM hosts",
     "The original h1286 report's legacy architecture label says native_ARM64, but this specific H1642 workflow explicitly verified uname x86_64 and three x86 ELF e_machine62 hashes; corrected here, historical report not rewritten",
     "Not independent A/B/C Windows DUT1800 L3 or physical WAN; unavailable/explicitly skipped work remains NOT_RUN"
-  ]
+  ],
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346"
 }
