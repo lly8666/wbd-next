@@ -27,12 +27,16 @@ CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道
 
 - IP表冷编译合并区间，flow命中O(1)；域名trie只处理DNS查询，不逐包解析TLS/SNI。
 - **选择性FakeIP只用于已解析成功的中国域名**，保证CN域名海外CDN仍直连且不把共享IP的无关非CN域名误放。非CN域名保留真实IP、照旧进隧道或按CN IP直连。FakeIP不进入隧道或物理外网；TTL、映射持久/回收、CNAME、HTTPS/SVCB与DoH能力边界按契约§2.2，不自行简化成共享IP反查表。
-- Direct UDP为Rust异步物理绑定socket；Direct TCP首选Rust本地内核TCP接入＋物理socket，两腿有界转发，不复活旧Go gVisor热泵、不把raw TCP当socket payload。先做真实Windows小型能力门，条件不成立才按契约限定备选，不同时写两套。详见契约§3。
+- Direct UDP为Rust异步物理绑定socket；Direct TCP首选Rust本地内核TCP接入＋物理socket，两腿有界转发，不复活旧Go gVisor热泵、不把raw TCP当socket payload。先做真实Windows小型能力门，按契约§3B有界调查后选择单一后端，不同时写两套。详见契约§3。
 - 现有 `Bypass4/Direct4` 保存、旧Go分流、静态classifier单测均不证明native V4已经接通。实际出口、逆向回包、owned Stop、内存与首到性能均需源锁证据。
 
 用户最新决定不接入老WFP：按契约§3A解除guard/stage/Ready/Stop前置，保留owned配置恢复；不以假guard蒙混。Wintun借用buffer/发送slot顺序是真实API约束，不是安全防御；无WFP的系统DNS与旁路能力边界要诚实验收。
 
-施工与退出按契约§6–7：先可行性边界→完整DNS/Direct/配置工作包→实际双出口→必要性能保护。契约是详细施工方案，本页不复制另一套参数表。
+**2026-11-13施工修订**：按契约§3B允许精确owned Defender Allow的A/B/C诊断；不接旧WFP、不全局关防火墙。Allow无效不能排除显式Block。禁止assemblyOnly形成“未验不许执行验收”死锁；真实adapter可执行，Applied/Ready仍按实际结果。共用Wintun回注先定位，TCP选型有界，UDP与四阶段OS事务独立推进。
+
+**资源修订（附件第八条落地到契约§5）**：4096 Direct软水位、默认16384硬上限按需增长；64MiB是分配上限不是队列目标。Direct硬满仅拒绝新Direct，TCP单流背压，UDP局部有界丢弃，DNS缓存淘汰/事务表明确失败/FakeIP安全回收分别处理；不可共用满表把Tunnel挡住。D3/P2缩小测试容量，明确验证满载时其他流继续与压力后恢复。
+
+施工与退出按契约§3B、§6–7：有界定位与独立施工→完整DNS/Direct/配置工作包→实际双出口与压力退让→必要性能保护。契约是详细施工方案，本页不复制另一套参数表。
 
 ## 3. 配置/GUI/portable，只补接线
 

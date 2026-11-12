@@ -1,6 +1,6 @@
 # PLAN029｜客户端中国 IP＋域名分流与单 DNS 契约
 
-2026-11-12 用户授权的设计修订，**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
+2026-11-13 用户授权的设计修订（含防火墙定位、开发入口解锁与资源压力策略），**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
 
 ## 1. 产品语义，先定清楚再实现
 
@@ -72,13 +72,13 @@ OS仅保留现有两条 `/1`、必要服务器endpoint和极少数内部端点�
 2. 对已判Direct的SYN/后续段，只改本地接入所需地址/端口与校验和，写回Wintun交Windows TCP；由其处理ACK/窗口/SACK/重传。listener accept从映射查原目标，创建物理绑定非阻塞连接；双向byte relay用Rust现有IOCP/事件运行时，支持半关闭、RST、连接失败反馈。返回本地TCP段逆变换成应用期待的原目标。不能立即ACK却丢掉尚未可靠接纳的数据。
 3. 每flow异步状态可以有，每flow OS线程、全局互斥串行等待、定时轮询不可以有。背压只暂停该flow的读取，其他flow继续；无用户态额外重传缓存。复制缓冲按需池化，优先复用现有库，不为splice/零拷贝神话造驱动。
 4. **先做一个真实签名Windows最小能力门**：Wintun→本地内核listener→物理socket→逆变换，验证SYN/FIN/RST、窗口、源绑定、回注不自环和Stop，再写其余完整集成。不能用Linux或内存mock判Windows此方法可用。读sing-tun Windows相关限制/issue，方法有借鉴价值不等于移植自动成功。
-5. 若确证当前Windows网络事务不允许这条内核接入且最小修复需要换驱动/重构网络控制层，则记录首个因果证据，改用**仅Direct TCP的成熟Rust smoltcp适配器**，本地短RTT接入＋物理Winsock腿，不自行实现TCP栈。先查窗口缩放/SACK/分片支持，补有界接入，不把UDP和隧道分支一起塞入栈。二选一交付，不长期维护两条默认后端；不得因未知担忧同时开发二者。
+5. 按§3B做有界调查后选择单一后端：确证内核接入不适用，或已有证据表明继续打通成本高于备选时，M0可转**仅Direct TCP的成熟Rust smoltcp适配器**，不必无限等待Windows过滤根因完全闭环。未知根因继续标OPEN，不能改称平台不支持。先验证共同Wintun回注通路；若共同回包也坏，换TCP栈无效，先修共同通路。备选只负责本地短RTT TCP接入＋物理Winsock腿，核查窗口缩放/SACK/分片、背压与许可，不自行写TCP栈、不把UDP和Tunnel塞入栈。二选一交付，不并养两条正式后端。
 
 Direct UDP复用旧语义移入Rust：每活跃5tuple一个物理绑定socket，IOCP事件收发，socket池/flow表有界，回复重新组IP/UDP并复原fake/原目标；保留datagram边界。不同QUIC/游戏flow不因端口相同串接。仅需要直连/DNS终止的IP分片做有界重组，其他隧道片保持原路径；后续片不能猜端口、随机改路。超MTU按现行契约返回错误/ICMP或分片，不静默截断。常用Direct ICMP echo可借原生异步ICMP接口重建对应ID/seq；其他未支持协议明确报告，不偷偷走隧道冒充直连。
 
 ## 3A. 不接入老WFP；把Wintun驱动约束与产品自设限制分开
 
-**2026-11-12最新用户决定：029不接入老项目WFP guard/防泄漏保护体系。** 本节替代上一修订“修改旧Block并加例外”的施工方法；不再为迁就老WFP继续扩规则/权限框架。不修改系统或第三方防火墙，不用一个假guard/no-op成功回执骗过现有检查。
+**2026-11-12最新用户决定：029不接入老项目WFP guard/防泄漏保护体系。** 本节替代上一修订“修改旧Block并加例外”的施工方法；不再为迁就老WFP继续扩规则/权限框架。**允许§3B限定的Windows Defender精确owned规则诊断/产品必要放行**；不恢复旧WFP guard，不全局关闭或重置防火墙、不修改第三方策略，不用假guard/no-op成功回执骗过检查。
 
 源码审阅依据：原Go `native_wfp_guard_plan_windows.go` 的非Wintun port53 Block；overlay `native_wfp_exact_arm_windows.go` 的纯Block验证；`native_unified_network_transaction.go` 的 `Stages [5]`、`guard/lease/mtu/dns/routes` 固定顺序及Recover完整guard前置；Windows真实入口 `PrepareOriginalTLSNativeProduct`。**这些是项目自己的设计，不是Wintun API要求**。接手时追最终装配链，不能只看到历史INACTIVE注释或ErrN4NativeGuard名称就判断是否在当前产品执行。
 
@@ -91,7 +91,7 @@ Direct UDP复用旧语义移入Rust：每活跃5tuple一个物理绑定socket，
 
 ### 无WFP后的DNS/IPv6边界必须诚实
 
-- 主路径采用owned系统DNS配置指向本地单DNS入口，应用普通系统解析进入Rust dispatcher；进入Wintun的UDP/TCP53按QNAME策略处理。物理Direct socket按接口/源地址绑定即可，不另找WFP许可。自有bootstrap仍使用唯一direct DNS。
+- 主路径采用owned系统DNS配置指向本地单DNS入口，应用普通系统解析进入Rust dispatcher；进入Wintun的UDP/TCP53按QNAME策略处理。物理Direct socket按接口/源地址绑定；真实OS过滤若要求必要放行，按§3B处理，不另接旧WFP许可框架。自有bootstrap仍使用唯一direct DNS。
 - **不再承诺拦截所有任意应用的DNS绕行。** 硬编码LAN DNS可能沿更具体on-link路由绕开Wintun，绑定物理接口的程序及加密DNS也不能单靠两条 `/1` 全面捕获。不为补这一点重新接入WFP或开发另一个拦截驱动。可对已配置的有限DNS地址用精确owned捕获规则实现正常场景，不能扩为扫描所有地址/海量route。UI/help与D1验收据实际出口明确边界；普通系统DNS和已接管业务必须按设置正确工作。
 - 原IPv6阻断意图仍需用实际已有可恢复的原生设置/捕获后丢弃路径落实，不得因删WFP悄悄放行，也不能仅有IPv6默认route就宣称所有本地/绑定物理IPv6均被禁止。范围不够如实记录具体缺口，优先普通路由/接口层最小实现，不恢复旧综合guard。既有非本程序配置保持原样。
 - 单DNS不跨方向回退、中国IP/域名分类与FakeIP不出本机仍是产品功能要求。缺少某条WFP状态不再算网络功能失败；某功能真实出口不符才是失败。
@@ -112,9 +112,31 @@ Direct UDP复用旧语义移入Rust：每活跃5tuple一个物理绑定socket，
 
 ### 最小验收增量
 
-D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct TCP/UDP＋Tunnel收发＋Stop；检查新建WFP对象为0。加一例精确owned旧journal/WFP迁移清理且不碰其他对象；一例DNS/Direct连接等待时其他flow继续收发；一例旧generation晚回调不能写已关闭ring。DNS旁路与IPv6覆盖未达范围如实记录，不做攻击矩阵、不重新全跑028。
+D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct TCP/UDP＋Tunnel收发＋Stop；检查旧项目自定义WFP guard/provider/filter未新建；必要Defender规则单独记录并回收，不能用“系统WFP对象总数为0”误拒绝Defender正常底层实现。加一例精确owned旧journal/WFP迁移清理且不碰其他对象；一例DNS/Direct连接等待时其他flow继续收发；一例旧generation晚回调不能写已关闭ring。DNS旁路与IPv6覆盖未达范围如实记录，不做攻击矩阵、不重新全跑028。
 
 参考：[Wintun官方使用与API](https://git.zx2c4.com/wintun/about/)。移除WFP冷控制依赖主要减少装配/Apply/Stop复杂度，不能无测量宣称会大幅降低稳态CPU。
+
+## 3B. Windows故障定位与可执行开发入口（2026-11-13）
+
+H1690只证明当时真实签名Wintun注入的UDP未到本地listener、TCP无SYNACK；默认入站Block是线索，不是防火墙根因证明。局部WAL PASS不替代真实产品业务，native整场FAIL也不能未经日志定位就归因于尚未接通的Direct模块。
+
+### 有界定位，不被无效门槛拖住
+
+1. **先收已有结果再派发。** 对同SOURCE找首个失败边界：包构造/校验和→Wintun提交→Windows协议栈/过滤→listener→返回Wintun。复用已有自连接/UDP自检证明listener正常；临时辅助地址避开FakeIP池和现有地址，或在隔离能力探针中明确关闭FakeIP，不能让198.18测试地址被分类器当未知映射丢掉。
+2. 一个Action内顺序做 **A现状→B精确owned Allow→C删除恢复**，同一真实Wintun、相同包与listener；最少维度限定程序/协议/端口/地址与适用profile，记录实际effective规则。Stop/失败沿现有finally与owned journal清理。不全局关闭Defender、不清空规则、不触碰第三方策略。
+3. **Allow无效不排除防火墙**：显式Block优先于冲突Allow，profile/本地规则合并政策也可能使规则不生效。查实际匹配的Block/策略和有界Pktmon丢弃原因；已证明为本项目旧owned Block可按迁移流程精确删除，非本项目规则只报告。无需新增长期抓包或监控框架。
+4. 最多两轮有不同可证伪假设的针对性真实诊断：第一轮Allow A/B/C；必要时第二轮首个丢弃组件/回注路径。没有新假设不重跑同类无SYNACK。随后M0根据现有证据选择内核路径或Direct-only备选并记理由；两轮是停止重复调查线，不是强制转栈或禁止修已定位小bug。共同Wintun返回路径失败时先修共同路径，后端切换不能掩盖它。
+5. UDP独立推进：**注入UDP到本机listener失败≠物理绑定UDP socket直连不可用**。实测应用经Wintun→Rust物理UDP→真实远端回包→重建IP/UDP回注→原应用收到；与TCP后端选择互不等待。四阶段OS事务、配置/GUI、DNS纯逻辑可同时施工，M0仍单写，不新开角色。
+
+### 放松历史限制，保留实际正确性
+
+- `assemblyOnly`只描述旧占位装配，不能成为“必须先有实网PASS才允许执行实网”的永久开关。真实租约/MTU/DNS/routes adapter和回滚已接好，即可让现有测试入口执行真实Apply；每阶段按实际结果记录，失败执行owned清理。**允许运行待验代码≠伪造Ready/Applied或提前宣布产品合格。** 正式Ready只看当前会话实际所需OS状态、Rust owner/数据面就绪，不能查历史Action绿灯作为运行条件。
+- 不再强制旧guard、五stage、测试专用固定地址/adapter名；辅助本地地址不必等于server租约。只解除错误绑定假设，不删除认证租约、包长、generation、原密文和ring生命周期约束。配置/规则/权限检查放启动、变更和Stop，不逐包查OS/WAL。
+- 分流启停按**下次连接生效**：存配置后正常Stop/重开，不要求热切迁移活动TCP。规则快照更新保持已有flow出口；这与启停冷生效不冲突。
+- 正式路径确实需要Defender Allow时，作为少量owned资源随入口创建/读回/Stop回收；规则数不随CN名单或业务flow增长。允许产品必要监听，不扩大成任意程序/任意端口全局放行。旧WFP一次性清理仍保留。
+- 恢复只测代表性正常Stop、部分Apply失败、进程中断后journal恢复，覆盖新增资源即可；不穷举每阶段×每失败点，不重造watchdog和通用安全框架。
+
+依据：[Microsoft防火墙规则优先级](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/rules)、[Pktmon](https://learn.microsoft.com/en-us/windows-server/networking/technologies/pktmon/pktmon)。
 
 ## 4. DNS 数据通路，避免自环和隐藏回退
 
@@ -131,11 +153,20 @@ D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct T
 |---|---|---|
 | 已编译CIDR/trie | 每配置一份，只读共享 | 更新时原子换快照，不每flow复制 |
 | DNS事务 | 256并发上限，可按实测调 | 同查询合并；满时明确SERVFAIL，不全局堵塞 |
-| DNS缓存 | 4096项＋8MiB字节上限 | 正/负TTL与resolver版本；不延长上游TTL |
+| DNS缓存 | 4096项＋8MiB字节上限 | TTL/近似LRU淘汰；满时查询仍可执行，不因缓存满拒绝解析 |
 | 域名映射 | 按需增长，16384项软目标、60000项硬上限＋16MiB目标预算 | 活跃引用/TTL/隔离期保护，entry实测size后修预算；无可回收槽拒绝新合成并报告 |
-| direct flow | 按需分块增长，4096默认上限、可调至16384 | UDP默认60s idle；TCP以FIN/RST/OS关闭为主，不能30s误杀空闲持久TCP |
+| direct flow | 按需分块增长；4096软水位，默认16384可配置硬上限 | 先回收关闭/过期项，再按需增长；硬满只拒绝新Direct，不杀已有TCP、不阻塞Tunnel。UDP默认60s idle，TCP按FIN/RST/OS关闭，不按30s误杀持久流 |
 | 转发缓冲 | 16–64KiB池化块、每方向按需借用，共享默认64MiB上限 | 无每flow预分配大窗口；达到上限仅该TCP背压/UDP有界丢弃 |
 | direct/DNS分片重组 | 最多128 datagrams且8MiB、2s上限 | 按tuple+IPID+generation；非重组路径不占额度 |
+
+### 压力行为必须按资源分类，禁止统一“满了拒绝所有新流”
+
+- **FlowPin与转发资源分开**：当前 `v4_client_split.rs::FlowPin::first` 对所有出口共用max且满返回None，接入产品前必须拆开。Direct容量不足不得导致新Tunnel包丢弃/等待；Tunnel沿原路径和现有owner限额运行。策略缓存独立限额，活动流出口必须固定；可用紧凑pin、淘汰已结束状态，并仅在首次分类时分配。不能缓存淘汰后把同一活跃流重新分类，也不能为容纳Direct扩整套Tunnel队列。
+- **TCP共享buffer满**：只暂停有关flow的socket读取，通过原生TCP窗口背压；还未拿到缓冲就不消费不可保存的字节。不得持锁/持Wintun slot等待，不因短时借不到buffer一律拒绝新连接。单flow按需、单轮工作量有界，活动小流有调度机会；初版复用现有公平轮转，不加复杂优先级系统。
+- **UDP满**：队列按包数、字节有界，丢受压flow的数据报并计数，不能截断或把旧UDP排成长延迟；不让一个UDP flow占满公共池。无需承诺过载无损，需证明其他flow和Tunnel仍前进。
+- **DNS缓存≠事务表≠FakeIP表**：缓存满做过期/近似LRU淘汰，miss照常查询；256事务表先合并相同查询，确实满则该新查询及时SERVFAIL，不让所有reader等待；FakeIP先回收满足TTL/引用/隔离期的项，无安全可回收项才拒绝新合成，不篡改已用映射、不跨出口回退。DNS缓存淘汰不能直接删除仍被应用持有的FakeIP。
+- **64MiB是总分配上限，不是排队目标**。必须观测实际队列字节与最老年龄，池中空闲容量和内核socket占用分开报告。若64MiB真排在单个100/200/500Mbps出口，仅序列化等待就约5.37/2.68/1.07s；绝不能以“未超64MiB”判低延迟合格。TCP让内核维护在途窗口，用户态只做短暂转交，不再复制一整份公网BDP；无每flow预分配窗口、无等待凑批。
+- 4096不是吞吐上限：100个新UDP flow/s × 60s idle≈6000项；按实测活跃流数/entry字节决定硬上限，不照搬旧4096重传池。低负载按需申请，空闲大块分批归还或保留少量热池；统一到期轮有界回收，不逐包分配/全表扫描，不为每种资源再建一套管理框架。
 
 以上是工程起点，不是虚构已测上限。用size_of/分配器采样核算实际字节；60000个映射不代表程序预分配60000个socket。统一粗粒度到期轮/现有timer结构，每次处理有限到期项，不每100ms全表扫描；正常DATA流缓存无需每包调用系统时间，复用worker时钟并降频更新last-used。
 
@@ -149,7 +180,7 @@ D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct T
 
 - 老业务DNS列表仅第一项迁移到tunnel，旧bootstrap显式第一项迁移direct；缺省分别1.1.1.1/223.5.5.5。其余旧备选仅迁移提示“已取消备用”，不继续运行。显式新键优先，存在冲突给清楚迁移说明；保存后只写新单值schema。
 - GUI两格：“直连DNS（中国域名/服务器地址解析）”“隧道DNS（其他域名）”；CN域名开关/规则来源日期与hash只读摘要，保留IP表/自定义CIDR与手动更新。展示配置已保存/当前effective，不宣称仅保存即生效。
-- 先完成共享policy/DNS契约和一个真实Windows Direct TCP能力门；随后直连TCP/UDP＋DNS/FakeIP＋配置迁移作为一个完整工作包实现；再接GUI、测试与性能。有限startup-padding沿029原方案独立开发，只影响Tunnel，不拖着本次分流一起重做协议。
+- 按§3B先有界定位共用回注通路；TCP后端调查、UDP实路和四阶段OS事务独立推进，不相互空等。后端选择后写齐Direct＋DNS/FakeIP＋配置/GUI及夹具，冻结SOURCE后分场验证，不每个helper发Action。有限startup-padding沿029原方案独立开发，只影响Tunnel，不拖着本次分流一起重做协议。
 - M0主线单写，读实时cursor，收已有H1661/H1663等Actions；本次文档修订不重复派发、不改动在途源码。新agent遵循本页，不按旧功能卡恢复备份DNS/海量route/Go热泵。
 
 ## 7. 一组可复用验收，先正确出口再谈速度
@@ -160,11 +191,13 @@ D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct T
 |---|---|
 | D1 两DNS单值与三route-mode | CN QNAME只到direct DNS，其他只到tunnel DNS；实际进入Wintun的1.1.1.1/网关53按QNAME处理；旁路on-link案例独立说明，禁止伪称全机拦截；TCP53、UDP TC回退同endpoint；任一DNS黑洞不换地址/方向；两个字段相同地址仍走各自方向 |
 | D2 域名/IP并集与CDN反例 | CN域名→非CN A直连；非CN域名→同一非CN A走隧道；非CN域名→CN A按IP直连；IP字面访问按IP规则。用真实TCP/UDP及两侧收件验证，不能只看classifier |
-| D3 DNS边界 | 多A/CNAME、无关additional不学习、NXDOMAIN/TTL0/过期、AAAA阻断、HTTPS/SVCB不逃映射、restart恢复映射、容量满/碰撞有界；FakeIP在物理/服务端抓取为0 |
+| D3 DNS边界 | 多A/CNAME、无关additional不学习、NXDOMAIN/TTL0/过期、AAAA阻断、HTTPS/SVCB不逃映射、restart恢复映射；缓存满仍能新查询，事务满只失败受影响请求，FakeIP满不破坏老映射；FakeIP在物理/服务端抓取为0 |
 | D4 接线生命周期 | 分片/近MTU包、大TCP写入、小UDP混跑；规则更新不迁移老flow；lane轮换不打断Direct；idle下Direct仍通、Tunnel DNS唤醒；物理DNS bootstrap在接管后可重连；Stop/WAL/晚回调与模式重开 |
 | D5 系统规模 | 内置/1万级规则加载，路由/WFP数不随条目数增长；没有新Go逐包热点；GUI两DNS保存→配置→owner有效值→真实出口；默认1460外层不被内层回写 |
 | P1 纯Tunnel保护 | 同VM分流off/on顺序，50→100→200Mbps按容量上探，大包为主＋小UDP时延；未变模式不重复028整矩阵 |
 | P2 Direct与混合 | 同VM直接物理socket基线→经过分流Direct TCP/UDP→直连大TCP与Tunnel小UDP共存；0损伤先看实现成本，容量内再一场5%单程50ms代表，Normal与Game4各做必要接线代表而非全笛卡尔积 |
+
+**资源压力补测复用D3/P2夹具**：用测试专用小容量触发Direct flow硬满、buffer压力和DNS三表分别满（产品默认不改），同时持续一条新建Tunnel流、一个已有Direct TCP和小UDP。验收各自按§5退让、无全局停顿、无错路/假映射、压力解除后恢复且RSS有界。TCP缓冲压力以暂停该流读取为合格，不强求过载吞吐或UDP零丢；FakeIP/DNS满造成的局部明确失败属于预期。输出最老排队年龄/池占用/flow数/原因计数，定位第一处等待，不堆永久逐包日志。冷OS检查只在生命周期调用。
 
 报实际注入/唯一交付/缺失、p99与最长空洞、flow/DNS等待、缓存命中、进程/线程CPU＋host内核忙、RSS/peak及owned资源。DNS性能分缓存命中/未命中，不把远端解析RTT算成本地分类慢。纯Tunnel比较相同业务/实际出口；Direct路径省掉公网隧道延迟不等于CPU优化证据。
 
@@ -176,7 +209,7 @@ D1/D4/D5使用**无本程序WFP guard**的新入口跑普通系统DNS＋Direct T
 - [sing-box FakeIP](https://sing-box.sagernet.org/configuration/dns/server/fakeip/)：本地地址映射思路；本项目选CN域名局部启用，不要求代理所有TCP。
 - [v2fly域名数据](https://github.com/v2fly/domain-list-community)：构建时固定版本与许可，运行时不解释整个配置生态。
 - [Microsoft IP_UNICAST_IF等选项](https://learn.microsoft.com/en-us/windows/win32/winsock/ipproto-ip-socket-options)：接口字节序与源绑定按官方和旧项目已验实现。
-- [smoltcp](https://github.com/smoltcp-rs/smoltcp)：仅在内核接入真实不成立时的Direct TCP备选；不预先并行开发两个栈。
+- [smoltcp](https://github.com/smoltcp-rs/smoltcp)：按§3B有界调查后选择的Direct TCP备选；不预先并行开发两个栈。
 - 旧源 `wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984` 的 `internal/windowsclient/userspace_tcp_direct_windows.go`、`direct_udp_windows.go` 和 current PLAN029 bootstrap：复用行为/绑定/回包/失败语义，当前Rust平台模块接线。
 
 本页为架构选择与待测预算，不宣称经过上述全部性能验证，也不保证域名分类能识别应用加密DNS或规则之外的中国网站。

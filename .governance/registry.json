@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN029 user-authorized 2026-11-12: native Windows Wintun Rust CN IPv4+domain union direct split, one DNS endpoint per direct/tunnel without fallback; server bootstrap reuses direct DNS; real config/GUI and bounded startup padding. Follow CLIENT_SPLIT_DNS_CONTRACT; one M0 main writer, preserve PLAN028 scoped limits.",
+      "goal": "PLAN029 user-authorized 2026-11-12: native Windows Wintun Rust CN IPv4+domain union direct split, one DNS endpoint per direct/tunnel without fallback; server bootstrap reuses direct DNS; real config/GUI and bounded startup padding. Follow CLIENT_SPLIT_DNS_CONTRACT; one M0 main writer, preserve PLAN028 scoped limits. 2026-11-13 amendment: contract §3B scoped owned Defender diagnosis, executable real adapters without circular qualification gates; §5 per-resource pressure isolation and bounded backend investigation.",
       "done_when": "PLAN029 exit plus CLIENT_SPLIT_DNS_CONTRACT D1-D5/P1-P2: real Windows Direct/Tunnel TCP/UDP and DNS egress, shared-CDN isolation, constant route/WFP count, canonical config/GUI/MTU1460, bounded padding, performance and owned Stop. DESIGN only is not PASS; do not reopen excluded 028 scope.",
       "assigned_task": "R0-M0-PLAN029-CLIENT-DNS-PADDING"
     },
