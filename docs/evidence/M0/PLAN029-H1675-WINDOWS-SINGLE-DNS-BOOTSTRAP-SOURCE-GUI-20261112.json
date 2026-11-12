@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1676",
+  "observed_at": "2026-11-12",
+  "classification": "PASS_SCOPED_WINDOWS_GO_SOURCE_AND_TRUE_WINFORMS_CLI_CONFIG_ONLY",
+  "source_sha": "cc4b374529557934825c79e21ec2c1c91db34871",
+  "action_source": {
+    "run_id": 43221547201,
+    "status": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43221547201"
+  },
+  "action_gui": {
+    "run_id": 43221547196,
+    "status": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43221547196"
+  },
+  "verified": [
+    "original Go overlay/manifest source lock",
+    "Windows native V4 CLI compiled",
+    "PLAN029 Windows DNS codec/invalid resolver pure unit",
+    "real WinForms/CLI 2 single DNS persisted config/1460 outer derived inner read-only source-only"
+  ],
+  "not_run": [
+    "real signed OS DNS captured bootstrap/reconnect/wake",
+    "Rust Wintun native CN+domain direct TCP/UDP two-way",
+    "no old WFP guard four-stage product OS WAL",
+    "real DNS tunnel QNAME FakeIP/physical separate resolver",
+    "startup padding flows cost/MTU/CPU RSS/latency"
+  ],
+  "preserved_fails": [
+    {
+      "source": "9d214f3585a2aab36b4b48125679cd3c2d8b6878",
+      "windows_go_run": 43220830074,
+      "windows_gui_run": 43220830203,
+      "reason": "missing Go import block in H1674"
+    },
+    {
+      "source": "698af424bd743b6f0e1d33100af8f6e52075b31e",
+      "run": 43218230969,
+      "reason": "real signed Wintun no-WFP TCP SYN-ACK missing, root undetermined"
+    }
+  ],
+  "original_028_closeout": "scoped only, ACK/independent Windows L3/human signed GUI excluded"
+}

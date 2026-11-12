@@ -53,6 +53,10 @@ mod v4_mtu_budget_ffi;
 /// Unit-testable without Npcap, Wintun or Go; no new crypto owner.
 #[cfg(any(target_os="windows", test))]
 mod windows_lane_lifecycle;
+// PLAN029 bounded cold-compiled IPv4/CN-domain split decisions shared by
+// Normal and Game; product Wintun/direct binding is qualified separately.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_split;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

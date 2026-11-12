@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1673,
-  "checkpoint_sha": "698af424bd743b6f0e1d33100af8f6e52075b31e",
+  "sequence": 1676,
+  "checkpoint_sha": "cc4b374529557934825c79e21ec2c1c91db34871",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1673: dual single DNS real WinForms/source config PASS_SCOPED; signed no-WFP Wintun Direct TCP real SYNACK FAIL twice; native four-stage no-WFP owner, Rust Direct UDP/TCP/CN QNAME selective FakeIP and padding still OPEN",
+  "current_task": "PLAN029 H1676: H1675 Windows Go+WinForms SOURCE cc4b PASS_SCOPED, Rust shared split decision in new source pending G2, signed Direct TCP kernel SYNACK FAIL two runs; no-WFP product WAL/FakeIP DNS/Direct IO/padding OPEN",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Do not rerun Windows SYN-only tests or infer filter cause from failed PowerShell profile. Audit actual old WFP guard dependencies in product transaction/stages/receipts to implement explicit no-WFP native owned lease/MTU/DNS/routes v2 WAL and exact legacy-owned cleanup; develop shared Rust native CIDR+DNS decision and bound direct IO, then one focused signed Windows actual Direct capability scenario. Keep Go cold and only Rust hot. Source-locked independent Actions.",
+  "next_action": "Collect G2 Rust plan029_split unit test and Windows source qualification. Then main implementation priority: true no-legacy-WFP four owned stages with exact WAL and old-owned-WFP one-shot recovery, Rust Wintun ingress shared split -> real Direct UDP/TCP async sockets and QNAME/FakeIP only after mandatory native TCP feasibility resolution. Do not rerun H1672 SYN-only seed or 028 full matrix; no 030 activation.",
   "unverified": true,
-  "last_tested_source": "698af424bd743b6f0e1d33100af8f6e52075b31e",
+  "last_tested_source": "cc4b374529557934825c79e21ec2c1c91db34871",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
+    "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -25,8 +25,9 @@
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1669-SIGNED-WINTUN-TCP-KERNEL-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1670-GUI-SINGLE-DNS-MIGRATION-SOURCE-ONLY-20261112.json"
+    "docs/evidence/M0/PLAN029-H1670-GUI-SINGLE-DNS-MIGRATION-SOURCE-ONLY-20261112.json",
+    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1673 source-locked H1672 action43218230969 FAIL: signed Wintun /32 live, native Windows same-host TCP listener self-connect/accept PASS, injected Wintun SYN matched TCP frames=0 for 6s, read-only firewall query failed. No Defender or WFP modifications, cause undetermined and no smoltcp selected. H1670 SOURCE32e46c action43216988261 real WinForms and real Go CLI dual single DNS and retired dns4 migration PASS_CONFIG_ONLY; H1667 source compiled, H1668 old028 generic manifest fanout narrowed. Contract §3A no legacy WFP, CN IP+domain FakeIP/real Rust direct/tunnel, D1–D5 and padding still NOT_QUALIFIED. PLAN028 scoped gaps unchanged."
+  "partial_summary": "H1675 SOURCE cc4b after H1674 missing-import FAIL: Windows Go source Action43221547201 SUCCESS, WinForms/real CLI Action43221547196 SUCCESS scoped. H1676 new Rust pure shared IP interval/route-mode/DNS purpose/unknown FakeIP drop/flow pin code submitted for G2 tests, not connected to true native Wintun. H1672 real signed TCP SYNACK absent even though kernel local socket self-connect PASS: UNKNOWN Windows filter; preserve FAIL. Four-stage no WFP WAL, Rust real direct IO/DNS and padding unfinished. M0 one writer, PLAN028 scoped exclusions retained."
 }
