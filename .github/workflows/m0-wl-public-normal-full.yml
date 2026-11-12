@@ -24,6 +24,7 @@
 # PLAN026 source-frozen actual signed NPF/Wintun historical Normal→Fixed→Auto→Game2 counterexample after cheap Go/Rust 40883126839 all green.
 # PLAN028 H1163: one impacted-SOURCE original signed Windows Npcap/Wintun↔WSL2 NORMAL physical .1→.9 reauth/MTU/UDP/TCP/Stop; no seven-mode or perf replay. Triggered by [plan028-win-physical-owned] on this workflow only.
 # PLAN028 H1173: independently run signed Game4FEC6 original physical source4 without altering other-mode qualification.
+# PLAN028 H1652: one current-source true signed Windows AutoLease AES256 + four original Linux independent AEAD clients in a single 150s mixed-loss0 kernel TCP/UDP scene. Commit message marker [plan028-h1581-win-auto-aes-mixed-150s]; preserve actual source hashes, first deliveries, native Stop; no default change.
 name: M0 Windows Linux original native whole-wiring capability and functional entry
 # S45 frozen original M0 source candidate: one real seven-mode functional batch.
 # Explicit [wiring-full] push only; manual N0 disabled, no extreme performance.
