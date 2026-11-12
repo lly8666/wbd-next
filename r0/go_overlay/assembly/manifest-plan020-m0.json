@@ -1446,6 +1446,18 @@
       "path": "internal/v4productcli/mixed_peer_persona_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/mixed_peer_persona_linux_test.go",
       "result_blob": "8d43a15a97f9085d4496e1ecf5b8019d9203962a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/native_dns_bootstrap_windows.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
+      "result_blob": "f50f0eda379e81a906b755e15509ea4ba7f7ead7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/native_dns_bootstrap_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows_test.go",
+      "result_blob": "ccce2996192d26367b7b313608a5dcca0d978423"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
