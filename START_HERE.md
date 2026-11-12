@@ -4,7 +4,7 @@
 
 源码、计划、进度均在 `main`。先读本页、[AGENTS](AGENTS.md)、[PROJECT_CHARTER](PROJECT_CHARTER.md)、[M0长期提示](docs/prompts/M0.md)、[registry](.governance/registry.json)、[M0 cursor](.governance/workstreams/M0/cursor.json)；只核checkpoint后相关增量与在途Actions，补中断遗漏，不重复派发。
 
-当前执行：[028接续提示](docs/prompts/M0-PLAN028.md) → [028功能范围](docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md) + [专项验收](docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md)。已完实现一笔带过，历史细节遇问题再查；状态/精确SOURCE以cursor及evidence为准。029/030入口在[移植总览](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)，不能因本次收尾授权自动新增功能。
+当前状态：028 范围收口／M0 cursor 暂停待 029；新 agent 得到用户单独启动后读 [029接续提示](docs/prompts/M0-PLAN029.md) 和 [移植总览](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)，先在同一 main 单写者体系登记029。旧028的范围与未通过项只查[验收专项](docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md)和收口证据，不能当作已全验。
 
 **长期硬门**：[TLS建链契约](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)，真实TLS前禁止私有前导，允许预共享route-key；旧WB-R1功能PASS不证明外观合格。[MTU契约](docs/architecture/MTU_CONTRACT.md)，用户外层完整IPv4 MTU默认1460B、不含L2，1500仅显式最大值，内层由Rust派生并由OS应用/读回。同NIC/IP有效MTU变化也需进入现有重认证流程；不能恢复旧“忽略MTU变化”的提示。
 

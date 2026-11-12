@@ -4,30 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1656,
-  "checkpoint_sha": "7dadf1eceff5f0b110133282f0a6b8de97e52c62",
-  "progress": "in_progress",
-  "task_id": "PLAN028-H1656-ONE-AUTO-DAMAGE-EXACT-FORMAL-527-GUI-IDENTICAL-ISAL",
-  "current_task": "H1656: H1654 native target43169764040 FAIL before network from obsolete no-ISA-L manifest branch; H1655 target43170379045 FAIL prebusiness from exact Rust DLL SHA mismatch: formal GUI SOURCE527 DLL SHA3973 vs rebuilt sourcea2ea DLL SHA d9fd, Go edbb same. Both official ZIP manifests independently read and DLL SHA verified; no cause guessed. Freeze final test product SOURCE527 official build43161652596 and exact GUI packaged edbb+3973; pin target prebuilt allowlist with actual byte hashes and retrigger only one Normal Auto 30%/250ms outer1460. No product changes, raw FAILs intact, no native PASS yet. GUI latest43167444547 and original seven-mode signed43161652596 SUCCESS. PLAN028 IN_PROGRESS.",
-  "why_now": "Exact formal GUI signed DLL differs from later identical-source rebuilt DLL; no cross-binary proof substitution. Reuse same official SOURCE527 for final L2 highloss.",
-  "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1656 wrapper+native target source527 full original TLS/Rust/Npcap/real app/Stop and artifact SHA. Then concise coverage inventory/feature cards+M0 prompt/PLAN028 status; residual GUI-origin signed OS, lack independent Win A/B/C L3 and failure-inclusive one-way p99 must remain clear, no unsupported closeout. Skip nearMTU/multiple WinWintun; 029/030 OOS.",
+  "sequence": 1657,
+  "checkpoint_sha": "d700b5337380d7133dfc9306ca47844175c797d7",
+  "progress": "paused",
+  "task_id": "PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT",
+  "current_task": "PLAN028 scoped delivery CLOSED for this user-authorized handoff; no general product/L3/ACK signoff; PLAN029 awaits fresh agent activation.",
+  "why_now": "Latest formal SOURCE527 signed Auto default1460 highloss native Action43171331954 SUCCESS; prior seven modes, GUI and heterogeneous client MTU scoped evidence already available; avoid unbounded repeat matrix.",
+  "done_when": "SCOPED_CLOSED recorded; full product acceptance NOT_QUALIFIED for ACK, GUI-origin OS, independent Windows L3, one-way p99. New PLAN029 task must be separately activated by user.",
+  "next_action": "Do not redispatch 028. Fresh agent for PLAN029 reads H1657 evidence, START_HERE and M0-PLAN029, then atomically assigns 029 in registry/cursor when user activates it.",
   "unverified": true,
   "last_tested_source": "52767d183b61eaf2621d967b16e85e644b1de428",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json",
-    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json"
+    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
+    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json",
+    "docs/evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
-    "AGENTS.md",
-    "docs/prompts/M0.md",
+    "docs/prompts/M0-PLAN029.md",
+    "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/devlog/M0/20261112-PLAN028-H1654-SOURCE527-FORMAL-GUI-PACKAGE-AND-ONE-CURRENT-AUTO-DAMAGE.md",
-    "docs/devlog/M0/20261112-PLAN028-H1655-CURRENT-ISA-L-REUSE-PIN-REPAIR.md",
-    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json"
+    "docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md",
+    "docs/devlog/M0/20261112-PLAN028-H1657-USER-SCOPED-CLOSEOUT-PLAN029-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "Current SOURCE527 formally compiled Windows Go edbb+Rust ISA-L 3973 and Linux original server; 7 signed real TCP/UDP modes+Stop native PASS short legacy1400, plus 354 GUI VM checks+read-only buttons PASS scoped same Go. Older SOURCE8a seven Win 30%/250ms separate, five native 180s strict original replay scoped PASS (old action FAIL retained). GUI-origin signed network/open p99/independent Windows L3 remain; do not extend 029/030."
+  "partial_summary": "USER_AUTHORIZED_SCOPED_CLOSED, not L0-L3 full PASS. Current SOURCE527 real signed 7 modes short and default1460 Normal Auto 30%/250ms PASS_SCOPED; formal GUI identical signed Go/Rust 354 checks FAKE network, GUI-origin E2E NOT_RUN. Older SOURCE8a mixed Windows/Linux 1460/1280 and 5-client weaknet PASS_SCOPED. ACK OPEN; independent Windows L3 unavailable; near-innerMTU and same-Win dual Wintun user-excluded. 029 pending fresh agent."
 }

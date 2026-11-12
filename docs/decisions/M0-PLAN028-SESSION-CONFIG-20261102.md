@@ -1,6 +1,11 @@
 # PLAN028｜简化认证、单端口多客户端与配置接线
 
-IN_PROGRESS（2026-11-12：SOURCE8a31375e Windows签名单Wintun＋四Linux异构三AEAD、同账号独立安装及自动/32真实150s业务/Windows先Stop其他继续/六owner清理 H1601 PASS_SCOPED；同SOURCE Win真实108.48s idle后60s双向UDP/TCP+Stop H1623 PASS_SCOPED。Windows独立DUT/控制面L3无合格A/B/C拓扑、高损全业务和受影响最新七模式/Win物理AutoIP path不齐；近innerMTU旧环境阻断且用户此前跳过；单Windows宿主双Wintun旧H1587 route CAS FAIL保留不支持。不能标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
+**最新决定（2026-11-12 H1657）：PLAN028 `USER_AUTHORIZED_SCOPED_CLOSED`，不是完整原 L0–L3 或产品生产验收 PASS。** 用户在审阅最新测试后授权本轮一次性读写快速收口，并计划由全新 agent 单独启动 PLAN029。主线正式 SOURCE `52767d183b61eaf2621d967b16e85e644b1de428` 七模式真实 Windows/Linux 签名 Npcap/Wintun、标准 Go TLS/Rust M4、双向 UDP/TCP/Stop 已有短程 PASS_SCOPED；同一正式 Go/Rust 构件的 Normal Auto 默认 outer1460、双向30%/250ms、60秒10Mbps 弱网 [Action43171331954](https://github.com/lly8666/wbd-next/actions/runs/43171331954) SUCCESS。原跨 OS 5 客户端异构 outer1460/1280、三 AEAD 与 ARM 真实物理 MTU 变更分别按旧 SOURCE PASS_SCOPED 继承；已验功能无需重复全矩阵。
+
+**明确留档的未验/例外：** Linux FakeTCP ACK 反馈仍 OPEN（用户另列，不得标已修）；真人 GUI 点击→原生签名网络 OS Applied/Stop 尚 NOT_RUN，VM FakeSession 不等价；Windows 独立 A/B/C 1800s L3 环境缺失 `ENVIRONMENT_BLOCKED/NOT_QUALIFIED`，不是已通过或用户此前明确跳过；失败包包含的一向 p99/完整 L2 高载未全面覆盖；近内层 MTU 极限包、同 Win 双 Wintun 用户已跳过（H1587 旧真实 FAIL 保留）。禁止放松 TLS/账户隔离/generation/MTU/owned Stop 硬门；完整版验收合同仍由 [专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)保存，收口只代表这次用户接受的*限定交付范围*。
+
+完整证据及后续保护：[H1657 原始 SOURCE/Action/未验项](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。M0 不自动开启029；新 agent 得到用户启动后进入 [M0-PLAN029](../prompts/M0-PLAN029.md)。
+
 
 ## 0. 施工边界：补接入与交接，不重做架构协议
 

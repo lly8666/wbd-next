@@ -1,5 +1,14 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
+## H1657｜用户授权限定范围收口；最新正式签名 Auto 1460 高损通过（2026-11-12）
+
+**交付状态 `USER_AUTHORIZED_SCOPED_CLOSED`，不是原L0–L3全部达标或生产级PASS。** 正式SOURCE `52767d183b61eaf2621d967b16e85e644b1de428`：真实[七模式 Windows/Linux 签名 TLS/Rust UDP/TCP/Stop Action43161652596](https://github.com/lly8666/wbd-next/actions/runs/43161652596) PASS_SCOPED；[GUI Win2025 与正式 Go/Rust 完全相同构件 Action43167444547](https://github.com/lly8666/wbd-next/actions/runs/43167444547)构建/49字段、FEC七档×三模式、三AEAD、保存与按钮真实WinForms VM SUCCESS（会话按钮为FakeSession）；真正 GUI点击起网仍 NOT_RUN。
+
+[H1656 最新真实 Auto 弱网 Action43171331954](https://github.com/lly8666/wbd-next/actions/runs/43171331954) **SUCCESS**，精确正式SOURCE527 Go EXE `edbb9715…f582` 和 Rust ISA-L DLL `3973cdad…9357`：outer1460、两端inner1375、Normal Auto、双向各10Mbps、双向30%实际丢包、单程250ms、60s；Windows/Linux首次交付0.997268/0.997779，真实Go TLS/Rust、Wintun/Npcap/TUN、UDP/TCP、双方owned Stop合格，未测失败包包含一向p99。之前H1654/H1655同族旧source/构件预检Action失败不删除。原ZIP artifact13921783275，上传SHA256 `44491311b6c1a925fc60382d0ef2fc364d6f74fca5cd3133cd2b508077902bf6`。
+
+异构MTU无需重跑：H1601 SOURCE8a同服单Win+四Linux outer1460×4/1280×1真150s/636494双向首次UDP及TCP/Stop PASS_SCOPED；H1644同SOURCE五Linux outer1460×4/1280×1真180s严格离线复核PASS_SCOPED（原Action FAIL仍留）；H1386 ARM原五端单客户端物理MTU1500→1280冷TLS重认证PASS_SCOPED。**仍保留** ACK OPEN、GUI真人签名OS Applied/Stop NOT_RUN、独立A/B/C Windows1800s L3 ENVIRONMENT_BLOCKED、单向p99/完整高载测量 NOT_QUALIFIED；近innerMTU边界包与同宿主双Wintun用户已跳过且原旧FAIL保持。此限定范围收口不让未验项自动转入029成为已完成。完整 [H1657 结构化来源与限制](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。
+
+
 
 ## H1650｜当前SOURCE527正式Windows七模式真网络与精简GUI验收（2026-11-12）
 

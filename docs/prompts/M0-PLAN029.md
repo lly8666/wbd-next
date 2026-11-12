@@ -1,5 +1,8 @@
 # M0｜PLAN029接续提示词
 
+**前置交接（H1657，2026-11-12）**：PLAN028 已经用户授权作限定范围收口（非全L3/ACK/GUI真实起网PASS），[H1657权威证据](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。此文件是供**新 agent**启动 029 的入口，不表示本次028收尾已替用户自动激活029。新 agent 接到启动指令后，先核 main/registry/cursor，再按 M0 单写者约束转换任务；直接复用经证实的 028 配置/MTU/会话接口，不重刷旧七模式。ACK未解、独立Windows L3与真人GUI签名起网未测不等于029依赖已有PASS。
+
+
 跨包红线：先读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`；预共享route-key可导入/手填，本地生成/存储/验证，不得为配置便利恢复TLS前私有交换或关闭服务器验证。
 
 你继续lly8666/wbd-next的PLAN029。读START_HERE/AGENTS、M0长期提示词、实时registry/cursor、`docs/decisions/M0-LEGACY-ROLLOUT-20261102.md`、`M0-PLAN029-CLIENT-DNS-PADDING-20261102.md`；只补checkpoint后相关增量/Actions，先收已有结果。文件存在不代表已启动，用户调用本提示词后按现有机制登记任务。

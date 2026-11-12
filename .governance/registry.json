@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN028 feature freeze and integration reliability acceptance/defect closure under docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md (user 2026-11-07). M0 chooses fixes and tests from theory plus measured VM/product capacity; retain hard contracts, progress from targeted short reproduction to coverage/pressure and finite final soak. Live source, failures, in-flight Actions and next steps belong to M0 cursor/evidence; do not repeat historical work or open unrelated features.",
-      "done_when": "PLAN028_INTEGRATION_ACCEPTANCE L0-L3 required scope complete: standard TLS/no private prelude, authenticated single-port multi-client/config/IP, seven-mode handover, native Windows/Linux path and MTU/lifecycle/Stop/isolation; known blockers closed with relevant regression, calibrated capacity and finite final soak evidence. Features/config/help match behavior. Preserve exact SOURCE and original FAIL, physical/Android NOT_RUN and H998 limited scope. No new 029/030 work without authorization.",
+      "goal": "PLAN028 user-authorized SCOPED_CLOSED H1657: original-Go/Rust Windows/Linux/ARM representative signed native functions delivered by exact SOURCE evidence; product-wide L0-L3 and GUI-origin signed OS/L3/ACK remain NOT_QUALIFIED. Await separate user start of PLAN029 on the same M0 main writer; no ongoing 028 redispatch.",
+      "done_when": "PLAN028 scoped delivery closeout recorded at docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json; preserve all original FAIL/NOT_RUN, exact SHA and hard contracts. PLAN029 not yet authorized as active registry task; fresh agent switches task only on user kickoff.",
       "assigned_task": "R0-M0-PLAN028-SESSION-CONFIG"
     },
     {

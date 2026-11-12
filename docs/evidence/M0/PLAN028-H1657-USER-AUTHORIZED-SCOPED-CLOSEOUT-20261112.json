@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1657",
+  "closeout": "USER_AUTHORIZED_SCOPED_DELIVERY_CLOSEOUT",
+  "scope_classification": "DELIVERY_SCOPE_CLOSED_WITH_RETAINED_GAPS_NOT_UNIVERSAL_PRODUCT_QUALIFICATION",
+  "acceptance_basis": "2026-11-12 user gave one-time read/write permission to close PLAN028 if latest native tests reveal no new major product blockers and plans to activate a fresh PLAN029 agent; the user previously excluded ACK work, near-inner-MTU payload probing and same-Windows-host dual Wintun. This narrows delivery scope; it is NOT waiver of authentication/integrity/MTU/owned-Stop hard safety requirements.",
+  "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "closeout_base_main_sha": "d700b5337380d7133dfc9306ca47844175c797d7",
+  "product_changes_in_closeout": false,
+  "current_formal_product": {
+    "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+    "build_action": 43161652596,
+    "action_conclusion": "success",
+    "windows_go_sha256": "edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582",
+    "windows_rust_isal_dll_sha256": "3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "seven_mode_native_action": 43161652596,
+    "seven_mode_result": "PASS_SCOPED signed Windows Npcap/Wintun + Linux Rust TLS443, UDP/TCP, Stop; sequential short modes using test-specific legacy1400",
+    "gui_formal_bundle_action": 43167444547,
+    "gui_formal_bundle_action_conclusion": "success",
+    "gui_bundle_exact_go_rust_sha_guard": true,
+    "gui_vm_scope": "354 field/config/readback and UI event checks; FakeSession for actual Connect events; signed GUI-originated network NOT_RUN"
+  },
+  "current_same_binary_weaknet": {
+    "harness_source_sha": "d700b5337380d7133dfc9306ca47844175c797d7",
+    "dispatch_wrapper_action": 43171311723,
+    "native_action_id": 43171331954,
+    "native_job_id": 131025303050,
+    "action_conclusion": "success",
+    "native_artifact_id": 13921783275,
+    "reported_artifact_zip_sha256": "44491311b6c1a925fc60382d0ef2fc364d6f74fca5cd3133cd2b508077902bf6",
+    "scenario_id": "plan028-h1632-auto-on-10m250ms30-outer1460-60s",
+    "scenario_sha256": "9a04181b20945ecdcda10e98832a24ec1d57736388538173ad17e43905fdc995",
+    "mode": "Normal Auto FEC",
+    "windows_and_linux_original_go_tls_rust_signed_native": true,
+    "windows_and_linux_owned_stop": "PASS_BOTH_OWNED",
+    "udp_tcp_native": true,
+    "outer_ipv4_mtu": 1460,
+    "both_os_inner_mtu": 1375,
+    "real_loss_pct_each_direction": 30,
+    "real_oneway_delay_ms_each_direction": 250,
+    "duration_s": 60,
+    "target_mbps_each_direction": 10,
+    "observed_mbps_windows": 9.9973,
+    "observed_mbps_linux": 10,
+    "first_delivery_fraction_windows": 0.997268,
+    "first_delivery_fraction_linux": 0.997779,
+    "auto_requested_revision": 2,
+    "auto_applied_revision": 2,
+    "oneway_p99": "NOT_MEASURED",
+    "classification": "PASS_SCOPED_REAL_WEAKNET_NOT_ALL_CONFIGS_OR_LONG_SOAK"
+  },
+  "prior_accepted_scoped_evidence": [
+    {
+      "area": "Windows+4 Linux original TLS/Rust shared server heterogeneous 1460/1280 outer intent + three AEAD + same-account + all Stop 150s",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "action": 43027983611,
+      "classification": "PASS_SCOPED",
+      "evidence": "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
+    },
+    {
+      "area": "Linux x86 five different client loss/delay 180s, 1460x4/1280x1",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "original_action": 43148997176,
+      "original_action_conclusion": "failure",
+      "offline_verification_action": 43152631016,
+      "classification": "PASS_SCOPED_OFFLINE_REJUDGED",
+      "evidence": "docs/evidence/M0/PLAN028-H1644-ORIGINAL-H1642-FIVE-NATIVE-180S-STRICT-M4-OFFLINE-PASS-20261112.json"
+    },
+    {
+      "area": "Linux ARM64 five clients 180s physical same-IP MTU 1500->1280 new TLS generation recovery and siblings",
+      "source_sha": "8fd0eb27fbc23f1491e7934baf0f4dee6a282c32",
+      "action": 42465059734,
+      "classification": "PASS_SCOPED",
+      "evidence": "docs/evidence/M0/PLAN028-H1386-SOURCE8FD0-ARM64-FIVE-CLIENT-LIVE-PHYSICAL-MTU-1500-1280-PASS-20261108.json"
+    },
+    {
+      "area": "Windows signed seven individual real 30pct/250ms cases, source-specific older binaries",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "classification": "PASS_SCOPED",
+      "evidence": "docs/evidence/M0/PLAN028-H1639-SOURCE8A-WIN-THREE-REMAINING-MODES-SIGNED-REAL-LOSS30-20261112.json"
+    }
+  ],
+  "retained_nonqualified": [
+    {
+      "area": "Linux FakeTCP outer ACK/feedback semantics",
+      "status": "OPEN_SEPARATELY_ACK_NOT_CERTIFIED",
+      "reason": "User explicitly carved ACK out of this rapid scoped closeout; no ACK fix or universal FakeTCP protocol certification claimed"
+    },
+    {
+      "area": "GUI human-origin Connect/Disconnect through signed Npcap/Wintun real OS Applied",
+      "status": "NOT_RUN",
+      "reason": "Compiled WinForms 354 checks and formal binary identity are not one true GUI-origin E2E network transaction"
+    },
+    {
+      "area": "independent controller A / Windows DUT B / external Linux C 1800s L3",
+      "status": "ENVIRONMENT_BLOCKED_NOT_QUALIFIED",
+      "reason": "No independently isolated rig; GitHub Windows Runner+WSL2 is not L3 substitute; never upgraded to PASS"
+    },
+    {
+      "area": "failure-inclusive calibrated end-to-end one-way p99, complete L2 high-load recovery",
+      "status": "NOT_MEASURED_OR_PARTIAL",
+      "reason": "Existing reported successful RTT p99 omits non-delivery; latest high-loss is a 60s scoped scenario"
+    },
+    {
+      "area": "near-inner-TUN-MTU boundary user-skipped",
+      "status": "USER_EXCLUDED_NOT_RUN",
+      "reason": "Existing mixed-client 1460/1280 functional tests PASS_SCOPED; this boundary is separate"
+    },
+    {
+      "area": "two independent Wintuns on same Windows host",
+      "status": "USER_EXCLUDED_UNSUPPORTED",
+      "reason": "Historical H1587 actual route/WAL CAS FAIL preserved"
+    },
+    {
+      "area": "full host-global Windows WFP/default-route DNS/IPv6 and public portable production acceptance",
+      "status": "NOT_QUALIFIED",
+      "reason": "True signed native local flows do not prove unrestricted global traffic capture or IPv6"
+    },
+    {
+      "area": "physical WAN/Android/jumbo/other platforms",
+      "status": "OUT_OF_SCOPE_NOT_RUN",
+      "reason": "No claimed physical release qualification"
+    }
+  ],
+  "original_failures_preserved": [
+    43169764040,
+    43170379045,
+    43148997176,
+    43001721886
+  ],
+  "handoff": {
+    "next_package": "PLAN029",
+    "state": "READY_FOR_FRESH_AGENT_USER_ACTIVATION_NOT_STARTED",
+    "new_agent_entry": "docs/prompts/M0-PLAN029.md",
+    "must_read": [
+      "START_HERE.md",
+      "AGENTS.md",
+      ".governance/registry.json",
+      ".governance/workstreams/M0/cursor.json",
+      "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json"
+    ],
+    "guard": "One M0 writer; no re-dispatch of completed 028 test family; 029 must not silently inherit missing ACK/GUI signed E2E/L3 qualifications as PASS. Keep default outer full IPv4 MTU1460, explicit1500 ceiling, Rust-derived read-only inner MTU, standard TLS pre-shared route-key and owned Stop."
+  },
+  "full_product_qualification": false,
+  "scope_delivered": true,
+  "source_or_test_changes_in_closeout": "NONE",
+  "artifact_verified": true,
+  "result": "PASS_SCOPED"
+}
