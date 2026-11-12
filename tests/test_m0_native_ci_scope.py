@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from tools.m0_native_ci_scope import is_native_path, requires_native_smoke
 
@@ -47,6 +48,15 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertTrue(requires_native_smoke("workflow_dispatch", ["README.md"]))
         for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]"):
             self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
+
+    def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        self.assertIn("native_smoke: ${{ steps.native_scope.outputs.native_smoke }}", workflow)
+        self.assertIn("if: needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
+        self.assertIn("if: always() && needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
+        self.assertIn("python -m unittest tests.test_m0_native_ci_scope -v", workflow)
+        self.assertIn("- r0/go_overlay/assembly/manifest-plan020-m0.json", workflow)
 
     def test_unknown_diff_fails_open_to_native(self):
         self.assertTrue(requires_native_smoke("push", []))
