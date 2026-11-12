@@ -1,6 +1,20 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1631 当期 Linux x86 七模式补缺已全部完成（2026-11-12）
+
+**产品二进制SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`，原Go TLS443＋Rust ISA-L共享TUN真实Linux x86 kernel；没有重编译。**此前H1621静态审计列出的三个**当期SOURCE**单项实网缺项，已经由三个独立Action真实结束并校验原ZIP/CRC及完整3个ELF hash；新[H1631源锁证据](../evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json)。历史第一/二次夹具FAIL原始Action仍保留，不改写。
+
+| 缺项模式 | 原始Native Action/ZIP SHA256 | 原 OS/TLS/Rust/真实业务及退出资格 | 未推论范围 |
+|---|---|---|---|
+| Normal Fixed6 最高 | [43135302816](https://github.com/lly8666/wbd-next/actions/runs/43135302816) **SUCCESS**，`f4da52397f9159438bae97be550dd63e2241cf612d0126ffef3b7e9dc9e1d44e` | 真实fixed6 Rust读回、自动/32、源IPv4 `.4→.9→.4`、物理1500→1280→1500、OS inner1375→1195、世代1→2→3旧代各精确Stop，Game4兄弟**80/80**真UDP持续、Normal新代**16/16** UDP、全部shared TUN Stop：**PASS_SCOPED** | 不是Windows/30%高损/单向p99 |
+| Game2 Fixed6 最高 | [43133373054](https://github.com/lly8666/wbd-next/actions/runs/43133373054) **SUCCESS**，`b5499e8ae4c1078a73745056988429a96459105fac7947d42d50db2aed64f211` | 两lane原TLS/Rust、源 `.2→.9→.2` 物理MTU变化、inner1358→1178，三世代旧代精确Stop、Game4/Normal兄弟各窗口真UDP**80/80**，Game2新代**16/16**真UDP与最终Stop：**PASS_SCOPED** | 不是Windows当前-source FEC2或全性能压测 |
+| Game4 Off | [43135302756](https://github.com/lly8666/wbd-next/actions/runs/43135302756) **SUCCESS**，`52d117688209e475ced0c916b8a78c70fc03814dc8050a181fa82abf10f0934d` | 四lane FEC实际Off、源 `.3→.9→.3`、inner1373→1193、世代1→2→3/Stop，Normal兄弟首/次切 **48/80**真UDP，Game4换代**32/16**真UDP、各own Stop：**PASS_SCOPED** | 非Windows L3或近内层MTU数据包 |
+
+其余四模式当前SOURCE已有可复用证据：Normal Off/Auto、Game2 Off、Game4 Fixed6；**七模式按原生Linux x86代表场分账已覆盖，而不是每模每平台全新300s/1800s矩阵。**既定默认outer1460/FEC Off/ChaCha/outer-repair on/Linux rotate0/Win 15/90/idle0不改。独立Windows A控制/B DUT/C外部Linux长测**INFRA_BLOCKED**不派；near-derived-innerMTU和同Windows宿主双Wintun用户已跳过且旧FAIL保留。
+
+**另行独立一场 Windows签名Npcap/Wintun＋真实Linux S8a 10Mbps双向、30% loss/250ms单程、60秒正式业务**以H1631 wrapper新建精确outer1460场景、复用H1600成功构件；其最终目标Action仍须取原始严格报告/第一失败/Stop才可记PASS，触发/包装不算Windows网络已通过。该短场不替代五客户端600s容量或独立DUT L3。
+
 ## H1626 2026-11-12 CURRENT main source-locked coverage (replaces stale unverified labels below)
 
 Formal original Go TLS443 + Rust ISA-L product binary SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346, build Action 43027983611; this evidence/handoff correction is based on main HEAD 60006d13ece22506c4ef9ae930270b5a4fa173aa, which is NOT a newly built product binary. No product, default or native test changed. Prior unsuccessful Actions are retained.

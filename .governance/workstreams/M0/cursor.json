@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1630,
-  "checkpoint_sha": "b62d940574453b7df4a9a689062c2f85d343c3d8",
+  "sequence": 1631,
+  "checkpoint_sha": "4b6b13097f004855c99fea5a21076ace06d4245f",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1630-CORRECT-MODE-RECEIPT-ORACLES-AND-BOUNDED-M0-CURSOR",
-  "current_task": "H1630: Original H1629 Action43134194491 NormalFixed6 had true 80+80 sibling UDP, physical double path MTU and explicit source-locked FEC6, but old fixture post-business server receipt counted 3 initial READY rather than actual 1 initial +2 verified B_CLIENT_READY; old Action stays FAIL. Original H1629 Action43134194597 Game4Off had true first physical source/OS and second 80 sibling true UDP, then shell retained 16-count old oracle; old Action FAIL preserved. H1630 correct only two derived fixture assertions (stronger actual 1+2 verified admission, all80 real UDP). Governance H1629 source b62d Actions43134194446 and 43134194457 FAIL due cursor context_refs10 > max8; restore <=8. Product SOURCE8a binaries and user defaults untouched. New two independent Actions NOT_RUN until terminal; Game2 Fixed6 H1628 SUCCESS scoped.",
-  "why_now": "Real original native logs show fixture oracle mismatch, not grounds to report complete or change protocol. Governance max_cursor_refs is 8, preserve hard max and restore bounded hot handoff without removing historical evidence.",
+  "task_id": "PLAN028-H1631-X86-SEVEN-MODE-SOURCE8A-SCOPED-PASS-AND-ONE-WIN30-250-SIGNED-DISPATCH",
+  "current_task": "H1631: After two targeted source-locked fixture repairs, current SOURCE8a x86 native Normal Fixed6 Action43135302816, Game2 Fixed6 Action43133373054, Game4 Off Action43135302756 each separate SUCCESS, exact zip CRC+SHA and all old generation/true OS path, sibling UDP and Stop pass; older four original test Actions remain FAIL. Current-SOURCE x86 7-mode representative covered with H1613/H1617/H1609. H1630 governance Action43135302735 and maintenance43135302796 SUCCESS. New H1631 one independent signed Windows+Linux 60s 30%loss/250ms/outer1460 Normal Off test using H1600 source8a prebuilt wrapper will dispatch on push, not PASS until target Action and report verified. No product change.",
+  "why_now": "User requested all feasible environments parallel targeted tests; source8a x86 mode gaps qualified; separate available Windows signed short damaged native business challenge remains distinct from missing independent 1800s L3 setup.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect the two independent H1630 Actions plus governance/maintenance and exact original artifacts, prove all owner Stop and realistic path/MTU/kernel UDP on unchanged SOURCE8a. Preserve old FAILs. Do not start Windows 1800s without isolated A/B/C DUT. Then assess remaining feasible Windows short/ARM64 current-source and higher damage only within VM capacity; exclude near MTU/dual Windows Wintun per user and 029/030.",
+  "next_action": "Collect H1631 wrapper and target workflow_dispatch Windows signed Npcap/Wintun + Linux original Rust true 30pct250ms kernel app result, report first-delivery/missing/time p99/CPU RSS when available; distinguish true product loss vs host/fixture, Stop. Do not call wrapper success native PASS. Other Win auto-IP path/GUI and pressure envelope need explicitly scoped evidence, but independent Windows L3 A/B/C unavailable skip. User skips near inner MTU and 2 same-host Wintun. Preserve original failures and 029/030 OOS.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -19,7 +19,8 @@
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
     "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json",
-    "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json"
+    "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
+    "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -27,9 +28,9 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
-    "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1629-GAME2FIXED6-PASS-AND-SIBLING-WINDOW-REPAIR.md",
-    "docs/devlog/M0/20261112-PLAN028-H1630-FROZEN-BIN-NATIVE-MODE-ORACLES-AND-CURSOR.md"
+    "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
+    "docs/devlog/M0/20261112-PLAN028-H1630-FROZEN-BIN-NATIVE-MODE-ORACLES-AND-CURSOR.md",
+    "docs/devlog/M0/20261112-PLAN028-H1631-CURRENT-SOURCE-X86-SEVENMODE-AND-ONE-WIN30-WEAKNET.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

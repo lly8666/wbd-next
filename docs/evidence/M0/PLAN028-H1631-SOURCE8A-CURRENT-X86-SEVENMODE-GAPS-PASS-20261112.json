@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1631",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "result": "PASS_SCOPED_SOURCE8A_X86_ORIGINAL_GO_RUST_THREE_REMAINING_MODE_GAPS_REAL_UDP_PATH_AND_OWNED_STOP",
+  "product_build_action_id": 43027983611,
+  "product_binary_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "harness_product_diff_unchanged": true,
+  "product_binary_rebuilt": false,
+  "binary_sha256": {
+    "linux_x86_64_original_go_client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "linux_x86_64_original_go_server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "linux_x86_64_rust_isa_l_so": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "native_backend": "original Go standard TLS443 cold and original Rust M4 shared-TUN kernel; pinned ISA-L feature true, native RS6 runtime usage only when actual FEC quanta eligible",
+  "scenes": [
+    {
+      "mode": "Normal Fixed highest profile6",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "harness_source_sha": "4b6b13097f004855c99fea5a21076ace06d4245f",
+      "action_id": 43135302816,
+      "job_id": 130909100499,
+      "overall_conclusion": "success",
+      "status": "PASS_SCOPED",
+      "raw_artifact_id": 13906689058,
+      "zip_sha256": "f4da52397f9159438bae97be550dd63e2241cf612d0126ffef3b7e9dc9e1d44e",
+      "zip_crc_all_members_verified": true,
+      "protected_real_tun_lease": "10.66.0.197",
+      "physical_source4_sequence": [
+        "10.25.0.4",
+        "10.25.0.9",
+        "10.25.0.4"
+      ],
+      "physical_mtu_sequence": [
+        1500,
+        1280,
+        1500
+      ],
+      "outer_complete_ipv4_mtu": 1460,
+      "inner_os_mtu_initial": 1375,
+      "inner_os_mtu_after_shrink": 1195,
+      "authenticated_generation_sequence": [
+        1,
+        2,
+        3
+      ],
+      "exact_stopped_old_generations": [
+        1,
+        2
+      ],
+      "game4_stable_generation": 1,
+      "game4_true_sibling_udp_each_path": [
+        80,
+        80
+      ],
+      "normal_true_postevent_udp": [
+        16,
+        16
+      ],
+      "real_shared_server_one_reader_stop": true,
+      "scope_limit": "one Linux x86 native path triple generation; not Windows or full loss30/250ms"
+    },
+    {
+      "mode": "Game2 fixed6 highest",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "harness_source_sha": "d6d498fcba06d99797f27b0f817c03660c7a85e3",
+      "action_id": 43133373054,
+      "job_id": 130902677975,
+      "overall_conclusion": "success",
+      "status": "PASS_SCOPED",
+      "raw_artifact_id": 13906910222,
+      "zip_sha256": "b5499e8ae4c1078a73745056988429a96459105fac7947d42d50db2aed64f211",
+      "zip_crc_all_members_verified": true,
+      "physical_source4_sequence": [
+        "10.25.0.2",
+        "10.25.0.9",
+        "10.25.0.2"
+      ],
+      "physical_mtu_sequence": [
+        1500,
+        1280,
+        1500
+      ],
+      "outer_complete_ipv4_mtu": 1460,
+      "inner_os_mtu": [
+        1358,
+        1178,
+        1178
+      ],
+      "authenticated_generation_sequence": [
+        1,
+        2,
+        3
+      ],
+      "exact_stopped_old_generations": [
+        1,
+        2
+      ],
+      "true_postevent_udp": [
+        16,
+        16
+      ],
+      "game4_and_normal_siblings": true,
+      "true_sibling_udp_each_path": [
+        [
+          80,
+          80
+        ],
+        [
+          80,
+          80
+        ]
+      ],
+      "shared_tls443_and_one_reader_stop": true,
+      "scope_limit": "only native Linux x86; not Windows signed FEC6 current-source all traffic"
+    },
+    {
+      "mode": "Game4 Off",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "harness_source_sha": "4b6b13097f004855c99fea5a21076ace06d4245f",
+      "action_id": 43135302756,
+      "job_id": 130909099895,
+      "overall_conclusion": "success",
+      "status": "PASS_SCOPED",
+      "raw_artifact_id": 13907805078,
+      "zip_sha256": "52d117688209e475ced0c916b8a78c70fc03814dc8050a181fa82abf10f0934d",
+      "zip_crc_all_members_verified": true,
+      "physical_source4_sequence": [
+        "10.25.0.3",
+        "10.25.0.9",
+        "10.25.0.3"
+      ],
+      "physical_mtu_sequence": [
+        1500,
+        1280,
+        1500
+      ],
+      "outer_complete_ipv4_mtu": 1460,
+      "inner_os_mtu": [
+        1373,
+        1193,
+        1193
+      ],
+      "authenticated_generation_sequence": [
+        1,
+        2,
+        3
+      ],
+      "exact_stopped_old_generations": [
+        1,
+        2
+      ],
+      "first_path_new_game4_udp": 32,
+      "second_restored_new_game4_udp": 16,
+      "normal_stable_generation": true,
+      "normal_sibling_first_and_second_udp": [
+        48,
+        80
+      ],
+      "one_shared_tls443": true,
+      "shared_tun_final_stop": true,
+      "scope_limit": "signed Windows Game4 Off on unchanged product not rerun; CPU/p99/high-loss not covered"
+    }
+  ],
+  "reused_other_current_product_source_modes": [
+    "Normal Off H1617 action43062378203",
+    "Normal Auto H1613 Action43050188977 and43053067266",
+    "Game2 Off H1617 Action43061710360",
+    "Game4 fixed6 H1609 Action43046531950"
+  ],
+  "prior_failures_preserved": [
+    {
+      "mode": "Normal Fixed6",
+      "actions": [
+        43133244964,
+        43134194491
+      ],
+      "classification": "first sibling window too short; second incorrect initial READY count vs authenticated B_CLIENT_READY; original Action conclusions FAIL retained"
+    },
+    {
+      "mode": "Game4 Off",
+      "actions": [
+        43133244743,
+        43134194597
+      ],
+      "classification": "first sibling window too short; second stale original shell 16-UDP oracle despite 80 real echoes; original Action conclusions FAIL retained"
+    },
+    {
+      "kind": "governance",
+      "actions": [
+        43134194446,
+        43134194457
+      ],
+      "classification": "H1629 cursor context_refs10 exceeded unchanged max8, original failures retained; H1630 bounded cursor and new governance actions passed"
+    }
+  ],
+  "governance_checks_h1630": [
+    {
+      "action_id": 43135302735,
+      "conclusion": "success"
+    },
+    {
+      "action_id": 43135302796,
+      "conclusion": "success"
+    }
+  ],
+  "scope_restrictions": [
+    "Seven original per-mode Linux x86 current-SOURCE representative business/rotation evidence, NOT all combinations of 30%/250ms or Windows seven modes",
+    "Product FEC remains Off unless explicitly fixed6 or Normal Auto, cipher ChaCha default; test-time fixed6 not product default",
+    "Healthy siblings and first-delivery unique real kernel UDP verified, per-worker CPU/RSS queue-age failure-aware p99 not measured in these short native fixtures",
+    "Windows independent A/B/C rig 1800s L3 environment unavailable, skip, not PASS",
+    "User previously skipped same-Windows-host two-Wintun and near-derived-inner-MTU; historical failure records retained",
+    "Android, physical public WAN, PLAN029/030 outside scope"
+  ],
+  "artifact_verified": true
+}

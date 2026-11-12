@@ -1,0 +1,67 @@
+name: PLAN028 H1631 one Windows signed Win1 Linux genuine loss30 delay250 business prebuilt dispatch
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-h1631-windows-loss30-250-prebuilt-dispatch.yml"]
+permissions: {contents: read, actions: write}
+jobs:
+  one-source-locked-original-go-rust-weaknet-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRODUCT_SOURCE: 8a31375e36bb6a93860c5579e64b4a39d0b6e346
+      BUILD_ACTION: "43027983611"
+      SCENE: scenarios/plan028-h1631-normal-on-10m250ms30-outer1460-60s.json
+      BASE_SCENE: scenarios/wl-outer-repair-10m-250ms-loss30-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify unchanged real product and one canonical damaged scenario before dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" && test "$GITHUB_REF_NAME" = main
+          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          test "$(git rev-parse FETCH_HEAD)" = "$PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py "$BASE_SCENE")"
+          test -z "$delta" || { echo "H1631 source-locked binary or original scenario changed: $delta" >&2;exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_ACTION" |
+            python3 -c 'import json,sys,os; x=json.load(sys.stdin);assert x["head_sha"]==os.environ["PRODUCT_SOURCE"] and x["conclusion"]=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_ACTION/artifacts?per_page=100" |
+            python3 -c 'import json,sys; d=json.load(sys.stdin); a={z["name"] for z in d["artifacts"] if not z["expired"]};assert "m0-plan024-linux-product" in a and any(n.startswith("m0-wl-windows-product-binaries-") for n in a)'
+          python3 - <<'PY'
+          import os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          from tools.m0_wl_native_mtu_contract import configured_native_test_mtu
+          s=read_scenario(os.environ['SCENE']); old=read_scenario(os.environ['BASE_SCENE'])
+          s2=dict(s); o2=dict(old); digest=s2.pop('scenario_sha256');o2.pop('scenario_sha256')
+          o2['scenario_id']='plan028-h1631-normal-on-10m250ms30-outer1460-60s'
+          o2['tun_mtu']=1460
+          assert s2==o2,'single-source original scenario differs beyond ID and corrected real outer1460'
+          assert s['public_mode']=='normal' and s['duration_s']==60 and s['tun_mtu']==1460
+          assert s['warmup_s']==5 and s['drain_s']==10 and s.get('lifecycle_idle_s',0)==0
+          for direction in ('windows_to_linux','linux_to_windows'):
+              d=s[direction]
+              assert d['offered_mbps']==10 and d['delay_ms']==250 and d['loss_pct']==30
+              assert max(p['udp_payload_bytes'] for p in d['packet_mix'])==1200
+          os.environ['WBD_WL_NATIVE_OUTER_MTU_REQUEST']='default1460';os.environ['WBD_WL_TUN_MTU']='1460'
+          assert configured_native_test_mtu()==1460
+          print('H1631_ONE_SIGNED_WINDOWS_NORMAL_OFF_LOSS30_DELAY250_SOURCE_SCENE_VALID',digest,flush=True)
+          PY
+      - name: Dispatch one original signed Windows Wintun and Linux server true kernel damaged scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This wrapper is never native PASS. Only the separately logged
+          # target signed Npcap/Wintun/OS + original Go TLS/Rust result may qualify.
+          matches="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            python3 -c 'import json,sys,os; d=json.load(sys.stdin); print(" ".join(str(x["id"]) for x in d["workflow_runs"] if x.get("head_sha")==os.environ["GITHUB_SHA"] and x.get("status") in ("queued","in_progress","completed")))' )"
+          test -z "$matches" || { echo "H1631_EXISTING_SOURCE_NATIVE_ACTION_NO_DUPLICATE runs=$matches";exit 0; }
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f public_mode=normal -f native_outer_mtu=default1460 \
+            -f run_n0=false -f outer_repair=on \
+            -f "perf_scenario_file=$SCENE" \
+            -f "perf_reuse_run_id=$BUILD_ACTION" \
+            -f "perf_binary_source_sha=$PRODUCT_SOURCE"
+          echo H1631_DISPATCH_ONE_REAL_WINDOWS_SIGNED_AND_LINUX_30PCT_250MS_SCOPED_NOT_YET_PASS
