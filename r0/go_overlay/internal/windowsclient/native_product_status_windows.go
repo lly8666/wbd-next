@@ -22,6 +22,7 @@ type N4NativeStateSnapshot struct {
     Phase string `json:"phase,omitempty"`
     RecordCount int `json:"record_count"`
     GuardQualified bool `json:"guard_qualified"`
+    TransactionSchema string `json:"transaction_schema,omitempty"`
 }
 
 const N4NativeStateSchema = "wbd-native-network-disk-status/v1"
@@ -66,6 +67,7 @@ func N4NativeInspectState(ctx context.Context, statePath string)(N4NativeStateSn
         }
         snap.Phase=journal.Phase
         snap.RecordCount=len(journal.Records)
+        snap.TransactionSchema=journal.Schema
         snap.State="native_wal_unverified"
     } else if snap.RouteIntent {
         snap.State="orphan_route_intent"

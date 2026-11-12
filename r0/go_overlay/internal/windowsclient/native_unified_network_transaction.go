@@ -102,8 +102,20 @@ type n4UnifiedEnvelope struct {
  SHA256 string `json:"sha256"`
 }
 const n4UnifiedSchema = "wbd-n4-native-network-txn/v1"
+const n4UnifiedSchemaNoWFP = "wbd-n4-native-network-txn/v2"
 const n4UnifiedReceiptMax = 4096
 var n4UnifiedOrder = [...]string{"guard","lease","mtu","dns","routes"}
+var n4UnifiedOrderNoWFP = [...]string{"lease","mtu","dns","routes"}
+
+// V2 changes the durable stage grammar; it is NEVER a v1 WAL with a fake
+// successful guard. A v1 journal continues to require its real WFP cleanup.
+func n4UnifiedOrderForSchema(schema string)([]string,error){
+ switch schema{
+ case n4UnifiedSchema:return n4UnifiedOrder[:],nil
+ case n4UnifiedSchemaNoWFP:return n4UnifiedOrderNoWFP[:],nil
+ default:return nil,ErrN4JournalConflict
+ }
+}
 
 type N4NativeUnifiedTxn struct {
  mu sync.Mutex
@@ -112,38 +124,54 @@ type N4NativeUnifiedTxn struct {
  Gate N4UnifiedExclusion
  Owner N4UnifiedOwner
  Stages [5]N4UnifiedStage
- // Unqualified five-stage assembly may never mutate OS or create a WAL.
+ // Internal-only v2 selector. Production cannot infer this from a config
+ // switch: the concrete four Win32 writers and live owner must be qualified.
+ noLegacyWFP bool
+ // Unqualified assembly may never mutate OS or create a WAL.
  assemblyOnly bool
 }
 
+func(n *N4NativeUnifiedTxn) schema()string{
+ if n.noLegacyWFP{return n4UnifiedSchemaNoWFP}
+ return n4UnifiedSchema
+}
+func(n *N4NativeUnifiedTxn) stages()[]N4UnifiedStage{
+ if n.noLegacyWFP{return n.Stages[:len(n4UnifiedOrderNoWFP)]}
+ return n.Stages[:]
+}
 func (n *N4NativeUnifiedTxn) preflight()error{
  if n==nil || n.Path=="" || !n.Identity.valid() || n.Gate==nil || n.Owner==nil {
   return ErrN4NativeGuard
  }
- for i,s:=range n.Stages{
-  if s==nil || s.Name()!=n4UnifiedOrder[i]{return ErrNetworkPlan}
+ order,_:=n4UnifiedOrderForSchema(n.schema())
+ if n.noLegacyWFP && n.Stages[len(n4UnifiedOrderNoWFP)]!=nil {
+  return ErrNetworkPlan // v2 cannot smuggle a fifth/guard stage
+ }
+ for i,s:=range n.stages(){
+  if s==nil || s.Name()!=order[i]{return ErrNetworkPlan}
  }
  return nil
 }
 func n4UnifiedValidJournal(j n4UnifiedJournal)error{
- if j.Schema!=n4UnifiedSchema || !j.Identity.valid() ||
+ order,err:=n4UnifiedOrderForSchema(j.Schema)
+ if err!=nil || !j.Identity.valid() ||
   (j.Phase!="applying" && j.Phase!="active" && j.Phase!="cleaning") ||
-  len(j.Records)>len(n4UnifiedOrder){return ErrN4JournalConflict}
+  len(j.Records)>len(order){return ErrN4JournalConflict}
  for i,e:=range j.Records{
-  if e.Name!=n4UnifiedOrder[i] ||
+  if e.Name!=order[i] ||
    (e.State!="intent" && e.State!="owned") ||
    len(e.Before)==0 || len(e.Before)>n4UnifiedReceiptMax ||
    !json.Valid(e.Before){return ErrN4JournalConflict}
   if e.State=="intent" && i!=len(j.Records)-1{return ErrN4JournalConflict}
  }
  if j.Phase=="active"{
-  if len(j.Records)!=len(n4UnifiedOrder){return ErrN4JournalConflict}
+  if len(j.Records)!=len(order){return ErrN4JournalConflict}
   for _,e:=range j.Records{if e.State!="owned"{return ErrN4JournalConflict}}
  }
  return nil
 }
 func n4UnifiedEncode(j n4UnifiedJournal)([]byte,error){
- j.Schema=n4UnifiedSchema
+ if j.Schema==""{j.Schema=n4UnifiedSchema}
  if err:=n4UnifiedValidJournal(j);err!=nil{return nil,err}
  payload,err:=json.Marshal(j);if err!=nil{return nil,err}
  sha:=sha256.Sum256(payload)
@@ -221,16 +249,17 @@ func(n *N4NativeUnifiedTxn) Apply(ctx context.Context)error{
  }else if !errors.Is(err,os.ErrNotExist){return err}
  // Obtain ALL immutable baselines before ANY mutation; no stale Wintun
  // handle or unexpected Windows setting may be silently overwritten.
- var before [5]json.RawMessage
- for i,s:=range n.Stages{
+ stages:=n.stages()
+ before:=make([]json.RawMessage,len(stages))
+ for i,s:=range stages{
   if err:=ctx.Err();err!=nil{return err}
   v,err:=s.Snapshot(ctx,n.Identity);if err!=nil{return err}
   if len(v)==0 || len(v)>n4UnifiedReceiptMax || !json.Valid(v){return ErrNetworkPlan}
   before[i]=append(json.RawMessage(nil),v...)
  }
- j:=n4UnifiedJournal{Schema:n4UnifiedSchema,Identity:n.Identity,Phase:"applying"}
+ j:=n4UnifiedJournal{Schema:n.schema(),Identity:n.Identity,Phase:"applying"}
  if err:=n4UnifiedWrite(n.Path,j,true);err!=nil{return err}
- for i,s:=range n.Stages{
+ for i,s:=range stages{
   if err:=ctx.Err();err!=nil{return err}
   j.Records=append(j.Records,n4UnifiedRecord{Name:s.Name(),State:"intent",Before:before[i]})
   if err:=n4UnifiedWrite(n.Path,j,false);err!=nil{return err}
@@ -252,10 +281,10 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
  j,err:=n4UnifiedRead(n.Path)
  if errors.Is(err,os.ErrNotExist){return nil}
  if err!=nil{return err}
- if j.Identity!=n.Identity{return ErrN4JournalConflict}
- // If ANY non-guard network state might remain, the persistent full WFP
- // guard is mandatory before removing even one owned resource.
- if len(j.Records)>1{
+ if j.Identity!=n.Identity || j.Schema!=n.schema(){return ErrN4JournalConflict}
+ // The legacy v1 WAL retains its WFP precondition, even though the new
+ // four-stage v2 journal must never create or pretend a WFP guard.
+ if !n.noLegacyWFP && len(j.Records)>1{
   if j.Records[0].State!="owned"{return ErrN4NativeGuard}
   observed,err:=n.Stages[0].Inspect(ctx,n.Identity,j.Records[0].Before)
   if err!=nil{return err}
@@ -275,7 +304,7 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
   // the parent has verified the full persistent WFP guard is still armed.
   // A route with ambiguous ownership remains an error and retains both WALs.
   routeReclaimer,routeStage:=n.Stages[i].(n4UnifiedRouteIntentReclaimer)
-  lastRoute:=i==len(n4UnifiedOrder)-1 && routeStage
+  lastRoute:=i==len(n.stages())-1 && routeStage
   if rec.State=="intent" && lastRoute {
    if err:=routeReclaimer.RecoverUnconfirmedRoutes(ctx,n.Identity,rec.Before);err!=nil{return err}
    j.Records=j.Records[:i]
@@ -283,14 +312,15 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
    continue
   }
   if rec.State=="intent" && observed!=N4UnifiedAbsent{
-   // Only exact-owned WFP guard itself may recover its interrupted Arm.
-   if i!=0 || observed!=N4UnifiedOwned{return ErrN4RouteAmbiguous}
+   // Only the v1 exact-owned WFP guard may reconcile interrupted Arm.
+   // A v2 lease/MTU/DNS unconfirmed create remains ambiguous.
+   if n.noLegacyWFP || i!=0 || observed!=N4UnifiedOwned{return ErrN4RouteAmbiguous}
   }
-  if observed==N4UnifiedPartial && i!=0 && !(lastRoute && rec.State=="owned"){
+  if observed==N4UnifiedPartial && (n.noLegacyWFP || i!=0) && !(lastRoute && rec.State=="owned"){
    return ErrN4NativeGuard
   }
   if observed!=N4UnifiedAbsent {
-   if observed!=N4UnifiedOwned && !(i==0 && observed==N4UnifiedPartial) &&
+   if observed!=N4UnifiedOwned && !(!n.noLegacyWFP && i==0 && observed==N4UnifiedPartial) &&
     !(lastRoute && rec.State=="owned" && observed==N4UnifiedPartial){return ErrN4RouteAmbiguous}
    if err:=n.Stages[i].Undo(ctx,n.Identity,rec.Before);err!=nil{return err}
   }

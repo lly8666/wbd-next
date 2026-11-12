@@ -61,8 +61,13 @@ func N4NativeRecoverState(ctx context.Context, statePath string) error {
     }
     journal,err:=n4UnifiedRead(nativePath)
     if err!=nil{return err}
-    // Actual recovery uses the original pinned Wintun identity, durable
-    // WFP guard and machine gate. Unsupported phases/ghost MTU stay errors
-    // and the original WAL remains on disk for operator recovery.
+    // A v2 WAL never has an old WFP guard. Never hand it to the legacy v1
+    // guard recovery constructor or pretend disk-only state is proof of a
+    // still-live Wintun generation; retain it until qualified v2 OS recovery.
+    if journal.Schema==n4UnifiedSchemaNoWFP {
+        return fmt.Errorf("%w: no-WFP v2 WAL requires live generation-owned four-stage recovery",ErrN4NativeGuard)
+    }
+    // Legacy v1 journal still requires its actual old WFP owner; migration
+    // removes only exact-owned objects and never widens the cleanup scope.
     return N4WindowsRecoverPersistedPreRouteWAL(ctx,nativePath,journal.Identity)
 }

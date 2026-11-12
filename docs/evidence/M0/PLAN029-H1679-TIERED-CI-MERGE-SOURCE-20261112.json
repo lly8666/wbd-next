@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1680",
+  "source_sha": "0a40c2a2931efda62326c3c17583760fb7faed92",
+  "result": "PASS_SCOPED_CI_ONLY",
+  "observed_on": "2026-11-12",
+  "pr": {
+    "number": 34,
+    "url": "https://github.com/lly8666/wbd-next/pull/34",
+    "merged": true,
+    "merge_commit_sha": "530af9abdfc8269c7c45235994fda1d849736187"
+  },
+  "actions": [
+    {
+      "run_id": 43229611167,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43229611167",
+      "status": "success",
+      "source_sha": "0a40c2a2931efda62326c3c17583760fb7faed92"
+    }
+  ],
+  "observed": [
+    "cheap workflow assembly regression success",
+    "Windows Go production/test compilation success",
+    "Linux Rust unit success",
+    "Windows Rust unit success",
+    "legacy expensive WSL2+signed native network jobs intentionally skipped for test/docs-only SOURCE"
+  ],
+  "not_qualified": [
+    "PLAN029 native v2 guard-free Win32 OS writer/Applied",
+    "real Direct DNS TCP UDP/FakeIP",
+    "H1672 signed native Windows kernel listener SYNACK failure",
+    "padding flows/performance P1/P2"
+  ]
+}

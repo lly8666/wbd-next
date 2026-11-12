@@ -27,6 +27,7 @@ type N4NativeLiveOSReceipt struct {
  AllNativeOSApplied bool `json:"all_native_os_applied"`
 }
 const N4NativeLiveOSSchema = "wbd-n4-live-os-owned/v1"
+const N4NativeLiveOSSchemaNoWFP = "wbd-n4-live-os-owned/v2"
 
 // VerifyLiveOSApplied never assumes that a valid disk WAL equals an OS
 // installation. With the same cross-process gate and LIVE Wintun reservation
@@ -35,13 +36,14 @@ const N4NativeLiveOSSchema = "wbd-n4-live-os-owned/v1"
 func (n *N4NativeUnifiedTxn) VerifyLiveOSApplied(ctx context.Context)(N4NativeLiveOSReceipt,error){
  result:=N4NativeLiveOSReceipt{Schema:N4NativeLiveOSSchema}
  if n==nil||n.assemblyOnly||ctx==nil{return result,ErrN4NativeGuard}
+ if n.noLegacyWFP{result.Schema=N4NativeLiveOSSchemaNoWFP}
  n.mu.Lock();defer n.mu.Unlock()
  release,err:=n.withGate(ctx);if err!=nil{return result,err}
  defer release()
  j,err:=n4UnifiedRead(n.Path);if err!=nil{return result,err}
- if j.Identity!=n.Identity || j.Phase!="active" ||
-  len(j.Records)!=len(n4UnifiedOrder){return result,ErrN4JournalConflict}
- for i,s:=range n.Stages{
+ if j.Identity!=n.Identity || j.Schema!=n.schema() || j.Phase!="active" ||
+  len(j.Records)!=len(n.stages()){return result,ErrN4JournalConflict}
+ for i,s:=range n.stages(){
   if j.Records[i].State!="owned"||j.Records[i].Name!=n4UnifiedOrder[i]{
    return result,ErrN4JournalConflict
   }
@@ -54,7 +56,10 @@ func (n *N4NativeUnifiedTxn) VerifyLiveOSApplied(ctx context.Context)(N4NativeLi
  result.Phase="active"
  result.WintunIndex=n.Identity.WintunIndex
  result.WintunLUID=n.Identity.WintunLUID
- result.GuardOwned=true;result.LeaseOwned=true;result.MTUOwned=true
+ // v2 certifies exactly four owned OS stages. GuardOwned MUST remain
+ // false; unlike v1 this never attests/installs legacy WFP.
+ result.GuardOwned=!n.noLegacyWFP
+ result.LeaseOwned=true;result.MTUOwned=true
  result.DNSOwned=true;result.RoutesOwned=true
  result.AllNativeOSApplied=true
  return result,ctx.Err()
@@ -77,7 +82,7 @@ func (n *N4NativeUnifiedTxn) VerifyLiveOSDisconnected(ctx context.Context)error{
   if _,err:=os.Lstat(path);err==nil{return ErrN4JournalConflict
   }else if !errors.Is(err,os.ErrNotExist){return err}
  }
- for _,s:=range n.Stages{
+ for _,s:=range n.stages(){
   if err:=ctx.Err();err!=nil{return err}
   // Snapshot is an OS-native read-only absence preflight; unlike a disk
   // absence check, it fails on existing foreign WFP, DNS, route and lease.
