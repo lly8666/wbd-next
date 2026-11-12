@@ -1,0 +1,90 @@
+name: PLAN029 H1663 current WinForms IPv4-domain outer MTU profile effective (build only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1663-gui-domain-mtu-vm.yml"
+      - "tools/m0_plan029_gui_address_mtu_harness.cs"
+permissions: {contents: read, actions: read}
+jobs:
+  current-windows-gui-profile:
+    runs-on: windows-2025
+    timeout-minutes: 18
+    env:
+      ORIGINAL_GO: a7a82db31fe736ffedee330795a3234d358f1984
+      PINNED_RUST_PRODUCT: 52767d183b61eaf2621d967b16e85e644b1de428
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 43161652596
+          github-token: ${{ github.token }}
+          name: m0-wl-windows-product-binaries-52767d183b61eaf2621d967b16e85e644b1de428
+          path: pinned-rust
+      - name: Check identical original Rust codec/ABI and reassemble exact original Go current CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference="Stop"
+          if((git -C legacy rev-parse HEAD).Trim() -ne $env:ORIGINAL_GO){throw "old original Go source changed"}
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw "test source changed"}
+          git fetch --quiet --depth=1 origin $env:PINNED_RUST_PRODUCT
+          if($LASTEXITCODE -ne 0 -or (git rev-parse FETCH_HEAD).Trim() -ne $env:PINNED_RUST_PRODUCT){throw "missing exact signed Rust donor source"}
+          $diff=@(git diff --name-only $env:PINNED_RUST_PRODUCT $env:GITHUB_SHA -- crates Cargo.toml Cargo.lock r0/abi)
+          if($LASTEXITCODE -ne 0 -or $diff.Count -ne 0){throw ("Rust or ABI mismatch: "+($diff -join ","))}
+          $dll=(Get-FileHash pinned-rust/wbd_engine.dll -Algorithm SHA256).Hash.ToLower()
+          if($dll -ne "3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357"){throw "not exact current Rust native DLL"}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw "native original Go assembly failed"}
+          Push-Location legacy
+          try{
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/current-plan029-native.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw "native Go current product build failed"}
+          } finally {Pop-Location}
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory result/gui -SourceSHA $env:GITHUB_SHA -Version plan029-h1663
+          if($LASTEXITCODE -ne 0){throw "WinForms compile failed"}
+          Copy-Item result/current-plan029-native.exe result/gui/wbd-client.exe
+          Copy-Item pinned-rust/wbd_engine.dll result/gui/wbd_engine.dll
+          Write-Output "PLAN029_H1663_CURRENT_GO_WINDOWS_GUI_PINNED_RUST_COMPILED"
+      - name: Compile and execute real WinForms profile + real current Go CLI --check-config (not signed network)
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference="Stop"
+          $csc=(Get-Content result/gui/roslyn-path.txt -Raw).Trim()
+          $fw='C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
+          $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fw ($_.ToString()+'.dll'))}
+          & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /utf8output /codepage:65001 ('/out:'+(Resolve-Path result/gui).Path+'/DomainMTU.exe') @refs ('/reference:'+(Resolve-Path result/gui/WBD.exe).Path) tools/m0_plan029_gui_address_mtu_harness.cs
+          if($LASTEXITCODE -ne 0){throw "real GUI domain MTU C# harness compiler failed"}
+          $where=(Resolve-Path result/gui).Path
+          $p=Start-Process -FilePath (Join-Path $where 'DomainMTU.exe') -ArgumentList @($where) -WorkingDirectory $where -PassThru -Wait -NoNewWindow
+          if($p.ExitCode -ne 0 -or -not(Test-Path result/gui/h1663-domain-mtu-winforms.png)){throw "GUI profile/real CLI validation failed"}
+          Write-Output "PLAN029_H1663_TRUE_WINFORMS_DOMAIN_SEPARATE_TLS_NAME_OUTER1460_EFFECTIVE_REOPEN_PASS_NO_SIGNED_NPF_TUN"
+      - name: Record source and explicit exclusions
+        shell: pwsh
+        if: always()
+        run: |
+          New-Item -ItemType Directory -Force result | Out-Null
+          $go=""
+          if(Test-Path result/current-plan029-native.exe){$go=(Get-FileHash result/current-plan029-native.exe -Algorithm SHA256).Hash.ToLower()}
+          [ordered]@{schema_version=1;source_sha=$env:GITHUB_SHA;original_go=$env:ORIGINAL_GO;pinned_rust_source=$env:PINNED_RUST_PRODUCT;go_sha256=$go;rust_sha256="3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357";scope="CURRENT_COMPILED_WINDOWS_GUI_REAL_CLI_CONFIG_ONLY";real_dns_wfp="NOT_RUN";signed_wintun_gui_business="NOT_RUN";native_cn_direct="NOT_RUN";flow_padding="NOT_RUN";run_id=$env:GITHUB_RUN_ID}|ConvertTo-Json -Depth 5|Set-Content -Encoding UTF8 result/h1663-source.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1663-gui-domain-mtu-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            result/h1663-source.json
+            result/assembly.json
+            result/gui/h1663-domain-mtu-winforms.png
+            result/gui/data/h1663-*.json
