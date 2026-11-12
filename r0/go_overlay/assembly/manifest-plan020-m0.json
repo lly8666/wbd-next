@@ -1458,6 +1458,18 @@
       "path": "internal/faketcp/native_dns_bootstrap_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows_test.go",
       "result_blob": "ccce2996192d26367b7b313608a5dcca0d978423"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
+      "result_blob": "56f01d2b2de41b136788e02b806cb3c228f2ae50"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_bootstrap_dns_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows_test.go",
+      "result_blob": "2007f952da6cba7996007d2b922413dd8c721a3d"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
