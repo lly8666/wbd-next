@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1673",
+  "observed_at": "2026-11-12",
+  "source_sha": "698af424bd743b6f0e1d33100af8f6e52075b31e",
+  "result": "FAIL_REAL_SIGNED_WINDOWS_WINTUN_TCP_NO_SYNACK_WITH_HEALTHY_LOCAL_LISTENER",
+  "workflow": {
+    "run_id": 43218230969,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43218230969",
+    "job_id": 131182837387,
+    "conclusion": "failure"
+  },
+  "qualified_observations": [
+    "real signed Wintun 0.14.1 vendor pinned, real Win32 IP Helper exact /32 and pinned Wintun PnP generated",
+    "same Windows-host native TCP client successfully established and server accepted connection to owned local Wintun IPv4 listener",
+    "real Wintun raw TCP SYN injection did not produce any matching TCP RX ring frames for 6s; matching_tcp_frames=0, last_flags=0x00",
+    "did not modify host Defender rules, firewall profiles or install old WFP guard",
+    "read-only firewall profile query exited 1; no factual conclusion about exact filter"
+  ],
+  "remaining_unknown": [
+    "Defender active inbound policy or other WFP layer drop",
+    "IP stack or driver ingress semantics for raw Wintun SYN",
+    "whether local listener technique can operate without any host firewall settings"
+  ],
+  "next_decision": "Do not choose fallback TCP stack based on unsupported firewall inference; continue independent native no-old-WFP transaction and Rust DNS/direct policy work; separately compare on real signed Windows using bounded non-noisy evidence only if necessary.",
+  "not_qualified": [
+    "Windows Wintun kernel SYN ingress Direct TCP capability",
+    "Rust physical bound Direct TCP/UDP",
+    "client signed business",
+    "DNS direct/tunnel D1-D5",
+    "legacy WFP removal",
+    "padding"
+  ]
+}

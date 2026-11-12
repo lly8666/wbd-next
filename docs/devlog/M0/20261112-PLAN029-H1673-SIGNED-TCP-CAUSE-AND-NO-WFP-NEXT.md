@@ -1,0 +1,5 @@
+# PLAN029 H1673｜signed Wintun TCP result and next independent work
+
+- [H1672 SOURCE 698af424bd743b6f0e1d33100af8f6e52075b31e, Action 43218230969](https://github.com/lly8666/wbd-next/actions/runs/43218230969) FAIL: real signed Wintun kernel local listener independently self-connect+accept PASS; raw Wintun SYN→kernel SYNACK still FAIL after six seconds, 0 matching Wintun ring TCP frames. Read-only PowerShell firewall readback itself failed; cannot assign Defender policy as proven cause. No WFP/Defender modifications, no new TCP fallback backend chosen.
+- Preserve original H1669 FAIL and H1670 WinForms/Go CLI single DNS config PASS as source-scoped facts, not network or security qualification.
+- Next independent task: real old WFP guard dependency graph spans qualified product assembler, 5-stage WAL and guard-aware lease/MTU/DNS/routes, exact Stop and live receipt; cannot just replace guard with always-PASS. Require new 4-stage schema with exact legacy-owned migration and signed Windows readback before claiming no-WFP product. Rust postcapture CN IP/domain + Direct TCP/UDP and selective FakeIP remain not implemented; no re-run of old 028 or SYN-only matrix.
