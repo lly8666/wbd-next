@@ -9,7 +9,7 @@
 2. `dns.direct=223.5.5.5`、`dns.tunnel=1.1.1.1`各一个endpoint；所有模式取消DNS主备/NIC多resolver轮询/跨方向回退。UDP→TCP只能同endpoint。服务器bootstrap复用直连DNS（all模式也如此），不新增第三地址。用户显式更改值须真正生效，旧列表按契约迁移。
 3. 稀疏DNS查询才查域名规则：只为匹配CN且解析成功的域名提供本地FakeIP，普通非CN答复保留真实IP，不能用共享真实IP反查表污染CDN。FakeIP不出本机，CNAME/hints/TTL/重启/容量边界按契约实现；加密DNS不可见如实说明，不做TLS解密或猜SNI。
 4. 原Rust Wintun ingress只一处分类；IP合并区间＋flow缓存，域名只读trie；OS仍少量owned捕获route/例外，禁止数千route/WFP/NRPT，禁止Go稳态逐包泵。普通Tunnel TCP不终止、不套代理栈，FEC/Game/record不重构。
-5. Direct UDP用物理绑定原生socket；Direct TCP优先本机Windows内核接入＋Rust异步物理socket中继，先跑一个真实签名Windows能力门验证SYN/逆回包/WFP/Stop，再集成；内核接入确实不成立才用契约限定的Direct-only成熟Rust栈备选。不要把IP/TCP包直接塞普通socket冒充转发；不要同时养两条后端。
+5. Direct UDP用物理绑定原生socket；Direct TCP优先本机Windows内核接入＋Rust异步物理socket中继，先跑一个真实签名Windows能力门验证SYN/逆回包/Stop，再集成；内核接入确实不成立才用契约限定的Direct-only成熟Rust栈备选。不要把IP/TCP包直接塞普通socket冒充转发；不要同时养两条后端。
 6. DNS resolver用途先于IP分类，隧道DNS永不因目标CN IP改走物理；普通53被接管后按QNAME处理。DNS异步、有界、缓存合并，不阻塞Wintun。纯Direct业务不续隧道payload idle，Tunnel DNS可以唤醒；lane轮换不销毁Direct流。
 
 开发顺序：先核最新H166x已实现代码和原旧`userspace_tcp_direct_windows.go`/`direct_udp_windows.go`，明确实际Rust接口；做最小真实Windows Direct TCP能力门；完整写齐policy/DNS/Direct/配置迁移/装配/GUI及对应夹具，再按D1–D5/P1–P2测。不要每helper跑Action，也不要堆整包未验证代码后才发现最底层Windows不能接收。bootstrap既有Npcap小包/CNAME修复复用，取消其旧备用链；startup-padding按029原有预算独立接，Direct不填，off无新增跟踪成本。
@@ -22,4 +22,4 @@
 
 每批更新现有devlog/功能卡/必要evidence和cursor，明确设计/已实现/已实际验收不同状态，保留历史失败。当前卡片可能过时，代码/真实SOURCE证据优先。自主大胆细心完成授权范围，不造防御框架，不钻牛角尖；029完整退出后停止并给交付报告，定时重复提示只核新事实，不自创新任务。
 
-**用户追加：不要拉满防御力。** 按契约§3A处理真实冲突：旧WFP“非Wintun的53全Block”需允许同owner的直连DNS，连带旧固定3条/纯Block验证、WAL比较和装配一起改；不能只在另一sublayer叠Permit。guard缺失不应卡死已确认owned资源的Stop，逐资源幂等清理、保留未知/他人资源、汇总残留。保留IPv6/正确出口/认证与generation/长度校验/原密文等功能硬门，不加防本机攻击、多代理共存、逐包身份/hash/WFP检查或另一权限框架。冷路径检查不要夸成热CPU瓶颈。把真实DNS出口与guard缺失清理并入现有D1/D4最少测试，不开攻击矩阵。
+**最新用户决定：不接入老项目WFP体系。** 按契约§3A解除旧guard、固定五stage、Ready/Stop必须WFP完整的依赖，连带真实入口/装配/receipt/GUI一起改；不能用no-op guard伪造Applied。只保留精确owned旧WFP对象的一次性卸除迁移，不重新Arm，不动系统/第三方防火墙。DNS用本地单入口＋owned系统设置＋实际Wintun流量，不承诺拦截硬编码on-link/绑定物理/加密DNS；IPv6实际阻断另按原生设置/捕获验证，未覆盖如实报告。保留租约/generation/包长/原密文/owned清理正确性。Wintun RX借用不能跨异步等待，TX先备好数据再Allocate/立即提交，避免占ring等DNS造成跨流HOL。测试无guard仍正常起网/分流/退出，迁移不误删、DNS等待不堵其他flow，不开攻击矩阵。
