@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1688,
-  "checkpoint_sha": "0d89843b6d2243945a81f45bb413be16ca7a97eb",
+  "sequence": 1690,
+  "checkpoint_sha": "c9e91fc2a22ca13a3dc11ac01552e9f27469229d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1688: collected H1687 exact-source Rust DLL+real WinForms/Go --check-config SUCCESS (GUI/config scoped only); H1669/H1672 signed Wintun kernel TCP SYNACK absence FAIL; no-WFP Win32 four-stage assemblyOnly, real OS route crash/legacy migration/Ready/Stop and Rust DNS/Direct/padding D1-D5/P1-P2 still OPEN.",
-  "why_now": "Reconciled post-H1687 completed Actions and source-locked artifact. No in-flight duplicate dispatch; source 0d89843. H1686 failure retained. Do not mark native network PASS.",
+  "current_task": "PLAN029 H1690: H1687 exact-current Rust DLL/WinForms/CLI single DNS+MTU config scoped PASS; H1689 signed Wintun injected UDP no kernel delivery and TCP SYNACK no frames FAIL. No old WFP; no-FWP 4-stage assembler disabled; all native DNS/Direct/FakeIP, OS Ready/Stop, startup padding, D1-D5/P1-P2 still open.",
+  "why_now": "Collected completed signed Wintun diagnostic and original artifact rather than repeat gate; Governance cursor source/hot refs corrected at c9e91fc and passed Action43244785508; preserve original TCP and GUI failures.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Find first causal reason for signed Wintun TCP SYNACK absence without modifying host/third-party firewall; then qualify one Direct TCP backend only. Complete no-WFP exact-owned route WAL crash/migration/Ready/Stop and actual Rust Wintun ingress DNS/FakeIP/direct TCP+UDP, GUI effective OS, bounded tunnel-only padding. Run SOURCE-locked D1-D5/P1-P2 only after full wiring; do not re-dispatch old H1669/H1672.",
+  "next_action": "Investigate kernel/Wintun injected inbound packet boundary without firewall or WFP changes; do not assume TCP-only failure or select smoltcp without a confirmed feasibility boundary. Then qualify exactly one Direct TCP backend, OS no-WFP owned route crash/recovery/legacy migration and Rust DNS/Direct Wintun ingress; complete product GUI/padding and D1-D5/P1-P2. Do not start 030.",
   "unverified": true,
-  "last_tested_source": "0d89843b6d2243945a81f45bb413be16ca7a97eb",
+  "last_tested_source": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1688-CURRENT-SOURCE-REAL-GUI-CLI-PASS-NO-NETWORK-20261112.json"
+    "docs/evidence/M0/PLAN029-H1690-SIGNED-WINTUN-UDP-CONTROL-AND-TCP-SYNACK-FAIL-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1687 Action43240195695 SUCCESS current Go+WinForms+Rust DLL from SOURCE0d89843, artifact13954571876 hashes verified, GUI/CLI config only (no signed network). H1686 43239063021 real missing Rust DLL FAIL preserved. H1685 43238034430 native scene SUCCESS unrelated to 029 D1-D5. H1672 raw Wintun kernel TCP SYNACK remains real FAIL; four no-WFP Win32 stages assemblyOnly=true; Rust classifier is pure unit, no Direct or DNS packet path."
+  "partial_summary": "H1690 Action43243971440 signed Wintun UDP control NO_MATCHING_NATIVE_DELIVERY and original TCP SYNACK absent real FAIL; native UDP/TCP local self tests passed but not Wintun. Read-only netsh firewall defaults BlockInbound, not causal proof. H1688 GUI/CLI exact current DLL PASS is scoped and kept in history. OS no-WFP assembler assemblyOnly; Direct DNS/TCP/UDP/FakeIP/padding/D1-D5/P1-P2 remain NOT_RUN. Governance at c9e91fc PASS."
 }

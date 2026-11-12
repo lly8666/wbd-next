@@ -80,6 +80,13 @@
       "status": "BUILD_PASS",
       "source_sha": "a5ef2cd0108946e380599895558b377f8686a208",
       "evidence": "docs/evidence/M0/PLAN029-H1676-RUST-SHARED-SPLIT-UNIT-SOURCE-20261112.json"
+    },
+    {
+      "platform": "Windows2025 real signed Wintun native kernel diagnostic (no WFP modifications)",
+      "scope": "H1690 source-locked UDP kernel-listener self-probe then Wintun-injected UDP no delivery; prior raw TCP SYN still no SYNACK; default firewall policy read-only, no exact drop causal proof",
+      "status": "FUNCTIONAL_FAIL",
+      "source_sha": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
+      "evidence": "docs/evidence/M0/PLAN029-H1690-SIGNED-WINTUN-UDP-CONTROL-AND-TCP-SYNACK-FAIL-20261112.json"
     }
   ],
   "limitations": [
@@ -95,7 +102,8 @@
     "H1669 SOURCE bd82a8 签名Windows Wintun Direct TCP能力门FAIL：一条owned /32可建立，但无WFP/Defender修改时注入SYN六秒无SYN-ACK，尚不能区分Windows入站过滤和本机TCP接入不可行。原失败保留，未选smoltcp后备。",
     "H1672 only focused Windows2025 source-locked real signed Wintun Direct TCP diagnostic: read-only profile/default inbound policy, real native listener selfconnect/accept before raw SYN, matching TCP flags counts, NO firewall or WFP mutation; H1669 original 6s no SYNACK FAIL remains, no stack chosen until causal result.",
     "H1676 Rust v4_client_split pure module: sorted/merged IPv4 intervals + log search, Normal/Game shared route-mode and exact DNS purpose, only selective FakeIP maps to Direct; unknown FakeIP rejects, flow decision pins; domain trie exact/suffix with explicit unsupported regex/keyword error, no silent conversion. NOT yet passed through real Rust Wintun ingress, no physical Direct IO or v2fly full list/regex support. G2 scoped pure tests pending.",
-    "H1676 G2 Action43222375840 Rust pure unit 5/5 PASS, not real Windows ingress or Direct/Tunnel; H1677 corrects cursor hot-reference overflow without deleting historical failure evidence."
+    "H1676 G2 Action43222375840 Rust pure unit 5/5 PASS, not real Windows ingress or Direct/Tunnel; H1677 corrects cursor hot-reference overflow without deleting historical failure evidence.",
+    "H1690 signed Wintun SOURCE0f1eec Action43243971440 real UDP listener self-probe PASS but raw Wintun UDP packet never delivered; TCP SYNACK remains absent, netsh showed BlockInbound default firewall policy but exact drop causality unproven. No WFP/firewall changes, not Direct UDP/TCP or DNS D1-D5 qualification."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

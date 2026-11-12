@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1690",
+  "observed_at": "2026-11-12",
+  "source_sha": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
+  "result": "FAIL_REAL_SIGNED_WINTUN_LOCAL_KERNEL_UDP_INGRESS_AND_TCP_SYNACK",
+  "action": {
+    "run_id": 43243971440,
+    "job_id": 131271556105,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43243971440"
+  },
+  "artifact": {
+    "id": 13955053359,
+    "name": "plan029-h1669-real-win-tcp-43243971440",
+    "zip_sha256": "f01f56fa6d29432da8560fbdbde99b8cbbf27a9de1d9907e40a3b96c02dfa23d"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "observed": [
+    "Same source built original Go native Win32 test and used genuine signature-checked Wintun 0.14.1, actual IP Helper owned /32 and exact /32 route; no program WFP guard.",
+    "Local kernel TCP listener same-host DialTCP+Accept passed before raw SYN.",
+    "Local Windows native UDP listener probe passed; one Wintun-injected IPv4/UDP packet produced NO_MATCHING_NATIVE_DELIVERY in 3s; receiver timed out.",
+    "Existing Wintun-injected TCP SYN still failed to produce SYNACK; six-second ring receive diagnostic FAIL.",
+    "Read-only netsh advfirewall show allprofiles displayed ON and BlockInbound,AllowOutbound for Domain, Private and Public profiles; no firewall configuration modified.",
+    "PowerShell Get-NetFirewallProfile read-only probe still exited 1; no exact packet drop attribution available."
+  ],
+  "disallowed_conclusions": [
+    "No confirmed causal Windows Firewall drop; default-policy context is correlation, not packet-trace proof.",
+    "No successful physical Direct TCP/UDP or reverse packet; two local listeners are not egress relays.",
+    "No evidence the alternative Direct-only smoltcp backend is qualified.",
+    "No D1-D5/P1-P2, no DNS/FakeIP runtime, no-WFP product Ready/Stop qualification."
+  ],
+  "retained_prior_fails": [
+    "docs/evidence/M0/PLAN029-H1669-SIGNED-WINTUN-TCP-KERNEL-FAIL-20261112.json",
+    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
+  ],
+  "next_causal_boundary": "Do not add firewall/WFP allow rules or infer a TCP-specific failure; first determine whether injected Wintun packets arrive at the Windows kernel before choosing a single Direct-only TCP backend."
+}
