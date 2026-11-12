@@ -84,7 +84,7 @@
     {
       "platform": "Windows2025 real signed Wintun native kernel diagnostic (no WFP modifications)",
       "scope": "H1690 source-locked UDP kernel-listener self-probe then Wintun-injected UDP no delivery; prior raw TCP SYN still no SYNACK; default firewall policy read-only, no exact drop causal proof",
-      "status": "FUNCTIONAL_FAIL",
+      "status": "FAIL",
       "source_sha": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
       "evidence": "docs/evidence/M0/PLAN029-H1690-SIGNED-WINTUN-UDP-CONTROL-AND-TCP-SYNACK-FAIL-20261112.json"
     }
