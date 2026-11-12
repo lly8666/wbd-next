@@ -60,7 +60,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          & legacy/scripts/build_windows_gui.ps1 -OutputDirectory result/gui-portable -SourceSHA $env:GITHUB_SHA -Version plan028-h1638
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory result/gui-portable -SourceSHA $env:GITHUB_SHA -Version plan028-h1640
           if($LASTEXITCODE -ne 0){throw 'actual WinForms release compiler failed'}
           Copy-Item prebuilt/wbd-client-embedded.exe result/gui-portable/wbd-client.exe
           Copy-Item prebuilt/wbd_engine.dll result/gui-portable/wbd_engine.dll
@@ -89,7 +89,7 @@ jobs:
         timeout-minutes: 4
         run: |
           $ErrorActionPreference='Stop'
-          $csc='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/Roslyn/csc.exe'
+          $csc=(Get-Content result/gui-portable/roslyn-path.txt -Raw).Trim()
           if(-not(Test-Path $csc)){throw 'Windows GUI Roslyn missing'}
           $fw='C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
           $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fw ($_.ToString()+'.dll'))}
@@ -102,7 +102,7 @@ jobs:
         timeout-minutes: 5
         run: |
           $ErrorActionPreference='Stop'
-          $csc='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/Roslyn/csc.exe'
+          $csc=(Get-Content result/gui-portable/roslyn-path.txt -Raw).Trim()
           $fw='C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8'
           $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fw ($_.ToString()+'.dll'))}
           & $csc /nologo /noconfig /nostdlib+ /langversion:latest /target:exe /platform:x64 /utf8output /codepage:65001 ('/out:'+(Resolve-Path result/gui-buttons).Path+'/Buttons.exe') @refs ('/reference:'+(Resolve-Path result/gui-buttons/WBD.exe).Path) r0/go_overlay/windows/gui/M0Plan028GUIButtonsVMHarness.cs
