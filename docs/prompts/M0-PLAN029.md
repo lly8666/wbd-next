@@ -1,24 +1,23 @@
-# M0｜PLAN029接续提示词
+# M0｜PLAN029长期接续提示词
 
-**前置交接（2026-11-12 H1657/H1658）**：PLAN028 已按用户授权限定范围收口（非全L3/ACK/GUI真实起网PASS），[H1657权威证据](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。PLAN029 已由用户在 H1658 明确启动，当前继续由 M0 main 单写者实施；每次开新 agent 必须先核 main/registry/cursor 增量，不重复启动登记或覆盖其他在途工作；直接复用经证实的 028 配置/MTU/会话接口，不重刷旧七模式。ACK未解、独立Windows L3与真人GUI签名起网未测不等于029依赖已有PASS。
+你在 `lly8666/wbd-next/main` 接续已授权PLAN029。先刷新main，读START_HERE/AGENTS、registry/M0 cursor、[029计划](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)与[分流/DNS施工契约](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)，只补上次checkpoint后的必要代码/日志/Actions。先收已有结果，补中断记录，不重复派发、不覆盖在途改动。028已按H1657限定收口，不恢复旧全矩阵；030未自动开工。
 
+本轮目标：**Wintun捕获后中国IP＋域名并集直连，其余走原Rust隧道；直连/隧道各一个可配置DNS，无备用；服务器域名接管后仍可解析；配置/GUI真实生效；有限新流填充不拖慢业务。** 完成全部029出口再交付，单Action绿或某一子项完成不等于没任务。
 
-**2026-11-12 用户新增硬约束：Windows IP 分流必须“Wintun 先捕获，再在 native V4 收包链按中国/LAN/自定义 IPv4 CIDR 分类”，不得向 Windows 路由表批量写入数千条中国 IP/补集/直连网段，也不得转成数千条 WFP/防火墙条目。** 保留少量 owned `0.0.0.0/1`、`128.0.0.0/1` 捕获路由、服务端物理 `/32` 逃逸与少量 DNS `/32`；入口从正式 V4 的 Wintun ingress 作 direct/proxy 决策，CN/LAN/自定义 TCP/UDP 真正绑定物理 NIC 出口及回包，其他走原 Rust 隧道。高效归并/区间查找或 flow 级缓存，不添加 Go 每包热泵或另一控制器。DNS53 优先于 CN 直连，bootstrap 独立物理路径；fail closed、保留 owned WAL/Stop 精确回滚。
+固定语义：
+1. CN模式中LAN/显式direct4、中国IP、中国域名均直连。CN域名解析到海外也直连；非CN域名解析到CN IP，查询走隧道DNS但业务按CN IP直连。另两个route-mode保持原政策，不强开中国规则。
+2. `dns.direct=223.5.5.5`、`dns.tunnel=1.1.1.1`各一个endpoint；所有模式取消DNS主备/NIC多resolver轮询/跨方向回退。UDP→TCP只能同endpoint。服务器bootstrap复用直连DNS（all模式也如此），不新增第三地址。用户显式更改值须真正生效，旧列表按契约迁移。
+3. 稀疏DNS查询才查域名规则：只为匹配CN且解析成功的域名提供本地FakeIP，普通非CN答复保留真实IP，不能用共享真实IP反查表污染CDN。FakeIP不出本机，CNAME/hints/TTL/重启/容量边界按契约实现；加密DNS不可见如实说明，不做TLS解密或猜SNI。
+4. 原Rust Wintun ingress只一处分类；IP合并区间＋flow缓存，域名只读trie；OS仍少量owned捕获route/例外，禁止数千route/WFP/NRPT，禁止Go稳态逐包泵。普通Tunnel TCP不终止、不套代理栈，FEC/Game/record不重构。
+5. Direct UDP用物理绑定原生socket；Direct TCP优先本机Windows内核接入＋Rust异步物理socket中继，先跑一个真实签名Windows能力门验证SYN/逆回包/WFP/Stop，再集成；内核接入确实不成立才用契约限定的Direct-only成熟Rust栈备选。不要把IP/TCP包直接塞普通socket冒充转发；不要同时养两条后端。
+6. DNS resolver用途先于IP分类，隧道DNS永不因目标CN IP改走物理；普通53被接管后按QNAME处理。DNS异步、有界、缓存合并，不阻塞Wintun。纯Direct业务不续隧道payload idle，Tunnel DNS可以唤醒；lane轮换不销毁Direct流。
 
-**现状注意：** 老 `go:embed china_ipv4.txt`（2026-10-03 固定快照约6209个CIDR）、`route-mode=bypass-lan-cn|bypass-lan|all`、`china-ip-file`/手动更新和 GUI 按钮已经有，**不等于当前正式 `--native-v4-product` 已接好中国 IP 实际直连**。`BuildCompactNetworkPlan` 故意清空路由计划里的 `Bypass4/Direct4`，旧 Go `TUNScopedFlows` 位于另一条分支；029先核真 V4 ingress/直连回程，不要为修分流去铺大量 Windows 路由。正式签名 Windows 测 CN/非CN TCP+UDP 两条出口、DNS优先、三模式、启动/Applied/Stop前后 `Get-NetRoute` 数量与 WAL；不得以旧源码旧PASS或 mock 冒充。细节与退出见 [PLAN029 §2A](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)。
+开发顺序：先核最新H166x已实现代码和原旧`userspace_tcp_direct_windows.go`/`direct_udp_windows.go`，明确实际Rust接口；做最小真实Windows Direct TCP能力门；完整写齐policy/DNS/Direct/配置迁移/装配/GUI及对应夹具，再按D1–D5/P1–P2测。不要每helper跑Action，也不要堆整包未验证代码后才发现最底层Windows不能接收。bootstrap既有Npcap小包/CNAME修复复用，取消其旧备用链；startup-padding按029原有预算独立接，Direct不填，off无新增跟踪成本。
 
-跨包红线：先读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`；预共享route-key可导入/手填，本地生成/存储/验证，不得为配置便利恢复TLS前私有交换或关闭服务器验证。
+强制性能思维：查询/新flow做决策，普通DATA只读缓存；只读规则共享、缓冲按需池化、有界内存与到期轮，无每flow线程/全表频扫/逐包全局锁。用PPS、flow数、复制次数和实际byte预算估算；Direct内核CPU也算成本，Go进程包含Rust库不可按进程名归因。不能声称“用了Rust就更快”。
 
-你继续lly8666/wbd-next的PLAN029。读START_HERE/AGENTS、M0长期提示词、实时registry/cursor、`docs/decisions/M0-LEGACY-ROLLOUT-20261102.md`、`M0-PLAN029-CLIENT-DNS-PADDING-20261102.md`；只补checkpoint后相关增量/Actions，先收已有结果。文件存在不代表已启动，用户调用本提示词后按现有机制登记任务。
+测试：一Action一网络场景/测量job，独立场景不同Action可并行，同VM A/B顺序；SOURCE/manifest/hash构建一次复用。先可控两DNS与真假CN/CDN共享IP出口，再生命周期/GUI/路由规模，再纯Tunnel性能保护、Direct与混合容量。Normal和Game4作必要接线代表，不重刷028全矩阵。CPU/首到/p99/最长空洞/RSS/出口都要看，宿主容量满停止加码；单worker/锁瓶颈仍是产品问题。失败不刷seed，找到首个异常点，定向复习旧逻辑再修；无稳定收益不继续抠小数点。
 
-目标：Windows客户端服务器地址支持IP/域名，DNS接管后仍能重连/唤醒/换lane；配置落到真实CLI/GUI/owner；有限TCP/UDP新流填充不拖慢业务。028 schema/session接口是依赖，DNS直出与UI可先独立实现；030服务CLI可并行，main共享WAL/ABI单写入。
+不变硬门：标准TLS前无私有前导、认证/账户与generation隔离、完整性、固定密文重传、统一MTU、owned Stop。默认外层1460（不含L2），内层Rust派生且GUI只读，不因规则/padding改变配置。多网卡极端/多代理共存不扩展，本轮一台机器一个代理实例。
 
-域名解析必须用原物理出口的bootstrap路径，DNS劫持/WFP与路由都要避开自身控制流，不能只在首次启动GetAddrInfo；保留业务DNS政策，不放行全机DNS。服务器地址≠借站SNI；Game一组固定endpoint，多A/地址变化不承诺跨独立server无缝迁移。
-
-GUI只编辑“外层 MTU（字节，上限）”，**普通默认固定1460B、不含L2；1500B只能显式设为最大值，不能恢复为默认**；有效外层与自动内层/OS应用状态只读。保存/重连/切模式不能把内层读回写进外层配置，padding只用027A预算余量。
-
-复用老网络/GUI/portable和现有flow/record padding，别换框架。padding默认off，flows模式有界、无等待、无每流线程，不因lane轮换或30s计时重复启动；实际MTU/首到优先。七模式换lane表归028，仅补域名/配置影响，不重新跑全性能矩阵。
-
-自主计算和判断，先查真实调用链/旧成熟测试再修；不为假想极端堆防御，不用mock假装真实网络。代码/配置/帮助/UI/夹具同批齐，产物按SOURCE/hash复用；独立Actions并行，一Action一场景测量，同VM新旧顺序。容量止步、噪声不刷，保留真实失败。
-
-每批短日志/功能卡/evidence，阶段更新cursor；可独立任务连续推进，按本包退出条件做完才交付。若整个028–030序列已授权再接后续，否则给030入口待验收，不无目标扩测。
+每批更新现有devlog/功能卡/必要evidence和cursor，明确设计/已实现/已实际验收不同状态，保留历史失败。当前卡片可能过时，代码/真实SOURCE证据优先。自主大胆细心完成授权范围，不造防御框架，不钻牛角尖；029完整退出后停止并给交付报告，定时重复提示只核新事实，不自创新任务。

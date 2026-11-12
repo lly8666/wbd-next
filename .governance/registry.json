@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN029 user-started 2026-11-12 H1658: native Windows server IPv4/domain endpoint and physical bootstrap DNS without DNS/WFP self-loop, 028 canonical config/CLI/GUI/owner and read-only MTU, bounded off/tls/flows startup record padding. One M0 main writer; PLAN028 scoped gaps remain NOT_QUALIFIED.",
-      "done_when": "PLAN029 exit in docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md: original signed DNS-hijacked Windows Normal/Game4 re-resolution/wake/reconnect, actual CLI/GUI/effective outer MTU1460 persistence and owned Stop, safe bounded flows TCP/UDP padding cost verified with source-locked Actions. Preserve 028 scoped limits and unmeasured items.",
+      "goal": "PLAN029 user-authorized 2026-11-12: native Windows Wintun Rust CN IPv4+domain union direct split, one DNS endpoint per direct/tunnel without fallback; server bootstrap reuses direct DNS; real config/GUI and bounded startup padding. Follow CLIENT_SPLIT_DNS_CONTRACT; one M0 main writer, preserve PLAN028 scoped limits.",
+      "done_when": "PLAN029 exit plus CLIENT_SPLIT_DNS_CONTRACT D1-D5/P1-P2: real Windows Direct/Tunnel TCP/UDP and DNS egress, shared-CDN isolation, constant route/WFP count, canonical config/GUI/MTU1460, bounded padding, performance and owned Stop. DESIGN only is not PASS; do not reopen excluded 028 scope.",
       "assigned_task": "R0-M0-PLAN029-CLIENT-DNS-PADDING"
     },
     {

@@ -1,6 +1,6 @@
 # 老功能产品化接续｜PLAN028–030总入口
 
-2026-11-02最初仅批准准备028–030方案、当时未启动。**最新状态（2026-11-12 H1657）：用户授权 PLAN028 限定范围收口（SCOPED_CLOSED，不是全L3/ACK/GUI真人起网合格），PLAN029/030未自动开工；新 agent 得到明确启动后再更新M0登记。**PLAN027及027A均已限定范围收口，历史NOT_RUN不重开旧矩阵。028使用现有M0 registry/cursor记录真实施工进度，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
+2026-11-02最初仅批准准备028–030方案、当时未启动。**最新状态（2026-11-12 H1657）：用户授权 PLAN028 限定范围收口（SCOPED_CLOSED，不是全L3/ACK/GUI真人起网合格），PLAN029已由用户H1658启动；030未自动开工。**PLAN027及027A均已限定范围收口，历史NOT_RUN不重开旧矩阵。028使用现有M0 registry/cursor记录真实施工进度，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
 
 ## 1. 三包与依赖
 
@@ -13,10 +13,10 @@
 | 包 | 只做这些增量 | 提示词 |
 |---|---|---|
 | [PLAN028](M0-PLAN028-SESSION-CONFIG-20261102.md) | 简化认证、自动IP、多客户端单端口/独立配置；各模式换lane；公共切网恢复与Windows/Linux通知接线 | [M0-PLAN028](../prompts/M0-PLAN028.md) |
-| [PLAN029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md) | 服务端域名解析不被自身DNS劫持、Windows配置/UI接入、有限新流填充 | [M0-PLAN029](../prompts/M0-PLAN029.md) |
+| [PLAN029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md) | 中国IP＋域名并集分流、双方向单DNS/服务器bootstrap、Windows配置/UI、有限新流填充 | [M0-PLAN029](../prompts/M0-PLAN029.md) |
 | [PLAN030](M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md) | 最小服务端配置、中文wbd-next管理CLI、持久服务化/完整卸载、组合交付 | [M0-PLAN030](../prompts/M0-PLAN030.md) |
 
-**2026-11-07：028功能冻结并按[集成专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)收口，尚未完成。**以下是既定分包关系；029/030独立部分只有已有明确授权时才并行，不能把本轮028收尾授权扩大为新功能开工。集成与正式客户端测试依赖028实际接通。生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
+**历史2026-11-07为028冻结验收；当前以H1657限定收口及H1658启动029为准。**以下是既定分包关系；029/030独立部分只有已有明确授权时才并行，不能把本轮028收尾授权扩大为新功能开工。集成与正式客户端测试依赖028实际接通。生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
 
 网络切换范围由028§4.1–4.2统一：现在落公共会话续接/路径事件和Windows/Linux客户端接线，保留内网IP、重认证/重算MTU、休眠不唤醒；Android只在后续客户端阶段接平台网络回调、socket绑定/VPN旁路及Wi-Fi/蜂窝真机验证。不新增第二个控制器，不要求现在提前完成Android。
 
@@ -68,3 +68,5 @@
 先算实际MTU/分片、k:r/相关损伤和生成器能力，再看first delivery/p99/timeout/CPU/owned Stop；高损不用零丢、一次换代成功等不合理门。容量不足停更重同族，单核锁问题仍属产品。修有实证的问题，最多一次必要反序对照；微小噪声/无收益即停，不防御式扩框架或重复验证成熟策略。
 
 每个包达到其退出条件即登记完成并给下一包入口；仅启动了某包不自动宣称其他包完成。若用户启动整个028–030序列，则阶段结束自动推进已授权下一包，不再等逐步派单。所有scope保留精确SOURCE、FAIL/NOT_RUN，最终只有配置到真正IO的完整链路通过才交付。旧独立CLI提案已撤出活动目录，内容由030吸收，历史见[b1aaf8d0版](https://github.com/lly8666/wbd-next/blob/b1aaf8d00d2aaa76d743eaedbd6579a8ea4c7204/docs/decisions/M0-SERVER-CLI-SIMPLIFICATION-20261102.md)。
+
+**029用户最新设计（2026-11-12）**：[分流/DNS契约](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)为实施唯一细则。直连/隧道各一个DNS、无备用，bootstrap复用direct；中国IP与域名并集分流，禁止海量OS路由和Go逐包热泵。当前只是方案授权，不代表产品已实现或测试通过。

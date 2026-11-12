@@ -1,22 +1,23 @@
 {
   "schema_version": 1,
   "id": "dns-split-ipv6",
-  "name": "DNS、分流和IPv6接线",
-  "summary": "追踪旧网络用户功能在新V4/Linux/Windows原生事务的真实平台资格。",
+  "name": "中国IP＋域名分流、单DNS和IPv6接线",
+  "summary": "PLAN029升级方案：原Rust Wintun后统一Direct/Tunnel分类，中国IP与域名并集直连，两方向各一个DNS；新执行链尚未验收。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
-  "development_branch": "work/m4-r1-platform",
+  "development_branch": "main",
   "available_on": [
     "integration/w168-freeze-windows-adapter-20261026"
   ],
   "defaults": {
     "linux": "公开V4 IPv4-only且disable_ipv6",
-    "windows": "局部DNS/MTU WAL支持，全局DNS/分流未验"
+    "windows": "局部DNS/MTU WAL支持，全局DNS/分流未验",
+    "plan029_design": "设计：CN模式IP＋域名并集；dns.direct=223.5.5.5、dns.tunnel=1.1.1.1各单endpoint，无备用。不是当前产品已生效声明。"
   },
   "usage": {
     "cli": "Linux V4 CLI没有独立DNS/IPv6选项，不沿用旧Go未证实帮助",
-    "config": "旧Go配置由装配manifest引用；新V4完整分流/IPv6实际应用未知",
-    "gui": "WinForms旧网络选项不能证明真实全局DNS/IPv6可用"
+    "config": "PLAN029新增单值dns.direct/dns.tunnel，bootstrap复用direct；旧主备列表迁移，具体实现/effective待M0按契约完成。",
+    "gui": "计划两格DNS与“中国IP/域名”模式、规则来源与effective读回；保存不等于真实出口已验。"
   },
   "code_refs": [
     "r0/go_overlay/internal/v4productcli/linux.go",
@@ -27,7 +28,8 @@
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
     "docs/handoff/CURRENT_INTEGRATION.md",
-    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md"
   ],
   "verification": [
     {
@@ -64,6 +66,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows native V4",
+      "scope": "PLAN029 CN IP/domain union, selective FakeIP, single resolver per egress, Rust direct TCP/UDP, constant route count and performance",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -71,7 +80,8 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "H672 local Windows original signed Wintun DNS restore Action41226501543 PASS scoped; host-global manual DNS failover, split DNS, IPv6 guard/routes and physical DNS leak qualification remain NOT_RUN.",
     "PLAN029仅规划服务器域名bootstrap DNS与真实业务DNS/分流/IPv6配置接入；全局路径须实际验证，旧局部PASS不能代替。",
-    "2026-11-12 新强制验收门 PLAN029 §2A：native V4 Rust Wintun ingress 对 CN/LAN/direct4 真实 TCP/UDP 绑定物理直连和回包尚未实现/未验；禁止数千条Windows route/WFP规则。旧 compact /1 与 GUI分类保存不等于真分流，仍 NOT_QUALIFIED。"
+    "2026-11-12 新强制验收门 PLAN029 §2A：native V4 Rust Wintun ingress 对 CN/LAN/direct4 真实 TCP/UDP 绑定物理直连和回包尚未实现/未验；禁止数千条Windows route/WFP规则。旧 compact /1 与 GUI分类保存不等于真分流，仍 NOT_QUALIFIED。",
+    "2026-11-12用户授权IP＋域名/单DNS设计；选择性CN FakeIP、Rust Direct TCP内核接入/UDP与两DNS实际出口尚未实现验收，不借已有bootstrap编译或旧Go分流PASS关闭。旧主备DNS描述被新契约替代。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

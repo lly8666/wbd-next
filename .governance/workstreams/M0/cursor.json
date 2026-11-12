@@ -11,7 +11,7 @@
   "current_task": "PLAN029 H1662: DNS/CLI source build verified; native DNS E2E, CIDR direct split, GUI effective readback, flows padding remain open",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 exit in docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md: original signed DNS-hijacked Windows Normal/Game4 re-resolution/wake/reconnect, actual CLI/GUI/effective outer MTU1460 persistence and owned Stop, safe bounded flows TCP/UDP padding cost verified with source-locked Actions. Preserve 028 scoped limits and unmeasured items.",
-  "next_action": "Source-locked real Windows Npcap/Wintun physical DNS under true WFP capture + own routes and Stop; implement and qualify mandatory PLAN029 §2A native Rust Wintun post-capture CN/LAN/direct4 TCP/UDP physical egress (no CIDR route explosion), then canonical GUI/owner/effective MTU and bounded TCP/UDP flows padding. No 028 seven-mode reruns or 030 activation.",
+  "next_action": "Collect already-running H166x Actions first; then implement user 2026-11-12 PLAN029 CN IP+domain/single-DNS revision per docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md: real Windows kernel Direct TCP feasibility gate, complete Rust direct UDP/TCP+selective CN FakeIP+DNS/config/GUI, D1-D5/P1-P2, remaining padding. No duplicate dispatch or 028 matrix.",
   "unverified": true,
   "last_tested_source": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
   "evidence_refs": [
@@ -22,8 +22,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/prompts/M0-PLAN029.md",
-    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json"
+    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
+    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1661 SOURCE474eeb66 Windows native Go V4 overlay/CLI build SUCCESS Action43180302066; 4 PLAN029 unit tests PASS (faketcp2/windowsclient1/cmd1). GUI text only. DNS NPF physical/WFP production E2E NOT_RUN, no resolver TTL/multiA retry, native Rust CN/LAN direct split NOT_QUALIFIED under 2026-11-12 new §2A, flows padding NOT_IMPLEMENTED. 028 ACK/Win L3/GUI signed startup excluded. Keep H1658 PLAN029 active, single M0 main writer."
+  "partial_summary": "H1661 SOURCE474eeb66 Windows native Go V4 overlay/CLI build SUCCESS Action43180302066; 4 PLAN029 unit tests PASS (faketcp2/windowsclient1/cmd1). GUI text only. DNS NPF physical/WFP production E2E NOT_RUN, no resolver TTL/multiA retry, native Rust CN/LAN direct split NOT_QUALIFIED under 2026-11-12 new §2A, flows padding NOT_IMPLEMENTED. 028 ACK/Win L3/GUI signed startup excluded. Keep H1658 PLAN029 active, single M0 main writer. User 2026-11-12 design-only expansion: CN IP+domain union and one resolver per egress, no backups; new execution/GUI/performance remains NOT_RUN. Existing product checkpoint/test evidence unchanged by this documentation update."
 }
