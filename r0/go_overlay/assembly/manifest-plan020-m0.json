@@ -359,7 +359,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "7bb0335224dd13a9cfcb6cff06d325f8cb718165",
+      "result_blob": "c05c9f4b70911ffae415b9e019a2cf89d270fd7f",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -492,6 +492,34 @@
         {
           "find": "                if (f.Key == \"fec-mode\") c.Items.AddRange(new[] {\n                    new Choice(\"legacy\", \"兼容旧配置 · 固定或关闭\"),\n                    new Choice(\"fixed\", \"固定 FEC\"),\n                    new Choice(\"off\", \"关闭 FEC\"),\n                    new Choice(\"auto\", \"Normal 自动 · 保守\"),\n                    new Choice(\"auto-aggressive\", \"Normal 自动 · 激进\")\n                });\n                if (f.Key == \"fec-min-parity\") c.Items.AddRange(new[] {\n                    new Choice(\"0\", \"关闭 R0（仅普通自动）\"), new Choice(\"4\", \"R4（默认）\"),\n                    new Choice(\"8\", \"R8\"), new Choice(\"10\", \"R10\"), new Choice(\"12\", \"R12\"),\n                    new Choice(\"16\", \"R16\"), new Choice(\"20\", \"R20\")\n                });\n                if (f.Key == \"fec-start-parity\") c.Items.AddRange(new[] {\n                    new Choice(\"20\", \"R20（默认保护）\"), new Choice(\"0\", \"R0（需普通自动 + 最低R0）\")\n                });\n",
           "replace": ""
+        },
+        {
+          "find": "using System.Linq;\n",
+          "replace": "using System.Linq;\nusing System.Net;\n"
+        },
+        {
+          "find": "        readonly Label quality = new Label();\n",
+          "replace": "        readonly Label quality = new Label();\n        // Read-only effective MTU/OS state, never part of Profile or Effective().\n        readonly Label mtuStatus = new Label();\n"
+        },
+        {
+          "find": "                    AddWide(fields, quality);\n",
+          "replace": "                    AddWide(fields, quality);\n                    mtuStatus.Text = \"有效外层上限：未知 · 自动内层 MTU：未知 · OS 应用：未验证\";\n                    mtuStatus.AutoSize = true;\n                    mtuStatus.MaximumSize = new Size(800, 0);\n                    mtuStatus.ForeColor = Color.FromArgb(75, 85, 99);\n                    AddWide(fields, mtuStatus);\n"
+        },
+        {
+          "find": "            connectedId = editing.Id; ShowState(\"正在建立连接 · \" + editing.Name); servers.Invalidate();\n",
+          "replace": "            connectedId = editing.Id;\n            object typedHost; editing.Values.TryGetValue(\"server-ip\", out typedHost);\n            IPAddress numeric;\n            bool namedServer = !IPAddress.TryParse(Convert.ToString(typedHost), out numeric);\n            ShowState(namedServer ? \"正在通过原物理出口解析服务器域名 · 系统尚未 Applied\"\n                                  : \"正在建立连接 · \" + editing.Name);\n            servers.Invalidate();\n"
+        },
+        {
+          "find": "            quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  实际发送 FEC：未知\";\n        }\n",
+          "replace": "            quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  实际发送 FEC：未知\";\n            mtuStatus.Text = \"有效外层上限：未知 · 自动内层 MTU：未知 · OS 应用：未验证\";\n        }\n"
+        },
+        {
+          "find": "        void Enqueue(string line) { lock (messages) { if (messages.Count >= 256) messages.Dequeue(); messages.Enqueue(line); } }\n",
+          "replace": "        // Only parse authenticated native owner status lines; no other input\n        // can change persisted outer \"mtu\" or claim OS Applied. This is a\n        // display receipt, not a separate tunnel owner.\n        static string Plan029Field(string line,string name) {\n            string prefix = name + \"=\";\n            foreach (string part in line.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries))\n                if (part.StartsWith(prefix, StringComparison.Ordinal)) return part.Substring(prefix.Length);\n            return \"\";\n        }\n        void Plan029ReadOnlyStatus(string line) {\n            if (connectedId == null || !session.Active) return;\n            uint effective, inner, applied;\n            if (line.StartsWith(\"WBD_WINDOWS_COLD_MSS_BUDGET_V1 \", StringComparison.Ordinal)) {\n                if (uint.TryParse(Plan029Field(line,\"effective_outer_mtu\"), out effective) &&\n                    uint.TryParse(Plan029Field(line,\"inner_mtu_planned\"), out inner) &&\n                    effective>=576 && effective<=1500 && inner>0 && inner<=effective)\n                    mtuStatus.Text = \"有效外层上限：\" + effective + \"B · 自动内层 MTU：\" +\n                        inner + \"B（计划） · OS 应用：未验证\";\n            }\n            if (line.StartsWith(\"WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 \", StringComparison.Ordinal)) {\n                if (uint.TryParse(Plan029Field(line,\"applied\"), out applied) &&\n                    uint.TryParse(Plan029Field(line,\"outer_config\"), out effective) &&\n                    uint.TryParse(Plan029Field(line,\"planned\"), out inner) &&\n                    applied==inner && inner>0 && inner<=effective && effective<=1500)\n                    mtuStatus.Text = \"外层配置：\" + effective + \"B · 自动内层 MTU：\" +\n                        applied + \"B · OS 应用：已读回（仍须独立 OS Applied 总回执）\";\n            }\n            if (line.StartsWith(\"WBD_PLAN029_BOOTSTRAP_DNS_SELECTED \", StringComparison.Ordinal)) {\n                IPAddress selected;\n                string value=Plan029Field(line,\"selected4\");\n                if (IPAddress.TryParse(value,out selected) &&\n                    selected.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)\n                    ShowState(\"域名已解析 → \" + value + \" · 正在认证，系统尚未 Applied\");\n            }\n        }\n        void Enqueue(string line) { lock (messages) { if (messages.Count >= 256) messages.Dequeue(); messages.Enqueue(line); } }\n"
+        },
+        {
+          "find": "                if (ApplyQualityLine(line)) continue;\n",
+          "replace": "                if (ApplyQualityLine(line)) continue;\n                Plan029ReadOnlyStatus(line);\n"
         }
       ]
     },

@@ -97,7 +97,8 @@
     "H1648完整Windows2025 VM compiled GUI Action43160679063 SUCCESS，原始artifact13917194780 CRC验证；354项字段/真实Go CLI/按钮为范围内PASS，GUI起网真Npcap/Wintun与同源码真实应用流仍未验。H1649仅UI可用性标签与少数读操作/导入按钮补烟，新的测试结果需再收集。",
     "H1650 接手核对最新Action43161652534及7项原始ZIP CRC、354项GUI自检全PASS（含49可见配置、21原生固定档、三AEAD）和真实read-only Win32/WAL按钮事件。功能目录verification只能用FUNCTIONAL_PASS等固定枚举，状态的限定scope不包含GUI起真实签名网络；旧 H1648 PASS_SCOPED 标签纠正为合法FUNCTIONAL_PASS，原Action和旧错误均保留。",
     "H1653发现正式GUI VM打包曾使用旧SOURCE8a Rust DLL SHA7c8ddd，虽然GUI Go同当前正式edbb；H1653将WinForms产物绑到SOURCE527正式签名产品Action43161652596的Go edbb及Rust ISA-L DLL SHA3973cd，加入源码目录/二进制双hash硬门。当前改装配的Windows VM终端结果待核实，禁止把旧H1649签名DLL说成最新。真实GUI-origin Npcap/Wintun业务依旧NOT_RUN。",
-    "PLAN029 H1661 仅将server-ip GUI catalog标为IPv4/域名、MTU改写为外层字节上限，均已经过原Go assembly，未重新编译 PLAN029 WinForms，也未验证 GUI 读取原生 OS 应用外层/自动内层只读状态；不能借旧H1650 354项 PASS 冒充当前SOURCE的GUI实网。"
+    "PLAN029 H1661 仅将server-ip GUI catalog标为IPv4/域名、MTU改写为外层字节上限，均已经过原Go assembly，未重新编译 PLAN029 WinForms，也未验证 GUI 读取原生 OS 应用外层/自动内层只读状态；不能借旧H1650 354项 PASS 冒充当前SOURCE的GUI实网。",
+    "PLAN029 H1664: 当前源码 WinForms 传输页新增有效外层/自动内层/OS回执只读Label与原物理域名解析阶段显示；仅已有真实原Go原生回执驱动显示，不修改outer 1460配置。当前 SOURCE 独立WinForms构建尚待 H1664 Action；无 signed GUI-origin L3 PASS。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

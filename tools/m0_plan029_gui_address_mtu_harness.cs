@@ -48,6 +48,10 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    using(var cli=new ClientSession(store))
    using(var form=new MainForm(store,cli,()=>Dependencies.Detect(store))){
     form.Show();Application.DoEvents();
+    var readOnly=(Label)typeof(MainForm).GetField("mtuStatus",
+      System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).GetValue(form);
+    Need(readOnly.Text.Contains("未知")&&readOnly.Text.Contains("未验证"),
+      "effective_outer_auto_inner_OS_receipts_start_unknown");
     form.LoadEditor();
     form.SetEditor("server-ip","EDGE.Example.Test.");
     form.SetEditor("server-name","borrow.example.org");

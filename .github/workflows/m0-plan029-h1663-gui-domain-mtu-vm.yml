@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/m0-plan029-h1663-gui-domain-mtu-vm.yml"
       - "tools/m0_plan029_gui_address_mtu_harness.cs"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
 permissions: {contents: read, actions: read}
 jobs:
   current-windows-gui-profile:
