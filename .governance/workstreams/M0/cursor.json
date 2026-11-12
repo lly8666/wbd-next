@@ -24,9 +24,7 @@
     "docs/prompts/M0-PLAN029.md",
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json",
-    "docs/evidence/M0/PLAN029-H1686-WINFORMS-REAL-CLI-MISSING-CURRENT-RUST-DLL-20261112.json"
+    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
   "partial_summary": "H1687 Action43240195695 SUCCESS current Go+WinForms+Rust DLL from SOURCE0d89843, artifact13954571876 hashes verified, GUI/CLI config only (no signed network). H1686 43239063021 real missing Rust DLL FAIL preserved. H1685 43238034430 native scene SUCCESS unrelated to 029 D1-D5. H1672 raw Wintun kernel TCP SYNACK remains real FAIL; four no-WFP Win32 stages assemblyOnly=true; Rust classifier is pure unit, no Direct or DNS packet path."
