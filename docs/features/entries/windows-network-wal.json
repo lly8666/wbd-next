@@ -71,6 +71,13 @@
       "status": "BUILD_PASS",
       "source_sha": "8dab6cb94db171af9ef63825198d4c5f2ee6ee92",
       "evidence": "docs/evidence/M0/PLAN029-H1684-NOWFP-LEASE-SOURCE-COMPILE-20261112.json"
+    },
+    {
+      "platform": "Windows2025 original Go compiled overlay / pure no-WFP v2 tests",
+      "scope": "H1692 SOURCE9b64 exact Go manifest/overlay and TestPlan029NoWFPControllerUsesFourOwnedStagesWithoutLegacyGuard + TestPlan029NoWFPV2LiveReceiptChecksFourStagesAndPreservesHardGate; no signed OS Applied/Stop",
+      "status": "BUILD_PASS",
+      "source_sha": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
+      "evidence": "docs/evidence/M0/PLAN029-H1693-SOURCE-LOCKED-NOWFP-PRODUCT-ENTRY-CLI-UNIT-PASS-20261112.json"
     }
   ],
   "limitations": [

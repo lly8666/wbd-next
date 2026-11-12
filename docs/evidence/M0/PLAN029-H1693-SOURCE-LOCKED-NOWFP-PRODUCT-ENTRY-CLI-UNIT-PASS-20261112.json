@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1693",
+  "observed_at": "2026-11-12",
+  "source_sha": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
+  "result": "PASS_SCOPED_WINDOWS_SOURCE_MANIFEST_GO_BUILD_AND_PURE_NOWFP_TESTS",
+  "action": {
+    "run_id": 43248552998,
+    "job_id": 131287770860,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43248552998"
+  },
+  "artifact": {
+    "id": 13957622378,
+    "name": "plan029-h1661-windows-source-only-43248552998",
+    "zip_sha256": "9b0547e0f592ccd8c65e7f7c00635ebe637545e654b1df57e111f4320c26f868"
+  },
+  "validated": [
+    "exact reviewed source 9b64ef8 build original pinned Go a7a82 plus six changed M0 overlay blob SHAs through manifest-plan020-m0.json without mismatch",
+    "Windows2025 original Go native client assembled and compiled",
+    "TestPlan029NoWFPControllerUsesFourOwnedStagesWithoutLegacyGuard passed with pure owner/stage fixtures, schema v2 guard false, reverse owned recovery and assemblyOnly denial",
+    "TestPlan029NoWFPV2LiveReceiptChecksFourStagesAndPreservesHardGate passed with true four-stage schema and fake-guard rejection",
+    "read-only product preflight code/test no longer queries old WFP layers nor blocks on legacy guard install; old output flags remain false",
+    "Governance/Feature catalog ACTION43248553518 passed; M0-WIN-LINUX source preflight, Windows Rust, Windows Go and Linux Rust preflight jobs passed, full run not yet completed at observation"
+  ],
+  "excluded": [
+    "signed Wintun actual native no-WFP four-stage OS Applied/Stop",
+    "real Wintun Direct UDP/TCP",
+    "local FakeIP DNS53 actual on-wire resolver/direction",
+    "real product GUI Connect",
+    "D1-D5/P1-P2",
+    "startup-padding performance",
+    "legacy exact-owned WFP uninstall migration"
+  ],
+  "unresolved": {
+    "signed_tcp_gate": "FAIL from H1690 Action43243971440; Wintun injected UDP no kernel delivery, TCP SYNACK absent, default firewall blocks unsolicited inbound but root cause not attributed",
+    "production_admission": "N4PrepareRealWindowsProduct uses only no-WFP v2 assembler but current four Win32 stages remain assemblyOnly=true, so Ready is denied and no false Applied",
+    "in_flight": [
+      "43248552878 M0|PLAN020-WIN-WAL",
+      "43248553062 M0-WIN-LINUX additional default jobs"
+    ]
+  }
+}

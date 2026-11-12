@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1692,
-  "checkpoint_sha": "354f0d156ca263c871a6481675875bed3e6f2311",
+  "sequence": 1693,
+  "checkpoint_sha": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1692: source-locked H1691a Windows Go pure v2 receipt TEST PASS at 354f0d; now removing legacy WFP requirement from actual public Windows product preparation, preflight and schema-specific controller cleanup. v2 assemblyOnly stays true pending real OS qualification; H1690 real signed kernel UDP/TCP ingress still FAIL.",
-  "why_now": "H1691a exact-reviewed assembly manifest Windows Action43246996766 pure v2 tests PASS; real N4PrepareRealWindowsProduct still constructed old WFP guard. Remove new-session dependency without falsely enabling product.",
+  "current_task": "PLAN029 H1693: H1692 no-old-WFP new-session entry, preflight and v2 controller source-locked Windows Go compile+pure unit PASS at 9b64ef; no-WFP assembler assemblyOnly and real signed Wintun TCP/UDP gate H1690 FAIL; actual no-WFP OS Applied/Stop, Rust DNS/FakeIP/direct/padding and D1-D5/P1-P2 remain OPEN.",
+  "why_now": "Collected completed H1692 Windows source-only Action43248552998 and original raw scoped PASS before overwriting cursor; parallel OS/WAL/native jobs still in flight; strict SHA and previous FAILs preserved.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Observe one SOURCE-locked Go Windows compile/Plan029 controller+preflight tests for H1692. If green, still require signed Windows Wintun kernel/Direct TCP viability decision, v2 actual Win32 Apply/Stop+owned crash migration and native Rust DNS/Direct/FakeIP/padding D1-D5/P1-P2. No repeated 028 matrix or 030.",
+  "next_action": "Collect only new facts from in-flight Actions43248552878/43248553062; investigate signed Wintun ingress (H1690 UDP+TCP no delivery) without old WFP/firewall edits; qualify single Direct TCP backend; remove v2 assemblyOnly only after actual owned Win32 4-stage lease/MTU/DNS/routes crash/Stop and Rust ingress. Then DNS/FakeIP/Direct/padding and scoped D1-D5/P1-P2; no 028 matrix/030.",
   "unverified": true,
-  "last_tested_source": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
+  "last_tested_source": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1690-SIGNED-WINTUN-UDP-CONTROL-AND-TCP-SYNACK-FAIL-20261112.json"
+    "docs/evidence/M0/PLAN029-H1693-SOURCE-LOCKED-NOWFP-PRODUCT-ENTRY-CLI-UNIT-PASS-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1691a Action43246996766 source-locked Windows Go native assembly + TestPlan029NoWFPV2LiveReceiptChecksFourStagesAndPreservesHardGate PASS, not network. H1692 code closes new-session legacy WFP constructor and preflight probe but production no-WFP assembler remains assemblyOnly, so OS Applied NOT_RUN. H1690 signed Wintun UDP/TCP no delivery real FAIL retained; product 029 IN_PROGRESS."
+  "partial_summary": "SOURCE9b64 Action43248552998 exact Windows Go+manifest and pure TestPlan029NoWFPController/V2LiveReceipt passed, no signed OS network. New product entry no longer creates v1 WFP guard but remains assemblyOnly=true/Ready denied. H1690 signed Wintun UDP to native listener NO_MATCHING_NATIVE_DELIVERY and TCP SYNACK absent genuine failure. H1687 GUI/CLI config PASS scoped only; D1-D5/P1-P2 and actual Rust DNS/Direct/Padding NOT_RUN. Other Action jobs in flight; don't redispatch."
 }
