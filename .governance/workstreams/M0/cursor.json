@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1658,
-  "checkpoint_sha": "921da2bafab873dc871db476d8754d279c9c6ed3",
+  "sequence": 1662,
+  "checkpoint_sha": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 Windows domain bootstrap DNS, configuration/GUI and bounded new-flow padding",
+  "current_task": "PLAN029 H1662: DNS/CLI source build verified; native DNS E2E, CIDR direct split, GUI effective readback, flows padding remain open",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 exit in docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md: original signed DNS-hijacked Windows Normal/Game4 re-resolution/wake/reconnect, actual CLI/GUI/effective outer MTU1460 persistence and owned Stop, safe bounded flows TCP/UDP padding cost verified with source-locked Actions. Preserve 028 scoped limits and unmeasured items.",
-  "next_action": "Inspect current canonical config/schema/Windows network and DNS/WFP bypass/GUI and Rust record padding callers; reuse old native paths; develop only missing edges, freeze source and run focused Action per scene.",
+  "next_action": "Source-locked real Windows Npcap/Wintun physical DNS under true WFP capture + own routes and Stop; implement and qualify mandatory PLAN029 §2A native Rust Wintun post-capture CN/LAN/direct4 TCP/UDP physical egress (no CIDR route explosion), then canonical GUI/owner/effective MTU and bounded TCP/UDP flows padding. No 028 seven-mode reruns or 030 activation.",
   "unverified": true,
-  "last_tested_source": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "last_tested_source": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json"
+    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
+    "docs/evidence/M0/PLAN029-H1661-DNS-SOURCE-ONLY-WINDOWS-BUILD-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -24,5 +25,5 @@
     "docs/prompts/M0-PLAN029.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1658 user-activated PLAN029; no PLAN029 implementation/real test yet. Baseline main 921da2bafab873dc871db476d8754d279c9c6ed3; 028 SOURCE527 PASS_SCOPED cannot cover ACK/independent Win L3/GUI-origin signed E2E. Keep normal outer1460 and route-key+certificate TLS, no private prelude."
+  "partial_summary": "H1661 SOURCE474eeb66 Windows native Go V4 overlay/CLI build SUCCESS Action43180302066; 4 PLAN029 unit tests PASS (faketcp2/windowsclient1/cmd1). GUI text only. DNS NPF physical/WFP production E2E NOT_RUN, no resolver TTL/multiA retry, native Rust CN/LAN direct split NOT_QUALIFIED under 2026-11-12 new §2A, flows padding NOT_IMPLEMENTED. 028 ACK/Win L3/GUI signed startup excluded. Keep H1658 PLAN029 active, single M0 main writer."
 }

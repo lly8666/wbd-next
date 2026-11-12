@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1662",
+  "observed_at": "2026-11-12",
+  "result": "PASS_SCOPED_WINDOWS_GO_SOURCE_BUILD_AND_PURE_UNIT_ONLY",
+  "product_source_sha": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "evidence_workflow": {
+    "run_id": 43180302066,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43180302066",
+    "conclusion": "success",
+    "job_id": 131054361407,
+    "artifact_id": 13926635142,
+    "artifact_name": "plan029-h1661-windows-source-only-43180302066"
+  },
+  "verified": {
+    "original_go_manifest_assembly": "PASS",
+    "windows_go_native_v4_cli_build": "PASS",
+    "test_names": [
+      "TestPlan029PhysicalDNSFrameDoesNotUseTunnelOrSystemResolver",
+      "TestPlan029PhysicalDNSRejectedOffPathAndWrongTransaction",
+      "TestPlan029BootstrapDNSBoundedPhysicalCandidates",
+      "TestPlan029ServerDomainValidationIsNotTLSNameOrNetworkIO"
+    ],
+    "all_four_unit_tests": "PASS",
+    "tls_protocol": "unchanged: preshared route-key and standard server certificate verification",
+    "default_outer_mtu_bytes": 1460,
+    "explicit_upper_outer_mtu_bytes": 1500,
+    "original_028_gaps": "not promoted"
+  },
+  "not_qualified": [
+    "real OS physical NPF DNS egress/ingress with WFP DNS capture active",
+    "real signed Windows + Linux TLS/Rust network DNS reconnect/wake/Game4",
+    "canonical server-address vs legacy server-ip import alias",
+    "GUI real origin, effective outer and automatic inner MTU OS readback",
+    "native Windows Wintun ingress CN/LAN/custom IPv4 direct physical TCP/UDP two-way vs non-CN tunnel, no OS CIDR route explosion",
+    "off/tls/flows TCP/UDP bounded startup padding real MTU/CPU/RSS/latency",
+    "PLAN028 ACK, independent signed Windows L3, real GUI signed startup"
+  ],
+  "defects_and_preserved_fails": [
+    "H1661 DNS A returns only first selected candidate; no multi-A retry/TTL/TCP fallback",
+    "raw NPF bootstrap not independently verified to satisfy §2 bound-socket/WFP/OS outlet receipts",
+    "legacy GUI source-locked SOURCE527 check intentionally rejects new code: Action43180104430 failure",
+    "earlier feature-catalog governance missing feature-impact declaration Action43180104298 failure; new H1662 gate declaration included"
+  ],
+  "citations": [
+    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
+    "docs/architecture/MTU_CONTRACT.md",
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
+  ]
+}

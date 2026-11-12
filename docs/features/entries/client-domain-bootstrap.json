@@ -2,38 +2,60 @@
   "schema_version": 1,
   "id": "client-domain-bootstrap",
   "name": "客户端服务器域名与独立bootstrap DNS",
-  "summary": "规划IP/域名连接，在Windows DNS接管后仍能解析、重连、唤醒和换lane；尚未实现。",
+  "summary": "Windows 原 Go V4 现已编译 IPv4/域名 CLI + 冷代际物理 Npcap DNS A 查询，尚无真实 DNS 接管/WFP/TLS/Wintun E2E 资格。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
-  "main_development_reason": "用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。",
-  "available_on": [],
+  "main_development_reason": "用户2026-11-12独立启动 PLAN029；M0 main 唯一写入，H1661 源码及 Windows Go 编译验证，不含真实起网。",
+  "available_on": [
+    "main"
+  ],
   "defaults": {
-    "planned_address": "IPv4或域名；借站SNI另列",
-    "planned_bootstrap": "物理出口DNS，失败备选1.1.1.1/8.8.8.8；可手动设置"
+    "canonical_config_key": "server-ip（当前旧唯一键，server-address 迁移仍未实现）",
+    "address": "IPv4/域名，借站 SNI 独立",
+    "bootstrap": "当前物理网卡配置 DNS→受控 1.1.1.1/8.8.8.8 备用，直发 Npcap A；TTL 缓存与多 A 候选尝试待补",
+    "mtu": "默认外层 1460B，不含 L2；1500B 显式上限"
   },
   "usage": {
-    "cli": "PLANNED: 统一服务器地址参数/旧IP字段读取别名；具体canonical key随028配置schema冻结。",
-    "config": "PLANNED: 独立bootstrap解析与业务DNS配置，前者不依赖隧道。",
-    "gui": "PLANNED: 服务器地址可填域名，显示解析/所选IP/错误；当前二进制能力不由本卡推断。"
+    "cli": "--server-ip IPv4或域名；--server-name 独立认证TLS借站SNI；--check-config只做本地语法与会话配置校验，不向DNS发包。",
+    "config": "原 server-ip 键在主线冷 native V4 入参保持；DNS名称在每个后续冷代际从物理接口读取DNS并直接由Npcap查询，不把服务器DNS名替换TLS server-name。候选只有第一地址进入真实owner；未证明DNS接管后实网。",
+    "gui": "当前 WinForms 字段catalog仅更新显示服务器地址(IPv4/域名)与外层MTU1460B上限。解析中/选中IP/失败原因在GUI实际显示尚未验证，现状仅CLI输出；不以保存或构建认定已Applied。"
   },
-  "code_refs": [],
+  "code_refs": [
+    "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
+    "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows_test.go",
+    "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    ".github/workflows/m0-plan029-h1661-windows-dns-source-build.yml"
+  ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
   ],
   "verification": [
     {
-      "platform": "windows/amd64 client + linux/amd64 or arm64 server",
-      "scope": "真实DNS接管前后初建/重连/休眠唤醒/换lane与owned清理",
-      "status": "PLANNED",
+      "platform": "windows-2025 x64",
+      "scope": "H1661 pinned original Go overlay assembly + 4 PLAN029 DNS codec/hostname pure-unit tests + real Go native V4 CLI cross-compiled executable; excludes physical DNS/WFP and WinForms actual network",
+      "status": "BUILD_PASS",
+      "source_sha": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43180302066"
+    },
+    {
+      "platform": "Windows2025 signed Npcap+Wintun and Linux original Rust",
+      "scope": "DNS caught by actual WFP/NRPT; original NIC DNS re-resolves at cold startup/reconnect/wake/Game4; real TLS authentication and /32 route, healthy old lane and WAL Stop",
+      "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     }
   ],
   "limitations": [
-    "尚无产品代码或通过证据，不因旧直出UDP helper存在宣称域名接通。",
-    "不包含IPv6外层支持或跨独立后端无缝会话迁移；内层IPv6政策不改变。"
+    "H1661 BUILD_PASS只涵盖编译、4个报文/域名负例单测与装配，无真实NIC DNS数据、非真实网络资格。",
+    "当前为原物理Npcap直发 DNS A 报文，无单独DNS bootstrap Winsock/IP_UNICAST_IF socket、WFP例外及OS出口实机回执；不能按PLAN029 §2认定已完成。",
+    "DNS多A返回只选择第一个，候选回退/TTL、CNAME/TCP回退、NXDOMAIN高级诊断待完成；不承诺独立服务器间无缝会话迁移。",
+    "GUI域名解析实时状态、server-address规范键及别名迁移、实际OS/MTU只读反馈尚未端到端验证。",
+    "外层IPv6不支持，内层IPv6安全策略不放宽。"
   ],
   "promotion": null
 }
