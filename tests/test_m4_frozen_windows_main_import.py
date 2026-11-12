@@ -61,6 +61,16 @@ M0_AUTHORIZED_CURRENT = {
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go": "96f24e506ea765e9719b252e850a94e4896f18b4",
 }
 
+# Explicit, SOURCE-hashed M0 PLAN029 live derivatives. They do NOT
+# rewrite any historical M4_FROZEN/PINNED_FILES, and a separately pinned
+# baseline protects the one derived 12-file Windows donor in PLAN020.
+M0_PLAN029_REVIEWED_CURRENT = {
+    "r0/go_overlay/assembly/assemble.py": "2bbb6b5a1e337f2637a183c9c8727144b65ac0a5",
+    "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "226e4bc0bcb97b85f249d27d14b8f2498da72566",
+    "r0/go_overlay/internal/windowsclient/native_product_status_windows.go": "58c0ff58550abbb2c9654668faa761c9119f02ab",
+    "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go": "356aed95e183c12f8bb6f195b9306e3db7699e9a",
+}
+
 def object_sha(data):
     header = b"blob " + str(len(data)).encode("ascii") + bytes([0])
     return hashlib.sha1(header + data).hexdigest()
@@ -75,7 +85,27 @@ class M4FrozenOverlay(unittest.TestCase):
                 # M4 frozen sha remains immutable in PINNED_FILES. M0 later
                 # explicitly superseded the live path after PLAN020 ownership transfer.
                 self.assertEqual(object_sha(path.read_bytes()),
-                                 M0_AUTHORIZED_CURRENT.get(relative, expected))
+                                 M0_PLAN029_REVIEWED_CURRENT.get(
+                                     relative, M0_AUTHORIZED_CURRENT.get(relative, expected)))
+
+    def test_plan029_live_win32_wal_derivative_keeps_frozen_donor_proof(self):
+        # A changed live M0 file is not evidence that the archived M4 SHA
+        # changed. All differences must be listed above and reproducible.
+        manifest=json.loads((ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
+        rows=[x for x in manifest["operations"] if "donor_blob" in x]
+        self.assertEqual(len(rows),12)
+        derivations=[x for x in rows if "main_owned_derivative" in x]
+        self.assertEqual(len(derivations),1)
+        one=derivations[0]
+        self.assertEqual(one["path"],"internal/windowsclient/native_unified_network_transaction.go")
+        self.assertEqual(one["main_owned_derivative"],"PLAN029_NO_WFP_TXN_V2")
+        baseline=ROOT/one["donor_base_overlay_path"]
+        self.assertEqual(object_sha(baseline.read_bytes()),one["donor_blob"])
+        self.assertEqual(one["donor_blob"],PINNED_FILES["r0/go_overlay/"+one["path"]])
+        self.assertEqual(one["result_blob"],M0_PLAN029_REVIEWED_CURRENT["r0/go_overlay/"+one["path"]])
+        for row in rows:
+            if row is one:continue
+            self.assertEqual(row["donor_blob"],row["result_blob"])
 
     def test_original_go_manifest_and_guard_remain_exact(self):
         obj = json.loads((ROOT / "r0/go_overlay/assembly/manifest.json").read_text())

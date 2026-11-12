@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1682",
+  "source_sha": "26816d9d51ece05aa877e0addfc2307ccf454f22",
+  "result": "PASS_SCOPED_PINNED_WINDOWS_GO_WAL_PURE_ONLY",
+  "observed_on": "2026-11-12",
+  "observations": [
+    {
+      "run_id": 43233031946,
+      "status": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43233031946",
+      "scope": "original Go pinned overlay assembled and Windows source compiled; TestPlan029NoWFPV2* 4/4 PASS; single DNS pure tests PASS"
+    },
+    {
+      "run_id": 43233032264,
+      "status": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43233032264",
+      "scope": "cheap assembly + Windows Go build and Linux/Windows Rust unit PASS; heavy original signed native two-OS scene SKIPPED"
+    },
+    {
+      "run_id": 43233032219,
+      "status": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43233032219",
+      "scope": "governance and feature catalog PASS"
+    }
+  ],
+  "failures_preserved": [
+    {
+      "run_id": 43233031805,
+      "status": "failure",
+      "reason": "historical M4 SHA frozen source fixture compares live PLAN029 derivative against immutable M4; updated H1682 test must preserve archived digest"
+    },
+    {
+      "run_id": 43233031857,
+      "status": "failure",
+      "reason": "fixed old Rust DLL is not source-compatible with newly compiled pure Rust client split module; cannot bypass source lock"
+    }
+  ],
+  "not_qualified": [
+    "native 4 stage no-WFP writer/owner OS Applied Stop",
+    "signed Windows Direct TCP/UDP and genuine per-direction DNS + selective FakeIP",
+    "GUI production with matching Rust DLL built at current SOURCE",
+    "P1/P2 performance"
+  ]
+}
