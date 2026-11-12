@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1629",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "kind": "PARALLEL_INDEPENDENT_NATIVE_SCOPED_TESTS_ORIGINAL_FAILURE_RETAINED_AND_TARGETED_FIXTURE_DURATION_REPAIR",
+  "product_build_action": 43027983611,
+  "binary_reused_without_recompilation": true,
+  "original_three_binary_sha256": {
+    "wbd-v4-client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "wbd-v4-server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "libwbd_engine.so": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc"
+  },
+  "scenes": [
+    {
+      "mode": "game2-fixed6",
+      "product_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "harness_source_sha": "d6d498fcba06d99797f27b0f817c03660c7a85e3",
+      "action_id": 43133373054,
+      "job_id": 130902677975,
+      "status": "SUCCESS_PASS_SCOPED",
+      "artifact_id": 13906910222,
+      "artifact_zip_sha256": "b5499e8ae4c1078a73745056988429a96459105fac7947d42d50db2aed64f211",
+      "real_original_tls": true,
+      "source4_sequence": [
+        "10.25.0.2",
+        "10.25.0.9",
+        "10.25.0.2"
+      ],
+      "physical_mtu": [
+        1500,
+        1280,
+        1500
+      ],
+      "outer_mtu": 1460,
+      "inner_mtu_game2": [
+        1358,
+        1178,
+        1178
+      ],
+      "authenticated_generations": [
+        1,
+        2,
+        3
+      ],
+      "exact_old_stops": [
+        1,
+        2
+      ],
+      "post_switch_udp": [
+        16,
+        16
+      ],
+      "sibling_game4_normal_stable": true,
+      "sibling_true_udp_each_window": [
+        80,
+        80
+      ],
+      "mixed_account_three_ciphers": true,
+      "shared_tls443": true,
+      "shared_tun_reader_final_stop": true
+    },
+    {
+      "mode": "normal-fixed6",
+      "harness_source_sha": "3898027dda8bd5d63241c79b6476c96b817b4560",
+      "action_id": 43133244964,
+      "job_id": 130902245028,
+      "status": "FAIL_ORIGINAL_SCOPED_PRETERMINAL",
+      "artifact_id": 13905917684,
+      "artifact_zip_sha256": "e86c364b24de0393cc9b4641b46f9518392f25db5ac913b6ca57b5a9d9e6c4da",
+      "first_failure": "Original sibling Game4 32 true UDP all echoed over ~12.8s but old-gen exact Stop occurred after ~18.82s; time-window assertion t1[0]<physical_change<old_Stop<t1[-1] failed. Genuine source-locked native Normal fixed6 profile6 TLS and OS were partly observed; later cleanup/current scenario final full report NOT_RUN."
+    },
+    {
+      "mode": "game4-off",
+      "harness_source_sha": "3898027dda8bd5d63241c79b6476c96b817b4560",
+      "action_id": 43133244743,
+      "job_id": 130902243973,
+      "status": "FAIL_ORIGINAL_SCOPED_PRETERMINAL",
+      "artifact_id": 13905309249,
+      "artifact_zip_sha256": "c54af27ccb57c6ea1a0f069d30dde86b75c80f281670dc49691f3f80e064cd07",
+      "first_failure": "Second Normal sibling 16 true UDP all echoed over ~6.4s, old Game4 gen2 exact Stop after ~20.26s, assertion len16 and ack[0]<physical_change<new_ready<ack[-1] fails; real authenticated Game4 off gen3 OS MTU1193/readback and kernel UDP before failure observed, final scenario full Stop/report not established."
+    }
+  ],
+  "fixture_repair": {
+    "reason": "Increase real sibling kernel payload windows to 80 *0.4 seconds (~32s) to cover actual 10–20s old-gen grace; retain physical event ordering, authenticated B-before-A Stop, no-gap true UDP, SHA and cleanup hard gates.",
+    "normal": "Only H1197 source-derived fixture generated Game4 sibling 32→80 each side, change corresponding strict expected counts 80.",
+    "game4": "Only H1202 source-derived fixture generated second Normal sibling 16→80, retain before/after new-auth+old-stop requirement, strict expected count 80.",
+    "new_native_actions": "PENDING_NEW_H1629_PUSH; NOT_YET_PASS",
+    "product_code_changed": false,
+    "old_original_failure_records_preserved": true
+  },
+  "skipped_unsupported": [
+    "Independent A/B/C Windows1800s L3 no qualified infrastructure",
+    "Previously user-skipped near-derived-inner-MTU and same Windows host dual Wintun"
+  ],
+  "artifact_verified": true,
+  "artifact_verification_method": "GitHub job log and original ZIP archive sha256 independently rehashed in this handoff"
+}

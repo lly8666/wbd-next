@@ -4,21 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1628,
-  "checkpoint_sha": "a7637f63bacaa6e70547ea10d970ceeea5eee7cd",
+  "sequence": 1629,
+  "checkpoint_sha": "d6d498fcba06d99797f27b0f817c03660c7a85e3",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1628-PARALLEL-X86-THREE-REMAINING-MODES-FROZEN-SOURCE8A",
-  "current_task": "H1628 user directed skip unavailable environment, parallelize remaining native tests. Three existing independent x86 mode workflows now reuse exactly H1600 SOURCE8a Go/Rust ISA-L official artifacts without recompilation; NormalFixed6/Game2Fixed6/Game4Off each one real OS TCP443/TUN/kernel UDP/physical A-B-A/Stop scene. On push all triggered separately; do not mark PASS before raw Action receipt. No product/default change.",
-  "why_now": "H1621 mode audit identified exactly three current-SOURCE x86 independent mode gaps; H1600 build reuse avoids waste and parallel workflows prevent all-mode same-Action HOL.",
+  "task_id": "PLAN028-H1629-GAME2-FIXED6-PASS-OLD-TWO-FAILS-KEEP-SIBLING-WINDOW-DURATION-RETEST",
+  "current_task": "H1629 three parallel current SOURCE8a native x86 gaps: Game2 Fixed6 action43133373054 SUCCESS with real source4/MTU/3 generations, 80/80 sibling true UDP, shared443 and all Stop. Original Normal fixed6 Action43133244964 FAIL sibling 32*0.4s finishes before real 18.82s old Stop. Original Game4 Off Action43133244743 FAIL second Normal sibling 16*0.4s ends before real 20.26s old Stop. ZIP SHA/evidence preserved. H1629 only derived original fixture windows extended to 80*0.4s and strict expected counts updated; new respective Actions NOT_RUN until terminal. Product frozen SOURCE8a binaries reused (no rebuild) and no defaults changed.",
+  "why_now": "Original three independent mode Actions ran in parallel; retain Game2 genuine PASS and measure actual sibling grace against short fixture, correct only explicit test windows without weakening original continuous-delivery/Stop hard gate.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect actual H1628 3 separate native workflow Actions, original artifacts and first failures, repair only real breakages, distinguish fixture/env/product; update precise coverage and cards. Skip independent Windows1800 L3 without A/B/C isolated rig and user-skipped near inner MTU/multi-Wintun. Consider real available Windows AutoIP path, constrained mixed 30%/250ms and ARM64 representative concurrently if evidence warrants; avoid duplicate H1601/H1623. No 029/030.",
+  "next_action": "Collect new H1629 NormalFixed6/Game4Off independent original kernel Actions, ZIP SHA/OS/Stop/first faults. No previous failure is overwritten. After modes, assess available Windows signed short AutoIP/path, constrained 30percent250ms business and ARM representative; no independent A/B/C Windows DUT means skip 1800 L3, skip user-excluded near-MTU and same-host multiple Wintun. Update exact SOURCE table and feature cards. No 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json",
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
-    "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json"
+    "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json",
+    "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -28,7 +29,9 @@
     "docs/evidence/M0/PLAN028-H1617-SOURCECF03-PREBUILT-NORMAL-FAILED-B-A-LIVE-GAME2-OFF-20261112.json",
     "docs/evidence/M0/PLAN028-H1621-SEVENMODE-DEFAULTS-SOURCE-AUDIT-20261112.json",
     "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
-    "docs/devlog/M0/20261112-H1625-M0-CHEAP-MAINTENANCE-POST-EVIDENCE-SCHEMA.md"
+    "docs/devlog/M0/20261112-H1625-M0-CHEAP-MAINTENANCE-POST-EVIDENCE-SCHEMA.md",
+    "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
+    "docs/devlog/M0/20261112-PLAN028-H1629-GAME2FIXED6-PASS-AND-SIBLING-WINDOW-REPAIR.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

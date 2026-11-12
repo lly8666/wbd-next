@@ -50,5 +50,14 @@ s=s.replace("NATIVE_ARM64_MIXED_NORMAL_GAME2_GAME4_PHYSICAL_REAUTH_SINGLE_SHARED
             "NATIVE_X86_X86_GAME4_OFF_NORMAL_HEALTHY_AUTHENTIC_TWO_PHYSICAL")
 s=s.replace("NATIVE_X86_X86_MIXED443_GAME4_TWO_SOURCE4_AND_MTU_HANDOVERS",
             "NATIVE_X86_X86_GAME4_OFF_TWO_AUTHENTIC_PHYSICAL_HANDOVERS")
+# H1629: original second Normal sibling had 16*0.4s=6.4s app window,
+# but the original Go/Rust old-generation exact Stop occurred 20.26s
+# after physical change. Keep assertion that sibling delivers before AND
+# after authenticated B and precise Stop; send >=32s true UDP instead.
+one('send_udp "$NSC" "$IPC" NORMAL_AUTO_LIVE_GAME4_RESTORE 16',
+    'send_udp "$NSC" "$IPC" NORMAL_AUTO_LIVE_GAME4_RESTORE 80')
+one("assert len(acks)==16 and acks[0]<changed<ready<acks[-1]",
+    "assert len(acks)==80 and acks[0]<changed<ready<acks[-1]")
+one('"normal_live_restoration_echoes":16,','"normal_live_restoration_echoes":80,')
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1202_X86_GAME4_OFF_TWO_ORIGINAL_TLS_FIXTURE_READY",flush=True)

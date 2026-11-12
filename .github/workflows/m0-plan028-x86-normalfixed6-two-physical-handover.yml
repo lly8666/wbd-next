@@ -90,7 +90,7 @@ jobs:
           n=json.loads(pathlib.Path("fixed-kernel-result/plan028-h1197-normal-fixed6-two-source4.json").read_text())
           assert n["physical_source4_sequence"]==["10.25.0.4","10.25.0.9","10.25.0.4"]
           assert n["normal_fixed6_authenticated_generations"]==[1,2,3] and n["old_normal_exact_stops"]==[1,2]
-          assert n["game4_generation_unchanged"] and n["game4_live_UDP_during_both"]==[32,32]
+          assert n["game4_generation_unchanged"] and n["game4_live_UDP_during_both"]==[80,80]
           assert n["normal_new_generation_udp"]==[16,16] and n["same_tunnel_IP"]
           assert n["outer_user_mtu"]==1460 and n["inner_mtu_new"]<n["inner_mtu_original"]
           assert n["sibling_game4_inner_mtu"]==1358

@@ -104,7 +104,7 @@ jobs:
           assert restored["physical_ipv4_mtu_sequence"]==[1500,1280,1500]
           assert restored["generation_replacement_sequence"]==[[1,2],[2,3]]
           assert restored["one_server_port"]==443 and restored["game4_new_gen3_echoes"]==16 and restored["game4_fec_off"]
-          assert restored["normal_live_restoration_echoes"]==16
+          assert restored["normal_live_restoration_echoes"]==80
           assert restored["old_generation1_exact_stop"] and restored["old_generation2_exact_stop"]
           assert 1100<=restored["os_mtu_third_generation_overlap_conservative"]<=proof["game4_new_inner_os_mtu"]
           assert restored["sibling_normal_os_mtu"]==1375 and restored["configured_outer_intent"]==1460

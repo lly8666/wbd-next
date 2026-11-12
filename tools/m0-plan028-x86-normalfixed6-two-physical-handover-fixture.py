@@ -32,5 +32,11 @@ effective_rows=re.findall(r'V4_PUBLIC_FEC2_READBACK role=client mode=fixed reque
 assert effective_rows and all(int(x)==6 for x in effective_rows),effective_rows'''
 one(old,new)
 assert s.count("PY_H1192")==2
+# H1629: actual old-retire grace reached 18.82s (H1628) while the 32*0.4s
+# sibling UDP generator finished in 12.8s. Lengthen real kernel payload
+# coverage across the ENTIRE authenticated old-A exact Stop, not weaken oracle.
+one("for i in $(seq 0 31);do","for i in $(seq 0 79);do")
+one("assert len(t1)==32 and t1[0]<a<b<t1[-1]","assert len(t1)==80 and t1[0]<a<b<t1[-1]")
+one("assert len(t2)==32 and t2[0]<c<d<t2[-1]","assert len(t2)==80 and t2[0]<c<d<t2[-1]")
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1198_X86_FIXED6_SERVER_THREE_CLIENT_FINAL_RUST_READBACK_FIXTURE_READY",flush=True)
