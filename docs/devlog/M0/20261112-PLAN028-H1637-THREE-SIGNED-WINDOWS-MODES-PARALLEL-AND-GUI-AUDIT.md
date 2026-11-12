@@ -1,0 +1,13 @@
+# PLAN028 H1637｜Three remaining signed Windows modes in parallel, GUI gap audited
+
+Main pre-push `bc43c711b89e3187b0f0a36114fe56b31fd4a4bf`, formal unchanged original Go TLS443/Rust ISA-L product source `8a31375e36bb6a93860c5579e64b4a39d0b6e346`, successful build Action43027983611. Previously current-source signed Windows Normal Off/Auto and Game2/Game4 Fixed6 30%/250ms native all scoped PASS; Linux x86 seven modes each has scoped native evidence. User says skip absent environments, **one-shot remaining feasible scenarios in parallel**, including short Windows VM GUI controls/config tests.
+
+This commit adds three INDEPENDENT native-source-locked Windows Actions, each one 60-second real signed Npcap/Wintun + WSL2 original Go/Rust TCP/UDP scene, 10Mbps/direction, 30% genuine tc loss each direction, one-way250ms, original complete IPv4 outer MTU1460, owned Stop; reuses only H1600 formal binaries. Normal fixed6 highest reuses original `scenarios/plan027a-h941-fixed-1460-10m-250ms-loss30-60s.json`; Game2 Off and Game4 Off clone their original one-mode scenarios with only ID and corrected outer1460. All source guards verify unchanged product and original scenario; wrapper dispatch SUCCESS is not native PASS, and each native result must be evaluated separately. No additional 7-mode matrix, no new binary compilation or product-default edits.
+
+GUI audit: historical WinForms donor `lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984` has WinForms `Portable.cs`, `MainForm.cs`, `GuiTests.cs`, source-locked `M0Plan020GUIAuthorityHarness.cs`. Prior WinVM self-test checks form fields, real CLI `--check-config`, fake child READY vs OS Applied/WAL denial, config save, profile operations, visual screenshot, **not signed-driver GUI-initiated live session nor each human-clicked button**. Actual donor `docs/PARAMETERS.json` still says outer MTU default 1500 and excludes new V4 native-repair flag; this is a **real source / GUI catalog parity finding**, not to be hidden by proof of CLI default1460. Dedicated VM GUI coverage is being designed separately, with explicit source/catalog test and real WinForms buttons; never claim full GUI native runtime until actual GUI child launches original signed networking.
+
+No L3 1800s independent Windows A/B/C rig, no near-derived-inner-MTU and same-host dual-Wintun (user skipped); no new 029/030 DNS/padding or 030 service management. Historical failures kept. PLAN028 IN_PROGRESS.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Three source-locked single-scene native Windows acceptance workflows and original-source scenario ID/MTU clones; no new production feature or default, GUI audit notes only."}
+```
