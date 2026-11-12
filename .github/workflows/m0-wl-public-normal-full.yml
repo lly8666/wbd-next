@@ -134,6 +134,8 @@ on:
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
       - crates/wbd-engine/src/v4_windows_native_runtime.rs
       - crates/wbd-engine/src/v4_client_split.rs
+      - 'crates/wbd-engine/src/v4_direct_*.rs'
+      - 'crates/wbd-platform/src/windows_*.rs'
       - crates/wbd-platform/src/windows_native_io.rs
       - crates/wbd-platform/src/ipv4_tcp.rs
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go
