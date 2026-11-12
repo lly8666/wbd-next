@@ -85,3 +85,39 @@ func TestPlan029NoWFPV2RejectsFakeGuardAndInvalidOrder(t *testing.T){
   t.Fatalf("invalid v2 WAL created: %v",err)
  }
 }
+
+// Plan029 v2 is a genuine four-stage WAL: a live receipt must validate its
+// own schema order, never compare lease to v1 guard. This is a software
+// grammar/owner-fixture test ONLY, not native OS qualification.
+func TestPlan029NoWFPV2LiveReceiptChecksFourStagesAndPreservesHardGate(t *testing.T){
+ ctx:=context.Background()
+ tx,st,_:=p029DryNoWFP(t)
+ if _,err:=tx.VerifyLiveOSApplied(ctx);!errors.Is(err,os.ErrNotExist){
+  t.Fatalf("missing v2 WAL manufactured Applied: %v",err)
+ }
+ if err:=tx.Apply(ctx);err!=nil{t.Fatal(err)}
+ applied,err:=tx.VerifyLiveOSApplied(ctx)
+ if err!=nil||!applied.AllNativeOSApplied||applied.GuardOwned||
+  applied.Schema!=N4NativeLiveOSSchemaNoWFP||
+  !applied.LeaseOwned||!applied.MTUOwned||!applied.DNSOwned||!applied.RoutesOwned{
+  t.Fatalf("v2 four real stage grammar/fixture mismatch: %+v %v",applied,err)
+ }
+ st[2].state=N4UnifiedAbsent
+ failed,err:=tx.VerifyLiveOSApplied(ctx)
+ if !errors.Is(err,ErrN4NativeGuard)||failed.AllNativeOSApplied{
+  t.Fatalf("missing DNS stage manufactured Applied: %+v %v",failed,err)
+ }
+ st[2].state=N4UnifiedForeign
+ failed,err=tx.VerifyLiveOSApplied(ctx)
+ if !errors.Is(err,ErrN4ForeignRoute)||failed.AllNativeOSApplied{
+  t.Fatalf("foreign DNS stage manufactured Applied: %+v %v",failed,err)
+ }
+ st[2].state=N4UnifiedOwned
+ tx.assemblyOnly=true
+ if _,err:=tx.VerifyLiveOSApplied(ctx);!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("assemblyOnly v2 bypassed: %v",err)
+ }
+ tx.assemblyOnly=false
+ if err:=tx.Recover(ctx);err!=nil{t.Fatal(err)}
+ if err:=tx.VerifyLiveOSDisconnected(ctx);err!=nil{t.Fatal(err)}
+}

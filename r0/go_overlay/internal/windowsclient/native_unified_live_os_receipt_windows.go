@@ -43,8 +43,10 @@ func (n *N4NativeUnifiedTxn) VerifyLiveOSApplied(ctx context.Context)(N4NativeLi
  j,err:=n4UnifiedRead(n.Path);if err!=nil{return result,err}
  if j.Identity!=n.Identity || j.Schema!=n.schema() || j.Phase!="active" ||
   len(j.Records)!=len(n.stages()){return result,ErrN4JournalConflict}
+ order,err:=n4UnifiedOrderForSchema(j.Schema)
+ if err!=nil||len(order)!=len(n.stages()){return result,ErrN4JournalConflict}
  for i,s:=range n.stages(){
-  if j.Records[i].State!="owned"||j.Records[i].Name!=n4UnifiedOrder[i]{
+  if j.Records[i].State!="owned"||j.Records[i].Name!=order[i]{
    return result,ErrN4JournalConflict
   }
   if err:=ctx.Err();err!=nil{return result,err}
