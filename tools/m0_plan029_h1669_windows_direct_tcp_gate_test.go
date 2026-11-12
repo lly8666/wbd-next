@@ -15,6 +15,7 @@ import (
  "net"
  "net/netip"
  "os"
+ "os/exec"
  "path/filepath"
  "syscall"
  "testing"
@@ -55,6 +56,8 @@ func p029TCP4(src,dst [4]byte,sport,dport uint16,seq,ack uint32,flags byte,paylo
 }
 func p029AwaitTCP(ctx context.Context,ring *N4OriginalKernelPacketLease,src,dst [4]byte,sport,dport uint16,flags byte,payload []byte)(uint32,error){
  var b [65535]byte
+ observed:=0
+ var lastFlags byte
  end:=time.Now().Add(6*time.Second)
  for time.Now().Before(end){
   if e:=ctx.Err();e!=nil{return 0,e}
@@ -65,13 +68,15 @@ func p029AwaitTCP(ctx context.Context,ring *N4OriginalKernelPacketLease,src,dst 
   if string(b[12:16])!=string(src[:])||string(b[16:20])!=string(dst[:]){continue}
   tcp:=b[20:n]
   if binary.BigEndian.Uint16(tcp[0:2])!=sport||binary.BigEndian.Uint16(tcp[2:4])!=dport{continue}
+  observed++
+  lastFlags=tcp[13]
   if tcp[13]&flags!=flags{continue}
   ihl:=int(tcp[12]>>4)*4
   if ihl<20||ihl>len(tcp){continue}
   if len(payload)>0&&(len(tcp)<ihl+len(payload)||string(tcp[ihl:ihl+len(payload)])!=string(payload)){continue}
   return binary.BigEndian.Uint32(tcp[4:8]),nil
  }
- return 0,fmt.Errorf("real signed Windows TCP kernel response absent within 6s; no WFP/firewall bypass attempted")
+ return 0,fmt.Errorf("real signed Windows kernel TCP response missing after 6s: matching_tcp_frames=%d last_flags=0x%02x required_flags=0x%02x (no WFP/Defender modification)",observed,lastFlags,flags)
 }
 
 func TestPlan029RealSignedWintunKernelTCPListenerFeasibility(t *testing.T){
@@ -137,6 +142,34 @@ func TestPlan029RealSignedWintunKernelTCPListenerFeasibility(t *testing.T){
  if e!=nil{t.Fatalf("real Windows TCP kernel could not bind owned Wintun address: %v",e)}
  t.Cleanup(func(){server.Close()})
  port:=uint16(server.Addr().(*net.TCPAddr).Port)
+
+ // Only read Windows' existing firewall and adapter status; NEVER change
+ // rules or probe a third-party interface. This separates a blocked
+ // inbound-Wintun SYN from a broken local kernel listener.
+ diagCtx,diagCancel:=context.WithTimeout(ctx,4*time.Second)
+ script:=fmt.Sprintf("$p=Get-NetConnectionProfile -InterfaceIndex %d -ErrorAction SilentlyContinue; if($p){'WINTUN_CATEGORY='+$p.NetworkCategory}else{'WINTUN_CATEGORY=UNKNOWN'}; $f=Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction SilentlyContinue; $f|ForEach-Object {'FIREWALL_PROFILE='+$_.Name+',Enabled='+$_.Enabled+',Inbound='+$_.DefaultInboundAction}",now.Index)
+ profile,profileErr:=exec.CommandContext(diagCtx,"powershell.exe","-NoProfile","-NonInteractive","-Command",script).CombinedOutput()
+ diagCancel()
+ if profileErr==nil{
+  // Firewall categories and default actions, no third-party rule contents.
+  t.Log("PLAN029_H1672_READ_ONLY_WINDOWS_FIREWALL_CONTEXT "+string(profile))
+  receipt["read_only_firewall_profile"]=string(profile)
+ } else {t.Logf("PLAN029_H1672_READ_ONLY_WINDOWS_FIREWALL_UNKNOWN error=%v",profileErr)}
+ localProbe,e:=net.DialTimeout("tcp4",net.JoinHostPort(local.String(),fmt.Sprint(port)),3*time.Second)
+ if e!=nil{
+  receipt["local_kernel_listener"]="FAIL_SELF_CONNECT"
+  t.Fatalf("same-Windows-host native TCP self-connect to Wintun address rejected before raw SYN: %v",e)
+ }
+ if e=server.SetDeadline(time.Now().Add(3*time.Second));e!=nil{localProbe.Close();t.Fatal(e)}
+ localAccepted,acceptErr:=server.AcceptTCP()
+ localProbe.Close()
+ if acceptErr!=nil{
+  receipt["local_kernel_listener"]="FAIL_ACCEPT"
+  t.Fatalf("same Windows kernel listener did not accept its own native socket: %v",acceptErr)
+ }
+ localAccepted.Close()
+ receipt["local_kernel_listener"]="PASS_REAL_NATIVE_SELF_CONNECT_ACCEPT"
+ t.Log("PLAN029_H1672_REAL_WINDOWS_LOCAL_KERNEL_TCP_LISTENER_ACCEPT_PASS_NO_WFP")
  var installation,generation [16]byte
  if _,e=rand.Read(installation[:]);e!=nil{t.Fatal(e)}
  if _,e=rand.Read(generation[:]);e!=nil{t.Fatal(e)}
