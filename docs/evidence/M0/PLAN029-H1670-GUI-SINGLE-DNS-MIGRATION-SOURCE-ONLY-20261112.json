@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1671",
+  "observed_at": "2026-11-12",
+  "source_sha": "32e46c64d4292e90682482b481a32bac73aab731",
+  "product_source_sha": "32e46c64d4292e90682482b481a32bac73aab731",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "PASS_SCOPED_REAL_WINFORMS_NATIVE_GO_CONFIG_ONLY_NO_NETWORK",
+  "workflow": {
+    "run_id": 43216988261,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43216988261",
+    "conclusion": "success",
+    "job_id": 131178629099,
+    "artifact_id": 13944555986
+  },
+  "verified": [
+    "current pinned original Go overlay assembled and native Windows client compiled",
+    "real compiled WinForms controls; two editable single DNS fields and retired hidden dns4 field",
+    "Go --check-config effective dns.direct=223.5.5.5,dns.tunnel=1.1.1.1",
+    "legacy dns4 two-item JSON first migrated only; no saved backup or runtime fallback; conflict rejected",
+    "profile reopen preserves both single DNS fields",
+    "server address domain distinct from verified TLS SNI",
+    "normal→game4 mode and 1500 explicit→1460 default preserves configured OUTER MTU, Rust inner computed only",
+    "no false OS Applied/WAL emitted"
+  ],
+  "not_qualified": [
+    "physical direct/tunnel DNS egress",
+    "real Windows Wintun DNS interception and IP+domain Direct TCP/UDP",
+    "FakeIP/CDN isolation",
+    "signed GUI-origin native TLS/Rust/OS business",
+    "no-old-WFP 4-stage native WAL/Stop",
+    "startup padding and performance"
+  ]
+}

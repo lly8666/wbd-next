@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1662,
-  "checkpoint_sha": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
+  "sequence": 1671,
+  "checkpoint_sha": "32e46c64d4292e90682482b481a32bac73aab731",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1662: DNS/CLI source build verified; native DNS E2E, CIDR direct split, GUI effective readback, flows padding remain open",
+  "current_task": "PLAN029 H1671: exact single direct/tunnel DNS GUI+CLI migration SOURCE32e46c PASS_SCOPED, signed Windows Direct TCP kernel SYNACK H1669 FAIL, real native Rust IP+CN-domain Direct/Tunnel and no-WFP OS transaction OPEN",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
-  "done_when": "PLAN029 exit in docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md: original signed DNS-hijacked Windows Normal/Game4 re-resolution/wake/reconnect, actual CLI/GUI/effective outer MTU1460 persistence and owned Stop, safe bounded flows TCP/UDP padding cost verified with source-locked Actions. Preserve 028 scoped limits and unmeasured items.",
-  "next_action": "Collect already-running H166x Actions first; then implement user 2026-11-12 PLAN029 CN IP+domain/single-DNS revision per docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md: real Windows kernel Direct TCP feasibility gate, complete Rust direct UDP/TCP+selective CN FakeIP+DNS/config/GUI, D1-D5/P1-P2, remaining padding. No duplicate dispatch or 028 matrix. Latest user: contract section3A NO legacy WFP adoption; remove guard prerequisites from real startup/cleanup/receipts, migrate only owned old objects. Preserve Wintun ring lifetime/order; no adversarial framework.",
+  "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
+  "next_action": "Read-only focused Windows TCP SYNACK diagnostic on signed Wintun: compare local kernel listener health, incoming profile/firewall readback and raw Wintun SYN/RST tuple without changing Defender/WFP; do not select smoltcp until first causal constraint. Then remove obsolete WFP stage across actual owned transaction/receipt/Stop with exact legacy-owned migration and verify on actual Windows. Implement Rust Direct UDP/TCP and QNAME/FakeIP per contract; D1–D5 real OS proof. No repeat old 028 tests.",
   "unverified": true,
-  "last_tested_source": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
+  "last_tested_source": "32e46c64d4292e90682482b481a32bac73aab731",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1661-DNS-SOURCE-ONLY-WINDOWS-BUILD-20261112.json"
+    "docs/evidence/M0/PLAN029-H1670-GUI-SINGLE-DNS-MIGRATION-SOURCE-ONLY-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -23,8 +23,9 @@
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/prompts/M0-PLAN029.md",
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
-    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md"
+    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
+    "docs/evidence/M0/PLAN029-H1669-SIGNED-WINTUN-TCP-KERNEL-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1661 SOURCE474eeb66 Windows native Go V4 overlay/CLI build SUCCESS Action43180302066; 4 PLAN029 unit tests PASS (faketcp2/windowsclient1/cmd1). GUI text only. DNS NPF physical/WFP production E2E NOT_RUN, no resolver TTL/multiA retry, native Rust CN/LAN direct split NOT_QUALIFIED under 2026-11-12 new §2A, flows padding NOT_IMPLEMENTED. 028 ACK/Win L3/GUI signed startup excluded. Keep H1658 PLAN029 active, single M0 main writer. User 2026-11-12 design-only expansion: CN IP+domain union and one resolver per egress, no backups; new execution/GUI/performance remains NOT_RUN. Existing product checkpoint/test evidence unchanged by this documentation update."
+  "partial_summary": "H1671 source lock: H1667 0aeaf9d canonical Windows Go/GUI dns.direct 223.5.5.5 and dns.tunnel 1.1.1.1, dns4 first-only migration and physical NPF bootstrap no NIC/third resolver; Windows Go Action43214945943 and GUI43214945651 success scoped. H1668 2a47461 limited manifest-only old028 fanout. H1669 real signed Windows no-WFP Direct TCP feasibility FAIL Action43216324767: signed driver and owned /32 reached SYN; no kernel SYNACK 6s. H1670 SOURCE32e46c current real WinForms/Go --check-config Action43216988261 SUCCESS, dual DNS, old backup retired, MTU1460/1500 and read-only inner persisted; NO network. New CN domain FakeIP/Rust Direct TCP+UDP/no-WFP 4-stage/flows padding not implemented or tested; 028 ACK, independent Windows L3 and GUI-origin signed E2E remain not qualified."
 }

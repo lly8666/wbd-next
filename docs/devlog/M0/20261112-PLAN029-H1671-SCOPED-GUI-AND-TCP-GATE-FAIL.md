@@ -1,0 +1,6 @@
+# H1671｜PLAN029 single DNS GUI scoped PASS; real signed Windows TCP kernel gate FAIL
+
+- SOURCE `32e46c64d4292e90682482b481a32bac73aab731`, [H1670 Windows2025 WinForms/real Go CLI Action 43216988261](https://github.com/lly8666/wbd-next/actions/runs/43216988261) SUCCESS; compiled current original Go overlay + unchanged pinned Rust, GUI fields dual single DNS/old dns4 hidden and first-only migration; 1460 configured outer and auto inner not written back; no network executed. Receipt docs/evidence/M0/PLAN029-H1670-GUI-SINGLE-DNS-MIGRATION-SOURCE-ONLY-20261112.json.
+- [H1669 real signed Wintun Action 43216324767](https://github.com/lly8666/wbd-next/actions/runs/43216324767) **FAIL**, pinned SOURCE `bd82a8b5`: OS lease/route + SYN injection, but no SYNACK within 6s. No project WFP or Defender edits; exact cause unknown. Historical source-scoped failure kept as docs/evidence/M0/PLAN029-H1669-SIGNED-WINTUN-TCP-KERNEL-FAIL-20261112.json, NOT upgraded due to new GUI PASS.
+- H1668 legacy action trigger fanout reduced; no old 028 performance rerun.
+- Contract DESIGN_APPROVED only: Rust CN-IP/domain FakeIP, actual Direct TCP/UDP + DNS both physical/tunnel egress, no-WFP owned OS transaction, startup-padding remain OPEN; no unauthorized 030 start, no 028 scoped promotion.

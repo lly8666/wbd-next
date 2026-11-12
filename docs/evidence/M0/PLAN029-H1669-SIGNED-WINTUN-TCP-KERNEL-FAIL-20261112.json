@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1669",
+  "observed_at": "2026-11-12",
+  "source_sha": "bd82a8b5b22b34d1f342bd2966c7cdb13b6806f8",
+  "result": "FAIL_REAL_SIGNED_WINDOWS_WINTUN_TCP_KERNEL_FEASIBILITY_NO_SYNACK",
+  "workflow": {
+    "run_id": 43216324767,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43216324767",
+    "conclusion": "failure",
+    "job_id": 131176372846
+  },
+  "observed": [
+    "real signed official Wintun 0.14.1 SHA256 verified; compile and assembly PASS",
+    "actual Win32 IP Helper /32 address and exact /32 reverse route setup progressed to SYN injection",
+    "after genuine WintunSendPacket SYN, original WintunReceivePacket produced no matching kernel SYNACK within 6s",
+    "no in-project WFP guard armed; no Defender firewall rules modified"
+  ],
+  "unknown": [
+    "whether Windows inbound Defender default profile drops fake source",
+    "whether local TCP kernel receiver/route interpretation prevented accept",
+    "whether raw SYN packet was delivered as expected inside OS"
+  ],
+  "not_qualified": [
+    "Windows kernel-local TCP listener Direct feasibility",
+    "Direct socket physical binding/relay/reverse mapping",
+    "CN IP/domain D1-D5, Stop",
+    "alternative Rust direct-only TCP stack (NOT SELECTED)"
+  ]
+}
