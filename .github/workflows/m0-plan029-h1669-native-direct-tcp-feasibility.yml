@@ -1,0 +1,76 @@
+name: PLAN029 H1669 signed Windows Wintun TCP kernel ingress feasibility (NO WFP)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1669-native-direct-tcp-feasibility.yml"
+      - "tools/m0_plan029_h1669_windows_direct_tcp_gate_test.go"
+permissions: {contents: read}
+jobs:
+  windows-real-tcp-gate:
+    runs-on: windows-2025
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble actual original Go Windows driver and pin signed Wintun
+        shell: pwsh
+        timeout-minutes: 9
+        run: |
+          $ErrorActionPreference="Stop"
+          New-Item -ItemType Directory -Force result,win-native | Out-Null
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw "current source mismatch"}
+          if((git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984'){throw "original Go donor mismatch"}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw "original Windows source assembly failed"}
+          Copy-Item tools/m0_plan029_h1669_windows_direct_tcp_gate_test.go legacy/internal/windowsclient/plan029_h1669_real_signed_tcp_windows_test.go
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile win-native/wintun.zip -TimeoutSec 40
+          $actual=(Get-FileHash win-native/wintun.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($actual -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw "signed Wintun original release ZIP hash mismatch"}
+          Expand-Archive -LiteralPath win-native/wintun.zip -DestinationPath win-native/release -Force
+          $dll='win-native/release/wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw "not real signed Wintun"}
+          Copy-Item $dll win-native/wintun.dll
+          Push-Location legacy
+          try {
+            & go test -c -tags wbd_v4_embedded_go -o ../win-native/plan029-real-native-tcp.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw "real Windows original Go kernel TCP capability test does not compile"}
+          } finally {Pop-Location}
+          Write-Output "PLAN029_H1669_REAL_SIGNED_WINTUN_TCP_GATE_NATIVE_BUILD_READY"
+      - name: Test real Wintun TCP SYN ACK data reverse FIN and exact cleanup without WFP/Defender edits
+        shell: pwsh
+        timeout-minutes: 4
+        env:
+          WBD_PLAN029_DIRECT_TCP_GATE: "1"
+          WBD_PLAN029_TCP_GATE_RECEIPT: ${{ github.workspace }}\result\h1669-real-tcp.json
+        run: |
+          $ErrorActionPreference="Stop"
+          & ./win-native/plan029-real-native-tcp.exe '-test.run=^TestPlan029RealSignedWintunKernelTCPListenerFeasibility$' '-test.v=true' '-test.timeout=160s' 2>&1 | Tee-Object result/h1669-real-tcp.log
+          if($LASTEXITCODE -ne 0){throw "real signed Wintun kernel TCP feasibility failed; preserve raw failure"}
+          $e=Get-Content result/h1669-real-tcp.json -Raw | ConvertFrom-Json
+          if($e.source_sha -ne $env:GITHUB_SHA -or $e.result -ne 'PASS_SCOPED_REAL_SIGNED_WINTUN_TCP_SYN_ACK_DATA_FIN_OS_ROUTE_NO_WFP' -or $e.wfp_guard -ne 'NOT_CREATED'){throw "no real signed kernel TCP PASS receipt"}
+          Write-Output "PLAN029_H1669_SIGNED_WINDOWS_KERNEL_TCP_GATE_SCOPED_PASS_NOT_FULL_DIRECT_OWNER"
+      - name: Preserve exact SOURCE and observed failure/scope
+        shell: pwsh
+        if: always()
+        run: |
+          New-Item -ItemType Directory -Force result | Out-Null
+          [ordered]@{source_sha=$env:GITHUB_SHA;legacy_source='a7a82db31fe736ffedee330795a3234d358f1984';classification='REAL_WIN_TCP_KERNEL_GATE_ONLY';full_direct_tcp_udp='NOT_RUN';physical_socket_bind='NOT_RUN';wfp_guard='NOT_ARMED';rust_win_native_owner='NOT_RUN';run_id=$env:GITHUB_RUN_ID}|ConvertTo-Json|Set-Content -Encoding UTF8 result/h1669-source.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1669-real-win-tcp-${{ github.run_id }}
+          path: |
+            result/h1669-real-tcp.json
+            result/h1669-real-tcp.log
+            result/h1669-source.json
+          if-no-files-found: warn
+          retention-days: 14
