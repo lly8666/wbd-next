@@ -1,6 +1,6 @@
 # PLAN028｜简化认证、单端口多客户端与配置接线
 
-IN_PROGRESS（2026-11-11：SOURCE8c0421 Windows自动AES256与四Linux三套cipher真实150s和六owner Stop PASS_SCOPED；用户明确不需运行同Windows宿主多Wintun，H1587原始route/WAL FAIL保留为该组合未支持限制；同账号跨OS独立安装已在SOURCE8a313真实150s PASS_SCOPED、最终综合质检与近MTU仍未齐，不得标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
+IN_PROGRESS（2026-11-12：SOURCE8a31375e Windows签名单Wintun＋四Linux异构三AEAD、同账号独立安装及自动/32真实150s业务/Windows先Stop其他继续/六owner清理 H1601 PASS_SCOPED；同SOURCE Win真实108.48s idle后60s双向UDP/TCP+Stop H1623 PASS_SCOPED。Windows独立DUT/控制面L3无合格A/B/C拓扑、高损全业务和受影响最新七模式/Win物理AutoIP path不齐；近innerMTU旧环境阻断且用户此前跳过；单Windows宿主双Wintun旧H1587 route CAS FAIL保留不支持。不能标COMPLETE）。主要实现已进入集成收尾，不将功能接通当全包完成；精确进度/SOURCE只读M0 cursor和evidence。功能范围留在本页，方法、压力、验收及退出统一见[专项验收](../testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，入口为[M0-PLAN028](../prompts/M0-PLAN028.md)。既有实现按证据复用，不重做旧包；真实缺陷与必要接线继续修，暂停无关新功能/协议重构。
 
 ## 0. 施工边界：补接入与交接，不重做架构协议
 

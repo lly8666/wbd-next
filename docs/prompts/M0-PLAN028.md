@@ -12,4 +12,6 @@
 
 本提示词只指路；具体方法、公式、覆盖和退出口径唯一维护在专项验收计划。运行SOURCE、待收结果及下一步仅在cursor/evidence，不把瞬时H号重新塞回长期提示。
 
-**H1580接续导航（不把瞬时Action写成永久结论）：**按 [028覆盖与逐键配置表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md) 阅读已用正式入口、SOURCE、原始失败、源码修复和独立剩余验证。Windows V4正式CLI已默认native，GUI走同exe；这不等于AES/自动租约已在新SOURCE实网通过。先收当前Actions、读实证据/receipt再派发，仍禁扩029/030。
+**H1580接续导航（不把瞬时Action写成永久结论）：**按 [028覆盖与逐键配置表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md) 阅读已用正式入口、SOURCE、原始失败、源码修复和独立剩余验证。Windows V4正式CLI已默认native，GUI走同exe；SOURCE8a H1601签名Windows单Wintun＋四Linux150s真业务已验证自动租约、AES256/三AEAD共存，但不是Windows七模式全组合或独立DUT L3均通过。先收当前Actions、读实证据/receipt再派发，仍禁扩029/030。
+
+**H1626交接校正：**旧审计中Win原生默认false/AutoLease:false/仅ChaCha的情形已被正式装配替换与SOURCE8a/H1601真实受保护/32和Rust cipher/OS应用证明；不重复重造协议。保持 MTU1460/FEC Off/Linux轮换0/Win15s-90s-idle0/outer repair on。当前缺独立 A管理+B非Runner Win DUT+C独立Linux 的真实1800s L3，禁止误用Windows hosted runner+WSL2；当前源其它未验项目看[覆盖表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md)。旧Action42979705842、42979705889失败保存，最新治理43113485314/43113485414成功。PLAN028继续IN_PROGRESS，029/030不动。

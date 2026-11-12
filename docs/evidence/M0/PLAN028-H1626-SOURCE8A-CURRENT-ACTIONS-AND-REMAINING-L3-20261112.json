@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1626",
+  "plan_status": "IN_PROGRESS",
+  "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+  "previous_head_sha": "60006d13ece22506c4ef9ae930270b5a4fa173aa",
+  "kind": "COLLECT_EXISTING_ACTIONS_AND_CORRECT_METADATA_NO_NEW_NATIVE_TEST",
+  "original_failures": [
+    {
+      "id": 42979705842,
+      "source_sha": "c3e60772c2f99e5d7fa1cadb0284b3e1addca1d4",
+      "status": "FAIL",
+      "native_job_id": 130388951749,
+      "actual": "Five-client true 150s UDP/TCP stage PASS locally; later Linux shared echo exited early, final full lifecycle oracle failed. Whole action FAIL, local business is not whole-scene PASS."
+    },
+    {
+      "id": 42979705889,
+      "source_sha": "c3e60772c2f99e5d7fa1cadb0284b3e1addca1d4",
+      "status": "FAIL",
+      "governance_job": 130386992397,
+      "actual": "Governance old static tests failed, original preserved."
+    },
+    {
+      "id": 43112296446,
+      "status": "FAIL",
+      "actual": "Old H1623 feature card 17081 UTF8 >16KiB and evidence missing top-level product source; subsequent H1624 metadata fixed, original failure preserved."
+    }
+  ],
+  "subsequent_results": [
+    {
+      "id": 43027983611,
+      "status": "SUCCESS",
+      "product_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "result": "PASS_SCOPED signed Windows1 Linux4 same login separate installation auto/32 three AEAD real UDP/TCP 150s, Alice Stop Bob remains real business, all owners exact Stop",
+      "evidence": "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
+    },
+    {
+      "id": 43110135433,
+      "status": "SUCCESS",
+      "product_source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "harness_source_sha": "0577bb29844375535b0a79955d49e409df604b55",
+      "result": "PASS_SCOPED Windows manual IPv4 signed Npcap/Wintun + Linux original Go/Rust after108.48s idle, 60s 99497 and 99551 original kernel UDP unique each all first delivered + duplex TCP + Stop",
+      "evidence": "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json"
+    },
+    {
+      "id": 43113130188,
+      "status": "SUCCESS",
+      "result": "Corrected feature UTF8 size and evidence schema"
+    },
+    {
+      "id": 43113485314,
+      "status": "SUCCESS",
+      "source_sha": "60006d13ece22506c4ef9ae930270b5a4fa173aa",
+      "result": "H1625 Feature catalog and Governance both successful"
+    },
+    {
+      "id": 43113485414,
+      "status": "SUCCESS",
+      "source_sha": "60006d13ece22506c4ef9ae930270b5a4fa173aa",
+      "job_id": 130835347859,
+      "result": "H1625 full governance-maintenance regression successful"
+    }
+  ],
+  "source_locked_product": {
+    "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+    "build_action": 43027983611,
+    "go_donor_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "windows_exe_sha256": "63b4a24abb0e7c775be5e58d3e54036f4bfab0491bc992a0147b8fe57886cd7c",
+    "windows_rust_dll_sha256": "7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d",
+    "linux_client_sha256": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "linux_rust_so_sha256": "2947d148d325e198acd920c56803ad168175ba11590396478682693fcf5922dc",
+    "native_fec_acceleration": "ISA-L pinned build manifest, actual usage only when FEC symbol size/runtime eligible",
+    "new_product_build_in_this_checkpoint": false,
+    "original_binary_hashes_from_existing_verified_evidence": true
+  },
+  "defaults_unchanged": {
+    "outer_complete_ipv4_mtu": 1460,
+    "FEC": "Off",
+    "cipher": "chacha20-poly1305",
+    "auto_lease": "lease4 empty",
+    "outer_repair": "on",
+    "linux_rotation_seconds": 0,
+    "windows_keepalive_seconds": 15,
+    "windows_dead_after_seconds": 90,
+    "windows_idle_dormant_seconds": 0
+  },
+  "unqualified": [
+    "Independent A control+B Windows nonrunner DUT+C independent Linux 1800s L3: INFRA_BLOCKED per docs/testing/PLAN028_L3_ISOLATED_CONTROL_PLANE.md; do not run hosted control for L3",
+    "Current SOURCE8a seven-mode complete Windows/Linux and ARM64 representative affected-entry gaps",
+    "Windows AutoIP real physical source/MTU path and GUI click",
+    "Current source 30percent/250ms full five-client pressure, failure-inclusive p99, per-worker CPU/RSS, queue age",
+    "Near-derived-inner-MTU signed Windows source8a original prebusiness environmental failure, previous user skipped retest",
+    "Same-Windows-host two Wintuns unsupported, historical H1587 FAIL preserved",
+    "Android physical public WAN and 029/030 out of scope"
+  ],
+  "artifact_verified": true,
+  "artifact_verified_scope": "H1601/H1623 original evidence ZIP and binaries checked earlier; not freshly downloaded in H1626",
+  "plan_complete": false
+}

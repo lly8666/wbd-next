@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1625,
-  "checkpoint_sha": "8950a238cbdee0f322467e863a23d7fd00263158",
+  "sequence": 1626,
+  "checkpoint_sha": "60006d13ece22506c4ef9ae930270b5a4fa173aa",
   "progress": "in_progress",
-  "task_id": "PLAN028-M0-H1625-CHEAP_GOV_MAINTENANCE_AFTER_CORRECTED_NATIVE_EVIDENCE",
-  "current_task": "H1623 native signed Windows single Wintun+genuine WSL2 Normal Off 105s idle then 60s bidirectional actual 10Mbps TCP/UDP original Go TLS/Rust M4 source8a H1600 reused binary, targetAction43110135433 SUCCESS, raw artifact13895333759 ZIPsha49d03fc3 verified; measured idle108.48s, Windows sent99497/Linux first received99497, Linux sent99551/Win first received99551, real outer1460 inner OS1389, final owned Stop/WAL/Npcap cleanup PASS_SCOPED. H1623 governance/maintenance source65e FAIL due feature card UTF8 17081 >16KiB and H1623 evidence missing source_sha; original failures preserved. H1624 corrected feature card actual UTF8 16129 and evidence top-level original product source_sha8a artifact_verified true; Feature catalog and governance Action43113130188 SUCCESS, but maintenance path filter did not select docs/features and evidence-only fix. H1625 appends source-locked M0 prompt handoff to trigger cheap governance-maintenance regression without rerunning native network or compiling Go/Rust. Source-of-product and limits unchanged; 028 IN_PROGRESS.",
-  "why_now": "Explicit post-H1624 cheap source governance maintenance needed because path filters exclude the metadata-only H1624 commit; sync handoff while triggering only CI unit regression, no product build or network duplication.",
+  "task_id": "PLAN028-M0-H1626-COLLECT-H1625-GOV-AND-CORRECT-SOURCE-LOCKED-INVENTORY",
+  "current_task": "H1626: collected H1625 main governance/feature Action43113485314 and governance-maintenance Action43113485414 SUCCESS, preserving H1575 native full Action42979705842 FAIL and maintenance42979705889 FAIL. Previous feature inventory falsely stated signed Windows auto IPv4/three ciphers only compiled; SOURCE8a H1601 genuine 150s 5-client Win/Linux lifecycle and H1623 105s idle+60s native duplex proven PASS_SCOPED. This is docs/catalog/evidence recovery, not product change or new native test. Independent A/B/C Windows1800 L3 rig unavailable, PLAN028 remains IN_PROGRESS.",
+  "why_now": "Restore genuine Actions and stop new M0 agents from reimplementing already signed-tested Windows auto/cipher or relabeling unqualified hosted L3.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1625 maintenance and governance Actions, retain previous fail record; no rerun of signed Windows idle105, Linux Game2 path or failed B old A scenarios. If all cheap checks pass, stop duplicate work; remaining independent Windows DUT 1800s L3, Windows Auto-IP/physical path, new-source seven-mode/ARM representative require separate reliable controls. No user-skipped nearMTU/multiWintun and do not start 029/030.",
+  "next_action": "Check H1626 doc-only governance/feature result. Require independently observed A control/B nonrunner Windows signed DUT/C independent Linux before one 1800s L3; hosted Windows+WSL2 cannot qualify. Do not duplicate H1601/H1623. Remaining real Win Auto-IP physical event/MTU, affected SOURCE seven mode variants, high-loss first delivery CPU/RSS queue age p99 and GUI only with capable rig. User previously skips near-MTU and multiWintun, preserve old H1587 FAIL. No PLAN029/030, no PLAN028 complete until all hard gates.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
     "docs/evidence/M0/PLAN028-H1604-SOURCE8A313-REAL-A-B-GAME-LANE-ROTATION-20261111.json",
     "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json",
-    "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json"
+    "docs/evidence/M0/PLAN028-H1623-SOURCE0577-WINDOWS-SIGNED-IDLE105-PREBUILT-TWO-OS-NATIVE-20261112.json",
+    "docs/evidence/M0/PLAN028-H1626-SOURCE8A-CURRENT-ACTIONS-AND-REMAINING-L3-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",

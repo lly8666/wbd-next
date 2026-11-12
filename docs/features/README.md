@@ -3,6 +3,8 @@
 本目录回答：有什么、怎么用、默认值、在哪个分支、哪些平台测过。
 `.governance/registry.json` 仍管工位权限/语义归属；这里不派任务、不授予写权限。
 
+H1626恢复提示（2026-11-12）：既有SOURCE8a Win/Linux自动地址＋三AEAD＋生命周期和signed idle105真实PASS_SCOPED已补回清单；同宿主双Windows Wintun旧FAIL及独立DUT L3未验仍存在。审计时期SOURCE813“仅编译未实测”不可再当最新事实；逐项见[覆盖与精确源码证据](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md)。
+
 先读 [inventory.json](inventory.json) 的完整性；PLAN028 本轮源码/正式入口/测试范围快速参见 [M0配置与覆盖表](../testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md)。NOT_INITIALIZED/PARTIAL 不是没有功能；
 COMPLETE_FOR_SCOPE 仅表示指定 SOURCE 已盘点，不表示全部功能/平台 PASS。
 

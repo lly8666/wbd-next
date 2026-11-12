@@ -3,13 +3,13 @@
   "status": "PARTIAL",
   "scope_branch": "main",
   "baseline_source": "6e271c1e01aefadb4266eed44646d51806f88d49",
-  "inventory_source": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
-  "review_ref": "docs/devlog/M0/20261027-feature-inventory-init.md",
+  "inventory_source": "60006d13ece22506c4ef9ae930270b5a4fa173aa",
+  "review_ref": "docs/devlog/M0/20261112-H1626-SOURCE-LOCKED-INVENTORY-AND-L3-BLOCKER.md",
   "gaps": [
-    "PLAN028 Windows2025 actual auto/manual IPv4 and three independently selected record ciphers with heterogeneous Linux clients: SOURCE813 source/compile only; original signed-Npcap/Wintun business at this SOURCE NOT_RUN.",
-    "One Windows+four Linux 150s 1.15x genuine UDP/TCP and six-owner Stop PASS_SCOPED at SOURCE cd5d, but old Action42983815178 still FAIL due compatibility report copy. New source report export corrected but network unchanged source not retested.",
-    "ARM64 existing 30min/30pct original Go TLS/Rust native evidence scoped to its original source24e; new source ARM build PASS, no automatic longtest promotion; signed Windows 30pct cold TLS remains a genuine gap.",
-    "Physical public internet, Android, all-GUI kernel-OS Applied/Stop, and PLAN029/030 are out of PLAN028 validation scope; old feature cards' historic negative Action records retained."
+    "Prior SOURCE813-only Windows auto-IP/AES build status is superseded: product SOURCE 8a31375e36bb6a93860c5579e64b4a39d0b6e346 Action43027983611 signed Windows auto /32 AES256 Rust cipher3 and Linux 4 clients with three AEAD including same-account separate installation, true 150s UDP/TCP, Windows owned Stop then Bob real UDP and six-owner Stop PASS_SCOPED; Windows manual /32 separately SOURCEfd473 Action43009320538. Not every Win cipher×mode permutation passed.",
+    "Windows signed idle105 true wake and 60s duplex kernel UDP/TCP SOURCE8a Action43110135433 PASS_SCOPED, but Windows auto-IP physical path changes, GUI human UI, independent Health counts, latest-source seven-mode total coverage, and same-source 30%/250ms five-client sustained mixed traffic are NOT fully qualified.",
+    "Independent A control + B remote Windows DUT + C external Linux 1800s L3 is NOT_QUALIFIED: no independent DUT available; hosted Windows Runner+WSL2 does not meet isolated failure-domain contract and must not be used as a replacement. Per-worker CPU/RSS, queue age, failure-inclusive p99 and capacity limits not completely captured; old source Linux 304Mbps is outer combined duplex, not single inner client.",
+    "Linux ARM64 old-source native 2x1800s and FEC accelerator build are scoped to their original evidence, not new source all-entry L3. Signed Windows near-inner-MTU genuine datagrams remain NOT_RUN (WSL2 pre-business failure; previous user skipped repeat). Same-Windows-host multiple Wintun original H1587 route WAL CAS FAIL retained as unsupported/user-excluded. Android, physical public WAN and PLAN029/030 outside scope."
   ],
   "next_action": "先收SOURCE813 Windows Go/Rust/ARM64 action结果、修旧PLAN020 WAL静态断言；用真实Windows signed Npcap/Wintun验 auto/manual/3 cipher coexist and TCP/UDP, then scoped lifecycle/L3; keep PLAN028 IN_PROGRESS."
 }
