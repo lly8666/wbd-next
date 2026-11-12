@@ -1,6 +1,17 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1636 当前SOURCE8a签名Windows Game2/Game4 固定最高FEC6双场同时完成
+
+两项独立的 [Game2 FEC6 Action43139768028](https://github.com/lly8666/wbd-next/actions/runs/43139768028)、[Game4 FEC6 Action43139771735](https://github.com/lly8666/wbd-next/actions/runs/43139771735) **均整体SUCCESS**，各自签名Windows2025 Npcap/Wintun＋Linux WSL2原Go标准TLS443／Rust M4真实内核UDP/TCP，60秒双向各10Mbps、每向真实tc30%丢包／单程250ms、outer1460／inner1358、两端各自Stop。保留两个原始ZIP，CRC均无误，来源为正式产品构件SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`，独立 [H1636证据](../evidence/M0/PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-250-PASS-20261112.json)。
+
+| 完整本机原生场 | Windows真实first | Linux真实first | 原Rust服务端FEC回执和内核loss | Windows原Go+Rust进程资源 |
+|---|---:|---:|---|---|
+| Game2 Fixed6 | 100.0000%（73640/73640） | 99.9823%（73610/73623；未到13） | `GAME_FEC_APPLIED lanes=2 fixed profile=6`，FEC`recovered_candidate=6778`，eth0/ifb drops105196/102266 | 76采样77.078s，CPU7.1406s/单核9.264%，峰值RSS58.48MB |
+| Game4 Fixed6 | 100.0000%（73640/73640） | 99.8778%（73532/73622；未到90） | `GAME_FEC_APPLIED lanes=4 fixed profile=6`，FEC`recovered_candidate=585`，eth0/ifb drops208661/146714 | 76采样77.984s，CPU33.4062s/单核42.837%，峰值RSS73.02MB |
+
+两场业务真实成功，不表示 FEC`recovered_candidate`可与业务唯一交付直接相加；Linux方向未收到的13/90包保持真实损失，成功报文RTT p99 531–625ms不含未返回探针，也不是校准过的一向p99。不同托管VM的CPU数据不得用于归因或单机A/B；旧owner限制不变。加上当期 [Normal Off Action43136758689](https://github.com/lly8666/wbd-next/actions/runs/43136758689) 和 [Normal Auto Action43138301038](https://github.com/lly8666/wbd-next/actions/runs/43138301038)，**当前SOURCE Windows 30%/250ms四个独立代表场均有真实产品原生结果**，但并非 Windows七模式全组合/五客户端满载/独立1800秒DUT或人手GUI已收口。Windows Normal Fixed6/Game2 Off/Game4 Off当前SOURCE损伤代表场仍未跑。缺独立A/B/C环境1800s不派，用户已排除近innerMTU/同一Windows多Wintun。
+
 ## H1632 Windows签名真实30%/250ms短场（Normal Off）已完成；显式Auto下一独立场待原始结果
 
 **当前产品二进制SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346`**，测试源码 `12d2c2378846ee34737a5f38555533d98c13cbbc`，单签名Windows Npcap/Wintun→真实Ubuntu WSL2共享Linux Go/Rust，独立[Action43136758689](https://github.com/lly8666/wbd-next/actions/runs/43136758689)整场native job **SUCCESS**，原ZIP artifact13907294714 SHA `59ca2be8ad7d08a429726e52bfc8c7bbe735818ba3b5e2f2be77e62b8902493c`、37文件CRC/原报表SHA核实；[全部原始数字和限制](../evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json)。

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1635,
-  "checkpoint_sha": "d861dcb88cf4fc5bcb02bbb9af4cfbf9ffe34e5a",
+  "sequence": 1636,
+  "checkpoint_sha": "f7d81a38951b9990ab1a9bad3fb1425c02e60c8c",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1635-CURSOR-HOT-BUDGET-REPAIR-NATIVE-GAME-FEC6-IN_FLIGHT",
-  "current_task": "H1635 SOURCE8a: signed Windows/Linux Normal Off 30%/250ms Action43136758689 PASSED scoped (72.3% first); explicit Auto Action43138301038 PASSED scoped (99.83/99.88%, auto revision2/profile6). Original ZIP/Stop verified H1632/H1634. Game2/Game4 FEC6 native Actions43139768028/43139771735 running in parallel; NOT PASS yet. Governance H1634 failed combined hot bytes 32848>32768; trim cursor only; no policy/product changes.",
-  "why_now": "Governance hot budget is 32768B; original H1634 combined hot 32848B. Preserve hard gate; source8a signed Game FEC6 true parallel network actions continue independently.",
+  "task_id": "PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-SCOPED-PASS",
+  "current_task": "H1636 current formal SOURCE8a: two parallel genuine signed Windows Wintun+Linux TLS/Rust 60s, 10Mbps each, 30%/250ms Game2 Fixed6 Action43139768028 and Game4 Fixed6 Action43139771735 both overall SUCCESS; true original 2/4-lane FEC6 profile6, kernel UDP/TCP, 100% Win first, Linux99.9823/99.8778%, kernel drops, owned Stop and original ZIP SHA/CRC verified. With earlier Normal Off/Auto, four Win short damaged native PASS_SCOPED. H1635 governance Action43140107354 PASS after cursor hot-byte repair. No product change. PLAN028 remains IN_PROGRESS.",
+  "why_now": "User requested all feasible independent parallel tests; both newest signed Windows Game FEC6 damaged native targets finished. Preserve raw failed and successful data; do not overclaim Windows seven-mode or independent-DUT L3.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect native Game2/Game4 Actions43139768028/43139771735 terminal results, true FEC/readback, original ZIP, delivered/missing, kernel qdisc, TCP/UDP/Stop and resource data; keep failures. Verify H1635 governance PASS. Skip unavailable independent Windows 1800s A/B/C; user-excluded near-MTU/multiple same-host Wintun; no 029/030.",
+  "next_action": "Remaining Windows source8a Normal fixed6, Game2 Off, Game4 Off 30%/250ms per-mode tests not run; original GUI/AutoIP physical, five-client highloss pressure and calibrated failure-inclusive p99 remain open. Independent Windows1800s A/B/C rig unavailable: skip. User excluded near-MTU and same-host two Wintuns. No 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -21,7 +21,8 @@
     "docs/evidence/M0/PLAN028-H1629-SOURCE8A-THREE-PARALLEL-ORIGINAL-MODE-RESULTS-20261112.json",
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
     "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
-    "docs/evidence/M0/PLAN028-H1634-SOURCE8A-WIN-LINUX-NORMAL-AUTO-LOSS30-250-PASS-20261112.json"
+    "docs/evidence/M0/PLAN028-H1634-SOURCE8A-WIN-LINUX-NORMAL-AUTO-LOSS30-250-PASS-20261112.json",
+    "docs/evidence/M0/PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-250-PASS-20261112.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -31,7 +32,7 @@
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
     "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
     "docs/evidence/M0/PLAN028-H1634-SOURCE8A-WIN-LINUX-NORMAL-AUTO-LOSS30-250-PASS-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1634-WINDOWS-AUTO-LOSS30-NATIVE-PASS-AND-TWO-GAMEFEC-WEAKNET-PARALLEL.md"
+    "docs/evidence/M0/PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-250-PASS-20261112.json"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

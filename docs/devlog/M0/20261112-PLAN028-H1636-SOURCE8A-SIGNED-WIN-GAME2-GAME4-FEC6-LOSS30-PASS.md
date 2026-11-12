@@ -1,0 +1,20 @@
+# PLAN028 H1636 | Source8a signed Windows Game2/Game4 FEC6 30%/250ms true native PASS
+
+Two **independent** true Windows2025 signed Npcap/Wintun ↔ WSL2 Linux original Go protected TLS443/Rust M4 source-locked native workflows finished SUCCESS, not just wrappers. Frozen formal product SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346` from successful Action43027983611; no Go/Cargo rebuild. H1634 source commit `d861dcb88cf4fc5bcb02bbb9af4cfbf9ffe34e5a` produced separate original [Game2 Action43139768028](https://github.com/lly8666/wbd-next/actions/runs/43139768028) and [Game4 Action43139771735](https://github.com/lly8666/wbd-next/actions/runs/43139771735). Both have genuine per-lane original TLS/Rust authenticated FEC6, two-way OS UDP/TCP, default outer1460/actual inner1358, true 30% each-direction `tc netem` loss plus 250ms one-way and 60s 10Mbps each business, original kernel Stop/WAL and signed NPF cleanup. Both original ZIPs independently CRC all 44 members with no error. Exact scope-limited source locks, numbers and ZIP hashes in [structured evidence](../evidence/M0/PLAN028-H1636-SOURCE8A-WINDOWS-GAME2-GAME4-FEC6-LOSS30-250-PASS-20261112.json).
+
+| Scenario | First Win / Linux | Rust original game FEC | OS actual netem drops | Windows native Go+Rust original PID (76 samples) |
+|---|---|---|---|---|
+| Game2 Fixed6, Action43139768028 artifact13908664353 ZIP`12a9fae243450de2240b5f26a44ca6154f6050d76f2f83cf33ccd9eac5f8381e` | **100% (73640/73640)** / **99.9823% (73610/73623)**, Linux missed13 | server `lanes=2 mode=fixed profile=6`, 100478 parity offered/copy, 6778 `recovered_candidate`; true TLS and both owned Stop | eth0 105196; ifb 102266 | CPU7.1406s/77.078s (9.264% one logical core), peak working set58.48MB |
+| Game4 Fixed6, Action43139771735 artifact13909217473 ZIP`4e58f33458d10a7c8f667a4d4626f04ca5f1eba10e8a2b38ce79808b0e6eae15` | **100% (73640/73640)** / **99.8778% (73532/73622)**, Linux missed90 | server `lanes=4 mode=fixed profile=6`, parity offered99207/copy99203, 585 recovered_candidate; true TLS and both owned Stop | eth0 208661; ifb 146714 | CPU33.4062s/77.984s (42.837% one logical core), peak working set73.02MB |
+
+The recovered candidate counters are **not additional application successes**, and 13/90 failed-to-arrive originals remain real losses. Successful-return UDP RTT p99 of roughly531–625ms is **not** one-way or failure-inclusive p99. Game4 native four-lane CPU/RSS is higher than Game2 two-lane observed on *different hosted VMs*; cannot attribute an A/B speed difference to mode alone, and Rust lock-wait p99 not measured.
+
+Now this current formal SOURCE has four Windows short damaged native PASS_SCOPED entries: Normal FEC Off [43136758689](https://github.com/lly8666/wbd-next/actions/runs/43136758689), explicit Auto [43138301038](https://github.com/lly8666/wbd-next/actions/runs/43138301038), Game2 FEC6, Game4 FEC6. Separate Linux x86 current source seven-mode native representative coverage also retained. This is **not** full current SOURCE Windows seven-mode, 5-client 600s/30%+250ms or every impacted platform.
+
+**Governance**: original H1634 governance Action43139748831/maintenance43139748855 FAIL from combined hot bytes 32848/32768. H1635 trimmed only M0 cursor prose (policy unchanged); exact [Action43140107354](https://github.com/lly8666/wbd-next/actions/runs/43140107354) Governance and Feature Catalog **SUCCESS**. Original failures retained.
+
+Per user skip missing independent A controller/B non-runner Windows DUT/C external Linux peer for 1800s L3; user-skipped near derived inner MTU and same Windows host two-Wintun preserved NOT_RUN. Remaining Windows normal Fixed6, Game2 Off, Game4 Off current source damaged native cases are open, as are auto-IP physical two changes, five-user overloaded true weaknet, calibrated failure-inclusive p99, GUI/physical WAN and ARM64 affected coverage; PLAN029/030 not begun. No product code/config/default changed.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only original network evidence and scope-limited acceptance coverage; production source/defaults unchanged."}
+```
