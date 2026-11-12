@@ -456,7 +456,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
- if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
+ if (o.ServerHost==""&&!o.ServerIP.Is4())||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)!=32||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
   !o.Lease4.IsValid()||!o.Lease4.Addr().Is4()||o.Lease4.Bits()!=32||
@@ -478,15 +478,29 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  slot,err:=m0Plan028WindowsNativeClientSlot(o)
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
- // One native route/address watcher for all original Normal/FEC/Game modes.
- pathChanged,stopPathWatch,err:=watchM0WindowsOriginalPhysicalPath(ctx,o.ServerIP,o.AdapterAlias)
- if err!=nil{return fmt.Errorf("original Windows route/address subscription: %w",err)}
- defer stopPathWatch()
+ // Numeric IPv4 preserves its old original watcher. DNS hostname re-resolves
+ // after the previous WAL Stop has joined, before each NEW cold TLS epoch.
+ var pathChanged <-chan struct{}
+ var stopPathWatch func()
+ defer func(){if stopPathWatch!=nil{stopPathWatch()}}()
  reauthAuthorized:=false
  pathRecoveryAuthorized:=false
  coldRetries:=0
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
+  if stopPathWatch==nil||o.ServerHost!=""{
+   if stopPathWatch!=nil{stopPathWatch();stopPathWatch=nil}
+   if o.ServerHost!=""{
+    resolved,e:=windowsclient.ResolveServerAFromOriginalPhysical(ctx,o.ServerHost,o.AdapterAlias,nil)
+    if e!=nil{return fmt.Errorf("PLAN029 physical DNS server address: %w",e)}
+    o.ServerIP=resolved.Selected4
+    fmt.Printf("WBD_PLAN029_BOOTSTRAP_DNS_SELECTED generation=%d host=%s selected4=%s physical_source4=%s physical_ifindex=%d resolver4=%s candidates=%d source=physical_Npcap_dns_A\n",
+     generation,o.ServerHost,o.ServerIP,resolved.PhysicalSource4,resolved.PhysicalIfIndex,resolved.Resolver4,len(resolved.Candidate4))
+   }
+   var e error
+   pathChanged,stopPathWatch,e=watchM0WindowsOriginalPhysicalPath(ctx,o.ServerIP,o.AdapterAlias)
+   if e!=nil{return fmt.Errorf("original Windows route/address subscription: %w",e)}
+  }
   applied:=false
   err:=m0WindowsRunPathScopedGeneration(ctx,pathChanged,
    func(genCtx context.Context,generationChanged <-chan struct{})error{
