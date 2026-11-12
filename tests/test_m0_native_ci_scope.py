@@ -29,6 +29,17 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "crates/wbd-engine/src/v4_owner_crypto.rs",
             "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
             "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+            "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_owned_transaction.go",
+            "r0/go_overlay/internal/windowsclient/native_dns_write_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_lease_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_route_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_mtu_write_windows.go",
+            "r0/go_overlay/internal/windowsclient/direct_udp_windows.go",
+            "r0/go_overlay/internal/windowsclient/userspace_tcp_direct_windows.go",
+            "r0/go_overlay/internal/windowsclient/network_plan.go",
             "r0/go_overlay/internal/windowsclient/native_rust_wintun_loan_windows.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
         ):
@@ -56,6 +67,8 @@ class NativeSmokeScopeTests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[1] /
                     ".github/workflows/m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         self.assertIn("native_smoke: ${{ steps.native_scope.outputs.native_smoke }}", workflow)
+        # GitHub 'needs' context only exposes DIRECT job dependencies.
+        self.assertIn("needs: [wiring-contract, windows-compile-preflight]", workflow)
         self.assertIn("if: needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
         self.assertIn("if: always() && needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
         self.assertIn("python -m unittest tests.test_m0_native_ci_scope -v", workflow)

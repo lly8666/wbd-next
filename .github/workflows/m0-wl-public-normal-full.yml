@@ -733,7 +733,7 @@ jobs:
     # PLAN026 coding commits use [plan026-coding]: compile/cheap ABI only.
     # Full signed two-OS qualification is reserved for the completed bundle
     # via workflow_dispatch or a separately source-locked full marker.
-    needs: [windows-compile-preflight]
+    needs: [wiring-contract, windows-compile-preflight]
     if: needs.wiring-contract.outputs.native_smoke == 'true' && (!contains(github.event.head_commit.message, '[plan028-win-tls-reuse]')) && !contains(github.event.head_commit.message, '[plan028-win-reuse-h1129]') && (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && !contains(github.event.head_commit.message, '[plan026-coding]') && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
     name: Build true original Go and new Linux Rust peer persona from same SOURCE
     runs-on: ubuntu-24.04
