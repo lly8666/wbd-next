@@ -76,8 +76,8 @@
     },
     {
       "platform": "Ubuntu 24.04 original five-crate Rust source-locked workspace",
-      "scope": "H1676 5 unit tests sorted CN IPv4 intervals, 3 modes/DNS purpose, FakeIP CDN isolation, domain suffix and flow decision; no Wintun/native network",
-      "status": "UNIT_PASS_ONLY",
+      "scope": "H1676 5 unit tests sorted CN IPv4 intervals, 3 modes/DNS purpose, FakeIP CDN isolation, domain suffix and flow decision; no Wintun/native network (pure compiled tests only, not physical Windows network)",
+      "status": "BUILD_PASS",
       "source_sha": "a5ef2cd0108946e380599895558b377f8686a208",
       "evidence": "docs/evidence/M0/PLAN029-H1676-RUST-SHARED-SPLIT-UNIT-SOURCE-20261112.json"
     }

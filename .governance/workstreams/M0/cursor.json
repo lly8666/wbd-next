@@ -4,11 +4,11 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1677,
+  "sequence": 1678,
   "checkpoint_sha": "a5ef2cd0108946e380599895558b377f8686a208",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1677: Go/WinForms single dns.direct bootstrap source and GUI PASS_SCOPED, pure Rust split decision five unit tests PASS_SCOPED; no product Wintun direct/FakeIP, no four-stage no-WFP owner, H1672 signed TCP FAIL retained",
+  "current_task": "PLAN029 H1678: H1676 Rust split pure 5/5 G2 PASS, source feature catalog status normalized to BUILD_PASS, H1677 governance scope PASS; old Windows signed SYNACK FAIL retained, no-WFP native owned OS stages and Rust real split pending",
   "why_now": "User explicitly invoked PLAN029; H1657 scoped closeout checked; post-checkpoint main only H1657 closeout; 43175234256 governance success. Read TLS, MTU, 028/029 contracts first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
   "next_action": "First collect governance H1677 and source-locked Rust follow-on Actions; then implement exact no-legacy-WFP owned lease/MTU/DNS/routes v2 txn with normal product Ready/Stop and one-time old owned WFP cleanup, and Rust single Wintun ingress Direct UDP/TCP/DNS FakeIP with real signed Windows feasibility. Don't replay old SYN-only H1672 or PLAN028 full matrix; no PLAN030 activation.",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1675-WINDOWS-SINGLE-DNS-BOOTSTRAP-SOURCE-GUI-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1676 SOURCEa5ef: G2 43222375840 PASS workspace Rust build and five pure plan029_split unit tests; source classifier not attached to Wintun, no prod Direct. H1675 SOURCEcc4 Windows Go/WinForms Actions 43221547201/43221547196 PASS_SCOPED. H1674 missing Go import FAIL archived. H1672 Windows no-WFP Wintun Direct TCP SYNACK absent 2 runs/root undetermined. No-WFP native owned WAL, DNS dispatcher/FakeIP persistence, Direct TCP/UDP, flows padding still OPEN. Governance H1676 failed context_refs=9, now capped <=8; original older evidence files unchanged."
+  "partial_summary": "H1676 SOURCE a5ef Rust 5 pure unit tests PASS in G2 action43222375840, source-only; H1677 governance check PASS but feature catalog failed because added non-schema UNIT_PASS_ONLY status. H1678 remaps row to BUILD_PASS with exact pure scope, no inflated Direct product PASS. Windows Go+GUI SOURCEcc4 H1675 scoped PASS; H1672 signed Wintun TCP no-SYNACK unresolved. Four-stage no-WFP native release, actual DNS QNAME/FakeIP mapping, TCP/UDP physical egress and flows padding remain OPEN."
 }
