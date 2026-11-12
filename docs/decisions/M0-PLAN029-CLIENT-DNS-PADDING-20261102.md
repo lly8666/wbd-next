@@ -30,6 +30,8 @@ CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道
 - Direct UDP为Rust异步物理绑定socket；Direct TCP首选Rust本地内核TCP接入＋物理socket，两腿有界转发，不复活旧Go gVisor热泵、不把raw TCP当socket payload。先做真实Windows小型能力门，条件不成立才按契约限定备选，不同时写两套。详见契约§3。
 - 现有 `Bypass4/Direct4` 保存、旧Go分流、静态classifier单测均不证明native V4已经接通。实际出口、逆向回包、WFP/owned Stop、内存与首到性能均需源锁证据。
 
+旧WFP DNS封锁、纯Block验证与guard缺失卡清理的已识别冲突，按契约§3A最小修改；不开发抗黑客/多代理安全框架，不恢复Go逐包检查。
+
 施工与退出按契约§6–7：先可行性边界→完整DNS/Direct/配置工作包→实际双出口→必要性能保护。契约是详细施工方案，本页不复制另一套参数表。
 
 ## 3. 配置/GUI/portable，只补接线

@@ -76,6 +76,31 @@ OS仅保留现有两条 `/1`、必要服务器endpoint和极少数内部端点�
 
 Direct UDP复用旧语义移入Rust：每活跃5tuple一个物理绑定socket，IOCP事件收发，socket池/flow表有界，回复重新组IP/UDP并复原fake/原目标；保留datagram边界。不同QUIC/游戏flow不因端口相同串接。仅需要直连/DNS终止的IP分片做有界重组，其他隧道片保持原路径；后续片不能猜端口、随机改路。超MTU按现行契约返回错误/ICMP或分片，不静默截断。常用Direct ICMP echo可借原生异步ICMP接口重建对应ID/seq；其他未支持协议明确报告，不偷偷走隧道冒充直连。
 
+## 3A. 最小必要约束，不能让旧防泄漏策略阻断新分流
+
+2026-11-12用户追加：这是自用实验程序，不新增抗入侵/对抗本机恶意进程框架。**保留能证明转发正确、资源可回收的检查，删改与实际分流政策冲突的限制。** 没有威胁假设不应成为多写一套控制器/权限中心/守护程序的理由。此节授权M0在029内修下面的真实冲突，不要求先取得新的逐项许可。
+
+已核对的代码依据（基于设计审阅SOURCE 3d94e0ba；原始Go装配基线a7a82db）：
+
+| 位置/现有约束 | 对029的影响 | 处理决定 |
+|---|---|---|
+| 原Go `native_wfp_guard_plan_windows.go` 的 `n4PlanWFPGuard`：非Wintun接口且remote port53→Block | 普通物理Winsock直连DNS会被旧规则拦住；当前Npcap冷bootstrap通不能证明新业务DNS socket通 | 修改本程序owned DNS规则的匹配范围，对本程序自有resolver出口作有限明确例外；不能全局放开所有程序DNS |
+| 同文件规则验证固定3条纯Block；overlay `native_wfp_exact_arm_windows.go` 与其测试同样只接受Block | 可能把合法的新分流规则判成非法，源于旧方案形状而非产品需求 | 同批改rule builder、验证、WAL读取/比较、装配、正反例；验证新明确策略，不死守旧条数/Action。规则仍常数级，不改成接受任意外部规则 |
+| `native_unified_network_transaction.go::Recover` 先要求完整guard仍Owned，否则不回收后续资源 | 自有guard已丢失/部分缺失时，可能反而阻塞确定属于自己的路由/DNS/TUN清理 | 收紧为逐资源归属判断：已确认Owned或已Absent的项目幂等清理；某guard缺失不自动卡全部Stop，不为清理先重装整套封锁。Foreign/无法判定项不碰，独立已确认项继续，最后汇总真实残留 |
+| 旧bootstrap读取NIC多个DNS再append fallback | 与单DNS要求冲突，不是必须保留的安全机制 | 改为唯一配置direct endpoint；物理NIC DNS仅WAL恢复资料，失败不探测备用 |
+| 旧“只准一个Wintun LUID”及接口绑定规则 | 不能机械理解成所有Direct socket都必须使用Wintun；但也不必扩展多代理/多实例 | 本轮仍一实例一Wintun，物理Direct与内部TCP回注是同owner合法出口，按用途接线，不恢复多Wintun开发 |
+
+实现原则：
+1. **一个policy决定出口。** WFP执行少量DNS/IPv6/owned控制约束，不重做IP/域名分类。优先从我们自己的DNS Block条件中排除明确的产品resolver身份（AppID、需要时物理接口及协议/endpoint），不为每条DNS查询/flow创建系统规则。产品进程例外只服务本程序已分类的socket，不承诺防本机恶意仿冒。
+2. 不能在另一个sublayer随手加Permit就宣布修好：WFP其他Block仍可能生效。修改/替换我们拥有的冲突Block或在同一owned规则集正确安排匹配；不删除第三方防火墙、不发不可覆盖的全局hard permit。必须用真实UDP和TCP53证明Direct通、Tunnel DNS不被误放物理。官方参考：[Filter Arbitration](https://learn.microsoft.com/en-us/windows/win32/fwp/filter-arbitration)。
+3. 原IPv6阻断、单DNS不换方向、服务器控制出口、账户/代际/完整性属于用户功能正确性，继续保持；连接无效报错、容量满只拒绝该查询/新flow，不扩大成停全局隧道。一个Direct dial失败不能触发整个owner重新Apply/Stop。
+4. 冷Apply/配置变更时验证一次规则/配置与实际接口，复用现有effective回执。稳态不逐包查WFP/路由表、进程身份、文件hash，不逐包写WAL、重验整份规则、加第二份加密。已有内存安全所需的长度/偏移检查、flow/generation匹配仍保留，避免网络碎片/旧回调导致错误数据。
+5. 所有权记录是为了**不误删用户网卡/路由**，不是防黑客；保留最小owner/generation/原值及恢复记录。取消重复证明、额外签章、双重许可等新增设想；原已有冷路径checksum无需为了理论省CPU专门重写。
+6. 已有持久guard/WAL不在本包整体重构成动态防火墙框架；只改冲突匹配和明确缺失状态的恢复逻辑。应用正常退出应恢复网络，不能为“永不泄漏”让正常退出长期卡住。中途崩溃的原恢复语义保持并测代表场景，不扩展故意破坏系统的攻击矩阵。
+7. 规则更新失败保留上一份可用快照并显示失败；FakeIP未知/已过期不猜测目标，明确触发重新解析或该flow失败，不能误发给其他网站。这些检查解决真实错误，不以“安全不重要”为由删除。
+
+新增最少验证：一场已有D1/D4中加入真实WFP开启时Direct UDP/TCP53、普通应用DNS受控、Direct TCP listener回注；再定向模拟删除**本程序owned**一条guard后Stop，验证已确认资源继续回收且无第三方变更。再测一个旧generation晚回调。无需一轮全漏洞/强对抗测试；是否影响热CPU用原P1/P2观测，不能把冷路径验证数量当稳态CPU比例。
+
 ## 4. DNS 数据通路，避免自环和隐藏回退
 
 - Windows系统DNS指向本机owned虚拟DNS入口（一个值），原设置只保存在WAL用于Stop恢复。拦截到的普通UDP/TCP53统一进dispatcher，按QNAME而不是应用指定的DNS IP选upstream。现有on-link路由若绕过TUN，须沿当前owned DNS捕获/阻断规则覆盖常规53；不能单凭两条 `/1` 宣称全机DNS已接管。

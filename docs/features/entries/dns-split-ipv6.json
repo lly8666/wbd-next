@@ -81,7 +81,8 @@
     "H672 local Windows original signed Wintun DNS restore Action41226501543 PASS scoped; host-global manual DNS failover, split DNS, IPv6 guard/routes and physical DNS leak qualification remain NOT_RUN.",
     "PLAN029仅规划服务器域名bootstrap DNS与真实业务DNS/分流/IPv6配置接入；全局路径须实际验证，旧局部PASS不能代替。",
     "2026-11-12 新强制验收门 PLAN029 §2A：native V4 Rust Wintun ingress 对 CN/LAN/direct4 真实 TCP/UDP 绑定物理直连和回包尚未实现/未验；禁止数千条Windows route/WFP规则。旧 compact /1 与 GUI分类保存不等于真分流，仍 NOT_QUALIFIED。",
-    "2026-11-12用户授权IP＋域名/单DNS设计；选择性CN FakeIP、Rust Direct TCP内核接入/UDP与两DNS实际出口尚未实现验收，不借已有bootstrap编译或旧Go分流PASS关闭。旧主备DNS描述被新契约替代。"
+    "2026-11-12用户授权IP＋域名/单DNS设计；选择性CN FakeIP、Rust Direct TCP内核接入/UDP与两DNS实际出口尚未实现验收，不借已有bootstrap编译或旧Go分流PASS关闭。旧主备DNS描述被新契约替代。",
+    "2026-11-12审计：原Go非Wintun port53 Block会与拟新增Direct DNS Winsock冲突；纯Block/固定条数验证及Recover对完整guard的前置依赖按契约§3A修正。当前是源码逻辑发现，新增修复及实网仍NOT_RUN，不宣称现有所有直连均被WFP阻断。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
