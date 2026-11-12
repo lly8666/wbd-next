@@ -239,7 +239,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "b2688af2ff3d810af8ff3751c08a465f01aa8b79",
+      "result_blob": "e8b8cbde04f4fd6abbe987366a7cb09a4a418bec",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -328,6 +328,10 @@
         {
           "find": "默认 R20，最低R4；仅普通Normal自动+最低R0可显式选择起步R0",
           "replace": "内部旧载体参数；V4 实际起步档仅由 fec.auto_start_profile 控制。"
+        },
+        {
+          "find": "\"FEC2 新模式\"",
+          "replace": "\"丢包纠错 FEC\""
         }
       ]
     },

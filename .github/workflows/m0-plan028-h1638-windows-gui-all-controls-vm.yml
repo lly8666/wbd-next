@@ -148,4 +148,6 @@ jobs:
             result/gui-self/gui-test-result.json
             result/gui-self/gui-screenshot.png
             result/gui-buttons/gui-buttons-vm.png
+            result/gui-buttons/gui-fec-fixed-vm.png
+            result/gui-buttons/gui-fec-auto-vm.png
             result/gui-portable/h1643-compiled-gui-source.json

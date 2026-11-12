@@ -1,6 +1,14 @@
 # PLAN028｜M0 当前功能、正式入口与集成覆盖（2026-11-11）
 
 
+## H1649 GUI原生FEC简化｜正式Windows2025 VM H1648已354项全场通过，新补按钮待本轮结果
+
+H1648 [WinForms 真实 VM Action43160679063](https://github.com/lly8666/wbd-next/actions/runs/43160679063) **SUCCESS**，正式source `d32ac61ddffbd14acc0b07afc895dc26abe8d295`（原Go donor `a7a82db...` 装配、Rust DLL SOURCE8a、**新Go EXE SHA256 `edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582`**）；原ZIP artifact13917194780 SHA256 `cf53c2b5bd2297a9c51fc4699c98c2bfd71d0c1f30116be959b918b3382792e3` CRC全5成员验证。原Windows VM编译、49项可见配置各自GUI保存/真实原Go V4 `--check-config` 读回、源锁 **七原生模式＋7强度×Normal/Game2/Game4共21组合**、三AEAD、非法值/旧模式拒绝、WAL安全和WinForms按钮（FakeSession）合计 **354条检查PASS**。旧H1647 Action43160277750因测试fixture C# `using` 作用域报错FAIL原样保留。H1648治理43160679121全PASS，旧失败不改写。
+
+按用户**不需旧项目兼容**，唯一可见FEC模型：**关闭（产品默认）／固定强度／仅Normal自动**；固定七档源于Rust比例 `r/k = 1/8,1/4,3/8,1/2,3/4,1,5/4`（按块进位和MAX_R封顶，非总体线速占比或成功保证）；不再展示旧Go `fec-mode/fec-parity/fec-min-parity/fec-start-parity` 四重复旋钮，其真实冷建链受保护载体仍由当前V4字段自动推导：Normal Fixed6需`fixed/parity4`，其他`off/parity0`。对Game Auto警告且只读验证拒绝，**不静默切换模式**；FEC Fixed/Auto只读状态是 `pending_native_auth`，**绝非真实 Rust/OS Applied**。截图确认Off时固定/自动区域折叠，避免两套设置混乱。
+
+H1649另收少数可安全执行的VM按钮：导出后导入JSON的实际MainForm路径、只读磁盘状态和原生WFP预检的实际点击、独立固定/自动界面图，以及主标签改为“丢包纠错 FEC”。真实 GUI 经点击连接后签名Npcap/Wintun、外部Npcap下载/Explorer/ChinaIP联网更新和file-picker人工文件选择仍明确区分为**NOT_RUN**（无外部环境不测），不得把模拟会话与实体Wintun相混。七模式真正受损原生Windows业务继续按SOURCE8a旧Go独立Action记PASS_SCOPED，**新GUI Go哈希不直接继承旧网络验收**。028 IN_PROGRESS；不扩大029/030。
+
 ## H1645 Windows GUI 53项和七模式实际VM已有251步；显式AES冷路径接线待新源复验
 
 [H1644 Windows2025实际GUI编译/配置 Action43153401230](https://github.com/lly8666/wbd-next/actions/runs/43153401230) 整体 **FAIL** 原样保留；正式WinForms与新original-Go V4 EXE均真实编译，新Go单文件 SHA `f9996e5bddebba015646b54f88d8a25fe9366c64686bebee53ab063abfc58553`（该次测试源码3caf5b70，不是旧H1600 Go hash）、Rust ISA-L DLL原SHA `7c8ddd808d08cfa18cf431fd5945d6c705bddaa6dd19a94e1891170ffa91d37d`。保留原始GUI JSON receipt artifact13914906742：**251条逐项检查成功**，包括53字段的编辑→保存→真实原Go CLI `--check-config` 有效值回读、七个V4合法模式和非法模式、FEC Fixed/Auto pending-not-Applied、ChaCha；实际在 AES128-GCM 且旧carrier `fec-mode=legacy` 时拒绝 `realityfront: invalid admission parameters`，故**GUI三AEAD整体尚未通过**，按钮后续阶段未执行，不能以251局部PASS替代全场。确认原因是旧Go V3保护层明确拒绝 legacy+非ChaCha，而旧GUI默认 legacy 实际表示FEC Off。H1645仅对 `--native-v4-product=true && legacy && parity=0 && AES显式` 使用相同原Go认证 **off** carrier，配置读回新增 `effective-original-carrier-fec-mode=off`，不更换cipher或FEC、不改变历史V3和不支持组合。等待新SOURCE正式组装Go+WinForms真实VM结果；**新Go冷认证源码已改变，不能复用旧SOURCE8a网络AES结果当本源码验收**。独立真正GUI点击后签名Wintun起网仍须另一真实网络场景；FakeSession的按钮验收只限UI事件。

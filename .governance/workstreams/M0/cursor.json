@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1648,
-  "checkpoint_sha": "4c9f21a44df206e0504e4879694582be0e286b65",
+  "sequence": 1649,
+  "checkpoint_sha": "d32ac61ddffbd14acc0b07afc895dc26abe8d295",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1648-GUI-NATIVE-FEC-COMPACT-VM-TEST-USING-SCOPE",
-  "current_task": "H1648: prior H1647 source4c9f21 native-only Win GUI FEC Off/Fixed7 tiers/Normal Auto, 4 old Go-carrier sliders hidden and derived (NormalFixed->fixed4, others off0), dynamic relevant controls and 21 tier×lane real CLI checks, VM buttons. Current GUI Action43160277750 FAIL before tests at Roslyn CS0103 configForm out of using scope due inserted second foreach; H1648 fixes braces only. Governance43160277739 SUCCESS. Prior H1646 GUI Action43154780427 PASS 53-field/7mode/3AEAD/button but it is old UI, not new compact UI or signed GUI-origin OS. PLAN028 IN_PROGRESS.",
-  "why_now": "Do not mask test-only lexical scope regression by dropping native-only UX hard checks; one precise test edit and one complete VM recheck.",
+  "task_id": "PLAN028-H1649-VM-GUI-FEC-CLARITY-READONLY-BUTTON-SCOPE",
+  "current_task": "H1649 main d32: H1648 full Windows2025 compiled WinForms/assembled Go Action43160679063 overall SUCCESS, 354 raw checks: 49 UI fields, 7 native modes, 7 fixed FEC r/k tiers×3 supported lane modes (21), three AEAD and WAL/FakeSession buttons; original ZIP13917194780 CRC/hash proven, NEW Go SHA edbb9715...7f582, frozen Rust DLL SOURCE8a hash7c8d...37d. User says no old project compat; visible FEC only Off(default)/Fixed seven profiles/Normal Auto, four old carrier knobs hidden and derived. H1649 label '丢包纠错 FEC', real Win32 read-only state/preflight clicks + export-import path + Fixed/Auto screenshots pending; not OS native signed GUI-origin network. H1648 governance43160679121 PASS. 028 IN_PROGRESS.",
+  "why_now": "Complete small safe GUI button gaps and polish fixed-tier UX with no hidden fallback or new 029/030 changes.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect next H1648 WinVM GUI all-field/21 fixed tiers/dynamic visibility/builder hashes/OS receipt guard, retain failure and fix actual problems only. Then new-source GUI-origin signed native OS if feasible; unavailable Win A/B/C L3 and user-skipped nearMTU/same-host dualWintun excluded; no 029/030.",
+  "next_action": "Collect H1649 actual Win GUI VM Action, strict receipt, CPU/source/hash, read-only buttons + source screenshot; fix only real failures. New-Go GUI-origin original signed Npcap/Wintun business separately OPEN; no A/B/C isolated Windows L3 rig; user excludes near-innerMTU and doubleWinWintun; no 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -30,9 +30,9 @@
     "docs/prompts/M0.md",
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
-    "docs/devlog/M0/20261112-PLAN028-H1647-V4-GUI-FEC-ONLY-SEVEN-TIERS.md",
-    "docs/devlog/M0/20261112-PLAN028-H1648-WIN-GUI-TEST-SCOPE-FIX.md",
-    "docs/features/entries/gui-config-feedback.json"
+    "docs/devlog/M0/20261112-PLAN028-H1649-GUI-FEC-LABEL-READONLY-AND-IMPORT-VM.md",
+    "docs/features/entries/gui-config-feedback.json",
+    "docs/evidence/M0/PLAN028-H1644-ORIGINAL-H1642-FIVE-NATIVE-180S-STRICT-M4-OFFLINE-PASS-20261112.json"
   ],
   "open_requests": [],
   "partial_summary": "Formal SOURCE8a original Win seven signed modes / Linux x86 seven modes each PASS_SCOPED; current 5-native 180s strict original offline-rejudged PASS while Action failure stays. Win same-account 5-end150s/idle105 original signed scoped PASS. GUI new assembled cold status pending, button VM pending; no GUI-origin signed runtime qualification. Old H1587 samehost 2 Wintun FAIL user-excluded, independent Windows A/B/C L3 unavailable. No 029/030."

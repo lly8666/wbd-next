@@ -115,11 +115,13 @@ public static class M0Plan028GUIButtonsVMHarness {
     var grades=(ComboBox)allEditors["fec.profile"];
     Need(grades.Items.Count==7,"FEC_Fixed_seven_real_Rust_ratios");
     form.SetEditor("fec.profile","maximum");
+    form.Capture(book.InRoot("gui-fec-fixed-vm.png"));
     Click(form,"保存配置");
     Need(Convert.ToString(p.Values["fec.profile"])=="maximum" &&
       Convert.ToString(book.Effective(p)["fec-mode"])=="fixed" &&
       Convert.ToInt32(book.Effective(p)["fec-parity"])==4,"FEC_Normal_maximum_maps_correct_internal_carrier");
     form.SetEditor("fec.mode","auto");Application.DoEvents();
+    form.Capture(book.InRoot("gui-fec-auto-vm.png"));
     Need(!allEditors["fec.profile"].Visible && allEditors["fec.auto_policy"].Visible &&
       allEditors["fec.auto_start_profile"].Visible,"FEC_Normal_Auto_only_relevant_controls");
     form.SetEditor("lanes","4");Application.DoEvents();
@@ -153,7 +155,13 @@ public static class M0Plan028GUIButtonsVMHarness {
     reveal.Checked=true;Need(!pwd.UseSystemPasswordChar,"reveal_secret_checked");
     reveal.Checked=false;Need(pwd.UseSystemPasswordChar,"reveal_secret_unchecked");
     Modal(form,"导出配置",1,"export_confirmation_dialog",()=>Click(form,"导出 JSON"));
-    Need(Directory.GetFiles(book.InRoot("data/exports"),"server-*.json").Length>0,"export_button_real_file");
+    var exports=Directory.GetFiles(book.InRoot("data/exports"),"server-*.json");
+    Need(exports.Length>0,"export_button_real_file");
+    int profileCount=book.Book.Profiles.Count;
+    var imported=form.ImportAsync(exports[0]);
+    Until(()=>imported.IsCompleted,"import_json_real_function_completed");
+    imported.GetAwaiter().GetResult();
+    Need(book.Book.Profiles.Count==profileCount+1,"import_json_uses_real_store_validation_and_creates_profile");
     Click(form,"使用内置 IP 表");
     Need(Convert.ToString(book.Book.Profiles.First(x=>x.Id==book.Book.SelectedId).Values["china-ip-file"])=="","embedded_IP_button_clears_path");
     Click(form,"重新检测");
@@ -169,6 +177,12 @@ public static class M0Plan028GUIButtonsVMHarness {
     Need(FindButton(form,"打开程序文件夹")!=null,"open_folder_button_present_external_OS_test_not_run");
     Need(FindButton(form,"导入 JSON")!=null&&FindButton(form,"导入中国 IP 表")!=null,"file_picker_buttons_present");
     Need(FindButton(form,"只读检查网络状态")!=null&&FindButton(form,"原生系统预检（只读）")!=null,"native_readonly_buttons_present");
+    var activity=(RichTextBox)typeof(MainForm).GetField("activity",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(form);
+    Click(form,"只读检查网络状态");
+    Until(()=>activity.Text.Contains("只读原生磁盘状态：absent"),"read_only_state_button_true_Go_no_WAL",20000);
+    Click(form,"原生系统预检（只读）");
+    Until(()=>activity.Text.Contains("原生系统只读预检：absent"),"read_only_preflight_button_true_Win32_qualified_false",20000);
+    Need(!fake.Active && !File.Exists(book.InRoot("data/network-state.json")),"read_only_buttons_never_create_OS_WAL");
     form.Capture(book.InRoot("gui-buttons-vm.png"));
    }
    var reopened=new PortableStore(root);
