@@ -491,7 +491,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   if stopPathWatch==nil||o.ServerHost!=""{
    if stopPathWatch!=nil{stopPathWatch();stopPathWatch=nil}
    if o.ServerHost!=""{
-    resolved,e:=windowsclient.ResolveServerAFromOriginalPhysical(ctx,o.ServerHost,o.AdapterAlias,nil)
+    resolved,e:=windowsclient.ResolveServerAFromOriginalPhysical(ctx,o.ServerHost,o.AdapterAlias,o.DirectDNS4)
     if e!=nil{return fmt.Errorf("PLAN029 physical DNS server address: %w",e)}
     o.ServerIP=resolved.Selected4
     fmt.Printf("WBD_PLAN029_BOOTSTRAP_DNS_SELECTED generation=%d host=%s selected4=%s physical_source4=%s physical_ifindex=%d resolver4=%s candidates=%d source=physical_Npcap_dns_A\n",

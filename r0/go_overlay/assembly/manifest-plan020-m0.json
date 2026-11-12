@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "fdb158285b9ebdc7de74d8d748f451d361c49df5",
+      "result_blob": "0cbbc3962ce6be7235c5cab136342ba61cb6c5bb",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -216,6 +216,30 @@
         {
           "find": "flag.String(\"server-ip\", \"\", \"server public IPv4\")",
           "replace": "flag.String(\"server-ip\", \"\", \"server IPv4 or DNS hostname; independent of TLS server-name\")"
+        },
+        {
+          "find": "\"github.com/lly8666/wobuzhidao/internal/dnsroute\"\n",
+          "replace": ""
+        },
+        {
+          "find": "dnsHijack          = flag.Bool(\"dns-hijack\", true, \"redirect system DNS through owned NRPT and dns4; default on\")",
+          "replace": "dnsHijack          = flag.Bool(\"dns-hijack\", true, \"capture configured system DNS; PLAN029 native dispatcher qualification pending\")"
+        },
+        {
+          "find": "dnsText            = flag.String(\"dns4\", \"1.1.1.1,8.8.8.8\", \"primary,backup IPv4 DNS; Windows resolver performs failover\")",
+          "replace": "dnsText            = flag.String(\"dns4\", \"\", \"legacy input only: migrate first value to dns.tunnel, discard backups\")\n\t\tdnsDirectText      = flag.String(\"dns.direct\", \"223.5.5.5\", \"single physical bootstrap DNS IPv4, port 53, no fallback\")\n\t\tdnsTunnelText      = flag.String(\"dns.tunnel\", \"1.1.1.1\", \"single tunnel DNS IPv4, port 53, no fallback\")"
+        },
+        {
+          "find": "\tdns, err := dnsroute.ParseServers(*dnsText)\n\tif err != nil || (*dnsHijack && len(dns) == 0) {\n\t\treturn errors.New(\"dns4 requires one or two IPv4 resolvers when DNS hijack is enabled\")\n\t}\n\tif !*dnsHijack {\n\t\tdns = nil\n\t}",
+          "replace": "\t// PLAN029: one resolver per direction; legacy dns4 is migration input only.\n\ttunnelExplicit:=false\n\tflag.Visit(func(f *flag.Flag){if f.Name==\"dns.tunnel\"{tunnelExplicit=true}})\n\tdirectDNS,tunnelDNS,retiredDNS,err:=m0Plan029DNSSettings(*dnsDirectText,*dnsTunnelText,*dnsText,tunnelExplicit)\n\tif err!=nil{return err}\n\tif retiredDNS>0{log.Printf(\"WBD_PLAN029_LEGACY_DNS_RETIRED=%d fallback=disabled\",retiredDNS)}\n\tvar dns []netip.Addr\n\tif *dnsHijack{dns=[]netip.Addr{tunnelDNS}}"
+        },
+        {
+          "find": "\t\treturn json.NewEncoder(os.Stdout).Encode(out)",
+          "replace": "\t\tout[\"dns.direct\"]=directDNS.String()\n\t\tout[\"dns.tunnel\"]=tunnelDNS.String()\n\t\tout[\"dns4\"]=\"\" // retired migration alias, never a live resolver\n\t\treturn json.NewEncoder(os.Stdout).Encode(out)"
+        },
+        {
+          "find": "DNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),",
+          "replace": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),"
         }
       ]
     },
@@ -251,7 +275,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "2c74515e92597386d4b13fe88e50548e2d5e35e0",
+      "result_blob": "6498f5fc0c83846b16db4eb2c2485a3591f11a03",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -352,6 +376,10 @@
         {
           "find": "  \"mtu\": [\n    \"传输\",\n    \"连接 MTU\",\n    \"外层完整 IPv4 IP 包上限（不含 L2）；默认 1460，可显式设 576–1500，内层自动计算\"\n  ],",
           "replace": "  \"mtu\": [\n    \"传输\",\n    \"外层 MTU（字节，上限）\",\n    \"默认固定 1460B（含外层 IPv4/IP-TCP 和封装、不含 L2）；1500B 仅显式设置，内层自动计算并只读\"\n  ],"
+        },
+        {
+          "find": "  \"dns4\": [\n    \"网络\",\n    \"DNS 主用、备用\",\n    \"一至两台 IPv4，以逗号分隔；由 Windows DNS 客户端执行互备\"\n  ],",
+          "replace": "  \"dns4\": [\n    \"兼容\",\n    \"旧 DNS 列表（自动迁移）\",\n    \"仅取首项作隧道DNS；剩余项停用\"\n  ],\n  \"dns.direct\": [\n    \"网络\",\n    \"直连 DNS（服务器地址/中国域名）\",\n    \"默认223.5.5.5，只有一个IPv4；走原物理出口，不备用\"\n  ],\n  \"dns.tunnel\": [\n    \"网络\",\n    \"隧道 DNS（其他域名）\",\n    \"默认1.1.1.1，只有一个IPv4；走认证隧道，不备用\"\n  ],"
         }
       ]
     },
@@ -687,7 +715,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "64a84ce5ccbc9e8150002abd2e69a4182b46fd9e",
+      "result_blob": "7cd39566b59840ea33097a4f32b57560fa5a7a63",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -722,6 +750,10 @@
         {
           "find": "      \"native-state-json\": {",
           "replace": "      \"outer-repair\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"on\\\"\",\n        \"help\": \"on|off; native V4 opportunistic outer ciphertext retransmission, does not guarantee business delivery\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"native-state-json\": {"
+        },
+        {
+          "find": "      \"dns4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"1.1.1.1,8.8.8.8\\\"\",\n        \"help\": \"primary,backup IPv4 DNS; Windows resolver performs failover\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
+          "replace": "      \"dns4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"legacy input migration only: first value to dns.tunnel, no fallback\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"dns.direct\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"223.5.5.5\\\"\",\n        \"help\": \"exactly one physical direct/bootstrap DNS IPv4\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"dns.tunnel\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"1.1.1.1\\\"\",\n        \"help\": \"exactly one tunnel DNS IPv4; no backup\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
         }
       ]
     },
@@ -925,9 +957,21 @@
         {
           "find": "            foreach (Field f in Fields.Where(f => !f.Managed)) if (values.ContainsKey(f.Key)) p.Values[f.Key] = values[f.Key];",
           "replace": "            // Existing programmatically exported native config may contain\n            // the internal carrier flags. They must already agree with the\n            // visible V4 selection, or reject instead of silently downgrading.\n            var requested=new Dictionary<string, object>(p.Values);\n            foreach (Field f in Fields.Where(f => !f.Managed))\n                if (values.ContainsKey(f.Key)) requested[f.Key]=values[f.Key];\n            var expected=new Dictionary<string, object>(requested);\n            NormalizeNativeCarrier(expected);\n            foreach (string key in new[]{\"fec-mode\",\"fec-parity\",\"fec-min-parity\",\"fec-start-parity\"})\n                if (values.ContainsKey(key) && Convert.ToString(values[key])!=Convert.ToString(expected[key]))\n                    throw new InvalidDataException(\"配置包含与原生 FEC 不一致的旧载体参数 \"+key+\"；请通过 FEC 模式和固定强度选择。\");\n            foreach (Field f in Fields.Where(f => !f.Managed)) if (values.ContainsKey(f.Key)) p.Values[f.Key] = values[f.Key];\n            NormalizeNativeCarrier(p.Values);"
+        },
+        {
+          "find": "public bool Managed { get { return Section == \"操作\" || Section == \"便携\"; } }",
+          "replace": "public bool Managed { get { return Section == \"操作\" || Section == \"便携\" || Section == \"兼容\"; } }"
+        },
+        {
+          "find": "            if (Book == null || Book.Schema != 1 || Book.Profiles == null || Book.Profiles.Count > 100) throw new InvalidDataException(\"服务器列表格式无效；原文件已保留。\");",
+          "replace": "            if (Book == null || Book.Schema != 1 || Book.Profiles == null || Book.Profiles.Count > 100) throw new InvalidDataException(\"服务器列表格式无效；原文件已保留。\");\n            // Migration before strict profile known-key validation. No second DNS is kept.\n            foreach (Profile prev in Book.Profiles) if (prev != null && prev.Values != null) {\n                object old;\n                if (!prev.Values.TryGetValue(\"dns4\",out old)) continue;\n                string[] list=Convert.ToString(old).Split(new[]{',',';'},StringSplitOptions.RemoveEmptyEntries);\n                object already;\n                if(list.Length>0&&!prev.Values.TryGetValue(\"dns.tunnel\",out already))\n                    prev.Values[\"dns.tunnel\"]=list[0].Trim();\n                prev.Values.Remove(\"dns4\");\n            }"
+        },
+        {
+          "find": "public void ImportValues(Profile p, Dictionary<string, object> values) {",
+          "replace": "public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            object old;\n            if(values.TryGetValue(\"dns4\",out old)){\n                string[] list=Convert.ToString(old).Split(new[]{',',';'},StringSplitOptions.RemoveEmptyEntries);\n                string first=list.Length>0?list[0].Trim():\"\";\n                object newer;\n                if(first.Length>0&&values.TryGetValue(\"dns.tunnel\",out newer)&&Convert.ToString(newer)!=first)\n                    throw new InvalidDataException(\"旧dns4首项与dns.tunnel冲突，请只保留新的隧道DNS。\");\n                if(first.Length>0&&!values.ContainsKey(\"dns.tunnel\"))values[\"dns.tunnel\"]=first;\n                values.Remove(\"dns4\");\n            }"
         }
       ],
-      "result_blob": "080f91444c4ca0ef1906ba084cbfe8ef307fe8d8"
+      "result_blob": "373d30175bb6309ffaa07cbb0350e890e6370854"
     },
     {
       "kind": "create",
@@ -1050,7 +1094,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "bca2ac4426b2cd0bc65cc0c6b3f14b5465643238"
+      "result_blob": "36ed914ed2568dc84fc5c6f780091ea8dd9634fb"
     },
     {
       "kind": "create",
@@ -1062,7 +1106,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "9e861b46e3d42cb7c866c346c45c3ef115048894"
+      "result_blob": "53a03bb8f29ac965bda2d103c1e3c64e883825b2"
     },
     {
       "kind": "create",
@@ -1511,7 +1555,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
-      "result_blob": "56f01d2b2de41b136788e02b806cb3c228f2ae50"
+      "result_blob": "1e66ceb9d363ad57a414e365c3d7899ee189ef88"
     },
     {
       "kind": "create",
@@ -1524,6 +1568,18 @@
       "path": "cmd/wbd-client/m0_plan029_server_name_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_server_name_windows_test.go",
       "result_blob": "4ae202983ed61d98ccfdff35a8f5b09f3541f3ff"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_single_dns_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_single_dns_windows.go",
+      "result_blob": "8fb7397e5519520bb6f2e2bc63b503342cdca2b2"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_single_dns_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_single_dns_windows_test.go",
+      "result_blob": "bff0c2c51244c381ce0fd64d69788ded341deb4d"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -29,6 +29,7 @@ type m0NativeV4Options struct {
  RecordCipher uint8 // exact per-client protected V4 AEAD, never a server-global switch
  AdapterAlias,StatePath string
  DNSServers4 []netip.Addr
+ DirectDNS4 netip.Addr // original physical cold bootstrap, single configured DNS
  Direct4,Bypass4 []netip.Prefix
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU

@@ -100,7 +100,8 @@
     "H1653发现正式GUI VM打包曾使用旧SOURCE8a Rust DLL SHA7c8ddd，虽然GUI Go同当前正式edbb；H1653将WinForms产物绑到SOURCE527正式签名产品Action43161652596的Go edbb及Rust ISA-L DLL SHA3973cd，加入源码目录/二进制双hash硬门。当前改装配的Windows VM终端结果待核实，禁止把旧H1649签名DLL说成最新。真实GUI-origin Npcap/Wintun业务依旧NOT_RUN。",
     "PLAN029 H1661 仅将server-ip GUI catalog标为IPv4/域名、MTU改写为外层字节上限，均已经过原Go assembly，未重新编译 PLAN029 WinForms，也未验证 GUI 读取原生 OS 应用外层/自动内层只读状态；不能借旧H1650 354项 PASS 冒充当前SOURCE的GUI实网。",
     "PLAN029 H1664: 当前源码 WinForms 传输页新增有效外层/自动内层/OS回执只读Label与原物理域名解析阶段显示；仅已有真实原Go原生回执驱动显示，不修改outer 1460配置。当前 SOURCE 独立WinForms构建尚待 H1664 Action；无 signed GUI-origin L3 PASS。",
-    "PLAN029 2026-11-12增量：DNS UI改成直连/隧道各一个值并迁移取消备用；中国分流显示IP＋域名及实际规则来源。设计已确定，UI/CLI/owner/真实出口尚未取得该增量PASS。"
+    "PLAN029 2026-11-12增量：DNS UI改成直连/隧道各一个值并迁移取消备用；中国分流显示IP＋域名及实际规则来源。设计已确定，UI/CLI/owner/真实出口尚未取得该增量PASS。",
+    "PLAN029 H1667 WinForms将旧dns4迁移为新dns.tunnel并隐藏旧键，新界面可编辑单一dns.direct和dns.tunnel；真实GUI检查/当前有效原生DNS出口尚未通过Actions，不以保存为Applied。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

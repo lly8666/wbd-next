@@ -56,7 +56,8 @@
     "DNS多A返回只选择第一个，候选回退/TTL、CNAME/TCP回退、NXDOMAIN高级诊断待完成；不承诺独立服务器间无缝会话迁移。",
     "GUI域名解析实时状态、server-address规范键及别名迁移、实际OS/MTU只读反馈尚未端到端验证。",
     "外层IPv6不支持，内层IPv6安全策略不放宽。",
-    "PLAN029 H1665 Windows physical DNS wire parser现支持受限CNAME链和无关A拒绝、Npcap小包接收门，后续以真实Windows NPF/WFP/OS对照测，当前源码仍NOT_QUALIFIED。"
+    "PLAN029 H1665 Windows physical DNS wire parser现支持受限CNAME链和无关A拒绝、Npcap小包接收门，后续以真实Windows NPF/WFP/OS对照测，当前源码仍NOT_QUALIFIED。",
+    "PLAN029 H1667源码将Windows服务器域名物理bootstrap固定到显式dns.direct一项223.5.5.5默认，不再网卡DNS或备用DNS轮询。尚无真Wintun/物理出口/owned Stop实网验证，不能当作D1 PASS。"
   ],
   "promotion": null
 }
