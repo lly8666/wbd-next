@@ -1,11 +1,13 @@
 name: M0 PLAN028 x86 original Game2 fixed6 two physical TLs cohorts with healthy Game4 Normal
 run-name: PLAN028 H1200 x86 Game2 fixed6 two genuine TLS cohorts with Game4 Normal healthy
-# H1488: historical source-rebuild scene duplicated the immutable source57b
-# H1488 native test on fixture push. Both genuinely ran; only old reporter
-# expected 24 (now 80) sibling probes. Make manual-only to prevent more.
+# H1628 user-requested ONE current SOURCE8a original Go/Rust prebuilt scenario.
+# Dedicated path-trigger once; not the historical source-rebuild H1488 scene.
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan028-x86-game2fixed6-two-physical-handover.yml"]
   workflow_dispatch:
-permissions: {contents: read}
+permissions: {contents: read, actions: read}
 jobs:
   original-x86-one443-normal-game2-game4:
     runs-on: ubuntu-24.04
