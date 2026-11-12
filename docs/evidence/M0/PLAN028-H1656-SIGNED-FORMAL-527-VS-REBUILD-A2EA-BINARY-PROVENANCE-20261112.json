@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN028",
+  "role_id": "M0",
+  "checkpoint": "H1656",
+  "status": "PROVENANCE_MISMATCH_ACCOUNTED_NOT_NETWORK_QUALIFICATION",
+  "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "formal_gui_source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "formal_signed_build_action": 43161652596,
+  "formal_signed_artifact_id": 13918442816,
+  "formal_manifest": {
+    "source_sha": "52767d183b61eaf2621d967b16e85e644b1de428",
+    "features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "native_fec_acceleration": true,
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "isa_l_archive_sha256": "02b7cb715c3f079c308800c25beb47ff64b4f160853c00cee4b975bdd64b49dd",
+    "exe_sha256": "edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582",
+    "dll_sha256": "3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357"
+  },
+  "later_formal_rebuild_source_sha": "a2ea745c94f20e714d30c6f2abae8b68a54c068a",
+  "later_rebuild_action": 43166596282,
+  "later_rebuild_artifact_id": 13920549208,
+  "later_manifest": {
+    "source_sha": "a2ea745c94f20e714d30c6f2abae8b68a54c068a",
+    "features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration",
+    "native_fec_acceleration": true,
+    "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "isa_l_archive_sha256": "6abbe76849530ebba401cca6d2141281d381c99e2cb36c7dd0fe96b6257769d7",
+    "exe_sha256": "edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582",
+    "dll_sha256": "d9fd5736c7d22e49fdce7d21a9def7c33a3452e7da2114040534fbbd48834879"
+  },
+  "comparison": {
+    "product_paths_change_source527_to_main": false,
+    "go_executable_byte_identical": true,
+    "rust_isa_l_dll_byte_identical": false,
+    "isa_l_archive_identical": false,
+    "cause": "NOT_ESTABLISHED; DO_NOT_GUESS_REPRODUCIBILITY_CAUSE"
+  },
+  "original_failed_actions": [
+    43169764040,
+    43170379045
+  ],
+  "original_failure_classification": "HARNESS_SOURCE_BIN_PIN_BEFORE_NATIVE_NETWORK_NOT_TESTED",
+  "selected_frozen_formal_test_binary_source": "52767d183b61eaf2621d967b16e85e644b1de428",
+  "selected_test_which": "one signed Windows+WSL2 60s Auto outer1460 30pct loss 250ms each with full original Go TLS/Rust M4 and Stop",
+  "selected_test_result": "NOT_RUN_UNTIL_H1656_TARGET_TERMINAL",
+  "gui_action": 43167444547,
+  "gui_outcome": "SUCCESS scoped GUI actual compiled with exact FORMAL EXE edbb+DLL 3973, all 354 field/button tests; GUI-origin OS real native NOT_RUN",
+  "required_boundaries": [
+    "No cross-build Rust SHA substitution",
+    "No old Action result silently promoted",
+    "No new GUI/protocol/default changes",
+    "Only original native target with real application + owner Stop may qualify"
+  ]
+}

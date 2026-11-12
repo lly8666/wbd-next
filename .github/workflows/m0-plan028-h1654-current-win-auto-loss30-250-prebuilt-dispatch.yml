@@ -10,14 +10,14 @@ jobs:
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
-      PRODUCT_SOURCE: a2ea745c94f20e714d30c6f2abae8b68a54c068a
-      BUILD_ACTION: "43166596282"
+      PRODUCT_SOURCE: 52767d183b61eaf2621d967b16e85e644b1de428
+      BUILD_ACTION: "43161652596"
       SCENE: scenarios/plan028-h1632-auto-on-10m250ms30-outer1460-60s.json
       BASE_SCENE: scenarios/wl-outer-repair-10m-250ms-loss30-60s.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      # H1655 exact official current Go/Rust ISA-L SHA allowlist fixed in the target; original failed target43169764040 retained.
+      # H1656: one frozen SOURCE527 GUI-identical Rust 3973cd target. H1654/55 pre-business FAILs retained.
       - name: Verify unchanged real product and one canonical damaged scenario before dispatch
         shell: bash
         run: |
