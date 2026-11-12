@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      # H1655 exact official current Go/Rust ISA-L SHA allowlist fixed in the target; original failed target43169764040 retained.
       - name: Verify unchanged real product and one canonical damaged scenario before dispatch
         shell: bash
         run: |

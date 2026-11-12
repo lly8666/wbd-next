@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1654,
-  "checkpoint_sha": "ca30afea95a9a572679cafc76c3ca9c5410b0e11",
+  "sequence": 1655,
+  "checkpoint_sha": "12deea17d3cf99513e7f0b04f5dcb1433bac96d4",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1654-ONE-CURRENT-SOURCE-SIGNED-WIN-AUTO-30PCT250-AND-GUI-PACKAGE",
-  "current_task": "H1654: SOURCE527 final product identical through current main; GUI assembled Go edbb+Rust ISA-L 3973 matched formal signed product and all compiled UI/CLI/button VM checks Action43167444547 SUCCESS, but GUI-origin actual signed network NOT_RUN. One independent original signed Windows+Linux 60s outer1460 Normal Auto 30%/250ms sourcea2ea official build43166596282 H1654 wrapper will dispatch, real target NOT_RUN until terminal. Other real current seven modes Action43161652596 and five-client150s current Action43166596282 SUCCESS, old L2 SOURCE8a damaged passes scoped. PLAN028 IN_PROGRESS.",
-  "why_now": "Verify one real max-damage same binary current-source L2 scene without matrix rerun, while crediting latest source-locked GUI formal package and not pretending simulated connection was real.",
+  "task_id": "PLAN028-H1655-NATIVE-FORMAL-ISAL-REUSE-GATE-CURRENT-SHA-AND-RETRY",
+  "current_task": "H1655: target signed Windows/Linux Action43169764040 failed prebusiness: frozen official SOURCEa2ea ISA-L manifest rejected by old H1600-only accel allowlist; Go/Rust/native NOT_STARTED. Original wrapper43169739260 PASS only dispatch. H1655 exact new official run43166596282+SOURCEa2ea+Go SHA edbb+Rust DLL3973 accelerator features/manifest source/real bytes added to target guard; old H1600 and unknown sources still strict. New wrapper retriggers one 60s Normal Auto signed true 30%/250ms outer1460, not PASS until target. Same product SOURCE527, compiled GUI full Action43167444547 PASS, 150s mixed native sourcea2ea Action43166596282 PASS; final PLAN028 scope still pending.",
+  "why_now": "Fix stale prebuilt fixture rejecting formally source-locked current accelerator without weakening source/hash checks or adding product code.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1654 wrapper+actual signed native target and raw report/ZIP, outer1460/auto FEC2 applied/first delivered+failed/CPU+RSS/owned Stop. Reconcile final precise SOURCE/default/entry/feature table. Independent Win A/B/C L3 environment missing, user skipped near-MTU and multiWinWintun; GUI-origin live OS remains separate; no 029/030.",
+  "next_action": "Collect H1655 wrapper+one native target, enforce original signed TLS/Wintun/Rust rev+OS MTU1460/real UDP TCP/first delivered/missing+owned Stop/CPU RSS, then update current SOURCE coverage/default/feature cards and final scope. Windows independent A/B/C L3 rig absent; GUI-origin signed OS not yet qualified; user skips near-MTU and same-Windows dual Wintun; 029/030 out.",
   "unverified": true,
   "last_tested_source": "52767d183b61eaf2621d967b16e85e644b1de428",
   "evidence_refs": [
@@ -25,8 +25,8 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/devlog/M0/20261112-PLAN028-H1654-SOURCE527-FORMAL-GUI-PACKAGE-AND-ONE-CURRENT-AUTO-DAMAGE.md",
-    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json",
-    "docs/evidence/M0/PLAN028-H1650-52767-WINDOWS-NATIVE-GUI-354-CONFIG-BUTTONS-SCOPED-PASS-20261112.json"
+    "docs/devlog/M0/20261112-PLAN028-H1655-CURRENT-ISA-L-REUSE-PIN-REPAIR.md",
+    "docs/evidence/M0/PLAN028-H1650-52767-SEVENMODE-FORMAL-WINDOWS-LINUX-ORIGINAL-NATIVE-SIGNED-20261112.json"
   ],
   "open_requests": [],
   "partial_summary": "Current SOURCE527 formally compiled Windows Go edbb+Rust ISA-L 3973 and Linux original server; 7 signed real TCP/UDP modes+Stop native PASS short legacy1400, plus 354 GUI VM checks+read-only buttons PASS scoped same Go. Older SOURCE8a seven Win 30%/250ms separate, five native 180s strict original replay scoped PASS (old action FAIL retained). GUI-origin signed network/open p99/independent Windows L3 remain; do not extend 029/030."
