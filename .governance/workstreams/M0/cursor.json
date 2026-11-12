@@ -15,14 +15,14 @@
   "unverified": true,
   "last_tested_source": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/evidence/M0/PLAN029-H1661-DNS-SOURCE-ONLY-WINDOWS-BUILD-20261112.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
-    "docs/prompts/M0-PLAN029.md"
+    "docs/prompts/M0-PLAN029.md",
+    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json"
   ],
   "open_requests": [],
   "partial_summary": "H1661 SOURCE474eeb66 Windows native Go V4 overlay/CLI build SUCCESS Action43180302066; 4 PLAN029 unit tests PASS (faketcp2/windowsclient1/cmd1). GUI text only. DNS NPF physical/WFP production E2E NOT_RUN, no resolver TTL/multiA retry, native Rust CN/LAN direct split NOT_QUALIFIED under 2026-11-12 new §2A, flows padding NOT_IMPLEMENTED. 028 ACK/Win L3/GUI signed startup excluded. Keep H1658 PLAN029 active, single M0 main writer."

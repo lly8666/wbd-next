@@ -48,5 +48,6 @@
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
-  ]
+  ],
+  "source_sha": "474eeb66e5f5048a6dd7afa78c863d8bc70e212c"
 }
