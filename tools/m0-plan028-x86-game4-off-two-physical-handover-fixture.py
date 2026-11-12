@@ -59,5 +59,11 @@ one('send_udp "$NSC" "$IPC" NORMAL_AUTO_LIVE_GAME4_RESTORE 16',
 one("assert len(acks)==16 and acks[0]<changed<ready<acks[-1]",
     "assert len(acks)==80 and acks[0]<changed<ready<acks[-1]")
 one('"normal_live_restoration_echoes":16,','"normal_live_restoration_echoes":80,')
+# H1630: the original source-generated SHELL COUNT oracle was still 16
+# after H1629 extended the actual true Normal sibling stream to 80.
+# Require every sent real kernel UDP echo, not just the first 16.
+one("""test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 16""",
+    """test "$(grep -c 'REAL_MIXED_UDP NORMAL_AUTO_LIVE_GAME4_RESTORE .* ack_ns=' "$TMP/C-restore.log")" -eq 80""")
+
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1202_X86_GAME4_OFF_TWO_ORIGINAL_TLS_FIXTURE_READY",flush=True)

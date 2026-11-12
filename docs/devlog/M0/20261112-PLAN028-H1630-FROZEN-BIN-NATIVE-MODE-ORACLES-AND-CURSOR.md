@@ -1,0 +1,15 @@
+# PLAN028 H1630｜真实原生Action失败分账、2个精准测试oracle与cursor硬门修正
+
+Product binary SOURCE `8a31375e36bb6a93860c5579e64b4a39d0b6e346` unchanged, H1600 original Go/Rust 3 ELF SHA reuse, not recompiled. Three scenes deliberately separate Actions. Game2 Fixed6 Action43133373054 is current-source native PASS_SCOPED, artifact13906910222 (see H1629 evidence). First two Actions43133244964/43133244743 FAIL retained. H1629 second two Actions43134194491 Normal Fixed6 and 43134194597 Game4 Off also **FAIL**, not promoted.
+
+**Normal Fixed6 H1629:** zip artifact13906228075 verified source-locked original Go/Rust native. Actual original OS auto lease `10.66.0.197`, physical source .4→.9→.4, derived OS MTU 1375→1195, three authenticated generations and exact Stop1/2, Game4 **80 and 80 genuine UDP** overlapping physical change and old Stop, Normal postevent 16+16 first deliveries. The generated test emitted `M0_PLAN028_H1197_X86_NORMAL_FIXED6_REAL_PHYSICAL_TWO_REAUTH_PASS` before failing original shared-server final receipt: the historical source generator had wrongly asserted three `V4_PUBLIC_MIXED_NORMAL_READY` (initial only), whereas original Go logs new generations as `V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY`. Update only the derived H1197 oracle to require **exactly one initial READY + at least two B_CLIENT_READY** and still three `PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6`, strict cipher/profile and final OS/TUN Stop. Do not hide a real missing authenticated B.
+
+**Game4 Off H1629:** artifact13905793589, original normal sibling extended 80 true echoes; real Game4 Off first physical .3→.9 and true first 32 new UDP plus Normal48, OS1373→1193 and old exact Stop passed. After return path, original H1167 shell test still demanded `NORMAL_AUTO_LIVE_GAME4_RESTORE` count **16** while source generator had correctly changed actual delivered stream to **80**; later final true business/owner Stop wasn't reached. Change only this old shell count to **80**, preserving two-source route/OS readback, real app-before-after and final Stop gates. Existing H1629 Action remains FAIL.
+
+**Governance failure:** original Action43134194446 feature/governance and Action43134194457 governance-maintenance overall FAIL: `.governance/workstreams/M0/cursor.json` had 10 `context_refs` from H1629, while authoritative `.governance/policy.json` requires max8. Recovered cursor to eight recent on-scope files; did **not** relax policy or delete evidence. Original failures preserved. New H1630 Actions will separately trigger on two fixture paths; until actual full log/zip receipt they are NOT_RUN.
+
+User excludes unprovisioned Windows independent A/B/C controlled L3, near-inner-MTU, same-host multi-Wintun; current product/defaults still outer1460, FEC default Off, Linux rotation0, Windows keepalive15/dead90/idle0, outer-repair on. No 029/030 work.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only derived native acceptance fixtures corrected to require actual authenticated B receipts and all 80 genuine sibling UDP echoes; M0 cursor restored to existing 8 reference limit. No product implementation/default or hard gate changes."}
+```

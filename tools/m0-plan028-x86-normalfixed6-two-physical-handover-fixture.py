@@ -26,10 +26,13 @@ s=s.replace("plan028-h1192-normal-auto-two-source4.json","plan028-h1197-normal-f
 one("M0_PLAN028_H1192_X86_NORMAL_FIXED6_REAL_PHYSICAL_TWO_REAUTH_PASS",
     "M0_PLAN028_H1197_X86_NORMAL_FIXED6_REAL_PHYSICAL_TWO_REAUTH_PASS")
 old='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3'
-new=r'''assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3
+new=r'''assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==1
+assert server.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server")>=2
 assert server.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")==3
 effective_rows=re.findall(r'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=\d+ applied=\d+ profile=(\d+) pending=false',normal)
 assert effective_rows and all(int(x)==6 for x in effective_rows),effective_rows'''
+# Original Go server emits one initial READY and two B_CLIENT_READY for
+# authenticated generation2/3; never reinterpret candidate as three initial READY.
 one(old,new)
 assert s.count("PY_H1192")==2
 # H1629: actual old-retire grace reached 18.82s (H1628) while the 32*0.4s
