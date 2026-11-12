@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1632,
-  "checkpoint_sha": "12d2c2378846ee34737a5f38555533d98c13cbbc",
+  "sequence": 1633,
+  "checkpoint_sha": "872fb8c9bd41f3d862a180bc4db9f999c8d6f95a",
   "progress": "in_progress",
-  "task_id": "PLAN028-H1632-COLLECT-WINDOWS-30PCT250-NORMAL-PASS-AND-DISPATCH-AUTO-FEC-SHORT",
-  "current_task": "H1632: Current formal SOURCE8a prebuilt real signed Win Wintun Npcap+WSL2 original Linux native Normal Off 30% loss/250ms both, genuine kernel TCP+UDP and Stop Action43136758689 completed SUCCESS; 99551 sent each, only 71958/71974 first delivered 72.3%, no lossless claim, CPU1.9375s/74.672s peak working set44MB. Exact original ZIP and report SHA recorded. H1632 one new independent explicit Normal Auto FEC 30%/250ms same 10Mbps profile source-locked wrapper will dispatch; not PASS before target. H1631 x86 seven-mode three gaps PASS_SCOPED, no product/default change.",
-  "why_now": "Normal Off at 30% loss is deliberately not a reliability PASS; one feasible short explicit FEC Auto test on identical nominal packet mix checks actual recovery under current Windows signed source while skipping independent-DUT L3.",
+  "task_id": "PLAN028-H1633-RETAIN-WRAPPER-FAIL-FIX-ONE-AUTO-SCENARIO-ID-AND-RETEST",
+  "current_task": "H1633: H1632 Auto source-locked preflight wrapper Action43138076757 FAIL before dispatch due expected clone scenario_id remained '...normal...' while actual valid Auto scene uses '...auto...'; no native business ran, product not blamed. Corrected only exact expected ID, retained SOURCE/MTU/mode/diff contract; new wrapper and target native still NOT_RUN before observed. H1631 Windows signed Normal Off loss30 250ms successful with only 72.3% first delivery, recorded H1632 evidence. x86 seven-mode three gap Actions SUCCESS. Plan IN_PROGRESS.",
+  "why_now": "Avoid silently treating a preflight name mismatch as product FEC failure, and run the intended exact one Auto weaknet real source-locked scenario only once after targeted ID correction.",
   "done_when": "Only after PLAN028_INTEGRATION_ACCEPTANCE L0-L3 scopes truly met: standard TLS, Windows/Linux independent automatic/manual /32 and three per-client AEAD (ONE Windows Wintun per host, multiple Windows Wintuns explicitly excluded by user and H1587 old FAIL retained as unsupported), seven-mode real native Windows/Linux + ARM representative, A->AB->B and candidate-failure retaining A, Win signed Npcap/Wintun OS and Rust readback, genuine TCP/UDP small/near-MTU, Stop/isolated siblings, calibrated pressure/representative L3. Feature catalog/defaults/per binary hashes+backend reconciled and all critical known blocker closed. Retain Android/physical/029/030 OOS.",
-  "next_action": "Collect H1632 wrapper and its separate target signed Windows Normal Auto original source8a action (60s 10Mbps 250ms30 loss), strict report and zip; verify Auto mode applied, true delivered/missing, per-process CPU/RSS, duplicates/invalid, OS/WAL/Stop. Do NOT call wrapper success business. No repeated Windows runner L3 with missing A/B/C. Keep current SOURCE5client 30%/250ms and AutoIP physical path/Windows full sevenmode and GUI labelled OPEN if untested; user skip near-innerMTU/multiWintun; no 029/030.",
+  "next_action": "Collect new H1633 wrapper and single target Windows signed Auto FEC 30pct250ms real native Action/report/ZIP, quantify original true delivered/failed/Auto FEC actual applied/Stop/resources. No extra rollout if environment blocked; preserve original Action43138076757 FAIL. Independent Windows L3 rig absent and user skips near-MTU/multi-Wintun; no 029/030.",
   "unverified": true,
   "last_tested_source": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
   "evidence_refs": [
@@ -30,8 +30,8 @@
     "docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md",
     "docs/evidence/M0/PLAN028-H1631-SOURCE8A-CURRENT-X86-SEVENMODE-GAPS-PASS-20261112.json",
     "docs/evidence/M0/PLAN028-H1632-SOURCE8A-SIGNED-WIN-LINUX-30PCT250-NORMAL-OFF-20261112.json",
-    "docs/devlog/M0/20261112-PLAN028-H1631-CURRENT-SOURCE-X86-SEVENMODE-AND-ONE-WIN30-WEAKNET.md",
-    "docs/devlog/M0/20261112-PLAN028-H1632-WINDOWS-30PCT250-NORMAL-REAL-AND-AUTO-SINGLE-SCENE.md"
+    "docs/devlog/M0/20261112-PLAN028-H1632-WINDOWS-30PCT250-NORMAL-REAL-AND-AUTO-SINGLE-SCENE.md",
+    "docs/devlog/M0/20261112-PLAN028-H1633-AUTO-WEAKNET-SCENE-ID-ONLY-PREFLIGHT.md"
   ],
   "open_requests": [],
   "partial_summary": "H1607 sourcec3a native Action43042125895 FAIL before product due WSL2 RST kernel rule command timeout120s after authentic Ubuntu pinned image import/real guest kernel preflight PASS. No nearMTU business yet; stop same hosted Windows tests. Source8a signed 150s same-user Windows+Linux and lifecycle PASS_SCOPED; ARM old2x1800s unchanged components PASS_SCOPED; H1587 multiple Wintun OOS per user original FAIL retained, Windows independent-DUT L3/nearMTU/idle-path full current-source unresolved. PLAN028 IN_PROGRESS."

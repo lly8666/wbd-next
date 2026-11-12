@@ -36,7 +36,7 @@ jobs:
           from tools.m0_wl_native_mtu_contract import configured_native_test_mtu
           s=read_scenario(os.environ['SCENE']); old=read_scenario(os.environ['BASE_SCENE'])
           s2=dict(s); o2=dict(old); digest=s2.pop('scenario_sha256');o2.pop('scenario_sha256')
-          o2['scenario_id']='plan028-h1632-normal-on-10m250ms30-outer1460-60s'
+          o2['scenario_id']='plan028-h1632-auto-on-10m250ms30-outer1460-60s'
           o2['tun_mtu']=1460
           o2['public_mode']='auto'
           assert s2==o2,'single-source original scenario differs beyond ID and corrected real outer1460'
