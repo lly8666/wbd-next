@@ -1,0 +1,83 @@
+import unittest
+from pathlib import Path
+
+from tools.m0_native_ci_scope import is_native_path, requires_native_smoke
+
+
+class NativeSmokeScopeTests(unittest.TestCase):
+    def test_cold_dns_and_gui_do_not_start_real_os_native(self):
+        self.assertFalse(requires_native_smoke("push", [
+            "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
+            "r0/go_overlay/cmd/wbd-client/m0_plan029_single_dns_windows.go",
+            "r0/go_overlay/assembly/manifest-plan020-m0.json",
+            "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
+        ]))
+
+    def test_pure_rust_policy_does_not_run_real_os(self):
+        self.assertFalse(requires_native_smoke("push", [
+            "crates/wbd-engine/src/v4_client_split.rs",
+        ]))
+
+    def test_windows_and_rust_network_paths_start_native(self):
+        for path in (
+            "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+            "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+            "crates/wbd-platform/src/windows_native_io.rs",
+            "crates/wbd-platform/src/windows_direct_socket.rs",
+            "crates/wbd-engine/src/v4_direct_egress.rs",
+            "r0/go_overlay/cmd/wbd-client/m0_native_v4_direct_windows.go",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+            "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_qualified_guard_intent_recovery_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_owned_transaction.go",
+            "r0/go_overlay/internal/windowsclient/native_dns_write_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_lease_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_route_windows.go",
+            "r0/go_overlay/internal/windowsclient/native_mtu_write_windows.go",
+            "r0/go_overlay/internal/windowsclient/direct_udp_windows.go",
+            "r0/go_overlay/internal/windowsclient/userspace_tcp_direct_windows.go",
+            "r0/go_overlay/internal/windowsclient/network_plan.go",
+            "r0/go_overlay/internal/windowsclient/native_rust_wintun_loan_windows.go",
+            "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(is_native_path(path))
+                self.assertTrue(requires_native_smoke("push", [path]))
+
+    def test_go_test_only_is_not_native(self):
+        self.assertFalse(requires_native_smoke("push", [
+            "r0/go_overlay/internal/windowsclient/native_unified_network_transaction_test.go",
+        ]))
+
+    def test_mixed_commit_starts_native(self):
+        self.assertTrue(requires_native_smoke("push", [
+            "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
+            "crates/wbd-engine/src/v4_windows_owner.rs",
+        ]))
+
+    def test_manual_and_explicit_full_requests_are_preserved(self):
+        self.assertTrue(requires_native_smoke("workflow_dispatch", ["README.md"]))
+        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]"):
+            self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
+
+    def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        self.assertIn("native_smoke: ${{ steps.native_scope.outputs.native_smoke }}", workflow)
+        # GitHub 'needs' context only exposes DIRECT job dependencies.
+        self.assertIn("needs: [wiring-contract, windows-compile-preflight]", workflow)
+        self.assertIn("if: needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
+        self.assertIn("if: always() && needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
+        self.assertIn("python -m unittest tests.test_m0_native_ci_scope -v", workflow)
+        self.assertIn("- r0/go_overlay/assembly/manifest-plan020-m0.json", workflow)
+
+    def test_unknown_diff_fails_open_to_native(self):
+        self.assertTrue(requires_native_smoke("push", []))
+        self.assertTrue(requires_native_smoke("unknown", ["docs/README.md"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
