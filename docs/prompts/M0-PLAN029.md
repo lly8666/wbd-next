@@ -1,7 +1,11 @@
 # M0｜PLAN029接续提示词
 
-**前置交接（H1657，2026-11-12）**：PLAN028 已经用户授权作限定范围收口（非全L3/ACK/GUI真实起网PASS），[H1657权威证据](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。此文件是供**新 agent**启动 029 的入口，不表示本次028收尾已替用户自动激活029。新 agent 接到启动指令后，先核 main/registry/cursor，再按 M0 单写者约束转换任务；直接复用经证实的 028 配置/MTU/会话接口，不重刷旧七模式。ACK未解、独立Windows L3与真人GUI签名起网未测不等于029依赖已有PASS。
+**前置交接（2026-11-12 H1657/H1658）**：PLAN028 已按用户授权限定范围收口（非全L3/ACK/GUI真实起网PASS），[H1657权威证据](../evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json)。PLAN029 已由用户在 H1658 明确启动，当前继续由 M0 main 单写者实施；每次开新 agent 必须先核 main/registry/cursor 增量，不重复启动登记或覆盖其他在途工作；直接复用经证实的 028 配置/MTU/会话接口，不重刷旧七模式。ACK未解、独立Windows L3与真人GUI签名起网未测不等于029依赖已有PASS。
 
+
+**2026-11-12 用户新增硬约束：Windows IP 分流必须“Wintun 先捕获，再在 native V4 收包链按中国/LAN/自定义 IPv4 CIDR 分类”，不得向 Windows 路由表批量写入数千条中国 IP/补集/直连网段，也不得转成数千条 WFP/防火墙条目。** 保留少量 owned `0.0.0.0/1`、`128.0.0.0/1` 捕获路由、服务端物理 `/32` 逃逸与少量 DNS `/32`；入口从正式 V4 的 Wintun ingress 作 direct/proxy 决策，CN/LAN/自定义 TCP/UDP 真正绑定物理 NIC 出口及回包，其他走原 Rust 隧道。高效归并/区间查找或 flow 级缓存，不添加 Go 每包热泵或另一控制器。DNS53 优先于 CN 直连，bootstrap 独立物理路径；fail closed、保留 owned WAL/Stop 精确回滚。
+
+**现状注意：** 老 `go:embed china_ipv4.txt`（2026-10-03 固定快照约6209个CIDR）、`route-mode=bypass-lan-cn|bypass-lan|all`、`china-ip-file`/手动更新和 GUI 按钮已经有，**不等于当前正式 `--native-v4-product` 已接好中国 IP 实际直连**。`BuildCompactNetworkPlan` 故意清空路由计划里的 `Bypass4/Direct4`，旧 Go `TUNScopedFlows` 位于另一条分支；029先核真 V4 ingress/直连回程，不要为修分流去铺大量 Windows 路由。正式签名 Windows 测 CN/非CN TCP+UDP 两条出口、DNS优先、三模式、启动/Applied/Stop前后 `Get-NetRoute` 数量与 WAL；不得以旧源码旧PASS或 mock 冒充。细节与退出见 [PLAN029 §2A](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)。
 
 跨包红线：先读 `docs/architecture/TLS_HANDSHAKE_CONTRACT.md`；预共享route-key可导入/手填，本地生成/存储/验证，不得为配置便利恢复TLS前私有交换或关闭服务器验证。
 
