@@ -9,6 +9,10 @@ use std::sync::Arc;
 use crate::v4_client_split::{
     DnsEgress,DnsUse,DomainIndex,Egress,FlowKey,FlowPin,SplitError,SplitPolicy,
 };
+// PLAN029 client-origin TCP/53 framing pure source, not yet a product
+// kernel listener or QNAME-routed upstream transaction.
+#[path="v4_client_dns_tcp_ingress.rs"]
+pub(crate) mod dns_tcp_ingress;
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum IngressWireError{
@@ -87,7 +91,7 @@ fn read_ports(data:&[u8])->Result<(u16,u16),IngressWireError>{
     Ok((u16::from_be_bytes([data[0],data[1]]),
         u16::from_be_bytes([data[2],data[3]])))
 }
-fn dns_question(data:&[u8])->Result<(u16,String,u16),IngressWireError>{
+pub(crate) fn dns_question(data:&[u8])->Result<(u16,String,u16),IngressWireError>{
     if data.len()<17{return Err(IngressWireError::MalformedDns)}
     let flags=u16::from_be_bytes([data[2],data[3]]);
     let qd=u16::from_be_bytes([data[4],data[5]]);

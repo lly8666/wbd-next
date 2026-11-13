@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1770",
+  "source_sha": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
+  "status": "PASS_SIGNED_D1_SINGLE_TUNNEL_DNS_NO_PHYSICAL_FALLBACK_SCOPED",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43528230244",
+  "action_id": 43528230244,
+  "artifact_id": 14086482885,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43528230244/artifacts/14086482885",
+  "original_source_sha": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
+  "github_conclusion": "success",
+  "verified": true,
+  "exact_real_windows_linux": {
+    "original_go_tls_rust_signed_wintun_linux_tun": "PASS",
+    "native_direct_tcp_32768_halfclose": "PASS",
+    "cn_fakeip_direct_udp": "PASS",
+    "noncn_tunnel_tcp_udp": "PASS",
+    "positive_noncn_single_tunnel_dns": "PASS",
+    "app_blackhole_real_windows_wintun_udp53_queries": 3,
+    "app_blackhole_unexpected_responses": 0,
+    "linux_tun_dns_1_1_1_1_target_queries": 3,
+    "linux_physical_direct_dns_target_queries": 0,
+    "linux_tun_unrelated_dns_queries": 4,
+    "linux_physical_unrelated_dns_queries": 0,
+    "windows_original_lease": "10.66.0.2",
+    "d1_target_name": "no-backup.globalx.example",
+    "blackhole_observation_window_seconds": 7,
+    "response_intentionally_sent": false,
+    "owned_stop_and_wal": "PASS",
+    "exact_hyperv_tcp46112_rule_removed": "PASS",
+    "strict_outer_oracle": "PASS",
+    "real_marker": "PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"
+  },
+  "h1770_source_pending": {
+    "d2_partial": "Use real nonCN DNS result 203.0.113.77 as the destination for a fresh Windows Wintun UDP business app, require Linux TUN echo at the same A; no fakeIP and no physical substitution",
+    "app_tcp53": "Only bounded 2-byte framed DNS question reassembly and malicious overlength/pipelined/reply rejection in Rust tests. No kernel listener and no physical/Tunnel QNAME transactions yet",
+    "original_go_owner_abi": "Legacy pinned original tls.go already exists. Reuse ONLY tls.go when exact original pinned git bytes and never overwrite. All other overlap still fail-closed; separate old ABI test result pending"
+  },
+  "remaining_not_proven": [
+    "application TCP/53 real inbound business",
+    "DNS UDP TC to same endpoint real backend",
+    "CN-domain overseas CDN vs nonCN-domain CN IP full two-way physical",
+    "D3 quota stress and Tunnel fairness",
+    "D4-D5 GUI/settings/IPv6",
+    "real product Tunnel startup padding and P1-P2"
+  ],
+  "plan_status": "IN_PROGRESS"
+}

@@ -144,7 +144,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -1014,6 +1014,52 @@ print(json.dumps(result),flush=True)
     "linux":dns_proofs["linux"],"app_tcp53":"NOT_RUN",
     "blackhole_no_fallback":"NOT_RUN"}
   print("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED",flush=True)
+  # D2 scoped real counterexample: the nonCN DNS A was just read by the
+  # original Windows app via its ONE authenticated Tunnel resolver; the
+  # actual returned IP must be used by a NEW Windows kernel UDP business
+  # socket and received by the original Linux TUN, never a FakeIP/Direct
+  # resolution shortcut. This independently proves that DNS direction is
+  # not silently re-used as a business flow routing classifier.
+  d2_real=dns_proofs["windows"]["real_answer"]
+  if d2_real!=linux_app4 or d2_real!=dns_proofs["linux"]["reply_a"]:
+   raise RuntimeError("D2 real nonCN DNS A not bound to exact Linux TUN alias")
+  d2_guest_log=(out/"plan029-h1770-linux-noncn-a-business.log").open("w");logs.append(d2_guest_log)
+  p029_d2_tun_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",
+      unix(root/"tools"/"m0_plan029_h1770_linux_resolved_noncn_tunnel_udp.py"),
+      d2_real,"10.66.0.2"],stdout=d2_guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029-h1770-linux-noncn-a-business.log",
+      "PLAN029_H1770_LINUX_ORIGINAL_TUN_A_BUSINESS_READY",p029_d2_tun_guest,12)
+  d2_win_log=(out/"plan029-h1770-windows-noncn-a-business.log").open("w");logs.append(d2_win_log)
+  p029_d2_tun_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py"),
+      "10.66.0.2",d2_real],stdout=d2_win_log,stderr=subprocess.STDOUT)
+  if p029_d2_tun_win.wait(timeout=17)!=0 or p029_d2_tun_guest.wait(timeout=6)!=0:
+   raise RuntimeError("real nonCN DNS A Tunnel business failed win="+
+      (out/"plan029-h1770-windows-noncn-a-business.log").read_text(errors="replace")[-500:]+
+      " linux="+(out/"plan029-h1770-linux-noncn-a-business.log").read_text(errors="replace")[-500:])
+  d2_receipts={}
+  for who,filename,marker in (
+   ("windows","plan029-h1770-windows-noncn-a-business.log","PLAN029_H1770_REAL_WINDOWS_NONCN_A_TUNNEL_BUSINESS "),
+   ("linux","plan029-h1770-linux-noncn-a-business.log","PLAN029_H1770_REAL_LINUX_TUN_A_BUSINESS ")):
+   rows=[line.split(" ",1)[1] for line in (out/filename).read_text().splitlines()
+        if line.startswith(marker)]
+   if len(rows)!=1:raise RuntimeError("D2 real nonCN DNS A business receipt missing "+who)
+   d2_receipts[who]=json.loads(rows[0])
+  if not (d2_receipts["windows"]["dns_real_a"]==d2_real and
+          d2_receipts["windows"]["fakeip"] is False and
+          d2_receipts["windows"]["reply_ip"]==d2_real and
+          d2_receipts["linux"]["destination"]==d2_real and
+          d2_receipts["linux"]["source_lease"]=="10.66.0.2" and
+          d2_receipts["windows"]["received_bytes"]==
+           d2_receipts["linux"]["echo_bytes"]):
+   raise RuntimeError("D2 real nonCN resolved business did not follow Tunnel exact source")
+  report["plan029_d2_noncn_resolved_a_tunnel_business"]={
+       "source_sha":os.environ["GITHUB_SHA"],
+       "scope":"SIGNED_NONCN_DNS_REAL_A_THEN_ORIGINAL_WINTUN_TO_LINUX_TUN_UDP",
+       "windows":d2_receipts["windows"],"linux":d2_receipts["linux"],
+       "cn_ip_a_converse":"NOT_RUN","overseas_cdn_reverse":"NOT_FULLY_RUN"}
+  print("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED",flush=True)
   # D1 single-upstream timeout proof. After genuine one-endpoint success,
   # leave the same run-owned TUN 1.1.1.1/32 in place and bind two independent
   # receivers: Tunnel DNS silently blackholes, physical Direct DNS is a
@@ -1842,7 +1888,7 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win):
   if p is not None and p.poll() is None:p.terminate()
  if p029_direct and (out/"plan029-h1765-owned-tunnel-dns-alias.txt").exists():
   # Current-generation INTENT is sufficient for safe partial Apply recovery:

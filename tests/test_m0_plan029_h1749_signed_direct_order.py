@@ -135,4 +135,42 @@ class NativeDirectOrder(unittest.TestCase):
            "tools"/"m0_plan029_h1767_windows_dns_blackhole.py").read_text(encoding="utf-8")
         self.assertIn(r'\x09no-backup\x07globalx\x07example\x00',source)
         self.assertIn(r'\x09no-backup\x07globalx\x07example\x00',w)
+    def test_h1770_real_noncn_dns_answer_is_used_by_original_tunnel_app(self):
+        import ast
+        ast.parse(S)
+        self.assertLess(S.index("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED"),
+                        S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"))
+        self.assertLess(S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"),
+                        S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
+        self.assertIn('d2_real=dns_proofs["windows"]["real_answer"]',S)
+        self.assertIn('d2_real!=dns_proofs["linux"]["reply_a"]',S)
+        self.assertIn('d2_receipts["linux"]["source_lease"]=="10.66.0.2"',S)
+        self.assertIn('"cn_ip_a_converse":"NOT_RUN"',S)
+        self.assertIn('p029_d2_tun_guest,p029_d2_tun_win):',S)
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        for path in ("tools/m0_plan029_h1770_linux_resolved_noncn_tunnel_udp.py",
+                     "tools/m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py"):
+            ast.parse((Path(__file__).resolve().parents[1]/path).read_text(encoding="utf-8"))
+            self.assertIn("      - "+path,W)
+        self.assertIn('plan029-h1770-linux-noncn-a-business.log',M)
+        self.assertIn('plan029-h1770-windows-noncn-a-business.log',M)
+        self.assertIn("$result.plan029_d2_noncn_resolved_a_tunnel_business.source_sha -ne $env:GITHUB_SHA",W)
+    def test_h1770_tcp53_framing_is_bounded_source_only_not_product_claim(self):
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        wire=(Path(__file__).resolve().parents[1]/"crates"/"wbd-engine"/"src"/"v4_client_split_wire.rs").read_text(encoding="utf-8")
+        tcp=(Path(__file__).resolve().parents[1]/"crates"/"wbd-engine"/"src"/"v4_client_dns_tcp_ingress.rs").read_text(encoding="utf-8")
+        self.assertIn('pub(crate) fn dns_question',wire)
+        self.assertIn('mod dns_tcp_ingress;',wire)
+        self.assertIn('const MAX_QUESTION_WIRE:usize=2048-42;',tcp)
+        self.assertIn('TcpClientDnsFramingError::ExtraPayload',tcp)
+        self.assertIn('application TCP/53',tcp)
+        self.assertIn("      - crates/wbd-engine/src/v4_client_dns_tcp_ingress.rs",W)
+        self.assertIn('"app_tcp53":"NOT_RUN"',S)
+    def test_h1770_pinned_legacy_tls_is_reused_only_if_exact_git_source_bytes(self):
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-plan013-windows-rust-original-owner-abi.yml").read_text(encoding="utf-8")
+        self.assertIn('assert filename=="tls.go"',W)
+        self.assertIn('target.read_bytes()==original_tls',W)
+        self.assertIn('pinned original Go TLS mutated by an unowned author',W)
+        self.assertIn('M0_PINNED_ORIGINAL_GO_TLS_REUSED_NO_OVERWRITE',W)
 if __name__=="__main__":unittest.main()

@@ -39,6 +39,7 @@ LOGS=(
  "plan029-h1760-guest-physical-tcp.log","plan029-h1760-windows-fakeip-tcp.log",
  "plan029-h1765-linux-tun-dns.log","plan029-h1765-windows-tun-dns.log",
  "plan029-h1767-linux-dns-blackhole.log","plan029-h1767-windows-dns-blackhole.log",
+ "plan029-h1770-linux-noncn-a-business.log","plan029-h1770-windows-noncn-a-business.log",
  "auto-adaptive-windows-udp.log","auto-adaptive-linux-udp.log",
  "auto-revision-windows-udp.log","auto-revision-linux-udp.log",
  "wl-n0-windows-app.log","wl-n0-linux-app.log",

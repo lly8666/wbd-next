@@ -205,8 +205,21 @@ jobs:
                            "bridge_v4_windows_scoped_client.go"):
               relative="r0/go_overlay/internal/realityfront/"+filename
               payload=subprocess.check_output(["git","show",os.environ["GITHUB_SHA"]+":"+relative])
-              assert not (dest/filename).exists(),"exact pinned old-Go/M4 assembly already owns this file; no competing author"
-              (dest/filename).write_bytes(payload)
+              target=dest/filename
+              if target.exists():
+                  # The original pinned Go TLS file already exists in the
+                  # accepted baseline. Never overwrite that credential code
+                  # with a later adapter copy. Verify it is STILL exactly
+                  # the pinned original git byte content, and only allow
+                  # this one explicitly known owner. All other duplicate
+                  # files remain strict fail-closed conflicts.
+                  assert filename=="tls.go","unexpected post-assembly owner collision: "+filename
+                  original_tls=subprocess.check_output(["git","-C",str(root/"legacy"),
+                      "show","a7a82db31fe736ffedee330795a3234d358f1984:internal/realityfront/tls.go"])
+                  assert target.read_bytes()==original_tls,"pinned original Go TLS mutated by an unowned author"
+                  print("M0_PINNED_ORIGINAL_GO_TLS_REUSED_NO_OVERWRITE")
+                  continue
+              target.write_bytes(payload)
           for filename in ("created_wintun_windows.go","created_wintun_windows_test.go",
                            "original_go_tls_join_windows_test.go",
                            "scoped_original_tls_native_wintun_windows.go"):

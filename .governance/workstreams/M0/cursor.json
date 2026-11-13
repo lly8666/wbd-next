@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1769,
-  "checkpoint_sha": "9f4b2488e77274a8e2124a13fbbd4877f2142cc4",
+  "sequence": 1770,
+  "checkpoint_sha": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1769: H1768 signed Action43526475121 reached actual product Normal CN Direct 32768 TCP+UDP, nonCN Tunnel TCP/UDP and nonCN single Tunnel DNS PASS, then new Linux D1 DNS blackhole fixture incorrectly aborted on unrelated real DNS QNAME from a shared physical/TUN endpoint, before 7s window. Windows app 3 queries, zero responses, but physical Direct fallback=NOT_PROVEN and owned Stop=NOT_PROVEN after fail. H1769 stages exact QNAME prefix+QTYPE+QCLASS filter and counters for unrelated traffic; still must assert selected target Tunnel >=2 and physical=0 over complete window. Rust/Go prior source builds passed; separate Windows owner ABI older pinned Go/M4 file-owner collision already failed on H1766 source, not 029 product first error, remains unresolved. One new signed SOURCE pending.",
-  "why_now": "Do not misclassify unrelated CN/bootstrap DNS reaching shared physical resolver as a no-fallback violation, and do not abort observation before 5s native DNS timeout can finish. Scope exact nonCN QNAME and retain all raw receipts, physical0 hard failure.",
+  "current_task": "H1770: H1769 signed original Go/Rust Windows2025 Wintun↔Linux TUN Action43528230244 FULL SUCCESS. D1 nonCN no-backup.globalx.example Windows Wintun app 3 queries and no reply, Linux sole Tunnel DNS1.1.1.1 received exactly 3 selected queries, physical Direct resolver received 0 selected queries; 4 unrelated Tunnel DNS counted separately through 7s, owned Defender/WAL/HyperV and both OS Stop PASS. H1770 stages partial D2 nonCN actual DNS A 203.0.113.77 follow-on NEW Windows UDP app→Linux original TUN echo, bounded client TCP53 DNS 2-byte frame parser pure tests only (NOT PRODUCT TCP53), and exact pinned old-Go TLS fixture owner collision correction solely for original legacy sha bytes (H1766-H1769 old owner ABI FAIL). One new scoped signed Normal SOURCE pending; D1-D5/P1-P2/real padding/GUI still OPEN.",
+  "why_now": "Signed D1 selected nonCN Tunnel blackhole with zero physical fallback and final Stop now PASS, so next network gate must move beyond DNS receipt: actual post-resolve nonCN A business into Tunnel, not repeat 32K and DNS probes. In parallel build bounded app TCP53 parser without suggesting production support, and make separate legacy owner ABI reuse only exact original pinned Go TLS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run one H1769 signed Normal current SOURCE with strict target-only DNS blackhole, observe all 7s and Stop. If it passes, record scoped no-fallback and proceed D1 application TCP53/D2 true CDN converse, D3 memory/throughput, GUI/padding P1/P2. Windows owner ABI long-standing pinned old-Go assembly duplicate must be reviewed separately; don't loosen its provenance assert blindly. PLAN030 stays closed.",
+  "next_action": "Collect H1770 one-source signed post-DNS nonCN A→Tunnel UDP, full prior D1 blackhole, owned Stop, Windows/Linux pure TCP53 frame tests and independent pinned-original-TLS owner ABI. Then D1 actual client TCP53 ingress/backend, D2 CN overseas vs nonCN CN IP, D3–D5, GUI and authenticated startup padding P1/P2. PLAN030 closed.",
   "unverified": true,
-  "last_tested_source": "9f4b2488e77274a8e2124a13fbbd4877f2142cc4",
+  "last_tested_source": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1769-H1768-SIGNED-DNS-BLACKHOLE-FIRST-UNRELATED-QNAME-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1770-H1769-SIGNED-DNS-BLACKHOLE-ZERO-PHYSICAL-PASS-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1768 signed real Direct TCP32K/CN DNS/Tunnel TCP/UDP+nonCN Tunnel DNS positive stages PASS, no-fallback negative FAIL in Linux fixture on unrelated DNS QNAME before full window. H1769 filters unrelated traffic without weakening target physical0 requirement, SOURCE pending; PLAN029 OPEN."
+  "partial_summary": "H1769 signed complete PASS incl D1 sole Tunnel DNS no fallback: target Tunnel 3, physical 0, Windows no answer, Stop. H1770 staged D2 nonCN A then real Tunnel business, TCP53 bounded parser only, baseline owner ABI original TLS ownership fix, all new SOURCE untested; 029 in progress."
 }
