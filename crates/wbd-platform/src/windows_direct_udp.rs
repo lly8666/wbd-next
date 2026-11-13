@@ -15,6 +15,11 @@ pub enum DirectUdpError {
     PacketTooLarge,
     SocketBind,
     InterfaceBind,
+    /// Actual WinSock WSAGetLastError from the separate cold boundaries.
+    InterfaceOptionSet(i32),
+    InterfaceOptionRead(i32),
+    InterfaceOptionMismatch{requested:u32,observed:u32,returned_len:i32},
+    InterfaceConnect(i32),
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct DirectUdpTuple {
@@ -118,9 +123,12 @@ mod win{
     extern "system" {
         fn setsockopt(socket:usize,level:i32,optname:i32,value:*const i8,len:i32)->i32;
         fn getsockopt(socket:usize,level:i32,optname:i32,value:*mut i8,len:*mut i32)->i32;
+        fn WSAGetLastError()->i32;
     }
-    // IPPROTO_IP=0, IP_UNICAST_IF=31. Windows expects an interface index in
-    // network byte order, not an IPv4 address or a host-order DWORD.
+    // IPPROTO_IP=0, IP_UNICAST_IF=31. Windows expects the IPv4 interface
+    // index in NETWORK order for SET, but GET returns HOST order:
+    // https://learn.microsoft.com/windows/win32/winsock/ipproto-ip-socket-options
+    // Never apply from_be to getsockopt's already-host-endian DWORD.
     const IP_UNICAST_IF:i32=31;
     /// One cold-created nonblocking socket, physically source-bound and
     /// connected to ONE real remote IPv4. Windows filters nonmatching peer
@@ -146,15 +154,34 @@ mod win{
             let network_index=ifindex.to_be();
             let ret=unsafe{setsockopt(native,0,IP_UNICAST_IF,
                 (&network_index as *const u32).cast(),4)};
-            if ret!=0{return Err(DirectUdpError::InterfaceBind)}
+            if ret!=0{
+                let code=unsafe{WSAGetLastError()};
+                eprintln!("PLAN029_H1703_UDP_IF_FIRST_ERROR stage=set_ip_unicast_if win32={} ifindex={}",code,ifindex);
+                return Err(DirectUdpError::InterfaceOptionSet(code))
+            }
             let mut observed=0u32;
             let mut size=4i32;
             let ret=unsafe{getsockopt(native,0,IP_UNICAST_IF,
                 (&mut observed as *mut u32).cast(),&mut size)};
-            if ret!=0||size!=4||u32::from_be(observed)!=ifindex{
-                return Err(DirectUdpError::InterfaceBind)
+            if ret!=0{
+                let code=unsafe{WSAGetLastError()};
+                eprintln!("PLAN029_H1703_UDP_IF_FIRST_ERROR stage=get_ip_unicast_if win32={} ifindex={}",code,ifindex);
+                return Err(DirectUdpError::InterfaceOptionRead(code))
             }
-            sock.connect(remote).map_err(|_|DirectUdpError::InterfaceBind)?;
+            if size!=4||observed!=ifindex{
+                eprintln!("PLAN029_H1703_UDP_IF_FIRST_ERROR stage=readback_mismatch expected_host={} observed_host={} observed_swapped={} len={}",
+                    ifindex,observed,u32::from_be(observed),size);
+                return Err(DirectUdpError::InterfaceOptionMismatch{
+                    requested:ifindex,observed,returned_len:size,
+                })
+            }
+            eprintln!("PLAN029_H1703_UDP_IF_READBACK_PASS requested={} observed_host={} returned_len={}",
+                ifindex,observed,size);
+            sock.connect(remote).map_err(|e|{
+                let code=e.raw_os_error().unwrap_or(-1);
+                eprintln!("PLAN029_H1703_UDP_IF_FIRST_ERROR stage=connect win32={} ifindex={} target={}",code,ifindex,remote);
+                DirectUdpError::InterfaceConnect(code)
+            })?;
             sock.set_nonblocking(true).map_err(|_|DirectUdpError::SocketBind)?;
             Ok(Self{socket:sock,physical_src,interface_index:ifindex,remote})
         }

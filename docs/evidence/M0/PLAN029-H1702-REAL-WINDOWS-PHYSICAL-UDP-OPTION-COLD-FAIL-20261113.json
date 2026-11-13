@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1702",
+  "source_sha": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
+  "observed_at": "2026-11-13",
+  "result": "FAIL_REAL_WINDOWS_UDP_SOCKET_BIND_OR_OPTION_READBACK",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 43349211216,
+    "job_id": 131635878303,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43349211216"
+  },
+  "artifact": {
+    "id": 14003041952,
+    "name": "plan029-h1702-physical-bound-udp-43349211216",
+    "zip_sha256": "04f8c204ba32687a2c1ae787436518c737484a7b66dfebc3bffa0f8970f21fdd"
+  },
+  "observation": {
+    "os": "Windows2025",
+    "selected_physical_ifindex": 14,
+    "selected_source4": "10.1.0.8",
+    "rust_version": "1.85.1",
+    "compile": "PASS",
+    "pure_udp_tests": "3_PASS",
+    "physical_socket_test": "FAIL",
+    "first_failure": "PhysicalUdpSocket::open -> InterfaceBind, stage not distinguished by H1702 source; actual send/reverse NOT_RUN",
+    "old_custom_wfp": "NOT_CREATED",
+    "direct_wintun": "NOT_RUN",
+    "off_host_udp": "NOT_RUN"
+  },
+  "next_hypothesis": "Microsoft IPPROTO_IP IP_UNICAST_IF SET expects network-order DWORD; GET returns host-order DWORD. H1702 incorrectly applied u32::from_be to observed host-order GET. H1703 corrects comparison and records separate set/get/mismatch/connect errors.",
+  "reference": "https://learn.microsoft.com/en-us/windows/win32/winsock/ipproto-ip-socket-options",
+  "excluded": [
+    "actual Windows Wintun-to-off-host UDP relay",
+    "Direct TCP",
+    "DNS53/FakeIP production",
+    "D1-D5/P1-P2"
+  ]
+}

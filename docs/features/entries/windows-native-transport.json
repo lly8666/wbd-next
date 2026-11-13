@@ -78,140 +78,140 @@
   },
   {
    "platform": "windows/x64 signed Npcap+Wintun original Go TLS…",
-   "scope": "True signed Windows Npcap/Wintun original Go TLS Rust owner/WAL and Linux raw/TUN 7/7 nati…（详见证据）",
+   "scope": "True signed Windows Npcap/Wintun original Go TLS Rust owner/WAL and Linu…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
    "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
   },
   {
-   "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WS…",
-   "scope": "Main S61 exact signed Windows Npcap/Wintun Go TLS Rust native 7/7 real Linux WSL2 duplex UDP/TCP owned Stop",
+   "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd…",
+   "scope": "Main S61 exact signed Windows Npcap/Wintun Go TLS Rust native 7/7 real L…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
    "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
   },
   {
-   "platform": "windows/x64 signed Wintun+Npcap ↔ linux/amd64 WSL2",
-   "scope": "历史施工前(已被 SOURCE055 FUNCTIONAL_PASS、SOURCEa123 N0 PASS、SOURCE7fc 150Mbps PASS 取代)：PLAN026 R…（详见证据）",
+   "platform": "windows/x64 signed Wintun+Npcap ↔ linux/amd…",
+   "scope": "历史施工前(已被 SOURCE055 FUNCTIONAL_PASS、SOURCEa123 N0 PASS、SOURCE7fc 150Mbps…（详见原证据）",
    "status": "NOT_RUN",
    "source_sha": null,
    "evidence": null
   },
   {
-   "platform": "Windows2025 x64 signed Wintun/Npcap ↔ WSL2 Linux…",
-   "scope": "PLAN026 SOURCE055 Rust NativeOwner Normal/off real bidirectional UDP/TCP and both owned St…（详见证据）",
+   "platform": "Windows2025 x64 signed Wintun/Npcap ↔ WSL2…",
+   "scope": "PLAN026 SOURCE055 Rust NativeOwner Normal/off real bidirectional UDP/TCP…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "055026fda1cf6ef31e1a8d81b7e04badeb617c34",
    "evidence": "docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json"
   },
   {
-   "platform": "Windows2025 signed Npcap Wintun to WSL2 Linux x64",
-   "scope": "PLAN026 P200 actual 60s kernel 200ms per direction 250Mbit/s rate 30% loss, offered Window…（详见证据）",
+   "platform": "Windows2025 signed Npcap Wintun to WSL2 Lin…",
+   "scope": "PLAN026 P200 actual 60s kernel 200ms per direction 250Mbit/s rate 30% lo…（详见原证据）",
    "status": "CAPACITY_LIMITED",
    "source_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
    "evidence": "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json"
   },
   {
-   "platform": "Windows2025 signed Npcap Wintun ↔ WSL2 Linux nat…",
-   "scope": "Original Rust Normal/off 10Mbps genuine kernel both-direction 300ms delay 0% injected loss…（详见证据）",
+   "platform": "Windows2025 signed Npcap Wintun ↔ WSL2 Linu…",
+   "scope": "Original Rust Normal/off 10Mbps genuine kernel both-direction 300ms dela…（详见原证据）",
    "status": "PERFORMANCE_PASS",
    "source_sha": "a1238c4d6964f60d88e65e2668314160fefe038f",
    "evidence": "docs/evidence/M0/PLAN026-N0-sourcea123-Windows-Normal-300ms-10Mbps-240s-PASS-20261028.json"
   },
   {
-   "platform": "Windows2025 signed Npcap/Wintun and Linux WSL2 x…",
-   "scope": "PLAN026 P200 200ms one-way per direction 250Mbps TC cap 30pct real random loss, optimized…（详见证据）",
+   "platform": "Windows2025 signed Npcap/Wintun and Linux W…",
+   "scope": "PLAN026 P200 200ms one-way per direction 250Mbps TC cap 30pct real rando…（详见原证据）",
    "status": "CAPACITY_LIMITED",
    "source_sha": "c8352931e15c954aa2c5de7a31e024af3a7eeb35",
    "evidence": "docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json"
   },
   {
-   "platform": "Windows amd64 + WSL2 Linux amd64 signed real Npc…",
-   "scope": "Rust NativeOwner Normal/off 150Mbps each direction 300ms one-way 0% tc netem 60s, RX→TX 32…（详见证据）",
+   "platform": "Windows amd64 + WSL2 Linux amd64 signed rea…",
+   "scope": "Rust NativeOwner Normal/off 150Mbps each direction 300ms one-way 0% tc n…（详见原证据）",
    "status": "PERFORMANCE_PASS",
    "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
    "evidence": "docs/evidence/M0/PLAN026-WIN-RX-WAKE-150M-SOURCE7FC3-ACTUAL-PASS-20261028.json"
   },
   {
-   "platform": "Windows amd64 signed Npcap/Wintun↔WSL2 Linux Rus…",
-   "scope": "Compiled SOURCEe6be Windows Rust NativeOwner Normal/off 150Mbps each /300ms one-way/0% tc…（详见证据）",
+   "platform": "Windows amd64 signed Npcap/Wintun↔WSL2 Linu…",
+   "scope": "Compiled SOURCEe6be Windows Rust NativeOwner Normal/off 150Mbps each /30…（详见原证据）",
    "status": "PERFORMANCE_PASS",
    "source_sha": "e6be9358d2272d7e1960a935be7fe772885bb034",
    "evidence": "docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json"
   },
   {
    "platform": "Windows-2025 + same-runner WSL2",
-   "scope": "A1/B1/B2/A2 signed 150M/300ms 60s: all network/Stop gates PASS; B CPU+1.63%/GB => rollback…（详见证据）",
+   "scope": "A1/B1/B2/A2 signed 150M/300ms 60s: all network/Stop gates PASS; B CPU+1.…（详见原证据）",
    "status": "PERFORMANCE_PASS",
    "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
    "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json"
   },
   {
    "platform": "Windows2025 signed native + WSL2 Linux x64",
-   "scope": "Rollback main b1bc fresh 150M/300ms one-way/60s Normal/off: kernel UDP/TCP and both Stop P…（详见证据）",
+   "scope": "Rollback main b1bc fresh 150M/300ms one-way/60s Normal/off: kernel UDP/T…（详见原证据）",
    "status": "FAIL",
    "source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
    "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"
   },
   {
-   "platform": "Windows2025 signed NPF/Wintun and WSL2 Linux ori…",
-   "scope": "H566 SOURCE525 original nine true dual-OS UDP/TCP/Stop positives: 0/1/5/15/30 Normal/off 1…（详见证据）",
+   "platform": "Windows2025 signed NPF/Wintun and WSL2 Linu…",
+   "scope": "H566 SOURCE525 original nine true dual-OS UDP/TCP/Stop positives: 0/1/5/…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
    "evidence": "docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"
   },
   {
-   "platform": "Windows2025 signed NPF/Wintun ↔ Linux WSL2 raw/T…",
-   "scope": "SOURCE525 Normal/off C100 25ms/0%/60s true bidirectional first 99.9992/100%, Windows whole…（详见证据）",
+   "platform": "Windows2025 signed NPF/Wintun ↔ Linux WSL2…",
+   "scope": "SOURCE525 Normal/off C100 25ms/0%/60s true bidirectional first 99.9992/1…（详见原证据）",
    "status": "CAPACITY_LIMITED",
    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
    "evidence": "docs/evidence/M0/PLAN027-H570-SOURCE525-REAL-C100-AND-C200-INFLIGHT-20261031.json"
   },
   {
-   "platform": "Windows2025 signed NPF/Wintun↔Linux WSL2 Rust or…",
-   "scope": "H583 frozen SOURCEd5e Game2 and Game4 highest FEC profile6 short genuine original two-OS U…（详见证据）",
+   "platform": "Windows2025 signed NPF/Wintun↔Linux WSL2 Ru…",
+   "scope": "H583 frozen SOURCEd5e Game2 and Game4 highest FEC profile6 short genuine…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
    "evidence": "docs/evidence/M0/PLAN027-H583-SOURCED5E7-FIVE-RATE-AND-GAME-FEC-20261031.json"
   },
   {
    "platform": "Win NPF/Wintun + WSL2 Linux",
-   "scope": "H586 SOURCEcb475 original highest Fixed50Mbps/25ms/0% two-OS first100% UDP/TCP/Stop PASS; Action41178599622.",
+   "scope": "H586 SOURCEcb475 original highest Fixed50Mbps/25ms/0% two-OS first100% U…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "cb475c89a29bc79c1608b747e76e136fd9341500",
    "evidence": "docs/evidence/M0/PLAN027-H586-SOURCECB475-REAL-RATES-FIXED50-20261031.json"
   },
   {
-   "platform": "Windows2025 signed Npcap/Wintun original Go TLS+…",
-   "scope": "PLAN027 H608 SOURCEa83 Game2/off genuine 2-lane original TLS→Rust/native OS-WAL/Wintun+Npc…（详见证据）",
+   "platform": "Windows2025 signed Npcap/Wintun original Go…",
+   "scope": "PLAN027 H608 SOURCEa83 Game2/off genuine 2-lane original TLS→Rust/native…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "a83b55e295db0b96e1108f071d877086c0f383ff",
    "evidence": "docs/evidence/M0/PLAN027-H608-SOURCEA83-GAME2-ORIGINAL-NATIVE-CLOSEOUT.json"
   },
   {
    "platform": "Windows2025 + WSL2",
-   "scope": "H1347 source56a5 native signed Windows WSL2 NormalOff SAME NIC/IP OS MTU1500→1280: origina…（详见证据）",
+   "scope": "H1347 source56a5 native signed Windows WSL2 NormalOff SAME NIC/IP OS MTU…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "56a5cb9a57406de9f3003d171d6f3674490a62c3",
    "evidence": "docs/evidence/M0/PLAN028-H1347-H1346-WINDOWS-SAME-IP-NLMTU-TRUE-TLS-RUST-UDP-TCP-STOP-PASS-20261108.json"
   },
   {
-   "platform": "Windows2025/x64 signed Npcap/Wintun + Ubuntu WSL…",
-   "scope": "H1364 source04db signed Windows Npcap/Wintun+WSL2 Normal original TLS443/Rust same-IP new…（详见证据）",
+   "platform": "Windows2025/x64 signed Npcap/Wintun + Ubunt…",
+   "scope": "H1364 source04db signed Windows Npcap/Wintun+WSL2 Normal original TLS443…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "04dbda77d0bcb85ea4e01b3c3a7ba9aae42f073a",
    "evidence": "docs/evidence/M0/PLAN028-H1364-SOURCE04DB-WINDOWS-NATIVE-SAME-IP-MTU1280-REAUTH-UDP-TCP-STOP-PASS-20261108.json"
   },
   {
-   "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linux fou…",
-   "scope": "H1577 original one Windows + four Linux native 150s 1.15x actual UDP/TCP and six-owner Sto…（详见证据）",
+   "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linu…",
+   "scope": "H1577 original one Windows + four Linux native 150s 1.15x actual UDP/TCP…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "cd5dfa3b7688167eebfc12020e0180a9fa8df8f4",
    "evidence": "docs/devlog/M0/20261111-PLAN028-H1577-FIVE-NATIVE-CALIBRATED-L2-115PCT.md"
   },
   {
    "platform": "windows/x64 plus Linux/arm64 build",
-   "scope": "H1580 SOURCE813 native assembly/Go/Rust preflight + ARM64 compile (no new signed OS AES/auto-ip E2E)",
+   "scope": "H1580 SOURCE813 native assembly/Go/Rust preflight + ARM64 compile (no ne…（详见原证据）",
    "status": "BUILD_PASS",
    "source_sha": "813e4c5c71fe2a1f2442bfda0ce19c205a398d03",
    "evidence": "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md"
@@ -224,53 +224,60 @@
    "evidence": null
   },
   {
-   "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linux x86…",
-   "scope": "H1586 SOURCEdd82：Win签名Wintun自动/32 AES256＋四Linux三AEAD；真实双向UDP/TCP150s、六owner Stop、0%/200ms，…（详见证据）",
+   "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linu…",
+   "scope": "H1586 SOURCEdd82：Win签名Wintun自动/32 AES256＋四Linux三AEAD；真实双向UDP/TCP150s、六ow…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "dd82db7ea529cfb7ed162ca665174c5df95a2ead",
    "evidence": "docs/evidence/M0/PLAN028-H1586-SOURCEDD82-WIN-AUTO-AES150-NATIVE-PASS-SCOPED-20261111.json"
   },
   {
-   "platform": "Windows2025 signed Npcap+Wintun plus original Li…",
-   "scope": "H1592 SOURCEfd473 30%双向loss/单程200ms；原Go冷TLS真实重传3次、TLS/Rust M4、Windows手动/32与OS MTU1389读回、真实…（详见证据）",
+   "platform": "Windows2025 signed Npcap+Wintun plus origin…",
+   "scope": "H1592 SOURCEfd473 30%双向loss/单程200ms；原Go冷TLS真实重传3次、TLS/Rust M4、Windows手动/…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "fd4732ec4adffa442a0bc25a145ed6ea1d1259a8",
    "evidence": "docs/evidence/M0/PLAN028-H1592-SOURCEFD473-WIN30-COLD-TLS-PASS-SCOPED-20261111.json"
   },
   {
-   "platform": "Windows2025 same host two signed independent Win…",
-   "scope": "H1587 SOURCE3b6 Windows A手动AES128 authenticated/Rust/OS TCPUDP通过、B手动ChaCha authenticated/R…（详见证据）",
+   "platform": "Windows2025 same host two signed independen…",
+   "scope": "H1587 SOURCE3b6 Windows A手动AES128 authenticated/Rust/OS TCPUDP通过、B手动ChaC…（详见原证据）",
    "status": "FAIL",
    "source_sha": "3b6d53c30531f6820c220f9e6c23f8a23480227c",
    "evidence": "docs/evidence/M0/PLAN028-H1587-SOURCE3B6-WIN-DUAL-AES128-CHA-ROUTE-FAIL-20261111.json"
   },
   {
-   "platform": "Windows2025 signed Npcap+Wintun plus Linux x86_6…",
-   "scope": "H1594 SOURCE8c0421 Windows auto /32 AES256 Rust3; Linux4 ChaCha/AES128/AES256 separate acc…（详见证据）",
+   "platform": "Windows2025 signed Npcap+Wintun plus Linux…",
+   "scope": "H1594 SOURCE8c0421 Windows auto /32 AES256 Rust3; Linux4 ChaCha/AES128/A…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "8c0421c33a4fcb9309be3530b3eec0100fc38d9d",
    "evidence": "docs/evidence/M0/PLAN028-H1594-SOURCE8C042-WIN-AUTO-AES-LINUX-FOUR-REAL-150S-PASS-SCOPED-20261111.json"
   },
   {
    "platform": "Windows2025 one signed Wintun + four Linux real…",
-   "scope": "H1601 source8a313 H1596 true same-login Alice Windows and Bob Linux distinct installation…（详见证据）",
+   "scope": "H1601 source8a313 H1596 true same-login Alice Windows and Bob Linux dist…（详见原证据）",
    "status": "FUNCTIONAL_PASS",
    "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
    "evidence": "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
   },
   {
    "platform": "Windows2025 Rust source-locked library compile",
-   "scope": "H1701 new physical UDP source/ifindex WinSock module compiled; incoming/outgoing L3 checks source-only. Real NIC option and same-host UDP echo H1702 still pending.",
+   "scope": "H1701 new physical UDP source/ifindex WinSock module compiled; incoming/…（详见原证据）",
    "status": "BUILD_PASS",
    "source_sha": "37042af626f8131e5ca7a552909946e2de117735",
    "evidence": "docs/evidence/M0/PLAN029-H1701-SOURCE-LOCKED-RUST-COMPILE-AND-UNIT-20261113.json"
+  },
+  {
+   "platform": "Windows2025 physical NIC bound UDP local so…",
+   "scope": "H1702 ifindex14/source10.1.0.8: 3 UDP pure tests PASS; real socket open…（详见原证据）",
+   "status": "FAIL",
+   "source_sha": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
+   "evidence": "docs/evidence/M0/PLAN029-H1702-REAL-WINDOWS-PHYSICAL-UDP-OPTION-COLD-FAIL-20261113.json"
   }
  ],
  "limitations": [
   "七模式/固定FEC/Auto/大包等旧SOURCE真业务证据仍保留在verification及对应旧devlog；新SOURCE只按受影响功能补代表场景，不能用编译成功冒充全模式实网。",
   "User excludes same-Windows-host two-Wintun tests. H1587 old double Wintun global /1 route/WAL CAS actual FAIL preserved; this concurrent Windows host combination is unsupported/unverified, cannot infer PASS from cross-OS same-account.",
   "H1601/H1623 scoped PASS and H1592 scope limitations remain in verification and linked evidence, not promoted to PLAN029 product E2E.",
-  "H1700 new Windows-only nonblocking UDP socket cold binding to physical source and IP_UNICAST_IF with readback; strict incoming tuple/IPv4 reverse bytes in pure Rust. Not yet connected to one native Wintun RX/IO scheduler; no real physical Direct application roundtrip, no product Ready. H1702 will execute a real physical NIC-bound same-host local-echo and reverse in one isolated job; not off-host/Wintun egress."
+  "H1702 source7ac real physical UDP local-echo FAIL on InterfaceBind before send; H1703 separates cold SET/GET/connect failures and corrects host-endian getsockopt. Not off-host egress or Wintun Direct."
  ],
  "promotion": null,
  "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",
