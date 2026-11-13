@@ -268,6 +268,12 @@ impl NativeSplitWorker {
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
+    // A finished kernel Direct TCP relay leaves only an exact NAT reverse
+    // tuple until ACK/retransmit close grace expires. One existing owner
+    // timer wake at the oldest deadline reclaims it, not 10ms WSAPoll.
+    pub(crate) fn next_tcp_cleanup_due_ms(&self)->Option<u64>{
+        self.tcp.as_ref().and_then(|t|t.next_close_due_ms())
+    }
     /// Obtain one identity for the first announced FakeIP BUSINESS flow.
     /// The ordinary real-IP/Tunnel hot path has no FakeIP hash lookup.
     /// This happens only after PacketIngress made the first policy pin.

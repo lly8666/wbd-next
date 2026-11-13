@@ -662,6 +662,13 @@
      retry_after_ns:Option<u64>)->Option<MonoNs>{
      retry_after_ns.map(MonoNs).or(shadow_due)
  }
+ // One existing TX timer due for exact reverse NAT cleanup, not a new worker.
+ // A completed Direct TCP relay is not active socket work at 10ms cadence.
+ fn closed_tcp_cleanup_wait_ms(now_ms:u64,deadline_ms:Option<u64>)->u32{
+     deadline_ms.map(|due|
+         due.saturating_sub(now_ms).min(u64::from(u32::MAX-1)) as u32
+     ).unwrap_or(IDLE_WAIT)
+ }
  fn m2_wake_timeout_ms(now:MonoNs,feedback:Option<MonoNs>,
      repair:Option<MonoNs>)->u32 {
      let Some(next)=feedback.into_iter().chain(repair).map(|x|x.0).min()
@@ -860,6 +867,9 @@
              let timeout=if split.as_ref().is_some_and(|s|s.has_udp_flows()){
                  timeout.min(10)
              }else{timeout};
+             let next_closed_nat=split.as_ref()
+                 .and_then(|owner|owner.next_tcp_cleanup_due_ms());
+             let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_closed_nat));
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),
                  Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
@@ -1562,6 +1572,15 @@
              if signal {assert_eq!(b.pending,0);}
          }
          assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
+     }
+     #[test]
+     fn plan029_closed_nat_owner_wakes_at_due_not_10ms_busy_tick(){
+         assert_eq!(closed_tcp_cleanup_wait_ms(0,None),IDLE_WAIT);
+         assert_eq!(closed_tcp_cleanup_wait_ms(2_000,Some(62_000)),60_000);
+         assert_eq!(closed_tcp_cleanup_wait_ms(61_999,Some(62_000)),1);
+         assert_eq!(closed_tcp_cleanup_wait_ms(62_000,Some(62_000)),0);
+         assert_eq!(closed_tcp_cleanup_wait_ms(62_001,Some(62_000)),0);
+         assert_eq!(closed_tcp_cleanup_wait_ms(0,Some(u64::MAX)),u32::MAX-1);
      }
      #[test]
      fn m2_native_next_deadline_wakes_only_when_due() {

@@ -132,6 +132,10 @@ on:
       # product dependency. Path-trigger checks are cheap unless the
       # same commit explicitly marks one scoped [plan029-v3-real-direct-udp]
       # scenario; do not silently omit real OS tests for actor-only fixes.
+      - crates/wbd-engine/src/v4_client_startup_padding.rs
+      - crates/wbd-engine/src/v4_owner_crypto.rs
+      - crates/wbd-engine/src/v4_windows_owner.rs
+      - crates/wbd-engine/src/lib.rs
       - crates/wbd-engine/src/v4_windows_native_tcp_direct.rs
       - crates/wbd-engine/src/v4_client_direct_tcp_nat.rs
       - crates/wbd-engine/src/v4_windows_native_split.rs
@@ -2245,6 +2249,39 @@ jobs:
               throw 'actual Windows original M2 Auto revision2 native both-OS delivery/Stop proof missing'
             }
             Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1') {
+            # PLAN029 has real original Windows->Linux outward Tunnel TCP.
+            # The historical 028 duplex inbound comparator remains intact
+            # below; never promote it or accept an arbitrary PASS string.
+            $dns=$result.plan029_d1_noncn_udp_dns_real
+            $direct=$result.plan029_private_v3_cn_direct_tcp
+            $udp=$result.plan029_private_v3_cn_direct_udp
+            if($env:WBD_WL_PUBLIC_MODES -ne 'normal' -or
+               $result.source -ne $env:GITHUB_SHA -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal' -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED' -or
+               $direct.source_sha -ne $env:GITHUB_SHA -or
+               $direct.stop -ne 'PASS_OWNED_DEFENDER_AND_WAL_ABSENT' -or
+               $direct.windows.tcp_two_leg_echo -ne $true -or
+               $direct.windows.tcp_half_close -ne $true -or
+               $direct.windows.app_bytes_echoed -ne 32768 -or
+               $direct.windows.app_bytes_sent -ne 32768 -or
+               $direct.linux.received_bytes -ne 32768 -or
+               $udp.source_sha -ne $env:GITHUB_SHA -or
+               $udp.tunnel_tcp -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP' -or
+               $dns.source_sha -ne $env:GITHUB_SHA -or
+               $dns.linux.upstream_ip -ne '1.1.1.1' -or
+               $dns.linux.client_ip -ne '10.66.0.2' -or
+               $dns.windows.qname -ne 'www.globalx.example' -or
+               $dns.windows.query_app_dns -ne '8.8.8.8' -or
+               $dns.windows.reply_source -ne '8.8.8.8' -or
+               $dns.windows.real_answer -ne '203.0.113.77' -or
+               $dns.windows.fakeip -ne $false){
+              throw 'PLAN029 exact same-SOURCE Direct/Tunnel TCP UDP DNS and owned Stop proof absent'
+            }
+            Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
           } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1') {
             if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
                $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or

@@ -45,6 +45,9 @@ struct ClosedNatGrace{
     deadlines:VecDeque<(u16,u64)>,
 }
 impl ClosedNatGrace{
+    fn next_due(&self)->Option<u64>{
+        self.deadlines.front().map(|(_,due)|*due)
+    }
     fn defer(&mut self,port:u16,key:TcpNatKey,now_ms:u64){
         let due=now_ms.saturating_add(CLOSED_NAT_GRACE_MS);
         self.by_port.insert(port,(key,due));
@@ -110,6 +113,9 @@ impl NativeTcpActor{
         // that warrants the original TX worker's 10ms active wait.
         !self.pending.is_empty()||!self.active.is_empty()||
             !self.ready.is_empty()
+    }
+    pub(crate) fn next_close_due_ms(&self)->Option<u64>{
+        self.closing.next_due()
     }
     pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
@@ -311,6 +317,7 @@ mod tests{
         let kernel_reply=packet(lease,synthetic,56234,entry.proxy_port,0x18);
         let mut closed=ClosedNatGrace::default();
         closed.defer(entry.proxy_port,entry.key,200);
+        assert_eq!(closed.next_due(),Some(200+CLOSED_NAT_GRACE_MS));
         // A fully read/written user-space relay can finish while the
         // kernel still owns 32KiB of TCP data/retransmit/FIN to the app.
         assert_eq!(nat.len(),1);
@@ -325,6 +332,7 @@ mod tests{
         closed.expire_some(200+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
         assert_eq!(retired,vec![entry.key]);
         assert_eq!(nat.len(),0);
+        assert_eq!(closed.next_due(),None);
         assert!(nat.to_app(&kernel_reply,&mut out).is_err());
         assert!(nat.to_listener(&packet(lease,fake,56237,46112,2),
             real,100,&mut out).is_ok());

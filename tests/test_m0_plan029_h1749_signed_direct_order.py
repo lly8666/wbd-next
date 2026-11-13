@@ -74,4 +74,23 @@ class NativeDirectOrder(unittest.TestCase):
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         self.assertIn('      - tools/m0_plan029_h1765_linux_tun_dns.py',W)
         self.assertIn('      - tools/m0_plan029_h1765_windows_tunnel_dns.py',W)
+    def test_h1766_outer_scope_accepts_only_true_029_tunnel_dns_and_tcp(self):
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        self.assertIn("elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1')",W)
+        self.assertIn("$result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP'",W)
+        self.assertIn("$dns.linux.upstream_ip -ne '1.1.1.1'",W)
+        self.assertIn("$dns.windows.reply_source -ne '8.8.8.8'",W)
+        self.assertIn("$direct.windows.app_bytes_echoed -ne 32768",W)
+        self.assertIn("$direct.stop -ne 'PASS_OWNED_DEFENDER_AND_WAL_ABSENT'",W)
+        self.assertIn("PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED",W)
+        for path in (
+            "crates/wbd-engine/src/v4_client_startup_padding.rs",
+            "crates/wbd-engine/src/v4_owner_crypto.rs",
+            "crates/wbd-engine/src/v4_windows_owner.rs",
+            "crates/wbd-engine/src/lib.rs",
+        ):
+            self.assertIn("      - "+path,W)
+        self.assertIn("$result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP'",W)
+        self.assertLess(W.index("} elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1')"),
+                        W.index("selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof"))
 if __name__=="__main__":unittest.main()

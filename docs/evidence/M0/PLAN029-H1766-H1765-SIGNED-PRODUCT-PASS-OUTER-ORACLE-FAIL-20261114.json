@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source_sha": "1ab6d4b5268b9bedc1506598b28fc33f9e485be3",
+  "plan": "PLAN029",
+  "checkpoint": "H1766",
+  "result": "FAIL_GITHUB_OUTER_STALE_028_TCP_ORACLE_AFTER_SIGNED_029_PRODUCT_SCOPED_PASS",
+  "action_id": 43514792104,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43514792104",
+  "job_id": 132196201021,
+  "artifact_id": 14080637898,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43514792104/artifacts/14080637898",
+  "exact_signed_source": "1ab6d4b5268b9bedc1506598b28fc33f9e485be3",
+  "original_go_windows_linux_rust_builds": "PASS",
+  "true_inner_process": {
+    "exit_code": 0,
+    "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "stop": "PASS_BOTH_OWNED",
+    "whole_mode_batch": "PASS"
+  },
+  "direct_tcp": {
+    "fakeip": "198.18.0.1",
+    "windows_source": "10.66.0.2",
+    "physical_tcp_guest_bytes": 32768,
+    "windows_app_bytes_sent": 32768,
+    "windows_app_bytes_echoed": 32768,
+    "half_close": true,
+    "exact_defender_and_wal_stop": "PASS"
+  },
+  "direct_udp_and_cn_dns": {
+    "real_physical_underlay": "PASS",
+    "selective_fakeip": "PASS",
+    "owned_cn_dns": "PASS"
+  },
+  "noncn_tunnel_dns_real": {
+    "question": "www.globalx.example",
+    "windows_application_resolver": "8.8.8.8",
+    "true_linux_guest_tun_resolver": "1.1.1.1",
+    "original_window_source": "10.66.0.2",
+    "linux_answer": "203.0.113.77",
+    "reverse_presented_source": "8.8.8.8",
+    "fakeip": false,
+    "scoped": "PASS_REAL_UDP53"
+  },
+  "noncn_tunnel_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+  "tunnel_udp": "PASS_BIDIRECTIONAL",
+  "exact_two_os_owned_stop": "PASS_SCOPED",
+  "hyperv_exact_guest_rule_cleanup": "PASS",
+  "outer_ci_failed": {
+    "stage": "PowerShell public selected same-source comparator after inner real product and Stop PASS",
+    "message": "selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof",
+    "root": "Unconditional old PLAN028 Linux->Windows inbound duplex TCP receipt expected PASS_ACTUAL_TWO_OS_KERNEL_TCP; new PLAN029 tests true Windows->Linux outbound and reports PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "no_product_failure_in_this_run": true
+  },
+  "h1766_source_changes_pending": {
+    "independent_outer_gate": "Separate strict source-locked PLAN029 old-proof-independent branch for true Direct/Tunnel TCP UDP, unique DNS 1.1.1.1, actual owned Stop; preserve unmodified historical 028 oracle below",
+    "closed_tcp_nat_due": "Wire bounded closed reverse NAT 60s deadline into original TX wait_ready once, no new timer/thread/10ms scan",
+    "padding_budget": "Standalone Rust budget 256 flows/12 records/2KiB/<=10%/1-2s for Tunnel only. NO actual seal, CLI or GUI integration yet"
+  },
+  "not_proven": [
+    "D1 application DNS TCP53 and no-fallback blackhole",
+    "D2 union overseas CDN + CN IP converse real",
+    "D3 pressure and exhausted local quotas with Tunnel progress",
+    "D4-D5 GUI actual config + Stop interrupted",
+    "startup-padding actual record and GUI",
+    "P1-P2 performance p99/RSS/CPU/GiB"
+  ],
+  "plan_status": "IN_PROGRESS",
+  "new_source_ci": "PENDING_NOT_PASS"
+}

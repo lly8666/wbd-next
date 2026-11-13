@@ -2,12 +2,14 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "规划扩展旧TLS启动填充为可选所有隧道TCP/UDP新流模式；默认关闭，不延迟首发。",
+  "summary": "Rust启动填充额度/生命周期策略源码已加入；默认off，尚未与真实record seal、CLI/GUI连接，非产品启用或实网通过。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
   "main_development_reason": "用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。",
-  "available_on": [],
+  "available_on": [
+    "main"
+  ],
   "defaults": {
     "planned_mode": "off；旧TLS bool映射tls，显式flows启用新增行为",
     "planned_bounds": "256流，1–2s可填充窗口，12 record/2048B每流上界，单record≤256B且不超MTU"
@@ -17,7 +19,9 @@
     "config": "PLANNED: 同一模式配置/每会话effective，现有record padding位置执行，首发预算有界。",
     "gui": "PLANNED: 关闭/仅TLS启动/所有TCP与UDP新流，与真实effective一致。"
   },
-  "code_refs": [],
+  "code_refs": [
+    "crates/wbd-engine/src/v4_client_startup_padding.rs"
+  ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
@@ -29,11 +33,19 @@
       "status": "PLANNED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "portable Rust owner component",
+      "scope": "H1766 bounded 256-flow/12-record/2KiB/≤10% source policy with tests; not connected to real encrypted records",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
     "旧TLS启动功能存在不等于新flows模式已实现；当前仅PLANNED。",
-    "不承诺DPI不可识别；无padding-only流、无主动业务延迟，不重复触发长流，不改变AEAD/generation。"
+    "不承诺DPI不可识别；无padding-only流、无主动业务延迟，不重复触发长流，不改变AEAD/generation。",
+    "H1766 Rust pure budget source is independent scaffolding only; actual Tunnel-only encrypted padding, off/tls/flows config, no-wait latency, GUI and OS performance still NOT_RUN."
   ],
   "promotion": null
 }
