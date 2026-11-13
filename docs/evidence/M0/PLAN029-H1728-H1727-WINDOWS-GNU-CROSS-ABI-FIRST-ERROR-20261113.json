@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1728",
+  "source_sha": "5de76fd79e4c07d798790a6e591a65de0e069e68",
+  "date": "2026-11-13",
+  "result": "FAIL_CROSS_ABI_WINDOWS_GNU_AT_WINDOWS_DLL_LINK_BUT_GO_WINDOWS_SOURCE_SUCCESS",
+  "cross_abi": {
+    "run_id": 43395331794,
+    "conclusion": "failure",
+    "failed_job": 131784753579,
+    "target": "x86_64-pc-windows-gnu",
+    "first_error": "/usr/bin/x86_64-w64-mingw32-ld: cannot find -lWs2_32",
+    "cause": "Case-sensitive MinGW Linux linker searches libWs2_32 but packaged import library is libws2_32. Explicit Windows native link attribute must use canonical lowercase ws2_32.",
+    "other_target": "aarch64-unknown-linux-gnu"
+  },
+  "go_compile": {
+    "run_id": 43395331781,
+    "conclusion": "success",
+    "scope": "Source-locked Windows original Go/CLI compile only; NOT public 029 native V3 egress"
+  },
+  "change": "Rename three Rust #[link] attributes to lowercase ws2_32: physical UDP, physical TCP, original Rust UDP actor. Preserve all sockets, ownership, ABI and packet behavior.",
+  "validation": "New SOURCE Windows/Linux native scoped Rust and GNU cross-ABI expected by push; results pending.",
+  "not_run": [
+    "Native 029 real Direct/Tunnel TCP/UDP DNS D1-D5/P1-P2",
+    "Product Ready/Stop/WAL, performance, startup padding"
+  ]
+}

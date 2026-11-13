@@ -67,7 +67,7 @@ struct PollFd{
     revents:i16,
 }
 #[cfg(target_os="windows")]
-#[link(name="Ws2_32")]
+#[link(name="ws2_32")]
 extern "system"{
     fn WSAPoll(fd_array:*mut PollFd,fds:u32,timeout:i32)->i32;
 }

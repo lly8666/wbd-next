@@ -58,7 +58,7 @@ mod win{
                 address:u32::from_ne_bytes(addr.octets()),zero:[0;8]}
         }
     }
-    #[link(name="Ws2_32")]
+    #[link(name="ws2_32")]
     extern "system" {
         fn socket(af:i32,kind:i32,proto:i32)->usize;
         fn closesocket(s:usize)->i32;

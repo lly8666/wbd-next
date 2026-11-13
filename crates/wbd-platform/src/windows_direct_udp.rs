@@ -119,7 +119,7 @@ mod win{
     use super::DirectUdpError;
     use std::net::{Ipv4Addr,SocketAddr,SocketAddrV4,UdpSocket};
     use std::os::windows::io::AsRawSocket;
-    #[link(name="Ws2_32")]
+    #[link(name="ws2_32")]
     extern "system" {
         fn setsockopt(socket:usize,level:i32,optname:i32,value:*const i8,len:i32)->i32;
         fn getsockopt(socket:usize,level:i32,optname:i32,value:*mut i8,len:*mut i32)->i32;

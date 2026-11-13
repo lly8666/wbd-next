@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1727,
-  "checkpoint_sha": "ac052e5f415511872551f02f95ab5c0245c48e5a",
+  "sequence": 1728,
+  "checkpoint_sha": "5de76fd79e4c07d798790a6e591a65de0e069e68",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1727：H1726 ac052e Rust原同一Wintun NativeOwner probe v3 UDP与同DNS IP/完整Fake池/失败回收Win/Linux Action43393030348两个job成功，仅组件。新原Go冷route-mode、CN IP/LAN/direct4、双单DNS、物理源/ifindex/内层MTU、IDNA Exact/Suffix与V3私有Go→Rust ABI，source-locked manifest更新，Windows Go及Rust CI待收；正式双出口/真实DNS/TCP/Defender Stop NOT_RUN。",
-  "why_now": "The source-locked Windows/Linux H1726 NativeOwner component succeeded. Original Go has live route-mode and CN IP/DNS but does not pass a cold policy to Rust; stage the sync probe V3 bridge without touching the public V2 path or adding a Go packet loop.",
+  "current_task": "PLAN029 H1728: H1727 original Go Windows source build Action43395331781 SUCCESS_SCOPED；cross-ABI Action43395331794 Windows-gnu FAIL于 -lWs2_32 大小写Linux MinGW链接，ARM64另行PASS。修Rust UDP/TCP/actor 3处#[link(name=\"ws2_32\")]，冻结本SOURCE等待Windows/Linux scoped+GNU cross ABI。正式029双出口/DNS/Stop和padding仍NOT_RUN。",
+  "why_now": "Cross ABI failure at first concrete native linkage boundary; fix library import name only, no network redesign or repeated old diagnostics.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1727 original Go Windows source-locked compile + Rust Win/Linux scoped tests. Implement pinned v2fly geolocation-cn full syntax, real Direct/Tunnel DNS and kernel TCP with owned Defender/Stop, then D1–D5/P1–P2. Do not claim Ready for cold config.",
+  "next_action": "Collect H1728 Windows GNU cross ABI and Windows/Linux scoped Rust runs, GUI H1727; then continue one owner Direct UDP/TCP/DNS and cold Go V3 product wiring guarded by real same-session owner+Stop, never premature Ready. D1-D5/P1-P2 still NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "ac052e5f415511872551f02f95ab5c0245c48e5a",
+  "last_tested_source": "5de76fd79e4c07d798790a6e591a65de0e069e68",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1727-H1726-WINDOWS-LINUX-RUST-V3-SCOPED-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1726-H1725-ONE-OWNER-V3-UDP-TWO-OS-SOURCE-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1726 Rust probe-only native single Wintun physical UDP source tested on Win/Linux PASS_SCOPED. H1727 original Go cold policy/FFI schema source-only pending CI. No native 029 product true Direct+Tunnel TCP UDP DNS/GUI Applied/padding/Stop proof."
+  "partial_summary": "H1727 original Go Windows source compile PASS_SCOPED; H1727 GNU cross ABI Windows leg FAIL due uppercase Ws2_32 import library; fix H1728 source-only PENDING. Rust Direct UDP single Wintun probe-only, DNS/TCP/product exits unqualified."
 }
