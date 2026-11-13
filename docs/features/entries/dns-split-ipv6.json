@@ -26,7 +26,8 @@
     "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go",
     "crates/wbd-platform/src/windows_direct_udp.rs",
     "crates/wbd-engine/src/v4_client_dns_answer.rs",
-    "crates/wbd-engine/src/v4_client_dns_pending.rs"
+    "crates/wbd-engine/src/v4_client_dns_pending.rs",
+    "crates/wbd-engine/src/v4_client_fake_pool.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -146,6 +147,13 @@
       "status": "FAIL",
       "source_sha": "171f7371d75a0416a53a48d13b83f7c47d02d9e6",
       "evidence": "docs/evidence/M0/PLAN029-H1708-WINDOWS-TCP-ALL-APP-PAYLOAD-PASS-EOF-FAIL-20261113.json"
+    },
+    {
+      "platform": "Win2025 signed Wintun kernel TCP→separate Ubuntu WSL2",
+      "scope": "H1709 native app SYN/data/real kernel FIN reverse to app EOF PASS, test-only; DNS answer+transaction 8 pure tests Windows317/Linux292 PASS",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ac292b0530659647da522e79fd2381995ed1c250",
+      "evidence": "docs/evidence/M0/PLAN029-H1709-TRUE-WINTUN-RUST-WINDOWS-TCP-APP-EOF-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -174,7 +182,8 @@
     "H1704 one non-product Rust test-only DLL entrypoint now tests original Go owned signed Wintun lease->Rust UDP->separate genuine Ubuntu WSL2 guest->Rust Wintun reverse, without per-packet Go callbacks; result is NOT_RUN at authoring, cannot grant CN DNS or Product Ready.",
     "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready.",
     "H1706 test-only genuine Windows app SYN→Rust Wintun TCP NAT→Windows kernel listener + physically bound Rust TCP→independent Linux guest + reverse/Stop gate authored; actual Action pending, not product.",
-    "H1709 Rust test-only native reverse FIN drain and bounded DNS answer/CNAME/truncated-query core added, SOURCE TEST PENDING. No live resolver/FakeIP pool or product Ready."
+    "H1709 Rust test-only native reverse FIN drain and bounded DNS answer/CNAME/truncated-query core added, SOURCE TEST PENDING. No live resolver/FakeIP pool or product Ready.",
+    "H1710 FakeIP lease allocator staged: query-level keyed original domain+real A+policy/resolver revision, 60s TTL cap/10min quarantine/ref pin/portable snapshot pre-DNS-answer receipt; source untested, no actual durable writer or live FakeIP DNS response."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

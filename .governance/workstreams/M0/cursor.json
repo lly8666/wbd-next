@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1709,
-  "checkpoint_sha": "171f7371d75a0416a53a48d13b83f7c47d02d9e6",
+  "sequence": 1710,
+  "checkpoint_sha": "ac292b0530659647da522e79fd2381995ed1c250",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1709: H1708 real Win signed Wintun TCP NAT SYN/Accept + physically bound Linux TCP to original Win app full bytes PASS, but app waits EOF and times out, Action FAIL. Rust test-only H1709 now waits and reverse-submits genuine Windows kernel FIN after two-leg EOF; bounded sparse DNS CNAME A reply validation and same-endpoint query coalescing source added, both untested. Formal product DNS/TCP/UDP not wired.",
-  "why_now": "First identified TCP failure is missing Wintun-translated kernel FIN delivery, not SYN/socket/payload; fix and requalify once. Parallel DNS source must validate upstream answer QNAME/CNAME/additional and transaction coalescing without cross-lane fallback, but no product inference.",
+  "current_task": "PLAN029 H1710: H1709 Action43361106714 signed Windows Wintun original app Direct-only kernel TCP SYN/SYNACK, native Accept, Rust physically bound TCP to separate Linux guest, actual application DATA and FIN/EOF all PASS (test-only FFI). H1709 new 8 DNS CNAME/transaction pure tests Win317/Linux292 PASS. H1710 FakeIP per-original-QNAME+real candidate durable-snapshot-before-announce allocator source staged, not compiled and not live.",
+  "why_now": "Real TCP SYN/FIN and independent UDP off-Wintun proofs now exist. Complete selective CN FakeIP lifecycle as single ingress worker-owned bounded table: CDN shared real address cannot contaminate other domains, TTL0 kept briefly, active mapping not rebound, durable portable snapshot required before DNS fake issue, no per-DATA disk.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1709 real signed Windows TCP guest Action and Win/Linux Rust unit tests; isolate first error, do not repeat identical seed. Then integrate chosen TCP/UDP in sole authenticated Rust Normal/Game4 ingress and actual direct/tunnel DNS53 upstream workers, selective FakeIP mapping/persistence, GUI/padding, D1-D5/P1-P2. No old 028 matrix or 030.",
+  "next_action": "Collect H1710 FakeIP Rust unit source-locked Windows/Linux and governance; on first failure fix only cause. Then connect DNS parser/transaction/FakeIP to real one physical dns.direct and one forced tunnel dns.tunnel inside existing Rust NativeOwner, plus Direct TCP/UDP selected kernel backend, Normal/Game4/GUI/padding and D1-D5/P1-P2. Do not repeat old 028 tests or auto-start 030.",
   "unverified": true,
-  "last_tested_source": "171f7371d75a0416a53a48d13b83f7c47d02d9e6",
+  "last_tested_source": "ac292b0530659647da522e79fd2381995ed1c250",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1708-WINDOWS-TCP-ALL-APP-PAYLOAD-PASS-EOF-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1709-TRUE-WINTUN-RUST-WINDOWS-TCP-APP-EOF-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1708 SRC171f real Wintun kernel TCP NAT/Accept+physically bound Linux guest, original Windows app response bytes PASS, EOF 15s timeout FAIL. H1709 diagnostic native FIN drain and DNS CNAME parser+bounded coalescer code source awaiting CI. H1704 true Wintun Rust Direct UDP independent Linux guest PASS diagnostic only. Full PLAN029 remains IN_PROGRESS."
+  "partial_summary": "H1709 SOURCEac292b Action43361106714 real Windows original signed Wintun→Rust NAT→kernel listener TCP→physical-bound Linux guest→Wintun app reply+FIN PASS test ABI only; Windows Rust317/Linux Rust292 pure pass incl 8 DNS answer/coalescing tests. H1710 FakeIP bounded lease/quarantine/flow-ref/durable snapshot staged new code, not tested or real DNS. Full product, GUI, P1/P2 remain OPEN."
 }

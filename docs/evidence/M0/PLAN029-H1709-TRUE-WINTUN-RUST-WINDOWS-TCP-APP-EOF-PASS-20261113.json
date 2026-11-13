@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1709",
+  "observed_at": "2026-11-13",
+  "source_sha": "ac292b0530659647da522e79fd2381995ed1c250",
+  "result": "PASS_SCOPED_REAL_WINTUN_WINDOWS_KERNEL_TCP_FULL_APP_BYTES_EOF_AFTER_REVERSE_FIN",
+  "action": {
+    "run_id": 43361106714,
+    "job_id": 131674549564,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43361106714"
+  },
+  "artifact": {
+    "id": 14008168003,
+    "name": "plan029-h1706-wintun-rust-independent-ubuntu-tcp-43361106714",
+    "zip_sha256": "1e52ae3dcead970916833b5a8bc42da395192800a3049963bb0591be96b19361"
+  },
+  "windows_linux_rust_library": [
+    {
+      "job_id": 131674737530,
+      "platform": "Windows",
+      "passed": 317,
+      "conclusion": "success"
+    },
+    {
+      "job_id": 131674737514,
+      "platform": "Linux",
+      "passed": 292,
+      "conclusion": "success"
+    }
+  ],
+  "observed": [
+    "real signed Windows original UDP/TCP app uses owned Wintun; Rust sole RX rewrites direct-only TCP NAT to native listener",
+    "real Windows kernel listener SYNACK reversed and native Accept succeeded, Rust source+ifindex bound TCP connected independent Linux WSL2 guest 172.29.153.175:46099",
+    "both physical/inner socket EOF observed; Rust kept Wintun RX and reverse-submitted actual Windows kernel FIN as 4th reverse packet",
+    "real Windows TCP app received full Linux guest reply bytes and proper EOF, Go test PASS rather than timing out",
+    "one signed test only; exact Hyper-V WSL rule removed"
+  ],
+  "limitations": [
+    "m0_v4_probe test-only FFI, not authenticated NativeOwner Normal/Game4",
+    "Linux guest is independent kernel over same-host vEthernet, not external physical internet",
+    "DNS parser/coalescer 8 new pure tests PASS, no live 2-endpoint DNS or FakeIP yet",
+    "no production GUI/startup padding/D1-D5/P1-P2"
+  ]
+}
