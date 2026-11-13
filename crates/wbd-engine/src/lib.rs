@@ -84,6 +84,12 @@ mod v4_client_fake_journal;
 // readiness worker; never terminates original Tunnel TCP.
 #[cfg(any(target_os="windows", test))]
 mod v4_client_direct_tcp_nat;
+// PLAN029 one-generation physical UDP Direct flow actor. It owns no
+// Wintun session, queues no Go callbacks, and has no Tunnel fallback.
+// Only the existing authenticated NativeOwner may bind it after the
+// cold split-policy, resolver and RX/TX Stop lifecycle are complete.
+#[cfg(target_os="windows")]
+mod v4_client_direct_udp_actor;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

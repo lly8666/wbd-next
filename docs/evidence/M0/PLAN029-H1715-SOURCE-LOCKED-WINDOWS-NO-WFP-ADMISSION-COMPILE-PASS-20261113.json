@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1715",
+  "source_sha": "f1dc2cd0c6e8e36734967abb434f40a6528d417f",
+  "result": "PASS_SCOPED_WINDOWS_NO_WFP_AUTHENTICATED_COLD_ADMISSION_GO_BUILD_ONLY",
+  "actions": [
+    {
+      "run_id": 43374768091,
+      "conclusion": "success",
+      "scope": "Original Go a7a82 exact manifest Windows TestPlan029 and public CLI compile"
+    },
+    {
+      "run_id": 43374768163,
+      "conclusion": "success",
+      "scope": "Go native WAL compile + five scoped original-TLS signed Wintun Normal/Fixed/Auto/Game2/Game4 actual original packet tests; OS Applied not run"
+    },
+    {
+      "run_id": 43374768081,
+      "conclusion": "success",
+      "scope": "Governance and feature catalog"
+    },
+    {
+      "run_id": 43374768125,
+      "conclusion": "in_progress_at_authoring",
+      "scope": "native-public-two-os pending; never inferred from separate compile green"
+    }
+  ],
+  "preserved": [
+    "H1713 real signed Wintun CN DNS53→Linux CNAME/A→synced FakeIP→app physically bound direct UDP reverse PASS diagnostic",
+    "H1709 native Direct TCP real SYN/Accept/physical Ubuntu guest and Windows app FIN PASS diagnostic",
+    "H1697 four no-old-WFP Win32 OS stages actual Apply/readback/Stop PASS isolated"
+  ],
+  "not_run": [
+    "authenticated Normal/Game4 same generation true new split ingress",
+    "forced tunnel DNS and shared overseas CDN counterexample",
+    "full product four-stage Applied+owned Stop",
+    "GUI/startup padding, P1–P2/D1–D5"
+  ]
+}

@@ -192,6 +192,9 @@ mod win{
         }
         pub fn selected_underlay(&self)->(Ipv4Addr,u32){(self.physical_src,self.interface_index)}
         pub fn remote(&self)->SocketAddrV4{self.remote}
+        /// Only for the one Rust Direct I/O scheduler's WSAPoll readiness
+        /// array; the socket remains owned here and cannot be closed by it.
+        pub fn poll_socket(&self)->usize{self.socket.as_raw_socket() as usize}
         pub fn send_ready(&self,data:&[u8])->std::io::Result<usize>{
             // Nonblocking and no hidden queue/retry or tunnel fallback.
             self.socket.send(data)
