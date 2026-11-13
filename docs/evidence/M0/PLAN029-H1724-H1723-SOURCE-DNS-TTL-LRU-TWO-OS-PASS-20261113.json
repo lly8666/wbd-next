@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1724",
+  "source_sha": "651bf5ce172ed12ddaa824f05f3f5cf220365c19",
+  "result": "SCOPED_WINDOWS_LINUX_RUST_DNS_TTL_LRU_COMPONENT_PASS_NO_NETWORK",
+  "action": {
+    "run_id": 43390874112,
+    "conclusion": "success",
+    "head_sha": "651bf5ce172ed12ddaa824f05f3f5cf220365c19",
+    "jobs": [
+      {
+        "job_id": 131770172384,
+        "os": "windows-2025",
+        "conclusion": "success"
+      },
+      {
+        "job_id": 131770172033,
+        "os": "ubuntu-24.04",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "scope": "DnsAnswerCache per resolver endpoint/lane/policy TTL and LRU size caps tested within PLAN029 Rust tests; no real production DNS socket or forced Tunnel DNS",
+  "retained": [
+    "H1721 first two-OS Rust full-suite FAIL at old SHA",
+    "H1695 Defender A/B/C kernel listener diagnostic PASS",
+    "H1709 TCP + H1713 CN FakeIP UDP test-only PASS"
+  ],
+  "not_run": [
+    "authenticated Windows Rust Normal/Game4 real Direct/Tunnel TCP UDP",
+    "forced DNS both directions and production CDN proof",
+    "P1/P2/GUI actual Applied/Stop/startup-padding"
+  ]
+}

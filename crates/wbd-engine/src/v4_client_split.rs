@@ -82,6 +82,17 @@ impl SplitPolicy {
     pub fn new(mode:Mode,lan:Ranges,cn:Ranges,direct4:Ranges,fake_pool:Ranges)->Self{
         Self{mode,lan,cn,direct4,fake_pool,fake_to_real:HashMap::new()}
     }
+    /// Only CN union mode may turn an announced FakeIP into a Direct
+    /// business target. The DNS worker must have durable-journaled the
+    /// mapping before passing it to this cold/first-flow admission method.
+    /// Never infer hostname from the real shared CDN address.
+    pub fn announced_fake_target(&self,fake:u32,real:u32)->Option<Egress>{
+        if self.mode!=Mode::BypassLanCn || !self.fake_pool.contains(fake) ||
+           real==0 || real==u32::MAX || self.fake_pool.contains(real){
+            return None
+        }
+        Some(Egress::Direct{real_dst:real,presented_dst:fake})
+    }
     pub fn dns_egress(&self,purpose:DnsUse)->DnsEgress{
         match purpose {
             DnsUse::ServerBootstrap|DnsUse::InternalDirect=>DnsEgress::Direct,

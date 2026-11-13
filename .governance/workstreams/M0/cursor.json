@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1723,
-  "checkpoint_sha": "1e75226951a03bc10da573d508881ed20a8a3437",
+  "sequence": 1724,
+  "checkpoint_sha": "651bf5ce172ed12ddaa824f05f3f5cf220365c19",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1723: 收回H1722同SOURCE 1e752 的Rust Windows/Linux scoped pure engine 41/38项＋platform 46/115项PASS（43389255442，两job成功），原H1721失败保留；同批新增单DNS resolver/lane/policy键的TTL/LRU bounded cache，满时不拒绝新DNS，独立Windows/Linux当前SOURCE测试PENDING。尚未接正式NativeOwner分流双出口/D1–D5/P1–P2。",
-  "why_now": "H1722 fixes and native jobs green; continue independent DNS cache semantics and tests while staging the authenticated Rust Wintun/physical socket compositor. No repeat diagnostic probes, preserve old H1721 failure.",
+  "current_task": "PLAN029 H1724：收回H1723同SHA 651bf5c的Win/Linux并行 Rust DNS TTL/LRU 029 scoped组件Action43390874112双job SUCCESS，非产品联网。新接线关键：PacketIngress新流支持同代FakeAllocator已durable mapping整数lookup；活动pin固定、海外共享CDN真实IP不受污染，All/LAN不能借Fake造Direct；仍未接认证NativeOwner/TCP双腿/双DNS。",
+  "why_now": "H1723 component DNS cache tests passed both platforms; genuine CN selective FakeIP must become visible to PacketIngress after async DNS without unsafe Arc mutation or real CDN reverse pollution. Add a cold/first-flow single-owner lookup seam now.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect scoped H1723 Linux/Windows tests; wire PacketIngress/DirectUdpActor/DirectTcpNat and DNS workers to one authenticated NativeOwner and cold Go ABI, with owned OS Stop. Then actual D1-D5/P1-P2 same-source network scenes; remaining OPEN not BLOCKED.",
+  "next_action": "Collect H1724 source-locked native dual-OS tests, then compose the single original Rust TX owner with physical bound UDP + Windows kernel TCP + DNS pending/return queue; versioned cold Go ABI and owned Stop. Real D1-D5/P1-P2 still NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "1e75226951a03bc10da573d508881ed20a8a3437",
+  "last_tested_source": "651bf5ce172ed12ddaa824f05f3f5cf220365c19",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1723-H1722-SCOPED-CROSSPLATFORM-RESULT-20261113.json"
+    "docs/evidence/M0/PLAN029-H1724-H1723-SOURCE-DNS-TTL-LRU-TWO-OS-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -25,8 +25,8 @@
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1722-H1721-WINDOWS-LINUX-FIRST-COMPONENT-TEST-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1723-H1722-SCOPED-CROSSPLATFORM-RESULT-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1722 exact SOURCE 1e752269 Windows wbd-platform46 + Rust PLAN029 41 PASS, Linux wbd-platform115 + Rust PLAN02938 PASS; no network, old H1721 FAIL retained. H1723 DNS cache source only currently PENDING. Product Direct/Tunnel TCP/UDP forced DNS, GUI Applied, startup-padding, P1/P2 NOT_RUN."
+  "partial_summary": "H1723 651bf5c exact SOURCE Windows/Linux scoped 029 DNS TTL/LRU + previous Direct resource pure tests PASS. H1724 new dynamic announced FakeIP first-flow lookup source-only pending CI; no cross-exit fallback. Production Rust Wintun Direct/Tunnel and DNS still OPEN NOT_RUN."
 }

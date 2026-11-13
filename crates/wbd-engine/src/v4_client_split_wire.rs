@@ -150,6 +150,17 @@ impl PacketIngress{
     pub fn fragment_count(&self)->usize{self.fragment_pins.len()}
     pub fn on_ipv4(&mut self,packet:&[u8],now_ms:u64)
         ->Result<IngressAction,IngressWireError>{
+        self.on_ipv4_with_announced_fake(packet,now_ms,|_|None)
+    }
+    /// The genuine DNS worker may publish a FakeIP only AFTER a durable
+    /// FakeAllocator journal receipt. This optional integer lookup lives
+    /// in the SAME native Rust TX scheduler: no shared CDN reverse table,
+    /// no Arc mutation, no DNS trie or OS syscall on ordinary DATA. An
+    /// already-pinned flow stays fixed even if its DNS TTL expires.
+    pub fn on_ipv4_with_announced_fake<F>(&mut self,packet:&[u8],
+        now_ms:u64,announced:F)->Result<IngressAction,IngressWireError>
+        where F:Fn(u32)->Option<u32>
+    {
         let view=parse_ipv4(packet)?;
         // The current Rust owner still performs its authenticated IPv4
         // source lease check. Here additionally reject foreign Wintun
@@ -228,7 +239,16 @@ impl PacketIngress{
             return Err(IngressWireError::FragmentCapacity)
         }
         let prior=self.pins.get(&key);
-        let preliminary=prior.unwrap_or_else(||self.policy.destination(view.dst));
+        let preliminary=prior.unwrap_or_else(||{
+            let decision=self.policy.destination(view.dst);
+            if decision!=Egress::RejectUnknownFakeIP{return decision}
+            // Only an already-announced, journaled fake from this owner
+            // may restore a real overseas target. Real IP fallback never
+            // gets an implicit CN name and cannot be polluted by CDN reuse.
+            announced(view.dst).and_then(|real|
+                self.policy.announced_fake_target(view.dst,real))
+                .unwrap_or(Egress::RejectUnknownFakeIP)
+        });
         // The chosen Windows kernel TCP NAT can only create a local
         // listener association from a fresh SYN (without ACK). Do not
         // consume the shared Direct quota on an orphan ACK/data segment:
@@ -400,6 +420,33 @@ mod tests{
             Err(IngressWireError::NoDirectFlowCapacity));
         assert_eq!(s.on_ipv4(&tcp(ip(8,8,4,4),36004,443),6),
             Ok(IngressAction::Tunnel));
+    }
+    #[test]
+    fn plan029_dynamic_durable_fake_cdn_lookup_only_first_direct_flow_and_cn_mode(){
+        let fake=ip(198,18,5,9);
+        let cdn=ip(198,51,100,77);
+        let mut cn=ingress(Mode::BypassLanCn,2,2);
+        let app=tcp(fake,31001,443);
+        assert_eq!(cn.on_ipv4(&app,1),Ok(IngressAction::DropUnknownFake));
+        assert_eq!(cn.flow_count(),0);
+        assert_eq!(cn.on_ipv4_with_announced_fake(&app,2,|ip|{
+            (ip==fake).then_some(cdn)
+        }),Ok(IngressAction::Direct{real_dst:cdn,presented_dst:fake}));
+        // Original pinned Direct flow stays fixed after the DNS worker's
+        // announced TTL entry disappears; explicit flow close owns release.
+        assert_eq!(cn.on_ipv4_with_announced_fake(&app,3,|_|None),
+            Ok(IngressAction::Direct{real_dst:cdn,presented_dst:fake}));
+        assert_eq!(cn.on_ipv4(&tcp(cdn,31002,443),4),
+            Ok(IngressAction::Tunnel)); // unrelated overseas CDN remains Tunnel
+        let mut all=ingress(Mode::All,2,2);
+        assert_eq!(all.on_ipv4_with_announced_fake(&app,1,|_|Some(cdn)),
+            Ok(IngressAction::DropUnknownFake));
+        let mut lan=ingress(Mode::BypassLan,2,2);
+        assert_eq!(lan.on_ipv4_with_announced_fake(&app,1,|_|Some(cdn)),
+            Ok(IngressAction::DropUnknownFake));
+        let mut cn_bad=ingress(Mode::BypassLanCn,2,2);
+        assert_eq!(cn_bad.on_ipv4_with_announced_fake(&app,1,|_|Some(fake)),
+            Ok(IngressAction::DropUnknownFake));
     }
     #[test]
     fn plan029_real_ingress_fragment_pin_ttl_and_unassociated_reject(){
