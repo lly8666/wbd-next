@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1714,
-  "checkpoint_sha": "3bb00716252435ab2579a5cd786696256c43bf55",
+  "sequence": 1715,
+  "checkpoint_sha": "28953781f5767af133de80381ac82fe1df03e87b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1714: H1713 SOURCE3bb Action43368431989 genuine signed Wintun original Windows DNS53 CN QNAME→bound direct resolver independent Linux CNAME/A→synced durable FakeIP→Windows app FakeIP Direct UDP guest reply PASS diagnostic. H1714 removes circular no-WFP `assemblyOnly` rejection only AFTER original credential TLS/Rust proof and actual signed Wintun generation kernel ring binding, typed four Win32 stage validation; code not Windows tested yet. Full Normal/Game4+Tunnel DNS/GUI/padding/P1-P2 OPEN.",
-  "why_now": "Latest real CN DNS/FakeIP one-direction network probe PASSED, not just pure fake pool. No-WFP real four Windows OS stages passed at H1697 but public `N4PrepareRealWindowsProduct` still refused `txn.assemblyOnly` before any live Apply. H1714 admits only actual current-generation authenticated Go TLS native owner and typed four Win32 stages; no noop WFP/Applied shortcut.",
+  "current_task": "PLAN029 H1715: H1713 real CN DNS53 durable FakeIP Direct UDP Linux guest PASS scoped; H1714 new authenticated no-WFP product stage admission source failed Windows build at missing Go import time (not OS gate) and feature card >16KiB. H1715 adds exact import and compact JSON without deleting historical verification, source CI pending.",
+  "why_now": "Collect H1714 first exact source Windows compile error undefined time at new no-WFP admission and separate feature catalog byte budget. Fix two known source-only blockers in one batch before any new network Action; no changes to qualified native DNS/UDP/TCP packet path.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1714 source-locked Go Windows pure TestPlan029 and product compile; fix first error. Then wire CN policy+physical UDP/TCP+two resolver lanes into original Normal/Game4 sole Rust ingress and protect shared real CDN (real nonCN Tunnel DNS while CN direct). Real full no-WFP product Apply/readback/Stop; config/GUI/startup-padding, D1–D5/P1–P2. No old 028 matrix or 030.",
+  "next_action": "Collect H1715 Windows original-Go source-locked build, NoWFP Product test and governance; fix first new error only. Then one authenticated Normal/Game4 no-WFP OS+actual single Rust Wintun split dispatcher integration including forced Tunnel DNS and exact backend socket routing, GUI/padding, D1–D5/P1–P2. No new 028/030.",
   "unverified": true,
-  "last_tested_source": "3bb00716252435ab2579a5cd786696256c43bf55",
+  "last_tested_source": "28953781f5767af133de80381ac82fe1df03e87b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1713-SIGNED-WINTUN-REAL-CN-DNS-DURABLE-FAKE-UDP-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1714-WINDOWS-SOURCE-FIRST-COMPILE-ERROR-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1713 actual SOURCE3bb signed Windows Wintun DNS53 via Rust QNAME direct UDP to Ubuntu WSL2 CNAME/A, durable fake 198.18.0.1, app fake business to real guest, reverse return and owned Hyper-V cleanup PASS test-only. H1714 original TLS owner proof-gated real Win32 four-stage no-WFP admission staged; now code-only, must not claim product Ready. Existing independent UDP/TCP signed guest roundtrips PASS diagnostics. Full PLAN029 still IN_PROGRESS."
+  "partial_summary": "H1713 real signed Windows app CN DNS53→Rust bound direct CNAME/A→synced local FakeIP→app Fake business to distinct Linux UDP and return PASS diagnostic; H1714 admission source compile FAIL missing import and feature card size, retained. H1715 fixed both, not yet Windows tested. Product Normal/Game4, two DNS egress, GUI/padding, performance remain OPEN."
 }

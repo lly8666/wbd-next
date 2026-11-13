@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1714",
+  "observed_at": "2026-11-13",
+  "source_sha": "28953781f5767af133de80381ac82fe1df03e87b",
+  "result": "FAIL_WINDOWS_COMPILE_MISSING_TIME_IMPORT",
+  "actions": [
+    {
+      "run_id": 43374441963,
+      "job_id": 131717518619,
+      "conclusion": "failure",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43374441963",
+      "first_error": "internal/windowsclient/native_real_product_service_windows.go:115:66 and 123:66 undefined: time"
+    },
+    {
+      "run_id": 43374441898,
+      "job_id": 131717518631,
+      "conclusion": "failure",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43374441898",
+      "first_error": "Feature catalog FAIL: feature card must be bounded regular JSON"
+    }
+  ],
+  "cause": "H1714 typed no-WFP product cold admission appended context.WithTimeout(...time.Second) without time import. DNS feature card grew above 16KiB after H1713 verification; compact encoding retains all historical statuses/source/evidence.",
+  "retained_proofs": [
+    "H1713 SOURCE3bb Action43368431989 actual signed Windows Wintun CN DNS53+CNAME/durable FakeIP+original Windows app direct Linux UDP PASS diagnostic only",
+    "H1697 noWFP four true Win32 stage Apply/readback/Stop PASS",
+    "H1709 kernel TCP real independent Linux guest original app FIN PASS scoped"
+  ],
+  "not_run": [
+    "H1714 actual authenticated Normal/Game4 product four-stage current-generation Apply/Stop",
+    "H1715 import/card fix new SOURCE test",
+    "Tunnel DNS true egress, real shared overseas CDN, GUI/padding, D1-D5/P1-P2"
+  ]
+}

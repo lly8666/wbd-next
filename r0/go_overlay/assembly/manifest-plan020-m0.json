@@ -1078,7 +1078,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "4055d101baf256ee96fc1ad4fb3ba52be5365e09"
+      "result_blob": "a47ad320c96a43a2b18229a4c32e3ea1efa593e9"
     },
     {
       "kind": "create",

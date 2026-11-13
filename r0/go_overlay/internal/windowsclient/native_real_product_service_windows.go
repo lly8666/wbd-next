@@ -11,6 +11,7 @@ import (
  "errors"
  "fmt"
  "sync"
+ "time"
 )
 
 // N4OriginalCurrentPinnedWintunIdentity obtains fresh OS PnP identity
