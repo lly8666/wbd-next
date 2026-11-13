@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "0cbbc3962ce6be7235c5cab136342ba61cb6c5bb",
+      "result_blob": "6a2d896856587c9cb5d2a51b777a67423ba9dd8e",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -239,7 +239,7 @@
         },
         {
           "find": "DNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),",
-          "replace": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),"
+          "replace": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         }
       ]
     },
@@ -1096,7 +1096,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "36ed914ed2568dc84fc5c6f780091ea8dd9634fb"
+      "result_blob": "76cbc8922e70483a18a3f90865d397e318d1a882"
     },
     {
       "kind": "create",
@@ -1630,6 +1630,24 @@
       "path": "internal/windowsclient/native_plan029_no_wfp_stage_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_stage_windows_test.go",
       "result_blob": "32435b81d041e4ad32801dc2783d809091ba1240"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+      "result_blob": "4b5ca6f6201413cd25b7108f0d3930dd8de5bbb2"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
+      "result_blob": "6d6e697b9ef43a2db59a3c49dbfad302765e79b9"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
+      "result_blob": "bbfd292d43fb35d00a83b085471cb6f6113bb91b"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

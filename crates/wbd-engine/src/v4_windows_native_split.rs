@@ -13,7 +13,8 @@ use crate::v4_client_direct_udp_actor::{DirectUdpActor,NativeUdpBudget,NativeUdp
 use crate::v4_client_fake_pool::FakeAllocator;
 
 const MAX_PREFIXES:usize=32_768;
-const MAX_DOMAIN_BYTES:usize=65_536;
+const MAX_DOMAIN_BYTES:usize=1<<20;
+const MAX_DOMAIN_RULES:usize=20_000;
 const DEFAULT_SOFT_FLOWS:usize=4_096;
 const MAX_HARD_FLOWS:usize=16_384;
 
@@ -121,7 +122,10 @@ impl NativeSplitWorker {
             let raw=unsafe{std::slice::from_raw_parts(
                 c.domains,c.domains_length as usize)};
             let text=std::str::from_utf8(raw).map_err(|_|())?;
+            let mut rule_count=0usize;
             for line in text.split('\n').filter(|s|!s.is_empty()){
+                rule_count+=1;
+                if rule_count>MAX_DOMAIN_RULES{return Err(())}
                 let (rule,kind)=if let Some(exact)=line.strip_prefix('='){
                     (exact,DomainRuleType::Exact)
                 }else{(line,DomainRuleType::Suffix)};

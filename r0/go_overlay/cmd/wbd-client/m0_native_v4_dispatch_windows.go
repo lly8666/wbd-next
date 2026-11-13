@@ -15,6 +15,7 @@ import (
 // deliberately unavailable and cannot emit an OS Applied status.
 type m0NativeV4Options struct {
  ServerIP netip.Addr
+ RouteMode string // source-locked cold CN/LAN/All, not Go packet routing
  ServerHost string // server domain, never TLS SNI
  ServerPort,SourcePort uint16
  ServerName string

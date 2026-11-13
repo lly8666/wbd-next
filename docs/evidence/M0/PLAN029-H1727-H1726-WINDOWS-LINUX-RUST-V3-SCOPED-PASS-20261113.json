@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1727",
+  "source_sha": "ac052e5f415511872551f02f95ab5c0245c48e5a",
+  "result": "PASS_SCOPED_H1726_REAL_RUST_SINGLE_OWNER_TWO_OS_BUILD_NOT_PUBLIC",
+  "action": {
+    "run_id": 43393030348,
+    "head_sha": "ac052e5f415511872551f02f95ab5c0245c48e5a",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 131777255638,
+        "os": "windows-2025",
+        "conclusion": "success"
+      },
+      {
+        "id": 131777255516,
+        "os": "ubuntu-24.04",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "scope": "Rust private V3 single owner Wintun Direct UDP actor and bounded reverse queue compiled and PLAN029 pure tests passed Windows/Linux. No public original-Go V3 invocation or real network.",
+  "this_source": "H1727 Go cold config/manifest and private Go V3 bridge source-only, pending CI",
+  "not_run": [
+    "production Windows CN domain+IP Direct/Tunnel TCP UDP both ways",
+    "real forced dual DNS and v2fly full syntax",
+    "owned TCP Defender listener / recovery / GUI effective",
+    "D1–D5/P1–P2 / startup padding"
+  ]
+}
