@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1754",
+  "source_sha": "7e952f3bd257037af20183c14d1a3be6f65e957d",
+  "result": "H1753_WORKFLOW_INVALID_YAML_ZERO_JOBS_NOT_NATIVE_COM_FAILURE",
+  "actions": [
+    {
+      "id": 43437134221,
+      "scope": "H1661 Go/Defender CI",
+      "conclusion": "failure",
+      "jobs_count": 0
+    },
+    {
+      "id": 43437137036,
+      "scope": "governance",
+      "conclusion": "failure",
+      "jobs_count": 0
+    },
+    {
+      "id": 43437137173,
+      "scope": "governance-maintenance",
+      "conclusion": "failure",
+      "jobs_count": 0
+    },
+    {
+      "id": 43437137096,
+      "scope": "old signed Normal suite",
+      "conclusion": "failure",
+      "jobs_count": 0
+    }
+  ],
+  "cause": "JS String.replace replacement string contained PowerShell Go regex ending `$'`, causing special replacement expansion of original workflow suffix, duplicating artifact section and breaking YAML; no Windows runner or COM call ever executed",
+  "fix": "Read known-good H1752 workflow, insert native single-rule test via function replacement callback to avoid `$'` special expansion; asserted exactly one test step, one upload-artifact and one report",
+  "new_source": "PENDING_CI",
+  "product": "PLAN029 OPEN NOT_RUN_NATIVE_DIRECT_TCP"
+}

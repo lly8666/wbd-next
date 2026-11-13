@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1753,
-  "checkpoint_sha": "61cb246f309439538652e9ab9bb98d445e6a433d",
+  "sequence": 1754,
+  "checkpoint_sha": "7e952f3bd257037af20183c14d1a3be6f65e957d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1753: H1752 exact SOURCE61cb2 WinGo source+native COM mock WAL tests Action43436316554 SUCCESS; old H1751 compiler FAIL preserved. H1753 on SAME disposable Windows-2025 Runner adds genuinely native INetFwPolicy2 COM one-rule owner install/readback/Remove test gated GITHUB_ACTIONS=true + explicit WBD_PLAN029_REAL_DEFENDER_TEST=1: exact lease4 10.234.12.34, remote198.19.87.99, one TCP port45321, no socket/broad policy; sidecar intent/owned/CAS absence verified after Stop, source sha locked. This new SOURCE actual OS result PENDING. Product post-Apply PREPARE->Defender->ENABLE and genuine Direct kernel TCP D1–D5/P1–P2/padding/GUI STILL OPEN.",
-  "why_now": "After fixing Windows COM syntax, component mocks pass but do not establish actual native Windows Firewall COM Add/readback/Remove behavior. Run one safe narrowly scoped native OS test on an ephemeral Admin Windows runner before attaching the rule to original Wintun product, and never mark overall product Ready.",
+  "current_task": "PLAN029 H1754: H1753 SOURCE7e952f3 actual real COM CI Action43437134221 FAIL before Windows runner (0 jobs): JS string replacement of PowerShell -run regex containing \"$'\" accidentally expanded remainder of workflow; all four triggered workflows on H1753 also FAIL before jobs. Restore exact workflow at H1752 known good SHA, safely insert one COM real Windows test using callback not replacement string; count 1 upload-artifact/1 final receipt/1 real native step. Existing COM new test source unmodified. H1754 source Windows/governance CI PENDING, native OS Add/Readback/Delete STILL NOT_RUN. H1750 signed CN physical Direct UDP+Tunnel+Stop PASS_SCOPED, real kernel Direct TCP/Defender postApply/P1P2/padding OPEN.",
+  "why_now": "First H1753 workflow failure was malformed YAML before any job due to JS replacement token expansion. Fix using verified base manifest with one inserted real Defender COM step, do not misrepresent a platform failure or rerun unrelated network diagnosis.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1753 exact Windows native COM real Add/readback/delete result (and original Go+manifest, no repeat old network). Fix first failure, then integrate exact owner with four-stage OS Apply & Stop and Rust post-Apply listener PREPARE/ENABLE, then signed true Direct kernel TCP scene, D1-D5/P1-P2/startup-padding. No 030.",
+  "next_action": "Collect H1754 governance workflow+Windows original-Go real Defender one-rule native COM readback. Fix first native OS Add/Delete failure, then gate Rust TCP PREPARE→exact owned Defender receipt→ENABLE and Stop, signed Direct kernel TCP and D1-D5/P1-P2/padding/GUI. 030 closed.",
   "unverified": true,
-  "last_tested_source": "61cb246f309439538652e9ab9bb98d445e6a433d",
+  "last_tested_source": "7e952f3bd257037af20183c14d1a3be6f65e957d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1753-H1752-GO-DEFENDER-COM-COMPILE-PASS-NATIVE-OS-TEST-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1754-H1753-WORKFLOW-PARSE-ZERO-JOBS-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1750 original signed CN physical DNS FakeIP Direct UDP + Tunnel+Stop PASS_SCOPED; H1752 WinGo COM original source build and mock WAL tests PASS. H1753 adds real Windows Defender exact one-rule native OS Add/Readback/CAS Remove test, pending source-locked CI. Real product direct kernel TCP and full 029 OPEN."
+  "partial_summary": "H1752 WinGo COM build+mock PASS. H1753 all Actions FAIL_CONFIG_PRE_JOB due malformed workflow; no Windows Defender OS native code ran. H1754 restores clean valid YAML with one exact COM OS test source pending; real product remains OPEN."
 }
