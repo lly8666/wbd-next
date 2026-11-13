@@ -7,6 +7,7 @@ import (
  "errors"
  "fmt"
  "net/netip"
+ "os"
  "path/filepath"
  "strings"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -104,4 +105,33 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   CN:cnRows,LAN:lanRows,Direct:directRows,Domains:domains,
   FakeJournalPath:journalPath,
  },nil
+}
+
+// m0Plan029TrialCold is the ONLY test-channel V3 gate. It does not turn
+// unfinished Direct TCP/DNS TCP into public Ready or silently activate a
+// missing China geosite snapshot. All product OS ownership still goes
+// through the original credential, signed Wintun and four-stage WAL.
+func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
+ ifindex uint32,lease netip.Addr,innerMTU uint32,
+)(*realityfront.V4WindowsColdSplitConfig,error){
+ if os.Getenv("GITHUB_ACTIONS")!="true"||
+  os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")!="1"{return nil,nil}
+ var domains []byte
+ if o.RouteMode=="bypass-lan-cn"{
+  file:=os.Getenv("WBD_PLAN029_CN_RULES_FILE")
+  if file==""||!filepath.IsAbs(file){return nil,errM0Plan029Cold}
+  info,e:=os.Lstat(file)
+  if e!=nil||info.Mode()&os.ModeSymlink!=0||
+   !info.Mode().IsRegular()||info.Size()==0||info.Size()>1<<20{
+   return nil,errM0Plan029Cold
+  }
+  domains,e=os.ReadFile(file);if e!=nil{return nil,e}
+ }
+ c,e:=m0Plan029ColdSource(o,physical,ifindex,lease,innerMTU,domains)
+ if e!=nil{return nil,e}
+ if o.RouteMode=="bypass-lan-cn"&&
+  (len(c.Domains)==0||len(c.FakeJournalPath)==0){
+  return nil,errM0Plan029Cold
+ }
+ return &c,nil
 }

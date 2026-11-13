@@ -33,6 +33,7 @@ type m0WinRustNativePeer struct{
  autoPolicy realityfront.FecV2AutoPolicy
  healthInterval,healthDead,healthDormant uint32
  disableOuterRepair bool
+ plan029Cold *realityfront.V4WindowsColdSplitConfig
  effectiveHealth realityfront.V4WindowsNativeHealthPolicyV1
  fixedMatureReported bool
  fixedInstalledReported bool
@@ -129,9 +130,16 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
  case m0WinModeAuto:mode=2
  default:return windowsclient.ErrN4NativeGuard
  }
- if err=p.owner.StartNativeIOForModePolicy(
-  ctx,cfg,mode,p.mode==m0WinModeAuto&&p.autoPolicy==realityfront.FecV2Aggressive,
- );err!=nil{return err}
+ // Only explicit GitHub trial opens the private V3 symbol on the SAME
+ // original credential owner, Npcap TX/RX and one signed Wintun session.
+ // This V3 trial must not be called on an ordinary public DLL.
+ aggressive:=p.mode==m0WinModeAuto&&p.autoPolicy==realityfront.FecV2Aggressive
+ if p.plan029Cold!=nil{
+  err=p.owner.StartNativeIOWithColdSplitProbe(ctx,cfg,mode,aggressive,*p.plan029Cold)
+ }else{
+  err=p.owner.StartNativeIOForModePolicy(ctx,cfg,mode,aggressive)
+ }
+ if err!=nil{return err}
  p.active=true
  // Auto M2 grading now lives on the same Rust TX worker (2s).
  // No second Go FecV2ControlRuntime goroutine in native hotpath.

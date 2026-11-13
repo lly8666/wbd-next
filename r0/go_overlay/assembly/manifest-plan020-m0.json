@@ -1108,7 +1108,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "53a03bb8f29ac965bda2d103c1e3c64e883825b2"
+      "result_blob": "a1676d0b74d71869b413e0f5dc3ad9f51254dc79"
     },
     {
       "kind": "create",
@@ -1288,7 +1288,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "b6c5cf347a7a18a8cd9534f0bfcb9a82794133f9"
+      "result_blob": "b7898e60a8352e29aded6113f32e5b4709479e78"
     },
     {
       "kind": "create",
@@ -1635,13 +1635,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "7b4b0897d18ba879f9687bf8a8e7ec5f3d4796ce"
+      "result_blob": "aabd978f2e78a930a9f9f8b1155ce92da4c88e87"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "6d6e697b9ef43a2db59a3c49dbfad302765e79b9"
+      "result_blob": "fea667037e8d533e456ea458dd8d04483ae89dfe"
     },
     {
       "kind": "create",

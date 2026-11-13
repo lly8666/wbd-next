@@ -980,6 +980,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   nativePeer.healthDead=o.HealthDeadSeconds
   nativePeer.healthDormant=o.HealthDormantSeconds
   nativePeer.disableOuterRepair=o.DisableOuterRepair
+  // PLAN029: private source-locked signed Windows trial only. Ordinary
+  // product V2 is unchanged; no implicit feature promotion/Go packet pump.
+  trial,e:=m0Plan029TrialCold(o,underlay.Source4,
+   physicalPath.InterfaceIndex,o.Lease4.Addr(),o.TunnelMTU)
+  if e!=nil{return fmt.Errorf("PLAN029 original Go cold V3 rejected: %w",e)}
+  if trial!=nil{
+   nativePeer.plan029Cold=trial
+   fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 not_public_product=1\\n",
+    o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
+  }
   transport=nativePeer
  }else{
   // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.

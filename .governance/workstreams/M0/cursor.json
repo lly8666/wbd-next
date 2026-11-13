@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1735,
-  "checkpoint_sha": "0d5158a0823e92f3a63ab8c8bb0a1e2e6ded0b0d",
+  "sequence": 1736,
+  "checkpoint_sha": "ddcf09766348ab4cd6f33c1fcb05a09ddc05d27b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1735: H1734 SOURCE0d5158a native WinRust Action43402459789 54 PASS 1 FAIL：唯一旧DNS SERVFAIL回包测试检查第29字节（原DNS ID），实际rcode在IPv420+UDP8+DNS flags byte1=31；Tunnel DNS forced endpoint与逆向回包新2测试均PASS，Linux纯Rust PASS，GNU cross-ABI Action43402460051和governance43402460095 PASS。修真实DNS RCODE偏移断言，代码业务路径不变；H1735 Win/Linux CI PENDING。私有V3仍未通过原Go product，TCP/真实Stop/D1–D5/P1–P2 NOT_RUN。",
-  "why_now": "The first actual H1734 scoped Windows test failure is solely a misindexed byte in a newly strengthened fail-closed DNS assertion. Fix it without changing the runtime or hiding previous failed Action; continue towards product integration after green.",
+  "current_task": "PLAN029 H1736: H1735 SOURCE ddcf097 scoped Rust Win2025 platform46/engine55/V3 probe56、Linux platform115/engine45全PASS（Action43403058114）；同步原Go认证 Wintun Rust NativePeer：只有GITHUB_ACTIONS=true且WBD_PLAN029_NATIVE_V3_TRIAL=1才调用已验证V3 cold Rust入口，CN模式需要独立绝对真实规则文件并拒绝不支持语法/静默空规则。旧V2默认不变；Go/manifest统一SOURCE编译CI PENDING，真实公网双DNS/Direct TCP/Defender/Stop/D1-D5/P1-P2仍NOT_RUN。",
+  "why_now": "Scoped Rust Direct and forced Tunnel DNS native tests passed but original-Go authenticated owner still invoked only V2. Add an explicit current-source GitHub trial gate through the authentic owner, original signed Wintun and no-WFP four-stage WAL without globally enabling unfinished V3.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1735 Windows private V3 and Linux Rust scoped jobs. Next wire selected Direct Windows kernel TCP actor+owned /32 route/Defender and original Go four-stage no-WFP source; same-endpoint DNS-over-TCP after UDP TC. Full 029 D1-D5/P1-P2 and padding NOT_RUN.",
+  "next_action": "Collect H1736 source-locked Go Windows source+GUI+Rust ABI actions, fix first real compile failure, then source-lock one genuine signed Windows authenticated V3 Wintun DNS/Direct UDP trial and selected kernel TCP/Defender owned support. Complete same-endpoint TCP fallback, D1–D5/P1–P2, padding; do not claim product ready.",
   "unverified": true,
-  "last_tested_source": "0d5158a0823e92f3a63ab8c8bb0a1e2e6ded0b0d",
+  "last_tested_source": "ddcf09766348ab4cd6f33c1fcb05a09ddc05d27b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1735-H1734-WINDOWS-FIRST-PACKET-RCODE-OFFSET-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1736-H1735-WINDOWS-LINUX-DNS-AND-GO-V3-TRIAL-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1734 Windows Rust 54/55 (one wrong test byte offset), Linux Rust scoped PASS; GNU cross ABI and governance PASS. H1735 fixes expected RCODE offset only, awaiting fresh source-lock tests. Real 029 network and public V3 still OPEN."
+  "partial_summary": "H1735 ddcf097 Rust Windows native platform46+engine55+V3probe56, Linux platform115+engine45 PASS_SCOPED; H1736 real original-Go authenticated NativeOwner opt-in V3 cold call with exact CN rule file staged, no signed 029 network yet. D1-D5/P1-P2 and TCP/padding not qualified."
 }

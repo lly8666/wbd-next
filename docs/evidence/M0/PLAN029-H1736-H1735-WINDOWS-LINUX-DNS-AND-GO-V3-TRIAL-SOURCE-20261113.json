@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1736",
+  "source_sha": "ddcf09766348ab4cd6f33c1fcb05a09ddc05d27b",
+  "recorded_at": "2026-11-13",
+  "result": "H1735_SOURCE_SCOPED_WIN_LINUX_RUST_DNS_PASS_H1736_AUTHENTIC_ORIGINAL_GO_V3_TRIAL_SOURCE_PENDING",
+  "native_rust": {
+    "action_id": 43403058114,
+    "conclusion": "success",
+    "source_sha": "ddcf09766348ab4cd6f33c1fcb05a09ddc05d27b",
+    "windows": {
+      "platform": 46,
+      "engine_plan029": 55,
+      "engine_private_v3_probe_plan029": 56
+    },
+    "ubuntu": {
+      "platform": 115,
+      "engine_plan029": 45
+    }
+  },
+  "other_qualified": {
+    "cross_abi": 43403058428,
+    "governance": 43403058192,
+    "conclusion": "success"
+  },
+  "new_source_scope": "Original-Go credential verified NativePeer selectively calls versioned Rust V3 only with GITHUB_ACTIONS=true plus WBD_PLAN029_NATIVE_V3_TRIAL=1, private current-generation signed Wintun/NPF. CN only with explicit validated absolute geosite file and durable fake journal location. Public V2 default unchanged.",
+  "new_source_test": "NOT_RUN_YET",
+  "product_status": "PLAN029_IN_PROGRESS",
+  "not_run": [
+    "genuine signed Wintun V3 product Direct/Tunnel TCP/UDP/DNS both ways D1-D5/P1-P2",
+    "DNS truncated same-resolver TCP and full v2fly syntax",
+    "owned Defender TCP kernel listener + original four-stage Stop/recovery",
+    "GUI live effective and bounded startup padding"
+  ]
+}
