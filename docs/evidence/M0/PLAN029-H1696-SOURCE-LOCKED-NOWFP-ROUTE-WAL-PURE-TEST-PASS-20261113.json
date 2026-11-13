@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1696",
+  "observed_at": "2026-11-13",
+  "source_sha": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
+  "result": "PASS_SCOPED_WINDOWS_SOURCE_BUILD_AND_PURE_V2_ROUTE_RECOVERY_TESTS",
+  "action": {
+    "run_id": 43340808979,
+    "job_id": 131608336306,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43340808979"
+  },
+  "artifact": {
+    "id": 13998997989,
+    "name": "plan029-h1661-windows-source-only-43340808979",
+    "zip_sha256": "ceb4177bdd33592ae6c74a549339194fcdd706b3f334526d009dcdf7cd6bdcd1"
+  },
+  "observed": [
+    "Windows2025 original Go source with exact main overlay manifest assembled/compiled",
+    "TestPlan029NoWFPV2RouteSidecarFullAndPartialOwnedRecovery pure test PASS",
+    "TestPlan029NoWFPV2RouteUnconfirmedAndForeignNeverGuessedOwned pure test PASS",
+    "No OS route setter or legacy WFP guard invoked by the isolated backend tests"
+  ],
+  "not_run": [
+    "signed Wintun actual four-stage Win32 OS Apply/Stop",
+    "Rust physical Direct TCP/UDP",
+    "DNS53 FakeIP/GUI",
+    "startup-padding",
+    "D1–D5/P1–P2"
+  ]
+}

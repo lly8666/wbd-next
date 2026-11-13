@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1696,
-  "checkpoint_sha": "653994b7a07cf98cf80a4dc643c803076574b26f",
+  "sequence": 1697,
+  "checkpoint_sha": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1696: H1695 signed Windows native TCP A/B/C PASS with exact owned Defender Allow; choose Windows kernel TCP only. New v2 no-WFP route stage has single bounded per-route WAL with owned/intent and safe parent recovery; new pure crash and foreign fixtures await CI, real OS pending.",
-  "why_now": "Previous v2 route stage had parent batch intent but no per-route confirmed crash receipts, leaving legitimate partial owned routes unrecoverable. Fix without pretending matching OS key is an owned route or adding old WFP guard.",
+  "current_task": "PLAN029 H1697: H1696 current Windows Go build and pure v2 per-route crash fixture PASS; one real signed Wintun no-WFP four Win32 stages Apply/Readback/owned Stop Action authored, no product Ready. Rust Direct/DNS/GUI/padding and scoped D1-D5/P1-P2 still pending.",
+  "why_now": "All exact H1696 Windows pure WAL tests were green; need actual OS acceptance with test-only executable four-stage adapters instead of circular assemblyOnly gate. H1694 real kernel TCP positive under owned Defender Allow established one backend.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1696 source-locked Windows Go pure tests and source-manifest checks. Then run one real signed Wintun no-WFP four-stage OS Apply/Stop with exact owned route path, dynamic NIC and scoped cleanup, do not use assemblyOnly as permanent circular prohibition. Parallel Rust Wintun direct native relay/DNS/FakeIP/padding; D1-D5/P1-P2 only on full wiring, no 028/030.",
+  "next_action": "Collect signed real Win32 H1697 first OS stage result/cleanup, fix first causal failure only; then remove product-only circular assemblyOnly barrier once same-owner actual stage qualification exists. Independently finish real Rust Wintun ingress/DNS/FakeIP/direct physical TCP+UDP/GUI/startup padding; D1–D5/P1–P2 after complete wiring. No 028 matrix/030.",
   "unverified": true,
-  "last_tested_source": "9b4d5adafb661bd405a9fe53254daf9754043030",
+  "last_tested_source": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1695-REAL-SIGNED-DEFENDER-ABC-NATIVE-TCP-UDP-SCOPED-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1696-SOURCE-LOCKED-NOWFP-ROUTE-WAL-PURE-TEST-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1695 A/B/C original SOURCE9b4d signed Windows kernel UDP/TCP ingress and owned Defender cleanup PASS; Rust FlowPin direct-hard isolation source patch in flight. H1696 exact v2 route child WAL+preflight+noWFP parent confirmation and pure failure fixtures code staged, not yet Windows tested. Physical Rust Direct and no-WFP full OS not run; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1696 SOURCEc652 Action43340808979 Windows original-Go pure per-route v2 WAL PASS and exact manifest build, NOT live OS. H1697 source-locked signed Windows real no-WFP four-stage Apply/Stop isolated test pending Action. H1694 kernel TCP A/B/C local capability PASS, physical Rust Direct, DNS/FakeIP and product READY not run. 029 remains IN_PROGRESS."
 }

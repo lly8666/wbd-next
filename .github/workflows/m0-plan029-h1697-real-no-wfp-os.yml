@@ -1,0 +1,81 @@
+name: PLAN029 H1697 signed Wintun real no-WFP Win32 four-stage OS Apply Stop (not Direct)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1697-real-no-wfp-os.yml"
+      - "tools/m0_plan029_h1697_real_no_wfp_os_windows_test.go"
+permissions: {contents: read}
+jobs:
+  windows-no-wfp-four-stage-os:
+    runs-on: windows-2025
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Build exact original Go plus source-locked v2 and verified signed Wintun
+        shell: pwsh
+        timeout-minutes: 9
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result,win-native | Out-Null
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'wrong 029 SOURCE'}
+          if((git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984'){throw 'wrong old Go donor'}
+          & python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'current original Go SOURCE manifest mismatch'}
+          Copy-Item tools/m0_plan029_h1697_real_no_wfp_os_windows_test.go legacy/internal/windowsclient/plan029_h1697_real_no_wfp_os_windows_test.go
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile win-native/wintun.zip -TimeoutSec 40
+          $zipHash=(Get-FileHash win-native/wintun.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($zipHash -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'unexpected Wintun release ZIP'}
+          Expand-Archive -LiteralPath win-native/wintun.zip -DestinationPath win-native/release -Force
+          $dll='win-native/release/wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'not signed original Wintun 0.14.1'}
+          Copy-Item $dll win-native/wintun.dll
+          Push-Location legacy
+          try {
+            & go test -c -tags wbd_v4_embedded_go -o ../win-native/plan029-real-no-wfp-os.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'real no-WFP Win32 four-stage test compile failed'}
+          } finally {Pop-Location}
+          Write-Output 'PLAN029_H1697_SIGNED_WIN32_FOUR_STAGE_EXACT_SOURCE_BUILD_PASS'
+      - name: One real same-run signed Wintun four-stage Win32 Apply OS readback and exact Stop
+        shell: pwsh
+        timeout-minutes: 4
+        env:
+          WBD_PLAN029_REAL_OS_V2_GATE: "1"
+          WBD_PLAN029_REAL_OS_V2_RECEIPT: ${{ github.workspace }}\result\h1697-real-no-wfp-os.json
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./win-native/plan029-real-no-wfp-os.exe '-test.run=^TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop$' '-test.count=1' '-test.v=true' '-test.timeout=165s' 2>&1 | Tee-Object result/h1697-real-no-wfp-os.log
+          if($LASTEXITCODE -ne 0){throw 'real four-stage Win32 Apply/Stop failed; retain first failing stage and exact cleanup receipt'}
+          $e=Get-Content result/h1697-real-no-wfp-os.json -Raw | ConvertFrom-Json
+          if($e.source_sha -ne $env:GITHUB_SHA -or
+             $e.result -ne 'PASS_SCOPED_SIGNED_WINTUN_REAL_FOUR_NO_WFP_WIN32_APPLY_READBACK_STOP' -or
+             $e.cleanup -ne 'PASS_EXACT_OWNED_FOUR_STAGE_STOP_NO_OLD_WFP' -or
+             $e.old_wfp_guard -ne 'NOT_CREATED'){
+            throw 'not an actual no-old-WFP complete four-stage OS receipt'
+          }
+          Write-Output 'PLAN029_H1697_REAL_SIGNED_WIN32_FOUR_STAGE_OS_PASS_NOT_RUST_DIRECT'
+      - name: Record SOURCE and disjoint product scope on failure too
+        shell: pwsh
+        if: always()
+        run: |
+          New-Item -ItemType Directory -Force result | Out-Null
+          [ordered]@{source_sha=$env:GITHUB_SHA;original_go_source='a7a82db31fe736ffedee330795a3234d358f1984';scope='REAL_NO_WFP_FOUR_STAGE_OS_ONLY';full_rust_DNS53='NOT_RUN';direct_tcp_udp='NOT_RUN';fakeip='NOT_RUN';gui_ready='NOT_RUN';padding='NOT_RUN';run_id=$env:GITHUB_RUN_ID}|ConvertTo-Json|Set-Content -Encoding UTF8 result/h1697-source.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1697-real-no-wfp-os-${{ github.run_id }}
+          path: |
+            result/h1697-real-no-wfp-os.json
+            result/h1697-real-no-wfp-os.log
+            result/h1697-source.json
+          if-no-files-found: warn
+          retention-days: 14
