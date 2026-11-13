@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1711",
+  "source_sha": "c939d868f6c6fdf8e4aa4eaec28db2899b91167d",
+  "date": "2026-11-13",
+  "result": "PASS_SCOPED_FAKE_DNS_WIRE_RUST_UNIT_WINDOWS_AND_LINUX; FEATURE_CATALOG_SIZE_FAIL",
+  "action": {
+    "run_id": 43366345223
+  },
+  "jobs": [
+    {
+      "job_id": 131691701174,
+      "platform": "Windows2025 Rust eligible library",
+      "conclusion": "success",
+      "rust_library_passed": 324,
+      "new_fake_dns_wire_tests_passed": 3
+    },
+    {
+      "job_id": 131691701208,
+      "platform": "Linux Rust eligible library",
+      "conclusion": "success",
+      "rust_library_passed": 299,
+      "new_fake_dns_wire_tests_passed": 3
+    },
+    {
+      "job_id": 131691701207,
+      "platform": "Windows Go source compilation only",
+      "conclusion": "success"
+    }
+  ],
+  "governance": {
+    "run_id": 43366345201,
+    "job_id": 131691540010,
+    "conclusion": "success"
+  },
+  "feature_catalog": {
+    "run_id": 43366345201,
+    "job_id": 131691540487,
+    "conclusion": "failure",
+    "first_error": "dns-split-ipv6.json exceeded bounded regular JSON 16KiB",
+    "correction": "H1712 compacts old human summaries keeping all history rows/status/source/evidence"
+  },
+  "observed": [
+    "DNSSynth only emits fake A for exact CN qname/canonical/real4/policy+resolver revision with previously acknowledged durable identity",
+    "CNAME plus multi-A fake answers, no real shared CDN IPv4 in wire and no unrelated additional leak",
+    "CN AAAA/HTTPS/SVCB synthesis NODATA no unverified address hints; DNSSEC AD cleared"
+  ],
+  "not_run": [
+    "Windows real DNS53 physical/tunnel endpoints",
+    "actual FakeIP snapshot fsync/restore before H1712",
+    "Normal/Game4 production Rust native ingress, complete D1-D5/P1-P2"
+  ]
+}

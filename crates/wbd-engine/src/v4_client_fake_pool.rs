@@ -168,6 +168,16 @@ impl FakeAllocator{
     /// no DNS answer may contain a fake while persist_before_reply=true.
     /// Pending records are included so a crash after rename but before
     /// publish only over-reserves an unused fake (never misroutes).
+    /// One journal-writer batch looks up only the pending fake identities
+    /// by integer key. Avoids copying an entire 60k DNS mapping snapshot
+    /// or touching filesystem state for each sparse DNS answer.
+    pub fn pending_snapshot(&self,ip:u32)->Option<FakeSnapshotEntry>{
+        let e=self.fake_to_entry.get(&ip)?;
+        e.needs_durable_write.then(||FakeSnapshotEntry{
+            fake4:ip,key:e.key.clone(),issued_until_ms:e.issued_until_ms,
+            quarantine_until_ms:e.quarantine_until_ms,
+        })
+    }
     pub fn durable_candidate(&self)->Vec<FakeSnapshotEntry>{
         let mut result=self.fake_to_entry.iter().map(|(&ip,e)|FakeSnapshotEntry{
             fake4:ip,key:e.key.clone(),issued_until_ms:e.issued_until_ms,

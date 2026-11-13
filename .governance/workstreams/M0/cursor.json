@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1711,
-  "checkpoint_sha": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
+  "sequence": 1712,
+  "checkpoint_sha": "c939d868f6c6fdf8e4aa4eaec28db2899b91167d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1711: H1710 Windows321/Linux296 Rust tests incl 4 FakeIP immutable CDN isolation/TTL0/ref/quarantine/restore pure PASS; no real DNS. H1711 source wires fake allocator exact-issued key + candidate synthetic DNS wire CNAME/multi-A/AAAA HTTPS NODATA, only after real durable acknowledgment; tests are new and not yet CI. Formal Normal/Game4 Rust ingress + DNS sockets/portable writer still OPEN.",
-  "why_now": "The standalone FakeIP allocator must produce actual client-visible DNS bytes without ever leaking shared CDN real addresses. Keep pure DNS answer gating separate from physical/tunnel socket worker and enforce exact durable, revision, TTL constraints before output.",
+  "current_task": "PLAN029 H1712: H1711 Windows324/Linux299 Rust fake-DNS wire pure tests PASS; governance PASS, feature catalog 16KiB FAIL corrected by compressing descriptions without dropping historical rows/status/source/evidence. H1712 new single cold Rust FakeIP portable append journal: bounded 128-entry batch with CRC/strict identity and real filesystem sync_data before announce, restart restore; source tests pending. Still no DNS53 physical/tunnel IO or production Normal/Game4.",
+  "why_now": "After DNS wire correctness, FakeIP must not become client-visible until a REAL portable file commit. Implement bounded append group rather than snapshot rewrite or per-packet fsync; preserve quarantine mapping at restart and reject corrupt/foreign journal. Fix latest specific Feature catalog budget failure without rewriting old evidence.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1711 Windows/Linux Rust synth tests first. Then implement actual portable atomic FakeIP writer and single-endpoint physical/tunnel DNS dispatcher with Windows owned DNS entry and original Rust single Wintun owner; verify real D1-D3 with two controlled DNS servers. Direct TCP/UDP diagnostics H1704/H1709 PASS do not grant product readiness; finish GUI/padding, D4-D5/P1-P2. No 028 matrix restart or 030.",
+  "next_action": "Collect H1712 Linux/Windows real-filesystem Rust journal tests + feature catalog. Then integrate current DNS CNAME/transaction/FakeIP components into actual one owned Wintun reader and 2 live upstream endpoints (direct physical socket, forced tunnel owner internal flow), plus native TCP/UDP, Go CLI/GUI and bounded startup padding; test D1-D5/P1-P2. Add safe bounded journal compaction before long capacity; keep PLAN028 scoped/030 unopened.",
   "unverified": true,
-  "last_tested_source": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
+  "last_tested_source": "c939d868f6c6fdf8e4aa4eaec28db2899b91167d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1710-WINDOWS-LINUX-FAKEIP-PURE-TEST-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1711-CN-DNS-WIRE-RUST-WINDOWS-LINUX-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1709 original Windows Wintun/Rust kernel TCP to separate Linux guest app bytes+real FIN/EOF PASS scoped probe; H1704 UDP independent guest reverse PASS. H1710 FakeIP Rust Win321/Linux296 tests PASS, no live resolver. H1711 Fake DNS response wire source plus exact durable-issued lookup added, yet to compile; no actual atomic persistence, no product NativeOwner Direct/DNS/Normal/Game4/padding/GUI."
+  "partial_summary": "H1711 c939 source Windows324/Linux299 guarded FakeIP DNS wire tests PASS but feature card size FAIL; H1712 card compressed with unchanged all statuses/SOURCE/evidence refs. H1712 actual portable file journal batch fsync/CRC/restore Rust tests staged, not yet PASS. H1704 UDP and H1709 TCP independent Linux guest original Wintun roundtrip scoped PASS; full PLAN029 authenticated Normal/Game4 DNS/GUI/padding/perf OPEN."
 }

@@ -75,6 +75,10 @@ mod v4_client_fake_pool;
 // exact acknowledged FakeIP identity, not a resolver or second Wintun RX).
 #[cfg(any(target_os="windows", test))]
 mod v4_client_dns_wire;
+// Single cold/sparse DNS worker portable FakeIP append journal. Real
+// filesystem sync precedes all client-visible fake announcement.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_fake_journal;
 // PLAN029 one native Windows-kernel TCP listener NAT rewrite/tuple pin.
 // Still needs live Wintun RX→local kernel listener and Rust physical socket
 // readiness worker; never terminates original Tunnel TCP.
