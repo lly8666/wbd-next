@@ -147,6 +147,19 @@ func TestPlan029DefenderExactSyntheticLeasePortOnly(t *testing.T){
  }
 }
 
+func TestPlan029DefenderReadbackExactSingleHostOnly(t *testing.T){
+ host:="10.234.12.34"
+ for _,s:=range []string{host,host+"/255.255.255.255"}{
+  if !n4Plan029ExactIPv4HostScope(s,host){t.Fatalf("exact host rejected %s",s)}
+ }
+ for _,s:=range []string{"10.234.12.35","10.234.12.34/24",
+  "10.234.12.34/255.255.255.0","10.234.12.34/255.255.255.254",
+  "10.234.12.34,10.234.12.35","10.234.12.34;10.234.12.35",
+  "*","Any","10.234.12.34/32",""," 10.234.12.34"}{
+  if n4Plan029ExactIPv4HostScope(s,host){t.Fatalf("broadened rule %q",s)}
+ }
+}
+
 // The only native Defender COM mutation in this workflow is opt-in and
 // source-locked on a disposable Windows CI runner. It opens no reachable
 // socket, claims no product Applied/Ready, and must prove the exact

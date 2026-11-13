@@ -128,6 +128,11 @@ func n4Plan029COMItem(rules n4Plan029COMObject,name string)(n4Plan029COMObject,b
 }
 // Preserve exact Lookup/RemoveOwned rules; only the post-Add caller logs
 // the first OS property mismatch. Never relax a rule on readback.
+// Only identical IPv4 single-host and Windows' observed /255.255.255.255
+// spelling are equivalent. Never accept a broader mask, list or wildcard.
+func n4Plan029ExactIPv4HostScope(actual,host string)bool{
+ return actual==host||actual==host+"/255.255.255.255"
+}
 func n4Plan029ExactRuleDetail(obj n4Plan029COMObject,k n4Plan029DefenderKey)(bool,string,error){
  strings:=[]struct{idx uintptr;field,value string}{
   {7,"Name",k.Name},{9,"Description",k.Description},
@@ -138,7 +143,13 @@ func n4Plan029ExactRuleDetail(obj n4Plan029COMObject,k n4Plan029DefenderKey)(boo
  for _,v:=range strings{
   actual,e:=obj.getString(v.idx)
   if e!=nil{return false,v.field,e}
-  if actual!=v.value{return false,fmt.Sprintf("%s got=%q want=%q",v.field,actual,v.value),nil}
+  if v.field=="LocalAddresses"||v.field=="RemoteAddresses"{
+   if !n4Plan029ExactIPv4HostScope(actual,v.value){
+    return false,fmt.Sprintf("%s got=%q want exact-host=%q",v.field,actual,v.value),nil
+   }
+  }else if actual!=v.value{
+   return false,fmt.Sprintf("%s got=%q want=%q",v.field,actual,v.value),nil
+  }
  }
  ints:=[]struct{idx uintptr;field string;value int32}{
   {15,"Protocol",6}, {27,"Direction",1},

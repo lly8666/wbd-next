@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1757",
+  "tested_source_sha": "df999a2b3970d0c91c960a372189e435acd93976",
+  "win_action": 43440902371,
+  "win_native_first_error": "Defender COM post-Add LocalAddresses got=\"10.234.12.34/255.255.255.255\" want=\"10.234.12.34\"",
+  "assembly": "PASS",
+  "build": "PASS",
+  "native_defender": "FAIL",
+  "cleanup": "WAL retained, owned CAS not confirmed",
+  "governance_run": 43440902708,
+  "governance_first_error": "feature card must be bounded regular JSON (<=16KiB)",
+  "fix": "accept only exact single host canonical /32 readback with negative tests; manifest both hashes, bounded feature",
+  "new_source_native": "PENDING",
+  "product_029": "IN_PROGRESS"
+}
