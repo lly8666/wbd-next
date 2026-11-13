@@ -5,6 +5,7 @@
 //! Unsupported Direct TCP / DNS cannot silently leak as Tunnel traffic.
 //! Every physical socket is opened lazily and bound to source+ifindex.
 use std::net::Ipv4Addr;
+use std::collections::HashMap;
 use std::sync::Arc;
 use crate::v4_client_split::{Ipv4Cidr,Ranges,Mode,SplitPolicy,
     DomainIndex,DomainRuleType};
@@ -63,6 +64,9 @@ pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
     udp:DirectUdpActor,
     fakes:Option<FakeAllocator>,
+    // Exactly one generation-owned FakeIP reference per active actual
+    // Direct 5tuple (TCP/UDP), independently of DNS TTL and DNS cache.
+    fake_refs:HashMap<FlowKey,u32>,
     journal:Option<FakeJournal>,
     dns:DirectDns,
     tunnel_dns:Ipv4Addr,
@@ -200,7 +204,7 @@ impl NativeSplitWorker {
         }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
-            udp,fakes,journal,dns,tunnel_dns,tunnel_map,tcp,
+            udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,tcp,
             next_reverse_lane:0,last_tick_ms:0})
     }
     pub(crate) fn tunnel_map(&self)->Arc<Mutex<TunnelDnsMap>>{
@@ -220,6 +224,48 @@ impl NativeSplitWorker {
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
+    /// Obtain one identity for the first announced FakeIP BUSINESS flow.
+    /// The ordinary real-IP/Tunnel hot path has no FakeIP hash lookup.
+    /// This happens only after PacketIngress made the first policy pin.
+    fn hold_fake_first_flow(&mut self,packet:&[u8],presented:u32,
+        real:u32)->Result<Option<FlowKey>,()>{
+        if presented==real{return Ok(None)}
+        let key=Self::flow_key(packet).ok_or(())?;
+        if let Some(&existing)=self.fake_refs.get(&key){
+            return if existing==presented{Ok(None)}else{Err(())}
+        }
+        let pool=self.fakes.as_mut().ok_or(())?;
+        if pool.announced_real(presented)!=Some(real){return Err(())}
+        let pinned=pool.pin_first_flow(presented).map_err(|_|())?;
+        if pinned!=real{
+            let _=pool.release_flow(presented,0);
+            return Err(())
+        }
+        self.fake_refs.insert(key,presented);
+        Ok(Some(key))
+    }
+    fn flow_key(packet:&[u8])->Option<FlowKey>{
+        if packet.len()<28||packet[0]>>4!=4{return None}
+        let ihl=usize::from(packet[0]&15)*4;
+        if ihl<20||ihl+4>packet.len(){return None}
+        let protocol=packet[9];
+        if protocol!=6&&protocol!=17{return None}
+        Some(FlowKey{
+            source:u32::from_be_bytes(packet[12..16].try_into().ok()?),
+            destination:u32::from_be_bytes(packet[16..20].try_into().ok()?),
+            source_port:u16::from_be_bytes(packet[ihl..ihl+2].try_into().ok()?),
+            destination_port:u16::from_be_bytes(packet[ihl+2..ihl+4].try_into().ok()?),
+            protocol,
+        })
+    }
+    fn retire_flow(&mut self,key:FlowKey){
+        if let Some(fake)=self.fake_refs.remove(&key){
+            if let Some(pool)=self.fakes.as_mut(){
+                let _=pool.release_flow(fake,0);
+            }
+        }
+        self.ingress.end_flow(&key);
+    }
     pub(crate) fn on_packet(&mut self,packet:&[u8],now_ms:u64)
         ->NativeDecision{
         // Kernel SYN-ACK/ACK/FIN from the ONE owned synthetic /32 are
@@ -237,6 +283,17 @@ impl NativeSplitWorker {
         match action{
             Ok(IngressAction::Tunnel)=>NativeDecision::Tunnel,
             Ok(IngressAction::Direct{real_dst,presented_dst})=>{
+                // The DNS journal must have acknowledged this exact
+                // FakeIP->real candidate. Pin it independently of DNS TTL
+                // before attempting either physical TCP or UDP backend.
+                let newly_held=match self.hold_fake_first_flow(
+                    packet,presented_dst,real_dst){
+                    Ok(key)=>key,
+                    Err(())=>{
+                        self.ingress.rollback_unserved_direct(packet);
+                        return NativeDecision::LocalDrop
+                    }
+                };
                 // TCP uses native Windows kernel's OWN retransmission,
                 // handshake and FIN. The selected actor exists only
                 // AFTER the original Go owner has an exact current
@@ -244,12 +301,23 @@ impl NativeSplitWorker {
                 if packet.get(9)==Some(&6){
                     let ok=self.tcp.as_mut()
                         .is_some_and(|tcp|tcp.direct(packet,real_dst,now_ms).is_ok());
-                    if !ok{self.ingress.rollback_unserved_direct(packet);}
+                    if !ok{
+                        if let Some(key)=newly_held{self.retire_flow(key);}
+                        else if presented_dst==real_dst{
+                            self.ingress.rollback_unserved_direct(packet);
+                        }
+                        // An existing fake-backed NAT flow retains its
+                        // original identity until the actual kernel relay
+                        // retires; backend pressure never rebases its exit.
+                    }
                     return if ok{NativeDecision::DirectHandled}
                         else{NativeDecision::LocalDrop}
                 }
                 if packet.get(9)!=Some(&17){
-                    self.ingress.rollback_unserved_direct(packet);
+                    if let Some(key)=newly_held{self.retire_flow(key);}
+                    else if presented_dst==real_dst{
+                        self.ingress.rollback_unserved_direct(packet);
+                    }
                     return NativeDecision::LocalDrop
                 }
                 let result=self.udp.send_direct_datagram(packet,
@@ -262,7 +330,10 @@ impl NativeSplitWorker {
                         NativeUdpFault::InvalidOriginal|
                         NativeUdpFault::DatagramTooLarge|
                         NativeUdpFault::BadUnderlay)=>{
-                        self.ingress.rollback_unserved_direct(packet);
+                        if let Some(key)=newly_held{self.retire_flow(key);}
+                        else if presented_dst==real_dst{
+                            self.ingress.rollback_unserved_direct(packet);
+                        }
                         NativeDecision::LocalDrop
                     },
                     // A locally congested existing socket gets only a
@@ -325,16 +396,39 @@ impl NativeSplitWorker {
         // while cold-only expiry remains on the existing 1-second sweep.
         if let Some(tcp)=self.tcp.as_mut(){
             for key in tcp.tick(now_ms){
-                self.ingress.end_flow(&FlowKey{
+                self.retire_flow(FlowKey{
                     source:key.client,destination:key.presented,
                     source_port:key.source_port,destination_port:key.target_port,
                     protocol:6,
                 });
             }
         }
+        // Per-owner retirement backlog is drained each bounded TX turn,
+        // rather than accumulating 1s of high-rate short-lived UDP flows.
+        // No Vec allocation on the ordinary Tunnel DATA path.
+        for _ in 0..64{
+            let Some(tuple)=self.udp.pop_retired()else{break};
+            self.retire_flow(FlowKey{
+                source:u32::from(tuple.client_ip),
+                destination:u32::from(tuple.presented_ip),
+                source_port:tuple.client_port,
+                destination_port:tuple.target_port,protocol:17,
+            });
+        }
         if now_ms.saturating_sub(self.last_tick_ms)<1_000{return}
         self.last_tick_ms=now_ms;
         self.udp.expire_some(now_ms,64);
+        // FakeIP quarantine and address reuse use UNIX epoch ms, NOT
+        // the monotonic Rust TLS health clock. Only this coarse tick
+        // touches the bounded expiry wheel; never DATA or socket IO.
+        if self.journal.is_some(){
+            if let (Some(pool),Ok(elapsed))=(self.fakes.as_mut(),
+                std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)){
+                if let Ok(wall)=u64::try_from(elapsed.as_millis()){
+                    pool.reap_due(wall,64);
+                }
+            }
+        }
         self.ingress.on_expiry_tick(now_ms);
         if let Ok(mut map)=self.tunnel_map.lock(){map.expire(now_ms)}
         // FakeIP journal and ref expiry require the separate DNS worker
@@ -405,6 +499,38 @@ mod tests{
         assert!(n>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
+    }
+    #[test]
+    fn plan029_native_fakeip_real_business_ref_survives_ttl_and_retires_exactly_once(){
+        use crate::v4_client_fake_pool::FakeKey;
+        let mut native=unsafe{NativeSplitWorker::new(
+            &config(&[],&[],b"cn.example\n"))}.unwrap();
+        let real=0xc633644d; // overseas CDN, must remain Tunnel as real IP
+        let now=1000u64;
+        let proposal=native.fakes.as_mut().unwrap().prepare(FakeKey{
+            qname:"cn.example".into(),canonical:"edge.example".into(),
+            real4:real,policy_rev:1,resolver_rev:1,
+        },1,now).unwrap();
+        // Test only: simulate a completed durable journal ACK; actual
+        // production may only call this inside FakeJournal::persist_batch.
+        native.fakes.as_mut().unwrap()
+            .acknowledge_durable(proposal.fake4).unwrap();
+        let fake=proposal.fake4;
+        let frame=packet(fake.to_be_bytes(),443,b"payload");
+        let key=NativeSplitWorker::flow_key(&frame).unwrap();
+        assert_eq!(native.hold_fake_first_flow(&frame,fake,real),Ok(Some(key)));
+        assert_eq!(native.hold_fake_first_flow(&frame,fake,real),Ok(None));
+        assert_eq!(native.fake_refs.len(),1);
+        // TTL1 + 10-minute quarantine: even after both expire, the actual
+        // active Direct flow reference MUST prevent address reissue.
+        assert_eq!(native.fakes.as_mut().unwrap().reap_due(602_100,64),0);
+        assert_eq!(native.fakes.as_ref().unwrap().announced_real(fake),Some(real));
+        native.retire_flow(key);
+        assert!(native.fake_refs.is_empty());
+        native.retire_flow(key); // late duplicate Stop/UDP retirement no underflow
+        assert_eq!(native.fakes.as_mut().unwrap().reap_due(661_101,64),1);
+        assert_eq!(native.fakes.as_ref().unwrap().announced_real(fake),None);
+        assert_eq!(native.hold_fake_first_flow(&frame,fake,real),Err(()));
     }
     #[test]
     fn plan029_native_fakeip_quota_not_tied_to_direct_flow_quota(){

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1741",
+  "source_sha": "2d3c6cfd84354037e2502e33a1502ab8a43190cb",
+  "recorded": "2026-11-13",
+  "result": "H1740_WIN_GO_COMPILE_PASS_SCOPED_H1741_NATIVE_FAKE_FLOW_REFS_PENDING",
+  "actions": [
+    {
+      "id": 43410186006,
+      "conclusion": "success",
+      "scope": "Original-Go Windows source and assembly",
+      "source_sha": "2d3c6cfd84354037e2502e33a1502ab8a43190cb"
+    },
+    {
+      "id": 43410185900,
+      "conclusion": "success",
+      "scope": "governance",
+      "source_sha": "2d3c6cfd84354037e2502e33a1502ab8a43190cb"
+    }
+  ],
+  "historical": {
+    "run": 43409673563,
+    "sha": "5b36599370e0b9ac2a368407befd77ba53cedefc",
+    "first_error": "no PhysicalPath.Source4",
+    "conclusion": "failure",
+    "retained": true
+  },
+  "fix": "Real NativeSplitWorker original Wintun first FakeIP Direct TCP/UDP 5tuple pin_first_flow; actor retired UDP tuple plus TCP relay closed key release_flow; <=64 events per existing TX turn no Vec allocation; UNIX wall ms coarse safe reap; no real product enabled",
+  "current_source": "PENDING_WIN_LINUX_029_CI",
+  "not_run": [
+    "Defender exact Allow and original four-stage post-Apply Direct TCP",
+    "signed Windows real Direct/Tunnel D1-D5/P1-P2",
+    "GUI full Applied/Stop and startup padding"
+  ]
+}

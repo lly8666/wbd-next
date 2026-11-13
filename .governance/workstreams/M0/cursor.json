@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1740,
-  "checkpoint_sha": "5b36599370e0b9ac2a368407befd77ba53cedefc",
+  "sequence": 1741,
+  "checkpoint_sha": "2d3c6cfd84354037e2502e33a1502ab8a43190cb",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1740: H1739 SOURCE5b365 Windows original-Go no-WFP product compile Action43409673563、Go Windows source43409673369 FAIL at new optional synthetic TCP /32 route helper: plan.Physical.Source4 undefined (donor PhysicalPath无此字段)。改校验真实现有Physical.NextHop4冲突，Rust Cold已独立拒绝underlay physical源IP与synthetic同一IP；不改NativeRouteBackend/WAL写回语义。保留原首错；H1740 Go Windows新SOURCE CI待测，未启用TCP/Defender/正式D1-D5。",
-  "why_now": "H1739 first Windows Go compile failed at a new reference to nonexistent original donor PhysicalPath.Source4. Use existing verified NextHop4 for physical route collision; only product source error, keep exact historical failure and avoid unrelated frozen suite retry.",
+  "current_task": "PLAN029 H1741: H1740 SOURCE2d3c6c Win原Go装配43410186006、治理43410185900 PASS_SCOPED，H1739 Source4首错FAIL保留。发现实际Rust NativeOwner FakeIP宣布后未pin_first_flow，活跃TCP/UDP超TTL+10min有地址回收风险。新增每5tuple Direct FakeIP真实pin、actual UDP socket/TCP relay退休释放、同TX每轮最多64条无分配退休、wall-clock coarse reap，源码CI PENDING；正式Defender、post-Apply、D1-D5/P1-P2/padding NOT_RUN。",
+  "why_now": "Fix real Direct FakeIP active flow ref gap: resolver mapping TTL+10min cannot permit address reuse while the original Rust NativeOwner physical socket remains active. Do not infer product qualification from pure tests.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1740 Windows Go source + actual Native WAL compile, fix only its first new error. Then implement precise owned Defender inbound listener Allow in same OS lifecycle and an authenticated post-Apply Rust TCP activate, source-lock genuine Wintun/WSL D1-D5 and P1-P2/padding. 029 NOT DONE.",
+  "next_action": "Collect H1741 Win/Linux scoped Rust. Finish precise Defender Allow owner, no-WFP WAL and post-Apply TCP activation; run signed original Win real D1-D5/P1-P2, padding; no old WFP/030.",
   "unverified": true,
-  "last_tested_source": "5b36599370e0b9ac2a368407befd77ba53cedefc",
+  "last_tested_source": "2d3c6cfd84354037e2502e33a1502ab8a43190cb",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1740-H1739-SYNTHETIC-ROUTE-GO-FIRST-COMPILE-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1741-H1740-GO-ROUTE-COMPILE-PASS-FAKE-FLOW-REF-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1738 2OS native Rust/Go/Cross/governance all PASS_SCOPED. H1739 optional v2 WAL synthetic /32 introduced a real Win Go compile FAIL Source4 not field; H1740 narrow fix NextHop4 source pending. No real product two-egress scene/Defender/TCP activation."
+  "partial_summary": "H1740 Win Go source and governance scoped PASS; H1739 first Windows fail retained. H1741 code adds real native first-flow FakeIP refs, socket retirement and epoch-clock expiry; new-source native tests pending, real product network OPEN."
 }

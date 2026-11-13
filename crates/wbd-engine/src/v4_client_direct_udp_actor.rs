@@ -7,7 +7,7 @@
 //! Not activated in the authenticated NativeOwner until the cold policy
 //! ABI, forced Tunnel DNS and Stop generations are wired and proven.
 use std::net::{Ipv4Addr,SocketAddrV4};
-use std::collections::HashMap;
+use std::collections::{HashMap,VecDeque};
 use std::io::ErrorKind;
 use wbd_platform::windows_direct_udp::{
     DirectUdpError,DirectUdpTuple,PhysicalUdpSocket,
@@ -87,6 +87,10 @@ pub(crate) struct DirectUdpActor{
     budget:NativeUdpBudget,
     flow_index:HashMap<UdpFlowKey,usize>,
     flows:Vec<UdpFlow>,
+    // Original one-owner DNS/FakeIP dispatcher releases the matching
+    // pin when a socket exits. This is a bounded lifecycle queue, never
+    // an extra Wintun reader or per-datagram return mailbox.
+    retired:VecDeque<DirectUdpTuple>,
     #[cfg(target_os="windows")]
     poll_fds:Vec<PollFd>,
     scan_cursor:usize,
@@ -108,6 +112,7 @@ impl DirectUdpActor{
         Ok(Self{physical_source:source,physical_ifindex:ifindex,
             lease4,fake_bounds,budget,
             flow_index:HashMap::new(),flows:Vec::new(),
+            retired:VecDeque::new(),
             #[cfg(target_os="windows")]poll_fds:Vec::new(),
             scan_cursor:0,next_ipv4_id:1})
     }
@@ -117,11 +122,22 @@ impl DirectUdpActor{
     fn discard_index(&mut self,index:usize){
         let removed=self.flows.swap_remove(index);
         self.flow_index.remove(&removed.key);
+        // Every removed socket is reported to the sole native TX owner;
+        // its original 5tuple must retire from PacketIngress and FakeIP.
+        // Total removals between native ticks are bounded by the source
+        // batch quantum. No special path may silently free a physical
+        // socket while retaining a FakeIP reference indefinitely.
+        self.retired.push_back(removed.tuple);
         if index<self.flows.len(){
             self.flow_index.insert(self.flows[index].key,index);
         }
         if !self.flows.is_empty(){self.scan_cursor%=self.flows.len()}
         else{self.scan_cursor=0}
+    }
+    /// The sole Rust NativeOwner drains a bounded number of retirement
+    /// events on each existing TX turn. No hot-path allocations or Go calls.
+    pub fn pop_retired(&mut self)->Option<DirectUdpTuple>{
+        self.retired.pop_front()
     }
     /// Packet is a COPY after Wintun RX has released its borrowed loan.
     /// The real destination comes ONLY from already-pinned Direct policy:
@@ -274,6 +290,7 @@ impl DirectUdpActor{
         let n=self.flows.len();
         self.flows.clear();
         self.flow_index.clear();
+        self.retired.clear();
         n
     }
 }
@@ -335,6 +352,7 @@ mod tests{
             Err(NativeUdpFault::Socket(DirectUdpError::WrongSourceLease)));
         assert_eq!(actor.len(),0);
         assert_eq!(actor.expire_some(500_000,128),0);
+        assert_eq!(actor.pop_retired(),None);
     }
     #[test]
     fn plan029_actor_rejects_unbounded_flow_and_unsafe_physical_defaults(){
