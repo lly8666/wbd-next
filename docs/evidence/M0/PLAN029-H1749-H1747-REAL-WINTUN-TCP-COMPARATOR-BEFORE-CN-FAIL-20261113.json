@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1749",
+  "source_sha": "4ca9954283a13cf29aed1bdf6017a1111521ede8",
+  "recorded": "2026-11-13",
+  "result": "SIGNED_H1747_REAL_TCP_COMPARATOR_FAILED_BEFORE_CN_DIRECT_NOT_RUN",
+  "signed": [
+    {
+      "run_id": 43422444895,
+      "source_sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
+      "conclusion": "failure"
+    },
+    {
+      "run_id": 43424294651,
+      "source_sha": "bb3c6762e4bb0fec39cb9676dd2507d5cd87da5f",
+      "conclusion": "failure",
+      "native_job": 131884379539,
+      "artifact_id": 14037186783,
+      "observed": {
+        "auth_rust_v3_signed_wintun": true,
+        "cn_cidrs": 6217,
+        "direct_dns": "172.21.21.111",
+        "windows_os_ready": true,
+        "windows_linux_native_udp_duplex": "PASS",
+        "windows_to_linux_tcp_echo": true,
+        "linux_to_windows_tcp_echo": false,
+        "windows_inbound_listener_received": 0,
+        "cn_fakeip_direct_dns_udp": "NOT_RUN_BEFORE_COMPARATOR"
+      }
+    }
+  ],
+  "h1748": {
+    "source_sha": "4ca9954283a13cf29aed1bdf6017a1111521ede8",
+    "actions": [
+      {
+        "id": 43426479743,
+        "conclusion": "success",
+        "scope": "original Go Windows source"
+      },
+      {
+        "id": 43426479785,
+        "conclusion": "success",
+        "scope": "PLAN029 Win/Linux Rust component"
+      },
+      {
+        "id": 43426480226,
+        "conclusion": "success",
+        "scope": "GNU cross ABI"
+      },
+      {
+        "id": 43426479910,
+        "conclusion": "success",
+        "scope": "governance"
+      }
+    ],
+    "tcp_post_apply": "PREPARE_ONLY_NO_AUTHORIZED_ENABLE"
+  },
+  "this_change": "Reorder one original signed CN physical DNS/FakeIP/Direct UDP scene after actual Tunnel UDP and before legacy TCP comparator, retaining its FAIL and native WAL/Stop as terminal gates. Add stage specific source-locked markers and cheap unittest.",
+  "new_source_signed_result": "PENDING",
+  "pending": [
+    "native Defender owned Direct kernel TCP",
+    "D1-D5/P1-P2",
+    "public GUI Apply",
+    "startup padding"
+  ]
+}

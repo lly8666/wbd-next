@@ -719,6 +719,65 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
  report["initial_smoke"]="PASS_REAL_TWO_OS_UDP_BEFORE_MEASUREMENT"
 
+ if p029_direct:
+  # D1/D2 real physical Direct first, once the SAME signed Windows
+  # Wintun and two-OS Tunnel UDP are proved. The historical inbound
+  # TCP comparator is still mandatory but must not mask CN failures.
+  # The original Windows app and two independent guest kernel sockets
+  # share the *same running* signed one-Wintun/one-Rust V3 generation.
+  # No packet injection/second-ring/probe-only helper ABI. The CN hostname
+  # is intentionally CNAME'd to a shared real public-IP peer so its
+  # selective FakeIP must not expose that CDN IP on any underlay wire.
+  if p029_alias_proc.wait(timeout=4)!=0 or not (out/"plan029-h1745-owned-tun-alias.txt").exists():
+   raise RuntimeError("test-owned Linux TUN public alias not OS confirmed")
+  guest_log=(out/"plan029-h1745-guest-physical.log").open("w");logs.append(guest_log)
+  host_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host_source:raise RuntimeError("original Windows physical source readback absent")
+  p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
+      peer,host_source],stdout=guest_log,stderr=subprocess.STDOUT)
+  for tick in range(100):
+   guest_log.flush()
+   raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")
+   if "PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY" in raw:break
+   if p029_guest_proc.poll() is not None:
+    raise RuntimeError("real Linux physical DNS53 business socket failed: "+raw[-600:])
+   time.sleep(.1)
+  else:raise RuntimeError("real Linux physical DNS53 not ready")
+  cn_log=(out/"plan029-h1745-windows-fake-cn-direct.log").open("w");logs.append(cn_log)
+  p029_client_proc=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1745_win_client_dns_direct.py"),
+      "10.66.0.2",peer],stdout=cn_log,stderr=subprocess.STDOUT)
+  try:cn_exit=p029_client_proc.wait(timeout=49)
+  except subprocess.TimeoutExpired:
+   raise RuntimeError("real Windows CN DNS/FakeIP direct UDP deadline")
+  if cn_exit!=0:
+   raise RuntimeError("original Windows CN FakeIP Direct app failed: "+
+      (out/"plan029-h1745-windows-fake-cn-direct.log").read_text(errors="replace")[-900:])
+  if p029_guest_proc.wait(timeout=4)!=0:
+   raise RuntimeError("independent Linux DNS/UDP physical recipient failed: "+
+      (out/"plan029-h1745-guest-physical.log").read_text(errors="replace")[-600:])
+  win_lines=(out/"plan029-h1745-windows-fake-cn-direct.log").read_text().splitlines()
+  guest_lines=(out/"plan029-h1745-guest-physical.log").read_text().splitlines()
+  wproof=[x.split(" ",1)[1] for x in win_lines if
+          x.startswith("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP ")]
+  gproof=[x.split(" ",1)[1] for x in guest_lines if
+          x.startswith("PLAN029_H1745_REAL_LINUX_GUEST_DIRECT ")]
+  if len(wproof)!=1 or len(gproof)!=1:raise RuntimeError("missing real two-OS Direct evidence")
+  wdata,gdata=json.loads(wproof[0]),json.loads(gproof[0])
+  if not(gdata["dns"] and gdata["direct_business"] and
+         gdata["dns_client_physical"]==host_source and
+         gdata["business_client_physical"]==host_source and
+         wdata["direct_resolver"]==peer):
+   raise RuntimeError("real Direct DNS/UDP guest physical proof mismatch")
+  report["plan029_private_v3_cn_direct_udp"]={
+   "scope":"SIGNED_ONE_WINTUN_RUST_V3_CN_DNS_JOURNALED_FAKE_AND_PHYSICAL_DIRECT_UDP",
+   "source_sha":os.environ["GITHUB_SHA"],
+   "windows_app":wdata,"linux_physical":gdata,
+   "tunnel_udp":report["app_duplex"],"tunnel_tcp":"NOT_RUN_PRE_TCP_COMPARATOR",
+   "stop":"NOT_RUN_UNTIL_OWNED_STOP","direct_tcp":"NOT_RUN",
+   "tunnel_dns":"NOT_RUN","D1_D5_P1_P2":"NOT_FULLY_RUN"}
+  print("PLAN029_H1749_SIGNED_CN_DNS_FAKE_DIRECT_UDP_STAGE_PASS_PRE_TCP_AND_STOP",flush=True)
  # Functional-only *real TCP* over the same original authenticated public
  # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
  # independently established IPv4 streams must echo exact application bytes.
@@ -799,61 +858,11 @@ print(json.dumps(result),flush=True)
  report["actual_kernel_tcp"]=tcp
  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
  if p029_direct:
-  # The original Windows app and two independent guest kernel sockets
-  # share the *same running* signed one-Wintun/one-Rust V3 generation.
-  # No packet injection/second-ring/probe-only helper ABI. The CN hostname
-  # is intentionally CNAME'd to a shared real public-IP peer so its
-  # selective FakeIP must not expose that CDN IP on any underlay wire.
-  if p029_alias_proc.wait(timeout=4)!=0 or not (out/"plan029-h1745-owned-tun-alias.txt").exists():
-   raise RuntimeError("test-owned Linux TUN public alias not OS confirmed")
-  guest_log=(out/"plan029-h1745-guest-physical.log").open("w");logs.append(guest_log)
-  host_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
-  if not host_source:raise RuntimeError("original Windows physical source readback absent")
-  p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-      "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
-      peer,host_source],stdout=guest_log,stderr=subprocess.STDOUT)
-  for tick in range(100):
-   guest_log.flush()
-   raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")
-   if "PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY" in raw:break
-   if p029_guest_proc.poll() is not None:
-    raise RuntimeError("real Linux physical DNS53 business socket failed: "+raw[-600:])
-   time.sleep(.1)
-  else:raise RuntimeError("real Linux physical DNS53 not ready")
-  cn_log=(out/"plan029-h1745-windows-fake-cn-direct.log").open("w");logs.append(cn_log)
-  p029_client_proc=subprocess.Popen([sys.executable,
-      str(root/"tools"/"m0_plan029_h1745_win_client_dns_direct.py"),
-      "10.66.0.2",peer],stdout=cn_log,stderr=subprocess.STDOUT)
-  try:cn_exit=p029_client_proc.wait(timeout=49)
-  except subprocess.TimeoutExpired:
-   raise RuntimeError("real Windows CN DNS/FakeIP direct UDP deadline")
-  if cn_exit!=0:
-   raise RuntimeError("original Windows CN FakeIP Direct app failed: "+
-      (out/"plan029-h1745-windows-fake-cn-direct.log").read_text(errors="replace")[-900:])
-  if p029_guest_proc.wait(timeout=4)!=0:
-   raise RuntimeError("independent Linux DNS/UDP physical recipient failed: "+
-      (out/"plan029-h1745-guest-physical.log").read_text(errors="replace")[-600:])
-  win_lines=(out/"plan029-h1745-windows-fake-cn-direct.log").read_text().splitlines()
-  guest_lines=(out/"plan029-h1745-guest-physical.log").read_text().splitlines()
-  wproof=[x.split(" ",1)[1] for x in win_lines if
-          x.startswith("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP ")]
-  gproof=[x.split(" ",1)[1] for x in guest_lines if
-          x.startswith("PLAN029_H1745_REAL_LINUX_GUEST_DIRECT ")]
-  if len(wproof)!=1 or len(gproof)!=1:raise RuntimeError("missing real two-OS Direct evidence")
-  wdata,gdata=json.loads(wproof[0]),json.loads(gproof[0])
-  if not(gdata["dns"] and gdata["direct_business"] and
-         gdata["dns_client_physical"]==host_source and
-         gdata["business_client_physical"]==host_source and
-         wdata["direct_resolver"]==peer):
-   raise RuntimeError("real Direct DNS/UDP guest physical proof mismatch")
-  report["plan029_private_v3_cn_direct_udp"]={
-   "scope":"SIGNED_ONE_WINTUN_RUST_V3_CN_DNS_JOURNALED_FAKE_AND_PHYSICAL_DIRECT_UDP",
-   "source_sha":os.environ["GITHUB_SHA"],
-   "windows_app":wdata,"linux_physical":gdata,
-   "tunnel_udp":report["app_duplex"],"tunnel_tcp":report["tcp_duplex"],
-   "stop":"NOT_RUN_UNTIL_OWNED_STOP","direct_tcp":"NOT_RUN",
-   "tunnel_dns":"NOT_RUN","D1_D5_P1_P2":"NOT_FULLY_RUN"}
-  print("PLAN029_H1745_REAL_CN_DNS_FAKE_DIRECT_UDP_AND_TUNNEL_TCP_UDP_TWO_EXITS_PASS",flush=True)
+  proof=report.get("plan029_private_v3_cn_direct_udp")
+  if not proof or proof.get("source_sha")!=os.environ["GITHUB_SHA"]:
+   raise RuntimeError("PLAN029 signed CN Direct source/physical evidence missing")
+  proof["tunnel_tcp"]=report["tcp_duplex"]
+  print("PLAN029_H1749_SIGNED_CN_DIRECT_AND_TUNNEL_TCP_UDP_STAGE_PASS_PRE_STOP",flush=True)
  # Exact native DF0/DF1 scenario only, after authenticated original-Go
  # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
  if os.environ.get("WBD_WL_V2_SCENARIO")==(
