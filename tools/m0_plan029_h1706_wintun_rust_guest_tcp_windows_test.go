@@ -16,7 +16,6 @@ import (
  "crypto/rand"
  "encoding/hex"
  "encoding/json"
- "errors"
  "fmt"
  "io"
  "net"
@@ -306,17 +305,17 @@ func TestPlan029H1706WintunRustKernelTCPToLinuxGuestHalfClose(t *testing.T){
  }
  // Always join Rust borrowed Wintun worker before the original owned
  // lease is released. No Go TCP data proxy or second Wintun RX.
- var rc uintptr
- select{case rc=<-rustRC:
+ var trialRC uintptr
+ select{case trialRC=<-rustRC:
  case <-time.After(22*time.Second):
   result["result"]="FAIL_RUST_TCP_PROBE_NOT_JOINED"
   t.Fatal("bounded Rust TCP diagnostic worker not joined; no product Applied")
  }
- result["rust_ffi_return"]=uint32(rc)
- if appErr!=nil||appReadErr!=nil||rc!=0||
+ result["rust_ffi_return"]=uint32(trialRC)
+ if appErr!=nil||appReadErr!=nil||trialRC!=0||
   string(reply)!="p029-linux-guest-tcp-wire-reply"{
   t.Fatalf("original signed Windows app SYN→Rust NAT→native kernel listener→physical TCP→Linux guest reverse FAIL dial=%v read=%v rust=%d reply=%q",
-   appErr,appReadErr,rc,reply)
+   appErr,appReadErr,trialRC,reply)
  }
  result["client_lease4"]=lease4.String()
  result["presented_fake4"]=fake4.String()

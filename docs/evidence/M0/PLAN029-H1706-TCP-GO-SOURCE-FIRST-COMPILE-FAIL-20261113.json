@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1706",
+  "observed_at": "2026-11-13",
+  "source_sha": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
+  "result": "FAIL_SCOPED_GO_TEST_COMPILE_BEFORE_WINDOWS_TCP_NETWORK",
+  "artifact_verified": false,
+  "action": {
+    "run_id": 43357897035,
+    "job_id": 131664201188,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43357897035"
+  },
+  "first_error": [
+    "Go test error: errors imported and not used at line19",
+    "Go test error: rc redeclared at line309, earlier declared line177"
+  ],
+  "not_run": [
+    "real original app TCP SYN, native Rust kernel listener, physical WinSock guest and Wintun reverse",
+    "no WFP/Defender/route mutations on this failed compilation",
+    "original authenticated TLS, DNS53 FakeIP/GUI/padding D1-D5/P1-P2"
+  ]
+}

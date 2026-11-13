@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1706,
-  "checkpoint_sha": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
+  "sequence": 1707,
+  "checkpoint_sha": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1706: H1705 Windows309/Linux284 Rust unit tests include 3 Direct TCP NAT reverse/checksum/capacity PASS. Real signed Wintun application TCP SYN→Rust NAT→local Windows kernel listener Accept + reverse SYNACK→physically bound Rust TCP two-leg relay→independent Ubuntu Linux TCP guest with FIN, original app reverse and exact Stop scene authored, result pending. H1704 real Rust Wintun UDP guest reverse PASS diagnostic.",
-  "why_now": "Typed TCP NAT Linux+Windows pure tests passed. Need prove this actual native kernel listener backend for an original Windows app arbitrary destination; do not confuse old H1694 forged SYN proof with NAT-supported real app TCP and physical second leg.",
+  "current_task": "PLAN029 H1707: H1706 Action43357897035 failed only pinned Go test build due unused errors and duplicate rc; no signed TCP SYN/guest network ran. Exact test-only source corrected and source-locked same one-scene Action pending. H1704 Rust Wintun independent guest UDP reverse scoped PASS; H1705 TCP NAT Win309/Linux284 pure tests PASS.",
+  "why_now": "Collect actual first H1706 failure before OS mutation; fix two concrete Go test compilation errors, not retry native TCP blindly or change driver/WFP/Tunnel.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1706 Action first Win32/Rust/guest stage and owned Stop; correct first failure only. Then compose BOTH UDP/TCP physical workers into authenticated single Rust Wintun ingress Normal/Game4; implement bounded DNS53 QNAME direction, selective FakeIP/CNAME TTL, config/GUI and startup padding. Run D1-D5/P1-P2. No WFP guard, no 028 matrix or 030.",
+  "next_action": "Collect H1707 true signed Windows Wintun app TCP SYN→Rust NAT→kernel listener Accept/reverse→physical bound Linux TCP two-leg and owned Stop. Fix only first causal runtime issue if any. Then integrate TCP+UDP into one production authenticated Rust ingress, DNS 2 one-endpoint resolver/FakeIP, config/GUI/padding, D1-D5/P1-P2, no 028/030.",
   "unverified": true,
-  "last_tested_source": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
+  "last_tested_source": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1705-SOURCE-WINDOWS-LINUX-TCP-NAT-PURE-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1706-TCP-GO-SOURCE-FIRST-COMPILE-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1704 sourceabc real native signed Wintun Rust direct UDP to independent WSL2 Linux and app reverse PASS (non-product scope). H1705 source006b TCP NAT pure Rust tests Windows309/Linux284 PASS. H1706 one true Windows app SYN/kernel listener/physically bound Rust TCP guest reverse test-only Action pending. Full PLAN029 original TLS Normal/Game4 DNS/FakeIP GUI Stop/performance not complete."
+  "partial_summary": "H1706 actual TCP witness blocked by Go test compilation only, old failure retained. H1707 test-only unused import/rc declaration fixed. H1704 independent guest signed Wintun Rust UDP reverse PASS, H1705 Windows/Linux TCP NAT pure PASS. Full PLAN029 product original TLS Normal/Game4 DNS/FakeIP/GUI/perf OPEN."
 }
