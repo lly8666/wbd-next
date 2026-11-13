@@ -5,6 +5,10 @@
  use super::*;
  use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU64, Ordering};
  use std::thread::{self, JoinHandle};
+ use std::sync::mpsc::{sync_channel,SyncSender,Receiver,TryRecvError,TrySendError};
+ use crate::v4_windows_native_split::{
+     NativeSplitWorker,NativeDecision,ColdSplitSourceV1,
+ };
  use std::time::Duration;
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
@@ -366,6 +370,7 @@
      cfg:&WbdWinNativeAttachV1,
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
+     split:&mut Option<NativeSplitWorker>,now_ms:u64,
  )->Result<usize,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
@@ -373,10 +378,23 @@
      let mut sources=[[0u8;MAX_IPV4];BATCH];
      let mut source_len=[0usize;BATCH];
      let mut count=0;
+     // One bounded RX quantum even when EVERY packet belongs to Direct.
+     // Only the Tunnel subset may enter the existing M3/FEC/AEAD seal.
+     // Direct never queues behind an old large Tunnel batch or vice versa.
      for _ in 0..BATCH {
          if counters.stopping.load(Ordering::Acquire){break}
          match tun.read(&mut sources[count]){
              Ok(ReadResult::Frame(n))=>{
+                 if let Some(s)=split.as_mut(){
+                     match s.on_packet(&sources[count][..n],now_ms){
+                         NativeDecision::Tunnel=>{},
+                         NativeDecision::DirectHandled=>continue,
+                         NativeDecision::LocalDrop=>{
+                             counters.rejected.fetch_add(1,Ordering::Relaxed);
+                             continue
+                         },
+                     }
+                 }
                  source_len[count]=n;
                  count+=1;
                  if count==BATCH{break}
@@ -673,7 +691,9 @@
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
-     sack_negotiated:bool)->i32{
+     sack_negotiated:bool,mut split:Option<NativeSplitWorker>,
+     direct_return:Option<SyncSender<Vec<u8>>>,
+     direct_notify:Arc<WakeEvent>)->i32{
      let mut ip_id=1u16;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
@@ -698,9 +718,31 @@
                  }
              }
              let mut work=0;
+             let now_ms=m2_clock().0/1_000_000;
+             if let Some(owner)=split.as_mut(){
+                 owner.tick(now_ms);
+                 // Physically received UDP is already a complete local L3
+                 // response. Wintun TX belongs exclusively to the Rust RX
+                 // worker; transfer owned bytes via bounded, nonblocking
+                 // mailbox and wake THAT original worker. Never hold ring.
+                 let mut complete=[0u8;MAX_IPV4];
+                 for _ in 0..8{
+                     let Some(n)=owner.poll_udp_reverse(&mut complete,now_ms)
+                         else{break};
+                     let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
+                     match queue.try_send(complete[..n].to_vec()){
+                         Ok(())=>{let _=direct_notify.wake();},
+                         Err(TrySendError::Full(_))=>{
+                             counters.rejected.fetch_add(1,Ordering::Relaxed);
+                         },
+                         Err(TrySendError::Disconnected(_))=>return Err(BAD_STAGE),
+                     }
+                 }
+             }
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
-                 let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,&counters,&mut ip_id,fixed)?;
+                 let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,
+                     &counters,&mut ip_id,fixed,&mut split,now_ms)?;
                  work+=n;
                  if n<BATCH{break}
              }
@@ -772,6 +814,12 @@
                   let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
              };
+             // When a Direct UDP socket is alive, check a bounded rotating
+             // WSAPoll workset every <=10ms, never 16k sockets per turn.
+             // Idle Tunnel-only sessions keep their original event timer.
+             let timeout=if split.as_ref().is_some_and(|s|s.has_udp_flows()){
+                 timeout.min(10)
+             }else{timeout};
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),
                  Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
@@ -849,7 +897,8 @@
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
-     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool)->i32{
+     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,
+     direct_returns:Option<Receiver<Vec<u8>>>)->i32{
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
      let trusted=TrustedRx{
          tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
@@ -863,6 +912,25 @@
      let mut last_sack_publish=Instant::now();
      loop{
          if counters.stopping.load(Ordering::Acquire){return OK}
+         // Rust original Wintun TX is sole owner of BOTH authenticated
+         // Tunnel replies and already-complete physical Direct UDP replies.
+         // Direct mailbox is bounded to 256 datagrams, no waiting on DNS,
+         // connect, Npcap, or Go. Ring TX allocates only after byte-ready.
+         if let Some(ready)=direct_returns.as_ref(){
+             for _ in 0..RX_WAKE_BATCH{
+                 match ready.try_recv(){
+                     Ok(packet)=>{
+                         if tun.deliver_native_direct_response(&packet).is_err(){
+                             // Datagram-specific Wintun pressure is a local
+                             // drop, never a fabricated authenticated reply.
+                             counters.rejected.fetch_add(1,Ordering::Relaxed);
+                         }
+                     },
+                     Err(TryRecvError::Empty)=>break,
+                     Err(TryRecvError::Disconnected)=>return BAD_STAGE,
+                 }
+             }
+         }
          // Drain genuine Go pre-handoff packets FIRST, in original order.
          // Only this RX worker ever calls the M3 opener after Start.
          let mut early_wakes=TxWakeBatch::default();
@@ -979,6 +1047,39 @@
      pub reserved:u32, // bit0 Auto aggressive; bit1 Go-negotiated SACK
      pub normal:WbdWinNativeAttachV1,
  }
+ // Private explicit probe-scoped V3 handoff uses the SAME original
+ // credential/GUID/LUID-checked V2 attachment. It cannot claim PLAN029
+ // Ready: TCP, forced DNS and owned Defender lifecycle are not wired yet.
+ #[cfg(feature="m0_v4_probe")]
+ #[repr(C)]
+ #[derive(Clone,Copy)]
+ pub struct WbdWinNativeAttachV3 {
+     version:u32,size:u32,
+     v2:WbdWinNativeAttachV2,
+     split:ColdSplitSourceV1,
+ }
+ #[cfg(feature="m0_v4_probe")]
+ #[no_mangle]
+ pub unsafe extern "C" fn wbd_m0_win_native_v3_start(
+     cfg:*const WbdWinNativeAttachV3)->i32{
+     if cfg.is_null(){return INVALID}
+     let v3=unsafe{*cfg};
+     if v3.version!=3 ||
+        v3.size as usize!=std::mem::size_of::<WbdWinNativeAttachV3>() ||
+        v3.v2.version!=2 ||
+        v3.v2.size as usize!=std::mem::size_of::<WbdWinNativeAttachV2>() ||
+        !matches!(v3.v2.mode,0|1|2) ||
+        v3.v2.reserved>3{return INVALID}
+     let split=match unsafe{NativeSplitWorker::new(&v3.split)}{
+         Ok(w)=>w,Err(())=>return INVALID
+     };
+     #[cfg(feature="fec2_product_record")]
+     {return start_native(v3.v2.normal,v3.v2.mode!=0,
+         if v3.v2.mode==2{Some(v3.v2.reserved&1!=0)}else{None},
+         v3.v2.reserved&2!=0,Some(split))}
+     #[cfg(not(feature="fec2_product_record"))]
+     {let _=split;BAD_STAGE}
+ }
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v2_start(cfg:*const WbdWinNativeAttachV2)->i32{
      if cfg.is_null(){return INVALID}
@@ -989,17 +1090,18 @@
      #[cfg(feature="fec2_product_record")]
      {start_native(v2.normal,v2.mode!=0,
          if v2.mode==2{Some(v2.reserved&1!=0)}else{None},
-         v2.reserved&2!=0)}
+         v2.reserved&2!=0,None)}
      #[cfg(not(feature="fec2_product_record"))]
      {let _=v2;BAD_STAGE}
  }
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v1_start(cfg:*const WbdWinNativeAttachV1)->i32{
      if cfg.is_null(){return INVALID}
-     start_native(unsafe{*cfg},false,None,false)
+     start_native(unsafe{*cfg},false,None,false,None)
  }
  fn start_native(config:WbdWinNativeAttachV1,fixed:bool,
-     auto_policy:Option<bool>,sack_negotiated:bool
+     auto_policy:Option<bool>,sack_negotiated:bool,
+     split:Option<NativeSplitWorker>
  )->i32{
      if config.version!=1||config.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()
          ||config.owner==0||config.local_port==0||config.peer_port==0
@@ -1047,16 +1149,22 @@
      let counters=Arc::new(Counters::new(config.initial_rx_seq,config.initial_tx_seq));
      let rx_notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let early=Arc::new(Mutex::new(VecDeque::with_capacity(64)));
+     let (direct_sender,direct_receiver)=if split.is_some(){
+         let (tx,rx)=sync_channel::<Vec<u8>>(256);
+         (Some(tx),Some(rx))
+     }else{(None,None)};
 
      let mut guard=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      if guard.contains_key(&config.owner){return BAD_STAGE}
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
+     let rx_notify_for_tx=Arc::clone(&rx_notify);
      let tx=thread::Builder::new().name("wbd-native-tx".into()).spawn(move||{
          set_native_thread_name(&NATIVE_TX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
-             Arc::clone(&tx_counters),fixed,auto_policy.is_some(),sack_negotiated);
+             Arc::clone(&tx_counters),fixed,auto_policy.is_some(),sack_negotiated,
+             split,direct_sender,Arc::clone(&rx_notify_for_tx));
          if rc!=OK{
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();
@@ -1070,7 +1178,8 @@
          set_native_thread_name(&NATIVE_RX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
-             rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated);
+             rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated,
+             direct_receiver);
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();

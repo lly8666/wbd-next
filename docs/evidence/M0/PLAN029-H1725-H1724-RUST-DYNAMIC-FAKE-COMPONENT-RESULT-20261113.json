@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1725",
+  "source_sha": "28a06adb9466522583f6969389949b4f8e51aa24",
+  "result": "H1724_NATIVE_SPLIT_DYNAMIC_FAKE_CROSSPLATFORM_RESULT_PENDING_REVIEW",
+  "prior_checkpoint": "H1724",
+  "prior_action": "https://github.com/lly8666/wbd-next/actions/runs/43391441201",
+  "current_source_changes": "Rust original Wintun TX Direct UDP single owner probe-only cold V3, bounded reverse mailbox to original Wintun TX on authenticated RX worker; DNS/TCP not wired fail-closed; full Rust build and OS data plane NOT_RUN",
+  "never_claim_ready": true,
+  "not_run": [
+    "public real Direct+Tunnel TCP UDP with DNS",
+    "owned Defender production and recovery",
+    "GUI actual Applied",
+    "P1/P2/padding"
+  ]
+}

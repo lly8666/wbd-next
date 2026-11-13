@@ -8,6 +8,8 @@ on:
       - "crates/wbd-engine/src/v4_client_fake_pool.rs"
       - "crates/wbd-engine/src/v4_client_split_wire.rs"
       - "crates/wbd-engine/src/v4_client_dns_cache.rs"
+      - "crates/wbd-engine/src/v4_windows_native_split.rs"
+      - "crates/wbd-engine/src/v4_windows_native_runtime.rs"
       - "crates/wbd-engine/src/v4_client_split.rs"
       - "crates/wbd-engine/src/lib.rs"
   workflow_dispatch:
