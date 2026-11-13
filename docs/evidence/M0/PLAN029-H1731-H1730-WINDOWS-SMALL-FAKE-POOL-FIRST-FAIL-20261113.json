@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1731",
+  "source_sha": "1d0458a8fdff21b450b4b05a272f0f1667aa24e9",
+  "result": "FAIL_SCOPED_WINDOWS_PLAN029_RUST_COMPONENT_NEW_SMALL_POOL_REGRESSION",
+  "action": {
+    "run_id": 43396935678,
+    "conclusion": "failure",
+    "windows": {
+      "job_id": 131790034526,
+      "passed": 51,
+      "failed": 1,
+      "test": "v4_windows_native_split::tests::plan029_native_cold_policy_rejects_fake_range_overlap_or_wrong_dns",
+      "failure": "assertion failed: NativeSplitWorker::new(&c).is_ok() on 41-address advanced pool"
+    },
+    "linux": {
+      "job_id": 131790033982,
+      "conclusion": "success"
+    }
+  },
+  "cause": "FakeAllocator::new rejects independent max_entries=60000 when advanced fake pool has width 41; no product egress tested.",
+  "fix": "cap to min(60000, inclusive address pool width); still independent of active Direct hard flow; add 41 allocated, 42nd PoolCapacity boundary",
+  "source_status": "H1731_SOURCE_PENDING_CI",
+  "historical_failure_retained": true,
+  "not_run": [
+    "real Windows Direct/Tunnel TCP UDP and dual DNS",
+    "owned Defender/GUI Applied+Stop",
+    "P1/P2 and padding"
+  ]
+}

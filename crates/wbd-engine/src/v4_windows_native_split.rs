@@ -141,10 +141,15 @@ impl NativeSplitWorker {
         let udp=DirectUdpActor::new(underlay,c.physical_ifindex,lease,
             (start,end),budget).map_err(|_|())?;
         let fakes=if mode==Mode::BypassLanCn{
+            // An advanced smaller FakeIP pool is legitimate. Limit the
+            // independent identity table by its exact inclusive width,
+            // NOT the unrelated Direct socket/flow hard cap.
+            let pool_width=u64::from(end)-u64::from(start)+1;
+            let max_identities=MAX_FAKE_IDENTITIES.min(pool_width as usize);
             Some(FakeAllocator::new(start,end,
                 &[(u32::from(lease),u32::from(lease)),
                   (u32::from(underlay),u32::from(underlay))],
-                MAX_FAKE_IDENTITIES,MAX_FAKE_BYTES)
+                max_identities,MAX_FAKE_BYTES)
                 .map_err(|_|())?)
         }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
@@ -300,7 +305,23 @@ mod tests{
         let mut c=config(&[],&[],b"cn.example");
         c.fake_start=[198,18,1,4];
         c.fake_end=[198,18,1,44];
-        assert!(unsafe{NativeSplitWorker::new(&c)}.is_ok());
+        let mut small=unsafe{NativeSplitWorker::new(&c)}.unwrap();
+        // Exactly 41 addresses; the independent 60k upper ceiling must
+        // not reject this valid advanced pool or steal a live mapping.
+        use crate::v4_client_fake_pool::{FakeKey,FakeError};
+        let fakes=small.fakes.as_mut().unwrap();
+        for n in 0..41u32{
+            fakes.prepare(FakeKey{
+                qname:format!("pool{n}.example"),
+                canonical:"edge.example".into(),
+                real4:0xcb007109,policy_rev:1,resolver_rev:1,
+            },30,1_000).unwrap();
+        }
+        assert_eq!(fakes.counts().0,41);
+        assert_eq!(fakes.prepare(FakeKey{
+            qname:"beyond.example".into(),canonical:"edge.example".into(),
+            real4:0xcb007109,policy_rev:1,resolver_rev:1,
+        },30,1_000),Err(FakeError::PoolCapacity));
         let mut c=config(&[],&[],b"cn.example");
         c.direct_hard=16_385;
         assert!(unsafe{NativeSplitWorker::new(&c)}.is_err());
