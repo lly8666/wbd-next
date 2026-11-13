@@ -4,6 +4,7 @@ package main
 // PLAN029: original Go cold CN/LAN/direct4/DNS snapshot for Rust V3 trial.
 // Never per-DATA Go dispatch or Windows route-per-CIDR installation.
 import (
+ "crypto/sha256"
  "errors"
  "fmt"
  "net/netip"
@@ -107,12 +108,25 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
  },nil
 }
 
+// Cold-only per-original-generation synthetic /32, disjoint from
+// selective FakeIP 198.18/16. No fixed test address.
+func m0Plan029SyntheticForGeneration(install,epoch [16]byte)([4]byte,error){
+ if install==[16]byte{}||epoch==[16]byte{}{
+  return [4]byte{},errM0Plan029Cold
+ }
+ var input [32]byte
+ copy(input[:16],install[:])
+ copy(input[16:],epoch[:])
+ h:=sha256.Sum256(input[:])
+ return [4]byte{198,19,h[0],1+h[1]%254},nil
+}
+
 // m0Plan029TrialCold is the ONLY test-channel V3 gate. It does not turn
 // unfinished Direct TCP/DNS TCP into public Ready or silently activate a
 // missing China geosite snapshot. All product OS ownership still goes
 // through the original credential, signed Wintun and four-stage WAL.
 func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
- ifindex uint32,lease netip.Addr,innerMTU uint32,
+ ifindex uint32,lease netip.Addr,innerMTU uint32,epoch [16]byte,
 )(*realityfront.V4WindowsColdSplitConfig,error){
  if os.Getenv("GITHUB_ACTIONS")!="true"||
   os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")!="1"{return nil,nil}
@@ -132,6 +146,12 @@ func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
  if o.RouteMode=="bypass-lan-cn"&&
   (len(c.Domains)==0||len(c.FakeJournalPath)==0){
   return nil,errM0Plan029Cold
+ }
+ // all stays Tunnel only, never preopens/records Direct TCP.
+ if c.RouteMode!=0{
+  synth,e:=m0Plan029SyntheticForGeneration(o.Installation,epoch)
+  if e!=nil{return nil,e}
+  c.TCPSynthetic4=synth
  }
  return &c,nil
 }

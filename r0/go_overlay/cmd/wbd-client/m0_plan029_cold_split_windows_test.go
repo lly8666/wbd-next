@@ -3,6 +3,7 @@ package main
 import ("net/netip";"os";"path/filepath";"strings";"testing")
 func plan029Options(mode string)m0NativeV4Options{
  return m0NativeV4Options{
+  Installation:[16]byte{1},
   RouteMode:mode,DirectDNS4:netip.MustParseAddr("223.5.5.5"),
   DNSServers4:[]netip.Addr{netip.MustParseAddr("1.1.1.1")},
   Bypass4:[]netip.Prefix{netip.MustParsePrefix("203.0.113.0/24")},
@@ -49,24 +50,35 @@ func TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains(t *testing.T){
  lease:=netip.MustParseAddr("10.234.12.34")
  t.Setenv("GITHUB_ACTIONS","false")
  t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","1")
- c,e:=m0Plan029TrialCold(o,physical,14,lease,1280)
+ c,e:=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2})
  if e!=nil||c!=nil{t.Fatal("private V3 without CI admitted",e)}
  t.Setenv("GITHUB_ACTIONS","true")
- if _,e=m0Plan029TrialCold(o,physical,14,lease,1280);e==nil{
+ if _,e=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2});e==nil{
   t.Fatal("CN missing rules silently degraded")
  }
  p:=filepath.Join(t.TempDir(),"cn-rules.txt")
  if e=os.WriteFile(p,[]byte("cn.example\n=exact.cn\n"),0600);e!=nil{t.Fatal(e)}
  t.Setenv("WBD_PLAN029_CN_RULES_FILE",p)
- c,e=m0Plan029TrialCold(o,physical,14,lease,1280)
- if e!=nil||c==nil||string(c.Domains)!="cn.example\n=exact.cn\n"||
+ c,e=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2})
+ if e!=nil||c==nil||c.TCPSynthetic4==[4]byte{}||string(c.Domains)!="cn.example\n=exact.cn\n"||
   len(c.FakeJournalPath)==0||c.DirectHard!=16384{
   t.Fatalf("cold trial missing durable CIDR/DNS/IDNA proof: %+v %v",c,e)
  }
  // Explicit route-mode all does NOT silently allocate CN-domain tracking.
  o.RouteMode="all"
- c,e=m0Plan029TrialCold(o,physical,14,lease,1280)
- if e!=nil||c==nil||len(c.Domains)!=0||len(c.FakeJournalPath)!=0{
+ c,e=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2})
+ if e!=nil||c==nil||c.TCPSynthetic4!=[4]byte{}||len(c.Domains)!=0||len(c.FakeJournalPath)!=0{
   t.Fatal("all mode allocated CN trie/journal",e)
  }
+}
+
+func TestPlan029GenerationSyntheticOnlyOneOwnedHost(t *testing.T){
+ install:=[16]byte{1};e1:=[16]byte{2};e2:=[16]byte{3}
+ a,err:=m0Plan029SyntheticForGeneration(install,e1)
+ if err!=nil||a[0]!=198||a[1]!=19||a[3]==0||a[3]==255{t.Fatalf("invalid synthetic %v %v",a,err)}
+ b,err:=m0Plan029SyntheticForGeneration(install,e1)
+ if err!=nil||a!=b{t.Fatal("synthetic unstable",err)}
+ b,err=m0Plan029SyntheticForGeneration(install,e2)
+ if err!=nil||a==b{t.Fatal("epoch not isolated",err)}
+ if _,err=m0Plan029SyntheticForGeneration(install,[16]byte{});err==nil{t.Fatal("zero generation admitted")}
 }

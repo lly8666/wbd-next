@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source_sha": "4dc70aad122a2697d2f00fd2b046dadce67f3990",
+  "plan": "PLAN029",
+  "checkpoint": "H1759",
+  "status": "SOURCE_UNTESTED",
+  "result": "NOT_RUN",
+  "based_on": {
+    "action": 43442086701,
+    "source": "9b9b1902a400478d19d1985e6e3732f8093aa8b4",
+    "scope": "real one exact Defender COM Add/Readback/CAS PASS_SCOPED only"
+  },
+  "delta": [
+    "per-generation synthetic /32 route in original owned Win32 four-stage",
+    "original Rust cold PREPARE after actual Applied",
+    "Defender exact owned Add/readback before native Rust ENABLE",
+    "CAS Stop before route recovery and Rust close",
+    "only one kernel Direct TCP backend, no old WFP/alternate TCP stack",
+    "all mode no new Direct TCP listener"
+  ],
+  "product_direct_tcp_delivery": "NOT_RUN",
+  "product_udp_dns": "NOT_RUN",
+  "e2e": "NOT_RUN",
+  "pending": "Windows original-Go source/build and actual signed network scenario"
+}

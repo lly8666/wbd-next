@@ -73,6 +73,7 @@ type N4RealWindowsProduct struct {
  owner N4NativeProductLiveOwner
  identity N4UnifiedIdentity
  receipt N4NativeLiveOSReceipt
+ tcpDefender *n4Plan029DefenderKey
  applied bool
  stopped bool
 }
@@ -205,6 +206,32 @@ func(s *N4RealWindowsProduct) Apply(
  return receipt,nil
 }
 
+// PLAN029 one kernel Direct TCP backend: only after actual complete
+// four-stage OS Applied and Rust PREPARE returned its kernel listener port,
+// persist one generation-bound intent/owned Defender Allow for synthetic /32.
+func(s *N4RealWindowsProduct) Plan029ArmOwnedDirectTCP(
+ ctx context.Context,port uint16,
+)error{
+ if s==nil||ctx==nil||port==0{return ErrN4NativeGuard}
+ s.mu.Lock();defer s.mu.Unlock()
+ if !s.applied||s.stopped||s.tcpDefender!=nil||
+  s.owner==nil||s.controller==nil||s.controller.txn==nil{return ErrN4NativeGuard}
+ txn:=s.controller.txn
+ if !txn.noLegacyWFP||txn.assemblyOnly||len(txn.stages())!=4{return ErrN4NativeGuard}
+ route,ok:=txn.Stages[3].(n4WindowsNoWFPRouteStage)
+ if !ok||!route.SyntheticTCP4.IsValid()||route.Plan.StatePath==""{return ErrN4NativeGuard}
+ if err:=s.owner.VerifyOriginalNativeHold(ctx,s.identity);err!=nil{return err}
+ live,err:=txn.VerifyLiveOSApplied(ctx)
+ if err!=nil{return err}
+ if !live.AllNativeOSApplied{return ErrN4NativeGuard}
+ key,err:=n4Plan029DefenderKeyFor(s.identity,route.Plan.Lease4.Addr(),route.SyntheticTCP4,port)
+ if err!=nil{return err}
+ // A later partial Add must remain recoverable by this same identity.
+ s.tcpDefender=&key
+ return n4Plan029DefenderInstall(ctx,n4Plan029DefenderSidecarPath(route.Plan.StatePath),
+  s.identity,key,n4Plan029DefenderCOM{})
+}
+
 // Stop drains first, restores every native OS stage via WAL reverse CAS,
 // verifies no owned sidecar/host mutation remains, releases the kernel
 // lease, and finally stops the original Rust TLS/Wintun generation.
@@ -216,6 +243,19 @@ func(s *N4RealWindowsProduct) Stop(ctx context.Context)error{
  if s.stopped{return nil}
  if s.controller==nil||s.kernel==nil||s.owner==nil{
   return ErrN4NativeGuard
+ }
+ // Exact own grant must be removed before its /32 route and original
+ // Rust/Wintun loan. An ambiguous/foreign rule retains all WALs and
+ // refuses false Disconnected. Stop can retry the same generation.
+ if s.tcpDefender!=nil{
+  if s.controller.txn==nil{return ErrN4NativeGuard}
+  route,ok:=s.controller.txn.Stages[3].(n4WindowsNoWFPRouteStage)
+  if !ok||route.Plan.StatePath==""{return ErrN4NativeGuard}
+  err:=n4Plan029DefenderRecover(ctx,
+   n4Plan029DefenderSidecarPath(route.Plan.StatePath),
+   s.identity,*s.tcpDefender,n4Plan029DefenderCOM{})
+  if err!=nil{return fmt.Errorf("PLAN029 owned Defender Stop: %w",err)}
+  s.tcpDefender=nil
  }
  switch s.controller.state{
  case "applied","recovery_required":

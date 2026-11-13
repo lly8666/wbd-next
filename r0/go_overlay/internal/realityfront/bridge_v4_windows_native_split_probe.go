@@ -109,6 +109,29 @@ func(s *V4WindowsAuthenticatedClientOwner) Plan029PrepareNativeTCPAfterOSApply(
  runtime.KeepAlive(req)
  return req.Port,nil
 }
+// The caller must hold exact owned Defender Add/readback for this
+// port before ENABLE. This cold FFI cannot create firewall permissions.
+func(s *V4WindowsAuthenticatedClientOwner) Plan029EnableNativeTCPAfterDefender(
+ ctx context.Context,port uint16,
+)error{
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil||port==0{return errV4WindowsOwner}
+ if e:=ctx.Err();e!=nil{return e}
+ state,e:=s.OriginalOwnerReadback()
+ if e!=nil{return e}
+ if !state.OwnerActive||!state.DeviceBound||state.DeviceQuiesced||
+  state.ServerSide||!state.ProductApplied{return errV4WindowsOwner}
+ req:=v4WindowsNativeTCPControlV1{Version:1,
+  Owner:s.bridge.handle,Epoch:s.bridge.epoch,
+  LUID:s.device.identity.LUID,IfIndex:s.device.identity.InterfaceIndex,
+  Port:port,Operation:2}
+ req.Size=uint32(unsafe.Sizeof(req))
+ proc,e:=s.bridge.fixedProc("wbd_m0_win_native_tcp_control_v1")
+ if e!=nil{return e}
+ if e=winOwnerCall(proc,uintptr(unsafe.Pointer(&req)));e!=nil{return e}
+ runtime.KeepAlive(req)
+ if req.Port!=port{return errV4WindowsOwner}
+ return nil
+}
 func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOWithColdSplitProbe(
  ctx context.Context,cfg V4WindowsNativeIOV1,mode uint32,aggressive bool,
  cold V4WindowsColdSplitConfig,

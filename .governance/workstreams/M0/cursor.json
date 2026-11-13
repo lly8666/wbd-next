@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1758,
-  "checkpoint_sha": "9b9b1902a400478d19d1985e6e3732f8093aa8b4",
+  "sequence": 1759,
+  "checkpoint_sha": "4dc70aad122a2697d2f00fd2b046dadce67f3990",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1758: H1757 SOURCE9b9b1902 Action43442086701 Windows2025 real exact IN/TCP Defender COM Add/readback/CAS Delete PASS_SCOPED; original-Go build PASS; never a product TCP/Wintun E2E. H1757 governance Action43442086632 FAIL only cursor-linked evidence lacked required source_sha field; this commit corrects source-bound evidence. Prior H1754/H1756 native FAIL and H1755 assembly FAIL retained; actual Direct TCP post-Apply PREPARE/owned Allow/ENABLE, D1-D5/P1-P2, GUI, padding remain OPEN.",
-  "why_now": "Native Defender one exact COM Allow now proven scoped on real Windows; governance demands evidence.source_sha==cursor.last_tested_source; fix that and preserve old FAIL without new native dispatch.",
+  "current_task": "PLAN029 H1759 SOURCE: selected Rust kernel Direct TCP is now cold-wired in original authenticated Windows Go product: generation-derived 198.19/16 synthetic /32 route within four-stage owned WAL, real post-Apply Rust PREPARE port, exact owned Defender Allow receipt, Rust ENABLE, and owned CAS Stop before route rollback; all Tunnel mode does not preopen. H1757 real COM exact one-rule live Add/readback/CAS PASS_SCOPED; this H1759 product code NOT_RUN until auto Actions, whole Direct TCP app and D1-D5/P1-P2/GUI/padding OPEN.",
+  "why_now": "H1757 native one-rule Defender COM proved; Rust already supports one selected Direct-only kernel TCP cold control, but no original product bridge. Wire it safely rather than adding smoltcp/old guard.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Connect original authenticated product Rust kernel TCP: after four-stage OS Apply, PREPARE obtains real listener port; install exact owned Defender rule/readback, ENABLE on Rust; Stop rollback; freeze SOURCE then D1-D5/P1-P2. Full product not signed, 030 closed.",
+  "next_action": "Collect H1759 source-locked original-Go windows build, first failing compiler/API boundary and governance; then actual signed post-Apply Rust kernel Direct TCP + physical socket app reverse and dual DNS/UDP scenario; run 029 D1-D5/P1-P2/GUI/padding. No duplicated network probe or 030.",
   "unverified": true,
   "last_tested_source": "9b9b1902a400478d19d1985e6e3732f8093aa8b4",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "Real native Defender exact owned rule PASS_SCOPED H1757; no full product TCP/DNS/GUI/padding qualification. H1758 governance evidence schema corrected."
+  "partial_summary": "H1759 new original Go product two-phase kernel TCP + owned Defender/route/Stop SOURCE only, NOT_RUN; H1757 COM scoped PASS; full PLAN029 IN_PROGRESS."
 }

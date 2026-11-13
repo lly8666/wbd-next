@@ -950,6 +950,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  var transport m0NativeV4ProductPeer
+ var tcpSynthetic netip.Addr
  // Only explicit CI measurement chooses the retained original Go packet pump.
  // The product default remains the Rust-only Wintun/Npcap NativeOwner; the
  // override does not change original credential TLS, OS WAL or session scope.
@@ -983,10 +984,11 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   // PLAN029: private source-locked signed Windows trial only. Ordinary
   // product V2 is unchanged; no implicit feature promotion/Go packet pump.
   trial,e:=m0Plan029TrialCold(o,underlay.Source4,
-   physicalPath.InterfaceIndex,o.Lease4.Addr(),o.TunnelMTU)
+   physicalPath.InterfaceIndex,o.Lease4.Addr(),o.TunnelMTU,session.Epoch)
   if e!=nil{return fmt.Errorf("PLAN029 original Go cold V3 rejected: %w",e)}
   if trial!=nil{
    nativePeer.plan029Cold=trial
+   if trial.TCPSynthetic4!=[4]byte{}{tcpSynthetic=netip.AddrFrom4(trial.TCPSynthetic4)}
    fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 not_public_product=1\\n",
     o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
   }
@@ -998,9 +1000,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if legacyErr!=nil{return legacyErr}
   transport=legacy
  }
- product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
-  ctx,owner,tun,plan,o.Installation,session.Epoch,transport,
-  o.ConnectionMTU,o.TunnelMTU)
+ var product *windowsownerlease.OriginalTLSNativeProductSession
+ if tcpSynthetic.IsValid(){
+  product,e=windowsownerlease.PrepareOriginalTLSNativeProductWithSyntheticTCP(
+   ctx,owner,tun,plan,o.Installation,session.Epoch,transport,
+   tcpSynthetic,o.ConnectionMTU,o.TunnelMTU)
+ }else{
+  product,e=windowsownerlease.PrepareOriginalTLSNativeProduct(
+   ctx,owner,tun,plan,o.Installation,session.Epoch,transport,
+   o.ConnectionMTU,o.TunnelMTU)
+ }
  if e!=nil{return e}
  cleanup:=func()error{
   stop,c:=context.WithTimeout(context.Background(),60*time.Second)
@@ -1039,6 +1048,23 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  select{
  case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,cleanup())
  default:
+ }
+ if tcpSynthetic.IsValid(){
+  // A cold-only, authenticated same-Rust-owner transition after actual
+  // four-stage Win32 Applied. Do not publish TCP Ready from source proof.
+  port,tcpErr:=owner.Plan029PrepareNativeTCPAfterOSApply(ctx)
+  if tcpErr!=nil{return errors.Join(fmt.Errorf("PLAN029 post-Apply TCP PREPARE: %w",tcpErr),cleanup())}
+  if tcpErr=product.Plan029ArmOwnedDirectTCP(ctx,port);tcpErr!=nil{
+   return errors.Join(fmt.Errorf("PLAN029 exact owned Defender Allow: %w",tcpErr),cleanup())
+  }
+  if tcpErr=owner.Plan029EnableNativeTCPAfterDefender(ctx,port);tcpErr!=nil{
+   return errors.Join(fmt.Errorf("PLAN029 Rust TCP ENABLE: %w",tcpErr),cleanup())
+  }
+  fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  select{
+  case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,cleanup())
+  default:
+  }
  }
  fmt.Println("WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1")
  // Native OS readback and original Rust M3 peer first+reverse proved.

@@ -9,6 +9,7 @@ package windowsownerlease
 import (
  "context"
  "errors"
+ "net/netip"
 
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
@@ -123,6 +124,19 @@ func PrepareOriginalTLSNativeProduct(
  // REAL original TLS Rust owner+Win32 PnP Hold first, before OS mutation.
  return prepareOriginalTLSNativeProduct(ctx,client,nil,tun,plan,install,epoch,packet,geometry...)
 }
+// Scoped PLAN029 original-TLS product with one synthetic Windows
+// TCP /32 owned by the same four-stage OS journal, not a 2nd Wintun.
+func PrepareOriginalTLSNativeProductWithSyntheticTCP(
+ ctx context.Context,
+ client *realityfront.V4WindowsAuthenticatedClientOwner,
+ tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
+ install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+ synthetic netip.Addr,geometry ...uint32,
+)(*OriginalTLSNativeProductSession,error){
+ if !synthetic.Is4()||synthetic.IsUnspecified(){return nil,ErrNativeDeviceNotOwned}
+ return prepareOriginalTLSNativeProductWithSynthetic(ctx,client,nil,tun,
+  plan,install,epoch,packet,synthetic,geometry...)
+}
 // Game reuses the SAME one signed Wintun, five-stage WAL and real OS
 // readback; one group rather than n private per-lane OS installations.
 func PrepareOriginalTLSNativeGameProduct(
@@ -141,6 +155,16 @@ func prepareOriginalTLSNativeProduct(
  install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
  geometry ...uint32,
 )(*OriginalTLSNativeProductSession,error){
+ return prepareOriginalTLSNativeProductWithSynthetic(ctx,client,game,tun,
+  plan,install,epoch,packet,netip.Addr{},geometry...)
+}
+func prepareOriginalTLSNativeProductWithSynthetic(
+ ctx context.Context,client *realityfront.V4WindowsAuthenticatedClientOwner,
+ game *realityfront.V4WindowsAuthenticatedGameGroup,
+ tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
+ install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+ synthetic netip.Addr,geometry ...uint32,
+)(*OriginalTLSNativeProductSession,error){
  if ctx==nil||client==nil||tun==nil||packet==nil{return nil,ErrNativeDeviceNotOwned}
  scoped,err:=ConnectScopedOriginalTLSWintun(ctx,client,tun,install,epoch,geometry...)
  if err!=nil{return nil,err}
@@ -153,7 +177,7 @@ func prepareOriginalTLSNativeProduct(
   scoped:scoped,tun:tun,client:client,packet:packet,game:game,id:id,
  }
  product,err:=windowsclient.N4PrepareRealWindowsProduct(
-  ctx,tun,plan,id,proof)
+  ctx,tun,plan,id,proof,synthetic)
  if err!=nil{
   return nil,errors.Join(err,scoped.StopRustScoped(context.Background()))
  }
@@ -186,4 +210,11 @@ func(s *OriginalTLSNativeProductSession) RuntimeMTU(
 func(s *OriginalTLSNativeProductSession) Stop(ctx context.Context)error{
  if s==nil||s.product==nil{return ErrNativeDeviceNotOwned}
  return s.product.Stop(ctx)
+}
+
+func(s *OriginalTLSNativeProductSession) Plan029ArmOwnedDirectTCP(
+ ctx context.Context,port uint16,
+)error{
+ if s==nil||s.product==nil{return ErrNativeDeviceNotOwned}
+ return s.product.Plan029ArmOwnedDirectTCP(ctx,port)
 }

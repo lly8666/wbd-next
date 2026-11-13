@@ -1078,13 +1078,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "7a2baa9b98edbe1bafec0cbab8444540a287ed4a"
+      "result_blob": "7849a1d08a8fb58538aa6173a0b7a6a4e63f6bd2"
     },
     {
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "72ccfa181740e1a4b82c141409ce3d4064a8c9d5"
+      "result_blob": "5b678472b8c15e06190ce87095189ea1edd8b12b"
     },
     {
       "kind": "create",
@@ -1108,7 +1108,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "a1676d0b74d71869b413e0f5dc3ad9f51254dc79"
+      "result_blob": "95999da340d006c1992438dd0bb6e47cac5e2227"
     },
     {
       "kind": "create",
@@ -1635,19 +1635,19 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "aabd978f2e78a930a9f9f8b1155ce92da4c88e87"
+      "result_blob": "85f5f6a3a018ea1a227fa0bad2466ee0cf3fff24"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "fea667037e8d533e456ea458dd8d04483ae89dfe"
+      "result_blob": "fc5f5f7fbcbb7334153c70cd902b978973a3d2c2"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "fab105398e40a49d16ed2e5aaf09bc4a6ccf7f17"
+      "result_blob": "f776758e790ea36ce157317805e713d0ab5ff50a"
     },
     {
       "kind": "create",
