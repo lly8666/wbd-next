@@ -101,6 +101,11 @@ mod v4_windows_plan029_udp_gate;
 // TCP two-leg real-gateway probe, explicitly test-only, NOT product Ready.
 #[cfg(all(feature = "m0_v4_probe", target_os = "windows"))]
 mod v4_windows_plan029_tcp_gate;
+// PLAN029 H1713: only one explicit diagnostic signed Wintun original
+// Windows app DNS53→physical Linux resolver→durable local FakeIP→Direct
+// UDP guest roundtrip. No second Wintun reader or product TLS Ready.
+#[cfg(all(feature = "m0_v4_probe", target_os = "windows"))]
+mod v4_windows_plan029_dns_gate;
 
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;

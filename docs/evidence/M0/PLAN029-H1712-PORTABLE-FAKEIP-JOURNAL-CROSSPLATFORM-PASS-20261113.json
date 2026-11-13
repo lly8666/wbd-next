@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1712",
+  "source_sha": "6ce01a62b50f53ad890a2c29f1058501b667c63c",
+  "date": "2026-11-13",
+  "result": "PASS_SCOPED_REAL_FILESYSTEM_FAKE_JOURNAL_RUST_UNIT_WINDOWS_AND_LINUX",
+  "workflow": {
+    "id": 43367189032,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43367189032"
+  },
+  "observed": [
+    {
+      "job_id": 131694471160,
+      "platform": "windows-2025",
+      "conclusion": "success",
+      "rust_library_test_count": 328,
+      "new_fake_journal_tests_passed": 4
+    },
+    {
+      "job_id": 131694471223,
+      "platform": "linux-ubuntu",
+      "conclusion": "success",
+      "rust_library_test_count": 303,
+      "new_fake_journal_tests_passed": 4
+    },
+    {
+      "job_id": 131694471216,
+      "platform": "Windows Go build only",
+      "conclusion": "success"
+    }
+  ],
+  "other": {
+    "governance_run_id": 43367189015,
+    "governance": "success",
+    "feature_catalog": "success"
+  },
+  "boundaries": [
+    "real test filesystem batch sync/restart/CRC and fail closed pure Rust exercised; no live Windows DNS53 upstream or product OS DNS entry in this action",
+    "H1713 real signed Wintun Windows DNS53→independent Linux DNS CNAME→durable FakeIP→real Windows UDP business is new single Action NOT_RUN at authoring",
+    "one Linux guest physically reachable over WSL2 vEthernet, not an external physical WAN; the local guest 172.16/12 LAN A is NOT the CN-domain-to-overseas D2 counterexample",
+    "no ordinary nonCN forced Tunnel DNS actual egress or product Normal/Game4 startup padding P1/P2"
+  ]
+}
