@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1743",
+  "source_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e",
+  "recorded": "2026-11-13",
+  "result": "H1742_NATIVE_RUST_CROSS_ABI_ALL_PASS_SCOPED_AND_H1743_SINGLE_SIGNED_WIN_V3_TRIAL_PENDING",
+  "actions": [
+    {
+      "id": 43412698406,
+      "scope": "Windows/Linux native Rust split DNS and fake-flow lifecycle",
+      "conclusion": "success",
+      "source_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e"
+    },
+    {
+      "id": 43412698604,
+      "scope": "Windows GNU/Linux ARM64 cross ABI",
+      "conclusion": "success",
+      "source_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e"
+    },
+    {
+      "id": 43412698439,
+      "scope": "governance",
+      "conclusion": "success",
+      "source_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e"
+    },
+    {
+      "id": 43412698476,
+      "scope": "native-regression",
+      "conclusion": "success",
+      "source_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e"
+    }
+  ],
+  "h1743_trial": "SOURCE_LOCKED_REAL_WINDOWS_ORIGINAL_GO_TLS_NATIVE_RUST_V3_SIGNED_WINTUN_UBUNTU_TUNNEL_ONLY_PENDING",
+  "run_conditions": "One main commit [plan029-v3-real-tunnel] only; original Windows EXE & original Rust release DLL built from same GITHUB_SHA with m0_v4_probe; route_mode=all; authenticated first/reverse real UDP/TCP and existing WAL Stop plus explicit new V3 receipt; no old PLAN028 matrix.",
+  "still_not_run": [
+    "Direct Windows TCP/UDP business authenticated V3+Defender",
+    "both actual purpose DNS endpoints and domain union D1-D5",
+    "startup-padding and P1-P2"
+  ]
+}

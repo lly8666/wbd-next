@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1742,
-  "checkpoint_sha": "23e56deb0c255aa4ea5a04bb1d5b75764dfc6402",
+  "sequence": 1743,
+  "checkpoint_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1742: H1741 SOURCE23e56 Rust Windows Action43411970374 58 PASS/1 FAIL，第一错新增FakeIP真实flow_ref单测误认首次活流扫描602100后可在661101回收，但原算法为now602100+60000=662100再扫描；实际测试观察0符合保护实现。Linux scoped job PASS，GNU cross ABI43411970273及governance43411970191 PASS。H1742仅改条件为662099仍0/662101回收1，保留历史FAIL，不改真实Nat/Wintun/FakeIP实现。新SOURCE Win/Linux CI待验。产品Defender/Apply后TCP授权、D1-D5/P1P2/padding仍OPEN。",
-  "why_now": "Fix the first Windows native source-locked test failure: the new FakeIP active-flow test asserted quarantine reuse 999 ms too early after explicit 60s deferred reaping. Preserve test failure evidence and strengthen both sides of exact reschedule boundary without changing product code.",
+  "current_task": "PLAN029 H1743: H1742 SOURCE1709ea92 Win/Linux Rust NativeOwner fake flow_refs Action43412698406、GNU cross ABI43412698604、governance43412698439及native-regression43412698476 all PASS_SCOPED。新增一次性SOURCE限定[plan029-v3-real-tunnel]原Go Windows TLS+原Rust V3 m0_v4_probe feature真正签名Wintun/Ubuntu Normal-only mode=all纯Tunnel UDP+TCP first/reverse及no-WFP4stage WAL owned Stop实测；本SOURCE Windows真机CI PENDING。不开Direct/TCP/双DNS／D1-D5/P1-P2；不跑028旧7模式矩阵。",
+  "why_now": "The original Go→Rust V3 trial source already compiled but only standalone components had proof. Run exactly one signed Wintun original Go TLS authenticated NativeOwner V3 application+Stop on SOURCE, with explicit feature, all-route Tunnel to avoid RFC1918 guest being Direct-selected; no promotion until real OS proof.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1742 Windows/Linux Rust scoped tests and GNU ABI; then exact Windows Defender Allow lifecycle and post-Apply Rust TCP owner grant, and actual signed real D1-D5/P1-P2. Do not run legacy M4 frozen test as 029 qualification.",
+  "next_action": "Collect source H1743 signed Windows V3 Normal-only first failure and real app/Stop artifact. If it fails, fix that first cause in current source. Then implement generation-owned Defender listener and post-Apply Direct TCP, run D1/D2 dual DNS and mixed data plus D3-D5/P1-P2 and bounded padding. Do not run PLAN030.",
   "unverified": true,
-  "last_tested_source": "23e56deb0c255aa4ea5a04bb1d5b75764dfc6402",
+  "last_tested_source": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1742-H1741-FAKEIP-REAP-SCHEDULE-TEST-FIRST-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1743-H1742-NATIVE-RUST-GREEN-REAL-SIGNED-V3-TUNNEL-TRIAL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1741 original Rust NativeOwner FakeIP actual 5tuple refs + noalloc retirement source-locked Win first test FAIL due wrong rescheduled expiry; Linux and GNU cross ABI PASS. H1742 fixes solely 60-second reaping test boundary pending Windows CI; no real 029 two-egress product PASS."
+  "partial_summary": "H1742 source Rust Windows/Linux, cross-ABI, native regression/governance PASS_SCOPED. H1743 adds an explicit single signed Windows Wintun original-Go TLS Rust V3 Tunnel-only real normal/Stop first delivery trial with no FakeIP or Direct; result PENDING, product complete D1-D5/P1-P2 OPEN."
 }

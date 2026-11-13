@@ -924,6 +924,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
       WBD_PLAN028_WIN5_SCENE: ${{ startsWith(matrix.win5_scene, 'mixed-') && '' || matrix.win5_scene == 'legacy' && '' || matrix.win5_scene }}
+      # One explicit current-SOURCE signed Windows NativeOwner V3
+      # Tunnel-only qualification. No PLAN028 matrix or public default.
+      WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
       WBD_PLAN028_WIN_REAL_COLD_SEED: ${{ github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]')) && '1' || '0' }}
@@ -1048,6 +1051,12 @@ jobs:
           $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
           $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
+          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1'){
+            # The original V3 entry point is cold/probe-scoped; it is
+            # NOT linked in the ordinary public Windows DLL.
+            $features+=',m0_v4_probe'
+            Write-Output 'PLAN029_EXACT_SOURCE_PRIVATE_RUST_V3_PROBE_FEATURE_ENABLED'
+          }
           & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
           if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
           New-Item -ItemType Directory -Force result/wl-public | Out-Null

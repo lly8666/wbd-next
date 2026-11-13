@@ -231,9 +231,19 @@ try:
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
+ # PLAN029 private signed V3 smoke first checks ONLY ordinary protected
+ # Tunnel. The Linux 10.66/24 guest is intentionally in RFC1918, so
+ # bypass-lan would Direct-route the test traffic and falsely fail the
+ # authenticated tunnel contract. Mode=all means no Direct identities,
+ # no FakeIP journal, no domain rule file, and no TCP Defender grant.
+ p029_v3=os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1"
+ if p029_v3 and mode!="normal":
+  raise RuntimeError("PLAN029 one real signed V3 probe must run Normal only")
+ if p029_v3 and os.environ.get("GITHUB_ACTIONS")!="true":
+  raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan","--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -1367,6 +1377,33 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1":
+  # These are actual current-source original TLS/Rust/OS receipts.
+  # Do not promote a pure-Tunnel trial to DNS/Direct/D1-D5 evidence.
+  win_native=(out/"client.log").read_text(errors="replace")
+  required=(
+   "WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=all ",
+   "WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1",
+   "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+   "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+  )
+  missing=[marker for marker in required if marker not in win_native]
+  wal=out/"owned-wal.json.n4-owned-wal"
+  routes=out/"owned-wal.json.n4-owned-wal.routes"
+  if missing or wal.exists() or routes.exists():
+   raise RuntimeError("PLAN029 private V3 signed Tunnel/Stop oracle FAILED "+
+                      json.dumps({"missing":missing,"wal":wal.exists(),
+                                  "route_sidecar":routes.exists()}))
+  report["plan029_private_v3_tunnel"]={
+   "scope":"ORIGINAL_GO_CREDENTIAL_RUST_V3_ONE_WINTUN_SIGNED_TWO_OS_TUNNEL_ONLY",
+   "source_sha":os.environ["GITHUB_SHA"],
+   "normal_udp_tcp":report.get("app_duplex"),
+   "app_tcp":report.get("tcp_duplex"),
+   "os_and_crypto_stop":"PASS_NO_WFP_V2_WAL_ABSENT",
+   "direct_dns":"NOT_RUN","tunnel_dns":"NOT_RUN",
+   "direct_udp_tcp":"NOT_RUN","D1_D5_P1_P2":"NOT_RUN"
+  }
+  print("PLAN029_H1743_REAL_ORIGINAL_GO_RUST_V3_TUNNEL_ONLY_SIGNED_STOP_PASS",flush=True)
  if mode=="normal":
   # Same SOURCE actual effective on BOTH owners, not CLI intent.
   expected=1 if outer_repair=="on" else 0

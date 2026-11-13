@@ -54,6 +54,7 @@ NATIVE_RUST_PREFIXES = (
 EXPLICIT_NATIVE_MARKERS = (
     "[wiring-full]", "[m0-native-smoke]", "[m0-real-game-fec]",
     "[plan025-", "[plan026-", "[plan027-", "[plan028-",
+    "[plan029-v3-real-tunnel]",
 )
 
 
