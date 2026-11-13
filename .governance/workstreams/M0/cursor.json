@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1741,
-  "checkpoint_sha": "2d3c6cfd84354037e2502e33a1502ab8a43190cb",
+  "sequence": 1742,
+  "checkpoint_sha": "23e56deb0c255aa4ea5a04bb1d5b75764dfc6402",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1741: H1740 SOURCE2d3c6c Win原Go装配43410186006、治理43410185900 PASS_SCOPED，H1739 Source4首错FAIL保留。发现实际Rust NativeOwner FakeIP宣布后未pin_first_flow，活跃TCP/UDP超TTL+10min有地址回收风险。新增每5tuple Direct FakeIP真实pin、actual UDP socket/TCP relay退休释放、同TX每轮最多64条无分配退休、wall-clock coarse reap，源码CI PENDING；正式Defender、post-Apply、D1-D5/P1-P2/padding NOT_RUN。",
-  "why_now": "Fix real Direct FakeIP active flow ref gap: resolver mapping TTL+10min cannot permit address reuse while the original Rust NativeOwner physical socket remains active. Do not infer product qualification from pure tests.",
+  "current_task": "PLAN029 H1742: H1741 SOURCE23e56 Rust Windows Action43411970374 58 PASS/1 FAIL，第一错新增FakeIP真实flow_ref单测误认首次活流扫描602100后可在661101回收，但原算法为now602100+60000=662100再扫描；实际测试观察0符合保护实现。Linux scoped job PASS，GNU cross ABI43411970273及governance43411970191 PASS。H1742仅改条件为662099仍0/662101回收1，保留历史FAIL，不改真实Nat/Wintun/FakeIP实现。新SOURCE Win/Linux CI待验。产品Defender/Apply后TCP授权、D1-D5/P1P2/padding仍OPEN。",
+  "why_now": "Fix the first Windows native source-locked test failure: the new FakeIP active-flow test asserted quarantine reuse 999 ms too early after explicit 60s deferred reaping. Preserve test failure evidence and strengthen both sides of exact reschedule boundary without changing product code.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1741 Win/Linux scoped Rust. Finish precise Defender Allow owner, no-WFP WAL and post-Apply TCP activation; run signed original Win real D1-D5/P1-P2, padding; no old WFP/030.",
+  "next_action": "Collect H1742 Windows/Linux Rust scoped tests and GNU ABI; then exact Windows Defender Allow lifecycle and post-Apply Rust TCP owner grant, and actual signed real D1-D5/P1-P2. Do not run legacy M4 frozen test as 029 qualification.",
   "unverified": true,
-  "last_tested_source": "2d3c6cfd84354037e2502e33a1502ab8a43190cb",
+  "last_tested_source": "23e56deb0c255aa4ea5a04bb1d5b75764dfc6402",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1741-H1740-GO-ROUTE-COMPILE-PASS-FAKE-FLOW-REF-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1742-H1741-FAKEIP-REAP-SCHEDULE-TEST-FIRST-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1740 Win Go source and governance scoped PASS; H1739 first Windows fail retained. H1741 code adds real native first-flow FakeIP refs, socket retirement and epoch-clock expiry; new-source native tests pending, real product network OPEN."
+  "partial_summary": "H1741 original Rust NativeOwner FakeIP actual 5tuple refs + noalloc retirement source-locked Win first test FAIL due wrong rescheduled expiry; Linux and GNU cross ABI PASS. H1742 fixes solely 60-second reaping test boundary pending Windows CI; no real 029 two-egress product PASS."
 }

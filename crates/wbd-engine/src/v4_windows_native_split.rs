@@ -528,7 +528,10 @@ mod tests{
         native.retire_flow(key);
         assert!(native.fake_refs.is_empty());
         native.retire_flow(key); // late duplicate Stop/UDP retirement no underflow
-        assert_eq!(native.fakes.as_mut().unwrap().reap_due(661_101,64),1);
+        // The first held-flow expiry rescheduled this exact identity for
+        // 602100+60000=662100, not the original DNS TTL/quarantine date.
+        assert_eq!(native.fakes.as_mut().unwrap().reap_due(662_099,64),0);
+        assert_eq!(native.fakes.as_mut().unwrap().reap_due(662_101,64),1);
         assert_eq!(native.fakes.as_ref().unwrap().announced_real(fake),None);
         assert_eq!(native.hold_fake_first_flow(&frame,fake,real),Err(()));
     }

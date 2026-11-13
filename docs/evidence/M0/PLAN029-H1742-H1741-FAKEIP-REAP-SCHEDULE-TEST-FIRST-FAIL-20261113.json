@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1742",
+  "source_sha": "23e56deb0c255aa4ea5a04bb1d5b75764dfc6402",
+  "recorded": "2026-11-13",
+  "result": "H1741_WINDOWS_SCOPED_RUST_TEST_FIRST_FAIL_DUE_60_SECOND_REAPER_SCHEDULE_EXPECTATION",
+  "actions": [
+    {
+      "id": 43411970374,
+      "conclusion": "failure",
+      "windows": {
+        "id": 131840349221,
+        "pass": 58,
+        "fail": 1,
+        "test": "v4_windows_native_split::tests::plan029_native_fakeip_real_business_ref_survives_ttl_and_retires_exactly_once",
+        "first_error": "at line531 left 0 expected 1 from reap_due(661101), scheduled first held attempt at 602100+60000=662100"
+      },
+      "linux": {
+        "id": 131840349728,
+        "conclusion": "success"
+      }
+    },
+    {
+      "id": 43411970273,
+      "conclusion": "success",
+      "scope": "GNU cross ABI"
+    },
+    {
+      "id": 43411970191,
+      "conclusion": "success",
+      "scope": "governance"
+    }
+  ],
+  "fix": "No runtime mutation. Exact reschedule boundary assertions at 662099→0, 662101→1; original full FakeIP active connection held beyond DNS TTL/quarantine.",
+  "pending_new_source": "H1742_WINDOWS_NATIVE_RUST_TEST",
+  "real_product": "NOT_RUN"
+}
