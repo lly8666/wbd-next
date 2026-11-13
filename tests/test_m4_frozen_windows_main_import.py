@@ -30,8 +30,8 @@ PINNED_FILES = {
     "r0/go_overlay/internal/windowsclient/native_orphan_pnp_probe_windows.go": "fe60f3297a1860e0ca915d827235b283dc3407c6",
     "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go": "9866a5815f91d4678b5c30fab544aa7567e2e3ee",
     "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "27e3d2721dd98a87806ed3eb12e7636584f043f7",
-    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go": "3b8ddc0facb0a342fa688182d551b2a06e249451",
-    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go": "4c9783d5a6218da87ca27c279f6f1563c449d162",
+    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go": "e13390c864e6631c619139a919d54632e9296147",
+    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go": "bfe2eb69305b1599b0798b92aa38a3ff282ea529",
     "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go": "c9157436a57ea16500484ca4a72a1214968cd57c",
     "r0/go_overlay/internal/windowsclient/native_product_status_windows.go": "83452baab8358f0f7e0be5527e54fc8e6360248f",
     "r0/go_overlay/internal/windowsclient/native_unified_assembly_windows_test.go": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7",
@@ -67,6 +67,8 @@ M0_AUTHORIZED_CURRENT = {
 M0_PLAN029_REVIEWED_CURRENT = {
     "r0/go_overlay/assembly/assemble.py": "2bbb6b5a1e337f2637a183c9c8727144b65ac0a5",
     "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "72a3693c72e207f2a2fe72e957c27a871ab5291b",
+    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go": "4c9783d5a6218da87ca27c279f6f1563c449d162",
+    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go": "3b8ddc0facb0a342fa688182d551b2a06e249451",
     "r0/go_overlay/internal/windowsclient/native_product_status_windows.go": "58c0ff58550abbb2c9654668faa761c9119f02ab",
     "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go": "deb8271b4ef4f0b75636c6ad9f436e8ca878540d",
 }
@@ -185,6 +187,16 @@ class M4FrozenOverlay(unittest.TestCase):
         self.assertIn("no-WFP four-stage Win32 Apply, Rust ingress and authenticated Stop have not been qualified", native)
         self.assertNotIn("production native WFP Apply and authenticated Stop have not been qualified", native)
         print("M0_PLAN027A_34_HISTORIC_M4_SHA_PINS_AND_11_EXACT_M0_OVERRIDES_PASS_NETWORK_NOT_RUN")
+
+
+    def test_plan029_gui_preflight_not_historical_wfp_blocker(self):
+        manifest=json.loads((ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
+        gui=next(x for x in manifest["operations"] if x["path"]=="windows/gui/MainForm.cs")
+        replacement="\n".join(p["replace"] for p in gui["patches"])
+        self.assertIn("authenticated_live_owner_and_applied_receipt_not_inspected", replacement)
+        self.assertNotIn("wfp_guard_and_authenticated_stop_not_qualified", replacement)
+        self.assertIn("four-stage no-old-WFP OS", replacement)
+        self.assertIn("WBD_WINDOWS_OS_APPLIED", replacement)
 
 if __name__ == "__main__":
     unittest.main()

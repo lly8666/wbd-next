@@ -4,18 +4,17 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1718,
-  "checkpoint_sha": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
+  "sequence": 1719,
+  "checkpoint_sha": "eed23da0fcfedfa151f2704a99cd117a1e285d7a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1718: 收回H1717原生四阶段Win32签名Wintun真实Apply/MTU读回/Stop PASS_SCOPED（Action43378854361）；同SHA旧Normal双OS legacy1400 Action43378854779 PASS但非029双出口；H1717治理Action43378854403 FAIL因四个M0 live派生blob pin/历史WFP旧断言漂移。修正现行manifest/测试审核列表，不改历史M4 donor。正式Rust NativeOwner Direct/Tunnel DNS/GUI/padding仍未完成。",
-  "why_now": "H1717 scoped genuine Win32 v2 results have arrived; reconcile live M0 provenance before full product work. Do not promote old Normal legacy1400 native PASS to new 029 egress qualification.",
+  "current_task": "PLAN029 H1719: H1718 复检治理FAIL（Action43383231768/43383231819）；纠正M4历史preflight blob被误作live pin、新增两条M0审定派生；把H1716旧FAIL移为context，H1718当前SOURCE证据唯一驻cursor；补feature-impact。修复WinForms原生预检依赖已退役WFP错误文本及五阶段Ready提示，并用真实原Go CLI只读预检回归（SOURCE CI待收）。029业务双出口/单DNS/GUI有效网络/padding仍未验收。",
+  "why_now": "H1718 source governance jobs found exact historical SHA/current provenance separation and cross-SOURCE cursor proof mismatch; correct the original historical pins and real current M0 approvals before declaring green. Also remove an actual stale WinForms WFP barrier against v2 read-only preflight.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Continue single original TLS/Rust NativeOwner Wintun ingress with kernel TCP+physical UDP and policy forced DNS/FakeIP under v2 WAL. Freeze source, then D1–D5/P1–P2 native scenes; do not repeat H1695 A/B/C or H1709/H1713 probes.",
+  "next_action": "Collect H1719 source-matched governance + one actual WinForms Go CLI config/preflight test. If PASS, continue one original TLS/Rust owner data-plane ingress (kernel TCP + physical UDP + forced DNS) and true D1–D5/P1–P2 product scenarios; preserve all historic FAIL and NOT_RUN.",
   "unverified": true,
   "last_tested_source": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json",
     "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
   ],
   "context_refs": [
@@ -25,8 +24,9 @@
     "docs/prompts/M0-PLAN029.md",
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
+    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
+    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1717 true noWFP signed Win32 4-stage OS Apply RuntimeMTU1280 Stop Action43378854361 PASS_SCOPED. Same SHA 43378854779 old legacy1400 Windows/Linux Normal UDP/TCP/Stop PASS not PLAN029. 43378854403 governance FAIL stale four live M0 pins + old WFP text (source-only fix pending CI). H1695 owned Defender A/B/C, H1709 kernel TCP app EOF and H1713 CN DNS journaled FakeIP UDP real diagnostic scoped PASS, not production NativeOwner. D1–D5/P1–P2 NOT_RUN."
+  "partial_summary": "H1718 commit eed23d governance failed: historical preflight M4 SHA was accidentally repinned, 2 M0 live overrides missing, cursor H1716 evidence SHA different, feature-impact declaration absent. H1719 fixes all under original donor SHA immutability and adds GUI real original-Go read-only preflight regression; test currently PENDING at new SOURCE. H1717 four-stage signed OS Apply/RuntimeMTU1280/Stop PASS_SCOPED. Real 029 dual egress/GUI effective/padding NOT_RUN."
 }

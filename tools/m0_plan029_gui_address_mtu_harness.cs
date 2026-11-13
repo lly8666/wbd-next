@@ -54,6 +54,20 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    using(var cli=new ClientSession(store))
    using(var form=new MainForm(store,cli,()=>Dependencies.Detect(store))){
     form.Show();Application.DoEvents();
+    // Actual original-Go read-only v2 preflight: no old WFP guard literal,
+    // no driver Apply and never a false Ready promotion.
+    var preflight=form.ReadNativeProductPreflightAsync();
+    var clock=System.Diagnostics.Stopwatch.StartNew();
+    while(!preflight.IsCompleted && clock.ElapsedMilliseconds<23000){
+      Application.DoEvents();
+      System.Threading.Thread.Sleep(25);
+    }
+    Need(preflight.IsCompleted,"v2_native_readonly_preflight_returns_bounded");
+    Need(preflight.GetAwaiter().GetResult()=="absent","gui_v2_preflight_live_go_cli_readback_absent");
+    Need(!File.Exists(store.InRoot("data/network-state.json")) &&
+         !File.Exists(store.InRoot("data/network-state.json.n4-owned-wal")),
+         "preflight_never_makes_network_state");
+
     var readOnly=(Label)typeof(MainForm).GetField("mtuStatus",
       System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).GetValue(form);
     Need(readOnly.Text.Contains("未知")&&readOnly.Text.Contains("未验证"),
