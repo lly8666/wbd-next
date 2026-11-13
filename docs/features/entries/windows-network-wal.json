@@ -92,6 +92,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
       "evidence": "docs/evidence/M0/PLAN029-H1698-REAL-SIGNED-NOWFP-FOUR-STAGE-OS-PASS-20261113.json"
+    },
+    {
+      "platform": "Windows2025 actual signed Wintun 0.14.1 + separate Linux DNS/UDP guest",
+      "scope": "H1713 real CN DNS53→CNAME/A→synced local FakeIP→Windows app Direct UDP reverse PASS (probe-only)",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "3bb00716252435ab2579a5cd786696256c43bf55",
+      "evidence": "docs/evidence/M0/PLAN029-H1713-SIGNED-WINTUN-REAL-CN-DNS-DURABLE-FAKE-UDP-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -110,7 +117,8 @@
     "H1692 no-WFP v2 real product entry candidate: removes public new-session qualified WFP constructor and defaults to v2 four-stage assembler, still deliberately rejects assemblyOnly before ring claim; controller v2 Recover avoids legacy WFP-only guard recovery. Windows SOURCE Go compile/tests not yet collected.",
     "H1696 adds a v2 no-old-WFP exact-generation per-route SHA sidecar and parent reconciliation. Confirmed child rows can be retired; present INTENT/foreign/mismatch remain fail-closed. New Windows source compile/pure stage tests and real Apply/Stop NOT_RUN when this code was authored.",
     "H1697 real signed Wintun four no-old-WFP Win32 stage Apply/Stop Action authored; test-only assemblyOnly override does not grant public Ready; real OS result not observed on commit.",
-    "H1698 H1697 real signed OS stage PASS via isolated test-only assemblyOnly override. Public original TLS/Rust product Ready, normal Game4 DNS/Direct actual paths, original authenticated Stop together, and D1-D5/P1-P2 are NOT_RUN. M0-WIN-LINUX 43340809026 legacy Ready old-guard failure preserved."
+    "H1698 H1697 real signed OS stage PASS via isolated test-only assemblyOnly override. Public original TLS/Rust product Ready, normal Game4 DNS/Direct actual paths, original authenticated Stop together, and D1-D5/P1-P2 are NOT_RUN. M0-WIN-LINUX 43340809026 legacy Ready old-guard failure preserved.",
+    "H1714 original-TLS product no-WFP four-concrete-writer admission after bound native Wintun and authenticated peer proof staged. Removes obsolete assemblyOnly circular reject, but requires same-generation full real Win32 Apply/readback/first+reverse/owned Stop; source untested and formal product still NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

@@ -1030,13 +1030,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_preflight_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
-      "result_blob": "7e9aaaed417a363bc6a5fc7b60d75bb66b691d57"
+      "result_blob": "4c9783d5a6218da87ca27c279f6f1563c449d162"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_preflight_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go",
-      "result_blob": "8603ab9a3974c1146a0437c2c44ba878bc7c4b39"
+      "result_blob": "3b8ddc0facb0a342fa688182d551b2a06e249451"
     },
     {
       "kind": "create",
@@ -1072,13 +1072,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_activation_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_activation_windows_test.go",
-      "result_blob": "7e462bbdd03a135a26948e6e9109da6c425c28b0"
+      "result_blob": "9afd534a9dd74e6c24dbeb2bab898cf1e8719ce3"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "de01342e34b6c1da00fd23b06029fb848de856c9"
+      "result_blob": "4055d101baf256ee96fc1ad4fb3ba52be5365e09"
     },
     {
       "kind": "create",

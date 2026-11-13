@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1713",
+  "observed_at": "2026-11-13",
+  "source_sha": "3bb00716252435ab2579a5cd786696256c43bf55",
+  "result": "PASS_SCOPED_REAL_WINTUN_CN_DNS_DURABLE_FAKE_TO_INDEPENDENT_LINUX_DIRECT_UDP",
+  "action": {
+    "run_id": 43368431989,
+    "job_id": 131698262361,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43368431989"
+  },
+  "artifact": {
+    "id": 14011870622,
+    "name": "plan029-h1713-cn-dns-fake-indep-linux-udp-43368431989",
+    "zip_sha256": "47d5fc237eb08625c4a564fe10d4f943c5182a71cf04170ddd23c49e27e7c0e4"
+  },
+  "observed": [
+    "Source-locked original Go donor + signed Wintun 0.14.1 Rust m0_v4_probe compiled on Windows2025 and single scoped scene passed",
+    "original Windows application DNS53 www.cn.example captured by one borrowed Rust Wintun ingress",
+    "Rust direct physically source/ifindex-bound UDP resolver queried independent Ubuntu WSL2 guest 172.24.31.186",
+    "CNAME/A accepted; per-qname synthetic FakeIP 198.18.0.1 TTL30 mapped to real Linux guest and durable local journal synced (92 bytes) BEFORE Wintun DNS response",
+    "original Windows application used returned FakeIP for business UDP, Rust forwarded to real Linux guest via bound socket and Wintun inverse delivered actual app reply",
+    "one exact-owned Hyper-V inbound rule was removed by Action finally; no legacy WFP guard was created"
+  ],
+  "bounds": [
+    "Diagnostic-only m0_v4_probe source, NOT authenticated Normal/Game4 NativeOwner or official Applied",
+    "WSL2 Linux distinct kernel over same host vEthernet, not remote physical Internet",
+    "No forced Tunnel DNS live reply; no nonCN/shared-CDN dual domain A/B real exit proof",
+    "No cross-mode GUI/portable live-effective readback, IPv6 native blocking, performance D1-D5/P1-P2 or production owned Stop",
+    "H1714 production four-stage admission source modification is UNTESTED at H1713 SOURCE and cannot inherit this PASS"
+  ]
+}

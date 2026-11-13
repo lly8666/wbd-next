@@ -91,12 +91,12 @@ func N4PrepareRealWindowsProduct(
  if err:=owner.VerifyOriginalCredentialAndKernelOwner(ctx,id);err!=nil{
   return nil,err
  }
- // PLAN029: new sessions must select only the four-stage no-WFP v2
- // assembler. Refuse its present assemblyOnly qualification barrier BEFORE
- // claiming the packet ring or mutating the OS; never fall back to v1 WFP.
+ // PLAN029: only the four actual Win32 writers, never a five-stage
+ // legacy WFP guard or any non-WFP no-op adapter. Assembly alone grants
+ // NOTHING: the current authenticated Rust packet owner must first bind
+ // the original generation's exclusive kernel ring.
  txn,err:=n4AssembleWindowsNoWFPNativeTxn(ctx,tun,plan,id)
  if err!=nil{return nil,err}
- if txn.assemblyOnly{return nil,ErrN4NativeGuard}
  // Real signed-Wintun PnP, generation and exclusive native ring readback;
  // the created ring lease is held until ALL native host changes are gone.
  kernel,err:=n4CreateOriginalKernelPacketLease(ctx,tun,id)
@@ -106,18 +106,70 @@ func N4PrepareRealWindowsProduct(
  if err=owner.BindOriginalNativePacketRing(ctx,id,kernel);err!=nil{
   return nil,errors.Join(err,kernel.Stop(context.Background()))
  }
- // One v2 txn only; its original Go TLS + Rust owner is still required.
+ // Qualification is a ONE-WAY cold transition AFTER exclusive
+ // real Wintun binding and verified original credential/Rust generation.
+ // The four stages will still have to APPLY to Win32, verify the actual
+ // OS rows, prove app-first+reverse and STOP cleanly in this SAME session
+ // before any positive Applied or Ready receipt can exist.
+ if err=n4AdmitAuthenticatedNoWFPProduct(ctx,txn,owner);err!=nil{
+  releaseCtx,cancel:=context.WithTimeout(context.Background(),30*time.Second)
+  defer cancel()
+  drained:=owner.DrainCryptoAndKernelLoans(releaseCtx,id)
+  if drained!=nil{return nil,errors.Join(err,drained)}
+  return nil,errors.Join(err,kernel.Stop(releaseCtx))
+ }
  controller,err:=n4NewWindowsNativeProductController(txn,owner)
  if err!=nil{
-  // No host network writes occurred; do not stop someone else's Rust
-  // or network owner. Release only OUR new ring claim.
-  releaseCtx:=context.Background()
+  releaseCtx,cancel:=context.WithTimeout(context.Background(),30*time.Second)
+  defer cancel()
+  drained:=owner.DrainCryptoAndKernelLoans(releaseCtx,id)
+  if drained!=nil{return nil,errors.Join(err,drained)}
   return nil,errors.Join(err,kernel.Stop(releaseCtx))
  }
  return &N4RealWindowsProduct{
   controller:controller,kernel:kernel,owner:owner,
   identity:id,
  },nil
+}
+
+// This is intentionally NOT a public Apply/Ready shortcut. The assembler
+// returned assemblyOnly=true to prevent arbitrary callers from writing to
+// Win32; ONLY the original-credential service, after a real current-owner
+// Wintun loan has been bound, calls this once. In particular no v1 guard,
+// fifth stage, mock or name-only adapter may be upgraded.
+func n4AdmitAuthenticatedNoWFPProduct(
+ ctx context.Context,txn *N4NativeUnifiedTxn,
+ proof N4OriginalAuthenticatedPacketProof,
+)error{
+ if ctx==nil||txn==nil||proof==nil||!txn.noLegacyWFP||
+  !txn.assemblyOnly||len(txn.stages())!=4||txn.Stages[4]!=nil{
+  return ErrN4NativeGuard
+ }
+ if err:=ctx.Err();err!=nil{return err}
+ if err:=txn.preflight();err!=nil{return err}
+ l,ok:=txn.Stages[0].(n4WindowsNoWFPLeaseStage)
+ if !ok||l.WALPath!=txn.Path||
+  n4ValidateLeaseIntent(l.Lease)!=nil||
+  l.Lease.InterfaceIndex!=txn.Identity.WintunIndex{
+  return ErrN4NativeGuard
+ }
+ m,ok:=txn.Stages[1].(n4WindowsNoWFPMTUStage)
+ if !ok||m.WALPath!=txn.Path||m.Target<576||m.Target>1500{
+  return ErrN4NativeGuard
+ }
+ d,ok:=txn.Stages[2].(n4WindowsNoWFPDNSStage)
+ if !ok||d.WALPath!=txn.Path||len(d.Servers)!=1{
+  return ErrN4NativeGuard
+ }
+ r,ok:=txn.Stages[3].(n4WindowsNoWFPRouteStage)
+ if !ok||r.WALPath!=txn.Path||r.Backend==nil{
+  return ErrN4NativeGuard
+ }
+ if err:=proof.VerifyOriginalCredentialAndKernelOwner(ctx,txn.Identity);err!=nil{
+  return err
+ }
+ txn.assemblyOnly=false
+ return nil
 }
 
 // Apply publishes a live OS receipt only AFTER complete persistent

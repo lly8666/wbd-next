@@ -30,8 +30,10 @@ const N4ProductPreflightSchema = "wbd-native-product-preflight/v1"
 // N4ReadOnlyProductPreflight checks the real Win32 privilege and system API
 // availability, plus the existing exact disk inspector. It MUST NEVER open
 // a Wintun session, create a firewall filter, alter DNS or install routes.
-// Until the original Go authenticated Stop, four no-WFP stages and rollback are
-// proven together, Ready and WFPInstallQualified are always false.
+// This is a read-only inspector, not an authenticated TLS/current-generation
+// packet owner. Ready and retired WFPInstallQualified are always false here.
+// The real product Connect checks live four-stage Win32 Apply/OS readback,
+// packet first+reverse and owned Stop separately.
 func N4ReadOnlyProductPreflight(ctx context.Context, statePath string)(N4ProductPreflight,error){
     p:=N4ProductPreflight{
         Schema:N4ProductPreflightSchema, Blockers:[]string{},
@@ -62,9 +64,11 @@ func N4ReadOnlyProductPreflight(ctx context.Context, statePath string)(N4Product
     p.WFPLayersReadable=false
     p.Elevated=windows.GetCurrentProcessToken().IsElevated()
     if !p.Elevated{p.Blockers=append(p.Blockers,"requires_elevated_original_client")}
-    // Never interpret lack of these blockers as readiness. This final
-    // production gate is unconditional until end-to-end real native proof.
-    p.Blockers=append(p.Blockers,"no_wfp_four_stage_and_authenticated_stop_not_qualified")
+    // Read-only inspection cannot produce a current-generation owned Rust
+    // data-plane/Win32 Applied receipt. This is not the old circular
+    // "four stages cannot be executed until tested" guard: authenticated
+    // N4PrepareRealWindowsProduct may perform the actual live transaction.
+    p.Blockers=append(p.Blockers,"authenticated_live_owner_and_applied_receipt_not_inspected")
     if len(p.Blockers)==0{return p,fmt.Errorf("%w: missing production blocker",ErrN4NativeGuard)}
     return p,ctx.Err()
 }

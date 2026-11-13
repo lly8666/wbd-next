@@ -26,8 +26,8 @@ func TestPLAN010NativeOriginalProductPreflightReadOnlyDenied(t *testing.T){
         for _,v:=range r.Blockers{if v==key{return true}}
         return false
     }
-    if !hasBlocker(r,"no_wfp_four_stage_and_authenticated_stop_not_qualified"){
-        t.Fatal("no-WFP four-stage and authenticated Stop hard gate disappeared")
+    if !hasBlocker(r,"authenticated_live_owner_and_applied_receipt_not_inspected"){
+        t.Fatal("read-only preflight falsely became live native packet/OS receipt")
     }
     if hasBlocker(r,"wfp_layer_read_unavailable")||r.WFPLayersReadable{
         t.Fatal("retired WFP layer check became PLAN029 admission dependency")
