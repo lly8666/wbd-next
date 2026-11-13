@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_sha": "dfced52918263a923c71087c1100aca95e3d8003",
+  "plan": "PLAN029",
+  "checkpoint": "H1763",
+  "result": "FAIL_REAL_SIGNED_DIRECT_TCP_PARTIAL_RETURN",
+  "run_id": 43457097827,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43457097827",
+  "artifact_id": 14054509049,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43457097827/artifacts/14054509049",
+  "original_build_and_os": "PASS source-locked original Go+Rust authenticated, signed Wintun, MTU1329/Ready",
+  "existing_real_successes": [
+    "CN CNAME selective FakeIP/DNS/physical UDP",
+    "Tunnel UDP both directions",
+    "Go PREPARE -> exact owned Defender Allow -> Rust ENABLE",
+    "WSL2 test-only exact HyperV TCP46112 readback and owned removal"
+  ],
+  "tcp": {
+    "fakeip_client": "10.66.0.2:56236 -> 198.18.0.1:46112",
+    "linux_physical": "172.19.16.1:56237 -> 172.19.17.54:46112",
+    "linux_received_bytes": 32768,
+    "linux_fin": true,
+    "linux_echo_written_bytes": 32768,
+    "windows_echo_received_bytes": 12288,
+    "expected_bytes": 32768,
+    "windows_final": "TimeoutError after 20s",
+    "first_not_delivered_segment": "UNKNOWN_NOT_PACKET_CAPTURED"
+  },
+  "later_gates": {
+    "non_cn_tunnel_tcp": "NOT_RUN",
+    "full_owned_stop": "NOT_PROVEN_AFTER_ABORT",
+    "d1_d5_p1_p2": "NOT_RUN"
+  },
+  "source_boundary": "v4_windows_native_tcp_direct.rs::NativeTcpActor::tick immediately retires NAT when relay pair finished; existing Windows kernel TCP may still have unACKed return segments/retransmits",
+  "root_cause_status": "PLAUSIBLE_PREMATURE_NAT_RELEASE_NOT_YET_PHYSICALLY_PROVEN",
+  "staged_h1763": "Retain only reverse NAT and first FakeIP ref for 60s after accepted relay EOF/error; bounded expiry <=64 per turn; no TCP payload retention or active 10ms wake; existing Direct hardcap still applies and Tunnel unaffected",
+  "new_source_native_result": "PENDING",
+  "no_claim": [
+    "TCP full return PASS",
+    "D1-D5/P1-P2 complete",
+    "startup padding shipped",
+    "overall PLAN029 exit"
+  ]
+}

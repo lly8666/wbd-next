@@ -17,6 +17,12 @@ const MAX_READY:usize=256;
 const MAX_QUANTUM:usize=8;
 const MAX_L3:usize=65535;
 const PENDING_MS:u64=30_000;
+// Metadata-only kernel TCP close grace: the relay's user-space EOF and
+// empty queues do NOT mean the Windows TCP stack has finished transmitting,
+// retransmitting or waiting for the application's final ACK. Keep the
+// exact NAT reverse tuple for one bounded TCP shutdown window without
+// retaining socket buffers or scheduling a 10ms data-plane wake.
+const CLOSED_NAT_GRACE_MS:u64=60_000;
 // Hard *allocation* ceiling remains 64 MiB across PLAN029 sources;
 // Direct TCP borrows only an 8 MiB live pending-read soft budget.
 // The rest is reserved for UDP/DNS/owner work, not queued TCP seconds.
@@ -27,7 +33,35 @@ enum TcpPhase{
     Relaying(TcpDirectRelay),
 }
 struct Active{
-    key:TcpNatKey,phase:Option<TcpPhase>,last_activity_ms:u64,
+    key:TcpNatKey,proxy_port:u16,phase:Option<TcpPhase>,
+    last_activity_ms:u64,
+}
+// One per-accepted-flow metadata token, bounded by the same NAT hard cap.
+// Only a slow expiring queue is swept; no per-flow timer and no full-table
+// scan. A newly closing flow cannot reuse its NAT port until expired.
+#[derive(Default)]
+struct ClosedNatGrace{
+    by_port:HashMap<u16,(TcpNatKey,u64)>,
+    deadlines:VecDeque<(u16,u64)>,
+}
+impl ClosedNatGrace{
+    fn defer(&mut self,port:u16,key:TcpNatKey,now_ms:u64){
+        let due=now_ms.saturating_add(CLOSED_NAT_GRACE_MS);
+        self.by_port.insert(port,(key,due));
+        self.deadlines.push_back((port,due));
+    }
+    fn expire_some(&mut self,now_ms:u64,nat:&mut DirectTcpNat,
+        retired:&mut Vec<TcpNatKey>){
+        for _ in 0..64{
+            let Some(&(port,due))=self.deadlines.front()else{break};
+            if due>now_ms{break}
+            self.deadlines.pop_front();
+            let Some((key,current))=self.by_port.get(&port).copied()else{continue};
+            if current!=due{continue}
+            self.by_port.remove(&port);
+            if nat.retire(key){retired.push(key);}
+        }
+    }
 }
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
@@ -36,6 +70,7 @@ pub(crate) struct NativeTcpActor{
     pending:HashMap<u16,(TcpNatKey,u64)>,
     deadlines:VecDeque<(u16,u64)>,
     active:Vec<Active>,cursor:usize,
+    closing:ClosedNatGrace,
     ready:VecDeque<Vec<u8>>,
     buffered_bytes:usize,
 }
@@ -62,6 +97,7 @@ impl NativeTcpActor{
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
             deadlines:VecDeque::new(),active:Vec::new(),cursor:0,
+            closing:ClosedNatGrace::default(),
             ready:VecDeque::with_capacity(MAX_READY),buffered_bytes:0})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
@@ -70,7 +106,10 @@ impl NativeTcpActor{
         self.listener.local_addr().map(|a|a.port()).map_err(|_|())
     }
     pub(crate) fn has_work(&self)->bool{
-        self.nat.len()>0||!self.ready.is_empty()
+        // Closed NAT grace is metadata waiting for the kernel, not work
+        // that warrants the original TX worker's 10ms active wait.
+        !self.pending.is_empty()||!self.active.is_empty()||
+            !self.ready.is_empty()
     }
     pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
@@ -139,7 +178,8 @@ impl NativeTcpActor{
                 entry.key.target_port);
             match PhysicalTcpSocket::start(self.physical,self.ifindex,dst){
                 Ok(socket)=>self.active.push(Active{
-                    key:entry.key,phase:Some(TcpPhase::Connecting(stream,socket)),
+                    key:entry.key,proxy_port:entry.proxy_port,
+                    phase:Some(TcpPhase::Connecting(stream,socket)),
                     last_activity_ms:now_ms,
                 }),
                 Err(_)=>{
@@ -160,11 +200,11 @@ impl NativeTcpActor{
             if flow.phase.as_ref().is_some_and(|phase|
                 matches!(phase,TcpPhase::Connecting(..))) &&
                 now_ms.saturating_sub(flow.last_activity_ms)>=PENDING_MS{
-                to_remove.push(idx);
+                to_remove.push((idx,false));
                 continue
             }
             let Some(phase)=flow.phase.take()else{
-                to_remove.push(idx);continue
+                to_remove.push((idx,false));continue
             };
             match phase{
                 TcpPhase::Connecting(inner,mut outer)=>{
@@ -179,10 +219,10 @@ impl NativeTcpActor{
                                     flow.phase=Some(TcpPhase::Relaying(relay));
                                     flow.last_activity_ms=now_ms;
                                 },
-                                Err(_)=>to_remove.push(idx),
+                                Err(_)=>to_remove.push((idx,false)),
                             }
                         },
-                        Err(_)=>to_remove.push(idx),
+                        Err(_)=>to_remove.push((idx,false)),
                     }
                 },
                 TcpPhase::Relaying(mut pair)=>{
@@ -196,12 +236,14 @@ impl NativeTcpActor{
                             if tick.bytes_read>0||tick.bytes_written>0{
                                 flow.last_activity_ms=now_ms;
                             }
-                            if tick.finished{to_remove.push(idx)}
+                            if tick.finished{to_remove.push((idx,true))}
                             else{flow.phase=Some(TcpPhase::Relaying(pair))}
                         },
                         Err(_)=>{
                             self.buffered_bytes=self.buffered_bytes.saturating_sub(previous);
-                            to_remove.push(idx)
+                            // The kernel may still need to deliver RST/FIN
+                            // and reverse ACKs after an accepted relay fails.
+                            to_remove.push((idx,true))
                         },
                     }
                 }
@@ -209,11 +251,18 @@ impl NativeTcpActor{
         }
         // Remove descending to preserve the original bounded readiness
         // snapshot indices. Never drop a different live NAT association.
-        to_remove.sort_unstable();to_remove.dedup();
-        for idx in to_remove.into_iter().rev(){
+        to_remove.sort_unstable_by_key(|(idx,_)|*idx);
+        to_remove.dedup_by_key(|(idx,_)|*idx);
+        for (idx,keep_reverse) in to_remove.into_iter().rev(){
             let flow=self.active.remove(idx);
-            self.nat.retire(flow.key);
-            retired.push(flow.key)
+            if keep_reverse{
+                // Closing the accepted kernel socket releases its user
+                // buffers, but must NOT erase its synthetic reverse NAT
+                // before Windows has delivered all TCP segments to Wintun.
+                self.closing.defer(flow.proxy_port,flow.key,now_ms);
+            }else if self.nat.retire(flow.key){
+                retired.push(flow.key)
+            }
         }
         if self.active.is_empty(){self.cursor=0}
         else{self.cursor=(self.cursor+quantum)%self.active.len()}
@@ -229,12 +278,71 @@ impl NativeTcpActor{
             self.nat.retire(key);
             retired.push(key);
         }
+        // Metadata-only closing flows are never on the fast 10ms wake.
+        // Their final FakeIP ref is released only after the exact NAT
+        // reverse mapping can no longer be needed for TCP retransmission.
+        self.closing.expire_some(now_ms,&mut self.nat,&mut retired);
         retired
     }
 }
 #[cfg(test)]
 mod tests{
     use super::*;
+    fn packet(src:u32,dst:u32,sport:u16,dport:u16,flags:u8)->[u8;40]{
+        let mut p=[0u8;40];
+        p[0]=0x45;p[2..4].copy_from_slice(&40u16.to_be_bytes());
+        p[8]=64;p[9]=6;
+        p[12..16].copy_from_slice(&src.to_be_bytes());
+        p[16..20].copy_from_slice(&dst.to_be_bytes());
+        p[20..22].copy_from_slice(&sport.to_be_bytes());
+        p[22..24].copy_from_slice(&dport.to_be_bytes());
+        p[32]=0x50;p[33]=flags;p
+    }
+    #[test]
+    fn plan029_close_retain_exact_nat_until_kernel_tcp_fin_retransmit_grace(){
+        let lease=u32::from(Ipv4Addr::new(10,66,0,2));
+        let fake=u32::from(Ipv4Addr::new(198,18,0,1));
+        let synthetic=u32::from(Ipv4Addr::new(198,19,118,116));
+        let real=u32::from(Ipv4Addr::new(172,19,17,54));
+        let mut nat=DirectTcpNat::new(lease,synthetic,56234,1).unwrap();
+        let mut out=[0u8;128];
+        let (_,entry)=nat.to_listener(&packet(lease,fake,56236,46112,2),
+            real,100,&mut out).unwrap();
+        let kernel_reply=packet(lease,synthetic,56234,entry.proxy_port,0x18);
+        let mut closed=ClosedNatGrace::default();
+        closed.defer(entry.proxy_port,entry.key,200);
+        // A fully read/written user-space relay can finish while the
+        // kernel still owns 32KiB of TCP data/retransmit/FIN to the app.
+        assert_eq!(nat.len(),1);
+        assert!(nat.to_app(&kernel_reply,&mut out).is_ok());
+        let mut retired=Vec::new();
+        closed.expire_some(200+CLOSED_NAT_GRACE_MS-1,
+            &mut nat,&mut retired);
+        assert_eq!(nat.len(),1);
+        assert!(retired.is_empty());
+        assert_eq!(nat.to_listener(&packet(lease,fake,56237,46112,2),
+            real,100,&mut out).err(),Some(crate::v4_client_direct_tcp_nat::TcpNatError::Capacity));
+        closed.expire_some(200+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
+        assert_eq!(retired,vec![entry.key]);
+        assert_eq!(nat.len(),0);
+        assert!(nat.to_app(&kernel_reply,&mut out).is_err());
+        assert!(nat.to_listener(&packet(lease,fake,56237,46112,2),
+            real,100,&mut out).is_ok());
+    }
+    #[test]
+    fn plan029_close_grace_bounded_expiration_no_busy_work(){
+        let mut closed=ClosedNatGrace::default();
+        let key=TcpNatKey{client:1,source_port:2,presented:3,target_port:4};
+        closed.defer(32768,key,10);
+        let mut nat=DirectTcpNat::new(1,2,3,16).unwrap();
+        let mut retired=Vec::new();
+        closed.expire_some(10+CLOSED_NAT_GRACE_MS-1,&mut nat,&mut retired);
+        assert_eq!(closed.by_port.len(),1);
+        assert!(retired.is_empty());
+        closed.expire_some(10+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
+        assert!(closed.by_port.is_empty());
+        assert!(retired.is_empty()); // stale, never-issued NAT is not owned
+    }
     #[test]
     fn plan029_native_kernel_tcp_synthetic_peer_never_overlaps_fake_or_lease(){
         let lease=0x0aea0c22;

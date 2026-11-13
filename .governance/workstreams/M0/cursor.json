@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1762,
-  "checkpoint_sha": "c5a0c6102bd496a66588de896dccd37406f62557",
+  "sequence": 1763,
+  "checkpoint_sha": "68b5ae7409e1c9529163581ecb88202dd4292876",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1762: Collected H1761 signed native Action43452721588 FAIL later than prior: original TLS/Rust/Wintun, MTU1329, PREPARE+Defender ENABLE, Ready, two-OS UDP and CN physical FakeIP DNS/UDP PASS; new Windows FakeIP Direct TCP connects but its 32KiB half-close echo recv() times out. Original WSL HyperV ingress rule only allowed TCP 443-446 with source ports 41031-41034; independent real guest TCP46112 and ephemeral physical host port were never allowed. H1762 adds one separate exact run-owned /32 host->guest TCP46112 HyperV allow/readback/always cleanup, archives both TCP fixture logs; preserves no broad firewall. Scopes 029 nonCN Tunnel TCP to actual Windows->Linux app echo without erasing historic 028 inbound FAIL. Fix H1761 governance evidence missing source_sha. H1762 real signed network PENDING, PLAN029 D1-D5 P1-P2 still OPEN.",
-  "why_now": "H1761 signed TCP failure is after native Ready/UDP and before any 32KiB physical echo; missing exact WSL guest TCP port firewall stands out from source and must be verified on next real generation. Produce Linux accept/FIN side evidence before changing Rust TCP core.",
+  "current_task": "H1763: Signed real H1762 Action43457097827 FAIL at Direct TCP return: original TLS+signed Wintun+OS Ready, CN DNS/FakeIP physical UDP and Tunnel UDP passed; exact HyperV TCP46112 per-run Allow/Remove succeeded. Linux physical TCP accepted Windows 172.19.16.1:56237, got entire 32768+FIN and sent 32768 echo. Windows app got 12288 then 20s recv timeout. Source NativeTcpActor::tick immediately retired exact synthetic->FakeIP NAT and FakeIP ref as soon as two user-space legs EOF and buffer empty; Windows kernel may still own unACKed/retransmittable TCP. H1763 stages bounded 60s metadata-only closing NAT grace, wheel reaps <=64, no extra 10ms empty polling, hardcap remains enforced; Rust pure tests. Real new SOURCE pending; 029 not done.",
+  "why_now": "H1762 disproved old physical TCP ingress Block as remaining first culprit: Linux received+echoed full 32KiB and precise HyperV rule removed. Local reverse NAT retirement on relay EOF is concrete code risk for Windows kernel retransmission; fix before further packet probes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect ONE H1762 signed Windows↔WSL2 normal CN Direct UDP/TCP plus separate nonCN outbound Tunnel TCP and Stop. If physical TCP still fails, read archived Windows connected/FIN and Linux TCP accept/FIN checkpoints and inspect Rust physical connection. Do not rerun same hypothesis without change. Then D1-D5/P1-P2, GUI, padding, perf; preserve PLAN028 gaps.",
+  "next_action": "Collect one signed H1763 Normal real CN Direct 32768 full echo/FIN plus Windows->Linux nonCN Tunnel TCP/UDP and owned Stop; first new failure only, no same probe repetition. Independently continue DNS D1–D5, GUI and bounded Tunnel startup padding+P1–P2, source freeze before actual performance. Keep 028 scoped and 030 closed.",
   "unverified": true,
-  "last_tested_source": "c5a0c6102bd496a66588de896dccd37406f62557",
+  "last_tested_source": "dfced52918263a923c71087c1100aca95e3d8003",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1762-H1761-SIGNED-DIRECT-TCP-PHYSICAL-RECV-TIMEOUT-20261113.json"
+    "docs/evidence/M0/PLAN029-H1763-H1762-SIGNED-TCP-32K-PHYSICAL-12K-RETURN-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1761 real original signed session passed DNS/FakeIP Direct UDP and Tunnel UDP; Direct TCP 32KiB echo timed out after local TCP connect. H1762 scoped WSL HyperV physical TCP46112 one-rule hypothesis plus exact logs, 029 outbound TCP comparator, governance evidence fix; native retest pending. PLAN029 not delivered."
+  "partial_summary": "H1762 real Linux Direct TCP physical 32768/32768 PASS but FakeIP Windows only 12288 and timed out. H1763 source fixes premature NAT eviction after user-space relay EOF using metadata-only grace and tests, signed CI pending. DNS/GUI/padding/perf exits OPEN."
 }
