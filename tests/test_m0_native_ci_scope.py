@@ -62,7 +62,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
 
     def test_manual_and_explicit_full_requests_are_preserved(self):
         self.assertTrue(requires_native_smoke("workflow_dispatch", ["README.md"]))
-        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]"):
+        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]"):
             self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
 
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
@@ -75,6 +75,14 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertIn("if: always() && needs.wiring-contract.outputs.native_smoke == 'true'", workflow)
         self.assertIn("python -m unittest tests.test_m0_native_ci_scope -v", workflow)
         self.assertIn("- r0/go_overlay/assembly/manifest-plan020-m0.json", workflow)
+        self.assertIn("- .github/workflows/m0-wl-public-normal-full.yml", workflow)
+        # Workflow-only edits trigger cheap source check; explicit marker
+        # determines whether the same push admits a signed native scene.
+        self.assertFalse(requires_native_smoke("push", [
+            ".github/workflows/m0-wl-public-normal-full.yml"], "test-only workflow cleanup"))
+        self.assertTrue(requires_native_smoke("push", [
+            ".github/workflows/m0-wl-public-normal-full.yml"],
+            "[plan029-v3-real-direct-udp]"))
 
     def test_plan029_real_gui_config_source_does_not_borrow_old_rust_dll(self):
         gui = (Path(__file__).resolve().parents[1] /

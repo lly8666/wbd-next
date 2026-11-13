@@ -39,6 +39,10 @@ on:
   push:
     branches: [main, fix/m0-windows-functional-wiring-20261026, integration/w168-freeze-windows-adapter-20261026, "experiment/windows-wiring-*"]
     paths:
+      # A source-locked Windows real test must run when its own exact
+      # fixture/Defender/owned-cleanup workflow changes. Expensive native
+      # work still requires the explicit PLAN029 marker in the scope gate.
+      - .github/workflows/m0-wl-public-normal-full.yml
       - tools/prepare_windows_wiring.py
       - tools/m0_native_ci_scope.py
       - tests/test_m0_native_ci_scope.py

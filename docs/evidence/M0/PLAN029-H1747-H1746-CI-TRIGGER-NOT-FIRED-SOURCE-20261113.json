@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1747",
+  "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+  "result": "H1743_REAL_TUNNEL_PASS_H1745_CN_REAL_IN_PROGRESS_H1746_NO_NATIVE_TRIGGER_FIX_PENDING",
+  "h1745": {
+    "run_id": 43422444895,
+    "sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
+    "signed_windows": "IN_PROGRESS"
+  },
+  "h1746": {
+    "sha": "ace4f60f5a46e595b79f3324182346cd0201592e",
+    "governance_run": 43423895675,
+    "maintenance_run": 43423895601,
+    "scope": "exact test-only Windows Defender remote source 203.0.113.77 /32 in CN mode",
+    "signed_action": "NOT_TRIGGERED_BY_PUSH_PATHS"
+  },
+  "h1747": {
+    "fix": "add own workflow path to push trigger; scoped unit test confirms cheap-only absent marker and real native only explicit [plan029-v3-real-direct-udp] marker",
+    "new_signed_action": "PENDING"
+  },
+  "never_claim": [
+    "H1746 native result PASS",
+    "actual CN Direct and two DNS D1-D5 P1-P2 PASS"
+  ],
+  "product_direct_tcp_defender": "NOT_RUN"
+}
