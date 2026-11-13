@@ -105,7 +105,8 @@
     "H1676 G2 Action43222375840 Rust pure unit 5/5 PASS, not real Windows ingress or Direct/Tunnel; H1677 corrects cursor hot-reference overflow without deleting historical failure evidence.",
     "H1690 signed Wintun SOURCE0f1eec Action43243971440 real UDP listener self-probe PASS but raw Wintun UDP packet never delivered; TCP SYNACK remains absent, netsh showed BlockInbound default firewall policy but exact drop causality unproven. No WFP/firewall changes, not Direct UDP/TCP or DNS D1-D5 qualification.",
     "H1690a feature verification uses the catalog's required FAIL enum (not unsupported FUNCTIONAL_FAIL); feature-impact declaration and card are paired in this commit. This does not change the network outcome.",
-    "2026-11-13用户授权方案修订（尚非实现PASS）：允许精确owned Defender Allow诊断/必要放行，仍不接旧WFP；去assemblyOnly循环验收门，TCP选型调查有界、UDP独立；Direct软4096/硬16384按需，buffer单流背压、DNS缓存/事务/FakeIP分别退让，不能压住Tunnel。详见契约§3B/§5，原失败及NOT_RUN不变。"
+    "2026-11-13用户授权方案修订（尚非实现PASS）：允许精确owned Defender Allow诊断/必要放行，仍不接旧WFP；去assemblyOnly循环验收门，TCP选型调查有界、UDP独立；Direct软4096/硬16384按需，buffer单流背压、DNS缓存/事务/FakeIP分别退让，不能压住Tunnel。详见契约§3B/§5，原失败及NOT_RUN不变。",
+    "H1694 adds one signed Windows A→B scoped owned Defender Allow→C exact cleanup diagnostic in the existing Wintun TCP/UDP gate. Not yet executed at this SOURCE; a Defender default inbound Block is only a hypothesis and an Allow failure does not prove no firewall involvement. No legacy WFP guard or global-disable path."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

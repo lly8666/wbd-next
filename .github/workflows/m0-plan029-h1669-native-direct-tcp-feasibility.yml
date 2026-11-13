@@ -1,4 +1,4 @@
-name: PLAN029 H1669 signed Windows Wintun TCP kernel ingress feasibility (NO WFP)
+name: PLAN029 H1694 signed Wintun kernel TCP/UDP same-VM Defender scoped A-B-C (NO old WFP)
 on:
   push:
     branches: [main]
@@ -45,7 +45,7 @@ jobs:
             if($LASTEXITCODE -ne 0){throw "real Windows original Go kernel TCP capability test does not compile"}
           } finally {Pop-Location}
           Write-Output "PLAN029_H1669_REAL_SIGNED_WINTUN_TCP_GATE_NATIVE_BUILD_READY"
-      - name: Test real Wintun TCP SYN ACK data reverse FIN and exact cleanup without WFP/Defender edits
+      - name: Test one signed Wintun A-original B-owned-Defender-Allow C-exact-restore TCP/UDP
         shell: pwsh
         timeout-minutes: 4
         env:
@@ -54,9 +54,9 @@ jobs:
         run: |
           $ErrorActionPreference="Stop"
           & ./win-native/plan029-real-native-tcp.exe '-test.run=^TestPlan029RealSignedWintunKernelTCPListenerFeasibility$' '-test.v=true' '-test.timeout=160s' 2>&1 | Tee-Object result/h1669-real-tcp.log
-          if($LASTEXITCODE -ne 0){throw "real signed Wintun kernel TCP feasibility failed; preserve raw failure"}
+          if($LASTEXITCODE -ne 0){throw "signed Wintun A/B/C complete native TCP feasibility failed; preserve A/B/C raw observations"}
           $e=Get-Content result/h1669-real-tcp.json -Raw | ConvertFrom-Json
-          if($e.source_sha -ne $env:GITHUB_SHA -or $e.result -ne 'PASS_SCOPED_REAL_SIGNED_WINTUN_TCP_SYN_ACK_DATA_FIN_OS_ROUTE_NO_WFP' -or $e.wfp_guard -ne 'NOT_CREATED'){throw "no real signed kernel TCP PASS receipt"}
+          if($e.source_sha -ne $env:GITHUB_SHA -or $e.result -ne 'PASS_SCOPED_REAL_SIGNED_WINTUN_TCP_SYN_ACK_DATA_FIN_OS_ROUTE_NO_WFP' -or $e.wfp_guard -ne 'NOT_CREATED' -or $e.abc_C_owned_rule_cleanup -ne 'VERIFIED_ABSENT'){throw "no real signed kernel TCP PASS receipt"}
           Write-Output "PLAN029_H1669_SIGNED_WINDOWS_KERNEL_TCP_GATE_SCOPED_PASS_NOT_FULL_DIRECT_OWNER"
       - name: Preserve exact SOURCE and observed failure/scope
         shell: pwsh

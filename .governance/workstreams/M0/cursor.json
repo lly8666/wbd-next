@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1693,
-  "checkpoint_sha": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
+  "sequence": 1694,
+  "checkpoint_sha": "2255e805798e95d6446344faf57432428a7213dc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1693: H1692 no-old-WFP new-session entry, preflight and v2 controller source-locked Windows Go compile+pure unit PASS at 9b64ef; no-WFP assembler assemblyOnly and real signed Wintun TCP/UDP gate H1690 FAIL; actual no-WFP OS Applied/Stop, Rust DNS/FakeIP/direct/padding and D1-D5/P1-P2 remain OPEN.",
-  "why_now": "Collected completed H1692 Windows source-only Action43248552998 and original raw scoped PASS before overwriting cursor; parallel OS/WAL/native jobs still in flight; strict SHA and previous FAILs preserved.",
+  "current_task": "PLAN029 H1694: one same-signed-Wintun A baseline/B narrow owned Defender TCP+UDP Allow/C exact restore with actual native packet receipts is staged on main; H1690 real UDP/TCP kernel inject FAIL still causal OPEN; legacy WFP remains retired and no-WFP v2 owner/data plane still incomplete.",
+  "why_now": "Newest 2026-11-13 PLAN029 §3B authorizes controlled A/B/C diagnosis after H1690 unknown kernel ingress. Collected H1692 SOURCE9b64 OS-independent build/unit PASS and ACTION43248553062 genuine legacy public two-OS Ready failure at retired guard precondition. No repeat seed or 028 matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Read updated PLAN029 contract §3B/§5 and M0-PLAN029 prompt (user 2026-11-13). Collect pending Actions first. Authorized scoped owned Defender Allow A/B/C; explicit Block can override Allow. Bound distinct diagnostics, verify common Wintun return path then choose one TCP backend; UDP and real four-stage OS work independently. Remove circular assemblyOnly test prohibition once real adapters exist, keep truthful runtime Applied/Ready. Implement per-resource pressure without blocking Tunnel; finish DNS/FakeIP/GUI/padding and D1-D5/P1-P2. No 028 matrix/030; historical failures unchanged.",
+  "next_action": "First collect H1694 single Windows A/B/C result and exact owned cleanup; if still no delivery, use at most one distinct packet-drop/return-path round, and do not infer firewall absence from Allow failure. In parallel move native Rust ingress/Direct UDP and no-WFP real four-stage generation-owned Apply/Stop; choose one TCP backend, wire DNS/FakeIP/GUI/padding and D1-D5/P1-P2. Do not start 030.",
   "unverified": true,
   "last_tested_source": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
   "evidence_refs": [
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE9b64 Action43248552998 exact Windows Go+manifest and pure TestPlan029NoWFPController/V2LiveReceipt passed, no signed OS network. New product entry no longer creates v1 WFP guard but remains assemblyOnly=true/Ready denied. H1690 signed Wintun UDP to native listener NO_MATCHING_NATIVE_DELIVERY and TCP SYNACK absent genuine failure. H1687 GUI/CLI config PASS scoped only; D1-D5/P1-P2 and actual Rust DNS/Direct/Padding NOT_RUN. Other Action jobs in flight; don't redispatch."
+  "partial_summary": "H1694 diagnostic SOURCE code prepared; real new A/B/C on Win2025 NOT_RUN yet. H1690 signed Wintun UDP listener receives no injected packet and TCP SYNACK absent. H1692 source Go/GUI+no-WFP pure v2 tests PASS only; H1692 older M0-WIN-LINUX Action43248553062 actual two-OS FAILED before client Ready (old ErrN4NativeGuard), no 029 data path qualification. Guard retired, no fake Applied."
 }

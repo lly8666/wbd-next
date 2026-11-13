@@ -17,6 +17,7 @@ import (
  "os"
  "os/exec"
  "path/filepath"
+ "strings"
  "syscall"
  "testing"
  "time"
@@ -99,6 +100,40 @@ func p029AwaitTCP(ctx context.Context,ring *N4OriginalKernelPacketLease,src,dst 
   return binary.BigEndian.Uint32(tcp[4:8]),nil
  }
  return 0,fmt.Errorf("real signed Windows kernel TCP response missing after 6s: matching_tcp_frames=%d last_flags=0x%02x required_flags=0x%02x (no WFP/Defender modification)",observed,lastFlags,flags)
+}
+
+
+ // All Defender rules below are temporary, narrowly scoped, and restricted
+ // to THIS process, local/remote test IP, protocol and exact listener ports.
+ // This is the user's §3B diagnostic, NOT the retired custom WFP guard.
+var p029DefenderRuleNameConflict=errors.New("plan029: exact Defender rule name already exists")
+func p029OwnedDefenderAllow(ctx context.Context,name,program,proto,local,remote string,lport,rport uint16)error{
+ args:=[]string{"advfirewall","firewall","show","rule","name="+name,"verbose"}
+ out,_:=exec.CommandContext(ctx,"netsh",args...).CombinedOutput()
+ if strings.Contains(strings.ToLower(string(out)),strings.ToLower(name)){
+  return fmt.Errorf("%w: %s",p029DefenderRuleNameConflict,name)
+ }
+ args=[]string{"advfirewall","firewall","add","rule","name="+name,"dir=in","action=allow",
+  "enable=yes","profile=any","protocol="+proto,"localip="+local,"remoteip="+remote,
+  fmt.Sprintf("localport=%d",lport),fmt.Sprintf("remoteport=%d",rport),"program="+program}
+ out,err:=exec.CommandContext(ctx,"netsh",args...).CombinedOutput()
+ if err!=nil{return fmt.Errorf("scoped Defender %s add: %v: %q",proto,err,string(out))}
+ // Independent readback is mandatory; 'netsh add' returning zero is not
+ // evidence that a rule actually exists or that a matching Block is absent.
+ out,err=exec.CommandContext(ctx,"netsh","advfirewall","firewall","show","rule","name="+name,"verbose").CombinedOutput()
+ if err!=nil||!strings.Contains(strings.ToLower(string(out)),strings.ToLower(name)){
+  return fmt.Errorf("scoped Defender %s rule readback failed: %v: %q",proto,err,string(out))
+ }
+ return nil
+}
+func p029RemoveOwnedDefender(ctx context.Context,name string)error{
+ out,err:=exec.CommandContext(ctx,"netsh","advfirewall","firewall","delete","rule","name="+name).CombinedOutput()
+ if err!=nil{return fmt.Errorf("exact-owned Defender %s delete: %v: %q",name,err,string(out))}
+ out,err=exec.CommandContext(ctx,"netsh","advfirewall","firewall","show","rule","name="+name,"verbose").CombinedOutput()
+ if err==nil && strings.Contains(strings.ToLower(string(out)),strings.ToLower(name)){
+  return fmt.Errorf("exact-owned Defender %s still exists after delete",name)
+ }
+ return nil
 }
 
 func TestPlan029RealSignedWintunKernelTCPListenerFeasibility(t *testing.T){
@@ -204,97 +239,178 @@ func TestPlan029RealSignedWintunKernelTCPListenerFeasibility(t *testing.T){
  if e!=nil{t.Fatalf("real owned signed native ring: %v",e)}
  t.Cleanup(func(){cl,done:=context.WithTimeout(context.Background(),10*time.Second);defer done();if e:=ring.Stop(cl);e!=nil{t.Errorf("owned ring Stop: %v",e)}})
  s,d:=remote.As4(),local.As4()
- // H1689 one bounded native control on this already-created signed Wintun.
- // If UDP also fails, cannot ascribe missing TCP SYNACK to a TCP-only issue;
- // if UDP arrives but TCP fails, narrow follow-up to Windows TCP admission.
- // Never turn UDP diagnostic PASS into full Direct UDP qualification.
- udpLocal,udpErr:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IP(local.AsSlice()),Port:0})
- if udpErr!=nil{
-  receipt["signed_wintun_udp_ingress_control"]="FAIL_BIND"
-  t.Logf("PLAN029_H1689_UDP_CONTROL_BIND_FAIL error=%v",udpErr)
- }else{
-  defer udpLocal.Close()
-  nativeProbe,e:=net.DialUDP("udp4",nil,udpLocal.LocalAddr().(*net.UDPAddr))
-  if e==nil{
-   _,e=nativeProbe.Write([]byte("native-udp-listener-probe"))
-   nativeProbe.Close()
-  }
-  var buf [100]byte
-  if e==nil{_ = udpLocal.SetReadDeadline(time.Now().Add(2*time.Second))
-   n,_,readErr:=udpLocal.ReadFromUDP(buf[:])
-   if readErr!=nil||string(buf[:n])!="native-udp-listener-probe"{
-    e=fmt.Errorf("native UDP listener self-probe read=%v bytes=%d",readErr,n)
-   }
-  }
-  if e!=nil{
-   receipt["signed_wintun_udp_ingress_control"]="FAIL_NATIVE_LISTENER_SELF_PROBE"
-   t.Logf("PLAN029_H1689_UDP_CONTROL_NATIVE_PROBE_FAIL error=%v",e)
-  }else{
-   packet:=p029UDP4(s,d,46132,uint16(udpLocal.LocalAddr().(*net.UDPAddr).Port),[]byte("signed-wintun-inbound-udp"))
-   written,sendErr:=tun.WritePacket(packet)
-   if sendErr!=nil||written!=len(packet){
-    receipt["signed_wintun_udp_ingress_control"]="FAIL_WINTUN_PACKET_WRITE"
-    t.Logf("PLAN029_H1689_UDP_CONTROL_WINTUN_WRITE_FAIL n=%d err=%v",written,sendErr)
-   }else{
-    _ = udpLocal.SetReadDeadline(time.Now().Add(3*time.Second))
-    n,from,readErr:=udpLocal.ReadFromUDP(buf[:])
-    if readErr==nil && n==len("signed-wintun-inbound-udp") &&
-     string(buf[:n])=="signed-wintun-inbound-udp" &&
-     from.IP.Equal(net.IP(s[:])){
-     receipt["signed_wintun_udp_ingress_control"]="PASS_NATIVE_KERNEL_UDP_DELIVERY"
-     t.Log("PLAN029_H1689_SIGNED_WINTUN_UDP_CONTROL_NATIVE_DELIVERY_PASS_TCP_STILL_INDEPENDENT")
-    }else{
-     receipt["signed_wintun_udp_ingress_control"]="NO_MATCHING_NATIVE_DELIVERY"
-     t.Logf("PLAN029_H1689_SIGNED_WINTUN_UDP_CONTROL_NO_DELIVERY bytes=%d from=%v err=%v",n,from,readErr)
-    }
-   }
-  }
+ exe,e:=os.Executable()
+ if e!=nil{t.Fatal(e)}
+ // A/B/C on the SAME process-created signed driver, exact listener and
+ // single receiver ring. Source ports differ per phase so an earlier
+ // half-open SYN or RST cannot be mistaken for a later response.
+ udpLocal,e:=net.ListenUDP("udp4",&net.UDPAddr{IP:net.IP(local.AsSlice()),Port:0})
+ if e!=nil{t.Fatalf("native UDP listener bind: %v",e)}
+ defer udpLocal.Close()
+ udpPort:=uint16(udpLocal.LocalAddr().(*net.UDPAddr).Port)
+ nativeProbe,e:=net.DialUDP("udp4",nil,udpLocal.LocalAddr().(*net.UDPAddr))
+ if e==nil{_,e=nativeProbe.Write([]byte("native-udp-listener-probe"));nativeProbe.Close()}
+ if e!=nil{t.Fatalf("native UDP socket self-probe send: %v",e)}
+ var uBuf [128]byte
+ _=udpLocal.SetReadDeadline(time.Now().Add(2*time.Second))
+ n,_,e:=udpLocal.ReadFromUDP(uBuf[:])
+ if e!=nil||string(uBuf[:n])!="native-udp-listener-probe"{
+  t.Fatalf("native UDP socket listener self-probe failed: %v bytes=%d",e,n)
  }
- // Independent read-only firewall profile fallback: PowerShell/net cmdlets
- // were unavailable in H1672; no rule install, enable/disable or profile edit.
- firewallCtx,firewallCancel:=context.WithTimeout(ctx,3*time.Second)
- firewallOutput,firewallErr:=exec.CommandContext(firewallCtx,"netsh","advfirewall","show","allprofiles").CombinedOutput()
- firewallCancel()
- if firewallErr==nil{
-  if len(firewallOutput)>1800{firewallOutput=firewallOutput[:1800]}
-  receipt["netsh_firewall_readonly_excerpt"]=string(firewallOutput)
-  t.Logf("PLAN029_H1689_READONLY_NETSH_FIREWALL_CONTEXT %q",string(firewallOutput))
- }else{t.Logf("PLAN029_H1689_READONLY_NETSH_FIREWALL_UNKNOWN error=%v",firewallErr)}
- const sport uint16=46131
- const clientSeq uint32=0x23011000
- send:=func(seq,ack uint32,flags byte,payload []byte){
-  pkt:=p029TCP4(s,d,sport,port,seq,ack,flags,payload)
+ receipt["native_udp_listener"]="PASS_NATIVE_SOCKET_SELF_PROBE"
+ probeUDP:=func(stage string,sourcePort uint16)bool{
+  // Before the only Wintun injection, no Windows system call or DNS await
+  // holds a borrowed RX ring pointer or a TX Allocate slot.
+  pkt:=p029UDP4(s,d,sourcePort,udpPort,[]byte("p029-abc-"+stage))
   n,e:=tun.WritePacket(pkt)
-  if e!=nil||n!=len(pkt){t.Fatalf("real WintunSendPacket TCP copy n=%d expected=%d error=%v",n,len(pkt),e)}
+  if e!=nil||n!=len(pkt){
+   receipt["abc_"+stage+"_udp"]="WINTUN_WRITE_FAILED"
+   t.Logf("PLAN029_ABC_%s_UDP_WRITE_FAIL n=%d error=%v",stage,n,e)
+   return false
+  }
+  _=udpLocal.SetReadDeadline(time.Now().Add(2500*time.Millisecond))
+  n,from,e:=udpLocal.ReadFromUDP(uBuf[:])
+  ok:=e==nil&&string(uBuf[:n])=="p029-abc-"+stage&&from.IP.Equal(net.IP(s[:]))&&from.Port==int(sourcePort)
+  if ok{receipt["abc_"+stage+"_udp"]="DELIVERED_TO_NATIVE_LISTENER"
+  }else{receipt["abc_"+stage+"_udp"]="NO_MATCHING_NATIVE_DELIVERY"}
+  t.Logf("PLAN029_ABC_%s_UDP %v bytes=%d from=%v err=%v",stage,ok,n,from,e)
+  return ok
  }
- send(clientSeq,0,0x02,nil)
- serverSeq,e:=p029AwaitTCP(ctx,ring,d,s,port,sport,0x12,nil)
- if e!=nil{receipt["result"]="FAIL_SIGNED_WINTUN_KERNEL_TCP_SYNACK_ABSENT";t.Fatal(e)}
- send(clientSeq+1,serverSeq+1,0x10,nil)
- server.SetDeadline(time.Now().Add(7*time.Second))
- conn,e:=server.AcceptTCP()
- if e!=nil{t.Fatalf("real Windows kernel TCP listener did not accept injected three-way handshake: %v",e)}
- defer conn.Close()
- if e=conn.SetDeadline(time.Now().Add(7*time.Second));e!=nil{t.Fatal(e)}
- payload:=[]byte("plan029-genuine-kernel-tcp-payload")
- send(clientSeq+1,serverSeq+1,0x18,payload)
- read:=make([]byte,len(payload))
- if _,e=io.ReadFull(conn,read);e!=nil||string(read)!=string(payload){
-  t.Fatalf("real Windows TCP socket did not receive Wintun-injected data: %v %q",e,read)
+ sendTCP:=func(sourcePort uint16,seq,ack uint32,flags byte,payload []byte)error{
+  pkt:=p029TCP4(s,d,sourcePort,port,seq,ack,flags,payload)
+  n,e:=tun.WritePacket(pkt)
+  if e!=nil{return e}
+  if n!=len(pkt){return fmt.Errorf("short Wintun TCP send %d/%d",n,len(pkt))}
+  return nil
  }
- reply:=[]byte("windows-kernel-reverse-tcp")
- if _,e=conn.Write(reply);e!=nil{t.Fatal(e)}
- if _,e=p029AwaitTCP(ctx,ring,d,s,port,sport,0x10,reply);e!=nil{
-  t.Fatalf("real reverse Windows kernel socket-to-Wintun packet absent: %v",e)
+ probeSYN:=func(stage string,sourcePort uint16,seq uint32)(uint32,bool){
+  if e:=sendTCP(sourcePort,seq,0,0x02,nil);e!=nil{
+   receipt["abc_"+stage+"_tcp"]="WINTUN_WRITE_FAILED"
+   t.Logf("PLAN029_ABC_%s_SYN_WRITE_FAIL %v",stage,e)
+   return 0,false
+  }
+  peerSeq,e:=p029AwaitTCP(ctx,ring,d,s,port,sourcePort,0x12,nil)
+  if e!=nil{
+   receipt["abc_"+stage+"_tcp"]="NO_MATCHING_SYNACK"
+   t.Logf("PLAN029_ABC_%s_SYNACK_MISSING %v",stage,e)
+   return 0,false
+  }
+  receipt["abc_"+stage+"_tcp"]="KERNEL_SYNACK_OBSERVED"
+  t.Logf("PLAN029_ABC_%s_SYNACK_REAL received_source_port=%d",stage,sourcePort)
+  return peerSeq,true
  }
- send(clientSeq+1+uint32(len(payload)),serverSeq+1+uint32(len(reply)),0x11,nil)
- conn.SetReadDeadline(time.Now().Add(6*time.Second))
- var one [1]byte
- if _,e=conn.Read(one[:]);!errors.Is(e,io.EOF){t.Fatalf("Windows TCP FIN/EOF not delivered: %v",e)}
+ const seq0 uint32=0x23011000
+ aUDP:=probeUDP("A",46132)
+ _,aTCP:=probeSYN("A",46131,seq0)
+ receipt["abc_A_original_firewall"]="NO_NEW_RULES"
+ // Exact owned rule IDs are randomly generated for this single job.
+ // Both A→B and B→C transitions are in this single action; never run
+ // A/B on different VMs or with different source/manifests.
+ suffix:=hex.EncodeToString(seed[:])
+ tcpRule:="WBD-P029-ABC-"+suffix+"-TCP"
+ udpRule:="WBD-P029-ABC-"+suffix+"-UDP"
+ var owned []string
+ removeOwned:=func()bool{
+  ok:=true
+  var unresolved []string
+  for i:=len(owned)-1;i>=0;i--{
+   cleanup,done:=context.WithTimeout(context.Background(),8*time.Second)
+   err:=p029RemoveOwnedDefender(cleanup,owned[i])
+   done()
+   if err!=nil{
+    ok=false
+    unresolved=append(unresolved,owned[i])
+    t.Errorf("owned Defender rule not removed %s: %v",owned[i],err)
+   }
+  }
+  owned=unresolved
+  return ok
+ }
+ t.Cleanup(func(){if len(owned)>0{removeOwned()}})
+ applyRule:=func(name,proto string,lport,rport uint16)bool{
+  scoped,done:=context.WithTimeout(context.Background(),8*time.Second)
+  // Even an add with uncertain success must be accounted for and
+  // rechecked during cleanup. The random name cannot overlap a known
+  // prior-owned ID; preexisting exact name is refused by the helper.
+  err:=p029OwnedDefenderAllow(scoped,name,exe,proto,local.String(),remote.String(),lport,rport)
+  done()
+  if err!=nil{
+   receipt["abc_B_rule_"+proto]="ADD_OR_READBACK_FAILED"
+   t.Logf("PLAN029_ABC_B_%s_RULE_FAILURE %v",proto,err)
+   // An uncertain add/readback may have created the exact named rule.
+   // Include it in owned cleanup; never remove a foreign preexisting
+   // name, which is excluded by the fresh random identifier.
+   if !errors.Is(err,p029DefenderRuleNameConflict){owned=append(owned,name)}
+   return false
+  }
+  owned=append(owned,name)
+  receipt["abc_B_rule_"+proto]="OWNED_SCOPED_ALLOW_READBACK"
+  t.Logf("PLAN029_ABC_B_%s_RULE_ADDED_VERIFIED %s",proto,name)
+  return true
+ }
+ udpAllowed:=applyRule(udpRule,"UDP",udpPort,46134)
+ tcpAllowed:=applyRule(tcpRule,"TCP",port,46133)
+ bUDP,bTCP:=false,false
+ var bSeq uint32
+ if udpAllowed{bUDP=probeUDP("B",46134)}
+ if tcpAllowed{bSeq,bTCP=probeSYN("B",46133,seq0+1024)}
+ bFull:=false
+ if bTCP{
+  // A SYNACK alone is not a physical Direct TCP qualification.
+  // Prove a real listener Accept, native app bytes, reverse Wintun
+  // DATA and FIN/EOF while the exact temporary allow is still owned.
+  finish:=func()error{
+   const sourcePort uint16=46133
+   clientSeq:=seq0+1024
+   if e:=sendTCP(sourcePort,clientSeq+1,bSeq+1,0x10,nil);e!=nil{return e}
+   if e:=server.SetDeadline(time.Now().Add(7*time.Second));e!=nil{return e}
+   conn,e:=server.AcceptTCP();if e!=nil{return e}
+   defer conn.Close()
+   if e:=conn.SetDeadline(time.Now().Add(7*time.Second));e!=nil{return e}
+   payload:=[]byte("p029-kernel-tcp-abc-owned-data")
+   if e:=sendTCP(sourcePort,clientSeq+1,bSeq+1,0x18,payload);e!=nil{return e}
+   read:=make([]byte,len(payload))
+   if _,e=io.ReadFull(conn,read);e!=nil{return e}
+   if string(read)!=string(payload){return fmt.Errorf("kernel listener data mismatch")}
+   reply:=[]byte("p029-kernel-reverse-data")
+   if _,e=conn.Write(reply);e!=nil{return e}
+   if _,e=p029AwaitTCP(ctx,ring,d,s,port,sourcePort,0x10,reply);e!=nil{return e}
+   if e:=sendTCP(sourcePort,clientSeq+1+uint32(len(payload)),bSeq+1+uint32(len(reply)),0x11,nil);e!=nil{return e}
+   _=conn.SetReadDeadline(time.Now().Add(6*time.Second))
+   var single [1]byte
+   if _,e=conn.Read(single[:]);!errors.Is(e,io.EOF){return fmt.Errorf("FIN/EOF: %w",e)}
+   return nil
+  }
+  e:=finish()
+  bFull=e==nil
+  if e!=nil{t.Logf("PLAN029_ABC_B_TCP_FULL_CHAIN_FAIL %v",e)}
+ }
+ receipt["abc_B_tcp_full_chain"]=map[bool]string{true:"SYN_ACK_ACCEPT_DATA_REVERSE_FIN",false:"NOT_QUALIFIED"}[bFull]
+ // C removes ONLY the newly created exact-name Defender rules, performs
+ // another readback, then re-probes to see whether Windows returned to its
+ // pre-Allow behavior. Some pre-existing rules can make C still deliver.
+ cleaned:=removeOwned()
+ if cleaned{receipt["abc_C_owned_rule_cleanup"]="VERIFIED_ABSENT"
+ }else{receipt["abc_C_owned_rule_cleanup"]="FAILED"}
+ cUDP:=probeUDP("C",46136)
+ _,cTCP:=probeSYN("C",46135,seq0+2048)
+ receipt["abc_A_udp_pass"]=aUDP
+ receipt["abc_A_tcp_synack_pass"]=aTCP
+ receipt["abc_B_udp_pass"]=bUDP
+ receipt["abc_B_tcp_synack_pass"]=bTCP
+ receipt["abc_C_udp_pass"]=cUDP
+ receipt["abc_C_tcp_synack_pass"]=cTCP
+ if cleaned{receipt["system_firewall_change"]="TEMP_SCOPED_OWNED_DEFENDER_ALLOW_RESTORED"
+ }else{receipt["system_firewall_change"]="OWNED_DEFENDER_CLEANUP_UNVERIFIED"}
+ if !cleaned{receipt["result"]="FAIL_OWNED_DEFENDER_CLEANUP";t.Fatal("C: Defender owned rule cleanup unverified")}
+ if !bFull{
+  receipt["result"]="FAIL_SCOPED_ABC_NO_COMPLETE_KERNEL_TCP"
+  t.Fatal("A/B/C: no complete signed Wintun native TCP SYN/Accept/DATA/reverse/FIN proof; do not choose backend by inference")
+ }
  receipt["result"]="PASS_SCOPED_REAL_SIGNED_WINTUN_TCP_SYN_ACK_DATA_FIN_OS_ROUTE_NO_WFP"
- receipt["tcp_real_kernel"]="SYNACK_ACCEPT_DATA_REVERSE_FIN"
+ receipt["tcp_real_kernel"]="SYNACK_ACCEPT_DATA_REVERSE_FIN_OWNED_ABC"
  receipt["windows_interface_index"]=now.Index
  receipt["owned_route_count"]=1
- t.Log("PLAN029_H1669_REAL_SIGNED_WINTUN_WINDOWS_TCP_KERNEL_INGRESS_AND_REVERSE_PASS_NO_DIRECT_EGRESS")
+ t.Log("PLAN029_ABC_SIGNED_WINTUN_TCP_KERNEL_GATE_PASS_AND_OWNED_DEFENDER_RULES_REMOVED_NOT_FULL_DIRECT")
  var _ syscall.Errno // keep native return type evident
 }
