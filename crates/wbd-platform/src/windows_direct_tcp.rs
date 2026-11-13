@@ -222,6 +222,12 @@ pub use win::{PhysicalTcpSocket,open_kernel_tcp_listener};
 
 const DEFAULT_PER_DIRECTION_CAP:usize=16*1024;
 const QUANTUM_BYTES:usize=4096;
+// Do not read new bytes from one Direct socket when its own buffer or
+// the WHOLE Rust TCP relay pool is under pressure. No global wait.
+fn bounded_relay_read(queued:usize,per_direction_cap:usize,global_free:usize)->usize{
+    per_direction_cap.saturating_sub(queued)
+        .min(QUANTUM_BYTES).min(global_free)
+}
 /// Small per-flow buffers allocated lazily ONLY for an accepted Direct
 /// socket. The scheduler accounts their bytes against one shared cap.
 /// No per-flow thread, whole-table scan or global packet mutex here.
@@ -264,23 +270,41 @@ impl TcpDirectRelay{
     /// original Rust scheduler. A congested physical stream stops reading
     /// THAT flow. It never sleeps/stops other Tunnel or Direct UDP flows.
     pub fn service_once(&mut self)->Result<RelayTick,DirectTcpError>{
+        self.service_once_with_read_budget(usize::MAX)
+    }
+    // The owner provides its GLOBAL currently-free budget, not just this
+    // flow's per-direction allowance. Existing pending writes always drain
+    // even when all new reads have been paused by other Direct flows.
+    pub fn service_once_with_read_budget(&mut self,read_budget:usize)
+        ->Result<RelayTick,DirectTcpError>{
+        let mut remaining_read=read_budget;
         let mut scratch=[0u8;QUANTUM_BYTES];
         let mut read=0usize;let mut wrote=0usize;
-        if !self.inner_eof && self.to_outer.len()<self.max_pending_per_direction{
-            let allowed=(self.max_pending_per_direction-self.to_outer.len()).min(QUANTUM_BYTES);
+        if !self.inner_eof && self.to_outer.len()<self.max_pending_per_direction &&
+            remaining_read>0{
+            let allowed=bounded_relay_read(self.to_outer.len(),
+                self.max_pending_per_direction,remaining_read);
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>self.inner_eof=true,
-                Ok(n)=>{self.to_outer.extend(&scratch[..n]);read+=n}
+                Ok(n)=>{
+                    self.to_outer.extend(&scratch[..n]);read+=n;
+                    remaining_read-=n;
+                }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("inner_read",e)),
             }
         }
-        if !self.outer_eof && self.to_inner.len()<self.max_pending_per_direction{
-            let allowed=(self.max_pending_per_direction-self.to_inner.len()).min(QUANTUM_BYTES);
+        if !self.outer_eof && self.to_inner.len()<self.max_pending_per_direction &&
+            remaining_read>0{
+            let allowed=bounded_relay_read(self.to_inner.len(),
+                self.max_pending_per_direction,remaining_read);
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>self.outer_eof=true,
-                Ok(n)=>{self.to_inner.extend(&scratch[..n]);read+=n}
+                Ok(n)=>{
+                    self.to_inner.extend(&scratch[..n]);read+=n;
+                    remaining_read-=n;
+                }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("outer_read",e)),
@@ -318,4 +342,17 @@ impl TcpDirectRelay{
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
     }
     pub fn pending_bytes(&self)->usize{self.to_outer.len()+self.to_inner.len()}
+}
+
+#[cfg(test)]
+mod plan029_global_backpressure_tests{
+    use super::*;
+    #[test]
+    fn one_global_pool_blocks_only_new_direct_reads_not_drains(){
+        assert_eq!(bounded_relay_read(0,16*1024,0),0);
+        assert_eq!(bounded_relay_read(12*1024,16*1024,4096),4096);
+        assert_eq!(bounded_relay_read(15*1024,16*1024,4096),1024);
+        assert_eq!(bounded_relay_read(16*1024,16*1024,8192),0);
+        assert_eq!(bounded_relay_read(0,16*1024,usize::MAX),4096);
+    }
 }

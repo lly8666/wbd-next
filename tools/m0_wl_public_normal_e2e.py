@@ -778,6 +778,60 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    "stop":"NOT_RUN_UNTIL_OWNED_STOP","direct_tcp":"NOT_RUN",
    "tunnel_dns":"NOT_RUN","D1_D5_P1_P2":"NOT_FULLY_RUN"}
   print("PLAN029_H1749_SIGNED_CN_DNS_FAKE_DIRECT_UDP_STAGE_PASS_PRE_TCP_AND_STOP",flush=True)
+  # H1760 actual Windows FakeIP TCP -> same owned Rust kernel listener ->
+  # physical Windows TCP socket -> independent Linux physical listener.
+  gname="plan029-h1760-guest-physical-tcp.log"
+  wname="plan029-h1760-windows-fakeip-tcp.log"
+  gfile=(out/gname).open("w");logs.append(gfile)
+  tcp_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3","-u",
+      unix(root/"tools"/"m0_plan029_h1760_guest_physical_direct_tcp.py"),
+      peer,host_source],stdout=gfile,stderr=subprocess.STDOUT)
+  try:
+   for _ in range(75):
+    gfile.flush()
+    raw=(out/gname).read_text(errors="replace")
+    if "PLAN029_H1760_PHYSICAL_KERNEL_TCP46112_READY" in raw:break
+    if tcp_guest.poll() is not None:raise RuntimeError("Linux TCP bind failed: "+raw[-700:])
+    time.sleep(.1)
+   else:raise RuntimeError("Linux physical TCP ready deadline")
+   wfile=(out/wname).open("w");logs.append(wfile)
+   tcp_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1760_windows_fakeip_direct_tcp.py"),
+      "10.66.0.2",wdata["fake4"]],stdout=wfile,stderr=subprocess.STDOUT)
+   try:
+    rc=tcp_win.wait(timeout=24)
+   except subprocess.TimeoutExpired:
+    raise RuntimeError("Windows genuine kernel TCP two-leg 24s deadline")
+   finally:
+    if tcp_win.poll() is None:
+     tcp_win.terminate()
+     try:tcp_win.wait(timeout=3)
+     except subprocess.TimeoutExpired:tcp_win.kill()
+   if rc:raise RuntimeError("Windows FakeIP Direct TCP failed: "+(out/wname).read_text(errors="replace")[-900:])
+   if tcp_guest.wait(timeout=6):raise RuntimeError("Linux physical kernel TCP echo failed: "+(out/gname).read_text(errors="replace")[-900:])
+  finally:
+   if tcp_guest.poll() is None:
+    tcp_guest.terminate()
+    try:tcp_guest.wait(timeout=3)
+    except subprocess.TimeoutExpired:tcp_guest.kill()
+  a=[x.split(" ",1)[1] for x in (out/wname).read_text().splitlines()
+    if x.startswith("PLAN029_H1760_WINDOWS_FAKEIP_DIRECT_TCP_ECHO ")]
+  b=[x.split(" ",1)[1] for x in (out/gname).read_text().splitlines()
+    if x.startswith("PLAN029_H1760_LINUX_PHYSICAL_TCP_ECHO ")]
+  if len(a)!=1 or len(b)!=1:raise RuntimeError("unique real two-leg TCP app receipts missing")
+  wa,li=json.loads(a[0]),json.loads(b[0])
+  if not(wa.get("tcp_two_leg_echo") and wa.get("tcp_half_close") and
+     wa.get("app_bytes_sent")==32768 and wa.get("app_bytes_echoed")==32768 and
+     wa.get("presented_peer")==wdata["fake4"] and
+     li.get("source_physical")==host_source and li.get("real_socket")==peer and
+     li.get("received_bytes")==32768):
+   raise RuntimeError("real Windows-to-Linux Direct kernel TCP socket receipts mismatch")
+  report["plan029_private_v3_cn_direct_tcp"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "scope":"ONE_SIGNED_WINTUN_TWO_REAL_KERNEL_TCP_SOCKETS_CN_FAKEIP_PHYSICAL_32K_HALF_CLOSE",
+    "windows":wa,"linux":li,"tunnel_tcp":"NOT_RUN_UNTIL_COMPARATOR","stop":"NOT_RUN"}
+  report["plan029_private_v3_cn_direct_udp"]["direct_tcp"]="PASS_REAL_KERNEL_TWO_LEG_TCP_32K"
+  print("PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",flush=True)
  # Functional-only *real TCP* over the same original authenticated public
  # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
  # independently established IPv4 streams must echo exact application bytes.
@@ -1499,11 +1553,15 @@ print(json.dumps(result),flush=True)
   missing=[marker for marker in required if marker not in win_native]
   wal=out/"owned-wal.json.n4-owned-wal"
   routes=out/"owned-wal.json.n4-owned-wal.routes"
-  if missing or wal.exists() or routes.exists():
+  tcp_sidecar=out/"owned-wal.json.plan029-defender-tcp"
+  if missing or wal.exists() or routes.exists() or (p029_direct and tcp_sidecar.exists()):
    raise RuntimeError("PLAN029 private V3 signed Tunnel/Stop oracle FAILED "+
                       json.dumps({"missing":missing,"wal":wal.exists(),
-                                  "route_sidecar":routes.exists()}))
+                                  "route_sidecar":routes.exists(),"tcp_defender_sidecar":tcp_sidecar.exists()}))
   if p029_direct:
+   if report.get("plan029_private_v3_cn_direct_tcp",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+    raise RuntimeError("real Direct TCP source-bound physical app evidence missing")
+   report["plan029_private_v3_cn_direct_tcp"]["stop"]="PASS_OWNED_DEFENDER_AND_WAL_ABSENT"
    if report.get("plan029_private_v3_cn_direct_udp",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
     raise RuntimeError("real PLAN029 Direct scenario lost SOURCE-locked Windows/Linux receipt")
    report["plan029_private_v3_cn_direct_udp"]["stop"]="PASS_NO_WFP_V2_WAL_ABSENT"

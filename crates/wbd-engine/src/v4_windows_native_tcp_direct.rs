@@ -17,7 +17,10 @@ const MAX_READY:usize=256;
 const MAX_QUANTUM:usize=8;
 const MAX_L3:usize=65535;
 const PENDING_MS:u64=30_000;
-const IDLE_MS:u64=120_000;
+// Hard *allocation* ceiling remains 64 MiB across PLAN029 sources;
+// Direct TCP borrows only an 8 MiB live pending-read soft budget.
+// The rest is reserved for UDP/DNS/owner work, not queued TCP seconds.
+const TCP_PENDING_POOL_LIMIT:usize=8*1024*1024;
 
 enum TcpPhase{
     Connecting(TcpStream,PhysicalTcpSocket),
@@ -34,6 +37,7 @@ pub(crate) struct NativeTcpActor{
     deadlines:VecDeque<(u16,u64)>,
     active:Vec<Active>,cursor:usize,
     ready:VecDeque<Vec<u8>>,
+    buffered_bytes:usize,
 }
 pub(crate) fn safe_synthetic(lease:u32,underlay:u32,synthetic:u32,
     fake_range:(u32,u32))->bool{
@@ -58,7 +62,7 @@ impl NativeTcpActor{
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
             deadlines:VecDeque::new(),active:Vec::new(),cursor:0,
-            ready:VecDeque::with_capacity(MAX_READY)})
+            ready:VecDeque::with_capacity(MAX_READY),buffered_bytes:0})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
     /// Never guess this value in Go or open a global firewall wildcard.
@@ -68,6 +72,7 @@ impl NativeTcpActor{
     pub(crate) fn has_work(&self)->bool{
         self.nat.len()>0||!self.ready.is_empty()
     }
+    pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
         self.ready.pop_front()
     }
@@ -149,7 +154,12 @@ impl NativeTcpActor{
         for step in 0..quantum{
             let idx=(self.cursor+step)%count;
             let flow=&mut self.active[idx];
-            if now_ms.saturating_sub(flow.last_activity_ms)>=IDLE_MS{
+            // A live kernel TCP may be quiescent for hours; FIN/RST,
+            // half-close and OS socket EOF own its retirement. Only
+            // nonblocking PHYSICAL CONNECT is bounded to 30s.
+            if flow.phase.as_ref().is_some_and(|phase|
+                matches!(phase,TcpPhase::Connecting(..))) &&
+                now_ms.saturating_sub(flow.last_activity_ms)>=PENDING_MS{
                 to_remove.push(idx);
                 continue
             }
@@ -176,15 +186,23 @@ impl NativeTcpActor{
                     }
                 },
                 TcpPhase::Relaying(mut pair)=>{
-                    match pair.service_once(){
+                    let previous=pair.pending_bytes();
+                    let free=TCP_PENDING_POOL_LIMIT.saturating_sub(self.buffered_bytes);
+                    match pair.service_once_with_read_budget(free){
                         Ok(tick)=>{
+                            self.buffered_bytes=self.buffered_bytes
+                                .saturating_sub(previous).saturating_add(tick.buffered);
+                            debug_assert!(self.buffered_bytes<=TCP_PENDING_POOL_LIMIT);
                             if tick.bytes_read>0||tick.bytes_written>0{
                                 flow.last_activity_ms=now_ms;
                             }
                             if tick.finished{to_remove.push(idx)}
                             else{flow.phase=Some(TcpPhase::Relaying(pair))}
                         },
-                        Err(_)=>to_remove.push(idx),
+                        Err(_)=>{
+                            self.buffered_bytes=self.buffered_bytes.saturating_sub(previous);
+                            to_remove.push(idx)
+                        },
                     }
                 }
             }

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_sha": "cb8dfb7a001dd9a52a5e1037fa1ed3d09e688f6f",
+  "plan": "PLAN029",
+  "checkpoint": "H1760",
+  "result": "PASS_SOURCE_SCOPED",
+  "checked_build_runs": [
+    {
+      "id": 43445358742,
+      "result": "SUCCESS",
+      "scope": "original-Go Windows source lock/build + scoped real Defender COM one rule"
+    },
+    {
+      "id": 43445358922,
+      "result": "SUCCESS",
+      "scope": "Rust DLL WinForms GUI and Go CLI configuration compilation NOT SIGNED NETWORK"
+    },
+    {
+      "id": 43445358655,
+      "result": "SUCCESS",
+      "scope": "governance"
+    },
+    {
+      "id": 43445358745,
+      "result": "SUCCESS",
+      "scope": "M0-WIN-LINUX no-scene source checks NOT PLAN029 E2E"
+    },
+    {
+      "id": 43445358730,
+      "result": "SUCCESS",
+      "scope": "PLAN020 WAL source tests"
+    }
+  ],
+  "new_source_delta": [
+    "bounded total Rust TCP relay pending READ soft 8MiB within wider 64MiB shared allocations; per-flow existing 16KiB/channel max",
+    "established Direct TCP lifetime based on FIN/RST/OS EOF instead of idle 120s",
+    "single original TLS/Wintun generation CN FakeIP physical TCP test after existing UDP: Linux actual socket receives Windows physical underlay, echoes 32768 bytes after half-close",
+    "pre-Tunnel TCP independent proof; exact Defender sidecar absent after normal Stop"
+  ],
+  "h1760_signed_action": "PENDING_AUTO",
+  "h1760_real_direct_tcp": "NOT_RUN",
+  "h1760_resource_perf": "NOT_RUN",
+  "full_D1_D5_P1_P2": "NOT_RUN"
+}
