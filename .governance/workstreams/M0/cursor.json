@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1698,
-  "checkpoint_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
+  "sequence": 1699,
+  "checkpoint_sha": "4de00f7f011af9a52ba841f3934732cb93ea8fb6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1698: signed Windows four no-old-WFP real OS stage Apply/Readback/Stop PASS at adb0ae, H1694 native kernel TCP A/B/C PASS, source-bounded route WAL pure tests pass. Public Rust CN DNS/FakeIP Direct, GUI and padding and D1-D5/P1-P2 still OPEN; old public legacy action fails before Ready.",
-  "why_now": "Collected H1697 Action43342274385 exact JSON/zip after signed driver actual 4-route Win32 OS readback+owned Stop SUCCESS; also H1696 previous legacy two-OS public failure first old guard preserved. Need finish real Rust ingress rather than repeat OS standalone.",
+  "current_task": "PLAN029 H1699: single typed Rust packet ingress decision helper staged after real signed native kernel TCP A/B/C and real no-WFP 4 Win32 Apply/Stop PASS. DNS QNAME-first and split pin decisions at one copy-owned boundary code written, CI/runtime Wintun binding not yet validated; full physical Rust Direct/DNS/GUI/padding remain OPEN.",
+  "why_now": "Two lowest Windows capability gates now real PASS. Next write one IPv4/DNS policy seam with bounded data-plane behavior before integrating physical sockets, avoiding shared flow hard cap and QNAME/IP DNS regression.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Wire one Rust Wintun ingress and chosen native kernel Direct TCP relay plus physical UDP and DNS53+selective FakeIP; support config and GUI actual effective then startup-padding, run D1-D5/P1-P2 source-locked. Move v2 OS entry out of test-only assemblyOnly only when actual owner/packet/DNS routing correct, no no-op WFP or false Applied. Exact-owned old WFP migration and IPv6 real blocking still required. No 028 matrix/030.",
+  "next_action": "Collect H1699 source-locked Rust unit and Windows/Go Actions. On first compiler failure fix only that source; then install packet decision once in Native Normal/Game4 Wintun ingress when native async DNS and Direct socket paths are in place, never steer Direct to Tunnel. Add selective FakeIP TTL/expiry + DNS reassembly, physical UDP, kernel TCP two-leg relay, config effective and scoped Defender lifecycle, then D1-D5/P1-P2. No 028 matrix or 030.",
   "unverified": true,
-  "last_tested_source": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
+  "last_tested_source": "4de00f7f011af9a52ba841f3934732cb93ea8fb6",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1698-REAL-SIGNED-NOWFP-FOUR-STAGE-OS-PASS-20261113.json"
   ],
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1698 SOURCEadb0 Action43342274385 real signed Wintun 4-stage Win32 lease MTU DNS 4 routes OS Apply/readback + exact reverse Stop PASS with no custom WFP. This is test-only, public Ready not exercised. H1694 signed kernel TCP/UDP Defender A/B/C positive, no Rust physical direct. H1696 M0-WIN-LINUX 43340809026 old original product FAIL before Ready old N4NativeGuard, not CN split. Full PLAN029 remains IN_PROGRESS."
+  "partial_summary": "H1698 actual signed Wintun 4-stage no-old-WFP Win32 OS Apply+Stop PASS (Action43342274385) and H1694 native local TCP A/B/C PASS. H1699 packet wire parser/dispatcher staged and unit tests pending, not hooked into Normal/Game4 Wintun, no Rust Direct physical or DNS resolver/FakeIP TTL. H1696 old network scene FAIL before Ready from legacy guard. PLAN029 in progress."
 }

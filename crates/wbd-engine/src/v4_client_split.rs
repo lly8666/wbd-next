@@ -91,7 +91,8 @@ impl SplitPolicy {
         }
     }
     pub fn remember_announced_fake(&mut self,fake:u32,real:u32)->Result<(),SplitError>{
-        if !self.fake_pool.contains(fake)||self.fake_pool.contains(real) {
+        if self.mode!=Mode::BypassLanCn ||
+           !self.fake_pool.contains(fake)||self.fake_pool.contains(real) {
             return Err(SplitError::FakeIPConflict);
         }
         if let Some(old)=self.fake_to_real.get(&fake) {
@@ -104,6 +105,7 @@ impl SplitPolicy {
     #[inline]
     pub fn destination(&self,ip:u32)->Egress{
         if self.fake_pool.contains(ip){
+            if self.mode!=Mode::BypassLanCn{return Egress::RejectUnknownFakeIP}
             return match self.fake_to_real.get(&ip){
                 Some(&real)=>Egress::Direct{real_dst:real,presented_dst:ip},
                 None=>Egress::RejectUnknownFakeIP,
@@ -293,6 +295,16 @@ mod tests {
         assert_eq!(split.destination(real_cdn),Egress::Tunnel); // shared CDN non-CN unaffected
         assert_eq!(split.remember_announced_fake(fake,ip(203,0,113,12)),Err(SplitError::FakeIPConflict));
         assert_eq!(split.remember_announced_fake(real_cdn,real_cdn),Err(SplitError::FakeIPConflict));
+    }
+    #[test]
+    fn plan029_split_fake_never_activates_in_other_modes(){
+        for mode in [Mode::All,Mode::BypassLan]{
+            let mut policy=make(mode);
+            assert_eq!(policy.remember_announced_fake(ip(198,18,1,9),ip(198,51,100,77)),
+                Err(SplitError::FakeIPConflict));
+            assert_eq!(policy.destination(ip(198,18,1,9)),
+                Egress::RejectUnknownFakeIP);
+        }
     }
     #[test]
     fn plan029_split_domain_trie_exact_and_boundary_no_guess_sni(){

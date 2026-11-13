@@ -57,6 +57,10 @@ mod windows_lane_lifecycle;
 // Normal and Game; product Wintun/direct binding is qualified separately.
 #[cfg(any(target_os="windows", test))]
 mod v4_client_split;
+// PLAN029: typed wire/query decision, owned by the ONE Rust Wintun ingress.
+// Does not create a second packet reader or authorize a Direct backend.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_split_wire;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device
