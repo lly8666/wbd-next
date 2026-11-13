@@ -1654,6 +1654,24 @@
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "result_blob": "a5d4c2d4928c4ca27b2f674e9fa7311f30201883"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_defender_com_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_com_windows.go",
+      "result_blob": "6b6f46782334c84153136e095cb30b5681c6498e"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_defender_lease_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows.go",
+      "result_blob": "cbec200140b92267dc0cc68d8cc06ed975f63d85"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
+      "result_blob": "9f1eb40cf6e05489fb0a204447d9ad29c863e247"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

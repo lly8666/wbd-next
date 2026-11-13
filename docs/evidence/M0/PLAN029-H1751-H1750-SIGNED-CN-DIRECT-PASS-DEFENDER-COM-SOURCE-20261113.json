@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1751",
+  "source_sha": "43d1d00cd7939ec70eb49dcb71eef651a2c29bab",
+  "recorded_date": "2026-11-13",
+  "result": "H1750_SIGNED_DIRECT_CN_DNS_FAKEIP_UDP_TUNNEL_STOP_PASS_SCOPED_H1751_DEFENDER_COM_SOURCE_PENDING",
+  "real_action": {
+    "id": 43429931906,
+    "head_sha": "43d1d00cd7939ec70eb49dcb71eef651a2c29bab",
+    "conclusion": "success",
+    "windows_signed_job_id": 131903342733,
+    "log_markers": [
+      "PLAN029_H1749_SIGNED_CN_DNS_FAKE_DIRECT_UDP_STAGE_PASS_PRE_TCP_AND_STOP",
+      "PLAN029_H1749_SIGNED_CN_DIRECT_AND_TUNNEL_TCP_UDP_STAGE_PASS_PRE_STOP",
+      "PLAN029_H1745_REAL_ORIGINAL_GO_RUST_V3_CN_DNS_FAKE_DIRECT_UDP_AND_TUNNEL_OWNED_STOP_PASS"
+    ]
+  },
+  "previous_h1749": {
+    "id": 43427819727,
+    "conclusion": "failure",
+    "reason": "old Linux TCP comparator non-bound source, fixed in H1750"
+  },
+  "new_source": "native Windows Defender INetFwPolicy2 COM exact rule (IN/TCP allow/one local IPv4+one remote IPv4+real port), SHA epoch name and durable intent/owned/CAS removal; fake-backend failure tests; NOT wired to product or enabled",
+  "not_run": [
+    "real native Windows kernel Direct TCP with owned Defender and no-WFP four-stage product",
+    "P1/P2 and full D1-D5 signed scenes",
+    "GUI all effective behavior, startup-padding"
+  ]
+}
