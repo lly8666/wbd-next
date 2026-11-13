@@ -25,6 +25,19 @@ class NativeDirectOrder(unittest.TestCase):
     def test_exact_windows_linux_physical_receipts(self):
         for term in ['m0_plan029_h1745_guest_dns_direct.py','m0_plan029_h1745_win_client_dns_direct.py','gdata["business_client_physical"]==host_source','gdata["dns_client_physical"]==host_source','"source_sha":os.environ["GITHUB_SHA"]','WBD_PLAN029_NATIVE_V3_TRIAL']:
             self.assertIn(term,S)
+    def test_h1764_tcp_core_rust_change_triggers_exact_signed_scope_only(self):
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        for path in (
+            "crates/wbd-engine/src/v4_windows_native_tcp_direct.rs",
+            "crates/wbd-engine/src/v4_client_direct_tcp_nat.rs",
+            "crates/wbd-engine/src/v4_windows_native_split.rs",
+            "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+            "crates/wbd-platform/src/windows_direct_tcp.rs",
+        ):
+            self.assertIn("      - "+path,W)
+        self.assertIn("[plan029-v3-real-direct-udp]",W)
+        self.assertIn("WBD_PLAN029_V3_DIRECT_SCENE",W)
+        self.assertIn("PLAN029_H1762_GUEST_TCP46112_HYPERV_EXACT_OWNER_REMOVED",W)
     def test_h1762_wsl_exact_physical_tcp_owner_and_scoped_comparator(self):
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")

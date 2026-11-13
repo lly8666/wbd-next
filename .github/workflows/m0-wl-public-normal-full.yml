@@ -126,6 +126,15 @@ on:
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go
+      # PLAN029: Rust Direct TCP/native ingress source is a real signed
+      # product dependency. Path-trigger checks are cheap unless the
+      # same commit explicitly marks one scoped [plan029-v3-real-direct-udp]
+      # scenario; do not silently omit real OS tests for actor-only fixes.
+      - crates/wbd-engine/src/v4_windows_native_tcp_direct.rs
+      - crates/wbd-engine/src/v4_client_direct_tcp_nat.rs
+      - crates/wbd-engine/src/v4_windows_native_split.rs
+      - crates/wbd-engine/src/v4_windows_native_runtime.rs
+      - crates/wbd-platform/src/windows_direct_tcp.rs
       - crates/wbd-engine/src/v4_windows_game_owner.rs
       # Actual PLAN026 Game2/4 Rust two-worker implementation must trigger real Windows/WSL2 tests.
       - crates/wbd-engine/src/v4_windows_game_native_runtime.rs

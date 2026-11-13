@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1763,
-  "checkpoint_sha": "68b5ae7409e1c9529163581ecb88202dd4292876",
+  "sequence": 1764,
+  "checkpoint_sha": "c40d1c4158186d7c6a904ea56faac5ae3e692fa3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1763: Signed real H1762 Action43457097827 FAIL at Direct TCP return: original TLS+signed Wintun+OS Ready, CN DNS/FakeIP physical UDP and Tunnel UDP passed; exact HyperV TCP46112 per-run Allow/Remove succeeded. Linux physical TCP accepted Windows 172.19.16.1:56237, got entire 32768+FIN and sent 32768 echo. Windows app got 12288 then 20s recv timeout. Source NativeTcpActor::tick immediately retired exact synthetic->FakeIP NAT and FakeIP ref as soon as two user-space legs EOF and buffer empty; Windows kernel may still own unACKed/retransmittable TCP. H1763 stages bounded 60s metadata-only closing NAT grace, wheel reaps <=64, no extra 10ms empty polling, hardcap remains enforced; Rust pure tests. Real new SOURCE pending; 029 not done.",
-  "why_now": "H1762 disproved old physical TCP ingress Block as remaining first culprit: Linux received+echoed full 32KiB and precise HyperV rule removed. Local reverse NAT retirement on relay EOF is concrete code risk for Windows kernel retransmission; fix before further packet probes.",
+  "current_task": "H1764: H1763 kernel TCP reverse NAT 60s metadata grace source c40d1c41; Linux Rust and cross Windows GNU compile/functional component checks pass, Windows2025 component still in flight at cursor write. Discovered M0-WIN-LINUX workflow push.paths omits all client Direct TCP Rust sources, so prior commit marker alone spawned no actual signed E2E. H1764 only adds five explicit Rust Direct path triggers and matching scope test, preserves user [plan029-v3-real-direct-udp] single-source single-Normal scene; not a new ad-hoc workflow/dispatch. Real signed product result pending; H1762 failures retained.",
+  "why_now": "Actual signed run missing after H1763 actor-only patch because workflow paths excluded Rust files; must restore source-based real E2E trigger without repeating old 028 matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one signed H1763 Normal real CN Direct 32768 full echo/FIN plus Windows->Linux nonCN Tunnel TCP/UDP and owned Stop; first new failure only, no same probe repetition. Independently continue DNS D1–D5, GUI and bounded Tunnel startup padding+P1–P2, source freeze before actual performance. Keep 028 scoped and 030 closed.",
+  "next_action": "Collect H1764 original signed Normal Action and H1763 component results; if 32KiB full echo and nonCN Tunnel TCP+Stop pass, proceed remaining D1-D5/P1-P2, GUI and startup-padding; if fail, inspect first boundary without retrying identical hypothesis. 030 closed.",
   "unverified": true,
   "last_tested_source": "dfced52918263a923c71087c1100aca95e3d8003",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1762 real Linux Direct TCP physical 32768/32768 PASS but FakeIP Windows only 12288 and timed out. H1763 source fixes premature NAT eviction after user-space relay EOF using metadata-only grace and tests, signed CI pending. DNS/GUI/padding/perf exits OPEN."
+  "partial_summary": "H1762 Linux physical TCP 32768 echo but Windows FakeIP received 12288, real FAIL; H1763 NAT grace compiled Linux+Windows GNU, signed E2E was not triggered by Rust actor-only path. H1764 adds guarded workflow paths/test to start one signed source run; product 029 incomplete."
 }
