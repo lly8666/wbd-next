@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1749,
-  "checkpoint_sha": "4ca9954283a13cf29aed1bdf6017a1111521ede8",
+  "sequence": 1750,
+  "checkpoint_sha": "6c82ea087a9081900e0f8ca81d51086dd3eb4a3f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1749: 实际H1747 SOURCEbb3c签名Action43424294651 FAIL于Linux TUN非CN .77→Win10.66.0.2 TCP45902，Windows Ready/原Rust V3 Wintun TLS和内核两向UDP均PASS；CN QNAME FakeIP物理DNS/Direct UDP被旧TCP comparator提前throw挡住，未运行。H1748 SOURCE4ca995 新原Rust V3 TCP post-Apply PREPARE Go/Rust跨ABI/治理均PASS_SCOPED，未ENABLE。H1749源锁单签名场景改为先CN真物理DNS53+FakeIP+UDP46111，再跑原TCP及Stop，任何失败整条Action仍FAIL；目前SOURCE CI待跑，D1-D5/P1-P2/padding OPEN。",
-  "why_now": "Downloaded signed H1747 original client/server/tcp/UDP logs prove first failure is unrelated inbound TCP comparator BEFORE CN Direct scene, so reordering the single real signed scene yields concrete physical Direct evidence while retaining all comparator and owned Stop gates. Preserve concurrent H1748 changes.",
+  "current_task": "PLAN029 H1750: H1749 original signed Win Go+Rust V3+Wintun SOURCE6c82ea Action43427819727 overall FAIL at old Linux .77→Win .2 TCP port45902; BUT true CN QNAME www.cn.example via application DNS8.8.8.8 was redirected to physical direct Linux DNS53, CNAME+A journaled FakeIP198.18.0.1, Windows application UDP46111 to FakeIP physical Linux guest received and sent matching reply, Windows received inverse, both guest socket sources match Windows physical172.27.80.1. Original Tunnel twoOS UDP PASS. Download artifact14039805110. H1750 exact old comparator fix: bind both TCP client dials to their owned TUN IP with source_address=(local,0) and assert getsockname, preventing Linux choosing primary 10.66.0.1 while Win Defender allows only203.0.113.77. Preserve exact firewall TCP gate and native Stop. New signed Action PENDING, product Direct kernel TCP Def/4stage P1P2 D1D5 padding OPEN.",
+  "why_now": "Real H1749 CN physical Direct DNS and FakeIP business UDP verified on both OS for first time, but full Action FAIL at old TCP comparator. Linux test listener bound secondary .77 yet outbound connect did not bind source, potentially mismatching exact Windows Defender .77 Allow; verify source explicitly without widening firewall.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1749 single [plan029-v3-real-direct-udp] signed Windows/WSL2 Action once and source-locked cheap unittest. Diagnose first actual physical DNS/FakeIP/Direct UDP failure. Independently resolve Linux->Win TCP alias/Defender, keep total FAIL until full TCP and WAL Stop. Then Defender owned Direct kernel TCP, D1-D5/P1-P2 and padding, no 030.",
+  "next_action": "Collect H1750 single signed Windows/WSL2 real Action for source-bound TCP full duplex and original Stop. If it passes record bounded signed Direct UDP+Tunnel UDP/TCP + owned Stop scope, not full Direct TCP or D1-D5 P1-P2. Then Defender native Direct kernel TCP postApply ENABLE/4stage WAL, real two DNS, padding, GUI. PLAN030 closed.",
   "unverified": true,
-  "last_tested_source": "4ca9954283a13cf29aed1bdf6017a1111521ede8",
+  "last_tested_source": "6c82ea087a9081900e0f8ca81d51086dd3eb4a3f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1749-H1747-REAL-WINTUN-TCP-COMPARATOR-BEFORE-CN-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1750-H1749-REAL-CN-PHYSICAL-DIRECT-PASS-TCP-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1744 real signed original V3 pure Tunnel+Stop PASS_SCOPED. H1747 real Wintun CN cold plus both UDP PASS but Linux->Windows TCP comparator FAIL before CN scene. H1748 private postApply TCP prepare components PASS_SCOPED. H1749 test-only ordering change pending one real signed SOURCE."
+  "partial_summary": "H1749 physical CN DNS CNAME+A to durable FakeIP 198.18.0.1 and Direct UDP46111 return Windows/WSL2 both real PASS_SCOPED, tunnel UDP PASS, but whole source Action FAIL on Linux->Win old TCP45902 and Stop terminal unqualified. H1750 source-bound TCP comparator exact socket IP, CI pending."
 }

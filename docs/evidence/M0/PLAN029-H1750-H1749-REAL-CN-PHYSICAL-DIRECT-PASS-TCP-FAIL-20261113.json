@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1750",
+  "source_sha": "6c82ea087a9081900e0f8ca81d51086dd3eb4a3f",
+  "recorded": "2026-11-13",
+  "result": "REAL_SIGNED_CN_PHYSICAL_DNS_JOURNALED_FAKEIP_DIRECT_UDP_PASS_SCOPED_WHOLE_ACTION_FAIL_TCP",
+  "run": {
+    "id": 43427819727,
+    "head_sha": "6c82ea087a9081900e0f8ca81d51086dd3eb4a3f",
+    "conclusion": "failure",
+    "native_job": 131895996268,
+    "artifact_id": 14039805110,
+    "marker": "PLAN029_H1749_SIGNED_CN_DNS_FAKE_DIRECT_UDP_STAGE_PASS_PRE_TCP_AND_STOP"
+  },
+  "actual": {
+    "one_original_signed_windows_wintun_rust_v3": true,
+    "original_tls_authenticated": true,
+    "app_presented_dns": "8.8.8.8",
+    "physical_direct_dns": "172.27.94.59",
+    "windows_physical_source": "172.27.80.1",
+    "cn_qname": "www.cn.example",
+    "dns_answer": "CNAME plus A",
+    "durable_fakeip": "198.18.0.1",
+    "windows_app_fakeip_udp_port": 46111,
+    "linux_independent_physical_business_received": true,
+    "linux_physical_dns_client_source": "172.27.80.1",
+    "linux_physical_udp_client_source": "172.27.80.1",
+    "windows_business_reverse_reply": "PLAN029-H1745-CN-DIRECT-UDP-reply",
+    "two_os_tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "old_tcp_windows_to_linux_echo": true,
+    "old_tcp_linux_to_windows_echo": false,
+    "old_tcp_windows_listener_received": 0,
+    "final_stop": "NOT_QUALIFIED_BY_TERMINAL_ORACLE"
+  },
+  "root_cause_hypothesis": "Test Linux listener binds secondary TUN alias203.0.113.77 but outbound socket.create_connection has no source_address; Windows exact test Defender remote only .77. Linux may select primary TUN IP10.66.0.1; requires actual source readback.",
+  "change": "Source-bind both test TCP clients to exact TUN local (local,0), assert getsockname, no firewall broadening and no product data changes.",
+  "new_source_ci": "PENDING",
+  "unqualified": [
+    "Direct kernel TCP owned Defender",
+    "full D1-D5/P1-P2",
+    "Stop success in this real Action",
+    "GUI and padding"
+  ]
+}

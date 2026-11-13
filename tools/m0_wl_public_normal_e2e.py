@@ -812,7 +812,14 @@ thread=threading.Thread(target=serve,daemon=True);thread.start()
 deadline=time.monotonic()+14
 while time.monotonic()<deadline:
  try:
-  with socket.create_connection((remote,port),timeout=1.5) as conn:
+  # The test-owned Linux TUN secondary /32 is NOT automatically chosen
+  # by socket.create_connection. Source-bind each CLIENT dial exactly to
+  # the same address as its independently owned listening socket.
+  # Otherwise Linux silently uses 10.66.0.1 while Windows Defender only
+  # allows the exact 203.0.113.77 alias, causing a false native TCP fail.
+  with socket.create_connection((remote,port),timeout=1.5,source_address=(local,0)) as conn:
+   result["dial_source"]=conn.getsockname()[0]
+   if result["dial_source"]!=local:raise RuntimeError("TCP kernel dial source differed from owned lease/alias")
    conn.settimeout(5);conn.sendall(marker)
    echoed=b""
    while len(echoed)<len(marker):
