@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1720",
+  "source_sha": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
+  "recorded_date": "2026-11-13",
+  "result": "PASS_SCOPED_GUI_V2_PREFLIGHT_GOVERNANCE_NOT_029_EGRESS",
+  "actions": [
+    {
+      "run_id": 43384251251,
+      "conclusion": "success",
+      "scope": "governance"
+    },
+    {
+      "run_id": 43384251318,
+      "conclusion": "success",
+      "scope": "maintenance original M4 provenance"
+    },
+    {
+      "run_id": 43384251255,
+      "conclusion": "success",
+      "job_id": 131748898488,
+      "artifact_id": 14017638331,
+      "scope": "real WinForms/Rust-source DLL and original Go CLI v2 preflight absent+no WAL, outer1460, dns.direct/dns.tunnel, reopen"
+    },
+    {
+      "run_id": 43384251247,
+      "conclusion": "success",
+      "scope": "Windows CLI source compile"
+    },
+    {
+      "run_id": 43384251240,
+      "conclusion": "success",
+      "scope": "legacy1400 original native TLS Normal Windows/Linux TCP+UDP; no 029 split"
+    }
+  ],
+  "first_unverified_boundary": "authenticated original Rust NativeOwner stage_sources still tunnels all Wintun frames; PLAN029 PacketIngress/physical UDP/kernel TCP are diagnostic or pure modules not yet integrated",
+  "latest_public_v2_native": "H1717 signed Win32 four-stage Apply RuntimeMTU1280 Stop PASS_SCOPED",
+  "retained_failures": [
+    "H1716 real public initial v2 RuntimeMTU=0 before H1717 repair",
+    "H1690 original no-owned-Defender-Allow UDP/TCP kernel entry failure"
+  ],
+  "not_run": [
+    "normal/game4 real 029 Direct+Tunnel TCP/UDP",
+    "forced single DNS direct/tunnel + QNAME FakeIP/CDN",
+    "online GUI Applied and interrupted owned Stop",
+    "D1-D5/P1-P2 / CPU p99 queue-age / caps / IPv6 / startup padding"
+  ]
+}

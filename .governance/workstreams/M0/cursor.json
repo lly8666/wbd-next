@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1719,
-  "checkpoint_sha": "eed23da0fcfedfa151f2704a99cd117a1e285d7a",
+  "sequence": 1720,
+  "checkpoint_sha": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1719: H1718 复检治理FAIL（Action43383231768/43383231819）；纠正M4历史preflight blob被误作live pin、新增两条M0审定派生；把H1716旧FAIL移为context，H1718当前SOURCE证据唯一驻cursor；补feature-impact。修复WinForms原生预检依赖已退役WFP错误文本及五阶段Ready提示，并用真实原Go CLI只读预检回归（SOURCE CI待收）。029业务双出口/单DNS/GUI有效网络/padding仍未验收。",
-  "why_now": "H1718 source governance jobs found exact historical SHA/current provenance separation and cross-SOURCE cursor proof mismatch; correct the original historical pins and real current M0 approvals before declaring green. Also remove an actual stale WinForms WFP barrier against v2 read-only preflight.",
+  "current_task": "PLAN029 H1720: H1719 SOURCE b8c800a五Action全部PASS_SCOPED：governance 43384251251、maintenance 43384251318、原Go/WinForms v2只读预检与单DNS/outer1460有效配置 43384251255、Windows Go source 43384251247、旧legacy1400 Normal Win/Linux 43384251240。都未证明029两出口；正式认证Rust唯一Wintun ingress仍未接Direct kernel TCP/UDP/DNS，D1–D5/P1–P2和padding保持NOT_RUN。",
+  "why_now": "Collect source-locked H1719 WinForms and Go CLI real read-only native v2 preflight success; preserve source and artifact without mistaking old Normal or pure diagnostics for 029 product egress.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1719 source-matched governance + one actual WinForms Go CLI config/preflight test. If PASS, continue one original TLS/Rust owner data-plane ingress (kernel TCP + physical UDP + forced DNS) and true D1–D5/P1–P2 product scenarios; preserve all historic FAIL and NOT_RUN.",
+  "next_action": "Implement one authenticated original Rust NativeOwner Wintun ingress with CN IP/domain union, selected kernel TCP + physical UDP, two forced single DNS endpoints, FakeIP, 4-stage owned Stop/Recover; freeze product SOURCE and run D1–D5/P1–P2 true product scenes. Do not repeat old A/B/C probes or begin PLAN030.",
   "unverified": true,
-  "last_tested_source": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
+  "last_tested_source": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
+    "docs/evidence/M0/PLAN029-H1720-H1719-GOVERNANCE-REAL-GUI-PREFLIGHT-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -25,8 +25,8 @@
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1718 commit eed23d governance failed: historical preflight M4 SHA was accidentally repinned, 2 M0 live overrides missing, cursor H1716 evidence SHA different, feature-impact declaration absent. H1719 fixes all under original donor SHA immutability and adds GUI real original-Go read-only preflight regression; test currently PENDING at new SOURCE. H1717 four-stage signed OS Apply/RuntimeMTU1280/Stop PASS_SCOPED. Real 029 dual egress/GUI effective/padding NOT_RUN."
+  "partial_summary": "H1719 five Actions green on b8c800a: real Go CLI v2 native preflight absent noWAL; GUI single DNS direct/tunnel effective, outer1460 native Rust inner auto read-only, save/reopen; old Normal legacy1400 networking. H1717 signed Win32 no-old-WFP four stages PASS_SCOPED; H1695 A/B/C, H1709 kernel TCP EOF and H1713 CN FakeIP UDP test-only PASS_SCOPED. Genuine 029 production dual TCP/UDP Direct/Tunnel, DNS, Stop, GUI Applied, perf, padding NOT_RUN OPEN."
 }
