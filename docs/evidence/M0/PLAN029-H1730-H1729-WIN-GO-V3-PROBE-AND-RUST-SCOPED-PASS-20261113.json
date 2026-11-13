@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1730",
+  "source_sha": "c090f9100081afdb74c5a3e4d0876bca455e285b",
+  "result": "PASS_SCOPED_NATIVE_GO_WINDOWS_V3_LAYOUT_SOURCE_AND_RUST_CROSSPLATFORM_COMPONENT_NO_PRODUCT_EGRESS",
+  "actions": [
+    {
+      "run_id": 43396403923,
+      "path": "m0-plan029-h1661-windows-dns-source-build",
+      "conclusion": "success",
+      "scope": "original Go Windows source compile, no product native V3 activation"
+    },
+    {
+      "run_id": 43396403828,
+      "path": "m0-plan029-h1721-native-split-capacity",
+      "conclusion": "success",
+      "scope": "native Rust component Windows/Linux + private V3 build"
+    }
+  ],
+  "new_source": "PENDING_WINDOWS_V3_RUST_LAYOUT_TEST_AND_FAKE_ID_QUOTA_SEPARATION",
+  "not_run": [
+    "Windows authentic Normal/Game4 Direct/Tunnel TCP UDP DNS D1-D5/P1-P2",
+    "Defender scoped owned listener and WAL/Stop",
+    "startup-padding"
+  ]
+}

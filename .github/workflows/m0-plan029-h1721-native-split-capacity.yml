@@ -45,6 +45,8 @@ jobs:
           if($IsWindows){
             # The private V3 symbol is excluded from normal production.
             # Compile precisely this feature ABI before real Wintun scenes.
+            & cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record,m0_v4_probe plan029_ 2>&1 | Tee-Object result/probe-v3-tests.log
+            if($LASTEXITCODE -ne 0){throw 'private Win32 V3 ABI Rust tests failed'}
             & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record,m0_v4_probe 2>&1 | Tee-Object result/probe-v3-build.log
             if($LASTEXITCODE -ne 0){throw 'private Win32 V3 source ABI compile failed'}
             if(-not(Test-Path target/release/wbd_engine.dll)){throw 'private V3 DLL missing'}

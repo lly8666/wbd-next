@@ -17,6 +17,9 @@ const MAX_DOMAIN_BYTES:usize=1<<20;
 const MAX_DOMAIN_RULES:usize=20_000;
 const DEFAULT_SOFT_FLOWS:usize=4_096;
 const MAX_HARD_FLOWS:usize=16_384;
+// Independent from live Direct flow hard cap. No eager socket or table slab.
+const MAX_FAKE_IDENTITIES:usize=60_000;
+const MAX_FAKE_BYTES:usize=16*1024*1024;
 
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -141,7 +144,7 @@ impl NativeSplitWorker {
             Some(FakeAllocator::new(start,end,
                 &[(u32::from(lease),u32::from(lease)),
                   (u32::from(underlay),u32::from(underlay))],
-                DEFAULT_SOFT_FLOWS.min(c.direct_hard as usize),8*1024*1024)
+                MAX_FAKE_IDENTITIES,MAX_FAKE_BYTES)
                 .map_err(|_|())?)
         }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
@@ -258,6 +261,26 @@ mod tests{
             NativeDecision::LocalDrop);
         assert!(!s.has_udp_flows());
         s.tick(1001);
+    }
+    #[test]
+    fn plan029_native_fakeip_quota_not_tied_to_direct_flow_quota(){
+        use crate::v4_client_fake_pool::FakeKey;
+        let mut c=config(&[],&[],b"cn.example\n");
+        c.direct_hard=1;
+        let mut native=unsafe{NativeSplitWorker::new(&c)}.unwrap();
+        let fake=native.fakes.as_mut().unwrap();
+        for n in 0..17u32{
+            let slot=fake.prepare(FakeKey{
+                qname:format!("cn{n}.example"),
+                canonical:"edge.example".into(),
+                real4:0xcb007109,policy_rev:1,resolver_rev:1,
+            },30,1000).unwrap();
+            // A reservation is NEVER a client-published FakeIP before
+            // the separate real durable DNS journal acknowledges it.
+            assert_eq!(fake.announced_real(slot.fake4),None);
+        }
+        assert_eq!(fake.counts().0,17);
+        assert_eq!(native.udp.max_flows(),1);
     }
     #[test]
     fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){

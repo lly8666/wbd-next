@@ -1058,6 +1058,19 @@
      v2:WbdWinNativeAttachV2,
      split:ColdSplitSourceV1,
  }
+ #[cfg(all(test,feature="m0_v4_probe"))]
+ #[test]
+ fn plan029_rust_native_v3_cold_abi_exact_amd64_layout(){
+     use std::mem::{size_of,offset_of};
+     assert_eq!(size_of::<crate::v4_windows_native_split::ColdCidrV1>(),8);
+     assert_eq!(size_of::<ColdSplitSourceV1>(),104);
+     assert_eq!(offset_of!(ColdSplitSourceV1,cn),64);
+     assert_eq!(offset_of!(ColdSplitSourceV1,domains),96);
+     assert_eq!(size_of::<WbdWinNativeAttachV1>(),192);
+     assert_eq!(size_of::<WbdWinNativeAttachV2>(),208);
+     assert_eq!(offset_of!(WbdWinNativeAttachV3,split),216);
+     assert_eq!(size_of::<WbdWinNativeAttachV3>(),320);
+ }
  #[cfg(feature="m0_v4_probe")]
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v3_start(

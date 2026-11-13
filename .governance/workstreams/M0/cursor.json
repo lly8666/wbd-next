@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1729,
-  "checkpoint_sha": "ee150cea49fb76a6e81576336880b887687a7130",
+  "sequence": 1730,
+  "checkpoint_sha": "c090f9100081afdb74c5a3e4d0876bca455e285b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1729: H1728现main ee150c修复MinGW ws2_32，GNU cross ABI Action43395844204及Win/Linux Rust029组件Action43395844439均SUCCESS_SCOPED（非联网）。保留另一writer提交，不重复；新Win original Go私有V3 cold ABI104B/offset/限额负测加现有Rust Win2025明确m0_v4_probe编译，SOURCE CI待收。正式029双出口TCP/DNS、Stop、GUI live、padding仍OPEN。",
-  "why_now": "Two independent H1728 exact-source native jobs are green after other writer corrected case-sensitive Windows GNU WinSock linkage. Validate the original-Go private V3 layout and explicit probe feature before attempting any real product network activation.",
+  "current_task": "PLAN029 H1730: H1729 SOURCE c090f9 original Windows Go private V3 cold ABI compile Action43396403923和Windows/Linux Rust029组件Action43396403828双job SUCCESS_SCOPED。新同代Rust端完整repr(C)偏移/大小probe测试和FakeIP 60000身份/16MiB额度与Direct active flow独立（hard=1仍能占17 safe unpublished fake），H1730 SOURCE Windows/Linux CI待实测；029正式双出口/双DNS/TCP/WAL Stop/padding仍NOT_RUN。",
+  "why_now": "H1729 Go V3 ABI and feature compile pass, but the mirror's Rust layout wasn't exercised in a filtered Windows test; FakeIP identity capacity was incorrectly bound to Direct flow hard limit. Fix independent quotas and source-locked native tests without enabling public V3.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1729 Windows original Go exact source and Rust private V3 ABI build, then implement actual kernel TCP relay, forced direct/tunnel DNS, owned Defender and four-stage lifecycle and real D1-D5/P1-P2. Avoid repeating H1695 and old diagnostic probes.",
+  "next_action": "Collect H1730 Windows Rust V3 probe ABI and Linux scoped components. Complete original Rust physical Direct TCP kernel listener+Defender owned Stop plus forced Direct/Tunnel DNS and Go cold activation, then real D1-D5/P1-P2. Preserve old historical FAIL.",
   "unverified": true,
-  "last_tested_source": "ee150cea49fb76a6e81576336880b887687a7130",
+  "last_tested_source": "c090f9100081afdb74c5a3e4d0876bca455e285b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1729-H1728-MINGW-ABI-SCOPED-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1730-H1729-WIN-GO-V3-PROBE-AND-RUST-SCOPED-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1728 ee150cea cross ABI GNU Windows and Win/Linux Rust PLAN029 source tests PASS_SCOPED. New H1729 Go private V3 C ABI layout and Windows probe feature build PENDING; V3 not called from public original Go NativeOwner. PLAN029 real dual exit remains NOT_RUN."
+  "partial_summary": "H1729 c090f9 Go Windows source 43396403923 PASS_SCOPED, Win/Linux Rust 43396403828 PASS_SCOPED; H1728 GNU cross ABI 43395844204 PASS. H1730 Rust V3 ABI and independent FakeIP capacity source pending, original product DNS/TCP/Stop NOT_RUN."
 }
