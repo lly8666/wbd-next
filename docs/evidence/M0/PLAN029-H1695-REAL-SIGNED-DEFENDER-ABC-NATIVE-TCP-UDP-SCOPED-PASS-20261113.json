@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1695",
+  "observed_at": "2026-11-13",
+  "source_sha": "9b4d5adafb661bd405a9fe53254daf9754043030",
+  "result": "PASS_SCOPED_REAL_SIGNED_WINTUN_KERNEL_TCP_AND_UDP_WITH_OWNED_DEFENDER_ABC",
+  "action": {
+    "run_id": 43338614004,
+    "job_id": 131601037089,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43338614004"
+  },
+  "artifact": {
+    "id": 13997853069,
+    "name": "plan029-h1669-real-win-tcp-43338614004",
+    "zip_sha256": "f30fc51afaaaf43ad586fa0bca3a4fa86fa01671223e810469093db68c85153c",
+    "receipt_file": "h1669-real-tcp.json"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "stage_A": {
+    "firewall_change": "NO_NEW_RULES",
+    "udp": "NO_MATCHING_NATIVE_DELIVERY",
+    "tcp": "NO_MATCHING_SYNACK"
+  },
+  "stage_B": {
+    "new_defender_rule_count": 2,
+    "scope": "same test executable, protocol TCP/UDP, exact virtual listener local IP, remote IP and local/remote port, any firewall profile",
+    "rules": "OWNED_SCOPED_ALLOW_READBACK",
+    "udp": "DELIVERED_TO_NATIVE_LISTENER",
+    "tcp": "KERNEL_SYNACK_OBSERVED",
+    "tcp_full_chain": "SYN_ACK_ACCEPT_DATA_REVERSE_FIN"
+  },
+  "stage_C": {
+    "owned_rule_cleanup": "VERIFIED_ABSENT",
+    "udp": "NO_MATCHING_NATIVE_DELIVERY",
+    "tcp": "NO_MATCHING_SYNACK"
+  },
+  "no_custom_wfp_guard": true,
+  "physical_socket_egress": "NOT_RUN",
+  "rust_win_native_owner": "NOT_RUN",
+  "full_direct_tcp_udp": "NOT_RUN",
+  "conclusion": "Same-VM owned Defender A/B/C change controls injected kernel delivery; single backend choice is local Windows kernel TCP listener with Rust physically bound socket relay (not yet wired). No reliance on old WFP guard. Rule removal independently confirmed.",
+  "boundaries": [
+    "Cannot infer any Direct physical exit, OS no-WFP v2 Ready/Stop or DNS/FakeIP completion from this test.",
+    "No general or permanently allowed global firewall state; production must install only its own narrow listening exception and undo it.",
+    "Existing H1669/H1672/H1690 Windows no-Allow FAIL remains historically true.",
+    "No latency/CPU or P1/P2 measurements."
+  ]
+}

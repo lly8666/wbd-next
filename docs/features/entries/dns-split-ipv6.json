@@ -87,6 +87,13 @@
       "status": "FAIL",
       "source_sha": "0f1eecd44eafc522dee7d8378040817d0c803cc4",
       "evidence": "docs/evidence/M0/PLAN029-H1690-SIGNED-WINTUN-UDP-CONTROL-AND-TCP-SYNACK-FAIL-20261112.json"
+    },
+    {
+      "platform": "Windows2025 same real signed Wintun, scoped owned Defender A/B/C native TCP/UDP",
+      "scope": "H1695 original source 9b4d5ada A both fail, B two exact scoped owned Defender Allow gives UDP native listener and full TCP SYN-ACK/Accept/DATA/reverse/FIN, C rule deletion confirms absent and A failure returns; no Direct physical socket",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9b4d5adafb661bd405a9fe53254daf9754043030",
+      "evidence": "docs/evidence/M0/PLAN029-H1695-REAL-SIGNED-DEFENDER-ABC-NATIVE-TCP-UDP-SCOPED-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -106,7 +113,8 @@
     "H1690 signed Wintun SOURCE0f1eec Action43243971440 real UDP listener self-probe PASS but raw Wintun UDP packet never delivered; TCP SYNACK remains absent, netsh showed BlockInbound default firewall policy but exact drop causality unproven. No WFP/firewall changes, not Direct UDP/TCP or DNS D1-D5 qualification.",
     "H1690a feature verification uses the catalog's required FAIL enum (not unsupported FUNCTIONAL_FAIL); feature-impact declaration and card are paired in this commit. This does not change the network outcome.",
     "2026-11-13用户授权方案修订（尚非实现PASS）：允许精确owned Defender Allow诊断/必要放行，仍不接旧WFP；去assemblyOnly循环验收门，TCP选型调查有界、UDP独立；Direct软4096/硬16384按需，buffer单流背压、DNS缓存/事务/FakeIP分别退让，不能压住Tunnel。详见契约§3B/§5，原失败及NOT_RUN不变。",
-    "H1694 adds one signed Windows A→B scoped owned Defender Allow→C exact cleanup diagnostic in the existing Wintun TCP/UDP gate. Not yet executed at this SOURCE; a Defender default inbound Block is only a hypothesis and an Allow failure does not prove no firewall involvement. No legacy WFP guard or global-disable path."
+    "H1694 adds one signed Windows A→B scoped owned Defender Allow→C exact cleanup diagnostic in the existing Wintun TCP/UDP gate. Not yet executed at this SOURCE; a Defender default inbound Block is only a hypothesis and an Allow failure does not prove no firewall involvement. No legacy WFP guard or global-disable path.",
+    "H1695 Action43338614004 proves local Windows native kernel TCP ingress with exact temporary Defender Allow; this authorizes choosing one kernel TCP backend, not claiming Rust direct socket egress/product Ready. All owned rules removed in stage C. H1695 Rust FlowPin per-resource pressure fix is source only pending CI."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

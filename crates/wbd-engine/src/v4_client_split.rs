@@ -184,20 +184,58 @@ pub(crate) struct FlowKey{
     pub source:u32,pub destination:u32,
     pub source_port:u16,pub destination_port:u16,pub protocol:u8,
 }
+/// Compact pin state is separate from the socket/buffer/transaction quotas.
+/// Direct-only pressure must NEVER suppress a new ordinary Tunnel frame:
+/// Tunnel's existing Rust owner retains its own independent admission gate.
+/// A full opportunistic Tunnel pin cache simply uses the current immutable
+/// policy for that packet; no global flow queue or per-packet timer is added.
 pub(crate) struct FlowPin {
     bound:HashMap<FlowKey,Egress>,
-    max:usize,
+    direct_hard:usize,
+    tunnel_pin_soft:usize,
+    direct_pins:usize,
+    tunnel_pins:usize,
 }
 impl FlowPin{
-    pub fn new(max:usize)->Self{Self{bound:HashMap::new(),max}}
+    pub fn new(direct_hard:usize)->Self{
+        Self::with_limits(direct_hard,direct_hard)
+    }
+    pub fn with_limits(direct_hard:usize,tunnel_pin_soft:usize)->Self{
+        Self{bound:HashMap::new(),direct_hard,tunnel_pin_soft,
+            direct_pins:0,tunnel_pins:0}
+    }
+    #[inline]
     pub fn get(&self,k:&FlowKey)->Option<Egress>{self.bound.get(k).copied()}
     pub fn first(&mut self,key:FlowKey,d:Egress)->Option<Egress>{
         if let Some(old)=self.bound.get(&key){return Some(*old)}
-        if self.bound.len()>=self.max{return None}
-        self.bound.insert(key,d);Some(d)
+        match d {
+            Egress::Direct{..}=>{
+                if self.direct_pins>=self.direct_hard{return None}
+                self.direct_pins+=1;
+            }
+            Egress::Tunnel=>{
+                // A full pin *cache* does not deny Tunnel admission. The
+                // immutable generation policy remains the source of truth
+                // until reconnect; the original tunnel worker applies its
+                // own independent capacity and backpressure policy.
+                if self.tunnel_pins>=self.tunnel_pin_soft{return Some(d)}
+                self.tunnel_pins+=1;
+            }
+            Egress::RejectUnknownFakeIP=>return Some(d),
+        }
+        self.bound.insert(key,d);
+        Some(d)
     }
-    pub fn end(&mut self,key:&FlowKey){self.bound.remove(key);}
+    pub fn end(&mut self,key:&FlowKey){
+        match self.bound.remove(key){
+            Some(Egress::Direct{..})=>self.direct_pins-=1,
+            Some(Egress::Tunnel)=>self.tunnel_pins-=1,
+            _=>{}
+        }
+    }
     pub fn len(&self)->usize{self.bound.len()}
+    pub fn direct_len(&self)->usize{self.direct_pins}
+    pub fn tunnel_len(&self)->usize{self.tunnel_pins}
 }
 #[cfg(test)]
 mod tests {
@@ -273,13 +311,47 @@ mod tests {
     }
     #[test]
     fn plan029_split_flow_pinned_for_relay_until_owned_stop_not_rotation(){
-        let mut cache=FlowPin::new(1);
+        let mut cache=FlowPin::with_limits(1,1);
         let key=FlowKey{source:1,destination:2,source_port:50,destination_port:80,protocol:6};
         let other=FlowKey{source:1,destination:3,source_port:51,destination_port:80,protocol:17};
         assert_eq!(cache.first(key,Egress::Tunnel),Some(Egress::Tunnel));
         assert_eq!(cache.first(key,Egress::Direct{real_dst:2,presented_dst:2}),Some(Egress::Tunnel));
-        assert_eq!(cache.first(other,Egress::Tunnel),None);
+        // Only the opportunistic Tunnel pin cache is full, not the
+        // product tunnel's original admission queue.
+        assert_eq!(cache.first(other,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(cache.tunnel_len(),1);
+        assert_eq!(cache.get(&other),None);
         cache.end(&key);
         assert_eq!(cache.first(other,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(cache.get(&other),Some(Egress::Tunnel));
+    }
+    #[test]
+    fn plan029_direct_hard_full_never_consumes_tunnel_capacity(){
+        let mut cache=FlowPin::with_limits(1,1);
+        let mk=|dst,port|FlowKey{
+            source:7,destination:dst,source_port:port,destination_port:443,protocol:6,
+        };
+        let d1=mk(2,401);let d2=mk(3,402);
+        let t1=mk(4,403);let t2=mk(5,404);
+        let direct=|real|Egress::Direct{real_dst:real,presented_dst:real};
+        assert_eq!(cache.first(d1,direct(2)),Some(direct(2)));
+        assert_eq!(cache.first(d2,direct(3)),None);
+        assert_eq!(cache.direct_len(),1);
+        assert_eq!(cache.first(t1,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(cache.first(t2,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(cache.direct_len(),1);
+        assert_eq!(cache.tunnel_len(),1);
+        assert_eq!(cache.len(),2); // bounded cache, no eager per-flow slab
+        assert_eq!(cache.first(d1,Egress::Tunnel),Some(direct(2)));
+        assert_eq!(cache.first(t1,direct(4)),Some(Egress::Tunnel));
+        assert_eq!(cache.first(mk(99,409),Egress::RejectUnknownFakeIP),
+            Some(Egress::RejectUnknownFakeIP));
+        assert_eq!(cache.len(),2); // never pin an invalid fake address
+        cache.end(&d1);cache.end(&d1); // repeated FIN/Stop is harmless
+        assert_eq!(cache.direct_len(),0);
+        assert_eq!(cache.first(d2,direct(3)),Some(direct(3)));
+        cache.end(&t1);cache.end(&t2);
+        assert_eq!(cache.tunnel_len(),0);
+        assert_eq!(cache.direct_len(),1);
     }
 }

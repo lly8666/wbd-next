@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1694,
-  "checkpoint_sha": "2255e805798e95d6446344faf57432428a7213dc",
+  "sequence": 1695,
+  "checkpoint_sha": "9b4d5adafb661bd405a9fe53254daf9754043030",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1694: one same-signed-Wintun A baseline/B narrow owned Defender TCP+UDP Allow/C exact restore with actual native packet receipts is staged on main; H1690 real UDP/TCP kernel inject FAIL still causal OPEN; legacy WFP remains retired and no-WFP v2 owner/data plane still incomplete.",
-  "why_now": "Newest 2026-11-13 PLAN029 §3B authorizes controlled A/B/C diagnosis after H1690 unknown kernel ingress. Collected H1692 SOURCE9b64 OS-independent build/unit PASS and ACTION43248553062 genuine legacy public two-OS Ready failure at retired guard precondition. No repeat seed or 028 matrix.",
+  "current_task": "PLAN029 H1695: signed Windows kernel TCP/UDP ingress A/B/C PASS with exact owned Defender Allow and verified removal at SOURCE9b4d5ada, choose Windows native kernel TCP listener backend only; code now separates Direct hard pressure from Tunnel flow pin cache, actual Rust Direct/DNS/FakeIP and no-WFP OS Apply/Stop still OPEN.",
+  "why_now": "Observed Action43338614004 real signed Wintun A no native delivery, B exact scoped owned Defender 2 rules UDP delivery + TCP full SYN/Accept/DATA/reverse/FIN, C rules fully removed and delivery disappears. Retain historical failures. Fix policy cache no-shared-hard-limit before native ingress.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First collect H1694 single Windows A/B/C result and exact owned cleanup; if still no delivery, use at most one distinct packet-drop/return-path round, and do not infer firewall absence from Allow failure. In parallel move native Rust ingress/Direct UDP and no-WFP real four-stage generation-owned Apply/Stop; choose one TCP backend, wire DNS/FakeIP/GUI/padding and D1-D5/P1-P2. Do not start 030.",
+  "next_action": "Implement only the qualified local Windows kernel Direct TCP listener and Rust physically bound relay (no smoltcp), with single Wintun ingress/owned NAT/reverse and direct UDP physical socket; implement exact scoped production Defender listening exception as owned cold resource in no-WFP v2 lifecycle, not retired WFP custom guard. Native OS v2 real stage Apply/Stop, selective fake DNS and startup-padding, then SOURCE-locked D1-D5/P1-P2. Build/test H1695 FlowPin change first; don't redispatch A/B/C.",
   "unverified": true,
-  "last_tested_source": "9b64ef8055c9416c1c32d192e8db4caf41d660fa",
+  "last_tested_source": "9b4d5adafb661bd405a9fe53254daf9754043030",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1693-SOURCE-LOCKED-NOWFP-PRODUCT-ENTRY-CLI-UNIT-PASS-20261112.json"
+    "docs/evidence/M0/PLAN029-H1695-REAL-SIGNED-DEFENDER-ABC-NATIVE-TCP-UDP-SCOPED-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1694 diagnostic SOURCE code prepared; real new A/B/C on Win2025 NOT_RUN yet. H1690 signed Wintun UDP listener receives no injected packet and TCP SYNACK absent. H1692 source Go/GUI+no-WFP pure v2 tests PASS only; H1692 older M0-WIN-LINUX Action43248553062 actual two-OS FAILED before client Ready (old ErrN4NativeGuard), no 029 data path qualification. Guard retired, no fake Applied."
+  "partial_summary": "A/B/C SOURCE9b4d Action43338614004 scoped signed Wintun native UDP+TCP kernel ingress with owned Defender Allow PASS, C cleanup VERIFIED_ABSENT. This qualifies Windows native TCP feasibility only, physical socket and Rust owner still NOT_RUN. H1695 Rust FlowPin fix direct-hard vs Tunnel pin memory staged (untested). Old 028 two-OS 43248553062 FAIL before Ready old N4NativeGuard retained. No DNS/FakeIP/Direct product, OS v2, padding or D1-D5/P1-P2 pass."
 }
