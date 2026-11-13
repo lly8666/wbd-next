@@ -1451,21 +1451,26 @@ jobs:
           # Functional TCP test uses a genuine Windows TCP listener on the
           # created Wintun's 10.66.0.2:45902. Windows host firewall may
           # independently deny new inbound SYNs even when authenticated Rust
-          # M3 delivered the packet. Admit ONLY Linux TUN 10.66.0.1 to this
-          # single testing listener; NEVER disable global firewall/WFP.
+          # M3 delivered the packet. In a PLAN029 CN Direct+Tunnel scene
+          # only the truly NON-CN Linux TUN /32 alias is the TCP source.
+          # Keep exactly ONE remote IPv4, one local IPv4 and one test port:
+          # never grant the whole subnet, global Allow or a product TCP rule.
           # The rule is owned by this exact run and deleted in finally.
+          $tcpRemote=if($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1'){
+            '203.0.113.77'
+          }else{'10.66.0.1'}
           $tcpRuleName='WBD-M0-WL-TCP-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
           if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){throw 'foreign scoped TCP listener firewall rule'}
-          New-NetFirewallRule -Name $tcpRuleName -DisplayName $tcpRuleName -Direction Inbound -Action Allow -Enabled True -Profile Any -Protocol TCP -LocalAddress '10.66.0.2' -RemoteAddress '10.66.0.1' -LocalPort 45902 -ErrorAction Stop | Out-Null
+          New-NetFirewallRule -Name $tcpRuleName -DisplayName $tcpRuleName -Direction Inbound -Action Allow -Enabled True -Profile Any -Protocol TCP -LocalAddress '10.66.0.2' -RemoteAddress $tcpRemote -LocalPort 45902 -ErrorAction Stop | Out-Null
           $tcpRule=Get-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
           $tcpPort=Get-NetFirewallPortFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
           $tcpIP=Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
           if($tcpRule.Action -ne 'Allow' -or $tcpRule.Direction -ne 'Inbound' -or
              [string]$tcpPort.LocalPort -ne '45902' -or [string]$tcpPort.Protocol -notin @('TCP','6') -or
-             [string]$tcpIP.LocalAddress -ne '10.66.0.2' -or [string]$tcpIP.RemoteAddress -ne '10.66.0.1'){
+             [string]$tcpIP.LocalAddress -ne '10.66.0.2' -or [string]$tcpIP.RemoteAddress -ne $tcpRemote){
             throw 'scoped WinTun TCP test listener firewall rule readback mismatch'
           }
-          [ordered]@{name=$tcpRuleName;local='10.66.0.2';remote='10.66.0.1';port=45902;type='OWNED_FUNCTIONAL_TCP_LISTENER_NOT_PRODUCT_FIREWALL_POLICY'} |
+          [ordered]@{name=$tcpRuleName;local='10.66.0.2';remote=$tcpRemote;port=45902;type='OWNED_FUNCTIONAL_TCP_LISTENER_NOT_PRODUCT_FIREWALL_POLICY'} |
             ConvertTo-Json | Set-Content result/wl-public/functional-tcp-firewall-owned.json
           Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_SCOPED_READBACK'
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.

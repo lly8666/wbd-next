@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1746",
+  "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+  "result": "H1743_REAL_TUNNEL_PASS_H1745_SIGNED_CN_DIRECT_IN_FLIGHT_H1746_EXACT_TEST_DEFENDER_SOURCE_PENDING",
+  "prior_real": {
+    "run_id": 43414888803,
+    "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+    "conclusion": "success",
+    "scope": "SIGNED_ORIGINAL_GO_RUST_V3_NORMAL_MODE_ALL_TUNNEL_UDP_TCP_STOP"
+  },
+  "inflight": {
+    "run_id": 43422444895,
+    "source_sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
+    "cheap_and_both_os_builds": "success",
+    "native_windows_signed": "IN_PROGRESS_AT_AUTHORING",
+    "actual_direct_cn_delivery": "NOT_YET_RECORDED"
+  },
+  "source_only_fix": "Test-only exact Windows inbound TCP listener port45902: during H1746 signed CN scene, one remote Linux TUN public alias 203.0.113.77/32 instead of old 10.66.0.1; unchanged rule name per GITHUB_RUN_ID+ATTEMPT, readback and finally remove exact owned rule. Product Direct TCP Defender not granted.",
+  "new_signed_source": "PENDING",
+  "not_run": [
+    "H1746 current source actual Windows CN DNS/FakeIP/physical UDP",
+    "product kernel Direct TCP precise route/Defender and Stop",
+    "Tunnel DNS source verification/D1-D5 P1-P2/padding"
+  ]
+}

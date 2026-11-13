@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1745,
-  "checkpoint_sha": "99654433eaa43080015bc782c9e6e4a33703ae1e",
+  "sequence": 1746,
+  "checkpoint_sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1745: H1743 SOURCE17405b签名Win原Go TLS/Rust私有V3 Normal All Tunnel UDP/TCP+四阶段WAL Stop Action43414888803 PASS_SCOPED_REAL；H1744治理SUCCESS。新H1745单真实场景：同原签名Wintun与独立WSL2 Linux TUN非CN 203.0.113.77/32保持Tunnel TCP/UDP；Win真UDP53请求www.cn.example→唯一WSL物理DNS53真实CNAME/A→Rust journal fsync合成FakeIP→原Windows应用UDP发FakeIP→Rust IP_UNICAST_IF物理socket→真实Linux UDP46111回包→原Wintun。SOURCE新编译/签名场景PENDING；Direct TCP Defender/完整D1-D5/P1-P2/padding NOT_RUN。",
-  "why_now": "Tunnel-only signed V3 and four-stage no-WFP Stop have real evidence, but Direct CN and simultaneous two egress lack product evidence. One new source-locked signed Windows original-Go/Rust V3 plus WSL2 scene verifies the missing physical DNS->FakeIP->Direct UDP path and a separate non-CN Tunnel app while preserving original credentials and single Wintun.",
+  "current_task": "PLAN029 H1746: H1745 SOURCE947c真实签名Win/WSL2 CN DNS→FakeIP→Direct UDP和Tunnel TCP/UDP Action43422444895仍在途；cheap/Win+Linux Rust+Go+Linux original source build均PASS、native live job running。源码审查发现H1745专用Linux非CN TUN alias 203.0.113.77作为真TCP源时，Windows Runner既有test-owned TCP allow仍仅允许旧10.66.0.1，可能使baseline Tunnel inbound TCP在Defender层错误失败。只改同一个按Action独占/Stop删除的测试临时规则RemoteAddress为当前场景唯一203.0.113.77，并实际readback，旧场景继续10.66.0.1；不扩大程序产品Defender、不猜真实结果。H1746新SOURCE签名测试待启动；029完整D1-D5/P1-P2/padding仍NOT_RUN。",
+  "why_now": "The H1745 real signed scene is valid but its non-CN Linux TUN source differs from historical test-only Defender ACL on Windows inbound TCP/45902. Correct one precise test-owned address under the exact scenario before interpreting any real signed two-exit result. H1745 in-progress SOURCE remains immutable; no legacy matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1745 signed real Windows+Linux Action. Inspect first specific failure (Linux TUN alias vs direct DNS source vs Rust fake journal vs inverse UDP) and patch it without rerunning the H1743 Tunnel-only matrix. Then implement exact-generation Defender TCP listener and post-Apply arm, real Tunnel DNS, D3-D5/P1-P2/padding; do not start PLAN030.",
+  "next_action": "Collect H1745 first actual Windows signed failure/pass and H1746 new exact scoped rule-source trial separately. If real DNS/FakeIP/Direct UDP fails diagnose that first native packet boundary; once proven proceed with original Go post-Apply Defender and Windows kernel Direct TCP owner, independent Tunnel DNS and D3-D5/P1-P2 startup padding. No 030.",
   "unverified": true,
   "last_tested_source": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1745-H1743-SIGNED-TUNNEL-AND-PENDING-CN-DIRECT-REAL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1746-H1745-TUNNEL-COMPARATOR-DEFENDER-EXACT-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1743 Action43414888803 verified genuine signed Windows original Go TLS Rust private V3 Tunnel UDP/TCP and owned no-WFP Stop. H1745 adds one targeted real two-exit scenario CN→physical DNS→durable FakeIP→physical UDP plus non-CN Tunnel; current SOURCE pending. D1–D5/P1–P2 full still OPEN."
+  "partial_summary": "H1745 signed real CN fake physical UDP plus non-CN Tunnel scene source947c cheap/Win+Linux tests & Go source build PASS, true signed native job IN_PROGRESS (not yet product qualified). H1746 corrects only temporary test-only TCP Allow remote source 203.0.113.77 for actual selected Linux non-CN Tunnel address; product Direct TCP remains default disabled; full PLAN029 OPEN."
 }
