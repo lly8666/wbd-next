@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1721,
-  "checkpoint_sha": "ebaf575c7a08dd2eded8bfe0c79907bd8fb33914",
+  "sequence": 1722,
+  "checkpoint_sha": "065f8f47576440c44fba92a5861c89c7a4ed70f2",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1721: 并行施工源冻结前批：Windows Direct UDP WSAPoll只扫描≤rx_quantum旋转workset，不对16384条逐轮全表poll；FakeIP满时最多64个到期槽安全回收，仍不得淘汰有引用/隔离期；新Direct TCP孤儿ACK/DATA不占flow硬限；加相应Linux/Windows Rust pure tests和单SOURCE双OS并行CI。正式认证Rust NativeOwner双出口/D1–D5/P1–P2仍NOT_RUN，未授权030。",
-  "why_now": "Review of current product seam found provable O(N) Windows UDP readiness scan on every turn and pressure/SYN admission defects independent of the remaining native I/O wiring. Fix these together with one source-locked Windows/Linux Rust test suite, not another diagnostic A/B/C.",
+  "current_task": "PLAN029 H1722: 收回H1721 Linux/Windows Rust纯组件初测Action43388829100 FAIL。新增FakeIP test误要求释放后重用相同numerical地址，实际Rust已安全回收到期并选下一空槽；两OS均编译但此assert FAIL。旧M1 pinned RTRB、Win旧M4 frozen FEC夹具在全量suite另FAIL，非029产品出口；改本Action仅跑plan029_精确用例，不复活旧矩阵。H1722修正后CI待结果；真实NativeOwner两出口仍OPEN/NOT_RUN。",
+  "why_now": "H1721 source-locked two OS jobs exposed a wrong new test expectation, plus unrelated inherited M1/M4 fixture requirements in full engine unit suite. Fix exact assertion and select the PLAN029 test scope; do not classify unrelated full-suite historical failures as 029 egress.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1721 Rust Windows/Linux independent jobs; if green proceed with the original Rust NativeOwner Wintun split dispatch+Direct/Tunnel DNS/TCP/UDP and owned Stop as a single batch, freeze source for full D1–D5/P1–P2. Retain true product NOT_RUN/OPEN until data-plane evidence.",
+  "next_action": "Collect H1722 Windows/Linux scoped Rust jobs, then integrate original authenticated Rust Wintun NativeOwner with physical Direct TCP/UDP and forced direction DNS, FakeIP, owned OS Stop, freeze full source and execute D1-D5/P1-P2.",
   "unverified": true,
-  "last_tested_source": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
+  "last_tested_source": "065f8f47576440c44fba92a5861c89c7a4ed70f2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1720-H1719-GOVERNANCE-REAL-GUI-PREFLIGHT-20261113.json"
+    "docs/evidence/M0/PLAN029-H1722-H1721-WINDOWS-LINUX-FIRST-COMPONENT-TEST-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1721 source-only pending real compiled jobs: UDP bounded round-robin WSAPoll workset, FakeIP pressure safe reclaim, Direct TCP SYN-only new pin. H1719 H1720 five original Go/GUI/governance jobs PASS_SCOPED; real full 029 dual exit, tunnel DNS, P1/P2 and padding remain NOT_RUN."
+  "partial_summary": "H1721 065f8f two-platform compile and platform tests pass; engine test fails due new wrong FakeIP exact-address reuse assertion and unrelated existing M1/M4 test-fixture paths. No real network attempted. H1722 corrects assertion and scope, SOURCE results PENDING. H1719 GUI and H1717 no-WFP OS PASS_SCOPED; full PLAN029 OPEN."
 }

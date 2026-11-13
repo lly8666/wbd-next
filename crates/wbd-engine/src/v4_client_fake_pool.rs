@@ -374,7 +374,10 @@ mod tests{
         assert_eq!(p.prepare(key("two.cn.example",ip(198,51,100,3),1),1,600099),
             Err(FakeError::PoolCapacity));
         let second=p.prepare(key("two.cn.example",ip(198,51,100,3),1),1,600101).unwrap();
-        assert_eq!(second.fake4,first.fake4);
+        // The pool advances to a fresh free slot; reaping only guarantees
+        // that the old key/identity is no longer active, NOT that the
+        // next allocation must reuse its exact numerical IPv4 address.
+        assert_ne!(second.fake4,first.fake4);
         assert!(second.persist_before_reply);
         assert_eq!(p.announced_real(first.fake4),None);
         p.acknowledge_durable(second.fake4).unwrap();

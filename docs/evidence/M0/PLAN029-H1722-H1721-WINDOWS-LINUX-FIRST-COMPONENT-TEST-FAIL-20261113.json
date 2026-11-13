@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1722",
+  "source_sha": "065f8f47576440c44fba92a5861c89c7a4ed70f2",
+  "recorded_date": "2026-11-13",
+  "result": "FAIL_SOURCE_LOCKED_FIRST_WINDOWS_LINUX_NATIVE_029_RUST_TEST_SELECTION",
+  "action": {
+    "run_id": 43388829100,
+    "head_sha": "065f8f47576440c44fba92a5861c89c7a4ed70f2",
+    "windows_job_id": 131763599192,
+    "linux_job_id": 131763598889,
+    "conclusion": "failure"
+  },
+  "first_new_test_failure": {
+    "test": "v4_client_fake_pool::tests::plan029_fake_pool_pressure_reclaims_only_safe_expired_slot_before_refusing",
+    "actual": 3323068418,
+    "incorrect_expected": 3323068417,
+    "cause": "test wrongly asserted immediate numerical fake address reuse after safe expiration; allocator intentionally advances next4; no product DNS reply was delivered"
+  },
+  "other_unrelated_native_suite_failures": [
+    "runtime::directional::pinned_rtrb_overlay_proof requires M1 donor temporary Cargo manifest missing",
+    "Windows v4_windows_owner::fec2 frozen Linux stream test fixture missing"
+  ],
+  "platform": "wbd-platform unit 46/46 PASS both OS",
+  "engines": "Linux 298 passed/2 failed/1 ignored; Windows 331 passed/3 failed/1 ignored",
+  "fix": "expect new eligible numerical FakeIP rather than identical reissued address, verify prior key unreachable; limit this action's engine test filter to plan029_ test cases, do not alter M1/M4 source",
+  "product_direct_tunnel_network": "NOT_RUN",
+  "governance_action": 43388829105,
+  "governance_conclusion": "success",
+  "maintenance_action": 43388829259,
+  "maintenance_conclusion": "success"
+}
