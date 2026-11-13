@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1733,
-  "checkpoint_sha": "1e022b113ea271475d3556b8bf34415ccdfdd97b",
+  "sequence": 1734,
+  "checkpoint_sha": "97f81b60c5c2a1d5a3858520360b267d1df68c87",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1733：原认证Rust NativeOwner私有V3同一Wintun TX引入purpose-first CN DNS53 单一IP_UNICAST_IF物理UDP DNS socket，最多256 in-flight/16轮询，pending/coalesce/same socket source验证；CN A只在FakeIP journal fsync后回注，缺journal SERVFAIL，不泄真实CDN A；正常原Rust RX mailbox Wintun回包。Go冷接口增加FakeJournal绝对路径并改Rust/Go V3 ABI 104→120/320→336、同步manifest。当前SOURCE CI待跑；Tunnel DNS仅原请求已经发向唯一tunnel endpoint则保持普通Tunnel，其他fail-closed，DNS-over-TCP fallback尚未做；TCP/owned Stop/全场景NOT_RUN。",
-  "why_now": "The H1731 source-locked scoped NativeOwner works for Direct business UDP but treated all captured DNS53 as drop. Implement first real physical DNS network leg with strict FakeIP publish-after-fsync inside the original native owner; do not claim finished two-endpoint product.",
+  "current_task": "PLAN029 H1734: H1733 97f81 原Go Windows source build43401408400成功、WinGNU跨ABI43401408444成功、Linux Rust43401408614通过，Win Rust组件 52 PASS/1 FAIL：原DNS测试仍期望LocalDrop，而新缺journal的CN域名实际DirectHandled并回注SERVFAIL，保留原FAIL。本SOURCE新增同一原Rust Wintun TX改写非CN DNS目的地到唯一tunnel DNS、原认证RX在端口53回复按ID+client port逆还原原DNS源；Arc Mutex只在DNS端点，256硬上限/5s期满，支持Normal/Fixed，不向物理出口回退。H1734 Win/Linux/Go CI PENDING；生产V3/真实D1–D5/P1–P2仍NOT_RUN。",
+  "why_now": "First real Windows H1733 source-locked test failure is a stale test expectation, not a Rust compiler or actual network result. Fix it and implement the other required DNS purpose direction with exact inverse tuple so a captured custom resolver cannot leak to arbitrary destination or deliver from a mismatched endpoint.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1733 Windows/Linux native Rust and original-Go compile Actions once, fix first source error, then implement tunnel DNS forced dst/inverse translation, same-endpoint TCP retry, kernel Direct TCP owned listener and no-old-WFP four-stage product, run actual D1-D5/P1-P2. Preserve historical FAIL and don't start 030.",
+  "next_action": "Collect H1734 source-locked Windows/Linux Rust/native Go jobs; then finish same-endpoint DNS-over-TCP, Windows Direct kernel TCP actor/owned Defender, production no-WFP 4-stage V3 activation and stop/recovery, run signed D1-D5/P1-P2/perf. Don't retry old H1709/H1713 probes without a new hypothesis.",
   "unverified": true,
-  "last_tested_source": "1e022b113ea271475d3556b8bf34415ccdfdd97b",
+  "last_tested_source": "97f81b60c5c2a1d5a3858520360b267d1df68c87",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1733-H1731-CI-AND-NATIVE-DIRECT-DNS-PROBE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1734-H1733-FIRST-NATIVE-DNS-FAIL-AND-TUNNEL-REMAP-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1731 Rust Windows53/53 private V3, Linux45/45 and GNU ABI PASS_SCOPED; H1733 new source-only genuine bound physical direct DNS request+FakeIP WAL flush+Wintun response under probe V3, full Windows compiler and product network NOT_RUN. Direct TCP and tunnel DNS remain OPEN."
+  "partial_summary": "H1733 Go Windows source and GNU cross ABI SUCCESS_SCOPED; Linux Rust PASS, Windows Rust FAIL due old DNS drop expected despite new DirectHandled SERVFAIL. H1734 one native owner forced Tunnel DNS query destination/inverse answer NAT source pending CI, product not activated, real two-egress NOT_RUN."
 }

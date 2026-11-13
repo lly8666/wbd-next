@@ -9,6 +9,7 @@
  use crate::v4_windows_native_split::{
      NativeSplitWorker,NativeDecision,ColdSplitSourceV1,
  };
+ use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
  use std::time::Duration;
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
@@ -388,6 +389,12 @@
                  if let Some(s)=split.as_mut(){
                      match s.on_packet(&sources[count][..n],now_ms){
                          NativeDecision::Tunnel=>{},
+                         NativeDecision::TunnelDns=>{
+                             if !s.rewrite_tunnel_dns(&mut sources[count][..n],now_ms){
+                                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+                                 continue
+                             }
+                         },
                          NativeDecision::DirectHandled=>continue,
                          NativeDecision::LocalDrop=>{
                              counters.rejected.fetch_add(1,Ordering::Relaxed);
@@ -829,12 +836,25 @@
          match result {Ok(true)=>return OK,Ok(false)=>{},Err(code)=>return code}
      }
  }
+ /// The fast path performs NO DNS map lookup and NO mutex for all DATA
+ /// except a UDP response with source port 53. Only actual authenticated
+ /// replies can restore the application's original presented DNS IPv4.
+ fn owned_tunnel_dns_reply(packet:&mut[u8],
+     map:Option<&Arc<Mutex<TunnelDnsMap>>>)->Result<bool,i32>{
+     let Some(map)=map else{return Ok(true)};
+     if packet.len()<28||packet[0]>>4!=4||packet[9]!=17{return Ok(true)}
+     let ihl=usize::from(packet[0]&15)*4;
+     if packet.len()<ihl+8||packet[ihl..ihl+2]!=[0,53]{return Ok(true)}
+     let mut map=map.lock().map_err(|_|BAD_STAGE)?;
+     Ok(map.rewrite_reply(packet,m2_clock().0/1_000_000).unwrap_or(true))
+ }
  // Returns true only for authenticated DATA or CONTROL whose ACK/M2
  // state was updated. The RX worker performs the bounded TX notification.
  fn open_and_deliver(cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      tun:&mut WintunTx,counters:&Counters,
      ack:&mut PresentationAck,seq:u32,wire:&[u8],
-     plain:&mut [u8;MAX_IPV4],fixed:bool)->Result<bool,i32>{
+     plain:&mut [u8;MAX_IPV4],fixed:bool,
+     tunnel_dns:Option<&Arc<Mutex<TunnelDnsMap>>>)->Result<bool,i32>{
      if fixed{
          #[cfg(feature="fec2_product_record")]
          {
@@ -845,10 +865,14 @@
              };
              match delivered{
                  Ok(frames)=>{
-                     for frame in frames{
-                         tun.deliver_authenticated(&frame.frame[..frame.length as usize])
-                             .map_err(|_|BAD_STAGE)?;
-                         counters.rx_delivered.fetch_add(1,Ordering::Release);
+                     for mut frame in frames{
+                         let data=&mut frame.frame[..frame.length as usize];
+                         if owned_tunnel_dns_reply(data,tunnel_dns)?{
+                             tun.deliver_authenticated(data).map_err(|_|BAD_STAGE)?;
+                             counters.rx_delivered.fetch_add(1,Ordering::Release);
+                         }else{
+                             counters.rejected.fetch_add(1,Ordering::Relaxed);
+                         }
                      }
                      counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
                      return Ok(true)
@@ -871,9 +895,13 @@
      };
      match opened {
          Ok((used,1,_))=>{
-             tun.deliver_authenticated(&plain[..used]).map_err(|_|BAD_STAGE)?;
+             if owned_tunnel_dns_reply(&mut plain[..used],tunnel_dns)?{
+                 tun.deliver_authenticated(&plain[..used]).map_err(|_|BAD_STAGE)?;
+                 counters.rx_delivered.fetch_add(1,Ordering::Release);
+             }else{
+                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+             }
              counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
-             counters.rx_delivered.fetch_add(1,Ordering::Release);
              Ok(true)
          },
          Ok((_,2,_))=>{
@@ -898,7 +926,8 @@
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
      counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,
-     direct_returns:Option<Receiver<Vec<u8>>>)->i32{
+     direct_returns:Option<Receiver<Vec<u8>>>,
+     tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>)->i32{
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
      let trusted=TrustedRx{
          tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
@@ -941,7 +970,8 @@
              };
              let Some((seq,record))=next else{break};
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
-                 &counters,&mut ack,seq,&record,&mut plain,fixed){
+                 &counters,&mut ack,seq,&record,&mut plain,fixed,
+                 tunnel_dns.as_ref()){
                  Ok(v)=>v,Err(code)=>return code
              };
              if verified&&early_wakes.note_verified(){
@@ -984,7 +1014,8 @@
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
-                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain,fixed){
+                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain,fixed,
+                 tunnel_dns.as_ref()){
                  Ok(v)=>v,Err(code)=>return code
              };
              if verified{
@@ -1163,6 +1194,7 @@
      let counters=Arc::new(Counters::new(config.initial_rx_seq,config.initial_tx_seq));
      let rx_notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let early=Arc::new(Mutex::new(VecDeque::with_capacity(64)));
+     let tunnel_dns_map=split.as_ref().map(|s|s.tunnel_map());
      let (direct_sender,direct_receiver)=if split.is_some(){
          let (tx,rx)=sync_channel::<Vec<u8>>(256);
          (Some(tx),Some(rx))
@@ -1193,7 +1225,7 @@
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated,
-             direct_receiver);
+             direct_receiver,tunnel_dns_map);
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();

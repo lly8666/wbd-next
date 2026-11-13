@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1734",
+  "source_sha": "97f81b60c5c2a1d5a3858520360b267d1df68c87",
+  "result": "H1733_GO_WINDOWS_AND_CROSS_ABI_PASS_BUT_WINDOWS_RUST_FAIL_SCOPED_OLD_DNS_EXPECTATION",
+  "actions": [
+    {
+      "run_id": 43401408400,
+      "scope": "original Go Windows source compile",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 43401408444,
+      "scope": "GNU Windows+Linux ARM64 cross ABI",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 43401408614,
+      "scope": "PLAN029 native Rust Windows/Linux tests",
+      "conclusion": "failure",
+      "windows": {
+        "job_id": 131804868194,
+        "passed": 52,
+        "failed": 1,
+        "first_test": "plan029_native_rust_owner_single_wintun_ingress_separates_tunnel_and_nonleaking_dns",
+        "observed": "DirectHandled",
+        "stale_expected": "LocalDrop"
+      },
+      "linux": {
+        "job_id": 131804867784,
+        "conclusion": "success"
+      }
+    }
+  ],
+  "fix": "Old test now confirms DirectHandled and actual fail-closed DNS SERVFAIL reverse with no journal. Non-CN Tunnel UDP DNS purpose NAT readdresses to configured tunnel endpoint and restores the original DNS source on authenticated reply, bounded lookup only for UDP sport53.",
+  "new_source": "SOURCE_PENDING_CI",
+  "formal_two_egress": "NOT_RUN",
+  "pending": [
+    "DNS TCP same endpoint",
+    "Direct kernel TCP+Defender+WAL Stop",
+    "product Go V3 activation",
+    "D1-D5/P1-P2/padding"
+  ]
+}

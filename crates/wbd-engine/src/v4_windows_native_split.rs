@@ -14,6 +14,8 @@ use crate::v4_client_fake_pool::FakeAllocator;
 use crate::v4_client_fake_journal::FakeJournal;
 use crate::v4_windows_native_dns_direct::DirectDns;
 use std::path::PathBuf;
+use std::sync::Mutex;
+use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
 
 const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
@@ -50,6 +52,7 @@ pub(crate) struct ColdSplitSourceV1 {
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum NativeDecision {
     Tunnel,
+    TunnelDns,
     DirectHandled,
     LocalDrop,
 }
@@ -60,6 +63,7 @@ pub(crate) struct NativeSplitWorker {
     journal:Option<FakeJournal>,
     dns:DirectDns,
     tunnel_dns:Ipv4Addr,
+    tunnel_map:Arc<Mutex<TunnelDnsMap>>,
     last_tick_ms:u64,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
@@ -179,9 +183,24 @@ impl NativeSplitWorker {
         }else{(None,fakes)};
         let dns=DirectDns::new(underlay,c.physical_ifindex,lease,
             direct_dns,c.inner_mtu as usize);
+        let tunnel_map=Arc::new(Mutex::new(TunnelDnsMap::new(
+            u32::from(lease),u32::from(tunnel_dns))));
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
-            udp,fakes,journal,dns,tunnel_dns,last_tick_ms:0})
+            udp,fakes,journal,dns,tunnel_dns,tunnel_map,last_tick_ms:0})
+    }
+    pub(crate) fn tunnel_map(&self)->Arc<Mutex<TunnelDnsMap>>{
+        Arc::clone(&self.tunnel_map)
+    }
+    /// In-place destination NAT happens on the already copied Wintun
+    /// source slot BEFORE the original Rust AEAD seal. Only DNS UDP53,
+    /// never ordinary Tunnel DATA, allocates one map entry.
+    pub(crate) fn rewrite_tunnel_dns(&mut self,packet:&mut[u8],
+        now_ms:u64)->bool{
+        match self.tunnel_map.lock(){
+            Ok(mut map)=>map.rewrite_query(packet,now_ms).is_ok(),
+            Err(_)=>false,
+        }
     }
     pub(crate) fn has_udp_flows(&self)->bool{
         self.udp.len()>0||self.dns.has_work()
@@ -228,12 +247,10 @@ impl NativeSplitWorker {
                         }else{NativeDecision::LocalDrop}
                     },
                     crate::v4_client_split::DnsEgress::Tunnel=>{
-                        // Fail closed until forced tunnel DNS rewrite and
-                        // exact inverse source translation are installed.
-                        if packet.get(16..20)==
-                           Some(self.tunnel_dns.octets().as_slice()){
-                            NativeDecision::Tunnel
-                        }else{NativeDecision::LocalDrop}
+                        // Caller changes only this DNS request's destination
+                        // to the unique Tunnel resolver and seals it through
+                        // the ORIGINAL authenticated M3/AEAD/FEC path.
+                        NativeDecision::TunnelDns
                     },
                 }
             },
@@ -260,6 +277,7 @@ impl NativeSplitWorker {
         self.last_tick_ms=now_ms;
         self.udp.expire_some(now_ms,64);
         self.ingress.on_expiry_tick(now_ms);
+        if let Ok(mut map)=self.tunnel_map.lock(){map.expire(now_ms)}
         // FakeIP journal and ref expiry require the separate DNS worker
         // before any synthesized mapping can be exposed.
     }
@@ -316,7 +334,15 @@ mod tests{
         dns.extend_from_slice(&1u16.to_be_bytes());
         dns.extend_from_slice(&1u16.to_be_bytes());
         assert_eq!(s.on_packet(&packet([8,8,8,8],53,&dns),2),
-            NativeDecision::LocalDrop);
+            NativeDecision::DirectHandled);
+        // Without a cold durable journal: one local SERVFAIL, no physical
+        // socket and no real overseas CDN A response.
+        assert_eq!(s.dns.counts(),(0,0,1));
+        let mut reply=[0u8;2048];
+        let n=s.poll_udp_reverse(&mut reply,2).unwrap();
+        assert_eq!(reply[20..22],[0,53]);
+        assert_eq!(reply[29]&0xf,2);
+        assert!(n>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
     }
