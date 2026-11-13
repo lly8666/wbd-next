@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1703",
+  "observed_at": "2026-11-13",
+  "source_sha": "c50de35cac2bfd9e2e78d9113919fd83a42af0f4",
+  "result": "PASS_SCOPED_REAL_WINDOWS_PHYSICAL_NIC_BOUND_SOCKET_LOCAL_ECHO_ONLY",
+  "artifact_verified": false,
+  "action": {
+    "run_id": 43350031538,
+    "job_id": 131638580399,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43350031538"
+  },
+  "artifact": {
+    "id": 14003361953,
+    "name": "plan029-h1702-physical-bound-udp-43350031538",
+    "zip_sha256": "509f30b7463f84843b6225d8a2bbf7a6724c16e9b41a463a32629845edf665f8"
+  },
+  "observed": [
+    "real Windows2025 physical IPv4 source 10.1.0.21 on ifindex14",
+    "IP_UNICAST_IF SET network byte order, GET host byte order returned requested14=observed14",
+    "Rust physical-bound connected UDP socket sent real Windows kernel datagram and received native socket reply from same host; H1703 rerun 4 tests PASS",
+    "No old WFP/Firewall/route mutations in this local socket scene"
+  ],
+  "not_run": [
+    "original signed Wintun actual client->guest relay",
+    "independent Linux guest",
+    "off-host internet physical wire",
+    "product Rust Direct/Tunnel or original TLS",
+    "DNS53 CN/FakeIP real",
+    "normal and Game4",
+    "GUI/padding and D1-D5/P1-P2"
+  ],
+  "retained_failure": {
+    "source_sha": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
+    "run_id": 43349211216,
+    "first_error": "PhysicalUdpSocket::open returned InterfaceBind at WinSock GET; incorrectly treated native HOST-endian index14 as network-endian",
+    "scope": "old code real FAIL, never rewritten"
+  }
+}

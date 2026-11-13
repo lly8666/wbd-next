@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1703,
-  "checkpoint_sha": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
+  "sequence": 1704,
+  "checkpoint_sha": "c50de35cac2bfd9e2e78d9113919fd83a42af0f4",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1703: source7ac H1702 real Win2025 NIC source10.1.0.8 ifindex14 UDP socket qualified scene FAILED InterfaceBind before send (3 pure tests PASS). Found official WinSock IP_UNICAST_IF GET host byte order vs SET network; corrected previous erroneous reverse conversion and separated set/get/readback/connect first error. H1703 rerun pending, no real Direct product.",
-  "why_now": "Actual real signed native capability scene H1702 failed at combined InterfaceBind; mature WinSock option spec shows SET network order, GET HOST order. Correct first identified source bug and retain stage-resolved diagnostics without any Defender/route/global policy change.",
+  "current_task": "PLAN029 H1704: H1703 Action43350031538 real Windows physical NIC-bound UDP socket local same-host echo PASS with WinSock ifindex14, not Wintun; actual one signed Wintun original owned generation borrowed by Rust non-product probe with physical UDP to independent Ubuntu WSL2 guest and Rust L3 reverse test authored and one Action to run. No product Ready.",
+  "why_now": "After H1703 real bind qualification, bypass same-host loop and directly exercise a true original Windows UDP application→signed owned Wintun RX (Rust single reader)→physical-bound source/ifindex UDP socket→independent Linux guest kernel→Rust Wintun TX→Windows application. No Go per-packet relay, no old WFP, exact test-owned route/lease/finally.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1703 same single Windows physical-source UDP socket local echo Action; no blind retry if still FAIL—use newly separated error code and repair first cause. Then integrate physically bound UDP into one original Rust Wintun ingress, off-host socket echo/reverse with owned Stop, and selected kernel TCP two-leg backend, DNS53/FakeIP TTL, GUI/padding, D1-D5/P1-P2. Keep scoped PASS H1694/H1697 distinct; no old 028/030.",
+  "next_action": "Collect H1704 one signed Wintun Rust physical UDP independent guest Action; if fail locate FIRST stage and exact owned cleanup, correct only causal issue rather than retry same probe. Then use the qualified parts inside single authenticated NativeOwner ingress/worker, implement chosen Windows kernel TCP socket relay and DNS53/FakeIP with bounded capacities, GUI/padding, independent scoped Normal/Game4 D1-D5/P1-P2. Do not claim test-only FFI product Ready; 028 scoped, 030 not started.",
   "unverified": true,
-  "last_tested_source": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
+  "last_tested_source": "c50de35cac2bfd9e2e78d9113919fd83a42af0f4",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1702-REAL-WINDOWS-PHYSICAL-UDP-OPTION-COLD-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1703-REAL-WIN32-UNICAST-IF-LOCAL-ECHO-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1702 source7ac real Win2025 physical source10.1.0.8/ifindex14 socket returned generic InterfaceBind before any send: FAIL, 3 pure tests PASS. H1703 fixes Microsoft-spec GET host vs SET network DWORD and adds distinct WSAGetLastError boundary log, new native result pending. H1701 cross-platform Rust unit PASS. H1694 signed native kernel TCP A/B/C + H1697 real no-WFP OS Apply/Stop PASS scoped; full PLAN029 remains IN_PROGRESS."
+  "partial_summary": "H1703 source c50de real WinSock source 10.1.0.21 ifindex14 local UDP return PASS; prior H1702 failure retained. H1704 one independent Ubuntu WSL2 guest Rust borrowed signed Wintun physical UDP reverse test-only scene authored with exact Go owner loan and WSL HyperV UDP 46098 owned rule. This is pending/NOT_RUN and not an authenticated product. H1694 kernel TCP A/B/C, H1697 4stage noWFP OS PASS retained, D1-D5/P1-P2 still OPEN."
 }

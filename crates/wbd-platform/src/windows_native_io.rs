@@ -415,9 +415,19 @@ impl WintunRx {
     }
 }
 impl WintunTx {
-    /// The Rust M3 owner must authenticate and replay-check first. Wintun
-    /// AllocateSendPacket always needs a matching SendPacket upon success.
+    /// Tunnel DATA must first pass Rust M3 authentication/replay checks.
+    /// Direct replies instead need a current-generation physically bound
+    /// socket/tuple match; they are not encrypted tunnel packets.
     pub fn deliver_authenticated(&mut self, packet: &[u8]) -> Result<(), NativeIoError> {
+        self.deliver_ipv4_bytes(packet)
+    }
+    /// Direct-only reply. Caller must have verified a current-generation
+    /// connected physical socket, fixed original Wintun tuple and payload
+    /// limits BEFORE allocating any packet slot. This is not a new reader.
+    pub fn deliver_native_direct_response(&mut self, packet: &[u8]) -> Result<(), NativeIoError> {
+        self.deliver_ipv4_bytes(packet)
+    }
+    fn deliver_ipv4_bytes(&mut self,packet:&[u8])->Result<(),NativeIoError>{
         if ipv4_packet_size(packet) != Some(packet.len()) {
             return Err(NativeIoError::InvalidFrame);
         }

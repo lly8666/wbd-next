@@ -1,0 +1,142 @@
+name: PLAN029 H1704 real signed Wintun Rust physical UDP independent Ubuntu guest reverse (diagnostic)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1704-wintun-rust-guest-udp.yml"
+      - "tools/m0_plan029_h1704_wintun_rust_guest_udp_windows_test.go"
+      - "crates/wbd-engine/src/v4_windows_plan029_udp_gate.rs"
+permissions: {contents: read}
+jobs:
+  signed-wintun-rust-udp-independent-linux-guest:
+    runs-on: windows-2025
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: SOURCE-pinned Rust native DLL and original-Go Windows Wintun executable
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result,win-native | Out-Null
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'wrong actual Git SOURCE'}
+          if((git -C legacy rev-parse HEAD).Trim() -ne 'a7a82db31fe736ffedee330795a3234d358f1984'){throw 'wrong pinned original Go donor'}
+          & rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'pinned Rust 1.85.1 install failed'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe 2>&1 |
+            Tee-Object result/h1704-rust-build.log
+          if($LASTEXITCODE -ne 0){throw 'real Rust test-only Wintun I/O DLL compile failed'}
+          if(-not(Test-Path target/release/wbd_engine.dll)){throw 'missing compiled Rust DLL'}
+          Copy-Item target/release/wbd_engine.dll win-native/wbd_engine.dll
+          & python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'pinned Windows native overlay manifest mismatch'}
+          Copy-Item tools/m0_plan029_h1704_wintun_rust_guest_udp_windows_test.go legacy/internal/windowsclient/h1704_wintun_rust_guest_udp_windows_test.go
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile win-native/wintun.zip -TimeoutSec 40
+          if((Get-FileHash win-native/wintun.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'wintun release hash mismatch'}
+          Expand-Archive win-native/wintun.zip -DestinationPath win-native/release -Force
+          $dll='win-native/release/wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'real Wintun driver DLL not signed'}
+          Copy-Item $dll win-native/wintun.dll
+          Push-Location legacy
+          try {
+            & go test -c -tags wbd_v4_embedded_go -o ../win-native/h1704-real-wintun-udp.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'pinned original Windows Go + test-only signed Wintun build failed'}
+          } finally {Pop-Location}
+          Write-Output 'PLAN029_H1704_RUST_DLL_AND_ORIGINAL_GO_SIGNED_DRIVER_SOURCE_BUILD_PASS'
+      - name: Boot one independently networked real Ubuntu WSL2 guest
+        shell: pwsh
+        timeout-minutes: 9
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 distro query unavailable'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/h1704-ubuntu-import.log
+            if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
+          }
+          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 2>&1 | Out-String)
+          if($LASTEXITCODE -ne 0){throw 'real independent Linux eth0 unavailable'}
+          $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
+          $ip=$m.Groups[1].Value
+          if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
+          $ip | Set-Content -Encoding ascii result/h1704-ubuntu-guest-ip.txt
+          Write-Output "PLAN029_H1704_INDEPENDENT_GUEST_READY ip=$ip topology=WSL2_vEthernet_not_off_host_internet"
+      - name: Exactly one scoped owned Hyper-V WSL2 UDP inbound rule for guest port 46098
+        shell: pwsh
+        timeout-minutes: 1
+        run: |
+          $ErrorActionPreference='Stop'
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'WSL HyperV creator not uniquely owned'}
+          $name='WBD-P029-H1704-'+$env:GITHUB_RUN_ID
+          New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol UDP -LocalPorts @('46098') -ErrorAction Stop | Out-Null
+          $name | Set-Content -Encoding ascii result/h1704-owned-hyperv-firewall.txt
+      - name: One REAL Wintun original app → Rust Direct UDP physical bound → Linux guest → Wintun app reverse
+        shell: pwsh
+        timeout-minutes: 4
+        env:
+          WBD_P029_H1704_OWNED_GATE: "1"
+          WBD_P029_H1704_RECEIPT: ${{ github.workspace }}\result\h1704-real-udp-guest.json
+          WBD_P029_H1704_RUST_DLL: ${{ github.workspace }}\win-native\wbd_engine.dll
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:WBD_P029_H1704_GUEST_IP=(Get-Content result/h1704-ubuntu-guest-ip.txt -Raw).Trim()
+          & ./win-native/h1704-real-wintun-udp.exe '-test.run=^TestPlan029H1704WintunRustBoundUdpIndependentLinuxGuestReverse$' '-test.v=true' '-test.count=1' '-test.timeout=105s' 2>&1 | Tee-Object result/h1704-real-udp-guest.log
+          if($LASTEXITCODE -ne 0){throw 'first actual Wintun/Rust/Ubuntu UDP ingress/egress failure; inspect first stage and owned Stop'}
+          $r=Get-Content result/h1704-real-udp-guest.json -Raw | ConvertFrom-Json
+          if($r.source_sha -ne $env:GITHUB_SHA -or $r.result -ne 'PASS_SCOPED_GENUINE_WINTUN_RUST_UDP_INDEPENDENT_GUEST_REVERSE' -or
+            $r.old_wfp_guard -ne 'NOT_CREATED' -or $r.app_read -ne 'PASS_ORIGINAL_WINDOWS_UDP_APP_REVERSE'){
+              throw 'actual independent Linux guest reciprocal UDP delivery was not proven'
+          }
+          Write-Output 'PLAN029_H1704_REAL_INDEPENDENT_LINUX_GUEST_WINTUN_RUST_UDP_REVERSE_PASS_DIAGNOSTIC_ONLY'
+      - name: Remove EXACT one owned WSL guest UDP Hyper-V rule; no system or third-party firewall changes
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path result/h1704-owned-hyperv-firewall.txt){
+            $name=(Get-Content result/h1704-owned-hyperv-firewall.txt -Raw).Trim()
+            if($name -ne ('WBD-P029-H1704-'+$env:GITHUB_RUN_ID)){throw 'refusing to touch foreign firewall owner'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL guest rule survived Stop'}
+            Write-Output 'PLAN029_H1704_EXACT_OWNED_HYPERV_WSL_GUEST_RULE_REMOVED'
+          }
+      - name: Preserve explicit SOURCE and not-product scope on any failure
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force result | Out-Null
+          [ordered]@{
+            source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;
+            scope='SINGLE_SIGNED_WINTUN_RUST_UDP_INDEPENDENT_WSL2_GUEST_DIAGNOSTIC';
+            true_off_host_physical_internet='NOT_RUN';full_product_ready='NOT_RUN';
+            dns_cn_fakeip_policy='NOT_RUN';normal_game4_tls='NOT_RUN'
+          } | ConvertTo-Json | Set-Content -Encoding UTF8 result/h1704-source.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1704-wintun-rust-independent-ubuntu-udp-${{ github.run_id }}
+          path: |
+            result/h1704-real-udp-guest.log
+            result/h1704-real-udp-guest.json
+            result/h1704-ubuntu-guest-ip.txt
+            result/h1704-ubuntu-import.log
+            result/h1704-rust-build.log
+            result/h1704-source.json
+          if-no-files-found: warn
+          retention-days: 14

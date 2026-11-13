@@ -271,13 +271,20 @@
    "status": "FAIL",
    "source_sha": "7ac13ab216ca814b38db6aa7ed83c84927a1c87e",
    "evidence": "docs/evidence/M0/PLAN029-H1702-REAL-WINDOWS-PHYSICAL-UDP-OPTION-COLD-FAIL-20261113.json"
+  },
+  {
+   "platform": "Windows2025 signed WinSock physical IPv4 test",
+   "scope": "H1703 ifindex14 source10.1.0.21 IP_UNICAST_IF SET/GET and local UDP/return 4/4 PASS. Remote separate guest and Wintun NOT_RUN.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "c50de35cac2bfd9e2e78d9113919fd83a42af0f4",
+   "evidence": "docs/evidence/M0/PLAN029-H1703-REAL-WIN32-UNICAST-IF-LOCAL-ECHO-PASS-20261113.json"
   }
  ],
  "limitations": [
   "七模式/固定FEC/Auto/大包等旧SOURCE真业务证据仍保留在verification及对应旧devlog；新SOURCE只按受影响功能补代表场景，不能用编译成功冒充全模式实网。",
   "User excludes same-Windows-host two-Wintun tests. H1587 old double Wintun global /1 route/WAL CAS actual FAIL preserved; this concurrent Windows host combination is unsupported/unverified, cannot infer PASS from cross-OS same-account.",
   "H1601/H1623 scoped PASS and H1592 scope limitations remain in verification and linked evidence, not promoted to PLAN029 product E2E.",
-  "H1702 source7ac real physical UDP local-echo FAIL on InterfaceBind before send; H1703 separates cold SET/GET/connect failures and corrects host-endian getsockopt. Not off-host egress or Wintun Direct."
+  "H1703 actual source-bound WinSock ifindex14 same-host echo PASS at SOURCEc50; H1704 separate Linux guest Wintun/Rust UDP single-scene test is code only and not full product."
  ],
  "promotion": null,
  "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",

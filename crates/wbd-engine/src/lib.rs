@@ -69,6 +69,11 @@ mod v4_embedded_go;
 mod v4_windows_owner;
 #[cfg(all(feature = "m0_v4_probe", target_os = "linux"))]
 mod v4_probe_bridge;
+// PLAN029: explicit NON-PRODUCT Windows test-only real Wintun→Rust
+// source/ifindex-bound UDP→independent Ubuntu guest→Wintun ingress gate.
+// Does not alter ordinary native ABI or grant public Direct readiness.
+#[cfg(all(feature = "m0_v4_probe", target_os = "windows"))]
+mod v4_windows_plan029_udp_gate;
 
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;
