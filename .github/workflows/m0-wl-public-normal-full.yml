@@ -502,7 +502,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan028_tls_wire_audit -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
       - run: python -m unittest tests.test_m0_plan028_h1619_exact_accelerated_prebuilt_manifest -v
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tests/test_m0_plan027_managed_unilateral.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tests/test_m0_plan027_managed_unilateral.py
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
       - run: python -m unittest tests.test_m0_wl_scoped_game2_trigger -v
@@ -926,7 +926,8 @@ jobs:
       WBD_PLAN028_WIN5_SCENE: ${{ startsWith(matrix.win5_scene, 'mixed-') && '' || matrix.win5_scene == 'legacy' && '' || matrix.win5_scene }}
       # One explicit current-SOURCE signed Windows NativeOwner V3
       # Tunnel-only qualification. No PLAN028 matrix or public default.
-      WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') && '1' || '0' }}
+      WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]')) && '1' || '0' }}
+      WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
       WBD_PLAN028_WIN_REAL_COLD_SEED: ${{ github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]')) && '1' || '0' }}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1745",
+  "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+  "date": "2026-11-13",
+  "prior": {
+    "run_id": 43414888803,
+    "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+    "conclusion": "success",
+    "job_id": 131852507579,
+    "scope": "REAL_SIGNED_ORIGINAL_GO_RUST_V3_NORMAL_ALL_TUNNEL_TCP_UDP_NO_WFP_APPLY_STOP"
+  },
+  "new": "H1745 single signed real source in progress / NOT_RUN",
+  "scenario": {
+    "route_mode": "bypass-lan-cn",
+    "linux_tun_owned_public_alias": "203.0.113.77/32 only for actual non-CN Tunnel traffic",
+    "windows_dns_query": "Windows original kernel UDP 8.8.8.8:53 www.cn.example",
+    "direct_dns": "single real Linux guest physical IP UDP53 CNAME/A",
+    "fakeip": "original Rust journal fsync before reply to Windows UDP application",
+    "direct_business": "Windows app to actual FakeIP -> one original Rust NativeOwner physically bound UDP -> real Linux guest UDP46111 -> Windows Wintun reverse",
+    "original_tunnel": "two actual kernel TUN/Wintun TCP and UDP flows during same generation"
+  },
+  "qualified": "PENDING_REAL_RUN, no inferred delivery",
+  "remaining": [
+    "Direct TCP/owned Defender",
+    "independent Tunnel DNS and TCP53 on real path",
+    "D3-D5/P1-P2 performance",
+    "padding and GUI effective"
+  ]
+}

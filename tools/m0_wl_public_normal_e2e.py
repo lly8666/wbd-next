@@ -16,6 +16,14 @@ configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
 plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
+# One new SOURCE-locked real signed Wintun NativeOwner scene. H1743
+# pure Tunnel remains a separate immutable qualification record.
+p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
+p029_tunnel_alias="203.0.113.77"
+if p029_direct and (mode!="normal" or
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
+    os.environ.get("GITHUB_ACTIONS")!="true"):
+ raise RuntimeError("PLAN029 real Direct CN scene requires exact source-locked Normal V3")
 if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
  raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
@@ -136,7 +144,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -230,6 +238,29 @@ try:
  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if plan028_owned_switch else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
+ if p029_direct:
+  # The existing Linux kernel TUN must have a test-owned PUBLIC /32 alias
+  # for protected Tunnel business. Its ordinary 10.66.0.1 RFC1918 address
+  # would be Direct by policy and could fake a successful split test.
+  # The shell waits for the ORIGINAL server-created TUN and touches no
+  # default route or foreign address. Its exact owner file is a CAS token.
+  owned=out/"plan029-h1745-owned-tun-alias.txt"
+  owned.unlink(missing_ok=True)
+  helper=out/"plan029-h1745-create-tun-alias.sh"
+  helper.write_bytes(("#!/bin/sh\nset -eu\n"+
+    "for i in $(seq 1 240); do\n"+
+    " if ip -4 -o addr show dev wbdwl4 >/dev/null 2>&1; then\n"+
+    "  if ip -4 -o addr show dev wbdwl4 | grep -q '"+p029_tunnel_alias+"/32'; then exit 21; fi\n"+
+    "  ip -4 addr add "+p029_tunnel_alias+"/32 dev wbdwl4\n"+
+    "  echo '"+p029_tunnel_alias+"/32' > '"+result+"/plan029-h1745-owned-tun-alias.txt'\n"+
+    "  echo PLAN029_H1745_ORIGINAL_LINUX_TUN_UNDERLAY_ALIAS_OWNED;exit 0\n"+
+    " fi\n sleep .1\ndone\nexit 22\n").encode("ascii"))
+  alias_log=(out/"plan029-h1745-tun-alias.log").open("w");logs.append(alias_log)
+  p029_alias_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+       "sh",unix(helper)],stdout=alias_log,stderr=subprocess.STDOUT)
+  rules=out/"plan029-h1745-cn-domains.txt"
+  rules.write_text("cn.example\n",encoding="ascii")
+  os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  # PLAN029 private signed V3 smoke first checks ONLY ordinary protected
  # Tunnel. The Linux 10.66/24 guest is intentionally in RFC1918, so
@@ -243,7 +274,11 @@ try:
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+ if p029_direct:
+  # The exact Linux guest is the ONLY direct resolver for this controlled
+  # scene; it also hosts an independent real physical business UDP socket.
+  args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1"])
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -320,8 +355,9 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if done.exists():done.unlink()
  llog=(out/"linux-app.log").open("w");logs.append(llog)
  wlog=(out/"windows-app.log").open("w");logs.append(wlog)
- la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
- wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done)],stdout=wlog,stderr=subprocess.STDOUT)
+ linux_app4=p029_tunnel_alias if p029_direct else "10.66.0.1"
+ la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
+ wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done)],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
@@ -738,9 +774,9 @@ print(json.dumps(result),flush=True)
 """)
  ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
  wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
- lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(tcpapp),"10.66.0.1","10.66.0.2"],
+ lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(tcpapp),linux_app4,"10.66.0.2"],
      stdout=ltlog,stderr=subprocess.STDOUT)
- wt=subprocess.Popen([sys.executable,str(tcpapp),"10.66.0.2","10.66.0.1"],
+ wt=subprocess.Popen([sys.executable,str(tcpapp),"10.66.0.2",linux_app4],
      stdout=wtlog,stderr=subprocess.STDOUT)
  until=time.monotonic()+40
  while lt.poll() is None or wt.poll() is None:
@@ -762,6 +798,62 @@ print(json.dumps(result),flush=True)
   tcp[role]=observed
  report["actual_kernel_tcp"]=tcp
  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+ if p029_direct:
+  # The original Windows app and two independent guest kernel sockets
+  # share the *same running* signed one-Wintun/one-Rust V3 generation.
+  # No packet injection/second-ring/probe-only helper ABI. The CN hostname
+  # is intentionally CNAME'd to a shared real public-IP peer so its
+  # selective FakeIP must not expose that CDN IP on any underlay wire.
+  if p029_alias_proc.wait(timeout=4)!=0 or not (out/"plan029-h1745-owned-tun-alias.txt").exists():
+   raise RuntimeError("test-owned Linux TUN public alias not OS confirmed")
+  guest_log=(out/"plan029-h1745-guest-physical.log").open("w");logs.append(guest_log)
+  host_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host_source:raise RuntimeError("original Windows physical source readback absent")
+  p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
+      peer,host_source],stdout=guest_log,stderr=subprocess.STDOUT)
+  for tick in range(100):
+   guest_log.flush()
+   raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")
+   if "PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY" in raw:break
+   if p029_guest_proc.poll() is not None:
+    raise RuntimeError("real Linux physical DNS53 business socket failed: "+raw[-600:])
+   time.sleep(.1)
+  else:raise RuntimeError("real Linux physical DNS53 not ready")
+  cn_log=(out/"plan029-h1745-windows-fake-cn-direct.log").open("w");logs.append(cn_log)
+  p029_client_proc=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1745_win_client_dns_direct.py"),
+      "10.66.0.2",peer],stdout=cn_log,stderr=subprocess.STDOUT)
+  try:cn_exit=p029_client_proc.wait(timeout=49)
+  except subprocess.TimeoutExpired:
+   raise RuntimeError("real Windows CN DNS/FakeIP direct UDP deadline")
+  if cn_exit!=0:
+   raise RuntimeError("original Windows CN FakeIP Direct app failed: "+
+      (out/"plan029-h1745-windows-fake-cn-direct.log").read_text(errors="replace")[-900:])
+  if p029_guest_proc.wait(timeout=4)!=0:
+   raise RuntimeError("independent Linux DNS/UDP physical recipient failed: "+
+      (out/"plan029-h1745-guest-physical.log").read_text(errors="replace")[-600:])
+  win_lines=(out/"plan029-h1745-windows-fake-cn-direct.log").read_text().splitlines()
+  guest_lines=(out/"plan029-h1745-guest-physical.log").read_text().splitlines()
+  wproof=[x.split(" ",1)[1] for x in win_lines if
+          x.startswith("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP ")]
+  gproof=[x.split(" ",1)[1] for x in guest_lines if
+          x.startswith("PLAN029_H1745_REAL_LINUX_GUEST_DIRECT ")]
+  if len(wproof)!=1 or len(gproof)!=1:raise RuntimeError("missing real two-OS Direct evidence")
+  wdata,gdata=json.loads(wproof[0]),json.loads(gproof[0])
+  if not(gdata["dns"] and gdata["direct_business"] and
+         gdata["dns_client_physical"]==host_source and
+         gdata["business_client_physical"]==host_source and
+         wdata["direct_resolver"]==peer):
+   raise RuntimeError("real Direct DNS/UDP guest physical proof mismatch")
+  report["plan029_private_v3_cn_direct_udp"]={
+   "scope":"SIGNED_ONE_WINTUN_RUST_V3_CN_DNS_JOURNALED_FAKE_AND_PHYSICAL_DIRECT_UDP",
+   "source_sha":os.environ["GITHUB_SHA"],
+   "windows_app":wdata,"linux_physical":gdata,
+   "tunnel_udp":report["app_duplex"],"tunnel_tcp":report["tcp_duplex"],
+   "stop":"NOT_RUN_UNTIL_OWNED_STOP","direct_tcp":"NOT_RUN",
+   "tunnel_dns":"NOT_RUN","D1_D5_P1_P2":"NOT_FULLY_RUN"}
+  print("PLAN029_H1745_REAL_CN_DNS_FAKE_DIRECT_UDP_AND_TUNNEL_TCP_UDP_TWO_EXITS_PASS",flush=True)
  # Exact native DF0/DF1 scenario only, after authenticated original-Go
  # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
  if os.environ.get("WBD_WL_V2_SCENARIO")==(
@@ -1382,7 +1474,8 @@ print(json.dumps(result),flush=True)
   # Do not promote a pure-Tunnel trial to DNS/Direct/D1-D5 evidence.
   win_native=(out/"client.log").read_text(errors="replace")
   required=(
-   "WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=all ",
+   ("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=bypass-lan-cn "
+    if p029_direct else "WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=all "),
    "WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1",
    "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
    "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
@@ -1394,16 +1487,22 @@ print(json.dumps(result),flush=True)
    raise RuntimeError("PLAN029 private V3 signed Tunnel/Stop oracle FAILED "+
                       json.dumps({"missing":missing,"wal":wal.exists(),
                                   "route_sidecar":routes.exists()}))
-  report["plan029_private_v3_tunnel"]={
-   "scope":"ORIGINAL_GO_CREDENTIAL_RUST_V3_ONE_WINTUN_SIGNED_TWO_OS_TUNNEL_ONLY",
-   "source_sha":os.environ["GITHUB_SHA"],
-   "normal_udp_tcp":report.get("app_duplex"),
-   "app_tcp":report.get("tcp_duplex"),
-   "os_and_crypto_stop":"PASS_NO_WFP_V2_WAL_ABSENT",
-   "direct_dns":"NOT_RUN","tunnel_dns":"NOT_RUN",
-   "direct_udp_tcp":"NOT_RUN","D1_D5_P1_P2":"NOT_RUN"
-  }
-  print("PLAN029_H1743_REAL_ORIGINAL_GO_RUST_V3_TUNNEL_ONLY_SIGNED_STOP_PASS",flush=True)
+  if p029_direct:
+   if report.get("plan029_private_v3_cn_direct_udp",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+    raise RuntimeError("real PLAN029 Direct scenario lost SOURCE-locked Windows/Linux receipt")
+   report["plan029_private_v3_cn_direct_udp"]["stop"]="PASS_NO_WFP_V2_WAL_ABSENT"
+   print("PLAN029_H1745_REAL_ORIGINAL_GO_RUST_V3_CN_DNS_FAKE_DIRECT_UDP_AND_TUNNEL_OWNED_STOP_PASS",flush=True)
+  else:
+   report["plan029_private_v3_tunnel"]={
+    "scope":"ORIGINAL_GO_CREDENTIAL_RUST_V3_ONE_WINTUN_SIGNED_TWO_OS_TUNNEL_ONLY",
+    "source_sha":os.environ["GITHUB_SHA"],
+    "normal_udp_tcp":report.get("app_duplex"),
+    "app_tcp":report.get("tcp_duplex"),
+    "os_and_crypto_stop":"PASS_NO_WFP_V2_WAL_ABSENT",
+    "direct_dns":"NOT_RUN","tunnel_dns":"NOT_RUN",
+    "direct_udp_tcp":"NOT_RUN","D1_D5_P1_P2":"NOT_RUN"
+   }
+   print("PLAN029_H1743_REAL_ORIGINAL_GO_RUST_V3_TUNNEL_ONLY_SIGNED_STOP_PASS",flush=True)
  if mode=="normal":
   # Same SOURCE actual effective on BOTH owners, not CLI intent.
   expected=1 if outer_repair=="on" else 0
@@ -1530,8 +1629,16 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc):
   if p is not None and p.poll() is None:p.terminate()
+ if p029_direct and (out/"plan029-h1745-owned-tun-alias.txt").exists():
+  # Exact ephemeral TUN alias only: cleanup is idempotent even after the
+  # server has already removed its own interface on normal Stop.
+  try:
+   attached=wsl("ip","-4","-o","addr","show","dev","wbdwl4",timeout=8)
+   if p029_tunnel_alias+"/32" in attached:
+    wsl("ip","addr","del",p029_tunnel_alias+"/32","dev","wbdwl4",timeout=8)
+  except Exception:pass
  stop_windows(w);stop_linux()
  if tls_capture is not None:
   try:end_tls_capture()
