@@ -104,7 +104,7 @@ class NativeDirectOrder(unittest.TestCase):
                       'bh_proofs["linux"]["client_source"]==["10.66.0.2"]',
                       '"blackhole_no_fallback"'):
             self.assertIn(proof,S)
-        self.assertIn('p029_dns_blackhole_guest,p029_dns_blackhole_win):',S)
+        self.assertIn('p029_dns_blackhole_guest,p029_dns_blackhole_win',S)
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         for path in ("tools/m0_plan029_h1767_linux_dns_blackhole.py",
@@ -146,7 +146,7 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('d2_real!=dns_proofs["linux"]["reply_a"]',S)
         self.assertIn('d2_receipts["linux"]["source_lease"]=="10.66.0.2"',S)
         self.assertIn('"cn_ip_a_converse":"NOT_RUN"',S)
-        self.assertIn('p029_d2_tun_guest,p029_d2_tun_win):',S)
+        self.assertIn('p029_d2_tun_guest,p029_d2_tun_win',S)
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         for path in ("tools/m0_plan029_h1770_linux_resolved_noncn_tunnel_udp.py",

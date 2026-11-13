@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1770,
-  "checkpoint_sha": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
+  "sequence": 1771,
+  "checkpoint_sha": "69c55a0584bbf3703a2b61b75dcf64aa94b74bae",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1770: H1769 signed original Go/Rust Windows2025 Wintun↔Linux TUN Action43528230244 FULL SUCCESS. D1 nonCN no-backup.globalx.example Windows Wintun app 3 queries and no reply, Linux sole Tunnel DNS1.1.1.1 received exactly 3 selected queries, physical Direct resolver received 0 selected queries; 4 unrelated Tunnel DNS counted separately through 7s, owned Defender/WAL/HyperV and both OS Stop PASS. H1770 stages partial D2 nonCN actual DNS A 203.0.113.77 follow-on NEW Windows UDP app→Linux original TUN echo, bounded client TCP53 DNS 2-byte frame parser pure tests only (NOT PRODUCT TCP53), and exact pinned old-Go TLS fixture owner collision correction solely for original legacy sha bytes (H1766-H1769 old owner ABI FAIL). One new scoped signed Normal SOURCE pending; D1-D5/P1-P2/real padding/GUI still OPEN.",
-  "why_now": "Signed D1 selected nonCN Tunnel blackhole with zero physical fallback and final Stop now PASS, so next network gate must move beyond DNS receipt: actual post-resolve nonCN A business into Tunnel, not repeat 32K and DNS probes. In parallel build bounded app TCP53 parser without suggesting production support, and make separate legacy owner ABI reuse only exact original pinned Go TLS.",
+  "current_task": "H1771: H1770 source69c55a05 D2 real nonCN A→Tunnel UDP + bounded TCP53 parser + pinned original Go TLS no-overwrite action. Signed Windows/WSL2 network NOT_RUN: cheap test H1767 asserted final Python cleanup tuple ended after blackhole guest/win, but H1770 legitimately appended D2 app Popen ownership; corrected tests to stable separate process ownership checks. Governance, Windows/Linux Rust unit and resource pressure normal/kernel/engine/FEC/receipt all PASS. Independent old original Windows Rust owner ABI moved past pinned tls.go collision with no-overwrite and Rust MSVC/ABI PASS, then true Go test build FAIL RootCAs field absent in frozen original ClientConfig. Do NOT overwrite original Go TLS or claim old ABI PASS; separate source contract migration OPEN. Single new signed H1771 source after preflight correction pending. PLAN029 remains IN_PROGRESS.",
+  "why_now": "H1770 D2 source, Rust TCP53 framing and ownership guard compiled in unit paths, but signed scene cheap stopped on brittle test cleanup list terminator. Fix only test expectations while retaining true Popen finally coverage. Independent old-Go RootCAs mismatch is a real frozen authority incompatibility, not a reason to forge TLS or block scoped 029 direct/Tunnel tests.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1770 one-source signed post-DNS nonCN A→Tunnel UDP, full prior D1 blackhole, owned Stop, Windows/Linux pure TCP53 frame tests and independent pinned-original-TLS owner ABI. Then D1 actual client TCP53 ingress/backend, D2 CN overseas vs nonCN CN IP, D3–D5, GUI and authenticated startup padding P1/P2. PLAN030 closed.",
+  "next_action": "Commit H1771 stable cleanup assertion and exact evidence, run one signed original Normal D2 post-DNS actual A→Tunnel UDP, D1 no-fallback and Stop; preserve separate owner ABI RootCAs source-contract mismatch for explicit authorized later resolution. Then real TCP53 ingress, D2 CN-IP converse, D3–D5, GUI, padding P1/P2. PLAN030 closed.",
   "unverified": true,
-  "last_tested_source": "d2a1ee3a2f2cf0d339459c6e0c4f2caf3b789724",
+  "last_tested_source": "69c55a0584bbf3703a2b61b75dcf64aa94b74bae",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1770-H1769-SIGNED-DNS-BLACKHOLE-ZERO-PHYSICAL-PASS-20261114.json"
+    "docs/evidence/M0/PLAN029-H1771-H1770-CHEAP-CLEANUP-ASSERT-AND-ORIGINAL-TLS-ROOTCAS-ABI-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1769 signed complete PASS incl D1 sole Tunnel DNS no fallback: target Tunnel 3, physical 0, Windows no answer, Stop. H1770 staged D2 nonCN A then real Tunnel business, TCP53 bounded parser only, baseline owner ABI original TLS ownership fix, all new SOURCE untested; 029 in progress."
+  "partial_summary": "H1769 signed real D1 DNS blackhole target3 Tunnel/0 physical PASS. H1770 D2 new product stage was NOT_RUN due cheap stale test cleanup tuple expectation; Rust/Go pure and pressure PASS. Old Windows Go TLS owner ABI reused pinned original correctly but RootCAs mismatch remains separate FAIL. H1771 test-only fix staged, PLAN029 OPEN."
 }

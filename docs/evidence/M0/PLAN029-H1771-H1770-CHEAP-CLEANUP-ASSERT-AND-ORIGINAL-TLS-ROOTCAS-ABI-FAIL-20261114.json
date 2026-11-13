@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1771",
+  "source_sha": "69c55a0584bbf3703a2b61b75dcf64aa94b74bae",
+  "result": "FAIL_CHEAP_TEST_CLEANUP_STRING_EXPECTATION_BEFORE_REAL_SIGNED_STAGE",
+  "signed_action_id": 43530167075,
+  "signed_action_url": "https://github.com/lly8666/wbd-next/actions/runs/43530167075",
+  "cheap_first_error": "test_h1767_one_selected_dns_blackhole_no_direct_fallback AssertionError: 'p029_dns_blackhole_guest,p029_dns_blackhole_win):' not found because H1770 correctly extended finally list with p029_d2_tun_guest, p029_d2_tun_win",
+  "first_result": "FAIL_TEST_ONLY",
+  "actual_h1770_signed_network": "NOT_RUN_SKIPPED_AFTER_CHEAP_GATE",
+  "h1770_completed_parallel": {
+    "governance_and_feature_catalog": "PASS",
+    "windows2025_rust_unit": "PASS",
+    "ubuntu2404_rust_unit": "PASS",
+    "resource_pressure_components_normal_kernel_engine_fec_receipt": "PASS",
+    "new_d2_actual_dns_A_to_tun_business": "NOT_RUN",
+    "app_tcp53_parser": "SOURCE_AND_WINDOWS_LINUX_PURE_COMPONENT_PASS_ONLY"
+  },
+  "legacy_owner_abi": {
+    "action_id": 43530167292,
+    "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43530167292",
+    "status": "FAIL_NEXT_ORIGINAL_GO_TLS_ABI_BOUNDARY_AFTER_SOURCE_OWNED_TLS_RESOLVED",
+    "verified_pinned_original_tls_no_overwrite": "M0_PINNED_ORIGINAL_GO_TLS_REUSED_NO_OVERWRITE",
+    "rust_windows_msvc_owner_tests": "PASS",
+    "native_rust_release_c_abi": "PASS",
+    "next_fail_stage": "original Go credential TLS -> Rust adapter Go tests compilation",
+    "exact_error": "internal/realityfront/admission_v4_test.go and bridge_v4_windows_dual_test.go: unknown field RootCAs in struct literal of type ClientConfig",
+    "trusted_original_client_config_fields": [
+      "ServerName",
+      "RouteKey",
+      "VerifyServer",
+      "Timeout"
+    ],
+    "issue": "Current adapter test source targets later RootCAs field that does not exist in pinned original Go tls.go; changing or overwriting original TLS to green test would break frozen source authority",
+    "not_new_plan029_signed_product_failure": true,
+    "outcome": "OPEN_SEPARATE_SOURCE_CONTRACT_MIGRATION_REQUIRED"
+  },
+  "h1771_fix": "Do not assume child process list ends immediately after H1767 DNS sentinel; assert ownership of DNS blackhole and D2 new processes independently in actual finally list, retaining exact correct cleanup",
+  "next_source_signed": "PENDING",
+  "plan029": "IN_PROGRESS"
+}
