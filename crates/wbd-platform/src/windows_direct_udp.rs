@@ -25,7 +25,7 @@ pub struct DirectUdpTuple {
     pub presented_ip:Ipv4Addr,
     pub target_port:u16,
 }
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct DirectUdpPayload<'a>{
     pub tuple:DirectUdpTuple,
     pub data:&'a [u8],

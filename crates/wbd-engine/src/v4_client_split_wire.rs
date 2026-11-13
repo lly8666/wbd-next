@@ -439,7 +439,7 @@ mod tests{
         // generation cannot silently change from Tunnel to Direct even if
         // a new first-fragment port would classify differently.
         let key=FragmentKey{
-            src:ip(10,234,12,34),dst,ip_id:22,proto:17,
+            src:ip(10,234,12,34),dst:dest,ip_id:22,proto:17,
         };
         s.fragment_pins.insert(key,FragmentPin{
             decision:Egress::Tunnel,expires_at_ms:3000,

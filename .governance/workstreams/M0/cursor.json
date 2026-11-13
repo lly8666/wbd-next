@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1700,
-  "checkpoint_sha": "889c1e74c06306261a27180a9a9f5395a11467bd",
+  "sequence": 1701,
+  "checkpoint_sha": "52efb21170cd3ed59019d07c38c3a5b40a270e80",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1700: H1699 both Linux and Windows pure 11 wire/split Rust tests PASS at source 889c, governance mismatch diagnosed and fixed via exact evidence SOURCE. Added real Windows physical-bound nonblocking UDP socket primitive, L3 reverse checksum encoder, atomic fragment quota and expiry validation, not yet native worker wired.",
-  "why_now": "H1699 source Rust pure success but ordinary legacy native workflow failed before new Direct. Governance failure caused by mismatched cursor tested-source versus H1698 evidence. Continue real Direct UDP socket boundary and lifecycle correctness rather than declaring source gate or two-OS failure product qualification.",
+  "current_task": "PLAN029 H1701: H1700 first source Windows/Linux Rust compile failed on isolated test fixture `dst` undeclared and DirectUdpPayload result Eq trait; both corrected in next source; Governance passed but windows-native-transport feature card exceeded 16KiB, compacts legacy summaries while preserving status/source/evidence refs. Physical UDP/Wintun not wired, PLAN029 still IN_PROGRESS.",
+  "why_now": "Collect precise first failure: Rust E0425 at v4_client_split_wire.rs first fragment test; platform pure tests need PartialEq for Result assertion; feature catalog 16KiB max. Fix exact errors without restarting 028 matrices or touching other test scopes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1700 source-locked Windows/Linux Rust unit and governance. On first actual compiler/contract failure correct only source. Then integrate physical bound Direct UDP per-flow socket and Wintun reverse into one Rust native ingress scheduler, native kernel TCP two-leg relay, DNS53 actual resolver/FakeIP TTL and GUI/padding, plus v2 OS production owned lifecycle. Freeze composite source for D1-D5/P1-P2, no old 028 matrix/030.",
+  "next_action": "Observe H1701 source-locked Linux/Windows Rust unit and Feature catalog checks. If pure pass, move bound UDP physical socket and packet reverse into single native Wintun/owner scheduler and source-locked isolated real UDP wire scene; implement qualified Windows kernel TCP relay, QNAME DNS resolver/FakeIP and owned firewall lifecycle, GUI/padding and D1-D5/P1-P2. No 028/030.",
   "unverified": true,
   "last_tested_source": "889c1e74c06306261a27180a9a9f5395a11467bd",
   "evidence_refs": [
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1699 SOURCE889c both Linux+Windows 11 pure PLAN029 split/wire tests PASS; old public and Go frozen gates still FAIL separately, Governance failed tested evidence SHA mismatch. H1700 physical UDP socket+reverse packet module and fragment atomicity source staged, pending CI; no real UDP Direct roundtrip, owner worker hookup, DNS resolver, Fake allocator, GUI or performance. H1694 real signed A/B/C kernel TCP native ingress and H1697 signed 4stage no-WFP OS Apply/Stop scoped PASS preserved; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1699 Rust unit 11 PASS both platforms SOURCE889c. H1700 native UDP physical-bound socket and fragment admission changes first compile FAIL from typed unit-fixture, not physical network. H1701 corrects first compiler failures and compresses old transport card while preserving all verification entry SOURCE/evidence/status. H1694 A/B/C signed kernel TCP/UDP PASS, H1697 signed four no-WFP Win32 stages PASS; public 029 Direct remains NOT_RUN."
 }
