@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1701",
+  "observed_at": "2026-11-13",
+  "source_sha": "37042af626f8131e5ca7a552909946e2de117735",
+  "result": "PASS_SCOPED_WINDOWS_LINUX_RUST_UNIT_AND_BUILD_ONLY",
+  "artifact_verified": false,
+  "jobs": [
+    {
+      "run_id": 43348306465,
+      "job_id": 131633071890,
+      "platform": "Windows2025 Rust eligible library",
+      "conclusion": "success",
+      "observed": "306 Rust tests PASSED incl PLAN029 fragment admission/conflict"
+    },
+    {
+      "run_id": 43348306465,
+      "job_id": 131633071925,
+      "platform": "Ubuntu Rust eligible library",
+      "conclusion": "success",
+      "observed": "281 Rust tests PASSED incl PLAN029 fragment admission/conflict"
+    },
+    {
+      "run_id": 43348306514,
+      "platform": "native-functional source build/selected fixtures",
+      "conclusion": "success",
+      "observed": "wbd-platform new physical UDP module compiled; selected platform 95 tests pass but H1702 real-bound test NOT_RUN"
+    }
+  ],
+  "other_actions": [
+    {
+      "run_id": 43348306426,
+      "scope": "Governance succeeded; feature catalog failed because devlog declared DNS card touched but only Windows platform card changed. This batch updates both."
+    }
+  ],
+  "boundaries": [
+    "No real physically-bound UDP socket runtime test yet at SOURCE37042.",
+    "No Windows Direct Wintun app->off-host->app egress or actual CN FakeIP/Tunnel DNS.",
+    "Old public Windows two-OS remains independent and not promoted by library PASS."
+  ]
+}

@@ -176,6 +176,68 @@ mod win{
     #[cfg(test)]
     mod tests {
         use super::*;
+        /// Real Win2025 physical NIC index/source selected by the Action.
+        /// This is a local kernel socket echo proving actual IP_UNICAST_IF
+        /// readback and correct physical SOURCE binding. Because the peer
+        /// is on the SAME host it does NOT prove off-host wire egress or a
+        /// Wintun application Direct roundtrip.
+        #[test]
+        fn plan029_real_physical_udp_source_interface_socket_local_echo(){
+            if std::env::var("WBD_PLAN029_H1702_PHYSICAL_SOCKET_GATE").as_deref()!=Ok("1"){
+                return
+            }
+            use std::time::Duration;
+            use std::io::ErrorKind;
+            let source=std::env::var("WBD_PLAN029_H1702_SRC4").unwrap()
+                .parse::<Ipv4Addr>().expect("real selected physical IPv4");
+            let ifindex=std::env::var("WBD_PLAN029_H1702_IFINDEX").unwrap()
+                .parse::<u32>().expect("real selected physical ifindex");
+            let server=UdpSocket::bind(SocketAddrV4::new(source,0))
+                .expect("real Windows same-host physical source listener");
+            server.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+            let listener=match server.local_addr().unwrap(){
+                SocketAddr::V4(a)=>a,_=>panic!("Windows expected IPv4"),
+            };
+            let bound=PhysicalUdpSocket::open(source,ifindex,listener)
+                .expect("real WinSock source + IP_UNICAST_IF setter/readback");
+            let actual=bound.local_addr().unwrap();
+            assert_eq!(*actual.ip(),source);
+            assert_ne!(actual.port(),0);
+            assert_eq!(bound.selected_underlay(),(source,ifindex));
+            assert_eq!(bound.remote(),listener);
+            let probe=b"p029-real-physical-bound-socket";
+            let mut wrote=false;
+            for _ in 0..30{
+                match bound.send_ready(probe){
+                    Ok(n)=>{assert_eq!(n,probe.len());wrote=true;break}
+                    Err(e) if e.kind()==ErrorKind::WouldBlock=>{
+                        std::thread::sleep(Duration::from_millis(10))
+                    }
+                    Err(e)=>panic!("real physical UDP send: {e}"),
+                }
+            }
+            assert!(wrote,"physical bound socket never writable");
+            let mut received=[0u8;256];
+            let (n,from)=server.recv_from(&mut received).expect("native listener delivery");
+            assert_eq!(&received[..n],probe);
+            assert_eq!(from,SocketAddr::V4(actual));
+            let reply=b"p029-real-physical-bound-reply";
+            assert_eq!(server.send_to(reply,from).unwrap(),reply.len());
+            let mut reply_ok=false;
+            for _ in 0..100{
+                match bound.receive_ready(&mut received){
+                    Ok(n)=>{assert_eq!(&received[..n],reply);reply_ok=true;break}
+                    Err(e) if e.kind()==ErrorKind::WouldBlock=>{
+                        std::thread::sleep(Duration::from_millis(10))
+                    }
+                    Err(e)=>panic!("real physical UDP reverse recv: {e}"),
+                }
+            }
+            assert!(reply_ok,"same-host physical-bound socket reverse missing");
+            eprintln!("PLAN029_H1702_REAL_PHYSICAL_UDP_SOURCE_BOUND_SOCKET_PASS ifindex={} source={} local_port={} same_host_only=1 wintun_app=NOT_RUN",ifindex,source,actual.port());
+            // Drop closes both ephemeral sockets. No routes/Defender/WFP
+            // rule installed, so no foreign network resource to recover.
+        }
         #[test]
         fn plan029_physical_udp_binder_never_uses_unknown_nic_or_loopback(){
             let remote=SocketAddrV4::new(Ipv4Addr::new(203,0,113,2),53);

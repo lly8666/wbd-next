@@ -257,13 +257,20 @@
    "status": "FUNCTIONAL_PASS",
    "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
    "evidence": "docs/evidence/M0/PLAN028-H1601-SOURCE8A313-H1596-WIN-LINUX-SAMEACCOUNT-150S-20261111.json"
+  },
+  {
+   "platform": "Windows2025 Rust source-locked library compile",
+   "scope": "H1701 new physical UDP source/ifindex WinSock module compiled; incoming/outgoing L3 checks source-only. Real NIC option and same-host UDP echo H1702 still pending.",
+   "status": "BUILD_PASS",
+   "source_sha": "37042af626f8131e5ca7a552909946e2de117735",
+   "evidence": "docs/evidence/M0/PLAN029-H1701-SOURCE-LOCKED-RUST-COMPILE-AND-UNIT-20261113.json"
   }
  ],
  "limitations": [
   "七模式/固定FEC/Auto/大包等旧SOURCE真业务证据仍保留在verification及对应旧devlog；新SOURCE只按受影响功能补代表场景，不能用编译成功冒充全模式实网。",
   "User excludes same-Windows-host two-Wintun tests. H1587 old double Wintun global /1 route/WAL CAS actual FAIL preserved; this concurrent Windows host combination is unsupported/unverified, cannot infer PASS from cross-OS same-account.",
   "H1601/H1623 scoped PASS and H1592 scope limitations remain in verification and linked evidence, not promoted to PLAN029 product E2E.",
-  "H1700 new Windows-only nonblocking UDP socket cold binding to physical source and IP_UNICAST_IF with readback; strict incoming tuple/IPv4 reverse bytes in pure Rust. Not yet connected to one native Wintun RX/IO scheduler; no real physical Direct application roundtrip, no product Ready."
+  "H1700 new Windows-only nonblocking UDP socket cold binding to physical source and IP_UNICAST_IF with readback; strict incoming tuple/IPv4 reverse bytes in pure Rust. Not yet connected to one native Wintun RX/IO scheduler; no real physical Direct application roundtrip, no product Ready. H1702 will execute a real physical NIC-bound same-host local-echo and reverse in one isolated job; not off-host/Wintun egress."
  ],
  "promotion": null,
  "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",
