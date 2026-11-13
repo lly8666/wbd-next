@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1768",
+  "source_sha": "8232d7d40468fa35e6cb14a4f54bc4aa979b232c",
+  "result": "FAIL_CHEAP_PREFLIGHT_BEFORE_NETWORK_SCENE",
+  "cheap_action": 43525950546,
+  "cheap_action_url": "https://github.com/lly8666/wbd-next/actions/runs/43525950546",
+  "catalog_action": 43525950582,
+  "catalog_action_url": "https://github.com/lly8666/wbd-next/actions/runs/43525950582",
+  "first_fails": [
+    {
+      "category": "test_h1767_one_selected_dns_blackhole_no_direct_fallback",
+      "stage": "cheap Python unittest",
+      "actual": "ValueError: substring not found",
+      "issue": "Test asserted literal backslash-n instead of actual end-of-run Stop call; exact product fixture unchanged",
+      "new_fix": "Assert final `stop_windows(w);stop_linux()` occurs after H1767 stage"
+    },
+    {
+      "category": "feature_catalog",
+      "stage": "verification status validation",
+      "actual": "dns-split-ipv6: unknown verification status",
+      "issue": "H1766 single-source real signed evidence row used unsupported status PASS",
+      "new_fix": "Use accepted PHYSICAL_PASS for the same strictly scoped source-bound signed Action"
+    },
+    {
+      "category": "Rust Windows 2025 M1 optional seal component test",
+      "stage": "native Rust component library --test compilation",
+      "actual": "error[E0277] TxDispatch does not implement Debug in v4_windows_owner.rs:2878",
+      "issue": "New unit test called drain_tx(...).unwrap(), requiring Debug on an unrelated Err type; not an AEAD runtime error",
+      "new_fix": "Use unwrap_or_else(|_| panic!(...)) only in test so TxDispatch remains unchanged"
+    }
+  ],
+  "product_network_h1767": "NOT_RUN_CHEAP_GATE_REJECTED",
+  "original_signed_h1766_success_remains": true,
+  "rust_component": {
+    "ubuntu_24_04": "PASS",
+    "windows_2025": "FAIL_TEST_ONLY_E0277_PENDING_NEW_SOURCE",
+    "windows_gnu_cross": "PASS",
+    "native_signed_full": "NOT_RUN"
+  },
+  "h1768_source": "Two targeted control-plane preflight corrections only; not a data-plane behavior change",
+  "plan_status": "IN_PROGRESS"
+}

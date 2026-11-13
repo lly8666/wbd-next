@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1767,
-  "checkpoint_sha": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
+  "sequence": 1768,
+  "checkpoint_sha": "8232d7d40468fa35e6cb14a4f54bc4aa979b232c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1767: H1766 exact signed Windows2025 Go/Rust Wintun ↔ Linux TUN Action43524162967 fully SUCCESS including strict PLAN029 outer receipt, real Direct FakeIP physical UDP and TCP32768 echo+FIN, outbound nonCN Tunnel TCP+UDP, unique Tunnel DNS www.globalx.example 8.8.8.8→1.1.1.1 original source restored and genuine both OS owned Stop; H1766 governance and Windows/Linux component passes. Still D1–D5/P1–P2/GUI/padding not full. H1767 introduces real no-fallback D1 negative: nonCN DNS Tunnel blackhole with live physical Direct53 sentinel and Windows raw Wintun query no reply; bounded close NAT 129/64 quantum test. Parallel M1 LINK AEAD optional pad 0..256 source-only with PN/Seq FrozenRecord component fixture, not connected to product. New signed source pending.",
-  "why_now": "H1766 authentic end-to-end and outer same-SOURCE strict gate now all green; stop wasting selected 028 comparator reruns. Next concrete D1 exit gap is no-fallback when sole Tunnel resolver drops, independently verified against a concurrently listening physical Direct sentinel.",
+  "current_task": "H1768: H1767 new D1 blackhole+M1 optional padded seal candidate source 8232d7; genuine signed Windows/WSL2 product stage NOT_RUN because cheap Python test used literal '\\\\n' instead of real final Stop substring, and catalog rejected unsupported verification status PASS (requires PHYSICAL_PASS). Ubuntu Linux component/Windows GNU cross PASS; Windows2025 component further FAIL at new optional M1 test-only drain_tx(...).unwrap() requiring TxDispatch:Debug (E0277), fixed via unwrap_or_else panic; no product runtime failure. All three cheap/component fixes staged. Staged precise two-file correction preserving H1766 SUCCESS and all H1767 application/crypto changes. Single new SOURCE signed test pending. PLAN029 OPEN.",
+  "why_now": "H1767 failed before actual signed product due wrong Python escaped newline, feature-catalog unsupported status and Windows test-only unwrap Debug bound. Three independently grounded corrections; do not mutate old source logs or claim product tested.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect a single H1767 source-pinned signed Normal Action to prove physical fallback sentinel observes zero while Tunnel receives nonCN query and Windows app sees timeout; run Rust optional M1 LINK authenticated pad bytes tests. If it passes, move to D1 application TCP53/D2 real IP-domain union/D3 pressure/GUI and full padding/P1–P2 with same-owner admission. PLAN030 unopened.",
+  "next_action": "Commit H1768 source-only preflight repairs and run cheap governance/Windows Rust component before one original signed Normal D1 DNS blackhole and Stop; investigate any new true first failure; no repeat old 028.",
   "unverified": true,
-  "last_tested_source": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
+  "last_tested_source": "8232d7d40468fa35e6cb14a4f54bc4aa979b232c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1767-H1766-SIGNED-SOURCE-SCOPED-PASS-20261114.json"
+    "docs/evidence/M0/PLAN029-H1768-H1767-PREFLIGHT-TEST-AND-CATALOG-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1766 signed real Windows2025/WSL2 full scoped Normal+owned Stop and source-specific outer oracle SUCCESS, Direct TCP full32768; H1767 new D1 no-fallback physical sentinel and M1 padding sealer/test staged, native pending. 029 remains IN_PROGRESS."
+  "partial_summary": "H1766 signed real native Direct/Tunnel+DNS and strict outer success; H1767 new D1 nonCN DNS blackhole and M1 padding adapter staged, but cheap test/catalog deterministic FAIL blocked signed product (NOT_RUN). H1768 prepared fix, product 029 not complete."
 }

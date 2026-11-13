@@ -2875,7 +2875,8 @@ mod tests {
                 slab,ipv4.len(),budget,0,now,32).unwrap();
             assert_eq!(used,ipv4.len()+FIXED_WIRE_OVERHEAD+32);
             let storage=std::mem::take(&mut e.tx_scratch);
-            let batch=e.owner.drain_tx(now,storage).unwrap();
+            let batch=e.owner.drain_tx(now,storage)
+                .unwrap_or_else(|_|panic!("original M1 padded FrozenRecord drain failed"));
             {
                 let rows=e.owner.checked_tx_ready(&batch).unwrap();
                 assert_eq!(rows.len(),1);

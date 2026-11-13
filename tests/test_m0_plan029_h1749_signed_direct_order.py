@@ -99,7 +99,7 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertLess(S.index("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED"),
                         S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
         self.assertLess(S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"),
-                        S.rindex("\\n stop_windows(w)\\n"))
+                        S.rindex(" stop_windows(w);stop_linux()"))
         for proof in ('"tunnel_query_count"', '"physical_query_count"', '"unexpected_response"',
                       'bh_proofs["linux"]["client_source"]==["10.66.0.2"]',
                       '"blackhole_no_fallback"'):
