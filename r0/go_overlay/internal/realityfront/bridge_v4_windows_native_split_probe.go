@@ -40,6 +40,18 @@ type v4WindowsNativeIOV3Probe struct{
  V2 V4WindowsNativeIOV2
  Split v4WindowsColdSplitWireV1
 }
+// Fixed Rust repr(C) 48-byte single-generation cold command. The same
+// original Go authenticated Rust worker chooses the kernel port AFTER
+// four-stage OS Apply. A prepared listener cannot admit Direct TCP until
+// an independently exact-owned Defender Allow is installed/read back.
+type v4WindowsNativeTCPControlV1 struct{
+ Version,Size uint32
+ Owner uint64
+ Epoch [16]byte
+ LUID uint64
+ IfIndex uint32
+ Port,Operation uint16 // prepare=1; runtime enable not exposed here
+}
 func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
  var w v4WindowsColdSplitWireV1
  if c==nil||c.RouteMode>2||c.PhysicalIfIndex==0||
@@ -47,7 +59,9 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   c.DirectHard>16384||len(c.CN)>32768||len(c.LAN)>32768||
   len(c.Direct)>32768||len(c.Domains)>1<<20||
   len(c.FakeJournalPath)>4096||
-  (c.TCPOwned&&c.TCPSynthetic4==[4]byte{}){return w,errV4WindowsOwner}
+  c.TCPOwned{ // NEVER arm before OS Apply and exact Defender proof.
+  return w,errV4WindowsOwner
+ }
  w=v4WindowsColdSplitWireV1{
   Version:1,Size:uint32(unsafe.Sizeof(w)),
   RouteMode:c.RouteMode,PhysicalIfIndex:c.PhysicalIfIndex,
@@ -67,6 +81,33 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
  if len(c.Domains)>0{w.Domains=uintptr(unsafe.Pointer(&c.Domains[0]))}
  if len(c.FakeJournalPath)>0{w.JournalPath=uintptr(unsafe.Pointer(&c.FakeJournalPath[0]))}
  return w,nil
+}
+// The first part of the post-Apply, two-phase Direct kernel TCP handshake.
+// It does not make the listener reachable: the V3 Rust owner remains
+// fail-closed until a separate exact Defender receipt authorizes a
+// later control command. This bridge intentionally exposes PREPARE only.
+func(s *V4WindowsAuthenticatedClientOwner) Plan029PrepareNativeTCPAfterOSApply(
+ ctx context.Context,
+)(uint16,error){
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil{
+  return 0,errV4WindowsOwner
+ }
+ if e:=ctx.Err();e!=nil{return 0,e}
+ state,e:=s.OriginalOwnerReadback()
+ if e!=nil{return 0,e}
+ if !state.OwnerActive||!state.DeviceBound||state.DeviceQuiesced||
+  state.ServerSide||!state.ProductApplied{return 0,errV4WindowsOwner}
+ req:=v4WindowsNativeTCPControlV1{Version:1,
+  Owner:s.bridge.handle,Epoch:s.bridge.epoch,
+  LUID:s.device.identity.LUID,IfIndex:s.device.identity.InterfaceIndex,
+  Operation:1}
+ req.Size=uint32(unsafe.Sizeof(req))
+ proc,e:=s.bridge.fixedProc("wbd_m0_win_native_tcp_control_v1")
+ if e!=nil{return 0,e}
+ if e=winOwnerCall(proc,uintptr(unsafe.Pointer(&req)));e!=nil{return 0,e}
+ if req.Port==0{return 0,errV4WindowsOwner}
+ runtime.KeepAlive(req)
+ return req.Port,nil
 }
 func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOWithColdSplitProbe(
  ctx context.Context,cfg V4WindowsNativeIOV1,mode uint32,aggressive bool,

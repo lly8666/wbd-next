@@ -4,6 +4,12 @@ import ("testing";"unsafe")
 
 // Compare independent Rust repr(C) cold ABI: not just the total size.
 func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
+ if unsafe.Sizeof(v4WindowsNativeTCPControlV1{})!=48 ||
+  unsafe.Offsetof(v4WindowsNativeTCPControlV1{}.Owner)!=8 ||
+  unsafe.Offsetof(v4WindowsNativeTCPControlV1{}.LUID)!=32 ||
+  unsafe.Offsetof(v4WindowsNativeTCPControlV1{}.Port)!=44{
+  t.Fatal("native post-Apply TCP control Go/Rust repr(C) layout drift")
+ }
  if unsafe.Sizeof(V4WindowsColdCIDR{})!=8 ||
   unsafe.Sizeof(v4WindowsColdSplitWireV1{})!=128 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.CN)!=64 ||
@@ -31,11 +37,14 @@ func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
  c.RouteMode=2;c.TCPOwned=true
  if _,e:=c.wire();e==nil{t.Fatal("unowned empty TCP synthetic path admitted")}
  c.TCPSynthetic4=[4]byte{198,19,87,99}
- w,e=c.wire()
- if e!=nil||w.TCPOwned!=1||w.TCPSynthetic4!=c.TCPSynthetic4{
-  t.Fatal("explicit TCP owner field not represented in cold Rust ABI",e)
+ if _,e=c.wire();e==nil{
+  t.Fatal("pre-Apply TCP arm must fail closed even with a synthetic IP")
  }
  c.TCPOwned=false
+ w,e=c.wire()
+ if e!=nil||w.TCPOwned!=0||w.TCPSynthetic4!=c.TCPSynthetic4{
+  t.Fatal("post-Apply deferred TCP plan missing or prematurely armed",e)
+ }
  c.RouteMode=2;c.InnerMTU=100
  if _,e:=c.wire();e==nil{t.Fatal("invalid native inner MTU")}
 }

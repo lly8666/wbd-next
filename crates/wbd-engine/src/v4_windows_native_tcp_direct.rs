@@ -60,6 +60,11 @@ impl NativeTcpActor{
             deadlines:VecDeque::new(),active:Vec::new(),cursor:0,
             ready:VecDeque::with_capacity(MAX_READY)})
     }
+    /// A post-Apply generation-owned listener's actual ephemeral port.
+    /// Never guess this value in Go or open a global firewall wildcard.
+    pub(crate) fn listener_port(&self)->Result<u16,()>{
+        self.listener.local_addr().map(|a|a.port()).map_err(|_|())
+    }
     pub(crate) fn has_work(&self)->bool{
         self.nat.len()>0||!self.ready.is_empty()
     }

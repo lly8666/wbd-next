@@ -17,7 +17,7 @@ use crate::v4_windows_native_dns_direct::DirectDns;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
-use crate::v4_windows_native_tcp_direct::NativeTcpActor;
+use crate::v4_windows_native_tcp_direct::{NativeTcpActor,safe_synthetic};
 use crate::v4_client_split::FlowKey;
 
 const MAX_PREFIXES:usize=32_768;
@@ -60,6 +60,12 @@ pub(crate) enum NativeDecision {
     DirectHandled,
     LocalDrop,
 }
+#[derive(Clone,Copy)]
+struct PendingKernelTcp {
+    lease:Ipv4Addr,synthetic:Ipv4Addr,
+    physical:Ipv4Addr,ifindex:u32,hard:usize,
+    fake_range:(u32,u32),
+}
 pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
     udp:DirectUdpActor,
@@ -72,6 +78,8 @@ pub(crate) struct NativeSplitWorker {
     tunnel_dns:Ipv4Addr,
     tunnel_map:Arc<Mutex<TunnelDnsMap>>,
     tcp:Option<NativeTcpActor>,
+    tcp_plan:Option<PendingKernelTcp>,
+    tcp_enabled:bool,
     next_reverse_lane:usize,
     last_tick_ms:u64,
 }
@@ -105,7 +113,7 @@ impl NativeSplitWorker {
            !(576..=1500).contains(&c.inner_mtu) ||
            c.domains_length as usize>MAX_DOMAIN_BYTES ||
            (c.domains_length>0 && c.domains.is_null()) ||
-           c.tcp_owned>1 || c.journal_length>4096 ||
+           c.tcp_owned!=0 || c.journal_length>4096 ||
            (c.journal_length>0 && c.journal_path.is_null()){
             return Err(())
         }
@@ -194,18 +202,54 @@ impl NativeSplitWorker {
             direct_dns,c.inner_mtu as usize);
         let tunnel_map=Arc::new(Mutex::new(TunnelDnsMap::new(
             u32::from(lease),u32::from(tunnel_dns))));
-        // The original Go no-WFP OS owner has NOT yet qualified a
-        // generation-owned synthetic /32 and exact Defender Allow for the
-        // private TCP listener. Default OFF until both receipts are owned.
-        let tcp=if c.tcp_owned==1{
-            Some(NativeTcpActor::new(lease,Ipv4Addr::from(c.tcp_synthetic4),
-                underlay,c.physical_ifindex,c.direct_hard as usize,
-                (start,end)).map_err(|_|())?)
-        }else{None};
+        // Never bind the kernel TCP listener while the original Go owner
+        // has not yet executed the four-stage no-WFP OS Apply. A live
+        // private V3 session may be constructed before lease/route exist.
+        // A later authenticated FFI command must PREPARE this plan on
+        // the same Rust TX thread, return the REAL kernel-chosen port,
+        // and then wait for exact owned Defender receipt before ENABLE.
+        let tcp_plan=if c.tcp_synthetic4==[0;4]{None}else{
+            let synthetic=Ipv4Addr::from(c.tcp_synthetic4);
+            if c.tcp_synthetic4[0..2]!=[198,19]||
+               !safe_synthetic(u32::from(lease),u32::from(underlay),
+                   u32::from(synthetic),(start,end)){
+                return Err(())
+            }
+            Some(PendingKernelTcp{lease,synthetic,physical:underlay,
+                ifindex:c.physical_ifindex,hard:c.direct_hard as usize,
+                fake_range:(start,end)})
+        };
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
-            udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,tcp,
+            udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,
+            tcp:None,tcp_plan,tcp_enabled:false,
             next_reverse_lane:0,last_tick_ms:0})
+    }
+    pub(crate) fn has_deferred_tcp(&self)->bool{self.tcp_plan.is_some()}
+    /// Only the already-authenticated original Rust TX worker may call
+    /// this after Go's actual four-stage OS Apply, with the leased /32
+    /// demonstrably assigned. No real driver/ring/Go callbacks inside.
+    pub(crate) fn prepare_tcp_after_apply(&mut self)->Result<u16,()>{
+        if self.tcp_enabled||self.tcp.is_some(){return Err(())}
+        let plan=self.tcp_plan.ok_or(())?;
+        let actor=NativeTcpActor::new(plan.lease,plan.synthetic,
+            plan.physical,plan.ifindex,plan.hard,plan.fake_range)?;
+        let port=actor.listener_port()?;
+        if port==0{return Err(())}
+        self.tcp=Some(actor);
+        Ok(port)
+    }
+    /// The same Go generation must install and read back an exact
+    /// source-synthetic/32 -> local-lease/32, TCP local-port Defender
+    /// Allow before invoking this cold authenticated arm command.
+    /// An API call alone is not a firewall receipt or public Ready.
+    pub(crate) fn enable_tcp_after_defender(&mut self,port:u16)
+        ->Result<(),()>{
+        if self.tcp_enabled||port==0{return Err(())}
+        let actor=self.tcp.as_ref().ok_or(())?;
+        if actor.listener_port()?!=port{return Err(())}
+        self.tcp_enabled=true;
+        Ok(())
     }
     pub(crate) fn tunnel_map(&self)->Arc<Mutex<TunnelDnsMap>>{
         Arc::clone(&self.tunnel_map)
@@ -273,8 +317,19 @@ impl NativeSplitWorker {
         // ordinary Tunnel or recursively to the physical Direct leg.
         if let Some(tcp)=self.tcp.as_mut(){
             if let Some(result)=tcp.kernel_return(packet){
-                return if result.is_ok(){NativeDecision::DirectHandled}
-                    else{NativeDecision::LocalDrop}
+                return if self.tcp_enabled&&result.is_ok(){
+                    NativeDecision::DirectHandled
+                }else{NativeDecision::LocalDrop}
+            }
+        }
+        // A synthetic peer /32 belongs solely to this TCP owner, even
+        // while its Defender grant is NOT yet active. Its unassociated
+        // kernel TCP reply MUST NOT be mistakenly classified as Tunnel.
+        if let Some(plan)=self.tcp_plan{
+            if packet.len()>=20&&packet[0]>>4==4&&packet[9]==6&&
+               packet[12..16]==plan.lease.octets()&&
+               packet[16..20]==plan.synthetic.octets(){
+                return NativeDecision::LocalDrop
             }
         }
         let fakes=&self.fakes;
@@ -299,7 +354,7 @@ impl NativeSplitWorker {
                 // AFTER the original Go owner has an exact current
                 // generation synthetic route plus Defender Allow receipt.
                 if packet.get(9)==Some(&6){
-                    let ok=self.tcp.as_mut()
+                    let ok=self.tcp_enabled&&self.tcp.as_mut()
                         .is_some_and(|tcp|tcp.direct(packet,real_dst,now_ms).is_ok());
                     if !ok{
                         if let Some(key)=newly_held{self.retire_flow(key);}
@@ -394,7 +449,8 @@ impl NativeSplitWorker {
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
         // while cold-only expiry remains on the existing 1-second sweep.
-        if let Some(tcp)=self.tcp.as_mut(){
+        if self.tcp_enabled{
+         if let Some(tcp)=self.tcp.as_mut(){
             for key in tcp.tick(now_ms){
                 self.retire_flow(FlowKey{
                     source:key.client,destination:key.presented,
@@ -402,6 +458,7 @@ impl NativeSplitWorker {
                     protocol:6,
                 });
             }
+         }
         }
         // Per-owner retirement backlog is drained each bounded TX turn,
         // rather than accumulating 1s of high-rate short-lived UDP flows.
@@ -499,6 +556,25 @@ mod tests{
         assert!(n>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
+    }
+    #[test]
+    fn plan029_native_kernel_tcp_cold_refuses_pre_apply_listener_and_unowned_synthetic_reply(){
+        let mut cold=config(&[],&[],b"");
+        cold.tcp_synthetic4=[198,19,87,99];
+        let mut owner=unsafe{NativeSplitWorker::new(&cold)}.unwrap();
+        assert!(owner.has_deferred_tcp());
+        assert!(owner.tcp.is_none()); // no OS lease yet, no listener!
+        assert!(!owner.tcp_enabled);
+        assert_eq!(owner.enable_tcp_after_defender(45902),Err(()));
+        let mut response=packet([198,19,87,99],45902,b"x");
+        response[9]=6;
+        assert_eq!(owner.on_packet(&response,1),NativeDecision::LocalDrop);
+        // A cold caller claiming the port was already owned is rejected,
+        // not a way to bind before the original no-WFP OS Apply.
+        cold.tcp_owned=1;
+        assert!(unsafe{NativeSplitWorker::new(&cold)}.is_err());
+        cold.tcp_owned=0;cold.tcp_synthetic4=[198,18,87,99];
+        assert!(unsafe{NativeSplitWorker::new(&cold)}.is_err());
     }
     #[test]
     fn plan029_native_fakeip_real_business_ref_survives_ttl_and_retires_exactly_once(){

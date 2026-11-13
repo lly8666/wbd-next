@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1748",
+  "source_sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
+  "result": "H1745_REAL_SIGNED_TUNNEL_REVERSE_TCP_FAIL_H1748_TWO_PHASE_TCP_SOURCE_ONLY",
+  "h1745": {
+    "run_id": 43422444895,
+    "sha": "947c116aec665c196d657ef1aa5974b54c5522e3",
+    "conclusion": "failure",
+    "first_error": "real public TCP apps failed on Linux203.0.113.77 -> Windows10.66.0.2:45902 inbound; Linux server_received=40, Windows server_received=0; Windows->Linux client_echo true",
+    "direct_cn_stage": "NOT_REACHED"
+  },
+  "h1747": {
+    "run_id": 43424294651,
+    "sha": "bb3c6762e4bb0fec39cb9676dd2507d5cd87da5f",
+    "signed_work_step": "FAILURE_REPORTED_FIRST_LOG_UNAVAILABLE_AT_AUTHORING",
+    "scope": "rule remote 203.0.113.77 and self-trigger",
+    "real_cn": "NOT_CONFIRMED"
+  },
+  "h1748": {
+    "source": "PREPARED_NOT_COMPILED",
+    "changes": [
+      "Rust V3 cold cannot start listener before OS Apply; rejects tcp_owned!=0",
+      "one generation-authenticated cold channel in original TX for post-Apply prepare kernel listener and actual bound port",
+      "separate enable command requires future Go exact Defender receipt; no Go activation exposed",
+      "Go 48 byte repr C cold prepare-only bridge with ProductApplied gate; original assembly current live blob updated"
+    ],
+    "client_directions": "ONE original Wintun and Go/NPF credentials only"
+  },
+  "not_run": [
+    "Defender owned Allow precise listener and OS lifecycle Stop",
+    "full D1–D5/P1–P2, Direct TCP actual delivery, Tunnel DNS real endpoint, startup padding"
+  ]
+}

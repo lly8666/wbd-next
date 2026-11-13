@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1747,
-  "checkpoint_sha": "ace4f60f5a46e595b79f3324182346cd0201592e",
+  "sequence": 1748,
+  "checkpoint_sha": "bb3c6762e4bb0fec39cb9676dd2507d5cd87da5f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1747: H1745签名原Go Rust V3 CN物理DNS/FakeIP/Direct UDP+非CN Tunnel Action43422444895 native实网仍IN_PROGRESS；H1746 ace4f60源精确修正Win临时TCP test-only Allow remote源Linux非CN alias203.0.113.77，治理43423895675/维护43423895601 SUCCESS，但由于旧workflow push.paths未含工作流文件本身，本SOURCE没有触发签名Action，不能误记PASS。H1747将工作流自身加到push.paths并增加测试：无显式标记只跑cheap，单[plan029-v3-real-direct-udp]标记才跑一场真签名VM。修正后H1747 CI待验，产品Direct TCP Defender/完整D1-D5 P1-P2 padding NOT_RUN。",
-  "why_now": "H1746 was a valid exact test fixture rule change but never launched a source-locked signed Windows native run because the workflow excludes its own path from push trigger. Repair triggering without a background promise, preserve H1745 in-progress source, and assert the only expensive case requires the already-approved explicit marker.",
+  "current_task": "PLAN029 H1748: H1745真实签名Windows原Go Rust V3 action43422444895 FAIL，首个业务错误为Linux非CN TUN 203.0.113.77→Windows10.66.0.2 TCP45902超时；Win→Linux成功，CN DNS/Direct还未执行。H1746精确临时Defender地址与H1747 self-trigger修复已提交；H1747 SOURCEbb3c signed runner业务阶段已报失败，首错误日志待读取，不能猜测。H1748新增原Rust NativeOwner TCP post-Apply两阶段冷控制：V3启动拒绝预先TCPOwned绑定，按同代synthetic4保留计划，Apply后FFI经原TX单槽指令获取真实kernel lease listener动态端口，守住Direct TCP禁流直到另行精确Defender+owned收据Enable；Go桥接只公开PREPARE，Rust/Go48B ABI与负用例，本SOURCE Windows/Linux+Go编译待验，029完整D1-D5/P1-P2/padding未完成。",
+  "why_now": "Real H1745 first fault is a test-only Windows Defender source mismatch, not CN Direct product. Independent product blocker: old Rust TCP actor attempted bind before no-WFP OS Apply and ephemeral listener port could not be pre-authorized precisely. Implement original-gen post-Apply PREPARE with authenticated owner/epoch/LUID/ifindex, return actual kernel port, leave true ENABLE unexposed to Go until exact Defender receipt/Stop exists.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1745 and H1747 separately on exact source; diagnose first real Wintun/WSL physical packet failure, not setup logs or old 028 matrix. If H1747 real CN Fake/Direct UDP succeeds, proceed with owned Defender native Direct kernel TCP and tunnel DNS scenes D1/D2, D3-D5/P1-P2/padding; no 030.",
+  "next_action": "Read H1747 signed runner's first runtime failure+exact Stop and patch only that scene. Collect H1748 original-Go and Win/Linux Rust private V3 FFI tests, fix first compile fault. Then add precise Defender owned rule and product Go post-Apply arm, signed Direct TCP/DNS D1-D5 P1-P2/padding; no PLAN030.",
   "unverified": true,
-  "last_tested_source": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+  "last_tested_source": "947c116aec665c196d657ef1aa5974b54c5522e3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1747-H1746-CI-TRIGGER-NOT-FIRED-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1748-H1745-REAL-TCP-FIRST-FAIL-TWO-PHASE-NATIVE-TCP-COLD-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1745 signed real Win/WSL CN physical Direct DNS/FakeIP/UDP new scenario RUNNING; H1746 remote alias-specific test-only Defender rule code and governance PASS, but no signed job triggered. H1747 fixes workflow self-trigger plus unit assertion with explicit native marker; real network PENDING. Product full two-egress/D1-D5 remains OPEN."
+  "partial_summary": "H1745 signed actual non-CN Tunnel reverse TCP failed due test-scoped firewall source, before CN Direct. H1747 corrected rule signed run business step failed, first log pending. H1748 source prepares two-stage single Rust TCP owner after OS Apply only, not product-enabled. Direct DNS/UDP/tunnel full plan still OPEN."
 }

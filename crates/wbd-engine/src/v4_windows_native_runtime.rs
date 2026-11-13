@@ -321,8 +321,23 @@
          assert_eq!(ack.sacks().1,0);
      }
  }
-  struct NativeSession {
+ enum TcpColdCommand {
+     Prepare(SyncSender<Result<u16,i32>>),
+     Enable(u16,SyncSender<Result<u16,i32>>),
+ }
+ #[cfg(feature="m0_v4_probe")]
+ #[repr(C)]
+ #[derive(Clone,Copy)]
+ pub struct WbdWinNativeTcpControlV1 {
+     pub version:u32,pub size:u32,
+     pub owner:u64,pub epoch:[u8;16],
+     pub luid:u64,pub ifindex:u32,
+     pub port:u16,pub operation:u16, // 1=prepare, 2=enable
+ }
+ struct NativeSession {
      stop:Arc<WakeEvent>,
+     epoch:[u8;16],luid:u64,ifindex:u32,
+     tcp_control:Option<SyncSender<TcpColdCommand>>,
      tx_notify:Arc<WakeEvent>,
      rx_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
@@ -700,7 +715,8 @@
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
      sack_negotiated:bool,mut split:Option<NativeSplitWorker>,
      direct_return:Option<SyncSender<Vec<u8>>>,
-     direct_notify:Arc<WakeEvent>)->i32{
+     direct_notify:Arc<WakeEvent>,
+     tcp_control:Option<Receiver<TcpColdCommand>>)->i32{
      let mut ip_id=1u16;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
@@ -722,6 +738,23 @@
                          return Err(AUTHENTICATED_PEER_DEAD)
                      }
                      m.retire_notice_due=true;
+                 }
+             }
+             // One bounded COLD command per original authenticated TX
+             // turn. No per-DATA Go call, 2nd Wintun, OS timer or lock.
+             if let (Some(commands),Some(owner))=(tcp_control.as_ref(),split.as_mut()){
+                 match commands.try_recv(){
+                     Ok(TcpColdCommand::Prepare(reply))=>{
+                         let result=owner.prepare_tcp_after_apply()
+                             .map_err(|_|BAD_STAGE);
+                         let _=reply.send(result);
+                     },
+                     Ok(TcpColdCommand::Enable(port,reply))=>{
+                         let result=owner.enable_tcp_after_defender(port)
+                             .map(|()|port).map_err(|_|BAD_STAGE);
+                         let _=reply.send(result);
+                     },
+                     Err(TryRecvError::Empty|TryRecvError::Disconnected)=>{},
                  }
              }
              let mut work=0;
@@ -1091,6 +1124,22 @@
  }
  #[cfg(all(test,feature="m0_v4_probe"))]
  #[test]
+ fn plan029_native_post_apply_tcp_cold_control_c_abi_and_unowned_reject(){
+     use std::mem::{size_of,offset_of};
+     assert_eq!(size_of::<WbdWinNativeTcpControlV1>(),48);
+     assert_eq!(offset_of!(WbdWinNativeTcpControlV1,owner),8);
+     assert_eq!(offset_of!(WbdWinNativeTcpControlV1,luid),32);
+     assert_eq!(offset_of!(WbdWinNativeTcpControlV1,port),44);
+     let mut bad=WbdWinNativeTcpControlV1{
+         version:1,size:48,owner:u64::MAX-1748,epoch:[0;16],
+         luid:1,ifindex:14,port:0,operation:1,
+     };
+     assert_eq!(unsafe{wbd_m0_win_native_tcp_control_v1(&mut bad)},UNKNOWN);
+     bad.operation=2;
+     assert_eq!(unsafe{wbd_m0_win_native_tcp_control_v1(&mut bad)},INVALID);
+ }
+ #[cfg(all(test,feature="m0_v4_probe"))]
+ #[test]
  fn plan029_rust_native_v3_cold_abi_exact_amd64_layout(){
      use std::mem::{size_of,offset_of};
      assert_eq!(size_of::<crate::v4_windows_native_split::ColdCidrV1>(),8);
@@ -1197,6 +1246,11 @@
      let rx_notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let early=Arc::new(Mutex::new(VecDeque::with_capacity(64)));
      let tunnel_dns_map=split.as_ref().map(|s|s.tunnel_map());
+     let (tcp_sender,tcp_receiver)=if split.as_ref()
+         .is_some_and(|s|s.has_deferred_tcp()){
+         let (tx,rx)=sync_channel::<TcpColdCommand>(1);
+         (Some(tx),Some(rx))
+     }else{(None,None)};
      let (direct_sender,direct_receiver)=if split.is_some(){
          let (tx,rx)=sync_channel::<Vec<u8>>(256);
          (Some(tx),Some(rx))
@@ -1212,7 +1266,8 @@
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
              Arc::clone(&tx_counters),fixed,auto_policy.is_some(),sack_negotiated,
-             split,direct_sender,Arc::clone(&rx_notify_for_tx));
+             split,direct_sender,Arc::clone(&rx_notify_for_tx),
+             tcp_receiver);
          if rc!=OK{
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();
@@ -1235,7 +1290,59 @@
          rc
      }).expect("Rust RX worker spawn");
      guard.insert(config.owner,NativeSession{stop,tx_notify:notify,
-         rx_notify,early,counters,tx,rx});
+         epoch:config.epoch,luid:config.luid,ifindex:config.ifindex,
+         tcp_control:tcp_sender,rx_notify,early,counters,tx,rx});
+     OK
+ }
+ /// After the exact four-stage OS Apply receipt, the original Go owner
+ /// may ask the SAME authenticated Rust TX to bind one lease listener
+ /// and return its real kernel port; NO Direct SYN is admitted yet.
+ /// Only after an exact Defender Allow readback does Go request Enable.
+ /// This FFI cannot itself mutate the OS firewall or mark product Ready.
+ #[cfg(feature="m0_v4_probe")]
+ #[no_mangle]
+ pub unsafe extern "C" fn wbd_m0_win_native_tcp_control_v1(
+     ptr:*mut WbdWinNativeTcpControlV1)->i32{
+     if ptr.is_null(){return INVALID}
+     let mut request=unsafe{*ptr};
+     if request.version!=1||
+        request.size as usize!=std::mem::size_of::<WbdWinNativeTcpControlV1>()||
+        request.owner==0||request.ifindex==0||
+        !matches!(request.operation,1|2)||
+        (request.operation==1&&request.port!=0)||
+        (request.operation==2&&request.port==0){return INVALID}
+     let (reply_tx,reply_rx)=sync_channel::<Result<u16,i32>>(1);
+     let wake={
+         let guard=match active().lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+         let Some(session)=guard.get(&request.owner)else{return UNKNOWN};
+         if session.epoch!=request.epoch || session.luid!=request.luid ||
+            session.ifindex!=request.ifindex||
+            session.counters.stopping.load(Ordering::Acquire){
+             return BAD_STAGE
+         }
+         let Some(commands)=session.tcp_control.as_ref()else{return BAD_STAGE};
+         let cmd=if request.operation==1{
+             TcpColdCommand::Prepare(reply_tx)
+         }else{TcpColdCommand::Enable(request.port,reply_tx)};
+         if commands.try_send(cmd).is_err(){return FULL}
+         Arc::clone(&session.tx_notify)
+     };
+     if wake.wake().is_err(){return BAD_STAGE}
+     let port=match reply_rx.recv_timeout(Duration::from_secs(4)){
+         Ok(Ok(port)) if port!=0=>port,
+         Ok(Err(rc))=>return rc,
+         _=>return STOP_INCOMPLETE,
+     };
+     {
+         let guard=match active().lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+         let Some(session)=guard.get(&request.owner)else{return UNKNOWN};
+         if session.epoch!=request.epoch||
+            session.counters.stopping.load(Ordering::Acquire){
+             return BAD_STAGE
+         }
+     }
+     request.port=port;
+     unsafe{ptr.write(request)};
      OK
  }
  /// Bounded cold handoff of already-read, post-Detach authenticated candidate
@@ -1368,6 +1475,7 @@
          let counters=Arc::new(Counters::new(0,0));
          counters.worker_error.store(AUTHENTICATED_PEER_DEAD,Ordering::Release);
          let session=NativeSession{
+             epoch:[0;16],luid:0,ifindex:0,tcp_control:None,
              stop:Arc::new(WakeEvent::new().unwrap()),
              tx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
              rx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
@@ -1389,6 +1497,7 @@
          let counters=Arc::new(Counters::new(0,0));
          counters.worker_error.store(INVALID,Ordering::Release);
          let session=NativeSession{
+             epoch:[0;16],luid:0,ifindex:0,tcp_control:None,
              stop:Arc::new(WakeEvent::new().unwrap()),
              tx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
              rx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
