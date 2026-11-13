@@ -26,6 +26,11 @@ pub mod windows_native_io;
 #[cfg(any(target_os = "windows", test))]
 #[allow(unsafe_code)]
 pub mod windows_direct_udp;
+// PLAN029 chosen kernel-TCP backend physical bound nonblocking WinSock leg
+// and per-flow fair two-stream half-close relay. No gVisor/Go TCP pump.
+#[cfg(any(target_os = "windows", test))]
+#[allow(unsafe_code)]
+pub mod windows_direct_tcp;
 
 // ABI island: the other platform modules still deny unsafe Rust code.
 #[cfg(all(target_os = "linux", any(target_arch="x86_64",target_arch="aarch64"), any(target_env="gnu",target_env="musl")))]

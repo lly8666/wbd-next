@@ -109,6 +109,13 @@
       "status": "BUILD_PASS",
       "source_sha": "37042af626f8131e5ca7a552909946e2de117735",
       "evidence": "docs/evidence/M0/PLAN029-H1701-SOURCE-LOCKED-RUST-COMPILE-AND-UNIT-20261113.json"
+    },
+    {
+      "platform": "Windows2025 signed Wintun Rust + independent Ubuntu WSL2 guest",
+      "scope": "H1704 real app→Rust Wintun→source/ifindex UDP→Linux→Rust Wintun app reverse PASS, explicitly test-only",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
+      "evidence": "docs/evidence/M0/PLAN029-H1704-SIGNED-WINTUN-RUST-INDEPENDENT-LINUX-UDP-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -134,7 +141,8 @@
     "H1700 fixes first-fragment atomically checked metadata quota, expired association and mismatch before Direct pin creation; adds physical-bound WinSock UDP socket and IPv4/UDP reverse packet builder. CODE ONLY until source-locked Rust PASS and real physical socket/Wintun dual egress tests; no IOCP worker integration or full fake allocator.",
     "H1702 adds one true Windows physical NIC-bound UDP socket local-echo test; pending action. Same-host socket capability is not off-host packet delivery, Direct socket→Wintun or DNS product correctness.",
     "H1702 physical WinSock source+IP_UNICAST_IF local socket actual FAIL before send; H1703 corrects GET host-order and splits option/connect diagnostics. Real Wintun Direct UDP/TCP and DNS product unqualified.",
-    "H1704 one non-product Rust test-only DLL entrypoint now tests original Go owned signed Wintun lease->Rust UDP->separate genuine Ubuntu WSL2 guest->Rust Wintun reverse, without per-packet Go callbacks; result is NOT_RUN at authoring, cannot grant CN DNS or Product Ready."
+    "H1704 one non-product Rust test-only DLL entrypoint now tests original Go owned signed Wintun lease->Rust UDP->separate genuine Ubuntu WSL2 guest->Rust Wintun reverse, without per-packet Go callbacks; result is NOT_RUN at authoring, cannot grant CN DNS or Product Ready.",
+    "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

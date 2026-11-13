@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1704",
+  "observed_at": "2026-11-13",
+  "source_sha": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
+  "result": "PASS_SCOPED_GENUINE_WINTUN_RUST_UDP_INDEPENDENT_GUEST_REVERSE",
+  "artifact_verified": false,
+  "action": {
+    "run_id": 43354904887,
+    "job_id": 131654506855,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43354904887"
+  },
+  "artifact": {
+    "id": 14005697239,
+    "name": "plan029-h1704-wintun-rust-independent-ubuntu-udp-43354904887",
+    "zip_sha256": "bd5e92377055905042120fd1f4241c7b7f9a29929a3b3ab1a01ec33c3d027656"
+  },
+  "observed": [
+    "real Windows application source198.18.87.77:58054, presented fake198.18.87.88 passed signed Wintun to Rust sole RX",
+    "Rust physically bound UDP 172.19.160.1:58055 ifindex22 to independent Ubuntu WSL2 kernel172.19.166.239:46098; 31B remote reply",
+    "Rust constructed and submitted 59B IPv4 UDP Wintun inverse; original Windows app received response",
+    "one exact owned WSL Hyper-V UDP rule removed by finally"
+  ],
+  "not_run": [
+    "authenticated TLS Normal/Game4 product owner",
+    "off-host physical internet machine: independent guest is WSL2 Linux kernel over host vEthernet",
+    "production DNS53/FakeIP allocator/GUI/padding/performance D1–D5/P1–P2",
+    "real kernel TCP NAT handshake and socket relay"
+  ]
+}

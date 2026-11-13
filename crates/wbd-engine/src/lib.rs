@@ -61,6 +61,11 @@ mod v4_client_split;
 // Does not create a second packet reader or authorize a Direct backend.
 #[cfg(any(target_os="windows", test))]
 mod v4_client_split_wire;
+// PLAN029 one native Windows-kernel TCP listener NAT rewrite/tuple pin.
+// Still needs live Wintun RX→local kernel listener and Rust physical socket
+// readiness worker; never terminates original Tunnel TCP.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_direct_tcp_nat;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device
