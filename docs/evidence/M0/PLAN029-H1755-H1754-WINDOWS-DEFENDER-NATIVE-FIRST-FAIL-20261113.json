@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1755",
+  "tested_source_sha": "fc83135a43c98cee5e3acc97c49c85dd78e1c0f8",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43437539407",
+  "run_id": 43437539407,
+  "job_id": 131926414730,
+  "conclusion": "FAIL",
+  "stages": {
+    "assembly": "PASS",
+    "go_native_compile_and_unit": "PASS",
+    "real_defender_com_one_owned_rule": "FAIL",
+    "artifact_upload": "PASS"
+  },
+  "first_error": "native exact IN/TCP firewall Add/readback failed: windowsclient: unconfirmed route ownership; retain journal and fail closed",
+  "finally_error": "exact owned Defender cleanup failed (WAL retained)",
+  "governance_success_runs": [
+    43437539285,
+    43437539234
+  ],
+  "previous_h1753": {
+    "run_id": 43437134221,
+    "conclusion": "FAIL_CONFIG_ZERO_JOBS"
+  },
+  "h1755_delta": "First strict post-Add COM field difference and stage, same fail-closed matching, existing single native job auto path trigger",
+  "new_ci": "PENDING",
+  "not_proven": [
+    "live COM owned CAS Stop",
+    "signed Wintun Direct kernel TCP",
+    "D1-D5/P1-P2",
+    "whole PLAN029"
+  ]
+}

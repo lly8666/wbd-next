@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1754,
-  "checkpoint_sha": "7e952f3bd257037af20183c14d1a3be6f65e957d",
+  "sequence": 1755,
+  "checkpoint_sha": "fc83135a43c98cee5e3acc97c49c85dd78e1c0f8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1754: H1753 SOURCE7e952f3 actual real COM CI Action43437134221 FAIL before Windows runner (0 jobs): JS string replacement of PowerShell -run regex containing \"$'\" accidentally expanded remainder of workflow; all four triggered workflows on H1753 also FAIL before jobs. Restore exact workflow at H1752 known good SHA, safely insert one COM real Windows test using callback not replacement string; count 1 upload-artifact/1 final receipt/1 real native step. Existing COM new test source unmodified. H1754 source Windows/governance CI PENDING, native OS Add/Readback/Delete STILL NOT_RUN. H1750 signed CN physical Direct UDP+Tunnel+Stop PASS_SCOPED, real kernel Direct TCP/Defender postApply/P1P2/padding OPEN.",
-  "why_now": "First H1753 workflow failure was malformed YAML before any job due to JS replacement token expansion. Fix using verified base manifest with one inserted real Defender COM step, do not misrepresent a platform failure or rerun unrelated network diagnosis.",
+  "current_task": "PLAN029 H1755: H1754 Windows Action43437539407 real runner compile+pure Go PASS, native Defender COM Add/readback FAIL: unconfirmed ownership, Stop WAL retained. Governance 43437539285/43437539234 PASS; prior H1753 zero-job YAML FAIL retained. H1755 only instruments first strict COM property mismatch, retains exact Create/Lookup/Remove gate + intent/CAS, and adds file-trigger to existing Windows workflow; new SOURCE test PENDING. H1750 signed CN Direct UDP+Tunnel PASS_SCOPED; Direct TCP, D1-D5/P1-P2, padding OPEN.",
+  "why_now": "H1754 moved beyond YAML and exposed real COM post-Add ambiguity; mocks do not identify which Windows-normalized field mismatched. Report first field without broadening permission, deleting unknown rules or falsely marking owned.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1754 governance workflow+Windows original-Go real Defender one-rule native COM readback. Fix first native OS Add/Delete failure, then gate Rust TCP PREPARE→exact owned Defender receipt→ENABLE and Stop, signed Direct kernel TCP and D1-D5/P1-P2/padding/GUI. 030 closed.",
+  "next_action": "Collect H1755 Windows COM real first property mismatch; target fix and prove exact Add/Readback/CAS Stop, then post-Apply PREPARE->Defender->ENABLE Rust kernel TCP; complete PLAN029 D1-D5/P1-P2 and GUI/padding. Do not rerun old Wintun tests without new hypothesis. 030 closed.",
   "unverified": true,
-  "last_tested_source": "7e952f3bd257037af20183c14d1a3be6f65e957d",
+  "last_tested_source": "fc83135a43c98cee5e3acc97c49c85dd78e1c0f8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1754-H1753-WORKFLOW-PARSE-ZERO-JOBS-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1755-H1754-WINDOWS-DEFENDER-NATIVE-FIRST-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1752 WinGo COM build+mock PASS. H1753 all Actions FAIL_CONFIG_PRE_JOB due malformed workflow; no Windows Defender OS native code ran. H1754 restores clean valid YAML with one exact COM OS test source pending; real product remains OPEN."
+  "partial_summary": "H1754 native Defender COM real FAIL and owned cleanup unconfirmed (WAL retained); H1755 readback mismatch instrumentation pending one Windows job. Full PLAN029 still IN_PROGRESS, scoped H1750 Direct UDP+Tunnel PASS."
 }

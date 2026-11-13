@@ -126,31 +126,40 @@ func n4Plan029COMItem(rules n4Plan029COMObject,name string)(n4Plan029COMObject,b
  if rule==0{return 0,false,ErrN4NativeGuard}
  return n4Plan029COMObject(rule),true,nil
 }
-func n4Plan029ExactRule(obj n4Plan029COMObject,k n4Plan029DefenderKey)(bool,error){
- strings:=[]struct{idx uintptr;value string}{
-  {7,k.Name},{9,k.Description},
-  {17,strconv.Itoa(int(k.Port))},
-  {21,k.Lease4.String()},{23,k.Remote4.String()},
+// Preserve exact Lookup/RemoveOwned rules; only the post-Add caller logs
+// the first OS property mismatch. Never relax a rule on readback.
+func n4Plan029ExactRuleDetail(obj n4Plan029COMObject,k n4Plan029DefenderKey)(bool,string,error){
+ strings:=[]struct{idx uintptr;field,value string}{
+  {7,"Name",k.Name},{9,"Description",k.Description},
+  {17,"LocalPorts",strconv.Itoa(int(k.Port))},
+  {21,"LocalAddresses",k.Lease4.String()},
+  {23,"RemoteAddresses",k.Remote4.String()},
  }
  for _,v:=range strings{
   actual,e:=obj.getString(v.idx)
-  if e!=nil{return false,e}
-  if actual!=v.value{return false,nil}
+  if e!=nil{return false,v.field,e}
+  if actual!=v.value{return false,fmt.Sprintf("%s got=%q want=%q",v.field,actual,v.value),nil}
  }
- ints:=[]struct{idx uintptr;value int32}{
-  {15,6}, // TCP only
-  {27,1}, // inbound only
-  {37,7}, // domain/private/public, still exact IP/port
-  {41,1}, // allow
+ ints:=[]struct{idx uintptr;field string;value int32}{
+  {15,"Protocol",6}, {27,"Direction",1},
+  {37,"Profiles",7}, {41,"Action",1},
  }
  for _,v:=range ints{
   actual,e:=obj.getInt(v.idx)
-  if e!=nil{return false,e}
-  if actual!=v.value{return false,nil}
+  if e!=nil{return false,v.field,e}
+  if actual!=v.value{return false,fmt.Sprintf("%s got=%d want=%d",v.field,actual,v.value),nil}
  }
- enabled,e:=obj.getBool(33);if e!=nil{return false,e}
- edge,e:=obj.getBool(39);if e!=nil{return false,e}
- return enabled&&!edge,nil
+ enabled,e:=obj.getBool(33)
+ if e!=nil{return false,"Enabled",e}
+ if !enabled{return false,"Enabled=false",nil}
+ edge,e:=obj.getBool(39)
+ if e!=nil{return false,"EdgeTraversal",e}
+ if edge{return false,"EdgeTraversal=true",nil}
+ return true,"",nil
+}
+func n4Plan029ExactRule(obj n4Plan029COMObject,k n4Plan029DefenderKey)(bool,error){
+ exact,_,e:=n4Plan029ExactRuleDetail(obj,k)
+ return exact,e
 }
 func (n4Plan029DefenderCOM)Lookup(ctx context.Context,k n4Plan029DefenderKey)(
  present,exact bool,err error){
@@ -197,11 +206,11 @@ func (n4Plan029DefenderCOM)CreateIfAbsent(ctx context.Context,k n4Plan029Defende
   if e=rules.call(8,raw);e!=nil{return e}
   got,found,e:=n4Plan029COMItem(rules,k.Name)
   if e!=nil{return e}
-  if !found{return ErrN4RouteAmbiguous}
+  if !found{return fmt.Errorf("%w: Defender COM post-Add Item absent",ErrN4RouteAmbiguous)}
   defer got.release()
-  exact,e:=n4Plan029ExactRule(got,k)
-  if e!=nil{return e}
-  if !exact{return ErrN4RouteAmbiguous}
+  exact,detail,e:=n4Plan029ExactRuleDetail(got,k)
+  if e!=nil{return fmt.Errorf("Defender COM post-Add get_%s: %w",detail,e)}
+  if !exact{return fmt.Errorf("%w: Defender COM post-Add %s",ErrN4RouteAmbiguous,detail)}
   return nil
  })
 }

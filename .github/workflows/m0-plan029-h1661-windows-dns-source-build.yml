@@ -8,6 +8,9 @@ on:
       - "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go"
       - "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go"
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+      - "r0/go_overlay/internal/windowsclient/native_plan029_defender_com_windows.go"
+      - "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows.go"
+      - "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go"
 permissions: {contents: read, actions: read}
 jobs:
   windows-source-compile:
