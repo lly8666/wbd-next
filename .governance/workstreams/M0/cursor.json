@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1761,
-  "checkpoint_sha": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
+  "sequence": 1762,
+  "checkpoint_sha": "c5a0c6102bd496a66588de896dccd37406f62557",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1761: H1760 signed Action43448922365 true Windows product FAIL before Ready at PLAN029 post-Apply TCP PREPARE original-Go private Windows Rust owner refused; auth+Rust worker+MTU1329 passed, Stop ran, Direct TCP NOT_RUN. Source confirms OriginalOwnerReadback() legacy ProductApplied permanently false but H1759 TCP PREPARE/ENABLE required it true. H1761 corrects only legacy gate, still requires active bound unquiesced original client; real N4 product.Apply+LiveReceipt proven by outer caller, exact Defender receipt and Rust generation unchanged. Update both source-locked blobs, regression test, docs; new same signed Action PENDING.",
-  "why_now": "First real failure is stale always-false ProductApplied precondition before Rust PREPARE, not physical TCP/Defender failure. Fix cold semantic mismatch without creating false Applied/Ready.",
+  "current_task": "H1762: Collected H1761 signed native Action43452721588 FAIL later than prior: original TLS/Rust/Wintun, MTU1329, PREPARE+Defender ENABLE, Ready, two-OS UDP and CN physical FakeIP DNS/UDP PASS; new Windows FakeIP Direct TCP connects but its 32KiB half-close echo recv() times out. Original WSL HyperV ingress rule only allowed TCP 443-446 with source ports 41031-41034; independent real guest TCP46112 and ephemeral physical host port were never allowed. H1762 adds one separate exact run-owned /32 host->guest TCP46112 HyperV allow/readback/always cleanup, archives both TCP fixture logs; preserves no broad firewall. Scopes 029 nonCN Tunnel TCP to actual Windows->Linux app echo without erasing historic 028 inbound FAIL. Fix H1761 governance evidence missing source_sha. H1762 real signed network PENDING, PLAN029 D1-D5 P1-P2 still OPEN.",
+  "why_now": "H1761 signed TCP failure is after native Ready/UDP and before any 32KiB physical echo; missing exact WSL guest TCP port firewall stands out from source and must be verified on next real generation. Produce Linux accept/FIN side evidence before changing Rust TCP core.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1761 auto single signed Normal CN Direct physical TCP/UDP+Tunnel+Stop; fix first genuinely reached Rust/Win32 boundary, then full D1-D5/P1-P2 and padding/GUI. No 030.",
+  "next_action": "Collect ONE H1762 signed Windows↔WSL2 normal CN Direct UDP/TCP plus separate nonCN outbound Tunnel TCP and Stop. If physical TCP still fails, read archived Windows connected/FIN and Linux TCP accept/FIN checkpoints and inspect Rust physical connection. Do not rerun same hypothesis without change. Then D1-D5/P1-P2, GUI, padding, perf; preserve PLAN028 gaps.",
   "unverified": true,
-  "last_tested_source": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
+  "last_tested_source": "c5a0c6102bd496a66588de896dccd37406f62557",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1761-H1760-REAL-NATIVE-PREPARE-READBACK-FIRST-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1762-H1761-SIGNED-DIRECT-TCP-PHYSICAL-RECV-TIMEOUT-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1760 native E2E FAIL at original Go pre-Ready TCP PREPARE; H1761 removes contradictory legacy bool gate, retains authenticated owner and true N4 OS receipt, pending CI; PLAN029 OPEN."
+  "partial_summary": "H1761 real original signed session passed DNS/FakeIP Direct UDP and Tunnel UDP; Direct TCP 32KiB echo timed out after local TCP connect. H1762 scoped WSL HyperV physical TCP46112 one-rule hypothesis plus exact logs, 029 outbound TCP comparator, governance evidence fix; native retest pending. PLAN029 not delivered."
 }

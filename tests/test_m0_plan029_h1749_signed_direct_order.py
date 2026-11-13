@@ -25,4 +25,18 @@ class NativeDirectOrder(unittest.TestCase):
     def test_exact_windows_linux_physical_receipts(self):
         for term in ['m0_plan029_h1745_guest_dns_direct.py','m0_plan029_h1745_win_client_dns_direct.py','gdata["business_client_physical"]==host_source','gdata["dns_client_physical"]==host_source','"source_sha":os.environ["GITHUB_SHA"]','WBD_PLAN029_NATIVE_V3_TRIAL']:
             self.assertIn(term,S)
+    def test_h1762_wsl_exact_physical_tcp_owner_and_scoped_comparator(self):
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
+        self.assertIn("PLAN029_H1762_PHYSICAL_GUEST_TCP46112_HYPERV_EXACT_ALLOW_READBACK",W)
+        self.assertIn("-LocalPorts '46112'",W)
+        self.assertIn("$directName=$ruleName+'-P029-TCP46112'",W)
+        self.assertIn("Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop",W)
+        self.assertIn("PLAN029_H1762_GUEST_TCP46112_HYPERV_EXACT_OWNER_REMOVED",W)
+        self.assertIn("result/wl-public/hyperv-direct-tcp-owned.json",W)
+        self.assertIn('plan029-h1760-guest-physical-tcp.log',M)
+        self.assertIn('plan029-h1760-windows-fakeip-tcp.log',M)
+        self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py',S)
+        self.assertIn('PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP',S)
+        self.assertIn('historical_028_linux_to_windows_tcp',S)
 if __name__=="__main__":unittest.main()

@@ -836,8 +836,47 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
  # independently established IPv4 streams must echo exact application bytes.
  # This is NOT a throughput/RTT/packet-loss measurement or fake carrier ACK.
- tcpapp=out/"tcp-functional.py"
- tcpapp.write_text(r"""import json,socket,sys,threading,time
+ if p029_direct:
+  # This 029 business direction is actual Windows-app -> Linux TUN TCP.
+  # PLAN028's previously failing Linux->Windows inbound comparator remains
+  # untouched below in else, and is NOT promoted or relabeled as passed.
+  app=root/"tools"/"m0_plan029_h1762_oneway_tunnel_tcp.py"
+  ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
+  wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
+  lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(app),"server",linux_app4,"10.66.0.2"],
+      stdout=ltlog,stderr=subprocess.STDOUT)
+  ready(out/"linux-tcp-app.log","PLAN029_H1762_REAL_LINUX_TUN_TCP_READY",lt,20)
+  wt=subprocess.Popen([sys.executable,str(app),"client","10.66.0.2",linux_app4],
+      stdout=wtlog,stderr=subprocess.STDOUT)
+  try:
+   if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:
+    raise RuntimeError("real Windows->Linux nonCN Tunnel TCP failed win="+
+     (out/"windows-tcp-app.log").read_text(errors="replace")[-550:]+
+     " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-550:])
+  finally:
+   for child in (wt,lt):
+    if child.poll() is None:
+     child.terminate()
+     try:child.wait(timeout=3)
+     except subprocess.TimeoutExpired:child.kill()
+  tcp={}
+  for role in ("windows","linux"):
+   lines=(out/(role+"-tcp-app.log")).read_text().splitlines()
+   observed=[x.split(" ",1)[1] for x in lines if x.startswith("PLAN029_H1762_ONEWAY_TUN_TCP ")]
+   if len(observed)!=1:raise RuntimeError("unique real Tunnel TCP "+role+" receipt absent")
+   tcp[role]=json.loads(observed[0])
+  if not (tcp["windows"]["client_echo"] and
+          tcp["windows"]["local"]=="10.66.0.2" and
+          tcp["windows"]["remote"]==linux_app4 and
+          tcp["linux"]["received_bytes"]>0 and
+          tcp["linux"]["client_ip"]=="10.66.0.2"):
+   raise RuntimeError("real Windows app Tunnel TCP guest receipt mismatched")
+  report["actual_kernel_tcp"]=tcp
+  report["tcp_duplex"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"
+ else:
+  tcpapp=out/"tcp-functional.py"
+  tcpapp.write_text(r"""import json,socket,sys,threading,time
 local,remote=sys.argv[1:3]
 port=45902
 marker=("WBD-TCP-NATIVE-"+local+"-to-"+remote).encode()
@@ -891,39 +930,41 @@ if thread.is_alive() or issues or not result["client_echo"] or result["server_re
  sys.exit(9)
 result["tcp"]="PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM"
 print(json.dumps(result),flush=True)
-""")
- ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
- wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
- lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(tcpapp),linux_app4,"10.66.0.2"],
-     stdout=ltlog,stderr=subprocess.STDOUT)
- wt=subprocess.Popen([sys.executable,str(tcpapp),"10.66.0.2",linux_app4],
-     stdout=wtlog,stderr=subprocess.STDOUT)
- until=time.monotonic()+40
- while lt.poll() is None or wt.poll() is None:
-  if w.poll() is not None or s.poll() is not None:
-   raise RuntimeError("actual original Windows/Linux owner exited during TCP")
-  if time.monotonic()>until:
-   raise RuntimeError("real TCP duplex deadline; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-450:]+
-      " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-450:])
-  time.sleep(.1)
- if wt.returncode or lt.returncode:
-  raise RuntimeError("real public TCP apps failed; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-400:]+
-     " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-400:])
- tcp={}
- for role in ("windows","linux"):
-  line=(out/(role+"-tcp-app.log")).read_text().strip().splitlines()[-1]
-  observed=json.loads(line)
-  if observed["tcp"]!="PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM" or not observed["client_echo"] or observed["server_received"]<=0:
-   raise RuntimeError("invalid real TCP native "+role+" "+repr(observed))
-  tcp[role]=observed
- report["actual_kernel_tcp"]=tcp
- report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+ """)
+  ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
+  wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
+  lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(tcpapp),linux_app4,"10.66.0.2"],
+      stdout=ltlog,stderr=subprocess.STDOUT)
+  wt=subprocess.Popen([sys.executable,str(tcpapp),"10.66.0.2",linux_app4],
+      stdout=wtlog,stderr=subprocess.STDOUT)
+  until=time.monotonic()+40
+  while lt.poll() is None or wt.poll() is None:
+   if w.poll() is not None or s.poll() is not None:
+    raise RuntimeError("actual original Windows/Linux owner exited during TCP")
+   if time.monotonic()>until:
+    raise RuntimeError("real TCP duplex deadline; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-450:]+
+       " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-450:])
+   time.sleep(.1)
+  if wt.returncode or lt.returncode:
+   raise RuntimeError("real public TCP apps failed; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-400:]+
+      " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-400:])
+  tcp={}
+  for role in ("windows","linux"):
+   line=(out/(role+"-tcp-app.log")).read_text().strip().splitlines()[-1]
+   observed=json.loads(line)
+   if observed["tcp"]!="PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM" or not observed["client_echo"] or observed["server_received"]<=0:
+    raise RuntimeError("invalid real TCP native "+role+" "+repr(observed))
+   tcp[role]=observed
+  report["actual_kernel_tcp"]=tcp
+  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
  if p029_direct:
   proof=report.get("plan029_private_v3_cn_direct_udp")
   if not proof or proof.get("source_sha")!=os.environ["GITHUB_SHA"]:
    raise RuntimeError("PLAN029 signed CN Direct source/physical evidence missing")
   proof["tunnel_tcp"]=report["tcp_duplex"]
+  proof["historical_028_linux_to_windows_tcp"]="NOT_RUN_028_SCOPED"
   print("PLAN029_H1749_SIGNED_CN_DIRECT_AND_TUNNEL_TCP_UDP_STAGE_PASS_PRE_STOP",flush=True)
+  print("PLAN029_H1762_SIGNED_DIRECT_TCP_UDP_ONEWAY_TUN_TCP_UDP_PASS_PRE_STOP",flush=True)
  # Exact native DF0/DF1 scenario only, after authenticated original-Go
  # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
  if os.environ.get("WBD_WL_V2_SCENARIO")==(
@@ -1566,6 +1607,7 @@ print(json.dumps(result),flush=True)
     raise RuntimeError("real PLAN029 Direct scenario lost SOURCE-locked Windows/Linux receipt")
    report["plan029_private_v3_cn_direct_udp"]["stop"]="PASS_NO_WFP_V2_WAL_ABSENT"
    print("PLAN029_H1745_REAL_ORIGINAL_GO_RUST_V3_CN_DNS_FAKE_DIRECT_UDP_AND_TUNNEL_OWNED_STOP_PASS",flush=True)
+   print("PLAN029_H1762_SIGNED_DIRECT_32K_TCP_PLUS_ONEWAY_TUN_TCP_UDP_EXACT_OWNED_STOP_PASS_SCOPED",flush=True)
   else:
    report["plan029_private_v3_tunnel"]={
     "scope":"ORIGINAL_GO_CREDENTIAL_RUST_V3_ONE_WINTUN_SIGNED_TWO_OS_TUNNEL_ONLY",

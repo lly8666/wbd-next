@@ -26,5 +26,7 @@
   ],
   "stop": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS (not proof of entire 029 sidecar closure)",
   "cause": "OriginalOwnerReadback() in bridge_v4_windows_scoped_client.go returns ProductApplied:false, while H1759 Plan029PrepareNativeTCPAfterOSApply and Enable erroneously required true. Separate outer N4 product.Apply+LiveReceipt already checked true OS status.",
-  "new_source": "H1761 patch+pure test+manifest source-lock; CI pending"
+  "new_source": "H1761 patch+pure test+manifest source-lock; CI pending",
+  "source_sha": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
+  "source_scope": "H1760 real test failure. Added mandatory canonical source_sha for governance; H1761 new failure separately recorded."
 }

@@ -11,10 +11,16 @@ with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
     connected=time.monotonic()
     if s.getsockname()[0]!=lease or s.getpeername()!=(fake,46112):
         raise RuntimeError("Windows original kernel socket escaped FakeIP")
+    print("PLAN029_H1762_WINDOWS_FAKEIP_TCP_CONNECT_OK local="+repr(s.getsockname())+
+          " peer="+repr(s.getpeername()),flush=True)
     s.sendall(payload);s.shutdown(socket.SHUT_WR)
+    print("PLAN029_H1762_WINDOWS_FAKEIP_TCP_32K_SENT_FIN",flush=True)
     returned=bytearray()
     while len(returned)<len(payload):
-        chunk=s.recv(4096)
+        try:chunk=s.recv(4096)
+        except TimeoutError:
+            print("PLAN029_H1762_WINDOWS_FAKEIP_TCP_RECV_DEADLINE echoed="+str(len(returned)),flush=True)
+            raise
         if not chunk:break
         returned.extend(chunk)
     if returned!=payload:

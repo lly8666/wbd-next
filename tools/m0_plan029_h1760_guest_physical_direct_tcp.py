@@ -8,6 +8,7 @@ print("PLAN029_H1760_PHYSICAL_KERNEL_TCP46112_READY",flush=True)
 started=time.monotonic()
 with listener:
     conn,peer=listener.accept()
+    print("PLAN029_H1762_PHYSICAL_TCP_ACCEPT peer="+repr(peer),flush=True)
     if peer[0]!=expected_windows_source:
         raise RuntimeError("Direct TCP physical socket unexpected source "+repr(peer))
     with conn:
@@ -17,6 +18,7 @@ with listener:
             if not chunk:break
             data.extend(chunk)
             if len(data)>32768:raise RuntimeError("Direct TCP unbounded client bytes")
+        print("PLAN029_H1762_PHYSICAL_TCP_FIN_RECEIVED bytes="+str(len(data)),flush=True)
         expected=(b"PLAN029-H1760-DIRECT-KERNEL-TCP-"*1024)[:32768]
         if data!=expected:
             raise RuntimeError("physical kernel TCP got wrong or partial app data")

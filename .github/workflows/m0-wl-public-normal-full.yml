@@ -65,6 +65,7 @@ on:
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_plan029_h1760_guest_physical_direct_tcp.py
       - tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py
+      - tools/m0_plan029_h1762_oneway_tunnel_tcp.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
       - tests/test_m0_plan028_h1587_two_windows_manual_cipher_scope.py
       - tools/m0_plan028_h1415_windows_linux_independent_clients.py
@@ -510,7 +511,8 @@ jobs:
       - run: python -m unittest tests.test_m0_plan028_tls_wire_audit -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
       - run: python -m unittest tests.test_m0_plan028_h1619_exact_accelerated_prebuilt_manifest -v
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tests/test_m0_plan027_managed_unilateral.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tools/m0_plan029_h1762_oneway_tunnel_tcp.py tests/test_m0_plan027_managed_unilateral.py
+      - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
       - run: python -m unittest tests.test_m0_wl_scoped_game2_trigger -v
@@ -1429,6 +1431,30 @@ jobs:
           [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_ports=@(443,444,445,446);client_tcp_ports=@(41031,41032,41033,41034);scope='OWNED_WSL2_ORIGINAL_NPCAP_GAME4_FOUR_LANES_MAX'} |
             ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
           Write-Output 'WL_REAL_WSL_HYPERV_TCP443_TO_446_EXACT_OWNER_ALLOW_INSTALLED'
+          # PLAN029 physical Direct TCP needs a separate guest listener TCP46112
+          # with an ephemeral real Windows source port. The legacy 443-446
+          # rule has both local and remote port limits: do not widen it.
+          if($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1'){
+            $directName=$ruleName+'-P029-TCP46112'
+            if(Get-NetFirewallHyperVRule -Name $directName -ErrorAction SilentlyContinue){
+              throw 'foreign PLAN029 WSL physical TCP rule'
+            }
+            New-NetFirewallHyperVRule -Name $directName -DisplayName $directName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses ([string]$source[0].IPAddress) -LocalPorts '46112' -ErrorAction Stop | Out-Null
+            $directLive=Get-NetFirewallHyperVRule -Name $directName -ErrorAction Stop
+            if($null -eq $directLive -or $directLive.Direction -ne 'Inbound' -or $directLive.Action -ne 'Allow' -or
+               [string]$directLive.LocalPorts -ne '46112' -or
+               [string]$directLive.LocalAddresses -ne $guestIP -or
+               [string]$directLive.RemoteAddresses -ne [string]$source[0].IPAddress -or
+               [string]$directLive.VMCreatorId -ne [string]$creator[0].VMCreatorId){
+              throw 'PLAN029 guest physical TCP46112 firewall rule readback mismatch'
+            }
+            [ordered]@{name=$directName;creator_id=[string]$creator[0].VMCreatorId;
+              protocol='TCP';port=46112;local_ip=$guestIP;
+              remote_ip=[string]$source[0].IPAddress;
+              scope='H1762_ONLY_OWNED_GUEST_DIRECT_TCP46112'} |
+              ConvertTo-Json | Set-Content result/wl-public/hyperv-direct-tcp-owned.json
+            Write-Output ('PLAN029_H1762_PHYSICAL_GUEST_TCP46112_HYPERV_EXACT_ALLOW_READBACK source='+[string]$source[0].IPAddress+' dest='+$guestIP)
+          }
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){Write-Output 'WL_GAME_NATIVE_STAGE HYPERV_RULE_INSTALLED'}
           # Real NPF header showed original product SYN destination MAC equals
           # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
@@ -2311,6 +2337,33 @@ jobs:
             if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
             Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
           }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
+      - name: Remove only exact owned PLAN029 guest TCP46112 HyperV rule after product Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT+'-P029-TCP46112'
+          $rule=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $rule){
+            $receipt='result/wl-public/hyperv-direct-tcp-owned.json'
+            if(-not (Test-Path $receipt)){throw 'unreceipted PLAN029 guest TCP rule; refuse removal'}
+            $owned=Get-Content $receipt -Raw | ConvertFrom-Json
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($owned.name -ne $name -or $owned.port -ne 46112 -or
+               $known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $owned.creator_id -or
+               [string]$rule.VMCreatorId -ne $owned.creator_id -or
+               [string]$rule.LocalPorts -ne '46112' -or
+               [string]$rule.LocalAddresses -ne $owned.local_ip -or
+               [string]$rule.RemoteAddresses -ne $owned.remote_ip){
+              throw 'foreign PLAN029 WSL TCP46112 rule; no broad cleanup'
+            }
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){
+              throw 'PLAN029 owned TCP46112 rule still installed'
+            }
+            Write-Output 'PLAN029_H1762_GUEST_TCP46112_HYPERV_EXACT_OWNER_REMOVED'
+          }else{Write-Output 'PLAN029_H1762_GUEST_TCP46112_HYPERV_NOT_INSTALLED'}
       - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
         if: always()
         timeout-minutes: 2
@@ -2431,6 +2484,7 @@ jobs:
             result/wl-public/windows-adapters.json
             result/wl-public/linux-eth0.json
             result/wl-public/hyperv-rule.json
+            result/wl-public/hyperv-direct-tcp-owned.json
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn

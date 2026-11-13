@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "source_sha": "c5a0c6102bd496a66588de896dccd37406f62557",
+  "plan": "PLAN029",
+  "checkpoint": "H1762",
+  "result": "FAIL_REAL_SIGNED_DIRECT_TCP_RECV_TIMEOUT",
+  "action_id": 43452721588,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43452721588",
+  "native_job_id": 131981664571,
+  "artifact_id": 14053607260,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43452721588/artifacts/14053607260",
+  "wins": [
+    "actual Windows Go and Rust signed binary build",
+    "original authenticated TLS session",
+    "single signed Wintun OS Applied+Ready",
+    "post-Apply native kernel TCP PREPARE exact Defender ENABLE port=52156 synthetic=198.19.176.111",
+    "real original two-OS Tunnel UDP",
+    "CN CNAME/direct DNS and FakeIP real Linux physical UDP both directions"
+  ],
+  "physical_tcp": {
+    "windows_app_socket": "connect(10.66.0.2 -> 198.18.0.1:46112) succeeded",
+    "bytes_sent": 32768,
+    "app_reply": "FAIL recv() TimeoutError after connection/half-close",
+    "linux_guest_received_proof": "UNKNOWN_NOT_UPLOADED",
+    "guest_port": 46112,
+    "guest_ip_at_run": "172.25.150.250",
+    "windows_physical_source": "172.25.144.1",
+    "hyperv_rule_observed": "original independent WSL rule only TCP local 443/444/445/446 and remote 41031/41032/41033/41034, not new 46112",
+    "hypothesis": "TEST_ENV_WSL_HYPERV_GUEST_46112_NOT_ALLOWED; no claim yet that this is sole cause"
+  },
+  "not_run": [
+    "physical TCP 32KiB echo and half-close PASS",
+    "non-CN Tunnel TCP comparator",
+    "full both-owned Stop oracle",
+    "PLAN029 D1-D5/P1-P2, GUI, startup padding, capacity"
+  ],
+  "h1762_changes": [
+    "one per-run WSL HyperV exact TCP 46112 Allow with exact physical host source and guest IP; independently owned removal in always()",
+    "preserve existing 443-446 WSL rule; no remote subnet/global bypass",
+    "copy real CN and TCP both-side stage logs into redacted per-mode evidence manifest",
+    "separate PLAN029 Windows->Linux nonCN Tunnel TCP outbound socket from unchanged PLAN028 historical Linux->Windows inbound verdict",
+    "repair canonical H1760 source_sha evidence field"
+  ],
+  "h1762_actions": "AUTO_CI_PENDING_SINGLE_NORMAL_SCENE",
+  "not_a_pass": true
+}
