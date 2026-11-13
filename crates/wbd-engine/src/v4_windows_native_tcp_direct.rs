@@ -352,6 +352,29 @@ mod tests{
         assert!(retired.is_empty()); // stale, never-issued NAT is not owned
     }
     #[test]
+    fn plan029_closed_nat_129_metadata_retire_in_bounded_64_item_quanta(){
+        let mut closing=ClosedNatGrace::default();
+        let now=7_000u64;
+        for i in 0..129u16{
+            closing.defer(32_768+i,TcpNatKey{
+                client:1,source_port:10_000+i,presented:3,target_port:4,
+            },now);
+        }
+        let mut nat=DirectTcpNat::new(1,2,3,256).unwrap();
+        let mut retired=Vec::new();
+        closing.expire_some(now+CLOSED_NAT_GRACE_MS-1,&mut nat,&mut retired);
+        assert_eq!(closing.by_port.len(),129);
+        assert_eq!(closing.next_due(),Some(now+CLOSED_NAT_GRACE_MS));
+        closing.expire_some(now+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
+        assert_eq!(closing.by_port.len(),65);
+        closing.expire_some(now+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
+        assert_eq!(closing.by_port.len(),1);
+        closing.expire_some(now+CLOSED_NAT_GRACE_MS,&mut nat,&mut retired);
+        assert!(closing.by_port.is_empty());
+        assert_eq!(closing.next_due(),None);
+        assert!(retired.is_empty()); // these were never owned NAT ports
+    }
+    #[test]
     fn plan029_native_kernel_tcp_synthetic_peer_never_overlaps_fake_or_lease(){
         let lease=0x0aea0c22;
         let physical=0x0a010007;

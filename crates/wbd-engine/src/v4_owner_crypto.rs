@@ -1014,6 +1014,24 @@ impl ProtectedScopedOwner {
             buffer,payload_len,budget,carrier_snapshot,now,false)
     }
 
+    /// PLAN029 cold opt-in candidate only: the original authenticated
+    /// owner, PN allocator, frozen TX record and TCP appearance sequence are
+    /// unchanged. Padding is AEAD-authenticated after the existing inner LINK
+    /// marker, not part of the application's IPv4 payload. No caller may use
+    /// this for Direct, FEC repair, Health or outer retransmission; the actual
+    /// cold configuration and Tunnel-only eligibility are still separate.
+    pub(crate) fn seal_normal_off_one_padded(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+        padding_bytes:usize,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if padding_bytes>256{return Err(ProtectedCryptoError::Tx)}
+        self.seal_scoped_authenticated_one_padded(
+            buffer,payload_len,budget,carrier_snapshot,now,
+            false,AUTHENTICATED_LINK_KIND,padding_bytes,
+        )
+    }
+
     /// M0 authenticated Normal/off LINK slow path; the M3 fragmenter is
     /// the only producer. Reject magic lookalikes BEFORE spending PN or
     /// allocating a driver loan. Same normal-build M1 owner/AEAD/Seq path.
@@ -1127,9 +1145,20 @@ impl ProtectedScopedOwner {
     }
 
     fn seal_scoped_authenticated_one(
-        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
         allow_fragment:bool,kind:u8,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        self.seal_scoped_authenticated_one_padded(
+            buffer,payload_len,budget,carrier_snapshot,now,
+            allow_fragment,kind,0,
+        )
+    }
+
+    fn seal_scoped_authenticated_one_padded(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,
+        budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+        allow_fragment:bool,kind:u8,padding_bytes:usize,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active || !self.rx_tx.detached()
             || !self.crypto.active || self.crypto.tx_boundary.is_none(){
@@ -1147,7 +1176,12 @@ impl ProtectedScopedOwner {
             }else{budget.record_payload_mtu} {
             return Err(ProtectedCryptoError::Tx)
         }
+        if padding_bytes>256||
+            (padding_bytes!=0&&kind!=AUTHENTICATED_LINK_KIND){
+            return Err(ProtectedCryptoError::Tx)
+        }
         let used=payload_len.checked_add(FIXED_WIRE_OVERHEAD)
+            .and_then(|n|n.checked_add(padding_bytes))
             .ok_or(ProtectedCryptoError::Tx)?;
         if used>budget.record_wire_mtu || buffer.writable().len()<used {
             return Err(ProtectedCryptoError::Tx)
@@ -1170,7 +1204,7 @@ impl ProtectedScopedOwner {
             wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND
         ){
             self.crypto.tx.seal_in_place(
-                kind,buffer.writable(),payload_len,0
+                kind,buffer.writable(),payload_len,padding_bytes
             )
         }else{
             #[cfg(any(feature="m0_fec2_owner_probe",feature="fec2_product_record"))]

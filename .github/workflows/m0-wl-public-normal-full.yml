@@ -68,6 +68,8 @@ on:
       - tools/m0_plan029_h1762_oneway_tunnel_tcp.py
       - tools/m0_plan029_h1765_linux_tun_dns.py
       - tools/m0_plan029_h1765_windows_tunnel_dns.py
+      - tools/m0_plan029_h1767_linux_dns_blackhole.py
+      - tools/m0_plan029_h1767_windows_dns_blackhole.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
       - tests/test_m0_plan028_h1587_two_windows_manual_cipher_scope.py
       - tools/m0_plan028_h1415_windows_linux_independent_clients.py
@@ -526,7 +528,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan028_tls_wire_audit -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
       - run: python -m unittest tests.test_m0_plan028_h1619_exact_accelerated_prebuilt_manifest -v
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tools/m0_plan029_h1762_oneway_tunnel_tcp.py tools/m0_plan029_h1765_linux_tun_dns.py tools/m0_plan029_h1765_windows_tunnel_dns.py tests/test_m0_plan027_managed_unilateral.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tools/m0_plan029_h1762_oneway_tunnel_tcp.py tools/m0_plan029_h1765_linux_tun_dns.py tools/m0_plan029_h1765_windows_tunnel_dns.py tools/m0_plan029_h1767_linux_dns_blackhole.py tools/m0_plan029_h1767_windows_dns_blackhole.py tests/test_m0_plan027_managed_unilateral.py
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
@@ -2278,7 +2280,14 @@ jobs:
                $dns.windows.query_app_dns -ne '8.8.8.8' -or
                $dns.windows.reply_source -ne '8.8.8.8' -or
                $dns.windows.real_answer -ne '203.0.113.77' -or
-               $dns.windows.fakeip -ne $false){
+               $dns.windows.fakeip -ne $false -or
+               $dns.blackhole_no_fallback -ne 'PASS_REAL_TUNNEL_NO_REPLY_AND_ZERO_PHYSICAL_DIRECT_FALLBACK' -or
+               $result.plan029_d1_dns_blackhole_no_fallback.source_sha -ne $env:GITHUB_SHA -or
+               $result.plan029_d1_dns_blackhole_no_fallback.windows.query_count -ne 3 -or
+               $result.plan029_d1_dns_blackhole_no_fallback.windows.unexpected_response -ne $false -or
+               $result.plan029_d1_dns_blackhole_no_fallback.linux.tunnel_query_count -lt 2 -or
+               $result.plan029_d1_dns_blackhole_no_fallback.linux.physical_query_count -ne 0 -or
+               $result.plan029_d1_dns_blackhole_no_fallback.linux.replied -ne $false){
               throw 'PLAN029 exact same-SOURCE Direct/Tunnel TCP UDP DNS and owned Stop proof absent'
             }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'

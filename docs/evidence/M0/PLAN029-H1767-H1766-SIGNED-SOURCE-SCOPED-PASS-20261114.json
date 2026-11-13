@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1767",
+  "source_sha": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
+  "status": "PASS_SIGNED_EXACT_TWO_OS_SCOPED_NOT_FULL_PLAN",
+  "action_id": 43524162967,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43524162967",
+  "artifact_id": 14084433794,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43524162967/artifacts/14084433794",
+  "governance_action_id": 43524162916,
+  "exact_signed_original_session": {
+    "original_go_tls_windows_and_linux_rust": "PASS",
+    "signed_wintun_and_real_linux_tun": "PASS",
+    "windows_linux_Rust_Go_and_native_preflight": "PASS",
+    "application_exit_code": 0,
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "stop": "PASS_BOTH_OWNED",
+    "outer_oracle": "PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED"
+  },
+  "actual_direct": {
+    "selective_cn_fakeip": "PASS",
+    "physical_direct_udp": "PASS",
+    "physical_direct_tcp_32768_send_32768_echo_and_halfclose": "PASS",
+    "linux_physical_origin_readback": "PASS",
+    "defender_owned_readback_and_wal_stop": "PASS"
+  },
+  "real_noncn_dns": {
+    "qname": "www.globalx.example",
+    "selected_tunnel_endpoint": "1.1.1.1:53",
+    "windows_presented_dns": "8.8.8.8:53",
+    "windows_reply_source": "8.8.8.8:53",
+    "linux_received_client_ip": "10.66.0.2",
+    "answer": "203.0.113.77",
+    "injected_fakeip": false
+  },
+  "owned_cleanup": {
+    "windows_defender": "PASS",
+    "wsl_hyperv_exact_tcp46112": "PASS",
+    "windows_wal": "PASS",
+    "linux_tun": "PASS"
+  },
+  "h1767_new_source_pending": {
+    "true_dns_blackhole": "Linux independent Tunnel 1.1.1.1:53 sink and physical Direct resolver:53 leak sentinel while original Windows Wintun app sends three nonCN queries; require tunnel 2+; physical0; no response",
+    "bounded_tcp_close_resource": "129 metadata-only NAT shutdown entries swept 64 per owner turn, no busy wake",
+    "authenticated_startup_padding": "Original M1 LINK AEAD optional 0..256 byte padding API and contiguous PN/Seq in component harness; no cold CLI/GUI product policy or true Tunnel use yet"
+  },
+  "not_proven": [
+    "application TCP53",
+    "IP/domain union real CDN counterexample",
+    "full D3 pressure P1/P2",
+    "GUI actual effective and IPv6 leak coverage",
+    "real startup padding and latency"
+  ],
+  "PLAN029": "IN_PROGRESS"
+}

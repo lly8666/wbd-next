@@ -93,4 +93,28 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("$result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP'",W)
         self.assertLess(W.index("} elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1')"),
                         W.index("selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof"))
+    def test_h1767_one_selected_dns_blackhole_no_direct_fallback(self):
+        import ast
+        ast.parse(S)
+        self.assertLess(S.index("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED"),
+                        S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
+        self.assertLess(S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"),
+                        S.rindex("\\n stop_windows(w)\\n"))
+        for proof in ('"tunnel_query_count"', '"physical_query_count"', '"unexpected_response"',
+                      'bh_proofs["linux"]["client_source"]==["10.66.0.2"]',
+                      '"blackhole_no_fallback"'):
+            self.assertIn(proof,S)
+        self.assertIn('p029_dns_blackhole_guest,p029_dns_blackhole_win):',S)
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        for path in ("tools/m0_plan029_h1767_linux_dns_blackhole.py",
+                     "tools/m0_plan029_h1767_windows_dns_blackhole.py"):
+            source=(Path(__file__).resolve().parents[1]/path).read_text(encoding="utf-8")
+            ast.parse(source)
+            self.assertIn("      - "+path,W)
+        for basename in ("plan029-h1767-linux-dns-blackhole.log",
+                         "plan029-h1767-windows-dns-blackhole.log"):
+            self.assertIn(basename,M)
+        self.assertIn("$result.plan029_d1_dns_blackhole_no_fallback.source_sha -ne $env:GITHUB_SHA",W)
+        self.assertIn("$result.plan029_d1_dns_blackhole_no_fallback.linux.physical_query_count -ne 0",W)
 if __name__=="__main__":unittest.main()

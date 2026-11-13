@@ -144,7 +144,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -1014,6 +1014,54 @@ print(json.dumps(result),flush=True)
     "linux":dns_proofs["linux"],"app_tcp53":"NOT_RUN",
     "blackhole_no_fallback":"NOT_RUN"}
   print("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED",flush=True)
+  # D1 single-upstream timeout proof. After genuine one-endpoint success,
+  # leave the same run-owned TUN 1.1.1.1/32 in place and bind two independent
+  # receivers: Tunnel DNS silently blackholes, physical Direct DNS is a
+  # sentinel. The original Windows Wintun app MUST time out, with real
+  # packets reaching only 1.1.1.1, not silently fail over to physical DNS.
+  bh_guest_log=(out/"plan029-h1767-linux-dns-blackhole.log").open("w");logs.append(bh_guest_log)
+  p029_dns_blackhole_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1767_linux_dns_blackhole.py"),
+      "1.1.1.1",peer,"10.66.0.2"],
+      stdout=bh_guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029-h1767-linux-dns-blackhole.log",
+      "PLAN029_H1767_LINUX_TUN_DNS_BLACKHOLE_AND_PHYSICAL_SENTINEL_READY",
+      p029_dns_blackhole_guest,12)
+  bh_win_log=(out/"plan029-h1767-windows-dns-blackhole.log").open("w");logs.append(bh_win_log)
+  p029_dns_blackhole_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1767_windows_dns_blackhole.py"),
+      "10.66.0.2","8.8.8.8"],
+      stdout=bh_win_log,stderr=subprocess.STDOUT)
+  win_exit=p029_dns_blackhole_win.wait(timeout=10)
+  guest_exit=p029_dns_blackhole_guest.wait(timeout=10)
+  if win_exit or guest_exit:
+   raise RuntimeError("D1 exact resolver blackout/fallback violated windows="+
+      (out/"plan029-h1767-windows-dns-blackhole.log").read_text(errors="replace")[-700:]+
+      " linux="+(out/"plan029-h1767-linux-dns-blackhole.log").read_text(errors="replace")[-700:])
+  bh_proofs={}
+  for who,filename,marker in (
+   ("windows","plan029-h1767-windows-dns-blackhole.log","PLAN029_H1767_REAL_WINDOWS_DNS_BLACKHOLE "),
+   ("linux","plan029-h1767-linux-dns-blackhole.log","PLAN029_H1767_REAL_LINUX_DNS_BLACKHOLE ")):
+   lines=[line.split(" ",1)[1] for line in (out/filename).read_text().splitlines()
+          if line.startswith(marker)]
+   if len(lines)!=1:raise RuntimeError("blackhole real "+who+" unique receipt missing")
+   bh_proofs[who]=json.loads(lines[0])
+  if not (bh_proofs["windows"]["query_count"]==3 and
+          bh_proofs["windows"]["unexpected_response"] is False and
+          bh_proofs["linux"]["tunnel_query_count"]>=2 and
+          bh_proofs["linux"]["physical_query_count"]==0 and
+          bh_proofs["linux"]["replied"] is False and
+          bh_proofs["linux"]["physical_ip"]==peer and
+          bh_proofs["linux"]["client_source"]==["10.66.0.2"]):
+   raise RuntimeError("D1 no-fallback exact real Windows/Linux DNS receipts diverge")
+  report["plan029_d1_dns_blackhole_no_fallback"]={
+      "source_sha":os.environ["GITHUB_SHA"],
+      "scope":"SIGNED_WINDOWED_UDP53_NONCN_TUNNEL_DNS_BLACKHOLE_PHYSICAL_SENTINEL",
+      "windows":bh_proofs["windows"],"linux":bh_proofs["linux"],
+      "app_tcp53":"NOT_RUN","other_system_dns":"NOT_PROVEN"}
+  report["plan029_d1_noncn_udp_dns_real"]["blackhole_no_fallback"]=(
+      "PASS_REAL_TUNNEL_NO_REPLY_AND_ZERO_PHYSICAL_DIRECT_FALLBACK")
+  print("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED",flush=True)
  # Exact native DF0/DF1 scenario only, after authenticated original-Go
  # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
  if os.environ.get("WBD_WL_V2_SCENARIO")==(
@@ -1794,7 +1842,7 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win):
   if p is not None and p.poll() is None:p.terminate()
  if p029_direct and (out/"plan029-h1765-owned-tunnel-dns-alias.txt").exists():
   # Current-generation INTENT is sufficient for safe partial Apply recovery:

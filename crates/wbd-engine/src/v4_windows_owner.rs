@@ -2852,6 +2852,51 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
     #[test]
+    fn plan029_original_m1_authenticated_link_padding_same_pn_seq_and_slab(){
+        // Component-only wire contract: product cold mode, classification
+        // and GUI have NOT enabled this function yet. The ordinary
+        // authenticated M1 sealer must own PN, Seq and FrozenRecord bytes.
+        let mut r=Registry{generation:705,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let epoch=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        let mut ipv4=[0u8;90];
+        ipv4[0]=0x45;ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let (pn,seq,n)={
+            let mut e=r.entries[&h].lock().unwrap();
+            let budget=normal_off_windows_budget(&e).unwrap();
+            let mut slab=e.arena.allocate().unwrap();
+            slab.writable()[14..14+ipv4.len()].copy_from_slice(&ipv4);
+            let now=m2_clock();
+            let (pn,seq,used)=e.owner.seal_normal_off_one_padded(
+                slab,ipv4.len(),budget,0,now,32).unwrap();
+            assert_eq!(used,ipv4.len()+FIXED_WIRE_OVERHEAD+32);
+            let storage=std::mem::take(&mut e.tx_scratch);
+            let batch=e.owner.drain_tx(now,storage).unwrap();
+            {
+                let rows=e.owner.checked_tx_ready(&batch).unwrap();
+                assert_eq!(rows.len(),1);
+                assert_eq!(rows[0].record.bytes().len(),used);
+                assert_eq!(rows[0].record.metadata().pn,RecordPn(pn));
+                assert_eq!(rows[0].record.metadata().seq.0 as u32,seq);
+            }
+            e.tx_scratch=batch.recycle();
+            (pn,seq,used)
+        };
+        let mut normal=[0u8;2048];
+        let (next_len,next_seq,next_pn)=v3_seal_one(
+            &r,h,epoch,91,19,&ipv4,&mut normal).unwrap();
+        assert_eq!(next_pn,pn+1);
+        assert_eq!(next_seq,seq.wrapping_add(n as u32));
+        assert_eq!(next_len,ipv4.len()+FIXED_WIRE_OVERHEAD);
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
     fn m0_windows_original_source_after_real_clock_feedback_has_contiguous_seq(){
         // Fixed/off can no longer generate a per-record M2 receipt;
         // absence of feedback must never burn PN/Seq or block new DATA.

@@ -20,7 +20,9 @@
     "gui": "PLANNED: 关闭/仅TLS启动/所有TCP与UDP新流，与真实effective一致。"
   },
   "code_refs": [
-    "crates/wbd-engine/src/v4_client_startup_padding.rs"
+    "crates/wbd-engine/src/v4_client_startup_padding.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
@@ -40,12 +42,20 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Rust same-original-M1 LINK AEAD/PN/SEQ component",
+      "scope": "H1767 optional authenticated 0..256B padding seal API and FrozenRecord contiguous PN/Seq test staged; real product cold integration and Windows signed effect not verified.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
     "旧TLS启动功能存在不等于新flows模式已实现；当前仅PLANNED。",
     "不承诺DPI不可识别；无padding-only流、无主动业务延迟，不重复触发长流，不改变AEAD/generation。",
-    "H1766 Rust pure budget source is independent scaffolding only; actual Tunnel-only encrypted padding, off/tls/flows config, no-wait latency, GUI and OS performance still NOT_RUN."
+    "H1766 Rust pure budget source is independent scaffolding only; actual Tunnel-only encrypted padding, off/tls/flows config, no-wait latency, GUI and OS performance still NOT_RUN.",
+    "H1767 new M1 padding method is unused by current product. No actual startup-padding CLI/GUI effective, performance comparison, or Tunnel/Game/FEC integration is claimed."
   ],
   "promotion": null
 }

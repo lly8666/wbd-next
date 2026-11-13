@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1766,
-  "checkpoint_sha": "1ab6d4b5268b9bedc1506598b28fc33f9e485be3",
+  "sequence": 1767,
+  "checkpoint_sha": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1766: H1765 original signed Action43514792104 nested real Normal+Stop PASS exit0: CN FakeIP physical Direct UDP+TCP 32768 FIN, Windows->Linux nonCN Tunnel TCP/UDP, real nonCN DNS www.globalx.example Windows app 8.8.8.8→Linux TUN 1.1.1.1 and answer source restored, owned Stop. Outer job FAILED only because stale PLAN028 generic requirement tcp_duplex PASS_ACTUAL_TWO_OS_KERNEL_TCP while exact PLAN029 has PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP. H1766 adds a scoped strict same-SOURCE PowerShell receipt branch (old 028 unchanged). Parallel fixes closed NAT 60s exact original TX timer expiry without 10ms spin, adds Rust bounded startup-padding pure policy only (NOT wired into seal/CLI/GUI), tests + cards. New signed source pending, remaining D1-D5/P1-P2 OPEN.",
-  "why_now": "Signed H1765 real application dual egress and DNS proved, no old 028 inbound comparator needed for 029. Correct only stale outer proof while preserving true signed source and ownership. Closed NAT 60s grace needs original worker deadline wake for capacity recycling; padding budget can be independently unit-developed but is not yet real product.",
+  "current_task": "H1767: H1766 exact signed Windows2025 Go/Rust Wintun ↔ Linux TUN Action43524162967 fully SUCCESS including strict PLAN029 outer receipt, real Direct FakeIP physical UDP and TCP32768 echo+FIN, outbound nonCN Tunnel TCP+UDP, unique Tunnel DNS www.globalx.example 8.8.8.8→1.1.1.1 original source restored and genuine both OS owned Stop; H1766 governance and Windows/Linux component passes. Still D1–D5/P1–P2/GUI/padding not full. H1767 introduces real no-fallback D1 negative: nonCN DNS Tunnel blackhole with live physical Direct53 sentinel and Windows raw Wintun query no reply; bounded close NAT 129/64 quantum test. Parallel M1 LINK AEAD optional pad 0..256 source-only with PN/Seq FrozenRecord component fixture, not connected to product. New signed source pending.",
+  "why_now": "H1766 authentic end-to-end and outer same-SOURCE strict gate now all green; stop wasting selected 028 comparator reruns. Next concrete D1 exit gap is no-fallback when sole Tunnel resolver drops, independently verified against a concurrently listening physical Direct sentinel.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1766 signed Normal Action and component tests. Then implement D1 app TCP53 and blackhole no fallback, D2 CN domain overseas CDN vs nonCN→CN A, GUI actual config and true Tunnel LINK seal padding and P1–P2; freeze source before each distinct expensive scenario. Keep PLAN028 scoped and PLAN030 unopened.",
+  "next_action": "Collect a single H1767 source-pinned signed Normal Action to prove physical fallback sentinel observes zero while Tunnel receives nonCN query and Windows app sees timeout; run Rust optional M1 LINK authenticated pad bytes tests. If it passes, move to D1 application TCP53/D2 real IP-domain union/D3 pressure/GUI and full padding/P1–P2 with same-owner admission. PLAN030 unopened.",
   "unverified": true,
-  "last_tested_source": "1ab6d4b5268b9bedc1506598b28fc33f9e485be3",
+  "last_tested_source": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1766-H1765-SIGNED-PRODUCT-PASS-OUTER-ORACLE-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1767-H1766-SIGNED-SOURCE-SCOPED-PASS-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1765 true authenticated Wintun Direct TCP32K, Direct UDP, Tunnel TCP/UDP, nonCN Tunnel DNS1.1.1.1 and owned Stop PASS_SCOPED but top-level Action FAIL at stale generic 028 TCP oracle. H1766 fixes exact outer proof, scheduled NAT close expiry, stages padding budget only; new SOURCE untested. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1766 signed real Windows2025/WSL2 full scoped Normal+owned Stop and source-specific outer oracle SUCCESS, Direct TCP full32768; H1767 new D1 no-fallback physical sentinel and M1 padding sealer/test staged, native pending. 029 remains IN_PROGRESS."
 }
