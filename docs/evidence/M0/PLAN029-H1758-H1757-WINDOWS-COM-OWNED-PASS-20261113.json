@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source_sha": "9b9b1902a400478d19d1985e6e3732f8093aa8b4",
+  "plan": "PLAN029",
+  "checkpoint": "H1758",
+  "result": "PASS_SCOPED",
+  "artifact_verified": false,
+  "action_id": 43442086701,
+  "job_id": 131941987193,
+  "conclusion": "success",
+  "marker": "PLAN029_REAL_WINDOWS_DEFENDER_NATIVE_COM_EXACT_ADD_READBACK_CAS_DELETE_PASS_SCOPE_ONLY_NOT_PRODUCT_TCP",
+  "observed": {
+    "original_go_overlay_assembly": "PASS",
+    "original_go_build": "PASS",
+    "native_exact_one_tcp_allow_add_readback": "PASS",
+    "native_exact_owned_cas_delete": "PASS",
+    "product_direct_tcp": "NOT_RUN",
+    "product_dual_egress": "NOT_RUN"
+  },
+  "legacy_failures_preserved": [
+    43437539407,
+    43440493323,
+    43440902371
+  ],
+  "h1757_governance": {
+    "action_id": 43442086632,
+    "result": "FAIL",
+    "error": "evidence is for a different SOURCE",
+    "root": "cursor ref H1757 evidence omitted required source_sha"
+  },
+  "next": "post-Apply PREPARE + owned Defender + ENABLE + signed end-to-end Direct TCP, DNS/GUI/Stop D1-D5/P1-P2"
+}
