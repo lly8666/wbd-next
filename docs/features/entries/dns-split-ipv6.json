@@ -24,7 +24,9 @@
     "r0/go_overlay/assembly/manifest.json",
     "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
     "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go",
-    "crates/wbd-platform/src/windows_direct_udp.rs"
+    "crates/wbd-platform/src/windows_direct_udp.rs",
+    "crates/wbd-engine/src/v4_client_dns_answer.rs",
+    "crates/wbd-engine/src/v4_client_dns_pending.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -137,6 +139,13 @@
       "status": "FAIL",
       "source_sha": "1165eff3420ecc779cc10c12fe8fb1ce8ea6cd7e",
       "evidence": "docs/evidence/M0/PLAN029-H1707-REAL-TCP-NAT-SYN-ACCEPT-RELAY-FAIL-20261113.json"
+    },
+    {
+      "platform": "Windows2025 Wintun kernel TCP+separate Linux guest",
+      "scope": "H1708 real Windows TCP SYN/Accept/physical Linux guest original app payload PASS but EOF timeout FAIL",
+      "status": "FAIL",
+      "source_sha": "171f7371d75a0416a53a48d13b83f7c47d02d9e6",
+      "evidence": "docs/evidence/M0/PLAN029-H1708-WINDOWS-TCP-ALL-APP-PAYLOAD-PASS-EOF-FAIL-20261113.json"
     }
   ],
   "limitations": [
@@ -164,7 +173,8 @@
     "H1702 physical WinSock source+IP_UNICAST_IF local socket actual FAIL before send; H1703 corrects GET host-order and splits option/connect diagnostics. Real Wintun Direct UDP/TCP and DNS product unqualified.",
     "H1704 one non-product Rust test-only DLL entrypoint now tests original Go owned signed Wintun lease->Rust UDP->separate genuine Ubuntu WSL2 guest->Rust Wintun reverse, without per-packet Go callbacks; result is NOT_RUN at authoring, cannot grant CN DNS or Product Ready.",
     "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready.",
-    "H1706 test-only genuine Windows app SYN→Rust Wintun TCP NAT→Windows kernel listener + physically bound Rust TCP→independent Linux guest + reverse/Stop gate authored; actual Action pending, not product."
+    "H1706 test-only genuine Windows app SYN→Rust Wintun TCP NAT→Windows kernel listener + physically bound Rust TCP→independent Linux guest + reverse/Stop gate authored; actual Action pending, not product.",
+    "H1709 Rust test-only native reverse FIN drain and bounded DNS answer/CNAME/truncated-query core added, SOURCE TEST PENDING. No live resolver/FakeIP pool or product Ready."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

@@ -61,6 +61,12 @@ mod v4_client_split;
 // Does not create a second packet reader or authorize a Direct backend.
 #[cfg(any(target_os="windows", test))]
 mod v4_client_split_wire;
+// PLAN029 sparse DNS-only answer parsing and bounded query coalescing;
+// no second Wintun reader, no Go per-query pump or product owner claim.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_dns_answer;
+#[cfg(any(target_os="windows", test))]
+mod v4_client_dns_pending;
 // PLAN029 one native Windows-kernel TCP listener NAT rewrite/tuple pin.
 // Still needs live Wintun RX→local kernel listener and Rust physical socket
 // readiness worker; never terminates original Tunnel TCP.

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1708",
+  "source_sha": "171f7371d75a0416a53a48d13b83f7c47d02d9e6",
+  "date": "2026-11-13",
+  "result": "FAIL_SCOPED_TCP_APP_EOF_AFTER_FULL_REPLY",
+  "run": {
+    "id": 43359821251,
+    "job_id": 131670396440,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43359821251",
+    "conclusion": "failure"
+  },
+  "artifact": {
+    "id": 14007726838,
+    "zip_sha256": "48b7b21714aa83e02866dd17399aeae0fd884b7aae4c927b9ad6f312100ab09f"
+  },
+  "observed": [
+    "signed Wintun original Windows app SYN→Rust NAT→kernel SYNACK/Wintun reverse and native listener Accept PASS",
+    "Rust physically bound TCP source172.27.32.1 ifindex22 connected independent Ubuntu WSL2 guest172.27.35.193:46099",
+    "Rust two-leg stream FIN/EOF reported complete, Windows original app received EXACT response payload p029-linux-guest-tcp-wire-reply",
+    "Original Windows app ReadAll timed out awaiting EOF (15s), Action FAIL; final reverse kernel FIN not proven",
+    "one exact-owned WSL Hyper-V inbound rule removed"
+  ],
+  "first_abnormal": "Native Rust TCP two-stream EOF caused test-only worker return before the final OS-emitted FIN was observed in Wintun and reverse-submitted to original app.",
+  "not_run": [
+    "H1709 repair retest",
+    "production authenticated Normal/Game4 and DNS FakeIP",
+    "physical off-host internet and full D1-D5/P1-P2"
+  ]
+}

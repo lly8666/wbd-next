@@ -73,6 +73,14 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
     let mut physical:Option<PhysicalTcpSocket>=None;
     let mut relay:Option<TcpDirectRelay>=None;
     let mut nat_port=0u16;
+    // The native two-leg socket relay reaching EOF is NOT sufficient to
+    // finish a Wintun TCP flow: the Windows kernel still has to emit its
+    // outbound FIN, and the sole Rust RX owner must translate and submit
+    // that FIN to the original application. H1708 delivered the complete
+    // payload but exited before this final kernel packet was observed.
+    let mut client_fin_seen=false;
+    let mut reverse_fin_submitted=false;
+    let mut relay_done=false;
     loop {
       if Instant::now()>=deadline{break}
       for _ in 0..8{
@@ -80,6 +88,9 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
           Ok(ReadResult::Frame(n))=>{
             let p=&scratch[..n];
             if n<40||p[9]!=6{continue}
+            let ihl=usize::from(p[0]&15)*4;
+            if ihl<20||ihl+20>n{continue}
+            let flags=p[ihl+13];
             let from=u32::from_be_bytes(p[12..16].try_into().unwrap());
             let to=u32::from_be_bytes(p[16..20].try_into().unwrap());
             let source_port=u16::from_be_bytes([p[20],p[21]]);
@@ -87,6 +98,7 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
                to==u32::from_be_bytes(c.presented){
               match nat.to_listener(p,u32::from_be_bytes(c.remote),0,&mut rewritten){
                 Ok((bytes,entry))=>{
+                  if flags&0x01!=0{client_fin_seen=true;}
                   nat_port=entry.proxy_port;
                   if let Err(e)=tx.deliver_native_direct_response(&rewritten[..bytes]){
                     eprintln!("PLAN029_H1706_FIRST_ERROR native_wintun_nat_to_listener {e:?}");
@@ -109,6 +121,10 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
                     return 9
                   }
                   reverse_packets+=1;
+                  if flags&0x01!=0{
+                    reverse_fin_submitted=true;
+                    eprintln!("PLAN029_H1709_KERNEL_TCP_FIN_WINTUN_REVERSE_SUBMITTED nat_port={nat_port} packet={reverse_packets}");
+                  }
                   if reverse_packets==1{
                     eprintln!("PLAN029_H1706_KERNEL_SYNACK_REVERSE_TO_ORIGINAL_APP_PASS nat_port={nat_port}");
                   }
@@ -166,25 +182,30 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
         }
       }
       if let Some(pair)=relay.as_mut(){
-        match pair.service_once(){
-          Ok(tick) if tick.finished=>{
-            if app_packets<2||reverse_packets<2{
-              eprintln!("PLAN029_H1706_FIRST_ERROR missing_TCP_bidirectional_Wintun app={} reverse={}",app_packets,reverse_packets);
-              return 20
+        if !relay_done {
+          match pair.service_once(){
+            Ok(tick) if tick.finished=>{
+              relay_done=true;
+              eprintln!("PLAN029_H1709_TWO_NATIVE_TCP_LEGS_EOF_DRAIN_PENDING app_packets={} reverse_packets={} guest={}",app_packets,reverse_packets,guest);
             }
-            eprintln!("PLAN029_H1706_INDEPENDENT_LINUX_TCP_TWO_LEGS_FIN_PASS app_packets={} reverse_packets={} guest={}",app_packets,reverse_packets,guest);
-            return 0
+            Ok(_)=>{}
+            Err(e)=>{eprintln!("PLAN029_H1706_FIRST_ERROR relay_service {e:?}");return 21}
           }
-          Ok(_)=>{}
-          Err(e)=>{eprintln!("PLAN029_H1706_FIRST_ERROR relay_service {e:?}");return 21}
         }
+      }
+      if relay_done&&client_fin_seen&&reverse_fin_submitted&&
+          app_packets>=2&&reverse_packets>=2{
+          eprintln!("PLAN029_H1709_NATIVE_FIN_SUBMITTED_AFTER_TWO_LEG_EOF_PASS app_packets={} reverse_packets={} guest={}",app_packets,reverse_packets,guest);
+          return 0
       }
       // This is a single isolated test gate, NOT the production steady
       // loop. Production schedules readiness with bounded WSAPoll/IOCP;
       // no borrowed RX packet or Wintun Allocate slot crosses this sleep.
       thread::sleep(Duration::from_millis(3))
     }
-    eprintln!("PLAN029_H1706_FIRST_ERROR deadline app_packets={} reverse={} native_accept={} physical_connected={}",app_packets,reverse_packets,accepted.is_some()||relay.is_some(),relay.is_some());
+    eprintln!("PLAN029_H1709_FIRST_ERROR deadline app_packets={} reverse={} native_accept={} physical_connected={} client_fin={} reverse_fin={} relay_eof={}",
+        app_packets,reverse_packets,accepted.is_some()||relay.is_some(),
+        relay.is_some(),client_fin_seen,reverse_fin_submitted,relay_done);
     22
 }
 /// # Safety
