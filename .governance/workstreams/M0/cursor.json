@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1743,
-  "checkpoint_sha": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e",
+  "sequence": 1744,
+  "checkpoint_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1743: H1742 SOURCE1709ea92 Win/Linux Rust NativeOwner fake flow_refs Action43412698406、GNU cross ABI43412698604、governance43412698439及native-regression43412698476 all PASS_SCOPED。新增一次性SOURCE限定[plan029-v3-real-tunnel]原Go Windows TLS+原Rust V3 m0_v4_probe feature真正签名Wintun/Ubuntu Normal-only mode=all纯Tunnel UDP+TCP first/reverse及no-WFP4stage WAL owned Stop实测；本SOURCE Windows真机CI PENDING。不开Direct/TCP/双DNS／D1-D5/P1-P2；不跑028旧7模式矩阵。",
-  "why_now": "The original Go→Rust V3 trial source already compiled but only standalone components had proof. Run exactly one signed Wintun original Go TLS authenticated NativeOwner V3 application+Stop on SOURCE, with explicit feature, all-route Tunnel to avoid RFC1918 guest being Direct-selected; no promotion until real OS proof.",
+  "current_task": "PLAN029 H1744: H1743 SOURCE17405b real original Go Windows credential TLS + Rust private V3 m0_v4_probe, signed Wintun/Npcap and genuine independent WSL2 Ubuntu Normal mode=all Tunnel UDP/TCP duplex+native OS Apply+exact Stop Action43414888803 PASS_SCOPED_REAL. Native real two-OS job131852507579 success, exact new PLAN029_H1743_REAL_ORIGINAL_GO_RUST_V3_TUNNEL_ONLY_SIGNED_STOP_PASS, app mode normal PASS exit0 10s; governance43414888888 and maintenance43414888758 PASS. Do not promote pure Tunnel only to D1–D5/P1–P2. Next precise owner Defender+synthetic route post-Apply Direct kernel TCP and two DNS endpoints, actual CN QNAME/union D1–D5, padding/perf still NOT_RUN.",
+  "why_now": "First genuine signed Windows original Go authenticated TLS Rust V3 same Wintun tunnel product and four-stage WAL Stop has now passed on exact current source; record real scope before implementation of Direct/dual DNS so later tests cannot reuse a generic Normal PASS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect source H1743 signed Windows V3 Normal-only first failure and real app/Stop artifact. If it fails, fix that first cause in current source. Then implement generation-owned Defender listener and post-Apply Direct TCP, run D1/D2 dual DNS and mixed data plus D3-D5/P1-P2 and bounded padding. Do not run PLAN030.",
+  "next_action": "Enable exact generation-owned Defender TCP listener rule and optional synthetic route with post-Apply Rust TCP gate; source-lock one real CN DNS domain/IP union Direct UDP/TCP and Tunnel DNS D1/D2 test, then D3-D5/P1-P2/padding. No old WFP guard, no PLAN030, do not rerun PLAN028 matrix.",
   "unverified": true,
-  "last_tested_source": "1709ea92b1662909bc1b55b43a14cb2cc7735c2e",
+  "last_tested_source": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1743-H1742-NATIVE-RUST-GREEN-REAL-SIGNED-V3-TUNNEL-TRIAL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1744-H1743-ORIGINAL-GO-RUST-V3-SIGNED-WINTUN-TUNNEL-REAL-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1742 source Rust Windows/Linux, cross-ABI, native regression/governance PASS_SCOPED. H1743 adds an explicit single signed Windows Wintun original-Go TLS Rust V3 Tunnel-only real normal/Stop first delivery trial with no FakeIP or Direct; result PENDING, product complete D1-D5/P1-P2 OPEN."
+  "partial_summary": "H1743 SOURCE17405b Action43414888803 genuine signed Windows Npcap/Wintun original TLS Rust V3 Normal mode=all Tunnel actual bidirectional UDP/TCP and owned no-WFP WAL Stop PASS_SCOPED_REAL; Win/Linux/Go compiles governance all PASS. D1-D5 two DNS/Direct TCP+UDP, P1-P2/padding still OPEN."
 }

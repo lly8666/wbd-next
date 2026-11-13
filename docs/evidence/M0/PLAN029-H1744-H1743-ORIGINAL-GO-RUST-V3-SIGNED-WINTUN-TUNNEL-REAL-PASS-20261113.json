@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1744",
+  "source_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+  "recorded": "2026-11-13",
+  "result": "PASS_SCOPED_REAL_SIGNED_WINDOWS_ORIGINAL_GO_TLS_RUST_V3_NORMAL_TUNNEL_ONLY_UDP_TCP_DUPLEX_AND_NATIVE_OS_WAL_STOP",
+  "workflow": {
+    "id": 43414888803,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43414888803",
+    "head_sha": "17405b156f58e1f7b03ab781dafc2f6ad7e54a7e",
+    "conclusion": "success",
+    "native_real_job_id": 131852507579,
+    "native_real_job_conclusion": "success",
+    "real_log_markers": [
+      "PLAN029_EXACT_SOURCE_PRIVATE_RUST_V3_PROBE_FEATURE_ENABLED",
+      "PLAN029_H1743_REAL_ORIGINAL_GO_RUST_V3_TUNNEL_ONLY_SIGNED_STOP_PASS",
+      "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal",
+      "WL_PUBLIC_REAL_MODE_PROCESS_EXIT mode=normal rc=0 elapsed_seconds=10",
+      "WL_PUBLIC_REAL_MODE_RESULT normal PASS"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 14031920336,
+      "name": "windows-compile-preflight-43414888803"
+    },
+    {
+      "id": 14031762749,
+      "name": "m0-wl-windows-product-binaries-17405b156f58e1f7b03ab781dafc2f6ad7e54a7e"
+    },
+    {
+      "id": 14031493859,
+      "name": "m0-wl-full-public-normal-direct-h1506-legacy-43414888803",
+      "scope": "The artifact name remains historical; content is the exact H1743 V3 private feature and independent app/Stop log, not a PLAN028 retest"
+    }
+  ],
+  "other_actions": [
+    {
+      "id": 43414888888,
+      "scope": "governance",
+      "conclusion": "success"
+    },
+    {
+      "id": 43414888758,
+      "scope": "governance-maintenance",
+      "conclusion": "success"
+    }
+  ],
+  "verified": [
+    "source locked same Go and Rust binaries",
+    "official signed Windows Wintun/Npcap/WSL2",
+    "original credential authenticated TLS+Rust private NativeOwner V3",
+    "Normal mode all pure Tunnel application UDP and TCP first/reverse",
+    "native OS Apply+Stop and WAL/route sidecar absent"
+  ],
+  "strictly_not_proven": [
+    "CN IP/domain union selected physical Direct",
+    "exact two DNS purposes real primary/tcp53 truncated no fallback",
+    "kernel TCP physical+Defender owned rule",
+    "D1-D5, P1-P2, startup padding and GUI full product availability"
+  ]
+}
