@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1769",
+  "source_sha": "9f4b2488e77274a8e2124a13fbbd4877f2142cc4",
+  "result": "FAIL_SIGNED_D1_BLACKHOLE_FIXTURE_PREMATURE_ABORT_NO_FALLBACK_NOT_PROVEN",
+  "action_id": 43526475121,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43526475121",
+  "job_id": 132235309822,
+  "artifact_id": 14085617590,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43526475121/artifacts/14085617590",
+  "source_signed_build": {
+    "cheap": "PASS",
+    "go_windows": "PASS",
+    "rust_windows": "PASS",
+    "rust_linux": "PASS",
+    "linux_go_rust": "PASS"
+  },
+  "real_signed_observation": {
+    "original_go_tls_signed_wintun_ready": "PASS",
+    "cn_dns_fakeip_direct_udp": "PASS_BEFORE_BLACKHOLE",
+    "direct_tcp_32768_echo_and_fin": "PASS_BEFORE_BLACKHOLE",
+    "noncn_tunnel_tcp_udp": "PASS_BEFORE_BLACKHOLE",
+    "noncn_tunnel_dns_single_endpoint": "PASS_BEFORE_BLACKHOLE",
+    "windows_blackhole_app_queries": 3,
+    "windows_blackhole_app_unexpected_responses": 0,
+    "linux_blackhole_listener_ready": true,
+    "linux_blackhole_complete_7s_observation": "FAIL_PREMATURE_EXIT",
+    "linux_error": "RuntimeError: blackhole fixture received unexpected query ID/QNAME/shape",
+    "zero_direct_fallback": "NOT_PROVEN_EARLY_ABORT",
+    "complete_owned_stop": "NOT_PROVEN_AFTER_ABORT",
+    "final_action_conclusion": "failure"
+  },
+  "h1769_fix": "Both real Linux physical DNS and Tunnel DNS socket listeners share kernel endpoints with prior CN/bootstrap traffic. Ignore and count unrelated QNAMEs (or EDNS extras after matching complete question) without terminating 7s observation; only exact nonCN no-backup.globalx.example QNAME+QTYPE+QCLASS and source lease counts toward Tunnel target or physical fallback. Preserve hard zero-physical assertion and raw receipts.",
+  "independent_windows_owner_abi": {
+    "action_id": 43526475111,
+    "status": "FAIL_PINNED_GO_ASSEMBLY_FILE_ALREADY_OWNED",
+    "first_error": "AssertionError: exact pinned old-Go/M4 assembly already owns this file; no competing author",
+    "preexisting_at_source": "c6bff330b237d59b2aff2b5c96aa62725d666a38",
+    "preexisting_action_id": 43524163017,
+    "not_new_m1_crypto_or_public_signed_runner_failure": true,
+    "unresolved_separate_legacy_source_overlay_boundary": true
+  },
+  "plan_status": "IN_PROGRESS",
+  "new_source_signed": "PENDING"
+}

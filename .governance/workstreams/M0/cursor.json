@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1768,
-  "checkpoint_sha": "8232d7d40468fa35e6cb14a4f54bc4aa979b232c",
+  "sequence": 1769,
+  "checkpoint_sha": "9f4b2488e77274a8e2124a13fbbd4877f2142cc4",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1768: H1767 new D1 blackhole+M1 optional padded seal candidate source 8232d7; genuine signed Windows/WSL2 product stage NOT_RUN because cheap Python test used literal '\\\\n' instead of real final Stop substring, and catalog rejected unsupported verification status PASS (requires PHYSICAL_PASS). Ubuntu Linux component/Windows GNU cross PASS; Windows2025 component further FAIL at new optional M1 test-only drain_tx(...).unwrap() requiring TxDispatch:Debug (E0277), fixed via unwrap_or_else panic; no product runtime failure. All three cheap/component fixes staged. Staged precise two-file correction preserving H1766 SUCCESS and all H1767 application/crypto changes. Single new SOURCE signed test pending. PLAN029 OPEN.",
-  "why_now": "H1767 failed before actual signed product due wrong Python escaped newline, feature-catalog unsupported status and Windows test-only unwrap Debug bound. Three independently grounded corrections; do not mutate old source logs or claim product tested.",
+  "current_task": "H1769: H1768 signed Action43526475121 reached actual product Normal CN Direct 32768 TCP+UDP, nonCN Tunnel TCP/UDP and nonCN single Tunnel DNS PASS, then new Linux D1 DNS blackhole fixture incorrectly aborted on unrelated real DNS QNAME from a shared physical/TUN endpoint, before 7s window. Windows app 3 queries, zero responses, but physical Direct fallback=NOT_PROVEN and owned Stop=NOT_PROVEN after fail. H1769 stages exact QNAME prefix+QTYPE+QCLASS filter and counters for unrelated traffic; still must assert selected target Tunnel >=2 and physical=0 over complete window. Rust/Go prior source builds passed; separate Windows owner ABI older pinned Go/M4 file-owner collision already failed on H1766 source, not 029 product first error, remains unresolved. One new signed SOURCE pending.",
+  "why_now": "Do not misclassify unrelated CN/bootstrap DNS reaching shared physical resolver as a no-fallback violation, and do not abort observation before 5s native DNS timeout can finish. Scope exact nonCN QNAME and retain all raw receipts, physical0 hard failure.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Commit H1768 source-only preflight repairs and run cheap governance/Windows Rust component before one original signed Normal D1 DNS blackhole and Stop; investigate any new true first failure; no repeat old 028.",
+  "next_action": "Run one H1769 signed Normal current SOURCE with strict target-only DNS blackhole, observe all 7s and Stop. If it passes, record scoped no-fallback and proceed D1 application TCP53/D2 true CDN converse, D3 memory/throughput, GUI/padding P1/P2. Windows owner ABI long-standing pinned old-Go assembly duplicate must be reviewed separately; don't loosen its provenance assert blindly. PLAN030 stays closed.",
   "unverified": true,
-  "last_tested_source": "8232d7d40468fa35e6cb14a4f54bc4aa979b232c",
+  "last_tested_source": "9f4b2488e77274a8e2124a13fbbd4877f2142cc4",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1768-H1767-PREFLIGHT-TEST-AND-CATALOG-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1769-H1768-SIGNED-DNS-BLACKHOLE-FIRST-UNRELATED-QNAME-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1766 signed real native Direct/Tunnel+DNS and strict outer success; H1767 new D1 nonCN DNS blackhole and M1 padding adapter staged, but cheap test/catalog deterministic FAIL blocked signed product (NOT_RUN). H1768 prepared fix, product 029 not complete."
+  "partial_summary": "H1768 signed real Direct TCP32K/CN DNS/Tunnel TCP/UDP+nonCN Tunnel DNS positive stages PASS, no-fallback negative FAIL in Linux fixture on unrelated DNS QNAME before full window. H1769 filters unrelated traffic without weakening target physical0 requirement, SOURCE pending; PLAN029 OPEN."
 }

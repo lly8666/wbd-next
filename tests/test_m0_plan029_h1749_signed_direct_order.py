@@ -117,4 +117,22 @@ class NativeDirectOrder(unittest.TestCase):
             self.assertIn(basename,M)
         self.assertIn("$result.plan029_d1_dns_blackhole_no_fallback.source_sha -ne $env:GITHUB_SHA",W)
         self.assertIn("$result.plan029_d1_dns_blackhole_no_fallback.linux.physical_query_count -ne 0",W)
+    def test_h1769_d1_blackhole_filters_unrelated_qnames_without_hiding_real_fallback(self):
+        # The physical and TUN listeners share real OS ports with preceding
+        # work; unrelated CN/OS queries are not the target nonCN fallback.
+        source=(Path(__file__).resolve().parents[1]/
+                "tools"/"m0_plan029_h1767_linux_dns_blackhole.py").read_text(encoding="utf-8")
+        self.assertIn('query[12:12+len(expected)]!=expected',source)
+        self.assertIn('unrelated[key.data]+=1',source)
+        self.assertIn('receipts[key.data]+=1',source)
+        self.assertLess(source.index('unrelated[key.data]+=1'),
+                        source.index('receipts[key.data]+=1'))
+        self.assertIn('if receipts["tunnel"]<2 or receipts["physical"]!=0:',source)
+        self.assertIn('"unrelated_query_count":unrelated',source)
+        self.assertIn('if peer[0]!=lease:raise RuntimeError',source)
+        # Exact DNS encoded question length must match the Windows app.
+        w=(Path(__file__).resolve().parents[1]/
+           "tools"/"m0_plan029_h1767_windows_dns_blackhole.py").read_text(encoding="utf-8")
+        self.assertIn(r'\x09no-backup\x07globalx\x07example\x00',source)
+        self.assertIn(r'\x09no-backup\x07globalx\x07example\x00',w)
 if __name__=="__main__":unittest.main()
