@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1735",
+  "source_sha": "0d5158a0823e92f3a63ab8c8bb0a1e2e6ded0b0d",
+  "recorded": "2026-11-13",
+  "result": "FAIL_SCOPED_WINDOWS_UNIT_EXPECTED_RCODE_WRONG_OFFSET",
+  "actions": [
+    {
+      "id": 43402459789,
+      "windows": {
+        "job_id": 131808430005,
+        "passed": 54,
+        "failed": 1,
+        "first_error": "v4_windows_native_split::tests::plan029_native_rust_owner_single_wintun_ingress_separates_tunnel_and_nonleaking_dns: left=0 right=2 from reply[29], byte29 is DNS ID, RCODE byte31"
+      },
+      "linux": {
+        "job_id": 131808430497,
+        "conclusion": "success"
+      },
+      "conclusion": "failure"
+    },
+    {
+      "id": 43402460051,
+      "scope": "GNU cross ABI",
+      "conclusion": "success"
+    },
+    {
+      "id": 43402460095,
+      "scope": "governance",
+      "conclusion": "success"
+    }
+  ],
+  "fix": "assert reply[31]&15==2 after full IPv4(20)+UDP(8)+DNS header flags low byte(3), leave native DNS behavior unchanged",
+  "new_source": "PENDING_CI",
+  "still_not_run": [
+    "production Go V3+no-WFP four-stage",
+    "real forced DNS plus Direct TCP/Defender",
+    "D1-D5/P1-P2 startup padding and Stop"
+  ]
+}

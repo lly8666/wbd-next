@@ -341,7 +341,7 @@ mod tests{
         let mut reply=[0u8;2048];
         let n=s.poll_udp_reverse(&mut reply,2).unwrap();
         assert_eq!(reply[20..22],[0,53]);
-        assert_eq!(reply[29]&0xf,2);
+        assert_eq!(reply[31]&0xf,2); // DNS RCODE at IPv4(20)+UDP(8)+flags byte1(3)
         assert!(n>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
