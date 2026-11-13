@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1716,
-  "checkpoint_sha": "f1dc2cd0c6e8e36734967abb434f40a6528d417f",
+  "sequence": 1717,
+  "checkpoint_sha": "69604e2dbcaa87b7c5ca0bfb649d20baaad88af6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1716: H1715 SOURCEf1dc exact Go Windows noWFP product admission compile/TestPlan029 + governance/feature PASS; five original-TLS scoped native signed Wintun tests PASS but no PLAN029 split OS Applied. One Rust Direct-only UDP generation actor: physically bound socket per five-tuple, WSAPoll zero-wait ready list, reverse L3, bounded 16384 hard flow quota/tick expiry, no FakeIP physical leak/DNS53 business cross; source untested and not yet attached to original NativeOwner.",
-  "why_now": "Normal existing Rust stage_sources currently seals ALL Wintun sources into original Tunnel. H1713 true probe shows physical Wintun CN DNS/Fake UDP, but actual product needs one actor behind that exact single ingress and response ownership on original RX worker; avoid new Go steady pump or same-host echo tests. H1716 isolates hard-bounded physical socket component before changing authenticated ABI.",
+  "current_task": "PLAN029 H1717: H1715 Windows exact manifest original-Go noWFP source build PASS, but public original TLS/Normal product Action43374768125 FAIL before Ready at RuntimeMTU because old five-stage/WFP-specific readback rejects v2 four-stage noWFP WAL. Implemented v1/v2 exact-generation read-only MTU stage selection and updated signed Win32 OS scene/test; SOURCE CI PENDING. Separate H1716 Rust bounded UDP actor remains source staged/not product connected.",
+  "why_now": "Fix the first actual old-public-Ready blocking line: LiveConfiguredMTU checks len(records)==5 and Stages[2] v1 MTU while PLAN029 v2 has four real Win32 stages and MTU at Stages[1]. This is independent of Rust CN Direct/Tunnel code, so address in parallel without another same-host UDP probe.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1716 Windows Rust actor source locked unit compile, fix first causal error. Then cold original-Go route-mode/CN IP/domain/policy hash+two DNS config into versioned Rust NativeOwner ABI, actual TX classify into Direct UDP/TCP/DNS vs original Tunnel, response queue on only existing WintunTX owner, correct noWFP Apply/Stop, Normal/Game4, shared-CDN/D1-D5/P1-P2, GUI/start padding. No 028/030.",
+  "next_action": "Collect H1717 source-locked Windows Go pure + one signed no-WFP Win32 Apply/Readback/RuntimeMTU/Stop Action. If PASS, continue versioned original Rust NativeOwner single ingress Direct UDP/TCP and two DNS/GUI/padding. Preserve old public failure and avoid 028 full matrix/030.",
   "unverified": true,
   "last_tested_source": "f1dc2cd0c6e8e36734967abb434f40a6528d417f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1715-SOURCE-LOCKED-WINDOWS-NO-WFP-ADMISSION-COMPILE-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1715 original-Go Windows no-old-WFP admission code and PLAN029 pure build passes SOURCEf1dc; original Normal/Game4 TLS signed Wintun cases scoped pass but not new product OS Applied. H1716 first bounded Rust Direct UDP socket actor staged source, not CI yet nor attached to Wintun worker, no actual dual DNS/tunnel+direct. H1713 real CN FakeIP Direct UDP probe, H1709 kernel TCP FIN probe remain scoped PASS. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1716 SOURCEf1dc original-Go Windows source compile PASS, public original Normal Action43374768125 fails RuntimeMTU old v1 five-stage assumption, not Direct packet proof. H1717 exact v1/v2 Win32 MTU live CAS code and single signed OS readback test staged, not yet tested. Concurrent H1716 bounded Rust Direct UDP actor source in HEAD6960, not attached to original worker. H1713 CN DNS Fake UDP and H1709 native TCP FIN probes scoped PASS; PLAN029 IN_PROGRESS."
 }

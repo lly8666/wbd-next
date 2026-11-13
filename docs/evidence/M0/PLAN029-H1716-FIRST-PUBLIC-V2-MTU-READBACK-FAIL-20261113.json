@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1716",
+  "source_sha": "f1dc2cd0c6e8e36734967abb434f40a6528d417f",
+  "observed_at": "2026-11-13",
+  "result": "WINDOWS_GO_COMPILE_PASS_PUBLIC_NORMAL_READY_FAIL_V1_ONLY_RUNTIME_MTU",
+  "actions": [
+    {
+      "run_id": 43374768091,
+      "job_id": 131718567080,
+      "conclusion": "success",
+      "scope": "source-locked Windows Go build and no-WFP four-stage pure tests"
+    },
+    {
+      "run_id": 43374768125,
+      "job_id": 131720487669,
+      "conclusion": "failure",
+      "scope": "genuine original TLS Windows Normal public client before Ready"
+    }
+  ],
+  "first_error": "Windows owned Wintun OS MTU not applied planned=1329 inspected=0: windowsclient: crash-persistent native DNS and IPv6 guard required",
+  "root_cause": "native_m0_runtime_mtu_windows.go always requires five v1 WAL records and Stages[2] n4WindowsMTUStage; PLAN029 noWFP four-stage v2 stores MTU at Stages[1] n4WindowsNoWFPMTUStage",
+  "not_run": [
+    "H1717 schema-aware actual MTU Win32 OS qualification",
+    "production Normal/Game4 dual-exit",
+    "D1-D5/P1-P2"
+  ],
+  "retained": [
+    "H1714 compile FAIL",
+    "H1713 diagnostic real CN DNS FakeIP UDP PASS",
+    "H1716 physical Direct UDP actor source-only"
+  ]
+}

@@ -10,6 +10,7 @@ import (
  "encoding/hex"
  "encoding/json"
  "errors"
+ "fmt"
  "net/netip"
  "os"
  "path/filepath"
@@ -138,6 +139,22 @@ func TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop(t *testing.T){
   t.Fatalf("real Win32 live four-stage readback %+v error=%v",status,e)
  }
  receipt["applied"]="PASS_INDEPENDENT_LIVE_V2_FOUR_STAGE_READBACK"
+ // H1716: THIS is the exact API called before public Windows READY and
+ // at its existing low-frequency health timer. Old v1 hard-coded five
+ // stages, so the real v2 OS rows could be fully Applied while this probe
+ // returned inspected=0/ErrN4NativeGuard. Read via the same live owner,
+ // original machine exclusion and actual no-old-WFP Win32 MTU CAS.
+ actualMTU,mtuErr:=txn.LiveConfiguredMTU(ctx)
+ if mtuErr!=nil||actualMTU!=plan.TunnelMTU{
+  receipt["result"]="FAIL_V2_RUNTIME_MTU_LIVE_CAS"
+  receipt["mtu_runtime_error"]=fmt.Sprint(mtuErr)
+  t.Fatalf("PLAN029 v2 live native MTU readback expected=%d actual=%d error=%v",
+   plan.TunnelMTU,actualMTU,mtuErr)
+ }
+ receipt["runtime_mtu"]="PASS_CURRENT_GENERATION_V2_LIVE_MTU_CAS"
+ receipt["runtime_mtu_value"]=actualMTU
+ t.Logf("PLAN029_H1716_RUNTIME_V2_MTU_TRUE_OS_READBACK_PASS source=%s mtu=%d no_old_wfp=true",
+  os.Getenv("GITHUB_SHA"),actualMTU)
  // Recover once now rather than letting test cleanup be the only Stop.
  receipt["result"]="FAIL_AT_LIVE_OS_RECOVER"
  if err:=txn.Recover(ctx);err!=nil{
