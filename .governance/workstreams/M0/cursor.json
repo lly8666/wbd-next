@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1697,
-  "checkpoint_sha": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
+  "sequence": 1698,
+  "checkpoint_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1697: H1696 current Windows Go build and pure v2 per-route crash fixture PASS; one real signed Wintun no-WFP four Win32 stages Apply/Readback/owned Stop Action authored, no product Ready. Rust Direct/DNS/GUI/padding and scoped D1-D5/P1-P2 still pending.",
-  "why_now": "All exact H1696 Windows pure WAL tests were green; need actual OS acceptance with test-only executable four-stage adapters instead of circular assemblyOnly gate. H1694 real kernel TCP positive under owned Defender Allow established one backend.",
+  "current_task": "PLAN029 H1698: signed Windows four no-old-WFP real OS stage Apply/Readback/Stop PASS at adb0ae, H1694 native kernel TCP A/B/C PASS, source-bounded route WAL pure tests pass. Public Rust CN DNS/FakeIP Direct, GUI and padding and D1-D5/P1-P2 still OPEN; old public legacy action fails before Ready.",
+  "why_now": "Collected H1697 Action43342274385 exact JSON/zip after signed driver actual 4-route Win32 OS readback+owned Stop SUCCESS; also H1696 previous legacy two-OS public failure first old guard preserved. Need finish real Rust ingress rather than repeat OS standalone.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect signed real Win32 H1697 first OS stage result/cleanup, fix first causal failure only; then remove product-only circular assemblyOnly barrier once same-owner actual stage qualification exists. Independently finish real Rust Wintun ingress/DNS/FakeIP/direct physical TCP+UDP/GUI/startup padding; D1–D5/P1–P2 after complete wiring. No 028 matrix/030.",
+  "next_action": "Wire one Rust Wintun ingress and chosen native kernel Direct TCP relay plus physical UDP and DNS53+selective FakeIP; support config and GUI actual effective then startup-padding, run D1-D5/P1-P2 source-locked. Move v2 OS entry out of test-only assemblyOnly only when actual owner/packet/DNS routing correct, no no-op WFP or false Applied. Exact-owned old WFP migration and IPv6 real blocking still required. No 028 matrix/030.",
   "unverified": true,
-  "last_tested_source": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
+  "last_tested_source": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1696-SOURCE-LOCKED-NOWFP-ROUTE-WAL-PURE-TEST-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1698-REAL-SIGNED-NOWFP-FOUR-STAGE-OS-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1696 SOURCEc652 Action43340808979 Windows original-Go pure per-route v2 WAL PASS and exact manifest build, NOT live OS. H1697 source-locked signed Windows real no-WFP four-stage Apply/Stop isolated test pending Action. H1694 kernel TCP A/B/C local capability PASS, physical Rust Direct, DNS/FakeIP and product READY not run. 029 remains IN_PROGRESS."
+  "partial_summary": "H1698 SOURCEadb0 Action43342274385 real signed Wintun 4-stage Win32 lease MTU DNS 4 routes OS Apply/readback + exact reverse Stop PASS with no custom WFP. This is test-only, public Ready not exercised. H1694 signed kernel TCP/UDP Defender A/B/C positive, no Rust physical direct. H1696 M0-WIN-LINUX 43340809026 old original product FAIL before Ready old N4NativeGuard, not CN split. Full PLAN029 remains IN_PROGRESS."
 }

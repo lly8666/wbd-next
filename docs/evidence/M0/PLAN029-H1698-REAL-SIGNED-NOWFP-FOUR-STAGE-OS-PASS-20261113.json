@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1698",
+  "observed_at": "2026-11-13",
+  "source_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
+  "result": "PASS_SCOPED_SIGNED_WINTUN_REAL_FOUR_NO_WFP_WIN32_APPLY_READBACK_STOP",
+  "action": {
+    "run_id": 43342274385,
+    "job_id": 131613176923,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43342274385"
+  },
+  "artifact": {
+    "id": 14000591536,
+    "name": "plan029-h1697-real-no-wfp-os-43342274385",
+    "zip_sha256": "2c37e54956d7be09470148853ac9feb1f11493a93925d9840db8f37b8129e407",
+    "json_file": "h1697-real-no-wfp-os.json"
+  },
+  "verified_original_receipt": {
+    "schema_version": 1,
+    "source_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
+    "scope": "REAL_SIGNED_NO_OLD_WFP_FOUR_OS_STAGES_ONLY",
+    "apply": "RETURNED_OK",
+    "applied": "PASS_INDEPENDENT_LIVE_V2_FOUR_STAGE_READBACK",
+    "cleanup": "PASS_EXACT_OWNED_FOUR_STAGE_STOP_NO_OLD_WFP",
+    "old_wfp_guard": "NOT_CREATED",
+    "owned_compact_route_keys": 4,
+    "selected_physical_index": 14,
+    "selected_physical_next_hop": "10.1.0.1",
+    "selected_physical_source": "10.1.0.71",
+    "wintun_ifindex": 19
+  },
+  "excluded": [
+    "actual Rust normal/Game ingress with DNS53 and selective FakeIP",
+    "physical Direct TCP/UDP socket wire",
+    "public Windows product Ready and authenticated TLS together",
+    "old legacy WFP exact-owned migration cleanup",
+    "IPv6 blocking actual verification",
+    "GUI effective actual network",
+    "startup padding",
+    "D1-D5/P1-P2"
+  ],
+  "retained_failure": {
+    "run_id": 43340809026,
+    "source_sha": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
+    "scene": "legacy M0-WIN-LINUX public two-OS",
+    "first_error": "Windows client exited before WBD_WINDOWS_CLIENT_READY; windowsclient: crash-persistent native DNS and IPv6 guard required",
+    "scope": "old original product entry blocked before new no-WFP Rust Direct/DNS, not a failed PLAN029 dual egress trial"
+  }
+}

@@ -85,6 +85,13 @@
       "status": "BUILD_PASS",
       "source_sha": "c6520506837a0c06d302489bf8b61d9a5f7d0bfd",
       "evidence": "docs/evidence/M0/PLAN029-H1696-SOURCE-LOCKED-NOWFP-ROUTE-WAL-PURE-TEST-PASS-20261113.json"
+    },
+    {
+      "platform": "Windows2025 true signed Wintun 0.14.1 + real native Win32 IP Helper/DNS/route APIs",
+      "scope": "H1697 source adb0ae... test-only actual four v2 lease/MTU/one DNS/four owned routes OS Apply independent readback, reverse Stop/parent+child WAL absent; old WFP not created, no product Direct",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "adb0ae78f5e28211a65d565b66d64e59cd7c8087",
+      "evidence": "docs/evidence/M0/PLAN029-H1698-REAL-SIGNED-NOWFP-FOUR-STAGE-OS-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -102,7 +109,8 @@
     "H1691a: H1691 Action 43246325510 + 43246325426 failed before Go build because reviewed v2 receipt/test changed without matching manifest result_blob. This patch updates only those exact current Git blob SHAs and retains original immutable donor comparison. Real Windows compile/OS still pending.",
     "H1692 no-WFP v2 real product entry candidate: removes public new-session qualified WFP constructor and defaults to v2 four-stage assembler, still deliberately rejects assemblyOnly before ring claim; controller v2 Recover avoids legacy WFP-only guard recovery. Windows SOURCE Go compile/tests not yet collected.",
     "H1696 adds a v2 no-old-WFP exact-generation per-route SHA sidecar and parent reconciliation. Confirmed child rows can be retired; present INTENT/foreign/mismatch remain fail-closed. New Windows source compile/pure stage tests and real Apply/Stop NOT_RUN when this code was authored.",
-    "H1697 real signed Wintun four no-old-WFP Win32 stage Apply/Stop Action authored; test-only assemblyOnly override does not grant public Ready; real OS result not observed on commit."
+    "H1697 real signed Wintun four no-old-WFP Win32 stage Apply/Stop Action authored; test-only assemblyOnly override does not grant public Ready; real OS result not observed on commit.",
+    "H1698 H1697 real signed OS stage PASS via isolated test-only assemblyOnly override. Public original TLS/Rust product Ready, normal Game4 DNS/Direct actual paths, original authenticated Stop together, and D1-D5/P1-P2 are NOT_RUN. M0-WIN-LINUX 43340809026 legacy Ready old-guard failure preserved."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
