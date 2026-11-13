@@ -67,6 +67,9 @@ mod v4_client_split_wire;
 mod v4_client_dns_answer;
 #[cfg(any(target_os="windows", test))]
 mod v4_client_dns_pending;
+// Separate DNS-only TTL/LRU cache; full is never a query-admission failure.
+#[cfg(any(target_os="windows", test))]
+mod v4_client_dns_cache;
 // PLAN029 one-generation selective FakeIP allocation, quarantine/ref and
 // portable durable-snapshot candidate (no DATA-time disk read/write).
 #[cfg(any(target_os="windows", test))]

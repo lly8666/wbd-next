@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1723",
+  "source_sha": "1e75226951a03bc10da573d508881ed20a8a3437",
+  "result": "PASS_SCOPED_TWO_OS_PLAN029_RUST_PLATFORM_COMPONENT_NOT_REAL_EGRESS",
+  "action": {
+    "run_id": 43389255442,
+    "conclusion": "success",
+    "head_sha": "1e75226951a03bc10da573d508881ed20a8a3437",
+    "jobs": [
+      {
+        "job_id": 131764969596,
+        "os": "windows-2025",
+        "platform_tests": 46,
+        "engine_plan029_tests": 41,
+        "conclusion": "success",
+        "artifact_id": 14019652628
+      },
+      {
+        "job_id": 131764969060,
+        "os": "ubuntu-24.04",
+        "platform_tests": 115,
+        "engine_plan029_tests": 38,
+        "conclusion": "success",
+        "artifact_id": 14019553607
+      }
+    ]
+  },
+  "governance": [
+    {
+      "run_id": 43389255601,
+      "conclusion": "success"
+    },
+    {
+      "run_id": 43389255580,
+      "conclusion": "success"
+    }
+  ],
+  "historical_retained": {
+    "run_id": 43388829100,
+    "source_sha": "065f8f47576440c44fba92a5861c89c7a4ed70f2",
+    "conclusion": "failure",
+    "first_error": "new FakeIP test expected exact reused integer IP; fixed in 1e752"
+  },
+  "scope": "pure Rust components: non-SYN direct pin, bounded UDP WSAPoll source, safe FakeIP pressure recycle; no original TLS/Wintun public product",
+  "not_run": [
+    "D1-D5/P1-P2 genuine Windows Direct/Tunnel dual transport and DNS",
+    "GUI connected effective, owned OS recovery, IPv6, startup padding"
+  ],
+  "this_source_dns_cache": "SOURCE_ONLY_NEW_CODE_PENDING_CI"
+}
