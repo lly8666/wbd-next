@@ -10,6 +10,7 @@ import (
  "context"
  "errors"
  "fmt"
+ "net/netip"
  "sync"
  "time"
 )
@@ -84,6 +85,7 @@ type N4RealWindowsProduct struct {
 func N4PrepareRealWindowsProduct(
  ctx context.Context,tun *TUN,plan NetworkPlan,
  id N4UnifiedIdentity,owner N4NativeProductLiveOwner,
+ tcpSynthetic4 ...netip.Addr,
 )(*N4RealWindowsProduct,error){
  if ctx==nil||owner==nil||tun==nil||!id.valid(){
   return nil,ErrN4NativeGuard
@@ -96,7 +98,7 @@ func N4PrepareRealWindowsProduct(
  // legacy WFP guard or any non-WFP no-op adapter. Assembly alone grants
  // NOTHING: the current authenticated Rust packet owner must first bind
  // the original generation's exclusive kernel ring.
- txn,err:=n4AssembleWindowsNoWFPNativeTxn(ctx,tun,plan,id)
+ txn,err:=n4AssembleWindowsNoWFPNativeTxn(ctx,tun,plan,id,tcpSynthetic4...)
  if err!=nil{return nil,err}
  // Real signed-Wintun PnP, generation and exclusive native ring readback;
  // the created ring lease is held until ALL native host changes are gone.

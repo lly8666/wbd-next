@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1738,
-  "checkpoint_sha": "dc7ced5647873190f493f7c0d7f132216ed10147",
+  "sequence": 1739,
+  "checkpoint_sha": "4bdc4283b5480ba48cb9171c1e7d30003b55ef4e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1738: H1737 SOURCE dc7ced Windows/Linux PLAN029 Rust native CI43404944766 PASS、GNU crossABI43404944742 PASS；legacy M0 PLAN013 Action43404944781 FAIL于旧assert 'foreign preexisting native M4 Go package'（冻结隔离，非029出口），保持原FAIL。新Rust原NativeOwner Direct TCP kernel NAT→独立非阻塞物理IP_UNICAST_IF TCP socket→bounded 8活跃relay/256封闭Wintun return邮箱接线，TCP synthetic4/owned V3冷ABI新128B/344B；**TCP owner default=false**直到四阶段WAL +精确synthetic /32路线与Defender Allow有真OS收据，绝不伪称全双出口。H1738 CI PENDING，D1-D5/P1-P2/stop/padding STILL OPEN。",
-  "why_now": "Single original Rust TX already handles Direct UDP and both DNS purposes; Direct TCP previously drops outright. Add real Windows kernel handshake/NAT and source-bound physical stream to that SAME one-session scheduler behind an explicit unqualified OS owned resource fence (off by default), so it can be enabled only when same-generation route/Defender CAS receipts exist.",
+  "current_task": "PLAN029 H1739: H1738 SOURCE 4bdc4 Windows/Linux Rust PLAN029 Action43408223889、原Go Windows编译43408224061、GNU cross ABI43408223776、治理43408224032/维护43408223830 同SOURCE全部PASS_SCOPED，非产品。新no-WFP四阶段WAL既有routes第四阶段可选追加ONE synthetic TCP peer /32，并经原Win32 RouteBackend逐key WAL intent/owned/CAS恢复，拒绝外来/重复IP和占用FakeIP的198.18/16；公开默认不传，Defender owned Allow与post-Apply TCP enable仍缺，故没放开Direct TCP。H1739 SOURCE Windows Go+CI待结果，D1–D5/P1–P2/padding未完成。",
+  "why_now": "Original Rust Windows kernel Direct TCP actor compiles on both targets but cannot safely start without exact owned reverse synthetic route. Extend the existing fourth no-WFP v2 WAL routes stage with at most one explicit generation-owned /32, not old WFP or additional per-flow routes, test durable CAS restore first.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1738 source locked Windows Rust and Go ABI/assembly/cross compiles. Then add exact owned no-WFP synthetic /32 route and Defender Allow to original four-stage WAL lifecycle before enabling Rust TCP flag, source-lock one genuine signed Windows original TLS/Wintun/DNS/Direct-Tunnel D1 scene with owned Stop; P1-P2/performance/padding afterward. Do not rerun obsolete PLAN013 frozen M4 test as PLAN029 evidence.",
+  "next_action": "Collect H1739 actual original-Go Windows source/assembly + route ledger test results once. Then implement exact scoped Defender inbound Allow ownership and original Go post-OS Apply cold arm (currently default TCP flag off); freeze one signed Windows V3 D1/D2 live DNS/Direct TCP+UDP/Tunnel scene and owned Stop, then D3-D5/P1-P2/padding. Do not start 030.",
   "unverified": true,
-  "last_tested_source": "dc7ced5647873190f493f7c0d7f132216ed10147",
+  "last_tested_source": "4bdc4283b5480ba48cb9171c1e7d30003b55ef4e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1738-H1737-DNS-TCP-COMPONENT-AND-KERNEL-TCP-ACTOR-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1739-H1738-ALL-NATIVE-CI-PASS-AND-SYNTHETIC-WAL-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1737 Windows/Linux PLAN029 native Rust tests, cross ABI passed; H1738 source adds cold-owned optional Windows kernel Direct TCP NAT/relay same Rust owner and 3-way fair Wintun return, default TCP disabled awaiting OS scope receipts. Product D1–D5/P1–P2 NOT_RUN, historical PLAN013 frozen FAIL retained."
+  "partial_summary": "H1738 SOURCE4bdc4 2OS Rust native, Win Go source, cross-ABI, governance all PASS_SCOPED. H1739 optional synthetic /32 route in same four-stage no-WFP WAL with real Win32 backend and source-only tests; actual Defender/GUI/startup padding/029 D1-D5 P1-P2 NOT_RUN."
 }

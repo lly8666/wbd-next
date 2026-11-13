@@ -159,3 +159,47 @@ func TestPlan029NoWFPV2RouteUnconfirmedAndForeignNeverGuessedOwned(t *testing.T)
  if err:=n4NoWFPRecoverRoutes(ctx,foreignPath,id,keys,owned);err!=nil{t.Fatal(err)}
  if owned.removes!=len(keys){t.Fatal("confirmed foreign-reset routes not all removed")}
 }
+
+func TestPlan029OwnedSyntheticTCPRouteIsFourthStageDurableCASNotAnotherWFP(t *testing.T){
+ // Exactly one extra /32 in the SAME existing v2 routes stage. No host
+ // mutation or firewall claim in this source-only test.
+ plan:=NetworkPlan{Lease4:netip.MustParsePrefix("10.66.0.2/32"),
+  Server4:netip.MustParseAddr("203.0.113.12"),
+  DNSServers4:[]netip.Addr{netip.MustParseAddr("1.1.1.1")}}
+ synthetic:=netip.MustParseAddr("198.19.87.99")
+ keys,e:=n4NoWFPWithSyntheticTCPKey(p029V2RouteKeys(),plan,synthetic)
+ if e!=nil||len(keys)!=4||keys[3].Prefix!=netip.PrefixFrom(synthetic,32)||
+  keys[3].Interface!=keys[1].Interface{
+  t.Fatalf("invalid one native synthetic /32: %+v %v",keys,e)
+ }
+ if e:=n4ValidateRouteBatch(keys);e!=nil{t.Fatal(e)}
+ for _,addr:=range []string{
+  "198.18.87.99","198.19.1.0","198.19.1.255","0.0.0.0",
+  "203.0.113.12","10.66.0.2","1.1.1.1","198.19.87.99",
+ }{
+  one:=netip.MustParseAddr(addr)
+  if addr=="198.19.87.99"{
+   // Existing exactly owned key cannot be appended again.
+   if _,e:=n4NoWFPWithSyntheticTCPKey(keys,plan,one);e==nil{
+    t.Fatal("duplicate synthetic /32 admitted")
+   }
+   continue
+  }
+  if _,e:=n4NoWFPWithSyntheticTCPKey(p029V2RouteKeys(),plan,one);e==nil{
+   t.Fatalf("unowned/foreign TCP synthetic address admitted: %s",addr)
+  }
+ }
+ ctx:=context.Background()
+ id:=n4TestConcreteNativeIdentity()
+ path:=filepath.Join(t.TempDir(),"synthetic.routes")
+ backend:=p029NewJournalRouteBackend()
+ if e:=n4NoWFPApplyRoutes(ctx,path,id,keys,backend);e!=nil{t.Fatal(e)}
+ journal,e:=n4NoWFPReadRouteSidecar(path,id,keys)
+ if e!=nil||journal.Phase!="active"||len(journal.Entries)!=4{
+  t.Fatalf("all four native route receipts not durable: %+v %v",journal,e)
+ }
+ if e:=n4NoWFPRecoverRoutes(ctx,path,id,keys,backend);e!=nil{t.Fatal(e)}
+ if len(backend.present)!=0||backend.removes!=4{
+  t.Fatal("synthetic /32 not CAS restored with default routes",backend)
+ }
+}

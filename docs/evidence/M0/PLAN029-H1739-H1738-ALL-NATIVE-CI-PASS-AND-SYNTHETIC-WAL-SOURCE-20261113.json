@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1739",
+  "source_sha": "4bdc4283b5480ba48cb9171c1e7d30003b55ef4e",
+  "recorded": "2026-11-13",
+  "result": "H1738_RUST_GO_GNU_GOV_ALL_SUCCESS_SCOPED_H1739_OPTIONAL_NATIVE_ROUTE_WAL_SOURCE_PENDING",
+  "actions": [
+    {
+      "id": 43408223889,
+      "scope": "Windows/Linux PLAN029 Rust native",
+      "conclusion": "success"
+    },
+    {
+      "id": 43408224061,
+      "scope": "Original Go Windows and assembly",
+      "conclusion": "success"
+    },
+    {
+      "id": 43408223776,
+      "scope": "GNU Windows + Linux ARM64 cross ABI",
+      "conclusion": "success"
+    },
+    {
+      "id": 43408224032,
+      "scope": "governance",
+      "conclusion": "success"
+    },
+    {
+      "id": 43408223830,
+      "scope": "governance-maintenance",
+      "conclusion": "success"
+    }
+  ],
+  "new_source": "Optional owned synthetic TCP /32 route under v2 no-WFP four-stage routes sidecar, existing native Win32 backend, per-key durable CAS; no actual product activation yet.",
+  "not_run": [
+    "exact Defender owned firewall resource ledger",
+    "authenticated post-Apply kernel listener activation and tested Stop",
+    "D1-D5/P1-P2, GUI live and bounded padding"
+  ],
+  "historical": "Do not repin frozen M4 historical fixture"
+}

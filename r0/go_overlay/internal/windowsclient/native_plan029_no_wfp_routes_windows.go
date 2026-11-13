@@ -9,6 +9,7 @@ import (
  "encoding/json"
  "errors"
  "io"
+ "net/netip"
  "os"
  "path/filepath"
  "slices"
@@ -26,6 +27,41 @@ type n4WindowsNoWFPRouteStage struct {
  Owner N4WindowsCreatedWintunReservation
  WALPath string
  Backend NativeRouteBackend
+ SyntheticTCP4 netip.Addr // absent except independently owned TCP route
+}
+// Only 198.19/16 is reserved as this generation's local synthetic TCP
+// peer. The original app lease, outer server, physical source and the
+// two singleton DNS endpoints must never be captured by this extra key.
+// The default 198.18/16 FakeIP pool is disjoint; the Rust cold validator
+// separately checks any advanced pool bounds. This adds ONE owned key to
+// the EXISTING 4th WAL routes stage, NOT a new fifth stage.
+func n4NoWFPWithSyntheticTCPKey(
+ original []NativeRouteKey,plan NetworkPlan,synthetic netip.Addr,
+)([]NativeRouteKey,error){
+ if !synthetic.IsValid(){return original,nil}
+ if !synthetic.Is4()||synthetic.IsUnspecified()||
+  synthetic.IsMulticast()||synthetic.IsLoopback()||
+  synthetic==plan.Server4||synthetic==plan.Lease4.Addr()||
+  synthetic==plan.Physical.Source4||
+  len(original)<3||synthetic.As4()[0]!=198||
+  synthetic.As4()[1]!=19||
+  synthetic.As4()[3]==0||synthetic.As4()[3]==255{
+  return nil,ErrNetworkPlan
+ }
+ for _,dns:=range plan.DNSServers4{
+  if dns==synthetic{return nil,ErrNetworkPlan}
+ }
+ for _,key:=range original{
+  if key.Prefix==netip.PrefixFrom(synthetic,32){return nil,ErrNetworkPlan}
+ }
+ if original[1].Interface==0||original[1].Interface!=original[2].Interface{
+  return nil,ErrNetworkPlan
+ }
+ out:=append(append([]NativeRouteKey(nil),original...),
+  NativeRouteKey{Prefix:netip.PrefixFrom(synthetic,32),
+   Interface:original[1].Interface,NextHop:netip.IPv4Unspecified(),Metric:5})
+ if err:=n4ValidateRouteBatch(out);err!=nil{return nil,err}
+ return out,nil
 }
 func(s n4WindowsNoWFPRouteStage) Name()string{return "routes"}
 func(s n4WindowsNoWFPRouteStage) expected(ctx context.Context,id N4UnifiedIdentity)([]NativeRouteKey,error){
@@ -35,7 +71,9 @@ func(s n4WindowsNoWFPRouteStage) expected(ctx context.Context,id N4UnifiedIdenti
  pnp,err:=n4ProbeOriginalWintunPnP(ctx,id)
  if err!=nil{return nil,err}
  if pnp.InstanceSHA256!=id.PnPInstanceSHA256{return nil,ErrN4ForeignRoute}
- return N4BuildCompactNativeRouteKeys(s.Plan,id.WintunIndex)
+ base,err:=N4BuildCompactNativeRouteKeys(s.Plan,id.WintunIndex)
+ if err!=nil{return nil,err}
+ return n4NoWFPWithSyntheticTCPKey(base,s.Plan,s.SyntheticTCP4)
 }
 func(s n4WindowsNoWFPRouteStage) receipt(ctx context.Context,id N4UnifiedIdentity,
  b json.RawMessage)([]NativeRouteKey,error){

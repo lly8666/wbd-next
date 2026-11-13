@@ -15,6 +15,7 @@ import (
 // Never replace the old 5-stage recovery or manufacture a fake WFP guard.
 func n4AssembleWindowsNoWFPNativeTxn(
  ctx context.Context,tun *TUN,plan NetworkPlan,id N4UnifiedIdentity,
+ tcpSynthetic4 ...netip.Addr,
 )(*N4NativeUnifiedTxn,error){
  if err:=ctx.Err();err!=nil{return nil,err}
  if tun==nil||!tun.createdByProcess||!id.valid()||
@@ -28,7 +29,12 @@ func n4AssembleWindowsNoWFPNativeTxn(
  // direct resolver is a separate physical bootstrap/DNS worker endpoint.
  if len(plan.DNSServers4)!=1{return nil,ErrNetworkPlan}
  if _,_,err:=n4StaticDNSRequest(plan.DNSServers4);err!=nil{return nil,err}
- if _,err:=N4BuildCompactNativeRouteKeys(plan,id.WintunIndex);err!=nil{return nil,err}
+ var tcpPeer netip.Addr
+ if len(tcpSynthetic4)>1{return nil,ErrNetworkPlan}
+ if len(tcpSynthetic4)==1{tcpPeer=tcpSynthetic4[0]}
+ keys,err:=N4BuildCompactNativeRouteKeys(plan,id.WintunIndex)
+ if err!=nil{return nil,err}
+ if _,err:=n4NoWFPWithSyntheticTCPKey(keys,plan,tcpPeer);err!=nil{return nil,err}
  if _,err:=n4StageLeaseIntent(id.WintunIndex,plan.Lease4);err!=nil{return nil,err}
  // The old PowerShell state is a different owner; never steal it or
  // cross-recover a v1 WFP transaction using the new v2 stage set.
@@ -51,7 +57,7 @@ func n4AssembleWindowsNoWFPNativeTxn(
    n4WindowsNoWFPDNSStage{Servers:append([]netip.Addr(nil),plan.DNSServers4...),
     Owner:owner,WALPath:wal},
    n4WindowsNoWFPRouteStage{Plan:plan,Owner:owner,
-    WALPath:wal,Backend:N4WindowsRouteBackend{}},
+    WALPath:wal,Backend:N4WindowsRouteBackend{},SyntheticTCP4:tcpPeer},
   },
  }
  if err:=n.preflight();err!=nil{return nil,err}
