@@ -42,7 +42,7 @@ func n4NoWFPWithSyntheticTCPKey(
  if !synthetic.Is4()||synthetic.IsUnspecified()||
   synthetic.IsMulticast()||synthetic.IsLoopback()||
   synthetic==plan.Server4||synthetic==plan.Lease4.Addr()||
-  synthetic==plan.Physical.Source4||
+  synthetic==plan.Physical.NextHop4||
   len(original)<3||synthetic.As4()[0]!=198||
   synthetic.As4()[1]!=19||
   synthetic.As4()[3]==0||synthetic.As4()[3]==255{

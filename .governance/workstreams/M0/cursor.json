@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1739,
-  "checkpoint_sha": "4bdc4283b5480ba48cb9171c1e7d30003b55ef4e",
+  "sequence": 1740,
+  "checkpoint_sha": "5b36599370e0b9ac2a368407befd77ba53cedefc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1739: H1738 SOURCE 4bdc4 Windows/Linux Rust PLAN029 Action43408223889、原Go Windows编译43408224061、GNU cross ABI43408223776、治理43408224032/维护43408223830 同SOURCE全部PASS_SCOPED，非产品。新no-WFP四阶段WAL既有routes第四阶段可选追加ONE synthetic TCP peer /32，并经原Win32 RouteBackend逐key WAL intent/owned/CAS恢复，拒绝外来/重复IP和占用FakeIP的198.18/16；公开默认不传，Defender owned Allow与post-Apply TCP enable仍缺，故没放开Direct TCP。H1739 SOURCE Windows Go+CI待结果，D1–D5/P1–P2/padding未完成。",
-  "why_now": "Original Rust Windows kernel Direct TCP actor compiles on both targets but cannot safely start without exact owned reverse synthetic route. Extend the existing fourth no-WFP v2 WAL routes stage with at most one explicit generation-owned /32, not old WFP or additional per-flow routes, test durable CAS restore first.",
+  "current_task": "PLAN029 H1740: H1739 SOURCE5b365 Windows original-Go no-WFP product compile Action43409673563、Go Windows source43409673369 FAIL at new optional synthetic TCP /32 route helper: plan.Physical.Source4 undefined (donor PhysicalPath无此字段)。改校验真实现有Physical.NextHop4冲突，Rust Cold已独立拒绝underlay physical源IP与synthetic同一IP；不改NativeRouteBackend/WAL写回语义。保留原首错；H1740 Go Windows新SOURCE CI待测，未启用TCP/Defender/正式D1-D5。",
+  "why_now": "H1739 first Windows Go compile failed at a new reference to nonexistent original donor PhysicalPath.Source4. Use existing verified NextHop4 for physical route collision; only product source error, keep exact historical failure and avoid unrelated frozen suite retry.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1739 actual original-Go Windows source/assembly + route ledger test results once. Then implement exact scoped Defender inbound Allow ownership and original Go post-OS Apply cold arm (currently default TCP flag off); freeze one signed Windows V3 D1/D2 live DNS/Direct TCP+UDP/Tunnel scene and owned Stop, then D3-D5/P1-P2/padding. Do not start 030.",
+  "next_action": "Collect H1740 Windows Go source + actual Native WAL compile, fix only its first new error. Then implement precise owned Defender inbound listener Allow in same OS lifecycle and an authenticated post-Apply Rust TCP activate, source-lock genuine Wintun/WSL D1-D5 and P1-P2/padding. 029 NOT DONE.",
   "unverified": true,
-  "last_tested_source": "4bdc4283b5480ba48cb9171c1e7d30003b55ef4e",
+  "last_tested_source": "5b36599370e0b9ac2a368407befd77ba53cedefc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1739-H1738-ALL-NATIVE-CI-PASS-AND-SYNTHETIC-WAL-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1740-H1739-SYNTHETIC-ROUTE-GO-FIRST-COMPILE-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1738 SOURCE4bdc4 2OS Rust native, Win Go source, cross-ABI, governance all PASS_SCOPED. H1739 optional synthetic /32 route in same four-stage no-WFP WAL with real Win32 backend and source-only tests; actual Defender/GUI/startup padding/029 D1-D5 P1-P2 NOT_RUN."
+  "partial_summary": "H1738 2OS native Rust/Go/Cross/governance all PASS_SCOPED. H1739 optional v2 WAL synthetic /32 introduced a real Win Go compile FAIL Source4 not field; H1740 narrow fix NextHop4 source pending. No real product two-egress scene/Defender/TCP activation."
 }

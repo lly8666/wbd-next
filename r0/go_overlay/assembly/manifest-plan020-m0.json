@@ -1617,7 +1617,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_routes_windows.go",
-      "result_blob": "f4f83fa75e79714cf00d9c06ceee86e4ac60d085"
+      "result_blob": "0bb2ea832657b7effc50f86067e1d1803b497189"
     },
     {
       "kind": "create",

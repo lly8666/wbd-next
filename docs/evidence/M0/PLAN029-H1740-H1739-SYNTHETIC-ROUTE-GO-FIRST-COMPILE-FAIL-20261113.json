@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1740",
+  "source_sha": "5b36599370e0b9ac2a368407befd77ba53cedefc",
+  "result": "FAIL_SCOPED_WINDOWS_GO_COMPILE_FIRST_NEW_SYNTHETIC_ROUTE_FIELD_ERROR",
+  "actions": [
+    {
+      "id": 43409673563,
+      "conclusion": "failure",
+      "job": 131832655729,
+      "first_error": "native_plan029_no_wfp_routes_windows.go:45:28: plan.Physical.Source4 undefined; PhysicalPath has no Source4 field"
+    },
+    {
+      "id": 43409673369,
+      "conclusion": "failure",
+      "scope": "Windows original-Go source compilation"
+    }
+  ],
+  "fix": "Replace imaginary PhysicalPath.Source4 with original donor PhysicalPath.NextHop4 for route-collision check, retaining Rust ColdSplit source-versus-synthetic reject and no-WFP v2 WAL exact route CAS",
+  "h1740_native": "PENDING",
+  "not_run": [
+    "exact Defender owned allow post-Apply",
+    "signed original-Go V3 one Wintun normal/Game4 two egress",
+    "D1-D5 P1-P2 and padding"
+  ]
+}
