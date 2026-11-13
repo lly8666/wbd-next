@@ -1648,6 +1648,12 @@
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "result_blob": "bbfd292d43fb35d00a83b085471cb6f6113bb91b"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
+      "result_blob": "29736498a3eb68ee41e4195e1a04b72d5a1650f1"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1729",
+  "source_sha": "ee150cea49fb76a6e81576336880b887687a7130",
+  "result": "H1728_WINDOWS_GNU_AND_RUST_COMPONENTS_PASS_SCOPED",
+  "actions": [
+    {
+      "run_id": 43395844204,
+      "conclusion": "success",
+      "scope": "Windows GNU cross-link after ws2_32 case fix"
+    },
+    {
+      "run_id": 43395844439,
+      "conclusion": "success",
+      "scope": "Windows Linux Rust PLAN029 components, not product egress"
+    }
+  ],
+  "new_source": "original Go V3 layout+bound tests and private Rust V3 feature compile PENDING",
+  "not_run": [
+    "authenticated product original-Go Rust V3 with TCP and DNS",
+    "physical Direct/Tunnel simultaneous TCP UDP",
+    "full DNS FakeIP CN snapshots and endpoints",
+    "owned Defender/Stop/GUI live D1–D5/P1–P2 and startup-padding"
+  ]
+}

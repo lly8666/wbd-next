@@ -42,6 +42,13 @@ jobs:
           # fixtures and are not qualified or repaired by a DNS/UDP batch.
           & cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record plan029_ 2>&1 | Tee-Object result/engine.log
           if($LASTEXITCODE -ne 0){throw 'native engine Rust tests FAIL'}
+          if($IsWindows){
+            # The private V3 symbol is excluded from normal production.
+            # Compile precisely this feature ABI before real Wintun scenes.
+            & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record,m0_v4_probe 2>&1 | Tee-Object result/probe-v3-build.log
+            if($LASTEXITCODE -ne 0){throw 'private Win32 V3 source ABI compile failed'}
+            if(-not(Test-Path target/release/wbd_engine.dll)){throw 'private V3 DLL missing'}
+          }
           @"
           {"source_sha":"$env:GITHUB_SHA","run_id":"$env:GITHUB_RUN_ID","os":"${{ matrix.os }}","scope":"RUST_PURE_NATIVE_COMPONENT_NOT_REAL_029_PRODUCT_NETWORK","product_native_double_egress":"NOT_RUN","stop":"NOT_RUN"}
           "@ | Set-Content -Encoding ascii result/source.json
