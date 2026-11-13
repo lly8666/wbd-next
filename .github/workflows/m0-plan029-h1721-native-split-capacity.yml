@@ -1,0 +1,49 @@
+name: PLAN029 single SOURCE Rust Direct resource pressure and ingress Windows Linux (pure component gate)
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1721-native-split-capacity.yml"
+      - "crates/wbd-engine/src/v4_client_direct_udp_actor.rs"
+      - "crates/wbd-engine/src/v4_client_fake_pool.rs"
+      - "crates/wbd-engine/src/v4_client_split_wire.rs"
+      - "crates/wbd-engine/src/v4_client_split.rs"
+      - "crates/wbd-engine/src/lib.rs"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-rust-component:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build and test one exact SOURCE Windows or Linux native Rust library, no network claim
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result | Out-Null
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'actual SOURCE drift'}
+          & rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain pin missing'}
+          & cargo +1.85.1 test --locked --release -p wbd-platform --lib 2>&1 | Tee-Object result/platform.log
+          if($LASTEXITCODE -ne 0){throw 'native platform Rust tests FAIL'}
+          & cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record 2>&1 | Tee-Object result/engine.log
+          if($LASTEXITCODE -ne 0){throw 'native engine Rust tests FAIL'}
+          @"
+          {"source_sha":"$env:GITHUB_SHA","run_id":"$env:GITHUB_RUN_ID","os":"${{ matrix.os }}","scope":"RUST_PURE_NATIVE_COMPONENT_NOT_REAL_029_PRODUCT_NETWORK","product_native_double_egress":"NOT_RUN","stop":"NOT_RUN"}
+          "@ | Set-Content -Encoding ascii result/source.json
+          Write-Output "PLAN029_H1721_SOURCE_LOCKED_RUST_NATIVE_COMPONENT_PASS os=${{ matrix.os }} scope=PURE_NOT_REAL_029_EGRESS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1721-rust-components-${{ matrix.os }}-${{ github.run_id }}
+          path: result/
+          retention-days: 14
+          if-no-files-found: warn

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1720,
-  "checkpoint_sha": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
+  "sequence": 1721,
+  "checkpoint_sha": "ebaf575c7a08dd2eded8bfe0c79907bd8fb33914",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1720: H1719 SOURCE b8c800a五Action全部PASS_SCOPED：governance 43384251251、maintenance 43384251318、原Go/WinForms v2只读预检与单DNS/outer1460有效配置 43384251255、Windows Go source 43384251247、旧legacy1400 Normal Win/Linux 43384251240。都未证明029两出口；正式认证Rust唯一Wintun ingress仍未接Direct kernel TCP/UDP/DNS，D1–D5/P1–P2和padding保持NOT_RUN。",
-  "why_now": "Collect source-locked H1719 WinForms and Go CLI real read-only native v2 preflight success; preserve source and artifact without mistaking old Normal or pure diagnostics for 029 product egress.",
+  "current_task": "PLAN029 H1721: 并行施工源冻结前批：Windows Direct UDP WSAPoll只扫描≤rx_quantum旋转workset，不对16384条逐轮全表poll；FakeIP满时最多64个到期槽安全回收，仍不得淘汰有引用/隔离期；新Direct TCP孤儿ACK/DATA不占flow硬限；加相应Linux/Windows Rust pure tests和单SOURCE双OS并行CI。正式认证Rust NativeOwner双出口/D1–D5/P1–P2仍NOT_RUN，未授权030。",
+  "why_now": "Review of current product seam found provable O(N) Windows UDP readiness scan on every turn and pressure/SYN admission defects independent of the remaining native I/O wiring. Fix these together with one source-locked Windows/Linux Rust test suite, not another diagnostic A/B/C.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Implement one authenticated original Rust NativeOwner Wintun ingress with CN IP/domain union, selected kernel TCP + physical UDP, two forced single DNS endpoints, FakeIP, 4-stage owned Stop/Recover; freeze product SOURCE and run D1–D5/P1–P2 true product scenes. Do not repeat old A/B/C probes or begin PLAN030.",
+  "next_action": "Collect H1721 Rust Windows/Linux independent jobs; if green proceed with the original Rust NativeOwner Wintun split dispatch+Direct/Tunnel DNS/TCP/UDP and owned Stop as a single batch, freeze source for full D1–D5/P1–P2. Retain true product NOT_RUN/OPEN until data-plane evidence.",
   "unverified": true,
   "last_tested_source": "b8c800a4e7e4473c307d991c3dd800d8d9c8c3aa",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1719 five Actions green on b8c800a: real Go CLI v2 native preflight absent noWAL; GUI single DNS direct/tunnel effective, outer1460 native Rust inner auto read-only, save/reopen; old Normal legacy1400 networking. H1717 signed Win32 no-old-WFP four stages PASS_SCOPED; H1695 A/B/C, H1709 kernel TCP EOF and H1713 CN FakeIP UDP test-only PASS_SCOPED. Genuine 029 production dual TCP/UDP Direct/Tunnel, DNS, Stop, GUI Applied, perf, padding NOT_RUN OPEN."
+  "partial_summary": "H1721 source-only pending real compiled jobs: UDP bounded round-robin WSAPoll workset, FakeIP pressure safe reclaim, Direct TCP SYN-only new pin. H1719 H1720 five original Go/GUI/governance jobs PASS_SCOPED; real full 029 dual exit, tunnel DNS, P1/P2 and padding remain NOT_RUN."
 }

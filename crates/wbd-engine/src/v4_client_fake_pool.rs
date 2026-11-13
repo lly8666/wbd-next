@@ -138,10 +138,17 @@ impl FakeAllocator{
             return Ok(FakeProposal{fake4:ip,advertised_ttl:ttl,
                 persist_before_reply:e.needs_durable_write})
         }
+        let charged=Self::accounted(&key);
+        if self.fake_to_entry.len()>=self.max_entries ||
+           charged>self.max_accounted_bytes.saturating_sub(self.bytes_used){
+            // Only on pressure: bounded due-wheel reclaim, never an
+            // all-table scan in the ordinary DNS path. A live reference
+            // or a still-quarantined identity is never stolen to make room.
+            self.reap_due(now_ms,64);
+        }
         if self.fake_to_entry.len()>=self.max_entries{
             return Err(FakeError::PoolCapacity)
         }
-        let charged=Self::accounted(&key);
         if charged>self.max_accounted_bytes.saturating_sub(self.bytes_used){
             return Err(FakeError::MemoryBudget)
         }
@@ -356,6 +363,32 @@ mod tests{
         assert!(matches!(FakeAllocator::new(ip(198,18,0,1),
             ip(198,18,0,200),&[(ip(198,18,0,50),ip(198,18,0,55))],
             8,4096),Err(FakeError::PoolConflict)));
+    }
+    #[test]
+    fn plan029_fake_pool_pressure_reclaims_only_safe_expired_slot_before_refusing(){
+        let mut p=pool(1);
+        let first=p.prepare(key("one.cn.example",ip(198,51,100,2),1),0,100).unwrap();
+        p.acknowledge_durable(first.fake4).unwrap();
+        // Deadline 600100, but the previous coarse tick may not have run.
+        // The next DNS query must perform a bounded safe reclaim.
+        assert_eq!(p.prepare(key("two.cn.example",ip(198,51,100,3),1),1,600099),
+            Err(FakeError::PoolCapacity));
+        let second=p.prepare(key("two.cn.example",ip(198,51,100,3),1),1,600101).unwrap();
+        assert_eq!(second.fake4,first.fake4);
+        assert!(second.persist_before_reply);
+        assert_eq!(p.announced_real(first.fake4),None);
+        p.acknowledge_durable(second.fake4).unwrap();
+        assert_eq!(p.announced_real(second.fake4),Some(ip(198,51,100,3)));
+
+        let mut held=pool(1);
+        let live=held.prepare(key("held.cn.example",ip(203,0,113,7),1),0,100).unwrap();
+        held.acknowledge_durable(live.fake4).unwrap();
+        held.pin_first_flow(live.fake4).unwrap();
+        assert_eq!(held.prepare(key("new.cn.example",ip(203,0,113,8),1),1,600101),
+            Err(FakeError::PoolCapacity));
+        assert_eq!(held.announced_real(live.fake4),Some(ip(203,0,113,7)));
+        held.release_flow(live.fake4,600102).unwrap();
+        assert!(held.prepare(key("new.cn.example",ip(203,0,113,8),1),1,660102).is_ok());
     }
     #[test]
     fn plan029_cn_fakeip_corrupt_snapshot_rejected_not_rebound(){

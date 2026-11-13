@@ -89,7 +89,6 @@ pub(crate) struct DirectUdpActor{
     flows:Vec<UdpFlow>,
     #[cfg(target_os="windows")]
     poll_fds:Vec<PollFd>,
-    poll_dirty:bool,
     scan_cursor:usize,
     next_ipv4_id:u16,
 }
@@ -110,17 +109,17 @@ impl DirectUdpActor{
             lease4,fake_bounds,budget,
             flow_index:HashMap::new(),flows:Vec::new(),
             #[cfg(target_os="windows")]poll_fds:Vec::new(),
-            poll_dirty:false,scan_cursor:0,next_ipv4_id:1})
+            scan_cursor:0,next_ipv4_id:1})
     }
     pub fn len(&self)->usize{self.flows.len()}
     pub fn max_flows(&self)->usize{self.budget.hard_flows}
+    pub fn poll_work_bound(&self)->usize{self.flows.len().min(self.budget.rx_quantum)}
     fn discard_index(&mut self,index:usize){
         let removed=self.flows.swap_remove(index);
         self.flow_index.remove(&removed.key);
         if index<self.flows.len(){
             self.flow_index.insert(self.flows[index].key,index);
         }
-        self.poll_dirty=true;
         if !self.flows.is_empty(){self.scan_cursor%=self.flows.len()}
         else{self.scan_cursor=0}
     }
@@ -171,7 +170,7 @@ impl DirectUdpActor{
                 self.flows.push(UdpFlow{key,tuple:parsed.tuple,
                     real4:u32::from(real4),socket,last_used_ms:now_ms});
                 self.flow_index.insert(key,i);
-                self.poll_dirty=true;i
+                i
             }
         };
         let flow=&mut self.flows[index];
@@ -187,15 +186,6 @@ impl DirectUdpActor{
             _=>{self.discard_index(index);Err(NativeUdpFault::LocalSend)}
         }
     }
-    #[cfg(target_os="windows")]
-    fn refresh_poll(&mut self){
-        if !self.poll_dirty{return}
-        self.poll_fds=self.flows.iter().map(|flow|PollFd{
-            socket:flow.socket.poll_socket(),
-            events:POLLRDNORM,revents:0,
-        }).collect();
-        self.poll_dirty=false;
-    }
     /// ONE readiness quantum. Physical responses are prepared as complete
     /// L3 bytes into caller-owned storage; only the ORIGINAL authenticated
     /// Rust Wintun TX owner may AllocateSendPacket afterward. Does not
@@ -204,15 +194,29 @@ impl DirectUdpActor{
     pub fn poll_reverse_ready(&mut self,out:&mut [u8],now_ms:u64)
         ->Result<Option<usize>,NativeUdpFault>{
         if self.flows.is_empty(){return Ok(None)}
-        self.refresh_poll();
-        let rc=unsafe{WSAPoll(self.poll_fds.as_mut_ptr(),
-            self.poll_fds.len() as u32,0)};
-        if rc<0{return Err(NativeUdpFault::RemoteReceive)}
-        if rc==0{return Ok(None)}
         let count=self.flows.len();
-        for step in 0..count.min(self.budget.rx_quantum){
+        let quantum=count.min(self.budget.rx_quantum);
+        // WSAPoll itself scans the array. Polling all 16k sockets on
+        // every ready-only quantum burns CPU and hides ready flows beyond
+        // the rx quantum. Populate only this rotating bounded slice;
+        // reuse the Vec capacity across service turns.
+        self.poll_fds.clear();
+        for step in 0..quantum {
             let i=(self.scan_cursor+step)%count;
-            let flags=self.poll_fds[i].revents;
+            self.poll_fds.push(PollFd{
+                socket:self.flows[i].socket.poll_socket(),
+                events:POLLRDNORM,revents:0,
+            });
+        }
+        let rc=unsafe{WSAPoll(self.poll_fds.as_mut_ptr(),quantum as u32,0)};
+        if rc<0{return Err(NativeUdpFault::RemoteReceive)}
+        if rc==0{
+            self.scan_cursor=(self.scan_cursor+quantum)%count;
+            return Ok(None)
+        }
+        for step in 0..quantum{
+            let i=(self.scan_cursor+step)%count;
+            let flags=self.poll_fds[step].revents;
             if flags&POLLRDNORM==0{
                 if flags&(POLLERR|POLLHUP|POLLNVAL)!=0{
                     self.discard_index(i);
@@ -246,7 +250,7 @@ impl DirectUdpActor{
             self.scan_cursor=(i+1)%count;
             return Ok(Some(bytes))
         }
-        self.scan_cursor=(self.scan_cursor+self.budget.rx_quantum)%count;
+        self.scan_cursor=(self.scan_cursor+quantum)%count;
         Ok(None)
     }
     /// One coarse scheduler tick, no whole-flow-table scan. At most budget
@@ -279,6 +283,23 @@ mod tests{
     fn underlay()->NativeUdpBudget{
         NativeUdpBudget{hard_flows:64,rx_quantum:16,
             ttl_ms:60_000,inner_mtu:1280}
+    }
+    #[test]
+    fn plan029_udp_readiness_quantum_is_fixed_not_all_direct_sockets(){
+        let lease=Ipv4Addr::new(10,234,12,34);
+        let pool=(u32::from_be_bytes([198,18,0,0]),
+            u32::from_be_bytes([198,18,255,255]));
+        let mut actor=DirectUdpActor::new(
+            Ipv4Addr::new(10,1,0,7),14,lease,pool,underlay()
+        ).unwrap();
+        assert_eq!(actor.poll_work_bound(),0);
+        assert_eq!(actor.max_flows(),64);
+        // For any 16k configured hard cap, one WSAPoll never
+        // receives more than the small current readiness quantum.
+        actor.budget.hard_flows=16_384;
+        actor.budget.rx_quantum=16;
+        assert_eq!(actor.poll_work_bound(),0);
+        assert_eq!(actor.budget.rx_quantum,16);
     }
     #[test]
     fn plan029_actor_never_sends_local_fake_or_raw_dns53_on_physical_socket(){

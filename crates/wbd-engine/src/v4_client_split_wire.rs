@@ -17,6 +17,7 @@ pub(crate) enum IngressWireError{
     MalformedDns,
     InvalidDomain,
     NoDirectFlowCapacity,
+    DirectTcpNeedsSyn,
     UnassociatedFragment,
     FragmentCapacity,
     FragmentAssociationConflict,
@@ -226,8 +227,18 @@ impl PacketIngress{
            !self.fragment_pins.contains_key(&fragment_key){
             return Err(IngressWireError::FragmentCapacity)
         }
-        let preliminary=self.pins.get(&key)
-            .unwrap_or_else(||self.policy.destination(view.dst));
+        let prior=self.pins.get(&key);
+        let preliminary=prior.unwrap_or_else(||self.policy.destination(view.dst));
+        // The chosen Windows kernel TCP NAT can only create a local
+        // listener association from a fresh SYN (without ACK). Do not
+        // consume the shared Direct quota on an orphan ACK/data segment:
+        // there is no kernel connection to which it could be delivered.
+        // Established pinned TCP is not subject to another SYN check.
+        if prior.is_none() && view.proto==6 &&
+           matches!(preliminary,Egress::Direct{..}) &&
+           view.transport[13]&0x12!=0x02{
+            return Err(IngressWireError::DirectTcpNeedsSyn)
+        }
         if view.more_fragments{
             if let Some(old)=self.fragment_pins.get(&fragment_key){
                 if old.expires_at_ms>now_ms && old.decision!=preliminary{
@@ -370,6 +381,25 @@ mod tests{
         assert_eq!(s.on_ipv4(&tcp(ip(198,18,3,4),1005,80),5),
             Ok(IngressAction::DropUnknownFake));
         assert_eq!(s.flow_count(),2);
+    }
+    #[test]
+    fn plan029_orphan_direct_tcp_data_does_not_consume_the_final_direct_slot(){
+        let mut s=ingress(Mode::BypassLanCn,1,1);
+        let cn=ip(203,0,113,9);
+        let mut orphan=tcp(cn,36001,443);
+        orphan[20+13]=0x10; // ACK with no SYN and no admitted association
+        assert_eq!(s.on_ipv4(&orphan,1),Err(IngressWireError::DirectTcpNeedsSyn));
+        assert_eq!(s.flow_count(),0);
+        assert_eq!(s.on_ipv4(&tcp(ip(8,8,8,8),36002,443),2),
+            Ok(IngressAction::Tunnel));
+        assert!(matches!(s.on_ipv4(&tcp(cn,36001,443),3),
+            Ok(IngressAction::Direct{..})));
+        assert!(matches!(s.on_ipv4(&orphan,4),
+            Ok(IngressAction::Direct{..}))); // already pinned
+        assert_eq!(s.on_ipv4(&tcp(ip(203,0,113,10),36003,443),5),
+            Err(IngressWireError::NoDirectFlowCapacity));
+        assert_eq!(s.on_ipv4(&tcp(ip(8,8,4,4),36004,443),6),
+            Ok(IngressAction::Tunnel));
     }
     #[test]
     fn plan029_real_ingress_fragment_pin_ttl_and_unassociated_reject(){
