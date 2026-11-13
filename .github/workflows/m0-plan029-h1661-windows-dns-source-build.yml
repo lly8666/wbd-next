@@ -46,6 +46,36 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'PLAN029 original Go native product compile FAILED'}
           } finally {Pop-Location}
           Write-Output "H1661_NATIVE_GO_BUILD_ONLY_PASS_NOT_SIGNED_E2E"
+      - name: Real native Defender COM exact single TCP rule add/readback/CAS delete (no product connection)
+        shell: pwsh
+        timeout-minutes: 5
+        env:
+          WBD_PLAN029_REAL_DEFENDER_TEST: "1"
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'real Defender evidence SOURCE drift'}
+          Push-Location legacy
+          try {
+            & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force result | Out-Null
+          $receipt=[ordered]@{schema_version=1;product_source_sha=$env:GITHUB_SHA;original_go_source_sha='a7a82db31fe736ffedee330795a3234d358f1984';scope='WINDOWS_COMPILE_AND_PURE_UNIT_ONLY';native_windows_l3='NOT_RUN';physical_dns_e2e='NOT_RUN';tls_signed_gui_e2e='NOT_RUN';padding_flows='NOT_RUN';original_go_native_build=(Test-Path result/plan029-source-only-client.exe);run_id=$env:GITHUB_RUN_ID}
+          $receipt|ConvertTo-Json -Depth 5|Set-Content -Encoding utf8 result/plan029-h1661-source-only.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1661-windows-source-only-${{ github.run_id }}
+          path: |
+            result/assembly.json
+            result/plan029-h1661-source-only.json
+          retention-days: 14
+          if-no-files-found: warn
+ -v ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'real Defender COM exact one-rule Add/CAS Delete FAILED'}
+          } finally {Pop-Location}
+          Write-Output 'PLAN029_REAL_WINDOWS_DEFENDER_COM_ONE_RULE_NATIVE_CAS_PASS_SCOPE_ONLY_NOT_TCP_PRODUCT'
       - name: Preserve exact source / build-only scope
         if: always()
         shell: pwsh

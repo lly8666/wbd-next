@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1753",
+  "source_sha": "61cb246f309439538652e9ab9bb98d445e6a433d",
+  "result": "H1752_WINDOWS_GO_NATIVE_DEFENDER_COM_CODE_AND_UNIT_MOCKS_PASS_H1753_REAL_OS_COM_ONE_RULE_PENDING",
+  "prior": {
+    "id": 43436316554,
+    "source_sha": "61cb246f309439538652e9ab9bb98d445e6a433d",
+    "conclusion": "success",
+    "scope": "original-Go Windows source and PLAN029 mock failure tests including Defender ledger; not real firewall mutation"
+  },
+  "original_fail": {
+    "id": 43435540007,
+    "source_sha": "47317155df4d678cc9698cce62b4feec47d40066",
+    "conclusion": "failure",
+    "reason": "COM source used nonexistent key.Local4 twice; fixed H1752"
+  },
+  "new_h1753": "Windows-2025 single GITHUB_ACTIONS-gated native INetFwPolicy2 COM one rule exact lease+remote synthetic+port Add/Readback/Remove; own WAL absence and firewall absence required, no network socket or public Direct TCP. RESULT PENDING",
+  "product_direct_tcp": "NOT_RUN",
+  "full_plan029": "IN_PROGRESS"
+}

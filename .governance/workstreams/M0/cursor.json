@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1752,
-  "checkpoint_sha": "47317155df4d678cc9698cce62b4feec47d40066",
+  "sequence": 1753,
+  "checkpoint_sha": "61cb246f309439538652e9ab9bb98d445e6a433d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1752: H1751 SOURCE47317155 signed H1750 record+native Windows Defender COM intent/owned CAS code committed. First native original-Go Windows source CI Action43435540007 FAIL: native_plan029_defender_com_windows.go:133,190 k.Local4 undefined; actual n4Plan029DefenderKey field Lease4. H1752 precise 2-reference fix and live assembly result_blob repin only, new Windows Go scoped CI PENDING. H1751 governance43435540199 PASS; exact Defender COM/real OS Allow NOT_RUN; original Rust PREPARE→ENABLE, no-WFP WAL, signed Direct kernel TCP D2, D1-D5/P1-P2/padding GUI still OPEN.",
-  "why_now": "Source-locked Windows compile first failure is two mistyped COM key field identifiers. Fix them and exact live assembly hash, preserving old FAIL; do not widen firewall or restore old WFP.",
+  "current_task": "PLAN029 H1753: H1752 exact SOURCE61cb2 WinGo source+native COM mock WAL tests Action43436316554 SUCCESS; old H1751 compiler FAIL preserved. H1753 on SAME disposable Windows-2025 Runner adds genuinely native INetFwPolicy2 COM one-rule owner install/readback/Remove test gated GITHUB_ACTIONS=true + explicit WBD_PLAN029_REAL_DEFENDER_TEST=1: exact lease4 10.234.12.34, remote198.19.87.99, one TCP port45321, no socket/broad policy; sidecar intent/owned/CAS absence verified after Stop, source sha locked. This new SOURCE actual OS result PENDING. Product post-Apply PREPARE->Defender->ENABLE and genuine Direct kernel TCP D1–D5/P1–P2/padding/GUI STILL OPEN.",
+  "why_now": "After fixing Windows COM syntax, component mocks pass but do not establish actual native Windows Firewall COM Add/readback/Remove behavior. Run one safe narrowly scoped native OS test on an ephemeral Admin Windows runner before attaching the rule to original Wintun product, and never mark overall product Ready.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one Windows native compile/PLAN029 injected Defender WAL tests under H1752; if green, integrate actual original Go post-Apply native COM exact Defender grant/ENABLE and Stop-before-routes. Then signed Windows Direct kernel TCP D2 and full D1-D5/P1-P2/padding/GUI. No 030.",
+  "next_action": "Collect H1753 exact Windows native COM real Add/readback/delete result (and original Go+manifest, no repeat old network). Fix first failure, then integrate exact owner with four-stage OS Apply & Stop and Rust post-Apply listener PREPARE/ENABLE, then signed true Direct kernel TCP scene, D1-D5/P1-P2/startup-padding. No 030.",
   "unverified": true,
-  "last_tested_source": "47317155df4d678cc9698cce62b4feec47d40066",
+  "last_tested_source": "61cb246f309439538652e9ab9bb98d445e6a433d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1752-H1751-WINDOWS-COM-FIRST-COMPILE-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1753-H1752-GO-DEFENDER-COM-COMPILE-PASS-NATIVE-OS-TEST-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1750 signed Windows+Linux original Go/Rust V3 CN physical DNS FakeIP Direct UDP, Tunnel TCP/UDP and Stop scoped PASS. H1751 Windows Go new Defender COM build FAIL k.Local4 name-only bug; H1752 source fix pending CI; no real Direct TCP Defender proof."
+  "partial_summary": "H1750 original signed CN physical DNS FakeIP Direct UDP + Tunnel+Stop PASS_SCOPED; H1752 WinGo COM original source build and mock WAL tests PASS. H1753 adds real Windows Defender exact one-rule native OS Add/Readback/CAS Remove test, pending source-locked CI. Real product direct kernel TCP and full 029 OPEN."
 }

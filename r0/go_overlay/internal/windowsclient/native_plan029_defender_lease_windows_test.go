@@ -4,6 +4,7 @@ package windowsclient
 
 import (
  "context"
+ "crypto/rand"
  "errors"
  "net/netip"
  "os"
@@ -144,4 +145,55 @@ func TestPlan029DefenderExactSyntheticLeasePortOnly(t *testing.T){
  if e!=nil||k2.Name==k.Name||k2.Description==k.Description{
   t.Fatal("exact firewall owner generation not in private rule identity",e)
  }
+}
+
+// The only native Defender COM mutation in this workflow is opt-in and
+// source-locked on a disposable Windows CI runner. It opens no reachable
+// socket, claims no product Applied/Ready, and must prove the exact
+// one-lease-IP/one-remote-IP/one-port allow has been removed BEFORE PASS.
+func TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS(t *testing.T){
+ if os.Getenv("GITHUB_ACTIONS")!="true"||
+  os.Getenv("WBD_PLAN029_REAL_DEFENDER_TEST")!="1"{
+  t.Skip("native Defender mutation is only authorized on ephemeral CI")
+ }
+ id,k,path:=p029DefenderFixture(t)
+ if _,e:=rand.Read(id.Generation[:]);e!=nil{t.Fatal(e)}
+ k,e:=n4Plan029DefenderKeyFor(id,k.Lease4,k.Remote4,k.Port)
+ if e!=nil{t.Fatal(e)}
+ ctx,cancel:=context.WithTimeout(context.Background(),30_000_000_000)
+ defer cancel()
+ backend:=n4Plan029DefenderCOM{}
+ present,_,e:=backend.Lookup(ctx,k)
+ if e!=nil||present{t.Fatalf("native Defender preflight unavailable/foreign: %v present=%v",e,present)}
+ // Cleanup is a second source-locked check, but no unconfirmed OS rule
+ // can be guessed owned; a failed Create leaves evidence for recovery.
+ defer func(){
+  cleanup,stop:=context.WithTimeout(context.Background(),15_000_000_000)
+  defer stop()
+  if e:=n4Plan029DefenderRecover(cleanup,path,id,k,backend);e!=nil{
+   t.Errorf("exact owned Defender cleanup failed (WAL retained): %v",e)
+  }
+ }()
+ if e=n4Plan029DefenderInstall(ctx,path,id,k,backend);e!=nil{
+  t.Fatalf("native exact IN/TCP firewall Add/readback failed: %v",e)
+ }
+ rec,e:=n4Plan029ReadDefender(path,id,k)
+ if e!=nil||rec.Phase!="owned"{
+  t.Fatalf("real COM rule missing durable owner: %+v %v",rec,e)
+ }
+ present,exact,e:=backend.Lookup(ctx,k)
+ if e!=nil||!present||!exact{
+  t.Fatalf("real Windows Defender exact rule mismatch: present=%v exact=%v err=%v",present,exact,e)
+ }
+ if e=n4Plan029DefenderRecover(ctx,path,id,k,backend);e!=nil{
+  t.Fatalf("native exact firewall CAS removal failed: %v",e)
+ }
+ present,_,e=backend.Lookup(ctx,k)
+ if e!=nil||present{
+  t.Fatalf("native Defender leftover after Stop: %v present=%v",e,present)
+ }
+ if _,e=os.Stat(path);!errors.Is(e,os.ErrNotExist){
+  t.Fatalf("Defender owned sidecar not cleared after OS absence: %v",e)
+ }
+ t.Log("PLAN029_REAL_WINDOWS_DEFENDER_NATIVE_COM_EXACT_ADD_READBACK_CAS_DELETE_PASS_SCOPE_ONLY_NOT_PRODUCT_TCP")
 }

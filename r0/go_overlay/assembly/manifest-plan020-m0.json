@@ -1671,7 +1671,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
-      "result_blob": "9f1eb40cf6e05489fb0a204447d9ad29c863e247"
+      "result_blob": "2b642086975667cbd331916e233f5ba58f170db3"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
