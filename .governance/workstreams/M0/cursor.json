@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1705,
-  "checkpoint_sha": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
+  "sequence": 1706,
+  "checkpoint_sha": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1705: H1704 real signed original Wintun→Rust physical UDP→independent Ubuntu WSL2 kernel→Rust Wintun→original Windows app PASS via test-only ABI. Direct-only Windows kernel TCP NAT, physical source/ifindex nonblocking TcpStream and bounded two-leg halfclose relay implemented in new isolated Rust modules, source CI pending, not product wired.",
-  "why_now": "H1704 proved native Rust Direct UDP reverse across two independent kernels. Chosen Windows kernel TCP listener requires src/dest packet NAT for arbitrary app target; one synthetic /32, original tuple port mapping and reverse SYNACK, ordinary Tunnel TCP preserved.",
+  "current_task": "PLAN029 H1706: H1705 Windows309/Linux284 Rust unit tests include 3 Direct TCP NAT reverse/checksum/capacity PASS. Real signed Wintun application TCP SYN→Rust NAT→local Windows kernel listener Accept + reverse SYNACK→physically bound Rust TCP two-leg relay→independent Ubuntu Linux TCP guest with FIN, original app reverse and exact Stop scene authored, result pending. H1704 real Rust Wintun UDP guest reverse PASS diagnostic.",
+  "why_now": "Typed TCP NAT Linux+Windows pure tests passed. Need prove this actual native kernel listener backend for an original Windows app arbitrary destination; do not confuse old H1694 forged SYN proof with NAT-supported real app TCP and physical second leg.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1705 cross-platform Rust NAT integrity/Windows TCP WinSock compile test; correct first error. Then one real signed Wintun TCP app SYN→Rust NAT→kernel listener Accept→physical-bound Rust TCP socket→independent Linux guest→app reverse and owned Stop; wire proven UDP/TCP into authenticated Normal/Game4 single ingress plus DNS53 selective FakeIP/GUI/padding, D1–D5/P1–P2. 028/030 unchanged.",
+  "next_action": "Collect H1706 Action first Win32/Rust/guest stage and owned Stop; correct first failure only. Then compose BOTH UDP/TCP physical workers into authenticated single Rust Wintun ingress Normal/Game4; implement bounded DNS53 QNAME direction, selective FakeIP/CNAME TTL, config/GUI and startup padding. Run D1-D5/P1-P2. No WFP guard, no 028 matrix or 030.",
   "unverified": true,
-  "last_tested_source": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
+  "last_tested_source": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1704-SIGNED-WINTUN-RUST-INDEPENDENT-LINUX-UDP-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1705-SOURCE-WINDOWS-LINUX-TCP-NAT-PURE-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1704 SOURCEabcdb72 Action43354904887 real Wintun Rust UDP source/ifindex physical bound to independent WSL2 Linux guest and back to Windows app PASS (scoped test-only, not internet or product). H1694 signed kernel listener TCP A/B/C, H1697 no-WFP four Win32 OS stages PASS. H1705 Direct-only kernel TCP NAT mapping and two-leg bound socket Rust code/pure tests staged, not real TCP. PLAN029 DNS/GUI/padding/Normal/Game4 remains IN_PROGRESS."
+  "partial_summary": "H1704 sourceabc real native signed Wintun Rust direct UDP to independent WSL2 Linux and app reverse PASS (non-product scope). H1705 source006b TCP NAT pure Rust tests Windows309/Linux284 PASS. H1706 one true Windows app SYN/kernel listener/physically bound Rust TCP guest reverse test-only Action pending. Full PLAN029 original TLS Normal/Game4 DNS/FakeIP GUI Stop/performance not complete."
 }

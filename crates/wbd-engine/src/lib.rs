@@ -79,6 +79,10 @@ mod v4_probe_bridge;
 // Does not alter ordinary native ABI or grant public Direct readiness.
 #[cfg(all(feature = "m0_v4_probe", target_os = "windows"))]
 mod v4_windows_plan029_udp_gate;
+// PLAN029 chosen Windows kernel TCP NAT listener + physically bound native
+// TCP two-leg real-gateway probe, explicitly test-only, NOT product Ready.
+#[cfg(all(feature = "m0_v4_probe", target_os = "windows"))]
+mod v4_windows_plan029_tcp_gate;
 
 use std::sync::{Mutex, OnceLock};
 use wbd_types::next_generation;

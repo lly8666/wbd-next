@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1705",
+  "observed_at": "2026-11-13",
+  "source_sha": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
+  "result": "PASS_SCOPED_WINDOWS_LINUX_RUST_TCP_NAT_PURE_TESTS",
+  "artifact_verified": false,
+  "jobs": [
+    {
+      "run_id": 43356759060,
+      "job_id": 131660678100,
+      "platform": "Windows2025",
+      "conclusion": "success",
+      "observed": "309 Rust unit pass, all 3 plan029_tcp NAT tests PASS"
+    },
+    {
+      "run_id": 43356759060,
+      "job_id": 131660678218,
+      "platform": "Ubuntu",
+      "conclusion": "success",
+      "observed": "284 Rust unit pass, all 3 plan029_tcp NAT tests PASS"
+    }
+  ],
+  "not_run": [
+    "real Wintun TCP NAT SYN/Accept or Linux remote TCP",
+    "authenticated product Normal/Game4, DNS FakeIP/GUI/Stop D1-D5/P1-P2"
+  ],
+  "prior_real_udp": {
+    "source_sha": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
+    "run_id": 43354904887,
+    "result": "PASS_SCOPED_GENUINE_WINTUN_RUST_UDP_INDEPENDENT_GUEST_REVERSE"
+  }
+}

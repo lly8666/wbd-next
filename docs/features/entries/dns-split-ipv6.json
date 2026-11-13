@@ -116,6 +116,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "abcdb72af96f7ae6b5073e1cd6086653ca920aa8",
       "evidence": "docs/evidence/M0/PLAN029-H1704-SIGNED-WINTUN-RUST-INDEPENDENT-LINUX-UDP-PASS-20261113.json"
+    },
+    {
+      "platform": "Windows/Linux Rust library pure",
+      "scope": "H1705 cross-platform 3 TCP NAT checksum/reverse/capacity tests PASS; real Wintun TCP H1706 still NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "006b31a48a991928edfaa8dc6006f5c8c4b19844",
+      "evidence": "docs/evidence/M0/PLAN029-H1705-SOURCE-WINDOWS-LINUX-TCP-NAT-PURE-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -142,7 +149,8 @@
     "H1702 adds one true Windows physical NIC-bound UDP socket local-echo test; pending action. Same-host socket capability is not off-host packet delivery, Direct socket→Wintun or DNS product correctness.",
     "H1702 physical WinSock source+IP_UNICAST_IF local socket actual FAIL before send; H1703 corrects GET host-order and splits option/connect diagnostics. Real Wintun Direct UDP/TCP and DNS product unqualified.",
     "H1704 one non-product Rust test-only DLL entrypoint now tests original Go owned signed Wintun lease->Rust UDP->separate genuine Ubuntu WSL2 guest->Rust Wintun reverse, without per-packet Go callbacks; result is NOT_RUN at authoring, cannot grant CN DNS or Product Ready.",
-    "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready."
+    "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready.",
+    "H1706 test-only genuine Windows app SYN→Rust Wintun TCP NAT→Windows kernel listener + physically bound Rust TCP→independent Linux guest + reverse/Stop gate authored; actual Action pending, not product."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
