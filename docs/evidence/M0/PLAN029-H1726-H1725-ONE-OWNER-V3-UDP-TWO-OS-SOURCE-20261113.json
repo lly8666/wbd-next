@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1726",
+  "source_sha": "2bb369f94421775e87aa2f3151821d9668fe86a1",
+  "result": "SOURCE_LOCKED_PROBE_V3_WINDOWS_LINUX_RUST_UNIT_BUILD_PASS_SCOPE_ONLY",
+  "action": {
+    "run_id": 43392432186,
+    "head_sha": "2bb369f94421775e87aa2f3151821d9668fe86a1",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 131775312587,
+        "os": "windows-2025",
+        "conclusion": "success"
+      },
+      {
+        "id": 131775312148,
+        "os": "ubuntu-24.04",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "governance": {
+    "run_id": 43392432019,
+    "conclusion": "success"
+  },
+  "governance_maintenance": {
+    "run_id": 43392432146,
+    "conclusion": "success"
+  },
+  "scope": "Private m0_v4_probe-only Rust original NativeOwner single Wintun reader Direct UDP actor plus bounded return to original RX Wintun TX; no Windows original Go V3 call yet; unit compilation/PLAN029 tests only",
+  "next_source_fixes": [
+    "equal direct/tunnel DNS endpoint is allowed when purpose forces distinct lane",
+    "exact advanced FakeIP interval covers all integers not endpoints",
+    "All/BypassLan no Fake allocator/trie tracking",
+    "Direct socket failure rolls back newly reserved Direct flow pin"
+  ],
+  "not_run": [
+    "real Windows authenticated CN/IP domain union Direct TCP/UDP + Tunnel",
+    "direct/tunnel DNS actual resolver and fake journal",
+    "owned Defender/route/Stop and GUI Applied",
+    "D1–D5/P1–P2 / startup-padding"
+  ]
+}

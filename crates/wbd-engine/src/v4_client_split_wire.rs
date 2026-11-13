@@ -146,6 +146,28 @@ impl PacketIngress{
         self.fragment_pins.retain(|_,v|v.expires_at_ms>now_ms);
     }
     pub fn end_flow(&mut self,key:&FlowKey){self.pins.end(key)}
+    /// Roll back a Direct-only flow that the physical socket or TCP kernel
+    /// listener did NOT admit. Call only for a failed first-stage backend
+    /// admission (not transient established per-flow UDP WouldBlock).
+    /// A hard-full Direct pin must not strand new Direct requests; Tunnel
+    /// admission must never depend on this table.
+    pub fn rollback_unserved_direct(&mut self,packet:&[u8])->bool{
+        let Ok(view)=parse_ipv4(packet)else{return false};
+        if view.fragment_offset!=0||!matches!(view.proto,6|17){return false}
+        let Ok((source_port,destination_port))=read_ports(view.transport)else{
+            return false
+        };
+        let key=FlowKey{source:view.src,destination:view.dst,
+            source_port,destination_port,protocol:view.proto};
+        if !matches!(self.pins.get(&key),Some(Egress::Direct{..})){
+            return false
+        }
+        self.pins.end(&key);
+        let frag=FragmentKey{src:view.src,dst:view.dst,
+            proto:view.proto,ip_id:view.ip_id};
+        self.fragment_pins.remove(&frag);
+        true
+    }
     pub fn flow_count(&self)->usize{self.pins.len()}
     pub fn fragment_count(&self)->usize{self.fragment_pins.len()}
     pub fn on_ipv4(&mut self,packet:&[u8],now_ms:u64)
@@ -420,6 +442,20 @@ mod tests{
             Err(IngressWireError::NoDirectFlowCapacity));
         assert_eq!(s.on_ipv4(&tcp(ip(8,8,4,4),36004,443),6),
             Ok(IngressAction::Tunnel));
+    }
+    #[test]
+    fn plan029_unserved_direct_backend_failure_releases_quota_without_tunnel_fallback(){
+        let mut s=ingress(Mode::BypassLanCn,1,1);
+        let a=udp(ip(203,0,113,9),31201,9000,b"new-a");
+        let b=udp(ip(203,0,113,10),31202,9000,b"new-b");
+        assert!(matches!(s.on_ipv4(&a,1),Ok(IngressAction::Direct{..})));
+        assert_eq!(s.on_ipv4(&b,2),Err(IngressWireError::NoDirectFlowCapacity));
+        assert!(s.rollback_unserved_direct(&a));
+        assert!(!s.rollback_unserved_direct(&a));
+        assert_eq!(s.flow_count(),0);
+        assert_eq!(s.on_ipv4(&udp(ip(8,8,8,8),50001,9001,b"t"),2),
+            Ok(IngressAction::Tunnel));
+        assert!(matches!(s.on_ipv4(&b,3),Ok(IngressAction::Direct{..})));
     }
     #[test]
     fn plan029_dynamic_durable_fake_cdn_lookup_only_first_direct_flow_and_cn_mode(){

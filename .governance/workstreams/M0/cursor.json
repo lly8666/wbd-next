@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1725,
-  "checkpoint_sha": "28a06adb9466522583f6969389949b4f8e51aa24",
+  "sequence": 1726,
+  "checkpoint_sha": "2bb369f94421775e87aa2f3151821d9668fe86a1",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1725: 新接线非产品probe v3 cold split 共享原Rust NativeOwner TX唯一Wintun RX，Direct UDP源/ifindex物理socket→bounded256反向mailbox→原Rust RX唯一Wintun TX，DNS/TCP未有owned后端前拒绝且不能进Tunnel；V2原产品不动。收回H1724 28a06当前Rust动态FakeIP纯组件Action结果，H1725编译和真实物理socket场景仍PENDING。",
-  "why_now": "Progress beyond pure split helpers: directly compose existing physical Direct UDP actor with original Rust authenticated Wintun TX and original RX Wintun delivery, without Go per-packet pump, ring loan across awaits or cross-flow HOL. Keep probe-only V3 until TCP/DNS/owned OS evidence.",
+  "current_task": "PLAN029 H1726: 收回H1725 Rust原认证NativeOwner单Wintun TX/RX v3 probe-only物理UDP接线Windows/Linux Rust原生组件Action43392432186 SUCCESS，不等于产品联网；修复同DNS IP两方向合法、精确FakeIP高级完整区间、all模式不分配FakeIP/trie、Direct socket首开失败回收flow pin不挡Tunnel。单SOURCE双OS CI待跑，正式TCP/DNS及Go启用仍NOT_RUN。",
+  "why_now": "H1725 source-locked native compilation passed both OS, reveals explicit contract points before Go cold ABI: equal DNS endpoint values are allowed when lanes are distinct, exact FakeIP pool must cover every integer address, all mode should not track inactive fake mapping, and failed direct socket admission must release the pin.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact Rust V3 native compilation/PLAN029 unit tests on Windows/Linux, then connect actual original Go cold config/owned network v2 lifecycle, Windows kernel TCP NAT physical relay and direction-scoped DNS; run D1–D5/P1–P2 real network. No premature Ready.",
+  "next_action": "Collect H1726 scoped Windows/Linux tests. Continue original Go cold route-mode/CN IP/domain source + V3 private handoff, production owned Defender listener + TCP NAT and direct/tunnel DNS; freeze once and test real D1–D5/P1–P2. No premature Ready.",
   "unverified": true,
-  "last_tested_source": "28a06adb9466522583f6969389949b4f8e51aa24",
+  "last_tested_source": "2bb369f94421775e87aa2f3151821d9668fe86a1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1725-H1724-RUST-DYNAMIC-FAKE-COMPONENT-RESULT-20261113.json"
+    "docs/evidence/M0/PLAN029-H1726-H1725-ONE-OWNER-V3-UDP-TWO-OS-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -25,8 +25,8 @@
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1724-H1723-SOURCE-DNS-TTL-LRU-TWO-OS-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1725-H1724-RUST-DYNAMIC-FAKE-COMPONENT-RESULT-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1724 new durable FakeIP first-flow lookup source tests pending. H1725 original NativeOwner TX/RX source owns one Direct UDP physical actor, bounded nonblocking reverse packet mailbox, V3 probe-only. No actual integrated product TCP/DNS real split yet. PLAN029 OPEN NOT_RUN."
+  "partial_summary": "H1725 2bb369f Rust NativeOwner single ingress + 256 direct UDP reverse mailbox probe-only source compile Windows/Linux PASS_SCOPED Action43392432186. H1726 source corrections pending new CI. Public 029 Direct/Tunnel/DNS and GUI/Stop/padding remain NOT_RUN OPEN."
 }

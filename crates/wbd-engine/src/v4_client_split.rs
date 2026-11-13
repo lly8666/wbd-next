@@ -46,6 +46,12 @@ impl Ranges {
         let end=self.0.partition_point(|(start,_)| *start<=ip);
         end>0&&ip<=self.0[end-1].1
     }
+    /// Exact exclusive synthetic interval. Advanced FakeIP pool may be
+    /// narrower than a CIDR; representing only endpoints is unsafe.
+    pub fn interval(first:u32,last:u32)->Result<Self,SplitError>{
+        if first>last{return Err(SplitError::InvalidCidr)}
+        Ok(Self(vec![(first,last)]))
+    }
     pub fn interval_count(&self)->usize{self.0.len()}
 }
 
@@ -274,6 +280,16 @@ mod tests {
         assert!(!r.contains(ip(10,0,2,1)));
         assert!(!r.contains(ip(0,0,0,1)));
         assert_eq!(Ranges::compile(&[cidr(0,33)]),Err(SplitError::InvalidCidr));
+    }
+    #[test]
+    fn plan029_fake_advanced_pool_interval_covers_every_owned_address(){
+        let range=Ranges::interval(
+            u32::from_be_bytes([198,18,1,9]),
+            u32::from_be_bytes([198,18,1,44])).unwrap();
+        assert!(!range.contains(u32::from_be_bytes([198,18,1,8])));
+        assert!(range.contains(u32::from_be_bytes([198,18,1,30])));
+        assert!(!range.contains(u32::from_be_bytes([198,18,1,45])));
+        assert_eq!(Ranges::interval(10,9),Err(SplitError::InvalidCidr));
     }
     #[test]
     fn plan029_split_three_modes_and_internal_dns_direction_wins_over_ip(){

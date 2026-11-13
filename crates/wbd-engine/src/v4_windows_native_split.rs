@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::v4_client_split::{Ipv4Cidr,Ranges,Mode,SplitPolicy,
     DomainIndex,DomainRuleType};
 use crate::v4_client_split_wire::{PacketIngress,IngressAction};
-use crate::v4_client_direct_udp_actor::{DirectUdpActor,NativeUdpBudget};
+use crate::v4_client_direct_udp_actor::{DirectUdpActor,NativeUdpBudget,NativeUdpFault};
 use crate::v4_client_fake_pool::FakeAllocator;
 
 const MAX_PREFIXES:usize=32_768;
@@ -48,7 +48,7 @@ pub(crate) enum NativeDecision {
 pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
     udp:DirectUdpActor,
-    fakes:FakeAllocator,
+    fakes:Option<FakeAllocator>,
     last_tick_ms:u64,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
@@ -98,7 +98,7 @@ impl NativeSplitWorker {
            lease.is_unspecified()||lease.is_loopback()||
            lease==underlay||direct_dns.is_unspecified()||
            tunnel_dns.is_unspecified()||direct_dns.is_multicast()||
-           tunnel_dns.is_multicast()||direct_dns==tunnel_dns ||
+           tunnel_dns.is_multicast() ||
            start>=end || (start..=end).contains(&u32::from(lease)) ||
            (start..=end).contains(&u32::from(underlay)){
             return Err(())
@@ -113,19 +113,11 @@ impl NativeSplitWorker {
             let first=cidr.network&mask;let last=first|!mask;
             if first<=end && last>=start{return Err(())}
         }
-        let fake_range=Ranges::compile(&[Ipv4Cidr{
-            network:start,bits:32},Ipv4Cidr{network:end,bits:32}
-        ]).map_err(|_|())?;
-        // The packet classifier only needs a contiguous fake interval.
-        // Compile a /16 if the configured exclusive pool uses 198.18/16.
-        let fake_range=if start==u32::from_be_bytes([198,18,0,1]) &&
-                           end==u32::from_be_bytes([198,18,255,254]){
-            Ranges::compile(&[Ipv4Cidr{
-                network:u32::from_be_bytes([198,18,0,0]),bits:16
-            }]).map_err(|_|())?
-        }else{fake_range};
+        // The owned candidate pool may be any exact contiguous advanced
+        // range. Never approximate it using just its two endpoint /32s.
+        let fake_range=Ranges::interval(start,end).map_err(|_|())?;
         let mut domains=DomainIndex::default();
-        if c.domains_length>0{
+        if mode==Mode::BypassLanCn && c.domains_length>0{
             let raw=unsafe{std::slice::from_raw_parts(
                 c.domains,c.domains_length as usize)};
             let text=std::str::from_utf8(raw).map_err(|_|())?;
@@ -141,11 +133,13 @@ impl NativeSplitWorker {
             rx_quantum:16,ttl_ms:120_000,inner_mtu:c.inner_mtu as usize};
         let udp=DirectUdpActor::new(underlay,c.physical_ifindex,lease,
             (start,end),budget).map_err(|_|())?;
-        let fakes=FakeAllocator::new(start,end,
-            &[(u32::from(lease),u32::from(lease)),
-              (u32::from(underlay),u32::from(underlay))],
-            DEFAULT_SOFT_FLOWS.min(c.direct_hard as usize),8*1024*1024)
-            .map_err(|_|())?;
+        let fakes=if mode==Mode::BypassLanCn{
+            Some(FakeAllocator::new(start,end,
+                &[(u32::from(lease),u32::from(lease)),
+                  (u32::from(underlay),u32::from(underlay))],
+                DEFAULT_SOFT_FLOWS.min(c.direct_hard as usize),8*1024*1024)
+                .map_err(|_|())?)
+        }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
             udp,fakes,last_tick_ms:0})
@@ -155,19 +149,34 @@ impl NativeSplitWorker {
         ->NativeDecision{
         let fakes=&self.fakes;
         let action=self.ingress.on_ipv4_with_announced_fake(packet,now_ms,
-            |ip|fakes.announced_real(ip));
+            |ip|fakes.as_ref().and_then(|pool|pool.announced_real(ip)));
         match action{
             Ok(IngressAction::Tunnel)=>NativeDecision::Tunnel,
             Ok(IngressAction::Direct{real_dst,presented_dst})=>{
                 // Only source-locked physical UDP is currently connected.
                 // TCP must wait for one owned Windows kernel listener + NAT
                 // and exact Defender/route resources. No Tunnel fallback.
-                if packet.get(9)!=Some(&17){return NativeDecision::LocalDrop}
+                if packet.get(9)!=Some(&17){
+                    self.ingress.rollback_unserved_direct(packet);
+                    return NativeDecision::LocalDrop
+                }
                 let result=self.udp.send_direct_datagram(packet,
                     Ipv4Addr::from(presented_dst),
                     Ipv4Addr::from(real_dst),now_ms);
-                if result.is_ok(){NativeDecision::DirectHandled}
-                else{NativeDecision::LocalDrop}
+                match result{
+                    Ok(())=>NativeDecision::DirectHandled,
+                    Err(NativeUdpFault::Capacity|
+                        NativeUdpFault::Socket(_)|
+                        NativeUdpFault::InvalidOriginal|
+                        NativeUdpFault::DatagramTooLarge|
+                        NativeUdpFault::BadUnderlay)=>{
+                        self.ingress.rollback_unserved_direct(packet);
+                        NativeDecision::LocalDrop
+                    },
+                    // A locally congested existing socket gets only a
+                    // datagram drop; never forcibly move the pinned flow.
+                    Err(_)=>NativeDecision::LocalDrop,
+                }
             }
             // Captured DNS53 must NEVER inherit a route based on the DNS
             // IP. Until the same-owner 2-endpoint resolver is installed,
@@ -247,13 +256,24 @@ mod tests{
         s.tick(1001);
     }
     #[test]
+    fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){
+        let mut c=config(&[],&[],b"");
+        c.tunnel_dns=c.direct_dns;
+        let owner=unsafe{NativeSplitWorker::new(&c)}.unwrap();
+        assert!(!owner.has_udp_flows());
+        c.route_mode=0; // 'all': no domain tracking or FakeIP allocator.
+        let all=unsafe{NativeSplitWorker::new(&c)}.unwrap();
+        assert!(all.fakes.is_none());
+    }
+    #[test]
     fn plan029_native_cold_policy_rejects_fake_range_overlap_or_wrong_dns(){
         let bad=[cidr([0,0,0,0],0)];
         let c=config(&bad,&[],b"cn.example");
         assert!(unsafe{NativeSplitWorker::new(&c)}.is_err());
         let mut c=config(&[],&[],b"cn.example");
-        c.tunnel_dns=c.direct_dns;
-        assert!(unsafe{NativeSplitWorker::new(&c)}.is_err());
+        c.fake_start=[198,18,1,4];
+        c.fake_end=[198,18,1,44];
+        assert!(unsafe{NativeSplitWorker::new(&c)}.is_ok());
         let mut c=config(&[],&[],b"cn.example");
         c.direct_hard=16_385;
         assert!(unsafe{NativeSplitWorker::new(&c)}.is_err());
