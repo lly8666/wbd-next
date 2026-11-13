@@ -23,7 +23,8 @@
     "r0/go_overlay/internal/v4productcli/linux.go",
     "r0/go_overlay/assembly/manifest.json",
     "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
-    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go"
+    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go",
+    "crates/wbd-platform/src/windows_direct_udp.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -96,11 +97,11 @@
       "evidence": "docs/evidence/M0/PLAN029-H1695-REAL-SIGNED-DEFENDER-ABC-NATIVE-TCP-UDP-SCOPED-PASS-20261113.json"
     },
     {
-      "platform": "Rust unit packet/decision fixture (not live Wintun)",
-      "scope": "H1699 packet-policy staged with CN DNS/real-CN-IP/CDN shared-IP, other modes, direct hard cap, unknown fake, fragments and encrypted DNS boundary; awaiting CI",
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "source_sha": null,
-      "evidence": null
+      "platform": "Ubuntu24.04 + Windows2025 source-locked Rust eligible library tests",
+      "scope": "H1699 one Rust wire DNS53 QNAME-first/CN FakeIP/CDN/fragment mode/Direct hard cap, 11 explicit cross-platform pure unit PASS; NO actual Wintun/physical UDP",
+      "status": "BUILD_PASS",
+      "source_sha": "889c1e74c06306261a27180a9a9f5395a11467bd",
+      "evidence": "docs/evidence/M0/PLAN029-H1699-SOURCE-LOCKED-RUST-DNS-INGRESS-PURE-TESTS-20261113.json"
     }
   ],
   "limitations": [
@@ -122,7 +123,8 @@
     "2026-11-13用户授权方案修订（尚非实现PASS）：允许精确owned Defender Allow诊断/必要放行，仍不接旧WFP；去assemblyOnly循环验收门，TCP选型调查有界、UDP独立；Direct软4096/硬16384按需，buffer单流背压、DNS缓存/事务/FakeIP分别退让，不能压住Tunnel。详见契约§3B/§5，原失败及NOT_RUN不变。",
     "H1694 adds one signed Windows A→B scoped owned Defender Allow→C exact cleanup diagnostic in the existing Wintun TCP/UDP gate. Not yet executed at this SOURCE; a Defender default inbound Block is only a hypothesis and an Allow failure does not prove no firewall involvement. No legacy WFP guard or global-disable path.",
     "H1695 Action43338614004 proves local Windows native kernel TCP ingress with exact temporary Defender Allow; this authorizes choosing one kernel TCP backend, not claiming Rust direct socket egress/product Ready. All owned rules removed in stage C. H1695 Rust FlowPin per-resource pressure fix is source only pending CI.",
-    "H1699 single Rust Wintun ingress packet policy wire module staged: DNS UDP53 QNAME-first, TCP53 NeedsQuestion, CN/FakeIP/client-IP and Direct-only capacity plus fragment pins. Still not called by Normal/Game4 native TX, no async DNS/FakeIP allocator or physical Direct exit; new Rust tests pending."
+    "H1699 single Rust Wintun ingress packet policy wire module staged: DNS UDP53 QNAME-first, TCP53 NeedsQuestion, CN/FakeIP/client-IP and Direct-only capacity plus fragment pins. Still not called by Normal/Game4 native TX, no async DNS/FakeIP allocator or physical Direct exit; new Rust tests pending.",
+    "H1700 fixes first-fragment atomically checked metadata quota, expired association and mismatch before Direct pin creation; adds physical-bound WinSock UDP socket and IPv4/UDP reverse packet builder. CODE ONLY until source-locked Rust PASS and real physical socket/Wintun dual egress tests; no IOCP worker integration or full fake allocator."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

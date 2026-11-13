@@ -19,6 +19,7 @@ pub(crate) enum IngressWireError{
     NoDirectFlowCapacity,
     UnassociatedFragment,
     FragmentCapacity,
+    FragmentAssociationConflict,
     FragmentedDnsNeedsReassembly,
     UnsupportedDirectProtocol,
 }
@@ -65,6 +66,11 @@ fn parse_ipv4(packet:&[u8])->Result<PacketView<'_>,IngressWireError>{
     // Only the DF/MF flags are defined. Reject reserved bits and avoid
     // pretending non-initial fragments have TCP/UDP ports.
     if flags&0x8000!=0{return Err(IngressWireError::MalformedIpv4)}
+    // IPv4 fragments except the last are multiples of 8 bytes. Reject
+    // malformed MF packets rather than pinning an impossible flow header.
+    if flags&0x2000!=0 && (total-ihl)%8!=0 {
+        return Err(IngressWireError::MalformedIpv4)
+    }
     Ok(PacketView{
         src:u32::from_be_bytes(packet[12..16].try_into().unwrap()),
         dst:u32::from_be_bytes(packet[16..20].try_into().unwrap()),
@@ -152,8 +158,14 @@ impl PacketIngress{
             src:view.src,dst:view.dst,proto:view.proto,ip_id:view.ip_id,
         };
         if view.fragment_offset!=0{
+            // A worker's coarse expiry sweep is only a reclaim optimization;
+            // never route an expired association merely because the timer
+            // wheel has not yet visited this fragment's slot.
             let pin=self.fragment_pins.get(&fragment_key)
                 .ok_or(IngressWireError::UnassociatedFragment)?;
+            if pin.expires_at_ms<=now_ms{
+                return Err(IngressWireError::UnassociatedFragment)
+            }
             return Ok(egress_action(pin.decision))
         }
         if view.proto!=6&&view.proto!=17{
@@ -164,6 +176,23 @@ impl PacketIngress{
             }
         }
         let (src_port,dst_port)=read_ports(view.transport)?;
+        // Every new flow must have a complete first transport header, but
+        // a deliberately fragmented UDP datagram may declare a datagram
+        // length larger than this first IP fragment.
+        if view.proto==6{
+            if view.transport.len()<20{return Err(IngressWireError::MalformedTransport)}
+            let tcp_header=usize::from(view.transport[12]>>4)*4;
+            if tcp_header<20 || tcp_header>view.transport.len(){
+                return Err(IngressWireError::MalformedTransport)
+            }
+        }else{
+            if view.transport.len()<8{return Err(IngressWireError::MalformedTransport)}
+            let udp_len=u16::from_be_bytes([view.transport[4],view.transport[5]]) as usize;
+            if udp_len<8 || (view.more_fragments && udp_len<view.transport.len()) ||
+               (!view.more_fragments && udp_len!=view.transport.len()){
+                return Err(IngressWireError::MalformedTransport)
+            }
+        }
         // DNS is a PURPOSE before any CN/LAN classification of the
         // requested DNS server IP. This branch must not borrow ring slots
         // across an async query, so the return is only a decision.
@@ -190,15 +219,26 @@ impl PacketIngress{
             source:view.src,destination:view.dst,
             source_port:src_port,destination_port:dst_port,protocol:view.proto,
         };
+        // All fragment admission checks happen BEFORE creating a new
+        // flow pin. Otherwise a full fragment table can strand a Direct
+        // capacity slot for a packet that never reached a socket.
+        if view.more_fragments && self.fragment_pins.len()>=self.max_fragments &&
+           !self.fragment_pins.contains_key(&fragment_key){
+            return Err(IngressWireError::FragmentCapacity)
+        }
+        let preliminary=self.pins.get(&key)
+            .unwrap_or_else(||self.policy.destination(view.dst));
+        if view.more_fragments{
+            if let Some(old)=self.fragment_pins.get(&fragment_key){
+                if old.expires_at_ms>now_ms && old.decision!=preliminary{
+                    return Err(IngressWireError::FragmentAssociationConflict)
+                }
+            }
+        }
         let decision=if let Some(old)=self.pins.get(&key){old}else{
-            let dest=self.policy.destination(view.dst);
-            self.pins.first(key,dest).ok_or(IngressWireError::NoDirectFlowCapacity)?
+            self.pins.first(key,preliminary).ok_or(IngressWireError::NoDirectFlowCapacity)?
         };
         if view.more_fragments && decision!=Egress::RejectUnknownFakeIP{
-            if !self.fragment_pins.contains_key(&fragment_key)
-                && self.fragment_pins.len()>=self.max_fragments{
-                return Err(IngressWireError::FragmentCapacity)
-            }
             self.fragment_pins.insert(fragment_key,FragmentPin{
                 decision,expires_at_ms:now_ms.saturating_add(2000),
             });
@@ -337,7 +377,7 @@ mod tests{
         let target=ip(203,0,113,9);
         // First fragment has source/dest UDP ports and MF; continuation
         // must use the immutable same IP-ID/direct association.
-        let first=udp(target,30001,13001,&[7,8,9,10]);
+        let first=udp(target,30001,13001,&[7,8,9,10,11,12,13,14]);
         let mut first=first;first[4..6].copy_from_slice(&777u16.to_be_bytes());
         first[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
         assert!(matches!(s.on_ipv4(&first,100),Ok(IngressAction::Direct{..})));
@@ -348,6 +388,69 @@ mod tests{
         assert_eq!(s.on_ipv4(&second,2101),Err(IngressWireError::UnassociatedFragment));
         assert_eq!(s.on_ipv4(&ipv4(target,17,999,2,&[1;8]),5),
             Err(IngressWireError::UnassociatedFragment));
+    }
+    #[test]
+    fn plan029_fragment_admission_is_atomic_with_direct_quota_and_rejects_stale(){
+        let dest=ip(203,0,113,1);
+        let mut full=ingress(Mode::BypassLanCn,2,2);
+        full.max_fragments=0;
+        let mut first=udp(dest,15501,7001,&[1,2,3,4,5,6,7,8]);
+        first[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
+        assert_eq!(full.on_ipv4(&first,1),Err(IngressWireError::FragmentCapacity));
+        assert_eq!(full.flow_count(),0); // no orphan Direct reservation
+        assert!(matches!(full.on_ipv4(&tcp(dest,15502,80),2),
+            Ok(IngressAction::Direct{..})));
+        let mut expiring=ingress(Mode::BypassLanCn,2,2);
+        assert!(matches!(expiring.on_ipv4(&first,100),
+            Ok(IngressAction::Direct{..})));
+        let continuation=ipv4(dest,17,22,2,&[1,2,3,4,5,6,7,8]);
+        // A late continuation may arrive BEFORE the next expiry sweep.
+        assert_eq!(expiring.on_ipv4(&continuation,2100),
+            Err(IngressWireError::UnassociatedFragment));
+        expiring.on_expiry_tick(2100);
+        assert_eq!(expiring.fragment_count(),0);
+        // Invalid first fragment or transport cannot consume a Direct pin.
+        let mut invalid=ingress(Mode::BypassLanCn,1,1);
+        let mut short=udp(dest,15503,7002,&[1,2,3,4]);
+        short[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
+        assert_eq!(invalid.on_ipv4(&short,1),Err(IngressWireError::MalformedIpv4));
+        assert_eq!(invalid.flow_count(),0);
+        let malformed=ipv4(dest,6,91,0,&[0,1,0,80]);
+        assert_eq!(invalid.on_ipv4(&malformed,2),Err(IngressWireError::MalformedTransport));
+        assert_eq!(invalid.flow_count(),0);
+    }
+    #[test]
+    fn plan029_first_fragment_id_collision_cannot_replace_another_exit(){
+        let mut s=ingress(Mode::BypassLanCn,4,4);
+        let dest=ip(198,18,1,9); // announced FakeIP -> CDN direct
+        let mut first=udp(dest,34511,34512,&[1,2,3,4,5,6,7,8]);
+        first[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
+        assert!(matches!(s.on_ipv4(&first,100),
+            Ok(IngressAction::Direct{..})));
+        assert_eq!(s.fragment_count(),1);
+        // A first fragment reusing the same IP-ID while the old one is
+        // still active is constrained to the original generation route.
+        let mut same_id=udp(dest,34513,34512,&[1,2,3,4,5,6,7,8]);
+        same_id[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
+        assert!(matches!(s.on_ipv4(&same_id,200),
+            Ok(IngressAction::Direct{..})));
+        assert_eq!(s.fragment_count(),1);
+        // Exercise fail-closed disagreement: an already recorded fragment
+        // generation cannot silently change from Tunnel to Direct even if
+        // a new first-fragment port would classify differently.
+        let key=FragmentKey{
+            src:ip(10,234,12,34),dst,ip_id:22,proto:17,
+        };
+        s.fragment_pins.insert(key,FragmentPin{
+            decision:Egress::Tunnel,expires_at_ms:3000,
+        });
+        let new_port=udp(dest,34514,34512,&[1,2,3,4,5,6,7,8]);
+        let mut new_port=new_port;
+        new_port[6..8].copy_from_slice(&0x2000u16.to_be_bytes());
+        let previous=s.flow_count();
+        assert_eq!(s.on_ipv4(&new_port,300),
+            Err(IngressWireError::FragmentAssociationConflict));
+        assert_eq!(s.flow_count(),previous);
     }
     #[test]
     fn plan029_real_ingress_dns53_cannot_guess_sni_or_dispatch_partial_query(){

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1699",
+  "observed_at": "2026-11-13",
+  "source_sha": "889c1e74c06306261a27180a9a9f5395a11467bd",
+  "result": "PASS_SCOPED_RUST_LINUX_WINDOWS_UNIT_TESTS_ONLY",
+  "artifact_verified": false,
+  "action": {
+    "run_id": 43344252063,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43344252063"
+  },
+  "jobs": [
+    {
+      "job_id": 131619935035,
+      "platform": "Ubuntu Rust eligible library",
+      "conclusion": "success",
+      "observed": "11 PLAN029 v4_client_split/wire tests PASS; total 279 tests pass"
+    },
+    {
+      "job_id": 131619935079,
+      "platform": "Windows Rust eligible library",
+      "conclusion": "success",
+      "observed": "same 11 PLAN029 tests PASS; total 304 tests pass"
+    }
+  ],
+  "artifact_refs": [
+    {
+      "id": 14000044300,
+      "name": "linux-rust-contract-preflight-43344252063"
+    },
+    {
+      "id": 14000857224,
+      "name": "rust-owner-compile-preflight-43344252063"
+    }
+  ],
+  "boundaries": [
+    "main M0-WIN-LINUX Action43344252063 remains FAIL at legacy product; Rust unit job PASS not product PASS.",
+    "native Windows real TCP/UDP physical app delivery for PLAN029 still NOT_RUN.",
+    "H1700 checksum/socket/fragment changes are new untested SOURCE; cannot inherit H1699 PASS."
+  ],
+  "separate_failures": {
+    "governance_run": 43344253726,
+    "reason": "old PLAN012 combined native test environment/component install failed; no 029 Rust Direct product exercise.",
+    "old_windows_rust_owner_run": 43344252083,
+    "combined_fec_run": 43344252086
+  }
+}

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1699,
-  "checkpoint_sha": "4de00f7f011af9a52ba841f3934732cb93ea8fb6",
+  "sequence": 1700,
+  "checkpoint_sha": "889c1e74c06306261a27180a9a9f5395a11467bd",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1699: single typed Rust packet ingress decision helper staged after real signed native kernel TCP A/B/C and real no-WFP 4 Win32 Apply/Stop PASS. DNS QNAME-first and split pin decisions at one copy-owned boundary code written, CI/runtime Wintun binding not yet validated; full physical Rust Direct/DNS/GUI/padding remain OPEN.",
-  "why_now": "Two lowest Windows capability gates now real PASS. Next write one IPv4/DNS policy seam with bounded data-plane behavior before integrating physical sockets, avoiding shared flow hard cap and QNAME/IP DNS regression.",
+  "current_task": "PLAN029 H1700: H1699 both Linux and Windows pure 11 wire/split Rust tests PASS at source 889c, governance mismatch diagnosed and fixed via exact evidence SOURCE. Added real Windows physical-bound nonblocking UDP socket primitive, L3 reverse checksum encoder, atomic fragment quota and expiry validation, not yet native worker wired.",
+  "why_now": "H1699 source Rust pure success but ordinary legacy native workflow failed before new Direct. Governance failure caused by mismatched cursor tested-source versus H1698 evidence. Continue real Direct UDP socket boundary and lifecycle correctness rather than declaring source gate or two-OS failure product qualification.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1699 source-locked Rust unit and Windows/Go Actions. On first compiler failure fix only that source; then install packet decision once in Native Normal/Game4 Wintun ingress when native async DNS and Direct socket paths are in place, never steer Direct to Tunnel. Add selective FakeIP TTL/expiry + DNS reassembly, physical UDP, kernel TCP two-leg relay, config effective and scoped Defender lifecycle, then D1-D5/P1-P2. No 028 matrix or 030.",
+  "next_action": "Collect H1700 source-locked Windows/Linux Rust unit and governance. On first actual compiler/contract failure correct only source. Then integrate physical bound Direct UDP per-flow socket and Wintun reverse into one Rust native ingress scheduler, native kernel TCP two-leg relay, DNS53 actual resolver/FakeIP TTL and GUI/padding, plus v2 OS production owned lifecycle. Freeze composite source for D1-D5/P1-P2, no old 028 matrix/030.",
   "unverified": true,
-  "last_tested_source": "4de00f7f011af9a52ba841f3934732cb93ea8fb6",
+  "last_tested_source": "889c1e74c06306261a27180a9a9f5395a11467bd",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1698-REAL-SIGNED-NOWFP-FOUR-STAGE-OS-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1699-SOURCE-LOCKED-RUST-DNS-INGRESS-PURE-TESTS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1698 actual signed Wintun 4-stage no-old-WFP Win32 OS Apply+Stop PASS (Action43342274385) and H1694 native local TCP A/B/C PASS. H1699 packet wire parser/dispatcher staged and unit tests pending, not hooked into Normal/Game4 Wintun, no Rust Direct physical or DNS resolver/FakeIP TTL. H1696 old network scene FAIL before Ready from legacy guard. PLAN029 in progress."
+  "partial_summary": "H1699 SOURCE889c both Linux+Windows 11 pure PLAN029 split/wire tests PASS; old public and Go frozen gates still FAIL separately, Governance failed tested evidence SHA mismatch. H1700 physical UDP socket+reverse packet module and fragment atomicity source staged, pending CI; no real UDP Direct roundtrip, owner worker hookup, DNS resolver, Fake allocator, GUI or performance. H1694 real signed A/B/C kernel TCP native ingress and H1697 signed 4stage no-WFP OS Apply/Stop scoped PASS preserved; PLAN029 IN_PROGRESS."
 }
