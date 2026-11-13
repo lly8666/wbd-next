@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1731,
-  "checkpoint_sha": "1d0458a8fdff21b450b4b05a272f0f1667aa24e9",
+  "sequence": 1732,
+  "checkpoint_sha": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1731: H1730 SOURCE 1d0458 Windows Rust PLAN029 Action43396935678 FAIL (51 PASS/1 FAIL) at advanced FakeIP small [198.18.1.4..1.44] pool init: max60k>width41；Linux scoped job PASS。修为 min(60000,实际inclusive池宽) 且独立DirectFlow硬限，增41个安全保留/第42拒绝测试。H1731双OS+V3 private ABI CI待跑，H1730 FAIL原样保留，真实产品029双出口仍NOT_RUN。",
-  "why_now": "New source-locked Windows native test uncovered that large independent FakeIP quota accidentally broke legitimate advanced small pools. Treat pool width as an independent upper bound; don't hide the old test FAIL or regress Direct isolation.",
+  "current_task": "PLAN029 H1732: H1731 SOURCE c5dfb5 Rust Windows2025 platform46/PLAN029普通52/V3-probe53（含Rust V3 repr(C) ABI）全部PASS，Ubuntu platform115/PLAN029 45 PASS，Action43397352991双job SUCCESS；Cross ABI43397352784、native regression、R0 native ABI、ARM64/G2/governance全SUCCESS。H1730 advanced小Fake池FAIL保留。正式认证NativeOwner双DNS和Direct kernel TCP/owned Defender/Go V3 live启用、D1–D5/P1–P2、padding均NOT_RUN，029继续IN_PROGRESS。",
+  "why_now": "H1731 real source-locked CI across Windows/Linux and GNU cross ABI is all green. Record precise per-platform test counts and original H1730 FAIL without promoting staged probe and identity quotas into product acceptance.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1731 Windows/Linux scoped Rust and V3 private ABI tests; then original real Rust Wintun TCP/DNS/Defender-owned Stop and production cold wiring, only advertise Ready on true D1-D5/P1-P2 evidence.",
+  "next_action": "Implement selected Rust kernel Direct TCP actor with one owned Windows listener and precise Defender Allow lifecycle, forced single Direct/Tunnel DNS with durable FakeIP reply and original Wintun reverse, cold-Go V3 authenticated product integration, then freeze and execute D1-D5/P1-P2 normal/Game4/GUI/padding. No old WFP or premature Ready.",
   "unverified": true,
-  "last_tested_source": "1d0458a8fdff21b450b4b05a272f0f1667aa24e9",
+  "last_tested_source": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1731-H1730-WINDOWS-SMALL-FAKE-POOL-FIRST-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1732-H1731-DUAL-OS-V3-ABI-SCOPED-CI-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1730 Windows native PLAN029 first test FAIL because 60000 FakeIP max exceeded advanced pool width41; Linux PASS. H1731 exact width cap +41/42 boundary added source-only. H1728 GNU cross ABI PASS; real PLAN029 networking NOT_RUN."
+  "partial_summary": "H1731 exact SOURCE c5dfb5 Windows platform46, Rust scoped52, private V3 Rust53 PASS; Ubuntu platform115, Rust scoped45 PASS; cross-ABI native and governance PASS. Old H1730 Windows FAIL preserved. Genuine 029 product TCP/DNS/Defender/Stop/perf/padding not implemented+NOT_RUN."
 }

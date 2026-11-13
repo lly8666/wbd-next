@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1732",
+  "source_sha": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
+  "recorded": "2026-11-13",
+  "result": "SUCCESS_SCOPED_NATIVE_WINDOWS_LINUX_PLAN029_RUST_AND_WINDOWS_V3_ABI_NOT_REAL_PRODUCT",
+  "actions": [
+    {
+      "id": 43397352991,
+      "scope": "Windows 2025 + Ubuntu 24.04 native PLAN029 Rust source-locked",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "job_id": 131791432072,
+          "os": "windows-2025",
+          "platform_pass": 46,
+          "engine_plan029_pass": 52,
+          "engine_private_v3_probe_plan029_pass": 53,
+          "conclusion": "success"
+        },
+        {
+          "job_id": 131791431702,
+          "os": "ubuntu-24.04",
+          "platform_pass": 115,
+          "engine_plan029_pass": 45,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 43397352784,
+      "scope": "Windows GNU and ARM64 cross C ABI",
+      "conclusion": "success"
+    },
+    {
+      "id": 43397352965,
+      "scope": "native regression",
+      "conclusion": "success"
+    },
+    {
+      "id": 43397352891,
+      "scope": "R0 native ABI",
+      "conclusion": "success"
+    },
+    {
+      "id": 43397352914,
+      "scope": "ARM64 default build bundle",
+      "conclusion": "success"
+    },
+    {
+      "id": 43397352894,
+      "scope": "governance",
+      "conclusion": "success"
+    }
+  ],
+  "historical_failure_retained": {
+    "source_sha": "1d0458a8fdff21b450b4b05a272f0f1667aa24e9",
+    "action": 43396935678,
+    "conclusion": "failure",
+    "reason": "60k identity table exceeded width=41 of advanced FakeIP address pool; fixed by width clamp at H1731"
+  },
+  "constraints": "No private V3 test feature is promoted to public Go NativeOwner; all real PLAN029 D1-D5/P1-P2 dual exits, DNS, kernel TCP, owned Stop, padding and GUI live still NOT_RUN",
+  "exit_status": "IN_PROGRESS_NOT_QUALIFIED"
+}
