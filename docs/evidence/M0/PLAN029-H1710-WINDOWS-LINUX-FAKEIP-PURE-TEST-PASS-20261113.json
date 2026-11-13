@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1710",
+  "source_sha": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
+  "date": "2026-11-13",
+  "result": "PASS_SCOPED_FAKEIP_PURE_RUST_TESTS_WINDOWS_AND_LINUX",
+  "run_id": 43362102305,
+  "tests": [
+    {
+      "job_id": 131677939643,
+      "platform": "windows-2025",
+      "conclusion": "success",
+      "rust_library_tests_passed": 321,
+      "fake_pool_tests": 4
+    },
+    {
+      "job_id": 131677939707,
+      "platform": "ubuntu",
+      "conclusion": "success",
+      "rust_library_tests_passed": 296,
+      "fake_pool_tests": 4
+    },
+    {
+      "job_id": 131677939728,
+      "platform": "windows-2025-original-Go-build-only",
+      "conclusion": "success"
+    }
+  ],
+  "observed": [
+    "FakeIP candidate segregates original CN QNAME from shared overseas CDN IPv4 and requires explicit durable acknowledgment before publication",
+    "TTL capped 60s, TTL0 stays in ten-minute quarantine while existing flow references protect mapping",
+    "full FakeIP capacity cannot evict/rebind existing active lease; invalid restoration rejected"
+  ],
+  "no_product_inference": [
+    "No real atomic durable snapshot file writer yet; acknowledge_durable is currently an API step only",
+    "No real DNS53 upstream/response path or selective FakeIP on Windows Wintun",
+    "Cross-ABI/public legacy unrelated workflow failures not promoted into this scoped result",
+    "H1709 real TCP dual-kernel diagnostic PASS remains separate source"
+  ]
+}

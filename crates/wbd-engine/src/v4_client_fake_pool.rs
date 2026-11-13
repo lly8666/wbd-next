@@ -194,6 +194,17 @@ impl FakeAllocator{
     pub fn announced_real(&self,ip:u32)->Option<u32>{
         self.fake_to_entry.get(&ip).and_then(|e|e.announced.then_some(e.key.real4))
     }
+    /// Only the DNS answer writer calls this after real portable snapshot
+    /// persistence. It requires the EXACT original hostname + canonical
+    /// chain + A candidate + policy/resolver revision, not an IP reverse
+    /// association. Expired announced TTL may retain its quarantine identity
+    /// for existing flows, but cannot be republished in a fresh DNS reply.
+    pub fn issued_for(&self,key:&FakeKey,now_unix_ms:u64)->Option<u32>{
+        let fake=*self.key_to_fake.get(key)?;
+        let e=self.fake_to_entry.get(&fake)?;
+        (e.announced&&!e.needs_durable_write&&e.key==*key&&
+            e.issued_until_ms>=now_unix_ms).then_some(fake)
+    }
     pub fn release_flow(&mut self,ip:u32,_now_ms:u64)->Result<(),FakeError>{
         let e=self.fake_to_entry.get_mut(&ip).ok_or(FakeError::NotFound)?;
         if e.flow_refs==0{return Err(FakeError::InvalidSnapshot)}

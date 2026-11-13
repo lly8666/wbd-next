@@ -27,7 +27,8 @@
     "crates/wbd-platform/src/windows_direct_udp.rs",
     "crates/wbd-engine/src/v4_client_dns_answer.rs",
     "crates/wbd-engine/src/v4_client_dns_pending.rs",
-    "crates/wbd-engine/src/v4_client_fake_pool.rs"
+    "crates/wbd-engine/src/v4_client_fake_pool.rs",
+    "crates/wbd-engine/src/v4_client_dns_wire.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -154,6 +155,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "ac292b0530659647da522e79fd2381995ed1c250",
       "evidence": "docs/evidence/M0/PLAN029-H1709-TRUE-WINTUN-RUST-WINDOWS-TCP-APP-EOF-PASS-20261113.json"
+    },
+    {
+      "platform": "Win2025 + Linux Rust pure",
+      "scope": "H1710 4 FakeIP quota/ref/TTL0/quarantine/restore tests Win321/Linux296 PASS; no DNS network",
+      "status": "BUILD_PASS",
+      "source_sha": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
+      "evidence": "docs/evidence/M0/PLAN029-H1710-WINDOWS-LINUX-FAKEIP-PURE-TEST-PASS-20261113.json"
     }
   ],
   "limitations": [
@@ -183,7 +191,8 @@
     "H1705 chosen Windows TCP kernel NAT and 2-leg physically bound socket source only; no actual signed Wintun application TCP SYN through new NAT or Normal/Game4 Ready.",
     "H1706 test-only genuine Windows app SYN→Rust Wintun TCP NAT→Windows kernel listener + physically bound Rust TCP→independent Linux guest + reverse/Stop gate authored; actual Action pending, not product.",
     "H1709 Rust test-only native reverse FIN drain and bounded DNS answer/CNAME/truncated-query core added, SOURCE TEST PENDING. No live resolver/FakeIP pool or product Ready.",
-    "H1710 FakeIP lease allocator staged: query-level keyed original domain+real A+policy/resolver revision, 60s TTL cap/10min quarantine/ref pin/portable snapshot pre-DNS-answer receipt; source untested, no actual durable writer or live FakeIP DNS response."
+    "H1710 FakeIP lease allocator staged: query-level keyed original domain+real A+policy/resolver revision, 60s TTL cap/10min quarantine/ref pin/portable snapshot pre-DNS-answer receipt; source untested, no actual durable writer or live FakeIP DNS response.",
+    "H1711 CN FakeIP UDP DNS response encoder source only: CNAME + multiA emit synthetic addresses only when allocator's exact hostname/real/policy/resolver mapping durable-acknowledged. No live DNS UDP/TCP listener, persisted file writer, public Normal/Game4 or D1-D5."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

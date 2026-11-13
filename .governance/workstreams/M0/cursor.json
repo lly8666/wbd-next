@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1710,
-  "checkpoint_sha": "ac292b0530659647da522e79fd2381995ed1c250",
+  "sequence": 1711,
+  "checkpoint_sha": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1710: H1709 Action43361106714 signed Windows Wintun original app Direct-only kernel TCP SYN/SYNACK, native Accept, Rust physically bound TCP to separate Linux guest, actual application DATA and FIN/EOF all PASS (test-only FFI). H1709 new 8 DNS CNAME/transaction pure tests Win317/Linux292 PASS. H1710 FakeIP per-original-QNAME+real candidate durable-snapshot-before-announce allocator source staged, not compiled and not live.",
-  "why_now": "Real TCP SYN/FIN and independent UDP off-Wintun proofs now exist. Complete selective CN FakeIP lifecycle as single ingress worker-owned bounded table: CDN shared real address cannot contaminate other domains, TTL0 kept briefly, active mapping not rebound, durable portable snapshot required before DNS fake issue, no per-DATA disk.",
+  "current_task": "PLAN029 H1711: H1710 Windows321/Linux296 Rust tests incl 4 FakeIP immutable CDN isolation/TTL0/ref/quarantine/restore pure PASS; no real DNS. H1711 source wires fake allocator exact-issued key + candidate synthetic DNS wire CNAME/multi-A/AAAA HTTPS NODATA, only after real durable acknowledgment; tests are new and not yet CI. Formal Normal/Game4 Rust ingress + DNS sockets/portable writer still OPEN.",
+  "why_now": "The standalone FakeIP allocator must produce actual client-visible DNS bytes without ever leaking shared CDN real addresses. Keep pure DNS answer gating separate from physical/tunnel socket worker and enforce exact durable, revision, TTL constraints before output.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1710 FakeIP Rust unit source-locked Windows/Linux and governance; on first failure fix only cause. Then connect DNS parser/transaction/FakeIP to real one physical dns.direct and one forced tunnel dns.tunnel inside existing Rust NativeOwner, plus Direct TCP/UDP selected kernel backend, Normal/Game4/GUI/padding and D1-D5/P1-P2. Do not repeat old 028 tests or auto-start 030.",
+  "next_action": "Collect H1711 Windows/Linux Rust synth tests first. Then implement actual portable atomic FakeIP writer and single-endpoint physical/tunnel DNS dispatcher with Windows owned DNS entry and original Rust single Wintun owner; verify real D1-D3 with two controlled DNS servers. Direct TCP/UDP diagnostics H1704/H1709 PASS do not grant product readiness; finish GUI/padding, D4-D5/P1-P2. No 028 matrix restart or 030.",
   "unverified": true,
-  "last_tested_source": "ac292b0530659647da522e79fd2381995ed1c250",
+  "last_tested_source": "c58fc4768b0448f44ed1baebb20e32e1bf05788e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1709-TRUE-WINTUN-RUST-WINDOWS-TCP-APP-EOF-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1710-WINDOWS-LINUX-FAKEIP-PURE-TEST-PASS-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1709 SOURCEac292b Action43361106714 real Windows original signed Wintun→Rust NAT→kernel listener TCP→physical-bound Linux guest→Wintun app reply+FIN PASS test ABI only; Windows Rust317/Linux Rust292 pure pass incl 8 DNS answer/coalescing tests. H1710 FakeIP bounded lease/quarantine/flow-ref/durable snapshot staged new code, not tested or real DNS. Full product, GUI, P1/P2 remain OPEN."
+  "partial_summary": "H1709 original Windows Wintun/Rust kernel TCP to separate Linux guest app bytes+real FIN/EOF PASS scoped probe; H1704 UDP independent guest reverse PASS. H1710 FakeIP Rust Win321/Linux296 tests PASS, no live resolver. H1711 Fake DNS response wire source plus exact durable-issued lookup added, yet to compile; no actual atomic persistence, no product NativeOwner Direct/DNS/Normal/Game4/padding/GUI."
 }

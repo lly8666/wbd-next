@@ -71,6 +71,10 @@ mod v4_client_dns_pending;
 // portable durable-snapshot candidate (no DATA-time disk read/write).
 #[cfg(any(target_os="windows", test))]
 mod v4_client_fake_pool;
+// Canonical client-visible DNS synthesis (only CN QNAME success after
+// exact acknowledged FakeIP identity, not a resolver or second Wintun RX).
+#[cfg(any(target_os="windows", test))]
+mod v4_client_dns_wire;
 // PLAN029 one native Windows-kernel TCP listener NAT rewrite/tuple pin.
 // Still needs live Wintun RX→local kernel listener and Rust physical socket
 // readiness worker; never terminates original Tunnel TCP.
