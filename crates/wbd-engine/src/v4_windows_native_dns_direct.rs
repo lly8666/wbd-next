@@ -16,6 +16,7 @@ use crate::v4_client_dns_answer::DnsAnswerStatus;
 use crate::v4_client_dns_wire::{synthesize_cn_a,synthesize_cn_nodata};
 use crate::v4_client_fake_pool::{FakeAllocator,FakeKey};
 use crate::v4_client_fake_journal::FakeJournal;
+use crate::v4_windows_native_dns_tcp::{TcpDnsFallback,TcpDnsPoll};
 
 const MAX_PENDING:usize=256;
 const MAX_READY:usize=256;
@@ -30,6 +31,7 @@ const POLLRDNORM:i16=0x0100;
 struct Inflight{
     id:u16,key:QueryKey,socket:PhysicalUdpSocket,
     query:Vec<u8>,sent:bool,deadline:u64,
+    tcp:Option<TcpDnsFallback>,
 }
 pub(crate) struct DirectDns{
     source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,endpoint:Ipv4Addr,
@@ -131,7 +133,8 @@ impl DirectDns{
         let mut query=udp.data.to_vec();
         query[..2].copy_from_slice(&ticket.upstream_id.to_be_bytes());
         let mut inflight=Inflight{id:ticket.upstream_id,key,socket,query,
-            sent:false,deadline:now_ms.saturating_add(TIMEOUT_MS)};
+            sent:false,deadline:now_ms.saturating_add(TIMEOUT_MS),
+            tcp:None};
         match inflight.socket.send_ready(&inflight.query){
             Ok(n) if n==inflight.query.len()=>inflight.sent=true,
             Err(e) if e.kind()==ErrorKind::WouldBlock=>{},
@@ -217,11 +220,30 @@ impl DirectDns{
         }
         let rc=unsafe{WSAPoll(fds.as_mut_ptr(),quantum as u32,0)};
         if rc<0{return}
-        let mut finished=Vec::new();
+        // Complete/failed exact tickets are collected by their original
+        // Vec index. Retire in reverse index order so swap_remove cannot
+        // detach a different DNS request or leak its original transaction.
+        let mut finished:Vec<(usize,Result<(ValidatedReply,Vec<u8>),()>)>=Vec::new();
         let mut bytes=[0u8;MAX_L3];
         for step in 0..quantum{
             let idx=(self.cursor+step)%count;
             let q=&mut self.inflight[idx];
+            if let Some(tcp)=q.tcp.as_mut(){
+                match tcp.poll(){
+                    TcpDnsPoll::Pending=>{},
+                    TcpDnsPoll::Failed=>finished.push((idx,Err(()))),
+                    TcpDnsPoll::Answer(wire)=>{
+                        let validated=self.pending.accept(q.id,
+                            u32::from(self.endpoint),53,ResolverLane::Direct,
+                            &wire,now_ms);
+                        match validated{
+                            Ok(answer)=>finished.push((idx,Ok((answer,wire)))),
+                            Err(_)=>finished.push((idx,Err(()))),
+                        }
+                    },
+                }
+                continue
+            }
             if !q.sent{
                 if let Ok(n)=q.socket.send_ready(&q.query){
                     q.sent=n==q.query.len();
@@ -235,19 +257,36 @@ impl DirectDns{
             if id!=q.id{continue}
             match self.pending.accept(id,u32::from(self.endpoint),53,
                 ResolverLane::Direct,&bytes[..n],now_ms){
-                Ok(answer)=>finished.push((idx,answer,bytes[..n].to_vec())),
+                Ok(answer)=>finished.push((idx,Ok((answer,bytes[..n].to_vec())))),
                 Err(DnsPendingError::TruncatedSameEndpointTcp)=>{
-                    // A bounded same-endpoint TCP retry is still required;
-                    // retain ticket until timeout, NEVER use a second DNS.
+                    // Exactly the same resolver IPv4/53, source IPv4/ifindex
+                    // and pending ticket; no new DNS transaction, system
+                    // DNS or opposite-direction fallback. Nonblocking
+                    // connect/read/write lives in this one Rust scheduler.
+                    match TcpDnsFallback::start(self.source,self.ifindex,
+                        self.endpoint,&q.query){
+                        Ok(tcp)=>q.tcp=Some(tcp),
+                        Err(())=>finished.push((idx,Err(()))),
+                    }
                 },
                 Err(_)=>{},
             }
         }
         self.cursor=(self.cursor+quantum)%count;
-        finished.sort_by_key(|(idx,_,_)|std::cmp::Reverse(*idx));
-        for (idx,answer,wire) in finished{
-            self.inflight.swap_remove(idx);
-            self.resolved(answer,&wire,fake.as_deref_mut(),journal.as_deref_mut())
+        finished.sort_by_key(|(idx,_)|std::cmp::Reverse(*idx));
+        for (idx,result) in finished{
+            let query=self.inflight.swap_remove(idx);
+            match result{
+                Ok((answer,wire))=>{
+                    self.resolved(answer,&wire,
+                        fake.as_deref_mut(),journal.as_deref_mut())
+                },
+                Err(())=>{
+                    if let Some((key,clients))=self.pending.abort_one(query.id){
+                        self.fail(&clients,&key,2)
+                    }
+                },
+            }
         }
         if self.inflight.is_empty(){self.cursor=0}
         else{self.cursor%=self.inflight.len()}

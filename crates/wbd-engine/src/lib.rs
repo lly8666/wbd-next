@@ -102,6 +102,9 @@ mod v4_windows_native_dns_direct;
 // Same-owner forced Tunnel DNS target plus authenticated inverse mapping.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_tunnel;
+// Same-endpoint nonblocking Direct DNS UDP-TC -> bound TCP/53 fallback.
+#[cfg(target_os="windows")]
+mod v4_windows_native_dns_tcp;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

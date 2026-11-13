@@ -11,6 +11,7 @@ on:
       - "crates/wbd-engine/src/v4_windows_native_split.rs"
       - "crates/wbd-engine/src/v4_windows_native_dns_direct.rs"
       - "crates/wbd-engine/src/v4_windows_native_dns_tunnel.rs"
+      - "crates/wbd-engine/src/v4_windows_native_dns_tcp.rs"
       - "crates/wbd-engine/src/v4_client_dns_pending.rs"
       - "crates/wbd-engine/src/v4_windows_native_runtime.rs"
       - "crates/wbd-engine/src/v4_client_split.rs"

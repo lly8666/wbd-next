@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1737",
+  "source_sha": "d38bf1ccc6be7ac1954100c583d36d03b2fd8a61",
+  "recorded_date": "2026-11-13",
+  "result": "H1736_GO_WINDOWS_SOURCE_WINFORMS_GOVERNANCE_PASS_SCOPED_H1737_DIRECT_DNS_TCP_SOURCE_PENDING",
+  "actions": [
+    {
+      "id": 43404251080,
+      "scope": "Windows original Go source and CN cold file negative tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404251072,
+      "scope": "True Windows WinForms+Go+Rust current SOURCE GUI compile",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404250899,
+      "scope": "Governance",
+      "conclusion": "success"
+    }
+  ],
+  "new_source": "New Rust NativeOwner direct DNS TC=1 same-endpoint TCP53 using bound physical source IP/ifindex, nonblocking one quantum, bounded DNS framing and same original DNS pending ticket; no third resolver or fallback. New SOURCE CI PENDING.",
+  "not_run": [
+    "genuine signed Windows/Wintun original TLS V3 full Direct/Tunnel product D1-D5/P1-P2",
+    "Direct kernel TCP owned Defender and native Stop/recovery",
+    "full v2fly geosite semantics and startup padding"
+  ]
+}
