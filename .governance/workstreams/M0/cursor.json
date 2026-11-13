@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1755,
-  "checkpoint_sha": "fc83135a43c98cee5e3acc97c49c85dd78e1c0f8",
+  "sequence": 1756,
+  "checkpoint_sha": "61dd065515cc8ea19f6e536b5b96a581059c9857",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1755: H1754 Windows Action43437539407 real runner compile+pure Go PASS, native Defender COM Add/readback FAIL: unconfirmed ownership, Stop WAL retained. Governance 43437539285/43437539234 PASS; prior H1753 zero-job YAML FAIL retained. H1755 only instruments first strict COM property mismatch, retains exact Create/Lookup/Remove gate + intent/CAS, and adds file-trigger to existing Windows workflow; new SOURCE test PENDING. H1750 signed CN Direct UDP+Tunnel PASS_SCOPED; Direct TCP, D1-D5/P1-P2, padding OPEN.",
-  "why_now": "H1754 moved beyond YAML and exposed real COM post-Add ambiguity; mocks do not identify which Windows-normalized field mismatched. Report first field without broadening permission, deleting unknown rules or falsely marking owned.",
+  "current_task": "PLAN029 H1756: collected H1755 native Action43440493323 first boundary FAILED in prepare_windows_wiring.py check_spec before Go/Defender: manifest-plan020-m0 result_blob stale for only changed native_plan029_defender_com_windows.go (expected 00a504ab, actual Git blob 5dee9379). Other automatically triggered governance/Normal workflows also FAIL on H1755 SOURCE integrity, not new network data. Update only exact one file manifest blob hash, preserve source diagnostics and all old results. H1756 new Windows native COM first-field test PENDING; full Direct TCP, D1-D5/P1-P2, padding OPEN.",
+  "why_now": "The immutable assembly lock correctly blocked new COM source; user wants first actual failure fixed, not bypassed. The single owned COM source blob changed in H1755 but the matched manifest result_blob was not updated. No reason to re-run older physical probes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1755 Windows COM real first property mismatch; target fix and prove exact Add/Readback/CAS Stop, then post-Apply PREPARE->Defender->ENABLE Rust kernel TCP; complete PLAN029 D1-D5/P1-P2 and GUI/padding. Do not rerun old Wintun tests without new hypothesis. 030 closed.",
+  "next_action": "Collect existing auto-triggered H1756 SOURCE windows COM test and governance; if readback mismatch, repair exact first field with fail-closed CAS, then post-Apply PREPARE/Defender/ENABLE and signed Direct TCP. Complete 029 D1-D5/P1-P2/padding/GUI; do not start 030.",
   "unverified": true,
-  "last_tested_source": "fc83135a43c98cee5e3acc97c49c85dd78e1c0f8",
+  "last_tested_source": "61dd065515cc8ea19f6e536b5b96a581059c9857",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1755-H1754-WINDOWS-DEFENDER-NATIVE-FIRST-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1756-H1755-MANIFEST-BLOB-GATE-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1754 native Defender COM real FAIL and owned cleanup unconfirmed (WAL retained); H1755 readback mismatch instrumentation pending one Windows job. Full PLAN029 still IN_PROGRESS, scoped H1750 Direct UDP+Tunnel PASS."
+  "partial_summary": "H1755 action fails before COM because exact assembly lock not advanced; H1756 synchronizes ONLY COM source blob in manifest. Native Add/CAS still unqualified; H1754 true COM failure remains."
 }

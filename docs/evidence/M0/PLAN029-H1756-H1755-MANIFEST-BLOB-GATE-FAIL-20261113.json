@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1756",
+  "tested_source_sha": "61dd065515cc8ea19f6e536b5b96a581059c9857",
+  "failed_windows_run_id": 43440493323,
+  "first_error": "prepare_windows_wiring.py check_spec ValueError: assembly blob mismatch r0/go_overlay/internal/windowsclient/native_plan029_defender_com_windows.go",
+  "native_com_test": "SKIPPED_NOT_RUN",
+  "source_blob_actual": "5dee93798090774adad82bd21280bdcf0c489565",
+  "manifest_blob_before": "00a504ab046da5d2e0fe1588b454e548058e4c0b",
+  "manifest_blob_after": "5dee93798090774adad82bd21280bdcf0c489565",
+  "other_auto_runs": [
+    {
+      "id": 43440493321,
+      "conclusion": "failure"
+    },
+    {
+      "id": 43440493098,
+      "conclusion": "failure"
+    },
+    {
+      "id": 43440493004,
+      "conclusion": "failure"
+    }
+  ],
+  "fix": "only exact result_blob, preserve original source lock and existing CI/Defender test semantics",
+  "h1754_native_com_failure_retained": true,
+  "h1756_windows_result": "PENDING"
+}

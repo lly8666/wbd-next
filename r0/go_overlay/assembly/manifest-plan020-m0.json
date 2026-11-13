@@ -1659,7 +1659,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_defender_com_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_com_windows.go",
-      "result_blob": "00a504ab046da5d2e0fe1588b454e548058e4c0b"
+      "result_blob": "5dee93798090774adad82bd21280bdcf0c489565"
     },
     {
       "kind": "create",
