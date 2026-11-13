@@ -7,6 +7,7 @@ import (
  "errors"
  "fmt"
  "net/netip"
+ "path/filepath"
  "strings"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/splitroute"
@@ -84,6 +85,12 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
  lanRows,e:=m0Plan029Rows(lan);if e!=nil{return empty,e}
  directRows,e:=m0Plan029Rows(o.Direct4);if e!=nil{return empty,e}
  var domains []byte
+ var journalPath []byte
+ if mode==2&&o.StatePath!=""{
+  if !filepath.IsAbs(o.StatePath){return empty,errM0Plan029Cold}
+  journalPath=[]byte(o.StatePath+".n4-fakeip-journal")
+  if len(journalPath)>4096{return empty,errM0Plan029Cold}
+ }
  if mode==2{
   domains,e=m0Plan029CanonicalDomains(domainRules)
   if e!=nil{return empty,e}
@@ -95,5 +102,6 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   FakeStart:[4]byte{198,18,0,1},FakeEnd:[4]byte{198,18,255,254},
   InnerMTU:innerMTU,DirectHard:16384,
   CN:cnRows,LAN:lanRows,Direct:directRows,Domains:domains,
+  FakeJournalPath:journalPath,
  },nil
 }

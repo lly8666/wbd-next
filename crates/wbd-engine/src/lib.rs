@@ -97,6 +97,8 @@ mod v4_client_direct_udp_actor;
 // remains private probe-only until forced DNS/TCP and owned OS are complete.
 #[cfg(target_os="windows")]
 mod v4_windows_native_split;
+#[cfg(target_os="windows")]
+mod v4_windows_native_dns_direct;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

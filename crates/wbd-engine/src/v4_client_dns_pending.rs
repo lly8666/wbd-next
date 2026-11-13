@@ -140,6 +140,13 @@ impl DnsPending{
     /// per coarse tick is cheaper than a per-query OS timer or thread.
     /// Returned waiters must receive deadline-scoped SERVFAIL on their
     /// ORIGINAL tuple/ID; no cross-lane or system-resolver retry.
+    /// Abort only this exact physical query, returning every coalesced client.
+    pub fn abort_one(&mut self,id:u16)->Option<(QueryKey,Vec<DnsClient>)>{
+        let query=self.entries.remove(&id)?;
+        self.keys.remove(&query.key);
+        self.active_waiters-=query.waiters.len();
+        Some((query.key,query.waiters))
+    }
     pub fn expire(&mut self,now_ms:u64)->Vec<DnsClient>{
         let gone=self.entries.iter().filter(|(_,q)|q.deadline_ms<=now_ms)
             .map(|(&id,_)|id).collect::<Vec<_>>();

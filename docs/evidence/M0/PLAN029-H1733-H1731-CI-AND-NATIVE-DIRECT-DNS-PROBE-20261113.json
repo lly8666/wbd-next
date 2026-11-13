@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1733",
+  "source_sha": "1e022b113ea271475d3556b8bf34415ccdfdd97b",
+  "result": "H1731_PASS_SCOPED_H1733_PHYSICAL_DNS_PROBE_SOURCE_PENDING",
+  "prior": {
+    "run_id": 43397352991,
+    "source_sha": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
+    "conclusion": "success",
+    "windows_probe": 53,
+    "linux_engine": 45,
+    "cross_abi_run": 43397352784
+  },
+  "new_source": "PRIVATE_V3_REAL_DIRECT_DNS_JOURNAL_RETURN_CODE_PENDING_NATIVE_CI",
+  "scope": "same original Rust Wintun TX DNS QNAME selector -> physically bound direct DNS UDP, pending/validation, fake durability then original Rust RX bounded Wintun mailbox; not public V2",
+  "known_open": [
+    "forced Tunnel DNS remap and inverse; same endpoint TCP retry",
+    "native Windows Direct kernel TCP owned Defender",
+    "no-WFP four-stage authentic product Stop/Ready and GUI",
+    "D1-D5/P1-P2, startup-padding",
+    "GUI 029 live"
+  ]
+}

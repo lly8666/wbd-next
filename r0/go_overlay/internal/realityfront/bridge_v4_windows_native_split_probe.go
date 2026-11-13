@@ -15,6 +15,7 @@ type V4WindowsColdSplitConfig struct{
  InnerMTU,DirectHard uint32
  CN,LAN,Direct []V4WindowsColdCIDR
  Domains []byte
+ FakeJournalPath []byte
 }
 type v4WindowsColdSplitWireV1 struct{
  Version,Size uint32
@@ -25,6 +26,8 @@ type v4WindowsColdSplitWireV1 struct{
  CN,LAN,Direct uintptr
  DomainsLength uint32
  Domains uintptr
+ JournalLength uint32
+ JournalPath uintptr
 }
 type v4WindowsNativeIOV3Probe struct{
  Version,Size uint32
@@ -36,7 +39,8 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
  if c==nil||c.RouteMode>2||c.PhysicalIfIndex==0||
   c.InnerMTU<576||c.InnerMTU>1500||c.DirectHard==0||
   c.DirectHard>16384||len(c.CN)>32768||len(c.LAN)>32768||
-  len(c.Direct)>32768||len(c.Domains)>1<<20{return w,errV4WindowsOwner}
+  len(c.Direct)>32768||len(c.Domains)>1<<20||
+  len(c.FakeJournalPath)>4096{return w,errV4WindowsOwner}
  w=v4WindowsColdSplitWireV1{
   Version:1,Size:uint32(unsafe.Sizeof(w)),
   RouteMode:c.RouteMode,PhysicalIfIndex:c.PhysicalIfIndex,
@@ -46,11 +50,13 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   InnerMTU:c.InnerMTU,DirectHard:c.DirectHard,
   CNCount:uint32(len(c.CN)),LANCount:uint32(len(c.LAN)),
   DirectCount:uint32(len(c.Direct)),DomainsLength:uint32(len(c.Domains)),
+  JournalLength:uint32(len(c.FakeJournalPath)),
  }
  if len(c.CN)>0{w.CN=uintptr(unsafe.Pointer(&c.CN[0]))}
  if len(c.LAN)>0{w.LAN=uintptr(unsafe.Pointer(&c.LAN[0]))}
  if len(c.Direct)>0{w.Direct=uintptr(unsafe.Pointer(&c.Direct[0]))}
  if len(c.Domains)>0{w.Domains=uintptr(unsafe.Pointer(&c.Domains[0]))}
+ if len(c.FakeJournalPath)>0{w.JournalPath=uintptr(unsafe.Pointer(&c.FakeJournalPath[0]))}
  return w,nil
 }
 func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOWithColdSplitProbe(

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1732,
-  "checkpoint_sha": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
+  "sequence": 1733,
+  "checkpoint_sha": "1e022b113ea271475d3556b8bf34415ccdfdd97b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1732: H1731 SOURCE c5dfb5 Rust Windows2025 platform46/PLAN029普通52/V3-probe53（含Rust V3 repr(C) ABI）全部PASS，Ubuntu platform115/PLAN029 45 PASS，Action43397352991双job SUCCESS；Cross ABI43397352784、native regression、R0 native ABI、ARM64/G2/governance全SUCCESS。H1730 advanced小Fake池FAIL保留。正式认证NativeOwner双DNS和Direct kernel TCP/owned Defender/Go V3 live启用、D1–D5/P1–P2、padding均NOT_RUN，029继续IN_PROGRESS。",
-  "why_now": "H1731 real source-locked CI across Windows/Linux and GNU cross ABI is all green. Record precise per-platform test counts and original H1730 FAIL without promoting staged probe and identity quotas into product acceptance.",
+  "current_task": "PLAN029 H1733：原认证Rust NativeOwner私有V3同一Wintun TX引入purpose-first CN DNS53 单一IP_UNICAST_IF物理UDP DNS socket，最多256 in-flight/16轮询，pending/coalesce/same socket source验证；CN A只在FakeIP journal fsync后回注，缺journal SERVFAIL，不泄真实CDN A；正常原Rust RX mailbox Wintun回包。Go冷接口增加FakeJournal绝对路径并改Rust/Go V3 ABI 104→120/320→336、同步manifest。当前SOURCE CI待跑；Tunnel DNS仅原请求已经发向唯一tunnel endpoint则保持普通Tunnel，其他fail-closed，DNS-over-TCP fallback尚未做；TCP/owned Stop/全场景NOT_RUN。",
+  "why_now": "The H1731 source-locked scoped NativeOwner works for Direct business UDP but treated all captured DNS53 as drop. Implement first real physical DNS network leg with strict FakeIP publish-after-fsync inside the original native owner; do not claim finished two-endpoint product.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Implement selected Rust kernel Direct TCP actor with one owned Windows listener and precise Defender Allow lifecycle, forced single Direct/Tunnel DNS with durable FakeIP reply and original Wintun reverse, cold-Go V3 authenticated product integration, then freeze and execute D1-D5/P1-P2 normal/Game4/GUI/padding. No old WFP or premature Ready.",
+  "next_action": "Collect H1733 Windows/Linux native Rust and original-Go compile Actions once, fix first source error, then implement tunnel DNS forced dst/inverse translation, same-endpoint TCP retry, kernel Direct TCP owned listener and no-old-WFP four-stage product, run actual D1-D5/P1-P2. Preserve historical FAIL and don't start 030.",
   "unverified": true,
-  "last_tested_source": "c5dfb5c9d736f45bae1f52a43405183e2ef942ba",
+  "last_tested_source": "1e022b113ea271475d3556b8bf34415ccdfdd97b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1732-H1731-DUAL-OS-V3-ABI-SCOPED-CI-PASS-20261113.json"
+    "docs/evidence/M0/PLAN029-H1733-H1731-CI-AND-NATIVE-DIRECT-DNS-PROBE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1731 exact SOURCE c5dfb5 Windows platform46, Rust scoped52, private V3 Rust53 PASS; Ubuntu platform115, Rust scoped45 PASS; cross-ABI native and governance PASS. Old H1730 Windows FAIL preserved. Genuine 029 product TCP/DNS/Defender/Stop/perf/padding not implemented+NOT_RUN."
+  "partial_summary": "H1731 Rust Windows53/53 private V3, Linux45/45 and GNU ABI PASS_SCOPED; H1733 new source-only genuine bound physical direct DNS request+FakeIP WAL flush+Wintun response under probe V3, full Windows compiler and product network NOT_RUN. Direct TCP and tunnel DNS remain OPEN."
 }

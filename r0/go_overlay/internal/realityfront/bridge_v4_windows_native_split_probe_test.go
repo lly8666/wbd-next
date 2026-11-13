@@ -5,9 +5,10 @@ import ("testing";"unsafe")
 // Compare independent Rust repr(C) cold ABI: not just the total size.
 func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
  if unsafe.Sizeof(V4WindowsColdCIDR{})!=8 ||
-  unsafe.Sizeof(v4WindowsColdSplitWireV1{})!=104 ||
+  unsafe.Sizeof(v4WindowsColdSplitWireV1{})!=120 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.CN)!=64 ||
-  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.Domains)!=96{
+  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.Domains)!=96 ||
+  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.JournalPath)!=112{
   t.Fatalf("V3 ABI mismatch: row=%d split=%d",
    unsafe.Sizeof(V4WindowsColdCIDR{}),
    unsafe.Sizeof(v4WindowsColdSplitWireV1{}))
@@ -17,7 +18,7 @@ func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
   CN:[]V4WindowsColdCIDR{{Network:[4]byte{203,0,113,0},Bits:24}},
   Domains:[]byte("cn.example\n")}
  w,e:=c.wire()
- if e!=nil||w.Size!=104||w.CNCount!=1||w.CN==0||
+ if e!=nil||w.Size!=120||w.CNCount!=1||w.CN==0||
   w.DomainsLength!=11||w.Domains==0{
   t.Fatalf("invalid C cold readback: %+v err=%v",w,e)
  }

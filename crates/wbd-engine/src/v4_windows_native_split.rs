@@ -11,6 +11,9 @@ use crate::v4_client_split::{Ipv4Cidr,Ranges,Mode,SplitPolicy,
 use crate::v4_client_split_wire::{PacketIngress,IngressAction};
 use crate::v4_client_direct_udp_actor::{DirectUdpActor,NativeUdpBudget,NativeUdpFault};
 use crate::v4_client_fake_pool::FakeAllocator;
+use crate::v4_client_fake_journal::FakeJournal;
+use crate::v4_windows_native_dns_direct::DirectDns;
+use std::path::PathBuf;
 
 const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
@@ -42,6 +45,7 @@ pub(crate) struct ColdSplitSourceV1 {
     pub cn:*const ColdCidrV1,pub lan:*const ColdCidrV1,
     pub direct:*const ColdCidrV1,
     pub domains_length:u32,pub domains:*const u8,
+    pub journal_length:u32,pub journal_path:*const u8,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum NativeDecision {
@@ -53,6 +57,9 @@ pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
     udp:DirectUdpActor,
     fakes:Option<FakeAllocator>,
+    journal:Option<FakeJournal>,
+    dns:DirectDns,
+    tunnel_dns:Ipv4Addr,
     last_tick_ms:u64,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
@@ -84,7 +91,9 @@ impl NativeSplitWorker {
            c.direct_hard as usize>MAX_HARD_FLOWS ||
            !(576..=1500).contains(&c.inner_mtu) ||
            c.domains_length as usize>MAX_DOMAIN_BYTES ||
-           (c.domains_length>0 && c.domains.is_null()){
+           (c.domains_length>0 && c.domains.is_null()) ||
+           c.journal_length>4096 ||
+           (c.journal_length>0 && c.journal_path.is_null()){
             return Err(())
         }
         let mode=match c.route_mode{
@@ -152,11 +161,31 @@ impl NativeSplitWorker {
                 max_identities,MAX_FAKE_BYTES)
                 .map_err(|_|())?)
         }else{None};
+        let (journal,fakes)=if mode==Mode::BypassLanCn &&
+            c.journal_length>0 {
+            let raw=unsafe{std::slice::from_raw_parts(
+                c.journal_path,c.journal_length as usize)};
+            let path=std::str::from_utf8(raw).map_err(|_|())?;
+            if path.contains('\0'){return Err(())}
+            let (journal,recovered)=FakeJournal::open(&PathBuf::from(path))
+                .map_err(|_|())?;
+            let mut pool=fakes.ok_or(())?;
+            let now=std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH).map_err(|_|())?
+                .as_millis();
+            pool.restore(&recovered,u64::try_from(now).map_err(|_|())?)
+                .map_err(|_|())?;
+            (Some(journal),Some(pool))
+        }else{(None,fakes)};
+        let dns=DirectDns::new(underlay,c.physical_ifindex,lease,
+            direct_dns,c.inner_mtu as usize);
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
-            udp,fakes,last_tick_ms:0})
+            udp,fakes,journal,dns,tunnel_dns,last_tick_ms:0})
     }
-    pub(crate) fn has_udp_flows(&self)->bool{self.udp.len()>0}
+    pub(crate) fn has_udp_flows(&self)->bool{
+        self.udp.len()>0||self.dns.has_work()
+    }
     pub(crate) fn on_packet(&mut self,packet:&[u8],now_ms:u64)
         ->NativeDecision{
         let fakes=&self.fakes;
@@ -190,17 +219,40 @@ impl NativeSplitWorker {
                     Err(_)=>NativeDecision::LocalDrop,
                 }
             }
-            // Captured DNS53 must NEVER inherit a route based on the DNS
-            // IP. Until the same-owner 2-endpoint resolver is installed,
-            // this probe-scoped compositor remains non-product and drops.
-            Ok(IngressAction::DnsUdp{..}|
-               IngressAction::DnsTcpNeedsQuestion|
+            Ok(IngressAction::DnsUdp{egress,name,qtype,id,..})=>{
+                match egress{
+                    crate::v4_client_split::DnsEgress::Direct=>{
+                        if self.dns.submit(packet,name,qtype,id,now_ms,
+                            self.journal.is_some()){
+                            NativeDecision::DirectHandled
+                        }else{NativeDecision::LocalDrop}
+                    },
+                    crate::v4_client_split::DnsEgress::Tunnel=>{
+                        // Fail closed until forced tunnel DNS rewrite and
+                        // exact inverse source translation are installed.
+                        if packet.get(16..20)==
+                           Some(self.tunnel_dns.octets().as_slice()){
+                            NativeDecision::Tunnel
+                        }else{NativeDecision::LocalDrop}
+                    },
+                }
+            },
+            Ok(IngressAction::DnsTcpNeedsQuestion|
                IngressAction::DropUnknownFake)|
             Err(_)=>NativeDecision::LocalDrop,
         }
     }
     pub(crate) fn poll_udp_reverse(&mut self,out:&mut[u8],now_ms:u64)
         ->Option<usize>{
+        if self.dns.has_work(){
+            self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
+            if let Some(data)=self.dns.pop(){
+                if data.len()<=out.len(){
+                    out[..data.len()].copy_from_slice(&data);
+                    return Some(data.len())
+                }
+            }
+        }
         self.udp.poll_reverse_ready(out,now_ms).ok().flatten()
     }
     pub(crate) fn tick(&mut self,now_ms:u64){
@@ -232,6 +284,7 @@ mod tests{
             direct_count:0,cn:cn.as_ptr(),lan:lan.as_ptr(),
             direct:std::ptr::null(),domains_length:domains.len() as u32,
             domains:domains.as_ptr(),
+            journal_length:0,journal_path:std::ptr::null(),
         }
     }
     fn packet(dst:[u8;4],port:u16,body:&[u8])->Vec<u8>{

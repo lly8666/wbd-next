@@ -1635,7 +1635,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "4b5ca6f6201413cd25b7108f0d3930dd8de5bbb2"
+      "result_blob": "7b4b0897d18ba879f9687bf8a8e7ec5f3d4796ce"
     },
     {
       "kind": "create",
@@ -1647,13 +1647,13 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "bbfd292d43fb35d00a83b085471cb6f6113bb91b"
+      "result_blob": "13b69b0d6d419e3bd86cd2cb4e300c21a3e6ba78"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
-      "result_blob": "29736498a3eb68ee41e4195e1a04b72d5a1650f1"
+      "result_blob": "bba57b2616fd9a40b17e8d19fce735946dce5f9a"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
