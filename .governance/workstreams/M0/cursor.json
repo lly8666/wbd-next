@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1737,
-  "checkpoint_sha": "d38bf1ccc6be7ac1954100c583d36d03b2fd8a61",
+  "sequence": 1738,
+  "checkpoint_sha": "dc7ced5647873190f493f7c0d7f132216ed10147",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1737: 收回H1736 SOURCE d38bf原Go Windows compile+CN规则负测Action43404251080、real WinForms GUI/Go/Rust compile Action43404251072、治理43404250899均SUCCESS_SCOPED。新原Rust NativeOwner Direct DNS UDP TC=1仅同dns.direct endpoint TCP53、同物理IPv4/ifindex、原DnsPending ID及5秒deadline；非阻塞TCP读写、最大2020B回答、TCP帧分段纯测试，绝无系统DNS/Tunnel回退。新SOURCE Win/Linux Rust CI PENDING。正式V3 real Windows业务/D1-D5/P1-P2、Direct TCP/Defender/Stop和padding NOT_RUN。",
-  "why_now": "The original-Go authenticated private V3 trial source has compiled on Windows/GUI, but its Direct DNS worker still returned SERVFAIL for valid UDP truncated responses. Implement bounded same-upstream physical DNS-over-TCP in the already authenticated Rust TX owner, not a new worker/thread/third endpoint.",
+  "current_task": "PLAN029 H1738: H1737 SOURCE dc7ced Windows/Linux PLAN029 Rust native CI43404944766 PASS、GNU crossABI43404944742 PASS；legacy M0 PLAN013 Action43404944781 FAIL于旧assert 'foreign preexisting native M4 Go package'（冻结隔离，非029出口），保持原FAIL。新Rust原NativeOwner Direct TCP kernel NAT→独立非阻塞物理IP_UNICAST_IF TCP socket→bounded 8活跃relay/256封闭Wintun return邮箱接线，TCP synthetic4/owned V3冷ABI新128B/344B；**TCP owner default=false**直到四阶段WAL +精确synthetic /32路线与Defender Allow有真OS收据，绝不伪称全双出口。H1738 CI PENDING，D1-D5/P1-P2/stop/padding STILL OPEN。",
+  "why_now": "Single original Rust TX already handles Direct UDP and both DNS purposes; Direct TCP previously drops outright. Add real Windows kernel handshake/NAT and source-bound physical stream to that SAME one-session scheduler behind an explicit unqualified OS owned resource fence (off by default), so it can be enabled only when same-generation route/Defender CAS receipts exist.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1737 source-locked Windows/Linux Rust scoped tests, fix first error; source-lock a real signed Windows original-Go V3 trial with actual Wintun/WSL2 DNS+Direct/Tunnel A/B and owned Stop, then connect selected kernel Direct TCP/Defender and complete D1-D5/P1-P2/padding. Do not turn probe into default.",
+  "next_action": "Collect H1738 source locked Windows Rust and Go ABI/assembly/cross compiles. Then add exact owned no-WFP synthetic /32 route and Defender Allow to original four-stage WAL lifecycle before enabling Rust TCP flag, source-lock one genuine signed Windows original TLS/Wintun/DNS/Direct-Tunnel D1 scene with owned Stop; P1-P2/performance/padding afterward. Do not rerun obsolete PLAN013 frozen M4 test as PLAN029 evidence.",
   "unverified": true,
-  "last_tested_source": "d38bf1ccc6be7ac1954100c583d36d03b2fd8a61",
+  "last_tested_source": "dc7ced5647873190f493f7c0d7f132216ed10147",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1737-H1736-WINDOWS-GO-V3-CI-AND-DNS-TCP-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1738-H1737-DNS-TCP-COMPONENT-AND-KERNEL-TCP-ACTOR-SOURCE-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1736 Go original CLI 43404251080, true GUI 43404251072, governance 43404250899 SUCCESS_SCOPED; explicit CI-only Go→Rust private V3 cold installed. H1737 same dns.direct endpoint TCP fallback source-only pending. Genuine 029 product TCP/real dual DNS/Stop/perf NOT_RUN."
+  "partial_summary": "H1737 Windows/Linux PLAN029 native Rust tests, cross ABI passed; H1738 source adds cold-owned optional Windows kernel Direct TCP NAT/relay same Rust owner and 3-way fair Wintun return, default TCP disabled awaiting OS scope receipts. Product D1–D5/P1–P2 NOT_RUN, historical PLAN013 frozen FAIL retained."
 }

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1738",
+  "source_sha": "dc7ced5647873190f493f7c0d7f132216ed10147",
+  "recorded": "2026-11-13",
+  "result": "H1737_CROSSPLATFORM_RUST_DNS_UDP_TCP_SCOPED_PASS_H1738_REAL_KERNEL_TCP_SOURCE_PENDING",
+  "actions": [
+    {
+      "id": 43404944766,
+      "path": "m0-plan029-h1721-native-split-capacity",
+      "conclusion": "success",
+      "windows": "success",
+      "linux": "success"
+    },
+    {
+      "id": 43404944742,
+      "path": "r0-cross-abi",
+      "conclusion": "success"
+    }
+  ],
+  "unrelated_retained_failure": {
+    "id": 43404944781,
+    "path": "m0-plan013-windows-rust-original-owner-abi",
+    "conclusion": "failure",
+    "first_error": "AssertionError: exact pinned old-Go/M4 assembly already owns this file; no competing author",
+    "classification": "Historical M4 immutable assembly assertion, NOT 029 product validation"
+  },
+  "new_source": "PENDING_GO_RUST_WINFLOW_COMPILATION_AND_UNIT",
+  "scope": "Optional same-owner kernel TCP NAT/listener, Windows physical bound TCP+relay and bounded queued native Wintun return. Cold owned field 0 unless explicit same-generation OS route/Defender receipts. No user-level TCP spoof or second Wintun.",
+  "not_run": [
+    "Owner-signed route/Defender 029 TCP resource grant, no-WFP 4-stage WAL recovery",
+    "genuine Windows original TLS full Direct/Tunnel DNS/TCP UDP D1-D5 P1-P2",
+    "GUI live, startup-padding and 256/100k sustained resource probes"
+  ]
+}

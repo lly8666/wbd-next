@@ -102,6 +102,10 @@ mod v4_windows_native_dns_direct;
 // Same-owner forced Tunnel DNS target plus authenticated inverse mapping.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_tunnel;
+// Real native Windows kernel TCP actor, only cold-armed after exact OS route
+// and Defender receipt. No second Wintun ring or user-space TCP stack.
+#[cfg(target_os="windows")]
+mod v4_windows_native_tcp_direct;
 // Same-endpoint nonblocking Direct DNS UDP-TC -> bound TCP/53 fallback.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_tcp;

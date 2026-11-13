@@ -1094,13 +1094,15 @@
  fn plan029_rust_native_v3_cold_abi_exact_amd64_layout(){
      use std::mem::{size_of,offset_of};
      assert_eq!(size_of::<crate::v4_windows_native_split::ColdCidrV1>(),8);
-     assert_eq!(size_of::<ColdSplitSourceV1>(),120);
+     assert_eq!(size_of::<ColdSplitSourceV1>(),128);
      assert_eq!(offset_of!(ColdSplitSourceV1,cn),64);
      assert_eq!(offset_of!(ColdSplitSourceV1,domains),96);
      assert_eq!(size_of::<WbdWinNativeAttachV1>(),192);
      assert_eq!(size_of::<WbdWinNativeAttachV2>(),208);
      assert_eq!(offset_of!(WbdWinNativeAttachV3,split),216);
-     assert_eq!(size_of::<WbdWinNativeAttachV3>(),336);
+     assert_eq!(size_of::<WbdWinNativeAttachV3>(),344);
+     assert_eq!(offset_of!(ColdSplitSourceV1,tcp_synthetic4),120);
+     assert_eq!(offset_of!(ColdSplitSourceV1,tcp_owned),124);
      assert_eq!(offset_of!(ColdSplitSourceV1,journal_path),112);
  }
  #[cfg(feature="m0_v4_probe")]

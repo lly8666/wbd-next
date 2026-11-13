@@ -16,6 +16,10 @@ type V4WindowsColdSplitConfig struct{
  CN,LAN,Direct []V4WindowsColdCIDR
  Domains []byte
  FakeJournalPath []byte
+ // Never set by normal public product/CI probe: exact generation-owned
+ // synthetic /32 route+Defender receipt is still missing.
+ TCPSynthetic4 [4]byte
+ TCPOwned bool
 }
 type v4WindowsColdSplitWireV1 struct{
  Version,Size uint32
@@ -28,6 +32,8 @@ type v4WindowsColdSplitWireV1 struct{
  Domains uintptr
  JournalLength uint32
  JournalPath uintptr
+ TCPSynthetic4 [4]byte
+ TCPOwned uint32
 }
 type v4WindowsNativeIOV3Probe struct{
  Version,Size uint32
@@ -40,7 +46,8 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   c.InnerMTU<576||c.InnerMTU>1500||c.DirectHard==0||
   c.DirectHard>16384||len(c.CN)>32768||len(c.LAN)>32768||
   len(c.Direct)>32768||len(c.Domains)>1<<20||
-  len(c.FakeJournalPath)>4096{return w,errV4WindowsOwner}
+  len(c.FakeJournalPath)>4096||
+  (c.TCPOwned&&c.TCPSynthetic4==[4]byte{}){return w,errV4WindowsOwner}
  w=v4WindowsColdSplitWireV1{
   Version:1,Size:uint32(unsafe.Sizeof(w)),
   RouteMode:c.RouteMode,PhysicalIfIndex:c.PhysicalIfIndex,
@@ -51,7 +58,9 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   CNCount:uint32(len(c.CN)),LANCount:uint32(len(c.LAN)),
   DirectCount:uint32(len(c.Direct)),DomainsLength:uint32(len(c.Domains)),
   JournalLength:uint32(len(c.FakeJournalPath)),
+  TCPSynthetic4:c.TCPSynthetic4,
  }
+ if c.TCPOwned{w.TCPOwned=1}
  if len(c.CN)>0{w.CN=uintptr(unsafe.Pointer(&c.CN[0]))}
  if len(c.LAN)>0{w.LAN=uintptr(unsafe.Pointer(&c.LAN[0]))}
  if len(c.Direct)>0{w.Direct=uintptr(unsafe.Pointer(&c.Direct[0]))}

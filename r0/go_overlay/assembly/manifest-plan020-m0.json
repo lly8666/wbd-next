@@ -1647,13 +1647,13 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "13b69b0d6d419e3bd86cd2cb4e300c21a3e6ba78"
+      "result_blob": "550bae58382b9bfee70885db5c67cc33770c2ceb"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
-      "result_blob": "bba57b2616fd9a40b17e8d19fce735946dce5f9a"
+      "result_blob": "1635a94cc879d9718163f52ea5a0114c4b1fa936"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

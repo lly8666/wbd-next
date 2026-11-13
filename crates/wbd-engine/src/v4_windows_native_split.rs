@@ -16,6 +16,8 @@ use crate::v4_windows_native_dns_direct::DirectDns;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
+use crate::v4_windows_native_tcp_direct::NativeTcpActor;
+use crate::v4_client_split::FlowKey;
 
 const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
@@ -48,6 +50,7 @@ pub(crate) struct ColdSplitSourceV1 {
     pub direct:*const ColdCidrV1,
     pub domains_length:u32,pub domains:*const u8,
     pub journal_length:u32,pub journal_path:*const u8,
+    pub tcp_synthetic4:[u8;4],pub tcp_owned:u32,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum NativeDecision {
@@ -64,6 +67,8 @@ pub(crate) struct NativeSplitWorker {
     dns:DirectDns,
     tunnel_dns:Ipv4Addr,
     tunnel_map:Arc<Mutex<TunnelDnsMap>>,
+    tcp:Option<NativeTcpActor>,
+    next_reverse_lane:usize,
     last_tick_ms:u64,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
@@ -96,7 +101,7 @@ impl NativeSplitWorker {
            !(576..=1500).contains(&c.inner_mtu) ||
            c.domains_length as usize>MAX_DOMAIN_BYTES ||
            (c.domains_length>0 && c.domains.is_null()) ||
-           c.journal_length>4096 ||
+           c.tcp_owned>1 || c.journal_length>4096 ||
            (c.journal_length>0 && c.journal_path.is_null()){
             return Err(())
         }
@@ -185,9 +190,18 @@ impl NativeSplitWorker {
             direct_dns,c.inner_mtu as usize);
         let tunnel_map=Arc::new(Mutex::new(TunnelDnsMap::new(
             u32::from(lease),u32::from(tunnel_dns))));
+        // The original Go no-WFP OS owner has NOT yet qualified a
+        // generation-owned synthetic /32 and exact Defender Allow for the
+        // private TCP listener. Default OFF until both receipts are owned.
+        let tcp=if c.tcp_owned==1{
+            Some(NativeTcpActor::new(lease,Ipv4Addr::from(c.tcp_synthetic4),
+                underlay,c.physical_ifindex,c.direct_hard as usize,
+                (start,end)).map_err(|_|())?)
+        }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
-            udp,fakes,journal,dns,tunnel_dns,tunnel_map,last_tick_ms:0})
+            udp,fakes,journal,dns,tunnel_dns,tunnel_map,tcp,
+            next_reverse_lane:0,last_tick_ms:0})
     }
     pub(crate) fn tunnel_map(&self)->Arc<Mutex<TunnelDnsMap>>{
         Arc::clone(&self.tunnel_map)
@@ -203,19 +217,37 @@ impl NativeSplitWorker {
         }
     }
     pub(crate) fn has_udp_flows(&self)->bool{
-        self.udp.len()>0||self.dns.has_work()
+        self.udp.len()>0||self.dns.has_work()||
+            self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
     pub(crate) fn on_packet(&mut self,packet:&[u8],now_ms:u64)
         ->NativeDecision{
+        // Kernel SYN-ACK/ACK/FIN from the ONE owned synthetic /32 are
+        // exclusively inverse-translated. Never forward them through
+        // ordinary Tunnel or recursively to the physical Direct leg.
+        if let Some(tcp)=self.tcp.as_mut(){
+            if let Some(result)=tcp.kernel_return(packet){
+                return if result.is_ok(){NativeDecision::DirectHandled}
+                    else{NativeDecision::LocalDrop}
+            }
+        }
         let fakes=&self.fakes;
         let action=self.ingress.on_ipv4_with_announced_fake(packet,now_ms,
             |ip|fakes.as_ref().and_then(|pool|pool.announced_real(ip)));
         match action{
             Ok(IngressAction::Tunnel)=>NativeDecision::Tunnel,
             Ok(IngressAction::Direct{real_dst,presented_dst})=>{
-                // Only source-locked physical UDP is currently connected.
-                // TCP must wait for one owned Windows kernel listener + NAT
-                // and exact Defender/route resources. No Tunnel fallback.
+                // TCP uses native Windows kernel's OWN retransmission,
+                // handshake and FIN. The selected actor exists only
+                // AFTER the original Go owner has an exact current
+                // generation synthetic route plus Defender Allow receipt.
+                if packet.get(9)==Some(&6){
+                    let ok=self.tcp.as_mut()
+                        .is_some_and(|tcp|tcp.direct(packet,real_dst,now_ms).is_ok());
+                    if !ok{self.ingress.rollback_unserved_direct(packet);}
+                    return if ok{NativeDecision::DirectHandled}
+                        else{NativeDecision::LocalDrop}
+                }
                 if packet.get(9)!=Some(&17){
                     self.ingress.rollback_unserved_direct(packet);
                     return NativeDecision::LocalDrop
@@ -261,18 +293,45 @@ impl NativeSplitWorker {
     }
     pub(crate) fn poll_udp_reverse(&mut self,out:&mut[u8],now_ms:u64)
         ->Option<usize>{
-        if self.dns.has_work(){
-            self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
-            if let Some(data)=self.dns.pop(){
-                if data.len()<=out.len(){
-                    out[..data.len()].copy_from_slice(&data);
-                    return Some(data.len())
-                }
+        // Fair 3-queue rotation prevents a busy TCP handshake burst from
+        // indefinitely starving physical UDP business or DNS replies.
+        for step in 0..3{
+            let lane=(self.next_reverse_lane+step)%3;
+            let ready=match lane{
+                0=>self.tcp.as_mut().and_then(|tcp|tcp.ready_pop())
+                    .and_then(|l3|if l3.len()<=out.len(){
+                        out[..l3.len()].copy_from_slice(&l3);Some(l3.len())
+                    }else{None}),
+                1=>{
+                    if !self.dns.has_work(){None}else{
+                        self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
+                        self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
+                            out[..l3.len()].copy_from_slice(&l3);Some(l3.len())
+                        }else{None})
+                    }
+                },
+                _=>self.udp.poll_reverse_ready(out,now_ms).ok().flatten(),
+            };
+            if ready.is_some(){
+                self.next_reverse_lane=(lane+1)%3;
+                return ready
             }
         }
-        self.udp.poll_reverse_ready(out,now_ms).ok().flatten()
+        None
     }
     pub(crate) fn tick(&mut self,now_ms:u64){
+        // The original Rust TX bounded scheduler already owns this call.
+        // Service max 8 kernel accepts/active native TCP relays each turn,
+        // while cold-only expiry remains on the existing 1-second sweep.
+        if let Some(tcp)=self.tcp.as_mut(){
+            for key in tcp.tick(now_ms){
+                self.ingress.end_flow(&FlowKey{
+                    source:key.client,destination:key.presented,
+                    source_port:key.source_port,destination_port:key.target_port,
+                    protocol:6,
+                });
+            }
+        }
         if now_ms.saturating_sub(self.last_tick_ms)<1_000{return}
         self.last_tick_ms=now_ms;
         self.udp.expire_some(now_ms,64);
@@ -303,6 +362,7 @@ mod tests{
             direct:std::ptr::null(),domains_length:domains.len() as u32,
             domains:domains.as_ptr(),
             journal_length:0,journal_path:std::ptr::null(),
+            tcp_synthetic4:[0;4],tcp_owned:0,
         }
     }
     fn packet(dst:[u8;4],port:u16,body:&[u8])->Vec<u8>{
