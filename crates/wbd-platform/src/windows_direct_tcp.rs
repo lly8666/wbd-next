@@ -21,7 +21,7 @@ pub enum DirectTcpError{
     SocketConnect(i32),
     PeerFailed,
     ListenerBind,
-    RelayIo,
+    RelayIo{stage:&'static str,code:i32},
     BufferBudget,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
@@ -40,6 +40,13 @@ mod win{
     const WSAEWOULDBLOCK:i32=10035;
     const WSAEINPROGRESS:i32=10036;
     const WSAEALREADY:i32=10037;
+    const POLLERR:i16=0x0001;
+    const POLLHUP:i16=0x0002;
+    const POLLNVAL:i16=0x0004;
+    const POLLWRNORM:i16=0x0010;
+    #[repr(C)]
+    struct WsaPollFd{socket:usize,events:i16,revents:i16}
+
     const INVALID_SOCKET:usize=usize::MAX;
     #[repr(C)]
     struct SockAddrIn{
@@ -61,6 +68,7 @@ mod win{
         fn setsockopt(s:usize,level:i32,opt:i32,p:*const i8,len:i32)->i32;
         fn getsockopt(s:usize,level:i32,opt:i32,p:*mut i8,len:*mut i32)->i32;
         fn WSAGetLastError()->i32;
+        fn WSAPoll(fds:*mut WsaPollFd,count:u32,timeout_ms:i32)->i32;
     }
     struct SocketGuard(usize);
     impl Drop for SocketGuard{
@@ -138,9 +146,25 @@ mod win{
             if self.progress==ConnectProgress::Connected{
                 return Ok(self.progress)
             }
-            if self.stream.take_error().map_err(|_|DirectTcpError::RelayIo)?.is_some(){
+            // WinSock nonblocking connect(): getpeername/peer_addr alone is
+            // not a write-ready guarantee. Wait for FD_WRITE then inspect
+            // SO_ERROR via take_error, as specified by Microsoft WSAPoll.
+            // The worker schedules this bounded ZERO-timeout check only
+            // while a new Direct socket is pending; never on ordinary DATA.
+            let mut fd=WsaPollFd{
+                socket:self.stream.as_raw_socket() as usize,
+                events:POLLWRNORM,revents:0,
+            };
+            let rc=unsafe{WSAPoll(&mut fd,1,0)};
+            if rc<0{return Err(DirectTcpError::SocketConnect(last()))}
+            if rc==0{return Ok(ConnectProgress::Pending)}
+            let os_error=self.stream.take_error().map_err(|e|DirectTcpError::RelayIo{
+                stage:"connect_take_error",code:e.raw_os_error().unwrap_or(-1)})?;
+            if os_error.is_some()||
+               fd.revents&(POLLERR|POLLHUP|POLLNVAL)!=0{
                 return Err(DirectTcpError::PeerFailed)
             }
+            if fd.revents&POLLWRNORM==0{return Ok(ConnectProgress::Pending)}
             match self.stream.peer_addr(){
                 Ok(std::net::SocketAddr::V4(addr)) if addr==self.remote=>{
                     self.progress=ConnectProgress::Connected;
@@ -201,6 +225,9 @@ const QUANTUM_BYTES:usize=4096;
 /// Small per-flow buffers allocated lazily ONLY for an accepted Direct
 /// socket. The scheduler accounts their bytes against one shared cap.
 /// No per-flow thread, whole-table scan or global packet mutex here.
+fn relay_error(stage:&'static str,e:std::io::Error)->DirectTcpError{
+    DirectTcpError::RelayIo{stage,code:e.raw_os_error().unwrap_or(-1)}
+}
 pub struct TcpDirectRelay{
     inner:TcpStream,
     outer:TcpStream,
@@ -226,8 +253,8 @@ impl TcpDirectRelay{
         if cap<QUANTUM_BYTES||cap>64*1024{
             return Err(DirectTcpError::BufferBudget)
         }
-        inner.set_nonblocking(true).map_err(|_|DirectTcpError::RelayIo)?;
-        outer.set_nonblocking(true).map_err(|_|DirectTcpError::RelayIo)?;
+        inner.set_nonblocking(true).map_err(|e|relay_error("inner_nonblocking",e))?;
+        outer.set_nonblocking(true).map_err(|e|relay_error("outer_nonblocking",e))?;
         Ok(Self{inner,outer,to_outer:VecDeque::new(),to_inner:VecDeque::new(),
             inner_eof:false,outer_eof:false,
             inner_write_closed:false,outer_write_closed:false,
@@ -245,7 +272,8 @@ impl TcpDirectRelay{
                 Ok(0)=>self.inner_eof=true,
                 Ok(n)=>{self.to_outer.extend(&scratch[..n]);read+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
-                Err(_)=>return Err(DirectTcpError::RelayIo),
+                Err(e) if e.kind()==ErrorKind::Interrupted=>{}
+                Err(e)=>return Err(relay_error("inner_read",e)),
             }
         }
         if !self.outer_eof && self.to_inner.len()<self.max_pending_per_direction{
@@ -254,7 +282,8 @@ impl TcpDirectRelay{
                 Ok(0)=>self.outer_eof=true,
                 Ok(n)=>{self.to_inner.extend(&scratch[..n]);read+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
-                Err(_)=>return Err(DirectTcpError::RelayIo),
+                Err(e) if e.kind()==ErrorKind::Interrupted=>{}
+                Err(e)=>return Err(relay_error("outer_read",e)),
             }
         }
         if !self.to_outer.is_empty(){
@@ -262,7 +291,8 @@ impl TcpDirectRelay{
             match self.outer.write(first){
                 Ok(n)=>{self.to_outer.drain(..n);wrote+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
-                Err(_)=>return Err(DirectTcpError::RelayIo),
+                Err(e) if e.kind()==ErrorKind::Interrupted=>{}
+                Err(e)=>return Err(relay_error("outer_write",e)),
             }
         }
         if !self.to_inner.is_empty(){
@@ -270,15 +300,16 @@ impl TcpDirectRelay{
             match self.inner.write(first){
                 Ok(n)=>{self.to_inner.drain(..n);wrote+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
-                Err(_)=>return Err(DirectTcpError::RelayIo),
+                Err(e) if e.kind()==ErrorKind::Interrupted=>{}
+                Err(e)=>return Err(relay_error("inner_write",e)),
             }
         }
         if self.inner_eof && self.to_outer.is_empty() && !self.outer_write_closed{
-            self.outer.shutdown(Shutdown::Write).map_err(|_|DirectTcpError::RelayIo)?;
+            self.outer.shutdown(Shutdown::Write).map_err(|e|relay_error("outer_close_write",e))?;
             self.outer_write_closed=true;
         }
         if self.outer_eof && self.to_inner.is_empty() && !self.inner_write_closed{
-            self.inner.shutdown(Shutdown::Write).map_err(|_|DirectTcpError::RelayIo)?;
+            self.inner.shutdown(Shutdown::Write).map_err(|e|relay_error("inner_close_write",e))?;
             self.inner_write_closed=true;
         }
         Ok(RelayTick{bytes_read:read,bytes_written:wrote,

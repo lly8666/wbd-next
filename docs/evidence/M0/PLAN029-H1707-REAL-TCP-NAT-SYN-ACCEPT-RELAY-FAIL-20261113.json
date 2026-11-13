@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1707",
+  "source_sha": "1165eff3420ecc779cc10c12fe8fb1ce8ea6cd7e",
+  "observed_at": "2026-11-13",
+  "result": "FAIL_AFTER_ACTUAL_SIGNED_TCP_KERNEL_ACCEPT_AND_PHYSICAL_CONNECT",
+  "action": {
+    "run_id": 43358618332,
+    "job_id": 131666532597,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43358618332"
+  },
+  "artifact": {
+    "id": 14006688770,
+    "name": "plan029-h1706-wintun-rust-independent-ubuntu-tcp-43358618332",
+    "zip_sha256": "0cd8e9822c4a769bb88f7bcede4255ec88900bd6b1f7282186e280184f1bea18"
+  },
+  "verified_steps": [
+    "original Windows app SYN→single signed Wintun Rust NAT nat_port32768",
+    "Windows native kernel SYNACK reversed to original app via Rust Wintun",
+    "Windows native kernel TCP Accept synthetic peer198.19.87.99:32768",
+    "physically bound Rust WinSock source172.22.160.1 ifindex22 connected independent Ubuntu WSL2 Linux172.22.166.190:46099",
+    "single owned WSL guest HyperV TCP inbound rule was removed"
+  ],
+  "first_error": "PLAN029_H1706_FIRST_ERROR relay_service RelayIo; original app read timeout. No successful real TCP payload reverse or halfclose.",
+  "hypothesis": "premature pending nonblocking getpeername check without write ready OR other unclassified socket I/O; instrument and gate WSAPoll POLLWRNORM, then exact leg/OS errno."
+}

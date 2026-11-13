@@ -6,6 +6,7 @@ on:
       - ".github/workflows/m0-plan029-h1706-wintun-rust-guest-tcp.yml"
       - "tools/m0_plan029_h1706_wintun_rust_guest_tcp_windows_test.go"
       - "crates/wbd-engine/src/v4_windows_plan029_tcp_gate.rs"
+      - "crates/wbd-platform/src/windows_direct_tcp.rs"
 permissions: {contents: read}
 jobs:
   signed-wintun-rust-tcp-independent-linux-guest:

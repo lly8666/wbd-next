@@ -130,6 +130,13 @@
       "status": "FAIL",
       "source_sha": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
       "evidence": "docs/evidence/M0/PLAN029-H1706-TCP-GO-SOURCE-FIRST-COMPILE-FAIL-20261113.json"
+    },
+    {
+      "platform": "Win2025 genuine signed TCP native kernel separate Linux guest",
+      "scope": "H1707 app SYN/NAT+kernel SYNACK/Accept+physical remote TCP connect PASS; first relay IO FAIL and app timeout",
+      "status": "FAIL",
+      "source_sha": "1165eff3420ecc779cc10c12fe8fb1ce8ea6cd7e",
+      "evidence": "docs/evidence/M0/PLAN029-H1707-REAL-TCP-NAT-SYN-ACCEPT-RELAY-FAIL-20261113.json"
     }
   ],
   "limitations": [

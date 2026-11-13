@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1707,
-  "checkpoint_sha": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
+  "sequence": 1708,
+  "checkpoint_sha": "1165eff3420ecc779cc10c12fe8fb1ce8ea6cd7e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1707: H1706 Action43357897035 failed only pinned Go test build due unused errors and duplicate rc; no signed TCP SYN/guest network ran. Exact test-only source corrected and source-locked same one-scene Action pending. H1704 Rust Wintun independent guest UDP reverse scoped PASS; H1705 TCP NAT Win309/Linux284 pure tests PASS.",
-  "why_now": "Collect actual first H1706 failure before OS mutation; fix two concrete Go test compilation errors, not retry native TCP blindly or change driver/WFP/Tunnel.",
+  "current_task": "PLAN029 H1708: H1707 genuine signed Wintun app TCP SYN/NAT -> Windows kernel SYNACK/Accept -> Rust physically bound socket connected to independent Linux guest real PASS before first two-leg RelayIo FAIL. H1708 adds WSAPoll write-ready + SO_ERROR gating pending connect and exact relay stage+raw WinSock errno; source not yet tested, product remains OPEN.",
+  "why_now": "Local WinSock kernel TCP gates already succeeded, first failure in two-leg relay. Must distinguish pending nonblocking connect misclassification and precise inner/outer read/write/halfclose before guessing or adding WFP.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1707 true signed Windows Wintun app TCP SYN→Rust NAT→kernel listener Accept/reverse→physical bound Linux TCP two-leg and owned Stop. Fix only first causal runtime issue if any. Then integrate TCP+UDP into one production authenticated Rust ingress, DNS 2 one-endpoint resolver/FakeIP, config/GUI/padding, D1-D5/P1-P2, no 028/030.",
+  "next_action": "Collect one H1708 source-locked real signed TCP guest scene and inspect first stage error. Then wire proven TCP+UDP into one actual authenticated Normal/Game4 Rust Wintun ingress and DNS53 selective FakeIP, config GUI and padding, D1-D5/P1-P2. No 028/030.",
   "unverified": true,
-  "last_tested_source": "38669421a285f1c23612f1ef9bc0f3ff8f245556",
+  "last_tested_source": "1165eff3420ecc779cc10c12fe8fb1ce8ea6cd7e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1706-TCP-GO-SOURCE-FIRST-COMPILE-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1707-REAL-TCP-NAT-SYN-ACCEPT-RELAY-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +27,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1706 actual TCP witness blocked by Go test compilation only, old failure retained. H1707 test-only unused import/rc declaration fixed. H1704 independent guest signed Wintun Rust UDP reverse PASS, H1705 Windows/Linux TCP NAT pure PASS. Full PLAN029 product original TLS Normal/Game4 DNS/FakeIP/GUI/perf OPEN."
+  "partial_summary": "H1707 SOURCE1165 Action43358618332 TCP true Windows application NAT SYN, kernel SYNACK reverse/Accept, bound TCP independent Linux connect PASS, first RelayIo FAIL, app timeout, WSL owned rule cleaned. H1708 WinSock readiness fix/error stage telemetry code only; H1704 Rust independent Linux UDP reverse scoped PASS. PLAN029 product not complete."
 }
