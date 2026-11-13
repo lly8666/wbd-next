@@ -93,7 +93,8 @@
     "H1685 no-old-WFP MTU/DNS/routes real Win32 stages added beside H1684 lease, shared v2 WAL, exact generation/PnP and per-stage WAL write authorization; route partial-intent crash retains unresolved WAL. Four-stage product assembler hardwired assemblyOnly=true. SOURCE compile pending, real signed OS Apply/Stop and two DNS exits NOT_RUN.",
     "H1691 fix proposal: v2 no-old-WFP live OS receipt stage-name loop must read v2 four-stage WAL schema order; add pure positive/negative fixtures preserving no-guard and assemblyOnly deny. Current real Windows Apply/Stop remains NOT_RUN until Action and physical proof.",
     "H1691a: H1691 Action 43246325510 + 43246325426 failed before Go build because reviewed v2 receipt/test changed without matching manifest result_blob. This patch updates only those exact current Git blob SHAs and retains original immutable donor comparison. Real Windows compile/OS still pending.",
-    "H1692 no-WFP v2 real product entry candidate: removes public new-session qualified WFP constructor and defaults to v2 four-stage assembler, still deliberately rejects assemblyOnly before ring claim; controller v2 Recover avoids legacy WFP-only guard recovery. Windows SOURCE Go compile/tests not yet collected."
+    "H1692 no-WFP v2 real product entry candidate: removes public new-session qualified WFP constructor and defaults to v2 four-stage assembler, still deliberately rejects assemblyOnly before ring claim; controller v2 Recover avoids legacy WFP-only guard recovery. Windows SOURCE Go compile/tests not yet collected.",
+    "H1696 adds a v2 no-old-WFP exact-generation per-route SHA sidecar and parent reconciliation. Confirmed child rows can be retired; present INTENT/foreign/mismatch remain fail-closed. New Windows source compile/pure stage tests and real Apply/Stop NOT_RUN when this code was authored."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

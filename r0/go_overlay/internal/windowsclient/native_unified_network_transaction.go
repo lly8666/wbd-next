@@ -299,9 +299,9 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
   observed,err:=n.Stages[i].Inspect(ctx,n.Identity,rec.Before)
   if err!=nil{return err}
   if observed==N4UnifiedForeign{return ErrN4ForeignRoute}
-  // The last route stage has a second, per-route owned receipt with
-  // its own intent/confirmed bits. Let it resolve ONLY those entries after
-  // the parent has verified the full persistent WFP guard is still armed.
+  // The last route stage has a separate per-entry intent/owned receipt.
+  // v1 requires its actual persistent WFP owner; v2 has no WFP guard
+  // and only reconciles exact current-generation confirmed child entries.
   // A route with ambiguous ownership remains an error and retains both WALs.
   routeReclaimer,routeStage:=n.Stages[i].(n4UnifiedRouteIntentReclaimer)
   lastRoute:=i==len(n.stages())-1 && routeStage
@@ -319,9 +319,20 @@ func(n *N4NativeUnifiedTxn) Recover(ctx context.Context)error{
   if observed==N4UnifiedPartial && (n.noLegacyWFP || i!=0) && !(lastRoute && rec.State=="owned"){
    return ErrN4NativeGuard
   }
-  if observed!=N4UnifiedAbsent {
+  // In v2 the route stage owns a separate per-key receipt. Even when
+  // Win32 currently shows all expected routes absent, its child sidecar
+  // might still require exact-generation cleanup after a crashed Stop.
+  // Never advance the parent before the child has been fully reconciled.
+  v2OwnedRoute:=false
+  if n.noLegacyWFP && lastRoute && rec.State=="owned"{
+   if _,statErr:=os.Lstat(n.Path+".routes");statErr==nil{
+    v2OwnedRoute=true
+   }else if !errors.Is(statErr,os.ErrNotExist){return statErr}
+  }
+  if observed!=N4UnifiedAbsent || v2OwnedRoute {
    if observed!=N4UnifiedOwned && !(!n.noLegacyWFP && i==0 && observed==N4UnifiedPartial) &&
-    !(lastRoute && rec.State=="owned" && observed==N4UnifiedPartial){return ErrN4RouteAmbiguous}
+    !(lastRoute && rec.State=="owned" && observed==N4UnifiedPartial) &&
+    !(v2OwnedRoute && observed==N4UnifiedAbsent){return ErrN4RouteAmbiguous}
    if err:=n.Stages[i].Undo(ctx,n.Identity,rec.Before);err!=nil{return err}
   }
   j.Records=j.Records[:i]
