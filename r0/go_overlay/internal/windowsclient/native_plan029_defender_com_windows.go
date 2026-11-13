@@ -130,7 +130,7 @@ func n4Plan029ExactRule(obj n4Plan029COMObject,k n4Plan029DefenderKey)(bool,erro
  strings:=[]struct{idx uintptr;value string}{
   {7,k.Name},{9,k.Description},
   {17,strconv.Itoa(int(k.Port))},
-  {21,k.Local4.String()},{23,k.Remote4.String()},
+  {21,k.Lease4.String()},{23,k.Remote4.String()},
  }
  for _,v:=range strings{
   actual,e:=obj.getString(v.idx)
@@ -187,7 +187,7 @@ func (n4Plan029DefenderCOM)CreateIfAbsent(ctx context.Context,k n4Plan029Defende
   if e=rule.setString(10,k.Description);e!=nil{return e}
   if e=rule.call(16,6);e!=nil{return e} // protocol before ports
   if e=rule.setString(18,strconv.Itoa(int(k.Port)));e!=nil{return e}
-  if e=rule.setString(22,k.Local4.String());e!=nil{return e}
+  if e=rule.setString(22,k.Lease4.String());e!=nil{return e}
   if e=rule.setString(24,k.Remote4.String());e!=nil{return e}
   if e=rule.call(28,1);e!=nil{return e} // IN
   if e=rule.call(38,7);e!=nil{return e} // only IP/port precise

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1751,
-  "checkpoint_sha": "43d1d00cd7939ec70eb49dcb71eef651a2c29bab",
+  "sequence": 1752,
+  "checkpoint_sha": "47317155df4d678cc9698cce62b4feec47d40066",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1751: H1750 SOURCE43d1d Action43429931906 signed original Go Rust Windows/WSL2 V3 full job SUCCESS_SCOPED: CN www.cn.example DNS→physical dns.direct CNAME/A→durable FakeIP198.18.0.1→app Direct UDP46111 Linux physical guest and original Win inverse; Tunnel TCP/UDP + controlled Stop PASS. Prior H1749 comparator FAIL retained; new native COM Defender exact single-port, one lease IPv4/one synthetic remote rule backend and per-generation WAL intent/owned/CAS added SOURCE ONLY PENDING Windows Go test; NOT yet wired to live TCP ENABLE. D1-D5/P1-P2/Start-padding and product full TCP/GUI still OPEN.",
-  "why_now": "Actual signed CN Direct UDP and Tunnel success makes native Windows kernel Direct TCP authorization the next missing boundary. Build native Defender COM exact rule CAS with owned WAL and injected failure tests; do not enable TCP until post-Apply proof.",
+  "current_task": "PLAN029 H1752: H1751 SOURCE47317155 signed H1750 record+native Windows Defender COM intent/owned CAS code committed. First native original-Go Windows source CI Action43435540007 FAIL: native_plan029_defender_com_windows.go:133,190 k.Local4 undefined; actual n4Plan029DefenderKey field Lease4. H1752 precise 2-reference fix and live assembly result_blob repin only, new Windows Go scoped CI PENDING. H1751 governance43435540199 PASS; exact Defender COM/real OS Allow NOT_RUN; original Rust PREPARE→ENABLE, no-WFP WAL, signed Direct kernel TCP D2, D1-D5/P1-P2/padding GUI still OPEN.",
+  "why_now": "Source-locked Windows compile first failure is two mistyped COM key field identifiers. Fix them and exact live assembly hash, preserving old FAIL; do not widen firewall or restore old WFP.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1751 Windows original-Go build and mocks, correct first failure; then integrate original Rust TCP PREPARE -> COM Allow exact readback -> authenticated ENABLE -> Stop unload before route rollback. Freeze signed Direct TCP scene followed by D1-D5/P1-P2+padding. No old WFP/030.",
+  "next_action": "Collect one Windows native compile/PLAN029 injected Defender WAL tests under H1752; if green, integrate actual original Go post-Apply native COM exact Defender grant/ENABLE and Stop-before-routes. Then signed Windows Direct kernel TCP D2 and full D1-D5/P1-P2/padding/GUI. No 030.",
   "unverified": true,
-  "last_tested_source": "43d1d00cd7939ec70eb49dcb71eef651a2c29bab",
+  "last_tested_source": "47317155df4d678cc9698cce62b4feec47d40066",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1751-H1750-SIGNED-CN-DIRECT-PASS-DEFENDER-COM-SOURCE-20261113.json"
+    "docs/evidence/M0/PLAN029-H1752-H1751-WINDOWS-COM-FIRST-COMPILE-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1750 SOURCE43d1d signed Win/WSL original Go+Rust V3 CN Direct DNS/FakeIP UDP and Tunnel TCP/UDP+Stop PASS_SCOPED. H1751 first native Defender COM backend and intent/owned/CAS Stop sidecar pending CI, not yet activated; full PLAN029 OPEN."
+  "partial_summary": "H1750 signed Windows+Linux original Go/Rust V3 CN physical DNS FakeIP Direct UDP, Tunnel TCP/UDP and Stop scoped PASS. H1751 Windows Go new Defender COM build FAIL k.Local4 name-only bug; H1752 source fix pending CI; no real Direct TCP Defender proof."
 }

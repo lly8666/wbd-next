@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1752",
+  "source_sha": "47317155df4d678cc9698cce62b4feec47d40066",
+  "result": "FAIL_WINDOWS_ORIGINAL_GO_COMPILATION_FIRST_DEFENDER_COM_KEY_FIELD",
+  "run": {
+    "id": 43435540007,
+    "head_sha": "47317155df4d678cc9698cce62b4feec47d40066",
+    "conclusion": "failure",
+    "job_id": 131919541995,
+    "first_errors": [
+      "native_plan029_defender_com_windows.go:133:9: k.Local4 undefined (n4Plan029DefenderKey field Lease4)",
+      "native_plan029_defender_com_windows.go:190:28: k.Local4 undefined"
+    ]
+  },
+  "other_actions": [
+    {
+      "id": 43435540199,
+      "scope": "governance",
+      "conclusion": "success"
+    }
+  ],
+  "fix": "Rename two COM accesses to Lease4, keep native IN/TCP and exact local/remote/port/owner unchanged; live overlay manifest SHA synchronized",
+  "h1752_ci": "PENDING",
+  "product_direct_tcp": "NOT_RUN"
+}
