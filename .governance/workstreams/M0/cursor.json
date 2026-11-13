@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1717,
-  "checkpoint_sha": "69604e2dbcaa87b7c5ca0bfb649d20baaad88af6",
+  "sequence": 1718,
+  "checkpoint_sha": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "PLAN029 H1717: H1715 Windows exact manifest original-Go noWFP source build PASS, but public original TLS/Normal product Action43374768125 FAIL before Ready at RuntimeMTU because old five-stage/WFP-specific readback rejects v2 four-stage noWFP WAL. Implemented v1/v2 exact-generation read-only MTU stage selection and updated signed Win32 OS scene/test; SOURCE CI PENDING. Separate H1716 Rust bounded UDP actor remains source staged/not product connected.",
-  "why_now": "Fix the first actual old-public-Ready blocking line: LiveConfiguredMTU checks len(records)==5 and Stages[2] v1 MTU while PLAN029 v2 has four real Win32 stages and MTU at Stages[1]. This is independent of Rust CN Direct/Tunnel code, so address in parallel without another same-host UDP probe.",
+  "current_task": "PLAN029 H1718: 收回H1717原生四阶段Win32签名Wintun真实Apply/MTU读回/Stop PASS_SCOPED（Action43378854361）；同SHA旧Normal双OS legacy1400 Action43378854779 PASS但非029双出口；H1717治理Action43378854403 FAIL因四个M0 live派生blob pin/历史WFP旧断言漂移。修正现行manifest/测试审核列表，不改历史M4 donor。正式Rust NativeOwner Direct/Tunnel DNS/GUI/padding仍未完成。",
+  "why_now": "H1717 scoped genuine Win32 v2 results have arrived; reconcile live M0 provenance before full product work. Do not promote old Normal legacy1400 native PASS to new 029 egress qualification.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1717 source-locked Windows Go pure + one signed no-WFP Win32 Apply/Readback/RuntimeMTU/Stop Action. If PASS, continue versioned original Rust NativeOwner single ingress Direct UDP/TCP and two DNS/GUI/padding. Preserve old public failure and avoid 028 full matrix/030.",
+  "next_action": "Continue single original TLS/Rust NativeOwner Wintun ingress with kernel TCP+physical UDP and policy forced DNS/FakeIP under v2 WAL. Freeze source, then D1–D5/P1–P2 native scenes; do not repeat H1695 A/B/C or H1709/H1713 probes.",
   "unverified": true,
-  "last_tested_source": "f1dc2cd0c6e8e36734967abb434f40a6528d417f",
+  "last_tested_source": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json"
+    "docs/evidence/M0/PLAN029-H1716-FIRST-PUBLIC-V2-MTU-READBACK-FAIL-20261113.json",
+    "docs/evidence/M0/PLAN029-H1718-H1717-RESULT-AND-M0-LIVE-SHA-CATCHUP-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -27,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1716 SOURCEf1dc original-Go Windows source compile PASS, public original Normal Action43374768125 fails RuntimeMTU old v1 five-stage assumption, not Direct packet proof. H1717 exact v1/v2 Win32 MTU live CAS code and single signed OS readback test staged, not yet tested. Concurrent H1716 bounded Rust Direct UDP actor source in HEAD6960, not attached to original worker. H1713 CN DNS Fake UDP and H1709 native TCP FIN probes scoped PASS; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1717 true noWFP signed Win32 4-stage OS Apply RuntimeMTU1280 Stop Action43378854361 PASS_SCOPED. Same SHA 43378854779 old legacy1400 Windows/Linux Normal UDP/TCP/Stop PASS not PLAN029. 43378854403 governance FAIL stale four live M0 pins + old WFP text (source-only fix pending CI). H1695 owned Defender A/B/C, H1709 kernel TCP app EOF and H1713 CN DNS journaled FakeIP UDP real diagnostic scoped PASS, not production NativeOwner. D1–D5/P1–P2 NOT_RUN."
 }

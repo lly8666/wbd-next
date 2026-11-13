@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1718",
+  "observed_at": "2026-11-13",
+  "source_sha": "2469e23bd525cce10d172804801fa1a8d0b4cffc",
+  "result": "H1717_V2_OS_REAL_PASS_SCOPED; LEGACY_NORMAL_PASS_NOT_029; GOVERNANCE_STALE_LIVE_M0_SHA_FAIL",
+  "actions": [
+    {
+      "run_id": 43378854361,
+      "job_id": 131731657983,
+      "conclusion": "success",
+      "scope": "signed-Wintun no-WFP four-stage Win32 actual Apply RuntimeMTU1280 readback exact Stop",
+      "direct_tunnel": "NOT_RUN"
+    },
+    {
+      "run_id": 43378854375,
+      "job_id": 131731658111,
+      "conclusion": "success",
+      "scope": "Windows original Go source compile",
+      "direct_tunnel": "NOT_RUN"
+    },
+    {
+      "run_id": 43378854779,
+      "job_id": 131733637241,
+      "conclusion": "success",
+      "scope": "original Go TLS/Rust Windows Linux Normal TCP/UDP and owned Stop legacy1400, not 029"
+    },
+    {
+      "run_id": 43378854403,
+      "job_id": 131731658582,
+      "conclusion": "failure",
+      "scope": "stale 4 M0 live result_blob pins and obsolete old-WFP guard assertion"
+    }
+  ],
+  "reviewed_live_blobs": {
+    "native_product_entry_windows.go": "72a3693c72e207f2a2fe72e957c27a871ab5291b",
+    "native_product_preflight_windows.go": "4c9783d5a6218da87ca27c279f6f1563c449d162",
+    "native_product_preflight_windows_test.go": "3b8ddc0facb0a342fa688182d551b2a06e249451",
+    "native_unified_network_transaction.go": "deb8271b4ef4f0b75636c6ad9f436e8ca878540d"
+  },
+  "historical_m4_donor_sha": "e359fde5703cc7b92ac4cfcb09d79f388d55ce93",
+  "retained": [
+    "H1716 original public before-Ready RuntimeMTU FAIL",
+    "H1690 no-Allow listener FAIL",
+    "H1695 owned Defender A/B/C PASS",
+    "H1709 diagnostics kernel TCP EOF PASS",
+    "H1713 diagnostic FakeIP direct UDP PASS"
+  ],
+  "not_run": [
+    "real authenticated Normal/Game4 Rust dual egress",
+    "D1–D5/P1–P2 including full DNS",
+    "off-host real physical Direct",
+    "GUI effective and padding"
+  ],
+  "this_commit": "source pin/manifest/test and tracking only; updated CI PENDING"
+}
