@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "checkpoint": "H1761",
+  "tested_source_sha": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
+  "result": "FAIL_REAL_PRODUCT_BEFORE_READY",
+  "action_id": 43448922365,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/43448922365",
+  "artifact_id": 14050277121,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43448922365/artifacts/14050277121",
+  "first_error": "2026/11/13 15:17:42 PLAN029 post-Apply TCP PREPARE: original-Go private Windows Rust owner refused",
+  "passes": [
+    "Windows original-Go source build",
+    "Rust native DLL build",
+    "signed Wintun/Npcap installed",
+    "Linux WSL2 boot",
+    "authenticated original Rust Wintun workers",
+    "inner MTU1329 applied"
+  ],
+  "not_run": [
+    "product Ready",
+    "Direct TCP application traffic",
+    "current-source CN DNS/UDP app",
+    "Tunnel TCP/UDP app",
+    "D1-D5 P1-P2"
+  ],
+  "stop": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS (not proof of entire 029 sidecar closure)",
+  "cause": "OriginalOwnerReadback() in bridge_v4_windows_scoped_client.go returns ProductApplied:false, while H1759 Plan029PrepareNativeTCPAfterOSApply and Enable erroneously required true. Separate outer N4 product.Apply+LiveReceipt already checked true OS status.",
+  "new_source": "H1761 patch+pure test+manifest source-lock; CI pending"
+}

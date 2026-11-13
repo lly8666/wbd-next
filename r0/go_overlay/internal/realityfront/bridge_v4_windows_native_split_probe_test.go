@@ -48,3 +48,19 @@ func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
  c.RouteMode=2;c.InnerMTU=100
  if _,e:=c.wire();e==nil{t.Fatal("invalid native inner MTU")}
 }
+
+func TestPlan029PostApplyTCPDoesNotRequireAlwaysFalseLegacyDeviceApplied(t *testing.T){
+ state:=V4WindowsScopedOwnerReadback{Generation:1,OwnerActive:true,
+  DeviceBound:true,ProductApplied:false}
+ if !plan029PostApplyOriginalOwnerReady(state){
+  t.Fatal("original readback false ProductApplied deadlocked real post-Apply PREPARE")
+ }
+ state.OwnerActive=false
+ if plan029PostApplyOriginalOwnerReady(state){t.Fatal("stopped owner permitted")}
+ state.OwnerActive=true;state.DeviceBound=false
+ if plan029PostApplyOriginalOwnerReady(state){t.Fatal("unbound device permitted")}
+ state.DeviceBound=true;state.DeviceQuiesced=true
+ if plan029PostApplyOriginalOwnerReady(state){t.Fatal("quiesced device permitted")}
+ state.DeviceQuiesced=false;state.ServerSide=true
+ if plan029PostApplyOriginalOwnerReady(state){t.Fatal("server side permitted")}
+}

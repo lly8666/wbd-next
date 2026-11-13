@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1760,
-  "checkpoint_sha": "cb8dfb7a001dd9a52a5e1037fa1ed3d09e688f6f",
+  "sequence": 1761,
+  "checkpoint_sha": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1760: collected ALL H1759 automatic Actions green: real Windows original Go source assembly/compile/Defender scoped Action43445358742, Rust DLL+WinForms/CLI Action43445358922, governance43445358655, source-only M0-WIN-LINUX43445358745(no-scene), WAL43445358730. No signed 029 product TCP tested. H1760 fixes global 8MiB TCP pending-read soft throttle under 64MiB aggregate allocation cap (no global read pause of Tunnel/UDP), prevents retiring healthy established TCP on 120s idle; adds first same-generation signed CN FakeIP physical Windows->Linux TCP 32KiB two-leg half-close echo after proven UDP and before independent Tunnel TCP, plus exact Defender sidecar absent on Stop. One existing Normal Action with [plan029-v3-real-direct-udp] source marker, no new workflow/dispatch; new result PENDING. Full D1-D5/P1-P2, GUI/padding/perf OPEN.",
-  "why_now": "H1759 native source/build and original one-rule COM closed; must test physical postApply TCP before claiming product networking. Fix observed code resource/idle policy divergence and instrument unique delivered data, not another old Wintun injection probe.",
+  "current_task": "H1761: H1760 signed Action43448922365 true Windows product FAIL before Ready at PLAN029 post-Apply TCP PREPARE original-Go private Windows Rust owner refused; auth+Rust worker+MTU1329 passed, Stop ran, Direct TCP NOT_RUN. Source confirms OriginalOwnerReadback() legacy ProductApplied permanently false but H1759 TCP PREPARE/ENABLE required it true. H1761 corrects only legacy gate, still requires active bound unquiesced original client; real N4 product.Apply+LiveReceipt proven by outer caller, exact Defender receipt and Rust generation unchanged. Update both source-locked blobs, regression test, docs; new same signed Action PENDING.",
+  "why_now": "First real failure is stale always-false ProductApplied precondition before Rust PREPARE, not physical TCP/Defender failure. Fix cold semantic mismatch without creating false Applied/Ready.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect only H1760 auto-triggered single signed Windows↔WSL2 Normal CN physical Direct UDP/TCP plus Tunnel comparator/Stop; on first failure pinpoint step boundary, do not rerun same scenario without changed hypothesis. Then D1-D5/P1-P2 including DNS/GUI/startup-padding and pressure/perf; 030 not opened.",
+  "next_action": "Collect H1761 auto single signed Normal CN Direct physical TCP/UDP+Tunnel+Stop; fix first genuinely reached Rust/Win32 boundary, then full D1-D5/P1-P2 and padding/GUI. No 030.",
   "unverified": true,
-  "last_tested_source": "cb8dfb7a001dd9a52a5e1037fa1ed3d09e688f6f",
+  "last_tested_source": "02423b2f1a89250ec0f52c95b0ee2cc14d7e8f97",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1760-H1759-SOURCE-BUILDS-GREEN-REAL-DIRECT-TCP-STAGED-20261113.json"
+    "docs/evidence/M0/PLAN029-H1761-H1760-REAL-NATIVE-PREPARE-READBACK-FIRST-FAIL-20261113.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1759 build/Defender one-rule/WinForms source Actions green, no real 029 TCP E2E. H1760 shared TCP pending read budget+idle close correction, one signed CN Direct TCP physical fixture SOURCE staged; native Action pending. PLAN029 not delivered."
+  "partial_summary": "H1760 native E2E FAIL at original Go pre-Ready TCP PREPARE; H1761 removes contradictory legacy bool gate, retains authenticated owner and true N4 OS receipt, pending CI; PLAN029 OPEN."
 }

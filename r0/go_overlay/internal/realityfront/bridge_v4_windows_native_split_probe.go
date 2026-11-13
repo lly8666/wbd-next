@@ -16,8 +16,8 @@ type V4WindowsColdSplitConfig struct{
  CN,LAN,Direct []V4WindowsColdCIDR
  Domains []byte
  FakeJournalPath []byte
- // Never set by normal public product/CI probe: exact generation-owned
- // synthetic /32 route+Defender receipt is still missing.
+ // Cold deferred kernel TCP plan. This never implies OS Applied or grants
+ // the listener any ingress permission before exact Defender receipt.
  TCPSynthetic4 [4]byte
  TCPOwned bool
 }
@@ -82,6 +82,17 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
  if len(c.FakeJournalPath)>0{w.JournalPath=uintptr(unsafe.Pointer(&c.FakeJournalPath[0]))}
  return w,nil
 }
+// ProductApplied in OriginalOwnerReadback is a legacy device field that
+// always reads false. Actual N4 OS Applied is verified by the caller's
+// product.Apply() and product.LiveReceipt() BEFORE these cold methods.
+// Do not fabricate legacy Applied=true to overcome this false prerequisite.
+// This check proves only current original authenticated device liveness;
+// Rust still checks generation/epoch/LUID/index, and exact Defender owned
+// Allow is required separately before enabling TCP.
+func plan029PostApplyOriginalOwnerReady(state V4WindowsScopedOwnerReadback) bool {
+ return state.OwnerActive && state.DeviceBound &&
+  !state.DeviceQuiesced && !state.ServerSide
+}
 // The first part of the post-Apply, two-phase Direct kernel TCP handshake.
 // It does not make the listener reachable: the V3 Rust owner remains
 // fail-closed until a separate exact Defender receipt authorizes a
@@ -95,8 +106,7 @@ func(s *V4WindowsAuthenticatedClientOwner) Plan029PrepareNativeTCPAfterOSApply(
  if e:=ctx.Err();e!=nil{return 0,e}
  state,e:=s.OriginalOwnerReadback()
  if e!=nil{return 0,e}
- if !state.OwnerActive||!state.DeviceBound||state.DeviceQuiesced||
-  state.ServerSide||!state.ProductApplied{return 0,errV4WindowsOwner}
+ if !plan029PostApplyOriginalOwnerReady(state){return 0,errV4WindowsOwner}
  req:=v4WindowsNativeTCPControlV1{Version:1,
   Owner:s.bridge.handle,Epoch:s.bridge.epoch,
   LUID:s.device.identity.LUID,IfIndex:s.device.identity.InterfaceIndex,
@@ -118,8 +128,7 @@ func(s *V4WindowsAuthenticatedClientOwner) Plan029EnableNativeTCPAfterDefender(
  if e:=ctx.Err();e!=nil{return e}
  state,e:=s.OriginalOwnerReadback()
  if e!=nil{return e}
- if !state.OwnerActive||!state.DeviceBound||state.DeviceQuiesced||
-  state.ServerSide||!state.ProductApplied{return errV4WindowsOwner}
+ if !plan029PostApplyOriginalOwnerReady(state){return errV4WindowsOwner}
  req:=v4WindowsNativeTCPControlV1{Version:1,
   Owner:s.bridge.handle,Epoch:s.bridge.epoch,
   LUID:s.device.identity.LUID,IfIndex:s.device.identity.InterfaceIndex,
