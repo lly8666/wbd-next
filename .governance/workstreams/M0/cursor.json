@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1764,
-  "checkpoint_sha": "c40d1c4158186d7c6a904ea56faac5ae3e692fa3",
+  "sequence": 1765,
+  "checkpoint_sha": "7ad30db2454837a4f9276bf5b47cbc37ef58bf63",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1764: H1763 kernel TCP reverse NAT 60s metadata grace source c40d1c41; Linux Rust and cross Windows GNU compile/functional component checks pass, Windows2025 component still in flight at cursor write. Discovered M0-WIN-LINUX workflow push.paths omits all client Direct TCP Rust sources, so prior commit marker alone spawned no actual signed E2E. H1764 only adds five explicit Rust Direct path triggers and matching scope test, preserves user [plan029-v3-real-direct-udp] single-source single-Normal scene; not a new ad-hoc workflow/dispatch. Real signed product result pending; H1762 failures retained.",
-  "why_now": "Actual signed run missing after H1763 actor-only patch because workflow paths excluded Rust files; must restore source-based real E2E trigger without repeating old 028 matrix.",
+  "current_task": "H1765: H1764 signed Action43511857343 real Windows/Linux authenticated OS/Wintun CN DNS/FakeIP Direct UDP, 32768B two-leg Direct TCP+FIN, Windows->Linux nonCN Tunnel TCP/UDP, owned Defender/WAL/Stop all PASS_SCOPED with actual sequential markers; overall Action FAIL because helper overwrote wa Popen with parsed TCP dict then finally wa.poll() AttributeError. Fix exact process variable shadow and stage D1 real nonCN UDP/53 QNAME to sole 1.1.1.1 Tunnel resolver via run-owned Linux TUN/32; verify original 8.8.8.8 DNS source returned to Windows app, no FakeIP. DNS TCP53/blackhole and all exit criteria remain OPEN; H1765 signed E2E pending.",
+  "why_now": "H1764 first product error is only test finally, after real dual-egress+owned Stop completed. Fix true provenance and use next single signed source to measure independent Tunnel DNS, not rerun old network probes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1764 original signed Normal Action and H1763 component results; if 32KiB full echo and nonCN Tunnel TCP+Stop pass, proceed remaining D1-D5/P1-P2, GUI and startup-padding; if fail, inspect first boundary without retrying identical hypothesis. 030 closed.",
+  "next_action": "Collect exactly one H1765 signed Normal Windows↔WSL2 D1 nonCN Tunnel DNS after Direct/Tunnel TCP and Stop plus governance, then D1 TCP53/no-fallback, D2 CDN union contraposition, D3–D5, GUI and padding/P1–P2. PLAN030 closed.",
   "unverified": true,
-  "last_tested_source": "dfced52918263a923c71087c1100aca95e3d8003",
+  "last_tested_source": "7ad30db2454837a4f9276bf5b47cbc37ef58bf63",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1763-H1762-SIGNED-TCP-32K-PHYSICAL-12K-RETURN-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1765-H1764-SIGNED-SCOPED-EXITS-PASS-HARNESS-FINALLY-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1762 Linux physical TCP 32768 echo but Windows FakeIP received 12288, real FAIL; H1763 NAT grace compiled Linux+Windows GNU, signed E2E was not triggered by Rust actor-only path. H1764 adds guarded workflow paths/test to start one signed source run; product 029 incomplete."
+  "partial_summary": "H1764 genuine CN Direct 32KiB TCP/UDP, nonCN Tunnel TCP/UDP, and exact owned Stop PASS_SCOPED but whole Action FAIL due to Python wa=dict Popen shadow in finally. H1765 fixes harness and adds true nonCN Tunnel DNS socket; native CI pending, PLAN029 IN_PROGRESS."
 }

@@ -66,6 +66,8 @@ on:
       - tools/m0_plan029_h1760_guest_physical_direct_tcp.py
       - tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py
       - tools/m0_plan029_h1762_oneway_tunnel_tcp.py
+      - tools/m0_plan029_h1765_linux_tun_dns.py
+      - tools/m0_plan029_h1765_windows_tunnel_dns.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
       - tests/test_m0_plan028_h1587_two_windows_manual_cipher_scope.py
       - tools/m0_plan028_h1415_windows_linux_independent_clients.py
@@ -520,7 +522,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan028_tls_wire_audit -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
       - run: python -m unittest tests.test_m0_plan028_h1619_exact_accelerated_prebuilt_manifest -v
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tools/m0_plan029_h1762_oneway_tunnel_tcp.py tests/test_m0_plan027_managed_unilateral.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_plan029_h1745_guest_dns_direct.py tools/m0_plan029_h1745_win_client_dns_direct.py tools/m0_plan029_h1760_guest_physical_direct_tcp.py tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py tools/m0_plan029_h1762_oneway_tunnel_tcp.py tools/m0_plan029_h1765_linux_tun_dns.py tools/m0_plan029_h1765_windows_tunnel_dns.py tests/test_m0_plan027_managed_unilateral.py
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v

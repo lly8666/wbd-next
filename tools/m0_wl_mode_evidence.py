@@ -37,6 +37,7 @@ LOGS=(
  "windows-app.log","linux-app.log","windows-tcp-app.log","linux-tcp-app.log",
  "plan029-h1745-guest-physical.log","plan029-h1745-windows-fake-cn-direct.log",
  "plan029-h1760-guest-physical-tcp.log","plan029-h1760-windows-fakeip-tcp.log",
+ "plan029-h1765-linux-tun-dns.log","plan029-h1765-windows-tun-dns.log",
  "auto-adaptive-windows-udp.log","auto-adaptive-linux-udp.log",
  "auto-revision-windows-udp.log","auto-revision-linux-udp.log",
  "wl-n0-windows-app.log","wl-n0-linux-app.log",

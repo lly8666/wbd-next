@@ -52,4 +52,26 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py',S)
         self.assertIn('PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP',S)
         self.assertIn('historical_028_linux_to_windows_tcp',S)
+    def test_h1765_scoped_real_noncn_tunnel_dns_and_safe_process_cleanup(self):
+        import ast
+        ast.parse(S)  # the full original signed Windows E2E runner must compile
+        self.assertNotIn("  wa,li=json.loads(a[0]),json.loads(b[0])",S)
+        self.assertIn("  tcp_windows_receipt,li=json.loads(a[0]),json.loads(b[0])",S)
+        self.assertIn("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED",S)
+        self.assertLess(S.index("PLAN029_H1762_SIGNED_DIRECT_TCP_UDP_ONEWAY_TUN_TCP_UDP_PASS_PRE_STOP"),S.index("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED"))
+        self.assertIn("plan029-h1765-owned-tunnel-dns-alias.txt",S)
+        self.assertIn("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED",S)
+        self.assertIn('if dns_alias in wsl("ip","-4","-o","addr","show","dev","wbdwl4",timeout=8)',S)
+        self.assertIn('wsl("ip","-4","addr","del","1.1.1.1/32","dev","wbdwl4",timeout=8)',S)
+        self.assertIn('"app_tcp53":"NOT_RUN"',S)
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text(encoding="utf-8")
+        self.assertIn('plan029-h1765-linux-tun-dns.log',M)
+        self.assertIn('plan029-h1765-windows-tun-dns.log',M)
+        for path in ("tools/m0_plan029_h1765_linux_tun_dns.py",
+                     "tools/m0_plan029_h1765_windows_tunnel_dns.py"):
+            source=(Path(__file__).resolve().parents[1]/path).read_text(encoding="utf-8")
+            ast.parse(source)
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
+        self.assertIn('      - tools/m0_plan029_h1765_linux_tun_dns.py',W)
+        self.assertIn('      - tools/m0_plan029_h1765_windows_tunnel_dns.py',W)
 if __name__=="__main__":unittest.main()

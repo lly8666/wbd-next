@@ -144,7 +144,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -819,17 +819,17 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   b=[x.split(" ",1)[1] for x in (out/gname).read_text().splitlines()
     if x.startswith("PLAN029_H1760_LINUX_PHYSICAL_TCP_ECHO ")]
   if len(a)!=1 or len(b)!=1:raise RuntimeError("unique real two-leg TCP app receipts missing")
-  wa,li=json.loads(a[0]),json.loads(b[0])
-  if not(wa.get("tcp_two_leg_echo") and wa.get("tcp_half_close") and
-     wa.get("app_bytes_sent")==32768 and wa.get("app_bytes_echoed")==32768 and
-     wa.get("presented_peer")==wdata["fake4"] and
+  tcp_windows_receipt,li=json.loads(a[0]),json.loads(b[0])
+  if not(tcp_windows_receipt.get("tcp_two_leg_echo") and tcp_windows_receipt.get("tcp_half_close") and
+     tcp_windows_receipt.get("app_bytes_sent")==32768 and tcp_windows_receipt.get("app_bytes_echoed")==32768 and
+     tcp_windows_receipt.get("presented_peer")==wdata["fake4"] and
      li.get("source_physical")==host_source and li.get("real_socket")==peer and
      li.get("received_bytes")==32768):
    raise RuntimeError("real Windows-to-Linux Direct kernel TCP socket receipts mismatch")
   report["plan029_private_v3_cn_direct_tcp"]={
     "source_sha":os.environ["GITHUB_SHA"],
     "scope":"ONE_SIGNED_WINTUN_TWO_REAL_KERNEL_TCP_SOCKETS_CN_FAKEIP_PHYSICAL_32K_HALF_CLOSE",
-    "windows":wa,"linux":li,"tunnel_tcp":"NOT_RUN_UNTIL_COMPARATOR","stop":"NOT_RUN"}
+    "windows":tcp_windows_receipt,"linux":li,"tunnel_tcp":"NOT_RUN_UNTIL_COMPARATOR","stop":"NOT_RUN"}
   report["plan029_private_v3_cn_direct_udp"]["direct_tcp"]="PASS_REAL_KERNEL_TWO_LEG_TCP_32K"
   print("PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",flush=True)
  # Functional-only *real TCP* over the same original authenticated public
@@ -965,6 +965,55 @@ print(json.dumps(result),flush=True)
   proof["historical_028_linux_to_windows_tcp"]="NOT_RUN_028_SCOPED"
   print("PLAN029_H1749_SIGNED_CN_DIRECT_AND_TUNNEL_TCP_UDP_STAGE_PASS_PRE_STOP",flush=True)
   print("PLAN029_H1762_SIGNED_DIRECT_TCP_UDP_ONEWAY_TUN_TCP_UDP_PASS_PRE_STOP",flush=True)
+  # Scoped D1 non-CN QNAME real UDP53. A TUN-only owned Linux /32 is
+  # the unique dns.tunnel endpoint (not the physical CN Direct resolver).
+  # Write INTENT before OS mutation so partial Apply is recoverable.
+  dns_alias="1.1.1.1/32"
+  dns_intent=out/"plan029-h1765-owned-tunnel-dns-alias.txt"
+  dns_intent.unlink(missing_ok=True)
+  if dns_alias in wsl("ip","-4","-o","addr","show","dev","wbdwl4",timeout=8):
+   raise RuntimeError("foreign Linux TUN 1.1.1.1/32 DNS alias")
+  dns_intent.write_text("INTENT "+dns_alias+" "+os.environ["GITHUB_SHA"]+"\n")
+  wsl("ip","-4","addr","add",dns_alias,"dev","wbdwl4",timeout=8)
+  if dns_alias not in wsl("ip","-4","-o","addr","show","dev","wbdwl4",timeout=8):
+   raise RuntimeError("Linux Tunnel DNS owned /32 was not applied")
+  dns_intent.write_text("OWNED "+dns_alias+" "+os.environ["GITHUB_SHA"]+"\n")
+  dns_guest_log=(out/"plan029-h1765-linux-tun-dns.log").open("w");logs.append(dns_guest_log)
+  p029_tun_dns_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1765_linux_tun_dns.py"),
+      "1.1.1.1","10.66.0.2",linux_app4],
+      stdout=dns_guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029-h1765-linux-tun-dns.log","PLAN029_H1765_LINUX_TUN_DNS53_READY",
+      p029_tun_dns_guest,12)
+  dns_win_log=(out/"plan029-h1765-windows-tun-dns.log").open("w");logs.append(dns_win_log)
+  p029_tun_dns_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1765_windows_tunnel_dns.py"),
+      "10.66.0.2","8.8.8.8",linux_app4],
+      stdout=dns_win_log,stderr=subprocess.STDOUT)
+  if p029_tun_dns_win.wait(timeout=24)!=0 or p029_tun_dns_guest.wait(timeout=8)!=0:
+   raise RuntimeError("real nonCN Tunnel DNS endpoint failed windows="+
+      (out/"plan029-h1765-windows-tun-dns.log").read_text(errors="replace")[-550:]+
+      " linux="+(out/"plan029-h1765-linux-tun-dns.log").read_text(errors="replace")[-550:])
+  dns_proofs={}
+  for who,filename,marker in (
+   ("windows","plan029-h1765-windows-tun-dns.log","PLAN029_H1765_REAL_WINDOWS_TUN_DNS "),
+   ("linux","plan029-h1765-linux-tun-dns.log","PLAN029_H1765_REAL_LINUX_TUN_DNS ")):
+   lines=[line.split(" ",1)[1] for line in (out/filename).read_text().splitlines()
+          if line.startswith(marker)]
+   if len(lines)!=1:raise RuntimeError("unique nonCN Tunnel DNS "+who+" receipt missing")
+   dns_proofs[who]=json.loads(lines[0])
+  if not (dns_proofs["linux"]["upstream_ip"]=="1.1.1.1" and
+          dns_proofs["linux"]["client_ip"]=="10.66.0.2" and
+          dns_proofs["windows"]["reply_source"]=="8.8.8.8" and
+          dns_proofs["windows"]["real_answer"]==linux_app4 and
+          dns_proofs["windows"]["fakeip"] is False):
+   raise RuntimeError("real nonCN Tunnel DNS selected endpoint or original app answer differs")
+  report["plan029_d1_noncn_udp_dns_real"]={
+    "scope":"SIGNED_NONCN_QNAME_TUNNEL_UDP53_EXACT_ONE_UPSTREAM_AND_ORIGINAL_DNS_SOURCE",
+    "source_sha":os.environ["GITHUB_SHA"],"windows":dns_proofs["windows"],
+    "linux":dns_proofs["linux"],"app_tcp53":"NOT_RUN",
+    "blackhole_no_fallback":"NOT_RUN"}
+  print("PLAN029_H1765_SIGNED_NONCN_UDP53_TUNNEL_DNS_SINGLE_ENDPOINT_PASS_SCOPED",flush=True)
  # Exact native DF0/DF1 scenario only, after authenticated original-Go
  # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
  if os.environ.get("WBD_WL_V2_SCENARIO")==(
@@ -1745,8 +1794,30 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win):
   if p is not None and p.poll() is None:p.terminate()
+ if p029_direct and (out/"plan029-h1765-owned-tunnel-dns-alias.txt").exists():
+  # Current-generation INTENT is sufficient for safe partial Apply recovery:
+  # the preexisting /32 check happened before durable intent was written.
+  try:
+   receipt=(out/"plan029-h1765-owned-tunnel-dns-alias.txt").read_text()
+   if (receipt.startswith(("INTENT 1.1.1.1/32 ","OWNED 1.1.1.1/32 ")) and
+       receipt.rstrip().endswith(os.environ["GITHUB_SHA"])):
+    try:
+     present=wsl("ip","-4","-o","addr","show","dev","wbdwl4",timeout=8)
+    except RuntimeError:
+     # After genuine Linux owned Stop the original TUN no longer exists.
+     # Accept only a stopped original server; do NOT infer success while
+     # the owner may still be live and our alias might remain installed.
+     if s is None or s.poll() is None:raise
+     present=""
+    if "1.1.1.1/32" in present:
+     wsl("ip","-4","addr","del","1.1.1.1/32","dev","wbdwl4",timeout=8)
+    (out/"plan029-h1765-owned-tunnel-dns-alias.txt").unlink()
+   else:
+    raise RuntimeError("foreign Tunnel DNS alias receipt; preserve OS address")
+  except Exception as exc:
+   print("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED "+str(exc)[-250:],flush=True)
  if p029_direct and (out/"plan029-h1745-owned-tun-alias.txt").exists():
   # Exact ephemeral TUN alias only: cleanup is idempotent even after the
   # server has already removed its own interface on normal Stop.

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_sha": "7ad30db2454837a4f9276bf5b47cbc37ef58bf63",
+  "plan": "PLAN029",
+  "checkpoint": "H1765",
+  "result": "FAIL_HARNESS_AFTER_REAL_SCOPED_PRODUCT_AND_STOP_PASS",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43511857343",
+  "action_id": 43511857343,
+  "native_job_id": 132186160302,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43511857343/artifacts/14078389727",
+  "artifact_id": 14078389727,
+  "true_original_client_server_build_and_signed_drivers": "PASS",
+  "observed_real_markers": [
+    "PLAN029_H1749_SIGNED_CN_DNS_FAKE_DIRECT_UDP_STAGE_PASS_PRE_TCP_AND_STOP",
+    "PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",
+    "PLAN029_H1762_SIGNED_DIRECT_TCP_UDP_ONEWAY_TUN_TCP_UDP_PASS_PRE_STOP",
+    "PLAN029_H1762_SIGNED_DIRECT_32K_TCP_PLUS_ONEWAY_TUN_TCP_UDP_EXACT_OWNED_STOP_PASS_SCOPED",
+    "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal"
+  ],
+  "actual_scoped_tests": {
+    "cn_dns_fakeip_physical_udp": "PASS",
+    "fakeip_physical_direct_tcp_32768_echo_and_fin": "PASS",
+    "noncn_outbound_tunnel_tcp": "PASS",
+    "bidirectional_tunnel_udp": "PASS",
+    "owned_wal_defender_and_two_os_stop": "PASS",
+    "test_owned_hyperv_rule_removal": "PASS"
+  },
+  "first_late_failure": {
+    "stage": "tools/m0_wl_public_normal_e2e.py finally after products stopped",
+    "message": "AttributeError: 'dict' object has no attribute 'poll'",
+    "cause": "H1762 test assigned JSON dict to wa, overwriting Windows UDP Popen used by finally",
+    "whole_action_conclusion": "failure"
+  },
+  "h1765_fix": "Use tcp_windows_receipt instead of wa; keep wa Popen owned until finally and add AST tests.",
+  "h1765_real_new_test": "Actual nonCN www.globalx.example captured Windows Wintun UDP53→one Tunnel 1.1.1.1/32 Linux TUN UDP53; Windows app originally addressed 8.8.8.8 should see matching reverse source; source results PENDING",
+  "h1765_not_run": [
+    "app DNS TCP53",
+    "DNS no fallback on blackout",
+    "D2–D5 and P1/P2",
+    "startup padding and full GUI effective"
+  ],
+  "not_promoted": true
+}
