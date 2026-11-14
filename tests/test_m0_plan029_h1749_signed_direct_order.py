@@ -327,4 +327,15 @@ class NativeDirectOrder(unittest.TestCase):
         evidence=(root/"tools/m0_wl_mode_evidence.py").read_text()
         self.assertIn('plan029-h1794-linux-two-tcp53.log',evidence)
         self.assertIn('plan029-h1794-windows-app-tcp53.log',evidence)
+    def test_h1799_startup_pad_normal_tunnel_only_npf_copied_receipt(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('WBD_PLAN029_STARTUP_PADDING_SCENE',S)
+        self.assertIn('args.extend(["--startup-padding","flows"])',S)
+        self.assertIn('WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT',S)
+        self.assertIn('"stop":"PASS_BOTH_OWNED"',S)
+        self.assertIn('PLAN029_H1799_SIGNED_NORMAL_FLOWS_M1_NPF_PAD_AND_BOTH_OS_STOP_PASS_SCOPED',S)
+        workflow=(Path(__file__).resolve().parents[1]/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn('WBD_PLAN029_STARTUP_PADDING_SCENE:',workflow)
+        self.assertIn('PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED',workflow)
 if __name__=="__main__":unittest.main()

@@ -966,6 +966,7 @@ jobs:
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]')) && '1' || '0' }}
       WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') && '1' || '0' }}
       WBD_PLAN029_APP_TCP53_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp53]') && '1' || '0' }}
+      WBD_PLAN029_STARTUP_PADDING_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-startup-pad]') && '1' || '0' }}
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}
       WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
@@ -2245,6 +2246,23 @@ jobs:
               throw 'PLAN028 Game4 OFF two authentic Rust M4 groups, OS MTU, UDP/TCP and Stop not qualified'
             }
             Write-Output 'M0_PLAN028_SIGNED_WINDOWS_GAME4_OFF_TWO_ACTUAL_TLS_RUST_SOURCE4_GENERATIONS_AND_STOP_PASS'
+          }
+          # H1799 one ordinary (not stress) original Normal Tunnel scene,
+          # authenticated encrypted M1 padding and actual NPF copied prefix.
+          # Do not count staged proposals or UI saved setting as delivery.
+          if($env:WBD_PLAN029_STARTUP_PADDING_SCENE -eq '1'){
+            $pad=$result.plan029_normal_startup_padding
+            if($result.source -ne $env:GITHUB_SHA -or
+               $pad.source_sha -ne $env:GITHUB_SHA -or
+               $pad.mode -ne 'flows' -or
+               $pad.driver_copied_records -lt 1 -or
+               $pad.driver_copied_bytes -lt 1 -or
+               $pad.ordinary_windows_linux_udp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $pad.ordinary_windows_linux_tcp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $pad.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'H1799 original Rust NPF copied M1 padding or two-OS native Stop unqualified'
+            }
+            Write-Output 'PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED'
           }
           # Only the already-verified ORIGINAL strict native report can
           # qualify this H1581/H1579 scoped result. The historic Normal-only

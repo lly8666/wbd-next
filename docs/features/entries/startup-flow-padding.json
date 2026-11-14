@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "H1797 Normal V3 original M1 LINK authenticated padding source Windows/Linux Rust, Go original compiler and Windows WinForms build PASS; H1798 single portable GUI off/tls/flows selector and old tls-startup-padding profile migration staged. Signed off/on real network still NOT_RUN.",
+  "summary": "D1 real original app TCP/53 Direct/Tunnel and Stop passed separately; startup padding H1797 default-off signed Normal native two-OS success, H1798 portable off/tls/flows GUI exact original Go/WinForms compiler PASS; H1799 one bounded real flows Normal scene adds original Rust M1 authenticated NPF accepted ciphertext counters, actual flows/Stop NOT_RUN until signed Action.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -17,7 +17,7 @@
   "usage": {
     "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
     "config": "Source-only: original-Go pinned config/CLI -> V3 reserved cold padding selector -> original Rust M1 Tunnel LINK; GUI portable stored profile imports and exports one canonical key. Physical signed off/on and live effective readback not qualified.",
-    "gui": "STAGED H1798: one WinForms portable selector 关闭 / 仅TLS / 所有TCP+UDP新流, default off; hides old tls-startup-padding checkbox; stored profiles and JSON import convert legacy boolean to canonical mode or reject explicit conflicting mode. Saved/selected intent requires reconnect; actual authenticated Rust/OS effective still NOT_RUN."
+    "gui": "H1798 source-compiled real Windows WinForms portable off/tls/flows choice, old TLS bool profiles/import migrated. Saved user mode is not applied until reconnect and Rust authenticated native owner; current live GUI effective display still OPEN."
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -27,7 +27,9 @@
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
     "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
+    "tools/m0_wl_public_normal_e2e.py",
+    ".github/workflows/m0-wl-public-normal-full.yml"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
@@ -66,6 +68,20 @@
       "platform": "Windows original WinForms assembly source H1798",
       "scope": "One startup-padding off/tls/flows ComboBox + legacy profile/import migration; exact original pinned Go PARAMETER/GUI schema and code build will be checked by automatic workflow, real effective not yet run",
       "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows 2025 original Go/Rust + Linux WSL2 TUN",
+      "scope": "H1797 default startup-padding off source 36b9 original Normal signed real TCP/UDP two-OS native and Stop on Action 43559122020; not a flows measurement",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+      "evidence": null
+    },
+    {
+      "platform": "Original Windows Rust M1/Npcap signed native Normal + Linux TUN",
+      "scope": "H1799 startup-padding=flows driver-accepted ciphertext byte/record counters + ordinary Windows/Linux TCP/UDP and owned Stop single-scene",
+      "status": "PLANNED",
       "source_sha": null,
       "evidence": null
     }

@@ -22,6 +22,7 @@ p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
+p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -32,6 +33,10 @@ if p029_cache and not p029_direct:
  raise RuntimeError("H1783 signed Direct cache witness requires CN Direct scene")
 if p029_tcp53 and not p029_direct:
  raise RuntimeError("H1794 signed app TCP53 requires one original CN Direct owner")
+if p029_padding and (mode!="normal" or p029_direct or
+                     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
+                     os.environ.get("GITHUB_ACTIONS")!="true"):
+ raise RuntimeError("H1799 single ordinary startup padding scene needs signed Normal V3 Tunnel-only")
 if p029_pressure and not p029_direct:
  raise RuntimeError("hard8 pressure requires exactly one signed Normal Direct scene")
 if p029_direct and (mode!="normal" or
@@ -345,6 +350,10 @@ try:
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+ if p029_padding:
+  # Same default Normal original Windows Wintun pipeline; no new test
+  # sender or artificial packet shape. Only the selected mode changes.
+  args.extend(["--startup-padding","flows"])
  if p029_direct:
   # The exact Linux guest is the ONLY direct resolver for this controlled
   # scene; it also hosts an independent real physical business UDP socket.
@@ -1983,6 +1992,28 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029_padding:
+  # Actual original Rust authenticated M1 encrypted LINK copied by NPF.
+  # Staged/proposed bytes alone cannot count, and live Linux original
+  # normal UDP/TCP must have been delivered before both owned Stops.
+  win_text=(out/"client.log").read_text(errors="replace")
+  rows=re.findall(
+   r"WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT mode=(\w+) copied_records=(\d+) copied_bytes=(\d+) source=original_Rust_M1_authenticated_NPF_accepted",
+   win_text)
+  if (len(rows)!=1 or rows[0][0]!="flows" or int(rows[0][1])<1 or
+      int(rows[0][2])<1 or
+      report.get("app_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_UDP" or
+      report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP"):
+   raise RuntimeError("H1799 signed original native M1 padding NPF accepted bytes and ordinary two-OS TCP/UDP missing")
+  report["plan029_normal_startup_padding"]={
+   "source_sha":os.environ["GITHUB_SHA"],
+   "mode":"flows","driver_copied_records":int(rows[0][1]),
+   "driver_copied_bytes":int(rows[0][2]),
+   "record":"SAME_ORIGINAL_RUST_M1_AUTHENTICATED_NPF_PREFIX",
+   "ordinary_windows_linux_udp":report["app_duplex"],
+   "ordinary_windows_linux_tcp":report["tcp_duplex"],
+   "stop":"PASS_BOTH_OWNED"}
+  print("PLAN029_H1799_SIGNED_NORMAL_FLOWS_M1_NPF_PAD_AND_BOTH_OS_STOP_PASS_SCOPED",flush=True)
  if os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1":
   # These are actual current-source original TLS/Rust/OS receipts.
   # Do not promote a pure-Tunnel trial to DNS/Direct/D1-D5 evidence.

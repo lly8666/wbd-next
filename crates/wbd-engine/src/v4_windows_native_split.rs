@@ -250,6 +250,9 @@ impl NativeSplitWorker {
     pub(crate) fn startup_padding_enabled(&self)->bool{
         self.padding_enabled
     }
+    pub(crate) fn startup_padding_mode_name(&self)->&'static str{
+        self.startup_padding.mode_name()
+    }
     /// Only the original TX stages classified Tunnel DATA, and it passes
     /// the actual M1 record_wire_mtu spare bytes; Direct never calls this.
     pub(crate) fn propose_tunnel_padding(&mut self,packet:&[u8],

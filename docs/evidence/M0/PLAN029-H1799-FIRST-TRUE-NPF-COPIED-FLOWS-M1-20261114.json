@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1799,
+  "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+  "kind": "H1799_TEST_SCENE_STAGED_NOT_YET_RUN",
+  "result": "SOURCE_TEST_NOT_RUN",
+  "previous_H1797": {
+    "run_id": 43559122020,
+    "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+    "normal_native_off": "SUCCESS_ORIGINAL_TWO_OS"
+  },
+  "previous_H1798": {
+    "run_id": 43559906217,
+    "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+    "Windows_Go_Rust_Gui_compiler": "SUCCESS"
+  },
+  "scene": {
+    "mode": "Normal",
+    "startup_padding": "flows",
+    "no_extreme_stress": true,
+    "original_Rust_M1_link_ciphertext": true,
+    "npf_copied_records": "NOT_RUN",
+    "npf_copied_bytes": "NOT_RUN",
+    "original_Windows_Linux_UDP_TCP": "NOT_RUN",
+    "stop": "NOT_RUN",
+    "source_lock": "NEW_H1799_SHA_PENDING"
+  },
+  "remaining": "D3-D5/P1-P2"
+}

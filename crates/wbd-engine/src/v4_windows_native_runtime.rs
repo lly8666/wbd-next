@@ -154,6 +154,10 @@
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
      fresh_outer_bytes:AtomicU64,
+     // Accepted by the genuine Npcap driver prefix, not just proposed
+     // by the pre-seal policy. No public ABI change or per-DATA log.
+     startup_pad_npf_bytes:AtomicU64,
+     startup_pad_npf_records:AtomicU64,
      feedback_outer_bytes:AtomicU64,
      repair_outer_bytes:AtomicU64,
      repair_uncertain_bytes:AtomicU64,
@@ -176,6 +180,8 @@
              rx_tx_notify_attempts:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              fresh_outer_bytes:AtomicU64::new(0),
+             startup_pad_npf_bytes:AtomicU64::new(0),
+             startup_pad_npf_records:AtomicU64::new(0),
              feedback_outer_bytes:AtomicU64::new(0),
              repair_outer_bytes:AtomicU64::new(0),
              repair_uncertain_bytes:AtomicU64::new(0),
@@ -437,6 +443,7 @@
      if count==0{return Ok(0)}
      let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
+     let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          // Compute the original M1 record ceiling ONCE per ready batch.
@@ -462,10 +469,12 @@
                      source_len[i].saturating_add(FIXED_WIRE_OVERHEAD));
                  let pad=split.as_mut().map(|s|s.propose_tunnel_padding(
                      &sources[i][..source_len[i]],now_ms,room)).unwrap_or(0);
-                 v3_seal_entry_with_padding(
+                 let result=v3_seal_entry_with_padding(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
                      &sources[i][..source_len[i]],&mut wire[i],pad
-                 )?
+                 )?;
+                 staged_pad[i]=pad;
+                 result
              }else{
                  v3_seal_entry(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
@@ -503,6 +512,14 @@
              if status==1{
                  fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 // Never count an M1 proposal on failed or partially
+                 // accepted Npcap prefix. No shadow/repair double count.
+                 if staged_pad[i]>0{
+                     counters.startup_pad_npf_bytes.fetch_add(
+                         staged_pad[i] as u64,Ordering::Relaxed);
+                     counters.startup_pad_npf_records.fetch_add(
+                         1,Ordering::Relaxed);
+                 }
                  if counters.rx_delivered.load(Ordering::Acquire)>0{
                      counters.tx_after_rx.fetch_add(1,Ordering::Relaxed);
                  }
@@ -739,6 +756,18 @@
      (sack_negotiated&&pending_sack)||
          (!business_active&&cumulative_changed)
  }
+ // One cold/signed owner receipt at graceful worker Stop. This is not
+ // a fabricated os-Applied flag: the counters count genuinely copied
+ // original encrypted M1 carrier bytes accepted by the NPF prefix.
+ fn log_padding_driver_receipt(split:&Option<NativeSplitWorker>,
+     counters:&Counters){
+     if let Some(owner)=split.as_ref(){
+         eprintln!("WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT mode={} copied_records={} copied_bytes={} source=original_Rust_M1_authenticated_NPF_accepted",
+             owner.startup_padding_mode_name(),
+             counters.startup_pad_npf_records.load(Ordering::Relaxed),
+             counters.startup_pad_npf_bytes.load(Ordering::Relaxed));
+     }
+ }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
@@ -751,7 +780,10 @@
      // takes an extra owner mutex for a 2-second policy decision.
      let mut next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
      loop {
-         if counters.stopping.load(Ordering::Acquire){return OK}
+         if counters.stopping.load(Ordering::Acquire){
+             log_padding_driver_receipt(&split,&counters);
+             return OK
+         }
          let result=(||->Result<bool,i32>{
              {
                  let mut e=lock_owner(&lane,&counters,LockDirection::Tx)?;
@@ -898,7 +930,14 @@
                  Err(_)=>Err(BAD_STAGE),
              }
          })();
-         match result {Ok(true)=>return OK,Ok(false)=>{},Err(code)=>return code}
+         match result {
+             Ok(true)=>{
+                 log_padding_driver_receipt(&split,&counters);
+                 return OK
+             },
+             Ok(false)=>{},
+             Err(code)=>return code,
+         }
      }
  }
  /// The fast path performs NO DNS map lookup and NO mutex for all DATA

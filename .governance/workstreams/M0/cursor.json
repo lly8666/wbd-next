@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1798,
-  "checkpoint_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+  "sequence": 1799,
+  "checkpoint_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1798 source: one WinForms portable GUI selector startup-padding off/tls/flows, legacy tls-startup-padding boolean safely migrated to canonical mode on profile import/load, old field hidden as compatible managed, exact frozen-original Go UI/parameters assembly manifest derives valid matching 57-field catalog. H1797 source Rust Windows+Linux, original Go and WinForms builds PASS; H1797 signed off/on mode physical NET_NOT_RUN. H1795 real D1 TCP53 and Stop PASS prior source. PLAN029 IN_PROGRESS.",
-  "why_now": "User prioritizes efficient shipping and no unnecessary extreme tests; complete user-facing canonical one control and prevent inconsistent old GUI checkbox while signed H1797 no-scene baseline continues. Governance H1797 procedural failure was invalid feature-impact kind and evidence source field, not network; fix declaration exactly.",
+  "current_task": "H1799 single ordinary original Windows/Linux Normal V3 startup-padding=flows acceptance staged: record bytes only from original Rust M1 encrypted LINK accepted by NPF driver prefix (no proposed-only counters), paired normal Windows/Linux TCP and UDP delivery and exact both owned Stop in existing signed SOURCE scene; no extra extreme test, new WFP, worker or wire field. H1797 source old Normal default off native Action43559122020 success; H1798 real WinForms/Go/Rust compile Action43559906217 success. H1799 signed flows new SOURCE NOT_RUN until Action; PLAN029 ongoing.",
+  "why_now": "Efficiency priority: after default-off signed Normal regression and real GUI build green, one scoped ordinary flows scene answers actual product effect rather than scaling pressure or rerunning all PLAN028 modes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1798 automatic source-locked cheap assembly + original WinForms/Go Windows build; fix first material compiler/UI issue only. Schedule only one modest Normal off versus flows signed original owner traffic/Stop scenario if baseline source sound; no extreme conditions or 028 seven-mode matrix. D3/D4/D5 live and P1/P2 performance still OPEN.",
+  "next_action": "Collect H1799 automatic cheap/Windows Rust+Go compile; then single source-locked Windows/Linux signed Normal flows driver NPF copied padding>0, normal TCP+UDP/Stop. Repair only real first error. Future D3/D4/D5 and P1/P2 latency/cpu remain OPEN. Do not treat old pinned Go RootCAs standalone red as product defect.",
   "unverified": true,
-  "last_tested_source": "36b9fd711b62fcacc23209f958be402be966fb77",
+  "last_tested_source": "30f234900f0d83007df975dfa071339ab4b9a7fe",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1798-WINFORMS-CANONICAL-PADDING-AND-H1797-SOURCE-CI-20261114.json"
+    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1795 signed Windows/Linux native app TCP53 double egress and owned Stop PASS. H1797 original Rust M1 padded Tunnel Normal source, CLI config compiled in Windows/Linux Rust/Go WinForms gates; signed off/on not tested. H1798 one portable GUI selector + migration source staged, no live GUI/OS effective readback yet."
+  "partial_summary": "H1795 signed app DNS TCP53 both directions and owned Stop PASS; H1797 Normal off signed native two-OS/Stop PASS; H1798 canonical GUI/off/tls/flows+old migration Windows Go/Rust compile PASS. H1799 NPF accepted true encrypted M1 padding instrument and one ordinary flows trial staged, signed flows NOT_RUN yet."
 }

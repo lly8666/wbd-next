@@ -67,6 +67,12 @@ impl TunnelStartupPadding{
             state:authenticated_seed.max(1)}
     }
     pub(crate) fn len(&self)->usize{self.seen.len()}
+    pub(crate) fn mode_name(&self)->&'static str{
+        match self.mode{
+            StartupMode::Off=>"off",StartupMode::Tls=>"tls",
+            StartupMode::Flows=>"flows",
+        }
+    }
     // Caller invokes only AFTER classifying Tunnel and computing actual
     // M1 LINK record room. Off is a single branch: no clock, parse, table,
     // PRNG, or allocations; Direct must never invoke this API.
@@ -126,6 +132,7 @@ mod tests{
         let mut p=TunnelStartupPadding::new(StartupMode::Off,123);
         for _ in 0..300{assert_eq!(p.propose(&udp(1),0,300),0)}
         assert_eq!(p.len(),0);
+        assert_eq!(p.mode_name(),"off");
     }
     #[test]
     fn flow_has_12_records_2k_cap_10pct_and_no_restart_without_idle(){
