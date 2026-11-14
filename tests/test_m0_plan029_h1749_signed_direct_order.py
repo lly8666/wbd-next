@@ -378,7 +378,9 @@ class NativeDirectOrder(unittest.TestCase):
                        "PASS_SCOPED_P1_BOTH_TRUE_NATIVE_TUNNEL_LEGS_MEASURED"):
             self.assertIn(marker,p)
         self.assertIn("git diff --name-only $sha $env:GITHUB_SHA",w)
-        self.assertIn("assert hashlib.sha256(b).hexdigest()==m['sha256'][key]",w)
+        self.assertIn("assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]",w)
+        self.assertIn("h1814_exact_native_accel",w)
+        self.assertIn("assert m['native_fec_acceleration'] is True",w)
         self.assertIn('assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]',w)
         self.assertIn("PASS_BOTH_OWNED",p)
 if __name__=="__main__":unittest.main()

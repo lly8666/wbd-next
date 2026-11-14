@@ -1209,6 +1209,10 @@ jobs:
           current_h1656=(os.environ.get('WBD_WL_REUSE_RUN_ID')=='43161652596' and
                          os.environ.get('WBD_WL_BINARY_SOURCE')=='52767d183b61eaf2621d967b16e85e644b1de428' and
                          m['source_sha']=='52767d183b61eaf2621d967b16e85e644b1de428')
+          h1814_exact_native_accel=(
+              os.environ.get('WBD_WL_REUSE_RUN_ID')=='43571086653' and
+              os.environ.get('WBD_WL_BINARY_SOURCE')=='c262636c81d688e8df8e844b668bbcc57957425d' and
+              m['source_sha']=='c262636c81d688e8df8e844b668bbcc57957425d')
           if os.environ.get('WBD_WL_NATIVE_ACCEL_REUSE')=='1' or frozen_h1600:
               assert m['features']=='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
               assert m['native_fec_acceleration'] is True
@@ -1219,6 +1223,13 @@ jobs:
               assert m['native_fec_acceleration'] is True
               assert m['sha256']['exe']=='edbb9715f19547dadc2117b2d2fe39169762480de3244c639ecbb0c1a777f582'
               assert m['sha256']['dll']=='3973cdadf9ced7063b1a5b8f47f24fe480c04a989a4baae383e33df1c76f9357'
+              assert m.get('original_go_source','a7a82db31fe736ffedee330795a3234d358f1984')=='a7a82db31fe736ffedee330795a3234d358f1984'
+          elif h1814_exact_native_accel:
+              # H1814 original signed release build includes pinned ISA-L.
+              # Never force a scalar claim, and NEVER accept unknown product
+              # features or skip the per-byte manifest hash below.
+              assert m['features']=='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
+              assert m['native_fec_acceleration'] is True
               assert m.get('original_go_source','a7a82db31fe736ffedee330795a3234d358f1984')=='a7a82db31fe736ffedee330795a3234d358f1984'
           else:
               assert m['features']=='m0_v4_embedded_go,fec2_product_record'
