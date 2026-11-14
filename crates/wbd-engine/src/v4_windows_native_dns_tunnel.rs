@@ -4,11 +4,12 @@
 //! delivery. No Go per-packet callback, physical socket, cross-exit retry,
 //! or third-party resolver selected by the client application's dst IPv4.
 use std::collections::HashMap;
+use crate::v4_client_split_wire::{dns_question,dns_reply_question};
 
 const MAX_PENDING:usize=256;
 const TTL_MS:u64=5_000;
-#[derive(Clone,Copy,Debug,Eq,PartialEq)]
-struct Ticket{original_dns:u32,until_ms:u64}
+#[derive(Clone,Debug,Eq,PartialEq)]
+struct Ticket{original_dns:u32,until_ms:u64,qname:String,qtype:u16}
 pub(crate) struct TunnelDnsMap{
     lease:u32,endpoint:u32,
     pending:HashMap<(u16,u16),Ticket>,
@@ -63,16 +64,21 @@ impl TunnelDnsMap{
         if u32be(&b[12..16])!=self.lease ||
            u16be(&b[ihl+2..ihl+4])!=53{return Err(())}
         let key=(u16be(&b[ihl..ihl+2]),u16be(&b[ihl+8..ihl+10]));
+        let (id,name,qtype)=dns_question(&b[ihl+8..]).map_err(|_|())?;
+        if id!=key.1{return Err(())}
         let presented=u32be(&b[16..20]);
         if presented==0||presented==u32::MAX{return Err(())}
         match self.pending.get(&key){
             Some(previous) if previous.until_ms>now_ms &&
-                previous.original_dns!=presented=>return Err(()),
+                (previous.original_dns!=presented ||
+                 previous.qname!=name||previous.qtype!=qtype)=>
+                return Err(()),
             None if self.pending.len()>=MAX_PENDING=>return Err(()),
             _=>{},
         }
         self.pending.insert(key,Ticket{
             original_dns:presented,until_ms:now_ms.saturating_add(TTL_MS),
+            qname:name,qtype,
         });
         b[16..20].copy_from_slice(&self.endpoint.to_be_bytes());
         rechecksum(b,ihl);
@@ -88,9 +94,21 @@ impl TunnelDnsMap{
            u32be(&b[16..20])!=self.lease ||
            u16be(&b[ihl..ihl+2])!=53{return None}
         let key=(u16be(&b[ihl+2..ihl+4]),u16be(&b[ihl+8..ihl+10]));
-        let Some(ticket)=self.pending.remove(&key)else{return Some(false)};
-        if ticket.until_ms<=now_ms{return Some(false)}
-        b[12..16].copy_from_slice(&ticket.original_dns.to_be_bytes());
+        let Some(ticket)=self.pending.get(&key)else{return Some(false)};
+        if ticket.until_ms<=now_ms{
+            self.pending.remove(&key);
+            return Some(false)
+        }
+        // Forged same-socket/ID QNAME cannot steal the real client's reply.
+        let Ok((id,name,qtype))=dns_reply_question(&b[ihl+8..])else{
+            return Some(false)
+        };
+        if id!=key.1||name!=ticket.qname||qtype!=ticket.qtype{
+            return Some(false)
+        }
+        let original_dns=ticket.original_dns;
+        self.pending.remove(&key);
+        b[12..16].copy_from_slice(&original_dns.to_be_bytes());
         rechecksum(b,ihl);
         Some(true)
     }
@@ -104,19 +122,43 @@ impl TunnelDnsMap{
 mod tests{
     use super::*;
     fn udp(src:u32,dst:u32,sport:u16,dport:u16,id:u16)->Vec<u8>{
-        let mut b=vec![0u8;40];
-        b[0]=0x45;b[2..4].copy_from_slice(&40u16.to_be_bytes());
+        let question=b"\x03www\x07globalx\x07example\x00\x00\x01\x00\x01";
+        let total=40+question.len();
+        let mut b=vec![0u8;total];
+        b[0]=0x45;b[2..4].copy_from_slice(&(total as u16).to_be_bytes());
         b[8]=64;b[9]=17;
         b[12..16].copy_from_slice(&src.to_be_bytes());
         b[16..20].copy_from_slice(&dst.to_be_bytes());
         b[20..22].copy_from_slice(&sport.to_be_bytes());
         b[22..24].copy_from_slice(&dport.to_be_bytes());
-        b[24..26].copy_from_slice(&20u16.to_be_bytes());
+        b[24..26].copy_from_slice(&((total-20) as u16).to_be_bytes());
         b[28..30].copy_from_slice(&id.to_be_bytes());
-        b[30..32].copy_from_slice(&0x0100u16.to_be_bytes());
+        b[30..32].copy_from_slice(&(if sport==53{0x8180u16}else{0x0100u16}).to_be_bytes());
         b[32..34].copy_from_slice(&1u16.to_be_bytes());
+        b[40..].copy_from_slice(question);
         rechecksum(&mut b,20);
         b
+    }
+    #[test]
+    fn plan029_tunnel_dns_wrong_question_cannot_consume_original_waiter(){
+        let lease=0x0aea0c22;
+        let mut map=TunnelDnsMap::new(lease,0x01010101);
+        let mut query=udp(lease,0x08080808,49112,53,0x1788);
+        assert_eq!(map.rewrite_query(&mut query,100),Ok(()));
+        let mut wrong=udp(0x01010101,lease,53,49112,0x1788);
+        wrong[45]=b'z'; // wrong QNAME, same socket/transaction ID
+        rechecksum(&mut wrong,20);
+        assert_eq!(map.rewrite_reply(&mut wrong,101),Some(false));
+        assert_eq!(map.len(),1);
+        let mut wrong_type=udp(0x01010101,lease,53,49112,0x1788);
+        wrong_type[62]=28; // AAAA instead of A
+        rechecksum(&mut wrong_type,20);
+        assert_eq!(map.rewrite_reply(&mut wrong_type,102),Some(false));
+        assert_eq!(map.len(),1);
+        let mut good=udp(0x01010101,lease,53,49112,0x1788);
+        assert_eq!(map.rewrite_reply(&mut good,103),Some(true));
+        assert_eq!(u32be(&good[12..16]),0x08080808);
+        assert_eq!(map.len(),0);
     }
     #[test]
     fn plan029_tunnel_dns_redirect_forces_configured_endpoint_reverses_app_source(){

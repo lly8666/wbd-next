@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1787,
-  "checkpoint_sha": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
+  "sequence": 1788,
+  "checkpoint_sha": "1d92fa7b3c225b75ffdfc30584f565bab1069097",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1787 parallel product source D3: original Rust TunnelDnsMap full/collision rewrite had only a silent drop, violating immediate local failure. On rejected genuine Tunnel DNS UDP query, queue SERVFAIL with exact original app tuple and DNS ID via existing DirectDns reverse mailbox (only shared scheduling lane; no Direct upstream). Reuses one existing Rust TX worker; no Wintun borrow over async or per-flow threads. Unit validates original source/IP/ID and no physical sockets. H1786 signed physical Action is separately in-flight frozen source; H1787 native code tests NOT_RUN until its Action. PLAN029 IN_PROGRESS.",
-  "why_now": "D3 max 256 Tunnel queries already bounded but full request previously dropped without application error. Fix production local failure in parallel to signed H1786 physical recovery; do not tweak unrelated TCP backends.",
+  "current_task": "H1788 source hardening in parallel to H1786 signed physical: original TunnelDnsMap ticket now stores validated QNAME/QTYPE and verifies response QR/QNAME/QTYPE before retiring original socket/ID; forged different question drops without stealing live waiter, no extra resolver. Rust unit confirms wrong name and type then exact original reply. H1787 local SERVFAIL source Windows/Linux Rust unit successful, H1786 signed native still separate SOURCE. PLAN029 IN_PROGRESS.",
+  "why_now": "Existing tunnel reply exact source/port/ID insufficient to prevent unrelated QNAME poisoning a live transaction. Do question parser work only on DNS/53 and retain valid ticket on mismatch.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1787 Windows/Linux Rust compilation and H1786 signed actual physical combined Action separately. Then D1 app TCP53, D3 hard small quota + FakeIP, D4/D5 lifecycle/GUI, P1/P2 padding.",
+  "next_action": "Collect one H1788 Rust component compile/CI, H1786 signed actual exit/Stop. Then D1 app TCP53, D3 physical DNS quotas, D4/D5 GUI/MTU, P1/P2 padding.",
   "unverified": true,
   "last_tested_source": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1787 first native source for Tunnel DNS full immediate original app SERVFAIL; real bound test and Stop not yet executed. H1786 signed Direct8 + positive cache running separate SOURCE."
+  "partial_summary": "H1788 Tunnel DNS QNAME/QTYPE stricter reply source implemented NOT_RUN until CI; H1786 separate signed combined Direct8+cache running."
 }

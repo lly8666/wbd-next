@@ -91,12 +91,13 @@ fn read_ports(data:&[u8])->Result<(u16,u16),IngressWireError>{
     Ok((u16::from_be_bytes([data[0],data[1]]),
         u16::from_be_bytes([data[2],data[3]])))
 }
-pub(crate) fn dns_question(data:&[u8])->Result<(u16,String,u16),IngressWireError>{
+fn parsed_dns_question(data:&[u8],reply:bool)
+    ->Result<(u16,String,u16),IngressWireError>{
     if data.len()<17{return Err(IngressWireError::MalformedDns)}
     let flags=u16::from_be_bytes([data[2],data[3]]);
     let qd=u16::from_be_bytes([data[4],data[5]]);
     // Response and unusual opcodes are not ordinary client DNS requests.
-    if flags&0x8000!=0 || flags&0x7800!=0 || qd!=1 {
+    if (flags&0x8000!=0)!=reply || flags&0x7800!=0 || qd!=1 {
         return Err(IngressWireError::MalformedDns);
     }
     let id=u16::from_be_bytes([data[0],data[1]]);
@@ -130,6 +131,15 @@ pub(crate) fn dns_question(data:&[u8])->Result<(u16,String,u16),IngressWireError
     let qclass=u16::from_be_bytes([data[cursor+2],data[cursor+3]]);
     if qclass!=1{return Err(IngressWireError::MalformedDns)}
     Ok((id,name,qtype))
+}
+/// QNAME/QTYPE must bind a request and its corresponding response.
+pub(crate) fn dns_question(data:&[u8])
+    ->Result<(u16,String,u16),IngressWireError>{
+    parsed_dns_question(data,false)
+}
+pub(crate) fn dns_reply_question(data:&[u8])
+    ->Result<(u16,String,u16),IngressWireError>{
+    parsed_dns_question(data,true)
 }
 pub(crate) struct PacketIngress {
     policy:Arc<SplitPolicy>,
