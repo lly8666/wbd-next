@@ -52,12 +52,20 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "(!contains(github.event.head_commit.message, '[plan028-win-tls-reuse]')) && inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
+            "(!contains(github.event.head_commit.message, '[plan028-win-tls-reuse]')) && inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')) && !(github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]')) && !(github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-reuse]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
         self.assertIn("./internal/realityfront", scripts)
         self.assertIn("GO_COMPILE_ONLY", scripts)
+        # H1815/H1816: these reuse-only selectors skip an unchanged-product
+        # preflight, while the original native job still verifies source diff,
+        # both binary manifests and signed drivers before real OS mutations.
+        for marker in ("[plan029-v3-real-p2-mixed]",
+                       "[plan029-v3-real-p1-reuse]"):
+            self.assertIn(marker,job["if"])
+            self.assertIn(marker,self.workflow["jobs"]["linux-source-locked-public"]["if"])
+            self.assertIn(marker,self.workflow["jobs"]["native-public-two-os"]["if"])
         self.assertIn("native_product='NOT_RUN'", scripts)
         for forbidden in ("rustup", "cargo ", "wsl.exe", "-Action Install", "m0_wl_public_normal_e2e.py"):
             self.assertNotIn(forbidden, scripts)

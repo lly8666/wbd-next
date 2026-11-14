@@ -126,13 +126,23 @@ for name,v3 in (("A_off_old_tunnel","0"),("B_on_all_tunnel","1")):
             measured.get("scenario_sha256")!=scene["scenario_sha256"] or
             not first_delivery_ok_for_scenario(scene,measured.get("first_delivery_fraction",{}))):
             raise ValueError("P1 real tc throughput first-delivery/Stop not qualified")
+        if (report.get("linux_binary_source")!=os.environ.get("WBD_WL_BINARY_SOURCE") or
+            os.environ.get("LINUX_BINARY_SRC")!=os.environ.get("WBD_WL_BINARY_SOURCE")):
+            raise ValueError("P1 real WSL guest original Go/Rust artifact source provenance mismatch")
         apps=report.get("wl_n0_measured",{})
         if set(apps)!={"windows","linux"}:
             raise ValueError("both native user socket reports missing")
         delivered=0
         for side in ("windows","linux"):
             app=apps[side]
-            if (app.get("source")!=SOURCE or
+            # WSL2 -u root does not inherit the GitHub host GITHUB_SHA.
+            # Its verified linux-binary manifest is checked by the original
+            # Windows runner, and this guest's exact scenario hash plus
+            # kernel TUN delivery are mandatory. Never trust a different
+            # nonempty Linux-reported SOURCE, nor excuse Windows source drift.
+            app_source=app.get("source")
+            if ((side=="windows" and app_source!=SOURCE) or
+                (side=="linux" and app_source not in (None,SOURCE)) or
                 app.get("scenario_sha256")!=scene["scenario_sha256"] or
                 app.get("measurement_duration_s")!=60 or
                 app.get("sent_payload_mbps",0)<47.5 or
