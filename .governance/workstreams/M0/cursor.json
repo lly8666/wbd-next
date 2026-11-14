@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1832,
-  "checkpoint_sha": "268fdc150937416a51991b440a961a5dc96a1a3e",
+  "sequence": 1833,
+  "checkpoint_sha": "70b70826df0e0a4543a8bbc02192fbc84fbb5ede",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1832: H1831 source268fdc signed genuine Windows/Wintun D3 CN CNAME 2 A→2 FakeIP Direct UDP+Tunnel+owned Stop PASS_SCOPED, DNS app 531ms/1 request. Build explicit non-GitHub-Actions cold split-enable and GUI portable cn-rules-file with next-Connect semantics, Game2/4 fail closed until real split owner. New H1832 source compile+GUI+real Stop NOT_RUN; P1/P2/Game4/IPv6/HOL OPEN.",
-  "why_now": "H1831 source-frozen D3 success establishes async FakeIP functional, but real normal product still gated by GITHUB_ACTIONS. User authorized real code execution and GUI effective config, so release only explicit opt-in cold path without fake Ready or claiming other modes.",
+  "current_task": "H1833: H1832 product explicit non-CI CN split+GUI file input source70b first assembly gate FAIL due four stale overlay create result_blob SHA; exact receipt fix only, no new product semantic or duplicate D3. Windows Go/GUI rebuild pending. H1831 source268 true signed D3 PASS, PLAN029 IN_PROGRESS.",
+  "why_now": "H1832 native main Action43586793272 and Windows DNS source Action43586793250 fail before compile at tools/prepare_windows_wiring.py --check-only: mismatch new m0_native_v4_dispatch_windows.go first. Root cause four changed overlay create files retained stale pinned manifest result_blob despite three original patched replace result_blob being updated. The gate correctly refused; repair exact four hashes, no weakening.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect single H1832 CI Go Windows native build/GUI manifest/feature governance first failure. Then one explicit non-CI Normal CN real OS GUI end-to-end scenario with saved config→CLI→Rust owner→2 DNS→Direct/Tunnel→Stop; continue separate Game4 owner, IPv6, P2 current source continuous UDP/RSS and P1 CPU. Do not re-dispatch H1831.",
+  "next_action": "Collect H1833 same-source exact pinned overlay assembly + Windows Go & GUI WinForms compile Actions; if failure locate first compiler/GUI config error, no false Ready. Then one explicit non-CI real Normal split-enable and GUI actual Connect/Stop representative, followed by Game4/IPv6 and P1/P2 new-source perf. H1831 true D3 not repeated.",
   "unverified": true,
   "last_tested_source": "268fdc150937416a51991b440a961a5dc96a1a3e",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1831-SIGNED-D3-ASYNC-CN-DNS-SOURCE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1832-EXPLICIT-PRODUCT-GUI-CN-SPLIT.md"
+    "docs/devlog/M0/20261114-PLAN029-H1832-EXPLICIT-PRODUCT-GUI-CN-SPLIT.md",
+    "docs/devlog/M0/20261114-PLAN029-H1833-EXACT-ASSEMBLY-RESULT-BLOBS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1831 signed D3 source268 PASS_SCOPED: two distinct FakeIP, physical Direct UDP, both owned Stop, app DNS531ms. H1832 explicit production CN split opt-in and GUI portable rules fields source candidate; no signed H1832 product evidence yet. 029 IN_PROGRESS, Game4/GUI true start/P2 latency/P1 CPU/IPv6/compaction slow-fsync OPEN."
+  "partial_summary": "H1831 signed D3 source268 true PASS_SCOPED. H1832 explicit split and GUI implementation source70b failed assembly because four old create result hashes; H1833 fixes only hashes. Actual non-CI GUI Connect/Stop NOT_RUN, async slow fsync, TCP perf, Game4 CN and IPv6 OPEN."
 }
