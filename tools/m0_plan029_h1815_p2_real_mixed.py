@@ -63,8 +63,8 @@ def tcp_client(role,local,remote):
         raise RuntimeError("P2 direct must use original Wintun /32 and announced local FakeIP")
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
         sock.settimeout(35);sock.bind((local,0))
-        started=time.monotonic();sock.connect((remote,PORT))
-        connected=time.monotonic()
+        started=time.perf_counter();sock.connect((remote,PORT))
+        connected=time.perf_counter()
         # Both genuine application WinSock sockets must retain the same
         # default TCP_NODELAY state; do not change transport pacing or
         # socket tuning when comparing physical vs synthetic Direct.
@@ -80,14 +80,14 @@ def tcp_client(role,local,remote):
             if (n+16384)%(128*1024)==0:
                 receipt("PLAN029_H1839_P2_TCP_STAGE",{
                     "role":role,"phase":"upload_progress",
-                    "bytes":n+16384,"elapsed_ms":round((time.monotonic()-connected)*1000,3)})
+                    "bytes":n+16384,"elapsed_ms":round((time.perf_counter()-connected)*1000,3)})
             if SEND_PAUSE:time.sleep(SEND_PAUSE) # Exact same condition on physical and Direct
-        uploaded=time.monotonic()
+        uploaded=time.perf_counter()
         receipt("PLAN029_H1839_P2_TCP_STAGE",{
             "role":role,"phase":"upload_complete","bytes":SIZE,
             "elapsed_ms":round((uploaded-connected)*1000,3)})
         sock.shutdown(socket.SHUT_WR)
-        half_closed=time.monotonic()
+        half_closed=time.perf_counter()
         receipt("PLAN029_H1839_P2_TCP_STAGE",{
             "role":role,"phase":"half_closed",
             "elapsed_ms":round((half_closed-started)*1000,3)})
@@ -97,10 +97,10 @@ def tcp_client(role,local,remote):
             if not part:
                 receipt("PLAN029_H1839_P2_TCP_STAGE",{
                     "role":role,"phase":"premature_eof",
-                    "bytes":len(echoed),"elapsed_ms":round((time.monotonic()-started)*1000,3)})
+                    "bytes":len(echoed),"elapsed_ms":round((time.perf_counter()-started)*1000,3)})
                 break
             if first_reply is None:
-                first_reply=time.monotonic()
+                first_reply=time.perf_counter()
                 receipt("PLAN029_H1839_P2_TCP_STAGE",{
                     "role":role,"phase":"first_reply",
                     "elapsed_ms":round((first_reply-started)*1000,3)})
@@ -110,8 +110,8 @@ def tcp_client(role,local,remote):
                 last_bucket=bucket
                 receipt("PLAN029_H1839_P2_TCP_STAGE",{
                     "role":role,"phase":"download_progress",
-                    "bytes":len(echoed),"elapsed_ms":round((time.monotonic()-started)*1000,3)})
-        ended=time.monotonic()
+                    "bytes":len(echoed),"elapsed_ms":round((time.perf_counter()-started)*1000,3)})
+        ended=time.perf_counter()
         if len(echoed)!=SIZE or hashlib.sha256(echoed).hexdigest()!=SHA:
             raise RuntimeError("P2 Windows actual one-MiB kernel TCP echo wrong")
         data={"role":role,"echo_bytes":len(echoed),"payload_sha256":SHA,
@@ -155,15 +155,15 @@ def udp_windows(lease,tun_ip):
     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
         sock.bind((lease,0));sock.settimeout(1.5)
         print("PLAN029_H1815_P2_WINDOWS_TUN_SMALL_READY",flush=True)
-        started=time.monotonic();rtts=[];gaps=[];prev=None;total=0
+        started=time.perf_counter();rtts=[];gaps=[];prev=None;total=0
         # Test-only host completion marker: UDP must span the entire real
         # Direct TCP lifetime, not end after the old first ~2 seconds.
         done=pathlib.Path(os.environ["WBD_PLAN029_P2_TCP_DONE_MARKER"])
         for seq in range(MAX_SUSTAIN):
-            begin=time.monotonic()
+            begin=time.perf_counter()
             sock.sendto(udp_packet(seq),(tun_ip,SMALL_PORT))
             payload,fromaddr=sock.recvfrom(512)
-            end=time.monotonic()
+            end=time.perf_counter()
             if fromaddr!=(tun_ip,SMALL_PORT) or payload!=udp_packet(seq):
                 raise RuntimeError("P2 small UDP echo escaped Tunnel or wrong sequence")
             rtts.append((end-begin)*1000)
@@ -180,7 +180,7 @@ def udp_windows(lease,tun_ip):
         payload,fromaddr=sock.recvfrom(512)
         if fromaddr!=(tun_ip,SMALL_PORT) or payload!=FINISH_PACKET:
             raise RuntimeError("P2 Tunnel final controlled echo missing")
-        finished=time.monotonic()
+        finished=time.perf_counter()
     receipt("PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS",
       {"received":COUNT,"sustained_total":total,
        "start_monotonic_s":started,"end_monotonic_s":finished,
@@ -297,7 +297,15 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         for f in streams:f.close()
 
 if __name__=="__main__":
-    if len(sys.argv)!=4:raise SystemExit("P2 role and two bounded addresses required")
+    # An optional exact fixture-only fourth argument is carried explicitly
+    # across wsl.exe, where Windows environment variables are not inherited.
+    # Never silently run different payload sizes on the two kernel legs.
+    if len(sys.argv) not in (4,5):
+        raise SystemExit("P2 role, two addresses and optional bounded workload required")
+    if len(sys.argv)==5 and (
+        sys.argv[4] not in ("p2bulk","p2paced") or
+        BULK!=(sys.argv[4]=="p2bulk")):
+        raise SystemExit("P2 physical and Wintun workload selection mismatch")
     role,a,b=sys.argv[1:4]
     if role=="guest_tcp":tcp_guest(a,b)
     elif role=="guest_udp":udp_guest(a,b)

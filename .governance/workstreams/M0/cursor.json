@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1860,
-  "checkpoint_sha": "ef46a84627f15d4fad983ba08a293daab3c94c5c",
+  "sequence": 1861,
+  "checkpoint_sha": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1860 P2 unpaced4MiB stage now admits exact signed Native with existing trial/build/MTU selectors and explicit WSL2 bulk argv; single new SOURCE P2 Action NOT_RUN at commit. H1859 independent P1 same-VM A/B ongoing; source feature card has previous H1859 declaration corrected.",
-  "why_now": "H1856 paced1MiB Normal P2 recovered but bulk HOL/RSS/CPU not measured; H1858 bulk marker skipped and H1859 fixed exact entry. Run one distinct unpaced4MiB probe, not another paced repetition.",
+  "current_task": "H1861 H1859 P1 real A/B 50Mbps60s both 0.6984GiB/p99 47ms/Stop PASS, but B V3/all CPU/GiB22.8424 vs A19.3522 (+18.04%) PERF_FAIL. H1860 P2 bulk pre-network FAIL old argv count vs fourth p2bulk; no 4MiB business, owned finally PASS. Implement All/nonDNS valid unfragmented Tunnel fastpath avoiding FlowPin; fix 4th arg and Windows highres timer.",
+  "why_now": "P1 real regression >5% cannot be treated as green; V3/all ordinary nonDNS DATA carries avoidable FlowPin/hash work. H1860 first gate was fixture not packet path.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1859 already in-flight P1 SOURCE ef46a846 without duplicate dispatch, and single H1860 [plan029-v3-real-p2-bulk] Native Action; check 4MiB full physical vs Direct, unique Tunnel UDP across entire TCP, p99/gap, correct SHA/FIN and exact Stop/finally. If failure classify first boundary; proceed Game4 CN, signed GUI true Connect/Stop, IPv6 and D1-D5.",
+  "next_action": "Collect one H1861 source-locked [plan029-v3-real-p1-tunnel-ab] Action and compare CPU/GiB, RSS, p99/holes and owned Stop, without seed retuning. Then independently source-lock H1862 4MiB unpaced P2 test with corrected WSL argv/high-resolution UDP RTT; after these address Game4 CN/GUI/D4 IPv6/D1-D5.",
   "unverified": true,
-  "last_tested_source": "13312046a6459d0693b4b2f196f7b9539dfc063f",
+  "last_tested_source": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1859-H1857-P1-FIRST-EXPORT-GATE-H1858-SKIP-20261114.json"
+    "docs/evidence/M0/PLAN029-H1861-H1859-CPU-P1-H1860-BULK-ARGV-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
     "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
     "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md",
     "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md",
     "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md",
     "docs/devlog/M0/20261114-PLAN029-H1856-REAL-MANIFEST-PIN-NPF.md",
     "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md",
-    "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md",
-    "docs/devlog/M0/20261114-PLAN029-H1853-H1852-FEATURE-CARD-SIZE-RECOVERY.md"
+    "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1856 Direct 1MiB 328ms vs physical281ms PASS_SCOPED. H1857 P1 A 50Mbps success/B absent V3 export pre-network; H1859 fixes builder and now P1 in flight. H1858 4MiB compile PASS but native SKIPPED; H1860 runs first exact unpaced4MiB P2 with updated selectors, real results pending. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1856 paced P2 Direct328ms/physical281ms + Tunnel UDP full Stop PASS_SCOPED. H1859 P1 real both legs throughput/p99/Stop PASS but +18.04% CPU/GiB FAIL. H1860 4MiB test not run because guest argv error before listener, owned cleanup PASS. H1861 all-mode pin-free normal Tunnel fastpath and fixed P2 fixture, new P1 NOT_RUN."
 }

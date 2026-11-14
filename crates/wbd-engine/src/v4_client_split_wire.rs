@@ -207,7 +207,46 @@ impl PacketIngress{
         // source lease check. Here additionally reject foreign Wintun
         // sources before any new Direct or ordinary DNS work.
         if view.src!=self.lease4{return Err(IngressWireError::MalformedIpv4)}
-        let fragment_key=FragmentKey{
+        // P1 pure-Tunnel protector: V3/all must not allocate or hash a
+        // FlowKey/FlowPin on every ordinary DATA packet. Mode is frozen for
+        // this generation. Preserve the full IPv4/source/header validation,
+        // fake-pool rejection, fragmented flow admission and QNAME-specific
+        // DNS53 handling on their original paths. This is NOT a hot rules
+        // update or a bypass of any authenticated owner invariant.
+        if view.fragment_offset==0 && !view.more_fragments &&
+            self.policy.plain_all_tunnel(view.dst){
+            match view.proto{
+                6=>{
+                    let (_,dst_port)=read_ports(view.transport)?;
+                    if dst_port!=53{
+                        if view.transport.len()<20{
+                            return Err(IngressWireError::MalformedTransport)
+                        }
+                        let tcp_header=usize::from(view.transport[12]>>4)*4;
+                        if tcp_header<20||tcp_header>view.transport.len(){
+                            return Err(IngressWireError::MalformedTransport)
+                        }
+                        return Ok(IngressAction::Tunnel)
+                    }
+                },
+                17=>{
+                    let (_,dst_port)=read_ports(view.transport)?;
+                    if dst_port!=53{
+                        if view.transport.len()<8{
+                            return Err(IngressWireError::MalformedTransport)
+                        }
+                        let udp_len=u16::from_be_bytes(
+                            [view.transport[4],view.transport[5]]) as usize;
+                        if udp_len!=view.transport.len()||udp_len<8{
+                            return Err(IngressWireError::MalformedTransport)
+                        }
+                        return Ok(IngressAction::Tunnel)
+                    }
+                },
+                _=>return Ok(IngressAction::Tunnel),
+            }
+        }
+        let fragment_key={
             src:view.src,dst:view.dst,proto:view.proto,ip_id:view.ip_id,
         };
         if view.fragment_offset!=0{
@@ -410,6 +449,43 @@ mod tests{
         assert_eq!(s.on_ipv4(&tcp(ip(203,0,113,5),45004,443),5),
             Ok(IngressAction::Direct{
                 real_dst:ip(203,0,113,5),presented_dst:ip(203,0,113,5)}));
+    }
+    #[test]
+    fn plan029_p1_all_plain_tunnel_avoids_flow_pin_and_keeps_dns_fake_guards(){
+        let mut all=ingress(Mode::All,1,3);
+        // Same mutable packet identity, thousands of ordinary business
+        // flows: no per-flow hash/pin churn for a generation-fixed
+        // all-Tunnel profile. The previous path pinned first three.
+        for i in 0..512u16{
+            let t=tcp(ip(8,8,4,4),20000+i,443);
+            assert_eq!(all.on_ipv4(&t,u64::from(i)),Ok(IngressAction::Tunnel));
+            let u=udp(ip(192,168,1,1),20000+i,4500,b"x");
+            assert_eq!(all.on_ipv4(&u,u64::from(i)),Ok(IngressAction::Tunnel));
+        }
+        assert_eq!(all.flow_count(),0);
+        assert_eq!(all.fragment_count(),0);
+        let dns_q=udp(ip(8,8,8,8),34001,53,&dns("www.cn.example",1));
+        assert_eq!(all.on_ipv4(&dns_q,513),Ok(IngressAction::DnsUdp{
+            egress:DnsEgress::Tunnel,name:"www.cn.example".into(),
+            qtype:1,id:0x4321,fake_eligible:false
+        }));
+        assert_eq!(all.on_ipv4(&tcp(ip(198,18,1,2),34002,443),514),
+            Ok(IngressAction::DropUnknownFake));
+        let mut foreign=tcp(ip(8,8,8,8),34003,443);
+        foreign[12..16].copy_from_slice(&ip(10,234,12,35).to_be_bytes());
+        assert_eq!(all.on_ipv4(&foreign,515),Err(IngressWireError::MalformedIpv4));
+        let mut wrong_tcp=tcp(ip(8,8,8,8),34004,443);
+        wrong_tcp[20+12]=0x40; // TCP header advertised below 20B
+        assert_eq!(all.on_ipv4(&wrong_tcp,516),
+            Err(IngressWireError::MalformedTransport));
+        let mut wrong_udp=udp(ip(8,8,8,8),34005,9000,b"x");
+        wrong_udp[20+4..20+6].copy_from_slice(&7u16.to_be_bytes());
+        assert_eq!(all.on_ipv4(&wrong_udp,517),
+            Err(IngressWireError::MalformedTransport));
+        // Fragment-internal flow identity still requires a pinned first
+        // fragment; a naked noninitial piece must never be fast-accepted.
+        assert_eq!(all.on_ipv4(&ipv4(ip(8,8,8,8),17,52,1,&[0;8]),518),
+            Err(IngressWireError::UnassociatedFragment));
     }
     #[test]
     fn plan029_real_ingress_all_and_lan_never_force_cn_domain_or_ip(){

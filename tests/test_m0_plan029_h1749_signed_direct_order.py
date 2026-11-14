@@ -440,6 +440,18 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("$expectedTcpBytes=4194304",wf)
         self.assertIn("[int]$p2.load_bytes -ne $expectedTcpBytes",wf)
 
+    def test_h1861_p2_p99_uses_high_resolution_same_windows_clock(self):
+        from pathlib import Path
+        app=(Path(__file__).resolve().parents[1] /
+             "tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        self.assertNotIn("time.monotonic()",app)
+        self.assertIn("time.perf_counter()",app)
+        self.assertIn("math.ceil(.99*total)",app)
+        self.assertIn('"rtt_p99_ms":round(sorted(rtts)',app)
+        self.assertIn("if len(sys.argv) not in (4,5):",app)
+        self.assertIn('sys.argv[4] not in ("p2bulk","p2paced")',app)
+        self.assertIn('BULK!=(sys.argv[4]=="p2bulk")',app)
+
     def test_h1845_nonci_product_exact_cli_and_legacy_trial_off(self):
         from pathlib import Path
         source=(Path(__file__).resolve().parents[1] /

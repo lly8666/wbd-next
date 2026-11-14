@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1861",
+  "date": "2026-11-14",
+  "source_sha": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
+  "result": "P1_CPU_FAIL_AND_P2_BULK_NOT_RUN",
+  "h1859_p1": {
+    "source_sha": "ef46a84627f15d4fad983ba08a293daab3c94c5c",
+    "action": 43615436423,
+    "conclusion": "success",
+    "setting": "same VM V4 off then V3/all on 50Mbps/25ms0loss/60s each",
+    "A": {
+      "delivered_gib": 0.6984,
+      "win_mbps": 49.9997,
+      "linux_mbps": 49.9874,
+      "win_rtt_p99_ms": 47,
+      "win_max_gap_ms": 47,
+      "cpu_s_per_gib": 19.3522,
+      "cpu_total_s": 13.5156,
+      "peak_rss_bytes": 42446848,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "B": {
+      "delivered_gib": 0.6984,
+      "win_mbps": 49.9999,
+      "linux_mbps": 49.9866,
+      "win_rtt_p99_ms": 47,
+      "win_max_gap_ms": 47,
+      "cpu_s_per_gib": 22.8424,
+      "cpu_total_s": 15.9531,
+      "peak_rss_bytes": 41615360,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "cpu_overhead_pct": 18.04,
+    "verdict": "FUNCTIONAL_PASS_CPU_PER_GIB_INVESTIGATION_FAIL",
+    "attribution": "Go+Rust same process; V4 versus V3 all-Tunnel, not isolated classifier nor driver kernel"
+  },
+  "h1860_bulk": {
+    "source_sha": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
+    "action": 43615797731,
+    "conclusion": "failure",
+    "compile_windows_go_rust_linux_rust": "PASS",
+    "guest_wsl2_boot": "PASS",
+    "first_failure": "P2 role and two bounded addresses required: new fourth p2bulk argv rejected by old len(sys.argv)!=4 guard before Linux physical listener READY",
+    "real_bulk_tcp": "NOT_RUN",
+    "business_stop": "NOT_RUN",
+    "owned_cleanup": "PASS_EXACT_RST_HYPERV_MAC_NPCAP_MANAGEMENT_ROUTE"
+  },
+  "h1861_delta": "All Tunnel nonfragment, nonDNS53, nonfake well-formed IPv4 fast path avoids FlowPin. Preserve DNS QNAME, fake reject, fragments, lease/header guards. Correct optional workload argv/consistency and replace Windows coarse monotonic with high-resolution perf_counter. New P1 source real test NOT_RUN at commit, bulk separate SOURCE later."
+}

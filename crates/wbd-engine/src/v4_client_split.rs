@@ -119,6 +119,13 @@ impl SplitPolicy {
         self.fake_to_real.insert(fake,real);
         Ok(())
     }
+    /// Exact cold all-mode fast admission for a complete, non-DNS IPv4
+    /// datagram. Never bypass reject-unknown-FakeIP even in Tunnel-only
+    /// mode. No shared-CDN reverse inference or mutable flow-pin lookup.
+    #[inline]
+    pub(crate) fn plain_all_tunnel(&self,dst:u32)->bool{
+        self.mode==Mode::All && !self.fake_pool.contains(dst)
+    }
     #[inline]
     pub fn destination(&self,ip:u32)->Egress{
         if self.fake_pool.contains(ip){
