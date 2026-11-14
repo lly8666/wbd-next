@@ -8,3 +8,5 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Internal bounded Rust Direct TCP relay service quantum only; no new config, GUI or public behavior guarantee. Native performance evidence pending."}
 ```
+
+- H1824 治理补记：H1823 push 的 governance [Action43577224620](https://github.com/lly8666/wbd-next/actions/runs/43577224620) 首个结构失败 `SCOPE_AUDIT_FAILED: unbounded context_refs`；确认为 cursor 9 项而上限 8，不涉及产品失败。本次仅从热上下文移去一份已有ARM64历史证据（证据文件仍保留），未覆盖源代码或当前SOURCE的P2 Action。
