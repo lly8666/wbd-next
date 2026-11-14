@@ -230,8 +230,14 @@ mod win{
 #[cfg(target_os="windows")]
 pub use win::{PhysicalTcpSocket,open_kernel_tcp_listener};
 
-const DEFAULT_PER_DIRECTION_CAP:usize=16*1024;
-const QUANTUM_BYTES:usize=4096;
+// A 4-KiB relay turn on the existing 10-ms Direct I/O wake required >=512
+// turns to shuttle a 1-MiB request and 1-MiB reply (H1820: 6.485 s).
+// Transfer at most 64 KiB in each direction per scheduled *flow* turn;
+// this is a work quantum, not a preallocated per-flow TCP window.
+// Each direction still has its own bounded queue, and the owner rotates
+// at most eight flows per turn without waiting on slow physical sockets.
+const DEFAULT_PER_DIRECTION_CAP:usize=64*1024;
+const QUANTUM_BYTES:usize=64*1024;
 // Do not read new bytes from one Direct socket when its own buffer or
 // the WHOLE Rust TCP relay pool is under pressure. No global wait.
 fn bounded_relay_read(queued:usize,per_direction_cap:usize,global_free:usize)->usize{
@@ -359,10 +365,11 @@ mod plan029_global_backpressure_tests{
     use super::*;
     #[test]
     fn one_global_pool_blocks_only_new_direct_reads_not_drains(){
-        assert_eq!(bounded_relay_read(0,16*1024,0),0);
-        assert_eq!(bounded_relay_read(12*1024,16*1024,4096),4096);
-        assert_eq!(bounded_relay_read(15*1024,16*1024,4096),1024);
-        assert_eq!(bounded_relay_read(16*1024,16*1024,8192),0);
-        assert_eq!(bounded_relay_read(0,16*1024,usize::MAX),4096);
+        assert_eq!(bounded_relay_read(0,64*1024,0),0);
+        assert_eq!(bounded_relay_read(48*1024,64*1024,4096),4096);
+        assert_eq!(bounded_relay_read(63*1024,64*1024,4096),1024);
+        assert_eq!(bounded_relay_read(64*1024,64*1024,8192),0);
+        assert_eq!(bounded_relay_read(0,64*1024,usize::MAX),64*1024);
+        assert_eq!(bounded_relay_read(0,64*1024,8192),8192);
     }
 }

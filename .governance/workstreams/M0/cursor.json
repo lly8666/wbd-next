@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1822,
-  "checkpoint_sha": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
+  "sequence": 1823,
+  "checkpoint_sha": "03da487e2695f1610a9c8098bb5b4b82fb1badd3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1822 actual signed P2 SOURCEb7b real V3 ABI/physical TCP1M vs FakeIP Direct1M +120 concurrent small Tunnel UDP and owned Stop PHYSICAL_PASS, but Direct 6485ms vs physical312ms one run performance risk. P1 SOURCE241 same-VM V4 vs V3 all Normal pure Tunnel both 50Mbps/25ms0%60s/Stop PASS, 0.6984GiB each, Go+Rust CPU/actual GiB 10.5599 vs11.343 (+7.42% exceeds5% investigation), one-way p99/driver CPU not measured. PLAN029 IN_PROGRESS.",
-  "why_now": "H1820/H1821 distinct Actions completed with actual original two-OS business and signed owned Stop after fixing V3 DLL export. Record two source-qualified results separately and performance limitations, not broad PLAN029 completion nor optimization claim.",
+  "current_task": "H1823 H1820 signed P2 Direct TCP 1MiB vs physical 1MiB gap targeted: one scheduled native TCP relay turn currently transfers only 4KiB per direction. Raise bounded per-flow work to 64KiB without threads/OS polling/global buffer changes; exact new-source signed P2 Action runs via one existing push marker. NO new PASS until logs.",
+  "why_now": "H1820 6485ms Direct vs312ms physical with concurrent UDP 10ms owner wake; 2MiB/4KiB requires >=512 service opportunities, consistent with observed excess but not proven causal. Target one source-locked changed-work-quantum hypothesis, preserve bounded fair 8-flow rotation and original other results.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Next distinct missing value: Game4/2/FEC actual CN split from single Rust Wintun ingress and direct vs Tunnel; GUI-origin signed Connect/Stop; bounded D4 native IPv6 OS/restore. P1 CPU +7.42% and Direct 1MiB latency gap merit one targeted attribution hypothesis only, no noise tuning or repeating old 028 7-mode or x86/ARM pure tests.",
+  "next_action": "Collect the single H1823 signed P2 action, check Rust compile + old-boundary TCP/UDP/Stop and actual elapsed/CPU/queue age. If performance still slow, identify next first boundary rather than retune blindly. Game4 native CN split, signed GUI-origin Connect/Stop and bounded D4 IPv6/restore remain NOT_RUN; P1 CPU+7.42% unresolved.",
   "unverified": true,
   "last_tested_source": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
   "evidence_refs": [
@@ -25,8 +25,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json"
+    "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
+    "docs/devlog/M0/20261114-PLAN029-H1823-DIRECT-TCP-QUANTUM-HYPOTHESIS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1822 signed P2 real physical1M vs FakeIPDirect1M +120 concurrent small Tunnel UDP, Stop PASS but Direct relative performance risk. Same binary H1821 source A V4/B V3 all-Tunnel real both Stop/50Mbps true, CPU/GiB +7.42% >5% target (functional PASS not performance goal). Windows/Linux x86, Linux ARM64 prior pure and GUI config scoped evidence preserved; IPv6/Game4 real split/signed GUI-origin remain."
+  "partial_summary": "H1823 source freeze candidate: 4KiB->64KiB bounded Direct TCP relay transfer per direction, existing shared 8MiB actual buffered cap and 8-flow scheduler unchanged. H1820 physical scoped PASS / observed 6485ms remains historical; H1821 P1 CPU/GiB +7.42% unresolved. New-source P2 NOT_RUN until original native Action completes."
 }
