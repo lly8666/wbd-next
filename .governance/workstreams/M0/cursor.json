@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1867,
-  "checkpoint_sha": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
+  "sequence": 1868,
+  "checkpoint_sha": "45ae468fc3942d7c407323295e572fea02a1bdb7",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1867 P1 V3 all-Tunnel tx_loop skipped only empty Direct/DNS/TCP reverse rotation, gated by original has_udp_flows; owner.tick, cached no-FlowPin fast DATA and real SERVFAIL path unchanged. H1863 P1 +7.01% CPU/GiB still OPEN; one H1867 P1 A/B source-locked true result NOT_RUN at checkpoint. H1866 D4 IPv6 Action43647750349 still in flight.",
-  "why_now": "P1 H1863 confirmed +7.01% CPU/GiB and p99 +15ms but FlowPin all-Tunnel fast path already exists. The V3 TX loop still rotates empty reverse poll queues on ordinary pure Tunnel turns; bounded targeted hypothesis, no new timers/threads or giant buffering.",
+  "current_task": "H1868 prepare one source-locked real native Direct hard8 resource pressure scene by correcting existing marker/native scope/V3 ABI/Direct/1460 MTU selectors. Original H1778 pressure never reached due upstream H1775 DNS first fault. New H1868 hard8/tunnel/old UDP/expiry proof NOT_RUN at commit. H1866 true D4 IPv6 and H1867 P1 Actions in-flight; no duplicate dispatch.",
+  "why_now": "Contract §5 hard cap must reject only new Direct while fresh Tunnel and existing Direct continue and recover. Existing small quota test already written but native scenario selection omitted critical gates; run one meaningful real bounded pressure scene, not VM exhaustion.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1866 original Normal D4 IPv6 route pre/Ready/Stop Action 43647750349; in parallel collect exactly one H1867 [plan029-v3-real-p1-tunnel-ab] real ordered A/B 50Mbps60s for CPU/GiB/p99/gaps/Stop, and confirm local SERVFAIL regression on Windows+Linux. If no significant P1 improvement, do not repeat same hypothesis; focus Game4 CN, GUI true Connect/Stop, D1-D5/IPv6 packet proof, pressure. All PLAN029 exits still IN_PROGRESS.",
+  "next_action": "Collect H1866 D4 signed IPv6 real route/Stop Action43647750349, H1867 P1 sameVM Action43648334316, and one H1868 [plan029-v3-real-direct-pressure] source-locked signed hard8 Direct16/Tunnel1/old Direct/120s expiration Action. Distinguish first failing test gate vs real. Then Game4 CN, GUI true Connect/Stop and DNS three-table pressure, IPv6 packet proof; no old 028 matrix.",
   "unverified": true,
   "last_tested_source": "88a263086613fdb0231f5fc608be7f6d13a313ce",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1865-H1864-SIGNED-UNPACED-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md",
     "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
     "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
-    "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
-    "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md"
+    "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1863 P1 business+Stop PASS but CPU/GiB +7.01% and p99 +15ms OPEN. H1864 unpaced4MiB physical32.155 Direct131.544ms, Tunnel UDP120/120/Stop PASS but performance still OPEN. H1866 read-only IPv6 native D4 Action in-flight. H1867 tiny V3 All/Tunnel empty reverse skip + unit, real P1 NOT_RUN at commit; 029 not delivered."
+  "partial_summary": "H1863 P1 functional pass/perf+7.01% OPEN, H1864 unpaced4MiB Direct 131.544ms vs physical32.155ms PASS with perf4.091x OPEN. H1866 D4 IPv6 read-only real signed in-flight, H1867 P1 empty reverse cost in-flight. H1868 existing hard8 true Direct/new Tunnel/old Direct/expiry bounded scenario admission fix, real NOT_RUN at commit. All 029 exits not complete."
 }
