@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1780,
-  "checkpoint_sha": "506d4966afecda73e63f6c0afaa2c103249939d8",
+  "sequence": 1781,
+  "checkpoint_sha": "0d29fb21b6d66eec72d15b9f7a181b9302223057",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1780 source 506d H1779 real Action 43544563417 physical Direct8 full/new Tunnel/old Direct+idle120s recovery all PASS_PRE_STOP (at 02:22:31 UTC), but nested Normal generic 165s supervisor killed test five seconds later stage=stop; global FAIL, DNS blackhole and owned Stop not yet qualified. Bound child270 and native400 ONLY exact signed Normal Direct8, preserve generic 165s. New Action NOT_RUN. PLAN029 IN_PROGRESS.",
-  "why_now": "First observed failure is nested test supervisor hard cutoff, NOT Direct hard-cap product logic or proven Stop error. Fix first boundary without rewriting data plane.",
+  "current_task": "H1781 first H1780 preflight FAIL: governance cursor retained old H1779 evidence SOURCE alongside new last_tested_source; old native runner test matched exact one-line default branch split after scoped hard8 270s preface. Repair cursor to exact H1780 evidence source 506d and update legacy test to assert preserved generic165 and scoped270 separately. New signed CI NOT_RUN until triggered; H1779 physical Direct8 PASS_PRE_STOP, Stop unqualified. PLAN029 IN_PROGRESS.",
+  "why_now": "Source-locked CI blocked before network by test expectation and mismatched cursor evidence, not a product or Rust failure. Correct both together; no broad validation bypass or repeat unrelated matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1780 one auto signed native Action and inspect whether DNS no fallback + original owned Stop finish. Parallel D1 app TCP53 and D3 DNS tables source; keep 028 gaps, separate pinned old Go ABI and 030 untouched.",
+  "next_action": "Read one auto H1781 cheap and signed real Action. If native Stage PASS but Stop fails, collect first owner Stop boundary. In parallel D3 Direct DNS bounded cache native wiring; D1 TCP53 separately.",
   "unverified": true,
   "last_tested_source": "506d4966afecda73e63f6c0afaa2c103249939d8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1779-H1778-NATIVE-FIRST-BOUNDARY-20261114.json"
+    "docs/evidence/M0/PLAN029-H1780-H1779-DIRECT8-PRESTOP-TIMER-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1779 H1778 hard8 physical stage PASS_PRE_STOP, Action FAIL generic 165s stage=stop timeout. H1780 narrow 270/400 timers staged, new native NOT_RUN. D1 TCP53/D3-D5/P1-P2 open."
+  "partial_summary": "H1780 270/400 scoped native timeout source staged, preflight governance/legacy test blockers fixed in H1781; old H1779 hard8 actual physical pre-Stop PASS, no full native exit yet."
 }

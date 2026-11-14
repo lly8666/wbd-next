@@ -441,7 +441,9 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("creationflags=0)",mode)
         self.assertNotIn("creationflags=getattr(subprocess",mode)
         self.assertIn('185 if minimal_game_fec else',mode)
-        self.assertIn('240 if (slow and mode.startswith("game")) else 690 if slow else 165',mode)
+        self.assertIn('240 if (slow and mode.startswith("game"))',mode)
+        self.assertIn('else 690 if slow else 165)',mode)
+        self.assertIn('mode_seconds=(270 if hard8 else 185',mode)
 
     def test_game_v2_nested_deadlines_finish_before_external_windows_watchdog(self):
         from tools.m0_wl_native_step_runner import native_batch_deadline
