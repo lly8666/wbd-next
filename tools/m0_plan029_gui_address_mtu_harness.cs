@@ -50,6 +50,13 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(store.Fields.Single(f=>f.Key=="dns.tunnel").Section=="网络","one_visible_tunnel_DNS");
    Need(store.Fields.Single(f=>f.Key=="direct-flow-hard").Section=="网络","Direct_quota_field_visible");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Section=="网络","CN_route_mode_visible");
+   Need(store.Fields.Single(f=>f.Key=="split-enable").Section=="网络" &&
+     store.Fields.Single(f=>f.Key=="split-enable").Kind=="Bool",
+     "H1835_actual_GUI_CN_split_toggle_source");
+   Need(store.Fields.Single(f=>f.Key=="cn-rules-file").Section=="网络",
+     "H1835_actual_GUI_CN_domain_rule_source");
+   Need(!Convert.ToBoolean(store.Fields.Single(f=>f.Key=="split-enable").Default),
+     "H1835_split_off_by_default");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Label.Contains("域名"),"CN_route_mode_label_shows_domain_union");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Hint.Contains("QNAME"),"CN_route_mode_hint_explicit_single_dns_direction");
    Need(Convert.ToInt32(store.Fields.Single(f=>f.Key=="direct-flow-hard").Default)==16384,"Direct_quota_default");
@@ -89,6 +96,9 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(((ComboBox)editors["route-mode"]).SelectedItem.ToString().Contains("域名"),
       "CN_visible_dropdown_option_IP_domain_union");
     form.SetEditor("direct-flow-hard","2");
+    store.WriteAtomic("data/h1835-cn-domains.txt","cn.example\n=exact.cn\n");
+    form.SetEditor("split-enable",true);
+    form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-name","borrow.example.org");
@@ -97,6 +107,12 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.tunnel","1.1.1.1");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"route-mode","bypass-lan-cn");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"direct-flow-hard","2");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"split-enable","true");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"cn-rules-file",
+      store.InRoot("data/h1835-cn-domains.txt"));
+    Need(Convert.ToBoolean(p.Values["split-enable"]) &&
+      Convert.ToString(p.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
+      "H1835_real_assembled_GUI_saved_cn_effective_portable");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns4","");
     var n=Check(store,p,"data/h1663-normal.json",cli);
     int inner=Convert.ToInt32(n["derived-inner-tun-mtu"]);
@@ -115,6 +131,11 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("lanes","4");
     form.SetEditor("fec.mode","off");
     form.SaveEditor();
+    bool rejectedGameSplit=false;
+    try{Check(store,p,"data/h1835-game4-split-invalid.json",cli);}
+    catch(Exception){rejectedGameSplit=true;}
+    Need(rejectedGameSplit,"H1835_real_Go_CLI_rejects_unwired_Game4_CN_before_OS");
+    form.SetEditor("split-enable",false);form.SaveEditor();
     var game=Check(store,p,"data/h1663-game4.json",cli);
     Correct(game,"server-ip","EDGE.Example.Test.");
     Correct(game,"mtu","1460");
@@ -128,6 +149,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("mtu","1460");
     form.SetEditor("lanes","1");
     form.SetEditor("route-mode","bypass-lan-cn");
+    form.SetEditor("split-enable",true);
     form.SetEditor("direct-flow-hard","16384");
     form.SaveEditor();
 
@@ -164,6 +186,9 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(Convert.ToString(saved.Values["server-name"])=="borrow.example.org","reopen_preserves_separate_verified_TLS_SNI");
    Need(Convert.ToString(saved.Values["dns.direct"])=="223.5.5.5","reopen_single_direct_DNS");
    Need(Convert.ToString(saved.Values["route-mode"])=="bypass-lan-cn","reopen_saved_CN_IP_DOMAIN_union_mode_cold_only");
+   Need(Convert.ToBoolean(saved.Values["split-enable"]) &&
+     Convert.ToString(saved.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
+     "H1835_reopened_CN_split_opt_in_and_owned_file_still_saved");
    Need(Convert.ToInt32(saved.Values["direct-flow-hard"])==16384,"reopen_Direct_quota_default");
    Need(Convert.ToString(saved.Values["dns.tunnel"])=="9.9.9.9","reopen_migrated_single_tunnel_DNS");
    Need(!saved.Values.ContainsKey("dns4"),"reopen_never_restores_backup_DNS");

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1834,
-  "checkpoint_sha": "b43334885ab7fae468e896609e748294dc6ccc8b",
+  "sequence": 1835,
+  "checkpoint_sha": "81cceb58205c54fd597315e9d18698eb18a92a2d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1834: H1833 exact manifest+Windows Go/Windows/Linux Rust component compile+governance PASS on source b433; no new physical networking. Add one actual WinForms compiled VM harness test of split-enable off by default, CN portable rule field, saved effective and fake Session.StartAsync JSON. H1834 test NOT_RUN until CI, not signed OS Ready; Game4/IPv6/P1/P2/HOL OPEN.",
-  "why_now": "H1833 repaired first assembly hash mismatch, Windows Go current-source compile and tests pass. D5 GUI field visibility/profile saved→effective→child config is independently testable without repeatedly dispatching signed DNS/P2; preserve actual OS Applied boundary.",
+  "current_task": "H1835: source81c H1834 fake-GUI harness change untriggered by H1663 path filter. Add current-source tools/m0_plan029_gui_address_mtu_harness.cs actual compiled WinForms fields + save/effective + original Go CLI --check-config for explicit Normal split; Game4 split must fail validation before OS Apply. H1835 GUI CI NOT_RUN; H1833 source b433 build PASS; true signed GUI Connect/Stop/other 029 exits remain OPEN.",
+  "why_now": "H1833 fixed exact four overlay SHA and source b433 Windows Go/Rust+Linux Rust compile and governance PASS, but new production CN GUI fields still lack a source-current GUI/CLI readback. Existing H1663 GUI workflow only triggers specific tools/m0_plan029_gui_address_mtu_harness.cs, not H1834 old GUI harness, so modify actual source-current fixture rather than falsely mark H1834 validated.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1834 exact WinForms VM GUI Action and first failing code boundary; after PASS, build one source-locked REAL Windows GUI Normal non-CI split-enable startup, signed Wintun applied config→two DNS/Direct+Tunnel→owned Stop. Independently Game4 CN owner, IPv6/D4, P2 full-span and P1 CPU/slow fsync remain.",
+  "next_action": "Collect exact H1835 current-source WinForms+real Go --check-config Action (one GUI scenario) with filed readback and Game4 rejection; if green distinguish mock UI/CLI from signed product. Then real non-CI Normal GUI Connect->Wintun Direct/Tunnel DNS/Stop; also Game4 CN owner, IPv6, P1/P2, slow fsync Stop remain.",
   "unverified": true,
   "last_tested_source": "b43334885ab7fae468e896609e748294dc6ccc8b",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1833-EXACT-ASSEMBLY-RESULT-BLOBS.md",
-    "docs/devlog/M0/20261114-PLAN029-H1834-WINFORMS-CN-SPLIT-SAVED-EFFECTIVE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1834-WINFORMS-CN-SPLIT-SAVED-EFFECTIVE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1835-CURRENT-SOURCE-GUI-CLI-READBACK.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1833 source b433 static assembly and Windows Go/Rust+Linux Rust regression PASS, no nonCI GUI real OS. H1834 test-only WinForms GUI config handoff candidate untested. H1831 source268 real signed CN D3 PASS_SCOPED remains historical. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1833 source b433 static Windows Go/native Rust/Linux Rust component PASS only. H1835 source GUI actual compiled WinForms→saved/effective→real Go check-config candidate plus pre-OS Game4 CN rejection NOT_RUN. H1831 source268 true signed D3 PASS_SCOPED. PLAN029 IN_PROGRESS."
 }
