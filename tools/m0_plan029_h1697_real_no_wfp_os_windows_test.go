@@ -18,11 +18,21 @@ import (
  "time"
 )
 
+// This wrapper models one reproducible partial Apply: the third writer
+// fails BEFORE DNS OS mutation, after genuine generation-owned lease+MTU.
+// The original DNS Inspect/Undo remain in place for WAL recovery.
+var h1809BeforeDNSFailure=errors.New("h1809-injected-before-dns-os-write")
+type h1809FailBeforeDNS struct { N4UnifiedStage }
+func (h1809FailBeforeDNS) Apply(context.Context,N4UnifiedIdentity,json.RawMessage) error {
+ return h1809BeforeDNSFailure
+}
+
 func TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop(t *testing.T){
  if os.Getenv("WBD_PLAN029_REAL_OS_V2_GATE")!="1" ||
   os.Getenv("GITHUB_ACTIONS")!="true"{
   t.Skip("requires isolated Windows2025 signed Wintun and actual owned Win32 OS")
  }
+ partial:=os.Getenv("WBD_PLAN029_PARTIAL_APPLY_SCENE")=="1"
  receipt:=map[string]any{
   "schema_version":1,"source_sha":os.Getenv("GITHUB_SHA"),
   "result":"FAIL_UNFINISHED","scope":"REAL_SIGNED_NO_OLD_WFP_FOUR_OS_STAGES_ONLY",
@@ -30,6 +40,7 @@ func TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop(t *testing.T){
   "rust_direct_tcp":"NOT_RUN","rust_direct_udp":"NOT_RUN",
   "real_dns53_dispatcher":"NOT_RUN","gui_product_ready":"NOT_RUN",
  }
+ if partial{receipt["scope"]="SIGNED_NO_WFP_V2_PARTIAL_APPLY_FIRST_TWO_REAL_STAGES_AND_RECOVERY"}
  defer func(){
   path:=os.Getenv("WBD_PLAN029_REAL_OS_V2_RECEIPT")
   if path==""{t.Error("missing receipt path");return}
@@ -125,6 +136,64 @@ func TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop(t *testing.T){
   }
   receipt["cleanup"]="PASS_EXACT_OWNED_FOUR_STAGE_STOP_NO_OLD_WFP"
  }()
+ if partial {
+  // No test-only DNS writer can mutate OS here: it always fails before
+  // calling the true Win32 writer. The two earlier concrete writers are
+  // read back from real OS while the durable third intent remains.
+  if txn.Stages[2]==nil||txn.Stages[2].Name()!="dns"{
+   receipt["result"]="FAIL_NOT_V2_DNS_THIRD_STAGE"
+   t.Fatal("not the expected no-WFP v2 DNS third stage")
+  }
+  txn.Stages[2]=h1809FailBeforeDNS{N4UnifiedStage:txn.Stages[2]}
+  receipt["result"]="FAIL_PARTIAL_APPLY_DNS_INTENT"
+  err:=txn.Apply(ctx)
+  if !errors.Is(err,h1809BeforeDNSFailure){
+   t.Fatalf("expected injected DNS pre-write error only, got %v",err)
+  }
+  j,e:=n4UnifiedRead(txn.Path)
+  if e!=nil||j.Schema!=n4UnifiedSchemaNoWFP||len(j.Records)!=3{
+   receipt["result"]="FAIL_PARTIAL_V2_WAL_ORDER"
+   t.Fatalf("real partial WAL should have three records: %+v %v",j,e)
+  }
+  if j.Records[0].Name!="lease"||j.Records[0].State!="owned"||
+     j.Records[1].Name!="mtu"||j.Records[1].State!="owned"||
+     j.Records[2].Name!="dns"||j.Records[2].State!="intent"{
+   receipt["result"]="FAIL_PARTIAL_STAGE_OWNED_INTENT"
+   t.Fatalf("unexpected real v2 partial OS journal rows: %+v",j.Records)
+  }
+  for i:=0;i<2;i++{
+   state,e:=txn.Stages[i].Inspect(ctx,txn.Identity,j.Records[i].Before)
+   if e!=nil||state!=N4UnifiedOwned{
+    receipt["result"]="FAIL_REAL_PREFIX_OS_APPLIED_READBACK"
+    t.Fatalf("real lease/MTU stage %d not owned: %s %v",i,state,e)
+   }
+  }
+  dnsState,e:=txn.Stages[2].Inspect(ctx,txn.Identity,j.Records[2].Before)
+  if e!=nil||dnsState!=N4UnifiedAbsent{
+   receipt["result"]="FAIL_UNTOUCHED_DNS_STAGE"
+   t.Fatalf("injected DNS should be untouched relative baseline: %s %v",dnsState,e)
+  }
+  receipt["partial_stage"]="dns"
+  receipt["real_owned_prefix"]="lease,mtu"
+  receipt["dns_pre_write"]="INTENT_ONLY_NO_MUTATION"
+  receipt["routes_write"]="NOT_STARTED"
+  receipt["result"]="FAIL_PARTIAL_OWNED_RECOVERY"
+  if err:=txn.Recover(ctx);err!=nil{
+   t.Fatalf("exact v2 partial rollback first actual failure: %v",err)
+  }
+  if err:=txn.VerifyLiveOSDisconnected(ctx);err!=nil{
+   t.Fatalf("real partial rollback OS baseline readback failed: %v",err)
+  }
+  for _,path:=range []string{txn.Path,txn.Path+".routes"}{
+   if _,e:=os.Lstat(path);!errors.Is(e,os.ErrNotExist){
+    t.Fatalf("current-generation partial WAL/sidecar survived recovery %s: %v",path,e)
+   }
+  }
+  receipt["cleanup"]="PASS_EXACT_OWNED_FOUR_STAGE_STOP_NO_OLD_WFP"
+  receipt["result"]="PASS_SCOPED_SIGNED_WINTUN_V2_PARTIAL_APPLY_LEASE_MTU_DNS_INTENT_OWNED_RECOVER"
+  t.Logf("PLAN029_H1809_SIGNED_REAL_LEASE_MTU_DNS_INTENT_FAILURE_OWNED_RECOVER_PASS source=%s",os.Getenv("GITHUB_SHA"))
+  return
+ }
  receipt["result"]="FAIL_AT_LIVE_OS_APPLY"
  if err:=txn.Apply(ctx);err!=nil{
   receipt["apply_error"]=err.Error()

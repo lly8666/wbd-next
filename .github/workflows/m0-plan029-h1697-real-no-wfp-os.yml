@@ -51,18 +51,30 @@ jobs:
         env:
           WBD_PLAN029_REAL_OS_V2_GATE: "1"
           WBD_PLAN029_REAL_OS_V2_RECEIPT: ${{ github.workspace }}\result\h1697-real-no-wfp-os.json
+          WBD_PLAN029_PARTIAL_APPLY_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v2-os-partial]') && '1' || '0' }}
         run: |
           $ErrorActionPreference='Stop'
           & ./win-native/plan029-real-no-wfp-os.exe '-test.run=^TestPlan029SignedNoWFPFourWin32StagesRealApplyAndStop$' '-test.count=1' '-test.v=true' '-test.timeout=165s' 2>&1 | Tee-Object result/h1697-real-no-wfp-os.log
           if($LASTEXITCODE -ne 0){throw 'real four-stage Win32 Apply/Stop failed; retain first failing stage and exact cleanup receipt'}
           $e=Get-Content result/h1697-real-no-wfp-os.json -Raw | ConvertFrom-Json
+          $partial=($env:WBD_PLAN029_PARTIAL_APPLY_SCENE -eq '1')
+          $expected=if($partial){'PASS_SCOPED_SIGNED_WINTUN_V2_PARTIAL_APPLY_LEASE_MTU_DNS_INTENT_OWNED_RECOVER'}else{'PASS_SCOPED_SIGNED_WINTUN_REAL_FOUR_NO_WFP_WIN32_APPLY_READBACK_STOP'}
           if($e.source_sha -ne $env:GITHUB_SHA -or
-             $e.result -ne 'PASS_SCOPED_SIGNED_WINTUN_REAL_FOUR_NO_WFP_WIN32_APPLY_READBACK_STOP' -or
+             $e.result -ne $expected -or
              $e.cleanup -ne 'PASS_EXACT_OWNED_FOUR_STAGE_STOP_NO_OLD_WFP' -or
              $e.old_wfp_guard -ne 'NOT_CREATED'){
-            throw 'not an actual no-old-WFP complete four-stage OS receipt'
+            throw 'exact current-SOURCE signed no-old-WFP four-stage OS receipt missing'
           }
-          Write-Output 'PLAN029_H1697_REAL_SIGNED_WIN32_FOUR_STAGE_OS_PASS_NOT_RUST_DIRECT'
+          if($partial){
+            if($e.partial_stage -ne 'dns' -or $e.real_owned_prefix -ne 'lease,mtu' -or
+               $e.dns_pre_write -ne 'INTENT_ONLY_NO_MUTATION' -or
+               $e.routes_write -ne 'NOT_STARTED'){
+              throw 'partial OS stage failure did not prove actual two live Win32 writers and safe exact recovery'
+            }
+            Write-Output 'PLAN029_H1809_REAL_SIGNED_V2_PARTIAL_LEASE_MTU_DNS_INTENT_RECOVER_PASS_SCOPED'
+          }else{
+            Write-Output 'PLAN029_H1697_REAL_SIGNED_WIN32_FOUR_STAGE_OS_PASS_NOT_RUST_DIRECT'
+          }
       - name: Record SOURCE and disjoint product scope on failure too
         shell: pwsh
         if: always()

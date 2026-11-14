@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1808,
-  "checkpoint_sha": "53b838a2d37d91ed5696e30c0ead9311e0615db5",
+  "sequence": 1809,
+  "checkpoint_sha": "c39a59ab79deebae52422f4a3463960a4f531a98",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1808 H1807 first gate exact: native run43565277807 FAIL before product build at old H1785 static fixture asserting only guest '0/1'; H1807 adds explicit '2' signed multi-A. Update static test to validate all 3 and add H1807 witness negative controls. ARM64 actual-native run43565277853 PASS pure 50 PLAN029+13 Game4+12 FEC at SOURCE53b. Signed D3 networking NOT_RUN yet. PLAN029 IN_PROGRESS.",
-  "why_now": "A narrowly stale test assertion caused first H1807 native gate FAIL before Windows/WSL2; fix test contract, not firewall or DNS. Separate ARM64 Action already successfully completed and must not be dispatched again.",
+  "current_task": "H1809 independent D4 signed partial Apply test staged: reuse actual H1697 same-generation signed Wintun no-WFP transaction but fail third DNS stage BEFORE OS mutation; verify first real lease/MTU owned, WAL ordered intent, recover exact owned original baseline and no guard. H1808 signed D3 multi-A still in-flight SOURCE c39, ARM64 H1807 pure PASS; new H1809 result NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "Contract D4 specifically needs representative partial Apply failure and owned WAL recovery; existing H1697 positive four-stage PASS never exercised real prefix failure. One different hypothesis/scenario, not old diagnostics or 028 matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact SOURCE H1808 single signed D3 multi-A Windows/Linux run, inspect first network boundary; do not rerun ARM64 pure or H1785 older cache tests. After D3, D4 OS/IPv6, D5 GUI, P1/P2 and mode wiring remain.",
+  "next_action": "Collect two independent in-flight H1808 D3 and H1809 D4 Actions, fix only first error. Retain CPU/GiB p99/gap P1/P2, GUI D5, IPv6, normal/Game4 split explicit qualification open.",
   "unverified": true,
   "last_tested_source": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "At H1807 ARM64 actual native Rust pure 50 plan029, 13 Game4, 12 FEC PASS on SHA53b; signed Windows D3 CNAME multi-A Action blocked by obsolete fixture static assert, not by network. H1808 updates exact assertion and reruns only new network scene."
+  "partial_summary": "H1808 current signed Normal D3 CNAME two-A still compiling; H1809 separate true signed Windows v2 OS fault injection before DNS with real lease/MTU writer/reverse WAL staged NOT_RUN. Native ARM64 H1807 pure 50/13/12 PASS older source; no full plan exit."
 }
