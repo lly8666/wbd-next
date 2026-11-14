@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1830",
+  "source_sha": "d358374e58f7c22c34e82d585bba26d64d3a45a2",
+  "result": "COMPONENT_PASS_REAL_SIGNED_D3_NOT_RUN",
+  "actions": [
+    {
+      "id": 43584886137,
+      "kind": "rust_native_component",
+      "windows": "success",
+      "linux": "success",
+      "scope": "PURE_NO_REAL_029_NETWORK"
+    },
+    {
+      "id": 43584886136,
+      "kind": "governance_and_feature",
+      "conclusion": "success"
+    },
+    {
+      "id": 43584886151,
+      "kind": "native_functional",
+      "conclusion": "success"
+    },
+    {
+      "id": 43584886121,
+      "kind": "static_qualification",
+      "conclusion": "success"
+    }
+  ],
+  "from_first_fail": {
+    "source_sha": "6bd21ed8d7777302e079bb8302cb1327d50610d4",
+    "issue_1": "Windows DirectDns test required immediate CN cached reply prior to durable ACK",
+    "issue_2": "FakeIP writer unit test invalid nine-IP-range with hard_cap100",
+    "fix": "test now waits real exact ACK, validates no early FakeIP answer and uses cap9",
+    "old_failures": "preserved"
+  },
+  "not_run": [
+    "true signed Windows Wintun app CN DNS UDP53 after async journal",
+    "true signed TCP53 after writer",
+    "slow or failed fsync versus concurrent Tunnel p99 and long-hole",
+    "compaction crash recovery",
+    "new source P2 Direct TCP",
+    "Game4 CN",
+    "GUI signed",
+    "IPv6",
+    "P1 CPU"
+  ]
+}

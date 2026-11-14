@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1830,
-  "checkpoint_sha": "6bd21ed8d7777302e079bb8302cb1327d50610d4",
+  "sequence": 1831,
+  "checkpoint_sha": "d358374e58f7c22c34e82d585bba26d64d3a45a2",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1830: H1829 async DNS writer + compact source 6bd: Windows Rust 78/79 one stale immediate-CN-reply test; full Windows Rust 375/377 and Linux Rust 322/323 fail because fixture 9 FakeIP slots vs requested100 hard; new exact tests now wait real durable ACK and use valid9 cap. New SOURCE tests / signed D3 DNS NOT_RUN, no blind P2 rerun. PLAN029 IN_PROGRESS.",
-  "why_now": "First fail in H1829 CI is invalid unit expectation of synchronous DNS output, plus InvalidPool fixture. Preserve new durable-before-answer product behavior, fix only test assertions/valid limits, keep physical DNS verification and Stop OPEN.",
+  "current_task": "H1831 SOURCE-lock once for one signed Windows/Wintun/WSL2 PLAN029 D3 MultiA+CNAME+FakeIP Direct UDP scenario on already Green H1830 async FakeIP tests. Fixture adds only client end-to-end DNS timing/attempts. Single Action triggered by exact [plan029-v3-real-d3-multia] marker; signed D3 results NOT_RUN until terminal. P2/P1/Game4/GUI/IPv6 and slow-fsync/Stop remain OPEN.",
+  "why_now": "H1829 asynchronous journal first tests were stale; H1830 exact Windows/Linux native Rust and native-functional/governance PASS. Need real current-source DNS app exit before broad work, only one D3 network scenario not full matrix. Timing distinguishes total application DNS wait from unmeasured isolated sync/classifier.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect new H1830 SOURCE same Windows/Linux Rust, governance and original source build Actions; inspect first failure, then run one source-locked true signed D3 UDP53/TCP53 plus owned Stop with controlled slow fsync/compaction if available; do not duplicate P2. Continue Game4/GUI/IPv6/P1/P2 exit work, single M0 writer.",
+  "next_action": "Collect H1831 single signed D3 Action real Windows application→Wintun→Rust DNS FakeIP multi-A/CNAME→physical Direct business UDP→app, current SOURCE/compiled artifact and owned Stop; if FAIL locate first boundary. Then independent TCP53+slow-fsync/Stop, P2 new-source full-span mixed + allocated RSS, P1, Game4 CN, GUI and IPv6.",
   "unverified": true,
-  "last_tested_source": "0077dcb013045678e12761568a0dd58f35722704",
+  "last_tested_source": "d358374e58f7c22c34e82d585bba26d64d3a45a2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1827-H1825-NODELAY-P2-NEGATIVE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1831-H1830-ASYNC-DNS-COMPONENT-RESULT-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1829-ASYNC-FAKEIP-WAL-DURABLE-ACK.md",
-    "docs/devlog/M0/20261114-PLAN029-H1830-ASYNC-DNS-WINDOWS-FIRST-FAILURE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1830-ASYNC-DNS-WINDOWS-FIRST-FAILURE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1831-SIGNED-D3-ASYNC-CN-DNS-SOURCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1829 real Windows/Linux product network D3 NOT_RUN; H1829 new async FakeIP code compile but 2 unit fixture errors. H1830 tests-only corrections preserve no-FakeIP-before-fsync. Remaining signed D3/Stop, HOL/RSS/CPU, Game4/GUI/IPv6, P1/P2 OPEN."
+  "partial_summary": "H1830 source d358 Windows/Linux Rust component PASS and governance/native-functional PASS, true network DNS still NOT_RUN. H1831 one signed D3 scenario queued via commit marker, no duplicate dispatch. H1825 old P2 six-second Direct performance unresolved, all remaining 029 exits OPEN."
 }

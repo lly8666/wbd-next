@@ -13,13 +13,18 @@ sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 sock.bind((lease,0))
 sock.settimeout(1.2)
 response=None
-deadline=time.monotonic()+24
+dns_started=time.monotonic()
+dns_attempts=0
+dns_completed=None
+deadline=dns_started+24
 while time.monotonic()<deadline:
     try:
+        dns_attempts+=1
         sock.sendto(query,("8.8.8.8",53))
         data,remote=sock.recvfrom(2048)
         if remote!=("8.8.8.8",53) or data[:2]!=txid:continue
         response=data
+        dns_completed=time.monotonic()
         break
     except socket.timeout:continue
 if response is None:
@@ -100,6 +105,10 @@ print("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "+json.dumps(
      "business_reply":reply.decode(),"source_lease":lease,
      "source_route":"ACTUAL_ORIGINAL_WINDOWS_WINTUN_SINGLE_RUST_OWNER",
      "direct_resolver":expected_dns,"cache_second_reply":cache_reply,
+     # End-to-end application DNS delay, including real retries and async
+     # durable FakeIP fsync; NOT isolated local classifier or disk latency.
+     "dns_app_elapsed_ms":round((dns_completed-dns_started)*1000,3),
+     "dns_app_attempts":dns_attempts,
      "cache_second_source_distinct":cache_different_source,
      "multi_a_mode":multia_mode,
      "multi_a_fake_addresses":addresses if multia_mode else []},sort_keys=True),flush=True)
