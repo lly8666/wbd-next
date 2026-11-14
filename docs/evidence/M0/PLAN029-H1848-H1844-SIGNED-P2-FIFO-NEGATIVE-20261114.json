@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1844",
+  "source_sha": "ecd85c18c1a6e0f64212aee555674187b89f5fb7",
+  "action": {
+    "run_id": 43598740573,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43598740573",
+    "artifact_id": 14115727505
+  },
+  "scenario": "SIGNED_REAL_ORIGINAL_GO_RUST_WINDOWS2025_NPCAP_WINTUN_AND_WSL2_TWO_KERNEL_TCP_AND_SUSTAINED_TUNNEL_UDP",
+  "physical_baseline": {
+    "role": "baseline",
+    "size_bytes": 1048576,
+    "elapsed_ms": 281,
+    "payload_correct": true
+  },
+  "direct": {
+    "role": "direct",
+    "size_bytes": 1048576,
+    "connect_ms": 750,
+    "upload_ms": 18703,
+    "half_closed_total_ms": 19453,
+    "first_reply_total_ms": 20860,
+    "echo_progress_bytes_at_36657_ms": 918853,
+    "completed_within_38s": false,
+    "server_got_1m_and_eof": true,
+    "server_sendall_echo_complete": true
+  },
+  "tunnel_udp": {
+    "at_least_echoes": 2432,
+    "spans_to_ms": 36438,
+    "final_p99": "NOT_MEASURED_AFTER_TCP_ABORT"
+  },
+  "signed_stop": "NOT_QUALIFIED_P2_ABORT",
+  "result": "FAIL_P2_DIRECT_TCP_TIMEOUT",
+  "performance": "FAIL",
+  "post_h1843_fifo_fix": "NO_MATERIAL_SPEEDUP_OBSERVED",
+  "not_proven": [
+    "mailbox Full occurred during this run",
+    "TCP retransmit RTO is first root cause",
+    "H1846 full-quantum fix evaluated by this SOURCE"
+  ]
+}

@@ -426,7 +426,7 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('client_env.pop("WBD_PLAN029_CN_RULES_FILE",None)',source)
         self.assertIn('args.count("--split-enable")!=1',source)
         self.assertIn('args.count("--cn-rules-file")!=1',source)
-        self.assertIn('owned_cn.read_bytes()!=b"cn.example\\n"',source)
+        self.assertIn('owned_cn.read_text(encoding="ascii").splitlines()!=["cn.example"]',source)
         self.assertIn('PLAN029_H1845_NONCI_PRODUCT_CLI_SOURCE_AND_ENV_EXACT_PRESTART',source)
 
     def test_h1821_exact_v3_export_qualified_prebuilt_reuse_no_old_dll(self):

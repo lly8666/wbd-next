@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1845",
+  "source_sha": "7e1d1259c7895fd5602c79599c12af9f56268a2c",
+  "action": {
+    "run_id": 43599087343,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43599087343"
+  },
+  "preflight": [
+    "current-source original Go and Rust Windows/Linux build PASS",
+    "signed Windows native Npcap/WSL2 prerequisites reached",
+    "exact nonCI child flag fixture built"
+  ],
+  "first_failure": "H1845 user CN source snapshot missing or changed at m0_wl_public_normal_e2e.py line409 before client spawn",
+  "cause": "Python Windows pathlib.Path.write_text(...,newline=None) translates LF to CRLF. New raw-byte assertion required Unix LF, despite semantic single CN rule staying identical. Fixture-only mismatch.",
+  "fix": "Read text and splitlines; exactly ['cn.example'] while retaining absolute-owned path equality, explicit CLI flag count and no private trial environment.",
+  "real_windows_client_spawn": "NOT_RUN",
+  "native_os_applied": "NOT_RUN",
+  "direct_tcp_udp": "NOT_RUN",
+  "tunnel": "NOT_RUN",
+  "owned_stop": "NOT_RUN",
+  "source_v3_abi_build": "H1843 feature gate included; product not yet consumed DLL"
+}

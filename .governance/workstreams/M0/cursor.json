@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1847,
-  "checkpoint_sha": "715a5dd0be89c8fb2786f515912ceb005ffcf3d8",
+  "sequence": 1848,
+  "checkpoint_sha": "89f0114240c845a187d5fe45180560f47899825d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1847: H1846 Direct RX full-quantum auto-reset bug fixed but feature catalog failed because the updated feature card was not committed. Align feature inventory with H1839 signed P2 actual FAIL and H1843/H1846 source fixes; retain experimental. H1844 signed P2 and H1845 real nonCI CN product independent in progress.",
-  "why_now": "M0 feature catalog is an enforced source-of-truth, so a runtime fix declared updated must change its card. Do not weaken auditing or falsely promote source-only change as signed performance success.",
+  "current_task": "H1848: H1844 SOURCE ecd signed P2 after H1843 FIFO fix still failed >38s, actual physical281ms, Direct upload18.703s, first reply20.86s, 918853B at36.657s and sustained 2432+ Tunnel UDP. H1845 original nonCI signed product source7e failed before Go client spawn due Windows CRLF vs Unix raw-byte test guard. H1848 fixes semantic splitlines test without removing owned-path/nonCI checks, runs one independent nonCI product scene only. H1847 feature card exceeded UTF-8 16KiB; shorten within 16289 bytes.",
+  "why_now": "H1844 real same-VM evidence disproves standalone FIFO patch as performance fix, while H1846 auto-reset 32/32 fix separately awaits P2 evidence. H1845 Windows newline raw-byte fixture blocked first actual explicit CN Ready despite healthy source build. Existing catalog UTF8-byte hard cap must be respected, no weakened governance.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect terminal H1844 P2 true Direct 1MiB phase/whole-span UDP/Stop and H1845 nonCI original Go real product OS Ready/owned Stop and H1846 Rust regressions; then one distinct H1846-source P2 if necessary. Game4/IPv6/GUI OS/P1/FakeIP stress OPEN.",
+  "next_action": "Collect H1848 nonCI real Go/Rust CN OS Applied/Ready/DNS/Direct/Tunnel/Stop new-source. Independently run ONE signed true P2 new H1846 scheduler source on original 1MiB workload with full-span UDP; if 20s slow persists inspect per-leg TCP window/ACK/slow wake. Collect H1846 current-source Rust native. Then Game4/IPv6/GUI OS Stop/P1/slow journal.",
   "unverified": true,
-  "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
+  "last_tested_source": "ecd85c18c1a6e0f64212aee555674187b89f5fb7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1841-H1839-SIGNED-P2-REAL-TCP-LEG-COUNTERS-20261114.json"
+    "docs/evidence/M0/PLAN029-H1848-H1844-SIGNED-P2-FIFO-NEGATIVE-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
-    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/devlog/M0/20261114-PLAN029-H1845-NONCI-PRODUCT-ABI-REAL-SIGNED.md",
     "docs/devlog/M0/20261114-PLAN029-H1846-EXACT-AUTO-WAKE-BATCH-WORK.md",
-    "docs/devlog/M0/20261114-PLAN029-H1847-FEATURE-CATALOG-REAL-STATUS.md"
+    "docs/evidence/M0/PLAN029-H1848-H1845-NONCI-CRLF-PRESTART-FAIL-20261114.json",
+    "docs/devlog/M0/20261114-PLAN029-H1848-TRUE-P2-FAIL-NONCI-CRLF-GATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1846 direct RX 32/32 coalesced wake safety fixed, governance structure PASS but feature catalog needed card update. H1847 card aligns truthful H1839 signed 38s P2 fail with H1843/H1846 code fixes. H1844 P2, H1845 product, H1846 compile in flight. H1838 GUI CLI and H1842 governance PASS."
+  "partial_summary": "H1844 sourceecd signed real P2 after H1843 FIFO FAIL: physical281ms, Direct upload18.703s first reply20.86s, 918853B at36.657s, 38s timeout, 2432+ UDP; no performance improvement. H1845 source7e1d product aborted before spawn due LF vs WinCRLF harness. H1846 source715a new RX 32-item auto-wake Rust Windows/Linux component PASS, real P2 unverified. H1848 product harness fixes newline plus feature inventory UTF8 size; new signed product NOT_RUN. M0 governance structure PASS, GUI config H1838 PASS."
 }

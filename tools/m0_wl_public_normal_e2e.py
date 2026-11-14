@@ -405,7 +405,9 @@ try:
   owned_cn=pathlib.Path(args[args.index("--cn-rules-file")+1])
   if (not owned_cn.is_absolute() or
       owned_cn.resolve()!=rules.resolve() or
-      owned_cn.read_bytes()!=b"cn.example\n"):
+      # Python Windows write_text translates LF into CRLF. Compare the
+      # canonical one-line domain rule, not platform-dependent bytes.
+      owned_cn.read_text(encoding="ascii").splitlines()!=["cn.example"]):
    raise RuntimeError("H1845 user CN source snapshot missing or changed")
   print("PLAN029_H1845_NONCI_PRODUCT_CLI_SOURCE_AND_ENV_EXACT_PRESTART",flush=True)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
