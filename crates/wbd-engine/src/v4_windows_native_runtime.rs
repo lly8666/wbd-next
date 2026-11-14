@@ -406,6 +406,11 @@
                          NativeDecision::Tunnel=>{},
                          NativeDecision::TunnelDns=>{
                              if !s.rewrite_tunnel_dns(&mut sources[count][..n],now_ms){
+                                 // Only this bounded Tunnel DNS request
+                                 // failed admission, e.g. 256 tickets full.
+                                 // Queue an exact app SERVFAIL (if mailbox
+                                 // has room) without stopping Tunnel DATA.
+                                 let _=s.reject_tunnel_dns(&sources[count][..n]);
                                  counters.rejected.fetch_add(1,Ordering::Relaxed);
                                  continue
                              }

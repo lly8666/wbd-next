@@ -91,6 +91,33 @@ impl DirectDns{
             }
         }
     }
+    /// A rejected genuine Tunnel DNS UDP ticket (e.g. all 256 in-flight
+    /// slots used) must promptly SERVFAIL THIS original client, not hang
+    /// its application until socket timeout or retry via physical Direct.
+    /// Original source/dst/ID and one Wintun mailbox are retained; no
+    /// physical DNS socket, second listener or per-query task is created.
+    pub(crate) fn fail_tunnel_query(&mut self,packet:&[u8])->bool{
+        if packet.len()<28||self.completed.len()>=MAX_READY{return false}
+        let requested=Ipv4Addr::new(packet[16],packet[17],packet[18],packet[19]);
+        let Ok(udp)=parse_owned_ipv4_udp(packet,self.lease,requested)else{
+            return false
+        };
+        let Ok((id,name,qtype))=
+            crate::v4_client_split_wire::dns_question(udp.data)else{
+            return false
+        };
+        let Some(wire)=plain_dns(id,&name,qtype,2)else{return false};
+        let tuple=DirectUdpTuple{
+            client_ip:self.lease,client_port:udp.tuple.client_port,
+            presented_ip:requested,target_port:53,
+        };
+        let mut l3=[0u8;MAX_L3];
+        self.ip_id=self.ip_id.wrapping_add(1);
+        let Ok(n)=encode_reverse_ipv4_udp(tuple,&wire,self.ip_id,
+            self.mtu,&mut l3)else{return false};
+        self.completed.push_back(l3[..n].to_vec());
+        true
+    }
     /// Called only by the original TX after packet bytes have been copied
     /// and released from Wintun. Never directly touches the native ring.
     pub(crate) fn submit(&mut self,packet:&[u8],name:String,qtype:u16,
@@ -321,6 +348,39 @@ impl DirectDns{
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan029_tunnel_dns_full_returns_exact_original_client_servfail_without_socket(){
+        let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
+            Ipv4Addr::new(10,66,0,2),Ipv4Addr::new(223,5,5,5),1280);
+        let q=b"\x03www\x07globalx\x07example\x00\x00\x01\x00\x01";
+        let total=28+12+q.len();
+        let mut raw=vec![0u8;total];
+        raw[0]=0x45;raw[2..4].copy_from_slice(&(total as u16).to_be_bytes());
+        raw[8]=64;raw[9]=17;
+        raw[12..16].copy_from_slice(&[10,66,0,2]);
+        raw[16..20].copy_from_slice(&[8,8,8,8]);
+        raw[20..22].copy_from_slice(&42111u16.to_be_bytes());
+        raw[22..24].copy_from_slice(&53u16.to_be_bytes());
+        raw[24..26].copy_from_slice(&((total-20) as u16).to_be_bytes());
+        raw[28..30].copy_from_slice(&0x1787u16.to_be_bytes());
+        raw[30..32].copy_from_slice(&0x0100u16.to_be_bytes());
+        raw[32..34].copy_from_slice(&1u16.to_be_bytes());
+        raw[40..].copy_from_slice(q);
+        assert!(dns.fail_tunnel_query(&raw));
+        assert_eq!(dns.counts(),(0,0,1));
+        assert_eq!(dns.cache_counts(),(0,0));
+        let err=dns.pop().unwrap();
+        assert_eq!(&err[12..16],&[8,8,8,8]);
+        assert_eq!(&err[16..20],&[10,66,0,2]);
+        assert_eq!(&err[20..22],&53u16.to_be_bytes());
+        assert_eq!(&err[22..24],&42111u16.to_be_bytes());
+        assert_eq!(&err[28..30],&0x1787u16.to_be_bytes());
+        assert_eq!(err[31]&15,2); // SERVFAIL from original DNS presentation
+        assert!(dns.pop().is_none());
+        raw[12..16].copy_from_slice(&[10,66,0,3]);
+        assert!(!dns.fail_tunnel_query(&raw)); // foreign original lease
+    }
+
     #[test]
     fn plan029_native_direct_dns_real_cache_hit_still_journals_fake_before_reply(){
         use crate::v4_client_dns_answer::{DnsAResolution,DnsAnswerStatus,ResolvedA};

@@ -264,6 +264,13 @@ impl NativeSplitWorker {
             Err(_)=>false,
         }
     }
+    /// Only on a failed Tunnel DNS transaction rewrite. The source
+    /// packet is still the original unmodified app packet; queue one
+    /// SERVFAIL for its original tuple/ID through the shared Rust TX
+    /// reverse mailbox. Never retry as Direct or poll a second resolver.
+    pub(crate) fn reject_tunnel_dns(&mut self,packet:&[u8])->bool{
+        self.dns.fail_tunnel_query(packet)
+    }
     pub(crate) fn has_udp_flows(&self)->bool{
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
