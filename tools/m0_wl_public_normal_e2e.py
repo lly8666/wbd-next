@@ -21,7 +21,10 @@ plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
+p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
+if p029_cache and not p029_direct:
+ raise RuntimeError("H1783 signed Direct cache witness requires CN Direct scene")
 if p029_pressure and not p029_direct:
  raise RuntimeError("hard8 pressure requires exactly one signed Normal Direct scene")
 if p029_direct and (mode!="normal" or
@@ -833,6 +836,18 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
          gdata["business_client_physical"]==host_source and
          wdata["direct_resolver"]==peer):
    raise RuntimeError("real Direct DNS/UDP guest physical proof mismatch")
+  if p029_cache:
+   if not (wdata["cache_second_reply"] is True and
+           wdata["cache_second_source_distinct"] is True and
+           gdata["target_dns_count"]==1 and gdata["cache_mode"] is True):
+    raise RuntimeError("H1783 two Windows DNS app sources did not share one physical DNS")
+   report["plan029_d3_cn_native_dns_cache"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "scope":"REAL_TWO_WINDOWS_DNS_TICKETS_ONE_PHYSICAL_CN_DNS_FAKEIP",
+    "windows":wdata,"linux":gdata,
+    "stop":"NOT_RUN_UNTIL_REAL_OWNED_STOP",
+    "full_DNS_pressure":"NOT_RUN"}
+   print("PLAN029_H1783_REAL_CN_DNS_CACHE_TWO_APP_CLIENTS_ONE_UPSTREAM_PASS_PRE_STOP",flush=True)
   report["plan029_private_v3_cn_direct_udp"]={
    "scope":"SIGNED_ONE_WINTUN_RUST_V3_CN_DNS_JOURNALED_FAKE_AND_PHYSICAL_DIRECT_UDP",
    "source_sha":os.environ["GITHUB_SHA"],
@@ -1913,6 +1928,10 @@ print(json.dumps(result),flush=True)
                       json.dumps({"missing":missing,"wal":wal.exists(),
                                   "route_sidecar":routes.exists(),"tcp_defender_sidecar":tcp_sidecar.exists()}))
   if p029_direct:
+   if p029_cache:
+    if report.get("plan029_d3_cn_native_dns_cache",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+     raise RuntimeError("H1783 cache proof lost before original owner Stop")
+    report["plan029_d3_cn_native_dns_cache"]["stop"]="PASS_BOTH_OWNED"
    if p029_pressure:
     if report.get("plan029_d3_direct_hard_pressure",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1778 physical capacity result lost at Stop")

@@ -2,6 +2,7 @@
 """H1745: genuine Windows application UDP53 -> Wintun -> original Rust direct."""
 import json,socket,struct,sys,time
 lease,expected_dns=sys.argv[1:3]
+cache_mode=__import__("os").environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 name=b"\x03www\x02cn\x07example\x00"
 question=name+b"\x00\x01\x00\x01"
 txid=b"\x17\x45"
@@ -50,6 +51,31 @@ for _ in range(struct.unpack("!H",response[6:8])[0]):
 if len(addresses)!=1 or not addresses[0].startswith("198.18."):
     raise RuntimeError("CN CDN A was not durably remapped to one owned FakeIP")
 fake=addresses[0]
+cache_reply=False
+cache_different_source=False
+if cache_mode:
+    # Different actual Windows original app socket + DNS ID, same CN name.
+    with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as new:
+        new.bind((lease,0));new.settimeout(.85)
+        cache_different_source=new.getsockname()[1]!=sock.getsockname()[1]
+        if not cache_different_source:raise RuntimeError("second DNS source port reused")
+        next_id=b"\x17\x83"
+        next_query=next_id+query[2:]
+        answer2=None
+        until=time.monotonic()+7
+        while time.monotonic()<until:
+            new.sendto(next_query,("8.8.8.8",53))
+            try:data2,from2=new.recvfrom(2048)
+            except socket.timeout:continue
+            if from2==("8.8.8.8",53) and data2[:2]==next_id:
+                answer2=data2;break
+        if answer2 is None:raise RuntimeError("second genuine Wintun client DNS reply missing")
+        if (answer2[2]&0x80==0 or answer2[3]&15 or
+            answer2[4:6]!=b"\x00\x01" or
+            answer2[6:8]!=response[6:8] or
+            not answer2.endswith(socket.inet_aton(fake))):
+            raise RuntimeError("cached CN fake DNS result changed or escaped CDN")
+        cache_reply=True
 business=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 business.bind((lease,0))
 business.settimeout(1.5)
@@ -68,5 +94,6 @@ print("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "+json.dumps(
     {"dns_presented":"8.8.8.8","dns_wire_id":txid.hex(),"fake4":fake,
      "business_reply":reply.decode(),"source_lease":lease,
      "source_route":"ACTUAL_ORIGINAL_WINDOWS_WINTUN_SINGLE_RUST_OWNER",
-     "direct_resolver":expected_dns},sort_keys=True),flush=True)
+     "direct_resolver":expected_dns,"cache_second_reply":cache_reply,
+     "cache_second_source_distinct":cache_different_source},sort_keys=True),flush=True)
 sock.close();business.close()

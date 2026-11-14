@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1782,
-  "checkpoint_sha": "deafbbe9d04166692be5cd33e1883cac07cd111a",
+  "sequence": 1783,
+  "checkpoint_sha": "03339bffda0ecc9f604683ea649843650cba0f69",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1782 parallel D3 source: native Direct DNS worker now uses bounded 4096-entry/8MiB cache for verified CN A, per exact lane/endpoint/policy; cache hit passes same FakeIP durable journal before answer, misses and full cache continue sole physical DNS, no Tunnel fallback. H1781 scoped native hard8 signed Action concurrently running independent SOURCE; H1782 code not yet tested on Actions. PLAN029 IN_PROGRESS.",
-  "why_now": "Existing DnsAnswerCache module was unused by live Rust DirectDns, so pure D3 capacity tests did not qualify product. Integrate one native owner path with unit persistence receipt; preserve application/Tunnel current route and no global queue.",
+  "current_task": "H1783 scoped signed D3 positive DNS cache native scenario: two distinct actual Windows Wintun UDP app source ports and DNS IDs query same CN domain, require same journaled FakeIP and exactly one Linux physical target DNS/53 receipt; original physical Direct UDP reply and both owned Stop. H1782 Windows/Linux native DNS cache source build in CI; H1781 separate Direct8 owned Stop Action source frozen. H1783 new signed scenario NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "Live DirectDns positive bounded cache wired in H1782 but pure component tests alone cannot prove physical absence of duplicate DNS traffic. Reuse H1745 actual recipients and source-locked Normal V3 without another adapter or WFP.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1782 Rust unit Windows compile, correct first source issue. In parallel collect independent H1781 actual Direct8 Stop and DNS blackout Action, don't rerun. Then D1 TCP53, D3 FakeIP + transaction pressure, D5 GUI live/1460, P1/P2.",
+  "next_action": "Collect H1783 signed direct DNS cache and independent H1781 hard8 Action, first real failure only. Then app TCP53, DNS transaction/FakeIP pressure, D4–D5/P1/P2.",
   "unverified": true,
   "last_tested_source": "506d4966afecda73e63f6c0afaa2c103249939d8",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1779 Direct8 pressure real PASS_PRE_STOP, Stop cutoff fix H1781 native in progress; H1782 Direct DNS A bounded cache native wired source, physical DNS cache pressure not yet measured. PLAN029 open D1 TCP53/D3–D5/P1/P2."
+  "partial_summary": "H1779 hard8 physical pressure PASS_PRE_STOP, H1781 watchdog corrective native pending; H1782 Direct DNS A cache native wiring tested in progress; H1783 two real DNS app sockets one physical upstream/Stop scene staged NOT_RUN."
 }

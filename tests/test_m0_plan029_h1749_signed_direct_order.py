@@ -227,4 +227,19 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertLess(src.index('unrelated_dns+=1'),src.index('if peer[0]!=lease:'))
         self.assertIn('if peer[0]!=host or wire!=marker:',src)
         self.assertIn('if not seen_dns or not seen_biz:raise RuntimeError',src)
+    def test_h1783_signed_native_direct_cn_cache_not_fake_two_clients(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"',S)
+        self.assertIn("PLAN029_H1783_REAL_CN_DNS_CACHE_TWO_APP_CLIENTS_ONE_UPSTREAM_PASS_PRE_STOP",S)
+        self.assertIn('report["plan029_d3_cn_native_dns_cache"]["stop"]="PASS_BOTH_OWNED"',S)
+        root=Path(__file__).resolve().parents[1]
+        for n in ("m0_plan029_h1745_guest_dns_direct.py",
+                  "m0_plan029_h1745_win_client_dns_direct.py"):
+            source=(root/"tools"/n).read_text()
+            ast.parse(source)
+            self.assertIn("WBD_PLAN029_DNS_CACHE_SCENE",source)
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("WBD_PLAN029_DNS_CACHE_SCENE:",workflow)
+        self.assertIn("$cache.linux.target_dns_count -ne 1",workflow)
 if __name__=="__main__":unittest.main()
