@@ -417,6 +417,18 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
         self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
                         w.index("Full public-run signed original Npcap and Wintun driver install"))
+    def test_h1849_p2_identical_app_nagle_and_failed_scene_udp_progress(self):
+        import ast
+        app=(Path(__file__).resolve().parents[1] /
+             "tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        ast.parse(app)
+        self.assertIn('app_nodelay=sock.getsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY)',app)
+        self.assertIn('base["app_tcp_nodelay"]!=direct_value["app_tcp_nodelay"]',app)
+        self.assertIn('CONCURRENT_TUNNEL_UDP_STAGES',app)
+        self.assertIn('LAST_APP_PHASES',app)
+        self.assertIn('MAX_SUSTAIN=3200',app)
+        self.assertIn('time.sleep(.004) # SAME application pacing',app)
+
     def test_h1845_nonci_product_exact_cli_and_legacy_trial_off(self):
         from pathlib import Path
         source=(Path(__file__).resolve().parents[1] /

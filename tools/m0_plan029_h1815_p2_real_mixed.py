@@ -60,8 +60,14 @@ def tcp_client(role,local,remote):
         sock.settimeout(35);sock.bind((local,0))
         started=time.monotonic();sock.connect((remote,PORT))
         connected=time.monotonic()
+        # Both genuine application WinSock sockets must retain the same
+        # default TCP_NODELAY state; do not change transport pacing or
+        # socket tuning when comparing physical vs synthetic Direct.
+        app_nodelay=sock.getsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY)
         receipt("PLAN029_H1839_P2_TCP_STAGE",{
-            "role":role,"phase":"connected","elapsed_ms":round((connected-started)*1000,3)})
+            "role":role,"phase":"connected",
+            "app_tcp_nodelay":int(app_nodelay),
+            "elapsed_ms":round((connected-started)*1000,3)})
         for n in range(0,SIZE,16384):
             sock.sendall(PAYLOAD[n:n+16384])
             # Only eight bounded, independent progress checkpoints / MiB,
@@ -104,6 +110,7 @@ def tcp_client(role,local,remote):
         if len(echoed)!=SIZE or hashlib.sha256(echoed).hexdigest()!=SHA:
             raise RuntimeError("P2 Windows actual one-MiB kernel TCP echo wrong")
         data={"role":role,"echo_bytes":len(echoed),"payload_sha256":SHA,
+              "app_tcp_nodelay":int(app_nodelay),
               "socket_source":sock.getsockname()[0],"presented_peer":remote,
               "start_monotonic_s":started,"end_monotonic_s":ended,
               "elapsed_ms":round((ended-started)*1000,3),"kernel_tcp":True,
@@ -198,11 +205,16 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
     def wait(p,log,limit):
         try:code=p.wait(timeout=limit)
         except subprocess.TimeoutExpired:
-            # Preserve last successful application phase even when the
-            # client never reaches its final JSON receipt.
-            tail=log.read_text(errors="replace")[-1800:]
+            # Preserve the last successful application phase AND genuine
+            # whole-span Tunnel UDP sequence even if TCP never completes.
+            # No application pacing change, second traffic source or
+            # after-the-fact invented p99. This is only failed-scene evidence.
+            tail=log.read_text(errors="replace")[-1600:]
+            udp_log=out/"plan029-h1815-windows-tunnel-small.log"
+            udp_tail=udp_log.read_text(errors="replace")[-700:] if udp_log.exists() else "NOT_RUN"
             raise RuntimeError("P2 bounded original kernel app timeout "+str(log)+
-                               " LAST_APP_PHASES="+repr(tail))
+                               " LAST_APP_PHASES="+repr(tail)+
+                               " CONCURRENT_TUNNEL_UDP_STAGES="+repr(udp_tail))
         if code!=0:raise RuntimeError("P2 kernel app failed "+str(log)+" "+
                  log.read_text(errors="replace")[-600:])
     def proof(log,marker):
@@ -234,6 +246,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                       direct_value["start_monotonic_s"] and
                       small_win["end_monotonic_s"]>=direct_value["end_monotonic_s"])
         if (base["role"]!="baseline" or direct_value["role"]!="direct" or
+            base["app_tcp_nodelay"]!=direct_value["app_tcp_nodelay"] or
             base["echo_bytes"]!=SIZE or direct_value["echo_bytes"]!=SIZE or
             base["payload_sha256"]!=direct_value["payload_sha256"] or
             base["socket_source"]!=host_source or

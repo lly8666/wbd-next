@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1848,
-  "checkpoint_sha": "89f0114240c845a187d5fe45180560f47899825d",
+  "sequence": 1849,
+  "checkpoint_sha": "27de9281316f5c1bc37907678c5373cba9b12d35",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1848: H1844 SOURCE ecd signed P2 after H1843 FIFO fix still failed >38s, actual physical281ms, Direct upload18.703s, first reply20.86s, 918853B at36.657s and sustained 2432+ Tunnel UDP. H1845 original nonCI signed product source7e failed before Go client spawn due Windows CRLF vs Unix raw-byte test guard. H1848 fixes semantic splitlines test without removing owned-path/nonCI checks, runs one independent nonCI product scene only. H1847 feature card exceeded UTF-8 16KiB; shorten within 16289 bytes.",
-  "why_now": "H1844 real same-VM evidence disproves standalone FIFO patch as performance fix, while H1846 auto-reset 32/32 fix separately awaits P2 evidence. H1845 Windows newline raw-byte fixture blocked first actual explicit CN Ready despite healthy source build. Existing catalog UTF8-byte hard cap must be respected, no weakened governance.",
+  "current_task": "H1849: run first distinct actual signed P2 with BOTH H1843 bounded TCP reverse non-drop and H1846 32-item RX auto-reset no-idle backlog fix. H1844 ecd genuine signed still failed 38s (physical281ms, Direct upload18.703s, first reply20.86s, 918853B at36.657s), so no performance claim. New current-source P2 fixture only reads app TCP_NODELAY on both and preserves UDP/last phase evidence on timeout. H1848 nonCI real product signed test separately in progress, no duplicate.",
+  "why_now": "H1844 real code after FIFO patch alone did not materially improve 1MiB, while H1846 fixes distinct deterministic queue wake starvation and has passed Windows/Linux source Rust unit/native regression. Need one sameVM signed P2 causal check with unchanged application pacing and explicit UDP fairness evidence even on failure.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1848 nonCI real Go/Rust CN OS Applied/Ready/DNS/Direct/Tunnel/Stop new-source. Independently run ONE signed true P2 new H1846 scheduler source on original 1MiB workload with full-span UDP; if 20s slow persists inspect per-leg TCP window/ACK/slow wake. Collect H1846 current-source Rust native. Then Game4/IPv6/GUI OS Stop/P1/slow journal.",
+  "next_action": "Collect H1849 source-locked signed P2 physical/direct full phase/tunnel small UDP spanning transfer and both owned Stop, compare to H1844. Separately collect H1848 nonCI product signed OS Applied/Ready/DNS/TCP/UDP/Tunnel/Defender/Stop. If still slow, kernel TCP ACK/advertised window/retransmits and TX 8 reverse vs 32 ingress quantum fairness; Game4/IPv6/GUI OS/P1/slow journal OPEN.",
   "unverified": true,
   "last_tested_source": "ecd85c18c1a6e0f64212aee555674187b89f5fb7",
   "evidence_refs": [
@@ -22,11 +22,11 @@
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1845-NONCI-PRODUCT-ABI-REAL-SIGNED.md",
     "docs/devlog/M0/20261114-PLAN029-H1846-EXACT-AUTO-WAKE-BATCH-WORK.md",
     "docs/evidence/M0/PLAN029-H1848-H1845-NONCI-CRLF-PRESTART-FAIL-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1848-TRUE-P2-FAIL-NONCI-CRLF-GATE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1848-TRUE-P2-FAIL-NONCI-CRLF-GATE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1849-REAL-P2-RX32-RETEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1844 sourceecd signed real P2 after H1843 FIFO FAIL: physical281ms, Direct upload18.703s first reply20.86s, 918853B at36.657s, 38s timeout, 2432+ UDP; no performance improvement. H1845 source7e1d product aborted before spawn due LF vs WinCRLF harness. H1846 source715a new RX 32-item auto-wake Rust Windows/Linux component PASS, real P2 unverified. H1848 product harness fixes newline plus feature inventory UTF8 size; new signed product NOT_RUN. M0 governance structure PASS, GUI config H1838 PASS."
+  "partial_summary": "H1844 true signed P2 sourceecd after FIFO alone FAIL, 1MiB physical281ms and Direct upload18.703s still 38s not complete. H1846 source715a 32/32 auto-reset lost wake fix Windows Linux native component PASS and no-performance yet. H1848 product from CRLF guard rerun in progress; H1849 new signed P2 single SOURCE and more failure phase/UDP evidence pending. H1848 feature card UTF8 cap/governance PASS."
 }
