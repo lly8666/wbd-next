@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1869",
+  "source_sha": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
+  "action_id": 43647750349,
+  "job_id": 132610597221,
+  "action_conclusion": "success",
+  "scope": "Signed original Go/Npcap/Wintun/Rust Normal explicit CN and Linux WSL2",
+  "business": "PASS_TRUE_DIRECT_TUNNEL",
+  "stop": "PASS_BOTH_OWNED",
+  "ipv6_readback": {
+    "before": {
+      "routes": [],
+      "wintun_ipv4_indexes": []
+    },
+    "ready": {
+      "routes": [],
+      "wintun_ipv4_indexes": [
+        23
+      ]
+    },
+    "after_stop": {
+      "routes": [],
+      "wintun_ipv4_indexes": []
+    },
+    "original_physical_ipv6_default": "ABSENT_ON_THIS_VM",
+    "wintun_ipv6_capture_prefixes": "ABSENT",
+    "owned_prefix_residue_after_stop": [],
+    "ipv6_actual_app_packets": "NOT_RUN",
+    "coverage": "OPEN_NO_GENERAL_IPV6_WINTUN_SINK",
+    "physical_bound_and_onlink": "NOT_PROVEN_BLOCKED"
+  },
+  "interpretation": "No default IPv6 route pre-existed on the runner. Empty IPv6 route snapshots plus true owned Stop prove neither global IPv6 blocking nor an actual leak; needs different genuine IPv6 kernel socket/route precondition."
+}
