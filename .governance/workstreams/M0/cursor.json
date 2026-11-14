@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1785,
-  "checkpoint_sha": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
+  "sequence": 1786,
+  "checkpoint_sha": "e8a781cf904777375b48d1d27631727c4b0ff904",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1785 collect H1783 Action 43547631254 and combined H1784 Action 43548325696: both native FAIL at first H1745 CN cache receipt. Windows two distinct original Wintun DNS UDP client IDs and ports got same durable FakeIP, Linux target_dns_count=1 physical Direct UDP reverse, but Linux cache_mode=false because Windows parent env did not reach wsl.exe. Guest ended before 2.5s duplicate watch. H1785 explicit argv one-bit fixture fix; new combined signed Action NOT_RUN. Later TCP/Tunnel/Direct8/Stop not run on failed H1783/H1784. PLAN029 IN_PROGRESS.",
-  "why_now": "Two signed independent action artifacts prove identical test-Windows/WSL environment transfer mistake; do not change product/DNS behavior, preserve no false full cache or Stop claim.",
+  "current_task": "H1786 first H1785 Action 43550049582 CI preflight FAIL before network: previous H1783 regression asserted literal Windows env in BOTH Windows and Linux guest source, inconsistent with newly explicit WSL argv. New H1785 explicit argv check passed; fix legacy test separately asserting Windows env and Linux strict argv plus runner pass. Governance maintenance also FAIL on this test. New H1786 combined signed native NOT_RUN until CI. PLAN029 IN_PROGRESS.",
+  "why_now": "Avoid re-dispatch before cheap gate; exact test false assumption, not product compile or real DNS failure. Retain original genuine network runs as previous frozen sources and their failures.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect single H1785 auto signed combined Action, then D1 application TCP53, D3 DNS transaction/FakeIP small-capacity, D4/D5 GUI+MTU1460, P1/P2 and padding. No repeat diagnostic.",
+  "next_action": "Collect H1786 cheap governance and then one signed native result. Parallel D3 per-resource typed capacity, D1 app TCP53 and D4/D5 representative OS/GUI, P1/P2, padding remain.",
   "unverified": true,
   "last_tested_source": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1783/H1784 both fail in test bridge after real two client same CN FakeIP and one Linux physical query; true 2.5s duplicate window and Stop NOT_RUN. Explicit WSL argv fix staged."
+  "partial_summary": "H1783/H1784 failed physical cache fixture WSL env-to-argv; H1785 explicit args introduced, but old H1783 assertion blocked preflight. H1786 corrects obsolete test, no new physical network evidence yet."
 }

@@ -266,7 +266,11 @@ class NativeDirectOrder(unittest.TestCase):
                   "m0_plan029_h1745_win_client_dns_direct.py"):
             source=(root/"tools"/n).read_text()
             ast.parse(source)
-            self.assertIn("WBD_PLAN029_DNS_CACHE_SCENE",source)
+            if n.endswith("_win_client_dns_direct.py"):
+                self.assertIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',source)
+            else:
+                self.assertIn('cache_mode=sys.argv[3]=="1"',source)
+                self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',source)
         workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn("WBD_PLAN029_DNS_CACHE_SCENE:",workflow)
         self.assertIn("$cache.linux.target_dns_count -ne 1",workflow)
