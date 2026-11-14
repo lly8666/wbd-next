@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1812,
-  "checkpoint_sha": "b6e5797008fdf75d04fcca60af69e824894d15f6",
+  "sequence": 1813,
+  "checkpoint_sha": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1812 first H1811 D5 scale gate error: native Windows x86/Linux x86/Linux ARM64 all 10 Rust tests PASS including 2 new 10k ones, Action43567463629 FAIL only incorrect '2 total' postcheck. Repair to >=10; independently H1811 actual WinForms/Go/Rust CN/all profile Action43567463580 PASS. H1812 additionally fixes actual visible GUI CN-domain union label/QNAME hint through exact pinned-donor-derived overlay and GUI control readback; source builds pending. PLAN029 IN_PROGRESS.",
-  "why_now": "D5 GUI displayed donor China IPv4-only despite CN IP+domain product semantics; user expects clear config. Fix presentation with immutable donor derivative, no new crypto/DNS OS behavior; correctly distinguish pure tests PASS from faulty CI summary.",
+  "current_task": "H1813 collect H1812 all-green source e2b: Windows x86/Linux x86/Linux ARM64 10k production Rust classifier 10/10 pure per native architecture, and Windows real WinForms visibly shows CN IP+domain/QNAME with Go/Rust CN/all, single DNS, quota, MTU, reopen effective config. Previous H1811 10/10 tests but bad '2 total' CI FAIL preserved. GUI real signed network and P1/P2 remain OPEN, PLAN029 IN_PROGRESS.",
+  "why_now": "Two independent exact-source Actions completed SUCCESS; recover code/UI scoped evidence separately and preserve historical postcheck failure without conflating pure rules/GUI config with signed 10k network or OS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact H1812 triple-architecture D5 scale and Windows compiled GUI label/effective, then update scoped evidence and card; proceed P1/P2 same-VM normal split A/B and Direct physical socket baseline plus real Game4 wiring. No 028 matrix/030.",
+  "next_action": "Implement/source-freeze one same-VM P1 pure Tunnel split off/on A/B at moderate 50Mbps with CPU per delivered GiB, RTT p99/longest gap and owned Stop; P2 ordinary physical baseline+Direct TCP/UDP + Tunnel small UDP; GUI-origin real signed Connect/Disconnect, D4 IPv6 and Game4 Split actual representative remain.",
   "unverified": true,
-  "last_tested_source": "c39a59ab79deebae52422f4a3463960a4f531a98",
+  "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1813-H1812-THREE-ARCH-10K-PRODUCTION-RUST-RULES-20261114.json",
+    "docs/evidence/M0/PLAN029-H1813-H1812-REAL-WINFORMS-CN-UNION-GO-RUST-CONFIG-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
     "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json",
     "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
-    "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json"
+    "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json",
+    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1811 test-only build pending. H1810 signed Windows/WSL2 x86 D3 CNAME multiA and Windows D4 partial-owned rollback PASS; ARM64 native PLAN029/Game4/FEC pure PASS. No product-wide D5 or performance P1/P2."
+  "partial_summary": "H1813 H1812 source e2b D5 rule scale pure Windows/Linux x64 + Linux ARM64 10/10 tests and real Windows WinForms CN IP-domain/QNAME visual config -> Go/Rust effective source PASS. H1810 true Normal Windows x86/WSL2 x86 DNS CNAME two FakeIPs physical Direct+Tunnel PASS; signed v2 partial OS apply recovery PASS. P1/P2, signed GUI origin, IPv6/Game4 split still OPEN."
 }

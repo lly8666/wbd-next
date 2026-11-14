@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1812",
+  "source_sha": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+  "result": "FUNCTIONAL_PASS",
+  "scope": "SOURCE_LOCKED_REAL_WINDOWS_WINFORMS_DERIVED_CN_IP_DOMAIN_LABEL_QNAME_HINT_AND_ORIGINAL_GO_RUST_EFFECTIVE_CONFIG_ONLY",
+  "action": {
+    "id": 43567997254,
+    "job_id": 132365969949,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43567997254",
+    "conclusion": "success"
+  },
+  "observed": {
+    "original_donor": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+    "donor_modified": false,
+    "derived_mainform_and_fields_sha256": "RECORDED_IN_ACTION_ARTIFACT",
+    "source_built_rust_dll": "PASS",
+    "source_built_go_cli": "PASS",
+    "compiled_real_windows_winforms": "PASS",
+    "cn_gui_label_contains_domain": "PASS_REAL_FIELD",
+    "cn_gui_dropdown_visible_domain_union": "PASS_REAL_COMBOBOX",
+    "qname_single_dns_hint": "PASS_REAL_FIELD",
+    "route_mode_cn": "PASS_ACTUAL_GO_CLI_CHECK_CONFIG",
+    "route_mode_all": "PASS_ACTUAL_GO_CLI_CHECK_CONFIG",
+    "direct_dns": "223.5.5.5",
+    "tunnel_dns": "1.1.1.1",
+    "direct_hard_cap": "2_AND_16384_VALIDATION",
+    "invalid_hard_cap_16385": "REJECTED",
+    "server_address": "HOSTNAME_SEPARATE_SNI",
+    "outer_default": "1460",
+    "derived_inner_readonly": "PASS",
+    "game4_config_readback": "PASS_CONFIG_ONLY",
+    "legacy_dns4_backup": "DROPPED",
+    "profile_reopen_cn_mode": "PASS",
+    "native_applied": "NOT_RUN",
+    "signed_gui_origin_business": "NOT_RUN",
+    "terminal_marker": "PLAN029_H1663_TRUE_WINFORMS_DOMAIN_SEPARATE_TLS_NAME_OUTER1460_EFFECTIVE_REOPEN_PASS_NO_SIGNED_NPF_TUN"
+  },
+  "exclusions": [
+    "Config/WinForms checkout does not create signed Wintun/OS Applied",
+    "No real GUI-origin Connect/Disconnect and TCP/UDP business path",
+    "No P1/P2 performance or all-route-mode native product matrix"
+  ]
+}

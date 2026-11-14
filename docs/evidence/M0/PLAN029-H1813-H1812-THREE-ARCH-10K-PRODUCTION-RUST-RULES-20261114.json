@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1812",
+  "source_sha": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+  "result": "BUILD_PASS",
+  "scope": "NATIVE_WINDOWS_X86_LINUX_X86_LINUX_ARM64_SOURCE_LINKED_RUST_10K_CN_DOMAIN_AND_IPV4_RULES_PURE",
+  "action": {
+    "id": 43567997223,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43567997223",
+    "conclusion": "success"
+  },
+  "architecture": [
+    {
+      "os": "windows-2025",
+      "arch": "X64",
+      "job_id": 132365969781
+    },
+    {
+      "os": "ubuntu-24.04",
+      "arch": "X64",
+      "job_id": 132365970073
+    },
+    {
+      "os": "ubuntu-24.04-arm",
+      "arch": "ARM64",
+      "job_id": 132365970048
+    }
+  ],
+  "observed": {
+    "production_rust_source": "crates/wbd-engine/src/v4_client_split.rs",
+    "production_source_included_in_test_by_path": true,
+    "native_rust_compiler": "1.85.1",
+    "cold_cn_domain_rules": 10000,
+    "exact_and_suffix": "PASS",
+    "cn_ipv4_unmerged_intervals": 10000,
+    "dns_direction_cn_vs_non_cn": "PASS_PURE",
+    "non_cn_domain_to_cn_ipv4_direct_business": "PASS_PURE",
+    "active_tunnel_flow_pinned_on_rule_change": "PASS_PURE",
+    "two_new_rules_tests": "PASS_EACH_OS",
+    "total_including_production_module_tests": "10/10_EACH_OS",
+    "actual_os_routes": "NOT_RUN",
+    "max_rss": "NOT_RUN",
+    "physical_performance": "NOT_RUN"
+  },
+  "prior_failure_preserved": {
+    "source": "b6e5797008fdf75d04fcca60af69e824894d15f6",
+    "action": 43567463629,
+    "raw_tests": "10/10_PASS_EACH_OS",
+    "postcheck": "WRONG_EXPECTED_TWO_INSTEAD_OF_TEN",
+    "result": "FAIL_ONLY_POSTCHECK"
+  },
+  "exclusions": [
+    "10k rules are source-linked pure compilation/lookup not Win32 OS route/WFP count",
+    "No native Wintun true 10k rule traffic/GUI network",
+    "P1/P2 CPU/GiB p99, fair scheduling and queue age unmeasured"
+  ],
+  "note": "One current-source Rust test executable per native OS/architecture including real production classifier module; the exact new 10k tests and included existing ones pass. Includes no additional runtime helper through Go."
+}
