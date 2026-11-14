@@ -57,6 +57,7 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-v3-real-tunnel]",
     "[plan029-v3-real-direct-udp]",
     "[plan029-v3-real-d3-multia]",
+    "[plan029-v3-real-p1-tunnel-ab]",
 )
 
 

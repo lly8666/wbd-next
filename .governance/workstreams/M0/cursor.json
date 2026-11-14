@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1813,
-  "checkpoint_sha": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+  "sequence": 1814,
+  "checkpoint_sha": "add795f986882ce5f8447e32d80eddc34d98f6f2",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1813 collect H1812 all-green source e2b: Windows x86/Linux x86/Linux ARM64 10k production Rust classifier 10/10 pure per native architecture, and Windows real WinForms visibly shows CN IP+domain/QNAME with Go/Rust CN/all, single DNS, quota, MTU, reopen effective config. Previous H1811 10/10 tests but bad '2 total' CI FAIL preserved. GUI real signed network and P1/P2 remain OPEN, PLAN029 IN_PROGRESS.",
-  "why_now": "Two independent exact-source Actions completed SUCCESS; recover code/UI scoped evidence separately and preserve historical postcheck failure without conflating pure rules/GUI config with signed 10k network or OS.",
+  "current_task": "H1814 source-frozen same VM P1 moderate Normal: A old V4 tunnel vs B Rust V3 route=all tunnel, sequential independent owned Stop, reuse same Go/Rust binaries, kernel tc 25ms/0%, each direction 50Mbps for 60s, same-Win-PID Go+Rust CPU/actual delivered GiB, UDP RTT p99 and gap, RSS; new H1814 test NOT_RUN until Actions. PLAN029 IN_PROGRESS.",
+  "why_now": "True D3 signed Windows/WSL2 DNS+Direct, D4 signed OS rollback, D5 x86+ARM64 10k rules/WinForms config finished scoped. Next material open P1 and real Game4 split, avoid redoing historical 028 modes and 500Mbps cases.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Implement/source-freeze one same-VM P1 pure Tunnel split off/on A/B at moderate 50Mbps with CPU per delivered GiB, RTT p99/longest gap and owned Stop; P2 ordinary physical baseline+Direct TCP/UDP + Tunnel small UDP; GUI-origin real signed Connect/Disconnect, D4 IPv6 and Game4 Split actual representative remain.",
+  "next_action": "Read H1814 signed Action first gate, preserve FAIL and repair narrowly. P2 physical baseline and mixed Direct/Tunnel, Game4 split wire, signed GUI Connect/Disconnect, IPv6 D4 remain; do not mark complete.",
   "unverified": true,
   "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1813 H1812 source e2b D5 rule scale pure Windows/Linux x64 + Linux ARM64 10/10 tests and real Windows WinForms CN IP-domain/QNAME visual config -> Go/Rust effective source PASS. H1810 true Normal Windows x86/WSL2 x86 DNS CNAME two FakeIPs physical Direct+Tunnel PASS; signed v2 partial OS apply recovery PASS. P1/P2, signed GUI origin, IPv6/Game4 split still OPEN."
+  "partial_summary": "H1814 same-VM source-locked P1 measurement wiring staged. No result yet. Existing D3/D4/D5 and ARM64 prior scoped proof preserved."
 }
