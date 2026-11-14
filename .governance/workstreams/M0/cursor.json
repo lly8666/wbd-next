@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1835,
-  "checkpoint_sha": "81cceb58205c54fd597315e9d18698eb18a92a2d",
+  "sequence": 1836,
+  "checkpoint_sha": "dc26cdb03cd8b9878063c415e5f1f241637be5a0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1835: source81c H1834 fake-GUI harness change untriggered by H1663 path filter. Add current-source tools/m0_plan029_gui_address_mtu_harness.cs actual compiled WinForms fields + save/effective + original Go CLI --check-config for explicit Normal split; Game4 split must fail validation before OS Apply. H1835 GUI CI NOT_RUN; H1833 source b433 build PASS; true signed GUI Connect/Stop/other 029 exits remain OPEN.",
-  "why_now": "H1833 fixed exact four overlay SHA and source b433 Windows Go/Rust+Linux Rust compile and governance PASS, but new production CN GUI fields still lack a source-current GUI/CLI readback. Existing H1663 GUI workflow only triggers specific tools/m0_plan029_gui_address_mtu_harness.cs, not H1834 old GUI harness, so modify actual source-current fixture rather than falsely mark H1834 validated.",
+  "current_task": "H1836: run exactly one source-locked true signed P2 new StageWork/TCP scheduling+resident-buffer source with full Direct 1MiB phase timing and Tunnel small UDP spanning full transfer, physical same-VM baseline and owned Stop. H1835 source-current WinForms/Go --check-config Action43587702812 independently running. New P2 timing NOT_RUN until terminal; PLAN029 IN_PROGRESS.",
+  "why_now": "Two old 4KiB→64KiB and owned TCP_NODELAY hypotheses failed on true signed Windows, Direct ~6.2–6.36s vs physical0.3s. H1827 actual scheduler fix and full-span P2 fixture now compiled, not yet real performance evaluated. Need separate actual first wait-stage evidence before further tuning, not another blind parameter change.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact H1835 current-source WinForms+real Go --check-config Action (one GUI scenario) with filed readback and Game4 rejection; if green distinguish mock UI/CLI from signed product. Then real non-CI Normal GUI Connect->Wintun Direct/Tunnel DNS/Stop; also Game4 CN owner, IPv6, P1/P2, slow fsync Stop remain.",
+  "next_action": "Collect signed H1836 P2 one Action actual SOURCE/hash and app connect/upload/halfclose/first reply/download, 120+ continuous Tunnel UDP p99/longest gap/unique delivery, real owned Stop. In parallel collect H1835 GUI source-current Action. When terminal compare physical/direct and decide first actionable stall. Other D1–D5 P1–P2 exits still OPEN.",
   "unverified": true,
   "last_tested_source": "b43334885ab7fae468e896609e748294dc6ccc8b",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1834-WINFORMS-CN-SPLIT-SAVED-EFFECTIVE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1835-CURRENT-SOURCE-GUI-CLI-READBACK.md"
+    "docs/devlog/M0/20261114-PLAN029-H1835-CURRENT-SOURCE-GUI-CLI-READBACK.md",
+    "docs/devlog/M0/20261114-PLAN029-H1836-REAL-P2-TIMELINE-SOURCE-FREEZE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1833 source b433 static Windows Go/native Rust/Linux Rust component PASS only. H1835 source GUI actual compiled WinForms→saved/effective→real Go check-config candidate plus pre-OS Game4 CN rejection NOT_RUN. H1831 source268 true signed D3 PASS_SCOPED. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1836 one signed P2 distinct network scenario in-flight after doc marker; no measured result yet. H1835 GUI actual WinForms/Go CLI still in progress; H1831 source268 signed D3 async FakeIP PASS_SCOPED; H1833 sourceb433 build PASS; performance/HOL/Game4/IPv6 and true GUI Stop OPEN."
 }
