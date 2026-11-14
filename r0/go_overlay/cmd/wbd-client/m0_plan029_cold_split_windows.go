@@ -125,18 +125,21 @@ func m0Plan029SyntheticForGeneration(install,epoch [16]byte)([4]byte,error){
  return [4]byte{198,19,h[0],1+h[1]%254},nil
 }
 
-// m0Plan029TrialCold is the ONLY test-channel V3 gate. It does not turn
-// unfinished Direct TCP/DNS TCP into public Ready or silently activate a
-// missing China geosite snapshot. All product OS ownership still goes
-// through the original credential, signed Wintun and four-stage WAL.
+// PLAN029 V3 selection is explicit by saved next-generation config, never
+// gated on the GITHUB_ACTIONS host variable in the real product. The old
+// source-locked signed CI trial remains available as a separate test input.
+// This is only cold source selection; Applied/Ready still require actual
+// authenticated owner + signed Wintun + four-stage owned OS receipts.
 func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
  ifindex uint32,lease netip.Addr,innerMTU uint32,epoch [16]byte,
 )(*realityfront.V4WindowsColdSplitConfig,error){
- if os.Getenv("GITHUB_ACTIONS")!="true"||
-  os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")!="1"{return nil,nil}
+ trial:=os.Getenv("GITHUB_ACTIONS")=="true"&&
+  os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")=="1"
+ if !o.SplitEnable&&!trial{return nil,nil}
  var domains []byte
  if o.RouteMode=="bypass-lan-cn"{
-  file:=os.Getenv("WBD_PLAN029_CN_RULES_FILE")
+  file:=o.CNRulesFile
+  if !o.SplitEnable{file=os.Getenv("WBD_PLAN029_CN_RULES_FILE")}
   if file==""||!filepath.IsAbs(file){return nil,errM0Plan029Cold}
   info,e:=os.Lstat(file)
   if e!=nil||info.Mode()&os.ModeSymlink!=0||

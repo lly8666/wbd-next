@@ -452,6 +452,11 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  return h,nil
 }
 func runM0NativeV4Windows(o m0NativeV4Options)error{
+ // Game2/Game4 still use their original Game Rust owner. Explicit CN
+ // split cannot be silently accepted without a corresponding Game actor.
+ if o.SplitEnable&&(o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4){
+  return fmt.Errorf("PLAN029 CN split Game2/4 not wired; no OS Apply attempted")
+ }
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
@@ -981,16 +986,17 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   nativePeer.healthDead=o.HealthDeadSeconds
   nativePeer.healthDormant=o.HealthDormantSeconds
   nativePeer.disableOuterRepair=o.DisableOuterRepair
-  // PLAN029: private source-locked signed Windows trial only. Ordinary
-  // product V2 is unchanged; no implicit feature promotion/Go packet pump.
+  // PLAN029 cold source: explicit saved opt-in OR source-locked CI trial.
+  // Actual signed driver/OS/owner receipt below determines Applied/Ready.
   trial,e:=m0Plan029TrialCold(o,underlay.Source4,
    physicalPath.InterfaceIndex,o.Lease4.Addr(),o.TunnelMTU,session.Epoch)
   if e!=nil{return fmt.Errorf("PLAN029 original Go cold V3 rejected: %w",e)}
   if trial!=nil{
    nativePeer.plan029Cold=trial
    if trial.TCPSynthetic4!=[4]byte{}{tcpSynthetic=netip.AddrFrom4(trial.TCPSynthetic4)}
-   fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 not_public_product=1\\n",
-    o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
+   fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 source=%s readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
+    o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU,
+    map[bool]string{true:"explicit_config",false:"source_locked_CI_trial"}[o.SplitEnable])
   }
   transport=nativePeer
  }else{

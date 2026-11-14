@@ -80,6 +80,12 @@ MTU编辑框标“外层 MTU（字节，上限）”，默认1460；最大1500�
 
 当前尚未合格的不止P2：Normal V3仍有GitHub Actions试验门、Game4 CN分流未接、GUI真实Connect/Stop及D4 IPv6/中断恢复和完整DNS/填充仍需落实。每批源码/夹具/日志同SOURCE冻结后再启动对应单场Action，不把某子项绿灯当029交付。
 
+### H1832 正式冷入口与GUI接线（仍待本SOURCE签名实测）
+
+H1831 [Action43585387611](https://github.com/lly8666/wbd-next/actions/runs/43585387611) 在SOURCE `268fdc150937416a51991b440a961a5dc96a1a3e`签名Normal验证异步FakeIP落盘后CN CNAME→两个真实A→两个不同FakeIP、物理Direct UDP/原Windows应用回包与owned Stop均PASS；应用首次DNS答复531ms/1次，不能与独立fsync或峰值延迟混同。H1829/H1830的Rust组件失败已保留并修复。
+
+H1832正式冷配置新增`split-enable`（默认false，显式开启下次连接生效）和便携`cn-rules-file`（CN模式必填独立、有效、冷读的规则源）。CLI`--config`→真实原Go cold V3→单Rust Wintun owner；取消`GITHUB_ACTIONS`作为产品选择条件，原CI试验marker仅供现有单Action复测。GUI配置输入保存及内部绝对路径受控复制同SOURCE完成；网络Ready仍只能取本次签名driver/OS四阶段WAL、Rust owner/业务通路真实回执，不能把`--check-config`或设计当实际联网。Game2/4在未接`NativeSplitWorker`前若显式要求CN分流必须冷拒绝，而非假Ready；按既定029出口继续Game4接线。H1832新CLI/GUI源码和实体Stop的签名测试在本提交时**NOT_RUN**。
+
 ## 5. 测试与退出
 
 分流/DNS按[契约§7](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md#7-一组可复用验收先正确出口再谈速度)的D1–D5/P1–P2执行；一Action一网络场景、不同Action并行、按SOURCE/hash复用编译。用可控DNS、CN/非CN endpoint与实际物理/隧道两出口，不依赖公共DNS恰好可达，不以mock冒充Windows真实路径。

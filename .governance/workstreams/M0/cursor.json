@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1831,
-  "checkpoint_sha": "d358374e58f7c22c34e82d585bba26d64d3a45a2",
+  "sequence": 1832,
+  "checkpoint_sha": "268fdc150937416a51991b440a961a5dc96a1a3e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1831 SOURCE-lock once for one signed Windows/Wintun/WSL2 PLAN029 D3 MultiA+CNAME+FakeIP Direct UDP scenario on already Green H1830 async FakeIP tests. Fixture adds only client end-to-end DNS timing/attempts. Single Action triggered by exact [plan029-v3-real-d3-multia] marker; signed D3 results NOT_RUN until terminal. P2/P1/Game4/GUI/IPv6 and slow-fsync/Stop remain OPEN.",
-  "why_now": "H1829 asynchronous journal first tests were stale; H1830 exact Windows/Linux native Rust and native-functional/governance PASS. Need real current-source DNS app exit before broad work, only one D3 network scenario not full matrix. Timing distinguishes total application DNS wait from unmeasured isolated sync/classifier.",
+  "current_task": "H1832: H1831 source268fdc signed genuine Windows/Wintun D3 CN CNAME 2 A→2 FakeIP Direct UDP+Tunnel+owned Stop PASS_SCOPED, DNS app 531ms/1 request. Build explicit non-GitHub-Actions cold split-enable and GUI portable cn-rules-file with next-Connect semantics, Game2/4 fail closed until real split owner. New H1832 source compile+GUI+real Stop NOT_RUN; P1/P2/Game4/IPv6/HOL OPEN.",
+  "why_now": "H1831 source-frozen D3 success establishes async FakeIP functional, but real normal product still gated by GITHUB_ACTIONS. User authorized real code execution and GUI effective config, so release only explicit opt-in cold path without fake Ready or claiming other modes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1831 single signed D3 Action real Windows application→Wintun→Rust DNS FakeIP multi-A/CNAME→physical Direct business UDP→app, current SOURCE/compiled artifact and owned Stop; if FAIL locate first boundary. Then independent TCP53+slow-fsync/Stop, P2 new-source full-span mixed + allocated RSS, P1, Game4 CN, GUI and IPv6.",
+  "next_action": "Collect single H1832 CI Go Windows native build/GUI manifest/feature governance first failure. Then one explicit non-CI Normal CN real OS GUI end-to-end scenario with saved config→CLI→Rust owner→2 DNS→Direct/Tunnel→Stop; continue separate Game4 owner, IPv6, P2 current source continuous UDP/RSS and P1 CPU. Do not re-dispatch H1831.",
   "unverified": true,
-  "last_tested_source": "d358374e58f7c22c34e82d585bba26d64d3a45a2",
+  "last_tested_source": "268fdc150937416a51991b440a961a5dc96a1a3e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1831-H1830-ASYNC-DNS-COMPONENT-RESULT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1832-H1831-SIGNED-ASYNC-D3-MULTIA-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1830-ASYNC-DNS-WINDOWS-FIRST-FAILURE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1831-SIGNED-D3-ASYNC-CN-DNS-SOURCE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1831-SIGNED-D3-ASYNC-CN-DNS-SOURCE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1832-EXPLICIT-PRODUCT-GUI-CN-SPLIT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1830 source d358 Windows/Linux Rust component PASS and governance/native-functional PASS, true network DNS still NOT_RUN. H1831 one signed D3 scenario queued via commit marker, no duplicate dispatch. H1825 old P2 six-second Direct performance unresolved, all remaining 029 exits OPEN."
+  "partial_summary": "H1831 signed D3 source268 PASS_SCOPED: two distinct FakeIP, physical Direct UDP, both owned Stop, app DNS531ms. H1832 explicit production CN split opt-in and GUI portable rules fields source candidate; no signed H1832 product evidence yet. 029 IN_PROGRESS, Game4/GUI true start/P2 latency/P1 CPU/IPv6/compaction slow-fsync OPEN."
 }

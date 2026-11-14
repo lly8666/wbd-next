@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1831",
+  "source_sha": "268fdc150937416a51991b440a961a5dc96a1a3e",
+  "result": "SIGNED_REAL_NORMAL_D3_PASS_SCOPED",
+  "action": {
+    "id": 43585387611,
+    "job_id": 132419948976,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43585387611"
+  },
+  "scope": "SIGNED_ORIGINAL_WINDOWS_GO_RUST_V3_WINTUN_NPF_CN_CNAME_TWO_REAL_A_DISTINCT_FAKEIP_DIRECT_UDP_AND_TUNNEL_WITH_OWNED_STOP",
+  "observed": {
+    "actual_scene_flags": {
+      "WBD_PLAN029_NATIVE_V3_TRIAL": "1",
+      "WBD_PLAN029_V3_DIRECT_SCENE": "1",
+      "WBD_PLAN029_D3_MULTIA_SCENE": "1",
+      "WBD_PLAN029_P2_MIXED_SCENE": "0",
+      "WBD_PLAN029_APP_TCP53_SCENE": "0"
+    },
+    "windows_app": {
+      "dns_app_elapsed_ms": 531,
+      "dns_app_attempts": 1,
+      "dns_display": "8.8.8.8",
+      "physical_direct_dns_endpoint": "172.22.66.211",
+      "dns_wire_id": "1745",
+      "fake_ips": [
+        "198.18.0.1",
+        "198.18.0.2"
+      ],
+      "business_reply": "PLAN029-H1745-CN-DIRECT-UDP-reply",
+      "source_lease": "10.66.0.2"
+    },
+    "linux_physical": {
+      "dns_received": true,
+      "direct_udp_business": true,
+      "dns_answer_batches": 1,
+      "direct_client_physical_source": "172.22.64.1"
+    },
+    "d2_converse": {
+      "noncn_dns_to_cn_ip_direct_udp": "PASS",
+      "owned_route_alias_cleanup": "PASS"
+    },
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "interpretation": "Proves current async FakeIP journal normal CN D3 delivered after actual Windows app DNS+Direct UDP and owned Stop; 531ms is total app DNS wait, not isolated fsync/classifier. Does not qualify P2 latency or Game4.",
+  "not_run": [
+    "H1832 explicit product non-CI split-enable GUI Connect/Stop",
+    "TCP53 after async writer",
+    "forced slow/failed fsync concurrent Tunnel p99",
+    "journal compact crash-reopen",
+    "P2 H1827/H1828 corrected current source",
+    "P1 CPU causality",
+    "Game4 CN split",
+    "IPv6 full policy"
+  ]
+}

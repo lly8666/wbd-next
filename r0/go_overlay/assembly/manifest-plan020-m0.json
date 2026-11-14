@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "c38a3975c37b1c262ac6f29a7c81a84b70ff49c8",
+      "result_blob": "defbfebcd2344a2a872ebf2d7a1f6b0204314aea",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -272,6 +272,22 @@
         {
           "find": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
           "replace": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),StartupPaddingMode:startupPaddingMode,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
+        },
+        {
+          "find": "directFlowHard     = flag.Int(\"direct-flow-hard\", 16384, \"Direct TCP/UDP hard flow limit 1..16384, independent of Tunnel; reconnect to apply\")",
+          "replace": "directFlowHard     = flag.Int(\"direct-flow-hard\", 16384, \"Direct TCP/UDP hard flow limit 1..16384, independent of Tunnel; reconnect to apply\")\n\t\tsplitEnable = flag.Bool(\"split-enable\", false, \"PLAN029 Rust Wintun CN IP+domain Direct/Tunnel split; next Connect only\")\n\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")"
+        },
+        {
+          "find": "if *directFlowHard<1 || *directFlowHard>16384 {return errors.New(\"direct-flow-hard requires 1..16384; new Direct only\")}",
+          "replace": "if *directFlowHard<1 || *directFlowHard>16384 {return errors.New(\"direct-flow-hard requires 1..16384; new Direct only\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+        },
+        {
+          "find": "out[\"startup-padding\"]=startupPaddingMode // selected next-generation intent, not physical effect",
+          "replace": "out[\"startup-padding\"]=startupPaddingMode // selected next-generation intent, not physical effect\n\t\tout[\"split-enable\"]=fmt.Sprint(*splitEnable) // cold intent; not Ready until real OS+Rust receipt\n\t\tout[\"cn-rules-file\"]=*cnRulesFile // single source path; not per-DATA"
+        },
+        {
+          "find": "StartupPaddingMode:startupPaddingMode,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
+          "replace": "StartupPaddingMode:startupPaddingMode,SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         }
       ]
     },
@@ -307,7 +323,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "94ead95d23979871af5e2275f43e9f19d158de93",
+      "result_blob": "18ff25d8af3abbddce632371ada21ab8d509e073",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -424,6 +440,10 @@
         {
           "find": "  \"tls-startup-padding\": [\n    \"传输\",\n    \"TLS 启动有限填充\",\n    \"默认关闭；不等待凑包，不保证消除所有流量特征\"\n  ],",
           "replace": "  \"tls-startup-padding\": [\n    \"兼容\",\n    \"旧TLS填充设置（已迁移）\",\n    \"从旧配置迁移到startup-padding=tls；GUI只使用单一新流填充选择\"\n  ],"
+        },
+        {
+          "find": "  \"direct4\": [",
+          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。仅支持已接线的Normal/Fixed/Auto，Game2/4尚未接线会明确拒绝；保存后重新连接才生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
         }
       ]
     },
@@ -1051,9 +1071,17 @@
         {
           "find": "        public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            object old;",
           "replace": "        public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            MigrateStartupPadding(values);\n            object old;"
+        },
+        {
+          "find": "            string diagnostic = Convert.ToString(values[\"diagnostic-jsonl\"]);",
+          "replace": "            string cnRules = Convert.ToString(values[\"cn-rules-file\"]);\n            if (cnRules.Length > 0) values[\"cn-rules-file\"] = InRoot(cnRules);\n            string diagnostic = Convert.ToString(values[\"diagnostic-jsonl\"]);"
+        },
+        {
+          "find": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n        }\n        public void AppendLog",
+          "replace": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n            // Import external CN snapshots into an owned portable source;\n            // active readers use the original generation snapshot and\n            // will not hot-migrate existing flows on a later profile edit.\n            object cnRulesField;\n            string cnRules = p.Values.TryGetValue(\"cn-rules-file\", out cnRulesField)\n                ? Convert.ToString(cnRulesField) : \"\";\n            if (cnRules.Length > 0 && Path.IsPathRooted(cnRules)) {\n                CheckPath(cnRules);\n                string text = ReadBounded(cnRules);\n                string rel = \"data/cn-rules-\" + p.Id + \".txt\";\n                WriteAtomic(rel, text); p.Values[\"cn-rules-file\"] = rel;\n            }\n        }\n        public void AppendLog"
         }
       ],
-      "result_blob": "1168f526ec96f6cc03ae2585506301e3b47deafd"
+      "result_blob": "ce874bf796317638d9c50143f9bba487b26b9206"
     },
     {
       "kind": "create",

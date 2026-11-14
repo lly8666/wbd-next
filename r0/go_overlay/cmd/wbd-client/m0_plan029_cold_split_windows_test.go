@@ -86,6 +86,35 @@ func TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains(t *testing.T){
  }
 }
 
+func TestPlan029ExplicitProductSplitOutsideCIUsesOnlyConfiguredRules(t *testing.T){
+ o:=plan029Options("bypass-lan-cn")
+ o.SplitEnable=true
+ o.StatePath=filepath.Join(t.TempDir(),"network-state")
+ path:=filepath.Join(t.TempDir(),"cn-rule-source.txt")
+ if err:=os.WriteFile(path,[]byte("cn.example\n=exact.cn\n"),0600);err!=nil{t.Fatal(err)}
+ o.CNRulesFile=path
+ t.Setenv("GITHUB_ACTIONS","false")
+ t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","")
+ t.Setenv("WBD_PLAN029_CN_RULES_FILE",filepath.Join(t.TempDir(),"foreign-ci-rules"))
+ c,err:=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2})
+ if err!=nil||c==nil||string(c.Domains)!="cn.example\n=exact.cn\n"||
+  c.TCPSynthetic4==[4]byte{}||len(c.FakeJournalPath)==0{
+  t.Fatalf("real configured split was still CI-gated: %+v %v",c,err)
+ }
+ o.CNRulesFile="relative-cn.txt"
+ if _,err=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2});err==nil{
+  t.Fatal("product admitted nonabsolute unowned CN rules path")
+ }
+ o.CNRulesFile=path
+ o.SplitEnable=false
+ if cold,err:=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2});err!=nil||cold!=nil{
+  t.Fatal("disabled split activated or required CN rules",err)
+ }
+}
+
 func TestPlan029GenerationSyntheticOnlyOneOwnedHost(t *testing.T){
  install:=[16]byte{1};e1:=[16]byte{2};e2:=[16]byte{3}
  a,err:=m0Plan029SyntheticForGeneration(install,e1)

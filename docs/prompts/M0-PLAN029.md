@@ -36,3 +36,7 @@
 - **P2夹具**把connect、上传、半关闭、首回包、下载时间独立输出；原16KiB每包睡4ms需醒目标记非峰值吞吐。Tunnel小UDP必须覆盖直连大TCP整个生命周期，不是旧120次短暂重合；唯一交付、p99、最长空洞、Stop与SOURCE均保留。
 - **第二批**一条有界FakeIP持久化队列/单后台写者，TX不直接write_all/sync_data/压缩。等到实际durable ACK才给相关DNS合成FakeIP；错误局部SERVFAIL，续期合并、Stop取消、不让旧generation晚回调发布。16MiB长期开启时由写者安全低频压缩有效映射/隔离保护并校验重启恢复。
 - **第三批**按真实保留容量对Direct TCP缓冲计费，按需池化或低频空闲收缩，64MiB是实际分配硬预算不是len或排队目标。小额度测试复核新Tunnel、旧Direct、DNS在压力时继续与恢复；然后才做定向P1 CPU因果测量。**完整029仍含**正式无Actions门Normal V3、Game4 CN、GUI签名Connect/Stop、D1–D5/P1–P2与IPv6/中断恢复、有限padding；这些没有证据不得交付。
+
+## H1832正式启动/GUI已实施候选，实测待收（2026-11-14）
+
+H1831签名Windows/WSL2真D3多A/CNAME+CN FakeIP和物理Direct UDP、Tunnel及owned Stop已在SOURCE `268fdc150937416a51991b440a961a5dc96a1a3e`PASS_SCOPED（Action43585387611），DNS应用等待531ms/1次，非独立fsync耗时。H1832新增明确`--split-enable`（默认off）及`--cn-rules-file`；GUI保存为可移植相对路径、原Go下一generation在非GitHub Actions也可选同一个Rust NativeSplitWorker，已有四阶段OS WAL/Rust真实Applied逻辑不造假。Game2/4尚未接线时收到显式split应Fail Closed，不恢复旧Game纯Tunnel冒充CN。**本H1832新SOURCE Windows/GUI真实起网Stop和规则有效值尚NOT_RUN**，先收正在跑的H1831 D3、不重复dispatch；再源锁验证单GUI/Normal代表，Game4、IPv6、P1/P2等继续。
