@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1795,
+  "source_sha": "d1f37236612a3f99f7bdfa47be6bf91817768ae8",
+  "action": {
+    "run_id": 43555931814,
+    "job_id": 132328655984,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43555931814"
+  },
+  "first_error": "test_h1778_real_bounded_direct8_capacity_and_new_tunnel_isolation expected literal 'p029_pressure_guest,p029_pressure_win):' but runtime finally tuple now appends p029_tcp53_guest,p029_tcp53_win; all other tests including new H1794 passed",
+  "governance": "PASS",
+  "network": "NOT_RUN",
+  "corrective_action": "Change only legacy expected full finally cleanup tuple, keep all process cleanup and early error provenance",
+  "old_H1791_native_default1460": "PASS_PREVIOUS_SOURCE"
+}

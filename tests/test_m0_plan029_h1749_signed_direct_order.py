@@ -232,7 +232,7 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertLess(S.index("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP"),
                         S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
         self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
-        self.assertIn('p029_pressure_guest,p029_pressure_win):',S)
+        self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win):',S)
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
         self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)

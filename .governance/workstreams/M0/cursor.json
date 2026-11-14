@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1794,
-  "checkpoint_sha": "7ac88c81772b3c25f6479b8193f0d81495595b64",
+  "sequence": 1795,
+  "checkpoint_sha": "d1f37236612a3f99f7bdfa47be6bf91817768ae8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1794 one signed original Windows app TCP53 network scenario SOURCE fixture staged: H1793 Linux/Windows native Rust component, Go build, native-functional, governance PASS_SCOPED source 7ac88; real TCP53 NOT_RUN. Same original kernel listener and synthetic owned route; Linux physical eth0:53 and Tunnel TUN 1.1.1.1:53 serve CN FakeIP and nonCN real A, original Windows two TCP clients and exact physical underlay source/Tunnel lease; one HyperV guest TCP53 Allow owned INTENT before Apply, exact readback+always cleanup; source-locked real Stop required. H1791 default1460 signed remains PASS. PLAN029 ongoing.",
-  "why_now": "H1793 compile PASS but D1 original application TCP53 real packet delivery not measured. Reuse one authenticated kernel listener and existing full signed Normal dual DNS fixture; no new old WFP/Go pump/second Wintun.",
+  "current_task": "H1795 exact preflight correction to H1794 source: Action 43555931814 cheap one H1778 old test asserted process cleanup tuple ended at p029_pressure_win, but H1794 correctly added TCP53 guest/client behind it. H1794 new test and governance PASS; native TCP53 NOT_RUN because old test shape failed. Update only expected complete finally tuple, keep all four guest/client pressure+TCP53 process terminations. Source-locked H1795 signed real D1 TCP53 pending; PLAN029 IN_PROGRESS.",
+  "why_now": "First failing boundary was a stale unit substring over a correctly extended existing finally tuple, not product DNS/TCP. Don't loosen runtime Stop or diagnostic rules and don't dispatch another Action manually.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1794 auto signed one Action first real Windows/Linux TCP53 boundary, no duplicate dispatch; repair only first failure and preserve owned Stop. Independently remaining D3 DNS full/expiry, D4 OS partial failure/IPv6, D5 GUI applied and P1/P2 p99/CPU/padding. Original Go RootCAs ABI separate OPEN, no 030.",
+  "next_action": "Collect H1795 new auto signed original-app TCP53 Windows/Linux Direct/Tunnel+owned Stop Action; inspect first native failure. Independently finish D3/D4/D5/P1/P2. H1791 default1460/1389 signed prior SOURCE PASS, old Go RootCAs ABI separate OPEN.",
   "unverified": true,
   "last_tested_source": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1793 source kernel TCP53 wired Rust Windows/Linux CI PASS, physical TCP53 still NOT_RUN. H1794 signed native two OS TCP53 direct/Tunnel test staged with owned guest allow and original Stop; H1791 1460/1389 full other exits PASS; PLAN029 incomplete."
+  "partial_summary": "H1793 Rust TCP53 same original kernel listener and DNS NAT compiled PASS. H1794 signed TCP53 test staged but cheap legacy H1778 assertion failed before network; H1795 corrects exact expected bounded cleanup tuple. New native run NOT_RUN."
 }
