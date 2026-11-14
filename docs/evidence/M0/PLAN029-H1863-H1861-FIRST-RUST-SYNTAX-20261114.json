@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source_sha": "905e1cef5ec7d9ccf3b6acdd5cf91add96cb1f2f",
+  "plan": "PLAN029",
+  "task": "H1863",
+  "date": "2026-11-14",
+  "result": "COMPILE_FAIL_NOT_REAL_P1",
+  "source_before": "ad4966403a4d21b40c6d9760fdc2e76a933dd925",
+  "h1861": {
+    "action_native": 43617572311,
+    "action_component": 43617572418,
+    "compile_windows_rust": "FAIL",
+    "compile_linux_rust": "FAIL",
+    "first_error": "crates/wbd-engine/src/v4_client_split_wire.rs:249 let fragment_key={ missing FragmentKey type, path separator must be a double colon/struct literal without path",
+    "real_p1_ab": "NOT_RUN",
+    "native_cleanup": "NOT_APPLICABLE_NO_NETWORK"
+  },
+  "h1862": {
+    "action_native": 43617776205,
+    "state_at_commit": "IN_PROGRESS",
+    "code_source_includes_same_syntax": "YES",
+    "result": "NOT_YET_COLLECTED"
+  },
+  "h1863_fix": "Restore exact FragmentKey{ initializer after H1861 pure-Tunnel fast path. No semantic difference, max queue/timer/Defender/TTL unchanged. New SOURCE Win/Linux Rust and real P1 results NOT_RUN_AT_COMMIT."
+}

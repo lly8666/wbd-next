@@ -246,7 +246,7 @@ impl PacketIngress{
                 _=>return Ok(IngressAction::Tunnel),
             }
         }
-        let fragment_key={
+        let fragment_key=FragmentKey{
             src:view.src,dst:view.dst,proto:view.proto,ip_id:view.ip_id,
         };
         if view.fragment_offset!=0{
