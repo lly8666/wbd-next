@@ -135,6 +135,41 @@ def plan(legacy: Path, overlay: Path, spec: dict) -> tuple[list, dict]:
                              result_blob=got, bytes=len(result),
                              donor_blob=e.get("donor_blob"),
                              main_owned_derivative=derived))
+    # Product build contract: the real portable WinForms constructor
+    # requires an EXACT key match between PARAMETERS.json and gui-fields.json.
+    # Validate the *assembled outputs* before the first OS/file mutation,
+    # instead of discovering a forgotten CLI catalog entry minutes later
+    # inside a Windows-only GUI launch.
+    cross = {
+        dst.relative_to(legacy).as_posix(): data
+        for dst, data in staged
+        if dst.relative_to(legacy).as_posix() in (
+            "docs/PARAMETERS.json", "windows/gui/fields.json")
+    }
+    if {"docs/PARAMETERS.json", "windows/gui/fields.json"} <= cross.keys():
+        try:
+            catalog = json.loads(cross["docs/PARAMETERS.json"])
+            labels = json.loads(cross["windows/gui/fields.json"])
+            cli = catalog["targets"]["client-windows"]
+            if not isinstance(cli, dict) or not isinstance(labels, dict):
+                raise ValueError("GUI/CLI assembled catalog is not an object")
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise ValueError("GUI/CLI assembled catalog malformed") from exc
+        missing_gui = sorted(set(cli) - set(labels))
+        unknown_gui = sorted(set(labels) - set(cli))
+        if missing_gui or unknown_gui:
+            raise ValueError("GUI/CLI catalog key mismatch; "
+                             f"missing_gui={missing_gui}; unknown_gui={unknown_gui}")
+        # Check critical future split selector against the actual Go CLI
+        # catalog type and default, not an independent GUI checkbox guess.
+        if ("split-enable" in cli and
+            (cli["split-enable"].get("type") != "Bool" or
+             cli["split-enable"].get("default_expression") != "false")):
+            raise ValueError("GUI/CLI split-enable default/type mismatch")
+        if ("cn-rules-file" in cli and
+            (cli["cn-rules-file"].get("type") != "String" or
+             cli["cn-rules-file"].get("default_expression") != "\"\"")):
+            raise ValueError("GUI/CLI cn-rules-file default/type mismatch")
     return staged, dict(schema_version=1, legacy_source=spec["legacy_source"],
                         overlay_source=actual, rust_source=spec["rust_source"],
                         rust_source_note="reference_only_not_actual_linked_ABI",

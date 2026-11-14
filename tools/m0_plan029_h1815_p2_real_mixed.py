@@ -201,7 +201,22 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             not whole_direct or
             small_win["sustained_total"]!=small_linux["sustained_total"]):
             raise RuntimeError("P2 real baseline/Direct 1MiB + concurrent Tunnel UDP independent proof invalid")
+        # Same-run, same-VM phase attribution, not an inferred algorithmic
+        # bottleneck or a peak throughput number. Additive deltas expose the
+        # first dominant wait without changing the paced 1-MiB workload.
+        phases=("connect_ms","upload_ms","half_close_ms",
+                "first_reply_wait_ms","download_ms")
+        delta={phase:round(direct_value[phase]-base[phase],3)
+               for phase in phases}
+        dominant=max(phases,key=lambda phase:delta[phase])
+        ratio=round(direct_value["elapsed_ms"]/max(.001,base["elapsed_ms"]),3)
         return {"source_sha":source,"binary_source_sha":os.environ.get("WBD_WL_BINARY_SOURCE",source),
+                "p2_timeline":{"direct_over_physical_elapsed_ratio":ratio,
+                    "direct_minus_physical_phase_ms":delta,
+                    "dominant_added_wait_phase":dominant,
+                    "same_vm_sequential_baseline":True,
+                    "workload":"PACED_16K_BLOCKS_4MS_NOT_PEAK",
+                    "no_single_kernel_cause_claim":True},
                 "scope":"REAL_PHYSICAL_SOCKET_BASELINE_1M_VS_FAKEIP_RUST_DIRECT_1M_AND_120_CONCURRENT_TUNNEL_UDP",
                 "physical_baseline":base,"direct_windows":direct_value,"physical_guest":linux,
                 "tunnel_windows":small_win,"tunnel_linux":small_linux,

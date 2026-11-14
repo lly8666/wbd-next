@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1835",
+  "source_sha": "dc26cdb03cd8b9878063c415e5f1f241637be5a0",
+  "result": "REAL_COMPILED_WINFORMS_GUARD_FAIL_NO_NETWORK",
+  "action": {
+    "id": 43587702812,
+    "conclusion": "failure",
+    "job": 132425654475,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43587702812"
+  },
+  "verified_substeps": [
+    "exact-current Rust cdylib release built",
+    "pinned original Go assembled and compiled",
+    "original WinForms release compiled"
+  ],
+  "first_failure": "PortableStore ctor refuses GUI 参数清单与客户端不一致 before first CLI --check-config",
+  "root_cause": "GUI fields.json has split-enable, cn-rules-file while assembled docs/PARAMETERS.json originally lacked both; mismatch correctly rejected entire GUI startup",
+  "separate_nonrun": {
+    "H1836_signed_P2": "NOT_TRIGGERED",
+    "reason": "8548 H1836 marker was docs/cursor-only: native Windows workflow push.paths not matched",
+    "H1835_GUI_APPLIED": "NOT_RUN",
+    "H1835_OS_STOP": "NOT_RUN"
+  },
+  "corrected_source_pending": "H1837 adds both exact typed parameters in assembled catalog, fail-fast assembler cross-contract and signed P2 workload source trigger; actions NOT_RUN at commit creation",
+  "preserved": "H1831 signed D3 same-source separate, does not prove H1837 GUI or P2"
+}

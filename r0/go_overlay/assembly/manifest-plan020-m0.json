@@ -795,7 +795,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "a42fbefb98a28c4322f6ff327fc00380389e6c23",
+      "result_blob": "083ff3b6e255fd252a8b959a5517b3eda3afc32d",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -842,6 +842,10 @@
         {
           "find": "      \"tls-startup-padding\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"bounded passive inner TLS startup padding; no waiting; default off\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
           "replace": "      \"startup-padding\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"canonical Normal original Rust M1 Tunnel-only startup padding off|tls|flows, default off; legacy tls-startup-padding maps to tls\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"tls-startup-padding\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"bounded passive inner TLS startup padding; no waiting; default off\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+        },
+        {
+          "find": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
+          "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
         }
       ]
     },

@@ -113,6 +113,16 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(Convert.ToBoolean(p.Values["split-enable"]) &&
       Convert.ToString(p.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
       "H1835_real_assembled_GUI_saved_cn_effective_portable");
+    // A real Go parser must reject missing CN domain rules with explicit
+    // split enabled. GUI cannot silently fall back to the old tunnel path.
+    form.SetEditor("cn-rules-file","");
+    form.SaveEditor();
+    bool missingCnDenied=false;
+    try{Check(store,p,"data/h1837-missing-cn.json",cli);}
+    catch(Exception){missingCnDenied=true;}
+    Need(missingCnDenied,"H1837_real_Go_CLI_missing_CN_snapshot_fails_closed");
+    form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
+    form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns4","");
     var n=Check(store,p,"data/h1663-normal.json",cli);
     int inner=Convert.ToInt32(n["derived-inner-tun-mtu"]);
