@@ -801,7 +801,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if not host_source:raise RuntimeError("original Windows physical source readback absent")
   p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
       "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
-      peer,host_source],stdout=guest_log,stderr=subprocess.STDOUT)
+      peer,host_source,"1" if p029_cache else "0"],stdout=guest_log,stderr=subprocess.STDOUT)
   for tick in range(100):
    guest_log.flush()
    raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")

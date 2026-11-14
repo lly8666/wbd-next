@@ -2,7 +2,11 @@
 """H1745: independent actual WSL2 kernel UDP DNS53 and business recipient."""
 import json,select,socket,struct,sys,time
 guest,expected_host=sys.argv[1:3]
-cache_mode=__import__("os").environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
+# Windows-parent environment variables are NOT inherited by wsl.exe --.
+# Explicit one-bit scene argument; never pretend an unarmed guest tested cache.
+if len(sys.argv)!=4 or sys.argv[3] not in ("0","1"):
+    raise RuntimeError("H1785 WSL guest CN cache mode argv must be exactly 0 or 1")
+cache_mode=sys.argv[3]=="1"
 dns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 business=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 dns.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,0)

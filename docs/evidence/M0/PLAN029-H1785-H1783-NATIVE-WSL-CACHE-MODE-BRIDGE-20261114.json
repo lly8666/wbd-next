@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1785,
+  "source_sha": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
+  "kind": "TWO_SIGNED_FIRST_BOUNDARIES",
+  "actions": [
+    {
+      "id": 43547631254,
+      "job_id": 132303990249,
+      "conclusion": "failure"
+    },
+    {
+      "id": 43548325696,
+      "job_id": 132306173031,
+      "conclusion": "failure"
+    }
+  ],
+  "first_boundary": {
+    "stage": "H1745 original WSL guest cache-mode fixture receipt",
+    "windows": "two real distinct source ports/IDs, second CN fake A same FakeIP and physical Direct UDP echo PASS",
+    "linux": "target_dns_count=1, physical DNS/53/UDP echo PASS, cache_mode=false",
+    "cause": "Windows environment did not pass to wsl.exe child, guest ended without 2.5s post-business duplicate-watch",
+    "later_tcp_tunnel_pressure": "NOT_RUN",
+    "full_owned_stop": "NOT_QUALIFIED_FAIL_PATH"
+  },
+  "fix": "explicit command-line argv 0|1 to WSL physical DNS fixture",
+  "fresh_native": "NOT_RUN",
+  "prior_H1779_Direct8": "PASS_PRE_STOP_ONLY"
+}

@@ -270,4 +270,16 @@ class NativeDirectOrder(unittest.TestCase):
         workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn("WBD_PLAN029_DNS_CACHE_SCENE:",workflow)
         self.assertIn("$cache.linux.target_dns_count -ne 1",workflow)
+    def test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('peer,host_source,"1" if p029_cache else "0"]',S)
+        guest=(Path(__file__).resolve().parents[1]/"tools"/
+               "m0_plan029_h1745_guest_dns_direct.py").read_text()
+        ast.parse(guest)
+        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1"):',guest)
+        self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
+        self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',guest)
+        self.assertIn('time.monotonic()-settled_at>=2.5',guest)
+        self.assertIn('if cache_mode and observed["target_dns_count"]!=1:',guest)
 if __name__=="__main__":unittest.main()
