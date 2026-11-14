@@ -74,6 +74,12 @@ impl ClosedNatGrace{
         }
     }
 }
+// Only actual accept/connect/relay progress can skip the owner's idle wait.
+// WouldBlock is not progress; closed NAT metadata remains deadline-driven.
+pub(crate) struct TcpServiceTick{
+    pub retired:Vec<TcpNatKey>,
+    pub advanced:bool,
+}
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
     physical:Ipv4Addr,ifindex:u32,
@@ -222,11 +228,12 @@ impl NativeTcpActor{
     /// One existing owner tick services at most 8 accepted connections and
     /// 8 existing relays (bounded rotating quantum); no per-flow thread
     /// or whole-table polling on every Wintun packet.
-    pub(crate) fn tick(&mut self,now_ms:u64)->Vec<TcpNatKey>{
+    pub(crate) fn tick(&mut self,now_ms:u64)->TcpServiceTick{
         let mut retired=Vec::new();
+        let mut advanced=false;
         for _ in 0..MAX_QUANTUM{
             let (stream,peer)=match self.listener.accept(){
-                Ok(ok)=>ok,
+                Ok(ok)=>{advanced=true;ok},
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>break,
                 Err(_)=>break,
             };
@@ -285,6 +292,7 @@ impl NativeTcpActor{
                             flow.phase=Some(TcpPhase::Connecting(inner,outer))
                         },
                         Ok(ConnectProgress::Connected)=>{
+                            advanced=true;
                             match outer.into_connected_stream()
                                 .and_then(|outside|TcpDirectRelay::new(inner,outside)){
                                 Ok(relay)=>{
@@ -306,9 +314,10 @@ impl NativeTcpActor{
                                 .saturating_sub(previous).saturating_add(tick.buffered);
                             debug_assert!(self.buffered_bytes<=TCP_PENDING_POOL_LIMIT);
                             if tick.bytes_read>0||tick.bytes_written>0{
+                                advanced=true;
                                 flow.last_activity_ms=now_ms;
                             }
-                            if tick.finished{to_remove.push((idx,true))}
+                            if tick.finished{advanced=true;to_remove.push((idx,true))}
                             else{flow.phase=Some(TcpPhase::Relaying(pair))}
                         },
                         Err(_)=>{
@@ -367,7 +376,7 @@ impl NativeTcpActor{
         let mut dns_retired=Vec::new();
         self.dns_closing.expire_some(now_ms,&mut self.dns_nat,
             &mut dns_retired);
-        retired
+        TcpServiceTick{retired,advanced}
     }
     /// One bounded 8-client readiness turn, no flow thread and no extra
     /// Wintun/NPF ring reader. One stalled resolver only holds its ticket.

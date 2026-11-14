@@ -389,18 +389,25 @@
      frame[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
      Ok(&frame[..total])
  }
+ // A direct-only Wintun batch still consumed real ingress slots. Keep
+ // Tunnel staging separate from Direct scheduling and other L3 ingress.
+ #[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
+ struct StageWork{tunnel:usize,captured:usize,direct:usize}
+ impl StageWork{fn quantum_full(self)->bool{self.captured==BATCH}}
  fn stage_sources(
      cfg:&WbdWinNativeAttachV1,
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
- )->Result<usize,i32>{
+ )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
      // No Vec, Go call, thread pool or shared registry lookup per packet.
      let mut sources=[[0u8;MAX_IPV4];BATCH];
      let mut source_len=[0usize;BATCH];
      let mut count=0;
+     let mut captured=0usize;
+     let mut direct=0usize;
      // One bounded RX quantum even when EVERY packet belongs to Direct.
      // Only the Tunnel subset may enter the existing M3/FEC/AEAD seal.
      // Direct never queues behind an old large Tunnel batch or vice versa.
@@ -408,6 +415,7 @@
          if counters.stopping.load(Ordering::Acquire){break}
          match tun.read(&mut sources[count]){
              Ok(ReadResult::Frame(n))=>{
+                 captured+=1;
                  if let Some(s)=split.as_mut(){
                      match s.on_packet(&sources[count][..n],now_ms){
                          NativeDecision::Tunnel=>{},
@@ -422,7 +430,7 @@
                                  continue
                              }
                          },
-                         NativeDecision::DirectHandled=>continue,
+                         NativeDecision::DirectHandled=>{direct+=1;continue},
                          NativeDecision::LocalDrop=>{
                              counters.rejected.fetch_add(1,Ordering::Relaxed);
                              continue
@@ -440,7 +448,7 @@
              Err(_)=>return Err(BAD_STAGE),
          }
      }
-     if count==0{return Ok(0)}
+     if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
      let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
@@ -535,7 +543,7 @@
          }
      }
      if result.error.is_some(){return Err(BAD_STAGE)}
-     Ok(count)
+     Ok(StageWork{tunnel:count,captured,direct})
  }
 
  // Only the existing FixedStream owns actual-k parity and block close.
@@ -819,17 +827,21 @@
                  }
              }
              let mut work=0;
+             let mut direct_progress=false;
+             let mut still_ready=false;
              let now_ms=m2_clock().0/1_000_000;
              if let Some(owner)=split.as_mut(){
-                 owner.tick(now_ms);
+                 direct_progress=owner.tick(now_ms);
                  // Physically received UDP is already a complete local L3
                  // response. Wintun TX belongs exclusively to the Rust RX
                  // worker; transfer owned bytes via bounded, nonblocking
                  // mailbox and wake THAT original worker. Never hold ring.
                  let mut complete=[0u8;MAX_IPV4];
+                 let mut reverse_count=0;
                  for _ in 0..8{
                      let Some(n)=owner.poll_udp_reverse(&mut complete,now_ms)
                          else{break};
+                     reverse_count+=1;
                      let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
                      match queue.try_send(complete[..n].to_vec()){
                          Ok(())=>{let _=direct_notify.wake();},
@@ -839,13 +851,19 @@
                          Err(TrySendError::Disconnected(_))=>return Err(BAD_STAGE),
                      }
                  }
+                 if reverse_count>0{direct_progress=true}
+                 // A full response quantum can have a ninth ready packet.
+                 if reverse_count==8{still_ready=true}
              }
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
-                 let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,
+                 let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;
-                 work+=n;
-                 if n<BATCH{break}
+                 work+=staged.tunnel;
+                 direct_progress|=staged.direct>0;
+                 // Exact exhaustion is a conservative next-turn hint.
+                 still_ready|=staged.quantum_full();
+                 if !staged.quantum_full(){break}
              }
              // A bounded <=4-row parity quantum follows ready fresh sources.
              // In Fixed/Auto there is never an extra native parity worker.
@@ -884,7 +902,10 @@
                      sack_negotiated)?;
                  return Ok(false)
              }
-             if active{return Ok(false)}
+             // Original authenticated Tunnel ACK semantics use Tunnel
+             // work only. Direct socket progress keeps scheduling fair
+             // without waiting for the 10ms poll; WouldBlock falls through.
+             if active||direct_progress||still_ready{return Ok(false)}
              let timeout={
                  let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
                  let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
@@ -1644,6 +1665,14 @@
              if signal {assert_eq!(b.pending,0);}
          }
          assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
+     }
+     #[test]
+     fn plan029_direct_only_full_ingress_quantum_is_not_idle(){
+         let full=StageWork{tunnel:0,captured:BATCH,direct:BATCH};
+         assert_eq!(full.tunnel,0);
+         assert!(full.quantum_full());
+         assert!(!StageWork{tunnel:0,captured:BATCH-1,direct:BATCH-1}.quantum_full());
+         assert!(StageWork{tunnel:BATCH,captured:BATCH,direct:0}.quantum_full());
      }
      #[test]
      fn plan029_closed_nat_owner_wakes_at_due_not_10ms_busy_tick(){

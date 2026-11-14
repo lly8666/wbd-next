@@ -28,3 +28,11 @@
 不变：标准TLS握手外观、认证/账户/generation/完整性、原密文重传、Rust统一MTU、owned Stop。默认外层1460不含L2，内层自动只读；单机一个代理，不扩多代理攻防。不把“尚未合格”当不能开发执行的权限限制。
 
 每批更新短devlog/功能卡/必要evidence和cursor，分清设计、实现、实测；保留失败与NOT_RUN。自主判断，找第一异常、定向复习成熟旧逻辑再修，不无目标调参/刷seed/抠噪声。全部029退出条件具备后给交付报告并停止；重复提示仅核新事实，不自创新任务。
+
+## H1827用户确认的优化与实测后继（2026-11-14）
+
+- **先收后测**：H1823签名P2同VM物理TCP 281ms、FakeIP Direct 6141ms；H1825的两socket TCP_NODELAY新SOURCE签名P2 [Action43578369480](https://github.com/lly8666/wbd-next/actions/runs/43578369480) 物理296ms、Direct6360ms，均1MiB同SHA/半关闭/120个Tunnel小UDP/两端Stop真实交付。两条各一次假设未消除约22倍慢，不能再无差别放大量子/调Nagle/刷同类Action。P1 CPU/GiB +7.42%只约0.009核绝对差，架构归因未成立。
+- **第一批**按计划§4A：修Rust stage_sources只返回Tunnel数造成Direct-only满批被误判0的调度错误，Direct socket accept/connect/read/write进展、逆向限额满和是否有待处理工作分开反馈给原Rust TX owner；有实质工作立刻下一次公平轮转，真正WouldBlock再等，不能把10ms改1ms空转。共享WinSock事件/完成驱动是后续正式方向，不可逐flow线程。
+- **P2夹具**把connect、上传、半关闭、首回包、下载时间独立输出；原16KiB每包睡4ms需醒目标记非峰值吞吐。Tunnel小UDP必须覆盖直连大TCP整个生命周期，不是旧120次短暂重合；唯一交付、p99、最长空洞、Stop与SOURCE均保留。
+- **第二批**一条有界FakeIP持久化队列/单后台写者，TX不直接write_all/sync_data/压缩。等到实际durable ACK才给相关DNS合成FakeIP；错误局部SERVFAIL，续期合并、Stop取消、不让旧generation晚回调发布。16MiB长期开启时由写者安全低频压缩有效映射/隔离保护并校验重启恢复。
+- **第三批**按真实保留容量对Direct TCP缓冲计费，按需池化或低频空闲收缩，64MiB是实际分配硬预算不是len或排队目标。小额度测试复核新Tunnel、旧Direct、DNS在压力时继续与恢复；然后才做定向P1 CPU因果测量。**完整029仍含**正式无Actions门Normal V3、Game4 CN、GUI签名Connect/Stop、D1–D5/P1–P2与IPv6/中断恢复、有限padding；这些没有证据不得交付。

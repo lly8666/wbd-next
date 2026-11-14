@@ -174,6 +174,10 @@ H1690只证明当时真实签名Wintun注入的UDP未到本地listener、TCP无S
 
 对原纯Tunnel稳定路径，分流开关同VM顺序A/B，目标CPU/实际交付GiB和p99无超出噪声的显著回退；可用5%作调查线，不作所有VM硬失败阈值。Direct吞吐对照同VM普通物理socket报告额外CPU、goodput、p99，计算每包/每GiB成本；系统TCP CPU包含内核，不能只看进程CPU宣称零开销。达到已知容量立即停止更重同族。
 
+**2026-11-14补充的实证优先级（关联029计划§4A）**：H1825原始签名P2双腿TCP_NODELAY后物理296ms、FakeIP Direct6360ms，64KiB量子与NODELAY都未解决约22倍慢。常规Tunnel P1 +7.42%只约0.0091核绝对差，架构归因未立。先修Direct-only stage_sources捕获8帧却返回Tunnel=0、TCP IO进展未进入TX活跃判定；在真实进展/满限后下一公平轮继续，不无谓sleep10ms，WouldBlock停止立即重试。shared IOCP/重叠IO是后续单事件驱动方向，不能以1ms空轮询代替。P2把连接/上传/半关闭/首回包/下载计时分开，现有16KiB+4ms人工pace不当满速测试，并要求小Tunnel UDP持续到整个Direct TCP结束。
+
+FakeIP持久日志的同步write_all/sync_data当前在TX DNS完成路径，纵非逐DATA也可能阻塞无关流；应变为单有界worker及durable回执，相关DNS才等待、其余流继续，失败本地SERVFAIL。现有16MiB追加限没有紧凑化闭环，必须由后台写者低频生成保留有效/隔离/引用安全约束的可恢复原子快照，不在TX做压缩。同理Direct VecDeque排空后capacity可能保留，len口径不能称64MiB实际分配硬限，需池化/容量计费+低频回收并小容量压力证明。16k×双64KiB理论2GiB仅风险上界非测得RSS。
+
 ## 6. 配置迁移、GUI与开发顺序
 
 沿当前schema注册canonical `dns.direct` / `dns.tunnel`（若现有单值键已满足可保留别名，一处真值）；明确IPv4可选port，初版不支持resolver域名，避免递归bootstrap。

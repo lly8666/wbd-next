@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1826,
-  "checkpoint_sha": "0077dcb013045678e12761568a0dd58f35722704",
+  "sequence": 1827,
+  "checkpoint_sha": "269034a77296916020f58b4e74ee335b735a44fd",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1826: H1825 new-source signed P2 TCP_NODELAY second independent hypothesis in progress. H1823 64KiB signed P2 (db6c) functional PASS but 6141ms Direct vs281ms physical. Governance structure must reference only evidence of cursor.last_tested_source; remove old H1821 P1 different-SOURCE evidence from evidence_refs (preserved on disk and in H1822/historical references). PLAN029 IN_PROGRESS.",
-  "why_now": "H1825 governance first structure failure was source mismatch: evidence_refs had H1821 P1 source241418 and H1823 P2 sourcedb6c while last_tested_source=db6c. The validator requires every evidence ref match exactly current tested SOURCE. No need to modify code or rerun signed P2.",
+  "current_task": "H1827: H1825 signed P2 with owned TCP_NODELAY true PASS 1MiB/120 Tunnel UDP/Stop, but physical296ms vs FakeIP Direct6360ms still slow. Two performance hypotheses (64KiB quantum and TCP_NODELAY) insufficient; no more blind tuning. New Rust Direct-only stage_sources captured progress/TCP IO scheduling feedback and full-duration P2 UDP/phase fixture candidate NOT_RUN until Action.",
+  "why_now": "User identified specific scheduler defect: stage_sources only counts Tunnel and Direct-only full packet burst looks idle; real accept/connect/socket bytes do not prevent 10ms owner wait. Synchronous FakeIP fsync and VecDeque capacity-vs-len are separate cross-flow risk after this first measurement fix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1825 pinned real signed P2 action from 0077dcb, with actual 1MiB physical/Direct and 120 Tunnel small UDP/Stop; if still slow mark performance OPEN, stop same-family blind tuning. Continue unclosed P1 CPU >5pct, Game4 CN, signed GUI and IPv6 lifecycle with separate evidence.",
+  "next_action": "First collect H1827 SOURCE-locked native compiler and real signed P2 test (if triggered). Read actual connect/upload/half-close/first_reply/download, sustained UDP count and longest gap/owned Stop; no assertion of peak throughput. Then move FakeIP journal write+sync and 16MiB compact into bounded background writer with durable DNS ACK and safe recovery, account actual allocated Direct buffer capacity. Last P1 CPU causes; Game4 CN, Normal production no-CI gate, GUI signed and IPv6 remain OPEN.",
   "unverified": true,
-  "last_tested_source": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
+  "last_tested_source": "0077dcb013045678e12761568a0dd58f35722704",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1825-H1823-SIGNED-P2-64K-NEGATIVE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1827-H1825-NODELAY-P2-NEGATIVE-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1823-DIRECT-TCP-QUANTUM-HYPOTHESIS.md",
-    "docs/devlog/M0/20261114-PLAN029-H1825-TCP-NODELAY-SECOND-HYPOTHESIS.md"
+    "docs/devlog/M0/20261114-PLAN029-H1825-TCP-NODELAY-SECOND-HYPOTHESIS.md",
+    "docs/devlog/M0/20261114-PLAN029-H1827-SCHEDULER-P2-TIMELINE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1826 governance-only reference repair, no new product source or P2. Last tested db6c H1823 P2 real functional PASS performance 6141/281ms; H1825 TCP_NODELAY signed native test not yet complete. H1821 P1 CPU +7.42pct historic evidence preserved outside current evidence_refs."
+  "partial_summary": "H1827 source candidate untested. H1825 signed real Normal V3 P2 functional PASS but P2 latency NOT_QUALIFIED (physical296ms Direct6360ms; 120 Tunnel UDP; Stop PASS). New scheduler returns Direct/captured/Tunnel work and TCP progress, P2 fixture phase-timed+UDP until TCP done. FakeIP fsync/compaction, real capacity budget, P1+7.42%, Game4/GUI/IPv6 still OPEN; 029 IN_PROGRESS."
 }

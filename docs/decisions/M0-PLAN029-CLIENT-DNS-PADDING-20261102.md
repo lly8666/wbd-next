@@ -65,6 +65,21 @@ MTU编辑框标“外层 MTU（字节，上限）”，默认1460；最大1500�
 - 启动窗口结束后保留已有flow的“已处理”标记直到其正常结束/idle淘汰，不能每30s对长流重新启动填充形成周期特征。复用流表生命周期/有界队列，没有每流线程/独立定时器；一轮仅处理有限到期项，状态满跳过新流。
 - 填充不是“无法识别”保证；本包验有限/不延迟/开销及外层格式，不能为追求未知DPI百分比无限增加字节/观测。
 
+## 4A. 2026-11-14 H1827真实慢路径与跨流HOL专项（用户新增施工优先级）
+
+本段补充§2/§2A及分流契约§3B、§5、§7，不替代完整029出口。H1823真实同VM签名P2：普通物理TCP 1MiB回声281ms、Wintun FakeIP Direct TCP 6141ms；H1825双腿TCP_NODELAY源码经[签名Action43578369480](https://github.com/lly8666/wbd-next/actions/runs/43578369480)核实，物理296ms、Direct6360ms、120/120 Tunnel小UDP、半关闭及两端owned Stop均PASS。调大读量与NODELAY两种小假设均未解决约22倍异常，性能仍OPEN；不同Action主机绝不能拼作精确同VM算法A/B。
+
+**按依赖和证据排序施工，不盲目继续调参：**
+
+1. **先修工作量反馈与分腿定时。** 现有stage_sources返回的只是Tunnel数，Direct-only满8个Wintun读槽时仍可能返回0；Direct TCP accept/非阻塞收发取得进展也不回报TX wait。分别记录捕获总数、Tunnel数、Direct数、TCP socket进展、逆向mailbox满轮次；满量子可再公平轮转，不能多等10ms；遇WouldBlock停止即时自旋。以后共享Direct socket事件/IOCP就绪管理替换10ms周期轮询，不给每flow开线程或粗暴降为1ms。只在明确新时序后进一步追首个等待点。
+2. **一个P2夹具贯穿大TCP全过程。** 既有每16KiB发送后sleep4ms是同条件的功能测试，不是峰值吞吐。单场记录connect、上传完成、半关闭、首回包、下载结束；Windows Tunnel小UDP从Direct TCP启动前直到TCP完全结束（保留原120条最小精确证据，并额外统计全程总数、p99、最长空洞、唯一交付及Stop）。远端需要时补内核TCP分腿收发/队列年龄时间；不能把原120条约数秒称为全程不卡顿。
+3. **隔离DNS成功FakeIP的durable fsync。** 当前DNS答复在Rust TX调用同步FakeJournal.persist_batch/write_all/sync_data，虽然不逐DATA写仍可能阻塞所有Tunnel/Direct。单个有界写任务或复用既有阻塞设施；只有相关DNS回复等待准确fsync回执并确认pool.acknowledge_durable，其他业务继续。合并相同续期，失败只影响对应DNS并SERVFAIL，不能提供未落盘/可能错绑的FakeIP。
+4. **低频journal紧凑化与恢复。** 现有16MiB append上限无压缩；由同一后台持久化worker在低负载创建只含有效/受保护隔离期映射的快照，用同目录临时文件fsync、原子替换和目录持久化（平台支持范围据实验证），读回验证后才继续发新FakeIP。失败不能使旧active/ref/隔离映射被重用，不引数据库，不在TX压缩。
+5. **真实共享已分配内存而非pending len。** VecDeque在排空后可保留capacity；仅累加pending_bytes()不能兑现64MiB的已分配总上限。16,384个连接×双向64KiB理论2GiB只是风险上界，**并非已测RSS**。使用按需共享缓冲块归还池或精确追踪已保留capacity+低频空闲回收，保住已有TCP、小UDP与Tunnel压力退让，不每write shrink或为全流预分配。
+6. **最后复核P1 CPU。** 真实同VM从7.375变7.9219 CPU秒/60s，增加7.42%但只约0.0091核；未单独归因于分流/重复flow查表/Direct空转/复制，亦未单独统计内核CPU。先处理调度/同步磁盘与分配风险，再以同SOURCE同VM顺序A/B看CPU/GiB、真实交付、p99、最长空洞，噪声与容量分开报告。
+
+当前尚未合格的不止P2：Normal V3仍有GitHub Actions试验门、Game4 CN分流未接、GUI真实Connect/Stop及D4 IPv6/中断恢复和完整DNS/填充仍需落实。每批源码/夹具/日志同SOURCE冻结后再启动对应单场Action，不把某子项绿灯当029交付。
+
 ## 5. 测试与退出
 
 分流/DNS按[契约§7](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md#7-一组可复用验收先正确出口再谈速度)的D1–D5/P1–P2执行；一Action一网络场景、不同Action并行、按SOURCE/hash复用编译。用可控DNS、CN/非CN endpoint与实际物理/隧道两出口，不依赖公共DNS恰好可达，不以mock冒充Windows真实路径。

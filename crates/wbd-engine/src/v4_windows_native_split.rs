@@ -519,13 +519,16 @@ impl NativeSplitWorker {
         }
         None
     }
-    pub(crate) fn tick(&mut self,now_ms:u64){
+    pub(crate) fn tick(&mut self,now_ms:u64)->bool{
+        let mut progressed=false;
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
         // while cold-only expiry remains on the existing 1-second sweep.
         if self.tcp_enabled{
          if let Some(tcp)=self.tcp.as_mut(){
-            for key in tcp.tick(now_ms){
+            let service=tcp.tick(now_ms);
+            progressed|=service.advanced;
+            for key in service.retired{
                 self.retire_flow(FlowKey{
                     source:key.client,destination:key.presented,
                     source_port:key.source_port,destination_port:key.target_port,
@@ -556,7 +559,7 @@ impl NativeSplitWorker {
                 destination_port:tuple.target_port,protocol:17,
             });
         }
-        if now_ms.saturating_sub(self.last_tick_ms)<1_000{return}
+        if now_ms.saturating_sub(self.last_tick_ms)<1_000{return progressed}
         if self.padding_enabled{self.startup_padding.expire_coarse(now_ms);}
         self.last_tick_ms=now_ms;
         self.udp.expire_some(now_ms,64);
@@ -575,6 +578,7 @@ impl NativeSplitWorker {
         if let Ok(mut map)=self.tunnel_map.lock(){map.expire(now_ms)}
         // FakeIP journal and ref expiry require the separate DNS worker
         // before any synthesized mapping can be exposed.
+        progressed
     }
 }
 

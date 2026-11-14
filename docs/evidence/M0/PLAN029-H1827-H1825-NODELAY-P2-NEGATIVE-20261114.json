@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1825",
+  "source_sha": "0077dcb013045678e12761568a0dd58f35722704",
+  "result": "PHYSICAL_FUNCTIONAL_PASS_PERFORMANCE_NOT_QUALIFIED",
+  "scope": "ONE_SIGNED_WINDOWS2025_WINTUN_NPF_NORMAL_RUST_V3_TO_LINUX_WSL2_PHYSICAL_TCP1M_VS_FAKEIP_DIRECT_TCP1M_WITH_120_SMALL_TUNNEL_UDP_AND_OWNED_STOP",
+  "action": {
+    "id": 43578369480,
+    "job_id": 132398799614,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43578369480"
+  },
+  "source_integrity": {
+    "compiled_and_signed_real_windows_v3": true,
+    "windows_linux_original_go_rust_same_source": true
+  },
+  "observed": {
+    "physical_ms": 296,
+    "direct_ms": 6360,
+    "bytes_echoed_each": 1048576,
+    "sha256_both": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "half_close": true,
+    "windows_small_tunnel_udp_received": 120,
+    "linux_small_tunnel_udp_received": 120,
+    "udp_p99_ms": 15,
+    "max_interreply_gap_ms": 31,
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "comparison": [
+    {
+      "source_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
+      "action": 43574002456,
+      "physical_ms": 312,
+      "direct_ms": 6485,
+      "quantum_bytes": 4096
+    },
+    {
+      "source_sha": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
+      "action": 43577224581,
+      "physical_ms": 281,
+      "direct_ms": 6141,
+      "quantum_bytes": 65536
+    },
+    {
+      "source_sha": "0077dcb013045678e12761568a0dd58f35722704",
+      "action": 43578369480,
+      "physical_ms": 296,
+      "direct_ms": 6360,
+      "quantum_bytes": 65536,
+      "owned_tcp_nodelay": true
+    }
+  ],
+  "interpretation": "Neither increased Direct relay quantum nor two owned TCP_NODELAY legs materially eliminated ~6 seconds TCP transfer. Each physical/direct pair is same Action VM; cross Action absolute times do not establish exact causal delta. Fixture sleeps 4ms per16KiB in both paths, hence not peak throughput.",
+  "not_run": [
+    "new H1827 scheduler and sustained UDP fixture signed verification",
+    "Direct per-leg kernel timing and queue age",
+    "FakeIP async disk writer/compaction",
+    "Actual shared retained buffer allocation cap",
+    "GUI signed Connect Stop",
+    "Game4 CN native split",
+    "IPv6 full OS restore",
+    "P1 CPU/GiB causality"
+  ]
+}
