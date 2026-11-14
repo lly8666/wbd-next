@@ -217,22 +217,20 @@ impl DirectDns{
         let (Some(fake),Some(journal),Some(wall))=(fake,journal,wall_ms())else{
             self.fail(&reply.waiters,key,2);return
         };
-        let mut batch=Vec::new();
-        let mut bad=false;
-        for candidate in &reply.answer.candidates{
-            let identity=FakeKey{qname:key.name.clone(),
-                canonical:reply.answer.canonical.clone(),real4:candidate.address,
-                policy_rev:key.policy_revision,resolver_rev:1};
-            match fake.prepare(identity,candidate.ttl,wall){
-                Ok(p) if p.persist_before_reply=>{
-                    if !batch.contains(&p.fake4){batch.push(p.fake4)}
-                },
-                Ok(_)=>{},Err(_)=>{bad=true;break}
-            }
+        // A failed later CN A candidate must not strand an unpublished
+        // earlier slot. Once persistence is attempted, preserve quarantine.
+        let candidates=reply.answer.candidates.iter().map(|a|{
+            (FakeKey{qname:key.name.clone(),
+                canonical:reply.answer.canonical.clone(),real4:a.address,
+                policy_rev:key.policy_revision,resolver_rev:1},a.ttl)
+        }).collect::<Vec<_>>();
+        let batch=match fake.prepare_batch(&candidates,wall){
+            Ok(batch)=>batch,
+            Err(_)=>{self.fail(&reply.waiters,key,2);return},
+        };
+        if !batch.is_empty()&&journal.persist_batch(fake,&batch).is_err(){
+            self.fail(&reply.waiters,key,2);return
         }
-        if !bad&&!batch.is_empty()&&
-           journal.persist_batch(fake,&batch).is_err(){bad=true}
-        if bad{self.fail(&reply.waiters,key,2);return}
         for client in reply.waiters{
             match synthesize_cn_a(client.original_id,&key.name,&reply.answer,
                 fake,key.policy_revision,1,wall){

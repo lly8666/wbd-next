@@ -70,15 +70,13 @@ fn persist_and_synthesize(id:u16,name:&str,a:&DnsAResolution,
     if a.status!=DnsAnswerStatus::Answered||a.candidates.is_empty(){
         return None
     }
-    let mut required=Vec::with_capacity(a.candidates.len());
-    for candidate in &a.candidates{
-        let key=FakeKey{qname:name.into(),canonical:a.canonical.clone(),
-            real4:candidate.address,policy_rev:1,resolver_rev:1};
-        let p=pool.prepare(key,candidate.ttl,now).ok()?;
-        if p.persist_before_reply&&!required.contains(&p.fake4){
-            required.push(p.fake4);
-        }
-    }
+    let candidates=a.candidates.iter().map(|a|{
+        (FakeKey{qname:name.into(),canonical:a.canonical.clone(),
+            real4:a.address,policy_rev:1,resolver_rev:1},a.ttl)
+    }).collect::<Vec<_>>();
+    // Use the same pre-journal bounded all-or-no-new-slot preparation as
+    // UDP/53; do not free uncertain written journal identities.
+    let required=pool.prepare_batch(&candidates,now).ok()?;
     if !required.is_empty()&&journal.persist_batch(pool,&required).is_err(){
         return None
     }

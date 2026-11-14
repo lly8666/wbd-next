@@ -170,6 +170,40 @@ impl FakeAllocator{
         self.bytes_used+=charged;
         Ok(FakeProposal{fake4:ip,advertised_ttl:ttl,persist_before_reply:true})
     }
+    /// Reserve all CN A candidates before attempting one durable journal.
+    /// If a LATER candidate fails at a small FakeIP quota, undo only the
+    /// fresh unpublished slots of THIS unfinished response. Never undo an
+    /// existing pending/announced identity or an uncertain journal write.
+    pub fn prepare_batch(&mut self,candidates:&[(FakeKey,u32)],
+        now_ms:u64)->Result<Vec<u32>,FakeError>{
+        let mut fresh=Vec::new();
+        let mut journal=Vec::new();
+        for (key,ttl) in candidates{
+            let existed=self.key_to_fake.contains_key(key);
+            match self.prepare(key.clone(),*ttl,now_ms){
+                Ok(p)=>{
+                    if !existed{fresh.push(p.fake4)}
+                    if p.persist_before_reply&&!journal.contains(&p.fake4){
+                        journal.push(p.fake4);
+                    }
+                },
+                Err(e)=>{
+                    for ip in fresh{self.discard_fresh_unannounced(ip);}
+                    return Err(e)
+                },
+            }
+        }
+        Ok(journal)
+    }
+    fn discard_fresh_unannounced(&mut self,ip:u32){
+        let Some(e)=self.fake_to_entry.get(&ip)else{return};
+        if e.announced||e.flow_refs!=0||!e.needs_durable_write{return}
+        let due=e.quarantine_until_ms;
+        self.remove_due(due,ip);
+        let e=self.fake_to_entry.remove(&ip).unwrap();
+        self.key_to_fake.remove(&e.key);
+        self.bytes_used-=Self::accounted(&e.key);
+    }
     /// Cold/sparse write preparation. The owner must atomically replace its
     /// portable snapshot + fsync policy before calling acknowledge_durable;
     /// no DNS answer may contain a fake while persist_before_reply=true.
@@ -392,6 +426,45 @@ mod tests{
         assert_eq!(held.announced_real(live.fake4),Some(ip(203,0,113,7)));
         held.release_flow(live.fake4,600102).unwrap();
         assert!(held.prepare(key("new.cn.example",ip(203,0,113,8),1),1,660102).is_ok());
+    }
+    #[test]
+    fn plan029_fakeip_multi_a_quota_rollback_preserves_held_and_recovers(){
+        let mut p=pool(2);
+        let old=p.prepare(key("held.cn.example",ip(198,51,100,2),1),10,100).unwrap();
+        p.acknowledge_durable(old.fake4).unwrap();
+        p.pin_first_flow(old.fake4).unwrap();
+        let a=key("new.cn.example",ip(198,51,100,3),1);
+        let b=key("new.cn.example",ip(198,51,100,4),1);
+        assert_eq!(p.prepare_batch(&[(a.clone(),60),(b,60)],101),
+            Err(FakeError::PoolCapacity));
+        assert_eq!(p.counts().0,1);
+        assert_eq!(p.announced_real(old.fake4),Some(ip(198,51,100,2)));
+        assert_eq!(p.issued_for(&a,102),None);
+        let needed=p.prepare_batch(&[(a.clone(),10)],103).unwrap();
+        assert_eq!(needed.len(),1);
+        assert_eq!(p.announced_real(needed[0]),None);
+        p.acknowledge_durable(needed[0]).unwrap();
+        assert_eq!(p.issued_for(&a,104),Some(needed[0]));
+        assert_eq!(p.announced_real(old.fake4),Some(ip(198,51,100,2)));
+        p.release_flow(old.fake4,104).unwrap();
+    }
+    #[test]
+    fn plan029_fakeip_failed_multi_a_does_not_erase_prior_uncertain_journal(){
+        let mut p=pool(2);
+        let older=p.prepare(key("older.cn.example",
+            ip(198,51,100,7),1),20,100).unwrap();
+        // A previous uncertain persist must stay quarantined even when
+        // this distinct answer fails BEFORE its own journal operation.
+        assert!(p.pending_snapshot(older.fake4).is_some());
+        let a=key("new.cn.example",ip(198,51,100,8),1);
+        let b=key("new.cn.example",ip(198,51,100,9),1);
+        assert_eq!(p.prepare_batch(&[(a.clone(),60),(b,60)],101),
+            Err(FakeError::PoolCapacity));
+        assert_eq!(p.counts().0,1);
+        assert!(p.pending_snapshot(older.fake4).is_some());
+        let next=p.prepare_batch(&[(a,60)],102).unwrap();
+        assert_eq!(next.len(),1);
+        assert_ne!(next[0],older.fake4);
     }
     #[test]
     fn plan029_cn_fakeip_corrupt_snapshot_rejected_not_rebound(){
