@@ -74,14 +74,14 @@
     {
       "platform": "Windows 2025 original Go/Rust + Linux WSL2 TUN",
       "scope": "H1797 default startup-padding off source 36b9 original Normal signed real TCP/UDP two-OS native and Stop on Action 43559122020; not a flows measurement",
-      "status": "PASS",
-      "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43559122020"
     },
     {
       "platform": "Original Windows Rust M1/Npcap signed native Normal + Linux TUN",
       "scope": "H1799 narrowly scoped original Normal flows native NPF accepted 16 records/50B; Windows/WSL2 TCP/UDP duplex and both owned Stop. Not product-wide padding A/B or P1/P2.",
-      "status": "PASS",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
       "evidence": "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
     }
