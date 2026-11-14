@@ -32,6 +32,7 @@ type m0NativeV4Options struct {
  DNSServers4 []netip.Addr
  DirectDNS4 netip.Addr // original physical cold bootstrap, single configured DNS
  DirectFlowHard uint32 // 0=16384 default; cold per-generation Direct-only hard cap, never Tunnel quota
+ StartupPaddingMode string // canonical off/tls/flows; only original Normal M1 LINK
  Direct4,Bypass4 []netip.Prefix
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU
@@ -42,6 +43,21 @@ type m0NativeV4Options struct {
  // Explicit cold original Rust Health policy. Zero means 15/90/0 defaults;
  // the real M2 TX clock returns the effective, not GUI intent.
  HealthIntervalSeconds,HealthDeadSeconds,HealthDormantSeconds uint32
+}
+// Default off has no per-DATA bookkeeping. Legacy boolean maps to tls.
+// Explicit conflicting new mode is rejected rather than silently ignored.
+func m0CanonicalWindowsStartupPadding(mode string,legacy bool)(string,error){
+ if mode==""{
+  if legacy{return "tls",nil}
+  return "off",nil
+ }
+ if mode!="off"&&mode!="tls"&&mode!="flows"{
+  return "",errors.New("startup-padding must be off, tls or flows")
+ }
+ if legacy&&mode!="tls"{
+  return "",errors.New("tls-startup-padding conflicts with startup-padding")
+ }
+ return mode,nil
 }
 var errM0NativeV4PacketBridge=errors.New("Windows original Go native V4 TLS authenticated, but public Rust M3 TCP/Wintun application packet bridge and full OS Applied/Stop remain NOT_RUN; refusing production network activation")
 

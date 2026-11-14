@@ -20,6 +20,7 @@ use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
 use crate::v4_windows_native_tcp_direct::{NativeTcpActor,safe_synthetic};
 use crate::v4_windows_native_dns_client_tcp::NativeTcpDnsEndpoints;
 use crate::v4_client_split::FlowKey;
+use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
 
 const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
@@ -82,6 +83,9 @@ pub(crate) struct NativeSplitWorker {
     tcp_plan:Option<PendingKernelTcp>,
     tcp_enabled:bool,
     dns_tcp_endpoints:NativeTcpDnsEndpoints,
+    // Tunnel-only original M1 LINK padding; OFF is a no-parse fast branch.
+    startup_padding:TunnelStartupPadding,
+    padding_enabled:bool,
     next_reverse_lane:usize,
     last_tick_ms:u64,
 }
@@ -229,7 +233,29 @@ impl NativeSplitWorker {
                 physical:underlay,physical_ifindex:c.physical_ifindex,
                 lease,wintun_ifindex:0,direct:direct_dns,tunnel:tunnel_dns,
             },
+            startup_padding:TunnelStartupPadding::new(StartupMode::Off,1),
+            padding_enabled:false,
             next_reverse_lane:0,last_tick_ms:0})
+    }
+    /// Called exactly once from authenticated V3 cold attach. The
+    /// generation's authenticated epoch seeds a NON-cryptographic window
+    /// chooser; AEAD keys/PN ownership remain exclusively original M1.
+    pub(crate) fn set_startup_padding(&mut self,mode:StartupMode,
+        epoch:[u8;16]){
+        let a=u64::from_be_bytes(epoch[..8].try_into().unwrap());
+        let b=u64::from_be_bytes(epoch[8..].try_into().unwrap());
+        self.startup_padding=TunnelStartupPadding::new(mode,a^b^0x574244_029);
+        self.padding_enabled=mode!=StartupMode::Off;
+    }
+    pub(crate) fn startup_padding_enabled(&self)->bool{
+        self.padding_enabled
+    }
+    /// Only the original TX stages classified Tunnel DATA, and it passes
+    /// the actual M1 record_wire_mtu spare bytes; Direct never calls this.
+    pub(crate) fn propose_tunnel_padding(&mut self,packet:&[u8],
+        now_ms:u64,room:usize)->usize{
+        if !self.padding_enabled{return 0}
+        self.startup_padding.propose(packet,now_ms,room)
     }
     pub(crate) fn set_wintun_ifindex(&mut self,ifindex:u32)->Result<(),()>{
         if ifindex==0||ifindex==u32::MAX{return Err(())}
@@ -528,6 +554,7 @@ impl NativeSplitWorker {
             });
         }
         if now_ms.saturating_sub(self.last_tick_ms)<1_000{return}
+        if self.padding_enabled{self.startup_padding.expire_coarse(now_ms);}
         self.last_tick_ms=now_ms;
         self.udp.expire_some(now_ms,64);
         // FakeIP quarantine and address reuse use UNIX epoch ms, NOT
@@ -685,6 +712,25 @@ mod tests{
         }
         assert_eq!(fake.counts().0,17);
         assert_eq!(native.udp.max_flows(),1);
+    }
+    #[test]
+    fn plan029_native_cold_startup_padding_off_and_generation_seed_no_direct_side_effect(){
+        let mut c=config(&[],&[],b"cn.example\n");
+        c.route_mode=2;
+        let mut s=unsafe{NativeSplitWorker::new(&c)}.unwrap();
+        assert!(!s.startup_padding_enabled());
+        let probe=packet([203,0,113,77],443,&[7u8;128]);
+        assert_eq!(s.propose_tunnel_padding(&probe,10,256),0);
+        assert_eq!(s.startup_padding.len(),0);
+        s.set_startup_padding(StartupMode::Flows,[2u8;16]);
+        assert!(s.startup_padding_enabled());
+        let mut total=0;
+        for _ in 0..12{total+=s.propose_tunnel_padding(&probe,11,256)}
+        assert!(total<=2048);
+        assert_eq!(s.startup_padding.len(),1);
+        s.set_startup_padding(StartupMode::Off,[3u8;16]);
+        assert_eq!(s.propose_tunnel_padding(&probe,12,256),0);
+        assert_eq!(s.startup_padding.len(),0);
     }
     #[test]
     fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){

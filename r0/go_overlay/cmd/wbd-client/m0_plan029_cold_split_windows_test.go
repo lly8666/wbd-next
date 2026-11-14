@@ -9,6 +9,20 @@ func plan029Options(mode string)m0NativeV4Options{
   Bypass4:[]netip.Prefix{netip.MustParsePrefix("203.0.113.0/24")},
   Direct4:[]netip.Prefix{netip.MustParsePrefix("198.51.100.0/24")}}
 }
+func TestPLAN029StartupPaddingCanonicalLegacyAndConflicts(t *testing.T){
+ cases:=[]struct{value string;old bool;want string;bad bool}{
+  {"",false,"off",false},{"",true,"tls",false},
+  {"off",false,"off",false},{"tls",false,"tls",false},
+  {"flows",false,"flows",false},{"tls",true,"tls",false},
+  {"off",true,"",true},{"flows",true,"",true},{"all",false,"",true},
+ }
+ for _,c:=range cases{
+  got,err:=m0CanonicalWindowsStartupPadding(c.value,c.old)
+  if (err!=nil)!=c.bad||(!c.bad&&got!=c.want){
+   t.Fatalf("mode=%q old=%t got=%q err=%v",c.value,c.old,got,err)
+  }
+ }
+}
 func TestPlan029GoColdRustThreeModesDnsEqualAllowedNoBackup(t *testing.T){
  for _,mode:=range []string{"all","bypass-lan","bypass-lan-cn"}{
   o:=plan029Options(mode)

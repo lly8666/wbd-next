@@ -106,6 +106,7 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   DirectDNS:o.DirectDNS4.As4(),TunnelDNS:o.DNSServers4[0].As4(),
   FakeStart:[4]byte{198,18,0,1},FakeEnd:[4]byte{198,18,255,254},
   InnerMTU:innerMTU,DirectHard:directHard,
+  StartupPaddingMode:o.StartupPaddingMode,
   CN:cnRows,LAN:lanRows,Direct:directRows,Domains:domains,
   FakeJournalPath:journalPath,
  },nil

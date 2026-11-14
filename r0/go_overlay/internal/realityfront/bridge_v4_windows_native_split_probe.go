@@ -13,6 +13,7 @@ type V4WindowsColdSplitConfig struct{
  RouteMode,PhysicalIfIndex uint32
  PhysicalSource,Lease4,DirectDNS,TunnelDNS,FakeStart,FakeEnd [4]byte
  InnerMTU,DirectHard uint32
+ StartupPaddingMode string // V3 reserved bits, no cold C ABI mutation
  CN,LAN,Direct []V4WindowsColdCIDR
  Domains []byte
  FakeJournalPath []byte
@@ -162,6 +163,17 @@ func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOWithColdSplitProbe(
  v2:=V4WindowsNativeIOV2{Version:2,Mode:mode,Normal:cfg}
  if mode==2&&aggressive{v2.Reserved=1}
  if s.bridge.sackPermitted{v2.Reserved|=2}
+ // Bits 2-3 are explicit V3-only cold padding modes. V2 rejects them.
+ switch cold.StartupPaddingMode{
+ case "","off":
+ case "tls":
+  if mode!=0{return errV4WindowsOwner}
+  v2.Reserved|=4
+ case "flows":
+  if mode!=0{return errV4WindowsOwner}
+  v2.Reserved|=8
+ default:return errV4WindowsOwner
+ }
  v2.Size=uint32(unsafe.Sizeof(v2))
  v3:=v4WindowsNativeIOV3Probe{Version:3,V2:v2,Split:split}
  v3.Size=uint32(unsafe.Sizeof(v3))

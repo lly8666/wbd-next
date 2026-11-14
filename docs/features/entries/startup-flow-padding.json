@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "Rust启动填充额度/生命周期策略源码已加入；默认off，尚未与真实record seal、CLI/GUI连接，非产品启用或实网通过。",
+  "summary": "H1797 Normal V3 source-only CLI/cold/true M1 authenticated LINK padding wired; default off; Windows/Linux off-on physical and GUI not yet qualified.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -15,14 +15,19 @@
     "planned_bounds": "256流，1–2s可填充窗口，12 record/2048B每流上界，单record≤256B且不超MTU"
   },
   "usage": {
-    "cli": "PLANNED: startup-padding off|tls|flows；旧tls-startup-padding含义保留，尚未新增解析。",
-    "config": "PLANNED: 同一模式配置/每会话effective，现有record padding位置执行，首发预算有界。",
-    "gui": "PLANNED: 关闭/仅TLS启动/所有TCP与UDP新流，与真实effective一致。"
+    "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
+    "config": "STAGED: original-Go pinned CLI/config file -> V3 cold reserved bits -> authenticated Rust original TX M1 LINK. Full product effective not yet proven.",
+    "gui": "NOT_CONNECTED: existing WinForms lacks canonical mode and live effective readback."
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
     "crates/wbd-engine/src/v4_owner_crypto.rs",
-    "crates/wbd-engine/src/v4_windows_owner.rs"
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "crates/wbd-engine/src/v4_windows_native_split.rs",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
@@ -49,13 +54,20 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows native V3 Normal source",
+      "scope": "H1797 canonical off/tls/flows cold to original M1 padded seal, native PN/SEQ and Tunnel-only cap; physical off/on pending",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
-    "旧TLS启动功能存在不等于新flows模式已实现；当前仅PLANNED。",
-    "不承诺DPI不可识别；无padding-only流、无主动业务延迟，不重复触发长流，不改变AEAD/generation。",
-    "H1766 Rust pure budget source is independent scaffolding only; actual Tunnel-only encrypted padding, off/tls/flows config, no-wait latency, GUI and OS performance still NOT_RUN.",
-    "H1767 new M1 padding method is unused by current product. No actual startup-padding CLI/GUI effective, performance comparison, or Tunnel/Game/FEC integration is claimed."
+    "H1797 is SOURCE staged, physical Windows/Linux off/on + GUI effective NOT_RUN; existing signed H1795 D1 TCP53 and Stop remain prior-SOURCE PASS.",
+    "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
+    "Old Go/Rust original pinned source unchanged; only versioned assembly overlay is edited. Full P1/P2 CPU/p99 and D3-D5 still OPEN.",
+    "Padding is not a guarantee against DPI recognition."
   ],
   "promotion": null
 }

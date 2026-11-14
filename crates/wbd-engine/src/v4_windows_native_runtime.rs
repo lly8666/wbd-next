@@ -10,6 +10,7 @@
      NativeSplitWorker,NativeDecision,ColdSplitSourceV1,
  };
  use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
+ use crate::v4_client_startup_padding::StartupMode;
  use std::time::Duration;
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
@@ -438,6 +439,13 @@
      let mut meta=[(0u64,0u32,0usize);BATCH];
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         // Compute the original M1 record ceiling ONCE per ready batch.
+         // OFF/Fixed never invoke the flow parser or derive a second
+         // budget. No kernel read, queue or per-DATA Go call is introduced.
+         let pad_wire_limit=if !fixed&&split.as_ref()
+             .is_some_and(|s|s.startup_padding_enabled()){
+             Some(normal_off_windows_budget(&e)?.record_wire_mtu.min(MAX_IPV4))
+         }else{None};
          for i in 0..count {
              let (used,seq,pn)=if fixed{
                  #[cfg(feature="fec2_product_record")]
@@ -449,6 +457,15 @@
                  }
                  #[cfg(not(feature="fec2_product_record"))]
                  {return Err(BAD_STAGE)}
+             }else if let Some(max_record)=pad_wire_limit{
+                 let room=max_record.saturating_sub(
+                     source_len[i].saturating_add(FIXED_WIRE_OVERHEAD));
+                 let pad=split.as_mut().map(|s|s.propose_tunnel_padding(
+                     &sources[i][..source_len[i]],now_ms,room)).unwrap_or(0);
+                 v3_seal_entry_with_padding(
+                     &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                     &sources[i][..source_len[i]],&mut wire[i],pad
+                 )?
              }else{
                  v3_seal_entry(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
@@ -1180,10 +1197,18 @@
         v3.v2.version!=2 ||
         v3.v2.size as usize!=std::mem::size_of::<WbdWinNativeAttachV2>() ||
         !matches!(v3.v2.mode,0|1|2) ||
-        v3.v2.reserved>3{return INVALID}
-     let split=match unsafe{NativeSplitWorker::new(&v3.split)}{
+        v3.v2.reserved>11 ||
+        v3.v2.reserved&12==12 ||
+        (v3.v2.mode!=0&&v3.v2.reserved&12!=0) ||
+        (v3.v2.mode!=2&&v3.v2.reserved&1!=0){return INVALID}
+     let mut split=match unsafe{NativeSplitWorker::new(&v3.split)}{
          Ok(w)=>w,Err(())=>return INVALID
      };
+     let pad=match v3.v2.reserved&12{
+         0=>StartupMode::Off,4=>StartupMode::Tls,
+         8=>StartupMode::Flows,_=>return INVALID,
+     };
+     split.set_startup_padding(pad,v3.v2.normal.epoch);
      #[cfg(feature="fec2_product_record")]
      {return start_native(v3.v2.normal,v3.v2.mode!=0,
          if v3.v2.mode==2{Some(v3.v2.reserved&1!=0)}else{None},

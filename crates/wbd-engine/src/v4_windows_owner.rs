@@ -1473,8 +1473,14 @@ fn v3_ready(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)->bool{
 fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,ipv4:&[u8],out:&mut [u8]
 )->Result<(usize,u32,u64),i32>{
-    if !v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
-        ipv4[0]>>4!=4 || ipv4.len()>2048 || out.len()<ipv4.len()+FIXED_WIRE_OVERHEAD{
+    v3_seal_entry_with_padding(e,epoch,luid,ifindex,ipv4,out,0)
+}
+fn v3_seal_entry_with_padding(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,ipv4:&[u8],out:&mut [u8],padding:usize
+)->Result<(usize,u32,u64),i32>{
+    if padding>256||!v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
+        ipv4[0]>>4!=4 || ipv4.len()>2048 ||
+        ipv4.len().saturating_add(FIXED_WIRE_OVERHEAD).saturating_add(padding)>out.len(){
         return Err(INVALID)
     }
     let budget=normal_off_windows_budget(e)?;
@@ -1486,8 +1492,17 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // m2_clock(): stale zero time after a genuine control deadline can
     // reverse its clock and reject an otherwise valid first DATA packet.
     let now=m2_clock();
-    let (pn,seq,used)=e.owner.seal_normal_off_one(
-        slab,ipv4.len(),budget,0,now).map_err(|_|BAD_STAGE)?;
+    // OFF calls the original unchanged M1 method; nonzero padding uses
+    // the existing authenticated LINK pad marker, not an IPv4 suffix.
+    // Original PN, stream Seq, immutable repair shadow and kernel loan
+    // are spent once after the size preflight, not by a second sealer.
+    let (pn,seq,used)=if padding==0{
+        e.owner.seal_normal_off_one(
+            slab,ipv4.len(),budget,0,now)
+    }else{
+        e.owner.seal_normal_off_one_padded(
+            slab,ipv4.len(),budget,0,now,padding)
+    }.map_err(|_|BAD_STAGE)?;
     // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
     // carrier buffer while its genuine LoanBatch remains borrowed; recycle
     // generation-scoped loans on *every* path, including rejected batches.
@@ -2848,6 +2863,34 @@ mod tests {
             "same PN cannot be reported as an additional fresh send");
         drop(e);
         assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn plan029_v3_native_tunnel_startup_padding_real_original_m1_length_sequence(){
+        let mut r=Registry{generation:709,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let epoch=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        let mut source=[0u8;100];
+        source[0]=0x45;source[2..4].copy_from_slice(&100u16.to_be_bytes());
+        source[8]=64;source[9]=17;
+        let mut out=[0u8;2048];
+        let (n,seq,pn)={
+            let mut e=r.entries[&h].lock().unwrap();
+            v3_seal_entry_with_padding(&mut e,epoch,91,19,&source,&mut out,32).unwrap()
+        };
+        assert_eq!(n,100+FIXED_WIRE_OVERHEAD+32);
+        let (n2,seq2,pn2)={
+            let mut e=r.entries[&h].lock().unwrap();
+            v3_seal_entry(&mut e,epoch,91,19,&source,&mut out).unwrap()
+        };
+        assert_eq!(n2,100+FIXED_WIRE_OVERHEAD);
+        assert_eq!(seq2,seq.wrapping_add(n as u32));
+        assert_eq!(pn2,pn+1);
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);
     }

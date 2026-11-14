@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1797,
+  "kind": "SOURCE_WIRING_NOT_PHYSICAL",
+  "prior_real": {
+    "run_id": 43556105215,
+    "source_sha": "1efb3cec6b9f90714b32c78e0318a57720d0e1f1",
+    "original_app_tcp53": "PASS_SCOPED",
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "source_only": {
+    "original_M1_Normal_link_padding": "STAGED",
+    "canonical_CLI": "STAGED",
+    "auth_epoch_seed": "STAGED",
+    "physical_off_on": "NOT_RUN",
+    "gui_effective": "NOT_CONNECTED",
+    "fixed_game": "UNCHANGED"
+  }
+}

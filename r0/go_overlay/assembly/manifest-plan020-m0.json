@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "7e2b053206a7b4570d14b3716b23bcf3918f9756",
+      "result_blob": "c38a3975c37b1c262ac6f29a7c81a84b70ff49c8",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -256,6 +256,22 @@
         {
           "find": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
           "replace": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
+        },
+        {
+          "find": "\t\ttlsStartupPadding  = flag.Bool(\"tls-startup-padding\", false, \"bounded passive inner TLS startup padding; no waiting; default off\")",
+          "replace": "\t\ttlsStartupPadding  = flag.Bool(\"tls-startup-padding\", false, \"bounded passive inner TLS startup padding; no waiting; default off\")\n\t\tstartupPadding = flag.String(\"startup-padding\", \"\", \"canonical native M1 Tunnel-only startup padding: off,tls,flows; empty inherits legacy tls-startup-padding (otherwise off)\")"
+        },
+        {
+          "find": "\tif *controlPaddingMax < 0 || *controlPaddingMax > 16384 {",
+          "replace": "\tstartupPaddingMode,padErr:=m0CanonicalWindowsStartupPadding(*startupPadding,*tlsStartupPadding)\n\tif padErr!=nil{return padErr}\n\tif *controlPaddingMax < 0 || *controlPaddingMax > 16384 {"
+        },
+        {
+          "find": "out[\"direct-flow-hard\"]=fmt.Sprint(*directFlowHard) // next-generation intent, not Applied",
+          "replace": "out[\"direct-flow-hard\"]=fmt.Sprint(*directFlowHard) // next-generation intent, not Applied\n\t\tout[\"startup-padding\"]=startupPaddingMode // selected next-generation intent, not physical effect"
+        },
+        {
+          "find": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
+          "replace": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),StartupPaddingMode:startupPaddingMode,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         }
       ]
     },
@@ -1120,7 +1136,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "c77d6af1699c59ab91d0751b6f32bd6d0d9f1b90"
+      "result_blob": "0c468f88930fcd771034d5bde1f56819683dfb27"
     },
     {
       "kind": "create",
@@ -1659,19 +1675,19 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "96c7062d35c0ce51ed8e54f6d87566167c085f06"
+      "result_blob": "2634617623dc7ac2633b4f0105c022290b91891d"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "7172e5bd1ffb2de2870699d37739a2b03f84ff84"
+      "result_blob": "0225671b2aa3f188ccb90fb78719842e7ee99a1a"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "b5c37eb2174fff75b1bab1826861050c522fd1e7"
+      "result_blob": "d845b2e69a67a7e2ff0fa9d6394b926aa64c152e"
     },
     {
       "kind": "create",
