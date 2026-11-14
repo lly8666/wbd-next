@@ -427,7 +427,16 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('CONCURRENT_TUNNEL_UDP_STAGES',app)
         self.assertIn('LAST_APP_PHASES',app)
         self.assertIn('MAX_SUSTAIN=3200',app)
-        self.assertIn('time.sleep(.004) # SAME application pacing',app)
+        self.assertIn('SEND_PAUSE=0.0 if BULK else .004',app)
+        self.assertIn('if SEND_PAUSE:time.sleep(SEND_PAUSE)',app)
+        self.assertIn('BULK=(os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" or',app)
+        self.assertIn('"p2bulk" if BULK else "p2paced"',app)
+        self.assertIn('(len(sys.argv)>4 and sys.argv[4]=="p2bulk")',app)
+        wf=(Path(__file__).resolve().parents[1] /
+            ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("[plan029-v3-real-p2-bulk]",wf)
+        self.assertIn("$expectedTcpBytes=4194304",wf)
+        self.assertIn("[int]$p2.load_bytes -ne $expectedTcpBytes",wf)
 
     def test_h1845_nonci_product_exact_cli_and_legacy_trial_off(self):
         from pathlib import Path

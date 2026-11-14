@@ -983,7 +983,9 @@ jobs:
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}
       WBD_PLAN029_D3_MULTIA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]') && '1' || '0' }}
       WBD_PLAN029_P1_AB_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || '0' }}
-      WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
+      # One new, explicit unpaced 4MiB P2 scenario; original 1MiB paced marker unchanged.
+      WBD_PLAN029_P2_BULK_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || '0' }}
+      WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
@@ -2450,12 +2452,15 @@ jobs:
             }
             if($env:WBD_PLAN029_P2_MIXED_SCENE -eq '1'){
               $p2=$result.plan029_p2_mixed_real
+              $expectedTcpBytes=1048576
+              if($env:WBD_PLAN029_P2_BULK_SCENE -eq '1'){$expectedTcpBytes=4194304}
               if($p2.source_sha -ne $env:GITHUB_SHA -or
                  $p2.stop -ne 'PASS_BOTH_OWNED' -or
                  $p2.physical_baseline.role -ne 'baseline' -or
                  $p2.direct_windows.role -ne 'direct' -or
-                 [int]$p2.physical_baseline.echo_bytes -ne 1048576 -or
-                 [int]$p2.direct_windows.echo_bytes -ne 1048576 -or
+                 [int]$p2.physical_baseline.echo_bytes -ne $expectedTcpBytes -or
+                 [int]$p2.direct_windows.echo_bytes -ne $expectedTcpBytes -or
+                 [int]$p2.load_bytes -ne $expectedTcpBytes -or
                  [int]$p2.tunnel_windows.received -ne 120 -or
                  $p2.tunnel_linux.source_lease -ne '10.66.0.2' -or
                  $p2.overlap -ne $true -or

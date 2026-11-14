@@ -184,10 +184,16 @@ pub(crate) fn load_journal(data:&[u8])
     rows.sort_by_key(|e|e.fake4);
     Ok(rows)
 }
+// Keep image encoding/CRC round-trip OFF the shared Wintun/Tunnel TX turn.
+ // The TX owner only takes a low-frequency bounded live mapping snapshot;
+ // the ONE existing disk worker builds/verifies/atomically replaces the WAL.
+enum JournalTask {
+    Append(u64,Vec<u8>),
+    Compact(u64,Vec<FakeSnapshotEntry>),
+}
 struct AsyncWrite{
-    // The boolean selects a compact (true) or append (false) command.
-    // The completion includes the exact byte length actually fsynced.
-    tx:Option<SyncSender<(u64,Vec<u8>,bool)>>,
+    // Completion reports actual synced bytes for either exact task type.
+    tx:Option<SyncSender<JournalTask>>,
     rx:Receiver<(u64,bool,usize,bool)>,
     thread:Option<JoinHandle<()>>,
     pending:HashMap<u64,(Vec<FakeSnapshotEntry>,usize)>,
@@ -200,16 +206,18 @@ struct AsyncWrite{
 // event. It includes every still-live or quarantined durable mapping,
 // regardless of its current DNS cache presence. An uncertain unissued
 // mapping remains unannounced and is not allowed to become visible here.
-fn compact_image(pool:&FakeAllocator)->Result<Vec<u8>,FakeJournalError>{
-    let mut image=MAGIC.to_vec();
+// Called only on coarse high-water tick; copy the protected identities,
+ // but DO NOT encode the multi-MiB journal or replay/check CRC on TX.
+fn compact_rows(pool:&FakeAllocator)->Result<Vec<FakeSnapshotEntry>,FakeJournalError>{
     let rows=pool.durable_candidate();
-    // An in-memory renewal may refer to a previously published FakeIP
-    // whose earlier durable identity is still needed after a crash.
-    // Do NOT omit that old identity just because its *new* snapshot has
-    // not been synced. Retry compaction after all pending writes settle.
+    // Unacknowledged renewal must never erase the older durable identity.
     if rows.iter().any(|row|pool.pending_snapshot(row.fake4).is_some()){
         return Err(FakeJournalError::Limit)
     }
+    Ok(rows)
+}
+fn compact_image_from_rows(rows:&[FakeSnapshotEntry])->Result<Vec<u8>,FakeJournalError>{
+    let mut image=MAGIC.to_vec();
     for group in rows.chunks(MAX_BATCH_ENTRIES){
         let batch=encode(group)?;
         if batch.len()>MAX_JOURNAL_BYTES.saturating_sub(image.len()){
@@ -361,7 +369,7 @@ impl FakeJournal {
         if self.async_writer.is_none(){
             let path=self.path.clone();
             let file=self.file.take().ok_or(FakeJournalError::Corrupt)?;
-            let (tx,requests)=sync_channel::<(u64,Vec<u8>,bool)>(ASYNC_QUEUE_JOBS);
+            let (tx,requests)=sync_channel::<JournalTask>(ASYNC_QUEUE_JOBS);
             // Unbounded *completion* channel contains at most the eight
             // outstanding bounded input jobs; avoids deadlock at Stop.
             let (done_tx,rx)=channel::<(u64,bool,usize,bool)>();
@@ -370,20 +378,28 @@ impl FakeJournal {
                 .spawn(move||{
                     let mut file=Some(file);
                     let mut failed=false;
-                    while let Ok((id,bytes,compact))=requests.recv(){
-                        let ok=if failed{false}else if compact{
-                            compact_on_writer(&path,&mut file,&bytes,id).is_ok()
-                        }else{
-                            file.as_mut().is_some_and(|f|
-                                f.write_all(&bytes)
-                                    .and_then(|_|f.sync_data()).is_ok())
+                    while let Ok(task)=requests.recv(){
+                        let (id,ok,written,compact)=match task{
+                            JournalTask::Append(id,bytes)=>{
+                                let ok=!failed && file.as_mut().is_some_and(|f|
+                                    f.write_all(&bytes).and_then(|_|f.sync_data()).is_ok());
+                                (id,ok,bytes.len(),false)
+                            },
+                            JournalTask::Compact(id,rows)=>{
+                                // Snapshot bytes, CRC verification and slow filesystem
+                                // writes are all on this ONE bounded worker, never TX.
+                                let image=compact_image_from_rows(&rows);
+                                let written=image.as_ref().map_or(0,|b|b.len());
+                                let ok=!failed && image.as_ref().is_ok_and(|bytes|
+                                    compact_on_writer(&path,&mut file,bytes,id).is_ok());
+                                (id,ok,written,true)
+                            },
                         };
-                        // A failed compaction leaves the old WAL valid and
-                        // allows another bounded attempt; an append failure
-                        // poisons this generation to prevent split history.
+                        // Failed compaction keeps the previous exact WAL;
+                        // append IO failure poisons this generation.
                         if !ok&&!compact{failed=true}
                         if file.is_none(){failed=true}
-                        if done_tx.send((id,ok,bytes.len(),compact)).is_err(){break}
+                        if done_tx.send((id,ok,written,compact)).is_err(){break}
                     }
                 }).map_err(ioe)?;
             self.async_writer=Some(AsyncWrite{
@@ -420,7 +436,7 @@ impl FakeJournal {
         let id=w.next_id;
         w.next_id=w.next_id.checked_add(1).ok_or(FakeJournalError::Limit)?;
         let frame_len=frame.len();
-        match w.tx.as_ref().ok_or(FakeJournalError::Corrupt)?.try_send((id,frame,false)){
+        match w.tx.as_ref().ok_or(FakeJournalError::Corrupt)?.try_send(JournalTask::Append(id,frame)){
             Ok(())=>{
                 w.queued_bytes+=frame_len;
                 w.pending.insert(id,(rows,frame_len));
@@ -492,11 +508,11 @@ impl FakeJournal {
         let Some(w)=self.async_writer.as_mut()else{return};
         if !w.pending.is_empty()||now_ms<w.next_compact_ms{return}
         w.next_compact_ms=now_ms.saturating_add(60_000);
-        let Ok(image)=compact_image(pool)else{return};
+        let Ok(rows)=compact_rows(pool)else{return};
         let id=w.next_id;
         let Some(next)=id.checked_add(1)else{return};
         if w.tx.as_ref().is_some_and(|tx|
-            tx.try_send((id,image,true)).is_ok()){
+            tx.try_send(JournalTask::Compact(id,rows)).is_ok()){
             w.next_id=next;
             w.pending.insert(id,(Vec::new(),0));
         }

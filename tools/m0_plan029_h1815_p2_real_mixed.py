@@ -6,7 +6,12 @@ import hashlib,json,math,os,pathlib,socket,subprocess,sys,time
 
 PORT=46112
 SMALL_PORT=46114
-SIZE=1024*1024
+# Windows environment is NOT automatically imported by wsl.exe; the Linux
+# guest gets the same load selection as a fourth explicit argv value.
+BULK=(os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" or
+      (len(sys.argv)>4 and sys.argv[4]=="p2bulk"))
+SIZE=4*1024*1024 if BULK else 1024*1024
+SEND_PAUSE=0.0 if BULK else .004
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
 MAX_SUSTAIN=3200
 FINISH_PACKET=b"PLAN029-P2-TUNNEL-FINISH"
@@ -76,7 +81,7 @@ def tcp_client(role,local,remote):
                 receipt("PLAN029_H1839_P2_TCP_STAGE",{
                     "role":role,"phase":"upload_progress",
                     "bytes":n+16384,"elapsed_ms":round((time.monotonic()-connected)*1000,3)})
-            time.sleep(.004) # SAME application pacing; NOT peak throughput
+            if SEND_PAUSE:time.sleep(SEND_PAUSE) # Exact same condition on physical and Direct
         uploaded=time.monotonic()
         receipt("PLAN029_H1839_P2_TCP_STAGE",{
             "role":role,"phase":"upload_complete","bytes":SIZE,
@@ -120,8 +125,8 @@ def tcp_client(role,local,remote):
               "half_close_ms":round((half_closed-uploaded)*1000,3),
               "first_reply_wait_ms":round(((first_reply or ended)-half_closed)*1000,3),
               "download_ms":round((ended-(first_reply or ended))*1000,3),
-              "nominal_send_sleep_ms":256,
-              "throughput_scope":"PACED_FUNCTIONAL_NOT_PEAK_GOODPUT"}
+              "nominal_send_sleep_ms":round(SIZE/16384*SEND_PAUSE*1000,3),
+              "throughput_scope":"UNPACED_4M_BULK" if BULK else "PACED_FUNCTIONAL_NOT_PEAK_GOODPUT"}
     receipt("PLAN029_H1815_P2_TCP_CLIENT",data)
 
 def udp_guest(tun_ip,lease):
@@ -198,7 +203,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
               if linux else [sys.executable,"-u",str(exe)])
         child_env=os.environ.copy()
         child_env["WBD_PLAN029_P2_TCP_DONE_MARKER"]=str(completed)
-        p=subprocess.Popen([*args,role,first,second],stdout=f,
+        p=subprocess.Popen([*args,role,first,second,"p2bulk" if BULK else "p2paced"],stdout=f,
                            stderr=subprocess.STDOUT,env=child_env)
         children.append(p)
         return p,log
@@ -272,9 +277,10 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                     "direct_minus_physical_phase_ms":delta,
                     "dominant_added_wait_phase":dominant,
                     "same_vm_sequential_baseline":True,
-                    "workload":"PACED_16K_BLOCKS_4MS_NOT_PEAK",
+                    "workload":"UNPACED_4M_16K_BLOCKS" if BULK else "PACED_16K_BLOCKS_4MS_NOT_PEAK",
                     "no_single_kernel_cause_claim":True},
-                "scope":"REAL_PHYSICAL_SOCKET_BASELINE_1M_VS_FAKEIP_RUST_DIRECT_1M_AND_120_CONCURRENT_TUNNEL_UDP",
+                "scope":"REAL_PHYSICAL_SOCKET_BASELINE_VS_FAKEIP_RUST_DIRECT_AND_SUSTAINED_TUNNEL_UDP",
+                "load_bytes":SIZE,"unpaced_bulk":BULK,
                 "physical_baseline":base,"direct_windows":direct_value,"physical_guest":linux,
                 "tunnel_windows":small_win,"tunnel_linux":small_linux,
                 "windows_direct_fakeip":fake,"overlap":overlap,

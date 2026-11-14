@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1857,
-  "checkpoint_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de",
+  "sequence": 1858,
+  "checkpoint_sha": "867612d26b35e413ad6637d9635a53d87f309fcb",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1857 H1856 exact SOURCE c110a982 signed real P2 PASS_SCOPED: Direct 1MiB 328ms vs same-VM physical281ms (1.167x), 120/120 concurrent Tunnel UDP entire overlap, 16ms max gap, signed owned Stop PASS. Npcap nonblocking captures 115x cross-SOURCE speedup; p99 '0.0ms' underresolved; P1/D1-D5/Game4/GUI/IPv6 open.",
-  "why_now": "Actual H1856 native product validates Npcap fail-closed nonblocking handoff and removes ~38s TCP bottleneck. Next protect pure Tunnel CPU/GiB and latency independently rather than retuning Direct TCP.",
+  "current_task": "H1858 H1856 verified real P2 1MiB 328ms vs physical281ms, no 120 small UDP loss, Stop PASS_SCOPED. H1857 50Mbps P1 same-VM ordered A/B independent Action43613384092 still running. H1858 source adds bulk unpaced4MiB independent P2 + journal encode on existing async disk worker; real H1858 NOT_RUN at commit.",
+  "why_now": "Paced1MiB passed after NPF nonblock but cannot qualify large unpaced TCP/higher-load cross-flow HOL. Compaction image serialization still runs in shared TX at 12MiB highwater despite async fsync, a concrete bounded slow-path hazard.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1857 [plan029-v3-real-p1-tunnel-ab] single-VM ordered off V4 vs on V3/all Tunnel 50Mbps 25ms0 loss, evaluate actual delivery/CPU/GiB/RSS/p99/gaps, Windows Go+Rust attribution caveat. Then targeted D4 Game4 CN, GUI true Stop, IPv6, pressure and remaining DNS/padding; do not dispatch old matrix.",
+  "next_action": "Collect H1857 P1 Action43613384092 without duplicate dispatch; collect one H1858 [plan029-v3-real-p2-bulk] Action real unpaced4MiB Direct versus physical, concurrent unique Tunnel UDP, p99/gaps/Stop; verify existing compact pure tests Windows+Linux. If failure find first boundary then targeted fix; continue Game4 CN/GUI true D4 IPv6/D1-D5.",
   "unverified": true,
   "last_tested_source": "c110a9820c88da2d46c54e7ae76ead040987a1de",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1857-H1856-NPF-NONBLOCK-P2-REAL-SIGNED-20261114.json"
+    "docs/evidence/M0/PLAN029-H1857-H1856-NPF-NONBLOCK-P2-REAL-SIGNED-20261114.json",
+    "docs/evidence/M0/PLAN029-H1858-H1857-P1-INFLIGHT-AND-BULK-TEST-GATE-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md",
     "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md",
     "docs/devlog/M0/20261114-PLAN029-H1856-REAL-MANIFEST-PIN-NPF.md",
     "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md",
     "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md",
     "docs/devlog/M0/20261114-PLAN029-H1853-H1852-FEATURE-CARD-SIZE-RECOVERY.md",
     "docs/devlog/M0/20261114-PLAN029-H1852-NPF-NONBLOCK-FIRST-RX-BOUNDARY.md",
-    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
+    "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md"
   ],
   "open_requests": [],
   "partial_summary": "H1856 original signed Win/WSL2 P2 Direct TCP1MiB 328ms vs physical281ms after Npcap cold nonblock, 120 Tunnel UDP all delivered max gap16ms, owned Stop PASS_SCOPED Action43611621095. H1850/H1851 38s negative preserved. P1 current source and other D1-D5/GUI/Game4 exits remain OPEN."

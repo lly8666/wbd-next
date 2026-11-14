@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "source_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de",
+  "plan": "PLAN029",
+  "task": "H1858",
+  "date": "2026-11-14",
+  "result": "IN_PROGRESS",
+  "prior_h1856": {
+    "source_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de",
+    "action_id": 43611621095,
+    "result": "P2_1M_REAL_PASS_SCOPED",
+    "physical_elapsed_ms": 281,
+    "direct_elapsed_ms": 328,
+    "overlap_tunnel_udp_unique": 120,
+    "max_interdelivery_gap_ms": 16,
+    "stop": "PASS_BOTH_OWNED",
+    "evidence": "docs/evidence/M0/PLAN029-H1857-H1856-NPF-NONBLOCK-P2-REAL-SIGNED-20261114.json"
+  },
+  "independent_h1857_p1": {
+    "source_sha": "867612d26b35e413ad6637d9635a53d87f309fcb",
+    "action_id": 43613384092,
+    "state_at_commit": "IN_PROGRESS",
+    "scenario": "ONE_VM_SEQUENTIAL_ORIGINAL_V4_V3_ALL_TUNNEL_50MBPS_60S_EACH",
+    "result": "NOT_YET_COLLECTED"
+  },
+  "h1858": {
+    "source_sha": "NEW_COMMIT_UNTIL_CREATED",
+    "scenario": "SIGNED_BULK_4M_UNPACED_PHYSICAL_VS_FAKEIP_DIRECT_AND_CONCURRENT_UNIQUE_TUNNEL_UDP",
+    "result_at_commit": "NOT_RUN",
+    "normal_1m_paced_regression": "NOT_RUN_ON_NEW_SOURCE",
+    "fake_journal_new_compaction": "IMPLEMENTED_UNVERIFIED_WINDOWS_LINUX_CI"
+  },
+  "code_changes": [
+    "move compact_image build/CRC reload from shared TX coarse tick to existing one bounded journal worker; TX still low-frequency live row copy & safety check",
+    "opt-in test 4MiB / no app send pause BOTH physical and Direct; preserve original 1MiB / 4ms path",
+    "explicit fourth argv transports bulk to WSL2 guest where Windows environment may not pass",
+    "keep 120+ unique Tunnel UDP and source SHA/owned Stop oracles; no additional packet pump/thread, no old WFP"
+  ]
+}
