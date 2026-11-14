@@ -4,32 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1854,
-  "checkpoint_sha": "4ea11ec2e3cb7066ccb8ec39f74b994b723614f3",
+  "sequence": 1855,
+  "checkpoint_sha": "c84cf40f34a97a358592c877d4620025b3dfec87",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1854 H1852 signed native run 43610536189 failed at PREBUILD assembly blob mismatch on Go overlay Npcap handoff before real product, so nonblocking hypothesis NOT_RUN. Sync exact two overlay source/test blob hashes in original assembly manifest, freeze new SOURCE for one scoped P2.",
-  "why_now": "First blocker is a correct immutable manifest check, not a product networking failure; do not remove integrity gate or falsely declare H1852 negative P2.",
+  "current_task": "H1855 H1852 true native P2 stopped pre-build at immutable assembly mismatch; H1854 synced exactly modified Go source/test blobs but native workflow push path omitted these files and manifest. Add only three exact path filters so one H1855 source-locked tagged P2 runs. H1852 evidence SOURCE anchored to last genuinely tested H1851 998d; cursor refs exact same SOURCE, retain all older evidence files elsewhere.",
+  "why_now": "Avoid both blocked real test execution due omitted manifest/entry path and persistent governance FAIL from mixed-source cursor evidence; keep original integrity and negative receipts.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1854 source-locked [plan029-v3-real-p2-rebuild] Action exactly once, first ensure manifest and Windows Go compile; then genuine 1MiB Direct+ongoing Tunnel UDP, nonblocking readback, owned cleanup, queue/p99; no duplicate dispatch. Continue 029 outstanding D1-D5/P1/P2 and Game4 GUI IPv6.",
+  "next_action": "Collect single H1855 [plan029-v3-real-p2-rebuild] Action, verify cheap wiring/Windows Go compiler, cold pcap_setnonblock/getnonblock, Wintun Direct 1MiB vs physical and concurrent Tunnel UDP, p99, queue/oldest-age if available, exact owned Stop/finally. If nonblock unsupported, report first rejection, not firewall conclusion. Never repeat dispatch or infer root cause from compile.",
   "unverified": true,
   "last_tested_source": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1852-H1851-P2-NPF-RX-NONBLOCK-BOUNDARY-20261114.json",
-    "docs/evidence/M0/PLAN029-H1851-H1850-SIGNED-P2-TIMEOUT-AND-REVERSE-QUANTUM-20261114.json",
-    "docs/evidence/M0/PLAN029-H1850-H1848-H1849-RECOVERED-REAL-CN-AND-P2-PERFORMANCE-20261114.json",
-    "docs/evidence/M0/PLAN029-H1848-H1844-SIGNED-P2-FIFO-NEGATIVE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1852-H1851-P2-NPF-RX-NONBLOCK-BOUNDARY-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md",
     "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md",
     "docs/devlog/M0/20261114-PLAN029-H1853-H1852-FEATURE-CARD-SIZE-RECOVERY.md",
     "docs/devlog/M0/20261114-PLAN029-H1852-NPF-NONBLOCK-FIRST-RX-BOUNDARY.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/devlog/M0/20261114-PLAN029-H1851-TRUE-P2-TIMEOUT-AND-REVERSE-QUANTUM.md",
-    "docs/devlog/M0/20261114-PLAN029-H1850-COLLECT-NONCI-P2-AND-LEG-PROBE.md",
-    "docs/architecture/MTU_CONTRACT.md"
+    "docs/devlog/M0/20261114-PLAN029-H1850-COLLECT-NONCI-P2-AND-LEG-PROBE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1851 38s Direct timeout with ready_full=0; H1852 Npcap nonblocking handoff implemented but first Action stopped BEFORE Windows build at stale manifest result_blob; H1853 card size fixed. H1854 updates only exact assembly result_blob for modified Go handoff and test, real test NOT_RUN at commit."
+  "partial_summary": "H1848 signed nonCI CN Direct+Tunnel PASS_SCOPED. H1849 Direct 1MiB 37.704s, H1850/H1851 38s timeout; H1851 ready_full0. H1852 Npcap borrowed capture nonblocking after Go reader join IMPLEMENTED, real test blocked pre-build stale manifest. H1854 fixed manifest, H1855 adds trigger files and source-consistent evidence to actually run first native test. PLAN029 IN_PROGRESS."
 }

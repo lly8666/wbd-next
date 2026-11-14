@@ -44,6 +44,11 @@ on:
       # work still requires the explicit PLAN029 marker in the scope gate.
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/prepare_windows_wiring.py
+      # PLAN029 cold Go→Rust NPF capture handoff and exact assembly receipts
+      # must trigger the same original source-locked native build gate.
+      - r0/go_overlay/assembly/manifest.json
+      - r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go
+      - r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go
       - tools/m0_native_ci_scope.py
       - tests/test_m0_native_ci_scope.py
       - tests/test_m0_plan029_h1749_signed_direct_order.py

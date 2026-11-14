@@ -37,5 +37,6 @@
   "diagnostic_npftime": "NOT_MEASURED",
   "direct_oldest_queue_age": "NOT_MEASURED",
   "full_plan029": "IN_PROGRESS",
-  "other_agent_recommendation": "ACCEPT_PRIORITY_NOT_PROVEN_ROOT_CAUSE"
+  "other_agent_recommendation": "ACCEPT_PRIORITY_NOT_PROVEN_ROOT_CAUSE",
+  "source_sha": "998d3df351db6472fa62d2c54d8b353dcc6f76b6"
 }
