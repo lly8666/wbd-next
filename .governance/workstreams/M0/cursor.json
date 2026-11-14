@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1839,
-  "checkpoint_sha": "dbfc27c220d95368795a24e21eb65d98dc732bf9",
+  "sequence": 1840,
+  "checkpoint_sha": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1839: H1837 signed true Windows P2 FAIL: baseline physical 1MiB281ms, Linux second Direct physical kernel TCP received complete 1MiB+echo sendall, Windows Direct client timed out 38s without final receipt; original P2 app logs only final. H1838 WinForms→Go CLI full PASS scoped. H1839 single new real signed P2 with bounded app/guest progress checkpoints and cold-only Rust read/write per-leg 1Hz diagnostic; new SOURCE NOT_RUN until CI. Need first stall attribution, not 10ms duplicate.",
-  "why_now": "P2 failures after true kernel echo cannot be solved by blindly changing MSS, NODELAY or TX quantum. Source inspection confirms existing has_udp_flows includes active TCP has_work, so 10ms wake already present. Separate which socket leg and app phase really stalled, via <=1Hz per-leg aggregate and stage checkpoints. Preserve same-VM P2 and component correctness.",
+  "current_task": "H1840: launch one distinct source-locked signed Windows/Ubuntu Normal product CN split with explicit --split-enable and owned --cn-rules-file, GITHUB_ACTIONS=false and V3_TRIAL=0 ONLY in actual Windows child. Must prove OS Applied/Ready, Direct DNS TCP UDP + Tunnel TCP UDP/D1/D2 and both owned Stop under exact SOURCE. New network NOT_RUN until CI terminal. H1839 P2 read/write-leg diagnostic signed Action separate source running, no duplicate dispatch; Game4/IPv6/P1/slow fsync OPEN.",
+  "why_now": "Static real WinForms->Go config proven H1838 but old signed D3 invoked private Actions trial. Product user opt-in cannot be considered connected without a real signed non-Actions selector, independent of CI hidden CN rule source. Reuse same original owner OS WAL and exact route/Defender receipts, without fake GUI events.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1839 single signed real Windows/Linux P2 Action and phase snapshots plus native leg cumulative counters and full-span UDP; locate first exact loss-of-progress then change underlying event/forwarding mechanism. Separately real nonCI Normal CN split signed source-locked selection (not GUI fake); Game4, IPv6, P1, slow fsync/Stop remain.",
+  "next_action": "Collect H1840 single real signed nonCI Normal source-locked product CN and owned Stop, identify first failure if any. In parallel collect H1839 true P2 per-app stage and Rust two-leg 1Hz read/write counters; fix first observed downlink/FIN bottleneck, not arbitrary tick. Then true GUI Connect/Stop, Game4 CN, IPv6 D4, P1, slow-fsync/compaction.",
   "unverified": true,
   "last_tested_source": "33e2f79352469d62e3025176670fd03d450e554a",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1838-PORTABLE-CN-IMPORT-ASSERTION.md",
-    "docs/devlog/M0/20261114-PLAN029-H1839-P2-ONE-MIB-TWO-LEG-READINESS-DIAG.md"
+    "docs/devlog/M0/20261114-PLAN029-H1839-P2-ONE-MIB-TWO-LEG-READINESS-DIAG.md",
+    "docs/devlog/M0/20261114-PLAN029-H1840-NONCI-PRODUCT-CN-SIGNED-SOURCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1837 source33e signed P2 FAIL at 38s Direct 1MiB; physical281ms, actual Linux 1MiB echo finished; Windows app stage unknown. Owner WAL cleaned after failure but P2 stop grade not proven. H1839 diagnostic source candidate with exact one new P2 Action NOT_RUN until done. H1838 source dbfc real GUI Go check-config PASS; signed GUI OS not run; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1840 one distinct real user cold --split-enable signed network scene queued, not current GUI simulation; requires child GITHUB_ACTIONS=false/V3_TRIAL=0 and actual Wintun original Go+Rust OS/Stop receipt. H1839 source a50 P2 diagnostic separate scene running; H1837 true P2 FAIL source33e with physical281ms/Direct>38s, linux complete1M. H1838 GUI check config PASS; D5 signed GUI, Game4, IPv6, P1 and slow fsync OPEN."
 }

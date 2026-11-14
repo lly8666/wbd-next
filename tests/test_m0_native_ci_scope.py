@@ -62,7 +62,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
 
     def test_manual_and_explicit_full_requests_are_preserved(self):
         self.assertTrue(requires_native_smoke("workflow_dispatch", ["README.md"]))
-        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]"):
+        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]", "[plan029-real-product-cn]"):
             self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
 
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):

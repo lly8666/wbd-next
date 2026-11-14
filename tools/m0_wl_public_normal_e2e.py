@@ -19,6 +19,10 @@ plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 # One new SOURCE-locked real signed Wintun NativeOwner scene. H1743
 # pure Tunnel remains a separate immutable qualification record.
 p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
+# H1840 tests the REAL user-selected cold split with all private CI trial
+# switches off in the launched original Go process. One source, one signed
+# Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
+p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
@@ -47,10 +51,15 @@ if p029_padding and (mode!="normal" or p029_direct or
  raise RuntimeError("H1799 single ordinary startup padding scene needs signed Normal V3 Tunnel-only")
 if p029_pressure and not p029_direct:
  raise RuntimeError("hard8 pressure requires exactly one signed Normal Direct scene")
-if p029_direct and (mode!="normal" or
+if p029_product and (not p029_direct or mode!="normal" or
+    p029_multia or p029_cache or p029_pressure or p029_p2 or
+    p029_padding or p029_tcp53 or
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0"):
+ raise RuntimeError("H1840 real product CN split requires single Normal owner, no private trial or mixed P2")
+if p029_direct and not p029_product and (mode!="normal" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
- raise RuntimeError("PLAN029 real Direct CN scene requires exact source-locked Normal V3")
+ raise RuntimeError("PLAN029 legacy Direct CN trial requires exact source-locked Normal V3")
 if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
  raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
@@ -367,6 +376,10 @@ try:
   # scene; it also hosts an independent real physical business UDP socket.
   args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
                "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
+ if p029_product:
+  # Same Next-Connect CLI fields a portable user enters in real WinForms,
+  # not WBD_PLAN029_CN_RULES_FILE or any GITHUB_ACTIONS test switch.
+  args.extend(["--split-enable","--cn-rules-file",str(rules)])
  if p029_pressure:
   args.extend(["--direct-flow-hard","8"])
  if native_outer=="default1460":
@@ -377,6 +390,10 @@ try:
  # for this P2 scene; ordinary users never incur socket-byte telemetry.
  client_env=os.environ.copy()
  if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
+ if p029_product:
+  client_env["GITHUB_ACTIONS"]="false"
+  client_env["WBD_PLAN029_NATIVE_V3_TRIAL"]="0"
+  client_env.pop("WBD_PLAN029_CN_RULES_FILE",None)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
                     text=True,env=client_env)
  game_cold_stage("COLD_CLIENT_SPAWNED")
@@ -456,6 +473,22 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
+ if p029_product:
+  cold_log=(out/"client.log").read_text(errors="replace")
+  if ("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE" not in cold_log or
+      "source=explicit_config readiness=AWAIT_REAL_OS_RUST_RECEIPT" not in cold_log or
+      "source=source_locked_CI_trial" in cold_log):
+   raise RuntimeError("H1840 REAL product split did not select explicit --split-enable")
+  # READY must follow real signed Wintun native OS WAL, not a GUI mock.
+  if "WBD_WINDOWS_OS_APPLIED" not in cold_log:
+   raise RuntimeError("H1840 product selection was READY without actual owned OS Apply")
+  report["plan029_real_product_normal_cn"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "selection":"EXPLICIT_GUI_EQUIVALENT_CLI_WITH_GITHUB_ACTIONS_FALSE",
+    "private_trial":"OFF","domain_rules":"ONE_COLD_OWNED_SNAPSHOT",
+    "signed_windows_wintun_os_applied":"PASS_OBSERVED",
+    "direct_tunnel_business":"PENDING","owned_stop":"PENDING"}
+  print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
    "V4_PUBLIC_MULTI_SESSION_READY role=server" if plan028_owned_switch and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
@@ -2025,6 +2058,33 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029_product:
+  # Not a private trial: the same real original Go/Rust owner and OS WAL
+  # must have independently shown Windows+Linux Stop and exact route/
+  # Defender cleanup after true two-OS business, not just READY.
+  win_native=(out/"client.log").read_text(errors="replace")
+  required=("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=bypass-lan-cn",
+            "source=explicit_config readiness=AWAIT_REAL_OS_RUST_RECEIPT",
+            "WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1",
+            "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
+  missing=[mark for mark in required if mark not in win_native]
+  wal=out/"owned-wal.json.n4-owned-wal"
+  routes=out/"owned-wal.json.n4-owned-wal.routes"
+  tcp_sidecar=out/"owned-wal.json.plan029-defender-tcp"
+  if missing or wal.exists() or routes.exists() or tcp_sidecar.exists():
+   raise RuntimeError("H1840 signed real nonCI CN owner Stop/OS WAL missing "+
+                      repr(missing)+" wal="+str(wal.exists())+
+                      " routes="+str(routes.exists())+" defender="+str(tcp_sidecar.exists()))
+  for key in ("plan029_private_v3_cn_direct_udp","plan029_private_v3_cn_direct_tcp"):
+   if report.get(key,{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+    raise RuntimeError("H1840 nonCI product no actual same-SOURCE Direct DNS/TCP proof "+key)
+  report["plan029_private_v3_cn_direct_tcp"]["stop"]="PASS_OWNED_DEFENDER_AND_WAL_ABSENT"
+  report["plan029_private_v3_cn_direct_udp"]["stop"]="PASS_NO_WFP_V2_WAL_ABSENT"
+  prod=report["plan029_real_product_normal_cn"]
+  prod["direct_tunnel_business"]="PASS_SIGNED_PHYSICAL_DIRECT_DNS_TCP_UDP_AND_TUNNEL"
+  prod["owned_stop"]="PASS_BOTH_OWNED"
+  print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_SIGNED_BOTH_OS_AND_STOP_PASS_SCOPED",flush=True)
  if p029_padding:
   # Actual original Rust authenticated M1 encrypted LINK copied by NPF.
   # Staged/proposed bytes alone cannot count, and live Linux original
