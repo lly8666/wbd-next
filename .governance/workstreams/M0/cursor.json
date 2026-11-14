@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1852,
-  "checkpoint_sha": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
+  "sequence": 1853,
+  "checkpoint_sha": "df26d8c618be4a5fb621c1828ec1a547cff8d2f9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1852 signed H1851 P2 Action43605289460 still FAIL 38s (upload18.969s, download917504B, ready_peak32 full0); uncovered Go→Rust Npcap capture loan remains blocking (50ms) while Rust RX calls up to32 pcap_next_ex before Direct Wintun return. Implement cold pcap_setnonblock/readback fail closed, source real result NOT_RUN at commit.",
-  "why_now": "The observed ready_full=0 falsifies the local queue-overflow hypothesis for H1851. Npcap official API and code audit prove missing nonblocking handoff; this is a closer bounded scheduling defect than uncontrolled TCP buffering/retransmit tuning, though not yet measured causal.",
+  "current_task": "H1853 retain H1852 signed original Npcap nonblock test in flight; H1852 feature card 17271B exceeded 16384B gate, compact repetitive limitations only. H1852 code frozen SOURCE df26d8c6, new real result NOT_RUN at checkpoint.",
+  "why_now": "Repair exact feature catalog byte cap without changing governance limits, code, other agents or re-dispatching P2.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exactly one source-locked [plan029-v3-real-p2-rebuild] signed Normal real TCP1M+ongoing Tunnel UDP Action from H1852, inspect early H1852 Go nonblock set/readback outcome, four legs, ready counts, unique delivery/p99/holes and owned Stop/finally. If still slow, leave NPF hypothesis OPEN/NEGATIVE and seek bounded first ACK/window/retransmit evidence; no repeated same P2 without a different falsifiable hypothesis. Then complete full 029 D1-D5/P1-P2 Game4 GUI IPv6 recovery.",
+  "next_action": "Collect already running H1852 signed original SOURCE df26d8c6 Action, confirm Npcap nonblock readback, true Direct TCP 1MiB and Tunnel UDP; preserve negative and NOT_RUN, then complete PLAN029 D1–D5/P1–P2.",
   "unverified": true,
   "last_tested_source": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
   "evidence_refs": [
@@ -21,15 +21,15 @@
     "docs/evidence/M0/PLAN029-H1848-H1844-SIGNED-P2-FIFO-NEGATIVE-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1853-H1852-FEATURE-CARD-SIZE-RECOVERY.md",
     "docs/devlog/M0/20261114-PLAN029-H1852-NPF-NONBLOCK-FIRST-RX-BOUNDARY.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/devlog/M0/20261114-PLAN029-H1851-TRUE-P2-TIMEOUT-AND-REVERSE-QUANTUM.md",
     "docs/devlog/M0/20261114-PLAN029-H1850-COLLECT-NONCI-P2-AND-LEG-PROBE.md",
     "docs/architecture/MTU_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1849-REAL-P2-RX32-RETEST.md"
+    "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1848 Normal nonCI split business real PASS_SCOPED. H1849 P2 full 1MiB at37.704s FAIL perf. H1850 & H1851 real P2 >38s FAIL, H1851 ready_full=0 disproves that queue cap as observed cause. H1852 cold Npcap pcap_setnonblock/readback implementation pending signed real proof; OS/runtime semantics otherwise unchanged. PLAN029 still IN_PROGRESS."
+  "partial_summary": "H1849 Direct 1MiB 37.704s; H1850/H1851 38s timeout with H1851 ready_full=0. H1852 cold Npcap pcap_setnonblock/readback implemented, native real result pending; H1853 only compacts feature card 16KiB, no extra P2 dispatch."
 }
