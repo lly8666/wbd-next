@@ -26,6 +26,10 @@ p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
+p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
+if p029_multia and (not p029_direct or p029_cache or p029_pressure or
+                    p029_padding or p029_tcp53 or mode!="normal"):
+ raise RuntimeError("H1807 genuine Normal signed CNAME+two-A scene must be exclusive")
 if p029_outer1460 and not (p029_direct and not p029_pressure and
                            native_outer=="default1460" and mode=="normal"):
  raise RuntimeError("H1791 default1460 requires signed Normal Direct, no hard8 pressure")
@@ -832,7 +836,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if not host_source:raise RuntimeError("original Windows physical source readback absent")
   p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
       "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
-      peer,host_source,"1" if p029_cache else "0"],stdout=guest_log,stderr=subprocess.STDOUT)
+      peer,host_source,"2" if p029_multia else "1" if p029_cache else "0"],stdout=guest_log,stderr=subprocess.STDOUT)
   for tick in range(100):
    guest_log.flush()
    raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")
@@ -867,6 +871,21 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
          gdata["business_client_physical"]==host_source and
          wdata["direct_resolver"]==peer):
    raise RuntimeError("real Direct DNS/UDP guest physical proof mismatch")
+  if p029_multia:
+   fakes=wdata.get("multi_a_fake_addresses",[])
+   if (wdata.get("multi_a_mode") is not True or len(fakes)!=2 or
+       fakes[0]!=wdata["fake4"] or len(set(fakes))!=2 or
+       any(not ip.startswith("198.18.") for ip in fakes) or
+       gdata.get("multi_a_mode") is not True or
+       gdata.get("multi_a_answers")!=1 or gdata.get("target_dns_count")!=1):
+    raise RuntimeError("H1807 signed CN CNAME two A/durable distinct FakeIP receipts absent")
+   report["plan029_d3_multia_real"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "scope":"SIGNED_NORMAL_CN_CNAME_TWO_REAL_A_TO_TWO_DISTINCT_FAKEIP_PLUS_DIRECT_UDP",
+    "windows":wdata,"linux":gdata,
+    "hard_quota_overflow":"NOT_RUN_SEPARATE_PURE_TEST",
+    "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
+   print("PLAN029_H1807_SIGNED_CN_CNAME_TWO_A_DISTINCT_FAKEIP_DIRECT_UDP_PRE_STOP",flush=True)
   if p029_cache:
    if not (wdata["cache_second_reply"] is True and
            wdata["cache_second_source_distinct"] is True and
@@ -2047,6 +2066,10 @@ print(json.dumps(result),flush=True)
     if report.get("plan029_d3_cn_native_dns_cache",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1783 cache proof lost before original owner Stop")
     report["plan029_d3_cn_native_dns_cache"]["stop"]="PASS_BOTH_OWNED"
+   if p029_multia:
+    if report.get("plan029_d3_multia_real",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+     raise RuntimeError("H1807 D3 physical CNAME multi-A receipt missing at Stop")
+    report["plan029_d3_multia_real"]["stop"]="PASS_BOTH_OWNED"
    if p029_pressure:
     if report.get("plan029_d3_direct_hard_pressure",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1778 physical capacity result lost at Stop")

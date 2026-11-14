@@ -4,9 +4,10 @@ import json,select,socket,struct,sys,time
 guest,expected_host=sys.argv[1:3]
 # Windows-parent environment variables are NOT inherited by wsl.exe --.
 # Explicit one-bit scene argument; never pretend an unarmed guest tested cache.
-if len(sys.argv)!=4 or sys.argv[3] not in ("0","1"):
+if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2"):
     raise RuntimeError("H1785 WSL guest CN cache mode argv must be exactly 0 or 1")
 cache_mode=sys.argv[3]=="1"
+multia_mode=sys.argv[3]=="2"
 dns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 business=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 dns.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,0)
@@ -20,7 +21,8 @@ marker=b"PLAN029-H1745-CN-DIRECT-UDP"
 print("PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY",flush=True)
 observed={"dns":False,"direct_business":False,"dns_client_physical":None,
           "business_client_physical":None,"real_server":guest,
-          "target_dns_count":0,"cache_mode":cache_mode}
+          "target_dns_count":0,"cache_mode":cache_mode,
+          "multi_a_mode":multia_mode,"multi_a_answers":0}
 settled_at=None
 limit=time.monotonic()+60
 while time.monotonic()<limit:
@@ -40,10 +42,16 @@ while time.monotonic()<limit:
             observed["target_dns_count"]+=1
             if cache_mode and observed["target_dns_count"]!=1:
                 raise RuntimeError("second same CN DNS query escaped physical rather than cache")
-            header=packet[:2]+b"\x81\x80\x00\x01\x00\x02\x00\x00\x00\x00"
+            answer_count=3 if multia_mode else 2  # CNAME + one/two A
+            header=packet[:2]+b"\x81\x80\x00\x01"+struct.pack("!H",answer_count)+b"\x00\x00\x00\x00"
             cname=b"\xc0\x0c"+b"\x00\x05\x00\x01"+struct.pack("!I",30)+struct.pack("!H",len(target))+target
             a=target+b"\x00\x01\x00\x01"+struct.pack("!I",30)+b"\x00\x04"+socket.inet_aton(guest)
-            dns.sendto(header+question+cname+a,remote)
+            # Non-identical second CDN real A: both are local-only FakeIPs
+            # in the original Windows app, not public A leakage.
+            other=(target+b"\x00\x01\x00\x01"+struct.pack("!I",30)+
+                   b"\x00\x04"+socket.inet_aton("203.0.113.89")) if multia_mode else b""
+            dns.sendto(header+question+cname+a+other,remote)
+            if multia_mode:observed["multi_a_answers"]+=1
             observed["dns"]=True
             observed["dns_client_physical"]=remote[0]
         elif packet==marker:

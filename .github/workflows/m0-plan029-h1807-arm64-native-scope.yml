@@ -1,0 +1,42 @@
+name: PLAN029 native ARM64 CN DNS plus Game4 FEC representative (pure scoped)
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/m0-plan029-h1807-arm64-native-scope.yml"]
+permissions: {contents: read}
+jobs:
+  native-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile once then execute nonduplicated native ARM64 029 and Game4/FEC representative
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p result
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = "aarch64"
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustc +1.85.1 --version | tee result/compiler.txt
+          cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record --no-run 2>&1 | tee result/build.log
+          cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record plan029_ 2>&1 | tee result/plan029.log
+          grep -F 'plan029_fakeip_multi_a_quota_rollback_preserves_held_and_recovers ... ok' result/plan029.log
+          grep -F 'plan029_fakeip_failed_multi_a_does_not_erase_prior_uncertain_journal ... ok' result/plan029.log
+          grep -E '^test result: ok\.' result/plan029.log
+          cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record r1_game_r4_g0 2>&1 | tee result/game4.log
+          grep -E '^test .*r1_game_r4_g0.* \.\.\. ok' result/game4.log
+          cargo +1.85.1 test --locked --release -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record r1_fec2_f2_ 2>&1 | tee result/fec2.log
+          grep -E '^test .*r1_fec2_f2_.* \.\.\. ok' result/fec2.log
+          printf '{"source_sha":"%s","arch":"aarch64","os":"ubuntu-24.04-arm","scope":"ARM64_NATIVE_PURE_PLAN029_NORMAL_GAME4_FEC_REPRESENTATIVE","real_wintun":"NOT_RUN","netns_business":"NOT_RUN"}\n' "$GITHUB_SHA" > result/source.json
+          echo PLAN029_H1807_ARM64_NATIVE_PURE_CN_DNS_NORMAL_GAME4_FEC_PASS_SCOPED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1807-arm64-pure-${{ github.run_id }}
+          path: result/
+          retention-days: 14
+          if-no-files-found: error

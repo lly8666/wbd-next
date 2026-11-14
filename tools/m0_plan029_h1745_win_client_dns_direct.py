@@ -3,6 +3,8 @@
 import json,socket,struct,sys,time
 lease,expected_dns=sys.argv[1:3]
 cache_mode=__import__("os").environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
+multia_mode=__import__("os").environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
+if multia_mode and cache_mode:raise RuntimeError("D3 multi-A is exclusive of cache test")
 name=b"\x03www\x02cn\x07example\x00"
 question=name+b"\x00\x01\x00\x01"
 txid=b"\x17\x45"
@@ -48,8 +50,11 @@ for _ in range(struct.unpack("!H",response[6:8])[0]):
     if (rtype,rclass,rdlength)==(1,1,4):
         addresses.append(socket.inet_ntoa(response[cursor:cursor+4]))
     cursor+=rdlength
-if len(addresses)!=1 or not addresses[0].startswith("198.18."):
-    raise RuntimeError("CN CDN A was not durably remapped to one owned FakeIP")
+expected=2 if multia_mode else 1
+if (len(addresses)!=expected or len(set(addresses))!=expected or
+    not all(ip.startswith("198.18.") for ip in addresses) or
+    expected_dns in addresses or "203.0.113.89" in addresses):
+    raise RuntimeError("CN CDN multi-A was not durably remapped to separate owned FakeIPs")
 fake=addresses[0]
 cache_reply=False
 cache_different_source=False
@@ -95,5 +100,7 @@ print("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "+json.dumps(
      "business_reply":reply.decode(),"source_lease":lease,
      "source_route":"ACTUAL_ORIGINAL_WINDOWS_WINTUN_SINGLE_RUST_OWNER",
      "direct_resolver":expected_dns,"cache_second_reply":cache_reply,
-     "cache_second_source_distinct":cache_different_source},sort_keys=True),flush=True)
+     "cache_second_source_distinct":cache_different_source,
+     "multi_a_mode":multia_mode,
+     "multi_a_fake_addresses":addresses if multia_mode else []},sort_keys=True),flush=True)
 sock.close();business.close()
