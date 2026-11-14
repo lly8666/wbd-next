@@ -27,6 +27,10 @@ p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
 p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
+p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
+if p029_p2 and (not p029_direct or p029_multia or p029_cache or
+                p029_pressure or p029_padding or p029_tcp53 or mode!="normal"):
+ raise RuntimeError("H1815 P2 signed moderate physical/Direct/Tunnel single Normal scene is exclusive")
 if p029_multia and (not p029_direct or p029_cache or p029_pressure or
                     p029_padding or p029_tcp53 or mode!="normal"):
  raise RuntimeError("H1807 genuine Normal signed CNAME+two-A scene must be exclusive")
@@ -960,6 +964,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "windows":tcp_windows_receipt,"linux":li,"tunnel_tcp":"NOT_RUN_UNTIL_COMPARATOR","stop":"NOT_RUN"}
   report["plan029_private_v3_cn_direct_udp"]["direct_tcp"]="PASS_REAL_KERNEL_TWO_LEG_TCP_32K"
   print("PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",flush=True)
+  if p029_p2:
+   from m0_plan029_h1815_p2_real_mixed import run_p2
+   report["plan029_p2_mixed_real"]=run_p2(root,out,peer,host_source,linux_app4,
+                                          wdata["fake4"],unix,ready)
+   print("PLAN029_H1815_P2_PHYSICAL1M_DIRECT1M_AND_CONCURRENT_TUNNEL_SMALL_UDP_PRE_STOP",flush=True)
  # Functional-only *real TCP* over the same original authenticated public
  # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
  # independently established IPv4 streams must echo exact application bytes.
@@ -2066,6 +2075,11 @@ print(json.dumps(result),flush=True)
     if report.get("plan029_d3_cn_native_dns_cache",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1783 cache proof lost before original owner Stop")
     report["plan029_d3_cn_native_dns_cache"]["stop"]="PASS_BOTH_OWNED"
+   if p029_p2:
+    p2=report.get("plan029_p2_mixed_real",{})
+    if p2.get("source_sha")!=os.environ["GITHUB_SHA"] or p2.get("overlap") is not True:
+     raise RuntimeError("H1815 true P2 mixed physical/tunnel receipt lost at Stop")
+    p2["stop"]="PASS_BOTH_OWNED"
    if p029_multia:
     if report.get("plan029_d3_multia_real",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1807 D3 physical CNAME multi-A receipt missing at Stop")

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1814,
-  "checkpoint_sha": "add795f986882ce5f8447e32d80eddc34d98f6f2",
+  "sequence": 1815,
+  "checkpoint_sha": "c262636c81d688e8df8e844b668bbcc57957425d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1814 source-frozen same VM P1 moderate Normal: A old V4 tunnel vs B Rust V3 route=all tunnel, sequential independent owned Stop, reuse same Go/Rust binaries, kernel tc 25ms/0%, each direction 50Mbps for 60s, same-Win-PID Go+Rust CPU/actual delivered GiB, UDP RTT p99 and gap, RSS; new H1814 test NOT_RUN until Actions. PLAN029 IN_PROGRESS.",
-  "why_now": "True D3 signed Windows/WSL2 DNS+Direct, D4 signed OS rollback, D5 x86+ARM64 10k rules/WinForms config finished scoped. Next material open P1 and real Game4 split, avoid redoing historical 028 modes and 500Mbps cases.",
+  "current_task": "H1815 P2 independent one signed Windows2025/WSL2 Normal test: physical underlay 1MiB TCP echo baseline then FakeIP/Rust Direct 1MiB concurrently with 120 real 96B Tunnel UDP, original owned Stop. Only scenario fixtures/workflow changed; reuse H1814 product release windows EXE/DLL+Linux server via exact SOURCE c262, verified action43571086653 artifacts SHA and unchanged product diff. New P2 NOT_RUN. H1814 P1 Action FAIL at Linux UDP app source=null despite 50Mbps & both kernel UDP/TCP/Stop actual PASS A, B NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "First P1 error is source-env-only false rejection: WSL2 Linux app does not inherit GITHUB_SHA, while scenario SHA/verified binary/real os source provenance exists. Preserve FAIL and fix in next P1-specific action, do not rerun compiled releases. P2 tests separate mixed hypothesis and will run on different Windows VM.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Read H1814 signed Action first gate, preserve FAIL and repair narrowly. P2 physical baseline and mixed Direct/Tunnel, Game4 split wire, signed GUI Connect/Disconnect, IPv6 D4 remain; do not mark complete.",
+  "next_action": "Collect H1815 P2 signed physical and Tunnel mixed one-VM source-qualified result. Next H1816 narrowly update P1 Linux guest source gate and rerun A/B with same H1814 compiled binaries using immutable hash artifact, no x86/ARM unit redos. Then Game4 actual split/GUI Connect/D4 IPv6 remain.",
   "unverified": true,
   "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1814 same-VM source-locked P1 measurement wiring staged. No result yet. Existing D3/D4/D5 and ARM64 prior scoped proof preserved."
+  "partial_summary": "H1814 signed P1 A pure Tunnel: two OS generator 49.99-50Mbps, original UDP/TCP owned Stop PASS. Overall H1814 Action FAIL because Linux WSL guest application source field null (not propagated), B NOT_RUN. H1815 P2 prepared, binary artifacts H1814 available, NOT_RUN."
 }
