@@ -70,9 +70,9 @@ fn persist_and_synthesize(id:u16,name:&str,a:&DnsAResolution,
     if a.status!=DnsAnswerStatus::Answered||a.candidates.is_empty(){
         return None
     }
-    let candidates=a.candidates.iter().map(|a|{
+    let candidates=a.candidates.iter().map(|candidate|{
         (FakeKey{qname:name.into(),canonical:a.canonical.clone(),
-            real4:a.address,policy_rev:1,resolver_rev:1},a.ttl)
+            real4:candidate.address,policy_rev:1,resolver_rev:1},candidate.ttl)
     }).collect::<Vec<_>>();
     // Use the same pre-journal bounded all-or-no-new-slot preparation as
     // UDP/53; do not free uncertain written journal identities.
