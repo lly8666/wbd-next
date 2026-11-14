@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1845,
-  "checkpoint_sha": "ecd85c18c1a6e0f64212aee555674187b89f5fb7",
+  "sequence": 1846,
+  "checkpoint_sha": "7e1d1259c7895fd5602c79599c12af9f56268a2c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1845: independent signed non-CI product activation on exact source, after H1843 fixed missing Windows Rust V3 DLL ABI for explicit --split-enable. H1844 source ecd signed P2 Windows/Linux compiled and running separately; do not duplicate. H1845 only adds pre-launch exact CLI/owned CN file and no-private-trial environment proof, new product marker, then must collect real OS Applied/Ready/Direct UDP TCP/Tunnel and owned Stop.",
-  "why_now": "H1841 signed product failed before actual Ready due missing V3 entrypoint in release DLL; H1843 now compiles and verifies ABI for explicit user product even with private trial disabled. Need separate source-locked Windows/Ubuntu signed real product test without P2 interference. Prestart guard stops silent trial fallback or fake rule-file use.",
+  "current_task": "H1846: fix additional proven Direct RX readiness starvation: after processing 32/32 bounded Direct packets from 256 mailbox, auto-reset wake events may be coalesced, yet original RX waits indefinitely even with queued TCP ACK/data. New source keeps exact count and timeout=0 on full quantum, 5ms only real Wintun ring backpressure, IDLE_WAIT otherwise, with focused Rust unit. No P2 marker: H1844 signed P2 source ecd and H1845 nonCI real CN product source7e1d are already independent in flight, do not duplicate.",
+  "why_now": "Windows auto-reset event is not a counting semaphore, and original native RX used a bounded 32-queue drain then unconditional infinite wait. An arbitrary queued TCP ACK can be stranded with no new SetEvent; this is a deterministic scheduler structural flaw independent of unproven P2 causal attribution.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1844 signed P2 complete source timing/UDP/Stop independently and H1845 source-locked product non-CI CLI CN real Windows/Ubuntu OS Applied/Ready/DNS/Direct/Tunnel/Defender/WAL Stop separately. Fix first true failure for each, no stale SOURCE promotion. Prioritize performance causal TCP window/ACK and Game4 IPv6 after product gate.",
+  "next_action": "Collect H1844 source ecd P2 actual phased results, H1845 source7e1d product signed OS Applied/DNS/Direct/Tunnel/owned Stop, and H1846 current Rust native tests. If P2 still slow after H1843 patch, re-run one source H1846+ true P2 against physical to measure effect of RX auto-reset exhaustion fix, not re-trigger same old source. Continue Game4/IPv6/GUI real Stop/P1/slow fsync.",
   "unverified": true,
   "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1843-TCP-REVERSE-FIFO-AND-PRODUCT-ABI.md",
     "docs/devlog/M0/20261114-PLAN029-H1844-V3-PRODUCT-ABI-STATIC-TEST-REPAIR.md",
-    "docs/devlog/M0/20261114-PLAN029-H1845-NONCI-PRODUCT-ABI-REAL-SIGNED.md"
+    "docs/devlog/M0/20261114-PLAN029-H1845-NONCI-PRODUCT-ABI-REAL-SIGNED.md",
+    "docs/devlog/M0/20261114-PLAN029-H1846-EXACT-AUTO-WAKE-BATCH-WORK.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1843 bounded TCP reverse FIFO/Wintun ring backpressure fix and explicit product V3 ABI compiled; H1844 signed P2 pending terminal after Rust/Go component pass. H1845 new product signing off old CI flags pending terminal. H1839 P2 real >38s failed; H1841 product real missing V3 DLL export pre-Ready failed. H1842 governance pass. H1838 GUI CLI pass scoped."
+  "partial_summary": "H1843 bounded TCP reverse FIFO across full mail/Wintun, H1844 source ecd full signed P2 still in progress; H1845 source7e1d product explicit CN real signed test in progress. New H1846 closes 32-item RX mailbox full-quantum auto-reset lost wake with 0ms one nonblocking recheck, idle event wait unaffected, source native compile pending. H1839 >38s performance fail remains baseline. Governance H1842 PASS."
 }

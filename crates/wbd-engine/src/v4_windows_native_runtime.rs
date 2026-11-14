@@ -54,6 +54,17 @@
  // Auto-reset Windows TX events preserve a pending wake. Once per ready
  // batch is sufficient; a partial batch flushes before any next RX wait.
  const RX_WAKE_BATCH:usize=32;
+ // An auto-reset mailbox wake is not a counting semaphore. When all 32
+ // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
+ // may already be queued even though Windows coalesced the SetEvent calls.
+ // Give NPF/Stop the normal nonblocking chance, then drain another fair
+ // quantum rather than parking forever on a lost edge. No idle spin.
+ #[inline]
+ fn direct_rx_wait_timeout_ms(deferred_tcp:bool,processed:usize)->u32{
+     if deferred_tcp{5}
+     else if processed>=RX_WAKE_BATCH{0}
+     else{IDLE_WAIT}
+ }
  #[derive(Default)]
  struct TxWakeBatch { pending:usize }
  impl TxWakeBatch {
@@ -1094,6 +1105,7 @@
          // Both Tunnel and Direct packets have ONE native Wintun TX owner.
          // A TCP ACK/window-update or DATA must survive a transient full
          // Wintun ring; discarding it here incurs real kernel RTO stalls.
+         let mut direct_processed=0usize;
          if let Some(ready)=direct_returns.as_ref(){
              let mut freed_mailbox=false;
              for _ in 0..RX_WAKE_BATCH{
@@ -1106,6 +1118,7 @@
                          Err(TryRecvError::Disconnected)=>return BAD_STAGE,
                      }
                  };
+                 direct_processed+=1;
                  let tcp=is_direct_tcp_ipv4(&packet);
                  match tun.deliver_native_direct_response(&packet){
                      Ok(())=>{},
@@ -1153,7 +1166,8 @@
          // Only a real TCP Wintun allocation refusal needs a bounded
          // 5ms retry. Otherwise preserve the original event-driven,
          // indefinite low-CPU Tunnel RX wait.
-         let wait_ms=if deferred_direct_tcp.is_some(){5}else{IDLE_WAIT};
+         let wait_ms=direct_rx_wait_timeout_ms(
+             deferred_direct_tcp.is_some(),direct_processed);
          match io::wait_ready(&[stop.handle(),event,early_notify.handle()],wait_ms){
              Ok(WaitResult::Ready(0))=>return OK,
              Ok(WaitResult::Ready(1|2))=>{},
@@ -1715,6 +1729,17 @@
              if signal {assert_eq!(b.pending,0);}
          }
          assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
+     }
+     #[test]
+     fn plan029_full_direct_rx_quantum_never_parks_on_coalesced_auto_wake(){
+         assert_eq!(direct_rx_wait_timeout_ms(false,0),IDLE_WAIT);
+         assert_eq!(direct_rx_wait_timeout_ms(false,RX_WAKE_BATCH-1),IDLE_WAIT);
+         assert_eq!(direct_rx_wait_timeout_ms(false,RX_WAKE_BATCH),0);
+         assert_eq!(direct_rx_wait_timeout_ms(true,0),5);
+         assert_eq!(direct_rx_wait_timeout_ms(true,RX_WAKE_BATCH),5);
+         // After one conservative nonblocking recheck with an empty
+         // mailbox, no further timer or CPU loop is requested.
+         assert_eq!(direct_rx_wait_timeout_ms(false,0),IDLE_WAIT);
      }
      #[test]
      fn plan029_tcp_return_never_uses_udp_datagram_drop_class(){
