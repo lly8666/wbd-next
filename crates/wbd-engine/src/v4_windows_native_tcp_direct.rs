@@ -100,6 +100,8 @@ struct TcpLegDiagnosis{
     next_ms:u64,
     read_inner:u64,read_outer:u64,
     wrote_inner:u64,wrote_outer:u64,
+    // P2-only ready queue high-water/overflow; no per-packet logging.
+    ready_peak:usize,ready_full:u64,
 }
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
@@ -190,9 +192,20 @@ impl NativeTcpActor{
     }
     /// All kernel-side L3 writes enqueue bytes, never borrow a second
     /// Wintun session, and never block an authenticated Tunnel DATA batch.
+    fn record_ready_full(&mut self){
+        if let Some(d)=self.diagnosis.as_mut(){
+            d.ready_full=d.ready_full.saturating_add(1);
+        }
+    }
     fn enqueue(&mut self,wire:&[u8])->Result<(),()>{
-        if self.ready.len()>=MAX_READY{return Err(())}
+        if self.ready.len()>=MAX_READY{
+            self.record_ready_full();
+            return Err(())
+        }
         self.ready.push_back(wire.to_vec());
+        if let Some(d)=self.diagnosis.as_mut(){
+            d.ready_peak=d.ready_peak.max(self.ready.len());
+        }
         Ok(())
     }
     /// DNS TCP uses the exact same post-Apply owned listener and single
@@ -231,7 +244,9 @@ impl NativeTcpActor{
     /// exact key, not hostname or shared physical CDN lookup.
     pub(crate) fn direct(&mut self,packet:&[u8],real:u32,
         now_ms:u64)->Result<(),()>{
-        if packet.len()<40||packet.len()>MAX_L3||self.ready.len()>=MAX_READY{
+        if packet.len()<40||packet.len()>MAX_L3{return Err(())}
+        if self.ready.len()>=MAX_READY{
+            self.record_ready_full();
             return Err(())
         }
         let was=self.nat.len();
@@ -459,10 +474,12 @@ impl NativeTcpActor{
                 // No addresses, credentials, payloads, per-packet tracing,
                 // or blocking filesystem I/O. Snapshot only active counts
                 // and committed kernel socket byte receipts once a second.
-                eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} buffered={} resident={} source=real_kernel_two_leg",
+                eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} buffered={} resident={} ready_now={} ready_peak={} ready_full={} source=real_kernel_two_leg",
                     self.active.len(),self.pending.len(),self.dns_active.len(),
                     d.read_inner,d.read_outer,d.wrote_inner,d.wrote_outer,
-                    self.buffered_bytes,self.resident_bytes);
+                    self.buffered_bytes,self.resident_bytes,
+                    self.ready.len(),d.ready_peak,d.ready_full);
+                d.ready_peak=self.ready.len();
             }
         }
         TcpServiceTick{retired,advanced}

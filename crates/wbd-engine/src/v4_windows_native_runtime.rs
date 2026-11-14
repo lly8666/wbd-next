@@ -54,6 +54,9 @@
  // Auto-reset Windows TX events preserve a pending wake. Once per ready
  // batch is sufficient; a partial batch flushes before any next RX wait.
  const RX_WAKE_BATCH:usize=32;
+// A Direct return quantum must match this TX loop's four 8-packet ingress
+// quanta. Otherwise the finite TCP return FIFO can fill under a real burst.
+const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  // An auto-reset mailbox wake is not a counting semaphore. When all 32
  // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
  // may already be queued even though Windows coalesced the SetEvent calls.
@@ -857,7 +860,7 @@
                  // mailbox and wake THAT original worker. Never hold ring.
                  let mut complete=[0u8;MAX_IPV4];
                  let mut reverse_count=0;
-                 for _ in 0..8{
+                 for _ in 0..DIRECT_RETURN_QUANTUM{
                      let Some(n)=owner.poll_udp_reverse(&mut complete,now_ms)
                          else{break};
                      let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
@@ -884,8 +887,8 @@
                      }
                  }
                  if reverse_count>0{direct_progress=true}
-                 // A full response quantum can have a ninth ready packet.
-                 if reverse_count==8{still_ready=true}
+                 // A full response quantum can have another ready packet.
+                 if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
              }
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
@@ -1729,6 +1732,11 @@
              if signal {assert_eq!(b.pending,0);}
          }
          assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
+     }
+     #[test]
+     fn plan029_direct_return_quantum_covers_wintun_ingress() {
+         assert_eq!(DIRECT_RETURN_QUANTUM,RX_WAKE_BATCH);
+         assert_eq!(DIRECT_RETURN_QUANTUM,4*BATCH);
      }
      #[test]
      fn plan029_full_direct_rx_quantum_never_parks_on_coalesced_auto_wake(){

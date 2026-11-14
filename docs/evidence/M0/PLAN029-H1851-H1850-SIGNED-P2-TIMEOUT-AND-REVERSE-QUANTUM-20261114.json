@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1851",
+  "date": "2026-11-14",
+  "prior_source_sha": "889b28e6a0736c7119653fdc7a51f206305d0023",
+  "prior_signed_action": {
+    "id": 43603707025,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43603707025",
+    "conclusion": "failure",
+    "job_id": 132475005360,
+    "artifact_id": 14117737752,
+    "stage": "REAL_P2_DIRECT_1M_CLIENT_PROCESS_TIMEOUT",
+    "client_bound_ms": 38000,
+    "physical_baseline": "PASS_REAL_KERNEL",
+    "direct_upload_progress_last_bytes": 1048576,
+    "direct_upload_progress_ms": 19140,
+    "direct_half_closed_ms": 19937,
+    "direct_first_reply_ms": 21390,
+    "direct_download_progress_last_bytes": 917504,
+    "direct_download_progress_ms": 37671,
+    "direct_complete": "FAIL_TIMEOUT_NOT_1M",
+    "go_report_stop": "NOT_RUN",
+    "cleanup_exact_owned_rst_rule": "PASS",
+    "cleanup_exact_owned_hyperv": "PASS",
+    "cleanup_exact_owned_mac_neighbor": "PASS",
+    "cleanup_exact_owned_npcap": "PASS",
+    "cleanup_owned_management_route": "PASS",
+    "note": "P2 process timeout prevents normal owned Stop receipt; cleanup steps successful are different evidence."
+  },
+  "diagnostic_h1850": "EXISTING_P2_HELPER_ALREADY_SETS_WBD_PLAN029_P2_RELAY_DIAG=1_IN_TOOLS/m0_wl_public_normal_e2e.py; WORKFLOW_ENV_ADDITION_WAS_REDUNDANT_NOT_NEW_MEASUREMENT",
+  "diagnosis_h1849_h1850": "1Hz Rust actor cumulative inner_read tracks slow uploaded bytes and outer_write follows; during download outer_read stays approximately one 64KiB relay buffer ahead of inner_write. Network ACK/window/retransmit attribution remains OPEN; queue-ready highwater was NOT_MEASURED.",
+  "code_in_h1851": "Match bounded Rust TX Direct return quantum 32 with existing 4x8 Wintun ingress quantum (previously 8 reverse vs 32 ingress), without increasing 256 hard ready queue; add optional P2-only 1Hz ready_now/ready_peak/ready_full counts for falsifiable queue hypothesis; normal product tracing off. No threads, WFP, OS routes, DNS, or 030.",
+  "risk": "Peak/full after repair not measured; matching quanta does not eliminate all burst/retransmit cases; full ready still rejects Direct TCP today, explicitly OPEN for resource-pressure requirement.",
+  "qualification": {
+    "h1850_native_p2": "FAIL",
+    "h1851_new_source": "NOT_RUN_AT_COMMIT",
+    "p2_perf": "OPEN",
+    "full_plan029": "IN_PROGRESS"
+  },
+  "not_run": [
+    "H1851 signed P2 throughput/replies/p99/CPU",
+    "P1 CPU per GiB native two-exit",
+    "GUI true connect-stop",
+    "D1-D5 complete across Game4, IPv6 and failure recovery"
+  ]
+}
