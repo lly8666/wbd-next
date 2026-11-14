@@ -27,6 +27,8 @@
 # PLAN028 H1652: one current-source true signed Windows AutoLease AES256 + four original Linux independent AEAD clients in a single 150s mixed-loss0 kernel TCP/UDP scene. Commit message marker [plan028-h1581-win-auto-aes-mixed-150s]; preserve actual source hashes, first deliveries, native Stop; no default change.
 # H1857 PLAN029 P1 only: a newly frozen SOURCE triggers the existing sequential
 # V4 off versus V3 all-Tunnel A/B once, independently from H1856 real P2.
+# H1862: one source-locked 4MiB unpaced P2 after exact WSL argv fix;
+# H1861 same-VM P1 remains separate, never mix network scenarios.
 name: M0 Windows Linux original native whole-wiring capability and functional entry
 # S45 frozen original M0 source candidate: one real seven-mode functional batch.
 # Explicit [wiring-full] push only; manual N0 disabled, no extreme performance.

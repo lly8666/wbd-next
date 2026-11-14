@@ -176,7 +176,9 @@ H1690只证明当时真实签名Wintun注入的UDP未到本地listener、TCP无S
 
 **2026-11-14补充的实证优先级（关联029计划§4A）**：H1825原始签名P2双腿TCP_NODELAY后物理296ms、FakeIP Direct6360ms，64KiB量子与NODELAY都未解决约22倍慢。常规Tunnel P1 +7.42%只约0.0091核绝对差，架构归因未立。先修Direct-only stage_sources捕获8帧却返回Tunnel=0、TCP IO进展未进入TX活跃判定；在真实进展/满限后下一公平轮继续，不无谓sleep10ms，WouldBlock停止立即重试。shared IOCP/重叠IO是后续单事件驱动方向，不能以1ms空轮询代替。P2把连接/上传/半关闭/首回包/下载计时分开，现有16KiB+4ms人工pace不当满速测试，并要求小Tunnel UDP持续到整个Direct TCP结束。
 
-FakeIP持久日志的同步write_all/sync_data当前在TX DNS完成路径，纵非逐DATA也可能阻塞无关流；应变为单有界worker及durable回执，相关DNS才等待、其余流继续，失败本地SERVFAIL。现有16MiB追加限没有紧凑化闭环，必须由后台写者低频生成保留有效/隔离/引用安全约束的可恢复原子快照，不在TX做压缩。同理Direct VecDeque排空后capacity可能保留，len口径不能称64MiB实际分配硬限，需池化/容量计费+低频回收并小容量压力证明。16k×双64KiB理论2GiB仅风险上界非测得RSS。
+**H1825时期的待办（H1858已经部分实现）**：FakeIP持久日志的同步write_all/sync_data曾在TX DNS完成路径，纵非逐DATA也可能阻塞无关流；应变为单有界worker及durable回执，相关DNS才等待、其余流继续，失败本地SERVFAIL。现有16MiB追加限没有紧凑化闭环，必须由后台写者低频生成保留有效/隔离/引用安全约束的可恢复原子快照，不在TX做压缩。同理Direct VecDeque排空后capacity可能保留，len口径不能称64MiB实际分配硬限，需池化/容量计费+低频回收并小容量压力证明。16k×双64KiB理论2GiB仅风险上界非测得RSS。
+
+**H1856/H1859最新真实结论，修订上述历史调查优先级**：H1856签名Normal真实1MiB Direct在原Go Npcap捕获handoff后明确`pcap_setnonblock(1)`、读回1，P2从早前37.704s下降至328ms（同轮物理281ms），小Tunnel UDP120条全交付、Stop PASS_SCOPED；不能据原H1690/TCP NODELAY/RX32继续恢复旧WFP或盲调缓冲。H1859同VM两段纯Tunnel A/B各50Mbps/60s，交付与p99均PASS但V3/all CPU/实际GiB较V4高18.04%，P1性能仍OPEN，不将绿色Action当CPU合格。H1861仅为冷固定All普通非53、非FakeIP、非分片合法IPv4移除FlowPin开销；仍需新SOURCE真测归因。H1858已用一个有界异步FakeIP writer完成append/fsync和compact编码/校验离开TX；慢盘与Stop压力、队列年龄仍NOT_RUN。H1860 4MiB bulk先因夹具argv计数失败、无真实TCP/UDP业务，本SOURCE只用已修复第四参数与Windows高分辨率计时重测一次。保持§5资源分类、§7退出不放松。
 
 ## 6. 配置迁移、GUI与开发顺序
 

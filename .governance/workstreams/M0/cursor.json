@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1861,
-  "checkpoint_sha": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
+  "sequence": 1862,
+  "checkpoint_sha": "905e1cef5ec7d9ccf3b6acdd5cf91add96cb1f2f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1861 H1859 P1 real A/B 50Mbps60s both 0.6984GiB/p99 47ms/Stop PASS, but B V3/all CPU/GiB22.8424 vs A19.3522 (+18.04%) PERF_FAIL. H1860 P2 bulk pre-network FAIL old argv count vs fourth p2bulk; no 4MiB business, owned finally PASS. Implement All/nonDNS valid unfragmented Tunnel fastpath avoiding FlowPin; fix 4th arg and Windows highres timer.",
-  "why_now": "P1 real regression >5% cannot be treated as green; V3/all ordinary nonDNS DATA carries avoidable FlowPin/hash work. H1860 first gate was fixture not packet path.",
+  "current_task": "H1862 H1861 P1 V3/all nonDNS valid IPv4 pin-free fast path has one independent native A/B Action running from SOURCE905e1c; H1860 4MiB bulk first failed BEFORE guest physical TCP listener due argv count; H1861 fixed fourth arg and time.perf_counter. This commit only starts one new exact [plan029-v3-real-p2-bulk] true source, no P1 rerun.",
+  "why_now": "Need first actual unpaced 4MiB Direct vs physical with sustained Tunnel UDP, high-res p99 and owned Stop; old H1860 failure only fixture argument. Preserve P1 independently.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1861 source-locked [plan029-v3-real-p1-tunnel-ab] Action and compare CPU/GiB, RSS, p99/holes and owned Stop, without seed retuning. Then independently source-lock H1862 4MiB unpaced P2 test with corrected WSL argv/high-resolution UDP RTT; after these address Game4 CN/GUI/D4 IPv6/D1-D5.",
+  "next_action": "Collect H1861 P1 one frozen Action, check full 50Mbps A/B, CPU/GiB improvement, p99/holes/Stop; collect H1862 4MiB P2 single frozen native Action, check genuine app bytes/sha/FIN, physical baseline, UDP p99/max gap and owned cleanup. If first actual failure, only targeted fix. Then plan029 Game4/GUI/IPv6/D1–D5 resource exits.",
   "unverified": true,
   "last_tested_source": "b6f87ceea7dbb6124a3acf4c0de2ceb68f576cc8",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1861-H1859-CPU-P1-H1860-BULK-ARGV-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
     "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
     "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
     "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md",
     "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md",
     "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md",
     "docs/devlog/M0/20261114-PLAN029-H1856-REAL-MANIFEST-PIN-NPF.md",
-    "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md",
-    "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md"
+    "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1856 paced P2 Direct328ms/physical281ms + Tunnel UDP full Stop PASS_SCOPED. H1859 P1 real both legs throughput/p99/Stop PASS but +18.04% CPU/GiB FAIL. H1860 4MiB test not run because guest argv error before listener, owned cleanup PASS. H1861 all-mode pin-free normal Tunnel fastpath and fixed P2 fixture, new P1 NOT_RUN."
+  "partial_summary": "H1856 paced P2 normal success Direct328ms vs physical281ms; H1859 true P1 CPU +18.04% despite network/Stop PASS; H1861 fixes all-mode FlowPin hotpath, retest in progress. H1860 4MiB P2 pre-network fail due extra arg; H1862 source tests corrected workload/clock for first real bulk result, NOT_RUN at commit."
 }
