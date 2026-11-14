@@ -8,6 +8,6 @@
 
 **长期硬门**：[TLS建链契约](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)，真实TLS前禁止私有前导，允许预共享route-key；旧WB-R1功能PASS不证明外观合格。[MTU契约](docs/architecture/MTU_CONTRACT.md)，用户外层完整IPv4 MTU默认1460B、不含L2，1500仅显式最大值，内层由Rust派生并由OS应用/读回。同NIC/IP有效MTU变化也需进入现有重认证流程；不能恢复旧“忽略MTU变化”的提示。
 
-历史限定收口：[027 H920](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)、[027A H998](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)。保留原在线同socket收窄FAIL、ARM64旧workflow FAIL、远端ICMP未测及CPU因果未证；后续新代重认证PASS不能改写旧结论。不因历史NOT_RUN重开整套旧矩阵，也不推广旧PASS。
+历史027/027A限定收口见[H920](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)及[H998](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)；不重开旧矩阵，不改写FAIL/NOT_RUN。
 
 功能卡：[features](docs/features/README.md)；真实测试：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。
