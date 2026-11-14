@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1852",
+  "date": "2026-11-14",
+  "source_before": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
+  "prior_h1851": {
+    "run": 43605289460,
+    "job": 132479881919,
+    "conclusion": "failure",
+    "source": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
+    "signed_windows_linux_compile": "PASS",
+    "signed_real_p2": "FAIL_TIMEOUT_38S",
+    "app_upload_complete_ms": 18969,
+    "app_download_last_bytes": 917504,
+    "app_download_progress_ms": 36703,
+    "ready_peak": 32,
+    "ready_full": 0,
+    "owned_rst_cleanup": "PASS",
+    "owned_hyperv_cleanup": "PASS",
+    "owned_npcap_cleanup": "PASS",
+    "owned_management_route_cleanup": "PASS",
+    "product_stop": "NOT_RUN"
+  },
+  "grounded_source": {
+    "go_handoff": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
+    "go_reader_join": "gate.close+gate.wait prior capture lease",
+    "original_go_capture_timeout_ms": 50,
+    "explicit_nonblocking_before_h1852": "ABSENT",
+    "rust_npf_read": "windows_native_io::NpcapRx::read pcap_next_ex",
+    "rust_rx_owner": "v4_windows_native_runtime::rx_loop 32 calls then handles Direct responses next outer loop",
+    "official_api": "https://npcap.com/guide/wpcap/pcap_setnonblock.html"
+  },
+  "hypothesis": "Npcap pcap_next_ex after readiness may block waiting for future packets within RX 32 call batch, preventing Direct TCP ACK/window/data Wintun injections. Mechanism plausible, not yet measured; 32*14ms is a risk example NOT a measured stall.",
+  "code_delta": "After original Go reader gate join, set same borrowed capture pcap_t pcap_setnonblock=1 and require pcap_getnonblock=1, fail closed and reclaim only that endpoint on false readback; leave pcap_getevent WaitForMultipleObjects cold idle unchanged, no per-flow goroutines or new global firewall. Pure Windows test covers exact readback.",
+  "test_at_commit": "NOT_RUN",
+  "diagnostic_npftime": "NOT_MEASURED",
+  "direct_oldest_queue_age": "NOT_MEASURED",
+  "full_plan029": "IN_PROGRESS",
+  "other_agent_recommendation": "ACCEPT_PRIORITY_NOT_PROVEN_ROOT_CAUSE"
+}

@@ -54,3 +54,13 @@ func TestNpcapNativeGameColdReadKeepsGenuineEOF(t *testing.T){
  _,_,err=e.readSegmentUntil(1,done,func(_ **pcapHeader,_ *uintptr)int32{reads++;return -2})
  if !errors.Is(err,ErrNpcapClosed)||reads!=0{t.Fatalf("read after transfer: %d %v",reads,err)}
 }
+
+func TestNpcapNativeNonblockingIsRequiredAfterReaderJoin(t *testing.T) {
+    for _,tc:=range []struct{set,get int32;ok bool}{
+        {0,1,true},{0,0,false},{-1,1,false},{-1,-1,false},{0,-1,false},
+    }{
+        if got:=npcapNativeNonblockingReadback(tc.set,tc.get);got!=tc.ok{
+            t.Fatalf("unqualified capture would be lent to Rust: set=%d get=%d got=%t",tc.set,tc.get,got)
+        }
+    }
+}

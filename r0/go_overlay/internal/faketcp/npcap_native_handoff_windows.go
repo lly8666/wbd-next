@@ -39,6 +39,11 @@ type NpcapNativeCaptureV1 struct {
     Flow       NpcapFlow
 }
 
+// Exact libpcap semantics: setnonblock success==0, getnonblock enabled==1.
+// Do not accept a zero/error readback and then silently lend a blocking RX.
+func npcapNativeNonblockingReadback(setRC,getRC int32) bool {
+    return setRC==0 && getRC==1
+}
 func npcapOptionalProcAddr(p *syscall.Proc) uintptr {
     if p==nil{return 0}
     return p.Addr()
@@ -173,6 +178,17 @@ func (e *NpcapEndpoint) takeNativeCapture(generation uint64,interruptReader bool
     if err != nil {
         return nil, fmt.Errorf("%w: pcap_getevent: %v", ErrNpcapUnsupported, err)
     }
+    // The original Go reader uses a bounded 50ms blocking read. The Rust RX
+    // worker, however, must never wait for a future NPF packet inside its
+    // 32-call batch: it also owns Direct TCP Wintun return delivery.
+    setNonblock, err := e.dll.FindProc("pcap_setnonblock")
+    if err != nil {
+        return nil, fmt.Errorf("%w: pcap_setnonblock: %v", ErrNpcapUnsupported, err)
+    }
+    getNonblock, err := e.dll.FindProc("pcap_getnonblock")
+    if err != nil {
+        return nil, fmt.Errorf("%w: pcap_getnonblock: %v", ErrNpcapUnsupported, err)
+    }
     if !e.gate.close() {
         return nil, ErrNpcapClosed
     }
@@ -187,6 +203,31 @@ func (e *NpcapEndpoint) takeNativeCapture(generation uint64,interruptReader bool
     if e.sendQueue != 0 {
         e.queueDestroy.Call(e.sendQueue)
         e.sendQueue = 0
+    }
+    // Only AFTER every Go pcap_next_ex call has joined, and BEFORE Rust
+    // receives the loan, switch this SAME capture pcap_t to nonblocking.
+    // The real NPF event still owns idle waiting; no busy polling is added.
+    // Fail closed: a partially transferred/blocking handle is not usable.
+    var errbuf [256]byte // PCAP_ERRBUF_SIZE
+    setRC, _, _ := setNonblock.Call(e.handle, 1,
+        uintptr(unsafe.Pointer(&errbuf[0])))
+    getRC := uintptr(0)
+    if int32(setRC) == 0 {
+        getRC, _, _ = getNonblock.Call(e.handle,
+            uintptr(unsafe.Pointer(&errbuf[0])))
+    }
+    if !npcapNativeNonblockingReadback(int32(setRC),int32(getRC)) {
+        // The Go call gate is already joined and permanently closed:
+        // reclaim ONLY this endpoint's owned live pcap_t/DLL here.
+        e.closeProc.Call(e.handle)
+        e.handle = 0
+        _ = e.dll.Release()
+        e.dll = nil
+        e.nextEx = nil
+        e.sendPacket = nil
+        e.closeProc = nil
+        return nil, fmt.Errorf("%w: native capture nonblocking set=%d get=%d",
+            ErrNpcapUnsupported,int32(setRC),int32(getRC))
     }
     event, _, _ := getEvent.Call(e.handle)
     lease := &NpcapNativeCaptureLease{
