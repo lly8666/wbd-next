@@ -196,9 +196,21 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(Convert.ToString(saved.Values["server-name"])=="borrow.example.org","reopen_preserves_separate_verified_TLS_SNI");
    Need(Convert.ToString(saved.Values["dns.direct"])=="223.5.5.5","reopen_single_direct_DNS");
    Need(Convert.ToString(saved.Values["route-mode"])=="bypass-lan-cn","reopen_saved_CN_IP_DOMAIN_union_mode_cold_only");
+   // ImportValues intentionally copies absolute exported CN source into
+   // its own portable data/cn-rules-<profile> snapshot. Importing cannot
+   // preserve the former relative filename; it MUST preserve the content
+   // and the enabled setting while the read-only Go CLI accepts the new
+   // exact owned path, without touching the network.
+   string importedCN="data/cn-rules-"+p.Id+".txt";
    Need(Convert.ToBoolean(saved.Values["split-enable"]) &&
-     Convert.ToString(saved.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
-     "H1835_reopened_CN_split_opt_in_and_owned_file_still_saved");
+     Convert.ToString(saved.Values["cn-rules-file"])==importedCN &&
+     File.ReadAllText(reopen.InRoot(importedCN)).Contains("cn.example"),
+     "H1838_reopened_CN_split_import_uses_owned_copied_source");
+   using(var importedCLI=new ClientSession(reopen)){
+     var imported=Check(reopen,saved,"data/h1838-imported-effective.json",importedCLI);
+     Correct(imported,"split-enable","true");
+     Correct(imported,"cn-rules-file",reopen.InRoot(importedCN));
+   }
    Need(Convert.ToInt32(saved.Values["direct-flow-hard"])==16384,"reopen_Direct_quota_default");
    Need(Convert.ToString(saved.Values["dns.tunnel"])=="9.9.9.9","reopen_migrated_single_tunnel_DNS");
    Need(!saved.Values.ContainsKey("dns4"),"reopen_never_restores_backup_DNS");

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1837",
+  "source_sha": "33e2f79352469d62e3025176670fd03d450e554a",
+  "gui_action": {
+    "run_id": 43593094295,
+    "status": "failure",
+    "first": "H1835_reopened_CN_split_opt_in_and_owned_file_still_saved assertion",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43593094295"
+  },
+  "passed_before_failure": [
+    "exact catalog+GUI key identity 59/59",
+    "real original Go Windows+Rust DLL+WinForms compiled",
+    "real WinForms field/default checks",
+    "Normal split-enable=true and owned CN rule path round-trip to actual Go --check-config",
+    "no CN rules exact fail closed",
+    "Game4 CN split exact Go --check-config early reject",
+    "MTU 1460/1500, derived inner readback, no dns4 fallback, direct-flow-hard bound"
+  ],
+  "cause": "The fixture expected same pre-import path data/h1835-cn-domains.txt after ImportValues; real portable importer copies external absolute canonical source to data/cn-rules-<profile-id>.txt, keeping contents and portable ownership. Code correctly normalizes rather than preserving filename.",
+  "fix_candidate": "H1838 test checks new path and identical domain file contents, then rechecks actual Go CLI config after reload; no product/OS changes",
+  "pending": {
+    "H1837_P2_signing": "IN_PROGRESS_SOURCE_LOCKED_ACTION_43593094309",
+    "H1838_GUI_new_source": "NOT_RUN",
+    "real_gui_os_applied": "NOT_RUN"
+  }
+}

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1837,
-  "checkpoint_sha": "8548fb1cf8f466329c7b431f53770734aa8bf3e9",
+  "sequence": 1838,
+  "checkpoint_sha": "33e2f79352469d62e3025176670fd03d450e554a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1837: H1835 current WinForms build success but actual GUI constructor fails because 59 GUI keys vs 57 catalog keys, first boundary exact. Add split-enable/cn-rules-file typed parameters to original Go assembly and static post-assembly schema invariant; H1836 documentation-only P2 marker did not trigger native workflow. H1837 one real signed P2 scene source trigger via actual fixture modification plus phase-delta and GUI negative assertion. Both NEW CI and P2 NOT_RUN until terminal.",
-  "why_now": "GUI/CLI/catalog schema drift is a systemic product configuration failure; prevent it in exact assembly rather than weakening GUI checks. Previous P2 trigger did not run because docs/cursor changes excluded by push.paths; need one actual source-modifying path + exact marker to observe scheduler improvement on signed VM.",
+  "current_task": "H1838: H1837 WinForms true Go CLI passes catalog59/59/Normal split/readback/missing-cn and Game4 early reject/MTU; last assertion fails because after ImportValues owned CN file is intentionally renamed data/cn-rules-profileID. Correct fixture to verify copied content/new path plus actual Go reload check. H1838 GUI NOT_RUN. H1837 signed P2 still active, no duplicate dispatch.",
+  "why_now": "First failure in GUI H1837 at final stale fixture expectation, not implementation. Safe portable import rewrites absolute external path into owned per-profile relative data/cn-rules-ID; must test new canonical path rather than relaxing importer, preserving security.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1837 current WinForms+real Go CLI schema check, native original Go/Rust preflight and ONE signed P2 current-source actual Windows/Ubuntu 1MiB with phase ratios, continuous Tunnel UDP p99/max gap/Stop. On first failure diagnose product not stale tests. After that select Direct event readiness vs retransmit/guest pacing based on phase evidence, then Game4/IPv6/slow fsync/CPU.",
+  "next_action": "Collect H1838 source-current WinForms/Go CLI independent real GUI test. In parallel collect H1837 signed Windows/Linux P2 real phase metrics, full-span Tunnel UDP p99 and owned Stop. Then address exact Direct IO readiness stall, and still-open GUI signed OS Start/Stop, Game4 CN, IPv6/D4, P1, slow-fsync Stop.",
   "unverified": true,
-  "last_tested_source": "dc26cdb03cd8b9878063c415e5f1f241637be5a0",
+  "last_tested_source": "33e2f79352469d62e3025176670fd03d450e554a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1837-H1835-GUI-CATALOG-FIRST-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1838-H1837-WINFORMS-CLI-FIRST-ASSERTION-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1836-REAL-P2-TIMELINE-SOURCE-FREEZE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1837-GUI-CATALOG-INVARIANT-P2-PHYSICAL-TRIGGER.md"
+    "docs/devlog/M0/20261114-PLAN029-H1837-GUI-CATALOG-INVARIANT-P2-PHYSICAL-TRIGGER.md",
+    "docs/devlog/M0/20261114-PLAN029-H1838-PORTABLE-CN-IMPORT-ASSERTION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1835 original Go/Rust/WinForms compiled but GUI startup missing 2 PARAMETERS keys (FAIL); H1836 P2 not triggered (no network run). H1837 repairs schema at assembly contract and ensures one signed P2 source dispatch. H1831 async D3 signed PASS_SCOPED; P1/P2/Game4/IPv6/GUI signed Stop OPEN."
+  "partial_summary": "H1837 source33e original Go/Rust/WinForms compiles; GUI positive Go CLI Normal split, missing CN rules negative, Game4 split negative pass; last path-after-import fixture stale. H1838 repairs only assertion and adds fresh Go reload check. H1837 P2 true networking still running; Game4/IPv6/P1/Stop OPEN."
 }
