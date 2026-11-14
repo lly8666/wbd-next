@@ -6,5 +6,5 @@
 - 未改旧28矩阵、TLS/Defender/WAL或性能参数，不调RTO/Nagle/64KiB。此commit仅`[plan029-v3-real-p1-tunnel-ab]`一场重测，真实B结果**NOT_RUN_AT_COMMIT**；失败/NOT_RUN保留。继续所有029出口。
 
 ```feature-impact
-{"kind":"none","ids":[],"reason":"Fix exact source/feature/MTU scenario selectors for P1 DLL V3 export and future separate 4MiB P2; no data-plane behavior or feature status promotion."}
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1859 updated this feature card with scoped negative P1 B missing V3 export and H1858 bulk native skip; status still experimental, no product performance promotion."}
 ```
