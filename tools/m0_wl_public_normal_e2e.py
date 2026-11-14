@@ -394,6 +394,20 @@ try:
   client_env["GITHUB_ACTIONS"]="false"
   client_env["WBD_PLAN029_NATIVE_V3_TRIAL"]="0"
   client_env.pop("WBD_PLAN029_CN_RULES_FILE",None)
+  # H1845: freeze exact user-facing CLI *and* child environment before
+  # spawning the genuine original Go product. Only then can real signed
+  # OS Applied/Ready and Stop prove non-CI activation. No trial fallback.
+  if (args.count("--split-enable")!=1 or args.count("--cn-rules-file")!=1 or
+      client_env.get("GITHUB_ACTIONS")!="false" or
+      client_env.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
+      "WBD_PLAN029_CN_RULES_FILE" in client_env):
+   raise RuntimeError("H1845 explicit product CN source still depends on private trial")
+  owned_cn=pathlib.Path(args[args.index("--cn-rules-file")+1])
+  if (not owned_cn.is_absolute() or
+      owned_cn.resolve()!=rules.resolve() or
+      owned_cn.read_bytes()!=b"cn.example\n"):
+   raise RuntimeError("H1845 user CN source snapshot missing or changed")
+  print("PLAN029_H1845_NONCI_PRODUCT_CLI_SOURCE_AND_ENV_EXACT_PRESTART",flush=True)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
                     text=True,env=client_env)
  game_cold_stage("COLD_CLIENT_SPAWNED")

@@ -417,6 +417,18 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
         self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
                         w.index("Full public-run signed original Npcap and Wintun driver install"))
+    def test_h1845_nonci_product_exact_cli_and_legacy_trial_off(self):
+        from pathlib import Path
+        source=(Path(__file__).resolve().parents[1] /
+                "tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn('client_env["GITHUB_ACTIONS"]="false"',source)
+        self.assertIn('client_env["WBD_PLAN029_NATIVE_V3_TRIAL"]="0"',source)
+        self.assertIn('client_env.pop("WBD_PLAN029_CN_RULES_FILE",None)',source)
+        self.assertIn('args.count("--split-enable")!=1',source)
+        self.assertIn('args.count("--cn-rules-file")!=1',source)
+        self.assertIn('owned_cn.read_bytes()!=b"cn.example\\n"',source)
+        self.assertIn('PLAN029_H1845_NONCI_PRODUCT_CLI_SOURCE_AND_ENV_EXACT_PRESTART',source)
+
     def test_h1821_exact_v3_export_qualified_prebuilt_reuse_no_old_dll(self):
         w=(Path(__file__).resolve().parents[1]/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn("43574002456",w)
