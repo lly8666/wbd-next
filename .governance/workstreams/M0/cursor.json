@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1864,
-  "checkpoint_sha": "b940e538e52bcbcd924d26040b1a7c096127a157",
+  "sequence": 1865,
+  "checkpoint_sha": "88a263086613fdb0231f5fc608be7f6d13a313ce",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1864 H1862 bulk SOURCEad496640 Win/Linux Rust compile failed before real 4MiB because missing FragmentKey type inherited H1861; native Action43617776205 still completing, real P2 NOT_RUN. H1863 exact fix SOURCEb940e538 has Win/Linux Rust eligible tests PASS and P1 A/B in flight. Start only H1864 corrected bulk P2 independent Action.",
-  "why_now": "H1860 guest argv pre-network and H1862 Rust syntax pre-network have both been specifically corrected; need one first genuine 4MiB physical-vs-Direct comparison and small Tunnel UDP with highres p99 before further tuning.",
+  "current_task": "H1865 H1863 source b940e538 signed P1 true sameVM V4off/A and V3all/B 50Mbps 60s both passed Stop, CPU/GiB 21.0525→22.5293 (+7.01%), Win RTT p99 47→62ms; perf OPEN not isolated. H1864 source88a263 signed unpaced4MiB true P2 physical32.155ms Direct131.544ms, Tunnel UDP120/120 p99 2.14ms, max gap34.371ms, SHA/FIN/Stop PASS; absolute extra99.389ms perf OPEN. Rest of PLAN029 not complete.",
+  "why_now": "Both H1863 and H1864 native Actions finished with genuine SOURCE-locked P1/P2 receipts. Old cursor incorrectly says in-flight and bulk NOT_RUN; preserve prior failures and distinguish green Action from full 029 exit.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1864 [plan029-v3-real-p2-bulk] Action physical 4MiB/Direct 4MiB SHA+FIN, genuine Tunnel small UDP p99/gaps/Stop; separately H1863 P1 CPU A/B in flight. Do not duplicate or start old matrix; next tackle remaining D1-D5/Game4 GUI IPv6 and bounded stress.",
+  "next_action": "Prioritize D4 original IPv6 policy actual Windows route/interface behavior and owned Stop/recovery witness; then GUI actual Connect/Stop, Game4 CN rust data-plane wiring and finite resource pressure. P1 +7.01% remains investigation signal, do not brute-force old matrix or tune TCP budget without first boundary. Only one Action per new network scene.",
   "unverified": true,
-  "last_tested_source": "ad4966403a4d21b40c6d9760fdc2e76a933dd925",
+  "last_tested_source": "88a263086613fdb0231f5fc608be7f6d13a313ce",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1864-H1862-BULK-RUST-GATE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1865-H1864-SIGNED-UNPACED-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
     "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
     "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
     "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
     "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md",
-    "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md"
+    "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1859 real P1 50Mbps both Stop/P99 pass but V3/all CPU/GiB +18.04%, H1863 pin-free all-mode fastpath fixed Rust syntax and retest in flight. H1862 4MiB had Rust compile fail from same old syntax, no real P2. H1864 first fixed-source 4MiB P2 Action to run; plan029 incomplete."
+  "partial_summary": "H1863 P1 A/B both real50Mbps+Stop PASS on same VM/SOURCE; CPU/GiB +7.01% and Win p99 +15ms keep perf OPEN. H1864 4MiB unpaced Direct131.544ms versus physical32.155ms, Tunnel UDP120/120, p99 2.14ms/gap34.371ms, Stop PASS; 4.091x perf OPEN. D1-D5, Game4 CN, GUI real, IPv6 and pressure incomplete. PLAN029 IN_PROGRESS."
 }

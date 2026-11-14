@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1865",
+  "scene": "P1_50M_ORDERED_ALL_TUNNEL_V4_OFF_V3_ON",
+  "source_sha": "b940e538e52bcbcd924d26040b1a7c096127a157",
+  "action": 43617979644,
+  "job": 132518494697,
+  "action_conclusion": "success",
+  "scope": "Windows2025 signed Wintun/Npcap Rust+Go and separate Linux WSL2; two sequential 60s same-VM real socket scenes",
+  "result": "FUNCTIONAL_PASS_PERF_OPEN",
+  "a": {
+    "mode": "V4_OFF",
+    "actual_delivered_gib": 0.6984,
+    "windows_mbps": 49.9999,
+    "linux_mbps": 49.9874,
+    "windows_rtt_p99_ms": 47,
+    "windows_max_gap_ms": 47,
+    "linux_rtt_p99_ms": 55.147,
+    "linux_max_gap_ms": 46,
+    "win_go_rust_cpu_total_s": 14.7031,
+    "cpu_seconds_per_delivered_gib": 21.0525,
+    "peak_rss_bytes": 42356736,
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "b": {
+    "mode": "V3_ALL_TUNNEL",
+    "actual_delivered_gib": 0.6984,
+    "windows_mbps": 49.9997,
+    "linux_mbps": 49.9866,
+    "windows_rtt_p99_ms": 62,
+    "windows_max_gap_ms": 46,
+    "linux_rtt_p99_ms": 55.165,
+    "linux_max_gap_ms": 43,
+    "win_go_rust_cpu_total_s": 15.7344,
+    "cpu_seconds_per_delivered_gib": 22.5293,
+    "peak_rss_bytes": 41484288,
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "comparison": {
+    "b_over_a_cpu_per_gib": 1.0701,
+    "relative_cpu_pct": 7.01,
+    "absolute_cpu_delta_s": 1.0313,
+    "absolute_cores_over_60s": 0.01719,
+    "windows_rtt_p99_delta_ms": 15,
+    "identical_original_go_and_rust_binary_sha": true,
+    "driver_kernel_cpu": "NOT_ATTRIBUTED",
+    "oldest_user_queue_age": "NOT_MEASURED",
+    "caveat": "V4 old Tunnel vs V3 all Tunnel includes implementation/backend differences; cannot isolate classifier or infer a causal per-packet CPU bug from this single A/B."
+  },
+  "prior_negative": "H1859 old source B/A +18.04% but different VM and SOURCE; not paired performance gain",
+  "performance_exit": "OPEN"
+}

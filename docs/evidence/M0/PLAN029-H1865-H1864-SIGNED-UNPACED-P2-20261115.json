@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1865",
+  "scene": "P2_UNPACED_4M_DIRECT_VS_PHYSICAL_AND_SUSTAINED_TUNNEL_UDP",
+  "source_sha": "88a263086613fdb0231f5fc608be7f6d13a313ce",
+  "action": 43618374849,
+  "job": 132519825791,
+  "action_conclusion": "success",
+  "result": "FUNCTIONAL_PASS_PERF_OPEN",
+  "scope": "One signed original Windows Go/Npcap/Wintun Rust Normal V3 source and independent Linux WSL2 TUN guest; exact SOURCE/compiled binary/owned Stop.",
+  "physical": {
+    "bytes": 4194304,
+    "elapsed_ms": 32.155,
+    "upload_ms": 9.061,
+    "download_ms": 9.64,
+    "app_tcp_nodelay": 0,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696"
+  },
+  "direct": {
+    "bytes": 4194304,
+    "elapsed_ms": 131.544,
+    "connect_ms": 14.623,
+    "upload_ms": 34.576,
+    "first_reply_wait_ms": 13.806,
+    "download_ms": 68.49,
+    "half_close": true,
+    "app_tcp_nodelay": 0,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696"
+  },
+  "same_vm": {
+    "ratio_direct_to_physical": 4.091,
+    "extra_elapsed_ms": 99.389,
+    "application_pacing_ms": 0,
+    "workload": "UNPACED_4M",
+    "cpu_per_actual_delivered_gib": "NOT_MEASURED"
+  },
+  "small_tunnel_udp": {
+    "windows_delivered_unique": 120,
+    "linux_received_unique": 120,
+    "loss": 0,
+    "windows_rtt_p99_ms": 2.14,
+    "longest_interreply_gap_ms": 34.371,
+    "covers_complete_direct_tcp": true
+  },
+  "stop": "PASS_BOTH_OWNED",
+  "manifest": "PASS_SOURCE_LOCK",
+  "windows_go_rust_and_linux_rust_compilation": "PASS",
+  "context": {
+    "previous_h1856_paced_1m": "Physical281ms / Direct328ms, not peak throughput; separate VM/workload",
+    "old_h1850_h1851": "38s timeout negative receipts remain",
+    "p2_capacity": "4.091x direct/physical cost still OPEN",
+    "game4_cn": "NOT_RUN",
+    "gui_true_connect_stop": "NOT_RUN",
+    "ipv6_os": "NOT_RUN",
+    "full_plan029": "IN_PROGRESS"
+  }
+}
