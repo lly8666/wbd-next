@@ -88,6 +88,14 @@ public static class M0Plan028GUIButtonsVMHarness {
    Need(Convert.ToString(book.Fields.First(x=>x.Key=="lease4").Default)=="","default_autoIP");
    Need(Convert.ToString(book.Fields.First(x=>x.Key=="fec.mode").Default)=="off","FEC2_default_Off");
    Need(book.Fields.Any(x=>x.Key=="outer-repair"),"outer_repair_selector_exists");
+   // PLAN029 H1834: the *actual compiled* WinForms catalog must expose
+   // the two opt-in fields, not only a CLI implementation or mock schema.
+   Need(book.Fields.Any(x=>x.Key=="split-enable"&&x.Kind=="Bool"),
+    "plan029_split_toggle_actual_catalog");
+   Need(book.Fields.Any(x=>x.Key=="cn-rules-file"),
+    "plan029_cn_rule_file_actual_catalog");
+   Need(!Convert.ToBoolean(book.Fields.First(x=>x.Key=="split-enable").Default),
+    "plan029_split_off_by_default");
    var p=book.Book.Profiles[0];
    book.Book.DriverNoticeAccepted=true;book.Save();
    var fake=new S();
@@ -103,6 +111,9 @@ public static class M0Plan028GUIButtonsVMHarness {
     var allEditors=(Dictionary<string,Control>)typeof(MainForm).GetField("editors",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(form);
     foreach(string old in new[]{"fec-mode","fec-parity","fec-min-parity","fec-start-parity"})
       Need(!allEditors.ContainsKey(old),"no_legacy_visible_FEC_"+old);
+    Need(allEditors["split-enable"] is CheckBox &&
+      allEditors["cn-rules-file"] is TextBox,
+      "plan029_visible_native_gui_split_checkbox_and_rules_editor");
     var tabs=Walk(form).OfType<TabControl>().Single();
     tabs.SelectedTab=tabs.TabPages.Cast<TabPage>().Single(t=>t.Text=="传输");
     Application.DoEvents();
@@ -131,13 +142,33 @@ public static class M0Plan028GUIButtonsVMHarness {
     form.SetEditor("fec.mode","off");form.SetEditor("lanes","1");Application.DoEvents();
     Need(!allEditors["fec.profile"].Visible,"FEC_Off_keeps_default");
     form.SetEditor("mtu","1460");
+    // A GUI-owned relative file is resolved to a safe absolute child
+    // only for the next cold native generation; this test never applies OS.
+    book.WriteAtomic("data/h1834-cn-domain.txt","cn.example\n=exact.cn\n");
+    form.SetEditor("split-enable",true);
+    form.SetEditor("cn-rules-file","data/h1834-cn-domain.txt");
     form.SetEditor("outer-repair","off");
     form.SetEditor("record-cipher","aes-128-gcm");
     Click(form,"保存配置");
     Need(Convert.ToString(p.Values["outer-repair"])=="off","outer_repair_UI_saved_explicit");
+    Need(Convert.ToBoolean(p.Values["split-enable"]) &&
+      Convert.ToString(p.Values["cn-rules-file"])=="data/h1834-cn-domain.txt",
+      "plan029_gui_saved_native_split_next_connect");
+    var effectiveSplit=book.Effective(p);
+    Need(Convert.ToBoolean(effectiveSplit["split-enable"]) &&
+      Convert.ToString(effectiveSplit["cn-rules-file"])==
+        book.InRoot("data/h1834-cn-domain.txt"),
+      "plan029_gui_effective_owned_abs_cn_rules");
     Need(Convert.ToString(p.Values["record-cipher"])=="aes-128-gcm","AES128_UI_saved");
     Click(form,"校验配置");Until(()=>fake.Checks>=1,"validate_button_fires");
     Click(form,"连接 / 切换");Until(()=>fake.Starts==1,"connect_button_fires");
+    var startup=book.Json.Deserialize<Dictionary<string,object>>(fake.LastConfig);
+    Need(Convert.ToBoolean(startup["split-enable"]) &&
+      Convert.ToString(startup["cn-rules-file"])==
+        book.InRoot("data/h1834-cn-domain.txt"),
+      "plan029_gui_actual_start_config_passes_split_and_owned_rules");
+    // Fake session may prove config handoff, NEVER signed Windows Apply.
+
     Drain(form);
     Need(State(form).Text.Contains("待验证"),"READY_not_OS_Applied");
     fake.Signal("WBD_WINDOWS_OS_APPLIED");Drain(form);

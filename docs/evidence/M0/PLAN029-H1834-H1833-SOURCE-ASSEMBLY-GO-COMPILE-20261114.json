@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1833",
+  "source_sha": "b43334885ab7fae468e896609e748294dc6ccc8b",
+  "result": "BUILD_PASS_SCOPED_NOT_REAL_PRODUCT_READY",
+  "actions": [
+    {
+      "id": 43587003652,
+      "conclusion": "success",
+      "scope": "exact manifest assembly + Windows Go production and unit compile + Windows/Linux Rust component regression",
+      "network": "NOT_RUN"
+    },
+    {
+      "id": 43587003694,
+      "conclusion": "success",
+      "scope": "Windows DNS cold source build and CLI-domain negative tests + exact Defender COM probe",
+      "network": "NOT_RUN"
+    },
+    {
+      "id": 43587003744,
+      "conclusion": "success",
+      "scope": "governance and feature catalog"
+    }
+  ],
+  "historical_first_failure": {
+    "source_sha": "70b70826df0e0a4543a8bbc02192fbc84fbb5ede",
+    "failed_actions": [
+      43586793272,
+      43586793250,
+      43586793249
+    ],
+    "first": "assembly blob mismatch new m0_native_v4_dispatch_windows.go",
+    "repair": "H1833 exact four create result_blob updates without weakening assembler"
+  },
+  "unverified": [
+    "true non-CI --split-enable Normal Windows OS Applied/Ready",
+    "actual WinForms saved config/Connect Stop",
+    "Game4 CN",
+    "D4 IPv6",
+    "P1 CPU",
+    "P2 current scheduling/perf",
+    "DNS slow fsync cross-flow HOL"
+  ]
+}

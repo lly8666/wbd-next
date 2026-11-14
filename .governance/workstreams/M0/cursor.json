@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1833,
-  "checkpoint_sha": "70b70826df0e0a4543a8bbc02192fbc84fbb5ede",
+  "sequence": 1834,
+  "checkpoint_sha": "b43334885ab7fae468e896609e748294dc6ccc8b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1833: H1832 product explicit non-CI CN split+GUI file input source70b first assembly gate FAIL due four stale overlay create result_blob SHA; exact receipt fix only, no new product semantic or duplicate D3. Windows Go/GUI rebuild pending. H1831 source268 true signed D3 PASS, PLAN029 IN_PROGRESS.",
-  "why_now": "H1832 native main Action43586793272 and Windows DNS source Action43586793250 fail before compile at tools/prepare_windows_wiring.py --check-only: mismatch new m0_native_v4_dispatch_windows.go first. Root cause four changed overlay create files retained stale pinned manifest result_blob despite three original patched replace result_blob being updated. The gate correctly refused; repair exact four hashes, no weakening.",
+  "current_task": "H1834: H1833 exact manifest+Windows Go/Windows/Linux Rust component compile+governance PASS on source b433; no new physical networking. Add one actual WinForms compiled VM harness test of split-enable off by default, CN portable rule field, saved effective and fake Session.StartAsync JSON. H1834 test NOT_RUN until CI, not signed OS Ready; Game4/IPv6/P1/P2/HOL OPEN.",
+  "why_now": "H1833 repaired first assembly hash mismatch, Windows Go current-source compile and tests pass. D5 GUI field visibility/profile saved→effective→child config is independently testable without repeatedly dispatching signed DNS/P2; preserve actual OS Applied boundary.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1833 same-source exact pinned overlay assembly + Windows Go & GUI WinForms compile Actions; if failure locate first compiler/GUI config error, no false Ready. Then one explicit non-CI real Normal split-enable and GUI actual Connect/Stop representative, followed by Game4/IPv6 and P1/P2 new-source perf. H1831 true D3 not repeated.",
+  "next_action": "Collect H1834 exact WinForms VM GUI Action and first failing code boundary; after PASS, build one source-locked REAL Windows GUI Normal non-CI split-enable startup, signed Wintun applied config→two DNS/Direct+Tunnel→owned Stop. Independently Game4 CN owner, IPv6/D4, P2 full-span and P1 CPU/slow fsync remain.",
   "unverified": true,
-  "last_tested_source": "268fdc150937416a51991b440a961a5dc96a1a3e",
+  "last_tested_source": "b43334885ab7fae468e896609e748294dc6ccc8b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1832-H1831-SIGNED-ASYNC-D3-MULTIA-20261114.json"
+    "docs/evidence/M0/PLAN029-H1834-H1833-SOURCE-ASSEMBLY-GO-COMPILE-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1832-EXPLICIT-PRODUCT-GUI-CN-SPLIT.md",
-    "docs/devlog/M0/20261114-PLAN029-H1833-EXACT-ASSEMBLY-RESULT-BLOBS.md"
+    "docs/devlog/M0/20261114-PLAN029-H1833-EXACT-ASSEMBLY-RESULT-BLOBS.md",
+    "docs/devlog/M0/20261114-PLAN029-H1834-WINFORMS-CN-SPLIT-SAVED-EFFECTIVE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1831 signed D3 source268 true PASS_SCOPED. H1832 explicit split and GUI implementation source70b failed assembly because four old create result hashes; H1833 fixes only hashes. Actual non-CI GUI Connect/Stop NOT_RUN, async slow fsync, TCP perf, Game4 CN and IPv6 OPEN."
+  "partial_summary": "H1833 source b433 static assembly and Windows Go/Rust+Linux Rust regression PASS, no nonCI GUI real OS. H1834 test-only WinForms GUI config handoff candidate untested. H1831 source268 real signed CN D3 PASS_SCOPED remains historical. PLAN029 IN_PROGRESS."
 }
