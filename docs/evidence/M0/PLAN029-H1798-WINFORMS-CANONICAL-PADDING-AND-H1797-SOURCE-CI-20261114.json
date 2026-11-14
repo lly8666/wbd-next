@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1798,
+  "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+  "result": "SOURCE_STAGED_NOT_NETWORK",
+  "kind": "GUI_COLD_CONFIG_ONLY",
+  "source_checks": {
+    "rust_windows_linux_H1797": "PASS",
+    "original_Go_H1797": "PASS",
+    "WinForms_H1797": "PASS",
+    "direct_app_tcp53_H1795": "PREVIOUS_SOURCE_PHYSICAL_PASS"
+  },
+  "gui": {
+    "single_combo_modes": [
+      "off",
+      "tls",
+      "flows"
+    ],
+    "default": "off",
+    "legacy_migration": "STAGED",
+    "configuration_rejects_conflict": true,
+    "owned_live_effective": "NOT_RUN",
+    "real_signed_off_on": "NOT_RUN"
+  },
+  "governance_procedural_H1797": {
+    "failure": "feature-impact wrote update not updated; cursor evidence lacked source_sha",
+    "corrected": "YES",
+    "network_or_compiler_defect": false
+  },
+  "remaining": "D3-D5 / P1-P2 live"
+}

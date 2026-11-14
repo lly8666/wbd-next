@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "H1797 Normal V3 source-only CLI/cold/true M1 authenticated LINK padding wired; default off; Windows/Linux off-on physical and GUI not yet qualified.",
+  "summary": "H1797 Normal V3 original M1 LINK authenticated padding source Windows/Linux Rust, Go original compiler and Windows WinForms build PASS; H1798 single portable GUI off/tls/flows selector and old tls-startup-padding profile migration staged. Signed off/on real network still NOT_RUN.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -16,8 +16,8 @@
   },
   "usage": {
     "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
-    "config": "STAGED: original-Go pinned CLI/config file -> V3 cold reserved bits -> authenticated Rust original TX M1 LINK. Full product effective not yet proven.",
-    "gui": "NOT_CONNECTED: existing WinForms lacks canonical mode and live effective readback."
+    "config": "Source-only: original-Go pinned config/CLI -> V3 reserved cold padding selector -> original Rust M1 Tunnel LINK; GUI portable stored profile imports and exports one canonical key. Physical signed off/on and live effective readback not qualified.",
+    "gui": "STAGED H1798: one WinForms portable selector 关闭 / 仅TLS / 所有TCP+UDP新流, default off; hides old tls-startup-padding checkbox; stored profiles and JSON import convert legacy boolean to canonical mode or reject explicit conflicting mode. Saved/selected intent requires reconnect; actual authenticated Rust/OS effective still NOT_RUN."
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -61,10 +61,17 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows original WinForms assembly source H1798",
+      "scope": "One startup-padding off/tls/flows ComboBox + legacy profile/import migration; exact original pinned Go PARAMETER/GUI schema and code build will be checked by automatic workflow, real effective not yet run",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
-    "H1797 is SOURCE staged, physical Windows/Linux off/on + GUI effective NOT_RUN; existing signed H1795 D1 TCP53 and Stop remain prior-SOURCE PASS.",
+    "H1797 is SOURCE staged, physical Windows/Linux off/on + GUI source selector wired but live effective NOT_RUN; existing signed H1795 D1 TCP53 and Stop remain prior-SOURCE PASS.",
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "Old Go/Rust original pinned source unchanged; only versioned assembly overlay is edited. Full P1/P2 CPU/p99 and D3-D5 still OPEN.",
     "Padding is not a guarantee against DPI recognition."

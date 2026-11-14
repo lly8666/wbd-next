@@ -307,7 +307,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "de5aee345f3c70bfaf6052275fa3a055bfd7e26f",
+      "result_blob": "94ead95d23979871af5e2275f43e9f19d158de93",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -416,6 +416,14 @@
         {
           "find": "  \"direct4\": [",
           "replace": "  \"direct-flow-hard\": [\n    \"网络\",\n    \"Direct 流数上限\",\n    \"默认16384，1–16384；满时仅拒绝新直连，不拦 Tunnel；重连生效\"\n  ],\n  \"direct4\": ["
+        },
+        {
+          "find": "  \"tls-startup-padding\": [",
+          "replace": "  \"startup-padding\": [\n    \"传输\",\n    \"新流启动填充\",\n    \"关闭（默认）／仅TLS握手／所有新TCP和UDP流。只对Normal原始隧道M1加密记录生效；不延迟业务、不填直连，修改后重连\"\n  ],\n  \"tls-startup-padding\": ["
+        },
+        {
+          "find": "  \"tls-startup-padding\": [\n    \"传输\",\n    \"TLS 启动有限填充\",\n    \"默认关闭；不等待凑包，不保证消除所有流量特征\"\n  ],",
+          "replace": "  \"tls-startup-padding\": [\n    \"兼容\",\n    \"旧TLS填充设置（已迁移）\",\n    \"从旧配置迁移到startup-padding=tls；GUI只使用单一新流填充选择\"\n  ],"
         }
       ]
     },
@@ -423,7 +431,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "f514fd44b847ffd6a1e13e9ea8baeb94bd5cfb93",
+      "result_blob": "e27cba4496e4c687f1029247ac9400f33a3aea6c",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -584,6 +592,18 @@
         {
           "find": "                if (ApplyQualityLine(line)) continue;\n",
           "replace": "                if (ApplyQualityLine(line)) continue;\n                Plan029ReadOnlyStatus(line);\n"
+        },
+        {
+          "find": "f.Key == \"record-cipher\" || f.Key == \"lanes\") {",
+          "replace": "f.Key == \"record-cipher\" || f.Key == \"lanes\" || f.Key == \"startup-padding\") {"
+        },
+        {
+          "find": "                if (f.Key == \"outer-repair\") c.Items.AddRange(new[] { new Choice(\"on\", \"开启（默认）\"), new Choice(\"off\", \"关闭（仅显式配置）\") });",
+          "replace": "                if (f.Key == \"startup-padding\") c.Items.AddRange(new[] { new Choice(\"off\", \"关闭（默认）\"), new Choice(\"tls\", \"仅TLS启动 · Normal\"), new Choice(\"flows\", \"所有TCP/UDP新流 · Normal\") });\n                if (f.Key == \"outer-repair\") c.Items.AddRange(new[] { new Choice(\"on\", \"开启（默认）\"), new Choice(\"off\", \"关闭（仅显式配置）\") });"
+        },
+        {
+          "find": "else if (c is ComboBox) { var box = (ComboBox)c; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == Convert.ToString(value)); }",
+          "replace": "else if (c is ComboBox) { var box = (ComboBox)c; string choice=Convert.ToString(value); if (key==\"startup-padding\" && choice==\"\") choice=\"off\"; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == choice); }"
         }
       ]
     },
@@ -751,7 +771,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "cac26e1ff840c8d2fe13116662aac96f5b11e95f",
+      "result_blob": "a42fbefb98a28c4322f6ff327fc00380389e6c23",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -794,6 +814,10 @@
         {
           "find": "      \"direct4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"comma-separated direct IPv4 prefixes\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
           "replace": "      \"direct4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"comma-separated direct IPv4 prefixes\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+        },
+        {
+          "find": "      \"tls-startup-padding\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"bounded passive inner TLS startup padding; no waiting; default off\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
+          "replace": "      \"startup-padding\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"canonical Normal original Rust M1 Tunnel-only startup padding off|tls|flows, default off; legacy tls-startup-padding maps to tls\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"tls-startup-padding\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"bounded passive inner TLS startup padding; no waiting; default off\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
         }
       ]
     },
@@ -1011,9 +1035,25 @@
         {
           "find": "public void ImportValues(Profile p, Dictionary<string, object> values) {",
           "replace": "public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            object old;\n            if(values.TryGetValue(\"dns4\",out old)){\n                string[] list=Convert.ToString(old).Split(new[]{',',';'},StringSplitOptions.RemoveEmptyEntries);\n                string first=list.Length>0?list[0].Trim():\"\";\n                object newer;\n                if(first.Length>0&&values.TryGetValue(\"dns.tunnel\",out newer)&&Convert.ToString(newer)!=first)\n                    throw new InvalidDataException(\"旧dns4首项与dns.tunnel冲突，请只保留新的隧道DNS。\");\n                if(first.Length>0&&!values.ContainsKey(\"dns.tunnel\"))values[\"dns.tunnel\"]=first;\n                values.Remove(\"dns4\");\n            }"
+        },
+        {
+          "find": "        public static void NormalizeNativeCarrier(Dictionary<string, object> values) {",
+          "replace": "        // Only GUI-owned portable profiles migrate the old boolean.\n        // CLI still accepts the historical flag; a conflicting explicit\n        // canonical mode MUST NOT be silently overwritten.\n        static void MigrateStartupPadding(Dictionary<string, object> values) {\n            object old, selected;\n            if (!values.TryGetValue(\"tls-startup-padding\",out old)) return;\n            bool enabled=Convert.ToBoolean(old);\n            bool hasNew=values.TryGetValue(\"startup-padding\",out selected);\n            string mode=hasNew?Convert.ToString(selected):\"\";\n            if (enabled && mode!=\"\" && mode!=\"tls\")\n                throw new InvalidDataException(\"旧TLS启动填充与新模式冲突，请选择唯一startup-padding。\");\n            if (!hasNew || mode==\"\") values[\"startup-padding\"]=enabled?\"tls\":\"off\";\n            values.Remove(\"tls-startup-padding\");\n        }\n        public static void NormalizeNativeCarrier(Dictionary<string, object> values) {"
+        },
+        {
+          "find": "            int lanes=Convert.ToInt32(values[\"lanes\"]);\n            // No exposed legacy transport setting:",
+          "replace": "            int lanes=Convert.ToInt32(values[\"lanes\"]);\n            object rawPad;\n            if(values.TryGetValue(\"startup-padding\",out rawPad)){\n                string mode=Convert.ToString(rawPad);\n                if(mode!=\"\"&&mode!=\"off\"&&mode!=\"tls\"&&mode!=\"flows\")\n                    throw new InvalidDataException(\"启动填充只能选择关闭／仅TLS／新流。\");\n                if(mode!=\"\"&&mode!=\"off\"&&(nativeMode!=\"off\"||lanes!=1))\n                    throw new InvalidDataException(\"新流启动填充当前仅支持 Normal + FEC关闭。\");\n            }\n            // No exposed legacy transport setting:"
+        },
+        {
+          "find": "            foreach (Profile prev in Book.Profiles) if (prev != null && prev.Values != null) {\n                object old;",
+          "replace": "            foreach (Profile prev in Book.Profiles) if (prev != null && prev.Values != null) {\n                MigrateStartupPadding(prev.Values);\n                object old;"
+        },
+        {
+          "find": "        public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            object old;",
+          "replace": "        public void ImportValues(Profile p, Dictionary<string, object> values) {\n            values=new Dictionary<string, object>(values);\n            MigrateStartupPadding(values);\n            object old;"
         }
       ],
-      "result_blob": "373d30175bb6309ffaa07cbb0350e890e6370854"
+      "result_blob": "1168f526ec96f6cc03ae2585506301e3b47deafd"
     },
     {
       "kind": "create",

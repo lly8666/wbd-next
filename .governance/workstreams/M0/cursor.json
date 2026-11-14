@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1797,
-  "checkpoint_sha": "bfdac9ef0e8a398fc12f38190c5bc91a2282d6fb",
+  "sequence": 1798,
+  "checkpoint_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1797 source staged: canonical Windows CLI startup-padding off/tls/flows + legacy bool, exact pinned original-Go assembly manifest and V3 reserved cold mode, original Rust Normal TX Tunnel-only bounded startup pad using same authenticated M1 LINK pad/PN/SEQ. OFF unchanged. CI and real off/on NOT_RUN. H1795 signed original app TCP53 both exits + owned Stop PASS, PLAN029 IN_PROGRESS.",
-  "why_now": "Real D1 native app TCP53 and owned Stop succeeded, focus on productive Normal M1 padding rather than extreme conditions or old ABI false reds.",
+  "current_task": "H1798 source: one WinForms portable GUI selector startup-padding off/tls/flows, legacy tls-startup-padding boolean safely migrated to canonical mode on profile import/load, old field hidden as compatible managed, exact frozen-original Go UI/parameters assembly manifest derives valid matching 57-field catalog. H1797 source Rust Windows+Linux, original Go and WinForms builds PASS; H1797 signed off/on mode physical NET_NOT_RUN. H1795 real D1 TCP53 and Stop PASS prior source. PLAN029 IN_PROGRESS.",
+  "why_now": "User prioritizes efficient shipping and no unnecessary extreme tests; complete user-facing canonical one control and prevent inconsistent old GUI checkbox while signed H1797 no-scene baseline continues. Governance H1797 procedural failure was invalid feature-impact kind and evidence source field, not network; fix declaration exactly.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1797 cheap and Windows Rust/Go assembly gates first, fix first material issue only. Then single regular off/on Normal business+Stop scene; GUI effective and D3-D5/P1-P2 later without broad 028 replay.",
+  "next_action": "Collect H1798 automatic source-locked cheap assembly + original WinForms/Go Windows build; fix first material compiler/UI issue only. Schedule only one modest Normal off versus flows signed original owner traffic/Stop scenario if baseline source sound; no extreme conditions or 028 seven-mode matrix. D3/D4/D5 live and P1/P2 performance still OPEN.",
   "unverified": true,
-  "last_tested_source": "1efb3cec6b9f90714b32c78e0318a57720d0e1f1",
+  "last_tested_source": "36b9fd711b62fcacc23209f958be402be966fb77",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1797-SOURCE-ORIGINAL-M1-STARTUP-PADDING-20261114.json"
+    "docs/evidence/M0/PLAN029-H1798-WINFORMS-CANONICAL-PADDING-AND-H1797-SOURCE-CI-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1795 real native app TCP53 CN Direct fake vs nonCN Tunnel actual Linux TCP socket and owned Stop PASS; H1797 Rust original M1 startup pad source and CLI mode staged only, NOT_RUN new source."
+  "partial_summary": "H1795 signed Windows/Linux native app TCP53 double egress and owned Stop PASS. H1797 original Rust M1 padded Tunnel Normal source, CLI config compiled in Windows/Linux Rust/Go WinForms gates; signed off/on not tested. H1798 one portable GUI selector + migration source staged, no live GUI/OS effective readback yet."
 }

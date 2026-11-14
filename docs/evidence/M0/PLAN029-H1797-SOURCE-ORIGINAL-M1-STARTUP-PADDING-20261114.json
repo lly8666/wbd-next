@@ -17,5 +17,19 @@
     "physical_off_on": "NOT_RUN",
     "gui_effective": "NOT_CONNECTED",
     "fixed_game": "UNCHANGED"
+  },
+  "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+  "result": "SOURCE_TEST_PASS_PHYSICAL_NOT_RUN",
+  "source_checks": {
+    "windows_rust_component": "PASS",
+    "linux_rust_component": "PASS",
+    "windows_go_compile": "PASS",
+    "current_winforms_source_build": "PASS",
+    "github_actions": [
+      "43559122134",
+      "43559122024",
+      "43559122131"
+    ],
+    "scope": "NOT_REAL_OFF_ON_SIGNED"
   }
 }

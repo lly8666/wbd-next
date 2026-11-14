@@ -6,5 +6,5 @@
 - Original Windows/Linux compile and same-VM ordinary off/on functional/Stop comparison **NOT_RUN** for this SOURCE. GUI readback, D3/D4/D5 and P1/P2 still OPEN. Do not replay 028 or extreme stress scenarios.
 
 ```feature-impact
-{"kind":"update","ids":["startup-flow-padding"],"reason":"Cold/CLI and original M1 Normal Tunnel pad source staged, not yet physically qualified."}
+{"kind":"updated","ids":["startup-flow-padding"],"reason":"Cold/CLI and original M1 Normal Tunnel pad source staged, not yet physically qualified."}
 ```
