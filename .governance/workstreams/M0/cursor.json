@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1843,
-  "checkpoint_sha": "15ead3c4bd340585ebb921550b7bc46fbce877f6",
+  "sequence": 1844,
+  "checkpoint_sha": "29ec31846c236f16a476ea6d3860d4950f9cf516",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1843: repair concrete TCP reverse-loss fault across 256-entry TX->RX mailbox Full and actual Wintun ring BufferTooSmall: TCP packet is retained FIFO in original NativeTcpActor or one original RX held packet, UDP remains lossy, only real backpressure 5ms bounded retry. New signed P2 exclusive source marker with actual Rust unit and end-to-end not yet terminal. Separately H1841 signed nonCI product source b7e failed BEFORE READY: original Go looked up missing wbd_m0_win_native_v3_start because Windows DLL was built without m0_v4_probe when private trial OFF; fix build/export source gate for explicit product, do not conflate ABI failure with packet performance.",
-  "why_now": "H1839 actual source showed both upload/download ~19s and 64K reverse backlog with long-Tunnel UDP progress. Rust packet path incorrectly discards native TCP ACK/DATA on bounded channel/ring pressure; TCP requires ordered backpressure not UDP-style drop. H1841 showed actual nonCI source product ABI omission, no OS evidence. Fix both independent deterministic code defects before new source-locked checks.",
+  "current_task": "H1844: H1843 Direct TCP bounded reverse FIFO and real CN product V3 ABI patch committed, but a stale static H1820 test required private trial ONLY condition, so signed P2 Action 43598580600 did NOT run any native OS. H1844 repairs static source oracle without changing code, retriggers EXACTLY ONE new SOURCE [plan029-v3-real-p2-rebuild] signed real Windows/Linux one-MiB P2 and full-span Tunnel UDP/Stop. Product nonCI remains separate H1845.",
+  "why_now": "New officially user-enabled CN product must link same Windows Rust V3 ABI, independent of old private trial flag. A historical static test expected the old feature-only condition and blocked the CI before native start; fix the test contract rather than removing ABI from real product or bypassing CI.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1843 Rust unit/Windows Linux source build and one signed P2 full phase timing+continuous Tunnel UDP and owned Stop. Separately launch one distinct source-locked H1844 nonCI explicit product CN activation only after H1843 code/ABI build gate, with actual OS Applied/Ready/DNS/TCP/UDP/Stop. If P2 still >38s use matched Windows synthetic TCP ACK/window/retransmissions, no false throughput PASS. Game4 CN/IPv6, GUI OS Connect/Stop, P1, FakeIP slow I/O stress remain OPEN.",
+  "next_action": "Collect H1844 cheap scope/Windows Linux Rust test, then native signed P2 real Direct 1MiB phased time/full span Tunnel UDP, actual Stop. If no credible speedup, inspect TCP ACK/window/retransmit and new mailbox retaining. Once product ABI compiled, launch one separately marked H1845 nonCI normal CN real product OS Applied/Ready/Stop. Game4/IPv6/GUI real Stop/P1/stress OPEN.",
   "unverified": true,
   "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1841-P2-ACK-SLOW-GUI-PRODUCT-MTU-PREFLIGHT.md",
     "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1843-TCP-REVERSE-FIFO-AND-PRODUCT-ABI.md"
+    "docs/devlog/M0/20261114-PLAN029-H1843-TCP-REVERSE-FIFO-AND-PRODUCT-ABI.md",
+    "docs/devlog/M0/20261114-PLAN029-H1844-V3-PRODUCT-ABI-STATIC-TEST-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1839 sourcea50 actual P2 FAIL: Direct upload18.969s, first reply21.172s, 917504B echoed at37.172s, physical297ms, real TCP reverse backlog65536; original code drops TCP on channel and Wintun full. H1843 fixes bounded FIFO/retry, test awaits signed P2. H1841 nonCI product sourceb7e build correct but original Go DLL V3 export absent at startup, H1843 build source fixes ABI and awaits separate product signed test. H1838 GUI CLI PASS_SCOPED."
+  "partial_summary": "H1843 product source 29ec deterministic packet loss defects fixed but P2 NOT_RUN because stale static fixture. H1844 unit test source exact ABI condition synchronized and signed P2 rerun; H1839 true P2 baseline remains physical297ms vs Direct>38s. Product H1841 sourceb7e failed missing V3 export before READY. H1842 governance PASS. H1838 GUI check-config PASS."
 }
