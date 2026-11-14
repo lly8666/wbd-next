@@ -1096,7 +1096,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "76cbc8922e70483a18a3f90865d397e318d1a882"
+      "result_blob": "c77d6af1699c59ab91d0751b6f32bd6d0d9f1b90"
     },
     {
       "kind": "create",
@@ -1635,13 +1635,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "85f5f6a3a018ea1a227fa0bad2466ee0cf3fff24"
+      "result_blob": "96c7062d35c0ce51ed8e54f6d87566167c085f06"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "fc5f5f7fbcbb7334153c70cd902b978973a3d2c2"
+      "result_blob": "7172e5bd1ffb2de2870699d37739a2b03f84ff84"
     },
     {
       "kind": "create",

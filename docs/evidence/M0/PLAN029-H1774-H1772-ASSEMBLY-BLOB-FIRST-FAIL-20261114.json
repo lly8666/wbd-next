@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1774,
+  "kind": "NEW_SOURCE_PREFLIGHT_FAILURE_AND_TARGETED_REPAIR",
+  "source_sha": "a4e0a4850bb6def587a2bcecebabf7ef9dab3590",
+  "observed": {
+    "source_only_action": {
+      "id": 43535292802,
+      "job_id": 132262694656,
+      "result": "FAIL",
+      "first_error": "assembly blob mismatch: r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go"
+    },
+    "native_scene_action": {
+      "id": 43535292632,
+      "job_id": 132262695434,
+      "result": "FAIL_CHEAP_PREFLIGHT_NO_NETWORK"
+    },
+    "gui_action": {
+      "id": 43535292533,
+      "job_id": 132262693873,
+      "result": "FAIL_ASSEMBLY_AFTER_RUST_CDylib_SOURCE_COMPILE"
+    },
+    "governance_action": {
+      "id": 43535292557,
+      "result": "FAIL_MIXED_SOURCE_EVIDENCE_AND_FEATURE_SCHEMA"
+    },
+    "corrective_governance_action": {
+      "id": 43535821522,
+      "result": "SUCCESS"
+    }
+  },
+  "new_manifest_results": [
+    {
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+      "old": "76cbc8922e70483a18a3f90865d397e318d1a882",
+      "new": "c77d6af1699c59ab91d0751b6f32bd6d0d9f1b90"
+    },
+    {
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+      "old": "85f5f6a3a018ea1a227fa0bad2466ee0cf3fff24",
+      "new": "96c7062d35c0ce51ed8e54f6d87566167c085f06"
+    },
+    {
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
+      "old": "fc5f5f7fbcbb7334153c70cd902b978973a3d2c2",
+      "new": "7172e5bd1ffb2de2870699d37739a2b03f84ff84"
+    }
+  ],
+  "source_compilation": "NOT_RETESTED_AFTER_MANIFEST_CHANGE",
+  "network": "NOT_RUN_NEW_SOURCE",
+  "old_H1771_real_exit": "PRESERVED_AS_PREVIOUS_SOURCE_EVIDENCE_ONLY",
+  "old_original_go_rootcas": "OPEN_INDEPENDENT_COMPILE_FAILURE",
+  "notes": "No alternate pinned Go TLS or direct network retry. This repairs exact existing manifest result SHA values for three H1772 Go overlay source changes."
+}

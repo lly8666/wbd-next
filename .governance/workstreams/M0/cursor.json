@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1773,
-  "checkpoint_sha": "a4e0a4850bb6def587a2bcecebabf7ef9dab3590",
+  "sequence": 1774,
+  "checkpoint_sha": "822e4734043d76f2dea346bf8feacc114fc45a73",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1773 exact governance repair after H1772 evidence/cold-quota commit. H1772 Go source changes not yet qualified: push governance failed cursor mixed-SOURCE evidence_refs and feature catalog >16KiB/missing feature-impact declaration; no native product failure implied. Enforce one tested SOURCE f615083-only evidence ref, keep H1771 Action proof, shrink feature card without deleting evidence, and explicitly declare feature-impact. PLAN029 IN_PROGRESS.",
-  "why_now": "H1772 checks exposed repository provenance/schema errors; fix first boundary instead of rerunning signed H1771 network or changing product TLS.",
+  "current_task": "H1774 post-H1772 in-flight Action collection: source a4e0 cheap native/source GUI jobs failed at assembly blob mismatch after three DirectFlowHard overlays changed without updating exact manifest-plan020-m0.json. H1773 provenance/feature governance now PASS. Update only the three result_blob SHA and journal original failure; new SOURCE native result NOT_RUN. H1771 older signed product networking PASS_SCOPED; PLAN029 IN_PROGRESS.",
+  "why_now": "The first H1772 Windows failure is stale assembly hash, not kernel TCP/UDP or authorization. Keep frozen original Go, update matching result blobs and rerun only new-source automatic gates.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Observe H1773 cheap governance/feature checks and H1772 in-flight build, no duplicate dispatch. Then implement D2 converse/D1 TCP53 and remaining OS/GUI, pressure, padding. Keep old Go ABI RootCAs OPEN and PLAN030 not started.",
+  "next_action": "Collect H1774 automatically triggered SOURCE/Go/Rust current build result, no manual duplicate dispatch. Then implement D2 CN-IP converse, app TCP53 and OS/GUI/padding/p99/pressure cases; preserve old Go RootCAs ABI OPEN separately; 030 untouched.",
   "unverified": true,
   "last_tested_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1771 signed source f615083 native Direct/Tunnel DNS/UDP/TCP scoped PASS; H1772 DirectFlowHard 1..16384 source change, real quota pressure NOT_RUN. H1772 governance FAIL mixed source evidence, card >16KiB and feature-impact missing; H1773 structural repair. Separate old Go RootCAs ABI FAIL OPEN; PLAN029 incomplete."
+  "partial_summary": "H1771 signed f615 source Direct+Tunnel real packet returns and Stop PASS scoped. H1772 a4e Go cold hard cap changes failed BEFORE networking because source assembly blob SHA not synchronized; H1773 governance repair PASS; H1774 updates only exact three manifest result blob hashes. New H1774 compiled/source proof NOT_RUN yet, all PLAN029 acceptance still OPEN."
 }
