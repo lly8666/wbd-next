@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1776,
-  "checkpoint_sha": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
+  "sequence": 1777,
+  "checkpoint_sha": "9bcf212c405efadcca20bbd5e3a0bdd99e49f601",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1776 recovered H1775 source 9a755 signed Action 43537693764 native job 132272565270 SUCCESS: real nonCN Tunnel DNS→CN A then Rust physical Direct UDP with independent Windows Wintun-bound app and Linux eth0 reply; exact owned route/alias cleanup. Prior CN FakeIP Direct TCP/UDP, Tunnel TCP/UDP and DNS no-fallback, Stop all PASS_SCOPED. PLAN029 ongoing.",
-  "why_now": "Collect H1775 signed real result before new changes/dispatch; preserve first measured boundary and exact owner cleanup.",
+  "current_task": "H1777 exact pinned original-Go manifest adds DirectFlowHard 1..16384 CLI, PARAM JSON and GUI, source Go --check-config readback, cold native option. WinForms harness tests default16384, value2, invalid16385, saved/reopened. New H1777 SOURCE tests NOT_RUN until Action; H1775 D2 signed network PASS scoped; PLAN029 ongoing.",
+  "why_now": "H1772 cold Direct cap was not configurable through real client/GUI; this single cold setting permits bounded stress without VM-wide exhaustion.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Wire DirectFlowHard CLI/GUI into existing Rust cold owner for small-volume pressure, verify original-Go manifest and GUI readback; then D1 TCP53, D3–D5/P1–P2. No duplicate signed Action, old Go RootCAs ABI separately OPEN, 030 not started.",
+  "next_action": "Collect H1777 auto GUI/Go and native cheap build first, no duplicate dispatch. Then real small-cap pressure with new Tunnel progressing, D1 app TCP53, D3–D5/P1–P2; prior RootCAs ABI OPEN independent; 030 untouched.",
   "unverified": true,
   "last_tested_source": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1775 signed source 9a755 true D2 nonCN Tunnel DNS→CNIP Direct physical UDP reverse and owned Stop PASS; full D1 TCP53/D3–D5/P1–P2 and GUI live, 1460/IPv6 NOT_RUN."
+  "partial_summary": "H1775 signed D2 real physical CN-IP converse PASS; H1777 CLI/GUI Direct quota 1..16384 source staged, no actual pressure yet. D1 TCP53/D3–D5/P1–P2 still OPEN."
 }

@@ -48,6 +48,8 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(!store.Fields.Any(f=>f.Key=="derived-inner-tun-mtu"||f.Key=="inner-mtu"),"no_editable_inner_MTU");
    Need(store.Fields.Single(f=>f.Key=="dns.direct").Section=="网络","one_visible_direct_DNS");
    Need(store.Fields.Single(f=>f.Key=="dns.tunnel").Section=="网络","one_visible_tunnel_DNS");
+   Need(store.Fields.Single(f=>f.Key=="direct-flow-hard").Section=="网络","Direct_quota_field_visible");
+   Need(Convert.ToInt32(store.Fields.Single(f=>f.Key=="direct-flow-hard").Default)==16384,"Direct_quota_default");
    Need(store.Fields.Single(f=>f.Key=="dns4").Managed,"retired_legacy_dns4_not_editable");
    Need(!store.Effective(p).ContainsKey("dns4"),"new_profile_has_no_legacy_dns4");
 
@@ -78,17 +80,24 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("mtu","1460");
     form.SetEditor("dns.direct","223.5.5.5");
     form.SetEditor("dns.tunnel","1.1.1.1");
+    form.SetEditor("direct-flow-hard","2");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-name","borrow.example.org");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"mtu","1460");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.direct","223.5.5.5");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.tunnel","1.1.1.1");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"direct-flow-hard","2");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns4","");
     var n=Check(store,p,"data/h1663-normal.json",cli);
     int inner=Convert.ToInt32(n["derived-inner-tun-mtu"]);
     Need(inner>0&&inner<1460,"native_Rust_inner_derived_only_no_GUI_rewrite");
     Need(Convert.ToInt32(p.Values["mtu"])==1460,"outer_kept_after_native_inner_read");
+    form.SetEditor("direct-flow-hard","16385");form.SaveEditor();
+    bool invalidCapRejected=false;
+    try{Check(store,p,"data/h1663-bad-direct-cap.json",cli);}catch(Exception){invalidCapRejected=true;}
+    Need(invalidCapRejected,"invalid_quota_rejected_by_real_Go_cli");
+    form.SetEditor("direct-flow-hard","2");form.SaveEditor();
 
     form.SetEditor("lanes","4");
     form.SetEditor("fec.mode","off");
@@ -105,6 +114,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(Convert.ToInt32(p.Values["mtu"])==1500,"1500_explicit_only");
     form.SetEditor("mtu","1460");
     form.SetEditor("lanes","1");
+    form.SetEditor("direct-flow-hard","16384");
     form.SaveEditor();
 
     var invalid=new Dictionary<string,object>(store.Effective(p));
@@ -139,6 +149,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(Convert.ToString(saved.Values["server-ip"])=="EDGE.Example.Test.","reopen_retains_server_domain");
    Need(Convert.ToString(saved.Values["server-name"])=="borrow.example.org","reopen_preserves_separate_verified_TLS_SNI");
    Need(Convert.ToString(saved.Values["dns.direct"])=="223.5.5.5","reopen_single_direct_DNS");
+   Need(Convert.ToInt32(saved.Values["direct-flow-hard"])==16384,"reopen_Direct_quota_default");
    Need(Convert.ToString(saved.Values["dns.tunnel"])=="9.9.9.9","reopen_migrated_single_tunnel_DNS");
    Need(!saved.Values.ContainsKey("dns4"),"reopen_never_restores_backup_DNS");
    Need(!File.Exists(store.InRoot("data/network-state.json")),"no_fake_OS_Applied_or_WAL");

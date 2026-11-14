@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "6a2d896856587c9cb5d2a51b777a67423ba9dd8e",
+      "result_blob": "7e2b053206a7b4570d14b3716b23bcf3918f9756",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -240,6 +240,22 @@
         {
           "find": "DNSServers4:dns,Direct4:direct,Bypass4:bypass,TunnelMTU:uint32(tunMTU),",
           "replace": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
+        },
+        {
+          "find": "directText         = flag.String(\"direct4\", \"\", \"comma-separated direct IPv4 prefixes\")",
+          "replace": "directText         = flag.String(\"direct4\", \"\", \"comma-separated direct IPv4 prefixes\")\n\t\tdirectFlowHard     = flag.Int(\"direct-flow-hard\", 16384, \"Direct TCP/UDP hard flow limit 1..16384, independent of Tunnel; reconnect to apply\")"
+        },
+        {
+          "find": "\tif *checkConfig {",
+          "replace": "\tif *directFlowHard<1 || *directFlowHard>16384 {return errors.New(\"direct-flow-hard requires 1..16384; new Direct only\")}\n\tif *checkConfig {"
+        },
+        {
+          "find": "\t\tout[\"dns4\"]=\"\" // retired migration alias, never a live resolver",
+          "replace": "\t\tout[\"dns4\"]=\"\" // retired migration alias, never a live resolver\n\t\tout[\"direct-flow-hard\"]=fmt.Sprint(*directFlowHard) // next-generation intent, not Applied"
+        },
+        {
+          "find": "DNSServers4:dns,DirectDNS4:directDNS,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
+          "replace": "DNSServers4:dns,DirectDNS4:directDNS,DirectFlowHard:uint32(*directFlowHard),Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         }
       ]
     },
@@ -275,7 +291,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "6498f5fc0c83846b16db4eb2c2485a3591f11a03",
+      "result_blob": "de5aee345f3c70bfaf6052275fa3a055bfd7e26f",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -380,6 +396,10 @@
         {
           "find": "  \"dns4\": [\n    \"网络\",\n    \"DNS 主用、备用\",\n    \"一至两台 IPv4，以逗号分隔；由 Windows DNS 客户端执行互备\"\n  ],",
           "replace": "  \"dns4\": [\n    \"兼容\",\n    \"旧 DNS 列表（自动迁移）\",\n    \"仅取首项作隧道DNS；剩余项停用\"\n  ],\n  \"dns.direct\": [\n    \"网络\",\n    \"直连 DNS（服务器地址/中国域名）\",\n    \"默认223.5.5.5，只有一个IPv4；走原物理出口，不备用\"\n  ],\n  \"dns.tunnel\": [\n    \"网络\",\n    \"隧道 DNS（其他域名）\",\n    \"默认1.1.1.1，只有一个IPv4；走认证隧道，不备用\"\n  ],"
+        },
+        {
+          "find": "  \"direct4\": [",
+          "replace": "  \"direct-flow-hard\": [\n    \"网络\",\n    \"Direct 流数上限\",\n    \"默认16384，1–16384；满时仅拒绝新直连，不拦 Tunnel；重连生效\"\n  ],\n  \"direct4\": ["
         }
       ]
     },
@@ -715,7 +735,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "7cd39566b59840ea33097a4f32b57560fa5a7a63",
+      "result_blob": "cac26e1ff840c8d2fe13116662aac96f5b11e95f",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -754,6 +774,10 @@
         {
           "find": "      \"dns4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"1.1.1.1,8.8.8.8\\\"\",\n        \"help\": \"primary,backup IPv4 DNS; Windows resolver performs failover\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
           "replace": "      \"dns4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"legacy input migration only: first value to dns.tunnel, no fallback\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"dns.direct\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"223.5.5.5\\\"\",\n        \"help\": \"exactly one physical direct/bootstrap DNS IPv4\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"dns.tunnel\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"1.1.1.1\\\"\",\n        \"help\": \"exactly one tunnel DNS IPv4; no backup\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+        },
+        {
+          "find": "      \"direct4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"comma-separated direct IPv4 prefixes\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
+          "replace": "      \"direct4\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"comma-separated direct IPv4 prefixes\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
         }
       ]
     },
