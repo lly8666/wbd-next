@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1824,
-  "checkpoint_sha": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
+  "sequence": 1825,
+  "checkpoint_sha": "2743afdee31964e6724af3820490240870b80c3d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1824: H1823 source db6c signed real P2 in progress; Windows/Linux Rust, Windows Go compile, Linux peer build PASS; final Windows native/physical P2 NOT_RUN until Action completes. Correct exact governance max8 context_refs violation without affecting source, and keep +7.42pct P1 CPU/GiB and GUI/Game4/IPv6 OPEN.",
-  "why_now": "H1823 governance failed with SCOPE_AUDIT_FAILED: unbounded context_refs (9 vs allowed 8). Limit historical context references; preserve PLAN029 contract, P2, and current H1823 devlog. Do not repeat signed source build or P2 dispatch.",
+  "current_task": "H1825 H1823 signed P2 functional PASS but 64KiB relay hypothesis did not materially improve (physical281ms vs FakeIP Direct6141ms, 120 Tunnel small UDP, half-close, owned Stop). One second distinct candidate: two owned Direct relay kernel TCP legs set TCP_NODELAY once on admission; new-source signed one P2 action pending. PLAN029 IN_PROGRESS.",
+  "why_now": "4KiB->64KiB resulted 6485ms->6141ms vs physical312->281ms across independent hosts; the transfer-quantum hypothesis is insufficient, making remaining Nagle/delayed ACK on the two separate kernel legs a specific distinct mechanism to falsify once, not speculative firewall diagnosis.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect pinned H1823 signed native P2 run 43577224581, compare real 1MiB Direct/baseline and Tunnel UDP p99/longest gap, confirm source hashes and owned Stop; use targeted failure logs if FAIL. Update independent evidence and cursor once terminal. P1 CPU >5pct, Game4 split, signed GUI origin and IPv6 remain OPEN.",
+  "next_action": "Collect exactly H1825 signed P2 with same application transfer and physical socket baseline; inspect actual new Direct elapsed and concurrent Tunnel UDP delivery/Stop and first failing stage if any. No third blind P2 retune without new packet/ACK chronology. P1 all-Tunnel +7.42pct CPU/GiB, Game4 native CN split, GUI actual signed start/stop, D4 IPv6/restore and queue age remain OPEN.",
   "unverified": true,
-  "last_tested_source": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
+  "last_tested_source": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1822-H1821-P1-REAL-TUNNEL-SAMEVM-20261114.json"
+    "docs/evidence/M0/PLAN029-H1822-H1821-P1-REAL-TUNNEL-SAMEVM-20261114.json",
+    "docs/evidence/M0/PLAN029-H1825-H1823-SIGNED-P2-64K-NEGATIVE-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1823-DIRECT-TCP-QUANTUM-HYPOTHESIS.md"
+    "docs/devlog/M0/20261114-PLAN029-H1823-DIRECT-TCP-QUANTUM-HYPOTHESIS.md",
+    "docs/devlog/M0/20261114-PLAN029-H1825-TCP-NODELAY-SECOND-HYPOTHESIS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1824 governance-only fix: source db6c still sole H1823 P2 performance candidate; no new product code or functional verdict. Old H1820 Direct1MiB 6485ms vs312ms and H1821 P1 CPU +7.42pct remain historical. New P2 signed Action running; no delivery claim."
+  "partial_summary": "H1823 true signed P2+Stop functional PASS on db6c, latency physical281ms Direct6141ms; 64KiB hypothesis not qualified. H1825 TCP_NODELAY candidate untested until exact next signed P2. H1821 P1 CPU/GiB+7.42pct and other D4/D5/Game4/GUI remain OPEN."
 }

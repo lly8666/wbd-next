@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1823",
+  "source_sha": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
+  "result": "PHYSICAL_FUNCTIONAL_PASS_PERFORMANCE_HYPOTHESIS_NOT_SUPPORTED",
+  "scope": "ONE_SIGNED_WINDOWS2025_WINTUN_GO_RUST_V3_TO_LINUX_PHYSICAL1M_VS_FAKEIP_DIRECT1M_WITH_120_CONCURRENT_TUNNEL_SMALL_UDP_AND_OWNED_STOP",
+  "action": {
+    "id": 43577224581,
+    "job_id": 132395217165,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43577224581"
+  },
+  "actual_source": {
+    "compiled_windows_rust_v3_dll_load_export": "PASS_BEFORE_DRIVER",
+    "source_frozen_sha": "db6c523d1b0b76f4adbffef88bd14fec0043c816",
+    "library_regressions": "PASS",
+    "signed_driver": "PASS_REAL_NPF_AND_WINTUN",
+    "linux_peer": "SAME_SOURCE_HASH_VERIFIED"
+  },
+  "observed": {
+    "physical_baseline": {
+      "echo_bytes": 1048576,
+      "elapsed_ms": 281,
+      "half_close": true,
+      "source": "172.28.176.1"
+    },
+    "direct_tcp": {
+      "echo_bytes": 1048576,
+      "elapsed_ms": 6141,
+      "half_close": true,
+      "presented_fakeip": "198.18.0.1",
+      "original_lease": "10.66.0.2",
+      "physical_guest_source": "172.28.176.1"
+    },
+    "exact_payload_sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "tunnel_small_udp": {
+      "windows_received": 120,
+      "linux_received": 120,
+      "overlap_with_direct_tcp": true,
+      "windows_max_interreply_gap_ms": 16,
+      "rtt_p99_ms_reported_zero_timer_resolution": "NOT_INTERPRETED_AS_ZERO_REAL_LATENCY"
+    },
+    "windows_and_linux_owned_stop": "PASS_BOTH_OWNED"
+  },
+  "prior_comparator": {
+    "run_id": 43574002456,
+    "source_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
+    "physical_baseline_ms": 312,
+    "direct_tcp_ms": 6485,
+    "relay_quantum_bytes": 4096
+  },
+  "tested_change": {
+    "relay_quantum_bytes": 65536,
+    "per_direction_limit_bytes": 65536,
+    "global_pending_pool": "UNCHANGED_8MIB",
+    "observed_effect": "NO_MATERIAL_DIRECT_1M_IMPROVEMENT_CONCURRENT_UDP_VS_BASELINE",
+    "attribution": "NOT_PROVEN"
+  },
+  "not_run": [
+    "P1 CPU per delivered GiB repeat",
+    "Game4 CN live split",
+    "GUI signed actual Connect Stop",
+    "D4 IPv6 full policy",
+    "Direct per-flow queue age/host kernel CPU"
+  ],
+  "next_hypothesis": "H1825 owned two-leg TCP_NODELAY once per accepted relay; distinct from quantum size and awaits new Action"
+}

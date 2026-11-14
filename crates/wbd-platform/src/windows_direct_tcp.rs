@@ -277,6 +277,14 @@ impl TcpDirectRelay{
         }
         inner.set_nonblocking(true).map_err(|e|relay_error("inner_nonblocking",e))?;
         outer.set_nonblocking(true).map_err(|e|relay_error("outer_nonblocking",e))?;
+        // Once per accepted Direct flow, both owned kernel TCP legs use
+        // TCP_NODELAY. With two independent ACK clocks, forwarding small
+        // writes while Nagle waits for a delayed ACK can create avoidable
+        // multi-turn stalls (H1823: 64KiB relay turns still took 6.141s
+        // vs 281ms physical for 1MiB). This hypothesis is NOT confirmed
+        // until one new signed same-VM P2 run; never change Tunnel sockets.
+        inner.set_nodelay(true).map_err(|e|relay_error("inner_nodelay",e))?;
+        outer.set_nodelay(true).map_err(|e|relay_error("outer_nodelay",e))?;
         Ok(Self{inner,outer,to_outer:VecDeque::new(),to_inner:VecDeque::new(),
             inner_eof:false,outer_eof:false,
             inner_write_closed:false,outer_write_closed:false,
@@ -363,6 +371,23 @@ impl TcpDirectRelay{
 #[cfg(test)]
 mod plan029_global_backpressure_tests{
     use super::*;
+    #[test]
+    fn two_owned_direct_relay_legs_disable_nagle_at_admission_only(){
+        fn accepted()->(TcpStream,TcpStream){
+            let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let peer=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (accepted,_)=listener.accept().unwrap();
+            (accepted,peer)
+        }
+        let (inner,application)=accepted();
+        let (outer,remote)=accepted();
+        let relay=TcpDirectRelay::new(inner,outer).unwrap();
+        assert!(relay.inner.nodelay().unwrap());
+        assert!(relay.outer.nodelay().unwrap());
+        // The application/remote endpoints aren't owned by the relay.
+        assert!(!application.nodelay().unwrap());
+        assert!(!remote.nodelay().unwrap());
+    }
     #[test]
     fn one_global_pool_blocks_only_new_direct_reads_not_drains(){
         assert_eq!(bounded_relay_read(0,64*1024,0),0);
