@@ -118,6 +118,24 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertIn(marker, requested)
         self.assertIn("'1460'", requested.split(marker, 1)[1].split("||", 1)[0])
 
+    def test_h1843_real_product_v3_abi_built_and_checked_before_driver(self):
+        workflow=(Path(__file__).resolve().parents[1] /
+                  ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        # Signed product build and runtime selection are different knobs.
+        # The CI-only trial stays off in the original Go child, but that
+        # cannot imply shipping a DLL without the V3 entrypoint.
+        feature_section=workflow.split("$features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'",1)[1]
+        feature_section=feature_section.split("& cargo +1.85.1 build --locked --release",1)[0]
+        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'",feature_section)
+        self.assertIn("$features+=',m0_v4_probe'",feature_section)
+        self.assertIn("WBD_PLAN029_NATIVE_V3_TRIAL -eq '1'",feature_section)
+        abi_section=workflow.split("Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll",1)[1]
+        abi_section=abi_section.split("windows-binary-manifest.json",1)[0]
+        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'",abi_section)
+        self.assertIn("getattr(d,\"wbd_m0_win_native_v3_start\")",abi_section)
+        self.assertIn("if (os.environ.get('WBD_PLAN029_NATIVE_V3_TRIAL')=='1' or",workflow)
+        self.assertIn("os.environ.get('WBD_PLAN029_PRODUCT_SPLIT_SCENE')=='1' or",workflow)
+
     def test_unknown_diff_fails_open_to_native(self):
         self.assertTrue(requires_native_smoke("push", []))
         self.assertTrue(requires_native_smoke("unknown", ["docs/README.md"]))

@@ -1103,11 +1103,14 @@ jobs:
           $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
           $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
-          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1'){
-            # The original V3 entry point is cold/probe-scoped; it is
-            # NOT linked in the ordinary public Windows DLL.
+          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+            # Real explicit CN product uses the SAME V3 ABI as a signed
+            # private trial, but activation comes only from --split-enable.
+            # Do not omit the ABI from the normal release DLL on product
+            # test sources; never silently borrow an earlier probe DLL.
             $features+=',m0_v4_probe'
-            Write-Output 'PLAN029_EXACT_SOURCE_PRIVATE_RUST_V3_PROBE_FEATURE_ENABLED'
+            Write-Output 'PLAN029_EXACT_SOURCE_V3_ABI_FOR_EXPLICIT_OR_TRIAL'
           }
           & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
           if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
@@ -1121,7 +1124,8 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
-          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1'){
+          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
             # Real Windows native DLL load/export, before any driver install.
             # A manifest with ISA-L but no m0_v4_probe is NOT a V3 binary.
             & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start"); print("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS")'
@@ -1253,6 +1257,7 @@ jobs:
               b=(p/name).read_bytes()
               assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]
           if (os.environ.get('WBD_PLAN029_NATIVE_V3_TRIAL')=='1' or
+              os.environ.get('WBD_PLAN029_PRODUCT_SPLIT_SCENE')=='1' or
               os.environ.get('WBD_PLAN029_P1_AB_SCENE')=='1'):
               import ctypes
               native=ctypes.WinDLL(str((p/'wbd_engine.dll').resolve()))

@@ -43,6 +43,14 @@
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
  const BATCH:usize=8;
+ // Same bounded physical/locally-translated IPv4 buffer carries TCP and
+ // UDP. Never use UDP's permitted datagram-drop policy for kernel TCP ACK,
+ // FIN or DATA; a single lost translated ACK can force an OS RTO.
+ #[inline]
+ fn is_direct_tcp_ipv4(packet:&[u8])->bool{
+     packet.len()>=40 && packet[0]>>4==4 &&
+     packet[0]&15>=5 && packet[9]==6
+ }
  // Auto-reset Windows TX events preserve a pending wake. Once per ready
  // batch is sufficient; a partial batch flushes before any next RX wait.
  const RX_WAKE_BATCH:usize=32;
@@ -841,11 +849,24 @@
                  for _ in 0..8{
                      let Some(n)=owner.poll_udp_reverse(&mut complete,now_ms)
                          else{break};
-                     reverse_count+=1;
                      let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
                      match queue.try_send(complete[..n].to_vec()){
-                         Ok(())=>{let _=direct_notify.wake();},
-                         Err(TrySendError::Full(_))=>{
+                         Ok(())=>{
+                             reverse_count+=1;
+                             let _=direct_notify.wake();
+                         },
+                         Err(TrySendError::Full(packet))=>{
+                             if is_direct_tcp_ipv4(&packet){
+                                 // Preserve already NAT-translated TCP
+                                 // ACK/data in the original actor FIFO.
+                                 // No dropped TCP segment, no per-flow wait,
+                                 // and no active-spin while RX is full.
+                                 owner.requeue_tcp_reverse(packet)
+                                     .map_err(|_|BAD_STAGE)?;
+                                 break
+                             }
+                             // Direct UDP is intentionally lossy under
+                             // local pressure, independent of Tunnel.
                              counters.rejected.fetch_add(1,Ordering::Relaxed);
                          },
                          Err(TrySendError::Disconnected(_))=>return Err(BAD_STAGE),
@@ -1064,25 +1085,50 @@
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
      let mut last_sack_publish=Instant::now();
+     // At most ONE failed TCP return is held outside the 256-item mailbox.
+     // No thread/worker per flow, no second Wintun writer, no unbounded
+     // backlog. UDP may still be discarded when the Wintun ring is full.
+     let mut deferred_direct_tcp:Option<Vec<u8>>=None;
      loop{
          if counters.stopping.load(Ordering::Acquire){return OK}
-         // Rust original Wintun TX is sole owner of BOTH authenticated
-         // Tunnel replies and already-complete physical Direct UDP replies.
-         // Direct mailbox is bounded to 256 datagrams, no waiting on DNS,
-         // connect, Npcap, or Go. Ring TX allocates only after byte-ready.
+         // Both Tunnel and Direct packets have ONE native Wintun TX owner.
+         // A TCP ACK/window-update or DATA must survive a transient full
+         // Wintun ring; discarding it here incurs real kernel RTO stalls.
          if let Some(ready)=direct_returns.as_ref(){
+             let mut freed_mailbox=false;
              for _ in 0..RX_WAKE_BATCH{
-                 match ready.try_recv(){
-                     Ok(packet)=>{
-                         if tun.deliver_native_direct_response(&packet).is_err(){
-                             // Datagram-specific Wintun pressure is a local
-                             // drop, never a fabricated authenticated reply.
-                             counters.rejected.fetch_add(1,Ordering::Relaxed);
-                         }
+                 let packet=if let Some(packet)=deferred_direct_tcp.take(){
+                     packet
+                 }else{
+                     match ready.try_recv(){
+                         Ok(packet)=>{freed_mailbox=true;packet},
+                         Err(TryRecvError::Empty)=>break,
+                         Err(TryRecvError::Disconnected)=>return BAD_STAGE,
+                     }
+                 };
+                 let tcp=is_direct_tcp_ipv4(&packet);
+                 match tun.deliver_native_direct_response(&packet){
+                     Ok(())=>{},
+                     Err(io::NativeIoError::BufferTooSmall) if tcp=>{
+                         // Exact FIFO stays at the front until the real
+                         // Wintun kernel ring has a slot. One retry every
+                         // 5ms ONLY under actual backpressure, not idle.
+                         deferred_direct_tcp=Some(packet);
+                         break
                      },
-                     Err(TryRecvError::Empty)=>break,
-                     Err(TryRecvError::Disconnected)=>return BAD_STAGE,
+                     Err(io::NativeIoError::BufferTooSmall)=>{
+                         counters.rejected.fetch_add(1,Ordering::Relaxed);
+                     },
+                     Err(_) if tcp=>return BAD_STAGE,
+                     Err(_)=>{
+                         counters.rejected.fetch_add(1,Ordering::Relaxed);
+                     },
                  }
+             }
+             if freed_mailbox{
+                 // One batched cross-worker wake on newly free mailbox
+                 // space; TCP TX never needs to poll a FULL channel forever.
+                 let _=tx_notify.wake();
              }
          }
          // Drain genuine Go pre-handoff packets FIRST, in original order.
@@ -1104,7 +1150,11 @@
              }
          }
          if early_wakes.finish(){flush_tx_wake(&tx_notify,&counters);}
-         match io::wait_ready(&[stop.handle(),event,early_notify.handle()],IDLE_WAIT){
+         // Only a real TCP Wintun allocation refusal needs a bounded
+         // 5ms retry. Otherwise preserve the original event-driven,
+         // indefinite low-CPU Tunnel RX wait.
+         let wait_ms=if deferred_direct_tcp.is_some(){5}else{IDLE_WAIT};
+         match io::wait_ready(&[stop.handle(),event,early_notify.handle()],wait_ms){
              Ok(WaitResult::Ready(0))=>return OK,
              Ok(WaitResult::Ready(1|2))=>{},
              Ok(WaitResult::Timeout)=>continue,
@@ -1665,6 +1715,18 @@
              if signal {assert_eq!(b.pending,0);}
          }
          assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
+     }
+     #[test]
+     fn plan029_tcp_return_never_uses_udp_datagram_drop_class(){
+         let mut tcp=[0u8;40];
+         tcp[0]=0x45;tcp[9]=6;
+         assert!(is_direct_tcp_ipv4(&tcp));
+         tcp[9]=17;
+         assert!(!is_direct_tcp_ipv4(&tcp));
+         tcp[9]=6;tcp[0]=0x65;
+         assert!(!is_direct_tcp_ipv4(&tcp));
+         tcp[0]=0x45;
+         assert!(!is_direct_tcp_ipv4(&tcp[..39]));
      }
      #[test]
      fn plan029_direct_only_full_ingress_quantum_is_not_idle(){

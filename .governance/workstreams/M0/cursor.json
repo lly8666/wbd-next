@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1842,
-  "checkpoint_sha": "b7e947a8ede357e6e7c0459db2a85bf61eae7e41",
+  "sequence": 1843,
+  "checkpoint_sha": "15ead3c4bd340585ebb921550b7bc46fbce877f6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1842: preserve H1841 signed nonCI Normal CN product scene source b7e currently in_progress; do not duplicate. Restore governance source-scoped proof: only H1839 source a50 P2 evidence is evidence_ref with tested_source a50; separate H1840 source825 preflight evidence belongs to context_ref, not falsely same SOURCE. Audit M0 current derived assembler SHA 31da; preserve immutable historical M4. Await real H1841 result and then diagnose TCP ACK/window against P2 >38s.",
-  "why_now": "H1841 governance main reports 'evidence is for a different SOURCE' because distinct-source evidence was co-indexed, and maintenance pinned old reviewed M0 assembler Git SHA. Those are schema/provenance failures, not runtime failures. Correct ledger and reviewed derivation without weakening checks or launching parallel native scenes.",
+  "current_task": "H1843: repair concrete TCP reverse-loss fault across 256-entry TX->RX mailbox Full and actual Wintun ring BufferTooSmall: TCP packet is retained FIFO in original NativeTcpActor or one original RX held packet, UDP remains lossy, only real backpressure 5ms bounded retry. New signed P2 exclusive source marker with actual Rust unit and end-to-end not yet terminal. Separately H1841 signed nonCI product source b7e failed BEFORE READY: original Go looked up missing wbd_m0_win_native_v3_start because Windows DLL was built without m0_v4_probe when private trial OFF; fix build/export source gate for explicit product, do not conflate ABI failure with packet performance.",
+  "why_now": "H1839 actual source showed both upload/download ~19s and 64K reverse backlog with long-Tunnel UDP progress. Rust packet path incorrectly discards native TCP ACK/DATA on bounded channel/ring pressure; TCP requires ordered backpressure not UDP-style drop. H1841 showed actual nonCI source product ABI omission, no OS evidence. Fix both independent deterministic code defects before new source-locked checks.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect signed H1841 source b7e nonCI product Action 43597050204 actual OS App/Ready, real DNS/Direct TCP UDP/Tunnel/owned Stop. Independently investigate H1839 P2 synthetic TCP ACK receive window/retransmissions from bounded signed evidence; avoid unsupported performance PASS. Keep Game4/IPv6 GUI OS Stop/P1 slow-journal OPEN.",
+  "next_action": "Collect H1843 Rust unit/Windows Linux source build and one signed P2 full phase timing+continuous Tunnel UDP and owned Stop. Separately launch one distinct source-locked H1844 nonCI explicit product CN activation only after H1843 code/ABI build gate, with actual OS Applied/Ready/DNS/TCP/UDP/Stop. If P2 still >38s use matched Windows synthetic TCP ACK/window/retransmissions, no false throughput PASS. Game4 CN/IPv6, GUI OS Connect/Stop, P1, FakeIP slow I/O stress remain OPEN.",
   "unverified": true,
   "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1840-NONCI-PRODUCT-CN-SIGNED-SOURCE.md",
     "docs/devlog/M0/20261114-PLAN029-H1841-P2-ACK-SLOW-GUI-PRODUCT-MTU-PREFLIGHT.md",
-    "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json",
+    "docs/devlog/M0/20261114-PLAN029-H1843-TCP-REVERSE-FIFO-AND-PRODUCT-ABI.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1841 product source b7e paired MTU in external signed run, result pending. H1839 sourcea50 signed P2 >38s, physical297ms, Direct upload18.969s and downloaded917504B by37.172s, Rust reverse backlog65536, Tunnel UDP>2432. H1840 source825 was pre-network MTU fixture mismatch. H1842 repairs governance evidence source scope and M0 reviewed assembler SHA only; historical M4 unchanged."
+  "partial_summary": "H1839 sourcea50 actual P2 FAIL: Direct upload18.969s, first reply21.172s, 917504B echoed at37.172s, physical297ms, real TCP reverse backlog65536; original code drops TCP on channel and Wintun full. H1843 fixes bounded FIFO/retry, test awaits signed P2. H1841 nonCI product sourceb7e build correct but original Go DLL V3 export absent at startup, H1843 build source fixes ABI and awaits separate product signed test. H1838 GUI CLI PASS_SCOPED."
 }

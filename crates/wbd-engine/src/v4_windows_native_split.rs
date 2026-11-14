@@ -491,6 +491,15 @@ impl NativeSplitWorker {
             Err(_)=>NativeDecision::LocalDrop,
         }
     }
+    /// Restore the exact TCP NAT return already selected by this worker
+    /// when its bounded cross-worker mailbox reports Full. Unlike UDP,
+    /// a lost ACK/window update can trigger seconds of retransmit delay.
+    /// Called exclusively on the original TX thread, before any new TCP
+    /// return is popped; never moves DNS or physical Direct flow identity.
+    pub(crate) fn requeue_tcp_reverse(&mut self,packet:Vec<u8>)
+        ->Result<(),()>{
+        self.tcp.as_mut().ok_or(())?.restore_tcp_ready_front(packet)
+    }
     pub(crate) fn poll_udp_reverse(&mut self,out:&mut[u8],now_ms:u64)
         ->Option<usize>{
         // Fair 3-queue rotation prevents a busy TCP handshake burst from

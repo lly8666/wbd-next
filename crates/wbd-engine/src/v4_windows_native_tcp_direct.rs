@@ -74,6 +74,18 @@ impl ClosedNatGrace{
         }
     }
 }
+/// TCP reverse returns have a stricter loss rule than UDP under the same
+/// bounded 256-entry mailbox. This helper also makes the FIFO/limit invariant
+/// testable without creating a WinSock listener or a second owner.
+fn retain_native_tcp_front(queue:&mut VecDeque<Vec<u8>>,packet:Vec<u8>)
+    ->Result<(),()>{
+    if queue.len()>=MAX_READY || packet.len()<40 ||
+        packet[0]>>4!=4 || packet[9]!=6 {
+        return Err(())
+    }
+    queue.push_front(packet);
+    Ok(())
+}
 // Only actual accept/connect/relay progress can skip the owner's idle wait.
 // WouldBlock is not progress; closed NAT metadata remains deadline-driven.
 pub(crate) struct TcpServiceTick{
@@ -165,6 +177,16 @@ impl NativeTcpActor{
     pub(crate) fn resident_bytes(&self)->usize{self.resident_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
         self.ready.pop_front()
+    }
+    /// A TCP reply that could not enter the bounded TX->RX mailbox MUST
+    /// stay in its exact NAT order. Dropping one translated TCP ACK/DATA
+    /// makes Windows wait for a retransmit timeout (~seconds), whereas a
+    /// Direct UDP datagram may legitimately be discarded under pressure.
+    /// This restores only an already authenticated, previously popped
+    /// kernel TCP return; no new NAT flow or Wintun reader is created.
+    pub(crate) fn restore_tcp_ready_front(&mut self,packet:Vec<u8>)
+        ->Result<(),()>{
+        retain_native_tcp_front(&mut self.ready,packet)
     }
     /// All kernel-side L3 writes enqueue bytes, never borrow a second
     /// Wintun session, and never block an authenticated Tunnel DATA batch.
@@ -499,6 +521,24 @@ mod tests{
         p[20..22].copy_from_slice(&sport.to_be_bytes());
         p[22..24].copy_from_slice(&dport.to_be_bytes());
         p[32]=0x50;p[33]=flags;p
+    }
+    #[test]
+    fn plan029_tcp_mailbox_backpressure_restores_exact_original_fifo(){
+        let ip=u32::from(Ipv4Addr::new(10,66,0,2));
+        let synthetic=u32::from(Ipv4Addr::new(198,19,1,1));
+        let first=packet(ip,synthetic,55000,32768,0x10).to_vec();
+        let later=packet(ip,synthetic,55000,32768,0x18).to_vec();
+        let mut ready=VecDeque::from([later.clone()]);
+        assert_eq!(retain_native_tcp_front(&mut ready,first.clone()),Ok(()));
+        assert_eq!(ready.pop_front(),Some(first.clone()));
+        assert_eq!(ready.pop_front(),Some(later));
+        let mut udp=first.clone();
+        udp[9]=17;
+        assert_eq!(retain_native_tcp_front(&mut ready,udp),Err(()));
+        assert!(ready.is_empty());
+        for _ in 0..MAX_READY{ready.push_back(first.clone());}
+        assert_eq!(retain_native_tcp_front(&mut ready,first),Err(()));
+        assert_eq!(ready.len(),MAX_READY);
     }
     #[test]
     fn plan029_close_retain_exact_nat_until_kernel_tcp_fin_retransmit_grace(){
