@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1841,
-  "checkpoint_sha": "82585c62c07060248d342be19b8f70eb56cda472",
+  "sequence": 1842,
+  "checkpoint_sha": "b7e947a8ede357e6e7c0459db2a85bf61eae7e41",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1841: H1839 sourcea50 signed P2 FAIL: physical1MiB297ms, Direct upload19.7s and downloaded917504 by37.17s; 1Hz Rust outer echo read all, inner Windows write 65536 behind, resident98304. Must measure Windows TCP ACK/window not enlarge buffers/1ms polls. H1840 source825 explicit product nonCI signed scene never launched client: workflow default1460 outer vs WBD_WL_TUN_MTU=1400 preflight rejected; H1841 fix MTU selector pair to1460, static guard, only product marker. Network NOT_RUN until Action.",
-  "why_now": "Current P2 bottleneck now isolated to Windows kernel inner TCP leg; no meaningful fix without ACK/window/retransmission evidence. Independent public entry attempts are blocked by a correct test-source MTU mismatch, so fix exact generator once with regression guard before drawing product conclusions.",
+  "current_task": "H1842: preserve H1841 signed nonCI Normal CN product scene source b7e currently in_progress; do not duplicate. Restore governance source-scoped proof: only H1839 source a50 P2 evidence is evidence_ref with tested_source a50; separate H1840 source825 preflight evidence belongs to context_ref, not falsely same SOURCE. Audit M0 current derived assembler SHA 31da; preserve immutable historical M4. Await real H1841 result and then diagnose TCP ACK/window against P2 >38s.",
+  "why_now": "H1841 governance main reports 'evidence is for a different SOURCE' because distinct-source evidence was co-indexed, and maintenance pinned old reviewed M0 assembler Git SHA. Those are schema/provenance failures, not runtime failures. Correct ledger and reviewed derivation without weakening checks or launching parallel native scenes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1841 signed nonCI CLI product Normal source in real Windows+Linux, OS Applied/Ready/DNS+physical Direct TCP UDP/Tunnel+owned Stop. Next do targeted TCP kernel window/ACK evidence and one true sameVM no/yes small Tunnel UDP matched contrast to fix >38s source P2. GUI user Connect/Stop, Game4, IPv6, P1, slow fsync remain OPEN.",
+  "next_action": "Collect signed H1841 source b7e nonCI product Action 43597050204 actual OS App/Ready, real DNS/Direct TCP UDP/Tunnel/owned Stop. Independently investigate H1839 P2 synthetic TCP ACK receive window/retransmissions from bounded signed evidence; avoid unsupported performance PASS. Keep Game4/IPv6 GUI OS Stop/P1 slow-journal OPEN.",
   "unverified": true,
   "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1841-H1839-SIGNED-P2-REAL-TCP-LEG-COUNTERS-20261114.json",
-    "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1841-H1839-SIGNED-P2-REAL-TCP-LEG-COUNTERS-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,10 +23,10 @@
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
     "docs/devlog/M0/20261114-PLAN029-H1840-NONCI-PRODUCT-CN-SIGNED-SOURCE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1841-P2-ACK-SLOW-GUI-PRODUCT-MTU-PREFLIGHT.md"
+    "docs/devlog/M0/20261114-PLAN029-H1841-P2-ACK-SLOW-GUI-PRODUCT-MTU-PREFLIGHT.md",
+    "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1839 sourcea50 real P2 FAIL: Direct sends1MiB in19.7s and returns<1MiB after38s, physical297ms, kernel relay backlog exactly65536; cause ACK/window pending. H1840 source825 product nonCI Action compile PASS but test preflight outer1460 vs configured TUN1400 FAIL before client. H1841 source candidate exact env correction and test. H1838 GUI check PASS, actual GUI OS Connect/Stop NOT_RUN."
+  "partial_summary": "H1841 product source b7e paired MTU in external signed run, result pending. H1839 sourcea50 signed P2 >38s, physical297ms, Direct upload18.969s and downloaded917504B by37.172s, Rust reverse backlog65536, Tunnel UDP>2432. H1840 source825 was pre-network MTU fixture mismatch. H1842 repairs governance evidence source scope and M0 reviewed assembler SHA only; historical M4 unchanged."
 }

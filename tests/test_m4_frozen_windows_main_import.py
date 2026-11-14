@@ -65,7 +65,7 @@ M0_AUTHORIZED_CURRENT = {
 # rewrite any historical M4_FROZEN/PINNED_FILES, and a separately pinned
 # baseline protects the one derived 12-file Windows donor in PLAN020.
 M0_PLAN029_REVIEWED_CURRENT = {
-    "r0/go_overlay/assembly/assemble.py": "2bbb6b5a1e337f2637a183c9c8727144b65ac0a5",
+    "r0/go_overlay/assembly/assemble.py": "31da7dd474f91010b02bfb7c6648334270bd2ed1",
     "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "72a3693c72e207f2a2fe72e957c27a871ab5291b",
     "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go": "4c9783d5a6218da87ca27c279f6f1563c449d162",
     "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go": "3b8ddc0facb0a342fa688182d551b2a06e249451",
