@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1820",
+  "source_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
+  "result": "PHYSICAL_PASS_NOT_PERFORMANCE_OPTIMIZATION",
+  "scope": "ONE_SIGNED_WINDOWS2025_NPF_WINTUN_NORMAL_TO_LINUX_WSL2_TUN_PHYSICAL_TCP_1M_VS_FAKEIP_RUST_DIRECT_TCP_1M_CONCURRENT_120_SMALL_TUNNEL_UDP_AND_OWNED_STOP",
+  "action": {
+    "id": 43574002456,
+    "job_id": 132385435685,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43574002456"
+  },
+  "actual_source_built_abi": {
+    "windows_rust_features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration,m0_v4_probe",
+    "win32_native_load_and_getprocaddress": "wbd_m0_win_native_v3_start PASS_BEFORE_SIGNED_DRIVER_INSTALL",
+    "linux_original_go_rust_server_same_source": true,
+    "windows_exe_dll_artifact": "m0-wl-windows-product-binaries-b7b688573326580e39571c1e748663b8566d5fc2"
+  },
+  "observed": {
+    "physical_tcp_baseline": {
+      "echo_bytes": 1048576,
+      "elapsed_ms": 312,
+      "real_winsock_source": "172.30.176.1",
+      "linux_guest_physical_tcp_dst": "172.30.183.139",
+      "half_close": true
+    },
+    "fakeip_direct_tcp": {
+      "echo_bytes": 1048576,
+      "elapsed_ms": 6485,
+      "original_signed_wintun_lease": "10.66.0.2",
+      "presented_fake_ip": "198.18.0.1",
+      "linux_guest_receives_same_physical_source": "172.30.176.1",
+      "half_close": true
+    },
+    "same_payload_sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "small_tunnel_udp": {
+      "payload_size": 96,
+      "windows_received": 120,
+      "linux_received": 120,
+      "source_lease": "10.66.0.2",
+      "tunnel_destination": "203.0.113.77",
+      "real_time_overlap_with_direct_tcp": true,
+      "max_interreply_gap_ms": 31,
+      "rtt_p99_recorded_ms": 0,
+      "rtt_zero_interpretation": "DO_NOT_INFER_ZERO_REAL_LATENCY_FROM_TIMER_PRECISION"
+    },
+    "normal_original_dns_direct_tunnel_tcp_udp": "PASS",
+    "both_original_os_owned_stop": "PASS_BOTH_OWNED",
+    "terminal": "PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED"
+  },
+  "performance_risk": {
+    "physical_1m_ms": 312,
+    "direct_1m_ms": 6485,
+    "status": "DIRECT_STACK_OBSERVED_SLOWER_ONE_EXPERIMENT_NOT_ALGORITHM_CAUSAL",
+    "interpretation": "Different physical and Wintun/Go/Rust socket paths; no separate driver CPU isolation"
+  },
+  "historical_failure": {
+    "run_id": 43573210008,
+    "reason": "OLD_H1814_ISA_L_DLL_MISSING_M0_V4_PROBE_EXPORT_AFTER_TLS"
+  },
+  "not_run": [
+    "P2 throughput performance parity",
+    "Real external Internet destination",
+    "Game4 direct/tunnel native split",
+    "GUI native Start/Stop",
+    "IPv6 D4 full policy",
+    "severe loss or stress matrices"
+  ]
+}

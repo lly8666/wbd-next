@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1821",
+  "source_sha": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
+  "result": "MEASUREMENT_PASS_PERFORMANCE_TARGET_NOT_QUALIFIED",
+  "scope": "ONE_WINDOWS2025_SIGNED_WINTUN_VM_SEQUENTIAL_NORMAL_A_V4_TUNNEL_B_V3_ALL_TUNNEL_50MBPS_EACH_25MS0_LOSS_60S_EACH_REAL_LINUX_WSL2",
+  "action": {
+    "id": 43574961780,
+    "job_id": 132387216617,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43574961780"
+  },
+  "binaries": {
+    "product_source_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
+    "windows_artifact": "m0-wl-windows-product-binaries-b7b688573326580e39571c1e748663b8566d5fc2",
+    "linux_artifact": "m0-plan024-linux-product",
+    "producer_run": 43574002456,
+    "native_features": "m0_v4_embedded_go,fec2_product_record,native_fec_acceleration,m0_v4_probe",
+    "same_exe_dll_linux_server_sha_between_legs": true,
+    "real_windows_v3_export_verified": true,
+    "source_manifest_and_sha256_verified": true,
+    "product_code_diff_between_sources": "NONE"
+  },
+  "conditions": {
+    "each_direction_offered_mbps": 50,
+    "declared_tc_delay_ms": 25,
+    "kernel_injected_loss_pct": 0,
+    "each_measurement_duration_seconds": 60,
+    "packet_payload_bytes": [
+      96,
+      1200
+    ]
+  },
+  "A": {
+    "mode": "original_V4_Tunnel_only",
+    "delivered_gib_both_directions": 0.6984,
+    "unique_first_delivery_fraction_each_direction": 1,
+    "win_go_plus_rust_process_cpu_s": 7.375,
+    "cpu_seconds_per_actual_delivered_gib": 10.5599,
+    "windows_peak_rss_bytes": 42340352,
+    "win_udp_rtt_p99_ms": 47,
+    "linux_udp_rtt_p99_ms": 53.738,
+    "max_interdelivery_gap_ms_windows": 31,
+    "max_interdelivery_gap_ms_linux": 45,
+    "tcp_udp_and_owned_stop": "PASS_BOTH_OWNED"
+  },
+  "B": {
+    "mode": "Rust_V3_split_route_mode_all_Tunnel_only",
+    "delivered_gib_both_directions": 0.6984,
+    "unique_first_delivery_fraction_each_direction": 1,
+    "win_go_plus_rust_process_cpu_s": 7.9219,
+    "cpu_seconds_per_actual_delivered_gib": 11.343,
+    "windows_peak_rss_bytes": 41418752,
+    "win_udp_rtt_p99_ms": 47,
+    "linux_udp_rtt_p99_ms": 55.739,
+    "max_interdelivery_gap_ms_windows": 31,
+    "max_interdelivery_gap_ms_linux": 41,
+    "tcp_udp_and_owned_stop": "PASS_BOTH_OWNED"
+  },
+  "verdict": {
+    "real_two_legs_and_stop": "PASS",
+    "cpu_B_over_A": 1.0742,
+    "cpu_per_delivered_gib_B_higher_percent": 7.42,
+    "project_investigation_threshold_percent": 5,
+    "p1_performance_target": "NOT_QUALIFIED_EXCEEDS_INVESTIGATION_LINE",
+    "interpretation": "A V4 old backend vs B V3/all, not isolated classifier CPU; one ordered AB observation",
+    "driver_cpu": "NOT_SEPARATELY_MEASURED",
+    "cross_os_oneway_p99": "NOT_MEASURED",
+    "tunnel_oldest_pending_queue_age": "NOT_MEASURED"
+  },
+  "prior_failed_historical_action": {
+    "run_id": 43573356427,
+    "reason": "OLD_H1814_REUSED_DLL_LACKED_V3_START_EXPORT",
+    "A_pass": true,
+    "B_fail": true
+  },
+  "not_run": [
+    "Direct and split concurrent P2 is separate H1820",
+    "Game4 split real business",
+    "GUI signed Connect/Stop",
+    "IPv6 OS/policy full recovery",
+    "randomized repeated statistical A/B"
+  ]
+}

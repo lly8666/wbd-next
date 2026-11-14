@@ -4,30 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1821,
-  "checkpoint_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
+  "sequence": 1822,
+  "checkpoint_sha": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1821 staged NOT_PUSHED until H1820 exact native V3-export Windows product artifact and Linux peer artifacts verified exist. P1 same-VM Normal A/B will reuse new H1820 SOURCE b7b and actual V3 GetProcAddress, direct product dir no diff. H1820 signed P2 Action building. Prior H1819 A valid 50Mbps/11.701 CPU sec per GiB, B missing old c262 symbol. PLAN029 IN_PROGRESS.",
-  "why_now": "Old c262 ISA-L DLL lacked V3 ABI; H1820 one full correct V3 compile is in-flight. H1821 source-only staged update swaps P1/P2 optional reuse to correct new H1820 run 43574002456 / source b7b and validates DLL V3 export before Wintun, not merely hash.",
+  "current_task": "H1822 actual signed P2 SOURCEb7b real V3 ABI/physical TCP1M vs FakeIP Direct1M +120 concurrent small Tunnel UDP and owned Stop PHYSICAL_PASS, but Direct 6485ms vs physical312ms one run performance risk. P1 SOURCE241 same-VM V4 vs V3 all Normal pure Tunnel both 50Mbps/25ms0%60s/Stop PASS, 0.6984GiB each, Go+Rust CPU/actual GiB 10.5599 vs11.343 (+7.42% exceeds5% investigation), one-way p99/driver CPU not measured. PLAN029 IN_PROGRESS.",
+  "why_now": "H1820/H1821 distinct Actions completed with actual original two-OS business and signed owned Stop after fixing V3 DLL export. Record two source-qualified results separately and performance limitations, not broad PLAN029 completion nor optimization claim.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Only after actual H1820 Windows artifact 'm0-wl-windows-product-binaries-b7b...' and linux-product manifest uploaded, CAS-push H1821 P1 source reuse marker. Then collect P1 A/B and P2 true scoped outcomes, preserve FAIL.",
+  "next_action": "Next distinct missing value: Game4/2/FEC actual CN split from single Rust Wintun ingress and direct vs Tunnel; GUI-origin signed Connect/Stop; bounded D4 native IPv6 OS/restore. P1 CPU +7.42% and Direct 1MiB latency gap merit one targeted attribution hypothesis only, no noise tuning or repeating old 028 7-mode or x86/ARM pure tests.",
   "unverified": true,
-  "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+  "last_tested_source": "241418ff0e78a80894ffdc344afaab73c77a3b0e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1813-H1812-THREE-ARCH-10K-PRODUCTION-RUST-RULES-20261114.json",
-    "docs/evidence/M0/PLAN029-H1813-H1812-REAL-WINFORMS-CN-UNION-GO-RUST-CONFIG-20261114.json"
+    "docs/evidence/M0/PLAN029-H1822-H1821-P1-REAL-TUNNEL-SAMEVM-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json",
     "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json",
-    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
+    "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1821 activation conditioned on H1820 build artifacts; no new P1 action yet. Product code unchanged. H1819 A 50Mbps/0.69839GiB/11.701 CPU s/GiB real; old B bad DLL cannot qualify."
+  "partial_summary": "H1822 signed P2 real physical1M vs FakeIPDirect1M +120 concurrent small Tunnel UDP, Stop PASS but Direct relative performance risk. Same binary H1821 source A V4/B V3 all-Tunnel real both Stop/50Mbps true, CPU/GiB +7.42% >5% target (functional PASS not performance goal). Windows/Linux x86, Linux ARM64 prior pure and GUI config scoped evidence preserved; IPv6/Game4 real split/signed GUI-origin remain."
 }
