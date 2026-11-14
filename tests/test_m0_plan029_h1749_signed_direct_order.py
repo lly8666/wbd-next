@@ -277,15 +277,36 @@ class NativeDirectOrder(unittest.TestCase):
     def test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env(self):
         import ast
         ast.parse(S)
-        self.assertIn('peer,host_source,"1" if p029_cache else "0"]',S)
+        self.assertIn('peer,host_source,"2" if p029_multia else "1" if p029_cache else "0"]',S)
         guest=(Path(__file__).resolve().parents[1]/"tools"/
                "m0_plan029_h1745_guest_dns_direct.py").read_text()
         ast.parse(guest)
-        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1"):',guest)
+        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2"):',guest)
+        self.assertIn('multia_mode=sys.argv[3]=="2"',guest)
         self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
         self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',guest)
         self.assertIn('time.monotonic()-settled_at>=2.5',guest)
         self.assertIn('if cache_mode and observed["target_dns_count"]!=1:',guest)
+    def test_h1807_d3_multia_real_requires_distinct_fakes_and_two_os_stop(self):
+        import ast
+        ast.parse(S)
+        root=Path(__file__).resolve().parents[1]
+        guest=(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py").read_text()
+        win=(root/"tools"/"m0_plan029_h1745_win_client_dns_direct.py").read_text()
+        ast.parse(guest);ast.parse(win)
+        self.assertIn('answer_count=3 if multia_mode else 2',guest)
+        self.assertIn('socket.inet_aton("203.0.113.89")',guest)
+        self.assertIn('if multia_mode:observed["multi_a_answers"]+=1',guest)
+        self.assertIn('expected=2 if multia_mode else 1',win)
+        self.assertIn('len(set(addresses))!=expected',win)
+        self.assertIn('p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"',S)
+        self.assertIn('report["plan029_d3_multia_real"]["stop"]="PASS_BOTH_OWNED"',S)
+        self.assertIn('len(set(fakes))!=2',S)
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("WBD_PLAN029_D3_MULTIA_SCENE:",workflow)
+        self.assertIn("PLAN029_H1807_REAL_CN_CNAME_TWO_A_TWO_FAKEIP_DIRECT_UDP_OWNED_STOP_PASS_SCOPED",workflow)
+        self.assertIn("$m.stop -ne 'PASS_BOTH_OWNED'",workflow)
+        self.assertIn("$m.linux.target_dns_count -ne 1",workflow)
     def test_h1791_signed_default1460_original_two_os_readback_and_stop(self):
         import ast
         ast.parse(S)

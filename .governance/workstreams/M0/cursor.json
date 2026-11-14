@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1807,
-  "checkpoint_sha": "d7d2c478bb615d2ba322e2d561aa6694d5d3f857",
+  "sequence": 1808,
+  "checkpoint_sha": "53b838a2d37d91ed5696e30c0ead9311e0615db5",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1807 SOURCE-frozen batch: one signed original Normal Windows2025/WSL2 x86 CN CNAME/two real A -> distinct FakeIPs/physical Direct UDP/owned Stop, plus a separate Linux native ARM64 Rust PLAN029+Game4/FEC pure Action. New results NOT_RUN, old x86 evidence preserved. PLAN029 IN_PROGRESS.",
-  "why_now": "First missing practical D3 real multi-A/CNAME and Linux ARM64 native execution with mode representatives; no repeat H1778 Direct hard8, H1799 startup padding, or full 028 matrix. One commit launches two different actions.",
+  "current_task": "H1808 H1807 first gate exact: native run43565277807 FAIL before product build at old H1785 static fixture asserting only guest '0/1'; H1807 adds explicit '2' signed multi-A. Update static test to validate all 3 and add H1807 witness negative controls. ARM64 actual-native run43565277853 PASS pure 50 PLAN029+13 Game4+12 FEC at SOURCE53b. Signed D3 networking NOT_RUN yet. PLAN029 IN_PROGRESS.",
+  "why_now": "A narrowly stale test assertion caused first H1807 native gate FAIL before Windows/WSL2; fix test contract, not firewall or DNS. Separate ARM64 Action already successfully completed and must not be dispatched again.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1807 signed multi-A Action and ARM64 native unit Action, repair only first failure. D3 real small-quota recovery/TC1, D4 IPv6/partial Apply, D5 GUI effective, P1/P2 measured A/B and Game4 Split remain OPEN.",
+  "next_action": "Collect exact SOURCE H1808 single signed D3 multi-A Windows/Linux run, inspect first network boundary; do not rerun ARM64 pure or H1785 older cache tests. After D3, D4 OS/IPv6, D5 GUI, P1/P2 and mode wiring remain.",
   "unverified": true,
   "last_tested_source": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1807 staging only; H1806 Windows/Linux x86 pure FakeIP quota BUILD_PASS and past signed H1799 Normal flows PASS scoped. New D3 CN CNAME two A scene and native ARM64 mode test require real Action logs. No product-wide pass."
+  "partial_summary": "At H1807 ARM64 actual native Rust pure 50 plan029, 13 Game4, 12 FEC PASS on SHA53b; signed Windows D3 CNAME multi-A Action blocked by obsolete fixture static assert, not by network. H1808 updates exact assertion and reruns only new network scene."
 }
