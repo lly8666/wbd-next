@@ -31,6 +31,7 @@ type m0NativeV4Options struct {
  AdapterAlias,StatePath string
  DNSServers4 []netip.Addr
  DirectDNS4 netip.Addr // original physical cold bootstrap, single configured DNS
+ DirectFlowHard uint32 // 0=16384 default; cold per-generation Direct-only hard cap, never Tunnel quota
  Direct4,Bypass4 []netip.Prefix
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU

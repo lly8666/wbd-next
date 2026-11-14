@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1771,
-  "checkpoint_sha": "69c55a0584bbf3703a2b61b75dcf64aa94b74bae",
+  "sequence": 1772,
+  "checkpoint_sha": "f61508339ca3c54c885f5f42c3adfc00a439b148",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1771: H1770 source69c55a05 D2 real nonCN A→Tunnel UDP + bounded TCP53 parser + pinned original Go TLS no-overwrite action. Signed Windows/WSL2 network NOT_RUN: cheap test H1767 asserted final Python cleanup tuple ended after blackhole guest/win, but H1770 legitimately appended D2 app Popen ownership; corrected tests to stable separate process ownership checks. Governance, Windows/Linux Rust unit and resource pressure normal/kernel/engine/FEC/receipt all PASS. Independent old original Windows Rust owner ABI moved past pinned tls.go collision with no-overwrite and Rust MSVC/ABI PASS, then true Go test build FAIL RootCAs field absent in frozen original ClientConfig. Do NOT overwrite original Go TLS or claim old ABI PASS; separate source contract migration OPEN. Single new signed H1771 source after preflight correction pending. PLAN029 remains IN_PROGRESS.",
-  "why_now": "H1770 D2 source, Rust TCP53 framing and ownership guard compiled in unit paths, but signed scene cheap stopped on brittle test cleanup list terminator. Fix only test expectations while retaining true Popen finally coverage. Independent old-Go RootCAs mismatch is a real frozen authority incompatibility, not a reason to forge TLS or block scoped 029 direct/Tunnel tests.",
+  "current_task": "H1772 interruption recovery: H1771 f615083 signed Windows Wintun + Linux TUN Action 43530885930 SUCCESS, real Direct CN FakeIP UDP, 32KiB Direct TCP halfclose, Tunnel TCP/UDP, D1 nonCN sole tunnel DNS and no-fallback, D2 DNS A then actual Tunnel UDP, owned Stop all PASS_SCOPED. Old native owner ABI RootCAs still FAIL separate. Implement DirectFlowHard 0 default16384, 1..16384 cold option and bounded unit; CLI/GUI/OS pressure NOT_RUN. PLAN029 remains IN_PROGRESS.",
+  "why_now": "Collect completed native result before fresh dispatch. Genuine kernel business and single tunnel DNS are now established; don't repeat earlier H1690 local-only probe or H1770 cheap failure. Test small Direct cap without VM-wide exhaustion, preserve prior owner/credential source.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Commit H1771 stable cleanup assertion and exact evidence, run one signed original Normal D2 post-DNS actual A→Tunnel UDP, D1 no-fallback and Stop; preserve separate owner ABI RootCAs source-contract mismatch for explicit authorized later resolution. Then real TCP53 ingress, D2 CN-IP converse, D3–D5, GUI, padding P1/P2. PLAN030 closed.",
+  "next_action": "After H1772 source cheap checks, wire real D2 nonCN DNS→CN IP Direct counterexample and original application TCP53 kernel listener / one resolver; D3-D5 OS/GUI/IPv6/bootstrap, resource pressure, P1/P2 with source-frozen single Action per scenario. No repeat H1771 Action; keep old Go RootCAs ABI red and separate. PLAN030 not opened.",
   "unverified": true,
-  "last_tested_source": "69c55a0584bbf3703a2b61b75dcf64aa94b74bae",
+  "last_tested_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1772-H1771-SIGNED-NONCN-A-TUNNEL-RECOVERY-20261114.json",
     "docs/evidence/M0/PLAN029-H1771-H1770-CHEAP-CLEANUP-ASSERT-AND-ORIGINAL-TLS-ROOTCAS-ABI-FAIL-20261114.json"
   ],
   "context_refs": [
@@ -28,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1769 signed real D1 DNS blackhole target3 Tunnel/0 physical PASS. H1770 D2 new product stage was NOT_RUN due cheap stale test cleanup tuple expectation; Rust/Go pure and pressure PASS. Old Windows Go TLS owner ABI reused pinned original correctly but RootCAs mismatch remains separate FAIL. H1771 test-only fix staged, PLAN029 OPEN."
+  "partial_summary": "H1771 real same-SOURCE signed original Go/Rust Windows Wintun + Linux TUN and Stop PASS; D2 ordinary nonCN DNS A then actual Tunnel app UDP PASS, DNS blackhole 3 Tunnel/0 physical PASS. Product exit remains incomplete (TCP53/CN-IP converse/OS+GUI/pressure/padding). New source H1772 pure cold DirectFlowHard option not native-tested; old original ClientConfig RootCAs mismatch OPEN."
 }

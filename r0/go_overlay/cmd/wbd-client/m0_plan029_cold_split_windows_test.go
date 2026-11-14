@@ -82,3 +82,23 @@ func TestPlan029GenerationSyntheticOnlyOneOwnedHost(t *testing.T){
  if err!=nil||a==b{t.Fatal("epoch not isolated",err)}
  if _,err=m0Plan029SyntheticForGeneration(install,[16]byte{});err==nil{t.Fatal("zero generation admitted")}
 }
+
+// A generation may select a small Direct-only hard cap for bounded pressure
+// testing without forcing the machine to allocate 16k physical sockets.
+// Tunnel pins/traffic are independent of this limit in Rust PacketIngress.
+func TestPlan029ColdDirectHardConfiguredBoundedAndDefault(t *testing.T){
+ for _,tc:=range []struct{requested,want uint32;accept bool}{
+  {0,16384,true},{1,1,true},{4096,4096,true},{16384,16384,true},
+  {16385,0,false},
+ }{
+  o:=plan029Options("bypass-lan-cn")
+  o.DirectFlowHard=tc.requested
+  c,e:=m0Plan029ColdSource(o,netip.MustParseAddr("10.1.0.7"),
+   14,netip.MustParseAddr("10.234.12.34"),1280,[]byte("cn.example\n"))
+  if tc.accept{
+   if e!=nil||c.DirectHard!=tc.want{
+    t.Fatalf("direct hard %d, got %d err=%v",tc.requested,c.DirectHard,e)
+   }
+  }else if e==nil{t.Fatalf("oversized direct hard %d accepted",tc.requested)}
+ }
+}

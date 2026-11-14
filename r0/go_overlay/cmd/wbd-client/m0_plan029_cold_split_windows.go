@@ -70,6 +70,9 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   o.DirectDNS4.IsMulticast()||o.DNSServers4[0].IsMulticast(){
   return empty,errM0Plan029Cold
  }
+ directHard:=o.DirectFlowHard
+ if directHard==0{directHard=16384}
+ if directHard>16384{return empty,errM0Plan029Cold}
  var mode uint32
  switch o.RouteMode{
  case "all":mode=0
@@ -102,7 +105,7 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   PhysicalSource:physical.As4(),Lease4:lease.As4(),
   DirectDNS:o.DirectDNS4.As4(),TunnelDNS:o.DNSServers4[0].As4(),
   FakeStart:[4]byte{198,18,0,1},FakeEnd:[4]byte{198,18,255,254},
-  InnerMTU:innerMTU,DirectHard:16384,
+  InnerMTU:innerMTU,DirectHard:directHard,
   CN:cnRows,LAN:lanRows,Direct:directRows,Domains:domains,
   FakeJournalPath:journalPath,
  },nil

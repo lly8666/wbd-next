@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1772,
+  "source_sha": "f61508339ca3c54c885f5f42c3adfc00a439b148",
+  "observed_at_utc": "2026-11-14T00:10:50Z",
+  "kind": "INTERRUPTION_RECOVERY_EXISTING_COMPLETED_ACTION_NO_REDISPATCH",
+  "action": {
+    "workflow_run_id": 43530885930,
+    "native_job_id": 132249972018,
+    "workflow_conclusion": "success",
+    "native_job_conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43530885930"
+  },
+  "source_locked_business": {
+    "direct_udp_cn_fakeip": "PHYSICAL_PASS_WINDOWS_WINTUN_RUST_BOUND_UNDERLAY_LINUX_GUEST_REPLY",
+    "direct_tcp_cn_fakeip": "PHYSICAL_PASS_TWO_REAL_KERNEL_TCP_LEGS_32768_BYTES_HALF_CLOSE",
+    "tunnel_udp": "PHYSICAL_PASS_ORIGINAL_WINDOWS_LINUX_KERNEL_UDP",
+    "tunnel_tcp": "PHYSICAL_PASS_ORIGINAL_WINDOWS_TO_LINUX_TUN_TCP",
+    "d1_noncn_tunnel_dns_udp": "PHYSICAL_PASS_ORIGINAL_DNS_ID_AND_A_REPLY_SINGLE_1_1_1_1",
+    "d2_noncn_dns_a_then_tunnel_udp": "PHYSICAL_PASS_REAL_DNS_A_203_0_113_77_WINDOWS_WINTUN_TO_LINUX_TUN_45_BYTES_WITH_50_BYTE_REPLY",
+    "d1_noncn_dns_blackhole": "PHYSICAL_PASS_TARGET_QUERIES_3_TUNNEL_3_PHYSICAL_0_NO_REPLY_NO_DIRECTIONAL_FALLBACK",
+    "stop": "PHYSICAL_PASS_OWNED_DEFENDER_WAL_ROUTES_AND_WSL_ALIASES_ABSENT",
+    "native_report_source": "f61508339ca3c54c885f5f42c3adfc00a439b148"
+  },
+  "source_lock_proof": {
+    "windows_binary_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
+    "linux_binary_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
+    "original_go_tls": "TRUE_NATIVE_SCOPED",
+    "wintun": "SIGNED_TRUE",
+    "dns_observed_app": "8.8.8.8",
+    "dns_actual_unique_tunnel": "1.1.1.1",
+    "normal_outer_selector": "legacy1400_NOT_DEFAULT1460_PROOF"
+  },
+  "separate_red_result": {
+    "run_id": 43530167292,
+    "job_id": 132245596148,
+    "first_boundary": "PINNED_ORIGINAL_GO_CLIENTCONFIG_HAS_NO_ROOTCAS_FIELD",
+    "go_build": "FAIL",
+    "native_rust_msvc_and_c_abi": "PASS_SCOPED",
+    "network_product": "NOT_RUN_THAT_JOB",
+    "resolution": "OPEN_NO_INSECURE_TLS_BYPASS_NO_FROZEN_TLS_OVERWRITE"
+  },
+  "not_run": [
+    "D1_APPLICATION_TCP53_KERNEL_LISTENER",
+    "D1_SYSTEM_ENCRYPTED_OR_PHYSICAL_BOUND_DNS_COVERAGE",
+    "D2_NONCN_DNS_TO_CN_IP_DIRECT_CONVERSE",
+    "D2_CN_DOMAIN_OVERSEAS_CDN_IN_FULL_POLICY_MATRIX",
+    "D3_D4_D5_COMPLETE_REAL_OS_AND_GUI",
+    "P1_P2_REAL_PADDING_AND_RESOURCE_LATENCY",
+    "TRUE_DEFAULT1460_IPV6_POLICY_AND_64MIB_PRESSURE_OS"
+  ],
+  "assessment": "PLAN029_IN_PROGRESS; H1771 proves scoped native exits, not all D1-D5/P1-P2"
+}
