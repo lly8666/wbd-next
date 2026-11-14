@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1789,
-  "checkpoint_sha": "1cc30ac6b4baf72140019324d216a4784e9b7f07",
+  "sequence": 1790,
+  "checkpoint_sha": "b12794ba17a37eea840089c8838cd6b89ef51bc8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1789 H1788 native Rust Windows/Linux component tests PASS, but feature inventory failed card 16,386-byte over 16,384-byte max by 2; shorten latest limitation (16,320 bytes) preserving all history. Independently collect exact H1779 signed Direct8 physical 5/16 delivered, Tunnel new 1, old Direct 11, new Direct after 120s expiry 1, still PASS_PRE_STOP and normal Stop NOT_RUN due original 165s wrapper. H1786 signed combined Direct8+CN cache in progress (separate frozen SOURCE). PLAN029 IN_PROGRESS.",
-  "why_now": "Do not ignore a hard feature-catalog failure when Rust source green; fix only byte budget and record genuine physical-pressure raw counts without claiming typed capacity or Stop.",
+  "current_task": "H1790 collect exact [H1786] Action 43550291848 source de19 native-public-two-os SUCCESS: same signed Windows original Go+Rust single Wintun / Linux TUN+eth0, CN two Windows UDP DNS IDs/source ports -> one Linux physical target DNS+durable same FakeIP and true physical UDP echo, Direct TCP32KiB halfclose, Tunnel TCP/UDP, nonCN->CN IP true Direct, Direct hard8 16 attempts/5 real echoes/11 unanswered (capacity cause not typed), old Direct heartbeat11+new Tunnel1+Direct idle recover1, 3 Tunnel DNS blackhole requests/0 physical, all owned Stop PASS. Outer legacy1400, actual inner1329. H1787/H1788 source-only strict Tunnel DNS local SERVFAIL/QNAME units PASS; D1 app TCP53, D3 cache/FakeIP/transaction physical quotas, D4–D5 GUI/effective/1460 and P1/P2 padding still OPEN. PLAN029 IN_PROGRESS.",
+  "why_now": "First complete same-SOURCE signed product owned Stop success with real bounded D3 Direct8 and CN DNS cache after multiple failed test fixtures; make full receipt durable, do not promote unrun exits or replace 028 gaps.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1789 governance and H1786 real signed Action first fault, no duplicate dispatch. Then D1 app TCP53, D3 DNS/FakeIP small-capacity, D4-D5, P1/P2/padding.",
+  "next_action": "Do not repeat signed legacy1400 baseline. Proceed D1 app TCP53 real owner ingress + same-direction backend, D3 DNS/FakeIP typed cap, D4 OS/IPv6/bootstrap/GUI/default1460, P1/P2 off/on CPU/p99 and padding. Validate new sources individually, 030 untouched.",
   "unverified": true,
-  "last_tested_source": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
+  "last_tested_source": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1785-H1783-NATIVE-WSL-CACHE-MODE-BRIDGE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1790-H1786-SIGNED-CN-CACHE-DIRECT8-BOTH-OWNED-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1789 feature card budget corrected, H1779 archived true 16 Direct tries/5 replies, 1 new Tunnel, 11 old Direct heartbeats, 1 Direct recovered but no Stop; H1786 native still running. D1/D3-D5/P1-P2 OPEN."
+  "partial_summary": "H1786 signed CN FakeIP cache one physical upstream, Direct/Tunnel TCP/UDP, CN-IP converse, Direct8, no-fallback and both owned Stop PASS scoped under legacy1400. D1 TCP53 and D3 other quotas/physical near-MTU + D4/D5/P1/P2/padding NOT_RUN, 029 active."
 }

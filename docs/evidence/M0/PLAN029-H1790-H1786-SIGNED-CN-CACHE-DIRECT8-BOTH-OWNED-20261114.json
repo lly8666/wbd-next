@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1790,
+  "source_sha": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
+  "kind": "SINGLE_SOURCE_SIGNED_REAL_WINDOWS_LINUX_SCOPED_PASS",
+  "result": "PASS_SCOPED_NOT_PLAN029_EXIT",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 43550291848,
+    "job_id": 132312341298,
+    "conclusion": "success",
+    "artifact_id": 14096036961,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43550291848"
+  },
+  "owner": {
+    "windows": "ONE_SIGNED_WINTUN_ORIGINAL_GO_TLS_RUST_NATIVE_V3",
+    "linux": "REAL_WSL2_TUN_AND_INDEPENDENT_ETH0_SOCKET",
+    "mode": "normal",
+    "native_outer": "legacy1400",
+    "requested_outer_mtu": 1400,
+    "measured_inner_mtu": 1329,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "npcap_driver_cleanup": "PASS"
+  },
+  "verified": {
+    "cn_dns_cache": {
+      "windows_two_distinct_original_ids_and_ports": true,
+      "same_fake4": "198.18.0.1",
+      "linux_physical_target_query_count": 1,
+      "source_physical": "172.23.160.1",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "direct_tcp": {
+      "app_bytes_sent": 32768,
+      "app_bytes_echoed": 32768,
+      "halfclose": true,
+      "physical_linux_received": 32768,
+      "tcp_connect_ms": 125
+    },
+    "direct_udp": "PASS_ACTUAL_WINDOWS_KERNEL_PHYSICAL_REVERSE",
+    "tunnel_tcp_udp": "PASS_REAL_TUNNEL_TWO_OS_KERNEL",
+    "noncn_domain_to_cn_ip": {
+      "dns_upstream": "1.1.1.1",
+      "real_a": "198.19.254.2",
+      "business_physical": true,
+      "owned_test_alias_cleanup": "PASS"
+    },
+    "direct_hard8": {
+      "new_direct_attempts": 16,
+      "new_direct_real_echo": 5,
+      "unanswered_direct": 11,
+      "unanswered_cause": "UNKNOWN_NOT_TYPED_CAPACITY",
+      "new_tunnel_echo_while_direct_full": 1,
+      "old_direct_heartbeat": 11,
+      "new_direct_after_idle": 1,
+      "old_direct_final": 1,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "single_tunnel_dns_blackhole": {
+      "windows_queries": 3,
+      "linux_tunnel_queries": 3,
+      "linux_physical_queries": 0,
+      "windows_unexpected_response": false
+    },
+    "snapshot": {
+      "process_scope": "SAME_WINDOWS_GO_PLUS_RUST_DLL",
+      "observation_count": 165,
+      "elapsed_s": 166.891,
+      "avg_one_logical_core_pct": 1.03,
+      "peak_working_set_bytes": 45899776,
+      "cpu_per_GiB": "NOT_MEASURED",
+      "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+    }
+  },
+  "not_run": {
+    "application_tcp53": true,
+    "dns_transaction_full_real": true,
+    "dns_cache_full_real": true,
+    "fakeip_capacity_full_real": true,
+    "ipv6_actual": true,
+    "default_outer1460_GUI_owner": true,
+    "performance_P1_P2": true,
+    "startup_padding_off_tls_flows": true
+  },
+  "report_path": "mode-results/normal/report.json"
+}

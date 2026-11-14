@@ -1,0 +1,10 @@
+# PLAN029 H1790 | H1786 complete one-SOURCE native two-exit + owned Stop
+
+- Collected [H1786 signed Action 43550291848](https://github.com/lly8666/wbd-next/actions/runs/43550291848) original Go TLS/Rust Windows single signed Wintun → independent Linux TUN/physical eth0: **native job, outer receipt and owned Stop all PASS**. Source `de19b99b331bcaf7b10bbd83b69ca9b14c16b28f`, [raw Action artifact 14096036961](https://github.com/lly8666/wbd-next/actions/runs/43550291848/artifacts/14096036961).
+- Same SOURCE: two real Windows app UDP source ports/IDs CN DNS -> durable same FakeIP `198.18.0.1`, Linux physical DNS exactly **one** target query over extended watch, real Direct UDP echo; Direct 32KiB TCP complete echo/half-close; real Tunnel TCP/UDP; nonCN Tunnel DNS→CN IP physical Direct UDP; Direct hard8 16 new flows with 5 physical replies, 11 unanswered (cause **not typed**), old Direct 11 heartbeats and new Tunnel delivered while pressured, then one recovered new Direct; 3 nonCN DNS blackhole Tunnel queries and physical 0; original Windows/WSL both owned Stop PASS with Npcap cleanup.
+- Scoped original outer **legacy1400** and Rust effective inner1329; must NOT count as GUI default1460. Original process whole Go+Rust sampled 165 times over 166.891s: avg 1.03% of one logical core and peak WS 45,899,776B (mostly idle pressure interval, **not** throughput CPU/GiB proof); p99 not measured. D1 **application TCP53**, D3 DNS/FakeIP/transaction full, D4 IPv6/bootstrap/failure lifecycle, D5 GUI 1460/effective and P1/P2/padding remain **OPEN/NOT_RUN**. Detailed evidence `docs/evidence/M0/PLAN029-H1790-H1786-SIGNED-CN-CACHE-DIRECT8-BOTH-OWNED-20261114.json`.
+- H1787/H1788 source-only Tunnel DNS table-full local SERVFAIL and original QNAME/QTYPE isolation have Windows/Linux Rust component PASS, but no signed live stress for those new source revisions. PLAN029 continues.
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Record H1786 scoped original two-exit real physical cache/capacity/Stop milestone while retaining unrun TCP53/default1460/performance gaps."}
+```
