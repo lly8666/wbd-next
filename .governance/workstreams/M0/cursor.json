@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1816,
-  "checkpoint_sha": "ef13375f9fe4aae0026fba3d47718c660747cc81",
+  "sequence": 1817,
+  "checkpoint_sha": "0b35336c834c2e922df7fc29912d01c0e4606eef",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1816 fix P2 H1815 cheap first gate old test_delivery_ci exact if assertion and P1 H1814 guest rate app source null false reject. P2 will rerun independently from same immutable H1814 prebuilt binaries. Future H1817 P1 V4/V3 A/B reuse selector prewired but NOT_DISPATCHED. Both remain unqualified. PLAN029 IN_PROGRESS.",
-  "why_now": "One first-error for each test: H1815 static if fixture excluded valid source-locked skip; H1814 A source-null WSL-only false gate after real ~50Mbps and Stop. No product code changes. Avoid redriving costly x86 and ARM releases.",
+  "current_task": "H1817 independent P1 same-VM Normal V4 vs V3/all Tunnel A/B rerun staged, now source-locked true H1814 prebuilt Windows/Linux Go/Rust EXE/DLL with manifest SHA and no product diff, after precise WSL Linux null-env SHA fix H1816. H1816 P2 independent native Action already in-flight on other VM. P1/B results NOT_RUN, PLAN029 IN_PROGRESS.",
+  "why_now": "H1816 repaired exact P2 cheap gate and WSL Linux `GITHUB_SHA` null false failure. One new P1 test source contract checks both A/B and literal hash guards and forces explicit P1 reuse marker, without making P1 compete with P2 on same host.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1816 P2 native same-source binary reuse and physical baseline/Direct1M/small-Tunnel signed Stop. Push H1817 independent P1 source-reuse rerun marker with no product changes; collect two separate Action verdicts. Actual Game4 split, signed GUI originating Connect/Disconnect, IPv6 continue OPEN.",
+  "next_action": "Collect H1816 P2 and H1817 P1 separately from current SHA and real signed Windows/WSL2 jobs. Both must pass original TCP/UDP/Stop and scoped metrics, otherwise preserve failed hypothesis not repeat randomly. Game4 split hot wiring, GUI signed Connect, D4 IPv6 remain OPEN.",
   "unverified": true,
   "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1815 P2 FAIL preflight static only, not network; H1814 A true Normal ~50Mbps/TCP/UDP/Stop PASS but coordinator FAIL Linux WSL source null, B NOT_RUN. H1816 fixes two exact static/provenance tests; new P2 physical outcome pending."
+  "partial_summary": "H1817 P1 rerun invoked with source-locked prebuilt; H1816 P2 in-flight using same H1814 product artifacts but separate VM. No new P1/P2 PASS before Action. H1814 A 50Mbps true original Stop scoped PASS, B prior NOT_RUN."
 }

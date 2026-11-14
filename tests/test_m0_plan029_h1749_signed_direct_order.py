@@ -359,4 +359,26 @@ class NativeDirectOrder(unittest.TestCase):
         workflow=(Path(__file__).resolve().parents[1]/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn('WBD_PLAN029_STARTUP_PADDING_SCENE:',workflow)
         self.assertIn('PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED',workflow)
+    def test_h1817_p1_both_real_native_legs_and_exact_prebuilt_source_gate(self):
+        import ast
+        root=Path(__file__).resolve().parents[1]
+        p=(root/"tools/m0_plan029_h1814_p1_tunnel_ab.py").read_text()
+        ast.parse(p)
+        w=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        for marker in ("[plan029-v3-real-p1-tunnel-ab]",
+                       "[plan029-v3-real-p1-reuse]",
+                       "WBD_PLAN029_P1_AB_SCENE",
+                       "PLAN029_H1814_P1_SIGNED_NORMAL_V4_V3_SAME_VM_CPU_GIB_RTT_P99_GAP_STOP_PASS_SCOPED"):
+            self.assertIn(marker,w)
+        for marker in ("A_off_old_tunnel","B_on_all_tunnel",
+                       "windows_cli_sha256","linux_server_sha256",
+                       'report.get("linux_binary_source")!=os.environ.get("WBD_WL_BINARY_SOURCE")',
+                       '(side=="linux" and app_source not in (None,SOURCE))',
+                       "windows_cpu_seconds_per_actual_delivered_gib",
+                       "PASS_SCOPED_P1_BOTH_TRUE_NATIVE_TUNNEL_LEGS_MEASURED"):
+            self.assertIn(marker,p)
+        self.assertIn("git diff --name-only $sha $env:GITHUB_SHA",w)
+        self.assertIn("assert hashlib.sha256(b).hexdigest()==m['sha256'][key]",w)
+        self.assertIn('assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]',w)
+        self.assertIn("PASS_BOTH_OWNED",p)
 if __name__=="__main__":unittest.main()
