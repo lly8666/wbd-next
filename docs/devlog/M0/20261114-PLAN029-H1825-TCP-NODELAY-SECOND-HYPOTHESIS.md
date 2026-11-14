@@ -8,3 +8,5 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"One-time TCP_NODELAY on two owned Rust Direct relay sockets only, with test; no public protocol/schema/feature entitlement change. New P2 native performance outcome pending."}
 ```
+
+- H1826治理核对：H1825 cursor错误混入不同SOURCE的旧H1821 P1 evidence 与现H1823 P2 evidence，现只保留 `last_tested_source=db6c...` 对应的H1823证据于 `evidence_refs`。旧H1821 JSON仍完整保留，不改记录、不重派Action。新P2仍测试SOURCE=`0077dcb...`，编译/网络结果待核。
