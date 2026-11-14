@@ -102,6 +102,22 @@ class NativeSmokeScopeTests(unittest.TestCase):
         # Whole manifest changes no longer cause a stale Rust product check.
         self.assertNotIn('      - "r0/go_overlay/assembly/manifest-plan020-m0.json"', gui)
 
+    def test_plan029_nonci_product_split_has_one_outer_mtu_source_contract(self):
+        # A source-only native build can be green while the actual signed
+        # runner aborts before OS Apply if these two selectors diverge.
+        # This is the first failure of H1840, not a Linux/Wintun bug.
+        flow = (Path(__file__).resolve().parents[1] /
+                ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        outer = next(x for x in flow.splitlines()
+                     if x.strip().startswith("WBD_WL_NATIVE_OUTER_MTU_REQUEST:"))
+        requested = next(x for x in flow.splitlines()
+                         if x.strip().startswith("WBD_WL_TUN_MTU:"))
+        marker = "[plan029-real-product-cn]"
+        self.assertIn(marker, outer)
+        self.assertIn("'default1460'", outer.split(marker, 1)[1].split("||", 1)[0])
+        self.assertIn(marker, requested)
+        self.assertIn("'1460'", requested.split(marker, 1)[1].split("||", 1)[0])
+
     def test_unknown_diff_fails_open_to_native(self):
         self.assertTrue(requires_native_smoke("push", []))
         self.assertTrue(requires_native_smoke("unknown", ["docs/README.md"]))

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1840",
+  "source_sha": "82585c62c07060248d342be19b8f70eb56cda472",
+  "action": {
+    "id": 43595752905,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43595752905"
+  },
+  "result": "SIGNED_WORKFLOW_ENV_PRECHECK_FAIL_BEFORE_PRODUCT_NETWORK",
+  "first": "ValueError: outer MTU selector/source scenario mismatch",
+  "cause": "WBD_WL_NATIVE_OUTER_MTU_REQUEST=default1460 for product marker but WBD_WL_TUN_MTU remained default1400, violating exact test-only scenario selector contract.",
+  "preflight_passed": [
+    "exact Go overlay compile",
+    "Windows/Linux Rust component",
+    "original Linux binaries compiled and source locked",
+    "signed driver prerequisites prepared"
+  ],
+  "product_actual_running": "NOT_RUN",
+  "fix": "Add [plan029-real-product-cn] condition to WBD_WL_TUN_MTU selector=1460, retain default1460 in outer selector, add static test in tests/test_m0_native_ci_scope.py. Do not weaken configured_native_test_mtu check.",
+  "no_claim": [
+    "No authenticated product cold split was exercised in H1840",
+    "No signed user direct or OS Stop evidence from H1840"
+  ]
+}

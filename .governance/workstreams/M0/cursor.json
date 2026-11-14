@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1840,
-  "checkpoint_sha": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
+  "sequence": 1841,
+  "checkpoint_sha": "82585c62c07060248d342be19b8f70eb56cda472",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1840: launch one distinct source-locked signed Windows/Ubuntu Normal product CN split with explicit --split-enable and owned --cn-rules-file, GITHUB_ACTIONS=false and V3_TRIAL=0 ONLY in actual Windows child. Must prove OS Applied/Ready, Direct DNS TCP UDP + Tunnel TCP UDP/D1/D2 and both owned Stop under exact SOURCE. New network NOT_RUN until CI terminal. H1839 P2 read/write-leg diagnostic signed Action separate source running, no duplicate dispatch; Game4/IPv6/P1/slow fsync OPEN.",
-  "why_now": "Static real WinForms->Go config proven H1838 but old signed D3 invoked private Actions trial. Product user opt-in cannot be considered connected without a real signed non-Actions selector, independent of CI hidden CN rule source. Reuse same original owner OS WAL and exact route/Defender receipts, without fake GUI events.",
+  "current_task": "H1841: H1839 sourcea50 signed P2 FAIL: physical1MiB297ms, Direct upload19.7s and downloaded917504 by37.17s; 1Hz Rust outer echo read all, inner Windows write 65536 behind, resident98304. Must measure Windows TCP ACK/window not enlarge buffers/1ms polls. H1840 source825 explicit product nonCI signed scene never launched client: workflow default1460 outer vs WBD_WL_TUN_MTU=1400 preflight rejected; H1841 fix MTU selector pair to1460, static guard, only product marker. Network NOT_RUN until Action.",
+  "why_now": "Current P2 bottleneck now isolated to Windows kernel inner TCP leg; no meaningful fix without ACK/window/retransmission evidence. Independent public entry attempts are blocked by a correct test-source MTU mismatch, so fix exact generator once with regression guard before drawing product conclusions.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1840 single real signed nonCI Normal source-locked product CN and owned Stop, identify first failure if any. In parallel collect H1839 true P2 per-app stage and Rust two-leg 1Hz read/write counters; fix first observed downlink/FIN bottleneck, not arbitrary tick. Then true GUI Connect/Stop, Game4 CN, IPv6 D4, P1, slow-fsync/compaction.",
+  "next_action": "Collect H1841 signed nonCI CLI product Normal source in real Windows+Linux, OS Applied/Ready/DNS+physical Direct TCP UDP/Tunnel+owned Stop. Next do targeted TCP kernel window/ACK evidence and one true sameVM no/yes small Tunnel UDP matched contrast to fix >38s source P2. GUI user Connect/Stop, Game4, IPv6, P1, slow fsync remain OPEN.",
   "unverified": true,
-  "last_tested_source": "33e2f79352469d62e3025176670fd03d450e554a",
+  "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1839-H1837-P2-SIGNED-ONE-MIB-DOWNLINK-TIMEOUT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1841-H1839-SIGNED-P2-REAL-TCP-LEG-COUNTERS-20261114.json",
+    "docs/evidence/M0/PLAN029-H1841-H1840-NONCI-PRODUCT-MTU-FIRST-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +25,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1839-P2-ONE-MIB-TWO-LEG-READINESS-DIAG.md",
-    "docs/devlog/M0/20261114-PLAN029-H1840-NONCI-PRODUCT-CN-SIGNED-SOURCE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1840-NONCI-PRODUCT-CN-SIGNED-SOURCE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1841-P2-ACK-SLOW-GUI-PRODUCT-MTU-PREFLIGHT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1840 one distinct real user cold --split-enable signed network scene queued, not current GUI simulation; requires child GITHUB_ACTIONS=false/V3_TRIAL=0 and actual Wintun original Go+Rust OS/Stop receipt. H1839 source a50 P2 diagnostic separate scene running; H1837 true P2 FAIL source33e with physical281ms/Direct>38s, linux complete1M. H1838 GUI check config PASS; D5 signed GUI, Game4, IPv6, P1 and slow fsync OPEN."
+  "partial_summary": "H1839 sourcea50 real P2 FAIL: Direct sends1MiB in19.7s and returns<1MiB after38s, physical297ms, kernel relay backlog exactly65536; cause ACK/window pending. H1840 source825 product nonCI Action compile PASS but test preflight outer1460 vs configured TUN1400 FAIL before client. H1841 source candidate exact env correction and test. H1838 GUI check PASS, actual GUI OS Connect/Stop NOT_RUN."
 }

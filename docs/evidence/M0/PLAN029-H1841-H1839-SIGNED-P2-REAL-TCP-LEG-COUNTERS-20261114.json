@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1839",
+  "source_sha": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
+  "action": {
+    "id": 43595218572,
+    "job_id": 132449431506,
+    "artifact_id": 14114675791,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43595218572"
+  },
+  "result": "SIGNED_REAL_P2_APPLICATION_DOWNLOAD_NOT_COMPLETE_IN_38S",
+  "controlled_workload": "WINDOWS2025_SIGNED_NPCAP_WINTUN_ORIGINAL_GO_RUST_TWO_OS_1MIB_PACED_16K_EVERY_4MS_PLUS_CONTINUOUS_TUNNEL_UDP",
+  "observed": {
+    "physical_same_vm": {
+      "bytes": 1048576,
+      "connect_ms": 16,
+      "upload_ms": 281,
+      "half_close_elapsed_ms": 297,
+      "first_reply_elapsed_ms": 297,
+      "full_elapsed_ms": 297,
+      "sha_match": true
+    },
+    "direct_windows": {
+      "connected_elapsed_ms": 765,
+      "first_128k_upload_elapsed_ms": 797,
+      "upload_complete_elapsed_ms": 19734,
+      "half_close_elapsed_ms": 19734,
+      "first_reply_elapsed_ms": 21172,
+      "download_131072_elapsed_ms": 24062,
+      "download_917504_elapsed_ms": 37172,
+      "full_1048576_elapsed_ms": "NOT_REACHED",
+      "controller_wait_s": 38
+    },
+    "physical_linux_second_tcp": {
+      "received_bytes": 1048576,
+      "sha_verified": true,
+      "half_close_received": true,
+      "echo_sendall_completed": true,
+      "shutdown_write_completed": true
+    },
+    "native_owner_both_legs_cumulative": {
+      "includes_previous_32768_flow": true,
+      "inner_read_bytes": 1081344,
+      "outer_write_bytes": 1081344,
+      "outer_read_bytes": 1081344,
+      "inner_write_bytes": 1015808,
+      "to_inner_buffer_bytes": 65536,
+      "resident_capacity_bytes": 98304,
+      "active_tcp_flows": 1,
+      "measurement": "last_one_second_diagnostic_before_timeout"
+    },
+    "tunnel_small_udp": {
+      "windows_delivered_progress_at_least": 2432,
+      "windows_128_packet_progress_receipts": true,
+      "full_span_p99": "NOT_COMPUTED_ON_FAILURE",
+      "unique_delivery_final": "NOT_COMPUTED_ON_FAILURE"
+    },
+    "direct_stop": {
+      "rust_native_owner_result": "PASS_JOIN_AND_WAL_RESTORED_OBSERVED",
+      "p2_scene_stop": "NOT_RUN_TERMINAL_BUSINESS_FAIL"
+    }
+  },
+  "finding": "APP upload and return both progress near 50-60 KiB/s after initial fast 128KiB; relay reads entire physical echo but Windows inside TCP write lags by exactly 65536. A 10ms active TCP wake already exists; do not add duplicate polling. The inner kernel TCP ACK/receive-window/retransmission timing or reverse NAT remains the next hypothesis, not proven mechanism.",
+  "not_run": [
+    "strict same-VM P2 full duration and p99 complete",
+    "kernel TCP ACK/window sample to confirm cause",
+    "product data-plane optimization",
+    "P1 CPU",
+    "Game4 CN",
+    "IPv6 D4",
+    "FakeIP slow sync/Stop"
+  ]
+}
