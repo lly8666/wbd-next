@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "source_sha": "ad4966403a4d21b40c6d9760fdc2e76a933dd925",
+  "plan": "PLAN029",
+  "task": "H1864",
+  "date": "2026-11-14",
+  "result": "COMPILE_FAIL_NOT_P2",
+  "native_action": 43617776205,
+  "status_at_commit": "IN_PROGRESS",
+  "real_unpaced_4m": "NOT_RUN",
+  "first_failed_preflight": "Windows/Linux Rust v4_client_split_wire.rs:249 `let fragment_key={` lacks FragmentKey type, same source as H1861",
+  "independent_go_build": "IN_PROGRESS_AT_COMMIT",
+  "owned_stop": "NOT_RUN_NO_NATIVE",
+  "fix_source": "b940e538e52bcbcd924d26040b1a7c096127a157",
+  "win_linux_original_rust_component": "PASS_ELIGIBLE_UNIT_TEST_IN_H1863_MAIN_NATIVE_JOB",
+  "h1864_result": "NOT_RUN_AT_COMMIT"
+}

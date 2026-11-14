@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1863,
-  "checkpoint_sha": "ad4966403a4d21b40c6d9760fdc2e76a933dd925",
+  "sequence": 1864,
+  "checkpoint_sha": "b940e538e52bcbcd924d26040b1a7c096127a157",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1863 H1861 source905e1cef Win/Linux Rust fail before network due missing FragmentKey struct literal type in v4_client_split_wire.rs:249; H1861 P1 real NOT_RUN. H1862 separate P2 still in flight with same source code. Fix exact syntax only; new P1 source test NOT_RUN at commit.",
-  "why_now": "First H1861 failure is compilation, not CPU data; narrow one-token fix before repeating one necessary P1 A/B, no tuning/old matrix.",
+  "current_task": "H1864 H1862 bulk SOURCEad496640 Win/Linux Rust compile failed before real 4MiB because missing FragmentKey type inherited H1861; native Action43617776205 still completing, real P2 NOT_RUN. H1863 exact fix SOURCEb940e538 has Win/Linux Rust eligible tests PASS and P1 A/B in flight. Start only H1864 corrected bulk P2 independent Action.",
+  "why_now": "H1860 guest argv pre-network and H1862 Rust syntax pre-network have both been specifically corrected; need one first genuine 4MiB physical-vs-Direct comparison and small Tunnel UDP with highres p99 before further tuning.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1863 [plan029-v3-real-p1-tunnel-ab] native Action, validate compiler+50Mbps60s ordered P1 CPU/GiB/p99/Stop; separately collect in-flight H1862 P2 terminal before any P2 repeat. Then H1864 corrected 4MiB real P2 and remaining Game4/GUI/IPv6/D1-D5.",
+  "next_action": "Collect one H1864 [plan029-v3-real-p2-bulk] Action physical 4MiB/Direct 4MiB SHA+FIN, genuine Tunnel small UDP p99/gaps/Stop; separately H1863 P1 CPU A/B in flight. Do not duplicate or start old matrix; next tackle remaining D1-D5/Game4 GUI IPv6 and bounded stress.",
   "unverified": true,
-  "last_tested_source": "905e1cef5ec7d9ccf3b6acdd5cf91add96cb1f2f",
+  "last_tested_source": "ad4966403a4d21b40c6d9760fdc2e76a933dd925",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1863-H1861-FIRST-RUST-SYNTAX-20261114.json"
+    "docs/evidence/M0/PLAN029-H1864-H1862-BULK-RUST-GATE-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
     "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
     "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
     "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md",
     "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md",
-    "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md",
-    "docs/devlog/M0/20261114-PLAN029-H1856-REAL-MANIFEST-PIN-NPF.md"
+    "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1859 real P1 +18.04% CPU/GiB while throughput/p99/Stop PASS. H1861 All fastpath compiled FAIL due exact missing FragmentKey type, so real P1 NOT_RUN. H1860 4MiB fixture failed pre-network; H1862 bulk in-flight but same Rust compile source. H1863 syntax only fixed, P1 retest pending; 029 still IN_PROGRESS."
+  "partial_summary": "H1859 real P1 50Mbps both Stop/P99 pass but V3/all CPU/GiB +18.04%, H1863 pin-free all-mode fastpath fixed Rust syntax and retest in flight. H1862 4MiB had Rust compile fail from same old syntax, no real P2. H1864 first fixed-source 4MiB P2 Action to run; plan029 incomplete."
 }
