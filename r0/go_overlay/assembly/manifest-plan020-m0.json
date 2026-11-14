@@ -1362,13 +1362,13 @@
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
-      "result_blob": "2901f24535e369046845802aede6eac3db77c5d1"
+      "result_blob": "9511ced3926dac1d32ade37eaaef387ae1e05566"
     },
     {
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go",
-      "result_blob": "53d06d454cba7cedd0e9575de9446936b30aac5c"
+      "result_blob": "770a8845ee6f0fda53c9f5b584dc8191b96bb23a"
     },
     {
       "kind": "create",
