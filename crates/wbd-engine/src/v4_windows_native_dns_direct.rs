@@ -13,6 +13,7 @@ use crate::v4_client_dns_pending::{
     DnsPending,DnsClient,QueryKey,ResolverLane,ValidatedReply,DnsPendingError,
 };
 use crate::v4_client_dns_answer::DnsAnswerStatus;
+use crate::v4_client_dns_cache::DnsAnswerCache;
 use crate::v4_client_dns_wire::{synthesize_cn_a,synthesize_cn_nodata};
 use crate::v4_client_fake_pool::{FakeAllocator,FakeKey};
 use crate::v4_client_fake_journal::FakeJournal;
@@ -35,7 +36,7 @@ struct Inflight{
 }
 pub(crate) struct DirectDns{
     source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,endpoint:Ipv4Addr,
-    mtu:usize,pending:DnsPending,inflight:Vec<Inflight>,
+    mtu:usize,pending:DnsPending,cache:DnsAnswerCache,inflight:Vec<Inflight>,
     completed:VecDeque<Vec<u8>>,cursor:usize,ip_id:u16,
 }
 fn wall_ms()->Option<u64>{
@@ -61,7 +62,8 @@ impl DirectDns{
     pub(crate) fn new(source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,
         endpoint:Ipv4Addr,mtu:usize)->Self{
         Self{source,ifindex,lease,endpoint,mtu,
-            pending:DnsPending::new(MAX_PENDING,1024),inflight:Vec::new(),
+            pending:DnsPending::new(MAX_PENDING,1024),
+            cache:DnsAnswerCache::production(),inflight:Vec::new(),
             completed:VecDeque::with_capacity(MAX_READY),cursor:0,ip_id:1}
     }
     pub(crate) fn has_work(&self)->bool{
@@ -70,6 +72,7 @@ impl DirectDns{
     pub(crate) fn counts(&self)->(usize,usize,usize){
         (self.inflight.len(),self.pending.counts().1,self.completed.len())
     }
+    pub(crate) fn cache_counts(&self)->(usize,usize){self.cache.counts()}
     fn enqueue(&mut self,client:DnsClient,reply:&[u8]){
         if self.completed.len()>=MAX_READY{return}
         let tuple=DirectUdpTuple{client_ip:Ipv4Addr::from(client.src4),
@@ -91,7 +94,8 @@ impl DirectDns{
     /// Called only by the original TX after packet bytes have been copied
     /// and released from Wintun. Never directly touches the native ring.
     pub(crate) fn submit(&mut self,packet:&[u8],name:String,qtype:u16,
-        id:u16,now_ms:u64,has_fake_writer:bool)->bool{
+        id:u16,now_ms:u64,mut fake:Option<&mut FakeAllocator>,
+        mut journal:Option<&mut FakeJournal>)->bool{
         if packet.len()<28{return false}
         let requested=Ipv4Addr::new(packet[16],packet[17],packet[18],packet[19]);
         let udp=match parse_owned_ipv4_udp(packet,self.lease,requested){
@@ -113,9 +117,23 @@ impl DirectDns{
             }
             return true
         }
-        // CN A without durable file is SERVFAIL, NEVER unmodified CDN A.
-        if qtype==1&&!has_fake_writer{
+        // CN A without durable ownership is SERVFAIL; never return a
+        // real CDN address merely because it came from the DNS cache.
+        if qtype==1&&(fake.is_none()||journal.is_none()){
             self.fail(&[client],&key,2);return true
+        }
+        // This is a real owner-fast DNS cache HIT, not a second resolver.
+        // Re-enter the identical all-or-none FakeIP durable writer on every
+        // cached positive answer, including TTL reduction. A cache miss or
+        // full cache always continues to the one physical DNS endpoint.
+        // No FakeIP entry is reclaimed just because its DNS cache evicted.
+        if qtype==1 {
+            if let Some(answer)=self.cache.get(&key,now_ms){
+                self.resolved(ValidatedReply{key,
+                    waiters:vec![client],answer},&[],
+                    fake.as_deref_mut(),journal.as_deref_mut());
+                return true
+            }
         }
         let ticket=match self.pending.begin(key.clone(),client,now_ms,TIMEOUT_MS){
             Ok(t)=>t,Err(_)=>{self.fail(&[client],&key,2);return true}
@@ -278,6 +296,13 @@ impl DirectDns{
             let query=self.inflight.swap_remove(idx);
             match result{
                 Ok((answer,wire))=>{
+                    // Only validated positive CN A replies enter this
+                    // bounded direction/endpoint/policy-scoped cache.
+                    // False=skip caching, never reject a successful DNS reply.
+                    if answer.key.qtype==1{
+                        let _=self.cache.insert(answer.key.clone(),
+                            answer.answer.clone(),now_ms);
+                    }
                     self.resolved(answer,&wire,
                         fake.as_deref_mut(),journal.as_deref_mut())
                 },
@@ -297,6 +322,69 @@ impl DirectDns{
 mod tests{
     use super::*;
     #[test]
+    fn plan029_native_direct_dns_real_cache_hit_still_journals_fake_before_reply(){
+        use crate::v4_client_dns_answer::{DnsAResolution,DnsAnswerStatus,ResolvedA};
+        use std::sync::atomic::{AtomicU64,Ordering};
+        static SERIAL:AtomicU64=AtomicU64::new(1);
+        let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
+            Ipv4Addr::new(10,234,12,34),Ipv4Addr::new(223,5,5,5),1280);
+        let path=std::env::temp_dir().join(format!(
+            "wbd-p029-direct-cache-{}-{}.db",std::process::id(),
+            SERIAL.fetch_add(1,Ordering::Relaxed)));
+        let (mut journal,restored)=FakeJournal::open(&path).unwrap();
+        assert!(restored.is_empty());
+        let mut pool=FakeAllocator::new(u32::from_be_bytes([198,18,0,1]),
+            u32::from_be_bytes([198,18,0,120]),&[],120,1024*1024).unwrap();
+        let key=QueryKey{name:"cn.example".into(),qtype:1,
+            lane:ResolverLane::Direct,
+            resolver4:u32::from_be_bytes([223,5,5,5]),
+            resolver_port:53,policy_revision:1};
+        let resolved=DnsAResolution{status:DnsAnswerStatus::Answered,
+            canonical:"cn.example".into(),cname_chain:vec![],
+            candidates:vec![ResolvedA{address:0xc633644d,ttl:60}]};
+        assert!(dns.cache.insert(key.clone(),resolved,1000));
+        let mut q=[0u8;44];
+        q[0]=0x45;q[2..4].copy_from_slice(&44u16.to_be_bytes());
+        q[9]=17;q[12..16].copy_from_slice(&[10,234,12,34]);
+        q[16..20].copy_from_slice(&[8,8,8,8]);
+        q[20..22].copy_from_slice(&45678u16.to_be_bytes());
+        q[22..24].copy_from_slice(&53u16.to_be_bytes());
+        q[24..26].copy_from_slice(&24u16.to_be_bytes());
+        q[28..30].copy_from_slice(&0x1777u16.to_be_bytes());
+        q[30..32].copy_from_slice(&0x0100u16.to_be_bytes());
+        q[32..34].copy_from_slice(&1u16.to_be_bytes());
+        // First hit must use the same durable FakeIP synthesize path as
+        // a fresh upstream response; no physical socket/inflight created.
+        assert!(dns.submit(&q,key.name.clone(),1,0x1777,1001,
+            Some(&mut pool),Some(&mut journal)));
+        assert_eq!(dns.counts(),(0,0,1));
+        assert_eq!(dns.cache_counts().0,1);
+        let first=dns.pop().unwrap();
+        assert_eq!(&first[28..30],&0x1777u16.to_be_bytes());
+        assert_eq!(first[31]&15,0);
+        let mappings=pool.durable_candidate();
+        assert!(!mappings.is_empty());
+        let fake=pool.issued_for(&FakeKey{
+            qname:key.name.clone(),canonical:"cn.example".into(),
+            real4:0xc633644d,policy_rev:1,resolver_rev:1},
+            wall_ms().unwrap()).unwrap();
+        assert_eq!(pool.announced_real(fake),Some(0xc633644d));
+        // A second client gets its own ID and the same identity with
+        // reduced TTL; cache is independent from FakeIP active references.
+        q[20..22].copy_from_slice(&45679u16.to_be_bytes());
+        q[28..30].copy_from_slice(&0x1778u16.to_be_bytes());
+        assert!(dns.submit(&q,key.name.clone(),1,0x1778,3500,
+            Some(&mut pool),Some(&mut journal)));
+        assert_eq!(dns.counts(),(0,0,1));
+        let again=dns.pop().unwrap();
+        assert_eq!(&again[28..30],&0x1778u16.to_be_bytes());
+        assert_eq!(pool.announced_real(fake),Some(0xc633644d));
+        assert_eq!(dns.cache_counts().0,1);
+        assert_eq!(dns.cache.get(&key,61_000),None); // TTL, no stale reuse
+        drop(journal);
+        std::fs::remove_file(path).unwrap();
+    }
+    #[test]
     fn plan029_direct_dns_one_socket_endpoint_bounded_no_journal_leak(){
         let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
             Ipv4Addr::new(10,234,12,34),Ipv4Addr::new(223,5,5,5),1280);
@@ -311,7 +399,7 @@ mod tests{
         q[28..30].copy_from_slice(&0x1234u16.to_be_bytes());
         q[30..32].copy_from_slice(&0x0100u16.to_be_bytes());
         q[32..34].copy_from_slice(&1u16.to_be_bytes());
-        assert!(dns.submit(&q,"cn.example".into(),1,0x1234,1,false));
+        assert!(dns.submit(&q,"cn.example".into(),1,0x1234,1,None,None));
         assert_eq!(dns.counts(),(0,0,1));
         let answer=dns.pop().unwrap();
         assert_eq!(&answer[12..16],&[8,8,8,8]);

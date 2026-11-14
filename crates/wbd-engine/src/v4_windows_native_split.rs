@@ -406,7 +406,7 @@ impl NativeSplitWorker {
                 match egress{
                     crate::v4_client_split::DnsEgress::Direct=>{
                         if self.dns.submit(packet,name,qtype,id,now_ms,
-                            self.journal.is_some()){
+                            self.fakes.as_mut(),self.journal.as_mut()){
                             NativeDecision::DirectHandled
                         }else{NativeDecision::LocalDrop}
                     },
