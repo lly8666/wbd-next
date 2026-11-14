@@ -1,0 +1,9 @@
+# PLAN029 H1779 | first native failure and exact H1775 DNS listener repair
+
+- Source `0c45a8ac7076840ea12ad7b57877d385dfabeacb` [Action 43542918731](https://github.com/lly8666/wbd-next/actions/runs/43542918731), job 132289003479: **FAIL actual Windows/Linux signed native**, **not** an H1778 hard8 result. Verified preceding original Direct CN FakeIP UDP, 32KiB TCP+FIN, Tunnel TCP/UDP, nonCN single Tunnel DNS and nonCN A→Tunnel business PASS. At H1775 the Linux TUN DNS/53 guest raised `not exact original Tunnel DNS query`; Windows had already parsed the expected CN A and entered business, but the guest exited before physical UDP echo, so Windows timed out. Unknown other QNAME bytes were not logged, keep UNKNOWN. No Defender/driver root attribution. Exact source/Stop evidence `docs/evidence/M0/PLAN029-H1779-H1778-NATIVE-FIRST-BOUNDARY-20261114.json`.
+- Failed report `stop=NOT_RUN`, not promoted; genuine cleanup logs independently show Rust WAL Stop PASS, Windows disconnected+restored, Linux drained, H1775 owned route/alias removed and exact guest HyperV TCP allow removed. Never clear foreign resources.
+- **H1779 code only, native NOT_RUN**: on the same Linux H1775 DNS/53 socket, classify exact expected UDP DNS A QNAME/QTYPE before asserting expected lease, ignore/count at most 64 other queries without answering, keep target lease/source and independently received physical UDP strict, and preserve bounded 35s deadline. This is the previous H1769 target-filter technique, not a new network probe. H1778 Direct hard8 pressure remains NOT_RUN until one new signed SOURCE Action; no parallel old matrices/030.
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Record H1778 first signed network FAIL and bounded target-only H1775 DNS listener correction; no product PASS or pressure claim."}
+```

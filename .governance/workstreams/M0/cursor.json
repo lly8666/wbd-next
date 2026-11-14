@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1778,
-  "checkpoint_sha": "0115a7abe171c6d9d71461780d6c5d3cdeb95e94",
+  "sequence": 1779,
+  "checkpoint_sha": "0c45a8ac7076840ea12ad7b57877d385dfabeacb",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1778 source-frozen signed Direct-hard8 capacity pressure fixture: H1777 Go/WinForms actual GUI --check-config saves2/rejects16385/reopens16384 PASS Action 43541647392; Rust/Go cheap and governance PASS. Add one H1778 signed Normal Wintun Action with physical Direct hard8 16 source tuples, NEW Tunnel continues while new Direct is full, old Direct stays alive across 127s, NEW Direct after 120s expiry, owned Stop. New native scenario NOT_RUN until Action. PLAN029 still IN_PROGRESS.",
-  "why_now": "Use only eight real Direct sockets/short new-flow tuples to exercise bounded hard capacity, not VM-wide exhaustion; verify independent new Tunnel and established Direct. Preserve H1775 network PASS as previous SOURCE, no repeat diagnostic probe.",
+  "current_task": "H1779 collect H1778 signed source 0c45 Action 43542918731 FAILURE: native first boundary H1775 guest Linux TUN DNS listener rejected a nonmatching wire question after target DNS had already satisfied Windows client; Windows real Direct UDP reverse then timed out because guest exited. Prior H1749 Direct UDP, H1760 TCP32K, Tunnel TCP/UDP, H1765 sole Tunnel DNS, H1770 nonCN A Tunnel UDP all PASS; H1778 hard8 pressure never ran. H1779 fixes target-only DNS listener (H1769 established approach), preserving true source/physical echo and exact owned cleanup. New H1779 native NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "First actual boundary is fixture rejecting unrelated QNAME; previous H1769 precisely filtered unrelated target DNS/53. Do not blame firewall or rerun H1690; one distinct targeted hypothesis and one source-frozen Action only, hold H1778 physical quota NOT_RUN.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1778 signed Action first boundary; no duplicate dispatch. Then D1 product TCP53, remaining D3 DNS/FakeIP/cache capacity, D4 OS lifecycle/IPv6, D5 GUI actual owner/1460 and P1/P2 p99/CPU/padding; separate pinned Go RootCAs ABI OPEN, 030 untouched.",
+  "next_action": "Collect one H1779 automatically triggered signed Action with corrected targeted DNS listener and Direct8 pressure, no duplicate dispatch. If fails, inspect new first boundary and stop repeating similar tests without new information; then D1 app TCP53 and full D3–D5/P1/P2. Preserve previous failed Action, partial Stop and pinned old Go RootCAs ABI OPEN; 030 untouched.",
   "unverified": true,
-  "last_tested_source": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
+  "last_tested_source": "0c45a8ac7076840ea12ad7b57877d385dfabeacb",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1776-H1775-SIGNED-D2-CONVERSE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1779-H1778-NATIVE-FIRST-BOUNDARY-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1775 signed D2 two egress and owned Stop PASS scoped; H1777 real WinForms+source-built Go CLI small cap check PASS scoped, new H1778 bounded hard8 pressure physical NOT_RUN until Action. Remaining full D1–D5/P1/P2 open."
+  "partial_summary": "H1778 same SOURCE Windows+Linux real TCP/UDP/DNS initial stages PASS, H1775 guest DNS unrelated QNAME killed listener, Windows reverse timed out; failed Action report Stop NOT_RUN but product WAL recovered and Linux drained in logs. New bounded Direct8 scene NOT_RUN. H1779 scoped fixture correction source staged."
 }

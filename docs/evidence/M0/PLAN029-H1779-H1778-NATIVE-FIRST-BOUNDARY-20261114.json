@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1779,
+  "source_sha": "0c45a8ac7076840ea12ad7b57877d385dfabeacb",
+  "kind": "SOURCE_LOCKED_SIGNED_NATIVE_FAILURE_FIRST_BOUNDARY",
+  "action": {
+    "run_id": 43542918731,
+    "job_id": 132289003479,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43542918731"
+  },
+  "first_boundary": {
+    "stage": "H1775 actual Linux TUN DNS/53 listener",
+    "guest": "RuntimeError: not exact original Tunnel DNS query to nonCN name",
+    "windows": "RuntimeError: physical Direct reverse never delivered to original app Wintun",
+    "sequence": [
+      "H1749 signed FakeIP Direct UDP PASS",
+      "H1760 real Direct TCP 32768/halfclose PASS",
+      "H1762 actual Tunnel TCP/UDP PASS",
+      "H1765 nonCN single Tunnel DNS PASS",
+      "H1770 nonCN A then real Tunnel UDP PASS",
+      "H1775 guest target DNS listener threw before physical UDP confirmation",
+      "H1778 new bounded hard8 pressure NOT_RUN",
+      "H1767 blackout after stage NOT_RUN"
+    ]
+  },
+  "interpretation": "Windows client reached its post-DNS business phase (therefore validated a target A answer); guest then rejected another DNS/53 datagram with nonmatching exact question. Unrelated QNAME identity not logged and must remain UNKNOWN; cannot claim driver/firewall or Direct product root cause. Fix target-only filtering as previously established in H1769, preserve wrong-target-source checks and real physical delivery requirement.",
+  "cleanup": {
+    "global_report_stop": "NOT_RUN_ON_FAILED_SCENARIO",
+    "client_log": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS; WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "linux_server_log": "V4_PUBLIC_NATIVE_STOP_DRAINED role=server",
+    "h1775_exact_route_and_alias": "PLAN029_H1775_ONE_ROUTE_AND_ALIAS_EXACT_CLEANUP_PASS",
+    "owned_HyperV_rule": "PLAN029_H1762_GUEST_TCP46112_HYPERV_EXACT_OWNER_REMOVED"
+  },
+  "fresh_H1779_network": "NOT_RUN_UNTIL_NEXT_SINGLE_ACTION",
+  "old_signed_D2_H1775": "PASS_PREVIOUS_SOURCE_9a7557e1e93a9eaecee287d5027f4168a2c8de65",
+  "separate_RootCAs_ABI": "OPEN"
+}

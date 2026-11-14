@@ -214,4 +214,17 @@ class NativeDirectOrder(unittest.TestCase):
             ast.parse((Path(__file__).resolve().parents[1]/"tools"/n).read_text())
             self.assertIn("      - tools/"+n,W)
         self.assertIn("plan029-h1778-linux-flow-pressure.log",M)
+    def test_h1779_target_only_dns_listener_preserves_real_cn_ip_direct(self):
+        import ast
+        src=(Path(__file__).resolve().parents[1]/
+             "tools"/"m0_plan029_h1775_guest_cn_converse.py").read_text()
+        ast.parse(src)
+        self.assertIn('if len(wire)<12 or wire[4:6]!=b"\\x00\\x01" or wire[12:]!=question:',src)
+        self.assertIn('unrelated_dns+=1',src)
+        self.assertIn('if unrelated_dns>64:',src)
+        self.assertIn('if peer[0]!=lease:raise RuntimeError("exact H1775 target DNS',src)
+        self.assertIn('"unrelated_dns_ignored":unrelated_dns',src)
+        self.assertLess(src.index('unrelated_dns+=1'),src.index('if peer[0]!=lease:'))
+        self.assertIn('if peer[0]!=host or wire!=marker:',src)
+        self.assertIn('if not seen_dns or not seen_biz:raise RuntimeError',src)
 if __name__=="__main__":unittest.main()
