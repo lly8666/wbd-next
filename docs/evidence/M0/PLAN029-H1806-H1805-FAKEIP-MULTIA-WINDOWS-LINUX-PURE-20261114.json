@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1806/H1805",
+  "source_sha": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
+  "result": "BUILD_PASS",
+  "scope": "SCOPED_RUST_COMPONENT_PURE_NOT_SIGNED_NETWORK",
+  "action": {
+    "id": 43563550515,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43563550515",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "linux": {
+    "os": "ubuntu-24.04",
+    "job_id": 132352317088,
+    "platform_tests": "116 passed",
+    "engine_plan029_tests": "50 passed",
+    "multi_a_rollback": "PASS",
+    "prior_uncertain_journal": "PASS"
+  },
+  "windows": {
+    "os": "windows-2025",
+    "job_id": 132352317197,
+    "platform_tests": "47 passed",
+    "engine_plan029_tests": "78 passed",
+    "probe_v3_plan029_tests": "80 passed",
+    "multi_a_rollback": "PASS_BOTH_VARIANTS",
+    "prior_uncertain_journal": "PASS_BOTH_VARIANTS",
+    "native_probe_v3_build": "PASS"
+  },
+  "provenance": [
+    "crates/wbd-engine/src/v4_client_fake_pool.rs",
+    "crates/wbd-engine/src/v4_windows_native_dns_direct.rs",
+    "crates/wbd-engine/src/v4_windows_native_dns_client_tcp.rs",
+    ".github/workflows/m0-plan029-h1721-native-split-capacity.yml"
+  ],
+  "historic_fail_preserved": {
+    "source": "301dddab9a9d371e6065b17be6b23010082e0618",
+    "windows_E0609_action": 43562854893,
+    "component_failure_action": 43562854910,
+    "feature_catalog_failure_action": 43562854925
+  },
+  "previous_followup": {
+    "source": "b23d74298fd639a1eec3926c24cce020041cccf6",
+    "cross_abi_action": 43563253326,
+    "governance_action": 43563253254,
+    "limitation": "Windows cross ABI compile alone did not run PLAN029 component tests because missing workflow path; H1805 path fixed."
+  },
+  "not_run": [
+    "Real signed Wintun Windows app CN multi-A hard quota and second smaller query recovery",
+    "True socket source/reverse and durable journal failure/Stop under D3 pressure",
+    "D4 IPv6/rules reload/lane/idle/partial Apply/restart",
+    "D5 GUI effective 10k rule+original signed network",
+    "P1/P2 real same VM CPU/GiB p99 longest gap queue-age A/B"
+  ]
+}

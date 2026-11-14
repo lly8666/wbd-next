@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1805,
-  "checkpoint_sha": "b23d74298fd639a1eec3926c24cce020041cccf6",
+  "sequence": 1806,
+  "checkpoint_sha": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1805 add missing v4_windows_native_dns_client_tcp.rs exact path to PLAN029 Rust component push test. H1804 all static/governance/cross-ABI passed, and H1803 Linux 2 small-quota FakeIP tests PASS; H1804 Windows unit still NOT_RUN due missing path trigger. PLAN029 IN_PROGRESS.",
-  "why_now": "H1803 native Rust Windows component failed E0609; H1804 corrected source cross compiled but component on-push path filter excluded the changed TCP53 file. One bounded pure Action provides accurate same SOURCE Windows/Linux component qualification; no native network dispatch.",
+  "current_task": "H1806 collect H1805 same-source PLAN029 pure Rust Windows2025 78+80 plan029 tests and Ubuntu50 plan029 tests PASS (both new FakeIP small quota cases on both OS); tag only BUILD_PASS. Exact Action43563550515 success/source fa5b38; no signed D3 network proof. PLAN029 IN_PROGRESS.",
+  "why_now": "H1803 failed Windows E0609 and card gate; H1804 corrected ABI; H1805 fixed missing TCP53 workflow path and Action43563550515 completed two-OS exact-source source-locked pure test. Distinguish scoped component from physical product.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1805 two-OS native Rust pure component Action, source lock and exact two new unit tests; if PASS, update card as BUILD_PASS only; D3 signed real small-quota, D4/D5/P1/P2 still OPEN.",
+  "next_action": "After frozen SOURCE, implement/run one D3 real small quota multi-A and recovery with original signed Windows Wintun and independent Direct physical DNS and Tunnel progress, plus no early FakeIP publish; D4 OS IPv6/partial apply/idle, D5 GUI and P1/P2 measurements remain OPEN. No repeated H1778/H1799 dispatch.",
   "unverified": true,
-  "last_tested_source": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
+  "last_tested_source": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
+    "docs/evidence/M0/PLAN029-H1806-H1805-FAKEIP-MULTIA-WINDOWS-LINUX-PURE-20261114.json"
   ],
   "context_refs": [
-    "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/prompts/M0-PLAN029.md",
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
-    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json",
+    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "Collected H1799 source 6a77 signed original Windows/WSL2 Normal flows: positive actual NPF post-copy M1 padding 16 records/50B, TCP/UDP duplex, two owned Stop, Action43560438283 PASS. 1795 application TCP53 Direct/Tunnel real earlier PASS; 1791 default outer1460 owned OS readback earlier PASS. Live GUI effective, D3-full/D4/D5/P1/P2 pending; no product-wide PASS and no new diagnostics dispatch."
+  "partial_summary": "H1806 exact source fa5b H1805 native Rust unit both OS BUILD_PASS with 2 new FakeIP batch quota cases and unchanged original signed H1799 at older 6a77 physical PASS_SCOPED. Overall D3-D5/P1-P2 remain unqualified. Pure tests are not signed network; no fake full exit."
 }
