@@ -60,6 +60,7 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-v3-real-p1-tunnel-ab]",
     "[plan029-v3-real-p2-mixed]",
     "[plan029-v3-real-p2-rebuild]",
+    "[plan029-v3-real-p2-bulk]",
     "[plan029-real-product-cn]",
 )
 

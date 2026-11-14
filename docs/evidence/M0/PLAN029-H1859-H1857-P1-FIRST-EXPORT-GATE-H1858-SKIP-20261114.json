@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source_sha": "13312046a6459d0693b4b2f196f7b9539dfc063f",
+  "date": "2026-11-14",
+  "plan": "PLAN029",
+  "task": "H1859",
+  "result": "SCOPED_NEGATIVE_BEFORE_B_AND_NOT_RUN_BULK",
+  "h1857_p1": {
+    "source_sha": "867612d26b35e413ad6637d9635a53d87f309fcb",
+    "action_id": 43613384092,
+    "conclusion": "failure",
+    "job_id": 132504631849,
+    "scenario": "ONE_VM_SEQUENTIAL_V4_A_50MBPS_THEN_V3_B_50MBPS_25MS_0LOSS_60S",
+    "A_real": {
+      "result": "PASS",
+      "delivered_gib": 0.69839,
+      "windows_mbps": 49.9996,
+      "linux_mbps": 49.9866,
+      "first_delivery_fraction": 1,
+      "windows_udp_rtt_p99_ms": 63,
+      "linux_udp_rtt_p99_ms": 63.974,
+      "windows_max_interdelivery_gap_ms": 46,
+      "linux_max_interdelivery_gap_ms": 55,
+      "win_go_plus_rust_cpu_s": 13.5156,
+      "win_go_plus_rust_cpu_s_per_delivered_gib": 19.3524,
+      "peak_rss_bytes": 42684416,
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "B_real": "NOT_RUN_DUE_TO_WINDOWS_DLL_EXPORT_ABSENT",
+    "first_failure": "Failed to find wbd_m0_win_native_v3_start procedure",
+    "P1_diff": "INCONCLUSIVE_NO_VALID_B",
+    "cleanup": "EXACT_OWNED_FINALLY_ATTEMPTED_CHECK_JOB"
+  },
+  "h1858_bulk": {
+    "source_sha": "13312046a6459d0693b4b2f196f7b9539dfc063f",
+    "action_id": 43614737936,
+    "conclusion": "success",
+    "cheap_and_windows_linux_rust_compiles": "PASS",
+    "native_smoke": "SKIPPED",
+    "real_p2_4m": "NOT_RUN",
+    "first_gate": "EXPLICIT_NATIVE_MARKERS lacked plan029-v3-real-p2-bulk; V3 feature/MTU also lacked this marker",
+    "fake_journal_async_compact_compiles": "PASS_COMPONENT_ONLY"
+  },
+  "next_fix": "Add both P1 and P2_BULK exact V3 cold build selectors; add bulk scope marker, Direct/FakeIP and original MTU 1460 selectors; strengthen cheap test. H1859 triggers one P1 only, not P2."
+}

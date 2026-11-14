@@ -62,7 +62,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
 
     def test_manual_and_explicit_full_requests_are_preserved(self):
         self.assertTrue(requires_native_smoke("workflow_dispatch", ["README.md"]))
-        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]", "[plan029-real-product-cn]"):
+        for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]", "[plan029-v3-real-p1-tunnel-ab]", "[plan029-v3-real-p2-bulk]", "[plan029-real-product-cn]"):
             self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
 
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
@@ -83,6 +83,21 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertTrue(requires_native_smoke("push", [
             ".github/workflows/m0-wl-public-normal-full.yml"],
             "[plan029-v3-real-direct-udp]"))
+
+    def test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native(self):
+        source=(Path(__file__).resolve().parents[1] /
+                ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        trial=next(x for x in source.splitlines()
+                   if x.strip().startswith("WBD_PLAN029_NATIVE_V3_TRIAL:"))
+        for marker in ("[plan029-v3-real-p1-tunnel-ab]",
+                       "[plan029-v3-real-p2-bulk]"):
+            self.assertIn(marker,trial)
+        for field in ("WBD_PLAN029_V3_DIRECT_SCENE:",
+                      "WBD_WL_NATIVE_OUTER_MTU_REQUEST:",
+                      "WBD_WL_TUN_MTU:"):
+            row=next(x for x in source.splitlines() if x.strip().startswith(field))
+            self.assertIn("[plan029-v3-real-p2-bulk]",row)
+        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',source)
 
     def test_plan029_real_gui_config_source_does_not_borrow_old_rust_dll(self):
         gui = (Path(__file__).resolve().parents[1] /
