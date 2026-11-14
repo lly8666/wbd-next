@@ -4,3 +4,7 @@
 - Independent old original owner ABI job `132245596148` first failed after MSVC Rust/ABI PASS: test structs use `ClientConfig.RootCAs`, but pinned original Go `ClientConfig` has no such field. **FAIL / OPEN**, do not silently remove server trust, overwrite original TLS or blame kernel networking.
 - H1772 **implementation (unverified in this batch)**: expose `DirectFlowHard` in Go original cold option; zero remains default 16384; allow 1–16384, reject larger. Add small-cap pure test. No CLI/GUI binding or physical resource pressure claimed; existing Rust Direct soft=4096, hard cap and independent Tunnel accounting are unchanged.
 - **Still NOT_RUN / OPEN**: original app TCP/53 listener and same endpoint fallback, D2 nonCN A→CN IP Direct converse, D3–D5/GUI/IPv6/bootstrap/OS partial Apply, real pressure 64MiB and latency/CPU, P1/P2 startup-padding, default 1460 real. No new old 028 matrices, no 030.
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1771 actual source-locked native exits evidence and H1772 bounded Direct cold configuration are reflected in this card; legacy failures remain linked by evidence."}
+```

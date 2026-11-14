@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1772,
-  "checkpoint_sha": "f61508339ca3c54c885f5f42c3adfc00a439b148",
+  "sequence": 1773,
+  "checkpoint_sha": "a4e0a4850bb6def587a2bcecebabf7ef9dab3590",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1772 interruption recovery: H1771 f615083 signed Windows Wintun + Linux TUN Action 43530885930 SUCCESS, real Direct CN FakeIP UDP, 32KiB Direct TCP halfclose, Tunnel TCP/UDP, D1 nonCN sole tunnel DNS and no-fallback, D2 DNS A then actual Tunnel UDP, owned Stop all PASS_SCOPED. Old native owner ABI RootCAs still FAIL separate. Implement DirectFlowHard 0 default16384, 1..16384 cold option and bounded unit; CLI/GUI/OS pressure NOT_RUN. PLAN029 remains IN_PROGRESS.",
-  "why_now": "Collect completed native result before fresh dispatch. Genuine kernel business and single tunnel DNS are now established; don't repeat earlier H1690 local-only probe or H1770 cheap failure. Test small Direct cap without VM-wide exhaustion, preserve prior owner/credential source.",
+  "current_task": "H1773 exact governance repair after H1772 evidence/cold-quota commit. H1772 Go source changes not yet qualified: push governance failed cursor mixed-SOURCE evidence_refs and feature catalog >16KiB/missing feature-impact declaration; no native product failure implied. Enforce one tested SOURCE f615083-only evidence ref, keep H1771 Action proof, shrink feature card without deleting evidence, and explicitly declare feature-impact. PLAN029 IN_PROGRESS.",
+  "why_now": "H1772 checks exposed repository provenance/schema errors; fix first boundary instead of rerunning signed H1771 network or changing product TLS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "After H1772 source cheap checks, wire real D2 nonCN DNS→CN IP Direct counterexample and original application TCP53 kernel listener / one resolver; D3-D5 OS/GUI/IPv6/bootstrap, resource pressure, P1/P2 with source-frozen single Action per scenario. No repeat H1771 Action; keep old Go RootCAs ABI red and separate. PLAN030 not opened.",
+  "next_action": "Observe H1773 cheap governance/feature checks and H1772 in-flight build, no duplicate dispatch. Then implement D2 converse/D1 TCP53 and remaining OS/GUI, pressure, padding. Keep old Go ABI RootCAs OPEN and PLAN030 not started.",
   "unverified": true,
   "last_tested_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1772-H1771-SIGNED-NONCN-A-TUNNEL-RECOVERY-20261114.json",
-    "docs/evidence/M0/PLAN029-H1771-H1770-CHEAP-CLEANUP-ASSERT-AND-ORIGINAL-TLS-ROOTCAS-ABI-FAIL-20261114.json"
+    "docs/evidence/M0/PLAN029-H1772-H1771-SIGNED-NONCN-A-TUNNEL-RECOVERY-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -29,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1771 real same-SOURCE signed original Go/Rust Windows Wintun + Linux TUN and Stop PASS; D2 ordinary nonCN DNS A then actual Tunnel app UDP PASS, DNS blackhole 3 Tunnel/0 physical PASS. Product exit remains incomplete (TCP53/CN-IP converse/OS+GUI/pressure/padding). New source H1772 pure cold DirectFlowHard option not native-tested; old original ClientConfig RootCAs mismatch OPEN."
+  "partial_summary": "H1771 signed source f615083 native Direct/Tunnel DNS/UDP/TCP scoped PASS; H1772 DirectFlowHard 1..16384 source change, real quota pressure NOT_RUN. H1772 governance FAIL mixed source evidence, card >16KiB and feature-impact missing; H1773 structural repair. Separate old Go RootCAs ABI FAIL OPEN; PLAN029 incomplete."
 }
