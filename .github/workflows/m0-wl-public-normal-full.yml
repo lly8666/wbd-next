@@ -74,6 +74,8 @@ on:
       - tools/m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py
       - tools/m0_plan029_h1775_guest_cn_converse.py
       - tools/m0_plan029_h1775_windows_cn_converse.py
+      - tools/m0_plan029_h1778_guest_bounded_flow_pressure.py
+      - tools/m0_plan029_h1778_windows_bounded_flow_pressure.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
       - tests/test_m0_plan028_h1587_two_windows_manual_cipher_scope.py
       - tools/m0_plan028_h1415_windows_linux_independent_clients.py
@@ -961,6 +963,7 @@ jobs:
       # Tunnel-only qualification. No PLAN028 matrix or public default.
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]')) && '1' || '0' }}
       WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') && '1' || '0' }}
+      WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
       WBD_PLAN028_WIN_REAL_COLD_SEED: ${{ github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]')) && '1' || '0' }}
@@ -2309,6 +2312,25 @@ jobs:
                $result.plan029_d2_noncn_cn_ip_direct_udp.linux.dns_upstream -ne '1.1.1.1' -or
                $result.plan029_d2_noncn_cn_ip_direct_udp.stop -ne 'PASS_EXACT_ROUTE_ALIAS_CLEANUP'){
               throw 'PLAN029 exact same-SOURCE Direct/Tunnel TCP UDP DNS and owned Stop proof absent'
+            }
+            if($env:WBD_PLAN029_DIRECT_PRESSURE -eq '1'){
+              $p=$result.plan029_d3_direct_hard_pressure
+              if($p.source_sha -ne $env:GITHUB_SHA -or
+                 $p.stop -ne 'PASS_BOTH_OWNED' -or
+                 $p.windows.hard_configured -ne 8 -or
+                 $p.windows.new_direct_attempts -ne 16 -or
+                 $p.windows.new_direct_real_echo -lt 1 -or
+                 $p.windows.new_direct_real_echo -gt 8 -or
+                 $p.windows.unanswered_new_direct -lt 8 -or
+                 $p.windows.new_tunnel_while_full -ne $true -or
+                 $p.windows.old_direct_heartbeat -lt 8 -or
+                 $p.windows.new_direct_after_expiry -ne $true -or
+                 $p.windows.old_direct_final -ne $true -or
+                 $p.linux.new_tunnel_echo -lt 1 -or
+                 $p.linux.new_direct_after_idle -lt 1){
+                throw 'H1778 real Direct-hard8 full new Tunnel or old/new Direct expiry did not qualify'
+              }
+              Write-Output 'PLAN029_H1778_REAL_DIRECT8_TUNNEL_ISOLATED_OLD_DIRECT_RECOVERY_AND_STOP_PASS_SCOPED'
             }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
           } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1') {

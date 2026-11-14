@@ -21,6 +21,9 @@ plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
+p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
+if p029_pressure and not p029_direct:
+ raise RuntimeError("hard8 pressure requires exactly one signed Normal Direct scene")
 if p029_direct and (mode!="normal" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
@@ -200,7 +203,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -337,6 +340,8 @@ try:
   # scene; it also hosts an independent real physical business UDP socket.
   args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
                "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
+ if p029_pressure:
+  args.extend(["--direct-flow-hard","8"])
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -1171,6 +1176,60 @@ print(json.dumps(result),flush=True)
    h1775_owned_cleanup()
   report["plan029_d2_noncn_cn_ip_direct_udp"]["stop"]="PASS_EXACT_ROUTE_ALIAS_CLEANUP"
   print("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS",flush=True)
+  # One H1778 source-frozen hard8 real signed scene before DNS blackout.
+  # Existing Windows Wintun owner and two independent Linux UDP sockets
+  # witness full Direct, NEW Tunnel flow and 120s Direct expiry/recovery.
+  if p029_pressure:
+   gn="plan029-h1778-linux-flow-pressure.log"
+   wn="plan029-h1778-windows-flow-pressure.log"
+   gf=(out/gn).open("w");logs.append(gf)
+   p029_pressure_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1778_guest_bounded_flow_pressure.py"),
+      peer,p029_tunnel_alias,host_source,"10.66.0.2"],
+      stdout=gf,stderr=subprocess.STDOUT)
+   ready(out/gn,"PLAN029_H1778_LINUX_TWO_OS_SOCKETS_READY",p029_pressure_guest,15)
+   wf=(out/wn).open("w");logs.append(wf)
+   p029_pressure_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1778_windows_bounded_flow_pressure.py"),
+      "10.66.0.2",wdata["fake4"],p029_tunnel_alias],
+      stdout=wf,stderr=subprocess.STDOUT)
+   try:wr=p029_pressure_win.wait(timeout=195)
+   except subprocess.TimeoutExpired:
+    raise RuntimeError("H1778 real hard8 original Windows app deadline")
+   if wr or p029_pressure_guest.wait(timeout=10):
+    raise RuntimeError("H1778 real Direct/Tunnel first fault win="+
+      (out/wn).read_text(errors="replace")[-850:]+" linux="+
+      (out/gn).read_text(errors="replace")[-850:])
+   proof={}
+   for who,name,marker in (
+     ("windows",wn,"PLAN029_H1778_WINDOWS_DIRECT8_TUNNEL_PRESSURE "),
+     ("linux",gn,"PLAN029_H1778_LINUX_BOUNDED_TWO_EGRESS ")):
+    found=[line.split(" ",1)[1] for line in (out/name).read_text().splitlines()
+           if line.startswith(marker)]
+    if len(found)!=1:raise RuntimeError("H1778 missing unique true OS receipt "+who)
+    proof[who]=json.loads(found[0])
+   win,linux=proof["windows"],proof["linux"]
+   if not(win["hard_configured"]==8 and win["new_direct_attempts"]==16 and
+       1<=win["new_direct_real_echo"]<=8 and win["unanswered_new_direct"]>=8 and
+       win["new_tunnel_while_full"] is True and
+       win["old_direct_heartbeat"]>=8 and
+       win["new_direct_after_expiry"] is True and win["old_direct_final"] is True and
+       linux["direct_source_physical"]==host_source and
+       linux["first_unique"]>=win["new_direct_real_echo"] and
+       linux["tunnel_lease"]=="10.66.0.2" and
+       linux["tunnel_dst"]==p029_tunnel_alias and
+       linux["new_tunnel_echo"]>=1 and
+       linux["old_direct_keep"]>=8 and
+       linux["new_direct_after_idle"]>=1 and linux["old_direct_final"]>=1):
+    raise RuntimeError("H1778 source-frozen real sockets did not prove Direct8/Tunnel isolation")
+   report["plan029_d3_direct_hard_pressure"]={
+     "source_sha":os.environ["GITHUB_SHA"],
+     "scope":"SIGNED_ONE_WINTUN_DIRECT_HARD8_NEW_TUNNEL_AND_IDLE_RECOVERY",
+     "windows":win,"linux":linux,
+     "typed_native_capacity_drop_counter":"NOT_RUN",
+     "dns_fakeip_tcp_buffer_pressure":"NOT_RUN",
+     "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
+   print("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP",flush=True)
   # D1 single-upstream timeout proof. After genuine one-endpoint success,
   # leave the same run-owned TUN 1.1.1.1/32 in place and bind two independent
   # receivers: Tunnel DNS silently blackholes, physical Direct DNS is a
@@ -1854,6 +1913,10 @@ print(json.dumps(result),flush=True)
                       json.dumps({"missing":missing,"wal":wal.exists(),
                                   "route_sidecar":routes.exists(),"tcp_defender_sidecar":tcp_sidecar.exists()}))
   if p029_direct:
+   if p029_pressure:
+    if report.get("plan029_d3_direct_hard_pressure",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
+     raise RuntimeError("H1778 physical capacity result lost at Stop")
+    report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"
    if report.get("plan029_private_v3_cn_direct_tcp",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
     raise RuntimeError("real Direct TCP source-bound physical app evidence missing")
    report["plan029_private_v3_cn_direct_tcp"]["stop"]="PASS_OWNED_DEFENDER_AND_WAL_ABSENT"
@@ -1999,7 +2062,7 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win):
   if p is not None and p.poll() is None:p.terminate()
  if p029_direct and (out/"plan029-h1775-owned-route-alias.json").exists():
   try:h1775_owned_cleanup()

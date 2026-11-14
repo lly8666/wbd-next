@@ -194,4 +194,24 @@ class NativeDirectOrder(unittest.TestCase):
             self.assertIn("      - tools/"+name,W)
         self.assertIn("plan029-h1775-linux-cn-converse.log",M)
         self.assertIn("$result.plan029_d2_noncn_cn_ip_direct_udp.source_sha -ne $env:GITHUB_SHA",W)
+    def test_h1778_real_bounded_direct8_capacity_and_new_tunnel_isolation(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"',S)
+        self.assertIn('args.extend(["--direct-flow-hard","8"])',S)
+        self.assertLess(S.index("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS"),
+                        S.index("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP"))
+        self.assertLess(S.index("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP"),
+                        S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
+        self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
+        self.assertIn('p029_pressure_guest,p029_pressure_win):',S)
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
+        self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)
+        self.assertIn("$p.windows.unanswered_new_direct -lt 8",W)
+        for n in ("m0_plan029_h1778_guest_bounded_flow_pressure.py",
+                  "m0_plan029_h1778_windows_bounded_flow_pressure.py"):
+            ast.parse((Path(__file__).resolve().parents[1]/"tools"/n).read_text())
+            self.assertIn("      - tools/"+n,W)
+        self.assertIn("plan029-h1778-linux-flow-pressure.log",M)
 if __name__=="__main__":unittest.main()

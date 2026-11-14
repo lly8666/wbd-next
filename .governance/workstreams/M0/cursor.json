@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1777,
-  "checkpoint_sha": "9bcf212c405efadcca20bbd5e3a0bdd99e49f601",
+  "sequence": 1778,
+  "checkpoint_sha": "0115a7abe171c6d9d71461780d6c5d3cdeb95e94",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1777 exact pinned original-Go manifest adds DirectFlowHard 1..16384 CLI, PARAM JSON and GUI, source Go --check-config readback, cold native option. WinForms harness tests default16384, value2, invalid16385, saved/reopened. New H1777 SOURCE tests NOT_RUN until Action; H1775 D2 signed network PASS scoped; PLAN029 ongoing.",
-  "why_now": "H1772 cold Direct cap was not configurable through real client/GUI; this single cold setting permits bounded stress without VM-wide exhaustion.",
+  "current_task": "H1778 source-frozen signed Direct-hard8 capacity pressure fixture: H1777 Go/WinForms actual GUI --check-config saves2/rejects16385/reopens16384 PASS Action 43541647392; Rust/Go cheap and governance PASS. Add one H1778 signed Normal Wintun Action with physical Direct hard8 16 source tuples, NEW Tunnel continues while new Direct is full, old Direct stays alive across 127s, NEW Direct after 120s expiry, owned Stop. New native scenario NOT_RUN until Action. PLAN029 still IN_PROGRESS.",
+  "why_now": "Use only eight real Direct sockets/short new-flow tuples to exercise bounded hard capacity, not VM-wide exhaustion; verify independent new Tunnel and established Direct. Preserve H1775 network PASS as previous SOURCE, no repeat diagnostic probe.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1777 auto GUI/Go and native cheap build first, no duplicate dispatch. Then real small-cap pressure with new Tunnel progressing, D1 app TCP53, D3–D5/P1–P2; prior RootCAs ABI OPEN independent; 030 untouched.",
+  "next_action": "Collect H1778 signed Action first boundary; no duplicate dispatch. Then D1 product TCP53, remaining D3 DNS/FakeIP/cache capacity, D4 OS lifecycle/IPv6, D5 GUI actual owner/1460 and P1/P2 p99/CPU/padding; separate pinned Go RootCAs ABI OPEN, 030 untouched.",
   "unverified": true,
   "last_tested_source": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1775 signed D2 real physical CN-IP converse PASS; H1777 CLI/GUI Direct quota 1..16384 source staged, no actual pressure yet. D1 TCP53/D3–D5/P1–P2 still OPEN."
+  "partial_summary": "H1775 signed D2 two egress and owned Stop PASS scoped; H1777 real WinForms+source-built Go CLI small cap check PASS scoped, new H1778 bounded hard8 pressure physical NOT_RUN until Action. Remaining full D1–D5/P1/P2 open."
 }
