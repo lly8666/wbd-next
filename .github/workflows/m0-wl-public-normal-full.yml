@@ -74,6 +74,8 @@ on:
       - tools/m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py
       - tools/m0_plan029_h1775_guest_cn_converse.py
       - tools/m0_plan029_h1775_windows_cn_converse.py
+      - tools/m0_plan029_h1794_linux_real_tcp53.py
+      - tools/m0_plan029_h1794_windows_real_app_tcp53.py
       - tools/m0_plan029_h1778_guest_bounded_flow_pressure.py
       - tools/m0_plan029_h1778_windows_bounded_flow_pressure.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
@@ -963,6 +965,7 @@ jobs:
       # Tunnel-only qualification. No PLAN028 matrix or public default.
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]')) && '1' || '0' }}
       WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') && '1' || '0' }}
+      WBD_PLAN029_APP_TCP53_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp53]') && '1' || '0' }}
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}
       WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
@@ -1482,6 +1485,36 @@ jobs:
               scope='H1762_ONLY_OWNED_GUEST_DIRECT_TCP46112'} |
               ConvertTo-Json | Set-Content result/wl-public/hyperv-direct-tcp-owned.json
             Write-Output ('PLAN029_H1762_PHYSICAL_GUEST_TCP46112_HYPERV_EXACT_ALLOW_READBACK source='+[string]$source[0].IPAddress+' dest='+$guestIP)
+          }
+          # H1794 only: an independent REAL physical WSL eth0 TCP/53
+          # listener, source-address restricted. Keep prior TCP46112 intact
+          # and never widen unrelated WSL host/TLS rules. Write INTENT
+          # before Apply so an interrupted partial Apply can be recovered.
+          if($env:WBD_PLAN029_APP_TCP53_SCENE -eq '1'){
+            if($env:WBD_PLAN029_V3_DIRECT_SCENE -ne '1'){throw 'H1794 TCP53 requires signed V3 Direct scene'}
+            $dnsName=$ruleName+'-P029-DNSTCP53'
+            if(Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction SilentlyContinue){
+              throw 'foreign PLAN029 DNS TCP53 guest rule'
+            }
+            $dnsIntent='result/wl-public/hyperv-direct-dns-tcp-owned.json'
+            [ordered]@{name=$dnsName;creator_id=[string]$creator[0].VMCreatorId;
+              protocol='TCP';port=53;local_ip=$guestIP;
+              remote_ip=[string]$source[0].IPAddress;
+              scope='H1794_ONLY_SIGNED_APP_DNS_PHYSICAL_TCP53';state='INTENT'} |
+              ConvertTo-Json | Set-Content $dnsIntent
+            New-NetFirewallHyperVRule -Name $dnsName -DisplayName $dnsName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses ([string]$source[0].IPAddress) -LocalPorts '53' -ErrorAction Stop | Out-Null
+            $dnsLive=Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction Stop
+            if($null -eq $dnsLive -or $dnsLive.Direction -ne 'Inbound' -or
+               $dnsLive.Action -ne 'Allow' -or [string]$dnsLive.LocalPorts -ne '53' -or
+               [string]$dnsLive.LocalAddresses -ne $guestIP -or
+               [string]$dnsLive.RemoteAddresses -ne [string]$source[0].IPAddress -or
+               [string]$dnsLive.VMCreatorId -ne [string]$creator[0].VMCreatorId){
+              throw 'H1794 exact physical TCP53 HyperV rule readback failed'
+            }
+            $receipt=Get-Content $dnsIntent -Raw | ConvertFrom-Json
+            $receipt.state='OWNED'
+            $receipt | ConvertTo-Json | Set-Content $dnsIntent
+            Write-Output 'PLAN029_H1794_OWNED_PHYSICAL_GUEST_TCP53_HYPERV_READBACK_PASS'
           }
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){Write-Output 'WL_GAME_NATIVE_STAGE HYPERV_RULE_INSTALLED'}
           # Real NPF header showed original product SYN destination MAC equals
@@ -2359,6 +2392,20 @@ jobs:
               }
               Write-Output 'PLAN029_H1791_REAL_DEFAULT1460_TWO_OS_AUTO_INNER1389_OWNED_STOP_PASS_SCOPED'
             }
+            if($env:WBD_PLAN029_APP_TCP53_SCENE -eq '1'){
+              $dns=$result.plan029_d1_original_app_tcp53
+              if($dns.source_sha -ne $env:GITHUB_SHA -or
+                 $dns.stop -ne 'PASS_BOTH_OWNED' -or
+                 $dns.windows.two_original_kernel_tcp_app_connections -ne $true -or
+                 $dns.windows.direct.was_fake -ne $true -or
+                 $dns.windows.tunnel.was_fake -ne $false -or
+                 $dns.windows.tunnel.dns_answer_a -ne '203.0.113.77' -or
+                 $dns.linux.tunnel.real_socket_local -ne '1.1.1.1' -or
+                 $dns.linux.tunnel.original_client_source -ne '10.66.0.2'){
+                throw 'H1794 true Windows application TCP53 direct/tunnel physical egress and owned Stop not proven'
+              }
+              Write-Output 'PLAN029_H1794_REAL_APP_TCP53_DIRECT_AND_TUNNEL_TWO_OS_OWNED_STOP_PASS_SCOPED'
+            }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
           } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1') {
             if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
@@ -2490,6 +2537,35 @@ jobs:
             }
             Write-Output 'PLAN029_H1762_GUEST_TCP46112_HYPERV_EXACT_OWNER_REMOVED'
           }else{Write-Output 'PLAN029_H1762_GUEST_TCP46112_HYPERV_NOT_INSTALLED'}
+      - name: Restore H1794 exact owned physical Linux guest DNS TCP53 HyperV grant
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT+'-P029-DNSTCP53'
+          $receipt='result/wl-public/hyperv-direct-dns-tcp-owned.json'
+          $rule=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $rule){
+            if(-not (Test-Path $receipt)){throw 'unreceipted H1794 rule; refuse foreign cleanup'}
+            $owned=Get-Content $receipt -Raw | ConvertFrom-Json
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($owned.name -ne $name -or $owned.port -ne 53 -or
+               $owned.state -notin @('INTENT','OWNED') -or
+               $known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $owned.creator_id -or
+               [string]$rule.VMCreatorId -ne $owned.creator_id -or
+               [string]$rule.LocalPorts -ne '53' -or
+               [string]$rule.LocalAddresses -ne $owned.local_ip -or
+               [string]$rule.RemoteAddresses -ne $owned.remote_ip -or
+               $rule.Action -ne 'Allow' -or $rule.Direction -ne 'Inbound'){
+              throw 'foreign H1794 rule identity, refuse unrelated removal'
+            }
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){
+              throw 'H1794 owned DNS TCP53 HyperV rule still present'
+            }
+            Write-Output 'PLAN029_H1794_EXACT_TCP53_PHYSICAL_RULE_RECOVERED'
+          }else{Write-Output 'PLAN029_H1794_NO_OWNED_GUEST_TCP53_RULE'}
       - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
         if: always()
         timeout-minutes: 2
@@ -2611,6 +2687,7 @@ jobs:
             result/wl-public/linux-eth0.json
             result/wl-public/hyperv-rule.json
             result/wl-public/hyperv-direct-tcp-owned.json
+            result/wl-public/hyperv-direct-dns-tcp-owned.json
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn

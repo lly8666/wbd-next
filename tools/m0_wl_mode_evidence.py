@@ -42,6 +42,7 @@ LOGS=(
  "plan029-h1770-linux-noncn-a-business.log","plan029-h1770-windows-noncn-a-business.log",
  "plan029-h1775-linux-cn-converse.log","plan029-h1775-windows-cn-converse.log",
  "plan029-h1778-linux-flow-pressure.log","plan029-h1778-windows-flow-pressure.log",
+ "plan029-h1794-linux-two-tcp53.log","plan029-h1794-windows-app-tcp53.log",
  "auto-adaptive-windows-udp.log","auto-adaptive-linux-udp.log",
  "auto-revision-windows-udp.log","auto-revision-linux-udp.log",
  "wl-n0-windows-app.log","wl-n0-linux-app.log",

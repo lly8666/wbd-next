@@ -300,4 +300,31 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("[plan029-v3-real-default1460]",w)
         self.assertIn("$m.real_windows_auto_inner -ne 1389",w)
         self.assertIn("$m.real_linux_auto_inner -ne 1389",w)
+    def test_h1794_real_tcp53_one_owned_kernel_backend_two_linux_dns_exits(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"',S)
+        self.assertIn('p029_tcp53_guest,p029_tcp53_win):',S)
+        self.assertIn('report["plan029_d1_original_app_tcp53"]["stop"]="PASS_BOTH_OWNED"',S)
+        self.assertIn("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP",S)
+        self.assertLess(S.index("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS"),
+                        S.index("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP"))
+        self.assertLess(S.index("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP"),
+                        S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
+        root=Path(__file__).resolve().parents[1]
+        for name in ("m0_plan029_h1794_linux_real_tcp53.py",
+                     "m0_plan029_h1794_windows_real_app_tcp53.py"):
+            source=(root/"tools"/name).read_text()
+            ast.parse(source)
+            self.assertIn("PLAN029_H1794_",source)
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("WBD_PLAN029_APP_TCP53_SCENE:",workflow)
+        self.assertIn("H1794 exact owned physical Linux guest DNS TCP53",workflow)
+        self.assertIn("PLAN029_H1794_EXACT_TCP53_PHYSICAL_RULE_RECOVERED",workflow)
+        self.assertIn("PLAN029_H1794_REAL_APP_TCP53_DIRECT_AND_TUNNEL_TWO_OS_OWNED_STOP_PASS_SCOPED",workflow)
+        self.assertIn("-LocalPorts '53'",workflow)
+        self.assertIn("result/wl-public/hyperv-direct-dns-tcp-owned.json",workflow)
+        evidence=(root/"tools/m0_wl_mode_evidence.py").read_text()
+        self.assertIn('plan029-h1794-linux-two-tcp53.log',evidence)
+        self.assertIn('plan029-h1794-windows-app-tcp53.log',evidence)
 if __name__=="__main__":unittest.main()
