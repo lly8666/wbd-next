@@ -3,9 +3,9 @@
   "role_id": "M0",
   "plan": "PLAN029",
   "sequence": 1799,
-  "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
-  "kind": "H1799_TEST_SCENE_STAGED_NOT_YET_RUN",
-  "result": "SOURCE_TEST_NOT_RUN",
+  "source_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
+  "kind": "H1799_SIGNED_SCOPED_REAL_WINDOWS_LINUX_NORMAL_FLOWS",
+  "result": "PASS_SCOPED_NOT_PLAN029_EXIT",
   "previous_H1797": {
     "run_id": 43559122020,
     "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
@@ -21,11 +21,48 @@
     "startup_padding": "flows",
     "no_extreme_stress": true,
     "original_Rust_M1_link_ciphertext": true,
-    "npf_copied_records": "NOT_RUN",
-    "npf_copied_bytes": "NOT_RUN",
+    "npf_copied_records": 16,
+    "npf_copied_bytes": 50,
     "original_Windows_Linux_UDP_TCP": "NOT_RUN",
-    "stop": "NOT_RUN",
-    "source_lock": "NEW_H1799_SHA_PENDING"
+    "stop": "PASS_BOTH_OWNED",
+    "source_lock": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
+    "ordinary_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "ordinary_windows_linux_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP"
   },
-  "remaining": "D3-D5/P1-P2"
+  "remaining": "D3-D5/P1-P2",
+  "previous_staging": {
+    "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+    "result": "SOURCE_TEST_NOT_RUN",
+    "preserved_as_historical": true
+  },
+  "action": {
+    "id": 43560438283,
+    "job_id": 132343974344,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43560438283"
+  },
+  "observed": {
+    "signed_driver_setup": "PASS",
+    "original_windows_wintun_npcap_go_rust": "PASS",
+    "linux_wsl2_tun_peer": "PASS",
+    "mode": "normal",
+    "startup_padding": "flows",
+    "npf_copied_records": 16,
+    "npf_copied_bytes": 50,
+    "validated_native_assert": "PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED",
+    "physical_process_exit": "rc=0",
+    "kernel_tcp_udp": "PASS_TWO_OS",
+    "owned_stop": "PASS_BOTH",
+    "npcap_cleanup": "PASS",
+    "source_lock": "6a77d23d54847aacc8ef99bba1104cf1758ca02d"
+  },
+  "not_run": [
+    "D3 DNS transaction/cache/FakeIP full true-native edge cases",
+    "D4 IPv6 policy/partial Apply/restart and bootstrap lifecycle coverage",
+    "D5 actual GUI effective readback/large rule table",
+    "P1 same-VM pure Tunnel off/on CPU/GiB/p99/gap",
+    "P2 direct socket baseline/mixed Direct TCP+Tunnel small UDP CPU/p99/gap",
+    "startup-padding tls vs flows real A/B and Game4 connector representative"
+  ],
+  "note": "H1799 is a 10-second ordinary Normal V3 startup padding flows native proof at legacy1400, NOT default1460 test, NOT DNS/Direct egress in this scene, NOT P1/P2 performance. H1690 historical SYNACK/injection failure is not treated as today's root cause; later Direct/Tunnel real achievements have separately sourced evidence. Latest unrelated old pinned Go RootCAs standalone failure remains OPEN, not native signed verdict."
 }

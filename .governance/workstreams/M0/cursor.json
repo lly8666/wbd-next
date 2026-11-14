@@ -4,18 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1799,
-  "checkpoint_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+  "sequence": 1800,
+  "checkpoint_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1799 single ordinary original Windows/Linux Normal V3 startup-padding=flows acceptance staged: record bytes only from original Rust M1 encrypted LINK accepted by NPF driver prefix (no proposed-only counters), paired normal Windows/Linux TCP and UDP delivery and exact both owned Stop in existing signed SOURCE scene; no extra extreme test, new WFP, worker or wire field. H1797 source old Normal default off native Action43559122020 success; H1798 real WinForms/Go/Rust compile Action43559906217 success. H1799 signed flows new SOURCE NOT_RUN until Action; PLAN029 ongoing.",
-  "why_now": "Efficiency priority: after default-off signed Normal regression and real GUI build green, one scoped ordinary flows scene answers actual product effect rather than scaling pressure or rerunning all PLAN028 modes.",
+  "current_task": "H1800 interruption reconciliation: collect H1799 single signed original Normal flows 6a77d23 / Action 43560438283 PASS scoped: 16 original Rust M1 NPF accepted padded records / 50B, Windows/WSL2 original TCP+UDP duplex and both owned Stop. No new dispatch. PLAN029 remains IN_PROGRESS; D3-D5/P1-P2 and GUI effective open.",
+  "why_now": "Old cursor/evidence said H1799 NOT_RUN despite completed signed same-SOURCE Action. Preserve actual result first, no duplicate dispatch, distinguish true completed scene from full PLAN029 exit.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1799 automatic cheap/Windows Rust+Go compile; then single source-locked Windows/Linux signed Normal flows driver NPF copied padding>0, normal TCP+UDP/Stop. Repair only real first error. Future D3/D4/D5 and P1/P2 latency/cpu remain OPEN. Do not treat old pinned Go RootCAs standalone red as product defect.",
+  "next_action": "Find the first remaining material PLAN029 gap without repeating H1799: targeted D3 DNS/FakeIP small-quota true-native pressure and D4 IPv6/partial-Apply lifecycle, D5 GUI effective/10k rule case, then source-locked P1/P2 same-VM off/on and mixed CPU/GiB, p99, longest gap and queue age. Existing 1790/1796/1793 source-scoped positives are not new-source PASS. Do not rerun historic H1690 probe or independent pinned Go RootCAs hygiene.",
   "unverified": true,
-  "last_tested_source": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+  "last_tested_source": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
+    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
+    "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
+    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +30,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1795 signed app DNS TCP53 both directions and owned Stop PASS; H1797 Normal off signed native two-OS/Stop PASS; H1798 canonical GUI/off/tls/flows+old migration Windows Go/Rust compile PASS. H1799 NPF accepted true encrypted M1 padding instrument and one ordinary flows trial staged, signed flows NOT_RUN yet."
+  "partial_summary": "Collected H1799 source 6a77 signed original Windows/WSL2 Normal flows: positive actual NPF post-copy M1 padding 16 records/50B, TCP/UDP duplex, two owned Stop, Action43560438283 PASS. 1795 application TCP53 Direct/Tunnel real earlier PASS; 1791 default outer1460 owned OS readback earlier PASS. Live GUI effective, D3-full/D4/D5/P1/P2 pending; no product-wide PASS and no new diagnostics dispatch."
 }

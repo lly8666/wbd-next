@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "D1 real original app TCP/53 Direct/Tunnel and Stop passed separately; startup padding H1797 default-off signed Normal native two-OS success, H1798 portable off/tls/flows GUI exact original Go/WinForms compiler PASS; H1799 one bounded real flows Normal scene adds original Rust M1 authenticated NPF accepted ciphertext counters, actual flows/Stop NOT_RUN until signed Action.",
+  "summary": "H1799 signed original Normal V3 Windows/WSL2 Rust M1 authenticated NPF accepted 16 padded records / 50 bytes; TCP+UDP duplex and both owned Stop PASS (Action 43560438283, source 6a77d23). H1797 default off signed PASS; H1798 GUI compiler PASS. Overall PLAN029 D3-D5/P1-P2 and GUI effective remain OPEN.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -16,7 +16,7 @@
   },
   "usage": {
     "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
-    "config": "Source-only: original-Go pinned config/CLI -> V3 reserved cold padding selector -> original Rust M1 Tunnel LINK; GUI portable stored profile imports and exports one canonical key. Physical signed off/on and live effective readback not qualified.",
+    "config": "Original pinned Go CLI/config -> V3 cold canonical off|tls|flows -> original Rust M1 Tunnel LINK. H1799 physical flows accepted after NPF prefix (16 records, 50 B); live GUI effective readback and A/B CPU/p99 remain NOT_RUN.",
     "gui": "H1798 source-compiled real Windows WinForms portable off/tls/flows choice, old TLS bool profiles/import migrated. Saved user mode is not applied until reconnect and Rust authenticated native owner; current live GUI effective display still OPEN."
   },
   "code_refs": [
@@ -74,22 +74,22 @@
     {
       "platform": "Windows 2025 original Go/Rust + Linux WSL2 TUN",
       "scope": "H1797 default startup-padding off source 36b9 original Normal signed real TCP/UDP two-OS native and Stop on Action 43559122020; not a flows measurement",
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
-      "evidence": null
+      "status": "PASS",
+      "source_sha": "36b9fd711b62fcacc23209f958be402be966fb77",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43559122020"
     },
     {
       "platform": "Original Windows Rust M1/Npcap signed native Normal + Linux TUN",
-      "scope": "H1799 startup-padding=flows driver-accepted ciphertext byte/record counters + ordinary Windows/Linux TCP/UDP and owned Stop single-scene",
-      "status": "PLANNED",
-      "source_sha": null,
-      "evidence": null
+      "scope": "H1799 narrowly scoped original Normal flows native NPF accepted 16 records/50B; Windows/WSL2 TCP/UDP duplex and both owned Stop. Not product-wide padding A/B or P1/P2.",
+      "status": "PASS",
+      "source_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
+      "evidence": "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
     }
   ],
   "limitations": [
-    "H1797 is SOURCE staged, physical Windows/Linux off/on + GUI source selector wired but live effective NOT_RUN; existing signed H1795 D1 TCP53 and Stop remain prior-SOURCE PASS.",
+    "H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.",
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
-    "Old Go/Rust original pinned source unchanged; only versioned assembly overlay is edited. Full P1/P2 CPU/p99 and D3-D5 still OPEN.",
+    "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
     "Padding is not a guarantee against DPI recognition."
   ],
   "promotion": null
