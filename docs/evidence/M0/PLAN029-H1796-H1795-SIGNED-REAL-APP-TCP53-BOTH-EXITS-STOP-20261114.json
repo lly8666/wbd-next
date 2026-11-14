@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1796,
+  "kind": "SIGNED_REAL_APP_TCP53_BOTH_EXITS_AND_OWNED_STOP",
+  "source_sha": "1efb3cec6b9f90714b32c78e0318a57720d0e1f1",
+  "action": {
+    "id": 43556105215,
+    "job_id": 132330572307,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43556105215",
+    "mode": "normal"
+  },
+  "observed": {
+    "Linux_physical_TCP53_scoped_HyperV_Allow": "PASS_APPLIED_READBACK",
+    "original_Windows_Wintun_app_CN_TCP53": "PHYSICAL_PASS",
+    "CN_QNAME": "www.cn.example",
+    "CN_real_upstream_A": "198.51.100.77",
+    "CN_app_fake_IP": "PASS",
+    "Linux_eth0_TCP53_physical_socket": "PASS",
+    "nonCN_Windows_Wintun_app_TCP53": "PHYSICAL_PASS",
+    "nonCN_QNAME": "www.globalx.example",
+    "nonCN_A": "203.0.113.77",
+    "nonCN_fakeIP": "FALSE",
+    "Linux_TUN_TCP53_1_1_1_1_socket": "PASS",
+    "Direct_Tunnel_TCP_UDP": "PASS",
+    "DNS_blackhole_no_fallback": "PASS",
+    "original_Windows_Linux_owned_Stop": "PASS_BOTH_OWNED",
+    "H1794_owned_TCP53_HyperV_Allow_always_removed": "PASS_REMOVED",
+    "prestop_utc": "2026-11-14T04:30:19Z",
+    "stop_utc": "2026-11-14T04:30:27Z"
+  },
+  "exact_log_markers": [
+    "PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP",
+    "PLAN029_H1794_REAL_APP_TCP53_DIRECT_AND_TUNNEL_TWO_OS_OWNED_STOP_PASS_SCOPED",
+    "PLAN029_H1794_EXACT_TCP53_PHYSICAL_RULE_RECOVERED"
+  ],
+  "not_run": [
+    "TC=1 UDP to same endpoint TCP fallback true native",
+    "D3 all DNS/FakeIP resource full and recovery",
+    "D4 IPv6/partial Apply/reconnect",
+    "D5 GUI live owner/10k domains",
+    "P1/P2 off-on p99/CPU/RSS/mixed/padding"
+  ],
+  "notes": "This action uses legacy1400, not H1791 actual default1460. H1794 source d1f372 cheap test failed before networking (separate H1795 evidence); do not conflate.",
+  "independent_old_go_abi": {
+    "action": 43553082256,
+    "first_boundary": "original pinned Go ClientConfig lacks RootCAs used in overlay-local test",
+    "status": "OPEN"
+  }
+}
