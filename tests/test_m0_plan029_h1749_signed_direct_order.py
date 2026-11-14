@@ -383,4 +383,22 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("assert m['native_fec_acceleration'] is True",w)
         self.assertIn('assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]',w)
         self.assertIn("PASS_BOTH_OWNED",p)
+    def test_h1819_p1_source_frozen_moderate_normal_single_vm_two_legs(self):
+        import json
+        root=Path(__file__).resolve().parents[1]
+        cfg=json.loads((root/"scenarios/plan029-p1-normal-50m-25ms0-60s.json").read_text())
+        self.assertEqual(cfg["public_mode"],"normal")
+        self.assertEqual(cfg["duration_s"],60)
+        self.assertEqual(cfg["tun_mtu"],1460)
+        for direction in ("windows_to_linux","linux_to_windows"):
+            row=cfg[direction]
+            self.assertEqual((row["offered_mbps"],row["delay_ms"],row["loss_pct"]),(50,25,0))
+            self.assertEqual([x["udp_payload_bytes"] for x in row["packet_mix"]],[96,1200])
+            self.assertEqual(sum(x["packets_weight"] for x in row["packet_mix"]),100)
+        h=(root/"tools/m0_plan029_h1814_p1_tunnel_ab.py").read_text()
+        self.assertIn('("A_off_old_tunnel","0"),("B_on_all_tunnel","1")',h)
+        self.assertIn('report.get("linux_binary_source")!=os.environ.get("WBD_WL_BINARY_SOURCE")',h)
+        self.assertIn('app_source not in (None,SOURCE)',h)
+        self.assertIn('windows_cpu_seconds_per_actual_delivered_gib',h)
+        self.assertIn('oneway_p99":"NOT_MEASURED_UNCALIBRATED_CROSS_OS_CLOCKS',h)
 if __name__=="__main__":unittest.main()

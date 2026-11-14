@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1818,
-  "checkpoint_sha": "1753ca530ccd5d329116cff930b06861aed3d3d7",
+  "sequence": 1819,
+  "checkpoint_sha": "6c52c59a98b2cd8ab237b5641bd6f9f4e6d86d6b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1818 exact first gate: H1816 P2 Action43572814169 cheap PASS but stopped in Windows binary reuse manifest assertion because valid pinned H1814 native ISA-L feature string, not plain default; P2 network NOT_RUN. H1817 P1 Action43572971519 cheap static source substring assertion FAIL, network NOT_RUN. H1818 exact H1814 SOURCE c262 + run43571086653 + native accelerator feature + SHA digest branch, corrected static test; P2 rerun, P1 new independent H1819 needed. PLAN029 IN_PROGRESS.",
-  "why_now": "Avoid duplicate Windows/Linux release compilation; validate actual H1814 Windows build feature `m0_v4_embedded_go,fec2_product_record,native_fec_acceleration` in immutable run and enforce SHA256, instead of broadening acceptance. Fix literal test to require real len+hash expression.",
+  "current_task": "H1819 independent signed P1 same-VM Normal A original V4 Tunnel vs B Rust V3 all-Tunnel 50Mbps/25ms/0%/60s with exact H1814 source SHA EXE/DLL+Linux server reuse; H1818 P2 separate Windows VM in-progress. Only P1 rerun marker, no product modifications. Results pending. PLAN029 IN_PROGRESS.",
+  "why_now": "H1818 P2 passed cheap and reached actual native job with pinned ISA-L hash artifact, so same feature-verified source reused for independent P1 via separate Action/runner. Avoid unnecessary x86+ARM pure retests and any 028 seven-mode matrix.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1818 signed P2 true Windows/WSL2 or first real failure and H1819 P1 independently; both source-based immutable run43571086653. Then close only scoped P1/P2 evidence, actual Game4 new split and signed GUI Start/Stop/IPv6 remain.",
+  "next_action": "Collect H1818 P2/ H1819 P1 independent signed results and first failure; only count measured business/Stop and SHA. Next Game4 split actual Rust ingress wiring, GUI-origin signed Connect, D4 IPv6 representative.",
   "unverified": true,
   "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1818 P2 source reuse feature gate fixed with exact known H1814 native ISA-L and current SHA. H1817 P1 static test fixed. Neither P1 B nor P2 true new network result exists yet. Prior H1814 A actual 50Mbps and owned Stop PASS scoped."
+  "partial_summary": "H1818 P2 native underway, H1819 P1 independent Action pending; exact H1814 SHA binary reuse gated by manifest features and individual content hashes, no new product recompiles; earlier P1 A true 50Mbps and Stop PASS, B must prove separately."
 }
