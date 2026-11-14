@@ -10,6 +10,7 @@ on:
       - "crates/wbd-engine/src/v4_client_dns_cache.rs"
       - "crates/wbd-engine/src/v4_windows_native_split.rs"
       - "crates/wbd-engine/src/v4_windows_native_dns_direct.rs"
+      - "crates/wbd-engine/src/v4_windows_native_dns_client_tcp.rs"
       - "crates/wbd-engine/src/v4_windows_native_dns_tunnel.rs"
       - "crates/wbd-engine/src/v4_windows_native_dns_tcp.rs"
       - "crates/wbd-engine/src/v4_windows_native_tcp_direct.rs"
