@@ -114,6 +114,10 @@ mod v4_windows_native_tcp_direct;
 // Same-endpoint nonblocking Direct DNS UDP-TC -> bound TCP/53 fallback.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_tcp;
+// Native app TCP/53 length-framed one-query actor (same owned kernel
+// listener); no second Wintun reader or per-query background thread.
+#[cfg(target_os="windows")]
+mod v4_windows_native_dns_client_tcp;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

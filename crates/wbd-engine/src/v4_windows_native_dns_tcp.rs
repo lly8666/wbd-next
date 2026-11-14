@@ -37,6 +37,7 @@ pub(crate) enum TcpDnsPoll{Pending,Answer(Vec<u8>),Failed}
 pub(crate) struct TcpDnsFallback {
     connecting:Option<PhysicalTcpSocket>,
     stream:Option<TcpStream>,
+    source_port:u16,
     framed:DnsTcpFrame,
 }
 impl TcpDnsFallback{
@@ -45,7 +46,11 @@ impl TcpDnsFallback{
         let frame=DnsTcpFrame::new(query).ok_or(())?;
         let socket=PhysicalTcpSocket::start(source,ifindex,
             SocketAddrV4::new(endpoint,53)).map_err(|_|())?;
-        Ok(Self{connecting:Some(socket),stream:None,framed:frame})
+        let source_port=socket.local_port().map_err(|_|())?;
+        Ok(Self{connecting:Some(socket),stream:None,framed:frame,source_port})
+    }
+    pub(crate) fn source_port(&self)->Option<u16>{
+        (self.source_port!=0).then_some(self.source_port)
     }
     /// One readiness-only bounded turn. The physical connect uses
     /// zero-time WSAPoll+SO_ERROR, then at most one nonblocking write and

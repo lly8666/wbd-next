@@ -1,0 +1,9 @@
+# PLAN029 H1792 | one original kernel TCP/53 DNS transaction component
+
+- D1 **source-only** Windows Rust component, not yet activated in the original signed kernel TCP listener: `ClientDnsTcp` reads one bounded 2-byte-length-prefixed DNS question from its already accepted nonblocking Windows socket, routes QNAME to Direct or Tunnel, polls the existing one-endpoint `TcpDnsFallback`, validates original QNAME/QTYPE/ID, and writes exactly one framed response. Direct uses bound physical source/ifindex and `dns.direct`; Tunnel uses owned lease/Wintun ifindex and `dns.tunnel`. Wintun-bound internal Tunnel source port is returned for owner registration **before** any subsequent Wintun TX quantum. No background worker, second packet reader, global wait, fallback resolver, or app SNI guessing.
+- CN A uses `FakeAllocator.prepare` → portable `FakeJournal.persist_batch` → `synthesize_cn_a` before reply; CN AAAA/HTTPS/SVCB local NODATA; other responses are verified against original question and retain their direction. 5s per-query upper bound, ≤2KiB single reply, local SERVFAIL for a failed upstream; the once-per-owner readiness quantum provides fairness. Unit includes no-fake-without-journal and no-real-CDN-on-wire. The helper uses existing `PhysicalTcpSocket` + TCP DNS same-endpoint read/write and extends its exact locally assigned source-port readback.
+- Critical remaining **H1793**: connect this state machine to original owned kernel NAT/listener, route internal Wintun TCP safely as ordinary Tunnel rather than recursive app DNS, give Tunnel DNS its own quota independent of Direct-hard, and sign genuine Windows/Linux TCP53 + Stop. H1791 signed default1460 independent SOURCE in flight. These exit conditions remain NOT_RUN.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Pre-activation bounded original-client TCP53 DNS transaction module and source-port readback; no user-visible ready or physical product qualification."}
+```

@@ -44,7 +44,7 @@ fn wall_ms()->Option<u64>{
         .and_then(|x|u64::try_from(x.as_millis()).ok())
 }
 /// An error/NODATA response containing no authority/additional real IP.
-fn plain_dns(id:u16,name:&str,qtype:u16,rcode:u16)->Option<Vec<u8>>{
+pub(crate) fn plain_dns(id:u16,name:&str,qtype:u16,rcode:u16)->Option<Vec<u8>>{
     let mut b=vec![0u8;12];
     b[..2].copy_from_slice(&id.to_be_bytes());
     b[2..4].copy_from_slice(&(0x8180u16|(rcode&15)).to_be_bytes());

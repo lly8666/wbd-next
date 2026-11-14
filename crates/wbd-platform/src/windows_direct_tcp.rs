@@ -140,6 +140,16 @@ mod win{
             Ok(Self{stream,remote:real,source,ifindex,progress})
         }
         pub fn peer(&self)->SocketAddrV4{self.remote}
+        /// A Wintun-bound internal Tunnel DNS TCP socket is registered
+        /// by original Rust TX before its next Wintun packet quantum.
+        /// This is the actual WinSock assigned source port, not a guess.
+        pub fn local_port(&self)->Result<u16,DirectTcpError>{
+            match self.stream.local_addr(){
+                Ok(std::net::SocketAddr::V4(addr)) if addr.port()!=0=>
+                    Ok(addr.port()),
+                _=>Err(DirectTcpError::PeerFailed),
+            }
+        }
         pub fn underlay(&self)->(Ipv4Addr,u32){(self.source,self.ifindex)}
         pub fn progress(&self)->ConnectProgress{self.progress}
         pub fn poll_connected(&mut self)->Result<ConnectProgress,DirectTcpError>{

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1791,
-  "checkpoint_sha": "d5c9d2f107d3deff861f9c4dd8c279f0cb69de6b",
+  "sequence": 1792,
+  "checkpoint_sha": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1791 signed D5 source-frozen Normal default outer1460, actual Windows original applied OS inner1389 and Linux original TUN inner1389 plus two-exit + owned Stop. Original --mtu omitted; no 133s hard8 replay. H1786 prior source de19 real Direct8+CN DNS cache/Tunnel no fallback and both owned Stop PASS at legacy1400. H1791 new native NOT_RUN. PLAN029 IN_PROGRESS.",
-  "why_now": "Prior real signed full success was legacy1400, does not prove default outer1460. Validate actual original Windows/WSL OS readbacks, not supplied config, under the already authenticated one-owner scene.",
+  "current_task": "H1792 parallel D1 original Windows app TCP53 bounded nonblocking transport module staged. Add ClientDnsTcp state machine: length-framed one query, QNAME Direct/Tunnel, on CN A exact FakeAllocator/Journal persist before fake answer, nonCN untouched validated ID/QNAME/QTYPE, CN AAAA/HTTPS NODATA, same-endpoint TcpDnsFallback, source-bound physical vs Wintun; accepted kernel listener/NAT activation still next H1793, so H1792 component is NOT real product TCP53 PASS. H1791 signed true default1460 Action separately source frozen/in flight. PLAN029 IN_PROGRESS.",
+  "why_now": "D1 TCP53 remains real product exit missing; reuse current Direct TCP native WinSock and owner bounded poll with one same-resolver transport, preserve original authenticated Tunnel TCP not terminated except DNS special-purpose.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1791 Action first real boundary; meanwhile D1 app TCP53, DNS/FakeIP small pressure, GUI-to-owner settings and P1/P2 padding incomplete.",
+  "next_action": "Read H1792 Windows Rust component first compile, integrate ClientDnsTcp into existing kernel NAT actor and Wintun owner (H1793), enforce separate Tunnel DNS admission quota, internal tunnel socket bypass. Then one real app TCP53 signed Action. H1791 default1460 separate Action not duplicated.",
   "unverified": true,
   "last_tested_source": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1786 original signed 1400 two egress + CN cache + hard8 and Stop PASS. H1791 actual original native outer default1460 omitted flag, both OS inner1389 + owner Stop staged NOT_RUN."
+  "partial_summary": "H1792 new native client TCP53 DNS transaction component is wired into crate for compile, not yet into listener; D1 application TCP53 real NOT_RUN. H1791 original native default1460 in flight."
 }
