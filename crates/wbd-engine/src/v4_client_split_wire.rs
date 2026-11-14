@@ -182,6 +182,11 @@ impl PacketIngress{
         self.fragment_pins.remove(&frag);
         true
     }
+    pub(crate) fn tcp_dns_egress(&self,name:&str)->Option<crate::v4_client_split::DnsEgress>{
+        let china=self.domains.contains(name).ok()?;
+        Some(self.policy.dns_egress(crate::v4_client_split::DnsUse::Ordinary{
+            china_domain:china}))
+    }
     pub fn flow_count(&self)->usize{self.pins.len()}
     pub fn fragment_count(&self)->usize{self.fragment_pins.len()}
     pub fn on_ipv4(&mut self,packet:&[u8],now_ms:u64)

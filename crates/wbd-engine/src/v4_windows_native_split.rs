@@ -18,6 +18,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
 use crate::v4_windows_native_tcp_direct::{NativeTcpActor,safe_synthetic};
+use crate::v4_windows_native_dns_client_tcp::NativeTcpDnsEndpoints;
 use crate::v4_client_split::FlowKey;
 
 const MAX_PREFIXES:usize=32_768;
@@ -80,6 +81,7 @@ pub(crate) struct NativeSplitWorker {
     tcp:Option<NativeTcpActor>,
     tcp_plan:Option<PendingKernelTcp>,
     tcp_enabled:bool,
+    dns_tcp_endpoints:NativeTcpDnsEndpoints,
     next_reverse_lane:usize,
     last_tick_ms:u64,
 }
@@ -223,7 +225,16 @@ impl NativeSplitWorker {
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
             udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,
             tcp:None,tcp_plan,tcp_enabled:false,
+            dns_tcp_endpoints:NativeTcpDnsEndpoints{
+                physical:underlay,physical_ifindex:c.physical_ifindex,
+                lease,wintun_ifindex:0,direct:direct_dns,tunnel:tunnel_dns,
+            },
             next_reverse_lane:0,last_tick_ms:0})
+    }
+    pub(crate) fn set_wintun_ifindex(&mut self,ifindex:u32)->Result<(),()>{
+        if ifindex==0||ifindex==u32::MAX{return Err(())}
+        self.dns_tcp_endpoints.wintun_ifindex=ifindex;
+        Ok(())
     }
     pub(crate) fn has_deferred_tcp(&self)->bool{self.tcp_plan.is_some()}
     /// Only the already-authenticated original Rust TX worker may call
@@ -345,6 +356,22 @@ impl NativeSplitWorker {
                 return NativeDecision::LocalDrop
             }
         }
+        // An internal Wintun-bound TCP socket already has its genuine
+        // Winsock source port registered by the single TX owner. Its TCP
+        // SYN/data goes over the authenticated Tunnel; never recursively
+        // intercept it as another client DNS/TCP query.
+        if self.tcp_enabled&&packet.len()>=40&&packet[0]>>4==4&&
+           packet[9]==6&&packet[12..16]==self.dns_tcp_endpoints.lease.octets()&&
+           packet[16..20]==self.tunnel_dns.octets(){
+            let ihl=usize::from(packet[0]&15)*4;
+            if ihl>=20&&ihl+4<=packet.len()&&
+               u16::from_be_bytes([packet[ihl+2],packet[ihl+3]])==53&&
+               self.tcp.as_ref().is_some_and(|t|
+                 t.is_internal_tunnel_dns_tcp(
+                   u16::from_be_bytes([packet[ihl],packet[ihl+1]]))){
+                return NativeDecision::Tunnel
+            }
+        }
         let fakes=&self.fakes;
         let action=self.ingress.on_ipv4_with_announced_fake(packet,now_ms,
             |ip|fakes.as_ref().and_then(|pool|pool.announced_real(ip)));
@@ -425,8 +452,13 @@ impl NativeSplitWorker {
                     },
                 }
             },
-            Ok(IngressAction::DnsTcpNeedsQuestion|
-               IngressAction::DropUnknownFake)|
+            Ok(IngressAction::DnsTcpNeedsQuestion)=>{
+                if self.tcp_enabled&&self.tcp.as_mut()
+                    .is_some_and(|tcp|tcp.dns_ingress(packet,now_ms).is_ok()){
+                    NativeDecision::DirectHandled
+                }else{NativeDecision::LocalDrop}
+            },
+            Ok(IngressAction::DropUnknownFake)|
             Err(_)=>NativeDecision::LocalDrop,
         }
     }
@@ -472,6 +504,16 @@ impl NativeSplitWorker {
                 });
             }
          }
+        }
+        // DNS/TCP shares the previously authorized Windows kernel listener
+        // and exact NAT reverse. It has independent 256-ticket admission.
+        if self.tcp_enabled{
+            let ingress=&self.ingress;
+            if let Some(tcp)=self.tcp.as_mut(){
+                tcp.tick_dns(now_ms,self.dns_tcp_endpoints,
+                    &|name|ingress.tcp_dns_egress(name),
+                    self.fakes.as_mut(),self.journal.as_mut());
+            }
         }
         // Per-owner retirement backlog is drained each bounded TX turn,
         // rather than accumulating 1s of high-rate short-lived UDP flows.

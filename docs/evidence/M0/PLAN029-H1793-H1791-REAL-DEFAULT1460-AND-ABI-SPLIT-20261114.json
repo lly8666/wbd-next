@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1793,
+  "kind": "RECOVER_EXISTING_ACTIONS_NO_REDISPATCH",
+  "source_sha": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
+  "observed_at_utc": "2026-11-14T03:49:19Z",
+  "real_native": {
+    "run_id": 43552619098,
+    "job_id": 132319637914,
+    "conclusion": "success",
+    "original_Go_Rust_signed_Wintun_Linux_TUN": "PHYSICAL_PASS",
+    "outer_mtu": "1460_default",
+    "inner_windows": 1389,
+    "inner_linux": 1389,
+    "CN_FakeIP_Direct_TCP_UDP": "PASS",
+    "nonCN_DNS_A_to_Tunnel_UDP": "PASS",
+    "nonCN_DNS_CN_IP_to_Direct_UDP": "PASS",
+    "single_Tunnel_DNS_no_fallback": "PASS",
+    "owned_Stop": "PASS_BOTH_OWNED",
+    "marker": "PLAN029_H1791_REAL_DEFAULT1460_TWO_OS_AUTO_INNER1389_OWNED_STOP_PASS_SCOPED",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43552619098"
+  },
+  "separate_abi_failure": {
+    "source_sha": "43a2c6f059373aa0711694e1eba62c925340d4a9",
+    "run_id": 43553082256,
+    "job_id": 132319716865,
+    "conclusion": "failure",
+    "first_boundary": "Pinned original Go ClientConfig has no RootCAs field used by overlay local tests; Rust DLL and Rust tests passed first",
+    "current_status": "OPEN_INDEPENDENT_NOT_NETWORK"
+  },
+  "separate_old_combined": {
+    "run_id": 43553082055,
+    "result": "FAIL_OTHER_PLAN012_TEST_NO_PLAN029_NETWORK"
+  },
+  "new_H1793_native_TCP53": "NOT_RUN",
+  "remaining": [
+    "D1 real original app TCP53 kernel and upstream 2 exits",
+    "D3 DNS FakeIP resource full/expiry",
+    "D4 IPv6 OS rollback bootstrap",
+    "D5 GUI live 10k rules",
+    "P1 P2 CPU/p99/mixed/startup padding"
+  ]
+}

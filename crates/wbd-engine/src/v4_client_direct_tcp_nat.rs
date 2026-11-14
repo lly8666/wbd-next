@@ -37,9 +37,12 @@ pub(crate) struct DirectTcpNat{
     forward:HashMap<TcpNatKey,u16>,
     reverse:HashMap<u16,TcpNatEntry>,
     next_port:u16,
+    port_min:u16,port_max:u16,
 }
 const NAT_PORT_MIN:u16=32768;
-const NAT_PORT_MAX:u16=64000;
+const NAT_PORT_MAX:u16=49151; // 16,384 Direct-only owned ports
+const DNS_PORT_MIN:u16=49152;
+const DNS_PORT_MAX:u16=64000; // independent bounded DNS tickets
 const TCP_SYN:u8=0x02;
 const TCP_ACK:u8=0x10;
 
@@ -129,8 +132,22 @@ impl DirectTcpNat{
            listener_port==0||hard_cap==0||hard_cap>16384{
             return Err(TcpNatError::InvalidPacket)
         }
+        Self::new_range(lease4,synthetic4,listener_port,hard_cap,
+            NAT_PORT_MIN,NAT_PORT_MAX)
+    }
+    pub(crate) fn new_dns(lease4:u32,synthetic4:u32,listener_port:u16)
+        ->Result<Self,TcpNatError>{
+        Self::new_range(lease4,synthetic4,listener_port,256,
+            DNS_PORT_MIN,DNS_PORT_MAX)
+    }
+    fn new_range(lease4:u32,synthetic4:u32,listener_port:u16,
+        hard_cap:usize,low:u16,high:u16)->Result<Self,TcpNatError>{
+        if lease4==0||synthetic4==0||lease4==synthetic4||
+           listener_port==0||hard_cap==0||
+           hard_cap>usize::from(high-low)+1{return Err(TcpNatError::InvalidPacket)}
         Ok(Self{lease4,synthetic4,listener_port,hard_cap,
-            forward:HashMap::new(),reverse:HashMap::new(),next_port:NAT_PORT_MIN})
+            forward:HashMap::new(),reverse:HashMap::new(),next_port:low,
+            port_min:low,port_max:high})
     }
     pub(crate) fn len(&self)->usize{self.forward.len()}
     pub(crate) fn by_nat_port(&self,p:u16)->Option<TcpNatEntry>{
@@ -156,9 +173,11 @@ impl DirectTcpNat{
                     return Err(TcpNatError::Capacity)
                 }
                 let mut free=None;
-                for _ in 0..=(NAT_PORT_MAX-NAT_PORT_MIN){
+                for _ in 0..=(self.port_max-self.port_min){
                     let port=self.next_port;
-                    self.next_port=if port==NAT_PORT_MAX{NAT_PORT_MIN}else{port+1};
+                    self.next_port=if port==self.port_max{
+                        self.port_min
+                    }else{port+1};
                     if !self.reverse.contains_key(&port){free=Some(port);break}
                 }
                 let Some(port)=free else{return Err(TcpNatError::PortExhausted)};
@@ -240,6 +259,30 @@ mod tests{
         d[36..38].copy_from_slice(&checksum(&all).to_be_bytes());
         let ipcs=checksum(&d[..20]);d[10..12].copy_from_slice(&ipcs.to_be_bytes());
         check_tcp_integrity(&d);d
+    }
+    #[test]
+    fn plan029_dns_tcp_nat_quota_separate_from_full_direct_and_inverse_identity(){
+        let lease=ip(10,66,0,2);
+        let synthetic=ip(198,19,7,9);
+        let mut direct=DirectTcpNat::new(lease,synthetic,46000,1).unwrap();
+        let mut dns=DirectTcpNat::new_dns(lease,synthetic,46000).unwrap();
+        let mut buf=[0u8;128];
+        let first=packet(lease,ip(198,18,4,5),52000,443,TCP_SYN,&[]);
+        assert!(direct.to_listener(&first,ip(172,16,3,4),1,&mut buf).is_ok());
+        assert_eq!(direct.to_listener(&packet(lease,ip(203,0,113,1),
+            52001,443,TCP_SYN,&[]),ip(203,0,113,1),2,&mut buf),
+            Err(TcpNatError::Capacity));
+        let question=packet(lease,ip(8,8,8,8),52002,53,TCP_SYN,&[]);
+        let (_,entry)=dns.to_listener(&question,ip(8,8,8,8),2,&mut buf).unwrap();
+        assert!((DNS_PORT_MIN..=DNS_PORT_MAX).contains(&entry.proxy_port));
+        assert!(direct.by_nat_port(entry.proxy_port).is_none());
+        assert!(dns.accepted(synthetic,entry.proxy_port).is_some());
+        let reply=packet(lease,synthetic,46000,entry.proxy_port,
+            TCP_SYN|TCP_ACK,&[]);
+        let (_,back)=dns.to_app(&reply,&mut buf).unwrap();
+        assert_eq!(back.key.presented,ip(8,8,8,8));
+        assert_eq!(be16(&buf[20..22]),53);
+        check_tcp_integrity(&buf[..40]);
     }
     #[test]
     fn plan029_tcp_kernel_nat_one_owned_synthetic_peer_reverse_syn_ack(){

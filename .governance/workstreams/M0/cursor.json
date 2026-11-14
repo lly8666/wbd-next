@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1792,
-  "checkpoint_sha": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
+  "sequence": 1793,
+  "checkpoint_sha": "43a2c6f059373aa0711694e1eba62c925340d4a9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1792 parallel D1 original Windows app TCP53 bounded nonblocking transport module staged. Add ClientDnsTcp state machine: length-framed one query, QNAME Direct/Tunnel, on CN A exact FakeAllocator/Journal persist before fake answer, nonCN untouched validated ID/QNAME/QTYPE, CN AAAA/HTTPS NODATA, same-endpoint TcpDnsFallback, source-bound physical vs Wintun; accepted kernel listener/NAT activation still next H1793, so H1792 component is NOT real product TCP53 PASS. H1791 signed true default1460 Action separately source frozen/in flight. PLAN029 IN_PROGRESS.",
-  "why_now": "D1 TCP53 remains real product exit missing; reuse current Direct TCP native WinSock and owner bounded poll with one same-resolver transport, preserve original authenticated Tunnel TCP not terminated except DNS special-purpose.",
+  "current_task": "H1793 source D1 original Windows application TCP53 real-owner kernel NAT: reuse already-owned listener/synthetic route/Defender, independent 256 DNS NAT ports, live bounded ClientDnsTcp QNAME selects Direct physical vs Tunnel Wintun-bound socket with same endpoint IP allowed, internal Tunnel source-port bypass recursive interception and same original Rust TX poll. H1793 new SOURCE build/network NOT_RUN. H1791 original signed default1460/inner1389 real Stop PASS. Separate old Go RootCAs ABI test FAIL remains OPEN. PLAN029 IN_PROGRESS.",
+  "why_now": "H1792 TCP53 component alone was not product entry; ingress previously always dropped DnsTcpNeedsQuestion. Implement existing single kernel backend and separate admission with no new reader, WFP guard or Go pump.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Read H1792 Windows Rust component first compile, integrate ClientDnsTcp into existing kernel NAT actor and Wintun owner (H1793), enforce separate Tunnel DNS admission quota, internal tunnel socket bypass. Then one real app TCP53 signed Action. H1791 default1460 separate Action not duplicated.",
+  "next_action": "Collect H1793 automatic Rust Windows/Linux compile first; fix exact boundary and then run one signed native Windows app TCP53 Direct/Tunnel DNS + Stop scenario. D3/D4/D5/P1/P2 remain OPEN; don't re-run H1791, no 028 full matrix or 030.",
   "unverified": true,
-  "last_tested_source": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
+  "last_tested_source": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1790-H1786-SIGNED-CN-CACHE-DIRECT8-BOTH-OWNED-20261114.json"
+    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1792 new native client TCP53 DNS transaction component is wired into crate for compile, not yet into listener; D1 application TCP53 real NOT_RUN. H1791 original native default1460 in flight."
+  "partial_summary": "H1791 original native signed 1460 outer and 1389 inner both OS, Direct+Tunnel TCP/UDP DNS no fallback Stop PASS. H1793 kernel TCP53 NAT and scheduler source staged NOT_RUN until CI; pinned Go RootCAs tests remain independent OPEN."
 }

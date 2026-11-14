@@ -1212,8 +1212,11 @@
  }
  fn start_native(config:WbdWinNativeAttachV1,fixed:bool,
      auto_policy:Option<bool>,sack_negotiated:bool,
-     split:Option<NativeSplitWorker>
+     mut split:Option<NativeSplitWorker>
  )->i32{
+     if let Some(owner)=split.as_mut(){
+         if owner.set_wintun_ifindex(config.ifindex).is_err(){return INVALID}
+     }
      if config.version!=1||config.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()
          ||config.owner==0||config.local_port==0||config.peer_port==0
          ||config.rx_capture==0||config.tx_capture==0||config.wintun_session==0

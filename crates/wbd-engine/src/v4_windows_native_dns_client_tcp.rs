@@ -32,7 +32,7 @@ impl NativeTcpDnsEndpoints{
     pub fn valid(self)->bool{
         self.physical_ifindex!=0&&self.wintun_ifindex!=0&&
         self.physical!=self.lease&&!self.lease.is_unspecified()&&
-        !self.physical.is_unspecified()&&self.direct!=self.tunnel&&
+        !self.physical.is_unspecified()&&
         !self.direct.is_unspecified()&&!self.tunnel.is_unspecified()
     }
 }
@@ -237,6 +237,14 @@ mod tests{
         assert!(!NativeTcpDnsEndpoints{physical:Ipv4Addr::new(10,1,2,3),
             physical_ifindex:14,lease:Ipv4Addr::new(10,66,0,2),
             wintun_ifindex:0,direct:Ipv4Addr::new(223,5,5,5),
+            tunnel:Ipv4Addr::new(1,1,1,1)}.valid());
+    }
+    #[test]
+    fn plan029_dns_tcp_same_ip_two_directions_are_distinct_by_bound_interface(){
+        assert!(NativeTcpDnsEndpoints{
+            physical:Ipv4Addr::new(10,1,0,7),physical_ifindex:19,
+            lease:Ipv4Addr::new(10,66,0,2),wintun_ifindex:25,
+            direct:Ipv4Addr::new(1,1,1,1),
             tunnel:Ipv4Addr::new(1,1,1,1)}.valid());
     }
     #[test]

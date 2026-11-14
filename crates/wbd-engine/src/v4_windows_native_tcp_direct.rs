@@ -5,13 +5,17 @@
 //! Activation REQUIRES a generation-owned synthetic /32 route AND exact
 //! Defender Allow prior to first Direct SYN. Until the Go owner can prove
 //! both, the cold V3 actor remains disabled and Direct TCP fails closed.
-use std::collections::{HashMap,VecDeque};
+use std::collections::{HashMap,HashSet,VecDeque};
 use std::io::ErrorKind;
 use std::net::{Ipv4Addr,SocketAddr,SocketAddrV4,TcpListener,TcpStream};
 use wbd_platform::windows_direct_tcp::{
     PhysicalTcpSocket,ConnectProgress,TcpDirectRelay,open_kernel_tcp_listener,
 };
 use crate::v4_client_direct_tcp_nat::{DirectTcpNat,TcpNatKey};
+use crate::v4_windows_native_dns_client_tcp::{ClientDnsTcp,NativeTcpDnsEndpoints};
+use crate::v4_client_split::DnsEgress;
+use crate::v4_client_fake_pool::FakeAllocator;
+use crate::v4_client_fake_journal::FakeJournal;
 
 const MAX_READY:usize=256;
 const MAX_QUANTUM:usize=8;
@@ -35,6 +39,10 @@ enum TcpPhase{
 struct Active{
     key:TcpNatKey,proxy_port:u16,phase:Option<TcpPhase>,
     last_activity_ms:u64,
+}
+struct ActiveDns{
+    key:TcpNatKey,proxy_port:u16,
+    stream:ClientDnsTcp,tunnel_source:Option<u16>,
 }
 // One per-accepted-flow metadata token, bounded by the same NAT hard cap.
 // Only a slow expiring queue is swept; no per-flow timer and no full-table
@@ -74,6 +82,11 @@ pub(crate) struct NativeTcpActor{
     deadlines:VecDeque<(u16,u64)>,
     active:Vec<Active>,cursor:usize,
     closing:ClosedNatGrace,
+    dns_nat:DirectTcpNat,
+    dns_pending:HashMap<u16,(TcpNatKey,u64)>,
+    dns_deadlines:VecDeque<(u16,u64)>,
+    dns_active:Vec<ActiveDns>,dns_cursor:usize,
+    dns_closing:ClosedNatGrace,dns_tunnel_sources:HashSet<u16>,
     ready:VecDeque<Vec<u8>>,
     buffered_bytes:usize,
 }
@@ -97,10 +110,16 @@ impl NativeTcpActor{
         let port=listener.local_addr().map_err(|_|())?.port();
         let nat=DirectTcpNat::new(u32::from(lease),u32::from(synthetic),
             port,hard).map_err(|_|())?;
+        let dns_nat=DirectTcpNat::new_dns(u32::from(lease),
+            u32::from(synthetic),port).map_err(|_|())?;
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
             deadlines:VecDeque::new(),active:Vec::new(),cursor:0,
             closing:ClosedNatGrace::default(),
+            dns_nat,dns_pending:HashMap::new(),
+            dns_deadlines:VecDeque::new(),dns_active:Vec::new(),
+            dns_cursor:0,dns_closing:ClosedNatGrace::default(),
+            dns_tunnel_sources:HashSet::new(),
             ready:VecDeque::with_capacity(MAX_READY),buffered_bytes:0})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
@@ -112,10 +131,14 @@ impl NativeTcpActor{
         // Closed NAT grace is metadata waiting for the kernel, not work
         // that warrants the original TX worker's 10ms active wait.
         !self.pending.is_empty()||!self.active.is_empty()||
+            !self.dns_pending.is_empty()||!self.dns_active.is_empty()||
             !self.ready.is_empty()
     }
     pub(crate) fn next_close_due_ms(&self)->Option<u64>{
-        self.closing.next_due()
+        match (self.closing.next_due(),self.dns_closing.next_due()){
+            (Some(a),Some(b))=>Some(a.min(b)),
+            (a,None)|(None,a)=>a,
+        }
     }
     pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
@@ -127,6 +150,37 @@ impl NativeTcpActor{
         if self.ready.len()>=MAX_READY{return Err(())}
         self.ready.push_back(wire.to_vec());
         Ok(())
+    }
+    /// DNS TCP uses the exact same post-Apply owned listener and single
+    /// Rust TX reverse mailbox. Source-port NAT has independent 256 hard
+    /// quota, never borrows the ordinary Direct hard16k table or Tunnel.
+    pub(crate) fn dns_ingress(&mut self,packet:&[u8],now_ms:u64)
+        ->Result<(),()>{
+        if packet.len()<40||packet.len()>MAX_L3||self.ready.len()>=MAX_READY||
+           packet[0]>>4!=4||packet[9]!=6{return Err(())}
+        let ihl=usize::from(packet[0]&15)*4;
+        if ihl<20||ihl+4>packet.len()||
+           u16::from_be_bytes([packet[ihl+2],packet[ihl+3]])!=53{
+            return Err(())
+        }
+        let presented=u32::from_be_bytes(packet[16..20].try_into().map_err(|_|())?);
+        let prior=self.dns_nat.len();
+        let mut rewritten=[0u8;MAX_L3];
+        let (n,entry)=self.dns_nat.to_listener(packet,presented,
+            now_ms,&mut rewritten).map_err(|_|())?;
+        if self.enqueue(&rewritten[..n]).is_err(){
+            if self.dns_nat.len()>prior{self.dns_nat.retire(entry.key);}
+            return Err(())
+        }
+        if self.dns_nat.len()>prior{
+            let due=now_ms.saturating_add(PENDING_MS);
+            self.dns_pending.insert(entry.proxy_port,(entry.key,due));
+            self.dns_deadlines.push_back((entry.proxy_port,due));
+        }
+        Ok(())
+    }
+    pub(crate) fn is_internal_tunnel_dns_tcp(&self,port:u16)->bool{
+        self.dns_tunnel_sources.contains(&port)
     }
     /// Called only for an ingress-classified Direct TCP flow. An original
     /// SYN allocates one NAT key; its subsequent DATA/ACK reuse the same
@@ -159,7 +213,8 @@ impl NativeTcpActor{
             return None
         }
         let mut rewritten=[0u8;MAX_L3];
-        let n=match self.nat.to_app(packet,&mut rewritten){
+        let n=match self.dns_nat.to_app(packet,&mut rewritten)
+            .or_else(|_|self.nat.to_app(packet,&mut rewritten)){
             Ok((n,_))=>n,Err(_)=>return Some(Err(()))
         };
         Some(self.enqueue(&rewritten[..n]))
@@ -176,6 +231,17 @@ impl NativeTcpActor{
                 Err(_)=>break,
             };
             let SocketAddr::V4(peer)=peer else{continue};
+            if let Some(entry)=self.dns_nat.accepted(u32::from(*peer.ip()),peer.port()){
+                if self.dns_pending.remove(&entry.proxy_port).is_none(){continue}
+                match ClientDnsTcp::new(stream,now_ms){
+                    Ok(dns)=>self.dns_active.push(ActiveDns{
+                        key:entry.key,proxy_port:entry.proxy_port,
+                        stream:dns,tunnel_source:None,
+                    }),
+                    Err(())=>{self.dns_nat.retire(entry.key);}
+                }
+                continue
+            }
             let Some(entry)=self.nat.accepted(u32::from(*peer.ip()),peer.port())
                 else{continue};
             if !self.pending.contains_key(&entry.proxy_port){continue}
@@ -288,7 +354,61 @@ impl NativeTcpActor{
         // Their final FakeIP ref is released only after the exact NAT
         // reverse mapping can no longer be needed for TCP retransmission.
         self.closing.expire_some(now_ms,&mut self.nat,&mut retired);
+        for _ in 0..64 {
+            let Some(&(port,due))=self.dns_deadlines.front()else{break};
+            if due>now_ms{break}
+            self.dns_deadlines.pop_front();
+            if self.dns_pending.get(&port).is_some_and(|x|x.1==due){
+                if let Some((key,_))=self.dns_pending.remove(&port){
+                    self.dns_nat.retire(key);
+                }
+            }
+        }
+        let mut dns_retired=Vec::new();
+        self.dns_closing.expire_some(now_ms,&mut self.dns_nat,
+            &mut dns_retired);
         retired
+    }
+    /// One bounded 8-client readiness turn, no flow thread and no extra
+    /// Wintun/NPF ring reader. One stalled resolver only holds its ticket.
+    pub(crate) fn tick_dns<F>(&mut self,now_ms:u64,ep:NativeTcpDnsEndpoints,
+        route:&F,mut pool:Option<&mut FakeAllocator>,
+        mut journal:Option<&mut FakeJournal>)
+        where F:Fn(&str)->Option<DnsEgress>
+    {
+        let count=self.dns_active.len();
+        let quantum=count.min(MAX_QUANTUM);
+        let mut done=Vec::new();
+        for step in 0..quantum {
+            let idx=(self.dns_cursor+step)%count;
+            let free=self.dns_tunnel_sources.len()<64;
+            let flow=&mut self.dns_active[idx];
+            match flow.stream.step(now_ms,ep,route,
+                pool.as_deref_mut(),journal.as_deref_mut(),free){
+                Ok(tick)=>{
+                    if let Some(port)=tick.new_tunnel_port{
+                        if !self.dns_tunnel_sources.insert(port){
+                            done.push(idx);continue
+                        }
+                        flow.tunnel_source=Some(port);
+                    }
+                    if tick.finished{done.push(idx)}
+                },
+                Err(())=>done.push(idx),
+            }
+        }
+        done.sort_unstable();done.dedup();
+        for idx in done.into_iter().rev(){
+            let flow=self.dns_active.remove(idx);
+            if let Some(port)=flow.tunnel_source{
+                self.dns_tunnel_sources.remove(&port);
+            }
+            // TCP FIN/ACK still belongs to the Windows kernel after the
+            // application DNS frame is complete; retain inverse NAT.
+            self.dns_closing.defer(flow.proxy_port,flow.key,now_ms);
+        }
+        if self.dns_active.is_empty(){self.dns_cursor=0}
+        else{self.dns_cursor=(self.dns_cursor+quantum)%self.dns_active.len()}
     }
 }
 #[cfg(test)]
