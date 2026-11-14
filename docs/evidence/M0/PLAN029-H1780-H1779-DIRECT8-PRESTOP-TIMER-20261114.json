@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "sequence": 1780,
+  "plan": "PLAN029",
+  "source_sha": "506d4966afecda73e63f6c0afaa2c103249939d8",
+  "action": {
+    "run_id": 43544563417,
+    "job_id": 132294174005,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43544563417"
+  },
+  "measured": {
+    "CN_FakeIP_Direct_TCP_UDP": "PASS_PRE_STOP",
+    "nonCN_A_Tunnel_UDP": "PASS_PRE_STOP",
+    "nonCN_DNS_A_CNIP_Direct": "PASS_PRE_STOP",
+    "H1778_Direct8_full_new_Tunnel_kept_Direct_120s_expiry_recovery": "PASS_PRE_STOP",
+    "last_pass_utc": "2026-11-14T02:22:31Z",
+    "first_failure": "WL_PUBLIC_REAL_MODE_TIMEOUT stage=stop bounded_seconds=165",
+    "owned_Stop": "NOT_QUALIFIED_RUNNER_CUTOFF",
+    "subsequent_DNS_blackhole": "NOT_RUN"
+  },
+  "fix": "270s nested + 400s outer only signed Normal V3 hard8. Old generic 165s unchanged",
+  "fresh_Action": "NOT_RUN"
+}

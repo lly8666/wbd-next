@@ -63,6 +63,18 @@ def native_batch_deadline(env):
         return 940  # genuine 600s + bounded original Stop; not 1800s evidence
     if env.get("WBD_PLAN028_WIN_LINUX_L3")=="1":
         return 2250  # signed Wintun + independent Linux true 1800s and owned Stop
+    # One true hard8 Direct idle sweep physically requires 120s plus
+    # genuine DNS blackout and Stop after the initial functional setup.
+    # Scope 400s to exactly the signed Normal one-owner fixture.
+    if env.get("WBD_PLAN029_DIRECT_PRESSURE")=="1":
+        if (env.get("WBD_WL_PUBLIC_MODES")!="normal" or
+            env.get("WBD_PLAN029_V3_DIRECT_SCENE")!="1" or
+            env.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
+            env.get("WBD_WL_RUN_N0")=="1" or
+            env.get("WBD_WL_RUN_P200")=="1" or
+            env.get("WBD_WL_V2_SCENARIO")):
+            raise ValueError("H1780 native 400s is only for signed Normal Direct8")
+        return 400
     # One functional mode has <=165s, historical four modes <=4*165s.
     # Leave substantial OS setup/owned cleanup time before the whole-step 600/1020s guard.
     if (env.get("WBD_WL_PUBLIC_MODES")=="game2-fec" and

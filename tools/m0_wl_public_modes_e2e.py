@@ -54,8 +54,18 @@ for mode in modes:
   "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
  game_stages=bool(mode=="game4-fec" and env.get("WBD_WL_V2_SCENARIO") and
   read_scenario(env["WBD_WL_V2_SCENARIO"]).get("impairment_stages"))
- mode_seconds=(185 if minimal_game_fec else 350 if game_stages else
-  240 if (slow and mode.startswith("game")) else 690 if slow else 165)
+ # The real Direct8 fixture spends >=127s observing the production 120s
+ # UDP idle wheel. H1779 got all physical replies by ~160s, but generic
+ # Normal 165s killed its DNS-blackhole and original owned Stop stages.
+ # Grant time ONLY to source-locked signed Normal Direct8, never other modes.
+ hard8=env.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
+ if hard8 and not (mode=="normal" and not slow and
+    env.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    env.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"):
+  raise SystemExit("H1780 Direct8 budget limited to signed Normal no-perf")
+ mode_seconds=(270 if hard8 else 185 if minimal_game_fec else
+  350 if game_stages else 240 if (slow and mode.startswith("game"))
+  else 690 if slow else 165)
  # Previous mode logs are archived already. Never observe stale prior-run
  # READY/fault lines as this new real GameFEC test's own evidence.
  if mode.endswith("-fec"):

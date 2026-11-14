@@ -246,5 +246,28 @@ class NativeWslDeadlineTests(unittest.TestCase):
         batch=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         self.assertIn("WL_PUBLIC_REAL_MODE_ABORT_ON_TIMEOUT",batch)
 
+
+    def test_h1780_only_exact_real_normal_direct8_gets_extended_deadlines(self):
+        from tools.m0_wl_native_step_runner import native_batch_deadline
+        x={"WBD_PLAN029_DIRECT_PRESSURE":"1",
+           "WBD_WL_PUBLIC_MODES":"normal",
+           "WBD_PLAN029_V3_DIRECT_SCENE":"1",
+           "WBD_PLAN029_NATIVE_V3_TRIAL":"1"}
+        self.assertEqual(native_batch_deadline(x),400)
+        self.assertEqual(native_batch_deadline({**x,"WBD_PLAN029_DIRECT_PRESSURE":"0"}),320)
+        self.assertEqual(native_batch_deadline({"WBD_WL_PUBLIC_MODES":"normal"}),320)
+        for key,bad in (("WBD_WL_PUBLIC_MODES","game4"),
+                        ("WBD_PLAN029_V3_DIRECT_SCENE","0"),
+                        ("WBD_PLAN029_NATIVE_V3_TRIAL","0"),
+                        ("WBD_WL_RUN_N0","1"),
+                        ("WBD_WL_V2_SCENARIO","scenarios/foo.json")):
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                native_batch_deadline({**x,key:bad})
+        mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
+        self.assertIn('mode_seconds=(270 if hard8 else 185',mode)
+        self.assertIn('env.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1"',mode)
+        self.assertIn('env.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"',mode)
+        self.assertIn('else 690 if slow else 165)',mode)
+        self.assertIn('WL_PUBLIC_REAL_MODE_ABORT_ON_TIMEOUT',mode)
 if __name__=="__main__":
     unittest.main()

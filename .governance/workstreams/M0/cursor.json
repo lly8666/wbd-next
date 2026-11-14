@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1779,
-  "checkpoint_sha": "0c45a8ac7076840ea12ad7b57877d385dfabeacb",
+  "sequence": 1780,
+  "checkpoint_sha": "506d4966afecda73e63f6c0afaa2c103249939d8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1779 collect H1778 signed source 0c45 Action 43542918731 FAILURE: native first boundary H1775 guest Linux TUN DNS listener rejected a nonmatching wire question after target DNS had already satisfied Windows client; Windows real Direct UDP reverse then timed out because guest exited. Prior H1749 Direct UDP, H1760 TCP32K, Tunnel TCP/UDP, H1765 sole Tunnel DNS, H1770 nonCN A Tunnel UDP all PASS; H1778 hard8 pressure never ran. H1779 fixes target-only DNS listener (H1769 established approach), preserving true source/physical echo and exact owned cleanup. New H1779 native NOT_RUN. PLAN029 IN_PROGRESS.",
-  "why_now": "First actual boundary is fixture rejecting unrelated QNAME; previous H1769 precisely filtered unrelated target DNS/53. Do not blame firewall or rerun H1690; one distinct targeted hypothesis and one source-frozen Action only, hold H1778 physical quota NOT_RUN.",
+  "current_task": "H1780 source 506d H1779 real Action 43544563417 physical Direct8 full/new Tunnel/old Direct+idle120s recovery all PASS_PRE_STOP (at 02:22:31 UTC), but nested Normal generic 165s supervisor killed test five seconds later stage=stop; global FAIL, DNS blackhole and owned Stop not yet qualified. Bound child270 and native400 ONLY exact signed Normal Direct8, preserve generic 165s. New Action NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "First observed failure is nested test supervisor hard cutoff, NOT Direct hard-cap product logic or proven Stop error. Fix first boundary without rewriting data plane.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1779 automatically triggered signed Action with corrected targeted DNS listener and Direct8 pressure, no duplicate dispatch. If fails, inspect new first boundary and stop repeating similar tests without new information; then D1 app TCP53 and full D3–D5/P1/P2. Preserve previous failed Action, partial Stop and pinned old Go RootCAs ABI OPEN; 030 untouched.",
+  "next_action": "Collect H1780 one auto signed native Action and inspect whether DNS no fallback + original owned Stop finish. Parallel D1 app TCP53 and D3 DNS tables source; keep 028 gaps, separate pinned old Go ABI and 030 untouched.",
   "unverified": true,
-  "last_tested_source": "0c45a8ac7076840ea12ad7b57877d385dfabeacb",
+  "last_tested_source": "506d4966afecda73e63f6c0afaa2c103249939d8",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1779-H1778-NATIVE-FIRST-BOUNDARY-20261114.json"
   ],
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1778 same SOURCE Windows+Linux real TCP/UDP/DNS initial stages PASS, H1775 guest DNS unrelated QNAME killed listener, Windows reverse timed out; failed Action report Stop NOT_RUN but product WAL recovered and Linux drained in logs. New bounded Direct8 scene NOT_RUN. H1779 scoped fixture correction source staged."
+  "partial_summary": "H1779 H1778 hard8 physical stage PASS_PRE_STOP, Action FAIL generic 165s stage=stop timeout. H1780 narrow 270/400 timers staged, new native NOT_RUN. D1 TCP53/D3-D5/P1-P2 open."
 }
