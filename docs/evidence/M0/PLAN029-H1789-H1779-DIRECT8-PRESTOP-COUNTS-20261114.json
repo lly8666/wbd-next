@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1789,
+  "source_sha": "506d4966afecda73e63f6c0afaa2c103249939d8",
+  "kind": "ARCHIVED_SIGNED_NATIVE_PARTIAL_MEASUREMENT",
+  "action": {
+    "run_id": 43544563417,
+    "job_id": 132294174005,
+    "conclusion": "failure",
+    "artifact_id": 14094465875
+  },
+  "two_os_sockets": {
+    "windows_source": "original Wintun 10.66.0.2",
+    "linux_physical_source": "172.30.240.1",
+    "linux_physical_receiver": "172.30.253.153:46118",
+    "linux_tun_receiver": "203.0.113.77:46119",
+    "direct_hard": 8,
+    "new_direct_attempts": 16,
+    "new_direct_real_echo": 5,
+    "unanswered_new_direct": 11,
+    "unanswered_reason": "NOT_TYPED_CAPACITY",
+    "new_tunnel_reply_while_full": 1,
+    "existing_direct_heartbeat": 11,
+    "new_direct_after_120s_idle": 1,
+    "existing_direct_final_reply": 1,
+    "windows_elapsed_s": 132.9
+  },
+  "grade": {
+    "capacity_business": "PASS_PRE_STOP_SCOPED",
+    "original_normal_Stop": "NOT_RUN_DUE_165S_TEST_CUTOFF",
+    "DNS_blackhole_followup": "NOT_RUN",
+    "entire_Action": "FAIL"
+  },
+  "artifact_paths": [
+    "mode-results/normal/plan029-h1778-windows-flow-pressure.log",
+    "mode-results/normal/plan029-h1778-linux-flow-pressure.log"
+  ]
+}

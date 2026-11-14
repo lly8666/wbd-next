@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1788,
-  "checkpoint_sha": "1d92fa7b3c225b75ffdfc30584f565bab1069097",
+  "sequence": 1789,
+  "checkpoint_sha": "1cc30ac6b4baf72140019324d216a4784e9b7f07",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1788 source hardening in parallel to H1786 signed physical: original TunnelDnsMap ticket now stores validated QNAME/QTYPE and verifies response QR/QNAME/QTYPE before retiring original socket/ID; forged different question drops without stealing live waiter, no extra resolver. Rust unit confirms wrong name and type then exact original reply. H1787 local SERVFAIL source Windows/Linux Rust unit successful, H1786 signed native still separate SOURCE. PLAN029 IN_PROGRESS.",
-  "why_now": "Existing tunnel reply exact source/port/ID insufficient to prevent unrelated QNAME poisoning a live transaction. Do question parser work only on DNS/53 and retain valid ticket on mismatch.",
+  "current_task": "H1789 H1788 native Rust Windows/Linux component tests PASS, but feature inventory failed card 16,386-byte over 16,384-byte max by 2; shorten latest limitation (16,320 bytes) preserving all history. Independently collect exact H1779 signed Direct8 physical 5/16 delivered, Tunnel new 1, old Direct 11, new Direct after 120s expiry 1, still PASS_PRE_STOP and normal Stop NOT_RUN due original 165s wrapper. H1786 signed combined Direct8+CN cache in progress (separate frozen SOURCE). PLAN029 IN_PROGRESS.",
+  "why_now": "Do not ignore a hard feature-catalog failure when Rust source green; fix only byte budget and record genuine physical-pressure raw counts without claiming typed capacity or Stop.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1788 Rust component compile/CI, H1786 signed actual exit/Stop. Then D1 app TCP53, D3 physical DNS quotas, D4/D5 GUI/MTU, P1/P2 padding.",
+  "next_action": "Collect H1789 governance and H1786 real signed Action first fault, no duplicate dispatch. Then D1 app TCP53, D3 DNS/FakeIP small-capacity, D4-D5, P1/P2/padding.",
   "unverified": true,
   "last_tested_source": "6ea9778d7b0e416ceff7b89084bc935fe1351f05",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1788 Tunnel DNS QNAME/QTYPE stricter reply source implemented NOT_RUN until CI; H1786 separate signed combined Direct8+cache running."
+  "partial_summary": "H1789 feature card budget corrected, H1779 archived true 16 Direct tries/5 replies, 1 new Tunnel, 11 old Direct heartbeats, 1 Direct recovered but no Stop; H1786 native still running. D1/D3-D5/P1-P2 OPEN."
 }
