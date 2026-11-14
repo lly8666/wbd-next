@@ -21,8 +21,12 @@ plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
+p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
+if p029_outer1460 and not (p029_direct and not p029_pressure and
+                           native_outer=="default1460" and mode=="normal"):
+ raise RuntimeError("H1791 default1460 requires signed Normal Direct, no hard8 pressure")
 if p029_cache and not p029_direct:
  raise RuntimeError("H1783 signed Direct cache witness requires CN Direct scene")
 if p029_pressure and not p029_direct:
@@ -652,6 +656,16 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    if not plan028_owned_mtu_only:
     print("PLAN027A_BOTH_REAL_SYN_SYNACK_MSS_VERIFIED "+json.dumps(budget_and_wire,sort_keys=True),flush=True)
 
+  if p029_outer1460:
+   if configured_mtu!=1460 or native_outer!="default1460" or windows_inner!=1389:
+    raise RuntimeError("H1791 original Windows real default1460 automatic inner mismatch")
+   report["plan029_d5_real_default_outer1460"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "outer_arg_present":False,"outer_selector":"default1460",
+    "configured_default_outer":configured_mtu,
+    "real_windows_auto_inner":windows_inner,
+    "real_linux_auto_inner":"NOT_RUN_UNTIL_TUN_READBACK",
+    "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
   report["plan027a_windows_os_inner_mtu_verified"]=windows_inner
   print("PLAN027A_WINDOWS_INNER_OS_READBACK",windows_inner,"outer",
         configured_mtu,"selector",native_outer,flush=True)
@@ -660,6 +674,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if len(kernel)!=1 or type(kernel[0].get("mtu")) is not int:
    raise RuntimeError("PLAN027A Linux actual inner OS MTU readback missing")
   inner=kernel[0]["mtu"]
+  if p029_outer1460:
+   if inner!=1389:
+    raise RuntimeError("H1791 original Linux actual TUN automatic inner not 1389")
+   report["plan029_d5_real_default_outer1460"]["real_linux_auto_inner"]=inner
+   print("PLAN029_H1791_REAL_DEFAULT_OUTER1460_TWO_OS_AUTO_INNER1389_PASS_PRE_STOP",flush=True)
   report["plan027a_linux_actual_inner_os_mtu"]=inner
   if not 576<=inner<=configured_mtu:
    raise RuntimeError("PLAN027A Linux OS inner MTU exceeds outer IP cap")
@@ -1928,6 +1947,11 @@ print(json.dumps(result),flush=True)
                       json.dumps({"missing":missing,"wal":wal.exists(),
                                   "route_sidecar":routes.exists(),"tcp_defender_sidecar":tcp_sidecar.exists()}))
   if p029_direct:
+   if p029_outer1460:
+    p=report.get("plan029_d5_real_default_outer1460",{})
+    if p.get("source_sha")!=os.environ["GITHUB_SHA"] or p.get("real_linux_auto_inner")!=1389:
+     raise RuntimeError("H1791 real default1460 Windows/Linux inner receipt missing at Stop")
+    p["stop"]="PASS_BOTH_OWNED"
    if p029_cache:
     if report.get("plan029_d3_cn_native_dns_cache",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1783 cache proof lost before original owner Stop")

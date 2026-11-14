@@ -286,4 +286,18 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',guest)
         self.assertIn('time.monotonic()-settled_at>=2.5',guest)
         self.assertIn('if cache_mode and observed["target_dns_count"]!=1:',guest)
+    def test_h1791_signed_default1460_original_two_os_readback_and_stop(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"',S)
+        self.assertIn('if native_outer=="default1460":',S)
+        self.assertIn('index=args.index("--mtu");del args[index:index+2]',S)
+        self.assertIn('native_outer!="default1460" or windows_inner!=1389:',S)
+        self.assertIn('if inner!=1389:',S)
+        self.assertIn('p["stop"]="PASS_BOTH_OWNED"',S)
+        w=(Path(__file__).resolve().parents[1]/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("WBD_PLAN029_REAL_DEFAULT_OUTER1460:",w)
+        self.assertIn("[plan029-v3-real-default1460]",w)
+        self.assertIn("$m.real_windows_auto_inner -ne 1389",w)
+        self.assertIn("$m.real_linux_auto_inner -ne 1389",w)
 if __name__=="__main__":unittest.main()

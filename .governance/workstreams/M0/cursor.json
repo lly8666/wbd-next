@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1790,
-  "checkpoint_sha": "b12794ba17a37eea840089c8838cd6b89ef51bc8",
+  "sequence": 1791,
+  "checkpoint_sha": "d5c9d2f107d3deff861f9c4dd8c279f0cb69de6b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1790 collect exact [H1786] Action 43550291848 source de19 native-public-two-os SUCCESS: same signed Windows original Go+Rust single Wintun / Linux TUN+eth0, CN two Windows UDP DNS IDs/source ports -> one Linux physical target DNS+durable same FakeIP and true physical UDP echo, Direct TCP32KiB halfclose, Tunnel TCP/UDP, nonCN->CN IP true Direct, Direct hard8 16 attempts/5 real echoes/11 unanswered (capacity cause not typed), old Direct heartbeat11+new Tunnel1+Direct idle recover1, 3 Tunnel DNS blackhole requests/0 physical, all owned Stop PASS. Outer legacy1400, actual inner1329. H1787/H1788 source-only strict Tunnel DNS local SERVFAIL/QNAME units PASS; D1 app TCP53, D3 cache/FakeIP/transaction physical quotas, D4–D5 GUI/effective/1460 and P1/P2 padding still OPEN. PLAN029 IN_PROGRESS.",
-  "why_now": "First complete same-SOURCE signed product owned Stop success with real bounded D3 Direct8 and CN DNS cache after multiple failed test fixtures; make full receipt durable, do not promote unrun exits or replace 028 gaps.",
+  "current_task": "H1791 signed D5 source-frozen Normal default outer1460, actual Windows original applied OS inner1389 and Linux original TUN inner1389 plus two-exit + owned Stop. Original --mtu omitted; no 133s hard8 replay. H1786 prior source de19 real Direct8+CN DNS cache/Tunnel no fallback and both owned Stop PASS at legacy1400. H1791 new native NOT_RUN. PLAN029 IN_PROGRESS.",
+  "why_now": "Prior real signed full success was legacy1400, does not prove default outer1460. Validate actual original Windows/WSL OS readbacks, not supplied config, under the already authenticated one-owner scene.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Do not repeat signed legacy1400 baseline. Proceed D1 app TCP53 real owner ingress + same-direction backend, D3 DNS/FakeIP typed cap, D4 OS/IPv6/bootstrap/GUI/default1460, P1/P2 off/on CPU/p99 and padding. Validate new sources individually, 030 untouched.",
+  "next_action": "Collect H1791 Action first real boundary; meanwhile D1 app TCP53, DNS/FakeIP small pressure, GUI-to-owner settings and P1/P2 padding incomplete.",
   "unverified": true,
   "last_tested_source": "de19b99b331bcaf7b10bbd83b69ca9b14c16b28f",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1786 signed CN FakeIP cache one physical upstream, Direct/Tunnel TCP/UDP, CN-IP converse, Direct8, no-fallback and both owned Stop PASS scoped under legacy1400. D1 TCP53 and D3 other quotas/physical near-MTU + D4/D5/P1/P2/padding NOT_RUN, 029 active."
+  "partial_summary": "H1786 original signed 1400 two egress + CN cache + hard8 and Stop PASS. H1791 actual original native outer default1460 omitted flag, both OS inner1389 + owner Stop staged NOT_RUN."
 }
