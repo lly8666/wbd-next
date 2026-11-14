@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1865,
-  "checkpoint_sha": "88a263086613fdb0231f5fc608be7f6d13a313ce",
+  "sequence": 1866,
+  "checkpoint_sha": "b8080b3ceb8598b5f5792c3a108ebf0bec0408ff",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1865 H1863 source b940e538 signed P1 true sameVM V4off/A and V3all/B 50Mbps 60s both passed Stop, CPU/GiB 21.0525→22.5293 (+7.01%), Win RTT p99 47→62ms; perf OPEN not isolated. H1864 source88a263 signed unpaced4MiB true P2 physical32.155ms Direct131.544ms, Tunnel UDP120/120 p99 2.14ms, max gap34.371ms, SHA/FIN/Stop PASS; absolute extra99.389ms perf OPEN. Rest of PLAN029 not complete.",
-  "why_now": "Both H1863 and H1864 native Actions finished with genuine SOURCE-locked P1/P2 receipts. Old cursor incorrectly says in-flight and bulk NOT_RUN; preserve prior failures and distinguish green Action from full 029 exit.",
+  "current_task": "H1866 normal signed original Go/Wintun D4 IPv6 no-old-WFP scope probe: read-only Get-NetRoute IPv6 ::/0,::/1,8000::/1 and exact Wintun 10.66.0.2 interface index before Apply, while genuine Ready, after owned Stop. Code/fixture prepared; true Windows result NOT_RUN at commit.",
+  "why_now": "PLAN029 §3A requires IPv6 original blocking intent not silently lost when old WFP removed. Existing signed receipt has no IPv6 packet or route evidence. First observe exact OS route boundary without altering third-party resources; cannot infer global block from a route.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Prioritize D4 original IPv6 policy actual Windows route/interface behavior and owned Stop/recovery witness; then GUI actual Connect/Stop, Game4 CN rust data-plane wiring and finite resource pressure. P1 +7.01% remains investigation signal, do not brute-force old matrix or tune TCP budget without first boundary. Only one Action per new network scene.",
+  "next_action": "Collect exactly one H1866 signed Normal explicit product Action [plan029-real-product-cn] [plan029-d4-ipv6-probe]; inspect actual pre/active/post IPv6 snapshot, first PowerShell/API boundary, current route coverage and owned Stop. If capture gap observed plan minimal owned IPv6 Wintun sink/deny with scoped follow-up; never globally disable Defender/IPv6 or claim on-link blocked. Then remaining Game4 CN, GUI actual Connect/Stop, D1-D5/padding and pressure.",
   "unverified": true,
   "last_tested_source": "88a263086613fdb0231f5fc608be7f6d13a313ce",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1865-H1864-SIGNED-UNPACED-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
     "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
     "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
     "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
-    "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1858-WAL-OFF-TX-BULK-P2.md"
+    "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1863 P1 A/B both real50Mbps+Stop PASS on same VM/SOURCE; CPU/GiB +7.01% and Win p99 +15ms keep perf OPEN. H1864 4MiB unpaced Direct131.544ms versus physical32.155ms, Tunnel UDP120/120, p99 2.14ms/gap34.371ms, Stop PASS; 4.091x perf OPEN. D1-D5, Game4 CN, GUI real, IPv6 and pressure incomplete. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1863 P1 same-VM 50Mbps A/B both PASS with CPU/GiB +7.01%, RTT p99 +15ms OPEN; H1864 4MiB unpaced Direct131.544ms vs physical32.155ms, Tunnel UDP120/120 p99=2.14ms, Stop PASS with perf OPEN. H1866 D4 original signed Windows IPv6 route/Stop witness implementation, no actual results yet. PLAN029 IN_PROGRESS."
 }

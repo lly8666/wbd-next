@@ -23,6 +23,9 @@ p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 # switches off in the launched original Go process. One source, one signed
 # Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
+p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
+ipv6_probe_before=None
+ipv6_probe_active=None
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
@@ -32,6 +35,8 @@ p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
 p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
 p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
+if p029_ipv6 and (not p029_product or not p029_direct or mode!="normal"):
+ raise RuntimeError("D4 real IPv6 route observation requires one explicit signed Normal CN product scene")
 if p029_p2 and (not p029_direct or p029_multia or p029_cache or
                 p029_pressure or p029_padding or p029_tcp53 or mode!="normal"):
  raise RuntimeError("H1815 P2 signed moderate physical/Direct/Tunnel single Normal scene is exclusive")
@@ -410,6 +415,11 @@ try:
       owned_cn.read_text(encoding="ascii").splitlines()!=["cn.example"]):
    raise RuntimeError("H1845 user CN source snapshot missing or changed")
   print("PLAN029_H1845_NONCI_PRODUCT_CLI_SOURCE_AND_ENV_EXACT_PRESTART",flush=True)
+ if p029_ipv6:
+  # Snapshot before the exact original Go/Wintun four-stage owned Apply.
+  # A read-only route probe must NOT add an IPv6 route or WFP rule.
+  from m0_plan029_d4_ipv6_route_probe import snapshot as ipv6_route_snapshot
+  ipv6_probe_before=ipv6_route_snapshot("pre_original_os_apply")
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
                     text=True,env=client_env)
  game_cold_stage("COLD_CLIENT_SPAWNED")
@@ -489,6 +499,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
+ if p029_ipv6:
+  # Only after the REAL original owner has emitted READY/Applied,
+  # and while it is live; no fake receipt supplied by this fixture.
+  ipv6_probe_active=ipv6_route_snapshot("active_signed_original_product")
  if p029_product:
   cold_log=(out/"client.log").read_text(errors="replace")
   if ("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE" not in cold_log or
@@ -2352,6 +2366,26 @@ finally:
     wsl("ip","addr","del",p029_tunnel_alias+"/32","dev","wbdwl4",timeout=8)
   except Exception:pass
  stop_windows(w);stop_linux()
+ if p029_ipv6:
+  try:
+   from m0_plan029_d4_ipv6_route_probe import evaluate as ipv6_evaluate
+   if ipv6_probe_before is None or ipv6_probe_active is None:
+    raise RuntimeError("missing exact pre/active original OS IPv6 readback")
+   ipv6_probe_after=ipv6_route_snapshot("after_exact_owned_stop")
+   assessed=ipv6_evaluate(ipv6_probe_before,ipv6_probe_active,ipv6_probe_after)
+   report["plan029_d4_ipv6_route_scope"]={
+     "result":"OBSERVED_ROUTE_SCOPE_NOT_IPV6_PACKET_PROOF",
+     "before":ipv6_probe_before,"active":ipv6_probe_active,
+     "after_stop":ipv6_probe_after,"assessment":assessed}
+   print("PLAN029_D4_IPV6_REAL_OS_ROUTE_SCOPE "+
+         json.dumps(assessed,separators=(",",":")),flush=True)
+  except Exception as ipv6_error:
+   # Stop cleanup always runs first. Never manufacture an IPv6 PASS.
+   report["plan029_d4_ipv6_route_scope"]={
+      "result":"NOT_MEASURED_OR_FIRST_ERROR",
+      "error":str(ipv6_error)[-700:]}
+   print("PLAN029_D4_IPV6_ROUTE_READBACK_FIRST_ERROR "+
+         str(ipv6_error)[-500:],flush=True)
  if tls_capture is not None:
   try:end_tls_capture()
   except Exception:pass

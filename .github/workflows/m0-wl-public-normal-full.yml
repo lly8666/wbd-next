@@ -534,6 +534,7 @@ jobs:
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_native_ci_scope -v
+      - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
@@ -615,7 +616,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -981,6 +982,9 @@ jobs:
       # Tunnel-only qualification. No PLAN028 matrix or public default.
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]'))) && '1' || '0' }}
       WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || '0' }}
+      # D4 read-only real Windows IPv6 route/Stop policy witness, same
+      # explicit CN product as the existing signed Normal scene.
+      WBD_PLAN029_D4_IPV6_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-d4-ipv6-probe]') && '1' || '0' }}
       WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]')) && '1' || '0' }}
       WBD_PLAN029_APP_TCP53_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp53]') && '1' || '0' }}
       WBD_PLAN029_STARTUP_PADDING_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-startup-pad]') && '1' || '0' }}
@@ -2453,6 +2457,19 @@ jobs:
                $result.plan029_d2_noncn_cn_ip_direct_udp.linux.dns_upstream -ne '1.1.1.1' -or
                $result.plan029_d2_noncn_cn_ip_direct_udp.stop -ne 'PASS_EXACT_ROUTE_ALIAS_CLEANUP'){
               throw 'PLAN029 exact same-SOURCE Direct/Tunnel TCP UDP DNS and owned Stop proof absent'
+            }
+            if($env:WBD_PLAN029_D4_IPV6_SCENE -eq '1'){
+              $v6=$result.plan029_d4_ipv6_route_scope
+              $assessment=$v6.assessment
+              if($v6.result -ne 'OBSERVED_ROUTE_SCOPE_NOT_IPV6_PACKET_PROOF' -or
+                 $assessment.source_sha -ne $env:GITHUB_SHA -or
+                 [int]$assessment.wintun_ifindex -le 0 -or
+                 $assessment.stop_route_baseline_readback -ne 'PASS_NO_NEW_PREFIX_ON_WINTUN' -or
+                 $assessment.actual_ipv6_app_packets -ne 'NOT_RUN_NO_EXTERNAL_IPV6_PRECONDITION'){
+                throw 'PLAN029 D4 read-only real Windows IPv6 pre/active/Stop witness incomplete; no coverage claim'
+              }
+              Write-Output ('PLAN029_D4_SIGNED_IPV6_ROUTE_SCOPE_MEASURED_' +
+                $assessment.ipv6_policy_scope + '_PACKET_NOT_PROVEN')
             }
             if($env:WBD_PLAN029_P2_MIXED_SCENE -eq '1'){
               $p2=$result.plan029_p2_mixed_real
