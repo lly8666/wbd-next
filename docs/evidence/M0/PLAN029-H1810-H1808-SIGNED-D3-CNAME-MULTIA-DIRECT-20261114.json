@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1808",
+  "source_sha": "c39a59ab79deebae52422f4a3463960a4f531a98",
+  "result": "PHYSICAL_PASS",
+  "scope": "ONE_ORIGINAL_SIGNED_WINDOWS_NORMAL_WINTUN_WSL2_LINUX_CNAME_TWO_A_SELECTIVE_FAKEIP_DIRECT_AND_OWNED_STOP",
+  "action": {
+    "id": 43565563279,
+    "job_id": 132359785457,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43565563279"
+  },
+  "observed": {
+    "native_mode": "normal",
+    "original_win_linux_app_runtime_seconds": 25,
+    "app_process_returncode": 0,
+    "china_domain": "www.cn.example",
+    "physical_guest_dns_qname": "www.cn.example",
+    "upstream_answer": "CNAME edge.cdn.example then two distinct real A",
+    "physical_second_a": "203.0.113.89",
+    "windows_app_synthetic_a_count": 2,
+    "synthetic_addresses_distinct": true,
+    "synthetic_range": "198.18.0.0/16",
+    "linux_physical_target_dns_query_count": 1,
+    "windows_original_app_first_fake_direct_udp_reverse": "PASS",
+    "same_generation_direct_tcp_32kiB_half_close": "PASS",
+    "same_generation_tunnel_tcp_udp": "PASS",
+    "same_generation_non_cn_tunnel_dns_and_no_fallback": "PASS",
+    "owned_two_os_stop": "PASS",
+    "verified_outer_assert": "PLAN029_H1807_REAL_CN_CNAME_TWO_A_TWO_FAKEIP_DIRECT_UDP_OWNED_STOP_PASS_SCOPED"
+  },
+  "historical_preflight": {
+    "source": "53b838a2d37d91ed5696e30c0ead9311e0615db5",
+    "action": 43565277807,
+    "first_error": "OLD_H1785_STATIC_TEST_EXCLUDED_VALID_NEW_MODE_2",
+    "result": "FAIL_BEFORE_NETWORK",
+    "fixed_on_source": "c39a59ab79deebae52422f4a3463960a4f531a98"
+  },
+  "not_run": [
+    "D3 FakeIP physical hard-quota full/after-relief recovery (pure tests covered separately)",
+    "Unrelated DNS additional RR/NXDOMAIN/AAAA physical full boundary",
+    "D4 IPv6 and interrupted restart lifecycle",
+    "D5 WinForms-origin signed network and 10k rules",
+    "P1/P2 same-VM CPU/GiB, queue age and p99/gaps"
+  ],
+  "limitation": "This 25s signed Normal scene is a D2/D3 multi-A increment and existing D1/D2 transport comparator, not P1/P2 or full PLAN029. No invented physical packet-capture FakeIP=0 claim beyond explicit real guest socket/source receipts."
+}

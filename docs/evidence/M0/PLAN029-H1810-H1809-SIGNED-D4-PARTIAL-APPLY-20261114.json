@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1809",
+  "source_sha": "00e1746e2c14942d4c260e2be659bc0655d7246e",
+  "result": "PHYSICAL_PASS",
+  "scope": "ONE_SIGNED_WINDOWS2025_WINTUN_NO_OLD_WFP_V2_PARTIAL_WIN32_APPLY_AND_OWNED_RESTORE",
+  "action": {
+    "id": 43566091583,
+    "job_id": 132360155159,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43566091583"
+  },
+  "observed": {
+    "real_signed_wintun": true,
+    "real_win32_lease": "APPLIED_INDEPENDENT_READBACK",
+    "real_win32_mtu": "APPLIED_INDEPENDENT_READBACK",
+    "dns_stage": "INTENT_RECORDED_IN_WAL_BUT_FAULT_BEFORE_WIN32_WRITE",
+    "routes_stage": "NOT_STARTED",
+    "schema": "wbd-n4-native-network-txn/v2",
+    "old_custom_wfp_guard": "NOT_CREATED",
+    "journal_rows": "lease=owned,mtu=owned,dns=intent",
+    "fault": "INJECTED_ONLY_AFTER_FIRST_TWO_REAL_OS_STAGES",
+    "recover": "PASS_GENERATION_EXACT_REVERSE_OWNED",
+    "post_recover_os": "PASS_BASELINE_READBACK",
+    "parent_and_routes_journal": "PASS_ABSENT",
+    "original_job_test_seconds": 4.51,
+    "terminal_marker": "PLAN029_H1809_REAL_SIGNED_V2_PARTIAL_LEASE_MTU_DNS_INTENT_RECOVER_PASS_SCOPED"
+  },
+  "not_run": [
+    "Hard OS crash before/during Win32 write, unsupported ambiguous foreign mutation",
+    "IPv6 host/on-link/physical-bound policy coverage",
+    "Full ordinary GUI-origin connected signed network, Go Ready, D1–D5",
+    "P1/P2 performance"
+  ],
+  "limitation": "Test wrapper fails before the DNS OS write and exercises a genuine lease/MTU already-owned prefix; not power-loss simulation or broad stage permutation."
+}

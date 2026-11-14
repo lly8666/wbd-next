@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1807",
+  "source_sha": "53b838a2d37d91ed5696e30c0ead9311e0615db5",
+  "result": "BUILD_PASS",
+  "scope": "NATIVE_LINUX_AARCH64_PURE_RUST_029_AND_GAME4_FEC_REPRESENTATIVE",
+  "action": {
+    "id": 43565277853,
+    "job_id": 132357650295,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43565277853"
+  },
+  "observed": {
+    "runner": "ubuntu-24.04-arm",
+    "architecture": "aarch64",
+    "native_compiler": "Rust 1.85.1",
+    "compiled_once": true,
+    "plan029_pure_tests": {
+      "passed": 50,
+      "failed": 0
+    },
+    "game4_scheduler_pure_tests": {
+      "passed": 13,
+      "failed": 0
+    },
+    "fec2_scheduler_pure_tests": {
+      "passed": 12,
+      "failed": 0
+    },
+    "fakeip_prejournal_multi_a_small_quota": "PASS",
+    "old_held_and_uncertain_journal_protected": "PASS",
+    "terminal_marker": "PLAN029_H1807_ARM64_NATIVE_PURE_CN_DNS_NORMAL_GAME4_FEC_PASS_SCOPED"
+  },
+  "not_run": [
+    "ARM64 real kernel TUN or Windows ARM64 product",
+    "Windows Game4 native Wintun split integration",
+    "Direct physical socket ARM64 or GUI live",
+    "P1/P2 actual traffic performance"
+  ],
+  "limitation": "This is genuine ARM64 execution of one Rust workspace test binary reused for three filtered subsets, not cross-build-only, not signed Windows/ARM network."
+}

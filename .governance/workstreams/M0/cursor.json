@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1809,
-  "checkpoint_sha": "c39a59ab79deebae52422f4a3463960a4f531a98",
+  "sequence": 1810,
+  "checkpoint_sha": "00e1746e2c14942d4c260e2be659bc0655d7246e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1809 independent D4 signed partial Apply test staged: reuse actual H1697 same-generation signed Wintun no-WFP transaction but fail third DNS stage BEFORE OS mutation; verify first real lease/MTU owned, WAL ordered intent, recover exact owned original baseline and no guard. H1808 signed D3 multi-A still in-flight SOURCE c39, ARM64 H1807 pure PASS; new H1809 result NOT_RUN. PLAN029 IN_PROGRESS.",
-  "why_now": "Contract D4 specifically needs representative partial Apply failure and owned WAL recovery; existing H1697 positive four-stage PASS never exercised real prefix failure. One different hypothesis/scenario, not old diagnostics or 028 matrix.",
+  "current_task": "H1810 collect H1808 signed Normal Windows x86/WSL2 x86 CNAME 2A distinct FakeIP physical Direct UDP plus same-session Direct TCP, Tunnel TCP/UDP and owned Stop PASS; H1809 signed Windows v2 partial lease/MTU→dns-intent failure exact OS recovery PASS; H1807 native ARM64 pure 50+13 Game4+12 FEC PASS. Three source-scoped distinct receipts, no P1/P2. PLAN029 IN_PROGRESS.",
+  "why_now": "H1808/1809 action results now complete and qualified: signed native network and independent OS rollback; H1807 ARM64 native pure. Preserve old H1807 Windows static FAIL, no repeat actions, no source-mixing in cursor.evidence_refs.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect two independent in-flight H1808 D3 and H1809 D4 Actions, fix only first error. Retain CPU/GiB p99/gap P1/P2, GUI D5, IPv6, normal/Game4 split explicit qualification open.",
+  "next_action": "One frozen-source batch for D5 GUI effective + 10k rules and bounded P1/P2 same-VM pure Tunnel AB/Direct socket baseline; still need D4 IPv6 true policy, D3 DNS pressure edge, and Game4 split actual representative. No 028 matrix/030.",
   "unverified": true,
-  "last_tested_source": "fa5b38f714c7b8529246e8b8656bb690dfa49c82",
+  "last_tested_source": "c39a59ab79deebae52422f4a3463960a4f531a98",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1806-H1805-FAKEIP-MULTIA-WINDOWS-LINUX-PURE-20261114.json"
+    "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
-    "docs/prompts/M0-PLAN029.md",
-    "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
     "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json",
-    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
+    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
+    "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
+    "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1808 current signed Normal D3 CNAME two-A still compiling; H1809 separate true signed Windows v2 OS fault injection before DNS with real lease/MTU writer/reverse WAL staged NOT_RUN. Native ARM64 H1807 pure 50/13/12 PASS older source; no full plan exit."
+  "partial_summary": "H1810 D3 Normal signed CNAME+two real A→two different local FakeIPs+actual Direct UDP, Direct TCP and Tunnel/Stop PASS SOURCE c39. D4 signed partial real lease/MTU/dns intent owned restore PASS source 00e. ARM64 native Rust pure PLAN029/Game4/FEC BUILD_PASS source53b. Product GUI/performance/IPv6/Game4 split remain OPEN."
 }
