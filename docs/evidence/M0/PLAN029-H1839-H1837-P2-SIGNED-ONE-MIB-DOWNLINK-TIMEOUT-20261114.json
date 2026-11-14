@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1837",
+  "source_sha": "33e2f79352469d62e3025176670fd03d450e554a",
+  "action": {
+    "id": 43593094309,
+    "job_id": 132442997118,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43593094309"
+  },
+  "artifact_id": 14113213130,
+  "result": "REAL_WINDOWS_DIRECT_TCP_ONE_MIB_TIMEOUT_NOT_PERFORMANCE_PASS",
+  "observed": {
+    "signed_original_windows_go_and_rust_build": "SUCCESS",
+    "native_windows_linux_rust_component": "SUCCESS",
+    "windows_signed_original_wintun_applied": true,
+    "physical_tcp_baseline": {
+      "bytes": 1048576,
+      "elapsed_ms": 281,
+      "sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586"
+    },
+    "signed_cn_dns_direct_udp": "PASS_SCOPED",
+    "signed_direct_tcp_32k": {
+      "bytes": 32768,
+      "elapsed_ms": 454,
+      "echo_and_half_close": true
+    },
+    "second_linux_tcp_connection": {
+      "received_bytes": 1048576,
+      "echo_sendall_and_shutdown_returned": true,
+      "observed_source": "172.27.0.1"
+    },
+    "windows_direct_client": {
+      "terminal_receipt": "ABSENT",
+      "app_log_bytes": 0,
+      "controller_wait_timeout_s": 38,
+      "partial_stage": "UNKNOWN_ON_H1837",
+      "download_or_finish": "UNPROVEN"
+    },
+    "sustained_tunnel_udp": {
+      "start_logs": "PASS_STARTED_BOTH_OS",
+      "continuous_unique_rtt_p99": "NOT_MEASURED",
+      "full_span": "NOT_PROVEN"
+    },
+    "product_cleanup": {
+      "rust_owner_join": "PASS_IN_CLIENT_LOG",
+      "native_wal_restored": "PASS_IN_CLIENT_LOG",
+      "p2_final_stop_grade": "NOT_RUN"
+    }
+  },
+  "root_cause": "UNKNOWN_FIRST_STALL_WHETHER_APP_SEND, HALF_CLOSE, INBOUND_ECHO_OR_KERNEL_FIN; source runtime already has_tcp.has_work inside has_udp_flows so <=10ms active wait. Do not blindly add 10ms or claim physical echo proves Windows app received it.",
+  "next": "H1839 exact signed P2 one diagnostic run with flushed app TCP phase checkpoints, Linux 2-leg checkpoints, 128-UDP receipts and cold-only once/s Rust per-leg socket read/write and memory meters; no payload logs, no network protocol change.",
+  "not_run": [
+    "H1839 new-source real P2",
+    "H1839 full-span UDP/p99",
+    "GUI signed OS Connect/Stop",
+    "Game4 CN",
+    "IPv6 D4",
+    "P1 CPU",
+    "slow-fsync FakeIP Stop and compaction"
+  ]
+}

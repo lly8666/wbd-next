@@ -40,7 +40,14 @@ def tcp_guest(physical,expected_host):
                     raise RuntimeError("P2 real Linux physical TCP 1MiB bytes mismatch")
                 if conn.recv(1)!=b"":
                     raise RuntimeError("P2 kernel TCP missing half-close")
+                receipt("PLAN029_H1839_GUEST_TCP_STAGE",{
+                    "leg":step,"phase":"received_1m_and_eof",
+                    "bytes":len(data),"sha256":SHA,
+                    "source_physical":peer[0]})
                 conn.sendall(data);conn.shutdown(socket.SHUT_WR)
+                receipt("PLAN029_H1839_GUEST_TCP_STAGE",{
+                    "leg":step,"phase":"echo_sendall_and_shutdown_complete",
+                    "bytes":len(data)})
             sources.append(peer[0]);sizes.append(len(data))
         receipt("PLAN029_H1815_P2_PHYSICAL_TCP_GUEST",
           {"source_ips":sources,"received_bytes":sizes,"socket":physical,
@@ -53,18 +60,46 @@ def tcp_client(role,local,remote):
         sock.settimeout(35);sock.bind((local,0))
         started=time.monotonic();sock.connect((remote,PORT))
         connected=time.monotonic()
+        receipt("PLAN029_H1839_P2_TCP_STAGE",{
+            "role":role,"phase":"connected","elapsed_ms":round((connected-started)*1000,3)})
         for n in range(0,SIZE,16384):
             sock.sendall(PAYLOAD[n:n+16384])
+            # Only eight bounded, independent progress checkpoints / MiB,
+            # not tracing kernel packets or changing application pacing.
+            if (n+16384)%(128*1024)==0:
+                receipt("PLAN029_H1839_P2_TCP_STAGE",{
+                    "role":role,"phase":"upload_progress",
+                    "bytes":n+16384,"elapsed_ms":round((time.monotonic()-connected)*1000,3)})
             time.sleep(.004) # SAME application pacing; NOT peak throughput
         uploaded=time.monotonic()
+        receipt("PLAN029_H1839_P2_TCP_STAGE",{
+            "role":role,"phase":"upload_complete","bytes":SIZE,
+            "elapsed_ms":round((uploaded-connected)*1000,3)})
         sock.shutdown(socket.SHUT_WR)
         half_closed=time.monotonic()
-        echoed=bytearray();first_reply=None
+        receipt("PLAN029_H1839_P2_TCP_STAGE",{
+            "role":role,"phase":"half_closed",
+            "elapsed_ms":round((half_closed-started)*1000,3)})
+        echoed=bytearray();first_reply=None;last_bucket=0
         while len(echoed)<SIZE:
             part=sock.recv(min(16384,SIZE-len(echoed)))
-            if not part:break
-            if first_reply is None:first_reply=time.monotonic()
+            if not part:
+                receipt("PLAN029_H1839_P2_TCP_STAGE",{
+                    "role":role,"phase":"premature_eof",
+                    "bytes":len(echoed),"elapsed_ms":round((time.monotonic()-started)*1000,3)})
+                break
+            if first_reply is None:
+                first_reply=time.monotonic()
+                receipt("PLAN029_H1839_P2_TCP_STAGE",{
+                    "role":role,"phase":"first_reply",
+                    "elapsed_ms":round((first_reply-started)*1000,3)})
             echoed.extend(part)
+            bucket=len(echoed)//(128*1024)
+            if bucket>last_bucket:
+                last_bucket=bucket
+                receipt("PLAN029_H1839_P2_TCP_STAGE",{
+                    "role":role,"phase":"download_progress",
+                    "bytes":len(echoed),"elapsed_ms":round((time.monotonic()-started)*1000,3)})
         ended=time.monotonic()
         if len(echoed)!=SIZE or hashlib.sha256(echoed).hexdigest()!=SHA:
             raise RuntimeError("P2 Windows actual one-MiB kernel TCP echo wrong")
@@ -122,6 +157,10 @@ def udp_windows(lease,tun_ip):
             rtts.append((end-begin)*1000)
             if prev is not None:gaps.append((end-prev)*1000)
             prev=end;total+=1
+            if total%128==0:
+                receipt("PLAN029_H1839_P2_UDP_STAGE",{
+                    "phase":"progress","delivered":total,
+                    "elapsed_ms":round((end-started)*1000,3)})
             if total>=COUNT and done.exists():break
             time.sleep(.014)
         else:raise RuntimeError("P2 UDP sustained cap before TCP completion")
@@ -158,7 +197,12 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         return p,log
     def wait(p,log,limit):
         try:code=p.wait(timeout=limit)
-        except subprocess.TimeoutExpired:raise RuntimeError("P2 bounded original kernel app timeout "+str(log))
+        except subprocess.TimeoutExpired:
+            # Preserve last successful application phase even when the
+            # client never reaches its final JSON receipt.
+            tail=log.read_text(errors="replace")[-1800:]
+            raise RuntimeError("P2 bounded original kernel app timeout "+str(log)+
+                               " LAST_APP_PHASES="+repr(tail))
         if code!=0:raise RuntimeError("P2 kernel app failed "+str(log)+" "+
                  log.read_text(errors="replace")[-600:])
     def proof(log,marker):

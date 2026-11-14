@@ -373,7 +373,12 @@ try:
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
  log=(out/"client.log").open("w");logs.append(log)
- w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+ # Original signed Windows Go passes one cold diagnostic bit to Rust only
+ # for this P2 scene; ordinary users never incur socket-byte telemetry.
+ client_env=os.environ.copy()
+ if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
+ w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
+                    text=True,env=client_env)
  game_cold_stage("COLD_CLIENT_SPAWNED")
  resource_worker=threading.Thread(
   target=sample_windows_original_process,

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1838,
-  "checkpoint_sha": "33e2f79352469d62e3025176670fd03d450e554a",
+  "sequence": 1839,
+  "checkpoint_sha": "dbfc27c220d95368795a24e21eb65d98dc732bf9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1838: H1837 WinForms true Go CLI passes catalog59/59/Normal split/readback/missing-cn and Game4 early reject/MTU; last assertion fails because after ImportValues owned CN file is intentionally renamed data/cn-rules-profileID. Correct fixture to verify copied content/new path plus actual Go reload check. H1838 GUI NOT_RUN. H1837 signed P2 still active, no duplicate dispatch.",
-  "why_now": "First failure in GUI H1837 at final stale fixture expectation, not implementation. Safe portable import rewrites absolute external path into owned per-profile relative data/cn-rules-ID; must test new canonical path rather than relaxing importer, preserving security.",
+  "current_task": "H1839: H1837 signed true Windows P2 FAIL: baseline physical 1MiB281ms, Linux second Direct physical kernel TCP received complete 1MiB+echo sendall, Windows Direct client timed out 38s without final receipt; original P2 app logs only final. H1838 WinForms→Go CLI full PASS scoped. H1839 single new real signed P2 with bounded app/guest progress checkpoints and cold-only Rust read/write per-leg 1Hz diagnostic; new SOURCE NOT_RUN until CI. Need first stall attribution, not 10ms duplicate.",
+  "why_now": "P2 failures after true kernel echo cannot be solved by blindly changing MSS, NODELAY or TX quantum. Source inspection confirms existing has_udp_flows includes active TCP has_work, so 10ms wake already present. Separate which socket leg and app phase really stalled, via <=1Hz per-leg aggregate and stage checkpoints. Preserve same-VM P2 and component correctness.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1838 source-current WinForms/Go CLI independent real GUI test. In parallel collect H1837 signed Windows/Linux P2 real phase metrics, full-span Tunnel UDP p99 and owned Stop. Then address exact Direct IO readiness stall, and still-open GUI signed OS Start/Stop, Game4 CN, IPv6/D4, P1, slow-fsync Stop.",
+  "next_action": "Collect H1839 single signed real Windows/Linux P2 Action and phase snapshots plus native leg cumulative counters and full-span UDP; locate first exact loss-of-progress then change underlying event/forwarding mechanism. Separately real nonCI Normal CN split signed source-locked selection (not GUI fake); Game4, IPv6, P1, slow fsync/Stop remain.",
   "unverified": true,
   "last_tested_source": "33e2f79352469d62e3025176670fd03d450e554a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1838-H1837-WINFORMS-CLI-FIRST-ASSERTION-20261114.json"
+    "docs/evidence/M0/PLAN029-H1839-H1837-P2-SIGNED-ONE-MIB-DOWNLINK-TIMEOUT-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/MTU_CONTRACT.md",
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1837-GUI-CATALOG-INVARIANT-P2-PHYSICAL-TRIGGER.md",
-    "docs/devlog/M0/20261114-PLAN029-H1838-PORTABLE-CN-IMPORT-ASSERTION.md"
+    "docs/devlog/M0/20261114-PLAN029-H1838-PORTABLE-CN-IMPORT-ASSERTION.md",
+    "docs/devlog/M0/20261114-PLAN029-H1839-P2-ONE-MIB-TWO-LEG-READINESS-DIAG.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1837 source33e original Go/Rust/WinForms compiles; GUI positive Go CLI Normal split, missing CN rules negative, Game4 split negative pass; last path-after-import fixture stale. H1838 repairs only assertion and adds fresh Go reload check. H1837 P2 true networking still running; Game4/IPv6/P1/Stop OPEN."
+  "partial_summary": "H1837 source33e signed P2 FAIL at 38s Direct 1MiB; physical281ms, actual Linux 1MiB echo finished; Windows app stage unknown. Owner WAL cleaned after failure but P2 stop grade not proven. H1839 diagnostic source candidate with exact one new P2 Action NOT_RUN until done. H1838 source dbfc real GUI Go check-config PASS; signed GUI OS not run; PLAN029 IN_PROGRESS."
 }

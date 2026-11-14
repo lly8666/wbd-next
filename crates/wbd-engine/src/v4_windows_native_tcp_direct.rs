@@ -80,6 +80,15 @@ pub(crate) struct TcpServiceTick{
     pub retired:Vec<TcpNatKey>,
     pub advanced:bool,
 }
+// One cold-only P2 diagnosis switch. The default product never formats
+// per-flow counters or samples wall clocks on the hot packet path. The
+// signed fixture enables this only for the single stalled TCP test.
+#[derive(Default)]
+struct TcpLegDiagnosis{
+    next_ms:u64,
+    read_inner:u64,read_outer:u64,
+    wrote_inner:u64,wrote_outer:u64,
+}
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
     physical:Ipv4Addr,ifindex:u32,
@@ -97,6 +106,7 @@ pub(crate) struct NativeTcpActor{
     // Pending bytes and actual VecDeque backing capacities are separate.
     buffered_bytes:usize,
     resident_bytes:usize,
+    diagnosis:Option<TcpLegDiagnosis>,
 }
 pub(crate) fn safe_synthetic(lease:u32,underlay:u32,synthetic:u32,
     fake_range:(u32,u32))->bool{
@@ -129,7 +139,9 @@ impl NativeTcpActor{
             dns_cursor:0,dns_closing:ClosedNatGrace::default(),
             dns_tunnel_sources:HashSet::new(),
             ready:VecDeque::with_capacity(MAX_READY),
-            buffered_bytes:0,resident_bytes:0})
+            buffered_bytes:0,resident_bytes:0,
+            diagnosis:(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
+                .as_deref()==Some("1")).then(TcpLegDiagnosis::default)})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
     /// Never guess this value in Go or open a global firewall wildcard.
@@ -341,6 +353,12 @@ impl NativeTcpActor{
                                 continue
                             }
                             self.resident_bytes=retained;
+                            if let Some(d)=self.diagnosis.as_mut(){
+                                d.read_inner=d.read_inner.saturating_add(tick.inner_read as u64);
+                                d.read_outer=d.read_outer.saturating_add(tick.outer_read as u64);
+                                d.wrote_inner=d.wrote_inner.saturating_add(tick.inner_write as u64);
+                                d.wrote_outer=d.wrote_outer.saturating_add(tick.outer_write as u64);
+                            }
                             self.buffered_bytes=self.buffered_bytes
                                 .saturating_sub(previous).saturating_add(tick.buffered);
                             if tick.bytes_read>0||tick.bytes_written>0{
@@ -412,6 +430,19 @@ impl NativeTcpActor{
         let mut dns_retired=Vec::new();
         self.dns_closing.expire_some(now_ms,&mut self.dns_nat,
             &mut dns_retired);
+        if let Some(d)=self.diagnosis.as_mut(){
+            if now_ms>=d.next_ms && (!self.active.is_empty()||
+                    !self.pending.is_empty()||!self.dns_active.is_empty()){
+                d.next_ms=now_ms.saturating_add(1_000);
+                // No addresses, credentials, payloads, per-packet tracing,
+                // or blocking filesystem I/O. Snapshot only active counts
+                // and committed kernel socket byte receipts once a second.
+                eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} buffered={} resident={} source=real_kernel_two_leg",
+                    self.active.len(),self.pending.len(),self.dns_active.len(),
+                    d.read_inner,d.read_outer,d.wrote_inner,d.wrote_outer,
+                    self.buffered_bytes,self.resident_bytes);
+            }
+        }
         TcpServiceTick{retired,advanced}
     }
     /// One bounded 8-client readiness turn, no flow thread and no extra

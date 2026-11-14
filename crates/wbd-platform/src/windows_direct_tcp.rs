@@ -263,6 +263,12 @@ pub struct TcpDirectRelay{
 pub struct RelayTick{
     pub bytes_read:usize,
     pub bytes_written:usize,
+    // Optional cold diagnostic only; distinguish which kernel TCP leg
+    // stopped making progress without attributing timeout to WSAPoll.
+    pub inner_read:usize,
+    pub outer_read:usize,
+    pub inner_write:usize,
+    pub outer_write:usize,
     pub buffered:usize,
     pub finished:bool,
 }
@@ -306,6 +312,8 @@ impl TcpDirectRelay{
         let mut remaining_capacity=read_budget;
         let mut scratch=[0u8;QUANTUM_BYTES];
         let mut read=0usize;let mut wrote=0usize;
+        let mut inner_read=0usize;let mut outer_read=0usize;
+        let mut inner_write=0usize;let mut outer_write=0usize;
         if !self.inner_eof && self.to_outer.len()<self.max_pending_per_direction &&
             (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
              self.to_outer.capacity()>self.to_outer.len()){
@@ -317,7 +325,7 @@ impl TcpDirectRelay{
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>self.inner_eof=true,
                 Ok(n)=>{
-                    self.to_outer.extend(&scratch[..n]);read+=n;
+                    self.to_outer.extend(&scratch[..n]);read+=n;inner_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_outer.capacity().saturating_sub(before));
                 }
@@ -337,7 +345,7 @@ impl TcpDirectRelay{
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>self.outer_eof=true,
                 Ok(n)=>{
-                    self.to_inner.extend(&scratch[..n]);read+=n;
+                    self.to_inner.extend(&scratch[..n]);read+=n;outer_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_inner.capacity().saturating_sub(before));
                 }
@@ -349,7 +357,7 @@ impl TcpDirectRelay{
         if !self.to_outer.is_empty(){
             let (first,_)=self.to_outer.as_slices();
             match self.outer.write(first){
-                Ok(n)=>{self.to_outer.drain(..n);wrote+=n}
+                Ok(n)=>{self.to_outer.drain(..n);wrote+=n;outer_write+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("outer_write",e)),
@@ -358,7 +366,7 @@ impl TcpDirectRelay{
         if !self.to_inner.is_empty(){
             let (first,_)=self.to_inner.as_slices();
             match self.inner.write(first){
-                Ok(n)=>{self.to_inner.drain(..n);wrote+=n}
+                Ok(n)=>{self.to_inner.drain(..n);wrote+=n;inner_write+=n}
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("inner_write",e)),
@@ -373,6 +381,7 @@ impl TcpDirectRelay{
             self.inner_write_closed=true;
         }
         Ok(RelayTick{bytes_read:read,bytes_written:wrote,
+            inner_read,outer_read,inner_write,outer_write,
             buffered:self.to_outer.len()+self.to_inner.len(),
             finished:self.inner_eof&&self.outer_eof&&
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
