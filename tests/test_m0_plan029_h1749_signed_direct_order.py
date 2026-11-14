@@ -414,4 +414,16 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
         self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
                         w.index("Full public-run signed original Npcap and Wintun driver install"))
+    def test_h1821_exact_v3_export_qualified_prebuilt_reuse_no_old_dll(self):
+        w=(Path(__file__).resolve().parents[1]/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("43574002456",w)
+        self.assertIn("b7b688573326580e39571c1e748663b8566d5fc2",w)
+        self.assertIn("PLAN029_H1821_REUSED_V3_NATIVE_DLL_ABI_REAL_EXPORT_PASS",w)
+        self.assertIn("m0_v4_embedded_go,fec2_product_record,native_fec_acceleration,m0_v4_probe",w)
+        self.assertIn("getattr(native,'wbd_m0_win_native_v3_start',None)",w)
+        self.assertIn("assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]",w)
+        for key in ("WBD_WL_REUSE_RUN_ID:","WBD_WL_BINARY_SOURCE:","LINUX_BINARY_SRC:"):
+            env_line=next(s for s in w.splitlines() if s.strip().startswith(key))
+            self.assertIn("b7b688573326580e39571c1e748663b8566d5fc2" if key!="WBD_WL_REUSE_RUN_ID:" else "43574002456",env_line)
+            self.assertNotIn("c262636c81d688e8df8e844b668bbcc57957425d",env_line)
 if __name__=="__main__":unittest.main()
