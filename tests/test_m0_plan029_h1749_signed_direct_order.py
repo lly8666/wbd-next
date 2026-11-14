@@ -401,4 +401,17 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('app_source not in (None,SOURCE)',h)
         self.assertIn('windows_cpu_seconds_per_actual_delivered_gib',h)
         self.assertIn('oneway_p99":"NOT_MEASURED_UNCALIBRATED_CROSS_OS_CLOCKS',h)
+    def test_h1820_real_source_built_v3_export_before_signed_native_driver(self):
+        root=Path(__file__).resolve().parents[1]
+        w=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        rust=(root/"crates/wbd-engine/src/v4_windows_native_runtime.rs").read_text()
+        self.assertIn('pub unsafe extern "C" fn wbd_m0_win_native_v3_start(',rust)
+        self.assertIn('#[cfg(feature="m0_v4_probe")]',rust)
+        self.assertIn("[plan029-v3-real-p2-rebuild]",w)
+        self.assertIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1')",w)
+        self.assertIn("$features+=',m0_v4_probe'",w)
+        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',w)
+        self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
+        self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
+                        w.index("Full public-run signed original Npcap and Wintun driver install"))
 if __name__=="__main__":unittest.main()

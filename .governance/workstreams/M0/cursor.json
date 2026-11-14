@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1819,
-  "checkpoint_sha": "6c52c59a98b2cd8ab237b5641bd6f9f4e6d86d6b",
+  "sequence": 1820,
+  "checkpoint_sha": "cee5bfd46cc9a31fabfdd7e62c2ca750dd059531",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1819 independent signed P1 same-VM Normal A original V4 Tunnel vs B Rust V3 all-Tunnel 50Mbps/25ms/0%/60s with exact H1814 source SHA EXE/DLL+Linux server reuse; H1818 P2 separate Windows VM in-progress. Only P1 rerun marker, no product modifications. Results pending. PLAN029 IN_PROGRESS.",
-  "why_now": "H1818 P2 passed cheap and reached actual native job with pinned ISA-L hash artifact, so same feature-verified source reused for independent P1 via separate Action/runner. Avoid unnecessary x86+ARM pure retests and any 028 seven-mode matrix.",
+  "current_task": "H1820 root cause of prior P1 B/P2 genuine network failure: H1814 compiled Windows Rust DLL features ISA-L but NOT m0_v4_probe so missing export wbd_m0_win_native_v3_start. P1 H1819 A 50Mbps each direction, 0-loss, RTT p99 Windows47.0ms Linux54.209ms, 0.69839GiB/real Stop PASS; B FAIL missing V3 export. H1818 P2 real Normal authenticated then FAIL same missing export; no P2 business. H1820 one exact-SOURCE full rebuilt Go/Rust V3-aware DLL + Linux peer, immediate Win32 DLL symbol check before drivers, then signed P2 real scene. No V3 artifact reuse until correct. PLAN029 IN_PROGRESS.",
+  "why_now": "This is incomplete V3 compile feature wiring, not Linux environment/static test; reusing old c262 compiled Windows DLL is invalid for V3 (missing m0_v4_probe), regardless of SHA correctness. One necessary full release rebuild with native export load proof; subsequently may reuse its exact product code/compiled binary for independent P1.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1818 P2/ H1819 P1 independent signed results and first failure; only count measured business/Stop and SHA. Next Game4 split actual Rust ingress wiring, GUI-origin signed Connect, D4 IPv6 representative.",
+  "next_action": "Collect H1820 genuine Windows V3 DLL export/build and P2 real signed result, first actual failure retained. Then use only H1820 successfully export-qualified original Go/Rust binaries for independent P1 A/B, no duplicate compile or old 028 mode matrix. Game4 split, GUI signed start, IPv6 D4 still OPEN.",
   "unverified": true,
   "last_tested_source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1818 P2 native underway, H1819 P1 independent Action pending; exact H1814 SHA binary reuse gated by manifest features and individual content hashes, no new product recompiles; earlier P1 A true 50Mbps and Stop PASS, B must prove separately."
+  "partial_summary": "H1820 repairs test CI build wiring: production DLL V3 export gated m0_v4_probe. Previous H1819 P1 A signed 50Mbps, owned Stop and RTT p99 pass; B was ineligible binary missing export; previous H1818 P2 also missing export pre-Ready. Current V3 rebuild/P2 not yet run."
 }
