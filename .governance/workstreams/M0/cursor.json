@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1849,
-  "checkpoint_sha": "27de9281316f5c1bc37907678c5373cba9b12d35",
+  "sequence": 1850,
+  "checkpoint_sha": "2771bec056cf077d42f0503012a218932a445d45",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1849: run first distinct actual signed P2 with BOTH H1843 bounded TCP reverse non-drop and H1846 32-item RX auto-reset no-idle backlog fix. H1844 ecd genuine signed still failed 38s (physical281ms, Direct upload18.703s, first reply20.86s, 918853B at36.657s), so no performance claim. New current-source P2 fixture only reads app TCP_NODELAY on both and preserves UDP/last phase evidence on timeout. H1848 nonCI real product signed test separately in progress, no duplicate.",
-  "why_now": "H1844 real code after FIFO patch alone did not materially improve 1MiB, while H1846 fixes distinct deterministic queue wake starvation and has passed Windows/Linux source Rust unit/native regression. Need one sameVM signed P2 causal check with unchanged application pacing and explicit UDP fairness evidence even on failure.",
+  "current_task": "H1850 recovered signed H1848 nonCI real CN product PASS_SCOPED and H1849 combined FIFO+RX32 P2 complete 1MiB but 37.704s vs 0.282s physical (133.702x); Action green does not qualify performance. Add P2-only pre-existing 1Hz Rust four-leg IO diagnosis, next SOURCE test NOT_RUN when committed.",
+  "why_now": "H1849 finished after interruption and its first kernel TCP waiting point remains unknown; H1843/H1846 did not remove symmetric upload/download delay. Capture bounded actual progress rather than rerun same tuning hypotheses.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1849 source-locked signed P2 physical/direct full phase/tunnel small UDP spanning transfer and both owned Stop, compare to H1844. Separately collect H1848 nonCI product signed OS Applied/Ready/DNS/TCP/UDP/Tunnel/Defender/Stop. If still slow, kernel TCP ACK/advertised window/retransmits and TX 8 reverse vs 32 ingress quantum fairness; Game4/IPv6/GUI OS/P1/slow journal OPEN.",
+  "next_action": "Collect exactly one new [plan029-v3-real-p2-rebuild] [plan029-p2-leg-boundary] SOURCE-locked native Action and parse 1Hz inner/outer read/write against P2 phases and UDP holes/Stop. Do not repeat H1848/H1849 dispatch. If IO stays quiescent, inspect kernel ACK/advertised window/retransmit selectively; then complete Game4/GUI/IPv6/D1-D5/P1 and journal resource exits.",
   "unverified": true,
-  "last_tested_source": "ecd85c18c1a6e0f64212aee555674187b89f5fb7",
+  "last_tested_source": "2771bec056cf077d42f0503012a218932a445d45",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1850-H1848-H1849-RECOVERED-REAL-CN-AND-P2-PERFORMANCE-20261114.json",
     "docs/evidence/M0/PLAN029-H1848-H1844-SIGNED-P2-FIFO-NEGATIVE-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1850-COLLECT-NONCI-P2-AND-LEG-PROBE.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261114-PLAN029-H1849-REAL-P2-RX32-RETEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1844 true signed P2 sourceecd after FIFO alone FAIL, 1MiB physical281ms and Direct upload18.703s still 38s not complete. H1846 source715a 32/32 auto-reset lost wake fix Windows Linux native component PASS and no-performance yet. H1848 product from CRLF guard rerun in progress; H1849 new signed P2 single SOURCE and more failure phase/UDP evidence pending. H1848 feature card UTF8 cap/governance PASS."
+  "partial_summary": "H1848 real nonCI CN product signed PASS_SCOPED (27de9281 Action43600601863). H1849 genuine physical baseline 282ms vs Direct 1MiB 37704ms, full delivery & 2558 Tunnel UDP, 47ms max gap, owned Stops PASS; P2 performance FAIL/OPEN at SOURCE2771bec0 Action43600840107. H1850 only prepares opt-in bounded diagnostic, new SOURCE result NOT_RUN."
 }

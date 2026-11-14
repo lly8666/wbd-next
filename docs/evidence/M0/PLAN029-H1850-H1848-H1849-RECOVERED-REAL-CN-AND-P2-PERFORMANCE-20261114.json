@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1850",
+  "date": "2026-11-14",
+  "checkpoint_parent_sha": "2771bec056cf077d42f0503012a218932a445d45",
+  "recovered_actions": [
+    {
+      "task": "H1848",
+      "source_sha": "27de9281316f5c1bc37907678c5373cba9b12d35",
+      "run_id": 43600601863,
+      "job_id": 132465665138,
+      "run_conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43600601863",
+      "evidence": "SIGNED_NONCI_NORMAL_CN_PRODUCT",
+      "private_trial": "OFF",
+      "windows_wintun_os_applied": "PASS_OBSERVED",
+      "direct_dns_tcp_udp_tunnel": "PASS_REAL_SIGNED",
+      "owned_stop": "PASS_BOTH_OWNED",
+      "scope": "SCOPED_PRODUCT_ENTRY_PASS_NOT_GUI_BUTTON_OR_ALL_029"
+    },
+    {
+      "task": "H1849",
+      "source_sha": "2771bec056cf077d42f0503012a218932a445d45",
+      "run_id": 43600840107,
+      "job_id": 132466487351,
+      "run_conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43600840107",
+      "evidence": "SIGNED_WINDOWS2025_WINTUN_RUST_NORMAL_AND_UBUNTU_WSL2_REAL_P2",
+      "physical_tcp_1m_ms": 282,
+      "direct_tcp_1m_ms": 37704,
+      "ratio": 133.702,
+      "app_tcp_nodelay_both": 0,
+      "direct_connect_ms": 735,
+      "direct_upload_ms": 18515,
+      "direct_first_reply_wait_ms": 1407,
+      "direct_download_ms": 17047,
+      "direct_echo_bytes": 1048576,
+      "physical_echo_bytes": 1048576,
+      "tunnel_udp_unique_sustained_count": 2558,
+      "tunnel_udp_max_interreply_gap_ms": 47,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "workload": "16K_WRITES_4MS_PACING_NOT_PEAK",
+      "functionality": "PASS_SCOPED",
+      "performance": "FAIL_OPEN",
+      "first_kernel_wait_point": "NOT_YET_LOCALIZED"
+    }
+  ],
+  "comparison": "H1844 prior FIFO-only source ecd85c18 upload 18703ms and 38s incomplete; H1849 contains both H1843 FIFO non-drop and H1846 RX32 wake and ends in 37.704s. Neither proves kernel ACK/window or retransmission root cause. Different source/test results cannot be treated as controlled CPU gain.",
+  "work_in_this_checkpoint": "Enable existing optional 1Hz Rust native four-leg cumulative read/write sampling ONLY on separately tagged P2 action; no new per-flow threads, per-packet clock, WFP or firewall mutations. Future signed result is NOT_RUN at creation.",
+  "not_qualified": [
+    "P2 throughput and first TCP slow boundary",
+    "P1 true same-VM CPU/GiB attribution",
+    "Game4 CN split",
+    "actual WinForms GUI Connect/Stop",
+    "D4 IPv6 and interruption restoration",
+    "D1 TCP53/TC same endpoint and complete D1-D5",
+    "FakeIP slow journal compaction/recovery stress",
+    "full resource-pressure and padding exit"
+  ]
+}
