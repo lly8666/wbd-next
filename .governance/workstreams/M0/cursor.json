@@ -4,20 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1801,
-  "checkpoint_sha": "20cbb95ed485273f5fd3b5301ef1497c4a0ebb7c",
+  "sequence": 1802,
+  "checkpoint_sha": "0200451b855750da77628dd01140b554b44df7dc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1801 repair strict feature-catalog verification enum on H1800 recovery note: two scoped true native results FUNCTIONAL_PASS, with exact Action/source; completed Action43561934666 governance FAIL due unknown PASS enum, NOT network. PLAN029 IN_PROGRESS.",
-  "why_now": "Automatic source 20cbb governance failed first at feature catalog: startup-flow-padding unknown verification status; replace only two PASS with FUNCTIONAL_PASS. Preserve H1799 signed result and all remaining NOT_RUN.",
+  "current_task": "H1802 collect governance failure Action43562204291: card schema fixed; first structural boundary now cursor evidence_refs mixed source. H1799 stays same-source only; old H1795 TCP53/H1791 MTU evidence moved to bounded context_refs. No product regression / new dispatch.",
+  "why_now": "Governance.py requires every cursor.evidence_refs JSON source_sha == cursor.last_tested_source (6a77d23); independent older-source observations remain useful but cannot be misattributed to same source.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Check automatic governance on H1801 source; then target missing D3 physical capacity/TC fallback, D4 IPv6/partial OS Apply and D5 GUI effective before P1/P2. No duplicate native dispatch.",
+  "next_action": "Read automatic governance of H1802 once completed; then PLAN029 D3-D5/P1-P2 product proof in separately source-locked scenarios; no repeat dispatch of signed H1799.",
   "unverified": true,
   "last_tested_source": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json",
-    "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
-    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json"
+    "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -26,8 +24,8 @@
     "docs/prompts/M0-PLAN029.md",
     "docs/evidence/M0/PLAN028-H1657-USER-AUTHORIZED-SCOPED-CLOSEOUT-20261112.json",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/evidence/M0/PLAN029-H1672-SIGNED-WINTUN-TCP-READONLY-DIAGNOSTIC-FAIL-20261112.json",
-    "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
+    "docs/evidence/M0/PLAN029-H1796-H1795-SIGNED-REAL-APP-TCP53-BOTH-EXITS-STOP-20261114.json",
+    "docs/evidence/M0/PLAN029-H1793-H1791-REAL-DEFAULT1460-AND-ABI-SPLIT-20261114.json"
   ],
   "open_requests": [],
   "partial_summary": "Collected H1799 source 6a77 signed original Windows/WSL2 Normal flows: positive actual NPF post-copy M1 padding 16 records/50B, TCP/UDP duplex, two owned Stop, Action43560438283 PASS. 1795 application TCP53 Direct/Tunnel real earlier PASS; 1791 default outer1460 owned OS readback earlier PASS. Live GUI effective, D3-full/D4/D5/P1/P2 pending; no product-wide PASS and no new diagnostics dispatch."
