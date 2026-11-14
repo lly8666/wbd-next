@@ -194,7 +194,7 @@ impl NativeSplitWorker {
                 c.journal_path,c.journal_length as usize)};
             let path=std::str::from_utf8(raw).map_err(|_|())?;
             if path.contains('\0'){return Err(())}
-            let (journal,recovered)=FakeJournal::open(&PathBuf::from(path))
+            let (journal,recovered)=FakeJournal::open_async(&PathBuf::from(path))
                 .map_err(|_|())?;
             let mut pool=fakes.ok_or(())?;
             let now=std::time::SystemTime::now()
@@ -521,6 +521,14 @@ impl NativeSplitWorker {
     }
     pub(crate) fn tick(&mut self,now_ms:u64)->bool{
         let mut progressed=false;
+        // DNS filesystem completion is a bounded, nonblocking mailbox
+        // operation on this TX turn. The exact durable journal writer
+        // runs on one independent blocking thread, never under M2/NPF,
+        // Wintun ring borrowing or the original Tunnel send lock.
+        if let (Some(pool),Some(journal))=
+            (self.fakes.as_mut(),self.journal.as_mut()){
+            journal.poll_completed(pool,8);
+        }
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
         // while cold-only expiry remains on the existing 1-second sweep.
@@ -573,6 +581,14 @@ impl NativeSplitWorker {
                     pool.reap_due(wall,64);
                 }
             }
+        }
+        // Only once per coarse expiry turn and only above the WAL
+        // high-water mark. The full snapshot is prepared in cold/sparse
+        // code; disk flush/atomic replacement runs on the same isolated
+        // blocking writer as new DNS FakeIP allocations.
+        if let (Some(pool),Some(journal))=
+            (self.fakes.as_ref(),self.journal.as_mut()){
+            journal.maybe_compact(pool,now_ms);
         }
         self.ingress.on_expiry_tick(now_ms);
         if let Ok(mut map)=self.tunnel_map.lock(){map.expire(now_ms)}

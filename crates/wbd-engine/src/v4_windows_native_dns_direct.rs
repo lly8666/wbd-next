@@ -34,7 +34,11 @@ struct Inflight{
     query:Vec<u8>,sent:bool,deadline:u64,
     tcp:Option<TcpDnsFallback>,
 }
+struct AwaitingDurable{
+    ticket:u64,reply:ValidatedReply,started_ms:u64,
+}
 pub(crate) struct DirectDns{
+    awaiting:VecDeque<AwaitingDurable>,
     source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,endpoint:Ipv4Addr,
     mtu:usize,pending:DnsPending,cache:DnsAnswerCache,inflight:Vec<Inflight>,
     completed:VecDeque<Vec<u8>>,cursor:usize,ip_id:u16,
@@ -62,12 +66,14 @@ impl DirectDns{
     pub(crate) fn new(source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,
         endpoint:Ipv4Addr,mtu:usize)->Self{
         Self{source,ifindex,lease,endpoint,mtu,
+            awaiting:VecDeque::new(),
             pending:DnsPending::new(MAX_PENDING,1024),
             cache:DnsAnswerCache::production(),inflight:Vec::new(),
             completed:VecDeque::with_capacity(MAX_READY),cursor:0,ip_id:1}
     }
     pub(crate) fn has_work(&self)->bool{
-        !self.inflight.is_empty()||!self.completed.is_empty()
+        !self.inflight.is_empty()||!self.completed.is_empty()||
+            !self.awaiting.is_empty()
     }
     pub(crate) fn counts(&self)->(usize,usize,usize){
         (self.inflight.len(),self.pending.counts().1,self.completed.len())
@@ -158,7 +164,7 @@ impl DirectDns{
             if let Some(answer)=self.cache.get(&key,now_ms){
                 self.resolved(ValidatedReply{key,
                     waiters:vec![client],answer},&[],
-                    fake.as_deref_mut(),journal.as_deref_mut());
+                    fake.as_deref_mut(),journal.as_deref_mut(),now_ms);
                 return true
             }
         }
@@ -193,8 +199,20 @@ impl DirectDns{
         self.inflight.push(inflight);
         true
     }
+    fn emit_durable(&mut self,reply:ValidatedReply,
+        fake:&FakeAllocator,wall:u64){
+        let key=&reply.key;
+        for client in reply.waiters{
+            match synthesize_cn_a(client.original_id,&key.name,&reply.answer,
+                fake,key.policy_revision,1,wall){
+                Ok(wire)=>self.enqueue(client,&wire.packet),
+                Err(_)=>self.fail(&[client],key,2),
+            }
+        }
+    }
     fn resolved(&mut self,reply:ValidatedReply,raw:&[u8],
-        fake:Option<&mut FakeAllocator>,journal:Option<&mut FakeJournal>){
+        fake:Option<&mut FakeAllocator>,journal:Option<&mut FakeJournal>,
+        now_ms:u64){
         let key=&reply.key;
         if key.qtype!=1{
             // Same verified physical endpoint and DNS question, original
@@ -228,22 +246,45 @@ impl DirectDns{
             Ok(batch)=>batch,
             Err(_)=>{self.fail(&reply.waiters,key,2);return},
         };
-        if !batch.is_empty()&&journal.persist_batch(fake,&batch).is_err(){
-            self.fail(&reply.waiters,key,2);return
-        }
-        for client in reply.waiters{
-            match synthesize_cn_a(client.original_id,&key.name,&reply.answer,
-                fake,key.policy_revision,1,wall){
-                Ok(wire)=>self.enqueue(client,&wire.packet),
-                Err(_)=>self.fail(&[client],key,2),
+        if !batch.is_empty(){
+            // No disk IO on this TX forwarding call. The DNS response is
+            // held until this exact generation-owned writer reports fsync.
+            if self.awaiting.len()>=MAX_PENDING{
+                self.fail(&reply.waiters,key,2);return
             }
+            match journal.enqueue_batch(fake,&batch){
+                Ok(ticket)=>{
+                    self.awaiting.push_back(AwaitingDurable{
+                        ticket,reply,started_ms:now_ms});
+                },
+                Err(_)=>self.fail(&reply.waiters,key,2),
+            }
+            return
         }
+        self.emit_durable(reply,fake,wall);
     }
     /// The native TX worker calls this on its already-bounded ready-only
     /// 10ms Direct quantum, not in the ordinary Tunnel DATA seal loop.
     pub(crate) fn poll(&mut self,now_ms:u64,
         mut fake:Option<&mut FakeAllocator>,
         mut journal:Option<&mut FakeJournal>){
+        // A completed filesystem write can publish only its own DNS A
+        // ticket. Timeout/failure answers SERVFAIL; Tunnel/UDP/TCP keep
+        // their independent scheduling turns during slow sync_data.
+        let awaiting=self.awaiting.len().min(MAX_POLL);
+        for _ in 0..awaiting{
+            let Some(p)=self.awaiting.pop_front()else{break};
+            let status=journal.as_deref_mut()
+                .and_then(|j|j.take_async_status(p.ticket));
+            if status==Some(true){
+                if let (Some(pool),Some(now))=(fake.as_deref(),wall_ms()){
+                    self.emit_durable(p.reply,pool,now)
+                }else{self.fail(&p.reply.waiters,&p.reply.key,2)}
+            }else if status==Some(false)||
+                now_ms.saturating_sub(p.started_ms)>=TIMEOUT_MS{
+                self.fail(&p.reply.waiters,&p.reply.key,2)
+            }else{self.awaiting.push_back(p)}
+        }
         let mut i=0;
         while i<self.inflight.len(){
             if now_ms<self.inflight[i].deadline{i+=1;continue}
@@ -329,7 +370,7 @@ impl DirectDns{
                             answer.answer.clone(),now_ms);
                     }
                     self.resolved(answer,&wire,
-                        fake.as_deref_mut(),journal.as_deref_mut())
+                        fake.as_deref_mut(),journal.as_deref_mut(),now_ms)
                 },
                 Err(())=>{
                     if let Some((key,clients))=self.pending.abort_one(query.id){

@@ -47,6 +47,10 @@ enum Phase{
     Reading(TcpClientDnsAssembler),
     Upstream{ticket:TcpClientDnsQuestion,lane:DnsEgress,
         tcp:TcpDnsFallback},
+    // A physical DNS answer is ready, but its synthetic A may not be
+    // exposed before the separate journal worker completes real fsync.
+    Durable{question:TcpClientDnsQuestion,answer:DnsAResolution,
+        journal_ticket:u64},
     Sending{bytes:Vec<u8>,sent:usize},
     Closed,
 }
@@ -132,7 +136,8 @@ impl ClientDnsTcp{
         if now_ms>=self.deadline_ms{
             let pending=std::mem::replace(&mut self.phase,Phase::Closed);
             match pending{
-                Phase::Upstream{ticket,..}=>{
+                Phase::Upstream{ticket,..}|
+                Phase::Durable{question:ticket,..}=>{
                     let wire=plain_dns(ticket.original_id,&ticket.qname,
                         ticket.qtype,2).ok_or(())?;
                     self.response(wire)?;
@@ -195,13 +200,84 @@ impl ClientDnsTcp{
                             ticket.qtype,2).ok_or(())?)?;
                     },
                     TcpDnsPoll::Answer(reply)=>{
-                        let wire=checked_client_reply(&ticket,lane,&reply,
-                            pool.as_deref_mut(),journal.as_deref_mut())
-                            .or_else(||plain_dns(ticket.original_id,
-                                &ticket.qname,ticket.qtype,2))
-                            .ok_or(())?;
-                        self.response(wire)?;
+                        let resolved=extract_a(&reply,ticket.original_id,
+                            &ticket.qname,ticket.qtype).ok();
+                        if lane==DnsEgress::Direct && ticket.qtype==1 &&
+                            resolved.as_ref().is_some_and(|a|
+                                a.status==DnsAnswerStatus::Answered &&
+                                !a.candidates.is_empty()){
+                            let a=resolved.ok_or(())?;
+                            let (Some(pool),Some(journal),Some(now))=
+                                (pool.as_deref_mut(),journal.as_deref_mut(),unix_ms())
+                            else{
+                                self.response(plain_dns(ticket.original_id,
+                                    &ticket.qname,ticket.qtype,2).ok_or(())?)?;
+                                return Ok(result)
+                            };
+                            let candidates=a.candidates.iter().map(|candidate|{
+                                (FakeKey{qname:ticket.qname.clone(),
+                                    canonical:a.canonical.clone(),
+                                    real4:candidate.address,policy_rev:1,
+                                    resolver_rev:1},candidate.ttl)
+                            }).collect::<Vec<_>>();
+                            match pool.prepare_batch(&candidates,now){
+                                Ok(required) if required.is_empty()=>{
+                                    let wire=synthesize_cn_a(ticket.original_id,
+                                        &ticket.qname,&a,pool,1,1,now)
+                                        .map_err(|_|())?.packet;
+                                    self.response(wire)?;
+                                },
+                                Ok(required)=>{
+                                    match journal.enqueue_batch(pool,&required){
+                                        Ok(journal_ticket)=>{
+                                            self.phase=Phase::Durable{
+                                                question:ticket,answer:a,journal_ticket};
+                                        },
+                                        Err(_)=>{
+                                            self.response(plain_dns(ticket.original_id,
+                                                &ticket.qname,ticket.qtype,2).ok_or(())?)?;
+                                        }
+                                    }
+                                },
+                                Err(_)=>{
+                                    self.response(plain_dns(ticket.original_id,
+                                        &ticket.qname,ticket.qtype,2).ok_or(())?)?;
+                                }
+                            }
+                        }else{
+                            let wire=checked_client_reply(&ticket,lane,&reply,
+                                pool.as_deref_mut(),journal.as_deref_mut())
+                                .or_else(||plain_dns(ticket.original_id,
+                                    &ticket.qname,ticket.qtype,2))
+                                .ok_or(())?;
+                            self.response(wire)?;
+                        }
                     },
+                }
+            },
+            Phase::Durable{question,answer,journal_ticket}=>{
+                match journal.as_deref_mut()
+                    .and_then(|j|j.take_async_status(journal_ticket)){
+                    Some(true)=>{
+                        if let (Some(pool),Some(now))=(pool.as_deref(),unix_ms()){
+                            match synthesize_cn_a(question.original_id,
+                                &question.qname,&answer,pool,1,1,now){
+                                Ok(wire)=>self.response(wire.packet)?,
+                                Err(_)=>self.response(plain_dns(
+                                    question.original_id,&question.qname,
+                                    question.qtype,2).ok_or(())?)?,
+                            }
+                        }else{
+                            self.response(plain_dns(question.original_id,
+                                &question.qname,question.qtype,2).ok_or(())?)?;
+                        }
+                    },
+                    Some(false)=>{
+                        self.response(plain_dns(question.original_id,
+                            &question.qname,question.qtype,2).ok_or(())?)?;
+                    },
+                    None=>self.phase=Phase::Durable{
+                        question,answer,journal_ticket},
                 }
             },
             Phase::Sending{bytes,mut sent}=>{

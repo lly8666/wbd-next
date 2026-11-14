@@ -6,6 +6,8 @@
 //! stops NEW FakeIP issuance rather than silently reusing a stale address.
 //! The host passes its owned portable application-directory absolute path.
 use std::collections::{HashMap,HashSet};
+use std::sync::mpsc::{sync_channel,channel,SyncSender,Receiver,TrySendError,TryRecvError};
+use std::thread::{self,JoinHandle};
 use std::fs::{self,File,OpenOptions};
 use std::io::{self,Read,Write};
 use std::path::{Path,PathBuf};
@@ -15,6 +17,13 @@ const MAGIC:&[u8;8]=b"WBD029F1";
 const MAX_JOURNAL_BYTES:usize=16*1024*1024;
 const MAX_BATCH_BYTES:usize=256*1024;
 const MAX_BATCH_ENTRIES:usize=128;
+// One per-owner durable writer, not per-flow threads. Bounded input queue;
+// acknowledgements remain owned by the original Rust TX generation.
+const ASYNC_QUEUE_JOBS:usize=8;
+const ASYNC_QUEUE_BYTES:usize=512*1024;
+// Compact before the 16-MiB history cap is reached, once per coarse
+// scheduler epoch only. This is NOT an allocation/queue latency target.
+const COMPACT_TRIGGER_BYTES:usize=12*1024*1024;
 #[derive(Debug)]
 pub(crate) enum FakeJournalError{
     InvalidPath,Corrupt,ForeignFile,Limit,Conflict,
@@ -175,11 +184,98 @@ pub(crate) fn load_journal(data:&[u8])
     rows.sort_by_key(|e|e.fake4);
     Ok(rows)
 }
+struct AsyncWrite{
+    // The boolean selects a compact (true) or append (false) command.
+    // The completion includes the exact byte length actually fsynced.
+    tx:Option<SyncSender<(u64,Vec<u8>,bool)>>,
+    rx:Receiver<(u64,bool,usize,bool)>,
+    thread:Option<JoinHandle<()>>,
+    pending:HashMap<u64,(Vec<FakeSnapshotEntry>,usize)>,
+    results:HashMap<u64,bool>,
+    queued_bytes:usize,
+    next_id:u64,
+    next_compact_ms:u64,
+}
+// Generate a COMPLETE compact image only on a low-frequency high-water
+// event. It includes every still-live or quarantined durable mapping,
+// regardless of its current DNS cache presence. An uncertain unissued
+// mapping remains unannounced and is not allowed to become visible here.
+fn compact_image(pool:&FakeAllocator)->Result<Vec<u8>,FakeJournalError>{
+    let mut image=MAGIC.to_vec();
+    let rows=pool.durable_candidate();
+    // An in-memory renewal may refer to a previously published FakeIP
+    // whose earlier durable identity is still needed after a crash.
+    // Do NOT omit that old identity just because its *new* snapshot has
+    // not been synced. Retry compaction after all pending writes settle.
+    if rows.iter().any(|row|pool.pending_snapshot(row.fake4).is_some()){
+        return Err(FakeJournalError::Limit)
+    }
+    for group in rows.chunks(MAX_BATCH_ENTRIES){
+        let batch=encode(group)?;
+        if batch.len()>MAX_JOURNAL_BYTES.saturating_sub(image.len()){
+            return Err(FakeJournalError::Limit)
+        }
+        image.extend_from_slice(&batch);
+    }
+    let verified=load_journal(&image)?;
+    if verified!=rows{return Err(FakeJournalError::Conflict)}
+    Ok(image)
+}
+// The writer alone replaces the known owned journal. create_new never
+// follows/reuses a foreign temp path. The original WAL is not removed
+// until a complete verified image has been flushed and synced.
+// A crash before rename leaves the old journal recoverable; afterwards
+// the new one is already a valid self-contained owned snapshot.
+fn compact_on_writer(path:&Path,file:&mut Option<File>,
+    image:&[u8],id:u64)->io::Result<()>{
+    if load_journal(image).is_err(){
+        return Err(io::Error::new(io::ErrorKind::InvalidData,
+            "invalid FakeIP compact image"))
+    }
+    let name=path.file_name().and_then(|n|n.to_str())
+        .ok_or_else(||io::Error::new(io::ErrorKind::InvalidInput,
+            "non-utf8 journal name"))?;
+    let nonce=std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|x|x.as_nanos()).unwrap_or(0);
+    let temp=path.with_file_name(format!(
+        "{name}.wbd029-compact-{}-{id}-{nonce}",std::process::id()));
+    let mut staged=OpenOptions::new().write(true).create_new(true).open(&temp)?;
+    let attempt=(||->io::Result<()>{
+        staged.write_all(image)?;
+        staged.sync_all()?;
+        drop(staged);
+        // Windows replacement can require releasing the source handle.
+        // On failed rename the original owned path stays intact.
+        file.take();
+        fs::rename(&temp,path)?;
+        *file=Some(OpenOptions::new().append(true).open(path)?);
+        Ok(())
+    })();
+    if attempt.is_err(){
+        // This exact temp filename was create_new'd by our writer above;
+        // do not enumerate or delete third-party/legacy files.
+        let _=fs::remove_file(&temp);
+        if file.is_none(){*file=OpenOptions::new().append(true).open(path).ok();}
+    }
+    attempt
+}
 pub(crate) struct FakeJournal{
     path:PathBuf,
-    file:File,
+    // Once async starts the owned file is moved to the ONE writer. The
+    // original TX never calls write_all/sync_data on that path again.
+    file:Option<File>,
+    async_writer:Option<AsyncWrite>,
     bytes:usize,
     poisoned:bool,
+}
+impl Drop for FakeJournal{
+    fn drop(&mut self){
+        if let Some(writer)=self.async_writer.as_mut(){
+            writer.tx.take();
+            if let Some(handle)=writer.thread.take(){let _=handle.join();}
+        }
+    }
 }
 impl FakeJournal {
     /// Current Windows application directory path, not a temp profile or
@@ -205,7 +301,16 @@ impl FakeJournal {
         let bytes=fs::read(path).map_err(ioe)?;
         let rows=load_journal(&bytes)?;
         let file=OpenOptions::new().append(true).open(path).map_err(ioe)?;
-        Ok((Self{path:path.to_path_buf(),file,bytes:bytes.len(),poisoned:false},rows))
+        Ok((Self{path:path.to_path_buf(),file:Some(file),async_writer:None,
+            bytes:bytes.len(),poisoned:false},rows))
+    }
+    /// Production installs a single bounded blocking writer at cold
+    /// startup, including when a valid old WAL is close to its 16-MiB cap.
+    /// Pure journal tests retain open() + persist_batch() synchronous API.
+    pub fn open_async(path:&Path)->Result<(Self,Vec<FakeSnapshotEntry>),FakeJournalError>{
+        let (mut journal,rows)=Self::open(path)?;
+        journal.ensure_async_writer()?;
+        Ok((journal,rows))
     }
     /// One batch = one durable commit. The caller coalesces sparse DNS
     /// allocations in the existing native scheduler: NEVER fsync per Wintun
@@ -228,7 +333,11 @@ impl FakeJournal {
         if frame.len()>MAX_JOURNAL_BYTES.saturating_sub(self.bytes){
             return Err(FakeJournalError::Limit)
         }
-        if let Err(err)=self.file.write_all(&frame){
+        // The legacy synchronous helper remains for pure journal tests.
+        // Production DNS always uses enqueue_batch + poll_completed below.
+        // It must never race an already-owned async file handle.
+        let file=self.file.as_mut().ok_or(FakeJournalError::Limit)?;
+        if let Err(err)=file.write_all(&frame){
             self.poisoned=true;
             return Err(ioe(err))
         }
@@ -236,7 +345,7 @@ impl FakeJournal {
         // sync poisons the journal for this generation. No new FakeIP is
         // issued or silently redirected, and original cached fakes are
         // still reserved until the next validated recovery.
-        if let Err(err)=self.file.sync_data(){
+        if let Err(err)=file.sync_data(){
             self.poisoned=true;
             return Err(ioe(err))
         }
@@ -245,6 +354,155 @@ impl FakeJournal {
             pool.acknowledge_durable(ip).map_err(FakeJournalError::Pool)?;
         }
         Ok(())
+    }
+    // One blocking writer thread per *cold DNS owner*, not per query/flow.
+    // Startup code may use this for an old journal already near 16MiB.
+    fn ensure_async_writer(&mut self)->Result<(),FakeJournalError>{
+        if self.async_writer.is_none(){
+            let path=self.path.clone();
+            let file=self.file.take().ok_or(FakeJournalError::Corrupt)?;
+            let (tx,requests)=sync_channel::<(u64,Vec<u8>,bool)>(ASYNC_QUEUE_JOBS);
+            // Unbounded *completion* channel contains at most the eight
+            // outstanding bounded input jobs; avoids deadlock at Stop.
+            let (done_tx,rx)=channel::<(u64,bool,usize,bool)>();
+            let thread=thread::Builder::new()
+                .name("wbd-fakeip-journal".to_string())
+                .spawn(move||{
+                    let mut file=Some(file);
+                    let mut failed=false;
+                    while let Ok((id,bytes,compact))=requests.recv(){
+                        let ok=if failed{false}else if compact{
+                            compact_on_writer(&path,&mut file,&bytes,id).is_ok()
+                        }else{
+                            file.as_mut().is_some_and(|f|
+                                f.write_all(&bytes)
+                                    .and_then(|_|f.sync_data()).is_ok())
+                        };
+                        // A failed compaction leaves the old WAL valid and
+                        // allows another bounded attempt; an append failure
+                        // poisons this generation to prevent split history.
+                        if !ok&&!compact{failed=true}
+                        if file.is_none(){failed=true}
+                        if done_tx.send((id,ok,bytes.len(),compact)).is_err(){break}
+                    }
+                }).map_err(ioe)?;
+            self.async_writer=Some(AsyncWrite{
+                tx:Some(tx),rx,thread:Some(thread),
+                pending:HashMap::new(),results:HashMap::new(),
+                queued_bytes:0,next_id:1,next_compact_ms:0,
+            });
+        }
+        Ok(())
+    }
+    /// Nonblocking cold DNS submission. Only the originating DNS reply
+    /// waits on its own exact ticket. All filesystem IO runs on ONE
+    /// bounded per-generation worker, never the shared TX forwarding turn.
+    pub fn enqueue_batch(&mut self,pool:&FakeAllocator,ips:&[u32])
+        ->Result<u64,FakeJournalError>{
+        if self.poisoned{return Err(FakeJournalError::Corrupt)}
+        if ips.is_empty()||ips.len()>MAX_BATCH_ENTRIES{return Err(FakeJournalError::Limit)}
+        let mut seen=HashSet::new();
+        let mut rows=Vec::with_capacity(ips.len());
+        for &ip in ips{
+            if !seen.insert(ip){return Err(FakeJournalError::Conflict)}
+            rows.push(pool.pending_snapshot(ip).ok_or(FakeJournalError::Pool(
+                FakeError::NotDurable))?);
+        }
+        let frame=encode(&rows)?;
+        let queued=self.async_writer.as_ref().map_or(0,|w|w.queued_bytes);
+        if frame.len()>MAX_JOURNAL_BYTES.saturating_sub(self.bytes.saturating_add(queued))||
+            frame.len()>ASYNC_QUEUE_BYTES.saturating_sub(queued){
+            return Err(FakeJournalError::Limit)
+        }
+        self.ensure_async_writer()?;
+        let w=self.async_writer.as_mut().ok_or(FakeJournalError::Corrupt)?;
+        if w.pending.len()>=ASYNC_QUEUE_JOBS{return Err(FakeJournalError::Limit)}
+        let id=w.next_id;
+        w.next_id=w.next_id.checked_add(1).ok_or(FakeJournalError::Limit)?;
+        let frame_len=frame.len();
+        match w.tx.as_ref().ok_or(FakeJournalError::Corrupt)?.try_send((id,frame,false)){
+            Ok(())=>{
+                w.queued_bytes+=frame_len;
+                w.pending.insert(id,(rows,frame_len));
+                Ok(id)
+            },
+            Err(TrySendError::Full(_))=>Err(FakeJournalError::Limit),
+            Err(TrySendError::Disconnected(_))=>{
+                self.poisoned=true;Err(FakeJournalError::Corrupt)
+            },
+        }
+    }
+    /// Poll at most a few completed IO jobs on the owned TX turn; checks
+    /// the *same* pending mapping identity before durable ACK. No answer
+    /// may contain an unacknowledged FakeIP, even on crash/late worker IO.
+    pub fn poll_completed(&mut self,pool:&mut FakeAllocator,limit:usize){
+        let Some(w)=self.async_writer.as_mut()else{return};
+        for _ in 0..limit{
+            let (id,ok,written,compacted)=match w.rx.try_recv(){
+                Ok(x)=>x,
+                Err(TryRecvError::Empty)=>break,
+                Err(TryRecvError::Disconnected)=>{
+                    self.poisoned=true;break
+                },
+            };
+            let Some((rows,n))=w.pending.remove(&id)else{
+                self.poisoned=true;break
+            };
+            if compacted{
+                if !rows.is_empty()||n!=0{self.poisoned=true;break}
+                // The same worker serializes future appends AFTER the
+                // compact rename, so their later receipts add to this
+                // new exact file size rather than the old history bytes.
+                if ok{self.bytes=written}
+                continue
+            }
+            w.queued_bytes=w.queued_bytes.saturating_sub(n);
+            let valid=ok && rows.iter().all(|row|
+                pool.pending_snapshot(row.fake4).as_ref()==Some(row));
+            if ok{self.bytes=self.bytes.saturating_add(n)}
+            if !ok{self.poisoned=true}
+            if valid{
+                for row in &rows{
+                    if pool.acknowledge_durable(row.fake4).is_err(){
+                        self.poisoned=true;break
+                    }
+                }
+            }
+            // DNS tickets are kept separately; an IO failure is local
+            // SERVFAIL, not an alternate physical/tunnel resolver.
+            w.results.insert(id,valid&&!self.poisoned);
+            // A timed-out DNS waiter may never consume its completion.
+            // Bound old statuses; current outstanding jobs are only <=8.
+            if w.results.len()>1024{
+                if let Some(old)=w.results.keys().copied().min(){
+                    w.results.remove(&old);
+                }
+            }
+        }
+    }
+    // Called only on an existing coarse 1-second owner tick. A full pool
+    // snapshot is NOT scanned on normal DATA/DNS reads or every 10ms.
+    // Background worker alone writes and atomically replaces this WAL.
+    pub fn maybe_compact(&mut self,pool:&FakeAllocator,now_ms:u64){
+        self.maybe_compact_after(pool,now_ms,COMPACT_TRIGGER_BYTES)
+    }
+    fn maybe_compact_after(&mut self,pool:&FakeAllocator,now_ms:u64,
+        trigger:usize){
+        if self.poisoned||self.bytes<trigger{return}
+        let Some(w)=self.async_writer.as_mut()else{return};
+        if !w.pending.is_empty()||now_ms<w.next_compact_ms{return}
+        w.next_compact_ms=now_ms.saturating_add(60_000);
+        let Ok(image)=compact_image(pool)else{return};
+        let id=w.next_id;
+        let Some(next)=id.checked_add(1)else{return};
+        if w.tx.as_ref().is_some_and(|tx|
+            tx.try_send((id,image,true)).is_ok()){
+            w.next_id=next;
+            w.pending.insert(id,(Vec::new(),0));
+        }
+    }
+    pub fn take_async_status(&mut self,id:u64)->Option<bool>{
+        self.async_writer.as_mut()?.results.remove(&id)
     }
     pub fn written_bytes(&self)->usize{self.bytes}
     pub fn path(&self)->&Path{&self.path}
@@ -265,6 +523,76 @@ mod tests{
     fn key(name:&str,real:u32)->FakeKey{
         FakeKey{qname:name.into(),canonical:"cdn.example".into(),
             real4:real,policy_rev:11,resolver_rev:1}
+    }
+    #[test]
+    fn async_dns_file_sync_requires_receipt_before_fakeip_announcement(){
+        let path=temp_path();
+        let (mut journal,_) =FakeJournal::open_async(&path).unwrap();
+        let mut pool=FakeAllocator::new(u32::from_be_bytes([198,18,0,1]),
+            u32::from_be_bytes([198,18,0,9]),&[],100,1024*1024).unwrap();
+        let candidate=pool.prepare(FakeKey{
+            qname:"cn.example".into(),canonical:"cn.example".into(),
+            real4:u32::from_be_bytes([198,51,100,1]),
+            policy_rev:1,resolver_rev:1,
+        },60,10).unwrap();
+        let ticket=journal.enqueue_batch(&pool,&[candidate.fake4]).unwrap();
+        assert!(pool.announced_real(candidate.fake4).is_none());
+        let mut success=false;
+        for _ in 0..1000{
+            journal.poll_completed(&mut pool,4);
+            if let Some(done)=journal.take_async_status(ticket){
+                assert!(done);success=true;break
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(success,"bounded test writer did not complete");
+        assert_eq!(pool.announced_real(candidate.fake4),
+            Some(u32::from_be_bytes([198,51,100,1])));
+        drop(journal);
+        let (reopened,rows)=FakeJournal::open(&path).unwrap();
+        assert_eq!(rows.len(),1);
+        drop(reopened);
+        std::fs::remove_file(path).unwrap();
+    }
+    #[test]
+    fn async_compact_keeps_quarantine_and_only_latest_mapping(){
+        let path=temp_path();
+        let (mut j,_) =FakeJournal::open_async(&path).unwrap();
+        let mut p=pool();
+        let key=key("compact.cn.example",0x08080404);
+        let first=p.prepare(key.clone(),20,1000).unwrap();
+        for (ttl,now) in [(20,1000),(30,3000),(40,5000)]{
+            if now!=1000{p.prepare(key.clone(),ttl,now).unwrap();}
+            let id=j.enqueue_batch(&p,&[first.fake4]).unwrap();
+            let mut ack=false;
+            for _ in 0..1000{
+                j.poll_completed(&mut p,8);
+                if let Some(result)=j.take_async_status(id){
+                    assert!(result);ack=true;break
+                }
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+            assert!(ack);
+        }
+        let prior=j.written_bytes();
+        j.maybe_compact_after(&p,6000,1); // test-only tiny trigger
+        let mut shrunk=false;
+        for _ in 0..1000{
+            j.poll_completed(&mut p,8);
+            if j.written_bytes()<prior{shrunk=true;break}
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(shrunk,"exact owned WAL compact did not finish");
+        drop(j);
+        let (reopen,rows)=FakeJournal::open(&path).unwrap();
+        assert_eq!(rows.len(),1);
+        assert_eq!(rows[0].fake4,first.fake4);
+        assert!(rows[0].quarantine_until_ms>=rows[0].issued_until_ms+600_000);
+        let mut restored=pool();
+        restored.restore(&rows,7000).unwrap();
+        assert_eq!(restored.announced_real(first.fake4),Some(0x08080404));
+        drop(reopen);
+        fs::remove_file(&path).unwrap();
     }
     #[test]
     fn plan029_fake_journal_real_os_batch_sync_then_restore_same_cn_fakes(){
