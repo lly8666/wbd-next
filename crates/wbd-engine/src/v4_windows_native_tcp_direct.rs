@@ -94,7 +94,9 @@ pub(crate) struct NativeTcpActor{
     dns_active:Vec<ActiveDns>,dns_cursor:usize,
     dns_closing:ClosedNatGrace,dns_tunnel_sources:HashSet<u16>,
     ready:VecDeque<Vec<u8>>,
+    // Pending bytes and actual VecDeque backing capacities are separate.
     buffered_bytes:usize,
+    resident_bytes:usize,
 }
 pub(crate) fn safe_synthetic(lease:u32,underlay:u32,synthetic:u32,
     fake_range:(u32,u32))->bool{
@@ -126,7 +128,8 @@ impl NativeTcpActor{
             dns_deadlines:VecDeque::new(),dns_active:Vec::new(),
             dns_cursor:0,dns_closing:ClosedNatGrace::default(),
             dns_tunnel_sources:HashSet::new(),
-            ready:VecDeque::with_capacity(MAX_READY),buffered_bytes:0})
+            ready:VecDeque::with_capacity(MAX_READY),
+            buffered_bytes:0,resident_bytes:0})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
     /// Never guess this value in Go or open a global firewall wildcard.
@@ -147,6 +150,7 @@ impl NativeTcpActor{
         }
     }
     pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
+    pub(crate) fn resident_bytes(&self)->usize{self.resident_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
         self.ready.pop_front()
     }
@@ -306,24 +310,56 @@ impl NativeTcpActor{
                     }
                 },
                 TcpPhase::Relaying(mut pair)=>{
+                    // Account actual retained VecDeque capacity, not merely
+                    // the bytes currently pending. A drained queue can
+                    // otherwise retain 64KiB per direction indefinitely.
                     let previous=pair.pending_bytes();
-                    let free=TCP_PENDING_POOL_LIMIT.saturating_sub(self.buffered_bytes);
+                    let old_resident=pair.resident_bytes();
+                    if previous==0 &&
+                        now_ms.saturating_sub(flow.last_activity_ms)>=500{
+                        // Low frequency and only when idle; never shrink
+                        // after every write on an active TCP stream.
+                        pair.release_idle_capacity();
+                        self.resident_bytes=self.resident_bytes
+                            .saturating_sub(old_resident)
+                            .saturating_add(pair.resident_bytes());
+                    }
+                    let before=pair.resident_bytes();
+                    let free=TCP_PENDING_POOL_LIMIT.saturating_sub(self.resident_bytes);
                     match pair.service_once_with_read_budget(free){
                         Ok(tick)=>{
+                            let after=pair.resident_bytes();
+                            let retained=self.resident_bytes
+                                .saturating_sub(before).saturating_add(after);
+                            if retained>TCP_PENDING_POOL_LIMIT{
+                                // A target allocator unexpectedly grew
+                                // beyond the reserved pool; only this
+                                // Direct TCP relay fails closed.
+                                self.buffered_bytes=self.buffered_bytes.saturating_sub(previous);
+                                self.resident_bytes=self.resident_bytes.saturating_sub(before);
+                                to_remove.push((idx,true));
+                                continue
+                            }
+                            self.resident_bytes=retained;
                             self.buffered_bytes=self.buffered_bytes
                                 .saturating_sub(previous).saturating_add(tick.buffered);
-                            debug_assert!(self.buffered_bytes<=TCP_PENDING_POOL_LIMIT);
                             if tick.bytes_read>0||tick.bytes_written>0{
                                 advanced=true;
                                 flow.last_activity_ms=now_ms;
                             }
-                            if tick.finished{advanced=true;to_remove.push((idx,true))}
-                            else{flow.phase=Some(TcpPhase::Relaying(pair))}
+                            if tick.finished{
+                                advanced=true;
+                                // pair is dropped below rather than kept
+                                // in flow.phase. Release its backing-memory
+                                // budget now, not on a later close-grace.
+                                self.resident_bytes=self.resident_bytes.saturating_sub(after);
+                                self.buffered_bytes=self.buffered_bytes.saturating_sub(tick.buffered);
+                                to_remove.push((idx,true))
+                            }else{flow.phase=Some(TcpPhase::Relaying(pair))}
                         },
                         Err(_)=>{
                             self.buffered_bytes=self.buffered_bytes.saturating_sub(previous);
-                            // The kernel may still need to deliver RST/FIN
-                            // and reverse ACKs after an accepted relay fails.
+                            self.resident_bytes=self.resident_bytes.saturating_sub(before);
                             to_remove.push((idx,true))
                         },
                     }

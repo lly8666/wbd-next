@@ -296,23 +296,30 @@ impl TcpDirectRelay{
     pub fn service_once(&mut self)->Result<RelayTick,DirectTcpError>{
         self.service_once_with_read_budget(usize::MAX)
     }
-    // The owner provides its GLOBAL currently-free budget, not just this
-    // flow's per-direction allowance. Existing pending writes always drain
-    // even when all new reads have been paused by other Direct flows.
+    // The owner provides its GLOBAL free *allocated capacity* budget.
+    // Existing pending writes drain even when all new reads are paused.
+    // If there is less than a full two-direction growth reserve, reads
+    // may use only already-allocated spare queue capacity; this prevents
+    // geometric VecDeque growth silently exceeding the global pool.
     pub fn service_once_with_read_budget(&mut self,read_budget:usize)
         ->Result<RelayTick,DirectTcpError>{
-        let mut remaining_read=read_budget;
+        let mut remaining_capacity=read_budget;
         let mut scratch=[0u8;QUANTUM_BYTES];
         let mut read=0usize;let mut wrote=0usize;
         if !self.inner_eof && self.to_outer.len()<self.max_pending_per_direction &&
-            remaining_read>0{
+            (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
+             self.to_outer.capacity()>self.to_outer.len()){
+            let spare=self.to_outer.capacity().saturating_sub(self.to_outer.len());
+            let growth=remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP;
             let allowed=bounded_relay_read(self.to_outer.len(),
-                self.max_pending_per_direction,remaining_read);
+                self.max_pending_per_direction,if growth{usize::MAX}else{spare});
+            let before=self.to_outer.capacity();
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>self.inner_eof=true,
                 Ok(n)=>{
                     self.to_outer.extend(&scratch[..n]);read+=n;
-                    remaining_read-=n;
+                    remaining_capacity=remaining_capacity.saturating_sub(
+                        self.to_outer.capacity().saturating_sub(before));
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
@@ -320,14 +327,19 @@ impl TcpDirectRelay{
             }
         }
         if !self.outer_eof && self.to_inner.len()<self.max_pending_per_direction &&
-            remaining_read>0{
+            (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
+             self.to_inner.capacity()>self.to_inner.len()){
+            let spare=self.to_inner.capacity().saturating_sub(self.to_inner.len());
+            let growth=remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP;
             let allowed=bounded_relay_read(self.to_inner.len(),
-                self.max_pending_per_direction,remaining_read);
+                self.max_pending_per_direction,if growth{usize::MAX}else{spare});
+            let before=self.to_inner.capacity();
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>self.outer_eof=true,
                 Ok(n)=>{
                     self.to_inner.extend(&scratch[..n]);read+=n;
-                    remaining_read-=n;
+                    remaining_capacity=remaining_capacity.saturating_sub(
+                        self.to_inner.capacity().saturating_sub(before));
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{}
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
@@ -366,11 +378,36 @@ impl TcpDirectRelay{
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
     }
     pub fn pending_bytes(&self)->usize{self.to_outer.len()+self.to_inner.len()}
+    pub fn resident_bytes(&self)->usize{self.to_outer.capacity()+self.to_inner.capacity()}
+    /// Coarse, idle-only release; NEVER shrink each successful TCP write.
+    pub fn release_idle_capacity(&mut self){
+        if self.to_outer.is_empty(){self.to_outer.shrink_to_fit();}
+        if self.to_inner.is_empty(){self.to_inner.shrink_to_fit();}
+    }
 }
 
 #[cfg(test)]
 mod plan029_global_backpressure_tests{
     use super::*;
+    #[test]
+    fn idle_relay_releases_retained_capacity_not_only_pending_length(){
+        let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let a=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let (b,_)=listener.accept().unwrap();
+        let listener2=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let c=TcpStream::connect(listener2.local_addr().unwrap()).unwrap();
+        let (d,_)=listener2.accept().unwrap();
+        let mut relay=TcpDirectRelay::new(a,c).unwrap();
+        relay.to_outer.extend(std::iter::repeat(5).take(32*1024));
+        relay.to_inner.extend(std::iter::repeat(7).take(32*1024));
+        assert_eq!(relay.pending_bytes(),64*1024);
+        relay.to_outer.clear();relay.to_inner.clear();
+        assert_eq!(relay.pending_bytes(),0);
+        assert!(relay.resident_bytes()>=64*1024);
+        relay.release_idle_capacity();
+        assert_eq!(relay.resident_bytes(),0);
+        drop((b,d));
+    }
     #[test]
     fn two_owned_direct_relay_legs_disable_nagle_at_admission_only(){
         fn accepted()->(TcpStream,TcpStream){

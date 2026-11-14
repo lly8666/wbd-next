@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1827,
-  "checkpoint_sha": "269034a77296916020f58b4e74ee335b735a44fd",
+  "sequence": 1828,
+  "checkpoint_sha": "e96d99d9c1c0bc6530310fc76c47021a39a6e76e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1827: H1825 signed P2 with owned TCP_NODELAY true PASS 1MiB/120 Tunnel UDP/Stop, but physical296ms vs FakeIP Direct6360ms still slow. Two performance hypotheses (64KiB quantum and TCP_NODELAY) insufficient; no more blind tuning. New Rust Direct-only stage_sources captured progress/TCP IO scheduling feedback and full-duration P2 UDP/phase fixture candidate NOT_RUN until Action.",
-  "why_now": "User identified specific scheduler defect: stage_sources only counts Tunnel and Direct-only full packet burst looks idle; real accept/connect/socket bytes do not prevent 10ms owner wait. Synchronous FakeIP fsync and VecDeque capacity-vs-len are separate cross-flow risk after this first measurement fix.",
+  "current_task": "H1828 source candidate: H1827 scheduler/continuous P2 fixture retained untouched. Fix Direct TCP VecDeque retained capacity vs queued bytes: per-flow resident quota, idle reclaim, global 8MiB subpool, Direct-only fail-closed overflow. Windows source compile/real P2/RSS NOT_RUN. FakeIP async fsync/compaction, P1, Game4, GUI, IPv6 remain OPEN.",
+  "why_now": "H1827 governance structure failed combined hot read set (32995 B >32768); e96d START_HERE trim now 32759 B, no room for useful cursor. Trim one historical H1625 prompt paragraph without deleting original evidence. Actual retained VecDeque capacity remains unaccounted even after pending bytes drained; 16k*2*64KiB is a theoretical 2GiB risk, not observed RSS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First collect H1827 SOURCE-locked native compiler and real signed P2 test (if triggered). Read actual connect/upload/half-close/first_reply/download, sustained UDP count and longest gap/owned Stop; no assertion of peak throughput. Then move FakeIP journal write+sync and 16MiB compact into bounded background writer with durable DNS ACK and safe recovery, account actual allocated Direct buffer capacity. Last P1 CPU causes; Game4 CN, Normal production no-CI gate, GUI signed and IPv6 remain OPEN.",
+  "next_action": "First collect H1827 source-pinned CI (no duplicate dispatch) and real signed P2 if in flight; H1828 source-bound Rust compile and bounded low-cap resident-memory pressure; then isolate FakeIP append/sync onto a bounded single writer with only related DNS replies pending durability and safe 16MiB compaction. Game4/GUI/IPv6 and P1 exit remain OPEN.",
   "unverified": true,
   "last_tested_source": "0077dcb013045678e12761568a0dd58f35722704",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1825-TCP-NODELAY-SECOND-HYPOTHESIS.md",
-    "docs/devlog/M0/20261114-PLAN029-H1827-SCHEDULER-P2-TIMELINE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1827-SCHEDULER-P2-TIMELINE.md",
+    "docs/devlog/M0/20261114-PLAN029-H1828-TCP-RESIDENT-CAPACITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1827 source candidate untested. H1825 signed real Normal V3 P2 functional PASS but P2 latency NOT_QUALIFIED (physical296ms Direct6360ms; 120 Tunnel UDP; Stop PASS). New scheduler returns Direct/captured/Tunnel work and TCP progress, P2 fixture phase-timed+UDP until TCP done. FakeIP fsync/compaction, real capacity budget, P1+7.42%, Game4/GUI/IPv6 still OPEN; 029 IN_PROGRESS."
+  "partial_summary": "H1828 capacity accounting candidate, no new P2 latency claim. H1825 signed Normal P2 physical296ms Direct6360ms, 120/120 short Tunnel UDP and Stop PASS_SCOPED; H1827 scheduler+full-span UDP harness new-source unverified. Async journal fsync and compaction not implemented."
 }
