@@ -37,7 +37,10 @@ jobs:
           cat result/test.log
           grep -F 'plan029_d5_ten_thousand_domain_exact_suffix_dns_and_snapshot_pins ... ok' result/test.log
           grep -F 'plan029_d5_ten_thousand_cn_ipv4_intervals_no_per_rule_route_emission ... ok' result/test.log
-          grep -F 'test result: ok. 2 passed; 0 failed' result/test.log
+          # #[path] includes 8 existing production-module tests along
+          # with the two D5 cases, so require >=10 total and both exact
+          # D5 success names rather than incorrectly hard-code two total.
+          grep -E '^test result: ok\. [1-9][0-9]+ passed; 0 failed' result/test.log
           printf '{"source_sha":"%s","native_os":"%s","native_arch":"%s","split_source_sha256":"%s","scope":"REAL_PRODUCTION_SPLIT_NATIVE_COLD_10K_PURE","owned_os_routes":"NOT_RUN","gui_live":"NOT_RUN","network":"NOT_RUN"}\n' "$GITHUB_SHA" "$RUNNER_OS" "$RUNNER_ARCH" "$source_sha" > result/source.json
           echo PLAN029_H1811_THREE_ARCH_NATIVE_10K_DOMAIN_IPV4_PURE_PASS_SCOPED
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

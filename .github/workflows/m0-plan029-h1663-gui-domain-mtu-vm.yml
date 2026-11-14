@@ -91,4 +91,5 @@ jobs:
             result/h1663-source.json
             result/assembly.json
             result/gui/h1663-domain-mtu-winforms.png
+            result/gui/gui-overlay-source.json
             result/gui/data/h1663-*.json

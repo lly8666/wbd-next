@@ -50,6 +50,8 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(store.Fields.Single(f=>f.Key=="dns.tunnel").Section=="网络","one_visible_tunnel_DNS");
    Need(store.Fields.Single(f=>f.Key=="direct-flow-hard").Section=="网络","Direct_quota_field_visible");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Section=="网络","CN_route_mode_visible");
+   Need(store.Fields.Single(f=>f.Key=="route-mode").Label.Contains("域名"),"CN_route_mode_label_shows_domain_union");
+   Need(store.Fields.Single(f=>f.Key=="route-mode").Hint.Contains("QNAME"),"CN_route_mode_hint_explicit_single_dns_direction");
    Need(Convert.ToInt32(store.Fields.Single(f=>f.Key=="direct-flow-hard").Default)==16384,"Direct_quota_default");
    Need(store.Fields.Single(f=>f.Key=="dns4").Managed,"retired_legacy_dns4_not_editable");
    Need(!store.Effective(p).ContainsKey("dns4"),"new_profile_has_no_legacy_dns4");
@@ -82,6 +84,10 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("dns.direct","223.5.5.5");
     form.SetEditor("dns.tunnel","1.1.1.1");
     form.SetEditor("route-mode","bypass-lan-cn");
+    var editors=(Dictionary<string,Control>)typeof(MainForm).GetField(
+      "editors",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).GetValue(form);
+    Need(((ComboBox)editors["route-mode"]).SelectedItem.ToString().Contains("域名"),
+      "CN_visible_dropdown_option_IP_domain_union");
     form.SetEditor("direct-flow-hard","2");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
