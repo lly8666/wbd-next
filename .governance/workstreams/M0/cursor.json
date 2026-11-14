@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1846,
-  "checkpoint_sha": "7e1d1259c7895fd5602c79599c12af9f56268a2c",
+  "sequence": 1847,
+  "checkpoint_sha": "715a5dd0be89c8fb2786f515912ceb005ffcf3d8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1846: fix additional proven Direct RX readiness starvation: after processing 32/32 bounded Direct packets from 256 mailbox, auto-reset wake events may be coalesced, yet original RX waits indefinitely even with queued TCP ACK/data. New source keeps exact count and timeout=0 on full quantum, 5ms only real Wintun ring backpressure, IDLE_WAIT otherwise, with focused Rust unit. No P2 marker: H1844 signed P2 source ecd and H1845 nonCI real CN product source7e1d are already independent in flight, do not duplicate.",
-  "why_now": "Windows auto-reset event is not a counting semaphore, and original native RX used a bounded 32-queue drain then unconditional infinite wait. An arbitrary queued TCP ACK can be stranded with no new SetEvent; this is a deterministic scheduler structural flaw independent of unproven P2 causal attribution.",
+  "current_task": "H1847: H1846 Direct RX full-quantum auto-reset bug fixed but feature catalog failed because the updated feature card was not committed. Align feature inventory with H1839 signed P2 actual FAIL and H1843/H1846 source fixes; retain experimental. H1844 signed P2 and H1845 real nonCI CN product independent in progress.",
+  "why_now": "M0 feature catalog is an enforced source-of-truth, so a runtime fix declared updated must change its card. Do not weaken auditing or falsely promote source-only change as signed performance success.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1844 source ecd P2 actual phased results, H1845 source7e1d product signed OS Applied/DNS/Direct/Tunnel/owned Stop, and H1846 current Rust native tests. If P2 still slow after H1843 patch, re-run one source H1846+ true P2 against physical to measure effect of RX auto-reset exhaustion fix, not re-trigger same old source. Continue Game4/IPv6/GUI real Stop/P1/slow fsync.",
+  "next_action": "Collect terminal H1844 P2 true Direct 1MiB phase/whole-span UDP/Stop and H1845 nonCI original Go real product OS Ready/owned Stop and H1846 Rust regressions; then one distinct H1846-source P2 if necessary. Game4/IPv6/GUI OS/P1/FakeIP stress OPEN.",
   "unverified": true,
   "last_tested_source": "a50f8c5bd5eeccf20748f168156c90f9825a1588",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1844-V3-PRODUCT-ABI-STATIC-TEST-REPAIR.md",
     "docs/devlog/M0/20261114-PLAN029-H1845-NONCI-PRODUCT-ABI-REAL-SIGNED.md",
-    "docs/devlog/M0/20261114-PLAN029-H1846-EXACT-AUTO-WAKE-BATCH-WORK.md"
+    "docs/devlog/M0/20261114-PLAN029-H1846-EXACT-AUTO-WAKE-BATCH-WORK.md",
+    "docs/devlog/M0/20261114-PLAN029-H1847-FEATURE-CATALOG-REAL-STATUS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1843 bounded TCP reverse FIFO across full mail/Wintun, H1844 source ecd full signed P2 still in progress; H1845 source7e1d product explicit CN real signed test in progress. New H1846 closes 32-item RX mailbox full-quantum auto-reset lost wake with 0ms one nonblocking recheck, idle event wait unaffected, source native compile pending. H1839 >38s performance fail remains baseline. Governance H1842 PASS."
+  "partial_summary": "H1846 direct RX 32/32 coalesced wake safety fixed, governance structure PASS but feature catalog needed card update. H1847 card aligns truthful H1839 signed 38s P2 fail with H1843/H1846 code fixes. H1844 P2, H1845 product, H1846 compile in flight. H1838 GUI CLI and H1842 governance PASS."
 }
