@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1810,
-  "checkpoint_sha": "00e1746e2c14942d4c260e2be659bc0655d7246e",
+  "sequence": 1811,
+  "checkpoint_sha": "6aabfd9dca692d49d7234164d6805093ac5d0ed4",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1810 collect H1808 signed Normal Windows x86/WSL2 x86 CNAME 2A distinct FakeIP physical Direct UDP plus same-session Direct TCP, Tunnel TCP/UDP and owned Stop PASS; H1809 signed Windows v2 partial lease/MTU→dns-intent failure exact OS recovery PASS; H1807 native ARM64 pure 50+13 Game4+12 FEC PASS. Three source-scoped distinct receipts, no P1/P2. PLAN029 IN_PROGRESS.",
-  "why_now": "H1808/1809 action results now complete and qualified: signed native network and independent OS rollback; H1807 ARM64 native pure. Preserve old H1807 Windows static FAIL, no repeat actions, no source-mixing in cursor.evidence_refs.",
+  "current_task": "H1811 D5 source-frozen parallel batch staged: native Windows x86/Linux x86/Linux ARM64 10k CN domain exact+suffix and 10k IPv4 interval production Rust classifier cold scale; independent real WinForms current original Go/Rust config readback for CN union versus all, single two DNS, quotas and save/reopen. No network GUI Applied claim. Both Action results NOT_RUN, PLAN029 IN_PROGRESS.",
+  "why_now": "Three OS/arch coverage should test new material D5 10k domain/IP lookup and actual GUI saved CN mode, not rerun prior ARM64 PLAN029 50 or H1808 Normal signed network or H1809 owned OS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "One frozen-source batch for D5 GUI effective + 10k rules and bounded P1/P2 same-VM pure Tunnel AB/Direct socket baseline; still need D4 IPv6 true policy, D3 DNS pressure edge, and Game4 split actual representative. No 028 matrix/030.",
+  "next_action": "Collect H1811 D5 scale matrix and WinForms/Go live config readback, fix first failure only; after that D5 signed GUI-origin network still pending, P1/P2 same VM A/B CPU/goodput/p99 and Game4 actual split need bounded representative.",
   "unverified": true,
   "last_tested_source": "c39a59ab79deebae52422f4a3463960a4f531a98",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1810-H1807-ARM64-NATIVE-MODES-20261114.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1810 D3 Normal signed CNAME+two real A→two different local FakeIPs+actual Direct UDP, Direct TCP and Tunnel/Stop PASS SOURCE c39. D4 signed partial real lease/MTU/dns intent owned restore PASS source 00e. ARM64 native Rust pure PLAN029/Game4/FEC BUILD_PASS source53b. Product GUI/performance/IPv6/Game4 split remain OPEN."
+  "partial_summary": "H1811 test-only build pending. H1810 signed Windows/WSL2 x86 D3 CNAME multiA and Windows D4 partial-owned rollback PASS; ARM64 native PLAN029/Game4/FEC pure PASS. No product-wide D5 or performance P1/P2."
 }

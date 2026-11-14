@@ -49,6 +49,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(store.Fields.Single(f=>f.Key=="dns.direct").Section=="网络","one_visible_direct_DNS");
    Need(store.Fields.Single(f=>f.Key=="dns.tunnel").Section=="网络","one_visible_tunnel_DNS");
    Need(store.Fields.Single(f=>f.Key=="direct-flow-hard").Section=="网络","Direct_quota_field_visible");
+   Need(store.Fields.Single(f=>f.Key=="route-mode").Section=="网络","CN_route_mode_visible");
    Need(Convert.ToInt32(store.Fields.Single(f=>f.Key=="direct-flow-hard").Default)==16384,"Direct_quota_default");
    Need(store.Fields.Single(f=>f.Key=="dns4").Managed,"retired_legacy_dns4_not_editable");
    Need(!store.Effective(p).ContainsKey("dns4"),"new_profile_has_no_legacy_dns4");
@@ -80,6 +81,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("mtu","1460");
     form.SetEditor("dns.direct","223.5.5.5");
     form.SetEditor("dns.tunnel","1.1.1.1");
+    form.SetEditor("route-mode","bypass-lan-cn");
     form.SetEditor("direct-flow-hard","2");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
@@ -87,6 +89,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Correct(Check(store,p,"data/h1663-normal.json",cli),"mtu","1460");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.direct","223.5.5.5");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns.tunnel","1.1.1.1");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"route-mode","bypass-lan-cn");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"direct-flow-hard","2");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"dns4","");
     var n=Check(store,p,"data/h1663-normal.json",cli);
@@ -99,6 +102,10 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(invalidCapRejected,"invalid_quota_rejected_by_real_Go_cli");
     form.SetEditor("direct-flow-hard","2");form.SaveEditor();
 
+    // Validate explicit cold mode switch through the same real Go CLI,
+    // without ever turning saved config into a fabricated OS Applied.
+    form.SetEditor("route-mode","all");form.SaveEditor();
+    Correct(Check(store,p,"data/h1811-all.json",cli),"route-mode","all");
     form.SetEditor("lanes","4");
     form.SetEditor("fec.mode","off");
     form.SaveEditor();
@@ -114,6 +121,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(Convert.ToInt32(p.Values["mtu"])==1500,"1500_explicit_only");
     form.SetEditor("mtu","1460");
     form.SetEditor("lanes","1");
+    form.SetEditor("route-mode","bypass-lan-cn");
     form.SetEditor("direct-flow-hard","16384");
     form.SaveEditor();
 
@@ -149,6 +157,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
    Need(Convert.ToString(saved.Values["server-ip"])=="EDGE.Example.Test.","reopen_retains_server_domain");
    Need(Convert.ToString(saved.Values["server-name"])=="borrow.example.org","reopen_preserves_separate_verified_TLS_SNI");
    Need(Convert.ToString(saved.Values["dns.direct"])=="223.5.5.5","reopen_single_direct_DNS");
+   Need(Convert.ToString(saved.Values["route-mode"])=="bypass-lan-cn","reopen_saved_CN_IP_DOMAIN_union_mode_cold_only");
    Need(Convert.ToInt32(saved.Values["direct-flow-hard"])==16384,"reopen_Direct_quota_default");
    Need(Convert.ToString(saved.Values["dns.tunnel"])=="9.9.9.9","reopen_migrated_single_tunnel_DNS");
    Need(!saved.Values.ContainsKey("dns4"),"reopen_never_restores_backup_DNS");

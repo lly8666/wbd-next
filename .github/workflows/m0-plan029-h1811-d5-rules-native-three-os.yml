@@ -1,0 +1,49 @@
+name: PLAN029 D5 native 10k rules exact-source x86 Windows Linux ARM64 pure scale
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan029-h1811-d5-rules-native-three-os.yml"
+      - "tools/m0_plan029_h1811_d5_large_rules.rs"
+permissions: {contents: read}
+jobs:
+  scale:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One native Rust test binary directly including production split source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p result
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          case "$RUNNER_OS/$RUNNER_ARCH" in
+            Windows/X64|Linux/X64|Linux/ARM64) ;;
+            *) echo "unexpected native OS architecture $RUNNER_OS/$RUNNER_ARCH"; exit 8;;
+          esac
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustc +1.85.1 --version | tee result/compiler.txt
+          source_sha="$(sha256sum crates/wbd-engine/src/v4_client_split.rs | cut -d ' ' -f 1)"
+          exe=result/plan029-d5-scale
+          if [[ "$RUNNER_OS" == "Windows" ]]; then exe="${exe}.exe"; fi
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 tools/m0_plan029_h1811_d5_large_rules.rs -o "$exe" > result/compile.log 2>&1
+          "$exe" --nocapture > result/test.log 2>&1
+          cat result/test.log
+          grep -F 'plan029_d5_ten_thousand_domain_exact_suffix_dns_and_snapshot_pins ... ok' result/test.log
+          grep -F 'plan029_d5_ten_thousand_cn_ipv4_intervals_no_per_rule_route_emission ... ok' result/test.log
+          grep -F 'test result: ok. 2 passed; 0 failed' result/test.log
+          printf '{"source_sha":"%s","native_os":"%s","native_arch":"%s","split_source_sha256":"%s","scope":"REAL_PRODUCTION_SPLIT_NATIVE_COLD_10K_PURE","owned_os_routes":"NOT_RUN","gui_live":"NOT_RUN","network":"NOT_RUN"}\n' "$GITHUB_SHA" "$RUNNER_OS" "$RUNNER_ARCH" "$source_sha" > result/source.json
+          echo PLAN029_H1811_THREE_ARCH_NATIVE_10K_DOMAIN_IPV4_PURE_PASS_SCOPED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan029-h1811-d5-10k-${{ matrix.os }}-${{ github.run_id }}
+          path: result/
+          if-no-files-found: warn
+          retention-days: 14
