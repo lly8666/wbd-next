@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1776,
+  "source_sha": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
+  "kind": "SIGNED_NATIVE_TWO_OS_PHYSICAL_D2",
+  "action": {
+    "run_id": 43537693764,
+    "job_id": 132272565270,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43537693764"
+  },
+  "physical": {
+    "qname": "cn-ip.globalx.example",
+    "sole_tunnel_dns": "1.1.1.1",
+    "real_CN_A": "198.19.254.2",
+    "signed_Wintun_to_Rust_physical_Direct_UDP_reply": "PASS",
+    "Linux_eth0_UDP_socket_and_reply": "PASS",
+    "test_owned_route_alias_cleanup": "PASS",
+    "CN_FakeIP_Direct_TCP_UDP": "PASS",
+    "normal_Tunnel_TCP_UDP": "PASS",
+    "noncn_A_to_Tunnel_UDP": "PASS",
+    "DNS_blackhole_zero_physical_fallback": "PASS",
+    "stop": "PASS_BOTH_OWNED",
+    "outer": "legacy1400"
+  },
+  "not_run": [
+    "D1 TCP53",
+    "D3–D5",
+    "P1–P2",
+    "GUI live/1460/IPv6",
+    "ordinary onlink/physical-bound DNS"
+  ],
+  "old_Go_RootCAs_ABI": "OPEN separate"
+}

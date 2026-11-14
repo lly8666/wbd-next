@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1775,
-  "checkpoint_sha": "034dbf3c1f641c75d6791117a34f96e0e10689a8",
+  "sequence": 1776,
+  "checkpoint_sha": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1775 signed native D2 converse source stage: H1774 034dbf3 assembly/Win-Go source/cheap/governance all PASS (no new signed network). Add nonCN Tunnel DNS A=non-LAN 198.19.254.2/32 then original Wintun-bound app physical Direct UDP true Linux socket and echo; one test-owned physical /32 route and Linux eth0 alias, exact journal/finally cleanup. Signed H1775 network NOT_RUN until Action; PLAN029 IN_PROGRESS.",
-  "why_now": "Prior H1771 nonCN DNS real A to Tunnel app business is scoped PASS; converse must prove independent CN-IP Direct after Tunnel DNS and not pass only LAN classifier. Keep one signed source-frozen real Action and scoped resource ownership.",
+  "current_task": "H1776 recovered H1775 source 9a755 signed Action 43537693764 native job 132272565270 SUCCESS: real nonCN Tunnel DNS→CN A then Rust physical Direct UDP with independent Windows Wintun-bound app and Linux eth0 reply; exact owned route/alias cleanup. Prior CN FakeIP Direct TCP/UDP, Tunnel TCP/UDP and DNS no-fallback, Stop all PASS_SCOPED. PLAN029 ongoing.",
+  "why_now": "Collect H1775 signed real result before new changes/dispatch; preserve first measured boundary and exact owner cleanup.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect existing H1775 signed Action result, no duplicate dispatch. If failed, diagnose first boundary only (owner route/Wintun ifindex/physical source), at most two different hypotheses; then D1 app TCP53, D3–D5, P1/P2, GUI/OS/1460/padding. Keep old original Go RootCAs ABI OPEN, 030 not opened.",
+  "next_action": "Wire DirectFlowHard CLI/GUI into existing Rust cold owner for small-volume pressure, verify original-Go manifest and GUI readback; then D1 TCP53, D3–D5/P1–P2. No duplicate signed Action, old Go RootCAs ABI separately OPEN, 030 not started.",
   "unverified": true,
-  "last_tested_source": "f61508339ca3c54c885f5f42c3adfc00a439b148",
+  "last_tested_source": "9a7557e1e93a9eaecee287d5027f4168a2c8de65",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1772-H1771-SIGNED-NONCN-A-TUNNEL-RECOVERY-20261114.json"
+    "docs/evidence/M0/PLAN029-H1776-H1775-SIGNED-D2-CONVERSE-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1774 SOURCE 034dbf3 cheap, H1661 Windows source compile and governance PASS, not physical. H1775 new D2 test staging NOT_RUN; previously signed f615 H1771 Direct/Tunnel real exits and D1 blackout/D2 A→Tunnel PASS_SCOPED. CLI/GUI/pressure/padding remains unverified."
+  "partial_summary": "H1775 signed source 9a755 true D2 nonCN Tunnel DNS→CNIP Direct physical UDP reverse and owned Stop PASS; full D1 TCP53/D3–D5/P1–P2 and GUI live, 1460/IPv6 NOT_RUN."
 }
