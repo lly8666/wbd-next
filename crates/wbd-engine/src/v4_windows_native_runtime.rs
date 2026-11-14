@@ -854,6 +854,11 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              let now_ms=m2_clock().0/1_000_000;
              if let Some(owner)=split.as_mut(){
                  direct_progress=owner.tick(now_ms);
+                 // P1: a pure Tunnel epoch has no Direct TCP/UDP sockets,
+                 // DNS reply, or ready packet. Avoid rotating empty
+                 // reverse queues on every hot TX turn. The existing tick
+                 // still performs exact expiry/owner receipt duties.
+                 if owner.has_udp_flows(){
                  // Physically received UDP is already a complete local L3
                  // response. Wintun TX belongs exclusively to the Rust RX
                  // worker; transfer owned bytes via bounded, nonblocking
@@ -889,6 +894,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  if reverse_count>0{direct_progress=true}
                  // A full response quantum can have another ready packet.
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
+                 } // reverse work genuinely pending
              }
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}

@@ -672,6 +672,35 @@ mod tests{
         s.tick(1001);
     }
     #[test]
+    fn plan029_all_tunnel_reverse_idle_skips_only_empty_real_work(){
+        let mut cfg=config(&[],&[],b"");
+        cfg.route_mode=0;
+        let mut owner=unsafe{NativeSplitWorker::new(&cfg)}.unwrap();
+        // No outgoing Direct sockets or unanswered DNS means the TX
+        // worker's 32-quantum reverse attempt would be pure overhead.
+        assert!(!owner.has_udp_flows());
+        assert_eq!(owner.on_packet(&packet([8,8,8,8],443,b"hello"),1),
+            NativeDecision::Tunnel);
+        assert!(!owner.has_udp_flows());
+        // An honest forced-Tunnel DNS admission failure is STILL real
+        // local work. It must be delivered via the same Wintun return
+        // mailbox even if the whole route mode is All.
+        let mut dns=vec![0u8;12];
+        dns[2..4].copy_from_slice(&0x0100u16.to_be_bytes());
+        dns[4..6].copy_from_slice(&1u16.to_be_bytes());
+        dns.extend_from_slice(&[3,119,119,119,7,101,120,97,109,112,108,101,0]);
+        dns.extend_from_slice(&1u16.to_be_bytes());
+        dns.extend_from_slice(&1u16.to_be_bytes());
+        let query=packet([1,1,1,1],53,&dns);
+        assert!(matches!(owner.on_packet(&query,2),NativeDecision::TunnelDns));
+        assert!(!owner.has_udp_flows());
+        assert!(owner.reject_tunnel_dns(&query));
+        assert!(owner.has_udp_flows());
+        let mut out=[0u8;2048];
+        assert!(owner.poll_udp_reverse(&mut out,3).is_some());
+        assert!(!owner.has_udp_flows());
+    }
+    #[test]
     fn plan029_native_kernel_tcp_cold_refuses_pre_apply_listener_and_unowned_synthetic_reply(){
         let mut cold=config(&[],&[],b"");
         cold.tcp_synthetic4=[198,19,87,99];

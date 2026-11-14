@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1866,
-  "checkpoint_sha": "b8080b3ceb8598b5f5792c3a108ebf0bec0408ff",
+  "sequence": 1867,
+  "checkpoint_sha": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1866 normal signed original Go/Wintun D4 IPv6 no-old-WFP scope probe: read-only Get-NetRoute IPv6 ::/0,::/1,8000::/1 and exact Wintun 10.66.0.2 interface index before Apply, while genuine Ready, after owned Stop. Code/fixture prepared; true Windows result NOT_RUN at commit.",
-  "why_now": "PLAN029 §3A requires IPv6 original blocking intent not silently lost when old WFP removed. Existing signed receipt has no IPv6 packet or route evidence. First observe exact OS route boundary without altering third-party resources; cannot infer global block from a route.",
+  "current_task": "H1867 P1 V3 all-Tunnel tx_loop skipped only empty Direct/DNS/TCP reverse rotation, gated by original has_udp_flows; owner.tick, cached no-FlowPin fast DATA and real SERVFAIL path unchanged. H1863 P1 +7.01% CPU/GiB still OPEN; one H1867 P1 A/B source-locked true result NOT_RUN at checkpoint. H1866 D4 IPv6 Action43647750349 still in flight.",
+  "why_now": "P1 H1863 confirmed +7.01% CPU/GiB and p99 +15ms but FlowPin all-Tunnel fast path already exists. The V3 TX loop still rotates empty reverse poll queues on ordinary pure Tunnel turns; bounded targeted hypothesis, no new timers/threads or giant buffering.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exactly one H1866 signed Normal explicit product Action [plan029-real-product-cn] [plan029-d4-ipv6-probe]; inspect actual pre/active/post IPv6 snapshot, first PowerShell/API boundary, current route coverage and owned Stop. If capture gap observed plan minimal owned IPv6 Wintun sink/deny with scoped follow-up; never globally disable Defender/IPv6 or claim on-link blocked. Then remaining Game4 CN, GUI actual Connect/Stop, D1-D5/padding and pressure.",
+  "next_action": "Collect H1866 original Normal D4 IPv6 route pre/Ready/Stop Action 43647750349; in parallel collect exactly one H1867 [plan029-v3-real-p1-tunnel-ab] real ordered A/B 50Mbps60s for CPU/GiB/p99/gaps/Stop, and confirm local SERVFAIL regression on Windows+Linux. If no significant P1 improvement, do not repeat same hypothesis; focus Game4 CN, GUI true Connect/Stop, D1-D5/IPv6 packet proof, pressure. All PLAN029 exits still IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "88a263086613fdb0231f5fc608be7f6d13a313ce",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1865-H1864-SIGNED-UNPACED-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md",
     "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
     "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md",
     "docs/devlog/M0/20261114-PLAN029-H1861-P1-ALL-FASTPATH-H1860-ARGV.md",
-    "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md",
-    "docs/devlog/M0/20261114-PLAN029-H1859-P1-DLL-EXPORT-SCOPE-GATE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1860-P2-UNPACED-4M-ONLY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1863 P1 same-VM 50Mbps A/B both PASS with CPU/GiB +7.01%, RTT p99 +15ms OPEN; H1864 4MiB unpaced Direct131.544ms vs physical32.155ms, Tunnel UDP120/120 p99=2.14ms, Stop PASS with perf OPEN. H1866 D4 original signed Windows IPv6 route/Stop witness implementation, no actual results yet. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1863 P1 business+Stop PASS but CPU/GiB +7.01% and p99 +15ms OPEN. H1864 unpaced4MiB physical32.155 Direct131.544ms, Tunnel UDP120/120/Stop PASS but performance still OPEN. H1866 read-only IPv6 native D4 Action in-flight. H1867 tiny V3 All/Tunnel empty reverse skip + unit, real P1 NOT_RUN at commit; 029 not delivered."
 }
