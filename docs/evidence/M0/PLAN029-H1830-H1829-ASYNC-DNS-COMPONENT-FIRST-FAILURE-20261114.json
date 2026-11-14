@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1829",
+  "source_sha": "6bd21ed8d7777302e079bb8302cb1327d50610d4",
+  "result": "NATIVE_COMPONENT_TESTS_FAIL_PRODUCT_DNS_NOT_RUN",
+  "actions": [
+    {
+      "id": 43582814402,
+      "windows": {
+        "status": "FAIL",
+        "first": "v4_windows_native_dns_direct::tests::plan029_native_direct_dns_real_cache_hit_still_journals_fake_before_reply",
+        "expected": "(0,0,1)",
+        "observed": "(0,0,0)",
+        "reason": "old immediate-publication test expected cached CN FakeIP before async durable ACK",
+        "test_passed": 78,
+        "test_failed": 1
+      },
+      "linux": {
+        "status": "PASS_SCOPED"
+      }
+    },
+    {
+      "id": 43582814365,
+      "windows_rust": {
+        "status": "FAIL",
+        "tests_passed": 375,
+        "tests_failed": 2,
+        "failures": [
+          "v4_client_fake_journal::tests::async_dns_file_sync_requires_receipt_before_fakeip_announcement: InvalidPool at line 532",
+          "v4_windows_native_dns_direct::tests::plan029_native_direct_dns_real_cache_hit_still_journals_fake_before_reply: expected immediate reply"
+        ]
+      },
+      "linux_rust": {
+        "status": "FAIL",
+        "tests_passed": 322,
+        "tests_failed": 1,
+        "reason": "new fixture constructed FakeAllocator hard_cap=100 in pool with nine FakeIP slots; InvalidPool"
+      },
+      "native_public_two_os": {
+        "status": "SUCCESS_NO_SCENE",
+        "real_plan029_dns": "NOT_RUN"
+      }
+    }
+  ],
+  "constraints": "Changing tests to assert only after real durable writer receipt does not prove signed actual CN UDP/TCP DNS or full Stop; previous failures retained.",
+  "not_run": [
+    "new H1830 SOURCE Windows/Linux tests",
+    "signed native D3 UDP/TCP53 packet delivery",
+    "fsync delay full-duration Tunnel UDP HOL",
+    "compact interrupt/restart",
+    "Game4 CN live",
+    "GUI signed",
+    "IPv6 D4",
+    "P1 CPU",
+    "P2 new-source performance"
+  ]
+}

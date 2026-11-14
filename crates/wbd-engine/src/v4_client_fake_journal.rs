@@ -528,8 +528,10 @@ mod tests{
     fn async_dns_file_sync_requires_receipt_before_fakeip_announcement(){
         let path=temp_path();
         let (mut journal,_) =FakeJournal::open_async(&path).unwrap();
+        // Pool hard cap must fit the explicitly tiny nine-address
+        // synthetic range. A 100-entry cap with nine slots is invalid.
         let mut pool=FakeAllocator::new(u32::from_be_bytes([198,18,0,1]),
-            u32::from_be_bytes([198,18,0,9]),&[],100,1024*1024).unwrap();
+            u32::from_be_bytes([198,18,0,9]),&[],9,1024*1024).unwrap();
         let candidate=pool.prepare(FakeKey{
             qname:"cn.example".into(),canonical:"cn.example".into(),
             real4:u32::from_be_bytes([198,51,100,1]),

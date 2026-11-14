@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1829,
-  "checkpoint_sha": "ec16ff8773344d5bbba639f8d6ffbae3dd95ea12",
+  "sequence": 1830,
+  "checkpoint_sha": "6bd21ed8d7777302e079bb8302cb1327d50610d4",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1829 source candidate: isolate FakeIP journal append/fsync and low-frequency verified compaction from shared original Rust TX into ONE bounded owned blocking writer. Both UDP53 and TCP53 hold only affected CN A response until same-ticket durability acknowledged, no fallback. Crash-safe rename retains still-valid/quarantined mapping with no uncertain renewal omitted. H1828 component/gov PASS; H1829 Rust build/real signed network/Stop NOT_RUN.",
-  "why_now": "User explicitly identified H1828 follow-up cross-flow HOL: DirectDns.resolved and ClientDnsTcp::step previously invoked FakeJournal.persist_batch with synchronous file.write_all+sync_data on original Rust TX. Historical WAL append-only capped16MiB risks long-run CN SERVFAIL; asynchronous only after exact ACK plus rare durable snapshot replace is required; prior signed 1MiB Direct slow is not proven caused by journal.",
+  "current_task": "H1830: H1829 async DNS writer + compact source 6bd: Windows Rust 78/79 one stale immediate-CN-reply test; full Windows Rust 375/377 and Linux Rust 322/323 fail because fixture 9 FakeIP slots vs requested100 hard; new exact tests now wait real durable ACK and use valid9 cap. New SOURCE tests / signed D3 DNS NOT_RUN, no blind P2 rerun. PLAN029 IN_PROGRESS.",
+  "why_now": "First fail in H1829 CI is invalid unit expectation of synchronous DNS output, plus InvalidPool fixture. Preserve new durable-before-answer product behavior, fix only test assertions/valid limits, keep physical DNS verification and Stop OPEN.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1829 Windows/Linux Rust library tests and unit failures first; fix exact compile/identity/crash boundary. Then one signed source-locked real D3 UDP53+TCP53 CN FakeIP durability/Stop scenario with controlled slow-fsync/queue-pressure, concurrent Tunnel small UDP through full DNS wait, plus compact+restart quarantine. Do not re-dispatch H1825 or claim new P2 performance. H1827/H1828 1MiB performance+RSS, P1 CPU, Game4 CN, GUI signed, IPv6 lifecycle OPEN.",
+  "next_action": "Collect new H1830 SOURCE same Windows/Linux Rust, governance and original source build Actions; inspect first failure, then run one source-locked true signed D3 UDP53/TCP53 plus owned Stop with controlled slow fsync/compaction if available; do not duplicate P2. Continue Game4/GUI/IPv6/P1/P2 exit work, single M0 writer.",
   "unverified": true,
   "last_tested_source": "0077dcb013045678e12761568a0dd58f35722704",
   "evidence_refs": [
@@ -24,9 +24,9 @@
     "docs/evidence/M0/PLAN029-H1810-H1809-SIGNED-D4-PARTIAL-APPLY-20261114.json",
     "docs/evidence/M0/PLAN029-H1810-H1808-SIGNED-D3-CNAME-MULTIA-DIRECT-20261114.json",
     "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json",
-    "docs/devlog/M0/20261114-PLAN029-H1828-TCP-RESIDENT-CAPACITY.md",
-    "docs/devlog/M0/20261114-PLAN029-H1829-ASYNC-FAKEIP-WAL-DURABLE-ACK.md"
+    "docs/devlog/M0/20261114-PLAN029-H1829-ASYNC-FAKEIP-WAL-DURABLE-ACK.md",
+    "docs/devlog/M0/20261114-PLAN029-H1830-ASYNC-DNS-WINDOWS-FIRST-FAILURE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1828 governed and Rust Windows/Linux component PASS; original Go/Windows signed product run in progress. H1829 candidate owns one cold File writer thread with 8 bounded jobs/512KiB appends; exact result/status maps & pending CN DNS UDP/TCP replies; compaction only on coarse tick after12MiB, fsynced temporary snapshot and same-dir atomic replace, refuses compaction if any unacknowledged pool renewal. No new signed real DNS or full P2 performance claim; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1829 real Windows/Linux product network D3 NOT_RUN; H1829 new async FakeIP code compile but 2 unit fixture errors. H1830 tests-only corrections preserve no-FakeIP-before-fsync. Remaining signed D3/Stop, HOL/RSS/CPU, Game4/GUI/IPv6, P1/P2 OPEN."
 }

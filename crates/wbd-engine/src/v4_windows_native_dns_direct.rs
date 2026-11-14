@@ -456,9 +456,23 @@ mod tests{
         // a fresh upstream response; no physical socket/inflight created.
         assert!(dns.submit(&q,key.name.clone(),1,0x1777,1001,
             Some(&mut pool),Some(&mut journal)));
-        assert_eq!(dns.counts(),(0,0,1));
+        // H1830: cache hit still needs a real writer fsync for a newly
+        // prepared FakeIP. No direct DNS packet may appear before that
+        // exact ticket is durably acknowledged by the single writer.
+        assert_eq!(dns.counts(),(0,0,0));
+        assert!(dns.pop().is_none());
         assert_eq!(dns.cache_counts().0,1);
-        let first=dns.pop().unwrap();
+        let pending=pool.durable_candidate();
+        assert_eq!(pending.len(),1);
+        assert_eq!(pool.announced_real(pending[0].fake4),None);
+        let mut first=None;
+        for turn in 0..1000{
+            journal.poll_completed(&mut pool,8);
+            dns.poll(1001+turn,Some(&mut pool),Some(&mut journal));
+            if let Some(packet)=dns.pop(){first=Some(packet);break}
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        let first=first.expect("CN A cache hit never emitted after durable writer receipt");
         assert_eq!(&first[28..30],&0x1777u16.to_be_bytes());
         assert_eq!(first[31]&15,0);
         let mappings=pool.durable_candidate();
