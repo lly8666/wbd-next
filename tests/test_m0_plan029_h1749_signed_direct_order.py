@@ -74,6 +74,34 @@ class NativeDirectOrder(unittest.TestCase):
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         self.assertIn('      - tools/m0_plan029_h1765_linux_tun_dns.py',W)
         self.assertIn('      - tools/m0_plan029_h1765_windows_tunnel_dns.py',W)
+    def test_h1784_target_only_tunnel_dns_ignores_other_qnames_but_not_foreign_target(self):
+        import ast
+        src=(Path(__file__).resolve().parents[1]/
+             "tools"/"m0_plan029_h1765_linux_tun_dns.py").read_text()
+        module=ast.parse(src)
+        fn=next(n for n in module.body if isinstance(n,ast.FunctionDef)
+                and n.name=="is_target_question")
+        # Execute only the tiny pure QNAME predicate, never import its
+        # actual bound real Linux DNS/53 socket during a cheap self-test.
+        ns={"question":b"\x03www\x07globalx\x07example\x00\x00\x01\x00\x01"}
+        exec(compile(ast.Module(body=[fn],type_ignores=[]),
+                     "<H1784 DNS filter>","exec"),ns)
+        target=(b"\x17\x65\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00"
+                +ns["question"])
+        self.assertTrue(ns["is_target_question"](target))
+        self.assertFalse(ns["is_target_question"](target[:-4]+b"\x00\x1c\x00\x01"))
+        self.assertFalse(ns["is_target_question"](target[:12]+
+            b"\x07another\x07example\x00\x00\x01\x00\x01"))
+        self.assertFalse(ns["is_target_question"](b"\x00"*8))
+        self.assertIn("if not is_target_question(query):",src)
+        self.assertIn("if unrelated>64:",src)
+        self.assertIn("if peer[0]!=client:",src)
+        self.assertLess(src.index("if not is_target_question(query):"),
+                        src.index("if peer[0]!=client:"))
+        self.assertIn("deadline=time.monotonic()+26",src)
+        self.assertIn('"unrelated_dns_ignored":unrelated',src)
+        self.assertIn('"target_queries":1',src)
+        self.assertIn("listener.sendto(response,peer)",src)
     def test_h1766_outer_scope_accepts_only_true_029_tunnel_dns_and_tcp(self):
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
         self.assertIn("elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1')",W)

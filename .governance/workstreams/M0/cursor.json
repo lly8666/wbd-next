@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1783,
-  "checkpoint_sha": "03339bffda0ecc9f604683ea649843650cba0f69",
+  "sequence": 1784,
+  "checkpoint_sha": "5f3853c26916fae8e23df05f550455e8ce1ff88d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1783 scoped signed D3 positive DNS cache native scenario: two distinct actual Windows Wintun UDP app source ports and DNS IDs query same CN domain, require same journaled FakeIP and exactly one Linux physical target DNS/53 receipt; original physical Direct UDP reply and both owned Stop. H1782 Windows/Linux native DNS cache source build in CI; H1781 separate Direct8 owned Stop Action source frozen. H1783 new signed scenario NOT_RUN. PLAN029 IN_PROGRESS.",
-  "why_now": "Live DirectDns positive bounded cache wired in H1782 but pure component tests alone cannot prove physical absence of duplicate DNS traffic. Reuse H1745 actual recipients and source-locked Normal V3 without another adapter or WFP.",
+  "current_task": "H1784 collect H1781 signed Action 43546818820 native job 132301513315 FAIL at H1765 original Linux TUN DNS/53 listener rejecting a nonmatching request before Windows nonCN DNS reply. Prior CN FakeIP Direct UDP/TCP and Tunnel business PASS_PRE_STOP; H1778 hard8 and owned Stop NOT_RUN on H1781. Fix H1765 guest target-only QNAME, ignore bounded <=64 unrelated requests within 26s; true target wrong-lease still fatal. One next signed Normal Direct8 + cache scene on new SOURCE; H1783 independent physical cache action still running. PLAN029 IN_PROGRESS.",
+  "why_now": "H1781 first failure is combined QNAME/source assertion in real Linux DNS receiver. Which predicate failed is UNKNOWN; H1779 established unrelated DNS QNAME coexists on same TUN resolver. Preserve exact lease failure and 26s overall deadline, no product DNS fallback or broad firewall changes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1783 signed direct DNS cache and independent H1781 hard8 Action, first real failure only. Then app TCP53, DNS transaction/FakeIP pressure, D4–D5/P1/P2.",
+  "next_action": "Collect one H1784 automatically triggered source-locked signed Action with pressure+DNS cache markers and actual owned Stop; no manual duplicate. H1783 earlier separate source may independently finish. If fail inspect first network boundary. D1 application TCP53 and D3 full pressure/D4–D5/P1–P2 remain.",
   "unverified": true,
-  "last_tested_source": "506d4966afecda73e63f6c0afaa2c103249939d8",
+  "last_tested_source": "deafbbe9d04166692be5cd33e1883cac07cd111a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1780-H1779-DIRECT8-PRESTOP-TIMER-20261114.json"
+    "docs/evidence/M0/PLAN029-H1784-H1781-H1765-TARGET-FIRST-FAIL-20261114.json"
   ],
   "context_refs": [
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN029-H1728-H1727-WINDOWS-GNU-CROSS-ABI-FIRST-ERROR-20261113.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1779 hard8 physical pressure PASS_PRE_STOP, H1781 watchdog corrective native pending; H1782 Direct DNS A cache native wiring tested in progress; H1783 two real DNS app sockets one physical upstream/Stop scene staged NOT_RUN."
+  "partial_summary": "H1781 signed source deaf H1765 Linux TUN DNS listener failed on combined QNAME/source check, Windows target nonCN DNS timed out, pressure and Stop NOT_RUN. H1784 bounded target-only listener fix staged, combined true Direct8+CN cache signed qualification pending."
 }

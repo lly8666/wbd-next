@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "sequence": 1784,
+  "source_sha": "deafbbe9d04166692be5cd33e1883cac07cd111a",
+  "action": {
+    "run_id": 43546818820,
+    "job_id": 132301513315,
+    "conclusion": "failure",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43546818820"
+  },
+  "first_boundary": {
+    "stage": "H1765 independent Linux original TUN UDP53 listener",
+    "linux": "RuntimeError: foreign or unexpected real tunnel DNS QNAME/peer",
+    "windows": "RuntimeError: nonCN Tunnel DNS reply absent; no direct or fallback accepted",
+    "failed_predicate": "UNKNOWN_COMBINED_PEER_QNAME_QDCOUNT_CHECK",
+    "H1749_CN_Direct_UDP": "PASS_PRE_STOP",
+    "H1760_CN_Direct_TCP32K": "PASS_PRE_STOP",
+    "H1762_Tunnel_TCP_UDP": "PASS_PRE_STOP",
+    "H1781_Direct8_after_DNS": "NOT_RUN",
+    "H1781_owned_Stop": "NOT_QUALIFIED"
+  },
+  "hypothesis": "A non-target QNAME can reach shared actual Linux Tunnel resolver/53 before target. Existing H1779 H1775 fixture filters unrelated. H1784 preserves exact target lease and sole resolver; bounded 26s/64 unrelated.",
+  "fresh_network": "NOT_RUN",
+  "independent_previous_H1779_hard8": "PASS_PRE_STOP_OWNED_STOP_NOT_RUN"
+}
