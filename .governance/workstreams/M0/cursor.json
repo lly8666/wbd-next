@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1856,
-  "checkpoint_sha": "98463d0a109d07f2a8ec72703390f3a923655177",
+  "sequence": 1857,
+  "checkpoint_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1856 H1855 signed native Action43611429748 stopped at original exact assembly check (no Windows build/P2), because earlier H1854 updated unused r0/go_overlay/assembly/manifest.json while tools/prepare_windows_wiring.py MANIFEST const points to manifest-plan020-m0.json. Fix exactly two operations in true pinned manifest; rerun only one signed P2 source.",
-  "why_now": "Preserve correctly failing pinned assembly guard; stop misdirected manifest changes rather than relaxing integrity or tuning TCP. H1855 remains NOT_RUN_REAL_P2, not a nonblocking failure.",
+  "current_task": "H1857 H1856 exact SOURCE c110a982 signed real P2 PASS_SCOPED: Direct 1MiB 328ms vs same-VM physical281ms (1.167x), 120/120 concurrent Tunnel UDP entire overlap, 16ms max gap, signed owned Stop PASS. Npcap nonblocking captures 115x cross-SOURCE speedup; p99 '0.0ms' underresolved; P1/D1-D5/Game4/GUI/IPv6 open.",
+  "why_now": "Actual H1856 native product validates Npcap fail-closed nonblocking handoff and removes ~38s TCP bottleneck. Next protect pure Tunnel CPU/GiB and latency independently rather than retuning Direct TCP.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exactly one H1856 [plan029-v3-real-p2-rebuild] normal signed P2 after original source-locked Go and Rust compile. Observe actual pcap_setnonblock/getnonblock support, Direct TCP 1MiB and concurrent Tunnel UDP, CPU/p99/Stop, or first failure. No repeated dispatch.",
+  "next_action": "Collect one H1857 [plan029-v3-real-p1-tunnel-ab] single-VM ordered off V4 vs on V3/all Tunnel 50Mbps 25ms0 loss, evaluate actual delivery/CPU/GiB/RSS/p99/gaps, Windows Go+Rust attribution caveat. Then targeted D4 Game4 CN, GUI true Stop, IPv6, pressure and remaining DNS/padding; do not dispatch old matrix.",
   "unverified": true,
-  "last_tested_source": "998d3df351db6472fa62d2c54d8b353dcc6f76b6",
+  "last_tested_source": "c110a9820c88da2d46c54e7ae76ead040987a1de",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1852-H1851-P2-NPF-RX-NONBLOCK-BOUNDARY-20261114.json"
+    "docs/evidence/M0/PLAN029-H1857-H1856-NPF-NONBLOCK-P2-REAL-SIGNED-20261114.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261114-PLAN029-H1857-P2-NPF-RECOVER-P1-AB.md",
     "docs/devlog/M0/20261114-PLAN029-H1856-REAL-MANIFEST-PIN-NPF.md",
     "docs/devlog/M0/20261114-PLAN029-H1855-NPF-MANIFEST-NATIVE-TRIGGER-SOURCE-CURSOR.md",
     "docs/devlog/M0/20261114-PLAN029-H1854-ASSEMBLY-RECEIPT-NPF-NONBLOCK.md",
     "docs/devlog/M0/20261114-PLAN029-H1853-H1852-FEATURE-CARD-SIZE-RECOVERY.md",
     "docs/devlog/M0/20261114-PLAN029-H1852-NPF-NONBLOCK-FIRST-RX-BOUNDARY.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
-    "docs/devlog/M0/20261114-PLAN029-H1851-TRUE-P2-TIMEOUT-AND-REVERSE-QUANTUM.md"
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1852/H1855 attempted Npcap nonblocking P2 but both stopped at original assembly mismatch before real Windows network; H1854 synced non-consumed manifest.json only. H1856 corrects actual assembly/manifest-plan020-m0.json. H1851 last true P2 38s TCP timeout, ready_full0. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1856 original signed Win/WSL2 P2 Direct TCP1MiB 328ms vs physical281ms after Npcap cold nonblock, 120 Tunnel UDP all delivered max gap16ms, owned Stop PASS_SCOPED Action43611621095. H1850/H1851 38s negative preserved. P1 current source and other D1-D5/GUI/Game4 exits remain OPEN."
 }

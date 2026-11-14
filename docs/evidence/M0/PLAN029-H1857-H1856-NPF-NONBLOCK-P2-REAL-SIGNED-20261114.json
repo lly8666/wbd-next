@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "source_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de",
+  "plan": "PLAN029",
+  "task": "H1857",
+  "result": "PASS_SCOPED_REAL_P2",
+  "date": "2026-11-14",
+  "run": {
+    "id": 43611621095,
+    "job": 132499117519,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43611621095",
+    "source_sha": "c110a9820c88da2d46c54e7ae76ead040987a1de"
+  },
+  "original_go_and_rust_compilation": {
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "signed_original_assembly": "PASS",
+    "same_source_windows_linux": "PASS"
+  },
+  "scope": "ONE_SIGNED_WINDOWS2025_ORIGINAL_GO_NPCAP_WINTUN_RUST_NORMAL_V3_VS_REAL_LINUX_WSL2_TUN_SINGLE_VM_P2",
+  "code_change_under_test": "Cold Go Npcap capture handoff after reader gate join sets pcap_setnonblock=1 and requires pcap_getnonblock=1; NPF event-driven idle wait unchanged. Successful native owner implies new fail-closed readback gate passed; no independent timing of each pcap_next_ex call.",
+  "physical_kernel_tcp": {
+    "bytes": 1048576,
+    "elapsed_ms": 281,
+    "sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "app_tcp_nodelay": 0
+  },
+  "wintun_direct_tcp": {
+    "bytes": 1048576,
+    "elapsed_ms": 328,
+    "connect_ms": 0,
+    "upload_ms": 281,
+    "half_close_ms": 0,
+    "first_reply_wait_ms": 16,
+    "download_ms": 31,
+    "sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "app_tcp_nodelay": 0,
+    "tcp_half_close": "PASS",
+    "physical_guest_source": "172.21.240.1",
+    "fake_app_peer": "198.18.0.1"
+  },
+  "comparisons": {
+    "same_source_direct_over_physical_elapsed_ratio": 1.167,
+    "same_source_extra_elapsed_ms": 47,
+    "prior_h1849_direct_1m_ms": 37704,
+    "prior_h1849_source": "2771bec056cf077d42f0503012a218932a445d45",
+    "cross_source_elapsed_improvement_factor": 114.95,
+    "warning": "114.95x compares separate Action/SOURCE; strongly consistent with nonblocking cause, not paired same-VM controlled algorithm A/B. Pacing 16KiB + 4ms is functional, NOT peak goodput."
+  },
+  "concurrent_tunnel_udp": {
+    "unique_delivered": 120,
+    "loss": 0,
+    "rx_rtt_p99_reported_ms": 0,
+    "max_interreply_gap_ms": 16,
+    "covered_entire_direct_tcp": true,
+    "warning": "p99 reported 0.0 due tool resolution; not a true physical zero RTT"
+  },
+  "stop": {
+    "signed_original_both_owners": "PASS",
+    "owned_defender_wal": "PASS",
+    "physical_guest": "PASS"
+  },
+  "residual": {
+    "p1_cpu_per_gib": "NOT_RUN_ON_THIS_SOURCE",
+    "large_unpaced_direct_tcp": "NOT_RUN",
+    "native_game4_cn": "NOT_RUN",
+    "gui_true_connect_stop": "NOT_RUN",
+    "d4_ipv6_interrupt": "NOT_RUN",
+    "dns_full_d1_d5": "PARTIAL",
+    "peak_latency": "NOT_RUN",
+    "queue_age": "NOT_RUN",
+    "whole_plan": "IN_PROGRESS"
+  }
+}
