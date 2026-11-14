@@ -596,13 +596,13 @@
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
-      "result_blob": "6fcb0e18f9b34eb0c9418a7efd71d5c17e16d2df"
+      "result_blob": "9511ced3926dac1d32ade37eaaef387ae1e05566"
     },
     {
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go",
-      "result_blob": "d0d880b1c07fa515a21abf76434b0d0d13342c12"
+      "result_blob": "770a8845ee6f0fda53c9f5b584dc8191b96bb23a"
     },
     {
       "kind": "create",
