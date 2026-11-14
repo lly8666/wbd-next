@@ -20,6 +20,7 @@ plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 # pure Tunnel remains a separate immutable qualification record.
 p029_direct=os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"
 p029_tunnel_alias="203.0.113.77"
+p029_converse_cn4="198.19.254.2"
 if p029_direct and (mode!="normal" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
@@ -77,6 +78,61 @@ def wsl(*a,timeout=30):return run(["wsl.exe","-d","Ubuntu","-u","root","--",*a],
 def unix(p):
  q=pathlib.Path(p).resolve()
  return "/mnt/"+q.drive[0].lower()+"/"+"/".join(q.relative_to(q.anchor).parts)
+
+def h1775_owned_apply(host,peer):
+ side=out/"plan029-h1775-owned-route-alias.json"
+ if side.exists():raise RuntimeError("H1775 foreign owner file")
+ target=p029_converse_cn4
+ if target+"/32" in wsl("ip","-4","-o","addr","show","dev","eth0",timeout=8):
+  raise RuntimeError("H1775 foreign Linux eth0 alias")
+ ps=("$ErrorActionPreference='Stop';"+
+  "if(@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -ErrorAction SilentlyContinue).Count -ne 0){throw 'foreign H1775 route'};"+
+  "$a=@(Get-NetIPAddress -AddressFamily IPv4 -IPAddress '__HOST__' -ErrorAction Stop);"+
+  "if($a.Count -ne 1){throw 'nonunique physical source'};Write-Output $a[0].InterfaceIndex")
+ ps=ps.replace("__TARGET__",target).replace("__HOST__",host)
+ idx=run(["powershell.exe","-NoProfile","-NonInteractive","-Command",ps],timeout=15).strip()
+ if not idx.isdigit() or int(idx)<=0:raise RuntimeError("H1775 physical ifindex invalid")
+ owner={"source_sha":os.environ["GITHUB_SHA"],"target":target,
+        "peer":peer,"host":host,"ifindex":int(idx),"state":"INTENT"}
+ side.write_text(json.dumps(owner,sort_keys=True)+"\n")
+ wsl("ip","-4","addr","add",target+"/32","dev","eth0",timeout=8)
+ if target+"/32" not in wsl("ip","-4","-o","addr","show","dev","eth0",timeout=8):
+  raise RuntimeError("H1775 Linux alias readback absent")
+ ps=("$ErrorActionPreference='Stop';"+
+  "New-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -InterfaceIndex __IDX__ -NextHop '__PEER__' -PolicyStore ActiveStore -ErrorAction Stop|Out-Null;"+
+  "$r=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -ErrorAction Stop);"+
+  "if($r.Count -ne 1 -or $r[0].InterfaceIndex -ne __IDX__ -or $r[0].NextHop -ne '__PEER__'){throw 'H1775 route readback mismatch'}")
+ ps=ps.replace("__TARGET__",target).replace("__IDX__",idx).replace("__PEER__",peer)
+ run(["powershell.exe","-NoProfile","-NonInteractive","-Command",ps],timeout=15)
+ owner["state"]="OWNED";side.write_text(json.dumps(owner,sort_keys=True)+"\n")
+ print("PLAN029_H1775_ONE_TEST_OWNED_PHYSICAL_ROUTE_AND_ALIAS_APPLIED",flush=True)
+
+def h1775_owned_cleanup():
+ side=out/"plan029-h1775-owned-route-alias.json"
+ if not side.exists():return
+ owner=json.loads(side.read_text())
+ if (owner.get("source_sha")!=os.environ["GITHUB_SHA"] or
+     owner.get("target")!=p029_converse_cn4 or
+     owner.get("state") not in ("INTENT","OWNED") or
+     type(owner.get("ifindex")) is not int or owner["ifindex"]<=0 or
+     not owner.get("peer")):
+  raise RuntimeError("H1775 foreign route/alias owner; do not mutate")
+ target=owner["target"];idx=str(owner["ifindex"]);peer=owner["peer"]
+ ps=("$ErrorActionPreference='Stop';"+
+  "$r=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -ErrorAction SilentlyContinue);"+
+  "if($r.Count -gt 1){throw 'H1775 ambiguous owned route'};"+
+  "if($r.Count -eq 1){if($r[0].InterfaceIndex -ne __IDX__ -or $r[0].NextHop -ne '__PEER__'){throw 'H1775 foreign route'};"+
+  "Remove-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -InterfaceIndex __IDX__ -NextHop '__PEER__' -Confirm:$false -ErrorAction Stop};"+
+  "if(@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '__TARGET__/32' -ErrorAction SilentlyContinue).Count -ne 0){throw 'route not removed'}")
+ ps=ps.replace("__TARGET__",target).replace("__IDX__",idx).replace("__PEER__",peer)
+ run(["powershell.exe","-NoProfile","-NonInteractive","-Command",ps],timeout=15)
+ if target+"/32" in wsl("ip","-4","-o","addr","show","dev","eth0",timeout=8):
+  wsl("ip","-4","addr","del",target+"/32","dev","eth0",timeout=8)
+ if target+"/32" in wsl("ip","-4","-o","addr","show","dev","eth0",timeout=8):
+  raise RuntimeError("H1775 exact Linux alias not removed")
+ side.unlink()
+ print("PLAN029_H1775_ONE_ROUTE_AND_ALIAS_EXACT_CLEANUP_PASS",flush=True)
+
 def game_due_first_fault():
  # Only the original Rust first-failure branch triggers an early verdict.
  # No synthetic delivery, packet parsing, extended watchdog or telemetry loop.
@@ -144,7 +200,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=None;logs=[]
+w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=None;logs=[]
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -261,6 +317,7 @@ try:
   rules=out/"plan029-h1745-cn-domains.txt"
   rules.write_text("cn.example\n",encoding="ascii")
   os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
+  (out/"plan029-h1775-cn-one32.txt").write_text(p029_converse_cn4+"/32\n",encoding="ascii")
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  # PLAN029 private signed V3 smoke first checks ONLY ordinary protected
  # Tunnel. The Linux 10.66/24 guest is intentionally in RFC1918, so
@@ -278,7 +335,8 @@ try:
  if p029_direct:
   # The exact Linux guest is the ONLY direct resolver for this controlled
   # scene; it also hosts an independent real physical business UDP socket.
-  args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1"])
+  args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
+               "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -1060,6 +1118,59 @@ print(json.dumps(result),flush=True)
        "windows":d2_receipts["windows"],"linux":d2_receipts["linux"],
        "cn_ip_a_converse":"NOT_RUN","overseas_cdn_reverse":"NOT_FULLY_RUN"}
   print("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED",flush=True)
+  # D2 nonCN DNS→CN IP converse. One explicit Wintun-bound socket is
+  # used because the fixture's test-only physical route is more specific
+  # than Wintun capture; never claim global on-link interception.
+  h1775_owned_apply(host_source,peer)
+  try:
+   gn="plan029-h1775-linux-cn-converse.log"
+   wn="plan029-h1775-windows-cn-converse.log"
+   gf=(out/gn).open("w");logs.append(gf)
+   p029_d2_cn_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+       "python3","-u",unix(root/"tools"/"m0_plan029_h1775_guest_cn_converse.py"),
+       "1.1.1.1",p029_converse_cn4,"10.66.0.2",host_source],
+       stdout=gf,stderr=subprocess.STDOUT)
+   ready(out/gn,"PLAN029_H1775_LINUX_CN_DNS_AND_PHYSICAL_DIRECT_READY",p029_d2_cn_guest,12)
+   wf=(out/wn).open("w");logs.append(wf)
+   p029_d2_cn_win=subprocess.Popen([sys.executable,
+       str(root/"tools"/"m0_plan029_h1775_windows_cn_converse.py"),
+       "10.66.0.2",p029_converse_cn4],
+       stdout=wf,stderr=subprocess.STDOUT)
+   if p029_d2_cn_win.wait(timeout=39)!=0 or p029_d2_cn_guest.wait(timeout=8)!=0:
+    raise RuntimeError("H1775 real Wintun→physical CN IP failed win="+
+      (out/wn).read_text(errors="replace")[-700:]+
+      " guest="+(out/gn).read_text(errors="replace")[-700:])
+   proofs={}
+   for key,file,marker in (
+    ("windows",wn,"PLAN029_H1775_REAL_WINDOWS_D2_CNIP_DIRECT "),
+    ("linux",gn,"PLAN029_H1775_REAL_LINUX_D2_CNIP_DIRECT ")):
+    values=[ln.split(" ",1)[1] for ln in (out/file).read_text().splitlines()
+            if ln.startswith(marker)]
+    if len(values)!=1:raise RuntimeError("H1775 missing true two-OS CN-IP receipt "+key)
+    proofs[key]=json.loads(values[0])
+   if not(proofs["windows"]["dns_real_a"]==p029_converse_cn4 and
+          proofs["windows"]["business_dst"]==p029_converse_cn4 and
+          proofs["windows"]["fakeip"] is False and
+          proofs["windows"]["echo_bytes"]==proofs["linux"]["echo_bytes"] and
+          proofs["linux"]["dns_upstream"]=="1.1.1.1" and
+          proofs["linux"]["dns_client_lease"]=="10.66.0.2" and
+          proofs["linux"]["real_dns_a"]==p029_converse_cn4 and
+          proofs["linux"]["physical_business_dst"]==p029_converse_cn4 and
+          proofs["linux"]["physical_source"]==host_source):
+    raise RuntimeError("H1775 actual DNS/Tunnel versus business/Direct disjoint proof missing")
+   report["plan029_d2_noncn_cn_ip_direct_udp"]={
+     "source_sha":os.environ["GITHUB_SHA"],
+     "scope":"REAL_NONCN_TUNNEL_DNS_TO_CN_IP_RUST_PHYSICAL_DIRECT_UDP",
+     "windows":proofs["windows"],"linux":proofs["linux"],
+     "ordinary_on_link_os_capture":"NOT_PROVEN_EXPLICIT_WINTUN_BOUND_APP",
+     "direct_tcp":"NOT_RUN","stop":"NOT_RUN_UNTIL_OWNED_CLEANUP"}
+   report["plan029_d2_noncn_resolved_a_tunnel_business"]["cn_ip_a_converse"]=(
+     "PASS_REAL_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP")
+   print("PLAN029_H1775_REAL_NONCN_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP_PASS_PRE_CLEANUP",flush=True)
+  finally:
+   h1775_owned_cleanup()
+  report["plan029_d2_noncn_cn_ip_direct_udp"]["stop"]="PASS_EXACT_ROUTE_ALIAS_CLEANUP"
+  print("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS",flush=True)
   # D1 single-upstream timeout proof. After genuine one-endpoint success,
   # leave the same run-owned TUN 1.1.1.1/32 in place and bind two independent
   # receivers: Tunnel DNS silently blackholes, physical Direct DNS is a
@@ -1888,8 +1999,13 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win):
   if p is not None and p.poll() is None:p.terminate()
+ if p029_direct and (out/"plan029-h1775-owned-route-alias.json").exists():
+  try:h1775_owned_cleanup()
+  except Exception as exc:
+   report["plan029_h1775_owned_cleanup"]="FAIL_OWNED_ROUTE_ALIAS"
+   print("PLAN029_H1775_OWNED_CLEANUP_FAILED "+str(exc)[-300:],flush=True)
  if p029_direct and (out/"plan029-h1765-owned-tunnel-dns-alias.txt").exists():
   # Current-generation INTENT is sufficient for safe partial Apply recovery:
   # the preexisting /32 check happened before durable intent was written.

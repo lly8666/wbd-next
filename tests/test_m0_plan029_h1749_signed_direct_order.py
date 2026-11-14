@@ -173,4 +173,25 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('target.read_bytes()==original_tls',W)
         self.assertIn('pinned original Go TLS mutated by an unowned author',W)
         self.assertIn('M0_PINNED_ORIGINAL_GO_TLS_REUSED_NO_OVERWRITE',W)
+
+    def test_h1775_noncn_dns_to_exact_cn_ip_physical_direct_and_owned_cleanup(self):
+        import ast
+        ast.parse(S)
+        self.assertIn('p029_converse_cn4="198.19.254.2"',S)
+        self.assertIn('"--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")',S)
+        self.assertLess(S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"),
+                        S.index("PLAN029_H1775_REAL_NONCN_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP_PASS_PRE_CLEANUP"))
+        self.assertLess(S.index("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS"),
+                        S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
+        self.assertIn('p029_d2_cn_guest,p029_d2_cn_win',S)
+        self.assertIn('h1775_owned_cleanup()',S)
+        self.assertIn('"PASS_EXACT_ROUTE_ALIAS_CLEANUP"',S)
+        self.assertIn('report["plan029_h1775_owned_cleanup"]="FAIL_OWNED_ROUTE_ALIAS"',S)
+        W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
+        M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
+        for name in ("m0_plan029_h1775_guest_cn_converse.py","m0_plan029_h1775_windows_cn_converse.py"):
+            ast.parse((Path(__file__).resolve().parents[1]/"tools"/name).read_text())
+            self.assertIn("      - tools/"+name,W)
+        self.assertIn("plan029-h1775-linux-cn-converse.log",M)
+        self.assertIn("$result.plan029_d2_noncn_cn_ip_direct_udp.source_sha -ne $env:GITHUB_SHA",W)
 if __name__=="__main__":unittest.main()

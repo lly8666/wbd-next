@@ -72,6 +72,8 @@ on:
       - tools/m0_plan029_h1767_windows_dns_blackhole.py
       - tools/m0_plan029_h1770_linux_resolved_noncn_tunnel_udp.py
       - tools/m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py
+      - tools/m0_plan029_h1775_guest_cn_converse.py
+      - tools/m0_plan029_h1775_windows_cn_converse.py
       - tools/m0_plan028_h1382_windows_two_original_tls_product.py
       - tests/test_m0_plan028_h1587_two_windows_manual_cipher_scope.py
       - tools/m0_plan028_h1415_windows_linux_independent_clients.py
@@ -2297,7 +2299,15 @@ jobs:
                $result.plan029_d2_noncn_resolved_a_tunnel_business.windows.fakeip -ne $false -or
                $result.plan029_d2_noncn_resolved_a_tunnel_business.windows.reply_ip -ne '203.0.113.77' -or
                $result.plan029_d2_noncn_resolved_a_tunnel_business.linux.destination -ne '203.0.113.77' -or
-               $result.plan029_d2_noncn_resolved_a_tunnel_business.linux.source_lease -ne '10.66.0.2'){
+               $result.plan029_d2_noncn_resolved_a_tunnel_business.linux.source_lease -ne '10.66.0.2' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.source_sha -ne $env:GITHUB_SHA -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.windows.dns_real_a -ne '198.19.254.2' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.windows.fakeip -ne $false -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.windows.business_dst -ne '198.19.254.2' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.linux.real_dns_a -ne '198.19.254.2' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.linux.physical_business_dst -ne '198.19.254.2' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.linux.dns_upstream -ne '1.1.1.1' -or
+               $result.plan029_d2_noncn_cn_ip_direct_udp.stop -ne 'PASS_EXACT_ROUTE_ALIAS_CLEANUP'){
               throw 'PLAN029 exact same-SOURCE Direct/Tunnel TCP UDP DNS and owned Stop proof absent'
             }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
