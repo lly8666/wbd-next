@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1878,
-  "checkpoint_sha": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
+  "sequence": 1879,
+  "checkpoint_sha": "e998604103a385d44e6e70108e4105ed07a84ed9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1878 collect H1877 signed true Windows/WSL2 P2 4MiB physical50.606 Direct141.030ms +90.424ms 2.787x, tunnel UDP120/120 p99 4.283ms, owned Stop PASS; 128 idle/two-active one-event Windows socket regression newly authored, NOT_RUN on H1878 SOURCE.",
-  "why_now": "H1877 event-driven 16-shard direct schedule functional PASS but 2.787x physical remains, not proof of gain. New Windows-native unit test targets missed FD_READ under 128 idle and two active in same shared event; avoid another redundant P2 full-network dispatch.",
+  "current_task": "H1879 direct Windows platform native CI trigger: H1878 WinSock 128-idle/two-active test compiled through engine but its platform unit tests NOT_RUN. Add platform source path to existing H1721 matrix trigger so actual Windows+Linux cargo test -p wbd-platform --lib executes, no production/source or network scene change.",
+  "why_now": "H1878 Windows engine 386 tests PASS but Rust dependency unit tests don't execute wbd-platform's new 128 TCP kernel sockets test; H1721 workflow already runs correct target on Windows/Ubuntu yet its push.paths omitted windows_direct_tcp.rs. Fix cheapest first actual verification boundary before claiming wake correctness.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1878 Windows component unit for true shared WSA event 128 idle and simultaneous two-active; then independent same VM scheduler old/new P2, user/kernel CPU, no-progress wake and FIFO wait; focus residual dual TCP leg download (+61.822ms). GUI/Game4/real IPv6 resource exits remain.",
+  "next_action": "Collect automatically triggered H1879 H1721 Windows platform test proof (actual 128 sockets, same shard 15/31, no lost FD_READ) and Linux companion. If failure address first real WinSock event mismatch. Do not repeat H1877 signed single-flow P2 or claim CPU/gain. Next one frozen same-VM old/new TCP scheduling comparator and real 128 Wintun case.",
   "unverified": true,
   "last_tested_source": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1878-H1877-SIGNED-P2-READY-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1877-READY-TICKET-BORROW-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1876-WINSOCK-SHARDED-READY-OWNER.md",
     "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md",
     "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
-    "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md",
-    "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md"
+    "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1877 signed true P2 functional and Stop PASS_SCOPED 4MiB physical50.606 Direct141.030 (2.787x), Tunnel120/120 p99 4.283ms; performance OPEN and no same-VM code A/B. H1878 Windows 128 idle+2 active shared event test newly written NOT_RUN. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1877 signed single-flow Normal CN P2 functional PASS but performance 2.787x physical OPEN. H1878 new 128 kernel-socket shared wake test source compiled, NOT_EXECUTED because triggering workflow omitted platform path. H1879 repairs actual Win2025 platform test gate; new source NOT_RUN. PLAN029 IN_PROGRESS."
 }
