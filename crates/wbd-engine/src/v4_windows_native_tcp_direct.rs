@@ -8,8 +8,10 @@
 use std::collections::{HashMap,HashSet,VecDeque};
 use std::io::ErrorKind;
 use std::net::{Ipv4Addr,SocketAddr,SocketAddrV4,TcpListener,TcpStream};
+use std::os::windows::io::AsRawSocket;
 use wbd_platform::windows_direct_tcp::{
     PhysicalTcpSocket,ConnectProgress,TcpDirectRelay,open_kernel_tcp_listener,
+    SocketReadiness,TCP_EVENT_SHARDS,EVENT_ACCEPT,EVENT_CONNECT,
 };
 use crate::v4_client_direct_tcp_nat::{DirectTcpNat,TcpNatKey};
 use crate::v4_windows_native_dns_client_tcp::{ClientDnsTcp,NativeTcpDnsEndpoints};
@@ -42,6 +44,18 @@ enum TcpPhase{
 struct Active{
     key:TcpNatKey,proxy_port:u16,phase:Option<TcpPhase>,
     last_activity_ms:u64,
+    // Stable identity across swap_remove and NAT port reuse. One entry in
+    // the bounded ready FIFO at most, keyed by (port,generation).
+    generation:u64,queued:bool,
+}
+impl TcpPhase{
+    fn socket_handles(&self)->(usize,usize){
+        match self{
+            Self::Connecting(inner,outer)=>
+                (inner.as_raw_socket() as usize,outer.raw_socket()),
+            Self::Relaying(pair)=>pair.socket_handles(),
+        }
+    }
 }
 struct ActiveDns{
     key:TcpNatKey,proxy_port:u16,
@@ -112,7 +126,14 @@ pub(crate) struct NativeTcpActor{
     listener:TcpListener,nat:DirectTcpNat,
     pending:HashMap<u16,(TcpNatKey,u64)>,
     deadlines:VecDeque<(u16,u64)>,
-    active:Vec<Active>,cursor:usize,
+    active:Vec<Active>,
+    active_by_port:HashMap<u16,usize>,
+    shard_ports:[Vec<u16>;TCP_EVENT_SHARDS],
+    flow_ready:VecDeque<(u16,u64)>,
+    next_generation:u64,
+    accept_armed:bool,
+    notified_shards:u16,
+    connect_deadlines:VecDeque<(u16,u64,u64)>,
     closing:ClosedNatGrace,
     dns_nat:DirectTcpNat,
     dns_pending:HashMap<u16,(TcpNatKey,u64)>,
@@ -125,6 +146,9 @@ pub(crate) struct NativeTcpActor{
     resident_bytes:usize,
     scratch:Option<Box<[u8;RELAY_SCRATCH_BYTES]>>,
     diagnosis:Option<TcpLegDiagnosis>,
+    // Last field: all sockets (listener, accepted, DNS) drop before the
+    // WinSock event group is closed, preserving exact owned Stop order.
+    socket_events:SocketReadiness,
 }
 pub(crate) fn safe_synthetic(lease:u32,underlay:u32,synthetic:u32,
     fake_range:(u32,u32))->bool{
@@ -148,9 +172,17 @@ impl NativeTcpActor{
             port,hard).map_err(|_|())?;
         let dns_nat=DirectTcpNat::new_dns(u32::from(lease),
             u32::from(synthetic),port).map_err(|_|())?;
+        let socket_events=SocketReadiness::new().map_err(|_|())?;
+        socket_events.watch(listener.as_raw_socket() as usize,0,EVENT_ACCEPT)
+            .map_err(|_|())?;
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
-            deadlines:VecDeque::new(),active:Vec::new(),cursor:0,
+            deadlines:VecDeque::new(),active:Vec::new(),
+            active_by_port:HashMap::new(),
+            shard_ports:std::array::from_fn(|_|Vec::new()),
+            flow_ready:VecDeque::new(),next_generation:0,
+            accept_armed:false,notified_shards:0,
+            connect_deadlines:VecDeque::new(),
             closing:ClosedNatGrace::default(),
             dns_nat,dns_pending:HashMap::new(),
             dns_deadlines:VecDeque::new(),dns_active:Vec::new(),
@@ -159,20 +191,78 @@ impl NativeTcpActor{
             ready:VecDeque::with_capacity(MAX_READY),
             buffered_bytes:0,resident_bytes:0,scratch:None,
             diagnosis:(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
-                .as_deref()==Some("1")).then(TcpLegDiagnosis::default)})
+                .as_deref()==Some("1")).then(TcpLegDiagnosis::default),
+            socket_events})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
     /// Never guess this value in Go or open a global firewall wildcard.
     pub(crate) fn listener_port(&self)->Result<u16,()>{
         self.listener.local_addr().map(|a|a.port()).map_err(|_|())
     }
-    /// Accept only owned reserved SYNs, service active legs, or reclaim
-    /// NAT on its exact deadline. Idle Tunnel needs no listener syscall.
+    /// One original TX WaitForMultipleObjects observes all 16 bounded
+    /// WinSock shards, together with Wintun, Stop and owner notification.
+    pub(crate) fn socket_event_handles(&self)->&[usize]{
+        self.socket_events.handles()
+    }
+    pub(crate) fn note_socket_event(&mut self,shard:usize){
+        if shard<TCP_EVENT_SHARDS{self.notified_shards|=1u16<<shard}
+    }
+    fn enqueue_port(&mut self,port:u16){
+        let Some(&idx)=self.active_by_port.get(&port)else{return};
+        let flow=&mut self.active[idx];
+        if flow.queued{return}
+        flow.queued=true;
+        // 2x hard16k bounds transient stale generations without dropping
+        // a live flow's single ready ticket.
+        if self.flow_ready.len()>=32768{
+            let index=&self.active_by_port;
+            let active=&self.active;
+            self.flow_ready.retain(|(p,g)|index.get(p)
+                .and_then(|&i|active.get(i))
+                .is_some_and(|a|a.generation==*g));
+        }
+        self.flow_ready.push_back((port,flow.generation));
+    }
+    fn harvest_events(&mut self){
+        let pending=std::mem::take(&mut self.notified_shards);
+        for shard in 0..TCP_EVENT_SHARDS{
+            if pending&(1u16<<shard)==0{continue}
+            // Shard0's listener is its reset anchor; other shards reset
+            // atomically on the first valid owned socket, then scan all
+            // recorded socket flags with NULL hEventObject.
+            if shard==0{
+                match self.socket_events.take(
+                    self.listener.as_raw_socket() as usize,0,true){
+                    Ok(mask)=>self.accept_armed|=SocketReadiness::is_accept(mask),
+                    Err(_)=>self.accept_armed=true,
+                }
+            }
+            let mut reset=shard!=0;
+            for index in 0..self.shard_ports[shard].len(){
+                let port=self.shard_ports[shard][index];
+                let Some(&slot)=self.active_by_port.get(&port)else{continue};
+                let Some(phase)=self.active[slot].phase.as_ref()else{continue};
+                let (inner,outer)=phase.socket_handles();
+                let imask=self.socket_events.take(inner,shard,reset);
+                if imask.is_ok(){reset=false}
+                let omask=self.socket_events.take(outer,shard,reset);
+                if omask.is_ok(){reset=false}
+                if imask.unwrap_or(1)!=0||omask.unwrap_or(1)!=0{
+                    self.enqueue_port(port);
+                }
+            }
+            if reset{
+                // Only an empty/unusable shard gets a plain reset. No
+                // recorded live socket can be lost by this case.
+                let _=self.socket_events.clear_unused(shard);
+            }
+        }
+    }
     pub(crate) fn needs_service(&self,now_ms:u64)->bool{
-        listener_accept_needed(self.pending.len(),self.dns_pending.len())||
-        !self.active.is_empty()||
+        self.accept_armed||self.notified_shards!=0||!self.flow_ready.is_empty()||
         self.deadlines.front().is_some_and(|(_,due)|*due<=now_ms)||
         self.dns_deadlines.front().is_some_and(|(_,due)|*due<=now_ms)||
+        self.connect_deadlines.front().is_some_and(|(_,_,due)|*due<=now_ms)||
         self.closing.next_due().is_some_and(|due|due<=now_ms)||
         self.dns_closing.next_due().is_some_and(|due|due<=now_ms)
     }
@@ -185,10 +275,12 @@ impl NativeTcpActor{
             !self.ready.is_empty()
     }
     pub(crate) fn next_close_due_ms(&self)->Option<u64>{
-        match (self.closing.next_due(),self.dns_closing.next_due()){
-            (Some(a),Some(b))=>Some(a.min(b)),
-            (a,None)|(None,a)=>a,
-        }
+        self.closing.next_due().into_iter()
+            .chain(self.dns_closing.next_due())
+            .chain(self.deadlines.front().map(|(_,due)|*due))
+            .chain(self.dns_deadlines.front().map(|(_,due)|*due))
+            .chain(self.connect_deadlines.front().map(|(_,_,due)|*due))
+            .min()
     }
     pub(crate) fn buffered_bytes(&self)->usize{self.buffered_bytes}
     pub(crate) fn resident_bytes(&self)->usize{self.resident_bytes}
@@ -248,6 +340,7 @@ impl NativeTcpActor{
             let due=now_ms.saturating_add(PENDING_MS);
             self.dns_pending.insert(entry.proxy_port,(entry.key,due));
             self.dns_deadlines.push_back((entry.proxy_port,due));
+            self.accept_armed=true;
         }
         Ok(())
     }
@@ -276,6 +369,7 @@ impl NativeTcpActor{
             let deadline=now_ms.saturating_add(PENDING_MS);
             self.pending.insert(entry.proxy_port,(entry.key,deadline));
             self.deadlines.push_back((entry.proxy_port,deadline));
+            self.accept_armed=true;
         }
         Ok(())
     }
@@ -299,13 +393,20 @@ impl NativeTcpActor{
     pub(crate) fn tick(&mut self,now_ms:u64)->TcpServiceTick{
         let mut retired=Vec::new();
         let mut advanced=false;
-        if listener_accept_needed(self.pending.len(),self.dns_pending.len()){
-        for _ in 0..MAX_QUANTUM{
+        self.harvest_events();
+        let accepting=self.accept_armed &&
+            listener_accept_needed(self.pending.len(),self.dns_pending.len());
+        self.accept_armed=false;
+        if accepting{
+        // Exactly one WouldBlock disables this admission until a real
+        // FD_ACCEPT or a new owned ingress NAT wakes the same TX owner.
+        for turn in 0..MAX_QUANTUM{
             let (stream,peer)=match self.listener.accept(){
                 Ok(ok)=>{advanced=true;ok},
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>break,
                 Err(_)=>break,
             };
+            if turn+1==MAX_QUANTUM{self.accept_armed=true}
             let SocketAddr::V4(peer)=peer else{continue};
             if let Some(entry)=self.dns_nat.accepted(u32::from(*peer.ip()),peer.port()){
                 if self.dns_pending.remove(&entry.proxy_port).is_none(){continue}
@@ -325,11 +426,32 @@ impl NativeTcpActor{
             let dst=SocketAddrV4::new(Ipv4Addr::from(entry.real_dst),
                 entry.key.target_port);
             match PhysicalTcpSocket::start(self.physical,self.ifindex,dst){
-                Ok(socket)=>self.active.push(Active{
-                    key:entry.key,proxy_port:entry.proxy_port,
-                    phase:Some(TcpPhase::Connecting(stream,socket)),
-                    last_activity_ms:now_ms,
-                }),
+                Ok(socket)=>{
+                    let shard=SocketReadiness::shard(entry.proxy_port);
+                    let watches=self.socket_events.watch(
+                        stream.as_raw_socket() as usize,shard,EVENT_CONNECT)
+                        .and_then(|_|self.socket_events.watch(
+                            socket.raw_socket(),shard,EVENT_CONNECT));
+                    if watches.is_err(){
+                        self.nat.retire(entry.key);
+                        retired.push(entry.key);
+                        continue
+                    }
+                    self.next_generation=self.next_generation.wrapping_add(1);
+                    if self.next_generation==0{self.next_generation=1}
+                    let generation=self.next_generation;
+                    let index=self.active.len();
+                    self.active.push(Active{
+                        key:entry.key,proxy_port:entry.proxy_port,
+                        phase:Some(TcpPhase::Connecting(stream,socket)),
+                        last_activity_ms:now_ms,generation,queued:false,
+                    });
+                    self.active_by_port.insert(entry.proxy_port,index);
+                    self.shard_ports[shard].push(entry.proxy_port);
+                    self.connect_deadlines.push_back((
+                        entry.proxy_port,generation,now_ms.saturating_add(PENDING_MS)));
+                    self.enqueue_port(entry.proxy_port); // probe immediate connect
+                },
                 Err(_)=>{
                     self.nat.retire(entry.key);
                     retired.push(entry.key)
@@ -337,11 +459,32 @@ impl NativeTcpActor{
             }
         }
         } // No accept() syscall when no Direct/DNS NAT is waiting.
-        let count=self.active.len();
-        let quantum=count.min(MAX_QUANTUM);
+        // Only expired in-flight connects are queued; idle TCP never
+        // occupies an RX quantum or a 10ms timer. A stale generation cannot
+        // accidentally schedule a reused NAT source port.
+        for _ in 0..64{
+            let Some(&(port,generation,due))=self.connect_deadlines.front()
+                else{break};
+            if due>now_ms{break}
+            self.connect_deadlines.pop_front();
+            if self.active_by_port.get(&port)
+                .and_then(|&i|self.active.get(i))
+                .is_some_and(|a|a.generation==generation &&
+                    a.phase.as_ref().is_some_and(|p|
+                        matches!(p,TcpPhase::Connecting(..)))){
+                self.enqueue_port(port);
+            }
+        }
         let mut to_remove=Vec::new();
-        for step in 0..quantum{
-            let idx=(self.cursor+step)%count;
+        let mut to_requeue=Vec::new();
+        let mut serviced=0;
+        for _ in 0..(MAX_QUANTUM*4){
+            if serviced>=MAX_QUANTUM{break}
+            let Some((port,generation))=self.flow_ready.pop_front()else{break};
+            let Some(&idx)=self.active_by_port.get(&port)else{continue};
+            if self.active[idx].generation!=generation{continue}
+            self.active[idx].queued=false;
+            serviced+=1;
             let flow=&mut self.active[idx];
             // A live kernel TCP may be quiescent for hours; FIN/RST,
             // half-close and OS socket EOF own its retirement. Only
@@ -421,6 +564,7 @@ impl NativeTcpActor{
                             if tick.bytes_read>0||tick.bytes_written>0{
                                 advanced=true;
                                 flow.last_activity_ms=now_ms;
+                                if !tick.finished{to_requeue.push(port)}
                             }
                             if tick.finished{
                                 advanced=true;
@@ -441,23 +585,31 @@ impl NativeTcpActor{
                 }
             }
         }
-        // Remove descending to preserve the original bounded readiness
-        // snapshot indices. Never drop a different live NAT association.
+        // swap_remove plus port->slot keeps ready tokens stable in O(1)
+        // per retired flow; generation rejects all stale queued tokens.
         to_remove.sort_unstable_by_key(|(idx,_)|*idx);
         to_remove.dedup_by_key(|(idx,_)|*idx);
         for (idx,keep_reverse) in to_remove.into_iter().rev(){
-            let flow=self.active.remove(idx);
+            let flow=self.active.swap_remove(idx);
+            self.active_by_port.remove(&flow.proxy_port);
+            if idx<self.active.len(){
+                let moved=self.active[idx].proxy_port;
+                self.active_by_port.insert(moved,idx);
+            }
+            self.shard_ports[SocketReadiness::shard(flow.proxy_port)]
+                .retain(|&port|port!=flow.proxy_port);
             if keep_reverse{
-                // Closing the accepted kernel socket releases its user
-                // buffers, but must NOT erase its synthetic reverse NAT
-                // before Windows has delivered all TCP segments to Wintun.
+                // Closed kernel socket retains only exact reverse NAT grace,
+                // not any event handle, pending Vec or ready work ticket.
                 self.closing.defer(flow.proxy_port,flow.key,now_ms);
             }else if self.nat.retire(flow.key){
                 retired.push(flow.key)
             }
         }
-        if self.active.is_empty(){self.cursor=0}
-        else{self.cursor=(self.cursor+quantum)%self.active.len()}
+        for port in to_requeue{self.enqueue_port(port)}
+        // One TX turn never sleeps while an already-ready flow waits
+        // beyond the fair eight-flow service quantum.
+        advanced|=!self.flow_ready.is_empty();
         // Admission-time-only expiry. Each port appears exactly once.
         // Evict <=64 silent, not-yet-accepted SYNs per coarse tick.
         for _ in 0..64{
@@ -559,6 +711,18 @@ mod tests{
         p[20..22].copy_from_slice(&sport.to_be_bytes());
         p[22..24].copy_from_slice(&dport.to_be_bytes());
         p[32]=0x50;p[33]=flags;p
+    }
+    #[test]
+    fn plan029_event_shards_and_stale_generation_bound(){
+        assert!(listener_accept_needed(1,0));
+        assert_eq!(SocketReadiness::shard(16),0);
+        assert_eq!(SocketReadiness::shard(17),1);
+        // Two successive owners may reuse the same NAT source port:
+        // a stale ready ticket must never match the new incarnation.
+        let old=(12345u16,7u64);
+        let replacement=(12345u16,8u64);
+        assert_ne!(old,replacement);
+        assert!(replacement.1!=old.1);
     }
     #[test]
     fn plan029_skip_idle_listener_but_keep_dns_tcp_admission(){

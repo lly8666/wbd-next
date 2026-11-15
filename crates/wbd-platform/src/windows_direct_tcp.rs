@@ -23,6 +23,7 @@ pub enum DirectTcpError{
     ListenerBind,
     RelayIo{stage:&'static str,code:i32},
     BufferBudget,
+    SocketEvent(i32),
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub enum ConnectProgress{Pending,Connected}
@@ -44,6 +45,19 @@ mod win{
     const POLLHUP:i16=0x0002;
     const POLLNVAL:i16=0x0004;
     const POLLWRNORM:i16=0x0010;
+    // Exactly 16 manual-reset WinSock events: all sockets join one
+    // original TX WaitForMultipleObjects, never a per-flow thread/event.
+    pub const TCP_EVENT_SHARDS:usize=16;
+    const FD_READ:i32=1;
+    const FD_WRITE:i32=2;
+    const FD_ACCEPT:i32=8;
+    const FD_CONNECT:i32=16;
+    const FD_CLOSE:i32=32;
+    pub const EVENT_ACCEPT:i32=FD_ACCEPT|FD_CLOSE;
+    pub const EVENT_CONNECT:i32=FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE;
+    #[repr(C)]
+    struct WsaNetworkEvents{mask:i32,errors:[i32;10]}
+
     #[repr(C)]
     struct WsaPollFd{socket:usize,events:i16,revents:i16}
 
@@ -69,6 +83,11 @@ mod win{
         fn getsockopt(s:usize,level:i32,opt:i32,p:*mut i8,len:*mut i32)->i32;
         fn WSAGetLastError()->i32;
         fn WSAPoll(fds:*mut WsaPollFd,count:u32,timeout_ms:i32)->i32;
+        fn WSACreateEvent()->usize;
+        fn WSACloseEvent(handle:usize)->i32;
+        fn WSAResetEvent(handle:usize)->i32;
+        fn WSAEventSelect(s:usize,event:usize,events:i32)->i32;
+        fn WSAEnumNetworkEvents(s:usize,event:usize,out:*mut WsaNetworkEvents)->i32;
     }
     struct SocketGuard(usize);
     impl Drop for SocketGuard{
@@ -82,6 +101,62 @@ mod win{
         }
     }
     fn last()->i32{unsafe{WSAGetLastError()}}
+    /// Shared wake shards, not one event or thread per flow. The original
+    /// Rust TX owns all 16 event handles and polls socket events only for
+    /// the signaled shard. Drop comes after owned sockets close.
+    pub struct SocketReadiness{events:Vec<usize>}
+    impl SocketReadiness{
+        pub fn new()->Result<Self,DirectTcpError>{
+            let mut this=Self{events:Vec::with_capacity(TCP_EVENT_SHARDS)};
+            for _ in 0..TCP_EVENT_SHARDS{
+                let event=unsafe{WSACreateEvent()};
+                if event==0||event==usize::MAX{
+                    return Err(DirectTcpError::SocketEvent(last()))
+                }
+                this.events.push(event);
+            }
+            Ok(this)
+        }
+        pub fn handles(&self)->&[usize]{&self.events}
+        pub fn shard(port:u16)->usize{usize::from(port)%TCP_EVENT_SHARDS}
+        pub fn watch(&self,socket:usize,shard:usize,events:i32)
+            ->Result<(),DirectTcpError>{
+            if shard>=TCP_EVENT_SHARDS||socket==usize::MAX{
+                return Err(DirectTcpError::SocketEvent(-1))
+            }
+            if unsafe{WSAEventSelect(socket,self.events[shard],events)}!=0{
+                return Err(DirectTcpError::SocketEvent(last()))
+            }
+            Ok(())
+        }
+        /// The first socket of a signaled shard atomically resets the
+        /// shard event while acknowledging its own recorded WinSock flags.
+        /// Remaining sockets use a NULL event to avoid resetting a new
+        /// wake in the middle of the scan. No lost FD_READ/FD_ACCEPT edges.
+        pub fn take(&self,socket:usize,shard:usize,reset:bool)
+            ->Result<i32,DirectTcpError>{
+            let mut item=WsaNetworkEvents{mask:0,errors:[0;10]};
+            let event=if reset{self.events[shard]}else{0};
+            if unsafe{WSAEnumNetworkEvents(socket,event,&mut item)}!=0{
+                return Err(DirectTcpError::SocketEvent(last()))
+            }
+            // A reported socket error is still actionable by the owner
+            // via its existing nonblocking connect/read/write error path.
+            Ok(item.mask)
+        }
+        pub fn clear_unused(&self,shard:usize)->Result<(),DirectTcpError>{
+            if unsafe{WSAResetEvent(self.events[shard])}==0{
+                return Err(DirectTcpError::SocketEvent(last()))
+            }
+            Ok(())
+        }
+        pub fn is_accept(mask:i32)->bool{mask&FD_ACCEPT!=0}
+    }
+    impl Drop for SocketReadiness{
+        fn drop(&mut self){for &event in &self.events{
+            unsafe{WSACloseEvent(event);}
+        }}
+    }
     /// One owned physical socket. Its remote is always the real DNS A/IP
     /// selected by current-generation Direct policy, NEVER its FakeIP.
     /// connect() is nonblocking: caller's one Rust readiness worker polls
@@ -139,6 +214,7 @@ mod win{
             let stream=unsafe{TcpStream::from_raw_socket(guard.disown())};
             Ok(Self{stream,remote:real,source,ifindex,progress})
         }
+        pub fn raw_socket(&self)->usize{self.stream.as_raw_socket() as usize}
         pub fn peer(&self)->SocketAddrV4{self.remote}
         /// A Wintun-bound internal Tunnel DNS TCP socket is registered
         /// by original Rust TX before its next Wintun packet quantum.
@@ -228,7 +304,8 @@ mod win{
     }
 }
 #[cfg(target_os="windows")]
-pub use win::{PhysicalTcpSocket,open_kernel_tcp_listener};
+pub use win::{PhysicalTcpSocket,open_kernel_tcp_listener,SocketReadiness,TCP_EVENT_SHARDS,
+    EVENT_ACCEPT,EVENT_CONNECT};
 
 // A 4-KiB relay turn on the existing 10-ms Direct I/O wake required >=512
 // turns to shuttle a 1-MiB request and 1-MiB reply (H1820: 6.485 s).
@@ -393,6 +470,11 @@ impl TcpDirectRelay{
             finished:self.inner_eof&&self.outer_eof&&
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
     }
+    #[cfg(target_os="windows")]
+    pub fn socket_handles(&self)->(usize,usize){
+        use std::os::windows::io::AsRawSocket;
+        (self.inner.as_raw_socket() as usize,self.outer.as_raw_socket() as usize)
+    }
     pub fn pending_bytes(&self)->usize{self.to_outer.len()+self.to_inner.len()}
     pub fn resident_bytes(&self)->usize{self.to_outer.capacity()+self.to_inner.capacity()}
     /// Coarse, idle-only release; NEVER shrink each successful TCP write.
@@ -456,6 +538,20 @@ mod plan029_global_backpressure_tests{
         relay.service_once_with_scratch(0,&mut scratch).unwrap();
         assert!(scratch.iter().all(|byte|*byte==0xA5));
         drop((peer1,peer2));
+    }
+    #[test]
+    fn sharded_socket_readiness_bounds_fixed_wait_handles_and_ports(){
+        #[cfg(target_os="windows")]
+        {
+            use super::win::{SocketReadiness,TCP_EVENT_SHARDS};
+            assert_eq!(TCP_EVENT_SHARDS,16);
+            assert_eq!(SocketReadiness::shard(0),0);
+            assert_eq!(SocketReadiness::shard(16),0);
+            assert_eq!(SocketReadiness::shard(17),1);
+            let event=SocketReadiness::new().unwrap();
+            assert_eq!(event.handles().len(),TCP_EVENT_SHARDS);
+            assert!(event.handles().iter().all(|handle|*handle!=0));
+        }
     }
     #[test]
     fn one_global_pool_blocks_only_new_direct_reads_not_drains(){

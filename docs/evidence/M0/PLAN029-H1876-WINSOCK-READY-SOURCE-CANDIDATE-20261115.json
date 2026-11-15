@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "task": "H1876",
+  "source_sha": "3d853a9119596f0c2e88770cdb060ee616af583f",
+  "scope": "TRIAL_SOURCE_NOT_MEASURED",
+  "result": "NOT_RUN",
+  "design": {
+    "shards": 16,
+    "wait_handlers": 19,
+    "per_flow_threads": 0,
+    "socket_event_masks": "FD_READ/FD_WRITE/FD_CONNECT/FD_CLOSE and FD_ACCEPT",
+    "max_service_quantum": 8,
+    "per_flow_ticket": "source NAT port plus monotone generation",
+    "retained_socket_budget": "TCP 8MiB and reused shared 64KiB scratch",
+    "DNS_TCP": "LEGACY_10MS_PRESERVED",
+    "UDP": "LEGACY_10MS_PRESERVED",
+    "Stop": "original manual reset event wins first"
+  },
+  "claimed_performance": "NONE",
+  "need": "SOURCE_LOCKED_WINDOWS_NATIVE_ACTION, same VM true A/B, idle 128+ few active"
+}

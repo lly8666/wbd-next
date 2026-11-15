@@ -983,17 +983,34 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                   let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
              };
-             // When a Direct UDP socket is alive, check a bounded rotating
-             // WSAPoll workset every <=10ms, never 16k sockets per turn.
-             // Idle Tunnel-only sessions keep their original event timer.
-             let timeout=if split.as_ref().is_some_and(|s|s.has_udp_flows()){
+             // Only UDP and DNS TCP retain their original <=10ms poll.
+             // Direct TCP has exact fixed WinSock event shards, not a
+             // per-connection thread or unbounded periodic active scan.
+             let timeout=if split.as_ref().is_some_and(|s|s.needs_10ms_poll()){
                  timeout.min(10)
              }else{timeout};
-             let next_closed_nat=split.as_ref()
+             let next_tcp_due=split.as_ref()
                  .and_then(|owner|owner.next_tcp_cleanup_due_ms());
-             let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_closed_nat));
-             match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
+             let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_tcp_due));
+             let mut handles=[0usize;3+16];
+             handles[..3].copy_from_slice(&[
+                 stop.handle(),tun.event(),notify.handle()]);
+             let mut count=3;
+             if let Some(s)=split.as_ref(){
+                 if let Some(events)=s.tcp_socket_wait_handles(){
+                     if events.len()!=16{return Err(BAD_STAGE)}
+                     handles[3..3+events.len()].copy_from_slice(events);
+                     count+=events.len();
+                 }
+             }
+             match io::wait_ready(&handles[..count],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),
+                 Ok(WaitResult::Ready(index)) if index>=3=>{
+                     if let Some(s)=split.as_mut(){
+                         s.note_tcp_socket_wake(index-3);
+                     }
+                     Ok(false)
+                 },
                  Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
                  Err(_)=>Err(BAD_STAGE),
              }
