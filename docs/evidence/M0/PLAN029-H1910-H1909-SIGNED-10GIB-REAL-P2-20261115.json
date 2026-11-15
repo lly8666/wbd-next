@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1910",
+  "source_sha": "64f6819460f7f950f13bc7d10659a6f4552b28b6",
+  "run_id": 43700145002,
+  "job_id": 132770375540,
+  "conclusion": "success",
+  "result": "SIGNED_REAL_WINDOWS_WSL2_10GIB_500_700_TCP_SHA_FIN_UDP_AND_OWNED_STOP_PASS_SCOPED_P2_CPU_PER_GIB_OPEN",
+  "scope": "Windows2025 original Go+signed Npcap/Wintun+Rust CN FakeIP Direct and WSL2 Linux original Go/Rust one Windows runner source-sha 64f681..., physical and Direct 2GiB one-way plus 1.5GiB each full duplex, 96B Tunnel UDP sustained throughout, original owner Stop",
+  "load_per_path_gib": 5,
+  "combined_physical_plus_direct_gib": 10,
+  "values": {
+    "oneway": {
+      "physical": {
+        "actual_mbps": 499.996,
+        "cpu_s_per_gib": {
+          "total": 0.46875,
+          "kernel": 0.265625,
+          "user": 0.203125
+        },
+        "udp_p99_ms": 0.968
+      },
+      "direct": {
+        "actual_mbps": 499.996,
+        "cpu_s_per_gib": {
+          "total": 11.679688,
+          "kernel": 5.59375,
+          "user": 6.085938
+        },
+        "udp_p99_ms": 1.241
+      },
+      "added": {
+        "total": 11.210938,
+        "kernel": 5.328125,
+        "user": 5.882813
+      },
+      "bytes_per_path": 2147483648
+    },
+    "duplex": {
+      "physical": {
+        "actual_mbps": 699.998,
+        "cpu_s_per_gib": {
+          "total": 0.3125,
+          "kernel": 0.208333,
+          "user": 0.104167
+        },
+        "udp_p99_ms": 1.037
+      },
+      "direct": {
+        "actual_mbps": 699.998,
+        "cpu_s_per_gib": {
+          "total": 9.630208,
+          "kernel": 5.640625,
+          "user": 3.989583
+        },
+        "udp_p99_ms": 2.693
+      },
+      "added": {
+        "total": 9.317708,
+        "kernel": 5.432292,
+        "user": 3.885416
+      },
+      "bytes_each_direction_each_path": 1610612736
+    }
+  },
+  "udp": {
+    "windows_unique": 11280,
+    "linux_unique": 11280,
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "provenance": {
+    "windows_product_artifact_id": 14156860270,
+    "linux_product_artifact_id": 14156043330,
+    "windows_manifest_sha256": "149fe9f5a22193d77dac4631de46d07a7f1bf84fccdf268ad6eeb75389126ae3",
+    "linux_manifest_sha256": "d8e7b738d78c3eaeb2c04ce42e8b2dec6199fd3f44cc6e02c0af2ea8dc214812"
+  },
+  "limitations": {
+    "P2_CPU": "OPEN_HIGH_DIRECT_PROCESS_COST",
+    "P1_cpu_gib": "OPEN_PLUS9.41_PERCENT_V4_V3_PRIOR",
+    "comparison": "SAME_VM_SAME_PRODUCT_SEQUENTIAL_PHYSICAL_VS_DIRECT_NOT_VPN_BACKEND_CAUSAL",
+    "target_exact": "ACTUAL_499.996_AND_699.998_NOT_GE_STRICT_TARGET",
+    "driver_ISR_DPC": "NOT_ATTRIBUTED",
+    "real_tcp128": "H1892_PREVIOUS_COMPONENT_SCOPED_NOT_CLOSED",
+    "GUI_Game4_IPv6": "OPEN"
+  }
+}

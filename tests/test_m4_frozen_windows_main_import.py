@@ -48,14 +48,19 @@ M0_AUTHORIZED_CURRENT = {
     # Historical M4 hash above is STILL immutable. The additional M0
     # Windows-owned Native IO entries belong to the live assembled source,
     # which is separately content-addressed; old M4 remains available.
-    "r0/go_overlay/assembly/manifest.json": "7d94b6bb0deabdad77fbfce45cdc72ff576f2d47",
+    "r0/go_overlay/assembly/manifest.json": "cc0c56e1a6741bce0a81091d0cba2281d12d496b",
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "4b1a907673473e84a3753c0672ac3316b6f1b763",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "aada7132a9edd492f2f1a00aa066021efcb1670b",
     # PLAN026 current M0 Npcap handoff is intentionally newer than the frozen
     # M4 four-entry manifest; the live PLAN020 manifest pins these exact blobs.
-    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go": "2901f24535e369046845802aede6eac3db77c5d1",
-    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go": "53d06d454cba7cedd0e9575de9446936b30aac5c",
+    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go": "9511ced3926dac1d32ade37eaaef387ae1e05566",
+    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go": "770a8845ee6f0fda53c9f5b584dc8191b96bb23a",
+    # H1910: these CURRENT overlays are identical to the reviewed exact Git
+    # blobs in manifest-plan020-m0.json and original assembly manifest.
+    # Their native NPF nonblocking/50ms bounded join checks were already
+    # exercised in signed H1909 real Windows 2025. This does NOT update
+    # the immutable historical M4_FROZEN/PINNED_FILES.
     # M0 own-current hash is already pinned in manifest-plan020-m0.json.
     # Original frozen M4 donor/manifest remain byte-exact.
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go": "96f24e506ea765e9719b252e850a94e4896f18b4",
