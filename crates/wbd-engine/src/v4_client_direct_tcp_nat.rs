@@ -104,12 +104,11 @@ fn words(src:u32,dst:u32,sport:u16,dport:u16)->[u16;6]{
     [(src>>16) as u16,src as u16,(dst>>16) as u16,dst as u16,
         sport,dport]
 }
-fn rewrite_tcp(d:&[u8],header:&ParsedTcp,
-    src:u32,dst:u32,sport:u16,dport:u16,out:&mut[u8])
-    ->Result<usize,TcpNatError>{
-    if out.len()<d.len(){return Err(TcpNatError::InvalidPacket)}
-    out[..d.len()].copy_from_slice(d);
-    let o=&mut out[..d.len()];
+// A single mutation of the already-owned packet's address/ports/checksums.
+// The inverse and forward owned-Vec paths bypass a second payload copy;
+// old borrowed-source callers still use rewrite_tcp below.
+fn rewrite_tcp_fields(o:&mut [u8],header:&ParsedTcp,
+    src:u32,dst:u32,sport:u16,dport:u16){
     let pos=header.ihl;
     let old=words(header.src,header.dst,header.src_port,header.dst_port);
     let new=words(src,dst,sport,dport);
@@ -123,6 +122,13 @@ fn rewrite_tcp(d:&[u8],header:&ParsedTcp,
     o[10]=0;o[11]=0;
     let ip_sum=checksum(&o[..header.ihl]);
     o[10..12].copy_from_slice(&ip_sum.to_be_bytes());
+}
+fn rewrite_tcp(d:&[u8],header:&ParsedTcp,
+    src:u32,dst:u32,sport:u16,dport:u16,out:&mut[u8])
+    ->Result<usize,TcpNatError>{
+    if out.len()<d.len(){return Err(TcpNatError::InvalidPacket)}
+    out[..d.len()].copy_from_slice(d);
+    rewrite_tcp_fields(&mut out[..d.len()],header,src,dst,sport,dport);
     Ok(d.len())
 }
 impl DirectTcpNat{
@@ -156,10 +162,8 @@ impl DirectTcpNat{
     // Original observed application's local address must already be
     // verified by current authenticated native Wintun owner. Only a new
     // SYN may allocate a NAT port. The same original 4-tuple is fixed.
-    pub(crate) fn to_listener(&mut self,packet:&[u8],real_dst:u32,
-        now_ms:u64,out:&mut[u8])->Result<(usize,TcpNatEntry),TcpNatError>{
-        let p=parse_packet(packet)?;
-        if out.len()<packet.len(){return Err(TcpNatError::InvalidPacket)}
+    fn listener_entry(&mut self,p:&ParsedTcp,real_dst:u32,now_ms:u64)
+        ->Result<TcpNatEntry,TcpNatError>{
         if p.src!=self.lease4{return Err(TcpNatError::WrongLease)}
         let key=TcpNatKey{client:p.src,source_port:p.src_port,
             presented:p.dst,target_port:p.dst_port};
@@ -190,9 +194,33 @@ impl DirectTcpNat{
         let entry=self.reverse.get(&port).copied()
             .ok_or(TcpNatError::NoAssociation)?;
         if entry.real_dst!=real_dst{return Err(TcpNatError::NoAssociation)}
-        let len=rewrite_tcp(packet,&p,self.synthetic4,self.lease4,
-            port,self.listener_port,out)?;
-        Ok((len,entry))
+        Ok(entry)
+    }
+    // Kept for existing borrowed-caller ABI and byte-exact comparison tests.
+    pub(crate) fn to_listener(&mut self,packet:&[u8],real_dst:u32,
+        now_ms:u64,out:&mut[u8])->Result<(usize,TcpNatEntry),TcpNatError>{
+        let p=parse_packet(packet)?;
+        if out.len()<packet.len(){return Err(TcpNatError::InvalidPacket)}
+        let entry=self.listener_entry(&p,real_dst,now_ms)?;
+        let n=rewrite_tcp(packet,&p,self.synthetic4,self.lease4,
+            entry.proxy_port,self.listener_port,out)?;
+        Ok((n,entry))
+    }
+    /// Caller already owns the one bounded FIFO packet allocation; mutate
+    /// precisely those bytes. No 65KiB stack scratch and no second Vec copy.
+    pub(crate) fn to_listener_in_place(&mut self,packet:&mut[u8],
+        real_dst:u32,now_ms:u64)->Result<TcpNatEntry,TcpNatError>{
+        let p=parse_packet(packet)?;
+        let entry=self.listener_entry(&p,real_dst,now_ms)?;
+        rewrite_tcp_fields(packet,&p,self.synthetic4,self.lease4,
+            entry.proxy_port,self.listener_port);
+        Ok(entry)
+    }
+    fn reverse_entry(&self,p:&ParsedTcp)->Result<TcpNatEntry,TcpNatError>{
+        if p.src!=self.lease4||p.src_port!=self.listener_port||
+            p.dst!=self.synthetic4{return Err(TcpNatError::WrongReverse)}
+        self.reverse.get(&p.dst_port).copied()
+            .ok_or(TcpNatError::NoAssociation)
     }
     /// Only packets emitted by the kernel TCP listener to our one synthetic
     /// peer + issued NAT port may become client-visible replies. A matched
@@ -200,13 +228,19 @@ impl DirectTcpNat{
     pub(crate) fn to_app(&self,packet:&[u8],out:&mut[u8])
         ->Result<(usize,TcpNatEntry),TcpNatError>{
         let p=parse_packet(packet)?;
-        if p.src!=self.lease4||p.src_port!=self.listener_port||
-           p.dst!=self.synthetic4{return Err(TcpNatError::WrongReverse)}
-        let entry=self.reverse.get(&p.dst_port).copied()
-            .ok_or(TcpNatError::NoAssociation)?;
-        let len=rewrite_tcp(packet,&p,entry.key.presented,
+        let entry=self.reverse_entry(&p)?;
+        let n=rewrite_tcp(packet,&p,entry.key.presented,
             entry.key.client,entry.key.target_port,entry.key.source_port,out)?;
-        Ok((len,entry))
+        Ok((n,entry))
+    }
+    /// A reverse miss never mutates packet, allowing DNS association fallback.
+    pub(crate) fn to_app_in_place(&self,packet:&mut[u8])
+        ->Result<TcpNatEntry,TcpNatError>{
+        let p=parse_packet(packet)?;
+        let entry=self.reverse_entry(&p)?;
+        rewrite_tcp_fields(packet,&p,entry.key.presented,
+            entry.key.client,entry.key.target_port,entry.key.source_port);
+        Ok(entry)
     }
     /// For an ACCEPT from the kernel listener, the source tuple must be
     /// exactly the synthetic peer and allocated NAT port. This directs the
@@ -318,6 +352,66 @@ mod tests{
         assert!(nat.retire(entry.key));
         assert!(!nat.retire(entry.key));
         assert_eq!(nat.len(),0);
+    }
+    #[test]
+    fn plan029_h1931_owned_nat_matches_legacy_for_full_mtu_and_max_ipv4(){
+        let lease=ip(10,66,0,2);
+        let fake=ip(198,18,1,9);
+        let synthetic=ip(198,19,2,1);
+        let real=ip(203,0,113,11);
+        for size in [0,1,64,1389,16*1024,65535-40]{
+            let payload=vec![0x7bu8;size];
+            let orig=packet(lease,fake,55701,443,TCP_SYN,&payload);
+            let mut old=DirectTcpNat::new(lease,synthetic,46100,2).unwrap();
+            let mut new=DirectTcpNat::new(lease,synthetic,46100,2).unwrap();
+            let mut old_wire=vec![0;orig.len()];
+            let (n,old_entry)=old.to_listener(&orig,real,11,&mut old_wire).unwrap();
+            let mut new_wire=orig.clone();
+            let new_entry=new.to_listener_in_place(&mut new_wire,real,11).unwrap();
+            assert_eq!(new_entry,old_entry);
+            assert_eq!(new_wire,&old_wire[..n]);
+            check_tcp_integrity(&new_wire);
+            let kernel=packet(lease,synthetic,46100,old_entry.proxy_port,
+                TCP_SYN|TCP_ACK,&payload);
+            let mut borrowed=vec![0;kernel.len()];
+            let (m,old_return)=old.to_app(&kernel,&mut borrowed).unwrap();
+            let mut owned=kernel.clone();
+            let new_return=new.to_app_in_place(&mut owned).unwrap();
+            assert_eq!(old_return,new_return);
+            assert_eq!(owned,&borrowed[..m]);
+            check_tcp_integrity(&owned);
+        }
+    }
+    #[test]
+    fn plan029_h1931_reverse_miss_has_no_mutation_and_forward_no_syn_no_leak(){
+        let lease=ip(10,66,0,2);
+        let fake=ip(198,18,1,9);
+        let synthetic=ip(198,19,2,1);
+        let mut nat=DirectTcpNat::new(lease,synthetic,46100,1).unwrap();
+        let mut raw=packet(lease,fake,44000,443,TCP_ACK,&[]);
+        let original=raw.clone();
+        assert_eq!(nat.to_listener_in_place(&mut raw,ip(8,8,8,8),7),
+            Err(TcpNatError::NoSyn));
+        assert_eq!(nat.len(),0);
+        assert_eq!(raw,original);
+        let mut reply=packet(lease,synthetic,46100,41000,TCP_SYN|TCP_ACK,&[]);
+        let before=reply.clone();
+        assert_eq!(nat.to_app_in_place(&mut reply),
+            Err(TcpNatError::NoAssociation));
+        assert_eq!(reply,before);
+        // DNS may fail to match while Direct must still identify its own
+        // real kernel return, without changing the same buffer on miss.
+        let initial=packet(lease,fake,44000,443,TCP_SYN,&[]);
+        let port=nat.to_listener_in_place(&mut initial.clone(),ip(8,8,8,8),7)
+            .unwrap().proxy_port;
+        let mut legitimate=packet(lease,synthetic,46100,port,TCP_ACK,&[]);
+        let dns=DirectTcpNat::new_dns(lease,synthetic,46100).unwrap();
+        let untouched=legitimate.clone();
+        assert_eq!(dns.to_app_in_place(&mut legitimate),
+            Err(TcpNatError::NoAssociation));
+        assert_eq!(legitimate,untouched);
+        assert!(nat.to_app_in_place(&mut legitimate).is_ok());
+        check_tcp_integrity(&legitimate);
     }
     #[test]
     fn plan029_tcp_native_only_direct_cap_does_not_reclassify_tunnel(){

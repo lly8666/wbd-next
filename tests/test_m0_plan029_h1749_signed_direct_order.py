@@ -517,10 +517,12 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"',app)
         self.assertIn('time.sleep(8)',app)
         self.assertIn('begin_monotonic=time.perf_counter() if TCP128_CONTROL or HIGH_RATE else None',app)
-        # H1926 adds an independent small-TCP A-B-B-A scene; the existing
-        # high-rate / 128 / sustained exclusion must reject it as well.
-        self.assertIn('if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or SMALL_TCP or not BULK):',app)
-        self.assertIn('if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or not BULK):',app)
+        # H1931 combines small TCP and long P2 ONLY on one exact signed
+        # Normal owner. Ordinary short rate/128/sustained remain separate.
+        self.assertIn('(SMALL_TCP and not LONG_RATE) or not BULK',app)
+        self.assertIn('(HIGH_RATE and not LONG_RATE) or not BULK',app)
+        self.assertIn('not (p029_sustain or p029_abba or p029_tcp128 or',runner)
+        self.assertIn('(p029_highrate and not p029_longrate)',runner)
         self.assertIn('if SMALL_TCP:',app)
         self.assertIn('wait(guest,gn,7)',app)
         self.assertIn('latency=run_small_tcp_latency(',app)

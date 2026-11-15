@@ -26,10 +26,15 @@ SMALL_TCP=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 LONG_RATE=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 if LONG_RATE and not HIGH_RATE:
     raise RuntimeError("H1903 extended 2GiB/1.5GiB requires explicit high-rate signed source")
-if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or SMALL_TCP or not BULK):
-    raise RuntimeError("H1898 high-rate exclusive of sustained/ABBA/128/small")
-if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or not BULK):
-    raise RuntimeError("H1926 small TCP only one signed 4MiB bulk owner")
+# H1931 one source-locked original product does both diagnostics: small
+# kernel A-B-B-A first, then the 10GiB physical/Direct CPU control.
+# Ordinary short rate, 128, sustained and old four-flow ABBA remain exclusive.
+if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or
+                  (SMALL_TCP and not LONG_RATE) or not BULK):
+    raise RuntimeError("H1931 rate/small combination only with signed long P2")
+if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or
+                  (HIGH_RATE and not LONG_RATE) or not BULK):
+    raise RuntimeError("H1931 small TCP only signed ordinary bulk or long P2")
 if SUSTAIN and (ABBA or TCP128 or not BULK):
     raise RuntimeError("H1896 sustained TCP separate from 128/ABBA and requires 4MiB CN")
 if TCP128_CONTROL and not TCP128:

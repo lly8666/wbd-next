@@ -48,8 +48,8 @@ if p029_smalltcp and not (
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
     os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal" and
     not (p029_sustain or p029_abba or p029_tcp128 or
-         p029_tcp128_control or p029_highrate or p029_longrate)):
- raise RuntimeError("H1926 small kernel TCP A-B-B-A requires one signed original P2 owner")
+         p029_tcp128_control or (p029_highrate and not p029_longrate))):
+ raise RuntimeError("H1931 small kernel TCP may join only a signed long P2 owner")
 if p029_longrate and not (p029_highrate and p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and

@@ -427,12 +427,14 @@ impl NativeTcpActor{
             d.ready_full=d.ready_full.saturating_add(1);
         }
     }
-    fn enqueue(&mut self,wire:&[u8])->Result<(),()>{
+    fn enqueue_owned(&mut self,wire:Vec<u8>)->Result<(),()>{
         if self.ready.len()>=MAX_READY{
             self.record_ready_full();
             return Err(())
         }
-        self.ready.push_back(wire.to_vec());
+        // The single Vec allocation is already owned by this NAT packet.
+        // Never re-copy its payload or borrow another Wintun device/ring.
+        self.ready.push_back(wire);
         if let Some(d)=self.diagnosis.as_mut(){
             d.ready_peak=d.ready_peak.max(self.ready.len());
         }
@@ -452,10 +454,10 @@ impl NativeTcpActor{
         }
         let presented=u32::from_be_bytes(packet[16..20].try_into().map_err(|_|())?);
         let prior=self.dns_nat.len();
-        let mut rewritten=[0u8;MAX_L3];
-        let (n,entry)=self.dns_nat.to_listener(packet,presented,
-            now_ms,&mut rewritten).map_err(|_|())?;
-        if self.enqueue(&rewritten[..n]).is_err(){
+        let mut rewritten=packet.to_vec();
+        let entry=self.dns_nat.to_listener_in_place(&mut rewritten,presented,
+            now_ms).map_err(|_|())?;
+        if self.enqueue_owned(rewritten).is_err(){
             if self.dns_nat.len()>prior{self.dns_nat.retire(entry.key);}
             return Err(())
         }
@@ -481,10 +483,10 @@ impl NativeTcpActor{
             return Err(())
         }
         let was=self.nat.len();
-        let mut rewritten=[0u8;MAX_L3];
-        let (n,entry)=self.nat.to_listener(packet,real,now_ms,&mut rewritten)
+        let mut rewritten=packet.to_vec();
+        let entry=self.nat.to_listener_in_place(&mut rewritten,real,now_ms)
             .map_err(|_|())?;
-        if self.enqueue(&rewritten[..n]).is_err(){
+        if self.enqueue_owned(rewritten).is_err(){
             if self.nat.len()>was{self.nat.retire(entry.key);}
             return Err(())
         }
@@ -503,12 +505,18 @@ impl NativeTcpActor{
            u32::from_be_bytes(packet[16..20].try_into().ok()?)!=self.synthetic{
             return None
         }
-        let mut rewritten=[0u8;MAX_L3];
-        let n=match self.dns_nat.to_app(packet,&mut rewritten)
-            .or_else(|_|self.nat.to_app(packet,&mut rewritten)){
-            Ok((n,_))=>n,Err(_)=>return Some(Err(()))
-        };
-        Some(self.enqueue(&rewritten[..n]))
+        // Reject a full owned reverse queue before one allocation or NAT
+        // mutation. A TCP packet is NEVER silently dropped on pressure.
+        if self.ready.len()>=MAX_READY{
+            self.record_ready_full();
+            return Some(Err(()))
+        }
+        let mut rewritten=packet.to_vec();
+        if self.dns_nat.to_app_in_place(&mut rewritten)
+            .or_else(|_|self.nat.to_app_in_place(&mut rewritten)).is_err(){
+            return Some(Err(()))
+        }
+        Some(self.enqueue_owned(rewritten))
     }
     /// One existing owner tick services at most 8 accepted connections and
     /// 8 existing relays (bounded rotating quantum); no per-flow thread
