@@ -59,5 +59,7 @@
   "next_candidate": "H1917 progress-correlated one-ticket continuation, no idle zero-progress tickets; source NOT_RUN",
   "proof_note": "Event suppression suggests readiness/progress coupling; logs do not prove a specific WinSock root cause. Prior H1913 10GiB PASS is other SOURCE; no causal CPU comparison.",
   "plan028": "LIMITED_CLOSED_NO_REOPEN",
-  "plan030": "NOT_STARTED"
+  "plan030": "NOT_STARTED",
+  "source_sha": "00c41dad927bd5846da79fcec4c42f51d650c645",
+  "result": "FAIL"
 }

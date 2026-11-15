@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1918,
-  "checkpoint_sha": "fbff58c923dedec097e976820b832114ff673e23",
+  "sequence": 1919,
+  "checkpoint_sha": "019067d2e6417c542f08111446ec2ee946029690",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1918 documentation-bound correction while exact H1917 SOURCE original Win2025/WSL2 native action43712621017 remains in progress. H1917 positive short-recv continuation candidate; no new product PASS.",
-  "why_now": "Feature catalog H1917 Action43712621086 check failed 16KiB feature-card bound; governance role check failed unbounded M0 context_refs=9. Both are real metadata contract violations, not false-red. Shorten feature summary without deleting historical rows and trim cursor context_refs to eight; avoid re-dispatching H1917 original source action.",
+  "current_task": "H1919 source-identity evidence schema correction: H1917 original source fbff58c signed original Win2025/WSL2 Action43712621017 still must be collected; H1916 signed 4MiB reply timeout remains true FAIL. No product code changes.",
+  "why_now": "H1918 governance Action43713116277 role+feature schema gates now PASS, but structure validation failed 'evidence is for a different SOURCE'. Exact problem: historical H1916 genuine failure evidence had observed_source_sha=00c41dad but lacked required source_sha key while listed in cursor.evidence_refs, whose last_tested_source=00c41dad. Add consistent source_sha and literal FAIL, do not alter artifact or claim PASS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect already-running H1917 original native Action43712621017 and pure component Action43712621090 first. If 4MiB full echo/FIN/Stop PASS, use SOURCE-matched 10GiB rate receipt; old/new CPU benefit requires same-VM sequential binary A/B, not cross-VM. If FAIL diagnose actual first boundary, no sweeping. PLAN029 D1–D5/P1–P2 remain OPEN.",
+  "next_action": "Collect H1917 signed native Action43712621017 and component successful Action43712621090; test full real 4MiB echo+SHA+FIN/Stop and then same-SOURCE 10GiB, no duplicated dispatch. Compare CPU old/new only on same VM and include small Direct latency protection. 029 D1–D5/P1–P2 OPEN.",
   "unverified": true,
   "last_tested_source": "00c41dad927bd5846da79fcec4c42f51d650c645",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1916-H1915-ORIGINAL-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
     "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md",
-    "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1917 code commit fbff58c spawned signed true native Action43712621017 and component Action43712621090 (pending at H1918 write). H1917 governance Action43712621086 FAIL from two local metadata overflows; H1918 corrects both with no product code change. H1916 signed native 4MiB original reply remains recorded FAIL, 10GiB NOT_RUN."
+  "partial_summary": "H1917 source fbff58c original Windows+WSL2 real run launched once (43712621017); static/Windows/Linux Rust/Go/component PASSED. H1916 signed 4MiB reply timeout TRUE FAIL. H1918 feature size and 8 refs fixed; H1919 corrects evidence.source_sha required by governance. Full H1917 native verdict pending, 10GiB NOT_RUN until proven."
 }
