@@ -401,6 +401,10 @@ pub struct TcpDirectRelay{
 pub struct RelayIoCounts{
     pub read_calls:[u16;2],
     pub read_wouldblock:[u16;2],
+    // A one-time non-consuming EOF check after actual FD_CLOSE and a
+    // positive recv: no per-packet syscall on an unclosed TCP stream.
+    pub fin_peek_calls:[u16;2],
+    pub fin_peek_eof:[u16;2],
     pub write_calls:[u16;2],
     pub write_wouldblock:[u16;2],
     pub short_writes:[u16;2],
@@ -612,6 +616,37 @@ impl TcpDirectRelay{
                 }
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("outer_read",e)),
+            }
+        }
+        // The real Windows FD_CLOSE may be coalesced with final short
+        // DATA. recv(DATA) needs another TX ticket to discover recv(0),
+        // delaying server echo when it waits for our forwarded FIN.
+        // MSG_PEEK never consumes data. Exactly one nonblocking probe
+        // per leg/turn ONLY after actual FD_CLOSE + positive recv.
+        // If data remains or WouldBlock, the H1920 any-progress
+        // self-ticket remains unchanged; no periodic polling.
+        if self.close_hint[0]&&!self.inner_eof&&inner_read>0{
+            io.fin_peek_calls[0]+=1;
+            let mut probe=[0u8;1];
+            match self.inner.peek(&mut probe){
+                Ok(0)=>{self.inner_eof=true;self.read_armed[0]=false;
+                         io.fin_peek_eof[0]+=1;},
+                Ok(_)=>{},
+                Err(e) if matches!(e.kind(),ErrorKind::WouldBlock|
+                    ErrorKind::Interrupted)=>{},
+                Err(e)=>return Err(relay_error("inner_fin_peek",e)),
+            }
+        }
+        if self.close_hint[1]&&!self.outer_eof&&outer_read>0{
+            io.fin_peek_calls[1]+=1;
+            let mut probe=[0u8;1];
+            match self.outer.peek(&mut probe){
+                Ok(0)=>{self.outer_eof=true;self.read_armed[1]=false;
+                         io.fin_peek_eof[1]+=1;},
+                Ok(_)=>{},
+                Err(e) if matches!(e.kind(),ErrorKind::WouldBlock|
+                    ErrorKind::Interrupted)=>{},
+                Err(e)=>return Err(relay_error("outer_fin_peek",e)),
             }
         }
         // A short or WouldBlock immediate write is not repeated in this
@@ -881,14 +916,14 @@ mod plan029_global_backpressure_tests{
         for _ in 0..100{
             let t=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
             uploaded+=t.inner_read;
-            saw_probe|=t.close_probe_due;
+            saw_probe|=t.close_probe_due||(t.inner_read>0&&relay.half_close_state()[0]);
             eof=relay.half_close_state()[0];
             if eof{break}
             // No new event; must be a close-correlated continuation,
             // an unsent tail or an actually full 64KiB read quantum.
             if t.bytes_read>0 || t.bytes_written>0 {
                 assert!(t.close_probe_due||t.buffered>0||
-                    t.inner_read==QUANTUM_BYTES);
+                    t.inner_read==QUANTUM_BYTES||relay.half_close_state()[0]);
             }
             std::thread::sleep(Duration::from_millis(1));
         }
@@ -911,7 +946,7 @@ mod plan029_global_backpressure_tests{
             if t.finished{done=true;break}
             if t.bytes_read>0 || t.bytes_written>0 {
                 assert!(t.close_probe_due||t.buffered>0||
-                    t.outer_read==QUANTUM_BYTES);
+                    t.outer_read==QUANTUM_BYTES||relay.half_close_state()[1]);
             }
             std::thread::sleep(Duration::from_millis(1));
         }
@@ -920,6 +955,57 @@ mod plan029_global_backpressure_tests{
         app.read_exact(&mut got).unwrap();
         assert_eq!(got,payload);
         assert_eq!(app.read(&mut b).unwrap(),0);
+    }
+    /// The real kernel may have short DATA and FIN buffered before one
+    /// FD_READ|FD_CLOSE. Both half closes propagate without relying on a
+    /// second Rust TX scheduling opportunity.
+    #[test]
+    fn plan029_h1941_coalesced_fin_peek_one_turn_short_kernel_tcp(){
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let client=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (server,_)=listener.accept().unwrap();
+            (server,client)
+        }
+        let (inner,mut app)=pair();
+        let (outer,mut guest)=pair();
+        app.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        guest.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let mut relay=TcpDirectRelay::new(inner,outer).unwrap();
+        relay.enable_event_driven_reads();
+        let mut scratch=[0u8;QUANTUM_BYTES];
+        let input=[0x57u8;64];
+        app.write_all(&input).unwrap();
+        app.shutdown(Shutdown::Write).unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        relay.note_read_event(true,false);
+        relay.note_close_event(true,false);
+        let upload=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(upload.inner_read,64);
+        assert_eq!(upload.io.fin_peek_calls,[1,0]);
+        assert_eq!(upload.io.fin_peek_eof,[1,0]);
+        assert!(!upload.close_probe_due);
+        assert!(relay.half_close_state()[0]&&relay.half_close_state()[2]);
+        let mut got=[0u8;64];
+        guest.read_exact(&mut got).unwrap();
+        assert_eq!(got,input);
+        let mut eof=[0u8;1];
+        assert_eq!(guest.read(&mut eof).unwrap(),0);
+        guest.write_all(&input).unwrap();
+        guest.shutdown(Shutdown::Write).unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        relay.note_read_event(false,true);
+        relay.note_close_event(false,true);
+        let download=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(download.outer_read,64);
+        assert_eq!(download.io.fin_peek_calls,[0,1]);
+        assert_eq!(download.io.fin_peek_eof,[0,1]);
+        assert!(download.finished);
+        assert_eq!(relay.half_close_state(),[true,true,true,true]);
+        app.read_exact(&mut got).unwrap();
+        assert_eq!(got,input);
+        assert_eq!(app.read(&mut eof).unwrap(),0);
     }
     #[test]
     fn plan029_per_leg_read_wouldblock_disarm_fd_read_rearm_and_fin(){

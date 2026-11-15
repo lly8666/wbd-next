@@ -18,6 +18,8 @@ class P1OriginalWiring(unittest.TestCase):
   self.assertIn('if p029_direct or p029_p1_policy:',s)
   self.assertIn('if p029_direct or p029_p1_cn:',s)
   self.assertIn('range(4096)',s)
+  self.assertIn('"11.42."+str(i//128)',s)
+  self.assertNotIn('"100.64."+str(i//128)',s)
   self.assertIn('range(8192)',s)
   self.assertIn('p1_rate_tunnel_ip=p029_tunnel_alias if p029_p1_policy',s)
   self.assertIn('rate,p1_rate_tunnel_ip,"10.66.0.2"',s)

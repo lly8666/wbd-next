@@ -177,6 +177,7 @@ struct TcpLegDiagnosis{
     connected_first_probe_tickets:u64,
     ready_wait_ge8_ms:u64,ready_wait_ge16_ms:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
+    io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
     io_event_suppressed_reads:[u64;2],
@@ -778,6 +779,8 @@ impl NativeTcpActor{
                                 for leg in 0..2{
                                     d.io_reads[leg]=d.io_reads[leg].saturating_add(tick.io.read_calls[leg] as u64);
                                     d.io_read_wouldblock[leg]=d.io_read_wouldblock[leg].saturating_add(tick.io.read_wouldblock[leg] as u64);
+                                    d.io_fin_peek_calls[leg]=d.io_fin_peek_calls[leg].saturating_add(tick.io.fin_peek_calls[leg] as u64);
+                                    d.io_fin_peek_eof[leg]=d.io_fin_peek_eof[leg].saturating_add(tick.io.fin_peek_eof[leg] as u64);
                                     d.io_writes[leg]=d.io_writes[leg].saturating_add(tick.io.write_calls[leg] as u64);
                                     d.io_write_wouldblock[leg]=d.io_write_wouldblock[leg].saturating_add(tick.io.write_wouldblock[leg] as u64);
                                     d.io_short_writes[leg]=d.io_short_writes[leg].saturating_add(tick.io.short_writes[leg] as u64);
@@ -1173,7 +1176,7 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} connected_first_probe_tickets={} ready_wait_ge8_ms={} ready_wait_ge16_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} connected_first_probe_tickets={} ready_wait_ge8_ms={} ready_wait_ge16_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_fin_peek_calls={} outer_fin_peek_calls={} inner_fin_peek_eof={} outer_fin_peek_eof={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
@@ -1183,6 +1186,8 @@ impl Drop for NativeTcpActor{
             d.relay_progress_no_self_ticket,d.relay_progress_self_ticket,
             d.relay_close_probe_self_ticket,d.io_reads[0],d.io_reads[1],
             d.io_read_wouldblock[0],d.io_read_wouldblock[1],
+            d.io_fin_peek_calls[0],d.io_fin_peek_calls[1],
+            d.io_fin_peek_eof[0],d.io_fin_peek_eof[1],
             d.io_writes[0],d.io_writes[1],
             d.io_write_wouldblock[0],d.io_write_wouldblock[1],
             d.io_short_writes[0],d.io_short_writes[1],

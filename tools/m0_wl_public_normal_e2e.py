@@ -415,9 +415,11 @@ try:
        "sh",unix(helper)],stdout=alias_log,stderr=subprocess.STDOUT)
   rules=out/"plan029-h1745-cn-domains.txt"
   if p029_p1_policy:
-   # 4096 nonadjacent deterministic /32s outside the same Tunnel peer.
+   # H1937 proved CGNAT 100.64/10 is folded into LAN: only 8
+   # effective CN rows despite 4096 /32 inputs. Test-only non-LAN
+   # 11.42.0.0/19 avoids this normalization and guest 203.0.113.77.
    cn=out/"plan029-h1934-cn4096.txt"
-   cn.write_text("".join("100.64."+str(i//128)+"."+str((i%128)*2)+"/32\n"
+   cn.write_text("".join("11.42."+str(i//128)+"."+str((i%128)*2)+"/32\n"
                          for i in range(4096)),encoding="ascii")
    rules.write_text("".join("cn%05d.bench.invalid\n"%i
                                  for i in range(8192)),encoding="ascii")

@@ -619,6 +619,8 @@ H1888_IO_FIELDS=(
     "relay_close_probe_self_ticket",
     "inner_read_calls","outer_read_calls",
     "inner_read_wouldblock","outer_read_wouldblock",
+    "inner_fin_peek_calls","outer_fin_peek_calls",
+    "inner_fin_peek_eof","outer_fin_peek_eof",
     "inner_write_calls","outer_write_calls",
     "inner_write_wouldblock","outer_write_wouldblock",
     "inner_write_short","outer_write_short",
@@ -651,6 +653,8 @@ def parse_kernel_io_final(text):
           fields["relay_progress_self_ticket"]>fields["relay_turns"] or
         fields["relay_close_probe_self_ticket"]>
           fields["relay_progress_self_ticket"] or
+        any(fields[f"{leg}_fin_peek_eof"]>fields[f"{leg}_fin_peek_calls"]
+            for leg in ("inner","outer")) or
         any(fields[f"{leg}_{op}_wouldblock"]>fields[f"{leg}_{op}_calls"]
             for leg in ("inner","outer") for op in ("read","write"))):
         raise RuntimeError("H1888 Rust kernel readiness/call count invariant invalid")
