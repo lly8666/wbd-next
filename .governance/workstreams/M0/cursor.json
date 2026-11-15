@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1873,
-  "checkpoint_sha": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
+  "sequence": 1874,
+  "checkpoint_sha": "c120fcee2efa2272b7ca81fa0e34360efd3cc260",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1873 repair governance exact source evidence_refs and feature catalog after H1872. H1870 source Windows Rust test E0369 fixed in H1872; network still requires H1872 signed P2 verification.",
-  "why_now": "governance.py validate_repo requires EVERY cursor evidence source_sha match last_tested_source; H1870 new aggregate evidence covers two different SOURCES, thus belongs devlog/feature but not cursor evidence_refs. Keep last verified-source eccaf H1866 and its matching evidence.",
+  "current_task": "H1874 exact feature-catalog declaration repair after governance H1873: new short devlog declares changed dns-split-ipv6 card; preserve H1872 runtime code/SOURCE and H1866 exact cursor evidence.",
+  "why_now": "H1873 Governance structure PASS; feature_catalog check FAIL because changed feature card lacked feature-impact declaration in a changed devlog. The pure docs followup adds one matching declaration, not a new product source or Action dispatch.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1872 exact source Windows Rust and signed P2; do not dispatch older H1870 network again. Continue event-ready Direct TCP and remaining PLAN029 exits, after proof.",
+  "next_action": "Collect ongoing H1872 source Windows Rust and P2 real network, keep original H1870 compile failure; then event-ready TCP scheduling and remaining PLAN029 exits.",
   "unverified": true,
   "last_tested_source": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1869-H1866-D4-SIGNED-IPV6-ROUTE-OPEN-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md",
     "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
     "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md",
     "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
-    "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
-    "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md"
+    "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md"
   ],
   "open_requests": [],
   "partial_summary": "H1870 test E0369 compiler failure retained; H1872 exact test fixed but real Windows P2 not yet qualified. H1873 fixes evidence provenance/feature CI only, no code/OS changes. H1867 P1 +9.41% OPEN and H1868 hard8 PASS_SCOPED."
