@@ -173,7 +173,7 @@ def udp_windows(lease,tun_ip):
         # Direct TCP lifetime, not end after the old first ~2 seconds.
         done=pathlib.Path(os.environ["WBD_PLAN029_P2_TCP_DONE_MARKER"])
         for seq in range(MAX_SUSTAIN):
-            begin_monotonic=time.monotonic() if TCP128_CONTROL else None
+            begin_monotonic=time.perf_counter() if TCP128_CONTROL else None
             begin=time.perf_counter()
             sock.sendto(udp_packet(seq),(tun_ip,SMALL_PORT))
             payload,fromaddr=sock.recvfrom(512)
@@ -183,7 +183,7 @@ def udp_windows(lease,tun_ip):
             rtt=(end-begin)*1000
             rtts.append(rtt)
             if tagged is not None:
-                tagged.append((begin_monotonic,time.monotonic(),rtt))
+                tagged.append((begin_monotonic,time.perf_counter(),rtt))
             if prev is not None:gaps.append((end-prev)*1000)
             prev=end;total+=1
             if total%128==0:
@@ -309,9 +309,9 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 # One genuine source-locked original Windows Go+Rust owner,
                 # same ongoing 96B Tunnel UDP, with NO newly opened H1892
                 # Wintun TCP sockets yet. Earlier P2 FIN grace may remain.
-                begin=time.monotonic()
+                begin=time.perf_counter()
                 time.sleep(8)
-                end=time.monotonic()
+                end=time.perf_counter()
                 control={"start_monotonic_s":begin,
                          "end_monotonic_s":end,
                          "scope":"PRE128_NO_NEW_TCP_PROBE_SOCKETS_POST_P2"}

@@ -494,6 +494,8 @@ class NativeDirectOrder(unittest.TestCase):
         wf=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn('TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"',app)
         self.assertIn('time.sleep(8)',app)
+        self.assertIn('begin_monotonic=time.perf_counter() if TCP128_CONTROL else None',app)
+        self.assertNotIn('time.monotonic()',app)
         self.assertIn('"matched_phase_udp":phase_udp',app)
         self.assertIn('math.ceil(.99*len(sample))-1',app)
         self.assertIn('set(small_win["matched_phase_udp"])!={"pre128","tcp128"}',app)
