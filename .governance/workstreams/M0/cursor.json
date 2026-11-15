@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1888,
-  "checkpoint_sha": "ea444880e608ec1f0acc409992ec02aa1f2e5175",
+  "sequence": 1889,
+  "checkpoint_sha": "d0b6da290e8afe5a438dac511d7791b649d81cd8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1888 new cold-only signed Rust TX TCP two-leg syscall/event/ready-ticket age diagnostic. Genuine Windows SocketReadiness flags READ/WRITE/CONNECT/CLOSE, actual per-leg read/write attempts, WouldBlock/short, allocated read gating and per-generation queue wait. One terminal owner Drop receipt parsed by signed normal P2 after owned Stop. Source candidate NOT_RUN.",
-  "why_now": "H1886 one Windows VM/binary four real 4MiB Direct ABBA shows copy mean78.137ms vs bypass82.636ms (+5.76% bypass slower single noisy run), so no supported copy optimization. Need quantify would-block syscalls and ready FIFO delay instead of microbranch guess; no new threads, clocks or syscall on hot path, no secrets in logs.",
+  "current_task": "H1889 collected exact H1888 signed Windows2025/WSL2 original Go/Wintun/Rust 4MiB direct+Tunnel120/120+Stop SUCCESS. Physical58.616ms Direct111.000ms (1.894x); real Rust outer read WouldBlock119/189 (63.0%), inner15/110 (13.6%), ready FIFO max1ms ticket_peak1, no-progress33/207. H1890 next per-leg FD_READ wake gating, pending.",
+  "why_now": "H1888 signed typed Rust actor Drop counters prove repeated reads of physical outer socket account 119 empty syscalls/189 outer reads, while scheduling queue max1ms/one ticket. Narrow concrete fix to per-leg read readiness, not FIFO/crypto/FEC/extra threads.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1888 Windows and Linux platform/engine tests + exact source original signed Windows/WSL2 4MiB normal CN P2; typed kernel IO final receipt must be emitted after original Stop. Analyze inner vs outer read_wouldblock, write blocks, event socket checks per wakes, oldest ready ticket wait and relay no progress. Only then choose event-direction gating or 128 true Wintun idle+few active pressure, separate P1 all-Tunnel user/kernel CPU +9.41% OPEN.",
+  "next_action": "H1890 implement per-leg Winsock FD_READ/FD_CLOSE armed reads, disarm each kernel leg only after actual WouldBlock and re-arm from existing shared event harvest, preserve FIN/backpressure/old ABBA and 16-shard TX single owner. Windows 128 idle/two active, short/blocked, real signed 4MiB+UDP120/120+Stop; compare new outer empty reads normalized, remain P1/P2 OPEN.",
   "unverified": true,
-  "last_tested_source": "3391b9a26897f4e56467c84a9e40c0cd6ebbfa56",
+  "last_tested_source": "d0b6da290e8afe5a438dac511d7791b649d81cd8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1887-H1886-SIGNED-SAME-VM-ABBA-20261115.json"
+    "docs/evidence/M0/PLAN029-H1889-H1888-SIGNED-TCP-IO-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1889-COLLECT-H1888-SIGNED-TCP-IO.md",
     "docs/devlog/M0/20261115-PLAN029-H1888-SIGNED-TCP-IO-SYSCALL-READY-AGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1887-COLLECT-SIGNED-ABBA-PERFORMANCE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md",
     "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md",
     "docs/devlog/M0/20261115-PLAN029-H1883-COLLECT-H1882-FAST-FORWARD-P2.md",
-    "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md",
-    "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md"
+    "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1888 adds only bounded in-memory counters and one cold final eprintln: genuine native TCP socket event masks, read/write calls and WouldBlock/short, pool gating, ticket waits, no-progress turns. Signed P2 parser fail-closed and deterministic unit test. Not yet run; H1886 signed full ABBA PASS but no P2 gain (copy78.137 vs bypass82.636ms). PLAN029 IN_PROGRESS."
+  "partial_summary": "H1888 exact signed original functional PASS physical58.616 Direct111.000ms 1.894x, UDP120/120 p99 3.603ms, owned Stop. True Rust IO outer_read_wouldblock119/189=63%; inner15/110; ready FIFO ticket max1ms, peak1; real outer FD_READ30, 46 shard wakes, no-progress33/207. H1890 per-leg FD_READ gating next, not yet run."
 }
