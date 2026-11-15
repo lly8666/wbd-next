@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1901,
-  "checkpoint_sha": "e1c4c1e4a28a7e5c58565b3770ba82e96e02fc84",
+  "sequence": 1902,
+  "checkpoint_sha": "d9ee83579a294c003105bf04e1b09e517394588e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1901 fix exact CI dispatch: H1900 changed only H1896 source contract test and no native Action launched because native workflow push.paths omitted that test and new H1898 fixture. Add three precise paths, preserving explicit source-locked 500/700 Mb/s markers. Original Windows/WSL2 highrate NOT_RUN.",
-  "why_now": "H1898, H1899 two cheap CI string assertions blocked genuine workload; H1900 fixed last H1896 assertion but did not trigger M0-WIN-LINUX due workflow path filters. A source-locked performance receipt needs the new exact CI action, not an unrun source.",
+  "current_task": "H1902 exact H1901 cheap static test only: actual Linux real socketpair simultaneous duplex+SHA PASSED, but H1898 CPU-source string lives in imported H1896 cpu_delta rather than duplicated in highrate script. Correct test asserts both function calls and actual shared declaration. No native signed workload yet.",
+  "why_now": "H1901 Action43688821106 cheap failed solely new test_target_is_reported_not_pretended_as_ci_performance_pass, first 3 of 4 new tests PASS. H1901 governance and feature SUCCESS. Need source-locked real Windows/WSL2 highrate.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1901 cheap 4 H1898 component tests, original Windows/WSL2 512MiB one-way target500Mbps and 256MiB each simultaneous aggregate700Mbps, real SHA/FIN, 96B Tunnel UDP pre/load/post p99, original/generator/host CPU, and owned Stop. Report throughput reached vs target, no false PASS.",
+  "next_action": "Collect H1902 full cheap test and signed Win2025/WSL2 physical 4MiB+true 512MiB 500Mb/s target, simultaneous 256MiB each 700Mb/s aggregate target, Tunnel96B pre/load/post p99, original/generator/host CPU, SHA/FIN/Stop; report real rates, no target overclaim.",
   "unverified": true,
   "last_tested_source": "29883ab1f674840df715542540d83ae3e240e5fb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1897-H1896-SIGNED-SUSTAIN-30S-CPU-GIB-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
     "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md",
     "docs/devlog/M0/20261115-PLAN029-H1898-TRUE-500-700-MBPS-PARALLEL-LOAD.md",
     "docs/devlog/M0/20261115-PLAN029-H1897-COLLECT-H1896-SIGNED-SUSTAIN-CPU-GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md",
-    "docs/devlog/M0/20261115-PLAN029-H1895-KEEP-P2-ONE-HIGH-RES-CPU-UDP-CLOCK.md",
-    "docs/devlog/M0/20261115-PLAN029-H1894-SAME-VM-PRE128-CPU-UDP-P99-CONTROL.md"
+    "docs/devlog/M0/20261115-PLAN029-H1895-KEEP-P2-ONE-HIGH-RES-CPU-UDP-CLOCK.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1898/1899 historical cheap test failures retained; H1900 only updated test but no native trigger due missing push paths. H1901 explicitly fixes source triggers, no VPN product changes, highrate signed outcome NOT_RUN. 128 real Wintun PASS H1892, capped30s/leg PASS H1896, P1/P2 OPEN."
+  "partial_summary": "H1898 fixture staged; H1901 native blocked by test checking wrong source file for CPU shared scope, three other H1898 tests PASS including real socketpair duplex and source lock. H1902 contract fix only; P1/P2 OPEN."
 }

@@ -72,7 +72,11 @@ class HighRateComponentTests(unittest.TestCase):
              "tools/m0_plan029_h1898_highrate_tcp.py").read_text()
         self.assertIn('phase["target_reached"]=actual>=phase["target_aggregate_mbps"]',src)
         self.assertIn('"rate_result":"TARGET_MEASURED_NOT_PREDECLARED"',src)
-        self.assertIn("WIN32_ORIGINAL_GO_PLUS_RUST_PROCESS_WITH_TUNNEL_UDP_NO_DRIVER_ISR_DPC",src)
+        self.assertIn('"original_process_cpu":cpu_delta(p0,p1,sec,total)',src)
+        self.assertIn('"load_generator_cpu":cpu_delta(g0,g1,sec,total)',src)
+        self.assertIn("WIN32_ORIGINAL_GO_PLUS_RUST_PROCESS_WITH_TUNNEL_UDP_NO_DRIVER_ISR_DPC",(
+            pathlib.Path(__file__).resolve().parents[1]/
+            "tools/m0_plan029_h1896_sustain_tcp.py").read_text())
         self.assertIn("SAME_ORIGINAL_WINDOWS_PROCESS_WITH_96B_TUNNEL_UDP_NO_NEW_TCP",(
             pathlib.Path(__file__).resolve().parents[1]/
             "tools/m0_plan029_h1896_sustain_tcp.py").read_text())
