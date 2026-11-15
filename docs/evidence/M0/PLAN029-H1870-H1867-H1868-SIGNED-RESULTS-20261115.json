@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task": "H1870",
+  "scope": "COLLECT_ONLY_OLDER_SOURCE",
+  "p1": {
+    "action_id": 43648334316,
+    "job_id": 132612420810,
+    "source_sha": "45ae468fc3942d7c407323295e572fea02a1bdb7",
+    "status": "SUCCESS_SCOPED",
+    "A_total_cpu_s": 12.9531,
+    "B_total_cpu_s": 14.1719,
+    "A_cpu_per_gib": 18.5469,
+    "B_cpu_per_gib": 20.2921,
+    "B_over_A": 1.0941,
+    "windows_udp_p99_ms": [
+      47,
+      47
+    ],
+    "throughput_mbps_each": 50,
+    "session_seconds_each": 60,
+    "owned_stop": "PASS_BOTH",
+    "driver_cpu": "NOT_ATTRIBUTED",
+    "user_queue_age": "NOT_MEASURED",
+    "performance": "OPEN_BACKEND_DIFFERS"
+  },
+  "direct_pressure": {
+    "action_id": 43648756279,
+    "job_id": 132613734303,
+    "source_sha": "11a1daaf4c0c74730da32909382f39f365f0427a",
+    "status": "SUCCESS_SCOPED",
+    "hard": 8,
+    "attempts": 16,
+    "real_echo": 5,
+    "unanswered": 11,
+    "unanswered_reason": "UNKNOWN_NOT_TYPED",
+    "old_direct_heartbeat": 11,
+    "new_tunnel_while_full": true,
+    "new_direct_after_expiry": true,
+    "owned_stop": "PASS_BOTH",
+    "tcp_buffer_dns_cache_dns_transaction_fakeip_pressure": "NOT_RUN"
+  },
+  "H1870_real_network": "NOT_RUN",
+  "H1870_build": "NOT_RUN"
+}

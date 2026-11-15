@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1869,
-  "checkpoint_sha": "11a1daaf4c0c74730da32909382f39f365f0427a",
+  "sequence": 1870,
+  "checkpoint_sha": "17e6e8b3f957991e6d30b6ddd173b0eefb39829d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1869 H1866 true signed original Normal CN Action43647750349 passed real Direct/Tunnel and owned Stop. Real Windows IPv6 route readback before/Ready/after Stop all []; original host no IPv6 default, Wintun ifindex23; actual IPv6 socket NOT_RUN; IPv6 policy protection OPEN not proven leak. H1867 P1 and H1868 Direct hard8 Actions still in progress.",
-  "why_now": "Signed host had zero IPv6 route precondition, so empty route observations cannot close the IPv6 policy; preserve before attempting a distinct controlled actual IPv6 socket path.",
+  "current_task": "H1870 Rust Windows native TX idle TCP accept/service gating, owned TCP/DNS reverse Vec zero redundant copies, one notify per <=32 packet batch, lazy shared 64KiB scratch; H1867/H1868 collected.",
+  "why_now": "H1867 same-VM P1 +9.41% CPU/GiB and H1864 Direct 4MiB +99.389ms. System-call and copy work is the next code target, not TLS/FEC.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect in-flight H1867 P1 Action43648334316 and H1868 Direct hard8 Action43648756279, then address first failure/new CPU facts; separately design controlled owned actual IPv6 packet test, not another empty route replay. Continue Game4 CN and actual GUI Connect/Stop.",
+  "next_action": "Verify exact H1870 SOURCE Rust compile/tests and one signed P2 network run; then build real event-based Direct TCP ready queue and same-VM P1/P2/idle+few-active comparator, without spinning at 1ms. GUI/Game4/IPv6/DNS capacity remain OPEN.",
   "unverified": true,
-  "last_tested_source": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
+  "last_tested_source": "11a1daaf4c0c74730da32909382f39f365f0427a",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1870-H1867-H1868-SIGNED-RESULTS-20261115.json",
     "docs/evidence/M0/PLAN029-H1869-H1866-D4-SIGNED-IPV6-ROUTE-OPEN-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
     "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1866 signed Normal CN business/Stop PASS; v6 routes [] in all three phases and IPv6 app NOT_RUN means policy OPEN. P1 +7.01% CPU/GiB and P2 4MiB 4.091x physical still perf OPEN; H1867 P1 and H1868 small hard8 pressure in flight; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1867 P1 both 50Mbps/60s & Stop PASS, +9.41% CPU/GiB OPEN; H1868 Direct hard8 allows new Tunnel/old Direct and expiry recovery PASS_SCOPED, 11 unanswered Direct untyped. H1870 source edits NOT_RUN, PLAN029 IN_PROGRESS."
 }

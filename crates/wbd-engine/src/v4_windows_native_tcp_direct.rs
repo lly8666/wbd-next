@@ -31,6 +31,9 @@ const CLOSED_NAT_GRACE_MS:u64=60_000;
 // Direct TCP borrows only an 8 MiB live pending-read soft budget.
 // The rest is reserved for UDP/DNS/owner work, not queued TCP seconds.
 const TCP_PENDING_POOL_LIMIT:usize=8*1024*1024;
+// Allocated once on the first real relay, reused across all ready flows.
+const RELAY_SCRATCH_BYTES:usize=64*1024;
+fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
 enum TcpPhase{
     Connecting(TcpStream,PhysicalTcpSocket),
@@ -120,6 +123,7 @@ pub(crate) struct NativeTcpActor{
     // Pending bytes and actual VecDeque backing capacities are separate.
     buffered_bytes:usize,
     resident_bytes:usize,
+    scratch:Option<Box<[u8;RELAY_SCRATCH_BYTES]>>,
     diagnosis:Option<TcpLegDiagnosis>,
 }
 pub(crate) fn safe_synthetic(lease:u32,underlay:u32,synthetic:u32,
@@ -153,7 +157,7 @@ impl NativeTcpActor{
             dns_cursor:0,dns_closing:ClosedNatGrace::default(),
             dns_tunnel_sources:HashSet::new(),
             ready:VecDeque::with_capacity(MAX_READY),
-            buffered_bytes:0,resident_bytes:0,
+            buffered_bytes:0,resident_bytes:0,scratch:None,
             diagnosis:(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
                 .as_deref()==Some("1")).then(TcpLegDiagnosis::default)})
     }
@@ -162,6 +166,17 @@ impl NativeTcpActor{
     pub(crate) fn listener_port(&self)->Result<u16,()>{
         self.listener.local_addr().map(|a|a.port()).map_err(|_|())
     }
+    /// Accept only owned reserved SYNs, service active legs, or reclaim
+    /// NAT on its exact deadline. Idle Tunnel needs no listener syscall.
+    pub(crate) fn needs_service(&self,now_ms:u64)->bool{
+        listener_accept_needed(self.pending.len(),self.dns_pending.len())||
+        !self.active.is_empty()||
+        self.deadlines.front().is_some_and(|(_,due)|*due<=now_ms)||
+        self.dns_deadlines.front().is_some_and(|(_,due)|*due<=now_ms)||
+        self.closing.next_due().is_some_and(|due|due<=now_ms)||
+        self.dns_closing.next_due().is_some_and(|due|due<=now_ms)
+    }
+    pub(crate) fn has_dns_sessions(&self)->bool{!self.dns_active.is_empty()}
     pub(crate) fn has_work(&self)->bool{
         // Closed NAT grace is metadata waiting for the kernel, not work
         // that warrants the original TX worker's 10ms active wait.
@@ -284,6 +299,7 @@ impl NativeTcpActor{
     pub(crate) fn tick(&mut self,now_ms:u64)->TcpServiceTick{
         let mut retired=Vec::new();
         let mut advanced=false;
+        if listener_accept_needed(self.pending.len(),self.dns_pending.len()){
         for _ in 0..MAX_QUANTUM{
             let (stream,peer)=match self.listener.accept(){
                 Ok(ok)=>{advanced=true;ok},
@@ -320,6 +336,7 @@ impl NativeTcpActor{
                 }
             }
         }
+        } // No accept() syscall when no Direct/DNS NAT is waiting.
         let count=self.active.len();
         let quantum=count.min(MAX_QUANTUM);
         let mut to_remove=Vec::new();
@@ -374,13 +391,16 @@ impl NativeTcpActor{
                             .saturating_add(pair.resident_bytes());
                     }
                     let before=pair.resident_bytes();
-                    let free=TCP_PENDING_POOL_LIMIT.saturating_sub(self.resident_bytes);
-                    match pair.service_once_with_read_budget(free){
+                    let scratch=self.scratch.get_or_insert_with(||
+                        Box::new([0u8;RELAY_SCRATCH_BYTES]));
+                    let free=TCP_PENDING_POOL_LIMIT.saturating_sub(
+                        self.resident_bytes.saturating_add(RELAY_SCRATCH_BYTES));
+                    match pair.service_once_with_scratch(free,&mut scratch[..]){
                         Ok(tick)=>{
                             let after=pair.resident_bytes();
                             let retained=self.resident_bytes
                                 .saturating_sub(before).saturating_add(after);
-                            if retained>TCP_PENDING_POOL_LIMIT{
+                            if retained>TCP_PENDING_POOL_LIMIT.saturating_sub(RELAY_SCRATCH_BYTES){
                                 // A target allocator unexpectedly grew
                                 // beyond the reserved pool; only this
                                 // Direct TCP relay fails closed.
@@ -477,7 +497,8 @@ impl NativeTcpActor{
                 eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} buffered={} resident={} ready_now={} ready_peak={} ready_full={} source=real_kernel_two_leg",
                     self.active.len(),self.pending.len(),self.dns_active.len(),
                     d.read_inner,d.read_outer,d.wrote_inner,d.wrote_outer,
-                    self.buffered_bytes,self.resident_bytes,
+                    self.buffered_bytes,self.resident_bytes.saturating_add(
+                        if self.scratch.is_some(){RELAY_SCRATCH_BYTES}else{0}),
                     self.ready.len(),d.ready_peak,d.ready_full);
                 d.ready_peak=self.ready.len();
             }
@@ -538,6 +559,12 @@ mod tests{
         p[20..22].copy_from_slice(&sport.to_be_bytes());
         p[22..24].copy_from_slice(&dport.to_be_bytes());
         p[32]=0x50;p[33]=flags;p
+    }
+    #[test]
+    fn plan029_skip_idle_listener_but_keep_dns_tcp_admission(){
+        assert!(!listener_accept_needed(0,0));
+        assert!(listener_accept_needed(1,0));
+        assert!(listener_accept_needed(0,1));
     }
     #[test]
     fn plan029_tcp_mailbox_backpressure_restores_exact_original_fifo(){

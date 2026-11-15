@@ -7,7 +7,7 @@
  use std::thread::{self, JoinHandle};
  use std::sync::mpsc::{sync_channel,SyncSender,Receiver,TryRecvError,TrySendError};
  use crate::v4_windows_native_split::{
-     NativeSplitWorker,NativeDecision,ColdSplitSourceV1,
+     NativeSplitWorker,NativeDecision,NativeReverse,ColdSplitSourceV1,
  };
  use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
  use crate::v4_client_startup_padding::StartupMode;
@@ -866,14 +866,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  let mut complete=[0u8;MAX_IPV4];
                  let mut reverse_count=0;
                  for _ in 0..DIRECT_RETURN_QUANTUM{
-                     let Some(n)=owner.poll_udp_reverse(&mut complete,now_ms)
+                     let Some(returned)=owner.poll_udp_reverse(&mut complete,now_ms)
                          else{break};
+                     let packet=match returned{
+                         NativeReverse::Owned(v)=>v,
+                         NativeReverse::InScratch(n)=>complete[..n].to_vec(),
+                     };
                      let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
-                     match queue.try_send(complete[..n].to_vec()){
-                         Ok(())=>{
-                             reverse_count+=1;
-                             let _=direct_notify.wake();
-                         },
+                     match queue.try_send(packet){
+                         Ok(())=>{reverse_count+=1;},
                          Err(TrySendError::Full(packet))=>{
                              if is_direct_tcp_ipv4(&packet){
                                  // Preserve already NAT-translated TCP
@@ -891,7 +892,12 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                          Err(TrySendError::Disconnected(_))=>return Err(BAD_STAGE),
                      }
                  }
-                 if reverse_count>0{direct_progress=true}
+                 if reverse_count>0{
+                     direct_progress=true;
+                     // Auto-reset is a latch, not a per-packet counter:
+                     // notify once for any nonempty bounded quantum.
+                     let _=direct_notify.wake();
+                 }
                  // A full response quantum can have another ready packet.
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
                  } // reverse work genuinely pending

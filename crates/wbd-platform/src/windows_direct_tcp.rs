@@ -309,8 +309,15 @@ impl TcpDirectRelay{
     // geometric VecDeque growth silently exceeding the global pool.
     pub fn service_once_with_read_budget(&mut self,read_budget:usize)
         ->Result<RelayTick,DirectTcpError>{
-        let mut remaining_capacity=read_budget;
+        // Production passes one reusable per-owner scratch to this same
+        // bounded relay. Keep the old API for component-only callers.
         let mut scratch=[0u8;QUANTUM_BYTES];
+        self.service_once_with_scratch(read_budget,&mut scratch)
+    }
+    pub fn service_once_with_scratch(&mut self,read_budget:usize,
+        scratch:&mut [u8])->Result<RelayTick,DirectTcpError>{
+        if scratch.len()<QUANTUM_BYTES{return Err(DirectTcpError::BufferBudget)}
+        let mut remaining_capacity=read_budget;
         let mut read=0usize;let mut wrote=0usize;
         let mut inner_read=0usize;let mut outer_read=0usize;
         let mut inner_write=0usize;let mut outer_write=0usize;
@@ -433,6 +440,22 @@ mod plan029_global_backpressure_tests{
         // The application/remote endpoints aren't owned by the relay.
         assert!(!application.nodelay().unwrap());
         assert!(!remote.nodelay().unwrap());
+    }
+    #[test]
+    fn borrowed_relay_scratch_is_bounded_and_preserved_when_idle(){
+        let l1=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let s1=TcpStream::connect(l1.local_addr().unwrap()).unwrap();
+        let (peer1,_)=l1.accept().unwrap();
+        let l2=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let s2=TcpStream::connect(l2.local_addr().unwrap()).unwrap();
+        let (peer2,_)=l2.accept().unwrap();
+        let mut relay=TcpDirectRelay::new(s1,s2).unwrap();
+        let mut scratch=vec![0xA5;QUANTUM_BYTES];
+        assert_eq!(relay.service_once_with_scratch(0,&mut scratch[..QUANTUM_BYTES-1]),
+            Err(DirectTcpError::BufferBudget));
+        relay.service_once_with_scratch(0,&mut scratch).unwrap();
+        assert!(scratch.iter().all(|byte|*byte==0xA5));
+        drop((peer1,peer2));
     }
     #[test]
     fn one_global_pool_blocks_only_new_direct_reads_not_drains(){

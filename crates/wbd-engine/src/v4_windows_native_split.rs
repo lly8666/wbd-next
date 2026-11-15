@@ -62,6 +62,9 @@ pub(crate) enum NativeDecision {
     DirectHandled,
     LocalDrop,
 }
+// Already-owned TCP/DNS L3 moves into the sole RX mailbox. UDP writes
+// into its caller scratch and requires only one copy on successful queue.
+pub(crate) enum NativeReverse{Owned(Vec<u8>),InScratch(usize)}
 #[derive(Clone,Copy)]
 struct PendingKernelTcp {
     lease:Ipv4Addr,synthetic:Ipv4Addr,
@@ -501,7 +504,7 @@ impl NativeSplitWorker {
         self.tcp.as_mut().ok_or(())?.restore_tcp_ready_front(packet)
     }
     pub(crate) fn poll_udp_reverse(&mut self,out:&mut[u8],now_ms:u64)
-        ->Option<usize>{
+        ->Option<NativeReverse>{
         // Fair 3-queue rotation prevents a busy TCP handshake burst from
         // indefinitely starving physical UDP business or DNS replies.
         for step in 0..3{
@@ -509,17 +512,18 @@ impl NativeSplitWorker {
             let ready=match lane{
                 0=>self.tcp.as_mut().and_then(|tcp|tcp.ready_pop())
                     .and_then(|l3|if l3.len()<=out.len(){
-                        out[..l3.len()].copy_from_slice(&l3);Some(l3.len())
+                        Some(NativeReverse::Owned(l3))
                     }else{None}),
                 1=>{
                     if !self.dns.has_work(){None}else{
                         self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
                         self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
-                            out[..l3.len()].copy_from_slice(&l3);Some(l3.len())
+                            Some(NativeReverse::Owned(l3))
                         }else{None})
                     }
                 },
-                _=>self.udp.poll_reverse_ready(out,now_ms).ok().flatten(),
+                _=>self.udp.poll_reverse_ready(out,now_ms).ok()
+                    .flatten().map(NativeReverse::InScratch),
             };
             if ready.is_some(){
                 self.next_reverse_lane=(lane+1)%3;
@@ -541,7 +545,8 @@ impl NativeSplitWorker {
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
         // while cold-only expiry remains on the existing 1-second sweep.
-        if self.tcp_enabled{
+        if self.tcp_enabled && self.tcp.as_ref()
+            .is_some_and(|tcp|tcp.needs_service(now_ms)){
          if let Some(tcp)=self.tcp.as_mut(){
             let service=tcp.tick(now_ms);
             progressed|=service.advanced;
@@ -556,7 +561,8 @@ impl NativeSplitWorker {
         }
         // DNS/TCP shares the previously authorized Windows kernel listener
         // and exact NAT reverse. It has independent 256-ticket admission.
-        if self.tcp_enabled{
+        if self.tcp_enabled && self.tcp.as_ref()
+            .is_some_and(|tcp|tcp.has_dns_sessions()){
             let ingress=&self.ingress;
             if let Some(tcp)=self.tcp.as_mut(){
                 tcp.tick_dns(now_ms,self.dns_tcp_endpoints,
@@ -610,6 +616,17 @@ impl NativeSplitWorker {
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan029_owned_reverse_reuses_exact_vec_allocation(){
+        let packet=vec![0x45,1,2,3,4,5];let ptr=packet.as_ptr();
+        match NativeReverse::Owned(packet){
+            NativeReverse::Owned(moved)=>{
+                assert_eq!(moved.as_ptr(),ptr);
+                assert_eq!(moved[1..],[1,2,3,4,5]);
+            },
+            _=>panic!("owned TCP lost allocation"),
+        }
+    }
     fn cidr(a:[u8;4],bits:u8)->ColdCidrV1{
         ColdCidrV1{network:a,bits,reserved:[0;3]}
     }
