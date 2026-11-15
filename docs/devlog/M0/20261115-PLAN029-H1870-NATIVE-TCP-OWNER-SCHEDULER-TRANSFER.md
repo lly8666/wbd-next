@@ -10,3 +10,12 @@
 ```feature-impact
 {"kind":"updated","ids":["dns-split-ipv6"],"reason":"Collect in-flight H1867/H1868 and stage bounded native Windows TCP idle service, move-only reverse queue, batched notify and shared scratch candidate; no performance promotion."}
 ```
+
+### H1871｜治理长度回收（不改 H1870 原生代码或实测 SOURCE）
+
+- H1870 push 的 Governance 首个失败为 `SCOPE_AUDIT_FAILED: unbounded context_refs`（cursor 9条超过限额）；功能目录 `feature card must be bounded regular JSON`（16KiB）。收敛 cursor 到8条、删除本批重复新增的两个 verification 行，**不删除任何历史已登记的验证**；两项H1867/H1868真实信息仍在本页和H1870 evidence，功能卡summary保留索引。
+- H1870 Rust/Windows/P2 Actions 在途，本H1871仅元数据，不再次dispatch标记，不把旧Source结果推为当前代码真实PASS。
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1871 fix only H1870 metadata bounds after actual first Governance failure, retaining historical evidence and source-locked Windows test."}
+```

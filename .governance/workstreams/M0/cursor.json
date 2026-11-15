@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1870,
-  "checkpoint_sha": "17e6e8b3f957991e6d30b6ddd173b0eefb39829d",
+  "sequence": 1871,
+  "checkpoint_sha": "0860242fc8669ebf37ba53f026d0301955019d00",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1870 Rust Windows native TX idle TCP accept/service gating, owned TCP/DNS reverse Vec zero redundant copies, one notify per <=32 packet batch, lazy shared 64KiB scratch; H1867/H1868 collected.",
-  "why_now": "H1867 same-VM P1 +9.41% CPU/GiB and H1864 Direct 4MiB +99.389ms. System-call and copy work is the next code target, not TLS/FEC.",
+  "current_task": "H1871 exact governance bounded-card/context fix on H1870 source; H1870 Rust and signed P2 in flight, no additional network dispatch. H1867 P1 and H1868 hard8 preserved.",
+  "why_now": "H1870 Governance first boundary unbounded context_refs and feature catalog >16KiB due to two new verification rows; fix only own metadata, preserve original historical verification and H1870 code SOURCE.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Verify exact H1870 SOURCE Rust compile/tests and one signed P2 network run; then build real event-based Direct TCP ready queue and same-VM P1/P2/idle+few-active comparator, without spinning at 1ms. GUI/Game4/IPv6/DNS capacity remain OPEN.",
+  "next_action": "Collect H1870 SOURCE 0860242f Windows Rust/P2 native; if first code failure fix exact compiler boundary. Event-driven Direct TCP ready-queue remains OPEN, alongside all PLAN029 exits; do not re-dispatch the already-running signed P2.",
   "unverified": true,
   "last_tested_source": "11a1daaf4c0c74730da32909382f39f365f0427a",
   "evidence_refs": [
@@ -26,8 +26,7 @@
     "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
     "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md",
-    "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md",
-    "docs/devlog/M0/20261114-PLAN029-H1862-BULK-FIRST-REAL-RETEST.md"
+    "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1867 P1 both 50Mbps/60s & Stop PASS, +9.41% CPU/GiB OPEN; H1868 Direct hard8 allows new Tunnel/old Direct and expiry recovery PASS_SCOPED, 11 unanswered Direct untyped. H1870 source edits NOT_RUN, PLAN029 IN_PROGRESS."
