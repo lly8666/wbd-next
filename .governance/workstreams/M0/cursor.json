@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1881,
-  "checkpoint_sha": "cab3feebb7ec778c96991ebbdc2b5e6efad48923",
+  "sequence": 1882,
+  "checkpoint_sha": "267c0faa0ba6977f31905e88aa59437f850c29b0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1881 collected exact H1880 actual Windows2025 wbd-platform lib test 52/52 PASS incl 128 idle live WinSock TCP kernel pairs, same WSA shard 15/31 two active actual FD_READ deliver both, no empty wake. Windows engine PLAN029 88/88 and probe90/90 PASS, Linux component PASS. Scoped tests only; H1877 signed 4MiB P2 remains perf2.787x OPEN.",
-  "why_now": "H1878 new WinSock 128 socket test originally only compiled, H1879 corrected CI, first Windows Action43664732661 E0277 test assertions fixed H1880, Action43664841742 Windows platform test actually executed and SUCCESS with 128 real sockets. Preserve all prior first fail, do not confuse test scope with 128 Wintun or perf.",
+  "current_task": "H1882 production two-legged Direct TCP immediate scratch->socket on empty backlog; partial/WouldBlock and existing FIFO fall back to bounded VecDeque, no extra threads, owner or flow budget. Cold bytes direct_forwarded/queued_copy. New mock short/blocked & real loopback duplex/FIN tests; SOURCE candidate NOT_RUN.",
+  "why_now": "H1877 signed true CN 4MiB P2 physical50.606 Direct141.030 (+90.424ms 2.787x), download+61.822ms; after event readiness H1880 128 WinSock loopback PASS remaining scratch->VecDeque copy exists even if opposite physical TCP writable.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Develop one exact-source same-VM H1877 vs prior H1875 TCP scheduler A/B with sustained Tunnel UDP and 128 actual Wintun idle+few-active, record CPU user/kernel, wake count, oldest work age, TCP upload/download p99. Diagnose dual-kernel leg download +61.822ms; P1 all-Tunnel backend +9.41% separate. GUI/Game4/IPv6/D1-D5 pressure still OPEN.",
+  "next_action": "Collect source-locked Windows/Linux platform+engine tests and actual signed P2 4MiB with UDP120/120, SHA/FIN and owned Stop. Distinguish fast-forward byte counts from measured CPU/latency; no across-VM gain claim. Next same VM old/new and 128 Wintun idle+active, user/kernel CPU and ready age.",
   "unverified": true,
   "last_tested_source": "cab3feebb7ec778c96991ebbdc2b5e6efad48923",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1881-H1880-WINDOWS-128-IDLE-SHARD-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md",
     "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1880-WIN-128-LOOPBACK-ASSERT-TYPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1877-READY-TICKET-BORROW-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1876-WINSOCK-SHARDED-READY-OWNER.md",
-    "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md",
-    "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md"
+    "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1880 128 actual Windows loopback TCP sockets 126 idle + two same shard active, WinSock 52/52 and engine 88/90 PASS_SCOPED; no new real Wintun P2 run. H1877 true CN 4MiB physical50.606 Direct141.030 (2.787x), Tunnel120/120 Stop PASS_SCOPED but performance OPEN. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1882 direct TCP no-backlog scratch->socket fast forwarding source candidate NOT_RUN; two bounded directions, preserves FIFO under partial and blocked and FIN; H1877 signed P2 function PASS but ratio2.787x PERF_OPEN; H1880 Windows128 idle component PASS_SCOPED. PLAN029 IN_PROGRESS."
 }

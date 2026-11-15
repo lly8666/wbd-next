@@ -327,6 +327,36 @@ fn bounded_relay_read(queued:usize,per_direction_cap:usize,global_free:usize)->u
 fn relay_error(stage:&'static str,e:std::io::Error)->DirectTcpError{
     DirectTcpError::RelayIo{stage,code:e.raw_os_error().unwrap_or(-1)}
 }
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+struct ForwardResult{
+    written:usize,
+    copied_to_queue:usize,
+    attempted_direct_write:bool,
+}
+/// Fresh bytes bypass per-flow VecDeque only when there is NO earlier
+/// buffered byte. A partial/blocked write queues its exact unsent suffix;
+/// this never admits a newer byte in front of older TCP stream data.
+fn forward_or_queue<W:Write>(
+    destination:&mut W,oldest:&mut VecDeque<u8>,fresh:&[u8],
+    stage:&'static str,
+)->Result<ForwardResult,DirectTcpError>{
+    if fresh.is_empty(){return Ok(ForwardResult{
+        written:0,copied_to_queue:0,attempted_direct_write:false
+    })}
+    if !oldest.is_empty(){
+        oldest.extend(fresh.iter().copied());
+        return Ok(ForwardResult{written:0,
+            copied_to_queue:fresh.len(),attempted_direct_write:false})
+    }
+    let written=match destination.write(fresh){
+        Ok(n)=>n.min(fresh.len()),
+        Err(e) if matches!(e.kind(),ErrorKind::WouldBlock|ErrorKind::Interrupted)=>0,
+        Err(e)=>return Err(relay_error(stage,e)),
+    };
+    let rest=fresh.len()-written;
+    if rest>0{oldest.extend(fresh[written..].iter().copied());}
+    Ok(ForwardResult{written,copied_to_queue:rest,attempted_direct_write:true})
+}
 pub struct TcpDirectRelay{
     inner:TcpStream,
     outer:TcpStream,
@@ -346,6 +376,8 @@ pub struct RelayTick{
     pub outer_read:usize,
     pub inner_write:usize,
     pub outer_write:usize,
+    pub forwarded_without_queue:usize,
+    pub copied_to_queue:usize,
     pub buffered:usize,
     pub finished:bool,
 }
@@ -398,6 +430,8 @@ impl TcpDirectRelay{
         let mut read=0usize;let mut wrote=0usize;
         let mut inner_read=0usize;let mut outer_read=0usize;
         let mut inner_write=0usize;let mut outer_write=0usize;
+        let mut forwarded_without_queue=0usize;let mut copied_to_queue=0usize;
+        let mut attempted_outer=false;let mut attempted_inner=false;
         if !self.inner_eof && self.to_outer.len()<self.max_pending_per_direction &&
             (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
              self.to_outer.capacity()>self.to_outer.len()){
@@ -409,7 +443,15 @@ impl TcpDirectRelay{
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>self.inner_eof=true,
                 Ok(n)=>{
-                    self.to_outer.extend(&scratch[..n]);read+=n;inner_read+=n;
+                    // First try direct scratch->physical kernel send, only then
+                    // allocate a bounded suffix queue if needed.
+                    let f=forward_or_queue(&mut self.outer,
+                        &mut self.to_outer,&scratch[..n],"outer_write")?;
+                    attempted_outer=f.attempted_direct_write;
+                    forwarded_without_queue+=f.written;
+                    copied_to_queue+=f.copied_to_queue;
+                    wrote+=f.written;outer_write+=f.written;
+                    read+=n;inner_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_outer.capacity().saturating_sub(before));
                 }
@@ -429,7 +471,13 @@ impl TcpDirectRelay{
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>self.outer_eof=true,
                 Ok(n)=>{
-                    self.to_inner.extend(&scratch[..n]);read+=n;outer_read+=n;
+                    let f=forward_or_queue(&mut self.inner,
+                        &mut self.to_inner,&scratch[..n],"inner_write")?;
+                    attempted_inner=f.attempted_direct_write;
+                    forwarded_without_queue+=f.written;
+                    copied_to_queue+=f.copied_to_queue;
+                    wrote+=f.written;inner_write+=f.written;
+                    read+=n;outer_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_inner.capacity().saturating_sub(before));
                 }
@@ -438,7 +486,9 @@ impl TcpDirectRelay{
                 Err(e)=>return Err(relay_error("outer_read",e)),
             }
         }
-        if !self.to_outer.is_empty(){
+        // A short or WouldBlock immediate write is not repeated in this
+        // same service quantum; FD_WRITE will re-arm that kernel leg.
+        if !attempted_outer && !self.to_outer.is_empty(){
             let (first,_)=self.to_outer.as_slices();
             match self.outer.write(first){
                 Ok(n)=>{self.to_outer.drain(..n);wrote+=n;outer_write+=n}
@@ -447,7 +497,7 @@ impl TcpDirectRelay{
                 Err(e)=>return Err(relay_error("outer_write",e)),
             }
         }
-        if !self.to_inner.is_empty(){
+        if !attempted_inner && !self.to_inner.is_empty(){
             let (first,_)=self.to_inner.as_slices();
             match self.inner.write(first){
                 Ok(n)=>{self.to_inner.drain(..n);wrote+=n;inner_write+=n}
@@ -466,6 +516,7 @@ impl TcpDirectRelay{
         }
         Ok(RelayTick{bytes_read:read,bytes_written:wrote,
             inner_read,outer_read,inner_write,outer_write,
+            forwarded_without_queue,copied_to_queue,
             buffered:self.to_outer.len()+self.to_inner.len(),
             finished:self.inner_eof&&self.outer_eof&&
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
@@ -522,6 +573,94 @@ mod plan029_global_backpressure_tests{
         // The application/remote endpoints aren't owned by the relay.
         assert!(!application.nodelay().unwrap());
         assert!(!remote.nodelay().unwrap());
+    }
+    /// No fresh TCP byte is allowed to bypass an older short-send tail.
+    #[test]
+    fn plan029_direct_tcp_fast_forward_fifo_short_and_wouldblock(){
+        struct Sink{max:usize,blocked:bool,out:Vec<u8>,calls:usize}
+        impl Write for Sink{
+            fn write(&mut self,data:&[u8])->std::io::Result<usize>{
+                self.calls+=1;
+                if self.blocked{return Err(ErrorKind::WouldBlock.into())}
+                let n=data.len().min(self.max);
+                self.out.extend_from_slice(&data[..n]);
+                Ok(n)
+            }
+            fn flush(&mut self)->std::io::Result<()>{Ok(())}
+        }
+        let mut s=Sink{max:3,blocked:false,out:Vec::new(),calls:0};
+        let mut q=VecDeque::new();
+        let a=forward_or_queue(&mut s,&mut q,b"ABCDEFG","test").unwrap();
+        assert_eq!(a,ForwardResult{written:3,copied_to_queue:4,
+            attempted_direct_write:true});
+        assert_eq!(s.out,b"ABC");
+        assert_eq!(q.iter().copied().collect::<Vec<_>>(),b"DEFG");
+        let b=forward_or_queue(&mut s,&mut q,b"HI","test").unwrap();
+        assert_eq!(b,ForwardResult{written:0,copied_to_queue:2,
+            attempted_direct_write:false});
+        assert_eq!(s.calls,1);
+        assert_eq!(q.iter().copied().collect::<Vec<_>>(),b"DEFGHI");
+        let mut blocked=Sink{max:8,blocked:true,out:Vec::new(),calls:0};
+        let mut other=VecDeque::new();
+        let b=forward_or_queue(&mut blocked,&mut other,b"XYZ","test").unwrap();
+        assert_eq!(b,ForwardResult{written:0,copied_to_queue:3,
+            attempted_direct_write:true});
+        assert_eq!(other.iter().copied().collect::<Vec<_>>(),b"XYZ");
+    }
+    /// Two actual kernel TCP legs, 4KiB in each direction and both FINs:
+    /// direct writes should not allocate a per-flow pending queue at all.
+    #[test]
+    fn plan029_direct_tcp_both_kernel_legs_no_queue_and_fin(){
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let l=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let client=TcpStream::connect(l.local_addr().unwrap()).unwrap();
+            let (server,_)=l.accept().unwrap();
+            (server,client)
+        }
+        let (inner,mut app)=pair();
+        let (outer,mut guest)=pair();
+        app.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        guest.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut relay=TcpDirectRelay::new(inner,outer).unwrap();
+        let mut scratch=vec![0u8;QUANTUM_BYTES];
+        let input=vec![0x41;4096];
+        app.write_all(&input).unwrap();
+        let mut direct=0;
+        for _ in 0..200{
+            let tick=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            direct+=tick.forwarded_without_queue;
+            if direct>=input.len(){break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(direct,input.len());
+        assert_eq!(relay.resident_bytes(),0);
+        let mut recv=vec![0;input.len()];
+        guest.read_exact(&mut recv).unwrap();
+        assert_eq!(recv,input);
+        let echo=vec![0x42;4096];
+        guest.write_all(&echo).unwrap();
+        let mut reverse=0;
+        for _ in 0..200{
+            let tick=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            reverse+=tick.forwarded_without_queue;
+            if reverse>=echo.len(){break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(reverse,echo.len());
+        assert_eq!(relay.resident_bytes(),0);
+        app.read_exact(&mut recv).unwrap();
+        assert_eq!(recv,echo);
+        app.shutdown(Shutdown::Write).unwrap();
+        guest.shutdown(Shutdown::Write).unwrap();
+        let mut finished=false;
+        for _ in 0..300{
+            let tick=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            if tick.finished{finished=true;break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert!(finished,"no lost half-close or pending tail");
+        assert_eq!(relay.pending_bytes(),0);
     }
     #[test]
     fn borrowed_relay_scratch_is_bounded_and_preserved_when_idle(){

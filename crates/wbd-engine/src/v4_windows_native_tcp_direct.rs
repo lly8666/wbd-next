@@ -117,6 +117,7 @@ struct TcpLegDiagnosis{
     next_ms:u64,
     read_inner:u64,read_outer:u64,
     wrote_inner:u64,wrote_outer:u64,
+    direct_forwarded:u64,queued_copy:u64,
     // P2-only ready queue high-water/overflow; no per-packet logging.
     ready_peak:usize,ready_full:u64,
 }
@@ -563,6 +564,10 @@ impl NativeTcpActor{
                                 d.read_outer=d.read_outer.saturating_add(tick.outer_read as u64);
                                 d.wrote_inner=d.wrote_inner.saturating_add(tick.inner_write as u64);
                                 d.wrote_outer=d.wrote_outer.saturating_add(tick.outer_write as u64);
+                                d.direct_forwarded=d.direct_forwarded.saturating_add(
+                                    tick.forwarded_without_queue as u64);
+                                d.queued_copy=d.queued_copy.saturating_add(
+                                    tick.copied_to_queue as u64);
                             }
                             self.buffered_bytes=self.buffered_bytes
                                 .saturating_sub(previous).saturating_add(tick.buffered);
@@ -651,9 +656,10 @@ impl NativeTcpActor{
                 // No addresses, credentials, payloads, per-packet tracing,
                 // or blocking filesystem I/O. Snapshot only active counts
                 // and committed kernel socket byte receipts once a second.
-                eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} buffered={} resident={} ready_now={} ready_peak={} ready_full={} source=real_kernel_two_leg",
+                eprintln!("PLAN029_H1839_NATIVE_TCP_LEGS active={} pending={} dns_active={} inner_read={} outer_read={} inner_write={} outer_write={} direct_forwarded={} queued_copy={} buffered={} resident={} ready_now={} ready_peak={} ready_full={} source=real_kernel_two_leg",
                     self.active.len(),self.pending.len(),self.dns_active.len(),
                     d.read_inner,d.read_outer,d.wrote_inner,d.wrote_outer,
+                    d.direct_forwarded,d.queued_copy,
                     self.buffered_bytes,self.resident_bytes.saturating_add(
                         if self.scratch.is_some(){RELAY_SCRATCH_BYTES}else{0}),
                     self.ready.len(),d.ready_peak,d.ready_full);
