@@ -444,6 +444,14 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn("$expectedTcpBytes=4194304",wf)
         self.assertIn("[int]$p2.load_bytes -ne $expectedTcpBytes",wf)
 
+    def test_h1886_abba_original_owner_log_probe_does_not_shadow_cleanup_handles(self):
+        app=(Path(__file__).resolve().parents[1] /
+             "tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn('for log in logs:log.close()',app)
+        self.assertIn('win_diag_text=(out/"client.log").read_text(errors="replace")',app)
+        self.assertIn('str(index+1)+" mode="+mode) in win_diag_text',app)
+        self.assertNotIn('logs=(out/"client.log").read_text',app)
+
     def test_h1861_p2_p99_uses_high_resolution_same_windows_clock(self):
         from pathlib import Path
         app=(Path(__file__).resolve().parents[1] /

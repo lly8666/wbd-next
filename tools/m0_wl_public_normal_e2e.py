@@ -2184,7 +2184,7 @@ print(json.dumps(result),flush=True)
     p2["stop"]="PASS_BOTH_OWNED"
     if p029_abba:
      chosen=p2.get("same_vm_abba",{})
-     logs=(out/"client.log").read_text(errors="replace")
+     win_diag_text=(out/"client.log").read_text(errors="replace")
      expected=("copy","bypass","bypass","copy")
      valid=(chosen.get("order")==list(expected) and
             chosen.get("test_port")==46116 and
@@ -2192,7 +2192,7 @@ print(json.dumps(result),flush=True)
             chosen.get("scope")==
              "FOUR_REAL_FAKEIP_DIRECT_TCP_ONE_VM_ONE_BINARY_ONE_WINTUN_GENERATION" and
             all(("PLAN029_H1884_ABBA_ADMITTED source=real_wintun_direct ordinal="+
-                 str(index+1)+" mode="+mode) in logs
+                 str(index+1)+" mode="+mode) in win_diag_text
                 for index,mode in enumerate(expected)))
      if not valid:
       raise RuntimeError("H1884 missing original Rust exact per-flow ABBA proof at owned Stop")

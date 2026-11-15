@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1885,
-  "checkpoint_sha": "40d2855f1a23002b30ea354287b817a4b396e73d",
+  "sequence": 1886,
+  "checkpoint_sha": "1d8704e11571418bb3cd28988a92ea02f68d7679",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1885 exact H1884 first CI failure: H1749 static P2 test expected fixed 5-argv old WSL spawn; new signed ABBA requires explicit sixth argv and P2 script __main__ originally only accepted 4 or 5. Updated strict backward-compatible workload+selection validation and corresponding static contract; no Rust/native TCP logic change.",
-  "why_now": "H1884 Action43669350889 cheap workflow failed test_h1849_p2_identical_app_nagle_and_failed_scene_udp_progress before native DLL/real WSL2. First failure from changed argv shape. Preserve old P2 4/5 argv and require explicit p2abba or p2ordinary in 6-argv case. Do not misclassify as network regression.",
+  "current_task": "H1886 fixes H1885 genuine signed ABBA first overall failure AFTER four actual real Direct flows/owned Stop: original normal Python script shadowed list of log file handles with ABBA Rust admission log string; finally `for log in logs: log.close()` raised AttributeError. Exactly rename local to win_diag_text; same native algorithm and A/B payload unchanged.",
+  "why_now": "H1885 Action43669531835 real product step printed PLAN029_H1884_SAME_VM_SAME_BINARY_COPY_VS_BYPASS_ABBA_AND_OWNED_STOP_PASS_SCOPED and WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal, but process exited rc1 at m0_wl_public_normal_e2e.py:2425 due Python str log handle shadow; report artifact not safely finalized, Action FAIL preserved. Must not promote real A/B or numeric performance until full new source SUCCESS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1885 source cheap static tests, Windows/Linux Rust components and signed original P2 4MiB four real Direct copy-bypass-bypass-copy flows in one VM. Check original Rust ordinals 1-4, Linux five TCP receipts, Tunnel120/120 across all, halfclose/SHA/Stop, CPU not measured. Performance decision only after signed ABBA evidence.",
+  "next_action": "Collect H1886 same SOURCE full signed native ABBA and Windows/Linux components, report four Direct per-mode 4MiB timings, actual original Rust per-flow admission logs, physical Linux 5 TCP sessions, Tunnel120/120 and both owned Stop. P1 CPU/GiB and kernel cost still OPEN.",
   "unverified": true,
   "last_tested_source": "37c6025629f76d082b080dfb786a46f436ace58b",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1883-H1882-SIGNED-FAST-FORWARD-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md",
     "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md",
     "docs/devlog/M0/20261115-PLAN029-H1883-COLLECT-H1882-FAST-FORWARD-P2.md",
     "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md",
     "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1880-WIN-128-LOOPBACK-ASSERT-TYPE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md"
+    "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1884 signed Action stopped at legacy P2 static test contract before networking (failure retained). H1885 updates both app runtime explicit WSL argv and static assertions; real ABBA NOT_RUN. H1882 signed functional PASS 2.453x physical but across-source performance OPEN."
+  "partial_summary": "H1885 native real A-B-B-A code path and original OS business reached local proof marker but ultimately FAILED in Python finally due local logs variable clobber. H1886 fixes exact name shadow, no native code changes, new signed Action NOT_RUN. H1882 prior signed P2 ratio2.453 functional PASS/PERF_OPEN."
 }
