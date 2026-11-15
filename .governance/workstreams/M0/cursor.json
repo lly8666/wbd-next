@@ -26,8 +26,7 @@
     "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
     "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md"
+    "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md"
   ],
   "open_requests": [],
   "partial_summary": "H1945 original SOURCE72d3e13 Action43771212764 QPC 384/384 PASS scoped, post-inner-write p99<0.5ms, pre-write 15.845–17.317ms tail root OPEN. H1937 P1 A1 PASS/B1 8 CN vs 4096 (domain180224) FAIL while actual app/Stop PASS; B2/A2 NOT_RUN. H1946 CN cold independent --china-ip-file implementation NOT_RUN until new source Action."

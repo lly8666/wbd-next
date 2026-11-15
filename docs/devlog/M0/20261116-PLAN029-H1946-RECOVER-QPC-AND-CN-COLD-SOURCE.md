@@ -5,3 +5,7 @@
 - 定向旧 Go/Rust 复习：`m0Plan029ColdSource` 的 `cn=o.Bypass4` 读取 OS 紧凑 bypass 字段，而实际 B1 只有八条 LAN 合并前缀。H1946 增加 `m0NativeV4Options.ChinaIPFile`，从原 `--china-ip-file` 单次读取 canonical Rust CN 快照（内含 LAN 并集，仍无海量 OS routes）；无效/缺失显式文件 fail closed。锁定 Go 4096 非相邻 /32、小的陈旧 LAN-only bypass 和坏文件测试；manifest blob 同源更新。
 - 新 SOURCE 的 **单 Action** 仅以 `[plan029-v3-real-p1-tunnel-ab]` + `[plan029-v3-real-p1-policy-abba]` 顺序进行 A1→B1→B2→A2；提交时全部 **NOT_RUN**，不得从新源码静态门槛直接晋升 P1 PASS。没有重发 H1945/P2/10GiB；沿原 WAL/owned finally 恢复。更多 D1–D5/P1–P2、Game4、GUI、IPv6 和全量性能仍 OPEN。
 - 证据：`docs/evidence/M0/PLAN029-H1946-H1945-QPC-AND-H1937-P1-FIRST-BOUNDARY-20261116.json`；H1937 历史失败留存，未触 PLAN028/030。
+
+```feature-impact
+{"kind":"updated","reason":"H1945 true QPC receipt and H1937 first P1 CN cold boundary; H1946 one-source Go Rust cold-fix not yet native-qualified","ids":["dns-split-ipv6"]}
+```
