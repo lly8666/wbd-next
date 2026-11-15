@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "task": "H1881",
+  "plan": "PLAN029",
+  "source_sha": "cab3feebb7ec778c96991ebbdc2b5e6efad48923",
+  "action_id": 43664841742,
+  "action_conclusion": "success",
+  "scope": "WINDOWS2025_REAL_LOOPBACK_WINSOCK_128_SOCKET_PAIRS_PLUS_LINUX_COMPONENT_NOT_WINTUN_128",
+  "windows_job_id": 132661812029,
+  "linux_job_id": 132661812463,
+  "result": "COMPONENT_PASS_SCOPED_NOT_REAL_PLAN029_128_WINTUN",
+  "windows_platform": {
+    "test": "windows_direct_tcp::plan029_global_backpressure_tests::plan029_sharded_wsa_128_idle_two_active_same_event_no_lost_read",
+    "status": "ok",
+    "unit_passed": 52,
+    "unit_failed": 0,
+    "actual_kernel_tcp_pair_count": 128,
+    "ids_active": [
+      15,
+      31
+    ],
+    "idle_pairs": 126,
+    "shard_count": 16,
+    "shared_shard": 15,
+    "fd_read_two_received": true,
+    "initial_idle_event_wait_timeout": true
+  },
+  "windows_engine": {
+    "plan029_feature_without_probe": {
+      "passed": 88,
+      "failed": 0
+    },
+    "plan029_feature_with_probe": {
+      "passed": 90,
+      "failed": 0
+    },
+    "release_v3_dll_build": "PASS"
+  },
+  "linux_component": {
+    "conclusion": "success"
+  },
+  "prior_failures": {
+    "H1879_windows_platform_action": 43664732661,
+    "first_error": "E0277_test_assert_one_byte_array_vs_reference",
+    "H1876_first_error": "E0502_ready_queue_borrow_scope"
+  },
+  "limitations": {
+    "real_original_Wintun_128_idle_plus_two_active": "NOT_RUN",
+    "same_vm_old_new_scheduler_ab": "NOT_RUN",
+    "P1_CPU_GIB": "+9.41% OPEN",
+    "P2_direct_over_physical": "2.787x OPEN from signed H1877 source9fa1724a",
+    "user_kernel_cpu_for_H1880": "NOT_MEASURED",
+    "driver_cpu": "NOT_ATTRIBUTED",
+    "GUI_Game4_real_ipv6": "OPEN"
+  },
+  "source_provenance": "H1880 Windows and Linux job exact source, produced genuine Windows socket events; no original Windows Go/NPF/Wintun product networking in this Action."
+}
