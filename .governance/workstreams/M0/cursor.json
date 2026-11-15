@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1929,
-  "checkpoint_sha": "582a284f2a35e84437513defa63264fcaae191c0",
+  "sequence": 1930,
+  "checkpoint_sha": "31a052e83da9ba28ea334bb7819e0b18623c4adf",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1929: H1927 signed Action43721447384 PASS 4MiB and 384 real small physical/Direct ABBA TCP SHA/FIN/Stop; Direct median extra 0.45–0.66ms, rare first-reply p99 14–15ms; Tunnel UDP379/379 p99 10.655ms. H1926 stack 8-ticket micro-opt functional PASS, CPU reduction NOT_MEASURED.",
-  "why_now": "H1928 governance Action43722873267 true FAIL: hot-read budget 32800>32768 bytes, only 32B over. Shorten M0 cursor repeated descriptive fields without deleting SOURCE, evidence, context, qualification gaps, or increasing budget. Product original Action43721447384 PASS unaffected.",
+  "current_task": "H1930 verified original signed H1922 Rust TX/RX OS TIDs (7868/4180) join Windows 1Hz GetThreadTimes: TX42.328s RX16.766s >=95.7% of same Go EXE/Rust DLL process61.75s CPU. Direct 500/700 stage >=99.07/98.51% sampled Rust. Added offline ZIP TID audit +8 cheap governance tests, no runtime/CPU gain claim.",
+  "why_now": "User asked why Go process uses high CPU if router is Rust. Real signed process numbers are Go+Rust same PID; Win32 GetThreadDescription H1922/H1927 HRESULT_10000000 unnamed, but original Rust logs exact TX/RX OS thread IDs matching 1Hz GetThreadTimes. High-rate bottleneck lies TX/RX not Go. Archive source-locked lower-bound CPU attribution rather than mislabel other threads.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Analyze Direct TCP event/ready wake first-reply p99 and concurrent Tunnel UDP HOL; quantify short same-VM matched CPU and old/new executable A/B before claiming improvement. Preserve positive read/write relay tickets; use signed 4MiB+384 small/Stop guard, avoid repeat10GiB until actual CPU algorithm changes. D1-D5/P1/GUI/Game4/IPv6/padding remain OPEN.",
+  "next_action": "Next native optimization target Rust TX extra event/IO/ready overhead and 14–15ms small TCP first-echo p99; preserve any read/write progress FIFO tickets. Before CPU improvement claim run same-VM source old/new binary A/B or matched phase with accurate TID CPU/GiB, 4MiB+Stop hard gate; no repeat10GiB just for offline tools. P1/D1-D5/GUI/Game4/IPv6/padding OPEN.",
   "unverified": true,
   "last_tested_source": "aab503faf78c4e54ea018544873c7650dd7c102f",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1928-H1927-SIGNED-SMALL-TCP-384-ABBA-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
     "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md"
+    "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1927 SHA aab503 signed real original Win2025/WSL2 Action43721447384 SUCCESS: 4MiB+384 small TCP 64B/1KiB/16KiB each physical/Direct 64 sessions SHA/FIN Stop; p50 Direct extra .453/.470/.658ms, first reply p99 ~14–15ms, Tunnel96B UDP 379/379 p99 10.655ms, ready ticket max14ms; H1926 stack CPU effect unmeasured. H1929 short cursor fixes genuine hot-byte budget red."
+  "partial_summary": "H1922 true 10GiB Action43716329886 sourced b0fa293: 191 1Hz Windows CPU snapshots total61.75s, signed Rust TX OS TID7868 CPU42.328s RX4180 CPU16.766s, >=95.7% process CPU. Direct 500Mb stage TX18.516 RX6.438 =99.07% sampled, 700 duplex TX22.25 RX9.75 =98.51%; Go EXE hosts Rust DLL, other threads not Go-attributed. H1927 signed 384 small TCP and Stop PASS, stack opt CPU reduction still not measured. H1930 adds offline audit only, PLAN029 OPEN."
 }

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task": "H1930",
+  "plan": "PLAN029",
+  "source_sha": "aab503faf78c4e54ea018544873c7650dd7c102f",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "OFFLINE_RETROSPECTIVE_NATIVE_RUST_TID_TO_WIN32_CPU_NOT_NEW_PRODUCT",
+  "action_h1922": {
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43716329886",
+    "conclusion": "success",
+    "source_sha": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
+    "artifact_id": 14163067201,
+    "process_pid": 9532,
+    "samples": 191,
+    "process_cpu_delta_s": 61.75,
+    "rust_tx_tid": 7868,
+    "rust_rx_tid": 4180,
+    "rust_tx_cpu_s_lower_bound": 42.328125,
+    "rust_rx_cpu_s_lower_bound": 16.765625,
+    "rust_combined_cpu_s_lower_bound": 59.09375,
+    "rust_share_of_process_pct_lower_bound": 95.7,
+    "rust_tx_user_s": 24.5625,
+    "rust_tx_kernel_s": 17.765625,
+    "rust_rx_user_s": 2.515625,
+    "rust_rx_kernel_s": 14.25,
+    "physical_500_sampled": {
+      "rust_tx_s": 0.359375,
+      "rust_rx_s": 0.140625,
+      "all_threads_s": 0.828125
+    },
+    "direct_500_sampled": {
+      "rust_tx_s": 18.515625,
+      "rust_rx_s": 6.4375,
+      "all_threads_s": 25.1875,
+      "rust_share_pct_lower_bound": 99.07
+    },
+    "physical_duplex_700_sampled": {
+      "rust_tx_s": 0.453125,
+      "rust_rx_s": 0.109375,
+      "all_threads_s": 1.015625
+    },
+    "direct_duplex_700_sampled": {
+      "rust_tx_s": 22.25,
+      "rust_rx_s": 9.75,
+      "all_threads_s": 32.484375,
+      "rust_share_pct_lower_bound": 98.51
+    }
+  },
+  "action_h1927": {
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43721447384",
+    "conclusion": "success",
+    "source_sha": "aab503faf78c4e54ea018544873c7650dd7c102f",
+    "artifact_id": 14164224296,
+    "samples": 28,
+    "process_cpu_delta_s": 1.4375,
+    "rust_tx_tid": 3996,
+    "rust_rx_tid": 8304,
+    "rust_tx_cpu_s_lower_bound": 0.390625,
+    "rust_rx_cpu_s_lower_bound": 0.09375,
+    "rust_share_of_process_pct_lower_bound": 33.7,
+    "scope": "short 4MiB + 384 small TCP, not high-rate phase or new CPU A/B"
+  },
+  "original_code_source": "crates/wbd-engine/src/v4_windows_native_runtime.rs WBD_WINDOWS_RUST_NATIVE_WORKER_TID role TX/RX",
+  "sample_source": "tools/m0_wl_native_resource_sampler.py GetProcessTimes + GetThreadTimes top6 every 1s",
+  "note": "GetThreadDescription produced HRESULT_10000000 for all H1922/H1927 thread observations: Rust TIDs from exact original Rust thread-start log, not inferred from absent names. Other threads are UNKNOWN, NOT Go-language attribution.",
+  "limitations": [
+    "original Windows Go executable loads Rust DLL in same PID",
+    "1Hz top-six per-snapshot Rust CPU lower bound, phase boundaries approx 1s",
+    "kernel CPU time belongs to native threads while executing syscalls, not entire OS DPC/ISR",
+    "prior H1926 stack 8-ticket optimization CPU reduction still not causally measured same-VM old/new binary",
+    "historical two different sources; do not compare H1927 short vs H1922 long and attribute change to optimization"
+  ]
+}
