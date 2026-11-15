@@ -63,6 +63,7 @@ on:
       - tests/test_m0_plan029_h1896_sustain_tcp.py
       - tests/test_m0_plan029_h1898_highrate.py
       - tests/test_m0_plan029_h1942_echo_before_fin.py
+      - tests/test_m0_plan029_h1943_reply_ticket_diag.py
       - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_install_public_faketcp.py
       - tools/m0_install_public_realityfront_tests.py
@@ -549,6 +550,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
       - run: python -m unittest tests.test_m0_plan029_h1942_echo_before_fin -v
+      - run: python -m unittest tests.test_m0_plan029_h1943_reply_ticket_diag -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
@@ -1011,6 +1013,7 @@ jobs:
       # physical/Direct A-B-B-A. Requires the ordinary signed 4MiB bulk.
       WBD_PLAN029_P2_SMALL_TCP_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-small-tcp-latency]') && '1' || '0' }}
       WBD_PLAN029_P2_ECHO_EARLY_CONTROL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-echo-early-control]') && '1' || '0' }}
+      WBD_PLAN029_P2_REPLY_TICKET_DIAG: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-reply-ticket-diag]') && '1' || '0' }}
       WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.
@@ -2590,6 +2593,21 @@ jobs:
                   throw 'H1942 original 384 FIN-first and 384 payload-first two-OS SHA/FIN/Stop not proven'
                 }
                 Write-Output 'PLAN029_H1942_TWO_REAL_KERNEL_TCP_REPLY_POLICIES_384_EACH_SHA_FIN_STOP_PASS_SCOPED'
+              }
+              if($env:WBD_PLAN029_P2_REPLY_TICKET_DIAG -eq '1'){
+                $io=$p2.tcp_kernel_io_diagnostic.values
+                if($p2.source_sha -ne $env:GITHUB_SHA -or
+                   $io.reply_outer_read_turns -lt 100 -or
+                   $io.reply_outer_read_inner_write_same_turn -lt 100 -or
+                   $io.reply_outer_ready_wait_ge8_ms -gt $io.reply_outer_read_turns -or
+                   $io.reply_outer_ready_wait_ge16_ms -gt $io.reply_outer_ready_wait_ge8_ms -or
+                   $io.reply_outer_read_inner_write_same_turn + $io.reply_outer_read_no_inner_write -ne $io.reply_outer_read_turns -or
+                   $p2.small_tcp_latency.echo_before_fin_control.status -ne 'PASS_SCOPED_ORIGINAL_TWO_OS_ECHO_BEFORE_FIN' -or
+                   $p2.stop -ne 'PASS_BOTH_OWNED'){
+                  throw 'H1943 original Rust reply outer-read ready-ticket latency and same-turn inner-write receipt missing'
+                }
+                Write-Output 'PLAN029_H1943_SIGNED_RUST_REPLY_WINSOCK_TICKET_AGE_AND_SAME_TURN_FORWARD_PASS_SCOPED'
+              }
               }
               if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
                 $rate=$p2.highrate_direct_tcp

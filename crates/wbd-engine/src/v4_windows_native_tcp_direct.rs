@@ -176,6 +176,16 @@ struct TcpLegDiagnosis{
     relay_close_probe_self_ticket:u64,
     connected_first_probe_tickets:u64,
     ready_wait_ge8_ms:u64,ready_wait_ge16_ms:u64,
+    // Source-locked diagnosis only: distinguish event/ticket delay
+    // before the first outer kernel TCP reply recv from delay after
+    // Rust has written the inner WinSock leg. No per-flow logs or timer.
+    reply_outer_read_turns:u64,
+    reply_outer_ready_wait_max_ms:u64,
+    reply_outer_ready_wait_ge8_ms:u64,
+    reply_outer_ready_wait_ge16_ms:u64,
+    reply_outer_read_inner_write_same_turn:u64,
+    reply_outer_read_no_inner_write:u64,
+    reply_inner_write_deferred_turns:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -185,6 +195,33 @@ struct TcpLegDiagnosis{
     // only by existing opt-in original TX diagnostic. An accepted()
     // or send() success is NOT proof of remote Linux packet delivery.
     half_close_transitions:[u64;4],
+}
+// Existing P2 opt-in only, using the same owner-monotonic enqueue time
+// already attached to a generation-scoped ready ticket. A positive outer
+// recv is real Linux->Windows kernel TCP payload; a same-turn inner write
+// proves the Rust socket relay did not add a later queue service round.
+// It does NOT time the later Wintun rewrite/RX injection or OS delivery.
+fn note_reply_service(d:&mut TcpLegDiagnosis,ready_age_ms:u64,
+    outer_read_bytes:usize,inner_write_bytes:usize){
+    if outer_read_bytes>0{
+        d.reply_outer_read_turns=d.reply_outer_read_turns.saturating_add(1);
+        d.reply_outer_ready_wait_max_ms=
+            d.reply_outer_ready_wait_max_ms.max(ready_age_ms);
+        d.reply_outer_ready_wait_ge8_ms=
+            d.reply_outer_ready_wait_ge8_ms.saturating_add(u64::from(ready_age_ms>=8));
+        d.reply_outer_ready_wait_ge16_ms=
+            d.reply_outer_ready_wait_ge16_ms.saturating_add(u64::from(ready_age_ms>=16));
+        if inner_write_bytes>0{
+            d.reply_outer_read_inner_write_same_turn=
+                d.reply_outer_read_inner_write_same_turn.saturating_add(1);
+        }else{
+            d.reply_outer_read_no_inner_write=
+                d.reply_outer_read_no_inner_write.saturating_add(1);
+        }
+    }else if inner_write_bytes>0{
+        d.reply_inner_write_deferred_turns=
+            d.reply_inner_write_deferred_turns.saturating_add(1);
+    }
 }
 /// H1892 signed, test-only 128 real Wintun source-port admissions.
 #[derive(Default)]
@@ -662,8 +699,9 @@ impl NativeTcpActor{
             let Some((port,generation,queued_at))=self.flow_ready.pop_front()else{break};
             let Some(&idx)=self.active_by_port.get(&port)else{continue};
             if self.active[idx].generation!=generation{continue}
+            let ready_age_ms=now_ms.saturating_sub(queued_at);
             if let Some(d)=self.diagnosis.as_mut(){
-                let age=now_ms.saturating_sub(queued_at);
+                let age=ready_age_ms;
                 d.ready_served=d.ready_served.saturating_add(1);
                 d.ready_wait_sum_ms=d.ready_wait_sum_ms.saturating_add(age);
                 d.ready_wait_max_ms=d.ready_wait_max_ms.max(age);
@@ -773,6 +811,8 @@ impl NativeTcpActor{
                                     }
                                 }
                                 d.relay_turns=d.relay_turns.saturating_add(1);
+                                note_reply_service(d,ready_age_ms,
+                                    tick.outer_read,tick.inner_write);
                                 if tick.bytes_read==0&&tick.bytes_written==0{
                                     d.relay_zero_progress=d.relay_zero_progress.saturating_add(1);
                                 }
@@ -1045,6 +1085,24 @@ mod tests{
         assert!(!relay_needs_continuation(0,0,0,false));
     }
     #[test]
+    fn plan029_h1943_real_outer_reply_ticket_age_is_separate_from_generic_queue(){
+        let mut d=TcpLegDiagnosis::default();
+        note_reply_service(&mut d,16,64,64);
+        note_reply_service(&mut d,9,1024,0);
+        note_reply_service(&mut d,3,0,1024);
+        note_reply_service(&mut d,0,16,16);
+        note_reply_service(&mut d,100,0,0);
+        assert_eq!(d.reply_outer_read_turns,3);
+        assert_eq!(d.reply_outer_ready_wait_max_ms,16);
+        assert_eq!(d.reply_outer_ready_wait_ge8_ms,2);
+        assert_eq!(d.reply_outer_ready_wait_ge16_ms,1);
+        assert_eq!(d.reply_outer_read_inner_write_same_turn,2);
+        assert_eq!(d.reply_outer_read_no_inner_write,1);
+        assert_eq!(d.reply_inner_write_deferred_turns,1);
+        // Zero-byte/zero-progress turns do not invent reply evidence.
+        assert_eq!(d.ready_served,0);
+    }
+    #[test]
     fn plan029_ready_fifo_ticket_age_is_monotonic_and_generation_scoped(){
         let mut d=TcpLegDiagnosis::default();
         let now=640u64;let enqueued=627u64;
@@ -1176,7 +1234,7 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} connected_first_probe_tickets={} ready_wait_ge8_ms={} ready_wait_ge16_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_fin_peek_calls={} outer_fin_peek_calls={} inner_fin_peek_eof={} outer_fin_peek_eof={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} connected_first_probe_tickets={} ready_wait_ge8_ms={} ready_wait_ge16_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_fin_peek_calls={} outer_fin_peek_calls={} inner_fin_peek_eof={} outer_fin_peek_eof={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} reply_outer_read_turns={} reply_outer_ready_wait_max_ms={} reply_outer_ready_wait_ge8_ms={} reply_outer_ready_wait_ge16_ms={} reply_outer_read_inner_write_same_turn={} reply_outer_read_no_inner_write={} reply_inner_write_deferred_turns={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
@@ -1193,7 +1251,12 @@ impl Drop for NativeTcpActor{
             d.io_short_writes[0],d.io_short_writes[1],
             d.io_read_gated[0],d.io_read_gated[1],
             d.io_event_suppressed_reads[0],d.io_event_suppressed_reads[1],
-            d.direct_forwarded,d.queued_copy);
+            d.direct_forwarded,d.queued_copy,
+            d.reply_outer_read_turns,d.reply_outer_ready_wait_max_ms,
+            d.reply_outer_ready_wait_ge8_ms,d.reply_outer_ready_wait_ge16_ms,
+            d.reply_outer_read_inner_write_same_turn,
+            d.reply_outer_read_no_inner_write,
+            d.reply_inner_write_deferred_turns);
         // Exactly one cold aggregate FIN witness AFTER the original TX
         // returns to its Stop owner. No IPs, TIDs, original payload,
         // per-packet logging or additional kernel I/O.

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1943",
+  "source_sha": "cbf01fae158e47b3ef967f5351f978f7cc083768",
+  "result": "PASS_SCOPED_TWO_OS_NOT_PERF_EXIT",
+  "action_id": 43751965403,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/43751965403",
+  "conclusion": "success",
+  "artifact_id": 14177405358,
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "source_manifest_binary_exact": true,
+  "four_mib": {
+    "physical_elapsed_ms": 23.403,
+    "direct_elapsed_ms": 59.086,
+    "bytes": 4194304,
+    "SHA_FIN": "PASS",
+    "owner_stop": "PASS_BOTH_OWNED"
+  },
+  "small": {
+    "fin_first_connections": 384,
+    "payload_first_connections": 384,
+    "sizes": [
+      64,
+      1024,
+      16384
+    ],
+    "each_path_each_size_each_policy": 64,
+    "order": [
+      "physical",
+      "direct",
+      "direct",
+      "physical"
+    ],
+    "source_sha": "cbf01fae158e47b3ef967f5351f978f7cc083768",
+    "windows_linux_original_aggregated_SHA256": "0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a",
+    "both_policies_linux_verifies_real_FIN": true,
+    "first_echo_after_halfclose_ms": {
+      "64": {
+        "fin_first": {
+          "physical_p50": 0.152,
+          "physical_p95": 0.208,
+          "physical_p99": 0.261,
+          "direct_p50": 0.551,
+          "direct_p95": 15.044,
+          "direct_p99": 15.568
+        },
+        "payload_first": {
+          "physical_p50": 0.162,
+          "physical_p95": 0.206,
+          "physical_p99": 0.221,
+          "direct_p50": 0.475,
+          "direct_p95": 15.152,
+          "direct_p99": 15.729
+        }
+      },
+      "1024": {
+        "fin_first": {
+          "physical_p99": 0.26,
+          "direct_p50": 0.53,
+          "direct_p95": 15.341,
+          "direct_p99": 21.088
+        },
+        "payload_first": {
+          "physical_p99": 0.247,
+          "direct_p50": 0.436,
+          "direct_p95": 3.77,
+          "direct_p99": 15.174
+        }
+      },
+      "16384": {
+        "fin_first": {
+          "physical_p99": 0.761,
+          "direct_p50": 0.716,
+          "direct_p95": 1.245,
+          "direct_p99": 1.627
+        },
+        "payload_first": {
+          "physical_p99": 0.566,
+          "direct_p50": 0.698,
+          "direct_p95": 8.525,
+          "direct_p99": 22.479
+        }
+      }
+    }
+  },
+  "tunnel_udp": {
+    "windows_and_linux_unique_received_each": 240,
+    "p99_ms": 14.401
+  },
+  "finding": "Without Linux application waiting for FIN, Direct 64B still p95/p99 ~15ms, so FIN-wait is NOT necessary to cause tail. Reverse TCP read/forward/Wintun/RX path and OS scheduling remain candidates. Trial sequential not randomized; few samples cannot prove a per-packet causal delta.",
+  "remaining": [
+    "P2 first-reply p99>10ms",
+    "Rust TX outer READ-ready vs true inner write vs Wintun RX delay",
+    "P1 all/CN/CN/all full same-source CPU ABBA",
+    "same-VM old/new direct NAT CPU ABBA",
+    "PLAN029 full D1-D5/GUI/Game4/IPv6/padding"
+  ]
+}

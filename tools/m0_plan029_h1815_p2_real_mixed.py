@@ -628,6 +628,13 @@ H1888_IO_FIELDS=(
     "inner_read_event_suppressed","outer_read_event_suppressed",
     "direct_forwarded","queued_copy",
 )
+H1943_REPLY_FIELDS=(
+    "reply_outer_read_turns","reply_outer_ready_wait_max_ms",
+    "reply_outer_ready_wait_ge8_ms","reply_outer_ready_wait_ge16_ms",
+    "reply_outer_read_inner_write_same_turn",
+    "reply_outer_read_no_inner_write",
+    "reply_inner_write_deferred_turns",
+)
 def parse_kernel_io_final(text):
     marker="PLAN029_H1888_TCP_IO_FINAL "
     records=[line.split(marker,1)[1].strip() for line in text.splitlines()
@@ -646,6 +653,21 @@ def parse_kernel_io_final(text):
            not tokens[key].isdecimal() for key in H1888_IO_FIELDS):
         raise RuntimeError("H1888 invalid/missing nonnegative typed I/O counter")
     fields={key:int(tokens[key]) for key in H1888_IO_FIELDS}
+    # Original older signed Action reports remain readable; for H1943
+    # reply attribution the seven counters MUST be present as a set.
+    if any(k in tokens for k in H1943_REPLY_FIELDS):
+        if any(k not in tokens or not tokens[k].isascii() or
+               not tokens[k].isdecimal() for k in H1943_REPLY_FIELDS):
+            raise RuntimeError("H1943 partial/invalid original reply diagnostic")
+        fields.update({k:int(tokens[k]) for k in H1943_REPLY_FIELDS})
+        if (fields["reply_outer_ready_wait_ge16_ms"]>
+              fields["reply_outer_ready_wait_ge8_ms"] or
+            fields["reply_outer_ready_wait_ge8_ms"]>
+              fields["reply_outer_read_turns"] or
+            fields["reply_outer_read_inner_write_same_turn"]+
+              fields["reply_outer_read_no_inner_write"]!=
+              fields["reply_outer_read_turns"]):
+            raise RuntimeError("H1943 original Rust reply timing invariant failed")
     if (fields["inner_read_calls"]<1 or fields["outer_read_calls"]<1 or
         fields["ticket_served"]<1 or
         fields["relay_no_progress"]>fields["relay_turns"] or

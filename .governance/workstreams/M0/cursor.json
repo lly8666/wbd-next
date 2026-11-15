@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1942,
-  "checkpoint_sha": "6bbaad4b346a16c97d1b5417d03d15aa2c23d7be",
+  "sequence": 1943,
+  "checkpoint_sha": "cbf01fae158e47b3ef967f5351f978f7cc083768",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1942 archived H1941 actual signed original Win2025/WSL2 source6bbaad4 Action43740776215 SUCCESS 4MiB+384 small physical/Direct kernel TCP SHA/FIN/Tunnel UDP120/120/owned Stop. H1941 FIN peek EOF inner138 outer84 works but Direct small first echo p99 15.642/15.837/15.641ms (64/1K/16K), ticket wait max25ms, >=8ms56, so latency OPEN. H1942 test-only extra 384 Linux echo-before-FIN with same original Rust owner to separate FIN vs return-data tail, new native source NOT_RUN.",
-  "why_now": "Two serial Rust event/FIN candidates H1940/1941 did not improve 10-15ms tail. Existing Linux test app intentionally waits recv(0) before returning echo; need isolate FIN forwarding from reverse TCP data/WinTun RX latency using same physical/Direct ABBA payload-first control without any production data-path change, full SHA/FIN verification each.",
+  "current_task": "H1943 archive H1942 SOURCE cbf01fa signed Action43751965403 SUCCESS 4MiB +384 FIN-first+384 payload-first small TCP same original Win2025/WSL2 Go/Rust SHA/FIN/TunnelUDP/Stop PASS. 64B Direct first echo p95/p99 fin-first15.044/15.568ms vs payload-first15.152/15.729ms, physical <=.261ms; FIN wait not necessary. Test-only opt-in Rust TX counters: outer reply-read ready ticket age 8/16ms, same-turn inner kernel write vs deferred; exact new source native P2 pending, no product behavior change.",
+  "why_now": "H1940 socket WAIT_ANY priority and H1941 FD_CLOSE peek did not fix p99; H1942 768 true sockets proves direct tail remains if Linux replies before observing FIN. Need distinguish before outer kernel read TX queue delay from after inner socket write/Wintun RX delivery, with same original Rust owner monotonic timestamps and no per-packet user data or busy polling.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1942 one signed normal Windows/WSL2 4MiB+384 fin-first+384 echo-first (all physical/Direct) original source and Tunnel UDP Stop; p50/p95/p99 for each; if early echo p99 disappears focus FIN forward, else focus reverse Winsock/RX/TUN. No duplicate 10GiB. Separately resume P1 same-Rust V3 all/CN/CN/all full 4-leg actual CPU ABBA with nonLAN 4096 CN rule fixture; no physical-as-classifier CPU.",
+  "next_action": "Run H1943 one source-locked original Win2025/WSL2 4MiB+768 physical/Direct small TCP with response-ticket timing counters and SHA/FIN TunnelUDP owned Stop; if outer reply-read ticket age remains small yet app p99 ~15ms, instrument TX Wintun reverse/RX injection; if age>=8 for many reply reads, target original WinSock wake processing. P1 4096 nonLAN CN rules all/CN/CN/all 4-arm CPU ABBA independently; no redundant 10GiB.",
   "unverified": true,
-  "last_tested_source": "6bbaad4b346a16c97d1b5417d03d15aa2c23d7be",
+  "last_tested_source": "cbf01fae158e47b3ef967f5351f978f7cc083768",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1942-H1941-SIGNED-SMALLTCP-FIN-PEEK-TAIL-OPEN-20261115.json"
+    "docs/evidence/M0/PLAN029-H1943-H1942-SIGNED-768-FIN-VS-PAYLOAD-FIRST-P99-OPEN-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
     "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md",
     "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md",
-    "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md"
+    "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1941 true original source6bbaad4 Action43740776215 PASS 4MiB 50.828/70.517ms physical/Direct, 384 small SHA/FIN, Tunnel UDP120/120 p99 10.339ms, Stop. Actual FIN peek inner138/138 outer84/84; Direct first echo p99 15.642/15.837/15.641ms, ticket wait max25ms; latency OPEN. H1942 adds second 384 socket same owner payload-first Linux reply control to diagnose FIN vs return-path, new native PENDING, no product change. P1 policy CPU ABBA still OPEN."
+  "partial_summary": "H1942 source cbf01fa actual signed Win2025/WSL2 Action43751965403 SUCCESS: 4MiB physical23.403 vs Direct59.086ms, 768 real small TCP each original Linux FIN+payload SHA, Tunnel UDP240/240 p99 14.401ms, Stop PASS. For64B FIN-first Direct p95/p99 15.044/15.568ms vs Linux payload-first 15.152/15.729ms (physical <=.261), so waiting for FIN not necessary. H1943 adds aggregate TX outer reply ready age and same-turn inner write counters only in original P2 diagnosis, new SOURCE NOT_RUN. Full029 and P1 CPU still OPEN."
 }
