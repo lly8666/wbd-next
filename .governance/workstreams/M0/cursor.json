@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1945,
-  "checkpoint_sha": "6848c0ddc7959fd5718d6d467f0b8c8769d56a4e",
+  "sequence": 1946,
+  "checkpoint_sha": "72d3e131561dcb54501722f7d9254b34a27094e9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1945 collect signed H1944 Win2025/WSL2 Action43753944774 true 4MiB+384 FIN-first+384 payload-first physical/Direct SHA/FIN/TunnelUDP/Stop PASS. Direct first-reply p99 9–40ms vs physical <1ms; Rust outer reply ticket wait max4ms, 571/582 same-turn inner socket write, so queue alone not root cause. Add bounded signed-test-only shared Windows QPC Rust first inner write→Python original app first recv per-flow for 384 true Direct sessions. Native new SOURCE NOT_RUN.",
-  "why_now": "After signed H1944 768 original real small TCP control, true source-locked 15-40ms tail persists. Win32 QueryPerformanceCounter consistent cross processes on same VM, unlike Windows+Linux wall clocks. Trace one first reply kernel write per flow at Rust TX and client recv only; no production timers or route changes.",
+  "current_task": "H1946 recovered H1945 real QPC Action43771212764 PASS scoped 384/384; pre-write TCP reply p99 17.317/15.845ms, post-write 0.476/0.450ms, p99 cause OPEN. Recovered H1937 P1 A1 PASS and B1 cn_rows=8/domain180224 FAIL despite true app/Stop; B2/A2 NOT_RUN. Fix original Go Rust cold ChinaIPFile independent of compact OS bypass, one new signed same-Rust P1 ABBA awaiting native verification.",
+  "why_now": "H1945 real action was already complete, so collect receipt without rerun. H1937 P1 first failure is cold 4096-CIDR source mismatch not Defender; fix exact cold Go→Rust boundary.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "One signed H1945 4MiB+768 small (FIN-first then echo-first), 96B Tunnel UDP and owned Stop. Require 384 QPC source-port matches by time window, compute app half-close→Rust write and Rust write→client recv p50/p95/p99; if true failure fix first fault, no 10GiB duplicate. P1 V3 all/CN ABBA still OPEN.",
+  "next_action": "One source-locked Win2025/WSL2 signed original Rust V3 all/CN/CN/all 50Mbps/25ms 60s P1 on identical binaries, cold cn_rows>=4096 and 8192 domain names; require each actual app/owned Stop and CPU/GiB/p99. No duplicate P2 or long 10GiB; leave first native failure OPEN.",
   "unverified": true,
-  "last_tested_source": "6848c0ddc7959fd5718d6d467f0b8c8769d56a4e",
+  "last_tested_source": "72d3e131561dcb54501722f7d9254b34a27094e9",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1946-H1945-QPC-AND-H1937-P1-FIRST-BOUNDARY-20261116.json",
     "docs/evidence/M0/PLAN029-H1945-H1944-SIGNED-TWO-REPLY-POLICIES-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
     "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1944 original SOURCE6848c0d Action43753944774 SUCCESS 4MiB+2x384 TCP Windows/WSL2 SHA/FIN, TunnelUDP/Stop. FIN-first Direct reply p99 16.151/15.872/15.677ms; payload-first14.690/39.545/9.185ms while physical <=.931ms. Rust outer-reply ready wait max4ms, 571/582 inner-write same turn; direct rare reply tail still OPEN. H1945 QPC diagnostics test-only NOT_RUN, P1/CPU still OPEN."
+  "partial_summary": "H1945 original SOURCE72d3e13 Action43771212764 QPC 384/384 PASS scoped, post-inner-write p99<0.5ms, pre-write 15.845–17.317ms tail root OPEN. H1937 P1 A1 PASS/B1 8 CN vs 4096 (domain180224) FAIL while actual app/Stop PASS; B2/A2 NOT_RUN. H1946 CN cold independent --china-ip-file implementation NOT_RUN until new source Action."
 }

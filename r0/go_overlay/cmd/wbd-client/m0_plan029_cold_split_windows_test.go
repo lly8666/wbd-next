@@ -1,6 +1,6 @@
 //go:build windows && wbd_v4_embedded_go
 package main
-import ("net/netip";"os";"path/filepath";"strings";"testing")
+import ("fmt";"net/netip";"os";"path/filepath";"strings";"testing")
 func plan029Options(mode string)m0NativeV4Options{
  return m0NativeV4Options{
   Installation:[16]byte{1},
@@ -32,7 +32,7 @@ func TestPlan029GoColdRustThreeModesDnsEqualAllowedNoBackup(t *testing.T){
    t.Fatalf("cold %s %v",mode,e)
   }
   if mode=="bypass-lan-cn"{
-   if len(c.CN)!=1||len(c.LAN)==0||string(c.Domains)!="cn.example\n"{t.Fatal("CN cold source",c)}
+   if len(c.CN)<4096||len(c.LAN)==0||string(c.Domains)!="cn.example\n"{t.Fatal("CN cold source",len(c.CN),c)}
   }else if len(c.CN)!=0||len(c.Domains)!=0{
    t.Fatal("inactive CN allocations",mode)
   }
@@ -143,5 +143,35 @@ func TestPlan029ColdDirectHardConfiguredBoundedAndDefault(t *testing.T){
     t.Fatalf("direct hard %d, got %d err=%v",tc.requested,c.DirectHard,e)
    }
   }else if e==nil{t.Fatalf("oversized direct hard %d accepted",tc.requested)}
+ }
+}
+
+func TestPlan029H1946Cold4096CNIndependentOfOSBypass(t *testing.T){
+ path:=filepath.Join(t.TempDir(),"china-4096.txt")
+ var lines strings.Builder
+ for i:=0;i<4096;i++{
+  fmt.Fprintf(&lines,"11.42.%d.%d/32\n",i/128,(i%128)*2)
+ }
+ if e:=os.WriteFile(path,[]byte(lines.String()),0600);e!=nil{t.Fatal(e)}
+ o:=plan029Options("bypass-lan-cn")
+ o.Bypass4=[]netip.Prefix{netip.MustParsePrefix("10.0.0.0/8")}
+ o.ChinaIPFile=path
+ cold,e:=m0Plan029ColdSource(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1280,[]byte("cn.example\n"))
+ if e!=nil{t.Fatal(e)}
+ count:=0;first:=false;last:=false
+ for _,p:=range cold.CN{
+  if p.Bits!=32||p.Network[0]!=11||p.Network[1]!=42{continue}
+  count++
+  if p.Network==([4]byte{11,42,0,0}){first=true}
+  if p.Network==([4]byte{11,42,31,254}){last=true}
+ }
+ if count!=4096||!first||!last{
+  t.Fatalf("Rust cold CN truncated/merged: raw32=%d first=%t last=%t",count,first,last)
+ }
+ o.ChinaIPFile=path+".missing"
+ if _,e:=m0Plan029ColdSource(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1280,nil);e==nil{
+  t.Fatal("explicit missing CN source silently fell back")
  }
 }

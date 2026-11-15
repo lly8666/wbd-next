@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "work": "H1946",
+  "baseline_sha": "72d3e131561dcb54501722f7d9254b34a27094e9",
+  "h1945_signed_real": {
+    "source_sha": "72d3e131561dcb54501722f7d9254b34a27094e9",
+    "run_id": 43771212764,
+    "job_id": 132988775791,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/43771212764",
+    "result": "PASS_SCOPED_OBSERVATIONAL_SAME_WINDOWS_QPC",
+    "frequency_hz": 10000000,
+    "rust_logged_events": 386,
+    "matched_direct_events": 384,
+    "fin_first": {
+      "count": 192,
+      "client_FIN_to_Rust_inner_write_p99_ms": 17.317,
+      "Rust_inner_write_to_client_recv_p99_ms": 0.476,
+      "client_FIN_to_recv_p99_ms": 17.542
+    },
+    "payload_first": {
+      "count": 192,
+      "client_FIN_to_Rust_inner_write_p99_ms": 15.845,
+      "Rust_inner_write_to_client_recv_p99_ms": 0.45,
+      "client_FIN_to_recv_p99_ms": 16.059
+    },
+    "true_4MiB_and_Tunnel_UDP": "PASS_SIGNED_SCOPED",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "limitations": [
+      "QPC same Windows VM only",
+      "pre-Rust-write includes Linux and outer TCP",
+      "not a causal latency fix",
+      "not CPU/GiB or P1 ABBA"
+    ]
+  },
+  "h1937_P1_native_first_boundary": {
+    "source_sha": "16742c8127d1f6dd9a49ee26361fd674719310b6",
+    "run_id": 43734219846,
+    "job_id": 132874602875,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/43734219846",
+    "A1_all": {
+      "status": "PASS",
+      "delivered_gib": 0.69839,
+      "windows_cpu_seconds_per_delivered_gib": 21.6792,
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "B1_cn": {
+      "status": "FAIL",
+      "first_failure": "H1934 cold policy must load real CN rows and domains",
+      "cold_cn_rows": 8,
+      "domain_bytes": 180224,
+      "true_app_business": "PASS",
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "B2_cn": "NOT_RUN",
+    "A2_all": "NOT_RUN",
+    "ABBA_CPU": "NOT_RUN",
+    "observed_issue": "cold Rust CN source o.Bypass4 had LAN-only snapshot despite 4096 CIDR fixture; do not infer firewall block"
+  },
+  "source_fix": {
+    "status": "SOURCE_CHANGES_NOT_YET_TESTED",
+    "change": "m0NativeV4Options.ChinaIPFile from original CLI; cold splitroute.Direct(mode=CN,ChinaIPFile) independent of compact OS bypass; strict missing input; one cold-only parse",
+    "regression": "4096 nonadjacent /32 with stale LAN-only o.Bypass4 plus missing source fail closed",
+    "no_per_CIDR_OS_routes": true
+  },
+  "exit_status": "PLAN029_IN_PROGRESS",
+  "unverified": [
+    "H1946_new_SOURCE_native_P1",
+    "H1945_latency_root_cause_and_CPU",
+    "other_PLAN029_D1_D5_P1_P2_full_exit"
+  ],
+  "historical_failures_preserved": true,
+  "not_dispatched": [
+    "repeat_H1945",
+    "old_P1_failed_run",
+    "10GiB_same_source"
+  ]
+}

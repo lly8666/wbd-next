@@ -25,6 +25,16 @@ class P1OriginalWiring(unittest.TestCase):
   self.assertIn('rate,p1_rate_tunnel_ip,"10.66.0.2"',s)
   self.assertIn('"10.66.0.2",p1_rate_tunnel_ip,"windows"',s)
   self.assertIn('linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy',s)
+ def test_h1946_independent_cold_china_ip_file(self):
+  d=read("r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go")
+  c=read("r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go")
+  t=read("r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go")
+  a=read("r0/go_overlay/assembly/manifest-plan020-m0.json")
+  self.assertIn('ChinaIPFile string // independent cold Rust CN table',d)
+  self.assertIn('cn,e=splitroute.Direct("bypass-lan-cn",o.ChinaIPFile)',c)
+  self.assertNotIn('if mode==2{cn=o.Bypass4}',c)
+  self.assertIn('TestPlan029H1946Cold4096CNIndependentOfOSBypass',t)
+  self.assertIn('ChinaIPFile:*chinaIPFile',a)
  def test_source_locked_one_expensive_test(self):
   w=read(".github/workflows/m0-wl-public-normal-full.yml")
   r=read("tools/m0_wl_native_step_runner.py")

@@ -84,7 +84,15 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
  if mode!=0{
   p,e:=splitroute.Direct("bypass-lan","");if e!=nil{return empty,e}
   lan=p
-  if mode==2{cn=o.Bypass4}
+  if mode==2{
+   // H1946 signed P1 B1 proved compact OS Bypass4 has only 8 LAN
+   // rows despite --china-ip-file's 4096 distinct /32 CN entries.
+   // Rust's canonical cold CN snapshot must parse its own configured
+   // source, not inherit the OS compact route/exclusion representation.
+   // Single cold parse; an invalid custom source fails closed.
+   cn,e=splitroute.Direct("bypass-lan-cn",o.ChinaIPFile)
+   if e!=nil{return empty,e}
+  }
  }
  cnRows,e:=m0Plan029Rows(cn);if e!=nil{return empty,e}
  lanRows,e:=m0Plan029Rows(lan);if e!=nil{return empty,e}

@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "d59318915210d4962f1087a449a2c0d918b70531",
+      "result_blob": "47a07519bc0e837bd8c9525ba07a349c091e0b68",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -287,7 +287,7 @@
         },
         {
           "find": "StartupPaddingMode:startupPaddingMode,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
-          "replace": "StartupPaddingMode:startupPaddingMode,SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
+          "replace": "StartupPaddingMode:startupPaddingMode,SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,ChinaIPFile:*chinaIPFile,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         },
         {
           "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
@@ -1212,7 +1212,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "5661f63b002cec32e283207ccff8a8149bb3bdb6"
+      "result_blob": "ad750606e992fdafd0aee2a5aff5f2dd60ea4ed0"
     },
     {
       "kind": "create",
@@ -1751,13 +1751,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "0d8d3ff50f021895d9f19a20c09f2fe97f51970b"
+      "result_blob": "2b0c2f9e4a19c7e6712d3ee6616c939d0100c8c0"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "de9089a4532f328bb89e7ac8140cd7c77a5527d7"
+      "result_blob": "7f1f0871f1c5bda88b099612eb190fcbea5e604d"
     },
     {
       "kind": "create",
