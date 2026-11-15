@@ -209,9 +209,14 @@ impl NativeTcpActor{
     }
     fn enqueue_port(&mut self,port:u16){
         let Some(&idx)=self.active_by_port.get(&port)else{return};
-        let flow=&mut self.active[idx];
-        if flow.queued{return}
-        flow.queued=true;
+        // Finish the one mutable slot update before the rare stale-FIFO
+        // compaction borrows the active table immutably (Windows E0502).
+        let generation={
+            let flow=&mut self.active[idx];
+            if flow.queued{return}
+            flow.queued=true;
+            flow.generation
+        };
         // 2x hard16k bounds transient stale generations without dropping
         // a live flow's single ready ticket.
         if self.flow_ready.len()>=32768{
@@ -221,7 +226,7 @@ impl NativeTcpActor{
                 .and_then(|&i|active.get(i))
                 .is_some_and(|a|a.generation==*g));
         }
-        self.flow_ready.push_back((port,flow.generation));
+        self.flow_ready.push_back((port,generation));
     }
     fn harvest_events(&mut self){
         let pending=std::mem::take(&mut self.notified_shards);
