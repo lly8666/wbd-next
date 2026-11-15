@@ -362,6 +362,7 @@ H1888_IO_FIELDS=(
     "inner_write_wouldblock","outer_write_wouldblock",
     "inner_write_short","outer_write_short",
     "inner_read_gated","outer_read_gated",
+    "inner_read_event_suppressed","outer_read_event_suppressed",
     "direct_forwarded","queued_copy",
 )
 def parse_kernel_io_final(text):

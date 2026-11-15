@@ -381,6 +381,16 @@ pub struct TcpDirectRelay{
     // Product always ON. Only an explicit source-locked Win2025 probe
     // A-B-B-A fixture may select legacy copy for a known test flow.
     fast_forward:bool,
+    // Each kernel TCP leg has its OWN FD_READ subscription. One side
+    // returning WouldBlock disarms only that side until the original TX
+    // owner harvests a genuine FD_READ/FD_CLOSE for that socket.
+    // Start permissive: connect-time events may predate relay admission.
+    read_armed:[bool;2],
+    // Standalone platform tests use legacy caller-driven polling; the
+    // genuine Windows TX actor enables this only after owning BOTH
+    // WSAEventSelect registrations. This prevents a component caller
+    // without a Windows event pump from deadlocking after WouldBlock.
+    read_event_driven:bool,
 }
 // Index 0: listener-facing inner socket, index 1: physical outer socket.
 // Bounded integer counts only; no syscall, clock or log added by metrics.
@@ -392,6 +402,10 @@ pub struct RelayIoCounts{
     pub write_wouldblock:[u16;2],
     pub short_writes:[u16;2],
     pub gated_reads:[u16;2],
+    // The recv was deliberately SKIPPED because THIS leg has not
+    // received new FD_READ/FD_CLOSE since its last WouldBlock. Unlike
+    // gated_reads, this is not pressure or a pending queue limit.
+    pub event_suppressed_reads:[u16;2],
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct RelayTick{
@@ -444,7 +458,21 @@ impl TcpDirectRelay{
         Ok(Self{inner,outer,to_outer:VecDeque::new(),to_inner:VecDeque::new(),
             inner_eof:false,outer_eof:false,
             inner_write_closed:false,outer_write_closed:false,
-            max_pending_per_direction:cap,fast_forward:enabled})
+            max_pending_per_direction:cap,fast_forward:enabled,
+            read_armed:[true,true],read_event_driven:false})
+    }
+    /// Only the real Windows TX with registered WinSock events may turn
+    /// this on; other callers keep their original polling semantics.
+    pub fn enable_event_driven_reads(&mut self){
+        self.read_event_driven=true;
+    }
+    /// Called only by the original owner after WSAEnumNetworkEvents.
+    /// The two independent bits are NOT collapsed into one flow-wide
+    /// readiness flag; an FD_WRITE from one leg cannot enable an
+    /// unrelated FD_READ on the other. FD_CLOSE must allow recv(0).
+    pub fn note_read_event(&mut self,inner:bool,outer:bool){
+        if inner{self.read_armed[0]=true}
+        if outer{self.read_armed[1]=true}
     }
     /// One bounded service turn, called only for a ready flow by the
     /// original Rust scheduler. A congested physical stream stops reading
@@ -479,7 +507,10 @@ impl TcpDirectRelay{
             (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
              self.to_outer.capacity()>self.to_outer.len());
         if !self.inner_eof && !inner_read_allowed{io.gated_reads[0]+=1;}
-        if inner_read_allowed{
+        if !self.inner_eof && self.read_event_driven && !self.read_armed[0]{
+            io.event_suppressed_reads[0]+=1;
+        }
+        if inner_read_allowed && (!self.read_event_driven || self.read_armed[0]){
             let spare=self.to_outer.capacity().saturating_sub(self.to_outer.len());
             let growth=remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP;
             let allowed=bounded_relay_read(self.to_outer.len(),
@@ -487,7 +518,7 @@ impl TcpDirectRelay{
             let before=self.to_outer.capacity();
             io.read_calls[0]+=1;
             match self.inner.read(&mut scratch[..allowed]){
-                Ok(0)=>self.inner_eof=true,
+                Ok(0)=>{self.inner_eof=true;self.read_armed[0]=false},
                 Ok(n)=>{
                     // First try direct scratch->physical kernel send, only then
                     // allocate a bounded suffix queue if needed.
@@ -517,6 +548,7 @@ impl TcpDirectRelay{
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{
                     io.read_wouldblock[0]+=1;
+                    self.read_armed[0]=false;
                 }
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("inner_read",e)),
@@ -527,7 +559,10 @@ impl TcpDirectRelay{
             (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
              self.to_inner.capacity()>self.to_inner.len());
         if !self.outer_eof && !outer_read_allowed{io.gated_reads[1]+=1;}
-        if outer_read_allowed{
+        if !self.outer_eof && self.read_event_driven && !self.read_armed[1]{
+            io.event_suppressed_reads[1]+=1;
+        }
+        if outer_read_allowed && (!self.read_event_driven || self.read_armed[1]){
             let spare=self.to_inner.capacity().saturating_sub(self.to_inner.len());
             let growth=remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP;
             let allowed=bounded_relay_read(self.to_inner.len(),
@@ -535,7 +570,7 @@ impl TcpDirectRelay{
             let before=self.to_inner.capacity();
             io.read_calls[1]+=1;
             match self.outer.read(&mut scratch[..allowed]){
-                Ok(0)=>self.outer_eof=true,
+                Ok(0)=>{self.outer_eof=true;self.read_armed[1]=false},
                 Ok(n)=>{
                     if self.fast_forward{
                         let f=forward_or_queue(&mut self.inner,
@@ -559,6 +594,7 @@ impl TcpDirectRelay{
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{
                     io.read_wouldblock[1]+=1;
+                    self.read_armed[1]=false;
                 }
                 Err(e) if e.kind()==ErrorKind::Interrupted=>{}
                 Err(e)=>return Err(relay_error("outer_read",e)),
@@ -756,6 +792,65 @@ mod plan029_global_backpressure_tests{
     }
     /// A/B control must reproduce the previously shipped queued-copy
     /// path on two genuine kernel sockets, without changing payload or FIN.
+    /// Genuine two-legged kernel TCP: after an actual WouldBlock, a
+    /// different leg's progress must not cause a syscall on the idle leg.
+    /// Explicit simulated FD_READ/FD_CLOSE from the owner re-arms only
+    /// the addressed leg. Full bidirectional payload and FIN still work.
+    #[test]
+    fn plan029_per_leg_read_wouldblock_disarm_fd_read_rearm_and_fin(){
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let client=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (server,_)=listener.accept().unwrap();
+            (server,client)
+        }
+        let (inner,mut app)=pair();
+        let (outer,mut remote)=pair();
+        let mut relay=TcpDirectRelay::new(inner,outer).unwrap();
+        relay.enable_event_driven_reads();
+        let mut scratch=[0u8;QUANTUM_BYTES];
+        app.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        remote.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let idle=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(idle.io.read_wouldblock,[1,1]);
+        let payload=vec![0x51u8;2048];
+        app.write_all(&payload).unwrap();
+        let no_signal=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(no_signal.io.read_calls,[0,0]);
+        assert_eq!(no_signal.io.event_suppressed_reads,[1,1]);
+        relay.note_read_event(true,false);
+        let forward=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(forward.inner_read,payload.len());
+        assert_eq!(forward.io.read_calls,[1,0]);
+        let mut got=vec![0;payload.len()];
+        remote.read_exact(&mut got).unwrap();
+        assert_eq!(got,payload);
+        // Now only the physical outer socket is signaled. Keep the
+        // earlier inner read state independent of the outer FD_READ.
+        let response=vec![0x52u8;3072];
+        remote.write_all(&response).unwrap();
+        relay.note_read_event(false,true);
+        let backward=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(backward.outer_read,response.len());
+        assert_eq!(backward.inner_read,0);
+        let mut response_got=vec![0;response.len()];
+        app.read_exact(&mut response_got).unwrap();
+        assert_eq!(response_got,response);
+        // FD_CLOSE is allowed to re-arm recv(0), so neither half-close
+        // waits for a fake timeout or application payload.
+        app.shutdown(Shutdown::Write).unwrap();
+        remote.shutdown(Shutdown::Write).unwrap();
+        relay.note_read_event(true,true);
+        let mut finished=false;
+        for _ in 0..100{
+            let t=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            if t.finished{finished=true;break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert!(finished,"both TCP FINs must propagate without a timer");
+        assert_eq!(relay.pending_bytes(),0);
+    }
     #[test]
     fn plan029_same_binary_probe_copy_mode_preserves_old_queue_path(){
         use std::time::Duration;

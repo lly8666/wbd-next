@@ -129,6 +129,7 @@ struct TcpLegDiagnosis{
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
+    io_event_suppressed_reads:[u64;2],
 }
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
@@ -298,6 +299,12 @@ impl NativeTcpActor{
                         d.event_connect+=u64::from(bits&EVENT_CONNECTED!=0);
                         d.event_close+=u64::from(bits&EVENT_CLOSED!=0);
                     }
+                }
+                if let Some(TcpPhase::Relaying(pair))=
+                    self.active[slot].phase.as_mut(){
+                    pair.note_read_event(
+                        imask&(EVENT_READ|EVENT_CLOSED)!=0,
+                        omask&(EVENT_READ|EVENT_CLOSED)!=0);
                 }
                 if imask!=0||omask!=0{
                     self.enqueue_port(port,now_ms);
@@ -587,7 +594,12 @@ impl NativeTcpActor{
                             let fast_forward=flow.fast_forward;
                             match outer.into_connected_stream().and_then(|outside|
                                 TcpDirectRelay::with_fast_forward(inner,outside,fast_forward)){
-                                Ok(relay)=>{
+                                Ok(mut relay)=>{
+                                    // Only this owner receives the real
+                                    // per-socket WSAEventSelect masks. The
+                                    // platform relay stays compatible with
+                                    // component callers lacking event pumps.
+                                    relay.enable_event_driven_reads();
                                     flow.phase=Some(TcpPhase::Relaying(relay));
                                     flow.last_activity_ms=now_ms;
                                 },
@@ -644,6 +656,9 @@ impl NativeTcpActor{
                                     d.io_write_wouldblock[leg]=d.io_write_wouldblock[leg].saturating_add(tick.io.write_wouldblock[leg] as u64);
                                     d.io_short_writes[leg]=d.io_short_writes[leg].saturating_add(tick.io.short_writes[leg] as u64);
                                     d.io_read_gated[leg]=d.io_read_gated[leg].saturating_add(tick.io.gated_reads[leg] as u64);
+                                    d.io_event_suppressed_reads[leg]=
+                                        d.io_event_suppressed_reads[leg].saturating_add(
+                                            tick.io.event_suppressed_reads[leg] as u64);
                                 }
                                 d.read_inner=d.read_inner.saturating_add(tick.inner_read as u64);
                                 d.read_outer=d.read_outer.saturating_add(tick.outer_read as u64);
@@ -948,7 +963,7 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
@@ -959,6 +974,7 @@ impl Drop for NativeTcpActor{
             d.io_write_wouldblock[0],d.io_write_wouldblock[1],
             d.io_short_writes[0],d.io_short_writes[1],
             d.io_read_gated[0],d.io_read_gated[1],
+            d.io_event_suppressed_reads[0],d.io_event_suppressed_reads[1],
             d.direct_forwarded,d.queued_copy);
     }
 }
