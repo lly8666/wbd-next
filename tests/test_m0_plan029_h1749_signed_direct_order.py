@@ -423,7 +423,12 @@ class NativeDirectOrder(unittest.TestCase):
             self.assertEqual([x["udp_payload_bytes"] for x in row["packet_mix"]],[96,1200])
             self.assertEqual(sum(x["packets_weight"] for x in row["packet_mix"]),100)
         h=(root/"tools/m0_plan029_h1814_p1_tunnel_ab.py").read_text()
-        self.assertIn('("A_off_old_tunnel","0"),("B_on_all_tunnel","1")',h)
+        # Legacy V4-vs-V3 architectural comparison remains an exact
+        # two-leg fallback. H1934 adds a distinct source-locked four-leg
+        # all/CN/CN/all Rust V3 policy experiment, not a silent rewrite.
+        self.assertIn('else [("A_off_old_tunnel","0","legacy_tunnel"),',h)
+        self.assertIn('("B_on_all_tunnel","1","all")]',h)
+        self.assertIn('for name,v3,requested_mode in arms:',h)
         self.assertIn('report.get("linux_binary_source")!=os.environ.get("WBD_WL_BINARY_SOURCE")',h)
         self.assertIn('app_source not in (None,SOURCE)',h)
         self.assertIn('windows_cpu_seconds_per_actual_delivered_gib',h)

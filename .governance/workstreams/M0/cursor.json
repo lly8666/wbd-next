@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1935,
-  "checkpoint_sha": "d9faa3b499dbd83a4295ba54b7081eda33fd26cf",
+  "sequence": 1936,
+  "checkpoint_sha": "1bdecc5cdaf403a58d4b37e67df21edcf967a352",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1935 repair actual cheap preflight FAIL Action43731389669 old test_h1775 exact --china-ip-file one32 string after H1934 test-only ABBA conditional; assert old H1775 fallback still unmodified, isolated B CN4096 file only with source-locked policy flag. H1934 original native Windows/WSL2 jobs SKIPPED by cheap gate, NOT_RUN. Same-Rust V3 A/all B/CN B/CN A/all true 4x60s signed Action pending.",
-  "why_now": "Do not waive real CI red. H1934 old H1775 exact literal assertion no longer matched conditional test-only source selection; product H1775 semantics still unchanged, not a Windows runtime failure. Keep failing cheap gate until scoped test updated and verified.",
+  "current_task": "H1936 second actual H1935 cheap preflight test_h1819 literal legacy two-leg tuple FAIL, native SKIPPED. Preserve legacy V4/V3 pair exactly as fallback while distinct source-locked same Rust V3 A/B/B/A is selected; update test to assert both legacy tuple route-mode fields and new branch, no product changes. Next exactly one signed original H1936 P1 four-leg native Action after cheap gate.",
+  "why_now": "H1935 Action43731527099 true red old byte-for-byte test of H1814 V4/V3 comparator, which now has third route-mode label and isolated ABBA branch. Don't call false red; keep legacy original A/B semantics and verify new four-arm selector; cheap preflight first before expensive signed Win/WSL2.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1935 governance cheap + signed native Action 4x60s. Before discussing CPU compare four real original Go/Rust Win+Linux products same binary/SOURCE, B4096 CN+8192 domains, app->public Linux TUN alias in both arms, 50Mbps true 25ms0loss, real stop, original Rust TX/RX Win32 thread CPU, actual delivered GiB + UDP p99. No re-running 10GiB.",
+  "next_action": "Check H1936 cheap workflow and existing governance first. If true original real four-arm starts, wait for output and log first fault. Require same Rust V3 all/CN/CN/all exact SOURCE/binary + two OS Tunnel-only 203.0.113.77 traffic per arm, CN4096 rules B, 50Mbps 60s and p99 Rust TX/RX CPU and Stop. Avoid long10GiB or rerun already signed H1931.",
   "unverified": true,
   "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1932-H1931-SIGNED-NAT-INPLACE-COMBINED-10GIB-384TCP-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md",
     "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md",
     "docs/devlog/M0/20261115-PLAN029-H1933-CPU-ABBA-TEST-DESIGN.md",
     "docs/devlog/M0/20261115-PLAN029-H1932-NAT-CPU-P99-SIGNED-ONE-ACTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1933 ABBA calculator governance passed. H1934 test-only actual source commit d9faa3 originally triggered native Action43731389669 but cheap test_h1775 expected literal old single CN file, failed and native jobs SKIPPED. H1935 updates old assertion to recognize old one-/32 fallback plus B-only CN4096, original product source unchanged, true native ABBA still NOT_RUN."
+  "partial_summary": "H1933 scorer 8 cheap tests PASS; H1934/H1935 original signed native never started due old H1775/H1819 exact-source assertions, both genuine cheap CI FAIL; H1936 updates both old assertions preserving legacy contracts. P1 four-arm same Rust policy performance NOT_RUN; PLAN029 OPEN."
 }
