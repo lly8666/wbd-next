@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1903,
-  "checkpoint_sha": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
+  "sequence": 1904,
+  "checkpoint_sha": "b636c43370190a9a8ce95a429ce4ba5c425a29ae",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1902 true signed Windows2025/WSL2 500/700Mb/s SHA+FIN+96B UDP+Stop SUCCESS; measured 499.965/699.760Mb/s but not strictly target reached. H1903 candidate adds true 2GiB one-way 500Mb/s plus 1.5GiB each simultaneous 700Mb/s, twice on same VM: physical TCP then FakeIP Direct, with original Go+Rust user/kernel CPU/GiB, independent Python generator, host CPU, six-phase Tunnel UDP p99 and owned Stop. New SOURCE NOT_RUN.",
-  "why_now": "H1902 original Go+Rust process used ~79.7% one core at 500Mb/s and ~98.7% one core at 700Mb/s, but the measurements lasted only 8.59s/6.14s and lacked matched same-volume physical TCP. Long same-VM control tests the sustainable CPU knee rather than optimizing memory copying speculatively.",
+  "current_task": "H1904 exact first H1903 cheap CI failure, before native Windows/WSL2: H1896 static test required old literal highrate MAX_SUSTAIN=14000 and original env list syntax. H1903 preserves legacy 14000 but makes conditional long60k, explicit WSL env list; H1904 updates OLD and new static tests to verify both, no Rust/Go/network code modified. Signed long 2GiB+1.5GiB every side physical-vs-Direct candidate NOT_RUN.",
+  "why_now": "H1903 Action43691408975 cheap job failed test_signed_original_p2_and_30s_per_phase_tunnel_contract solely stale hardcoded highrate UDP cap and old env insertion literal; native jobs SKIPPED, not a network/data plane regression. Test exactly 14000 old versus60000 new and WSL long env.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect source-locked H1903 cheap Python contract and full original Windows2025 signed Wintun/WSL2 2GiB one-way plus 1.5GiB each duplex physical/Direct and 96B Tunnel UDP six-phase, SHA/FIN/Stop. Compare each true rate, original Go+Rust incremental USER/KERNEL CPU seconds per GiB vs physical, Python generator and host busy, then change only measured hotpath. P1 pure Tunnel CPU/GiB and driver ISR/DPC still separate OPEN.",
+  "next_action": "Collect H1904 cheap full Python tests and original Windows2025 signed Wintun/WSL2 2GiB physical and Direct 500Mb/s one-way + 1.5GiB each 700Mb/s aggregate duplex, SHA/FIN/96B Tunnel six-stage p99/owned Stop. Compare sameVM original user/kernel CPU/GiB Direct minus physical and generator and host CPU. Production Rust kept frozen.",
   "unverified": true,
   "last_tested_source": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1903-H1902-SIGNED-SHORT-HIGHRATE-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
     "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
     "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md",
     "docs/devlog/M0/20261115-PLAN029-H1898-TRUE-500-700-MBPS-PARALLEL-LOAD.md",
-    "docs/devlog/M0/20261115-PLAN029-H1897-COLLECT-H1896-SIGNED-SUSTAIN-CPU-GIB.md",
-    "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md"
+    "docs/devlog/M0/20261115-PLAN029-H1897-COLLECT-H1896-SIGNED-SUSTAIN-CPU-GIB.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1902 signed short 500/700 targets measured 499.965/699.760 Mb/s, original Go+Rust 13.6875/12.125 CPU seconds/GiB, Tunnel 96B p99 1.495/3.066ms, Stop PASS. H1903 long same-VM physical-Direct candidate NOT_RUN. PLAN029 IN_PROGRESS; P1/P2 performance OPEN."
+  "partial_summary": "H1903 staged long same Windows VM 30s+ per phase, failed only stale H1896 static test before native. H1904 source-contract fix candidate NOT_RUN. H1902 signed short targets actual499.965/699.760Mbps, original process CPU/GiB13.6875/12.125, Tunnel96B, Stop PASS; P1/P2 still OPEN."
 }
