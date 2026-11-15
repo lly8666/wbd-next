@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "task": "H1940",
+  "plan": "PLAN029",
+  "source_sha": "3e80fc8c7b7d723a618a91b7c47a351c99d3dfef",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_id": 43735936831,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43735936831",
+  "action_conclusion": "success",
+  "artifact_id": 14171155678,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43735936831",
+  "scope": "EXACT_ORIGINAL_WINTUN_NPCAP_WINDOWS2025_GO_EXE_RUST_DLL_WSL2_KERNEL_TWO_OS_SIGNED_NORMAL_4M_384_SMALL",
+  "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+  "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "four_mib": {
+    "bytes_each": 4194304,
+    "physical_elapsed_ms": 37.628,
+    "direct_elapsed_ms": 147.313,
+    "physical_and_direct_same_SHA_FIN": true
+  },
+  "small_tcp": {
+    "status": "PASS_SCOPED_SMALL_TCP_A_B_B_A_SHA_FIN",
+    "real_kernel_conns": 384,
+    "per_size_per_path": 64,
+    "sizes_bytes": [
+      64,
+      1024,
+      16384
+    ],
+    "payload_sha256": "0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a",
+    "linux_received": 384,
+    "first_echo_p99_ms": {
+      "64": {
+        "physical": 0.825,
+        "direct": 15.025
+      },
+      "1024": {
+        "physical": 0.708,
+        "direct": 13.461
+      },
+      "16384": {
+        "physical": 0.979,
+        "direct": 7.185
+      }
+    },
+    "first_echo_p95_ms": {
+      "64": {
+        "physical": 0.566,
+        "direct": 13.765
+      },
+      "1024": {
+        "physical": 0.522,
+        "direct": 1.582
+      },
+      "16384": {
+        "physical": 0.882,
+        "direct": 2.411
+      }
+    },
+    "full_request_p50_ms": {
+      "64": {
+        "physical": 14.585,
+        "direct": 15.379
+      },
+      "1024": {
+        "physical": 14.643,
+        "direct": 15.403
+      },
+      "16384": {
+        "physical": 14.365,
+        "direct": 15.549
+      }
+    }
+  },
+  "tunnel_udp": {
+    "received_windows": 120,
+    "received_linux": 120,
+    "p99_ms": 9.005,
+    "covered_full_direct": true
+  },
+  "rust_socket": {
+    "connected_first_probe_tickets": 194,
+    "shard_wakes": 1327,
+    "event_socket_checks": 2052,
+    "relay_turns": 1541,
+    "relay_no_progress": 793,
+    "ready_ticket_served": 2127,
+    "ready_wait_sum_ms": 1084,
+    "ready_wait_max_ms": 24,
+    "ready_wait_ge8_ms": 72,
+    "ready_wait_ge16_ms": 4,
+    "ticket_peak": 1
+  },
+  "limits": [
+    "Direct first_echo p99 regression STILL OPEN; original one-shot did not solve latency",
+    "This source cannot prove old/new causal improvement across different runners",
+    "H1940 rotating WAIT_ANY priority NOT_RUN on source",
+    "no full 10GiB rerun; H1931 signed prior 10GiB proof separate",
+    "P1 four-leg CN/all CPU still OPEN because earlier B rules were subsumed by LAN"
+  ]
+}

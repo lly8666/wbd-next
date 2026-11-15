@@ -731,6 +731,38 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      retry_after_ns:Option<u64>)->Option<MonoNs>{
      retry_after_ns.map(MonoNs).or(shadow_due)
  }
+// WaitForMultipleObjects(WAIT_ANY) returns the LOWEST-INDEX signaled
+ // HANDLE. Keeping Wintun first forever can starve WinSock Direct TCP
+ // readiness while other ingress is busy, and putting sockets first
+ // forever would starve Tunnel. Preserve original Stop at index0, but
+ // rotate the three ownership groups across *existing* wait calls.
+ // No new wait, polling, per-flow thread, timer or socket system call.
+ // Logical source indices: 0=Stop,1=Wintun,2=RX notify,3..18=TCP shards.
+ #[inline]
+ fn native_tx_wait_order(phase:u8,has_tcp:bool)->([u8;19],usize){
+     let mut order=[0u8;19];
+     if !has_tcp{
+         order[0]=0;order[1]=1;order[2]=2;
+         return (order,3)
+     }
+     match phase%3{
+         0=>{
+             order[0]=0;order[1]=1;order[2]=2;
+             for i in 0..16{order[3+i]=(i+3) as u8;}
+         },
+         1=>{
+             order[0]=0;order[1]=2;
+             for i in 0..16{order[2+i]=(i+3) as u8;}
+             order[18]=1;
+         },
+         _=>{
+             order[0]=0;
+             for i in 0..16{order[1+i]=(i+3) as u8;}
+             order[17]=1;order[18]=2;
+         },
+     }
+     (order,19)
+ }
  // One existing TX timer due for exact reverse NAT cleanup, not a new worker.
  // A completed Direct TCP relay is not active socket work at 10ms cadence.
  fn closed_tcp_cleanup_wait_ms(now_ms:u64,deadline_ms:Option<u64>)->u32{
@@ -809,6 +841,9 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
      let mut next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
+     // WAIT_ANY's first-signaled-index bias is real even with one owner
+     // and 16 fixed WinSock shard events. Rotate owner class priority.
+     let mut wait_phase=0u8;
      loop {
          if counters.stopping.load(Ordering::Acquire){
              log_padding_driver_receipt(&split,&counters);
@@ -1003,15 +1038,25 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      count+=events.len();
                  }
              }
-             match io::wait_ready(&handles[..count],timeout){
-                 Ok(WaitResult::Ready(0))=>Ok(true),
-                 Ok(WaitResult::Ready(index)) if index>=3=>{
-                     if let Some(s)=split.as_mut(){
-                         s.note_tcp_socket_wake(index-3);
+             // Compare only original *owned* handles. Stop always has
+             // absolute priority, and all 16 WinSock shard identities
+             // still map back to the same exact native actor.
+             let (order,n)=native_tx_wait_order(wait_phase,count==19);
+             if n==19{wait_phase=(wait_phase+1)%3;}
+             let mut ordered=[0usize;19];
+             for i in 0..n{ordered[i]=handles[usize::from(order[i])];}
+             match io::wait_ready(&ordered[..n],timeout){
+                 Ok(WaitResult::Ready(index)) if order[index]==0=>Ok(true),
+                 Ok(WaitResult::Ready(index))=>{
+                     let kind=usize::from(order[index]);
+                     if kind>=3{
+                         if let Some(s)=split.as_mut(){
+                             s.note_tcp_socket_wake(kind-3);
+                         }
                      }
                      Ok(false)
                  },
-                 Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
+                 Ok(WaitResult::Timeout)=>Ok(false),
                  Err(_)=>Err(BAD_STAGE),
              }
          })();
@@ -1650,6 +1695,25 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  #[cfg(test)]
  mod tests {
      use super::*;
+     #[test]
+     fn plan029_h1940_wait_any_rotates_tunnel_notify_tcp_without_stop_starvation(){
+         let (a,na)=native_tx_wait_order(0,true);
+         let (b,nb)=native_tx_wait_order(1,true);
+         let (c,nc)=native_tx_wait_order(2,true);
+         assert_eq!((na,nb,nc),(19,19,19));
+         assert_eq!((a[0],b[0],c[0]),(0,0,0)); // owned Stop ALWAYS first
+         assert_eq!((a[1],b[1],c[1]),(1,2,3)); // 3 classes get 1st
+         assert_eq!((a[2],b[18],c[18]),(2,1,2));
+         for order in [a,b,c]{
+             let mut actual=order.to_vec();
+             actual.sort_unstable();
+             assert_eq!(actual,(0..19).collect::<Vec<u8>>());
+         }
+         let (no,n)=native_tx_wait_order(2,false);
+         assert_eq!(n,3);
+         assert_eq!(&no[..3],&[0,1,2]);
+         assert_eq!(native_tx_wait_order(4,true).0,b);
+     }
      #[cfg(feature="win_native_lock_profile")]
      #[test]
      fn sampled_lock_profile_separates_tx_and_rx_without_packet_abi() {
