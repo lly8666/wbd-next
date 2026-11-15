@@ -1,0 +1,69 @@
+{
+  "task": "H1945",
+  "schema_version": 1,
+  "source_sha": "6848c0ddc7959fd5718d6d467f0b8c8769d56a4e",
+  "result": "PASS",
+  "scope": "H1944_TRUE_SIGNED_ORIGINAL_WIN2025_WSL2_4M_AND_384_X2_PHYSICAL_DIRECT",
+  "action_id": 43753944774,
+  "artifact_id": 14177004090,
+  "action_conclusion": "success",
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "original_product": "Windows Go+Rust DLL Wintun Npcap plus Linux native Rust",
+  "bulk4m": {
+    "physical_ms": 56.216,
+    "direct_ms": 148.7,
+    "real_echo_bytes_each": 4194304,
+    "sha_fin": true
+  },
+  "each_policy_tcp_sessions": 384,
+  "each_size_each_path": 64,
+  "sizes": [
+    64,
+    1024,
+    16384
+  ],
+  "reply_p99_ms": {
+    "fin_first_direct": [
+      16.151,
+      15.872,
+      15.677
+    ],
+    "fin_first_physical": [
+      0.485,
+      0.5,
+      0.931
+    ],
+    "echo_first_direct": [
+      14.69,
+      39.545,
+      9.185
+    ],
+    "echo_first_physical": [
+      0.524,
+      0.426,
+      0.769
+    ]
+  },
+  "rust_actual_last_diagnostic": {
+    "outer_read_turns": 582,
+    "outer_ready_wait_max_ms": 4,
+    "outer_read_same_turn_inner_write": 571,
+    "outer_read_no_inner_write": 11,
+    "deferred_inner_write_turns": 10,
+    "overall_ready_ticket_wait_max_ms": 24
+  },
+  "tunnel_udp": {
+    "received": 120,
+    "sustained_total": 696,
+    "p99_ms": 13.953
+  },
+  "conclusion": "High first-byte app tail remains, ordinary Rust reply-ready queue alone insufficient to explain the 15-40ms, stage not causally isolated.",
+  "new_test": "H1945 source-locked QPC first actual Rust inner Windows kernel TCP write and matched Windows app first recv; bounded stop-only original Rust log, fail-closed true original 384 matched Direct events; no production forwarding change",
+  "new_test_status": "NOT_RUN",
+  "other_open": [
+    "P1 V3 all/CN/CN/all CPU ABBA",
+    "real CPU old/new matched",
+    "full D1-D5 Game4 GUI IPv6 padding"
+  ]
+}

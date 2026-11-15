@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1944,
-  "checkpoint_sha": "b07d7468c696707ddbf64d2d846faa6c84a89cfc",
+  "sequence": 1945,
+  "checkpoint_sha": "6848c0ddc7959fd5718d6d467f0b8c8769d56a4e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1944 original signed Win2025/WSL2 H1943 reverse reply-ticket timing test-only source emitted one extra PowerShell '}' before 500/700Mbps gate; H1944 fixes exact P2_MIXED nested gate, adds cheap regression. H1942 original 4MiB + 768 fin-first/payload-first SHA/FIN+Stop PASS but first echo 64B Direct p99 ~15.6ms. H1944 native source test PENDING; no performance improvement claim.",
-  "why_now": "Catch the extra brace before native Windows Runner spends time on Go/Rust builds. P2_MIXED gate must include both the new H1943 short reply diagnostic and the old H1898 high-rate branch, not prematurely close. Fix is fixture/workflow only, not product change. Retain old H1942 signed receipt as last tested SOURCE.",
+  "current_task": "H1945 collect signed H1944 Win2025/WSL2 Action43753944774 true 4MiB+384 FIN-first+384 payload-first physical/Direct SHA/FIN/TunnelUDP/Stop PASS. Direct first-reply p99 9–40ms vs physical <1ms; Rust outer reply ticket wait max4ms, 571/582 same-turn inner socket write, so queue alone not root cause. Add bounded signed-test-only shared Windows QPC Rust first inner write→Python original app first recv per-flow for 384 true Direct sessions. Native new SOURCE NOT_RUN.",
+  "why_now": "After signed H1944 768 original real small TCP control, true source-locked 15-40ms tail persists. Win32 QueryPerformanceCounter consistent cross processes on same VM, unlike Windows+Linux wall clocks. Trace one first reply kernel write per flow at Rust TX and client recv only; no production timers or route changes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1944 cheap workflow and original one signed short 4MiB + 768 FIN-first/payload-first 64B/1K/16KiB physical/Direct; read original Rust outer reply ready-ticket max/ge8/ge16 and same-turn inner write, SHA/FIN/TunnelUDP/Stop. If real product FAIL never call false red. No duplicate 10GiB. P1 same-Rust all/CN/CN/all full CPU ABBA remains OPEN.",
+  "next_action": "One signed H1945 4MiB+768 small (FIN-first then echo-first), 96B Tunnel UDP and owned Stop. Require 384 QPC source-port matches by time window, compute app half-close→Rust write and Rust write→client recv p50/p95/p99; if true failure fix first fault, no 10GiB duplicate. P1 V3 all/CN ABBA still OPEN.",
   "unverified": true,
-  "last_tested_source": "cbf01fae158e47b3ef967f5351f978f7cc083768",
+  "last_tested_source": "6848c0ddc7959fd5718d6d467f0b8c8769d56a4e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1943-H1942-SIGNED-768-FIN-VS-PAYLOAD-FIRST-P99-OPEN-20261115.json"
+    "docs/evidence/M0/PLAN029-H1945-H1944-SIGNED-TWO-REPLY-POLICIES-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
     "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
     "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md",
-    "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md"
+    "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1942 original signed Action43751965403 PASS 4MiB+768 small TCP true two-OS SHA/FIN, Tunnel UDP240/240 and owned Stop; Direct 64B first echo p99 15.568ms FIN-first vs 15.729ms echo-first, so FIN wait not necessary. H1943 adds cold-only Rust outer-read ticket age + same-turn inner write diagnostics (7 counters), H1944 fixes extra PowerShell brace found before source-locked native qualification. Full PLAN029 OPEN."
+  "partial_summary": "H1944 original SOURCE6848c0d Action43753944774 SUCCESS 4MiB+2x384 TCP Windows/WSL2 SHA/FIN, TunnelUDP/Stop. FIN-first Direct reply p99 16.151/15.872/15.677ms; payload-first14.690/39.545/9.185ms while physical <=.931ms. Rust outer-reply ready wait max4ms, 571/582 inner-write same turn; direct rare reply tail still OPEN. H1945 QPC diagnostics test-only NOT_RUN, P1/CPU still OPEN."
 }

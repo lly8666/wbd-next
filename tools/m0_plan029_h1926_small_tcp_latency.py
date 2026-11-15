@@ -117,6 +117,23 @@ def distribution(values):
             "max_ms":round(max(values),3)}
 
 
+def win_qpc_tick():
+    import ctypes
+    value=ctypes.c_longlong()
+    if not ctypes.windll.kernel32.QueryPerformanceCounter(ctypes.byref(value)):
+        raise RuntimeError("H1945 Windows QPC missing")
+    return value.value
+
+
+def win_qpc_frequency():
+    import ctypes
+    value=ctypes.c_longlong()
+    if not ctypes.windll.kernel32.QueryPerformanceFrequency(ctypes.byref(value)):
+        raise RuntimeError("H1945 Windows QPC frequency missing")
+    if value.value<=0:raise RuntimeError("H1945 nonpositive QPC frequency")
+    return value.value
+
+
 def windows(physical,host_source,fake,expected_source,reply_policy="fin_first"):
     if not expected_source or SOURCE!=expected_source:
         raise RuntimeError("H1926 Windows original SOURCE SHA mismatch")
@@ -125,6 +142,11 @@ def windows(physical,host_source,fake,expected_source,reply_policy="fin_first"):
     if reply_policy not in ("fin_first","payload_first"):
         raise RuntimeError("H1942 unknown original echo policy")
     records={str(size):{"physical":[],"direct":[]} for size in SIZES}
+    qpc_enabled=(os.environ.get("GITHUB_ACTIONS")=="true" and
+                 os.environ.get("WBD_PLAN029_P2_REPLY_QPC_SCENE")=="1" and
+                 os.environ.get("WBD_PLAN029_P2_ECHO_EARLY_CONTROL")=="1")
+    qpc_freq=win_qpc_frequency() if qpc_enabled else None
+    qpc_rows=[]
     dig=hashlib.sha256()
     begin=time.perf_counter()
     for seq,role,size in scenario():
@@ -146,8 +168,14 @@ def windows(physical,host_source,fake,expected_source,reply_policy="fin_first"):
             sent=time.perf_counter_ns()
             sock.shutdown(socket.SHUT_WR)
             half=time.perf_counter_ns()
+            qpc_half=win_qpc_tick() if qpc_enabled else None
             first=sock.recv(min(16384,size))
+            qpc_first=win_qpc_tick() if qpc_enabled else None
             first_at=time.perf_counter_ns()
+            if qpc_enabled:
+                qpc_rows.append({"role":role,"size":size,
+                    "source_port":sock.getsockname()[1],
+                    "half_close_qpc":qpc_half,"first_echo_qpc":qpc_first})
             if not first:
                 raise RuntimeError("H1926 no first echo byte")
             echoed=first+read_exact(sock,size-len(first))
@@ -202,7 +230,9 @@ def windows(physical,host_source,fake,expected_source,reply_policy="fin_first"):
         "elapsed_s":elapsed,"same_vm_original_process":True,
         "no_cross_os_oneway_clock_claim":True,
         "no_cpu_causality_claim":True,"stats":summary,
-        "scope":"TRUE_SAME_VM_NATIVE_WINDOWS_PHYSICAL_VS_WINTUN_FAKEIP_SMALL_TCP"})
+        "scope":"TRUE_SAME_VM_NATIVE_WINDOWS_PHYSICAL_VS_WINTUN_FAKEIP_SMALL_TCP",
+        "qpc_frequency":qpc_freq,
+        "qpc_records":qpc_rows if qpc_enabled else None})
 
 
 def proof(path,marker):

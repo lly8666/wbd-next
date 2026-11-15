@@ -1,0 +1,10 @@
+# PLAN029 H1945｜同Windows绝对QPC拆解Direct首回包等待
+
+- [H1944签名原生Win2025/WSL2 Action43753944774](https://github.com/lly8666/wbd-next/actions/runs/43753944774) SOURCE `6848c0ddc7959fd5718d6d467f0b8c8769d56a4e` artifact14177004090原Go EXE加载Rust DLL、Wintun/Npcap、Linux真Rust/TCP，真实4MiB物理56.216ms/Direct148.700ms、384 FIN-first +384 payload-first物理/Direct同机A-B-B-A三种payload全部SHA/FIN、Tunnel96B UDP和owned Stop PASS。Direct FIN-first首echo p99 16.151/15.872/15.677ms，对比物理<=0.931ms；echo-first Direct14.690/39.545/9.185ms，对比物理<=0.769ms（每大小/方向64样本，p99近极值）。
+- Rust原signed Stop真正`reply_outer_ready_wait_max_ms=4`、`reply_outer_read_turns=582`、`reply_outer_read_inner_write_same_turn=571`，可知15–40ms尾部不能简单归因已有Rust回包ready FIFO。总ticket最大24ms但含新建/读写/关闭其他流，不是单条最慢reply路径。H1940旋转WaitForMultipleObjects、H1941 EOF窥视、H1942 FIN顺序都没证明修正。
+- [Microsoft Win32 QPC跨进程单机一致时钟](https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps)与[Python perf_counter Windows实现](https://docs.python.org/3/library/time.html#time.perf_counter)允许在同Windows VM通过QPC频率直接比较原Rust TX与Windows原Python用户应用的事件。**不跨WSL2/Linux解释单程延迟**。H1945仅在源锁m0_v4_probe+GITHUB_ACTIONS+BULK+SMALL+echo两个顺序+专用marker且原诊断允许下，一次冷QPC频率、每条真实Direct流首次`inner.write`返回后记录源临时端口/QPC（总量<=1024），original owner Stop才一次打印紧凑记录，生产一般代码无QPC/每包日志/新轮询；Windows小TCP物理+Direct应用对等记录源端口、客户端半关/首recv时QPC，不更改TCP_NODELAY/包/WSL2 peer。
+- 新`tools/m0_plan029_h1945_reply_qpc.py`在owner Stop之后校验SOURCE、两种各384真Linux/Windows接收/FIN SHA与original Rust QPC，不允许频率不相等、时间/port重复歧义、少任一384 Direct first write；把每条`client FIN→Rust首次inner写`(包含Linux echo、outer WinSock就绪)和`Rust首次inner写→client首次recv`(包含内侧Windows TCP/Wintun/应用调度)分别报告p50/p95/p99。8个纯负面/正面单测入廉价治理CI；未经签名原生和真实QPC关联**绝不宣称CPU变好或p99解决**。
+- 原生目标单次短4MiB+2×384 A-B-B-A+持续Tunnel 96B UDP/owned Stop，不重复10GiB；同Rust V3 all/CN/ CN/all P1 CPU ABBA和完整D1–D5/GUI/Game4/IPv6/padding仍OPEN。
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Collect H1944 actual signed small TCP reply-tail & Rust ticket telemetry; add source-gated same Win32 QPC split with no data-plane behavior modification, pending original native qualification."}
+```

@@ -2264,9 +2264,17 @@ print(json.dumps(result),flush=True)
     # Missing/invalid original Rust terminal counters fail this scene,
     # rather than allowing a green 4MiB receipt with no bottleneck data.
     from m0_plan029_h1815_p2_real_mixed import parse_kernel_io_final
-    p2["tcp_kernel_io_diagnostic"]=parse_kernel_io_final(
-        (out/"client.log").read_text(errors="replace"))
+    original_stop_log=(out/"client.log").read_text(errors="replace")
+    p2["tcp_kernel_io_diagnostic"]=parse_kernel_io_final(original_stop_log)
     print("PLAN029_H1888_SIGNED_ORIGINAL_TCP_KERNEL_IO_FINAL_TYPED_AFTER_STOP",flush=True)
+    if os.environ.get("WBD_PLAN029_P2_REPLY_QPC_SCENE")=="1":
+     from m0_plan029_h1945_reply_qpc import analyze
+     measured=p2.get("small_tcp_latency")
+     if not isinstance(measured,dict):
+      raise RuntimeError("H1945 signed small TCP receipt missing")
+     measured["same_windows_reply_qpc"]=analyze(
+         original_stop_log,measured,os.environ["GITHUB_SHA"])
+     print("PLAN029_H1945_SIGNED_RUST_INNER_WRITE_WINDOWS_APP_RECV_QPC",flush=True)
     if p029_tcp128:
      from m0_plan029_h1892_real_tcp128 import parse_rust_128,idle_cpu_window
      stress=p2.get("tcp128")

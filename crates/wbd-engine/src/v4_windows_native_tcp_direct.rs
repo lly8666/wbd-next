@@ -20,6 +20,22 @@ use crate::v4_client_split::DnsEgress;
 use crate::v4_client_fake_pool::FakeAllocator;
 use crate::v4_client_fake_journal::FakeJournal;
 
+// H1945 signed-test QPC: Win32 time base is shared with Python clients
+// in this SAME Windows VM. Never compare it with the Linux guest clock.
+#[link(name="kernel32")]
+unsafe extern "system" {
+    fn QueryPerformanceCounter(out:*mut i64)->i32;
+    fn QueryPerformanceFrequency(out:*mut i64)->i32;
+}
+fn reply_qpc_now()->Option<i64>{
+    let mut q=0i64;
+    (unsafe{QueryPerformanceCounter(&mut q)}!=0 && q>0).then_some(q)
+}
+fn reply_qpc_frequency()->Option<i64>{
+    let mut f=0i64;
+    (unsafe{QueryPerformanceFrequency(&mut f)}!=0 && f>0).then_some(f)
+}
+const MAX_QPC_REPLY_ROWS:usize=1024;
 const MAX_READY:usize=256;
 const MAX_QUANTUM:usize=8;
 const MAX_L3:usize=65535;
@@ -94,6 +110,7 @@ struct Active{
     // the bounded ready FIFO at most, keyed by (port,generation).
     generation:u64,queued:bool,fast_forward:bool,
     close_hints:[bool;2],
+    first_reply_qpc_logged:bool,
 }
 impl TcpPhase{
     fn socket_handles(&self)->(usize,usize){
@@ -186,6 +203,10 @@ struct TcpLegDiagnosis{
     reply_outer_read_inner_write_same_turn:u64,
     reply_outer_read_no_inner_write:u64,
     reply_inner_write_deferred_turns:u64,
+    // At most one timestamp on the first real inner-kernel reply write
+    // per original Direct flow; only source-locked signed CI enables it.
+    reply_qpc_frequency:i64,
+    reply_qpc_rows:Vec<(u16,i64)>,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -294,6 +315,19 @@ impl NativeTcpActor{
         let socket_events=SocketReadiness::new().map_err(|_|())?;
         socket_events.watch(listener.as_raw_socket() as usize,0,EVENT_ACCEPT)
             .map_err(|_|())?;
+        let mut diagnosis=(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
+                .as_deref()==Some("1")).then(TcpLegDiagnosis::default);
+        let signed_qpc=cfg!(feature="m0_v4_probe") &&
+            std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+            std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_BULK_SCENE").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_SMALL_TCP_SCENE").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_ECHO_EARLY_CONTROL").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_REPLY_QPC_SCENE").ok().as_deref()==Some("1");
+        if signed_qpc {
+            diagnosis.as_mut().ok_or(())?.reply_qpc_frequency=
+                reply_qpc_frequency().ok_or(())?;
+        }
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
             deadlines:VecDeque::new(),active:Vec::new(),
@@ -309,8 +343,7 @@ impl NativeTcpActor{
             dns_tunnel_sources:HashSet::new(),
             ready:VecDeque::with_capacity(MAX_READY),
             buffered_bytes:0,resident_bytes:0,scratch:None,
-            diagnosis:(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
-                .as_deref()==Some("1")).then(TcpLegDiagnosis::default),
+            diagnosis,
             // Nested explicit gates: probe ABI, signed CI, real mixed P2
             // and ABBA-specific selection. Ordinary users cannot turn on
             // the comparison code by a new CLI flag or generic env alone.
@@ -646,6 +679,7 @@ impl NativeTcpActor{
                         phase:Some(TcpPhase::Connecting(stream,socket)),
                         last_activity_ms:now_ms,generation,queued:false,
                         fast_forward,close_hints:[false,false],
+                        first_reply_qpc_logged:false,
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
@@ -813,6 +847,15 @@ impl NativeTcpActor{
                                 d.relay_turns=d.relay_turns.saturating_add(1);
                                 note_reply_service(d,ready_age_ms,
                                     tick.outer_read,tick.inner_write);
+                                if d.reply_qpc_frequency>0 &&
+                                   !flow.first_reply_qpc_logged &&
+                                   tick.inner_write>0 &&
+                                   d.reply_qpc_rows.len()<MAX_QPC_REPLY_ROWS {
+                                    if let Some(q)=reply_qpc_now(){
+                                        d.reply_qpc_rows.push((flow.key.source_port,q));
+                                        flow.first_reply_qpc_logged=true;
+                                    }
+                                }
                                 if tick.bytes_read==0&&tick.bytes_written==0{
                                     d.relay_zero_progress=d.relay_zero_progress.saturating_add(1);
                                 }
@@ -1257,6 +1300,14 @@ impl Drop for NativeTcpActor{
             d.reply_outer_read_inner_write_same_turn,
             d.reply_outer_read_no_inner_write,
             d.reply_inner_write_deferred_turns);
+        if d.reply_qpc_frequency>0 {
+            // No hot-path logs, payload, IPs, secrets or new timers.
+            // The one bounded record is emitted only at original Stop.
+            let rows=d.reply_qpc_rows.iter().map(|(p,q)|
+                format!("{}:{}",p,q)).collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1945_REPLY_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
+                d.reply_qpc_frequency,d.reply_qpc_rows.len(),rows);
+        }
         // Exactly one cold aggregate FIN witness AFTER the original TX
         // returns to its Stop owner. No IPs, TIDs, original payload,
         // per-packet logging or additional kernel I/O.
