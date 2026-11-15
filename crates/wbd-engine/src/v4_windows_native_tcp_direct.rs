@@ -46,7 +46,7 @@ struct Active{
     last_activity_ms:u64,
     // Stable identity across swap_remove and NAT port reuse. One entry in
     // the bounded ready FIFO at most, keyed by (port,generation).
-    generation:u64,queued:bool,
+    generation:u64,queued:bool,fast_forward:bool,
 }
 impl TcpPhase{
     fn socket_handles(&self)->(usize,usize){
@@ -147,6 +147,9 @@ pub(crate) struct NativeTcpActor{
     resident_bytes:usize,
     scratch:Option<Box<[u8;RELAY_SCRATCH_BYTES]>>,
     diagnosis:Option<TcpLegDiagnosis>,
+    /// Four real TCP sessions on a reserved test port, within ONE signed
+    /// Wintun owner generation. None in an ordinary product build.
+    probe_abba_next:Option<usize>,
     // Last field: all sockets (listener, accepted, DNS) drop before the
     // WinSock event group is closed, preserving exact owned Stop order.
     socket_events:SocketReadiness,
@@ -193,6 +196,15 @@ impl NativeTcpActor{
             buffered_bytes:0,resident_bytes:0,scratch:None,
             diagnosis:(std::env::var("WBD_PLAN029_P2_RELAY_DIAG").ok()
                 .as_deref()==Some("1")).then(TcpLegDiagnosis::default),
+            // Nested explicit gates: probe ABI, signed CI, real mixed P2
+            // and ABBA-specific selection. Ordinary users cannot turn on
+            // the comparison code by a new CLI flag or generic env alone.
+            probe_abba_next:(cfg!(feature="m0_v4_probe") &&
+                std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+                std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+                std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+                std::env::var("WBD_PLAN029_P2_ABBA_SCENE").ok().as_deref()==Some("1")
+                ).then_some(0),
             socket_events})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
@@ -443,6 +455,25 @@ impl NativeTcpActor{
                         retired.push(entry.key);
                         continue
                     }
+                    // The reserved P2 A/B port is distinct from the
+                    // original H1760 32KiB fake TCP probe port. This
+                    // counter cannot consume a physical baseline socket
+                    // or a DNS TCP flow; only real Direct NAT admissions.
+                    let fast_forward=if entry.key.target_port==46116{
+                        if let Some(ordinal)=self.probe_abba_next.as_mut(){
+                            if *ordinal>=4{
+                                self.nat.retire(entry.key);
+                                retired.push(entry.key);
+                                continue
+                            }
+                            let index=*ordinal;
+                            *ordinal+=1;
+                            let fast=index==1||index==2;
+                            eprintln!("PLAN029_H1884_ABBA_ADMITTED source=real_wintun_direct ordinal={} mode={}",
+                                index+1,if fast{"bypass"}else{"copy"});
+                            fast
+                        }else{true}
+                    }else{true};
                     self.next_generation=self.next_generation.wrapping_add(1);
                     if self.next_generation==0{self.next_generation=1}
                     let generation=self.next_generation;
@@ -451,6 +482,7 @@ impl NativeTcpActor{
                         key:entry.key,proxy_port:entry.proxy_port,
                         phase:Some(TcpPhase::Connecting(stream,socket)),
                         last_activity_ms:now_ms,generation,queued:false,
+                        fast_forward,
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
@@ -512,8 +544,9 @@ impl NativeTcpActor{
                         },
                         Ok(ConnectProgress::Connected)=>{
                             advanced=true;
-                            match outer.into_connected_stream()
-                                .and_then(|outside|TcpDirectRelay::new(inner,outside)){
+                            let fast_forward=flow.fast_forward;
+                            match outer.into_connected_stream().and_then(|outside|
+                                TcpDirectRelay::with_fast_forward(inner,outside,fast_forward)){
                                 Ok(relay)=>{
                                     flow.phase=Some(TcpPhase::Relaying(relay));
                                     flow.last_activity_ms=now_ms;

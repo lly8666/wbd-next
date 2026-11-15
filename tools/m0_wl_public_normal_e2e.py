@@ -35,6 +35,12 @@ p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
 p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
 p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
+p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
+if p029_abba and not (p029_p2 and p029_direct and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true"):
+ raise RuntimeError("H1884 only signed private Normal 4MiB Direct A-B-B-A allowed")
 if p029_ipv6 and (not p029_product or not p029_direct or mode!="normal"):
  raise RuntimeError("D4 real IPv6 route observation requires one explicit signed Normal CN product scene")
 if p029_p2 and (not p029_direct or p029_multia or p029_cache or
@@ -395,6 +401,7 @@ try:
  # for this P2 scene; ordinary users never incur socket-byte telemetry.
  client_env=os.environ.copy()
  if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
+ if p029_abba:client_env["WBD_PLAN029_P2_ABBA_SCENE"]="1"
  if p029_product:
   client_env["GITHUB_ACTIONS"]="false"
   client_env["WBD_PLAN029_NATIVE_V3_TRIAL"]="0"
@@ -2175,6 +2182,24 @@ print(json.dumps(result),flush=True)
     if p2.get("source_sha")!=os.environ["GITHUB_SHA"] or p2.get("overlap") is not True:
      raise RuntimeError("H1815 true P2 mixed physical/tunnel receipt lost at Stop")
     p2["stop"]="PASS_BOTH_OWNED"
+    if p029_abba:
+     chosen=p2.get("same_vm_abba",{})
+     logs=(out/"client.log").read_text(errors="replace")
+     expected=("copy","bypass","bypass","copy")
+     valid=(chosen.get("order")==list(expected) and
+            chosen.get("test_port")==46116 and
+            len(chosen.get("trials",[]))==4 and
+            chosen.get("scope")==
+             "FOUR_REAL_FAKEIP_DIRECT_TCP_ONE_VM_ONE_BINARY_ONE_WINTUN_GENERATION" and
+            all(("PLAN029_H1884_ABBA_ADMITTED source=real_wintun_direct ordinal="+
+                 str(index+1)+" mode="+mode) in logs
+                for index,mode in enumerate(expected)))
+     if not valid:
+      raise RuntimeError("H1884 missing original Rust exact per-flow ABBA proof at owned Stop")
+     chosen["rust_admission_verified"]=True
+     chosen["stop"]="PASS_BOTH_OWNED"
+     chosen["status"]="PASS_SIGNED_REAL_ONE_WINTUN_ABBA_AFTER_STOP"
+     print("PLAN029_H1884_SAME_VM_SAME_BINARY_COPY_VS_BYPASS_ABBA_AND_OWNED_STOP_PASS_SCOPED",flush=True)
    if p029_multia:
     if report.get("plan029_d3_multia_real",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1807 D3 physical CNAME multi-A receipt missing at Stop")

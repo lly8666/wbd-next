@@ -365,6 +365,9 @@ pub struct TcpDirectRelay{
     inner_eof:bool,outer_eof:bool,
     inner_write_closed:bool,outer_write_closed:bool,
     max_pending_per_direction:usize,
+    // Product always ON. Only an explicit source-locked Win2025 probe
+    // A-B-B-A fixture may select legacy copy for a known test flow.
+    fast_forward:bool,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct RelayTick{
@@ -387,6 +390,19 @@ impl TcpDirectRelay{
     }
     pub fn with_budget(inner:TcpStream,outer:TcpStream,cap:usize)
         ->Result<Self,DirectTcpError>{
+        Self::with_budget_and_fast_forward(inner,outer,cap,true)
+    }
+    /// Probe control applies only to this relay object, never a global
+    /// product/runtime policy. Ordinary new()/with_budget() ALWAYS enable
+    /// the proven strict-FIFO fast-forward implementation.
+    pub fn with_fast_forward(inner:TcpStream,outer:TcpStream,enabled:bool)
+        ->Result<Self,DirectTcpError>{
+        Self::with_budget_and_fast_forward(
+            inner,outer,DEFAULT_PER_DIRECTION_CAP,enabled)
+    }
+    fn with_budget_and_fast_forward(
+        inner:TcpStream,outer:TcpStream,cap:usize,enabled:bool)
+        ->Result<Self,DirectTcpError>{
         if cap<QUANTUM_BYTES||cap>64*1024{
             return Err(DirectTcpError::BufferBudget)
         }
@@ -403,7 +419,7 @@ impl TcpDirectRelay{
         Ok(Self{inner,outer,to_outer:VecDeque::new(),to_inner:VecDeque::new(),
             inner_eof:false,outer_eof:false,
             inner_write_closed:false,outer_write_closed:false,
-            max_pending_per_direction:cap})
+            max_pending_per_direction:cap,fast_forward:enabled})
     }
     /// One bounded service turn, called only for a ready flow by the
     /// original Rust scheduler. A congested physical stream stops reading
@@ -445,12 +461,21 @@ impl TcpDirectRelay{
                 Ok(n)=>{
                     // First try direct scratch->physical kernel send, only then
                     // allocate a bounded suffix queue if needed.
-                    let f=forward_or_queue(&mut self.outer,
-                        &mut self.to_outer,&scratch[..n],"outer_write")?;
-                    attempted_outer=f.attempted_direct_write;
-                    forwarded_without_queue+=f.written;
-                    copied_to_queue+=f.copied_to_queue;
-                    wrote+=f.written;outer_write+=f.written;
+                    if self.fast_forward{
+                        let f=forward_or_queue(&mut self.outer,
+                            &mut self.to_outer,&scratch[..n],"outer_write")?;
+                        attempted_outer=f.attempted_direct_write;
+                        forwarded_without_queue+=f.written;
+                        copied_to_queue+=f.copied_to_queue;
+                        wrote+=f.written;outer_write+=f.written;
+                    }else{
+                        // Original H1877 bounded read->queue->socket
+                        // semantics. A/B is a change to data movement
+                        // only: sockets, traffic, scheduling and NAT
+                        // remain byte-identical.
+                        self.to_outer.extend(&scratch[..n]);
+                        copied_to_queue+=n;
+                    }
                     read+=n;inner_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_outer.capacity().saturating_sub(before));
@@ -471,12 +496,17 @@ impl TcpDirectRelay{
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>self.outer_eof=true,
                 Ok(n)=>{
-                    let f=forward_or_queue(&mut self.inner,
-                        &mut self.to_inner,&scratch[..n],"inner_write")?;
-                    attempted_inner=f.attempted_direct_write;
-                    forwarded_without_queue+=f.written;
-                    copied_to_queue+=f.copied_to_queue;
-                    wrote+=f.written;inner_write+=f.written;
+                    if self.fast_forward{
+                        let f=forward_or_queue(&mut self.inner,
+                            &mut self.to_inner,&scratch[..n],"inner_write")?;
+                        attempted_inner=f.attempted_direct_write;
+                        forwarded_without_queue+=f.written;
+                        copied_to_queue+=f.copied_to_queue;
+                        wrote+=f.written;inner_write+=f.written;
+                    }else{
+                        self.to_inner.extend(&scratch[..n]);
+                        copied_to_queue+=n;
+                    }
                     read+=n;outer_read+=n;
                     remaining_capacity=remaining_capacity.saturating_sub(
                         self.to_inner.capacity().saturating_sub(before));
@@ -661,6 +691,36 @@ mod plan029_global_backpressure_tests{
         }
         assert!(finished,"no lost half-close or pending tail");
         assert_eq!(relay.pending_bytes(),0);
+    }
+    /// A/B control must reproduce the previously shipped queued-copy
+    /// path on two genuine kernel sockets, without changing payload or FIN.
+    #[test]
+    fn plan029_same_binary_probe_copy_mode_preserves_old_queue_path(){
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let l=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let a=TcpStream::connect(l.local_addr().unwrap()).unwrap();
+            let (b,_)=l.accept().unwrap();
+            (b,a)
+        }
+        let (inner,mut app)=pair();let (outer,mut remote)=pair();
+        remote.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let mut relay=TcpDirectRelay::with_fast_forward(inner,outer,false).unwrap();
+        let payload=vec![0x5a;4096];
+        app.write_all(&payload).unwrap();
+        let mut scratch=[0u8;QUANTUM_BYTES];
+        let mut copied=0;let mut forwarded=0;
+        for _ in 0..200{
+            let tick=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            copied+=tick.copied_to_queue;forwarded+=tick.forwarded_without_queue;
+            if tick.inner_read>0{break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(copied,payload.len());
+        assert_eq!(forwarded,0);
+        let mut echo=vec![0u8;payload.len()];
+        remote.read_exact(&mut echo).unwrap();
+        assert_eq!(echo,payload);
     }
     #[test]
     fn borrowed_relay_scratch_is_bounded_and_preserved_when_idle(){

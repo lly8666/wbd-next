@@ -4,7 +4,11 @@ concurrent small Tunnel UDP. A test fixture, not another product packet pump.
 """
 import hashlib,json,math,os,pathlib,socket,subprocess,sys,time
 
-PORT=46112
+# Private, same-run A-B-B-A source-locked fixture. The extra argv
+# explicitly propagates selection through WSL (Windows env is NOT shared).
+ABBA=(os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1" or
+      (len(sys.argv)>5 and sys.argv[5]=="p2abba"))
+PORT=46116 if ABBA else 46112
 SMALL_PORT=46114
 # Windows environment is NOT automatically imported by wsl.exe; the Linux
 # guest gets the same load selection as a fourth explicit argv value.
@@ -12,6 +16,8 @@ BULK=(os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" or
       (len(sys.argv)>4 and sys.argv[4]=="p2bulk"))
 SIZE=4*1024*1024 if BULK else 1024*1024
 SEND_PAUSE=0.0 if BULK else .004
+if ABBA and not BULK:raise RuntimeError("P2 A-B-B-A requires 4MiB unpaced")
+ABBA_MODES=("copy","bypass","bypass","copy")
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
 MAX_SUSTAIN=3200
 FINISH_PACKET=b"PLAN029-P2-TUNNEL-FINISH"
@@ -27,10 +33,10 @@ def receipt(label,data):
 def tcp_guest(physical,expected_host):
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        sock.bind((physical,PORT));sock.listen(2);sock.settimeout(40)
+        sock.bind((physical,PORT));sock.listen(5 if ABBA else 2);sock.settimeout(40)
         print("PLAN029_H1815_P2_PHYSICAL_TCP_READY",flush=True)
         sources=[];sizes=[]
-        for step in range(2):
+        for step in range(5 if ABBA else 2):
             conn,peer=sock.accept()
             if peer[0]!=expected_host:
                 raise RuntimeError("physical WinSock source changed under Direct")
@@ -203,7 +209,9 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
               if linux else [sys.executable,"-u",str(exe)])
         child_env=os.environ.copy()
         child_env["WBD_PLAN029_P2_TCP_DONE_MARKER"]=str(completed)
-        p=subprocess.Popen([*args,role,first,second,"p2bulk" if BULK else "p2paced"],stdout=f,
+        p=subprocess.Popen([*args,role,first,second,
+                            "p2bulk" if BULK else "p2paced",
+                            "p2abba" if ABBA else "p2ordinary"],stdout=f,
                            stderr=subprocess.STDOUT,env=child_env)
         children.append(p)
         return p,log
@@ -236,33 +244,75 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         ready(ln,"PLAN029_H1815_P2_LINUX_TUN_SMALL_READY",lin,12)
         win,wn=spawn("windows-tunnel-small","windows_udp","10.66.0.2",tunnel_ip)
         ready(wn,"PLAN029_H1815_P2_WINDOWS_TUN_SMALL_READY",win,8)
-        direct,dn=spawn("direct-windows","direct","10.66.0.2",fake)
-        wait(direct,dn,38)
+        direct_proofs=[]
+        if ABBA:
+            for ordinal in range(4):
+                direct,dn=spawn("direct-abba-"+str(ordinal+1),
+                    "direct","10.66.0.2",fake)
+                wait(direct,dn,38)
+                direct_proofs.append(proof(dn,"PLAN029_H1815_P2_TCP_CLIENT"))
+        else:
+            direct,dn=spawn("direct-windows","direct","10.66.0.2",fake)
+            wait(direct,dn,38)
+            direct_proofs.append(proof(dn,"PLAN029_H1815_P2_TCP_CLIENT"))
         completed.write_text("direct-finished\n",encoding="ascii")
         wait(win,wn,23);wait(lin,ln,7);wait(guest,gn,7)
         base=proof(bn,"PLAN029_H1815_P2_TCP_CLIENT")
-        direct_value=proof(dn,"PLAN029_H1815_P2_TCP_CLIENT")
+        # Preserve the historic P2 field, now one of the two B trials.
+        # The full four-trial chain gets its OWN exact, signed receipt.
+        direct_value=direct_proofs[1] if ABBA else direct_proofs[0]
         linux=proof(gn,"PLAN029_H1815_P2_PHYSICAL_TCP_GUEST")
         small_win=proof(wn,"PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS")
         small_linux=proof(ln,"PLAN029_H1815_P2_TUNNEL_SMALL_LINUX")
-        overlap=(max(direct_value["start_monotonic_s"],small_win["start_monotonic_s"])<
-                 min(direct_value["end_monotonic_s"],small_win["end_monotonic_s"]))
-        whole_direct=(small_win["start_monotonic_s"]<=
-                      direct_value["start_monotonic_s"] and
-                      small_win["end_monotonic_s"]>=direct_value["end_monotonic_s"])
+        first_direct=min(t["start_monotonic_s"] for t in direct_proofs)
+        last_direct=max(t["end_monotonic_s"] for t in direct_proofs)
+        overlap=(max(first_direct,small_win["start_monotonic_s"])<
+                 min(last_direct,small_win["end_monotonic_s"]))
+        whole_direct=(small_win["start_monotonic_s"]<=first_direct and
+                      small_win["end_monotonic_s"]>=last_direct)
         if (base["role"]!="baseline" or direct_value["role"]!="direct" or
             base["app_tcp_nodelay"]!=direct_value["app_tcp_nodelay"] or
             base["echo_bytes"]!=SIZE or direct_value["echo_bytes"]!=SIZE or
             base["payload_sha256"]!=direct_value["payload_sha256"] or
             base["socket_source"]!=host_source or
             direct_value["presented_peer"]!=fake or
-            linux["source_ips"]!=[host_source,host_source] or
-            linux["received_bytes"]!=[SIZE,SIZE] or
+            linux["source_ips"]!=[host_source]*(5 if ABBA else 2) or
+            linux["received_bytes"]!=[SIZE]*(5 if ABBA else 2) or
             small_win["received"]!=COUNT or small_linux["received"]!=COUNT or
             small_linux["source_lease"]!="10.66.0.2" or not overlap or
             not whole_direct or
             small_win["sustained_total"]!=small_linux["sustained_total"]):
             raise RuntimeError("P2 real baseline/Direct 1MiB + concurrent Tunnel UDP independent proof invalid")
+        abba=None
+        if ABBA:
+            if len(direct_proofs)!=4 or any(
+                    trial["role"]!="direct" or
+                    trial["presented_peer"]!=fake or
+                    trial["socket_source"]!="10.66.0.2" or
+                    trial["echo_bytes"]!=SIZE or
+                    trial["payload_sha256"]!=SHA or
+                    trial["app_tcp_nodelay"]!=base["app_tcp_nodelay"] or
+                    trial["half_close"] is not True
+                    for trial in direct_proofs):
+                raise RuntimeError("P2 A-B-B-A true Direct 4MiB SHA/FIN/source invalid")
+            tests=[{"ordinal":i+1,"mode":ABBA_MODES[i],**item}
+                   for i,item in enumerate(direct_proofs)]
+            a_ms=(tests[0]["elapsed_ms"]+tests[3]["elapsed_ms"])/2
+            b_ms=(tests[1]["elapsed_ms"]+tests[2]["elapsed_ms"])/2
+            abba={
+                "status":"PENDING_OWNER_STOP",
+                "scope":"FOUR_REAL_FAKEIP_DIRECT_TCP_ONE_VM_ONE_BINARY_ONE_WINTUN_GENERATION",
+                "test_port":PORT,"order":list(ABBA_MODES),
+                "trials":tests,"copy_mean_ms":round(a_ms,3),
+                "bypass_mean_ms":round(b_ms,3),
+                "bypass_minus_copy_ms":round(b_ms-a_ms,3),
+                "bypass_div_copy":round(b_ms/max(.001,a_ms),4),
+                "rust_admission_verified":False,
+                "stop":"NOT_RUN_UNTIL_OWNER_STOP",
+                "cpu_user_kernel":"NOT_MEASURED_4_SHORT_TRIALS",
+                "driver_cpu":"NOT_ATTRIBUTED",
+                "performance_judgment":"MEASURED_ABBA_NOT_YET_REPRODUCED"
+            }
         # Same-run, same-VM phase attribution, not an inferred algorithmic
         # bottleneck or a peak throughput number. Additive deltas expose the
         # first dominant wait without changing the paced 1-MiB workload.
@@ -286,6 +336,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "windows_direct_fakeip":fake,"overlap":overlap,
                 "covered_whole_direct_tcp":whole_direct,
                 "udp_sustained_total":small_win["sustained_total"],
+                "same_vm_abba":abba,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}
     finally:
