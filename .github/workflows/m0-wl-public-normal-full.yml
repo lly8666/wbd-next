@@ -58,6 +58,10 @@ on:
       - tools/m0_native_ci_scope.py
       - tests/test_m0_native_ci_scope.py
       - tests/test_m0_plan029_h1749_signed_direct_order.py
+      # H1901: any edit to either test-only high-rate fixture/contract
+      # must trigger the SAME real signed original Windows/WSL2 source.
+      - tests/test_m0_plan029_h1896_sustain_tcp.py
+      - tests/test_m0_plan029_h1898_highrate.py
       - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_install_public_faketcp.py
       - tools/m0_install_public_realityfront_tests.py
@@ -119,6 +123,7 @@ on:
       - tools/m0_plan029_h1814_p1_tunnel_ab.py
       - tools/m0_plan029_h1815_p2_real_mixed.py
       - tools/m0_plan029_h1892_real_tcp128.py
+      - tools/m0_plan029_h1898_highrate_tcp.py
       - scenarios/plan029-p1-normal-50m-25ms0-60s.json
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
