@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1899,
-  "checkpoint_sha": "691d8cf003579ce94e74a28d36171a00692e41f4",
+  "sequence": 1900,
+  "checkpoint_sha": "2fa68df28526a427f3a71f25d6799714c7290844",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1899 exact first CI static failure: legacy H1894 assertion expected only TCP128 on same Windows high-res UDP clock, H1898 also samples signed high-rate windows. No real network or Windows Rust/Go tests ran due cheap gate; update strict test, preserve H1894 windows and H1898 gates.",
-  "why_now": "H1898 Action43688298682 Cheap fail only test_h1894_same_original_process_pre128_vs128_idle_cpu_and_udp_contract exact string. Main H1898 Governance+Feature catalog Action43688298677 both SUCCESS after hot cursor shrink; original high-rate still NOT_RUN.",
+  "current_task": "H1900 source-only static test alignment: H1896 cheap test expected only sustained to suppress per128 UDP progress logs; H1898 highrate also suppresses those logs and uses 14k true 96B UDP plus explicit WSL env. No Windows/WSL2 business yet, same highrate fixture unchanged.",
+  "why_now": "H1899 Action43688459805 first failure only tests.test_m0_plan029_h1896_sustain_tcp exact string; previous H1894 assertion now PASS. Retain exact static guarantee no per128 UDP logs for both sustained/highrate and fail-close WSL 14k cap.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1899 cheap component tests, then exact SOURCE original Win2025/WSL2 500Mb/s one-way 512MiB and 700Mb/s aggregate simultaneous 256MiB each, real SHA/FIN/Tunnel96B p99/pre-post CPU/owned Stop; output actual achieved vs targets and no CPU attribution leap.",
+  "next_action": "Collect H1900 cheap full tests including H1898 4 tests, then original Win2025/WSL2 500Mb/s one-way 512MiB, 700Mb/s aggregate duplex 256MiB per leg, SHA/FIN/96B UDP p99, original/generator/host CPU and owned Stop.",
   "unverified": true,
   "last_tested_source": "29883ab1f674840df715542540d83ae3e240e5fb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1897-H1896-SIGNED-SUSTAIN-30S-CPU-GIB-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md",
     "docs/devlog/M0/20261115-PLAN029-H1898-TRUE-500-700-MBPS-PARALLEL-LOAD.md",
     "docs/devlog/M0/20261115-PLAN029-H1897-COLLECT-H1896-SIGNED-SUSTAIN-CPU-GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md",
     "docs/devlog/M0/20261115-PLAN029-H1895-KEEP-P2-ONE-HIGH-RES-CPU-UDP-CLOCK.md",
     "docs/devlog/M0/20261115-PLAN029-H1894-SAME-VM-PRE128-CPU-UDP-P99-CONTROL.md",
-    "docs/devlog/M0/20261115-PLAN029-H1893-COLLECT-SIGNED-128-WINTUN-PARALLEL-CPU.md",
-    "docs/devlog/M0/20261115-PLAN029-H1892-REAL-128-WINTUN-2-SAME-SHARD-PARALLEL-EFFICIENCY.md"
+    "docs/devlog/M0/20261115-PLAN029-H1893-COLLECT-SIGNED-128-WINTUN-PARALLEL-CPU.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1898 high-rate fixture shipped but original source failed old H1894 static shape before native; H1899 fixes only test shape and retains same QPC semantics. Governance/feature H1898 SUCCESS. P1/P2 OPEN."
+  "partial_summary": "H1898 500/700Mb/s target test source shipped; H1898/H1899 first two CI runs failed only old literal static P2 assertions before native (retained); H1900 fixes H1896 source contract, highrate business NOT_RUN, PLAN029 IN_PROGRESS P1/P2 OPEN."
 }
