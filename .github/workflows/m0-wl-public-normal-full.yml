@@ -1012,6 +1012,9 @@ jobs:
       # H1898: signed private 500Mb/s one-way, 700Mb/s aggregate
       # full-duplex TARGET test only, NOT an original product speed switch.
       WBD_PLAN029_P2_HIGH_RATE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-500-700]') && '1' || '0' }}
+      # H1903: explicit long, same-VM original underlay-vs-Wintun trial.
+      # Never enabled for the 6-9s H1898 check or any end user.
+      WBD_PLAN029_P2_LONG_RATE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-long-ab]') && '1' || '0' }}
       # H1892 is a *distinct*, source-locked one-VM 128 genuine Wintun
       # Direct TCP socket scene, reusing the exact guest TCP46112 grant.
       WBD_PLAN029_TCP128_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128]') && '1' || '0' }}
@@ -2517,7 +2520,7 @@ jobs:
               if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
                 $rate=$p2.highrate_direct_tcp
                 if($rate.source_sha -ne $env:GITHUB_SHA -or
-                   $rate.status -ne 'PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED' -or
+                   $rate.status -ne $(if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){'PASS_SIGNED_LONG_SAME_VM_PHYSICAL_VS_DIRECT_CPU_UDP_STOP'}else{'PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED'}) -or
                    $rate.owner_stop -ne 'PASS_BOTH_OWNED' -or
                    $rate.tunnel_udp_covers_rate -ne $true -or
                    $rate.windows.stages.oneway_500mbps.local_sent_bytes -ne 536870912 -or
@@ -2532,6 +2535,35 @@ jobs:
                   throw 'H1898 real signed 500/700 Mbps target high-rate SHA/Tunnel/Stop failed'
                 }
                 Write-Output 'PLAN029_H1898_SIGNED_TRUE_512M_ONEWAY_256M_EACH_PARALLEL_TCP_CPU_UDP_OWNED_STOP_PASS_SCOPED'
+               if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){
+                 $physical=$rate.physical_control
+                 $stages=$rate.same_vm_original_process_cpu_increment
+                 $udp=$rate.tunnel_udp_per_stage
+                 $guest=$rate.linux.sessions
+                 if($rate.scope -ne 'REAL_SAME_VM_PHYSICAL_AND_WINTUN_2GIB_UP_1P5GIB_EACH_DUPLEX' -or
+                    $physical.source_sha -ne $env:GITHUB_SHA -or
+                    $physical.original_pid -ne $rate.windows.original_pid -or
+                    $physical.path -ne 'physical' -or
+                    $rate.windows.path -ne 'direct' -or
+                    $physical.windows_half_close -ne $true -or
+                    [int64]$physical.stages.oneway_500mbps.local_sent_bytes -ne 2147483648 -or
+                    [int64]$rate.windows.stages.oneway_500mbps.local_sent_bytes -ne 2147483648 -or
+                    [int64]$physical.stages.duplex_700mbps_aggregate.local_sent_bytes -ne 1610612736 -or
+                    [int64]$rate.windows.stages.duplex_700mbps_aggregate.local_received_bytes -ne 1610612736 -or
+                    $guest.Count -ne 2 -or
+                    $guest[0].path -ne 'physical' -or $guest[1].path -ne 'direct' -or
+                    $guest[0].half_close -ne $true -or $guest[1].half_close -ne $true -or
+                    $stages.oneway_500mbps.scope -ne 'SAME_SOURCE_SAME_WINDOWS_PROCESS_MATCHED_DATA_VOLUME_DIFFERENT_CONSECUTIVE_TCP_SESSIONS_NOT_DRIVER_CPU' -or
+                    $stages.duplex_700mbps_aggregate.scope -ne 'SAME_SOURCE_SAME_WINDOWS_PROCESS_MATCHED_DATA_VOLUME_DIFFERENT_CONSECUTIVE_TCP_SESSIONS_NOT_DRIVER_CPU' -or
+                    $udp.physical_oneway_500mbps.unique_delivered -lt 750 -or
+                    $udp.physical_duplex_700mbps_aggregate.unique_delivered -lt 750 -or
+                    $udp.oneway_500mbps.unique_delivered -lt 750 -or
+                    $udp.duplex_700mbps_aggregate.unique_delivered -lt 750 -or
+                    $rate.owner_stop -ne 'PASS_BOTH_OWNED'){
+                   throw 'H1903 signed long 30s+ physical/Direct original Windows PID, SHA, TCP FIN, CPU user/kernel, 96B Tunnel UDP and owned Stop invalid'
+                 }
+                 Write-Output 'PLAN029_H1903_SIGNED_LONG_SAME_VM_PHYSICAL_DIRECT_500MBPS_700MBPS_CPU_UDP_STOP_PASS_SCOPED'
+               }
               }
               if($env:WBD_PLAN029_P2_SUSTAIN_SCENE -eq '1'){
                 $s=$p2.sustained_direct_tcp

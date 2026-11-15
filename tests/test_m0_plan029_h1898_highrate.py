@@ -58,6 +58,55 @@ class HighRateComponentTests(unittest.TestCase):
             r.DUPLEX_SHA=original_sha
             r.MAX_STAGE_S=original_max
 
+    def test_h1903_30s_plus_same_vm_long_load_is_source_locked(self):
+        src=(pathlib.Path(__file__).resolve().parents[1]/
+             "tools/m0_plan029_h1898_highrate_tcp.py").read_text()
+        harness=(pathlib.Path(__file__).resolve().parents[1]/
+                 "tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        e2e=(pathlib.Path(__file__).resolve().parents[1]/
+             "tools/m0_wl_public_normal_e2e.py").read_text()
+        workflow=(pathlib.Path(__file__).resolve().parents[1]/
+                  ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn('2*1024*1024*1024 if LONG',src)
+        self.assertIn('1536*1024*1024 if LONG',src)
+        self.assertIn('len(sys.argv)>1 and sys.argv[-1]=="p2long"',src)
+        self.assertIn('physical_args=[sys.executable',src)
+        self.assertIn('physical_receipt["original_pid"]!=pid',src)
+        self.assertIn('original_cpu_increment(physical_receipt,w)',src)
+        self.assertIn('"physical_oneway_500mbps"',harness)
+        self.assertIn('if LONG_RATE:MAX_SUSTAIN=26000',harness)
+        self.assertIn('WBD_PLAN029_P2_LONG_RATE_SCENE',e2e)
+        self.assertIn('WBD_PLAN029_P2_LONG_RATE_SCENE',workflow)
+        self.assertIn('[plan029-v3-real-p2-long-ab]',workflow)
+        self.assertIn('PASS_SIGNED_LONG_SAME_VM_PHYSICAL_VS_DIRECT_CPU_UDP_STOP',e2e)
+
+    def test_h1903_incremental_original_process_cpu_is_signed_not_clamped(self):
+        def row(sent,rate,total,user,kernel,host_pct):
+            return {"local_sent_bytes":sent,"target_aggregate_mbps":rate,
+                    "actual_aggregate_mbps":rate-0.5,"elapsed_s":35.0,
+                    "original_process_cpu":{
+                        "original_process_total_cpu_s_per_gib":total,
+                        "original_process_user_cpu_s_per_gib":user,
+                        "original_process_kernel_cpu_s_per_gib":kernel},
+                    "windows_host_cpu":{"host_all_logical_cpu_busy_pct":host_pct}}
+        a={"stages":{
+            "oneway_500mbps":row(2*1024**3,500,2.5,1,1.5,30),
+            "duplex_700mbps_aggregate":row(1536*1024**2,700,4,2,2,38)}}
+        b={"stages":{
+            "oneway_500mbps":row(2*1024**3,500,12,4.5,7.5,61),
+            "duplex_700mbps_aggregate":row(1536*1024**2,700,3,0.8,2.2,68)}}
+        result=r.original_cpu_increment(a,b)
+        self.assertEqual(result["oneway_500mbps"][
+            "added_process_total_cpu_s_per_gib"],9.5)
+        self.assertEqual(result["oneway_500mbps"][
+            "added_process_kernel_cpu_s_per_gib"],6.0)
+        self.assertEqual(result["duplex_700mbps_aggregate"][
+            "added_process_total_cpu_s_per_gib"],-1.0)
+        self.assertIn("NOT_DRIVER_CPU",result["oneway_500mbps"]["scope"])
+        b["stages"]["oneway_500mbps"]["local_sent_bytes"]=1024
+        with self.assertRaises(RuntimeError):
+            r.original_cpu_increment(a,b)
+
     def test_host_cpu_delta_includes_idle_and_other_processes(self):
         # Synthetic FILETIME-derived seconds validate units/math only.
         row=r.host_cpu_delta((10.,25.,5.),(11.,29.,7.))

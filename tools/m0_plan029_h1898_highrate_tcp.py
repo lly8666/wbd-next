@@ -20,11 +20,17 @@ from m0_plan029_h1896_sustain_tcp import (
 )
 
 PORT=46118
-ONE_WAY_BYTES=512*1024*1024
-DUPLEX_BYTES=256*1024*1024
+# H1903: an explicitly signed, source-locked long 2-GiB/1.5-GiB
+# challenge. A short H1898 run preserves all previous constants and
+# receipts. Linux WSL.exe does NOT inherit the Windows runner env, so
+# both signed OS applications require the explicit p2long argv marker.
+LONG=(os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1" or
+      (len(sys.argv)>1 and sys.argv[-1]=="p2long"))
+ONE_WAY_BYTES=(2*1024*1024*1024 if LONG else 512*1024*1024)
+DUPLEX_BYTES=(1536*1024*1024 if LONG else 256*1024*1024)
 ONE_WAY_TARGET_BPS=500_000_000
 DUPLEX_TARGET_AGG_BPS=700_000_000
-MAX_STAGE_S=100
+MAX_STAGE_S=180 if LONG else 100
 WIN_MARK="PLAN029_H1898_WINDOWS_HIGH_RATE"
 GUEST_MARK="PLAN029_H1898_LINUX_HIGH_RATE"
 SCOPE="ONE_REAL_WINTUN_FAKEIP_TCP_AND_WSL2_PHYSICAL_FULL_DUPLEX"
@@ -127,38 +133,54 @@ def windows_original_stage(pid,func,total):
 def guest(physical,expected_source,source):
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as listener:
         listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        listener.bind((physical,PORT));listener.listen(1);listener.settimeout(30)
+        listener.bind((physical,PORT));listener.listen(2 if LONG else 1)
+        listener.settimeout(30)
         print("PLAN029_H1898_LINUX_READY",flush=True)
-        conn,peer=listener.accept()
-        if peer[0]!=expected_source:
-            raise RuntimeError("H1898 Linux saw nonphysical Direct source")
-        with conn:
-            conn.settimeout(MAX_STAGE_S)
-            conn.sendall(b"R")
-            n,h=recv_exact_data(conn,ONE_WAY_BYTES)
-            if n!=ONE_WAY_BYTES or h!=ONE_WAY_SHA:
-                raise RuntimeError("H1898 Linux did not receive genuine 512MiB one-way")
-            conn.sendall(b"u")
-            read_control(conn,b"D")
-            conn.sendall(b"d")
-            duplex_result=duplex(conn,DUPLEX_BYTES,
-                                 DUPLEX_TARGET_AGG_BPS/16)
-            # each sender target = total aggregate /2 /8 bytes/s
-            conn.sendall(b"k")
-            read_control(conn,b"y")
-            conn.shutdown(socket.SHUT_WR)
-            if conn.recv(1)!=b"":
-                raise RuntimeError("H1898 genuine Windows FIN absent")
-        emit(GUEST_MARK,{"source_sha":source,"physical_source":peer[0],
+        sessions=[]
+        # Same Linux physical kernel listener, first ORIGINAL Windows
+        # underlay control, then signed Wintun FakeIP Direct. Never an
+        # artificial ACK, tunnel socket, or generated performance number.
+        for ordinal in range(2 if LONG else 1):
+            conn,peer=listener.accept()
+            if peer[0]!=expected_source:
+                raise RuntimeError("H1903 Linux saw nonphysical source")
+            with conn:
+                conn.settimeout(MAX_STAGE_S)
+                conn.sendall(b"R")
+                n,h=recv_exact_data(conn,ONE_WAY_BYTES)
+                if n!=ONE_WAY_BYTES or h!=ONE_WAY_SHA:
+                    raise RuntimeError("H1903 Linux physical TCP one-way SHA/bytes mismatch")
+                conn.sendall(b"u")
+                read_control(conn,b"D")
+                conn.sendall(b"d")
+                duplex_result=duplex(conn,DUPLEX_BYTES,
+                                     DUPLEX_TARGET_AGG_BPS/16)
+                # Each sender target = 700Mb/s aggregate /2 /8 B/s.
+                conn.sendall(b"k")
+                read_control(conn,b"y")
+                conn.shutdown(socket.SHUT_WR)
+                if conn.recv(1)!=b"":
+                    raise RuntimeError("H1903 genuine Windows FIN absent")
+            sessions.append({
+                "path":"physical" if LONG and ordinal==0 else "direct",
+                "source_ip":peer[0],"oneway_received_bytes":n,
+                "oneway_sha256":h,"duplex":duplex_result,
+                "half_close":True})
+        last=sessions[-1]
+        emit(GUEST_MARK,{"source_sha":source,"physical_source":last["source_ip"],
                          "physical_listener":physical,
-                         "oneway_received_bytes":n,"oneway_sha256":h,
-                         "duplex":duplex_result,
+                         "oneway_received_bytes":last["oneway_received_bytes"],
+                         "oneway_sha256":last["oneway_sha256"],
+                         "duplex":last["duplex"],"sessions":sessions,
                          "half_close":True,
                          "scope":"REAL_LINUX_KERNEL_TCP_ON_PHYSICAL_SOURCE"})
 
-def windows(lease,fake,source,pid,phase_file):
-    if lease!="10.66.0.2" or not fake.startswith("198.18."):
-        raise RuntimeError("H1898 original Wintun lease or FakeIP invalid")
+def windows(lease,fake,source,pid,phase_file,mode="direct"):
+    if (mode not in ("physical","direct") or
+        (mode=="physical" and not LONG) or
+        (mode=="direct" and
+         (lease!="10.66.0.2" or not fake.startswith("198.18.")))):
+        raise RuntimeError("H1903 wrong source-bound physical/Direct selector")
     if pid<=0:raise RuntimeError("H1898 no original Go+Rust PID")
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
         sock.settimeout(MAX_STAGE_S)
@@ -195,19 +217,73 @@ def windows(lease,fake,source,pid,phase_file):
             500 if key=="oneway_500mbps" else 700)
         phase["target_reached"]=actual>=phase["target_aggregate_mbps"]
         phase["wall_clock_mbps_not_driver_cpu"]=True
-    # Only written after actual kernel bytes+SHA and BOTH half-closes.
-    Path(phase_file).write_text(json.dumps({
-        "source_sha":source,"windows":{name:{
-           "start_monotonic_s":v["start_monotonic_s"],
-           "end_monotonic_s":v["end_monotonic_s"]}
-           for name,v in stages.items()}},sort_keys=True),encoding="utf-8")
+    # Only written after genuine kernel SHA+FIN. Different application
+    # processes share Windows QPC monotonic epochs for the SAME runner.
+    # Do not overwrite the earlier physical control phase timestamps.
+    old={"source_sha":source,"windows":{}}
+    if LONG and mode=="direct":
+        old=json.loads(Path(phase_file).read_text(encoding="utf-8"))
+        if (old.get("source_sha")!=source or
+            set(old.get("windows",{}))!={
+                "physical_oneway_500mbps",
+                "physical_duplex_700mbps_aggregate"}):
+            raise RuntimeError("H1903 genuine physical preflight QPC timeline absent")
+    for name,value in stages.items():
+        key=("physical_"+name if LONG and mode=="physical" else name)
+        if key in old["windows"]:
+            raise RuntimeError("H1903 duplicate physical/Direct phase")
+        old["windows"][key]={
+            "start_monotonic_s":value["start_monotonic_s"],
+            "end_monotonic_s":value["end_monotonic_s"]}
+    Path(phase_file).write_text(json.dumps(old,sort_keys=True),
+                                encoding="utf-8")
     emit(WIN_MARK,{"source_sha":source,"original_pid":pid,
                    "actual_client_lease":lease,"actual_fakeip_peer":fake,
-                   "test_port":PORT,"connect_ms":round(connect_ms,3),
+                   "path":mode,"test_port":PORT,
+                   "connect_ms":round(connect_ms,3),
                    "one_real_full_duplex_tcp_socket":True,
                    "warmup":"H1815_ORIGINAL_4M_P2_PRECEDES_RATE_SCENE",
                    "stages":stages,"windows_half_close":True,
-                   "scope":SCOPE})
+                   "scope":SCOPE if mode=="direct" else
+                       "REAL_PHYSICAL_WINDOWS_TO_WSL2_TCP_SAME_OWNER_CPU_CONTROL"})
+
+def original_cpu_increment(physical,direct):
+    """Matched signed Windows PID: incremental Go+Rust process CPU per GiB.
+    Not kernel-wide driver ISR/DPC time and not a separate Rust TX sample.
+    Keep signed negative differences as possible CI jitter, NEVER clamp.
+    """
+    out={}
+    for stage in ("oneway_500mbps","duplex_700mbps_aggregate"):
+        a=physical["stages"][stage]
+        b=direct["stages"][stage]
+        if (a["local_sent_bytes"]!=b["local_sent_bytes"] or
+            a["target_aggregate_mbps"]!=b["target_aggregate_mbps"] or
+            a["elapsed_s"]<=0 or b["elapsed_s"]<=0):
+            raise RuntimeError("H1903 CPU baseline mismatch in real same-VM stage")
+        old=a["original_process_cpu"]
+        new=b["original_process_cpu"]
+        out[stage]={
+            "physical_actual_mbps":a["actual_aggregate_mbps"],
+            "direct_actual_mbps":b["actual_aggregate_mbps"],
+            "physical_process_total_cpu_s_per_gib":
+                old["original_process_total_cpu_s_per_gib"],
+            "direct_process_total_cpu_s_per_gib":
+                new["original_process_total_cpu_s_per_gib"],
+            "added_process_total_cpu_s_per_gib":round(
+                new["original_process_total_cpu_s_per_gib"]-
+                old["original_process_total_cpu_s_per_gib"],6),
+            "added_process_user_cpu_s_per_gib":round(
+                new["original_process_user_cpu_s_per_gib"]-
+                old["original_process_user_cpu_s_per_gib"],6),
+            "added_process_kernel_cpu_s_per_gib":round(
+                new["original_process_kernel_cpu_s_per_gib"]-
+                old["original_process_kernel_cpu_s_per_gib"],6),
+            "windows_host_busy_pct_physical":
+                a["windows_host_cpu"]["host_all_logical_cpu_busy_pct"],
+            "windows_host_busy_pct_direct":
+                b["windows_host_cpu"]["host_all_logical_cpu_busy_pct"],
+            "scope":"SAME_SOURCE_SAME_WINDOWS_PROCESS_MATCHED_DATA_VOLUME_DIFFERENT_CONSECUTIVE_TCP_SESSIONS_NOT_DRIVER_CPU"}
+    return out
 
 def proof(log,marker):
     rows=[line.split(marker+" ",1)[1] for line in Path(log).read_text(
@@ -222,27 +298,51 @@ def run_highrate(root,out,physical,host_source,fake,unix,ready,pid):
         os.environ.get("GITHUB_ACTIONS")!="true"):
         raise RuntimeError("H1898 high-rate only original signed Normal P2")
     source=os.environ["GITHUB_SHA"]
+    if LONG and not (
+        os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1" and
+        os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1"):
+        raise RuntimeError("H1903 long physical/direct requires signed bulk source")
     script=Path(root)/"tools"/"m0_plan029_h1898_highrate_tcp.py"
     guest_log=Path(out)/"plan029-h1898-rate-linux.log"
     win_log=Path(out)/"plan029-h1898-rate-windows.log"
+    physical_log=Path(out)/"plan029-h1903-long-physical-windows.log"
     phase_file=Path(out)/"plan029-h1898-rate-phases.json"
     children=[]
     try:
         with guest_log.open("w") as gf:
-            g=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-                "python3","-u",unix(script),"guest",physical,host_source,source],
-                stdout=gf,stderr=subprocess.STDOUT);children.append(g)
+            guest_args=["wsl.exe","-d","Ubuntu","-u","root","--",
+                "python3","-u",unix(script),"guest",physical,host_source,source]
+            if LONG:guest_args.append("p2long")
+            g=subprocess.Popen(guest_args,stdout=gf,
+                               stderr=subprocess.STDOUT);children.append(g)
             ready(guest_log,"PLAN029_H1898_LINUX_READY",g,12)
             # Comparable same original Windows process / same 96B UDP
             # before/after bounded controls, no actual new H1898 SYN yet.
             pre_start=time.perf_counter()
             pre=idle_baseline(pid)
             pre_end=time.perf_counter()
+            if LONG:
+                with physical_log.open("w") as pf:
+                    physical_args=[sys.executable,"-u",str(script),"windows",
+                        host_source,physical,source,str(pid),str(phase_file),
+                        "physical","p2long"]
+                    phys=subprocess.Popen(physical_args,stdout=pf,
+                                          stderr=subprocess.STDOUT)
+                    children.append(phys)
+                    try:physical_rc=phys.wait(timeout=400)
+                    except subprocess.TimeoutExpired:
+                        raise RuntimeError("H1903 original physical TCP timeout "+
+                              physical_log.read_text(errors="replace")[-1400:])
+                    if physical_rc:
+                        raise RuntimeError("H1903 original physical TCP failed "+
+                              physical_log.read_text(errors="replace")[-1400:])
             with win_log.open("w") as wf:
-                w=subprocess.Popen([sys.executable,"-u",str(script),"windows",
-                    "10.66.0.2",fake,source,str(pid),str(phase_file)],
-                    stdout=wf,stderr=subprocess.STDOUT);children.append(w)
-                try:rc=w.wait(timeout=210)
+                win_args=[sys.executable,"-u",str(script),"windows",
+                    "10.66.0.2",fake,source,str(pid),str(phase_file)]
+                if LONG:win_args.extend(["direct","p2long"])
+                w=subprocess.Popen(win_args,stdout=wf,
+                                   stderr=subprocess.STDOUT);children.append(w)
+                try:rc=w.wait(timeout=400 if LONG else 210)
                 except subprocess.TimeoutExpired:
                     raise RuntimeError("H1898 real rate client timeout "+
                                        win_log.read_text(errors="replace")[-1200:])
@@ -266,6 +366,7 @@ def run_highrate(root,out,physical,host_source,fake,unix,ready,pid):
         phase_file.write_text(json.dumps(phase_windows,sort_keys=True),
                               encoding="utf-8")
         w=proof(win_log,WIN_MARK);g=proof(guest_log,GUEST_MARK)
+        physical_receipt=proof(physical_log,WIN_MARK) if LONG else None
         stages=w["stages"]
         if (w["source_sha"]!=source or g["source_sha"]!=source or
             w["scope"]!=SCOPE or w["original_pid"]!=pid or
@@ -283,15 +384,40 @@ def run_highrate(root,out,physical,host_source,fake,unix,ready,pid):
             g["duplex"]["local_sent_bytes"]!=DUPLEX_BYTES or
             g["duplex"]["local_received_bytes"]!=DUPLEX_BYTES):
             raise RuntimeError("H1898 true original 500/700Mb/s challenge evidence mismatch")
-        for stage in stages.values():
-            if not (2.0<=stage["elapsed_s"]<=MAX_STAGE_S and
+        for stage in list(stages.values())+(
+                list(physical_receipt["stages"].values()) if LONG else []):
+            if not ((30.0 if LONG else 2.0)<=stage["elapsed_s"]<=MAX_STAGE_S and
                 stage["actual_aggregate_mbps"]>0 and
                 stage["original_process_cpu"]["original_process_total_cpu_s_per_gib"]>=0 and
                 stage["load_generator_cpu"]["original_process_total_cpu_s_per_gib"]>=0):
-                raise RuntimeError("H1898 genuine CPU/throughput source invalid")
+                raise RuntimeError("H1903 signed sustained CPU/throughput stage invalid")
+        incremental=None
+        if LONG:
+            sessions=g.get("sessions",[])
+            if (len(sessions)!=2 or
+                [x.get("path") for x in sessions]!=["physical","direct"] or
+                physical_receipt["source_sha"]!=source or
+                physical_receipt["path"]!="physical" or
+                physical_receipt["actual_client_lease"]!=host_source or
+                physical_receipt["actual_fakeip_peer"]!=physical or
+                physical_receipt["original_pid"]!=pid or
+                w.get("path")!="direct" or
+                physical_receipt["windows_half_close"] is not True or
+                any(x.get("oneway_sha256")!=ONE_WAY_SHA or
+                    x.get("oneway_received_bytes")!=ONE_WAY_BYTES or
+                    x.get("duplex",{}).get("local_received_bytes")!=DUPLEX_BYTES or
+                    x.get("duplex",{}).get("local_sent_bytes")!=DUPLEX_BYTES or
+                    x.get("half_close") is not True
+                    for x in sessions)):
+                raise RuntimeError("H1903 actual physical and Direct session SHA/FIN/source incomplete")
+            incremental=original_cpu_increment(physical_receipt,w)
         return {"source_sha":source,"status":"PENDING_UDP_AND_STOP",
-                "scope":"REAL_FAKEIP_WIN_LINUX_512M_UP_AND_256M_EACH_FULL_DUPLEX",
+                "scope":("REAL_SAME_VM_PHYSICAL_AND_WINTUN_2GIB_UP_1P5GIB_EACH_DUPLEX"
+                         if LONG else
+                         "REAL_FAKEIP_WIN_LINUX_512M_UP_AND_256M_EACH_FULL_DUPLEX"),
                 "windows":w,"linux":g,"phase_windows":phase_windows,
+                "physical_control":physical_receipt,
+                "same_vm_original_process_cpu_increment":incremental,
                 "pre_udp_only_cpu":pre,"post_udp_only_cpu":post,
                 "tunnel_udp_per_stage":"NOT_RUN",
                 "owner_stop":"NOT_RUN",
@@ -306,6 +432,11 @@ def run_highrate(root,out,physical,host_source,fake,unix,ready,pid):
 if __name__=="__main__":
     if len(sys.argv)==5 and sys.argv[1]=="guest":
         guest(*sys.argv[2:])
+    elif len(sys.argv)==6 and sys.argv[1]=="guest" and sys.argv[5]=="p2long":
+        guest(*sys.argv[2:5])
     elif len(sys.argv)==7 and sys.argv[1]=="windows":
         windows(*sys.argv[2:5],int(sys.argv[5]),sys.argv[6])
-    else:raise SystemExit("H1898 only source-pinned signed actual Windows/WSL2 roles")
+    elif (len(sys.argv)==9 and sys.argv[1]=="windows" and
+          sys.argv[8]=="p2long" and sys.argv[7] in ("physical","direct")):
+        windows(*sys.argv[2:5],int(sys.argv[5]),sys.argv[6],sys.argv[7])
+    else:raise SystemExit("H1903 only source-pinned signed Windows/WSL2 roles")

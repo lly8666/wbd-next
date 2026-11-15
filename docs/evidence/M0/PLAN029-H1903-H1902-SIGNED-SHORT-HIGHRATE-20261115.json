@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1903-COLLECT-H1902",
+  "source_sha": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
+  "action_id": 43688959038,
+  "job_id": 132736391139,
+  "action_conclusion": "success",
+  "result": "ORIGINAL_SIGNED_REAL_WINDOWS_WSL2_500_700_TARGET_LOAD_FUNCTIONAL_PASS_P2_PERFORMANCE_OPEN",
+  "scope": "original Windows2025 Go+Rust signed Npcap/Wintun FakeIP direct vs WSL2 Linux real TCP; concurrent 96-byte Tunnel UDP; user/kernel original process + separate generator and host CPU; owned Stop",
+  "one_way": {
+    "bytes": 536870912,
+    "actual_mbps": 499.965,
+    "target_mbps": 500,
+    "target_reached": false,
+    "elapsed_s": 8.590528,
+    "original_process_cpu_s": 6.84375,
+    "original_process_user_s": 3.28125,
+    "original_process_kernel_s": 3.5625,
+    "original_process_total_cpu_s_per_gib": 13.6875,
+    "generator_cpu_s": 0.875,
+    "host_busy_percent": 55.8636,
+    "udp_unique": 555,
+    "udp_p99_ms": 1.495,
+    "sha256": "0e1eff4854f1145f9b486faacd3819aa5844870ff14d11f8a827e38fe1b24719"
+  },
+  "duplex": {
+    "windows_sent_bytes": 268435456,
+    "linux_sent_bytes": 268435456,
+    "actual_aggregate_mbps": 699.76,
+    "target_mbps": 700,
+    "target_reached": false,
+    "elapsed_s": 6.137771,
+    "original_process_cpu_s": 6.0625,
+    "original_process_user_s": 2.1875,
+    "original_process_kernel_s": 3.875,
+    "original_process_total_cpu_s_per_gib": 12.125,
+    "generator_cpu_s": 1.75,
+    "host_busy_percent": 76.7176,
+    "udp_unique": 387,
+    "udp_p99_ms": 3.066,
+    "sha256": "dbeaec187916ede8afe08351f8bd1019bf27f6b98f7ead9e945eb3c70b33d125"
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "limitations": {
+    "short_only_duration_seconds": [
+      8.590528,
+      6.137771
+    ],
+    "matched_long_physical_baseline": "NOT_RUN_H1902",
+    "driver_isr_dpc_cpu": "NOT_MEASURED",
+    "original_process": "GO_PLUS_RUST_NOT_RUST_ONLY",
+    "host_busy": "INCLUDES_OTHER_RUNNER_PROCESSES",
+    "P1": "OPEN",
+    "P2": "OPEN",
+    "real_GUI_Game4_IPv6": "OPEN"
+  }
+}

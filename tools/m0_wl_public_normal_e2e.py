@@ -40,6 +40,13 @@ p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 p029_tcp128_control=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
 p029_sustain=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 p029_highrate=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
+p029_longrate=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
+if p029_longrate and not (p029_highrate and p029_p2 and p029_direct and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal" and
+    not (p029_sustain or p029_abba or p029_tcp128 or p029_tcp128_control)):
+ raise RuntimeError("H1903 long 2GiB/1.5GiB physical-vs-Direct only in original signed Normal")
 if p029_highrate and not (p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
@@ -2273,8 +2280,10 @@ print(json.dumps(result),flush=True)
          rate.get("status")!="PENDING_UDP_AND_STOP" or
          rate.get("owner_stop")!="NOT_RUN" or
          not rate.get("tunnel_udp_covers_rate") or
-         rate.get("scope")!=
-         "REAL_FAKEIP_WIN_LINUX_512M_UP_AND_256M_EACH_FULL_DUPLEX" or
+         rate.get("scope")!=(
+           "REAL_SAME_VM_PHYSICAL_AND_WINTUN_2GIB_UP_1P5GIB_EACH_DUPLEX"
+           if p029_longrate else
+           "REAL_FAKEIP_WIN_LINUX_512M_UP_AND_256M_EACH_FULL_DUPLEX") or
          not rate.get("windows",{}).get("one_real_full_duplex_tcp_socket") or
          not rate.get("windows",{}).get("windows_half_close") or
          not rate.get("linux",{}).get("half_close")):
@@ -2284,7 +2293,7 @@ print(json.dumps(result),flush=True)
       stage=rate["windows"]["stages"].get(name,{})
       udp=rate["tunnel_udp_per_stage"].get(name,{})
       if (stage.get("target_aggregate_mbps")!=target or
-          not 2<=stage.get("elapsed_s",0)<=100 or
+          not (30 if p029_longrate else 2)<=stage.get("elapsed_s",0)<=(180 if p029_longrate else 100) or
           stage.get("actual_aggregate_mbps",0)<=0 or
           stage.get("original_process_cpu",{}).get(
              "original_process_total_cpu_s_per_gib",-1)<0 or
@@ -2295,9 +2304,42 @@ print(json.dumps(result),flush=True)
           udp.get("unique_delivered",0)<25 or
           udp.get("rtt_p99_ms",-1)<0):
        raise RuntimeError("H1898 true high-rate SHA/CPU/Tunnel 96B p99 absent")
-     rate["owner_stop"]="PASS_BOTH_OWNED"
-     rate["status"]="PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED"
-     print("PLAN029_H1898_SIGNED_TRUE_500MBPS_ONEWAY_700MBPS_SIMULTANEOUS_TCP_SHA_CPU_UDP_STOP_PASS_SCOPED",flush=True)
+     if p029_longrate:
+      baseline=rate.get("physical_control")
+      inc=rate.get("same_vm_original_process_cpu_increment")
+      sessions=rate.get("linux",{}).get("sessions",[])
+      phases=rate.get("tunnel_udp_per_stage",{})
+      expected={"physical_oneway_500mbps",
+                "physical_duplex_700mbps_aggregate"}
+      valid=(isinstance(baseline,dict) and
+             baseline.get("source_sha")==os.environ["GITHUB_SHA"] and
+             baseline.get("path")=="physical" and
+             baseline.get("windows_half_close") is True and
+             baseline.get("original_pid")==rate["windows"]["original_pid"] and
+             isinstance(inc,dict) and
+             set(inc)=={"oneway_500mbps","duplex_700mbps_aggregate"} and
+             len(sessions)==2 and [x.get("path") for x in sessions]==
+                 ["physical","direct"] and
+             all(x.get("half_close") is True for x in sessions) and
+             set(phases)==expected|{"pre","post",
+                 "oneway_500mbps","duplex_700mbps_aggregate"} and
+             all(phases[k].get("unique_delivered",0)>=750 for k in
+                 expected|{"oneway_500mbps","duplex_700mbps_aggregate"}))
+      for k in ("oneway_500mbps","duplex_700mbps_aggregate"):
+       stage=baseline.get("stages",{}).get(k,{}) if isinstance(baseline,dict) else {}
+       if (not 30<=stage.get("elapsed_s",0)<=180 or
+           stage.get("actual_aggregate_mbps",0)<=0 or
+           not isinstance(inc.get(k) if isinstance(inc,dict) else None,dict)):
+        valid=False
+      if not valid:
+       raise RuntimeError("H1903 same Windows owner signed long physical/Direct SHA/CPU/UDP all stage witnesses absent")
+      rate["owner_stop"]="PASS_BOTH_OWNED"
+      rate["status"]="PASS_SIGNED_LONG_SAME_VM_PHYSICAL_VS_DIRECT_CPU_UDP_STOP"
+      print("PLAN029_H1903_SIGNED_LONG_2GIB_500MBPS_1P5GIB_EACH_700MBPS_SAMEVM_PHYSICAL_VS_DIRECT_AND_OWNED_STOP_PASS_SCOPED",flush=True)
+     else:
+      rate["owner_stop"]="PASS_BOTH_OWNED"
+      rate["status"]="PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED"
+      print("PLAN029_H1898_SIGNED_TRUE_500MBPS_ONEWAY_700MBPS_SIMULTANEOUS_TCP_SHA_CPU_UDP_STOP_PASS_SCOPED",flush=True)
     if p029_sustain:
      st=p2.get("sustained_direct_tcp")
      if (not isinstance(st,dict) or

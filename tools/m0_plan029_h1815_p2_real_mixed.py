@@ -22,6 +22,9 @@ TCP128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
 SUSTAIN=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 HIGH_RATE=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
+LONG_RATE=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
+if LONG_RATE and not HIGH_RATE:
+    raise RuntimeError("H1903 extended 2GiB/1.5GiB requires explicit high-rate signed source")
 if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or not BULK):
     raise RuntimeError("H1898 high-rate exclusive of sustained/ABBA/128")
 if SUSTAIN and (ABBA or TCP128 or not BULK):
@@ -33,7 +36,7 @@ if TCP128 and (ABBA or not BULK):
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
 MAX_SUSTAIN=3200
 if SUSTAIN:MAX_SUSTAIN=9000
-if HIGH_RATE:MAX_SUSTAIN=14000
+if HIGH_RATE:MAX_SUSTAIN=60000 if LONG_RATE else 14000
 FINISH_PACKET=b"PLAN029-P2-TUNNEL-FINISH"
 PREFIX=b"PLAN029-H1815-ORIGINAL-SIGNED-COMPARATIVE-TCP/"
 PAYLOAD=(PREFIX*((SIZE+len(PREFIX)-1)//len(PREFIX)))[:SIZE]
@@ -269,7 +272,11 @@ def udp_windows(lease,tun_ip):
     if HIGH_RATE:
         path=pathlib.Path(os.environ["WBD_PLAN029_P2_HIGH_RATE_PHASE_FILE"])
         phase=json.loads(path.read_text(encoding="utf-8"))
-        names=("pre","oneway_500mbps","duplex_700mbps_aggregate","post")
+        names=(("pre","physical_oneway_500mbps",
+                "physical_duplex_700mbps_aggregate",
+                "oneway_500mbps","duplex_700mbps_aggregate","post")
+               if LONG_RATE else
+               ("pre","oneway_500mbps","duplex_700mbps_aggregate","post"))
         if phase.get("source_sha")!=os.environ["GITHUB_SHA"] or set(
                 phase.get("windows",{}))!=set(names):
             raise RuntimeError("H1898 signed 500/700Mbps QPC stage windows absent")
@@ -277,7 +284,7 @@ def udp_windows(lease,tun_ip):
         for name in names:
             bounds=phase["windows"][name]
             start,stop=bounds["start_monotonic_s"],bounds["end_monotonic_s"]
-            if (not 2<=stop-start<=100 or
+            if (not 2<=stop-start<=(180 if LONG_RATE else 100) or
                 (last_end is not None and start<last_end)):
                 raise RuntimeError("H1898 overlapped/invalid TCP/UDP stage")
             samples=[(b,e,r) for b,e,r in tagged if start<=b and e<=stop]
@@ -322,7 +329,9 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             # preserve the six-argv P2/ABBA workload contract unchanged.
             args[6:6]=["env","WBD_PLAN029_P2_SUSTAIN_SCENE=1"]
         if linux and HIGH_RATE:
-            args[6:6]=["env","WBD_PLAN029_P2_HIGH_RATE_SCENE=1"]
+            extras=["env","WBD_PLAN029_P2_HIGH_RATE_SCENE=1"]
+            if LONG_RATE:extras.append("WBD_PLAN029_P2_LONG_RATE_SCENE=1")
+            args[6:6]=extras
         child_env=os.environ.copy()
         child_env["WBD_PLAN029_P2_TCP_DONE_MARKER"]=str(completed)
         if TCP128_CONTROL:
@@ -462,9 +471,15 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         if HIGH_RATE:
             samples=small_win.get("highrate_phase_udp")
             names={"pre","oneway_500mbps","duplex_700mbps_aggregate","post"}
+            if LONG_RATE:
+                names|={"physical_oneway_500mbps",
+                        "physical_duplex_700mbps_aggregate"}
             if highrate is None or not isinstance(samples,dict) or set(samples)!=names:
                 raise RuntimeError("H1898 original 96B Tunnel UDP QPC windows missing")
             highrate["tunnel_udp_per_stage"]=samples
+            if LONG_RATE and any(samples[k]["unique_delivered"]<750
+                for k in names-{"pre","post"}):
+                raise RuntimeError("H1903 true 30+ second physical and Direct stages lack continuous Tunnel UDP")
             pre=highrate["phase_windows"]["windows"]["pre"]
             post=highrate["phase_windows"]["windows"]["post"]
             highrate["tunnel_udp_covers_rate"]=(

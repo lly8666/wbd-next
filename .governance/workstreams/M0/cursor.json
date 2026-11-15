@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1902,
-  "checkpoint_sha": "d9ee83579a294c003105bf04e1b09e517394588e",
+  "sequence": 1903,
+  "checkpoint_sha": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1902 exact H1901 cheap static test only: actual Linux real socketpair simultaneous duplex+SHA PASSED, but H1898 CPU-source string lives in imported H1896 cpu_delta rather than duplicated in highrate script. Correct test asserts both function calls and actual shared declaration. No native signed workload yet.",
-  "why_now": "H1901 Action43688821106 cheap failed solely new test_target_is_reported_not_pretended_as_ci_performance_pass, first 3 of 4 new tests PASS. H1901 governance and feature SUCCESS. Need source-locked real Windows/WSL2 highrate.",
+  "current_task": "H1902 true signed Windows2025/WSL2 500/700Mb/s SHA+FIN+96B UDP+Stop SUCCESS; measured 499.965/699.760Mb/s but not strictly target reached. H1903 candidate adds true 2GiB one-way 500Mb/s plus 1.5GiB each simultaneous 700Mb/s, twice on same VM: physical TCP then FakeIP Direct, with original Go+Rust user/kernel CPU/GiB, independent Python generator, host CPU, six-phase Tunnel UDP p99 and owned Stop. New SOURCE NOT_RUN.",
+  "why_now": "H1902 original Go+Rust process used ~79.7% one core at 500Mb/s and ~98.7% one core at 700Mb/s, but the measurements lasted only 8.59s/6.14s and lacked matched same-volume physical TCP. Long same-VM control tests the sustainable CPU knee rather than optimizing memory copying speculatively.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1902 full cheap test and signed Win2025/WSL2 physical 4MiB+true 512MiB 500Mb/s target, simultaneous 256MiB each 700Mb/s aggregate target, Tunnel96B pre/load/post p99, original/generator/host CPU, SHA/FIN/Stop; report real rates, no target overclaim.",
+  "next_action": "Collect source-locked H1903 cheap Python contract and full original Windows2025 signed Wintun/WSL2 2GiB one-way plus 1.5GiB each duplex physical/Direct and 96B Tunnel UDP six-phase, SHA/FIN/Stop. Compare each true rate, original Go+Rust incremental USER/KERNEL CPU seconds per GiB vs physical, Python generator and host busy, then change only measured hotpath. P1 pure Tunnel CPU/GiB and driver ISR/DPC still separate OPEN.",
   "unverified": true,
-  "last_tested_source": "29883ab1f674840df715542540d83ae3e240e5fb",
+  "last_tested_source": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1897-H1896-SIGNED-SUSTAIN-30S-CPU-GIB-20261115.json"
+    "docs/evidence/M0/PLAN029-H1903-H1902-SIGNED-SHORT-HIGHRATE-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
     "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
     "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md",
     "docs/devlog/M0/20261115-PLAN029-H1898-TRUE-500-700-MBPS-PARALLEL-LOAD.md",
     "docs/devlog/M0/20261115-PLAN029-H1897-COLLECT-H1896-SIGNED-SUSTAIN-CPU-GIB.md",
-    "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md",
-    "docs/devlog/M0/20261115-PLAN029-H1895-KEEP-P2-ONE-HIGH-RES-CPU-UDP-CLOCK.md"
+    "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1898 fixture staged; H1901 native blocked by test checking wrong source file for CPU shared scope, three other H1898 tests PASS including real socketpair duplex and source lock. H1902 contract fix only; P1/P2 OPEN."
+  "partial_summary": "H1902 signed short 500/700 targets measured 499.965/699.760 Mb/s, original Go+Rust 13.6875/12.125 CPU seconds/GiB, Tunnel 96B p99 1.495/3.066ms, Stop PASS. H1903 long same-VM physical-Direct candidate NOT_RUN. PLAN029 IN_PROGRESS; P1/P2 performance OPEN."
 }
