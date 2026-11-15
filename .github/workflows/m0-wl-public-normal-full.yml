@@ -1001,6 +1001,10 @@ jobs:
       # H1892 is a *distinct*, source-locked one-VM 128 genuine Wintun
       # Direct TCP socket scene, reusing the exact guest TCP46112 grant.
       WBD_PLAN029_TCP128_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128]') && '1' || '0' }}
+      # H1894: extra eight-second same-owner idle control, without any
+      # additional TCP128 SYN, while the SAME Tunnel UDP sender advances.
+      # Exact control marker requires the H1892 marker in the same commit.
+      WBD_PLAN029_TCP128_CONTROL_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128-control]') && '1' || '0' }}
       WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
@@ -2516,6 +2520,24 @@ jobs:
                   throw 'H1892 128 true Wintun TCP 126 idle 2 active SAME shard / CPU / Tunnel Stop invalid'
                 }
                 Write-Output 'PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_SAME_SHARD_AND_IDLE_CPU_BOTH_STOP_PASS_SCOPED'
+                if($env:WBD_PLAN029_TCP128_CONTROL_SCENE -eq '1'){
+                  $cpu=$stress.same_vm_cpu_control
+                  $delta=$cpu.comparison
+                  $udp=$stress.same_vm_udp_control
+                  if($stress.matched_control_status -ne 'PASS_SIGNED_SAME_OWNER_PRE128_VS128_PROCESS_CPU_AND_TUNNEL_UDP_P99_SCOPED' -or
+                     $cpu.scope -ne 'SAME_WINDOWS_PROCESS_TWO_CONSECUTIVE_IDLE_PHASES' -or
+                     $delta.status -ne 'SAME_ORIGINAL_WINDOWS_PROCESS_CPU_TWO_PHASES_MEASURED' -or
+                     $cpu.pre128.observations -lt 3 -or
+                     $cpu.tcp128.observations -lt 3 -or
+                     $cpu.pre128.native_pid -ne $cpu.tcp128.native_pid -or
+                     $udp.pre128.unique_delivered -lt 25 -or
+                     $udp.tcp128.unique_delivered -lt 25 -or
+                     $udp.pre128.scope -ne 'ACTUAL_WINDOWS_KERNEL_TUNNEL_UDP_WITHIN_ORIGINAL_IDLE_WINDOW' -or
+                     $udp.tcp128.scope -ne 'ACTUAL_WINDOWS_KERNEL_TUNNEL_UDP_WITHIN_ORIGINAL_IDLE_WINDOW'){
+                    throw 'H1894 same VM original process kernel/user CPU matched zero-new-TCP vs128/Tunnel UDP p99 scene invalid'
+                  }
+                  Write-Output 'PLAN029_H1894_SIGNED_SAME_WINDOWS_PROCESS_PRE128_VS128_KERNEL_USER_CPU_UDP_P99_AND_STOP_PASS_SCOPED'
+                }
               }
               if($env:WBD_PLAN029_P2_ABBA_SCENE -eq '1'){
                 $abba=$p2.same_vm_abba

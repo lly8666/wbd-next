@@ -229,8 +229,13 @@ def parse_rust_128(client_log):
         "all_128_source_ports_verified":True
     }
 
-def idle_cpu_window(path,begin,end):
-    """Process-charged Win32 kernel/user CPU for the *idle-only* 8s span."""
+def idle_cpu_window(path,begin,end,phase="tcp128"):
+    """Same original process Win32 GetProcessTimes within a bounded phase.
+    Pre-128 baseline is a post-P2 interval with no newly admitted
+    TCP128 probe sockets; earlier FIN-grace metadata may still exist.
+    """
+    if phase not in ("tcp128","pre128"):
+        raise RuntimeError("H1894 unknown original signed CPU phase")
     rows=[]
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         if not line.strip():continue
@@ -254,7 +259,10 @@ def idle_cpu_window(path,begin,end):
            deltas["cpu_kernel_s"])>.004:
         raise RuntimeError("H1892 process kernel/user CPU sum invalid")
     return {
-        "scope":"SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_IDLE_128_TCP",
+        "scope":("SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_IDLE_128_TCP" if
+                 phase=="tcp128" else
+                 "SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_PRE128_IDLE_CONTROL"),
+        "native_pid":first["native_pid"],
         "observations":len(rows),"measured_elapsed_s":round(elapsed,3),
         "process_kernel_cpu_s":deltas["cpu_kernel_s"],
         "process_user_cpu_s":deltas["cpu_user_s"],
@@ -267,6 +275,36 @@ def idle_cpu_window(path,begin,end):
         "max_threads_sampled":max(
             (r.get("thread_cpu") or {}).get("thread_count_sampled",0) for r in rows),
         "interpretation":"Original Go+Rust process CPU only; driver ISR/DPC, VM and per-function CPU NOT measured."
+    }
+
+def compare_original_cpu_idle(control,full):
+    """Same Windows original process and owner, 1Hz CPU-s/second.
+    Measures phase difference; neither a randomized causal A/B nor driver CPU.
+    """
+    if (control.get("scope")!=
+        "SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_PRE128_IDLE_CONTROL" or
+        full.get("scope")!=
+        "SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_IDLE_128_TCP" or
+        control.get("native_pid")!=full.get("native_pid") or
+        control.get("observations",0)<3 or full.get("observations",0)<3):
+        raise RuntimeError("H1894 matched process CPU phase provenance invalid")
+    def rate(row,label):
+        elapsed=row["measured_elapsed_s"]
+        if elapsed<=2:raise RuntimeError("H1894 too-short original idle CPU phase")
+        return row["process_"+label+"_cpu_s"]/elapsed
+    user0=rate(control,"user");user128=rate(full,"user")
+    kernel0=rate(control,"kernel");kernel128=rate(full,"kernel")
+    return {
+        "status":"SAME_ORIGINAL_WINDOWS_PROCESS_CPU_TWO_PHASES_MEASURED",
+        "source":"ONE_SIGNED_WINTUN_TLS_OWNER_GETPROCESSTIMES_TWO_IDLE_WINDOWS",
+        "native_pid":control["native_pid"],
+        "pre128_cpu_singlecore_pct":round(100*(user0+kernel0),3),
+        "tcp128_cpu_singlecore_pct":round(100*(user128+kernel128),3),
+        "delta_singlecore_pct":round(100*(user128+kernel128-user0-kernel0),3),
+        "delta_user_cpu_s_per_s":round(user128-user0,6),
+        "delta_kernel_cpu_s_per_s":round(kernel128-kernel0,6),
+        "interpretation":"Phase-associated process CPU with same UDP background, not randomized 0-vs128 causal attribution; driver ISR/DPC and OS-wide CPU NOT measured.",
+        "warmup_warning":"pre128 may retain previous P2 TCP FIN-grace metadata, different chronological windows"
     }
 
 def run_tcp128(root,out,physical,host_source,fake,unix,ready):

@@ -452,6 +452,57 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('str(index+1)+" mode="+mode) in win_diag_text',app)
         self.assertNotIn('logs=(out/"client.log").read_text',app)
 
+    def test_h1894_same_original_process_pre128_vs128_idle_cpu_and_udp_contract(self):
+        import json
+        import tempfile
+        from tools.m0_plan029_h1892_real_tcp128 import (
+            idle_cpu_window,compare_original_cpu_idle)
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/"original-1hz.jsonl"
+            rows=[]
+            for i in range(20):
+                # Same signed original Go+Rust process, two non-overlapping
+                # windows, same 96-byte Tunnel UDP sender active in both.
+                user=.025*i if i<10 else .25+.055*(i-10)
+                kernel=.02*i if i<10 else .2+.065*(i-10)
+                rows.append({
+                    "scope":"SAME_WINDOWS_PROCESS_GO_PLUS_RUST_NOT_SEPARATELY_ATTRIBUTED",
+                    "native_pid":1234,"monotonic_s":40+i,
+                    "cpu_user_s":round(user,6),
+                    "cpu_kernel_s":round(kernel,6),
+                    "cpu_total_s":round(user+kernel,6),
+                    "working_set_bytes":40000000,"private_bytes":39000000,
+                    "thread_cpu":{"thread_count_sampled":19}
+                })
+            target.write_text("\n".join(json.dumps(r) for r in rows))
+            control=idle_cpu_window(target,40,48,phase="pre128")
+            held=idle_cpu_window(target,50,58,phase="tcp128")
+            result=compare_original_cpu_idle(control,held)
+            self.assertEqual(control["native_pid"],1234)
+            self.assertEqual(result["status"],
+                "SAME_ORIGINAL_WINDOWS_PROCESS_CPU_TWO_PHASES_MEASURED")
+            self.assertGreater(result["delta_singlecore_pct"],0)
+            self.assertGreater(result["delta_kernel_cpu_s_per_s"],0)
+            self.assertIn("NOT measured",result["interpretation"])
+            with self.assertRaises(RuntimeError):
+                compare_original_cpu_idle(held,control)
+            with self.assertRaises(RuntimeError):
+                idle_cpu_window(target,40,47,phase="unknown")
+        root=Path(__file__).resolve().parents[1]
+        app=(root/"tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        runner=(root/"tools/m0_wl_public_normal_e2e.py").read_text()
+        wf=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn('TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"',app)
+        self.assertIn('time.sleep(8)',app)
+        self.assertIn('"matched_phase_udp":phase_udp',app)
+        self.assertIn('math.ceil(.99*len(sample))-1',app)
+        self.assertIn('set(small_win["matched_phase_udp"])!={"pre128","tcp128"}',app)
+        self.assertIn('stress["same_vm_cpu_control"]=',runner)
+        self.assertIn('stress["same_vm_udp_control"]=udp_phases',runner)
+        self.assertIn('WBD_PLAN029_TCP128_CONTROL_SCENE:',wf)
+        self.assertIn("PLAN029_H1894_SIGNED_SAME_WINDOWS_PROCESS_PRE128_VS128_KERNEL_USER_CPU_UDP_P99_AND_STOP_PASS_SCOPED",wf)
+        self.assertIn("[plan029-v3-real-tcp128-control]",wf)
+
     def test_h1892_true_wintun_128_same_shard_original_rust_and_idle_cpu(self):
         import json
         import tempfile

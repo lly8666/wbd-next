@@ -37,6 +37,12 @@ p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
 p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
 p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
 p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
+p029_tcp128_control=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
+if p029_tcp128_control and not (p029_tcp128 and p029_p2 and not p029_abba and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal"):
+ raise RuntimeError("H1894 original signed exact SOURCE pre128 CPU/UDP comparison required")
 if p029_tcp128 and not (p029_p2 and p029_direct and not p029_abba and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
@@ -2212,6 +2218,33 @@ print(json.dumps(result),flush=True)
      stress["cpu_idle_128"]=idle_cpu_window(
          out/"windows-original-go-rust-process-1hz.jsonl",
          times["idle_start_monotonic_s"],times["idle_end_monotonic_s"])
+     if p029_tcp128_control:
+      from m0_plan029_h1892_real_tcp128 import compare_original_cpu_idle
+      pre=stress.get("pre128_control")
+      if not isinstance(pre,dict) or pre.get("scope")!=(
+          "PRE128_NO_NEW_TCP_PROBE_SOCKETS_POST_P2") or not (
+          pre["end_monotonic_s"]<=times["idle_start_monotonic_s"]):
+       raise RuntimeError("H1894 original pre128 control not before actual 128 TCP idle")
+      before=idle_cpu_window(
+          out/"windows-original-go-rust-process-1hz.jsonl",
+          pre["start_monotonic_s"],pre["end_monotonic_s"],phase="pre128")
+      delta=compare_original_cpu_idle(before,stress["cpu_idle_128"])
+      udp_phases=stress.get("matched_phase_udp")
+      if (not isinstance(udp_phases,dict) or
+          set(udp_phases)!={"pre128","tcp128"} or any(
+          phase.get("unique_delivered",0)<25 or
+          phase.get("scope")!=
+              "ACTUAL_WINDOWS_KERNEL_TUNNEL_UDP_WITHIN_ORIGINAL_IDLE_WINDOW"
+          for phase in udp_phases.values())):
+       raise RuntimeError("H1894 no true phase-specific original Tunnel UDP p99")
+      stress["same_vm_cpu_control"]={
+          "scope":"SAME_WINDOWS_PROCESS_TWO_CONSECUTIVE_IDLE_PHASES",
+          "pre128":before,"tcp128":stress["cpu_idle_128"],
+          "comparison":delta
+      }
+      stress["same_vm_udp_control"]=udp_phases
+      stress["matched_control_status"]="PASS_SIGNED_SAME_OWNER_PRE128_VS128_PROCESS_CPU_AND_TUNNEL_UDP_P99_SCOPED"
+      print("PLAN029_H1894_SAME_VM_PRE128_VS128_IDLE_USER_KERNEL_CPU_AND_TUNNEL_UDP_P99_WITH_STOP_PASS_SCOPED",flush=True)
      stress["stop"]="PASS_BOTH_OWNED"
      stress["status"]="PASS_SIGNED_TRUE_WINTUN_128_IDLE2_ACTIVE_SAME_SHARD_AND_CPU_SCOPE"
      print("PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_126_IDLE_2_SAME_SHARD_ACTIVE_AND_IDLE_CPU_STOP_PASS_SCOPED",flush=True)

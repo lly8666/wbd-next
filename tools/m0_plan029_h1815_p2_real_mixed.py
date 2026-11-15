@@ -19,6 +19,9 @@ SEND_PAUSE=0.0 if BULK else .004
 if ABBA and not BULK:raise RuntimeError("P2 A-B-B-A requires 4MiB unpaced")
 ABBA_MODES=("copy","bypass","bypass","copy")
 TCP128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
+TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
+if TCP128_CONTROL and not TCP128:
+    raise RuntimeError("H1894 matched CPU control requires actual H1892 128 TCP")
 if TCP128 and (ABBA or not BULK):
     raise RuntimeError("H1892 signed 128 Wintun sockets requires ordinary unpaced 4MiB P2")
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
@@ -165,17 +168,22 @@ def udp_windows(lease,tun_ip):
         sock.bind((lease,0));sock.settimeout(1.5)
         print("PLAN029_H1815_P2_WINDOWS_TUN_SMALL_READY",flush=True)
         started=time.perf_counter();rtts=[];gaps=[];prev=None;total=0
+        tagged=[] if TCP128_CONTROL else None
         # Test-only host completion marker: UDP must span the entire real
         # Direct TCP lifetime, not end after the old first ~2 seconds.
         done=pathlib.Path(os.environ["WBD_PLAN029_P2_TCP_DONE_MARKER"])
         for seq in range(MAX_SUSTAIN):
+            begin_monotonic=time.monotonic() if TCP128_CONTROL else None
             begin=time.perf_counter()
             sock.sendto(udp_packet(seq),(tun_ip,SMALL_PORT))
             payload,fromaddr=sock.recvfrom(512)
             end=time.perf_counter()
             if fromaddr!=(tun_ip,SMALL_PORT) or payload!=udp_packet(seq):
                 raise RuntimeError("P2 small UDP echo escaped Tunnel or wrong sequence")
-            rtts.append((end-begin)*1000)
+            rtt=(end-begin)*1000
+            rtts.append(rtt)
+            if tagged is not None:
+                tagged.append((begin_monotonic,time.monotonic(),rtt))
             if prev is not None:gaps.append((end-prev)*1000)
             prev=end;total+=1
             if total%128==0:
@@ -190,8 +198,37 @@ def udp_windows(lease,tun_ip):
         if fromaddr!=(tun_ip,SMALL_PORT) or payload!=FINISH_PACKET:
             raise RuntimeError("P2 Tunnel final controlled echo missing")
         finished=time.perf_counter()
+    phase_udp=None
+    if TCP128_CONTROL:
+        path=pathlib.Path(os.environ["WBD_PLAN029_TCP128_WINDOWS_PHASE_PATH"])
+        phase=json.loads(path.read_text(encoding="utf-8"))
+        if phase.get("source_sha")!=os.environ["GITHUB_SHA"] or set(
+                phase.get("windows",{}))!={"pre128","tcp128"}:
+            raise RuntimeError("H1894 original signed TCP128 phase times missing")
+        phase_udp={}
+        previous_end=None
+        for key in ("pre128","tcp128"):
+            bounds=phase["windows"][key]
+            start,stop=bounds["start_monotonic_s"],bounds["end_monotonic_s"]
+            if not (7.5<=stop-start<=9.5 and
+                    (previous_end is None or previous_end<=start)):
+                raise RuntimeError("H1894 CPU/UDP idle windows overlap or are too short")
+            sample=[(b,e,r) for b,e,r in tagged if start<=b and e<=stop]
+            if len(sample)<25:
+                raise RuntimeError("H1894 original 96B Tunnel UDP packet samples missing")
+            sample.sort()
+            phase_udp[key]={
+                "unique_delivered":len(sample),
+                "rtt_p99_ms":round(sorted(r for _,_,r in sample)[
+                    math.ceil(.99*len(sample))-1],3),
+                "max_interreply_gap_ms":round(max(sample[i][1]-sample[i-1][1]
+                    for i in range(1,len(sample)))*1000,3),
+                "scope":"ACTUAL_WINDOWS_KERNEL_TUNNEL_UDP_WITHIN_ORIGINAL_IDLE_WINDOW"
+            }
+            previous_end=stop
     receipt("PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS",
       {"received":COUNT,"sustained_total":total,
+       "matched_phase_udp":phase_udp,
        "start_monotonic_s":started,"end_monotonic_s":finished,
        "kernel_lease":lease,"tunnel_ip":tun_ip,
        "rtt_p99_ms":round(sorted(rtts)[math.ceil(.99*total)-1],3),
@@ -212,6 +249,9 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
               if linux else [sys.executable,"-u",str(exe)])
         child_env=os.environ.copy()
         child_env["WBD_PLAN029_P2_TCP_DONE_MARKER"]=str(completed)
+        if TCP128_CONTROL:
+            child_env["WBD_PLAN029_TCP128_WINDOWS_PHASE_PATH"]=str(
+                out/"plan029-h1894-tcp128-udp-windows-phases.json")
         p=subprocess.Popen([*args,role,first,second,
                             "p2bulk" if BULK else "p2paced",
                             "p2abba" if ABBA else "p2ordinary"],stdout=f,
@@ -264,8 +304,34 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             # grant AFTER the ordinary Linux P2 listener exits.
             # Keep original Tunnel UDP alive across all 128 connections.
             wait(guest,gn,7)
+            control=None
+            if TCP128_CONTROL:
+                # One genuine source-locked original Windows Go+Rust owner,
+                # same ongoing 96B Tunnel UDP, with NO newly opened H1892
+                # Wintun TCP sockets yet. Earlier P2 FIN grace may remain.
+                begin=time.monotonic()
+                time.sleep(8)
+                end=time.monotonic()
+                control={"start_monotonic_s":begin,
+                         "end_monotonic_s":end,
+                         "scope":"PRE128_NO_NEW_TCP_PROBE_SOCKETS_POST_P2"}
             from m0_plan029_h1892_real_tcp128 import run_tcp128
             tcp128=run_tcp128(root,out,physical,host_source,fake,unix,ready)
+            if TCP128_CONTROL:
+                tcp128["pre128_control"]=control
+                windows=tcp128["windows"]
+                owner={
+                    "source_sha":source,
+                    "windows":{
+                        "pre128":control,
+                        "tcp128":{
+                            "start_monotonic_s":windows["idle_start_monotonic_s"],
+                            "end_monotonic_s":windows["idle_end_monotonic_s"]
+                        }
+                    }
+                }
+                (out/"plan029-h1894-tcp128-udp-windows-phases.json").write_text(
+                    json.dumps(owner,sort_keys=True),encoding="utf-8")
         completed.write_text("direct-finished\n",encoding="ascii")
         wait(win,wn,23);wait(lin,ln,7)
         if not TCP128:wait(guest,gn,7)
@@ -276,6 +342,12 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         linux=proof(gn,"PLAN029_H1815_P2_PHYSICAL_TCP_GUEST")
         small_win=proof(wn,"PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS")
         small_linux=proof(ln,"PLAN029_H1815_P2_TUNNEL_SMALL_LINUX")
+        if TCP128_CONTROL:
+            if (tcp128 is None or not isinstance(
+                    small_win.get("matched_phase_udp"),dict) or
+                set(small_win["matched_phase_udp"])!={"pre128","tcp128"}):
+                raise RuntimeError("H1894 two real same-VM Tunnel UDP phase receipts missing")
+            tcp128["matched_phase_udp"]=small_win["matched_phase_udp"]
         first_direct=min(t["start_monotonic_s"] for t in direct_proofs)
         last_direct=max(t["end_monotonic_s"] for t in direct_proofs)
         overlap=(max(first_direct,small_win["start_monotonic_s"])<
@@ -288,6 +360,14 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 tcp128["windows"]["start_monotonic_s"] and
             small_win["end_monotonic_s"]>=
                 tcp128["windows"]["end_monotonic_s"]))
+        if TCP128_CONTROL:
+            ctl=tcp128["pre128_control"]
+            if not (small_win["start_monotonic_s"]<=ctl["start_monotonic_s"]<
+                    ctl["end_monotonic_s"]<=
+                    tcp128["windows"]["idle_start_monotonic_s"] and
+                    small_win["end_monotonic_s"]>=
+                    tcp128["windows"]["idle_end_monotonic_s"]):
+                raise RuntimeError("H1894 original UDP did not span both idle windows")
         if (base["role"]!="baseline" or direct_value["role"]!="direct" or
             base["app_tcp_nodelay"]!=direct_value["app_tcp_nodelay"] or
             base["echo_bytes"]!=SIZE or direct_value["echo_bytes"]!=SIZE or
