@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1921,
-  "checkpoint_sha": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
+  "sequence": 1922,
+  "checkpoint_sha": "7464ff95cfb3c450ca6cc83836df2b00b9ef9d3a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1921 collect H1920 signed Windows/WSL2 4MiB original Direct TCP SHA/FIN/Stop PASS; launch exactly one new-source long 10GiB same-VM physical-vs-Direct 500Mbps/700Mbps with concurrently protected Tunnel96B UDP, process CPU-s/GiB and p99. Full PLAN029 open.",
-  "why_now": "H1920 Action43714217838 is SUCCESS with exact original Win2025 signed Npcap/Wintun and WSL2 real Go/Rust: physical4MiB53.246ms, Direct4MiB126.924ms, SHA/FIN both, Tunnel96B 120/120 p99 2.872ms, both owned Stop PASS. Prior H1916/H1917 native functional FAIL remain history. Need long source-locked performance/CPU and correctness proof before any further optimization.",
+  "current_task": "H1922 scoped source-locked 10GiB original Windows/WSL2 long P2 Action: H1921 docs-only marker had no native workflow because push.paths excludes evidence/cursor/feature, governance PASS only. H1922 adds genuine highrate fixture regression in allowlisted tests/test_m0_plan029_h1898_highrate.py and same 3 long markers; one native run pending. H1920 signed 4MiB real PASS.",
+  "why_now": "H1921 7464ff95 docs-only push triggered only governance Action43716113039 SUCCESS, no original signed Windows/WSL2 scene. New real test must change a push.paths allowlisted file, not manually dispatch into event without markers. Add test asserting exact 4MiB barrier precedes high-rate and workflow flags/push filter. Original product code unchanged since H1920.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Use H1921 commit markers once: [plan029-v3-real-p2-bulk] [plan029-v3-real-p2-500-700] [plan029-v3-real-p2-long-ab] to run new exact SOURCE original signed Windows Go/Rust and WSL2 same-VM physical/Direct two 2GiB one-way + 1.5GiB each duplex (10GiB total), concurrent 96B Tunnel UDP, stop, OS process CPU-s/GiB. Collect once and check first failure; no second dispatch; then same-VM old/new binaries and small Direct latency / P1. Other D1–D5, GUI Game4 padding IPv6 OPEN.",
+  "next_action": "Collect H1922 automatically triggered exact-source Windows/Linux component and long physical/Direct 10GiB same-VM original Go/Rust. Require 4MiB precheck plus two paths 2GiB one-way and 1.5GiB each duplex 500/700 target, SHA/FIN/96B tunnel p99/Stop and process CPU-s/GiB. If first fail classify, no duplicate dispatch. Later P1 same-VM off/on and small packet latency, remaining 029 D1–D5 GUI Game4 padding IPv6.",
   "unverified": true,
   "last_tested_source": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1921-H1920-SIGNED-4M-TCP-RESTORED-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
-    "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1920 SOURCE e901d152 signed original Action43714217838 SUCCESS actual 4MiB Direct TCP SHA/FIN full echo Windows/Linux, physical baseline53.246ms vs Direct126.924ms, Tunnel UDP96B 120/120 p99 2.872ms, OS/owner Stop PASS, rust 230 relay turns 43 no progress. Long10GiB NOT_RUN. H1921 doc-only new SOURCE to trigger one long current product scene, qualification pending. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1920 signed original Wintun/WSL2 4MiB Direct+physical SHA/FIN Stop PASS (Action43714217838), unchanged product source. H1921 docs-only commit did not start workflow due push.paths; governance PASS (43716113039). H1922 allowlisted high-rate fixture guard + 3 long flags triggers first actual new-source 10GiB native scene, NOT_RUN at commit."
 }

@@ -130,5 +130,32 @@ class HighRateComponentTests(unittest.TestCase):
             pathlib.Path(__file__).resolve().parents[1]/
             "tools/m0_plan029_h1896_sustain_tcp.py").read_text())
 
+
+    def test_h1922_long_source_run_is_after_real_4m_gate_and_push_path_matched(self):
+        # H1921 only changed a cursor, feature card and evidence: GitHub
+        # skipped the native workflow entirely because push.paths excludes
+        # those docs. This existing test path is specifically allowlisted.
+        root=pathlib.Path(__file__).resolve().parents[1]
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        harness=(root/"tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        rate=(root/"tools/m0_plan029_h1898_highrate_tcp.py").read_text()
+        import m0_native_ci_scope as scope
+        self.assertIn("      - tests/test_m0_plan029_h1898_highrate.py",workflow)
+        flags=("[plan029-v3-real-p2-bulk]",
+               "[plan029-v3-real-p2-500-700]",
+               "[plan029-v3-real-p2-long-ab]")
+        for flag in flags:
+            self.assertIn(flag,workflow)
+        self.assertTrue(scope.requires_native_smoke(
+            "push",["tests/test_m0_plan029_h1898_highrate.py"],
+            " ".join(flags)))
+        self.assertLess(
+            harness.index('direct_proofs.append(proof(dn,"PLAN029_H1815_P2_TCP_CLIENT"))'),
+            harness.index("highrate=run_highrate("))
+        self.assertIn('source=os.environ["GITHUB_SHA"]',rate)
+        self.assertIn('physical_args=[sys.executable',rate)
+        self.assertIn('original_cpu_increment(physical_receipt,w)',rate)
+        self.assertIn('source_sha',rate)
+
 if __name__=="__main__":
     unittest.main()
