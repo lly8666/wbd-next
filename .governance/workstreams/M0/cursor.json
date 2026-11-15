@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1920,
-  "checkpoint_sha": "20115a12044d062d834491bddbbfcb1d3a3a964a",
+  "sequence": 1921,
+  "checkpoint_sha": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1920 true signed H1917 original Go/Rust Windows/WSL2 Action43712621017 FAIL 4MiB Direct Windows sendall after logging 786432B, 35s timeout. H1917 progress-read-only requeue insufficient; restore H1909/H1913 any-real-read-or-write-progress fair ticket, FD_CLOSE fix retained. New SOURCE NOT_RUN.",
-  "why_now": "H1915 introduced a speculative no-ticket optimization after small fully forwarded reads/last successful writes. H1916 signed 4MiB reply timeout; H1917 signed 4MiB upload timeout. Old H1909/H1913 same binary had signed 10GiB complete, 500/700Mbps, SHA/FIN/Stop. Revert only unsafe predicate while preserving original event-driven bounded fairness; do not fake red.",
+  "current_task": "H1921 collect H1920 signed Windows/WSL2 4MiB original Direct TCP SHA/FIN/Stop PASS; launch exactly one new-source long 10GiB same-VM physical-vs-Direct 500Mbps/700Mbps with concurrently protected Tunnel96B UDP, process CPU-s/GiB and p99. Full PLAN029 open.",
+  "why_now": "H1920 Action43714217838 is SUCCESS with exact original Win2025 signed Npcap/Wintun and WSL2 real Go/Rust: physical4MiB53.246ms, Direct4MiB126.924ms, SHA/FIN both, Tunnel96B 120/120 p99 2.872ms, both owned Stop PASS. Prior H1916/H1917 native functional FAIL remain history. Need long source-locked performance/CPU and correctness proof before any further optimization.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1920 new source original signed Windows/WSL2 32KiB and 4MiB first; only if genuine 4MiB bidirectional SHA/FIN and owned cleanup succeeds, proceed long same-SOURCE 10GiB 500/700Mbps. Stop H1915 CPU optimization direction; next isolate CPU hotspots using old/new same-VM binaries and Direct small packet p99, then other 029 D1-D5/P1-P2 exits.",
+  "next_action": "Use H1921 commit markers once: [plan029-v3-real-p2-bulk] [plan029-v3-real-p2-500-700] [plan029-v3-real-p2-long-ab] to run new exact SOURCE original signed Windows Go/Rust and WSL2 same-VM physical/Direct two 2GiB one-way + 1.5GiB each duplex (10GiB total), concurrent 96B Tunnel UDP, stop, OS process CPU-s/GiB. Collect once and check first failure; no second dispatch; then same-VM old/new binaries and small Direct latency / P1. Other D1–D5, GUI Game4 padding IPv6 OPEN.",
   "unverified": true,
-  "last_tested_source": "fbff58c923dedec097e976820b832114ff673e23",
+  "last_tested_source": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1920-H1917-NATIVE-4M-UPLINK-SENDALL-FAIL-20261115.json"
+    "docs/evidence/M0/PLAN029-H1921-H1920-SIGNED-4M-TCP-RESTORED-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1917 signed Action43712621017 FAILED real P2 upload after 786432B sendall TimeoutError; baseline4MiB physical PASS; 32KiB Direct FIN PASS; long 10GiB NOT_RUN; limited finally cleanup PASS. H1920 code restores proven H1909/H1913 any-progress ticket candidate NOT_RUN. H1919 governance failed because active evidence_refs mixed H1915/H1916 sources; now one exact H1917 source evidence ref. PLAN029 OPEN."
+  "partial_summary": "H1920 SOURCE e901d152 signed original Action43714217838 SUCCESS actual 4MiB Direct TCP SHA/FIN full echo Windows/Linux, physical baseline53.246ms vs Direct126.924ms, Tunnel UDP96B 120/120 p99 2.872ms, OS/owner Stop PASS, rust 230 relay turns 43 no progress. Long10GiB NOT_RUN. H1921 doc-only new SOURCE to trigger one long current product scene, qualification pending. PLAN029 IN_PROGRESS."
 }

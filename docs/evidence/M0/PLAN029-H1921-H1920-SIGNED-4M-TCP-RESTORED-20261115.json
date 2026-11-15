@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "task": "H1921",
+  "plan": "PLAN029",
+  "source_sha": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_id": 43714217838,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43714217838",
+  "job_id": 132813592448,
+  "artifact_id": 14162451433,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43714217838",
+  "real_windows_linux_original_products": true,
+  "conclusion": "success",
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+  "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+  "outer_mtu": 1460,
+  "inner_mtu": 1389,
+  "d1_d2_scoped": {
+    "CN_DNS_journaled_FakeIP_to_physical_Direct_UDP": "PASS",
+    "nonCN_DNS_Tunnel_UDP": "PASS",
+    "nonCN_resolved_A_Tunnel_business": "PASS",
+    "nonCN_to_CN_IP_Direct_UDP": "PASS",
+    "DNS_blackhole_no_fallback": "PASS_SCOPED"
+  },
+  "direct_tcp_32k": {
+    "windows_sent": 32768,
+    "windows_echo": 32768,
+    "physical_received": 32768,
+    "both_fin": "PASS"
+  },
+  "p2_direct_4MiB": {
+    "bytes": 4194304,
+    "physical_windows_elapsed_ms": 53.246,
+    "direct_windows_elapsed_ms": 126.924,
+    "physical_upload_ms": 17.215,
+    "direct_upload_ms": 59.719,
+    "physical_download_ms": 15.023,
+    "direct_download_ms": 50.145,
+    "physical_tcp_connect_ms": 17.67,
+    "direct_tcp_connect_ms": 12.42,
+    "same_VM_baseline_then_direct": true,
+    "unpaced_tcp_nodelay_app": 0,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+    "physical_windows_echo": 4194304,
+    "direct_windows_echo": 4194304,
+    "linux_real_kernel_received_bytes": [
+      4194304,
+      4194304
+    ],
+    "upload_FIN_and_reverse_FIN": "PASS_BOTH",
+    "direct_to_physical_elapsed_ratio": 2.384,
+    "interpretation": "SINGLE_RUN_RELATIVE_ELAPSED_NO_CAUSAL_CPU_CLAIM"
+  },
+  "tunnel_small_96B_udp": {
+    "windows_unique_delivered": 120,
+    "linux_unique_delivered": 120,
+    "p99_ms": 2.872,
+    "max_interreply_gap_ms": 19.173,
+    "covered_full_direct_tcp": true
+  },
+  "rust_tcp_final": {
+    "shard_wakes": 55,
+    "event_take_errors": 0,
+    "event_read": 41,
+    "event_write": 18,
+    "event_close": 3,
+    "ready_ticket_peak": 1,
+    "ticket_wait_max_ms": 2,
+    "relay_turns": 230,
+    "relay_no_progress": 43,
+    "relay_progress_no_self_ticket": 0,
+    "relay_progress_self_ticket": 187,
+    "relay_close_probe_self_ticket": 7,
+    "inner_read_calls": 122,
+    "outer_read_calls": 77,
+    "inner_read_event_suppressed": 0,
+    "outer_read_event_suppressed": 121,
+    "direct_forwarded": 7340032,
+    "queued_copy": 1114112,
+    "inner_recv_eof": 2,
+    "outer_recv_eof": 2
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "not_run": [
+    "new_source_10GiB_500_and_700Mbps",
+    "same_VM_old_vs_new_binary_CPU_AB",
+    "full_D1_D5_P1_P2_Game4_GUI_padding_IPv6"
+  ],
+  "code_provenance": "H1920 restore actual read-or-write-progress fair ticket following H1916 reply/H1917 upload true FAIL; no special rate mode in H1920 Action",
+  "scope_note": "4MiB and scoped DNS/UDP/Stop product PASS, not full PLAN029 completion; 10GiB explicitly NOT_RUN"
+}
