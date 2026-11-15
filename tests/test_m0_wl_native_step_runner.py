@@ -445,6 +445,33 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn('else 690 if slow else 165)',mode)
         self.assertIn('mode_seconds=(270 if hard8 else 185',mode)
 
+    def test_h1909_long_and_short_rate_outer_oracles_are_exact_and_distinct(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        # Match exact decoded Python stage counters, not just test labels.
+        self.assertIn("$expectedOneWayBytes=[int64]536870912",flow)
+        self.assertIn("$expectedDuplexEachBytes=[int64]268435456",flow)
+        self.assertIn("if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){\n                  $expectedOneWayBytes=[int64]2147483648",flow)
+        self.assertIn("$expectedDuplexEachBytes=[int64]1610612736",flow)
+        for key,size in [
+            ("$rate.windows.stages.oneway_500mbps.local_sent_bytes",
+             "$expectedOneWayBytes"),
+            ("$rate.linux.oneway_received_bytes","$expectedOneWayBytes"),
+            ("$rate.windows.stages.duplex_700mbps_aggregate.local_sent_bytes",
+             "$expectedDuplexEachBytes"),
+            ("$rate.windows.stages.duplex_700mbps_aggregate.local_received_bytes",
+             "$expectedDuplexEachBytes"),
+            ("$rate.linux.duplex.local_received_bytes",
+             "$expectedDuplexEachBytes"),
+            ("$rate.linux.duplex.local_sent_bytes",
+             "$expectedDuplexEachBytes")]:
+            self.assertIn(f"[int64]{key} -ne {size}",flow)
+            for invalid in ("536870912","268435456"):
+                self.assertNotIn(f"{key} -ne {invalid}",flow)
+        self.assertIn("$rate.owner_stop -ne 'PASS_BOTH_OWNED'",flow)
+        self.assertIn("$p2.stop -ne 'PASS_BOTH_OWNED'",flow)
+        self.assertIn("if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -ne '1'){",flow)
+        self.assertIn("PLAN029_H1903_SIGNED_LONG_SAME_VM_PHYSICAL_DIRECT_500MBPS_700MBPS_CPU_UDP_STOP_PASS_SCOPED",flow)
+
     def test_h1907_signed_long_500_700_has_strict_two_level_deadlines(self):
         from tools.m0_wl_native_step_runner import native_batch_deadline
         env={

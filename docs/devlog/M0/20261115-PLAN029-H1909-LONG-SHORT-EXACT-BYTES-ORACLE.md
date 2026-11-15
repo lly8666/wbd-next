@@ -1,0 +1,10 @@
+# PLAN029 H1909｜10GiB真实原业务完成，外层误用短量验收导致完整Action失败
+- [H1907 Action43698414027](https://github.com/lly8666/wbd-next/actions/runs/43698414027) source `a4cfa1d354b7e3b2043ec0f6d35ac0defc7e8f4b` 的原始 artifact id 14155129354 `report.json`、PowerShell日志：真实Windows2025原Go＋Rust/Npcap/Wintun与WSL2 Linux签名Normal执行到`PLAN029_H1903_SIGNED_LONG_2GIB_...`、`WBD_WL_TRUE_PUBLIC_MODE...PASS`、`WL_PUBLIC_REAL_MODE_PROCESS_EXIT mode=normal rc=0 elapsed_seconds=199`及owned Stop，说明H1907的900s/1060s预算解决旧165s误kill，物理与Direct各完成**2GiB 500Mb/s单向+两向各1.5GiB聚合700Mb/s**，合计约10GiB原双系统真实内核数据，真实两端SHA与FIN PASS。
+- 但整条GitHub Action **FAIL**：`.github/workflows/m0-wl-public-normal-full.yml`的`$rate.status`已有LONG条件，紧接着却把**所有HIGH_RATE**的实际TCP字节与旧短测试512MiB/256MiB比较，LONG物理/Direct正确2GiB/1.5GiB必然 FAIL，抛`H1898 ... SHA/Tunnel/Stop failed`。该错误与真实SHA/Stop无关，不能将局部业务PASS提升为完整签名Action合格。
+- H1909在原HIGH_RATE的同一外层验收里令短SOURCE继续精确匹配512MiB、256MiB每向；**只有签名 LONG flag 才精确匹配2GiB、1.5GiB每向**，不再输出错用的短流量成功标记。原P2 4MiB、Linux双端SHA、FIN、6阶段Tunnel UDP、owned Stop和新的LONG专门严格验收保持原样。静态回归逐个验证所有6项本地与远端字节比较是有符号64位与条件期望，不得回退短硬编码。不改Rust/Go数据面、资源和timeout。
+- 同VM原Go+Rust PID 8948：单向物理500.002/Direct499.966 Mb/s，原进程CPU秒/GiB物理**0.6875**/Direct**13.289062**，Direct净额外**12.601562 CPU秒/GiB**（用户5.234375、进程内核7.367187）；双向物理700.000/Direct699.987 Mb/s，原进程CPU秒/GiB物理**0.494792**/Direct**9.843750**，净额外**9.348958 CPU秒/GiB**（用户4.296875、进程内核5.052084）。是同Runner、同Go+Rust PID的两条不同物理TCP会话，**未测驱动ISR/DPC或Rust独立CPU**，不是严格CPU-only A/B。虽达到很接近请求的目标值，标明499.966/699.987 **未严格达到500/700目标**。
+- 96B Tunnel UDP六段p99: pre1.389ms、物理单向1.285、物理双向1.768、Direct单向**2.458**、Direct双向**3.222**、post1.604，全阶段各518/2226/2372/2170/2323/520真实回包。长量的性能/资源瓶颈主要是Direct额外双内核TCP腿＋Wintun数据搬运的用户和进程内核CPU，非凭CPU统计就判定Crypto/FEC。
+- H1909新SOURCE未跑；需要**完整Action SUCCESS**再正式结算，原H1907 FAILURE历史留档。下一刀优先分离Go/Rust/Wintun数据回注/拷贝及TCP/IP内核路径CPU成本，不能跳过owned Stop或改控制平面。PLAN029继续OPEN，不启动030。
+```feature-impact
+{"kind":"none","ids":[],"reason":"H1909 correct exact signed high-rate PowerShell outer LONG bytes vs SHORT bytes oracle, preserve strict SHA/FIN/UDP/Stop and archive H1907 actual original 10GiB CPU; no product feature or algorithm changes."}
+```

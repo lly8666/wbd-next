@@ -2519,22 +2519,34 @@ jobs:
               Write-Output 'PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
               if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
                 $rate=$p2.highrate_direct_tcp
+                # H1909: H1907 actually completed 10GiB, SHA/FIN/Stop,
+                # but the outer short-only 512/256MiB oracle failed. Keep
+                # the long and short original contracts DISTINCT, exact
+                # and independent of Python's suggested PASS marker.
+                $expectedOneWayBytes=[int64]536870912
+                $expectedDuplexEachBytes=[int64]268435456
+                if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){
+                  $expectedOneWayBytes=[int64]2147483648
+                  $expectedDuplexEachBytes=[int64]1610612736
+                }
                 if($rate.source_sha -ne $env:GITHUB_SHA -or
                    $rate.status -ne $(if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){'PASS_SIGNED_LONG_SAME_VM_PHYSICAL_VS_DIRECT_CPU_UDP_STOP'}else{'PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED'}) -or
                    $rate.owner_stop -ne 'PASS_BOTH_OWNED' -or
                    $rate.tunnel_udp_covers_rate -ne $true -or
-                   $rate.windows.stages.oneway_500mbps.local_sent_bytes -ne 536870912 -or
-                   $rate.linux.oneway_received_bytes -ne 536870912 -or
-                   $rate.windows.stages.duplex_700mbps_aggregate.local_sent_bytes -ne 268435456 -or
-                   $rate.windows.stages.duplex_700mbps_aggregate.local_received_bytes -ne 268435456 -or
-                   $rate.linux.duplex.local_received_bytes -ne 268435456 -or
-                   $rate.linux.duplex.local_sent_bytes -ne 268435456 -or
+                   [int64]$rate.windows.stages.oneway_500mbps.local_sent_bytes -ne $expectedOneWayBytes -or
+                   [int64]$rate.linux.oneway_received_bytes -ne $expectedOneWayBytes -or
+                   [int64]$rate.windows.stages.duplex_700mbps_aggregate.local_sent_bytes -ne $expectedDuplexEachBytes -or
+                   [int64]$rate.windows.stages.duplex_700mbps_aggregate.local_received_bytes -ne $expectedDuplexEachBytes -or
+                   [int64]$rate.linux.duplex.local_received_bytes -ne $expectedDuplexEachBytes -or
+                   [int64]$rate.linux.duplex.local_sent_bytes -ne $expectedDuplexEachBytes -or
                    $rate.tunnel_udp_per_stage.oneway_500mbps.unique_delivered -lt 25 -or
                    $rate.tunnel_udp_per_stage.duplex_700mbps_aggregate.unique_delivered -lt 25 -or
                    $p2.stop -ne 'PASS_BOTH_OWNED'){
                   throw 'H1898 real signed 500/700 Mbps target high-rate SHA/Tunnel/Stop failed'
                 }
-                Write-Output 'PLAN029_H1898_SIGNED_TRUE_512M_ONEWAY_256M_EACH_PARALLEL_TCP_CPU_UDP_OWNED_STOP_PASS_SCOPED'
+                if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -ne '1'){
+                  Write-Output 'PLAN029_H1898_SIGNED_TRUE_512M_ONEWAY_256M_EACH_PARALLEL_TCP_CPU_UDP_OWNED_STOP_PASS_SCOPED'
+                }
                if($env:WBD_PLAN029_P2_LONG_RATE_SCENE -eq '1'){
                  $physical=$rate.physical_control
                  $stages=$rate.same_vm_original_process_cpu_increment

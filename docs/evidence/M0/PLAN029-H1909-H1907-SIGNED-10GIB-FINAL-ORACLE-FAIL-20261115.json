@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1909-COLLECT-H1907-FIRST-STRICT-ORACLE-FAIL",
+  "source_sha": "a4cfa1d354b7e3b2043ec0f6d35ac0defc7e8f4b",
+  "action_id": 43698414027,
+  "job_id": 132765036307,
+  "artifact_id": 14155129354,
+  "action_conclusion": "failure",
+  "result": "ORIGINAL_SIGNED_REAL_10GIB_AND_OWNED_STOP_PASS_LOCALLY_BUT_FINAL_SHORT_BYTE_ORACLE_FAILED",
+  "exact_first_error": "OUTER_POWERSHELL_H1898_EXPECTED_SHORT_512M_256M_IN_LONG_2GIB_1536M",
+  "business": {
+    "mode": "normal",
+    "exit": 0,
+    "elapsed_s": 199,
+    "original_native_stop": "PASS_BOTH_OWNED",
+    "one_way_each_path_bytes": 2147483648,
+    "duplex_each_direction_each_path_bytes": 1610612736,
+    "bytes_across_physical_and_direct": 10737418240,
+    "linux_both_sessions_sha_fin": true
+  },
+  "source_checks": {
+    "original_client": "REAL_WINTUN",
+    "original_guest": "WSL2_PHYSICAL_TCP",
+    "same_source_sha": true,
+    "same_original_pid": 8948
+  },
+  "stages": {
+    "oneway_500mbps": {
+      "physical_mbps": 500.002,
+      "direct_mbps": 499.966,
+      "physical_original_cpu_total_s_per_gib": 0.6875,
+      "direct_original_cpu_total_s_per_gib": 13.289062,
+      "added_cpu_s_per_gib": 12.601562,
+      "added_user_cpu_s_per_gib": 5.234375,
+      "added_process_kernel_cpu_s_per_gib": 7.367187,
+      "physical_host_busy_pct": 20.1569,
+      "direct_host_busy_pct": 82.3068
+    },
+    "duplex_700mbps_aggregate": {
+      "physical_mbps": 700,
+      "direct_mbps": 699.987,
+      "physical_original_cpu_total_s_per_gib": 0.494792,
+      "direct_original_cpu_total_s_per_gib": 9.84375,
+      "added_cpu_s_per_gib": 9.348958,
+      "added_user_cpu_s_per_gib": 4.296875,
+      "added_process_kernel_cpu_s_per_gib": 5.052084,
+      "physical_host_busy_pct": 34.5925,
+      "direct_host_busy_pct": 80.6664
+    }
+  },
+  "tunnel_udp_96b": {
+    "pre": {
+      "delivered": 518,
+      "p99_ms": 1.389
+    },
+    "physical_oneway": {
+      "delivered": 2226,
+      "p99_ms": 1.285
+    },
+    "physical_duplex": {
+      "delivered": 2372,
+      "p99_ms": 1.768
+    },
+    "direct_oneway": {
+      "delivered": 2170,
+      "p99_ms": 2.458
+    },
+    "direct_duplex": {
+      "delivered": 2323,
+      "p99_ms": 3.222
+    },
+    "post": {
+      "delivered": 520,
+      "p99_ms": 1.604
+    }
+  },
+  "limits": {
+    "complete_Action_success": "NO_H1907_FINAL_ORACLE_FAILED",
+    "new_H1909_full_signed": "NOT_RUN",
+    "P1_performance": "OPEN",
+    "P2_efficiency": "OPEN",
+    "kernel_driver_isr_dpc": "NOT_MEASURED",
+    "original_pid_cpu": "GO_PLUS_RUST_NOT_RUST_ONLY",
+    "host_busy": "INCLUDING_OTHER_RUNNER_PROCESSES",
+    "not_500_700_min_pass": "RATE_499.966_AND_699.987_UNDER_TARGET"
+  }
+}

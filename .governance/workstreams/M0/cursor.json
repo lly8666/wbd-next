@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1908,
-  "checkpoint_sha": "a4cfa1d354b7e3b2043ec0f6d35ac0defc7e8f4b",
+  "sequence": 1909,
+  "checkpoint_sha": "e941f7d525f6d35893f40f8bb7a15688f987ae51",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1908 metadata-only hot-read budget repair: H1907 exact signed Normal 10GiB 500/700Mb/s source is RUNNING; old H1906 signed 32KiB SHA/FIN PASS but long interrupted by historical 165s test child (not product loss). H1907 has 900s nested/1060s parent, all four 180s-capped stages unchanged; new source result NOT_RUN.",
-  "why_now": "H1907 governance structure failed combined hot byte budget 32777 (>32768 by 9) from expanded cursor; trim repeated context without weakening policy. No data-plane or signed H1907 source change.",
+  "current_task": "H1909 correct H1907 exact signed original 10GiB FINAL PowerShell short-only byte oracle (512/256MiB) rejecting genuine LONG 2GiB/1.5GiB. Actual original Python Normal exit rc0, 10GiB both paths real SHA/FIN, CPU/UDP six phases/owned Stop PASS_SCOPED, but outer Action43698414027 FAILURE. New exact conditional byte verifier + static negative tests, source NOT_RUN.",
+  "why_now": "H1907 nested900 parent1060 fixed false165s timeout; Action real Normal 199s PASS, 2GiB physical+Direct one-way and each side1.5GiB simultaneous physically verified, but final outer reused short size constants. Need accept exact long size only under original signed LONG gate, preserving SHA/Stop/UDP/CPU.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1907 exact-source original Windows/WSL2 10GiB physical-vs-Direct 2GiB one-way500Mb/s and 1.5GiB each 700Mb/s duplex, separate user/kernel Win32 PID CPU and generator/host, 96B UDP six-phase p99, SHA/FIN and original owned Stop. Fail first stage/timeout explicitly; P1/P2 OPEN.",
+  "next_action": "Collect H1909 source-locked workflow Gate and signed real 10GiB Windows/WSL2; compare same-run Direct-minus-physical CPU/GiB (old original stage measured +12.60 single/+9.35 duplex), 96B Tunnel p99, real SHA/FIN/Stop; no driver ISR attribution. Then optimize Go/Rust/Wintun packet moves based on user/kernel CPU evidence, not crypto/FEC or copying guesses.",
   "unverified": true,
-  "last_tested_source": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
+  "last_tested_source": "a4cfa1d354b7e3b2043ec0f6d35ac0defc7e8f4b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1906-H1905-SIGNED-32K-FIN-FAIL-20261115.json"
+    "docs/evidence/M0/PLAN029-H1909-H1907-SIGNED-10GIB-FINAL-ORACLE-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md",
     "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md",
     "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md",
     "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md",
     "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md"
+    "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1892 original real 128 Wintun idle+2 active PASS_SCOPED. H1902 signed short rates 499.965/699.760Mb/s PASS_SCOPED. H1906 exact 32KiB/4MiB original TCP PASS, long 10GiB started but generic165s child timeout FAIL. H1907 gated 900/1060s extended test candidate, source-locked Action in progress. H1908 metadata only. P1/P2 OPEN, PLAN029 IN_PROGRESS."
+  "partial_summary": "H1907 signed 10GiB actual Normal app 199s PASS/Stop, physical vs Direct original CPU/GiB: single0.688 vs13.289, duplex0.495 vs9.844, 96B UDP p99 Direct2.458/3.222ms. But outer static verifier expected SHORT 512/256 and GH Action failed; H1909 source candidate fixes exact LONG verifier, NOT_RUN. 128 real Wintun PASS, P1/P2 performance OPEN."
 }
