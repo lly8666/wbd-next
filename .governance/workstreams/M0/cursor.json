@@ -4,18 +4,17 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1872,
-  "checkpoint_sha": "91ba859d3868db054c2354d63543d47b6d2cd7f0",
+  "sequence": 1873,
+  "checkpoint_sha": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1872 fix Windows Rust unit first error E0369 after H1870 owned DNS reverse Vec API: old SERVFAIL test compared NativeReverse to integer; updated test checks Owned reply and original DNS fields, no product behavior change.",
-  "why_now": "H1870 Windows Rust component CI source 0860242f failed before native P2 due to test-only assert!(n>=40); Linux and native-functional subsets pass. Clear exact compiler boundary before product networking.",
+  "current_task": "H1873 repair governance exact source evidence_refs and feature catalog after H1872. H1870 source Windows Rust test E0369 fixed in H1872; network still requires H1872 signed P2 verification.",
+  "why_now": "governance.py validate_repo requires EVERY cursor evidence source_sha match last_tested_source; H1870 new aggregate evidence covers two different SOURCES, thus belongs devlog/feature but not cursor evidence_refs. Keep last verified-source eccaf H1866 and its matching evidence.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1872 Windows Rust build and signed P2 (one network scene), preserving H1870 pre-network FAIL. Then event-ready TCP worker and true P1/P2/idle-flow comparators; remaining PLAN029 exits OPEN.",
+  "next_action": "Collect H1872 exact source Windows Rust and signed P2; do not dispatch older H1870 network again. Continue event-ready Direct TCP and remaining PLAN029 exits, after proof.",
   "unverified": true,
-  "last_tested_source": "11a1daaf4c0c74730da32909382f39f365f0427a",
+  "last_tested_source": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1870-H1867-H1868-SIGNED-RESULTS-20261115.json",
     "docs/evidence/M0/PLAN029-H1869-H1866-D4-SIGNED-IPV6-ROUTE-OPEN-20261115.json"
   ],
   "context_refs": [
@@ -29,5 +28,5 @@
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1867 P1 +9.41% CPU/GiB OPEN; H1868 hard8 PASS_SCOPED. H1870 Windows first boundary is test signature E0369, NOT_RUN network. H1872 fixes exact test; product still NOT_RUN, PLAN029 IN_PROGRESS."
+  "partial_summary": "H1870 test E0369 compiler failure retained; H1872 exact test fixed but real Windows P2 not yet qualified. H1873 fixes evidence provenance/feature CI only, no code/OS changes. H1867 P1 +9.41% OPEN and H1868 hard8 PASS_SCOPED."
 }
