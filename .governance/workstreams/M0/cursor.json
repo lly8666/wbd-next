@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1927,
-  "checkpoint_sha": "eef45b1197d3d74928b72211b9e12e923003974d",
+  "sequence": 1928,
+  "checkpoint_sha": "aab503faf78c4e54ea018544873c7650dd7c102f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1927 repair genuine cheap native-wiring preflight FAIL Action43721220070: H1894 test hardcoded exact old HIGH_RATE predicate without new SMALL_TCP exception; update assert to preserve/strengthen exclusions and test new signed 384 small TCP ABBA real source/FIN wiring. Product H1926 stack no-alloc and latency fixture unchanged; new signed native test starts once on H1927.",
-  "why_now": "H1926 signed native workflow blocked at cheap existing test_h1894_same_original_process_pre128_vs128_idle_cpu_and_udp_contract failure due exact source string mismatch; no signed current-source Win2025 kernel network executed (not product failure). Replace brittle expected condition with new complete condition and guard new small source locked phase; don't waive red CI or dispatch unqualified binary.",
+  "current_task": "H1928 collect H1927 SOURCE aab503 signed original Win2025/WSL2 4MiB+384 small TCP physical/Direct ABBA SHA/FIN and owned Stop PASS Action43721447384. Direct small TCP median extra 0.453/0.470/0.658ms (64B/1KiB/16KiB), but first reply post-half-close p99 13.903/15.052/15.004ms vs physical <=0.684ms; Tunnel96B UDP 379/379 p99 10.655ms. Rust ready ticket max 14ms. CPU stack microopt functional PASS but CPU/GiB gain NOT_MEASURED.",
+  "why_now": "True Win2025 signed Action43721447384 SUCCESS original Go+Rust Windows Wintun/Npcap+WSL2; direct TCP has low median extra cost but observable return-packet tail; no new 10GiB needed to detect first response. Captured complete kernel SHA/FIN and Rust ready wait 14ms (not causal proof), dual Stop. Next use this as exact source-scoped performance guard, focus event-wake jitter and CPU attribution while preserving H1920 any-progress relay liveness.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1927 governance/cheap + Windows Rust preflight and signed original native P2 small TCP 4MiB bulk first, 384 real A-B-B-A physical/Direct 64B/1024B/16KiB complete echo SHA/FIN and 96B Tunnel UDP+owned Stop. Analyze p50/p95/p99 phase+same source. If native first failure log, repair once and rerun; never claim H1926 current source PASS without a green signed original product.",
+  "next_action": "Do one bounded same-VM old/new binary original Go+Rust CPU A/B or short 512MiB physical/Direct rate control; label per-source precisely. Target first-return rare >10ms with original TX readiness/WaitForMultipleObjects trace, not global 1ms polling or suppress any-progress fair tickets. Keep 4MiB liveness + 384 small A-B-B-A p99 + Tunnel UDP under churn when changing event scheduler. If optimizing loop use same-VM CPU before claims, no repeated long10GiB until product algorithm meaningful. Remaining PLAN029 GUI/Game4/P1/D1–D5/IPv6/padding OPEN.",
   "unverified": true,
-  "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
+  "last_tested_source": "aab503faf78c4e54ea018544873c7650dd7c102f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
+    "docs/evidence/M0/PLAN029-H1928-H1927-SIGNED-SMALL-TCP-384-ABBA-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
     "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
-    "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
-    "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md"
+    "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1926 code stack-only 8 followups and H1926 real small TCP fixture submitted on SOURCE eef45b; native runner was SKIPPED because cheap wiring test expected old HIGH_RATE exclusion string (real test failure), not a Windows product execution. H1927 updates old test predicate + adds small-scene source/FIN/ABBA regression, triggering new signed exact product after gate. H1922 original 10GiB previous source still PASS; new code correctness/perf NOT_RUN."
+  "partial_summary": "H1927 original signed SHA aab503 Win2025/WSL2 Action43721447384 SUCCESS: P2 4MiB physical40.011ms Direct105.790ms full SHA/FIN, 384 small A-B-B-A 64B/1024B/16KiB 64 each path/size full echo SHA/FIN. Direct extra total p50 0.453/0.470/0.658ms; post-FIN first echo p99 13.903/15.052/15.004ms vs physical <=0.684ms. Tunnel96B UDP 379/379 p99 10.655ms; original both Stop PASS; Rust ready ticket max14ms. H1926 stack-only followup product function PASS, CPU improvement NOT_YET_MEASURED. Full PLAN029 OPEN."
 }

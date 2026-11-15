@@ -1,0 +1,11 @@
+# PLAN029 H1928｜Direct TCP small A-B-B-A签名实测：典型额外0.5ms，首回包p99有15ms尾部
+
+- [Win2025原签名Action43721447384](https://github.com/lly8666/wbd-next/actions/runs/43721447384) SOURCE `aab503faf78c4e54ea018544873c7650dd7c102f` **SUCCESS**，原 Go+Rust、真实Wintun/Npcap及WSL2 Linux kernel，artifact14164224296下载核实report、Linux/Windows SHA/FIN和原owner双端Stop：`PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal`，`PASS_BOTH_OWNED`。原无pace4MiB物理40.011ms、Direct105.790ms，Windows真4194304B、Linux两真实TCP核全部收到，半关闭/回显完整；未运行新的10GiB。
+- 在**完全同一个Windows VM、同一个原Go+Rust产品进程/owner、新无proxy的WinSock**，与原4MiB之后复用46112 owned WSL2 kernel listener做真正 `A-B-B-A: physical,Direct,Direct,physical`，64/1024/16384B各32组，每大小每方向64样本、总384 TCP socket，Windows发真实原文后SHUT_WR/首字节/完整echo/FIN，WSL2通过源物理口、序列、SHA `0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a` 和FIN，**PASS_SCOPED**。
+- 64B完整请求：物理p50/p99 14.991/18.382ms、Direct15.444/23.662ms；1KiB 15.131/19.473 vs15.601/21.548；16KiB 14.782/16.629 vs15.440/16.960。真实Direct相对物理的**完整请求p50额外+0.453/+0.470/+0.658ms**。建连p50几乎一致（64B 14.652 vs14.726；1KiB 14.740 vs14.780；16KiB 14.100 vs13.995ms）。半关闭后**首回包等待p99**：物理0.396/0.447/0.684ms，Direct13.903/15.052/15.004ms；Direct极端尾部明显，但64个经验样本的p99约等于最大值，不能伪称稳定SLA。
+- Tunnel真实96B UDP在此次384 TCP混合负载中 **379/379唯一交付**、Windows RTT p99 **10.655ms**、最大间隔27.856ms，明显高于过去不同SOURCE/Runner的长负载 p99，但不能跨VM宣称新算法回退/归因。Rust签名冷计数：`ticket_wait_max_ms=14`、`ticket_peak=1`、`relay_turns=1358`、`relay_no_progress=582`、`relay_progress_self_ticket=776`、`shard_wakes=1302`、`event_socket_checks=1986`、`event_take_errors=0`、`direct_forwarded=9840128`、`queued_copy=851968`；ready等待最大14ms**与首回包尾部量级接近但无同请求严格时间关联**，不能认定同根因。需测owner真实WaitForMultipleObjects→socket事件→relay tick阶段方可提优化。
+- H1926把`tick`内短生存期`Vec<u16>`换成固定8口栈数组，最大8公平流不变，正读/写进展续票与0进展止票不变；纯Windows Rust单测和本次原业务4MiB/384短连接/Stop均PASS。**此SOURCE没有测500/700Mbps、CPU-s/GiB或旧新二进制同机A/B**，不对外承诺CPU下降。H1922历史10GiB源不同，只作为正确性基线，不能用两Action CPU差当因果改善。
+- PLAN029原D1–D5/P1–P2 full和GUI/Game4/IPv6/padding仍OPEN，CPU大头继续先定位两条热线程的真实职责；保持28限定不重开、30未开工。
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Collect exact real signed H1927 384 small TCP same-VM physical-vs-Direct p50/p99, full SHA/FIN/Tunnel UDP/Stop; CPU micro-opt functional PASS but benefit unverified."}
+```

@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "task": "H1928",
+  "plan": "PLAN029",
+  "source_sha": "aab503faf78c4e54ea018544873c7650dd7c102f",
+  "result": "PASS",
+  "scope": "PASS_SCOPED_SIGNED_ORIGINAL_WINDOWS_WSL2_SMALL_DIRECT_TCP_ABBA_SHA_FIN_STOP",
+  "action_id": 43721447384,
+  "action_conclusion": "success",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43721447384",
+  "job_id": 132835537406,
+  "artifact_id": 14164224296,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43721447384",
+  "original_product": "Win2025 signed Npcap/Wintun original Go+Rust Normal and separate Linux kernel peer",
+  "source_verified_in_original_report_and_both_small_os": "aab503faf78c4e54ea018544873c7650dd7c102f",
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "original_product_owned_stop": "PASS_BOTH_OWNED",
+  "unpaced_4MiB": {
+    "bytes": 4194304,
+    "physical_elapsed_ms": 40.011,
+    "direct_elapsed_ms": 105.79,
+    "physical_connect_ms": 11.487,
+    "direct_connect_ms": 14.738,
+    "physical_upload_ms": 13.221,
+    "direct_upload_ms": 39.313,
+    "physical_first_reply_wait_ms": 2.88,
+    "direct_first_reply_wait_ms": 3.784,
+    "physical_download_ms": 12.359,
+    "direct_download_ms": 47.901,
+    "physical_and_direct_linux_received_both": 4194304,
+    "sha_fin": "PASS_BOTH"
+  },
+  "small_tcp": {
+    "socket_count": 384,
+    "each_path_each_size": 64,
+    "sizes_bytes": [
+      64,
+      1024,
+      16384
+    ],
+    "order": [
+      "physical",
+      "direct",
+      "direct",
+      "physical"
+    ],
+    "repetitions_per_size": 32,
+    "port": 46112,
+    "physical_vs_selective_fakeip": true,
+    "actual_win32_QPC_same_VM": true,
+    "linux_physical_underlay_witness": "PASS",
+    "linux_and_windows_aggregated_sha256": "0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a",
+    "round_trip_application_timing": true,
+    "measurements_ms": {
+      "64": {
+        "total_physical_p50": 14.991,
+        "total_direct_p50": 15.444,
+        "total_physical_p99": 18.382,
+        "total_direct_p99": 23.662,
+        "connect_physical_p50": 14.652,
+        "connect_direct_p50": 14.726,
+        "first_echo_after_halfclose_physical_p50": 0.241,
+        "first_echo_after_halfclose_direct_p50": 0.658,
+        "first_echo_after_halfclose_physical_p99": 0.396,
+        "first_echo_after_halfclose_direct_p99": 13.903
+      },
+      "1024": {
+        "total_physical_p50": 15.131,
+        "total_direct_p50": 15.601,
+        "total_physical_p99": 19.473,
+        "total_direct_p99": 21.548,
+        "connect_physical_p50": 14.74,
+        "connect_direct_p50": 14.78,
+        "first_echo_after_halfclose_physical_p50": 0.25,
+        "first_echo_after_halfclose_direct_p50": 0.716,
+        "first_echo_after_halfclose_physical_p99": 0.447,
+        "first_echo_after_halfclose_direct_p99": 15.052
+      },
+      "16384": {
+        "total_physical_p50": 14.782,
+        "total_direct_p50": 15.44,
+        "total_physical_p99": 16.629,
+        "total_direct_p99": 16.96,
+        "connect_physical_p50": 14.1,
+        "connect_direct_p50": 13.995,
+        "first_echo_after_halfclose_physical_p50": 0.438,
+        "first_echo_after_halfclose_direct_p50": 1.049,
+        "first_echo_after_halfclose_physical_p99": 0.684,
+        "first_echo_after_halfclose_direct_p99": 15.004
+      }
+    },
+    "limitations": [
+      "64 samples per path/size means empirical p99 near max, not a production SLA probability",
+      "same Windows VM clock, not cross-OS one-way delay",
+      "phase percentile deltas not per-sample causal RTT or correlation"
+    ]
+  },
+  "tunnel_udp": {
+    "unique_sent_received_each_os": 379,
+    "bytes_per_message": 96,
+    "original_windows_p99_ms": 10.655,
+    "windows_max_inter_reply_gap_ms": 27.856,
+    "original_user_Tunnel_continued_through_small_TCP": true
+  },
+  "rust_relay_io_final": {
+    "relay_turns": 1358,
+    "relay_no_progress": 582,
+    "relay_progress_self_ticket": 776,
+    "ready_ticket_wait_max_ms": 14,
+    "ready_ticket_peak": 1,
+    "shard_wakes": 1302,
+    "event_socket_checks": 1986,
+    "event_take_errors": 0,
+    "direct_forwarded_bytes": 9840128,
+    "queued_copy_bytes": 851968,
+    "inner_read_calls": 681,
+    "outer_read_calls": 789
+  },
+  "product_change": "H1926 heap Vec<u16> followups to stack [u16;8] while any-positive-read/write progress continues; Windows/Linux original product PASS, not CPU gain proof",
+  "cpu_result": "NEW_SOURCE_LONG_CPU_PER_GIB_NOT_RUN_NO_AB_NO_PROVEN_CPU_REDUCTION",
+  "historical_other_SOURCE_h1922": "H1922 old unmodified source signed 10GiB +12.281/+10.604 original process CPU seconds per GiB; VM non-paired, NOT a valid before/after",
+  "open": [
+    "CPU same-VM product old/new binary A/B",
+    "event wait tail >14ms cause",
+    "Tunnel UDP p99 under small TCP churn",
+    "D1-D5 full",
+    "P1",
+    "Game4",
+    "GUI",
+    "IPv6",
+    "padding"
+  ]
+}
