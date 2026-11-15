@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task": "H1883",
+  "plan": "PLAN029",
+  "source_sha": "37c6025629f76d082b080dfb786a46f436ace58b",
+  "action_id": 43667025249,
+  "job_id": 132669802359,
+  "action_conclusion": "success",
+  "result": "SIGNED_ORIGINAL_NATIVE_FUNCTIONAL_PASS_SCOPED_P2_PERFORMANCE_OPEN",
+  "scope": "Win2025 original-Go signed Npcap/Wintun Rust V3 CN FakeIP TCP 4MiB unpaced + true WSL2 Linux kernel TCP + concurrent Tunnel UDP + owned Stop",
+  "physical": {
+    "elapsed_ms": 47.233,
+    "connect_ms": 11.016,
+    "upload_ms": 18.159,
+    "first_reply_wait_ms": 3.292,
+    "download_ms": 14.691,
+    "half_close_ms": 0.074
+  },
+  "direct": {
+    "elapsed_ms": 115.862,
+    "connect_ms": 12.662,
+    "upload_ms": 51.444,
+    "first_reply_wait_ms": 4.639,
+    "download_ms": 47.052,
+    "half_close_ms": 0.064
+  },
+  "bytes": 4194304,
+  "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+  "direct_over_physical_ratio": 2.453,
+  "direct_extra_ms": 68.629,
+  "direct_extra_upload_ms": 33.285,
+  "direct_extra_download_ms": 32.361,
+  "tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "windows_p99_ms": 2.324,
+    "windows_max_gap_ms": 17.889,
+    "whole_direct_lifetime": true
+  },
+  "fin": true,
+  "stop": "PASS_BOTH_OWNED",
+  "limits": {
+    "old_source_h1877_over_physical_ratio": 2.787,
+    "old_vs_new_vm": "DIFFERENT_NOT_AB",
+    "same_binary_copy_vs_bypass": "NOT_RUN",
+    "driver_cpu": "NOT_ATTRIBUTED",
+    "P2_performance": "OPEN",
+    "P1_CPU_GiB": "OPEN_PLUS9.41_PCT",
+    "Windows_128_Wintun": "NOT_RUN",
+    "GUI_Game4_IPv6": "OPEN"
+  }
+}
