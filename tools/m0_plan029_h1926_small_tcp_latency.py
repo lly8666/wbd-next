@@ -58,7 +58,21 @@ def emit(mark,data):
           flush=True)
 
 
-def guest(physical,host_source,expected_source):
+def send_guest_echo(conn,data,reply_policy):
+    if reply_policy not in ("fin_first","payload_first"):
+        raise RuntimeError("H1942 invalid original source-locked echo policy")
+    if reply_policy=="payload_first":
+        conn.sendall(data)
+        conn.shutdown(socket.SHUT_WR)
+    # Both policies MUST still receive the real Linux kernel TCP FIN.
+    if conn.recv(1)!=b"":
+        raise RuntimeError("H1942 Linux original TCP FIN missing")
+    if reply_policy=="fin_first":
+        conn.sendall(data)
+        conn.shutdown(socket.SHUT_WR)
+
+
+def guest(physical,host_source,expected_source,reply_policy="fin_first"):
     if not expected_source or len(expected_source)!=40:
         raise RuntimeError("H1926 real Linux SOURCE absent")
     dig=hashlib.sha256()
@@ -81,15 +95,12 @@ def guest(physical,host_source,expected_source):
                 data=read_exact(conn,size)
                 if data!=payload(seq,size):
                     raise RuntimeError("H1926 Linux source-locked TCP bytes mismatch")
-                if conn.recv(1)!=b"":
-                    raise RuntimeError("H1926 Linux did not receive TCP half-close")
                 dig.update(data)
-                conn.sendall(data)
-                conn.shutdown(socket.SHUT_WR)
+                send_guest_echo(conn,data,reply_policy)
     emit(GUEST_MARK,{"source_sha":expected_source,
         "received_connections":TOTAL,"real_kernel_tcp":True,
         "underlay_source":host_source,"port":PORT,
-        "sha256_all_received":dig.hexdigest()})
+        "sha256_all_received":dig.hexdigest(),"reply_policy":reply_policy})
 
 
 def percentile(values,pct):
@@ -106,11 +117,13 @@ def distribution(values):
             "max_ms":round(max(values),3)}
 
 
-def windows(physical,host_source,fake,expected_source):
+def windows(physical,host_source,fake,expected_source,reply_policy="fin_first"):
     if not expected_source or SOURCE!=expected_source:
         raise RuntimeError("H1926 Windows original SOURCE SHA mismatch")
     if not fake.startswith("198.18."):
         raise RuntimeError("H1926 requires announced CN FakeIP, no proxy")
+    if reply_policy not in ("fin_first","payload_first"):
+        raise RuntimeError("H1942 unknown original echo policy")
     records={str(size):{"physical":[],"direct":[]} for size in SIZES}
     dig=hashlib.sha256()
     begin=time.perf_counter()
@@ -180,7 +193,8 @@ def windows(physical,host_source,fake,expected_source):
                 summary[str(size)]["physical"][phase]["p99_ms"],3)}
             for phase in phases}
     elapsed=round(time.perf_counter()-begin,4)
-    emit(MARK,{"source_sha":SOURCE,"physical_underlay":host_source,
+    emit(MARK,{"source_sha":SOURCE,"reply_policy":reply_policy,
+        "physical_underlay":host_source,
         "wintun_lease":"10.66.0.2","fakeip":fake,
         "order":list(ORDER),"sizes":list(SIZES),
         "repetitions_per_path_per_size":REPEATS*2,
@@ -248,9 +262,67 @@ def run_small_tcp_latency(root,out,physical,host_source,fake,unix,ready):
                     if item["n"]!=2*REPEATS or not (
                         0<=item["p50_ms"]<=item["p99_ms"]<=item["max_ms"]):
                         raise RuntimeError("H1926 invalid measured TCP phase tail")
+        echo_control=None
+        if os.environ.get("WBD_PLAN029_P2_ECHO_EARLY_CONTROL")=="1":
+            # SAME native Windows owner, exact second Linux kernel
+            # listener port and 384 application sockets. The legacy
+            # FIN-first proof above is unchanged, and both still own FIN.
+            log_g=Path(out)/"plan029-h1942-echo-first-guest.log"
+            log_w=Path(out)/"plan029-h1942-echo-first-windows.log"
+            with log_g.open("w") as gp:
+                guest2=subprocess.Popen(
+                    ["wsl.exe","-d","Ubuntu","-u","root","--",
+                     "python3","-u",unix(script),"guest",
+                     physical,host_source,source,"payload_first"],
+                    stdout=gp,stderr=subprocess.STDOUT)
+                children.append(guest2)
+                ready(log_g,READY,guest2,12)
+                with log_w.open("w") as wp:
+                    client2=subprocess.Popen(
+                        [sys.executable,"-u",str(script),"windows",
+                         physical,host_source,fake,source,"payload_first"],
+                        stdout=wp,stderr=subprocess.STDOUT)
+                    children.append(client2)
+                    if client2.wait(timeout=95)!=0:
+                        raise RuntimeError("H1942 true Windows echo-first failed "+
+                                           log_w.read_text(errors="replace")[-1500:])
+                if guest2.wait(timeout=15)!=0:
+                    raise RuntimeError("H1942 true Linux echo-first failed "+
+                                       log_g.read_text(errors="replace")[-1500:])
+            e_win=proof(log_w,MARK)
+            e_linux=proof(log_g,GUEST_MARK)
+            if (w["reply_policy"]!="fin_first" or
+                g["reply_policy"]!="fin_first" or
+                e_win["reply_policy"]!="payload_first" or
+                e_linux["reply_policy"]!="payload_first" or
+                e_win["source_sha"]!=source or e_linux["source_sha"]!=source or
+                e_win["total_connections"]!=TOTAL or
+                e_linux["received_connections"]!=TOTAL or
+                e_win["payload_sha256"]!=e_linux["sha256_all_received"] or
+                e_win["payload_sha256"]!=w["payload_sha256"] or
+                e_win["order"]!=list(ORDER) or e_win["sizes"]!=list(SIZES) or
+                e_win["repetitions_per_path_per_size"]!=2*REPEATS or
+                e_win["fakeip"]!=fake or
+                e_win["wintun_lease"]!="10.66.0.2" or
+                e_win["physical_underlay"]!=host_source or
+                e_linux["underlay_source"]!=host_source):
+                raise RuntimeError("H1942 true two-OS 384+384 source/SHA/FIN failure")
+            for size in SIZES:
+                for path in ("physical","direct"):
+                    for phase in ("connect","first_echo_after_half_close","total"):
+                        item=e_win["stats"][str(size)][path][phase]
+                        if item["n"]!=2*REPEATS or not (
+                            0<=item["p50_ms"]<=item["p99_ms"]<=item["max_ms"]):
+                            raise RuntimeError("H1942 invalid echo-first tail receipt")
+            echo_control={
+                "source_sha":source,
+                "status":"PASS_SCOPED_ORIGINAL_TWO_OS_ECHO_BEFORE_FIN",
+                "windows":e_win,"linux":e_linux,
+                "limitations":"sequential application-protocol intervention; no old/new product CPU claim"}
         return {"source_sha":source,
                 "status":"PASS_SCOPED_SMALL_TCP_A_B_B_A_SHA_FIN",
                 "windows":w,"linux":g,
+                "echo_before_fin_control":echo_control,
                 "original_go_rust_owner":"SAME_AS_4M_P2",
                 "tunnel_udp":"SAME_P2_LIFETIME_BOUNDARY",
                 "owned_stop":"PENDING_ORIGINAL_OWNER_STOP"}
@@ -263,9 +335,9 @@ def run_small_tcp_latency(root,out,physical,host_source,fake,unix,ready):
 
 
 if __name__=="__main__":
-    if len(sys.argv)==5 and sys.argv[1]=="guest":
+    if len(sys.argv) in (5,6) and sys.argv[1]=="guest":
         guest(*sys.argv[2:])
-    elif len(sys.argv)==6 and sys.argv[1]=="windows":
+    elif len(sys.argv) in (6,7) and sys.argv[1]=="windows":
         windows(*sys.argv[2:])
     else:
         raise SystemExit("H1926 only exact Linux guest / Windows original roles")

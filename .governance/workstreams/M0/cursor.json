@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1941,
-  "checkpoint_sha": "601d540401b7d516bf1e1dfaa9c2998cce07defb",
+  "sequence": 1942,
+  "checkpoint_sha": "6bbaad4b346a16c97d1b5417d03d15aa2c23d7be",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1941 original Rust Direct TCP single non-consuming WinSock EOF peek after actual FD_CLOSE and positive short data recv to forward FIN same TX quantum, preserving H1920 any-read/write progress self-ticket. New real Windows double-kernel-socket 64B FIN regression and P2 opt-in fin_peek_calls/eof terminal counters; original 4MiB+384 small TCP ABBA native NOT_RUN. H1940 source601d Action43738050095 PASS functional, first echo Direct p99 15.360/15.764/15.567ms, ticket max23ms, 96B Tunnel UDP p99 9.352ms OPEN. H1937 P1 B1 CNrows8 from CGNAT LAN, synthetic fixture moved to nonLAN 11.42/19 4096 disjoint /32; full P1 four-arm still NOT_RUN.",
-  "why_now": "Current H1940 real p99 ~15ms despite one connecting first read ticket and WAIT_ANY group fairness. Linux echo server waits recv(0): original relay on FD_CLOSE coalesced with last positive read only confirms EOF on next TX ticket, whose max age23ms. A single nonconsuming peek can confirm EOF and propagate FIN in same turn without consuming data, new polling or suppressing proven liveness. P1 100.64/10 test rules normalized as LAN, not enough real B CN search.",
+  "current_task": "H1942 archived H1941 actual signed original Win2025/WSL2 source6bbaad4 Action43740776215 SUCCESS 4MiB+384 small physical/Direct kernel TCP SHA/FIN/Tunnel UDP120/120/owned Stop. H1941 FIN peek EOF inner138 outer84 works but Direct small first echo p99 15.642/15.837/15.641ms (64/1K/16K), ticket wait max25ms, >=8ms56, so latency OPEN. H1942 test-only extra 384 Linux echo-before-FIN with same original Rust owner to separate FIN vs return-data tail, new native source NOT_RUN.",
+  "why_now": "Two serial Rust event/FIN candidates H1940/1941 did not improve 10-15ms tail. Existing Linux test app intentionally waits recv(0) before returning echo; need isolate FIN forwarding from reverse TCP data/WinTun RX latency using same physical/Direct ABBA payload-first control without any production data-path change, full SHA/FIN verification each.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Check one H1941 source-locked original Windows/WSL2 short 4MiB+384 small TCP physical/Direct 64B/1K/16K first echo p50/p95/p99, SHA/FIN, Tunnel96B p99, Rust ready wait and fin peek counts, Stop. If product false? NO: report real FAIL and revert if needed. Avoid10GiB; H1937 full P1 source-locked V3 all/CN/CN/all real ABBA separate after B fixture proof.",
+  "next_action": "Collect H1942 one signed normal Windows/WSL2 4MiB+384 fin-first+384 echo-first (all physical/Direct) original source and Tunnel UDP Stop; p50/p95/p99 for each; if early echo p99 disappears focus FIN forward, else focus reverse Winsock/RX/TUN. No duplicate 10GiB. Separately resume P1 same-Rust V3 all/CN/CN/all full 4-leg actual CPU ABBA with nonLAN 4096 CN rule fixture; no physical-as-classifier CPU.",
   "unverified": true,
-  "last_tested_source": "3e80fc8c7b7d723a618a91b7c47a351c99d3dfef",
+  "last_tested_source": "6bbaad4b346a16c97d1b5417d03d15aa2c23d7be",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1940-H1938-SIGNED-SMALL-TCP-FIRST-REPLY-TAIL-OPEN-20261115.json"
+    "docs/evidence/M0/PLAN029-H1942-H1941-SIGNED-SMALLTCP-FIN-PEEK-TAIL-OPEN-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
     "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md",
     "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md",
     "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md",
-    "docs/devlog/M0/20261115-PLAN029-H1933-CPU-ABBA-TEST-DESIGN.md"
+    "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1940 original 601d signed Action43738050095 SUCCESS true 4MiB+384 small SHA/FIN and Tunnel UDP, Direct first echo p99 15.360/15.764/15.567ms vs physical .321/.425/.905, ready max23ms (peak1). H1941 scoped FD_CLOSE+positive-read nonconsuming peek candidate + actual WinSock unit, not signed. P1 B1 normalized8 CN rules from CGNAT LAN input; nonLAN 11.42/19 4096 /32 corrected fixture, full P1 CPU ABBA still OPEN."
+  "partial_summary": "H1941 true original source6bbaad4 Action43740776215 PASS 4MiB 50.828/70.517ms physical/Direct, 384 small SHA/FIN, Tunnel UDP120/120 p99 10.339ms, Stop. Actual FIN peek inner138/138 outer84/84; Direct first echo p99 15.642/15.837/15.641ms, ticket wait max25ms; latency OPEN. H1942 adds second 384 socket same owner payload-first Linux reply control to diagnose FIN vs return-path, new native PENDING, no product change. P1 policy CPU ABBA still OPEN."
 }

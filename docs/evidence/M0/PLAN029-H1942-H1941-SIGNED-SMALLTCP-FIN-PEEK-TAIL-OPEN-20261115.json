@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task": "H1942",
+  "plan": "PLAN029",
+  "source_sha": "6bbaad4b346a16c97d1b5417d03d15aa2c23d7be",
+  "result": "PASS_SCOPED_H1941_NATIVE_NOT_LATENCY_EXIT",
+  "action": 43740776215,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/43740776215",
+  "artifact_id": 14172541931,
+  "conclusion": "success",
+  "original_mode": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "source_exact_in_report_manifest_binary": true,
+  "tcp4MiB": {
+    "physical_elapsed_ms": 50.828,
+    "direct_elapsed_ms": 70.517,
+    "echo_bytes_each": 4194304,
+    "linux_SHA_FIN": "PASS",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "small": {
+    "physical_direct_ABBA": 384,
+    "bytes": [
+      64,
+      1024,
+      16384
+    ],
+    "per_path_per_size": 64,
+    "source_locked_SHA_FIN": "PASS",
+    "first_echo_after_half_close_p99_ms": {
+      "b64": {
+        "physical": 0.379,
+        "direct": 15.642
+      },
+      "b1024": {
+        "physical": 0.441,
+        "direct": 15.837
+      },
+      "b16384": {
+        "physical": 5.597,
+        "direct": 15.641
+      }
+    }
+  },
+  "tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "p99_ms": 10.339
+  },
+  "rust_counters": {
+    "relay_turns": 1339,
+    "ready_ticket_served": 1948,
+    "ready_ticket_peak": 1,
+    "ready_wait_ge8_ms": 56,
+    "ready_wait_ge16_ms": 4,
+    "ready_wait_max_ms": 25,
+    "inner_fin_peek_calls": 138,
+    "inner_fin_peek_eof": 138,
+    "outer_fin_peek_calls": 84,
+    "outer_fin_peek_eof": 84
+  },
+  "exits": {
+    "H1941_FIN_peek_functional": "PASS",
+    "P2_small_first_echo_latency": "OPEN",
+    "P1_policy_ABBA": "OPEN",
+    "H1942_two_server_echo_policies": "NOT_RUN",
+    "CPU_old_new_same_VM": "NOT_RUN"
+  },
+  "limitations": [
+    "p99 64 requests per path/size almost maximum, not an SLA",
+    "no causal old/new runtime performance proof",
+    "H1941 not full10GiB, only short",
+    "physical process CPU bypasses original Rust, not classifier control"
+  ]
+}

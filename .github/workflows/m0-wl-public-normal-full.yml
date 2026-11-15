@@ -62,6 +62,7 @@ on:
       # must trigger the SAME real signed original Windows/WSL2 source.
       - tests/test_m0_plan029_h1896_sustain_tcp.py
       - tests/test_m0_plan029_h1898_highrate.py
+      - tests/test_m0_plan029_h1942_echo_before_fin.py
       - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_install_public_faketcp.py
       - tools/m0_install_public_realityfront_tests.py
@@ -547,6 +548,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
+      - run: python -m unittest tests.test_m0_plan029_h1942_echo_before_fin -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
@@ -1008,6 +1010,7 @@ jobs:
       # H1926: small kernel TCP real app phase p50/p95/p99, same-Windows
       # physical/Direct A-B-B-A. Requires the ordinary signed 4MiB bulk.
       WBD_PLAN029_P2_SMALL_TCP_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-small-tcp-latency]') && '1' || '0' }}
+      WBD_PLAN029_P2_ECHO_EARLY_CONTROL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-echo-early-control]') && '1' || '0' }}
       WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.
@@ -2566,6 +2569,28 @@ jobs:
                 throw 'H1815 genuine P2 physical vs Direct TCP 1MiB and concurrent Tunnel small UDP/owned Stop unqualified'
               }
               Write-Output 'PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_P2_ECHO_EARLY_CONTROL -eq '1'){
+                $base=$p2.small_tcp_latency
+                $early=$base.echo_before_fin_control
+                if($base.source_sha -ne $env:GITHUB_SHA -or
+                   $base.status -ne 'PASS_SCOPED_SMALL_TCP_A_B_B_A_SHA_FIN' -or
+                   $base.windows.reply_policy -ne 'fin_first' -or
+                   $base.windows.total_connections -ne 384 -or
+                   $early.status -ne 'PASS_SCOPED_ORIGINAL_TWO_OS_ECHO_BEFORE_FIN' -or
+                   $early.source_sha -ne $env:GITHUB_SHA -or
+                   $early.windows.source_sha -ne $env:GITHUB_SHA -or
+                   $early.linux.source_sha -ne $env:GITHUB_SHA -or
+                   $early.windows.reply_policy -ne 'payload_first' -or
+                   $early.linux.reply_policy -ne 'payload_first' -or
+                   $early.windows.total_connections -ne 384 -or
+                   $early.linux.received_connections -ne 384 -or
+                   $early.windows.payload_sha256 -ne $early.linux.sha256_all_received -or
+                   $early.windows.payload_sha256 -ne $base.windows.payload_sha256 -or
+                   $p2.stop -ne 'PASS_BOTH_OWNED'){
+                  throw 'H1942 original 384 FIN-first and 384 payload-first two-OS SHA/FIN/Stop not proven'
+                }
+                Write-Output 'PLAN029_H1942_TWO_REAL_KERNEL_TCP_REPLY_POLICIES_384_EACH_SHA_FIN_STOP_PASS_SCOPED'
+              }
               if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
                 $rate=$p2.highrate_direct_tcp
                 # H1909: H1907 actually completed 10GiB, SHA/FIN/Stop,
