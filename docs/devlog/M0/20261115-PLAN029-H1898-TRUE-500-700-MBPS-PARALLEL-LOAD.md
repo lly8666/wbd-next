@@ -1,0 +1,11 @@
+# PLAN029 H1898｜签名原Wintun高负载：500 Mb/s单向与700 Mb/s双向合计目标
+
+- 背景事实：H1892签名真实原Windows2025 Wintun 128条 Direct TCP（126 idle、两同WSA分片活跃）＋真实Linux TCP＋Tunnel UDP/Stop PASS；H1896 [签名Action43683524510](https://github.com/lly8666/wbd-next/actions/runs/43683524510) 的两次30秒240MiB各交付/SHA/FIN/96B Tunnel UDP 4890/4890/Stop PASS，但`8MiB/s`为人为定速约67Mb/s，未触达系统极限。原Go+Rust混合进程CPU上/下方向3.4/3.2sec/GiB但UDP-only baseline CPU还高于加载阶段，不能冒认真实Direct-only CPU。H1897 [治理Action43684779714](https://github.com/lly8666/wbd-next/actions/runs/43684779714) **FAILED**：原结构热读文件总字节32782超过固定预算32768（14B），本SOURCE收短M0 cursor约数百字节，不调整任何治理阈值；旧FAIL保留。
+- 本SOURCE只加签名私有`[plan029-v3-real-p2-bulk] [plan029-v3-real-p2-500-700]`的一场Normal V3真实场景，不修改Go/Rust产品搬运算法/调度/密钥/配置、原物理基准4MiB、纯Tunnel、DNS和owned Stop。原Windows应用绑定**真Wintun租约10.66.0.2**访问原FakeIP，原Rust双内核TCP腿和物理源绑定，WSL2 Linux原kernel socket在**已签名授权端口46118**接收。一个持久OS TCP：第一阶段单方向**512MiB**，写入绝对单向目标**500 Mb/s（62.5MB/s）**；第二阶段测试应用开一条仅负载发生器线程与main读取线程，在**相同OS TCP连接**中上/下**各256MiB同时传送**，目标双向**总计700 Mb/s**，即每腿350 Mb/s。每阶段均按真实接收字节/SHA/最终物理确认ACK计时，不分配512MiB用户态数组：恒定64KiB测试块、逐块Linux/Windows数据验真、两端FIN独立确认。
+- 两个**目标不作为硬性throughput PASS**：报告真实`actual_aggregate_mbps`与`target_reached`布尔值，低于目标也明示瓶颈、绝不伪称系统达到500/700。若未交付512+256+256MiB、真实SHA/FIN、时间界或Stop任一失败则完整FAIL；不以丢数据换绿灯。因单Windows runner计算密集时吞吐与时钟波动，禁止跨VM计算加速幅度或暗示达到宣传带宽。
+- 归因在同一真VPN owner/PID收集：原Go+Rust进程`GetProcessTimes`用户/内核CPU秒及sec/GiB；**独立Python发生器PID**同字段；整台Windows VM`GetSystemTimes`所有逻辑核busy百分比（会包含runner/驱动/其他进程，绝非驱动独占）；另取负载前后各8秒原进程仅有**96B持续Tunnel UDP**的CPU对照。源锁定原Windows QPC窗口覆盖pre/单向500/双向700/post，UDP每窗口真内核收到至少25个序列，p99/maxgap按同钟实算。真实Tunnel UDP仍保留原普通P2最低120/120和整个新高率阶段持续覆盖，本场独立提高上限14000、WSL用显式环境传入而不是假定继承Windows变量。
+- 跨平台小组件测试验证确切500/700单位、字节预算、流式64KiB、一个真实socketpair双向线程+SHA与测试内部host CPU计算；原生产测试、原Windows2025 Rust/Go/WSL2签名网络端到端/Stop**均NOT_RUN**，不得提前升级P1/P2。若虚拟机/生成器资源先饱和按原始CPU和实际速率直接报告`TARGET_NOT_REACHED`而非掩盖；D1–D5/GUI/Game4/真实IPv6仍OPEN，PLAN029 IN_PROGRESS，PLAN030不启动。
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1898 source-locked real Windows Wintun/WSL2 500Mb/s one-way and 700Mb/s aggregate full-duplex TARGET experiment with streaming SHA/FIN, per-process/generator/VM CPU and concurrent Tunnel UDP p99; candidate NOT_RUN."}
+```

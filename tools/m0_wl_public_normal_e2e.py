@@ -39,6 +39,13 @@ p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
 p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 p029_tcp128_control=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
 p029_sustain=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
+p029_highrate=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
+if p029_highrate and not (p029_p2 and p029_direct and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal" and
+    not (p029_sustain or p029_abba or p029_tcp128 or p029_tcp128_control)):
+ raise RuntimeError("H1898 only original signed Normal 500/700Mb/s load")
 if p029_sustain and not (p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
@@ -1065,7 +1072,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   report["plan029_private_v3_cn_direct_udp"]["direct_tcp"]="PASS_REAL_KERNEL_TWO_LEG_TCP_32K"
   print("PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",flush=True)
   if p029_p2:
-   if p029_sustain:
+   if p029_sustain or p029_highrate:
     # Passed only to the test orchestrator; product environment was
     # already frozen at its original Popen(), without a new CLI option.
     os.environ["WBD_PLAN029_P2_ORIGINAL_PID"]=str(w.pid)
@@ -2259,6 +2266,38 @@ print(json.dumps(result),flush=True)
      stress["stop"]="PASS_BOTH_OWNED"
      stress["status"]="PASS_SIGNED_TRUE_WINTUN_128_IDLE2_ACTIVE_SAME_SHARD_AND_CPU_SCOPE"
      print("PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_126_IDLE_2_SAME_SHARD_ACTIVE_AND_IDLE_CPU_STOP_PASS_SCOPED",flush=True)
+    if p029_highrate:
+     rate=p2.get("highrate_direct_tcp")
+     if (not isinstance(rate,dict) or
+         rate.get("source_sha")!=os.environ["GITHUB_SHA"] or
+         rate.get("status")!="PENDING_UDP_AND_STOP" or
+         rate.get("owner_stop")!="NOT_RUN" or
+         not rate.get("tunnel_udp_covers_rate") or
+         rate.get("scope")!=
+         "REAL_FAKEIP_WIN_LINUX_512M_UP_AND_256M_EACH_FULL_DUPLEX" or
+         not rate.get("windows",{}).get("one_real_full_duplex_tcp_socket") or
+         not rate.get("windows",{}).get("windows_half_close") or
+         not rate.get("linux",{}).get("half_close")):
+      raise RuntimeError("H1898 signed real 500/700 throughput CPU/Stop proof absent")
+     for name,target in (("oneway_500mbps",500),
+                         ("duplex_700mbps_aggregate",700)):
+      stage=rate["windows"]["stages"].get(name,{})
+      udp=rate["tunnel_udp_per_stage"].get(name,{})
+      if (stage.get("target_aggregate_mbps")!=target or
+          not 2<=stage.get("elapsed_s",0)<=100 or
+          stage.get("actual_aggregate_mbps",0)<=0 or
+          stage.get("original_process_cpu",{}).get(
+             "original_process_total_cpu_s_per_gib",-1)<0 or
+          stage.get("load_generator_cpu",{}).get(
+             "original_process_total_cpu_s_per_gib",-1)<0 or
+          stage.get("windows_host_cpu",{}).get(
+             "host_all_logical_cpu_busy_pct",-1)<0 or
+          udp.get("unique_delivered",0)<25 or
+          udp.get("rtt_p99_ms",-1)<0):
+       raise RuntimeError("H1898 true high-rate SHA/CPU/Tunnel 96B p99 absent")
+     rate["owner_stop"]="PASS_BOTH_OWNED"
+     rate["status"]="PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED"
+     print("PLAN029_H1898_SIGNED_TRUE_500MBPS_ONEWAY_700MBPS_SIMULTANEOUS_TCP_SHA_CPU_UDP_STOP_PASS_SCOPED",flush=True)
     if p029_sustain:
      st=p2.get("sustained_direct_tcp")
      if (not isinstance(st,dict) or

@@ -538,6 +538,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
+      - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
@@ -618,7 +619,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -1003,6 +1004,9 @@ jobs:
       # physical Linux kernel peer and one original Wintun FakeIP TCP.
       # Must also name [plan029-v3-real-p2-bulk]; never 128 or ABBA.
       WBD_PLAN029_P2_SUSTAIN_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-sustain]') && '1' || '0' }}
+      # H1898: signed private 500Mb/s one-way, 700Mb/s aggregate
+      # full-duplex TARGET test only, NOT an original product speed switch.
+      WBD_PLAN029_P2_HIGH_RATE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-500-700]') && '1' || '0' }}
       # H1892 is a *distinct*, source-locked one-VM 128 genuine Wintun
       # Direct TCP socket scene, reusing the exact guest TCP46112 grant.
       WBD_PLAN029_TCP128_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128]') && '1' || '0' }}
@@ -2505,6 +2509,25 @@ jobs:
                 throw 'H1815 genuine P2 physical vs Direct TCP 1MiB and concurrent Tunnel small UDP/owned Stop unqualified'
               }
               Write-Output 'PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
+                $rate=$p2.highrate_direct_tcp
+                if($rate.source_sha -ne $env:GITHUB_SHA -or
+                   $rate.status -ne 'PASS_SIGNED_REAL_500_TARGET_AND_700_AGGREGATE_MEASURED' -or
+                   $rate.owner_stop -ne 'PASS_BOTH_OWNED' -or
+                   $rate.tunnel_udp_covers_rate -ne $true -or
+                   $rate.windows.stages.oneway_500mbps.local_sent_bytes -ne 536870912 -or
+                   $rate.linux.oneway_received_bytes -ne 536870912 -or
+                   $rate.windows.stages.duplex_700mbps_aggregate.local_sent_bytes -ne 268435456 -or
+                   $rate.windows.stages.duplex_700mbps_aggregate.local_received_bytes -ne 268435456 -or
+                   $rate.linux.duplex.local_received_bytes -ne 268435456 -or
+                   $rate.linux.duplex.local_sent_bytes -ne 268435456 -or
+                   $rate.tunnel_udp_per_stage.oneway_500mbps.unique_delivered -lt 25 -or
+                   $rate.tunnel_udp_per_stage.duplex_700mbps_aggregate.unique_delivered -lt 25 -or
+                   $p2.stop -ne 'PASS_BOTH_OWNED'){
+                  throw 'H1898 real signed 500/700 Mbps target high-rate SHA/Tunnel/Stop failed'
+                }
+                Write-Output 'PLAN029_H1898_SIGNED_TRUE_512M_ONEWAY_256M_EACH_PARALLEL_TCP_CPU_UDP_OWNED_STOP_PASS_SCOPED'
+              }
               if($env:WBD_PLAN029_P2_SUSTAIN_SCENE -eq '1'){
                 $s=$p2.sustained_direct_tcp
                 if($s.source_sha -ne $env:GITHUB_SHA -or
@@ -2915,6 +2938,7 @@ jobs:
             result/wl-public/report.json
             result/wl-public/normal-report.json
             result/wl-public/plan029-h1815-*.log
+            result/wl-public/plan029-h1898-*.log
             result/wl-public/*-report.json
             result/wl-public/mode-batch.json
             result/wl-public/mode-results/
