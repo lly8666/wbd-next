@@ -29,8 +29,9 @@ class H1911SignedPrebuiltReuse(unittest.TestCase):
         self.assertEqual(s.count("if: (!contains(github.event.head_commit.message, '"+MARKER+"')) &&"),3)
         self.assertNotIn("if: !contains(github.event.head_commit.message, '"+MARKER+"') &&",s)
         self.assertGreaterEqual(s.count("!contains(github.event.head_commit.message, '"+MARKER+"')"),4)
-        self.assertIn("needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' ||",s) if False else None
-        self.assertIn("contains(github.event.head_commit.message, '"+MARKER+"') ||",s)
+        # The native dependency clause is parenthesized; source review
+        # must verify the *actual* expression, not an impossible substring.
+        self.assertIn("(github.ref_name == 'main' && contains(github.event.head_commit.message, '"+MARKER+"')) ||",s)
         self.assertIn("if: env.WBD_WL_REUSE_RUN_ID == ''",s)
         self.assertIn("if: env.WBD_WL_REUSE_RUN_ID != '' && env.WBD_WL_ABBA_NATIVE != '1'",s)
         for marker in ("[plan029-v3-real-p2-bulk]","[plan029-v3-real-p2-500-700]",

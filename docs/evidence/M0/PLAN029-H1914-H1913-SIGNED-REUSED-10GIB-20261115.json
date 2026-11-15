@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1914",
+  "harness_source_sha": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
+  "source_sha": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
+  "product_binary_source_sha": "64f6819460f7f950f13bc7d10659a6f4552b28b6",
+  "action_id": 43704703993,
+  "job_id": 132783312900,
+  "action_conclusion": "success",
+  "result": "SIGNED_ORIGINAL_WIN_WSL2_PREBUILT_REUSE_10GIB_CPU_SAME_VM_PHYSICAL_VS_DIRECT_AND_TUNNEL_UDP_STOP_PASS_SCOPED_P2_CPU_PER_GIB_OPEN",
+  "artifact_source_run": 43700145002,
+  "windows_artifact_id": 14156860270,
+  "linux_artifact_id": 14156043330,
+  "verified_gates": [
+    "original Windows EXE Rust DLL and original Linux Go/Rust exact SHA256 byte manifests",
+    "source/run/repo/conclusion=SUCCESS and original product ABI git diff empty",
+    "actual original Windows V3 DLL export",
+    "signed Npcap/Wintun/WSL2 native business and Stop",
+    "four heavy compilation jobs SKIPPED"
+  ],
+  "load": {
+    "per_path_gib": 5,
+    "combined_physical_plus_direct_gib": 10,
+    "oneway_bytes_each_path": 2147483648,
+    "duplex_each_direction_bytes_each_path": 1610612736
+  },
+  "oneway_500_target": {
+    "physical_mbps": 500.008,
+    "direct_mbps": 499.997,
+    "physical_process_cpu_s_per_gib": 0.242188,
+    "direct_process_cpu_s_per_gib": 9.304688,
+    "added_cpu_s_per_gib": 9.0625,
+    "added_user_cpu_s_per_gib": 4.945313,
+    "added_kernel_cpu_s_per_gib": 4.117188,
+    "physical_host_busy_pct": 15.6321,
+    "direct_host_busy_pct": 39.125,
+    "tunnel_udp_direct_p99_ms": 1.212
+  },
+  "duplex_700_target": {
+    "physical_mbps": 699.996,
+    "direct_mbps": 700.003,
+    "physical_process_cpu_s_per_gib": 0.255208,
+    "direct_process_cpu_s_per_gib": 7.885417,
+    "added_cpu_s_per_gib": 7.630209,
+    "added_user_cpu_s_per_gib": 4.208334,
+    "added_kernel_cpu_s_per_gib": 3.421875,
+    "physical_host_busy_pct": 19.0047,
+    "direct_host_busy_pct": 56.4092,
+    "tunnel_udp_direct_p99_ms": 1.416
+  },
+  "tcp_kernel_io_final": {
+    "source": "ORIGINAL_RUST_AFTER_STOP",
+    "shard_wakes": 121511,
+    "event_socket_checks": 243008,
+    "ticket_peak": 1,
+    "ticket_wait_max_ms": 2,
+    "relay_turns": 274595,
+    "relay_no_progress": 93796,
+    "no_progress_fraction": 0.3415794169595222,
+    "inner_read_calls": 195468,
+    "outer_read_calls": 82006,
+    "inner_read_wouldblock": 57454,
+    "outer_read_wouldblock": 37522,
+    "inner_read_event_suppressed": 79024,
+    "outer_read_event_suppressed": 192564,
+    "direct_forwarded_bytes": 5376180230,
+    "queued_copy_bytes": 983040
+  },
+  "replicate": {
+    "h1909_product_binary_source_sha": "64f6819460f7f950f13bc7d10659a6f4552b28b6",
+    "h1909_oneway_added_cpu_s_per_gib": 11.210938,
+    "h1909_duplex_added_cpu_s_per_gib": 9.317708,
+    "h1909_no_progress_relay_turns": 87237,
+    "h1909_relay_turns": 231572,
+    "vm": "DIFFERENT_RUNNER_NOT_CODE_CAUSAL_AB"
+  },
+  "limits": {
+    "P2_performance": "OPEN",
+    "P1_cpu_gib": "OPEN",
+    "driver_isr_dpc": "NOT_ATTRIBUTED",
+    "CPU_process_scope": "Original Go plus Rust process user/kernel with concurrent Tunnel96B UDP, not split backend alone",
+    "strict_target": "oneway Direct499.997 <500, duplex Direct700.003>700",
+    "GUI_Game4_IPV6": "OPEN"
+  }
+}

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1913,
-  "checkpoint_sha": "48c4795853ad3308787038b8617f2e5dae28e120",
+  "sequence": 1914,
+  "checkpoint_sha": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1913 H1912 signed reuse Action43704549848 reached real CI jobs, intended WinGo/WinRust/LinuxRust + Linux original recompile all SKIPPED; cheap tests.test_delivery_ci exact old compiler if assertion expected no H1909 reuse marker and FAILED before native. Preserve exact gate string expectation by adding only the new verified marker (no remove/skip test), no product code changes. Reused signed 10GiB run NOT_RUN until full action.",
-  "why_now": "True fail-fast CI prevented network due legacy equality assertion. Keep it strict for no native driver effects in Windows compile-only job while allowing proven SHA-frozen H1909 artifact reuse. H1912 previous failure retained.",
+  "current_task": "H1914 collect H1913 source-locked signed real 10GiB original Win2025/WSL2 reuse full SUCCESS, signed original H1909 EXE/DLL + Linux manifest SHA, no WinGo/WinRust/LinuxRust/Linux product rebuild; physical-vs-Direct incremental original process CPU/GiB +9.0625s one-way / +7.630209s full duplex (distinct VM replicate vs H1909 +11.210938/+9.317708). Rust final relay no-progress93796/274595 (34.2%), prior H1909 87237/231572 (37.7%), ready FIFO peak1/wait2ms. H1913 governance-maintenance failed one test's malformed substring (native was SUCCESS), H1914 fixes exact test expression without relaxing scope.",
+  "why_now": "H1913 genuinely completed one origin-signed second 10GiB run and exact artifact reuse; high CPU and 34–38% no-progress relay turns reproduced across distinct VMs with unchanged compiled binary. Correct invalid current test assertion rather than weakening source locks. NEXT: reduce unnecessary same-flow immediate requeue only when socket queue empty and neither 64KiB kernel read quantum full, relying existing FD_READ/FD_CLOSE.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1913 cheap + governance and original Windows2025/WSL2 P2 long reuse: skipped four compilers, downloaded SOURCE H1909 bytes, signed Npcap Wintun owned Stop; numerical CPU/GiB independent repeated trial then prioritize hot path or backpressure diagnosis.",
+  "next_action": "H1915 minimal original Rust TX true-ready requeue criterion: only when buffered tail exists or per-leg full 64KiB read quantum, never requeue after small fully forwarded data when no backlog. Add deterministically tested pure scheduling predicate, cold requeue-skipped source counter; signed new SOURCE Windows2025 4MiB+Tunnel UDP/Stop then long 2GiB/1.5GiB CPU. Preserve FIN, FD_CLOSE, TCP backpressure and owned Stop. P1 and P2 perf OPEN.",
   "unverified": true,
-  "last_tested_source": "64f6819460f7f950f13bc7d10659a6f4552b28b6",
+  "last_tested_source": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1910-H1909-SIGNED-10GIB-REAL-P2-20261115.json"
+    "docs/evidence/M0/PLAN029-H1914-H1913-SIGNED-REUSED-10GIB-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
     "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
     "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md",
     "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md",
     "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md",
-    "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md"
+    "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1912 YAML fixed and Go/Rust rebuild jobs skipped as intended but cheap delivery contract failed comparing old exact string. H1913 updated only exact expected if and added explicit verified marker assertion, source candidate NOT_RUN. H1909 signed 10GiB PASS, H1910 maintenance SHA PASS, P1/P2 perf OPEN."
+  "partial_summary": "H1913 full signed 10GiB original artifact reuse PASS; actual 499.997/700.003Mbps Direct, original process incremental CPU9.0625/7.630209 s/GiB, all SHA/FIN/Tunnel96B/Stop. H1909 vs H1913 same H1909 original binaries, different VM; CPU/GiB varies but hot CPU persists. 93796/274595 no-progress relay turns, ready queue peak1, max2ms. H1914 fixes governance-maintenance static incorrect substring while preserving strict contract. PLAN029 IN_PROGRESS."
 }
