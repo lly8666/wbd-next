@@ -10,6 +10,9 @@ import shutil
 import subprocess
 import sys
 import time
+import re
+from m0_plan029_rust_thread_cpu_attribution import worker_ids,_sum_samples
+from m0_plan029_h1933_abba_math import ORDER,MODES,SUCCESS,score
 from m0_wl_perf_v2_config import read_scenario, first_delivery_ok_for_scenario
 
 ROOT=pathlib.Path.cwd()
@@ -17,6 +20,7 @@ OUT=ROOT/"result"/"wl-public"
 PAIR=OUT/"plan029-p1-ab"
 SCENE="scenarios/plan029-p1-normal-50m-25ms0-60s.json"
 SOURCE=os.environ.get("GITHUB_SHA","")
+POLICY_ABBA=os.environ.get("WBD_PLAN029_P1_POLICY_ABBA_SCENE")=="1"
 if (len(SOURCE)!=40 or os.environ.get("GITHUB_ACTIONS")!="true" or
     os.environ.get("WBD_PLAN029_P1_AB_SCENE")!="1" or
     os.environ.get("WBD_WL_PUBLIC_MODES")!="normal" or
@@ -29,6 +33,9 @@ if (scene["duration_s"]!=60 or scene["tun_mtu"]!=1460 or
     any(scene[k]["offered_mbps"]!=50 or scene[k]["loss_pct"]!=0 or
         scene[k]["delay_ms"]!=25 for k in ("windows_to_linux","linux_to_windows"))):
     raise SystemExit("H1814 50Mbps/25ms/zero loss input drift")
+if POLICY_ABBA and (os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
+    os.environ.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1"):
+    raise SystemExit("H1934 source-locked same-Rust V3 policy ABBA required")
 if PAIR.exists():
     raise SystemExit("H1814 refuses previous generation pair directory")
 PAIR.mkdir(parents=True)
@@ -36,6 +43,9 @@ result={"schema_version":1,"source_sha":SOURCE,"scenario":SCENE,
         "order":"A_OFF_B_ON_ALL","result":"NOT_RUN","legs":[],
         "oneway_p99":"NOT_MEASURED_UNCALIBRATED_CROSS_OS_CLOCKS",
         "scope":"SIGNED_SAME_VM_TOTAL_V4_V3_TUNNEL_COMPARATOR_NOT_SPLITTER_ONLY"}
+if POLICY_ABBA:
+    result["order"]="A_ALL_B_CN_B_CN_A_ALL"
+    result["scope"]="SIGNED_SAME_RUST_V3_POLICY_ABBA_ORIGINAL_TUNNEL_ONLY"
 def save():
     (PAIR/"result.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
 
@@ -70,14 +80,19 @@ def cpu_window(path,app):
             "samples":len(rows),
             "scope":"ONE_WINDOWS_GO_PLUS_RUST_PROCESS_INCLUDES_SYSCALLS_NOT_DRIVER_CPU"}
 save()
-for name,v3 in (("A_off_old_tunnel","0"),("B_on_all_tunnel","1")):
+arms=([(name,"1",mode) for name,mode in zip(ORDER,MODES)] if POLICY_ABBA
+      else [("A_off_old_tunnel","0","legacy_tunnel"),
+            ("B_on_all_tunnel","1","all")])
+for name,v3,requested_mode in arms:
     legdir=PAIR/name
     legdir.mkdir()
     env=os.environ.copy()
     env.update(WBD_WL_PUBLIC_MODES="normal",WBD_PLAN029_NATIVE_V3_TRIAL=v3,
         WBD_PLAN029_V3_DIRECT_SCENE="0",WBD_WL_OUTER_REPAIR="off",
         WBD_WL_V2_SCENARIO=SCENE,WBD_WL_RUN_N0="0",WBD_WL_RUN_P200="0",
-        WBD_PLAN029_STARTUP_PADDING_SCENE="0")
+        WBD_PLAN029_STARTUP_PADDING_SCENE="0",
+        WBD_PLAN029_P1_POLICY_ABBA_SCENE="1" if POLICY_ABBA else "0",
+        WBD_PLAN029_P1_POLICY_CN_ARM="1" if POLICY_ABBA and requested_mode=="bypass-lan-cn" else "0")
     (OUT/"normal-report.json").unlink(missing_ok=True)
     print("PLAN029_H1814_P1_LEG_BEGIN name="+name+" source="+SOURCE,flush=True)
     process=subprocess.Popen([sys.executable,"-u","tools/m0_wl_public_modes_e2e.py"],env=env)
@@ -96,13 +111,13 @@ for name,v3 in (("A_off_old_tunnel","0"),("B_on_all_tunnel","1")):
     if rp.is_file():
         shutil.copy2(rp,legdir/"normal-report.json")
     for filename in ("windows-original-go-rust-process-1hz.jsonl",
-                     "wl-n0-windows-app.json","wl-n0-linux-app.json"):
+                     "wl-n0-windows-app.json","wl-n0-linux-app.json","client.log"):
         path=OUT/filename
         if path.is_file():
             shutil.copy2(path,legdir/filename)
     report=json.loads(rp.read_text()) if rp.is_file() else {}
     entry={"name":name,"source_sha":SOURCE,"split_trial":v3=="1",
-           "route_mode":"all" if v3=="1" else "legacy_tunnel",
+           "route_mode":requested_mode,
            "child_exit":rc,"wall_s":round(time.monotonic()-began,2),
            "result":"NOT_QUALIFIED","owned_stop":report.get("stop","NOT_RUN"),
            "windows_cli_sha256":report.get("windows_cli_sha256"),
@@ -155,6 +170,37 @@ for name,v3 in (("A_off_old_tunnel","0"),("B_on_all_tunnel","1")):
                 raise ValueError("P1 actual real kernel UDP RTT p99/gap missing "+side)
             delivered+=app["received_first_payload_bytes"]
         cpu=cpu_window(OUT/"windows-original-go-rust-process-1hz.jsonl",apps["windows"])
+        if POLICY_ABBA:
+            cold=(legdir/"client.log").read_text(errors="replace")
+            marker="WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode="+requested_mode+" "
+            # The original logger may emit multiple messages on one
+            # physical line containing literal \n; anchor in the entire
+            # exact source log, not line starts.
+            start=cold.find(marker)
+            if start<0 or cold.find(marker,start+1)>=0:
+                raise ValueError("H1934 original Rust V3 cold route-mode absent/duplicate")
+            m=re.search(r"cn_rows=(\d+) domain_bytes=(\d+)",cold[start:start+400])
+            if not m or (requested_mode=="bypass-lan-cn" and
+                          (int(m[1])<4096 or int(m[2])<100000)) or (
+                          requested_mode=="all" and
+                          (int(m[1])!=0 or int(m[2])!=0)):
+                raise ValueError("H1934 cold policy must load real CN rows and domains")
+            alias=OUT/"plan029-h1745-owned-tun-alias.txt"
+            if not alias.is_file() or alias.read_text().strip()!="203.0.113.77/32":
+                raise ValueError("H1934 true Linux owned Tunnel alias absent")
+            rows=[json.loads(x) for x in
+                  (OUT/"windows-original-go-rust-process-1hz.jsonl").read_text().splitlines()
+                  if x.strip()]
+            thread=_sum_samples(rows,worker_ids(cold),
+                apps["windows"]["measurement_start_monotonic_s"],
+                apps["windows"]["measurement_end_monotonic_s"])
+            if thread["samples"]<45 or thread["rust_combined_cpu_s_lower_bound"]<=0:
+                raise ValueError("H1934 actual Rust TX/RX TID CPU unavailable")
+            entry.update(app_target="203.0.113.77",
+                         linux_alias_os_owned=True,
+                         rust_thread_cpu=thread,cn_rows=int(m[1]),
+                         domain_bytes=int(m[2]))
+
         if cpu["cpu_total_s"]<=0:
             raise ValueError("actual source-locked Go+Rust process CPU unavailable")
         gib=delivered/(1024**3)
@@ -176,15 +222,25 @@ for name,v3 in (("A_off_old_tunnel","0"),("B_on_all_tunnel","1")):
         save()
         print("PLAN029_H1814_P1_FIRST_ERROR "+str(error),flush=True)
         raise SystemExit(1)
-a,b=result["legs"]
+a,b=result["legs"][:2]
 equal=(a["windows_cli_sha256"] and
-       a["windows_cli_sha256"]==b["windows_cli_sha256"] and
+       all(x.get("windows_cli_sha256")==a["windows_cli_sha256"] for x in result["legs"]) and
        a["linux_server_sha256"] and
-       a["linux_server_sha256"]==b["linux_server_sha256"])
+       all(x.get("linux_server_sha256")==a["linux_server_sha256"] for x in result["legs"]))
 result["binary_sha_equal"]=bool(equal)
 if not equal:
     result["result"]="FAIL_BINARY_SHA_CHANGED";save()
     raise SystemExit("P1 A/B compiled binary hash changed")
+if POLICY_ABBA:
+    try:result["comparison"]=score(result["legs"],SOURCE)
+    except ValueError as error:
+        result["result"]="FAIL_SOURCE_ORIGINAL_ABBA_EVIDENCE";save()
+        raise SystemExit(str(error))
+    result["result"]=SUCCESS
+    save()
+    print("PLAN029_H1934_REAL_SAME_RUST_V3_POLICY_ABBA "+
+          json.dumps(result["comparison"],sort_keys=True),flush=True)
+    raise SystemExit(0)
 result["comparison"]={
     "A_cpu_seconds_per_delivered_gib":a["windows_cpu_seconds_per_actual_delivered_gib"],
     "B_cpu_seconds_per_delivered_gib":b["windows_cpu_seconds_per_actual_delivered_gib"],

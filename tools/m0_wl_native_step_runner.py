@@ -84,6 +84,17 @@ def native_batch_deadline(env):
         ):
             raise ValueError("H1907 1060s owner only for exact signed Normal 500/700 long original Wintun")
         return 1060  # nested 900s plus source-owned termination and Stage/Stop receipt
+    # Four original V3 Rust owner lifecycles on ONE Windows+WSL2 VM.
+    if env.get("WBD_PLAN029_P1_POLICY_ABBA_SCENE")=="1":
+        if not (env.get("GITHUB_ACTIONS")=="true" and
+                env.get("WBD_WL_PUBLIC_MODES")=="normal" and
+                env.get("WBD_PLAN029_P1_AB_SCENE")=="1" and
+                env.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+                env.get("WBD_PLAN029_V3_DIRECT_SCENE")!="1" and
+                env.get("WBD_WL_V2_SCENARIO")==
+                "scenarios/plan029-p1-normal-50m-25ms0-60s.json"):
+            raise ValueError("H1934 original V3 four Tunnel legs not source-locked")
+        return 1850
     # One true hard8 Direct idle sweep physically requires 120s plus
     # genuine DNS blackout and Stop after the initial functional setup.
     # Scope 400s to exactly the signed Normal one-owner fixture.

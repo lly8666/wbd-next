@@ -121,6 +121,8 @@ on:
       - tests/test_m0_wl_windows_cpu_audit.py
       - tools/m0_wl_outer_pair.py
       - tools/m0_plan029_h1814_p1_tunnel_ab.py
+      - tools/m0_plan029_h1933_abba_math.py
+      - tests/test_m0_plan029_h1933_abba_math.py
       - tools/m0_plan029_h1815_p2_real_mixed.py
       - tools/m0_plan029_h1892_real_tcp128.py
       - tools/m0_plan029_h1898_highrate_tcp.py
@@ -1000,6 +1002,7 @@ jobs:
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}
       WBD_PLAN029_D3_MULTIA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]') && '1' || '0' }}
       WBD_PLAN029_P1_AB_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || '0' }}
+      WBD_PLAN029_P1_POLICY_ABBA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-policy-abba]') && '1' || '0' }}
       # One new, explicit unpaced 4MiB P2 scenario; original 1MiB paced marker unchanged.
       WBD_PLAN029_P2_BULK_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || '0' }}
       # H1926: small kernel TCP real app phase p50/p95/p99, same-Windows
@@ -2217,16 +2220,29 @@ jobs:
           }
           if($env:WBD_PLAN029_P1_AB_SCENE -eq '1'){
             $pair=Get-Content result/wl-public/plan029-p1-ab/result.json -Raw | ConvertFrom-Json
-            if($pair.source_sha -ne $env:GITHUB_SHA -or
-               $pair.result -ne 'PASS_SCOPED_P1_BOTH_TRUE_NATIVE_TUNNEL_LEGS_MEASURED' -or
-               $pair.order -ne 'A_OFF_B_ON_ALL' -or
-               @($pair.legs).Count -ne 2 -or
-               $pair.legs[0].result -ne 'PASS' -or
-               $pair.legs[1].result -ne 'PASS' -or
-               $pair.binary_sha_equal -ne $true){
-              throw 'H1814 genuine same-VM V4/V3 Normal Tunnel P1 A/B measured receipt missing'
+            if($env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1'){
+              if($pair.source_sha -ne $env:GITHUB_SHA -or
+                 $pair.result -ne 'PASS_SCOPED_P1_SAME_RUST_V3_POLICY_ABBA_MEASURED' -or
+                 $pair.order -ne 'A_ALL_B_CN_B_CN_A_ALL' -or
+                 @($pair.legs).Count -ne 4 -or
+                 @($pair.legs | Where-Object { $_.result -ne 'PASS' }).Count -ne 0 -or
+                 $pair.binary_sha_equal -ne $true -or
+                 $pair.comparison.source_sha -ne $env:GITHUB_SHA){
+                throw 'H1934 original Rust V3 same policy four-leg CPU/Stop not qualified'
+              }
+              Write-Output ('PLAN029_H1934_ORIGINAL_V3_POLICY_ABBA '+$pair.comparison.cpu_interpretation)
+            }else{
+              if($pair.source_sha -ne $env:GITHUB_SHA -or
+                 $pair.result -ne 'PASS_SCOPED_P1_BOTH_TRUE_NATIVE_TUNNEL_LEGS_MEASURED' -or
+                 $pair.order -ne 'A_OFF_B_ON_ALL' -or
+                 @($pair.legs).Count -ne 2 -or
+                 $pair.legs[0].result -ne 'PASS' -or
+                 $pair.legs[1].result -ne 'PASS' -or
+                 $pair.binary_sha_equal -ne $true){
+                throw 'H1814 original V4/V3 Normal Tunnel A/B receipt missing'
+              }
+              Write-Output 'PLAN029_H1814_P1_SIGNED_NORMAL_V4_V3_SAME_VM_CPU_GIB_RTT_P99_GAP_STOP_PASS_SCOPED'
             }
-            Write-Output 'PLAN029_H1814_P1_SIGNED_NORMAL_V4_V3_SAME_VM_CPU_GIB_RTT_P99_GAP_STOP_PASS_SCOPED'
           }
           if($env:WBD_WL_OUTER_PAIR -eq '1'){
             $pair=Get-Content result/wl-public/outer-pair/result.json -Raw | ConvertFrom-Json
