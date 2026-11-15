@@ -351,12 +351,18 @@ if __name__=="__main__":
     # An optional exact fixture-only fourth argument is carried explicitly
     # across wsl.exe, where Windows environment variables are not inherited.
     # Never silently run different payload sizes on the two kernel legs.
-    if len(sys.argv) not in (4,5):
-        raise SystemExit("P2 role, two addresses and optional bounded workload required")
-    if len(sys.argv)==5 and (
+    if len(sys.argv) not in (4,5,6):
+        raise SystemExit("P2 role, two addresses, optional workload and ABBA selection required")
+    if len(sys.argv)>=5 and (
         sys.argv[4] not in ("p2bulk","p2paced") or
         BULK!=(sys.argv[4]=="p2bulk")):
         raise SystemExit("P2 physical and Wintun workload selection mismatch")
+    if len(sys.argv)==6:
+        if (sys.argv[5] not in ("p2abba","p2ordinary") or
+                ABBA!=(sys.argv[5]=="p2abba")):
+            raise SystemExit("P2 WSL explicit ABBA selection mismatch")
+    elif ABBA:
+        raise SystemExit("P2 ABBA requires explicit WSL argv, not env-only activation")
     role,a,b=sys.argv[1:4]
     if role=="guest_tcp":tcp_guest(a,b)
     elif role=="guest_udp":udp_guest(a,b)

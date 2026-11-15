@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1884,
-  "checkpoint_sha": "f51daca9a6038549bfd53af04fc7be85f0fb5bc0",
+  "sequence": 1885,
+  "checkpoint_sha": "40d2855f1a23002b30ea354287b817a4b396e73d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1884 code candidate: one original signed Win2025/WSL2 V3 Normal CN owner, four 4MiB real FakeIP Direct sessions A(copy)-B(bypass)-B(bypass)-A(copy) on reserved TCP port46116, original physical baseline + sustained Tunnel UDP120/120, exact original Rust per-flow admission log verified after owned Stop. Only feature m0_v4_probe + signed CI + explicit source-scoped ABBA activation permits old copy mode. SOURCE NOT_RUN.",
-  "why_now": "H1882 signed physical47.233ms/Direct115.862ms ratio2.453 vs historical H1877 2.787 from different Windows VMs, impossible performance causality. Same source, same VM, same Rust binary/queue policy/NPF/Wintun generation, four independent real kernel sockets with ABBA balances monotonic thermal drift; no production toggle.",
+  "current_task": "H1885 exact H1884 first CI failure: H1749 static P2 test expected fixed 5-argv old WSL spawn; new signed ABBA requires explicit sixth argv and P2 script __main__ originally only accepted 4 or 5. Updated strict backward-compatible workload+selection validation and corresponding static contract; no Rust/native TCP logic change.",
+  "why_now": "H1884 Action43669350889 cheap workflow failed test_h1849_p2_identical_app_nagle_and_failed_scene_udp_progress before native DLL/real WSL2. First failure from changed argv shape. Preserve old P2 4/5 argv and require explicit p2abba or p2ordinary in 6-argv case. Do not misclassify as network regression.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1884 source-locked Windows/Linux Rust unit, Go/script compilation, then original Windows/WSL2 true ABBA scene and Stop. Extract copy/bypass per trial, means/phase, strict admission log proof and Tunnel120/120; performance remains OPEN unless repeatable and cross-validated. CPU user/kernel and 128 real Wintun idle+active still independently OPEN.",
+  "next_action": "Collect H1885 source cheap static tests, Windows/Linux Rust components and signed original P2 4MiB four real Direct copy-bypass-bypass-copy flows in one VM. Check original Rust ordinals 1-4, Linux five TCP receipts, Tunnel120/120 across all, halfclose/SHA/Stop, CPU not measured. Performance decision only after signed ABBA evidence.",
   "unverified": true,
   "last_tested_source": "37c6025629f76d082b080dfb786a46f436ace58b",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1883-H1882-SIGNED-FAST-FORWARD-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md",
     "docs/devlog/M0/20261115-PLAN029-H1883-COLLECT-H1882-FAST-FORWARD-P2.md",
     "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md",
     "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1880-WIN-128-LOOPBACK-ASSERT-TYPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md",
-    "docs/devlog/M0/20261115-PLAN029-H1877-READY-TICKET-BORROW-SCOPE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1882 signed 4MiB P2 original functional PASS physical47.233ms Direct115.862ms ratio2.453, Tunnel120/120 Stop. H1884 probe-only four real Direct TCP ABBA same VM/one binary source candidate NOT_RUN; P1 CPU/GiB +9.41%, GUI/Game4/IPv6 remain OPEN. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1884 signed Action stopped at legacy P2 static test contract before networking (failure retained). H1885 updates both app runtime explicit WSL argv and static assertions; real ABBA NOT_RUN. H1882 signed functional PASS 2.453x physical but across-source performance OPEN."
 }
