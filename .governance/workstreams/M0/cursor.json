@@ -15,8 +15,7 @@
   "unverified": true,
   "last_tested_source": "72d3e131561dcb54501722f7d9254b34a27094e9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1946-H1945-QPC-AND-H1937-P1-FIRST-BOUNDARY-20261116.json",
-    "docs/evidence/M0/PLAN029-H1945-H1944-SIGNED-TWO-REPLY-POLICIES-20261115.json"
+    "docs/evidence/M0/PLAN029-H1946-H1945-QPC-AND-H1937-P1-FIRST-BOUNDARY-20261116.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",

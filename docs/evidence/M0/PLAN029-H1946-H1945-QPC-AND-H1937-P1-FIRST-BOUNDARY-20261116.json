@@ -74,5 +74,7 @@
     "repeat_H1945",
     "old_P1_failed_run",
     "10GiB_same_source"
-  ]
+  ],
+  "source_sha": "72d3e131561dcb54501722f7d9254b34a27094e9",
+  "result": "PASS_SCOPED_H1945_QPC_ONLY__H1946_SOURCE_NOT_RUN"
 }
