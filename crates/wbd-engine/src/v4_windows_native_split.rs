@@ -680,11 +680,16 @@ mod tests{
         // Without a cold durable journal: one local SERVFAIL, no physical
         // socket and no real overseas CDN A response.
         assert_eq!(s.dns.counts(),(0,0,1));
-        let mut reply=[0u8;2048];
-        let n=s.poll_udp_reverse(&mut reply,2).unwrap();
-        assert_eq!(reply[20..22],[0,53]);
-        assert_eq!(reply[31]&0xf,2); // DNS RCODE at IPv4(20)+UDP(8)+flags byte1(3)
-        assert!(n>=40);
+        let mut scratch=[0u8;2048];
+        // A finished DNS reply already owns a Vec. Native TX passes it
+        // directly into the original RX mailbox rather than re-copying it.
+        let owned=match s.poll_udp_reverse(&mut scratch,2).unwrap(){
+            NativeReverse::Owned(bytes)=>bytes,
+            NativeReverse::InScratch(_)=>panic!("DNS reply lost owned Vec"),
+        };
+        assert_eq!(owned[20..22],[0,53]);
+        assert_eq!(owned[31]&0xf,2); // DNS RCODE at IPv4(20)+UDP(8)+flags byte1(3)
+        assert!(owned.len()>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
     }

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1871,
-  "checkpoint_sha": "0860242fc8669ebf37ba53f026d0301955019d00",
+  "sequence": 1872,
+  "checkpoint_sha": "91ba859d3868db054c2354d63543d47b6d2cd7f0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1871 exact governance bounded-card/context fix on H1870 source; H1870 Rust and signed P2 in flight, no additional network dispatch. H1867 P1 and H1868 hard8 preserved.",
-  "why_now": "H1870 Governance first boundary unbounded context_refs and feature catalog >16KiB due to two new verification rows; fix only own metadata, preserve original historical verification and H1870 code SOURCE.",
+  "current_task": "H1872 fix Windows Rust unit first error E0369 after H1870 owned DNS reverse Vec API: old SERVFAIL test compared NativeReverse to integer; updated test checks Owned reply and original DNS fields, no product behavior change.",
+  "why_now": "H1870 Windows Rust component CI source 0860242f failed before native P2 due to test-only assert!(n>=40); Linux and native-functional subsets pass. Clear exact compiler boundary before product networking.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1870 SOURCE 0860242f Windows Rust/P2 native; if first code failure fix exact compiler boundary. Event-driven Direct TCP ready-queue remains OPEN, alongside all PLAN029 exits; do not re-dispatch the already-running signed P2.",
+  "next_action": "Collect H1872 Windows Rust build and signed P2 (one network scene), preserving H1870 pre-network FAIL. Then event-ready TCP worker and true P1/P2/idle-flow comparators; remaining PLAN029 exits OPEN.",
   "unverified": true,
   "last_tested_source": "11a1daaf4c0c74730da32909382f39f365f0427a",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/devlog/M0/20261114-PLAN029-H1863-FIX-P1-RUST-PRECOMPILE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1867 P1 both 50Mbps/60s & Stop PASS, +9.41% CPU/GiB OPEN; H1868 Direct hard8 allows new Tunnel/old Direct and expiry recovery PASS_SCOPED, 11 unanswered Direct untyped. H1870 source edits NOT_RUN, PLAN029 IN_PROGRESS."
+  "partial_summary": "H1867 P1 +9.41% CPU/GiB OPEN; H1868 hard8 PASS_SCOPED. H1870 Windows first boundary is test signature E0369, NOT_RUN network. H1872 fixes exact test; product still NOT_RUN, PLAN029 IN_PROGRESS."
 }

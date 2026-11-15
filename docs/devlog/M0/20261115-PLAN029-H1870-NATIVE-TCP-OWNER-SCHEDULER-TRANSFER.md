@@ -19,3 +19,12 @@
 ```feature-impact
 {"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1871 fix only H1870 metadata bounds after actual first Governance failure, retaining historical evidence and source-locked Windows test."}
 ```
+
+### H1872｜Windows Rust 编译首错（真实P2尚未运行）
+
+- [H1870 Rust component Action43660216474](https://github.com/lly8666/wbd-next/actions/runs/43660216474) Windows失败在 `v4_windows_native_split.rs:687`：旧 DNS SERVFAIL 单测把改成 `NativeReverse` 的返回值与整数做 `>=40`，Rust `E0369`，业务/Stop **NOT_RUN**；Ubuntu组件成功、native-functional分组通过。非Windows网络失败，亦非内核/Rust relay实测PASS。
+- 本SOURCE仅修测试：从新返回类型拆出既有 `Owned(Vec)` DNS reply，按原IP/UDP/DNS字段断言；生产算法、队列/唤醒、Go/OS/WAL完全不变。按同一个P2 SOURCE marker构建/验证一场，保留前一编译FAIL。
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"H1872 fix original Windows-only Rust test signature after H1870 move-only DNS reverse; actual network still NOT_RUN."}
+```
