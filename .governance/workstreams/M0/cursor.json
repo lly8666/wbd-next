@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1932,
-  "checkpoint_sha": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
+  "sequence": 1933,
+  "checkpoint_sha": "53d5ce7d9f22ab34eb7f2694187009f461d6be2f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1932 record H1931 signed original Win2025/WSL2 Action43725739018 SUCCESS: 4MiB + 384 small physical/Direct A-B-B-A +10GiB 500/700Mbps full SHA/FIN/96B Tunnel UDP 11464/11464/owned Stop PASS. New NAT one-Vec inplace. Direct extra original-process CPU +11.757813/+9.838541s/GiB; historically 4.26/7.22% lower than H1922 other runner NON-CAUSAL. Small TCP first-echo p99 up to14.957ms and ready wait max16ms OPEN.",
-  "why_now": "H1931 single SOURCE combined test completed true signed success with exact original Win Go/Rust/Linux, enabling direct within-run physical vs Direct CPU and packet timing. New NAT bytes/FIN correct and potentially cheaper but two historical runners cannot causally prove code gain; event/IO and small first-reply outliers remain.",
+  "current_task": "H1933 correct CPU comparator and implement fail-closed 4-leg same-Rust-V3 all-vs-CN policy ABBA statistic with exact endpoint/source/bin/Stop/goodput/TID guards, 8 cheap unit tests. Real Windows/WSL2 four-leg wiring NOT_RUN pending H1934. H1931 physical TCP bypasses original Go/Rust process; measured 11.758/9.839s/GiB is whole Direct TCP bridge overhead, not splitter rules.",
+  "why_now": "User correctly challenged physical baseline near idle and old H1863 P1 V4-vs-V3 comparison backend confound. Isolate real Rust policy overhead via same V3 binaries, A route-mode all vs B CN rules, identical original protected Tunnel TCP/UDP target public 203.0.113.77, A-B-B-A bracketing VM drift. CPU process + Rust TIDs, actual delivered bytes and p99, no B Direct flow.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First optimize/measure Rust TX event wake fairness and socket read/write costs without touching proven any-read-or-write-progress tickets; before declaring CPU gain compare old/new binary under same Windows VM or explicit same-process bounded old/new NAT trial. Focus >10ms small first reply tail and 16ms ready wait, protect Tunnel 96B p99, 4MiB/FIN, owned Stop; do not repeat 10GiB just for doc updates. P1/D1-D5/GUI/Game4/IPv6/padding OPEN.",
+  "next_action": "H1934 wire H1933 four-leg source-locked original Windows+WSL2 Normal 50Mbps two directions 25ms0loss60s: no native run until original alias, 4096 CIDR+8192 domain CN rules, four independent owned Stops/source/bin SHA and fail-closed analysis are grounded. Then one signed Action, no 10GiB rerun. Legacy V4-vs-V3 comparator kept separate, Direct old/new NAT ABBA is other later experiment.",
   "unverified": true,
   "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1932-H1931-SIGNED-NAT-INPLACE-COMBINED-10GIB-384TCP-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1933-CPU-ABBA-TEST-DESIGN.md",
     "docs/devlog/M0/20261115-PLAN029-H1932-NAT-CPU-P99-SIGNED-ONE-ACTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md",
-    "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
-    "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md"
+    "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1931 source6dd014e signed real Action43725739018 SUCCESS full 4MiB, 384 small 64/1024/16384B A-B-B-A true TCP/FIN/SHA and 10GiB 500/700Mbps physical vs Direct, 11464 96B Tunnel UDP, Stop. CPU extra 11.758/9.839s/GiB same VM physical-vs-Direct; relative historical H1922 other VM 4.26/7.22% lower but NONCAUSAL. Rust TX39.531s RX16.391s >=95.6% process total, event 129409 wakes, 30% relay no-progress, ticket max16ms. Rare first echo p99 ~15ms still OPEN. NAT in-place optimization functional PASS, no old/new same-VM AB."
+  "partial_summary": "H1931 signed Action43725739018 4MiB+384TCP+10GiB passes; physical 0.320/0.307s/GiB is original client process idle because kernel physical app bypasses Rust TX/RX. Direct extra 11.758/9.839s/GiB measures full 2-kernel-TCP-leg bridge not classifier. H1933 installs ABBA no-causal-overclaim scorer/8 cheap tests; original source same Rust all-vs-CN four real native legs NOT_RUN. PLAN029 OPEN."
 }
