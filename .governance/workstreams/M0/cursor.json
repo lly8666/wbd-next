@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1906,
-  "checkpoint_sha": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
+  "sequence": 1907,
+  "checkpoint_sha": "cb7339214880ceb2b113f8c3ee3d3b57441c4846",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1906 collect exact H1905 signed original Windows2025/WSL2 FAILURE *before* long 2GiB test: real 32KiB original FakeIP Direct kernel TCP app connected and sent FIN, original Rust relay kernel inner read32768 and outer write32768, zero queue, WSL2 Linux physical listener accepted source but did not log EOF/echo before 20s, Windows recv timed out echoed0. Signed 500/700 LONG NOT_RUN. H1906 adds failure-only real Linux received-byte/SHA/TCP_INFO/SO_ERROR witness and opt-in cold original Rust inner/outer EOF vs SHUT_WR transition counters; no payload/timeouts/data path change, new source tests NOT_RUN.",
-  "why_now": "Unpaced 10GiB physical-vs-Direct CPU work cannot claim success when existing 32KiB half-close behavior can occasionally block. Windows kernel socket sendall success does NOT prove the Linux physical guest received data or FIN; exact Linux received count and local Rust FIN transitions needed before choosing optimization. H1905 ACTION43691768429 FAIL retained.",
+  "current_task": "H1907 fix exact long 500/700 Mbps 10GiB signed source first H1906 runtime fail: real 32KiB original Wintun TCP passed and long original Rust transferred >3.4GiB forward plus >1.2GiB reverse, but generic Normal child 165s watchdog killed test before any full 2GiB physical/direct + duplex stage receipt or owned Stop. Extend only exact signed Normal 500/700 long scene to bounded mode900s and parent original PID1060s under native 24-minute step; add bounded every256MiB test-app local-send progress and strict negative gates. No original Go/Rust datapath change; NEW signed SOURCE NOT_RUN.",
+  "why_now": "H1906 Action43693416486 original ZIP shows PLAN029_H1760 WINDOWS AND LINUX 32KiB SHA/FIN/PASS, P2 4MiB SHA/FIN pass, highrate Linux listener READY and Rust original side cumulative inner_read>=3.4GiB, outer_read>=1.2GiB, then WL_PUBLIC_REAL_MODE_TIMEOUT 165 and rc124. This failure is an invalid old harness deadline for four 180s-bounded stages, not proof that the long test failed on packet path. H1906 earlier H1905 32KiB stall was an independent intermittent failure; retain historical FAIL.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "H1906 source-locked Python static, Windows/Linux platform & engine tests, original Windows2025 signed 32KiB small TCP gate plus 2GiB physical/direct 500Mb/s and 1.5GiB each duplex 700Mb/s; if fails, inspect first Linux timeout detail (received_bytes, SHA-if-full, TCP_INFO state, SO_ERROR) and Rust FIN transition terminal; do not extend original 20s deadline. If passes, collect 10GiB long sameVM CPU/user/kernel, 96B UDP six p99, SHA/FIN/Stop; only then targeted performance hotpath.",
+  "next_action": "Collect H1907 source-locked Python budget tests, exact main governance, Windows/Linux original compile, then one true signed Windows/WSL2 2GiB one-way500Mbps and 1.5GiB each 700Mbps full duplex physical then Direct (10GiB total), per-stage Win32 process user/kernel CPU vs separate generator/whole host CPU and 96B Tunnel UDP p99, SHA/FIN and owned Stop. If fails, archive partial test-app acceptance progress, distinguish remote WSL SHA/FIN and first host/runner timeout; P1/P2 unchanged.",
   "unverified": true,
   "last_tested_source": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1906-H1905-SIGNED-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md",
     "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md",
     "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
     "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
-    "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md"
+    "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1905 real signed first product 32KiB direct half-close FAIL BEFORE highrate; original Rust outer write32768 and inner read32768 but Linux accepted physical TCP with NO FIN/echo terminal. Root cause unproven (kernel delivery vs FIN event). H1906 failure-only Linux and cold Rust four FIN transition diagnostics candidate NOT_RUN. H1902 signed short 499.965/699.760Mb/s PASS; P1/P2 OPEN; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1906 actual signed new source original 32KiB TCP FIN SUCCESS, prior 4MiB P2 SUCCESS, long 10GiB test STARTED and original Rust sent >3.4GiB forward plus >1.2GiB reverse but outer nested generic Normal 165s timeout FAIL before report/Stop; user requested long test. H1907 scoped double-deadline budget change only NOT_RUN. H1892 real Wintun128 PASS_SCOPED, H1902 short 499.965/699.760 Mb/s PASS_SCOPED, P1/P2 OPEN, PLAN029 IN_PROGRESS."
 }

@@ -63,6 +63,27 @@ def native_batch_deadline(env):
         return 940  # genuine 600s + bounded original Stop; not 1800s evidence
     if env.get("WBD_PLAN028_WIN_LINUX_L3")=="1":
         return 2250  # signed Wintun + independent Linux true 1800s and owned Stop
+    # A 10-GiB signed physical-vs-Direct test is mathematically longer
+    # than Normal's historical 165-second child budget. The four bounded
+    # TCP stages can consume up to 4*180s; permit the exact private
+    # source-locked test to finish or fail on its OWN per-stage guard.
+    if env.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1":
+        if not (
+            env.get("GITHUB_ACTIONS")=="true" and
+            env.get("WBD_WL_PUBLIC_MODES")=="normal" and
+            env.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+            env.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1" and
+            env.get("WBD_PLAN029_P2_MIXED_SCENE")=="1" and
+            env.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+            env.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1" and
+            env.get("WBD_PLAN029_P2_ABBA_SCENE")!="1" and
+            env.get("WBD_PLAN029_DIRECT_PRESSURE")!="1" and
+            env.get("WBD_WL_RUN_N0")!="1" and
+            env.get("WBD_WL_RUN_P200")!="1" and
+            not env.get("WBD_WL_V2_SCENARIO")
+        ):
+            raise ValueError("H1907 1060s owner only for exact signed Normal 500/700 long original Wintun")
+        return 1060  # nested 900s plus source-owned termination and Stage/Stop receipt
     # One true hard8 Direct idle sweep physically requires 120s plus
     # genuine DNS blackout and Stop after the initial functional setup.
     # Scope 400s to exactly the signed Normal one-owner fixture.

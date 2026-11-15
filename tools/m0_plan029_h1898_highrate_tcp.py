@@ -51,6 +51,16 @@ def send_stream(sock,total,rate_bytes_s):
             if left<=0:break
             time.sleep(min(.002,left))
         sock.sendall(DATA)
+        # LONG only, one diagnostic per 256MiB of local kernel-accepted
+        # application data (never claim the remote ACK/FIN from sendall).
+        # 4 streams * <=8 events; no per-packet logging, fixed 64KiB data.
+        if LONG and (sent+BLOCK)%(256*1024*1024)==0:
+            emit("PLAN029_H1907_LONG_TCP_APP_WRITE_PROGRESS",{
+                "local_socket_accepted_bytes":sent+BLOCK,
+                "target_bytes":total,
+                "elapsed_s":round(time.perf_counter()-began,3),
+                "remote_delivery":"NOT_PROVEN_BY_SENDALL",
+                "source":"REAL_OS_TCP_APPLICATION_NOT_RUST_PUMP"})
     return time.perf_counter()-began
 
 def duplex(sock,bytes_each,rate_each):

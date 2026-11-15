@@ -445,6 +445,48 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn('else 690 if slow else 165)',mode)
         self.assertIn('mode_seconds=(270 if hard8 else 185',mode)
 
+    def test_h1907_signed_long_500_700_has_strict_two_level_deadlines(self):
+        from tools.m0_wl_native_step_runner import native_batch_deadline
+        env={
+            "GITHUB_ACTIONS":"true","WBD_WL_PUBLIC_MODES":"normal",
+            "WBD_PLAN029_NATIVE_V3_TRIAL":"1",
+            "WBD_PLAN029_V3_DIRECT_SCENE":"1",
+            "WBD_PLAN029_P2_MIXED_SCENE":"1",
+            "WBD_PLAN029_P2_BULK_SCENE":"1",
+            "WBD_PLAN029_P2_HIGH_RATE_SCENE":"1",
+            "WBD_PLAN029_P2_LONG_RATE_SCENE":"1"}
+        self.assertEqual(native_batch_deadline(env),1060)
+        self.assertLess(4*180,900)
+        self.assertLess(900,1060)
+        self.assertLess(1060,24*60) # exact Windows native-step guard
+        for key in ("GITHUB_ACTIONS","WBD_WL_PUBLIC_MODES",
+                    "WBD_PLAN029_NATIVE_V3_TRIAL",
+                    "WBD_PLAN029_V3_DIRECT_SCENE",
+                    "WBD_PLAN029_P2_MIXED_SCENE",
+                    "WBD_PLAN029_P2_BULK_SCENE",
+                    "WBD_PLAN029_P2_HIGH_RATE_SCENE"):
+            bad=env.copy();bad.pop(key)
+            with self.subTest(missing=key),self.assertRaises(ValueError):
+                native_batch_deadline(bad)
+        for key in ("WBD_PLAN029_P2_ABBA_SCENE",
+                    "WBD_PLAN029_DIRECT_PRESSURE",
+                    "WBD_WL_RUN_N0","WBD_WL_RUN_P200",
+                    "WBD_WL_V2_SCENARIO"):
+            bad=env.copy();bad[key]="1"
+            with self.subTest(forbidden=key),self.assertRaises(ValueError):
+                native_batch_deadline(bad)
+        ordinary=env.copy();ordinary.pop("WBD_PLAN029_P2_LONG_RATE_SCENE")
+        self.assertEqual(native_batch_deadline(ordinary),320)
+        mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
+        self.assertIn("mode_seconds=900",mode)
+        self.assertIn("H1907_LONG_MODE_BUDGET_SOURCE_LOCKED",mode)
+        self.assertIn("else 690 if slow else 165)",mode)
+        highrate=(ROOT/"tools/m0_plan029_h1898_highrate_tcp.py").read_text()
+        self.assertIn("PLAN029_H1907_LONG_TCP_APP_WRITE_PROGRESS",highrate)
+        self.assertIn("remote_delivery",highrate)
+        self.assertIn("if LONG and (sent+BLOCK)%(256*1024*1024)==0:",highrate)
+        self.assertIn("MAX_STAGE_S=180 if LONG else 100",highrate)
+
     def test_game_v2_nested_deadlines_finish_before_external_windows_watchdog(self):
         from tools.m0_wl_native_step_runner import native_batch_deadline
         game={"WBD_WL_PUBLIC_MODES":"game4-fec",

@@ -66,6 +66,23 @@ for mode in modes:
  mode_seconds=(270 if hard8 else 185 if minimal_game_fec else
   350 if game_stages else 240 if (slow and mode.startswith("game"))
   else 690 if slow else 165)
+ # H1907: only this EXACT signed Normal original-owner 10-GiB challenge
+ # gets 900s inside its separate 1060s PID supervisor and the existing
+ # 24-minute Windows step watchdog. Never widen ordinary 165s Normal.
+ if env.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1":
+  if not (
+     mode=="normal" and env.get("GITHUB_ACTIONS")=="true" and
+     env.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+     env.get("WBD_PLAN029_V3_DIRECT_SCENE")=="1" and
+     env.get("WBD_PLAN029_P2_MIXED_SCENE")=="1" and
+     env.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+     env.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1" and
+     env.get("WBD_PLAN029_P2_ABBA_SCENE")!="1" and
+     env.get("WBD_PLAN029_DIRECT_PRESSURE")!="1" and not slow):
+   raise SystemExit("H1907 long Normal 900s needs exact signed 500/700 stage")
+  mode_seconds=900
+  print("PLAN029_H1907_LONG_MODE_BUDGET_SOURCE_LOCKED seconds=900 mode=normal source="+
+        env.get("GITHUB_SHA",""),flush=True)
  # Previous mode logs are archived already. Never observe stale prior-run
  # READY/fault lines as this new real GameFEC test's own evidence.
  if mode.endswith("-fec"):
