@@ -517,7 +517,13 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"',app)
         self.assertIn('time.sleep(8)',app)
         self.assertIn('begin_monotonic=time.perf_counter() if TCP128_CONTROL or HIGH_RATE else None',app)
-        self.assertIn('if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or not BULK):',app)
+        # H1926 adds an independent small-TCP A-B-B-A scene; the existing
+        # high-rate / 128 / sustained exclusion must reject it as well.
+        self.assertIn('if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or SMALL_TCP or not BULK):',app)
+        self.assertIn('if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or not BULK):',app)
+        self.assertIn('if SMALL_TCP:',app)
+        self.assertIn('wait(guest,gn,7)',app)
+        self.assertIn('latency=run_small_tcp_latency(',app)
         self.assertIn('if TCP128_CONTROL:',app)
         self.assertIn('if HIGH_RATE:',app)
         self.assertNotIn('time.monotonic()',app)
@@ -529,6 +535,31 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('WBD_PLAN029_TCP128_CONTROL_SCENE:',wf)
         self.assertIn("PLAN029_H1894_SIGNED_SAME_WINDOWS_PROCESS_PRE128_VS128_KERNEL_USER_CPU_UDP_P99_AND_STOP_PASS_SCOPED",wf)
         self.assertIn("[plan029-v3-real-tcp128-control]",wf)
+
+    def test_h1927_small_tcp_real_original_same_vm_a_b_b_a_is_source_locked(self):
+        root=Path(__file__).resolve().parents[1]
+        harness=(root/"tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        scenario=(root/"tools/m0_plan029_h1926_small_tcp_latency.py").read_text()
+        runner=(root/"tools/m0_wl_public_normal_e2e.py").read_text()
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("ORDER=(\"physical\",\"direct\",\"direct\",\"physical\")",scenario)
+        self.assertIn("SIZES=(64,1024,16384)",scenario)
+        self.assertIn("REPEATS=32",scenario)
+        self.assertIn('source=os.environ["GITHUB_SHA"]',scenario)
+        self.assertIn('sock.shutdown(socket.SHUT_WR)',scenario)
+        self.assertIn('conn.shutdown(socket.SHUT_WR)',scenario)
+        self.assertIn("read_exact(conn,size)",scenario)
+        self.assertIn('dig.update(data)',scenario)
+        self.assertIn('"p99_ms":percentile(values,.99)',scenario)
+        self.assertIn('"source_sha":SOURCE',scenario)
+        self.assertIn('from m0_plan029_h1926_small_tcp_latency import run_small_tcp_latency',harness)
+        self.assertIn('"small_tcp_latency":latency',harness)
+        self.assertIn('WBD_PLAN029_P2_SMALL_TCP_SCENE',runner)
+        self.assertIn('WBD_PLAN029_P2_SMALL_TCP_SCENE:',workflow)
+        self.assertIn('[plan029-v3-real-p2-small-tcp-latency]',workflow)
+        self.assertIn('      - tools/m0_plan029_h1926_small_tcp_latency.py',workflow)
+        self.assertLess(harness.index("wait(guest,gn,7)\n            from m0_plan029_h1926"),
+                        harness.index("completed.write_text("))
 
     def test_h1892_true_wintun_128_same_shard_original_rust_and_idle_cpu(self):
         import json

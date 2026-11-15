@@ -1,0 +1,5 @@
+# PLAN029 H1927｜修真实原生预检红灯后才跑小TCP p99
+
+- H1926 signed Windows/WSL2 [Action43721220070](https://github.com/lly8666/wbd-next/actions/runs/43721220070) 在`Cheap workflow and current assembly checks`里 **真实FAIL**：旧`tests.test_m0_plan029_h1749_signed_direct_order.NativeDirectOrder.test_h1894_same_original_process_pre128_vs128_idle_cpu_and_udp_contract`逐字匹配`if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or not BULK):`。本次小TCP确实应与highrate互斥，生产场景正确增加了`SMALL_TCP`，但测试字串未同步。原生Windows Go/Rust/WSL2业务job全部SKIPPED，未得到此SOURCE的小TCP交付证明；不能算Actions假红、也不能称原生业务失败。
+- 仅更新该**实际控制约束**的原测试断言，覆盖`HIGH_RATE`拒绝`SMALL_TCP`、`SMALL_TCP`拒绝SUSTAIN/ABBA/128、同一P2 4MiB后才启动Linux46112物理vsDirect A-B-B-A 384次真实kernel socket；单测检查SOURCE、源锁marker、半关闭、回显SHA以及p99读取逻辑。不触碰 H1926 Rust热路径和真实测试夹具的功能行为。新提交同标记`[plan029-v3-real-p2-bulk]` `[plan029-v3-real-p2-small-tcp-latency]`，待通过低价preflight后**只进行一次**本SOURCE签名Windows/WSL2 P2；10GiB无需新跑。
+- H1922 SOURCE `b0fa293733cbd56a4e5df6add8dc5b474cc7cb15` 已验签10GiB吞吐/Stop PASS；H1926/H1927改动的CPU收益和小TCP真实p99均仍**NOT_RUN**直到签名场景产物结束。

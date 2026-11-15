@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1926,
-  "checkpoint_sha": "064d253f3c4ad28c943ffcbb51171fa5e6ff2d13",
+  "sequence": 1927,
+  "checkpoint_sha": "eef45b1197d3d74928b72211b9e12e923003974d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1926 product CPU hot-path micro-opt: replace one per-progress-turn heap Vec<u16> with exact eight-ticket stack RelayFollowups preserving original liveness/fairness and 4MiB hard gate. Add one same-VM original Windows physical/Direct 64/1024/16384B A-B-B-A 384 real kernel connections measured connect/echo/FIN p50/95/99 with concurrent Tunnel96B UDP and owned Stop. One signed source native test pending.",
-  "why_now": "H1922 verified 10GiB full SHA/FIN/owned Stop throughput500/700Mbps but process CPU Direct extra +12.281/+10.604s/GiB; 277318 service turns and 184302 self-progress follow-ups imply frequent per-tick Vec allocation/free. H1920 4MiB physical41.294 vs Direct118.804ms, but 4MiB whole-stream elapsed is NOT small-flow latency. Keep any-positive-progress requeue and measure actual small requests before claiming tail win.",
+  "current_task": "H1927 repair genuine cheap native-wiring preflight FAIL Action43721220070: H1894 test hardcoded exact old HIGH_RATE predicate without new SMALL_TCP exception; update assert to preserve/strengthen exclusions and test new signed 384 small TCP ABBA real source/FIN wiring. Product H1926 stack no-alloc and latency fixture unchanged; new signed native test starts once on H1927.",
+  "why_now": "H1926 signed native workflow blocked at cheap existing test_h1894_same_original_process_pre128_vs128_idle_cpu_and_udp_contract failure due exact source string mismatch; no signed current-source Win2025 kernel network executed (not product failure). Replace brittle expected condition with new complete condition and guard new small source locked phase; don't waive red CI or dispatch unqualified binary.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1926 true signed original Win2025+WSL2 Action with [plan029-v3-real-p2-bulk] [plan029-v3-real-p2-small-tcp-latency]. Hard-gate 4MiB real SHA/FIN, 384 small 64/1024/16384B native TCP ABBA Linux SHA/FIN, concurrent Tunnel UDP, both owned Stop; extract physical-vs-Direct phase p50/95/99. Do not repeat long10GiB for tiny allocation change without latency/liveness result. Later one same-VM old/new binary CPU A/B and host process/driver attribution.",
+  "next_action": "Collect H1927 governance/cheap + Windows Rust preflight and signed original native P2 small TCP 4MiB bulk first, 384 real A-B-B-A physical/Direct 64B/1024B/16KiB complete echo SHA/FIN and 96B Tunnel UDP+owned Stop. Analyze p50/p95/p99 phase+same source. If native first failure log, repair once and rerun; never claim H1926 current source PASS without a green signed original product.",
   "unverified": true,
   "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
     "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
-    "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1922 signed same-VM physical vs Direct 10GiB 500/700Mbps SHA/FIN and owned Stop PASS; Direct original process CPU delta +12.281/+10.604s/GiB. Prior 4MiB 41.294 vs118.804ms does not isolate RTT. H1926 code removes per-followup heap allocations (max8 stack ports) preserving H1920 proven true positive read/write fair tickets; adds dedicated same Windows VM 384 real small TCP ABBA physical/Direct samples (64/1024/16384) and Tunnel small UDP continuity. New SOURCE NOT_RUN."
+  "partial_summary": "H1926 code stack-only 8 followups and H1926 real small TCP fixture submitted on SOURCE eef45b; native runner was SKIPPED because cheap wiring test expected old HIGH_RATE exclusion string (real test failure), not a Windows product execution. H1927 updates old test predicate + adds small-scene source/FIN/ABBA regression, triggering new signed exact product after gate. H1922 original 10GiB previous source still PASS; new code correctness/perf NOT_RUN."
 }
