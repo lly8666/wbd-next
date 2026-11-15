@@ -36,6 +36,20 @@ const CLOSED_NAT_GRACE_MS:u64=60_000;
 const TCP_PENDING_POOL_LIMIT:usize=8*1024*1024;
 // Allocated once on the first real relay, reused across all ready flows.
 const RELAY_SCRATCH_BYTES:usize=64*1024;
+/// A WinSock FD_READ is a level-triggered indication re-armed by recv.
+/// When a relay consumed strictly LESS than one maximum kernel read and
+/// forwarded everything without an old pending TCP tail, it has no
+/// unfinished work of its own. Another turn must require a *new* socket
+/// event, rather than self-enqueueing a guaranteed futile read.
+/// Preserve a bounded self-ticket for an unsent tail or a full 64KiB
+/// read (there might still be unread kernel bytes). Never add a timer
+/// or poll the 128 mostly idle Direct flows to compensate.
+fn relay_needs_continuation(
+    buffered:usize,inner_read:usize,outer_read:usize
+)->bool{
+    buffered!=0 || inner_read>=RELAY_SCRATCH_BYTES ||
+    outer_read>=RELAY_SCRATCH_BYTES
+}
 fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
 enum TcpPhase{
@@ -126,6 +140,7 @@ struct TcpLegDiagnosis{
     ready_ticket_peak:usize,ready_served:u64,
     ready_wait_sum_ms:u64,ready_wait_max_ms:u64,
     relay_turns:u64,relay_zero_progress:u64,
+    relay_progress_no_self_ticket:u64,relay_progress_self_ticket:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
@@ -718,7 +733,28 @@ impl NativeTcpActor{
                             if tick.bytes_read>0||tick.bytes_written>0{
                                 advanced=true;
                                 flow.last_activity_ms=now_ms;
-                                if !tick.finished{to_requeue.push(port)}
+                                if !tick.finished{
+                                    // H1909/H1913 source-identical 10GiB
+                                    // runs each saw 34-38% empty relay
+                                    // quanta. A small complete scratch
+                                    // forwarding with no queue tail has NO
+                                    // unfinished work. The 16 existing
+                                    // WSAEventSelect shards will wake on
+                                    // next true FD_READ/FD_CLOSE; don't
+                                    // manufacture an immediate self-ticket.
+                                    if relay_needs_continuation(
+                                        tick.buffered,tick.inner_read,
+                                        tick.outer_read){
+                                        to_requeue.push(port);
+                                        if let Some(d)=self.diagnosis.as_mut(){
+                                            d.relay_progress_self_ticket=
+                                                d.relay_progress_self_ticket.saturating_add(1);
+                                        }
+                                    }else if let Some(d)=self.diagnosis.as_mut(){
+                                        d.relay_progress_no_self_ticket=
+                                            d.relay_progress_no_self_ticket.saturating_add(1);
+                                    }
+                                }
                             }
                             if tick.finished{
                                 advanced=true;
@@ -879,6 +915,21 @@ mod tests{
         assert_ne!(old,replacement);
         assert!(replacement.1!=old.1);
     }
+    /// A real full read quantum or an old unsent FIFO tail needs a
+    /// bounded continuation. A short fully delivered transfer does NOT:
+    /// FD_READ/FD_CLOSE/FD_WRITE from the existing WSA shards re-arm it.
+    #[test]
+    fn plan029_h1915_ready_requeue_only_backlog_or_full_kernel_read(){
+        assert!(!relay_needs_continuation(0,0,0));
+        assert!(!relay_needs_continuation(0,16*1024,0));
+        assert!(!relay_needs_continuation(0,0,32*1024));
+        assert!(!relay_needs_continuation(0,
+            RELAY_SCRATCH_BYTES-1,RELAY_SCRATCH_BYTES-1));
+        assert!(relay_needs_continuation(1,0,0));
+        assert!(relay_needs_continuation(16*1024,512,0));
+        assert!(relay_needs_continuation(0,RELAY_SCRATCH_BYTES,0));
+        assert!(relay_needs_continuation(0,0,RELAY_SCRATCH_BYTES));
+    }
     #[test]
     fn plan029_ready_fifo_ticket_age_is_monotonic_and_generation_scoped(){
         let mut d=TcpLegDiagnosis::default();
@@ -1011,11 +1062,12 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
             d.ready_wait_max_ms,d.relay_turns,d.relay_zero_progress,
+            d.relay_progress_no_self_ticket,d.relay_progress_self_ticket,
             d.io_reads[0],d.io_reads[1],
             d.io_read_wouldblock[0],d.io_read_wouldblock[1],
             d.io_writes[0],d.io_writes[1],

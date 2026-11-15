@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1914,
-  "checkpoint_sha": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
+  "sequence": 1915,
+  "checkpoint_sha": "d2f2035e76ff68f48c3c74327f8deb10163289e3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1914 collect H1913 source-locked signed real 10GiB original Win2025/WSL2 reuse full SUCCESS, signed original H1909 EXE/DLL + Linux manifest SHA, no WinGo/WinRust/LinuxRust/Linux product rebuild; physical-vs-Direct incremental original process CPU/GiB +9.0625s one-way / +7.630209s full duplex (distinct VM replicate vs H1909 +11.210938/+9.317708). Rust final relay no-progress93796/274595 (34.2%), prior H1909 87237/231572 (37.7%), ready FIFO peak1/wait2ms. H1913 governance-maintenance failed one test's malformed substring (native was SUCCESS), H1914 fixes exact test expression without relaxing scope.",
-  "why_now": "H1913 genuinely completed one origin-signed second 10GiB run and exact artifact reuse; high CPU and 34–38% no-progress relay turns reproduced across distinct VMs with unchanged compiled binary. Correct invalid current test assertion rather than weakening source locks. NEXT: reduce unnecessary same-flow immediate requeue only when socket queue empty and neither 64KiB kernel read quantum full, relying existing FD_READ/FD_CLOSE.",
+  "current_task": "H1915 original Rust Windows TX ready-only progress scheduling. Do not self-enqueue a relay after a short (<64KiB/leg) fully forwarded progress if no buffered tail. Requeue only pending bytes or 64KiB full read; original FD_READ/FD_WRITE/FD_CLOSE wakes again. Cold counters no_self_ticket/self_ticket in original Rust final receipt and typed signed P2 parser. New SOURCE Windows/Linux+real signed long 10GiB NOT_RUN.",
+  "why_now": "Two exact-product 10GiB real WinVM runs show 34-38% zero-progress relay turns, ready FIFO peak1/max2ms. Existing Rust TX immediately self-enqueues after any byte progress, including fully forwarded short reads and drained tails. Stop adding this redundant ready ticket when there is no backlog/full 64KiB quantum.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "H1915 minimal original Rust TX true-ready requeue criterion: only when buffered tail exists or per-leg full 64KiB read quantum, never requeue after small fully forwarded data when no backlog. Add deterministically tested pure scheduling predicate, cold requeue-skipped source counter; signed new SOURCE Windows2025 4MiB+Tunnel UDP/Stop then long 2GiB/1.5GiB CPU. Preserve FIN, FD_CLOSE, TCP backpressure and owned Stop. P1 and P2 perf OPEN.",
+  "next_action": "Test new H1915 Windows Rust unit including pure scheduling predicate and existing 128 WinSock shard loopback/FD_READ/FIN/backpressure, Go & Linux, then signed original Win2025/WSL2 LONG 2GiB one-way+1.5GiB each duplex original physical vs Direct, Tunnel UDP full span SHA/FIN/Stop. Compare Rust no-self-ticket, no-progress/CPU s/GiB against H1909/H1913 actual product binary; cross-VM cannot assert causal CPU gain. P1/P2 remain OPEN.",
   "unverified": true,
   "last_tested_source": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1913 full signed 10GiB original artifact reuse PASS; actual 499.997/700.003Mbps Direct, original process incremental CPU9.0625/7.630209 s/GiB, all SHA/FIN/Tunnel96B/Stop. H1909 vs H1913 same H1909 original binaries, different VM; CPU/GiB varies but hot CPU persists. 93796/274595 no-progress relay turns, ready queue peak1, max2ms. H1914 fixes governance-maintenance static incorrect substring while preserving strict contract. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1913 reused H1909 binary signed 10GiB PASS, Direct incremental process CPU/GiB +9.0625 one-way / +7.630209 duplex, empty relay 93796/274595; identical binaries other VM H1909 empty 87237/231572. H1915 event-only no-tail continuation candidate NOT_RUN. PLAN029 OPEN."
 }

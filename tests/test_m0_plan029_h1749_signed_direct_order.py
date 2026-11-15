@@ -613,6 +613,8 @@ class NativeDirectOrder(unittest.TestCase):
         fields={field:"0" for field in H1888_IO_FIELDS}
         fields.update(inner_read_calls="3",outer_read_calls="4",
                       ticket_served="5",relay_turns="9",
+                      relay_progress_no_self_ticket="3",
+                      relay_progress_self_ticket="2",
                       inner_read_wouldblock="1",outer_read_wouldblock="2")
         receipt="PLAN029_H1888_TCP_IO_FINAL "+" ".join(
             f"{name}={fields[name]}" for name in H1888_IO_FIELDS
@@ -621,6 +623,11 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertEqual(p["values"]["outer_read_wouldblock"],2)
         self.assertEqual(p["scope"],"FINAL_ONE_ORIGINAL_RUST_TX_TWO_KERNEL_TCP_LEGS")
         self.assertIn("NOT_MEASURED",p["attribution"])
+        self.assertEqual(p["values"]["relay_progress_no_self_ticket"],3)
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt.replace(
+                "relay_progress_no_self_ticket=3",
+                "relay_progress_no_self_ticket=10"))
         with self.assertRaises(RuntimeError):
             parse_kernel_io_final(receipt+"\n"+receipt)
         with self.assertRaises(RuntimeError):

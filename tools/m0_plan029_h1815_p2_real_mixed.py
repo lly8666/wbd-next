@@ -597,6 +597,7 @@ H1888_IO_FIELDS=(
     "event_read","event_write","event_connect","event_close",
     "ticket_peak","ticket_served","ticket_wait_sum_ms","ticket_wait_max_ms",
     "relay_turns","relay_no_progress",
+    "relay_progress_no_self_ticket","relay_progress_self_ticket",
     "inner_read_calls","outer_read_calls",
     "inner_read_wouldblock","outer_read_wouldblock",
     "inner_write_calls","outer_write_calls",
@@ -627,6 +628,8 @@ def parse_kernel_io_final(text):
     if (fields["inner_read_calls"]<1 or fields["outer_read_calls"]<1 or
         fields["ticket_served"]<1 or
         fields["relay_no_progress"]>fields["relay_turns"] or
+        fields["relay_progress_no_self_ticket"]+
+          fields["relay_progress_self_ticket"]>fields["relay_turns"] or
         any(fields[f"{leg}_{op}_wouldblock"]>fields[f"{leg}_{op}_calls"]
             for leg in ("inner","outer") for op in ("read","write"))):
         raise RuntimeError("H1888 Rust kernel readiness/call count invariant invalid")
