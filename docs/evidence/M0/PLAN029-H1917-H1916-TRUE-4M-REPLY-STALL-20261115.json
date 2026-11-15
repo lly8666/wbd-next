@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task": "H1917",
+  "plan": "PLAN029",
+  "observed_source_sha": "00c41dad927bd5846da79fcec4c42f51d650c645",
+  "action": {
+    "id": 43708480409,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43708480409",
+    "conclusion": "failure",
+    "artifact_id": 14159737215,
+    "product_classification": "TRUE_NATIVE_FUNCTIONAL_FAIL_NOT_FALSE_RED"
+  },
+  "bounded_successes": {
+    "original_windows_linux_ready": "PASS",
+    "outer_ipv4_mtu": 1460,
+    "inner_ipv4_mtu": 1389,
+    "cn_fakeip_direct_udp": "PASS_SCOPED",
+    "tunnel_udp": "PASS_SCOPED",
+    "direct_tcp_32768_bytes_fin_reply": "PASS",
+    "wsl2_physical_tcp_4194304_baseline": "PASS",
+    "linux_direct_upload_4194304_sha_and_fin": "PASS",
+    "linux_sendall_echo_4194304_and_shutdown_write": "PASS",
+    "owned_finally_os_cleanup": "PASS_SCOPED"
+  },
+  "first_failure": {
+    "stage": "UNPACED_4M_DIRECT_TCP_WINDOWS_REPLY",
+    "windows_source_sent_bytes": 4194304,
+    "linux_received_bytes": 4194304,
+    "linux_echo_sent_bytes": 4194304,
+    "windows_download_progress_marker_bytes": 131485,
+    "exact_final_windows_reply_bytes": "NOT_PROVEN",
+    "windows_recv_timeout_s": 35,
+    "original_python_exception": "TimeoutError: timed out",
+    "original_test_source": "tools/m0_plan029_h1815_p2_real_mixed.py"
+  },
+  "rust_original_tx_final": {
+    "shard_wakes": 40,
+    "event_socket_checks": 76,
+    "event_take_errors": 0,
+    "event_read": 32,
+    "event_close": 3,
+    "relay_turns": 92,
+    "relay_no_progress": 8,
+    "relay_progress_no_self_ticket": 26,
+    "relay_progress_self_ticket": 58,
+    "outer_read_calls": 10,
+    "outer_read_wouldblock": 2,
+    "outer_read_event_suppressed": 79,
+    "half_close_inner_recv_eof": 2,
+    "half_close_outer_recv_eof": 1
+  },
+  "not_run": [
+    "new_source_10GiB_500_and_700Mbps",
+    "new_source_same_VM_old_vs_new_binary_cpu_AB",
+    "direct_small_tcp_udp_latency_p99",
+    "full_product_Stop",
+    "all_PLAN029_D1_D5_P1_P2"
+  ],
+  "next_candidate": "H1917 progress-correlated one-ticket continuation, no idle zero-progress tickets; source NOT_RUN",
+  "proof_note": "Event suppression suggests readiness/progress coupling; logs do not prove a specific WinSock root cause. Prior H1913 10GiB PASS is other SOURCE; no causal CPU comparison.",
+  "plan028": "LIMITED_CLOSED_NO_REOPEN",
+  "plan030": "NOT_STARTED"
+}

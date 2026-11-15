@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1916,
-  "checkpoint_sha": "1fabca1f1e6353ff81747671df23f3df94324ca0",
+  "sequence": 1917,
+  "checkpoint_sha": "00c41dad927bd5846da79fcec4c42f51d650c645",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1916 exact H1915 signed 32KiB FIN liveness regression: original Windows sent 32768 and shutdown, real Linux received all but no FIN/echo; Rust no_self_ticket2, self_ticket0, event_close2. Fix per-leg WSA FD_CLOSE hint and one bounded recv(0) followup after real short data. Windows component and new 10GiB signed SOURCE NOT_RUN.",
-  "why_now": "H1915 real signed Action43706191185 FAILED at 32KiB FakeIP Direct before long 10GiB, not a load timeout; coalesced FD_CLOSE consumed before recv(0) and no self requeue. Preserve no-ticket optimization only in ordinary short reads, restore finite close-correlated EOF progress.",
+  "current_task": "H1917 scoped H1916 signed 4MiB Direct TCP reply liveness: Windows application sent 4194304/FIN, Linux received full SHA, sent 4194304 and FIN; Windows reply only prefix progress >=131485 before 35s timeout. Undo H1915 unsafe no-ticket after short positive recv while preserving no-progress idle sleep and H1916 real FD_CLOSE close hints. SOURCE unverified.",
+  "why_now": "H1916 signed real action43708480409 FAIL at unpaced 4MiB reply, not a false-red: TCP 32KiB and readiness passed but first 4MiB gate timed out, 10GiB NOT_RUN. Real WinSock event-suppressed outer reads 79, no event_take_errors. A positive recv cannot rely on one subsequent event for guaranteed progress in this exercised shard path.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H1916 Windows platform true two-kernel-pair coalesced close/32KiB reverse FIN, 128 WSA shard test, Windows/Linux Rust and Go; then exact source signed original Win2025/WSL2 32KiB gate and same-VM physical then Direct 2GiB one-way 500Mbps + 1.5GiB each duplex 700Mbps 10GiB, 96B Tunnel UDP p99, original process kernel/user CPU s/GiB SHA/FIN and dual owned Stop. Because source changed do NOT reuse H1915 failed binaries.",
+  "next_action": "Collect exact H1917 commit SOURCE Windows/Linux component and original signed Win2025 Wintun/Npcap/WSL2 32KiB and unpaced 4MiB; only if both SHA/FIN/owned cleanup PASS run same-SOURCE 10GiB physical+Direct 500Mbps/700Mbps on one VM. After correctness, optimize CPU through same-VM original OLD vs NEW binaries with real latency p99; do not claim improvement from cross-VM reused H1913.",
   "unverified": true,
-  "last_tested_source": "1fabca1f1e6353ff81747671df23f3df94324ca0",
+  "last_tested_source": "00c41dad927bd5846da79fcec4c42f51d650c645",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1917-H1916-TRUE-4M-REPLY-STALL-20261115.json",
     "docs/evidence/M0/PLAN029-H1916-H1915-ORIGINAL-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1915 original signed ACTION FAIL 32KiB complete transfer but Linux waits FIN, long 10GiB NOT_RUN. H1916 finite FD_CLOSE correlated EOF ticket candidate NOT_RUN; prior signed H1913 reused 10GiB CPU extra+9.0625/+7.630209 s/GiB. PLAN029 OPEN."
+  "partial_summary": "H1916 signed Action43708480409: Normal Ready, Direct/Tunnel UDP, 32KiB TCP FIN PASS; unpaced 4MiB Direct TCP upload+Linux echo PASS, Windows download stalls prefix after >=131485B and 35s Timeout; long 10GiB NOT_RUN. H1917 bounded progress ticket code only, NOT_RUN, 029 still OPEN. H1913 old reused 10GiB remains historical PASS; cross-VM cannot prove CPU benefit."
 }

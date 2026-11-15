@@ -36,21 +36,21 @@ const CLOSED_NAT_GRACE_MS:u64=60_000;
 const TCP_PENDING_POOL_LIMIT:usize=8*1024*1024;
 // Allocated once on the first real relay, reused across all ready flows.
 const RELAY_SCRATCH_BYTES:usize=64*1024;
-/// A WinSock FD_READ is a level-triggered indication re-armed by recv.
-/// When a relay consumed strictly LESS than one maximum kernel read and
-/// forwarded everything without an old pending TCP tail, it has no
-/// unfinished work of its own. Another turn must require a *new* socket
-/// event, rather than self-enqueueing a guaranteed futile read.
-/// Preserve a bounded self-ticket for an unsent tail or a full 64KiB
-/// read (there might still be unread kernel bytes). Never add a timer
-/// or poll the 128 mostly idle Direct flows to compensate.
+/// H1916 real signed P2 received only a prefix of a 4MiB echo before
+/// timing out: suppressing ALL self-tickets after a short positive recv
+/// (H1915) is not a safe liveness proof for the shared WinSock event path.
+/// A positive read may leave bytes in flight; give the *already-active*
+/// flow one fair ready ticket to drain until WouldBlock/EOF. A later
+/// zero-progress turn never queues itself, so no 10ms per-flow polling,
+/// no idle socket scan and no unbounded busy loop are introduced.
+/// Preserve the existing bounded FIFO tail and FD_CLOSE EOF semantics.
 fn relay_needs_continuation(
     buffered:usize,inner_read:usize,outer_read:usize,close_probe_due:bool
 )->bool{
-    // FD_CLOSE can be consumed with FD_READ before recv returns EOF.
-    // Only the data-bearing close-hint leg gets an extra bounded turn.
-    buffered!=0 || inner_read>=RELAY_SCRATCH_BYTES ||
-    outer_read>=RELAY_SCRATCH_BYTES || close_probe_due
+    // Retry only after a real recv made progress or a pending FIFO tail
+    // remains. The next WouldBlock/EOF quantum has no self-ticket.
+    // FD_CLOSE coalescing remains an explicit reason for its EOF probe.
+    buffered!=0 || inner_read!=0 || outer_read!=0 || close_probe_due
 }
 fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
@@ -751,14 +751,15 @@ impl NativeTcpActor{
                                 advanced=true;
                                 flow.last_activity_ms=now_ms;
                                 if !tick.finished{
-                                    // H1909/H1913 source-identical 10GiB
-                                    // runs each saw 34-38% empty relay
-                                    // quanta. A small complete scratch
-                                    // forwarding with no queue tail has NO
-                                    // unfinished work. The 16 existing
-                                    // WSAEventSelect shards will wake on
-                                    // next true FD_READ/FD_CLOSE; don't
-                                    // manufacture an immediate self-ticket.
+                                    // H1915 suppressed tickets after all
+                                    // short positive reads, but H1916
+                                    // signed 4MiB reply stalled after a
+                                    // 131KiB progress marker. Continue
+                                    // *only* while recv made progress or
+                                    // an unsent FIFO tail exists; a truly
+                                    // idle/WouldBlock turn has no ticket.
+                                    // Fair FIFO bounds each turn to 64KiB
+                                    // and eight flows, no 10ms flow poll.
                                     if relay_needs_continuation(
                                         tick.buffered,tick.inner_read,
                                         tick.outer_read,tick.close_probe_due){
@@ -936,22 +937,28 @@ mod tests{
         assert_ne!(old,replacement);
         assert!(replacement.1!=old.1);
     }
-    /// A real full read quantum or an old unsent FIFO tail needs a
-    /// bounded continuation. A short fully delivered transfer does NOT:
-    /// FD_READ/FD_CLOSE/FD_WRITE from the existing WSA shards re-arm it.
+    /// H1916 original real Windows/WSL2 4MiB P2: upload and Linux
+    /// echo were complete, but a short reply recv received no next
+    /// ready ticket and Windows timed out after a 131KiB progress marker.
+    /// Every *positive* recv gets one fair follow-up, regardless of its
+    /// quantum size; a zero-progress read never spins by itself.
     #[test]
-    fn plan029_h1915_ready_requeue_only_backlog_or_full_kernel_read(){
+    fn plan029_h1917_positive_short_read_has_one_bounded_followup(){
         assert!(!relay_needs_continuation(0,0,0,false));
-        assert!(!relay_needs_continuation(0,16*1024,0,false));
-        assert!(!relay_needs_continuation(0,0,32*1024,false));
-        assert!(!relay_needs_continuation(0,
-            RELAY_SCRATCH_BYTES-1,RELAY_SCRATCH_BYTES-1,false));
+        for n in [1,413,16*1024,32*1024,RELAY_SCRATCH_BYTES-1,
+                  RELAY_SCRATCH_BYTES]{
+            assert!(relay_needs_continuation(0,n,0,false),
+                "inner positive recv must advance");
+            assert!(relay_needs_continuation(0,0,n,false),
+                "outer positive recv must advance");
+        }
         assert!(relay_needs_continuation(1,0,0,false));
         assert!(relay_needs_continuation(16*1024,512,0,false));
-        assert!(relay_needs_continuation(0,RELAY_SCRATCH_BYTES,0,false));
-        assert!(relay_needs_continuation(0,0,RELAY_SCRATCH_BYTES,false));
         assert!(relay_needs_continuation(0,32768,0,true));
         assert!(relay_needs_continuation(0,0,16384,true));
+        // Only the first progress ticket is issued: the next idle tick
+        // must wait for a real WinSock event, not a periodic self poll.
+        assert!(!relay_needs_continuation(0,0,0,false));
     }
     #[test]
     fn plan029_ready_fifo_ticket_age_is_monotonic_and_generation_scoped(){
