@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1879,
-  "checkpoint_sha": "e998604103a385d44e6e70108e4105ed07a84ed9",
+  "sequence": 1880,
+  "checkpoint_sha": "22327a59ded42b6f51f74d04e231578478b180cb",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1879 direct Windows platform native CI trigger: H1878 WinSock 128-idle/two-active test compiled through engine but its platform unit tests NOT_RUN. Add platform source path to existing H1721 matrix trigger so actual Windows+Linux cargo test -p wbd-platform --lib executes, no production/source or network scene change.",
-  "why_now": "H1878 Windows engine 386 tests PASS but Rust dependency unit tests don't execute wbd-platform's new 128 TCP kernel sockets test; H1721 workflow already runs correct target on Windows/Ubuntu yet its push.paths omitted windows_direct_tcp.rs. Fix cheapest first actual verification boundary before claiming wake correctness.",
+  "current_task": "H1880 fixes true Windows wbd-platform --lib test compile first failure E0277 for H1878 128 idle kernel sockets shared shard: 1-byte array compared to reference byte array at lines595/597. Replace only asserts with reply[0] vs ASCII literal; production event algorithm unchanged, WinSock run still NOT_RUN.",
+  "why_now": "H1879 corrected CI trigger and H1721 Windows Action43664732661 exposed exact E0277 compilation from formerly unexecuted test; do not infer WinSock correctness before Windows test runs.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect automatically triggered H1879 H1721 Windows platform test proof (actual 128 sockets, same shard 15/31, no lost FD_READ) and Linux companion. If failure address first real WinSock event mismatch. Do not repeat H1877 signed single-flow P2 or claim CPU/gain. Next one frozen same-VM old/new TCP scheduling comparator and real 128 Wintun case.",
+  "next_action": "Collect H1880 automatically triggered Windows2025 platform full unit test; confirm named plan029_sharded_wsa_128_idle_two_active_same_event_no_lost_read ... ok and Stop/owner unaffected. If runtime failure repair exact WinSock event boundary; still no same-VM P2 old/new and 128 Wintun.",
   "unverified": true,
   "last_tested_source": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1878-H1877-SIGNED-P2-READY-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1880-WIN-128-LOOPBACK-ASSERT-TYPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1879-WINDOWS-WIN32-SHARD-TEST-RUN-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1877-READY-TICKET-BORROW-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1876-WINSOCK-SHARDED-READY-OWNER.md",
     "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md",
-    "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
-    "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md"
+    "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1877 signed single-flow Normal CN P2 functional PASS but performance 2.787x physical OPEN. H1878 new 128 kernel-socket shared wake test source compiled, NOT_EXECUTED because triggering workflow omitted platform path. H1879 repairs actual Win2025 platform test gate; new source NOT_RUN. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1877 signed 4MiB P2 original true business and Stop PASS_SCOPED, perf2.787x physical OPEN; H1879 CI actual platform test compiler E0277, H1880 test-only two assertion types fixed. WinSocket concurrent 128 test NOT_RUN; PLAN029 IN_PROGRESS."
 }

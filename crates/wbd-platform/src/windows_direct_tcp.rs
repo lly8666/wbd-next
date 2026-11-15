@@ -592,9 +592,9 @@ mod plan029_global_backpressure_tests{
         assert_eq!(seen,[15,31]);
         let mut reply=[0u8;1];
         sockets[15].1.read_exact(&mut reply).unwrap();
-        assert_eq!(reply,b"A");
+        assert_eq!(reply[0],b'A');
         sockets[31].1.read_exact(&mut reply).unwrap();
-        assert_eq!(reply,b"B");
+        assert_eq!(reply[0],b'B');
         // All socket RAII closes before the event group; no thread or
         // extra Wintun owner was introduced by this test.
     }
