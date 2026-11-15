@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task": "H1920",
+  "plan": "PLAN029",
+  "source_sha": "fbff58c923dedec097e976820b832114ff673e23",
+  "result": "FAIL",
+  "action_id": 43712621017,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43712621017",
+  "job_id": 132808470083,
+  "artifact_id": 14161343430,
+  "native_result": "TRUE_PRODUCT_FAILURE_NOT_FALSE_RED",
+  "prior_scoped_passes": [
+    "original Windows Go/Rust/Npcap/Wintun and Linux OS Ready",
+    "outer_ipv4_mtu1460 inner_ipv4_mtu1389",
+    "CN DNS/FakeIP Direct UDP and Tunnel UDP pre-TCP",
+    "real 32KiB Direct TCP with both FIN/echo",
+    "real 4MiB physical unpaced TCP baseline 41.15ms full echo SHA FIN",
+    "owned teardown finally WAL restore and Rust stop scoped"
+  ],
+  "first_failure": {
+    "stage": "P2_UNPACED_4M_DIRECT_WINDOWS_UPLOAD_SENDALL",
+    "writable_role": "direct",
+    "app_reported_upload_progress_bytes": 786432,
+    "actual_delivered_bytes": "NOT_PROVEN_FROM_PROGRESS_LOG",
+    "windows_exception": "TimeoutError: timed out at tools/m0_plan029_h1815_p2_real_mixed.py:100 sock.sendall",
+    "timeout_s": 35,
+    "real_linux_4MiB_echo": "NOT_RUN_UPLOAD_NEVER_COMPLETE",
+    "windows_direct_4MiB_full_sha_fin": "FAIL"
+  },
+  "rust_final": {
+    "relay_turns": 20,
+    "relay_no_progress": 7,
+    "relay_progress_no_self_ticket": 1,
+    "relay_progress_self_ticket": 12,
+    "inner_read_calls": 13,
+    "inner_read_wouldblock": 2,
+    "outer_read_calls": 7,
+    "outer_read_wouldblock": 3,
+    "inner_read_event_suppressed": 0,
+    "outer_read_event_suppressed": 13,
+    "event_take_errors": 0,
+    "queue_tail_accounting": "CUMULATIVE_32K_AND_PARTIAL_P2"
+  },
+  "not_run": [
+    "500_700Mbps_new_SOURCE_10GiB",
+    "new_vs_old_same_Windows_VM_CPU_AB",
+    "Direct_small_TCP_and_UDP_p99",
+    "full_product_Stop",
+    "PLAN029_D1_D5_P1_P2"
+  ],
+  "candidate": "H1920 revert H1915 speculative no-ticket-after-short-read/last-write optimization to H1909/H1913 proven any-byte-progress fair self-ticket, retain H1916 FD_CLOSE and all bounded scheduler invariants",
+  "note": "Only H1920 source-locked new native test can establish recovery, old H1913 PASS does not automatically qualify H1920."
+}

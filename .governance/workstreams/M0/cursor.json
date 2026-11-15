@@ -4,30 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1919,
-  "checkpoint_sha": "019067d2e6417c542f08111446ec2ee946029690",
+  "sequence": 1920,
+  "checkpoint_sha": "20115a12044d062d834491bddbbfcb1d3a3a964a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1919 source-identity evidence schema correction: H1917 original source fbff58c signed original Win2025/WSL2 Action43712621017 still must be collected; H1916 signed 4MiB reply timeout remains true FAIL. No product code changes.",
-  "why_now": "H1918 governance Action43713116277 role+feature schema gates now PASS, but structure validation failed 'evidence is for a different SOURCE'. Exact problem: historical H1916 genuine failure evidence had observed_source_sha=00c41dad but lacked required source_sha key while listed in cursor.evidence_refs, whose last_tested_source=00c41dad. Add consistent source_sha and literal FAIL, do not alter artifact or claim PASS.",
+  "current_task": "H1920 true signed H1917 original Go/Rust Windows/WSL2 Action43712621017 FAIL 4MiB Direct Windows sendall after logging 786432B, 35s timeout. H1917 progress-read-only requeue insufficient; restore H1909/H1913 any-real-read-or-write-progress fair ticket, FD_CLOSE fix retained. New SOURCE NOT_RUN.",
+  "why_now": "H1915 introduced a speculative no-ticket optimization after small fully forwarded reads/last successful writes. H1916 signed 4MiB reply timeout; H1917 signed 4MiB upload timeout. Old H1909/H1913 same binary had signed 10GiB complete, 500/700Mbps, SHA/FIN/Stop. Revert only unsafe predicate while preserving original event-driven bounded fairness; do not fake red.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1917 signed native Action43712621017 and component successful Action43712621090; test full real 4MiB echo+SHA+FIN/Stop and then same-SOURCE 10GiB, no duplicated dispatch. Compare CPU old/new only on same VM and include small Direct latency protection. 029 D1–D5/P1–P2 OPEN.",
+  "next_action": "Collect H1920 new source original signed Windows/WSL2 32KiB and 4MiB first; only if genuine 4MiB bidirectional SHA/FIN and owned cleanup succeeds, proceed long same-SOURCE 10GiB 500/700Mbps. Stop H1915 CPU optimization direction; next isolate CPU hotspots using old/new same-VM binaries and Direct small packet p99, then other 029 D1-D5/P1-P2 exits.",
   "unverified": true,
-  "last_tested_source": "00c41dad927bd5846da79fcec4c42f51d650c645",
+  "last_tested_source": "fbff58c923dedec097e976820b832114ff673e23",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1917-H1916-TRUE-4M-REPLY-STALL-20261115.json",
-    "docs/evidence/M0/PLAN029-H1916-H1915-ORIGINAL-32K-FIN-FAIL-20261115.json"
+    "docs/evidence/M0/PLAN029-H1920-H1917-NATIVE-4M-UPLINK-SENDALL-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md"
+    "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1917 source fbff58c original Windows+WSL2 real run launched once (43712621017); static/Windows/Linux Rust/Go/component PASSED. H1916 signed 4MiB reply timeout TRUE FAIL. H1918 feature size and 8 refs fixed; H1919 corrects evidence.source_sha required by governance. Full H1917 native verdict pending, 10GiB NOT_RUN until proven."
+  "partial_summary": "H1917 signed Action43712621017 FAILED real P2 upload after 786432B sendall TimeoutError; baseline4MiB physical PASS; 32KiB Direct FIN PASS; long 10GiB NOT_RUN; limited finally cleanup PASS. H1920 code restores proven H1909/H1913 any-progress ticket candidate NOT_RUN. H1919 governance failed because active evidence_refs mixed H1915/H1916 sources; now one exact H1917 source evidence ref. PLAN029 OPEN."
 }
