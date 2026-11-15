@@ -553,6 +553,51 @@ mod plan029_global_backpressure_tests{
             assert!(event.handles().iter().all(|handle|*handle!=0));
         }
     }
+    /// Actual 128 Windows loopback kernel socket pairs with only two
+    /// readable, both sharing ONE manual-reset event. Enumerating the first
+    /// socket and resetting the group MUST NOT erase the second socket's
+    /// recorded FD_READ or force per-idle-flow polling.
+    #[cfg(target_os="windows")]
+    #[test]
+    fn plan029_sharded_wsa_128_idle_two_active_same_event_no_lost_read(){
+        use std::io::{Read,Write};
+        use std::os::windows::io::AsRawSocket;
+        use crate::windows_native_io::{wait_ready,WaitResult};
+        let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let events=SocketReadiness::new().unwrap();
+        let mut sockets=Vec::with_capacity(128);
+        for i in 0..128{
+            let client=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (server,_)=listener.accept().unwrap();
+            // FD_READ | FD_CLOSE: no false initial FD_WRITE storms for 128
+            // genuinely idle connections. This is one owned event group.
+            events.watch(server.as_raw_socket() as usize,
+                i%TCP_EVENT_SHARDS,1|32).unwrap();
+            sockets.push((client,server));
+        }
+        assert_eq!(wait_ready(events.handles(),0).unwrap(),WaitResult::Timeout);
+        // Ports 15 and 31 share shard15 while 126 other sockets are idle.
+        sockets[15].0.write_all(b"A").unwrap();
+        sockets[31].0.write_all(b"B").unwrap();
+        assert_eq!(wait_ready(events.handles(),3000).unwrap(),
+            WaitResult::Ready(15));
+        let mut seen=Vec::new();
+        let mut first=true;
+        for i in (0..128).filter(|i|i%TCP_EVENT_SHARDS==15){
+            let flags=events.take(sockets[i].1.as_raw_socket() as usize,
+                15,first).unwrap();
+            first=false;
+            if flags&1!=0{seen.push(i)}
+        }
+        assert_eq!(seen,[15,31]);
+        let mut reply=[0u8;1];
+        sockets[15].1.read_exact(&mut reply).unwrap();
+        assert_eq!(reply,b"A");
+        sockets[31].1.read_exact(&mut reply).unwrap();
+        assert_eq!(reply,b"B");
+        // All socket RAII closes before the event group; no thread or
+        // extra Wintun owner was introduced by this test.
+    }
     #[test]
     fn one_global_pool_blocks_only_new_direct_reads_not_drains(){
         assert_eq!(bounded_relay_read(0,64*1024,0),0);

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task": "H1878",
+  "plan": "PLAN029",
+  "source_sha": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
+  "action_id": 43663127990,
+  "job_id": 132657914576,
+  "action_conclusion": "success",
+  "scope": "REAL_SIGNED_WINDOWS2025_GO_NPF_WINTUN_RUST_V3_CN_WSL2_4M_WITH_TUNNEL_UDP_AND_OWNED_STOP",
+  "result": "FUNCTIONAL_PASS_P2_PERFORMANCE_OPEN",
+  "physical": {
+    "bytes": 4194304,
+    "elapsed_ms": 50.606,
+    "connect_ms": 11.681,
+    "upload_ms": 19.485,
+    "first_reply_wait_ms": 3.203,
+    "download_ms": 16.117,
+    "half_close_ms": 0.119
+  },
+  "direct": {
+    "bytes": 4194304,
+    "elapsed_ms": 141.03,
+    "connect_ms": 10.35,
+    "upload_ms": 48.403,
+    "first_reply_wait_ms": 4.268,
+    "download_ms": 77.939,
+    "half_close_ms": 0.07,
+    "half_close": true
+  },
+  "exact_payload_sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+  "same_vm_physical_vs_direct": {
+    "ratio": 2.787,
+    "direct_minus_physical_ms": 90.424,
+    "upload_extra_ms": 28.918,
+    "download_extra_ms": 61.822,
+    "no_application_pacing": true
+  },
+  "sustained_tunnel_udp": {
+    "windows_unique": 120,
+    "linux_unique": 120,
+    "whole_direct_coverage": true,
+    "p99_rtt_ms": 4.283,
+    "max_interreply_gap_ms": 29.606
+  },
+  "stop": "PASS_BOTH_OWNED",
+  "source_comparison": {
+    "prior_h1875_source": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
+    "prior_ratio": 2.792,
+    "current_ratio": 2.787,
+    "same_vm_old_vs_new_code_ab": "NOT_RUN",
+    "causal_gain_claim": "NOT_SUPPORTED_DIFFERENT_VM"
+  },
+  "remaining": {
+    "P1_cpu_per_gib": "OPEN_PLUS9_41_PERCENT_PREVIOUS_V4_V3_DIFFERENT_BACKENDS",
+    "P2": "OPEN",
+    "high_connection_fairness": "NOT_RUN_ON_REAL_WINTUN",
+    "H1878_windows_loopback_shared_event": "NEW_SOURCE_NOT_RUN",
+    "win_ready_fifo_age": "NOT_MEASURED",
+    "driver_cpu": "NOT_ATTRIBUTED",
+    "GUI_GAME4_IPV6": "OPEN"
+  }
+}

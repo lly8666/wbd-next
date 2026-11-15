@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1877,
-  "checkpoint_sha": "80770d9ac953452593671c7b58d733acf0fd72df",
+  "sequence": 1878,
+  "checkpoint_sha": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1877 repair exact H1876 Windows Rust E0502 ready queue immutable-vs-mutable active borrow, after compiler confirmed initial algorithm not executed on Windows. H1877 source candidate, signed network NOT_RUN.",
-  "why_now": "H1876 Windows native owner library compilation first error E0502 actor enqueue_port, while Linux/pure platform and Governance pass. Shorten mutable borrow before stale-generation FIFO retain; no Ready algorithm/OS permissions/flow semantics changed.",
+  "current_task": "H1878 collect H1877 signed true Windows/WSL2 P2 4MiB physical50.606 Direct141.030ms +90.424ms 2.787x, tunnel UDP120/120 p99 4.283ms, owned Stop PASS; 128 idle/two-active one-event Windows socket regression newly authored, NOT_RUN on H1878 SOURCE.",
+  "why_now": "H1877 event-driven 16-shard direct schedule functional PASS but 2.787x physical remains, not proof of gain. New Windows-native unit test targets missed FD_READ under 128 idle and two active in same shared event; avoid another redundant P2 full-network dispatch.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact-source Windows Rust unit build and signed P2 after H1877; if real product still fails inspect first syscall/wake boundary and rollback/correct without hiding prior H1876 FAIL. Then 128 idle+few active true comparator.",
+  "next_action": "Collect H1878 Windows component unit for true shared WSA event 128 idle and simultaneous two-active; then independent same VM scheduler old/new P2, user/kernel CPU, no-progress wake and FIFO wait; focus residual dual TCP leg download (+61.822ms). GUI/Game4/real IPv6 resource exits remain.",
   "unverified": true,
-  "last_tested_source": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
+  "last_tested_source": "9fa1724a9c4802bed3889cd2480b6e64595f5566",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1875-H1872-SIGNED-P2-DIRECT-SCHEDULER-20261115.json"
+    "docs/evidence/M0/PLAN029-H1878-H1877-SIGNED-P2-READY-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1878-COLLECT-P2-128-IDLE-TEST.md",
     "docs/devlog/M0/20261115-PLAN029-H1877-READY-TICKET-BORROW-SCOPE.md",
     "docs/devlog/M0/20261115-PLAN029-H1876-WINSOCK-SHARDED-READY-OWNER.md",
     "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md",
     "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
     "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md",
-    "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md"
+    "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1876 Windows Rust first failure was E0502 immutable/mutable actor table borrows, product native P2 NOT_RUN. H1877 borrow scope fix only. Prior H1875 true P2 2.792x functional PASS perf OPEN; PLAN029 IN_PROGRESS."
+  "partial_summary": "H1877 signed true P2 functional and Stop PASS_SCOPED 4MiB physical50.606 Direct141.030 (2.787x), Tunnel120/120 p99 4.283ms; performance OPEN and no same-VM code A/B. H1878 Windows 128 idle+2 active shared event test newly written NOT_RUN. PLAN029 IN_PROGRESS."
 }
