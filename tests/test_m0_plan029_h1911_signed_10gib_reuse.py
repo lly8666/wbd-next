@@ -26,6 +26,8 @@ class H1911SignedPrebuiltReuse(unittest.TestCase):
             self.assertIn(clause,s)
     def test_no_rebuild_and_no_cross_vm_concurrent_CPU_aggregation(self):
         s=self.workflow
+        self.assertEqual(s.count("if: (!contains(github.event.head_commit.message, '"+MARKER+"')) &&"),3)
+        self.assertNotIn("if: !contains(github.event.head_commit.message, '"+MARKER+"') &&",s)
         self.assertGreaterEqual(s.count("!contains(github.event.head_commit.message, '"+MARKER+"')"),4)
         self.assertIn("needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' ||",s) if False else None
         self.assertIn("contains(github.event.head_commit.message, '"+MARKER+"') ||",s)

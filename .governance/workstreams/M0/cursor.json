@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1911,
-  "checkpoint_sha": "b20c6572147035d9ae8a3e7ae12c211adfd79597",
+  "sequence": 1912,
+  "checkpoint_sha": "5d92bce6b77fa02f3da4061a7445ed4e7313c773",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1911 exact historical H1909 signed 10GiB binary reuse for another same-VM physical-vs-Direct 2GiB one-way +1.5GiB each duplex long P2. Reuse GitHub Actions run43700145002 original Windows Win2025 EXE/DLL and Linux Go/Rust artifacts, SHA manifest verified with GITHUB_SHA harness distinct from product SOURCE64f6819; product/ABI git diff must be empty; skip redundant WinGo/WinRust/LinuxRust component and Linux release rebuild. SOURCE CI NOT_RUN.",
-  "why_now": "H1909 signed 10GiB Action SUCCESS and exact compiled Windows/Linux artifacts alive; one-run Direct original CPU/GiB +11.21/+9.32 vs physical controls could reflect host VM timing. Independent repeat source-locked with same compiled code is next least costly check; run original signed H1909 artifacts, not fresh rebuild or inferred driver CPU.",
+  "current_task": "H1912 first error H1911 Action43704387233 complete FAILURE before jobs due YAML unquoted line-leading !contains in 3 compile-preflight 'if:' conditions (tag parser). Only wrap 3 !contains expressions in parentheses to keep exact same skip logic and add static fail-closed test. Source H1911 network NOT_RUN; reuse artifacts H1909 unchanged.",
+  "why_now": "H1911 compiled product reuse commit triggered no jobs from GitHub YAML parse error, not a Windows/WSL2 TCP failure. YAML plain scalar at 'if: !contains' starts unsupported !tag; all other sources fixed SHA and strict artifact validation. Correct only parser shape and retain historical failed Action.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Check H1911 cheap workflow, governance-maintenance and native public twoOS exact artifact reuse/Stop. Compare 2GiB one-way +1.5GiB each duplex CPU user/kernel seconds/GiB vs H1909; the two distinct VMs are replicates, not a strict same-VM causal code A/B. If repeated hot CPU, instrument RX/TX per path instead of more tiny copy tweaks; P1 and true 128 Wintun/open GUI remain OPEN.",
+  "next_action": "Check H1912 workflow syntax and H1911/H1912 static test, validate Windows/Linux build jobs SKIPPED (reused original product) and native-public-two-os downloads exactly H1909 run43700145002 source64f68194 with manifest SHA and 10GiB real TCP, UDP and Stop. If no success, report first error and don't promote CPU gains.",
   "unverified": true,
   "last_tested_source": "64f6819460f7f950f13bc7d10659a6f4552b28b6",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1910-H1909-SIGNED-10GIB-REAL-P2-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
     "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
     "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md",
     "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md",
     "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md",
     "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md",
     "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md"
+    "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1910 source-locked original H1909 real signed 10GiB functional+Stop PASS, Direct incremental CPU +11.210938s/GiB one-way, +9.317708 duplex; maintenance frozen-current SHA tests PASS, no product code change. H1911 reusable exact H1909 Win/Linux binaries candidate NOT_RUN, compile-only jobs skipped and Git product diff verified; P1/P2 OPEN."
+  "partial_summary": "H1911 candidate exact H1909 signed 10GiB artifacts reuse failed before any job due 3 YAML if line-leading !contains; H1912 parenthesizes those exact 3 conditions, preserves reuse binary hashes/long P2 marker and tests, no native code. New Action NOT_RUN; H1909 original signed data remain PASS."
 }
