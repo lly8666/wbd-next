@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1917,
-  "checkpoint_sha": "00c41dad927bd5846da79fcec4c42f51d650c645",
+  "sequence": 1918,
+  "checkpoint_sha": "fbff58c923dedec097e976820b832114ff673e23",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1917 scoped H1916 signed 4MiB Direct TCP reply liveness: Windows application sent 4194304/FIN, Linux received full SHA, sent 4194304 and FIN; Windows reply only prefix progress >=131485 before 35s timeout. Undo H1915 unsafe no-ticket after short positive recv while preserving no-progress idle sleep and H1916 real FD_CLOSE close hints. SOURCE unverified.",
-  "why_now": "H1916 signed real action43708480409 FAIL at unpaced 4MiB reply, not a false-red: TCP 32KiB and readiness passed but first 4MiB gate timed out, 10GiB NOT_RUN. Real WinSock event-suppressed outer reads 79, no event_take_errors. A positive recv cannot rely on one subsequent event for guaranteed progress in this exercised shard path.",
+  "current_task": "H1918 documentation-bound correction while exact H1917 SOURCE original Win2025/WSL2 native action43712621017 remains in progress. H1917 positive short-recv continuation candidate; no new product PASS.",
+  "why_now": "Feature catalog H1917 Action43712621086 check failed 16KiB feature-card bound; governance role check failed unbounded M0 context_refs=9. Both are real metadata contract violations, not false-red. Shorten feature summary without deleting historical rows and trim cursor context_refs to eight; avoid re-dispatching H1917 original source action.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact H1917 commit SOURCE Windows/Linux component and original signed Win2025 Wintun/Npcap/WSL2 32KiB and unpaced 4MiB; only if both SHA/FIN/owned cleanup PASS run same-SOURCE 10GiB physical+Direct 500Mbps/700Mbps on one VM. After correctness, optimize CPU through same-VM original OLD vs NEW binaries with real latency p99; do not claim improvement from cross-VM reused H1913.",
+  "next_action": "Collect already-running H1917 original native Action43712621017 and pure component Action43712621090 first. If 4MiB full echo/FIN/Stop PASS, use SOURCE-matched 10GiB rate receipt; old/new CPU benefit requires same-VM sequential binary A/B, not cross-VM. If FAIL diagnose actual first boundary, no sweeping. PLAN029 D1–D5/P1–P2 remain OPEN.",
   "unverified": true,
   "last_tested_source": "00c41dad927bd5846da79fcec4c42f51d650c645",
   "evidence_refs": [
@@ -26,9 +26,8 @@
     "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
     "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
     "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md",
-    "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md"
+    "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1916 signed Action43708480409: Normal Ready, Direct/Tunnel UDP, 32KiB TCP FIN PASS; unpaced 4MiB Direct TCP upload+Linux echo PASS, Windows download stalls prefix after >=131485B and 35s Timeout; long 10GiB NOT_RUN. H1917 bounded progress ticket code only, NOT_RUN, 029 still OPEN. H1913 old reused 10GiB remains historical PASS; cross-VM cannot prove CPU benefit."
+  "partial_summary": "H1917 code commit fbff58c spawned signed true native Action43712621017 and component Action43712621090 (pending at H1918 write). H1917 governance Action43712621086 FAIL from two local metadata overflows; H1918 corrects both with no product code change. H1916 signed native 4MiB original reply remains recorded FAIL, 10GiB NOT_RUN."
 }
