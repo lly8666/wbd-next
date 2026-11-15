@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1931,
-  "checkpoint_sha": "85f33ec07a5d564e8592d4326474f6d8bf2a0f59",
+  "sequence": 1932,
+  "checkpoint_sha": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1931 optimize original Rust Direct TCP NAT hot path: 1 owned Vec per Wintun TCP packet, in-place IPv4/TCP 4tuple/checksum rewrite, move exact buffer into existing 256 FIFO; remove repeated 65KiB stack temporary and one payload copy. Preserve old borrowed NAT API and 4MiB liveness/any-progress tickets. Source-locked single signed original Windows/WSL2 4MiB+384 small ABBA+10GiB 500/700 CPU/UDP/FIN/Stop pending.",
-  "why_now": "H1930 confirmed signed original 10GiB high CPU is Rust TX/RX (>=95.7% total), not Go; prior H1922 5GiB Direct relay 277318 turns with 1MiB queued_copy but existing Direct TCP packet NAT path copies each Wintun L3 packet via 65535B stack scratch then Vec. Remove unnecessary copy and stack zeroing without touching packet order/readiness; prove byte/checksum equivalence, full signed real flow and scoped CPU.",
+  "current_task": "H1932 record H1931 signed original Win2025/WSL2 Action43725739018 SUCCESS: 4MiB + 384 small physical/Direct A-B-B-A +10GiB 500/700Mbps full SHA/FIN/96B Tunnel UDP 11464/11464/owned Stop PASS. New NAT one-Vec inplace. Direct extra original-process CPU +11.757813/+9.838541s/GiB; historically 4.26/7.22% lower than H1922 other runner NON-CAUSAL. Small TCP first-echo p99 up to14.957ms and ready wait max16ms OPEN.",
+  "why_now": "H1931 single SOURCE combined test completed true signed success with exact original Win Go/Rust/Linux, enabling direct within-run physical vs Direct CPU and packet timing. New NAT bytes/FIN correct and potentially cheaper but two historical runners cannot causally prove code gain; event/IO and small first-reply outliers remain.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1931 original Win2025 signed native run combining normal 4MiB SHA/FIN gate, 384 real 64B/1K/16K small TCP A-B-B-A phase p50/p99, same-VM physical/Direct total 10GiB 500/700Mbps with original thread-TID CPU-s/GiB, Tunnel 96B UDP over all, Stop. If true fail diagnose first stage, don't call fake red. Compare within same VM physical vs Direct; old H1922 different Runner cannot prove causal CPU reduction. Full D1-D5/P1/GUI/Game4/IPv6/padding OPEN.",
+  "next_action": "First optimize/measure Rust TX event wake fairness and socket read/write costs without touching proven any-read-or-write-progress tickets; before declaring CPU gain compare old/new binary under same Windows VM or explicit same-process bounded old/new NAT trial. Focus >10ms small first reply tail and 16ms ready wait, protect Tunnel 96B p99, 4MiB/FIN, owned Stop; do not repeat 10GiB just for doc updates. P1/D1-D5/GUI/Game4/IPv6/padding OPEN.",
   "unverified": true,
-  "last_tested_source": "aab503faf78c4e54ea018544873c7650dd7c102f",
+  "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1928-H1927-SIGNED-SMALL-TCP-384-ABBA-PASS-20261115.json"
+    "docs/evidence/M0/PLAN029-H1932-H1931-SIGNED-NAT-INPLACE-COMBINED-10GIB-384TCP-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1932-NAT-CPU-P99-SIGNED-ONE-ACTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
-    "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1930 archived exact Rust TX/RX high CPU source H1922; H1931 product code refactors TCP NAT source/direct/DNS-return into in-place 4tuple/checksum on exactly one owned Vec then FIFO move. Old borrowed output API kept for positive byte-equivalence and no-mutation error regression; fairness and WSAEventSelect unchanged. Combined single source-locked native 384 small TCP + 10GiB scenario pending, no proven CPU gain yet."
+  "partial_summary": "H1931 source6dd014e signed real Action43725739018 SUCCESS full 4MiB, 384 small 64/1024/16384B A-B-B-A true TCP/FIN/SHA and 10GiB 500/700Mbps physical vs Direct, 11464 96B Tunnel UDP, Stop. CPU extra 11.758/9.839s/GiB same VM physical-vs-Direct; relative historical H1922 other VM 4.26/7.22% lower but NONCAUSAL. Rust TX39.531s RX16.391s >=95.6% process total, event 129409 wakes, 30% relay no-progress, ticket max16ms. Rare first echo p99 ~15ms still OPEN. NAT in-place optimization functional PASS, no old/new same-VM AB."
 }

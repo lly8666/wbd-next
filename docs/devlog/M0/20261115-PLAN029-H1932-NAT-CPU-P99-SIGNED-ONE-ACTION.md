@@ -1,0 +1,10 @@
+# PLAN029 H1932｜一轮原生同时验证：NAT原地改写、384小TCP、10GiB持续负载CPU/Stop
+
+- [H1931源锁真实Win2025/WSL2 Action43725739018](https://github.com/lly8666/wbd-next/actions/runs/43725739018) SOURCE `6dd014ee411ba5bcb1ef8a74800dda573663ac9e`、完整原Go EXE+Rust DLL/Wintun/Npcap/WSL2 Ubuntu Linux真实socket，Action **SUCCESS**、下载artifact14166812627核查源SHA/完整report/Windows原业务与Linux真实收件、SHA/FIN、双端Stop。所有廉价治理、ABI、Windows/Linux Rust+Go、ARM64等门槛PASS。
+- 原源相同产品一次顺序执行：物理4MiB 51.688ms vs Direct 108.361ms全量回声/FIN PASS；小TCP 64B/1024B/16384B，同一Windows VM物理-Direct-Direct-物理每大小32轮、每条路径64个，384真实连接全部 Linux收件、总SHA `0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a`相等、Windows echo/FIN PASS；同一个原产品继续物理/Direct分别2GiB 500Mbps单向与各双向1.5GiB 700Mbps聚合，双路径合计10GiB全部 SHA/FIN、Stop PASS。96B Tunnel UDP全场连续 **11464/11464**，整体p99 2.330ms，Direct单向/双向阶段p99 2.372/2.535ms。
+- **同一VM当前产品进程CPU/GiB**：500Mbps物理0.320312 vs Direct12.078125，额外**11.757813s/GiB**；700Mbps双向物理0.307292 vs Direct10.145833，额外**9.838541s/GiB**。实测速率500.005/500.000、699.998/699.992Mbps。H1922历史额外12.28125/10.604167s/GiB比本轮高4.26%/7.22%，**但不同Windows Runner且其他代码变更，绝不宣称旧新二进制同VM因果收益**。此CPU不包含驱动ISR/DPC独立归属。H1931本次TID2472/2412对照191+个Windows1Hz CPU样本：Rust TX39.531s RX16.391s，至少占原Go+Rust进程58.484s的95.62%，高CPU仍主要Rust TX/RX，而非Go代码。
+- **延迟未解决**：同机小TCP完整请求p50物理/Direct分别64B 14.392/15.466ms、1KiB14.664/15.397ms、16KiB14.725/15.619ms；Direct额外约1.074/.733/.894ms。半关后的首回包p99物理1.225/.554/2.477ms，Direct10.696/14.957/6.389ms；64样本p99不稳定且接近极值。Rust `relay_turns=328558`、`relay_no_progress=98284`、`shard_wakes=129409`、`event_socket_checks=258196`、`ticket_wait_max_ms=16`、`direct_forwarded=5378090502`、`queued_copy=1310720`；需要后续针对WinSock通知→原TX服务的公平性/系统调用成本，而不是盲抑读/写正进展续票造成H1916/H1917真4MiB挂死。
+- 本次 H1932 **只归档短证据和M0 cursor/feature card**，不再触发真实原生构建或长负载；下一步如要声称CPU改善须同VM旧新binary或原生同进程有界NAT双实现AB。PLAN029 P1/D1–D5、GUI/Game4、IPv6、padding仍OPEN；PLAN028限定未重开、PLAN030未开始。
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Source-locked H1931 true native same-VM 4MiB+384 small TCP+10GiB Direct/physical CPU and Tunnel UDP/Stop PASS, CPU improvement causality not proven."}
+```

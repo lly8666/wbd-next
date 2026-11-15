@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "task": "H1932",
+  "plan": "PLAN029",
+  "source_sha": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_id": 43725739018,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43725739018",
+  "action_conclusion": "success",
+  "job_id": 132848432891,
+  "artifact_id": 14166812627,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43725739018",
+  "signed_product_scope": "EXACT_ORIGINAL_WIN2025_GO_RUST_NPCAP_WINTUN_PLUS_WSL2_LINUX_NORMAL",
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "source_in_original_report_and_binary": true,
+  "product_change": "Rust Direct TCP NAT one already-owned Vec in-place IPv4/TCP 4-tuple and incremental checksum; eliminate 65KiB stack rewritten temp and second payload copy, retain old borrowed NAT for comparison",
+  "pure_tests": [
+    "Win/Linux Rust unit tests PASS",
+    "owned NAT vs borrowed NAT full-byte IP/TCP checksum match for 40/41/104/1429/16424/65535-byte IPv4",
+    "forward SYN reject no NAT resource leak, reverse miss no packet mutation",
+    "native pure resource pressure PASS"
+  ],
+  "four_MiB": {
+    "real_kernel_both_paths": true,
+    "bytes_each": 4194304,
+    "physical_elapsed_ms": 51.688,
+    "direct_elapsed_ms": 108.361,
+    "source_locked_Sha_FIN_echo": "PASS_BOTH"
+  },
+  "small": {
+    "real_kernel_connections": 384,
+    "each_path_per_size": 64,
+    "sizes_bytes": [
+      64,
+      1024,
+      16384
+    ],
+    "order": [
+      "physical",
+      "direct",
+      "direct",
+      "physical"
+    ],
+    "content_sha256": "0425643d53f93dc3d3e43049f4934b321b18c14d655400e07a93767db4b17f8a",
+    "Windows_Linux_SHA_match": true,
+    "half_close_both": "PASS",
+    "status": "PASS_SCOPED_SMALL_TCP_A_B_B_A_SHA_FIN",
+    "p50_full_request_ms": {
+      "64B": {
+        "physical": 14.392,
+        "direct": 15.466,
+        "added": 1.074
+      },
+      "1024B": {
+        "physical": 14.664,
+        "direct": 15.397,
+        "added": 0.733
+      },
+      "16384B": {
+        "physical": 14.725,
+        "direct": 15.619,
+        "added": 0.894
+      }
+    },
+    "p99_first_echo_after_half_close_ms": {
+      "64B": {
+        "physical": 1.225,
+        "direct": 10.696
+      },
+      "1024B": {
+        "physical": 0.554,
+        "direct": 14.957
+      },
+      "16384B": {
+        "physical": 2.477,
+        "direct": 6.389
+      }
+    },
+    "p99_full_request_ms": {
+      "64B": {
+        "physical": 18.355,
+        "direct": 41.818
+      },
+      "1024B": {
+        "physical": 16.189,
+        "direct": 20.912
+      },
+      "16384B": {
+        "physical": 18.139,
+        "direct": 30.181
+      }
+    },
+    "notes": "64 samples per arm per size, p99 empirically near maximum; one VM physical vs Direct valid contrast, not individual paired p99 delta or a causal old/new binary comparison"
+  },
+  "long": {
+    "total_GiB_both_paths": 10,
+    "linux_physical_and_direct_sessions": 2,
+    "full_SHA_FIN": "PASS",
+    "owner_stop": "PASS_BOTH_OWNED",
+    "status": "PASS_SIGNED_LONG_SAME_VM_PHYSICAL_VS_DIRECT_CPU_UDP_STOP",
+    "phases": {
+      "oneway_500mbps": {
+        "bytes_per_path": 2147483648,
+        "physical_mbps": 500.005,
+        "direct_mbps": 500,
+        "physical_original_process_cpu_s_per_gib": 0.320312,
+        "direct_original_process_cpu_s_per_gib": 12.078125,
+        "added_original_process_cpu_s_per_gib": 11.757813,
+        "added_user_cpu_s_per_gib": 4.898437,
+        "added_kernel_cpu_s_per_gib": 6.859375,
+        "tunnel_udp_direct_p99_ms": 2.372,
+        "physical_p99_ms": 0.968
+      },
+      "duplex_700mbps_aggregate": {
+        "bytes_per_direction_per_path": 1610612736,
+        "physical_mbps": 699.998,
+        "direct_mbps": 699.992,
+        "physical_original_process_cpu_s_per_gib": 0.307292,
+        "direct_original_process_cpu_s_per_gib": 10.145833,
+        "added_original_process_cpu_s_per_gib": 9.838541,
+        "added_user_cpu_s_per_gib": 3.505209,
+        "added_kernel_cpu_s_per_gib": 6.333334,
+        "tunnel_udp_direct_p99_ms": 2.535,
+        "physical_p99_ms": 1.411
+      }
+    },
+    "cpu_scope": "GO_EXECUTABLE_HOSTING_RUST_DLL_PROCESS_USER_KERNEL_NOT_DRIVER_ISR_DPC",
+    "historical_H1922_other_runner_comparison": {
+      "old_added_500": 12.28125,
+      "old_added_700": 10.604167,
+      "new_added_500": 11.757813,
+      "new_added_700": 9.838541,
+      "directional_lower_percent_500": 4.26,
+      "directional_lower_percent_700": 7.22,
+      "causal_AB": "NOT_PROVEN_DIFFERENT_WINDOWS_RUNNER_OTHER_SOURCE"
+    }
+  },
+  "tunnel_udp": {
+    "count_unique_windows_and_linux": 11464,
+    "windows_overall_p99_ms": 2.33,
+    "covered_small_and_long": true
+  },
+  "rust_kernel_io": {
+    "shard_wakes": 129409,
+    "event_socket_checks": 258196,
+    "event_take_errors": 0,
+    "relay_turns": 328558,
+    "relay_no_progress": 98284,
+    "relay_progress_self_ticket": 230274,
+    "ticket_wait_max_ms": 16,
+    "forwarded_without_queue_bytes": 5378090502,
+    "queued_copy_bytes": 1310720,
+    "interpretation": "No extra TCP COPY relay growth; event readiness and native kernel TCP system-call cost remain high; 30% no-progress relay turns."
+  },
+  "original_windows_process_thread_cpu": {
+    "rust_tx_tid": 2472,
+    "rust_rx_tid": 2412,
+    "total_process_sampled_cpu_s": 58.484375,
+    "rust_tx_cpu_s_lower_bound": 39.53125,
+    "rust_rx_cpu_s_lower_bound": 16.390625,
+    "rust_tx_kernel_cpu_s": 20.46875,
+    "rust_tx_user_cpu_s": 19.0625,
+    "rust_rx_kernel_cpu_s": 13.953125,
+    "rust_rx_user_cpu_s": 2.4375,
+    "rust_cpu_total_lower_bound_s": 55.921875,
+    "rust_share_of_original_process_cpu_pct_lower_bound": 95.62,
+    "stage_direct_oneway_cpu_s": {
+      "rust_tx": 17.578125,
+      "rust_rx": 6.171875,
+      "all_threads": 24.03125
+    },
+    "stage_direct_duplex_cpu_s": {
+      "rust_tx": 19.828125,
+      "rust_rx": 9.453125,
+      "all_threads": 29.90625
+    },
+    "source": "original Rust WBD_WINDOWS_RUST_NATIVE_WORKER_TID joined Windows 1Hz GetThreadTimes; thread names unusable"
+  },
+  "open": [
+    "same-VM old/new source binary CPU AB to confirm NAT causality",
+    "Direct TCP rare first reply p99>10ms and ready ticket age16ms",
+    "TX socket IO/readiness syscall cost and no-progress tickets not safely suppressible",
+    "full PLAN029 P1/D1-D5/GUI/Game4/IPv6/padding",
+    "driver ISR/DPC attribution"
+  ]
+}
