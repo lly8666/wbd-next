@@ -38,6 +38,13 @@ p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
 p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
 p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 p029_tcp128_control=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
+p029_sustain=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
+if p029_sustain and not (p029_p2 and p029_direct and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal" and
+    not p029_abba and not p029_tcp128 and not p029_tcp128_control):
+ raise RuntimeError("H1896 only one original signed Normal 4MiB+30s Direct source, never 128/ABBA")
 if p029_tcp128_control and not (p029_tcp128 and p029_p2 and not p029_abba and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
@@ -1058,6 +1065,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   report["plan029_private_v3_cn_direct_udp"]["direct_tcp"]="PASS_REAL_KERNEL_TWO_LEG_TCP_32K"
   print("PLAN029_H1760_SIGNED_CN_DIRECT_TCP_32K_TWO_LEG_HALF_CLOSE_PASS_PRE_TUNNEL_AND_STOP",flush=True)
   if p029_p2:
+   if p029_sustain:
+    # Passed only to the test orchestrator; product environment was
+    # already frozen at its original Popen(), without a new CLI option.
+    os.environ["WBD_PLAN029_P2_ORIGINAL_PID"]=str(w.pid)
    from m0_plan029_h1815_p2_real_mixed import run_p2
    report["plan029_p2_mixed_real"]=run_p2(root,out,peer,host_source,linux_app4,
                                           wdata["fake4"],unix,ready)
@@ -2248,6 +2259,36 @@ print(json.dumps(result),flush=True)
      stress["stop"]="PASS_BOTH_OWNED"
      stress["status"]="PASS_SIGNED_TRUE_WINTUN_128_IDLE2_ACTIVE_SAME_SHARD_AND_CPU_SCOPE"
      print("PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_126_IDLE_2_SAME_SHARD_ACTIVE_AND_IDLE_CPU_STOP_PASS_SCOPED",flush=True)
+    if p029_sustain:
+     st=p2.get("sustained_direct_tcp")
+     if (not isinstance(st,dict) or
+         st.get("source_sha")!=os.environ["GITHUB_SHA"] or
+         st.get("status")!="PENDING_UDP_AND_OWNED_STOP" or
+         st.get("scope")!=
+         "REAL_WINDOWS_FAKEIP_TO_WSL2_PHYSICAL_TCP_30S_EACH_DIRECTION" or
+         set(st.get("tunnel_udp_per_phase",{}))!={"upload","download"} or
+         not st.get("windows",{}).get("one_persistent_socket") or
+         not st.get("linux",{}).get("half_close") or
+         not st.get("windows",{}).get("windows_half_close")):
+      raise RuntimeError("H1896 signed 30+30s sustained original CPU/UDP delivery missing")
+     for phase in ("upload","download"):
+      stage=st["windows"]["phases"][phase]
+      sample=st["tunnel_udp_per_phase"][phase]
+      cpu=stage.get("cpu",{})
+      if (stage.get("delivered_bytes")!=251658240 or
+          not 29.5<=stage.get("elapsed_s",0)<=55 or
+          stage.get("throughput_mib_s",0)<=0 or
+          sample.get("unique_delivered",0)<250 or
+          sample.get("rtt_p99_ms",-1)<0 or
+          cpu.get("cpu_scope")!=
+          "WIN32_ORIGINAL_GO_PLUS_RUST_PROCESS_WITH_TUNNEL_UDP_NO_DRIVER_ISR_DPC" or
+          cpu.get("original_process_total_cpu_s_per_gib",-1)<0 or
+          cpu.get("original_process_kernel_cpu_s_per_gib",-1)<0 or
+          cpu.get("original_process_user_cpu_s_per_gib",-1)<0):
+       raise RuntimeError("H1896 original 240MiB per-leg delivery/CPU/p99 receipt invalid")
+     st["owner_stop"]="PASS_BOTH_OWNED"
+     st["status"]="PASS_SIGNED_REAL_30S_UP_AND_DOWN_CPU_GIB_UDP_AND_STOP"
+     print("PLAN029_H1896_SIGNED_REAL_30S_UPLOAD_DOWNLOAD_ORIGINAL_CPU_GIB_UDP_P99_AND_OWNED_STOP_PASS_SCOPED",flush=True)
     if p029_abba:
      chosen=p2.get("same_vm_abba",{})
      win_diag_text=(out/"client.log").read_text(errors="replace")

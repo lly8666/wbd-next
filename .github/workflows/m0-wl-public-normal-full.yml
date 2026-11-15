@@ -537,6 +537,7 @@ jobs:
       - run: python -m unittest tests.test_m0_native_ci_scope -v
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
+      - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
@@ -998,6 +999,10 @@ jobs:
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.
       WBD_PLAN029_P2_ABBA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-abba]') && '1' || '0' }}
+      # H1896: separate source-locked 30s upload / 30s download one
+      # physical Linux kernel peer and one original Wintun FakeIP TCP.
+      # Must also name [plan029-v3-real-p2-bulk]; never 128 or ABBA.
+      WBD_PLAN029_P2_SUSTAIN_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-sustain]') && '1' || '0' }}
       # H1892 is a *distinct*, source-locked one-VM 128 genuine Wintun
       # Direct TCP socket scene, reusing the exact guest TCP46112 grant.
       WBD_PLAN029_TCP128_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128]') && '1' || '0' }}
@@ -2500,6 +2505,30 @@ jobs:
                 throw 'H1815 genuine P2 physical vs Direct TCP 1MiB and concurrent Tunnel small UDP/owned Stop unqualified'
               }
               Write-Output 'PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_P2_SUSTAIN_SCENE -eq '1'){
+                $s=$p2.sustained_direct_tcp
+                if($s.source_sha -ne $env:GITHUB_SHA -or
+                   $s.status -ne 'PASS_SIGNED_REAL_30S_UP_AND_DOWN_CPU_GIB_UDP_AND_STOP' -or
+                   $s.owner_stop -ne 'PASS_BOTH_OWNED' -or
+                   $s.windows.test_port -ne 46118 -or
+                   $s.windows.actual_client_lease -ne '10.66.0.2' -or
+                   $s.windows.one_persistent_socket -ne $true -or
+                   $s.linux.physical_client_source -ne $p2.physical_baseline.socket_source -or
+                   $s.windows.phases.upload.delivered_bytes -ne 251658240 -or
+                   $s.windows.phases.download.delivered_bytes -ne 251658240 -or
+                   $s.linux.received_upload_bytes -ne 251658240 -or
+                   $s.linux.sent_download_bytes -ne 251658240 -or
+                   $s.linux.half_close -ne $true -or
+                   $s.windows.windows_half_close -ne $true -or
+                   $s.tunnel_udp_per_phase.upload.unique_delivered -lt 250 -or
+                   $s.tunnel_udp_per_phase.download.unique_delivered -lt 250 -or
+                   $s.windows.phases.upload.cpu.cpu_scope -ne 'WIN32_ORIGINAL_GO_PLUS_RUST_PROCESS_WITH_TUNNEL_UDP_NO_DRIVER_ISR_DPC' -or
+                   $s.windows.phases.download.cpu.cpu_scope -ne 'WIN32_ORIGINAL_GO_PLUS_RUST_PROCESS_WITH_TUNNEL_UDP_NO_DRIVER_ISR_DPC' -or
+                   $p2.stop -ne 'PASS_BOTH_OWNED'){
+                  throw 'H1896 sustained true original Win/WSL2 up/down CPU/GiB and UDP phases/Stop invalid'
+                }
+                Write-Output 'PLAN029_H1896_SIGNED_30S_EACH_TCP_REAL_KERNEL_PROCESS_CPU_GIB_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
+              }
               if($env:WBD_PLAN029_TCP128_SCENE -eq '1'){
                 $stress=$p2.tcp128
                 if($stress.source_sha -ne $env:GITHUB_SHA -or

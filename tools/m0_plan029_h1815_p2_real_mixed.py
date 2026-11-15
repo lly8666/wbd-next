@@ -20,12 +20,16 @@ if ABBA and not BULK:raise RuntimeError("P2 A-B-B-A requires 4MiB unpaced")
 ABBA_MODES=("copy","bypass","bypass","copy")
 TCP128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
+SUSTAIN=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
+if SUSTAIN and (ABBA or TCP128 or not BULK):
+    raise RuntimeError("H1896 sustained TCP separate from 128/ABBA and requires 4MiB CN")
 if TCP128_CONTROL and not TCP128:
     raise RuntimeError("H1894 matched CPU control requires actual H1892 128 TCP")
 if TCP128 and (ABBA or not BULK):
     raise RuntimeError("H1892 signed 128 Wintun sockets requires ordinary unpaced 4MiB P2")
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
 MAX_SUSTAIN=3200
+if SUSTAIN:MAX_SUSTAIN=9000
 FINISH_PACKET=b"PLAN029-P2-TUNNEL-FINISH"
 PREFIX=b"PLAN029-H1815-ORIGINAL-SIGNED-COMPARATIVE-TCP/"
 PAYLOAD=(PREFIX*((SIZE+len(PREFIX)-1)//len(PREFIX)))[:SIZE]
@@ -168,12 +172,14 @@ def udp_windows(lease,tun_ip):
         sock.bind((lease,0));sock.settimeout(1.5)
         print("PLAN029_H1815_P2_WINDOWS_TUN_SMALL_READY",flush=True)
         started=time.perf_counter();rtts=[];gaps=[];prev=None;total=0
-        tagged=[] if TCP128_CONTROL else None
+        tagged=[] if TCP128_CONTROL or SUSTAIN else None
         # Test-only host completion marker: UDP must span the entire real
         # Direct TCP lifetime, not end after the old first ~2 seconds.
         done=pathlib.Path(os.environ["WBD_PLAN029_P2_TCP_DONE_MARKER"])
         for seq in range(MAX_SUSTAIN):
             begin_monotonic=time.perf_counter() if TCP128_CONTROL else None
+            if SUSTAIN and begin_monotonic is None:
+                begin_monotonic=time.perf_counter()
             begin=time.perf_counter()
             sock.sendto(udp_packet(seq),(tun_ip,SMALL_PORT))
             payload,fromaddr=sock.recvfrom(512)
@@ -186,7 +192,7 @@ def udp_windows(lease,tun_ip):
                 tagged.append((begin_monotonic,time.perf_counter(),rtt))
             if prev is not None:gaps.append((end-prev)*1000)
             prev=end;total+=1
-            if total%128==0:
+            if total%128==0 and not SUSTAIN:
                 receipt("PLAN029_H1839_P2_UDP_STAGE",{
                     "phase":"progress","delivered":total,
                     "elapsed_ms":round((end-started)*1000,3)})
@@ -226,9 +232,39 @@ def udp_windows(lease,tun_ip):
                 "scope":"ACTUAL_WINDOWS_KERNEL_TUNNEL_UDP_WITHIN_ORIGINAL_IDLE_WINDOW"
             }
             previous_end=stop
+    sustained_udp=None
+    if SUSTAIN:
+        path=pathlib.Path(os.environ["WBD_PLAN029_P2_SUSTAIN_PHASE_FILE"])
+        phase=json.loads(path.read_text(encoding="utf-8"))
+        if (phase.get("source_sha")!=os.environ["GITHUB_SHA"] or
+            set(phase.get("windows",{}))!={"upload","download"}):
+            raise RuntimeError("H1896 actual signed Windows sustained phase file missing")
+        sustained_udp={}
+        last_end=None
+        for name in ("upload","download"):
+            stage=phase["windows"][name]
+            start,stop=stage["start_monotonic_s"],stage["end_monotonic_s"]
+            if (not 29.5<=stop-start<=55 or
+                (last_end is not None and start<last_end)):
+                raise RuntimeError("H1896 true sustained phase durations invalid")
+            sample=[(b,e,r) for b,e,r in tagged if start<=b and e<=stop]
+            if len(sample)<250:
+                raise RuntimeError("H1896 real 96B Tunnel UDP per-phase sample absent")
+            sample.sort()
+            sustained_udp[name]={
+                "unique_delivered":len(sample),
+                "rtt_p99_ms":round(sorted(r for _,_,r in sample)[
+                    math.ceil(.99*len(sample))-1],3),
+                "max_interreply_gap_ms":round(max(
+                    (sample[i][1]-sample[i-1][1])*1000
+                    for i in range(1,len(sample))),3),
+                "scope":"REAL_96B_TUNNEL_UDP_WITHIN_30S_ORIGINAL_WINDOWS_TCP_PHASE"
+            }
+            last_end=stop
     receipt("PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS",
       {"received":COUNT,"sustained_total":total,
        "matched_phase_udp":phase_udp,
+       "sustained_phase_udp":sustained_udp,
        "start_monotonic_s":started,"end_monotonic_s":finished,
        "kernel_lease":lease,"tunnel_ip":tun_ip,
        "rtt_p99_ms":round(sorted(rtts)[math.ceil(.99*total)-1],3),
@@ -247,11 +283,19 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         f=log.open("w");streams.append(f)
         args=(["wsl.exe","-d","Ubuntu","-u","root","--","python3","-u",unix(exe)]
               if linux else [sys.executable,"-u",str(exe)])
+        if linux and SUSTAIN:
+            # WSL.exe does not inherit Windows process environment. Pass
+            # the exact longer UDP run bound explicitly to Linux guest;
+            # preserve the six-argv P2/ABBA workload contract unchanged.
+            args[6:6]=["env","WBD_PLAN029_P2_SUSTAIN_SCENE=1"]
         child_env=os.environ.copy()
         child_env["WBD_PLAN029_P2_TCP_DONE_MARKER"]=str(completed)
         if TCP128_CONTROL:
             child_env["WBD_PLAN029_TCP128_WINDOWS_PHASE_PATH"]=str(
                 out/"plan029-h1894-tcp128-udp-windows-phases.json")
+        if SUSTAIN:
+            child_env["WBD_PLAN029_P2_SUSTAIN_PHASE_FILE"]=str(
+                out/"plan029-h1896-sustain-windows-phases.json")
         p=subprocess.Popen([*args,role,first,second,
                             "p2bulk" if BULK else "p2paced",
                             "p2abba" if ABBA else "p2ordinary"],stdout=f,
@@ -298,6 +342,15 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             direct,dn=spawn("direct-windows","direct","10.66.0.2",fake)
             wait(direct,dn,38)
             direct_proofs.append(proof(dn,"PLAN029_H1815_P2_TCP_CLIENT"))
+        sustained=None
+        if SUSTAIN:
+            # The original two-entry P2 kernel server must finish before a
+            # different physical TCP46118 listener is started. No new owner.
+            wait(guest,gn,7)
+            from m0_plan029_h1896_sustain_tcp import run_sustained
+            original_pid=int(os.environ["WBD_PLAN029_P2_ORIGINAL_PID"])
+            sustained=run_sustained(
+                root,out,physical,host_source,fake,unix,ready,original_pid)
         tcp128=None
         if TCP128:
             # Reuse original already-owned Hyper-V physical TCP46112
@@ -348,6 +401,18 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 set(small_win["matched_phase_udp"])!={"pre128","tcp128"}):
                 raise RuntimeError("H1894 two real same-VM Tunnel UDP phase receipts missing")
             tcp128["matched_phase_udp"]=small_win["matched_phase_udp"]
+        if SUSTAIN:
+            if (sustained is None or
+                not isinstance(small_win.get("sustained_phase_udp"),dict) or
+                set(small_win["sustained_phase_udp"])!={"upload","download"}):
+                raise RuntimeError("H1896 original simultaneous UDP/TCP stage evidence absent")
+            for name in ("upload","download"):
+                segment=small_win["sustained_phase_udp"][name]
+                if (segment["unique_delivered"]<250 or
+                    segment["scope"]!=
+                    "REAL_96B_TUNNEL_UDP_WITHIN_30S_ORIGINAL_WINDOWS_TCP_PHASE"):
+                    raise RuntimeError("H1896 sustained phase lacked Tunnel UDP progress")
+            sustained["tunnel_udp_per_phase"]=small_win["sustained_phase_udp"]
         first_direct=min(t["start_monotonic_s"] for t in direct_proofs)
         last_direct=max(t["end_monotonic_s"] for t in direct_proofs)
         overlap=(max(first_direct,small_win["start_monotonic_s"])<
@@ -436,6 +501,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "udp_sustained_total":small_win["sustained_total"],
                 "same_vm_abba":abba,
                 "tcp128":tcp128,
+                "sustained_direct_tcp":sustained,
                 "tunnel_udp_covers_all_128":whole_tcp128,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}

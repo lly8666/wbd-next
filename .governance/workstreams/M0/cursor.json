@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1895,
-  "checkpoint_sha": "5ff82147e17ad0fe9213aeed34f669395e6e1b50",
+  "sequence": 1896,
+  "checkpoint_sha": "a7b8669d3cac62e30bb1fbca26e6d8b47efda4d1",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1895 first H1894 signed Action43681882700 failed cheap static legacy H1861 P2 RTT clock contract: test requires entire original P2 script time.perf_counter() high-resolution instead of any time.monotonic() textual. H1894 introduced 4 monotonic calls only for new 8s CPU/UDP control, not data-plane. H1895 changes exactly those four to time.perf_counter and extends targeted test to enforce same 1-clock source. Native/network NOT_RUN in failed H1894; retry exact new H1895 SOURCE.",
-  "why_now": "H1894 original full native workflow did not build Windows Rust/Go or run signed network, stopped at tests.test_m0_plan029_h1749_signed_direct_order.NativeDirectOrder.test_h1861_p2_p99_uses_high_resolution_same_windows_clock. New H1894 CPU matched fixture tests PASS; preserve strict original 99th latency high-resolution perf_counter contract, no feature behavior change.",
+  "current_task": "H1896 source candidate NOT_RUN: original signed Windows2025 Wintun FakeIP TCP46118 to WSL2 Linux physical TCP, 2s warmup each direction then upload and download 30s each at 8MiB/s, 240MiB each, actual SHA/FIN/Stop. Original Go+Rust process user/kernel CPU/GiB via GetProcessTimes at stage boundaries and concurrent 96B Tunnel UDP p99/UDP-only 8s CPU baseline. No Rust/Go product path changes.",
+  "why_now": "H1892 signed 128 true Wintun TCP 126 idle+2 same-shard active PASS. H1895 signed same-owner 8s pre128 vs128 idle process CPU 3.057% vs2.402% one core and Tunnel UDP p99 1.494ms vs1.016ms, sequential/noisy; older 4.15% is not idle socket causal cost. Short 4MiB cannot attribute true user/kernel CPU/GiB.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1895 cheap static P2 high-resolution same-clock test and full Win2025 original Go/Rust + WSL2 signed 4MiB 128 Wintun CPU pre128-vs128 two 8s windows with real Tunnel UDP p99 and both owned Stop. Do not infer kernel driver CPU or P2 performance gain from two sequential phases; P1 V4/V3 CPU/GiB separate.",
+  "next_action": "Collect H1896 quick deterministic five Python tests, strict source-locked signed Windows Go/Rust+WSL2 4MiB short functional plus new one-socket 30s upload/30s download 240MiB each, Win32 original-process CPU/GiB, 8s idle UDP control, Tunnel per-phase p99 >=250 delivered and owned Stop. Any first failure fix exactly, no CPU benefit claim. Then choose one dominant hotspot; P1 latest pure Tunnel CPU/GiB separately.",
   "unverified": true,
   "last_tested_source": "9152225584a105302bdc4908a87324f703252223",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1893-H1892-SIGNED-128-WINTUN-CPU-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1896-30S-SUSTAINED-P2-CPU-GIB-TWO-LEGS.md",
     "docs/devlog/M0/20261115-PLAN029-H1895-KEEP-P2-ONE-HIGH-RES-CPU-UDP-CLOCK.md",
     "docs/devlog/M0/20261115-PLAN029-H1894-SAME-VM-PRE128-CPU-UDP-P99-CONTROL.md",
     "docs/devlog/M0/20261115-PLAN029-H1893-COLLECT-SIGNED-128-WINTUN-PARALLEL-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1892-REAL-128-WINTUN-2-SAME-SHARD-PARALLEL-EFFICIENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1891-COLLECT-H1890-SIGNED-FDREAD-STOP.md",
     "docs/devlog/M0/20261115-PLAN029-H1890-WINSOCK-PER-LEG-FDREAD-NO-IDLE-RECV.md",
-    "docs/devlog/M0/20261115-PLAN029-H1889-COLLECT-H1888-SIGNED-TCP-IO.md",
-    "docs/devlog/M0/20261115-PLAN029-H1888-SIGNED-TCP-IO-SYSCALL-READY-AGE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1889-COLLECT-H1888-SIGNED-TCP-IO.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1892 signed real Wintun128 CPU/UDP/Stop PASS, H1894 matched two 8s CPU and UDP tail control static tests mostly PASS but exact old H1861 one-clock P2 contract failed before real network. H1895 four test-only clock calls change to perf_counter, new true normal signed scene NOT_RUN. PLAN029 in progress P1/P2 perf open."
+  "partial_summary": "H1895 signed pre128/128 same process original CPU and Tunnel p99 PASS, but no idle connection CPU delta causal signal. H1896 new true real TCP 30s per upload/download CPU/GiB and concurrent UDP p99 fixture NOT_RUN, 4MiB short preserved. PLAN029 P1/P2 perf OPEN."
 }
