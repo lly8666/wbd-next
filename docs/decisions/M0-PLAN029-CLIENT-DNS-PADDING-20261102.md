@@ -4,6 +4,8 @@
 
 **本次关键设计唯一入口：[CLIENT_SPLIT_DNS_CONTRACT](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)。** 它取代旧主备DNS、NIC多DNS轮询、普通DNS一律Tunnel、中国IP单独分流条款；历史源码/日志只作证据。保留原Rust隧道/FEC/Game，新增客户端分流执行层，不改服务端协议、不恢复Go逐包热泵。
 
+**2026-11-16 增量：[PLAN029B](M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) / [029B提示词](../prompts/M0-PLAN029B.md)。** 当前优化批次安全收尾后，完成分流关闭不实例化业务Direct/FakeIP、普通/高级CN可选、所有受管AAAA本地空答与原IPv6入口政策；纳入029最终收口，不先关闭029也不启动030。以下CN域名并集/FakeIP条款适用于**高级CN开启**；普通CN仍按域名选择DNS、业务按真实IP判断，CN→海外走Tunnel。新配置高级默认off，旧配置保语义迁移。详细边界以029B为准，当前产品资格不因此改变。
+
 ## 1. 地址字段与解析职责
 
 MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-20261102.md)落实的[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)。内层IPv4后续片没有TCP/UDP端口，不得当新流重领填充；无需为识别填充重组所有IP分片。
@@ -17,7 +19,7 @@ MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-2026
 
 只保留 `dns.direct`（默认223.5.5.5）和 `dns.tunnel`（默认1.1.1.1）两个单endpoint设置，普通界面各一个输入框。所有route-mode/Normal/Game都不使用备份DNS、系统DNS自动回退或跨方向竞速；UDP截断可对同endpoint做TCP回退。旧列表第一项迁移、剩余项明确停用，具体兼容见契约§6。
 
-CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道DNS；中国域名、LAN/显式direct4、中国IP业务并集直连。其他两route-mode保持其语义，不强行开启中国规则。resolver出口由内部用途固定，优先于普通IP分类；即使隧道DNS地址位于CN网段，也不能被直连。
+CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道DNS；高级CN开启时中国域名、LAN/显式direct4、中国IP业务并集直连；普通CN仅按LAN/direct4/中国IP决定业务出口。其他两route-mode保持其语义，不强行开启中国规则。resolver出口由内部用途固定，优先于普通IP分类；即使隧道DNS地址位于CN网段，也不能被直连。所有受管AAAA按029B统一本地空答。
 
 服务器地址解析是唯一必要cold例外，始终复用同一个 `dns.direct` 从物理出口查询，不依赖隧道先建好；复用H1659/H1665 Npcap/CNAME与小包修复，取消原bootstrap/NIC备用链。初建/已接管后重连/休眠唤醒均真实验证，服务器地址不改SNI，多A/TTL失败不先杀健康lane。新查询合并、缓存、deadline及DNS回包分流见契约§4。
 

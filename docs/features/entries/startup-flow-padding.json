@@ -33,7 +33,8 @@
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
-    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "verification": [
     {
@@ -90,7 +91,8 @@
     "H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.",
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
-    "Padding is not a guarantee against DPI recognition."
+    "Padding is not a guarantee against DPI recognition.",
+    "PLAN029B PLANNED：padding独立于业务分流实例，split off不得丢失已支持填充；不是新增Game填充资格。"
   ],
   "promotion": null
 }

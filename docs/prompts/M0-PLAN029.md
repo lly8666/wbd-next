@@ -1,5 +1,7 @@
 # M0｜PLAN029长期接续提示词
 
+**2026-11-16后继定案**：[029B方案](../decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) / [029B提示词](M0-PLAN029B.md)。先收当前已冻结优化批次，再完整实施029B，纳入029收口、030前；不取消Action、不等029先全部关闭。CN域名强制直连改为可选高级功能，分流off真正不实例化业务模块，公共DNS/填充/IPv6处理保留；以下旧CN并集要求仅适用于高级开启。设计已定案不等于实现/测试PASS。
+
 你在 `lly8666/wbd-next/main` 接续已授权PLAN029。默认上轮中断：刷新main，读START_HERE/AGENTS、registry/M0 cursor、[029计划](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)与[分流/DNS施工契约](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)，重点最新§3B、§5、§7。只补checkpoint之后必要代码/日志/Actions；先收在途结果、补中断记录，不重复dispatch、不覆盖其他改动。028限定收口，不恢复旧矩阵；030未开工。
 
 目标：**Wintun后Rust中国IP＋域名并集分流、单DNS、真实Direct/Tunnel TCP/UDP、配置GUI与有限填充，低CPU、低延迟、无跨流HOL。** 全部029出口完成再交付，单Action绿、某个子项完成或诊断暂时受阻不等于没任务。
@@ -12,7 +14,7 @@
 
 ## 实现固定语义
 
-- CN模式：中国域名、中国IP、LAN/direct4并集Direct；CN域名海外CDN也Direct，非CN域名→CN IP则DNS走Tunnel而业务Direct。其他route-mode原语义不变。选择性FakeIP仅CN成功A答复，不用真实IP反查污染共享CDN；TTL/引用/隔离回收遵契约。不解密DoH、不猜SNI。
+- CN模式：普通档按LAN/direct4/CN IP选业务出口，CN域名海外IP走Tunnel；高级 `cn-domain-direct` 开启才复用选择性FakeIP实现域名/IP并集Direct。两档CN查询都走direct DNS；非CN→CN IP仍DNS走Tunnel、业务Direct。新配置高级off、旧配置缺键保语义迁移。FakeIP仅CN成功A答复，不用真实IP反查污染CDN；生命周期遵契约。不解密DoH、不猜SNI。
 - `dns.direct=223.5.5.5`、`dns.tunnel=1.1.1.1`各一个endpoint，无备用/跨方向回退；服务器bootstrap所有模式复用direct，UDP→TCP只同endpoint。DNS用途优先普通IP分类。系统DNS＋被Wintun捕获53按QNAME，无法覆盖的on-link/绑定物理/加密DNS如实说明；IPv6原有政策须真实验证。
 - 少量owned捕获路由，Rust单一ingress→flow缓存/区间IP表，域名trie仅DNS查询调用；不加海量route/WFP/NRPT、Go逐包泵。普通Tunnel TCP不终止、不套额外代理栈；FEC/Game/record不重构。
 - Direct UDP物理绑定异步socket，Direct TCP按已选后端两腿有界中继，支持回程/半关闭/失败；无每flow线程/全局等待。Wintun RX借用不能跨await，TX备好数据再Allocate并立即提交，不占ring等DNS/connect。
