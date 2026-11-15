@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1934,
-  "checkpoint_sha": "2925288fe62f24bf323c353b59fae5d224c0da7a",
+  "sequence": 1935,
+  "checkpoint_sha": "d9faa3b499dbd83a4295ba54b7081eda33fd26cf",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1934 original Win2025/WSL2 true P1 Rust V3 policy ABBA source wired: A1(all),B1(CN),B2(CN),A2(all); four owned 50Mbps each direction 60s 25ms0loss, single same Go/Rust/Linux binary SHA, real Linux TUN public alias203.0.113.77 both arms, B 4096 sparse CN /32+8192 domains, full CPU (Rust TX/RX Win32 TIDs), real delivery/p99/Stop. Native signed source pending; no CPU improvement claim.",
-  "why_now": "Physical TCP process CPU near idle because bypasses original Rust. Prior P1 V4-vs-V3 was backend confound. Same original Rust V3 all vs CN policy four-leg ABBA controls backend/Go binary/Runner while preserving identical actual Tunnel exit, measures real split-policy overhead.",
+  "current_task": "H1935 repair actual cheap preflight FAIL Action43731389669 old test_h1775 exact --china-ip-file one32 string after H1934 test-only ABBA conditional; assert old H1775 fallback still unmodified, isolated B CN4096 file only with source-locked policy flag. H1934 original native Windows/WSL2 jobs SKIPPED by cheap gate, NOT_RUN. Same-Rust V3 A/all B/CN B/CN A/all true 4x60s signed Action pending.",
+  "why_now": "Do not waive real CI red. H1934 old H1775 exact literal assertion no longer matched conditional test-only source selection; product H1775 semantics still unchanged, not a Windows runtime failure. Keep failing cheap gate until scoped test updated and verified.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1934 signed native Action true original 4x60s via two explicit commit markers. Hard-check old V4/V3 P1 separate untouched, 4 source+binary equal true OS Stop receipts, B CN rows+domain bytes, actual Tunnel 203.0.113.77 all arms, 1Hz Rust TX/RX TIDs and CPU-per-actual-delivered GiB, 50Mbps per OS + UDP p99. Fail closed first fault, no duplicate 10GiB. Next separate NAT legacy vs new same VM ABBA.",
+  "next_action": "Collect H1935 governance cheap + signed native Action 4x60s. Before discussing CPU compare four real original Go/Rust Win+Linux products same binary/SOURCE, B4096 CN+8192 domains, app->public Linux TUN alias in both arms, 50Mbps true 25ms0loss, real stop, original Rust TX/RX Win32 thread CPU, actual delivered GiB + UDP p99. No re-running 10GiB.",
   "unverified": true,
   "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1932-H1931-SIGNED-NAT-INPLACE-COMBINED-10GIB-384TCP-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md",
     "docs/devlog/M0/20261115-PLAN029-H1933-CPU-ABBA-TEST-DESIGN.md",
     "docs/devlog/M0/20261115-PLAN029-H1932-NAT-CPU-P99-SIGNED-ONE-ACTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1927-NATIVE-CHEAP-PREFLIGHT-SMALL-LATENCY.md"
+    "docs/devlog/M0/20261115-PLAN029-H1928-SMALL-DIRECT-TCP-LATENCY-CPU-EVIDENCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1933 exact policy ABBA scorer8 pure tests and governance PASS. H1934 signed original 4-leg Rust V3 A(all)/B(CN)/B(CN)/A(all) 50Mbps true Tunnel on guest owned public alias, B4096 CIDR+8192domains, actual source/Stop/CPU/p99 pending. H1931 physical vs Direct extra11.758/9.839s/GiB is Rust bridge overhead, NOT splitter policy overhead. PLAN029 OPEN."
+  "partial_summary": "H1933 ABBA calculator governance passed. H1934 test-only actual source commit d9faa3 originally triggered native Action43731389669 but cheap test_h1775 expected literal old single CN file, failed and native jobs SKIPPED. H1935 updates old assertion to recognize old one-/32 fallback plus B-only CN4096, original product source unchanged, true native ABBA still NOT_RUN."
 }

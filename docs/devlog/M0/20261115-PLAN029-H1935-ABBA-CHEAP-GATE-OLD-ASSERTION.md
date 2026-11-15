@@ -1,0 +1,3 @@
+# PLAN029 H1935｜先纠正旧D2测试字面断言才跑四臂ABBA
+- H1934 [Action43731389669](https://github.com/lly8666/wbd-next/actions/runs/43731389669) **FAIL于cheap预检**的`test_h1775_noncn_dns_to_exact_cn_ip_physical_direct_and_owned_cleanup`，不是产品业务失败：原测试逐字匹配`"--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")`，但源锁四臂测试的B用独立`plan029-h1934-cn4096.txt`并保留旧单/32作为fallback。新条件仍只针对开了`WBD_PLAN029_P1_POLICY_CN_ARM`并同时开了ABBA且原签名CI的测试臂，绝不改变H1775用户真实DNS到中国IP的出口。H1935修改字面测试同时验证两选项及缺权限拒绝，保持旧原有反例的CPU/exit/路由完整性。
+- H1934原 Windows+WSL2 原生产品网络任务全部 **SKIPPED/NOT_RUN**，不能将source记为通过。H1935同marker仅重试一次经过修复的源锁真实四阶段；其它产品/ABI/Go/Rust热路径均未改。性能对比是同 Rust V3 all/CN/CN/all、同Tunnel，非此前物理直接TCPvsRust桥接。
