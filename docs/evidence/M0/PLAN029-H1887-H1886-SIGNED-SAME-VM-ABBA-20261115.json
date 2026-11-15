@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1887",
+  "source_sha": "3391b9a26897f4e56467c84a9e40c0cd6ebbfa56",
+  "action_id": 43670529264,
+  "job_id": 132680622163,
+  "action_conclusion": "success",
+  "status": "SIGNED_FULL_ORIGINAL_NATIVE_FOUR_FLOW_ABBA_FUNCTIONAL_PASS_P2_PERFORMANCE_OPEN",
+  "scope": "Windows2025 original Go/Npcap signed Wintun Rust V3 Normal CN FakeIP vs original Linux WSL2/physical; one VM, binary, generation, original app four TCP kernel connections port46116; P2 probe-only",
+  "admission": {
+    "port": 46116,
+    "rust_verified": true,
+    "order": [
+      "copy",
+      "bypass",
+      "bypass",
+      "copy"
+    ],
+    "private_ci_and_probe_only": true
+  },
+  "workload": {
+    "physical_baseline_4m_elapsed_ms": 37.979,
+    "each_direct_bytes": 4194304,
+    "no_application_pacing": true,
+    "distinct_real_direct_flows": 4,
+    "linux_physical_tcp_sessions": 5,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+    "half_close_all": true,
+    "actual_direct_source": "10.66.0.2",
+    "presented_fakeip": "198.18.0.1",
+    "app_tcp_nodelay_default": 0
+  },
+  "abba": {
+    "trials": [
+      {
+        "ordinal": 1,
+        "mode": "copy",
+        "elapsed_ms": 84.079,
+        "connect_ms": 18.944,
+        "upload_ms": 31.939,
+        "first_reply_wait_ms": 3.935,
+        "download_ms": 29.131,
+        "half_close_ms": 0.131
+      },
+      {
+        "ordinal": 2,
+        "mode": "bypass",
+        "elapsed_ms": 71.915,
+        "connect_ms": 0.487,
+        "upload_ms": 40.818,
+        "first_reply_wait_ms": 3.274,
+        "download_ms": 27.261,
+        "half_close_ms": 0.075
+      },
+      {
+        "ordinal": 3,
+        "mode": "bypass",
+        "elapsed_ms": 93.357,
+        "connect_ms": 25.256,
+        "upload_ms": 36.938,
+        "first_reply_wait_ms": 3.586,
+        "download_ms": 27.518,
+        "half_close_ms": 0.059
+      },
+      {
+        "ordinal": 4,
+        "mode": "copy",
+        "elapsed_ms": 72.195,
+        "connect_ms": 0.459,
+        "upload_ms": 36.624,
+        "first_reply_wait_ms": 3.512,
+        "download_ms": 31.496,
+        "half_close_ms": 0.103
+      }
+    ],
+    "stage_means": {
+      "elapsed_ms": {
+        "copy_mean_ms": 78.137,
+        "bypass_mean_ms": 82.636,
+        "bypass_minus_copy_ms": 4.499
+      },
+      "connect_ms": {
+        "copy_mean_ms": 9.7015,
+        "bypass_mean_ms": 12.8715,
+        "bypass_minus_copy_ms": 3.17
+      },
+      "upload_ms": {
+        "copy_mean_ms": 34.2815,
+        "bypass_mean_ms": 38.878,
+        "bypass_minus_copy_ms": 4.5965
+      },
+      "first_reply_wait_ms": {
+        "copy_mean_ms": 3.7235,
+        "bypass_mean_ms": 3.43,
+        "bypass_minus_copy_ms": -0.2935
+      },
+      "download_ms": {
+        "copy_mean_ms": 30.3135,
+        "bypass_mean_ms": 27.3895,
+        "bypass_minus_copy_ms": -2.924
+      },
+      "half_close_ms": {
+        "copy_mean_ms": 0.117,
+        "bypass_mean_ms": 0.067,
+        "bypass_minus_copy_ms": -0.05
+      }
+    },
+    "copy_mean_ms": 78.137,
+    "bypass_mean_ms": 82.636,
+    "bypass_minus_copy_ms": 4.499,
+    "bypass_div_copy": 1.0576,
+    "interpretation": "NO_PROVEN_END_TO_END_GAIN_SINGLE_SHORT_FOUR_TRIAL_RUN_WITH_CONNECT_AND_UPLOAD_JITTER_NOT_REPRODUCED"
+  },
+  "tunnel": {
+    "windows_unique": 120,
+    "linux_unique": 120,
+    "windows_rtt_p99_ms": 2.101,
+    "max_interreply_gap_ms": 16.65,
+    "covered_all_four": true
+  },
+  "stop": "PASS_BOTH_OWNED",
+  "full_original_e2e": "SUCCESS_RC0",
+  "source_verified": true,
+  "historical": {
+    "h1885_failed_action_id": 43669531835,
+    "first_error": "Python cleanup `logs` list shadowed by string AFTER local positive original business markers; Action FAILURE retained",
+    "h1886_fix": "renamed read text to `win_diag_text` + static test",
+    "h1882_signed_p2_2_453_ratio": "different VM/source; NOT_A_CODE_AB"
+  },
+  "exits": {
+    "P1_all_tunnel_cpu_gib": "OPEN_PLUS9.41_PCT_V4_V3_DIFFERENT_BACKENDS",
+    "P2_performance": "OPEN",
+    "CPU_user_kernel_driver": "NOT_MEASURED_FOR_FOUR_SHORT_TRIALS",
+    "ready_queue_oldest_age": "NOT_MEASURED",
+    "real_wintun_128_idle_few_active": "NOT_RUN",
+    "GUI_Game4_CN_Actual_IPv6": "OPEN"
+  }
+}
