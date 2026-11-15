@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1924,
-  "checkpoint_sha": "a08a197a9543a0516642efa728218b88f7015362",
+  "sequence": 1925,
+  "checkpoint_sha": "fa8b74f08c8cda7d45b8b9163506d47f1ef31b06",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1924 fix offline artifact ZIP audit Python syntax and strengthen original 10GiB SHA checks; add nine subsecond auditor unit tests to already existing governance cheap test step. H1922 original signed 10GiB Action43716329886 remains full PASS. No product change or new native test requested.",
-  "why_now": "H1923 governance-maintenance43718900178 and feature gate43718900142 true red from Python SyntaxError at audit script line222; fix immediately, not ignore Action false-red. Make inexpensive audit tests run automatically within existing governance gate, rather than relying on a developer to remember manual test. Also verify long Linux+Windows bytes and SHA on both phases; never let green Action alone imply end-to-end correct.",
+  "current_task": "H1925 keep PLAN029 feature card within 16KiB headroom without deleting any historical verification row, SHA, result, or evidence; short current status H1922 10GiB verified, H1924 offline receipt CI PASS. No runtime product code change and no additional native Actions.",
+  "why_now": "Feature card remained 16370/16384 bytes after H1923, only 14B free; routine status updates caused H1917/H1918 governance failure. Normalize redundant historic platform labels and long scope blurbs while preserving all 44 evidence rows and exact SOURCE/status/artifact link. No change to plan or product acceptance.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect cheap H1924 governance+maintenance tests; execute new CLI with H1922 and H1917 downloaded artifacts, verify signed long PASS vs native true product FAIL classification. Do not re-run 10GiB because H1922 is source-locked and completed; proceed remaining PLAN029 and before new CPU optimization add same-VM old/new binary A/B and Direct small packet p99.",
+  "next_action": "Use the new H1924 pass/negative-gated offline receipt audit for future scoped Actions. Continue new mixed Direct small TCP/UDP latency p99 and pure Tunnel P1 same-VM performance guard, followed by D1–D5 GUI/Game4/IPv6/padding; if optimizing CPU require same-VM binary old/new AB and retain H1922 complete 10GiB liveness. Do not repeat H1922.",
   "unverified": true,
   "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
-    "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md"
+    "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1922 true original signed10GiB SOURCE b0fa293 PASS Action43716329886, incremental process CPU +12.281/+10.604s/GiB high. H1923 added offline audit but syntax fail on line222 caught by cheap governance workflow; H1924 fixes syntax and adds 9 cheap tests to governance on every push and full long receipt SHA checks. Product code unmodified, native product not retested, PLAN029 OPEN."
+  "partial_summary": "H1922 original signed Win2025/WSL2 10GiB SOURCE b0fa293 PASSED Action43716329886; Direct extra Go+Rust process CPU +12.281/+10.604s/GiB still OPEN. H1924 offline receipt audit Python syntax fixed and 9 tests added to cheap governance CI; governance and maintenance both SUCCESS. H1925 reduces 44-row feature card length without altering evidence SHA or statuses; native NOT_RUN, full PLAN029 OPEN."
 }
