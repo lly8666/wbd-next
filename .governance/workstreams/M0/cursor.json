@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1938,
-  "checkpoint_sha": "16742c8127d1f6dd9a49ee26361fd674719310b6",
+  "sequence": 1939,
+  "checkpoint_sha": "3e80fc8c7b7d723a618a91b7c47a351c99d3dfef",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1938 fix Rust Direct TCP candidate post-connect first-read FD_READ handoff with one safe FIFO ticket, plus loopback real kernel prebuffered recv test and 8/16ms ready queue diagnostic; source-locked 4MiB+384 small TCP only, NOT_RUN. H1937 Action43734219846 true original same Rust policy ABBA A1 real success 49.99/49.99Mbps, SHA/Stop, A1 21.6792 CPU-s/GiB, but B1 real business/Stop PASS yet strict cold CN expectation FAILED: 8 CN rows not 4096 (domain_bytes=180224). B2/A2 NOT_RUN, whole P1 CPU comparator FAIL not complete. Keep P1 separate after Direct latency test.",
-  "why_now": "H1937 true Action43734219846 shows exact firewall fix worked, A1 full original real native pass, B1 real workload also pass but test CN row count unexpectedly8, not4096 synthetic /32; four-arm CPU comparison invalid and must not claim change. H1931 384 small physical/Direct first-reply p99 up to14.957ms and Rust ready max16ms remains unresolved. Fix narrow plausible post-connect FD_READ consumed transition with one first probe; protect H1920 positive read/write tickets and 4MiB/FIN.",
+  "current_task": "H1939 metadata budget correction only; H1938 bounded Rust Direct TCP post-connect first-read + kernel prebuffered test SOURCE3e80fc8 original 4MiB/384 small TCP Action43735936831 pending. H1937 P1 A1 real 50Mbps/Stop PASS, B1 workload PASS but cold CN rows8!=4096; full ABBA FAIL/unfinished.",
+  "why_now": "H1938 governance Action43735936939 structure actually FAIL combined hot bytes32974>32768. Trim repetitive cursor prose, do not waive rule. H1938 native action independent and running. Direct first reply p99 up to15ms remains OPEN.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "H1938 first cheap Rust Win/Linux + platform real loopback initial data test, then one signed original Windows/WSL2 P2 bulk 4MiB +384 64/1024/16384B small kernel TCP physical/Direct/Direct/physical and 96B Tunnel UDP/owned Stop. No 10GiB. Inspect connected_first_probe_tickets, ready_wait_ge8/ge16 plus first echo p50/p95/p99 and full SHA/FIN. Real P1 H1937 B1 loads domain180224 but CN rows8 vs expected4096: separate follow-up pinpoint Go --china-ip-file source vs Rust cold CN snapshot before any more P1 ABBA Action.",
+  "next_action": "Inspect H1938 source-locked Action43735936831 real original Windows 4MiB +384 small TCP first_echo/p99/FIN/UDP/Stop and new Rust ticket diagnostics. Independently trace H1937 Go CN file input: B domain180224 bytes loaded but Rust CN8 rows vs4096 required; no CPU policy ABBA claim.",
   "unverified": true,
   "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md"
   ],
   "open_requests": [],
-  "partial_summary": "Signed H1937 original Win2025/WSL2 Action43734219846 genuine A1 all 50Mbps both OS PASS, original Go+Rust CPU21.6792s/GiB, Stop, true H1936 firewall fix; B1 CN also business 50Mbps Stop PASS but fails *test policy proof* cn_rows8 not4096 despite domain180224: not comparable, B2/A2 NOT_RUN. Separate Direct first echo real H1931 p99 up to14.957ms remains OPEN; H1938 one post-physical-connect bounded first relay ticket and loopback kernel pre-buffer test pending signed true 384 small A-B-B-A, no high-rate 10GiB."
+  "partial_summary": "H1931 signed 384 small Direct TCP first-echo p99 up to14.957ms, ready max16ms; H1938 one-shot Rust first-relay read candidate and source-locked native run pending. H1937 P1 A1/B1 real 50Mbps/Stop PASS but B1 CN8 vs4096, B2/A2 NOT_RUN. H1939 only tightens cursor size for original 32KiB governance hot budget, no product code."
 }
