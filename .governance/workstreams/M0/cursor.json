@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1943,
-  "checkpoint_sha": "cbf01fae158e47b3ef967f5351f978f7cc083768",
+  "sequence": 1944,
+  "checkpoint_sha": "b07d7468c696707ddbf64d2d846faa6c84a89cfc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1943 archive H1942 SOURCE cbf01fa signed Action43751965403 SUCCESS 4MiB +384 FIN-first+384 payload-first small TCP same original Win2025/WSL2 Go/Rust SHA/FIN/TunnelUDP/Stop PASS. 64B Direct first echo p95/p99 fin-first15.044/15.568ms vs payload-first15.152/15.729ms, physical <=.261ms; FIN wait not necessary. Test-only opt-in Rust TX counters: outer reply-read ready ticket age 8/16ms, same-turn inner kernel write vs deferred; exact new source native P2 pending, no product behavior change.",
-  "why_now": "H1940 socket WAIT_ANY priority and H1941 FD_CLOSE peek did not fix p99; H1942 768 true sockets proves direct tail remains if Linux replies before observing FIN. Need distinguish before outer kernel read TX queue delay from after inner socket write/Wintun RX delivery, with same original Rust owner monotonic timestamps and no per-packet user data or busy polling.",
+  "current_task": "H1944 original signed Win2025/WSL2 H1943 reverse reply-ticket timing test-only source emitted one extra PowerShell '}' before 500/700Mbps gate; H1944 fixes exact P2_MIXED nested gate, adds cheap regression. H1942 original 4MiB + 768 fin-first/payload-first SHA/FIN+Stop PASS but first echo 64B Direct p99 ~15.6ms. H1944 native source test PENDING; no performance improvement claim.",
+  "why_now": "Catch the extra brace before native Windows Runner spends time on Go/Rust builds. P2_MIXED gate must include both the new H1943 short reply diagnostic and the old H1898 high-rate branch, not prematurely close. Fix is fixture/workflow only, not product change. Retain old H1942 signed receipt as last tested SOURCE.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H1943 one source-locked original Win2025/WSL2 4MiB+768 physical/Direct small TCP with response-ticket timing counters and SHA/FIN TunnelUDP owned Stop; if outer reply-read ticket age remains small yet app p99 ~15ms, instrument TX Wintun reverse/RX injection; if age>=8 for many reply reads, target original WinSock wake processing. P1 4096 nonLAN CN rules all/CN/CN/all 4-arm CPU ABBA independently; no redundant 10GiB.",
+  "next_action": "Collect H1944 cheap workflow and original one signed short 4MiB + 768 FIN-first/payload-first 64B/1K/16KiB physical/Direct; read original Rust outer reply ready-ticket max/ge8/ge16 and same-turn inner write, SHA/FIN/TunnelUDP/Stop. If real product FAIL never call false red. No duplicate 10GiB. P1 same-Rust all/CN/CN/all full CPU ABBA remains OPEN.",
   "unverified": true,
   "last_tested_source": "cbf01fae158e47b3ef967f5351f978f7cc083768",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1943-H1942-SIGNED-768-FIN-VS-PAYLOAD-FIRST-P99-OPEN-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
     "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1938-DIRECT-TCP-FIRST-RELAY-READ-PROBE.md",
     "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md",
-    "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md",
-    "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md"
+    "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1942 source cbf01fa actual signed Win2025/WSL2 Action43751965403 SUCCESS: 4MiB physical23.403 vs Direct59.086ms, 768 real small TCP each original Linux FIN+payload SHA, Tunnel UDP240/240 p99 14.401ms, Stop PASS. For64B FIN-first Direct p95/p99 15.044/15.568ms vs Linux payload-first 15.152/15.729ms (physical <=.261), so waiting for FIN not necessary. H1943 adds aggregate TX outer reply ready age and same-turn inner write counters only in original P2 diagnosis, new SOURCE NOT_RUN. Full029 and P1 CPU still OPEN."
+  "partial_summary": "H1942 original signed Action43751965403 PASS 4MiB+768 small TCP true two-OS SHA/FIN, Tunnel UDP240/240 and owned Stop; Direct 64B first echo p99 15.568ms FIN-first vs 15.729ms echo-first, so FIN wait not necessary. H1943 adds cold-only Rust outer-read ticket age + same-turn inner write diagnostics (7 counters), H1944 fixes extra PowerShell brace found before source-locked native qualification. Full PLAN029 OPEN."
 }

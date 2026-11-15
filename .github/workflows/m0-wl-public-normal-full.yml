@@ -2608,7 +2608,6 @@ jobs:
                 }
                 Write-Output 'PLAN029_H1943_SIGNED_RUST_REPLY_WINSOCK_TICKET_AGE_AND_SAME_TURN_FORWARD_PASS_SCOPED'
               }
-              }
               if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE -eq '1'){
                 $rate=$p2.highrate_direct_tcp
                 # H1909: H1907 actually completed 10GiB, SHA/FIN/Stop,

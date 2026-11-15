@@ -29,5 +29,14 @@ class ReplyTicketDiagnostics(unittest.TestCase):
             self.assertIn('"'+key+'"',parser)
         self.assertIn("H1943 partial/invalid original reply diagnostic",parser)
         self.assertIn("H1943 original Rust reply timing invariant failed",parser)
+        # The H1943 optional diagnostic and the long-rate gate must
+        # remain INSIDE the same P2_MIXED PowerShell block. An extra
+        # closing brace would only fail after the costly signed build.
+        self.assertIn(
+            "PLAN029_H1943_SIGNED_RUST_REPLY_WINSOCK_TICKET_AGE_AND_SAME_TURN_FORWARD_PASS_SCOPED'\n              }\n              if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE",
+            workflow)
+        self.assertNotIn(
+            "PLAN029_H1943_SIGNED_RUST_REPLY_WINSOCK_TICKET_AGE_AND_SAME_TURN_FORWARD_PASS_SCOPED'\n              }\n              }\n              if($env:WBD_PLAN029_P2_HIGH_RATE_SCENE",
+            workflow)
 
 if __name__=="__main__":unittest.main()
