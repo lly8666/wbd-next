@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1907,
-  "checkpoint_sha": "cb7339214880ceb2b113f8c3ee3d3b57441c4846",
+  "sequence": 1908,
+  "checkpoint_sha": "a4cfa1d354b7e3b2043ec0f6d35ac0defc7e8f4b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1907 fix exact long 500/700 Mbps 10GiB signed source first H1906 runtime fail: real 32KiB original Wintun TCP passed and long original Rust transferred >3.4GiB forward plus >1.2GiB reverse, but generic Normal child 165s watchdog killed test before any full 2GiB physical/direct + duplex stage receipt or owned Stop. Extend only exact signed Normal 500/700 long scene to bounded mode900s and parent original PID1060s under native 24-minute step; add bounded every256MiB test-app local-send progress and strict negative gates. No original Go/Rust datapath change; NEW signed SOURCE NOT_RUN.",
-  "why_now": "H1906 Action43693416486 original ZIP shows PLAN029_H1760 WINDOWS AND LINUX 32KiB SHA/FIN/PASS, P2 4MiB SHA/FIN pass, highrate Linux listener READY and Rust original side cumulative inner_read>=3.4GiB, outer_read>=1.2GiB, then WL_PUBLIC_REAL_MODE_TIMEOUT 165 and rc124. This failure is an invalid old harness deadline for four 180s-bounded stages, not proof that the long test failed on packet path. H1906 earlier H1905 32KiB stall was an independent intermittent failure; retain historical FAIL.",
+  "current_task": "H1908 metadata-only hot-read budget repair: H1907 exact signed Normal 10GiB 500/700Mb/s source is RUNNING; old H1906 signed 32KiB SHA/FIN PASS but long interrupted by historical 165s test child (not product loss). H1907 has 900s nested/1060s parent, all four 180s-capped stages unchanged; new source result NOT_RUN.",
+  "why_now": "H1907 governance structure failed combined hot byte budget 32777 (>32768 by 9) from expanded cursor; trim repeated context without weakening policy. No data-plane or signed H1907 source change.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1907 source-locked Python budget tests, exact main governance, Windows/Linux original compile, then one true signed Windows/WSL2 2GiB one-way500Mbps and 1.5GiB each 700Mbps full duplex physical then Direct (10GiB total), per-stage Win32 process user/kernel CPU vs separate generator/whole host CPU and 96B Tunnel UDP p99, SHA/FIN and owned Stop. If fails, archive partial test-app acceptance progress, distinguish remote WSL SHA/FIN and first host/runner timeout; P1/P2 unchanged.",
+  "next_action": "Collect H1907 exact-source original Windows/WSL2 10GiB physical-vs-Direct 2GiB one-way500Mb/s and 1.5GiB each 700Mb/s duplex, separate user/kernel Win32 PID CPU and generator/host, 96B UDP six-phase p99, SHA/FIN and original owned Stop. Fail first stage/timeout explicitly; P1/P2 OPEN.",
   "unverified": true,
   "last_tested_source": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1906-H1905-SIGNED-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md",
     "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md",
     "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md",
     "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
     "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
-    "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1906 actual signed new source original 32KiB TCP FIN SUCCESS, prior 4MiB P2 SUCCESS, long 10GiB test STARTED and original Rust sent >3.4GiB forward plus >1.2GiB reverse but outer nested generic Normal 165s timeout FAIL before report/Stop; user requested long test. H1907 scoped double-deadline budget change only NOT_RUN. H1892 real Wintun128 PASS_SCOPED, H1902 short 499.965/699.760 Mb/s PASS_SCOPED, P1/P2 OPEN, PLAN029 IN_PROGRESS."
+  "partial_summary": "H1892 original real 128 Wintun idle+2 active PASS_SCOPED. H1902 signed short rates 499.965/699.760Mb/s PASS_SCOPED. H1906 exact 32KiB/4MiB original TCP PASS, long 10GiB started but generic165s child timeout FAIL. H1907 gated 900/1060s extended test candidate, source-locked Action in progress. H1908 metadata only. P1/P2 OPEN, PLAN029 IN_PROGRESS."
 }
