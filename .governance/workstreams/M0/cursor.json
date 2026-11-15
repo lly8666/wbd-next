@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1890,
-  "checkpoint_sha": "5d56b0db17869fd41815ae2199badf027c408521",
+  "sequence": 1891,
+  "checkpoint_sha": "6f75fc145aed1ad1e7a2e4e4ddf40f10f45067c6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1890 per-leg FD_READ/FD_CLOSE gate on original Rust TX: two independent TCP read arms, disarm only after actual WSAEWOULDBLOCK, rearm from existing WSAEnumNetworkEvents for same kernel socket; preserve other leg/FIN/backpressure/FIFO. Platform standalone without event pump retains legacy reads. Cold suppressed read call metrics and exact typed signed P2 parser. SOURCE CANDIDATE NOT_RUN.",
-  "why_now": "H1888 signed exact physical58.616/Direct111ms P2 functional PASS but outer kernel TCP read WouldBlock119/189 (63%), inner15/110, ready FIFO peak1/max1ms. Windows official WSAEventSelect says FD_READ level triggered, recv re-enables, FD_CLOSE triggers EOF. High-confidence remove repeated unsignaled leg empty recv, not change scheduler threads or crypto/FEC.",
+  "current_task": "H1891 collected original signed H1890 Windows2025/Wintun/Rust+WSL2 4MiB/Tunnel UDP120/120/Stop SUCCESS: physical47.656ms Direct131.645ms (2.762x); outer kernel TCP read WouldBlock 7/77 vs H1888 119/189, 119 event-suppressed reads, ready max2ms. P2 performance OPEN.",
+  "why_now": "H1888 typed original Rust diagnostic measured outer empty read119/189. H1890 true signed source proves 7/77 with same 4MiB and 119 skipped unsignaled reads, SHA/FIN/Tunnel/Stop PASS. Claim is only syscall reduction; different VMs cannot measure CPU or end-to-end causal speed.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1890 Win2025 platform full component tests (including existing 128 loopback same shared WSA shard and new two-leg event-suppressed/FD_CLOSE/FIN test), Windows eligible engine and signed real P2 4MiB+UDP120/120+Stop with strict original Rust final counters. Compare normalized outer read WouldBlock vs H1888 119/189 and suppressed counts; across-VM speed gain not claimed. Then 128 REAL Wintun idle+few active and P1 pure-Tunnel CPU user/kernel.",
+  "next_action": "Build exact-source original Windows/WSL2 real Wintun 128 idle Direct TCP + few active same-event-shard pressure with signed Stop, CPU user/kernel and Tunnel small p99; P1 pure all-Tunnel V4/V3 sameVM CPU/GiB +9.41% separately OPEN.",
   "unverified": true,
-  "last_tested_source": "d0b6da290e8afe5a438dac511d7791b649d81cd8",
+  "last_tested_source": "6f75fc145aed1ad1e7a2e4e4ddf40f10f45067c6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1889-H1888-SIGNED-TCP-IO-20261115.json"
+    "docs/evidence/M0/PLAN029-H1891-H1890-SIGNED-FDREAD-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1891-COLLECT-H1890-SIGNED-FDREAD-STOP.md",
     "docs/devlog/M0/20261115-PLAN029-H1890-WINSOCK-PER-LEG-FDREAD-NO-IDLE-RECV.md",
     "docs/devlog/M0/20261115-PLAN029-H1889-COLLECT-H1888-SIGNED-TCP-IO.md",
     "docs/devlog/M0/20261115-PLAN029-H1888-SIGNED-TCP-IO-SYSCALL-READY-AGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1887-COLLECT-SIGNED-ABBA-PERFORMANCE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md",
     "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1883-COLLECT-H1882-FAST-FORWARD-P2.md"
+    "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1888 signed real H1889 evidence: outer read WouldBlock119/189(63%), max ticket wait1ms, 33/207 no-progress, functional PASS/ratio1.894x perf OPEN. H1890 per-leg WinSock FD_READ gating code candidate NOT_RUN, no new thread/timer/IOCP. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1890 signed functional PASS, physical47.656 Direct131.645 2.762x P2 OPEN; real outer read WouldBlock119->7, 119 skipped, FIFO wait2ms, Tunnel120/120 p99 2.269ms, owned Stop. 128 real Wintun, P1 CPU and GUI/Game4/IPv6 OPEN; PLAN029 IN_PROGRESS."
 }

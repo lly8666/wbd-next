@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1891",
+  "source_sha": "6f75fc145aed1ad1e7a2e4e4ddf40f10f45067c6",
+  "action_id": 43676932963,
+  "job_id": 132700245780,
+  "action_conclusion": "success",
+  "result": "SIGNED_REAL_PER_LEG_FDREAD_SYSCALL_REDUCTION_PASS_SCOPED_P2_PERFORMANCE_OPEN",
+  "scope": "Windows2025 original Go/signed Npcap/Wintun/Rust V3 CN vs WSL2 Linux true 4MiB TCP with concurrent Tunnel UDP and owned Stop",
+  "physical": {
+    "elapsed_ms": 47.656,
+    "connect_ms": 20.651,
+    "upload_ms": 11.923,
+    "first_reply_wait_ms": 3.835,
+    "download_ms": 11.182
+  },
+  "direct": {
+    "elapsed_ms": 131.645,
+    "connect_ms": 24.938,
+    "upload_ms": 57.293,
+    "first_reply_wait_ms": 4.259,
+    "download_ms": 45.109,
+    "half_close": true
+  },
+  "bytes": 4194304,
+  "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+  "direct_ratio": 2.762,
+  "direct_extra_ms": 83.989,
+  "tunnel_udp": {
+    "windows_unique": 120,
+    "linux_unique": 120,
+    "p99_ms": 2.269,
+    "max_gap_ms": 19.477,
+    "covered_entire_direct": true
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "tcp_kernel_io": {
+    "source": "real_kernel_two_leg",
+    "type": "ORIGINAL_RUST_TX_AFTER_OWNED_STOP",
+    "values": {
+      "shard_wakes": 49,
+      "event_socket_checks": 92,
+      "event_take_errors": 0,
+      "event_read": 33,
+      "event_write": 11,
+      "event_connect": 2,
+      "event_close": 3,
+      "ticket_peak": 1,
+      "ticket_served": 213,
+      "ticket_wait_sum_ms": 58,
+      "ticket_wait_max_ms": 2,
+      "relay_turns": 207,
+      "relay_no_progress": 36,
+      "inner_read_calls": 116,
+      "outer_read_calls": 77,
+      "inner_read_wouldblock": 18,
+      "outer_read_wouldblock": 7,
+      "inner_write_calls": 80,
+      "outer_write_calls": 98,
+      "inner_write_wouldblock": 12,
+      "outer_write_wouldblock": 2,
+      "inner_write_short": 0,
+      "outer_write_short": 0,
+      "inner_read_gated": 2,
+      "outer_read_gated": 11,
+      "inner_read_event_suppressed": 0,
+      "outer_read_event_suppressed": 119,
+      "direct_forwarded": 8009664,
+      "queued_copy": 444480
+    },
+    "prior_h1888": {
+      "source_sha": "d0b6da290e8afe5a438dac511d7791b649d81cd8",
+      "outer_read_calls": 189,
+      "outer_read_wouldblock": 119,
+      "outer_event_suppressed": 0,
+      "ticket_max_ms": 1
+    },
+    "change": {
+      "outer_read_wouldblock_less": 112,
+      "outer_read_wouldblock_reduction_percent": 94.1176,
+      "outer_event_suppressed": 119,
+      "claim": "ACTUAL_SYSCALL_BEHAVIOR_ONLY_NOT_CPU_OR_ACROSS_VM_PERF"
+    }
+  },
+  "limitations": {
+    "P2": "OPEN_2.762x_PHYSICAL_THIS_VM",
+    "P1_cpu_gib": "OPEN_PLUS9.41pct",
+    "user_kernel_cpu": "NOT_MEASURED",
+    "driver_cpu": "NOT_ATTRIBUTED",
+    "real_wintun128": "NOT_RUN",
+    "GUI_Game4_IPv6": "OPEN"
+  }
+}
