@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1892,
-  "checkpoint_sha": "ffff8e9ca52a8a892c6961973c0505b174660e81",
+  "sequence": 1893,
+  "checkpoint_sha": "9152225584a105302bdc4908a87324f703252223",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1892 source candidate true parallel efficiency: original Windows Go/Rust authenticated V3 one Wintun owner, 128 actual Direct TCP kernel connections on signed existing HyperV TCP46112 grant, 126 idle 8sec and two active same actual WSA shard 64KiB each true SHA/FIN. Original Rust exact NAT/WinSock accepted 128 log and max active, Linux 128 original eth0 accept, concurrent Tunnel UDP120 minimum, 1Hz Win32 original process kernel/user CPU specifically within idle interval, original both owned Stop. New SOURCE NOT_RUN.",
-  "why_now": "H1890 signed H1891 real functional PASS outer WouldBlock119->7 with no progress loss but Direct P2 2.762x performance OPEN. Need true high-concurrency 128 original Wintun flows and actual idle user/kernel CPU rather than component-only 128 WinSock loopback. Reuse one existing signed Normal 4MiB P2 and original Hyper-V TCP46112 grant, no perflow product threads/driver changes.",
+  "current_task": "H1893 archive exact H1892 original signed Win2025/WSL2 V3 Normal CN real Wintun128 (126 idle8s, 2 true 64KiB active same WinSock shard1) + Linux128 real accept, Rust actual NAT128 active peak128/shard max8, SHA/FIN, Tunnel UDP679/679 p997.133ms gap53.641ms, two owned Stop PASS. Idle original Go+Rust process CPU 7.156s 8 samples kernel0.203125s+user0.09375s=0.296875s (4.149% one core). P2 physical64.953 Direct121.689ms ratio1.873x, PERF_OPEN.",
+  "why_now": "H1892 source-locked real Windows signed original WinSock shared-event capacity 128 PASS with 126 long idle+2 same shard active, one Rust TX and one RX, no perflow threads. Explicit process CPU user/kernel 8s window shows 4.149% one core, which is not 128 incremental overhead or kernel driver CPU. Next should isolate same-VM idle0 versus idle128 process CPU and sustained UDP p99, then P1 Tunnel user/kernel CPU/GiB.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1892 cheap static/Win2025 Rust+Go Linux component and source-locked Windows2025/WSL2 signed original native 128 actual TCP/126 idle/two active same shard + 4MiB P2 + continuous 120/120 UDP and both owned Stop, compare original Rust max ticket age/active and idle process user/kernel CPU. If real 128 admission or FIN fails record exact first fault; do not infer performance from source changes. Then P1 pure Tunnel V4/V3 sameVM CPU/GiB.",
+  "next_action": "H1894 one original signed Normal Windows/WSL2 source, matched 8s 0 TCP vs 8s 128 TCP idle under identical ongoing Tunnel small UDP, exclude connect and Stop, same original process GetProcessTimes and exact Windows runner and Wintun owner. Compare delta CPU user/kernel and UDP p99, preserve 128 real admissions plus 2 same shard active and owned Stop. P1 pure Tunnel V3/V4 sameVM CPU/GiB still OPEN. No PLAN030.",
   "unverified": true,
-  "last_tested_source": "6f75fc145aed1ad1e7a2e4e4ddf40f10f45067c6",
+  "last_tested_source": "9152225584a105302bdc4908a87324f703252223",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1891-H1890-SIGNED-FDREAD-20261115.json"
+    "docs/evidence/M0/PLAN029-H1893-H1892-SIGNED-128-WINTUN-CPU-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1893-COLLECT-SIGNED-128-WINTUN-PARALLEL-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1892-REAL-128-WINTUN-2-SAME-SHARD-PARALLEL-EFFICIENCY.md",
     "docs/devlog/M0/20261115-PLAN029-H1891-COLLECT-H1890-SIGNED-FDREAD-STOP.md",
     "docs/devlog/M0/20261115-PLAN029-H1890-WINSOCK-PER-LEG-FDREAD-NO-IDLE-RECV.md",
     "docs/devlog/M0/20261115-PLAN029-H1889-COLLECT-H1888-SIGNED-TCP-IO.md",
     "docs/devlog/M0/20261115-PLAN029-H1888-SIGNED-TCP-IO-SYSCALL-READY-AGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1887-COLLECT-SIGNED-ABBA-PERFORMANCE-OPEN.md",
-    "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md",
-    "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1892 implements 128 original Windows lease bound Wintun TCP sessions single test app/select, 126 idle 8sec and 2 64KiB live shared-shard, physical Linux real kernel listener and actual original Rust admission logs, existing 1Hz process Win32 CPU per phase, whole-span Tunnel UDP/Stop. All H1892 source tests NOT_RUN; P1 CPU/GiB and P2 wallclock OPEN, PLAN029 IN_PROGRESS."
+  "partial_summary": "H1892 FULL signed original success: 128 real Windows Wintun native Direct TCP, 126 idle 8s, two 64KiB both-way same WSA shard1 SHA FIN; Linux128 kernel accept, Rust active peak128/shard8, FIFO max2ms, Tunnel679/679 UDP p99 7.133ms gap53.641ms, original Go+Rust idle CPU 0.296875/7.156=4.149% one core (kernel0.203125 user0.09375). P2 ratio1.873x OPEN, P1+9.41% OPEN, GUI/Game4/IPv6 OPEN. PLAN029 IN_PROGRESS."
 }

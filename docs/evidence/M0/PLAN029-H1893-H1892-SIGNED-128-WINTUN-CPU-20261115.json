@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1893",
+  "source_sha": "9152225584a105302bdc4908a87324f703252223",
+  "action_id": 43680192237,
+  "job_id": 132710158218,
+  "action_conclusion": "success",
+  "result": "SIGNED_ORIGINAL_WINTUN_128_KERNEL_TCP_126_IDLE_TWO_ACTIVE_SAME_WSA_SHARD_AND_SCOPED_USER_KERNEL_CPU_FUNCTIONAL_PASS_P1_P2_PERFORMANCE_OPEN",
+  "environment": "Windows2025 original Go+signed Npcap/Wintun+Rust V3 Normal CN/TLS under one Wintun owner, true same-source WSL2 Linux TCP and TUN, no new product socket threads",
+  "real_tcp128": {
+    "wintun_lease": "10.66.0.2",
+    "real_connections": 128,
+    "original_rust_nat_admitted": 128,
+    "original_rust_active_peak": 128,
+    "original_rust_max_same_shard": 8,
+    "active_actual_shard": 1,
+    "source_ports": {
+      "from": 42500,
+      "to": 42627,
+      "unique": 128,
+      "verified": true
+    },
+    "idle_connections": 126,
+    "idle_hold_seconds": 8,
+    "active_sources": [
+      42515,
+      42531
+    ],
+    "active_each_payload_bytes": 65536,
+    "active_echo_bytes": [
+      65536,
+      65536
+    ],
+    "sha256": [
+      "9a2fe11596b5ab2b4875bee46777f6deef6156955bc7ca306fefa388ce54ac94",
+      "eab11488cbf9ee392d08cbbb0c6ed2e00f36254f8227bc1810000db9e1b1a5bd"
+    ],
+    "dual_fin": true,
+    "linux_physical_kernel_tcp_accepted": 128,
+    "linux_event_loop_threads": 1,
+    "real_original_rust_tx_shards": 16,
+    "additional_per_flow_product_threads": 0
+  },
+  "original_windows_process_idle_cpu": {
+    "samples": 8,
+    "measured_elapsed_seconds": 7.156,
+    "process_kernel_cpu_s": 0.203125,
+    "process_user_cpu_s": 0.09375,
+    "process_total_cpu_s": 0.296875,
+    "percent_one_logical_core": 4.149,
+    "peak_private_bytes": 40124416,
+    "peak_working_set_bytes": 45887488,
+    "thread_count_min": 19,
+    "thread_count_max": 19,
+    "scope": "Go_PLUS_RUST_PROCESS_ONLY_IDLE_128_TCP_NOT_PER_RUST_OR_DRIVER_CPU_NOT_INCREMENTAL_NO_0FLOW_BASELINE"
+  },
+  "tunnel_udp": {
+    "windows_unique_minimum": 120,
+    "linux_unique_minimum": 120,
+    "actual_windows_sustained": 679,
+    "actual_linux_sustained": 679,
+    "covered_p2_and_all_128": true,
+    "windows_rtt_p99_ms": 7.133,
+    "windows_max_interreply_gap_ms": 53.641
+  },
+  "fairness": {
+    "real_ready_ticket_peak": 8,
+    "max_ticket_wait_ms": 2,
+    "live_shard_1_concurrent_active": 2,
+    "no_lost_wintun_nat_receipts": true
+  },
+  "tcp_owner_kernel_io_terminal": {
+    "shard_wakes": 432,
+    "event_socket_checks": 3478,
+    "event_take_errors": 0,
+    "event_read": 36,
+    "event_write": 271,
+    "event_connect": 130,
+    "event_close": 257,
+    "ticket_peak": 8,
+    "ticket_served": 778,
+    "ticket_wait_sum_ms": 77,
+    "ticket_wait_max_ms": 2,
+    "relay_turns": 418,
+    "relay_no_progress": 183,
+    "inner_read_calls": 305,
+    "outer_read_calls": 218,
+    "inner_read_wouldblock": 30,
+    "outer_read_wouldblock": 14,
+    "inner_write_calls": 100,
+    "outer_write_calls": 147,
+    "inner_write_wouldblock": 26,
+    "outer_write_wouldblock": 4,
+    "inner_write_short": 0,
+    "outer_write_short": 0,
+    "inner_read_gated": 2,
+    "outer_read_gated": 26,
+    "inner_read_event_suppressed": 0,
+    "outer_read_event_suppressed": 160,
+    "direct_forwarded": 7632638,
+    "queued_copy": 1083650
+  },
+  "p2_4m_unpaced": {
+    "physical_elapsed_ms": 64.953,
+    "direct_elapsed_ms": 121.689,
+    "ratio": 1.873,
+    "upload_physical_ms": 19.969,
+    "upload_direct_ms": 56.691,
+    "download_physical_ms": 24.443,
+    "download_direct_ms": 50.527,
+    "correct_sha_fin": true,
+    "performance": "OPEN_NO_CROSS_VM_CAUSAL_COMPARISON"
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "limits": {
+    "P1_CPU_GiB": "OPEN_H1867_PLUS_9_41_PERCENT_UNISOLATED_BACKENDS",
+    "P2_Direct_wallclock": "OPEN_1_873x_PHYSICAL",
+    "idle_incremental_CPU": "NOT_MEASURED_NO_ZERO_FLOW_SAME_VM_BASELINE",
+    "driver_ISR_DPC_CPU": "NOT_MEASURED",
+    "udp_p99_comparison": "NO_SAME_VM_ZERO_FLOW_BASELINE",
+    "all_128_simultaneously_active": "NOT_RUN_ONLY_2_ACTIVE",
+    "GUI_Game4_IPv6_D1_D5": "OPEN"
+  }
+}
