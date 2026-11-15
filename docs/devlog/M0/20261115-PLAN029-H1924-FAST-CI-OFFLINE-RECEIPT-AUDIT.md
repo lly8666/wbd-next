@@ -1,0 +1,5 @@
+# PLAN029 H1924｜廉价CI在编译产品前主动跑全部离线证据审计用例
+
+- H1923新增证据核查工具时含一处纯Python语法错误， [governance-maintenance Action43718900178](https://github.com/lly8666/wbd-next/actions/runs/43718900178) 与[feature catalog Action43718900142](https://github.com/lly8666/wbd-next/actions/runs/43718900142) 因`tools/m0_plan029_native_receipt_audit.py:222` SyntaxError而FAIL；**真实仓库代码检查红灯，必须修复**，不以“功能不受影响”掩盖。H1924仅将多行拼接改为合法括号表达式，同时加强H1922 10GiB完整双方Linux/Windows SHA审查：单向2GiB与双向每腿1.5GiB都要跨原始WinSock Linux kernel receipts SHA完全相等；无字段不发PASS。
+- 不需改变原生重建/原有硬门。把新的9个毫秒级纯测试`tests.test_m0_plan029_native_receipt_audit`并入已存在治理`feature-catalog`job的`python -m unittest ...`，以后**任意push的廉价CI即自动阻断**工具退化（SOURCE、原生真红、Action红不自动免罪、缺结论、4MiB、10GiB、FIN、SHA、CPU和小于目标的实际速率）。不会触发Windows/WSL2真实网络场景，因为只改tools/audit、tests/audit、governance、cursor、devlog，不命中原生工作流push.paths。避免后继手工审计时间与为了纯工具更改重跑十几分钟原生Actions。
+- H1922 [Action43716329886](https://github.com/lly8666/wbd-next/actions/runs/43716329886) SOURCE`b0fa293733cbd56a4e5df6add8dc5b474cc7cb15` 的原真实10GiB、500/700Mbps、SHA/FIN、11106 Tunnel UDP p99、owned Stop不变且PASS；此次是只读分析工具的自检，**不是新的签名产品验证**。完整029 P1、Direct小TCP/UDP p99、CPU优化、GUI/Game4/IPv6/padding/D1–D5继续OPEN。

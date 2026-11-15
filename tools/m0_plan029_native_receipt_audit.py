@@ -155,10 +155,17 @@ def analyse(path,expected_source,action_conclusion="unknown"):
                      "long real rate/UDP/Stop receipt not qualified")
                 must([s["path"] for s in rate["linux"]["sessions"]]==["physical","direct"],
                      "physical then Direct Linux sessions not proven")
+                one_sha=rate["linux"]["oneway_sha256"]
+                duplex_sha=rate["linux"]["duplex"]["received_sha256"]
+                must(all(re.fullmatch(r"[0-9a-f]{64}",value or "") is not None
+                         for value in (one_sha,duplex_sha)),
+                     "Linux 10GiB SHA missing/invalid")
                 must(all(s["half_close"] is True and
                          s["oneway_received_bytes"]==ONE_WAY and
+                         s["oneway_sha256"]==one_sha and
                          s["duplex"]["local_received_bytes"]==DUPLEX and
-                         s["duplex"]["local_sent_bytes"]==DUPLEX
+                         s["duplex"]["local_sent_bytes"]==DUPLEX and
+                         s["duplex"]["received_sha256"]==duplex_sha
                          for s in rate["linux"]["sessions"]),
                      "Linux 10GiB SHA/FIN/bytes sessions incomplete")
                 udp=rate["tunnel_udp_per_stage"]
@@ -173,8 +180,14 @@ def analyse(path,expected_source,action_conclusion="unknown"):
                          "long TCP Windows upload incomplete "+name)
                     if name==STAGES[1]:
                         must(ph["local_received_bytes"]==DUPLEX and
-                             di["local_received_bytes"]==DUPLEX,
-                             "long TCP full duplex download incomplete")
+                             di["local_received_bytes"]==DUPLEX and
+                             ph["received_sha256"]==duplex_sha and
+                             di["received_sha256"]==duplex_sha,
+                             "long TCP full duplex bytes/SHA incomplete")
+                    else:
+                        must(ph["receiver_sha256"]==one_sha and
+                             di["receiver_sha256"]==one_sha,
+                             "long TCP one-way Windows/Linux SHA mismatch")
                     physical_cpu=number(ph["original_process_cpu"]
                           ["original_process_total_cpu_s_per_gib"],"physical_cpu")
                     direct_cpu=number(di["original_process_cpu"]
@@ -219,8 +232,8 @@ def analyse(path,expected_source,action_conclusion="unknown"):
             result["reason"]="artifact cannot establish overall GitHub Action conclusion"
         else:
             result["verdict"]="ACTION_FAILURE_REVIEW_REQUIRED"
-            result["reason"]="product receipt scoped PASS but GitHub Action is "+
-                             action_conclusion+"; do not auto-claim false red"
+            result["reason"]=("product receipt scoped PASS but GitHub Action is "
+                              +action_conclusion+"; do not auto-claim false red")
         return result
     finally:
         a.close()

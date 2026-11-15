@@ -31,6 +31,8 @@ def sample(long=False,failed=False):
         for key,target,mbps in [(a.STAGES[0],ONE,500.),(a.STAGES[1],DUP,700.)]:
             base={"local_sent_bytes":target,
                   "local_received_bytes":DUP,
+                  "receiver_sha256":"1"*64,
+                  "received_sha256":"2"*64,
                   "actual_aggregate_mbps":mbps,
                   "original_process_cpu":{"original_process_total_cpu_s_per_gib":0.4},
                   "target_reached":True}
@@ -42,16 +44,18 @@ def sample(long=False,failed=False):
             for prefix in ("physical_",""):
                 udp[prefix+key]={"unique_delivered":200,"rtt_p99_ms":1.5}
         sessions=[{"path":key,"half_close":True,
-                   "oneway_received_bytes":ONE,
-                   "duplex":{"local_received_bytes":DUP,"local_sent_bytes":DUP}}
+                   "oneway_received_bytes":ONE,"oneway_sha256":"1"*64,
+                   "duplex":{"local_received_bytes":DUP,"local_sent_bytes":DUP,
+                             "received_sha256":"2"*64}}
                   for key in ("physical","direct")]
         p["highrate_direct_tcp"]={
             "source_sha":SHA,"status":a.RATE_PASS,
             "windows":{"source_sha":SHA,"stages":stages},
             "physical_control":{"source_sha":SHA,"stages":physical},
             "linux":{"source_sha":SHA,"sessions":sessions,
-                     "oneway_received_bytes":ONE,
-                     "duplex":{"local_received_bytes":DUP}},
+                     "oneway_received_bytes":ONE,"oneway_sha256":"1"*64,
+                     "duplex":{"local_received_bytes":DUP,
+                               "received_sha256":"2"*64}},
             "tunnel_udp_per_stage":udp,"owner_stop":"PASS_BOTH_OWNED",
             "tunnel_udp_covers_rate":True,
             "same_vm_original_process_cpu_increment":delta}
@@ -115,6 +119,12 @@ class NativeReceiptTests(unittest.TestCase):
         report=sample(long=True)
         report["plan029_p2_mixed_real"]["highrate_direct_tcp"]["linux"]["sessions"][1][
              "duplex"]["local_received_bytes"]-=1
+        self.assertEqual(self.audit(report)["verdict"],"INCOMPLETE_OR_INCONSISTENT_LONG")
+
+    def test_10gib_sha_mismatch_fails_even_if_bytes_and_action_green(self):
+        report=sample(long=True)
+        report["plan029_p2_mixed_real"]["highrate_direct_tcp"]["windows"]["stages"][
+             a.STAGES[1]]["received_sha256"]="f"*64
         self.assertEqual(self.audit(report)["verdict"],"INCOMPLETE_OR_INCONSISTENT_LONG")
 
 

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1923,
-  "checkpoint_sha": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
+  "sequence": 1924,
+  "checkpoint_sha": "a08a197a9543a0516642efa728218b88f7015362",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1923 collect H1922 original signed Win2025/WSL2 10GiB full PASS Action43716329886, 500.003 physical vs 499.994 Direct Mbps, 699.992 physical vs 699.989 Direct Mbps, SHA/FIN/11106 Tunnel UDP/owned Stop; true extra original-process CPU +12.28125/+10.604167s/GiB. Add instant offline artifact audit with SOURCE/bytes/SHA/FIN/Stop/red-vs-unknown classification (no native retest).",
-  "why_now": "H1922 already verified one signed 10GiB run; repeating hardware without a new testable hypothesis wastes time. 33.5% no-progress relay turns and extra Go+Rust process CPU remain performance work; reduce per-iteration evidence review by deterministic offline ZIP audit. Separate actual business FAIL from infra Action review and avoid mistaken pass on missing SOURCE/conclusion.",
+  "current_task": "H1924 fix offline artifact ZIP audit Python syntax and strengthen original 10GiB SHA checks; add nine subsecond auditor unit tests to already existing governance cheap test step. H1922 original signed 10GiB Action43716329886 remains full PASS. No product change or new native test requested.",
+  "why_now": "H1923 governance-maintenance43718900178 and feature gate43718900142 true red from Python SyntaxError at audit script line222; fix immediately, not ignore Action false-red. Make inexpensive audit tests run automatically within existing governance gate, rather than relying on a developer to remember manual test. Also verify long Linux+Windows bytes and SHA on both phases; never let green Action alone imply end-to-end correct.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run offline tools/m0_plan029_native_receipt_audit.py on H1922 and failing H1917 native ZIP with --expected-source and separately confirmed --action-conclusion. Use one bounded same-Windows-VM OLD/NEW binary comparison if actual CPU optimization candidate exists, not cross-VM. Continue remaining D1–D5/GUI/Game4/IPv6/owned Stop/P1 and small Direct TCP/UDP tail latency, no duplicate10GiB Actions.",
+  "next_action": "Collect cheap H1924 governance+maintenance tests; execute new CLI with H1922 and H1917 downloaded artifacts, verify signed long PASS vs native true product FAIL classification. Do not re-run 10GiB because H1922 is source-locked and completed; proceed remaining PLAN029 and before new CPU optimization add same-VM old/new binary A/B and Direct small packet p99.",
   "unverified": true,
   "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
-    "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
-    "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md"
+    "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1922 signed SOURCE b0fa293 original normal Win2025/WSL2 long10GiB native Action43716329886 PASS; 500Mb/s and 700Mbps aggregate measured within 0.011Mbps of targets, two 2GiB one-way + four 1.5GiB duplex legs SHA/FIN, 96B Tunnel UDP 11106 echoes/p99 <=2.245ms, both original owners Stop PASS. Process CPU Direct minus physical +12.28125/+10.604167s/GiB; high CPU remains. H1923 offline audit+pure tests code only, product NOT_RETESTED, full029 OPEN."
+  "partial_summary": "H1922 true original signed10GiB SOURCE b0fa293 PASS Action43716329886, incremental process CPU +12.281/+10.604s/GiB high. H1923 added offline audit but syntax fail on line222 caught by cheap governance workflow; H1924 fixes syntax and adds 9 cheap tests to governance on every push and full long receipt SHA checks. Product code unmodified, native product not retested, PLAN029 OPEN."
 }
