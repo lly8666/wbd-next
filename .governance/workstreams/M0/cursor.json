@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1922,
-  "checkpoint_sha": "7464ff95cfb3c450ca6cc83836df2b00b9ef9d3a",
+  "sequence": 1923,
+  "checkpoint_sha": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1922 scoped source-locked 10GiB original Windows/WSL2 long P2 Action: H1921 docs-only marker had no native workflow because push.paths excludes evidence/cursor/feature, governance PASS only. H1922 adds genuine highrate fixture regression in allowlisted tests/test_m0_plan029_h1898_highrate.py and same 3 long markers; one native run pending. H1920 signed 4MiB real PASS.",
-  "why_now": "H1921 7464ff95 docs-only push triggered only governance Action43716113039 SUCCESS, no original signed Windows/WSL2 scene. New real test must change a push.paths allowlisted file, not manually dispatch into event without markers. Add test asserting exact 4MiB barrier precedes high-rate and workflow flags/push filter. Original product code unchanged since H1920.",
+  "current_task": "H1923 collect H1922 original signed Win2025/WSL2 10GiB full PASS Action43716329886, 500.003 physical vs 499.994 Direct Mbps, 699.992 physical vs 699.989 Direct Mbps, SHA/FIN/11106 Tunnel UDP/owned Stop; true extra original-process CPU +12.28125/+10.604167s/GiB. Add instant offline artifact audit with SOURCE/bytes/SHA/FIN/Stop/red-vs-unknown classification (no native retest).",
+  "why_now": "H1922 already verified one signed 10GiB run; repeating hardware without a new testable hypothesis wastes time. 33.5% no-progress relay turns and extra Go+Rust process CPU remain performance work; reduce per-iteration evidence review by deterministic offline ZIP audit. Separate actual business FAIL from infra Action review and avoid mistaken pass on missing SOURCE/conclusion.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1922 automatically triggered exact-source Windows/Linux component and long physical/Direct 10GiB same-VM original Go/Rust. Require 4MiB precheck plus two paths 2GiB one-way and 1.5GiB each duplex 500/700 target, SHA/FIN/96B tunnel p99/Stop and process CPU-s/GiB. If first fail classify, no duplicate dispatch. Later P1 same-VM off/on and small packet latency, remaining 029 D1–D5 GUI Game4 padding IPv6.",
+  "next_action": "Run offline tools/m0_plan029_native_receipt_audit.py on H1922 and failing H1917 native ZIP with --expected-source and separately confirmed --action-conclusion. Use one bounded same-Windows-VM OLD/NEW binary comparison if actual CPU optimization candidate exists, not cross-VM. Continue remaining D1–D5/GUI/Game4/IPv6/owned Stop/P1 and small Direct TCP/UDP tail latency, no duplicate10GiB Actions.",
   "unverified": true,
-  "last_tested_source": "e901d152e6dc1e05c784e7b81fcb2b8ae9ab7c38",
+  "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1921-H1920-SIGNED-4M-TCP-RESTORED-20261115.json"
+    "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
     "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md",
     "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
-    "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
-    "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1920 signed original Wintun/WSL2 4MiB Direct+physical SHA/FIN Stop PASS (Action43714217838), unchanged product source. H1921 docs-only commit did not start workflow due push.paths; governance PASS (43716113039). H1922 allowlisted high-rate fixture guard + 3 long flags triggers first actual new-source 10GiB native scene, NOT_RUN at commit."
+  "partial_summary": "H1922 signed SOURCE b0fa293 original normal Win2025/WSL2 long10GiB native Action43716329886 PASS; 500Mb/s and 700Mbps aggregate measured within 0.011Mbps of targets, two 2GiB one-way + four 1.5GiB duplex legs SHA/FIN, 96B Tunnel UDP 11106 echoes/p99 <=2.245ms, both original owners Stop PASS. Process CPU Direct minus physical +12.28125/+10.604167s/GiB; high CPU remains. H1923 offline audit+pure tests code only, product NOT_RETESTED, full029 OPEN."
 }

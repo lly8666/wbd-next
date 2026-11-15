@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "task": "H1923",
+  "plan": "PLAN029",
+  "source_sha": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_id": 43716329886,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43716329886",
+  "job_id": 132819994300,
+  "artifact_id": 14163067201,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43716329886",
+  "action_conclusion": "success",
+  "original_Win2025_Go_Rust_signed_Wintun_Npcap_and_WSL2": true,
+  "source_identical_in_report_windows_linux_and_binary": true,
+  "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+  "original_os_mtu": {
+    "outer_ipv4": 1460,
+    "inner_ipv4": 1389
+  },
+  "warmup_4m": {
+    "physical_ms": 41.294,
+    "direct_ms": 118.804,
+    "bytes": 4194304,
+    "sha": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+    "linux_received_each": [
+      4194304,
+      4194304
+    ],
+    "fin": "PASS"
+  },
+  "long": true,
+  "stages": {
+    "oneway_500mbps": {
+      "physical_mbps": 500.003,
+      "direct_mbps": 499.994,
+      "physical_original_process_cpu_s_per_gib": 0.414062,
+      "direct_original_process_cpu_s_per_gib": 12.695312,
+      "incremental_original_process_total_cpu_s_per_gib": 12.28125,
+      "added_user_cpu_s_per_gib": 6.445313,
+      "added_kernel_cpu_s_per_gib": 5.835938,
+      "tunnel_udp_physical_p99_ms": 1.151,
+      "tunnel_udp_direct_p99_ms": 1.524,
+      "bytes_each_path": 2147483648
+    },
+    "duplex_700mbps_aggregate": {
+      "physical_mbps": 699.992,
+      "direct_mbps": 699.989,
+      "physical_original_process_cpu_s_per_gib": 0.333333,
+      "direct_original_process_cpu_s_per_gib": 10.9375,
+      "incremental_original_process_total_cpu_s_per_gib": 10.604167,
+      "added_user_cpu_s_per_gib": 4.411458,
+      "added_kernel_cpu_s_per_gib": 6.192709,
+      "tunnel_udp_physical_p99_ms": 1.484,
+      "tunnel_udp_direct_p99_ms": 2.245,
+      "bytes_each_direction_each_path": 1610612736
+    }
+  },
+  "accounting": {
+    "oneway_per_path_gib": 2,
+    "duplex_per_path_each_direction_gib": 1.5,
+    "paths": 2,
+    "total_gib": 10,
+    "linux_sessions": [
+      "physical",
+      "direct"
+    ],
+    "sha_and_fin": "PASS_TWO_REAL_KERNEL_PATHS"
+  },
+  "tunnel_udp": {
+    "unique_delivered": 11106,
+    "concurrent_all_phases": true,
+    "phase_p99_pass": true,
+    "all_packets_real_kernel_tunnel": true
+  },
+  "rust_final": {
+    "shard_wakes": 120300,
+    "event_socket_checks": 240586,
+    "event_take_errors": 0,
+    "relay_turns": 277318,
+    "relay_no_progress": 93016,
+    "relay_progress_self_ticket": 184302,
+    "ticket_wait_max_ms": 3,
+    "queued_copy": 1039196,
+    "direct_forwarded": 5376124074,
+    "inner_recv_eof": 3,
+    "outer_recv_eof": 3,
+    "physical_shutdown_write": 3,
+    "inner_shutdown_write": 3
+  },
+  "owner_stop": "PASS_BOTH_OWNED",
+  "performance_exit": "OPEN_HIGH_ORIGINAL_PROCESS_CPU_NOT_TUNNEL_CPU_CAUSAL_PROOF",
+  "not_run": [
+    "new_binary_vs_old_binary_same_Windows_VM_cpu_AB",
+    "Direct_small_TCP_UDP_latency_p50_p95_p99",
+    "P1_performance_exit",
+    "all_D1_D5_Game4_GUI_ipv6_padding"
+  ],
+  "caveats": [
+    "499.994Mbps and 699.989Mbps slightly below exact target due pacing/clock; non-gating target_reached false, all SHA FIN and CPU gates PASS.",
+    "Same-VM physical vs Direct is product process cost; NOT full host driver/ISR/DPC attribution.",
+    "Historical H1913 old binary different VM cannot establish causal CPU improvement; test old/new on SAME runner.",
+    "H1915 reduced no-progress self-tickets at expense of real 4MiB liveness, do not reactivate without liveness proof."
+  ]
+}

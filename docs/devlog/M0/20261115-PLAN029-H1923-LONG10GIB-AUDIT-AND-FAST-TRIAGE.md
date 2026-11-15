@@ -1,0 +1,9 @@
+# PLAN029 H1923｜回收H1922完整10GiB签名收据；用离线单命令减少后继测试/开发成本
+
+- [H1922原Win2025+WSL2真签名Action43716329886](https://github.com/lly8666/wbd-next/actions/runs/43716329886) SOURCE `b0fa293733cbd56a4e5df6add8dc5b474cc7cb15` **SUCCESS**，下载并逐项解析artifact14163067201 `report.json`、Linux/Windows原业务日志、manifest。先真实无pace4MiB回声：物理41.294ms vs FakeIP Rust Direct118.804ms，两个kernel 4MiB收件和SHA/FIN、Stop PASS。又在**同一Windows VM/同SOURCE**对物理/Direct各执行2GiB 500Mbps单向 + 同一socket同时两向各1.5GiB总700Mbps，合计10GiB：500.003/499.994Mbps；699.992/699.989Mbps，完整两会话双向 SHA/FIN 和Stop，原Windows Tunnel UDP并发11106条全交付，Direct阶段p99 1.524/2.245ms。临界目标缺几千分之一Mbps是非硬失败`target_reached=false`信息，不是红灯。原Go+Rust**进程**CPU/GiB增量+12.28125/+10.604167s，包括进程可归属user/kernel，不代表整机driver/ISR/DPC。Rust 277318 relay回合、93016零进展、wait最大3ms，后继性能任务仍OPEN。
+- H1923只做**不触发真实网络/不需要WinRunner/不改产品代码**的 `tools/m0_plan029_native_receipt_audit.py` 和其纯Python单测，输入本地Actions下载ZIP或解压目录；例如 `python tools/m0_plan029_native_receipt_audit.py run.zip --expected-source b0fa293733cbd56a4e5df6add8dc5b474cc7cb15 --action-conclusion success`。会严格核验原报告/manifest SOURCE、真实4MiB双端传输与SHA/FIN/Stop、10GiB Linux双方会话、物理/Direct各阶段字节和CPU/GiB、Tunnel UDP阶段p99；输出短JSON可直接贴入后继devlog、避免人工搜索多份长日志。若Action失败但report表面成功则**只输出ACTION_FAILURE_REVIEW_REQUIRED，不自动认定假红**；Action结论缺省unknown禁止签名PASS，SOURCE/FIN/字节缺项故障关闭。499.994不凭测量噪声假装失败，保留原真实速率。
+- 单测覆盖正常4MiB、10GiB、速率目标小偏差、原生真红、Action红需复核、缺Action结论、错误SOURCE/FIN/SHA、缺10GiB双向字节。不改CI的长原生触发路径，不复测同一SOURCE的10GiB；小纯测可秒级运行。产品下次真实编译或更新仍使用精确新SOURCE，不把历史二进制通过当成新源码通过。
+- 下一步目标是**同VM旧新编译产物CPU A/B和实际Direct小TCP/UDP p99、队列等待年龄**，需在不破坏已通过10GiB真实交付前提下以单一假设调度优化；H1915零工作票据贸然抑制曾真导致4MiB超时，不重启。PLAN029 P1/完整D1-D5/Game4/GUI/IPv6/padding/压力仍OPEN，028限定不重开，030未开始。
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"Collect exact signed H1922 long 10GiB original two-OS same-VM SHA/FIN/Stop proof; H1923 adds read-only offline artifact audit, no product status promotion."}
+```
