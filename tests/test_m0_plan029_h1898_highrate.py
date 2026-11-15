@@ -74,7 +74,7 @@ class HighRateComponentTests(unittest.TestCase):
         self.assertIn('physical_receipt["original_pid"]!=pid',src)
         self.assertIn('original_cpu_increment(physical_receipt,w)',src)
         self.assertIn('"physical_oneway_500mbps"',harness)
-        self.assertIn('if LONG_RATE:MAX_SUSTAIN=60000',harness)
+        self.assertIn('if HIGH_RATE:MAX_SUSTAIN=60000 if LONG_RATE else 14000',harness)
         self.assertIn('WBD_PLAN029_P2_LONG_RATE_SCENE',e2e)
         self.assertIn('WBD_PLAN029_P2_LONG_RATE_SCENE',workflow)
         self.assertIn('[plan029-v3-real-p2-long-ab]',workflow)
