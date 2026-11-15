@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1897",
+  "source_sha": "29883ab1f674840df715542540d83ae3e240e5fb",
+  "action_id": 43683524510,
+  "job_id": 132720106031,
+  "action_conclusion": "success",
+  "result": "SIGNED_ONE_SOURCE_ORIGINAL_WIN_WSL2_30S_BOTH_TUNNEL_MIX_CPU_AND_STOP_PASS_SCOPED_P2_PERFORMANCE_OPEN",
+  "scope": "Windows2025 original authenticated Go+Rust V3 CN FakeIP/Wintun+signed Npcap original single TLS owner, WSL2 real physical kernel TCP 46118, original P2 short4MiB and concurrent 96B Tunnel UDP; no invented UDP or process CPU",
+  "sustained": {
+    "source_sha": "29883ab1f674840df715542540d83ae3e240e5fb",
+    "test_port": 46118,
+    "one_persistent_socket": true,
+    "local_wintun": "10.66.0.2",
+    "fakeip": "198.18.0.1",
+    "linux_physical_source": "172.19.48.1",
+    "linux_listener": "172.19.50.119",
+    "original_go_rust_pid": 6708,
+    "warmup_each_direction": {
+      "seconds": 2,
+      "bytes": 16777216
+    },
+    "configured": {
+      "rate_mib_s": 8,
+      "phase_duration_s": 30
+    },
+    "each_phase_bytes": 251658240,
+    "sha256": "2a9311076e867b9a4e176477723b5e830c2b653e21599c2c5e93418d39b92d23",
+    "upload": {
+      "elapsed_s": 30.173939,
+      "throughput_mib_s": 7.9539,
+      "delivered_bytes": 251658240,
+      "original_cpu_user_s": 0.21875,
+      "original_cpu_kernel_s": 0.578125,
+      "original_cpu_user_s_per_gib": 0.933333,
+      "original_cpu_kernel_s_per_gib": 2.466667,
+      "original_cpu_total_s_per_gib": 3.4,
+      "original_cpu_percent_singlecore": 2.6409,
+      "udp_unique": 1996,
+      "udp_rtt_p99_ms": 1.061,
+      "udp_max_gap_ms": 22.868
+    },
+    "download": {
+      "elapsed_s": 29.995503,
+      "throughput_mib_s": 8.0012,
+      "delivered_bytes": 251658240,
+      "original_cpu_user_s": 0.25,
+      "original_cpu_kernel_s": 0.5,
+      "original_cpu_user_s_per_gib": 1.066667,
+      "original_cpu_kernel_s_per_gib": 2.133333,
+      "original_cpu_total_s_per_gib": 3.2,
+      "original_cpu_percent_singlecore": 2.5004,
+      "udp_unique": 1995,
+      "udp_rtt_p99_ms": 1.024,
+      "udp_max_gap_ms": 16.019
+    },
+    "udp_only_preceding_cpu": {
+      "elapsed_s": 8.000538,
+      "original_user_s_per_s": 0.01562395,
+      "original_kernel_s_per_s": 0.0292949,
+      "original_total_cpu_percent_singlecore": 4.491885,
+      "interpretation": "SEQUENTIAL_NO_NEW_TCP_BUT_SAME_96B_UDP_NOT_RANDOMIZED"
+    },
+    "background_subtracted_estimate": {
+      "upload_user_s_per_gib": 0,
+      "upload_kernel_s_per_gib": 0,
+      "download_user_s_per_gib": 0,
+      "download_kernel_s_per_gib": 0,
+      "interpretation": "CLIPPED_ZERO_NONCAUSAL_UNUSABLE_AS_DIRECT_TCP_CPU_ESTIMATE_PRECEDING_IDLE_RATE_EXCEEDS_BOTH_LOADED_WINDOWS"
+    },
+    "actual_tunnel_udp_windows_linux": {
+      "unique_each": 4890,
+      "min_required": 120,
+      "covered_both_windows": true
+    },
+    "sha_verified_by_real_linux": true,
+    "windows_half_close": true,
+    "linux_half_close": true,
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "same_runner_short4m": {
+    "bytes": 4194304,
+    "physical_elapsed_ms": 62.165,
+    "direct_elapsed_ms": 153.993,
+    "ratio": 2.477,
+    "extra_ms": 91.828,
+    "dominant_extra_download_ms": 63.224,
+    "source": "ORIGINAL_SAME_RUNNER_PHYSICAL_VS_DIRECT_NOT_ALGORITHM_AB"
+  },
+  "rust_tx_terminal_diag": {
+    "source": "real_kernel_two_leg",
+    "event_socket_checks": 25924,
+    "shard_wakes": 12966,
+    "ready_ticket_peak": 1,
+    "ready_wait_max_ms": 2,
+    "relay_turns": 25351,
+    "relay_no_progress": 11733,
+    "inner_read_calls": 9461,
+    "outer_read_calls": 15865,
+    "inner_read_wouldblock": 4117,
+    "outer_read_wouldblock": 7599,
+    "inner_write_wouldblock": 26,
+    "outer_write_wouldblock": 1
+  },
+  "limits": {
+    "producer_target_capped_not_max_throughput": true,
+    "original_process_mixed_udp_cpu_not_direct_only": true,
+    "driver_ISR_DPC_CPU": "NOT_MEASURED",
+    "linux_guest_cpu": "NOT_MEASURED",
+    "generator_host_saturation": "NOT_MEASURED",
+    "causal_background_subtraction": "INVALID_ZERO_CLIPPED",
+    "P1_cpu_gib": "OPEN",
+    "P2_direct_performance": "OPEN_SHORT_2.477x",
+    "real_128_wintun": "H1892_PASS_SCOPED",
+    "GUI_Game4_IPv6": "OPEN"
+  }
+}
