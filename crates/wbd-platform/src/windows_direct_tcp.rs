@@ -710,6 +710,35 @@ mod plan029_global_backpressure_tests{
         assert_eq!(relay.resident_bytes(),0);
         drop((b,d));
     }
+    /// The original TX may have acknowledged FD_READ while this socket
+    /// was still in Connecting. A newly created relay must drain bytes
+    /// ALREADY resident in the original kernel TCP receive buffer on
+    /// its single bounded first handoff ticket, with no later FD_READ.
+    #[test]
+    fn plan029_h1938_first_relay_probe_reads_existing_kernel_bytes_no_new_event(){
+        let inbound=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let mut application=TcpStream::connect(inbound.local_addr().unwrap()).unwrap();
+        let (inner,_)=inbound.accept().unwrap();
+        application.write_all(b"EARLY").unwrap();
+        // Prove initial payload was already in the kernel socket before
+        // TcpDirectRelay/FD_READ admission. peek does not consume bytes.
+        let mut seen=[0u8;5];
+        assert_eq!(inner.peek(&mut seen).unwrap(),5);
+        assert_eq!(&seen,b"EARLY");
+        let outbound=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+        let outside=TcpStream::connect(outbound.local_addr().unwrap()).unwrap();
+        let (mut destination,_)=outbound.accept().unwrap();
+        let mut relay=TcpDirectRelay::with_fast_forward(inner,outside,true).unwrap();
+        relay.enable_event_driven_reads();
+        let mut scratch=[0u8;QUANTUM_BYTES];
+        let first=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+        assert_eq!(first.inner_read,5);
+        assert_eq!(first.outer_write,5);
+        assert_eq!(first.io.read_wouldblock[0],0);
+        let mut received=[0u8;5];
+        destination.read_exact(&mut received).unwrap();
+        assert_eq!(&received,b"EARLY");
+    }
     #[test]
     fn two_owned_direct_relay_legs_disable_nagle_at_admission_only(){
         fn accepted()->(TcpStream,TcpStream){

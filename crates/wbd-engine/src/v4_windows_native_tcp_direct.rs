@@ -71,6 +71,16 @@ impl RelayFollowups{
         self.ports[..self.len].iter().copied()
     }
 }
+/// When a new physical TCP socket becomes connected, FD_READ may have
+/// been consumed by this actor while it was still in Connecting phase.
+/// H1931 small-TCP first echo had a 10-15ms tail. Give each newly
+/// CONNECTED relay exactly ONE first read/forward chance, even if it has
+/// no FD_CLOSE hint; this runs after the old service quantum, on the
+/// existing bounded FIFO. WouldBlock disarms reads until a real FD_READ.
+/// No timer, per-flow thread or extra idle-loop polling.
+fn schedule_connected_first_relay_tick(followups:&mut RelayFollowups,port:u16){
+    followups.push(port)
+}
 fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
 enum TcpPhase{
@@ -164,6 +174,8 @@ struct TcpLegDiagnosis{
     relay_turns:u64,relay_zero_progress:u64,
     relay_progress_no_self_ticket:u64,relay_progress_self_ticket:u64,
     relay_close_probe_self_ticket:u64,
+    connected_first_probe_tickets:u64,
+    ready_wait_ge8_ms:u64,ready_wait_ge16_ms:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
@@ -654,6 +666,8 @@ impl NativeTcpActor{
                 d.ready_served=d.ready_served.saturating_add(1);
                 d.ready_wait_sum_ms=d.ready_wait_sum_ms.saturating_add(age);
                 d.ready_wait_max_ms=d.ready_wait_max_ms.max(age);
+                d.ready_wait_ge8_ms+=u64::from(age>=8);
+                d.ready_wait_ge16_ms+=u64::from(age>=16);
             }
             self.active[idx].queued=false;
             serviced+=1;
@@ -689,11 +703,20 @@ impl NativeTcpActor{
                                     relay.enable_event_driven_reads();
                                     relay.note_close_event(
                                         flow.close_hints[0],flow.close_hints[1]);
-                                    if flow.close_hints[0]||flow.close_hints[1]{
-                                        // A one-shot close consumed during
-                                        // Connecting needs an initial relay
-                                        // recv even without a future wake.
-                                        to_requeue.push(port);
+                                    // Even WITHOUT FD_CLOSE, a read-ready
+                                    // indication may have been consumed
+                                    // during Connecting. The newly created
+                                    // relay must get one real nonblocking
+                                    // recv opportunity before parking.
+                                    // ONE bounded FIFO ticket per actual
+                                    // connected socket; WouldBlock can then
+                                    // disarm it until FD_READ.
+                                    schedule_connected_first_relay_tick(
+                                        &mut to_requeue,port);
+                                    if let Some(d)=self.diagnosis.as_mut(){
+                                        d.connected_first_probe_tickets=
+                                            d.connected_first_probe_tickets
+                                                .saturating_add(1);
                                     }
                                     flow.phase=Some(TcpPhase::Relaying(relay));
                                     flow.last_activity_ms=now_ms;
@@ -979,6 +1002,23 @@ mod tests{
         assert!(!relay_needs_continuation(0,0,0,false));
     }
     #[test]
+    fn plan029_h1938_connected_relay_first_tick_when_no_close_hint(){
+        // FD_READ may have arrived while the physical TCP socket was
+        // Connecting; no subsequent edge is guaranteed before recv().
+        // The connection transition must schedule ONE first real read
+        // opportunity without a close hint or 10ms polling. Existing
+        // positive progress tickets remain unchanged and bounded.
+        let mut tickets=RelayFollowups::new();
+        schedule_connected_first_relay_tick(&mut tickets,46116);
+        assert_eq!(tickets.ports().collect::<Vec<_>>(),vec![46116]);
+        // One no-progress turn does not schedule another ticket.
+        assert!(!relay_needs_continuation(0,0,0,false));
+        // Genuine send OR recv positive progress still earns one fair
+        // continuation, preserving H1920's signed 4MiB/10GiB liveness.
+        assert!(relay_needs_continuation(0,16,0,false));
+        assert!(relay_needs_continuation(0,0,16,false));
+    }
+    #[test]
     #[should_panic(expected="more follow-ups than served flows")]
     fn plan029_h1926_stack_followup_overrun_fails_loudly(){
         let mut q=RelayFollowups::new();
@@ -1133,11 +1173,13 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} connected_first_probe_tickets={} ready_wait_ge8_ms={} ready_wait_ge16_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
-            d.ready_wait_max_ms,d.relay_turns,d.relay_zero_progress,
+            d.ready_wait_max_ms,d.connected_first_probe_tickets,
+            d.ready_wait_ge8_ms,d.ready_wait_ge16_ms,
+            d.relay_turns,d.relay_zero_progress,
             d.relay_progress_no_self_ticket,d.relay_progress_self_ticket,
             d.relay_close_probe_self_ticket,d.io_reads[0],d.io_reads[1],
             d.io_read_wouldblock[0],d.io_read_wouldblock[1],
