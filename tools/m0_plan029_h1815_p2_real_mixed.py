@@ -347,6 +347,51 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 except subprocess.TimeoutExpired:p.kill()
         for f in streams:f.close()
 
+
+# H1888: strictly typed, cold final Rust kernel-socket counter receipt.
+# Read after the original Go owner stops; never inspect packet payload,
+# remote IP, a secret or a sampled wall-clock on the data path.
+H1888_IO_FIELDS=(
+    "shard_wakes","event_socket_checks","event_take_errors",
+    "event_read","event_write","event_connect","event_close",
+    "ticket_peak","ticket_served","ticket_wait_sum_ms","ticket_wait_max_ms",
+    "relay_turns","relay_no_progress",
+    "inner_read_calls","outer_read_calls",
+    "inner_read_wouldblock","outer_read_wouldblock",
+    "inner_write_calls","outer_write_calls",
+    "inner_write_wouldblock","outer_write_wouldblock",
+    "inner_write_short","outer_write_short",
+    "inner_read_gated","outer_read_gated",
+    "direct_forwarded","queued_copy",
+)
+def parse_kernel_io_final(text):
+    marker="PLAN029_H1888_TCP_IO_FINAL "
+    records=[line.split(marker,1)[1].strip() for line in text.splitlines()
+             if marker in line]
+    if len(records)!=1:
+        raise RuntimeError("H1888 exactly one source-locked Rust kernel I/O final missing")
+    tokens={}
+    for item in records[0].split():
+        if "=" in item:
+            key,value=item.split("=",1)
+            if key in tokens:raise RuntimeError("H1888 duplicate Rust I/O counter")
+            tokens[key]=value
+    if tokens.get("source")!="real_kernel_two_leg":
+        raise RuntimeError("H1888 forged/missing actual kernel I/O scope")
+    if any(key not in tokens or not tokens[key].isascii() or
+           not tokens[key].isdecimal() for key in H1888_IO_FIELDS):
+        raise RuntimeError("H1888 invalid/missing nonnegative typed I/O counter")
+    fields={key:int(tokens[key]) for key in H1888_IO_FIELDS}
+    if (fields["inner_read_calls"]<1 or fields["outer_read_calls"]<1 or
+        fields["ticket_served"]<1 or
+        fields["relay_no_progress"]>fields["relay_turns"] or
+        any(fields[f"{leg}_{op}_wouldblock"]>fields[f"{leg}_{op}_calls"]
+            for leg in ("inner","outer") for op in ("read","write"))):
+        raise RuntimeError("H1888 Rust kernel readiness/call count invariant invalid")
+    return {"scope":"FINAL_ONE_ORIGINAL_RUST_TX_TWO_KERNEL_TCP_LEGS",
+            "attribution":"USER_KERNEL_DRIVER_CPU_NOT_MEASURED",
+            "values":fields}
+
 if __name__=="__main__":
     # An optional exact fixture-only fourth argument is carried explicitly
     # across wsl.exe, where Windows environment variables are not inherited.

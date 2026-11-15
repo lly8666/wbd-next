@@ -452,6 +452,30 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('str(index+1)+" mode="+mode) in win_diag_text',app)
         self.assertNotIn('logs=(out/"client.log").read_text',app)
 
+    def test_h1888_kernel_io_parser_is_strict_and_never_infers_driver_cpu(self):
+        from tools.m0_plan029_h1815_p2_real_mixed import (
+            H1888_IO_FIELDS,parse_kernel_io_final)
+        fields={field:"0" for field in H1888_IO_FIELDS}
+        fields.update(inner_read_calls="3",outer_read_calls="4",
+                      ticket_served="5",relay_turns="9",
+                      inner_read_wouldblock="1",outer_read_wouldblock="2")
+        receipt="PLAN029_H1888_TCP_IO_FINAL "+" ".join(
+            f"{name}={fields[name]}" for name in H1888_IO_FIELDS
+        )+" source=real_kernel_two_leg"
+        p=parse_kernel_io_final("unrelated log\n"+receipt+"\n")
+        self.assertEqual(p["values"]["outer_read_wouldblock"],2)
+        self.assertEqual(p["scope"],"FINAL_ONE_ORIGINAL_RUST_TX_TWO_KERNEL_TCP_LEGS")
+        self.assertIn("NOT_MEASURED",p["attribution"])
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt+"\n"+receipt)
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt.replace("ticket_served=5","ticket_served=-1"))
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt.replace("outer_read_wouldblock=2",
+                                                    "outer_read_wouldblock=5"))
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt.replace(
+                "source=real_kernel_two_leg","source=pretend"))
     def test_h1861_p2_p99_uses_high_resolution_same_windows_clock(self):
         from pathlib import Path
         app=(Path(__file__).resolve().parents[1] /

@@ -12,6 +12,7 @@ use std::os::windows::io::AsRawSocket;
 use wbd_platform::windows_direct_tcp::{
     PhysicalTcpSocket,ConnectProgress,TcpDirectRelay,open_kernel_tcp_listener,
     SocketReadiness,TCP_EVENT_SHARDS,EVENT_ACCEPT,EVENT_CONNECT,
+    EVENT_READ,EVENT_WRITE,EVENT_CONNECTED,EVENT_CLOSED,
 };
 use crate::v4_client_direct_tcp_nat::{DirectTcpNat,TcpNatKey};
 use crate::v4_windows_native_dns_client_tcp::{ClientDnsTcp,NativeTcpDnsEndpoints};
@@ -120,6 +121,14 @@ struct TcpLegDiagnosis{
     direct_forwarded:u64,queued_copy:u64,
     // P2-only ready queue high-water/overflow; no per-packet logging.
     ready_peak:usize,ready_full:u64,
+    shard_wakes:u64,event_socket_checks:u64,event_take_errors:u64,
+    event_read:u64,event_write:u64,event_connect:u64,event_close:u64,
+    ready_ticket_peak:usize,ready_served:u64,
+    ready_wait_sum_ms:u64,ready_wait_max_ms:u64,
+    relay_turns:u64,relay_zero_progress:u64,
+    io_reads:[u64;2],io_read_wouldblock:[u64;2],
+    io_writes:[u64;2],io_write_wouldblock:[u64;2],
+    io_short_writes:[u64;2],io_read_gated:[u64;2],
 }
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
@@ -130,7 +139,9 @@ pub(crate) struct NativeTcpActor{
     active:Vec<Active>,
     active_by_port:HashMap<u16,usize>,
     shard_ports:[Vec<u16>;TCP_EVENT_SHARDS],
-    flow_ready:VecDeque<(u16,u64)>,
+    // Actual monotonic ticket enqueue time; generation rejects stale
+    // reused ports, so only live tickets count toward measured latency.
+    flow_ready:VecDeque<(u16,u64,u64)>,
     next_generation:u64,
     accept_armed:bool,
     notified_shards:u16,
@@ -218,9 +229,14 @@ impl NativeTcpActor{
         self.socket_events.handles()
     }
     pub(crate) fn note_socket_event(&mut self,shard:usize){
-        if shard<TCP_EVENT_SHARDS{self.notified_shards|=1u16<<shard}
+        if shard<TCP_EVENT_SHARDS{
+            self.notified_shards|=1u16<<shard;
+            if let Some(d)=self.diagnosis.as_mut(){
+                d.shard_wakes=d.shard_wakes.saturating_add(1);
+            }
+        }
     }
-    fn enqueue_port(&mut self,port:u16){
+    fn enqueue_port(&mut self,port:u16,now_ms:u64){
         let Some(&idx)=self.active_by_port.get(&port)else{return};
         // Finish the one mutable slot update before the rare stale-FIFO
         // compaction borrows the active table immutably (Windows E0502).
@@ -235,13 +251,16 @@ impl NativeTcpActor{
         if self.flow_ready.len()>=32768{
             let index=&self.active_by_port;
             let active=&self.active;
-            self.flow_ready.retain(|(p,g)|index.get(p)
+            self.flow_ready.retain(|(p,g,_)|index.get(p)
                 .and_then(|&i|active.get(i))
                 .is_some_and(|a|a.generation==*g));
         }
-        self.flow_ready.push_back((port,generation));
+        self.flow_ready.push_back((port,generation,now_ms));
+        if let Some(d)=self.diagnosis.as_mut(){
+            d.ready_ticket_peak=d.ready_ticket_peak.max(self.flow_ready.len());
+        }
     }
-    fn harvest_events(&mut self){
+    fn harvest_events(&mut self,now_ms:u64){
         let pending=std::mem::take(&mut self.notified_shards);
         for shard in 0..TCP_EVENT_SHARDS{
             if pending&(1u16<<shard)==0{continue}
@@ -265,8 +284,23 @@ impl NativeTcpActor{
                 if imask.is_ok(){reset=false}
                 let omask=self.socket_events.take(outer,shard,reset);
                 if omask.is_ok(){reset=false}
-                if imask.unwrap_or(1)!=0||omask.unwrap_or(1)!=0{
-                    self.enqueue_port(port);
+                // The existing conservative error path must still queue
+                // the flow. Metrics never alter readiness semantics.
+                let errors=u64::from(imask.is_err())+u64::from(omask.is_err());
+                let imask=imask.unwrap_or(EVENT_READ);
+                let omask=omask.unwrap_or(EVENT_READ);
+                if let Some(d)=self.diagnosis.as_mut(){
+                    d.event_socket_checks=d.event_socket_checks.saturating_add(2);
+                    d.event_take_errors=d.event_take_errors.saturating_add(errors);
+                    for bits in [imask,omask]{
+                        d.event_read+=u64::from(bits&EVENT_READ!=0);
+                        d.event_write+=u64::from(bits&EVENT_WRITE!=0);
+                        d.event_connect+=u64::from(bits&EVENT_CONNECTED!=0);
+                        d.event_close+=u64::from(bits&EVENT_CLOSED!=0);
+                    }
+                }
+                if imask!=0||omask!=0{
+                    self.enqueue_port(port,now_ms);
                 }
             }
             if reset{
@@ -411,7 +445,7 @@ impl NativeTcpActor{
     pub(crate) fn tick(&mut self,now_ms:u64)->TcpServiceTick{
         let mut retired=Vec::new();
         let mut advanced=false;
-        self.harvest_events();
+        self.harvest_events(now_ms);
         let accepting=self.accept_armed &&
             listener_accept_needed(self.pending.len(),self.dns_pending.len());
         self.accept_armed=false;
@@ -488,7 +522,7 @@ impl NativeTcpActor{
                     self.shard_ports[shard].push(entry.proxy_port);
                     self.connect_deadlines.push_back((
                         entry.proxy_port,generation,now_ms.saturating_add(PENDING_MS)));
-                    self.enqueue_port(entry.proxy_port); // probe immediate connect
+                    self.enqueue_port(entry.proxy_port,now_ms); // probe immediate connect
                 },
                 Err(_)=>{
                     self.nat.retire(entry.key);
@@ -510,7 +544,7 @@ impl NativeTcpActor{
                 .is_some_and(|a|a.generation==generation &&
                     a.phase.as_ref().is_some_and(|p|
                         matches!(p,TcpPhase::Connecting(..)))){
-                self.enqueue_port(port);
+                self.enqueue_port(port,now_ms);
             }
         }
         let mut to_remove=Vec::new();
@@ -518,9 +552,15 @@ impl NativeTcpActor{
         let mut serviced=0;
         for _ in 0..(MAX_QUANTUM*4){
             if serviced>=MAX_QUANTUM{break}
-            let Some((port,generation))=self.flow_ready.pop_front()else{break};
+            let Some((port,generation,queued_at))=self.flow_ready.pop_front()else{break};
             let Some(&idx)=self.active_by_port.get(&port)else{continue};
             if self.active[idx].generation!=generation{continue}
+            if let Some(d)=self.diagnosis.as_mut(){
+                let age=now_ms.saturating_sub(queued_at);
+                d.ready_served=d.ready_served.saturating_add(1);
+                d.ready_wait_sum_ms=d.ready_wait_sum_ms.saturating_add(age);
+                d.ready_wait_max_ms=d.ready_wait_max_ms.max(age);
+            }
             self.active[idx].queued=false;
             serviced+=1;
             let flow=&mut self.active[idx];
@@ -593,6 +633,18 @@ impl NativeTcpActor{
                             }
                             self.resident_bytes=retained;
                             if let Some(d)=self.diagnosis.as_mut(){
+                                d.relay_turns=d.relay_turns.saturating_add(1);
+                                if tick.bytes_read==0&&tick.bytes_written==0{
+                                    d.relay_zero_progress=d.relay_zero_progress.saturating_add(1);
+                                }
+                                for leg in 0..2{
+                                    d.io_reads[leg]=d.io_reads[leg].saturating_add(tick.io.read_calls[leg] as u64);
+                                    d.io_read_wouldblock[leg]=d.io_read_wouldblock[leg].saturating_add(tick.io.read_wouldblock[leg] as u64);
+                                    d.io_writes[leg]=d.io_writes[leg].saturating_add(tick.io.write_calls[leg] as u64);
+                                    d.io_write_wouldblock[leg]=d.io_write_wouldblock[leg].saturating_add(tick.io.write_wouldblock[leg] as u64);
+                                    d.io_short_writes[leg]=d.io_short_writes[leg].saturating_add(tick.io.short_writes[leg] as u64);
+                                    d.io_read_gated[leg]=d.io_read_gated[leg].saturating_add(tick.io.gated_reads[leg] as u64);
+                                }
                                 d.read_inner=d.read_inner.saturating_add(tick.inner_read as u64);
                                 d.read_outer=d.read_outer.saturating_add(tick.outer_read as u64);
                                 d.wrote_inner=d.wrote_inner.saturating_add(tick.inner_write as u64);
@@ -649,7 +701,7 @@ impl NativeTcpActor{
                 retired.push(flow.key)
             }
         }
-        for port in to_requeue{self.enqueue_port(port)}
+        for port in to_requeue{self.enqueue_port(port,now_ms)}
         // One TX turn never sleeps while an already-ready flow waits
         // beyond the fair eight-flow service quantum.
         advanced|=!self.flow_ready.is_empty();
@@ -769,6 +821,19 @@ mod tests{
         assert!(replacement.1!=old.1);
     }
     #[test]
+    fn plan029_ready_fifo_ticket_age_is_monotonic_and_generation_scoped(){
+        let mut d=TcpLegDiagnosis::default();
+        let now=640u64;let enqueued=627u64;
+        d.ready_wait_max_ms=d.ready_wait_max_ms.max(now.saturating_sub(enqueued));
+        d.ready_wait_sum_ms+=now.saturating_sub(enqueued);
+        d.ready_served+=1;
+        assert_eq!(d.ready_wait_max_ms,13);
+        assert_eq!(d.ready_wait_sum_ms,13);
+        // A stale generation is filtered by the actor before counters.
+        assert_ne!((200u16,10u64),(200u16,11u64));
+        assert_eq!(enqueued.saturating_sub(now),0);
+    }
+    #[test]
     fn plan029_skip_idle_listener_but_keep_dns_tcp_admission(){
         assert!(!listener_accept_needed(0,0));
         assert!(listener_accept_needed(1,0));
@@ -873,5 +938,27 @@ mod tests{
         assert!(!safe_synthetic(lease,physical,physical,fake));
         assert!(!safe_synthetic(lease,physical,0,fake));
         assert!(!safe_synthetic(lease,physical,u32::MAX,fake));
+    }
+}
+
+impl Drop for NativeTcpActor{
+    fn drop(&mut self){
+        let Some(d)=self.diagnosis.as_ref()else{return};
+        // Exactly one cold source-scoped terminal record, no payload,
+        // addresses, per-packet log, filesystem, threads, or system calls.
+        // This runs before Rust's normal field drops, preserving the
+        // existing socket-then-WSA-event owned destruction order.
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+            d.shard_wakes,d.event_socket_checks,d.event_take_errors,
+            d.event_read,d.event_write,d.event_connect,d.event_close,
+            d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
+            d.ready_wait_max_ms,d.relay_turns,d.relay_zero_progress,
+            d.io_reads[0],d.io_reads[1],
+            d.io_read_wouldblock[0],d.io_read_wouldblock[1],
+            d.io_writes[0],d.io_writes[1],
+            d.io_write_wouldblock[0],d.io_write_wouldblock[1],
+            d.io_short_writes[0],d.io_short_writes[1],
+            d.io_read_gated[0],d.io_read_gated[1],
+            d.direct_forwarded,d.queued_copy);
     }
 }

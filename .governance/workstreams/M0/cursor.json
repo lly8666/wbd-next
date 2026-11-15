@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1887,
-  "checkpoint_sha": "3391b9a26897f4e56467c84a9e40c0cd6ebbfa56",
+  "sequence": 1888,
+  "checkpoint_sha": "ea444880e608ec1f0acc409992ec02aa1f2e5175",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1887 collect H1886 exact-source signed one-Windows-VM/one-Rust-binary/one-Wintun-owner 4x4MiB ABBA real CN FakeIP Direct. A(copy) 84.079/72.195 mean78.137ms; B(bypass)71.915/93.357 mean82.636ms, B-A+4.499ms(+5.76%) in this single variable run. Linux real TCP x5 SHA/FIN, Tunnel UDP120/120 p99 2.101ms, both owned Stop and full Action SUCCESS. P2 no performance gain demonstrated.",
-  "why_now": "H1885 previous Action43669531835 failed Python finally from shadowing log file handle list, not data plane; H1886 Action43670529264 job132680622163 is full original signed SUCCESS after exact Python test fix. One same-VM ABBA refutes prior ungrounded across-VM gain attribution; first-flow and connect timings fluctuate substantially.",
+  "current_task": "H1888 new cold-only signed Rust TX TCP two-leg syscall/event/ready-ticket age diagnostic. Genuine Windows SocketReadiness flags READ/WRITE/CONNECT/CLOSE, actual per-leg read/write attempts, WouldBlock/short, allocated read gating and per-generation queue wait. One terminal owner Drop receipt parsed by signed normal P2 after owned Stop. Source candidate NOT_RUN.",
+  "why_now": "H1886 one Windows VM/binary four real 4MiB Direct ABBA shows copy mean78.137ms vs bypass82.636ms (+5.76% bypass slower single noisy run), so no supported copy optimization. Need quantify would-block syscalls and ready FIFO delay instead of microbranch guess; no new threads, clocks or syscall on hot path, no secrets in logs.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Prioritize targeted native kernel TCP two-leg readiness/backpressure and Wintun/Npcap event/syscall attribution: bounded signed cold-only counters for inner/outer read/write per actual FD_READ/FD_WRITE, attempted/blocked syscalls and oldest ready-ticket age, alongside phase and CPU user/kernel. Then one 128 REAL Wintun idle + few active scene, Stop; P1 all Tunnel CPU/GiB separately compare V4/V3 backend. Do not repeat copy microbranch P2 without hypothesis.",
+  "next_action": "Collect H1888 Windows and Linux platform/engine tests + exact source original signed Windows/WSL2 4MiB normal CN P2; typed kernel IO final receipt must be emitted after original Stop. Analyze inner vs outer read_wouldblock, write blocks, event socket checks per wakes, oldest ready ticket wait and relay no progress. Only then choose event-direction gating or 128 true Wintun idle+few active pressure, separate P1 all-Tunnel user/kernel CPU +9.41% OPEN.",
   "unverified": true,
   "last_tested_source": "3391b9a26897f4e56467c84a9e40c0cd6ebbfa56",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1887-H1886-SIGNED-SAME-VM-ABBA-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1888-SIGNED-TCP-IO-SYSCALL-READY-AGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1887-COLLECT-SIGNED-ABBA-PERFORMANCE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1886-ABBA-FINALLY-FILE-HANDLES.md",
     "docs/devlog/M0/20261115-PLAN029-H1885-ABBA-WSL-ARG-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1884-ONE-SOURCE-ONE-VM-ABBA-COPY-VS-DIRECT.md",
     "docs/devlog/M0/20261115-PLAN029-H1883-COLLECT-H1882-FAST-FORWARD-P2.md",
     "docs/devlog/M0/20261115-PLAN029-H1882-DIRECT-TCP-FAST-FORWARD-BOUNDED-FIFO.md",
-    "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md",
-    "docs/devlog/M0/20261115-PLAN029-H1880-WIN-128-LOOPBACK-ASSERT-TYPE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1881-COLLECT-WINDOWS-128-SHARD-TRUE-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1886 same-binary same-VM 4x4MiB genuine signed ABBA functional/Stop PASS, A avg78.137 vs B avg82.636 (+4.499ms B slower this run), no causal end-to-end P2 improvement established. Tunnel120/120 p99 2.101ms gap16.65. H1877/H1882 cross-run P2 perf OPEN, P1+9.41% OPEN; GUI/Game4/IPv6/real Wintun128 OPEN. PLAN029 IN_PROGRESS."
+  "partial_summary": "H1888 adds only bounded in-memory counters and one cold final eprintln: genuine native TCP socket event masks, read/write calls and WouldBlock/short, pool gating, ticket waits, no-progress turns. Signed P2 parser fail-closed and deterministic unit test. Not yet run; H1886 signed full ABBA PASS but no P2 gain (copy78.137 vs bypass82.636ms). PLAN029 IN_PROGRESS."
 }

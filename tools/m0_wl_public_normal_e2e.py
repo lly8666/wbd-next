@@ -2182,6 +2182,13 @@ print(json.dumps(result),flush=True)
     if p2.get("source_sha")!=os.environ["GITHUB_SHA"] or p2.get("overlap") is not True:
      raise RuntimeError("H1815 true P2 mixed physical/tunnel receipt lost at Stop")
     p2["stop"]="PASS_BOTH_OWNED"
+    # On signed P2 only: collect once after original owner teardown.
+    # Missing/invalid original Rust terminal counters fail this scene,
+    # rather than allowing a green 4MiB receipt with no bottleneck data.
+    from m0_plan029_h1815_p2_real_mixed import parse_kernel_io_final
+    p2["tcp_kernel_io_diagnostic"]=parse_kernel_io_final(
+        (out/"client.log").read_text(errors="replace"))
+    print("PLAN029_H1888_SIGNED_ORIGINAL_TCP_KERNEL_IO_FINAL_TYPED_AFTER_STOP",flush=True)
     if p029_abba:
      chosen=p2.get("same_vm_abba",{})
      win_diag_text=(out/"client.log").read_text(errors="replace")
