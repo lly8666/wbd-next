@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1936,
-  "checkpoint_sha": "1bdecc5cdaf403a58d4b37e67df21edcf967a352",
+  "sequence": 1937,
+  "checkpoint_sha": "8e55afcbdbc726892986cee8c7bf914219861403",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1936 second actual H1935 cheap preflight test_h1819 literal legacy two-leg tuple FAIL, native SKIPPED. Preserve legacy V4/V3 pair exactly as fallback while distinct source-locked same Rust V3 A/B/B/A is selected; update test to assert both legacy tuple route-mode fields and new branch, no product changes. Next exactly one signed original H1936 P1 four-leg native Action after cheap gate.",
-  "why_now": "H1935 Action43731527099 true red old byte-for-byte test of H1814 V4/V3 comparator, which now has third route-mode label and isolated ABBA branch. Don't call false red; keep legacy original A/B semantics and verify new four-arm selector; cheap preflight first before expensive signed Win/WSL2.",
+  "current_task": "H1937 fix genuine H1936 Action43731638265 first original Windows/WSL2 A1(all) TCP FAIL: both real UDP application endpoints use public Linux TUN203.0.113.77 but exact Windows test functional TCP45902 inbound firewall allowed ONLY10.66.0.1; single source-locked policy ABBA marker now also authorizes 203.0.113.77, other modes remain old /32. H1936 four arm CPU NOT_RUN; H1937 signed ABBA pending. Direct small TCP first echo p99 ~15ms still OPEN.",
+  "why_now": "H1936 authentic owner TLS+UDP PASSED, real functional TCP failed on first A1 10.66.0.2↔203.0.113.77 due test Windows Defender ACL remote10.66.0.1 only; clear source evidence from original signed report and workflow, not Actions fake red. Preserve exact local10.66.0.2/TCP45902 remote one address, no product changes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Check H1936 cheap workflow and existing governance first. If true original real four-arm starts, wait for output and log first fault. Require same Rust V3 all/CN/CN/all exact SOURCE/binary + two OS Tunnel-only 203.0.113.77 traffic per arm, CN4096 rules B, 50Mbps 60s and p99 Rust TX/RX CPU and Stop. Avoid long10GiB or rerun already signed H1931.",
+  "next_action": "Collect H1937 cheap gates and original Win2025 WSL2 same V3 P1 policy ABBA; verify genuine four owned 50Mbps two-OS 60s/25ms0loss, source SHA, identical binary, CN4096+8192, Rust TID CPU and p99. If native faults, first signed artifact and logs. Separately Direct small 384 first echo p99 and ready wait16ms remains pending, investigate with short targeted original P2 not 10GiB.",
   "unverified": true,
   "last_tested_source": "6dd014ee411ba5bcb1ef8a74800dda573663ac9e",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1932-H1931-SIGNED-NAT-INPLACE-COMBINED-10GIB-384TCP-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1937-H1936-ABBA-WIN-ACL-FIRST-NATIVE-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1936-P1-LEGACY-TEST-AND-ABBA-EXCLUSIVITY.md",
     "docs/devlog/M0/20261115-PLAN029-H1935-ABBA-CHEAP-GATE-OLD-ASSERTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1934-TRUE-SAME-RUST-V3-POLICY-ABBA.md",
     "docs/devlog/M0/20261115-PLAN029-H1933-CPU-ABBA-TEST-DESIGN.md",
     "docs/devlog/M0/20261115-PLAN029-H1932-NAT-CPU-P99-SIGNED-ONE-ACTION.md",
     "docs/devlog/M0/20261115-PLAN029-H1931-DIRECT-NAT-SINGLE-OWNED-PACKET-CPU-OPT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1929-HOT-CURSOR-BUDGET-GOVERNANCE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1930-RUST-NOT-GO-CPU-TID-ATTRIBUTION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1933 scorer 8 cheap tests PASS; H1934/H1935 original signed native never started due old H1775/H1819 exact-source assertions, both genuine cheap CI FAIL; H1936 updates both old assertions preserving legacy contracts. P1 four-arm same Rust policy performance NOT_RUN; PLAN029 OPEN."
+  "partial_summary": "H1936 actual original Action43731638265 real native A1(all) failed TCP 203.0.113.77; real UDP25/26 delivered; Windows test TCP45902 Defender Allow source still10.66.0.1; later B legs NOT_RUN, no comparable CPU. H1937 scopes exact alias ACL for new policy markers, old direct/test unchanged. Direct first echo p99 highest~15ms OPEN."
 }

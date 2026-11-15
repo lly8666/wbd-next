@@ -31,3 +31,9 @@ class P1OriginalWiring(unittest.TestCase):
   self.assertIn('PASS_SCOPED_P1_SAME_RUST_V3_POLICY_ABBA_MEASURED',w)
   self.assertIn('if env.get("WBD_PLAN029_P1_POLICY_ABBA_SCENE")=="1":',r)
   self.assertIn("return 1850",r)
+  # Real functional WinTun TCP45902 listener must accept the exact
+  # public guest TUN source in both policy arms, not 10.66.0.1.
+  self.assertIn("$env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and",w)
+  self.assertIn("$env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1'",w)
+  self.assertIn("'203.0.113.77'\n          }else{'10.66.0.1'}",w)
+  self.assertIn("-RemoteAddress $tcpRemote -LocalPort 45902",w)
