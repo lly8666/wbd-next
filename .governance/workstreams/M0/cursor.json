@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1925,
-  "checkpoint_sha": "fa8b74f08c8cda7d45b8b9163506d47f1ef31b06",
+  "sequence": 1926,
+  "checkpoint_sha": "064d253f3c4ad28c943ffcbb51171fa5e6ff2d13",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1925 keep PLAN029 feature card within 16KiB headroom without deleting any historical verification row, SHA, result, or evidence; short current status H1922 10GiB verified, H1924 offline receipt CI PASS. No runtime product code change and no additional native Actions.",
-  "why_now": "Feature card remained 16370/16384 bytes after H1923, only 14B free; routine status updates caused H1917/H1918 governance failure. Normalize redundant historic platform labels and long scope blurbs while preserving all 44 evidence rows and exact SOURCE/status/artifact link. No change to plan or product acceptance.",
+  "current_task": "H1926 product CPU hot-path micro-opt: replace one per-progress-turn heap Vec<u16> with exact eight-ticket stack RelayFollowups preserving original liveness/fairness and 4MiB hard gate. Add one same-VM original Windows physical/Direct 64/1024/16384B A-B-B-A 384 real kernel connections measured connect/echo/FIN p50/95/99 with concurrent Tunnel96B UDP and owned Stop. One signed source native test pending.",
+  "why_now": "H1922 verified 10GiB full SHA/FIN/owned Stop throughput500/700Mbps but process CPU Direct extra +12.281/+10.604s/GiB; 277318 service turns and 184302 self-progress follow-ups imply frequent per-tick Vec allocation/free. H1920 4MiB physical41.294 vs Direct118.804ms, but 4MiB whole-stream elapsed is NOT small-flow latency. Keep any-positive-progress requeue and measure actual small requests before claiming tail win.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Use the new H1924 pass/negative-gated offline receipt audit for future scoped Actions. Continue new mixed Direct small TCP/UDP latency p99 and pure Tunnel P1 same-VM performance guard, followed by D1–D5 GUI/Game4/IPv6/padding; if optimizing CPU require same-VM binary old/new AB and retain H1922 complete 10GiB liveness. Do not repeat H1922.",
+  "next_action": "Collect one H1926 true signed original Win2025+WSL2 Action with [plan029-v3-real-p2-bulk] [plan029-v3-real-p2-small-tcp-latency]. Hard-gate 4MiB real SHA/FIN, 384 small 64/1024/16384B native TCP ABBA Linux SHA/FIN, concurrent Tunnel UDP, both owned Stop; extract physical-vs-Direct phase p50/95/99. Do not repeat long10GiB for tiny allocation change without latency/liveness result. Later one same-VM old/new binary CPU A/B and host process/driver attribution.",
   "unverified": true,
   "last_tested_source": "b0fa293733cbd56a4e5df6add8dc5b474cc7cb15",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1923-H1922-SIGNED-LONG10GIB-SAMEVM-PASS-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1926-DIRECT-TCP-SMALL-LATENCY-CPU-ALLOC.md",
     "docs/devlog/M0/20261115-PLAN029-H1925-BOUNDED-FEATURE-CARD-ITERATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1924-FAST-CI-OFFLINE-RECEIPT-AUDIT.md",
     "docs/devlog/M0/20261115-PLAN029-H1923-LONG10GIB-AUDIT-AND-FAST-TRIAGE.md",
     "docs/devlog/M0/20261115-PLAN029-H1922-PUSH-PATH-FILTER-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1921-H1920-4M-PASS-AND-LONG-10GIB.md",
     "docs/devlog/M0/20261115-PLAN029-H1920-REVERT-UNSAFE-ONLY-READY-OPTIMIZATION.md",
-    "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1917-RECV-PROGRESS-BOUNDED-FOLLOWUP.md"
+    "docs/devlog/M0/20261115-PLAN029-H1919-GOVERNANCE-SOURCE-RECEIPT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1922 original signed Win2025/WSL2 10GiB SOURCE b0fa293 PASSED Action43716329886; Direct extra Go+Rust process CPU +12.281/+10.604s/GiB still OPEN. H1924 offline receipt audit Python syntax fixed and 9 tests added to cheap governance CI; governance and maintenance both SUCCESS. H1925 reduces 44-row feature card length without altering evidence SHA or statuses; native NOT_RUN, full PLAN029 OPEN."
+  "partial_summary": "H1922 signed same-VM physical vs Direct 10GiB 500/700Mbps SHA/FIN and owned Stop PASS; Direct original process CPU delta +12.281/+10.604s/GiB. Prior 4MiB 41.294 vs118.804ms does not isolate RTT. H1926 code removes per-followup heap allocations (max8 stack ports) preserving H1920 proven true positive read/write fair tickets; adds dedicated same Windows VM 384 real small TCP ABBA physical/Direct samples (64/1024/16384) and Tunnel small UDP continuity. New SOURCE NOT_RUN."
 }

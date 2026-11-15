@@ -52,6 +52,25 @@ fn relay_needs_continuation(
     // one fair follow-up. After zero bytes and no queued tail, stop.
     buffered!=0 || bytes_read!=0 || bytes_written!=0 || close_probe_due
 }
+// One short-lived entry per serviced relay ticket. The owner can service
+// at most MAX_QUANTUM flows before draining these follow-ups; the previous
+// Vec<u16> allocated/freed on nearly every positive-progress TX turn.
+struct RelayFollowups{
+    ports:[u16;MAX_QUANTUM],
+    len:usize,
+}
+impl RelayFollowups{
+    fn new()->Self{Self{ports:[0;MAX_QUANTUM],len:0}}
+    fn push(&mut self,port:u16){
+        // One fair ticket per serviced flow; never silently drop liveness.
+        assert!(self.len<MAX_QUANTUM,"more follow-ups than served flows");
+        self.ports[self.len]=port;
+        self.len+=1;
+    }
+    fn ports(&self)->impl Iterator<Item=u16>+'_{
+        self.ports[..self.len].iter().copied()
+    }
+}
 fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
 enum TcpPhase{
@@ -615,7 +634,7 @@ impl NativeTcpActor{
             }
         }
         let mut to_remove=Vec::new();
-        let mut to_requeue=Vec::new();
+        let mut to_requeue=RelayFollowups::new();
         let mut serviced=0;
         for _ in 0..(MAX_QUANTUM*4){
             if serviced>=MAX_QUANTUM{break}
@@ -816,7 +835,7 @@ impl NativeTcpActor{
                 retired.push(flow.key)
             }
         }
-        for port in to_requeue{self.enqueue_port(port,now_ms)}
+        for port in to_requeue.ports(){self.enqueue_port(port,now_ms)}
         // One TX turn never sleeps while an already-ready flow waits
         // beyond the fair eight-flow service quantum.
         advanced|=!self.flow_ready.is_empty();
@@ -938,6 +957,25 @@ mod tests{
     /// Restore H1909/H1913 known native 10GiB liveness: even a
     /// WRITE-ONLY service quantum can need a fair follow-up. H1917
     /// only retried recv>0 and signed P2 then stalled on upload.
+    #[test]
+    fn plan029_h1926_stack_only_fair_followup_capacity_and_fifo(){
+        // The bound comes from serviced<=MAX_QUANTUM. No per-turn Vec
+        // growth or allocator calls; preserve the exact serviced order.
+        assert!(std::mem::size_of::<RelayFollowups>()<=32);
+        let mut q=RelayFollowups::new();
+        assert_eq!(q.ports().count(),0);
+        for i in 0..MAX_QUANTUM{q.push(41000+i as u16)}
+        assert_eq!(q.ports().collect::<Vec<_>>(),
+            (41000..41000+MAX_QUANTUM as u16).collect::<Vec<_>>());
+        assert!(relay_needs_continuation(0,0,1,false));
+        assert!(!relay_needs_continuation(0,0,0,false));
+    }
+    #[test]
+    #[should_panic(expected="more follow-ups than served flows")]
+    fn plan029_h1926_stack_followup_overrun_fails_loudly(){
+        let mut q=RelayFollowups::new();
+        for i in 0..=MAX_QUANTUM{q.push(45000+i as u16)}
+    }
     #[test]
     fn plan029_h1920_legacy_any_progress_single_fair_ticket(){
         assert!(!relay_needs_continuation(0,0,0,false));

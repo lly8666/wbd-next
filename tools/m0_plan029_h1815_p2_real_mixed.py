@@ -22,11 +22,14 @@ TCP128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 TCP128_CONTROL=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
 SUSTAIN=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 HIGH_RATE=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
+SMALL_TCP=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 LONG_RATE=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 if LONG_RATE and not HIGH_RATE:
     raise RuntimeError("H1903 extended 2GiB/1.5GiB requires explicit high-rate signed source")
-if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or not BULK):
-    raise RuntimeError("H1898 high-rate exclusive of sustained/ABBA/128")
+if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or SMALL_TCP or not BULK):
+    raise RuntimeError("H1898 high-rate exclusive of sustained/ABBA/128/small")
+if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or not BULK):
+    raise RuntimeError("H1926 small TCP only one signed 4MiB bulk owner")
 if SUSTAIN and (ABBA or TCP128 or not BULK):
     raise RuntimeError("H1896 sustained TCP separate from 128/ABBA and requires 4MiB CN")
 if TCP128_CONTROL and not TCP128:
@@ -398,6 +401,15 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             original_pid=int(os.environ["WBD_PLAN029_P2_ORIGINAL_PID"])
             sustained=run_sustained(
                 root,out,physical,host_source,fake,unix,ready,original_pid)
+        latency=None
+        if SMALL_TCP:
+            # The H1815 TCP46112 Linux listener has exited; reuse exactly
+            # that already-owned WSL2 grant with the same signed Windows
+            # original Go/Rust, Wintun/FakeIP, and live Tunnel96B UDP.
+            wait(guest,gn,7)
+            from m0_plan029_h1926_small_tcp_latency import run_small_tcp_latency
+            latency=run_small_tcp_latency(
+                root,out,physical,host_source,fake,unix,ready)
         highrate=None
         if HIGH_RATE:
             # Reuse only the original signed WSL2 physical TCP46118
@@ -577,6 +589,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "tcp128":tcp128,
                 "sustained_direct_tcp":sustained,
                 "highrate_direct_tcp":highrate,
+                "small_tcp_latency":latency,
                 "tunnel_udp_covers_all_128":whole_tcp128,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}
