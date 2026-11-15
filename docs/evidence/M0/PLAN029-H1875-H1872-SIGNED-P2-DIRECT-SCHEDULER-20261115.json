@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1875",
+  "scene": "P2_UNPACED_4M_TRUE_SIGNED_WINDOWS_NORMAL_CN_SOURCE_H1872",
+  "source_sha": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
+  "action_id": 43660566940,
+  "job_id": 132650008325,
+  "conclusion": "success",
+  "result": "FUNCTIONAL_PASS_PERFORMANCE_OPEN",
+  "product": "Real original-Go Npcap/Wintun Rust V3 Normal CN to WSL2 Linux TUN, one signed Windows VM, exact source compiled and owned cleanup",
+  "workload": {
+    "bytes": 4194304,
+    "no_application_pacing": true,
+    "dns_fakeip": true,
+    "tunnel_udp_sustained": true
+  },
+  "baseline_physical": {
+    "elapsed_ms": 47.902,
+    "connect_ms": 10.753,
+    "upload_ms": 18.93,
+    "first_reply_wait_ms": 3.25,
+    "download_ms": 14.871,
+    "half_close_ms": 0.098,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696"
+  },
+  "fakeip_direct": {
+    "elapsed_ms": 133.73,
+    "connect_ms": 12.509,
+    "upload_ms": 58.343,
+    "first_reply_wait_ms": 13.5,
+    "download_ms": 49.305,
+    "half_close_ms": 0.073,
+    "sha256": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696"
+  },
+  "direct_minus_physical_ms": {
+    "elapsed": 85.828,
+    "connect": 1.756,
+    "upload": 39.413,
+    "first_reply_wait": 10.25,
+    "download": 34.434,
+    "half_close": -0.025
+  },
+  "ratio": 2.792,
+  "tunnel_udp": {
+    "windows_unique": 120,
+    "linux_unique": 120,
+    "windows_rtt_p99_ms": 2.552,
+    "max_interreply_gap_ms": 49.147,
+    "covered_whole_direct_tcp": true
+  },
+  "stop": "PASS_BOTH_OWNED",
+  "outer_mtu": 1460,
+  "inner_mtu_readback_windows": 1389,
+  "inner_mtu_readback_linux": 1389,
+  "constraints": {
+    "cpu_per_delivered_gib": "NOT_MEASURED",
+    "old_vs_new_code_same_vm_ab": "NOT_RUN",
+    "idle_128_vs_few_active": "NOT_RUN",
+    "user_queue_oldest_age": "NOT_MEASURED",
+    "socket_ready_event_queue": "NOT_IMPLEMENTED",
+    "game4_gui_ipv6": "NOT_RUN"
+  },
+  "comparison": "Prior H1864 source88a263 4.091x Direct/physical was a different VM/run, not code A/B and cannot prove H1872 performance gain.",
+  "limitations": "H1872 native actual physical baseline is sequential same-VM physical-vs-Direct only. No measurement of old/new code on that VM; P1 remains a separate V4/V3 comparator."
+}

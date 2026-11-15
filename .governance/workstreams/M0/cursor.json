@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1874,
-  "checkpoint_sha": "c120fcee2efa2272b7ca81fa0e34360efd3cc260",
+  "sequence": 1875,
+  "checkpoint_sha": "09cc60ebe6f1a2e7996858ea859e78454c9eee2c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1874 exact feature-catalog declaration repair after governance H1873: new short devlog declares changed dns-split-ipv6 card; preserve H1872 runtime code/SOURCE and H1866 exact cursor evidence.",
-  "why_now": "H1873 Governance structure PASS; feature_catalog check FAIL because changed feature card lacked feature-impact declaration in a changed devlog. The pure docs followup adds one matching declaration, not a new product source or Action dispatch.",
+  "current_task": "H1875 collected H1872 genuine signed Normal CN P2 4MiB Action43660566940 source8e59f643: physical47.902ms Direct133.730ms 2.792x, whole-duration Tunnel UDP120/120 p99 2.552ms, both owned Stop PASS_SCOPED. P2 extra85.828ms OPEN; P1 +9.41% CPU/GiB OPEN.",
+  "why_now": "H1870 scheduler/transfer batch now source-locked Windows real two-OS business PASS, but different VM versus old H1864 4.091x cannot claim improvement. Within current VM extra upload39.413ms and download34.434ms dominate; need event-based ready flows and true old/new comparator rather than repeat microbranch tuning.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect ongoing H1872 source Windows Rust and P2 real network, keep original H1870 compile failure; then event-ready TCP scheduling and remaining PLAN029 exits.",
+  "next_action": "Plan/implement single-owner Windows Direct TCP socket readiness/completion-driven queue (no perflow thread, 10ms→1ms polling or lost wake) and one true same-VM baseline/new P2 plus idle-many/few-active; P1 pure Tunnel separate backend syscall/kernel attribution. Continue GUI/Game4/IPv6/DNS capacity exits for PLAN029.",
   "unverified": true,
-  "last_tested_source": "eccafcd7af72efbce496e6e3a8413b9f827560f6",
+  "last_tested_source": "8e59f643aa3223a390ae2d5490c49bd84144e3c3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1869-H1866-D4-SIGNED-IPV6-ROUTE-OPEN-20261115.json"
+    "docs/evidence/M0/PLAN029-H1875-H1872-SIGNED-P2-DIRECT-SCHEDULER-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1875-COLLECT-H1872-SIGNED-P2-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1874-CATALOG-PROVENANCE-CI-REPAIR.md",
     "docs/devlog/M0/20261115-PLAN029-H1870-NATIVE-TCP-OWNER-SCHEDULER-TRANSFER.md",
     "docs/devlog/M0/20261115-PLAN029-H1869-COLLECT-H1866-IPV6-ROUTE-OPEN.md",
     "docs/devlog/M0/20261115-PLAN029-H1868-REAL-DIRECT8-TUNNEL-ISOLATION.md",
     "docs/devlog/M0/20261115-PLAN029-H1867-ALL-TUNNEL-EMPTY-REVERSE-COST.md",
     "docs/devlog/M0/20261115-PLAN029-H1866-D4-REAL-ORIGINAL-IPV6-ROUTE-SCOPE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md",
-    "docs/devlog/M0/20261114-PLAN029-H1864-TRUE-BULK-AFTER-RUST-FIX.md"
+    "docs/devlog/M0/20261115-PLAN029-H1865-COLLECT-P1-P2-AND-REMAINING-EXIT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1870 test E0369 compiler failure retained; H1872 exact test fixed but real Windows P2 not yet qualified. H1873 fixes evidence provenance/feature CI only, no code/OS changes. H1867 P1 +9.41% OPEN and H1868 hard8 PASS_SCOPED."
+  "partial_summary": "H1872 signed true Normal CN P2 real 4MiB/UDP/Stop PASS_SCOPED, physical47.902 Direct133.730ms +85.828ms 2.792x, Tunnel UDP120/120 p99 2.552ms; no causal older SOURCE A/B, performance OPEN. H1867 P1 +9.41% CPU/GiB OPEN, H1868 hard8 PASS_SCOPED, IPv6/Game4/GUI OPEN. PLAN029 IN_PROGRESS."
 }
