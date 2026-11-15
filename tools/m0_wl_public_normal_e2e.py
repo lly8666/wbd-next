@@ -36,6 +36,12 @@ p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
 p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
 p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
 p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
+p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
+if p029_tcp128 and not (p029_p2 and p029_direct and not p029_abba and
+    os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and mode=="normal"):
+ raise RuntimeError("H1892 only original signed Normal 4MiB P2 with 128 true Wintun TCP")
 if p029_abba and not (p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
@@ -393,6 +399,11 @@ try:
   args.extend(["--split-enable","--cn-rules-file",str(rules)])
  if p029_pressure:
   args.extend(["--direct-flow-hard","8"])
+ if p029_tcp128:
+  # Own the real TCP NAT hard cap across 128 simultaneous sockets PLUS
+  # existing 32KiB P2 probe and bounded 60s FIN grace. Never widen
+  # a production default; source-locked CI-only argument.
+  args.extend(["--direct-flow-hard","256"])
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -402,6 +413,7 @@ try:
  client_env=os.environ.copy()
  if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
  if p029_abba:client_env["WBD_PLAN029_P2_ABBA_SCENE"]="1"
+ if p029_tcp128:client_env["WBD_PLAN029_TCP128_SCENE"]="1"
  if p029_product:
   client_env["GITHUB_ACTIONS"]="false"
   client_env["WBD_PLAN029_NATIVE_V3_TRIAL"]="0"
@@ -2189,6 +2201,20 @@ print(json.dumps(result),flush=True)
     p2["tcp_kernel_io_diagnostic"]=parse_kernel_io_final(
         (out/"client.log").read_text(errors="replace"))
     print("PLAN029_H1888_SIGNED_ORIGINAL_TCP_KERNEL_IO_FINAL_TYPED_AFTER_STOP",flush=True)
+    if p029_tcp128:
+     from m0_plan029_h1892_real_tcp128 import parse_rust_128,idle_cpu_window
+     stress=p2.get("tcp128")
+     if not isinstance(stress,dict) or not p2.get("tunnel_udp_covers_all_128"):
+      raise RuntimeError("H1892 signed TCP128 not fully overlapped by Tunnel UDP")
+     signed_log=(out/"client.log").read_text(errors="replace")
+     stress["rust_admission"]=parse_rust_128(signed_log)
+     times=stress["windows"]
+     stress["cpu_idle_128"]=idle_cpu_window(
+         out/"windows-original-go-rust-process-1hz.jsonl",
+         times["idle_start_monotonic_s"],times["idle_end_monotonic_s"])
+     stress["stop"]="PASS_BOTH_OWNED"
+     stress["status"]="PASS_SIGNED_TRUE_WINTUN_128_IDLE2_ACTIVE_SAME_SHARD_AND_CPU_SCOPE"
+     print("PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_126_IDLE_2_SAME_SHARD_ACTIVE_AND_IDLE_CPU_STOP_PASS_SCOPED",flush=True)
     if p029_abba:
      chosen=p2.get("same_vm_abba",{})
      win_diag_text=(out/"client.log").read_text(errors="replace")

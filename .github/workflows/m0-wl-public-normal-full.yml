@@ -118,6 +118,7 @@ on:
       - tools/m0_wl_outer_pair.py
       - tools/m0_plan029_h1814_p1_tunnel_ab.py
       - tools/m0_plan029_h1815_p2_real_mixed.py
+      - tools/m0_plan029_h1892_real_tcp128.py
       - scenarios/plan029-p1-normal-50m-25ms0-60s.json
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
@@ -616,7 +617,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -997,6 +998,9 @@ jobs:
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.
       WBD_PLAN029_P2_ABBA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-abba]') && '1' || '0' }}
+      # H1892 is a *distinct*, source-locked one-VM 128 genuine Wintun
+      # Direct TCP socket scene, reusing the exact guest TCP46112 grant.
+      WBD_PLAN029_TCP128_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp128]') && '1' || '0' }}
       WBD_PLAN029_DIRECT_PRESSURE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || '0' }}
       WBD_PLAN028_MIXED_SCENE: ${{ matrix.win5_scene == 'mixed-loss0' && 'loss0' || matrix.win5_scene == 'mixed-loss30' && 'loss30' || '' }}
       WBD_PLAN028_WIN_FIRST_REVERSE_PROBE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') || ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]'))) && '1' || '0' }}
@@ -2492,6 +2496,27 @@ jobs:
                 throw 'H1815 genuine P2 physical vs Direct TCP 1MiB and concurrent Tunnel small UDP/owned Stop unqualified'
               }
               Write-Output 'PLAN029_H1815_SIGNED_P2_PHYSICAL_TCP_VS_DIRECT1M_WITH_SMALL_TUNNEL_UDP_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_TCP128_SCENE -eq '1'){
+                $stress=$p2.tcp128
+                if($stress.source_sha -ne $env:GITHUB_SHA -or
+                   $stress.status -ne 'PASS_SIGNED_TRUE_WINTUN_128_IDLE2_ACTIVE_SAME_SHARD_AND_CPU_SCOPE' -or
+                   $stress.stop -ne 'PASS_BOTH_OWNED' -or
+                   $stress.windows.connections -ne 128 -or
+                   $stress.windows.held_idle_during_active -ne 126 -or
+                   $stress.linux.accepted -ne 128 -or
+                   $stress.rust_admission.admitted -ne 128 -or
+                   $stress.rust_admission.active_peak -lt 128 -or
+                   $stress.rust_admission.max_same_shard -lt 2 -or
+                   $stress.rust_admission.all_128_source_ports_verified -ne $true -or
+                   $stress.cpu_idle_128.observations -lt 3 -or
+                   $stress.cpu_idle_128.scope -ne 'SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_IDLE_128_TCP' -or
+                   $p2.tunnel_udp_covers_all_128 -ne $true -or
+                   $p2.tunnel_windows.received -ne 120 -or
+                   $p2.tunnel_linux.received -ne 120){
+                  throw 'H1892 128 true Wintun TCP 126 idle 2 active SAME shard / CPU / Tunnel Stop invalid'
+                }
+                Write-Output 'PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_SAME_SHARD_AND_IDLE_CPU_BOTH_STOP_PASS_SCOPED'
+              }
               if($env:WBD_PLAN029_P2_ABBA_SCENE -eq '1'){
                 $abba=$p2.same_vm_abba
                 if($abba.status -ne 'PASS_SIGNED_REAL_ONE_WINTUN_ABBA_AFTER_STOP' -or

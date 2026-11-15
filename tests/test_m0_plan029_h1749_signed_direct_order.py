@@ -452,6 +452,83 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('str(index+1)+" mode="+mode) in win_diag_text',app)
         self.assertNotIn('logs=(out/"client.log").read_text',app)
 
+    def test_h1892_true_wintun_128_same_shard_original_rust_and_idle_cpu(self):
+        import json
+        import tempfile
+        from tools.m0_plan029_h1892_real_tcp128 import (
+            N,SRC_BASE,ACTIVE,parse_rust_128,idle_cpu_window)
+        # Exact source-locked ORIGINAL Rust: 128 distinct NAT accepted
+        # ports (starting after prior real H1760 TCP source), not just
+        # 128 mock WSA sockets or app-side attempted connects.
+        lines=[
+            f"PLAN029_H1892_WINTUN_TCP_ADMITTED source_port={SRC_BASE+i} "
+            f"proxy_port={32769+i} shard={(32769+i)%16} "
+            "source=real_wintun_direct"
+            for i in range(N)]
+        lines.append("PLAN029_H1892_TCP128_FINAL admitted=128 "
+                     "active_peak=128 max_same_shard=8 "
+                     "source=real_wintun_direct")
+        text="\n".join(lines)
+        parsed=parse_rust_128(text)
+        self.assertEqual(parsed["admitted"],128)
+        self.assertEqual(parsed["active_source_ports"],
+                         [SRC_BASE+i for i in ACTIVE])
+        self.assertTrue(parsed["all_128_source_ports_verified"])
+        self.assertEqual(parsed["max_same_shard"],8)
+        with self.assertRaises(RuntimeError):
+            parse_rust_128("\n".join(lines[1:]))
+        with self.assertRaises(RuntimeError):
+            parse_rust_128(text+"\n"+lines[0])
+        with self.assertRaises(RuntimeError):
+            parse_rust_128(text.replace(
+                "proxy_port=32800 shard=0","proxy_port=32800 shard=1"))
+        with self.assertRaises(RuntimeError):
+            parse_rust_128(text.replace("active_peak=128","active_peak=127"))
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/"original-1hz.jsonl"
+            rows=[]
+            for i in range(9):
+                rows.append({
+                    "scope":"SAME_WINDOWS_PROCESS_GO_PLUS_RUST_NOT_SEPARATELY_ATTRIBUTED",
+                    "native_pid":3234,"monotonic_s":50+i,
+                    "cpu_user_s":round(.02*i,6),
+                    "cpu_kernel_s":round(.01*i,6),
+                    "cpu_total_s":round(.03*i,6),
+                    "working_set_bytes":100000,
+                    "private_bytes":200000,
+                    "thread_cpu":{"thread_count_sampled":12}
+                })
+            target.write_text("\n".join(json.dumps(r) for r in rows))
+            idle=idle_cpu_window(target,50.5,57.5)
+            self.assertEqual(idle["observations"],7)
+            self.assertAlmostEqual(idle["process_kernel_cpu_s"],.06,places=5)
+            self.assertAlmostEqual(idle["process_user_cpu_s"],.12,places=5)
+            self.assertEqual(idle["scope"],
+                             "SAME_REAL_WINDOWS_PROCESS_GO_PLUS_RUST_IDLE_128_TCP")
+            self.assertIn("driver ISR/DPC",idle["interpretation"])
+            with self.assertRaises(RuntimeError):
+                idle_cpu_window(target,50.5,51.5)
+
+    def test_h1892_signed_scene_reuses_exact_original_tcp46112_and_owned_stop(self):
+        from pathlib import Path
+        root=Path(__file__).resolve().parents[1]
+        e2e=(root/"tools/m0_wl_public_normal_e2e.py").read_text()
+        p2=(root/"tools/m0_plan029_h1815_p2_real_mixed.py").read_text()
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        actor=(root/"crates/wbd-engine/src/v4_windows_native_tcp_direct.rs").read_text()
+        self.assertIn('args.extend(["--direct-flow-hard","256"])',e2e)
+        self.assertIn('if p029_tcp128:',e2e)
+        self.assertIn('stress["rust_admission"]=parse_rust_128(signed_log)',e2e)
+        self.assertIn('stress["cpu_idle_128"]=idle_cpu_window(',e2e)
+        self.assertIn('if TCP128:',p2)
+        self.assertIn('wait(guest,gn,7)',p2)
+        self.assertIn('tunnel_udp_covers_all_128',p2)
+        self.assertIn('WBD_PLAN029_TCP128_SCENE:',workflow)
+        self.assertIn("'[plan029-v3-real-tcp128]'",workflow)
+        self.assertIn("PLAN029_H1892_WINTUN_TCP_ADMITTED",actor)
+        self.assertIn("PLAN029_H1892_TCP128_FINAL",actor)
+        self.assertIn("PLAN029_H1892_SIGNED_128_REAL_WINTUN_TCP_SAME_SHARD_AND_IDLE_CPU_BOTH_STOP_PASS_SCOPED",workflow)
+
     def test_h1888_kernel_io_parser_is_strict_and_never_infers_driver_cpu(self):
         from tools.m0_plan029_h1815_p2_real_mixed import (
             H1888_IO_FIELDS,parse_kernel_io_final)

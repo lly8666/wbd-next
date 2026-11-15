@@ -131,6 +131,13 @@ struct TcpLegDiagnosis{
     io_short_writes:[u64;2],io_read_gated:[u64;2],
     io_event_suppressed_reads:[u64;2],
 }
+/// H1892 signed, test-only 128 real Wintun source-port admissions.
+#[derive(Default)]
+struct ProbeTcp128{
+    admitted:usize,
+    active_peak:usize,
+    max_same_shard:usize,
+}
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
     physical:Ipv4Addr,ifindex:u32,
@@ -162,6 +169,10 @@ pub(crate) struct NativeTcpActor{
     /// Four real TCP sessions on a reserved test port, within ONE signed
     /// Wintun owner generation. None in an ordinary product build.
     probe_abba_next:Option<usize>,
+    // Bounded, source-locked 128 real original Wintun socket fixture:
+    // aggregate peak + exactly one immutable record per accepted kernel
+    // TCP connection, no new product control/threads or per-packet logs.
+    probe_tcp128:Option<ProbeTcp128>,
     // Last field: all sockets (listener, accepted, DNS) drop before the
     // WinSock event group is closed, preserving exact owned Stop order.
     socket_events:SocketReadiness,
@@ -217,6 +228,12 @@ impl NativeTcpActor{
                 std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
                 std::env::var("WBD_PLAN029_P2_ABBA_SCENE").ok().as_deref()==Some("1")
                 ).then_some(0),
+            probe_tcp128:(cfg!(feature="m0_v4_probe") &&
+                std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+                std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+                std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+                std::env::var("WBD_PLAN029_TCP128_SCENE").ok().as_deref()==Some("1")
+                ).then_some(ProbeTcp128::default()),
             socket_events})
     }
     /// A post-Apply generation-owned listener's actual ephemeral port.
@@ -527,6 +544,21 @@ impl NativeTcpActor{
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
+                    // This is an actual accepted Windows kernel socket
+                    // whose SYN came from the original Wintun application
+                    // and whose matching physical socket was registered
+                    // into the original TX WinSock event shard.
+                    if let Some(probe)=self.probe_tcp128.as_mut(){
+                        if entry.key.target_port==46112 &&
+                            (42500..42628).contains(&entry.key.source_port){
+                            probe.admitted=probe.admitted.saturating_add(1);
+                            probe.active_peak=probe.active_peak.max(self.active.len());
+                            probe.max_same_shard=probe.max_same_shard.max(
+                                self.shard_ports[shard].len());
+                            eprintln!("PLAN029_H1892_WINTUN_TCP_ADMITTED source_port={} proxy_port={} shard={} source=real_wintun_direct",
+                                entry.key.source_port,entry.proxy_port,shard);
+                        }
+                    }
                     self.connect_deadlines.push_back((
                         entry.proxy_port,generation,now_ms.saturating_add(PENDING_MS)));
                     self.enqueue_port(entry.proxy_port,now_ms); // probe immediate connect
@@ -958,6 +990,10 @@ mod tests{
 
 impl Drop for NativeTcpActor{
     fn drop(&mut self){
+        if let Some(p)=self.probe_tcp128.as_ref(){
+            eprintln!("PLAN029_H1892_TCP128_FINAL admitted={} active_peak={} max_same_shard={} source=real_wintun_direct",
+                p.admitted,p.active_peak,p.max_same_shard);
+        }
         let Some(d)=self.diagnosis.as_ref()else{return};
         // Exactly one cold source-scoped terminal record, no payload,
         // addresses, per-packet log, filesystem, threads, or system calls.

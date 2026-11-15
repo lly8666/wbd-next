@@ -18,6 +18,9 @@ SIZE=4*1024*1024 if BULK else 1024*1024
 SEND_PAUSE=0.0 if BULK else .004
 if ABBA and not BULK:raise RuntimeError("P2 A-B-B-A requires 4MiB unpaced")
 ABBA_MODES=("copy","bypass","bypass","copy")
+TCP128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
+if TCP128 and (ABBA or not BULK):
+    raise RuntimeError("H1892 signed 128 Wintun sockets requires ordinary unpaced 4MiB P2")
 COUNT=120  # old exact receipt minimum; sustained overlap uses a separate counter
 MAX_SUSTAIN=3200
 FINISH_PACKET=b"PLAN029-P2-TUNNEL-FINISH"
@@ -255,8 +258,17 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             direct,dn=spawn("direct-windows","direct","10.66.0.2",fake)
             wait(direct,dn,38)
             direct_proofs.append(proof(dn,"PLAN029_H1815_P2_TCP_CLIENT"))
+        tcp128=None
+        if TCP128:
+            # Reuse original already-owned Hyper-V physical TCP46112
+            # grant AFTER the ordinary Linux P2 listener exits.
+            # Keep original Tunnel UDP alive across all 128 connections.
+            wait(guest,gn,7)
+            from m0_plan029_h1892_real_tcp128 import run_tcp128
+            tcp128=run_tcp128(root,out,physical,host_source,fake,unix,ready)
         completed.write_text("direct-finished\n",encoding="ascii")
-        wait(win,wn,23);wait(lin,ln,7);wait(guest,gn,7)
+        wait(win,wn,23);wait(lin,ln,7)
+        if not TCP128:wait(guest,gn,7)
         base=proof(bn,"PLAN029_H1815_P2_TCP_CLIENT")
         # Preserve the historic P2 field, now one of the two B trials.
         # The full four-trial chain gets its OWN exact, signed receipt.
@@ -270,6 +282,12 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                  min(last_direct,small_win["end_monotonic_s"]))
         whole_direct=(small_win["start_monotonic_s"]<=first_direct and
                       small_win["end_monotonic_s"]>=last_direct)
+        whole_tcp128=(not TCP128 or (
+            tcp128 is not None and
+            small_win["start_monotonic_s"]<=
+                tcp128["windows"]["start_monotonic_s"] and
+            small_win["end_monotonic_s"]>=
+                tcp128["windows"]["end_monotonic_s"]))
         if (base["role"]!="baseline" or direct_value["role"]!="direct" or
             base["app_tcp_nodelay"]!=direct_value["app_tcp_nodelay"] or
             base["echo_bytes"]!=SIZE or direct_value["echo_bytes"]!=SIZE or
@@ -280,7 +298,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             linux["received_bytes"]!=[SIZE]*(5 if ABBA else 2) or
             small_win["received"]!=COUNT or small_linux["received"]!=COUNT or
             small_linux["source_lease"]!="10.66.0.2" or not overlap or
-            not whole_direct or
+            not whole_direct or not whole_tcp128 or
             small_win["sustained_total"]!=small_linux["sustained_total"]):
             raise RuntimeError("P2 real baseline/Direct 1MiB + concurrent Tunnel UDP independent proof invalid")
         abba=None
@@ -337,6 +355,8 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "covered_whole_direct_tcp":whole_direct,
                 "udp_sustained_total":small_win["sustained_total"],
                 "same_vm_abba":abba,
+                "tcp128":tcp128,
+                "tunnel_udp_covers_all_128":whole_tcp128,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}
     finally:
