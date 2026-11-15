@@ -654,6 +654,15 @@ impl TcpDirectRelay{
         use std::os::windows::io::AsRawSocket;
         (self.inner.as_raw_socket() as usize,self.outer.as_raw_socket() as usize)
     }
+    /// Cold observation only. Order: local app-side recv(0), physical
+    /// recv(0), physical shutdown(SHUT_WR), app-side shutdown(SHUT_WR).
+    /// This does NOT infer remote ACK, driver delivery or Linux FIN receipt.
+    /// The real original TX can compare transitions after one bounded
+    /// service quantum without adding a system call to the hot path.
+    pub fn half_close_state(&self)->[bool;4]{
+        [self.inner_eof,self.outer_eof,
+         self.outer_write_closed,self.inner_write_closed]
+    }
     pub fn pending_bytes(&self)->usize{self.to_outer.len()+self.to_inner.len()}
     pub fn resident_bytes(&self)->usize{self.to_outer.capacity()+self.to_inner.capacity()}
     /// Coarse, idle-only release; NEVER shrink each successful TCP write.
@@ -789,6 +798,8 @@ mod plan029_global_backpressure_tests{
         }
         assert!(finished,"no lost half-close or pending tail");
         assert_eq!(relay.pending_bytes(),0);
+        assert_eq!(relay.half_close_state(),[true,true,true,true],
+            "both original kernel TCP recv EOFs and both local SHUT_WR must finish");
     }
     /// A/B control must reproduce the previously shipped queued-copy
     /// path on two genuine kernel sockets, without changing payload or FIN.

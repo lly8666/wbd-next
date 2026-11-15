@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1905,
-  "checkpoint_sha": "8ebb1aa28a3159f8a76cc2739d075163536ab528",
+  "sequence": 1906,
+  "checkpoint_sha": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1905 second exact-source H1904 cheap first failure was only H1903 new static assertion expecting 'if LONG_RATE:MAX_SUSTAIN=60000' while actual rigorously guarded current expression is 'if HIGH_RATE:MAX_SUSTAIN=60000 if LONG_RATE else 14000'. H1896 previous failed test now passes and H1898 5/6 Python tests passed including actual loopback bidirectional and signed negative CPU delta. H1905 changes assertion only, no product/scene/traffic changes. Real H1903 long physical-vs-Direct still NOT_RUN.",
-  "why_now": "H1904 Action43691627759 cheap failure due new test's old literal; must preserve a single conditional source of truth for short 14k and long 60k UDP cap, not introduce duplicate branch/packet logic just to appease text test. No real network ran.",
+  "current_task": "H1906 collect exact H1905 signed original Windows2025/WSL2 FAILURE *before* long 2GiB test: real 32KiB original FakeIP Direct kernel TCP app connected and sent FIN, original Rust relay kernel inner read32768 and outer write32768, zero queue, WSL2 Linux physical listener accepted source but did not log EOF/echo before 20s, Windows recv timed out echoed0. Signed 500/700 LONG NOT_RUN. H1906 adds failure-only real Linux received-byte/SHA/TCP_INFO/SO_ERROR witness and opt-in cold original Rust inner/outer EOF vs SHUT_WR transition counters; no payload/timeouts/data path change, new source tests NOT_RUN.",
+  "why_now": "Unpaced 10GiB physical-vs-Direct CPU work cannot claim success when existing 32KiB half-close behavior can occasionally block. Windows kernel socket sendall success does NOT prove the Linux physical guest received data or FIN; exact Linux received count and local Rust FIN transitions needed before choosing optimization. H1905 ACTION43691768429 FAIL retained.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1905 cheap Python tests, Windows Go/Rust/Linux Rust, and original signed Windows2025/WSL2 sameVM 2GiB single +1.5GiB each duplex for physical then Direct; CPU user/kernel, generator/host, six Tunnel 96B p99 segments, SHA/FIN and Stop; first actual bottleneck decides next native optimization.",
+  "next_action": "H1906 source-locked Python static, Windows/Linux platform & engine tests, original Windows2025 signed 32KiB small TCP gate plus 2GiB physical/direct 500Mb/s and 1.5GiB each duplex 700Mb/s; if fails, inspect first Linux timeout detail (received_bytes, SHA-if-full, TCP_INFO state, SO_ERROR) and Rust FIN transition terminal; do not extend original 20s deadline. If passes, collect 10GiB long sameVM CPU/user/kernel, 96B UDP six p99, SHA/FIN/Stop; only then targeted performance hotpath.",
   "unverified": true,
-  "last_tested_source": "59d6ccdff4ac92300bc9bda7d45a39401e619569",
+  "last_tested_source": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1903-H1902-SIGNED-SHORT-HIGHRATE-20261115.json"
+    "docs/evidence/M0/PLAN029-H1906-H1905-SIGNED-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1906-REAL-32K-FIN-STALL-SOURCE-DIAGNOSTIC.md",
     "docs/devlog/M0/20261115-PLAN029-H1905-FINAL-LONG-SCENE-STATIC-ASSERT.md",
     "docs/devlog/M0/20261115-PLAN029-H1904-LONG-TEST-CONTRACT-FIRST-FAIL.md",
     "docs/devlog/M0/20261115-PLAN029-H1903-LONG-500-700-SAMEVM-COMPARE.md",
     "docs/devlog/M0/20261115-PLAN029-H1902-HIGHRATE-SHARED-CPU-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1901-SOURCE-LOCKED-HIGHRATE-CI-RETRIGGER.md",
     "docs/devlog/M0/20261115-PLAN029-H1900-SILENT-UDP-SUSTAIN-RATE-TEST-CONTRACT.md",
-    "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md",
-    "docs/devlog/M0/20261115-PLAN029-H1898-TRUE-500-700-MBPS-PARALLEL-LOAD.md"
+    "docs/devlog/M0/20261115-PLAN029-H1899-FIX-CLOCK-TEST-H1894-H1898.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1903/H1904 real long CI not reached: two consecutive exact-text static assertion mismatches; H1905 changes final new static test to true LONG selection syntax, no production/fixture modifications. H1902 signed short 500/700 rates and CPU functional PASS, P1/P2 performance OPEN."
+  "partial_summary": "H1905 real signed first product 32KiB direct half-close FAIL BEFORE highrate; original Rust outer write32768 and inner read32768 but Linux accepted physical TCP with NO FIN/echo terminal. Root cause unproven (kernel delivery vs FIN event). H1906 failure-only Linux and cold Rust four FIN transition diagnostics candidate NOT_RUN. H1902 signed short 499.965/699.760Mb/s PASS; P1/P2 OPEN; PLAN029 IN_PROGRESS."
 }

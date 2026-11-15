@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1906-COLLECT-H1905-FIRST-SIGNED-FAIL",
+  "source_sha": "e821607ac36b5e7ab90ec4265e500ddf0f037d9b",
+  "action_id": 43691768429,
+  "native_job_id": 132744669150,
+  "action_conclusion": "failure",
+  "first_error": "ORIGINAL_REAL_WINDOWS_FAKEIP_DIRECT_TCP_32K_RECV_TIMEOUT_BEFORE_H1903_LONG_SCENE",
+  "scope": "Windows2025 original Go+Rust signed Npcap/Wintun Normal CN FakeIP and WSL2 Linux true physical TCP46112, after real authenticated product, BEFORE any H1903 large load",
+  "windows_app": {
+    "kernel_tcp_source": "10.66.0.2",
+    "fakeip": "198.18.0.1",
+    "port": 46112,
+    "connected": true,
+    "app_sent_bytes": 32768,
+    "shutdown_wr_called": true,
+    "app_echo_bytes": 0,
+    "recv_timeout_s": 20,
+    "expected_sha": true
+  },
+  "original_rust_actor": {
+    "inner_read_bytes": 32768,
+    "outer_write_accepted_bytes": 32768,
+    "outer_read_bytes": 0,
+    "inner_write_bytes": 0,
+    "queued_copy_bytes": 0,
+    "pending_bytes": 0,
+    "allocated_relay_scratch_bytes": 65536,
+    "relay_turns": 2,
+    "relay_no_progress_turns": 1,
+    "inner_read_calls": 2,
+    "inner_read_wouldblock": 0,
+    "outer_write_calls": 1,
+    "outer_write_wouldblock": 0,
+    "event_socket_checks": 10,
+    "event_take_errors": 0,
+    "limitation": "KERNEL_WRITE_ACCEPTED_NOT_REMOTE_LINUX_RECEIVED_OR_FIN_PROOF"
+  },
+  "linux_physical_tcp": {
+    "actual_listener_accept": true,
+    "physical_source_observed": true,
+    "observed_final_data_count": "NOT_LOGGED_H1905",
+    "observed_fin_receipt": false,
+    "echo_completion": false
+  },
+  "stop": {
+    "original_rust_stopped": true,
+    "original_rust_os_wal_stage": "PASS",
+    "public_scoped_stop": "NOT_QUALIFIED_AFTER_FIRST_ERROR",
+    "cleanup": "ACTION_FINALLY_CLEANUP_OBSERVED_NOT_SCOPED_BUSINESS_PASS"
+  },
+  "long_workload": {
+    "physical_2gib": "NOT_RUN",
+    "direct_2gib": "NOT_RUN",
+    "duplex_each_1p5gib": "NOT_RUN",
+    "six_phase_96b_tunnel": "NOT_RUN",
+    "cpu_comparison": "NOT_MEASURED"
+  },
+  "before_vs_after_source": "H1905 exact original production Rust/Go data path unchanged since H1902; failure not proven caused by new long fixture",
+  "root_cause": "UNDETERMINED_LINUX_RECEIVED_BYTES_AND_FIN_LOCAL_STATE_NOT_YET_LOGGED",
+  "H1906_source_plan": "Add failure-only Linux read bytes/SHA/TCP_INFO/SO_ERROR without timeout widening plus original Rust cold two-legged FIN / SHUT_WR transition counts, signed rerun",
+  "limits": {
+    "P1": "OPEN",
+    "P2": "OPEN",
+    "real_GUI_Game4_IPv6": "OPEN"
+  }
+}

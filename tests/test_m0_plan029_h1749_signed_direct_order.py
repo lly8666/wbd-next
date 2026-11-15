@@ -3,6 +3,28 @@ import unittest
 from pathlib import Path
 S=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_public_normal_e2e.py").read_text(encoding="utf-8")
 class NativeDirectOrder(unittest.TestCase):
+    def test_h1906_first_failure_diag_preserves_32k_fin_deadline_and_real_os_receipts(self):
+        import ast
+        root=Path(__file__).resolve().parents[1]
+        guest=(root/"tools/m0_plan029_h1760_guest_physical_direct_tcp.py").read_text()
+        platform=(root/"crates/wbd-platform/src/windows_direct_tcp.rs").read_text()
+        actor=(root/"crates/wbd-engine/src/v4_windows_native_tcp_direct.rs").read_text()
+        ast.parse(guest)
+        self.assertIn('conn.settimeout(20);data=bytearray()',guest)
+        self.assertIn('chunk=conn.recv(4096)',guest)
+        self.assertIn('PLAN029_H1906_LINUX_PHYSICAL_TCP_FIN_STALL',guest)
+        self.assertIn('len(data)==32768',guest)
+        self.assertIn('socket.TCP_INFO',guest)
+        self.assertIn('payload_sha256_matches_if_full',guest)
+        self.assertIn('raise\n',guest)
+        self.assertIn('PLAN029_H1762_PHYSICAL_TCP_FIN_RECEIVED',guest)
+        self.assertIn('pub fn half_close_state(&self)->[bool;4]',platform)
+        self.assertIn('assert_eq!(relay.half_close_state(),[true,true,true,true]',platform)
+        self.assertIn('d.half_close_transitions[state].saturating_add(1)',actor)
+        self.assertIn('PLAN029_H1906_TCP_FIN_FINAL',actor)
+        self.assertIn('source=original_rust_kernel_tcp_local',actor)
+
+
     def test_signed_direct_before_inbound_tcp_comparator_but_after_udp(self):
         self.assertLess(S.index(' report["actual_kernel_udp"]=real'),S.index('  # D1/D2 real physical Direct first'))
         self.assertLess(S.index('  # D1/D2 real physical Direct first'),S.index(' # Functional-only *real TCP*'))

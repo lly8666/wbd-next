@@ -130,6 +130,10 @@ struct TcpLegDiagnosis{
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
     io_event_suppressed_reads:[u64;2],
+    // Four actual kernel TCP local EOF/SHUT_WR transitions, recorded
+    // only by existing opt-in original TX diagnostic. An accepted()
+    // or send() success is NOT proof of remote Linux packet delivery.
+    half_close_transitions:[u64;4],
 }
 /// H1892 signed, test-only 128 real Wintun source-port admissions.
 #[derive(Default)]
@@ -661,6 +665,7 @@ impl NativeTcpActor{
                         Box::new([0u8;RELAY_SCRATCH_BYTES]));
                     let free=TCP_PENDING_POOL_LIMIT.saturating_sub(
                         self.resident_bytes.saturating_add(RELAY_SCRATCH_BYTES));
+                    let half_close_before=pair.half_close_state();
                     match pair.service_once_with_scratch(free,&mut scratch[..]){
                         Ok(tick)=>{
                             let after=pair.resident_bytes();
@@ -677,6 +682,13 @@ impl NativeTcpActor{
                             }
                             self.resident_bytes=retained;
                             if let Some(d)=self.diagnosis.as_mut(){
+                                let half_close_after=pair.half_close_state();
+                                for state in 0..4{
+                                    if !half_close_before[state] && half_close_after[state]{
+                                        d.half_close_transitions[state]=
+                                            d.half_close_transitions[state].saturating_add(1);
+                                    }
+                                }
                                 d.relay_turns=d.relay_turns.saturating_add(1);
                                 if tick.bytes_read==0&&tick.bytes_written==0{
                                     d.relay_zero_progress=d.relay_zero_progress.saturating_add(1);
@@ -1012,5 +1024,11 @@ impl Drop for NativeTcpActor{
             d.io_read_gated[0],d.io_read_gated[1],
             d.io_event_suppressed_reads[0],d.io_event_suppressed_reads[1],
             d.direct_forwarded,d.queued_copy);
+        // Exactly one cold aggregate FIN witness AFTER the original TX
+        // returns to its Stop owner. No IPs, TIDs, original payload,
+        // per-packet logging or additional kernel I/O.
+        eprintln!("PLAN029_H1906_TCP_FIN_FINAL inner_recv_eof={} outer_recv_eof={} physical_shutdown_write={} inner_shutdown_write={} source=original_rust_kernel_tcp_local",
+            d.half_close_transitions[0],d.half_close_transitions[1],
+            d.half_close_transitions[2],d.half_close_transitions[3]);
     }
 }
