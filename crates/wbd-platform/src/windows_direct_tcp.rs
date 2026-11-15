@@ -386,6 +386,9 @@ pub struct TcpDirectRelay{
     // owner harvests a genuine FD_READ/FD_CLOSE for that socket.
     // Start permissive: connect-time events may predate relay admission.
     read_armed:[bool;2],
+    // A coalesced FD_CLOSE may be consumed before recv reaches EOF.
+    // Preserve the one-shot real kernel hint separately for both legs.
+    close_hint:[bool;2],
     // Standalone platform tests use legacy caller-driven polling; the
     // genuine Windows TX actor enables this only after owning BOTH
     // WSAEventSelect registrations. This prevents a component caller
@@ -419,6 +422,9 @@ pub struct RelayTick{
     pub outer_write:usize,
     pub forwarded_without_queue:usize,
     pub copied_to_queue:usize,
+    /// A leg received FD_CLOSE, consumed positive bytes, but not recv(0).
+    /// Only this case needs a bounded extra ready turn after short reads.
+    pub close_probe_due:bool,
     pub io:RelayIoCounts,
     pub buffered:usize,
     pub finished:bool,
@@ -459,7 +465,8 @@ impl TcpDirectRelay{
             inner_eof:false,outer_eof:false,
             inner_write_closed:false,outer_write_closed:false,
             max_pending_per_direction:cap,fast_forward:enabled,
-            read_armed:[true,true],read_event_driven:false})
+            read_armed:[true,true],close_hint:[false,false],
+            read_event_driven:false})
     }
     /// Only the real Windows TX with registered WinSock events may turn
     /// this on; other callers keep their original polling semantics.
@@ -473,6 +480,13 @@ impl TcpDirectRelay{
     pub fn note_read_event(&mut self,inner:bool,outer:bool){
         if inner{self.read_armed[0]=true}
         if outer{self.read_armed[1]=true}
+    }
+    /// Only the original TX owner calls this after an actual per-socket
+    /// WSAEnumNetworkEvents FD_CLOSE. DATA may precede EOF in the next
+    /// recv despite this single kernel close notification being consumed.
+    pub fn note_close_event(&mut self,inner:bool,outer:bool){
+        if inner{self.close_hint[0]=true;self.read_armed[0]=true}
+        if outer{self.close_hint[1]=true;self.read_armed[1]=true}
     }
     /// One bounded service turn, called only for a ready flow by the
     /// original Rust scheduler. A congested physical stream stops reading
@@ -644,8 +658,10 @@ impl TcpDirectRelay{
         }
         Ok(RelayTick{bytes_read:read,bytes_written:wrote,
             inner_read,outer_read,inner_write,outer_write,
-            forwarded_without_queue,copied_to_queue,io,
-            buffered:self.to_outer.len()+self.to_inner.len(),
+            forwarded_without_queue,copied_to_queue,
+            close_probe_due:(self.close_hint[0]&&!self.inner_eof&&inner_read>0)||
+                (self.close_hint[1]&&!self.outer_eof&&outer_read>0),
+            io,buffered:self.to_outer.len()+self.to_inner.len(),
             finished:self.inner_eof&&self.outer_eof&&
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
     }
@@ -807,6 +823,75 @@ mod plan029_global_backpressure_tests{
     /// different leg's progress must not cause a syscall on the idle leg.
     /// Explicit simulated FD_READ/FD_CLOSE from the owner re-arms only
     /// the addressed leg. Full bidirectional payload and FIN still work.
+    /// H1915 real signed 32KiB regression: one FD_READ|FD_CLOSE is
+    /// consumed before the first data-bearing recv, so another recv(0)
+    /// is needed even if this was only a SHORT fully forwarded packet.
+    #[test]
+    fn plan029_h1916_coalesced_close_short_read_fin_and_reverse_echo(){
+        use std::time::Duration;
+        fn tcp_pair()->(TcpStream,TcpStream){
+            let l=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let a=TcpStream::connect(l.local_addr().unwrap()).unwrap();
+            let (b,_)=l.accept().unwrap();
+            (b,a)
+        }
+        let (inner,mut app)=tcp_pair();
+        let (outer,mut guest)=tcp_pair();
+        app.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        guest.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let mut relay=TcpDirectRelay::new(inner,outer).unwrap();
+        relay.enable_event_driven_reads();
+        let payload=vec![0x55;32768];
+        let mut scratch=[0u8;QUANTUM_BYTES];
+        app.write_all(&payload).unwrap();
+        app.shutdown(Shutdown::Write).unwrap();
+        std::thread::sleep(Duration::from_millis(15));
+        relay.note_read_event(true,false);
+        relay.note_close_event(true,false);
+        let mut uploaded=0;let mut saw_probe=false;let mut eof=false;
+        for _ in 0..100{
+            let t=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            uploaded+=t.inner_read;
+            saw_probe|=t.close_probe_due;
+            eof=relay.half_close_state()[0];
+            if eof{break}
+            // No new event; must be a close-correlated continuation,
+            // an unsent tail or an actually full 64KiB read quantum.
+            if t.bytes_read>0 || t.bytes_written>0 {
+                assert!(t.close_probe_due||t.buffered>0||
+                    t.inner_read==QUANTUM_BYTES);
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(uploaded,payload.len());
+        assert!(saw_probe&&eof);
+        let mut got=vec![0;payload.len()];
+        guest.read_exact(&mut got).unwrap();
+        assert_eq!(got,payload);
+        let mut b=[0u8;1];
+        assert_eq!(guest.read(&mut b).unwrap(),0,"physical kernel FIN");
+        guest.write_all(&payload).unwrap();
+        guest.shutdown(Shutdown::Write).unwrap();
+        std::thread::sleep(Duration::from_millis(15));
+        relay.note_read_event(false,true);
+        relay.note_close_event(false,true);
+        let mut downloaded=0;let mut done=false;
+        for _ in 0..100{
+            let t=relay.service_once_with_scratch(usize::MAX,&mut scratch).unwrap();
+            downloaded+=t.outer_read;
+            if t.finished{done=true;break}
+            if t.bytes_read>0 || t.bytes_written>0 {
+                assert!(t.close_probe_due||t.buffered>0||
+                    t.outer_read==QUANTUM_BYTES);
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(downloaded,payload.len());
+        assert!(done,"both real FINs must propagate");
+        app.read_exact(&mut got).unwrap();
+        assert_eq!(got,payload);
+        assert_eq!(app.read(&mut b).unwrap(),0);
+    }
     #[test]
     fn plan029_per_leg_read_wouldblock_disarm_fd_read_rearm_and_fin(){
         use std::time::Duration;

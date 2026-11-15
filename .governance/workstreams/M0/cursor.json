@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1915,
-  "checkpoint_sha": "d2f2035e76ff68f48c3c74327f8deb10163289e3",
+  "sequence": 1916,
+  "checkpoint_sha": "1fabca1f1e6353ff81747671df23f3df94324ca0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1915 original Rust Windows TX ready-only progress scheduling. Do not self-enqueue a relay after a short (<64KiB/leg) fully forwarded progress if no buffered tail. Requeue only pending bytes or 64KiB full read; original FD_READ/FD_WRITE/FD_CLOSE wakes again. Cold counters no_self_ticket/self_ticket in original Rust final receipt and typed signed P2 parser. New SOURCE Windows/Linux+real signed long 10GiB NOT_RUN.",
-  "why_now": "Two exact-product 10GiB real WinVM runs show 34-38% zero-progress relay turns, ready FIFO peak1/max2ms. Existing Rust TX immediately self-enqueues after any byte progress, including fully forwarded short reads and drained tails. Stop adding this redundant ready ticket when there is no backlog/full 64KiB quantum.",
+  "current_task": "H1916 exact H1915 signed 32KiB FIN liveness regression: original Windows sent 32768 and shutdown, real Linux received all but no FIN/echo; Rust no_self_ticket2, self_ticket0, event_close2. Fix per-leg WSA FD_CLOSE hint and one bounded recv(0) followup after real short data. Windows component and new 10GiB signed SOURCE NOT_RUN.",
+  "why_now": "H1915 real signed Action43706191185 FAILED at 32KiB FakeIP Direct before long 10GiB, not a load timeout; coalesced FD_CLOSE consumed before recv(0) and no self requeue. Preserve no-ticket optimization only in ordinary short reads, restore finite close-correlated EOF progress.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Test new H1915 Windows Rust unit including pure scheduling predicate and existing 128 WinSock shard loopback/FD_READ/FIN/backpressure, Go & Linux, then signed original Win2025/WSL2 LONG 2GiB one-way+1.5GiB each duplex original physical vs Direct, Tunnel UDP full span SHA/FIN/Stop. Compare Rust no-self-ticket, no-progress/CPU s/GiB against H1909/H1913 actual product binary; cross-VM cannot assert causal CPU gain. P1/P2 remain OPEN.",
+  "next_action": "Run H1916 Windows platform true two-kernel-pair coalesced close/32KiB reverse FIN, 128 WSA shard test, Windows/Linux Rust and Go; then exact source signed original Win2025/WSL2 32KiB gate and same-VM physical then Direct 2GiB one-way 500Mbps + 1.5GiB each duplex 700Mbps 10GiB, 96B Tunnel UDP p99, original process kernel/user CPU s/GiB SHA/FIN and dual owned Stop. Because source changed do NOT reuse H1915 failed binaries.",
   "unverified": true,
-  "last_tested_source": "4f7a3481e9c48f83869b5d4e98a39a976c1bca61",
+  "last_tested_source": "1fabca1f1e6353ff81747671df23f3df94324ca0",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1914-H1913-SIGNED-REUSED-10GIB-20261115.json"
+    "docs/evidence/M0/PLAN029-H1916-H1915-ORIGINAL-32K-FIN-FAIL-20261115.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261115-PLAN029-H1916-COALESCED-FDCLOSE-FIN-LIVENESS.md",
     "docs/devlog/M0/20261115-PLAN029-H1914-COLLECT-H1913-REUSED-10GIB-CPU.md",
     "docs/devlog/M0/20261115-PLAN029-H1913-EXACT-PREFLIGHT-COMPILE-SKIP-CONTRACT.md",
     "docs/devlog/M0/20261115-PLAN029-H1912-FIX-YAML-NOT-TAG-REUSE.md",
     "docs/devlog/M0/20261115-PLAN029-H1911-REUSE-H1909-SIGNED-10GIB-REPEAT.md",
     "docs/devlog/M0/20261115-PLAN029-H1910-COLLECT-LONG-10GIB-REVIEW-M0-LIVE-SHA.md",
     "docs/devlog/M0/20261115-PLAN029-H1909-LONG-SHORT-EXACT-BYTES-ORACLE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md",
-    "docs/devlog/M0/20261115-PLAN029-H1907-SIGNED-LONG-500-700-OWNED-DEADLINE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1908-CURSOR-HOT-BYTE-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1913 reused H1909 binary signed 10GiB PASS, Direct incremental process CPU/GiB +9.0625 one-way / +7.630209 duplex, empty relay 93796/274595; identical binaries other VM H1909 empty 87237/231572. H1915 event-only no-tail continuation candidate NOT_RUN. PLAN029 OPEN."
+  "partial_summary": "H1915 original signed ACTION FAIL 32KiB complete transfer but Linux waits FIN, long 10GiB NOT_RUN. H1916 finite FD_CLOSE correlated EOF ticket candidate NOT_RUN; prior signed H1913 reused 10GiB CPU extra+9.0625/+7.630209 s/GiB. PLAN029 OPEN."
 }

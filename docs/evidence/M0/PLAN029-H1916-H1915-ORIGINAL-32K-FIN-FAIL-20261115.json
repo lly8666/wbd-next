@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "task": "H1916",
+  "plan": "PLAN029",
+  "source_sha": "1fabca1f1e6353ff81747671df23f3df94324ca0",
+  "action_id": 43706191185,
+  "job_id": 132788763294,
+  "action_conclusion": "failure",
+  "result": "ORIGINAL_SIGNED_32K_TCP_FIN_STALL_BEFORE_LONG_10GIB",
+  "artifact_id": 14158891595,
+  "windows": {
+    "fakeip_connected": true,
+    "bytes_sent": 32768,
+    "shutdown_write": true,
+    "echo_bytes": 0,
+    "error": "TimeoutError after20s"
+  },
+  "linux": {
+    "real_kernel_tcp_accepted": true,
+    "bytes_received": 32768,
+    "fin_received": false,
+    "stage": "PLAN029_H1906_LINUX_FULL_32K_WAIT_FIN"
+  },
+  "rust_original_tx": {
+    "direct_forwarded": 32768,
+    "queued_copy": 0,
+    "event_close": 2,
+    "relay_turns": 3,
+    "relay_progress_no_self_ticket": 2,
+    "relay_progress_self_ticket": 0
+  },
+  "long_test": "NOT_RUN_NO_SAME_VM_PHYSICAL_OR_DIRECT",
+  "owned_driver_cleanup": "PASS_SCOPED",
+  "product": "FAIL",
+  "new_source": "H1916_NOT_RUN",
+  "P1_P2": "OPEN"
+}

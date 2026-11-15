@@ -624,6 +624,11 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertEqual(p["scope"],"FINAL_ONE_ORIGINAL_RUST_TX_TWO_KERNEL_TCP_LEGS")
         self.assertIn("NOT_MEASURED",p["attribution"])
         self.assertEqual(p["values"]["relay_progress_no_self_ticket"],3)
+        self.assertEqual(p["values"]["relay_close_probe_self_ticket"],0)
+        with self.assertRaises(RuntimeError):
+            parse_kernel_io_final(receipt.replace(
+                "relay_close_probe_self_ticket=0",
+                "relay_close_probe_self_ticket=3"))
         with self.assertRaises(RuntimeError):
             parse_kernel_io_final(receipt.replace(
                 "relay_progress_no_self_ticket=3",

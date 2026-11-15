@@ -45,10 +45,12 @@ const RELAY_SCRATCH_BYTES:usize=64*1024;
 /// read (there might still be unread kernel bytes). Never add a timer
 /// or poll the 128 mostly idle Direct flows to compensate.
 fn relay_needs_continuation(
-    buffered:usize,inner_read:usize,outer_read:usize
+    buffered:usize,inner_read:usize,outer_read:usize,close_probe_due:bool
 )->bool{
+    // FD_CLOSE can be consumed with FD_READ before recv returns EOF.
+    // Only the data-bearing close-hint leg gets an extra bounded turn.
     buffered!=0 || inner_read>=RELAY_SCRATCH_BYTES ||
-    outer_read>=RELAY_SCRATCH_BYTES
+    outer_read>=RELAY_SCRATCH_BYTES || close_probe_due
 }
 fn listener_accept_needed(direct:usize,dns:usize)->bool{direct>0||dns>0}
 
@@ -62,6 +64,7 @@ struct Active{
     // Stable identity across swap_remove and NAT port reuse. One entry in
     // the bounded ready FIFO at most, keyed by (port,generation).
     generation:u64,queued:bool,fast_forward:bool,
+    close_hints:[bool;2],
 }
 impl TcpPhase{
     fn socket_handles(&self)->(usize,usize){
@@ -141,6 +144,7 @@ struct TcpLegDiagnosis{
     ready_wait_sum_ms:u64,ready_wait_max_ms:u64,
     relay_turns:u64,relay_zero_progress:u64,
     relay_progress_no_self_ticket:u64,relay_progress_self_ticket:u64,
+    relay_close_probe_self_ticket:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
     io_short_writes:[u64;2],io_read_gated:[u64;2],
@@ -336,11 +340,16 @@ impl NativeTcpActor{
                         d.event_close+=u64::from(bits&EVENT_CLOSED!=0);
                     }
                 }
+                let closed_inner=imask&EVENT_CLOSED!=0;
+                let closed_outer=omask&EVENT_CLOSED!=0;
+                self.active[slot].close_hints[0]|=closed_inner;
+                self.active[slot].close_hints[1]|=closed_outer;
                 if let Some(TcpPhase::Relaying(pair))=
                     self.active[slot].phase.as_mut(){
                     pair.note_read_event(
                         imask&(EVENT_READ|EVENT_CLOSED)!=0,
                         omask&(EVENT_READ|EVENT_CLOSED)!=0);
+                    pair.note_close_event(closed_inner,closed_outer);
                 }
                 if imask!=0||omask!=0{
                     self.enqueue_port(port,now_ms);
@@ -559,7 +568,7 @@ impl NativeTcpActor{
                         key:entry.key,proxy_port:entry.proxy_port,
                         phase:Some(TcpPhase::Connecting(stream,socket)),
                         last_activity_ms:now_ms,generation,queued:false,
-                        fast_forward,
+                        fast_forward,close_hints:[false,false],
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
@@ -651,6 +660,14 @@ impl NativeTcpActor{
                                     // platform relay stays compatible with
                                     // component callers lacking event pumps.
                                     relay.enable_event_driven_reads();
+                                    relay.note_close_event(
+                                        flow.close_hints[0],flow.close_hints[1]);
+                                    if flow.close_hints[0]||flow.close_hints[1]{
+                                        // A one-shot close consumed during
+                                        // Connecting needs an initial relay
+                                        // recv even without a future wake.
+                                        to_requeue.push(port);
+                                    }
                                     flow.phase=Some(TcpPhase::Relaying(relay));
                                     flow.last_activity_ms=now_ms;
                                 },
@@ -744,11 +761,15 @@ impl NativeTcpActor{
                                     // manufacture an immediate self-ticket.
                                     if relay_needs_continuation(
                                         tick.buffered,tick.inner_read,
-                                        tick.outer_read){
+                                        tick.outer_read,tick.close_probe_due){
                                         to_requeue.push(port);
                                         if let Some(d)=self.diagnosis.as_mut(){
                                             d.relay_progress_self_ticket=
                                                 d.relay_progress_self_ticket.saturating_add(1);
+                                            if tick.close_probe_due{
+                                                d.relay_close_probe_self_ticket=
+                                                    d.relay_close_probe_self_ticket.saturating_add(1);
+                                            }
                                         }
                                     }else if let Some(d)=self.diagnosis.as_mut(){
                                         d.relay_progress_no_self_ticket=
@@ -920,15 +941,17 @@ mod tests{
     /// FD_READ/FD_CLOSE/FD_WRITE from the existing WSA shards re-arm it.
     #[test]
     fn plan029_h1915_ready_requeue_only_backlog_or_full_kernel_read(){
-        assert!(!relay_needs_continuation(0,0,0));
-        assert!(!relay_needs_continuation(0,16*1024,0));
-        assert!(!relay_needs_continuation(0,0,32*1024));
+        assert!(!relay_needs_continuation(0,0,0,false));
+        assert!(!relay_needs_continuation(0,16*1024,0,false));
+        assert!(!relay_needs_continuation(0,0,32*1024,false));
         assert!(!relay_needs_continuation(0,
-            RELAY_SCRATCH_BYTES-1,RELAY_SCRATCH_BYTES-1));
-        assert!(relay_needs_continuation(1,0,0));
-        assert!(relay_needs_continuation(16*1024,512,0));
-        assert!(relay_needs_continuation(0,RELAY_SCRATCH_BYTES,0));
-        assert!(relay_needs_continuation(0,0,RELAY_SCRATCH_BYTES));
+            RELAY_SCRATCH_BYTES-1,RELAY_SCRATCH_BYTES-1,false));
+        assert!(relay_needs_continuation(1,0,0,false));
+        assert!(relay_needs_continuation(16*1024,512,0,false));
+        assert!(relay_needs_continuation(0,RELAY_SCRATCH_BYTES,0,false));
+        assert!(relay_needs_continuation(0,0,RELAY_SCRATCH_BYTES,false));
+        assert!(relay_needs_continuation(0,32768,0,true));
+        assert!(relay_needs_continuation(0,0,16384,true));
     }
     #[test]
     fn plan029_ready_fifo_ticket_age_is_monotonic_and_generation_scoped(){
@@ -1062,13 +1085,13 @@ impl Drop for NativeTcpActor{
         // addresses, per-packet log, filesystem, threads, or system calls.
         // This runs before Rust's normal field drops, preserving the
         // existing socket-then-WSA-event owned destruction order.
-        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
+        eprintln!("PLAN029_H1888_TCP_IO_FINAL shard_wakes={} event_socket_checks={} event_take_errors={} event_read={} event_write={} event_connect={} event_close={} ticket_peak={} ticket_served={} ticket_wait_sum_ms={} ticket_wait_max_ms={} relay_turns={} relay_no_progress={} relay_progress_no_self_ticket={} relay_progress_self_ticket={} relay_close_probe_self_ticket={} inner_read_calls={} outer_read_calls={} inner_read_wouldblock={} outer_read_wouldblock={} inner_write_calls={} outer_write_calls={} inner_write_wouldblock={} outer_write_wouldblock={} inner_write_short={} outer_write_short={} inner_read_gated={} outer_read_gated={} inner_read_event_suppressed={} outer_read_event_suppressed={} direct_forwarded={} queued_copy={} source=real_kernel_two_leg",
             d.shard_wakes,d.event_socket_checks,d.event_take_errors,
             d.event_read,d.event_write,d.event_connect,d.event_close,
             d.ready_ticket_peak,d.ready_served,d.ready_wait_sum_ms,
             d.ready_wait_max_ms,d.relay_turns,d.relay_zero_progress,
             d.relay_progress_no_self_ticket,d.relay_progress_self_ticket,
-            d.io_reads[0],d.io_reads[1],
+            d.relay_close_probe_self_ticket,d.io_reads[0],d.io_reads[1],
             d.io_read_wouldblock[0],d.io_read_wouldblock[1],
             d.io_writes[0],d.io_writes[1],
             d.io_write_wouldblock[0],d.io_write_wouldblock[1],
