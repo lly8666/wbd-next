@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1989,
-  "checkpoint_sha": "22c44a70e73d8bf3ff84930b094cd39792948b6d",
+  "sequence": 1990,
+  "checkpoint_sha": "e1bc78c192bbca3b045e8e1339f032211aab626d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1989 performance: original H1988 SOURCE22c44a7 Windows/Linux Rust components Action43832554872 PASS, Windows test plan029_ready_dns_drain_never_repolls... PASS; H1988 governance 43832554971 and cheap+Windows Go/Win+Linux Rust M0 jobs success, full M0 Action still in_progress when collected (Linux peer persona). H1989 modifies single original TX WaitForMultipleObjects socket shards to rotate priority after last served FD shard (current source CI/native NOT_RUN), no new polling/threads, H1974 61ms OPEN.",
-  "why_now": "User explicit normal low-latency/CPU priority. After removing repeated DNS WSAPoll, existing WAIT_ANY three-class rotation still leaves all 16 TCP socket handles in fixed low-index order; among two ready Direct TCP flows, lower shard can repeatedly win and delay unrelated flow. Rotate only owned 16 handles after a genuine shard event.",
+  "current_task": "H1990 collect H1989 source e1bc: true Windows Rust H1989 new 16-shard fairness tests PASS in jobs133184130063,133184432009; Ubuntu Rust component PASS, native source/cheap PASS. Original governance Action43833451163 FAIL FeatureCatalog first at stale H1940 exact source string, Governance identity/structure PASS. Strict H1940 test updated to assert rotating TCP shard order, Stop index0, three classes and no second event wait. H1990 source CI/native NOT_RUN; original H1974 61ms OPEN, no new extreme dispatch.",
+  "why_now": "The old H1940 source test still expects exact unrotated 'let (order,n)' and one-line phase advance; the real new performance code has a rotating TCP 16-handle order verified by Windows Rust tests. Preserve and strengthen source semantics, not remove the old contract.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1989 Windows Rust unit test, related native source build/governance without any extra 2048 or pressure dispatch. H1974 long-tail still OPEN; next focus normal p99 and CPU for same-source ordinary Direct vs Tunnel, not extreme scenarios/028 matrix/030.",
+  "next_action": "Collect H1990 governance/Windows+Linux Rust CI and original in-flight H1988 native scene outcome without re-dispatch; prioritize ordinary p99/CPU perGiB and live mixed Direct TCP/Tunnel UDP only with new causal condition, no pressure matrix.",
   "unverified": true,
-  "last_tested_source": "22c44a70e73d8bf3ff84930b094cd39792948b6d",
+  "last_tested_source": "e1bc78c192bbca3b045e8e1339f032211aab626d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1989-H1988-PERF-DNS-ONE-POLL-COMPONENT-PASS-20261116.json"
+    "docs/evidence/M0/PLAN029-H1990-H1989-ROUNDRobin-WINSOCK-WAIT-UNIT-AND-STATIC-FAIL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
     "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1982-DEFENDER-ORPHAN-READONLY-COLD-FENCE.md"
+    "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1988 per-TX-turn DNS poll/no Vec mechanism Windows test and Rust component PASS, performance impact not yet measured. H1989 WinSock WAIT_ANY TCP shard fairness code/test authored, new SOURCE CI NOT_RUN; no claim 61ms fix or full PLAN029."
+  "partial_summary": "H1988 Direct DNS once-per-TX-turn + stack WSAPoll Windows component PASS; H1989 original Rust WinSock 16-shard fairness Windows component PASS, old H1940 static test fails from exact source string. H1990 strict test updated, CI NOT_RUN. True 61ms tail remains OPEN."
 }

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1990",
+  "date": "2026-11-16",
+  "source_sha": "e1bc78c192bbca3b045e8e1339f032211aab626d",
+  "original_h1989": {
+    "rust_component": {
+      "run_id": 43833451089,
+      "win_job": 133184130063,
+      "ubuntu_job": 133184130295,
+      "result": "SUCCESS",
+      "win_test": "plan029_wait_any_rotates_all_sixteen_tcp_shards_no_cross_flow_hol ... ok (104/106)",
+      "native_product_performance": "NOT_RUN"
+    },
+    "m0": {
+      "run_id": 43833451125,
+      "cheap_job": 133184131808,
+      "result": "SUCCESS",
+      "win_rust_job": 133184432009,
+      "result_win_rust": "SUCCESS, 402 Rust tests including new fairness",
+      "linux_rust_job": 133184432021,
+      "result_linux_rust": "SUCCESS",
+      "win_go_job": 133184432000,
+      "status_at_collection": "IN_PROGRESS",
+      "product_network": "NOT_RUN"
+    },
+    "governance": {
+      "run_id": 43833451163,
+      "result": "failure",
+      "feature_catalog_job": 133184131787,
+      "first_failure": "test_m0_plan029_h1940_tcp_event_fair_wait.EventClassFairness.test_original_rust_tx_wait_priorities_are_rotated expects obsolete exact H1940 no-rotation strings",
+      "governance_job": 133184132117,
+      "result_governance": "success"
+    },
+    "h1988_m0_real": {
+      "run_id": 43832554963,
+      "job_id": 133183275348,
+      "at_collection": "IN_PROGRESS, original preexisting in-flight native-public-two-os, not redispatched"
+    }
+  },
+  "correction": "Update only H1940 strict static source test to assert 16-shard rotation and preserved Stop/Tunnel priority and absence of 2nd wait; no production code changes",
+  "new_source_result": "NOT_RUN",
+  "measured_cpu_reduction": "NOT_RUN",
+  "measured_latency_reduction": "NOT_RUN",
+  "h1974_61ms": "OPEN",
+  "plan029": "IN_PROGRESS"
+}
