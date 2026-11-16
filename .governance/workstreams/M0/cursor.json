@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1960,
-  "checkpoint_sha": "3b2c6e267d6b7047f334c450bcbc2c37bdbe4a19",
+  "sequence": 1961,
+  "checkpoint_sha": "c34a6881dbe5de03715d1a0b3450a2ae5f830e5c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1960 source 3b2c after H1959 original H1958 P2 source ab224 evidence stored; H1959 D3 FakeIP cold valid real-A guard Windows/Linux native-component PASS + Windows Go & governance. Reuse same H1958 real original D1 nonCN Tunnel DNS app source 8.8.8.8 to upstream1.1.1.1, blackhole 3 Tunnel/0 physical; D2 nonCN overseas TUN and nonCN name resolving CN IP => true physical Direct UDP; shared-CDN same-real-IP and TCP53/onlink full exit not proven. H1960 pure Windows Go cold config guard rejects zero/broadcast in BOTH single DNS fields, preserves equality, pending CI; no repeated P2 native marker. Full 029 OPEN.",
-  "why_now": "Existing original Action43792684618 already contains source-locked real D1 nonCN DNS+blackhole and D2 nonCN overseas/CN-IP converse proof. Reuse native results rather than launch another expensive signed WSL2 run. Concurrent code review showed Go cold source validated single/multicast but accepted DNS 0.0.0.0 or 255.255.255.255; fail closed at one cold snapshot, preserve original valid equal endpoints.",
+  "current_task": "H1961: H1960 Windows Go one-DNS cold guard was NOT_RUN in assembled product: two edited Go files did not match pinned manifest blobs, and cursor hot-read sum 32937B exceeded 32768B. Fix only two exact assembly blob hashes and compact cursor. H1958 real P2/D1/D2 scoped source ab224 remains last tested. Full PLAN029 OPEN.",
+  "why_now": "H1960 Action43795958866 and Windows build 43795958940 failed before original assembly on exact Go overlay blob SHA. Governance43795958874 failed hot-read budget by169B; Feature unit tests were OK. Neither is a DNS network or data-flow failure.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1960 Windows Go cold DNS 3mode x invalid-endpoint-direction pure test and governance; no new P2 scene. Then implement targeted full shared-CDN same-real-IP CN FakeIP Direct vs unrelated nonCN Tunnel original Wintun receipts and D1 TCP53/GUI/IPv6 representatives; carry full D1-D5/P1-P2 as OPEN. Keep normal product early physical preconnect OFF.",
+  "next_action": "Check H1961 governance, exact original Go assembly, Windows CLI/GUI compile and cold DNS unit tests. No duplicate 4MiB network dispatch. Then scoped shared-CDN same-real-IP CN FakeIP Direct vs nonCN Tunnel and D1 TCP53/GUI/IPv6; D1-D5/P1-P2 OPEN.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md",
     "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md",
     "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md",
-    "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md"
+    "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1958 same original Win/WSL2 P2 source ab224 4x4MiB ON88.982/OFF80.742ms n2, 384 small QPC ON first-write p95 0.261/0.215 vs OFF14.854/14.317, Tunnel UDP632 and Stop PASS; no performance PASS. Same Action D1 nonCN Tunnel DNS1.1.1.1 and blackhole Tunnel3/physical0, D2 nonCN overseas TUN + nonCN→CN-IP physical Direct scoped PASS; shared CDN same-IP/onlink/TCP53 not run. H1959 D3 restored-FakeIP invalid real targets pure CI PASS. H1960 cold direct/tunnel DNS zero/broadcast reject with equal-valid acceptance pending Windows Go CI; full PLAN029 in_progress."
+  "partial_summary": "H1958 original Win/WSL2 source ab224: P2 four 4MiB SHA/Stop PASS, ON88.982/OFF80.742ms n=2/arm, small QPC384 and TunnelUDP632 PASS; bulk perf OPEN. Same original run D1 DNS blackhole Tunnel3/physical0 and D2 overseas Tunnel/CN-IP Direct scoped PASS, shared-CDN same-IP NOT_RUN. H1959 FakeIP restore Rust pure CI PASS. H1960 dual DNS invalid endpoint guard awaits H1961 restored manifest; full 029 OPEN."
 }

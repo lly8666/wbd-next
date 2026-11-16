@@ -1751,13 +1751,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "2b0c2f9e4a19c7e6712d3ee6616c939d0100c8c0"
+      "result_blob": "b05ec84ae51db7d7928a9209740065d8f3015652"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "7f1f0871f1c5bda88b099612eb190fcbea5e604d"
+      "result_blob": "aa57526e43b13fa20bca34ba336997031f08b4d3"
     },
     {
       "kind": "create",
