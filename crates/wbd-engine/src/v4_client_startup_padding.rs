@@ -161,8 +161,9 @@ mod tests{
         // business bytes and share the original 2KiB per-flow ceiling.
         let mut packet=udp(43210);
         packet.resize(1228,0x5a);
-        packet[2..4].copy_from_slice(&(packet.len() as u16).to_be_bytes());
-        packet[24..26].copy_from_slice(&((packet.len()-20) as u16).to_be_bytes());
+        let packet_len=packet.len();
+        packet[2..4].copy_from_slice(&(packet_len as u16).to_be_bytes());
+        packet[24..26].copy_from_slice(&((packet_len-20) as u16).to_be_bytes());
         let mut above_old=false;
         for seed in 1..=64{
             let mut p=TunnelStartupPadding::new(StartupMode::Flows,seed);
