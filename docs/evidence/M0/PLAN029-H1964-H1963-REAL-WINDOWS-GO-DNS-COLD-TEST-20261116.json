@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1964_COLLECT_H1963_ORIGINAL_WINDOWS_GO_COLD_DNS",
+  "source_sha": "5e46a2a06c8292be049f57da5c15df4c534d7b79",
+  "result": "PASS_SCOPED_REAL_WINDOWS_RUNNER_GO_COLD_CONFIG_TEST_AND_EXACT_ASSEMBLY",
+  "source_pinned_original_legacy_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_windows_native_cli_action": {
+    "run_id": 43797131805,
+    "job_id": 133068380316,
+    "conclusion": "success",
+    "stages": [
+      "Verify exact overlay assembly and pinned legacy",
+      "Windows compiled parser and CLI-domain negative tests (not DNS real network)",
+      "Real native Defender COM exact one TCP rule add/readback/CAS delete (no product connection)"
+    ]
+  },
+  "exact_logged_test": {
+    "name": "TestPlan029H1963ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast",
+    "run_line": "=== RUN   TestPlan029H1963ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast",
+    "pass_line": "--- PASS: TestPlan029H1963ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast (0.00s)",
+    "test_cases_scoped": "3 route modes x 2 unusable DNS IPs x 2 DNS directions plus equal-valid configured DNS for each mode",
+    "result": "PASS",
+    "windows_os": "WINDOWS_RUNNER_GO_TEST"
+  },
+  "source_locked_windows_gui_compile": {
+    "run_id": 43797131801,
+    "job_name": "current-windows-gui-profile",
+    "conclusion": "success",
+    "scope": "COMPILE_EXACT_CURRENT_RUST_CDYLIB_AND_ORIGINAL_GO_REAL_WINFORMS_NOT_PRODUCT_CONNECT_STOP"
+  },
+  "cross_os_preflight": {
+    "run_id": 43797131838,
+    "conclusion": "success",
+    "cheap": "success",
+    "linux_rust": "success",
+    "windows_rust": "success",
+    "windows_go": "success"
+  },
+  "governance": {
+    "run_id": 43797131908,
+    "conclusion": "success",
+    "jobs": [
+      "Governance",
+      "Feature catalog"
+    ]
+  },
+  "actual_windows_dns_network": "NOT_RUN_H1963",
+  "gui_signed_connect_stop": "NOT_RUN_H1963",
+  "last_proven_full_native_win_wsl2_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "full_d1": "OPEN_UNTESTED_ONLINK_TCP53_AND_SHARED_CDN",
+  "full_plan029": "IN_PROGRESS"
+}
