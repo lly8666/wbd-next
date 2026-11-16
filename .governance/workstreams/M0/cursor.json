@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1974,
-  "checkpoint_sha": "e7df139f269395e4481b093c3cca447ded9bc203",
+  "sequence": 1975,
+  "checkpoint_sha": "bd611192c397220d467a8330defce4e0d494ac04",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1974: one signed original Windows2025/WSL2 NORMAL already-connected 2048x1KiB QPC trial now source-triggered: H1972 bounded <=8 post-stage fresh Direct reverse handoff to same Wintun RX, old 32 first, no new thread, product default OFF. H1972 original Win/Linux Rust component gates PASS, H1973 pure 4/5 only static string 'original' assertion failed, corrected. Real native outcome PENDING; target >20us median improvement to historical 34.4us NAT→inner-read gap; no performance claim yet. PLAN029 OPEN.",
-  "why_now": "User explicitly wants only large deltas. H1970 source direct application p50 overhead124.3us vs physical; original offline QPC shows 34.4us NAT→inner kernel read p50 and47.9us return app gap; classifier/NAT sub2us irrelevant. One extra TX quantum is avoidable without new owner.",
+  "current_task": "H1975 original H1974 Win2025/WSL2 SOURCE bd611 Action43808776053 FAILED strict QPC 2048 request join due four true same-seq TCP retransmits (2084 ingress vs 2080; 4160 relay). Real physical and Direct each 2048x1KiB+32 warmup SHA/FIN and both Stop PASS. Signed-only post-ingress delivered5610 but NOT successful latency optimization; physical p50 217us Direct 473us, different H1970 VM baseline95us. Five distinct Direct 61-63ms RTT stall windows, one no retransmit and two inner reads before retransmit; actual ~60ms after first NAT→inner read not yet attributed. Product OFF, PLAN029 OPEN.",
+  "why_now": "User requests fix big differences only. H1974 genuine 5x61ms Direct-only stall dominates classifier/NAT <2us. Prior H1972 fast-path achieved 5610 deliveries but cannot demonstrate real speed gain and H1966 strict byte joins rightfully failed on 4 duplicates; do not guess cause.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1974 original native Action, first cheap and Win/Linux Rust/Go/source peer, then Windows2025 Wintun/WSL2 app 2048x1KiB. Parse original Windows QPC gap analyzer, post-ingress delivered count, Linux SHA/FIN and both owned Stop. Compare H1970 source different VM as observational, require >=20us large direction to justify more work; if not, reject and target 47.9us return gap. No duplicate native Action.",
+  "next_action": "Add bounded signed-only original TX->RX mailbox and RX Wintun SendPacket QPC stamps with exact TCP original source port/sequence, plus WinSock FD_READ to first kernel inner read, source-gate one normal 2048x1KiB original Win/WSL2. First isolate 60ms stage; then one event-driven bounded recovery if proved. Don't retry without root source and don't promote signed optimizations.",
   "unverified": true,
-  "last_tested_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
+  "last_tested_source": "bd611192c397220d467a8330defce4e0d494ac04",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1975-H1974-NORMAL-STEADY-60MS-TCP-STALL-FAIL-20261116.json",
     "docs/evidence/M0/PLAN029-H1971-H1970-REAL-STEADY-2048X1K-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1975-H1974-60MS-TCP-STALL-DIAGNOSIS.md",
     "docs/devlog/M0/20261116-PLAN029-H1974-REAL-POST-INGRESS-2048X1K-ONE-SOURCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1972-POST-INGRESS-EXACT-LOW-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md",
     "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md",
     "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
-    "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md"
+    "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md"
   ],
   "open_requests": [],
-  "partial_summary": "Original H1970 real per-window QPC large gaps: 34.4us p50 NAT queue→inner read and47.9us innerWrite→Windows app recv; H1972 signed-only post-ingress <=8 same-turn handoff source built on H1973. H1972 Win/Linux Rust pure PASS, H1973 cheap failed irrelevant literal 'original' in snippet (others 4/5 PASS). H1974 combines correction with one signed normal 2048x1KiB original Win/WSL2 real test, performance UNVERIFIED; preconnect OFF, full PLAN029 OPEN."
+  "partial_summary": "H1974 genuine Win2025/WSL2 source bd611 Action43808776053 original overall FAIL QPC due 4 true same-seq TCP retransmits; 5 Direct-only 61-63ms RTT outliers, one without retries; signed post-ingress5610, Windows+Linux app2048/2048 bytes/SHA/FIN and owned Stop PASS. Absolute p50 physical217us Direct473us, baseline VM different H1970 physical94.5us, no performance gain proven. Next isolate ~60ms original NAT→inner read via original RX SendPacket and WinSock event QPC. PLAN029 OPEN."
 }
