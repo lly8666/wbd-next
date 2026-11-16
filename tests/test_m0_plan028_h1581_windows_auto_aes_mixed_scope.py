@@ -17,7 +17,9 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         marker="[plan028-h1581-win-auto-aes-mixed-150s]"
         self.assertIn("win5_scene: ${{ fromJSON(contains(github.event.head_commit.message, '"+marker+"') && '[\"mixed-loss0\"]'",w)
         self.assertIn("WBD_PLAN028_WIN_AUTO_AES_MIXED_150:",w)
-        self.assertIn("WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '"+marker+"') && 'normal'",w)
+        self.assertIn("WBD_WL_PUBLIC_MODES: ${{",w)
+        self.assertIn("contains(github.event.head_commit.message, '"+marker+"') && 'normal'",w)
+        self.assertIn("[plan029-game4-cn-real]') && 'game4' ||",w)
         self.assertIn("H1581_REAL_WINDOWS_AUTO_AES256_LINUX_THREE_AEAD_150S_UDP_TCP_SIX_OWNER_STOP_PASS_SCOPED",w)
         # Historic Normal two-OS metadata must not veto a genuinely verified
         # 5-client signed/Wintun strict report after all owners Stop.
