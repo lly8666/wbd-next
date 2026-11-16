@@ -25,6 +25,7 @@ on:
       - "experiments/android-root-probe/probe/src/android_split.rs"
       - "experiments/android-root-probe/probe/src/splitgate.rs"
       - "experiments/android-root-probe/ci/cn-ipv4-snapshot.py"
+      - "experiments/android-root-probe/ci/split-settings-ui.py"
       - "experiments/android-root-probe/ci/build-device-diagnostic.sh"
       - "experiments/android-root-probe/ci/device-diagnostic-case.sh"
   workflow_dispatch:

@@ -22,6 +22,8 @@ adb install -r out/diag/device-diagnostic.apk >"$o/install.txt"
 adb shell pm path org.wbdnext.rootprobe >"$o/apk-path.txt"
 grep -q '^package:' "$o/apk-path.txt"
 python3 experiments/android-root-probe/ci/device-diagnostic-ui.py
+# Prove real per-App UI config writes and Root reads the APNIC policy snapshot.
+python3 experiments/android-root-probe/ci/split-settings-ui.py
 adb shell su -c 'ip -4 rule show' >"$o/rules-after.txt"
 adb shell su -c 'ip -4 route show table all' >"$o/routes-after.txt"
 cmp "$o/rules-before.txt" "$o/rules-after.txt"
@@ -65,7 +67,9 @@ d={"schema":"android-real-ksu-self-contained-root-diagnostic/v1",
    "synthetic_tether_nat":cases.get("synthetic_tether_nat",{}).get("status"),
    "android_split_policy":cases.get("android_split_policy",{}).get("status"),
    "android_split_uid_kernel":cases.get("android_split_uid_kernel",{}).get("status"),
-   "physical_wifi_usb":"NOT_RUN","errors":errors}
+   "physical_wifi_usb":"NOT_RUN",
+   "split_settings_ui":"PASS" if (p/"split-validation.json").is_file() else "NOT_RUN",
+   "errors":errors}
 (p/"summary.json").write_text(json.dumps(d,indent=2)+"\n")
 print(json.dumps(d,indent=2))
 if errors:raise SystemExit("embedded Android diagnostic App gate failed")

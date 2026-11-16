@@ -80,7 +80,11 @@ public final class SplitSettingsActivity extends Activity {
         v.put("direct_dns",directDns.getText().toString().trim());
         v.put("tunnel_dns",tunnelDns.getText().toString().trim());
         ArrayList<String> cidrs=rules(bundledCn,32768);
-        cidrs.addAll(rules(customCidr.getText().toString(),32768));
+        ArrayList<String> extraCidrs=rules(customCidr.getText().toString(),32768);
+        cidrs.addAll(extraCidrs);
+        JSONArray extraJson=new JSONArray();
+        for(String v:extraCidrs)extraJson.put(v);
+        v.put("custom_cn_ipv4",extraJson);
         JSONArray ranges=new JSONArray();
         for(String s:cidrs)ranges.put(s);v.put("cn_ipv4",ranges);
         JSONArray customDomains=new JSONArray();
@@ -103,6 +107,7 @@ public final class SplitSettingsActivity extends Activity {
             String old=uids.put(uid,x.getValue());
             if(old!=null && !old.equals(x.getValue()))throw new IllegalArgumentException(
                 "共享 UID 存在互相冲突的模式，无法按包名隔离: "+name);
+            if(old!=null)continue; // one policy per UID, not per package alias
             apps.put(new JSONObject().put("uid",uid).put("mode",x.getValue()).put("package",name));
         }
         v.put("apps",apps);
@@ -138,8 +143,14 @@ public final class SplitSettingsActivity extends Activity {
                 JSONObject x=apps.optJSONObject(i);if(x==null)continue;
                 appOverrides.put(x.optString("package","uid:"+x.optInt("uid")),x.optString("mode"));
             }
+            JSONArray extras=o.optJSONArray("custom_cn_ipv4");
+            if(extras!=null){
+                StringBuilder extra=new StringBuilder();
+                for(int i=0;i<extras.length();i++)extra.append(extras.optString(i)).append('\n');
+                customCidr.setText(extra.toString());
+            }
             JSONArray cidrs=o.optJSONArray("cn_ipv4");
-            if(cidrs!=null && bundledCn.isEmpty()){
+            if(cidrs!=null && bundledCn.isEmpty() && extras==null){
                 StringBuilder ss=new StringBuilder();
                 for(int i=0;i<cidrs.length();i++)ss.append(cidrs.optString(i)).append('\n');
                 customCidr.setText(ss.toString());
