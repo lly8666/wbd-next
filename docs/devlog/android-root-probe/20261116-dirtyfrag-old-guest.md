@@ -9,3 +9,12 @@
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Create exact pre-Apr Android16 ARM64 r07 fresh AVD unrooted baseline and preserve DirtyFrag/WBD NOT_RUN until real operations."}
 ```
+
+## SOURCE-specific CI blocker and bounded fixture correction
+
+- [Action43859987790](https://github.com/lly8666/wbd-next/actions/runs/43859987790), SOURCE `22211f41a5b529be46d9e8e91688580edbf5a67f`, job `133273970185`, Action `SUCCESS` but **case status `ENV_BLOCKED/HISTORICAL_SOURCE_PROPERTIES_MISSING`** after a verified historical ZIP was extracted to the wrong SDK folder. Artifact `14222638280`, GitHub ZIP digest `sha256:69363ba5b763662c68502a7ace9829ca52dbc19652d32c2fe5ecec1d61fb505c`. No guest boot/root/DirtyFrag in this Action.
+- The corrected script explicitly inventories ZIP entries and only accepts a single `source.properties` at archive root or under `arm64-v8a/`; it extracts to the corresponding parent folder, still strictly requires identical historical archive SHA1/size and revision r07. One affected-source rerun; no fallback image and no root success claim.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Record source-specific failed ZIP layout assumption and correct extraction of immutable pre-Apr Android16 ARM64 r07; DirtyFrag remains NOT_RUN."}
+```

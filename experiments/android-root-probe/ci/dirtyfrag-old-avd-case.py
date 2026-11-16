@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import time
 import traceback
+import zipfile
 
 ROOT = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
 OUT = ROOT / "out" / "dirtyfrag-api36"
@@ -99,8 +100,21 @@ def main():
         return stop("HISTORICAL_ARCHIVE_SHA1_MISMATCH", "FAIL")
     D["image_sha256"] = hash_file(ARCHIVE, "sha256")
     D["image_hash_verified"] = True
-    IMAGE.mkdir(parents=True, exist_ok=True)
-    ret, _ = cmd(["unzip", "-q", ARCHIVE, "-d", IMAGE], 180, "unzip.log")
+    (OUT / "archive.sha256").write_text(D["image_sha256"]+"  android16-arm64-r07.zip\n")
+    # The SDK ZIP has its own top-level ABI directory. Inspect rather than
+    # extracting the ABI folder inside another copy of itself.
+    with zipfile.ZipFile(ARCHIVE) as z:
+        entries = z.namelist()
+        (OUT / "archive-entries.txt").write_text("\n".join(entries[:100])+"\n")
+        found = [name for name in entries if name.endswith("source.properties")]
+        if len(found) != 1:
+            return stop("ARCHIVE_LAYOUT_NO_UNIQUE_SOURCE_PROPERTIES")
+        prefix = found[0][:-len("source.properties")]
+        if prefix not in ("arm64-v8a/", ""):
+            return stop("ARCHIVE_LAYOUT_UNEXPECTED_PREFIX_"+repr(prefix))
+        unpack_root = IMAGE.parent if prefix else IMAGE
+    unpack_root.mkdir(parents=True, exist_ok=True)
+    ret, _ = cmd(["unzip", "-q", ARCHIVE, "-d", unpack_root], 180, "unzip.log")
     if ret:
         return stop("IMAGE_UNZIP_FAILED")
     # Delete owned 1.9GB archive only after exact digest/size record.
