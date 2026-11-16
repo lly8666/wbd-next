@@ -113,8 +113,14 @@ def normal_tcp_128k_progress_gaps(log,role,size):
         prev=start
         durations=[]
         for i,row in enumerate(progress[kind],1):
-            if type(row.get("bytes")) is not int or row["bytes"]!=i*128*1024:
-                raise RuntimeError("H1993 TCP 128KiB milestone missing or reordered")
+            # Upload is exact; original download recv(max=16KiB) logs
+            # bytes AFTER crossing a 128KiB boundary, not at that boundary.
+            # Reject skipped buckets and crossings larger than one recv.
+            lower=i*128*1024
+            upper=lower if kind=="upload_progress" else min(size,lower+16383)
+            observed=row.get("bytes")
+            if type(observed) is not int or not lower<=observed<=upper:
+                raise RuntimeError("H1995 TCP 128KiB milestone missing or reordered")
             now=timestamp(row)
             if now+0.002<prev:
                 raise RuntimeError("H1993 backwards original application progress")
@@ -136,6 +142,8 @@ def normal_tcp_128k_progress_gaps(log,role,size):
         "upload_worst_bucket":upload.index(max(upload))+1,
         "download_worst_bucket":download.index(max(download))+1,
         "upload_bucket_gaps_ms":upload,"download_bucket_gaps_ms":download,
+        "download_crossing_recv_actual_bytes":[x["bytes"] for x in progress["download_progress"]],
+        "max_allowed_recv_crossing_bytes":16383,
         "upload_includes_4ms_pacing_per_16k":True,
         "download_includes_windows_and_linux_kernel_and_scheduling":True,
         "not_app_rtt_p99_or_rust_cpu":True

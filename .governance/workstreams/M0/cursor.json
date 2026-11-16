@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1994,
-  "checkpoint_sha": "34e87006c51db9c8e183af68482050e6550fb460",
+  "sequence": 1995,
+  "checkpoint_sha": "b7e5dd10d1829113027f116a82ec59141f358558",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1994 source provenance repair only: original H1993 governance Action43840543217 FAIL because cursor last_tested_source ac18e797 did not match existing H1992 evidence SOURCE8ed70bc5. Last actually tested prior product source is 8ed70bc5, retaining exact H1992 evidence. Original H1993 normal paced 1MiB [plan029-v3-real-p2-rebuild] Action43840543096 cheap and 7/7 Python gap tests PASS, real native IN_PROGRESS at this repair, must collect and preserve original status, no redispatch or test relaxation.",
-  "why_now": "Governance must not falsely source-lock old H1991 native receipts to untested H1992/H1993 commit. H1994 records last tested SOURCE exactly as in immutable prior evidence; H1993 true normal P2 still belongs ONLY to its own new SHA and original Action.",
+  "current_task": "H1995 collect original H1993 source34e870 Action43840543096 native FAILURE: Windows+Linux original 1MiB physical/Direct kernel SHA/FIN and 120 real Tunnel UDP observed, but strict new H1993 Python parser assumes download recv bytes exactly 128KiB multiples; recv(<=16KiB) in fact crosses boundary, so original report Stop NOT_RUN. Fix only parser recv crossing <=16383, upload exact; 9 pure tests and exactly one original normal signed P2 rerun, preserve first native FAIL.",
+  "why_now": "Frozen Action43840543096 artifact14214065842 proves original physical first download bytes134968 and Direct140296, second Direct263583 (not exact 131072/262144). Fail is measuring parser bug, not established Rust packet fault. Reuse original SHA/FIN/Stop strict verification and one same-source ordinary baseline.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1993 source34e870 original normal 1MiB physical/Direct+Tunnel UDP signed Action43840543096, including real CPU/TCP phase gaps/Stop and conservative failure semantics; no second native dispatch. No extreme pressure or 2048 replay.",
+  "next_action": "Collect H1995 newly signed one original Normal 1MiB physical+Direct+Tunnel 96B Action and all original Go/Rust/Win/WSL2 Stop; compare p99/longest app download progress conservatively; no 2048 replay, 4MiB/stress or speculative hot-path tweak.",
   "unverified": true,
   "last_tested_source": "8ed70bc54a1aba3ccd460d63089b251280897915",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
     "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
     "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
     "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
-    "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md"
+    "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1993 original cheap Python 7/7 + assembly success; strict original governance Action43840543217 failure due wrong SOURCE pointer; H1994 source only correction with last_tested_source=8ed70 matching old H1992 evidence, H1993 native not yet measured. Three H1988/H1989/H1991 Rust scheduling changes remain CI-green; H1974 tail OPEN."
+  "partial_summary": "H1993 7/7 pure regression, Win/Linux Rust, Win Go and Linux peer build PASS; signed native Action43840543096 FAIL when H1993 measurement-only parser rejected genuine recv 128KiB crossings, Stop NOT_RUN. Actual partial 1MiB physical300.86ms Direct319.608ms; Tunnel120 returns, p99 2.366ms. H1995 fix parser/test only. H1974 true five 61ms tails OPEN, current-source Direct p99/CPU NOT_RUN."
 }

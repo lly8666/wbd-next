@@ -1,4 +1,4 @@
-"""H1993 ordinary P2 128KiB milestones: source-only causal-scope checks."""
+"""H1995 original WinSock recv 128KiB crossing fix after signed H1993 native FAIL."""
 import unittest
 from tools.m0_plan029_h1815_p2_real_mixed import normal_tcp_128k_progress_gaps
 import json, tempfile
@@ -56,6 +56,36 @@ class OriginalProgress(unittest.TestCase):
     def test_nonmonotonic_download_rejected(self):
         with self.assertRaisesRegex(RuntimeError,"backwards"):
             self.read(log_for(download=[302,304,306,305,372,374,376,378]))
+
+    def test_real_windows_recv_16k_crossing_milestones(self):
+        # Original H1993 failed Action43840543096 artifact14214065842:
+        # real physical and FakeIP Direct Windows recv cumulative bytes.
+        physical=[134968,268152,399224,530296,661368,792440,923512,1048576]
+        direct=[140296,263583,408275,525661,656733,789154,920422,1048576]
+        for role,actual in (("baseline",physical),("direct",direct)):
+            lines=log_for(role).splitlines()
+            replaced=[]
+            for line in lines:
+                if '"download_progress"' in line:
+                    item=json.loads(line[len(M):])
+                    index=item["bytes"]//131072-1
+                    item["bytes"]=actual[index]
+                    line=M+json.dumps(item)
+                replaced.append(line)
+            result=self.read("\n".join(replaced),role)
+            self.assertEqual(result["download_crossing_recv_actual_bytes"],actual)
+            self.assertEqual(result["max_allowed_recv_crossing_bytes"],16383)
+
+    def test_download_more_than_one_recv_crossing_rejected(self):
+        lines=log_for().splitlines()
+        for i,line in enumerate(lines):
+            if '"download_progress"' in line:
+                item=json.loads(line[len(M):])
+                item["bytes"]=131072+16384
+                lines[i]=M+json.dumps(item)
+                break
+        with self.assertRaisesRegex(RuntimeError,"milestone"):
+            self.read("\n".join(lines))
 
     def test_wrong_bucket_bytes_rejected(self):
         with self.assertRaisesRegex(RuntimeError,"milestone"):
