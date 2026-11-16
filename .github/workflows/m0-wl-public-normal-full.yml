@@ -1739,10 +1739,13 @@ jobs:
           # Keep exactly ONE remote IPv4, one local IPv4 and one test port:
           # never grant the whole subnet, global Allow or a product TCP rule.
           # The rule is owned by this exact run and deleted in finally.
+          # H2038 Game4 CN uses the same real 203.0.113.77 original
+          # guest TUN source for Linux->Windows TCP45902, not 10.66.0.1.
           # H1937 all/CN/CN/all original Rust P1 application source
           # is the same public Linux TUN alias; H1936 A1 TCP was
           # blocked by the old 10.66.0.1-only Windows listener ACL.
           $tcpRemote=if($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1' -or
+                        $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1' -or
                         ($env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and
                          $env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1')){
             '203.0.113.77'

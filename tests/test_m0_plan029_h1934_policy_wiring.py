@@ -47,5 +47,6 @@ class P1OriginalWiring(unittest.TestCase):
   # public guest TUN source in both policy arms, not 10.66.0.1.
   self.assertIn("$env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and",w)
   self.assertIn("$env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1'",w)
+  self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1' -or",w)
   self.assertIn("'203.0.113.77'\n          }else{'10.66.0.1'}",w)
   self.assertIn("-RemoteAddress $tcpRemote -LocalPort 45902",w)
