@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1956,
-  "checkpoint_sha": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
+  "sequence": 1957,
+  "checkpoint_sha": "5aa5f66340f61b4fb001986e06642bf32d920b97",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1956 collect H1955 source 4bab one true original Windows/WSL2 P2 Action43788677966: matched 384/384, 96 ON/OFF each Linux fin-first/payload-first. ON small p95 0.234/0.253ms vs OFF 4.798/13.749ms first physical send; ON p99 8.156/0.314 vs OFF14.685/35.476ms. Original 4MiB single DIRECT was OFF (QPC accepted ~514.48635s vs app start514.48584) and 462.673ms/phys34.26, not evidence eager path caused bulk slowdown. Same-source signed-only 4x4MiB ON/OFF/OFF/ON with UDP and original Stop planned; neither full P2 nor product preconnect qualified.",
-  "why_now": "H1955 confirms source-locked small Direct 384/384 QPC and 120 Tunnel UDP/Stop. Real 4MiB OFF 462.673ms vs phys34.26ms while older SOURCE baseline Direct120.698ms proves run-to-run Direct throughput volatility, not eager connect regression. 4x one-source 4MiB ON/OFF/OFF/ON to isolate tail/throughput without cross-VM inference; reuse exact signed P2 and Linux listener, no second packet owner, preserve 384 small scene.",
+  "current_task": "H1957 H1956 SOURCE5aa true Windows/WSL2 NOT_RUN: original cheap Action43792019825 test_h1849 P2 explicit WSL ABBA argv expression source gate FAIL; governance feature Action43792019812 1/10 new synthetic test incorrect H1955 fixture has 384 small only not 386. Exact two test-fixture-only repairs now staged: original mode_argv actual runtime expression retained, new sign-only argv6 override; synthetic 5 cold+bulk QPC prepended to 384 small preserving count389 and early-on195. Collect one new original signed P2 SOURCE, no blind rerun, no normal product changes.",
+  "why_now": "H1956 original app network step was SKIPPED because preflight failed before compiler: existing H1849 contract protected exact original 'p2abba if ABBA else p2ordinary' expression; use same original expression in real mode_argv, only signed H1956 changes sixth arg. H1956 synthetic test incorrectly inferred two bulk entries in H1945 synthetic fixture: actually 384 small only, so prepend exactly one cold plus four bulk and preserve 384 unchanged.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1956 original Win2025/WSL2 Action (signed 4x4MiB ON/OFF/OFF/ON, genuine SHA/FIN, 5 Linux TCP streams, continuous Tunnel UDP, 384 small direct QPC 96/96 each, bounded pending sockets and owned Stop). Do not duplicate native runs. Use same-source bulk on/off means and variability; if not convincing leave early physical connect OFF in ordinary product. Then D1-D5/GUI/Game4/IPv6/padding/pressure still OPEN.",
+  "next_action": "Collect one H1957 true original Win2025/WSL2 H1956 four 4MiB ON/OFF/OFF/ON source-locked signed P2 with same Wintun owner, QPC join and 384 small, SHA/FIN/Tunnel UDP/Stop; no new P1. Preserve H1956 original preflight failure, H1955 genuine last-tested reference. If any new actual failure, inspect exact stage, do not blind repeat; full D1-D5/Game4/GUI/IPv6/perf still OPEN.",
   "unverified": true,
   "last_tested_source": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1956-H1955-SIGNED-PRECONNECT-AB-REAL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md",
     "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md",
     "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
     "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md",
     "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md",
     "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
-    "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md"
+    "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1955 signed original P2 source4bab Action43788677966 PASS_SCOPED: 384 real Direct QPC, 96 ON+96 OFF per FIN/payload echo, 0 eager failures, small first physical send p95 <0.253ms ON vs4.798/13.749ms OFF, all SHA/FIN/UDP+Stop PASS. Single 4MiB Direct OFF took462.673ms vs physical34.26ms (volatile old original path). H1956 same-source 4x4MiB ABBA pending, normal preconnect OFF, full PLAN029 OPEN."
+  "partial_summary": "H1955 true Win2025 P2 source4bab 384 QPC small ON/OFF + SHA/FIN/Stop PASS, 4MiB single OFF slow462.673ms, not eager side effect proof. H1956 5aa native NOT_RUN due cheap contract+synthetic fixture mismatches; H1957 changes exactly those test scaffolding lines, ordinary runtime semantics unchanged. Full PLAN029 OPEN."
 }

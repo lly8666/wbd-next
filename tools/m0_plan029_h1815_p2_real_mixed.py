@@ -360,10 +360,14 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         if HIGH_RATE:
             child_env["WBD_PLAN029_P2_HIGH_RATE_PHASE_FILE"]=str(
                 out/"plan029-h1898-rate-phases.json")
+        # Preserve the old original P2/ABBA argv contract as the
+        # default actual runtime expression; this extra signed variant
+        # changes ONLY the sixth argv of four-bulk preconnect CI.
+        mode_argv=["p2abba" if ABBA else "p2ordinary"]
+        if PRECON_BULK:mode_argv=["p2preconnect4"]
         p=subprocess.Popen([*args,role,first,second,
                             "p2bulk" if BULK else "p2paced",
-                            "p2abba" if ABBA else
-                            "p2preconnect4" if PRECON_BULK else "p2ordinary"],stdout=f,
+                            *mode_argv],stdout=f,
                            stderr=subprocess.STDOUT,env=child_env)
         children.append(p)
         return p,log

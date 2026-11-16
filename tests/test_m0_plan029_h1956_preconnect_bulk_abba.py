@@ -14,13 +14,19 @@ def fixture():
     # One original cold Direct first, then four 4MiB sessions whose
     # sockets all have distinct original application ports. Keep the
     # remaining 384 real small synthetic events unchanged.
-    p,mode,start,accepted=rows[1].split(":")
+    # Existing H1945/H1955 pure fixture contains EXACTLY 384 small
+    # Direct rows and zero cold/bulk rows; inject those five independently.
+    # Three ON (cold+first+last 4MiB) and two OFF keep 96/96 small.
+    p,mode,start,accepted=rows[0].split(":")
     accept=int(accepted)
-    rows[1]=f"{p}:1:{accept-1000}:{accept}"
-    added=[f"41001:0:{accept+1000}:{accept+1000}",
-           f"41002:0:{accept+2000}:{accept+2000}",
-           f"41003:1:{accept+2000}:{accept+3000}"]
-    rows=rows[:2]+added+rows[2:]
+    added=[
+        f"51000:1:{accept-6000}:{accept-5000}",
+        f"51001:1:{accept-5000}:{accept-4000}",
+        f"51002:0:{accept-3000}:{accept-3000}",
+        f"51003:0:{accept-2000}:{accept-2000}",
+        f"51004:1:{accept-2000}:{accept-1000}",
+    ]
+    rows=added+rows
     newmark=("PLAN029_H1955_PRECONNECT_AB_QPC_FINAL frequency=10000000 "+
              "count=389 early_started=195 early_failed=0 rows="+
              ",".join(rows)+" source=original_rust_direct_test_only")
