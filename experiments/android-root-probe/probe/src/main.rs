@@ -180,13 +180,36 @@ fn exercise_tun() -> Value {
             format!("SO_BINDTODEVICE owned TUN: {}", io::Error::last_os_error()))); }
         sender.send_to(b"wbd-tun-out", "198.18.251.2:49492")?;
         let mut buf = [0u8; 2048];
-        let n = wait_read(file.as_raw_fd(), &mut buf, 1200)
-            .map_err(|e| io::Error::new(e.kind(), format!("TUN egress after ingress PASS, owned device bind: {e}")))?;
-        if n < 28 || buf[0] >> 4 != 4 || buf[9] != 17 ||
-            buf[12..16] != LOCAL || buf[16..20] != PEER {
-            return Err(io::Error::new(ErrorKind::Other, "TUN read did not capture owned IPv4 UDP"));
+        let deadline = Instant::now() + Duration::from_millis(1500);
+        let mut matched = None;
+        let mut other_count = 0usize;
+        let mut other_samples = Vec::new();
+        while Instant::now() < deadline {
+            let remain = deadline.saturating_duration_since(Instant::now()).as_millis() as i32;
+            if remain <= 0 { break; }
+            let n = match wait_read(file.as_raw_fd(), &mut buf, remain.min(300)) {
+                Ok(n) => n,
+                Err(e) if e.kind() == ErrorKind::TimedOut => continue,
+                Err(e) => return Err(e),
+            };
+            if n >= 28 && buf[0] >> 4 == 4 && buf[9] == 17 &&
+                buf[12..16] == LOCAL && buf[16..20] == PEER &&
+                &buf[28..n] == b"wbd-tun-out" {
+                matched = Some(n);
+                break;
+            }
+            other_count += 1;
+            if other_samples.len() < 3 {
+                let proto = if n > 9 { buf[9] } else { 0 };
+                let version = if n > 0 { buf[0] >> 4 } else { 0 };
+                let src = if n >= 20 { format!("{:?}", &buf[12..16]) } else { "short".to_owned() };
+                let dst = if n >= 20 { format!("{:?}", &buf[16..20]) } else { "short".to_owned() };
+                other_samples.push(format!("len={n},v={version},proto={proto},src={src},dst={dst}"));
+            }
         }
-        Ok(json!({"read_bytes":n,"write_bytes":wrote,"mtu_readback":1400,"udp_echo":"kernel delivered to local UDP socket","scope":"owned TUN only"}))
+        let n = matched.ok_or_else(|| io::Error::new(ErrorKind::TimedOut,
+            format!("TUN expected owned UDP not seen in 1500ms; other_count={other_count}; samples={other_samples:?}")))?;
+        Ok(json!({"read_bytes":n,"write_bytes":wrote,"mtu_readback":1400,"udp_echo":"kernel delivered to local UDP socket","scope":"owned TUN only","ignored_non_target_packets":other_count,"first_ignored":other_samples}))
     })();
     drop(file); // closes non-persistent TUN on normal and failed paths
     let cleaned = !Path::new(&format!("/sys/class/net/{name}")).exists();
