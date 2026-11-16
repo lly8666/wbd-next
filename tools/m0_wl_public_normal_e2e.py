@@ -2274,6 +2274,27 @@ print(json.dumps(result),flush=True)
       raise RuntimeError("H1966 actual established TCP app data missing before Stop")
      steady["same_source_steady_windows_qpc"]=analyze(
          original_stop_log,steady,os.environ["GITHUB_SHA"])
+     if os.environ.get("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE")=="1":
+      from m0_plan029_h1972_gap_attribution import analyze as gaps
+      steady["same_source_steady_gap_qpc"]=gaps(
+          original_stop_log,steady,os.environ["GITHUB_SHA"])
+      markers=[row for row in original_stop_log.splitlines() if
+          row.startswith("PLAN029_H1972_POST_INGRESS_DIRECT_FINAL ")]
+      if len(markers)!=1:
+       raise RuntimeError("H1972 original joined post-ingress delivery receipt absent")
+      m=re.fullmatch(
+          r"PLAN029_H1972_POST_INGRESS_DIRECT_FINAL delivered=(\d+) max_per_turn=8 sole_original_rx_owner=1 joined=true source=signed_original_native_only",
+          markers[0])
+      if m is None or not 0<int(m.group(1))<=8192:
+       raise RuntimeError("H1972 fresh Direct delivery never used original RX FIFO")
+      steady["same_turn_post_ingress"]={
+          "source_sha":os.environ["GITHUB_SHA"],
+          "delivered":int(m.group(1)),
+          "max_per_turn":8,
+          "sole_original_wintun_rx_owner":True,
+          "stop":"PASS_BOTH_OWNED",
+          "status":"PASS_SCOPED_POST_INGRESS_DELIVERY_AND_REAL_QPC_JOIN"}
+      print("PLAN029_H1972_ORIGINAL_SAME_TURN_DIRECT_RX_2048_QPC_STOP",flush=True)
      steady["stop"]="PASS_BOTH_OWNED"
      print("PLAN029_H1966_SIGNED_2048_STEADY_1K_REAL_WINDOWS_QPC_BOTH_OS_OWNED_STOP",flush=True)
     if os.environ.get("WBD_PLAN029_P2_REPLY_QPC_SCENE")=="1":

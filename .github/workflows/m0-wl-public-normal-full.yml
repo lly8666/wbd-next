@@ -131,7 +131,9 @@ on:
       - tools/m0_plan029_h1815_p2_real_mixed.py
       - tools/m0_plan029_h1966_steady_tcp_qpc.py
       - tools/m0_plan029_h1966_steady_qpc.py
+      - tools/m0_plan029_h1972_gap_attribution.py
       - tests/test_m0_plan029_h1966_steady_qpc.py
+      - tests/test_m0_plan029_h1972_post_ingress.py
       - tools/m0_plan029_h1892_real_tcp128.py
       - tools/m0_plan029_h1898_highrate_tcp.py
       - tools/m0_plan029_h1926_small_tcp_latency.py
@@ -559,6 +561,7 @@ jobs:
       - run: python -m unittest tests.test_m0_native_ci_scope -v
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1966_steady_qpc -v
+      - run: python -m unittest tests.test_m0_plan029_h1972_post_ingress -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
@@ -644,7 +647,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1966_steady_tcp_qpc.py tools/m0_plan029_h1966_steady_qpc.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1966_steady_tcp_qpc.py tools/m0_plan029_h1966_steady_qpc.py tools/m0_plan029_h1972_gap_attribution.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -1035,6 +1038,9 @@ jobs:
       # H1966: one ordinary 1KiB established-stream QPC, same original
       # Rust owner. Explicit source marker, NEVER product default.
       WBD_PLAN029_P2_STEADY_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-steady-qpc]') && '1' || '0' }}
+      # H1972: one signed normal steady 1KiB experiment ONLY, second
+      # bounded 8-return post-ingress mailbox flush; product default OFF.
+      WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-post-ingress-flush]') && '1' || '0' }}
       WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.

@@ -57,6 +57,7 @@
 // A Direct return quantum must match this TX loop's four 8-packet ingress
 // quanta. Otherwise the finite TCP return FIFO can fill under a real burst.
 const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
+ const POST_INGRESS_RETURN_QUANTUM:usize=BATCH;
  // An auto-reset mailbox wake is not a counting semaphore. When all 32
  // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
  // may already be queued even though Windows coalesced the SetEvent calls.
@@ -173,6 +174,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      tx_copied:AtomicU64,
      rx_delivered:AtomicU64,
      rx_tx_notify_attempts:AtomicU64,
+     post_ingress_direct_to_rx:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
      fresh_outer_bytes:AtomicU64,
@@ -200,6 +202,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      fn new(ack:u32,seq:u32)->Self{
          Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              rx_tx_notify_attempts:AtomicU64::new(0),
+             post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              fresh_outer_bytes:AtomicU64::new(0),
              startup_pad_npf_bytes:AtomicU64::new(0),
@@ -844,6 +847,14 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // WAIT_ANY's first-signaled-index bias is real even with one owner
      // and 16 fixed WinSock shard events. Rotate owner class priority.
      let mut wait_phase=0u8;
+     // Signed-only original normal small TCP: no product-default change.
+     let same_turn_direct=cfg!(feature="m0_v4_probe") &&
+         std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+         std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE").ok()
+             .as_deref()==Some("1");
      loop {
          if counters.stopping.load(Ordering::Acquire){
              log_padding_driver_receipt(&split,&counters);
@@ -885,6 +896,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              }
              let mut work=0;
              let mut direct_progress=false;
+             let mut fresh_direct_ingress=false;
              let mut still_ready=false;
              let now_ms=m2_clock().0/1_000_000;
              if let Some(owner)=split.as_mut(){
@@ -942,10 +954,53 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;
                  work+=staged.tunnel;
+                 fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;
                  // Exact exhaustion is a conservative next-turn hint.
                  still_ready|=staged.quantum_full();
                  if !staged.quantum_full(){break}
+             }
+             // The original 32-item return drain runs BEFORE stage_sources.
+             // A freshly NAT-translated Wintun segment otherwise waits for
+             // a second entire owner TX turn before reaching the sole RX
+             // Wintun writer. Keep older returns first, deliver <=8 fresh
+             // ones only in the explicitly signed steady test.
+             if same_turn_direct && fresh_direct_ingress{
+                 if let (Some(owner),Some(queue))=
+                     (split.as_mut(),direct_return.as_ref()){
+                     let mut scratch=[0u8;MAX_IPV4];
+                     let mut delivered=0usize;
+                     for _ in 0..POST_INGRESS_RETURN_QUANTUM{
+                         let Some(returned)=owner.poll_udp_reverse(
+                             &mut scratch,now_ms)else{break};
+                         let packet=match returned{
+                             NativeReverse::Owned(v)=>v,
+                             NativeReverse::InScratch(n)=>scratch[..n].to_vec(),
+                         };
+                         match queue.try_send(packet){
+                             Ok(())=>{delivered+=1},
+                             Err(TrySendError::Full(packet))=>{
+                                 if is_direct_tcp_ipv4(&packet){
+                                     owner.requeue_tcp_reverse(packet)
+                                         .map_err(|_|BAD_STAGE)?;
+                                     break
+                                 }
+                                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+                             },
+                             Err(TrySendError::Disconnected(_))=>
+                                 return Err(BAD_STAGE),
+                         }
+                     }
+                     if delivered>0{
+                         counters.post_ingress_direct_to_rx.fetch_add(
+                             delivered as u64,Ordering::Relaxed);
+                         direct_progress=true;
+                         let _=direct_notify.wake();
+                     }
+                     if delivered==POST_INGRESS_RETURN_QUANTUM{
+                         still_ready=true;
+                     }
+                 }
              }
              // A bounded <=4-row parity quantum follows ready fresh sources.
              // In Fixed/Auto there is never an extra native parity worker.
@@ -1660,6 +1715,13 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          RX_WAKE_BATCH,
          session.counters.rx_tx_notify_attempts.load(Ordering::Relaxed),
          session.counters.rx_delivered.load(Ordering::Acquire));
+     if cfg!(feature="m0_v4_probe") &&
+         std::env::var("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE").ok()
+             .as_deref()==Some("1"){
+         eprintln!("PLAN029_H1972_POST_INGRESS_DIRECT_FINAL delivered={} max_per_turn={} sole_original_rx_owner=1 joined=true source=signed_original_native_only",
+             session.counters.post_ingress_direct_to_rx.load(Ordering::Acquire),
+             POST_INGRESS_RETURN_QUANTUM);
+     }
      #[cfg(feature="win_native_lock_profile")]
      {
          let p=&session.counters.profile;
