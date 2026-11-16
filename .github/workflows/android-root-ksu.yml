@@ -1,0 +1,54 @@
+name: Android KernelSU real app authorization — single API36 AVD
+run-name: "android-ksu-real-su|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - "experiments/android-root-probe/ci/ksu-prepare-avd.sh"
+      - "experiments/android-root-probe/ci/ksu-boot-and-test.sh"
+      - "experiments/android-root-probe/ci/ksu-grant-ui.py"
+      - ".github/workflows/android-root-ksu.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-ksu-real-su-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  real-ksu:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build one real targetSdk37 APK with stock SDK, no service or fake su
+        shell: bash
+        run: bash experiments/android-root-probe/ci/build-app.sh
+      - name: Prepare isolated Android16 KSU 3.3.1 AVD and immutable native executable
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Cold boot real KSU module, grant test APK in Manager UI, run TUN and raw
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-boot-and-test.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-real-ksu-api36-${{ github.sha }}
+          path: |
+            out/ksu/*.txt
+            out/ksu/*.json
+            out/ksu/*.xml
+            out/ksu/*.log
+            out/ksu/*.png
+            out/appcase/
+            out/apk/SOURCE
+            out/apk/manifest.json
+            out/apk/SHA256SUMS
+            out/apk/badging.txt
+            out/apk/compile-api.txt
+          retention-days: 14
+          if-no-files-found: warn

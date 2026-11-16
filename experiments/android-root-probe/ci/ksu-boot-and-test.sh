@@ -58,6 +58,8 @@ adb shell am start -n org.wbdnext.rootprobe/.ProbeActivity >out/ksu/initial-app-
 sleep 5
 python3 experiments/android-root-probe/ci/ksu-grant-ui.py
 # Existing app UID harness validates native TUN/raw, not merely KSU shell UID0.
+# Prevent an initial pre-grant error JSON from being reused as the final app run.
+adb shell run-as org.wbdnext.rootprobe rm -f files/result.json
 bash experiments/android-root-probe/ci/app-su-case.sh
 python3 - <<'PY'
 import json,os,hashlib
