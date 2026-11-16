@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Cold boot real KernelSU twice; do NOT invoke adb root. KSU's --allow-shell is a CI preflight only.
 set -euo pipefail
+# Unlike android-emulator-runner, our manually booted KSU AVD does not inject adb into PATH.
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 cd "$GITHUB_WORKSPACE"
 mkdir -p out/ksu out/appcase
 emulator="$ANDROID_HOME/emulator/emulator"
