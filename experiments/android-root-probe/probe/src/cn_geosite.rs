@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+#[derive(Debug)]
 pub(crate) struct Index {
     suffix:HashSet<String>,
     exact:HashSet<String>,
