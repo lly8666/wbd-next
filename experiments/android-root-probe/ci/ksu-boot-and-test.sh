@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Cold boot real KernelSU twice; do NOT invoke adb root. KSU's --allow-shell is a CI preflight only.
+set -euo pipefail
+cd "$GITHUB_WORKSPACE"
+mkdir -p out/ksu out/appcase
+emulator="$ANDROID_HOME/emulator/emulator"
+rooted="$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img"
+EMU_PID=""
+cleanup() {
+  adb emu kill >/dev/null 2>&1 || true
+  if [[ -n "$EMU_PID" ]];then
+    kill "$EMU_PID" >/dev/null 2>&1 || true
+    wait "$EMU_PID" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+start_avd() {
+  local phase="$1"
+  "$emulator" -avd wbd_ksu36 -ramdisk "$rooted" \
+    -no-snapshot-load -no-snapshot-save -no-window -no-audio -no-boot-anim \
+    -gpu swiftshader_indirect -accel on -memory 3072 \
+    >"out/ksu/emulator-$phase.log" 2>&1 &
+  EMU_PID=$!
+  timeout 300s adb wait-for-device
+  local booted=0
+  for n in $(seq 1 140);do
+    if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]];then booted=1;break;fi
+    sleep 2
+  done
+  if [[ "$booted" != 1 ]];then
+    echo "ENV_BLOCKED: patched AVD boot failed in phase $phase"
+    tail -n 90 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
+  adb shell getenforce >"out/ksu/enforce-$phase.txt"
+  adb shell uname -r >"out/ksu/kernel-$phase.txt"
+  adb shell getprop ro.build.version.sdk >"out/ksu/api-$phase.txt"
+  test "$(tr -d '\r' <"out/ksu/api-$phase.txt")" = 36
+  test "$(tr -d '\r' <"out/ksu/enforce-$phase.txt")" = Enforcing
+}
+start_avd first
+adb install -r out/ksu/manager.apk >out/ksu/install-manager.txt
+adb install -r out/apk/app-su.apk >out/ksu/install-test-app.txt
+adb shell monkey -p me.weishu.kernelsu -c android.intent.category.LAUNCHER 1 >out/ksu/first-manager-launch.txt 2>&1 || true
+sleep 5
+adb emu kill >out/ksu/first-cold-stop.txt 2>&1 || true
+wait "$EMU_PID" >/dev/null 2>&1 || true
+for n in $(seq 1 40);do
+  if ! adb devices | grep -q 'emulator-.*device';then break;fi
+  sleep 1
+done
+start_avd second
+adb shell su -c id >out/ksu/fixture-shell-su.txt 2>&1 || true
+adb shell su -c '/data/adb/ksud debug info' >out/ksu/ksud-debug-info.txt 2>&1 || true
+adb shell pm list packages | grep -E 'kernelsu|rootprobe' >out/ksu/packages.txt || true
+# Trigger a real app request before explicitly granting ONLY our app in the manager UI.
+adb shell am start -n org.wbdnext.rootprobe/.ProbeActivity >out/ksu/initial-app-launch.txt
+sleep 5
+python3 experiments/android-root-probe/ci/ksu-grant-ui.py
+# Existing app UID harness validates native TUN/raw, not merely KSU shell UID0.
+bash experiments/android-root-probe/ci/app-su-case.sh
+python3 - <<'PY'
+import json,os,hashlib
+from pathlib import Path
+p=Path("out/ksu")
+r=json.loads(Path("out/appcase/app-result.json").read_text())
+out={
+ "schema":"android-real-kernelsu-app-su/v1",
+ "source":os.environ["GITHUB_SHA"],
+ "manager":"KernelSU v3.3.1 on ephemeral patched-ramdisk AVD x86_64 API36",
+ "manager_sha256":"b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
+ "avd_helper_source":"c6c6057d807976d3dee6dbe9197189654cbd1a2a",
+ "patched_ramdisk_sha256":hashlib.sha256((p/"patched-ramdisk.img").read_bytes()).hexdigest(),
+ "ksud_info":(p/"ksud-debug-info.txt").read_text(errors="replace")[:4000],
+ "app_uid":r.get("app_uid"),"app_selinux":r.get("app_context"),
+ "app_su_exit":r.get("su_exit"),"app_su_status":r.get("status"),
+ "native_tun_status":r.get("native_tun_status"),
+ "native_raw_status":r.get("native_raw_status"),
+ "app_to_real_ksu_native_pass":r.get("status")=="APP_SU_NATIVE_EXERCISE_PASS",
+ "limits":["No real phone","No production app","No full Android netd/NAT/hotspot/USB"]
+}
+(p/"summary.json").write_text(json.dumps(out,indent=2,sort_keys=True))
+if not out["app_to_real_ksu_native_pass"]:
+ raise SystemExit("KSU positive not established; original app and manager evidence retained")
+PY
