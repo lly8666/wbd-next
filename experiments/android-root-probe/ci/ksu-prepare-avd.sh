@@ -15,6 +15,9 @@ printf 'no\n' | "$avdmanager" create avd -n wbd_ksu36 -k "system-images;android-
 git clone --quiet https://github.com/leemikepop/avd-kernelsu-x86_64 out/ksu/helper
 (cd out/ksu/helper && git checkout --quiet c6c6057d807976d3dee6dbe9197189654cbd1a2a)
 echo c6c6057d807976d3dee6dbe9197189654cbd1a2a >out/ksu/helper-sha.txt
+# The upstream helper explicitly reads GITHUB_TOKEN for authenticated GitHub Releases API.
+# Hosted runner unauthenticated REST budget can be exhausted across concurrent jobs.
+export GITHUB_TOKEN="$GH_TOKEN"
 python3 out/ksu/helper/avd-ksu.py patch --image-dir "$image" --variant kernelsu --version v3.3.1 --allow-shell --out "$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img" >out/ksu/patch-log.txt 2>&1 || { tail -n 100 out/ksu/patch-log.txt; exit 2; }
 test -s out/ksu/patched-ramdisk.img
 sha256sum "$image/ramdisk.img" out/ksu/patched-ramdisk.img >out/ksu/ramdisk-hashes.txt
