@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1992,
-  "checkpoint_sha": "8ed70bc54a1aba3ccd460d63089b251280897915",
+  "sequence": 1993,
+  "checkpoint_sha": "ac18e797afedd1937b0aaa10f23265986d8bb6bf",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1992 collect H1991 normal performance SOURCE8ed70: Rust component43835248674 both Win2025/Ubuntu SUCCESS (new UDP empty-sweep pure WinRust 105/107 ok); governance43835248700 SUCCESS; M0 43835248671 cheap, Win Go and Win/Linux Rust SUCCESS, later peer/native still IN_PROGRESS on collection. H1988 source22c44 M0 native43832554963 and H1989 sourcee1bc M0 native43833451125 were BOTH real Normal/off two-OS TCP/UDP/Stop SUCCESS, not CN Direct P2. H1990 governance+maintenance SUCCESS, older red retained. No proven p99 or CPU gain, H1974 61ms OPEN; PLAN029 not finished.",
-  "why_now": "User said focus previous agent's ordinary low-latency and CPU performance rather than extreme saturation; source-lock real Normal results and bounded three scheduler fixes without equating Go/Rust build or Normal success to CN Direct P2.",
+  "current_task": "H1993: H1991 original actual Windows2025↔WSL2 Normal/off native Action43835248671 completed SUCCESS; three CPU/HOL Rust scheduler optimizations H1988 DNS, H1989 TCP WAIT_ANY fairness, H1991 UDP idle sweep Rust/Go components PASS, but CN Direct p99/CPU H1974 61ms still OPEN. Add passive per-128KiB app progress gaps to existing ordinary paced 1MiB physical vs FakeIP Direct TCP + concurrent Tunnel UDP scene; strict pure Python tests. Trigger exactly one signed normal P2 via current-source [plan029-v3-real-p2-rebuild] marker; no 2048/4MiB/ABBA/highrate/pressure/longrate. CI/native result NOT_RUN until collected.",
+  "why_now": "Avoid speculative packet hot-path changes after three CI-green scheduler fixes; reuse proven original Windows/Linux ordinary H1815 physical+Direct 1MiB and Tunnel UDP test, capture max 128KiB progress stalls from already emitted checkpoints without new socket/thread/poll or packet logging.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect original H1991 native in-flight without repeat dispatch. Then ONE normal mixed CN Direct TCP+UDP and Tunnel small UDP physical baseline on same SOURCE/VM: real p99/max no-delivery gap, CPU per GiB, queue age and owned Stop; do not replay prior 2048 without new causal hypothesis, no heavy stress.",
+  "next_action": "Collect H1993 Python preflight/governance and ONE original H1815 signed moderate P2, source-locked SHA/FIN/UDP/Stop and per-arm max 128KiB upload/download gap. Compare physical/Direct only descriptively; if real >8ms new gap, map existing native ticket/ready stats. H1974 true 61ms remains OPEN; no extreme CDN/resource tests or another 2048 replay.",
   "unverified": true,
-  "last_tested_source": "8ed70bc54a1aba3ccd460d63089b251280897915",
+  "last_tested_source": "ac18e797afedd1937b0aaa10f23265986d8bb6bf",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
     "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
     "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
     "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
-    "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1988 one DNS poll/TX turn and stack WSAPoll PASS WinRust; H1989 rotate 16 TCP WAIT_ANY shards PASS WinRust; H1991 empty UDP WSAPoll full-sweep suppression PASS WinRust 105/107, all components compile. H1988/H1989 default Normal real Win/WSL2 TCP+UDP+Stop PASS, CN Direct p99/CPU NOT_MEASURED; H1974 true 61ms tail OPEN."
+  "partial_summary": "H1988 DNS/TCP H1989 fair shard H1991 UDP redundant-poll optimizations all Windows Rust PASS, H1991 actual Normal/off two-OS PASS. H1993 passive progress-gap attribution for ordinary 1MiB physical/Direct and Tunnel small UDP new source CI/network NOT_RUN; H1974 tail still OPEN, product preconnect/postflush OFF."
 }

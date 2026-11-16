@@ -1,3 +1,5 @@
+# H1993 only one ordinary paced 1MiB physical/Direct+Tunnel-UDP P2;
+# passive existing 128KiB application milestone gaps, no 2048 QPC replay.
 # H1978 ONE normal Windows2025/WSL2 source-locked 2048x1KiB stall diagnosis
 # Original TX mailbox -> RX WintunSendPacket -> FD_READ QPC, retain real TCP retries
 # Test-only signed same-turn; no ordinary product change and no extreme CDN.
@@ -137,6 +139,7 @@ on:
       - tools/m0_plan029_h1972_gap_attribution.py
       - tools/m0_plan029_h1977_boundary_qpc.py
       - tests/test_m0_plan029_h1977_boundary_qpc.py
+      - tests/test_m0_plan029_h1993_p2_progress_gaps.py
       - tests/test_m0_plan029_h1966_steady_qpc.py
       - tests/test_m0_plan029_h1972_post_ingress.py
       - tools/m0_plan029_h1892_real_tcp128.py
@@ -568,6 +571,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan029_h1966_steady_qpc -v
       - run: python -m unittest tests.test_m0_plan029_h1972_post_ingress -v
       - run: python -m unittest tests.test_m0_plan029_h1977_boundary_qpc -v
+      - run: python -m unittest tests.test_m0_plan029_h1993_p2_progress_gaps -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
