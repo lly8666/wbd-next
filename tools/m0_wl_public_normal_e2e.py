@@ -40,6 +40,7 @@ ipv6_probe_active=None
 p029_tunnel_alias="203.0.113.77"
 p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
+p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
@@ -112,6 +113,9 @@ if p029_outer1460 and not (p029_direct and not p029_pressure and
  raise RuntimeError("H1791 default1460 requires signed Normal Direct, no hard8 pressure")
 if p029_cache and not p029_direct:
  raise RuntimeError("H1783 signed Direct cache witness requires CN Direct scene")
+if p029_cdn and not (p029_direct and p029_tcp53 and mode=="normal" and
+    not (p029_padding or p029_pressure or p029_multia or p029_udp_rtt or p029_p2)):
+ raise RuntimeError("H2010 shared overseas CDN requires one signed Normal Direct+TCP53 scene")
 if p029_tcp53 and not p029_direct:
  raise RuntimeError("H1794 signed app TCP53 requires one original CN Direct owner")
 if p029_padding and (mode!="normal" or p029_direct or
@@ -183,10 +187,11 @@ def unix(p):
  q=pathlib.Path(p).resolve()
  return "/mnt/"+q.drive[0].lower()+"/"+"/".join(q.relative_to(q.anchor).parts)
 
-def h1775_owned_apply(host,peer):
- side=out/"plan029-h1775-owned-route-alias.json"
- if side.exists():raise RuntimeError("H1775 foreign owner file")
- target=p029_converse_cn4
+def h1775_owned_apply(host,peer,target=None,tag="h1775"):
+ if target is None:target=p029_converse_cn4
+ if tag not in ("h1775","h2010"):raise RuntimeError("unknown owned test route")
+ side=out/("plan029-"+tag+"-owned-route-alias.json")
+ if side.exists():raise RuntimeError(tag+" foreign owner file")
  if target+"/32" in wsl("ip","-4","-o","addr","show","dev","eth0",timeout=8):
   raise RuntimeError("H1775 foreign Linux eth0 alias")
  ps=("$ErrorActionPreference='Stop';"+
@@ -211,12 +216,14 @@ def h1775_owned_apply(host,peer):
  owner["state"]="OWNED";side.write_text(json.dumps(owner,sort_keys=True)+"\n")
  print("PLAN029_H1775_ONE_TEST_OWNED_PHYSICAL_ROUTE_AND_ALIAS_APPLIED",flush=True)
 
-def h1775_owned_cleanup():
- side=out/"plan029-h1775-owned-route-alias.json"
+def h1775_owned_cleanup(target=None,tag="h1775"):
+ if target is None:target=p029_converse_cn4
+ if tag not in ("h1775","h2010"):raise RuntimeError("unknown owned test cleanup")
+ side=out/("plan029-"+tag+"-owned-route-alias.json")
  if not side.exists():return
  owner=json.loads(side.read_text())
  if (owner.get("source_sha")!=os.environ["GITHUB_SHA"] or
-     owner.get("target")!=p029_converse_cn4 or
+     owner.get("target")!=target or
      owner.get("state") not in ("INTENT","OWNED") or
      type(owner.get("ifindex")) is not int or owner["ifindex"]<=0 or
      not owner.get("peer")):
@@ -305,6 +312,7 @@ def stop_windows(p):
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=p029_tcp53_guest=p029_tcp53_win=None;logs=[]
+p029_cdn_guest=p029_cdn_win=None
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -1472,6 +1480,64 @@ print(json.dumps(result),flush=True)
     "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
    report["plan029_d1_noncn_udp_dns_real"]["app_tcp53"]="PASS_REAL_DIRECT_AND_TUNNEL_TCP"
    print("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP",flush=True)
+  # H2010: same overseas CDN IP on eth0 and original Linux TUN.
+  # Two independent physical/Tunnel DNS services and kernel business
+  # recipients check src AND ingress ifindex; no classifier-only PASS.
+  if p029_cdn:
+   h1775_owned_apply(host_source,peer,target=p029_tunnel_alias,tag="h2010")
+   try:
+    gn="plan029-h2010-guest-shared-cdn.log"
+    wn="plan029-h2010-windows-shared-cdn.log"
+    gf=(out/gn).open("w");logs.append(gf)
+    p029_cdn_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h2010_shared_cdn_guest.py"),
+      peer,"1.1.1.1",p029_tunnel_alias,host_source,"10.66.0.2"],
+      stdout=gf,stderr=subprocess.STDOUT)
+    ready(out/gn,"PLAN029_H2010_SHARED_CDN_FOUR_KERNEL_SOCKETS_READY",p029_cdn_guest,12)
+    wf=(out/wn).open("w");logs.append(wf)
+    p029_cdn_win=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h2010_shared_cdn_windows.py"),
+      "10.66.0.2","8.8.8.8",p029_tunnel_alias],
+      stdout=wf,stderr=subprocess.STDOUT)
+    if p029_cdn_win.wait(timeout=54)!=0 or p029_cdn_guest.wait(timeout=8)!=0:
+     raise RuntimeError("H2010 same CDN opposite-exit FAIL windows="+
+       (out/wn).read_text(errors="replace")[-700:]+
+       " guest="+(out/gn).read_text(errors="replace")[-700:])
+    witnesses={}
+    for who,name,marker in (
+      ("windows",wn,"PLAN029_H2010_WINDOWS_REAL_SHARED_CDN "),
+      ("linux",gn,"PLAN029_H2010_LINUX_REAL_SHARED_CDN ")):
+     values=[x.split(" ",1)[1] for x in (out/name).read_text().splitlines()
+             if x.startswith(marker)]
+     if len(values)!=1:raise RuntimeError("H2010 missing unique "+who+" receipt")
+     witnesses[who]=json.loads(values[0])
+    wrec,lrec=witnesses["windows"],witnesses["linux"]
+    counts=lrec["counts"]
+    if not (wrec["shared_real_a"]==p029_tunnel_alias and
+       wrec["noncn_real_a"]==wrec["shared_real_a"] and
+       wrec["cn_fakeip"].startswith("198.18.") and
+       wrec["cn_fakeip"]!=p029_tunnel_alias and
+       wrec["business"]["cn_direct"]["dst"]==wrec["cn_fakeip"] and
+       wrec["business"]["noncn_tunnel"]["dst"]==p029_tunnel_alias and
+       lrec["real_a"]==p029_tunnel_alias and
+       lrec["physical_src"]==host_source and
+       lrec["tunnel_src"]=="10.66.0.2" and
+       lrec["kernel_eth0_and_tun_distinct"] is True and
+       counts["cn_business_physical"]==1 and
+       counts["noncn_business_tunnel"]==1 and
+       1<=counts["cn_dns_physical"]<=3 and
+       1<=counts["noncn_dns_tunnel"]<=3):
+     raise RuntimeError("H2010 same-real-CDN FakeIP/nonCN two actual exits not evidenced")
+    report["plan029_h2010_shared_cdn_opposite_exits"]={
+       "source_sha":os.environ["GITHUB_SHA"],
+       "scope":"REAL_SAME_OVERSEAS_A_CN_FAKEIP_PHYSICAL_VS_NONCN_REAL_TUNNEL",
+       "windows":wrec,"linux":lrec,
+       "alias_cleanup":"NOT_RUN","stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
+    print("PLAN029_H2010_REAL_SHARED_CDN_DNS_TWO_ACTUAL_EXITS_PRE_STOP",flush=True)
+   finally:
+    h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
+   report["plan029_h2010_shared_cdn_opposite_exits"]["alias_cleanup"]="PASS_EXACT_OWNED_ALIAS_ROUTE"
+   print("PLAN029_H2010_SHARED_CDN_EXACT_ALIAS_AND_ROUTE_CLEANUP_PASS",flush=True)
   # One H1778 source-frozen hard8 real signed scene before DNS blackout.
   # Existing Windows Wintun owner and two independent Linux UDP sockets
   # witness full Direct, NEW Tunnel flow and 120s Direct expiry/recovery.
@@ -2259,6 +2325,13 @@ print(json.dumps(result),flush=True)
                       json.dumps({"missing":missing,"wal":wal.exists(),
                                   "route_sidecar":routes.exists(),"tcp_defender_sidecar":tcp_sidecar.exists()}))
   if p029_direct:
+   if p029_cdn:
+    proof=report.get("plan029_h2010_shared_cdn_opposite_exits",{})
+    if (proof.get("source_sha")!=os.environ["GITHUB_SHA"] or
+        proof.get("alias_cleanup")!="PASS_EXACT_OWNED_ALIAS_ROUTE"):
+     raise RuntimeError("H2010 missing real shared CDN/owned alias receipt at Stop")
+    proof["stop"]="PASS_BOTH_OWNED"
+    print("PLAN029_H2010_SHARED_CDN_TWO_EXITS_AND_BOTH_OWNED_STOP_PASS_SCOPED",flush=True)
    if p029_tcp53:
     if report.get("plan029_d1_original_app_tcp53",{}).get("source_sha")!=os.environ["GITHUB_SHA"]:
      raise RuntimeError("H1794 original app TCP53 two-OS evidence missing at Stop")
@@ -2664,8 +2737,13 @@ except Exception as e:
 finally:
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win):
+ for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
   if p is not None and p.poll() is None:p.terminate()
+ if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():
+  try:h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
+  except Exception as exc:
+   report["plan029_h2010_owned_cleanup"]="FAIL_OWNED_ROUTE_ALIAS"
+   print("PLAN029_H2010_OWNED_CLEANUP_FAILED "+str(exc)[-300:],flush=True)
  if p029_direct and (out/"plan029-h1775-owned-route-alias.json").exists():
   try:h1775_owned_cleanup()
   except Exception as exc:
