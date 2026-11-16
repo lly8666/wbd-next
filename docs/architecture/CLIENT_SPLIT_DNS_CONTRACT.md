@@ -1,6 +1,6 @@
 # PLAN029｜客户端中国 IP＋域名分流与单 DNS 契约
 
-**2026-11-16 最新用户覆盖**：同一海外 CDN IP 上 CN/非CN 双域名相反出口专项**NOT_REQUIRED**（不再开发/不作为029验收门），不能据此宣称该反例PASS；保留CN/IP普通代表场景。Normal Tunnel填充逐合格record 0..500B，只受实际MTU余量限制。2026-11-13其余设计修订（含防火墙定位、开发入口解锁与资源压力策略），**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
+**2026-11-16 最新用户覆盖**：同一海外 CDN IP 上 CN/非CN 双域名相反出口专项**NOT_REQUIRED**（不再开发/不作为029验收门），不能据此宣称该反例PASS；保留CN/IP普通代表场景。Normal Tunnel填充依2026-11-16最新修订：每新流随机前20..30条合格record/2..3s窗口先到停止，单record随机0..500B仅受真实MTU余量限制，**不限制每流累计总字节或10%比例**。2026-11-13其余设计修订（含防火墙定位、开发入口解锁与资源压力策略），**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
 
 ## 1. 产品语义，先定清楚再实现
 

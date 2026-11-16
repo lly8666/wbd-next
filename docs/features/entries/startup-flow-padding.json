@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "Normal Tunnel每条合格加密record独立0..500B，仅实际外层MTU裁剪，无每流总预算/次数/窗口；默认off、Direct不填。H2016 Rust源码编译PASS，新的物理抓包/Stop需真实验证。",
+  "summary": "H2025用户最新限定：Normal Tunnel新TCP/UDP流随机前20..30条、2..3s窗口先到即停，每record随机0..min(500B,真实MTU余量)；无每流2KiB/10%字节预算；默认off，Direct不填。H2021旧不限窗口物理抓包PASS不能替代本版验收。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -12,7 +12,7 @@
   ],
   "defaults": {
     "planned_mode": "off；旧TLS bool映射tls，显式flows启用新增行为",
-    "planned_bounds": "每个合格Tunnel record随机0..min(500B,当次实际外层M1记录余量)，取消每流限制"
+    "planned_bounds": "每个新Tunnel流随机20..30合格record及2..3s时间窗，先到为止；单条0..min(500B,实际密文record MTU空间)，不设累计字节或10%总预算；最多256流跟踪"
   },
   "usage": {
     "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
@@ -84,6 +84,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
       "evidence": "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
+    },
+    {
+      "platform": "Original Windows Npcap + Linux WSL2 eth0 tcpdump",
+      "scope": "H2021 original full Normal unrestricted 0..500B no-flow-quota physical pcap, original M1 copied padding, kernel TCP/UDP duplex and both owned Stop; HISTORICAL policy, not H2025 20..30 record/2..3s envelope",
+      "status": "FUNCTIONAL_PASS_HISTORICAL_POLICY",
+      "source_sha": "076a227d9360b8a6025ff6901d02aca350035aff",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43893558571"
+    },
+    {
+      "platform": "Windows 2025 original M1 owner + Linux TUN",
+      "scope": "H2025 user revised first 20–30/2–3s randomized per-flow startup envelope; physical NPF/eth0 encrypted packet capture, MTU, business and owned Stop",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -91,7 +105,7 @@
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
     "Padding is not a guarantee against DPI recognition.",
-    "H2017真实抓包验证新无流预算500B源，H1799历史旧限制通过不能充当新来源PASS。"
+    "H2025每新流20–30条与2–3秒随机启动窗口需全新真实物理抓包/Stop；H2021旧不限窗口物理PASS不可升级。"
   ],
   "promotion": null
 }

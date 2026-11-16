@@ -1030,8 +1030,13 @@ mod tests{
         s.set_startup_padding(StartupMode::Flows,[2u8;16]);
         assert!(s.startup_padding_enabled());
         let mut total=0;
-        for _ in 0..256{total+=s.propose_tunnel_padding(&probe,11,256)}
-        assert!(total>2048,"old per-flow quota must not suppress valid records");
+        for _ in 0..64{total+=s.propose_tunnel_padding(&probe,11,500)}
+        assert!(total>2048,"old per-flow byte quota remains removed");
+        assert_eq!(s.startup_padding.len(),1);
+        assert_eq!(s.propose_tunnel_padding(&probe,12,500),0,
+            "first 20..30 eligible records only");
+        assert_eq!(s.propose_tunnel_padding(&probe,3112,500),0,
+            "past 2..3s startup envelope, no periodic restart");
         s.set_startup_padding(StartupMode::Off,[3u8;16]);
         assert_eq!(s.propose_tunnel_padding(&probe,12,256),0);
     }
