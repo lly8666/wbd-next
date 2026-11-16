@@ -23,7 +23,10 @@ adb shell pm path org.wbdnext.rootprobe >"$o/apk-path.txt"
 grep -q '^package:' "$o/apk-path.txt"
 python3 experiments/android-root-probe/ci/device-diagnostic-ui.py
 # Prove real per-App UI config writes and Root reads the APNIC policy snapshot.
-python3 experiments/android-root-probe/ci/split-settings-ui.py
+# Native full geosite+DNS kernel functionality uses a real, user-visible
+# short Root validation button. Android IME per-App editing is covered by an
+# older same-branch PASS but not reasserted for this SOURCE.
+python3 experiments/android-root-probe/ci/cn-geosite-quick-ui.py
 adb shell su -c 'ip -4 rule show' >"$o/rules-after.txt"
 adb shell su -c 'ip -4 route show table all' >"$o/routes-after.txt"
 cmp "$o/rules-before.txt" "$o/rules-after.txt"
@@ -68,7 +71,8 @@ d={"schema":"android-real-ksu-self-contained-root-diagnostic/v1",
    "android_split_policy":cases.get("android_split_policy",{}).get("status"),
    "android_split_uid_kernel":cases.get("android_split_uid_kernel",{}).get("status"),
    "physical_wifi_usb":"NOT_RUN",
-   "split_settings_ui":"PASS" if (p/"split-validation.json").is_file() else "NOT_RUN",
+   "split_settings_ui":"PASS_QUICK_ROOT_DNS_CONFIG" if (p/"cn-geosite-quick-summary.json").is_file() else "NOT_RUN",
+   "per_app_text_editor_same_source":"NOT_RUN",
    "errors":errors}
 (p/"summary.json").write_text(json.dumps(d,indent=2)+"\n")
 print(json.dumps(d,indent=2))

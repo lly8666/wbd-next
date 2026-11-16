@@ -326,10 +326,16 @@ pub fn validate_file(path:&str)->Value{
  // A real kernel UDP DNS packet, not just a mocked policy return, must
  // traverse the correct isolated synthetic physical/tunnel TUN and deliver
  // the DNS response with intact transaction ID and actual overseas A answer.
- let split_uid=if policy.base==Mode::Split{Some(0)}
-    else{policy.overrides.iter().find(|(_,m)|**m==Mode::Split).map(|(uid,_)|*uid)};
- let global_uid=if policy.base==Mode::Global{Some(0)}
-    else{policy.overrides.iter().find(|(_,m)|**m==Mode::Global).map(|(uid,_)|*uid)};
+ // The saved user policy is immutable from the perspective of the
+ // test: temporarily instantiate both routing modes with dedicated synthetic
+ // fixture UIDs, so even an untouched default Split UI tests BOTH directions.
+ // No main-network route entry and no fake per-App override is persisted.
+ let saved_base=policy.base;
+ let saved_overrides=std::mem::take(&mut policy.overrides);
+ policy.base=Mode::Split;
+ policy.overrides.insert(10502,Mode::Global);
+ let split_uid=Some(0);
+ let global_uid=Some(10502);
  let mut dns_cases=Vec::<crate::dns_udp_gate::Case>::new();
  let foreign=u32::from(Ipv4Addr::new(8,8,8,8));
  if let Some(uid)=split_uid {
@@ -370,6 +376,9 @@ pub fn validate_file(path:&str)->Value{
     });
  }
  let dns_udp_gate=crate::dns_udp_gate::run(&dns_cases);
+ // Restore precisely what was loaded from App before reporting per-App rows.
+ policy.base=saved_base;
+ policy.overrides=saved_overrides;
  if dns_udp_gate["status"]=="FAIL"{
      return json!({"status":"FAIL","reason":"isolated real kernel DNS UDP/53 check failed",
        "dns_udp_gate":dns_udp_gate,"installed":false})
@@ -389,5 +398,6 @@ pub fn validate_file(path:&str)->Value{
    "geosite":geosite_evidence,
    "geosite_cn_com_direct_dns_verified":split_mode_exists,
    "dns_udp_gate":dns_udp_gate,
+   "dns_udp_synthetic_modes":"private test-only Split UID0 / Global UID10502, saved per-App config unchanged",
    "reason":"Policy parsed/validated only. No real Android netd routing, DNS dispatcher or production WBD tunnel activated."})
 }

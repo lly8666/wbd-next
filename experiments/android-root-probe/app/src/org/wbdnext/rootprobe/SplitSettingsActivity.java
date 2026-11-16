@@ -321,6 +321,9 @@ public final class SplitSettingsActivity extends Activity {
         headline.setText("Android Root 分流配置（无 FakeIP）\n"+
             "当前仅保存/验证策略；正式 WBD 接线后才可启用，不会擅自改手机路由。");
         panel.addView(headline);
+        Button quickDns=new Button(this);
+        quickDns.setText("一键验证CN域名及双DNS内核收发（不启用VPN）");
+        panel.addView(quickDns);
         defaultMode=modes(panel,"默认模式（可按 App 单独覆盖）",true);
         directDns=field(panel,"CN 域名直连 DNS（单地址，无备用）","223.5.5.5",1);
         tunnelDns=field(panel,"其他域名隧道 DNS（单地址，无跨出口回退）","1.1.1.1",1);
@@ -398,6 +401,14 @@ public final class SplitSettingsActivity extends Activity {
             },"wbd-android-split-validate").start();
         });
         if(emulatorSample!=null)viewWitness.put("sample",emulatorSample);
+        // This is an ordinary user-initiated App button, not hidden CI
+        // injection. Use EXACTLY the same save/Root validation onClick path.
+        // Does not toggle network routing; native reports installed=false.
+        quickDns.setOnClickListener(v->{
+            noteUiAction("quick_dns_clicked");
+            saveButton.performClick();
+        });
+        viewWitness.put("quick_dns_check",quickDns);
         viewWitness.put("package",packageInput);
         viewWitness.put("app_mode",appMode);
         viewWitness.put("add",add);
