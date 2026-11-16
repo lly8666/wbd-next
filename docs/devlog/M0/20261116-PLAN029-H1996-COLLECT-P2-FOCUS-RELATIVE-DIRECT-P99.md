@@ -7,6 +7,8 @@
 - **执行取舍（新用户指令优先）**：停止继续极端容量压力、长时 2048 重刷/调种子/盲目 1ms 空轮询，不为 1MiB 2.2% 差异做大改。下一阶段只针对正常 Direct 小包的 **1.8–2.1× p99** 与偶发 60ms 真实停顿：复用原 H1977/H1979 时间偏序和已有 owner 计数找第一次异常的 TX mailbox→RX `WintunSendPacket`→`FD_READ` 真实边界；只有证据指向一个可反证的丢唤醒/跨流 HOL 实现缺陷时才做定向单修复＋同 VM 物理/Direct 原生对照。现有 WinSock shard 轮转、DNS/UDP 空扫抑制已经代码落地，未证实因果，不再复制优化。**没有新假设，不派 Action。**
 - 029 仍 **IN_PROGRESS**；原 D1–D5/P1–P2 未全出齐，GUI/Game4/IPv6 等开放项不因这轮签名绿灯而升级。028 限定结论、030 未开工；保留 TLS、MTU1460、generation、owned Stop。新 Rust/Go 产品改动 **NONE**。
 
+- **自动治理失败原样保留并修复**：H1996 首个 docs-only commit `92eafb0c` 的 [Action43849096878](https://github.com/lly8666/wbd-next/actions/runs/43849096878) **FAIL** 于治理 `unbounded context_refs`（M0 cursor 9 条超过既有 `max_refs=8`），121 项既有功能单测单独 PASS；修复仅保留最新 8 条上下文引用，不修改历史性能事实、Rust/Go、原签名网络测试或脚本限制。此修复的新治理结果以 Action 实际结论为准。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H1996 collects one existing original H1995 signed normal P2 without code/feature changes; user reprioritizes large relative Direct RTT p99 and real 60ms stalls, avoids extreme feature development and duplicate dispatch."}
 ```
