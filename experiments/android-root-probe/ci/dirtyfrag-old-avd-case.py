@@ -47,10 +47,10 @@ D = {
 def save():
     D["measured_at_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     (OUT / "summary.json").write_text(json.dumps(D, ensure_ascii=False, indent=2, sort_keys=True)+"\n")
-def cmd(argv, timeout=40, log=None, env=None):
+def cmd(argv, timeout=40, log=None, env=None, stdin_text=None):
     try:
         p = subprocess.run([str(v) for v in argv], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                           timeout=timeout, text=True, errors="replace", env=env)
+                           timeout=timeout, text=True, errors="replace", env=env, input=stdin_text)
         output = p.stdout or ""
         if log:
             (OUT / log).write_text(output[-12000:])
@@ -131,7 +131,7 @@ def main():
     ret, _ = cmd([AVDMANAGER, "create", "avd", "-n", "wbd_dirtyfrag36",
                   "-k", "system-images;android-36;google_apis_playstore;arm64-v8a",
                   "-p", AVD_HOME / "wbd_dirtyfrag36.avd", "--force"],
-                 75, "avd-create.log", env=env)
+                 75, "avd-create.log", env=env, stdin_text="no\n")
     if ret:
         return stop("HISTORICAL_IMAGE_NOT_REGISTERED_AS_AVD")
     ret, listing = cmd([EMULATOR, "-list-avds"], 20, "avd-list.log", env=env)
