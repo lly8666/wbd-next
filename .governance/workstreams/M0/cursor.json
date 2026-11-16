@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1998,
-  "checkpoint_sha": "e200061997839ef3697a826742c2eb4d1a34b41f",
+  "sequence": 1999,
+  "checkpoint_sha": "7c26f38c5baf253ccf4a9f5805ab6ba0ed214af0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1998 one original source-locked normal unpaced 4MiB Direct TCP vs physical socket, concurrent 120 Tunnel small UDP and both original owned Stop; H1997 separate in-flight established Direct TCP 1KiB p99.",
-  "why_now": "User requests representative Direct conditions; prior paced 1MiB extra 2.2% does not measure bulk, H1864 old-source unpaced Direct 131.544ms versus physical 32.155ms warrants targeted newer-source retest.",
+  "current_task": "H1999 bounded original Windows/WSL2 native 96B/512B/1200B Direct UDP RTT p50/p95/p99/max versus same-VM physical socket; H1997 source e200 original TCP steady Action SUCCESS, H1998 source7c26 unpaced4MiB Action in flight. No product code.",
+  "why_now": "User requests several ordinary Direct latency workloads. Original Direct UDP has one true business response but no p99; add test-only 120-sample/size/arm application RTT with strict two-OS unique receipts.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1997 and H1998 signed Windows/WSL2 Actions, per-source exact SHA/FIN/Stop, p99/max TCP and UDP plus bulk phase gaps. Do not count original H1745 single Direct UDP packet as RTT p99; only add more UDP samples if still materially needed and test-only source checks pass.",
+  "next_action": "Collect both in-flight native H1998 unpaced4MiB and new H1999 3-size UDP, preserve FAIL/Stop; then compare with actual H1997 1KiB established RTT and existing H1995 paced mixed evidence. No extreme load or speculative tuning.",
   "unverified": true,
   "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1999-REAL-DIRECT-UDP-RTT-3SIZE.md",
     "docs/devlog/M0/20261116-PLAN029-H1998-UNPACED-DIRECT-TCP-4M-COMPARATOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1997-DIRECT-ORDINARY-1K-RTT-SOURCE-TRIGGER.md",
     "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",
     "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
     "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md"
+    "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1997 signed ordinary 1KiB established RTT in flight, H1998 signed original unpaced 4MiB P2 planned, Direct UDP p99 NOT_RUN (H1745 single true UDP business receipt only). No product code changed."
+  "partial_summary": "H1997 original Windows signed 1KiB steady Action43855958211 success; physical/Direct app RTT p99 0.410/0.699ms, max0.649/0.878ms; 1MiB physical305.854 Direct304.072ms, Tunnel UDP p99 4.682ms. H1998 4MiB in progress. H1999 UDP 3size 120 per arm NOT_RUN until original Action."
 }

@@ -1,3 +1,4 @@
+# H1999 independent signed 3-size Direct UDP RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt], ordinary 120 per arm.
 # H1998 one ordinary unpaced 4MiB Direct P2 physical baseline + small Tunnel UDP [plan029-v3-real-p2-bulk]; no pressure/highrate/128/ABBA.
  # H1997 one normal Direct latency source [plan029-v3-real-p2-rebuild] [plan029-v3-real-p2-steady-qpc]; NO post-ingress flush, preconnect, bulk, pressure or high-rate.
 # H1993 only one ordinary paced 1MiB physical/Direct+Tunnel-UDP P2;
@@ -1029,6 +1030,7 @@ jobs:
       # explicit CN product as the existing signed Normal scene.
       WBD_PLAN029_D4_IPV6_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-d4-ipv6-probe]') && '1' || '0' }}
       WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]')) && '1' || '0' }}
+      WBD_PLAN029_DIRECT_UDP_RTT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-h1999-direct-udp-rtt]') && '1' || '0' }}
       WBD_PLAN029_APP_TCP53_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp53]') && '1' || '0' }}
       WBD_PLAN029_STARTUP_PADDING_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-startup-pad]') && '1' || '0' }}
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}

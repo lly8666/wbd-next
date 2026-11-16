@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """H1745: independent actual WSL2 kernel UDP DNS53 and business recipient."""
 import json,select,socket,struct,sys,time
+def ping_body(arm,size,seq):
+    if arm not in (b"P",b"D") or size not in (96,512,1200) or seq<0 or seq>=120:
+        raise RuntimeError("H1999 invalid UDP identity")
+    hdr=b"P29U"+arm+struct.pack("!HH",size,seq)
+    return hdr+bytes([(size+17*seq)&255])*(size-len(hdr))
+
 guest,expected_host=sys.argv[1:3]
 # Windows-parent environment variables are NOT inherited by wsl.exe --.
 # Explicit one-bit scene argument; never pretend an unarmed guest tested cache.
-if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2"):
+if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2","3"):
     raise RuntimeError("H1785 WSL guest CN cache mode argv must be exactly 0 or 1")
 cache_mode=sys.argv[3]=="1"
 multia_mode=sys.argv[3]=="2"
+ping_mode=sys.argv[3]=="3"
+ping_seen=set()
 dns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 business=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 dns.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,0)
@@ -22,13 +30,15 @@ print("PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY",flush=True)
 observed={"dns":False,"direct_business":False,"dns_client_physical":None,
           "business_client_physical":None,"real_server":guest,
           "target_dns_count":0,"cache_mode":cache_mode,
-          "multi_a_mode":multia_mode,"multi_a_answers":0}
+          "multi_a_mode":multia_mode,"multi_a_answers":0,
+          "ping_unique":0,"ping_mode":ping_mode}
 settled_at=None
 limit=time.monotonic()+60
 while time.monotonic()<limit:
     if (observed["dns"] and observed["direct_business"] and
         (not cache_mode or (settled_at is not None and
-         time.monotonic()-settled_at>=2.5))):
+         time.monotonic()-settled_at>=2.5)) and
+        (not ping_mode or len(ping_seen)==720)):
         break
     ready,_,_=select.select([dns,business],[],[],.5)
     for selected in ready:
@@ -54,6 +64,16 @@ while time.monotonic()<limit:
             if multia_mode:observed["multi_a_answers"]+=1
             observed["dns"]=True
             observed["dns_client_physical"]=remote[0]
+        elif ping_mode and packet.startswith(b"P29U"):
+            if len(packet)<9 or not observed["direct_business"]:
+                raise RuntimeError("H1999 early/short original UDP")
+            arm=packet[4:5]
+            size,seq=struct.unpack("!HH",packet[5:9])
+            if packet!=ping_body(arm,size,seq) or (arm,size,seq) in ping_seen:
+                raise RuntimeError("H1999 true guest UDP duplicate/corrupt")
+            ping_seen.add((arm,size,seq))
+            if business.sendto(packet,remote)!=len(packet):
+                raise RuntimeError("H1999 short guest kernel UDP send")
         elif packet==marker:
             business.sendto(marker+b"-reply",remote)
             observed["direct_business"]=True
@@ -61,8 +81,13 @@ while time.monotonic()<limit:
             if cache_mode:settled_at=time.monotonic()
         else:
             raise RuntimeError("unexpected business payload")
+observed["ping_unique"]=len(ping_seen)
 dns.close();business.close()
 print("PLAN029_H1745_REAL_LINUX_GUEST_DIRECT "+json.dumps(observed,sort_keys=True),flush=True)
 if not observed["dns"] or not observed["direct_business"]:sys.exit(8)
+if ping_mode and (len(ping_seen)!=720 or
+    ping_seen!={(arm,size,seq) for arm in (b"P",b"D")
+               for size in (96,512,1200) for seq in range(120)}):
+    raise RuntimeError("H1999 guest 720 real UDP requests incomplete")
 if cache_mode and observed["target_dns_count"]!=1:
     raise RuntimeError("H1783 real CN cache physical DNS target count mismatch")

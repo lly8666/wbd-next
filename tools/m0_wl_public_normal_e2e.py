@@ -46,6 +46,11 @@ p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
 p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
 p029_p2=os.environ.get("WBD_PLAN029_P2_MIXED_SCENE")=="1"
+p029_udp_rtt=os.environ.get("WBD_PLAN029_DIRECT_UDP_RTT_SCENE")=="1"
+if p029_udp_rtt and not (p029_direct and not p029_p2 and mode=="normal" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true"):
+ raise RuntimeError("H1999 only original signed Normal Direct UDP RTT")
 p029_abba=os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1"
 p029_tcp128=os.environ.get("WBD_PLAN029_TCP128_SCENE")=="1"
 p029_tcp128_control=os.environ.get("WBD_PLAN029_TCP128_CONTROL_SCENE")=="1"
@@ -988,7 +993,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if not host_source:raise RuntimeError("original Windows physical source readback absent")
   p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
       "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
-      peer,host_source,"2" if p029_multia else "1" if p029_cache else "0"],stdout=guest_log,stderr=subprocess.STDOUT)
+      peer,host_source,"3" if p029_udp_rtt else "2" if p029_multia else "1" if p029_cache else "0"],stdout=guest_log,stderr=subprocess.STDOUT)
   for tick in range(100):
    guest_log.flush()
    raw=(out/"plan029-h1745-guest-physical.log").read_text(errors="replace")
@@ -1050,6 +1055,18 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "stop":"NOT_RUN_UNTIL_REAL_OWNED_STOP",
     "full_DNS_pressure":"NOT_RUN"}
    print("PLAN029_H1783_REAL_CN_DNS_CACHE_TWO_APP_CLIENTS_ONE_UPSTREAM_PASS_PRE_STOP",flush=True)
+  if p029_udp_rtt:
+   result=wdata.get("udp_p99_results",{})
+   if (wdata.get("udp_p99_real_samples")!=720 or gdata.get("ping_unique")!=720 or
+       set(result)!={"96","512","1200"}):
+    raise RuntimeError("H1999 real two-OS UDP sample receipts absent")
+   for size in ("96","512","1200"):
+    for arm in ("physical","direct"):
+     vals=result[size][arm]
+     if (vals["unique"]!=120 or vals["loss"]!=0 or not (
+         0<=vals["p50_ms"]<=vals["p95_ms"]<=vals["p99_ms"]<=vals["max_ms"])):
+      raise RuntimeError("H1999 real UDP p99 values invalid")
+   print("PLAN029_H1999_REAL_WINDOWS_DIRECT_UDP_3SIZE_720_RTT_PRE_STOP",flush=True)
   report["plan029_private_v3_cn_direct_udp"]={
    "scope":"SIGNED_ONE_WINTUN_RUST_V3_CN_DNS_JOURNALED_FAKE_AND_PHYSICAL_DIRECT_UDP",
    "source_sha":os.environ["GITHUB_SHA"],
