@@ -43,10 +43,7 @@ p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
 p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1"
-if p029_game4_cn and not (mode=="game4" and not
-   (p029_direct or p029_padding or p029_product or p029_p2 or p029_p1_policy
-    or p029_tcp53 or p029_cdn or p029_cache or p029_pressure)):
- raise RuntimeError("H2017 only original signed Game4 off four lane CN split + owned Stop")
+# The cross-scenario guards run after all p029_* flags are initialized.
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -64,6 +61,10 @@ p029_sustain=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 p029_highrate=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
 p029_longrate=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 p029_smalltcp=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
+if p029_game4_cn and not (mode=="game4" and not
+    (p029_direct or p029_padding or p029_product or p029_p2 or p029_p1_policy
+     or p029_tcp53 or p029_cdn or p029_cache or p029_pressure)):
+ raise RuntimeError("H2017 only signed Game4 off four-lane CN split with owned Stop")
 if p029_smalltcp and not (
     p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
