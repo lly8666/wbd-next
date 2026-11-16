@@ -9,6 +9,7 @@ mod recovery;
 mod ipv6gate;
 mod devicecheck;
 mod android_split;
+mod cn_geosite;
 mod splitgate;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;

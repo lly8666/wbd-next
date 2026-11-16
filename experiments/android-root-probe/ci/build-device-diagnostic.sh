@@ -39,6 +39,16 @@ curl --fail --location --retry 3 --connect-timeout 15 --max-time 100 \
 python3 experiments/android-root-probe/ci/cn-ipv4-snapshot.py \
  "$out/apnic-delegated-20261116.txt" "$out/assets"
 cp "$out/assets/cn-ipv4-provenance.json" "$out/cn-ipv4-provenance.json"
+# Full pinned geolocation-cn graph: includes/attributes/affiliations and
+# domain/full/keyword/regexp are flattened into an audited DNS-only asset.
+# Fixed commit, pinned digest, and MIT license travel with each debug APK.
+curl --fail --location --retry 3 --connect-timeout 15 --max-time 120 \
+ "https://codeload.github.com/v2fly/domain-list-community/zip/41504eae2a11f305fe88cfc605cf6c105a80bf5a" \
+ --output "$out/cn-geosite-upstream.zip"
+python3 experiments/android-root-probe/ci/cn-geosite-snapshot.py \
+ "$out/cn-geosite-upstream.zip" "$out/assets"
+cp "$out/assets/cn-geosite-provenance.json" "$out/cn-geosite-provenance.json"
+rm -f "$out/cn-geosite-upstream.zip"
 rm -f "$out/apnic-delegated-20261116.txt"
 printf '%s\n' "$GITHUB_SHA" >"$out/assets/wbd-diagnostic-source.txt"
 "$tools/aapt2" link --manifest experiments/android-root-probe/app/DeviceDiagnosticManifest.xml \
@@ -70,6 +80,13 @@ with zipfile.ZipFile(apk) as z:
  assert z.read("assets/wbd-diagnostic-source.txt").strip().decode()==os.environ["GITHUB_SHA"]
  assert z.getinfo("assets/wbd-cn-ipv4.txt").file_size>10000
  assert z.getinfo("assets/cn-ipv4-provenance.json").file_size>100
+ assert 10000<z.getinfo("assets/wbd-cn-geosite.txt").file_size<6000000
+ assert z.getinfo("assets/cn-geosite-provenance.json").file_size>100
+ assert z.getinfo("assets/wbd-cn-geosite-license.txt").file_size>100
+ geo=json.loads(z.read("assets/cn-geosite-provenance.json"))
+ assert geo["source_commit"]=="41504eae2a11f305fe88cfc605cf6c105a80bf5a"
+ assert hashlib.sha256(z.read("assets/wbd-cn-geosite.txt")).hexdigest()==geo["text_sha256"]
+ assert geo["output_distinct_rules"]>1000
  assert z.getinfo("classes.dex").file_size>2000
 def sha(b):return hashlib.sha256(b).hexdigest()
 m={
@@ -83,7 +100,9 @@ m={
  "elf_load_alignment":"0x4000 PT_LOAD",
  "native_execution":"extractNativeLibs=true; App nativeLibraryDir/libwbdprobe.so via actual su; no ADB push",
  "cn_ipv4_provenance":json.loads((p/"cn-ipv4-provenance.json").read_text()),
- "cn_ipv4_note":"APNIC CN allocated/assigned, not IP geolocation; .cn suffix/custom domains only",
+ "cn_geosite_provenance":json.loads((p/"cn-geosite-provenance.json").read_text()),
+ "cn_ipv4_note":"APNIC CN allocated/assigned, not IP geolocation",
+ "cn_domain_note":"fixed full geolocation-cn include/attribute graph with exact/suffix/keyword/regexp, tested at DNS classification only",
  "root_installer":False,"vpn_client":False,"vpn_service":False,
  "wifi_usb_physical_traffic":"NOT_RUN",
  "signing":"disposable per-run CI test key; uninstall debug package after test",
@@ -93,7 +112,7 @@ m={
 (p/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
 PY
 echo "$GITHUB_SHA" >"$out/SOURCE"
-( cd "$out"; sha256sum device-diagnostic.apk SOURCE manifest.json badging.txt apksigner-verify.txt elf-arm64-header.txt elf-x86_64-header.txt elf-arm64-loads.txt elf-x86_64-loads.txt cn-ipv4-provenance.json >SHA256SUMS )
+( cd "$out"; sha256sum device-diagnostic.apk SOURCE manifest.json badging.txt apksigner-verify.txt elf-arm64-header.txt elf-x86_64-header.txt elf-arm64-loads.txt elf-x86_64-loads.txt cn-ipv4-provenance.json cn-geosite-provenance.json >SHA256SUMS )
 ( cd "$out"; sha256sum -c SHA256SUMS )
 rm -f out/apk/temporary.jks "$out/unsigned.apk" "$out/aligned.apk"
 rm -rf "$out/native-payload" "$out/assets"

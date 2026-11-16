@@ -11,6 +11,7 @@ import android.widget.*;
 import org.json.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -118,9 +119,15 @@ public final class SplitSettingsActivity extends Activity {
     private void refresh(){
         appsView.setText("每 App 独立路由模式（按包名保存，执行前须重新校验 UID）：\n"+
             (appOverrides.isEmpty()?"无覆盖规则":appOverrides.toString()));
+        String geoSummary="CN geosite规则未验证";
+        try{
+            JSONObject geo=new JSONObject(asset(this,"cn-geosite-provenance.json"));
+            geoSummary="CN geosite完整导入快照: "+geo.optInt("output_distinct_rules",0)+
+                " 条；匹配 exact/suffix/keyword/regexp，仅DNS查询时执行";
+        }catch(Exception e){geoSummary="CN geosite快照缺失/无法读取；保存将失败";}
         cnStatus.setText("预装 CN IPv4 分配快照："+rules(bundledCn,32768).size()+
-            " 条；属于 APNIC CN 分配地址，不保证完整地理定位。\n"+
-            "CN 域名默认包括 .cn；其他中国域名可在下面自定义。");
+            " 条；属于APNIC CN分配地址，不保证精确地理定位。\n"+
+            geoSummary+"。\n自定义CN域名规则仍可追加；无FakeIP。");
     }
     private JSONObject build() throws Exception{
         JSONObject v=new JSONObject();v.put("schema","wbd-android-split/v1");
@@ -160,7 +167,7 @@ public final class SplitSettingsActivity extends Activity {
         }
         v.put("apps",apps);
         v.put("cn_rule_provenance","APNIC CN allocation snapshot 2026-11-16; not proof of geography");
-        v.put("cn_domain_semantics","DNS direct for .cn+custom only in split; actual A IP final egress");
+        v.put("cn_domain_semantics","DNS direct for fixed geolocation-cn + .cn + custom rules only in split; actual A IP final egress");
         v.put("server_bootstrap","always physical direct in split and global; no spare resolver");
         v.put("no_fakeip",true);
         return v;
@@ -205,7 +212,43 @@ public final class SplitSettingsActivity extends Activity {
             }
         }catch(Exception e){status.setText("读取旧配置失败："+e.getMessage());}
     }
+    private static String hex(byte[] data){
+        StringBuilder sb=new StringBuilder(data.length*2);
+        for(byte x:data)sb.append(String.format(java.util.Locale.ROOT,"%02x",x&0xff));
+        return sb.toString();
+    }
+    private String extractOwnedGeosite()throws Exception{
+        // An APK-asset digest is verified independently against pinned
+        // provenance. A replacement file is fully fsynced and renamed before
+        // publishing its expected hash in wbd-split-settings.json.
+        JSONObject manifest=new JSONObject(asset(this,"cn-geosite-provenance.json"));
+        String expected=manifest.optString("text_sha256","");
+        if(!expected.matches("[0-9a-f]{64}"))
+            throw new IOException("CN geosite provenance digest missing");
+        MessageDigest md=MessageDigest.getInstance("SHA-256");
+        File dst=new File(getFilesDir(),"wbd-cn-geosite.txt");
+        File tmp=new File(getFilesDir(),"wbd-cn-geosite.txt.tmp");
+        long length=0;
+        try(InputStream in=getAssets().open("wbd-cn-geosite.txt");
+            FileOutputStream out=new FileOutputStream(tmp)){
+            byte[] buf=new byte[8192];int n;
+            while((n=in.read(buf))!=-1){
+                length+=n;
+                if(length>=6000000)throw new IOException("CN geosite exceeds 6MiB hard limit");
+                md.update(buf,0,n);out.write(buf,0,n);
+            }
+            out.getFD().sync();
+        }catch(Exception e){tmp.delete();throw e;}
+        String actual=hex(md.digest());
+        if(length<10000||!expected.equals(actual)){
+            tmp.delete();
+            throw new IOException("pinned geosite hash mismatch / incomplete asset");
+        }
+        if(!tmp.renameTo(dst)){tmp.delete();throw new IOException("geosite atomic rename failed");}
+        return actual;
+    }
     private void atomicSave(JSONObject data)throws Exception{
+        data.put("geosite_sha256",extractOwnedGeosite());
         File dst=new File(getFilesDir(),"wbd-split-settings.json");
         File tmp=new File(getFilesDir(),"wbd-split-settings.json.tmp");
         byte[] bytes=data.toString().getBytes(StandardCharsets.UTF_8);
@@ -248,6 +291,7 @@ public final class SplitSettingsActivity extends Activity {
             String st=j.optString("status","FAIL");
             if("SUPPORTED_IN_SCOPE".equals(st))
                 return "配置语义校验 PASS：CIDR合并区间 "+j.optInt("compiled_cn_ipv4_intervals")+
+                    "，CN geosite "+j.optJSONObject("geosite").optInt("total_rules")+" 条"+
                     "，每App覆盖 "+j.optJSONArray("per_app_modes").length()+
                     "。\n**未安装到 Android 主网络，也未接入 WBD VPN。**";
             return st+"："+j.optString("reason","无具体原因");

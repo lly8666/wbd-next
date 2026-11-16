@@ -106,6 +106,7 @@ struct Policy {
     lan:Ranges,
     explicit:Ranges,
     domains:Domains,
+    geosite:Option<crate::cn_geosite::Index>,
 }
 fn str_vec(obj:&Value,name:&str)->Result<Vec<String>,String>{
     let Some(xs)=obj.get(name).and_then(Value::as_array) else{
@@ -142,16 +143,23 @@ impl Policy {
         if cn.0.is_empty() && overrides.values().any(|m|*m==Mode::Split){
             return Err("CN IPv4 dataset EMPTY: a per-app split override is not ready".into())
         }
-        Ok(Self{base,overrides,cn,lan,explicit,domains})
+        Ok(Self{base,overrides,cn,lan,explicit,domains,geosite:None})
     }
     fn mode(&self,uid:u32)->Mode{self.overrides.get(&uid).copied().unwrap_or(self.base)}
     /// Control socket and resolver purposes are unforgeable internal metadata,
     /// not an exemption for regular apps visiting the same resolver/server IP.
     fn dns(&self,uid:u32,qname:&str,use_kind:DnsUse)->Result<Egress,String>{
+        // Purpose is an internal caller-owned enum, not a user-supplied QNAME.
+        // Imported geosite rules are only consulted for an ordinary Split
+        // DNS question; NEVER for data-plane real-IP routing or bootstrap.
+        let cn=if use_kind==DnsUse::Ordinary && self.mode(uid)==Mode::Split{
+            self.domains.has(qname)? ||
+              self.geosite.as_ref().map(|g|g.has(qname)).transpose()?.unwrap_or(false)
+        }else{false};
         Ok(match use_kind{
             DnsUse::Bootstrap|DnsUse::OwnedDirect=>Egress::Direct,
             DnsUse::OwnedTunnel=>Egress::Tunnel,
-            DnsUse::Ordinary if self.mode(uid)==Mode::Split&&self.domains.has(qname)?=>Egress::Direct,
+            DnsUse::Ordinary if cn=>Egress::Direct,
             DnsUse::Ordinary=>Egress::Tunnel
         })
     }
@@ -272,7 +280,7 @@ pub fn validate_file(path:&str)->Value{
  let config:Value=match serde_json::from_str(&text){
   Ok(x)=>x,Err(e)=>return json!({"status":"FAIL","reason":format!("malformed JSON: {e}"),"installed":false})
  };
- let policy=match Policy::compile(&config){
+ let mut policy=match Policy::compile(&config){
   Ok(p)=>p,Err(e)=>return json!({"status":"FAIL","reason":e,"installed":false})
  };
  let direct_dns=config.get("direct_dns").and_then(Value::as_str).unwrap_or("");
@@ -282,6 +290,34 @@ pub fn validate_file(path:&str)->Value{
     return json!({"status":"FAIL","reason":format!("{kind} must be ONE IPv4 resolver, no fallback"),
       "installed":false})
    }
+ }
+ let sha=config.get("geosite_sha256").and_then(Value::as_str).unwrap_or("");
+ let filename=std::path::Path::new(path).with_file_name("wbd-cn-geosite.txt");
+ let geosite=match crate::cn_geosite::Index::load(&filename,sha){
+     Ok(v)=>v,Err(e)=>return json!({"status":"FAIL",
+       "reason":format!("CN full geosite snapshot: {e}"),"installed":false})
+ };
+ let geosite_evidence=geosite.evidence();
+ // Representative .com mainland domains must classify as CN DNS queries.
+ // No hostname->IP routing inference: overseas real A still goes TUN.
+ let sanity=["baidu.com","www.baidu.com","qq.com","www.qq.com"];
+ for domain in sanity{
+    if geosite.has(domain)!=Ok(true){
+        return json!({"status":"FAIL","reason":format!("CN geosite missing {domain}"),
+           "geosite":geosite_evidence,"installed":false})
+    }
+ }
+ let foreign_real=u32::from(Ipv4Addr::new(8,8,8,8));
+ let splitter=policy.overrides.iter().find(|(_,m)|**m==Mode::Split)
+     .map(|(uid,_)|*uid).unwrap_or(0);
+ let split_mode_exists=policy.mode(splitter)==Mode::Split;
+ policy.geosite=Some(geosite);
+ if split_mode_exists{
+    if policy.dns(splitter,"www.baidu.com",DnsUse::Ordinary)!=Ok(Egress::Direct) ||
+       policy.data(splitter,foreign_real)!=Egress::Tunnel{
+        return json!({"status":"FAIL","reason":"CN .com DNS direct / overseas A data-tunnel fixture mismatch",
+           "geosite":geosite_evidence,"installed":false})
+    }
  }
  let wbd_bootstrap=policy.dns(0,"wbd.example.net",DnsUse::Bootstrap)==Ok(Egress::Direct);
  if !wbd_bootstrap{
@@ -299,5 +335,7 @@ pub fn validate_file(path:&str)->Value{
    "server_bootstrap_dns":"DIRECT_IN_ALL_MODES",
    "cn_domain_overseas_result":"TUNNEL_BY_ACTUAL_IP",
    "fakeip":false,"installed":false,
+   "geosite":geosite_evidence,
+   "geosite_cn_com_direct_dns_verified":split_mode_exists,
    "reason":"Policy parsed/validated only. No real Android netd routing, DNS dispatcher or production WBD tunnel activated."})
 }

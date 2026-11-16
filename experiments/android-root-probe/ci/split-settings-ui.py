@@ -140,6 +140,13 @@ assert report.get("status")=="SUPPORTED_IN_SCOPE"
 assert report.get("installed") is False
 assert report.get("server_bootstrap_dns")=="DIRECT_IN_ALL_MODES"
 assert report.get("compiled_cn_ipv4_intervals",0)>500
+manifest=json.load(open("out/diag/cn-geosite-provenance.json"))
+assert manifest["output_distinct_rules"]>1000
+assert config.get("geosite_sha256")==manifest["text_sha256"]
+assert report.get("geosite",{}).get("sha256")==manifest["text_sha256"]
+assert report.get("geosite",{}).get("total_rules")==manifest["output_distinct_rules"]
+assert report.get("geosite_cn_com_direct_dns_verified") is True
+assert report.get("geosite",{}).get("suffixes",0)>1000
 assert any(x.get("uid")==10502 and x.get("mode")=="global" for x in report.get("per_app_modes",[]))
 print("ANDROID_SPLIT_PER_APP_SETTINGS_UI_CONFIG_VALIDATION_PASS")
 print("CN intervals:",report["compiled_cn_ipv4_intervals"],
