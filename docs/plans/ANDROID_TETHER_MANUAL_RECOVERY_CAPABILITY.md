@@ -8,14 +8,14 @@
 
 Root 能否修改 TUN / raw / NAT / netd 取决于真实 UID、capabilities、DAC、SELinux 和内核功能，不因拿 Root 的方式不同而自动减配。DirtyFrag 成功后的 Root 模块和 `su` 会随重启消失，而已被 Root 写入的内核路由/iptables 状态不会因为普通 App 进程退出自动回滚；TUN 若非持久且最后 fd 关闭通常消失。Kill App 不等于撤销另一个进程现有的 capabilities。重启前重新打开 App 时若 su 失效，恢复键必须报 `SU_UNAVAILABLE`，不能声称已恢复。完整 reboot 恢复 root 和非持久规则的行为要按实际设备测。
 
-## A. 显式的安全恢复键（已实现，待实测）
+## A. 显式的安全恢复键（API36 真 KSU App CI 范围内 PASS）
 
 - Root helper `android-root-probe recover <real_app_uid>`：仅 AVD 中工作；精确匹配 `pref 8200 uidrange UID-UID to 198.18.254.2/32 lookup 235` 和最多一个 `198.18.254.2 ... dev wba<hex>` 的受控历史 route。其他 `pref 8200`、表235内容、当前仍存在的 wba 接口、不是模拟器、非 UID0 立即拒绝。不能删 Android 默认路由、netd 独立规则、全局网络链。
 - 另有仅 CI 使用 `recover-seed <uid>`，只在原规则/表均空时植入一个精确 orphan 的 WBD /32 rule 供真实 Button 复原，**不**模拟假 Root。
 - 普通 targetSdk37 `RecoveryActivity` 有真实文字 `一键恢复正常网络` Button；默认不执行恢复，只有用户点后才发起已授权 App 的 `su -c` 进程。`RESTORED`、`ALREADY_CLEAN`、`REFUSED_AMBIGUOUS/ACTIVE_WORKER`、`SU_UNAVAILABLE` 分别明示，保存 app 私有取证文件；原启动页增加入口按钮。
 - 真机需要下一步添加跨进程/跨重启的 **原子 owned journal**（UID、rule、链、route、原值、签名/权限等）及精确恢复列表后才能安全开放按钮，目前显式 fail closed 而非声称真机可用。这是调试 APK，未做生产系统包/FGS。
 
-## B. 共享 Wi-Fi/USB 经过同一 Root TUN 的可行性（已实现夹具，待实测）
+## B. 共享 Wi-Fi/USB 经过同一 Root TUN 的可行性（隔离 netns 模型 PASS，实体 NOT_RUN）
 
 - Android 原系统继续负责热点/USB DHCP、网段分配、系统共享开关；不自己造 AP/USB gadget，不用 `VpnService`；root worker 未来只接管经过内核数据路径的特定共享入口。
 - `android-root-probe tethergate` 首先 `unshare(CLONE_NEWNET)`、验证独立且空路由表；之后**仅在这个私有网络 namespace** 创建三个非持久 TUN：合成 Wi-Fi 下游 `10.128.11.0/24`、合成 USB 下游 `10.128.12.0/24` 和模拟上游 `198.18.253.1`。在命名空间里开启转发，安装源网段/出口精确的 IPv4 SNAT、单条 FORWARD ACCEPT/ESTABLISHED 规则；绝不在 Android 主 netns 操作 NAT。
@@ -23,7 +23,7 @@ Root 能否修改 TUN / raw / NAT / netd 取决于真实 UID、capabilities、DA
 - 上述证明内核网络命名空间中 NAT/转发能力、两个不同下游和一个共享上游的策略模型。**不代表真正 Wi-Fi 热点或 USB downstream**，因为 Android13+ eBPF tethering offload 及 vendor hardware offload 可能直接绕过常规 iptables hook。需要真实 2 个设备、Wi-Fi/USB 数据计数及返回包，验证上游 route / netd / checksum / SNAT / IPv6/CLAT、bpf map 和 offload 才能宣布真实共享支持。
 - **安全红线：**服务端单一租约地址校验不能关闭；NAT 必须使来自任何下游的包满足租约。不能全局禁 IPv6、不能变更整机默认 NAT，允许热点/USB 独立选择接入，且依照原项目 MTU 外层默认1460计算内层预算，不假定热点 MTU1500可无分片转发。
 
-## C. Actions 源锁验证
+## C. Actions 源锁验证（已完成）
 
 仅复用 `.github/workflows/android-root-ksu.yml` 的单个 Android16/API36 x86_64、SELinux Enforcing、真 KernelSU3.3.1/Manager 普通 target37 App AVD，在已经验证的 App UDP/DNS/TCP、SIGKILL 后同一 AVD 下执行一次新 `tether-recovery-case.sh`：source-locked native/A PK hash、主 namespace 规则/路由前后完全一致、独立 namespace 的合成转发证据、精确 seed，UIAutomator 确实点击 RecoveryActivity 实际 Button，首次 `RESTORED`，第二次 `ALREADY_CLEAN`，最后主路由与原规则字节一致。无权限/缺内核模块必须单独 `UNAVAILABLE`；绝不把 CI success 当产品热点成功。一个 Action 一个 AV D、同 SOURCE，不发多个重复工作流。
 
@@ -44,3 +44,7 @@ Root 能否修改 TUN / raw / NAT / netd 取决于真实 UID、capabilities、DA
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Add explicitly clicked ordinary-App owned recovery and private-netns 2xWiFi+1xUSB NAT feasibility probe with CI source/cleanup gates; physical tether NOT_RUN."}
 ```
+
+## 2026-11-16 同源 CI 实测收口
+
+真实 KSU3.3.1 Android16/API36 x86_64 普通 target37 App，SOURCE `a5cca542f93e7c256145e07d7432b4dfa388e7c7`， [Action43872821388](https://github.com/lly8666/wbd-next/actions/runs/43872821388) **SUCCESS**；工件14229385474 ZIP SHA256 `9d6c57a88acee55a43dbd4829fe5f5bb4f7df445e78d65bf6b7f85bee399ecea`。在独立 netns，两个 Wi-Fi 合成来源及一个 USB 合成来源的三条内核 UDP 转发→统一 SNAT→owned TUN→conntrack 反向恢复全部 PASS；真实普通 App 手动点击一次 `RESTORED`（仅精确 WBD 自有规则）再点一次 `ALREADY_CLEAN`；主网络空间所有 IPv4 路由与规则与测试前一致。原 App TUN/DNS53/TCP/TLS1.3、SIGKILL 自有清理同 SOURCE 再次 PASS。先前 [Action43871859506](https://github.com/lly8666/wbd-next/actions/runs/43871859506) 按钮被 ActionBar 遮挡导致 **FAIL** 保留。此结果并不意味着 Wi-Fi Hotspot、USB tether、eBPF/HW offload、物理蜂窝或完整产品可用，这些是 **NOT_RUN**。生产真机恢复需要精确 durable owned journal，而且无 Root 时按钮不能改变特权路由。Android15+ `dataSync` FGS 有使用时限，生产持续服务必须另做符合当前规则的生命周期设计。具体报告与机读矩阵分别见 `docs/devlog/android-root-probe/20261116-tether-recovery-final.md`、`docs/devlog/android-root-probe/20261116-tether-recovery-matrix.json`。
