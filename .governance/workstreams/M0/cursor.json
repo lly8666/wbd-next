@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2005,
-  "checkpoint_sha": "fc82cf8f898ac075288c667e52c721f39906470d",
+  "sequence": 2006,
+  "checkpoint_sha": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2005 correct event ACK BEFORE nonblocking UDP recv to retain level FD_READ under two already queued datagrams; add genuine WinSock localhost two-packet event unit, retain H2002 16 bounded events/overflow fallback; one original signed normal 3-size Direct UDP native run pending.",
-  "why_now": "Microsoft WinSock FD_READ is level-triggered and recv reenables. H2002 ACK-after-recv may clear a new unread-data signal and hang multi-packet UDP. H2005 limits change to exact ACK ordering plus empty WSAPoll race recv, no new threads/timer or product protocol.",
+  "current_task": "H2006 repair old H1940 static test exact19 wait-array assertion to assert original TCP 16-shard fairness, absolute Stop and bounded UDP <=16 -> <=35 wait handles; no product change. H2005 original real UDP native in flight.",
+  "why_now": "H2004 governance Action43871366628 FAIL on H1940 test hardcoded old 19-handle expression after targeted H2002 Direct UDP event integration. Old product CPU/Stop semantics unaffected; update static proof rather than roll back event wake.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect first H2002 original native trial as historic separate source; then H2005 Windows real socket two-datagram event unit and exact H2005 signed Win2025/WSL2 96/512/1200B physical/Direct p99/owned Stop. Investigate only first failure, no extreme replay.",
+  "next_action": "Collect original SOURCE H2002/H2005 Windows/WSL2 Actions, including H2005 genuine Windows two queued UDP events test and 3-size physical-vs-FakeIP Direct RTT/720 deliveries/owned Stop; preserve first failures and no extreme scenarios.",
   "unverified": true,
   "last_tested_source": "839e161a90a8c8017848dab1327f60673e38e05d",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2001-H2000-REAL-DIRECT-UDP-3SIZE-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2006-H1940-STATIC-FAIRNESS-ASSERTION-UPDATE.md",
     "docs/devlog/M0/20261116-PLAN029-H2005-EVENT-ACK-BEFORE-RECV-LOSSLESS-REARM.md",
     "docs/devlog/M0/20261116-PLAN029-H2004-DECLARED-FEATURE-CARD-CHECK.md",
     "docs/devlog/M0/20261116-PLAN029-H2002-DIRECT-UDP-ONE-OWNER-EVENT-WAKE.md",
     "docs/devlog/M0/20261116-PLAN029-H2001-COLLECT-THREE-DIRECT-ORDINARY-LATENCY-WORKLOADS.md",
     "docs/devlog/M0/20261116-PLAN029-H2000-H1999-UDP-STATIC-PREFLIGHT-FIX.md",
     "docs/devlog/M0/20261116-PLAN029-H1999-REAL-DIRECT-UDP-RTT-3SIZE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1998-UNPACED-DIRECT-TCP-4M-COMPARATOR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1997-DIRECT-ORDINARY-1K-RTT-SOURCE-TRIGGER.md"
+    "docs/devlog/M0/20261116-PLAN029-H1998-UNPACED-DIRECT-TCP-4M-COMPARATOR.md"
   ],
   "open_requests": [],
   "partial_summary": "Actual H1997 TCP 1KiB physical/Direct p99 0.410/0.699ms (2048 each), max 0.649/0.878ms; H1998 unpaced 4MiB physical/Direct 51.970/97.260ms (1.871x) and 120 Tunnel UDP p99 6.359ms; H2000 UDP 96/512/1200B true Direct RTT p99 21.725/25.684/24.974ms versus phys 0.347/0.282/0.350ms (62-91x) with zero loss and both Stop PASS. Severe UDP latency OPEN, original H1999 cheap preflight FAIL preserved."
