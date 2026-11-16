@@ -125,7 +125,7 @@ d={"schema":"android-ksu-real-app-uid-tun/v1",
 "ksud_info":(p/"ksud-debug-info.txt").read_text(errors="replace")[:1200],
 "patched_ramdisk_sha256":hashlib.sha256((p/"patched-ramdisk.img").read_bytes()).hexdigest(),
 "app_uid":s.get("app_uid"),"status":s["status"],
-"app_origin_udp_captured":s["status"]=="APP_UID_TUN_FLOW_PASS",
+"app_origin_udp_captured":s["status"]=="APP_UID_TUN_ROUNDTRIP_PASS",
 "netd_nat_hotspot_usb":"NOT_RUN",
 "scope":"one exact UID and one synthetic /32 temporary policy rule, AVD only"}
 (p/"summary.json").write_text(json.dumps(d,indent=2,sort_keys=True))

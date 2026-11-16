@@ -53,18 +53,22 @@ if a.get("target_sdk")!=37 or uid<10000:errors.append("not the expected real ord
 if not "untrusted_app" in a.get("app_selinux",""):errors.append("not untrusted_app SELinux")
 if a.get("su_exit")!=0 or native.get("root_uid")!=0:errors.append("real app->KSU UID0 unproven")
 if not a.get("root_ready") or a.get("app_udp_sent_bytes",0)<1:errors.append("app DatagramSocket not used")
-if a.get("status")!="APP_UID_TUN_FLOW_PASS":errors.append("true ordinary App UDP TUN proof failed")
+if a.get("status")!="APP_UID_TUN_ROUNDTRIP_PASS":errors.append("true ordinary App UDP TUN proof failed")
 if native.get("app_uid")!=uid or ev.get("app_uid_rule")!=f"{uid}-{uid}":errors.append("UID-specific route not proven")
 if ev.get("status")!="SUPPORTED_IN_SCOPE" or not ev.get("app_payload_on_tun"):errors.append("real app payload missing from TUN")
 if ev.get("dst_ip")!="198.18.254.2" or ev.get("dst_port")!=49492:errors.append("wrong packet destination")
+if not ev.get("tun_reply_injected_bytes",0)>28:errors.append("no TUN UDP return injection")
+if not a.get("app_reply_bytes",0)>0:errors.append("ordinary app did not receive UDP reply")
+if a.get("app_reply_payload")!=ev.get("tun_reply_payload"):errors.append("return payload mismatch")
+if a.get("app_reply_source")!="198.18.253.2:49492":errors.append("return source not owned TUN peer")
 if ev.get("tun_mtu")!=1400 or ev.get("udp_packet_bytes",0)<28:errors.append("TUN packet/MTU missing")
 if not all(cl.get(k) is True for k in ("ok","rules_equal","routes_equal","tun_gone")):errors.append("owned cleanup failed")
 if read("rule-before.txt")!=read("rule-after.txt"):errors.append("Android global policy rules changed")
 if read("route-before.txt")!=read("route-after.txt"):errors.append("Android global route snapshots changed")
 out={"schema":"android-ksu-app-origin-udp-case/v1","source":m["source"],"api":read("api.txt"),
 "app_uid":uid,"app_context":a.get("app_selinux"),"su_exit":a.get("su_exit"),
-"status":"APP_UID_TUN_FLOW_PASS" if not errors else "FAIL",
-"capture":ev,"cleanup":cl,"errors":errors,
+"status":"APP_UID_TUN_ROUNDTRIP_PASS" if not errors else "FAIL",
+"capture":ev,"app_reply":a.get("app_reply_payload"),"app_reply_source":a.get("app_reply_source"),"cleanup":cl,"errors":errors,
 "netd_nat_tether_real_underlay":"NOT_RUN",
 "scope":"one ordinary app UID to root-owned TUN using temporary exact /32 rule"}
 (p/"summary.json").write_text(json.dumps(out,indent=2,sort_keys=True))
