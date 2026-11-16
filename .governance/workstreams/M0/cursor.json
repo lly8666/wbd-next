@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2022,
-  "checkpoint_sha": "076a227d9360b8a6025ff6901d02aca350035aff",
+  "sequence": 2023,
+  "checkpoint_sha": "5c75663c13b900a506398235e93579eca79c4ceb",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2022 enable explicit existing Game4 CN scene source marker in native CI selection and cargo m0_v4_probe + original DLL V4 exports, one real Windows/WSL2 Game4 off four-lane CN test; parallel H2021 physical pcap Normal padding.",
-  "why_now": "H2019 and H2020 original Windows Rust/Go cheap compilation PASS but `wiring-contract.outputs.native_smoke=false` because m0_native_ci_scope lacks explicit `[plan029-game4-cn-real]` marker; skipped OS true network. Also Game4 V4 exports require m0_v4_probe in exact Cargo feature selection; check DLL before drivers.",
+  "current_task": "H2023 narrow H1820 source-string test to preserve V3 plus new Game4 m0_v4_probe/FFI. H2022 Action43894039520 cheap FAIL before original real network.",
+  "why_now": "H2022 original Action43894039520 native selected but cheap H1820 expected old exact `PRODUCT_SPLIT_SCENE -eq 1){` while new valid OR adds explicit Game4 branch; no network conclusion.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2022 game4 CN source-frozen actual Win/WSL2 native 4 TLS lane Direct DNS/UDP/TCP and Tunnel UDP/TCP Stop, preserve FAIL/NOT_RUN; parallel H2021 Normal physical tcpdump padding. Fix only first verified errors.",
+  "next_action": "Collect H2023 Game4 CN 4 TLS lane original kernel physical Direct DNS/TCP/UDP and Tunnel TCP/UDP Stop; concurrently H2021 Normal physical pcap.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2023-GAME4-ABI-OLD-ASSERTION.md",
     "docs/devlog/M0/20261116-PLAN029-H2022-ORIGINAL-GAME4-CN-NATIVE-SCOPE-AND-V4-EXPORT.md",
     "docs/devlog/M0/20261116-PLAN029-H2021-REAL-ORIGINAL-PADDING-PHYSICAL-TCPDUMP.md",
     "docs/devlog/M0/20261116-PLAN029-H2020-GAME4-CN-SCENE-VALIDATION-ORDER.md",
     "docs/devlog/M0/20261116-PLAN029-H2019-GAME4-COLD-ASSEMBLY-MANIFEST-HASH.md",
     "docs/devlog/M0/20261116-PLAN029-H2018-GAME4-OLD-STATIC-AND-CARD-BOUND.md",
     "docs/devlog/M0/20261116-PLAN029-H2017-GAME4-CN-ONE-SPLIT-RUST-ATTACH.md",
-    "docs/devlog/M0/20261116-PLAN029-H2016-PADDING-E0277-TEST-FIX.md",
-    "docs/devlog/M0/20261116-PLAN029-H2015-USER-MTU-ONLY-RANDOM-FILL.md"
+    "docs/devlog/M0/20261116-PLAN029-H2016-PADDING-E0277-TEST-FIX.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."

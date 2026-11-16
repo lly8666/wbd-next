@@ -450,7 +450,9 @@ class NativeDirectOrder(unittest.TestCase):
         # Explicit real product also requires the very same exact V3 ABI.
         # Old test assumed it was private-trial-only and prevented build.
         self.assertIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or",w)
-        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){",w)
+        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or",w)
+        self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){",w)
+        self.assertIn("wbd_m0_win_game_native_v4_tcp_control",w)
         self.assertIn("$features+=',m0_v4_probe'",w)
         self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',w)
         self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
