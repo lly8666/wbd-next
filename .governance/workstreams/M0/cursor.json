@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1990,
-  "checkpoint_sha": "e1bc78c192bbca3b045e8e1339f032211aab626d",
+  "sequence": 1991,
+  "checkpoint_sha": "620d35419c8ab6e0edd47661f54c101bbb65b187",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1990 collect H1989 source e1bc: true Windows Rust H1989 new 16-shard fairness tests PASS in jobs133184130063,133184432009; Ubuntu Rust component PASS, native source/cheap PASS. Original governance Action43833451163 FAIL FeatureCatalog first at stale H1940 exact source string, Governance identity/structure PASS. Strict H1940 test updated to assert rotating TCP shard order, Stop index0, three classes and no second event wait. H1990 source CI/native NOT_RUN; original H1974 61ms OPEN, no new extreme dispatch.",
-  "why_now": "The old H1940 source test still expects exact unrotated 'let (order,n)' and one-line phase advance; the real new performance code has a rotating TCP 16-handle order verified by Windows Rust tests. Preserve and strengthen source semantics, not remove the old contract.",
+  "current_task": "H1991 ordinary mixed-flow perf: H1990 SOURCE620d governance43834103182 and maintenance43834103172 both SUCCESS; H1988 auto-source native43832554963 real Normal Tunnel TCP/UDP and owned Stops SUCCESS (not CN Direct P2). H1989 Win Rust shard fairness PASS; original H1989 native Action43833451125 in progress at handoff. New H1991 code bounds repeated empty Direct UDP WSAPoll in 32-item TCP reverse drain to <=one rotating scan of current live UDP sockets per TX turn, without delaying actually ready UDP, plus pure regression. New source CI/native NOT_RUN; H1974 tail OPEN.",
+  "why_now": "The same per-packet poll hotspot fixed for DNS in H1988 also exists in the Direct UDP lane: when a ready TCP reply repeatedly wins, the returned TCP packet can cause another expensive empty WSAPoll on unchanged UDP sockets. A bounded full rotating UDP sweep each TX turn preserves chance for every flow and suppresses redundant checks.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1990 governance/Windows+Linux Rust CI and original in-flight H1988 native scene outcome without re-dispatch; prioritize ordinary p99/CPU perGiB and live mixed Direct TCP/Tunnel UDP only with new causal condition, no pressure matrix.",
+  "next_action": "Collect H1991 Win/Linux Rust component/unit and governance; collect in-flight original H1989 native result without duplicate dispatch. Then one ordinary source-locked real Direct TCP+UDP+Tunnel measurement focusing p99/long holes and CPU, NOT extreme pressure, no old 2048 replay without new causal hypothesis. H1974 61ms OPEN.",
   "unverified": true,
-  "last_tested_source": "e1bc78c192bbca3b045e8e1339f032211aab626d",
+  "last_tested_source": "620d35419c8ab6e0edd47661f54c101bbb65b187",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1990-H1989-ROUNDRobin-WINSOCK-WAIT-UNIT-AND-STATIC-FAIL-20261116.json"
+    "docs/evidence/M0/PLAN029-H1991-PERF-UDP-EMPTY-SWEEP-H1990-CI-COLLECT-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
     "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
     "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md"
+    "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1988 Direct DNS once-per-TX-turn + stack WSAPoll Windows component PASS; H1989 original Rust WinSock 16-shard fairness Windows component PASS, old H1940 static test fails from exact source string. H1990 strict test updated, CI NOT_RUN. True 61ms tail remains OPEN."
+  "partial_summary": "H1990 two CI governance/maintenance PASS, H1989 WinRust shard fairness PASS, H1988 real Normal/off native OS+TLS+TCP/UDP/Stop PASS but no Direct P2. H1991 pure bounded UDP negative-poll skip for ordinary mixed TCP/UDP authored CI NOT_RUN. 029 not delivered."
 }

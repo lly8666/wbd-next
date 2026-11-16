@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1991",
+  "date": "2026-11-16",
+  "source_sha": "620d35419c8ab6e0edd47661f54c101bbb65b187",
+  "collected": {
+    "h1990_governance": {
+      "run": 43834103182,
+      "result": "success"
+    },
+    "h1990_maintenance": {
+      "run": 43834103172,
+      "result": "success"
+    },
+    "h1988_native": {
+      "run": 43832554963,
+      "result": "success",
+      "source": "22c44a70e73d8bf3ff84930b094cd39792948b6d",
+      "mode": "normal",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "original_kernel_tcp": "PASS",
+      "original_kernel_udp": "PASS",
+      "owned_stop": "PASS_BOTH_OWNED",
+      "cn_direct_perf": "NOT_RUN",
+      "p99": "NOT_MEASURED"
+    },
+    "h1989_native": {
+      "run": 43833451125,
+      "at_collection": "IN_PROGRESS",
+      "not_promoted": true
+    }
+  },
+  "new_perf": {
+    "mechanism": "When a TCP or DNS return is delivered, a repeating empty direct UDP WSAPoll is skipped after one rotating full sweep of all live UDP sockets within one original TX turn; next turn resets; delivered UDP resets and remains drainable.",
+    "actual_cpu_gain": "NOT_RUN",
+    "actual_p99_gain": "NOT_RUN",
+    "rust_unit": "NOT_RUN"
+  },
+  "old_h1974": "61ms OPEN",
+  "plan029": "IN_PROGRESS"
+}

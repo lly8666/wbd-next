@@ -93,6 +93,20 @@ pub(crate) enum NativeDecision {
 // Already-owned TCP/DNS L3 moves into the sole RX mailbox. UDP writes
 // into its caller scratch and requires only one copy on successful queue.
 pub(crate) enum NativeReverse{Owned(Vec<u8>),InScratch(usize)}
+// Repeated TCP/DNS reverse packets must not trigger WinSock WSAPoll
+// again for the SAME empty Direct UDP socket on the same native TX turn.
+// The budget is the number of ACTUAL live UDP sockets, not a timer or
+// global flow table scan. A real UDP packet resets the scan budget.
+#[derive(Default)]
+struct UdpEmptyPollTurn{checked:usize}
+impl UdpEmptyPollTurn{
+    fn reset(&mut self){self.checked=0}
+    fn should_poll(&self,live:usize)->bool{live>0&&self.checked<live}
+    fn observed(&mut self,quantum:usize,delivered:bool){
+        if delivered{self.checked=0}
+        else{self.checked=self.checked.saturating_add(quantum)}
+    }
+}
 #[derive(Clone,Copy)]
 struct PendingKernelTcp {
     lease:Ipv4Addr,synthetic:Ipv4Addr,
@@ -118,6 +132,9 @@ pub(crate) struct NativeSplitWorker {
     startup_padding:TunnelStartupPadding,
     padding_enabled:bool,
     next_reverse_lane:usize,
+    // Same-owner ready-only negative UDP WSAPoll suppression. Scans at
+    // most one full rotating socket sweep per TX turn if no UDP arrived.
+    udp_empty_poll:UdpEmptyPollTurn,
     last_tick_ms:u64,
     // Signed original Windows/WSL2 probe only; no always-on tracing.
     steady_qpc:Option<SteadyIngressQpc>,
@@ -277,7 +294,8 @@ impl NativeSplitWorker {
             },
             startup_padding:TunnelStartupPadding::new(StartupMode::Off,1),
             padding_enabled:false,
-            next_reverse_lane:0,last_tick_ms:0,steady_qpc})
+            next_reverse_lane:0,udp_empty_poll:UdpEmptyPollTurn::default(),
+            last_tick_ms:0,steady_qpc})
     }
     /// Called exactly once from authenticated V3 cold attach. The
     /// generation's authenticated epoch seeds a NON-cryptographic window
@@ -598,8 +616,20 @@ impl NativeSplitWorker {
                 1=>self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
                     Some(NativeReverse::Owned(l3))
                 }else{None}),
-                _=>self.udp.poll_reverse_ready(out,now_ms).ok()
-                    .flatten().map(NativeReverse::InScratch),
+                _=>{
+                    let live=self.udp.len();
+                    if !self.udp_empty_poll.should_poll(live){None}else{
+                        let quantum=self.udp.poll_work_bound();
+                        let reply=self.udp.poll_reverse_ready(out,now_ms)
+                            .ok().flatten();
+                        // One full no-data socket sweep at most, even
+                        // while 32 unrelated TCP returns are delivered.
+                        // If actual UDP arrived, continue fair round-robin
+                        // packet delivery within this same bounded turn.
+                        self.udp_empty_poll.observed(quantum,reply.is_some());
+                        reply.map(NativeReverse::InScratch)
+                    }
+                },
             };
             if ready.is_some(){
                 self.next_reverse_lane=(lane+1)%3;
@@ -609,6 +639,9 @@ impl NativeSplitWorker {
         None
     }
     pub(crate) fn tick(&mut self,now_ms:u64)->bool{
+        // One old native TX turn, not one packet or one flow. A newly
+        // queued physical response will be checked on the next wake.
+        self.udp_empty_poll.reset();
         let mut progressed=false;
         // DNS filesystem completion is a bounded, nonblocking mailbox
         // operation on this TX turn. The exact durable journal writer
@@ -848,6 +881,33 @@ mod tests{
         assert!(owner.poll_udp_reverse(&mut bytes,1).is_none());
         assert_eq!(owner.dns.poll_invocations(),0);
         assert!(!owner.has_udp_flows());
+    }
+    #[test]
+    fn plan029_udp_empty_socket_is_not_wsapolled_32x_for_tcp_reverse(){
+        // No physical sockets or real networking required: the test
+        // models one normal Direct UDP socket sharing TX with a burst of
+        // unrelated Direct TCP returns, then a 33-flow rotating scan.
+        let mut b=UdpEmptyPollTurn::default();
+        assert!(!b.should_poll(0));
+        assert!(b.should_poll(1));
+        b.observed(1,false);
+        for _ in 0..32{
+            assert!(!b.should_poll(1)); // no redundant WinSock calls
+        }
+        b.reset();
+        assert!(b.should_poll(1)); // the next native TX turn wakes
+        b.observed(1,true); // an actually delivered UDP response
+        assert!(b.should_poll(1)); // can drain further ready UDP
+        b.reset();
+        for _ in 0..3{
+            assert!(b.should_poll(33));
+            b.observed(16,false);
+        }
+        assert!(!b.should_poll(33)); // ceil(33/16) bounded fair sweep
+        b.reset();
+        assert!(b.should_poll(33));
+        // No TCP/Tunnel timer, no synthetic response receipt, no new
+        // resource cap: every socket gets a chance before idle suppression.
     }
     #[test]
     fn plan029_all_tunnel_reverse_idle_skips_only_empty_real_work(){
