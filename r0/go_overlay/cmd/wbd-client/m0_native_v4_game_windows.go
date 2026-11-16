@@ -56,7 +56,8 @@ func m0WindowsGameOriginalClientFlow(
 }
 
 func runM0NativeV4WindowsGame(
- ctx context.Context,o m0NativeV4Options,localIP [4]byte,physicalIfIndex uint32,
+ ctx context.Context,o m0NativeV4Options,localIP [4]byte,
+ physicalMTU uint32,physicalIfIndex uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
  pathChanged <-chan struct{},
@@ -163,7 +164,7 @@ func runM0NativeV4WindowsGame(
  if err!=nil{return err}
  recordOffer,err:=m0WindowsV4ColdRecordOffer(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
-  o.ConnectionMTU,physical,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
+  o.ConnectionMTU,physicalMTU,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
  )
  if err!=nil{return err}
  cfg:=realityfront.ClientAdmissionConfig{

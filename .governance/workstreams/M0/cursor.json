@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2036,
-  "checkpoint_sha": "f8c8a019a01ade66b92dbee306beb02ad9f88e15",
+  "sequence": 2037,
+  "checkpoint_sha": "e476cef948d4706cf29fade0004fa0f6a2fa2a9b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2036 collected original source H2031 real physical eth0 encrypted Normal Tunnel 20–30-record/2–3s 0..500B MTU-safe pcap+business+owned Stop PASS_SCOPED, precise per-record randomness only Rust unit; H2035 new Game4 CN physical ifindex fix original native Action pending.",
-  "why_now": "Latest user restored 20–30 eligible record and 2–3s window and asks progress. H2031 signed original Action43901130216 true eth0 41 record varying sizes, 31 NPF original copies, true UDP/TCP/Stop success. Old feature card had NOT_RUN caveat.",
+  "current_task": "H2037 fix H2035 source-first Go compile undefined physical: Game4 needs both physicalMTU=1500 for original M1 record budget and physicalIfIndex=25 for Direct socket; split named parameters and caller, manifest + tests updated. Real Game4 retest pending.",
+  "why_now": "H2035 source Action43912881765 and other Go builds FAIL on undefined physical line166 after variable rename, before native. H2033 true WinSock 10022 ifindex1500 is separate prior SOURCE. No product behavior cause beyond missing two cold parameters.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect already-dispatched H2035 Game4 CN Action source f8c8a019..., first network failure if any. H2036 docs-only, no second padding dispatch. Keep same-IP CDN exception NOT_REQUIRED.",
+  "next_action": "Collect H2037 one ORIGINAL same-source Game4 four-lane true Windows/WSL2 DNS FakeIP Direct UDP/TCP Tunnel TCP/UDP/owned Stop Action. Preserve H2035 compile FAIL and H2033 native FAIL, no duplicate dispatch. H2031 padding PASS scoped archived H2036.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
@@ -19,14 +19,14 @@
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2037-GAME4-IFINDEX-MTU-TWO-COLD-ARGS.md",
     "docs/devlog/M0/20261117-PLAN029-H2036-COLLECT-H2031-REAL-PADDING-20-30-WINDOW.md",
     "docs/devlog/M0/20261117-PLAN029-H2035-FIX-GAME4-COLD-IFINDEX-NOT-MTU.md",
     "docs/devlog/M0/20261117-PLAN029-H2034-UI-HELP-GAME4-CN-FOUR-LANE-COLD.md",
     "docs/devlog/M0/20261117-PLAN029-H2033-ORIGINAL-GO-GAME4-CN-FOUR-LANE-ENTRY.md",
     "docs/devlog/M0/20261116-PLAN029-H2032-FEATURE-CARD-MTU-ZERO-STARTUP.md",
     "docs/devlog/M0/20261116-PLAN029-H2031-COUNT-MTU-ZERO-SLOTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H2030-REAL-GAME4-FLAG-ORDER-REMEDY.md",
-    "docs/devlog/M0/20261116-PLAN029-H2029-POST-COMPILER-GAME4-REAL-RETRY.md"
+    "docs/devlog/M0/20261116-PLAN029-H2030-REAL-GAME4-FLAG-ORDER-REMEDY.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
