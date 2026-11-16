@@ -146,7 +146,7 @@ mod tests{
             let max_records=v.max_records;
             assert!(total<=usize::from(max_records)*500);
             assert_eq!(p.propose(&packet,101,500),0);
-            observed.insert(v.max_records);
+            observed.insert(max_records);
             above_old_2k|=total>2048;
         }
         assert!(observed.len()>=9,"random startup record cap not 20..30");
