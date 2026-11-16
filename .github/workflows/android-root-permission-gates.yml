@@ -1,12 +1,6 @@
 name: Android temp-root isolated policy route (one SOURCE build reuse)
 run-name: "android-routegate|${{ github.sha }}"
 on:
-  push:
-    branches: [experiment/android-temp-root-probe]
-    paths:
-      - "experiments/android-root-probe/probe/src/**"
-      - "experiments/android-root-probe/ci/routegate.sh"
-      - ".github/workflows/android-root-permission-gates.yml"
   workflow_dispatch:
 permissions:
   contents: read
