@@ -1,32 +1,41 @@
 {
   "schema_version": 1,
   "id": "android-temp-root-probe",
-  "name": "Android临时root能力探针（计划）",
-  "summary": "独立Rust探针与薄Android测试壳规划，核验非VpnService的TUN/raw/路由、共享、切网与清理条件；尚未实现。",
+  "name": "Android临时root能力探针（实验，尚无Android PASS）",
+  "summary": "独立Rust inspect/exercise探针与API28/API37 Action可行性入口；当前仅实现owned TUN/IPv4 UDP与loopback raw TCP短验证，路由/netd、NAT/共享、app-su/FGS、蜂窝CLAT和真机均未验。",
   "owner": "Android临时root独立实验（用户授权）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
   "available_on": [],
   "defaults": {
-    "implementation": "PLANNED",
+    "implementation": "RUST_PROBE_SOURCE_STAGED; ACTIONS_PENDING",
     "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
   "usage": {
-    "cli": "尚无可运行命令；未来probe inspect/exercise以实际实现帮助为准",
-    "config": "见能力探测计划；Android9到最新稳定版逐版Actions，真机权限另验",
-    "gui": "只规划薄测试壳，不是可连接的Android客户端"
+    "cli": "android-root-probe [inspect|exercise]；inspect只读，exercise仅创建owned非持久TUN与loopback raw socket；不申请root",
+    "config": "独立Actions按SOURCE/manifest/SHA256构建x86_64+aarch64；API28/37先canary，中间API需要canary证据后再跑",
+    "gui": "本工作包未新增Kotlin壳；app→su、前台服务、网络回调均NOT_RUN，不是可连接客户端"
   },
-  "code_refs": [],
+  "code_refs": [
+    "experiments/android-root-probe/Cargo.toml",
+    "experiments/android-root-probe/probe/src/main.rs",
+    "experiments/android-root-probe/ci/case.sh",
+    ".github/workflows/android-root-probe-build.yml",
+    ".github/workflows/android-root-probe-case.yml",
+    ".github/workflows/android-root-probe-canary-api28.yml",
+    ".github/workflows/android-root-probe-canary-api37.yml"
+  ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
-    "docs/devlog/android-root-probe/20261116-plan.md"
+    "docs/devlog/android-root-probe/20261116-plan.md",
+    "docs/devlog/android-root-probe/20261116-workpack-01.md"
   ],
   "verification": [
     {
       "platform": "Android9/API28至最新稳定版（当前17/API37）官方AVD",
-      "scope": "不同API/镜像的实际root能力、TUN/raw/路由/模拟转发及owned清理",
+      "scope": "Rust x86_64/aarch64 NDK构建+API28/37 AOSP canary待运行；API29–36含32待canary后补",
       "status": "PLANNED",
       "source_sha": null,
       "evidence": null
@@ -42,7 +51,8 @@
   "limitations": [
     "本卡登记独立诊断工具计划，不改变android-vpn-shell历史状态；未宣称Android产品可连接。",
     "adb root和模拟器通过不能代表app→su、OEM热点/USB/真实蜂窝切网或省电通过。",
-    "不自行获取root、不使用VpnService、不修改共享核心或M0主线任务。"
+    "不自行获取root、不使用VpnService、不修改共享核心或M0主线任务。",
+    "当前实现仅覆盖owned TUN/lo raw的短探测；fwmark/NAT/转发/真实DNS与网络绑定未测试，不将模拟能力当真实热点/USB PASS。"
   ],
   "promotion": null
 }

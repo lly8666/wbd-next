@@ -1,0 +1,72 @@
+name: Android temp root probe - one build
+run-name: "android-root-probe|build|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - "experiments/android-root-probe/**"
+      - ".github/workflows/android-root-probe-build.yml"
+      - ".github/workflows/android-root-probe-case.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-root-probe-build-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Native Rust x86_64 and aarch64 Android ABI (no product build)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          rustup target add --toolchain 1.85.1 x86_64-linux-android aarch64-linux-android
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          ndk="$(find "$sdk/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
+          test -d "$ndk"
+          bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          test -x "$bin/x86_64-linux-android28-clang"
+          test -x "$bin/aarch64-linux-android28-clang"
+          export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android28-clang"
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$bin/aarch64-linux-android28-clang"
+          export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
+          manifest="experiments/android-root-probe/Cargo.toml"
+          cargo +1.85.1 generate-lockfile --manifest-path "$manifest"
+          for target in x86_64-linux-android aarch64-linux-android; do
+            cargo +1.85.1 build --locked --release --manifest-path "$manifest" -p android-root-probe --target "$target"
+            mkdir -p dist/bin
+            cp "experiments/android-root-probe/target/$target/release/android-root-probe" "dist/bin/probe-$target"
+            file "dist/bin/probe-$target"
+            readelf -l "dist/bin/probe-$target" >"dist/elf-$target.txt"
+          done
+          cp experiments/android-root-probe/Cargo.lock dist/Cargo.lock
+          printf '%s\n' "$GITHUB_SHA" >dist/SOURCE
+          {
+            rustc +1.85.1 -Vv
+            echo "ndk=$ndk"
+            echo "linkflags=$RUSTFLAGS"
+            sha256sum "$bin/"{x86_64-linux-android28-clang,aarch64-linux-android28-clang} || true
+          } >dist/toolchain.txt
+          (cd dist; sha256sum Cargo.lock SOURCE bin/* elf-*.txt toolchain.txt > SHA256SUMS)
+          python3 - <<'PY'
+          import hashlib, json, os
+          root="dist"
+          files=["Cargo.lock","SOURCE","toolchain.txt","elf-x86_64-linux-android.txt","elf-aarch64-linux-android.txt","bin/probe-x86_64-linux-android","bin/probe-aarch64-linux-android"]
+          h=lambda p: hashlib.sha256(open(os.path.join(root,p),"rb").read()).hexdigest()
+          with open(os.path.join(root,"manifest.json"),"w") as f:
+              json.dump({"schema":"android-root-probe-build/v1","source":os.environ["GITHUB_SHA"],"files":{p:h(p) for p in files},"target_sdk":37,"min_sdk":28,"platform":"Android NDK Bionic, build-only"},f,sort_keys=True,indent=2)
+          PY
+          (cd dist; sha256sum manifest.json >>SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-root-probe-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+          if-no-files-found: warn
