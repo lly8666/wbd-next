@@ -5,6 +5,8 @@
 - 上轮失败不可改写：H1948 SOURCE `ad35662b` 的原生 P2 状态 `NOT_RUN_CHEAP_SYNTAX_FAIL`；本 SOURCE `NOT_RUN`。一次原 H1948 指定 4MiB + 两策略各384 真 TCP、Tunnel UDP/owned Stop 验收仍应签名执行。保留可能并行的组件编译结果，不将其当产品 PASS。
 - 029 整体仍 IN_PROGRESS：首到根因、P1 CPU、D1–D5、Game4、GUI、IPv6、padding和压力退出均 OPEN。
 
+- 同 SOURCE 后续 [H1949 治理 Action43782426572](https://github.com/lly8666/wbd-next/actions/runs/43782426572)：94 个廉价单测全 PASS，`scope_audit.py` 的第一失败为 `SCOPE_AUDIT_FAILED: unbounded context_refs`；M0 cursor 原有10条而 `governance.validate_cursor(max_refs=8)` 限8。H1950仅保留最新8条 cursor 引用，旧 devlog/evidence 文件不删；没有任何额外原生 P2 dispatch。测试 SOURCE H1949 仍在途，不宣称实网 PASS。
+
 ```feature-impact
 {"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1948 cheap workflow encountered Python indentation before any native P2; H1949 fixes exact after-Stop QPC parser indentation with real scenario still pending."}
 ```

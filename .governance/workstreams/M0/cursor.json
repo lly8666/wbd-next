@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1949,
-  "checkpoint_sha": "ad35662b5560cd482c95458539019531db89087c",
+  "sequence": 1950,
+  "checkpoint_sha": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1949 collect H1948 source ad35662b cheap Python IndentationError line2278 before native scenario (not an app/network FAIL). Correct five indentation levels at original after-Stop H1948 join only; same bounded source-locked first physical write/read QPC scene must qualify on new SOURCE. Other rust builds H1948 in progress, no re-dispatch of old run.",
-  "why_now": "H1948 original Action43782225752 cheap workflow fails ast.parse line2278 (unexpected indent), Go+Rust native scene skipped. Fix exactly parser boundary, not network tuning. Preserve H1948 FAIL and historical H1945 QPC/P1 results.",
+  "current_task": "H1950 H1949 signed original P2 still source-locked in-flight. Governance second first boundary: M0 context_refs length10 exceeded max8, causing pre-network governance FAIL, while H1949 cheap Python 94 tests PASS. Trim refs only; H1945 first arrival root and P1 CPU still OPEN.",
+  "why_now": "H1949 original governance Action43782426572 scope audit fails unbounded context_refs, old devlog files remain intact. Keep cursor <=8 references without deleting prior evidence; no new network marker or dispatch.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect existing H1948 component compile results; new H1949 one original signed P2 if cheap syntax and builds qualify. Source verify 384 physical-path joins, real TCP SHA/FIN, Tunnel UDP, owned Stop. On failure fix first distinct boundary, no duplicate long P2/10GiB.",
+  "next_action": "Collect existing H1949 native Win2025/WSL2 P2 run 43782426660 for first physical TCP write/read and inner-write QPC, SHA/FIN/TunnelUDP/owned Stop. No another network dispatch. If first signed native failure diagnose locally; preserve H1945/QPC and H1947/P1 results.",
   "unverified": true,
   "last_tested_source": "bc6afde542c4daecee393745a982a590c9dba27f",
   "evidence_refs": [
@@ -25,10 +25,8 @@
     "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
     "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md",
     "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md",
-    "docs/devlog/M0/20261115-PLAN029-H1941-SHORT-FIN-PEEK-P99-AND-NONLAN-CN.md",
-    "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md"
+    "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1948 ad35662b original native workflow preflight failed in tools/m0_wl_public_normal_e2e.py line2278 indentation; no real P2 test. Correct H1949 fixture-only indent, Rust QPC instrumentation unchanged; old H1945 384/384 and H1947 4-arm P1 scoped actual PASS retained, full PLAN029 OPEN."
+  "partial_summary": "H1949 cheap workflow 94 Python tests pass; second failure only cursor context_refs 10>8 in role/governance. H1950 metadata correction trims to 8, keeps full devlog history and no new P2 marker. H1949 real P2 still NOT_RUN pending action."
 }
