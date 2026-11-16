@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1973,
-  "checkpoint_sha": "af5c7f88f17fa2b398065c7eddce21ca8472c8a8",
+  "sequence": 1974,
+  "checkpoint_sha": "e7df139f269395e4481b093c3cca447ded9bc203",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1973: H1972 signed-only <=8 post-ingress Direct return optimization aimed at source H1970 34.4us queued→inner read, original 32 reverse predrain FIFO retained; synthetic 4/5 PASS, one test wrongly compared variable declaration to first legacy flush, fixed to actual stage_sources invocation. Linux Rust pure PASS, Windows Rust still collecting; no new native/RTT claim. Full PLAN029 OPEN.",
-  "why_now": "Cheapest H1972 static test misidentified local variable introduction as first Wintun read. Actual old pre-ingress 32 reverse drain comes after declaration and BEFORE real stage_sources. Keep original kernel owner and do not weaken FIFO/drop guards.",
+  "current_task": "H1974: one signed original Windows2025/WSL2 NORMAL already-connected 2048x1KiB QPC trial now source-triggered: H1972 bounded <=8 post-stage fresh Direct reverse handoff to same Wintun RX, old 32 first, no new thread, product default OFF. H1972 original Win/Linux Rust component gates PASS, H1973 pure 4/5 only static string 'original' assertion failed, corrected. Real native outcome PENDING; target >20us median improvement to historical 34.4us NAT→inner-read gap; no performance claim yet. PLAN029 OPEN.",
+  "why_now": "User explicitly wants only large deltas. H1970 source direct application p50 overhead124.3us vs physical; original offline QPC shows 34.4us NAT→inner kernel read p50 and47.9us return app gap; classifier/NAT sub2us irrelevant. One extra TX quantum is avoidable without new owner.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1973 QPC gap synthetic 5/5 and exact original Win/Linux Rust preflights, then one original Windows2025/WSL2 source-locked Normal P2 2048x1KiB using rebuild+steady+post-ingress marker. Verify >=1 true post flushed, original SHA/FIN/Stop and real per-window NAT→inner/app p50 p99. Do not call a tiny shift a fix; else revert/retarget biggest.",
+  "next_action": "Collect H1974 original native Action, first cheap and Win/Linux Rust/Go/source peer, then Windows2025 Wintun/WSL2 app 2048x1KiB. Parse original Windows QPC gap analyzer, post-ingress delivered count, Linux SHA/FIN and both owned Stop. Compare H1970 source different VM as observational, require >=20us large direction to justify more work; if not, reject and target 47.9us return gap. No duplicate native Action.",
   "unverified": true,
   "last_tested_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1971-H1970-REAL-STEADY-2048X1K-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1974-REAL-POST-INGRESS-2048X1K-ONE-SOURCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1972-POST-INGRESS-EXACT-LOW-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md",
     "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md",
     "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
     "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md"
+    "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1972 original per-window QPC baseline source dc2d: 34.4us queue→inner read p50, 47.9us inner write→Windows app recv p50; H1972 tentative <=8 same-turn TX→RX return optimization signed-only. H1973 source-order assertion fix only, no original native run, product default OFF. H1970 real 2048 SHA/Stop scoped; PLAN029 OPEN."
+  "partial_summary": "Original H1970 real per-window QPC large gaps: 34.4us p50 NAT queue→inner read and47.9us innerWrite→Windows app recv; H1972 signed-only post-ingress <=8 same-turn handoff source built on H1973. H1972 Win/Linux Rust pure PASS, H1973 cheap failed irrelevant literal 'original' in snippet (others 4/5 PASS). H1974 combines correction with one signed normal 2048x1KiB original Win/WSL2 real test, performance UNVERIFIED; preconnect OFF, full PLAN029 OPEN."
 }

@@ -53,9 +53,8 @@ class PostIngressSteady(unittest.TestCase):
                       "owner.requeue_tcp_reverse(packet)",
                       "TrySendError::Full(packet)",
                       "TrySendError::Disconnected",
-                      "direct_notify.wake()","sole"):
-            self.assertIn(guard if guard!="sole" else
-                          "original",code)
+                      "direct_notify.wake()"):
+            self.assertIn(guard,code)
         before=src[src.index("let same_turn_direct="):src.index("loop {",src.index("let same_turn_direct="))]
         for gate in ("GITHUB_ACTIONS","WBD_PLAN029_NATIVE_V3_TRIAL",
                      "WBD_PLAN029_P2_MIXED_SCENE",
