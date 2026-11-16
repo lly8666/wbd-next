@@ -48,7 +48,7 @@ func TestPlan029GoColdRustThreeModesDnsEqualAllowedNoBackup(t *testing.T){
 // H1960: two configured DNS settings are each ONE unicast IPv4 endpoint.
 // No invalid 0/broadcast sentinel may silently become a system resolver,
 // second endpoint or cross-direction fallback at cold Apply.
-func TestPLAN029H1960ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast(t *testing.T){
+func TestPlan029H1963ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast(t *testing.T){
  physical:=netip.MustParseAddr("10.1.0.7")
  lease:=netip.MustParseAddr("10.234.12.34")
  for _,mode:=range []string{"all","bypass-lan","bypass-lan-cn"}{

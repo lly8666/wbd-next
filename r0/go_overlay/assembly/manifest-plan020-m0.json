@@ -1757,7 +1757,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "aa57526e43b13fa20bca34ba336997031f08b4d3"
+      "result_blob": "563fe7aefd8a70e444b3a941661daadabfb38a83"
     },
     {
       "kind": "create",

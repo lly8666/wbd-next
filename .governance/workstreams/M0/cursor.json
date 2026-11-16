@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1962,
-  "checkpoint_sha": "3a036d0fc5e732893d447d1f7d878f2ffb3010b0",
+  "sequence": 1963,
+  "checkpoint_sha": "a1f18950b1b875dd7ca24048972075fd8dfd0fb3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1962: H1961 source 3a036 original Go manifest SHA pin now cheap assembly PASS and Windows CLI compile in progress. Main governance PASS but Feature catalog failed only because feature-impact kind:none declaration omitted mandatory ids:[]. Correct docs with explicit [] and keep cursor hot budget. H1958 original D1/D2/P2 last-tested ab224; full PLAN029 OPEN.",
-  "why_now": "Feature catalog 43796550763 failed 'invalid feature-impact IDs' on H1961 devlog note, which must give ids:[] when kind:none. H1961 manifest fix is already allowing source-locked build and old checks. No product change or new P2 hypothesis.",
+  "current_task": "H1963: H1960 single-DNS zero/broadcast Go source and assembly compile pass after H1961 exact blob repairs. But new TestPLAN029H1960... was NOT_RUN due runner -run '^TestPlan029' case-sensitive regex. Rename just Go test to TestPlan029H1963..., update only its pinned manifest blob, require original Windows job actually RUN+PASS this case. H1962 governance/feature PASS; last true Win/WSL2 native source ab224.",
+  "why_now": "H1961 Windows SOURCE compile/Defender CAS green is not evidence H1960 new DNS test executed. Explicit Windows go test logs select '^TestPlan029'; uppercase PLAN029 test was skipped. Fix coverage not semantics without new P2 native run.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1962 Feature catalog + Governance, H1961 original Windows Go CLI and Go DNS cold tests. No duplicate network P2. Then implement original same-CDN CN/nonCN D2 and D1 TCP53/GUI/IPv6 source-locked representatives; full 029 OPEN.",
+  "next_action": "Collect H1963 Windows original source compile log explicit TestPlan029H1963... RUN/PASS, exact assembly check and H1963 governance. Then address untested shared-CDN same-real-IP CN/foreign receipts plus D1 TCP53, GUI/IPv6; full PLAN029 IN_PROGRESS.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
     "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md",
     "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md",
-    "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
-    "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md"
+    "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "Real H1958 source ab224 native 4x4MiB and 384 small QPC/Stop scoped PASS, P2 throughput OPEN; D1 Tunnel blackhole3/physical0, D2 overseas Tunnel/CN-IP Direct scoped PASS. H1959 restored FakeIP guard pure PASS. H1960 Go cold DNS zero/broadcast guard pending native Windows tests, H1961 assembled pinned Go SHA fixed & hot cursor under cap, H1962 corrects feature-impact ids:[]."
+  "partial_summary": "H1958 exact true Win2025/WSL2 P2 source ab224: 4x4MiB ON88.982/OFF80.742ms n=2, small QPC384 and Tunnel UDP/Stop PASS, big perf OPEN. Same original D1 nonCN Tunnel DNS blackhole Tunnel3/physical0 and D2 overseas Tunnel/CN-IP Direct limited PASS. H1959 Rust FakeIP restore pure tests PASS. H1960 single DNS zero/broadcast code compiled after H1961 manifest repair but new test NOT_RUN due name; H1963 adds correct case-sensitive selection, pending Windows original Go test."
 }
