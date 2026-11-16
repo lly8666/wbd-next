@@ -31,6 +31,6 @@ curl --fail --location --retry 3 "https://github.com/tiann/KernelSU/releases/dow
 echo 'b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450  out/ksu/manager.apk' | sha256sum -c - | tee out/ksu/manager-hash-verified.txt
 buildtool="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
 "$buildtool/aapt" dump badging out/ksu/manager.apk >out/ksu/manager-badging.txt
-gh run download 43808870166 --repo "$GITHUB_REPOSITORY" --name android-root-probe-42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d --dir out/native
+# The native binary is built ONCE from this current SOURCE for this KSU run.
 (cd out/native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
-test "$(cat out/native/SOURCE)" = 42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d
+test "$(cat out/native/SOURCE)" = "$GITHUB_SHA"

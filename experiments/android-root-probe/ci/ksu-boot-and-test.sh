@@ -110,31 +110,24 @@ adb shell getprop ro.build.fingerprint >out/ksu/build-fingerprint-second.txt
 adb shell am start -n org.wbdnext.rootprobe/.ProbeActivity >out/ksu/initial-app-launch.txt
 sleep 5
 python3 experiments/android-root-probe/ci/ksu-grant-ui.py
-# Existing app UID harness validates native TUN/raw, not merely KSU shell UID0.
-# Prevent an initial pre-grant error JSON from being reused as the final app run.
-adb shell run-as org.wbdnext.rootprobe rm -f files/result.json
-bash experiments/android-root-probe/ci/app-su-case.sh
+# Previous KSU root-generated TUN/raw PASS is source-locked and not rerun here.
+# Prove the missing link: actual untrusted App DatagramSocket -> owned TUN.
+bash experiments/android-root-probe/ci/appflow-case.sh
 python3 - <<'PY'
 import json,os,hashlib
 from pathlib import Path
 p=Path("out/ksu")
-r=json.loads(Path("out/appcase/app-result.json").read_text())
-out={
- "schema":"android-real-kernelsu-app-su/v1",
- "source":os.environ["GITHUB_SHA"],
- "manager":"KernelSU v3.3.1 on ephemeral patched-ramdisk AVD x86_64 API36",
- "manager_sha256":"b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
- "avd_helper_source":"c6c6057d807976d3dee6dbe9197189654cbd1a2a",
- "patched_ramdisk_sha256":hashlib.sha256((p/"patched-ramdisk.img").read_bytes()).hexdigest(),
- "ksud_info":(p/"ksud-debug-info.txt").read_text(errors="replace")[:4000],
- "app_uid":r.get("app_uid"),"app_selinux":r.get("app_context"),
- "app_su_exit":r.get("su_exit"),"app_su_status":r.get("status"),
- "native_tun_status":r.get("native_tun_status"),
- "native_raw_status":r.get("native_raw_status"),
- "app_to_real_ksu_native_pass":r.get("status")=="APP_SU_NATIVE_EXERCISE_PASS",
- "limits":["No real phone","No production app","No full Android netd/NAT/hotspot/USB"]
-}
-(p/"summary.json").write_text(json.dumps(out,indent=2,sort_keys=True))
-if not out["app_to_real_ksu_native_pass"]:
- raise SystemExit("KSU positive not established; original app and manager evidence retained")
+s=json.loads(Path("out/appflow/summary.json").read_text())
+d={"schema":"android-ksu-real-app-uid-tun/v1",
+"source":os.environ["GITHUB_SHA"],
+"manager":"real KernelSU v3.3.1 on ephemeral Android16 API36 x86_64 AVD",
+"manager_sha256":"b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
+"ksud_info":(p/"ksud-debug-info.txt").read_text(errors="replace")[:1200],
+"patched_ramdisk_sha256":hashlib.sha256((p/"patched-ramdisk.img").read_bytes()).hexdigest(),
+"app_uid":s.get("app_uid"),"status":s["status"],
+"app_origin_udp_captured":s["status"]=="APP_UID_TUN_FLOW_PASS",
+"netd_nat_hotspot_usb":"NOT_RUN",
+"scope":"one exact UID and one synthetic /32 temporary policy rule, AVD only"}
+(p/"summary.json").write_text(json.dumps(d,indent=2,sort_keys=True))
+if not d["app_origin_udp_captured"]:raise SystemExit("ordinary App-origin UDP TUN test failed")
 PY

@@ -4,6 +4,11 @@ on:
   push:
     branches: [experiment/android-temp-root-probe]
     paths:
+      - "experiments/android-root-probe/app/**"
+      - "experiments/android-root-probe/probe/src/appflow.rs"
+      - "experiments/android-root-probe/probe/src/main.rs"
+      - "experiments/android-root-probe/ci/build-ksu-native.sh"
+      - "experiments/android-root-probe/ci/appflow-case.sh"
       - "experiments/android-root-probe/ci/ksu-prepare-avd.sh"
       - "experiments/android-root-probe/ci/ksu-boot-and-test.sh"
       - "experiments/android-root-probe/ci/ksu-grant-ui.py"
@@ -28,10 +33,13 @@ jobs:
       - name: Build one real targetSdk37 APK with stock SDK, no service or fake su
         shell: bash
         run: bash experiments/android-root-probe/ci/build-app.sh
+      - name: Compile ONE source-locked Android x86_64 native probe
+        shell: bash
+        run: bash experiments/android-root-probe/ci/build-ksu-native.sh
       - name: Prepare isolated Android16 KSU 3.3.1 AVD and immutable native executable
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
-      - name: Cold boot real KSU module, grant test APK in Manager UI, run TUN and raw
+      - name: KSU approve app, prove ordinary-app UDP reaches rooted TUN
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-boot-and-test.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -44,6 +52,10 @@ jobs:
             out/ksu/*.xml
             out/ksu/*.log
             out/ksu/*.png
+            out/appflow/
+            out/native/SOURCE
+            out/native/SHA256SUMS
+            out/native/manifest.json
             out/appcase/
             out/apk/SOURCE
             out/apk/manifest.json
