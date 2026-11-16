@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1972,
-  "checkpoint_sha": "72c3457075cd55ceec5dc44cc65c0a09cc6d7d87",
+  "sequence": 1973,
+  "checkpoint_sha": "af5c7f88f17fa2b398065c7eddce21ca8472c8a8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1972: target measured ~34.4us p50 NAT queue→actual inner kernel read via source-gated <=8 same-TX-turn fresh Direct reverse handoff; retain old 32-return priority, sole original RX Wintun writer, TCP full mailbox FIFO and ordinary default OFF. New source-locked 2048 x1KiB QPC gap oracle; no new native performance value yet. H1970 original 2048/2048 SHA/Stop p50 delta124.3us; other 47.9us innerWrite→app gap unlocated; PLAN029 still OPEN.",
-  "why_now": "Rejoined actual H1970 original same-Win QPC: NAT queue→inner read34.4us p50/59.8us p99 and innerWrite→app47.9us/75.1us are meaningful; classification/NAT p99 <=1.1us, don't waste budget there. TX has a provable extra turn between predrain and fresh stage_sources.",
+  "current_task": "H1973: H1972 signed-only <=8 post-ingress Direct return optimization aimed at source H1970 34.4us queued→inner read, original 32 reverse predrain FIFO retained; synthetic 4/5 PASS, one test wrongly compared variable declaration to first legacy flush, fixed to actual stage_sources invocation. Linux Rust pure PASS, Windows Rust still collecting; no new native/RTT claim. Full PLAN029 OPEN.",
+  "why_now": "Cheapest H1972 static test misidentified local variable introduction as first Wintun read. Actual old pre-ingress 32 reverse drain comes after declaration and BEFORE real stage_sources. Keep original kernel owner and do not weaken FIFO/drop guards.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H1972 five strict QPC/scheduler synthetic gates, original Win/Linux Rust and Go preflight. If green trigger one source-locked Win2025/WSL2 normal P2 2048x1KiB with rebuild+steady+post-ingress flags, record actual post-delivered >0, full SHA/FIN/Stop and gap p50/p99. Require major (~20us) improvement before product enable; different-run comparisons are observational. Stay away from extreme CDN and unrelated micros.",
+  "next_action": "Collect H1973 QPC gap synthetic 5/5 and exact original Win/Linux Rust preflights, then one original Windows2025/WSL2 source-locked Normal P2 2048x1KiB using rebuild+steady+post-ingress marker. Verify >=1 true post flushed, original SHA/FIN/Stop and real per-window NAT→inner/app p50 p99. Do not call a tiny shift a fix; else revert/retarget biggest.",
   "unverified": true,
   "last_tested_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1971-H1970-REAL-STEADY-2048X1K-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1972-POST-INGRESS-EXACT-LOW-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md",
     "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md",
     "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
     "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md"
+    "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1970 original genuine Win2025/WSL2 2048x1KiB Direct RTT p50 218.8us vs physical94.5us, gap extra124.3us. Offline source-locked 2048 QPC windows identify NAT→inner kernel read p50 34.4us/p99 59.8us and innerWrite→Win app recv p50 47.9us/p99 75.1us; policy <2us. H1972 signed-only 8-event same-turn fresh return FIFO experiment staged, native not yet proven, product OFF; full PLAN029 OPEN."
+  "partial_summary": "H1972 original per-window QPC baseline source dc2d: 34.4us queue→inner read p50, 47.9us inner write→Windows app recv p50; H1972 tentative <=8 same-turn TX→RX return optimization signed-only. H1973 source-order assertion fix only, no original native run, product default OFF. H1970 real 2048 SHA/Stop scoped; PLAN029 OPEN."
 }

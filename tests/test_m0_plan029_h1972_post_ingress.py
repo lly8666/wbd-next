@@ -44,7 +44,7 @@ class PostIngressSteady(unittest.TestCase):
     def test_original_wintun_rx_ownership_and_signed_only(self):
         src=(ROOT/"crates/wbd-engine/src/v4_windows_native_runtime.rs").read_text()
         a=src.index("if owner.has_udp_flows(){")
-        b=src.index("let mut fresh_direct_ingress=false;")
+        b=src.index("let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,")
         c=src.index("if same_turn_direct && fresh_direct_ingress{")
         d=src.index("// A bounded <=4-row parity quantum",c)
         self.assertLess(a,b);self.assertLess(b,c);self.assertLess(c,d)
