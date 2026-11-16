@@ -1478,7 +1478,7 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn v3_seal_entry_with_padding(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,ipv4:&[u8],out:&mut [u8],padding:usize
 )->Result<(usize,u32,u64),i32>{
-    if padding>256||!v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
+    if padding>500||!v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
         ipv4[0]>>4!=4 || ipv4.len()>2048 ||
         ipv4.len().saturating_add(FIXED_WIRE_OVERHEAD).saturating_add(padding)>out.len(){
         return Err(INVALID)
@@ -2880,9 +2880,9 @@ mod tests {
         let mut out=[0u8;2048];
         let (n,seq,pn)={
             let mut e=r.entries[&h].lock().unwrap();
-            v3_seal_entry_with_padding(&mut e,epoch,91,19,&source,&mut out,32).unwrap()
+            v3_seal_entry_with_padding(&mut e,epoch,91,19,&source,&mut out,400).unwrap()
         };
-        assert_eq!(n,100+FIXED_WIRE_OVERHEAD+32);
+        assert_eq!(n,100+FIXED_WIRE_OVERHEAD+400);
         let (n2,seq2,pn2)={
             let mut e=r.entries[&h].lock().unwrap();
             v3_seal_entry(&mut e,epoch,91,19,&source,&mut out).unwrap()
@@ -2915,8 +2915,8 @@ mod tests {
             slab.writable()[14..14+ipv4.len()].copy_from_slice(&ipv4);
             let now=m2_clock();
             let (pn,seq,used)=e.owner.seal_normal_off_one_padded(
-                slab,ipv4.len(),budget,0,now,32).unwrap();
-            assert_eq!(used,ipv4.len()+FIXED_WIRE_OVERHEAD+32);
+                slab,ipv4.len(),budget,0,now,400).unwrap();
+            assert_eq!(used,ipv4.len()+FIXED_WIRE_OVERHEAD+400);
             let storage=std::mem::take(&mut e.tx_scratch);
             let batch=e.owner.drain_tx(now,storage)
                 .unwrap_or_else(|_|panic!("original M1 padded FrozenRecord drain failed"));
