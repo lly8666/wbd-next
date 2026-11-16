@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1995,
-  "checkpoint_sha": "b7e5dd10d1829113027f116a82ec59141f358558",
+  "sequence": 1996,
+  "checkpoint_sha": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1995 collect original H1993 source34e870 Action43840543096 native FAILURE: Windows+Linux original 1MiB physical/Direct kernel SHA/FIN and 120 real Tunnel UDP observed, but strict new H1993 Python parser assumes download recv bytes exactly 128KiB multiples; recv(<=16KiB) in fact crosses boundary, so original report Stop NOT_RUN. Fix only parser recv crossing <=16383, upload exact; 9 pure tests and exactly one original normal signed P2 rerun, preserve first native FAIL.",
-  "why_now": "Frozen Action43840543096 artifact14214065842 proves original physical first download bytes134968 and Direct140296, second Direct263583 (not exact 131072/262144). Fail is measuring parser bug, not established Rust packet fault. Reuse original SHA/FIN/Stop strict verification and one same-source ordinary baseline.",
+  "current_task": "H1996 collect H1995 signed ordinary real P2 SUCCESS and reprioritize: only Direct 1KiB RTT p99 materially higher than ordinary physical socket (~1.8-2.1x in prior source), plus H1974 five 61-63ms true outliers; do not pursue small 1MiB +2.2% differences, extreme capacity development or blind 2048 replays.",
+  "why_now": "H1995 Action43844626304 native and Stop success 1MiB 295.366ms physical vs 301.871ms Direct (+2.2%), Tunnel UDP 120/120 p99 2.823ms. This is not Direct RTT p99. H1974 genuine app 1KiB p99 0.7411 vs 0.3558ms and five rare ~61ms stalls remains unlocated; H1978 another VM 0.682 vs 0.381ms with no stalls cannot prove cause.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1995 newly signed one original Normal 1MiB physical+Direct+Tunnel 96B Action and all original Go/Rust/Win/WSL2 Stop; compare p99/longest app download progress conservatively; no 2048 replay, 4MiB/stress or speculative hot-path tweak.",
+  "next_action": "No immediate Action repeat. First reuse existing H1974/H1978/H1979 source-locked TX mailbox→RX Wintun SendPacket start→WinSock FD_READ/inner read boundary and look for one falsifiable large-tail lost-wake/HOL cause; only evidence-backed small code change + ONE ordinary same-source same-VM physical/Direct RTT p99 and owned Stop test. No extreme saturation, 4MiB/2048 blind replay or microsecond tuning.",
   "unverified": true,
-  "last_tested_source": "8ed70bc54a1aba3ccd460d63089b251280897915",
+  "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json",
     "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",
     "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
     "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1993 7/7 pure regression, Win/Linux Rust, Win Go and Linux peer build PASS; signed native Action43840543096 FAIL when H1993 measurement-only parser rejected genuine recv 128KiB crossings, Stop NOT_RUN. Actual partial 1MiB physical300.86ms Direct319.608ms; Tunnel120 returns, p99 2.366ms. H1995 fix parser/test only. H1974 true five 61ms tails OPEN, current-source Direct p99/CPU NOT_RUN."
+  "partial_summary": "H1995 original signed two-OS Action43844626304 SUCCESS (all native/Stop): paced 1MiB physical295.366ms Direct301.871ms; 128KiB download largest gap1.171/1.732ms; 120/120 Tunnel UDP RTT p99 2.823ms. Current-source Direct 1KiB RTT p99 and CPU/GiB NOT_RUN. Original H1993 FAIL preserved. Prior H1974 small Direct p99 ratio2.08x and 5×61-63ms outliers OPEN; no new extreme dispatch."
 }

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1996_collect_H1995_native_focus_direct_relative_p99",
+  "date": "2026-11-16",
+  "source_sha": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
+  "action": {
+    "id": 43844626304,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43844626304",
+    "conclusion": "success",
+    "native_job_id": 133224228145,
+    "native_job_conclusion": "success",
+    "native_artifact_id": 14214519541
+  },
+  "real_normal_p2": {
+    "test": "one original Windows2025 Wintun/Npcap Rust CN FakeIP Direct TCP 1MiB vs physical TCP 1MiB same VM, 16KiB/4ms pacing, Linux WSL2 kernel peer, 120 genuine 96B Tunnel UDP",
+    "physical_elapsed_ms": 295.366,
+    "direct_elapsed_ms": 301.871,
+    "direct_over_physical_elapsed_ratio": 1.022,
+    "physical_download_max_128k_gap_ms": 1.171,
+    "direct_download_max_128k_gap_ms": 1.732,
+    "tunnel_udp_unique_replies": 120,
+    "tunnel_udp_rtt_p99_ms": 2.823,
+    "tunnel_udp_max_interreply_gap_ms": 20.829,
+    "covered_whole_direct_tcp": true,
+    "same_payload_sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "normal_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal"
+  },
+  "measurement_scope": {
+    "application_128k_gaps_are_not_direct_rtt_p99": true,
+    "single_paced_1m_not_bulk_or_causal_cpu_test": true,
+    "latest_source_direct_small_tcp_rtt_p99": "NOT_RUN",
+    "latest_source_cpu_per_delivered_gib": "NOT_RUN"
+  },
+  "priority_source_locked_prior": {
+    "h1974": {
+      "source_sha": "bd611192c397220d467a8330defce4e0d494ac04",
+      "action_id": 43808776053,
+      "original_native_conclusion": "failure",
+      "physical_rtt_p99_ms": 0.3558,
+      "direct_rtt_p99_ms": 0.7411,
+      "direct_over_physical_rtt_p99_ratio": 2.083,
+      "original_direct_max_rtt_ms": 62.6962,
+      "outliers_61_63_ms": 5,
+      "genuine_duplicate_seq": 4,
+      "first_nat_to_inner_read_outlier_about_ms": 60,
+      "root_cause": "OPEN",
+      "signoff": "APP_SHA_FIN_AND_BOTH_OWNED_STOP_ONLY"
+    },
+    "h1978": {
+      "source_sha": "a07e62fe4ee62ba90b5a1fd60a2699c36ee2ab11",
+      "action_id": 43817058020,
+      "original_native_conclusion": "failure",
+      "physical_rtt_p99_ms": 0.381,
+      "direct_rtt_p99_ms": 0.682,
+      "direct_over_physical_rtt_p99_ratio": 1.79,
+      "app_rtt_ge8ms": 0,
+      "source_boundary_qpc_2048": "OFFLINE_DIAG_ONLY_NOT_ACTION_PASS"
+    }
+  },
+  "preserved_fail": {
+    "h1993_action_id": 43840543096,
+    "conclusion": "failure",
+    "why": "test harness incorrectly required 128KiB-aligned recv checkpoints; real TCP SHA, FIN and 120 replies seen, but Stop NOT_RUN",
+    "not_upgraded": true
+  },
+  "decision": "No new extreme-pressure features, no retry matrix, no broad tuning. Direct 1MiB total +2.2% is not p99. Focus ordinary 1KiB Direct RTT ~1.8-2.1x physical and rare ~61ms max; no speculative product change without exact first-stall boundary; 029 remains IN_PROGRESS",
+  "new_dispatch": "NONE",
+  "product_code_changed": false
+}
