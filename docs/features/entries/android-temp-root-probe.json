@@ -10,13 +10,13 @@
     "experiment/android-temp-root-probe"
   ],
   "defaults": {
-    "implementation": "API28_OWNED_TUN_RAW_PASS; API29_30_31_TUN_TARGET_FILTER_FAIL_RAW_PASS; API37_SDK_ENV_BLOCKED; bounded fixture correction pending",
+    "implementation": "API28_TUN_RAW_PASS_SOURCE_c7fa; API29_31_RAW_PASS_TUN_FILTER_FAIL_SOURCE_c7fa; API37_ENV_BLOCKED; API32_34_NEW_SOURCE_WAITING",
     "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
   "usage": {
     "cli": "android-root-probe [inspect|exercise]；inspect只读，exercise仅创建owned非持久TUN与loopback raw socket；不申请root",
-    "config": "Code SOURCE c7fa61412a02e0adff389e761308bb1147a35fa7 build 43801129305 artifact 14195549242; API29=43801669820 API30=43801669682 API31=43801669793 (TUN exact-match FAIL; raw PASS); API37 SDK37 ENV_BLOCKED",
+    "config": "new SOURCE=66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925 build=43802134067 artifact=14197020858 manifest_SHA256=ecae5b4668a15af72d06dd8695718cfedf12fdbf25849319ee4cda61b478d800 ; API32/33/34 pinned new build; old-source API29-31 FAIL preserved",
     "gui": "本工作包未新增Kotlin壳；app→su、前台服务、网络回调均NOT_RUN，不是可连接客户端"
   },
   "code_refs": [
@@ -38,9 +38,17 @@
     "docs/devlog/android-root-probe/20261116-workpack-04.md",
     "docs/devlog/android-root-probe/20261116-workpack-05.md",
     "docs/devlog/android-root-probe/20261116-workpack-06.md",
-    "docs/devlog/android-root-probe/20261116-workpack-07.md"
+    "docs/devlog/android-root-probe/20261116-workpack-07.md",
+    "docs/devlog/android-root-probe/20261116-workpack-08.md"
   ],
   "verification": [
+    {
+      "platform": "Android Bionic x86_64+aarch64 parser fix SOURCE 66ab0d8",
+      "scope": "bounded exact-match TUN read filter, ignore/record up to three unrelated packet samples; cross-build and artifact SHA256 only",
+      "status": "BUILD_PASS",
+      "source_sha": "66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43802134067"
+    },
     {
       "platform": "Android 12 / API31 AOSP x86_64, Enforcing adb-root",
       "scope": "TUN owned UDP ingress/cleanup and raw lo TCP SYN+RST positive; egress first packet failed exact target match, TUN overall FAIL, no whole-tether proof",
