@@ -124,7 +124,7 @@ fn underlay_completion(fd:RawFd,token:&str)->io::Result<Value>{
  // actual response from emulator host 10.0.2.2. The root-owned /32 rule is
  // still active until this packet is observed on the TUN.
  let expected=format!("wbd-underlay-{token}");
- let deadline=Instant::now()+Duration::from_secs(16);
+ let deadline=Instant::now()+Duration::from_secs(34);
  let mut buf=[0u8;2048];
  while Instant::now()<deadline{
   let n=match wait_read(fd,&mut buf,300){Ok(n)=>n,

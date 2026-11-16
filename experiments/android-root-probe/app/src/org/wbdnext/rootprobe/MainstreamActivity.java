@@ -122,7 +122,20 @@ public final class MainstreamActivity extends Activity {
                 .put("connected_to","198.18.254.2:49493");
         }
     }
+    // Bound emulator host bridge retries. Each attempt still uses the exact
+    // Android Network.bindSocket path; never ADB reverse or loopback.
     private JSONObject underlay(String t) throws Exception {
+        IOException last=null;
+        for(int attempt=1;attempt<=3;attempt++){
+            try {return underlayAttempt(t).put("connect_attempt",attempt);}
+            catch(SocketTimeoutException | ConnectException e){
+                last=e;
+                if(attempt<3)Thread.sleep(250);
+            }
+        }
+        throw new IOException("netd-bound host TCP unavailable after 3 real attempts",last);
+    }
+    private JSONObject underlayAttempt(String t) throws Exception {
         ConnectivityManager cm=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         if(cm==null)throw new IOException("ConnectivityManager absent");
         Network net=cm.getActiveNetwork();
@@ -137,7 +150,7 @@ public final class MainstreamActivity extends Activity {
         try(Socket s=new Socket()){
             // Actual Android API uses netd fwmark/network selection, not root SO_BINDTODEVICE.
             net.bindSocket(s);
-            s.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{10,0,2,2}),18317),4500);
+            s.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{10,0,2,2}),18317),2800);
             s.setSoTimeout(4500);
             s.getOutputStream().write((probe+"\n").getBytes(StandardCharsets.US_ASCII));
             s.getOutputStream().flush();
@@ -180,6 +193,17 @@ public final class MainstreamActivity extends Activity {
             .put("elapsed_ms",SystemClock.elapsedRealtime()-start);
     }
     private JSONObject tlsUnderlay(String t) throws Exception {
+        IOException last=null;
+        for(int attempt=1;attempt<=2;attempt++){
+            try {return tlsUnderlayAttempt(t).put("connect_attempt",attempt);}
+            catch(SocketTimeoutException | ConnectException e){
+                last=e;
+                if(attempt<2)Thread.sleep(250);
+            }
+        }
+        throw new IOException("real netd-bound pinned TLS unavailable after two attempts",last);
+    }
+    private JSONObject tlsUnderlayAttempt(String t) throws Exception {
         ConnectivityManager cm=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         Network net=cm==null?null:cm.getActiveNetwork();
         if(net==null)throw new IOException("no active Network for TLS");
@@ -201,7 +225,7 @@ public final class MainstreamActivity extends Activity {
         ssl.init(null,trust.getTrustManagers(),null);
         try(Socket transport=new Socket()){
             net.bindSocket(transport);
-            transport.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{10,0,2,2}),18318),4500);
+            transport.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{10,0,2,2}),18318),2800);
             transport.setSoTimeout(5000);
             try(SSLSocket socket=(SSLSocket)ssl.getSocketFactory().createSocket(
                   transport,"wbd-ci-host.test",18318,true)){
@@ -286,7 +310,7 @@ public final class MainstreamActivity extends Activity {
                     j.put("network_error",e.toString());
                 }
             }
-            boolean finished=root.waitFor(40,TimeUnit.SECONDS);
+            boolean finished=root.waitFor(55,TimeUnit.SECONDS);
             if(!finished){
                 root.destroy();
                 if(!root.waitFor(2,TimeUnit.SECONDS))root.destroyForcibly();

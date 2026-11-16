@@ -62,7 +62,7 @@ adb shell chmod 0755 /data/local/tmp/wbd-app-native
 adb shell run-as org.wbdnext.rootprobe rm -f files/mainstream-result.json
 adb shell am start -W -n org.wbdnext.rootprobe/.MainstreamActivity >"$o/app-start.txt"
 found=0
-for i in $(seq 1 48);do
+for i in $(seq 1 72);do
  if adb shell run-as org.wbdnext.rootprobe cat files/mainstream-result.json >"$o/app-mainstream.json" 2>"$o/read.err";then
   if python3 -m json.tool "$o/app-mainstream.json" >/dev/null 2>&1;then found=1;break;fi
  fi
@@ -136,6 +136,7 @@ req(json.loads(Path("out/native/manifest.json").read_text()).get("source")==os.e
 summary={"schema":"android-ksu-mainstream-traffic/v1","source":os.environ["GITHUB_SHA"],
  "status":"MAINSTREAM_DNS_TLS_PASS" if not errors else "FAIL",
  "app_uid":a.get("app_uid"),"app_selinux":a.get("app_context"),
+ "app_direct_dns":d,"app_tcp_http":t,"app_network_error":a.get("network_error"),
  "app_su_exit":a.get("su_exit"),"udp":u,"dns":dns,"tcp":tcp,
  "netd_underlay":net,"system_dns":sdns,"tls_underlay":tls,"cleanup":clean,"errors":errors,
  "scope":"real App UDP/DNS UDP53/TCP HTTP via synthetic TUN; real default Network bound Socket to emulator host. Not system resolver/physical modem/tether/NAT"}
