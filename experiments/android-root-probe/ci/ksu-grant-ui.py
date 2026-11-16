@@ -99,13 +99,28 @@ try:
         except RuntimeError:
             switches=[n for n in detail if "switch" in n["class"].lower() and
                       n["checked"]!="true"]
-            if len(switches)!=1:
-                raise RuntimeError(f"expected one root-grant toggle, got {len(switches)}")
-            n=switches[0]
-            m=re.match(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",n["bounds"])
-            if not m:raise RuntimeError("grant toggle bounds unavailable")
-            a,b,c,d=map(int,m.groups())
-            adb("shell","input","tap",str((a+c)//2),str((b+d)//2))
+            if len(switches)==1:
+                n=switches[0]
+                m=re.match(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",n["bounds"])
+                if not m:raise RuntimeError("grant toggle bounds unavailable")
+                a,b,c,d=map(int,m.groups())
+                adb("shell","input","tap",str((a+c)//2),str((b+d)//2))
+                result["grant_action"]="ACCESSIBILITY_SWITCH"
+            else:
+                # Actual KSU 3.3.1 Compose detail screenshot from pinned AVD:
+                # "Superuser" row [12,230]-[308,290], OFF toggle x268,y260.
+                # Android UIAutomator sees the row, but not a Switch class.
+                # The exact PKG has already been verified on THIS detail page.
+                size=adb("shell","wm","size").strip()
+                superuser=[n for n in detail if n["text"].casefold()=="superuser"
+                          and "[66,250][143,270]"==n["bounds"]]
+                row=[n for n in detail if n["clickable"]=="true"
+                     and n["bounds"]=="[12,230][308,290]"]
+                pkglabel=[n for n in detail if PKG==n["text"]]
+                if "320x640" not in size or len(superuser)!=1 or len(row)!=1 or len(pkglabel)!=1:
+                    raise RuntimeError("refuse Compose toggle fallback: exact package, Superuser row or size differs")
+                adb("shell","input","tap","267","260")
+                result["grant_action"]="VERIFIED_PACKAGE_COMPOSE_SUPERUSER_TOGGLE_267_260"
             time.sleep(2)
         after=capture("after-grant")
         # A confirmation dialog may be shown, only confirm if visible.
