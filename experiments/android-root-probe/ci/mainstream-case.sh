@@ -93,6 +93,9 @@ req(net.get("status")=="PASS" and net.get("socket_bound_to_active_network") and
     "Android netd active Network underlay Socket to emulator host")
 req("HOST_ACCEPT "+str(a.get("token","missing")) in read("host-echo.log"),
     "host TCP server never saw actual App token via underlay")
+req((extra.get("underlay_marker") or {}).get("real_app_underlay_completed_before_rule_release") is True and
+    a.get("underlay_completion_marker_bytes",0)>0,
+    "host netd socket not proven before UID route released")
 req(clean.get("ok") and clean.get("rules_equal") and clean.get("routes_equal") and
     clean.get("tun_gone"),"root-owned network cleanup")
 req(read("rule-before.txt")==read("rule-after.txt"),"system rule snapshot changed")

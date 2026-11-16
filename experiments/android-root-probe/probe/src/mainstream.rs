@@ -119,9 +119,32 @@ fn tcp(fd:RawFd,token:&str)->io::Result<Value>{
      format!("TCP App SYN/HTTP/ACK incomplete: syn_seen={},response_written={}",
         client.is_some(),reply_info.is_some())))
 }
+fn underlay_completion(fd:RawFd,token:&str)->io::Result<Value>{
+ // App sends this marker ONLY after a netd-bound TCP socket has received an
+ // actual response from emulator host 10.0.2.2. The root-owned /32 rule is
+ // still active until this packet is observed on the TUN.
+ let expected=format!("wbd-underlay-{token}");
+ let deadline=Instant::now()+Duration::from_secs(6);
+ let mut buf=[0u8;2048];
+ while Instant::now()<deadline{
+  let n=match wait_read(fd,&mut buf,300){Ok(n)=>n,
+      Err(e) if e.kind()==ErrorKind::TimedOut=>continue,Err(e)=>return Err(e)};
+  let Some((proto,_src,seg))=ipv4(&buf[..n])else{continue};
+  if proto!=17||seg.len()<8||u16::from_be_bytes([seg[2],seg[3]])!=49494{continue}
+  if &seg[8..]==expected.as_bytes(){
+   return Ok(json!({"status":"SUPPORTED_IN_SCOPE",
+      "real_app_underlay_completed_before_rule_release":true,
+      "marker_bytes":expected.len(),"marker_udp_ip_bytes":n}));
+  }
+ }
+ Err(io::Error::new(ErrorKind::TimedOut,
+     "ordinary App host-underlay completion marker absent while UID route active"))
+}
 pub fn serve(fd:RawFd,token:&str)->io::Result<Value>{
  let dns=dns(fd)?;
  let tcp=tcp(fd,token)?;
+ let marker=underlay_completion(fd,token)?;
  Ok(json!({"status":"SUPPORTED_IN_SCOPE","dns_udp53":dns,"tcp_http":tcp,
-     "scope":"one normal App synthetic IPv4 /32 to root TUN; not system DNS/Internet"}))
+     "underlay_marker":marker,
+     "scope":"one normal App synthetic IPv4 /32 to root TUN; netd host underlay is separate, no system DNS/Internet"}))
 }

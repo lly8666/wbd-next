@@ -188,6 +188,13 @@ public final class MainstreamActivity extends Activity {
                     j.put("dns",dns(t));
                     j.put("tcp",tcpHttp(t));
                     j.put("netd_underlay",underlay(t));
+                    // A real App marker confirms the default-network echo was
+                    // completed WHILE the independent root TUN UID rule was active.
+                    byte[] completed=("wbd-underlay-"+t).getBytes(StandardCharsets.US_ASCII);
+                    try(DatagramSocket signal=new DatagramSocket()){
+                        signal.send(new DatagramPacket(completed,completed.length,peer(),49494));
+                    }
+                    j.put("underlay_completion_marker_bytes",completed.length);
                 }catch(Exception e){
                     j.put("network_error",e.toString());
                 }
@@ -222,6 +229,9 @@ public final class MainstreamActivity extends Activity {
                     "PASS".equals(j.optJSONObject("dns").optString("status"))&&
                     "PASS".equals(j.optJSONObject("tcp").optString("status"))&&
                     "PASS".equals(j.optJSONObject("netd_underlay").optString("status"))&&
+                    multi.optJSONObject("underlay_marker")!=null &&
+                    multi.optJSONObject("underlay_marker").optBoolean("real_app_underlay_completed_before_rule_release")&&
+                    j.optInt("underlay_completion_marker_bytes",0)>0&&
                     cl!=null&&cl.optBoolean("ok")&&cl.optBoolean("rules_equal")&&
                     cl.optBoolean("routes_equal")&&cl.optBoolean("tun_gone");
                 j.put("status",pass?"APP_MAINSTREAM_NETWORK_PASS":"APP_MAINSTREAM_NETWORK_FAIL");
