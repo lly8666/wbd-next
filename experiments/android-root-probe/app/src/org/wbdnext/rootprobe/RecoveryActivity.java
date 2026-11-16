@@ -86,7 +86,10 @@ public final class RecoveryActivity extends Activity {
         super.onCreate(b);
         LinearLayout layout=new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(24,24,24,24);
+        // This app uses the stock ActionBar theme. A content View at y=24
+        // is visually present but the ActionBar intercepts its tap.
+        // Keep the physical Button entirely below the ActionBar's y=80.
+        layout.setPadding(24,112,24,24);
         label=new TextView(this);
         label.setText("仅清理 WBD 自有规则，不会清空默认路由或修改系统共享。");
         label.setTextSize(16);

@@ -38,9 +38,17 @@ m=re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",bounds)
 if not m:raise RuntimeError("no button bounds")
 a,b,c,d=map(int,m.groups())
 if c-a<20 or d-b<20:raise RuntimeError("invalid recovery tap box")
+# On this stock-theme API36 AVD the action bar container sits over the top
+# 80 px of content. The first CI proved a visible y=24..72 Button was occluded.
+bars=[n for n in nodes if n.get("resource-id","")=="android:id/action_bar_container"]
+if bars:
+    mbar=re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",bars[0].get("bounds",""))
+    if mbar and b<int(mbar.group(4)):
+        raise RuntimeError("refuse tap: recovery Button still occluded by Android ActionBar")
+
 adb("shell","input","tap",str((a+c)//2),str((b+d)//2))
 data=None
-for i in range(50):
+for i in range(135):
     p=adb("shell","run-as",PKG,"cat","files/recovery-result.json",check=False)
     if p.startswith("{"):
         try:
