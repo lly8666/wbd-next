@@ -2,6 +2,9 @@ package org.wbdnext.rootprobe;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.graphics.Rect;
+import android.view.View;
+import android.os.SystemClock;
 import android.content.pm.PackageManager;
 import android.text.InputType;
 import android.widget.*;
@@ -28,6 +31,39 @@ public final class SplitSettingsActivity extends Activity {
     private String bundledCn="";
     private String previousCustom="";
     private static final String SOURCE="wbd-cn-ipv4.txt";
+    // View locations are a debug-only black-box input witness. CI reads only
+    // screen rectangles and still has to send real Android touch events and
+    // verify native Root readback. It does not synthesize a config or call
+    // any click handler internally.
+    private final LinkedHashMap<String,View> viewWitness=new LinkedHashMap<>();
+    private long witnessLastMs=0;
+    private void emitVisibleBounds(){
+        long now=SystemClock.elapsedRealtime();
+        if(now-witnessLastMs<120 || viewWitness.size()<3)return;
+        witnessLastMs=now;
+        try{
+            JSONObject result=new JSONObject();
+            result.put("schema","wbd-split-real-android-view-bounds/v1");
+            result.put("activity","SplitSettingsActivity");
+            result.put("default_mode",mode(defaultMode));
+            result.put("app_mode",mode(appMode));
+            JSONObject views=new JSONObject();
+            for(Map.Entry<String,View> entry:viewWitness.entrySet()){
+                Rect area=new Rect();
+                boolean exists=entry.getValue().isShown() &&
+                    entry.getValue().getGlobalVisibleRect(area);
+                JSONObject row=new JSONObject();
+                row.put("visible",exists && area.top>=80 && area.width()>=30 && area.height()>=24);
+                row.put("left",area.left);row.put("top",area.top);
+                row.put("right",area.right);row.put("bottom",area.bottom);
+                views.put(entry.getKey(),row);
+            }
+            result.put("controls",views);
+            try(FileOutputStream out=openFileOutput("wbd-split-ui-bounds.json",MODE_PRIVATE)){
+                out.write(result.toString().getBytes(StandardCharsets.UTF_8));
+            }
+        }catch(Exception e){android.util.Log.w("WBD_SPLIT_VIEW","geometry witness unavailable",e);}
+    }
 
     private EditText field(LinearLayout panel,String title,String initial,int rows){
         TextView label=new TextView(this);label.setText(title);label.setTextSize(15);
@@ -258,7 +294,16 @@ public final class SplitSettingsActivity extends Activity {
                 runOnUiThread(()->{status.setText(line);saveButton.setEnabled(true);});
             },"wbd-android-split-validate").start();
         });
+        viewWitness.put("package",packageInput);
+        viewWitness.put("app_mode",appMode);
+        viewWitness.put("add",add);
+        viewWitness.put("save",saveButton);
+        viewWitness.put("default_mode",defaultMode);
+        scroll.setOnScrollChangeListener((v,sx,sy,ox,oy)->{
+            emitVisibleBounds();
+        });
         scroll.addView(panel);setContentView(scroll);
+        scroll.post(()->emitVisibleBounds());
         restoreSaved();refresh();
     }
 }

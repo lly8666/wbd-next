@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-"""True target37 Android UI selection/persistence and native Root policy readback.
-No Android main routing, DNS, WBD connection or FakeIP is activated.
+"""Black-box Android touch regression on a real KernelSU AVD.
+
+Reuse the *already captured* real uiautomator hierarchy from the immediately
+preceding diagnostic click. In this API36 guest a second uiautomator process is
+OOM-killed (137); repeating it isn't evidence. SplitSettingsActivity exposes
+only its real on-screen View rectangles in app-private debug JSON. This script
+must send real adb input taps to those rectangles and independently verify
+App-saved JSON and Root-native readback. No click handler or config injection.
 """
 import json,re,subprocess,time,xml.etree.ElementTree as ET
 from pathlib import Path
@@ -9,87 +15,84 @@ O=Path("out/device-diag");O.mkdir(parents=True,exist_ok=True)
 def adb(*args,check=True,timeout=30):
  p=subprocess.run(["adb",*args],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
                   text=True,timeout=timeout)
- if check and p.returncode:raise RuntimeError(f"adb {args}: {p.returncode}: {p.stdout[:320]}")
+ if check and p.returncode:
+  raise RuntimeError(f"adb {args!r}: rc={p.returncode}: {p.stdout[:300]}")
  return p.stdout
-def dump():
- # The real API36 AVD occasionally kills the *second* short-lived
- # uiautomator process with SIGKILL/137 while App and Accessibility
- # services recover. It is an infrastructure failure, not a route verdict.
- last=""
- for attempt in range(5):
-  result=adb("shell","uiautomator","dump","/sdcard/wbd-split-screen.xml",
-             check=False,timeout=40)
-  raw=adb("shell","cat","/sdcard/wbd-split-screen.xml",check=False)
-  if "<hierarchy" in raw:
-   try:
-    nodes=list(ET.fromstring(raw).iter("node"))
-    (O/"split-ui.xml").write_text(raw)
-    return nodes
-   except ET.ParseError as e:
-    last=f"XML invalid: {e}"
-  else:
-   last=f"dump attempt={attempt+1} output={result[:200]} XML={raw[:140]}"
-  time.sleep(2.5)
- raise RuntimeError(f"uiautomator failed after 5 bounded tries: {last}")
-def box(n):
- b=n.get("bounds","")
- m=re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",b)
- if not m:raise RuntimeError(f"invalid view bounds {b}")
- return tuple(map(int,m.groups()))
-def valid(n):
- l,t,r,b=box(n);return r>l+20 and b>t+20 and t>=85 and n.get("visible-to-user","true")=="true"
-def click(n):
- l,t,r,b=box(n)
- if not valid(n):raise RuntimeError(f"view invisible/covered: {n.attrib}")
+def tap_bounds(rect,which):
+ l,t,r,b=[int(rect[k]) for k in ("left","top","right","bottom")]
+ if not rect.get("visible") or r-l<30 or b-t<24 or t<80 or b>640:
+  raise RuntimeError(f"App reported {which} outside real touch area: {rect}")
  adb("shell","input","tap",str((l+r)//2),str((t+b)//2))
-def find(text,klass=None):
- for n in dump():
-  if text in n.get("text","") and (klass is None or klass in n.get("class","")) and valid(n):
-   return n
- return None
-adb("shell","am","start","-W","-n",P+"/.DeviceDiagnosticActivity")
-time.sleep(2.5)
-button=find("Android 分流/全局设置","Button")
-if button is None:raise RuntimeError("split settings entry missing")
-click(button)
-if "SplitSettingsActivity" not in adb("shell","dumpsys","activity","activities"):
- raise RuntimeError("split mode SettingsActivity not reached")
-# Android's scroll view may expose offscreen nodes, but only click visible views.
-def scroll_for(text,klass=None,limit=10):
- for i in range(limit):
-  n=find(text,klass)
-  if n is not None:return n
-  adb("shell","input","swipe","160","690","160","180","300")
- raise RuntimeError("could not scroll to visible "+text)
-# Locate the editable directly following the package label in UI tree order.
-edit=None
-for turn in range(8):
- nodes=dump()
- for i,n in enumerate(nodes):
-  if "单独设置某 App" in n.get("text",""):
-   for x in nodes[i+1:i+6]:
-    if "EditText" in x.get("class","") and valid(x):edit=x;break
-   if edit:break
- if edit:break
- adb("shell","input","swipe","160","675","160","190","280")
-if edit is None:raise RuntimeError("per-app package editor not reachable")
-click(edit)
-adb("shell","input","text","uid:10502")
-adb("shell","input","keyevent","4")
-click(scroll_for("添加/覆盖此 App","Button"))
-click(scroll_for("保存并经 Root 验证策略","Button"))
-config=report=None
-for _ in range(70):
- raw=adb("shell","run-as",P,"cat","files/wbd-split-settings.json",check=False)
- val=adb("shell","run-as",P,"cat","files/wbd-split-validation.json",check=False)
+def fresh_bounds():
+ raw=adb("shell","run-as",P,"cat","files/wbd-split-ui-bounds.json",check=False)
  try:
-  config=json.loads(raw);report=json.loads(val)
-  if report.get("status")=="SUPPORTED_IN_SCOPE":break
- except ValueError:pass
- time.sleep(0.4)
-if config is None or report is None:raise RuntimeError("no saved config/native result")
-(O/"split-settings.json").write_text(json.dumps(config,indent=2,ensure_ascii=False)+"\n")
-(O/"split-validation.json").write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n")
+  v=json.loads(raw)
+  if v.get("schema")!="wbd-split-real-android-view-bounds/v1":
+   raise RuntimeError("invalid view geometry schema")
+  return v
+ except (ValueError,TypeError):
+  return {}
+def scroll_to(which):
+ for n in range(10):
+  state=fresh_bounds()
+  value=state.get("controls",{}).get(which,{})
+  if value.get("visible"):
+   return value
+  adb("shell","input","swipe","160","550","160","195","340")
+  time.sleep(0.25)
+ raise RuntimeError(f"Cannot reach visible {which} in Android layout, last={state}")
+def wait_config():
+ for _ in range(70):
+  raw=adb("shell","run-as",P,"cat","files/wbd-split-settings.json",check=False)
+  val=adb("shell","run-as",P,"cat","files/wbd-split-validation.json",check=False)
+  try:
+   cfg=json.loads(raw);report=json.loads(val)
+   if report.get("status")=="SUPPORTED_IN_SCOPE":
+    return cfg,report
+  except ValueError:pass
+  time.sleep(0.35)
+ raise RuntimeError("real UI click did not produce approved App config and Root-native validation")
+# Deliberately do NOT rerun the uiautomator service: it was already run
+# successfully as part of device-diagnostic-ui.py on this same boot/source.
+first=O/"ui.xml"
+if not first.is_file():raise RuntimeError("missing first-run authentic uiautomator screen snapshot")
+nodes=list(ET.fromstring(first.read_text()).iter("node"))
+buttons=[n for n in nodes if "Android 分流/全局设置" in n.get("text","") and
+         "Button" in n.get("class","") and n.get("enabled")=="true"]
+if len(buttons)!=1:raise RuntimeError("actual first-Activity Split Settings button not identified")
+m=re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",buttons[0].get("bounds",""))
+if not m:raise RuntimeError("real Split settings button bounds missing")
+l,t,r,b=map(int,m.groups())
+if l<0 or t<80 or b>640 or r>320 or b-t<24:
+ raise RuntimeError("real button obscured/out-of-bounds")
+adb("shell","run-as",P,"rm","-f","files/wbd-split-settings.json",
+    "files/wbd-split-validation.json","files/wbd-split-ui-bounds.json")
+adb("shell","am","start","-W","-n",P+"/.DeviceDiagnosticActivity")
+time.sleep(0.25)
+adb("shell","input","tap",str((l+r)//2),str((t+b)//2))
+# Confirm real Activity transition, not an imaginary click.
+for _ in range(15):
+ active=adb("shell","dumpsys","activity","activities",check=False)
+ if "SplitSettingsActivity" in active:break
+ time.sleep(0.25)
+else:raise RuntimeError("real tap did not open SplitSettingsActivity")
+for _ in range(15):
+ if fresh_bounds().get("controls"):break
+ time.sleep(0.3)
+else:raise RuntimeError("SplitSettingsActivity did not emit its on-screen widget bounds")
+tap_bounds(scroll_to("package"),"package")
+adb("shell","input","text","uid:10502")
+adb("shell","input","keyevent","4") # hide IME
+time.sleep(0.3)
+state=fresh_bounds()
+if state.get("default_mode")!="split" or state.get("app_mode")!="global":
+ raise RuntimeError("UI did not select split default / global per-app mode")
+tap_bounds(scroll_to("add"),"add")
+time.sleep(0.2)
+tap_bounds(scroll_to("save"),"save")
+config,report=wait_config()
+(O/"split-settings.json").write_text(json.dumps(config,ensure_ascii=False,indent=2)+"\n")
+(O/"split-validation.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
 assert config.get("schema")=="wbd-android-split/v1"
 assert config.get("default_mode")=="split"
 assert config.get("no_fakeip") is True
