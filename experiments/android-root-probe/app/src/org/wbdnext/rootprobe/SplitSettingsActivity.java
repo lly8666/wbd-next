@@ -8,6 +8,9 @@ import android.os.SystemClock;
 import android.content.pm.PackageManager;
 import android.text.InputType;
 import android.widget.*;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.WindowManager;
 import org.json.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -67,6 +70,7 @@ public final class SplitSettingsActivity extends Activity {
                     entry.getValue().getGlobalVisibleRect(area);
                 JSONObject row=new JSONObject();
                 row.put("visible",exists && area.top>=80 && area.width()>=30 && area.height()>=24);
+                row.put("focused",entry.getValue().hasFocus());
                 row.put("left",area.left);row.put("top",area.top);
                 row.put("right",area.right);row.put("bottom",area.bottom);
                 views.put(entry.getKey(),row);
@@ -302,6 +306,7 @@ public final class SplitSettingsActivity extends Activity {
     }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         bundledCn=asset(this,SOURCE);
         ScrollView scroll=new ScrollView(this);
         LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);
@@ -317,6 +322,21 @@ public final class SplitSettingsActivity extends Activity {
         domainInput=field(panel,"额外 CN 域名：每行一个后缀或 =完全匹配（不使用 FakeIP）","",3);
         customCidr=field(panel,"手动额外 CN IPv4 CIDR：每行一条（预装列表外自定义）","",2);
         packageInput=field(panel,"单独设置某 App：填写完整包名（或 uid:10482）","",1);
+        packageInput.setInputType(InputType.TYPE_CLASS_TEXT|
+            InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        packageInput.setSelectAllOnFocus(true);
+        packageInput.setOnFocusChangeListener((v,focused)->{
+            noteUiAction(focused?"package_focused":"package_unfocused");
+        });
+        packageInput.addTextChangedListener(new TextWatcher(){
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count){
+                // Expose the field's *length* to test driver after real typing,
+                // never its actual package name or user-entered string.
+                noteUiAction("package_text_changed");
+            }
+            @Override public void afterTextChanged(Editable text){}
+        });
         appMode=modes(panel,"该 App 选用的模式",false);
         Button add=new Button(this);add.setText("添加/覆盖此 App 的模式");
         add.setOnClickListener(v->{

@@ -97,8 +97,40 @@ for _ in range(15):
  if fresh_bounds().get("controls"):break
  time.sleep(0.3)
 else:raise RuntimeError("SplitSettingsActivity did not emit its on-screen widget bounds")
-tap_bounds(scroll_to("package"),"package")
-adb("shell","input","text","uid:10502")
+# InputMethod may race a ScrollView relayout on the low-memory API36
+# system. Require actual focused EditText and real post-IME char count before
+# leaving the field. Never write the JSON or invoke an App onClick directly.
+typed=False
+entry_attempts=[]
+for attempt in range(4):
+ tap_bounds(scroll_to("package"),"package")
+ focus=False
+ for _ in range(12):
+  cur=fresh_bounds()
+  if cur.get("controls",{}).get("package",{}).get("focused"):
+   focus=True
+   break
+  time.sleep(0.2)
+ if not focus:
+  entry_attempts.append(f"try{attempt}:EditText_not_focused")
+  adb("shell","input","keyevent","4")
+  time.sleep(0.35)
+  continue
+ # Selection is set by Android EditText setSelectAllOnFocus(true), so a
+ # subsequent real keyboard action replaces rather than appends stale text.
+ adb("shell","input","text","uid:10502")
+ for _ in range(15):
+  cur=fresh_bounds()
+  if cur.get("package_char_count")==9:
+   typed=True
+   break
+  time.sleep(0.2)
+ if typed:break
+ entry_attempts.append(f"try{attempt}:post_keyboard_chars={cur.get('package_char_count')}")
+ adb("shell","input","keyevent","4")
+ time.sleep(0.3)
+if not typed:
+ raise RuntimeError(f"Real keyboard did not edit focused App package field: {entry_attempts}; {forensic()}")
 adb("shell","input","keyevent","4") # hide IME
 time.sleep(0.3)
 state=fresh_bounds()
