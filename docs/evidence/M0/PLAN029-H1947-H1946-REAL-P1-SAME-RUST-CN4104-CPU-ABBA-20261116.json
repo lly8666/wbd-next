@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "task": "H1947",
+  "plan": "029",
+  "source_sha": "bc6afde542c4daecee393745a982a590c9dba27f",
+  "result": "PASS_SCOPED_P1_SAME_RUST_V3_POLICY_ABBA_MEASURED",
+  "action_id": 43777305453,
+  "job_id": 133007701699,
+  "artifact_id": 14187716392,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/43777305453",
+  "action_conclusion": "success",
+  "scope": "ONE_WIN_VM_ORIGINAL_RUST_V3_POLICY_ABBA_SAME_TUNNEL_NO_DIRECT_FLOW",
+  "order": [
+    "A1_all",
+    "B1_cn",
+    "B2_cn",
+    "A2_all"
+  ],
+  "same_original_windows_go_sha": true,
+  "same_original_linux_peer_sha": true,
+  "app_and_owned_stop_all_4": "PASS_BOTH_OWNED",
+  "linux_alias_os_owned_all_4": true,
+  "cn_rows": [
+    0,
+    4104,
+    4104,
+    0
+  ],
+  "domain_bytes": [
+    0,
+    180224,
+    180224,
+    0
+  ],
+  "delivered_gib_each_leg": [
+    0.6984,
+    0.6984,
+    0.6984,
+    0.6984
+  ],
+  "windows_mbps_each_leg": [
+    49.9999,
+    49.9999,
+    49.9999,
+    49.9999
+  ],
+  "linux_mbps_each_leg": [
+    49.9866,
+    49.9866,
+    49.9866,
+    49.9874
+  ],
+  "windows_udp_p99_ms": [
+    63,
+    78,
+    63,
+    63
+  ],
+  "windows_go_plus_rust_process_cpu_s_per_gib": [
+    20.49327,
+    23.58076,
+    21.29868,
+    19.59837
+  ],
+  "cpu_comparison": {
+    "all_A_mean": 20.04582,
+    "cn_B_mean": 22.43972,
+    "difference_B_minus_A_cpu_s_per_gib": 2.3939,
+    "relative_difference_percent": 11.942,
+    "all_repeat_drift_pct": 4.464,
+    "cn_repeat_drift_pct": 10.17,
+    "delivered_gib_spread_pct": 0,
+    "interpretation": "POTENTIAL_REGRESSION_NEEDS_REPLICATION"
+  },
+  "windows_process_peak_rss_bytes": [
+    42557440,
+    46555136,
+    46788608,
+    41353216
+  ],
+  "rust_tx_cpu_s_lower_bound": [
+    7.609375,
+    7.984375,
+    7.1875,
+    6.53125
+  ],
+  "rust_rx_cpu_s_lower_bound": [
+    5.6875,
+    6.875,
+    7.125,
+    6.109375
+  ],
+  "limitations": [
+    "The scoped result means four-arm functionality and provenance PASS, not P1 CPU optimization qualified.",
+    "B1 and B2 CPU differ by 10.17%, so 11.942% between modes is not a causal classification-cost estimate.",
+    "Windows process CPU includes Go plus Rust and kernel time charged to process; no host-wide ISR/DPC/WSL attribution.",
+    "All four arms use same Tunnel destination and no Direct flow. Real direct TCP/UDP P2 baseline still separate.",
+    "Observed UDP p99 values are not pairwise subtractable; no second same-source P1 rerun."
+  ],
+  "h1946_fix": "4096 nonadjacent /32 CN fixture yields Rust cold 4104 rows, resolving H1937 B1 8-row first failure",
+  "h1947_new_code": "NOT_RUN_NONE_ADDED",
+  "full_plan029_exit": "OPEN"
+}
