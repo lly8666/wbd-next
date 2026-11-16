@@ -88,7 +88,7 @@
     {
       "platform": "Original Windows Npcap + Linux WSL2 eth0 tcpdump",
       "scope": "H2021 original full Normal unrestricted 0..500B no-flow-quota physical pcap, original M1 copied padding, kernel TCP/UDP duplex and both owned Stop; HISTORICAL policy, not H2025 20..30 record/2..3s envelope",
-      "status": "FUNCTIONAL_PASS_HISTORICAL_POLICY",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "076a227d9360b8a6025ff6901d02aca350035aff",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43893558571"
     },

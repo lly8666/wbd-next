@@ -143,8 +143,9 @@ mod tests{
             assert!((20..=30).contains(&v.max_records));
             assert!((2000..=3000).contains(&v.window_ms));
             assert_eq!(v.count,v.max_records);
+            let max_records=v.max_records;
+            assert!(total<=usize::from(max_records)*500);
             assert_eq!(p.propose(&packet,101,500),0);
-            assert!(total<=usize::from(v.max_records)*500);
             observed.insert(v.max_records);
             above_old_2k|=total>2048;
         }
