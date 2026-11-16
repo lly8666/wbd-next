@@ -31,6 +31,15 @@ for abi in arm64 x86_64;do
   }
 done
 mkdir -p "$out/assets"
+# Historical, date-pinned APNIC CN allocation snapshot. This is NOT an IP
+# geolocation truth set and MUST NOT be silently replaced by incomplete data.
+curl --fail --location --retry 3 --connect-timeout 15 --max-time 100 \
+ "https://ftp.apnic.net/stats/apnic/delegated-apnic-20261116" \
+ --output "$out/apnic-delegated-20261116.txt"
+python3 experiments/android-root-probe/ci/cn-ipv4-snapshot.py \
+ "$out/apnic-delegated-20261116.txt" "$out/assets"
+cp "$out/assets/cn-ipv4-provenance.json" "$out/cn-ipv4-provenance.json"
+rm -f "$out/apnic-delegated-20261116.txt"
 printf '%s\n' "$GITHUB_SHA" >"$out/assets/wbd-diagnostic-source.txt"
 "$tools/aapt2" link --manifest experiments/android-root-probe/app/DeviceDiagnosticManifest.xml \
  -I "$jar" -A "$out/assets" --min-sdk-version 28 --target-sdk-version 37 \
@@ -59,6 +68,8 @@ with zipfile.ZipFile(apk) as z:
   assert i.compress_type==zipfile.ZIP_STORED,(name,i.compress_type)
   assert i.file_size>200000,(name,i.file_size)
  assert z.read("assets/wbd-diagnostic-source.txt").strip().decode()==os.environ["GITHUB_SHA"]
+ assert z.getinfo("assets/wbd-cn-ipv4.txt").file_size>10000
+ assert z.getinfo("assets/cn-ipv4-provenance.json").file_size>100
  assert z.getinfo("classes.dex").file_size>2000
 def sha(b):return hashlib.sha256(b).hexdigest()
 m={
@@ -71,6 +82,8 @@ m={
  "x86_64_elf_sha256":sha((p/"native-payload/lib/x86_64/libwbdprobe.so").read_bytes()),
  "elf_load_alignment":"0x4000 PT_LOAD",
  "native_execution":"extractNativeLibs=true; App nativeLibraryDir/libwbdprobe.so via actual su; no ADB push",
+ "cn_ipv4_provenance":json.loads((p/"cn-ipv4-provenance.json").read_text()),
+ "cn_ipv4_note":"APNIC CN allocated/assigned, not IP geolocation; .cn suffix/custom domains only",
  "root_installer":False,"vpn_client":False,"vpn_service":False,
  "wifi_usb_physical_traffic":"NOT_RUN",
  "signing":"disposable per-run CI test key; uninstall debug package after test",
@@ -80,7 +93,7 @@ m={
 (p/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
 PY
 echo "$GITHUB_SHA" >"$out/SOURCE"
-( cd "$out"; sha256sum device-diagnostic.apk SOURCE manifest.json badging.txt apksigner-verify.txt elf-arm64-header.txt elf-x86_64-header.txt elf-arm64-loads.txt elf-x86_64-loads.txt >SHA256SUMS )
+( cd "$out"; sha256sum device-diagnostic.apk SOURCE manifest.json badging.txt apksigner-verify.txt elf-arm64-header.txt elf-x86_64-header.txt elf-arm64-loads.txt elf-x86_64-loads.txt cn-ipv4-provenance.json >SHA256SUMS )
 ( cd "$out"; sha256sum -c SHA256SUMS )
 rm -f out/apk/temporary.jks "$out/unsigned.apk" "$out/aligned.apk"
 rm -rf "$out/native-payload" "$out/assets"

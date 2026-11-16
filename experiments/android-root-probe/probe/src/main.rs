@@ -8,6 +8,8 @@ mod tethergate;
 mod recovery;
 mod ipv6gate;
 mod devicecheck;
+mod android_split;
+mod splitgate;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
@@ -311,6 +313,25 @@ fn main() {
         let result=appflow::run(uid,&token,mode=="appflow-kill",mode=="appflow-mainstream");
         println!("WBD_APPFLOW_RESULT {}",serde_json::to_string(&result).unwrap());
         if result["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1);}
+        return;
+    }
+    if mode=="splitpolicy" {
+        let r=android_split::pure();
+        println!("WBD_SPLIT_POLICY_RESULT {}",serde_json::to_string(&r).unwrap());
+        if r["status"]=="FAIL"{std::process::exit(1)}
+        return;
+    }
+    if mode=="splitvalidate" {
+        let path=std::env::args().nth(2).unwrap_or_default();
+        let r=android_split::validate_file(&path);
+        println!("WBD_SPLIT_CONFIG_RESULT {}",serde_json::to_string(&r).unwrap());
+        if r["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1)}
+        return;
+    }
+    if mode=="splitgate" {
+        let r=splitgate::run();
+        println!("WBD_SPLIT_KERNEL_RESULT {}",serde_json::to_string(&r).unwrap());
+        if r["status"]=="FAIL"{std::process::exit(1)}
         return;
     }
     if mode=="devicecheck" {

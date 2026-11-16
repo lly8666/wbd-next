@@ -42,7 +42,7 @@ need(r.get("root_verified") is True,"no true App->Root UID0 evidence")
 need(r.get("core_ipv4_eligibility")=="CORE_IPV4_ROOT_PROBE_PASS","not actual TUN/raw core pass")
 need(r.get("production_wifi_usb_vpn")=="NOT_RUN","misrepresented physical tether as passed")
 cases={x["id"]:x for x in r.get("tests",[])}
-for case in ("app_su","cap_net_admin","cap_net_raw","tun","raw_tcp","synthetic_tether_nat"):
+for case in ("app_su","cap_net_admin","cap_net_raw","tun","raw_tcp","android_split_policy","android_split_uid_kernel","synthetic_tether_nat"):
  need(cases.get(case,{}).get("status")=="PASS",f"missing real {case} pass")
 for case in ("ipv6_tun","policy_route"):
  need(cases.get(case,{}).get("status") in ("PASS","ENV_BLOCKED"),f"unclassified {case} outcome")
@@ -63,6 +63,8 @@ d={"schema":"android-real-ksu-self-contained-root-diagnostic/v1",
    "ipv6_tun":cases.get("ipv6_tun",{}).get("status"),
    "policy_route":cases.get("policy_route",{}).get("status"),
    "synthetic_tether_nat":cases.get("synthetic_tether_nat",{}).get("status"),
+   "android_split_policy":cases.get("android_split_policy",{}).get("status"),
+   "android_split_uid_kernel":cases.get("android_split_uid_kernel",{}).get("status"),
    "physical_wifi_usb":"NOT_RUN","errors":errors}
 (p/"summary.json").write_text(json.dumps(d,indent=2)+"\n")
 print(json.dumps(d,indent=2))

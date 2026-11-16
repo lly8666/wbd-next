@@ -22,6 +22,9 @@ on:
       - "experiments/android-root-probe/ci/tether-recovery-case.sh"
       - "experiments/android-root-probe/probe/src/ipv6gate.rs"
       - "experiments/android-root-probe/probe/src/devicecheck.rs"
+      - "experiments/android-root-probe/probe/src/android_split.rs"
+      - "experiments/android-root-probe/probe/src/splitgate.rs"
+      - "experiments/android-root-probe/ci/cn-ipv4-snapshot.py"
       - "experiments/android-root-probe/ci/build-device-diagnostic.sh"
       - "experiments/android-root-probe/ci/device-diagnostic-case.sh"
   workflow_dispatch:
@@ -89,5 +92,6 @@ jobs:
             out/diag/SHA256SUMS
             out/diag/badging.txt
             out/diag/elf-info.txt
+            out/diag/cn-ipv4-provenance.json
           retention-days: 14
           if-no-files-found: warn

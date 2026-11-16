@@ -138,6 +138,8 @@ public final class DeviceDiagnosticActivity extends Activity {
             String marker=mode.equals("devicecheck")?"WBD_DIAG_RESULT ":
                 mode.equals("ipv6gate")?"WBD_IPV6_RESULT ":
                 mode.equals("tethergate")?"WBD_TETHER_RESULT ":
+                mode.equals("splitpolicy")?"WBD_SPLIT_POLICY_RESULT ":
+                mode.equals("splitgate")?"WBD_SPLIT_KERNEL_RESULT ":
                 mode.equals("routegate")?"":""; // routegate / exercise return plain JSON
             int a=marker.isEmpty()?output.indexOf('{'):output.indexOf(marker);
             if(a<0){
@@ -239,11 +241,16 @@ public final class DeviceDiagnosticActivity extends Activity {
                 }
                 putRun(cases,"ipv6_tun","隔离网络命名空间 IPv6 TUN 双向 UDP",nativeCommand("ipv6gate"));
                 putRun(cases,"policy_route","隔离网络命名空间 SO_MARK/策略路由",nativeCommand("routegate"));
+                putRun(cases,"android_split_policy","Android 无 FakeIP：CN IP/DNS/每App模式、海外A优先逻辑",
+                    nativeCommand("splitpolicy"));
+                putRun(cases,"android_split_uid_kernel",
+                    "隔离网络命名空间：真实内核 UID 分流/全局与控制出口",
+                    nativeCommand("splitgate"));
                 putRun(cases,"synthetic_tether_nat",
                     "隔离网内 2 Wi-Fi + 1 USB 合成客户端 SNAT/反向 conntrack",
                     nativeCommand("tethergate"));
             }else{
-                for(String id:new String[]{"tun","raw_tcp","ipv6_tun","policy_route","synthetic_tether_nat"}){
+                for(String id:new String[]{"tun","raw_tcp","ipv6_tun","policy_route","android_split_policy","android_split_uid_kernel","synthetic_tether_nat"}){
                     cases.put(caseItem(id,id,"NOT_RUN",
                         thorough?"Root 未验证，拒绝尝试特权操作":"用户选择只读预检",root));
                 }
@@ -333,6 +340,10 @@ public final class DeviceDiagnosticActivity extends Activity {
         TextView title=new TextView(this);title.setTextSize(20);
         title.setText("WBD Android Root 上机诊断\n只测条件，不建立真实 VPN");
         v.addView(title);
+        Button split=new Button(this);
+        split.setText("Android 分流/全局设置与每 App 覆盖（配置预览）");
+        split.setOnClickListener(x->startActivity(new Intent(this,SplitSettingsActivity.class)));
+        v.addView(split);
         basic=new Button(this);basic.setText("1. Root 授权与系统只读预检");
         basic.setOnClickListener(x->launch(false));v.addView(basic);
         full=new Button(this);full.setText("2. 运行短时 Root / TUN / RAW / NAT 完整检测");
