@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2001",
+  "date": "2026-11-16",
+  "acceptance": "PASS_SCOPED_ONLY_NOT_FULL_PLAN029",
+  "evidence_type": "SOURCE_LOCKED_REAL_WINDOWS2025_WSL2_NATIVE",
+  "source_sha": "839e161a90a8c8017848dab1327f60673e38e05d",
+  "original_action": {
+    "id": 43858907438,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43858907438",
+    "conclusion": "success",
+    "native_job_id": 133273076864
+  },
+  "original_H1999_first_failed_preflight": {
+    "source_sha": "412bef6a2431f882aea37a74bcef57e10ce43714",
+    "action_id": 43858589556,
+    "conclusion": "failure",
+    "first_boundary": "old cheap static test assumed guest mode only 0/1/2; new signed UDP mode3",
+    "real_network": "NOT_RUN",
+    "owned_stop": "NOT_RUN",
+    "preserved": true
+  },
+  "scenario": "one_real_original_CN_DNS_FakeIP_Direct_UDP_windows2025_and_physical_WSL2_kernel_echo_then_720_sequential_pings",
+  "qname_dns_total_attempts": 1,
+  "qname_dns_app_elapsed_ms": 31,
+  "original_real_Cn_direct_udp_echo": "PASS",
+  "packet_sizes_bytes": [
+    96,
+    512,
+    1200
+  ],
+  "samples_per_arm_per_size": 120,
+  "app_total_unique_720": true,
+  "guest_underlay_unique": 720,
+  "direct_unique": 360,
+  "physical_unique": 360,
+  "results_by_bytes": {
+    "96": {
+      "physical": {
+        "p50_ms": 0.199,
+        "p95_ms": 0.254,
+        "p99_ms": 0.347,
+        "max_ms": 0.57,
+        "ge8ms": 0,
+        "loss": 0
+      },
+      "direct": {
+        "p50_ms": 14.024,
+        "p95_ms": 16.293,
+        "p99_ms": 21.725,
+        "max_ms": 25.592,
+        "ge8ms": 120,
+        "loss": 0
+      },
+      "direct_over_physical_p99": 62.608
+    },
+    "512": {
+      "physical": {
+        "p50_ms": 0.202,
+        "p95_ms": 0.247,
+        "p99_ms": 0.282,
+        "max_ms": 0.404,
+        "ge8ms": 0,
+        "loss": 0
+      },
+      "direct": {
+        "p50_ms": 13.796,
+        "p95_ms": 21.561,
+        "p99_ms": 25.684,
+        "max_ms": 26.101,
+        "ge8ms": 120,
+        "loss": 0
+      },
+      "direct_over_physical_p99": 91.078
+    },
+    "1200": {
+      "physical": {
+        "p50_ms": 0.23,
+        "p95_ms": 0.306,
+        "p99_ms": 0.35,
+        "max_ms": 0.372,
+        "ge8ms": 0,
+        "loss": 0
+      },
+      "direct": {
+        "p50_ms": 15.56,
+        "p95_ms": 21.381,
+        "p99_ms": 24.974,
+        "max_ms": 25.682,
+        "ge8ms": 120,
+        "loss": 0
+      },
+      "direct_over_physical_p99": 71.354
+    }
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "severity": "MATERIAL_DIRECT_UDP_P99_REGRESSION_OPEN",
+  "first_supported_implementation_hypothesis": {
+    "source": "crates/wbd-engine/src/v4_windows_native_runtime.rs / v4_windows_native_split.rs / v4_client_direct_udp_actor.rs",
+    "code_path": "Direct UDP reverse uses WSAPoll timeout0 from sole Rust TX; active UDP keeps TX owner sleeping with up-to-10ms timeout rather than physical socket FD_READ event; compared TCP which uses registered WinSock shard wake handles",
+    "observed_consistency": "Direct 13.8–15.6ms p50, 21.7–25.7ms p99 for all sizes; physical <=.350ms p99 and 360/360 app replies",
+    "status": "HIGH_CONFIDENCE_SCHEDULING_SUSPECT_NOT_MEASURED_CAUSAL_PROOF",
+    "prohibited_shortcut": "Do not merely change 10ms to 1ms busy poll or add per-flow threads; prefer bounded event-driven physical UDP wake integrated original Rust owner with original Stop and fairness"
+  }
+}

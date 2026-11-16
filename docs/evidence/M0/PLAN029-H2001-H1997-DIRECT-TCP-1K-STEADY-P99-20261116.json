@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2001",
+  "date": "2026-11-16",
+  "acceptance": "PASS_SCOPED_ONLY_NOT_FULL_PLAN029",
+  "evidence_type": "SOURCE_LOCKED_REAL_WINDOWS2025_WSL2_NATIVE",
+  "source_sha": "e200061997839ef3697a826742c2eb4d1a34b41f",
+  "original_action": {
+    "id": 43855958211,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43855958211",
+    "conclusion": "success",
+    "native_job_id": 133262468649
+  },
+  "scenario": "established_one_kernel_tcp_32warmup_2048x1024B_windows_QPC_physical_then_Wintun_Direct",
+  "physical_rtt_ms": {
+    "n": 2048,
+    "p50": 0.288,
+    "p95": 0.355,
+    "p99": 0.41,
+    "max": 0.649
+  },
+  "direct_rtt_ms": {
+    "n": 2048,
+    "p50": 0.544,
+    "p95": 0.647,
+    "p99": 0.699,
+    "max": 0.878
+  },
+  "same_vm_p99_ratio": 1.705,
+  "direct_minus_physical_p99_ms": 0.289,
+  "rare_60ms_outliers_in_this_run": 0,
+  "overrides_prior_h1974_5_real_61ms_outliers": false,
+  "also_one_mib_paced_ms": {
+    "physical": 305.854,
+    "direct": 304.072
+  },
+  "concurrent_tunnel_udp": {
+    "unique": 120,
+    "rtt_p99_ms": 4.682,
+    "max_interreply_gap_ms": 29.062
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "note": "Application RTT including Windows/WSL2 OS, not local Rust-only processing. One sequential physical/Direct VM, not causal randomized A/B. Original H1974 rare stalls remain OPEN."
+}

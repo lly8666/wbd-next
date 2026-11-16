@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2000,
-  "checkpoint_sha": "412bef6a2431f882aea37a74bcef57e10ce43714",
+  "sequence": 2001,
+  "checkpoint_sha": "839e161a90a8c8017848dab1327f60673e38e05d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2000 repair only H1999 cheap test source literal for explicit guest UDP mode3, while retaining cold cache modes 0/1/2, one SOURCE signed real H1999 scenario rerun; H1998 4MiB still running.",
-  "why_now": "H1999 original Action43858589556 cheap FAIL at test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env: old assertion requires exactly modes0/1/2, new test-only bounded UDP RTT is explicit mode3. No native network was run. Correct the stale static proof, never reclassify original Action.",
+  "current_task": "H2001 collected true signed H1997 TCP steady, H1998 unpaced 4MiB, H2000 3-size physical-vs-FakeIP Direct UDP p99: 62-91x slower Direct UDP despite 720/720 delivery; prioritize physical UDP wake event instead of 10ms WSAPoll cadence, with bounded owner and owned Stop.",
+  "why_now": "User requested representative Direct latency verification. H2000 original Action43858907438 SUCCESS: physical UDP p99 0.282-0.350ms vs Direct p99 21.725-25.684ms, 360/360 Direct >=8ms; H1997 Direct TCP p99 0.699ms, H1998 Direct unpaced 4MiB 1.871x elapsed. UDP dominant. First observed code mechanism WSAPoll0 plus <=10ms TX idle poll.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1998 original 4MiB native and H2000 rerun exactly one original signed Direct UDP 3-size RTT; no additional resource/higher-rate dispatch. Log source-specific first failures and Stop; keep H1999 cheap FAIL.",
+  "next_action": "Investigate and implement a bounded event-driven physical Direct UDP receive wake on the existing one Rust TX owner, preserving receive fairness/no extra thread/Wintun reader, Stop and Tunnel; first verify actual UDP event-to-Wintun reverse boundary, then only one same-source same-VM physical/Direct 96/512/1200B RTT+Stop comparison, with usual TCP small-flow regression. Do NOT 1ms busy-poll or extreme capacity.",
   "unverified": true,
-  "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
+  "last_tested_source": "839e161a90a8c8017848dab1327f60673e38e05d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json"
+    "docs/evidence/M0/PLAN029-H2001-H2000-REAL-DIRECT-UDP-3SIZE-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2001-COLLECT-THREE-DIRECT-ORDINARY-LATENCY-WORKLOADS.md",
     "docs/devlog/M0/20261116-PLAN029-H2000-H1999-UDP-STATIC-PREFLIGHT-FIX.md",
     "docs/devlog/M0/20261116-PLAN029-H1999-REAL-DIRECT-UDP-RTT-3SIZE.md",
     "docs/devlog/M0/20261116-PLAN029-H1998-UNPACED-DIRECT-TCP-4M-COMPARATOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1997-DIRECT-ORDINARY-1K-RTT-SOURCE-TRIGGER.md",
     "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",
     "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1997 original Windows+WSL2 1KiB Direct p99 0.699ms vs 0.410 physical, max 0.878 vs0.649, appSHA/FIN/Stop PASS. H1998 native 4MiB still in flight. H1999 Action43858589556 FAIL prior to native due static test refusing mode3; H2000 fixes test contract only and triggers one signed native UDP RTT rerun."
+  "partial_summary": "Actual H1997 TCP 1KiB physical/Direct p99 0.410/0.699ms (2048 each), max 0.649/0.878ms; H1998 unpaced 4MiB physical/Direct 51.970/97.260ms (1.871x) and 120 Tunnel UDP p99 6.359ms; H2000 UDP 96/512/1200B true Direct RTT p99 21.725/25.684/24.974ms versus phys 0.347/0.282/0.350ms (62-91x) with zero loss and both Stop PASS. Severe UDP latency OPEN, original H1999 cheap preflight FAIL preserved."
 }
