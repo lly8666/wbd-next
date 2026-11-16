@@ -4,7 +4,12 @@ on:
   push:
     branches: [experiment/android-temp-root-probe]
     paths:
-      - "experiments/android-root-probe/**"
+      - "experiments/android-root-probe/probe/**"
+      - "experiments/android-root-probe/Cargo.toml"
+      - "experiments/android-root-probe/Cargo.lock"
+      - "experiments/android-root-probe/ci/case.sh"
+      - "experiments/android-root-probe/ci/capgate.sh"
+      - "experiments/android-root-probe/ci/routegate.sh"
       - ".github/workflows/android-root-probe-build.yml"
       - ".github/workflows/android-root-probe-case.yml"
   workflow_dispatch:

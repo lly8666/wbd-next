@@ -1,0 +1,53 @@
+{
+  "schema": "android-app-su-real-apk/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "api": 36,
+  "release": "Android 16",
+  "abi": "x86_64",
+  "enforcing": true,
+  "apk_min_sdk": 28,
+  "apk_target_sdk": 37,
+  "compile_sdk_platform": 36,
+  "app_uid": 10150,
+  "app_selinux": "u:r:untrusted_app:s0:c150,c256,c512,c768",
+  "app_cap_eff": "0000000000000000",
+  "app_cap_bnd": "0000000000000000",
+  "su_inode": {
+    "path": "/system/xbin/su",
+    "owner": "root",
+    "group": "shell",
+    "mode": "4750",
+    "app_exec_errno": 13
+  },
+  "cases": [
+    {
+      "source": "f9956db60ecb113b18bc28419d15751eb437cbb8",
+      "run": 43811154343,
+      "artifact": 14200372347,
+      "zip_sha256": "0bef451f31b71d8116fe329dca06051b0f9350b7906c22e8e37645547446095e",
+      "apk_sha256": "230d0d053f9aa640d02a4a9d77ee0646bd51e9bda7b97136c0e0af05def2507f",
+      "su_command": "/system/xbin/su -c",
+      "status": "SU_EXEC_UNAVAILABLE",
+      "app_su_authorized": false
+    },
+    {
+      "source": "2a8344f29c8f4a65a7d16fae183b0f7808082080",
+      "run": 43811844216,
+      "artifact": 14200472781,
+      "zip_sha256": "42fb7b695b78839d54b219ad6f84c01895aca4dd06d4ccc5013a902e4c04f0ff",
+      "apk_sha256": "c1b4069019723760c160df3047be83b17b192c0b67ac994e7cc65caeb37fddf6",
+      "su_command": "su -c via app PATH",
+      "status": "SU_EXEC_UNAVAILABLE",
+      "app_su_authorized": false
+    }
+  ],
+  "native_probe_source": "42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d",
+  "app_su_native_exercise": "NOT_RUN",
+  "real_root_manager_approval": "NOT_RUN (no Magisk/KernelSU/APatch on this AOSP image)",
+  "root_or_boot_installation": false,
+  "notes": [
+    "actual installed ordinary Android Activity app; not adb-root impersonation",
+    "both Actions failed positive gate intentionally while preserving actual denial",
+    "root-manager provisioned environment required for positive result"
+  ]
+}
