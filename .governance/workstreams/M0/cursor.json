@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1950,
-  "checkpoint_sha": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
+  "sequence": 1951,
+  "checkpoint_sha": "56edd66885e0c24043937d97404154dffd7c32f0",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1950 H1949 signed original P2 still source-locked in-flight. Governance second first boundary: M0 context_refs length10 exceeded max8, causing pre-network governance FAIL, while H1949 cheap Python 94 tests PASS. Trim refs only; H1945 first arrival root and P1 CPU still OPEN.",
-  "why_now": "H1949 original governance Action43782426572 scope audit fails unbounded context_refs, old devlog files remain intact. Keep cursor <=8 references without deleting prior evidence; no new network marker or dispatch.",
+  "current_task": "H1951 existing H1949 native first physical TCP QPC P2 SOURCE e1cb1d6 in flight; cheap Windows/Linux Go/Rust preflight PASS. Correct governance evidence_refs to true last_tested_source bc6afde H1947, not preflight H1949 failure file. Full PLAN029 IN_PROGRESS, p99 cause and P1 CPU OPEN.",
+  "why_now": "H1950 cursor max8 refs repaired but governance structure Action43782644336 reported evidence is for a different SOURCE. Keep last_tested_source bc6afde true H1947 signed P1, evidence_refs only matching H1947. H1949 failure archive in devlog not current actual evidence pointer.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect existing H1949 native Win2025/WSL2 P2 run 43782426660 for first physical TCP write/read and inner-write QPC, SHA/FIN/TunnelUDP/owned Stop. No another network dispatch. If first signed native failure diagnose locally; preserve H1945/QPC and H1947/P1 results.",
+  "next_action": "Collect H1949 actual source e1cb1d6 native action43782426660, if real application QPC 384 writes/reads join measure physical RTT and postread relay; preserve failures/Stop. No duplicate dispatch.",
   "unverified": true,
   "last_tested_source": "bc6afde542c4daecee393745a982a590c9dba27f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1949-H1948-PYTHON-FIRST-SYNTAX-FAIL-20261116.json"
+    "docs/evidence/M0/PLAN029-H1947-H1946-REAL-P1-SAME-RUST-CN4104-CPU-ABBA-20261116.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1949 cheap workflow 94 Python tests pass; second failure only cursor context_refs 10>8 in role/governance. H1950 metadata correction trims to 8, keeps full devlog history and no new P2 marker. H1949 real P2 still NOT_RUN pending action."
+  "partial_summary": "M0 last proven SOURCE bc6afde H1947 P1 application+owned Stop, CPU still OPEN; H1945 QPC true last Direct first-byte observation separate. H1949 new physical QPC actor source e1cb1d6 cheap build PASS and native currently in flight. Governance evidence_ref now matches last tested SOURCE."
 }
