@@ -245,6 +245,11 @@ struct TcpLegDiagnosis{
     steady_qpc_frequency:i64,
     steady_qpc_rows:Vec<SteadyQpcRow>,
     steady_qpc_dropped:u64,
+    // Source-locked H1977 FD_READ signal at original WinSock kernel leg.
+    boundary_qpc_frequency:i64,
+    boundary_event_rows:Vec<(u16,u16,i64)>,
+    boundary_proxy_map:Vec<(u16,u16)>,
+    boundary_event_dropped:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -403,6 +408,14 @@ impl NativeTcpActor{
             d.steady_qpc_frequency=reply_qpc_frequency().ok_or(())?;
             d.steady_qpc_rows.reserve_exact(STEADY_QPC_MAX_ROWS);
         }
+        if signed_steady &&
+            std::env::var("WBD_PLAN029_P2_BOUNDARY_QPC_SCENE").ok()
+                .as_deref()==Some("1"){
+            let d=diagnosis.as_mut().ok_or(())?;
+            d.boundary_qpc_frequency=d.steady_qpc_frequency;
+            d.boundary_event_rows.reserve_exact(8192);
+            d.boundary_proxy_map.reserve_exact(16);
+        }
         let preconnect_bulk_abba=signed_preconnect &&
             std::env::var("WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE").ok()
                 .as_deref()==Some("1");
@@ -512,7 +525,19 @@ impl NativeTcpActor{
                 let errors=u64::from(imask.is_err())+u64::from(omask.is_err());
                 let imask=imask.unwrap_or(EVENT_READ);
                 let omask=omask.unwrap_or(EVENT_READ);
+                let original_port=self.active[slot].key.source_port;
+                let steady_port=self.active[slot].key.target_port==STEADY_QPC_PORT;
                 if let Some(d)=self.diagnosis.as_mut(){
+                    if steady_port && d.boundary_qpc_frequency>0{
+                        for (leg,bits) in [(0u16,imask),(1u16,omask)]{
+                            if bits&EVENT_READ!=0{
+                                if d.boundary_event_rows.len()<8192{
+                                    d.boundary_event_rows.push((
+                                        original_port,leg,reply_qpc_now().unwrap_or(0)));
+                                }else{d.boundary_event_dropped+=1}
+                            }
+                        }
+                    }
                     d.event_socket_checks=d.event_socket_checks.saturating_add(2);
                     d.event_take_errors=d.event_take_errors.saturating_add(errors);
                     for bits in [imask,omask]{
@@ -572,6 +597,11 @@ impl NativeTcpActor{
     pub(crate) fn resident_bytes(&self)->usize{self.resident_bytes}
     pub(crate) fn ready_pop(&mut self)->Option<Vec<u8>>{
         self.ready.pop_front()
+    }
+    // Used only by original signed TX mailbox trace: the kernel-local
+    // socket sees an assigned proxy source port, not the app source port.
+    pub(crate) fn original_source_for_proxy(&self,p:u16)->Option<u16>{
+        self.nat.by_nat_port(p).map(|x|x.key.source_port)
     }
     /// A TCP reply that could not enter the bounded TX->RX mailbox MUST
     /// stay in its exact NAT order. Dropping one translated TCP ACK/DATA
@@ -800,6 +830,14 @@ impl NativeTcpActor{
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
+                    if entry.key.target_port==STEADY_QPC_PORT{
+                        if let Some(d)=self.diagnosis.as_mut(){
+                            if d.boundary_qpc_frequency>0{
+                                d.boundary_proxy_map.push((
+                                    entry.proxy_port,entry.key.source_port));
+                            }
+                        }
+                    }
                     // This is an actual accepted Windows kernel socket
                     // whose SYN came from the original Wintun application
                     // and whose matching physical socket was registered
@@ -1504,6 +1542,23 @@ impl Drop for NativeTcpActor{
             d.reply_outer_read_inner_write_same_turn,
             d.reply_outer_read_no_inner_write,
             d.reply_inner_write_deferred_turns);
+        if d.boundary_qpc_frequency>0{
+            let mappings=d.boundary_proxy_map.iter().map(|(proxy,src)|
+                format!("{}:{}",proxy,src)).collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1977_PROXY_MAP_FINAL frequency={} count={} rows={} source=original_kernel_listener",
+                d.boundary_qpc_frequency,d.boundary_proxy_map.len(),mappings);
+            for (chunk,rows) in d.boundary_event_rows.chunks(96).enumerate(){
+                let packed=rows.iter().map(|(src,leg,q)|
+                    format!("{}:{}:{}",src,leg,q)).collect::<Vec<_>>().join(",");
+                eprintln!("PLAN029_H1977_FD_READ_QPC_FINAL frequency={} total={} dropped={} chunk={} count={} rows={} source=original_winsock_events",
+                    d.boundary_qpc_frequency,d.boundary_event_rows.len(),
+                    d.boundary_event_dropped,chunk,rows.len(),packed);
+            }
+            if d.boundary_event_rows.is_empty(){
+                eprintln!("PLAN029_H1977_FD_READ_QPC_FINAL frequency={} total=0 dropped={} chunk=0 count=0 rows= source=original_winsock_events",
+                    d.boundary_qpc_frequency,d.boundary_event_dropped);
+            }
+        }
         if d.steady_qpc_frequency>0{
             // Source-locked original Stop only, <=96 rows per log line.
             // A positive kernel write is NOT evidence of Linux receipt.

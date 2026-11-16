@@ -364,6 +364,10 @@ impl NativeSplitWorker {
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_dns_sessions())
     }
+    /// Signed original TX boundary-only map; no per-packet lookup in product.
+    pub(crate) fn original_tcp_source_for_proxy(&self,p:u16)->Option<u16>{
+        self.tcp.as_ref()?.original_source_for_proxy(p)
+    }
     pub(crate) fn tcp_socket_wait_handles(&self)->Option<&[usize]>{
         if !self.tcp_enabled{return None}
         self.tcp.as_ref().map(|tcp|tcp.socket_event_handles())

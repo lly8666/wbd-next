@@ -2272,6 +2272,16 @@ print(json.dumps(result),flush=True)
      steady=p2.get("steady_tcp_qpc")
      if not isinstance(steady,dict):
       raise RuntimeError("H1966 actual established TCP app data missing before Stop")
+     # Source/Stop verified; write a separate true-boundary diagnostic
+     # BEFORE the existing H1966 strict exactly-1024B qualifier. Four real
+     # repeat TCP segments must still leave that original run FAIL, not PASS.
+     if os.environ.get("WBD_PLAN029_P2_BOUNDARY_QPC_SCENE")=="1":
+      from m0_plan029_h1977_boundary_qpc import analyze as boundary
+      detail=boundary(original_stop_log,steady,os.environ["GITHUB_SHA"])
+      (out/"plan029-h1977-boundary-qpc.json").write_text(
+          json.dumps(detail,sort_keys=True,indent=2)+"\\n",encoding="utf-8")
+      steady["h1977_boundary_diagnostic"]=detail
+      print("PLAN029_H1977_ORIGINAL_TX_RX_WINTUN_FD_READ_QPC_DIAGNOSTIC_ONLY",flush=True)
      steady["same_source_steady_windows_qpc"]=analyze(
          original_stop_log,steady,os.environ["GITHUB_SHA"])
      if os.environ.get("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE")=="1":
