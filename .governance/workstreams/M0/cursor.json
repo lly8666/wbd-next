@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1966,
-  "checkpoint_sha": "5ea3facc924d6e31226ccebcb1e14eb81250bdc6",
+  "sequence": 1967,
+  "checkpoint_sha": "ad44e387cba9ab9573605b05c4afabc95f381eaa",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1966: stage bounded signed-only Win32 steady TCP1KiB QPC in original Wintun on_packet class→NAT and established two WinSock legs; 2048 original Windows app QPC echoes over physical/Direct to same Linux kernel guest, strict Stop+byte joins. Native SOURCE CI pending, no perf claim; product preconnect OFF. Full PLAN029 OPEN.",
-  "why_now": "User rejects extreme shared-CDN/DNS stress; H1958 first-SYN QPC and 4x4MiB throughput cannot isolate steady-state Rust/Windows relay latency. Single normal established stream must expose classify/NAT/physical socket wait vs app RTT at same Windows QPC.",
+  "current_task": "H1967: H1966 original signed steady QPC not run: cheap workflow and feature catalog failed Python fixture multiline if SyntaxError; Win/Linux Rust component and independent Win DLL compile failed duplicate RelaySteadyQpc derive, inherited RelayTick trait missing. Fix exact grammar/derives; still no native P2 claim. Last true Win/WSL2 source ab224.",
+  "why_now": "Action43803692519/43803692572 failed at Python AST before native launch; Action43803692711 and Action43803692573 showed platform duplicate derive, not kernel/driver failure. Repair both without bypassing guards or new test scenario flags.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H1966 cheap parser/source gates and exact Windows/Linux Rust+Go compile, then one original same-SOURCE signed Win2025/WSL2 2048x1KiB QPC. Only if source-genuine Stop and every 1024B app/Rust join pass report p50/p95/p99; otherwise diagnose actual first failure. Do not rerun H1958 four-bulk or same-IP CDN stress.",
+  "next_action": "Collect H1967 cheap workflow+Feature/Governance and true Win/Linux Rust component exact SOURCE; if green enable ONE original same-source Win2025/WSL2 2048x1KiB steady TCP with H1968 marker. Current performance NOT_RUN; preconnect product OFF.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
     "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
     "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md",
-    "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md"
+    "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1965 user pivot confirmed. H1966 signed-only bounded original Wintun on_packet/class/NAT and kernel inner/outer TCP QPC probe with real Windows/WSL2 one-connection 2048×1KiB and same-run physical baseline; source not yet measured, performance OPEN. H1958 4x4MiB small preconnect observations scoped; H1963 Windows Go DNS cold actual test PASS, GUI build only."
+  "partial_summary": "H1966 bounded original Wintun classify/NAT and kernel two-leg QPC source/fixture staged, but Python SyntaxError+Rust duplicate derives failed preflight; original signed Windows/WSL2 NOT_RUN. H1967 repairs only parsing and trait placement. H1958 original first-byte/small/4MiB observations unchanged; full PLAN029 OPEN."
 }

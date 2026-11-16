@@ -439,7 +439,6 @@ pub struct RelayIoCounts{
     // gated_reads, this is not pressure or a pending queue limit.
     pub event_suppressed_reads:[u16;2],
 }
-#[derive(Clone,Copy,Debug,Eq,PartialEq)]
 /// Each timestamp is observed AFTER its positive WinSock syscall.
 /// A successful socket write is NOT proof of Linux receipt or an ACK.
 #[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
@@ -449,6 +448,7 @@ pub struct RelaySteadyQpc{
     pub outer_read_done:i64,
     pub inner_write_done:i64,
 }
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct RelayTick{
     pub bytes_read:usize,
     pub bytes_written:usize,

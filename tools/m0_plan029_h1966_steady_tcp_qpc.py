@@ -164,8 +164,9 @@ def run_steady(root,out,physical,host_source,fake,unix,ready):
             if proof["source"]!=source or len(proof["receipts"])!=2:
                 raise RuntimeError("H1966 Linux wrong source or counts")
             for a,l in zip(arms,proof["receipts"]):
-                if a["role"]!=l["arm"] or a["sha256"]!=l["sha256"] or
-                   a["exact_bytes"]!=l["bytes"] or l["physical_source"]!=host_source:
+                if (a["role"]!=l["arm"] or a["sha256"]!=l["sha256"] or
+                    a["exact_bytes"]!=l["bytes"] or
+                    l["physical_source"]!=host_source):
                     raise RuntimeError("H1966 original two-OS byte/sha/physical path mismatch")
             return dict(source_sha=source,physical=arms[0],direct=arms[1],
                         linux=proof,stop="PENDING_ORIGINAL_OWNED_STOP",
