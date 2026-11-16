@@ -1,0 +1,17 @@
+name: Android temp root probe API 31 case
+run-name: "android-root-probe|api31|case|c7fa61412a02e0adff389e761308bb1147a35fa7"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - ".github/workflows/android-root-probe-api31.yml"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  one-api31:
+    uses: ./.github/workflows/android-root-probe-case.yml
+    with:
+      api: '31'
+      scenario: canary
+      source_sha: 'c7fa61412a02e0adff389e761308bb1147a35fa7'
