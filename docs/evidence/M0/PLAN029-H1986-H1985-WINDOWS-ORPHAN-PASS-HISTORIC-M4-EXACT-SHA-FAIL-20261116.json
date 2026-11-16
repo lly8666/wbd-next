@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1986",
+  "date": "2026-11-16",
+  "source_sha": "8a43e84e857b1156407a403220a7f468c8bbce72",
+  "h1985": {
+    "windows": {
+      "run_id": 43827317944,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43827317944",
+      "job_id": 133164118238,
+      "conclusion": "success",
+      "tests": {
+        "TestPlan029NoWFPAssemblyRejectsUnreconciledDefenderSidecar": "PASS",
+        "TestPLAN010NativeReadOnlyDiskStatusAndConflict": "PASS",
+        "TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback": "PASS"
+      },
+      "build": "PASS",
+      "owned_defender_COM_single_rule_CAS": "PASS_SCOPE_ONLY_NOT_PRODUCT_TCP",
+      "native_product_network": "NOT_RUN"
+    },
+    "governance": {
+      "run_id": 43827317992,
+      "conclusion": "success"
+    },
+    "maintenance": {
+      "run_id": 43827317993,
+      "job_id": 133164118981,
+      "conclusion": "failure",
+      "first_family": "test_m4_frozen_windows_main_import",
+      "fail_count": 8,
+      "classes": [
+        "test_import_all_frozen_original_go_windows_source",
+        "test_original_go_manifest_and_guard_remain_exact"
+      ],
+      "cause": "Four PLAN029 modified Go overlay product entry/status and their tests have correct M0 manifest SHA; frozen M4-style exact reviewed map still expects prior blobs"
+    }
+  },
+  "correction": {
+    "scope": "Only tests/test_m4_frozen_windows_main_import.py explicit M0_PLAN029_REVIEWED_CURRENT exact SHA and create whitelist for 4 files",
+    "frozen_PINNED_FILES": "UNCHANGED",
+    "original_M4_git_SHA": "UNCHANGED",
+    "frozen_assembly_manifest": "UNCHANGED",
+    "current_assembly_manifest": "UNCHANGED",
+    "new_CI": "NOT_RUN"
+  },
+  "exit_status": "PLAN029_IN_PROGRESS",
+  "unverified": [
+    "D1-D5",
+    "P1-P2",
+    "actual GUI Connect Stop",
+    "Game4 CN",
+    "IPv6 actual",
+    "padding pressure"
+  ],
+  "original_H1978_native": "FAIL",
+  "H1974_latency": "OPEN"
+}

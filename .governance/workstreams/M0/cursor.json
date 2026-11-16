@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1985,
-  "checkpoint_sha": "3257b9e817f374782adeacf9be3c6fc7b19abcda",
+  "sequence": 1986,
+  "checkpoint_sha": "8a43e84e857b1156407a403220a7f468c8bbce72",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1985 H1984 SOURCE3257b9e H1661 Action43826342300 FAIL invalid YAML/no jobs; maintenance43826344589 FAIL line86 duplicated -v due JS replace '$\\x27' expansion; FeatureCatalog job133160986306 FAIL YAML, Governance structure133160985939 PASS. Restore previous valid H1661 and add two separately anchored pure Windows orphan Defender status/Recover tests using callback-safe literal insertion. H1985 CI/native NOT_RUN; PLAN029 still OPEN.",
-  "why_now": "Root cause: JS String.replace interpreted replacement sequence dollar-apostrophe in Go -run regex as 'entire suffix', corrupting YAML with an extra trailing block. Rebuild exact source using callback-safe replacement and verify GitHub blob before publishing.",
+  "current_task": "H1986 collect H1985 SOURCE8a43: H1661 43827317944 SUCCESS Windows real three orphan Defender pure tests (Plan029 cold, PLAN010 read-only status, PLAN010 Recover) plus one precise Defender COM CAS, Go build PASS; Governance43827317992 SUCCESS. Maintenance43827317993 FAIL 8 stale historic M4 hash checks for four newly changed M0-go-owned source/test overlays. Update only exact M0_PLAN029_REVIEWED_CURRENT SHA + whitelist matching PLAN020 live manifest, leave frozen PINNED_FILES/legacy manifest intact; H1986 CI NOT_RUN, PLAN029 OPEN.",
+  "why_now": "H1985 Windows owned sidecar regression now evidence-backed PASS; first unrelated M4 frozen/current mismatch is stale M0 reviewed map, not donor drift. Keep strict hash checks and only explicit new current M0 SHA exceptions.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1985 H1661 Windows source-only and governance/maintenance runs; D1-D5/P1-P2, actual GUI Connect/Stop, Game4 CN, true IPv6, resource/padding still OPEN. Do not redispatch H1974/H1978 native scene.",
+  "next_action": "Collect H1986 governance-maintenance original result, no H1974 2048 rerun. Actual WinForms Connect/Stop, Game4 CN and D1–D5/P1–P2/IPv6/queue/RSS/padding still not fully exited.",
   "unverified": true,
-  "last_tested_source": "3257b9e817f374782adeacf9be3c6fc7b19abcda",
+  "last_tested_source": "8a43e84e857b1156407a403220a7f468c8bbce72",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1985-H1984-WORKFLOW-YAML-CORRUPTION-FAIL-20261116.json"
+    "docs/evidence/M0/PLAN029-H1986-H1985-WINDOWS-ORPHAN-PASS-HISTORIC-M4-EXACT-SHA-FAIL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1982-DEFENDER-ORPHAN-READONLY-COLD-FENCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1980-H1979-PREFLIGHT-AND-INTERRUPT-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1979-H1978-ORIGINAL-2048-QPC-CONCURRENT-WINTUN-SEND.md",
-    "docs/devlog/M0/20261116-PLAN029-H1978-ONE-REAL-2048X1K-BOUNDARY-QPC-60MS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1977-60MS-ORIGINAL-WINTUN-TX-RX-FDREAD-BOUNDARY-QPC.md"
+    "docs/devlog/M0/20261116-PLAN029-H1978-ONE-REAL-2048X1K-BOUNDARY-QPC-60MS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1984 invalid YAML, both new TestPLAN010 regressions NOT_RUN and original failed Actions preserved; H1985 exact known-good workflow restored plus two independent pure Windows Go test commands, source CI NOT_RUN. H1978 native FAIL/H1974 five 61ms tails remain."
+  "partial_summary": "H1985 Windows 3 pure orphan sidecar tests + exact owned Defender COM CAS PASS; non-network. H1985 maintenance FAIL 8 stale M4 pins; H1986 strict reviewed M0 current hashes updated, CI NOT_RUN. H1978 native FAIL/H1974 61ms open."
 }
