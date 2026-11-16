@@ -146,9 +146,21 @@ assert config.get("geosite_sha256")==manifest["text_sha256"]
 assert report.get("geosite",{}).get("sha256")==manifest["text_sha256"]
 assert report.get("geosite",{}).get("total_rules")==manifest["output_distinct_rules"]
 assert report.get("geosite_cn_com_direct_dns_verified") is True
+dns=report.get("dns_udp_gate",{})
+assert dns.get("status")=="SUPPORTED_IN_SCOPE",dns
+evidence=dns.get("evidence",{})
+assert evidence.get("actual_kernel_dns_udp") is True
+assert evidence.get("check_count")==6
+checks=evidence.get("checks",[])
+assert all(x.get("dns_transaction_verified") is True for x in checks)
+assert sum("direct" in x.get("purpose_egress","") for x in checks)==4
+assert sum("tunnel" in x.get("purpose_egress","") for x in checks)==2
+assert all(x.get("answer_A")=="8.8.8.8" for x in checks)
+assert evidence.get("real_upstream_direct_DNS")=="NOT_RUN"
+assert evidence.get("android_system_dns_interception")=="NOT_RUN"
 assert report.get("geosite",{}).get("suffixes",0)>1000
 assert any(x.get("uid")==10502 and x.get("mode")=="global" for x in report.get("per_app_modes",[]))
 print("ANDROID_SPLIT_PER_APP_SETTINGS_UI_CONFIG_VALIDATION_PASS")
 print("CN intervals:",report["compiled_cn_ipv4_intervals"],
       "DNS:",report["dns_direct"],report["dns_tunnel"],
-      "OS installed:",report["installed"])
+      "OS installed:",report["installed"],"UDP/53 real private netns:",dns["status"])

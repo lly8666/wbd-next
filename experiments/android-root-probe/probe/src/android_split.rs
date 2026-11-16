@@ -323,6 +323,57 @@ pub fn validate_file(path:&str)->Value{
  if !wbd_bootstrap{
   return json!({"status":"FAIL","reason":"bootstrap must always be direct","installed":false})
  }
+ // A real kernel UDP DNS packet, not just a mocked policy return, must
+ // traverse the correct isolated synthetic physical/tunnel TUN and deliver
+ // the DNS response with intact transaction ID and actual overseas A answer.
+ let split_uid=if policy.base==Mode::Split{Some(0)}
+    else{policy.overrides.iter().find(|(_,m)|**m==Mode::Split).map(|(uid,_)|*uid)};
+ let global_uid=if policy.base==Mode::Global{Some(0)}
+    else{policy.overrides.iter().find(|(_,m)|**m==Mode::Global).map(|(uid,_)|*uid)};
+ let mut dns_cases=Vec::<crate::dns_udp_gate::Case>::new();
+ let foreign=u32::from(Ipv4Addr::new(8,8,8,8));
+ if let Some(uid)=split_uid {
+    for (label,name,expected) in [
+       ("split_baidu_com_cn_dns_direct","www.baidu.com",Egress::Direct),
+       ("split_example_net_dns_tunnel","www.example.net",Egress::Tunnel),
+       ("split_cn_suffix_dns_direct","foo.example.cn",Egress::Direct)]{
+       if policy.dns(uid,name,DnsUse::Ordinary)!=Ok(expected) ||
+          policy.data(uid,foreign)!=Egress::Tunnel {
+          return json!({"status":"FAIL","reason":format!("split QNAME/DATA policy mismatch: {name}"),
+             "installed":false})
+       }
+       dns_cases.push(crate::dns_udp_gate::Case{
+         label,qname:name,direct:expected==Egress::Direct,
+         data_outcome:"TUNNEL_FOR_REAL_FOREIGN_A",
+       });
+    }
+    if policy.dns(uid,"wbd-bootstrap.example.net",DnsUse::Bootstrap)!=Ok(Egress::Direct){
+       return json!({"status":"FAIL","reason":"split WBD bootstrap DNS not Direct","installed":false})
+    }
+    dns_cases.push(crate::dns_udp_gate::Case{
+        label:"split_bootstrap_dns_direct",qname:"wbd-bootstrap.example.net",
+        direct:true,data_outcome:"CONTROL_ONLY_PHYSICAL",
+    });
+ }
+ if let Some(uid)=global_uid{
+    if policy.dns(uid,"www.baidu.com",DnsUse::Ordinary)!=Ok(Egress::Tunnel) ||
+       policy.dns(uid,"wbd-bootstrap.example.net",DnsUse::Bootstrap)!=Ok(Egress::Direct) {
+       return json!({"status":"FAIL","reason":"global QNAME/bootstrap policy mismatch","installed":false})
+    }
+    dns_cases.push(crate::dns_udp_gate::Case{
+        label:"global_baidu_com_dns_tunnel",qname:"www.baidu.com",
+        direct:false,data_outcome:"TUNNEL_FOR_REAL_FOREIGN_A",
+    });
+    dns_cases.push(crate::dns_udp_gate::Case{
+        label:"global_bootstrap_dns_direct",qname:"wbd-bootstrap.example.net",
+        direct:true,data_outcome:"CONTROL_ONLY_PHYSICAL",
+    });
+ }
+ let dns_udp_gate=crate::dns_udp_gate::run(&dns_cases);
+ if dns_udp_gate["status"]=="FAIL"{
+     return json!({"status":"FAIL","reason":"isolated real kernel DNS UDP/53 check failed",
+       "dns_udp_gate":dns_udp_gate,"installed":false})
+ }
  let rows=policy.overrides.iter().map(|(&uid,mode)|json!({"uid":uid,"mode":mode.name()}))
      .collect::<Vec<_>>();
  json!({"status":"SUPPORTED_IN_SCOPE","schema":"wbd-android-split-validation/v1",
@@ -337,5 +388,6 @@ pub fn validate_file(path:&str)->Value{
    "fakeip":false,"installed":false,
    "geosite":geosite_evidence,
    "geosite_cn_com_direct_dns_verified":split_mode_exists,
+   "dns_udp_gate":dns_udp_gate,
    "reason":"Policy parsed/validated only. No real Android netd routing, DNS dispatcher or production WBD tunnel activated."})
 }

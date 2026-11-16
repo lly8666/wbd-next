@@ -33,9 +33,15 @@ done
 mkdir -p "$out/assets"
 # Historical, date-pinned APNIC CN allocation snapshot. This is NOT an IP
 # geolocation truth set and MUST NOT be silently replaced by incomplete data.
+# The fixed-day APNIC flat file is rotated out of /stats/apnic/ when
+# the next daily snapshot arrives. Use the permanent year archive, and verify
+# the **decompressed** original bytes against the last SOURCE-locked success.
 curl --fail --location --retry 3 --connect-timeout 15 --max-time 100 \
- "https://ftp.apnic.net/stats/apnic/delegated-apnic-20261116" \
- --output "$out/apnic-delegated-20261116.txt"
+ "https://ftp.apnic.net/stats/apnic/2026/delegated-apnic-20261116.gz" \
+ --output "$out/apnic-delegated-20261116.gz"
+gzip -cd "$out/apnic-delegated-20261116.gz" > "$out/apnic-delegated-20261116.txt"
+echo 'f5bc4f8969b76afce7622820711e446db09da71c981cdf1f6cf49c3573fbc557  out/diag/apnic-delegated-20261116.txt' | sha256sum -c -
+rm -f "$out/apnic-delegated-20261116.gz"
 python3 experiments/android-root-probe/ci/cn-ipv4-snapshot.py \
  "$out/apnic-delegated-20261116.txt" "$out/assets"
 cp "$out/assets/cn-ipv4-provenance.json" "$out/cn-ipv4-provenance.json"

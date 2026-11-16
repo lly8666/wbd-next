@@ -292,6 +292,8 @@ public final class SplitSettingsActivity extends Activity {
             if("SUPPORTED_IN_SCOPE".equals(st))
                 return "配置语义校验 PASS：CIDR合并区间 "+j.optInt("compiled_cn_ipv4_intervals")+
                     "，CN geosite "+j.optJSONObject("geosite").optInt("total_rules")+" 条"+
+                    "，隔离DNS UDP/53："+(j.optJSONObject("dns_udp_gate")==null?
+                         "NOT_RUN":j.optJSONObject("dns_udp_gate").optString("status"))+
                     "，每App覆盖 "+j.optJSONArray("per_app_modes").length()+
                     "。\n**未安装到 Android 主网络，也未接入 WBD VPN。**";
             return st+"："+j.optString("reason","无具体原因");
