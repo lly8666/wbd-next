@@ -348,7 +348,7 @@ public final class SplitSettingsActivity extends Activity {
         // AVD IME refuses focus. Never available on physical phones.
         Button emulatorSample=null;
         if("ranchu".equalsIgnoreCase(android.os.Build.HARDWARE) &&
-           android.os.Build.FINGERPRINT.contains("generic")){
+           (android.os.Build.FINGERPRINT.contains("generic") || android.os.Build.FINGERPRINT.contains("sdk_gphone"))){
             emulatorSample=new Button(this);
             emulatorSample.setText("模拟器测试：填入演示 UID10502");
             emulatorSample.setOnClickListener(v->{
