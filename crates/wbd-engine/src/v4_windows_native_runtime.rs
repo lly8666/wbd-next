@@ -1178,43 +1178,73 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                   let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
              };
-             // Only UDP and DNS TCP retain their original <=10ms poll.
-             // Direct TCP has exact fixed WinSock event shards, not a
-             // per-connection thread or unbounded periodic active scan.
+             // Only non-event UDP overflow and DNS retain <=10ms poll.
+             // The ordinary 16 Direct UDP sockets now signal native TX
+             // via their own WinSock events; no 1ms busy timer/worker.
              let timeout=if split.as_ref().is_some_and(|s|s.needs_10ms_poll()){
                  timeout.min(10)
              }else{timeout};
              let next_tcp_due=split.as_ref()
                  .and_then(|owner|owner.next_tcp_cleanup_due_ms());
              let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_tcp_due));
-             let mut handles=[0usize;3+16];
+             // 3 old owner events + 16 existing TCP shards + at most
+             // 16 ordinary Direct UDP FD_READ events = 35 (<64 WAIT_ANY).
+             // Overflow UDP keeps its old timed scan. No per-flow thread.
+             let mut handles=[0usize;3+16+16];
              handles[..3].copy_from_slice(&[
                  stop.handle(),tun.event(),notify.handle()]);
-             let mut count=3;
+             let mut base_count=3;
              if let Some(s)=split.as_ref(){
                  if let Some(events)=s.tcp_socket_wait_handles(){
                      if events.len()!=16{return Err(BAD_STAGE)}
                      handles[3..3+events.len()].copy_from_slice(events);
-                     count+=events.len();
+                     base_count+=events.len();
                  }
              }
-             // Compare only original *owned* handles. Stop always has
-             // absolute priority, and all 16 WinSock shard identities
-             // still map back to the same exact native actor.
-             let (mut order,n)=native_tx_wait_order(wait_phase,count==19);
-             if n==19{
-                 rotate_tcp_shard_wait_order(&mut order,wait_phase,socket_wait_head);
+             let udp_count=if let Some(s)=split.as_ref(){
+                 let events=s.udp_socket_wait_handles();
+                 if events.len()>16{return Err(BAD_STAGE)}
+                 handles[base_count..base_count+events.len()]
+                     .copy_from_slice(events);
+                 events.len()
+             }else{0};
+             let (mut tcp_order,base_n)=
+                 native_tx_wait_order(wait_phase,base_count==19);
+             if base_n==19{
+                 rotate_tcp_shard_wait_order(
+                     &mut tcp_order,wait_phase,socket_wait_head);
+             }
+             let mut order=[0u8;35];
+             let mut n=1usize;order[0]=0; // Stop always absolute first.
+             // Rotate wake priority of the two genuine socket classes.
+             // Existing TCP within-class shard rotation stays unchanged.
+             if udp_count>0&&wait_phase%2==1{
+                 for j in 0..udp_count{
+                     order[n]=(base_n+j) as u8;n+=1;
+                 }
+             }
+             for &item in &tcp_order[1..base_n]{
+                 order[n]=item;n+=1;
+             }
+             if udp_count>0&&wait_phase%2!=1{
+                 for j in 0..udp_count{
+                     order[n]=(base_n+j) as u8;n+=1;
+                 }
+             }
+             if base_n==19||udp_count>0{
                  wait_phase=(wait_phase+1)%3;
              }
-             let mut ordered=[0usize;19];
+             let mut ordered=[0usize;35];
              for i in 0..n{ordered[i]=handles[usize::from(order[i])];}
              match io::wait_ready(&ordered[..n],timeout){
                  Ok(WaitResult::Ready(index)) if order[index]==0=>Ok(true),
                  Ok(WaitResult::Ready(index))=>{
                      let kind=usize::from(order[index]);
-                     if kind>=3{
-                         // Give every other shard a chance after this
-                         // wake, even if this socket remains signaled.
+                     if kind>=base_n{
+                         if let Some(s)=split.as_mut(){
+                             s.note_udp_socket_wake(kind-base_n);
+                         }
+                     }else if kind>=3{
                          socket_wait_head=((kind-3+1)&15) as u8;
                          if let Some(s)=split.as_mut(){
                              s.note_tcp_socket_wake(kind-3);

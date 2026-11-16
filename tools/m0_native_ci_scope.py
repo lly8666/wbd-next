@@ -27,6 +27,7 @@ NATIVE_EXACT = frozenset({
     "crates/wbd-platform/src/windows_native_io.rs",
     "crates/wbd-platform/src/ipv4_tcp.rs",
     "crates/wbd-engine/src/lib.rs",
+    "crates/wbd-engine/src/v4_client_direct_udp_actor.rs",
     "crates/wbd-engine/src/v4_owner_crypto.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
 })

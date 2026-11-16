@@ -1,3 +1,4 @@
+# H2002 exact normal physical-vs-FakeIP UDP 3size RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt] after bounded event wake; no TCP bulk, no extreme tests.
 # H1999 independent signed 3-size Direct UDP RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt], ordinary 120 per arm.
 # H1998 one ordinary unpaced 4MiB Direct P2 physical baseline + small Tunnel UDP [plan029-v3-real-p2-bulk]; no pressure/highrate/128/ABBA.
  # H1997 one normal Direct latency source [plan029-v3-real-p2-rebuild] [plan029-v3-real-p2-steady-qpc]; NO post-ingress flush, preconnect, bulk, pressure or high-rate.
@@ -202,6 +203,7 @@ on:
       - crates/wbd-engine/src/lib.rs
       - crates/wbd-engine/src/v4_windows_native_tcp_direct.rs
       - crates/wbd-engine/src/v4_client_direct_tcp_nat.rs
+      - crates/wbd-engine/src/v4_client_direct_udp_actor.rs
       - crates/wbd-engine/src/v4_windows_native_split.rs
       - crates/wbd-engine/src/v4_windows_native_runtime.rs
       - crates/wbd-platform/src/windows_direct_tcp.rs

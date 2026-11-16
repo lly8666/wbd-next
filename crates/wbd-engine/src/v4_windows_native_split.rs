@@ -375,11 +375,12 @@ impl NativeSplitWorker {
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
-    /// Physical UDP and client DNS TCP still use their bounded legacy
-    /// poll cadence. Direct kernel TCP instead wakes on 16 registered
-    /// WinSock event shards and exact pending/close deadlines.
+    /// Only UDP flows above the 16-handle event budget, DNS and client
+    /// DNS/TCP retain the legacy <=10ms fallback. Ordinary physical
+    /// Direct UDP wakes from its own registered WinSock read event.
+    /// TCP retains its existing 16 fixed event shards/deadlines.
     pub(crate) fn needs_10ms_poll(&self)->bool{
-        self.udp.len()>0||self.dns.has_work()||
+        self.udp.has_unwatched_flows()||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_dns_sessions())
     }
     /// Signed original TX boundary-only map; no per-packet lookup in product.
@@ -389,6 +390,12 @@ impl NativeSplitWorker {
     pub(crate) fn tcp_socket_wait_handles(&self)->Option<&[usize]>{
         if !self.tcp_enabled{return None}
         self.tcp.as_ref().map(|tcp|tcp.socket_event_handles())
+    }
+    pub(crate) fn udp_socket_wait_handles(&self)->&[usize]{
+        self.udp.wake_handles()
+    }
+    pub(crate) fn note_udp_socket_wake(&mut self,index:usize){
+        self.udp.note_socket_wake(index);
     }
     pub(crate) fn note_tcp_socket_wake(&mut self,shard:usize){
         if self.tcp_enabled{
