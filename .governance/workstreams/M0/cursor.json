@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1969,
-  "checkpoint_sha": "03bb121b4ced94205482c80bae35372ab23740c6",
+  "sequence": 1970,
+  "checkpoint_sha": "a46e5f119a9007e9a2d86f4199a87b7b363d092f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1969 one signed source-locked NORMAL established-connection 2048x1KiB TCP Windows native Wintun/Rust/WSL2 QPC dispatched via exact original P2 rebuild + steady scene commit markers. Windows/Linux Rust pure H1967 PASS, H1968 cheap seven parser tests PASS and governance PASS. Await Action original guest/Stop QPC; no performance claim yet. Full PLAN029 OPEN.",
-  "why_now": "User prioritizes real Windows/Rust overhead in sustained ordinary small TCP and rejects extreme same-real-CDN reverse case. H1966 source and H1967/H1968 preflight errors fixed, original Windows+Linux Rust component tests and same-source Python fail-closed parser green; now one bounded real native run has value.",
+  "current_task": "H1970: previous H1969 SOURCE a46e signed markers alone in docs/cursor did NOT trigger native workflow due on.push.paths filter. New H1970 signed rebuild+steady commit changes workflow comment to force exactly one real Windows/WSL2 Normal established TCP46119 2048x1KiB same Win QPC/physical control. H1967 Win/Linux Rust component PASS, H1968 cheap QPC parser 7/7 PASS. Original native not yet seen, no latency claims. Full 029 OPEN.",
+  "why_now": "H1969 only Governance Action, not original native; signed token requires changed workflow-path file. User demands concrete Windows/Rust latency not exotic stress. Unchanged original performance harness must run once on same SOURCE guest/Windows QPC and owned Stop.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect ONLY H1969 signed original action's true Windows WinSock 2048 app RTT physical/Direct, Rust on_packet→classify→NAT QPC, two kernel TCP read/write spans and Linux SHA/FIN, Wintun/owned Stop. If false/FAIL, fix source actual stage; no duplicate full network without diagnosis. Still no initial Wintun ReadPacket and RX SendPacket time; full P2/P1/D1-D5 OPEN.",
+  "next_action": "Verify H1970 real native Action was actually dispatched; gather original Windows/WSL2 log, Rust QPC 2048 message windows, app/guest SHA and owned Stop. If fail report original stage and fix source; no claims until source-genuine proof. Preconnect OFF.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md",
     "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
     "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
-    "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md"
+    "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1969 one original 2048x1KiB normal steady Win/WSL2 two-OS TCP scene pending actual source-specific action. Prior H1967 Win/Linux Rust pure PASS, H1968 exact parser 7/7 and governance PASS. Latest genuine real P2 remains H1958 ab224 (4x4MiB~2x physical; ON first-send tail improves but n2 bulk unresolved). User de-prioritized extreme CDN and left product preconnect OFF."
+  "partial_summary": "H1970 triggers one true Win2025/WSL2 original steady TCP 2048x1KiB native run (H1969 doc-only push did not launch it). H1968 cheap 7/7 QPC parser and H1967 Windows/Linux Rust pure components PASS; H1958 last genuine P2 ab224 until H1970 receipts. Full PLAN029 still IN_PROGRESS, early physical preconnect OFF, CDN same-IP extreme not pursued."
 }
