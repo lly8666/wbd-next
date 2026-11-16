@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2040,
-  "checkpoint_sha": "0e5bde6f3aebf055b4d1325ffa0a5d9b8604d09b",
+  "sequence": 2041,
+  "checkpoint_sha": "6b588b317e583ab9584a0c873fdc39ed8e7ddb4f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2040 feature-card verification of previously archived H2031 real 20–30-record/2–3s/0..500B Normal Tunnel physical encrypted pcap, genuine TCP/UDP and Stop PASS_SCOPED. H2038 Game4 four-lane owned TCP45902 source fix original Action in-flight.",
-  "why_now": "PAD summary already reported H2031 PASS but verification still ended H2025 PLANNED. Register a true same-source signed functional row while preserving opacity and old H2025 history; no new test.",
+  "current_task": "H2041 original signed Game4 CN four-TLS-lane FEC-off physical DNS/FakeIP Direct UDP and 32KiB Direct TCP/FIN plus real bidirectional Tunnel TCP/UDP and both owned Stop PASS_SCOPED after exact test-owned TCP45902 Defender remote fix. No further same-family dispatch, PLAN029 overall IN_PROGRESS.",
+  "why_now": "H2038 native Action43942345347 all jobs Success: Linux->Windows Tunnel TCP source 203.0.113.77 now succeeds 40B and echo, Windows->Linux 40B echo, CN original physical UDP and 32KiB Direct TCP, both Stop PASS; fixing old test listener Rule remote 10.66.0.1 to actual guest TUN source. H2031 padding already separately PASS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2038 one original SOURCE Game4 CN test Action43942345347 and confirm direct/tunnel TCP+UDP, physical DNS, Wintun, owned Stop; if success archive proof, if FAIL isolate first boundary only. Do not re-run H2031 padding.",
+  "next_action": "Do not rerun the successful Game4 CN four-lane off or H2031 padding scenes. For PLAN029 remaining closure, review only unverified D1-D5/P1-P2/GUI/default-1460/IPv6 scoped gaps against existing source-locked evidence; do not revive user-excluded same-IP shared CDN or extreme workload, and do not promote full PLAN029 without all required exits.",
   "unverified": true,
-  "last_tested_source": "b76240bedb04237780bd13377bfe7aae38785018",
+  "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2041-GAME4-CN-TRUE-FOUR-LANE-TWO-EXITS-STOP.md",
+    "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2040-REGISTER-H2031-REAL-PADDING-FEATURE-VERIFICATION.md",
     "docs/devlog/M0/20261117-PLAN029-H2039-FIX-G2-EVIDENCE-SINGLE-SOURCE-CURSOR.md",
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json",
     "docs/devlog/M0/20261117-PLAN029-H2038-GAME4-TRUE-TUNNEL-TCP-ALIAS-OWNED-ALLOW.md",
     "docs/devlog/M0/20261117-PLAN029-H2037-GAME4-IFINDEX-MTU-TWO-COLD-ARGS.md",
-    "docs/devlog/M0/20261117-PLAN029-H2036-COLLECT-H2031-REAL-PADDING-20-30-WINDOW.md",
-    "docs/devlog/M0/20261117-PLAN029-H2035-FIX-GAME4-COLD-IFINDEX-NOT-MTU.md",
-    "docs/devlog/M0/20261117-PLAN029-H2034-UI-HELP-GAME4-CN-FOUR-LANE-COLD.md"
+    "docs/devlog/M0/20261117-PLAN029-H2036-COLLECT-H2031-REAL-PADDING-20-30-WINDOW.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
