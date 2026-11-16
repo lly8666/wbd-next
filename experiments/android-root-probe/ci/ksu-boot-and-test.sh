@@ -10,6 +10,14 @@ cd "$GITHUB_WORKSPACE"
 mkdir -p out/ksu out/appcase
 emulator="$ANDROID_HOME/emulator/emulator"
 rooted="$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img"
+# Pre-generate and serve a stable CI-only ADB key BEFORE launching Play Store AVD.
+# This configures the emulator control channel; it is NOT app Root authorization.
+mkdir -p "$HOME/.android"
+if [[ ! -s "$HOME/.android/adbkey" ]]; then
+  adb keygen "$HOME/.android/adbkey" >out/ksu/adb-keygen.txt 2>&1
+fi
+adb start-server >out/ksu/adb-server-start.txt 2>&1
+adb devices -l >out/ksu/adb-devices-initial.txt
 EMU_PID=""
 cleanup() {
   adb emu kill >/dev/null 2>&1 || true
@@ -26,7 +34,29 @@ start_avd() {
     -gpu swiftshader_indirect -accel on -memory 3072 \
     >"out/ksu/emulator-$phase.log" 2>&1 &
   EMU_PID=$!
-  timeout 300s adb wait-for-device
+  # Avoid 300-second opaque wait on "device unauthorized".
+  local authorized=0
+  for n in $(seq 1 90); do
+    adb devices -l >"out/ksu/adb-devices-$phase.txt" 2>&1 || true
+    if grep -Eq 'emulator-[0-9]+[[:space:]]+device([[:space:]]|$)' "out/ksu/adb-devices-$phase.txt"; then
+      authorized=1
+      break
+    fi
+    if grep -Eq 'emulator-[0-9]+[[:space:]]+unauthorized' "out/ksu/adb-devices-$phase.txt"; then
+      printf '%s\n' "ADB_UNAUTHORIZED on $phase at $n" >"out/ksu/adb-unauthorized-$phase.txt"
+    fi
+    if ! kill -0 "$EMU_PID" 2>/dev/null; then
+      tail -n 100 "out/ksu/emulator-$phase.log"
+      echo "ENV_BLOCKED: emulator process exited before ADB online"
+      exit 3
+    fi
+    sleep 2
+  done
+  if [[ "$authorized" != 1 ]]; then
+    echo "ENV_BLOCKED: ADB never reached authorized 'device' on $phase; never confuse with KSU app authorization"
+    tail -n 90 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
   local booted=0
   for n in $(seq 1 140);do
     if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]];then booted=1;break;fi
