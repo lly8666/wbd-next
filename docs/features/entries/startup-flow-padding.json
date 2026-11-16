@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "H2025用户最新限定：Normal Tunnel新TCP/UDP流随机前20..30条、2..3s窗口先到即停，每record随机0..min(500B,真实MTU余量)；无每流2KiB/10%字节预算；默认off，Direct不填。H2021旧不限窗口物理抓包PASS不能替代本版验收。",
+  "summary": "H2031用户规则：每新Tunnel TCP/UDP流随机前20–30条合格record、2–3秒窗口先到即停止；即使某条业务包MTU余量为0，仍消耗条数并启动窗口。可填时每条0..500B且不超真实MTU，不设每流2KiB/10%累计预算。默认off，Direct不填。H2028/H2031新物理验收待签名证据。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -12,7 +12,7 @@
   ],
   "defaults": {
     "planned_mode": "off；旧TLS bool映射tls，显式flows启用新增行为",
-    "planned_bounds": "每个新Tunnel流随机20..30合格record及2..3s时间窗，先到为止；单条0..min(500B,实际密文record MTU空间)，不设累计字节或10%总预算；最多256流跟踪"
+    "planned_bounds": "随机20..30条/2..3秒（先到为止，0-room有效record也计数和开窗）；每条0..min(500B,真实MTU余量)；无累计填充字节或10%比例预算；256个有界流跟踪槽"
   },
   "usage": {
     "cli": "STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.",
@@ -105,7 +105,8 @@
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
     "Padding is not a guarantee against DPI recognition.",
-    "H2025每新流20–30条与2–3秒随机启动窗口需全新真实物理抓包/Stop；H2021旧不限窗口物理PASS不可升级。"
+    "H2025每新流20–30条与2–3秒随机启动窗口需全新真实物理抓包/Stop；H2021旧不限窗口物理PASS不可升级。",
+    "H2031业务record即使无加密填充room也消费启动条数和窗口；验证需同时覆盖后续小record不会在过窗时重新获得填充。"
   ],
   "promotion": null
 }
