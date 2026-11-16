@@ -37,3 +37,5 @@ Maximum one AVD per Action, max three independent Actions concurrently, boot <=5
 ## First host result / alternate host
 
 Real Linux ARM64 host preflight [Action43857158313](https://github.com/lly8666/wbd-next/actions/runs/43857158313) SOURCE `f0b835c70050e88041cb14afbb9b8fd6780c9e27` reported actual `aarch64` but `/dev/kvm` inaccessible and emulator binary missing, **ENV_BLOCKED/NO_ARM64_KVM**; Action CI success only validates the host script. One nonidentical host qualification on Apple Silicon macOS with HVF is permitted as a bounded alternative; see `.github/workflows/android-root-dirtyfrag-mac-host.yml`, which does not boot or exploit a guest. No further host retries without evidence.
+
+**Preflight correction:** Original macOS Action43857610954 selected obsolete Intel SDK tools/emulator and queried unavailable `kern.hv_support`; classification is **host emulator unqualified**, not proven Apple Silicon HVF absent. One corrected official SDK emulator installation + `-accel-check` run is allowed as an affected-code fix, still no guest or exploit. Do not extend host retry loop if this fails.

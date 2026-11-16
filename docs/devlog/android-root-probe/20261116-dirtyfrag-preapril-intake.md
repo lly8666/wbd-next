@@ -19,3 +19,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Record precise first Linux ARM64 host KVM ENV_BLOCKED Action/artifact and one independent Apple Silicon HVF preflight; no Android guest/root claim."}
 ```
+
+## MacOS host preflight defect and governance fix (do not reinterpret as exploit result)
+
+- SOURCE `8342f575474255debd41ae409c8c5b6e7ff1f34c`, [Action43857610954](https://github.com/lly8666/wbd-next/actions/runs/43857610954), job `133265807588`: host `arm64`; `sysctl kern.hv_support` returned unknown OID (exit1), selected **legacy** `/Users/runner/Library/Android/sdk/tools/emulator` which returned Intel VT-x required (exit4). Thus `ENV_BLOCKED`, but this does **not** prove Apple Silicon native HVF itself absent. Artifact `14220879880`, declared ZIP SHA256 `67e26a1fa6dc5e2333cd0360e1fc40784f068973e8839283dea09066b4cb33e5`. No guest boot/root.
+- Governance feature catalog [Action43857158043](https://github.com/lly8666/wbd-next/actions/runs/43857158043) and [Action43857610888](https://github.com/lly8666/wbd-next/actions/runs/43857610888) FAIL: feature card exceeded 16KiB. Correct by retaining the original 34 source-locked verification entries **unchanged**, using bounded compact JSON and only one narrowly scoped DirtyFrag NOT_RUN entry; prior evidence still in devlogs, not deleted.
+- One **code-defect corrective** macOS preflight is now configured to install the official current emulator via SDK manager where available, use `sdk/emulator/emulator` rather than obsolete `sdk/tools/emulator`, inspect the binary architecture, and use real `emulator -accel-check` instead of Intel-only sysctl. It never boots/emulates/exploits a guest; do not launch more host variants if blocked.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Correct bounded feature card and accurately isolate Apple Silicon legacy-emulator preflight bug; old host results remain ENV_BLOCKED, root NOT_RUN."}
+```

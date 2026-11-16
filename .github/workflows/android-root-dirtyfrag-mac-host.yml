@@ -16,11 +16,30 @@ jobs:
   one-macos-arm64-host:
     if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
     runs-on: macos-15
-    timeout-minutes: 7
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Check actual Apple Silicon HVF and Android ARM64 emulator
+      - name: Install official ARM64 macOS emulator with current SDK manager if available (bounded)
+        shell: bash
+        run: |
+          mkdir -p out/dirtyfrag-mac-host
+          python3 - <<'PY'
+          import os,pathlib,shutil,subprocess
+          sdk=pathlib.Path(os.environ.get('ANDROID_HOME',str(pathlib.Path.home()/'Library/Android/sdk')))
+          manager=sdk/'cmdline-tools/latest/bin/sdkmanager'
+          cmd=str(manager) if manager.is_file() else shutil.which('sdkmanager')
+          result='ENV_BLOCKED_NO_SDKMANAGER' if not cmd else 'NOT_RUN'
+          if cmd:
+              try:
+                  p=subprocess.run([cmd,'--install','emulator'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=210)
+                  result='EXIT_'+str(p.returncode)+'\n'+p.stdout[-3500:]
+              except (OSError,subprocess.TimeoutExpired) as e:
+                  result='ENV_BLOCKED_'+str(e)
+          (pathlib.Path('out/dirtyfrag-mac-host')/'sdk-install.txt').write_text(result+'\n')
+          print(result[:600])
+          PY
+      - name: Check native ARM64 emulator and its actual accelerator
         shell: bash
         run: bash experiments/android-root-probe/ci/dirtyfrag-mac-host-preflight.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
