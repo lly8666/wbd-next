@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-temp-root-probe",
   "name": "Android临时root能力探针（实验，非Android客户端PASS）",
-  "summary": "独立Android原生探针：原API28–36 AOSP adb-root TUN UDP+Raw loopback 有限正例；后续API28/32/36共63组capset实际对照通过，发现/dev/tun DAC访问与NET_ADMIN ioctl门槛不同。app→su、路由/NAT/共享和真机均未验。",
+  "summary": "AOSP adb-root API28–36原生TUN UDP/raw lo有限正例，API28/32/36削权门槛63/63通过；后续仅在原android-temp-root-probe分支尝试安全隔离的真实fwmark→TUN策略路由，不提升产品状态。",
   "owner": "Android临时root独立实验（用户授权）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -12,13 +12,13 @@
   ],
   "defaults": {
     "implementation": "LIMITED_AOSP_NATIVE_AND_CAPABILITY_GATES_COMPLETE: API28–36 prior TUN UDP/raw; follow-on API28/32/36 63/63 capset-gate; app-su/route/NAT/tether NOT_RUN",
-    "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
+    "planned_operation": "inspect只读；显式exercise/capgate；routegate只有确认空私有netns才写临时路由，决不写Android全局规则",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
   "usage": {
-    "cli": "android-root-probe [inspect|exercise|capgate <none|netadmin|netraw|both|dac|admin-dac|both-dac> <tun|tun-preopen|raw>]; capgate仅受控adb-root进程内降权，非Root获取工具",
+    "cli": "android-root-probe [inspect|exercise|capgate <none|netadmin|netraw|both|dac|admin-dac|both-dac> <tun|tun-preopen|raw>]; capgate仅受控adb-root进程内降权，非Root获取工具; routegate (only distinct lo-only private network namespace, requires externally supplied adb-root)",
     "config": "build SOURCE 66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925, Action43802134067/artifact14197020858/manifest ecae5b4668a15af72d06dd8695718cfedf12fdbf25849319ee4cda61b478d800; API28 source c7fa61412a02e0adff389e761308bb1147a35fa7, Action43801129305; exact all-version Actions and hashes in docs/devlog/android-root-probe/20261116-api-matrix.json; follow-on SOURCE a5794555e44efcb4945cc928cb8308258c93d8b0 Action43806012347; details docs/devlog/android-root-probe/20261116-capgates-matrix.json",
-    "gui": "本工作包未新增Kotlin壳；app→su、前台服务、网络回调均NOT_RUN，不是可连接客户端"
+    "gui": "未新增APK，app→su/FGS/tether仍NOT_RUN"
   },
   "code_refs": [
     "experiments/android-root-probe/Cargo.toml",
@@ -30,7 +30,9 @@
     ".github/workflows/android-root-probe-canary-api37.yml",
     "experiments/android-root-probe/probe/src/capgate.rs",
     "experiments/android-root-probe/ci/capgate.sh",
-    ".github/workflows/android-root-permission-gates.yml"
+    ".github/workflows/android-root-permission-gates.yml",
+    "experiments/android-root-probe/probe/src/routegate.rs",
+    "experiments/android-root-probe/ci/routegate.sh"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -53,9 +55,17 @@
     "docs/devlog/android-root-probe/20261116-capgates-02.md",
     "docs/devlog/android-root-probe/20261116-capgates-03.md",
     "docs/devlog/android-root-probe/20261116-capgates-matrix.json",
-    "docs/devlog/android-root-probe/20261116-capgates-final.md"
+    "docs/devlog/android-root-probe/20261116-capgates-final.md",
+    "docs/devlog/android-root-probe/20261116-unified-routegate.md"
   ],
   "verification": [
+    {
+      "platform": "Android9/API28 and Android16/API36 canary then 12L/API32 isolated netns routegate",
+      "scope": "Pending only: distinct lo-only unshare(CLONE_NEWNET) prerequisite; one private fwmark rule+route and owned TUN packet positive/unmarked negative; ENV_BLOCKED if isolation denied",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
     {
       "platform": "Android9 API28 AOSP x86_64 adb-root Enforcing, 21 capability gates",
       "status": "FUNCTIONAL_PASS",
@@ -250,7 +260,8 @@
     "feature catalog requires experimental tool available_on=experiment/android-temp-root-probe; this denotes runnable diagnostic code on the experiment branch, not an Android client or physical support.",
     "后续仅在新分支experiment/android-root-permission-gates通过AOSP API28/32/36的21项/版本capset对照；/dev/tun mode0660 uid1000 gid1016，NET_ADMIN只够TUNSETIFF但未必有DAC打开权限；预开FD或短期DAC_OVERRIDE是候选设计，未测生产应用su。",
     "后续capgate过程没有调用ip子进程，也没有在降权后验证完整TUN UDP/MTU、fwmark/NAT/转发、实际热点/USB；CapBnd和UID0仍保留，不能据此认证全项目最小权限。",
-    "capgate最终文档更新已在20261116-capgates-03.md申报feature-impact；仅实验分支能力门槛PASS，不提升Android产品状态。"
+    "capgate最终文档更新已在20261116-capgates-03.md申报feature-impact；仅实验分支能力门槛PASS，不提升Android产品状态。",
+    "最新指令：Android root 相关后续开发只在 experiment/android-temp-root-probe；旧 experiment/android-root-permission-gates 保留历史证据但不继续写入。"
   ],
   "promotion": null
 }

@@ -1,6 +1,7 @@
 //! Bounded Android capability experiment, not a VPN/client or root installer.
 //! inspect is read-only; exercise only creates a short-lived owned TUN and loopback raw socket.
 mod capgate;
+mod routegate;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
@@ -298,6 +299,12 @@ fn usage() -> Value {
 }
 fn main() {
     let mode = std::env::args().nth(1).unwrap_or_else(||"inspect".to_owned());
+    if mode == "routegate" {
+        let result = routegate::run();
+        println!("{}", serde_json::to_string_pretty(&result).unwrap());
+        if result["status"] == "FAIL" { std::process::exit(1); }
+        return;
+    }
     if mode == "capgate" {
         let profile = std::env::args().nth(2).unwrap_or_default();
         let operation = std::env::args().nth(3).unwrap_or_default();
