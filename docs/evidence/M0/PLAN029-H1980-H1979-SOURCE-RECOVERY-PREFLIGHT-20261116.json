@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "task": "H1980",
+  "plan": "PLAN029",
+  "date": "2026-11-16",
+  "source_sha": "b7a3339f9b31074486310ce5f794022f152afb13",
+  "status": "CURRENT_SOURCE_CI_PREFLIGHT_PASS_NATIVE_NOT_RUN",
+  "run": {
+    "id": 43820149812,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43820149812",
+    "conclusion": "success",
+    "native": "SKIPPED",
+    "jobs": [
+      {
+        "id": 133141140535,
+        "result": "H1979 genuine QPC 8/8 PASS"
+      },
+      {
+        "id": 133141373797,
+        "result": "Win Go PASS"
+      },
+      {
+        "id": 133141373904,
+        "result": "Linux Rust PASS"
+      },
+      {
+        "id": 133141374009,
+        "result": "Win Rust PASS"
+      }
+    ]
+  },
+  "governance": {
+    "run": 43820149761,
+    "jobs": [
+      133141140056,
+      133141140529
+    ],
+    "result": "success"
+  },
+  "maintenance": {
+    "run": 43820149743,
+    "result": "success"
+  },
+  "original_native": {
+    "run": 43817058020,
+    "job": 133133158554,
+    "source_sha": "a07e62fe4ee62ba90b5a1fd60a2699c36ee2ab11",
+    "result": "FAIL_STAGE19",
+    "error": "H1966 QPC H1977 causal boundary ordering invalid",
+    "reason": "2 legitimate Win32 kernel reads after WintunSendPacket call START but before RETURN (22.8/2.6us)",
+    "real_app": "Physical and Direct 2048x1KiB+32 warmup, per-arm Linux kernel 2,129,920B, exact SHA/FIN, both owned Stop PASS",
+    "qpc": "2080 ingress/2080 TX/2080 RX send/2080 FD_READ/4160 relay, 2048 exact joins, 0 retransmits",
+    "physical_rtt_p50_p95_p99_us": [
+      269,
+      334,
+      381
+    ],
+    "direct_rtt_p50_p95_p99_us": [
+      521,
+      620,
+      682
+    ],
+    "ge_8ms": 0,
+    "earlier_h1974": "5x61-63ms and 4 true retransmissions OPEN"
+  },
+  "already_tested": "H1848 run43600601863 genuine nonCI Normal CN Direct DNS/TCP/UDP+Tunnel+Stop limited PASS; don't redispatch duplicate scene",
+  "open": [
+    "D1-D5",
+    "P1 CPU/p99",
+    "P2 61ms tail",
+    "real GUI Connect/Stop",
+    "Game4 CN",
+    "actual IPv6",
+    "pressure/padding"
+  ]
+}
