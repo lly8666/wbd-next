@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1982,
-  "checkpoint_sha": "7db952dafaadaf07241895b6aa13b7003f9a0885",
+  "sequence": 1983,
+  "checkpoint_sha": "3d0d020ece638ed8eeca4c376408d2e6a883341a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1982 implement fail-closed orphan exact PLAN029 Defender Allow detection: existing read-only disk inspector marked absent, disk-only N4NativeRecoverState returned nil, next-generation no-WFP assembly ignored .plan029-defender-tcp when native primary WAL missing. Three pure Windows regressions added; SOURCE CI/native NOT_RUN. H1978 original native FAIL and H1974 61ms tail OPEN.",
-  "why_now": "A concrete Stop/crash recovery loss-of-authority boundary, not a firewall root-cause guess. New code only inspects same-owned sidecar and refuses false clean state; it does not touch any OS Defender rule.",
+  "current_task": "H1983 collect H1982 original SOURCE 3d0d: governance 43824831591 SUCCESS, M0 43824831603 FAIL first at preflight prepare_windows_wiring.py --check-only result_blob mismatch entry (Windows Go/native SKIPPED), H1661 source 43824831641 FAIL same assembly. Six changed Go overlay SHA result_blob now synchronized in exact PLAN020 derivative manifest, source CI NOT_RUN. H1978 native FAIL, H1974 61ms OPEN.",
+  "why_now": "User requires entry/manifest/source correctness, no auto network dispatch. H1982 product code was not compiled because exact assembly SHA mismatch, so cannot claim tests PASS; update only six create-operation result_blob references, keep donor/source blobs unchanged.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact-source Windows Go unit/build and governance; do not redispatch previous H1974/H1978 network probes. Actual GUI Connect/Stop, Game4 CN and D1-D5/P1-P2/pressure/IPv6/padding remain OPEN.",
+  "next_action": "Collect H1983 actual Windows Go build/regression and governance only, no native repeat. Then prioritize missing actual WinForms GUI Connect/Stop and Game4 CN evidence, D1–D5/P1–P2/IPv6/padding/full pressure still open.",
   "unverified": true,
-  "last_tested_source": "b7a3339f9b31074486310ce5f794022f152afb13",
+  "last_tested_source": "3d0d020ece638ed8eeca4c376408d2e6a883341a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1980-H1979-SOURCE-RECOVERY-PREFLIGHT-20261116.json"
+    "docs/evidence/M0/PLAN029-H1983-H1982-OVERLAY-MANIFEST-CI-FAIL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1982-DEFENDER-ORPHAN-READONLY-COLD-FENCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1980-H1979-PREFLIGHT-AND-INTERRUPT-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1979-H1978-ORIGINAL-2048-QPC-CONCURRENT-WINTUN-SEND.md",
     "docs/devlog/M0/20261116-PLAN029-H1978-ONE-REAL-2048X1K-BOUNDARY-QPC-60MS.md",
     "docs/devlog/M0/20261116-PLAN029-H1977-60MS-ORIGINAL-WINTUN-TX-RX-FDREAD-BOUNDARY-QPC.md",
     "docs/devlog/M0/20261116-PLAN029-H1976-RESTORE-FAIL-SOURCE-AND-GOVERNANCE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1975-H1974-60MS-TCP-STALL-DIAGNOSIS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1974-REAL-POST-INGRESS-2048X1K-ONE-SOURCE.md"
+    "docs/devlog/M0/20261116-PLAN029-H1975-H1974-60MS-TCP-STALL-DIAGNOSIS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1982 pure failure-close code + tests authored CI NOT_RUN. H1979 build/QPC preflight success but native NOT_RUN; H1978 original failed Action and H1974 genuine 61ms tail OPEN."
+  "partial_summary": "H1982 original M0 and H1661 CI both FAIL at stale overlay SHA before Windows Go compile; governance PASS. H1983 manifest hash-only fix for six files, new CI NOT_RUN. H1978 original native FAIL/H1974 61ms remain."
 }

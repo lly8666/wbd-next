@@ -1095,13 +1095,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
-      "result_blob": "72a3693c72e207f2a2fe72e957c27a871ab5291b"
+      "result_blob": "d34f7d31dfd2d1366eda38b2387188079fb8d60f"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
-      "result_blob": "9866a5815f91d4678b5c30fab544aa7567e2e3ee"
+      "result_blob": "cd196a95a5a7c6f4074c76180cf477353599885a"
     },
     {
       "kind": "create",
@@ -1134,13 +1134,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_status_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
-      "result_blob": "58c0ff58550abbb2c9654668faa761c9119f02ab"
+      "result_blob": "b1b4b3aae1e1efbc2d62e0f4f553d3b0cd08abb2"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_status_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
-      "result_blob": "c9157436a57ea16500484ca4a72a1214968cd57c"
+      "result_blob": "5ab0e94cd7ab2dea2bdb0e602670c2f65eec04cc"
     },
     {
       "kind": "create",
@@ -1739,7 +1739,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
-      "result_blob": "75f1ca030b4ac3f577e0aa32eb9e8873d30efed3"
+      "result_blob": "d4c6c1fe51bcead11aab4ef3391f9205cda42325"
     },
     {
       "kind": "create",
@@ -1787,7 +1787,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
-      "result_blob": "e4adea8b4a687df92489c4fb9466584b348657f7"
+      "result_blob": "45ebac5b21347ba47107352a61936b9cf7f5183a"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

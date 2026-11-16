@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task": "H1983",
+  "plan": "PLAN029",
+  "date": "2026-11-16",
+  "tested_source_sha": "3d0d020ece638ed8eeca4c376408d2e6a883341a",
+  "original": {
+    "run": 43824831603,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43824831603",
+    "conclusion": "failure",
+    "first_job": 133156071319,
+    "first_step": 57,
+    "error": "assembly blob mismatch: r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+    "windows_go": "SKIPPED_NOT_RUN",
+    "windows_rust": "SKIPPED",
+    "linux_rust": "SKIPPED",
+    "native_network": "SKIPPED"
+  },
+  "companion": {
+    "run": 43824831641,
+    "job": 133156070386,
+    "conclusion": "failure",
+    "boundary": "Verify exact overlay assembly and pinned legacy, same result_blob mismatch; Go compile not started"
+  },
+  "governance": {
+    "run": 43824831591,
+    "conclusion": "success",
+    "jobs": [
+      133156071121,
+      133156071334
+    ]
+  },
+  "manifest_patch": "Only six exact Go overlay create result_blob SHA values; donor original, operation list, output path and stage semantics unchanged",
+  "blobs": [
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+      "previous": "72a3693c72e207f2a2fe72e957c27a871ab5291b",
+      "new": "d34f7d31dfd2d1366eda38b2387188079fb8d60f"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
+      "previous": "9866a5815f91d4678b5c30fab544aa7567e2e3ee",
+      "new": "cd196a95a5a7c6f4074c76180cf477353599885a"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
+      "previous": "58c0ff58550abbb2c9654668faa761c9119f02ab",
+      "new": "b1b4b3aae1e1efbc2d62e0f4f553d3b0cd08abb2"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
+      "previous": "c9157436a57ea16500484ca4a72a1214968cd57c",
+      "new": "5ab0e94cd7ab2dea2bdb0e602670c2f65eec04cc"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
+      "previous": "75f1ca030b4ac3f577e0aa32eb9e8873d30efed3",
+      "new": "d4c6c1fe51bcead11aab4ef3391f9205cda42325"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
+      "previous": "e4adea8b4a687df92489c4fb9466584b348657f7",
+      "new": "45ebac5b21347ba47107352a61936b9cf7f5183a"
+    }
+  ],
+  "repair_source_ci": "NOT_RUN",
+  "full_plan": "IN_PROGRESS"
+}
