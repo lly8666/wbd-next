@@ -12,11 +12,25 @@ def adb(*args,check=True,timeout=30):
  if check and p.returncode:raise RuntimeError(f"adb {args}: {p.returncode}: {p.stdout[:320]}")
  return p.stdout
 def dump():
- adb("shell","uiautomator","dump","/sdcard/wbd-split-screen.xml",timeout=40)
- raw=adb("shell","cat","/sdcard/wbd-split-screen.xml")
- (O/"split-ui.xml").write_text(raw)
- if "<hierarchy" not in raw:raise RuntimeError("ui hierarchy missing")
- return list(ET.fromstring(raw).iter("node"))
+ # The real API36 AVD occasionally kills the *second* short-lived
+ # uiautomator process with SIGKILL/137 while App and Accessibility
+ # services recover. It is an infrastructure failure, not a route verdict.
+ last=""
+ for attempt in range(5):
+  result=adb("shell","uiautomator","dump","/sdcard/wbd-split-screen.xml",
+             check=False,timeout=40)
+  raw=adb("shell","cat","/sdcard/wbd-split-screen.xml",check=False)
+  if "<hierarchy" in raw:
+   try:
+    nodes=list(ET.fromstring(raw).iter("node"))
+    (O/"split-ui.xml").write_text(raw)
+    return nodes
+   except ET.ParseError as e:
+    last=f"XML invalid: {e}"
+  else:
+   last=f"dump attempt={attempt+1} output={result[:200]} XML={raw[:140]}"
+  time.sleep(2.5)
+ raise RuntimeError(f"uiautomator failed after 5 bounded tries: {last}")
 def box(n):
  b=n.get("bounds","")
  m=re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",b)
@@ -34,6 +48,7 @@ def find(text,klass=None):
    return n
  return None
 adb("shell","am","start","-W","-n",P+"/.DeviceDiagnosticActivity")
+time.sleep(2.5)
 button=find("Android 分流/全局设置","Button")
 if button is None:raise RuntimeError("split settings entry missing")
 click(button)
