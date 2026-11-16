@@ -9,6 +9,7 @@ use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
 
 const CAP_VERSION_3: u32 = 0x2008_0522;
+const CAP_DAC_OVERRIDE: u64 = 1 << 1;
 const CAP_NET_ADMIN: u64 = 1 << 12;
 const CAP_NET_RAW: u64 = 1 << 13;
 #[repr(C)]
@@ -28,7 +29,8 @@ fn status_caps() -> Value {
     }
     Value::Object(values)
 }
-fn gate_tun() -> Value {
+fn gate_tun(preopened: Option<std::fs::File>) -> Value {
+    let preopen_used = preopened.is_some();
     let path = ["/dev/tun", "/dev/net/tun"].iter().copied().find(|x| Path::new(x).exists());
     let Some(path) = path else {
         return json!({"status":"UNAVAILABLE","action":"TUN device absent","cleanup":"nothing created"});
@@ -37,9 +39,12 @@ fn gate_tun() -> Value {
     if Path::new(&format!("/sys/class/net/{name}")).exists() {
         return json!({"status":"FAIL","action":"owned TUN name collision","cleanup":"not attempted"});
     }
-    let file = match OpenOptions::new().read(true).write(true)
-        .custom_flags(libc::O_NONBLOCK | libc::O_CLOEXEC).open(path) {
-        Ok(f) => f, Err(e) => return failure("open TUN device", &e),
+    let file = match preopened {
+        Some(f) => f,
+        None => match OpenOptions::new().read(true).write(true)
+            .custom_flags(libc::O_NONBLOCK | libc::O_CLOEXEC).open(path) {
+            Ok(f) => f, Err(e) => return failure("open TUN device after capset", &e),
+        },
     };
     let mut ifr = [0u8; 40];
     ifr[..name.len()].copy_from_slice(name.as_bytes());
@@ -52,10 +57,12 @@ fn gate_tun() -> Value {
     match err {
         Some(e) => json!({"status":if cleaned {classify(&e)} else {"FAIL"},
             "action":"TUNSETIFF with restricted CapEff/CapPrm","errno":e.raw_os_error(),
-            "evidence":e.to_string(),"created":existed,"cleanup":if cleaned {"no owned interface"} else {"LEAK"}}),
+            "evidence":e.to_string(),"created":existed,"device_preopened_before_capset":preopen_used,
+            "cleanup":if cleaned {"no owned interface"} else {"LEAK"}}),
         None => json!({"status":if existed && cleaned {"SUPPORTED_IN_SCOPE"} else {"FAIL"},
             "action":"TUNSETIFF with restricted CapEff/CapPrm",
-            "created":existed,"cleanup":if cleaned {"interface gone after close"} else {"LEAK"},
+            "created":existed,"device_preopened_before_capset":preopen_used,
+            "cleanup":if cleaned {"interface gone after close"} else {"LEAK"},
             "scope":"create+close only; does not validate MTU, UDP or policy routing at reduced caps"})
     }
 }
@@ -63,11 +70,27 @@ pub(super) fn run(profile: &str, operation: &str) -> Value {
     let mask = match profile {
         "none" => 0u64, "netadmin" => CAP_NET_ADMIN,
         "netraw" => CAP_NET_RAW, "both" => CAP_NET_ADMIN | CAP_NET_RAW,
+        "dac" => CAP_DAC_OVERRIDE,
+        "admin-dac" => CAP_NET_ADMIN | CAP_DAC_OVERRIDE,
+        "both-dac" => CAP_NET_ADMIN | CAP_NET_RAW | CAP_DAC_OVERRIDE,
         _ => return json!({"status":"FAIL","reason":"invalid profile"}),
     };
-    if operation != "tun" && operation != "raw" {
-        return json!({"status":"FAIL","reason":"operation must be tun|raw"});
+    if operation != "tun" && operation != "tun-preopen" && operation != "raw" {
+        return json!({"status":"FAIL","reason":"operation must be tun|tun-preopen|raw"});
     }
+    // Preopen with the original adb-root credentials ONLY for this variant,
+    // then apply capset BEFORE TUNSETIFF. This isolates device DAC from ioctl authorization.
+    let preopened = if operation == "tun-preopen" {
+        let path = ["/dev/tun", "/dev/net/tun"].iter().copied().find(|x| Path::new(x).exists());
+        let Some(path) = path else {
+            return json!({"status":"FAIL","reason":"TUN device not present for preopen"});
+        };
+        match OpenOptions::new().read(true).write(true)
+            .custom_flags(libc::O_NONBLOCK | libc::O_CLOEXEC).open(path) {
+            Ok(file) => Some(file),
+            Err(e) => return failure("preopen TUN using original adb-root credentials", &e),
+        }
+    } else { None };
     let before = status_caps();
     let uid = unsafe { libc::getuid() };
     let euid = unsafe { libc::geteuid() };
@@ -100,12 +123,15 @@ pub(super) fn run(profile: &str, operation: &str) -> Value {
             "action":"verify caps+NNP","expected":expected,
             "caps_before":before,"caps_after":after,"no_new_privs":nnp,"uid":uid,"euid":euid});
     }
-    let check = if operation == "tun" { gate_tun() } else { exercise_raw() };
+    let check = if operation == "tun" || operation == "tun-preopen" {
+        gate_tun(preopened)
+    } else { exercise_raw() };
     json!({"schema":"android-root-capgate/v1","status":"CAPSET_VERIFIED",
         "execution_path":"adb-root caller; NOT app su","operation":operation,"profile":profile,
         "requested_caps":expected,"uid":uid,"euid":euid,"selinux":selinux,"no_new_privs":nnp,
         "caps_before":before,"caps_after":after,"check":check,
         "limitations":["CapBnd and UID0 unchanged; this proves only isolated CapEff/CapPrm/CapInh gate under AOSP su SELinux domain",
+           "TUN preopen tests ioctl independently of device DAC; postdrop open requires actual DAC access",
            "No exec after capset; TUN only create+cleanup, raw only loopback",
            "No app-su, fwmark, netfilter/NAT, real physical network or hotspot/USB tested"]})
 }
