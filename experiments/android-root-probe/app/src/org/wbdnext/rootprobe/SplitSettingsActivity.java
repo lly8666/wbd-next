@@ -37,6 +37,12 @@ public final class SplitSettingsActivity extends Activity {
     // any click handler internally.
     private final LinkedHashMap<String,View> viewWitness=new LinkedHashMap<>();
     private long witnessLastMs=0;
+    private String lastUiAction="opened";
+    private void noteUiAction(String value){
+        lastUiAction=value;
+        witnessLastMs=0;
+        if(packageInput!=null) packageInput.post(()->emitVisibleBounds());
+    }
     private void emitVisibleBounds(){
         long now=SystemClock.elapsedRealtime();
         if(now-witnessLastMs<120 || viewWitness.size()<3)return;
@@ -47,6 +53,12 @@ public final class SplitSettingsActivity extends Activity {
             result.put("activity","SplitSettingsActivity");
             result.put("default_mode",mode(defaultMode));
             result.put("app_mode",mode(appMode));
+            result.put("last_action",lastUiAction);
+            result.put("override_count",appOverrides.size());
+            result.put("package_char_count",packageInput==null?0:packageInput.length());
+            result.put("status_preview",status==null?"":status.getText().toString().substring(0,
+                Math.min(220,status.getText().length())));
+            result.put("save_enabled",saveButton!=null&&saveButton.isEnabled());
             JSONObject views=new JSONObject();
             for(Map.Entry<String,View> entry:viewWitness.entrySet()){
                 Rect area=new Rect();
@@ -264,9 +276,11 @@ public final class SplitSettingsActivity extends Activity {
         add.setOnClickListener(v->{
             String p=packageInput.getText().toString().trim();
             if(!p.matches("[A-Za-z][A-Za-z0-9_.]{2,180}")&&!p.matches("uid:[1-9][0-9]{4,6}")){
-                status.setText("请填写有效的已安装 App 包名或 uid:数字");return;
+                status.setText("请填写有效的已安装 App 包名或 uid:数字");
+                noteUiAction("add_invalid_package");return;
             }
             appOverrides.put(p,mode(appMode));refresh();
+            noteUiAction("add_clicked");
         });panel.addView(add);
         Button clear=new Button(this);clear.setText("清空单独 App 覆盖");
         clear.setOnClickListener(v->{appOverrides.clear();refresh();});panel.addView(clear);
@@ -280,18 +294,21 @@ public final class SplitSettingsActivity extends Activity {
             "点击保存只确认策略正确，不代表已启用 VPN。");
         panel.addView(status);
         saveButton.setOnClickListener(v->{
+            noteUiAction("save_clicked");
             JSONObject config;
             try{config=build();}catch(Exception e){
-                status.setText("FAIL：配置错误 "+e.getMessage());return;
+                status.setText("FAIL：配置错误 "+e.getMessage());
+                noteUiAction("save_config_error");return;
             }
             saveButton.setEnabled(false);
             status.setText("正在原子保存并运行 Root 只读策略验证…");
+            noteUiAction("save_started");
             new Thread(()->{
                 String result;
                 try{atomicSave(config);result=verifyNative();}
                 catch(Exception e){result="FAIL：保存失败 "+e;}
                 String line=result;
-                runOnUiThread(()->{status.setText(line);saveButton.setEnabled(true);});
+                runOnUiThread(()->{status.setText(line);saveButton.setEnabled(true);noteUiAction("save_completed");});
             },"wbd-android-split-validate").start();
         });
         viewWitness.put("package",packageInput);
@@ -302,8 +319,18 @@ public final class SplitSettingsActivity extends Activity {
         scroll.setOnScrollChangeListener((v,sx,sy,ox,oy)->{
             emitVisibleBounds();
         });
+        // An App row is added to appsView between Add and Save; its layout
+        // pushes the Save button down without necessarily changing scrollY.
+        // Record actual post-layout rectangles before the next real tap.
+        panel.addOnLayoutChangeListener((v,left,top,right,bottom,oldLeft,oldTop,oldRight,oldBottom)->{
+            if(bottom!=oldBottom||right!=oldRight){
+                witnessLastMs=0;
+                panel.post(()->emitVisibleBounds());
+            }
+        });
         scroll.addView(panel);setContentView(scroll);
         scroll.post(()->emitVisibleBounds());
         restoreSaved();refresh();
+        noteUiAction("opened");
     }
 }

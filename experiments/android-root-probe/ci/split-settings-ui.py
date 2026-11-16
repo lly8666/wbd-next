@@ -41,17 +41,34 @@ def scroll_to(which):
   adb("shell","input","swipe","160","550","160","195","340")
   time.sleep(0.25)
  raise RuntimeError(f"Cannot reach visible {which} in Android layout, last={state}")
+def forensic():
+ # Never invoke an additional uiautomator. Retain exactly the app-owned
+ # diagnostic and status, so UI/layout errors are not mistaken for su errors.
+ files={}
+ for name in ("wbd-split-settings.json","wbd-split-validation.json","wbd-split-ui-bounds.json"):
+  raw=adb("shell","run-as",P,"cat","files/"+name,check=False)
+  files[name]=raw[:9000]
+ (O/"split-failure-forensic.json").write_text(json.dumps({
+  "files":files,
+  "activity":adb("shell","dumpsys","activity","activities",check=False)[-12000:],
+  "private_listing":adb("shell","run-as",P,"ls","-l","files",check=False),
+  "recent_logcat":adb("logcat","-d","-t","350",check=False)[-25000:]
+ },ensure_ascii=False,indent=2)+"\\n")
+ return {k:v[:450] for k,v in files.items()}
 def wait_config():
+ last_raw="";last_val=""
  for _ in range(70):
-  raw=adb("shell","run-as",P,"cat","files/wbd-split-settings.json",check=False)
-  val=adb("shell","run-as",P,"cat","files/wbd-split-validation.json",check=False)
+  last_raw=adb("shell","run-as",P,"cat","files/wbd-split-settings.json",check=False)
+  last_val=adb("shell","run-as",P,"cat","files/wbd-split-validation.json",check=False)
   try:
-   cfg=json.loads(raw);report=json.loads(val)
+   cfg=json.loads(last_raw);report=json.loads(last_val)
    if report.get("status")=="SUPPORTED_IN_SCOPE":
     return cfg,report
+   if report.get("status") in ("FAIL","UNAVAILABLE","PERMISSION_DENIED"):
+    raise RuntimeError(f"native Root validation rejected settings: {report}")
   except ValueError:pass
-  time.sleep(0.35)
- raise RuntimeError("real UI click did not produce approved App config and Root-native validation")
+  time.sleep(0.4)
+ raise RuntimeError(f"real UI config/native readback incomplete; snapshot={forensic()}")
 # Deliberately do NOT rerun the uiautomator service: it was already run
 # successfully as part of device-diagnostic-ui.py on this same boot/source.
 first=O/"ui.xml"
@@ -88,8 +105,27 @@ state=fresh_bounds()
 if state.get("default_mode")!="split" or state.get("app_mode")!="global":
  raise RuntimeError("UI did not select split default / global per-app mode")
 tap_bounds(scroll_to("add"),"add")
-time.sleep(0.2)
+# Wait for the *actual* App override list to change and for Android to
+# finish relayout before tapping Save. A stale coordinate can hit the list.
+for _ in range(30):
+ state=fresh_bounds()
+ if state.get("last_action")=="add_clicked" and state.get("override_count")==1:
+  break
+ time.sleep(0.2)
+else:
+ raise RuntimeError(f"Add tap did not update App override list: {forensic()}")
 tap_bounds(scroll_to("save"),"save")
+# On slow CI emulators native su may take seconds. We require an actual
+# App save click witness, rather than presuming a touch was delivered.
+for _ in range(20):
+ state=fresh_bounds()
+ if state.get("last_action") in ("save_clicked","save_started","save_completed","save_config_error"):
+  break
+ time.sleep(0.2)
+else:
+ raise RuntimeError(f"Save tap did not reach App button: {forensic()}")
+if state.get("last_action")=="save_config_error":
+ raise RuntimeError(f"App settings rejected before Root call: {forensic()}")
 config,report=wait_config()
 (O/"split-settings.json").write_text(json.dumps(config,ensure_ascii=False,indent=2)+"\n")
 (O/"split-validation.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
