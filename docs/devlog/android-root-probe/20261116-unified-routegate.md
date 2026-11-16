@@ -31,3 +31,11 @@ This corrected SOURCE uses per-netns /proc/net/route to require an empty IPv4 FI
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Preserve SOURCE a40fbc0 API28/36 ENV_BLOCKED due to mount-pinned sysfs preflight; correct private-netns inventory and cleanup via per-netns proc route and RTNL, no global route writes or product promotion."}
 ```
+
+## Verified corrected SOURCE / final code and artifact evidence
+
+Corrected `42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d` compiled by Action43808870166, no rebuild per test. API28/API36 canary then API32/12L all independent Action43808870202 jobs **SUCCESS** and `SUPPORTED_IN_SCOPE`: distinct netns + empty /proc/net/route preflight, private table235/fwmark0x23500, 39B marked UDP on owned TUN, unmarked unreachable, MTU1400 ioctl readback and TUN cleanup; Android original route/rule snapshots identical. Exact IDs/SHA256 in 20261116-routegate-final.md / 20261116-routegate-matrix.json. Historical source `a40fbc0` ENV_BLOCKED unchanged. This is NOT system netd, NAT, hotspot, USB or App→su proof. All work on original experiment/android-temp-root-probe branch.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Register corrected SOURCE-locked API28/API32/API36 real isolated fwmark→owned TUN positive and negative kernel route evidence, retain first-source ENV_BLOCKED and Android netd/app-su/NAT/tether/physical NOT_RUN."}
+```

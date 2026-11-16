@@ -1,0 +1,97 @@
+{
+  "schema": "android-root-private-routegate-matrix/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source_sha": "42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d",
+  "build": {
+    "run": 43808870166,
+    "artifact_id": 14200125029,
+    "zip_sha256": "3f5838b3f4affa945832b84b2fca3ac46122b8b48db18baa74d0bd55dbc1a374",
+    "manifest_sha256": "84b053f1315d655f6811c5214014b0c270406e07a064c59d7b9dd6db6fe6b0f5",
+    "bin_x86_64_sha256": "c1b443392e896bc77b0887e05efec01baff8212bc5f9a06e52a62709bdc8b6e8",
+    "bin_arm64_sha256": "c48d9d1d817c2a348512f037d814a3d098437a28d63ec23ca98d78f095cfc1d3",
+    "sha256sums_verified": 8,
+    "sha256_mismatches": 0,
+    "arm64_runtime": "NOT_RUN"
+  },
+  "scenario": {
+    "api_canaries": [
+      28,
+      36
+    ],
+    "middle": [
+      32
+    ],
+    "max_parallel_emulators": 2,
+    "route_isolated_only": true,
+    "private_table": 235,
+    "rule_pref": 12000,
+    "mark": 144640,
+    "unmarked_negative": true,
+    "tun_mtu": 1400,
+    "global_route_modification": false
+  },
+  "run": 43808870202,
+  "conclusion": "success",
+  "cases": [
+    {
+      "api": 28,
+      "android": "9",
+      "job_id": 133105812501,
+      "artifact_id": 14199935861,
+      "zip_sha256": "6c43a46fc89b7a0b3318c3aad90a8dc956a0543da0de2b0cdc480fb45c29164a",
+      "ns_before": "net:[4026531964]",
+      "ns_after": "net:[4026532371]",
+      "status": "SUPPORTED_IN_SCOPE",
+      "tun_packet_bytes": 39,
+      "ignored_non_target": 0,
+      "global_route_rule_before_after_identical": true,
+      "owned_interface_cleaned": true
+    },
+    {
+      "api": 32,
+      "android": "12L",
+      "job_id": 133106653419,
+      "artifact_id": 14199532936,
+      "zip_sha256": "f2f3454b7cb441aa9bf8ef7c9b19f2a9fd588d27d7f9b6559bcea42d791a0825",
+      "ns_before": "net:[4026531998]",
+      "ns_after": "net:[4026532851]",
+      "status": "SUPPORTED_IN_SCOPE",
+      "tun_packet_bytes": 39,
+      "ignored_non_target": 1,
+      "global_route_rule_before_after_identical": true,
+      "owned_interface_cleaned": true
+    },
+    {
+      "api": 36,
+      "android": "16",
+      "job_id": 133105812356,
+      "artifact_id": 14198869728,
+      "zip_sha256": "48cc56040593c91a8cea90a9118d43fca4e6a05879e6e62827d10db067c24f2b",
+      "ns_before": "net:[4026531840]",
+      "ns_after": "net:[4026533052]",
+      "status": "SUPPORTED_IN_SCOPE",
+      "tun_packet_bytes": 39,
+      "ignored_non_target": 1,
+      "global_route_rule_before_after_identical": true,
+      "owned_interface_cleaned": true
+    }
+  ],
+  "historical": {
+    "source_sha": "a40fbc0b94512c4702a0724f81d3248a9a9683e3",
+    "build_run": 43808360398,
+    "run": 43808360345,
+    "api28_api36": "ENV_BLOCKED sysfs pinned to original mount netns despite distinct CLONE_NEWNET; zero test route writes",
+    "api32": "SKIPPED"
+  },
+  "not_run": [
+    "ordinary app->su authorization + SELinux",
+    "Android netd fwmark/real underlay binding",
+    "NAT/conntrack/forwarding/downstream clients",
+    "real Wi-Fi hotspot/USB/offload",
+    "DNS UDP/TCP53 and IPv6/CLAT",
+    "FGS/targetSDK37/notifications",
+    "real ARM64/16KiB runtime/physical battery",
+    "unexpected process exit owned restore",
+    "Android17/API37 unavailable SDK"
+  ]
+}
