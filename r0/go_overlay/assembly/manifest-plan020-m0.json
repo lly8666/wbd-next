@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "47a07519bc0e837bd8c9525ba07a349c091e0b68",
+      "result_blob": "4ca2c5625e59987bf3659e4dc9a18227604a530d",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -291,7 +291,7 @@
         },
         {
           "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
-          "replace": "if *splitEnable && *lanes!=1 {return errors.New(\"PLAN029 CN split Game2/4 is not yet wired; select Normal (one lane)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+          "replace": "if *splitEnable && *lanes!=1 && *lanes!=4 {return errors.New(\"PLAN029 CN split Game2 not wired; select Normal or Game4 (four lanes)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
         }
       ]
     },

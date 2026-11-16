@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2032,
-  "checkpoint_sha": "b76240bedb04237780bd13377bfe7aae38785018",
+  "sequence": 2033,
+  "checkpoint_sha": "2ffccb199f7131ad585beda1c55daab293cf91e3",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2032 fix feature catalog true `feature-impact updated` requires touching startup-flow-padding card when H2031 0-room startup record behavior changes; product no code delta, H2031 physical tests remain source-scoped.",
-  "why_now": "H2031 Feature Catalog Action43901131033 failed declared feature card not updated: startup-flow-padding. Latest user window/MTU semantics preserved, update effective planned bounds and summary in card.",
+  "current_task": "H2033 fix original Go generated CLI split-enable guard Game4 erroneously rejected before Wintun; permit 4 lanes, reject 2; manifest result blob source locked. H2031 Normal padding real eth0 pcap and Stop PASS; Game4 native pending.",
+  "why_now": "H2030 Action43900614704 first true original Game4 error 'CN split Game2/4 not yet wired' at Go main_windows.go before OS/Wintun. Rust compiled; overlay allowed Game4, manifest main entry stale.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2031 original Normal physical Npcap/eth0 encrypted record size, MTU/duplex/Stop and H2030 Game4 CN original 4lane actual physical first error; fix only grounded boundary.",
+  "next_action": "Collect exact one H2033 Game4 CN real Windows/WSL2 four-lane scene (CN physical DNS, Direct TCP/UDP, Tunnel TCP/UDP, owned Stop). Preserve first error/NOT_RUN, no shared CDN extra scenes. H2031 padding physical PASS scope; no further tuning.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2033-ORIGINAL-GO-GAME4-CN-FOUR-LANE-ENTRY.md",
     "docs/devlog/M0/20261116-PLAN029-H2032-FEATURE-CARD-MTU-ZERO-STARTUP.md",
     "docs/devlog/M0/20261116-PLAN029-H2031-COUNT-MTU-ZERO-SLOTS.md",
     "docs/devlog/M0/20261116-PLAN029-H2030-REAL-GAME4-FLAG-ORDER-REMEDY.md",
     "docs/devlog/M0/20261116-PLAN029-H2029-POST-COMPILER-GAME4-REAL-RETRY.md",
     "docs/devlog/M0/20261116-PLAN029-H2028-SECOND-TEST-E0502.md",
     "docs/devlog/M0/20261116-PLAN029-H2027-COMPILER-BORROW-FEATURE-STATUS.md",
-    "docs/devlog/M0/20261116-PLAN029-H2026-GAME4-CN-SEPARATE-REAL-SCENE.md",
-    "docs/devlog/M0/20261116-PLAN029-H2025-USER-20-30-RECORDS-2-3S-MTU-500B.md"
+    "docs/devlog/M0/20261116-PLAN029-H2026-GAME4-CN-SEPARATE-REAL-SCENE.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
