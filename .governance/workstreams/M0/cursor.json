@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1991,
-  "checkpoint_sha": "620d35419c8ab6e0edd47661f54c101bbb65b187",
+  "sequence": 1992,
+  "checkpoint_sha": "8ed70bc54a1aba3ccd460d63089b251280897915",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1991 ordinary mixed-flow perf: H1990 SOURCE620d governance43834103182 and maintenance43834103172 both SUCCESS; H1988 auto-source native43832554963 real Normal Tunnel TCP/UDP and owned Stops SUCCESS (not CN Direct P2). H1989 Win Rust shard fairness PASS; original H1989 native Action43833451125 in progress at handoff. New H1991 code bounds repeated empty Direct UDP WSAPoll in 32-item TCP reverse drain to <=one rotating scan of current live UDP sockets per TX turn, without delaying actually ready UDP, plus pure regression. New source CI/native NOT_RUN; H1974 tail OPEN.",
-  "why_now": "The same per-packet poll hotspot fixed for DNS in H1988 also exists in the Direct UDP lane: when a ready TCP reply repeatedly wins, the returned TCP packet can cause another expensive empty WSAPoll on unchanged UDP sockets. A bounded full rotating UDP sweep each TX turn preserves chance for every flow and suppresses redundant checks.",
+  "current_task": "H1992 collect H1991 normal performance SOURCE8ed70: Rust component43835248674 both Win2025/Ubuntu SUCCESS (new UDP empty-sweep pure WinRust 105/107 ok); governance43835248700 SUCCESS; M0 43835248671 cheap, Win Go and Win/Linux Rust SUCCESS, later peer/native still IN_PROGRESS on collection. H1988 source22c44 M0 native43832554963 and H1989 sourcee1bc M0 native43833451125 were BOTH real Normal/off two-OS TCP/UDP/Stop SUCCESS, not CN Direct P2. H1990 governance+maintenance SUCCESS, older red retained. No proven p99 or CPU gain, H1974 61ms OPEN; PLAN029 not finished.",
+  "why_now": "User said focus previous agent's ordinary low-latency and CPU performance rather than extreme saturation; source-lock real Normal results and bounded three scheduler fixes without equating Go/Rust build or Normal success to CN Direct P2.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1991 Win/Linux Rust component/unit and governance; collect in-flight original H1989 native result without duplicate dispatch. Then one ordinary source-locked real Direct TCP+UDP+Tunnel measurement focusing p99/long holes and CPU, NOT extreme pressure, no old 2048 replay without new causal hypothesis. H1974 61ms OPEN.",
+  "next_action": "Collect original H1991 native in-flight without repeat dispatch. Then ONE normal mixed CN Direct TCP+UDP and Tunnel small UDP physical baseline on same SOURCE/VM: real p99/max no-delivery gap, CPU per GiB, queue age and owned Stop; do not replay prior 2048 without new causal hypothesis, no heavy stress.",
   "unverified": true,
-  "last_tested_source": "620d35419c8ab6e0edd47661f54c101bbb65b187",
+  "last_tested_source": "8ed70bc54a1aba3ccd460d63089b251280897915",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1991-PERF-UDP-EMPTY-SWEEP-H1990-CI-COLLECT-20261116.json"
+    "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
     "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
     "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
-    "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1990 two CI governance/maintenance PASS, H1989 WinRust shard fairness PASS, H1988 real Normal/off native OS+TLS+TCP/UDP/Stop PASS but no Direct P2. H1991 pure bounded UDP negative-poll skip for ordinary mixed TCP/UDP authored CI NOT_RUN. 029 not delivered."
+  "partial_summary": "H1988 one DNS poll/TX turn and stack WSAPoll PASS WinRust; H1989 rotate 16 TCP WAIT_ANY shards PASS WinRust; H1991 empty UDP WSAPoll full-sweep suppression PASS WinRust 105/107, all components compile. H1988/H1989 default Normal real Win/WSL2 TCP+UDP+Stop PASS, CN Direct p99/CPU NOT_MEASURED; H1974 true 61ms tail OPEN."
 }

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1992",
+  "date": "2026-11-16",
+  "source_sha": "8ed70bc54a1aba3ccd460d63089b251280897915",
+  "h1991_rust": {
+    "run": 43835248674,
+    "conclusion": "success",
+    "windows_job": 133190133761,
+    "ubuntu_job": 133190134240,
+    "windows_test": "plan029_udp_empty_socket_is_not_wsapolled_32x_for_tcp_reverse PASS in 105/107 tests"
+  },
+  "h1991_governance": {
+    "run": 43835248700,
+    "conclusion": "success"
+  },
+  "h1991_m0": {
+    "run": 43835248671,
+    "status_on_collection": "in_progress",
+    "finished_success_jobs": [
+      133190135867,
+      133190427793,
+      133190427925,
+      133190427971
+    ],
+    "signed_native": "IN_PROGRESS_NOT_PROMOTED"
+  },
+  "prior_actual_normal": [
+    {
+      "source_sha": "22c44a70e73d8bf3ff84930b094cd39792948b6d",
+      "run": 43832554963,
+      "conclusion": "success",
+      "mode": "normal",
+      "real_tcp_udp": "PASS",
+      "owned_stop": "PASS_BOTH",
+      "cn_direct_p99": "NOT_RUN"
+    },
+    {
+      "source_sha": "e1bc78c192bbca3b045e8e1339f032211aab626d",
+      "run": 43833451125,
+      "conclusion": "success",
+      "mode": "normal",
+      "real_tcp_udp": "PASS",
+      "owned_stop": "PASS_BOTH",
+      "cn_direct_p99": "NOT_RUN"
+    }
+  ],
+  "h1990": {
+    "governance_run": 43834103182,
+    "governance": "success",
+    "maintenance_run": 43834103172,
+    "maintenance": "success"
+  },
+  "measured": {
+    "current_source_cpu_per_gib": "NOT_RUN",
+    "cn_direct_p99": "NOT_RUN",
+    "max_hole": "NOT_RUN",
+    "h1974_61ms": "OPEN"
+  },
+  "new_network_dispatch": "NONE",
+  "plan029": "IN_PROGRESS"
+}
