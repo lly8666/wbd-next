@@ -45,6 +45,30 @@ func TestPlan029GoColdRustThreeModesDnsEqualAllowedNoBackup(t *testing.T){
  if _,e:=m0Plan029ColdSource(same,netip.MustParseAddr("10.1.0.7"),
   14,netip.MustParseAddr("10.234.12.34"),1280,nil);e==nil{t.Fatal("backup DNS admitted")}
 }
+// H1960: two configured DNS settings are each ONE unicast IPv4 endpoint.
+// No invalid 0/broadcast sentinel may silently become a system resolver,
+// second endpoint or cross-direction fallback at cold Apply.
+func TestPLAN029H1960ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast(t *testing.T){
+ physical:=netip.MustParseAddr("10.1.0.7")
+ lease:=netip.MustParseAddr("10.234.12.34")
+ for _,mode:=range []string{"all","bypass-lan","bypass-lan-cn"}{
+  for _,bad:=range []string{"0.0.0.0","255.255.255.255"}{
+   for _,which:=range []string{"direct","tunnel"}{
+    o:=plan029Options(mode)
+    addr:=netip.MustParseAddr(bad)
+    if which=="direct"{o.DirectDNS4=addr}else{o.DNSServers4=[]netip.Addr{addr}}
+    if c,err:=m0Plan029ColdSource(o,physical,14,lease,1280,[]byte("cn.example\n"));
+       err==nil{t.Fatalf("invalid %s DNS %s accepted in mode=%s: %+v",which,bad,mode,c)}
+   }
+  }
+  // User may deliberately set both directions to the SAME valid IPv4;
+  // this remains two independent purposes, not multiple/fallback DNS.
+  same:=plan029Options(mode)
+  same.DNSServers4=[]netip.Addr{same.DirectDNS4}
+  if _,err:=m0Plan029ColdSource(same,physical,14,lease,1280,[]byte("cn.example\n"));
+     err!=nil{t.Fatalf("equal valid DNS lost in mode=%s: %v",mode,err)}
+ }
+}
 func TestPlan029GoColdDomainsIDNAAndRejectUnsupportedGeosite(t *testing.T){
  b,e:=m0Plan029CanonicalDomains([]byte("Example.CN.\n=例子.cn\n"))
  if e!=nil||!strings.Contains(string(b),"example.cn\n")||
