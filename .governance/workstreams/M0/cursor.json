@@ -5,7 +5,7 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 1996,
-  "checkpoint_sha": "92eafb0ce3804a490e12b2842f709f9805c2caed",
+  "checkpoint_sha": "99d311aaeb8c6fd998c1e6c24f8f2de43349342f",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
   "current_task": "H1996 collect H1995 signed ordinary real P2 SUCCESS and reprioritize: only Direct 1KiB RTT p99 materially higher than ordinary physical socket (~1.8-2.1x in prior source), plus H1974 five 61-63ms true outliers; do not pursue small 1MiB +2.2% differences, extreme capacity development or blind 2048 replays.",
@@ -15,8 +15,7 @@
   "unverified": true,
   "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json",
-    "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
+    "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",

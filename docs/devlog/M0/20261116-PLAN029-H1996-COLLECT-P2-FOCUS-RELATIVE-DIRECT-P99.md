@@ -9,6 +9,8 @@
 
 - **自动治理失败原样保留并修复**：H1996 首个 docs-only commit `92eafb0c` 的 [Action43849096878](https://github.com/lly8666/wbd-next/actions/runs/43849096878) **FAIL** 于治理 `unbounded context_refs`（M0 cursor 9 条超过既有 `max_refs=8`），121 项既有功能单测单独 PASS；修复仅保留最新 8 条上下文引用，不修改历史性能事实、Rust/Go、原签名网络测试或脚本限制。此修复的新治理结果以 Action 实际结论为准。
 
+- **第二个失败原样保留、已定位**：[Action43849517151](https://github.com/lly8666/wbd-next/actions/runs/43849517151) `scope_audit` 已 PASS，但 `governance validate` 检验当前 M0 `evidence_refs` 时要求**每条 evidence.source_sha 与 `last_tested_source` 一致**；H1996 首次把新 SOURCE `5add3e` 与历史 H1992 SOURCE `8ed70b` 混在当前正式引用。只保留 H1996 新证据于 `evidence_refs`，H1992 历史文件仍原样留仓及旧 devlog，不能冒作 H1995 同源测试。未修改产品/性能结果。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H1996 collects one existing original H1995 signed normal P2 without code/feature changes; user reprioritizes large relative Direct RTT p99 and real 60ms stalls, avoids extreme feature development and duplicate dispatch."}
 ```
