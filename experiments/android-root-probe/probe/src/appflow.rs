@@ -91,7 +91,7 @@ pub fn run(uid:u32,token:&str)->Value{
    if port!=49492||&buf[ihl+8..n]!=expected.as_bytes(){ignored+=1;continue;}
    return Ok(json!({"status":"SUPPORTED_IN_SCOPE","app_payload_on_tun":true,
      "udp_packet_bytes":n,"payload":expected,"app_uid_rule":range,
-     "src_ip":format!("{}.{}.{}.{}",buf[12],buf[13],buf[14]),
+     "src_ip":format!("{}.{}.{}.{}",buf[12],buf[13],buf[14],buf[15]),
      "dst_ip":"198.18.254.2","dst_port":49492,"tun_mtu":1400,"ignored_packets":ignored}));
   }
   Err(io::Error::new(ErrorKind::TimedOut,format!("real App UDP not captured on owned TUN; ignored={ignored}")))

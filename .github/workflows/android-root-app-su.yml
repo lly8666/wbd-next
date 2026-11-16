@@ -1,13 +1,6 @@
 name: Android actual APK to existing su
 run-name: "android-app-su|${{ github.sha }}"
 on:
-  push:
-    branches: [experiment/android-temp-root-probe]
-    paths:
-      - "experiments/android-root-probe/app/**"
-      - "experiments/android-root-probe/ci/build-app.sh"
-      - "experiments/android-root-probe/ci/app-su-case.sh"
-      - ".github/workflows/android-root-app-su.yml"
   workflow_dispatch:
 permissions:
   contents: read

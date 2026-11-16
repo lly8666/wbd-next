@@ -15,7 +15,7 @@ else
  echo 'ENV_BLOCKED: No Android SDK API36/37' >"$out/blocked.txt";exit 2
 fi
 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar" -d "$out/classes" \
- "$src/src/org/wbdnext/rootprobe/ProbeActivity.java"
+ "$src/src/org/wbdnext/rootprobe/"*.java
 "$tools/d8" --min-api 28 --lib "$jar" --output "$out/dex" \
  $(find "$out/classes" -name '*.class')
 "$tools/aapt2" link --manifest "$src/AndroidManifest.xml" -I "$jar" \
@@ -40,7 +40,7 @@ p=Path("out/apk")
 d={"source":os.environ["GITHUB_SHA"],"min_sdk":28,"target_sdk":37,
  "compile_api":int((p/"compile-api.txt").read_text()),
  "apk_sha256":hashlib.sha256((p/"app-su.apk").read_bytes()).hexdigest(),
- "native_source":"42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d",
+ "native_source":os.environ["GITHUB_SHA"],
  "scope":"real ordinary debug APK, not a Magisk/KernelSU installer"}
 (p/"manifest.json").write_text(json.dumps(d,indent=2))
 PY
