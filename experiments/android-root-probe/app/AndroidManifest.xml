@@ -6,6 +6,7 @@
   <application android:label="WBD app su probe" android:debuggable="true" android:allowBackup="false">
     <activity android:name=".AppFlowActivity" android:exported="true"/>
     <activity android:name=".MainstreamActivity" android:exported="true"/>
+    <activity android:name=".RecoveryActivity" android:exported="true"/>
     <activity android:name=".ProbeActivity" android:exported="true">
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
     </activity>

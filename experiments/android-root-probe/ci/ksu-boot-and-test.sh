@@ -149,6 +149,8 @@ bash experiments/android-root-probe/ci/appflow-case.sh
 bash experiments/android-root-probe/ci/mainstream-case.sh
 # KSU root worker SIGKILL must leave no orphan UID rule.
 bash experiments/android-root-probe/ci/appflow-crash-case.sh
+# Synthetic two-downstream kernel NAT and explicit ordinary-App recovery button.
+bash experiments/android-root-probe/ci/tether-recovery-case.sh
 python3 - <<'PY'
 import json,os,hashlib
 from pathlib import Path
@@ -164,8 +166,9 @@ d={"schema":"android-ksu-real-app-uid-tun/v1",
 "app_origin_udp_captured":s["status"]=="APP_UID_TUN_ROUNDTRIP_PASS",
 "sigkill_cleanup_status":json.loads(Path("out/appflow-crash/summary.json").read_text())["status"],
 "mainstream_status":json.loads(Path("out/mainstream/summary.json").read_text())["status"],
+"tether_recovery_status":json.loads(Path("out/tether-recovery/summary.json").read_text())["status"],
 "netd_nat_hotspot_usb":"NOT_RUN",
 "scope":"one exact UID and one synthetic /32 temporary policy rule, AVD only"}
 (p/"summary.json").write_text(json.dumps(d,indent=2,sort_keys=True))
-if not d["app_origin_udp_captured"] or d["sigkill_cleanup_status"]!="SIGKILL_WATCHDOG_CLEANUP_PASS" or d["mainstream_status"]!="MAINSTREAM_DNS_TLS_PASS":raise SystemExit("real App mainstream, UDP roundtrip, or SIGKILL cleanup failed")
+if not d["app_origin_udp_captured"] or d["sigkill_cleanup_status"]!="SIGKILL_WATCHDOG_CLEANUP_PASS" or d["mainstream_status"]!="MAINSTREAM_DNS_TLS_PASS" or d["tether_recovery_status"]=="FAIL":raise SystemExit("real App mainstream, UDP roundtrip, recovery or SIGKILL cleanup failed")
 PY

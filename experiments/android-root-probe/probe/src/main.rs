@@ -4,6 +4,8 @@ mod capgate;
 mod routegate;
 mod appflow;
 mod mainstream;
+mod tethergate;
+mod recovery;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
@@ -307,6 +309,22 @@ fn main() {
         let result=appflow::run(uid,&token,mode=="appflow-kill",mode=="appflow-mainstream");
         println!("WBD_APPFLOW_RESULT {}",serde_json::to_string(&result).unwrap());
         if result["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1);}
+        return;
+    }
+    if mode == "recover" || mode == "recover-seed" {
+        let uid=std::env::args().nth(2).and_then(|x|x.parse::<u32>().ok()).unwrap_or(0);
+        let result=if mode=="recover"{recovery::restore(uid)}else{recovery::seed(uid)};
+        println!("WBD_RECOVERY_RESULT {}",serde_json::to_string(&result).unwrap());
+        let ok=if mode=="recover" {
+            result["status"]=="RESTORED"||result["status"]=="ALREADY_CLEAN"
+        }else{result["status"]=="FIXTURE_SEEDED"};
+        if !ok{std::process::exit(1)}
+        return;
+    }
+    if mode == "tethergate" {
+        let result=tethergate::run();
+        println!("WBD_TETHER_RESULT {}",serde_json::to_string(&result).unwrap());
+        if result["status"]=="FAIL"{std::process::exit(1)}
         return;
     }
     if mode == "routegate" {

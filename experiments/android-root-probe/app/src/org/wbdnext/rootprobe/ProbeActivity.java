@@ -5,6 +5,9 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.content.Intent;
 import org.json.JSONObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -90,7 +93,15 @@ public final class ProbeActivity extends Activity {
     super.onCreate(b);
     text=new TextView(this);
     text.setText("App UID "+Process.myUid()+" requesting installed su");
-    text.setTextSize(16); text.setPadding(24,24,24,24);setContentView(text);
+    text.setTextSize(16); text.setPadding(24,24,24,24);LinearLayout layout=new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    layout.setPadding(24,24,24,24);
+    Button recover=new Button(this);
+    recover.setText("一键恢复正常网络");
+    recover.setOnClickListener(view->startActivity(new Intent(this,RecoveryActivity.class)));
+    layout.addView(recover);
+    layout.addView(text);
+    setContentView(layout);
     new Thread(()->{
       JSONObject j;
       try{j=execute();}

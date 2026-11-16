@@ -17,6 +17,9 @@ on:
       - "experiments/android-root-probe/ci/ksu-boot-and-test.sh"
       - "experiments/android-root-probe/ci/ksu-grant-ui.py"
       - ".github/workflows/android-root-ksu.yml"
+      - "experiments/android-root-probe/probe/src/tethergate.rs"
+      - "experiments/android-root-probe/probe/src/recovery.rs"
+      - "experiments/android-root-probe/ci/tether-recovery-case.sh"
   workflow_dispatch:
 permissions:
   contents: read
@@ -59,6 +62,7 @@ jobs:
             out/appflow/
             out/mainstream/
             out/appflow-crash/
+            out/tether-recovery/
             out/native/SOURCE
             out/native/SHA256SUMS
             out/native/manifest.json
