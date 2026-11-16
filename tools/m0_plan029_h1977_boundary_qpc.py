@@ -58,6 +58,18 @@ def us_dist(rows,f):
             for k,p in (("p50_us",.5),("p95_us",.95),
                         ("p99_us",.99),("max_us",1.0))}
 
+def signed_us_dist(rows,f):
+    """A kernel read may overlap the *return* from Wintun SendPacket.
+    Signed return-to-read gaps are observations, never negative queue wait.
+    """
+    need(len(rows)==MIN_COUNT,
+         "H1979 missing original signed return/read window")
+    a=sorted(rows)
+    return {**{k:round(a[math.ceil(p*len(a))-1]*1_000_000/f,3)
+               for k,p in (("p50_us",.5),("p95_us",.95),
+                           ("p99_us",.99),("max_us",1.0))},
+            "min_us":round(a[0]*1_000_000/f,3)}
+
 def analyze(log,steady,source):
     need(steady["source_sha"]==source,"H1977 different original source")
     direct=steady["direct"]
@@ -96,9 +108,10 @@ def analyze(log,steady,source):
         need(r[3]==SIZE and 0<r[4]<=r[5],
              "H1977 wrong 1024B TCP packet or nonmonotonic QPC")
     out={k:[] for k in ("nat_to_mailbox_tx","mailbox_tx_to_rx_before_send",
-        "rx_wintun_send_call","rx_send_return_to_inner_kernel_read",
+        "rx_wintun_send_call","rx_send_start_to_inner_kernel_read",
+        "rx_send_return_to_inner_kernel_read_signed",
         "nat_to_inner_kernel_read","full_app_rtt")}
-    retrans=[];long=[];fd_gap=[]
+    retrans=[];long=[];fd_gap=[];send_return_overlap=[]
     windows=direct["app_qpc"]
     for i,(a,b,c) in enumerate(windows):
         need(0<a<=b<=c and (i==0 or windows[i-1][2]<a),
@@ -122,11 +135,22 @@ def analyze(log,steady,source):
         need(sum(r[7] for r in leg)==SIZE,
              "H1977 real inner kernel read not exact 1024B")
         inner=min(r[2] for r in leg)
-        need(nat<=first_tx[4]<=first_tx[5]<=first_rx[4]<=first_rx[5]<=inner<=c,
-             "H1977 causal boundary ordering invalid")
+        # The Win32 WintunSendPacket syscall can publish an L3 packet to
+        # the Windows kernel BEFORE it returns to our RX thread. A genuine
+        # TCP FD_READ/inner.recv on the TX thread is therefore allowed to
+        # execute between the RX call's beginning and its return.
+        # Do NOT require rx_return<=inner_read or fake negative wait time.
+        need(nat<=first_tx[4]<=first_tx[5]<=first_rx[4]<=inner<=c and
+             first_rx[4]<=first_rx[5]<=c,
+             "H1979 genuine TX/RX call start or inner TCP ordering invalid")
         values=(first_tx[5]-nat,first_rx[4]-first_tx[5],
-                first_rx[5]-first_rx[4],inner-first_rx[5],
-                inner-nat,c-a)
+                first_rx[5]-first_rx[4],inner-first_rx[4],
+                inner-first_rx[5],inner-nat,c-a)
+        if inner<first_rx[5]:
+            send_return_overlap.append(dict(
+                index=i,seq=seq,
+                inner_kernel_read_before_send_return_us=
+                    round((first_rx[5]-inner)*1_000_000/f,3)))
         for k,v in zip(out,values):out[k].append(v)
         repeats=len(in_win)-1
         if repeats:
@@ -138,7 +162,10 @@ def analyze(log,steady,source):
                 nat_to_tx_ms=round(values[0]*1000/f,3),
                 tx_to_rx_ms=round(values[1]*1000/f,3),
                 send_call_ms=round(values[2]*1000/f,3),
-                after_wintun_send_to_inner_read_ms=round(values[3]*1000/f,3),
+                after_wintun_send_start_to_inner_read_ms=
+                    round(values[3]*1000/f,3),
+                send_return_to_inner_read_signed_ms=
+                    round(values[4]*1000/f,3),
                 inner_fd_read_signal_seen=bool(event),
                 repeated_tcp_payload_count=repeats))
     need(len(out["full_app_rtt"])==MIN_COUNT,
@@ -150,9 +177,14 @@ def analyze(log,steady,source):
       original_ingress_count=len(ing),original_tx_mailbox_count=len(tx),
       original_rx_wintun_send_count=len(rx),original_inner_fd_read_count=len(fd),
       retransmission_windows=retrans,
-      boundary_gap_us={k:us_dist(v,f) for k,v in out.items()},
+      boundary_gap_us={
+          k:(signed_us_dist(v,f) if k==
+             "rx_send_return_to_inner_kernel_read_signed" else us_dist(v,f))
+          for k,v in out.items()},
+      rx_wintun_send_return_overlapped_kernel_read=send_return_overlap,
       severe_ge8ms_windows=long,fd_read_before_kernel_recv_n=len(fd_gap),
       unknown=["Wintun SendPacket return is not Windows kernel TCP consume/ACK",
+               "Wintun SendPacket call/inner kernel read may run concurrently; signed return/read is not queue wait",
                "FD_READ can coalesce, zero events does not prove no wake",
                "No pure Rust CPU time from WinSock wall waits"],
       owner_stop="REQUIRES_ORIGINAL_PASS_BOTH_OWNED",

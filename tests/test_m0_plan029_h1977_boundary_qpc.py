@@ -56,10 +56,40 @@ class H1977BoundedOwnerQpc(unittest.TestCase):
         r=analyze(log,data,SRC)
         self.assertEqual(r["matched_2048"],N)
         self.assertGreaterEqual(
-            r["boundary_gap_us"]["rx_send_return_to_inner_kernel_read"]["p50_us"],0)
+            r["boundary_gap_us"]["rx_send_start_to_inner_kernel_read"]["p50_us"],0)
         self.assertEqual(r["original_kernel_proxy_port"],PROXY)
         self.assertEqual(r["fd_read_before_kernel_recv_n"],N)
         self.assertEqual(r["severe_ge8ms_windows"],[])
+    def test_kernel_inner_read_during_wintun_send_call_is_legal(self):
+        # Source-locked original H1978 had TWO windows where Windows
+        # kernel recv happened before SendPacket returned. Publication can
+        # occur DURING Win32 call; do not invent a negative waiting time.
+        log,data=fixture()
+        start=data["direct"]["app_qpc"][0][0]
+        previous=f"{PROXY}:0:1000000:1024:{start+975}:{start+990}"
+        overlapping=f"{PROXY}:0:1000000:1024:{start+975}:{start+1300}"
+        self.assertEqual(log.count(previous),1)
+        report=analyze(log.replace(previous,overlapping,1),data,SRC)
+        self.assertEqual(report["matched_2048"],N)
+        self.assertEqual(len(
+            report["rx_wintun_send_return_overlapped_kernel_read"]),1)
+        self.assertEqual(
+            report["rx_wintun_send_return_overlapped_kernel_read"][0]["index"],0)
+        self.assertLess(
+            report["boundary_gap_us"]["rx_send_return_to_inner_kernel_read_signed"]["min_us"],0)
+        self.assertGreater(
+            report["boundary_gap_us"]["rx_send_start_to_inner_kernel_read"]["p50_us"],0)
+
+    def test_inner_kernel_read_before_wintun_send_start_rejected(self):
+        log,data=fixture()
+        start=data["direct"]["app_qpc"][0][0]
+        previous=f"{PROXY}:0:1000000:1024:{start+975}:{start+990}"
+        wrong=f"{PROXY}:0:1000000:1024:{start+1300}:{start+1500}"
+        self.assertEqual(log.count(previous),1)
+        with self.assertRaisesRegex(RuntimeError,
+                                    "genuine TX/RX call start"):
+            analyze(log.replace(previous,wrong,1),data,SRC)
+
     def test_real_retransmit_rows_retained_without_fake_perf_pass(self):
         log,data=fixture(retransmit=True)
         out=analyze(log,data,SRC)
