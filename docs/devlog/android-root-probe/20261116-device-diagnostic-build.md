@@ -20,3 +20,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Add standalone dual-ABI embedded-native on-phone Root eligibility diagnostic, IPv6 TUN and exact per-check failure classification; retain actual physical tether NOT_RUN."}
 ```
+
+## 最终同源验证结果
+
+SOURCE `d5919d9d2967c29de83351b157d9c1db27a04e63`， [Android16真KSU Action43884001753](https://github.com/lly8666/wbd-next/actions/runs/43884001753) **SUCCESS**；交付APK SHA256 `247a8e90247ad6d1b798c68b0a658ea010007d0bebf9dda07ea4641a7cef5ff0`，双ABI编译/16KiB ELF对齐及签名检查通过，x86_64 真 App→su+APK内nativeLib Root/TUN/raw/IPv6/路由/合成3客户端NAT PASS，主namespace前后不变；实体 ARM64/热点USB/offload/完整WBD VPN 均 NOT_RUN。[最终说明](20261116-device-diagnostic-final.md)、[机读矩阵](20261116-device-diagnostic-matrix.json)。旧 SOURCE `d2794f1...` 的 `aapt2 --file` 构建错误保持 FAIL。
