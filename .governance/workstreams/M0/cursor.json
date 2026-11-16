@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2029,
-  "checkpoint_sha": "810be8e5189ee13a129a4357bc89decc66607366",
+  "sequence": 2030,
+  "checkpoint_sha": "46c4ef7eaefcaa458c64f7b2a7852e16c7245767",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2029 separate original Game4 CN four lane real true Windows/WSL2 test on H2028 corrected M1 Rust unit source; concurrently H2028 tests Normal 20..30records/2..3s random500B with original NPF/eth0 pcap. Game4 test NOT PASS until real Direct/Tunnel plus owned Stop.",
-  "why_now": "User requests parallel efficiency. Previous Game4 scene skipped true network due Python initial NameError, fixed by H2020. H2028 fixed E0502 Rust tests; use one docs/cursor-only exact source Game4 test tag separately from Normal padding.",
+  "current_task": "H2030 true Game4 CN per-4lane real WSL2 source launch after restoring guard below all p029_* initializations. H2020 attempted correction was lost by H2021 tool source update; H2023 true Game4 failed early NameError. H2030 modifies tool path so tagged native workflow really schedules. H2028 Normal physical padding independent.",
+  "why_now": "Latest main runner still validated p029_game4_cn at line46 referencing undefined p029_p2/cache/pressure despite H2020 plan. H2029 was docs-only and did not trigger native workflow. Fix both true blockers without touching product.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Read H2028/H2029 Action first true failure; fix only grounded failure; preserve original Game4 four lanes, single Wintun, Rust native owner. Report either actual verified receipt or explicit NOT_RUN.",
+  "next_action": "Check H2030 signed Game4 original physical DNS/FakeIP UDP/TCP and Tunnel TCP/UDP plus Stop, H2028 Normal random 20–30 records/2–3s phys NPF/eth0; retain any actual failures.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2030-REAL-GAME4-FLAG-ORDER-REMEDY.md",
     "docs/devlog/M0/20261116-PLAN029-H2029-POST-COMPILER-GAME4-REAL-RETRY.md",
     "docs/devlog/M0/20261116-PLAN029-H2028-SECOND-TEST-E0502.md",
     "docs/devlog/M0/20261116-PLAN029-H2027-COMPILER-BORROW-FEATURE-STATUS.md",
     "docs/devlog/M0/20261116-PLAN029-H2026-GAME4-CN-SEPARATE-REAL-SCENE.md",
     "docs/devlog/M0/20261116-PLAN029-H2025-USER-20-30-RECORDS-2-3S-MTU-500B.md",
     "docs/devlog/M0/20261116-PLAN029-H2024-PRESERVE-OLD-H1581-GAME4-PRIORITY-ASSERT.md",
-    "docs/devlog/M0/20261116-PLAN029-H2023-GAME4-ABI-OLD-ASSERTION.md",
-    "docs/devlog/M0/20261116-PLAN029-H2022-ORIGINAL-GAME4-CN-NATIVE-SCOPE-AND-V4-EXPORT.md"
+    "docs/devlog/M0/20261116-PLAN029-H2023-GAME4-ABI-OLD-ASSERTION.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
