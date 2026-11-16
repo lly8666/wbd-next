@@ -164,12 +164,59 @@ func TestPlan029DefenderReadbackExactSingleHostOnly(t *testing.T){
 // source-locked on a disposable Windows CI runner. It opens no reachable
 // socket, claims no product Applied/Ready, and must prove the exact
 // one-lease-IP/one-remote-IP/one-port allow has been removed BEFORE PASS.
+// Exercise the sole generation-owned rule identity, not a test firewall.
+// An orphan owned receipt may clean once; intent, foreign and tampered
+// receipt MUST retain their rule without guessing ownership.
+func TestPlan029DefenderOrphanOwnedCASNotIntentOrForeign(t *testing.T){
+ ctx:=context.Background()
+ id,k,path:=p029DefenderFixture(t)
+ b:=&p029DefenderFake{}
+ if e:=n4Plan029DefenderInstall(ctx,path,id,k,b);e!=nil{t.Fatal(e)}
+ if e:=n4Plan029DefenderRecoverOrphan(ctx,path,b);e!=nil{t.Fatal(e)}
+ if b.adds!=1||b.removes!=1||len(b.rules)!=0{
+  t.Fatalf("exact orphan must delete only one owned rule: %+v",b)
+ }
+ if _,e:=os.Lstat(path);!errors.Is(e,os.ErrNotExist){t.Fatalf("owned sidecar remained: %v",e)}
+ if e:=n4Plan029DefenderRecover(ctx,path,id,k,b);e!=nil{t.Fatal(e)}
+ b=&p029DefenderFake{failAfterAdd:true}
+ if e:=n4Plan029DefenderInstall(ctx,path,id,k,b);e==nil{t.Fatal("injected partial Add did not fail")}
+ if e:=n4Plan029DefenderRecoverOrphan(ctx,path,b);!errors.Is(e,ErrN4RouteAmbiguous){
+  t.Fatalf("unconfirmed intent misread as owned: %v",e)
+ }
+ if b.removes!=0||len(b.rules)!=1{t.Fatal("unconfirmed rule removed")}
+ if _,e:=os.Lstat(path);e!=nil{t.Fatal("intent evidence vanished",e)}
+ // Fixture cleanup only: real COM resources are never touched here.
+ delete(b.rules,k.Name)
+ if e:=n4Plan029DefenderRecoverOrphan(ctx,path,b);e!=nil{t.Fatal(e)}
+ b=&p029DefenderFake{}
+ if e:=n4Plan029DefenderInstall(ctx,path,id,k,b);e!=nil{t.Fatal(e)}
+ b.tamper=true
+ if e:=n4Plan029DefenderRecoverOrphan(ctx,path,b);!errors.Is(e,ErrN4ForeignRoute){
+  t.Fatalf("foreign rule incorrectly recovered: %v",e)
+ }
+ if b.removes!=0||len(b.rules)!=1{t.Fatal("foreign rule removed")}
+ b.tamper=false
+ rec,e:=n4Plan029ReadDefender(path,id,k);if e!=nil{t.Fatal(e)}
+ rec.Key.Port++
+ if e=n4Plan029WriteDefender(path,rec,false);e!=nil{t.Fatal(e)}
+ if e=n4Plan029DefenderRecoverOrphan(ctx,path,b);!errors.Is(e,ErrN4JournalConflict){
+  t.Fatalf("checksum-valid forged key accepted: %v",e)
+ }
+ if b.removes!=0||len(b.rules)!=1{t.Fatal("forged key deleted rule")}
+ if e=n4Plan029WriteDefender(path,n4Plan029DefenderRecord{
+  Schema:n4Plan029DefenderSchema,Identity:id,Key:k,Phase:"owned",
+ },false);e!=nil{t.Fatal(e)}
+ if e=n4Plan029DefenderRecoverOrphan(ctx,path,b);e!=nil{t.Fatal(e)}
+ if b.removes!=1{t.Fatalf("final exact fake cleanup count=%d",b.removes)}
+}
 func TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS(t *testing.T){
  if os.Getenv("GITHUB_ACTIONS")!="true"||
   os.Getenv("WBD_PLAN029_REAL_DEFENDER_TEST")!="1"{
   t.Skip("native Defender mutation is only authorized on ephemeral CI")
  }
  id,k,path:=p029DefenderFixture(t)
+ statePath:=filepath.Join(filepath.Dir(path),"orphan-native-state.json")
+ path=n4Plan029DefenderSidecarPath(statePath)
  if _,e:=rand.Read(id.Generation[:]);e!=nil{t.Fatal(e)}
  k,e:=n4Plan029DefenderKeyFor(id,k.Lease4,k.Remote4,k.Port)
  if e!=nil{t.Fatal(e)}
@@ -198,8 +245,8 @@ func TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS(t *testing.T){
  if e!=nil||!present||!exact{
   t.Fatalf("real Windows Defender exact rule mismatch: present=%v exact=%v err=%v",present,exact,e)
  }
- if e=n4Plan029DefenderRecover(ctx,path,id,k,backend);e!=nil{
-  t.Fatalf("native exact firewall CAS removal failed: %v",e)
+ if e=N4NativeRecoverState(ctx,statePath);e!=nil{
+  t.Fatalf("main-WAL-missing orphan exact Defender recovery failed: %v",e)
  }
  present,_,e=backend.Lookup(ctx,k)
  if e!=nil||present{

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1986,
-  "checkpoint_sha": "8a43e84e857b1156407a403220a7f468c8bbce72",
+  "sequence": 1987,
+  "checkpoint_sha": "6d2ba3f5906a7dd4b71f5cf853ae6fb1da893b7c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1986 collect H1985 SOURCE8a43: H1661 43827317944 SUCCESS Windows real three orphan Defender pure tests (Plan029 cold, PLAN010 read-only status, PLAN010 Recover) plus one precise Defender COM CAS, Go build PASS; Governance43827317992 SUCCESS. Maintenance43827317993 FAIL 8 stale historic M4 hash checks for four newly changed M0-go-owned source/test overlays. Update only exact M0_PLAN029_REVIEWED_CURRENT SHA + whitelist matching PLAN020 live manifest, leave frozen PINNED_FILES/legacy manifest intact; H1986 CI NOT_RUN, PLAN029 OPEN.",
-  "why_now": "H1985 Windows owned sidecar regression now evidence-backed PASS; first unrelated M4 frozen/current mismatch is stale M0 reviewed map, not donor drift. Keep strict hash checks and only explicit new current M0 SHA exceptions.",
+  "current_task": "H1987 code staged: H1986 Governance43827991490 and Maintenance43827991504 both PASS. Primary WAL missing with exact phase=owned PLAN029 Defender sidecar now uses checksum, original generation-derived Name/Description and one OS COM exact Lookup/CAS; route sidecars, intent, foreign, corrupt all fail-closed. H1987 single-Defender Win test now drives N4NativeRecoverState; fake negative matrix. Source H1987 CI/native product NOT_RUN; PLAN029 D1-D5/P1-P2/GUI/Game4/IPv6 and H1974 tail OPEN.",
+  "why_now": "Close a specific Stop interruption gap without treating the presence of a sidecar as permission to delete or returning false OS-clean success. No broad WFP/Firewall policy changes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1986 governance-maintenance original result, no H1974 2048 rerun. Actual WinForms Connect/Stop, Game4 CN and D1–D5/P1–P2/IPv6/queue/RSS/padding still not fully exited.",
+  "next_action": "Collect H1987 original source H1661 Windows single-rule COM and pure matrix, exact assembly/Go/Rust and governance; no duplicate original H1974/H1978 two-OS probes. Next real GUI Connect/Stop, Game4 CN, actual IPv6 and complete D1-D5/P1-P2/pressure/padding remain OPEN.",
   "unverified": true,
-  "last_tested_source": "8a43e84e857b1156407a403220a7f468c8bbce72",
+  "last_tested_source": "6d2ba3f5906a7dd4b71f5cf853ae6fb1da893b7c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1986-H1985-WINDOWS-ORPHAN-PASS-HISTORIC-M4-EXACT-SHA-FAIL-20261116.json"
+    "docs/evidence/M0/PLAN029-H1987-H1986-GOVERNANCE-AND-OWNED-ORPHAN-CAS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1985-RESTORE-H1661-YAML-AND-TWO-PURE-RECOVERY-TESTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1984-H1983-BUILD-GREEN-EVIDENCE-SCHEMA-AND-PURE-TESTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1983-H1982-OVERLAY-BLOB-CI-RECOVERY.md",
     "docs/devlog/M0/20261116-PLAN029-H1982-DEFENDER-ORPHAN-READONLY-COLD-FENCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1980-H1979-PREFLIGHT-AND-INTERRUPT-RECOVERY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1979-H1978-ORIGINAL-2048-QPC-CONCURRENT-WINTUN-SEND.md",
-    "docs/devlog/M0/20261116-PLAN029-H1978-ONE-REAL-2048X1K-BOUNDARY-QPC-60MS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1979-H1978-ORIGINAL-2048-QPC-CONCURRENT-WINTUN-SEND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1985 Windows 3 pure orphan sidecar tests + exact owned Defender COM CAS PASS; non-network. H1985 maintenance FAIL 8 stale M4 pins; H1986 strict reviewed M0 current hashes updated, CI NOT_RUN. H1978 native FAIL/H1974 61ms open."
+  "partial_summary": "H1986 M0 reviewed SHA governance and maintenance SUCCESS. H1987 exact orphan Defender CAS path and negative tests authored, Windows source CI/product native NOT_RUN; H1978 native FAIL, H1974 61ms tail unresolved."
 }

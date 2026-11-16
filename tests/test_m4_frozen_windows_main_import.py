@@ -73,7 +73,7 @@ M0_PLAN029_REVIEWED_CURRENT = {
     # H1986: four new exact current Go blobs are verified against the live
     # PLAN020/M0 manifest; M4_FROZEN and its donor SHA list remain unchanged.
     "r0/go_overlay/assembly/assemble.py": "31da7dd474f91010b02bfb7c6648334270bd2ed1",
-    "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "d34f7d31dfd2d1366eda38b2387188079fb8d60f",
+    "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go": "286a5f40d3cda72c2ffd9bd06c23615e52d0a362",
     "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go": "cd196a95a5a7c6f4074c76180cf477353599885a",
     "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go": "4c9783d5a6218da87ca27c279f6f1563c449d162",
     "r0/go_overlay/internal/windowsclient/native_product_preflight_windows_test.go": "3b8ddc0facb0a342fa688182d551b2a06e249451",

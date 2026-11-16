@@ -191,6 +191,35 @@ func n4Plan029DefenderRecover(ctx context.Context,path string,
  // same-looking but distinct rule name can never be removed by this path.
  return os.Remove(path)
 }
+// An orphan exact Defender rule may be recovered only with its original
+// generation-bound durable owned receipt AND a live exact COM CAS check.
+// Never infer authority from an arbitrary filename, checksum alone, or
+// unconfirmed Add. No WFP guard or host-wide firewall mutation is involved.
+func n4Plan029DefenderRecoverOrphan(ctx context.Context,path string,
+ backend n4Plan029DefenderBackend)error{
+ if ctx==nil||path==""||backend==nil{return ErrN4NativeGuard}
+ if e:=ctx.Err();e!=nil{return e}
+ info,e:=os.Lstat(path);if e!=nil{return e}
+ if !info.Mode().IsRegular()||info.Mode()&os.ModeSymlink!=0{
+  return ErrN4JournalConflict
+ }
+ f,e:=os.Open(path);if e!=nil{return e}
+ raw,readErr:=io.ReadAll(io.LimitReader(f,n4MaxJournalBytes+1))
+ closeErr:=f.Close()
+ if readErr!=nil{return readErr}
+ if closeErr!=nil{return closeErr}
+ if len(raw)>n4MaxJournalBytes{return ErrN4JournalConflict}
+ var envelope n4Plan029DefenderEnvelope
+ if e=json.Unmarshal(raw,&envelope);e!=nil{return ErrN4JournalConflict}
+ id,k:=envelope.Data.Identity,envelope.Data.Key
+ if !id.valid()||k.validate()!=nil{return ErrN4JournalConflict}
+ expected,e:=n4Plan029DefenderKeyFor(id,k.Lease4,k.Remote4,k.Port)
+ if e!=nil||expected!=k{return ErrN4JournalConflict}
+ // Use the normal hash, exact identity and phase validator before any
+ // COM access. Recover does its own second read and COM Lookup/CAS.
+ if _,e=n4Plan029ReadDefender(path,id,k);e!=nil{return e}
+ return n4Plan029DefenderRecover(ctx,path,id,k,backend)
+}
 func n4Plan029DefenderSidecarPath(statePath string)string{
  return statePath+".plan029-defender-tcp"
 }
