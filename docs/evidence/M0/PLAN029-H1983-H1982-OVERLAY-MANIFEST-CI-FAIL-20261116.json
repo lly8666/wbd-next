@@ -64,5 +64,6 @@
     }
   ],
   "repair_source_ci": "NOT_RUN",
-  "full_plan": "IN_PROGRESS"
+  "full_plan": "IN_PROGRESS",
+  "source_sha": "3d0d020ece638ed8eeca4c376408d2e6a883341a"
 }
