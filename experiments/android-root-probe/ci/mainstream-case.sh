@@ -30,18 +30,18 @@ except Exception:raise SystemExit(1)
 PY
   then
     if python3 - <<'PY'
-    import socket,ssl
-    ctx=ssl.create_default_context(cafile="out/apk/host-tls.crt")
-    ctx.minimum_version=ssl.TLSVersion.TLSv1_2
-    try:
-     with socket.create_connection(("127.0.0.1",18318),timeout=1.5) as sock:
-      with ctx.wrap_socket(sock,server_hostname="wbd-ci-host.test") as tls:
-       tls.sendall(b"wbd-tls-health\n")
-       value=tls.recv(100)
-       assert value==b"wbd-tls-ok-health\n",repr(value)
-    except Exception:
-     raise SystemExit(1)
-    PY
+import socket,ssl
+ctx=ssl.create_default_context(cafile="out/apk/host-tls.crt")
+ctx.minimum_version=ssl.TLSVersion.TLSv1_2
+try:
+ with socket.create_connection(("127.0.0.1",18318),timeout=1.5) as sock:
+  with ctx.wrap_socket(sock,server_hostname="wbd-ci-host.test") as tls:
+   tls.sendall(b"wbd-tls-health\n")
+   value=tls.recv(100)
+   assert value==b"wbd-tls-ok-health\n",repr(value)
+except Exception:
+ raise SystemExit(1)
+PY
     then ready=1;break;fi
   fi
   sleep 0.3
