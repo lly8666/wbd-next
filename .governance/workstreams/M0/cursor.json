@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1993,
-  "checkpoint_sha": "ac18e797afedd1937b0aaa10f23265986d8bb6bf",
+  "sequence": 1994,
+  "checkpoint_sha": "34e87006c51db9c8e183af68482050e6550fb460",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1993: H1991 original actual Windows2025↔WSL2 Normal/off native Action43835248671 completed SUCCESS; three CPU/HOL Rust scheduler optimizations H1988 DNS, H1989 TCP WAIT_ANY fairness, H1991 UDP idle sweep Rust/Go components PASS, but CN Direct p99/CPU H1974 61ms still OPEN. Add passive per-128KiB app progress gaps to existing ordinary paced 1MiB physical vs FakeIP Direct TCP + concurrent Tunnel UDP scene; strict pure Python tests. Trigger exactly one signed normal P2 via current-source [plan029-v3-real-p2-rebuild] marker; no 2048/4MiB/ABBA/highrate/pressure/longrate. CI/native result NOT_RUN until collected.",
-  "why_now": "Avoid speculative packet hot-path changes after three CI-green scheduler fixes; reuse proven original Windows/Linux ordinary H1815 physical+Direct 1MiB and Tunnel UDP test, capture max 128KiB progress stalls from already emitted checkpoints without new socket/thread/poll or packet logging.",
+  "current_task": "H1994 source provenance repair only: original H1993 governance Action43840543217 FAIL because cursor last_tested_source ac18e797 did not match existing H1992 evidence SOURCE8ed70bc5. Last actually tested prior product source is 8ed70bc5, retaining exact H1992 evidence. Original H1993 normal paced 1MiB [plan029-v3-real-p2-rebuild] Action43840543096 cheap and 7/7 Python gap tests PASS, real native IN_PROGRESS at this repair, must collect and preserve original status, no redispatch or test relaxation.",
+  "why_now": "Governance must not falsely source-lock old H1991 native receipts to untested H1992/H1993 commit. H1994 records last tested SOURCE exactly as in immutable prior evidence; H1993 true normal P2 still belongs ONLY to its own new SHA and original Action.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1993 Python preflight/governance and ONE original H1815 signed moderate P2, source-locked SHA/FIN/UDP/Stop and per-arm max 128KiB upload/download gap. Compare physical/Direct only descriptively; if real >8ms new gap, map existing native ticket/ready stats. H1974 true 61ms remains OPEN; no extreme CDN/resource tests or another 2048 replay.",
+  "next_action": "Collect H1993 source34e870 original normal 1MiB physical/Direct+Tunnel UDP signed Action43840543096, including real CPU/TCP phase gaps/Stop and conservative failure semantics; no second native dispatch. No extreme pressure or 2048 replay.",
   "unverified": true,
-  "last_tested_source": "ac18e797afedd1937b0aaa10f23265986d8bb6bf",
+  "last_tested_source": "8ed70bc54a1aba3ccd460d63089b251280897915",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1992-H1991-NORMAL-PERF-COMPONENT-AND-REAL-NORMAL-RESULTS-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
     "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
     "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
     "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md",
     "docs/devlog/M0/20261116-PLAN029-H1988-ONCE-PER-TURN-DNS-POLL-NO-REVERSE-HOL.md",
-    "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1986-EXACT-LIVE-M0-SHA-WHITELIST-OLD-M4-TEST.md"
+    "docs/devlog/M0/20261116-PLAN029-H1987-DEFENDER-ORPHAN-EXACT-OWNED-CAS-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1988 DNS/TCP H1989 fair shard H1991 UDP redundant-poll optimizations all Windows Rust PASS, H1991 actual Normal/off two-OS PASS. H1993 passive progress-gap attribution for ordinary 1MiB physical/Direct and Tunnel small UDP new source CI/network NOT_RUN; H1974 tail still OPEN, product preconnect/postflush OFF."
+  "partial_summary": "H1993 original cheap Python 7/7 + assembly success; strict original governance Action43840543217 failure due wrong SOURCE pointer; H1994 source only correction with last_tested_source=8ed70 matching old H1992 evidence, H1993 native not yet measured. Three H1988/H1989/H1991 Rust scheduling changes remain CI-green; H1974 tail OPEN."
 }
