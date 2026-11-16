@@ -92,6 +92,7 @@ on:
       - tests/test_delivery_ci.py
       - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
+      - tools/m0_plan029_h2019_wire_padding_pcap.py
       - tools/m0_plan029_h1745_guest_dns_direct.py
       - tools/m0_plan029_h1745_win_client_dns_direct.py
       - tools/m0_plan029_h1760_guest_physical_direct_tcp.py
@@ -664,6 +665,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
+      - run: python -m py_compile tools/m0_plan029_h2019_wire_padding_pcap.py
       - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1966_steady_tcp_qpc.py tools/m0_plan029_h1966_steady_qpc.py tools/m0_plan029_h1972_gap_attribution.py tools/m0_plan029_h1977_boundary_qpc.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
@@ -2471,9 +2473,18 @@ jobs:
                $pad.driver_copied_bytes -lt 1 -or
                $pad.ordinary_windows_linux_udp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
                $pad.ordinary_windows_linux_tcp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
-               $pad.stop -ne 'PASS_BOTH_OWNED'){
+               $pad.stop -ne 'PASS_BOTH_OWNED' -or
+               $pad.record_padding_policy -ne 'INDEPENDENT_0_TO_MIN_500_AND_ACTUAL_MTU_NO_PER_FLOW_BUDGET' -or
+               $pad.original_physical_eth0_tcpdump.capture -ne 'TRUE_WSL2_ETH0_TCPDUMP_FROM_ORIGINAL_WINDOWS_NPF' -or
+               $pad.original_physical_eth0_tcpdump.tls_looking_exact_record_count -lt 5 -or
+               $pad.original_physical_eth0_tcpdump.distinct_ciphertext_record_lengths -lt 3 -or
+               $pad.original_physical_eth0_tcpdump.record_length_spread_bytes -lt 50 -or
+               $pad.original_physical_eth0_tcpdump.raw_pcap_retained -ne $false -or
+               $pad.original_physical_eth0_tcpdump.max_captured_l3_bytes -gt $pad.original_physical_eth0_tcpdump.outer_mtu_limit){
+
               throw 'H1799 original Rust NPF copied M1 padding or two-OS native Stop unqualified'
             }
+            Write-Output 'PLAN029_H2019_REAL_WSL2_ETH0_TLS_CIPHERTEXT_RANDOM_LENGTH_MTU_AND_NATIVE_NPF_PAD_BOTH_STOP_PASS'
             Write-Output 'PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED'
           }
           # Only the already-verified ORIGINAL strict native report can

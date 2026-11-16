@@ -43,7 +43,10 @@ p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
 p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1"
-# The cross-scenario guards run after all p029_* flags are initialized.
+if p029_game4_cn and not (mode=="game4" and not
+   (p029_direct or p029_padding or p029_product or p029_p2 or p029_p1_policy
+    or p029_tcp53 or p029_cdn or p029_cache or p029_pressure)):
+ raise RuntimeError("H2017 only original signed Game4 off four lane CN split + owned Stop")
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -61,10 +64,6 @@ p029_sustain=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 p029_highrate=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
 p029_longrate=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 p029_smalltcp=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
-if p029_game4_cn and not (mode=="game4" and not
-    (p029_direct or p029_padding or p029_product or p029_p2 or p029_p1_policy
-     or p029_tcp53 or p029_cdn or p029_cache or p029_pressure)):
- raise RuntimeError("H2017 only signed Game4 off four-lane CN split with owned Stop")
 if p029_smalltcp and not (
     p029_p2 and p029_direct and
     os.environ.get("WBD_PLAN029_P2_BULK_SCENE")=="1" and
@@ -319,6 +318,8 @@ def stop_windows(p):
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=p029_tcp53_guest=p029_tcp53_win=None;logs=[]
 p029_cdn_guest=p029_cdn_win=None
+padding_capture=None
+padding_capture_source=None
 route_local=route_guest=None
 # The real Windows Npcap client and the Linux WSL2 server are one scenario,
 # never an unattended seven-mode matrix or a scripted TLS clone.
@@ -336,6 +337,17 @@ def end_tls_capture():
   tls_capture.terminate()
   try:tls_capture.wait(timeout=4)
   except subprocess.TimeoutExpired:tls_capture.kill()
+def end_padding_capture():
+ if padding_capture is None:return
+ pid=out/"plan029-padding-capture.pid"
+ if pid.exists() and pid.read_text().strip().isdigit():
+  try:wsl("kill","-INT",pid.read_text().strip(),timeout=10)
+  except Exception:pass
+ try:padding_capture.wait(timeout=10)
+ except subprocess.TimeoutExpired:
+  padding_capture.terminate()
+  try:padding_capture.wait(timeout=4)
+  except subprocess.TimeoutExpired:padding_capture.kill()
 resource_stop=threading.Event();resource_worker=None
 try:
  cli=out/"wbd-client-embedded.exe";lib=out/"wbd_engine.dll"
@@ -446,6 +458,41 @@ try:
    rules.write_text("cn.example\n",encoding="ascii")
   os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
   (out/"plan029-h1775-cn-one32.txt").write_text(p029_converse_cn4+"/32\n",encoding="ascii")
+ # One genuine WSL2 eth0 physical packet capture starts before the
+ # original Normal Go TLS/NPF client. It stays active through actual
+ # Tunnel TCP/UDP apps, then is stopped at owned Stop; only bounded
+ # length histogram is published, never raw authenticated ciphertext.
+ if p029_padding:
+  padding_capture_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not padding_capture_source:
+   raise RuntimeError("H2019 original Windows Npcap physical source missing")
+  wsl("sh","-c",
+      "command -v tcpdump >/dev/null || (apt-get update -qq && apt-get install -y -qq tcpdump)",
+      timeout=120)
+  pid=out/"plan029-padding-capture.pid"
+  if pid.exists():raise RuntimeError("foreign H2019 pcap owner PID")
+  capture_script=out/"plan029-padding-capture.sh"
+  capture_script.write_bytes(("#!/bin/sh\nset -eu\necho "+chr(36)*2+
+    " > '"+result+"/plan029-padding-capture.pid'\nexec tcpdump -i eth0 -n -s 4096 -U -w '"+
+    result+"/plan029-padding-real-eth0.pcap' 'tcp dst port 443 and src host "+
+    padding_capture_source+" and dst host "+peer+"'\n").encode("ascii"))
+  cf=(out/"plan029-padding-capture-stderr.log").open("w");logs.append(cf)
+  padding_capture=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "sh",unix(capture_script)],stdout=subprocess.DEVNULL,stderr=cf)
+  for _ in range(100):
+   cf.flush()
+   if padding_capture.poll() is not None:
+    raise RuntimeError("H2019 original physical tcpdump did not start: "+
+      (out/"plan029-padding-capture-stderr.log").read_text(errors="replace")[-450:])
+   if "listening on eth0" in (out/"plan029-padding-capture-stderr.log").read_text(errors="replace"):
+    break
+   time.sleep(.1)
+  else:raise RuntimeError("H2019 physical tcpdump missing real kernel listener")
+  report["plan029_padding_pcap_start"]={
+   "source":"ORIGINAL_WSL2_ETH0_REAL_PHYSICAL_TCP443",
+   "host":padding_capture_source,"server":peer,
+   "raw_pcap_retained":False}
+  print("PLAN029_H2019_REAL_PHYSICAL_TUNNEL_PADDING_TCPDUMP_READY",flush=True)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  # PLAN029 private signed V3 smoke first checks ONLY ordinary protected
  # Tunnel. The Linux 10.66/24 guest is intentionally in RFC1918, so
@@ -2398,14 +2445,27 @@ print(json.dumps(result),flush=True)
       report.get("app_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_UDP" or
       report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP"):
    raise RuntimeError("H1799 signed original native M1 padding NPF accepted bytes and ordinary two-OS TCP/UDP missing")
+  # Stop the independently owned eth0 packet capture after real
+  # Windows/Linux kernel business and both product Stop confirmations.
+  end_padding_capture()
+  pc=out/"plan029-padding-real-eth0.pcap"
+  if not pc.exists():raise RuntimeError("H2019 real physical pcap missing")
+  from m0_plan029_h2019_wire_padding_pcap import assess
+  cap=assess(pc.read_bytes(),padding_capture_source,peer,configured_mtu)
+  pc.unlink() # never publish raw encrypted user data
+  if cap["tls_looking_exact_record_count"]<5 or cap["record_length_spread_bytes"]<50:
+   raise RuntimeError("H2019 genuine eth0 M1 ciphertext lengths insufficient")
   report["plan029_normal_startup_padding"]={
    "source_sha":os.environ["GITHUB_SHA"],
    "mode":"flows","driver_copied_records":int(rows[0][1]),
    "driver_copied_bytes":int(rows[0][2]),
    "record":"SAME_ORIGINAL_RUST_M1_AUTHENTICATED_NPF_PREFIX",
+   "original_physical_eth0_tcpdump":cap,
+   "record_padding_policy":"INDEPENDENT_0_TO_MIN_500_AND_ACTUAL_MTU_NO_PER_FLOW_BUDGET",
    "ordinary_windows_linux_udp":report["app_duplex"],
    "ordinary_windows_linux_tcp":report["tcp_duplex"],
    "stop":"PASS_BOTH_OWNED"}
+  print("PLAN029_H2019_REAL_WSL2_ETH0_ENCRYPTED_M1_LENGTH_DISTRIBUTION_PLUS_NPF_PAD_AND_OWNED_STOP_PASS",flush=True)
   print("PLAN029_H1799_SIGNED_NORMAL_FLOWS_M1_NPF_PAD_AND_BOTH_OS_STOP_PASS_SCOPED",flush=True)
  if os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="1":
   # These are actual current-source original TLS/Rust/OS receipts.
@@ -2837,6 +2897,13 @@ except Exception as e:
  print("WBD_WL_TRUE_PUBLIC_MODE_FAIL "+mode+": "+str(e),file=sys.stderr)
  raise
 finally:
+ if padding_capture is not None and padding_capture.poll() is None:
+  try:end_padding_capture()
+  except Exception as exc:
+   print("PLAN029_H2019_REAL_PCAP_STOP_INCOMPLETE "+str(exc)[-220:],flush=True)
+ (out/"plan029-padding-real-eth0.pcap").unlink(missing_ok=True)
+ if padding_capture is not None and padding_capture.poll() is not None:
+  (out/"plan029-padding-capture.pid").unlink(missing_ok=True)
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
  for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
