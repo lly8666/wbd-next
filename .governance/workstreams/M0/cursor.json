@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2039,
-  "checkpoint_sha": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
+  "sequence": 2040,
+  "checkpoint_sha": "0e5bde6f3aebf055b4d1325ffa0a5d9b8604d09b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2039 correct G2 cursor mixed-source evidence references: H2031 real padding is sole current evidence SOURCE; historical H2005 UDP p99 archive preserved in context. Independent H2038 original Game4 four-lane exact TCP45902 owned Allow retry in flight.",
-  "why_now": "H2037 Action43913747609 governance FAIL 'evidence is for a different SOURCE': cursor last_tested_source H2005 while evidence_refs includes both H2036 H2031 and H2007 H2005. Correct cursor source/evidence pairing without weakening checks or deleting historical artifact.",
+  "current_task": "H2040 feature-card verification of previously archived H2031 real 20–30-record/2–3s/0..500B Normal Tunnel physical encrypted pcap, genuine TCP/UDP and Stop PASS_SCOPED. H2038 Game4 four-lane owned TCP45902 source fix original Action in-flight.",
+  "why_now": "PAD summary already reported H2031 PASS but verification still ended H2025 PLANNED. Register a true same-source signed functional row while preserving opacity and old H2025 history; no new test.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exactly one already dispatched H2038 real Game4 CN native Action43942345347 (fix precise Linux alias TCP45902 listener Allow) and both owned Stop, then update Game4 feature/evidence and document PLAN029 remaining OPEN. H2031 padding scoped PASS stays frozen; no duplicate scene.",
+  "next_action": "Collect H2038 one original SOURCE Game4 CN test Action43942345347 and confirm direct/tunnel TCP+UDP, physical DNS, Wintun, owned Stop; if success archive proof, if FAIL isolate first boundary only. Do not re-run H2031 padding.",
   "unverified": true,
   "last_tested_source": "b76240bedb04237780bd13377bfe7aae38785018",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2040-REGISTER-H2031-REAL-PADDING-FEATURE-VERIFICATION.md",
     "docs/devlog/M0/20261117-PLAN029-H2039-FIX-G2-EVIDENCE-SINGLE-SOURCE-CURSOR.md",
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json",
     "docs/devlog/M0/20261117-PLAN029-H2038-GAME4-TRUE-TUNNEL-TCP-ALIAS-OWNED-ALLOW.md",
     "docs/devlog/M0/20261117-PLAN029-H2037-GAME4-IFINDEX-MTU-TWO-COLD-ARGS.md",
     "docs/devlog/M0/20261117-PLAN029-H2036-COLLECT-H2031-REAL-PADDING-20-30-WINDOW.md",
     "docs/devlog/M0/20261117-PLAN029-H2035-FIX-GAME4-COLD-IFINDEX-NOT-MTU.md",
-    "docs/devlog/M0/20261117-PLAN029-H2034-UI-HELP-GAME4-CN-FOUR-LANE-COLD.md",
-    "docs/devlog/M0/20261117-PLAN029-H2033-ORIGINAL-GO-GAME4-CN-FOUR-LANE-ENTRY.md"
+    "docs/devlog/M0/20261117-PLAN029-H2034-UI-HELP-GAME4-CN-FOUR-LANE-COLD.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."

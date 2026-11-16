@@ -98,6 +98,13 @@
       "status": "PLANNED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Original Windows 2025 Go TLS/Rust M1/Npcap + WSL2 Linux eth0 tcpdump",
+      "scope": "H2031 signed 20–30-record / 2–3s first-limit startup padding; 0..500B and actual MTU with no cumulative-byte cap. Real NPF accepted 31 records/6579B, physical eth0 41 exact-looking encrypted records length71..589B, max IPv4 707<1400, two real kernel TCP/UDP business receipts and both owned Stop PASS. Per-record actual padding bytes/time window cannot be decrypted from ciphertext and are unit-tested source policy.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b76240bedb04237780bd13377bfe7aae38785018",
+      "evidence": "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
     }
   ],
   "limitations": [
