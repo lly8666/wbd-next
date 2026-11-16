@@ -83,7 +83,7 @@ public final class SplitSettingsActivity extends Activity {
         ArrayList<String> extraCidrs=rules(customCidr.getText().toString(),32768);
         cidrs.addAll(extraCidrs);
         JSONArray extraJson=new JSONArray();
-        for(String v:extraCidrs)extraJson.put(v);
+        for(String cidr:extraCidrs)extraJson.put(cidr);
         v.put("custom_cn_ipv4",extraJson);
         JSONArray ranges=new JSONArray();
         for(String s:cidrs)ranges.put(s);v.put("cn_ipv4",ranges);
