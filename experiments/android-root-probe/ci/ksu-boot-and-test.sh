@@ -24,11 +24,34 @@ adb start-server >out/ksu/adb-server-start.txt 2>&1
 adb devices -l >out/ksu/adb-devices-initial.txt
 EMU_PID=""
 cleanup() {
-  adb emu kill >/dev/null 2>&1 || true
-  if [[ -n "$EMU_PID" ]];then
-    kill "$EMU_PID" >/dev/null 2>&1 || true
-    wait "$EMU_PID" >/dev/null 2>&1 || true
-  fi
+  # Do NOT wait unboundedly for a wedged emulator parent. SOURCE e1d73f
+  # finished all real KSU gates in ~2 min but the old EXIT-trap wait blocked
+  # until the 780s outer timeout, falsely failing an otherwise good run.
+  set +e
+  {
+    echo "cleanup_enter $(date -u +%Y-%m-%dT%H:%M:%SZ) emulator_parent=$EMU_PID"
+    adb emu kill >/dev/null 2>&1
+    echo "adb_emu_kill_rc=$?"
+    if [[ -n "$EMU_PID" ]];then
+      kill -TERM "$EMU_PID" >/dev/null 2>&1
+      echo "emulator_term_rc=$?"
+      for n in $(seq 1 25);do
+        state="$(ps -o stat= -p "$EMU_PID" 2>/dev/null | tr -d ' ')" || true
+        if [[ -z "$state" || "$state" == Z* ]];then
+          echo "emulator_exited_or_zombie state=$state iteration=$n"
+          wait "$EMU_PID" >/dev/null 2>&1 || true
+          echo "cleanup_exit $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          return
+        fi
+        sleep 0.2
+      done
+      echo "emulator_ignored_term; forcing_kill"
+      kill -KILL "$EMU_PID" >/dev/null 2>&1 || true
+      # Never issue an unbounded wait after SIGKILL: a kernel D-state process
+      # may not be reapable; GitHub runner will tear down orphan processes.
+    fi
+    echo "cleanup_exit $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } >out/ksu/cleanup.log 2>&1
 }
 trap cleanup EXIT
 start_avd() {
