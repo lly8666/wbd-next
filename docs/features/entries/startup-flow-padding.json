@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "TCP/UDP新流有限启动填充",
-  "summary": "H1799 signed original Normal V3 Windows/WSL2 Rust M1 authenticated NPF accepted 16 padded records / 50 bytes; TCP+UDP duplex and both owned Stop PASS (Action 43560438283, source 6a77d23). H1797 default off signed PASS; H1798 GUI compiler PASS. Overall PLAN029 D3-D5/P1-P2 and GUI effective remain OPEN.",
+  "summary": "Normal Tunnel startup-padding每record随机候选上限500B，保留MTU/每流2KiB/12record/10%预算，默认off；H1799旧256B签名真实NPF流程PASS，500B更新原生待验。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -90,7 +90,8 @@
     "H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.",
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
-    "Padding is not a guarantee against DPI recognition."
+    "Padding is not a guarantee against DPI recognition.",
+    "H2008 500B随机单record上限调整待同SOURCE真实NPF/Stop复验；原H1799真实16条/50B不证明新上限被采到。"
   ],
   "promotion": null
 }

@@ -8,7 +8,7 @@ use crate::v4_client_split::FlowKey;
 const MAX_TRACKED:usize=256;
 const MAX_RECORDS:u8=12;
 const MAX_FLOW_PAD:u16=2048;
-const MAX_RECORD_PAD:usize=256;
+const MAX_RECORD_PAD:usize=500;
 const FLOW_IDLE_MS:u64=120_000;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum StartupMode{Off,Tls,Flows}
@@ -141,7 +141,7 @@ mod tests{
         let mut total=0;
         for _ in 0..100{
             let n=p.propose(&packet,1,500);
-            assert!(n<=256);
+            assert!(n<=500);
             total+=n;
         }
         assert!(total<=12*(packet.len()-28)/10);
@@ -152,6 +152,37 @@ mod tests{
         assert_eq!(p.len(),1);
         p.expire_coarse(160_001);
         assert_eq!(p.len(),0);
+    }
+
+    #[test]
+    fn random_record_pad_can_exceed_old_256_but_never_500_or_real_room(){
+        // Typical normal Tunnel UDP payload, not an impossible >MTU
+        // synthetic packet. Twelve records accumulate <=10% of actual
+        // business bytes and share the original 2KiB per-flow ceiling.
+        let mut packet=udp(43210);
+        packet.resize(1228,0x5a);
+        packet[2..4].copy_from_slice(&(packet.len() as u16).to_be_bytes());
+        packet[24..26].copy_from_slice(&((packet.len()-20) as u16).to_be_bytes());
+        let mut above_old=false;
+        for seed in 1..=64{
+            let mut p=TunnelStartupPadding::new(StartupMode::Flows,seed);
+            let mut total=0usize;
+            for _ in 0..12{
+                let n=p.propose(&packet,100,700);
+                assert!(n<=MAX_RECORD_PAD);
+                total+=n;
+                above_old|=n>256;
+            }
+            assert!(total<=2048);
+            assert!(total<=12*1200/10);
+            assert_eq!(p.propose(&packet,100,700),0);
+            let mut small_room=TunnelStartupPadding::new(StartupMode::Flows,seed);
+            for _ in 0..12{
+                assert!(small_room.propose(&packet,100,273)<=273);
+            }
+            assert_eq!(small_room.propose(&packet,100,273),0);
+        }
+        assert!(above_old,"500B limit must be reachable under real business budget");
     }
     #[test]
     fn hard_256_only_suppresses_padding_never_business_or_growth(){

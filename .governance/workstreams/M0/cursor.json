@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2007,
-  "checkpoint_sha": "53ce09815a3cd5da778a0425bb88d18abae57795",
+  "sequence": 2008,
+  "checkpoint_sha": "acf8453ef00ec2fd72d510988d84fd4c782a2721",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2007 collect final signed H2005 bounded WinSock Direct UDP physical event-wake: all three sizes direct p99 <1ms, 720/720 real kernel UDP and both Stop PASS. Stop tuning UDP; preserve independent TCP/bulk gaps and PLAN029 OPEN.",
-  "why_now": "H2000 physical/Direct p99 .3ms vs 21-26ms (all 360 Direct >=8ms), H2002 event prototype dropped to sub-ms, final H2005 proper ACK-before-recv real Win2025+WSL2 action43871804786 success 96/512/1200B Direct p99 .771/.427/.451ms and no >=8ms.",
+  "current_task": "H2008 change bounded Tunnel startup per-record random candidate 0..500B from 256B, preserving MTU/flow-budget/10%/12-record/default off and Direct; restore same-source real Normal padding fixture pending.",
+  "why_now": "User requested PLAN029 closure and random fill 0..500B. Old H1799 physical shows 16 NPF accepted padded records but was old 256B cap; new H2008 source unit plus real validation needed.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "No more UDP optimization or extreme runs; keep H1974 rare 61ms TCP and H1998 4MiB 1.87x separate OPEN only if concrete normal reproducible regression merits future scoped work. Preserve PLAN029 acceptance gaps.",
+  "next_action": "Collect one original Normal Tunnel padding real Action on same SOURCE and compile/owned Stop, then build one shared-CDN IP opposite-exit DNS scenario with TCP53/no-cross-fallback/bootstrap and basic Game4 CN check; preserve Game4 cold refusal if still unwired.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2008-RECORD-PADDING-500B-POLICY.md",
     "docs/devlog/M0/20261116-PLAN029-H2007-REAL-DIRECT-UDP-WAKE-FINAL-ACCEPTANCE.md",
     "docs/devlog/M0/20261116-PLAN029-H2006-H1940-STATIC-FAIRNESS-ASSERTION-UPDATE.md",
     "docs/devlog/M0/20261116-PLAN029-H2005-EVENT-ACK-BEFORE-RECV-LOSSLESS-REARM.md",
     "docs/devlog/M0/20261116-PLAN029-H2004-DECLARED-FEATURE-CARD-CHECK.md",
     "docs/devlog/M0/20261116-PLAN029-H2002-DIRECT-UDP-ONE-OWNER-EVENT-WAKE.md",
     "docs/devlog/M0/20261116-PLAN029-H2001-COLLECT-THREE-DIRECT-ORDINARY-LATENCY-WORKLOADS.md",
-    "docs/devlog/M0/20261116-PLAN029-H2000-H1999-UDP-STATIC-PREFLIGHT-FIX.md",
-    "docs/devlog/M0/20261116-PLAN029-H1999-REAL-DIRECT-UDP-RTT-3SIZE.md"
+    "docs/devlog/M0/20261116-PLAN029-H2000-H1999-UDP-STATIC-PREFLIGHT-FIX.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
