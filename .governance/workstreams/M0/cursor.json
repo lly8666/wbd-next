@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2034,
-  "checkpoint_sha": "d546da726800241926f499188df75ee98b2da43c",
+  "sequence": 2035,
+  "checkpoint_sha": "37cc3ce58de12ec7c38d946427cc7eeac3e1b6fe",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2034 original GUI help now says Game4 CN four-lane wired but actual native not yet qualified, Game2 cold reject; original manifest full patched GUI result blob, no product network change. H2033 one real Game4 Action still in flight.",
-  "why_now": "Original Windows GUI fields.json still claimed Game2/4 entirely unwired despite H2033 enabling four-lane Game4, contrary to truthful next-connect configuration UI.",
+  "current_task": "H2035 true Game4 CN first failure real Action43909402223 after four TLS lane/OS Apply/normal Tunnel UDP pass: physical DNS UDP WSAEINVAL10022 ifindex1500 (actual NIC25, NlMtu1500). Correct cold parameter and both Go manifest hashes; native retest pending.",
+  "why_now": "Actual H2033 client.log shows ifindex=25 physical_mtu=1500, then PhysicalUdpSocket IP_UNICAST_IF error 10022 ifindex1500. Go caller passed NlMtu into Game cold physical index.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect already-dispatched H2033 Action43909402223 true Game4 physical CN DNS/Direct TCP UDP/Tunnel TCP UDP and owned Stop, no repeated native dispatch; H2031 normal 20..30 record 2..3s physical capture scoped PASS.",
+  "next_action": "Collect one newly signed Game4 CN original Windows/WSL2 Action for CN physical DNS FakeIP + Direct UDP/TCP + Tunnel TCP/UDP and owned Stop. Diagnose first new boundary only; do not rerun shared CDN excluded scene or extreme workloads.",
   "unverified": true,
   "last_tested_source": "5e6a8f36ca738a3a5d63725b498dcfe5c1d99f34",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2035-FIX-GAME4-COLD-IFINDEX-NOT-MTU.md",
     "docs/devlog/M0/20261117-PLAN029-H2034-UI-HELP-GAME4-CN-FOUR-LANE-COLD.md",
     "docs/devlog/M0/20261117-PLAN029-H2033-ORIGINAL-GO-GAME4-CN-FOUR-LANE-ENTRY.md",
     "docs/devlog/M0/20261116-PLAN029-H2032-FEATURE-CARD-MTU-ZERO-STARTUP.md",
     "docs/devlog/M0/20261116-PLAN029-H2031-COUNT-MTU-ZERO-SLOTS.md",
     "docs/devlog/M0/20261116-PLAN029-H2030-REAL-GAME4-FLAG-ORDER-REMEDY.md",
     "docs/devlog/M0/20261116-PLAN029-H2029-POST-COMPILER-GAME4-REAL-RETRY.md",
-    "docs/devlog/M0/20261116-PLAN029-H2028-SECOND-TEST-E0502.md",
-    "docs/devlog/M0/20261116-PLAN029-H2027-COMPILER-BORROW-FEATURE-STATUS.md"
+    "docs/devlog/M0/20261116-PLAN029-H2028-SECOND-TEST-E0502.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."

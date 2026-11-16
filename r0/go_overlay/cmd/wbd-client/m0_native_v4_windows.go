@@ -695,7 +695,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     StatePath:o.StatePath,
    })
   }
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,open,planForGame,pathChanged)
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),selected.ifindex,open,planForGame,pathChanged)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}

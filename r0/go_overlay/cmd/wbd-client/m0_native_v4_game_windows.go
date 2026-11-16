@@ -56,7 +56,7 @@ func m0WindowsGameOriginalClientFlow(
 }
 
 func runM0NativeV4WindowsGame(
- ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
+ ctx context.Context,o m0NativeV4Options,localIP [4]byte,physicalIfIndex uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
  pathChanged <-chan struct{},
@@ -210,7 +210,7 @@ func runM0NativeV4WindowsGame(
    return fmt.Errorf("PLAN029 Game4 split requires CN mode and Game padding off")
   }
   gameSplit,err=m0Plan029TrialCold(o,netip.AddrFrom4(localIP),
-    physical,o.Lease4.Addr(),o.TunnelMTU,group.Epoch())
+    physicalIfIndex,o.Lease4.Addr(),o.TunnelMTU,group.Epoch())
   if err!=nil||gameSplit==nil{
    return fmt.Errorf("PLAN029 Game4 original cold split: %w",errors.Join(err,windowsclient.ErrN4NativeGuard))
   }
