@@ -56,8 +56,11 @@ def choose(records, needles, stage, expect_app=False):
 
 result={"manager":"me.weishu.kernelsu","app":PKG,"outcome":"NOT_GRANTED"}
 try:
-    adb("shell","monkey","-p","me.weishu.kernelsu","-c",
-        "android.intent.category.LAUNCHER","1",timeout=25)
+    installed=adb("shell","pm","path","me.weishu.kernelsu",check=False,timeout=20)
+    if "package:" not in installed:
+        raise RuntimeError("KernelSU official manager not installed in user0 after second boot")
+    # Explicit official activity; avoid monkey package resolution ambiguity.
+    adb("shell","am","start","-n","me.weishu.kernelsu/me.weishu.kernelsu.ui.MainActivity",timeout=25)
     time.sleep(4)
     home=capture("home")
     choose(home,["superuser","超级用户"],"home")

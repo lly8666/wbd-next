@@ -45,6 +45,10 @@ start_avd() {
 }
 start_avd first
 adb install -r out/ksu/manager.apk >out/ksu/install-manager.txt
+adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-first.txt 2>&1 || true
+adb shell pm list packages | grep -E 'kernelsu|rootprobe' >out/ksu/packages-first.txt || true
+adb shell ls -l /data/adb /data/adb/ksud /system/bin/su /system/xbin/su >out/ksu/ksu-paths-first.txt 2>&1 || true
+adb shell cat /proc/modules | grep -Ei 'kernelsu|ksu' >out/ksu/modules-first.txt 2>&1 || true
 adb install -r out/apk/app-su.apk >out/ksu/install-test-app.txt
 adb shell monkey -p me.weishu.kernelsu -c android.intent.category.LAUNCHER 1 >out/ksu/first-manager-launch.txt 2>&1 || true
 sleep 5
@@ -55,9 +59,23 @@ for n in $(seq 1 40);do
   sleep 1
 done
 start_avd second
+adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-second-before.txt 2>&1 || true
+adb shell pm list packages -u | grep -E 'kernelsu|rootprobe' >out/ksu/packages-second-all.txt || true
+adb shell ls -l /data/adb /data/adb/ksud /system/bin/su /system/xbin/su >out/ksu/ksu-paths-second.txt 2>&1 || true
+adb shell cat /proc/modules | grep -Ei 'kernelsu|ksu' >out/ksu/modules-second.txt 2>&1 || true
+# If the manager was removed during cold boot, reinstall the same already SHA-verified
+# official APK (not fake su), and check once. Real KSU kernel must independently work.
+if ! grep -q '^package:' out/ksu/manager-pm-second-before.txt; then
+  adb install -r out/ksu/manager.apk >out/ksu/reinstall-manager-second.txt
+  adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-after-reinstall.txt 2>&1 || true
+  adb shell am start -n me.weishu.kernelsu/me.weishu.kernelsu.ui.MainActivity >out/ksu/manager-second-launch.txt 2>&1 || true
+  sleep 3
+fi
 adb shell su -c id >out/ksu/fixture-shell-su.txt 2>&1 || true
 adb shell su -c '/data/adb/ksud debug info' >out/ksu/ksud-debug-info.txt 2>&1 || true
 adb shell pm list packages | grep -E 'kernelsu|rootprobe' >out/ksu/packages.txt || true
+adb shell getprop ro.build.type >out/ksu/build-type-second.txt
+adb shell getprop ro.build.fingerprint >out/ksu/build-fingerprint-second.txt
 # Trigger a real app request before explicitly granting ONLY our app in the manager UI.
 adb shell am start -n org.wbdnext.rootprobe/.ProbeActivity >out/ksu/initial-app-launch.txt
 sleep 5
