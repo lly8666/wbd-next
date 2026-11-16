@@ -827,6 +827,20 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      }
      (order,19)
  }
+ // Within the 16 WinSock shards, WAIT_ANY also prefers a lower array
+ // index when multiple independent TCP flows are ready. Rotate the shard
+ // handles after the last SERVICED shard; a constantly ready earlier
+ // flow must not withhold the later flow's FD_READ/FD_WRITE. No extra
+ // waits, handles, scans of socket tables, timers or per-flow workers.
+ #[inline]
+ fn rotate_tcp_shard_wait_order(
+     order:&mut[u8;19],phase:u8,first_shard:u8
+ ){
+     let start=match phase%3{0=>3,1=>2,_=>1};
+     for i in 0..16{
+         order[start+i]=3+((usize::from(first_shard)+i)&15) as u8;
+     }
+ }
  // One existing TX timer due for exact reverse NAT cleanup, not a new worker.
  // A completed Direct TCP relay is not active socket work at 10ms cadence.
  fn closed_tcp_cleanup_wait_ms(now_ms:u64,deadline_ms:Option<u64>)->u32{
@@ -908,6 +922,9 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // WAIT_ANY's first-signaled-index bias is real even with one owner
      // and 16 fixed WinSock shard events. Rotate owner class priority.
      let mut wait_phase=0u8;
+     // The next WinSock shard after the last signaled one leads the
+     // existing WAIT_ANY group; Stop always keeps absolute priority.
+     let mut socket_wait_head=0u8;
      let mut boundary_tx=BoundaryQpcTrace::new("TX_MAILBOX");
      // Signed-only original normal small TCP: no product-default change.
      let same_turn_direct=cfg!(feature="m0_v4_probe") &&
@@ -1184,8 +1201,11 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              // Compare only original *owned* handles. Stop always has
              // absolute priority, and all 16 WinSock shard identities
              // still map back to the same exact native actor.
-             let (order,n)=native_tx_wait_order(wait_phase,count==19);
-             if n==19{wait_phase=(wait_phase+1)%3;}
+             let (mut order,n)=native_tx_wait_order(wait_phase,count==19);
+             if n==19{
+                 rotate_tcp_shard_wait_order(&mut order,wait_phase,socket_wait_head);
+                 wait_phase=(wait_phase+1)%3;
+             }
              let mut ordered=[0usize;19];
              for i in 0..n{ordered[i]=handles[usize::from(order[i])];}
              match io::wait_ready(&ordered[..n],timeout){
@@ -1193,6 +1213,9 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  Ok(WaitResult::Ready(index))=>{
                      let kind=usize::from(order[index]);
                      if kind>=3{
+                         // Give every other shard a chance after this
+                         // wake, even if this socket remains signaled.
+                         socket_wait_head=((kind-3+1)&15) as u8;
                          if let Some(s)=split.as_mut(){
                              s.note_tcp_socket_wake(kind-3);
                          }
@@ -1890,6 +1913,32 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          assert_eq!(n,3);
          assert_eq!(&no[..3],&[0,1,2]);
          assert_eq!(native_tx_wait_order(4,true).0,b);
+     }
+     #[test]
+     fn plan029_wait_any_rotates_all_sixteen_tcp_shards_no_cross_flow_hol(){
+         for phase in 0..3{
+             let first_tcp_index=match phase{0=>3,1=>2,_=>1};
+             for head in 0..16u8{
+                 let (mut order,n)=native_tx_wait_order(phase,true);
+                 assert_eq!(n,19);
+                 rotate_tcp_shard_wait_order(&mut order,phase,head);
+                 assert_eq!(order[0],0); // original Stop remains first
+                 assert_eq!(order[first_tcp_index],3+head);
+                 let mut once=order;
+                 once.sort_unstable();
+                 assert_eq!(once,std::array::from_fn(|i|i as u8));
+             }
+         }
+         // An absent Direct TCP actor retains the original exact three
+         // handles and never grows the hot Tunnel wait set.
+         let (mut no,n)=native_tx_wait_order(2,false);
+         assert_eq!(n,3);
+         rotate_tcp_shard_wait_order(&mut no,2,11);
+         assert_eq!(&no[..3],&[0,3+11,3+12]);
+         // The actual owner intentionally only rotates if n==19.
+         let (plain,only)=native_tx_wait_order(2,false);
+         assert_eq!(only,3);
+         assert_eq!(&plain[..3],&[0,1,2]);
      }
      #[cfg(feature="win_native_lock_profile")]
      #[test]

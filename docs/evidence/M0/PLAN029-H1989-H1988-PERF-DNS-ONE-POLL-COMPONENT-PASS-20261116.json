@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1989_H1988_PERF_COMPONENT_COLLECT",
+  "date": "2026-11-16",
+  "source_sha": "22c44a70e73d8bf3ff84930b094cd39792948b6d",
+  "results": {
+    "rust_component": {
+      "run": 43832554872,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/43832554872",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 133181113859,
+          "platform": "ubuntu-24.04",
+          "result": "success"
+        },
+        {
+          "id": 133181114319,
+          "platform": "windows-2025",
+          "result": "success",
+          "new_test": "v4_windows_native_split::tests::plan029_ready_dns_drain_never_repolls_one_pending_socket_per_packet ... ok",
+          "windows_test_103_and_105": "PASS"
+        }
+      ]
+    },
+    "governance": {
+      "run": 43832554971,
+      "conclusion": "success"
+    },
+    "m0_preflight": {
+      "run": 43832554963,
+      "status_at_collection": "in_progress",
+      "completed_success_jobs": [
+        133181116371,
+        133181392537,
+        133181392562,
+        133181392621
+      ],
+      "linux_peer_persona": "IN_PROGRESS",
+      "native_network": "NOT_RUN"
+    },
+    "native_functional": {
+      "run": 43832554763,
+      "conclusion": "success",
+      "scope": "non-signature static/functional, not real Direct/Tunnel networking"
+    }
+  },
+  "measured_cpu_gain": "NOT_RUN",
+  "measured_real_p99_gain": "NOT_RUN",
+  "previous_h1974_61ms": "OPEN",
+  "previous_h1978_native": "FAIL_ORIGINAL_UNCHANGED",
+  "plan029": "IN_PROGRESS"
+}
