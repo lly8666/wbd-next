@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1958_REPAIR_H1957_OLD_ABBA_SOURCE_PROTECTION",
+  "source_sha": "b1f915f4883544aeb6cdc2138affb46bb40023f0",
+  "original_action": 43792440957,
+  "original_network": "NOT_RUN_SKIPPED_BY_CHEAP_PREFLIGHT",
+  "cheap_failed": "tests.test_m0_plan029_h1749_signed_direct_order.NativeDirectOrder.test_h1861_p2_p99_uses_high_resolution_same_windows_clock",
+  "assertion": "missing elif ABBA: and original exact explicit WSL error string",
+  "governance_action": 43792441069,
+  "governance": "PASS_BOTH_JOBS",
+  "h1957_synthetic_h1956_unit10": "PASS",
+  "repair": "Preserve exact elif ABBA and exact legacy SystemExit then add separate elif PRECON_BULK only for explicit signed new scene",
+  "next_original_native": "NOT_RUN_UNTIL_H1958_CI",
+  "last_true_p2_source": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
+  "full_plan": "IN_PROGRESS"
+}

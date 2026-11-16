@@ -742,8 +742,11 @@ if __name__=="__main__":
                 ABBA!=(sys.argv[5]=="p2abba") or
                 PRECON_BULK!=(sys.argv[5]=="p2preconnect4")):
             raise SystemExit("P2 WSL explicit ABBA selection mismatch")
-    elif ABBA or PRECON_BULK:
-        raise SystemExit("P2 ABBA/preconnect requires explicit WSL argv, not env-only activation")
+    elif ABBA:
+        # Exact H1861 original WSL ABBA source contract; unchanged.
+        raise SystemExit("P2 ABBA requires explicit WSL argv, not env-only activation")
+    elif PRECON_BULK:
+        raise SystemExit("H1958 signed preconnect bulk requires explicit WSL argv, not env-only activation")
     role,a,b=sys.argv[1:4]
     if role=="guest_tcp":tcp_guest(a,b)
     elif role=="guest_udp":udp_guest(a,b)
