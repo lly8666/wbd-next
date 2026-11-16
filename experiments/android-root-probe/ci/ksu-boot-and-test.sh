@@ -3,6 +3,9 @@
 set -euo pipefail
 # Unlike android-emulator-runner, our manually booted KSU AVD does not inject adb into PATH.
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+export ANDROID_AVD_HOME="$GITHUB_WORKSPACE/out/ksu/avd-home"
+test -s "$ANDROID_AVD_HOME/wbd_ksu36.ini"
+"$ANDROID_HOME/emulator/emulator" -list-avds | grep -qx wbd_ksu36
 cd "$GITHUB_WORKSPACE"
 mkdir -p out/ksu out/appcase
 emulator="$ANDROID_HOME/emulator/emulator"

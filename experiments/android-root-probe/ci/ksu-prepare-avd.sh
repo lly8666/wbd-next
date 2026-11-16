@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$GITHUB_WORKSPACE"
 mkdir -p out/ksu out/native
+export ANDROID_AVD_HOME="$GITHUB_WORKSPACE/out/ksu/avd-home"
+mkdir -p "$ANDROID_AVD_HOME"
+echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >>"$GITHUB_ENV"
 test -c /dev/kvm || { echo "ENV_BLOCKED: missing /dev/kvm"; exit 2; }
 sudo chmod a+rw /dev/kvm
 sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
@@ -11,7 +14,10 @@ test -x "$sdkmanager" && test -x "$avdmanager"
 printf 'y\n' | "$sdkmanager" "system-images;android-36;google_apis_playstore;x86_64" >out/ksu/sdk-install.txt 2>&1 || { tail -n 70 out/ksu/sdk-install.txt; exit 2; }
 image="$ANDROID_HOME/system-images/android-36/google_apis_playstore/x86_64"
 test -s "$image/kernel-ranchu" && test -s "$image/ramdisk.img"
-printf 'no\n' | "$avdmanager" create avd -n wbd_ksu36 -k "system-images;android-36;google_apis_playstore;x86_64" --force >out/ksu/avd-create.txt 2>&1
+printf 'no\n' | "$avdmanager" create avd -n wbd_ksu36 -k "system-images;android-36;google_apis_playstore;x86_64" -p "$ANDROID_AVD_HOME/wbd_ksu36.avd" --force >out/ksu/avd-create.txt 2>&1
+"$ANDROID_HOME/emulator/emulator" -list-avds >out/ksu/avd-list.txt
+cat out/ksu/avd-list.txt
+grep -qx wbd_ksu36 out/ksu/avd-list.txt || { echo "ENV_BLOCKED: AVD config was not registered"; find "$ANDROID_AVD_HOME" -maxdepth 2 -type f -print; exit 2; }
 git clone --quiet https://github.com/leemikepop/avd-kernelsu-x86_64 out/ksu/helper
 (cd out/ksu/helper && git checkout --quiet c6c6057d807976d3dee6dbe9197189654cbd1a2a)
 echo c6c6057d807976d3dee6dbe9197189654cbd1a2a >out/ksu/helper-sha.txt
