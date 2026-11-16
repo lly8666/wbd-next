@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1953,
-  "checkpoint_sha": "eb5743986191a9102dda7e0aa085c7b198d0a123",
+  "sequence": 1954,
+  "checkpoint_sha": "acbc130775c3b1d7077b986db3a272c7d7fde738",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1953 signed-test-only original Windows first TCP listener accept, physical connect and inner.recv QPC, joined to H1948 physical first write/read and H1945 inner.write; new original P2 SOURCE NOT_RUN until Action. H1952 one-lookup CN P1 source eb574 original ABBA in flight, no duplicate dispatch. H1949 pre-physical-write p99 14.546ms FIN-first, 5.889ms payload-first, root OPEN.",
-  "why_now": "H1949 384/384 same-Windows matched first physical write/read: physical RTT p99 1.829ms, outer recv→inner write 0.210ms; client FIN→first physical send p99 14.546ms. Need measure whether before listener accept, kernel TCP connect, or inner recv, instead of broad unproven socket flags/echo fixes. H1952 P1 is independent same-Rust CPU hypothesis and already running.",
+  "current_task": "H1954 H1953 QPC original source acbc real P2 in-flight, H1952 CN one-lookup real P1 source eb574 in-flight. H1953 governance catalog first-boundary card grew beyond 16KiB; bounded compression only, all original 46 statuses, SOURCE refs, evidence refs retained; no new scene dispatched.",
+  "why_now": "Original H1953 governance Action43785820641 feature catalog rejected card byte budget 16,851>16,384. Preserve all 46 verification rows, all FAIL/NOT_RUN/SOURCE/evidence verbatim and trim narrative only. P2 original fixture cheap gate PASS, native component/build stage not yet final; P1 independent.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect existing H1952 P1 Action43785063606 source eb574 exactly, and new H1953 SOURCE one original signed P2 4MiB + two genuine 384 TCP policies + 120 Tunnel UDP + owned Stop with 384 bounded prewrite QPC joins. No repeated H1949 or P1. Continue D1–D5, Game4, GUI, IPv6, padding/pressure separately after first measured failure.",
+  "next_action": "Collect only existing H1952 P1 Action43785063606 and H1953 original P2 Action43785820738; validate actual 384 same-Windows six-phase QPC, real SHA/FIN/TunnelUDP/Stop; P1 CPU 4-arm uncertainty; after that prioritize actual delayed segment. No duplicate dispatch.",
   "unverified": true,
   "last_tested_source": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1952-H1949-REAL-FIRST-PHYSICAL-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
     "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md",
     "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md",
     "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
     "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md",
     "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
-    "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md"
+    "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1949 original source e1cb Action43782426660 actual SHA/FIN/Stop P2 PASS_SCOPED and QPC 384/384; first phys write preceding p99 FIN-first14.546ms; physical RTT1.829ms, post-read0.210ms. H1952 independent P1 code lookup optimization and native ABBA in-flight. H1953 bounded test-only accept/connect/inner.recv metrics source NOT_RUN, whole PLAN029 OPEN."
+  "partial_summary": "H1953 cheap workflow succeeded and original native P2 in flight, governance feature card over 16KiB. H1954 retains 46 historical verification source/status/evidence rows unchanged while compressing summary/3 narrative scopes; old failed governance retained. H1952 P1 separately in flight; full PLAN029 open."
 }
