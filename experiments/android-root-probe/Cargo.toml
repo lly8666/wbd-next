@@ -1,3 +1,9 @@
 [workspace]
 members = ["probe"]
 resolver = "2"
+
+[profile.release]
+panic = "abort"
+strip = "symbols"
+lto = "thin"
+codegen-units = 1

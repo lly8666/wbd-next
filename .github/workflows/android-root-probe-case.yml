@@ -68,6 +68,12 @@ jobs:
                  if r.get("path")==".github/workflows/android-root-probe-build.yml"
                  and r.get("head_sha")==os.environ["ANDROID_PROBE_SOURCE_SHA"]
                  and r.get("conclusion")=="success"]
+          failed=[r for r in data["workflow_runs"]
+                  if r.get("path")==".github/workflows/android-root-probe-build.yml"
+                  and r.get("head_sha")==os.environ["ANDROID_PROBE_SOURCE_SHA"]
+                  and r.get("conclusion") in ("failure","cancelled","timed_out")]
+          if failed:
+              raise SystemExit("Matching SOURCE build failed; no canary attempt or retry")
           print(match[0]["id"] if match else "")
           PY
             )"

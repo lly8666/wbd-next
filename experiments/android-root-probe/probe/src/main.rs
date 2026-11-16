@@ -144,7 +144,7 @@ fn exercise_tun() -> Value {
     let mut ifr = [0u8; 40]; // ifreq: 16-byte name + 24-byte union, x86_64/aarch64
     ifr[..name.len()].copy_from_slice(name.as_bytes());
     ifr[16..18].copy_from_slice(&(IFF_TUN | IFF_NO_PI).to_ne_bytes());
-    let rc = unsafe { libc::ioctl(file.as_raw_fd(), TUNSETIFF, ifr.as_mut_ptr()) };
+    let rc = unsafe { libc::ioctl(file.as_raw_fd(), TUNSETIFF as _, ifr.as_mut_ptr()) };
     if rc < 0 {
         return failure("TUNSETIFF (non-persistent, owned)", &io::Error::last_os_error());
     }

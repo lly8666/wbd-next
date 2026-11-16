@@ -8,7 +8,7 @@
   "development_branch": "experiment/android-temp-root-probe",
   "available_on": [],
   "defaults": {
-    "implementation": "RUST_PROBE_SOURCE_STAGED; ACTIONS_PENDING",
+    "implementation": "RUST_PROBE_COMPILER_FIX_PENDING; NO_ANDROID_RUNTIME_PASS",
     "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
@@ -30,15 +30,23 @@
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
     "docs/devlog/android-root-probe/20261116-plan.md",
-    "docs/devlog/android-root-probe/20261116-workpack-01.md"
+    "docs/devlog/android-root-probe/20261116-workpack-01.md",
+    "docs/devlog/android-root-probe/20261116-workpack-02.md"
   ],
   "verification": [
+    {
+      "platform": "Android NDK x86_64 build (first SOURCE)",
+      "scope": "libc ioctl request type",
+      "status": "FAIL",
+      "source_sha": "7c01a89e043083883c3dac937c7b311a4bcf376f",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43799378701 (E0308); no binary artifact"
+    },
     {
       "platform": "Android9/API28至最新稳定版（当前17/API37）官方AVD",
       "scope": "Rust x86_64/aarch64 NDK构建+API28/37 AOSP canary待运行；API29–36含32待canary后补",
       "status": "PLANNED",
       "source_sha": null,
-      "evidence": null
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43799378800 ; https://github.com/lly8666/wbd-next/actions/runs/43799378686 (KVM preflight only; build unavailable; emulator NOT_RUN)"
     },
     {
       "platform": "Android/arm64 physical",
@@ -52,7 +60,8 @@
     "本卡登记独立诊断工具计划，不改变android-vpn-shell历史状态；未宣称Android产品可连接。",
     "adb root和模拟器通过不能代表app→su、OEM热点/USB/真实蜂窝切网或省电通过。",
     "不自行获取root、不使用VpnService、不修改共享核心或M0主线任务。",
-    "当前实现仅覆盖owned TUN/lo raw的短探测；fwmark/NAT/转发/真实DNS与网络绑定未测试，不将模拟能力当真实热点/USB PASS。"
+    "当前实现仅覆盖owned TUN/lo raw的短探测；fwmark/NAT/转发/真实DNS与网络绑定未测试，不将模拟能力当真实热点/USB PASS。",
+    "首轮SOURCE 7c01a89e0430因libc::ioctl类型错误编译FAIL；API28/37尚未启动模拟器。后续SOURCE成功不能改写旧FAIL。"
   ],
   "promotion": null
 }

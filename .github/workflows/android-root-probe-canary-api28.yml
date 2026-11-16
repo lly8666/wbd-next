@@ -1,13 +1,7 @@
 name: Android temp root probe API 28 canary
 run-name: "android-root-probe|api28|canary|${{ github.sha }}"
 on:
-  push:
-    branches: [experiment/android-temp-root-probe]
-    paths:
-      - "experiments/android-root-probe/**"
-      - ".github/workflows/android-root-probe-build.yml"
-      - ".github/workflows/android-root-probe-case.yml"
-      - ".github/workflows/android-root-probe-canary-api28.yml"
+  workflow_dispatch:
 permissions:
   contents: read
   actions: read
