@@ -13,3 +13,11 @@ CAP_SYS_ADMIN 只是隔离夹具可能依赖的权限，不当成产品最低权
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Fast-forward historical capgate proofs onto the original Android experimental branch and register a fail-closed private-netns fwmark packet fixture without touching Android global routes."}
 ```
+
+## Feature catalog size correction
+
+SOURCE a40fbc0b94512c4702a0724f81d3248a9a9683e3 hit governance FAIL: the feature-card JSON exceeded its 16 KiB byte limit. This docs-only correction retains every source-specific verification entry (including historical failures) but uses 1-space JSON indent and drops five obsolete/duplicated limitation prose entries. Their evidence remains in 20261116-final-report.md, 20261116-capgates-final.md, 20261116-api-matrix.json and 20261116-capgates-matrix.json. No Rust binary, test case or product claim changes.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Fit the complete source-specific verification card within 16KiB by compact layout and removing redundant prose; historical failures, PASS and NOT_RUN evidence remain in committed reports."}
+```
