@@ -249,7 +249,8 @@
     "API37 stable SDK platform package 'platforms;android-37' absent in GitHub-hosted SDK manager; runner did not boot guest, not a platform UNSUPPORTED claim.",
     "feature catalog requires experimental tool available_on=experiment/android-temp-root-probe; this denotes runnable diagnostic code on the experiment branch, not an Android client or physical support.",
     "后续仅在新分支experiment/android-root-permission-gates通过AOSP API28/32/36的21项/版本capset对照；/dev/tun mode0660 uid1000 gid1016，NET_ADMIN只够TUNSETIFF但未必有DAC打开权限；预开FD或短期DAC_OVERRIDE是候选设计，未测生产应用su。",
-    "后续capgate过程没有调用ip子进程，也没有在降权后验证完整TUN UDP/MTU、fwmark/NAT/转发、实际热点/USB；CapBnd和UID0仍保留，不能据此认证全项目最小权限。"
+    "后续capgate过程没有调用ip子进程，也没有在降权后验证完整TUN UDP/MTU、fwmark/NAT/转发、实际热点/USB；CapBnd和UID0仍保留，不能据此认证全项目最小权限。",
+    "capgate最终文档更新已在20261116-capgates-03.md申报feature-impact；仅实验分支能力门槛PASS，不提升Android产品状态。"
   ],
   "promotion": null
 }
