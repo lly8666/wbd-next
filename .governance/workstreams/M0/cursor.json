@@ -4,30 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1970,
-  "checkpoint_sha": "a46e5f119a9007e9a2d86f4199a87b7b363d092f",
+  "sequence": 1971,
+  "checkpoint_sha": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1970: previous H1969 SOURCE a46e signed markers alone in docs/cursor did NOT trigger native workflow due on.push.paths filter. New H1970 signed rebuild+steady commit changes workflow comment to force exactly one real Windows/WSL2 Normal established TCP46119 2048x1KiB same Win QPC/physical control. H1967 Win/Linux Rust component PASS, H1968 cheap QPC parser 7/7 PASS. Original native not yet seen, no latency claims. Full 029 OPEN.",
-  "why_now": "H1969 only Governance Action, not original native; signed token requires changed workflow-path file. User demands concrete Windows/Rust latency not exotic stress. Unchanged original performance harness must run once on same SOURCE guest/Windows QPC and owned Stop.",
+  "current_task": "H1971 collected H1970 exact native Win2025/WSL2 SOURCE dc2d Action43804841097 artifact14197958732: both original kernel TCP arms 2048x1KiB+32 warmup SHA/FIN/Stop PASS; source/Windows QPC joined 2048 messages, 2080 ingress, 4160 relay events, zero drops. Physical RTT p50/95/99 94.5/132.9/159.2us, Direct 218.8/277.6/318.0us (deltas124.3/144.7/158.8us). Class QPC p99 0.6us, NAT p99 1.1us, kernel inner-read→physical-write p99 27.3us, reverse p99 4.8us. Full PLAN029 OPEN; user deprioritizes exotic CDN.",
+  "why_now": "One real same-SOURCE original Windows/WSL2 steady 1KiB QPC resolves user requested Windows/Rust performance attribution direction. Classification/NAT time is sub-2us at p99; most Direct app RTT delta remains unlocated in Wintun/Windows kernel/socket scheduling, not just Rust policy.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Verify H1970 real native Action was actually dispatched; gather original Windows/WSL2 log, Rust QPC 2048 message windows, app/guest SHA and owned Stop. If fail report original stage and fix source; no claims until source-genuine proof. Preconnect OFF.",
+  "next_action": "Stay on ordinary performance: instrument real original Wintun ReadPacket→NativeSplitWorker on_packet entry, TX→RX mailbox age, RX owner SendPacket boundary under bounded signed QPC, plus a no-trace control to quantify probe overhead; then at most one same-source normal 1KiB A/B, no exotic CDN/highrate/4MiB replay. Keep P1-P2 full and GUI/Game4/IPv6 OPEN, preconnect OFF.",
   "unverified": true,
-  "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "last_tested_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1959-H1958-REAL-4M-PRECONNECT-ABBA-20261116.json",
-    "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
+    "docs/evidence/M0/PLAN029-H1971-H1970-REAL-STEADY-2048X1K-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md",
     "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md",
     "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
     "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md"
+    "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1970 triggers one true Win2025/WSL2 original steady TCP 2048x1KiB native run (H1969 doc-only push did not launch it). H1968 cheap 7/7 QPC parser and H1967 Windows/Linux Rust pure components PASS; H1958 last genuine P2 ab224 until H1970 receipts. Full PLAN029 still IN_PROGRESS, early physical preconnect OFF, CDN same-IP extreme not pursued."
+  "partial_summary": "H1970 true Win2025/WSL2 source dc2d Action43804841097 2048x1KiB physical/Direct same Win QPC: app RTT p50 94.5/218.8us, p95 132.9/277.6us, p99 159.2/318.0us; actual Rust class/NAT p99 0.6/1.1us, innerRead→outerWrite27.3us, outerRead→innerWrite4.8us; kernel receipts 2x2.12992MB SHA, original Stop PASS. Missing ReadPacket/RX SendPacket/Windows kernel CPU attribution; PLAN029 OPEN."
 }
