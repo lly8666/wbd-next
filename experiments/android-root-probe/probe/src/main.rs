@@ -156,26 +156,35 @@ fn exercise_tun() -> Value {
         if mtu.trim() != "1400" {
             return Err(io::Error::new(ErrorKind::Other, "TUN MTU readback mismatch"));
         }
+        // Verify kernel ingress independently before exercising policy-routed egress.
         let recv = UdpSocket::bind("198.18.251.1:0")?;
         recv.set_read_timeout(Some(Duration::from_millis(1200)))?;
-        let sender = UdpSocket::bind("198.18.251.1:0")?;
-        sender.send_to(b"wbd-tun-out", "198.18.251.2:49492")?;
-        let mut buf = [0u8; 2048];
-        let n = wait_read(file.as_raw_fd(), &mut buf, 1200)?;
-        if n < 28 || buf[0] >> 4 != 4 || buf[9] != 17 ||
-            buf[12..16] != LOCAL || buf[16..20] != PEER {
-            return Err(io::Error::new(ErrorKind::Other, "TUN read did not capture owned IPv4 UDP"));
-        }
         let reply = udp_packet(PEER, LOCAL, 49492, recv.local_addr()?.port(), b"wbd-tun-in");
         let wrote = unsafe { libc::write(file.as_raw_fd(), reply.as_ptr().cast(), reply.len()) };
         if wrote < 0 { return Err(io::Error::last_os_error()); }
         if wrote as usize != reply.len() {
-            return Err(io::Error::new(ErrorKind::Other, "short TUN write"));
+            return Err(io::Error::new(ErrorKind::Other, "short TUN ingress write"));
         }
         let mut got = [0u8; 64];
         let (received, from) = recv.recv_from(&mut got)?;
         if &got[..received] != b"wbd-tun-in" || from.ip().to_string() != "198.18.251.2" {
             return Err(io::Error::new(ErrorKind::Other, "TUN injected IPv4 UDP not delivered"));
+        }
+        // Android netd rules do not guarantee an unmarked root socket uses main table.
+        // Bind only this test sender to our owned device; do not edit netd or global fwmarks.
+        let sender = UdpSocket::bind("198.18.251.1:0")?;
+        let device = format!("{name}\0");
+        let rc = unsafe { libc::setsockopt(sender.as_raw_fd(), libc::SOL_SOCKET, libc::SO_BINDTODEVICE,
+            device.as_ptr().cast(), device.len() as libc::socklen_t) };
+        if rc < 0 { return Err(io::Error::new(ErrorKind::PermissionDenied,
+            format!("SO_BINDTODEVICE owned TUN: {}", io::Error::last_os_error()))); }
+        sender.send_to(b"wbd-tun-out", "198.18.251.2:49492")?;
+        let mut buf = [0u8; 2048];
+        let n = wait_read(file.as_raw_fd(), &mut buf, 1200)
+            .map_err(|e| io::Error::new(e.kind(), format!("TUN egress after ingress PASS, owned device bind: {e}")))?;
+        if n < 28 || buf[0] >> 4 != 4 || buf[9] != 17 ||
+            buf[12..16] != LOCAL || buf[16..20] != PEER {
+            return Err(io::Error::new(ErrorKind::Other, "TUN read did not capture owned IPv4 UDP"));
         }
         Ok(json!({"read_bytes":n,"write_bytes":wrote,"mtu_readback":1400,"udp_echo":"kernel delivered to local UDP socket","scope":"owned TUN only"}))
     })();

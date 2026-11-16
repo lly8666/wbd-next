@@ -37,6 +37,10 @@ set -e
 echo "$root_request" >"$out/adb-root-exit.txt"
 adb wait-for-device
 adb shell id >"$out/after-root-id.txt"
+# Read-only routing inventory to distinguish Android netd policy from TUN fixture bugs.
+timeout 3s adb shell ip -4 rule show >"$out/root-ip-rule.txt" 2>"$out/root-ip-rule.err" || true
+timeout 3s adb shell ip -4 route show table all >"$out/root-ip-route-all.txt" 2>"$out/root-ip-route-all.err" || true
+timeout 3s adb shell iptables -t nat -S >"$out/root-nat-chains.txt" 2>"$out/root-nat-chains.err" || true
 if [[ "$(adb shell id -u | tr -d '\r')" == "0" ]]; then
   printf 'adb-root\n' >"$out/execution_path.txt"
   set +e
