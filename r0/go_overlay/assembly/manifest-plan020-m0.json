@@ -327,7 +327,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "18ff25d8af3abbddce632371ada21ab8d509e073",
+      "result_blob": "78412d44272a2e94640700e32ffc8b6a6faa0303",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -447,7 +447,7 @@
         },
         {
           "find": "  \"direct4\": [",
-          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。仅支持已接线的Normal/Fixed/Auto，Game2/4尚未接线会明确拒绝；保存后重新连接才生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
         }
       ]
     },
