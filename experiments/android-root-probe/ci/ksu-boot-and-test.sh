@@ -144,5 +144,5 @@ d={"schema":"android-ksu-real-app-uid-tun/v1",
 "netd_nat_hotspot_usb":"NOT_RUN",
 "scope":"one exact UID and one synthetic /32 temporary policy rule, AVD only"}
 (p/"summary.json").write_text(json.dumps(d,indent=2,sort_keys=True))
-if not d["app_origin_udp_captured"] or d["sigkill_cleanup_status"]!="SIGKILL_WATCHDOG_CLEANUP_PASS" or d["mainstream_status"]!="MAINSTREAM_APP_NETWORK_PASS":raise SystemExit("real App mainstream, UDP roundtrip, or SIGKILL cleanup failed")
+if not d["app_origin_udp_captured"] or d["sigkill_cleanup_status"]!="SIGKILL_WATCHDOG_CLEANUP_PASS" or d["mainstream_status"]!="MAINSTREAM_DNS_TLS_PASS":raise SystemExit("real App mainstream, UDP roundtrip, or SIGKILL cleanup failed")
 PY

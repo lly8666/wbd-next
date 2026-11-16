@@ -15,6 +15,14 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.TrustManagerFactory;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -147,6 +155,83 @@ public final class MainstreamActivity extends Activity {
                 .put("destination","10.0.2.2:18317").put("reply",answer);
         }
     }
+
+    /** Real Android netd resolver, not the App's synthetic direct UDP53 server. */
+    private JSONObject systemDns() throws Exception {
+        ConnectivityManager cm=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network net=cm==null?null:cm.getActiveNetwork();
+        if(net==null)throw new IOException("no active Network for system DNS");
+        long start=SystemClock.elapsedRealtime();
+        InetAddress[] addrs=net.getAllByName("example.com");
+        boolean ipv4=false;
+        StringBuilder ips=new StringBuilder();
+        for(InetAddress a:addrs){
+            if(a instanceof Inet4Address && !a.isAnyLocalAddress() && !a.isLoopbackAddress()){
+                ipv4=true;
+            }
+            if(ips.length()>0)ips.append(',');
+            ips.append(a.getHostAddress());
+        }
+        if(!ipv4)throw new IOException("system network DNS returned no usable IPv4 for example.com: "+ips);
+        return new JSONObject().put("status","PASS").put("using_android_network_resolver",true)
+            .put("network",net.toString()).put("hostname","example.com")
+            .put("has_ipv4",ipv4).put("answer_count",addrs.length)
+            .put("addresses",ips.toString())
+            .put("elapsed_ms",SystemClock.elapsedRealtime()-start);
+    }
+    private JSONObject tlsUnderlay(String t) throws Exception {
+        ConnectivityManager cm=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network net=cm==null?null:cm.getActiveNetwork();
+        if(net==null)throw new IOException("no active Network for TLS");
+        CertificateFactory cf=CertificateFactory.getInstance("X.509");
+        Certificate cert;
+        try(InputStream in=getAssets().open("wbd-host-tls.der")){
+            cert=cf.generateCertificate(in);
+        }
+        MessageDigest hash=MessageDigest.getInstance("SHA-256");
+        byte[] digest=hash.digest(cert.getEncoded());
+        StringBuilder hex=new StringBuilder();
+        for(byte b:digest)hex.append(String.format(java.util.Locale.ROOT,"%02x",b&0xff));
+        KeyStore store=KeyStore.getInstance(KeyStore.getDefaultType());
+        store.load(null,null);
+        store.setCertificateEntry("ephemeral-ci-host",cert);
+        TrustManagerFactory trust=TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trust.init(store);
+        SSLContext ssl=SSLContext.getInstance("TLS");
+        ssl.init(null,trust.getTrustManagers(),null);
+        try(Socket transport=new Socket()){
+            net.bindSocket(transport);
+            transport.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{10,0,2,2}),18318),4500);
+            transport.setSoTimeout(5000);
+            try(SSLSocket socket=(SSLSocket)ssl.getSocketFactory().createSocket(
+                  transport,"wbd-ci-host.test",18318,true)){
+                socket.setSoTimeout(5000);
+                SSLParameters params=socket.getSSLParameters();
+                params.setEndpointIdentificationAlgorithm("HTTPS");
+                socket.setSSLParameters(params);
+                socket.startHandshake();
+                String version=socket.getSession().getProtocol();
+                if(!("TLSv1.3".equals(version)||"TLSv1.2".equals(version)))
+                    throw new IOException("TLS version unacceptable: "+version);
+                String body="wbd-tls-"+t;
+                socket.getOutputStream().write((body+"\n").getBytes(StandardCharsets.US_ASCII));
+                socket.getOutputStream().flush();
+                BufferedReader in=new BufferedReader(new InputStreamReader(
+                    socket.getInputStream(),StandardCharsets.US_ASCII));
+                String actual=in.readLine();
+                if(!("wbd-tls-ok-"+t).equals(actual))
+                    throw new IOException("TLS host nonce mismatch: "+actual);
+                return new JSONObject().put("status","PASS").put("protocol",version)
+                    .put("cipher_suite",socket.getSession().getCipherSuite())
+                    .put("network",net.toString())
+                    .put("server_identity_verified",true).put("hostname_verified",true)
+                    .put("network_bound_socket",true)
+                    .put("certificate_sha256",hex.toString())
+                    .put("host","wbd-ci-host.test").put("underlay_ip","10.0.2.2")
+                    .put("reply",actual);
+            }
+        }
+    }
     private JSONObject run() throws Exception {
         JSONObject j=new JSONObject();
         int uid=Process.myUid();
@@ -188,6 +273,8 @@ public final class MainstreamActivity extends Activity {
                     j.put("dns",dns(t));
                     j.put("tcp",tcpHttp(t));
                     j.put("netd_underlay",underlay(t));
+                    j.put("system_dns",systemDns());
+                    j.put("tls_underlay",tlsUnderlay(t));
                     // A real App marker confirms the default-network echo was
                     // completed WHILE the independent root TUN UID rule was active.
                     byte[] completed=("wbd-underlay-"+t).getBytes(StandardCharsets.US_ASCII);
@@ -199,7 +286,7 @@ public final class MainstreamActivity extends Activity {
                     j.put("network_error",e.toString());
                 }
             }
-            boolean finished=root.waitFor(29,TimeUnit.SECONDS);
+            boolean finished=root.waitFor(40,TimeUnit.SECONDS);
             if(!finished){
                 root.destroy();
                 if(!root.waitFor(2,TimeUnit.SECONDS))root.destroyForcibly();
@@ -229,12 +316,16 @@ public final class MainstreamActivity extends Activity {
                     "PASS".equals(j.optJSONObject("dns").optString("status"))&&
                     "PASS".equals(j.optJSONObject("tcp").optString("status"))&&
                     "PASS".equals(j.optJSONObject("netd_underlay").optString("status"))&&
+                    j.optJSONObject("system_dns")!=null &&
+                    "PASS".equals(j.optJSONObject("system_dns").optString("status"))&&
+                    j.optJSONObject("tls_underlay")!=null &&
+                    "PASS".equals(j.optJSONObject("tls_underlay").optString("status"))&&
                     multi.optJSONObject("underlay_marker")!=null &&
                     multi.optJSONObject("underlay_marker").optBoolean("real_app_underlay_completed_before_rule_release")&&
                     j.optInt("underlay_completion_marker_bytes",0)>0&&
                     cl!=null&&cl.optBoolean("ok")&&cl.optBoolean("rules_equal")&&
                     cl.optBoolean("routes_equal")&&cl.optBoolean("tun_gone");
-                j.put("status",pass?"APP_MAINSTREAM_NETWORK_PASS":"APP_MAINSTREAM_NETWORK_FAIL");
+                j.put("status",pass?"APP_DNS_TLS_MAINSTREAM_PASS":"APP_DNS_TLS_MAINSTREAM_FAIL");
             }else{
                 j.put("status","NO_NATIVE_RESULT");
             }

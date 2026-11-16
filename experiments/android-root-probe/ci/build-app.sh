@@ -14,12 +14,25 @@ elif [[ -f "$sdk/platforms/android-36/android.jar" ]];then
 else
  echo 'ENV_BLOCKED: No Android SDK API36/37' >"$out/blocked.txt";exit 2
 fi
+# Disposable self-signed TLS server identity, generated fresh per CI run.
+# Only the public certificate enters the APK; private key never leaves runner.
+mkdir -p "$out/assets"
+openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 2 \
+  -subj '/CN=wbd-ci-host.test/O=WBD Disposable/C=US' \
+  -addext 'subjectAltName=DNS:wbd-ci-host.test' \
+  -keyout "$out/host-tls.key" -out "$out/host-tls.crt" >/dev/null 2>&1
+chmod 0600 "$out/host-tls.key"
+openssl x509 -in "$out/host-tls.crt" -outform DER \
+  -out "$out/assets/wbd-host-tls.der"
+openssl x509 -in "$out/host-tls.crt" -noout -text | grep -A1 'Subject Alternative Name' \
+  >"$out/tls-cert-san.txt"
+sha256sum "$out/assets/wbd-host-tls.der" >"$out/tls-cert-sha256.txt"
 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar" -d "$out/classes" \
  "$src/src/org/wbdnext/rootprobe/"*.java
 "$tools/d8" --min-api 28 --lib "$jar" --output "$out/dex" \
  $(find "$out/classes" -name '*.class')
 "$tools/aapt2" link --manifest "$src/AndroidManifest.xml" -I "$jar" \
- --min-sdk-version 28 --target-sdk-version 37 -o "$out/unsigned.apk"
+ -A "$out/assets" --min-sdk-version 28 --target-sdk-version 37 -o "$out/unsigned.apk"
 (cd "$out/dex";zip -q -j ../unsigned.apk classes.dex)
 "$tools/zipalign" -f 4 "$out/unsigned.apk" "$out/aligned.apk"
 keytool -genkeypair -alias probe -keystore "$out/temporary.jks" \
@@ -40,9 +53,11 @@ p=Path("out/apk")
 d={"source":os.environ["GITHUB_SHA"],"min_sdk":28,"target_sdk":37,
  "compile_api":int((p/"compile-api.txt").read_text()),
  "apk_sha256":hashlib.sha256((p/"app-su.apk").read_bytes()).hexdigest(),
+ "tls_fixture_public_cert_sha256":hashlib.sha256((p/"assets/wbd-host-tls.der").read_bytes()).hexdigest(),
+ "tls_fixture_private_key":"RUNNER_ONLY_NOT_UPLOADED",
  "native_source":os.environ["GITHUB_SHA"],
  "scope":"real ordinary debug APK, not a Magisk/KernelSU installer"}
 (p/"manifest.json").write_text(json.dumps(d,indent=2))
 PY
-( cd "$out";sha256sum manifest.json >>SHA256SUMS)
+( cd "$out";sha256sum manifest.json assets/wbd-host-tls.der tls-cert-sha256.txt tls-cert-san.txt >>SHA256SUMS)
 rm -f "$out/temporary.jks" "$out/unsigned.apk" "$out/aligned.apk"

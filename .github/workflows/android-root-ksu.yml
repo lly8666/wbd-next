@@ -68,5 +68,7 @@ jobs:
             out/apk/SHA256SUMS
             out/apk/badging.txt
             out/apk/compile-api.txt
+            out/apk/tls-cert-sha256.txt
+            out/apk/tls-cert-san.txt
           retention-days: 14
           if-no-files-found: warn

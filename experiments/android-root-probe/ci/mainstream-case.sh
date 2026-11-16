@@ -7,7 +7,9 @@ o=out/mainstream
 mkdir -p "$o"
 test "$(cat out/native/SOURCE)" = "$GITHUB_SHA"
 (cd out/native && sha256sum -c SHA256SUMS) >"$o/native-hashes.txt"
-python3 -u experiments/android-root-probe/ci/underlay-echo.py >"$o/host-echo.log" 2>&1 &
+test -s out/apk/host-tls.crt && test -s out/apk/host-tls.key
+python3 -u experiments/android-root-probe/ci/underlay-echo.py \
+ out/apk/host-tls.crt out/apk/host-tls.key >"$o/host-echo.log" 2>&1 &
 hostpid=$!
 clean(){
   kill "$hostpid" 2>/dev/null || true
@@ -26,7 +28,22 @@ try:
   assert data==b"wbd-underlay-ok-health\n",repr(data)
 except Exception:raise SystemExit(1)
 PY
-  then ready=1;break;fi
+  then
+    if python3 - <<'PY'
+    import socket,ssl
+    ctx=ssl.create_default_context(cafile="out/apk/host-tls.crt")
+    ctx.minimum_version=ssl.TLSVersion.TLSv1_2
+    try:
+     with socket.create_connection(("127.0.0.1",18318),timeout=1.5) as sock:
+      with ctx.wrap_socket(sock,server_hostname="wbd-ci-host.test") as tls:
+       tls.sendall(b"wbd-tls-health\n")
+       value=tls.recv(100)
+       assert value==b"wbd-tls-ok-health\n",repr(value)
+    except Exception:
+     raise SystemExit(1)
+    PY
+    then ready=1;break;fi
+  fi
   sleep 0.3
 done
 if [[ "$ready" != 1 ]];then
@@ -80,7 +97,7 @@ req(read("api.txt")=="36" and read("selinux.txt")=="Enforcing","Android16/KSU AV
 req(a.get("app_uid",0)>=10000 and "untrusted_app" in a.get("app_context","")
     and a.get("target_sdk")==37,"real normal targetSdk37 App UID/context")
 req(a.get("root_ready") and a.get("su_exit")==0 and native.get("root_uid")==0,"real app KSU su UID0")
-req(a.get("status")=="APP_MAINSTREAM_NETWORK_PASS","App end-to-end mainstream result")
+req(a.get("status")=="APP_DNS_TLS_MAINSTREAM_PASS","App end-to-end mainstream result")
 req(u.get("status")=="PASS" and u.get("receive_bytes",0)>0,"App real UDP roundtrip")
 req(d.get("status")=="PASS" and d.get("answer")=="198.18.254.2" and
     dns.get("status")=="SUPPORTED_IN_SCOPE","App direct DNS UDP53 real TUN")
@@ -91,6 +108,20 @@ req(t.get("status")=="PASS" and t.get("http_status")==200 and
 req(net.get("status")=="PASS" and net.get("socket_bound_to_active_network") and
     net.get("interface") and net.get("routes",0)>=1 and net.get("internet_capability") is True,
     "Android netd active Network underlay Socket to emulator host")
+sdns=a.get("system_dns") or {}
+tls=a.get("tls_underlay") or {}
+req(sdns.get("status")=="PASS" and sdns.get("using_android_network_resolver") and
+    sdns.get("answer_count",0)>0 and sdns.get("has_ipv4"),
+    "Android Network.getAllByName real resolver failed")
+req(tls.get("status")=="PASS" and tls.get("server_identity_verified") and
+    tls.get("hostname_verified") and tls.get("network_bound_socket") and
+    tls.get("protocol") in ("TLSv1.2","TLSv1.3") and
+    tls.get("reply")=="wbd-tls-ok-"+str(a.get("token","")),
+    "authenticated Android SSLSocket over netd default network failed")
+req("HOST_TLS_ACCEPT "+str(a.get("token","missing")) in read("host-echo.log"),
+    "host TLS server never accepted ordinary App nonce")
+req(tls.get("certificate_sha256")==json.loads(Path("out/apk/manifest.json").read_text()).get("tls_fixture_public_cert_sha256"),
+    "actual pinned TLS public cert hash mismatch")
 req("HOST_ACCEPT "+str(a.get("token","missing")) in read("host-echo.log"),
     "host TCP server never saw actual App token via underlay")
 req((extra.get("underlay_marker") or {}).get("real_app_underlay_completed_before_rule_release") is True and
@@ -103,10 +134,10 @@ req(read("route-before.txt")==read("route-after.txt"),"system routes snapshot ch
 req(json.loads(Path("out/native/manifest.json").read_text()).get("source")==os.environ["GITHUB_SHA"],
     "source/hash mismatch")
 summary={"schema":"android-ksu-mainstream-traffic/v1","source":os.environ["GITHUB_SHA"],
- "status":"MAINSTREAM_APP_NETWORK_PASS" if not errors else "FAIL",
+ "status":"MAINSTREAM_DNS_TLS_PASS" if not errors else "FAIL",
  "app_uid":a.get("app_uid"),"app_selinux":a.get("app_context"),
  "app_su_exit":a.get("su_exit"),"udp":u,"dns":dns,"tcp":tcp,
- "netd_underlay":net,"cleanup":clean,"errors":errors,
+ "netd_underlay":net,"system_dns":sdns,"tls_underlay":tls,"cleanup":clean,"errors":errors,
  "scope":"real App UDP/DNS UDP53/TCP HTTP via synthetic TUN; real default Network bound Socket to emulator host. Not system resolver/physical modem/tether/NAT"}
 (p/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True))
 print(json.dumps(summary,indent=2,sort_keys=True))
