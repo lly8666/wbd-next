@@ -6,5 +6,5 @@
 - **未变**：普通产品 early physical preconnect OFF、无备用DNS、无新增第三出口/路由/WFP/Go热泵、无新 P2 场景 marker。H1958 真原生业务止于限定PASS，D1–D5/P1–P2/GUI/Game4/IPv6并不因此合格。H1961 CI 原装配、Windows CLI/GUI build、纯Go单DNS验证与治理需独立收。
 
 ```feature-impact
-{"kind":"none","reason":"Only repair two exact assembly manifest blob SHA pins and reduce M0 cursor hot-read budget after H1960 source-lock preflight; no new product behavior, feature card remains unchanged."}
+{"kind":"none","ids":[],"reason":"Only repair two exact assembly manifest blob SHA pins and reduce M0 cursor hot-read budget after H1960 source-lock preflight; no new product behavior, feature card remains unchanged."}
 ```
