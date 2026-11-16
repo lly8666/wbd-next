@@ -1,5 +1,5 @@
 name: Android temp root probe API 28 canary
-run-name: "android-root-probe|api28|canary|80e2218fc3f2a03b28a284bead32b94d623e29e2"
+run-name: "android-root-probe|api28|canary|c7fa61412a02e0adff389e761308bb1147a35fa7"
 on:
   push:
     branches: [experiment/android-temp-root-probe]
@@ -15,4 +15,4 @@ jobs:
     with:
       api: '28'
       scenario: canary
-      source_sha: '80e2218fc3f2a03b28a284bead32b94d623e29e2'
+      source_sha: 'c7fa61412a02e0adff389e761308bb1147a35fa7'
