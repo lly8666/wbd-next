@@ -44,12 +44,12 @@ func N4NativeRecoverState(ctx context.Context, statePath string) error {
     nativePath:=statePath+".n4-owned-wal"
     info,err:=os.Lstat(nativePath)
     if errors.Is(err,os.ErrNotExist){
-        // A crash may strand a route sidecar even if the primary WAL was
-        // lost. Do not display "recovered" while any owned route intent
-        // remains on disk without a verifiable journal.
-        for _,candidate:=range []string{nativePath+".routes",statePath+".routes"} {
+        // A crash may leave a route or exact-owned Defender sidecar after
+        // primary WAL loss. Never report clean recovery or delete foreign rules.
+        for _,candidate:=range []string{nativePath+".routes",statePath+".routes",
+            n4Plan029DefenderSidecarPath(statePath)} {
             _,sideErr:=os.Lstat(candidate)
-            if sideErr==nil{return fmt.Errorf("%w: orphan route sidecar without owned WAL: %s",ErrN4JournalConflict,candidate)}
+            if sideErr==nil{return fmt.Errorf("%w: orphan owned sidecar without native WAL: %s",ErrN4JournalConflict,candidate)}
             if !errors.Is(sideErr,os.ErrNotExist){return sideErr}
         }
         return nil

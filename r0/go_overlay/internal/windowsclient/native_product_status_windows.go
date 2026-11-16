@@ -19,6 +19,8 @@ type N4NativeStateSnapshot struct {
     LegacyJournal bool `json:"legacy_journal"`
     NativeWAL bool `json:"native_wal"`
     RouteIntent bool `json:"route_intent"`
+    // This is an unverified disk sidecar, never an OS rule receipt.
+    DefenderSidecar bool `json:"defender_sidecar"`
     Phase string `json:"phase,omitempty"`
     RecordCount int `json:"record_count"`
     GuardQualified bool `json:"guard_qualified"`
@@ -38,8 +40,9 @@ func N4NativeInspectState(ctx context.Context, statePath string)(N4NativeStateSn
         return snap,ErrNetworkPlan
     }
     wal:=statePath+".n4-owned-wal"
-    paths:=[]string{statePath,wal,wal+".routes",statePath+".routes"}
-    present:=[4]bool{}
+    paths:=[]string{statePath,wal,wal+".routes",statePath+".routes",
+        n4Plan029DefenderSidecarPath(statePath)}
+    present:=[5]bool{}
     for i,path:=range paths{
         if err:=ctx.Err();err!=nil{return snap,err}
         info,err:=os.Lstat(path)
@@ -53,6 +56,7 @@ func N4NativeInspectState(ctx context.Context, statePath string)(N4NativeStateSn
     snap.LegacyJournal=present[0]
     snap.NativeWAL=present[1]
     snap.RouteIntent=present[2]||present[3]
+    snap.DefenderSidecar=present[4]
     if present[0]&&present[1]{
         snap.State="conflict"
         return snap,ErrN4JournalConflict
@@ -71,6 +75,9 @@ func N4NativeInspectState(ctx context.Context, statePath string)(N4NativeStateSn
         snap.State="native_wal_unverified"
     } else if snap.RouteIntent {
         snap.State="orphan_route_intent"
+    } else if snap.DefenderSidecar {
+        // No primary WAL does not prove exact-owned Defender Allow gone.
+        snap.State="orphan_defender_sidecar"
     } else if present[0] {
         snap.State="legacy_journal"
     } else {

@@ -210,3 +210,20 @@ func TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS(t *testing.T){
  }
  t.Log("PLAN029_REAL_WINDOWS_DEFENDER_NATIVE_COM_EXACT_ADD_READBACK_CAS_DELETE_PASS_SCOPE_ONLY_NOT_PRODUCT_TCP")
 }
+
+// Only pure disk checks; never arm Defender or borrow a live adapter.
+func TestPlan029NoWFPAssemblyRejectsUnreconciledDefenderSidecar(t *testing.T){
+ state:=filepath.Join(t.TempDir(),"native-state.json")
+ if err:=n4Plan029RequireNoOrphanDefender(state);err!=nil{t.Fatal(err)}
+ path:=n4Plan029DefenderSidecarPath(state)
+ evidence:=[]byte("old-generation intent or owned")
+ if err:=os.WriteFile(path,evidence,0600);err!=nil{t.Fatal(err)}
+ if err:=n4Plan029RequireNoOrphanDefender(state);!errors.Is(err,ErrN4JournalConflict){
+  t.Fatalf("new generation could adopt unverified Allow: %v",err)
+ }
+ if data,err:=os.ReadFile(path);err!=nil||string(data)!=string(evidence){
+  t.Fatalf("cold check modified orphan evidence: %v",err)
+ }
+ if err:=os.Remove(path);err!=nil{t.Fatal(err)}
+ if err:=n4Plan029RequireNoOrphanDefender(state);err!=nil{t.Fatal(err)}
+}

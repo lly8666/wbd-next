@@ -35,6 +35,16 @@ func TestPLAN010NativeReadOnlyDiskStatusAndConflict(t *testing.T){
         t.Fatalf("read-only scan changed route intent: %v",err)
     }
     if err:=os.Remove(orphan);err!=nil{t.Fatal(err)}
+    defender:=n4Plan029DefenderSidecarPath(state)
+    sidecar:=[]byte("intent or owned; disk-only")
+    if err:=os.WriteFile(defender,sidecar,0600);err!=nil{t.Fatal(err)}
+    if snap:=read("orphan_defender_sidecar");!snap.DefenderSidecar||
+       snap.RouteIntent||snap.NativeWAL||snap.LegacyJournal{t.Fatal(snap)}
+    if data,err:=os.ReadFile(defender);err!=nil||string(data)!=string(sidecar){
+        t.Fatalf("read-only inspector touched Defender sidecar: %v",err)
+    }
+    if err:=os.Remove(defender);err!=nil{t.Fatal(err)}
+    if snap:=read("absent");snap.DefenderSidecar{t.Fatal(snap)}
     wal:=state+".n4-owned-wal"
     malformed:=[]byte(`{"schema":"foreign","identity":"spoof"}`)
     if err:=os.WriteFile(wal,malformed,0600);err!=nil{t.Fatal(err)}
