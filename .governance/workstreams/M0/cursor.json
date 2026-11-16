@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1947,
-  "checkpoint_sha": "8fcc05776cad02bd5139f8c3ffe7e572f893041e",
+  "sequence": 1948,
+  "checkpoint_sha": "4b61bef80ec4ec5e4f0e6973efb0142cb3695342",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1947 collected source-locked Action43777305453: genuine A1/B1/B2/A2 same-Rust-V3 P1 business/Stop four PASS, B1/B2 CN cold rows=4104/domain bytes=180224 fixing old B1 CN8. Windows Go+Rust CPU/GiB B vs A +11.942%, B repeat drift10.17%, P1 performance OPEN. H1945 QPC pre-write tail and all other PLAN029 exits OPEN.",
-  "why_now": "Existing P1 Action finally finished, first collect original real four-arm payload and CPU, not rerun. CN source first fault fixed, P1 CPU difference not causally attributable with two noisy CN legs.",
+  "current_task": "H1948 first genuine physical WinSock write/read QPC and original inner write QPC within one signed Direct P2 scene. Rust Windows two-leg relay cold test instrumentation, 384+384 app join helper. New SOURCE native NOT_RUN until original Action receipt; no forwarding or CPU claims.",
+  "why_now": "H1945 original 384/384 Win32 QPC shows app tail before Rust first inner write (p99 15.845–17.317ms), while inner write→app recv p99 <=0.476ms. One new differentiated hypothesis: physical outer RTT vs WinSock readiness/relay. H1947 P1 CN CPU noisy OPEN; do not rerun.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Review actual TX/RX Rust per-thread cost and immutable tunnel DATA pin hot path; fold measured fixes with remaining PLAN029 OS/DNS/GUI/pressure exits before next source-locked native test. Do not retry same P1 without changed hypothesis/implementation; keep P2, resource/G4/IPv6 and full D1-D5 OPEN.",
+  "next_action": "Collect one H1948 signed native P2 4MiB+2x384 TCP with Tunnel UDP and owned Stop, verify 384 physical first write/read/inner write QPC joins and native SOURCE; identify earliest abnormal segment, then targeted implementation. P1 CPU/GUI/Game4/IPv6/D1-D5 other exits remain OPEN.",
   "unverified": true,
   "last_tested_source": "bc6afde542c4daecee393745a982a590c9dba27f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1947-H1946-REAL-P1-SAME-RUST-CN4104-CPU-ABBA-20261116.json"
+    "docs/evidence/M0/PLAN029-H1948-PENDING-PHYSICAL-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
     "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md",
     "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
@@ -28,5 +29,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1946 original P1 four-arm real Windows/WSL2 Action43777305453 PASS scoped application/owned Stop: CN4104 both B arms, 0.6984GiB/leg, ~50Mbps. CPU B+11.942% versus All, CN B drift10.17%, POTENTIAL_REGRESSION_NEEDS_REPLICATION not CPU PASS; latest H1945 QPC pre-Rust-write tail OPEN. Overall 029 NOT COMPLETE."
+  "partial_summary": "H1945 384/384 true Windows QPC inner write→app p99 0.450–0.476ms; pre-write 15.845–17.317ms OPEN. H1947 P1 all/CN/CN/all four real business/Stop PASS CN4104, CPU CN+11.942% with 10.17% B drift OPEN. H1948 signed-only physical first write/read QPC newly authored, real SOURCE NOT_RUN."
 }

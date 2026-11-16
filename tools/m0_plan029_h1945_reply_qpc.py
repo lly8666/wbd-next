@@ -97,3 +97,81 @@ def analyze(original_log,scene,source):
           "RUST_WRITE_TO_APP_RECV_INCLUDES_WINDOWS_TCP_WINTUN_AND_SCHEDULING",
           "CLIENT_FIN_TO_RUST_WRITE_INCLUDES_LINUX_AND_OUTER_TCP",
           "NOT_CPU_AB_OR_CAUSAL_P99_FIX"]}
+
+
+# H1948: first REAL physical Winsock write -> first physical recv ->
+# first inner Winsock write. No cross-OS absolute timestamp arithmetic:
+# physical RTT includes Linux/WSL2 and actual physical TCP kernels.
+PATH_MARK="PLAN029_H1948_REPLY_PATH_QPC_FINAL "
+def read_native_path_qpc(log):
+    lines=[line.split(PATH_MARK,1)[1].strip() for line in log.splitlines()
+           if PATH_MARK in line]
+    need(len(lines)==1,"H1948 original path QPC record absent/duplicated")
+    m=re.fullmatch(r"frequency=([1-9]\d*) count=(\d+) rows=([0-9:,]*) "
+                   r"source=original_rust_direct_test_only",lines[0])
+    need(m is not None,"H1948 native path format invalid")
+    freq=int(m[1]);count=int(m[2])
+    need(0<count<=LIMIT,"H1948 native path count invalid")
+    rows=[]
+    for entry in m[3].split(","):
+        fields=entry.split(":")
+        need(len(fields)==4,"H1948 incomplete first-event row")
+        port,w,r,i=map(int,fields)
+        need(1024<=port<=65535 and 0<w<=r<=i,
+             "H1948 first events missing or out of order")
+        rows.append((port,w,r,i))
+    need(len(rows)==count,"H1948 native row count mismatch")
+    need(all(a[3]<=b[3] for a,b in zip(rows,rows[1:])),
+         "H1948 inner QPC sequence not monotonic")
+    return freq,rows
+
+def analyze_path(original_log,scene,source):
+    prior=analyze(original_log,scene,source)
+    freq,paths=read_native_path_qpc(original_log)
+    need(freq==prior["frequency_hz"],"H1948 QPC frequency differs")
+    _,inners=read_native_qpc(original_log)
+    by_port={}
+    for j,(port,w,r,i) in enumerate(paths):
+        by_port.setdefault(port,[]).append((j,w,r,i))
+    inner_port={}
+    for port,i in inners:inner_port.setdefault(port,[]).append(i)
+    used=set();result={}
+    for policy,app in (("fin_first",scene["windows"]),
+                       ("payload_first",scene["echo_before_fin_control"]["windows"])):
+        rows=[x for x in app["qpc_records"] if x.get("role")=="direct"]
+        need(len(rows)==192,"H1948 direct app rows absent")
+        from_fin=[];rtt=[];to_inner=[];to_app=[];total=[]
+        for app_row in rows:
+            port=app_row["source_port"]
+            fin=app_row["half_close_qpc"];recv=app_row["first_echo_qpc"]
+            # The inner write joins H1945's already-proven app window.
+            # A port may be reused; require one unclaimed event per window.
+            candidates=[(j,w,r,i) for j,w,r,i in by_port.get(port,[])
+                if j not in used and fin-freq//100<=i<=recv+freq//100]
+            need(len(candidates)==1,"H1948 native path missing or ambiguous")
+            j,w,r,i=candidates[0]
+            need(any(abs(i-old)<=freq//1000 for old in inner_port.get(port,[])),
+                 "H1948 inner write does not match original H1945")
+            used.add(j)
+            from_fin.append((w-fin)*1000/freq)
+            rtt.append((r-w)*1000/freq)
+            to_inner.append((i-r)*1000/freq)
+            to_app.append((recv-i)*1000/freq)
+            total.append((recv-fin)*1000/freq)
+        result[policy]={
+            "client_FIN_to_first_physical_write_signed":dist(from_fin),
+            "Rust_first_physical_write_to_first_physical_read":dist(rtt),
+            "Rust_first_physical_read_to_first_inner_write":dist(to_inner),
+            "Rust_first_inner_write_to_app_first_recv":dist(to_app),
+            "client_FIN_to_app_first_recv":dist(total),
+            "physical_write_precedes_FIN":sum(v<0 for v in from_fin)}
+    need(len(used)==384,"H1948 384 source-locked Direct first-event joins not proven")
+    return {"source_sha":source,"frequency_hz":freq,
+        "status":"PASS_SCOPED_OBSERVATIONAL_SAME_WINDOWS_QPC_PATH",
+        "matched_direct_events":len(used),"rust_path_rows":len(paths),
+        "policies":result,
+        "limitations":["NO_CROSS_WINDOWS_LINUX_ABSOLUTE_CLOCK",
+          "PHYSICAL_WRITE_TO_READ_INCLUDES_LINUX_AND_NETWORK",
+          "WIN32_QPC_NOT_CAUSAL_CPU_OR_LATENCY_FIX",
+          "FIRST_OUTER_READ_IS_AFTER_NONBLOCKING_RECV_SUCCESS",
+          "SIGNED_TEST_ONLY_NO_PRODUCTION_POLLING"]}

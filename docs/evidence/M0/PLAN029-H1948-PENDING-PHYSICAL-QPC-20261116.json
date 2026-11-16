@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1948",
+  "base_checkpoint_sha": "4b61bef80ec4ec5e4f0e6973efb0142cb3695342",
+  "h1945_actual": {
+    "source_sha": "72d3e131561dcb54501722f7d9254b34a27094e9",
+    "action_id": 43771212764,
+    "matched": 384,
+    "fin_first_pre_inner_write_p99_ms": 17.317,
+    "fin_first_after_inner_write_p99_ms": 0.476,
+    "payload_first_pre_inner_write_p99_ms": 15.845,
+    "payload_first_after_inner_write_p99_ms": 0.45,
+    "remaining_cause": "OPEN"
+  },
+  "h1947_actual": {
+    "source_sha": "bc6afde542c4daecee393745a982a590c9dba27f",
+    "action_id": 43777305453,
+    "application_and_owned_stop": "PASS_SCOPED_ALL_FOUR",
+    "cn_rows": 4104,
+    "go_plus_rust_cpu_gib_cn_vs_all_pct": 11.942,
+    "cn_repeat_drift_pct": 10.17,
+    "performance": "OPEN"
+  },
+  "h1948_new_source": {
+    "scope": "original Windows Rust physical TCP first write/read and inner write QPC, same VM",
+    "active_only_under_source_locked_h1948_marker": true,
+    "regression_tests": "NOT_RUN",
+    "native_action": "NOT_RUN",
+    "expected_direct_matched": 384,
+    "no_product_timers": true
+  },
+  "full_plan_exit": "IN_PROGRESS",
+  "history_fail_preserved": true
+}

@@ -319,6 +319,24 @@ pub use win::{PhysicalTcpSocket,open_kernel_tcp_listener,SocketReadiness,TCP_EVE
 // this is a work quantum, not a preallocated per-flow TCP window.
 // Each direction still has its own bounded queue, and the owner rotates
 // at most eight flows per turn without waiting on slow physical sockets.
+// H1948 signed-test-only first real physical socket events, same-Windows QPC.
+#[cfg(target_os="windows")]
+#[link(name="kernel32")]
+unsafe extern "system" { fn QueryPerformanceCounter(out:*mut i64)->i32; }
+#[inline]
+fn signed_reply_path_qpc_tick()->i64{
+    #[cfg(target_os="windows")]
+    {
+        let mut tick=0i64;
+        if unsafe{QueryPerformanceCounter(&mut tick)}!=0{return tick}
+    }
+    0
+}
+#[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
+pub struct RelayReplyPathQpc{
+    pub first_outer_write:i64,
+    pub first_outer_read:i64,
+}
 const DEFAULT_PER_DIRECTION_CAP:usize=64*1024;
 const QUANTUM_BYTES:usize=64*1024;
 // Do not read new bytes from one Direct socket when its own buffer or
@@ -394,6 +412,8 @@ pub struct TcpDirectRelay{
     // WSAEventSelect registrations. This prevents a component caller
     // without a Windows event pump from deadlocking after WouldBlock.
     read_event_driven:bool,
+    // None for ordinary product. No clock syscall or log unless signed P2.
+    reply_path_qpc:Option<RelayReplyPathQpc>,
 }
 // Index 0: listener-facing inner socket, index 1: physical outer socket.
 // Bounded integer counts only; no syscall, clock or log added by metrics.
@@ -470,7 +490,26 @@ impl TcpDirectRelay{
             inner_write_closed:false,outer_write_closed:false,
             max_pending_per_direction:cap,fast_forward:enabled,
             read_armed:[true,true],close_hint:[false,false],
-            read_event_driven:false})
+            read_event_driven:false,reply_path_qpc:None})
+    }
+    // The original source-locked Windows TX enables this only for H1948.
+    pub fn enable_signed_reply_path_qpc(&mut self){
+        self.reply_path_qpc=Some(RelayReplyPathQpc::default());
+    }
+    pub fn signed_reply_path_qpc(&self)->Option<RelayReplyPathQpc>{
+        self.reply_path_qpc
+    }
+    #[inline]
+    fn note_first_outer_write_qpc(&mut self){
+        if let Some(row)=self.reply_path_qpc.as_mut(){
+            if row.first_outer_write==0{row.first_outer_write=signed_reply_path_qpc_tick();}
+        }
+    }
+    #[inline]
+    fn note_first_outer_read_qpc(&mut self){
+        if let Some(row)=self.reply_path_qpc.as_mut(){
+            if row.first_outer_read==0{row.first_outer_read=signed_reply_path_qpc_tick();}
+        }
     }
     /// Only the real Windows TX with registered WinSock events may turn
     /// this on; other callers keep their original polling semantics.
@@ -544,6 +583,7 @@ impl TcpDirectRelay{
                         let f=forward_or_queue(&mut self.outer,
                             &mut self.to_outer,&scratch[..n],"outer_write")?;
                         attempted_outer=f.attempted_direct_write;
+                        if f.written>0{self.note_first_outer_write_qpc();}
                         if f.attempted_direct_write{
                             io.write_calls[1]+=1;
                             io.write_wouldblock[1]+=u16::from(f.blocked);
@@ -590,6 +630,7 @@ impl TcpDirectRelay{
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>{self.outer_eof=true;self.read_armed[1]=false},
                 Ok(n)=>{
+                    if n>0{self.note_first_outer_read_qpc();}
                     if self.fast_forward{
                         let f=forward_or_queue(&mut self.inner,
                             &mut self.to_inner,&scratch[..n],"inner_write")?;
@@ -658,7 +699,8 @@ impl TcpDirectRelay{
             match self.outer.write(first){
                 Ok(n)=>{
                     io.short_writes[1]+=u16::from(n>0&&n<first_len);
-                    self.to_outer.drain(..n);wrote+=n;outer_write+=n
+                    self.to_outer.drain(..n);wrote+=n;outer_write+=n;
+                    if n>0{self.note_first_outer_write_qpc();}
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{
                     io.write_wouldblock[1]+=1;

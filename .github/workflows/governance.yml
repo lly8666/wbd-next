@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install PyYAML==6.0.2
           python tools/check_workflows.py
-          python -m unittest tests.test_feature_catalog tests.test_governance_ci tests.test_delivery_ci tests.test_m0_plan029_native_receipt_audit tests.test_m0_plan029_rust_thread_cpu_attribution tests.test_m0_plan029_h1933_abba_math tests.test_m0_plan029_h1934_policy_wiring tests.test_m0_plan029_h1938_first_relay_ready tests.test_m0_plan029_h1940_tcp_event_fair_wait tests.test_m0_plan029_h1942_echo_before_fin tests.test_m0_plan029_h1943_reply_ticket_diag tests.test_m0_plan029_h1945_reply_qpc -v
+          python -m unittest tests.test_feature_catalog tests.test_governance_ci tests.test_delivery_ci tests.test_m0_plan029_native_receipt_audit tests.test_m0_plan029_rust_thread_cpu_attribution tests.test_m0_plan029_h1933_abba_math tests.test_m0_plan029_h1934_policy_wiring tests.test_m0_plan029_h1938_first_relay_ready tests.test_m0_plan029_h1940_tcp_event_fair_wait tests.test_m0_plan029_h1942_echo_before_fin tests.test_m0_plan029_h1943_reply_ticket_diag tests.test_m0_plan029_h1945_reply_qpc tests.test_m0_plan029_h1948_reply_path_qpc -v
           python tools/governance.py validate > out/structure.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

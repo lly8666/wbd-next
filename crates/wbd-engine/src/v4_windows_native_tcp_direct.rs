@@ -207,6 +207,8 @@ struct TcpLegDiagnosis{
     // per original Direct flow; only source-locked signed CI enables it.
     reply_qpc_frequency:i64,
     reply_qpc_rows:Vec<(u16,i64)>,
+    reply_path_qpc_frequency:i64,
+    reply_path_qpc_rows:Vec<(u16,i64,i64,i64)>,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -327,6 +329,13 @@ impl NativeTcpActor{
         if signed_qpc {
             diagnosis.as_mut().ok_or(())?.reply_qpc_frequency=
                 reply_qpc_frequency().ok_or(())?;
+        }
+        let signed_path_qpc=signed_qpc &&
+            std::env::var("WBD_PLAN029_P2_REPLY_PATH_QPC_SCENE").ok()
+                .as_deref()==Some("1");
+        if signed_path_qpc {
+            let d=diagnosis.as_mut().ok_or(())?;
+            d.reply_path_qpc_frequency=d.reply_qpc_frequency;
         }
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
@@ -774,6 +783,10 @@ impl NativeTcpActor{
                                     // platform relay stays compatible with
                                     // component callers lacking event pumps.
                                     relay.enable_event_driven_reads();
+                                    if self.diagnosis.as_ref().is_some_and(|d|
+                                        d.reply_path_qpc_frequency>0){
+                                        relay.enable_signed_reply_path_qpc();
+                                    }
                                     relay.note_close_event(
                                         flow.close_hints[0],flow.close_hints[1]);
                                     // Even WITHOUT FD_CLOSE, a read-ready
@@ -853,6 +866,17 @@ impl NativeTcpActor{
                                    d.reply_qpc_rows.len()<MAX_QPC_REPLY_ROWS {
                                     if let Some(q)=reply_qpc_now(){
                                         d.reply_qpc_rows.push((flow.key.source_port,q));
+                                        if d.reply_path_qpc_frequency>0 &&
+                                           d.reply_path_qpc_rows.len()<MAX_QPC_REPLY_ROWS {
+                                            if let Some(path)=pair.signed_reply_path_qpc(){
+                                                // Incomplete first-events must be
+                                                // rejected by the signed analyzer.
+                                                d.reply_path_qpc_rows.push((
+                                                    flow.key.source_port,
+                                                    path.first_outer_write,
+                                                    path.first_outer_read,q));
+                                            }
+                                        }
                                         flow.first_reply_qpc_logged=true;
                                     }
                                 }
@@ -1307,6 +1331,12 @@ impl Drop for NativeTcpActor{
                 format!("{}:{}",p,q)).collect::<Vec<_>>().join(",");
             eprintln!("PLAN029_H1945_REPLY_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
                 d.reply_qpc_frequency,d.reply_qpc_rows.len(),rows);
+        }
+        if d.reply_path_qpc_frequency>0 {
+            let rows=d.reply_path_qpc_rows.iter().map(|(p,w,r,i)|
+                format!("{}:{}:{}:{}",p,w,r,i)).collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1948_REPLY_PATH_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
+                d.reply_path_qpc_frequency,d.reply_path_qpc_rows.len(),rows);
         }
         // Exactly one cold aggregate FIN witness AFTER the original TX
         // returns to its Stop owner. No IPs, TIDs, original payload,
