@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1964,
-  "checkpoint_sha": "5e46a2a06c8292be049f57da5c15df4c534d7b79",
+  "sequence": 1965,
+  "checkpoint_sha": "15d9890b7ee861288893272f1d72ef262b741c79",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1964: H1963 source 5e46 original Windows Go test TestPlan029H1963ColdDnsTwoSingleEndpointsRejectZeroAndBroadcast truly RUN/PASS on Action43797131805, exact pinned overlay compile/one Defender CAS PASS. Windows GUI real WinForms + Rust DLL build Action43797131801 SUCCESS (not signed Connect/Stop). Go/Rust Linux/Windows preflight Action43797131838 all PASS, governance43797131908 both PASS. Last true Win/WSL2 P2/D1/D2 source ab224; full PLAN029 OPEN.",
-  "why_now": "H1961 source3a pure Windows build was green but new H1960 test silently skipped due TestPLAN029 capitalized. H1963 source5e46 renamed test, preserved exact assembly pin and now logs explicit RUN+PASS; source-locked Windows/CLI/GUI build+governance complete. Preserve exact evidence and do not dispatch duplicate P2.",
+  "current_task": "H1965: User explicitly prioritizes ordinary established single-TCP stream steady-state performance QPC; stop pursuing extreme CN/nonCN same-real-CDN-IP deep test as next gate. Source-locked H1958 4MiB still ~2x physical but not causally located; H1963 Windows Go DNS cold RUN/PASS, GUI build PASS; all full 029 exits OPEN.",
+  "why_now": "Existing signed QPC isolates first reply/connect, not steady-state message-level classification/NAT/mailbox/Windows kernel TCP socket progress. User rejects exotic CDN/DNS stress and requests precise extra latency rather than repeated 4MiB A/B.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Next evidence gap: one genuine Windows/WSL2 original Wintun D2 shared-real-CDN two-QNAME opposite exits; D1 TCP53/onlink/GUI Connect/Stop, IPv6, P1 100/200Mbps, bounded pressure and Game4. Build-only CI does not close those. Keep normal early physical connect OFF; no duplicate H1958 P2.",
+  "next_action": "FIRST: one normal-source original Windows/WSL2 established TCP, 1KiB ordered app echoes (~2000-4000), same Win QPC app send/recv + Wintun read→classify→NAT→mailbox→RX SendPacket and inner read→physical write, reverse physical read→inner write→Wintun→app. Phase+full RTT p50/p95/p99 and p99 queue ages; distinguish socket readiness waiting from Rust CPU, QPC clock only Windows; one same-run physical baseline. Sampled bounded signed-only trace, no high concurrency or repeated H1958 P2. CN/nonCN same-real-IP CDN case deprioritized NOT_RUN; remaining GUI/Game4/IPv6/D1-D5/P1-P2 OPEN.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
     "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
     "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md",
     "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md"
+    "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1958 original Win2025/WSL2 source ab224: 4x4MiB ON88.982/OFF80.742ms n2, 384 small QPC first-write improvement, Linux/TunnelUDP/Stop PASS, throughput OPEN; D1 blackhole Tunnel3/physical0 and D2 nonCN overseas Tunnel/CN-IP Direct limited PASS. H1959 Rust invalid FakeIP cold restore pure PASS. H1963 source5e46 Windows Go true cold dual DNS invalid address and equal-valid test RUN/PASS + exact Go/Defender/GUI build; actual DNS full E2E/GUI button NOT_RUN."
+  "partial_summary": "User H1965 redirected PLAN029 toward ordinary steady-state per-message QPC latency and Windows/Rust attribution; no extreme same-real-IP CN/nonCN investigation. H1958 true Windows/WSL2 source ab224 first-write fast with preconnect ON, 4x4MiB ~2x physical and ON/OFF n2 inconclusive; product preconnect OFF. H1963 Go cold DNS invalid endpoint exact Windows RUN/PASS and GUI build only; full PLAN029 remains OPEN."
 }
