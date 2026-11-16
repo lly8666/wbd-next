@@ -19,13 +19,13 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: android-ksu-real-su-${{ github.sha }}
-  cancel-in-progress: false
+  group: android-ksu-real-su-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   real-ksu:
     if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 24
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -42,7 +42,7 @@ jobs:
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
       - name: KSU approve app, prove ordinary-app UDP reaches rooted TUN
         shell: bash
-        run: bash experiments/android-root-probe/ci/ksu-boot-and-test.sh
+        run: timeout --signal=TERM --kill-after=8s 780s bash experiments/android-root-probe/ci/ksu-boot-and-test.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

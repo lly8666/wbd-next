@@ -3,6 +3,10 @@
 set -euo pipefail
 # Unlike android-emulator-runner, our manually booted KSU AVD does not inject adb into PATH.
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+# Avoid unbounded adb shell hangs on unhealthy AVD startup.
+adb() {
+  timeout --signal=TERM --kill-after=2s 18s "$ANDROID_HOME/platform-tools/adb" "$@"
+}
 export ANDROID_AVD_HOME="$GITHUB_WORKSPACE/out/ksu/avd-home"
 test -s "$ANDROID_AVD_HOME/wbd_ksu36.ini"
 "$ANDROID_HOME/emulator/emulator" -list-avds | grep -qx wbd_ksu36
@@ -36,7 +40,10 @@ start_avd() {
   EMU_PID=$!
   # Avoid 300-second opaque wait on "device unauthorized".
   local authorized=0
-  for n in $(seq 1 90); do
+  local auth_deadline=$((SECONDS+130))
+  local n=0
+  while (( SECONDS < auth_deadline )); do
+    n=$((n+1))
     adb devices -l >"out/ksu/adb-devices-$phase.txt" 2>&1 || true
     if grep -Eq 'emulator-[0-9]+[[:space:]]+device([[:space:]]|$)' "out/ksu/adb-devices-$phase.txt"; then
       authorized=1
@@ -58,7 +65,8 @@ start_avd() {
     exit 3
   fi
   local booted=0
-  for n in $(seq 1 140);do
+  local boot_deadline=$((SECONDS+210))
+  while (( SECONDS < boot_deadline ));do
     if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]];then booted=1;break;fi
     sleep 2
   done
