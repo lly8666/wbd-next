@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1996,
-  "checkpoint_sha": "99d311aaeb8c6fd998c1e6c24f8f2de43349342f",
+  "sequence": 1997,
+  "checkpoint_sha": "262556f2fb33fec8f5a08f78791006163d38b0ca",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1996 collect H1995 signed ordinary real P2 SUCCESS and reprioritize: only Direct 1KiB RTT p99 materially higher than ordinary physical socket (~1.8-2.1x in prior source), plus H1974 five 61-63ms true outliers; do not pursue small 1MiB +2.2% differences, extreme capacity development or blind 2048 replays.",
-  "why_now": "H1995 Action43844626304 native and Stop success 1MiB 295.366ms physical vs 301.871ms Direct (+2.2%), Tunnel UDP 120/120 p99 2.823ms. This is not Direct RTT p99. H1974 genuine app 1KiB p99 0.7411 vs 0.3558ms and five rare ~61ms stalls remains unlocated; H1978 another VM 0.682 vs 0.381ms with no stalls cannot prove cause.",
+  "current_task": "H1997 trigger exactly one signed original Windows2025/WSL2 ordinary 1KiB established Direct TCP RTT p99 baseline+Wintun, plus existing normal paced P2 and Tunnel UDP; no product code change, no extreme workloads.",
+  "why_now": "User requests representative Direct latency tests; H1974/1978 earlier Direct RTT p99 1.8-2.1x physical and rare 61ms unlocalized, latest H1995 1MiB not a RTT p99 measure.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "No immediate Action repeat. First reuse existing H1974/H1978/H1979 source-locked TX mailbox→RX Wintun SendPacket start→WinSock FD_READ/inner read boundary and look for one falsifiable large-tail lost-wake/HOL cause; only evidence-backed small code change + ONE ordinary same-source same-VM physical/Direct RTT p99 and owned Stop test. No extreme saturation, 4MiB/2048 blind replay or microsecond tuning.",
+  "next_action": "Collect original source-locked native H1997 Action and artifact, preserve signed failures and Stop; only then choose one bounded separate ordinary Direct UDP or unpaced 4MiB representative scene, no speculative tuning.",
   "unverified": true,
   "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1997-DIRECT-ORDINARY-1K-RTT-SOURCE-TRIGGER.md",
     "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",
     "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
     "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
     "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md",
     "docs/devlog/M0/20261116-PLAN029-H1991-EMPTY-UDP-SWEEP-AVOIDS-TCP-CROSSFLOW-WSAPOLL.md",
-    "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1989-ROTATING-WINSOCK-SHARD-WAIT-FAIRNESS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1990-H1940-STRICT-FAIR-WAIT-ASSERTIONS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1995 original signed two-OS Action43844626304 SUCCESS (all native/Stop): paced 1MiB physical295.366ms Direct301.871ms; 128KiB download largest gap1.171/1.732ms; 120/120 Tunnel UDP RTT p99 2.823ms. Current-source Direct 1KiB RTT p99 and CPU/GiB NOT_RUN. Original H1993 FAIL preserved. Prior H1974 small Direct p99 ratio2.08x and 5×61-63ms outliers OPEN; no new extreme dispatch."
+  "partial_summary": "H1997 one requested original Windows/WSL2 steady 32warmup+2048x1KiB true Direct RTT p99 scenario source trigger. Latest tested H1995 success; H1997 new result NOT_RUN until Action completes."
 }
