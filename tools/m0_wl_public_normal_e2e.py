@@ -2290,6 +2290,14 @@ print(json.dumps(result),flush=True)
         measured["same_source_preconnect_ab_qpc"]=analyze_preconnect(
             original_stop_log,measured,os.environ["GITHUB_SHA"])
         print("PLAN029_H1955_SIGNED_SAME_SOURCE_EARLY_PHYSICAL_TCP_A_B",flush=True)
+        if os.environ.get("WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE")=="1":
+         from m0_plan029_h1945_reply_qpc import analyze_preconnect_bulk
+         original_bulk=p2.get("same_vm_preconnect_bulk")
+         measured["same_source_preconnect_bulk_abba"]=analyze_preconnect_bulk(
+             original_stop_log,measured,p2,os.environ["GITHUB_SHA"])
+         original_bulk["preconnect_real_QPC_join"]="PASS_4_OF_4_ORIGINAL_WINDOWS"
+         original_bulk["status"]="PASS_SCOPED_ORIGINAL_ON_OFF_OFF_ON_SHA_FIN_STOP"
+         print("PLAN029_H1956_SIGNED_ONE_SOURCE_FOUR_4MIB_DIRECT_EARLY_CONNECT_ABBA",flush=True)
     if p029_tcp128:
      from m0_plan029_h1892_real_tcp128 import parse_rust_128,idle_cpu_window
      stress=p2.get("tcp128")

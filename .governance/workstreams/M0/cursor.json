@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1955,
-  "checkpoint_sha": "5105f7b90a3dc5d788527fa29c62d6b157f5be76",
+  "sequence": 1956,
+  "checkpoint_sha": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1955 H1952 real original P1 CN single FlowPin lookup ABBA SOURCE eb574: CPU/GiB CN+2.471% within 1.93% B noise, four true app/Stop PASS; H1953 real original P2 SOURCE acbc 384/384 QPC, first FIN-to-physical write tail majority during physical TCP connect (6/7 >8ms), 4MiB Direct120.698 vs physical48.427, UDP/Stop PASS. Signed-only first-SYN physical preconnect interleaved on/off in same original Windows source now implementation/proof pending, not product qualification.",
-  "why_now": "Two original source-locked native Actions now completed successfully: H1952 43785063606 P1 and H1953 43785820738 P2. H1953 physical connect created after listener accept; 6/7 FIN-first post-FIN pre-write >8ms flows still waiting for physical connect. Test one source exact SYN-time preconnect vs accept-time nonblocking connect on alternate Direct flows to overlap independent TCP handshakes, bounded per NAT, no new reader/thread/WFP; fail-closed if real app/Stop or QPC A/B mismatches.",
+  "current_task": "H1956 collect H1955 source 4bab one true original Windows/WSL2 P2 Action43788677966: matched 384/384, 96 ON/OFF each Linux fin-first/payload-first. ON small p95 0.234/0.253ms vs OFF 4.798/13.749ms first physical send; ON p99 8.156/0.314 vs OFF14.685/35.476ms. Original 4MiB single DIRECT was OFF (QPC accepted ~514.48635s vs app start514.48584) and 462.673ms/phys34.26, not evidence eager path caused bulk slowdown. Same-source signed-only 4x4MiB ON/OFF/OFF/ON with UDP and original Stop planned; neither full P2 nor product preconnect qualified.",
+  "why_now": "H1955 confirms source-locked small Direct 384/384 QPC and 120 Tunnel UDP/Stop. Real 4MiB OFF 462.673ms vs phys34.26ms while older SOURCE baseline Direct120.698ms proves run-to-run Direct throughput volatility, not eager connect regression. 4x one-source 4MiB ON/OFF/OFF/ON to isolate tail/throughput without cross-VM inference; reuse exact signed P2 and Linux listener, no second packet owner, preserve 384 small scene.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exactly one H1955 original native Action from this SOURCE, validate 96-on/96-off *each* Linux FIN-first/payload-first policy, source-port QPC, physical TCP/4MiB SHA+FIN, 120 sustained Tunnel UDP, 30s pending cleanup, owned Stop; if difference not real/consistent, leave preconnect disabled in regular product. D1–D5/Game4/GUI/IPv6/padding/resources still OPEN; no duplicate P1 dispatch.",
+  "next_action": "Collect one H1956 original Win2025/WSL2 Action (signed 4x4MiB ON/OFF/OFF/ON, genuine SHA/FIN, 5 Linux TCP streams, continuous Tunnel UDP, 384 small direct QPC 96/96 each, bounded pending sockets and owned Stop). Do not duplicate native runs. Use same-source bulk on/off means and variability; if not convincing leave early physical connect OFF in ordinary product. Then D1-D5/GUI/Game4/IPv6/padding/pressure still OPEN.",
   "unverified": true,
-  "last_tested_source": "acbc130775c3b1d7077b986db3a272c7d7fde738",
+  "last_tested_source": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1955-COLLECT-H1953-PREWRITE-20261116.json"
+    "docs/evidence/M0/PLAN029-H1956-H1955-SIGNED-PRECONNECT-AB-REAL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md",
     "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
     "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md",
     "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md",
     "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
-    "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md",
-    "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md"
+    "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1952 original P1 CPU +2.471% within noise, app/Stop PASS, source eb574. H1953 original P2 384 real same Windows QPC, 6 of 7 slow FIN-to-first-physical-writes are during nonblocking physical connection following listener accept; one 51.808ms inner recv late; bulk Direct 2.492x physical, tunnel UDP/Stop pass. H1955 experimental early SYN nonblocking phys socket creates only on alternate real Direct flows in explicitly signed scene, pending proof. Full 029 OPEN."
+  "partial_summary": "H1955 signed original P2 source4bab Action43788677966 PASS_SCOPED: 384 real Direct QPC, 96 ON+96 OFF per FIN/payload echo, 0 eager failures, small first physical send p95 <0.253ms ON vs4.798/13.749ms OFF, all SHA/FIN/UDP+Stop PASS. Single 4MiB Direct OFF took462.673ms vs physical34.26ms (volatile old original path). H1956 same-source 4x4MiB ABBA pending, normal preconnect OFF, full PLAN029 OPEN."
 }

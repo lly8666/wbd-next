@@ -345,3 +345,94 @@ def analyze_preconnect(log,scene,source):
                        "LOW_N_WITHIN_POLICY_P99_CANNOT_PROVE_CAUSAL_FIX",
                        "PHYSICAL_SOCKET_START_BEFORE_LISTENER_ACCEPT_NOT_EARLY_ACK",
                        "NORMAL_PRODUCT_EAGER_CONNECT_REMAINS_DISABLED"]}
+
+
+# H1956: four REAL 4MiB ON/OFF/OFF/ON Direct sessions, sharing the
+# exact Windows original kernel app, 384 small direct probes and WSL2 peer.
+# The first Direct flow is the existing H1760 cold 32KiB control.
+def analyze_preconnect_bulk(log,small,whole_p2,source):
+    prior=analyze_preconnect(log,small,source)
+    need(whole_p2.get("source_sha")==source and
+         whole_p2.get("stop")=="PASS_BOTH_OWNED" and
+         whole_p2.get("covered_whole_direct_tcp") is True,
+         "H1956 original bulk/UDP/owned Stop receipt absent")
+    bulk=whole_p2.get("same_vm_preconnect_bulk")
+    need(isinstance(bulk,dict) and bulk.get("source_sha")==source and
+         bulk.get("order")==["on","off","off","on"] and
+         bulk.get("status")=="PENDING_ORIGINAL_OWNED_STOP_AND_QPC" and
+         bulk.get("all_unpaced_4mib") is True and
+         bulk.get("linux_kernel_tcp_connections")==5,
+         "H1956 four original bulk source/mode/peer receipts absent")
+    trials=bulk.get("trials")
+    need(isinstance(trials,list) and len(trials)==4,
+         "H1956 original four bulk trials missing")
+    physical=whole_p2.get("physical_baseline")
+    linux=whole_p2.get("physical_guest")
+    need(isinstance(physical,dict) and isinstance(linux,dict) and
+         physical.get("echo_bytes")==4*1024*1024 and
+         linux.get("received_bytes")==[4*1024*1024]*5,
+         "H1956 original physical and Linux kernel 5-session SHA missing")
+    freq,events=read_native_preconnect_qpc(log)
+    need(freq==prior["original_windows_frequency_hz"] and len(events)==389,
+         "H1956 1 prewarm + 4 original bulk + 384 small QPC rows required")
+    smallports={x["source_port"] for app in (
+        small["windows"],small["echo_before_fin_control"]["windows"])
+        for x in app["qpc_records"] if x.get("role")=="direct"}
+    checked=[];used=set()
+    sha=physical["payload_sha256"]
+    for index,trial in enumerate(trials):
+        expected=bulk["order"][index]
+        port=trial.get("socket_source_port")
+        need(isinstance(port,int) and 1024<=port<=65535 and
+             port not in used and port not in smallports and
+             trial.get("ordinal")==index+1 and
+             trial.get("preconnect")==expected and
+             trial.get("role")=="direct" and
+             trial.get("presented_peer")==whole_p2.get("windows_direct_fakeip") and
+             trial.get("socket_source")=="10.66.0.2" and
+             trial.get("echo_bytes")==4*1024*1024 and
+             trial.get("payload_sha256")==sha and
+             trial.get("half_close") is True and
+             trial.get("app_tcp_nodelay")==physical.get("app_tcp_nodelay") and
+             trial.get("nominal_send_sleep_ms")==0.,
+             "H1956 original 4MiB app SOURCE/SHA/FIN/port corrupt")
+        matched=[(j,row) for j,row in enumerate(events)
+                 if row[0]==port and
+                 trial["start_monotonic_s"]<=row[3]/freq<=
+                 trial["end_monotonic_s"]]
+        need(len(matched)==1,"H1956 bulk port/QPC/Windows app session ambiguous")
+        j,(p,on,start,accepted)=matched[0]
+        need(j==index+1 and on==int(expected=="on"),
+             "H1956 original NAT admission does not match ON/OFF/OFF/ON")
+        used.add(port)
+        checked.append({"ordinal":index+1,"mode":expected,
+                        "elapsed_ms":trial["elapsed_ms"],
+                        "upload_ms":trial["upload_ms"],
+                        "download_ms":trial["download_ms"],
+                        "first_reply_wait_ms":trial["first_reply_wait_ms"],
+                        "early_socket_started_before_listener_accept_ms":
+                            round((accepted-start)*1000/freq,3)})
+    by_mode={m:[t for t in checked if t["mode"]==m]
+             for m in ("on","off")}
+    need(all(len(v)==2 for v in by_mode.values()),
+         "H1956 2+2 ABBA measurements required")
+    means={mode:{
+        field:round(sum(t[field] for t in vals)/2,3)
+        for field in ("elapsed_ms","upload_ms","download_ms")}
+        for mode,vals in by_mode.items()}
+    on=means["on"]["elapsed_ms"];off=means["off"]["elapsed_ms"]
+    return {
+        "source_sha":source,
+        "status":"PASS_SCOPED_ORIGINAL_4X_4MIB_SAME_SOURCE_PRECONNECT_BULK_ABBA",
+        "original_owned_stop":"PASS_BOTH_OWNED",
+        "exact_native_start_accept_join":4,
+        "mode_order":["on","off","off","on"],
+        "trials":checked,"means_ms":means,
+        "on_div_off_elapsed":round(on/max(.001,off),4),
+        "physical_baseline_ms":physical["elapsed_ms"],
+        "sustained_tunnel_udp":whole_p2["udp_sustained_total"],
+        "separate_small_direct_qpc_matches":prior["matched_direct_events"],
+        "limitations":["SAME_SOURCE_ONE_VM_SEQUENTIAL_4X_NOT_RANDOMIZED",
+            "ONLY_2_REAL_4M_TRIALS_PER_ARM_NO_PEAK_THROUGHPUT_CLAIM",
+            "NO_CPU_DRIVER_ATTRIBUTION",
+            "NORMAL_PRODUCT_PRECONNECT_STILL_DISABLED"]}

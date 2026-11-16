@@ -8,6 +8,10 @@ import hashlib,json,math,os,pathlib,socket,subprocess,sys,time
 # explicitly propagates selection through WSL (Windows env is NOT shared).
 ABBA=(os.environ.get("WBD_PLAN029_P2_ABBA_SCENE")=="1" or
       (len(sys.argv)>5 and sys.argv[5]=="p2abba"))
+# H1956: four original 4MiB kernel Direct sessions, signed-only.
+# WSL carries this finite workload through explicit argv, not Windows env.
+PRECON_BULK=(os.environ.get("WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE")=="1" or
+             (len(sys.argv)>5 and sys.argv[5]=="p2preconnect4"))
 PORT=46116 if ABBA else 46112
 SMALL_PORT=46114
 # Windows environment is NOT automatically imported by wsl.exe; the Linux
@@ -35,6 +39,9 @@ if HIGH_RATE and (SUSTAIN or ABBA or TCP128 or
 if SMALL_TCP and (SUSTAIN or ABBA or TCP128 or
                   (HIGH_RATE and not LONG_RATE) or not BULK):
     raise RuntimeError("H1931 small TCP only signed ordinary bulk or long P2")
+if PRECON_BULK and (ABBA or not BULK or SUSTAIN or HIGH_RATE or TCP128 or
+                    (os.name=="nt" and not SMALL_TCP)):
+    raise RuntimeError("H1956 preconnect bulk requires exactly one original signed 4MiB plus small-TCP P2")
 if SUSTAIN and (ABBA or TCP128 or not BULK):
     raise RuntimeError("H1896 sustained TCP separate from 128/ABBA and requires 4MiB CN")
 if TCP128_CONTROL and not TCP128:
@@ -58,10 +65,10 @@ def receipt(label,data):
 def tcp_guest(physical,expected_host):
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        sock.bind((physical,PORT));sock.listen(5 if ABBA else 2);sock.settimeout(40)
+        sock.bind((physical,PORT));sock.listen(5 if (ABBA or PRECON_BULK) else 2);sock.settimeout(40)
         print("PLAN029_H1815_P2_PHYSICAL_TCP_READY",flush=True)
         sources=[];sizes=[]
-        for step in range(5 if ABBA else 2):
+        for step in range(5 if (ABBA or PRECON_BULK) else 2):
             conn,peer=sock.accept()
             if peer[0]!=expected_host:
                 raise RuntimeError("physical WinSock source changed under Direct")
@@ -147,7 +154,9 @@ def tcp_client(role,local,remote):
             raise RuntimeError("P2 Windows actual one-MiB kernel TCP echo wrong")
         data={"role":role,"echo_bytes":len(echoed),"payload_sha256":SHA,
               "app_tcp_nodelay":int(app_nodelay),
-              "socket_source":sock.getsockname()[0],"presented_peer":remote,
+              "socket_source":sock.getsockname()[0],
+              "socket_source_port":sock.getsockname()[1],
+              "presented_peer":remote,
               "start_monotonic_s":started,"end_monotonic_s":ended,
               "elapsed_ms":round((ended-started)*1000,3),"kernel_tcp":True,
               "half_close":True,
@@ -353,7 +362,8 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 out/"plan029-h1898-rate-phases.json")
         p=subprocess.Popen([*args,role,first,second,
                             "p2bulk" if BULK else "p2paced",
-                            "p2abba" if ABBA else "p2ordinary"],stdout=f,
+                            "p2abba" if ABBA else
+                            "p2preconnect4" if PRECON_BULK else "p2ordinary"],stdout=f,
                            stderr=subprocess.STDOUT,env=child_env)
         children.append(p)
         return p,log
@@ -387,7 +397,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         win,wn=spawn("windows-tunnel-small","windows_udp","10.66.0.2",tunnel_ip)
         ready(wn,"PLAN029_H1815_P2_WINDOWS_TUN_SMALL_READY",win,8)
         direct_proofs=[]
-        if ABBA:
+        if ABBA or PRECON_BULK:
             for ordinal in range(4):
                 direct,dn=spawn("direct-abba-"+str(ordinal+1),
                     "direct","10.66.0.2",fake)
@@ -530,8 +540,8 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
             base["payload_sha256"]!=direct_value["payload_sha256"] or
             base["socket_source"]!=host_source or
             direct_value["presented_peer"]!=fake or
-            linux["source_ips"]!=[host_source]*(5 if ABBA else 2) or
-            linux["received_bytes"]!=[SIZE]*(5 if ABBA else 2) or
+            linux["source_ips"]!=[host_source]*(5 if ABBA or PRECON_BULK else 2) or
+            linux["received_bytes"]!=[SIZE]*(5 if ABBA or PRECON_BULK else 2) or
             small_win["received"]!=COUNT or small_linux["received"]!=COUNT or
             small_linux["source_lease"]!="10.66.0.2" or not overlap or
             not whole_direct or not whole_tcp128 or
@@ -567,6 +577,34 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "driver_cpu":"NOT_ATTRIBUTED",
                 "performance_judgment":"MEASURED_ABBA_NOT_YET_REPRODUCED"
             }
+        preconnect_bulk=None
+        if PRECON_BULK:
+            if len(direct_proofs)!=4 or any(
+                trial["role"]!="direct" or trial["echo_bytes"]!=SIZE or
+                trial["payload_sha256"]!=SHA or
+                trial["presented_peer"]!=fake or
+                trial["socket_source"]!="10.66.0.2" or
+                trial["app_tcp_nodelay"]!=base["app_tcp_nodelay"] or
+                trial["half_close"] is not True or
+                not 1024<=trial["socket_source_port"]<=65535
+                for trial in direct_proofs):
+                raise RuntimeError("H1956 four real 4MiB Direct SHA/FIN/source proofs invalid")
+            modes=["on","off","off","on"]
+            trials=[{"ordinal":i+1,"preconnect":modes[i],**v}
+                for i,v in enumerate(direct_proofs)]
+            on=(trials[0]["elapsed_ms"]+trials[3]["elapsed_ms"])/2
+            off=(trials[1]["elapsed_ms"]+trials[2]["elapsed_ms"])/2
+            preconnect_bulk={
+                "status":"PENDING_ORIGINAL_OWNED_STOP_AND_QPC",
+                "source_sha":source,"scope":"ONE_WIN_VM_ORIGINAL_RUST_WINTUN_4X_UNPACED_4M_SHA_FIN_WITH_TUNNEL_UDP",
+                "order":modes,"trials":trials,
+                "on_mean_elapsed_ms":round(on,3),
+                "off_mean_elapsed_ms":round(off,3),
+                "on_div_off_elapsed":round(on/max(.001,off),4),
+                "preconnect_real_QPC_join":"PENDING_ORIGINAL_OWNER_STOP",
+                "linux_kernel_tcp_connections":5,
+                "all_unpaced_4mib":True,
+                "cpu_or_driver_causality":"NOT_MEASURED"}
         # Same-run, same-VM phase attribution, not an inferred algorithmic
         # bottleneck or a peak throughput number. Additive deltas expose the
         # first dominant wait without changing the paced 1-MiB workload.
@@ -591,6 +629,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "covered_whole_direct_tcp":whole_direct,
                 "udp_sustained_total":small_win["sustained_total"],
                 "same_vm_abba":abba,
+                "same_vm_preconnect_bulk":preconnect_bulk,
                 "tcp128":tcp128,
                 "sustained_direct_tcp":sustained,
                 "highrate_direct_tcp":highrate,
@@ -695,11 +734,12 @@ if __name__=="__main__":
         BULK!=(sys.argv[4]=="p2bulk")):
         raise SystemExit("P2 physical and Wintun workload selection mismatch")
     if len(sys.argv)==6:
-        if (sys.argv[5] not in ("p2abba","p2ordinary") or
-                ABBA!=(sys.argv[5]=="p2abba")):
+        if (sys.argv[5] not in ("p2abba","p2ordinary","p2preconnect4") or
+                ABBA!=(sys.argv[5]=="p2abba") or
+                PRECON_BULK!=(sys.argv[5]=="p2preconnect4")):
             raise SystemExit("P2 WSL explicit ABBA selection mismatch")
-    elif ABBA:
-        raise SystemExit("P2 ABBA requires explicit WSL argv, not env-only activation")
+    elif ABBA or PRECON_BULK:
+        raise SystemExit("P2 ABBA/preconnect requires explicit WSL argv, not env-only activation")
     role,a,b=sys.argv[1:4]
     if role=="guest_tcp":tcp_guest(a,b)
     elif role=="guest_udp":udp_guest(a,b)

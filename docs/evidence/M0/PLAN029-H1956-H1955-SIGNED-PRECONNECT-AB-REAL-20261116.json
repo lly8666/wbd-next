@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "task": "H1956_COLLECT_H1955_ORIGINAL",
+  "plan": "029",
+  "source_sha": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
+  "action_id": 43788677966,
+  "job_id": 133043241321,
+  "artifact_id": 14191093972,
+  "action_conclusion": "success",
+  "scope": "SIGNED_ONE_ORIGINAL_WIN2025_WSL2_SOURCE_DIRECT_PRECONNECT_INTERLEAVED_P2",
+  "result": "PASS_SCOPED_SAME_SOURCE_INTERLEAVED_PRECONNECT_P2",
+  "source_match_windows_linux": true,
+  "matched_direct_qpc": 384,
+  "native_first_event_rows": 386,
+  "two_real_linux_echo_policies": [
+    "fin_first",
+    "payload_first"
+  ],
+  "per_policy_counts": {
+    "preconnect_on": 96,
+    "original_off": 96
+  },
+  "first_physical_send_after_client_fin_ms": {
+    "fin_first": {
+      "on": {
+        "p50": 0.152,
+        "p95": 0.234,
+        "p99": 8.156,
+        "max": 8.156,
+        "over8": 1
+      },
+      "off": {
+        "p50": 0.188,
+        "p95": 4.798,
+        "p99": 14.685,
+        "max": 14.685,
+        "over8": 2
+      }
+    },
+    "payload_first": {
+      "on": {
+        "p50": 0.143,
+        "p95": 0.253,
+        "p99": 0.314,
+        "max": 0.314,
+        "over8": 0
+      },
+      "off": {
+        "p50": 0.183,
+        "p95": 13.749,
+        "p99": 35.476,
+        "max": 35.476,
+        "over8": 5
+      }
+    }
+  },
+  "first_accept_to_physical_connected_ms": {
+    "fin_first": {
+      "on_p99": 6.006,
+      "off_p99": 19.213
+    },
+    "payload_first": {
+      "on_p99": 0.105,
+      "off_p99": 14.863
+    }
+  },
+  "first_eager_accepted_count": 193,
+  "first_eager_failed_count": 0,
+  "bulk_4mib": {
+    "physical_ms": 34.26,
+    "direct_ms": 462.673,
+    "physical_upload_ms": 19.063,
+    "direct_upload_ms": 396.42,
+    "physical_download_ms": 11.731,
+    "direct_download_ms": 51.081,
+    "measured_trial_early_preconnect": false,
+    "observation": "THE_ORIGINAL_4M_DIRECT_TRIAL_IS_OFF; NO_CAUSAL_EAGER_BULK_REGRESSION_INFERENCE",
+    "sha_fin": "PASS"
+  },
+  "tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "sustained_total": 634,
+    "whole_direct_span": true
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "old_h1953_control": {
+    "source_sha": "acbc130775c3b1d7077b986db3a272c7d7fde738",
+    "physical_ms": 48.427,
+    "direct_ms": 120.698,
+    "not_same_source": true
+  },
+  "performance_judgment": "SCOPE_PASS_SMALL_FIRST_SEND_BULK_SAFETY_NOT_QUALIFIED",
+  "production_preconnect_enabled": false,
+  "full_plan029": "IN_PROGRESS"
+}

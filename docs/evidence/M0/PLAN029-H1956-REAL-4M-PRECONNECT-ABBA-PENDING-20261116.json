@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task": "H1956_TRUE_FOUR_BULK_ABBA",
+  "plan": "029",
+  "source_sha": "UNASSIGNED_UNTIL_COMMITTED",
+  "status": "NOT_RUN",
+  "last_genuine_source": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
+  "expected_one_original_wsl2_peer_physical_connections": 5,
+  "expected_four_real_direct_4mib": [
+    "on",
+    "off",
+    "off",
+    "on"
+  ],
+  "original_32k_precontrol": "ON",
+  "expected_384_small_qpc_each_policy": {
+    "on": 96,
+    "off": 96
+  },
+  "required": [
+    "all_four_4mib_exact_original_SHA_FIN",
+    "same_source_original_go_and_rust_and_wsl2",
+    "one_120_plus_continuous_tunnel_udp",
+    "same_windows_QPC_source_port_each_bulk",
+    "no_eager_errors",
+    "both_owned_stop"
+  ],
+  "hypothesis": "Does early physical connect help 4MiB without a material resource/throughput regression versus same-source OFF?",
+  "no_peak_claim_without_proof": true,
+  "normal_product_setting": "OFF"
+}

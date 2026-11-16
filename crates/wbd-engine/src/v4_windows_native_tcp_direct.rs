@@ -107,6 +107,14 @@ enum TcpPhase{
 // generation-owned NAT proxy port as the first authenticated Direct SYN.
 // No extra event handle/thread, no route changes or early inner ACK logic.
 struct PendingPhysical{socket:PhysicalTcpSocket,started_qpc:i64}
+// H1956: signed-only, original one 32KiB cold Direct control precedes
+// four unpaced 4MiB same-source ON/OFF/OFF/ON kernel TCP sessions.
+// The later 384 original small TCP flows retain exactly 96 ON/96 OFF
+// in EACH Linux echo-policy arm. Not a product configuration.
+fn signed_preconnect_on(ordinal:u64,bulk_abba:bool)->bool{
+    if bulk_abba && ordinal<=5{matches!(ordinal,1|2|5)}
+    else{ordinal%2==1}
+}
 struct Active{
     key:TcpNatKey,proxy_port:u16,phase:Option<TcpPhase>,
     last_activity_ms:u64,
@@ -276,6 +284,7 @@ pub(crate) struct NativeTcpActor{
     pending:HashMap<u16,(TcpNatKey,u64)>,
     pending_physical:HashMap<u16,PendingPhysical>,
     preconnect_signed:bool,
+    preconnect_bulk_abba:bool,
     preconnect_ordinal:u64,
     deadlines:VecDeque<(u16,u64)>,
     active:Vec<Active>,
@@ -370,10 +379,13 @@ impl NativeTcpActor{
             diagnosis.as_mut().ok_or(())?.preconnect_qpc_frequency=
                 reply_qpc_frequency().ok_or(())?;
         }
+        let preconnect_bulk_abba=signed_preconnect &&
+            std::env::var("WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE").ok()
+                .as_deref()==Some("1");
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
             pending_physical:HashMap::new(),preconnect_signed:signed_preconnect,
-            preconnect_ordinal:0,
+            preconnect_bulk_abba,preconnect_ordinal:0,
             deadlines:VecDeque::new(),active:Vec::new(),
             active_by_port:HashMap::new(),
             shard_ports:std::array::from_fn(|_|Vec::new()),
@@ -627,7 +639,7 @@ impl NativeTcpActor{
                 // Windows VM/source, never compare separate VM builds.
                 // A failed eager attempt keeps the old accept-time path.
                 self.preconnect_ordinal=self.preconnect_ordinal.saturating_add(1);
-                if self.preconnect_ordinal%2==1 {
+                if signed_preconnect_on(self.preconnect_ordinal,self.preconnect_bulk_abba) {
                     let dst=SocketAddrV4::new(Ipv4Addr::from(entry.real_dst),
                         entry.key.target_port);
                     let start=reply_qpc_now().unwrap_or(0);
@@ -1170,6 +1182,22 @@ impl NativeTcpActor{
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan029_h1956_signed_bulk_preconnect_abba_after_original_cold_direct(){
+        let choices=(1..=5).map(|n|signed_preconnect_on(n,true))
+            .collect::<Vec<_>>();
+        assert_eq!(choices,vec![true,true,false,false,true]);
+        // The four actual 4MiB sessions start after the old H1760
+        // 32KiB prewarm; same exact physical/fake address and Rust owner.
+        assert_eq!(&choices[1..],&[true,false,false,true]);
+        for offset in [6u64,198]{
+            assert_eq!((offset..offset+192)
+                .filter(|&n|signed_preconnect_on(n,true)).count(),96);
+        }
+        for n in 1..400{
+            assert_eq!(signed_preconnect_on(n,false),n%2==1);
+        }
+    }
     fn packet(src:u32,dst:u32,sport:u16,dport:u16,flags:u8)->[u8;40]{
         let mut p=[0u8;40];
         p[0]=0x45;p[2..4].copy_from_slice(&40u16.to_be_bytes());
