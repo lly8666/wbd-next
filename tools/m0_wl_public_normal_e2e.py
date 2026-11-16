@@ -2267,6 +2267,15 @@ print(json.dumps(result),flush=True)
     original_stop_log=(out/"client.log").read_text(errors="replace")
     p2["tcp_kernel_io_diagnostic"]=parse_kernel_io_final(original_stop_log)
     print("PLAN029_H1888_SIGNED_ORIGINAL_TCP_KERNEL_IO_FINAL_TYPED_AFTER_STOP",flush=True)
+    if os.environ.get("WBD_PLAN029_P2_STEADY_QPC_SCENE")=="1":
+     from m0_plan029_h1966_steady_qpc import analyze
+     steady=p2.get("steady_tcp_qpc")
+     if not isinstance(steady,dict):
+      raise RuntimeError("H1966 actual established TCP app data missing before Stop")
+     steady["same_source_steady_windows_qpc"]=analyze(
+         original_stop_log,steady,os.environ["GITHUB_SHA"])
+     steady["stop"]="PASS_BOTH_OWNED"
+     print("PLAN029_H1966_SIGNED_2048_STEADY_1K_REAL_WINDOWS_QPC_BOTH_OS_OWNED_STOP",flush=True)
     if os.environ.get("WBD_PLAN029_P2_REPLY_QPC_SCENE")=="1":
      from m0_plan029_h1945_reply_qpc import analyze
      measured=p2.get("small_tcp_latency")

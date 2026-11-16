@@ -17,7 +17,9 @@ use crate::v4_windows_native_dns_direct::DirectDns;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
-use crate::v4_windows_native_tcp_direct::{NativeTcpActor,safe_synthetic};
+use crate::v4_windows_native_tcp_direct::{
+    NativeTcpActor,safe_synthetic,reply_qpc_now,reply_qpc_frequency,
+};
 use crate::v4_windows_native_dns_client_tcp::NativeTcpDnsEndpoints;
 use crate::v4_client_split::FlowKey;
 use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
@@ -26,6 +28,32 @@ const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
 const MAX_DOMAIN_RULES:usize=20_000;
 const DEFAULT_SOFT_FLOWS:usize=4_096;
+const STEADY_TCP_DST_PORT:u16=46119;
+const STEADY_INGRESS_MAX:usize=8192;
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+struct SteadyIngressRow{
+    source_port:u16,seq:u32,payload_bytes:usize,
+    entry_qpc:i64,class_qpc:i64,nat_queued_qpc:i64,
+}
+struct SteadyIngressQpc{
+    frequency:i64,rows:Vec<SteadyIngressRow>,dropped:u64,
+}
+/// Do not equate kernel TCP segments with application messages.
+/// The signed analyzer matches an exact per-flow SEQUENCE / payload range.
+fn steady_payload_tcp(packet:&[u8])->Option<(u16,u32,usize)>{
+    if packet.len()<40||packet[0]>>4!=4||packet[9]!=6{return None}
+    let ihl=usize::from(packet[0]&15)*4;
+    if ihl<20||ihl+20>packet.len(){return None}
+    let total=usize::from(u16::from_be_bytes([packet[2],packet[3]]));
+    if total!=packet.len(){return None}
+    let port=u16::from_be_bytes([packet[ihl+2],packet[ihl+3]]);
+    if port!=STEADY_TCP_DST_PORT{return None}
+    let tcp=usize::from(packet[ihl+12]>>4)*4;
+    if tcp<20||ihl+tcp>=total{return None}
+    let src=u16::from_be_bytes([packet[ihl],packet[ihl+1]]);
+    let seq=u32::from_be_bytes(packet[ihl+4..ihl+8].try_into().ok()?);
+    Some((src,seq,total-ihl-tcp))
+}
 const MAX_HARD_FLOWS:usize=16_384;
 // Independent from live Direct flow hard cap. No eager socket or table slab.
 const MAX_FAKE_IDENTITIES:usize=60_000;
@@ -91,6 +119,8 @@ pub(crate) struct NativeSplitWorker {
     padding_enabled:bool,
     next_reverse_lane:usize,
     last_tick_ms:u64,
+    // Signed original Windows/WSL2 probe only; no always-on tracing.
+    steady_qpc:Option<SteadyIngressQpc>,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
     ->Result<(Vec<Ipv4Cidr>,Ranges),()>{
@@ -228,6 +258,15 @@ impl NativeSplitWorker {
                 ifindex:c.physical_ifindex,hard:c.direct_hard as usize,
                 fake_range:(start,end)})
         };
+        let steady_signed=cfg!(feature="m0_v4_probe") &&
+            std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+            std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1");
+        let steady_qpc=if steady_signed{
+            Some(SteadyIngressQpc{frequency:reply_qpc_frequency().ok_or(())?,
+                rows:Vec::with_capacity(STEADY_INGRESS_MAX),dropped:0})
+        }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
             udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,
@@ -238,7 +277,7 @@ impl NativeSplitWorker {
             },
             startup_padding:TunnelStartupPadding::new(StartupMode::Off,1),
             padding_enabled:false,
-            next_reverse_lane:0,last_tick_ms:0})
+            next_reverse_lane:0,last_tick_ms:0,steady_qpc})
     }
     /// Called exactly once from authenticated V3 cold attach. The
     /// generation's authenticated epoch seeds a NON-cryptographic window
@@ -420,9 +459,13 @@ impl NativeSplitWorker {
                 return NativeDecision::Tunnel
             }
         }
+        let probe=self.steady_qpc.as_ref()
+            .and_then(|_|steady_payload_tcp(packet));
+        let qpc_in=if probe.is_some(){reply_qpc_now().unwrap_or(0)}else{0};
         let fakes=&self.fakes;
         let action=self.ingress.on_ipv4_with_announced_fake(packet,now_ms,
             |ip|fakes.as_ref().and_then(|pool|pool.announced_real(ip)));
+        let qpc_class=if probe.is_some(){reply_qpc_now().unwrap_or(0)}else{0};
         match action{
             Ok(IngressAction::Tunnel)=>NativeDecision::Tunnel,
             Ok(IngressAction::Direct{real_dst,presented_dst})=>{
@@ -444,6 +487,21 @@ impl NativeSplitWorker {
                 if packet.get(9)==Some(&6){
                     let ok=self.tcp_enabled&&self.tcp.as_mut()
                         .is_some_and(|tcp|tcp.direct(packet,real_dst,now_ms).is_ok());
+                    if ok{
+                        if let (Some((source_port,seq,payload_bytes)),Some(s))=
+                            (probe,self.steady_qpc.as_mut()){
+                            let end=reply_qpc_now().unwrap_or(0);
+                            if qpc_in>0&&qpc_class>=qpc_in&&end>=qpc_class{
+                                if s.rows.len()<STEADY_INGRESS_MAX{
+                                    s.rows.push(SteadyIngressRow{
+                                        source_port,seq,payload_bytes,
+                                        entry_qpc:qpc_in,class_qpc:qpc_class,
+                                        nat_queued_qpc:end,
+                                    });
+                                }else{s.dropped+=1;}
+                            }
+                        }
+                    }
                     if !ok{
                         if let Some(key)=newly_held{self.retire_flow(key);}
                         else if presented_dst==real_dst{
@@ -629,9 +687,51 @@ impl NativeSplitWorker {
     }
 }
 
+impl Drop for NativeSplitWorker{
+    fn drop(&mut self){
+        let Some(trace)=self.steady_qpc.as_ref()else{return};
+        // Original owner Stop only. Strictly <=96 records per line, no
+        // app content, DNS, IPs or per-packet printf in the hot path.
+        let total=trace.rows.len();
+        for (index,part) in trace.rows.chunks(96).enumerate(){
+            let rows=part.iter().map(|r|format!(
+                "{}:{}:{}:{}:{}:{}",
+                r.source_port,r.seq,r.payload_bytes,
+                r.entry_qpc,r.class_qpc,r.nat_queued_qpc
+            )).collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1966_STEADY_INGRESS_QPC_FINAL frequency={} total={} dropped={} chunk={} count={} rows={} source=original_rust_wintun_tx_test_only",
+                trace.frequency,total,trace.dropped,index,part.len(),rows);
+        }
+        if total==0{
+            eprintln!("PLAN029_H1966_STEADY_INGRESS_QPC_FINAL frequency={} total=0 dropped={} chunk=0 count=0 rows= source=original_rust_wintun_tx_test_only",
+                trace.frequency,trace.dropped);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan029_h1966_steady_probe_accepts_only_genuine_tcp_payload_and_seq(){
+        let mut wire=vec![0u8;40+1024];
+        wire[0]=0x45;wire[9]=6;
+        let total=wire.len() as u16;
+        wire[2..4].copy_from_slice(&total.to_be_bytes());
+        wire[20..22].copy_from_slice(&41231u16.to_be_bytes());
+        wire[22..24].copy_from_slice(&STEADY_TCP_DST_PORT.to_be_bytes());
+        wire[24..28].copy_from_slice(&0xfedcba98u32.to_be_bytes());
+        wire[32]=0x50; // real 20-byte TCP header
+        assert_eq!(steady_payload_tcp(&wire),Some((41231,0xfedcba98,1024)));
+        wire[23]=0x20;
+        assert_eq!(steady_payload_tcp(&wire),None); // foreign target port
+        wire[23]=0x27;
+        wire[32]=0x40;
+        assert_eq!(steady_payload_tcp(&wire),None); // malformed TCP header
+        wire[32]=0x50;
+        wire[2..4].copy_from_slice(&40u16.to_be_bytes());
+        assert_eq!(steady_payload_tcp(&wire),None); // forged L3 length
+    }
     #[test]
     fn plan029_owned_reverse_reuses_exact_vec_allocation(){
         let packet=vec![0x45,1,2,3,4,5];let ptr=packet.as_ptr();

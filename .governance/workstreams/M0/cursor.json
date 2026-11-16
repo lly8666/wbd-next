@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1965,
-  "checkpoint_sha": "15d9890b7ee861288893272f1d72ef262b741c79",
+  "sequence": 1966,
+  "checkpoint_sha": "5ea3facc924d6e31226ccebcb1e14eb81250bdc6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1965: User explicitly prioritizes ordinary established single-TCP stream steady-state performance QPC; stop pursuing extreme CN/nonCN same-real-CDN-IP deep test as next gate. Source-locked H1958 4MiB still ~2x physical but not causally located; H1963 Windows Go DNS cold RUN/PASS, GUI build PASS; all full 029 exits OPEN.",
-  "why_now": "Existing signed QPC isolates first reply/connect, not steady-state message-level classification/NAT/mailbox/Windows kernel TCP socket progress. User rejects exotic CDN/DNS stress and requests precise extra latency rather than repeated 4MiB A/B.",
+  "current_task": "H1966: stage bounded signed-only Win32 steady TCP1KiB QPC in original Wintun on_packet class→NAT and established two WinSock legs; 2048 original Windows app QPC echoes over physical/Direct to same Linux kernel guest, strict Stop+byte joins. Native SOURCE CI pending, no perf claim; product preconnect OFF. Full PLAN029 OPEN.",
+  "why_now": "User rejects extreme shared-CDN/DNS stress; H1958 first-SYN QPC and 4x4MiB throughput cannot isolate steady-state Rust/Windows relay latency. Single normal established stream must expose classify/NAT/physical socket wait vs app RTT at same Windows QPC.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "FIRST: one normal-source original Windows/WSL2 established TCP, 1KiB ordered app echoes (~2000-4000), same Win QPC app send/recv + Wintun read→classify→NAT→mailbox→RX SendPacket and inner read→physical write, reverse physical read→inner write→Wintun→app. Phase+full RTT p50/p95/p99 and p99 queue ages; distinguish socket readiness waiting from Rust CPU, QPC clock only Windows; one same-run physical baseline. Sampled bounded signed-only trace, no high concurrency or repeated H1958 P2. CN/nonCN same-real-IP CDN case deprioritized NOT_RUN; remaining GUI/Game4/IPv6/D1-D5/P1-P2 OPEN.",
+  "next_action": "Run H1966 cheap parser/source gates and exact Windows/Linux Rust+Go compile, then one original same-SOURCE signed Win2025/WSL2 2048x1KiB QPC. Only if source-genuine Stop and every 1024B app/Rust join pass report p50/p95/p99; otherwise diagnose actual first failure. Do not rerun H1958 four-bulk or same-IP CDN stress.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
     "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
     "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md",
     "docs/devlog/M0/20261116-PLAN029-H1960-REUSE-ORIGINAL-D1-D2-AND-UNUSABLE-ONE-DNS-COLD-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md"
+    "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md"
   ],
   "open_requests": [],
-  "partial_summary": "User H1965 redirected PLAN029 toward ordinary steady-state per-message QPC latency and Windows/Rust attribution; no extreme same-real-IP CN/nonCN investigation. H1958 true Windows/WSL2 source ab224 first-write fast with preconnect ON, 4x4MiB ~2x physical and ON/OFF n2 inconclusive; product preconnect OFF. H1963 Go cold DNS invalid endpoint exact Windows RUN/PASS and GUI build only; full PLAN029 remains OPEN."
+  "partial_summary": "H1965 user pivot confirmed. H1966 signed-only bounded original Wintun on_packet/class/NAT and kernel inner/outer TCP QPC probe with real Windows/WSL2 one-connection 2048×1KiB and same-run physical baseline; source not yet measured, performance OPEN. H1958 4x4MiB small preconnect observations scoped; H1963 Windows Go DNS cold actual test PASS, GUI build only."
 }

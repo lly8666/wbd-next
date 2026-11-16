@@ -27,15 +27,24 @@ unsafe extern "system" {
     fn QueryPerformanceCounter(out:*mut i64)->i32;
     fn QueryPerformanceFrequency(out:*mut i64)->i32;
 }
-fn reply_qpc_now()->Option<i64>{
+pub(crate) fn reply_qpc_now()->Option<i64>{
     let mut q=0i64;
     (unsafe{QueryPerformanceCounter(&mut q)}!=0 && q>0).then_some(q)
 }
-fn reply_qpc_frequency()->Option<i64>{
+pub(crate) fn reply_qpc_frequency()->Option<i64>{
     let mut f=0i64;
     (unsafe{QueryPerformanceFrequency(&mut f)}!=0 && f>0).then_some(f)
 }
 const MAX_QPC_REPLY_ROWS:usize=1024;
+const STEADY_QPC_PORT:u16=46119;
+const STEADY_QPC_MAX_ROWS:usize=8192;
+#[derive(Clone,Copy,Debug)]
+struct SteadyQpcRow{
+    port:u16,turn_start:i64,inner_read:i64,outer_write:i64,
+    outer_read:i64,inner_write:i64,turn_end:i64,
+    inner_bytes:usize,outer_written:usize,outer_bytes:usize,
+    inner_written:usize,ready_age_ms:u64,
+}
 const MAX_READY:usize=256;
 const MAX_QUANTUM:usize=8;
 const MAX_L3:usize=65535;
@@ -233,6 +242,9 @@ struct TcpLegDiagnosis{
     preconnect_qpc_frequency:i64,
     preconnect_qpc_rows:Vec<(u16,bool,i64,i64)>,
     preconnect_started:u64,preconnect_failed:u64,
+    steady_qpc_frequency:i64,
+    steady_qpc_rows:Vec<SteadyQpcRow>,
+    steady_qpc_dropped:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -378,6 +390,18 @@ impl NativeTcpActor{
         if signed_preconnect{
             diagnosis.as_mut().ok_or(())?.preconnect_qpc_frequency=
                 reply_qpc_frequency().ok_or(())?;
+        }
+        // H1966 steady-state QPC is scoped to one established physical
+        // kernel TCP stream on :46119; ordinary product remains untouched.
+        let signed_steady=cfg!(feature="m0_v4_probe") &&
+            std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+            std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1");
+        if signed_steady{
+            let d=diagnosis.as_mut().ok_or(())?;
+            d.steady_qpc_frequency=reply_qpc_frequency().ok_or(())?;
+            d.steady_qpc_rows.reserve_exact(STEADY_QPC_MAX_ROWS);
         }
         let preconnect_bulk_abba=signed_preconnect &&
             std::env::var("WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE").ok()
@@ -875,6 +899,11 @@ impl NativeTcpActor{
                                         d.reply_path_qpc_frequency>0){
                                         relay.enable_signed_reply_path_qpc();
                                     }
+                                    if flow.key.target_port==STEADY_QPC_PORT &&
+                                        self.diagnosis.as_ref().is_some_and(|d|
+                                            d.steady_qpc_frequency>0){
+                                        relay.enable_signed_steady_qpc();
+                                    }
                                     relay.note_close_event(
                                         flow.close_hints[0],flow.close_hints[1]);
                                     // Even WITHOUT FD_CLOSE, a read-ready
@@ -922,6 +951,10 @@ impl NativeTcpActor{
                     let free=TCP_PENDING_POOL_LIMIT.saturating_sub(
                         self.resident_bytes.saturating_add(RELAY_SCRATCH_BYTES));
                     let half_close_before=pair.half_close_state();
+                    let steady_begin=if flow.key.target_port==STEADY_QPC_PORT &&
+                        self.diagnosis.as_ref().is_some_and(|d|d.steady_qpc_frequency>0){
+                            reply_qpc_now().unwrap_or(0)
+                        }else{0};
                     match pair.service_once_with_scratch(free,&mut scratch[..]){
                         Ok(tick)=>{
                             let after=pair.resident_bytes();
@@ -938,6 +971,28 @@ impl NativeTcpActor{
                             }
                             self.resident_bytes=retained;
                             if let Some(d)=self.diagnosis.as_mut(){
+                                if steady_begin>0 && (tick.inner_read>0||
+                                        tick.outer_write>0||tick.outer_read>0||
+                                        tick.inner_write>0){
+                                    if d.steady_qpc_rows.len()<STEADY_QPC_MAX_ROWS{
+                                        if let Some(q)=tick.steady_qpc{
+                                            d.steady_qpc_rows.push(SteadyQpcRow{
+                                                port:flow.key.source_port,
+                                                turn_start:steady_begin,
+                                                inner_read:q.inner_read_done,
+                                                outer_write:q.outer_write_done,
+                                                outer_read:q.outer_read_done,
+                                                inner_write:q.inner_write_done,
+                                                turn_end:reply_qpc_now().unwrap_or(0),
+                                                inner_bytes:tick.inner_read,
+                                                outer_written:tick.outer_write,
+                                                outer_bytes:tick.outer_read,
+                                                inner_written:tick.inner_write,
+                                                ready_age_ms,
+                                            });
+                                        }
+                                    }else{d.steady_qpc_dropped+=1;}
+                                }
                                 let half_close_after=pair.half_close_state();
                                 for state in 0..4{
                                     if !half_close_before[state] && half_close_after[state]{
@@ -1449,6 +1504,26 @@ impl Drop for NativeTcpActor{
             d.reply_outer_read_inner_write_same_turn,
             d.reply_outer_read_no_inner_write,
             d.reply_inner_write_deferred_turns);
+        if d.steady_qpc_frequency>0{
+            // Source-locked original Stop only, <=96 rows per log line.
+            // A positive kernel write is NOT evidence of Linux receipt.
+            let total=d.steady_qpc_rows.len();
+            for (index,part) in d.steady_qpc_rows.chunks(96).enumerate(){
+                let rows=part.iter().map(|r|format!(
+                    "{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}",
+                    r.port,r.turn_start,r.inner_read,r.outer_write,
+                    r.outer_read,r.inner_write,r.turn_end,r.inner_bytes,
+                    r.outer_written,r.outer_bytes,r.inner_written,r.ready_age_ms
+                )).collect::<Vec<_>>().join(",");
+                eprintln!("PLAN029_H1966_STEADY_LEGS_QPC_FINAL frequency={} total={} dropped={} chunk={} count={} rows={} source=original_rust_tcp_test_only",
+                    d.steady_qpc_frequency,total,d.steady_qpc_dropped,
+                    index,part.len(),rows);
+            }
+            if total==0{
+                eprintln!("PLAN029_H1966_STEADY_LEGS_QPC_FINAL frequency={} total=0 dropped={} chunk=0 count=0 rows= source=original_rust_tcp_test_only",
+                    d.steady_qpc_frequency,d.steady_qpc_dropped);
+            }
+        }
         if d.reply_qpc_frequency>0 {
             // No hot-path logs, payload, IPs, secrets or new timers.
             // The one bounded record is emitted only at original Stop.

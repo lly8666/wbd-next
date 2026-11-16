@@ -28,6 +28,10 @@ SUSTAIN=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 HIGH_RATE=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
 SMALL_TCP=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 LONG_RATE=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
+STEADY_QPC=os.environ.get("WBD_PLAN029_P2_STEADY_QPC_SCENE")=="1"
+if STEADY_QPC and (BULK or ABBA or PRECON_BULK or SMALL_TCP or
+                  SUSTAIN or HIGH_RATE or TCP128):
+    raise RuntimeError("H1966 ordinary 1KiB established-TCP QPC cannot mix bulk/stress/first-SYN")
 if LONG_RATE and not HIGH_RATE:
     raise RuntimeError("H1903 extended 2GiB/1.5GiB requires explicit high-rate signed source")
 # H1931 one source-locked original product does both diagnostics: small
@@ -474,6 +478,13 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         completed.write_text("direct-finished\n",encoding="ascii")
         wait(win,wn,23);wait(lin,ln,7)
         if not TCP128:wait(guest,gn,7)
+        steady=None
+        if STEADY_QPC:
+            # Do not reuse first-SYN, FIN-first or paced 1MiB phase times
+            # as settled data latency. The SAME original Windows Rust Wintun
+            # owner remains alive for a separate 2,048-message TCP stream.
+            from m0_plan029_h1966_steady_tcp_qpc import run_steady
+            steady=run_steady(root,out,physical,host_source,fake,unix,ready)
         base=proof(bn,"PLAN029_H1815_P2_TCP_CLIENT")
         # Preserve the historic P2 field, now one of the two B trials.
         # The full four-trial chain gets its OWN exact, signed receipt.
@@ -638,6 +649,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "sustained_direct_tcp":sustained,
                 "highrate_direct_tcp":highrate,
                 "small_tcp_latency":latency,
+                "steady_tcp_qpc":steady,
                 "tunnel_udp_covers_all_128":whole_tcp128,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}
