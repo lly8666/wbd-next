@@ -65,7 +65,23 @@ try:
     home=capture("home")
     choose(home,["superuser","超级用户"],"home")
     listing=capture("superuser")
-    choose(listing,[APP_LABEL.casefold(),PKG.casefold()],"superuser")
+    try:
+        choose(listing,[APP_LABEL.casefold(),PKG.casefold()],"superuser")
+        result["selection"]="ACCESSIBILITY_NODE"
+    except RuntimeError:
+        # KernelSU v3.3.1 Compose UI visually shows our app second row on this
+        # exact 320x640 fresh AVD, while uiautomator can expose only bottom tabs.
+        # This is a SINGLE package-specific visual-layout fallback, not grant.
+        # The next details page MUST explicitly identify our exact package
+        # before the grant switch can be touched.
+        size=adb("shell","wm","size").strip()
+        target=adb("shell","pm","path",PKG,check=False).strip()
+        texts=" ".join(n["text"]+" "+n["content-desc"] for n in listing).casefold()
+        if "320x640" not in size or not target.startswith("package:") or "superuser" not in texts:
+            raise RuntimeError("refuse coordinate fallback: unexpected AVD size, app package or UI state")
+        result["selection"]="APP_ROW_SECOND_320x640_VERIFY_ON_DETAIL"
+        adb("shell","input","tap","160","295")
+        time.sleep(3)
     detail=capture("app-detail")
     label=(APP_LABEL.casefold() in " ".join(n["text"]+" "+n["content-desc"] for n in detail).casefold()
            or PKG in " ".join(n["text"]+" "+n["content-desc"] for n in detail))
