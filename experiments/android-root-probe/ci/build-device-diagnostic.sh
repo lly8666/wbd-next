@@ -46,7 +46,7 @@ printf '%s\n' "$GITHUB_SHA" >"$out/assets/wbd-diagnostic-source.txt"
 grep -q "targetSdkVersion:'37'" "$out/badging.txt"
 grep -q "sdkVersion:'28'" "$out/badging.txt"
 grep -q "package: name='org.wbdnext.rootprobe'" "$out/badging.txt"
-"$tools/aapt2" dump xmltree "$out/device-diagnostic.apk" AndroidManifest.xml >"$out/manifest-xmltree.txt"
+"$tools/aapt2" dump xmltree --file AndroidManifest.xml "$out/device-diagnostic.apk" >"$out/manifest-xmltree.txt"
 grep -q 'extractNativeLibs' "$out/manifest-xmltree.txt"
 python3 - <<'PY'
 import hashlib,json,os,zipfile
