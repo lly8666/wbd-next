@@ -75,7 +75,7 @@ impl TunnelStartupPadding {
     // any business data. No per-flow accumulation or re-seal on replay.
     pub(crate) fn propose(&mut self,packet:&[u8],now_ms:u64,
         current_wire_room:usize)->usize {
-        if self.mode==StartupMode::Off||current_wire_room==0{return 0}
+        if self.mode==StartupMode::Off{return 0}
         let Some(key)=candidate(packet,self.mode==StartupMode::Tls)
             else{return 0};
         if !self.seen.contains_key(&key){
@@ -94,7 +94,8 @@ impl TunnelStartupPadding {
         flow.last_ms=now_ms;
         if now_ms.saturating_sub(flow.first_ms)>u64::from(flow.window_ms)||
             flow.count>=flow.max_records{return 0}
-        flow.count+=1;
+        flow.count+=1; // An eligible record with no MTU room still spends its slot.
+        if current_wire_room==0{return 0}
         let max=current_wire_room.min(MAX_RECORD_PAD);
         (next_random(&mut flow.state) as usize)%(max+1)
     }
@@ -180,6 +181,23 @@ mod tests{
         assert_eq!(p.propose(&fragment,5,500),0);
         let mut tls=TunnelStartupPadding::new(StartupMode::Tls,17);
         assert_eq!(tls.propose(&packet,5,500),0);
+    }
+    #[test]
+    fn no_mtu_room_still_spends_startup_slots_and_begins_window(){
+        let pkt=udp(4242);
+        let mut p=TunnelStartupPadding::new(StartupMode::Flows,333);
+        assert_eq!(p.propose(&pkt,100,0),0);
+        let key=candidate(&pkt,false).unwrap();
+        assert_eq!(p.seen[&key].first_ms,100);
+        assert_eq!(p.seen[&key].count,1);
+        for _ in 0..40{assert_eq!(p.propose(&pkt,101,0),0);}
+        assert_eq!(p.seen[&key].count,p.seen[&key].max_records);
+        assert_eq!(p.propose(&pkt,102,500),0,
+            "all first 20..30 records spent even if MTU had no pad room");
+        let other=udp(4243);
+        assert_eq!(p.propose(&other,200,0),0);
+        assert_eq!(p.propose(&other,3201,500),0,
+            "2..3s startup window starts with first eligible record");
     }
     #[test]
     fn fixed_256_flow_table_bounded_and_coarse_idle_reclaims(){
