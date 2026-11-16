@@ -98,6 +98,27 @@ start_avd() {
     tail -n 90 "out/ksu/emulator-$phase.log"
     exit 3
   fi
+  # Android sys.boot_completed can be published while system_server's
+  # PackageManager binder is still registering. An immediate adb install
+  # otherwise fails "Can't find service: package" before ANY Root test runs.
+  # This is a bounded AVD readiness check, not root authorization spoofing.
+  local package_ready=0
+  local package_deadline=$((SECONDS+95))
+  while (( SECONDS < package_deadline ));do
+    local check
+    check="$(adb shell pm path android 2>&1)" || true
+    printf '%s\n' "$check" >"out/ksu/package-ready-$phase.txt"
+    if grep -q '^package:' "out/ksu/package-ready-$phase.txt";then
+      package_ready=1;break
+    fi
+    sleep 2
+  done
+  if [[ "$package_ready" != 1 ]];then
+    echo "ENV_BLOCKED: Android PackageManager not ready after boot_completed in phase $phase"
+    adb shell service check package >"out/ksu/package-service-$phase.txt" 2>&1 || true
+    tail -n 55 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
   adb shell getenforce >"out/ksu/enforce-$phase.txt"
   adb shell uname -r >"out/ksu/kernel-$phase.txt"
   adb shell getprop ro.build.version.sdk >"out/ksu/api-$phase.txt"
