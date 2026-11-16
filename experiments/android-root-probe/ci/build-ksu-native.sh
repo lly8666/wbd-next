@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Compile ONE x86_64 ABI for the single KernelSU emulator end-to-end canary.
+set -euo pipefail
+cd "$GITHUB_WORKSPACE"
+rustup toolchain install 1.85.1 --profile minimal
+rustup target add --toolchain 1.85.1 x86_64-linux-android
+sdk="$ANDROID_HOME"
+ndk="$(find "$sdk/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
+bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+test -x "$bin/x86_64-linux-android28-clang"
+export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android28-clang"
+export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
+cargo +1.85.1 build --locked --release \
+ --manifest-path experiments/android-root-probe/Cargo.toml \
+ -p android-root-probe --target x86_64-linux-android
+mkdir -p out/native/bin
+cp experiments/android-root-probe/target/x86_64-linux-android/release/android-root-probe \
+ out/native/bin/probe-x86_64-linux-android
+file out/native/bin/probe-x86_64-linux-android >out/native/file.txt
+readelf -l out/native/bin/probe-x86_64-linux-android >out/native/elf.txt
+echo "$GITHUB_SHA" >out/native/SOURCE
+python3 - <<'PY'
+import hashlib,json,os
+from pathlib import Path
+p=Path("out/native")
+sha=lambda name:hashlib.sha256((p/name).read_bytes()).hexdigest()
+d={"schema":"android-ksu-app-uid-flow-native/v1","source":os.environ["GITHUB_SHA"],
+"abi":"x86_64-linux-android","min_api":28,"target_sdk":37,
+"binary_sha256":sha("bin/probe-x86_64-linux-android"),
+"native_mode":"appflow","test_scope":"one ephemeral AVD app UID destination /32"}
+(p/"manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True))
+PY
+(cd out/native && sha256sum bin/* SOURCE file.txt elf.txt manifest.json > SHA256SUMS)
+(cd out/native && sha256sum -c SHA256SUMS)
