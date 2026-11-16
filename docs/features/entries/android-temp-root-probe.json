@@ -10,13 +10,13 @@
     "experiment/android-temp-root-probe"
   ],
   "defaults": {
-    "implementation": "API28_29_32_33_34_35_36_TUN_RAW_LO_PASS; API30_31_OLD_FIXTURE_FAIL_PENDING_SOURCE66ab; API37_SDK_ENV_BLOCKED",
+    "implementation": "LIMITED_CAPABILITY_PROBE_COMPLETE: API28–36 AOSP adb-root TUN_UDP_AND_RAW_LO_SUPPORTED_IN_SCOPE; API37 ENV_BLOCKED; app-su/tether/physical NOT_RUN",
     "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
   "usage": {
     "cli": "android-root-probe [inspect|exercise]；inspect只读，exercise仅创建owned非持久TUN与loopback raw socket；不申请root",
-    "config": "SOURCE=66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925 build=43802134067/artifact14197020858 manifest=ecae5b4668a15af72d06dd8695718cfedf12fdbf25849319ee4cda61b478d800; successful API28,29,32,33,34,35,36; API30/31 retest pending, API37 sdkmanager blocked",
+    "config": "build SOURCE 66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925, Action43802134067/artifact14197020858/manifest ecae5b4668a15af72d06dd8695718cfedf12fdbf25849319ee4cda61b478d800; API28 source c7fa61412a02e0adff389e761308bb1147a35fa7, Action43801129305; exact all-version Actions and hashes in docs/devlog/android-root-probe/20261116-api-matrix.json",
     "gui": "本工作包未新增Kotlin壳；app→su、前台服务、网络回调均NOT_RUN，不是可连接客户端"
   },
   "code_refs": [
@@ -41,9 +41,26 @@
     "docs/devlog/android-root-probe/20261116-workpack-07.md",
     "docs/devlog/android-root-probe/20261116-workpack-08.md",
     "docs/devlog/android-root-probe/20261116-workpack-09.md",
-    "docs/devlog/android-root-probe/20261116-workpack-10.md"
+    "docs/devlog/android-root-probe/20261116-workpack-10.md",
+    "docs/devlog/android-root-probe/20261116-api-matrix.json",
+    "docs/devlog/android-root-probe/20261116-final-report.md",
+    "docs/devlog/android-root-probe/20261116-workpack-11.md"
   ],
   "verification": [
+    {
+      "platform": "Android 12 / API31 AOSP x86_64 Enforcing adb-root corrected filter",
+      "scope": "real owned TUN IPv4 UDP write38/read39, background IPv6 packet skipped, raw TCP lo SYN+RST and fd cleanup; no physical/shared network",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43803115102"
+    },
+    {
+      "platform": "Android 11 / API30 AOSP x86_64 Enforcing adb-root corrected filter",
+      "scope": "real owned TUN IPv4 UDP write38/read39, background IPv6 packet skipped, raw TCP lo SYN+RST and fd cleanup; no physical/shared network",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "66ab0d8a043bfc3e74ca8ecd4e4a91db7d9d0925",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43803115045"
+    },
     {
       "platform": "Android 16 / API36 AOSP x86_64 Enforcing adb-root corrected filter",
       "scope": "owned TUN IPv4 UDP write38/read39 with exact matching after one IPv6 packet; raw TCP loopback SYN/RST, MTU1400, fd cleanup; NOT physical",
@@ -165,7 +182,7 @@
     },
     {
       "platform": "Android9/API28至最新稳定版（当前17/API37）官方AVD",
-      "scope": "API29–36 (including 12L/API32) have not yet run, subject to canary gate; no whole-Android compatibility claim",
+      "scope": "完整热点/USB共享、转发与NAT、DNS/IPv6/CLAT、app→su与前台服务/切网、真机耗电全部NOT_RUN；这里的版本正例仅是自有TUN与loopback raw",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
