@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1948,
-  "checkpoint_sha": "4b61bef80ec4ec5e4f0e6973efb0142cb3695342",
+  "sequence": 1949,
+  "checkpoint_sha": "ad35662b5560cd482c95458539019531db89087c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1948 first genuine physical WinSock write/read QPC and original inner write QPC within one signed Direct P2 scene. Rust Windows two-leg relay cold test instrumentation, 384+384 app join helper. New SOURCE native NOT_RUN until original Action receipt; no forwarding or CPU claims.",
-  "why_now": "H1945 original 384/384 Win32 QPC shows app tail before Rust first inner write (p99 15.845–17.317ms), while inner write→app recv p99 <=0.476ms. One new differentiated hypothesis: physical outer RTT vs WinSock readiness/relay. H1947 P1 CN CPU noisy OPEN; do not rerun.",
+  "current_task": "H1949 collect H1948 source ad35662b cheap Python IndentationError line2278 before native scenario (not an app/network FAIL). Correct five indentation levels at original after-Stop H1948 join only; same bounded source-locked first physical write/read QPC scene must qualify on new SOURCE. Other rust builds H1948 in progress, no re-dispatch of old run.",
+  "why_now": "H1948 original Action43782225752 cheap workflow fails ast.parse line2278 (unexpected indent), Go+Rust native scene skipped. Fix exactly parser boundary, not network tuning. Preserve H1948 FAIL and historical H1945 QPC/P1 results.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1948 signed native P2 4MiB+2x384 TCP with Tunnel UDP and owned Stop, verify 384 physical first write/read/inner write QPC joins and native SOURCE; identify earliest abnormal segment, then targeted implementation. P1 CPU/GUI/Game4/IPv6/D1-D5 other exits remain OPEN.",
+  "next_action": "Collect existing H1948 component compile results; new H1949 one original signed P2 if cheap syntax and builds qualify. Source verify 384 physical-path joins, real TCP SHA/FIN, Tunnel UDP, owned Stop. On failure fix first distinct boundary, no duplicate long P2/10GiB.",
   "unverified": true,
   "last_tested_source": "bc6afde542c4daecee393745a982a590c9dba27f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1948-PENDING-PHYSICAL-QPC-20261116.json"
+    "docs/evidence/M0/PLAN029-H1949-H1948-PYTHON-FIRST-SYNTAX-FAIL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
     "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md",
     "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",
@@ -29,5 +30,5 @@
     "docs/devlog/M0/20261115-PLAN029-H1940-TX-STOP-TUN-NOTIFY-TCP-FAIR-WAIT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1945 384/384 true Windows QPC inner write→app p99 0.450–0.476ms; pre-write 15.845–17.317ms OPEN. H1947 P1 all/CN/CN/all four real business/Stop PASS CN4104, CPU CN+11.942% with 10.17% B drift OPEN. H1948 signed-only physical first write/read QPC newly authored, real SOURCE NOT_RUN."
+  "partial_summary": "H1948 ad35662b original native workflow preflight failed in tools/m0_wl_public_normal_e2e.py line2278 indentation; no real P2 test. Correct H1949 fixture-only indent, Rust QPC instrumentation unchanged; old H1945 384/384 and H1947 4-arm P1 scoped actual PASS retained, full PLAN029 OPEN."
 }

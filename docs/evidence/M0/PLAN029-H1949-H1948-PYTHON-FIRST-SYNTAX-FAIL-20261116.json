@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1949",
+  "source_sha": "ad35662b5560cd482c95458539019531db89087c",
+  "last_failed_workflow_run": 43782225752,
+  "job_id": 133021779170,
+  "first_boundary": "tools/m0_wl_public_normal_e2e.py:2278 IndentationError: unexpected indent",
+  "check": "python tools/check_workflows.py",
+  "old_source_native_network": "NOT_RUN",
+  "failure_class": "TEST_FIXTURE_SYNTAX_PRE_NETWORK",
+  "change": "align H1948 path-QPC after-Stop parser indentation only",
+  "corrected_source_native": "NOT_RUN_PENDING",
+  "retained_h1945_h1947": true,
+  "plan029": "IN_PROGRESS"
+}
