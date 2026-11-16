@@ -1,3 +1,6 @@
+# H1978 ONE normal Windows2025/WSL2 source-locked 2048x1KiB stall diagnosis
+# Original TX mailbox -> RX WintunSendPacket -> FD_READ QPC, retain real TCP retries
+# Test-only signed same-turn; no ordinary product change and no extreme CDN.
 # H1970 single original Windows2025/WSL2 steady 2048x1KiB QPC after H1969
 # doc-only push did not match on.push.paths: one SOURCE / one NativeOwner,
 # ordinary 1MiB paced P2 prerequisite; NO bulk/preconnect/CDN stress.

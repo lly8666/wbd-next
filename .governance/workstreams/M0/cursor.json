@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1977,
-  "checkpoint_sha": "9475e3ca34068e368cfba7ee73b71f5313df2e1d",
+  "sequence": 1978,
+  "checkpoint_sha": "c66d37a4f3dafa757150a3562699fd05a1ad745d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1977 signed-only boundary QPC instrumentation staged: original TCP 1024B proxy/source/seq TX channel acceptance, RX Wintun SendPacket call/return, actual WinSock FD_READ observation; bounded8192/owner, source mapped, duplicate TCP preserved in diagnostic sidecar BEFORE strict H1966 test. Product early preconnect/postflush OFF; no native H1977 receipt yet.",
-  "why_now": "H1974 real source bd611 failed original QPC on four true TCP retransmits and showed five Direct-only 61-63ms stalls between NAT (30us) and first kernel inner recv (~60ms). User says focus huge differences only. H1976 restored true FAIL and governance PASS. Instrument original missing TX/RX/FD_READ boundaries before guessing repair.",
+  "current_task": "H1978 queued one normal original Windows2025/WSL2 2048×1KiB same-source signed boundary QPC, with H1972 post-ingress8 signed mode to reproduce H1974 five 61ms Direct tails; H1977 cheap 6 synthetic tests/Windows Linux Rust/Go compile and Governance PASS. Original Action/metrics pending. H1974 source bd611 last true failed QPC until new real receipt; product preconnect/postflush OFF; full PLAN029 OPEN.",
+  "why_now": "User asks fix significant 60ms difference only. Original H1974 four repeat TCP segments plus fifth un-retransmitted 61ms request; H1977 instruments exact TX mailbox/RX WintunSendPacket/FD_READ boundaries under same Windows QPC. One real reproduction, no bulk stress.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "First H1977 cheap Python 6 synthetic parser tests, original Windows+Linux Rust compile and governance. If all green, one source-locked normal Win2025/WSL2 2048x1KiB with signed boundary marker; sidecar after genuine owned Stop even when original strict QPC still FAIL on retransmits. Then decide exact one large-delay event/wake fix, not submicrosecond NAT tuning.",
+  "next_action": "Collect signed H1978 exact original Win/WSL2 Action and sidecar after owned Stop; attribute severe >=8ms QPC windows to TX enqueue, RX SendPacket, Windows kernel/FD_READ/inner read. Keep original strict H1966 FAIL on duplicate seq, do not optimize until actual dominant interval established. No re-run or same CDN.",
   "unverified": true,
   "last_tested_source": "bd611192c397220d467a8330defce4e0d494ac04",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1975-H1974-NORMAL-STEADY-60MS-TCP-STALL-FAIL-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1978-ONE-REAL-2048X1K-BOUNDARY-QPC-60MS.md",
     "docs/devlog/M0/20261116-PLAN029-H1977-60MS-ORIGINAL-WINTUN-TX-RX-FDREAD-BOUNDARY-QPC.md",
     "docs/devlog/M0/20261116-PLAN029-H1976-RESTORE-FAIL-SOURCE-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1975-H1974-60MS-TCP-STALL-DIAGNOSIS.md",
     "docs/devlog/M0/20261116-PLAN029-H1974-REAL-POST-INGRESS-2048X1K-ONE-SOURCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md",
     "docs/devlog/M0/20261116-PLAN029-H1972-POST-INGRESS-EXACT-LOW-LATENCY.md",
-    "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1970-ONE-NATIVE-STEADY-QPC-EXPLICIT-PUSH-PATH.md"
+    "docs/devlog/M0/20261116-PLAN029-H1971-COLLECT-H1970-REAL-2048X1K-QPC-PER-STAGE.md"
   ],
   "open_requests": [],
-  "partial_summary": "Latest true H1974 source bd611 Action43808776053 original native FAIL QPC 4 duplicate retransmits; 5 Direct RTT 61-63ms, original 2048 app each 1KiB SHA/FIN/Stop PASS, postflush 5610 actual but perf not qualified. H1976 Governance and Feature PASS restored, no product change. H1977 source signed-only TX->RX Wintun/FD_READ QPC staged pending CI; full PLAN029 OPEN."
+  "partial_summary": "H1978 one original 2048×1KiB ordinary SOURCE-bound native diagnostic intended. H1977 code compiled and 6 parser synthetic tests pass, Governance PASS; H1974 latest actual original FAIL four TCP repeats and five 61–63ms Direct stalls, app SHA/Stop PASS; signed postflush 5610 but no performance proof. H1970 historic clean small RTT still separate source. PLAN029 OPEN."
 }
