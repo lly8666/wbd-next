@@ -259,7 +259,9 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertLess(S.index("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP"),
                         S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
         self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
-        self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win):',S)
+        self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
+  self.assertIn('p029_cdn_guest,p029_cdn_win=None',S)
+  self.assertIn('if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
         self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)
@@ -355,7 +357,8 @@ class NativeDirectOrder(unittest.TestCase):
         import ast
         ast.parse(S)
         self.assertIn('p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"',S)
-        self.assertIn('p029_tcp53_guest,p029_tcp53_win):',S)
+        self.assertIn('p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
+  self.assertIn('if p029_cdn:',S)
         self.assertIn('report["plan029_d1_original_app_tcp53"]["stop"]="PASS_BOTH_OWNED"',S)
         self.assertIn("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP",S)
         self.assertLess(S.index("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS"),
