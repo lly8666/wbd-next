@@ -320,43 +320,28 @@ impl DirectUdpActor{
         }
         let rc=unsafe{WSAPoll(self.poll_fds.as_mut_ptr(),quantum as u32,0)};
         if rc<0{return Err(NativeUdpFault::RemoteReceive)}
-        if rc==0{
-            // A signaled FD_READ could race with an empty WSAPoll. Clear
-            // only that exact event; non-signaled sockets cost no WSAEnum.
-            if let Some(i)=preferred{
-                let flow=&self.flows[i];
-                if let Some(w)=flow.wake.as_ref(){
-                    w.acknowledge(flow.socket.poll_socket())?;
-                }
-            }
+        if rc==0&&preferred.is_none(){
             self.scan_cursor=(self.scan_cursor+quantum)%count;
             return Ok(None)
         }
         for step in 0..quantum{
             let i=self.poll_indices[step];
             let flags=self.poll_fds[step].revents;
-            if flags&POLLRDNORM==0{
-                if flags&(POLLERR|POLLHUP|POLLNVAL)!=0{
-                    self.discard_index(i);
-                    return Err(NativeUdpFault::RemoteReceive)
-                }
-                if preferred==Some(i){
-                    let flow=&self.flows[i];
-                    if let Some(w)=flow.wake.as_ref(){
-                        w.acknowledge(flow.socket.poll_socket())?;
-                    }
-                }
-                continue
+            if flags&(POLLERR|POLLHUP|POLLNVAL)!=0{
+                self.discard_index(i);
+                return Err(NativeUdpFault::RemoteReceive)
             }
-            // One datagram per bounded turn. Acknowledge FD_READ AFTER
-            // recv; otherwise a manual event can remain signaled forever
-            // or lose the last datagram's next wake.
+            if flags&POLLRDNORM==0&&preferred!=Some(i){continue}
+            // WSAEnum must ACK the exact event BEFORE the nonblocking recv:
+            // recv re-arms level-triggered FD_READ even when more datagrams
+            // were queued. An event/WSAPoll race still attempts one recv;
+            // WouldBlock itself re-arms the next real packet event.
             let mut buf=[0u8;2048];
             let flow=&mut self.flows[i];
-            let result=flow.socket.receive_ready(&mut buf);
             if let Some(w)=flow.wake.as_ref(){
                 w.acknowledge(flow.socket.poll_socket())?;
             }
+            let result=flow.socket.receive_ready(&mut buf);
             let n=match result{
                 Ok(n)=>n,
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>continue,
@@ -445,6 +430,32 @@ mod tests{
             actor.note_socket_wake(0);
             assert!(actor.pending_wake.is_none());
         }
+    }
+    #[cfg(target_os="windows")]
+    #[test]
+    fn plan029_windows_udp_wake_two_queued_datagrams_rearm_after_each_recv(){
+        use std::net::UdpSocket;
+        use std::os::windows::io::AsRawSocket;
+        #[link(name="kernel32")]
+        extern "system"{fn WaitForSingleObject(handle:usize,ms:u32)->u32;}
+        let socket=UdpSocket::bind("127.0.0.1:0").unwrap();
+        socket.set_nonblocking(true).unwrap();
+        let fd=socket.as_raw_socket() as usize;
+        let wake=UdpReadWake::attach(fd).expect("WinSock event registration");
+        let peer=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let addr=socket.local_addr().unwrap();
+        peer.send_to(b"p1",addr).unwrap();
+        peer.send_to(b"p2",addr).unwrap();
+        let mut buf=[0u8;32];
+        // One registered FD_READ, then the first receive must re-arm a
+        // SECOND event for data that was already queued before that read.
+        assert_eq!(unsafe{WaitForSingleObject(wake.handle,1500)},0);
+        wake.acknowledge(fd).unwrap();
+        assert_eq!(socket.recv(&mut buf).unwrap(),2);
+        assert_eq!(unsafe{WaitForSingleObject(wake.handle,1500)},0);
+        wake.acknowledge(fd).unwrap();
+        assert_eq!(socket.recv(&mut buf).unwrap(),2);
+        assert_ne!(unsafe{WaitForSingleObject(wake.handle,0)},0);
     }
     #[test]
     fn plan029_actor_never_sends_local_fake_or_raw_dns53_on_physical_socket(){
