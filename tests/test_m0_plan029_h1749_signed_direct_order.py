@@ -304,11 +304,14 @@ class NativeDirectOrder(unittest.TestCase):
     def test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env(self):
         import ast
         ast.parse(S)
-        self.assertIn('peer,host_source,"2" if p029_multia else "1" if p029_cache else "0"]',S)
+        self.assertIn('peer,host_source,"3" if p029_udp_rtt else "2" if p029_multia else "1" if p029_cache else "0"]',S)
+        self.assertIn('p029_udp_rtt=os.environ.get("WBD_PLAN029_DIRECT_UDP_RTT_SCENE")=="1"',S)
         guest=(Path(__file__).resolve().parents[1]/"tools"/
                "m0_plan029_h1745_guest_dns_direct.py").read_text()
         ast.parse(guest)
-        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2"):',guest)
+        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2","3"):',guest)
+        self.assertIn('ping_mode=sys.argv[3]=="3"',guest)
+        self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
         self.assertIn('multia_mode=sys.argv[3]=="2"',guest)
         self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
         self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',guest)

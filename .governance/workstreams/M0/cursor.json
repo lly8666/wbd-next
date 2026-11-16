@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1999,
-  "checkpoint_sha": "7c26f38c5baf253ccf4a9f5805ab6ba0ed214af0",
+  "sequence": 2000,
+  "checkpoint_sha": "412bef6a2431f882aea37a74bcef57e10ce43714",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1999 bounded original Windows/WSL2 native 96B/512B/1200B Direct UDP RTT p50/p95/p99/max versus same-VM physical socket; H1997 source e200 original TCP steady Action SUCCESS, H1998 source7c26 unpaced4MiB Action in flight. No product code.",
-  "why_now": "User requests several ordinary Direct latency workloads. Original Direct UDP has one true business response but no p99; add test-only 120-sample/size/arm application RTT with strict two-OS unique receipts.",
+  "current_task": "H2000 repair only H1999 cheap test source literal for explicit guest UDP mode3, while retaining cold cache modes 0/1/2, one SOURCE signed real H1999 scenario rerun; H1998 4MiB still running.",
+  "why_now": "H1999 original Action43858589556 cheap FAIL at test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env: old assertion requires exactly modes0/1/2, new test-only bounded UDP RTT is explicit mode3. No native network was run. Correct the stale static proof, never reclassify original Action.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect both in-flight native H1998 unpaced4MiB and new H1999 3-size UDP, preserve FAIL/Stop; then compare with actual H1997 1KiB established RTT and existing H1995 paced mixed evidence. No extreme load or speculative tuning.",
+  "next_action": "Collect H1998 original 4MiB native and H2000 rerun exactly one original signed Direct UDP 3-size RTT; no additional resource/higher-rate dispatch. Log source-specific first failures and Stop; keep H1999 cheap FAIL.",
   "unverified": true,
   "last_tested_source": "5add3e6903faa8ed2f9116350067b9fa2563d5be",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H1996-H1995-REAL-NORMAL-P2-COLLECT-AND-P99-PRIORITY-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H2000-H1999-UDP-STATIC-PREFLIGHT-FIX.md",
     "docs/devlog/M0/20261116-PLAN029-H1999-REAL-DIRECT-UDP-RTT-3SIZE.md",
     "docs/devlog/M0/20261116-PLAN029-H1998-UNPACED-DIRECT-TCP-4M-COMPARATOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1997-DIRECT-ORDINARY-1K-RTT-SOURCE-TRIGGER.md",
     "docs/devlog/M0/20261116-PLAN029-H1996-COLLECT-P2-FOCUS-RELATIVE-DIRECT-P99.md",
     "docs/devlog/M0/20261116-PLAN029-H1995-FIX-TRUE-RECV-BOUNDARY-ONLY.md",
     "docs/devlog/M0/20261116-PLAN029-H1994-STRICT-SOURCE-POINTER-REPAIR.md",
-    "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md",
-    "docs/devlog/M0/20261116-PLAN029-H1992-COLLECT-REAL-NORMAL-AND-THREE-PERF-COMPONENTS.md"
+    "docs/devlog/M0/20261116-PLAN029-H1993-ORDINARY-P2-128K-PROGRESS-GAPS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1997 original Windows signed 1KiB steady Action43855958211 success; physical/Direct app RTT p99 0.410/0.699ms, max0.649/0.878ms; 1MiB physical305.854 Direct304.072ms, Tunnel UDP p99 4.682ms. H1998 4MiB in progress. H1999 UDP 3size 120 per arm NOT_RUN until original Action."
+  "partial_summary": "H1997 original Windows+WSL2 1KiB Direct p99 0.699ms vs 0.410 physical, max 0.878 vs0.649, appSHA/FIN/Stop PASS. H1998 native 4MiB still in flight. H1999 Action43858589556 FAIL prior to native due static test refusing mode3; H2000 fixes test contract only and triggers one signed native UDP RTT rerun."
 }
