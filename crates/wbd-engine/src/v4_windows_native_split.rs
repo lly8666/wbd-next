@@ -592,14 +592,12 @@ impl NativeSplitWorker {
                     .and_then(|l3|if l3.len()<=out.len(){
                         Some(NativeReverse::Owned(l3))
                     }else{None}),
-                1=>{
-                    if !self.dns.has_work(){None}else{
-                        self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
-                        self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
-                            Some(NativeReverse::Owned(l3))
-                        }else{None})
-                    }
-                },
+                // DNS I/O was polled once by tick() at the start of this
+                // original TX owner turn. Reverse packet dequeue must NOT
+                // re-run WSAPoll or allocate per unrelated UDP/TCP packet.
+                1=>self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
+                    Some(NativeReverse::Owned(l3))
+                }else{None}),
                 _=>self.udp.poll_reverse_ready(out,now_ms).ok()
                     .flatten().map(NativeReverse::InScratch),
             };
@@ -619,6 +617,13 @@ impl NativeSplitWorker {
         if let (Some(pool),Some(journal))=
             (self.fakes.as_mut(),self.journal.as_mut()){
             journal.poll_completed(pool,8);
+        }
+        // One DNS network poll per original TX turn, independent of how
+        // many Direct TCP/UDP/DNS returns the fair 32-packet RX handoff
+        // drains. This removes repeated WSAPoll and Vec allocations from
+        // other flows' latency path without a timer or new socket worker.
+        if self.dns.needs_poll(){
+            self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
         }
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
@@ -812,6 +817,37 @@ mod tests{
         assert!(owned.len()>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
+    }
+    #[test]
+    fn plan029_ready_dns_drain_never_repolls_one_pending_socket_per_packet(){
+        let mut cfg=config(&[],&[],b"");
+        cfg.route_mode=0;
+        let mut owner=unsafe{NativeSplitWorker::new(&cfg)}.unwrap();
+        let mut dns=vec![0u8;12];
+        dns[2..4].copy_from_slice(&0x0100u16.to_be_bytes());
+        dns[4..6].copy_from_slice(&1u16.to_be_bytes());
+        dns.extend_from_slice(b"\x02cn\x07example\x00\x00\x01\x00\x01");
+        let request=packet([1,1,1,1],53,&dns);
+        // Produce genuine bounded local error replies without touching a
+        // physical resolver socket or a Wintun ring. These are ready-only
+        // packets; repeated dequeue cannot justify another DNS WSAPoll.
+        for _ in 0..8{
+            assert!(owner.reject_tunnel_dns(&request));
+        }
+        assert_eq!(owner.dns.poll_invocations(),0);
+        owner.tick(1);
+        assert_eq!(owner.dns.poll_invocations(),0);
+        let mut bytes=[0u8;2048];
+        for _ in 0..8{
+            let Some(NativeReverse::Owned(reply))=
+                owner.poll_udp_reverse(&mut bytes,1)else{
+                panic!("original DNS reverse packet was lost");
+            };
+            assert_eq!(reply[31]&15,2); // exact local SERVFAIL
+        }
+        assert!(owner.poll_udp_reverse(&mut bytes,1).is_none());
+        assert_eq!(owner.dns.poll_invocations(),0);
+        assert!(!owner.has_udp_flows());
     }
     #[test]
     fn plan029_all_tunnel_reverse_idle_skips_only_empty_real_work(){
