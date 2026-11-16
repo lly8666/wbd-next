@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 public final class ProbeActivity extends Activity {
   private static final String TAG="WBD_APP_SU";
-  private static final String SU="/system/xbin/su";
+  private static final String SU="su";
   private static final String NATIVE="/data/local/tmp/wbd-app-native";
   private TextView text;
   private static String read(String path,int length) {
@@ -32,7 +32,7 @@ public final class ProbeActivity extends Activity {
     j.put("execution_path","ordinary installed APK app UID -> existing su -c");
     String command="id; cat /proc/self/attr/current; grep '^CapEff:' /proc/self/status; "+
       "if [ \"$(id -u)\" != 0 ]; then exit 43; fi; "+
-      NATIVE+" inspect; "+NATIVE+" exercise";
+      NATIVE+" exercise";
     long start=SystemClock.elapsedRealtime();
     java.lang.Process p=null;
     try {
@@ -58,14 +58,27 @@ public final class ProbeActivity extends Activity {
       j.put("su_exit",finished?p.exitValue():-1);
       j.put("su_stdout_stderr",stdout);
       j.put("elapsed_ms",SystemClock.elapsedRealtime()-start);
-      if(!finished)j.put("status","AUTH_TIMEOUT");
-      else if(p.exitValue()==0 && stdout.contains("uid=0(") &&
-        stdout.contains("\"mode\": \"inspect\"") &&
-        stdout.contains("\"mode\": \"exercise\"") &&
-        stdout.contains("SUPPORTED_IN_SCOPE"))
-          j.put("status","APP_SU_NATIVE_EXERCISE_PASS");
+      boolean nativeProof=false;
+      if(finished && p.exitValue()==0 && stdout.contains("uid=0(")) {
+        try {
+          JSONObject report=new JSONObject(stdout.substring(stdout.indexOf('{')));
+          JSONObject identity=report.optJSONObject("identity");
+          JSONObject checks=report.optJSONObject("checks");
+          JSONObject tun=checks==null?null:checks.optJSONObject("tun");
+          JSONObject raw=checks==null?null:checks.optJSONObject("raw_tcp");
+          String tunStatus=tun==null?"NOT_RUN":tun.optString("status");
+          String rawStatus=raw==null?"NOT_RUN":raw.optString("status");
+          j.put("native_tun_status",tunStatus);
+          j.put("native_raw_status",rawStatus);
+          nativeProof=identity!=null && identity.optInt("uid",-1)==0 &&
+            "SUPPORTED_IN_SCOPE".equals(tunStatus) &&
+            "SUPPORTED_IN_SCOPE".equals(rawStatus);
+        } catch(Exception e) { j.put("native_json_error",e.toString()); }
+      }
+      if(!finished) j.put("status","AUTH_TIMEOUT");
+      else if(nativeProof) j.put("status","APP_SU_NATIVE_EXERCISE_PASS");
       else if(p.exitValue()==0 && stdout.contains("uid=0("))
-          j.put("status","APP_SU_UID0_NATIVE_UNVERIFIED");
+        j.put("status","APP_SU_UID0_NATIVE_UNVERIFIED");
       else j.put("status","PERMISSION_DENIED_OR_UNAVAILABLE");
     } catch(IOException e) {
       j.put("status","SU_EXEC_UNAVAILABLE");
