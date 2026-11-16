@@ -9,6 +9,9 @@ on:
       - "experiments/android-root-probe/probe/src/main.rs"
       - "experiments/android-root-probe/ci/build-ksu-native.sh"
       - "experiments/android-root-probe/ci/appflow-case.sh"
+      - "experiments/android-root-probe/probe/src/mainstream.rs"
+      - "experiments/android-root-probe/ci/mainstream-case.sh"
+      - "experiments/android-root-probe/ci/underlay-echo.py"
       - "experiments/android-root-probe/ci/appflow-crash-case.sh"
       - "experiments/android-root-probe/ci/ksu-prepare-avd.sh"
       - "experiments/android-root-probe/ci/ksu-boot-and-test.sh"
@@ -54,6 +57,7 @@ jobs:
             out/ksu/*.log
             out/ksu/*.png
             out/appflow/
+            out/mainstream/
             out/appflow-crash/
             out/native/SOURCE
             out/native/SHA256SUMS
