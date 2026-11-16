@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1980,
-  "checkpoint_sha": "b7a3339f9b31074486310ce5f794022f152afb13",
+  "sequence": 1981,
+  "checkpoint_sha": "831754407fa7d25b480aab841b2133436fa1ac48",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1980 recovered main b7a H1979 preflight: signed QPC 8/8 and Win Go/Linux+Win Rust/governance PASS, original native NOT_RUN. Original H1978 true Win/WSL2 app SHA/Stop PASS but Action43817058020 stage19 FAIL false send-return causal check, status retained. H1974 five 61ms stalls unresolved. No new dispatch, PLAN029 OPEN.",
-  "why_now": "Collect existing completed source and restore accurate CI vs product/native status without duplicating prior H1848 and H1978 network scenes.",
+  "current_task": "H1981 metadata repair: original H1980 main Action43823044139 Governance/FeatureCatalog FAIL first boundary SCOPE_AUDIT_FAILED unbounded context_refs (9>8). Keep original FAIL, reduce to 8 existing refs. H1979 true 8/8 build preflight PASS; current signed native NOT_RUN. H1974 61ms OPEN, PLAN029 OPEN.",
+  "why_now": "First introduced governance error, no product/network failure. Original H1980 Action red cannot be waived, 121 FeatureCatalog/test fixtures passed but governance validate failed; exact policy max_cursor_refs=8.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
   "next_action": "Prioritize first missing real WinForms GUI Connect/Stop + Direct/Tunnel effective evidence or Game4 CN single Rust ingress; only revisit H1974 tail with distinct falsifiable RX/FD_READ wake boundary, then source-locked D1–D5/P1–P2/IPv6/pressure/padding. No 028 matrix/030.",
   "unverified": true,
@@ -25,9 +25,8 @@
     "docs/devlog/M0/20261116-PLAN029-H1976-RESTORE-FAIL-SOURCE-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261116-PLAN029-H1975-H1974-60MS-TCP-STALL-DIAGNOSIS.md",
     "docs/devlog/M0/20261116-PLAN029-H1974-REAL-POST-INGRESS-2048X1K-ONE-SOURCE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md",
-    "docs/devlog/M0/20261116-PLAN029-H1972-POST-INGRESS-EXACT-LOW-LATENCY.md"
+    "docs/devlog/M0/20261116-PLAN029-H1973-POST-INGRESS-FIRST-PROBE-ORDER-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1979 QPC/preflight GREEN but native NOT_RUN; H1978 original native FAIL unchanged; H1974 61ms remains OPEN. Product 029 D1–D5/P1–P2/GUI/Game4/IPv6/resources/padding still incomplete."
+  "partial_summary": "H1980 governance run43823044139 FAIL unbounded 9 context_refs; fixed schema count to 8 in H1981. H1979 preflight success native NOT_RUN, H1978 native FAIL retained, H1974 latency OPEN."
 }

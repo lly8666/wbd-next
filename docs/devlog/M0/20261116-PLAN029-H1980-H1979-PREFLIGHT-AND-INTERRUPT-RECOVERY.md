@@ -9,3 +9,7 @@
 ```feature-impact
 {"kind":"updated","ids":["dns-split-ipv6"],"reason":"Source-locked H1979 QPC 8/8 and Go/Rust/Governance preflight PASS, native NOT_RUN; preserve H1978 original FAIL and H1974 tail OPEN, no new dispatch."}
 ```
+
+## H1981｜原 H1980 治理首错（保留失败）
+
+[H1980 原治理 Action43823044139](https://github.com/lly8666/wbd-next/actions/runs/43823044139) **FAIL**，Governance job133150314404 的第一个异常为 `SCOPE_AUDIT_FAILED: unbounded context_refs`：H1980 cursor 写入9条 `context_refs`，超过 `.governance/policy.json:max_cursor_refs=8`。Feature catalog job133150313821 亦 FAIL，尽管其 121 项单元测试均通过，后续 `tools/governance.py validate` 同样失败。H1981 仅把 context 引用缩为8条有效现有文档、cursor序号推进；原Action红灯与 H1978 native 红灯都保留，不把治理当联网PASS。本修复发布时新 SOURCE 的 CI/实网一律 NOT_RUN。
