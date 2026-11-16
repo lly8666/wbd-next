@@ -60,11 +60,11 @@
  ],
  "verification": [
   {
-   "platform": "Android9/API28 and Android16/API36 canary then 12L/API32 isolated netns routegate",
-   "scope": "Pending only: distinct lo-only unshare(CLONE_NEWNET) prerequisite; one private fwmark rule+route and owned TUN packet positive/unmarked negative; ENV_BLOCKED if isolation denied",
-   "status": "PLANNED",
-   "source_sha": null,
-   "evidence": null
+   "platform": "AOSP API28 + API36 private-netns routegate initial source",
+   "scope": "Distinct CLONE_NEWNET did succeed, but mount-pinned /sys/class/net falsely included host devices; conservative preflight blocked BEFORE any route/TUN write, API32 skipped. Corrected SRC rerun pending.",
+   "status": "NOT_RUN",
+   "source_sha": "a40fbc0b94512c4702a0724f81d3248a9a9683e3",
+   "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43808360345"
   },
   {
    "platform": "Android9 API28 AOSP x86_64 adb-root Enforcing, 21 capability gates",

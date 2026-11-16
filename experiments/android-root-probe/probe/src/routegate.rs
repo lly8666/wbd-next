@@ -18,7 +18,9 @@ fn tun()->io::Result<(File,String)>{
         .find(|x|Path::new(x).exists())
         .ok_or_else(||io::Error::new(ErrorKind::NotFound,"no TUN device"))?;
     let name=format!("wbdn{:05x}",std::process::id()%0xfffff);
-    if Path::new(&format!("/sys/class/net/{name}")).exists(){
+    // /sys/class/net may reflect the mount namespace rather than this network namespace;
+    // query the kernel netlink view in the current namespace instead.
+    if ip(&["link","show","dev",&name]).is_ok(){
         return Err(io::Error::new(ErrorKind::AlreadyExists,"TUN collision"));
     }
     let f=OpenOptions::new().read(true).write(true)
@@ -82,8 +84,18 @@ fn fixture(f:&File,name:&str)->io::Result<Value>{
     }
     if matched==0{return Err(io::Error::new(ErrorKind::TimedOut,
         format!("no marked packet on owned TUN; ignored={ignored}")));}
-    let mtu=fs::read_to_string(format!("/sys/class/net/{name}/mtu"))?;
-    if mtu.trim()!="1400"{return Err(io::Error::new(ErrorKind::Other,"MTU mismatch"));}
+    // SIOCGIFMTU is namespace-aware; sysfs can still show the original Android mount.
+    const SIOCGIFMTU_LINUX:libc::c_ulong=0x8921;
+    let sock=unsafe{libc::socket(libc::AF_INET,libc::SOCK_DGRAM|libc::SOCK_CLOEXEC,0)};
+    if sock<0{return Err(io::Error::last_os_error());}
+    let guard=super::Fd(sock);
+    let mut ifr=[0u8;40];
+    ifr[..name.len()].copy_from_slice(name.as_bytes());
+    let rc=unsafe{libc::ioctl(sock,SIOCGIFMTU_LINUX as _,ifr.as_mut_ptr())};
+    if rc<0{return Err(io::Error::last_os_error());}
+    let mtu=i32::from_ne_bytes(ifr[16..20].try_into().unwrap());
+    drop(guard);
+    if mtu!=1400{return Err(io::Error::new(ErrorKind::Other,"namespace TUN MTU mismatch"));}
     Ok(json!({"unmarked_negative":true,"marked_udp_tun_read_bytes":matched,
         "SO_MARK_readback":got,"mtu_readback":1400,"ignored_packets":ignored,
         "scope":"private netns route table235/rule12000 only; not Android netd/NAT/tether"}))
@@ -109,21 +121,21 @@ pub(super) fn run()->Value{
     };
     if before==after{return json!({"status":"FAIL","action":"namespace not distinct",
         "before":before,"after":after,"global_changes":false});}
-    let mut interfaces=Vec::new();
-    match fs::read_dir("/sys/class/net"){
-        Ok(xs)=>for x in xs.flatten(){
-            if let Some(n)=x.file_name().to_str(){interfaces.push(n.to_owned());}
-        },
-        Err(e)=>return json!({"status":"ENV_BLOCKED","action":"network namespace inventory",
+    // Android /sys/class/net is mounted from a different mount namespace: its device
+    // list is NOT a valid new-netns emptiness test. /proc/net/route is per-process netns.
+    let route_before=match fs::read_to_string("/proc/net/route"){
+        Ok(x)=>x,
+        Err(e)=>return json!({"status":"ENV_BLOCKED",
+            "action":"read private namespace IPv4 main FIB",
             "errno":e.raw_os_error(),"global_changes":false,"route":"NOT_RUN"}),
+    };
+    if route_before.lines().skip(1).any(|s| !s.trim().is_empty()){
+        return json!({"status":"ENV_BLOCKED",
+            "action":"new namespace has preexisting IPv4 main routes",
+            "route_count":route_before.lines().count().saturating_sub(1),
+            "before":before,"after":after,"global_changes":false,"route":"NOT_RUN"});
     }
-    interfaces.sort();
-    if interfaces.len()!=1 || interfaces[0]!="lo"{
-        return json!({"status":"ENV_BLOCKED","action":"netns not empty lo-only",
-            "interfaces":interfaces,"before":before,"after":after,
-            "global_changes":false,"route":"NOT_RUN"});
-    }
-    // No netlink mutation is reachable above this exact distinct-netns + lo-only guard.
+    // No netlink mutation reachable above the distinct-netns AND empty FIB guard.
     let (f,name)=match tun(){
         Ok(x)=>x,
         Err(e)=>return json!({"status":"FAIL","action":"create only private owned TUN",
@@ -131,10 +143,11 @@ pub(super) fn run()->Value{
     };
     let v=fixture(&f,&name);
     drop(f);
-    let clean=!Path::new(&format!("/sys/class/net/{name}")).exists();
+    // Namespace-aware RTNL query rather than mount-pinned sysfs.
+    let clean=ip(&["link","show","dev",&name]).is_err();
     match v{
         Ok(data) if clean=>json!({"status":"SUPPORTED_IN_SCOPE","before":before,
-            "after":after,"interfaces_before":["lo"],"evidence":data,
+            "after":after,"fib_before":"empty /proc/net/route","evidence":data,
             "cleanup":"owned TUN interface gone; private namespace exits with process",
             "global_changes":false,"real_netd_nat_tether":"NOT_RUN"}),
         Ok(data)=>json!({"status":"FAIL","action":"owned cleanup","evidence":data,

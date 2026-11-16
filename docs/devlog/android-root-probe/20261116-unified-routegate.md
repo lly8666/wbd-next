@@ -21,3 +21,13 @@ SOURCE a40fbc0b94512c4702a0724f81d3248a9a9683e3 hit governance FAIL: the feature
 ```feature-impact
 {"kind":"updated","ids":["android-temp-root-probe"],"reason":"Fit the complete source-specific verification card within 16KiB by compact layout and removing redundant prose; historical failures, PASS and NOT_RUN evidence remain in committed reports."}
 ```
+
+## Routegate canary source-specific correction
+
+SOURCE a40fbc0b94512c4702a0724f81d3248a9a9683e3: single native build Action 43808360398 SUCCESS, both API28 and API36 canaries Action 43808360345 reported **ENV_BLOCKED**; API32 skipped. Exact /proc/self/ns/net IDs did change (unshare succeeded). The preflight incorrectly checked /sys/class/net and found system eth0/radio0/wlan0, because Android's sysfs mount exposes the original mount-netns view; NO private TUN or rule was created and both global route/rule snapshots matched. Preserve this outcome; it is not a failed unshare or unsupported kernel policy routing conclusion.
+
+This corrected SOURCE uses per-netns /proc/net/route to require an empty IPv4 FIB after exact distinct namespace verification, and uses namespace-aware RTNL link existence and SIOCGIFMTU ioctl instead of mounted sysfs for owned TUN cleanup/MTU. If namespace has existing routes, stop without writes. The only new route, mark, and packet are still strictly within the verified private namespace, never Android global routing. Build once and rerun only API28/36 canaries, API32 after success.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Preserve SOURCE a40fbc0 API28/36 ENV_BLOCKED due to mount-pinned sysfs preflight; correct private-netns inventory and cleanup via per-netns proc route and RTNL, no global route writes or product promotion."}
+```
