@@ -158,7 +158,7 @@ fn spawn_watch(uid:&str,name:&str,token:&str,crash:bool)->io::Result<WatchGuard>
 fn stop(uid:u32,status:&str,why:&str)->Value{
  json!({"schema":"android-app-uid-route/v1","mode":"appflow","status":status,"app_uid":uid,"reason":why,"global_changes":false})
 }
-pub fn run(uid:u32,token:&str,crash:bool)->Value{
+pub fn run(uid:u32,token:&str,crash:bool,mainstream:bool)->Value{
  if unsafe{libc::getuid()}!=0||uid<10000||uid>199999||token.is_empty()||token.len()>64||
   !token.bytes().all(|c|c.is_ascii_alphanumeric()||c==b'_'||c==b'-'){
   return stop(uid,"FAIL","UID0 or app UID/token constraints not met")
@@ -219,7 +219,11 @@ pub fn run(uid:u32,token:&str,crash:bool)->Value{
        packet.as_ptr().cast(),packet.len())};
    if wrote<0{return Err(io::Error::last_os_error())}
    if wrote as usize!=packet.len(){return Err(io::Error::new(ErrorKind::WriteZero,"short UDP TUN return packet"))}
+   let mainstream_evidence=if mainstream {
+     Some(super::mainstream::serve(owned.tun.as_ref().unwrap().as_raw_fd(),token)?)
+   } else {None};
    return Ok(json!({"status":"SUPPORTED_IN_SCOPE","app_payload_on_tun":true,
+     "mainstream":mainstream_evidence,
      "udp_packet_bytes":n,"payload":expected,"app_uid_rule":range,
      "src_ip":format!("{}.{}.{}.{}",buf[12],buf[13],buf[14],buf[15]),
      "dst_ip":"198.18.254.2","dst_port":49492,"tun_mtu":1400,"ignored_packets":ignored,

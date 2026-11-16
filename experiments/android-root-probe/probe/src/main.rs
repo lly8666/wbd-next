@@ -3,6 +3,7 @@
 mod capgate;
 mod routegate;
 mod appflow;
+mod mainstream;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
@@ -300,10 +301,10 @@ fn usage() -> Value {
 }
 fn main() {
     let mode = std::env::args().nth(1).unwrap_or_else(||"inspect".to_owned());
-    if mode == "appflow" || mode == "appflow-kill" {
+    if mode == "appflow" || mode == "appflow-kill" || mode=="appflow-mainstream" {
         let uid=std::env::args().nth(2).and_then(|x|x.parse::<u32>().ok()).unwrap_or(0);
         let token=std::env::args().nth(3).unwrap_or_default();
-        let result=appflow::run(uid,&token,mode=="appflow-kill");
+        let result=appflow::run(uid,&token,mode=="appflow-kill",mode=="appflow-mainstream");
         println!("WBD_APPFLOW_RESULT {}",serde_json::to_string(&result).unwrap());
         if result["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1);}
         return;
