@@ -8,6 +8,10 @@ mod outer;
 use std::sync::atomic::{AtomicBool,AtomicI32,AtomicU32,AtomicU64,Ordering};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::collections::{BTreeMap,VecDeque};
+use std::sync::mpsc::{sync_channel,SyncSender,Receiver,TryRecvError,TrySendError};
+use std::time::{Instant,Duration};
+use crate::v4_windows_native_split::{NativeSplitWorker,NativeDecision,NativeReverse,ColdSplitSourceV1};
+use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
 use std::thread::{self,JoinHandle};
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use wbd_platform::windows_native_io::{
@@ -51,6 +55,14 @@ pub struct WbdWinGameNativeAttachV3{
     pub disable_outer_repair:u32, // 0=default ON, 1=real no optional DATA shadow
     pub first:WbdWinNativeAttachV1,
     pub extra:[WbdWinGameExtraLaneV3;3],
+}
+#[cfg(feature="m0_v4_probe")]
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWinGameNativeAttachV4 {
+    pub version:u32,pub size:u32,
+    pub game:WbdWinGameNativeAttachV3,
+    pub split:ColdSplitSourceV1,
 }
 #[derive(Clone,Copy)]
 struct LaneConfig{
@@ -110,12 +122,18 @@ impl AckLedger{
         self.next as u32
     }
 }
+enum GameTcpColdCommand{
+    Prepare(SyncSender<Result<u16,i32>>),
+    Enable(u16,SyncSender<Result<u16,i32>>),
+}
 struct GameSession{
     stop:Arc<WakeEvent>,tx_wake:Arc<WakeEvent>,rx_wake:Arc<WakeEvent>,
     early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
     counters:Arc<GameCounters>,
     tx:JoinHandle<i32>,rx:JoinHandle<i32>,
     repair_enabled:bool, // read back from constructed actual GameOuter
+    first_owner:u64,epoch:[u8;16],luid:u64,ifindex:u32,
+    tcp_control:Option<SyncSender<GameTcpColdCommand>>,
 }
 static GAME_NATIVE:OnceLock<Mutex<BTreeMap<u64,GameSession>>>=OnceLock::new();
 fn sessions()->&'static Mutex<BTreeMap<u64,GameSession>>{
@@ -308,6 +326,11 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     outer:Arc<Mutex<outer::GameOuter>>,
     mut tun:WintunRx,mut npf:Vec<NpcapTx>,stop:Arc<WakeEvent>,
     wake:Arc<WakeEvent>,c:Arc<GameCounters>,
+    mut split:Option<NativeSplitWorker>,
+    direct_return:Option<SyncSender<Vec<u8>>>,
+    direct_wake:Arc<WakeEvent>,
+    tcp_control:Option<Receiver<GameTcpColdCommand>>,
+    split_clock:Instant,
 )->i32{
     let mut bytes=[0u8;MAX_IPV4];let mut id=1u16;
     // TX and RX capture endpoints have distinct native failure lifetimes.
@@ -321,11 +344,74 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
-        let mut did_work=false;
+        // PLAN029: ONE original Game TX classifies already-copied Wintun
+        // frames before GameAdapter staging. Direct sockets and DNS use
+        // the same NativeSplitWorker as Normal; Game FEC/PN never sees Direct.
+        let now_ms=split_clock.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
+        let mut direct_progress=false;
+        if let (Some(actor),Some(commands))=(split.as_mut(),tcp_control.as_ref()){
+            match commands.try_recv(){
+                Ok(GameTcpColdCommand::Prepare(reply))=>{
+                    let _=reply.send(actor.prepare_tcp_after_apply().map_err(|_|BAD_STAGE));
+                },
+                Ok(GameTcpColdCommand::Enable(port,reply))=>{
+                    let _=reply.send(actor.enable_tcp_after_defender(port)
+                        .map(|()|port).map_err(|_|BAD_STAGE));
+                },
+                Err(TryRecvError::Empty|TryRecvError::Disconnected)=>{},
+            }
+        }
+        if let Some(actor)=split.as_mut(){
+            direct_progress=actor.tick(now_ms);
+            if actor.has_udp_flows(){
+                let mut scratch=[0u8;MAX_IPV4];
+                let mut moved=0usize;
+                for _ in 0..32{
+                    let Some(reply)=actor.poll_udp_reverse(&mut scratch,now_ms)else{break};
+                    let bytes=match reply{
+                        NativeReverse::Owned(v)=>v,
+                        NativeReverse::InScratch(n)=>scratch[..n].to_vec(),
+                    };
+                    let Some(queue)=direct_return.as_ref()else{return BAD_STAGE};
+                    match queue.try_send(bytes){
+                        Ok(())=>moved+=1,
+                        Err(TrySendError::Full(packet))=>{
+                            if packet.len()>=20&&packet[0]>>4==4&&packet[9]==6{
+                                if actor.requeue_tcp_reverse(packet).is_err(){return BAD_STAGE}
+                                break
+                            }
+                            c.rejected.fetch_add(1,Ordering::Relaxed);
+                        },
+                        Err(TrySendError::Disconnected(_))=>return BAD_STAGE,
+                    }
+                }
+                if moved>0{
+                    direct_progress=true;
+                    let _=direct_wake.wake(); // original sole RX Wintun writer
+                }
+            }
+        }
+        let mut did_work=direct_progress;
         for _ in 0..8{
             if c.stop.load(Ordering::Acquire){return OK}
             match tun.read(&mut bytes){
                 Ok(ReadResult::Frame(n))=>{
+                    if let Some(actor)=split.as_mut(){
+                        match actor.on_packet(&bytes[..n],now_ms){
+                            NativeDecision::Tunnel=>{},
+                            NativeDecision::TunnelDns=>{
+                                if !actor.rewrite_tunnel_dns(&mut bytes[..n],now_ms){
+                                    let _=actor.reject_tunnel_dns(&bytes[..n]);
+                                    c.rejected.fetch_add(1,Ordering::Relaxed);
+                                    continue
+                                }
+                            },
+                            NativeDecision::DirectHandled=>{did_work=true;continue},
+                            NativeDecision::LocalDrop=>{
+                                c.rejected.fetch_add(1,Ordering::Relaxed);continue
+                            },
+                        }
+                    }
                     let records=match group.lock(){
                         Ok(mut g)=>game::offer_records_native(&mut g,cfg.group,&bytes[..n]),
                         Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_lock");return BAD_STAGE},
@@ -474,9 +560,40 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             };
             game_timeout.min(health_wait).min(outer_wait)
         };
-        match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],timeout){
+        let timeout=if split.as_ref().is_some_and(|s|s.needs_10ms_poll()){
+            timeout.min(10)
+        }else{timeout};
+        let timeout=if let Some(due)=split.as_ref().and_then(|s|s.next_tcp_cleanup_due_ms()){
+            timeout.min(due.saturating_sub(now_ms).max(1).min(u64::from(u32::MAX)) as u32)
+        }else{timeout};
+        // Stop remains absolute first. 3 existing events + <=16 TCP shards
+        // + <=16 Direct UDP socket FD_READ handles (<64 WAIT_ANY).
+        let mut handles=vec![stop.handle(),tun.event(),wake.handle()];
+        let mut tcp_count=0usize;
+        let mut udp_count=0usize;
+        if let Some(actor)=split.as_ref(){
+            if let Some(events)=actor.tcp_socket_wait_handles(){
+                if events.len()!=16{return BAD_STAGE}
+                tcp_count=events.len();handles.extend_from_slice(events);
+            }
+            let events=actor.udp_socket_wait_handles();
+            if events.len()>16{return BAD_STAGE}
+            udp_count=events.len();handles.extend_from_slice(events);
+        }
+        match io::wait_ready(&handles,timeout){
             Ok(WaitResult::Ready(0))=>return OK,
-            Ok(WaitResult::Ready(1|2)|WaitResult::Timeout)=>{},
+            Ok(WaitResult::Ready(index)) if index<3=>{},
+            Ok(WaitResult::Ready(index)) if index<3+tcp_count=>{
+                if let Some(actor)=split.as_mut(){
+                    actor.note_tcp_socket_wake(index-3);
+                }
+            },
+            Ok(WaitResult::Ready(index)) if index<3+tcp_count+udp_count=>{
+                if let Some(actor)=split.as_mut(){
+                    actor.note_udp_socket_wake(index-3-tcp_count);
+                }
+            },
+            Ok(WaitResult::Timeout)=>{},
             Ok(other)=>{
                 eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=event_wait unexpected={other:?} timeout_ms={timeout}");
                 return BAD_STAGE
@@ -511,17 +628,29 @@ fn trusted_windows_game_rx<'a>(
 struct DeferredFec{
     seq:u32,wire_len:usize,copied:u32,frames:Vec<Vec<u8>>,
 }
+// Original authenticated Tunnel DNS responses are the only Game DATA
+// that touch transaction maps. Ordinary Game/FEC DATA never locks here.
+fn game_tunnel_dns_reply(packet:&mut [u8],
+    map:Option<&Arc<Mutex<TunnelDnsMap>>>,now_ms:u64)->Result<bool,i32>{
+    let Some(map)=map else{return Ok(true)};
+    if packet.len()<28||packet[0]>>4!=4||packet[9]!=17{return Ok(true)}
+    let ihl=usize::from(packet[0]&15)*4;
+    if packet.len()<ihl+8||packet[ihl..ihl+2]!=[0,53]{return Ok(true)}
+    let mut map=map.lock().map_err(|_|BAD_STAGE)?;
+    Ok(map.rewrite_reply(packet,now_ms).unwrap_or(true))
+}
 fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,
     c:&GameCounters,ledgers:&mut [AckLedger],
     deferred:&mut [Option<DeferredFec>],lane:usize,seq:u32,wire:&[u8],
+    tunnel_dns:Option<&Arc<Mutex<TunnelDnsMap>>>,now_ms:u64,
 )->Result<(),i32>{
     // Original Go TLS-derived GameAdapter M3+PN open and stage happens
     // under ONE group lock; the actual Wintun kernel writes MUST happen
     // outside the group lock or a blocked TUN send would stall every
     // sibling Game4 TX lane. AllCopied is settled only after real kernel
     // results, with exact per-lane prefix on partial failure.
-    let (frames,pending)={
+    let (mut frames,pending)={
         let mut g=group.lock().map_err(|_|BAD_STAGE)?;
         if game::native_game_has_fec(&g){
             game::receive_fec_group(&mut g,cfg.group,(lane+1) as u32,wire)?
@@ -531,6 +660,28 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
             (frame.into_iter().collect(),pending)
         }
     };
+    // Rewrite all DNS frames before any kernel Wintun write or deferred
+    // copy: a full ring cannot trigger a second DNS transaction rewrite.
+    let mut blocked=false;
+    for frame in frames.iter_mut(){
+        if !game_tunnel_dns_reply(frame,tunnel_dns,now_ms)?{
+            blocked=true;break
+        }
+    }
+    if blocked{
+        c.rejected.fetch_add(1,Ordering::Relaxed);
+        if pending{
+            let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+            let rc=if game::native_game_has_fec(&g){
+                game::finish_fec_group(&mut g,(lane+1) as u32,0)
+            }else{
+                game::finish_off_group(&mut g,(lane+1) as u32,false)
+            };
+            if rc!=OK{return Err(rc)}
+        }
+        c.ack[lane].store(ledgers[lane].verified(seq,wire.len()),Ordering::Release);
+        return Ok(())
+    }
     let total=frames.len();
     let mut copied=0u32;
     let mut failed=false;
@@ -649,7 +800,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     outer:Arc<Mutex<outer::GameOuter>>,mut tun:WintunTx,
     mut npf:Vec<NpcapRx>,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
     tx_wake:Arc<WakeEvent>,early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
-    c:Arc<GameCounters>,
+    c:Arc<GameCounters>,direct_returns:Option<Receiver<Vec<u8>>>,
+    tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>,split_clock:Instant,
 )->i32{
     let mut ledgers:Vec<AckLedger>=lanes.iter().map(|x|AckLedger::new(x.rx_seq)).collect();
     let mut deferred:Vec<Option<DeferredFec>>=(0..lanes.len()).map(|_|None).collect();
@@ -670,9 +822,37 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     let mut handles=vec![stop.handle(),wake.handle()];
     for (i,&e) in events.iter().enumerate(){if active[i]&&deferred[i].is_none(){handles.push(e)}};
     let mut frame=[0u8;NPF_CAP];
+    let mut deferred_direct_tcp:Option<Vec<u8>>=None;
     loop{
         if c.stop.load(Ordering::Acquire){
             return abort_deferred_fec(&group,&mut deferred)
+        }
+        // Physical socket return is already a complete local IPv4 reply.
+        // Only this original RX worker may allocate/submit Wintun TX.
+        if let Some(queue)=direct_returns.as_ref(){
+            let mut released=false;
+            for _ in 0..32{
+                let packet=if let Some(p)=deferred_direct_tcp.take(){p}else{
+                    match queue.try_recv(){
+                        Ok(p)=>{released=true;p},
+                        Err(TryRecvError::Empty)=>break,
+                        Err(TryRecvError::Disconnected)=>return BAD_STAGE,
+                    }
+                };
+                let tcp=packet.len()>=20&&packet[0]>>4==4&&packet[9]==6;
+                match tun.deliver_native_direct_response(&packet){
+                    Ok(())=>{},
+                    Err(NativeIoError::BufferTooSmall) if tcp=>{
+                        deferred_direct_tcp=Some(packet);break
+                    },
+                    Err(NativeIoError::BufferTooSmall)=>{
+                        c.rejected.fetch_add(1,Ordering::Relaxed);
+                    },
+                    Err(_) if tcp=>return BAD_STAGE,
+                    Err(_)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
+                }
+            }
+            if released{let _=tx_wake.wake();}
         }
         match flush_deferred_fec(&group,&mut tun,&c,&mut ledgers,&mut deferred){
             Ok(true)=>{let _=tx_wake.wake();},
@@ -691,7 +871,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 q.push_back((i,seq,wire));continue
             }
             match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
-                &mut deferred,i,seq,&wire){
+                &mut deferred,i,seq,&wire,tunnel_dns.as_ref(),
+                split_clock.elapsed().as_millis() as u64){
                 Ok(())=>{let _=tx_wake.wake();},
                 Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                 Err(e)=>return e,
@@ -706,7 +887,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
         // Never park indefinitely while a real decoded FEC batch is
         // awaiting Wintun capacity; never poll when there is no backlog.
-        let timeout=if deferred.iter().any(Option::is_some){5}else{u32::MAX};
+        let timeout=if deferred.iter().any(Option::is_some)||
+            deferred_direct_tcp.is_some(){5}else{u32::MAX};
         match io::wait_ready(&handles,timeout){
             Ok(WaitResult::Ready(0))=>{
                 return abort_deferred_fec(&group,&mut deferred)
@@ -761,7 +943,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 }
                 let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
                 match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
-                    &mut deferred,i,p.seq32,p.ciphertext){
+                    &mut deferred,i,p.seq32,p.ciphertext,tunnel_dns.as_ref(),
+                    split_clock.elapsed().as_millis() as u64){
                     Ok(())=>{
                         verified=true;
                         let changed=match outer.lock(){
@@ -795,7 +978,27 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     ptr:*const WbdWinGameNativeAttachV3,
 )->i32{
     if ptr.is_null(){return INVALID}
-    let cfg=unsafe{*ptr};
+    start_game_native(unsafe{*ptr},None)
+}
+#[cfg(feature="m0_v4_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_native_v4_start(
+    ptr:*const WbdWinGameNativeAttachV4,
+)->i32{
+    if ptr.is_null(){return INVALID}
+    let v4=unsafe{*ptr};
+    if v4.version!=4||
+        v4.size as usize!=std::mem::size_of::<WbdWinGameNativeAttachV4>(){
+        return INVALID
+    }
+    let mut split=match unsafe{NativeSplitWorker::new(&v4.split)}{
+        Ok(v)=>v,Err(())=>return INVALID,
+    };
+    if split.set_wintun_ifindex(v4.game.first.ifindex).is_err(){return INVALID}
+    start_game_native(v4.game,Some(split))
+}
+fn start_game_native(cfg:WbdWinGameNativeAttachV3,
+    split:Option<NativeSplitWorker>)->i32{
     let lanes=match configs(&cfg){Ok(v)=>v,Err(e)=>return e};
     let group=match game::native_game_group(cfg.group,cfg.first.epoch,
         cfg.first.luid,cfg.first.ifindex,lanes.len(),&lanes.iter().map(|x|x.owner).collect::<Vec<_>>()){
@@ -826,6 +1029,16 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let rx_wake=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
     let counters=Arc::new(GameCounters::new(&lanes));
     let early=Arc::new(Mutex::new(VecDeque::with_capacity(EARLY_CAP)));
+    let tunnel_dns=split.as_ref().map(|s|s.tunnel_map());
+    let (tcp_sender,tcp_receiver)=if split.as_ref().is_some_and(|s|s.has_deferred_tcp()){
+        let (tx,rx)=sync_channel::<GameTcpColdCommand>(1);
+        (Some(tx),Some(rx))
+    }else{(None,None)};
+    let (direct_sender,direct_receiver)=if split.is_some(){
+        let (tx,rx)=sync_channel::<Vec<u8>>(256);
+        (Some(tx),Some(rx))
+    }else{(None,None)};
+    let split_clock=Instant::now();
     let mut sessions=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     if sessions.contains_key(&cfg.group){return BAD_STAGE}
     // The protected native_game_group lookup above already verified every
@@ -844,9 +1057,12 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let tx_notify=Arc::clone(&tx_wake);
     let tx_counters=Arc::clone(&counters);
     let tx_lanes=lanes.clone();
+    let direct_wake=Arc::clone(&rx_wake);
+    let tx_clock=split_clock;
     let tx=match thread::Builder::new().name("wbd-game-native-tx".into()).spawn(move||{
         let rc=tx_loop(cfg,tx_lanes,tx_group,tx_outer,tun_rx,senders,
-            Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters));
+            Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters),
+            split,direct_sender,direct_wake,tcp_receiver,tx_clock);
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
             tx_counters.err.store(rc,Ordering::Release);
@@ -860,10 +1076,11 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let wake_tx=Arc::clone(&tx_wake);
     let rx_counter=Arc::clone(&counters);
     let rx_early=Arc::clone(&early);
+    let rx_clock=split_clock;
     let rx=match thread::Builder::new().name("wbd-game-native-rx".into()).spawn(move||{
         let rc=rx_loop(cfg,lanes,rx_group,rx_outer,tun_tx,captures,
             Arc::clone(&rx_stop),rx_notify,wake_tx,rx_early,
-            Arc::clone(&rx_counter));
+            Arc::clone(&rx_counter),direct_receiver,tunnel_dns,rx_clock);
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=worker_exit rc={rc}");
             rx_counter.err.store(rc,Ordering::Release);
@@ -880,7 +1097,56 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     };
     sessions.insert(cfg.group,GameSession{
         stop,tx_wake,rx_wake,early,counters,tx,rx,repair_enabled,
+        first_owner:cfg.first.owner,epoch:cfg.first.epoch,
+        luid:cfg.first.luid,ifindex:cfg.first.ifindex,
+        tcp_control:tcp_sender,
     });
+    OK
+}
+// Same current-generation authenticated first Game lane and original
+// post-Apply owned Defender grant protocol as Normal. No Game per-packet
+// Go callback or second TCP stack.
+#[cfg(feature="m0_v4_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_native_v4_tcp_control(
+    ptr:*mut super::native_runtime::WbdWinNativeTcpControlV1,
+)->i32{
+    if ptr.is_null(){return INVALID}
+    let mut q=unsafe{*ptr};
+    if q.version!=1||
+        q.size as usize!=std::mem::size_of::<super::native_runtime::WbdWinNativeTcpControlV1>()||
+        q.owner==0||q.ifindex==0||!matches!(q.operation,1|2)||
+        (q.operation==1&&q.port!=0)||(q.operation==2&&q.port==0){
+        return INVALID
+    }
+    let (reply_tx,reply_rx)=sync_channel::<Result<u16,i32>>(1);
+    let (group,wake)={
+        let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        let Some((&group,s))=map.iter().find(|(_,s)|s.first_owner==q.owner &&
+             s.epoch==q.epoch&&s.luid==q.luid&&s.ifindex==q.ifindex)else{return UNKNOWN};
+        if s.counters.stop.load(Ordering::Acquire){return BAD_STAGE}
+        let Some(commands)=s.tcp_control.as_ref()else{return BAD_STAGE};
+        let cmd=if q.operation==1{
+            GameTcpColdCommand::Prepare(reply_tx)
+        }else{GameTcpColdCommand::Enable(q.port,reply_tx)};
+        if commands.try_send(cmd).is_err(){return FULL}
+        (group,Arc::clone(&s.tx_wake))
+    };
+    if wake.wake().is_err(){return BAD_STAGE}
+    let port=match reply_rx.recv_timeout(Duration::from_secs(4)){
+        Ok(Ok(v)) if v!=0=>v,
+        Ok(Err(rc))=>return rc,
+        _=>return STOP_INCOMPLETE,
+    };
+    {
+        let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        let Some(s)=map.get(&group)else{return UNKNOWN};
+        if s.epoch!=q.epoch||s.counters.stop.load(Ordering::Acquire){
+            return BAD_STAGE
+        }
+    }
+    q.port=port;
+    unsafe{ptr.write(q)};
     OK
 }
 #[no_mangle]

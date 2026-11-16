@@ -23,10 +23,27 @@ type V4WindowsGameNativeIOV3 struct{
  First V4WindowsNativeIOV1
  Extra [3]V4WindowsGameExtraLaneV3
 }
+// Extension: SAME Game TLS group and SAME Wintun/Npcap loan, one
+// synchronously copied cold CN split source. V3 native users unchanged.
+type v4WindowsGameNativeIOV4 struct{
+ Version,Size uint32
+ Game V4WindowsGameNativeIOV3
+ Split v4WindowsColdSplitWireV1
+}
 // Only the protected 2/4 independent Go TLS owners can authorize a native
 // group handoff; this C layout does not mint a fresh TLS epoch.
 func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIO(
  ctx context.Context,cfg V4WindowsGameNativeIOV3,
+)error{
+ return g.startNativeGameIO(ctx,cfg,nil)
+}
+func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIOWithColdSplit(
+ ctx context.Context,cfg V4WindowsGameNativeIOV3,cold V4WindowsColdSplitConfig,
+)error{
+ return g.startNativeGameIO(ctx,cfg,&cold)
+}
+func(g *V4WindowsAuthenticatedGameGroup) startNativeGameIO(
+ ctx context.Context,cfg V4WindowsGameNativeIOV3,cold *V4WindowsColdSplitConfig,
 )error{
  if g==nil||ctx==nil{return errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return err}
@@ -60,6 +77,17 @@ func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIO(
    return errV4WindowsOwner
   }
   cfg.Extra[i-1].Owner=owner.bridge.handle
+ }
+ if cold!=nil{
+  split,err:=cold.wire();if err!=nil{return err}
+  v4:=v4WindowsGameNativeIOV4{Version:4,Game:cfg,Split:split}
+  v4.Size=uint32(unsafe.Sizeof(v4))
+  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v4_start")
+  if err!=nil{return err}
+  err=winOwnerCall(p,uintptr(unsafe.Pointer(&v4)))
+  runtime.KeepAlive(cold)
+  runtime.KeepAlive(v4)
+  return err
  }
  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v3_start")
  if err!=nil{return err}
@@ -135,4 +163,46 @@ func(g *V4WindowsAuthenticatedGameGroup) NativeGameOuterRepairEffective(
   return 0,errV4WindowsOwner
  }
  return enabled,nil
+}
+
+// After four-stage OS Apply and actual original owner liveness, ask
+// the SAME Game4 Rust TX to prepare a kernel TCP listener. Caller MUST
+// install an exact owned Defender rule before enabling it.
+func(g *V4WindowsAuthenticatedGameGroup) plan029GameTCPControl(
+ ctx context.Context,operation,port uint16,
+)(uint16,error){
+ if g==nil||ctx==nil||operation!=1&&operation!=2||
+  operation==1&&port!=0||operation==2&&port==0{
+  return 0,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return 0,err}
+ g.mu.Lock()
+ if g.closed||g.joined==0||len(g.members)!=4||g.members[0]==nil{
+  g.mu.Unlock();return 0,errV4WindowsOwner
+ }
+ first:=g.members[0];g.mu.Unlock()
+ if first.bridge==nil||first.device==nil{return 0,errV4WindowsOwner}
+ state,err:=first.OriginalOwnerReadback()
+ if err!=nil{return 0,err}
+ if !plan029PostApplyOriginalOwnerReady(state){return 0,errV4WindowsOwner}
+ req:=v4WindowsNativeTCPControlV1{Version:1,
+  Owner:first.bridge.handle,Epoch:first.bridge.epoch,
+  LUID:first.device.identity.LUID,IfIndex:first.device.identity.InterfaceIndex,
+  Operation:operation,Port:port}
+ req.Size=uint32(unsafe.Sizeof(req))
+ proc,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v4_tcp_control")
+ if err!=nil{return 0,err}
+ err=winOwnerCall(proc,uintptr(unsafe.Pointer(&req)))
+ runtime.KeepAlive(req)
+ if err!=nil||req.Port==0{return 0,errV4WindowsOwner}
+ if operation==2&&req.Port!=port{return 0,errV4WindowsOwner}
+ return req.Port,nil
+}
+func(g *V4WindowsAuthenticatedGameGroup) Plan029GamePrepareNativeTCPAfterOSApply(
+ ctx context.Context,
+)(uint16,error){return g.plan029GameTCPControl(ctx,1,0)}
+func(g *V4WindowsAuthenticatedGameGroup) Plan029GameEnableNativeTCPAfterDefender(
+ ctx context.Context,port uint16,
+)error{
+ _,err:=g.plan029GameTCPControl(ctx,2,port);return err
 }

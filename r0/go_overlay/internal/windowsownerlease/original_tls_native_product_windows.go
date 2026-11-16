@@ -148,6 +148,20 @@ func PrepareOriginalTLSNativeGameProduct(
  return prepareOriginalTLSNativeProduct(ctx,game.FirstOriginalOwner(),
   game,tun,plan,install,epoch,packet)
 }
+// Game4 CN reuses the original one OS/WAL transaction and binds only
+// one extra generation-scoped synthetic /32 for the physical TCP leg.
+func PrepareOriginalTLSNativeGameProductWithSyntheticTCP(
+ ctx context.Context,game *realityfront.V4WindowsAuthenticatedGameGroup,
+ tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
+ install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+ synthetic netip.Addr,
+)(*OriginalTLSNativeProductSession,error){
+ if game==nil||!synthetic.Is4()||synthetic.IsUnspecified(){
+  return nil,ErrNativeDeviceNotOwned
+ }
+ return prepareOriginalTLSNativeProductWithSynthetic(ctx,game.FirstOriginalOwner(),
+  game,tun,plan,install,epoch,packet,synthetic)
+}
 func prepareOriginalTLSNativeProduct(
  ctx context.Context,client *realityfront.V4WindowsAuthenticatedClientOwner,
  game *realityfront.V4WindowsAuthenticatedGameGroup,

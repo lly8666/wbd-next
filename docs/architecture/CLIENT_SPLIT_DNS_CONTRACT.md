@@ -1,6 +1,6 @@
 # PLAN029｜客户端中国 IP＋域名分流与单 DNS 契约
 
-2026-11-13 用户授权的设计修订（含防火墙定位、开发入口解锁与资源压力策略），**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
+**2026-11-16 最新用户覆盖**：同一海外 CDN IP 上 CN/非CN 双域名相反出口专项**NOT_REQUIRED**（不再开发/不作为029验收门），不能据此宣称该反例PASS；保留CN/IP普通代表场景。Normal Tunnel填充逐合格record 0..500B，只受实际MTU余量限制。2026-11-13其余设计修订（含防火墙定位、开发入口解锁与资源压力策略），**DESIGN_APPROVED / IMPLEMENTATION_NOT_QUALIFIED**。本页替代029旧“中国IP单独分流、DNS主备、按DNS目标IP决定查询出口”条款；不是产品已实现声明。主入口：[PLAN029](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)，接续：[M0提示词](../prompts/M0-PLAN029.md)。
 
 ## 1. 产品语义，先定清楚再实现
 
@@ -196,7 +196,7 @@ H1690只证明当时真实签名Wintun注入的UDP未到本地listener、TCP无S
 | 场景 | 必须实际验证 |
 |---|---|
 | D1 两DNS单值与三route-mode | CN QNAME只到direct DNS，其他只到tunnel DNS；实际进入Wintun的1.1.1.1/网关53按QNAME处理；旁路on-link案例独立说明，禁止伪称全机拦截；TCP53、UDP TC回退同endpoint；任一DNS黑洞不换地址/方向；两个字段相同地址仍走各自方向 |
-| D2 域名/IP并集与CDN反例 | CN域名→非CN A直连；非CN域名→同一非CN A走隧道；非CN域名→CN A按IP直连；IP字面访问按IP规则。用真实TCP/UDP及两侧收件验证，不能只看classifier |
+| D2 域名/IP并集（同IP共享CDN跨域名反例NOT_REQUIRED） | CN域名→非CN A直连；非CN域名→海外A走隧道（不要求同一A）；非CN域名→CN A按IP直连；字面IP按IP规则，保留真实TCP/UDP双出口证据 |
 | D3 DNS边界 | 多A/CNAME、无关additional不学习、NXDOMAIN/TTL0/过期、AAAA阻断、HTTPS/SVCB不逃映射、restart恢复映射；缓存满仍能新查询，事务满只失败受影响请求，FakeIP满不破坏老映射；FakeIP在物理/服务端抓取为0 |
 | D4 接线生命周期 | 分片/近MTU包、大TCP写入、小UDP混跑；规则更新不迁移老flow；lane轮换不打断Direct；idle下Direct仍通、Tunnel DNS唤醒；物理DNS bootstrap在接管后可重连；Stop/WAL/晚回调与模式重开 |
 | D5 系统规模 | 内置/1万级规则加载，路由/WFP数不随条目数增长；没有新Go逐包热点；GUI两DNS保存→配置→owner有效值→真实出口；默认1460外层不被内层回写 |
@@ -207,7 +207,7 @@ H1690只证明当时真实签名Wintun注入的UDP未到本地listener、TCP无S
 
 报实际注入/唯一交付/缺失、p99与最长空洞、flow/DNS等待、缓存命中、进程/线程CPU＋host内核忙、RSS/peak及owned资源。DNS性能分缓存命中/未命中，不把远端解析RTT算成本地分类慢。纯Tunnel比较相同业务/实际出口；Direct路径省掉公网隧道延迟不等于CPU优化证据。
 
-退出：真实Windows双出口、CN域名/IP并集、单DNS不回退、不会CDN误分流、普通Tunnel性能保护、配置/UI可读回与owned Stop全部有证据；NOT_RUN/设计完成不冒充实现PASS。不重新要求028排除的多Wintun或全L3，不增加Android/服务器新wire工作。
+退出：真实Windows双出口、CN域名/IP并集、单DNS不回退、共享CDN同IP双域名反向出口专项NOT_REQUIRED、普通Tunnel性能保护、配置/UI可读回与owned Stop全部有证据；NOT_RUN/设计完成不冒充实现PASS。不重新要求028排除的多Wintun或全L3，不增加Android/服务器新wire工作。
 
 ## 8. 实现参考（借鉴方法，不照搬依赖树）
 

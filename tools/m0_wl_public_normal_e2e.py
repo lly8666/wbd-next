@@ -42,6 +42,11 @@ p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
 p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
+p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1"
+if p029_game4_cn and not (mode=="game4" and not
+   (p029_direct or p029_padding or p029_product or p029_p2 or p029_p1_policy
+    or p029_tcp53 or p029_cdn or p029_cache or p029_pressure)):
+ raise RuntimeError("H2017 only original signed Game4 off four lane CN split + owned Stop")
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -406,7 +411,7 @@ try:
  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if plan028_owned_switch else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
- if p029_direct or p029_p1_policy:
+ if p029_direct or p029_p1_policy or p029_game4_cn:
   # The existing Linux kernel TUN must have a test-owned PUBLIC /32 alias
   # for protected Tunnel business. Its ordinary 10.66.0.1 RFC1918 address
   # would be Direct by policy and could fake a successful split test.
@@ -453,16 +458,18 @@ try:
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
- if p029_direct or p029_p1_cn:
+ if p029_direct or p029_p1_cn or p029_game4_cn:
   # The exact Linux guest is the ONLY direct resolver for this controlled
   # scene; it also hosts an independent real physical business UDP socket.
   args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
                "--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))])
+ if p029_game4_cn:
+  args.extend(["--split-enable","--cn-rules-file",str(rules)])
  if p029_product:
   # Same Next-Connect CLI fields a portable user enters in real WinForms,
   # not WBD_PLAN029_CN_RULES_FILE or any GITHUB_ACTIONS test switch.
@@ -582,11 +589,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if done.exists():done.unlink()
  llog=(out/"linux-app.log").open("w");logs.append(llog)
  wlog=(out/"windows-app.log").open("w");logs.append(wlog)
- if p029_p1_policy:
+ if p029_p1_policy or p029_game4_cn:
   if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
       out/"plan029-h1745-owned-tun-alias.txt").is_file():
    raise RuntimeError("H1934 Linux original public TUN alias never applied")
- linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy else "10.66.0.1"
+ linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn else "10.66.0.1"
  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done)],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
@@ -985,6 +992,87 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
  report["initial_smoke"]="PASS_REAL_TWO_OS_UDP_BEFORE_MEASUREMENT"
 
+ if p029_game4_cn:
+  # H2017: one original four-lane Game4/Go TLS group; Rust GameAdapter
+  # remains the Tunnel authority while shared split handles physical DNS
+  # and real Direct UDP/TCP via the very same Wintun loan.
+  if p029_alias_proc is None or p029_alias_proc.wait(timeout=4)!=0 or not (
+      out/"plan029-h1745-owned-tun-alias.txt").exists():
+   raise RuntimeError("Game4 CN real Linux Tunnel alias not owned")
+  host_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host_source:raise RuntimeError("Game4 CN physical source missing")
+  gn="plan029-h2017-game4-physical-udp-dns.log"
+  wn="plan029-h2017-game4-app-dns-udp.log"
+  gf=(out/gn).open("w");logs.append(gf)
+  p029_guest_proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1745_guest_dns_direct.py"),
+      peer,host_source,"0"],stdout=gf,stderr=subprocess.STDOUT)
+  ready(out/gn,"PLAN029_H1745_LINUX_REAL_DNS53_AND_UDP46111_READY",
+        p029_guest_proc,12)
+  wf=(out/wn).open("w");logs.append(wf)
+  p029_client_proc=subprocess.Popen([sys.executable,
+      str(root/"tools"/"m0_plan029_h1745_win_client_dns_direct.py"),
+      "10.66.0.2",peer],stdout=wf,stderr=subprocess.STDOUT)
+  if p029_client_proc.wait(timeout=50)!=0 or p029_guest_proc.wait(timeout=8)!=0:
+   raise RuntimeError("Game4 CN physical DNS/FakeIP/Direct UDP app FAIL win="+
+      (out/wn).read_text(errors="replace")[-800:]+" guest="+
+      (out/gn).read_text(errors="replace")[-800:])
+  proof={}
+  for who,file,mark in (
+   ("windows",wn,"PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "),
+   ("linux",gn,"PLAN029_H1745_REAL_LINUX_GUEST_DIRECT ")):
+   vals=[line.split(" ",1)[1] for line in (out/file).read_text().splitlines()
+        if line.startswith(mark)]
+   if len(vals)!=1:raise RuntimeError("Game4 missing real "+who+" Direct UDP receipt")
+   proof[who]=json.loads(vals[0])
+  ww,ll=proof["windows"],proof["linux"]
+  if not (ww["fake4"].startswith("198.18.") and ww["direct_resolver"]==peer
+      and ll["dns"] is True and ll["direct_business"] is True
+      and ll["dns_client_physical"]==host_source
+      and ll["business_client_physical"]==host_source):
+   raise RuntimeError("Game4 CN DNS/physical UDP actual receipt invalid")
+  # Reuse exact ordinary native kernel TCP 32KiB + FIN/half-close scene.
+  gt="plan029-h2017-game4-physical-tcp.log"
+  wt="plan029-h2017-game4-windows-tcp.log"
+  gf=(out/gt).open("w");logs.append(gf)
+  tcp_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029_h1760_guest_physical_direct_tcp.py"),
+      peer,host_source],stdout=gf,stderr=subprocess.STDOUT)
+  try:
+   ready(out/gt,"PLAN029_H1760_PHYSICAL_KERNEL_TCP46112_READY",tcp_guest,12)
+   wf=(out/wt).open("w");logs.append(wf)
+   tcp_win=subprocess.Popen([sys.executable,
+       str(root/"tools"/"m0_plan029_h1760_windows_fakeip_direct_tcp.py"),
+       "10.66.0.2",ww["fake4"]],stdout=wf,stderr=subprocess.STDOUT)
+   try:
+    if tcp_win.wait(timeout=25)!=0 or tcp_guest.wait(timeout=8)!=0:
+     raise RuntimeError("Game4 CN real TCP half-close FAIL win="+
+      (out/wt).read_text(errors="replace")[-650:]+" linux="+
+      (out/gt).read_text(errors="replace")[-650:])
+   finally:
+    if tcp_win.poll() is None:tcp_win.terminate()
+  finally:
+   if tcp_guest.poll() is None:tcp_guest.terminate()
+  tw=[line.split(" ",1)[1] for line in (out/wt).read_text().splitlines()
+      if line.startswith("PLAN029_H1760_WINDOWS_FAKEIP_DIRECT_TCP_ECHO ")]
+  tl=[line.split(" ",1)[1] for line in (out/gt).read_text().splitlines()
+      if line.startswith("PLAN029_H1760_LINUX_PHYSICAL_TCP_ECHO ")]
+  if len(tw)!=1 or len(tl)!=1:raise RuntimeError("Game4 CN real 32K TCP receipt missing")
+  tw,tl=json.loads(tw[0]),json.loads(tl[0])
+  if not (tw["app_bytes_echoed"]==32768 and tw["tcp_half_close"] is True
+      and tw["presented_peer"]==ww["fake4"] and
+      tl["source_physical"]==host_source and tl["received_bytes"]==32768):
+   raise RuntimeError("Game4 CN physical TCP original two kernel legs mismatch")
+  report["plan029_game4_cn_real"]={
+      "source_sha":os.environ["GITHUB_SHA"],
+      "mode":"game4","lanes":4,"fec":"off",
+      "normal_tunnel_udp":report["app_duplex"],
+      "cn_real_direct_udp":{"windows":ww,"linux":ll},
+      "cn_real_direct_tcp":{"windows":tw,"linux":tl},
+      "single_wintun":"ORIGINAL_GAME4_SIGNED_RUST_NATIVE",
+      "tunnel_tcp":"NOT_RUN_UNTIL_ORIGINAL_TUN_TCP",
+      "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
+  print("PLAN029_H2017_GAME4_CN_REAL_DIRECT_TCP_UDP_AND_TUNNEL_UDP_PRE_STOP",flush=True)
  if p029_direct:
   # D1/D2 real physical Direct first, once the SAME signed Windows
   # Wintun and two-OS Tunnel UDP are proved. The historical inbound
@@ -2256,6 +2344,19 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029_game4_cn:
+  g4=report.get("plan029_game4_cn_real",{})
+  if (g4.get("source_sha")!=os.environ["GITHUB_SHA"] or
+      report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP"):
+   raise RuntimeError("Game4 CN direct and Tunnel kernel TCP not proven on same source")
+  native=(out/"client.log").read_text(errors="replace")
+  if ("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE" not in native or
+      "WBD_PLAN029_GAME4_CN_NATIVE_TCP_ENABLED" not in native or
+      "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" not in native):
+   raise RuntimeError("Game4 CN Rust V4 cold attach, exact Defender or owned Stop absent")
+  g4["tunnel_tcp"]=report["tcp_duplex"]
+  g4["stop"]="PASS_BOTH_OWNED"
+  print("PLAN029_H2017_GAME4_CN_DIRECT_TUNNEL_TCP_UDP_AND_OWNED_STOP_PASS_SCOPED",flush=True)
  if p029_product:
   # Not a private trial: the same real original Go/Rust owner and OS WAL
   # must have independently shown Windows+Linux Stop and exact route/
@@ -2771,7 +2872,7 @@ finally:
     raise RuntimeError("foreign Tunnel DNS alias receipt; preserve OS address")
   except Exception as exc:
    print("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED "+str(exc)[-250:],flush=True)
- if (p029_direct or p029_p1_policy) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
+ if (p029_direct or p029_p1_policy or p029_game4_cn) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
   # Exact ephemeral TUN alias only: cleanup is idempotent even after the
   # server has already removed its own interface on normal Stop.
   try:

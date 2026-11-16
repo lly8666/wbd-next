@@ -452,10 +452,11 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  return h,nil
 }
 func runM0NativeV4Windows(o m0NativeV4Options)error{
- // Game2/Game4 still use their original Game Rust owner. Explicit CN
- // split cannot be silently accepted without a corresponding Game actor.
- if o.SplitEnable&&(o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4){
-  return fmt.Errorf("PLAN029 CN split Game2/4 not wired; no OS Apply attempted")
+ // Game4 CN is wired through its actual 4-lane Rust GameAdapter TX/RX
+ // and one shared NativeSplitWorker. Game2 remains explicitly unsupported
+ // rather than silently using Normal or bypassing user split settings.
+ if o.SplitEnable&&o.Mode==m0WinModeGame2{
+  return fmt.Errorf("PLAN029 CN split Game2 not wired; no OS Apply attempted")
  }
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
