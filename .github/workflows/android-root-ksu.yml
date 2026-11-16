@@ -9,6 +9,7 @@ on:
       - "experiments/android-root-probe/probe/src/main.rs"
       - "experiments/android-root-probe/ci/build-ksu-native.sh"
       - "experiments/android-root-probe/ci/appflow-case.sh"
+      - "experiments/android-root-probe/ci/appflow-crash-case.sh"
       - "experiments/android-root-probe/ci/ksu-prepare-avd.sh"
       - "experiments/android-root-probe/ci/ksu-boot-and-test.sh"
       - "experiments/android-root-probe/ci/ksu-grant-ui.py"
@@ -53,6 +54,7 @@ jobs:
             out/ksu/*.log
             out/ksu/*.png
             out/appflow/
+            out/appflow-crash/
             out/native/SOURCE
             out/native/SHA256SUMS
             out/native/manifest.json
