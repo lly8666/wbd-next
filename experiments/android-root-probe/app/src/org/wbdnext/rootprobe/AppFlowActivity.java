@@ -71,10 +71,19 @@ public final class AppFlowActivity extends Activity {
             if(ready) {
                 byte[] payload=("wbd-app-"+token).getBytes(StandardCharsets.US_ASCII);
                 try (DatagramSocket socket=new DatagramSocket()) {
+                    socket.setSoTimeout(4500);
                     InetAddress dest=InetAddress.getByAddress(new byte[]{(byte)198,18,(byte)254,2});
                     socket.send(new DatagramPacket(payload,payload.length,dest,49492));
                     j.put("app_udp_sent_bytes",payload.length);
                     j.put("app_udp_destination","198.18.254.2:49492");
+                    // Real TUN->kernel->normal App UDP socket return, not native self-receive.
+                    byte[] incoming=new byte[256];
+                    DatagramPacket reply=new DatagramPacket(incoming,incoming.length);
+                    socket.receive(reply);
+                    String data=new String(reply.getData(),reply.getOffset(),reply.getLength(),StandardCharsets.US_ASCII);
+                    j.put("app_reply_payload",data);
+                    j.put("app_reply_source",reply.getAddress().getHostAddress()+":"+reply.getPort());
+                    j.put("app_reply_bytes",reply.getLength());
                 } catch(Exception e) {
                     j.put("app_udp_error",e.toString());
                 }
@@ -109,8 +118,12 @@ public final class AppFlowActivity extends Activity {
                     cleanup!=null && cleanup.optBoolean("ok") &&
                     cleanup.optBoolean("rules_equal") && cleanup.optBoolean("routes_equal") &&
                     cleanup.optBoolean("tun_gone") &&
-                    j.optInt("app_udp_sent_bytes",0)>0;
-                j.put("status",verified?"APP_UID_TUN_FLOW_PASS":"APP_UID_TUN_FLOW_FAIL");
+                    j.optInt("app_udp_sent_bytes",0)>0 &&
+                    ("wbd-reply-"+token).equals(ev.optString("tun_reply_payload")) &&
+                    ("wbd-reply-"+token).equals(j.optString("app_reply_payload")) &&
+                    "198.18.253.2:49492".equals(j.optString("app_reply_source")) &&
+                    ev.optInt("tun_reply_injected_bytes",0)>28;
+                j.put("status",verified?"APP_UID_TUN_ROUNDTRIP_PASS":"APP_UID_TUN_ROUNDTRIP_FAIL");
             }
         } catch(IOException e) {
             j.put("status","SU_EXEC_UNAVAILABLE");

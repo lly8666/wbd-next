@@ -1,5 +1,5 @@
 //! AVD-only App UID to root-owned TUN. No default route, netfilter or NAT mutation.
-use super::{wait_read,IFF_NO_PI,IFF_TUN,TUNSETIFF};
+use super::{wait_read,udp_packet,IFF_NO_PI,IFF_TUN,TUNSETIFF};
 use serde_json::{json,Value};
 use std::fs::{self,File,OpenOptions};
 use std::io::{self,ErrorKind,Write};
@@ -89,10 +89,22 @@ pub fn run(uid:u32,token:&str)->Value{
    if ihl!=20||buf[16..20]!=[198,18,254,2]||n<ihl+8{ignored+=1;continue;}
    let port=u16::from_be_bytes([buf[ihl+2],buf[ihl+3]]);
    if port!=49492||&buf[ihl+8..n]!=expected.as_bytes(){ignored+=1;continue;}
+   // Reply from a peer on the owned /30, not from a real network or netd.
+   // The destination is the ACTUAL app sender's IP and ephemeral UDP port.
+   let src_ip=[buf[12],buf[13],buf[14],buf[15]];
+   let sport=u16::from_be_bytes([buf[ihl],buf[ihl+1]]);
+   let reply_data=format!("wbd-reply-{token}");
+   let packet=udp_packet([198,18,253,2],src_ip,49492,sport,reply_data.as_bytes());
+   let wrote=unsafe{libc::write(owned.tun.as_ref().unwrap().as_raw_fd(),
+       packet.as_ptr().cast(),packet.len())};
+   if wrote<0{return Err(io::Error::last_os_error())}
+   if wrote as usize!=packet.len(){return Err(io::Error::new(ErrorKind::WriteZero,"short UDP TUN return packet"))}
    return Ok(json!({"status":"SUPPORTED_IN_SCOPE","app_payload_on_tun":true,
      "udp_packet_bytes":n,"payload":expected,"app_uid_rule":range,
      "src_ip":format!("{}.{}.{}.{}",buf[12],buf[13],buf[14],buf[15]),
-     "dst_ip":"198.18.254.2","dst_port":49492,"tun_mtu":1400,"ignored_packets":ignored}));
+     "dst_ip":"198.18.254.2","dst_port":49492,"tun_mtu":1400,"ignored_packets":ignored,
+     "tun_reply_injected_bytes":wrote,"tun_reply_source":"198.18.253.2:49492",
+     "tun_reply_destination_port":sport,"tun_reply_payload":reply_data}));
   }
   Err(io::Error::new(ErrorKind::TimedOut,format!("real App UDP not captured on owned TUN; ignored={ignored}")))
  })();
