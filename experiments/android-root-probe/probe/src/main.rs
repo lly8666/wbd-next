@@ -6,6 +6,8 @@ mod appflow;
 mod mainstream;
 mod tethergate;
 mod recovery;
+mod ipv6gate;
+mod devicecheck;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
@@ -309,6 +311,18 @@ fn main() {
         let result=appflow::run(uid,&token,mode=="appflow-kill",mode=="appflow-mainstream");
         println!("WBD_APPFLOW_RESULT {}",serde_json::to_string(&result).unwrap());
         if result["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1);}
+        return;
+    }
+    if mode=="devicecheck" {
+        let report=devicecheck::run();
+        println!("WBD_DIAG_RESULT {}",serde_json::to_string(&report).unwrap());
+        if report["status"]!="SUPPORTED_IN_SCOPE"{std::process::exit(1)}
+        return;
+    }
+    if mode=="ipv6gate" {
+        let report=ipv6gate::run();
+        println!("WBD_IPV6_RESULT {}",serde_json::to_string(&report).unwrap());
+        if report["status"]=="FAIL"{std::process::exit(1)}
         return;
     }
     if mode == "recover" || mode == "recover-seed" {

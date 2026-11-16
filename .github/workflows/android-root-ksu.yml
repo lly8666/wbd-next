@@ -20,6 +20,10 @@ on:
       - "experiments/android-root-probe/probe/src/tethergate.rs"
       - "experiments/android-root-probe/probe/src/recovery.rs"
       - "experiments/android-root-probe/ci/tether-recovery-case.sh"
+      - "experiments/android-root-probe/probe/src/ipv6gate.rs"
+      - "experiments/android-root-probe/probe/src/devicecheck.rs"
+      - "experiments/android-root-probe/ci/build-device-diagnostic.sh"
+      - "experiments/android-root-probe/ci/device-diagnostic-case.sh"
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,6 +38,7 @@ jobs:
     timeout-minutes: 24
     env:
       GH_TOKEN: ${{ github.token }}
+      WBD_PACK_DEVICE_DIAGNOSTIC: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -43,6 +48,9 @@ jobs:
       - name: Compile ONE source-locked Android x86_64 native probe
         shell: bash
         run: bash experiments/android-root-probe/ci/build-ksu-native.sh
+      - name: Build self-contained dual-ABI physical-device diagnostic APK
+        shell: bash
+        run: bash experiments/android-root-probe/ci/build-device-diagnostic.sh
       - name: Prepare isolated Android16 KSU 3.3.1 AVD and immutable native executable
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
@@ -63,6 +71,7 @@ jobs:
             out/mainstream/
             out/appflow-crash/
             out/tether-recovery/
+            out/device-diag/
             out/native/SOURCE
             out/native/SHA256SUMS
             out/native/manifest.json
@@ -74,5 +83,11 @@ jobs:
             out/apk/compile-api.txt
             out/apk/tls-cert-sha256.txt
             out/apk/tls-cert-san.txt
+            out/diag/device-diagnostic.apk
+            out/diag/SOURCE
+            out/diag/manifest.json
+            out/diag/SHA256SUMS
+            out/diag/badging.txt
+            out/diag/elf-info.txt
           retention-days: 14
           if-no-files-found: warn

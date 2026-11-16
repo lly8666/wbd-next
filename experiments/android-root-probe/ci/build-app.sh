@@ -60,4 +60,5 @@ d={"source":os.environ["GITHUB_SHA"],"min_sdk":28,"target_sdk":37,
 (p/"manifest.json").write_text(json.dumps(d,indent=2))
 PY
 ( cd "$out";sha256sum manifest.json assets/wbd-host-tls.der tls-cert-sha256.txt tls-cert-san.txt >>SHA256SUMS)
-rm -f "$out/temporary.jks" "$out/unsigned.apk" "$out/aligned.apk"
+if [[ "${WBD_PACK_DEVICE_DIAGNOSTIC:-0}" != 1 ]];then rm -f "$out/temporary.jks";fi
+rm -f "$out/unsigned.apk" "$out/aligned.apk"
