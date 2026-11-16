@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2036",
+  "date": "2026-11-17",
+  "source_sha": "b76240bedb04237780bd13377bfe7aae38785018",
+  "original_action": {
+    "id": 43901130216,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43901130216",
+    "conclusion": "success",
+    "native_job_id": 133421340787
+  },
+  "scene": "NORMAL_TUNNEL_FLOWS_ORIGINAL_GO_TLS_RUST_M1_NPCAP_WSL2_ETH0_TCPDUMP",
+  "real_source_scope": "TRUE_WINDOWS_NPCAP_OUTBOUND_ENCRYPTED_TCP443_WS L2_ETH0_LOCAL_RECEIVE",
+  "cold_policy": {
+    "record_count_random_min": 20,
+    "record_count_random_max": 30,
+    "window_ms_random_min": 2000,
+    "window_ms_random_max": 3000,
+    "first_limit_wins": true,
+    "zero_room_eligible_records_spend_slots": true,
+    "padding_random_min_bytes": 0,
+    "padding_random_max_bytes": 500,
+    "no_cumulative_flow_bytes": true,
+    "no_flow_percentage_budget": true,
+    "only_actual_outer_mtu_room": true,
+    "default_mode": "off",
+    "direct_padding": false
+  },
+  "original_native_rust_npcap": {
+    "driver_copied_records": 31,
+    "driver_copied_bytes": 6579
+  },
+  "true_physical_capture": {
+    "source_windows_ip4": "192.168.224.1",
+    "server_linux_ip4": "192.168.238.104",
+    "outer_mtu_limit_bytes": 1400,
+    "max_captured_ipv4_bytes": 707,
+    "original_outbound_tcp_payload_segments": 43,
+    "exact_tls_looking_record_count": 41,
+    "record_payload_min_bytes": 71,
+    "record_payload_max_bytes": 589,
+    "distinct_ciphertext_lengths": 36,
+    "record_length_spread_bytes": 518,
+    "raw_pcap_retained": false,
+    "per_record_inferred_padding": "CANNOT_DECRYPT_FROM_PHYSICAL_PCAP_ONLY"
+  },
+  "original_native_business": {
+    "windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "windows_linux_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "limitation": "The pcap demonstrates true encrypted record-length spread and safe physical MTU, but not exact pad bytes or per-flow first20–30/2–3s cadence. That policy is verified by Rust source and tests, not inferred from opaque ciphertext.",
+  "full_plan029": "IN_PROGRESS",
+  "game4_cn": "OPEN_SEPARATE_H2035_REAL_ACTION"
+}

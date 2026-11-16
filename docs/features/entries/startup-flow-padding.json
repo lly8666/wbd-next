@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "H2031用户规则：每新Tunnel TCP/UDP流随机前20–30条合格record、2–3秒窗口先到即停止；即使某条业务包MTU余量为0，仍消耗条数并启动窗口。可填时每条0..500B且不超真实MTU，不设每流2KiB/10%累计预算。默认off，Direct不填。H2028/H2031新物理验收待签名证据。",
+  "summary": "H2031新窗口真实物理抓包/业务/双Stop PASS_SCOPED：每流前20–30条、2–3秒先到停，0..500B仅MTU余量，无累计预算；空余量也计条数。Game4单独OPEN。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -105,8 +105,7 @@
     "Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
     "Padding is not a guarantee against DPI recognition.",
-    "H2025每新流20–30条与2–3秒随机启动窗口需全新真实物理抓包/Stop；H2021旧不限窗口物理PASS不可升级。",
-    "H2031业务record即使无加密填充room也消费启动条数和窗口；验证需同时覆盖后续小record不会在过窗时重新获得填充。"
+    "H2031真实eth0 pcap仅能验证加密record尺寸多样性与MTU；逐record填充字节数和随机窗口分布不能从密文单独反推，依同源Rust单测，不能虚报直接抓到500B。"
   ],
   "promotion": null
 }
