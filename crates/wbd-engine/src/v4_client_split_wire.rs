@@ -346,7 +346,12 @@ impl PacketIngress{
                 }
             }
         }
-        let decision=if let Some(old)=self.pins.get(&key){old}else{
+        // H1952: immutable first-flow route was already looked up above.
+        // Re-querying the same HashMap for every CN-mode DATA packet
+        // added a second hash/probe despite no intervening pin mutation.
+        // The stable old Direct/Fake association still wins over a
+        // refreshed DNS TTL; only a genuinely new flow calls first().
+        let decision=if let Some(old)=prior{old}else{
             self.pins.first(key,preliminary).ok_or(IngressWireError::NoDirectFlowCapacity)?
         };
         if view.more_fragments && decision!=Egress::RejectUnknownFakeIP{
@@ -659,6 +664,41 @@ mod tests{
         assert_eq!(s.on_ipv4(&new_port,300),
             Err(IngressWireError::FragmentAssociationConflict));
         assert_eq!(s.flow_count(),previous);
+    }
+    #[test]
+    fn plan029_h1952_cn_one_prior_lookup_preserves_old_fake_and_tunnel_admission(){
+        let mut s=ingress(Mode::BypassLanCn,1,1);
+        let fake=ip(198,18,1,9);
+        let real=ip(198,51,100,77);
+        let direct=tcp(fake,42000,443);
+        let pinned=IngressAction::Direct{real_dst:real,presented_dst:fake};
+        assert_eq!(s.on_ipv4_with_announced_fake(&direct,1,|x|
+            (x==fake).then_some(real)),Ok(pinned.clone()));
+        let mut established=direct.clone();
+        established[20+13]=0x10;
+        // Even if journal TTL expires after an actual first SYN, the
+        // frozen original Direct route persists for every subsequent ACK.
+        for i in 0..128{
+            assert_eq!(s.on_ipv4_with_announced_fake(&established,i+2,|_|None),
+                Ok(pinned.clone()));
+        }
+        let overseas=udp(ip(8,8,4,4),42001,9000,b"tunnel");
+        assert_eq!(s.on_ipv4(&overseas,131),Ok(IngressAction::Tunnel));
+        for i in 0..128{
+            assert_eq!(s.on_ipv4(&overseas,i+132),Ok(IngressAction::Tunnel));
+        }
+        // Full Direct quota must not reject unrelated Tunnel frames;
+        // the optional Tunnel pin cache may fill without backpressure.
+        for i in 0..128u16{
+            assert_eq!(s.on_ipv4(&udp(ip(9,9,9,9),43000+i,9000,b"x"),
+                280+u64::from(i)),Ok(IngressAction::Tunnel));
+        }
+        assert_eq!(s.flow_count(),2);
+        assert_eq!(s.on_ipv4(&tcp(ip(203,0,113,12),42003,443),500),
+            Err(IngressWireError::NoDirectFlowCapacity));
+        // Unknown FakeIP still cannot become a Tunnel fallback.
+        assert_eq!(s.on_ipv4(&tcp(ip(198,18,3,12),42004,443),501),
+            Ok(IngressAction::DropUnknownFake));
     }
     #[test]
     fn plan029_real_ingress_dns53_cannot_guess_sni_or_dispatch_partial_query(){

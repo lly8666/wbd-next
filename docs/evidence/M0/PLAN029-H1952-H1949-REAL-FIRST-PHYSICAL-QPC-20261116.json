@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1952_COLLECT_H1949",
+  "source_sha": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
+  "action": {
+    "id": 43782426660,
+    "conclusion": "success",
+    "platform": "Windows2025 native signed Wintun + actual WSL2/Linux socket",
+    "artifact_id": 14189347344,
+    "report": "mode-results/normal/report.json",
+    "product_sha_matches": true
+  },
+  "result": "PASS_SCOPED_OBSERVATIONAL_FIRST_PHYSICAL_QPC",
+  "physical_app": {
+    "bytes": 4194304,
+    "elapsed_ms": 60.209,
+    "upload_ms": 17.944,
+    "first_reply_wait_ms": 3.215
+  },
+  "direct_app": {
+    "bytes": 4194304,
+    "elapsed_ms": 117.515,
+    "upload_ms": 65.148,
+    "first_reply_wait_ms": 4.517
+  },
+  "small_tcp": {
+    "status": "PASS_SCOPED_SMALL_TCP_A_B_B_A_SHA_FIN",
+    "two_linux_echo_policies": true,
+    "matched_direct_first_events": 384,
+    "rust_first_events_including_bulk": 386,
+    "qpc_frequency_hz": 10000000,
+    "fin_first": {
+      "direct_n": 192,
+      "client_FIN_to_outer_write_p99_ms": 14.546,
+      "outer_write_to_outer_read_p99_ms": 1.829,
+      "outer_read_to_inner_write_p99_ms": 0.21,
+      "inner_write_to_client_recv_p99_ms": 0.537
+    },
+    "payload_first": {
+      "direct_n": 192,
+      "client_FIN_to_outer_write_p99_ms": 5.889,
+      "outer_write_to_outer_read_p99_ms": 1.4,
+      "outer_read_to_inner_write_p99_ms": 0.119,
+      "inner_write_to_client_recv_p99_ms": 0.43
+    }
+  },
+  "real_tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "windows_p99_ms": 12.074
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "tcp_FIN": {
+    "inner_recv_eof": 386,
+    "outer_recv_eof": 386,
+    "physical_shutdown_write": 386,
+    "inner_shutdown_write": 386
+  },
+  "first_latency_root": "OPEN_BEFORE_FIRST_PHYSICAL_SOCKET_WRITE",
+  "is_cpu_causal_proof": false,
+  "h1947_p1": {
+    "source_sha": "bc6afde542c4daecee393745a982a590c9dba27f",
+    "action": 43777305453,
+    "cn_rows": 4104,
+    "go_plus_rust_cpu_delta_percent": 11.942,
+    "repeat_drift_percent": 10.17,
+    "performance": "OPEN"
+  },
+  "h1952_change": {
+    "single_prior_lookup_no_pin_semantic_change": true,
+    "source_locked_p1_abba": "NOT_RUN"
+  },
+  "entire_plan": "IN_PROGRESS"
+}

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1951,
-  "checkpoint_sha": "56edd66885e0c24043937d97404154dffd7c32f0",
+  "sequence": 1952,
+  "checkpoint_sha": "f5ee530e38c1458cc1def517e074095e3fc86716",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1951 existing H1949 native first physical TCP QPC P2 SOURCE e1cb1d6 in flight; cheap Windows/Linux Go/Rust preflight PASS. Correct governance evidence_refs to true last_tested_source bc6afde H1947, not preflight H1949 failure file. Full PLAN029 IN_PROGRESS, p99 cause and P1 CPU OPEN.",
-  "why_now": "H1950 cursor max8 refs repaired but governance structure Action43782644336 reported evidence is for a different SOURCE. Keep last_tested_source bc6afde true H1947 signed P1, evidence_refs only matching H1947. H1949 failure archive in devlog not current actual evidence pointer.",
+  "current_task": "H1952 H1949 43782426660 true native Windows/WSL2 matched 384/384 first physical WinSock write/read and inner.write. FIN-first p99 client FIN→outer_write14.546ms, outer RTT1.829ms, outer_read→inner_write0.210ms; payload-first 5.889/1.400/0.119ms. Real 4MiB physical60.209/Direct117.515ms, Tunnel UDP120/120, owned Stop PASS_SCOPED. Root before first outer write OPEN. P1 one redundant CN FlowPin get removed, one new source-locked original A/B/B/A planned, no claim CPU improvement.",
+  "why_now": "Original H1949 signed action completed successful; collect real QPC before another test. H1947 P1 original CN4104 four-arm CPU/GiB +11.942% with B drift10.17%, performance OPEN. CN on every ordinary DATA performed two identical hash lookups; no intervening pin mutation; one low-risk measured hypothesis and existing bounded P1 exact source fixture.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1949 actual source e1cb1d6 native action43782426660, if real application QPC 384 writes/reads join measure physical RTT and postread relay; preserve failures/Stop. No duplicate dispatch.",
+  "next_action": "Collect one H1952 exact same-Rust All/CN/CN/All P1 original Action (single source), verify business+Stop+4104 CN rows and CPU by actual GiB with uncertainty; separately isolate H1949 prephysical-write tail with signed-only accept/connected/inner-read QPC on a distinct SOURCE. Do not rerun old P1 or bulk P2. Remaining D1–D5/GUI/Game4/IPv6/padding/pressure OPEN.",
   "unverified": true,
-  "last_tested_source": "bc6afde542c4daecee393745a982a590c9dba27f",
+  "last_tested_source": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1947-H1946-REAL-P1-SAME-RUST-CN4104-CPU-ABBA-20261116.json"
+    "docs/evidence/M0/PLAN029-H1952-H1949-REAL-FIRST-PHYSICAL-QPC-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md",
     "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md",
     "docs/devlog/M0/20261116-PLAN029-H1948-PHYSICAL-REPLY-QPC-BOUNDED.md",
     "docs/devlog/M0/20261116-PLAN029-H1947-P1-FOUR-ARM-CN4104-CPU-OPEN.md",
     "docs/devlog/M0/20261116-PLAN029-H1946-RECOVER-QPC-AND-CN-COLD-SOURCE.md",
     "docs/devlog/M0/20261115-PLAN029-H1945-WIN-QPC-APP-REPLY-GAP.md",
     "docs/devlog/M0/20261115-PLAN029-H1944-ORIGINAL-P2-POWERSHELL-SCOPED-GATE.md",
-    "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261115-PLAN029-H1942-TWO-LINUX-ECHO-POLICIES-FIRST-REPLY.md"
+    "docs/devlog/M0/20261115-PLAN029-H1943-RUST-REVERSE-TICKET-AGE-DIAGNOSTIC.md"
   ],
   "open_requests": [],
-  "partial_summary": "M0 last proven SOURCE bc6afde H1947 P1 application+owned Stop, CPU still OPEN; H1945 QPC true last Direct first-byte observation separate. H1949 new physical QPC actor source e1cb1d6 cheap build PASS and native currently in flight. Governance evidence_ref now matches last tested SOURCE."
+  "partial_summary": "H1949 original source e1cb1d6 Action43782426660 true P2: QPC 384/384, FIN-first pre-physical-write p99 14.546ms vs physical RTT1.829ms; payload-first pre 5.889ms vs RTT1.400ms; native 4MiB 117.515ms direct/60.209ms physical, Tunnel UDP120/120 and owned Stop PASS_SCOPED. H1952 removes one duplicate CN DATA HashMap get, original P1 measured proof PENDING. P1 CPU+11.942% H1947 OPEN, full PLAN029 OPEN."
 }
