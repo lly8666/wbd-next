@@ -103,6 +103,10 @@ enum TcpPhase{
     Connecting(TcpStream,PhysicalTcpSocket),
     Relaying(TcpDirectRelay),
 }
+// Test-only optional early nonblocking physical leg, keyed by the SAME
+// generation-owned NAT proxy port as the first authenticated Direct SYN.
+// No extra event handle/thread, no route changes or early inner ACK logic.
+struct PendingPhysical{socket:PhysicalTcpSocket,started_qpc:i64}
 struct Active{
     key:TcpNatKey,proxy_port:u16,phase:Option<TcpPhase>,
     last_activity_ms:u64,
@@ -114,6 +118,8 @@ struct Active{
     // Both zero for ordinary product flows; signed first event only.
     request_accept_qpc:i64,
     request_connected_qpc:i64,
+    preconnect_started_qpc:i64,
+    preconnect_enabled:bool,
 }
 impl TcpPhase{
     fn socket_handles(&self)->(usize,usize){
@@ -214,6 +220,11 @@ struct TcpLegDiagnosis{
     reply_path_qpc_rows:Vec<(u16,i64,i64,i64)>,
     prewrite_qpc_frequency:i64,
     prewrite_qpc_rows:Vec<(u16,i64,i64,i64,i64,i64,i64)>,
+    // H1955 source-locked 4MiB+384 Direct paired on/off first-SYN
+    // physical preconnect; never enabled by a normal product build.
+    preconnect_qpc_frequency:i64,
+    preconnect_qpc_rows:Vec<(u16,bool,i64,i64)>,
+    preconnect_started:u64,preconnect_failed:u64,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -263,6 +274,9 @@ pub(crate) struct NativeTcpActor{
     physical:Ipv4Addr,ifindex:u32,
     listener:TcpListener,nat:DirectTcpNat,
     pending:HashMap<u16,(TcpNatKey,u64)>,
+    pending_physical:HashMap<u16,PendingPhysical>,
+    preconnect_signed:bool,
+    preconnect_ordinal:u64,
     deadlines:VecDeque<(u16,u64)>,
     active:Vec<Active>,
     active_by_port:HashMap<u16,usize>,
@@ -349,8 +363,17 @@ impl NativeTcpActor{
             let d=diagnosis.as_mut().ok_or(())?;
             d.prewrite_qpc_frequency=d.reply_qpc_frequency;
         }
+        let signed_preconnect=signed_prewrite_qpc &&
+            std::env::var("WBD_PLAN029_P2_PRECONNECT_AB_SCENE").ok()
+                .as_deref()==Some("1");
+        if signed_preconnect{
+            diagnosis.as_mut().ok_or(())?.preconnect_qpc_frequency=
+                reply_qpc_frequency().ok_or(())?;
+        }
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
+            pending_physical:HashMap::new(),preconnect_signed:signed_preconnect,
+            preconnect_ordinal:0,
             deadlines:VecDeque::new(),active:Vec::new(),
             active_by_port:HashMap::new(),
             shard_ports:std::array::from_fn(|_|Vec::new()),
@@ -599,6 +622,29 @@ impl NativeTcpActor{
             self.pending.insert(entry.proxy_port,(entry.key,deadline));
             self.deadlines.push_back((entry.proxy_port,deadline));
             self.accept_armed=true;
+            if self.preconnect_signed{
+                // Interleave direct first-SYN on/off within ONE original
+                // Windows VM/source, never compare separate VM builds.
+                // A failed eager attempt keeps the old accept-time path.
+                self.preconnect_ordinal=self.preconnect_ordinal.saturating_add(1);
+                if self.preconnect_ordinal%2==1 {
+                    let dst=SocketAddrV4::new(Ipv4Addr::from(entry.real_dst),
+                        entry.key.target_port);
+                    let start=reply_qpc_now().unwrap_or(0);
+                    match PhysicalTcpSocket::start(self.physical,self.ifindex,dst){
+                        Ok(socket)=>{
+                            self.pending_physical.insert(entry.proxy_port,
+                                PendingPhysical{socket,started_qpc:start});
+                            if let Some(d)=self.diagnosis.as_mut(){
+                                d.preconnect_started+=1;
+                            }
+                        },
+                        Err(_)=>if let Some(d)=self.diagnosis.as_mut(){
+                            d.preconnect_failed+=1;
+                        },
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -664,7 +710,13 @@ impl NativeTcpActor{
             }else{0};
             let dst=SocketAddrV4::new(Ipv4Addr::from(entry.real_dst),
                 entry.key.target_port);
-            match PhysicalTcpSocket::start(self.physical,self.ifindex,dst){
+            let prephysical=self.pending_physical.remove(&entry.proxy_port);
+            let early=prephysical.is_some();
+            let started=prephysical.as_ref().map(|p|p.started_qpc)
+                .unwrap_or(accept_qpc);
+            let candidate=prephysical.map(|p|p.socket).map(Ok)
+                .unwrap_or_else(||PhysicalTcpSocket::start(self.physical,self.ifindex,dst));
+            match candidate{
                 Ok(socket)=>{
                     let shard=SocketReadiness::shard(entry.proxy_port);
                     let watches=self.socket_events.watch(
@@ -707,6 +759,8 @@ impl NativeTcpActor{
                         first_reply_qpc_logged:false,
                         request_accept_qpc:accept_qpc,
                         request_connected_qpc:0,
+                        preconnect_started_qpc:started,
+                        preconnect_enabled:early,
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
@@ -897,6 +951,14 @@ impl NativeTcpActor{
                                                     flow.key.source_port,
                                                     path.first_outer_write,
                                                     path.first_outer_read,q));
+                                                if d.preconnect_qpc_frequency>0 &&
+                                                   d.preconnect_qpc_rows.len()<MAX_QPC_REPLY_ROWS {
+                                                    d.preconnect_qpc_rows.push((
+                                                        flow.key.source_port,
+                                                        flow.preconnect_enabled,
+                                                        flow.preconnect_started_qpc,
+                                                        flow.request_accept_qpc));
+                                                }
                                                 if d.prewrite_qpc_frequency>0 &&
                                                    d.prewrite_qpc_rows.len()<MAX_QPC_REPLY_ROWS{
                                                     d.prewrite_qpc_rows.push((
@@ -1021,6 +1083,9 @@ impl NativeTcpActor{
             let Some((key,current))=self.pending.get(&port).copied()else{continue};
             if current!=due{continue}
             self.pending.remove(&port);
+            // Drop only the exact unaccepted generation's early physical
+            // socket. No socket survives the 30-second SYN admission limit.
+            self.pending_physical.remove(&port);
             self.nat.retire(key);
             retired.push(key);
         }
@@ -1369,6 +1434,14 @@ impl Drop for NativeTcpActor{
                 format!("{}:{}:{}:{}",p,w,r,i)).collect::<Vec<_>>().join(",");
             eprintln!("PLAN029_H1948_REPLY_PATH_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
                 d.reply_path_qpc_frequency,d.reply_path_qpc_rows.len(),rows);
+        }
+        if d.preconnect_qpc_frequency>0{
+            let rows=d.preconnect_qpc_rows.iter().map(|(p,on,start,accept)|
+                format!("{}:{}:{}:{}",p,u8::from(*on),start,accept))
+                .collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1955_PRECONNECT_AB_QPC_FINAL frequency={} count={} early_started={} early_failed={} rows={} source=original_rust_direct_test_only",
+                d.preconnect_qpc_frequency,d.preconnect_qpc_rows.len(),
+                d.preconnect_started,d.preconnect_failed,rows);
         }
         if d.prewrite_qpc_frequency>0 {
             let rows=d.prewrite_qpc_rows.iter().map(|(p,a,c,r,w,o,i)|

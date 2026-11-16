@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task": "PLAN029-H1955-COLLECT-H1952",
+  "plan": "029",
+  "source_sha": "eb5743986191a9102dda7e0aa085c7b198d0a123",
+  "result": "PASS_SCOPED_P1_SAME_RUST_V3_POLICY_ABBA_MEASURED",
+  "action_id": 43785063606,
+  "job_id": 133032468175,
+  "artifact_id": 14190856869,
+  "action_conclusion": "success",
+  "scope": "ONE_ORIGINAL_WIN2025_WSL2_VM_SAME_RUST_V3_POLICY_ABBA_SAME_TUNNEL_NO_DIRECT_FLOW",
+  "order": [
+    "A1_all",
+    "B1_cn",
+    "B2_cn",
+    "A2_all"
+  ],
+  "same_original_windows_cli_sha256": true,
+  "same_original_linux_server_sha256": true,
+  "cn_rows": [
+    0,
+    4104,
+    4104,
+    0
+  ],
+  "domain_bytes": [
+    0,
+    180224,
+    180224,
+    0
+  ],
+  "delivered_gib_each_leg": [
+    0.6984,
+    0.6984,
+    0.6984,
+    0.6984
+  ],
+  "windows_mbps": [
+    49.9999,
+    49.9997,
+    49.9997,
+    49.9999
+  ],
+  "linux_mbps": [
+    49.9874,
+    49.9874,
+    49.9874,
+    49.9874
+  ],
+  "windows_udp_p99_ms": [
+    63,
+    63,
+    78,
+    78
+  ],
+  "windows_go_plus_rust_cpu_s_per_actual_gib": [
+    20.24714,
+    21.07503,
+    20.67225,
+    20.49327
+  ],
+  "cpu_comparison": {
+    "A_all_mean_cpu_s_per_gib": 20.3702,
+    "B_cn_mean_cpu_s_per_gib": 20.87364,
+    "B_minus_A_cpu_s_per_gib": 0.50344,
+    "B_over_A_cpu_pct": 2.471,
+    "A_drift_pct": 1.208,
+    "B_repeat_spread_pct": 1.93,
+    "interpretation": "NO_PROVEN_REGRESSION_WITHIN_ABBA_NOISE_NOT_CAUSAL_PROOF"
+  },
+  "app_and_owned_stop_all_four": "PASS_BOTH_OWNED",
+  "source_locked_functional_result": "PASS",
+  "limitations": [
+    "Four sequential legs on one VM; change across previous SOURCE is not a causal before/after estimate",
+    "Includes Go+Rust Windows process but not all ISR/DPC/driver/WSL CPU",
+    "Only 50Mbps; 100-200Mbps and full P1 exit not proven",
+    "P99 reported per arm and cannot be directly subtracted"
+  ],
+  "plan029_p1_performance": "OPEN_PARTIAL_PROTECTION_SAME_VM_WITHIN_NOISE",
+  "full_plan029": "IN_PROGRESS"
+}

@@ -253,3 +253,95 @@ def analyze_prewrite(log,scene,source):
                 "INNER_RECV_AFTER_REAL_NONBLOCKING_KERNEL_READ",
                 "PHYSICAL_WRITE_AFTER_SUCCESSFUL_KERNEL_SEND",
                 "OBSERVATION_NOT_CAUSAL_P99_FIX_OR_CPU_AB"]}
+
+
+# H1955 only: exact same-source, same-Windows, interleaved Direct SYN
+# early physical connect vs original accept-time physical connect.
+PRECON_MARK="PLAN029_H1955_PRECONNECT_AB_QPC_FINAL "
+def read_native_preconnect_qpc(log):
+    lines=[x.split(PRECON_MARK,1)[1].strip()
+        for x in log.splitlines() if PRECON_MARK in x]
+    need(len(lines)==1,"H1955 original preconnect receipt missing/duplicated")
+    m=re.fullmatch(r"frequency=([1-9]\d*) count=(\d+) "
+                   r"early_started=(\d+) early_failed=(\d+) "
+                   r"rows=([0-9:,]*) source=original_rust_direct_test_only",
+                   lines[0])
+    need(m is not None,"H1955 invalid original preconnect receipt")
+    freq=int(m[1]);count=int(m[2])
+    started=int(m[3]);failed=int(m[4])
+    need(0<count<=LIMIT and started>=0 and failed==0,
+         "H1955 preconnect overflow/physical eager socket failed")
+    rows=[]
+    for entry in m[5].split(","):
+        items=entry.split(":")
+        need(len(items)==4,"H1955 original preconnect first-event row incomplete")
+        port,enabled,start,accepted=map(int,items)
+        need(1024<=port<=65535 and enabled in (0,1) and
+             0<start<=accepted,"H1955 original preconnect time/mode malformed")
+        need(enabled==1 or start==accepted,
+             "H1955 off arm must not begin before listener accept")
+        rows.append((port,enabled,start,accepted))
+    need(len(rows)==count,"H1955 source first-event row count invalid")
+    need(sum(int(x[1]) for x in rows)==started,
+         "H1955 eager socket start count not matching first replies")
+    return freq,rows
+
+def analyze_preconnect(log,scene,source):
+    proof=analyze_prewrite(log,scene,source)
+    freq,rows=read_native_preconnect_qpc(log)
+    need(freq==proof["frequency_hz"],"H1955 original Windows QPC freq changed")
+    _,prewrites=read_native_prewrite_qpc(log)
+    by_key={}
+    for i,row in enumerate(rows):
+        by_key.setdefault((row[0],row[3]),[]).append((i,row))
+    qpc_by_port={}
+    for port,accepted,connected,inner_recv,phys_write,phys_recv,reply_write in prewrites:
+        qpc_by_port.setdefault(port,[]).append((
+            accepted,connected,inner_recv,phys_write,phys_recv,reply_write))
+    consumed=set();joined_pre=set();report={}
+    for policy,app in (("fin_first",scene["windows"]),
+                       ("payload_first",scene["echo_before_fin_control"]["windows"])):
+        arm=[v for v in app["qpc_records"] if v.get("role")=="direct"]
+        need(len(arm)==192,"H1955 missing original Direct application receipts")
+        observations={"on":[],"off":[]}
+        lead={"on":[],"off":[]}
+        accepts={"on":[],"off":[]}
+        for x in arm:
+            port=x["source_port"];fin=x["half_close_qpc"];first=x["first_echo_qpc"]
+            pre=[row for row in qpc_by_port.get(port,[])
+                 if (port,row[0]) not in joined_pre and
+                    fin-freq//100<=row[-1]<=first+freq//100]
+            need(len(pre)==1,"H1955 actual physical prewrite QPC ambiguous")
+            accepted,connected,inner_recv,write,recv,reply=pre[0]
+            linked=by_key.get((port,accepted),[])
+            need(len(linked)==1,"H1955 physical SYN start not matched by accept")
+            i,row=linked[0]
+            need(i not in consumed,"H1955 reused source-port preconnect event")
+            consumed.add(i);joined_pre.add((port,accepted))
+            _,mode,started,_=row
+            arm_name="on" if mode==1 else "off"
+            # Actual client half-close clock remains the same Windows QPC;
+            # a negative FIN->write is a valid early payload response, not
+            # a latency correction or an imaginary cross-OS timestamp.
+            observations[arm_name].append((write-fin)*1000/freq)
+            lead[arm_name].append((accepted-started)*1000/freq)
+            accepts[arm_name].append((connected-accepted)*1000/freq)
+        need(all(len(observations[k])==96 for k in ("on","off")),
+             "H1955 within-policy 96-on/96-off interleaving missing")
+        report[policy]={arm_name:{
+            "n":len(observations[arm_name]),
+            "client_FIN_to_first_physical_write_signed":dist(observations[arm_name]),
+            "first_physical_connect_start_to_listener_accept":dist(lead[arm_name]),
+            "listener_accept_to_physical_connected":dist(accepts[arm_name])
+        } for arm_name in ("on","off")}
+    need(len(consumed)==384,"H1955 all 384 original Direct off/on rows required")
+    return {"source_sha":source,
+        "status":"PASS_SCOPED_SAME_SOURCE_INTERLEAVED_PRECONNECT_P2",
+        "matched_direct_events":384,"original_windows_frequency_hz":freq,
+        "native_qpc_rows":len(rows),"policies":report,
+        "preconnect_enabled_only_signed_original_CI":True,
+        "limitations":["TRUE_SAME_SOURCE_WIN2025_INTERLEAVED_NOT_INDEPENDENT_VM",
+                       "NOT_REMOTE_LINUX_ONEWAY_CLOCK",
+                       "LOW_N_WITHIN_POLICY_P99_CANNOT_PROVE_CAUSAL_FIX",
+                       "PHYSICAL_SOCKET_START_BEFORE_LISTENER_ACCEPT_NOT_EARLY_ACK",
+                       "NORMAL_PRODUCT_EAGER_CONNECT_REMAINS_DISABLED"]}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "task": "PLAN029-H1955",
+  "plan": "029",
+  "source_sha": "UNASSIGNED_UNTIL_ATOMIC_H1955_COMMIT",
+  "status": "NOT_RUN_PENDING_GENUINE_SIGNED_NATIVE_384",
+  "latest_proven_original_p2_source": "acbc130775c3b1d7077b986db3a272c7d7fde738",
+  "latest_proven_original_p1_source": "eb5743986191a9102dda7e0aa085c7b198d0a123",
+  "scene": "SAME_WIN2025_ORIGINAL_4M_PLUS_384_DIRECT_ONE_COLD_OWNER_INTERLEAVED_EARLY_SYN_PRECONNECT_ODD_AND_ORIGINAL_ACCEPT_TIME_EVEN",
+  "expected_384_direct": 384,
+  "expected_each_policy": {
+    "on": 96,
+    "off": 96
+  },
+  "ordinary_product_preconnect": false,
+  "owned_source_interface_and_target": true,
+  "pending_30s_nat_expiry_reclaims_socket": true,
+  "exit_requirements": [
+    "both_linux_echo_policies_SHA_FIN",
+    "one_win_vm_384_matched_prewrite_and_preconnect_qpc",
+    "physical_unpaced_4mib_reference",
+    "direct_unpaced_4mib_sha",
+    "overlap_tunnel_udp120_and_sustained",
+    "both_owned_stop"
+  ],
+  "report": "NOT_RUN",
+  "full_plan029": "IN_PROGRESS"
+}

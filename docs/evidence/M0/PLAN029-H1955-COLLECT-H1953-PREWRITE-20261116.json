@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task": "PLAN029-H1955-COLLECT-H1953",
+  "plan": "029",
+  "source_sha": "acbc130775c3b1d7077b986db3a272c7d7fde738",
+  "result": "PASS_SCOPED_NATIVE_REAL_PREPHYSICAL_QPC_AND_APPLICATION",
+  "action_id": 43785820738,
+  "job_id": 133034691259,
+  "artifact_id": 14190448480,
+  "conclusion": "success",
+  "scope": "ORIGINAL_WIN2025_WSL2_REAL_WINTUN_AND_PHYSICAL_TCP_TWO_LINUX_ECHO_POLICIES",
+  "native_windows_rust_prewrite_qpc_frequency": 10000000,
+  "rust_first_event_rows": 386,
+  "matched_actual_direct_application_qpc": 384,
+  "p2_unpaced_4mib": {
+    "payload_bytes": 4194304,
+    "physical_elapsed_ms": 48.427,
+    "direct_elapsed_ms": 120.698,
+    "direct_over_physical_ratio": 2.492,
+    "physical_upload_ms": 19.092,
+    "direct_upload_ms": 57.807,
+    "physical_download_ms": 14.781,
+    "direct_download_ms": 49.578,
+    "full_SHA_FIN": "PASS"
+  },
+  "prewrite_segments": {
+    "fin_first": {
+      "app_FIN_to_phys_write_p99_ms": 13.984,
+      "listener_accept_to_phys_connected_p99_ms": 17.266,
+      "phys_connected_to_first_inner_recv_p99_ms": 22.73,
+      "first_inner_recv_to_phys_write_p99_ms": 0.182,
+      "app_FIN_to_listener_accept_p99_ms": 0.132,
+      "accept_before_client_FIN": 177,
+      "real_app_direct_connections": 192
+    },
+    "payload_first": {
+      "app_FIN_to_phys_write_p99_ms": 14.635,
+      "listener_accept_to_phys_connected_p99_ms": 17.467,
+      "phys_connected_to_first_inner_recv_p99_ms": 19.488,
+      "first_inner_recv_to_phys_write_p99_ms": 0.139,
+      "app_FIN_to_listener_accept_p99_ms": 0.18,
+      "accept_before_client_FIN": 177,
+      "real_app_direct_connections": 192
+    }
+  },
+  "per_flow_Fin_to_first_physical_write_over8ms": {
+    "fin_first": 3,
+    "payload_first": 4,
+    "connection_not_connected_by_FIN": 6,
+    "connected_but_inner_recv_delayed": 1,
+    "observation": "6 of 7 slow flows wait for completed kernel physical TCP connection after FIN; 1 exception first inner recv 51.808ms after physical connected. No causal blame or cross-OS one-way clock."
+  },
+  "tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "sustained_total": 694,
+    "covered_whole_direct_tcp": true
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "p2_performance": "OPEN_2_492_X_BULK_AND_NONZERO_FIRST_BYTE_TAIL",
+  "limitations": [
+    "p99 stages are marginal distributions and cannot be added",
+    "physical TCP connect may include true guest TCP handshake and Windows event servicing",
+    "pre-FIN time from client upload is not rust-blocked time",
+    "Linux/Windows monotonic clocks never mixed",
+    "One original SRC test is not a P2 latency fix"
+  ],
+  "full_plan029": "IN_PROGRESS"
+}
