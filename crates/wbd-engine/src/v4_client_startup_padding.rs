@@ -12,8 +12,8 @@ fn candidate(packet:&[u8],tls_only:bool)->bool{
     if packet.len()<28||packet[0]>>4!=4{return false}
     let ihl=usize::from(packet[0]&15)*4;
     if ihl<20||ihl+8>packet.len()||
-        u16::from_be_bytes(packet[2..4].try_into().ok()?) as usize!=packet.len()||
-        (u16::from_be_bytes(packet[6..8].try_into().ok()?)&0x1fff)!=0{
+        u16::from_be_bytes([packet[2],packet[3]]) as usize!=packet.len()||
+        (u16::from_be_bytes([packet[6],packet[7]])&0x1fff)!=0{
         return false
     }
     let proto=packet[9];
@@ -24,7 +24,7 @@ fn candidate(packet:&[u8],tls_only:bool)->bool{
         if hdr<20||ihl+hdr>=packet.len(){return false}
         ihl+hdr
     }else{
-        let len=u16::from_be_bytes(packet[ihl+4..ihl+6].try_into().ok()?) as usize;
+        let len=u16::from_be_bytes([packet[ihl+4],packet[ihl+5]]) as usize;
         if len!=packet.len()-ihl||len<=8{return false}
         ihl+8
     };

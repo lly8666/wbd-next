@@ -1027,16 +1027,13 @@ mod tests{
         assert!(!s.startup_padding_enabled());
         let probe=packet([203,0,113,77],443,&[7u8;128]);
         assert_eq!(s.propose_tunnel_padding(&probe,10,256),0);
-        assert_eq!(s.startup_padding.len(),0);
         s.set_startup_padding(StartupMode::Flows,[2u8;16]);
         assert!(s.startup_padding_enabled());
         let mut total=0;
-        for _ in 0..12{total+=s.propose_tunnel_padding(&probe,11,256)}
-        assert!(total<=2048);
-        assert_eq!(s.startup_padding.len(),1);
+        for _ in 0..256{total+=s.propose_tunnel_padding(&probe,11,256)}
+        assert!(total>2048,"old per-flow quota must not suppress valid records");
         s.set_startup_padding(StartupMode::Off,[3u8;16]);
         assert_eq!(s.propose_tunnel_padding(&probe,12,256),0);
-        assert_eq!(s.startup_padding.len(),0);
     }
     #[test]
     fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){
