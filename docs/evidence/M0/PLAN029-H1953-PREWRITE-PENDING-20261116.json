@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1953",
+  "last_tested_source": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
+  "h1949_original": {
+    "source_sha": "e1cb1d6c8c2919e2a946e262f3c24ee475138036",
+    "action": 43782426660,
+    "matched_direct_small_tcp": 384,
+    "fin_first_client_FIN_to_first_phys_send_p99_ms": 14.546,
+    "fin_first_physical_RTT_p99_ms": 1.829,
+    "fin_first_post_read_to_inner_write_p99_ms": 0.21,
+    "full_p2_stop": "PASS_BOTH_OWNED"
+  },
+  "h1952_p1": {
+    "source_sha": "eb5743986191a9102dda7e0aa085c7b198d0a123",
+    "action": 43785063606,
+    "status": "IN_PROGRESS_SAME_RUST_CN_ONE_FLOWPIN_GET",
+    "do_not_rerun": true
+  },
+  "h1953_p2": {
+    "source_sha": "FUTURE_COMMIT_SHA_ON_PUBLISH",
+    "status": "NOT_RUN",
+    "new_qpc": [
+      "first_real_listener_accept",
+      "first_real_physical_connected",
+      "first_real_inner_recv"
+    ],
+    "expected_direct_matched": 384,
+    "first_broken_boundary": "NOT_OBSERVED_YET",
+    "signed_gate": "WBD_PLAN029_P2_PREWRITE_QPC_SCENE"
+  },
+  "overall": "IN_PROGRESS",
+  "not_cpu_fix": true,
+  "not_first_byte_fix": true
+}

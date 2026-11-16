@@ -175,3 +175,81 @@ def analyze_path(original_log,scene,source):
           "WIN32_QPC_NOT_CAUSAL_CPU_OR_LATENCY_FIX",
           "FIRST_OUTER_READ_IS_AFTER_NONBLOCKING_RECV_SUCCESS",
           "SIGNED_TEST_ONLY_NO_PRODUCTION_POLLING"]}
+
+
+# H1953 signed-only first original Windows kernel listener/physical connect/
+# local app inner receive -> first physical write; never Linux clock arithmetic.
+PREWRITE_MARK="PLAN029_H1953_PREWRITE_QPC_FINAL "
+def read_native_prewrite_qpc(log):
+    lines=[line.split(PREWRITE_MARK,1)[1].strip()
+           for line in log.splitlines() if PREWRITE_MARK in line]
+    need(len(lines)==1,"H1953 original prewrite QPC absent/duplicated")
+    m=re.fullmatch(r"frequency=([1-9]\d*) count=(\d+) rows=([0-9:,]*) "
+                   r"source=original_rust_direct_test_only",lines[0])
+    need(m is not None,"H1953 original prewrite QPC format invalid")
+    freq=int(m[1]);count=int(m[2])
+    need(0<count<=LIMIT,"H1953 original prewrite row count invalid")
+    rows=[]
+    for entry in m[3].split(","):
+        fields=entry.split(":")
+        need(len(fields)==7,"H1953 prewrite tuple incomplete")
+        port,accepted,connected,inner_recv,phys_write,phys_recv,inner_write=map(int,fields)
+        need(1024<=port<=65535 and
+             0<accepted<=connected<=inner_recv<=phys_write<=phys_recv<=inner_write,
+             "H1953 missing/nonmonotonic original prephysical event")
+        rows.append((port,accepted,connected,inner_recv,phys_write,phys_recv,inner_write))
+    need(len(rows)==count,"H1953 prewrite row count mismatch")
+    need(all(a[-1]<=b[-1] for a,b in zip(rows,rows[1:])),
+         "H1953 original inner write chronology invalid")
+    return freq,rows
+
+def analyze_prewrite(log,scene,source):
+    prior=analyze_path(log,scene,source)
+    freq,rows=read_native_prewrite_qpc(log)
+    need(freq==prior["frequency_hz"],"H1953 QPC frequencies mismatch")
+    _,existing=read_native_path_qpc(log)
+    prior_path={}
+    for port,w,r,i in existing:prior_path.setdefault(port,[]).append((w,r,i))
+    by_port={}
+    for j,row in enumerate(rows):by_port.setdefault(row[0],[]).append((j,row))
+    used=set();reported={}
+    for policy,app in (("fin_first",scene["windows"]),
+                       ("payload_first",scene["echo_before_fin_control"]["windows"])):
+        samples=[x for x in app["qpc_records"] if x.get("role")=="direct"]
+        need(len(samples)==192,"H1953 original Direct application rows missing")
+        to_accept=[];connect=[];await_inner=[];forward=[];to_outer=[]
+        accepted_before_fin=0
+        for x in samples:
+            port=x["source_port"];fin=x["half_close_qpc"];first=x["first_echo_qpc"]
+            found=[(j,row) for j,row in by_port.get(port,[])
+                   if j not in used and fin-freq//100<=row[-1]<=first+freq//100]
+            need(len(found)==1,"H1953 missing/ambiguous original Direct port QPC")
+            j,row=found[0]
+            _,a,c,r,w,o,i=row
+            need(any((w,o,i)==prior for prior in prior_path.get(port,[])),
+                 "H1953 events disagree with H1948 physical first-events")
+            used.add(j)
+            v=(a-fin)*1000/freq
+            to_accept.append(v)
+            accepted_before_fin+=int(v<0)
+            connect.append((c-a)*1000/freq)
+            await_inner.append((r-c)*1000/freq)
+            forward.append((w-r)*1000/freq)
+            to_outer.append((w-fin)*1000/freq)
+        reported[policy]={
+            "client_FIN_to_Rust_listener_accept_signed":dist(to_accept),
+            "Rust_listener_accept_to_physical_connected":dist(connect),
+            "physical_connected_to_first_inner_recv":dist(await_inner),
+            "first_inner_recv_to_first_physical_write":dist(forward),
+            "client_FIN_to_first_physical_write_signed":dist(to_outer),
+            "listener_accept_precedes_client_FIN":accepted_before_fin}
+    need(len(used)==384,"H1953 384 original Direct joined events required")
+    return {"source_sha":source,"frequency_hz":freq,
+            "status":"PASS_SCOPED_SAME_WINDOWS_PREPHYSICAL_QPC",
+            "matched_direct_events":len(used),"rust_first_event_rows":len(rows),
+            "policies":reported,
+            "limitations":["WIN2025_SOURCE_LOCKED_NO_LINUX_ONEWAY_CLOCK",
+                "ACCEPT_CONNECT_TIMESTAMPS_AFTER_SUCCESSFUL_SYSCALL",
+                "INNER_RECV_AFTER_REAL_NONBLOCKING_KERNEL_READ",
+                "PHYSICAL_WRITE_AFTER_SUCCESSFUL_KERNEL_SEND",
+                "OBSERVATION_NOT_CAUSAL_P99_FIX_OR_CPU_AB"]}

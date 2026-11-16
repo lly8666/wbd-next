@@ -111,6 +111,9 @@ struct Active{
     generation:u64,queued:bool,fast_forward:bool,
     close_hints:[bool;2],
     first_reply_qpc_logged:bool,
+    // Both zero for ordinary product flows; signed first event only.
+    request_accept_qpc:i64,
+    request_connected_qpc:i64,
 }
 impl TcpPhase{
     fn socket_handles(&self)->(usize,usize){
@@ -209,6 +212,8 @@ struct TcpLegDiagnosis{
     reply_qpc_rows:Vec<(u16,i64)>,
     reply_path_qpc_frequency:i64,
     reply_path_qpc_rows:Vec<(u16,i64,i64,i64)>,
+    prewrite_qpc_frequency:i64,
+    prewrite_qpc_rows:Vec<(u16,i64,i64,i64,i64,i64,i64)>,
     io_reads:[u64;2],io_read_wouldblock:[u64;2],
     io_fin_peek_calls:[u64;2],io_fin_peek_eof:[u64;2],
     io_writes:[u64;2],io_write_wouldblock:[u64;2],
@@ -336,6 +341,13 @@ impl NativeTcpActor{
         if signed_path_qpc {
             let d=diagnosis.as_mut().ok_or(())?;
             d.reply_path_qpc_frequency=d.reply_qpc_frequency;
+        }
+        let signed_prewrite_qpc=signed_path_qpc &&
+            std::env::var("WBD_PLAN029_P2_PREWRITE_QPC_SCENE").ok()
+                .as_deref()==Some("1");
+        if signed_prewrite_qpc {
+            let d=diagnosis.as_mut().ok_or(())?;
+            d.prewrite_qpc_frequency=d.reply_qpc_frequency;
         }
         Ok(Self{lease:u32::from(lease),synthetic:u32::from(synthetic),
             physical,ifindex,listener,nat,pending:HashMap::new(),
@@ -646,6 +658,10 @@ impl NativeTcpActor{
                 else{continue};
             if !self.pending.contains_key(&entry.proxy_port){continue}
             self.pending.remove(&entry.proxy_port);
+            let accept_qpc=if self.diagnosis.as_ref().is_some_and(|d|
+                d.prewrite_qpc_frequency>0){
+                reply_qpc_now().unwrap_or(0)
+            }else{0};
             let dst=SocketAddrV4::new(Ipv4Addr::from(entry.real_dst),
                 entry.key.target_port);
             match PhysicalTcpSocket::start(self.physical,self.ifindex,dst){
@@ -689,6 +705,8 @@ impl NativeTcpActor{
                         last_activity_ms:now_ms,generation,queued:false,
                         fast_forward,close_hints:[false,false],
                         first_reply_qpc_logged:false,
+                        request_accept_qpc:accept_qpc,
+                        request_connected_qpc:0,
                     });
                     self.active_by_port.insert(entry.proxy_port,index);
                     self.shard_ports[shard].push(entry.proxy_port);
@@ -774,6 +792,10 @@ impl NativeTcpActor{
                         },
                         Ok(ConnectProgress::Connected)=>{
                             advanced=true;
+                            if self.diagnosis.as_ref().is_some_and(|d|
+                                d.prewrite_qpc_frequency>0){
+                                flow.request_connected_qpc=reply_qpc_now().unwrap_or(0);
+                            }
                             let fast_forward=flow.fast_forward;
                             match outer.into_connected_stream().and_then(|outside|
                                 TcpDirectRelay::with_fast_forward(inner,outside,fast_forward)){
@@ -875,6 +897,16 @@ impl NativeTcpActor{
                                                     flow.key.source_port,
                                                     path.first_outer_write,
                                                     path.first_outer_read,q));
+                                                if d.prewrite_qpc_frequency>0 &&
+                                                   d.prewrite_qpc_rows.len()<MAX_QPC_REPLY_ROWS{
+                                                    d.prewrite_qpc_rows.push((
+                                                        flow.key.source_port,
+                                                        flow.request_accept_qpc,
+                                                        flow.request_connected_qpc,
+                                                        path.first_inner_read,
+                                                        path.first_outer_write,
+                                                        path.first_outer_read,q));
+                                                }
                                             }
                                         }
                                         flow.first_reply_qpc_logged=true;
@@ -1337,6 +1369,13 @@ impl Drop for NativeTcpActor{
                 format!("{}:{}:{}:{}",p,w,r,i)).collect::<Vec<_>>().join(",");
             eprintln!("PLAN029_H1948_REPLY_PATH_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
                 d.reply_path_qpc_frequency,d.reply_path_qpc_rows.len(),rows);
+        }
+        if d.prewrite_qpc_frequency>0 {
+            let rows=d.prewrite_qpc_rows.iter().map(|(p,a,c,r,w,o,i)|
+                format!("{}:{}:{}:{}:{}:{}:{}",p,a,c,r,w,o,i))
+                .collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1953_PREWRITE_QPC_FINAL frequency={} count={} rows={} source=original_rust_direct_test_only",
+                d.prewrite_qpc_frequency,d.prewrite_qpc_rows.len(),rows);
         }
         // Exactly one cold aggregate FIN witness AFTER the original TX
         // returns to its Stop owner. No IPs, TIDs, original payload,

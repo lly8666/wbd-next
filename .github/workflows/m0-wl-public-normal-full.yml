@@ -132,6 +132,7 @@ on:
       - tools/m0_plan029_h1945_reply_qpc.py
       - tests/test_m0_plan029_h1945_reply_qpc.py
       - tests/test_m0_plan029_h1948_reply_path_qpc.py
+      - tests/test_m0_plan029_h1953_prewrite_qpc.py
       - scenarios/plan029-p1-normal-50m-25ms0-60s.json
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
@@ -1019,6 +1020,7 @@ jobs:
       WBD_PLAN029_P2_REPLY_TICKET_DIAG: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-reply-ticket-diag]') && '1' || '0' }}
       WBD_PLAN029_P2_REPLY_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-reply-qpc]') && '1' || '0' }}
       WBD_PLAN029_P2_REPLY_PATH_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-reply-path-qpc]') && '1' || '0' }}
+      WBD_PLAN029_P2_PREWRITE_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-prewrite-qpc]') && '1' || '0' }}
       WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.

@@ -2280,6 +2280,11 @@ print(json.dumps(result),flush=True)
       measured["same_windows_reply_path_qpc"]=analyze_path(
           original_stop_log,measured,os.environ["GITHUB_SHA"])
       print("PLAN029_H1948_SIGNED_RUST_PHYSICAL_WRITE_READ_INNER_WRITE_QPC",flush=True)
+      if os.environ.get("WBD_PLAN029_P2_PREWRITE_QPC_SCENE")=="1":
+       from m0_plan029_h1945_reply_qpc import analyze_prewrite
+       measured["same_windows_prephysical_qpc"]=analyze_prewrite(
+           original_stop_log,measured,os.environ["GITHUB_SHA"])
+       print("PLAN029_H1953_SIGNED_RUST_PREPHYSICAL_TCP_REQUEST_QPC",flush=True)
     if p029_tcp128:
      from m0_plan029_h1892_real_tcp128 import parse_rust_128,idle_cpu_window
      stress=p2.get("tcp128")

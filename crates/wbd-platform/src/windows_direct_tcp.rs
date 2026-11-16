@@ -334,6 +334,8 @@ fn signed_reply_path_qpc_tick()->i64{
 }
 #[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
 pub struct RelayReplyPathQpc{
+    // H1953 source-locked test only: timestamp first inner kernel recv.
+    pub first_inner_read:i64,
     pub first_outer_write:i64,
     pub first_outer_read:i64,
 }
@@ -500,6 +502,12 @@ impl TcpDirectRelay{
         self.reply_path_qpc
     }
     #[inline]
+    fn note_first_inner_read_qpc(&mut self){
+        if let Some(row)=self.reply_path_qpc.as_mut(){
+            if row.first_inner_read==0{row.first_inner_read=signed_reply_path_qpc_tick();}
+        }
+    }
+    #[inline]
     fn note_first_outer_write_qpc(&mut self){
         if let Some(row)=self.reply_path_qpc.as_mut(){
             if row.first_outer_write==0{row.first_outer_write=signed_reply_path_qpc_tick();}
@@ -577,6 +585,7 @@ impl TcpDirectRelay{
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>{self.inner_eof=true;self.read_armed[0]=false},
                 Ok(n)=>{
+                    if n>0{self.note_first_inner_read_qpc();}
                     // First try direct scratch->physical kernel send, only then
                     // allocate a bounded suffix queue if needed.
                     if self.fast_forward{
