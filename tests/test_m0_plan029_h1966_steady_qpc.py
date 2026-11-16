@@ -51,7 +51,7 @@ class H1966SteadyOriginalQPC(unittest.TestCase):
         self.assertEqual(report["messages"],N)
         self.assertEqual(report["app_direct_rtt"]["n"],N)
         self.assertEqual(report["wintun_on_packet_to_classification"]["n"],N)
-        self.assertIn("not TCP packet count equality",report["sequence_policy"])
+        self.assertIn("no TCP packet count equality",report["sequence_policy"])
         self.assertEqual(report["kernel_inner_read_to_physical_write"]["n"],N)
     def test_missing_rust_real_owner_trace(self):
         log,data=scene()
