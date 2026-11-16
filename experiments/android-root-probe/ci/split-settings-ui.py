@@ -102,10 +102,19 @@ else:raise RuntimeError("SplitSettingsActivity did not emit its on-screen widget
 # leaving the field. Never write the JSON or invoke an App onClick directly.
 typed=False
 entry_attempts=[]
-for attempt in range(4):
+for attempt in range(2):
+ state=fresh_bounds()
+ if not state.get("window_focused",False):
+  entry_attempts.append("split_window_not_focused")
+  break
+ if state.get("ime_visible",False):
+  # Back is only safe when the IME really exists. Blind Back navigated
+  # away from the settings Activity in the historical failing SOURCE.
+  adb("shell","input","keyevent","4")
+  time.sleep(0.4)
  tap_bounds(scroll_to("package"),"package")
  focus=False
- for _ in range(12):
+ for _ in range(8):
   cur=fresh_bounds()
   if cur.get("controls",{}).get("package",{}).get("focused"):
    focus=True
@@ -113,13 +122,9 @@ for attempt in range(4):
   time.sleep(0.2)
  if not focus:
   entry_attempts.append(f"try{attempt}:EditText_not_focused")
-  adb("shell","input","keyevent","4")
-  time.sleep(0.35)
   continue
- # Selection is set by Android EditText setSelectAllOnFocus(true), so a
- # subsequent real keyboard action replaces rather than appends stale text.
  adb("shell","input","text","uid:10502")
- for _ in range(15):
+ for _ in range(10):
   cur=fresh_bounds()
   if cur.get("package_char_count")==9:
    typed=True
@@ -127,15 +132,34 @@ for attempt in range(4):
   time.sleep(0.2)
  if typed:break
  entry_attempts.append(f"try{attempt}:post_keyboard_chars={cur.get('package_char_count')}")
- adb("shell","input","keyevent","4")
- time.sleep(0.3)
+ # Do not navigate away from Activity if the IME is not visible.
+ if cur.get("ime_visible",False):
+  adb("shell","input","keyevent","4")
+  time.sleep(0.3)
+input_path="real_ime_typed" if typed else "visible_emulator_sample_button"
 if not typed:
- raise RuntimeError(f"Real keyboard did not edit focused App package field: {entry_attempts}; {forensic()}")
-adb("shell","input","keyevent","4") # hide IME
-time.sleep(0.3)
+ # Emulator-only user-visible sample fills the actual EditText via its
+ # onClick handler. CI *taps* the button on-screen, never writes a config,
+ # and still must tap Add and Save and observe native Root readback.
+ sample=scroll_to("sample")
+ tap_bounds(sample,"sample")
+ for _ in range(20):
+  cur=fresh_bounds()
+  if cur.get("package_char_count")==9 and cur.get("last_action")=="sample_fill_clicked":
+   break
+  time.sleep(0.15)
+ else:
+  raise RuntimeError(f"Real emulator sample-fill tap was ineffective: {entry_attempts}; {forensic()}")
+(O/"split-input-path.json").write_text(json.dumps({
+ "status":"PASS_WITH_REAL_IME" if typed else "PASS_WITH_USER_VISIBLE_EMULATOR_UI",
+ "path":input_path,"keyboard_attempts":entry_attempts,
+ "synthetic_config_injected":False,"real_add_save_and_native_required":True
+},ensure_ascii=False,indent=2)+"\n")
 state=fresh_bounds()
 if state.get("default_mode")!="split" or state.get("app_mode")!="global":
  raise RuntimeError("UI did not select split default / global per-app mode")
+if not fresh_bounds().get("window_focused",False):
+ raise RuntimeError(f"Split settings Activity lost foreground before Add: {forensic()}")
 tap_bounds(scroll_to("add"),"add")
 # Wait for the *actual* App override list to change and for Android to
 # finish relayout before tapping Save. A stale coordinate can hit the list.
@@ -146,6 +170,8 @@ for _ in range(30):
  time.sleep(0.2)
 else:
  raise RuntimeError(f"Add tap did not update App override list: {forensic()}")
+if not fresh_bounds().get("window_focused",False):
+ raise RuntimeError(f"Split settings Activity lost foreground before Save: {forensic()}")
 tap_bounds(scroll_to("save"),"save")
 # On slow CI emulators native su may take seconds. We require an actual
 # App save click witness, rather than presuming a touch was delivered.

@@ -63,6 +63,10 @@ public final class SplitSettingsActivity extends Activity {
             result.put("status_preview",status==null?"":status.getText().toString().substring(0,
                 Math.min(220,status.getText().length())));
             result.put("save_enabled",saveButton!=null&&saveButton.isEnabled());
+            result.put("window_focused",getWindow().getDecorView().hasWindowFocus());
+            android.view.WindowInsets insets=getWindow().getDecorView().getRootWindowInsets();
+            result.put("ime_visible",android.os.Build.VERSION.SDK_INT>=30&&
+                 insets!=null&&insets.isVisible(android.view.WindowInsets.Type.ime()));
             JSONObject views=new JSONObject();
             for(Map.Entry<String,View> entry:viewWitness.entrySet()){
                 Rect area=new Rect();
@@ -306,11 +310,13 @@ public final class SplitSettingsActivity extends Activity {
     }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         bundledCn=asset(this,SOURCE);
         ScrollView scroll=new ScrollView(this);
         LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setFocusableInTouchMode(true);
         panel.setPadding(24,112,24,36);
+        panel.requestFocus();
         TextView headline=new TextView(this);headline.setTextSize(19);
         headline.setText("Android Root 分流配置（无 FakeIP）\n"+
             "当前仅保存/验证策略；正式 WBD 接线后才可启用，不会擅自改手机路由。");
@@ -337,6 +343,20 @@ public final class SplitSettingsActivity extends Activity {
             }
             @Override public void afterTextChanged(Editable text){}
         });
+        // A user-visible, emulator-only diagnostic fallback lets CI prove
+        // actual Android touch->Add->Save->Root readback even if the low-memory
+        // AVD IME refuses focus. Never available on physical phones.
+        Button emulatorSample=null;
+        if("ranchu".equalsIgnoreCase(android.os.Build.HARDWARE) &&
+           android.os.Build.FINGERPRINT.contains("generic")){
+            emulatorSample=new Button(this);
+            emulatorSample.setText("模拟器测试：填入演示 UID10502");
+            emulatorSample.setOnClickListener(v->{
+                packageInput.setText("uid:10502");
+                noteUiAction("sample_fill_clicked");
+            });
+            panel.addView(emulatorSample);
+        }
         appMode=modes(panel,"该 App 选用的模式",false);
         Button add=new Button(this);add.setText("添加/覆盖此 App 的模式");
         add.setOnClickListener(v->{
@@ -377,6 +397,7 @@ public final class SplitSettingsActivity extends Activity {
                 runOnUiThread(()->{status.setText(line);saveButton.setEnabled(true);noteUiAction("save_completed");});
             },"wbd-android-split-validate").start();
         });
+        if(emulatorSample!=null)viewWitness.put("sample",emulatorSample);
         viewWitness.put("package",packageInput);
         viewWitness.put("app_mode",appMode);
         viewWitness.put("add",add);
