@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "android-dirtyfrag-unrooted-probe",
+  "name": "Android16 未Root DirtyFrag 临时提权后能力验证（独立候选）",
+  "summary": "公开情报找到 Android16/Linux6.6 vivo iPA2575 的第三方 DirtyFrag v1.10 临时root报告；本环境无受控未root设备/KVM/SDK，未执行漏洞、未获取root或验证WBD。DirtyFrag链需临时SELinux Permissive，须与既有实验边界隔离。",
+  "owner": "Android DirtyFrag 独立实验（仅用户授权的隔离设备）",
+  "stage": "experimental",
+  "development_branch": "experiment/android-dirtyfrag-unrooted-probe",
+  "available_on": [
+    "experiment/android-dirtyfrag-unrooted-probe"
+  ],
+  "defaults": {
+    "implementation": "NOT_RUN_EXTERNAL_REPORTS_ONLY",
+    "planned_operation": "仅已授权隔离设备；默认只读；需先解决SELinux Permissive授权冲突",
+    "planned_runtime": "No device, no KVM, no adb, no emulator or Android SDK in current environment"
+  },
+  "usage": {
+    "cli": "none (not implemented)",
+    "config": "See docs/devlog/android-dirtyfrag-probe/20261116-intake.md",
+    "gui": "none"
+  },
+  "code_refs": [],
+  "doc_refs": [
+    "docs/devlog/android-dirtyfrag-probe/20261116-intake.md",
+    "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md"
+  ],
+  "verification": [
+    {
+      "platform": "Android16/Linux6.6 vivo iPA2575 externally reported DirtyFrag v1.10",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": "https://github.com/mitschud/DirtyFrag/issues/5",
+      "scope": "Third-party success report only; no own device, exploit, root or product tests"
+    }
+  ],
+  "limitations": [
+    "Android 16 OS release not interchangeable with android16-6.12 KMI name; exact firmware and patch required.",
+    "No authorized unrooted test target and no local KVM/adb/emulator/SDK; cannot claim exploit or cleanup.",
+    "DirtyFrag chain transiently sets SELinux Permissive, conflicting with preceding no-disable scope.",
+    "Previous AOSP adb-root and true KSU-preloaded emulator PASS do not show DirtyFrag root success.",
+    "Raw physical underlay, tether offload, hotspot/USB, CLAT, battery and vendor/ARM64 differences unverified."
+  ],
+  "promotion": null
+}
