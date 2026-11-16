@@ -1,0 +1,144 @@
+name: Android root reduced-capability gates (experimental)
+run-name: "android-capgates|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-root-permission-gates]
+    paths:
+      - "experiments/android-root-probe/probe/src/**"
+      - "experiments/android-root-probe/ci/capgate.sh"
+      - ".github/workflows/android-root-permission-gates.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-root-capgates-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/experiment/android-root-permission-gates'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact SOURCE once for Bionic x86_64 and aarch64
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          rustup target add --toolchain 1.85.1 x86_64-linux-android aarch64-linux-android
+          ndk="$(find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
+          test -d "$ndk"
+          bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android28-clang"
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$bin/aarch64-linux-android28-clang"
+          export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
+          manifest="experiments/android-root-probe/Cargo.toml"
+          cargo +1.85.1 generate-lockfile --manifest-path "$manifest"
+          for target in x86_64-linux-android aarch64-linux-android; do
+            cargo +1.85.1 build --locked --release --manifest-path "$manifest" -p android-root-probe --target "$target"
+            mkdir -p dist/bin
+            cp "experiments/android-root-probe/target/$target/release/android-root-probe" "dist/bin/probe-$target"
+            file "dist/bin/probe-$target"
+            readelf -l "dist/bin/probe-$target" >"dist/elf-$target.txt"
+          done
+          cp experiments/android-root-probe/Cargo.lock dist/Cargo.lock
+          printf '%s\n' "$GITHUB_SHA" >dist/SOURCE
+          { rustc +1.85.1 -Vv; echo "ndk=$ndk"; echo "linkflags=$RUSTFLAGS"; } >dist/toolchain.txt
+          (cd dist; sha256sum Cargo.lock SOURCE bin/* elf-*.txt toolchain.txt >SHA256SUMS)
+          python3 - <<'PY'
+          import hashlib,json,os
+          root="dist"
+          files=["Cargo.lock","SOURCE","toolchain.txt","elf-x86_64-linux-android.txt","elf-aarch64-linux-android.txt",
+                 "bin/probe-x86_64-linux-android","bin/probe-aarch64-linux-android"]
+          h=lambda p:hashlib.sha256(open(os.path.join(root,p),"rb").read()).hexdigest()
+          with open(os.path.join(root,"manifest.json"),"w") as f:
+              json.dump({"schema":"android-root-capgates-build/v1","source":os.environ["GITHUB_SHA"],
+                         "files":{p:h(p) for p in files},"min_sdk":28,"platform":"Bionic build only"},f,sort_keys=True,indent=2)
+          PY
+          (cd dist; sha256sum manifest.json >>SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-capgates-${{ github.sha }}
+          path: dist/
+          retention-days: 21
+          if-no-files-found: error
+  canaries:
+    needs: build
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: {api: ['28', '36']}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ANDROID_PROBE_API: ${{ matrix.api }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: KVM preflight and immutable build artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/case out/build
+          test -c /dev/kvm || { echo 'KVM missing'; exit 2; }
+          sudo chmod a+rw /dev/kvm
+          gh run download "${{ github.run_id }}" --repo "$GITHUB_REPOSITORY" --name "android-capgates-${{ github.sha }}" --dir out/build
+          (cd out/build && sha256sum -c SHA256SUMS)
+          test "$(cat out/build/SOURCE)" = "$GITHUB_SHA"
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/capgate.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: capgates-api${{ matrix.api }}-${{ github.sha }}
+          path: out/case/
+          retention-days: 21
+          if-no-files-found: warn
+  middle:
+    needs: [build, canaries]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ANDROID_PROBE_API: '32'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: KVM preflight and same immutable artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/case out/build
+          test -c /dev/kvm || { echo 'KVM missing'; exit 2; }
+          sudo chmod a+rw /dev/kvm
+          gh run download "${{ github.run_id }}" --repo "$GITHUB_REPOSITORY" --name "android-capgates-${{ github.sha }}" --dir out/build
+          (cd out/build && sha256sum -c SHA256SUMS)
+          test "$(cat out/build/SOURCE)" = "$GITHUB_SHA"
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: '32'
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/capgate.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: capgates-api32-${{ github.sha }}
+          path: out/case/
+          retention-days: 21
+          if-no-files-found: warn
