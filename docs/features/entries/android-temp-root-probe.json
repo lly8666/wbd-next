@@ -52,7 +52,9 @@
     "experiments/android-root-probe/ci/mainstream-case.sh",
     "experiments/android-root-probe/ci/underlay-echo.py",
     "experiments/android-root-probe/ci/dirtyfrag-host-preflight.sh",
-    ".github/workflows/android-root-dirtyfrag-host.yml"
+    ".github/workflows/android-root-dirtyfrag-host.yml",
+    ".github/workflows/android-root-dirtyfrag-mac-host.yml",
+    "experiments/android-root-probe/ci/dirtyfrag-mac-host-preflight.sh"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -71,6 +73,13 @@
     "docs/devlog/android-root-probe/20261116-dirtyfrag-preapril-intake.md"
   ],
   "verification": [
+    {
+      "platform": "Android16 pre-Apr DirtyFrag ARM64 Linux host feasibility",
+      "status": "NOT_RUN",
+      "source_sha": "f0b835c70050e88041cb14afbb9b8fd6780c9e27",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43857158313",
+      "scope": "Host-only Action SUCCESS; aarch64 /dev/kvm not readable/writable, no Linux arm64 emulator; ENV_BLOCKED/NO_ARM64_KVM. No Android guest, exploit or postroot WBD."
+    },
     {
       "platform": "Android16/API36 ARM64 Google Play r07 before 2026-04 DirtyFrag candidate",
       "status": "NOT_RUN",
@@ -326,7 +335,8 @@
     "旧AOSP su的DAC限制拒绝普通APP；真正KSU授权另有正例。",
     "native worker单独SIGKILL清理已过；Android App force-stop、整组退出、watchdog同时死亡、设备重启未测。",
     "Android16 Google Play ARM64 r07 is dated pre-April 2026 but kernel/vulnerability not yet verified; DirtyFrag is arm64-only, original x86_64 KSU cannot substitute.",
-    "Temporary SELinux permissive exception is limited to separately isolated, user-authorized DirtyFrag AVD; no real device."
+    "Temporary SELinux permissive exception is limited to separately isolated, user-authorized DirtyFrag AVD; no real device.",
+    "ARM64 hosted ubuntu runner actual /dev/kvm absent; Apple Silicon HVF independent host preflight pending."
   ],
   "promotion": null
 }

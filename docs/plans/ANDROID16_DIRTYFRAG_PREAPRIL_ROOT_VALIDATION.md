@@ -33,3 +33,7 @@ Reuse original ARM64 Rust NDK probe at exact SOURCE/manifest/hash: `inspect` fir
 ## Stop and disposition
 
 Maximum one AVD per Action, max three independent Actions concurrently, boot <=5min, root attempt <=120s, full attempt <=25min. No rerun on missing host/image. Preserve FAIL and NOT_RUN, precise SOURCE, file/ZIP SHA256, old SDK snapshot, image fingerprint, kernel, App identity/caps, rule and route before-after and recovery. `ENV_BLOCKED` for missing host/emulator/image; `UNAVAILABLE` for kernel patched/missing exploit prerequisites; `FAIL` for actual guest crash/cleanup defect; `SUPPORTED_IN_SCOPE` only for verified real App→su and subsequent native operations. At this writing **root NOT_RUN; after-root WBD NOT_RUN**.
+
+## First host result / alternate host
+
+Real Linux ARM64 host preflight [Action43857158313](https://github.com/lly8666/wbd-next/actions/runs/43857158313) SOURCE `f0b835c70050e88041cb14afbb9b8fd6780c9e27` reported actual `aarch64` but `/dev/kvm` inaccessible and emulator binary missing, **ENV_BLOCKED/NO_ARM64_KVM**; Action CI success only validates the host script. One nonidentical host qualification on Apple Silicon macOS with HVF is permitted as a bounded alternative; see `.github/workflows/android-root-dirtyfrag-mac-host.yml`, which does not boot or exploit a guest. No further host retries without evidence.
