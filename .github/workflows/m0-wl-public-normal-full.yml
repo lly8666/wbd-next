@@ -1216,7 +1216,8 @@ jobs:
           $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
           if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
-             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
             # Real explicit CN product uses the SAME V3 ABI as a signed
             # private trial, but activation comes only from --split-enable.
             # Do not omit the ABI from the normal release DLL on product
@@ -1237,11 +1238,16 @@ jobs:
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
           if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
-             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
             # Real Windows native DLL load/export, before any driver install.
             # A manifest with ISA-L but no m0_v4_probe is NOT a V3 binary.
             & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start"); print("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS")'
             if($LASTEXITCODE -ne 0){throw 'PLAN029 source-built V3 actual Rust DLL export missing; refusing native Wintun'}
+            if($env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
+              & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_game_native_v4_start"); getattr(d,"wbd_m0_win_game_native_v4_tcp_control"); print("PLAN029_H2022_ACTUAL_WINDOWS_GAME4_NATIVE_SPLIT_AND_TCP_CONTROL_DLL_ABI_PASS")'
+              if($LASTEXITCODE -ne 0){throw 'Game4 CN V4 Rust native FFI absent before Wintun'}
+            }
           }
           [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;isa_l_source='c387163fcbca62701d646149564c550c78a4f985';
             native_fec_acceleration=$true;
@@ -2537,7 +2543,8 @@ jobs:
             }
             Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
           } elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1') {
-            if($env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+            if($env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
               $product=$result.plan029_real_product_normal_cn
               if($null -eq $product -or
                  $product.source_sha -ne $env:GITHUB_SHA -or
