@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1968,
-  "checkpoint_sha": "4a00a7b68b0f458ccdce76b1aeb4c004931fe346",
+  "sequence": 1969,
+  "checkpoint_sha": "03bb121b4ced94205482c80bae35372ab23740c6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1968: H1967 Rust/Linux and WSL components rebuilding, Governance/Feature PASS. Cheap script stage reached seven H1966 QPC parser tests: 6/7 passed, only positive test expected literal 'not TCP packet count equality' while analyzer states semantically identical 'no TCP packet count equality'. Fix one synthetic assertion; original signed 2048x1KiB Win/WSL2 NOT_RUN; full PLAN029 OPEN.",
-  "why_now": "H1967 Action43804163808 cheap tests failed exactly one syntactic string assertion, not sample algorithm; 2048-message positive report calculations already reached the assertion. Preserve strict missing-byte/clock/port/window fails and avoid running expensive host action on a red parser.",
+  "current_task": "H1969 one signed source-locked NORMAL established-connection 2048x1KiB TCP Windows native Wintun/Rust/WSL2 QPC dispatched via exact original P2 rebuild + steady scene commit markers. Windows/Linux Rust pure H1967 PASS, H1968 cheap seven parser tests PASS and governance PASS. Await Action original guest/Stop QPC; no performance claim yet. Full PLAN029 OPEN.",
+  "why_now": "User prioritizes real Windows/Rust overhead in sustained ordinary small TCP and rejects extreme same-real-CDN reverse case. H1966 source and H1967/H1968 preflight errors fixed, original Windows+Linux Rust component tests and same-source Python fail-closed parser green; now one bounded real native run has value.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H1968 cheap 7/7 signed analyzer + Windows/Linux Rust component gate. Only after PASS, trigger one original Win2025/WSL2 source-locked established TCP1KiB QPC with rebuild+steady markers, original owned Stop; no 4MiB or exotic CDN.",
+  "next_action": "Collect ONLY H1969 signed original action's true Windows WinSock 2048 app RTT physical/Direct, Rust on_packet→classify→NAT QPC, two kernel TCP read/write spans and Linux SHA/FIN, Wintun/owned Stop. If false/FAIL, fix source actual stage; no duplicate full network without diagnosis. Still no initial Wintun ReadPacket and RX SendPacket time; full P2/P1/D1-D5 OPEN.",
   "unverified": true,
   "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN029-H1960-H1958-REAL-D1-D2-NOCROSS-FALLBACK-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1969-ONE-SIGNED-STEADY-2048X1K-ORIGINAL-WINDOWS-WSL2.md",
     "docs/devlog/M0/20261116-PLAN029-H1968-STEADY-QPC-ASSERTION-SELECTOR.md",
     "docs/devlog/M0/20261116-PLAN029-H1967-FIX-STEADY-QPC-PREFLIGHT-PARSER-RUST-DERIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1966-ESTABLISHED-TCP-STEADY-QPC-NATIVE.md",
     "docs/devlog/M0/20261116-PLAN029-H1965-USER-PRIORITY-STEADY-STATE-QPC-LATENCY.md",
     "docs/devlog/M0/20261116-PLAN029-H1964-COLLECT-H1963-WINDOWS-CLI-GUI-BUILD-COLD-DNS.md",
     "docs/devlog/M0/20261116-PLAN029-H1963-ENABLE-EXISTING-GO-DNS-COLD-TEST-SELECTION.md",
-    "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md",
-    "docs/devlog/M0/20261116-PLAN029-H1961-RESTORE-COLD-DNS-ASSEMBLY-HASHES-AND-HOT-BUDGET.md"
+    "docs/devlog/M0/20261116-PLAN029-H1962-EXPLICIT-NO-FEATURE-IDS-DECLARATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1967 cured Python syntax and Rust RelaySteadyQpc duplicate derives (Linux Rust tests PASS, Windows pending). H1968 fixes only positive synthetic test wording from 'not' to 'no', all six negative tests passed; original QPC latency still NOT_RUN, product preconnect OFF. Full PLAN029 OPEN."
+  "partial_summary": "H1969 one original 2048x1KiB normal steady Win/WSL2 two-OS TCP scene pending actual source-specific action. Prior H1967 Win/Linux Rust pure PASS, H1968 exact parser 7/7 and governance PASS. Latest genuine real P2 remains H1958 ab224 (4x4MiB~2x physical; ON first-send tail improves but n2 bulk unresolved). User de-prioritized extreme CDN and left product preconnect OFF."
 }
