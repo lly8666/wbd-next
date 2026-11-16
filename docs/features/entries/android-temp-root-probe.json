@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "android-temp-root-probe",
+  "name": "Android临时root能力探针（计划）",
+  "summary": "独立Rust探针与薄Android测试壳规划，核验非VpnService的TUN/raw/路由、共享、切网与清理条件；尚未实现。",
+  "owner": "Android临时root独立实验（用户授权）",
+  "stage": "experimental",
+  "development_branch": "experiment/android-temp-root-probe",
+  "available_on": [],
+  "defaults": {
+    "implementation": "PLANNED",
+    "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
+    "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
+  },
+  "usage": {
+    "cli": "尚无可运行命令；未来probe inspect/exercise以实际实现帮助为准",
+    "config": "见能力探测计划；Android9到最新稳定版逐版Actions，真机权限另验",
+    "gui": "只规划薄测试壳，不是可连接的Android客户端"
+  },
+  "code_refs": [],
+  "doc_refs": [
+    "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
+    "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
+    "docs/devlog/android-root-probe/20261116-plan.md"
+  ],
+  "verification": [
+    {
+      "platform": "Android9/API28至最新稳定版（当前17/API37）官方AVD",
+      "scope": "不同API/镜像的实际root能力、TUN/raw/路由/模拟转发及owned清理",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Android/arm64 physical",
+      "scope": "app→su、SELinux、实际共享/切网/offload/蜂窝CLAT与耗电；本轮不部署",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "本卡登记独立诊断工具计划，不改变android-vpn-shell历史状态；未宣称Android产品可连接。",
+    "adb root和模拟器通过不能代表app→su、OEM热点/USB/真实蜂窝切网或省电通过。",
+    "不自行获取root、不使用VpnService、不修改共享核心或M0主线任务。"
+  ],
+  "promotion": null
+}
