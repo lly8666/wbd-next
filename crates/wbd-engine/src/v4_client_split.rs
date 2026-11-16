@@ -108,8 +108,10 @@ impl SplitPolicy {
         }
     }
     pub fn remember_announced_fake(&mut self,fake:u32,real:u32)->Result<(),SplitError>{
-        if self.mode!=Mode::BypassLanCn ||
-           !self.fake_pool.contains(fake)||self.fake_pool.contains(real) {
+        // The cold restore of a durable DNS A must enforce the SAME
+        // admission bounds as a newly issued synthetic DNS response:
+        // never resurrect zero/broadcast/another FakeIP as physical Direct.
+        if self.announced_fake_target(fake,real).is_none(){
             return Err(SplitError::FakeIPConflict);
         }
         if let Some(old)=self.fake_to_real.get(&fake) {
@@ -329,6 +331,28 @@ mod tests {
         assert_eq!(split.destination(real_cdn),Egress::Tunnel); // shared CDN non-CN unaffected
         assert_eq!(split.remember_announced_fake(fake,ip(203,0,113,12)),Err(SplitError::FakeIPConflict));
         assert_eq!(split.remember_announced_fake(real_cdn,real_cdn),Err(SplitError::FakeIPConflict));
+    }
+    #[test]
+    fn plan029_h1959_fake_restored_zero_broadcast_cannot_be_direct(){
+        let fake=ip(198,18,12,27);
+        let valid=ip(198,51,100,77);
+        let mut policy=make(Mode::BypassLanCn);
+        for bad in [0,u32::MAX,ip(198,18,20,1)]{
+            assert_eq!(policy.announced_fake_target(fake,bad),None);
+            assert_eq!(policy.remember_announced_fake(fake,bad),
+                Err(SplitError::FakeIPConflict));
+            assert_eq!(policy.destination(fake),Egress::RejectUnknownFakeIP);
+        }
+        // A corrupt historical target cannot poison a valid new binding.
+        assert_eq!(policy.remember_announced_fake(fake,valid),Ok(()));
+        assert_eq!(policy.destination(fake),Egress::Direct{
+            real_dst:valid,presented_dst:fake});
+        for bad in [0,u32::MAX,ip(198,18,20,1)]{
+            assert_eq!(policy.remember_announced_fake(fake,bad),
+                Err(SplitError::FakeIPConflict));
+            assert_eq!(policy.destination(fake),Egress::Direct{
+                real_dst:valid,presented_dst:fake});
+        }
     }
     #[test]
     fn plan029_split_fake_never_activates_in_other_modes(){

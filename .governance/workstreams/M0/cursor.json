@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1958,
-  "checkpoint_sha": "b1f915f4883544aeb6cdc2138affb46bb40023f0",
+  "sequence": 1959,
+  "checkpoint_sha": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1958 H1957 SOURCE b1f original native NOT_RUN: cheap Python H1861 source guard insists original elif ABBA: and exact legacy explicit WSL error; H1957 had merged elif ABBA or PRECON_BULK. H1958 restores exact original branch with separate elif PRECON_BULK, no impact to original production/ABBA or Rust physical logic. H1957 governance feature catalog and H1956 synthetic test PASS. One true original P2 signed 4MiB ON/OFF/OFF/ON and 384 small pending.",
-  "why_now": "H1956 cheap H1849 and synthetic test fixed in H1957, governance PASS. H1957 cheap H1861 only remains: source locked explicit old ABBA branch/error must remain exact. Preserve legacy branch behavior and add separate signed preconnect variant rather than weakening tests or forging pass.",
+  "current_task": "H1959 collected H1958 real original Win2025/WSL2 SOURCE ab224 Action43792684618: 4 original 4MiB Direct ON/OFF/OFF/ON SHA/FIN/QPC/5 Linux receipts and 384/384 small Direct same Windows QPC, 120/120 sustained Tunnel UDP, owned Stop PASS. Small latency ON advantage replicated, 4MiB ON88.982 vs OFF80.742ms n2 each has 12/19.5ms drift and not causally safe/qualified; keep product early preconnect OFF. One pure D3 FakeIP cold restore policy guard rejects zero/broadcast same as fresh A, new Rust test pending CI. Full 029 D1-D5/P1-P2/GUI/Game4/IPv6 OPEN.",
+  "why_now": "True H1958 original P2 now completed; no new expensive duplicate warranted. P2 small first-byte wait fixed in signed prototype but bulk 2x physical and 2-trial ON/OFF uncertainty remain; resource pressure not proven for early sockets. Independent D3 source inspection found cold FakeIP restore admitted 0/broadcast as real target even though newly announced policy rejects those; unify minimal validation and test without starting new original P2.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect one H1958 original Windows/WSL2 Action after cheap preflight: actual four 4MiB ON/OFF/OFF/ON + 384 original small QPC + continuous Tunnel UDP and owned Stop, same source and 30s pending cleanup. Do not repeat H1956/H1957 failed preflight Actions, do not promote product preconnect without native results. Other D1-D5/GUI/Game4/IPv6/P1-P2 still OPEN.",
+  "next_action": "Collect source-locked pure Rust/feature/governance gate on H1959. If clean, prioritize full D1/D3 DNS real shared-CDN/no-fallback/TTL and D4 resource pressure plus GUI/IPv6 representative. Keep normal production preconnect off and do not rerun H1958 P2 by generic P2 marker; P1 100/200Mbps and Game4 remain OPEN.",
   "unverified": true,
-  "last_tested_source": "4bab00bdc38fa410180dcecf4e8f0415c0b544b9",
+  "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1956-H1955-SIGNED-PRECONNECT-AB-REAL-20261116.json"
+    "docs/evidence/M0/PLAN029-H1959-H1958-REAL-4M-PRECONNECT-ABBA-20261116.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md",
     "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md",
     "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
     "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md",
     "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
     "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md",
-    "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md",
-    "docs/devlog/M0/20261116-PLAN029-H1949-QPC-PARSER-INDENT-REPAIR.md"
+    "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md"
   ],
   "open_requests": [],
-  "partial_summary": "H1955 real original source 4bab and Action43788677966 successful 384 small QPC ON vs OFF, big 4MiB only OFF slow; H1956 source5aa H1849+new fixture cheap failure, native NOT_RUN; H1957 source b1f H1861 old WSL source guard cheap failure, native NOT_RUN; H1958 restores old exact default ABBA runtime branch, one original P2 signed pending; complete PLAN029 OPEN."
+  "partial_summary": "H1958 original P2 true 4x4MiB/source ab224 ON/OFF/OFF/ON elapsed [95.133,90.504,70.980,82.832]ms, ON88.982/OFF80.742ms n=2/arm not performance qualified; genuine small QPC384/384 repeat ON 0.26/0.215ms p95 vs OFF14.854/14.317, Tunnel UDP632 and true owned Stop PASS. H1959 D3 cold FakeIP restore invalid-target fix pending CI. PLAN029 still IN_PROGRESS."
 }

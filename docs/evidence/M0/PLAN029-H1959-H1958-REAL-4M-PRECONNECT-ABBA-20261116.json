@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1959_COLLECT_H1958_ORIGINAL",
+  "source_sha": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "action": {
+    "run_id": 43792684618,
+    "job_id": 133056188908,
+    "artifact_id": 14193726167,
+    "conclusion": "success",
+    "original_source_windows_go_rust_linux": "ab224ae03cd362f758f98fb59fd097285e436ca6"
+  },
+  "result": "PASS_SCOPED_ONE_SOURCE_ORIGINAL_4X_4MIB_PRECONNECT_ABBA_SHA_FIN_STOP",
+  "scope": "ONE_REAL_WIN2025_WSL2_NATIVE_WINTUN_OWNER_ORIGINAL_RUST_AND_FIVE_LINUX_KERNEL_TCP_RECEIPTS",
+  "physical_baseline_4mib": {
+    "bytes": 4194304,
+    "elapsed_ms": 38.868,
+    "upload_ms": 13.117,
+    "download_ms": 11.743,
+    "sha_fin": "PASS"
+  },
+  "direct_4mib_abba": {
+    "order": [
+      "on",
+      "off",
+      "off",
+      "on"
+    ],
+    "elapsed_ms": [
+      95.133,
+      90.504,
+      70.98,
+      82.832
+    ],
+    "upload_ms": [
+      49.397,
+      47.086,
+      33.622,
+      27.176
+    ],
+    "download_ms": [
+      27.687,
+      29.017,
+      23.687,
+      30.874
+    ],
+    "on_mean_elapsed_ms": 88.982,
+    "off_mean_elapsed_ms": 80.742,
+    "on_over_off": 1.1021,
+    "on_repeat_spread_ms": 12.301,
+    "off_repeat_spread_ms": 19.524,
+    "all_sha_fin": "PASS",
+    "same_windows_native_qpc_joins": 4
+  },
+  "small_direct": {
+    "real_direct_connections": 384,
+    "linux_echo_policies": [
+      "fin_first",
+      "payload_first"
+    ],
+    "per_policy_preconnect_on": 96,
+    "per_policy_original_off": 96,
+    "matched_windows_and_rust_qpc": 384,
+    "fin_first": {
+      "on_first_physical_write_after_FIN_p95_ms": 0.261,
+      "off_p95_ms": 14.854,
+      "on_p99_ms": 0.573,
+      "off_p99_ms": 15.735,
+      "on_ge8_ms": 0,
+      "off_ge8_ms": 8
+    },
+    "payload_first": {
+      "on_p95_ms": 0.215,
+      "off_p95_ms": 14.317,
+      "on_p99_ms": 0.245,
+      "off_p99_ms": 15.36,
+      "on_ge8_ms": 0,
+      "off_ge8_ms": 8
+    },
+    "native_total_first_event_rows": 389,
+    "eager_started": 195,
+    "eager_failed": 0
+  },
+  "linux_kernel_physical_tcp_received_five_4mib": true,
+  "tunnel_udp": {
+    "windows_received": 120,
+    "linux_received": 120,
+    "sustained_total": 632,
+    "covered_entire_direct_tcp": true
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "experimental_first_syn_preconnect_only_in_signed_original_CI": true,
+  "normal_product_early_connect": "OFF",
+  "limitations": [
+    "Only two 4MiB samples per mode, not randomized; cannot prove a stable 10.21% throughput regression or qualification",
+    "One Windows/WSL2 VM; no 100/200Mbps P1 or Game4/IPv6/GUI qualification",
+    "Normal Wintun source client and Linux peer are exact source locked; no fake P2 packet telemetry or mixed OS monotonic time",
+    "Previously observed ON first-byte improvement replicated in one new source; but pending preconnect under resource pressure is NOT_RUN",
+    "Full D1-D5/P1-P2 exit OPEN"
+  ],
+  "verdict": {
+    "first_physical_write_after_fin": "IMPROVES_SMALL_SCOPED_NATIVE_QPC_TWO_REAL_SOURCES",
+    "bulk": "OBSERVED_ON_10_21_PERCENT_SLOWER_THAN_OFF_WITH_2_SAMPLES_PER_ARM_NOT_CAUSAL",
+    "full_plan029": "IN_PROGRESS"
+  }
+}
