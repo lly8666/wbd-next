@@ -8,13 +8,13 @@
   "development_branch": "experiment/android-temp-root-probe",
   "available_on": [],
   "defaults": {
-    "implementation": "RUST_PROBE_COMPILER_FIX_PENDING; NO_ANDROID_RUNTIME_PASS",
+    "implementation": "RUST_PROBE_BIONIC_BUILD_PASS; ANDROID_RUNTIME_NOT_RUN",
     "planned_operation": "只读inspect；exercise显式选择后仅修改owned临时对象",
     "planned_runtime": "Rust原生，必要薄Kotlin壳；不使用VpnService"
   },
   "usage": {
     "cli": "android-root-probe [inspect|exercise]；inspect只读，exercise仅创建owned非持久TUN与loopback raw socket；不申请root",
-    "config": "独立Actions按SOURCE/manifest/SHA256构建x86_64+aarch64；API28/37先canary，中间API需要canary证据后再跑",
+    "config": "Bionic ABI artifact=14196057151, SOURCE=80e2218fc3f2a03b28a284bead32b94d623e29e2; reuse manifest hash d6a2178fa08ff7381d1951fcc85430d1a14ab3dc892b39f51f9b771b7f6d5ee4; API28/37 canaries待独立验证",
     "gui": "本工作包未新增Kotlin壳；app→su、前台服务、网络回调均NOT_RUN，不是可连接客户端"
   },
   "code_refs": [
@@ -31,9 +31,17 @@
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
     "docs/devlog/android-root-probe/20261116-plan.md",
     "docs/devlog/android-root-probe/20261116-workpack-01.md",
-    "docs/devlog/android-root-probe/20261116-workpack-02.md"
+    "docs/devlog/android-root-probe/20261116-workpack-02.md",
+    "docs/devlog/android-root-probe/20261116-workpack-03.md"
   ],
   "verification": [
+    {
+      "platform": "Android NDK x86_64 and aarch64 (cross-build only)",
+      "scope": "rustc 1.85.1 + NDK r30, linked API28+; ELF LOAD Align 0x4000 static check; no Android process startup",
+      "status": "PASS",
+      "source_sha": "80e2218fc3f2a03b28a284bead32b94d623e29e2",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43799678131 ; artifact 14196057151 ; manifest d6a2178fa08ff7381d1951fcc85430d1a14ab3dc892b39f51f9b771b7f6d5ee4"
+    },
     {
       "platform": "Android NDK x86_64 build (first SOURCE)",
       "scope": "libc ioctl request type",
