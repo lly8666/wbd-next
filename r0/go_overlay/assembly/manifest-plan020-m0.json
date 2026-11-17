@@ -1661,7 +1661,7 @@
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
-      "result_blob": "1bd00e1da7c59155d23dfb20228d53a7544aa84d"
+      "result_blob": "087f96388dc88a86c3598b55730e22e21175f114"
     },
     {
       "kind": "create",
@@ -1673,7 +1673,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
-      "result_blob": "e58280c2f4dc1f989bc96096df665c8ef8fa1539"
+      "result_blob": "3c2054a21b68e108d03bb181d39c812a90a25044"
     },
     {
       "kind": "create",

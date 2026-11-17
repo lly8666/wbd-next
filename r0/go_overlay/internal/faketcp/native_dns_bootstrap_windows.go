@@ -208,8 +208,8 @@ func physicalBootstrapTCPSameEndpoint(ctx context.Context,c PhysicalDNSConfig,
   !strings.EqualFold(q.Name.String(),name.String()){return nil,ErrPhysicalDNS}
  if e=p.SkipAllQuestions();e!=nil{return nil,ErrPhysicalDNS}
  // The same CNAME/A parser used for UDP validates the DNS payload.
- ips,ok:=physicalDNSAnswerPayload(response,id,name)
- if !ok||len(ips)==0{return nil,ErrPhysicalDNS}
+ ips,ok,truncated:=physicalDNSAnswerPayload(response,id,name)
+ if !ok||truncated||len(ips)==0{return nil,ErrPhysicalDNS}
  return ips,nil
 }
 

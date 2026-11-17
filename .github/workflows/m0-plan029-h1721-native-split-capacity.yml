@@ -6,6 +6,7 @@ on:
       - ".github/workflows/m0-plan029-h1721-native-split-capacity.yml"
       - "crates/wbd-engine/src/v4_client_direct_udp_actor.rs"
       - "crates/wbd-engine/src/v4_client_fake_pool.rs"
+      - "crates/wbd-engine/src/v4_client_fake_journal.rs"
       - "crates/wbd-engine/src/v4_client_split_wire.rs"
       - "crates/wbd-engine/src/v4_client_dns_cache.rs"
       - "crates/wbd-engine/src/v4_windows_native_split.rs"
