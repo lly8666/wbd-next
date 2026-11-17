@@ -77,6 +77,27 @@ jobs:
             out/android-b2-cn-geosite/receipt.json
           retention-days: 14
           if-no-files-found: warn
+  b2c-physical-scoped-dns-host:
+    # Real Linux socket callback order and source IPv4/TCP/UDP scope.
+    # Actual NDK netd binding is in the original Android ARM64 cgo build,
+    # but is NOT runnable on this host without an Android guest.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exercise real scoped UDP/TCP sockets and fail-closed netd-bind callback
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c-physical-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c-scoped-physical-dns-${{ github.sha }}
+          path: out/android-b2c-physical/
+          retention-days: 14
+          if-no-files-found: warn
   original-m3-wire-oracle:
     # This is a pure M3 wire unit-test host: NO Android x86 target and
     # no second app/crypto implementation. Runs independently of NDK link.

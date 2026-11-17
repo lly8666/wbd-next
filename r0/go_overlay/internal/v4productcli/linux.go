@@ -127,6 +127,10 @@ type config struct{
     androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
     // Signed APK's verified offline CN list only, not live DNS capture.
     androidCNSnapshot *dnsnative.CNRules
+    // Constructed from selected kernel interface and Android Network netId
+    // before protected TLS. No socket is opened and no DNS request occurs
+    // until the future Rust/TUN DNS packet owner is independently qualified.
+    androidPhysicalDNSDial dnsnative.DialFunc
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -849,6 +853,20 @@ func Run(role string,args []string)(retErr error){
             return fmt.Errorf("Android ARM64 first-connect requires Normal/off, protected auto /32, outer-repair off and no overlap rotation")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
+        cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialer(
+            dnsnative.PhysicalScope{
+                NetworkHandle:cfg.androidNetworkHandle,
+                InterfaceName:cfg.rawInterface,
+                IfIndex:iface.Index,
+                MTU:iface.MTU,
+                LocalIPv4:cfg.localIP,
+            })
+        if err!=nil{
+            return fmt.Errorf("Android physical DNS cold Network scope denied: %w",err)
+        }
+        // This is scope construction, not an outbound DNS socket or proof
+        // of System Resolver interception/physical netd permission.
+        log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
     }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.

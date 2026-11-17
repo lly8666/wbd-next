@@ -253,3 +253,38 @@ This is not a system DNS listener, Android system resolver rewrite,
 tunnel DNS socket routing, or P2/P3 native Root execution proof.
 All direct/tunnel DNS packet capture, KernelSU runtime and physical
 network bind gates remain separate and NOT_RUN.
+
+## B2c1: actual Android netd physical DNS socket binding (cold scope)
+
+Source-locked original Go now constructs a scoped **physical-only**
+`dnsnative.NewAndroidPhysicalDNSDialer` from the exact
+`ConnectivityManager.Network.getNetworkHandle()`, original interface
+name, kernel ifindex and MTU, and observed `LinkProperties` IPv4.
+On Android Bionic CGO, each new **UDP or TCP** DNS socket uses
+`net.Dialer.ControlContext` before connect to call the same
+`android_setsocknetwork` NDK API used by original-Go FakeTCP RAW,
+plus `SO_BINDTODEVICE` and device name readback. The source IPv4 is
+explicitly selected; no implicit resolver/default route/IPv6, and only
+the fixed physical `223.5.5.5:53` endpoint and `Physical` path
+are accepted. The code revalidates actual ifindex/MTU/IP before
+and after connect. Failed mark/readback or selected network change
+closes the socket without cross-upstream fallback.
+
+This is a **real socket implementation, not an Android packet
+interceptor**. The original Go Android cold owner constructs this
+physical-only dialer after validating its selected Network; it
+does not call `Resolve` or send DNS data yet. There is no tunnel
+dialer, local DNS listener, shared Rust M4/TUN UDP/TCP53 extraction,
+system netd Resolver redirect or direct/Global/split IP rule change
+in B2c1.
+
+Dedicated Actions exercises actual Linux kernel loopback UDP,
+TC→same-endpoint TCP, source local IP and per-socket
+`ControlContext` callback order, deliberately failed mark with
+zero transmitted UDP packets, invalid handle/index/MTU/IP, wrong
+endpoint and Tunnel rejection. These tests use an injected **host
+callback** and are not Android `android_setsocknetwork` runtime
+evidence. The already pinned original ARM64 Android CGO build
+must link the NDK implementation called by the cold original-Go
+client; a separate Android CGO=0 test ELF only builds the
+fail-closed stub. Neither counts as P2/P3 Android guest/root execution.
