@@ -28,7 +28,15 @@ public static class Plan029BThreeRealGUI {
   }
  }
  static void Click(MainForm f,string title) {
-  var button=Children(f).OfType<Button>().FirstOrDefault(x=>x.Text==title);
+  // Preserve the genuine original WinForms button action and fail closed;
+  // a real disconnected->connected UI may still be finishing BeginInvoke.
+  var watch=Stopwatch.StartNew();
+  Button button=null;
+  while(watch.ElapsedMilliseconds<2200) {
+   button=Children(f).OfType<Button>().FirstOrDefault(x=>x.Text==title);
+   if(button!=null&&button.Enabled)break;
+   Tick();
+  }
   Need(button!=null&&button.Enabled,"real WinForms button unavailable "+title);
   button.PerformClick();
  }
@@ -77,7 +85,14 @@ public static class Plan029BThreeRealGUI {
  }
  static void Connect(MainForm f,ClientSession client,int ordinal) {
   ready=false;applied=false;inner=false;
-  Click(f,"保存配置");Tick();
+  // The original GUI SaveEditor() has ALREADY persisted ordinal 2/3
+  // before the exact original Go ValidateAsync() and effective policy gate.
+  // Clicking the disabled "保存配置" button AGAIN after a clean saved
+  // all/off editor is not a product failure (H2128 original signed
+  // generation 1/2 PASS, generation 3 failed at this duplicate click).
+  // Generation 1 still uses a real original Save button, and ALL three
+  // generations must use real original Connect/Disconnect buttons.
+  if(ordinal==1) {Click(f,"保存配置");Tick();}
   Click(f,"连接 / 切换");
   var watch=Stopwatch.StartNew();
   while(watch.ElapsedMilliseconds<88000) {

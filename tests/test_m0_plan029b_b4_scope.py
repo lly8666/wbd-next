@@ -46,6 +46,17 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py', e2e)
         self.assertIn('report["tcp_duplex"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"', e2e)
         self.assertIn('if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:', e2e)
+        # H2128 original signed trace: gen1 and gen2 complete real GUI
+        # Applied/DNS/business/Stop, but gen3 had already called the real
+        # SaveEditor()+ValidateAsync() and the now-clean Save button was
+        # disabled. Do not call a disabled duplicate Save for gen2/3;
+        # demand real button Connect/Disconnect and exact Go effective.
+        self.assertIn('if(ordinal==1) {Click(f,"保存配置");Tick();}', gui)
+        self.assertIn('form.SaveEditor();', gui)
+        self.assertIn('CheckEffective(Effective(store,profile,client,ordinal),ordinal);', gui)
+        self.assertIn('Click(f,"连接 / 切换");', gui)
+        self.assertIn('Click(form,"断开连接");', gui)
+        self.assertIn('while(watch.ElapsedMilliseconds<2200)', gui)
         # The signed 534b original native report was PASS with genuine
         # one-way TCP and all three GUI Stops, while PowerShell still
         # demanded the legacy two-way PLAN028 comparator. Preserve that
