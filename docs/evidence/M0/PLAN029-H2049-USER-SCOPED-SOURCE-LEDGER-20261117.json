@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "date": "2026-11-17",
+  "task": "H2049",
+  "kind": "USER_SCOPED_DELIVERY_INVENTORY_NOT_FULL_PLAN029_PROMOTION",
+  "user_selected_only": [
+    "real WinForms Connect/Go Rust OS Applied default outer1460 inner automatic true Direct/Tunnel and owned Stop",
+    "same-direct-endpoint UDP TC/TCP bootstrap and reconnect; TTL crash FakeIP writer",
+    "Direct TCP buffer DNS cache pending FakeIP small capacity isolation",
+    "source locked Normal Game4 DNS padding GUI lifecycle evidence and closeout"
+  ],
+  "excluded_user_scope": [
+    "IPv6 native default route/leak matrix",
+    "old 028 full matrix",
+    "old P1/P2 high-load and 60ms legacy tail tuning",
+    "same-A shared overseas CDN two-domain reverse-egress",
+    "PLAN030",
+    "Android",
+    "extra Game2/4 fixed FEC"
+  ],
+  "historical_confirmed": [
+    {
+      "id": "H2041_Game4_CN_FECoff",
+      "source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
+      "action": 43942345347,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "four TLS lanes Direct UDP TCP32KiB FIN and bidirectional Tunnel UDP TCP plus both owned Stop",
+      "outer": "legacy1400",
+      "not_default1460": true
+    },
+    {
+      "id": "H1791_Normal_CN_default1460",
+      "source": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
+      "action": 43552619098,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "Direct TCP UDP nonCN Tunnel UDP DNS+FakeIP OS inner1389 Stop",
+      "outer": 1460
+    },
+    {
+      "id": "H1958_original_single_DNS",
+      "source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+      "action": 43792684618,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "nonCN tunnel DNS and nonCN QNAME->CN A physical direct UDP; tunnel blackhole physical DNS0; owned Stop"
+    },
+    {
+      "id": "H1795_original_real_TCP53",
+      "source": "1efb3cec6b9f90714b32c78e0318a57720d0e1f1",
+      "action": 43556105215,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "physical CN TCP53 and Tunnel nonCN TCP53, no cross-direction fallback, owned Stop"
+    },
+    {
+      "id": "H2031_Normal_startup_padding",
+      "source": "b76240bedb04237780bd13377bfe7aae38785018",
+      "action": 43901130216,
+      "status": "PASS_SCOPED_PHYSICAL_ENCRYPTED_CAPTURE",
+      "proof": "20–30 record/2–3 second/0–500B real bounded per-record MTU budget, app TCP UDP+owned Stop; ciphertext does not expose exact pad bytes",
+      "outer": "legacy1400"
+    },
+    {
+      "id": "H1812_WinForms_config",
+      "source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+      "action": 43567997254,
+      "status": "FUNCTIONAL_PASS_CONFIG_ONLY",
+      "proof": "real WinForms+Go CLI two DNS/profile CN/outer1460 and inner config readback",
+      "actual_GUI_OS_Applied": "NOT_RUN_H1812"
+    },
+    {
+      "id": "H1868_Real_Direct_hard8",
+      "source": "11a1daaf4c0c74730da32909382f39f365f0427a",
+      "action": 43648756279,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "Direct hard8 saturation; old Direct heartbeat/new Tunnel progressed; new Direct after idle; unanswered packets not typed reason"
+    },
+    {
+      "id": "H2044_cold_TCP_TC_compiler",
+      "source": "c7c3054579f9db9bac07bdbeccef44ca3ac01fe5",
+      "action": 43992993306,
+      "status": "BUILD_PASS_ONLY",
+      "proof": "Windows Go/bootstrap physical interface source compilation; no TCP53 actual TC scenario"
+    },
+    {
+      "id": "H2043_async_writer_pure",
+      "source": "e0a3f44461111aae5e3e17e4252f16202c5c4151",
+      "action": 43992703683,
+      "status": "SOURCE_LOCKED_RUST_PURE_PASS",
+      "proof": "Windows/Linux original Rust units including 8 queued FakeIP fsync jobs, 9th bounded reject; pending Tunnel DNS independent, durable ACK/reopen"
+    }
+  ],
+  "current_attempts": [
+    {
+      "id": "H2045_GUI_first",
+      "source": "969da571374506e405c6b3c1d0f3b94ecf1b5d3e",
+      "action": 43994188290,
+      "status": "FAIL_BEFORE_GUI_NETWORK",
+      "first_boundary": "H1845 original Python prestart check used GUI parent argv after conversion; WinForms source/Go Rust binary hashes passed. Original OS Applied/Direct Tunnel NOT_RUN."
+    },
+    {
+      "id": "H2048_GUI_original_retry",
+      "source": "b26098e3f4dd0577ab18422c1fa7a0700021c448",
+      "action": 43995805550,
+      "status": "IN_PROGRESS_UNVERIFIED",
+      "test": "original WinForms real button with frozen pre-conversion CLI, config readback and real kernel two-egress/Stop"
+    },
+    {
+      "id": "H2047_physical_single_DNS_TC",
+      "source": "87eea943160e2ea51bde0fb6c61f0424d929b351",
+      "action": 43995525313,
+      "status": "IN_PROGRESS_UNVERIFIED",
+      "test": "real Windows Npcap UDP TC -> WSL2 physical TCP53 same resolver ID/QNAME/source, followed by original TLS and two-exit/Stop"
+    }
+  ],
+  "selected_unverified": {
+    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "PENDING_H2048",
+    "DNS_bootstrap_same_endpoint_TC_real": "PENDING_H2047",
+    "DNS_bootstrap_after_reconnect": "NOT_RUN",
+    "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "FakeIP_durable_unexpected_process_crash_recovery": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "FakeIP_writer_slow_disk_vs_other_live_flows": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "resource_full_tcp_resident_buffer_original_concurrent": "PURE_COMPONENT_ONLY",
+    "resource_full_dns_cache_original_concurrent": "PURE_COMPONENT_ONLY",
+    "resource_full_dns_pending_original_concurrent": "PURE_COMPONENT_ONLY",
+    "resource_full_FakeIP_original_concurrent": "PURE_COMPONENT_ONLY",
+    "resource_full_direct": "H1868_SCOPED_REAL",
+    "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
+    "GUI_effective_padding": "PENDING_H2048_GUI_CONFIG_NOT_PADDING_OFF_ON",
+    "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
+  },
+  "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
+  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NO_DELIVERY_PROMOTION"
+}
