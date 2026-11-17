@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# A1: compile real shared WBD Rust ABI and original-Go PRODUCT sources for
+# Android/Bionic. This is an integration build GATE, not a connected client.
+set -euo pipefail
+cd "${GITHUB_WORKSPACE:?Actions checkout required}"
+test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?SOURCE required}"
+test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f1984"
+: "${ANDROID_HOME:?NDK missing}"
+ndk="$(find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+tool="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+test -x "$tool/aarch64-linux-android28-clang"
+test -x "$tool/x86_64-linux-android28-clang"
+rustup toolchain install 1.85.1 --profile minimal
+rustup target add --toolchain 1.85.1 aarch64-linux-android x86_64-linux-android
+export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$tool/aarch64-linux-android28-clang"
+export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$tool/x86_64-linux-android28-clang"
+export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
+mkdir -p out/android-product-a1
+# Exact public original-Go source-lock installation; do not duplicate legacy.
+python3 tools/m0_install_public_faketcp.py --check-only
+python3 tools/m0_install_public_faketcp.py legacy
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/
+python3 tools/m0_install_public_realityfront_tests.py legacy
+mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+for file in r0/go_overlay/internal/realityfront/*.go; do
+  name="${file##*/}"
+  case "$name" in
+    tls_test.go|wire_qualification_test.go) continue ;;
+    tls.go)
+      test "$(git -C legacy hash-object internal/realityfront/tls.go)" = 518a18104803baf75c703fd8b038f2126beb8d64
+      cp "$file" "legacy/internal/realityfront/tls.go"
+      continue ;;
+  esac
+  test ! -e "legacy/internal/realityfront/$name" || { echo "overlay collision: $name" >&2; exit 1; }
+  cp "$file" "legacy/internal/realityfront/$name"
+done
+cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
+# Normal/off only. Native ISA-L FEC is intentionally NOT a first-connect gate.
+features=m0_v4_probe,m0_v4_embedded_go
+for pair in "aarch64 arm64" "x86_64 amd64"; do
+  read -r triple goarch <<< "$pair"
+  if [ "$triple" = aarch64 ]; then rust_target=aarch64-linux-android; else rust_target=x86_64-linux-android; fi
+  cc="$tool/${rust_target}28-clang"
+  test -x "$cc"
+  "$cc" -c -std=c11 -Wall -Wextra -Werror android/root-native/android_abi.c -o "out/android-product-a1/abi-$goarch.o"
+  cargo +1.85.1 build --release --locked --target "$rust_target" -p wbd-engine --features "$features"
+  lib="target/$rust_target/release/libwbd_engine.so"
+  test -s "$lib"
+  cp "$lib" "out/android-product-a1/libwbd_engine-$goarch.so"
+  export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
+  export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine"
+  (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
+  unset CGO_LDFLAGS
+done
+python3 - <<'PY'
+import json,os,hashlib,pathlib,struct
+p=pathlib.Path("out/android-product-a1")
+art=sorted(x for x in p.iterdir() if x.is_file())
+def elf(path):
+    b=path.read_bytes()
+    assert b[:5]==b"\x7fELF\x02",path
+    bo="<" if b[5]==1 else ">"
+    e_type,e_machine=struct.unpack_from(bo+"HH",b,16)
+    phoff=struct.unpack_from(bo+"Q",b,32)[0]
+    entsize,phnum=struct.unpack_from(bo+"HH",b,54)
+    aligns=[]
+    for i in range(phnum):
+        t=struct.unpack_from(bo+"I",b,phoff+i*entsize)[0]
+        if t==1:aligns.append(struct.unpack_from(bo+"Q",b,phoff+i*entsize+48)[0])
+    assert aligns and all(v>=16384 for v in aligns),(path,aligns)
+    return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
+result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
+"donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
+"rust_features":"m0_v4_probe,m0_v4_embedded_go","mode":"NORMAL_OFF_BUILD_ONLY",
+"android_abis":["arm64","amd64"],"go_os":"android","android_api":28,
+"artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
+"elf":elf(x) if x.name.endswith(".so") else None} for x in art},
+"production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",
+"android_root_app_install":"NOT_RUN","physical_acceleration":"NOT_RUN",
+"real_server_connection":"NOT_RUN"}
+(p/"manifest.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+(p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
+PY
+(cd out/android-product-a1 && sha256sum * >SHA256SUMS && sha256sum -c SHA256SUMS)

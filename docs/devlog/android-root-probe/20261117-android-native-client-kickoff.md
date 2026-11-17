@@ -15,5 +15,5 @@
 A 产品装配与Normal/off实际连接 **IN_PROGRESS**：接下来做 Android source-locked Go donor + 共享Rust target preflight/编译产物，识别Bionic阻塞并最小共享接口抽取，继而实际Android16 KSU ↔ 同源Linux WBD server的标准TLS、认证、租约、Rust双向TCP/UDP/Stop。B统一DNS/路由/App选择，C生命周期/模式，D热点USB/PR皆 PLANNED；不以合成探针代替。后续完整包需记录冻结 SOURCE、Action、失败、未测和唯一下一步。
 
 ```feature-impact
-{"kind":"added","ids":["android-root-native-client","android-temp-root-probe"],"reason":"用户授权从已完成范围内Root能力探针进入正式Android原生客户端适配；新增独立产品卡与现行施工方案/长期接续入口，保留旧探针历史与NOT_RUN边界。"}
+{"kind":"updated","ids":["android-root-native-client"],"reason":"用户授权从已完成范围内Root能力探针进入正式Android原生客户端适配；新增独立产品卡与现行施工方案/长期接续入口，保留旧探针历史与NOT_RUN边界。"}
 ```

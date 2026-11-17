@@ -6,7 +6,9 @@
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
-  "available_on": [],
+  "available_on": [
+    "experiment/android-temp-root-probe"
+  ],
   "defaults": {
     "mode": "split（待实现）",
     "cn_domain_dns_split": "on（待实现）",
@@ -17,11 +19,17 @@
     "vpn_service": "disabled"
   },
   "usage": {
-    "cli": "产品Start/Stop、标准TLS客户端和Root工作进程尚未接线；现有 probe 命令仅诊断",
+    "cli": "A1源锁构建脚本 android/root-native/build-source-locked.sh（尚非可连接APK/正式Start），Root探针CLI另见历史卡",
     "config": "预计包名/用户/默认模式、每App follow/split/global/direct、两单DNS、手动规则更新；尚未作为产品配置生效",
     "gui": "计划Java原生安装App选择/搜索/批量/Start/Stop/状态；当前设置页仅诊断配置预览"
   },
-  "code_refs": [],
+  "code_refs": [
+    "crates/wbd-platform/src/android_root_io.rs",
+    "crates/wbd-platform/src/lib.rs",
+    "android/root-native/android_abi.c",
+    "android/root-native/build-source-locked.sh",
+    ".github/workflows/android-root-product-a1.yml"
+  ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
@@ -29,6 +37,13 @@
     "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md"
   ],
   "verification": [
+    {
+      "platform": "Android NDK arm64/x86_64",
+      "scope": "Bionic struct ABI + original-Go cgo product + shared Rust owner Normal/off source-locked 编译",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
     {
       "platform": "Android16 KSU x86_64 AVD",
       "scope": "正式Go TLS认证/租约→Rust Normal/off→实际服务端TCP/UDP/Stop",
