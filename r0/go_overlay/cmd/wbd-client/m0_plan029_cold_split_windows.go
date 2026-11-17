@@ -73,15 +73,21 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   o.DNSServers4[0]==netip.AddrFrom4([4]byte{255,255,255,255}){
   return empty,errM0Plan029Cold
  }
- directHard:=o.DirectFlowHard
- if directHard==0{directHard=16384}
- if directHard>16384{return empty,errM0Plan029Cold}
  var mode uint32
  switch o.RouteMode{
  case "all":mode=0
  case "bypass-lan":mode=1
  case "bypass-lan-cn":mode=2
  default:return empty,errM0Plan029Cold
+ }
+ // Disabled business resources must not reject a saved Direct-only cap.
+ // Keep the original bounded DNS TCP listener, Tunnel and bootstrap.
+ directHard:=o.DirectFlowHard
+ if mode==0{
+  directHard=16384
+ }else{
+  if directHard==0{directHard=16384}
+  if directHard>16384{return empty,errM0Plan029Cold}
  }
  var lan,cn []netip.Prefix
  if mode!=0{

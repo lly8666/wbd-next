@@ -529,6 +529,11 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              },
              Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
              Ok(ReadResult::Skipped)=>{
+                 // This Wintun loan was consumed and released even when
+                 // IPv6/non-IPv4. Count its RX quantum without staging it
+                 // for Tunnel, business Direct, FEC or padding. Otherwise
+                 // BATCH skipped loans hide the next ready IPv4 packet.
+                 captured+=1;
                  counters.rejected.fetch_add(1,Ordering::Relaxed);
              },
              Err(_)=>return Err(BAD_STAGE),
@@ -2147,6 +2152,16 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          assert!(full.quantum_full());
          assert!(!StageWork{tunnel:0,captured:BATCH-1,direct:BATCH-1}.quantum_full());
          assert!(StageWork{tunnel:BATCH,captured:BATCH,direct:0}.quantum_full());
+     }
+     #[test]
+     fn plan029b_ipv6_skipped_rx_consumes_quantum_and_keeps_next_ipv4_ready(){
+         // Original WintunRx::read already skips/releases IPv6; the
+         // scheduler's consumed-slot quantum must still be complete.
+         let all_skipped=StageWork{tunnel:0,captured:BATCH,direct:0};
+         assert!(all_skipped.quantum_full());
+         let mixed=StageWork{tunnel:1,captured:BATCH,direct:0};
+         assert!(mixed.quantum_full());
+         assert!(!StageWork{tunnel:1,captured:BATCH-1,direct:0}.quantum_full());
      }
      #[test]
      fn plan029_closed_nat_owner_wakes_at_due_not_10ms_busy_tick(){

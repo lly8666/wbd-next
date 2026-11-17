@@ -147,6 +147,41 @@ func TestPlan029ExplicitProductSplitOutsideCIUsesOnlyConfiguredRules(t *testing.
  }
 }
 
+// H2102: all/off does not read inactive CN rules or enforce a saved
+// business Direct hard cap; the two public DNS endpoints remain required.
+func TestPlan029BAllOffIgnoresInactiveBusinessCapacity(t *testing.T){
+ physical:=netip.MustParseAddr("10.1.0.7")
+ lease:=netip.MustParseAddr("10.234.12.34")
+ t.Setenv("GITHUB_ACTIONS","false")
+ t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","")
+ for _,tc:=range []struct{mode string;split bool}{
+  {"bypass-lan-cn",false},{"all",true},{"all",false},
+ }{
+  o:=plan029Options(tc.mode)
+  o.SplitEnable=tc.split
+  o.DirectFlowHard=^uint32(0)
+  o.ChinaIPFile=filepath.Join(t.TempDir(),"missing-cn-ips")
+  o.CNRulesFile=filepath.Join(t.TempDir(),"missing-cn-domains")
+  cold,err:=m0Plan029TrialCold(o,physical,14,lease,1389,[16]byte{2})
+  if err!=nil||cold==nil||cold.RouteMode!=0||cold.DirectHard!=16384||
+   cold.TCPSynthetic4==[4]byte{}||len(cold.CN)!=0||
+   len(cold.Direct)!=0||len(cold.Domains)!=0||
+   len(cold.FakeJournalPath)!=0{
+   t.Fatalf("inactive Direct cap/rules blocked public Rust DNS: mode=%s split=%t cfg=%+v err=%v",tc.mode,tc.split,cold,err)
+  }
+  o.DirectDNS4=netip.IPv4Unspecified()
+  if _,err=m0Plan029TrialCold(o,physical,14,lease,1389,[16]byte{2});err==nil{
+   t.Fatal("inactive split suppressed mandatory bootstrap DNS validation")
+  }
+ }
+ active:=plan029Options("bypass-lan")
+ active.SplitEnable=true
+ active.DirectFlowHard=^uint32(0)
+ if _,err:=m0Plan029TrialCold(active,physical,14,lease,1389,[16]byte{2});err==nil{
+  t.Fatal("active Direct cap exceeded 16384 but was accepted")
+ }
+}
+
 func TestPlan029GenerationSyntheticOnlyOneOwnedHost(t *testing.T){
  install:=[16]byte{1};e1:=[16]byte{2};e2:=[16]byte{3}
  a,err:=m0Plan029SyntheticForGeneration(install,e1)
