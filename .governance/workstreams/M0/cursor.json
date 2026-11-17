@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2050,
-  "checkpoint_sha": "f71a2b6ddbb4871eb98f9f256b03e9d098d0c75b",
+  "sequence": 2051,
+  "checkpoint_sha": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2050 exact real original WinForms Npcap signed DLL userland bundle copied from same verified driver source; H2048 actual GUI native failed wpcap.dll absent. H2047 physical TC native failed physical NPF UDP53 timeout; add bounded owned HyperV WSL UDP53/TCP53 grants and owned exact cleanup. New GUI source Action pending.",
-  "why_now": "H2048 run43995805550 failed after correct Go/Rust MSS budget at Npcap DLL load from GUI-specific EXE folder. H2047 run43995525313 failed at physical A query timeout before TLS; WSL Hyper-V has only TCP443/46112 inbound grants. Build/source validation green, actual native receipts missing.",
+  "current_task": "H2051 physically original Windows NPF single DNS TC/TCP guest with scoped HyperV grants; new independent action marker; adds small-budget Rust five class pure tests including actual Windows TCP kernel loopback sibling progress + old flow recovery (NOT native OS Wintun). H2050 GUI original native Action separate SOURCE in progress.",
+  "why_now": "H2047 native TC UDP timeout before WSL physical DNS readback; H2050 pinned two HyperV rules before UDP and exact cleanup. User requires 5-class small pressure rather than H1868 hard8 only.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2050 GUI real native pass/failure first. Once source fix confirmed, dispatch one separate H2051 TCP TC native scene on later commit marker. Do not re-run Game4 H2041 or H2031 padding.",
+  "next_action": "Collect exact H2050 GUI and H2051 physical DNS TCP and Windows/Linux quota Rust status, fix first failed boundary; do not treat two pure unit tests as same-VM real pressure.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2051-FIVE-QUOTA-COMPONENT-REAL-TC.md",
     "docs/devlog/M0/20261117-PLAN029-H2050-GUI-NPCAP-BOOTSTRAP-FIREWALL.md",
     "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
-    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
-    "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."

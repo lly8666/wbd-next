@@ -424,4 +424,114 @@ mod tests {
         assert_eq!(cache.tunnel_len(),0);
         assert_eq!(cache.direct_len(),1);
     }
+
+    /// Five quota classes are independent. This is a bounded pure component
+    /// oracle, not a claim about real Windows Wintun/WSL2 scheduling or RSS.
+    /// The kernel TCP buffer class has its own Windows socket test.
+    #[test]
+    fn plan029_h2051_small_classified_quotas_old_direct_tunnel_advance_and_recover(){
+        use crate::v4_client_dns_pending::{
+            DnsPending,DnsPendingError,DnsClient,QueryKey,ResolverLane
+        };
+        use crate::v4_client_dns_cache::DnsAnswerCache;
+        use crate::v4_client_dns_answer::{DnsAResolution,DnsAnswerStatus,ResolvedA};
+        use crate::v4_client_fake_pool::{FakeAllocator,FakeError,FakeKey};
+        // Direct flow hard=1 cannot steal the one Tunnel pin, and a
+        // saturated Tunnel pin *cache* still forwards by generation policy.
+        let mut flows=FlowPin::with_limits(1,1);
+        let f=|dest,port|FlowKey{source:7,destination:dest,
+            source_port:port,destination_port:443,protocol:6};
+        let d=f(ip(203,0,113,8),45001);
+        let overflow=f(ip(203,0,113,9),45002);
+        let t=f(ip(198,51,100,8),45003);
+        let second_t=f(ip(198,51,100,9),45004);
+        let direct=Egress::Direct{real_dst:ip(203,0,113,8),
+            presented_dst:ip(203,0,113,8)};
+        assert_eq!(flows.first(d,direct),Some(direct));
+        assert_eq!(flows.first(overflow,direct),None);
+        assert_eq!(flows.first(t,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(flows.first(second_t,Egress::Tunnel),Some(Egress::Tunnel));
+        assert_eq!(flows.first(d,Egress::Tunnel),Some(direct));
+        // One DNS pending admission each direction. Third newcomer fails,
+        // but its absence must not cancel either original key; on freeing
+        // one exact waiter, a new same-lane query can continue.
+        let k=|name:&str,lane| QueryKey{
+            name:name.into(),qtype:1,lane,resolver4:ip(1,1,1,1),
+            resolver_port:53,policy_revision:1};
+        let client=|port,id|DnsClient{src4:ip(10,66,0,2),
+            src_port:port,requested_dns4:ip(1,1,1,1),original_id:id};
+        let mut p=DnsPending::new(2,2);
+        let pd=p.begin(k("cn.example",ResolverLane::Direct),
+            client(22001,1),100,1000).unwrap();
+        let pt=p.begin(k("outside.example",ResolverLane::Tunnel),
+            client(22002,2),100,1000).unwrap();
+        assert_eq!(p.begin(k("new.cn.example",ResolverLane::Direct),
+            client(22003,3),101,1000),Err(DnsPendingError::WaitersFull));
+        assert_eq!(p.counts(),(2,2));
+        assert_eq!(p.abort_one(pd.upstream_id).unwrap().1,
+            vec![client(22001,1)]);
+        assert_eq!(p.counts(),(1,1));
+        assert!(p.begin(k("new.cn.example",ResolverLane::Direct),
+            client(22003,3),102,1000).is_ok());
+        assert_eq!(p.abort_one(pt.upstream_id).unwrap().1,
+            vec![client(22002,2)]);
+        assert_eq!(p.cancel_all(),vec![client(22003,3)]);
+        // A distinct transaction-count quota also refuses only the new
+        // key and preserves the existing Tunnel key for expiry/abort.
+        let mut ticket_cap=DnsPending::new(1,3);
+        let held=ticket_cap.begin(k("live.example",ResolverLane::Tunnel),
+            client(23001,4),100,1000).unwrap();
+        assert_eq!(ticket_cap.begin(k("new.example",ResolverLane::Direct),
+            client(23002,5),101,1000),Err(DnsPendingError::TransactionFull));
+        assert_eq!(ticket_cap.abort_one(held.upstream_id).unwrap().1,
+            vec![client(23001,4)]);
+        assert!(ticket_cap.begin(k("new.example",ResolverLane::Direct),
+            client(23002,5),102,1000).is_ok());
+        // DNS cache max_entries=1 is an LRU bypass/eviction, not a DNS
+        // transport admission wait or cross-direction answer leak.
+        let mut cache=DnsAnswerCache::new(1,4096);
+        let response=|value|DnsAResolution{
+            status:DnsAnswerStatus::Answered,canonical:"cdn.example".into(),
+            cname_chain:vec![],candidates:vec![ResolvedA{address:value,ttl:10}]};
+        let cd=k("one.cn.example",ResolverLane::Direct);
+        let ct=k("outside.example",ResolverLane::Tunnel);
+        assert!(cache.insert(cd.clone(),response(7),100));
+        assert!(cache.insert(ct.clone(),response(8),101));
+        assert_eq!(cache.get(&cd,102),None);
+        assert_eq!(cache.get(&ct,102).unwrap().candidates[0].address,8);
+        assert_eq!(flows.first(d,Egress::Tunnel),Some(direct));
+        assert_eq!(flows.first(t,Egress::Direct{real_dst:9,presented_dst:9}),
+            Some(Egress::Tunnel));
+        cache.clear();
+        assert!(cache.insert(cd.clone(),response(9),103));
+        assert_eq!(cache.get(&cd,104).unwrap().candidates[0].address,9);
+        // FakeIP hard=1 protects the existing durable pinned Direct map:
+        // refuse a second CN answer rather than hijack existing identity.
+        let mut fake=FakeAllocator::new(ip(198,18,1,1),ip(198,18,1,4),
+            &[],1,4096).unwrap();
+        let fk=|name:&str,value|FakeKey{qname:name.into(),
+            canonical:"cdn.example".into(),real4:value,
+            policy_rev:1,resolver_rev:1};
+        let old=fake.prepare(fk("one.cn.example",ip(198,51,100,7)),0,100).unwrap();
+        fake.acknowledge_durable(old.fake4).unwrap();
+        assert_eq!(fake.pin_first_flow(old.fake4),Ok(ip(198,51,100,7)));
+        assert_eq!(fake.prepare(fk("new.cn.example",ip(198,51,100,8)),10,101),
+            Err(FakeError::PoolCapacity));
+        assert_eq!(fake.announced_real(old.fake4),Some(ip(198,51,100,7)));
+        assert_eq!(flows.first(d,Egress::Tunnel),Some(direct));
+        assert_eq!(flows.first(t,Egress::Tunnel),Some(Egress::Tunnel));
+        fake.release_flow(old.fake4,600_101).unwrap();
+        assert_eq!(fake.reap_due(660_102,8),1);
+        let fresh=fake.prepare(fk("new.cn.example",ip(198,51,100,8)),
+            10,660_103).unwrap();
+        assert_eq!(fake.announced_real(fresh.fake4),None);
+        fake.acknowledge_durable(fresh.fake4).unwrap();
+        assert_eq!(fake.announced_real(fresh.fake4),Some(ip(198,51,100,8)));
+        // Direct cap recovery is independent of all DNS/FakeIP operations.
+        flows.end(&d);
+        assert!(flows.first(overflow,Egress::Direct{
+            real_dst:ip(203,0,113,9),
+            presented_dst:ip(203,0,113,9)}).is_some());
+        assert_eq!(flows.first(t,Egress::Tunnel),Some(Egress::Tunnel));
+    }
 }

@@ -834,6 +834,72 @@ mod plan029_global_backpressure_tests{
         assert_eq!(relay.resident_bytes(),0);
         drop((b,d));
     }
+
+    /// A full 1-quantum Direct TCP pending buffer gates only that relay;
+    /// an unrelated actual loopback TCP pair progresses, then the held
+    /// relay drains/reopens under its own capacity. This is a Windows
+    /// kernel socket/component proof, NOT a Wintun/native OS Applied claim.
+    #[test]
+    fn plan029_h2051_tcp_one_quantum_full_sibling_stays_live_then_recovers(){
+        use std::io::{Read,Write};
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let peer=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (server,_)=listener.accept().unwrap();
+            (server,peer)
+        }
+        let (inner,mut application)=pair();
+        let (outer,mut physical)=pair();
+        let mut choked=TcpDirectRelay::with_budget(inner,outer,QUANTUM_BYTES).unwrap();
+        choked.to_outer.extend(std::iter::repeat(b'X').take(QUANTUM_BYTES));
+        assert_eq!(choked.pending_bytes(),QUANTUM_BYTES);
+        let limit=choked.service_once_with_read_budget(0).unwrap();
+        assert!(limit.io.gated_reads[0]>0,"one flow buffer full failed to gate own read");
+        let (healthy_inner,mut healthy_app)=pair();
+        let (healthy_outer,mut healthy_peer)=pair();
+        healthy_peer.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut sibling=TcpDirectRelay::with_budget(
+            healthy_inner,healthy_outer,QUANTUM_BYTES).unwrap();
+        healthy_app.write_all(b"OTHER_DIRECT_LIVE").unwrap();
+        let mut wrote=0;
+        for _ in 0..200{
+            let turn=sibling.service_once_with_read_budget(usize::MAX).unwrap();
+            wrote+=turn.outer_write;
+            if wrote>=b"OTHER_DIRECT_LIVE".len(){break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(wrote,b"OTHER_DIRECT_LIVE".len(),
+            "sibling held behind unrelated Direct TCP buffer quota");
+        let mut observed=[0u8;17];
+        healthy_peer.read_exact(&mut observed).unwrap();
+        assert_eq!(&observed,b"OTHER_DIRECT_LIVE");
+        // Drain the original full queue into the existing kernel socket.
+        // No new relay object, fallback connection or worker is admitted.
+        for _ in 0..200{
+            if choked.pending_bytes()==0{break}
+            choked.service_once_with_read_budget(usize::MAX).unwrap();
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(choked.pending_bytes(),0,"original TCP queue never drained");
+        physical.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut old=vec![0u8;QUANTUM_BYTES];
+        physical.read_exact(&mut old).unwrap();
+        assert!(old.iter().all(|&b|b==b'X'));
+        application.write_all(b"RECOVER").unwrap();
+        let mut forwarded=0;
+        for _ in 0..200{
+            let turn=choked.service_once_with_read_budget(usize::MAX).unwrap();
+            forwarded+=turn.outer_write;
+            if forwarded>=7{break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(forwarded,7);
+        let mut resumed=[0u8;7];
+        physical.read_exact(&mut resumed).unwrap();
+        assert_eq!(&resumed,b"RECOVER");
+    }
+
     /// The original TX may have acknowledged FD_READ while this socket
     /// was still in Connecting. A newly created relay must drain bytes
     /// ALREADY resident in the original kernel TCP receive buffer on

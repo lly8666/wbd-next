@@ -119,6 +119,13 @@
       "action": null,
       "status": "IMPLEMENTED_NOT_TESTED",
       "first_boundary": "Bundled exact signed Npcap userland DLL into real WinForms client EXE folder; original Go TLS/OS Applied/Stop still pending."
+    },
+    {
+      "id": "H2051_physical_TC_new_exact_WSL_grant_and_five_quota_pure",
+      "source": null,
+      "action": null,
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "test": "physical single dns.direct UDP TC->TCP53 in original signed Normal CN plus one engine bounded quota old Direct/Tunnel recovery and Windows kernel TCP independent relay test"
     }
   ],
   "selected_unverified": {
@@ -128,15 +135,15 @@
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
     "FakeIP_durable_unexpected_process_crash_recovery": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
     "FakeIP_writer_slow_disk_vs_other_live_flows": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
-    "resource_full_tcp_resident_buffer_original_concurrent": "PURE_COMPONENT_ONLY",
-    "resource_full_dns_cache_original_concurrent": "PURE_COMPONENT_ONLY",
-    "resource_full_dns_pending_original_concurrent": "PURE_COMPONENT_ONLY",
-    "resource_full_FakeIP_original_concurrent": "PURE_COMPONENT_ONLY",
+    "resource_full_tcp_resident_buffer_original_concurrent": "H2051_WINDOWS_LOOPBACK_TEST_PENDING_NATIVE_NOT_RUN",
+    "resource_full_dns_cache_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
+    "resource_full_dns_pending_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
+    "resource_full_FakeIP_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
     "resource_full_direct": "H1868_SCOPED_REAL",
     "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
     "GUI_effective_padding": "PENDING_H2048_GUI_CONFIG_NOT_PADDING_OFF_ON",
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
-  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NEW_NATIVE_SOURCES_UNVERIFIED"
+  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NOT_PROMOTED"
 }
