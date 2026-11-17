@@ -78,7 +78,7 @@ import hashlib,json,os,pathlib,struct
 p=pathlib.Path("out/android-product-a1")
 def inspect(path,expected_machine):
     b=path.read_bytes()
-    assert b[:5]==b"\\x7fELF\\x02",(path,"not ELF64")
+    assert b[:5]==b"\x7fELF\x02",(path,"not ELF64")
     bo="<" if b[5]==1 else ">"
     assert struct.unpack_from(bo+"H",b,18)[0]==expected_machine,(path,"wrong ELF machine")
     phoff=struct.unpack_from(bo+"Q",b,32)[0]
@@ -101,7 +101,7 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "real_server_TLS_auth_lease_data_stop":"NOT_RUN",
    "physical_android_load":"NOT_RUN"}
 (p/"rust-cold-stage-manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
-(p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\\n")
+(p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
 # Do not remove the failing link gate: until real Android RAW/TUN M4 owner
 # is wired this must FAIL and never publish a pretend client binary.

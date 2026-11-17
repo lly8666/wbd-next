@@ -73,3 +73,11 @@ SOURCE `b2fe8422682e7e2dd34ce39211cb2f1f3dfcdd2a` [Action44014373562](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"区分已通过的arm64共享Rust认证冷ABI与尚缺失的Android M4 Go全链接；重排A1为双ABI冷编译证明与真实Go链接独立闸门，留精确SOURCE证据且不发布假APK。"}
 ```
+
+### A1 构建闸门静态审计修正
+
+审查新第一阶段清单生成器，修正了被双转义的ELF magic及SOURCE换行字符串；这仅防止Python夹具错误地拒绝有效Android ELF，不影响Rust/Go产品编译或认证协议。下一完整源锁Action才是证据，旧SOURCE的临时Action如被替换须按CANCELLED记录，不得算PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"修正A1双ABI Rust ELF阶段manifest Python文字双转义，确保真正检验ELF magic且SOURCE换行正确；不改变产品语义。"}
+```

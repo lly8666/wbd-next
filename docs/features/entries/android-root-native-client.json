@@ -99,7 +99,8 @@
     "Action44013768079 Android Bionic C+Rust共享引擎交叉编译通过，但原Go产品缺wbd_v4_fec2_product编译tag导致类型未定义；已匹配原公共Linux发布的标签闭包，实际Android M4连接未验证。",
     "Action44014077113 原Go源码已编译至Android最终链接，但Rust原产品v4_embedded_go模块Linux-only导致原始authenticated owner ABI缺失；现仅启用同一Rust模块Android64冷认证ABI编译，不视为M4可用。",
     "Action44014373562 原Go-Rust共享V4冷owner在Bionic编译发现16个Linux M4专属字段/辅助函数条件门遗漏；正在按原内核驱动条件修正，未用stub冒充实际M4。",
-    "Action44014838092 ARM64 Rust cold ABI导出通过但完整原Go CGo链接缺AndroidM4 RAW/TUN/Health/MTU符号，属于实际未实现；未生成真实WBD产品客户端APK。"
+    "Action44014838092 ARM64 Rust cold ABI导出通过但完整原Go CGo链接缺AndroidM4 RAW/TUN/Health/MTU符号，属于实际未实现；未生成真实WBD产品客户端APK。",
+    "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。"
   ],
   "promotion": null
 }
