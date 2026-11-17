@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2045,
-  "checkpoint_sha": "c7c3054579f9db9bac07bdbeccef44ca3ac01fe5",
+  "sequence": 2046,
+  "checkpoint_sha": "969da571374506e405c6b3c1d0f3b94ecf1b5d3e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2045 test-owned original WinForms button with real ClientSession, exact-Go/Rust binary, OS Applied/inner readback, Normal CN actual two kernel exits and owned Stop added to existing one native Windows/WSL2 scenario. New signed SOURCE pending.",
+  "current_task": "H2046 bounded feature card UTF8 <=16KiB with all prior statuses/evidence rows; H2045 WinForms real signed Action still running, do not dispatch again.",
   "why_now": "H2044 Windows original Go SOURCE Action43992993306 successful, H2043 two OS Rust pressure pure Action43992703683 success. H2044 feature catalog failed because pretty-printed card over16KiB; correct minification in this batch. No fake GUI origin claims.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact H2045 real GUI original Action and fix first failure; native TC network and all five quota classes must not be claimed real. No Game4/padding duplicate dispatch.",
+  "next_action": "Collect H2045 real GUI signed native Action; fix first boundary if failure. Same-endpoint physical TC and five-category on-wire pressure still OPEN.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2046-BOUNDED-FEATURE-UTF8.md",
     "docs/devlog/M0/20261117-PLAN029-H2045-GUI-REAL-SIGNED-CANDIDATE.md",
-    "docs/devlog/M0/20261117-PLAN029-H2044-ASSEMBLY-STOP-RESTORE.md",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
