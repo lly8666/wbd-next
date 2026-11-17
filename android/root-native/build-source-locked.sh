@@ -182,10 +182,18 @@ for pair in "aarch64 arm64"; do
     go build -trimpath -buildvcs=false \
     -o "$GITHUB_WORKSPACE/out/android-product-a1/ksu-arm64-go-probe" \
     android/root-app/ci/nativebridge-arm64-go-probe.go
+  # Distinguish Android NativeBridge's direct Go executable startup from
+  # a real NDK dlopen of the genuine Go runtime's c-shared initializer.
+  # Strictly test-only; this Go .so is NOT included in the Root APK.
+  GO111MODULE=off CGO_ENABLED=1 GOTOOLCHAIN=local \
+    CGO_LDFLAGS="-Wl,-z,max-page-size=16384" \
+    go build -buildmode=c-shared -trimpath -buildvcs=false \
+    -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-go-cshared-probe.so" \
+    android/root-app/ci/nativebridge-arm64-go-cshared-probe.go
   python3 - <<'PYARM64'
 from pathlib import Path
 import struct
-for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe"):
+for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared-probe.so"):
     raw=(Path("out/android-product-a1")/name).read_bytes()
     assert raw[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",raw,18)[0]==183,name
 print("ARM64_NATIVEBRIDGE_DIAGNOSTIC_PROBES_SOURCE_COMPILED_ONLY")

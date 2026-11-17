@@ -86,3 +86,19 @@ SOURCE `32e32e8ccceb1adf1d895e9327d378faa5353a7a` [Action44121481475](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"恢复最新真实KSU NativeBridge原ARM64 Go+Rust SIGSEGV 139失败并保留证据；新增测试专用NDK/纯Go/Rust动态载入层次与Android崩溃收据，不伪装正式TLS或业务。"}
 ```
+
+## 2026-11-18 分层真实KSU结论：NDK/Rust加载PASS，Go runtime本体SIGSEGV
+
+SOURCE `e284b720b4a7e806b24f1438f72ac2f6aaa63198` [Actions44126602143](https://github.com/lly8666/wbd-next/actions/runs/44126602143)：原10项构建/Host/Linux原协议oracle **10/10 PASS**；新增第11项真实Android16 API36 x86_64 KVM/KernelSU/ARM64 NativeBridge **FAIL**，原始[artifact14348032201](https://github.com/lly8666/wbd-next/actions/runs/44126602143/artifacts/14348032201)中真实退出码和系统crash：
+- NDK纯C ARM64 Android进程`--self`：**exit0**，且真实`WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS`；
+- 同NDK ARM64进程`dlopen("/data/local/tmp/libwbd_engine.so",RTLD_NOW)` + `dlsym`实际Rust原M1导出函数（仅寻找函数、不造数据包）：**exit0**，`WBD_ANDROID_ARM64_RUST_DLOPEN_PASS`；
+- 同SOURCE且无Rust依赖的最小**纯Go CGO0 ARM64**可执行程序：**SIGSEGV exit139**，尚未进入`main`或打印证据；
+- 与正式签名APK逐字节匹配、`DT_NEEDED=libwbd_engine.so`和`$ORIGIN`已实证的真正Go/Rust原客户端`--help`：**SIGSEGV exit139**；
+- 真Android`logcat -b crash`显示两者均由`/system/bin/ndk_translation_program_runner_binfmt_misc_arm64`实际启动，`SIGSEGV SEGV_MAPERR`均访问`fault addr=0x2`（/memfd:exec in translated code）。该事实极大缩小为当前NativeBridge执行路径与独立Go runtime的不兼容，**不能反推出真实ARM64设备也会崩溃，更不能把NDK/Rust加载PASS算WBD TLS/租约PASS**。
+- 该次脚本在原Go失败处中断，签名APK Activity尚**NOT_PROVEN**；以往x86 KSU探针仍不等于ARM64客户端。
+
+当前下一测试分支严格是**测试专用 Go c-shared `android/arm64` ELF**，通过已PASS的NDK ARM64桥接启动程序`dlopen`并调用其仅返回常数的Go `//export`符号，验证是否“直接Go CLI/binfmt”特有的问题。附加同份纯Go在`GODEBUG=asyncpreemptoff=1,GOMAXPROCS=1`下的真实进程对照；结果分别收据，不将辅助Go sidecar打入生产APK或冒充原WBD协议。另修改KSU脚本即使正式Go崩溃也继续启动签名APK原`RootClientActivity`，独立采集PackageManager/UI真实PID（无凭据、不请求Root START），随后仍因原Go SIGSEGV保持**整Job FAIL**，绝不伪造NativeReady。当前这些新SOURCE的Android结果**NOT_RUN**，main/M0/原Linux Windows协议完全不动。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"KSU分层真结果NDK ARM64/Rust dlopen退出0，独立Go和正式Go SIGSEGV139，二者同由binfmt runner故障地址0x2；增加测试专用Go c-shared/Go runtime选项对照及失败后独立APK Activity验收，不引入假WBD业务。"}
+```

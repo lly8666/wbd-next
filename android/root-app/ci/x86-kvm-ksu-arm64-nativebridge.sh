@@ -42,6 +42,8 @@ d={
  "arm64_ndk_min_exec":probe_ok("ndk-min-exec.txt","ndk-min-exit-code.txt","WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS"),
  "arm64_pure_go_runtime":probe_ok("go-min-exec.txt","go-min-exit-code.txt","WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS"),
  "arm64_rust_dlopen":probe_ok("rust-dlopen.txt","rust-dlopen-exit-code.txt","WBD_ANDROID_ARM64_RUST_DLOPEN_PASS"),
+ "arm64_pure_go_tuned":probe_ok("go-min-tuned-exec.txt","go-min-tuned-exit-code.txt","WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS"),
+ "arm64_go_cshared":probe_ok("go-cshared-exec.txt","go-cshared-exit-code.txt","WBD_ANDROID_ARM64_GO_CSHARED_CALL_PASS"),
  "arm64_native_exec":"PASS" if txt("arm64-exit-code.txt")=="0" and "ANDROID_AARCH64_GO_RUNTIME_STARTED" in execout else "NOT_PROVEN",
  "arm64_native_exit_code":txt("arm64-exit-code.txt"),
  "product_app_launch":"PASS" if "ACTIVITY_STARTED" in app else "NOT_PROVEN",
@@ -72,6 +74,7 @@ test -s out/android-root-app-native/libwbd_engine-arm64.so
 # they are never shipped in the official APK or treated as WBD success.
 test -s out/android-root-app-native/ksu-arm64-ndk-probe
 test -s out/android-root-app-native/ksu-arm64-go-probe
+test -s out/android-root-app-native/libksu-arm64-go-cshared-probe.so
 test -s out/android-root-app/wbd-root-arm64-debug.apk
 test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
 test "$(cat out/android-root-app/SOURCE)" = "$GITHUB_SHA"
@@ -224,7 +227,9 @@ adb push out/android-root-app-native/ksu-arm64-ndk-probe \
   /data/local/tmp/wbd-ndk-arm64-probe >"$dir/ndk-probe-push.txt"
 adb push out/android-root-app-native/ksu-arm64-go-probe \
   /data/local/tmp/wbd-go-arm64-probe >"$dir/go-probe-push.txt"
-adb shell su -c 'chmod 755 /data/local/tmp/wbd-ndk-arm64-probe /data/local/tmp/wbd-go-arm64-probe' \
+adb push out/android-root-app-native/libksu-arm64-go-cshared-probe.so \
+  /data/local/tmp/libwbd-go-cshared-test.so >"$dir/go-cshared-push.txt"
+adb shell su -c 'chmod 755 /data/local/tmp/wbd-ndk-arm64-probe /data/local/tmp/wbd-go-arm64-probe; chmod 644 /data/local/tmp/libwbd-go-cshared-test.so' \
   >"$dir/probe-chmod.txt" 2>&1
 # Each result is a real Bionic/NativeBridge process. Every probe is
 # independent; never short-circuit before the original WBD execution.
@@ -235,10 +240,18 @@ adb shell su -c '/data/local/tmp/wbd-go-arm64-probe' >"$dir/go-min-exec.txt" 2>&
 gorc=$?
 adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --dlopen /data/local/tmp/libwbd_engine.so' >"$dir/rust-dlopen.txt" 2>&1
 rustrc=$?
+adb shell su -c 'GODEBUG=asyncpreemptoff=1 GOMAXPROCS=1 /data/local/tmp/wbd-go-arm64-probe' \
+  >"$dir/go-min-tuned-exec.txt" 2>&1
+gotunedrc=$?
+adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --go-shared /data/local/tmp/libwbd-go-cshared-test.so' \
+  >"$dir/go-cshared-exec.txt" 2>&1
+gosharedrc=$?
 set -e
 printf '%s\n' "$ndkrc" >"$dir/ndk-min-exit-code.txt"
 printf '%s\n' "$gorc" >"$dir/go-min-exit-code.txt"
 printf '%s\n' "$rustrc" >"$dir/rust-dlopen-exit-code.txt"
+printf '%s\n' "$gotunedrc" >"$dir/go-min-tuned-exit-code.txt"
+printf '%s\n' "$gosharedrc" >"$dir/go-cshared-exit-code.txt"
 phase="ORIGINAL_ARM64_GO_RUST_EXEC_RUNTIME"
 set +e
 adb shell su -c 'LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/wbd-product-arm64 --help' \
@@ -253,29 +266,24 @@ adb logcat -d -t 800 >"$dir/arm64-recent-logcat.txt" 2>&1 || true
 adb shell su -c 'ls -lt /data/tombstones' >"$dir/tombstone-list.txt" 2>&1 || true
 adb shell su -c 'f=$(ls -t /data/tombstones/tombstone_* 2>/dev/null | head -1); test -n "$f" && head -n 220 "$f"' \
   >"$dir/latest-tombstone-excerpt.txt" 2>&1 || true
-printf 'NDK_ARM64_EXIT=%s PURE_GO_ARM64_EXIT=%s RUST_DLOPEN_EXIT=%s ORIGINAL_WBD_ARM64_EXIT=%s\n' \
-  "$ndkrc" "$gorc" "$rustrc" "$rc"
-if grep -Eiq 'Usage of|Usage:|--peer-ip|peer-ip|--android-network-handle|android-network-handle' "$dir/arm64-exec.txt" &&
-   ! grep -Eiq 'exec format|not executable|not found|failed to execute|bad ELF' "$dir/arm64-exec.txt";then
+printf 'NDK_ARM64_EXIT=%s PURE_GO_ARM64_EXIT=%s RUST_DLOPEN_EXIT=%s PURE_GO_TUNED_EXIT=%s GO_CSHARED_EXIT=%s ORIGINAL_WBD_ARM64_EXIT=%s\n' \
+  "$ndkrc" "$gorc" "$rustrc" "$gotunedrc" "$gosharedrc" "$rc"
+original_ready=0
+if [[ "$rc" == 0 ]] &&
+   grep -Eiq 'Usage of|Usage:|--peer-ip|peer-ip|--android-network-handle|android-network-handle' "$dir/arm64-exec.txt" &&
+   ! grep -Eiq 'exec format|not executable|not found|failed to execute|bad ELF|Segmentation fault' "$dir/arm64-exec.txt";then
   echo "ANDROID_AARCH64_GO_RUNTIME_STARTED" >>"$dir/arm64-exec.txt"
+  original_ready=1
 else
-  echo "ENV_BLOCKED_NATIVEBRIDGE_AARCH64_RAW_EXEC: original ARM64 WBD did not complete --help" >&2
+  echo "ENV_BLOCKED_NATIVEBRIDGE_AARCH64_RAW_EXEC: original ARM64 WBD did not complete --help (exit $rc)" >&2
   cat "$dir/native-bridge.txt" >&2
-  for f in ndk-min-exec.txt go-min-exec.txt rust-dlopen.txt arm64-exec.txt latest-tombstone-excerpt.txt;do
+  for f in ndk-min-exec.txt go-min-exec.txt rust-dlopen.txt go-min-tuned-exec.txt go-cshared-exec.txt arm64-exec.txt latest-tombstone-excerpt.txt;do
     echo "=== $f ===" >&2
     tail -n 85 "$dir/$f" >&2 || true
   done
-  exit 10
 fi
-# All diagnostic subprocesses must succeed independently; do not mark the
-# genuine product as 'runtime qualified' because a test-only sidecar ran.
-if [[ "$ndkrc" != 0 || "$gorc" != 0 || "$rustrc" != 0 ]] ||
-   ! grep -q 'WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS' "$dir/ndk-min-exec.txt" ||
-   ! grep -q 'WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS' "$dir/go-min-exec.txt" ||
-   ! grep -q 'WBD_ANDROID_ARM64_RUST_DLOPEN_PASS' "$dir/rust-dlopen.txt";then
-  echo "NATIVEBRIDGE_LAYERED_ARM64_DIAGNOSTIC_FAIL: no false-positive product pass" >&2
-  exit 13
-fi
+# Test the actual signed APK's Activity even when ARM64 Go runtime crashes;
+# UI/AOSP PackageManager are independent evidence, NOT Go/TLS readiness.
 phase="REAL_PRODUCT_APK_ACTIVITY"
 adb shell am start -n org.wbdnext.rootclient/.RootClientActivity >"$dir/app-launch.txt" 2>&1
 if grep -Eqi 'error|exception|permission denied' "$dir/app-launch.txt";then
@@ -303,5 +311,12 @@ if [[ "$app_ready" != 1 ]];then
   exit 11
 fi
 printf '\nACTIVITY_STARTED\n' >>"$dir/app-launch.txt"
+if [[ "$original_ready" != 1 ]];then
+  phase="ORIGINAL_ARM64_GO_RUNTIME_BLOCKED_APP_ACTIVITY_PROVEN"
+  echo "ANDROID_REAL_APK_ACTIVITY_PASS_BUT_ORIGINAL_ARM64_GO_NOT_EXECUTABLE: device business NOT_RUN" >&2
+  exit 10
+fi
+# Companion diagnostics never authorize the real protocol; negative results
+# remain in the receipt and require their own review.
 phase="KSU_ARM64_EXEC_AND_APK_ACTIVITY_PASS_P2_RUNTIME_ONLY"
 echo "ANDROID_X86_KVM_REAL_KSU_ARM64_NATIVEBRIDGE_GO_RUNTIME_AND_APK_LAUNCH_PASS; APP_SU_AND_BUSINESS_NOT_RUN"

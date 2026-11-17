@@ -11,8 +11,9 @@ int main(int argc, char **argv) {
         puts("WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS");
         return 0;
     }
-    if (argc != 3 || strcmp(argv[1], "--dlopen") != 0) {
-        fputs("usage: probe --self | --dlopen /absolute/path/libwbd_engine.so\n", stderr);
+    if (argc != 3 || (strcmp(argv[1], "--dlopen") != 0 &&
+                      strcmp(argv[1], "--go-shared") != 0)) {
+        fputs("usage: probe --self | --dlopen /absolute/path/libwbd_engine.so | --go-shared /absolute/path/libgo.so\n", stderr);
         return 2;
     }
     // Real source-locked Rust shared ELF, no fake ABI and no native WBD
@@ -24,6 +25,24 @@ int main(int argc, char **argv) {
     if (h == NULL) {
         fprintf(stderr, "WBD_ANDROID_ARM64_RUST_DLOPEN_FAIL: %s\n", dlerror());
         return 4;
+    }
+    if (strcmp(argv[1], "--go-shared") == 0) {
+        puts("WBD_ANDROID_ARM64_GO_CSHARED_DLOPEN_PASS");
+        fflush(stdout);
+        void *symbol = dlsym(h, "WBD_AndroidGoCSharedProbe");
+        if (symbol == NULL) {
+            fputs("WBD_ANDROID_ARM64_GO_CSHARED_SYMBOL_FAIL\n", stderr);
+            return 6;
+        }
+        // This is a constant-return runtime probe, never WBD auth or
+        // a fake transport. Distinguish dlopen Go runtime constructors
+        // from the first exported Go function call.
+        int (*go_probe)(void) = (int (*)(void))symbol;
+        puts("WBD_ANDROID_ARM64_GO_CSHARED_CALL_ENTER");
+        fflush(stdout);
+        if (go_probe() != 2666) return 7;
+        puts("WBD_ANDROID_ARM64_GO_CSHARED_CALL_PASS");
+        return 0;
     }
     // Do not call an owner symbol with fabricated credentials or packets.
     void *sym = dlsym(h, "wbd_m0_embedded_go_prepare_client");
