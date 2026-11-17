@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2127",
+  "date": "2026-11-18",
+  "source_sha": "534b7ba84af901492f571334a76ed510dad093da",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "action": {
+    "id": 44150334492,
+    "attempt": 1,
+    "conclusion": "failure",
+    "native_job_id": 134280137961,
+    "original_mode_result": "PASS",
+    "original_process_exit_code": 0,
+    "workflow_gate": "FAIL_POST_NATIVE_IN_POWERSHELL_BEFORE_FULL_STEP_SUCCESS",
+    "artifact_id": 14358594070,
+    "archive_sha256": "d7b6dbd2d1ae3af2630908ecaa04f9af7c8a4e1edba61d4321e07a5a023dd34f",
+    "zip_entries": 28,
+    "all_crc": "PASS",
+    "original_product_source": "534b7ba84af901492f571334a76ed510dad093da",
+    "original_fixture_source": "534b7ba84af901492f571334a76ed510dad093da",
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "linux_original_build": "PASS",
+    "windows_original_build": "PASS"
+  },
+  "signed_original_b4": {
+    "windows_actual_gui_generations": 3,
+    "windows_os_applied": 3,
+    "windows_owned_stops": 3,
+    "source_ports": [
+      41031,
+      41032,
+      41033
+    ],
+    "real_windows_outer_mtu": 1460,
+    "real_windows_inner_os_mtu_each": [
+      1389,
+      1389,
+      1389
+    ],
+    "original_syn_mss_each": [
+      1420,
+      1420,
+      1420
+    ],
+    "original_linux_synack_mss_each": [
+      1420,
+      1420,
+      1420
+    ],
+    "linux_authenticated_sessions": 3,
+    "advanced": {
+      "cn_dns": "real physical UDP53",
+      "cn_a": "FakeIP presented",
+      "business_udp": "real physical Direct"
+    },
+    "ordinary": {
+      "cn_dns": "real physical UDP53",
+      "cn_a": "real 203.0.113.77",
+      "business_udp": "real Rust Tunnel"
+    },
+    "all": {
+      "cn_dns": "real Rust Tunnel UDP53",
+      "cn_a": "real 203.0.113.77",
+      "business_udp": "real Rust Tunnel",
+      "business_split": false
+    },
+    "three_actual_kernel_business_udp": "PASS",
+    "original_linux_kernel_guest": "PASS_THREE_REAL_GUI_GENERATION_EGRESS",
+    "old_fake_ip_app_replies": 0,
+    "old_fake_ip_physical_or_tunnel_egress": 0,
+    "guest_stale_marker_receipts": 0,
+    "actual_windows_to_linux_tcp": {
+      "windows_original_client_echo": true,
+      "linux_original_socket_received_bytes": 36,
+      "real_windows_tcp_echo_bytes": 42,
+      "scope": "H1762_REAL_KERNEL_TUNNEL_TCP"
+    },
+    "original_mode_report": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "original_stop": "PASS_BOTH_OWNED",
+    "original_public_mode_batch": "PASS",
+    "real_original_public_mode_exit_code": 0,
+    "status": "PASS_SCOPED_ORIGINAL_WINFORMS_3_GENERATION_DNS_TCP_UDP_MSS_STOP"
+  },
+  "first_ci_failure": {
+    "source": ".github/workflows/m0-wl-public-normal-full.yml",
+    "literal": "selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof",
+    "reason": "Legacy generic PowerShell gate accepts only tcp_duplex=PASS_ACTUAL_TWO_OS_KERNEL_TCP, but signed B4 uses genuine original Windows_to_Linux kernel TCP with tcp_duplex=PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP.",
+    "not_product_data_plane_failure": true
+  },
+  "fix_candidate": {
+    "commit": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
+    "action_id": 44153223434,
+    "status_at_collection": "IN_PROGRESS",
+    "modified": [
+      ".github/workflows/m0-wl-public-normal-full.yml",
+      "tests/test_m0_plan029b_b4_scope.py"
+    ],
+    "behavior": "Exclusive B4 PowerShell native hard gate requires real 3 GUI Applied/Stop, source-locked original Linux egress/stale FakeIP, actual kernel TCP, MSS/MTU and full owned Stop; generic bidirectional TCP gate remains unchanged"
+  },
+  "still_open": {
+    "github_native_action": "RED_LAST_SOURCE",
+    "b4_current_new_action": "NOT_YET_FINAL",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps_cpu_gib_rss_p99": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN",
+    "plan030": "NOT_STARTED"
+  }
+}
