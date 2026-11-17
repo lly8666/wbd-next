@@ -81,3 +81,20 @@ SOURCE `b2fe8422682e7e2dd34ce39211cb2f1f3dfcdd2a` [Action44014373562](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"修正A1双ABI Rust ELF阶段manifest Python文字双转义，确保真正检验ELF magic且SOURCE换行正确；不改变产品语义。"}
 ```
+
+## A1 阶段封存：双ABI原Rust冷认证构建成功，真实客户端产品链接失败
+
+**同一SOURCE** `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`；[Android Product A1 Action44015392698](https://github.com/lly8666/wbd-next/actions/runs/44015392698) **overall FAIL**（明确是随后原Go真实M4链接失败，不是A1冷模块本身失败）；[source-locked artifact14298207771](https://github.com/lly8666/wbd-next/actions/runs/44015392698/artifacts/14298207771)。已单独下载ZIP并校验 ZIP SHA256=`57b9f4870f690e773837f4dd4acd08cb4f52210184961761d82ffcf6d67e824d`。其中 `rust-cold-stage-manifest.json` 与两个 .so 独立SHA256吻合：
+
+| ARM ABI | Rust shared owner ELF64 SHA256 | machine | PT_LOAD最小对齐 | NDK C 静态 ABI + 原Rust冷FFI导出 |
+|---|---|---|---|---|
+| arm64-v8a | `bf2261b2ebd33656cb0df9efc1bc7b16aa462cb9fee2c389192d23b86e458be8` | 183 | 16384 | PASS |
+| x86_64 | `53a9445f1d5083b09c8d2d74cf57363648956b6292aba18664bb6e34f669c7ec` | 62 | 16384 | PASS |
+
+上游Go donor SHA固定 `a7a82db31fe736ffedee330795a3234d358f1984`；`prepare_client/stage/commit/stop` 均从**同一个 Rust `v4_embedded_go`** 冷所有权模块导出（非伪造stub）。Go产品编译确实执行，但原LLVM链接在 `wbd_m0_embedded_go_normal_off_*`、`attach_raw_rx/attach_tun`、`loop_*`、FEC/Game接口等缺失的 *真实 Android M4* Rust符号处 **FAIL**；因此仅arm64完整链接跑到失败，x86完整链接为NOT_RUN。`rust-cold-stage-manifest.json` 是严格标注 `SHARED_RUST_COLD_ABI_ONLY` 的阶段清单，不能用作 TLS/认证/租约已成功、硬件ISA实际启用或产品APK可安装的证据。
+
+**唯一接续任务 A2**：抽出原 `v4_embedded_go` Rust成熟 M4 (Raw/TUN/Health/MTU/owned Stop) 的跨Linux64/Android64共享内核ABI接口，Android-only选择并锁定实际ConnectivityManager Network句柄/接口、NDK socket/TUN；不得为让Go链接而写无行为函数、虚假的SUCCESS或复制核心。A2完整码线冻结后再跑同SOURCE构建和Android16 KSU↔原Linux服务端 A3真实Normal/off。这是工作包A的**第一阶段**证据，不启动B/C/D。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"核实同源A1双ABI Rust认证冷owner构建和16KiB ELF实际PASS但原Go产品M4链接FAIL；更新功能卡/方案/长期提示词的实际下一步A2。"}
+```

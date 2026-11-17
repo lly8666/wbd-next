@@ -17,3 +17,7 @@ A 产品装配与Normal/off实际连接 **IN_PROGRESS**：接下来做 Android s
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"用户授权从已完成范围内Root能力探针进入正式Android原生客户端适配；新增独立产品卡与现行施工方案/长期接续入口，保留旧探针历史与NOT_RUN边界。"}
 ```
+
+## 同源正式移植A1结果更新（2026-11-17）
+
+证据固定SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，[Action44015392698](https://github.com/lly8666/wbd-next/actions/runs/44015392698)与 [artifact14298207771](https://github.com/lly8666/wbd-next/actions/runs/44015392698/artifacts/14298207771)：**Android64 arm64/x86_64 NDK Bionic ABI+同一Rust protected cold owner C导出+16KiB ELF，构建阶段PASS；原Go真正 M4 产物链接在ARM64因缺Android M4接口FAIL，x86未执行完整链接；真实server/TCP/UDP全部NOT_RUN。** 下步只做A2原 Rust M4产品内核API的Android平台抽取与Go正确接线，不再做普通探针。细节见 [A1装配日志](20261117-android-product-a1-assembly.md)。

@@ -24,7 +24,7 @@
 | **C 产品模式与生命周期** | Normal/off、fixed/auto、Game原有lane；低频状态、前台Service、网络callback、重认证/轮换/切网、资源观测 | PLANNED | 同源模式及Stop；一次实际网络切换；有限业务 p99/CPU/RSS/idle 唤醒 |
 | **D 条件热点USB与PR整合** | 手机/热点/USB独立开关、系统共享SNAT/conntrack、真实offload/CLAT边界、回归/PR | PLANNED | 已授权真机专项结果 + 清晰NOT_RUN 清单 + PR；未经验收不得自合 main |
 
-**已验证：A1 ARM64 Bionic ABI + 共享 Rust Go↔Rust 认证冷所有权 C ABI 构建及导出通过（SOURCE `7a721ae82c18e68db58af1b43b7fb3ce16057b0d`，Action 44014838092）；但原Go完整连接器因 Android M4 RAW/TUN/Health/MTU 符号未移植而链接 FAIL。下一步：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再在 Android16 KSU 与同源 Linux 服务端真实 TLS/认证/租约及 TCP/UDP 收发验收。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
+**已验证：A1 ARM64+X86_64 Bionic ABI + 同一共享 Rust Go↔Rust 认证冷所有权真实C ABI导出、双64位 ELF 16KiB对齐（SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，Action44015392698，阶段清单/ZIP14298207771）；但原Go完整产品连接器在ARM64因 Android M4 RAW/TUN/Health/MTU 产品符号未移植而链接FAIL，x86完整链接NOT_RUN。下一步：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再在 Android16 KSU 与同源 Linux 服务端真实 TLS/认证/租约及 TCP/UDP 收发验收。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
 
 ## 4. 真正的 Android 产品架构
 

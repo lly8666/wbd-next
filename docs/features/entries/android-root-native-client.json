@@ -36,27 +36,35 @@
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
     "docs/devlog/android-root-probe/20261117-android-native-client-kickoff.md",
-    "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md"
+    "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md",
+    "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md"
   ],
   "verification": [
     {
       "platform": "Android NDK arm64-v8a",
-      "scope": "Bionic C ifreq+TUN ABI and original shared Rust Go↔Rust protected cold owner symbols (prepare/stage/commit/stop)",
+      "scope": "Bionic 64-bit struct ABI + shared product Rust Go↔Rust cold owner FFI + 16KiB ELF (no live handshake)",
       "status": "BUILD_PASS",
-      "source_sha": "7a721ae82c18e68db58af1b43b7fb3ce16057b0d",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44014838092"
-    },
-    {
-      "platform": "Android NDK arm64-v8a",
-      "scope": "Real original-Go product CGo link to Android authenticated Rust M4 RAW/TUN worker",
-      "status": "FAIL",
-      "source_sha": "7a721ae82c18e68db58af1b43b7fb3ce16057b0d",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44014838092"
+      "source_sha": "c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44015392698"
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "Bionic C ABI + protected Rust cold ownership + 16KiB ELF and original-Go full product link",
-      "status": "PLANNED",
+      "scope": "Bionic 64-bit struct ABI + shared product Rust Go↔Rust cold owner FFI + 16KiB ELF (no live handshake)",
+      "status": "BUILD_PASS",
+      "source_sha": "c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44015392698"
+    },
+    {
+      "platform": "Android NDK arm64-v8a",
+      "scope": "Full original-Go CGo client link to real Android M4 RAW/TUN/Health/MTU worker",
+      "status": "FAIL",
+      "source_sha": "c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44015392698"
+    },
+    {
+      "platform": "Android NDK x86_64",
+      "scope": "Full original-Go CGo client link to real Android M4 RAW/TUN/Health/MTU worker",
+      "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
@@ -100,7 +108,8 @@
     "Action44014077113 原Go源码已编译至Android最终链接，但Rust原产品v4_embedded_go模块Linux-only导致原始authenticated owner ABI缺失；现仅启用同一Rust模块Android64冷认证ABI编译，不视为M4可用。",
     "Action44014373562 原Go-Rust共享V4冷owner在Bionic编译发现16个Linux M4专属字段/辅助函数条件门遗漏；正在按原内核驱动条件修正，未用stub冒充实际M4。",
     "Action44014838092 ARM64 Rust cold ABI导出通过但完整原Go CGo链接缺AndroidM4 RAW/TUN/Health/MTU符号，属于实际未实现；未生成真实WBD产品客户端APK。",
-    "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。"
+    "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。",
+    "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。"
   ],
   "promotion": null
 }
