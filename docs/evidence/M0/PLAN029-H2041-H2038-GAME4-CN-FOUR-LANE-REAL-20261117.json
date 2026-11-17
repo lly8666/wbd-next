@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2041",
+  "date": "2026-11-17",
+  "source_sha": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
+  "result": "PASS_SCOPED",
+  "full_plan029": "IN_PROGRESS",
+  "action": {
+    "id": 43942345347,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43942345347",
+    "conclusion": "success",
+    "native_job_id": 133566338216,
+    "original_go_windows_rust_linux_rust_components": "ALL_SUCCESS",
+    "exact_source_and_manifest": "PASS"
+  },
+  "scene": "ORIGINAL_WINDOWS2025_GAME4_FOUR_AUTHENTICATED_TLS_LANES_FEC_OFF_CN_SPLIT_AND_ONE_SHARED_WINTUN_VS_REAL_WSL2_LINUX",
+  "outer_mtu_scope": "LEGACY1400_IN_THIS_ACTION_NOT_DEFAULT1460",
+  "game4": {
+    "lanes": 4,
+    "fec": "off",
+    "split_mode": "bypass-lan-cn",
+    "cold_source": "SAME_ORIGINAL_GAME_RUST_NATIVE_SPLIT_WORKER",
+    "one_wintun": true
+  },
+  "cn_dns": {
+    "physical_direct_resolver_real4": "172.19.42.70",
+    "presented_resolver4": "8.8.8.8",
+    "original_windows_app_attempts": 1,
+    "original_linux_physical_dns_received": 1,
+    "fakeip_presented4": "198.18.0.1",
+    "windows_app_source_lease4": "10.66.0.2",
+    "linux_real_underlay_source4": "172.19.32.1",
+    "cn_fakeip_and_physical_receipt": "PASS"
+  },
+  "direct_udp": {
+    "true_guest_kernel_received": true,
+    "real_physical_source4": "172.19.32.1",
+    "original_windows_fakeip_application_reply": "PLAN029-H1745-CN-DIRECT-UDP-reply",
+    "one_true_business_echo": "PASS",
+    "application_p99": "NOT_RUN_THIS_GAME4_SCENE"
+  },
+  "direct_tcp": {
+    "windows_real_kernel_tcp_bytes_sent": 32768,
+    "windows_real_kernel_tcp_bytes_echoed": 32768,
+    "windows_half_close": true,
+    "presented_remote4": "198.18.0.1",
+    "guest_true_kernel_tcp_received_bytes": 32768,
+    "guest_true_kernel_tcp_echo_sent_bytes": 32768,
+    "real_server4": "172.19.42.70",
+    "real_guest_underlay_source4": "172.19.32.1",
+    "guest_elapsed_ms": 135.656,
+    "original_two_leg_application_and_fin": "PASS"
+  },
+  "tunnel_udp": {
+    "result": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "real_guest_and_windows_application": true
+  },
+  "tunnel_tcp": {
+    "result": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "independent_real_kernel_windows": {
+      "local4": "10.66.0.2",
+      "remote4": "203.0.113.77",
+      "dial_source4": "10.66.0.2",
+      "server_received_bytes": 40,
+      "client_echo": true
+    },
+    "independent_real_kernel_linux": {
+      "local4": "203.0.113.77",
+      "remote4": "10.66.0.2",
+      "dial_source4": "203.0.113.77",
+      "server_received_bytes": 40,
+      "client_echo": true
+    },
+    "note": "Both directions establish original native TCP sockets and echo independent exact 40-byte markers; no classifier-only or synthetic ACK."
+  },
+  "owned_stop": {
+    "product": "PASS_BOTH_OWNED",
+    "one_exact_windows_test_inbound_allow": {
+      "local4": "10.66.0.2",
+      "remote4": "203.0.113.77",
+      "local_port": 45902,
+      "protocol": "TCP",
+      "readback": "PASS",
+      "post_run_removed": "PASS"
+    },
+    "no_global_firewall_reset": true,
+    "no_legacy_wfp_guard": true
+  },
+  "corrective_comparison": {
+    "old_source_sha": "99a621ca919183f8ed228feb1f2fd981be895892",
+    "failed_original_action_id": 43913748050,
+    "old_first_failure": "Original Game4 CN linux->windows Tunnel TCP source 203.0.113.77 to Win10.66.0.2:45902 timed out while Windows->Linux TCP echoed; fixture owned listener rule selected 10.66.0.1 because Game4 flag absent",
+    "fix": "Include exactly Game4 CN scene in pre-existing one-scoped-TCP45902-owned-listener-Allow selection (remote 203.0.113.77), leave rule readback and Stop deletion unchanged",
+    "inference": "Same first network scenario now has both real TCP reverse receipts; highly consistent with listener-rule root cause, no claim of direct Pktmon proof of each blocked SYN."
+  },
+  "non_promotion": {
+    "fixed_fec_game4": "NOT_RUN",
+    "game2_cn": "UNSUPPORTED_NOT_PART_OF_THIS_SCOPE",
+    "default_outer1460_game4": "NOT_RUN",
+    "game4_cpu_gib_or_p99": "NOT_RUN",
+    "full_d1_d5_p1_p2_gui": "OPEN_OR_SEPARATE_SCOPED_EVIDENCE",
+    "cn_noncn_same_overseas_ip_opposite_exit": "NOT_REQUIRED_BY_USER",
+    "normal_tunnel_20_to_30_record_2_to_3_second_random_0_to_500_padding": "SEPARATE_H2031_SOURCE_PASS_SCOPED"
+  }
+}

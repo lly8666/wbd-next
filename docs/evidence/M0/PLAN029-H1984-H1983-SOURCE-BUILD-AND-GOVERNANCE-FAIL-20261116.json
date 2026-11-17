@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1984",
+  "date": "2026-11-16",
+  "source_sha": "57b2fe47e71555538294370065f130b47c152b1b",
+  "source_locked_results": {
+    "m0": {
+      "run": 43825343465,
+      "conclusion": "success",
+      "jobs": [
+        133157753633,
+        133157987997,
+        133157988026,
+        133157988038
+      ],
+      "native_network": "SKIPPED_NOT_RUN"
+    },
+    "h1661": {
+      "run": 43825343422,
+      "job": 133157752382,
+      "conclusion": "success",
+      "cold_defender_orphan_pure": "PASS",
+      "native_defender_COM_one_exact_owned_rule_CAS": "PASS_NOT_PRODUCT_TCP",
+      "status_and_recover_orphan_pure": "COMPILED_NOT_EXECUTED"
+    },
+    "governance": {
+      "run": 43825343455,
+      "conclusion": "failure",
+      "jobs": [
+        133157753284,
+        133157753730
+      ],
+      "structure_first_error": "evidence is for a different SOURCE",
+      "cause": "H1983 evidence only tested_source_sha, no canonical source_sha",
+      "catalog_unit_tests": "121 PASS, validation FAIL"
+    }
+  },
+  "fixes": [
+    "Add correct canonical H1983 evidence.source_sha without altering history/status",
+    "Expand H1661 Windows anchored go test regex to run existing two pure PLAN010 Defender orphan status+Recover tests"
+  ],
+  "h1984_test": "NOT_RUN",
+  "plan029": "IN_PROGRESS"
+}

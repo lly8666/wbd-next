@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1960_COLLECT_H1958_ORIGINAL_D1_D2",
+  "source_sha": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "action": {
+    "run_id": 43792684618,
+    "job_id": 133056188908,
+    "artifact_id": 14193726167,
+    "conclusion": "success"
+  },
+  "status": "PASS_SCOPED_REAL_WINDOWS_WSL2_D1_D2_SELECTED_CASES_NOT_FULL_EXIT",
+  "scene": "SAME_ORIGINAL_WINDOWS_WINTUN_RUST_GO_AND_WSL2_LINUX_GUEST_SOURCE_AS_H1958_P2_NO_REPEAT_ACTION",
+  "d1_noncn_tunnel_dns": {
+    "windows_original_kernel_dns": {
+      "qname": "www.globalx.example",
+      "presented_dns": "8.8.8.8",
+      "reply_source": "8.8.8.8",
+      "reply_port": 53,
+      "no_fakeip": true
+    },
+    "linux_upstream": {
+      "resolver": "1.1.1.1",
+      "qname": "www.globalx.example",
+      "target_queries": 1,
+      "unrelated_dns_ignored": 1,
+      "returned_real_a": "203.0.113.77"
+    },
+    "blackhole": {
+      "qname": "no-backup.globalx.example",
+      "windows_app_attempts": 3,
+      "linux_tunnel_queries": 3,
+      "physical_dns_queries": 0,
+      "unrelated_physical_queries": 0,
+      "windows_received_reply": false,
+      "status": "PASS_SCOPED_NO_CROSS_DIRECTION_FALLBACK"
+    },
+    "not_run": [
+      "REAL_TCP53_THIS_SOURCE",
+      "ARBITRARY_ONLINK_SYSTEM_DNS_BYPASS",
+      "OTHER_SYSTEM_DNS"
+    ]
+  },
+  "d2_noncn_business_tunnel": {
+    "dns_real_a": "203.0.113.77",
+    "fakeip": false,
+    "linux_tun_received_bytes": 45,
+    "windows_business_echo_bytes": 50,
+    "physical_underlay": "NOT_SELECTED_BY_THIS_TUN_SOCKET",
+    "status": "PASS_SCOPED_REAL_NONCN_TUNNEL_DNS_AND_UDP"
+  },
+  "d2_noncn_name_cn_ip_direct": {
+    "qname": "cn-ip.globalx.example",
+    "tunnel_dns_upstream": "1.1.1.1",
+    "resolved_real_a": "198.19.254.2",
+    "fakeip": false,
+    "real_windows_app_bound_source": "10.66.0.2",
+    "app_forced_wintun_interface": true,
+    "linux_physical_receipts": 1,
+    "linux_original_go_physical_src": "172.20.192.1",
+    "real_business_echo_bytes": 40,
+    "status": "PASS_SCOPED_NONCN_DNS_TO_CN_IP_PHYSICAL_DIRECT_UDP",
+    "limitations": [
+      "REAL_NONCN_DNS_TO_CN_IP_DIRECT_TCP_NOT_RUN",
+      "ORDINARY_ONLINK_DNS_WINTUN_CAPTURE_NOT_PROVEN"
+    ]
+  },
+  "d2_cn_domain_selective_fake": {
+    "query_from_windows_original_wintun": true,
+    "cn_fake_answer": "198.18.0.1",
+    "one_real_linux_physical_direct_dns_query": true,
+    "physical_udp_business": true,
+    "app_fake_dns_elapsed_ms": 32,
+    "real_cn_fake_business_tcp_32k_and_fin": true,
+    "limitations": [
+      "SHARED_REAL_OVERSEAS_CDN_SAME_IP_TWO_QNAMES_NOT_RUN",
+      "CN_FAKE_MULTI_A_THIS_SOURCE_NOT_RUN"
+    ]
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "physical_paths_proven": true,
+  "full_d1": "OPEN_NOT_ALL_TCP53_OR_OTHER_DNS",
+  "full_d2": "OPEN_SHARED_CDN_AND_ONLINK_CASES",
+  "full_d3": "OPEN_TTL_RESTART_ETC",
+  "full_plan029": "IN_PROGRESS"
+}

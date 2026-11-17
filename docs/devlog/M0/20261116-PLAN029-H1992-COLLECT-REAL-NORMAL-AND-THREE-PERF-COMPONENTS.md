@@ -1,0 +1,10 @@
+# PLAN029 H1992｜普通性能优先，收三处Rust热路径优化与原Native Normal结果
+
+- H1988 [Rust组件43832554872](https://github.com/lly8666/wbd-next/actions/runs/43832554872) **SUCCESS**：Direct DNS物理 `WSAPoll` 从原32回包出队循环移到唯一 TX `tick` 一次，并去每次FD堆分配。H1989 [Rust组件43833451089](https://github.com/lly8666/wbd-next/actions/runs/43833451089) **SUCCESS**：16个 WinSock TCP shard 在原 `WAIT_ANY` 内按最后已服务shard轮换，Stop优先不变。原H1989 FeatureCatalog曾因H1940旧字符串FAIL；H1990 [治理43834103182](https://github.com/lly8666/wbd-next/actions/runs/43834103182)及[维护43834103172](https://github.com/lly8666/wbd-next/actions/runs/43834103172) **SUCCESS**；原失败保留。
+- H1991 SOURCE `8ed70bc54a1aba3ccd460d63089b251280897915` [Rust组件43835248674](https://github.com/lly8666/wbd-next/actions/runs/43835248674) Win2025 job133190133761与Ubuntu job133190134240双 SUCCESS；Windows真实 `plan029_udp_empty_socket_is_not_wsapolled_32x_for_tcp_reverse` 在105及107项测试中 `ok`。对一个正常空闲Direct UDP socket，单TX轮即使有32个TCP回包也不做32次重复 `WSAPoll`；大于16个UDP socket要扫完整轮转集合才抑制；有真实UDP交付即恢复扫描。 [治理43835248700](https://github.com/lly8666/wbd-next/actions/runs/43835248700) SUCCESS。[M0预检43835248671](https://github.com/lly8666/wbd-next/actions/runs/43835248671) cheap/Windows Go/Linux+Windows Rust已绿、其后Linux peer/原native收件时仍 IN_PROGRESS，不能夸为整Action绿。
+- 不重派网络：已有原H1988 SOURCE22c44 [M0 Action43832554963](https://github.com/lly8666/wbd-next/actions/runs/43832554963)、H1989 SOURCEe1bc [M0 Action43833451125](https://github.com/lly8666/wbd-next/actions/runs/43833451125) **均最终成功**，原 Win2025/WSL2 Linux Normal/off TLS/Wintun/Npcap/OS WAL Ready、真kernel TCP+UDP应用双向和双方owned Stop PASS。**这些不是CN Direct或P2性能测试**，不能宣称三项优化带来任何CPU/p99数值收益。
+- 用户明确不做极端16k饱和、长压/旧2048不断重刷；下一步只采普通混合 CN Direct TCP+UDP + Tunnel小UDP 和真实物理socket baseline，同SOURCE/同VM的p99/最长空洞、CPU每GiB、少量队列年龄与Stop，查第一异常再改。H1974五次61–63ms真实尾延迟与4次TCP重传根因仍OPEN；PLAN029不交付，028不扩大，030不启动。
+
+```feature-impact
+{"kind":"updated","ids":["dns-split-ipv6"],"reason":"H1992 record H1988/89 true Normal/off two-OS TCP/UDP/Stop PASS and H1991 Rust component/Go and governance preflight PASS, keeping true CN Direct p99/CPU and H1974 long tail OPEN; no new dispatch."}
+```

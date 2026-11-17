@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task": "PLAN029-H2035",
+  "date": "2026-11-17",
+  "source_sha": "d546da726800241926f499188df75ee98b2da43c",
+  "original_action": {
+    "id": 43909402223,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43909402223",
+    "conclusion": "failure"
+  },
+  "real_positive": {
+    "tls_lanes": 4,
+    "rust_game_workers_started": true,
+    "original_os_applied": true,
+    "live_receipt": true,
+    "inner_os_mtu": 1313,
+    "outer_mtu": 1400,
+    "owned_defender_tcp_port": 64917,
+    "tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "native_workers_stop": "PASS",
+    "wal_restored": "PASS",
+    "wintun_closed": true
+  },
+  "first_failure": "CN physical DNS53 no real Windows FakeIP reply",
+  "native_error": "PLAN029_H1703_UDP_IF_FIRST_ERROR stage=set_ip_unicast_if win32=10022 ifindex=1500",
+  "root_source": "runM0NativeV4WindowsGeneration passed selected.physicalMTU as Game4 physical index instead of selected.ifindex",
+  "physical_ifindex_actual": 25,
+  "nlmtu_mispassed": 1500,
+  "cn_direct_udp": "NOT_RUN",
+  "cn_direct_tcp": "NOT_RUN",
+  "tunnel_tcp": "NOT_RUN",
+  "scene_stop": "FAIL_SCOPED_DESPITE_INTERNAL_OWNED_STOP_PASS",
+  "postfix_retest": "NOT_RUN",
+  "old_fail_preserved": true
+}

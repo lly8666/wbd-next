@@ -13,6 +13,15 @@ import (
 // real Win32 writers. This is an ASSEMBLY/PREFLIGHT ONLY entry until exact
 // OS capability, crash recovery and signed Rust packet owner are qualified.
 // Never replace the old 5-stage recovery or manufacture a fake WFP guard.
+// A previous generation's unresolved exact Defender Allow is not empty OS.
+// No broad firewall mutation or old WFP guard is done by this preflight.
+func n4Plan029RequireNoOrphanDefender(statePath string)error{
+ if statePath==""{return ErrNetworkPlan}
+ _,err:=os.Lstat(n4Plan029DefenderSidecarPath(statePath))
+ if err==nil{return ErrN4JournalConflict}
+ if errors.Is(err,os.ErrNotExist){return nil}
+ return err
+}
 func n4AssembleWindowsNoWFPNativeTxn(
  ctx context.Context,tun *TUN,plan NetworkPlan,id N4UnifiedIdentity,
  tcpSynthetic4 ...netip.Addr,
@@ -40,6 +49,7 @@ func n4AssembleWindowsNoWFPNativeTxn(
  // cross-recover a v1 WFP transaction using the new v2 stage set.
  if _,err:=os.Stat(plan.StatePath);err==nil{return nil,ErrN4JournalConflict
  }else if !errors.Is(err,os.ErrNotExist){return nil,err}
+ if err:=n4Plan029RequireNoOrphanDefender(plan.StatePath);err!=nil{return nil,err}
  owner:=N4WindowsCreatedWintunReservation{Tunnel:tun,
   Installation:id.Installation,Generation:id.Generation}
  if err:=owner.Verify(ctx,id);err!=nil{return nil,err}

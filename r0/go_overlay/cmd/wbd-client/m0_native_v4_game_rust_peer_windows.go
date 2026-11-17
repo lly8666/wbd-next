@@ -34,6 +34,7 @@ type m0WinRustGamePeer struct{
  maxIPv4 int
  pathMTU uint32
  disableOuterRepair bool
+ plan029Cold *realityfront.V4WindowsColdSplitConfig // synchronous cold only; no hot Go callback
  live bool
  moved bool
  last realityfront.V4WindowsNativeWorkerStatsV1
@@ -141,7 +142,9 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  }
  if p.disableOuterRepair{cfg.DisableOuterRepair=1}
  fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_ENTER")
- if err=p.group.StartNativeGameIO(ctx,cfg);err!=nil{return err}
+ if p.plan029Cold!=nil{
+  if err=p.group.StartNativeGameIOWithColdSplit(ctx,cfg,*p.plan029Cold);err!=nil{return err}
+ }else if err=p.group.StartNativeGameIO(ctx,cfg);err!=nil{return err}
  p.live=true;p.identity=id;p.maxIPv4=max
  enabled,readErr:=p.group.NativeGameOuterRepairEffective(ctx)
  if readErr!=nil||((enabled==0)!=p.disableOuterRepair){

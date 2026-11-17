@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1985",
+  "date": "2026-11-16",
+  "source_sha": "3257b9e817f374782adeacf9be3c6fc7b19abcda",
+  "original_h1984": {
+    "h1661": {
+      "run_id": 43826342300,
+      "result": "FAIL_INVALID_YAML",
+      "jobs": 0,
+      "new_pure_status_and_recovery_tests": "NOT_RUN"
+    },
+    "maintenance": {
+      "run_id": 43826344589,
+      "job_id": 133160985242,
+      "result": "FAIL_YAML_PARSE",
+      "first": "line86 column2 unexpected scalar leftover -v after duplicated YAML tail"
+    },
+    "governance": {
+      "run_id": 43826344472,
+      "result": "PARTIAL",
+      "structure_job": 133160985939,
+      "structure": "PASS",
+      "catalog_job": 133160986306,
+      "catalog": "FAIL_YAML_PARSE"
+    }
+  },
+  "cause": "Original JavaScript String.replace replacement string contained '$\\x27' from anchored Go test regex, interpreted as insertion of original suffix rather than literal text, truncating line50 and duplicating final workflow section.",
+  "fix": "Restore valid 57b2fe H1661 86-line workflow; callback-safe literal replacement adds 4 lines: retain original TestPlan029 + independent TestPLAN010 status and Recover Windows pure-disk tests.",
+  "new_source_verification": "NOT_RUN",
+  "new_native_network": "NOT_RUN",
+  "open": [
+    "H1974 61ms",
+    "H1978 original native FAIL",
+    "D1-D5",
+    "P1-P2",
+    "real GUI Connect/Stop",
+    "Game4 CN",
+    "IPv6",
+    "pressure/padding"
+  ],
+  "plan029": "IN_PROGRESS"
+}

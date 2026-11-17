@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "date": "2026-11-17",
+  "task": "H2049",
+  "kind": "USER_SCOPED_DELIVERY_INVENTORY_NOT_FULL_PLAN029_PROMOTION",
+  "user_selected_only": [
+    "real WinForms Connect/Go Rust OS Applied default outer1460 inner automatic true Direct/Tunnel and owned Stop",
+    "same-direct-endpoint UDP TC/TCP bootstrap and reconnect; TTL crash FakeIP writer",
+    "Direct TCP buffer DNS cache pending FakeIP small capacity isolation",
+    "source locked Normal Game4 DNS padding GUI lifecycle evidence and closeout"
+  ],
+  "excluded_user_scope": [
+    "IPv6 native default route/leak matrix",
+    "old 028 full matrix",
+    "old P1/P2 high-load and 60ms legacy tail tuning",
+    "same-A shared overseas CDN two-domain reverse-egress",
+    "PLAN030",
+    "Android",
+    "extra Game2/4 fixed FEC"
+  ],
+  "historical_confirmed": [
+    {
+      "id": "H2041_Game4_CN_FECoff",
+      "source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
+      "action": 43942345347,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "four TLS lanes Direct UDP TCP32KiB FIN and bidirectional Tunnel UDP TCP plus both owned Stop",
+      "outer": "legacy1400",
+      "not_default1460": true
+    },
+    {
+      "id": "H1791_Normal_CN_default1460",
+      "source": "7f6b23f57aa5d4e8ce6a80b496d14faa79d09c74",
+      "action": 43552619098,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "Direct TCP UDP nonCN Tunnel UDP DNS+FakeIP OS inner1389 Stop",
+      "outer": 1460
+    },
+    {
+      "id": "H1958_original_single_DNS",
+      "source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+      "action": 43792684618,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "nonCN tunnel DNS and nonCN QNAME->CN A physical direct UDP; tunnel blackhole physical DNS0; owned Stop"
+    },
+    {
+      "id": "H1795_original_real_TCP53",
+      "source": "1efb3cec6b9f90714b32c78e0318a57720d0e1f1",
+      "action": 43556105215,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "physical CN TCP53 and Tunnel nonCN TCP53, no cross-direction fallback, owned Stop"
+    },
+    {
+      "id": "H2031_Normal_startup_padding",
+      "source": "b76240bedb04237780bd13377bfe7aae38785018",
+      "action": 43901130216,
+      "status": "PASS_SCOPED_PHYSICAL_ENCRYPTED_CAPTURE",
+      "proof": "20–30 record/2–3 second/0–500B real bounded per-record MTU budget, app TCP UDP+owned Stop; ciphertext does not expose exact pad bytes",
+      "outer": "legacy1400"
+    },
+    {
+      "id": "H1812_WinForms_config",
+      "source": "e2b73dd8062a8a0ead22d6d58b689e9f04875882",
+      "action": 43567997254,
+      "status": "FUNCTIONAL_PASS_CONFIG_ONLY",
+      "proof": "real WinForms+Go CLI two DNS/profile CN/outer1460 and inner config readback",
+      "actual_GUI_OS_Applied": "NOT_RUN_H1812"
+    },
+    {
+      "id": "H1868_Real_Direct_hard8",
+      "source": "11a1daaf4c0c74730da32909382f39f365f0427a",
+      "action": 43648756279,
+      "status": "PASS_SCOPED_REAL_KERNEL",
+      "proof": "Direct hard8 saturation; old Direct heartbeat/new Tunnel progressed; new Direct after idle; unanswered packets not typed reason"
+    },
+    {
+      "id": "H2044_cold_TCP_TC_compiler",
+      "source": "c7c3054579f9db9bac07bdbeccef44ca3ac01fe5",
+      "action": 43992993306,
+      "status": "BUILD_PASS_ONLY",
+      "proof": "Windows Go/bootstrap physical interface source compilation; no TCP53 actual TC scenario"
+    },
+    {
+      "id": "H2043_async_writer_pure",
+      "source": "e0a3f44461111aae5e3e17e4252f16202c5c4151",
+      "action": 43992703683,
+      "status": "SOURCE_LOCKED_RUST_PURE_PASS",
+      "proof": "Windows/Linux original Rust units including 8 queued FakeIP fsync jobs, 9th bounded reject; pending Tunnel DNS independent, durable ACK/reopen"
+    }
+  ],
+  "current_attempts": [
+    {
+      "id": "H2045_GUI_first",
+      "source": "969da571374506e405c6b3c1d0f3b94ecf1b5d3e",
+      "action": 43994188290,
+      "status": "FAIL_BEFORE_GUI_NETWORK",
+      "first_boundary": "H1845 original Python prestart check used GUI parent argv after conversion; WinForms source/Go Rust binary hashes passed. Original OS Applied/Direct Tunnel NOT_RUN."
+    },
+    {
+      "id": "H2048_GUI_original_retry",
+      "source": "b26098e3f4dd0577ab18422c1fa7a0700021c448",
+      "action": 43995805550,
+      "status": "FAIL_BEFORE_GUI_OS_APPLIED",
+      "test": "original WinForms real button with frozen pre-conversion CLI, config readback and real kernel two-egress/Stop",
+      "first_boundary": "Action43995805550 original source-locked GUI Go/COLD outer1460 inner1389 passed; GO child failed loading wpcap.dll from independent WinForms portable EXE directory. No signed OS Applied or business."
+    },
+    {
+      "id": "H2047_physical_single_DNS_TC",
+      "source": "87eea943160e2ea51bde0fb6c61f0424d929b351",
+      "action": 43995525313,
+      "status": "FAIL_BEFORE_TCP_FALLBACK",
+      "test": "real Windows Npcap UDP TC -> WSL2 physical TCP53 same resolver ID/QNAME/source, followed by original TLS and two-exit/Stop",
+      "first_boundary": "Action43995525313 physical NPF UDP53 cold A lookup timeout; WSL HyperV had only original TCP443/46112 guest inbound grants, H2050 adds exact boot UDP/TCP53 grant. No TCP proof."
+    },
+    {
+      "id": "H2050_GUI_signed_npcap_repair",
+      "source": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
+      "action": 43998891197,
+      "status": "H2050_EXIT1_HISTORICAL_FIRST_FAULT_RETAINED_H2055_LATER_PASS",
+      "first_boundary": "Bundled exact signed Npcap userland DLL into real WinForms client EXE folder; original Go TLS/OS Applied/Stop still pending."
+    },
+    {
+      "id": "H2051_physical_TC_new_exact_WSL_grant_and_five_quota_pure",
+      "source": "09c6a794b68447f1e6711db0f237b0beae9c37c8",
+      "action": 43999380296,
+      "status": "H2051_NATIVE_UDP_TIMEOUT_H2056_LATER_PASS_FIVE_CLASS_PURE_PASS",
+      "test": "physical single dns.direct UDP TC->TCP53 in original signed Normal CN plus one engine bounded quota old Direct/Tunnel recovery and Windows kernel TCP independent relay test"
+    },
+    {
+      "id": "H2050_GUI_real_kernel_then_dispose_crash",
+      "source": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
+      "action": 43998891197,
+      "status": "FAIL_AFTER_REAL_OS_APPLIED_AND_WAL_STOP",
+      "first_boundary": "True original WinForms two kernel egress and WAL Stop demonstrated, but harness Form.Dispose during Control.CreateHandle caused unhandled InvalidOperationException and process exit1 after Stop; native report stopped at strict exit0 oracle."
+    },
+    {
+      "id": "H2054_GUI_StopSTA_fix",
+      "source": null,
+      "action": null,
+      "status": "CODE_FIXED_NATIVE_NOT_TRIGGERED",
+      "test": "H2054 harness-only changed excluded on.push.paths; fixed in H2055 workflow."
+    },
+    {
+      "id": "H2055_GUI_real_original_replay",
+      "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+      "action": 44000778566,
+      "status": "PASS_REAL_GUI_ORIGINAL_OS_DIRECT_TUNNEL_AND_STOP",
+      "test": "One original WinForms STA real signed Go/Rust source, WSL2 Direct+Tunnel and Stop, no double Form.Dispose, require child exit0 and independently verified kernel business",
+      "artifact": 14292293757
+    },
+    {
+      "id": "H2051_physical_TC_direct_two_os_attempt",
+      "source": "09c6a794b68447f1e6711db0f237b0beae9c37c8",
+      "action": 43999380296,
+      "status": "FAIL_BEFORE_UDP_TC",
+      "first_boundary": "Guest WSL2 HyperV exact UDP53/TCP53 grants installed/readback and owned cleanup PASS, but original physical NPF UDP A query still timed out. This SOURCE lacked H2053 verified Linux eth0 guest MAC binding for host-self SendARP route."
+    },
+    {
+      "id": "H2056_physical_TC_after_H2053_os_mac",
+      "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+      "action": 44001081299,
+      "status": "PASS_REAL_PHYSICAL_UDP_TC1_SAME_TCP53_AND_OS_STOP",
+      "test": "Original signed Windows physical NPF UDP source/dst/guest L2 matching, same dns.direct UDP TC response + exact TCP/53 DNS ID and QNAME, original TLS + Direct/Tunnel kernel business/Stop, real guest stage receipt.",
+      "artifact": 14292184174,
+      "reconnect": "NOT_RUN"
+    },
+    {
+      "id": "H2057_async_fake_writer_true_child_abort",
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "PASS_WINDOWS_LINUX_REAL_PROCESS_ABORT_PURE_NOT_WIN_WAL",
+      "test": "Windows/Linux Rust test subprocess real fsync ACK then std::process::abort without Drop; parent opens journal and checks FakeIP identity/TTL quarantine/new alias not announced. NOT original Wintun/OS crash."
+    },
+    {
+      "id": "H2059_gui_flows_effective_original_rust_npf",
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "action": 44005631732,
+      "status": "PASS_SCOPED_GUI_FLOWS_REAL_RUST_M1_NPF_AND_OS_STOP",
+      "test": "Original WinForms saved flows selection, Go source --check-config effective flows, original M1 actual NPF copied records+bytes, same real CN Direct/Tunnel kernel business and original owned Stop",
+      "non_goal": "H2031 physical encrypted padding repeat and off/on CPU RSS not in this scene",
+      "artifact": 14295665084,
+      "npf_records": 41,
+      "npf_bytes": 11466
+    },
+    {
+      "id": "H2061_normal_GUI_stop_reconnect_then_real_business_stop",
+      "source": null,
+      "action": null,
+      "status": "NATIVE_SCENE_NOT_YET_RUN",
+      "test": "same original WinForms session user Disconnect->WAL restored->user Connect new original signed Go/Rust generation/1460/1389->real CN Direct/Tunnel TCP/UDP->owned Stop",
+      "excludes": [
+        "abrupt crash",
+        "slow disk",
+        "resource exhaustion",
+        "high rate or long CPU A/B",
+        "second bootstrap TC after reconnect"
+      ]
+    }
+  ],
+  "selected_unverified": {
+    "DNS_bootstrap_after_reconnect": "H2056_FIRST_COLD_PASS; ORIGINAL_RECONNECT_SECOND_GENERATION_NOT_RUN",
+    "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "FakeIP_durable_unexpected_process_crash_recovery": "H2057_REAL_CHILD_ABORT_PURE_PASS; NATIVE_GO_WINTUN_WIN_OS_WAL_CRASH_NOT_RUN",
+    "FakeIP_writer_slow_disk_vs_other_live_flows": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "resource_full_tcp_resident_buffer_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_dns_cache_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_dns_pending_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_FakeIP_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_direct": "H1868_SCOPED_REAL",
+    "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
+    "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
+  },
+  "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
+  "closure_status": "H2059_ORDINARY_GUI_PADDING_PASS_H2061_NORMAL_GUI_RECONNECT_PENDING_NO_EXTREME_SCENES",
+  "selected_verified": {
+    "real_original_GUI_Connect_OS_Applied_Direct_Tunnel_Stop": {
+      "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+      "action": 44000778566,
+      "status": "PASS_SCOPED_REAL_KERNEL"
+    },
+    "real_first_cold_physical_UDP_TC_same_TCP53": {
+      "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+      "action": 44001081299,
+      "status": "PASS_SCOPED_REAL_OS_WIRE"
+    },
+    "FakeIP_async_child_process_abort_FS_recovery": {
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "COMPONENT_PROCESS_CRASH_PASS_NOT_PRODUCT_OS_WAL"
+    },
+    "small_class_quota_independent_Rust": {
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "PURE_COMPONENT_PASS_NOT_SAME_VM_STRESS"
+    },
+    "Game4_padding_historical": "H2041_H2031_RETAINED_SEPARATE_SOURCE",
+    "GUI_flows_to_original_Rust_M1_NPF": {
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "action": 44005631732,
+      "status": "PASS_SCOPED_NATIVE_OS_KERNEL_AND_NPF_41_RECORDS_11466_BYTES"
+    }
+  },
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json"
+  ],
+  "user_active_scope_20261117": {
+    "mode": "ORDINARY_DAILY_USE_ONLY",
+    "required": [
+      "GUI saved/effective cold config",
+      "Normal 1460 and automatic1389",
+      "one DNS per direction and CN IP/domain Direct",
+      "real GUI Connect, Direct/Tunnel TCP UDP, Stop",
+      "server domain cold physical DNS same-endpoint TCP fallback first generation",
+      "GUI off default/flows effective and original Rust NPF",
+      "ordinary Disconnect then reconnect if H2061 passes"
+    ],
+    "explicitly_not_required": [
+      "extreme five-class concurrent exhaustion",
+      "artificially slowed disk",
+      "hard process/machine crash",
+      "high-load multi-VM/long CPU-RSS A/B",
+      "repeat H2031 physical padding or H2041 Game4",
+      "IPv6 broad suite, shared CDN double QNAME reverse"
+    ],
+    "not_measured_still_not_pass": "Excluded stress and performance remain NOT_RUN; no false full PLAN029 D1–D5/P1–P2 promotion"
+  }
+}

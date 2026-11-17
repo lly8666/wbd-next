@@ -4,29 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1959,
-  "checkpoint_sha": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "sequence": 2061,
+  "checkpoint_sha": "ddfbcae5a788f94a83e906fa5535707907da5d30",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H1959 collected H1958 real original Win2025/WSL2 SOURCE ab224 Action43792684618: 4 original 4MiB Direct ON/OFF/OFF/ON SHA/FIN/QPC/5 Linux receipts and 384/384 small Direct same Windows QPC, 120/120 sustained Tunnel UDP, owned Stop PASS. Small latency ON advantage replicated, 4MiB ON88.982 vs OFF80.742ms n2 each has 12/19.5ms drift and not causally safe/qualified; keep product early preconnect OFF. One pure D3 FakeIP cold restore policy guard rejects zero/broadcast same as fresh A, new Rust test pending CI. Full 029 D1-D5/P1-P2/GUI/Game4/IPv6 OPEN.",
-  "why_now": "True H1958 original P2 now completed; no new expensive duplicate warranted. P2 small first-byte wait fixed in signed prototype but bulk 2x physical and 2-trial ON/OFF uncertainty remain; resource pressure not proven for early sockets. Independent D3 source inspection found cold FakeIP restore admitted 0/broadcast as real target even though newly announced policy rejects those; unify minimal validation and test without starting new original P2.",
+  "current_task": "H2061 user narrowed to ordinary operation only. H2059 original GUI flows selector/Go effective/Rust M1 NPF copied41 records 11466B with 1460/1389 CN Direct+Tunnel TCP UDP/Stop is original signed WIN/WSL2 PASS. New one-scene ordinary GUI user Disconnect -> second Connect with second real OS Applied and real business/Stop, not crash/reconnect stress, in implementation pending native.",
+  "why_now": "User explicitly declines extreme stress/testing and asks fast normal use closeout. H2059 Action44005631732 is now completed SUCCESS source ccf0... and real artifact14295665084 proved exact GUI effective flows+NPF+Stop; the one remaining common user-visible flow is ordinary GUI disconnect->reconnect with same config. Avoid resource exhaustion, artificial crash, slow disk, long CPU A/B, IPv6 and other excluded scopes.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect source-locked pure Rust/feature/governance gate on H1959. If clean, prioritize full D1/D3 DNS real shared-CDN/no-fallback/TTL and D4 resource pressure plus GUI/IPv6 representative. Keep normal production preconnect off and do not rerun H1958 P2 by generic P2 marker; P1 100/200Mbps and Game4 remain OPEN.",
+  "next_action": "Collect only one H2061 signed normal GUI restart Action; if success archive user-normal exit and stop. Historical H2041 Game4/H2031 Padding/H2056 first cold physical DNS and H2057 component retained independently. Don't launch extreme saturation or perf matrix.",
   "unverified": true,
-  "last_tested_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "last_tested_source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H1959-H1958-REAL-4M-PRECONNECT-ABBA-20261116.json"
+    "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261116-PLAN029-H1959-COLLECT-H1958-BULK-AND-D3-FAKEIP-RESTORE-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1958-RESTORE-H1861-WSL-ABBA-SOURCE-GUARD.md",
-    "docs/devlog/M0/20261116-PLAN029-H1957-SIGNED-P2-PREFLIGHT-FIX-AND-NO-DUPLICATE-WSL.md",
-    "docs/devlog/M0/20261116-PLAN029-H1956-COLLECT-H1955-REAL-ABBA-AND-BULK-QUALIFICATION.md",
-    "docs/devlog/M0/20261116-PLAN029-H1955-REAL-P1-P2-COLLECT-AND-EARLY-SYN-AB.md",
-    "docs/devlog/M0/20261116-PLAN029-H1954-FEATURE-BOUND-WITHOUT-ERASURE.md",
-    "docs/devlog/M0/20261116-PLAN029-H1953-BOUND-PREPHYSICAL-QPC.md",
-    "docs/devlog/M0/20261116-PLAN029-H1952-TRUE-H1949-QPC-AND-P1-ONE-LOOKUP.md"
+    "docs/devlog/M0/20261117-PLAN029-H2061-ORDINARY-USE-FOCUS.md",
+    "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json",
+    "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json",
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1958 original P2 true 4x4MiB/source ab224 ON/OFF/OFF/ON elapsed [95.133,90.504,70.980,82.832]ms, ON88.982/OFF80.742ms n=2/arm not performance qualified; genuine small QPC384/384 repeat ON 0.26/0.215ms p95 vs OFF14.854/14.317, Tunnel UDP632 and true owned Stop PASS. H1959 D3 cold FakeIP restore invalid-target fix pending CI. PLAN029 still IN_PROGRESS."
+  "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
 }

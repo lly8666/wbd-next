@@ -67,7 +67,10 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   physicalIndex==0||!lease.Is4()||lease.IsUnspecified()||
   innerMTU<576||innerMTU>1500||len(o.DNSServers4)!=1||
   !o.DirectDNS4.Is4()||!o.DNSServers4[0].Is4()||
-  o.DirectDNS4.IsMulticast()||o.DNSServers4[0].IsMulticast(){
+  o.DirectDNS4.IsMulticast()||o.DNSServers4[0].IsMulticast()||
+  o.DirectDNS4.IsUnspecified()||o.DNSServers4[0].IsUnspecified()||
+  o.DirectDNS4==netip.AddrFrom4([4]byte{255,255,255,255})||
+  o.DNSServers4[0]==netip.AddrFrom4([4]byte{255,255,255,255}){
   return empty,errM0Plan029Cold
  }
  directHard:=o.DirectFlowHard

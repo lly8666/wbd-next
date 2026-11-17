@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "47a07519bc0e837bd8c9525ba07a349c091e0b68",
+      "result_blob": "4ca2c5625e59987bf3659e4dc9a18227604a530d",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -291,7 +291,7 @@
         },
         {
           "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
-          "replace": "if *splitEnable && *lanes!=1 {return errors.New(\"PLAN029 CN split Game2/4 is not yet wired; select Normal (one lane)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+          "replace": "if *splitEnable && *lanes!=1 && *lanes!=4 {return errors.New(\"PLAN029 CN split Game2 not wired; select Normal or Game4 (four lanes)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
         }
       ]
     },
@@ -327,7 +327,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "18ff25d8af3abbddce632371ada21ab8d509e073",
+      "result_blob": "78412d44272a2e94640700e32ffc8b6a6faa0303",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -447,7 +447,7 @@
         },
         {
           "find": "  \"direct4\": [",
-          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。仅支持已接线的Normal/Fixed/Auto，Game2/4尚未接线会明确拒绝；保存后重新连接才生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
         }
       ]
     },
@@ -1095,13 +1095,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
-      "result_blob": "72a3693c72e207f2a2fe72e957c27a871ab5291b"
+      "result_blob": "286a5f40d3cda72c2ffd9bd06c23615e52d0a362"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
-      "result_blob": "9866a5815f91d4678b5c30fab544aa7567e2e3ee"
+      "result_blob": "cd196a95a5a7c6f4074c76180cf477353599885a"
     },
     {
       "kind": "create",
@@ -1134,13 +1134,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_status_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows.go",
-      "result_blob": "58c0ff58550abbb2c9654668faa761c9119f02ab"
+      "result_blob": "b1b4b3aae1e1efbc2d62e0f4f553d3b0cd08abb2"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_product_status_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_status_windows_test.go",
-      "result_blob": "c9157436a57ea16500484ca4a72a1214968cd57c"
+      "result_blob": "5ab0e94cd7ab2dea2bdb0e602670c2f65eec04cc"
     },
     {
       "kind": "create",
@@ -1200,7 +1200,7 @@
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "5b678472b8c15e06190ce87095189ea1edd8b12b"
+      "result_blob": "c4a64d7872cc74768cbbe9ce5b843a91b5de1625"
     },
     {
       "kind": "create",
@@ -1224,7 +1224,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "356797798d7ce4c7338e9b87764a23b04e256da4"
+      "result_blob": "1bb7ee87ec5d9d3b09e7037d16a8e7f356c8ab54"
     },
     {
       "kind": "create",
@@ -1302,7 +1302,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "59a645210cc61edbf498b36233cc8549811ad67d"
+      "result_blob": "bae8d0f6a6fe695b8a631afabd306ad04eb683fa"
     },
     {
       "kind": "create",
@@ -1410,13 +1410,13 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "706a172d9c5fc8e8b3f54e333fc5252153fdfcac"
+      "result_blob": "b818a8fc9f111441a91860239a1072aeb82551ca"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "f0e2713147d63258266a788cc1135edd115a1983"
+      "result_blob": "ad63c6b0dea06d8e971fb2e0cfe1a9460abab884"
     },
     {
       "kind": "create",
@@ -1661,25 +1661,25 @@
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
-      "result_blob": "1bd00e1da7c59155d23dfb20228d53a7544aa84d"
+      "result_blob": "087f96388dc88a86c3598b55730e22e21175f114"
     },
     {
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows_test.go",
-      "result_blob": "92129be5a386d49e67744de22a9590edc93b5448"
+      "result_blob": "bcd26d7bc483555b5dea1744ea98c1029896c84c"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows.go",
-      "result_blob": "e58280c2f4dc1f989bc96096df665c8ef8fa1539"
+      "result_blob": "10b1487f523d3560952487338771fdfd0718c372"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_bootstrap_dns_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_bootstrap_dns_windows_test.go",
-      "result_blob": "d6e0e577c915cf0f8a9680c319edfed995b8bf58"
+      "result_blob": "ed831814daa3b5a880f57e08ec219ba7c819a96a"
     },
     {
       "kind": "create",
@@ -1739,7 +1739,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_no_wfp_assembly_windows.go",
-      "result_blob": "75f1ca030b4ac3f577e0aa32eb9e8873d30efed3"
+      "result_blob": "d4c6c1fe51bcead11aab4ef3391f9205cda42325"
     },
     {
       "kind": "create",
@@ -1751,13 +1751,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "2b0c2f9e4a19c7e6712d3ee6616c939d0100c8c0"
+      "result_blob": "b05ec84ae51db7d7928a9209740065d8f3015652"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "7f1f0871f1c5bda88b099612eb190fcbea5e604d"
+      "result_blob": "563fe7aefd8a70e444b3a941661daadabfb38a83"
     },
     {
       "kind": "create",
@@ -1781,13 +1781,13 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_defender_lease_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows.go",
-      "result_blob": "cbec200140b92267dc0cc68d8cc06ed975f63d85"
+      "result_blob": "a233ced718b4cb5cf2c866f7b7a2286d3dd6f4d1"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
-      "result_blob": "e4adea8b4a687df92489c4fb9466584b348657f7"
+      "result_blob": "68ade031e7ece9b36a0cad572d9fb4035247c7fb"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

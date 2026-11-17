@@ -232,7 +232,8 @@ class NativeDirectOrder(unittest.TestCase):
         # 4096-CIDR policy arm only in the isolated P1 ABBA. The genuine
         # H1775 DNS→CN-IP use case must retain its old one-/32 fallback.
         self.assertIn('"--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))',S)
-        self.assertIn('if p029_direct or p029_p1_cn:',S)
+        self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',S)
+        self.assertIn('args.extend(["--split-enable","--cn-rules-file",str(rules)])',S)
         self.assertIn('if p029_p1_cn and not p029_p1_policy:',S)
         self.assertLess(S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"),
                         S.index("PLAN029_H1775_REAL_NONCN_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP_PASS_PRE_CLEANUP"))
@@ -259,7 +260,9 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertLess(S.index("PLAN029_H1778_SIGNED_DIRECT8_NEW_TUNNEL_OLD_DIRECT_RECOVERY_PASS_PRE_STOP"),
                         S.index("PLAN029_H1767_SIGNED_NONCN_DNS_TUNNEL_BLACKHOLE_ZERO_DIRECT_FALLBACK_PASS_SCOPED"))
         self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
-        self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win):',S)
+        self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
+        self.assertIn('p029_cdn_guest=p029_cdn_win=None',S)
+        self.assertIn('if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
         self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)
@@ -304,11 +307,14 @@ class NativeDirectOrder(unittest.TestCase):
     def test_h1785_guest_cache_mode_is_explicit_wsl_argv_not_parent_env(self):
         import ast
         ast.parse(S)
-        self.assertIn('peer,host_source,"2" if p029_multia else "1" if p029_cache else "0"]',S)
+        self.assertIn('peer,host_source,"3" if p029_udp_rtt else "2" if p029_multia else "1" if p029_cache else "0"]',S)
+        self.assertIn('p029_udp_rtt=os.environ.get("WBD_PLAN029_DIRECT_UDP_RTT_SCENE")=="1"',S)
         guest=(Path(__file__).resolve().parents[1]/"tools"/
                "m0_plan029_h1745_guest_dns_direct.py").read_text()
         ast.parse(guest)
-        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2"):',guest)
+        self.assertIn('if len(sys.argv)!=4 or sys.argv[3] not in ("0","1","2","3"):',guest)
+        self.assertIn('ping_mode=sys.argv[3]=="3"',guest)
+        self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
         self.assertIn('multia_mode=sys.argv[3]=="2"',guest)
         self.assertIn('cache_mode=sys.argv[3]=="1"',guest)
         self.assertNotIn('environ.get("WBD_PLAN029_DNS_CACHE_SCENE")',guest)
@@ -352,7 +358,8 @@ class NativeDirectOrder(unittest.TestCase):
         import ast
         ast.parse(S)
         self.assertIn('p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"',S)
-        self.assertIn('p029_tcp53_guest,p029_tcp53_win):',S)
+        self.assertIn('p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
+        self.assertIn('if p029_cdn:',S)
         self.assertIn('report["plan029_d1_original_app_tcp53"]["stop"]="PASS_BOTH_OWNED"',S)
         self.assertIn("PLAN029_H1794_REAL_ORIGINAL_APP_TCP53_BOTH_ENDPOINTS_PASS_PRE_STOP",S)
         self.assertLess(S.index("PLAN029_H1775_REAL_D2_CN_IP_CONVERSE_OWNED_CLEANUP_PASS"),
@@ -443,7 +450,9 @@ class NativeDirectOrder(unittest.TestCase):
         # Explicit real product also requires the very same exact V3 ABI.
         # Old test assumed it was private-trial-only and prevented build.
         self.assertIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or",w)
-        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){",w)
+        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or",w)
+        self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){",w)
+        self.assertIn("wbd_m0_win_game_native_v4_tcp_control",w)
         self.assertIn("$features+=',m0_v4_probe'",w)
         self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',w)
         self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)

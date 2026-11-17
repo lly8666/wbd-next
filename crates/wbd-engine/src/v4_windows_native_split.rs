@@ -17,7 +17,9 @@ use crate::v4_windows_native_dns_direct::DirectDns;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
-use crate::v4_windows_native_tcp_direct::{NativeTcpActor,safe_synthetic};
+use crate::v4_windows_native_tcp_direct::{
+    NativeTcpActor,safe_synthetic,reply_qpc_now,reply_qpc_frequency,
+};
 use crate::v4_windows_native_dns_client_tcp::NativeTcpDnsEndpoints;
 use crate::v4_client_split::FlowKey;
 use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
@@ -26,6 +28,32 @@ const MAX_PREFIXES:usize=32_768;
 const MAX_DOMAIN_BYTES:usize=1<<20;
 const MAX_DOMAIN_RULES:usize=20_000;
 const DEFAULT_SOFT_FLOWS:usize=4_096;
+const STEADY_TCP_DST_PORT:u16=46119;
+const STEADY_INGRESS_MAX:usize=8192;
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+struct SteadyIngressRow{
+    source_port:u16,seq:u32,payload_bytes:usize,
+    entry_qpc:i64,class_qpc:i64,nat_queued_qpc:i64,
+}
+struct SteadyIngressQpc{
+    frequency:i64,rows:Vec<SteadyIngressRow>,dropped:u64,
+}
+/// Do not equate kernel TCP segments with application messages.
+/// The signed analyzer matches an exact per-flow SEQUENCE / payload range.
+fn steady_payload_tcp(packet:&[u8])->Option<(u16,u32,usize)>{
+    if packet.len()<40||packet[0]>>4!=4||packet[9]!=6{return None}
+    let ihl=usize::from(packet[0]&15)*4;
+    if ihl<20||ihl+20>packet.len(){return None}
+    let total=usize::from(u16::from_be_bytes([packet[2],packet[3]]));
+    if total!=packet.len(){return None}
+    let port=u16::from_be_bytes([packet[ihl+2],packet[ihl+3]]);
+    if port!=STEADY_TCP_DST_PORT{return None}
+    let tcp=usize::from(packet[ihl+12]>>4)*4;
+    if tcp<20||ihl+tcp>=total{return None}
+    let src=u16::from_be_bytes([packet[ihl],packet[ihl+1]]);
+    let seq=u32::from_be_bytes(packet[ihl+4..ihl+8].try_into().ok()?);
+    Some((src,seq,total-ihl-tcp))
+}
 const MAX_HARD_FLOWS:usize=16_384;
 // Independent from live Direct flow hard cap. No eager socket or table slab.
 const MAX_FAKE_IDENTITIES:usize=60_000;
@@ -65,6 +93,20 @@ pub(crate) enum NativeDecision {
 // Already-owned TCP/DNS L3 moves into the sole RX mailbox. UDP writes
 // into its caller scratch and requires only one copy on successful queue.
 pub(crate) enum NativeReverse{Owned(Vec<u8>),InScratch(usize)}
+// Repeated TCP/DNS reverse packets must not trigger WinSock WSAPoll
+// again for the SAME empty Direct UDP socket on the same native TX turn.
+// The budget is the number of ACTUAL live UDP sockets, not a timer or
+// global flow table scan. A real UDP packet resets the scan budget.
+#[derive(Default)]
+struct UdpEmptyPollTurn{checked:usize}
+impl UdpEmptyPollTurn{
+    fn reset(&mut self){self.checked=0}
+    fn should_poll(&self,live:usize)->bool{live>0&&self.checked<live}
+    fn observed(&mut self,quantum:usize,delivered:bool){
+        if delivered{self.checked=0}
+        else{self.checked=self.checked.saturating_add(quantum)}
+    }
+}
 #[derive(Clone,Copy)]
 struct PendingKernelTcp {
     lease:Ipv4Addr,synthetic:Ipv4Addr,
@@ -90,7 +132,12 @@ pub(crate) struct NativeSplitWorker {
     startup_padding:TunnelStartupPadding,
     padding_enabled:bool,
     next_reverse_lane:usize,
+    // Same-owner ready-only negative UDP WSAPoll suppression. Scans at
+    // most one full rotating socket sweep per TX turn if no UDP arrived.
+    udp_empty_poll:UdpEmptyPollTurn,
     last_tick_ms:u64,
+    // Signed original Windows/WSL2 probe only; no always-on tracing.
+    steady_qpc:Option<SteadyIngressQpc>,
 }
 unsafe fn compiled_cidrs(ptr:*const ColdCidrV1,n:u32)
     ->Result<(Vec<Ipv4Cidr>,Ranges),()>{
@@ -228,6 +275,15 @@ impl NativeSplitWorker {
                 ifindex:c.physical_ifindex,hard:c.direct_hard as usize,
                 fake_range:(start,end)})
         };
+        let steady_signed=cfg!(feature="m0_v4_probe") &&
+            std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+            std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+            std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1");
+        let steady_qpc=if steady_signed{
+            Some(SteadyIngressQpc{frequency:reply_qpc_frequency().ok_or(())?,
+                rows:Vec::with_capacity(STEADY_INGRESS_MAX),dropped:0})
+        }else{None};
         Ok(Self{ingress:PacketIngress::new(policy,Arc::new(domains),
             u32::from(lease),c.direct_hard as usize,DEFAULT_SOFT_FLOWS,1024),
             udp,fakes,fake_refs:HashMap::new(),journal,dns,tunnel_dns,tunnel_map,
@@ -238,7 +294,8 @@ impl NativeSplitWorker {
             },
             startup_padding:TunnelStartupPadding::new(StartupMode::Off,1),
             padding_enabled:false,
-            next_reverse_lane:0,last_tick_ms:0})
+            next_reverse_lane:0,udp_empty_poll:UdpEmptyPollTurn::default(),
+            last_tick_ms:0,steady_qpc})
     }
     /// Called exactly once from authenticated V3 cold attach. The
     /// generation's authenticated epoch seeds a NON-cryptographic window
@@ -318,16 +375,27 @@ impl NativeSplitWorker {
         self.udp.len()>0||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
-    /// Physical UDP and client DNS TCP still use their bounded legacy
-    /// poll cadence. Direct kernel TCP instead wakes on 16 registered
-    /// WinSock event shards and exact pending/close deadlines.
+    /// Only UDP flows above the 16-handle event budget, DNS and client
+    /// DNS/TCP retain the legacy <=10ms fallback. Ordinary physical
+    /// Direct UDP wakes from its own registered WinSock read event.
+    /// TCP retains its existing 16 fixed event shards/deadlines.
     pub(crate) fn needs_10ms_poll(&self)->bool{
-        self.udp.len()>0||self.dns.has_work()||
+        self.udp.has_unwatched_flows()||self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_dns_sessions())
+    }
+    /// Signed original TX boundary-only map; no per-packet lookup in product.
+    pub(crate) fn original_tcp_source_for_proxy(&self,p:u16)->Option<u16>{
+        self.tcp.as_ref()?.original_source_for_proxy(p)
     }
     pub(crate) fn tcp_socket_wait_handles(&self)->Option<&[usize]>{
         if !self.tcp_enabled{return None}
         self.tcp.as_ref().map(|tcp|tcp.socket_event_handles())
+    }
+    pub(crate) fn udp_socket_wait_handles(&self)->&[usize]{
+        self.udp.wake_handles()
+    }
+    pub(crate) fn note_udp_socket_wake(&mut self,index:usize){
+        self.udp.note_socket_wake(index);
     }
     pub(crate) fn note_tcp_socket_wake(&mut self,shard:usize){
         if self.tcp_enabled{
@@ -420,9 +488,13 @@ impl NativeSplitWorker {
                 return NativeDecision::Tunnel
             }
         }
+        let probe=self.steady_qpc.as_ref()
+            .and_then(|_|steady_payload_tcp(packet));
+        let qpc_in=if probe.is_some(){reply_qpc_now().unwrap_or(0)}else{0};
         let fakes=&self.fakes;
         let action=self.ingress.on_ipv4_with_announced_fake(packet,now_ms,
             |ip|fakes.as_ref().and_then(|pool|pool.announced_real(ip)));
+        let qpc_class=if probe.is_some(){reply_qpc_now().unwrap_or(0)}else{0};
         match action{
             Ok(IngressAction::Tunnel)=>NativeDecision::Tunnel,
             Ok(IngressAction::Direct{real_dst,presented_dst})=>{
@@ -444,6 +516,21 @@ impl NativeSplitWorker {
                 if packet.get(9)==Some(&6){
                     let ok=self.tcp_enabled&&self.tcp.as_mut()
                         .is_some_and(|tcp|tcp.direct(packet,real_dst,now_ms).is_ok());
+                    if ok{
+                        if let (Some((source_port,seq,payload_bytes)),Some(s))=
+                            (probe,self.steady_qpc.as_mut()){
+                            let end=reply_qpc_now().unwrap_or(0);
+                            if qpc_in>0&&qpc_class>=qpc_in&&end>=qpc_class{
+                                if s.rows.len()<STEADY_INGRESS_MAX{
+                                    s.rows.push(SteadyIngressRow{
+                                        source_port,seq,payload_bytes,
+                                        entry_qpc:qpc_in,class_qpc:qpc_class,
+                                        nat_queued_qpc:end,
+                                    });
+                                }else{s.dropped+=1;}
+                            }
+                        }
+                    }
                     if !ok{
                         if let Some(key)=newly_held{self.retire_flow(key);}
                         else if presented_dst==real_dst{
@@ -530,16 +617,26 @@ impl NativeSplitWorker {
                     .and_then(|l3|if l3.len()<=out.len(){
                         Some(NativeReverse::Owned(l3))
                     }else{None}),
-                1=>{
-                    if !self.dns.has_work(){None}else{
-                        self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
-                        self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
-                            Some(NativeReverse::Owned(l3))
-                        }else{None})
+                // DNS I/O was polled once by tick() at the start of this
+                // original TX owner turn. Reverse packet dequeue must NOT
+                // re-run WSAPoll or allocate per unrelated UDP/TCP packet.
+                1=>self.dns.pop().and_then(|l3|if l3.len()<=out.len(){
+                    Some(NativeReverse::Owned(l3))
+                }else{None}),
+                _=>{
+                    let live=self.udp.len();
+                    if !self.udp_empty_poll.should_poll(live){None}else{
+                        let quantum=self.udp.poll_work_bound();
+                        let reply=self.udp.poll_reverse_ready(out,now_ms)
+                            .ok().flatten();
+                        // One full no-data socket sweep at most, even
+                        // while 32 unrelated TCP returns are delivered.
+                        // If actual UDP arrived, continue fair round-robin
+                        // packet delivery within this same bounded turn.
+                        self.udp_empty_poll.observed(quantum,reply.is_some());
+                        reply.map(NativeReverse::InScratch)
                     }
                 },
-                _=>self.udp.poll_reverse_ready(out,now_ms).ok()
-                    .flatten().map(NativeReverse::InScratch),
             };
             if ready.is_some(){
                 self.next_reverse_lane=(lane+1)%3;
@@ -549,6 +646,9 @@ impl NativeSplitWorker {
         None
     }
     pub(crate) fn tick(&mut self,now_ms:u64)->bool{
+        // One old native TX turn, not one packet or one flow. A newly
+        // queued physical response will be checked on the next wake.
+        self.udp_empty_poll.reset();
         let mut progressed=false;
         // DNS filesystem completion is a bounded, nonblocking mailbox
         // operation on this TX turn. The exact durable journal writer
@@ -557,6 +657,13 @@ impl NativeSplitWorker {
         if let (Some(pool),Some(journal))=
             (self.fakes.as_mut(),self.journal.as_mut()){
             journal.poll_completed(pool,8);
+        }
+        // One DNS network poll per original TX turn, independent of how
+        // many Direct TCP/UDP/DNS returns the fair 32-packet RX handoff
+        // drains. This removes repeated WSAPoll and Vec allocations from
+        // other flows' latency path without a timer or new socket worker.
+        if self.dns.needs_poll(){
+            self.dns.poll(now_ms,self.fakes.as_mut(),self.journal.as_mut());
         }
         // The original Rust TX bounded scheduler already owns this call.
         // Service max 8 kernel accepts/active native TCP relays each turn,
@@ -629,9 +736,51 @@ impl NativeSplitWorker {
     }
 }
 
+impl Drop for NativeSplitWorker{
+    fn drop(&mut self){
+        let Some(trace)=self.steady_qpc.as_ref()else{return};
+        // Original owner Stop only. Strictly <=96 records per line, no
+        // app content, DNS, IPs or per-packet printf in the hot path.
+        let total=trace.rows.len();
+        for (index,part) in trace.rows.chunks(96).enumerate(){
+            let rows=part.iter().map(|r|format!(
+                "{}:{}:{}:{}:{}:{}",
+                r.source_port,r.seq,r.payload_bytes,
+                r.entry_qpc,r.class_qpc,r.nat_queued_qpc
+            )).collect::<Vec<_>>().join(",");
+            eprintln!("PLAN029_H1966_STEADY_INGRESS_QPC_FINAL frequency={} total={} dropped={} chunk={} count={} rows={} source=original_rust_wintun_tx_test_only",
+                trace.frequency,total,trace.dropped,index,part.len(),rows);
+        }
+        if total==0{
+            eprintln!("PLAN029_H1966_STEADY_INGRESS_QPC_FINAL frequency={} total=0 dropped={} chunk=0 count=0 rows= source=original_rust_wintun_tx_test_only",
+                trace.frequency,trace.dropped);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan029_h1966_steady_probe_accepts_only_genuine_tcp_payload_and_seq(){
+        let mut wire=vec![0u8;40+1024];
+        wire[0]=0x45;wire[9]=6;
+        let total=wire.len() as u16;
+        wire[2..4].copy_from_slice(&total.to_be_bytes());
+        wire[20..22].copy_from_slice(&41231u16.to_be_bytes());
+        wire[22..24].copy_from_slice(&STEADY_TCP_DST_PORT.to_be_bytes());
+        wire[24..28].copy_from_slice(&0xfedcba98u32.to_be_bytes());
+        wire[32]=0x50; // real 20-byte TCP header
+        assert_eq!(steady_payload_tcp(&wire),Some((41231,0xfedcba98,1024)));
+        wire[23]=0x20;
+        assert_eq!(steady_payload_tcp(&wire),None); // foreign target port
+        wire[23]=0x27;
+        wire[32]=0x40;
+        assert_eq!(steady_payload_tcp(&wire),None); // malformed TCP header
+        wire[32]=0x50;
+        wire[2..4].copy_from_slice(&40u16.to_be_bytes());
+        assert_eq!(steady_payload_tcp(&wire),None); // forged L3 length
+    }
     #[test]
     fn plan029_owned_reverse_reuses_exact_vec_allocation(){
         let packet=vec![0x45,1,2,3,4,5];let ptr=packet.as_ptr();
@@ -708,6 +857,64 @@ mod tests{
         assert!(owned.len()>=40);
         assert!(!s.has_udp_flows());
         s.tick(1001);
+    }
+    #[test]
+    fn plan029_ready_dns_drain_never_repolls_one_pending_socket_per_packet(){
+        let mut cfg=config(&[],&[],b"");
+        cfg.route_mode=0;
+        let mut owner=unsafe{NativeSplitWorker::new(&cfg)}.unwrap();
+        let mut dns=vec![0u8;12];
+        dns[2..4].copy_from_slice(&0x0100u16.to_be_bytes());
+        dns[4..6].copy_from_slice(&1u16.to_be_bytes());
+        dns.extend_from_slice(b"\x02cn\x07example\x00\x00\x01\x00\x01");
+        let request=packet([1,1,1,1],53,&dns);
+        // Produce genuine bounded local error replies without touching a
+        // physical resolver socket or a Wintun ring. These are ready-only
+        // packets; repeated dequeue cannot justify another DNS WSAPoll.
+        for _ in 0..8{
+            assert!(owner.reject_tunnel_dns(&request));
+        }
+        assert_eq!(owner.dns.poll_invocations(),0);
+        owner.tick(1);
+        assert_eq!(owner.dns.poll_invocations(),0);
+        let mut bytes=[0u8;2048];
+        for _ in 0..8{
+            let Some(NativeReverse::Owned(reply))=
+                owner.poll_udp_reverse(&mut bytes,1)else{
+                panic!("original DNS reverse packet was lost");
+            };
+            assert_eq!(reply[31]&15,2); // exact local SERVFAIL
+        }
+        assert!(owner.poll_udp_reverse(&mut bytes,1).is_none());
+        assert_eq!(owner.dns.poll_invocations(),0);
+        assert!(!owner.has_udp_flows());
+    }
+    #[test]
+    fn plan029_udp_empty_socket_is_not_wsapolled_32x_for_tcp_reverse(){
+        // No physical sockets or real networking required: the test
+        // models one normal Direct UDP socket sharing TX with a burst of
+        // unrelated Direct TCP returns, then a 33-flow rotating scan.
+        let mut b=UdpEmptyPollTurn::default();
+        assert!(!b.should_poll(0));
+        assert!(b.should_poll(1));
+        b.observed(1,false);
+        for _ in 0..32{
+            assert!(!b.should_poll(1)); // no redundant WinSock calls
+        }
+        b.reset();
+        assert!(b.should_poll(1)); // the next native TX turn wakes
+        b.observed(1,true); // an actually delivered UDP response
+        assert!(b.should_poll(1)); // can drain further ready UDP
+        b.reset();
+        for _ in 0..3{
+            assert!(b.should_poll(33));
+            b.observed(16,false);
+        }
+        assert!(!b.should_poll(33)); // ceil(33/16) bounded fair sweep
+        b.reset();
+        assert!(b.should_poll(33));
+        // No TCP/Tunnel timer, no synthetic response receipt, no new
+        // resource cap: every socket gets a chance before idle suppression.
     }
     #[test]
     fn plan029_all_tunnel_reverse_idle_skips_only_empty_real_work(){
@@ -820,16 +1027,18 @@ mod tests{
         assert!(!s.startup_padding_enabled());
         let probe=packet([203,0,113,77],443,&[7u8;128]);
         assert_eq!(s.propose_tunnel_padding(&probe,10,256),0);
-        assert_eq!(s.startup_padding.len(),0);
         s.set_startup_padding(StartupMode::Flows,[2u8;16]);
         assert!(s.startup_padding_enabled());
         let mut total=0;
-        for _ in 0..12{total+=s.propose_tunnel_padding(&probe,11,256)}
-        assert!(total<=2048);
+        for _ in 0..64{total+=s.propose_tunnel_padding(&probe,11,500)}
+        assert!(total>2048,"old per-flow byte quota remains removed");
         assert_eq!(s.startup_padding.len(),1);
+        assert_eq!(s.propose_tunnel_padding(&probe,12,500),0,
+            "first 20..30 eligible records only");
+        assert_eq!(s.propose_tunnel_padding(&probe,3112,500),0,
+            "past 2..3s startup envelope, no periodic restart");
         s.set_startup_padding(StartupMode::Off,[3u8;16]);
         assert_eq!(s.propose_tunnel_padding(&probe,12,256),0);
-        assert_eq!(s.startup_padding.len(),0);
     }
     #[test]
     fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){

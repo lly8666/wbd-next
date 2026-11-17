@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2001",
+  "date": "2026-11-16",
+  "acceptance": "PASS_SCOPED_ONLY_NOT_FULL_PLAN029",
+  "evidence_type": "SOURCE_LOCKED_REAL_WINDOWS2025_WSL2_NATIVE",
+  "source_sha": "7c26f38c5baf253ccf4a9f5805ab6ba0ed214af0",
+  "original_action": {
+    "id": 43857978655,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43857978655",
+    "conclusion": "success",
+    "native_job_id": 133269673022
+  },
+  "scenario": "normal_real_kernel_tcp_4MiB_UNPACED_physical_then_FakeIP_Direct_with_tunnel_UDP120",
+  "load_bytes": 4194304,
+  "source_locked_application_sha256_both": "1618a5d5a74a6ac472099023d01d773d41054e8b06911f825778184217501696",
+  "physical": {
+    "elapsed_ms": 51.97,
+    "connect_ms": 14.066,
+    "upload_ms": 19.503,
+    "half_close_ms": 0.139,
+    "first_reply_wait_ms": 3.328,
+    "download_ms": 14.935
+  },
+  "direct": {
+    "elapsed_ms": 97.26,
+    "connect_ms": 11.757,
+    "upload_ms": 43.441,
+    "half_close_ms": 0.082,
+    "first_reply_wait_ms": 4.897,
+    "download_ms": 37.083
+  },
+  "comparison": {
+    "direct_over_physical_elapsed_ratio": 1.871,
+    "added_elapsed_ms": 45.29,
+    "added_upload_ms": 23.938,
+    "added_download_ms": 22.148,
+    "dominant_added_wait_phase": "upload_ms",
+    "no_single_kernel_cause_claim": true
+  },
+  "concurrent_tunnel_udp": {
+    "unique": 120,
+    "rtt_p99_ms": 6.359,
+    "max_interreply_gap_ms": 32.311
+  },
+  "real_windows_rust_tcp_diagnosis": {
+    "shard_wakes": 67,
+    "event_take_errors": 0,
+    "ready_ticket_peak": 1,
+    "ready_ticket_max_age_ms": 3,
+    "reply_outer_ready_wait_ge8_ms": 0,
+    "inner_write_wouldblock": 43,
+    "outer_read_gated": 41
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "note": "4MiB total transfer is NOT per-packet p99 RTT; same-VM sequential comparison. No demonstrated global HOL. Historical H1864 ~4.09x on different VM/SOURCE cannot establish causal improvement."
+}

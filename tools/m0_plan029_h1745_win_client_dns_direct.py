@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """H1745: genuine Windows application UDP53 -> Wintun -> original Rust direct."""
-import json,socket,struct,sys,time
+import json,socket,struct,sys,time,math
+def ping_body(arm,size,seq):
+    if arm not in (b"P",b"D") or size not in (96,512,1200) or seq<0 or seq>=120:
+        raise RuntimeError("H1999 invalid UDP identity")
+    hdr=b"P29U"+arm+struct.pack("!HH",size,seq)
+    return hdr+bytes([(size+17*seq)&255])*(size-len(hdr))
+
 lease,expected_dns=sys.argv[1:3]
 cache_mode=__import__("os").environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 multia_mode=__import__("os").environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"
+ping_mode=__import__("os").environ.get("WBD_PLAN029_DIRECT_UDP_RTT_SCENE")=="1"
+physical_host=__import__("os").environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+if ping_mode and not physical_host:
+    raise RuntimeError("H1999 original Windows physical NIC binding absent")
 if multia_mode and cache_mode:raise RuntimeError("D3 multi-A is exclusive of cache test")
 name=b"\x03www\x02cn\x07example\x00"
 question=name+b"\x00\x01\x00\x01"
@@ -100,6 +110,44 @@ while time.monotonic()<end:
             reply=data;break
     except socket.timeout:continue
 if reply is None:raise RuntimeError("real Windows application never received Direct FakeIP UDP reverse")
+pings={}
+if ping_mode:
+    def q_ms(samples,fraction):
+        ordered=sorted(samples)
+        return round(ordered[math.ceil(len(ordered)*fraction)-1],3)
+    for size in (96,512,1200):
+        both={}
+        for arm in (b"P",b"D"):
+            is_direct=arm==b"D"
+            address=fake if is_direct else expected_dns
+            c=business if is_direct else socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            if not is_direct:c.bind((physical_host,0))
+            c.settimeout(1.5)
+            rtt=[]
+            try:
+                for seq in range(120):
+                    pkt=ping_body(arm,size,seq)
+                    start=time.perf_counter_ns()
+                    if c.sendto(pkt,(address,46111))!=len(pkt):
+                        raise RuntimeError("H1999 short Win UDP send")
+                    try:data,peer=c.recvfrom(2048)
+                    except socket.timeout as exc:
+                        raise RuntimeError("H1999 UDP timeout "+str((arm,size,seq))) from exc
+                    elapsed=(time.perf_counter_ns()-start)/1000000
+                    if data!=pkt or peer!=(address,46111):
+                        raise RuntimeError("H1999 wrong physical/Direct source or bytes")
+                    rtt.append(elapsed)
+            finally:
+                if not is_direct:c.close()
+            both["direct" if is_direct else "physical"]={
+                "unique":len(rtt),"loss":0,"p50_ms":q_ms(rtt,.50),
+                "p95_ms":q_ms(rtt,.95),"p99_ms":q_ms(rtt,.99),
+                "max_ms":q_ms(rtt,1.0),
+                "over8ms":sum(x>=8 for x in rtt)}
+        both["direct_to_physical_p99_ratio"]=round(
+            both["direct"]["p99_ms"]/both["physical"]["p99_ms"],3
+        ) if both["physical"]["p99_ms"] else None
+        pings[str(size)]=both
 print("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "+json.dumps(
     {"dns_presented":"8.8.8.8","dns_wire_id":txid.hex(),"fake4":fake,
      "business_reply":reply.decode(),"source_lease":lease,
@@ -111,5 +159,9 @@ print("PLAN029_H1745_REAL_WINDOWS_CN_DNS_FAKE_DIRECT_UDP "+json.dumps(
      "dns_app_attempts":dns_attempts,
      "cache_second_source_distinct":cache_different_source,
      "multi_a_mode":multia_mode,
-     "multi_a_fake_addresses":addresses if multia_mode else []},sort_keys=True),flush=True)
+     "multi_a_fake_addresses":addresses if multia_mode else [],
+     "udp_p99_real_samples":720 if ping_mode else 0,
+     "udp_p99_results":pings,
+     "udp_p99_scope":"REAL_WINDOWS_PHYSICAL_VS_FAKEIP_DIRECT_APPLICATION_RTT" if ping_mode else "NOT_RUN"
+     },sort_keys=True),flush=True)
 sock.close();business.close()

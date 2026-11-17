@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1971_COLLECT_H1970_ORIGINAL_NORMAL_STEADY_QPC",
+  "source_sha": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
+  "original_action": {
+    "run_id": 43804841097,
+    "job_id": 133094854307,
+    "conclusion": "success",
+    "artifact_id": 14197958732,
+    "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-43804841097",
+    "report": "report.json",
+    "windows_log": "mode-results/normal/client.log",
+    "original_guest_log": "mode-results/normal/linux-app.log"
+  },
+  "scope": "ORIGINAL_SIGNED_WIN2025_GO_RUST_SINGLE_WINTUN_OWNER_WS_LINUX_KERNEL_TCP_1KIB_STOP_AND_WAIT_SAME_QPC_SEQUENTIAL_ARMS",
+  "status": "PASS_SCOPED_ORIGINAL_TWO_OS_2048X1024_QPC_SHA_FIN_OWNED_STOP",
+  "source_attestation": {
+    "windows_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
+    "linux_binary_source": "dc2d1904ee3e487b9ac307086be189a8ba053a83",
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS"
+  },
+  "workload": {
+    "per_arm_warmup": 32,
+    "per_arm_measured_messages": 2048,
+    "message_bytes": 1024,
+    "per_arm_total_bytes": 2129920,
+    "socket_policy": "TCP_NODELAY_1_ON_BOTH_ORIGINAL_WINDOWS_APPS",
+    "windows_qpc_frequency_hz": 10000000,
+    "per_arm_kernel_tcp_connections": 1,
+    "arms_in_source_order": [
+      "physical",
+      "direct"
+    ],
+    "linux_guest_echo_source": "TRUE_WSL2_LINUX_KERNEL_LISTENER_TCP46119",
+    "unpaced": false,
+    "continuous_stream": "ONE_ESTABLISHED_TCP_PER_ARM_WITH_2048_SEQUENTIAL_ECHO_REQUESTS"
+  },
+  "business_origins": {
+    "physical_windows_bind": "172.18.144.1",
+    "physical_peer": "172.18.151.20",
+    "physical_source_port": 59271,
+    "direct_windows_wintun_lease": "10.66.0.2",
+    "direct_source_port": 59272,
+    "linux_physical_source_for_both_arms": "172.18.144.1"
+  },
+  "real_kernel_receipts": {
+    "physical_bytes": 2129920,
+    "direct_bytes": 2129920,
+    "common_real_linux_and_windows_sha256": "0c5cfc1733c1b0e54b53e2b67a1777dc4f7d27a0e77669f625aa8d8af40fa927",
+    "both_windows_kernel_fin": true,
+    "both_linux_kernel_fin": true,
+    "linux_receipts": 2,
+    "all_app_echo_1024_bytes_exact": true
+  },
+  "original_owner_qpc": {
+    "windows_ingress_records": 2080,
+    "windows_ingress_qpc_chunk_lines": 22,
+    "windows_tcp_relay_event_records": 4160,
+    "windows_relay_chunk_lines": 44,
+    "ingress_dropped": 0,
+    "relay_dropped": 0,
+    "joined_measured_message_windows": 2048,
+    "port_joined": 59272,
+    "qpc_source": "ONE_ORIGINAL_WIN32_QueryPerformanceCounter_FREQUENCY_10000000",
+    "scope_note": "on_packet ingress after original Wintun ReadPacket; not a driver RX timestamp"
+  },
+  "complete_original_windows_app_rtt_ms": {
+    "physical": {
+      "n": 2048,
+      "p50": 0.0945,
+      "p95": 0.1329,
+      "p99": 0.1592,
+      "max": 0.1959
+    },
+    "direct": {
+      "n": 2048,
+      "p50": 0.2188,
+      "p95": 0.2776,
+      "p99": 0.318,
+      "max": 0.5363
+    },
+    "direct_minus_physical_per_arm_quantile_ms": {
+      "p50": 0.1243,
+      "p95": 0.1447,
+      "p99": 0.1588
+    },
+    "comparison_note": "Quantile differences from sequential arms on ONE VM, NOT per-request paired subtraction or a kernel/Rust-only CPU price"
+  },
+  "windows_rust_phase_qpc_ms": {
+    "on_packet_to_classification": {
+      "n": 2048,
+      "p50": 0.0002,
+      "p95": 0.0005,
+      "p99": 0.0006,
+      "max": 0.012
+    },
+    "classification_to_tcp_nat_enqueued": {
+      "n": 2048,
+      "p50": 0.0003,
+      "p95": 0.0009,
+      "p99": 0.0011,
+      "max": 0.0333
+    },
+    "actual_kernel_inner_read_to_physical_write": {
+      "n": 2048,
+      "p50": 0.01,
+      "p95": 0.0172,
+      "p99": 0.0273,
+      "max": 0.046
+    },
+    "actual_physical_read_to_kernel_inner_write": {
+      "n": 2048,
+      "p50": 0.0022,
+      "p95": 0.0037,
+      "p99": 0.0048,
+      "max": 0.0282
+    },
+    "tcp_ready_ticket_age_coarse_ms": {
+      "n": 4096,
+      "max": 0,
+      "ge8": 0,
+      "ge16": 0,
+      "time_resolution": "COARSE_INTEGER_MS_MAY_CONCEAL_SUBMILLISECOND_WAIT"
+    }
+  },
+  "normal_original_p2_context": {
+    "original_1mib_paced_physical_elapsed_ms": 277.139,
+    "original_1mib_paced_direct_elapsed_ms": 310.863,
+    "both_1mib_sha_fin": "PASS",
+    "original_p2_tunnel_udp_sustained_total": 120,
+    "original_p2_tunnel_udp_overlap": true,
+    "original_p2_tunnel_udp_whole_coverage": true,
+    "original_p2_stop": "PASS_BOTH_OWNED"
+  },
+  "lifecycle": {
+    "windows_report_stop": "PASS_BOTH_OWNED",
+    "signed_original_rust_stop_marker": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+    "windows_original_disconnected": true,
+    "linux_owned_stop": true,
+    "windows_hyperv_route_cleanup": "PASS_NATIVE_JOB",
+    "normal_product_early_physical_preconnect": "OFF"
+  },
+  "interpretation": {
+    "result": "EXTRA_NORMAL_ESTABLISHED_DIRECT_APPLICATION_RTT_P50_ABOUT_124_MICROSECONDS_P99_ABOUT_159_MICROSECONDS_ON_THIS_SINGLE_REAL_VM",
+    "classifier_nat": "SMALL_SUBMICROSECOND_TO_ONE_MICROSECOND_MEASURED_STAGES_NOT_DOMINANT_RTT_COMPONENT",
+    "socket_two_leg": "INNER_READ_TO_PHYSICAL_WRITE_P50_10_MICROSECONDS_P99_27_3_MICROSECONDS_AND_RETURN_P50_2_2_P99_4_8_MICROSECONDS;INCLUDES_SCHEDULING_AND_NATIVE_SOCKET_CALLS",
+    "unknown": "WINTUN_KERNEL_IO_DRIVER_AND_OWNER_MAILBOX_OR_RX_SENDPACKET_AND_KERNEL_TCP_HANDOFF_NOT_YET_TIMESTAMPED",
+    "limits": [
+      "One Windows VM and sequential one-stream arms; runner variation and QPC observer overhead not separately A/B controlled",
+      "10MHz Windows QPC has ~0.1us timestamp granularity; individual sub-us segments are sensitive to probe overhead",
+      "Wintun ReadPacket-before-on_packet, reverse owner mailbox age, Wintun SendPacket and kernel consume/ACK not measured",
+      "Linux execution timestamp cannot be subtracted from the Windows QPC clock",
+      "Tail quantile gaps are differences of percentile summaries, not per-request paired causal cost",
+      "FIN/4MiB and handshake costs deliberately excluded from steady 1KiB RTT; broad P2 throughput not qualified",
+      "Full PLAN029 P1-P2/D1-D5/GUI/Game4/IPv6 still open, exotic shared CDN reverse case deprioritized at user direction"
+    ]
+  },
+  "full_plan029": "IN_PROGRESS"
+}

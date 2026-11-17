@@ -15,8 +15,8 @@ class P1OriginalWiring(unittest.TestCase):
   self.assertIn('rust_thread_cpu=thread',s)
  def test_same_real_tunnel_alias_and_rule_scale(self):
   s=read("tools/m0_wl_public_normal_e2e.py")
-  self.assertIn('if p029_direct or p029_p1_policy:',s)
-  self.assertIn('if p029_direct or p029_p1_cn:',s)
+  self.assertIn('if p029_direct or p029_p1_policy or p029_game4_cn:',s)
+  self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',s)
   self.assertIn('range(4096)',s)
   self.assertIn('"11.42."+str(i//128)',s)
   self.assertNotIn('"100.64."+str(i//128)',s)
@@ -47,5 +47,6 @@ class P1OriginalWiring(unittest.TestCase):
   # public guest TUN source in both policy arms, not 10.66.0.1.
   self.assertIn("$env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and",w)
   self.assertIn("$env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1'",w)
+  self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1' -or",w)
   self.assertIn("'203.0.113.77'\n          }else{'10.66.0.1'}",w)
   self.assertIn("-RemoteAddress $tcpRemote -LocalPort 45902",w)

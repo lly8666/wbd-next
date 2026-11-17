@@ -48,6 +48,10 @@ jobs:
           Push-Location legacy
           try {
             & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPlan029' -v ./internal/faketcp ./internal/windowsclient ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'PLAN029 source-only tests failed'}
+            & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPLAN010NativeReadOnlyDiskStatusAndConflict$' -v ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'PLAN029 orphan Defender status failed'}
+            & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback$' -v ./internal/windowsclient
             if($LASTEXITCODE -ne 0){throw 'PLAN029 Windows compilation / tests FAILED'}
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/plan029-source-only-client.exe ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'PLAN029 original Go native product compile FAILED'}

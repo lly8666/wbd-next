@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1995_H1993_original_failure",
+  "date": "2026-11-16",
+  "source_sha": "34e87006c51db9c8e183af68482050e6550fb460",
+  "original_action": {
+    "run": 43840543096,
+    "conclusion": "failure",
+    "native_job": 133210556310,
+    "native": "failure",
+    "artifact_id": 14214065842,
+    "artifact_downloaded_and_inspected": true,
+    "cheap_rust_go_linux_build": "success"
+  },
+  "first_fault": "H1993 TCP 128KiB milestone missing or reordered",
+  "first_fault_location": "Python downloaded 128KiB progress parser before owned Stop",
+  "original_partial_actual_kernel": {
+    "physical_tcp": {
+      "bytes": 1048576,
+      "elapsed_ms": 300.86,
+      "sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+      "download_max_gap_ms_offline": 0.831,
+      "download_checkpoint_bytes": [
+        134968,
+        268152,
+        399224,
+        530296,
+        661368,
+        792440,
+        923512,
+        1048576
+      ]
+    },
+    "direct_tcp": {
+      "bytes": 1048576,
+      "elapsed_ms": 319.608,
+      "sha256": "70c482ce452eaf4f6c303008a359e629aecba5dd9d1c44f2123542ea30213586",
+      "download_max_gap_ms_offline": 5.283,
+      "download_checkpoint_bytes": [
+        140296,
+        263583,
+        408275,
+        525661,
+        656733,
+        789154,
+        920422,
+        1048576
+      ]
+    },
+    "tunnel_udp": {
+      "kernel_udp": true,
+      "delivered": 120,
+      "rtt_p99_ms": 2.366,
+      "max_interreply_gap_ms": 17.814
+    },
+    "physical_and_direct_linux_guest_sha_fin": true
+  },
+  "owned_stop": "NOT_RUN_PARSER_FAILED",
+  "p2_status": "FAIL_NOT_PROMOTED",
+  "h1974_61ms": "OPEN",
+  "cpu_per_gib": "NOT_MEASURED",
+  "measurement_fix": "keep upload exact; download 128KiB milestone bytes can overshoot by at most 16383 because original kernel recv has 16KiB bound",
+  "new_source_real_network": "NOT_RUN_UNTIL_H1995_ACTION",
+  "preserve_original_failure": true
+}

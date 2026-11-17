@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1975_original_H1974_post_ingress_proof_and_first_dominant_tail_failure",
+  "source_sha": "bd611192c397220d467a8330defce4e0d494ac04",
+  "action": {
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43808776053",
+    "id": 43808776053,
+    "native_job_id": 133107537568,
+    "native_job_conclusion": "failure",
+    "failed_step": 19,
+    "original_artifact_id": 14199838286,
+    "original_report_path": "mode-results/normal/report.json",
+    "original_client_log": "mode-results/normal/client.log"
+  },
+  "verdict": "FAIL_SCOPED_ORIGINAL_QPC_JOIN__Genuine_Application_SHA_FIN_OwnedStop_PASS_NOT_PERF_QUALIFICATION",
+  "original_report": {
+    "normal_public": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "error": "H1966 QPC: missing or ambiguous request-to-owner QPC joins",
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "windows_owned_stop": "PASS_BOTH_OWNED",
+    "p2_owned_stop": "PASS_BOTH_OWNED",
+    "linux_binary_source": "bd611192c397220d467a8330defce4e0d494ac04"
+  },
+  "real_test": {
+    "same_vm": "Windows 2025 original Go/Rust/Npcap/Wintun and WSL2 independent real Linux kernel TCP46119",
+    "per_arm_warmup": 32,
+    "per_arm_measured": 2048,
+    "message_bytes": 1024,
+    "per_arm_exact_bytes_with_warmup": 2129920,
+    "physical_source_port": 52628,
+    "direct_source_port": 52629,
+    "linux_kernel_receipts": 2,
+    "windows_and_linux_same_sha256": "0c5cfc1733c1b0e54b53e2b67a1777dc4f7d27a0e77669f625aa8d8af40fa927",
+    "both_fin": true,
+    "normal_product_early_preconnect": "OFF"
+  },
+  "same_run_application_rtt_ms": {
+    "physical": {
+      "p50": 0.2173,
+      "p95": 0.305,
+      "p99": 0.3558,
+      "max": 1.2811
+    },
+    "direct": {
+      "p50": 0.4729,
+      "p95": 0.6194,
+      "p99": 0.7411,
+      "max": 62.6962
+    },
+    "direct_minus_physical_quantile_ms": {
+      "p50": 0.2556,
+      "p99": 0.3853
+    },
+    "note": "one sequential physical then Direct arm on this VM; a quantile difference is not per-message paired causal overhead"
+  },
+  "original_rust_stop": {
+    "post_ingress_direct_delivered": 5610,
+    "post_ingress_max_per_turn": 8,
+    "sole_original_rx_owner": true,
+    "ingress_qpc_rows": 2084,
+    "expected_original_distinct_1024_byte_stream_segments": 2080,
+    "relay_io_qpc_rows": 4160,
+    "ingress_dropped": 0,
+    "relay_dropped": 0,
+    "wintun_rust_worker_joined": true,
+    "source": "original_signed_kernel_Win32_QPC_10MHz"
+  },
+  "same_tcp_seq_retransmissions": {
+    "count": 4,
+    "source_port": 52629,
+    "sequence_numbers": [
+      3389418656,
+      3389674656,
+      3390468256,
+      3390470304
+    ],
+    "window_indices_zero_based": [
+      920,
+      1170,
+      1945,
+      1947
+    ],
+    "repeat_bytes_each": 1024,
+    "interpretation": "genuine same TCP seq payload segment arrived twice; strict parser counted 2x1024B and failed; cannot equate retransmit event timestamp with original inner kernel delivery"
+  },
+  "outlier_stalls": [
+    {
+      "index": 865,
+      "app_rtt_ms": 61.27,
+      "first_ingress_after_send_ms": 0.038,
+      "first_nat_queued_after_send_ms": 0.041,
+      "first_inner_read_after_send_ms": 60.518,
+      "retransmitted_same_seq": false
+    },
+    {
+      "index": 920,
+      "app_rtt_ms": 62.696,
+      "first_ingress_after_send_ms": 0.032,
+      "first_nat_queued_after_send_ms": 0.034,
+      "first_inner_read_after_send_ms": 61.936,
+      "repeat_wintun_ingress_after_send_ms": 62.052,
+      "retransmitted_same_seq": true
+    },
+    {
+      "index": 1170,
+      "app_rtt_ms": 61.219,
+      "first_ingress_after_send_ms": 0.03,
+      "first_nat_queued_after_send_ms": 0.032,
+      "first_inner_read_after_send_ms": 60.449,
+      "repeat_wintun_ingress_after_send_ms": 60.37,
+      "retransmitted_same_seq": true
+    },
+    {
+      "index": 1945,
+      "app_rtt_ms": 61.404,
+      "first_ingress_after_send_ms": 0.028,
+      "first_nat_queued_after_send_ms": 0.03,
+      "first_inner_read_after_send_ms": 60.713,
+      "repeat_wintun_ingress_after_send_ms": 61.098,
+      "retransmitted_same_seq": true
+    },
+    {
+      "index": 1947,
+      "app_rtt_ms": 61.441,
+      "first_ingress_after_send_ms": 0.027,
+      "first_nat_queued_after_send_ms": 0.029,
+      "first_inner_read_after_send_ms": 60.711,
+      "repeat_wintun_ingress_after_send_ms": 60.534,
+      "retransmitted_same_seq": true
+    }
+  ],
+  "limitations": [
+    "An accepted same-turn TX→RX enqueue is NOT Wintun SendPacket nor kernel TCP delivery; root not yet isolated",
+    "All five real stalls have ~60ms from first Wintun/NAT ingress to first kernel inner read; four include retransmit, and two reads PRECEDE duplicate ingress; causality of retry cannot be asserted",
+    "Physical RTT p50 in this VM=217.3us versus H1970 94.5us different runner; cannot attribute cross-run goodput change to optimization",
+    "Strict QPC join ERROR remains original Action FAIL; offline segment dedup may enable diagnosis, never reclassify the run as PASS",
+    "No invented app data, omitted 60ms samples, false TCP ACK or relaxed SHA/FIN/Stop allowed",
+    "Signed same-turn experiment never ordinary product default; no full PLAN029 exit"
+  ],
+  "priority_next": "Focus 60ms exact original TX->RX mailbox/Wintun send/WinSock FD_READ gap; source-locked bounded trace and fail-closed original receipts, not microsecond class/NAT tuning or extreme CDN."
+}

@@ -612,6 +612,135 @@ mod tests{
         drop(reopen);
         fs::remove_file(&path).unwrap();
     }
+
+
+    // A real OS *process* crash, not a graceful Rust destructor or memory
+    // reset: a child test binary fsyncs one real FakeIP journal through the
+    // asynchronous writer, receives durable ACK, then aborts the process.
+    // Only the parent process reopens the original bytes and checks that no
+    // new unacknowledged FakeIP alias has replaced the durable identity.
+    // Product driver/Wintun crash recovery is deliberately not asserted.
+    #[test]
+    fn plan029_h2057_async_writer_real_child_abort_after_ack_recovers_identity(){
+        const CHILD_FILE:&str="WBD_PLAN029_H2057_ABORT_JOURNAL_PATH";
+        let mapping=key("durable.cn.example",0xc633644d);
+        if let Ok(raw_path)=std::env::var(CHILD_FILE){
+            use std::io::Write as _;
+            let path=PathBuf::from(raw_path);
+            let (mut journal,existing)=FakeJournal::open_async(&path).unwrap();
+            assert!(existing.is_empty());
+            let mut p=pool();
+            let proposed=p.prepare(mapping,30,1000).unwrap();
+            assert!(p.announced_real(proposed.fake4).is_none());
+            let ticket=journal.enqueue_batch(&p,&[proposed.fake4]).unwrap();
+            let mut durable=false;
+            for _ in 0..2000{
+                journal.poll_completed(&mut p,8);
+                if let Some(ok)=journal.take_async_status(ticket){
+                    assert!(ok,"real file worker failed before abort");
+                    durable=true;break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+            assert!(durable);
+            assert_eq!(p.announced_real(proposed.fake4),Some(0xc633644d));
+            println!("PLAN029_H2057_REAL_ASYNC_FSYNC_ACK_BEFORE_PROCESS_ABORT");
+            std::io::stdout().flush().unwrap();
+            // Intentionally bypass journal Drop, worker join, and graceful
+            // file closing. Parent verifies recovery from OS-owned bytes.
+            std::process::abort();
+        }
+        let path=temp_path();
+        let child=std::process::Command::new(std::env::current_exe().unwrap())
+            .arg("--nocapture")
+            .arg("plan029_h2057_async_writer_real_child_abort_after_ack_recovers_identity")
+            .env(CHILD_FILE,&path)
+            .output().unwrap();
+        assert!(!child.status.success(),"child did not crash");
+        assert!(String::from_utf8_lossy(&child.stdout).contains(
+            "PLAN029_H2057_REAL_ASYNC_FSYNC_ACK_BEFORE_PROCESS_ABORT"),
+            "child aborted before durable ACK: {}",
+            String::from_utf8_lossy(&child.stderr));
+        let (journal,rows)=FakeJournal::open(&path).unwrap();
+        assert_eq!(rows.len(),1,"child abort lost acknowledged durable mapping");
+        assert_eq!(rows[0].key,mapping);
+        assert_eq!(rows[0].fake4,0xc6120001);
+        assert!(rows[0].quarantine_until_ms>=rows[0].issued_until_ms+600_000);
+        let mut restored=pool();
+        restored.restore(&rows,2000).unwrap();
+        assert_eq!(restored.issued_for(&mapping,2001),Some(0xc6120001));
+        assert_eq!(restored.announced_real(0xc6120001),Some(0xc633644d));
+        let fresh=restored.prepare(key("new.cn.example",0xc633644e),20,2002)
+            .unwrap();
+        assert_ne!(fresh.fake4,rows[0].fake4);
+        assert_eq!(restored.announced_real(fresh.fake4),None);
+        assert_eq!(restored.announced_real(rows[0].fake4),Some(0xc633644d));
+        drop(journal);
+        fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn plan029_async_writer_eight_job_pressure_does_not_publish_uncertain_fake_and_recovers(){
+        use crate::v4_client_dns_pending::{DnsPending,QueryKey,DnsClient,ResolverLane};
+        let path=temp_path();
+        let (mut j,_) =FakeJournal::open_async(&path).unwrap();
+        let mut p=pool();
+        let mut accepted=Vec::new();
+        for n in 0..ASYNC_QUEUE_JOBS{
+            let fake=p.prepare(key(&format!("queued-{n}.cn.example"),
+                0xc6336401+n as u32),30,1000).unwrap();
+            let job=j.enqueue_batch(&p,&[fake.fake4]).unwrap();
+            assert_eq!(p.announced_real(fake.fake4),None);
+            accepted.push((job,fake.fake4));
+        }
+        let extra=p.prepare(key("overlimit.cn.example",0xc63364fe),30,1000).unwrap();
+        assert!(matches!(j.enqueue_batch(&p,&[extra.fake4]),
+            Err(FakeJournalError::Limit)));
+        assert_eq!(p.announced_real(extra.fake4),None);
+        // An unrelated Tunnel DNS transaction can progress while the
+        // single asynchronous filesystem worker has a full job budget.
+        let mut transactions=DnsPending::new(1,1);
+        let k=QueryKey{name:"outside.example".into(),qtype:1,
+            lane:ResolverLane::Tunnel,resolver4:0x01010101,
+            resolver_port:53,policy_revision:7};
+        let client=DnsClient{src4:1,src_port:30000,
+            requested_dns4:0x08080808,original_id:99};
+        let original=transactions.begin(k.clone(),client,1000,5000).unwrap();
+        assert!(original.new_upstream_query);
+        assert_eq!(transactions.cancel_all(),vec![client]);
+        let mut pending=accepted;
+        for _ in 0..3000{
+            j.poll_completed(&mut p,8);
+            pending.retain(|(id,ip)|match j.take_async_status(*id){
+                Some(true)=>{
+                    assert!(p.announced_real(*ip).is_some());
+                    false
+                },
+                Some(false)=>panic!("async append failed"),
+                None=>true,
+            });
+            if pending.is_empty(){break}
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(pending.is_empty(),"bounded async writer never drained");
+        let job=j.enqueue_batch(&p,&[extra.fake4]).unwrap();
+        let mut restored=false;
+        for _ in 0..3000{
+            j.poll_completed(&mut p,8);
+            if let Some(result)=j.take_async_status(job){
+                assert!(result);restored=true;break
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(restored);
+        assert_eq!(p.announced_real(extra.fake4),Some(0xc63364fe));
+        drop(j);
+        let (reopened,rows)=FakeJournal::open(&path).unwrap();
+        assert_eq!(rows.len(),ASYNC_QUEUE_JOBS+1);
+        drop(reopened);
+        fs::remove_file(&path).unwrap();
+    }
+
     #[test]
     fn plan029_fake_journal_real_os_batch_sync_then_restore_same_cn_fakes(){
         let path=temp_path();

@@ -1,176 +1,212 @@
-//! PLAN029 bounded startup-padding budget for original authenticated
-//! Tunnel DATA. Only the old Rust M1 LINK seal may consume the returned
-//! padding: this module never emits a packet, creates a thread/timer, or
-//! touches Direct sockets. It deliberately cannot authorize TLS changes.
+//! PLAN029 bounded *startup* padding on original authenticated Normal
+//! Tunnel LINK records. Each eligible TCP/UDP flow has one randomly chosen
+//! 20..=30-record / 2..=3-second envelope. The first exhausted condition wins.
+//! No per-flow byte budget or percentage cap. No timers or Direct sockets.
 use std::collections::{HashMap,VecDeque};
 use crate::v4_client_split::FlowKey;
 
 const MAX_TRACKED:usize=256;
-const MAX_RECORDS:u8=12;
-const MAX_FLOW_PAD:u16=2048;
-const MAX_RECORD_PAD:usize=256;
+const MAX_RECORD_PAD:usize=500;
 const FLOW_IDLE_MS:u64=120_000;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum StartupMode{Off,Tls,Flows}
-
-struct Seen{
+struct Seen {
     first_ms:u64,last_ms:u64,window_ms:u16,
-    count:u8,business:u32,padded:u16,
-    state:u64,
+    max_records:u8,count:u8,state:u64,
 }
-pub(crate) struct TunnelStartupPadding{
+pub(crate) struct TunnelStartupPadding {
     mode:StartupMode,
     seen:HashMap<FlowKey,Seen>,
     rotation:VecDeque<FlowKey>,
     state:u64,
 }
-fn next_random(x:&mut u64)->u64{
-    // One keyed per-generation PRNG seed is supplied by authenticated
-    // owner; never used as cipher, TLS or connection entropy.
+fn next_random(x:&mut u64)->u64 {
+    // Per-original-owner generation noncryptographic randomness only.
+    // Cipher, AEAD nonce and protected PN do not depend on this PRNG.
     let mut v=(*x).max(1);
     v^=v<<13;v^=v>>7;v^=v<<17;*x=v;v
 }
-fn candidate(packet:&[u8],tls_only:bool)->Option<(FlowKey,usize)>{
+fn candidate(packet:&[u8],tls_only:bool)->Option<FlowKey> {
     if packet.len()<28||packet[0]>>4!=4{return None}
     let ihl=usize::from(packet[0]&15)*4;
     if ihl<20||ihl+8>packet.len()||
-        u16::from_be_bytes(packet[2..4].try_into().ok()?) as usize!=packet.len()||
-        (u16::from_be_bytes(packet[6..8].try_into().ok()?)&0x1fff)!=0{
+       u16::from_be_bytes([packet[2],packet[3]]) as usize!=packet.len()||
+       (u16::from_be_bytes([packet[6],packet[7]])&0x1fff)!=0{
         return None
     }
     let proto=packet[9];
     if proto!=6&&proto!=17{return None}
-    let base=if proto==6{
+    let base=if proto==6 {
         if packet.len()<ihl+20{return None}
         let hdr=usize::from(packet[ihl+12]>>4)*4;
         if hdr<20||ihl+hdr>=packet.len(){return None}
         ihl+hdr
     }else{
-        let len=u16::from_be_bytes(packet[ihl+4..ihl+6].try_into().ok()?) as usize;
+        let len=u16::from_be_bytes([packet[ihl+4],packet[ihl+5]]) as usize;
         if len!=packet.len()-ihl||len<=8{return None}
         ihl+8
     };
     if tls_only&&!(proto==6&&packet.len()>=base+5&&
-       packet[base]==22&&packet[base+1]==3&&
-       packet[base+2]<=4){return None}
-    Some((FlowKey{
-        source:u32::from_be_bytes(packet[12..16].try_into().ok()?),
-        destination:u32::from_be_bytes(packet[16..20].try_into().ok()?),
-        source_port:u16::from_be_bytes(packet[ihl..ihl+2].try_into().ok()?),
-        destination_port:u16::from_be_bytes(packet[ihl+2..ihl+4].try_into().ok()?),
+       packet[base]==22&&packet[base+1]==3&&packet[base+2]<=4) {
+        return None
+    }
+    Some(FlowKey{
+        source:u32::from_be_bytes([packet[12],packet[13],packet[14],packet[15]]),
+        destination:u32::from_be_bytes([packet[16],packet[17],packet[18],packet[19]]),
+        source_port:u16::from_be_bytes([packet[ihl],packet[ihl+1]]),
+        destination_port:u16::from_be_bytes([packet[ihl+2],packet[ihl+3]]),
         protocol:proto,
-    },packet.len()-base))
+    })
 }
-impl TunnelStartupPadding{
-    pub(crate) fn new(mode:StartupMode,authenticated_seed:u64)->Self{
+impl TunnelStartupPadding {
+    pub(crate) fn new(mode:StartupMode,authenticated_seed:u64)->Self {
         Self{mode,seen:HashMap::new(),rotation:VecDeque::new(),
             state:authenticated_seed.max(1)}
     }
     pub(crate) fn len(&self)->usize{self.seen.len()}
-    pub(crate) fn mode_name(&self)->&'static str{
-        match self.mode{
-            StartupMode::Off=>"off",StartupMode::Tls=>"tls",
-            StartupMode::Flows=>"flows",
-        }
+    pub(crate) fn mode_name(&self)->&'static str {
+        match self.mode{StartupMode::Off=>"off",StartupMode::Tls=>"tls",
+            StartupMode::Flows=>"flows"}
     }
-    // Caller invokes only AFTER classifying Tunnel and computing actual
-    // M1 LINK record room. Off is a single branch: no clock, parse, table,
-    // PRNG, or allocations; Direct must never invoke this API.
+    // Only the original Tunnel M1 owner calls this with actual record room
+    // AFTER classification. Direct must not invoke it. Both record count
+    // and elapsed window are measured from the FIRST eligible proposal,
+    // even if the random result is zero. A 0-byte proposal never delays
+    // any business data. No per-flow accumulation or re-seal on replay.
     pub(crate) fn propose(&mut self,packet:&[u8],now_ms:u64,
-        current_wire_room:usize)->usize{
-        if self.mode==StartupMode::Off||current_wire_room==0{return 0}
-        let Some((key,payload))=candidate(packet,self.mode==StartupMode::Tls)
+        current_wire_room:usize)->usize {
+        if self.mode==StartupMode::Off{return 0}
+        let Some(key)=candidate(packet,self.mode==StartupMode::Tls)
             else{return 0};
         if !self.seen.contains_key(&key){
             if self.seen.len()>=MAX_TRACKED{return 0}
             let seed=next_random(&mut self.state);
-            let window=1000+(seed%1001) as u16;
-            self.seen.insert(key,Seen{first_ms:now_ms,last_ms:now_ms,
-                window_ms:window,count:0,business:0,padded:0,state:seed});
+            let mut entropy=seed;
+            let max_records=20+(next_random(&mut entropy)%11) as u8;
+            let window_ms=2000+(next_random(&mut entropy)%1001) as u16;
+            self.seen.insert(key,Seen{
+                first_ms:now_ms,last_ms:now_ms,window_ms,max_records,
+                count:0,state:entropy,
+            });
             self.rotation.push_back(key);
         }
         let Some(flow)=self.seen.get_mut(&key)else{return 0};
         flow.last_ms=now_ms;
         if now_ms.saturating_sub(flow.first_ms)>u64::from(flow.window_ms)||
-            flow.count>=MAX_RECORDS{return 0}
-        flow.count+=1;
-        flow.business=flow.business.saturating_add(payload as u32);
-        let allowed=(flow.business/10).saturating_sub(u32::from(flow.padded)) as usize;
-        let max=current_wire_room.min(MAX_RECORD_PAD)
-            .min(usize::from(MAX_FLOW_PAD-flow.padded)).min(allowed);
-        if max==0{return 0}
-        let n=(next_random(&mut flow.state) as usize)%(max+1);
-        flow.padded+=n as u16;n
+            flow.count>=flow.max_records{return 0}
+        flow.count+=1; // An eligible record with no MTU room still spends its slot.
+        if current_wire_room==0{return 0}
+        let max=current_wire_room.min(MAX_RECORD_PAD);
+        (next_random(&mut flow.state) as usize)%(max+1)
     }
-    // Existing original TX owner calls at its coarse due tick, never per
-    // packet. Rotate max 8 known flows; long live flows retain their done
-    // state until actual idle, so no repeating 30s startup pattern.
+    // Existing original TX due-tick, never a dedicated timer, rotates at
+    // most eight known flows. Spent flows are retained until real idle:
+    // long-lived traffic cannot restart 2..3-second padding every 30s.
     pub(crate) fn expire_coarse(&mut self,now_ms:u64){
         for _ in 0..8{
             let Some(key)=self.rotation.pop_front()else{break};
             let Some(v)=self.seen.get(&key)else{continue};
             if now_ms.saturating_sub(v.last_ms)>=FLOW_IDLE_MS{
                 self.seen.remove(&key);
-            }else{self.rotation.push_back(key);}
+            }else{self.rotation.push_back(key)}
         }
     }
 }
 #[cfg(test)]
 mod tests{
     use super::*;
-    fn udp(src_port:u16)->Vec<u8>{
+    fn udp(port:u16)->Vec<u8>{
         let mut p=vec![0u8;44];p[0]=0x45;
         p[2..4].copy_from_slice(&44u16.to_be_bytes());
         p[9]=17;p[12..16].copy_from_slice(&[10,66,0,2]);
         p[16..20].copy_from_slice(&[203,0,113,77]);
-        p[20..22].copy_from_slice(&src_port.to_be_bytes());
+        p[20..22].copy_from_slice(&port.to_be_bytes());
         p[22..24].copy_from_slice(&443u16.to_be_bytes());
         p[24..26].copy_from_slice(&24u16.to_be_bytes());p
     }
     #[test]
-    fn off_never_allocates_or_fills_and_direct_not_called(){
+    fn off_never_allocates_or_changes_prng(){
         let mut p=TunnelStartupPadding::new(StartupMode::Off,123);
-        for _ in 0..300{assert_eq!(p.propose(&udp(1),0,300),0)}
-        assert_eq!(p.len(),0);
-        assert_eq!(p.mode_name(),"off");
+        for _ in 0..2048{assert_eq!(p.propose(&udp(101),0,500),0)}
+        assert_eq!(p.len(),0);assert_eq!(p.state,123);
     }
     #[test]
-    fn flow_has_12_records_2k_cap_10pct_and_no_restart_without_idle(){
-        let mut p=TunnelStartupPadding::new(StartupMode::Flows,13);
-        let packet=udp(11);
-        let mut total=0;
-        for _ in 0..100{
-            let n=p.propose(&packet,1,500);
-            assert!(n<=256);
-            total+=n;
+    fn randomized_first_20_to_30_records_without_byte_budget(){
+        let mut observed=std::collections::BTreeSet::new();
+        let mut above_old_2k=false;
+        for seed in 1..=128{
+            let packet=udp(4040);
+            let mut p=TunnelStartupPadding::new(StartupMode::Flows,seed);
+            let mut total=0usize;
+            for _ in 0..64{total+=p.propose(&packet,100,500);}
+            let key=candidate(&packet,false).unwrap();
+            let v=&p.seen[&key];
+            assert!((20..=30).contains(&v.max_records));
+            assert!((2000..=3000).contains(&v.window_ms));
+            assert_eq!(v.count,v.max_records);
+            let max_records=v.max_records;
+            assert!(total<=usize::from(max_records)*500);
+            assert_eq!(p.propose(&packet,101,500),0);
+            observed.insert(max_records);
+            above_old_2k|=total>2048;
         }
-        assert!(total<=12*(packet.len()-28)/10);
-        assert!(total<=2048);
-        assert_eq!(p.len(),1);
-        assert_eq!(p.propose(&packet,30_000,300),0);
-        p.expire_coarse(30_000);
-        assert_eq!(p.len(),1);
-        p.expire_coarse(160_001);
-        assert_eq!(p.len(),0);
+        assert!(observed.len()>=9,"random startup record cap not 20..30");
+        assert!(above_old_2k,"must not restore old 2KiB total padding quota");
     }
     #[test]
-    fn hard_256_only_suppresses_padding_never_business_or_growth(){
-        let mut p=TunnelStartupPadding::new(StartupMode::Flows,13);
-        for port in 1..=256{p.propose(&udp(port),0,512);}
+    fn random_two_to_three_second_window_ends_and_never_restarts_live_flow(){
+        let packet=udp(4041);
+        for seed in 1..=128{
+            let mut p=TunnelStartupPadding::new(StartupMode::Flows,seed);
+            let _=p.propose(&packet,1000,500);
+            let key=candidate(&packet,false).unwrap();
+            let window=u64::from(p.seen[&key].window_ms);
+            assert_eq!(p.seen[&key].count,1);
+            // Not past the deadline, but still bounded by max_records.
+            let _=p.propose(&packet,1000+window,500);
+            assert_eq!(p.seen[&key].count,2);
+            assert_eq!(p.propose(&packet,1000+window+1,500),0);
+            assert_eq!(p.seen[&key].count,2);
+            p.expire_coarse(1000+window+50_000);
+            assert_eq!(p.len(),1,"spent live flow must not restart");
+            assert_eq!(p.propose(&packet,999_999,500),0);
+        }
+    }
+    #[test]
+    fn actual_mtu_room_and_fragment_and_tls_mode(){
+        let mut p=TunnelStartupPadding::new(StartupMode::Flows,77);
+        let packet=udp(221);assert_eq!(p.propose(&packet,1,0),0);
+        for i in 0..10{assert!(p.propose(&packet,i,13)<=13)}
+        let mut fragment=udp(334);fragment[7]=1;
+        assert_eq!(p.propose(&fragment,5,500),0);
+        let mut tls=TunnelStartupPadding::new(StartupMode::Tls,17);
+        assert_eq!(tls.propose(&packet,5,500),0);
+    }
+    #[test]
+    fn no_mtu_room_still_spends_startup_slots_and_begins_window(){
+        let pkt=udp(4242);
+        let mut p=TunnelStartupPadding::new(StartupMode::Flows,333);
+        assert_eq!(p.propose(&pkt,100,0),0);
+        let key=candidate(&pkt,false).unwrap();
+        assert_eq!(p.seen[&key].first_ms,100);
+        assert_eq!(p.seen[&key].count,1);
+        for _ in 0..40{assert_eq!(p.propose(&pkt,101,0),0);}
+        assert_eq!(p.seen[&key].count,p.seen[&key].max_records);
+        assert_eq!(p.propose(&pkt,102,500),0,
+            "all first 20..30 records spent even if MTU had no pad room");
+        let other=udp(4243);
+        assert_eq!(p.propose(&other,200,0),0);
+        assert_eq!(p.propose(&other,3201,500),0,
+            "2..3s startup window starts with first eligible record");
+    }
+    #[test]
+    fn fixed_256_flow_table_bounded_and_coarse_idle_reclaims(){
+        let mut p=TunnelStartupPadding::new(StartupMode::Flows,7);
+        for port in 1..=256{p.propose(&udp(port),0,500);}
         assert_eq!(p.len(),256);
-        assert_eq!(p.propose(&udp(257),0,512),0);
+        assert_eq!(p.propose(&udp(257),0,500),0);
         p.expire_coarse(120_001);
         assert!(p.len()<256);
         assert!(p.len()<=MAX_TRACKED);
-    }
-    #[test]
-    fn no_fragment_no_empty_udp_no_tls_guess(){
-        let mut p=TunnelStartupPadding::new(StartupMode::Tls,99);
-        assert_eq!(p.propose(&udp(11),0,256),0);
-        assert_eq!(p.len(),0);
-        let mut fragment=udp(11);
-        fragment[7]=1;
-        assert_eq!(TunnelStartupPadding::new(StartupMode::Flows,2)
-            .propose(&fragment,0,256),0);
     }
 }

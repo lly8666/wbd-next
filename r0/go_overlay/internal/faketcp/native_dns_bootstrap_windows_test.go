@@ -3,7 +3,9 @@
 package faketcp
 
 import (
+ "context"
  "encoding/binary"
+ "errors"
  "net/netip"
  "testing"
  "golang.org/x/net/dns/dnsmessage"
@@ -100,4 +102,54 @@ func TestPlan029PhysicalCNAMEChainAndUnrelatedAProtection(t *testing.T){
  wire,c=plan029PhysicalReplyFrame(t,name,answers[:1])
  ips,ok=physicalDNSReply(wire,c,50000,99,name)
  if !ok||len(ips)!=0{t.Fatalf("unrelated DNS A must not be endpoint: %v %v",ips,ok)}
+}
+
+
+func TestPlan029PhysicalTCOnlySameValidatedSourceQuestionIDAndNoUnboundDial(t *testing.T){
+ name,_:=dnsmessage.NewName("vpn.example.")
+ other,_:=dnsmessage.NewName("foreign.example.")
+ c:=PhysicalDNSConfig{
+  Device:"\\Device\\NPF_{12345678-1234-1234-1234-123456789abc}",
+  SourceMAC:[6]byte{1,2,3,4,5,6},NextHopMAC:[6]byte{7,8,9,10,11,12},
+  Source4:netip.MustParseAddr("192.168.1.2"),
+  Resolver4:netip.MustParseAddr("192.168.1.1"),
+ }
+ answer,e:=(&dnsmessage.Message{Header:dnsmessage.Header{
+  ID:99,Response:true,Truncated:true},
+  Questions:[]dnsmessage.Question{{Name:name,Type:dnsmessage.TypeA,
+   Class:dnsmessage.ClassINET}}}).Pack()
+ if e!=nil{t.Fatal(e)}
+ inverse:=c
+ inverse.Source4,inverse.Resolver4=c.Resolver4,c.Source4
+ inverse.SourceMAC,inverse.NextHopMAC=c.NextHopMAC,c.SourceMAC
+ frame,e:=physicalDNSFrame(inverse,50000,answer,99)
+ if e!=nil{t.Fatal(e)}
+ binary.BigEndian.PutUint16(frame[34:36],53)
+ binary.BigEndian.PutUint16(frame[36:38],50000)
+ binary.BigEndian.PutUint16(frame[40:42],0)
+ src,dst:=inverse.Source4.As4(),inverse.Resolver4.As4()
+ sum:=physicalDNSChecksumFold(physicalDNSPseudoSum(src[:],dst[:],frame[34:]))
+ if sum==0{sum=0xffff}
+ binary.BigEndian.PutUint16(frame[40:42],sum)
+ if ips,ok,tc:=physicalDNSReplyState(frame,c,50000,99,name);ok||!tc||len(ips)!=0{
+  t.Fatalf("expected validated TC only: %v %v %v",ips,ok,tc)
+ }
+ if _,ok:=physicalDNSReply(frame,c,50000,99,name);ok{
+  t.Fatal("truncated UDP must never be published as usable A")
+ }
+ if _,ok,tc:=physicalDNSReplyState(frame,c,50000,98,name);ok||tc{
+  t.Fatal("wrong transaction triggered TCP")
+ }
+ if _,ok,tc:=physicalDNSReplyState(frame,c,50000,99,other);ok||tc{
+  t.Fatal("wrong question triggered TCP")
+ }
+ frame[26]^=1 // source becomes foreign and checksum invalid
+ if _,ok,tc:=physicalDNSReplyState(frame,c,50000,99,name);ok||tc{
+  t.Fatal("off-path packet triggered TCP")
+ }
+ // No cold-selected NIC means no TCP attempt, before any dial/OS write.
+ if _,err:=physicalBootstrapTCPSameEndpoint(context.Background(),c,
+  answer,99,name);!errors.Is(err,ErrPhysicalDNS){
+  t.Fatalf("unbound TCP fallback not rejected: %v",err)
+ }
 }

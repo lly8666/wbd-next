@@ -416,6 +416,9 @@ pub struct TcpDirectRelay{
     read_event_driven:bool,
     // None for ordinary product. No clock syscall or log unless signed P2.
     reply_path_qpc:Option<RelayReplyPathQpc>,
+    // Signed original Win/WSL2 steady-state experiment only. No QPC
+    // syscall, allocation or per-packet log in an ordinary product.
+    steady_qpc_enabled:bool,
 }
 // Index 0: listener-facing inner socket, index 1: physical outer socket.
 // Bounded integer counts only; no syscall, clock or log added by metrics.
@@ -436,6 +439,15 @@ pub struct RelayIoCounts{
     // gated_reads, this is not pressure or a pending queue limit.
     pub event_suppressed_reads:[u16;2],
 }
+/// Each timestamp is observed AFTER its positive WinSock syscall.
+/// A successful socket write is NOT proof of Linux receipt or an ACK.
+#[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
+pub struct RelaySteadyQpc{
+    pub inner_read_done:i64,
+    pub outer_write_done:i64,
+    pub outer_read_done:i64,
+    pub inner_write_done:i64,
+}
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct RelayTick{
     pub bytes_read:usize,
@@ -452,6 +464,7 @@ pub struct RelayTick{
     /// Only this case needs a bounded extra ready turn after short reads.
     pub close_probe_due:bool,
     pub io:RelayIoCounts,
+    pub steady_qpc:Option<RelaySteadyQpc>,
     pub buffered:usize,
     pub finished:bool,
 }
@@ -492,7 +505,8 @@ impl TcpDirectRelay{
             inner_write_closed:false,outer_write_closed:false,
             max_pending_per_direction:cap,fast_forward:enabled,
             read_armed:[true,true],close_hint:[false,false],
-            read_event_driven:false,reply_path_qpc:None})
+            read_event_driven:false,reply_path_qpc:None,
+            steady_qpc_enabled:false})
     }
     // The original source-locked Windows TX enables this only for H1948.
     pub fn enable_signed_reply_path_qpc(&mut self){
@@ -500,6 +514,10 @@ impl TcpDirectRelay{
     }
     pub fn signed_reply_path_qpc(&self)->Option<RelayReplyPathQpc>{
         self.reply_path_qpc
+    }
+    /// Arm only on a single source-locked original kernel TCP flow.
+    pub fn enable_signed_steady_qpc(&mut self){
+        self.steady_qpc_enabled=true;
     }
     #[inline]
     fn note_first_inner_read_qpc(&mut self){
@@ -567,6 +585,7 @@ impl TcpDirectRelay{
         let mut forwarded_without_queue=0usize;let mut copied_to_queue=0usize;
         let mut attempted_outer=false;let mut attempted_inner=false;
         let mut io=RelayIoCounts::default();
+        let mut steady=self.steady_qpc_enabled.then(RelaySteadyQpc::default);
         let inner_read_allowed=!self.inner_eof &&
             self.to_outer.len()<self.max_pending_per_direction &&
             (remaining_capacity>=2*DEFAULT_PER_DIRECTION_CAP ||
@@ -585,14 +604,20 @@ impl TcpDirectRelay{
             match self.inner.read(&mut scratch[..allowed]){
                 Ok(0)=>{self.inner_eof=true;self.read_armed[0]=false},
                 Ok(n)=>{
-                    if n>0{self.note_first_inner_read_qpc();}
+                    if n>0{
+                        self.note_first_inner_read_qpc();
+                        if let Some(t)=steady.as_mut(){t.inner_read_done=signed_reply_path_qpc_tick();}
+                    }
                     // First try direct scratch->physical kernel send, only then
                     // allocate a bounded suffix queue if needed.
                     if self.fast_forward{
                         let f=forward_or_queue(&mut self.outer,
                             &mut self.to_outer,&scratch[..n],"outer_write")?;
                         attempted_outer=f.attempted_direct_write;
-                        if f.written>0{self.note_first_outer_write_qpc();}
+                        if f.written>0{
+                            self.note_first_outer_write_qpc();
+                            if let Some(t)=steady.as_mut(){t.outer_write_done=signed_reply_path_qpc_tick();}
+                        }
                         if f.attempted_direct_write{
                             io.write_calls[1]+=1;
                             io.write_wouldblock[1]+=u16::from(f.blocked);
@@ -639,7 +664,10 @@ impl TcpDirectRelay{
             match self.outer.read(&mut scratch[..allowed]){
                 Ok(0)=>{self.outer_eof=true;self.read_armed[1]=false},
                 Ok(n)=>{
-                    if n>0{self.note_first_outer_read_qpc();}
+                    if n>0{
+                        self.note_first_outer_read_qpc();
+                        if let Some(t)=steady.as_mut(){t.outer_read_done=signed_reply_path_qpc_tick();}
+                    }
                     if self.fast_forward{
                         let f=forward_or_queue(&mut self.inner,
                             &mut self.to_inner,&scratch[..n],"inner_write")?;
@@ -648,6 +676,9 @@ impl TcpDirectRelay{
                             io.write_calls[0]+=1;
                             io.write_wouldblock[0]+=u16::from(f.blocked);
                             io.short_writes[0]+=u16::from(f.short_write);
+                        }
+                        if f.written>0{
+                            if let Some(t)=steady.as_mut(){t.inner_write_done=signed_reply_path_qpc_tick();}
                         }
                         forwarded_without_queue+=f.written;
                         copied_to_queue+=f.copied_to_queue;
@@ -709,7 +740,10 @@ impl TcpDirectRelay{
                 Ok(n)=>{
                     io.short_writes[1]+=u16::from(n>0&&n<first_len);
                     self.to_outer.drain(..n);wrote+=n;outer_write+=n;
-                    if n>0{self.note_first_outer_write_qpc();}
+                    if n>0{
+                        self.note_first_outer_write_qpc();
+                        if let Some(t)=steady.as_mut(){t.outer_write_done=signed_reply_path_qpc_tick();}
+                    }
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{
                     io.write_wouldblock[1]+=1;
@@ -725,7 +759,10 @@ impl TcpDirectRelay{
             match self.inner.write(first){
                 Ok(n)=>{
                     io.short_writes[0]+=u16::from(n>0&&n<first_len);
-                    self.to_inner.drain(..n);wrote+=n;inner_write+=n
+                    self.to_inner.drain(..n);wrote+=n;inner_write+=n;
+                    if n>0{
+                        if let Some(t)=steady.as_mut(){t.inner_write_done=signed_reply_path_qpc_tick();}
+                    }
                 }
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>{
                     io.write_wouldblock[0]+=1;
@@ -747,7 +784,8 @@ impl TcpDirectRelay{
             forwarded_without_queue,copied_to_queue,
             close_probe_due:(self.close_hint[0]&&!self.inner_eof&&inner_read>0)||
                 (self.close_hint[1]&&!self.outer_eof&&outer_read>0),
-            io,buffered:self.to_outer.len()+self.to_inner.len(),
+            io,steady_qpc:steady,
+            buffered:self.to_outer.len()+self.to_inner.len(),
             finished:self.inner_eof&&self.outer_eof&&
                 self.to_outer.is_empty()&&self.to_inner.is_empty()})
     }
@@ -796,6 +834,72 @@ mod plan029_global_backpressure_tests{
         assert_eq!(relay.resident_bytes(),0);
         drop((b,d));
     }
+
+    /// A full 1-quantum Direct TCP pending buffer gates only that relay;
+    /// an unrelated actual loopback TCP pair progresses, then the held
+    /// relay drains/reopens under its own capacity. This is a Windows
+    /// kernel socket/component proof, NOT a Wintun/native OS Applied claim.
+    #[test]
+    fn plan029_h2051_tcp_one_quantum_full_sibling_stays_live_then_recovers(){
+        use std::io::{Read,Write};
+        use std::time::Duration;
+        fn pair()->(TcpStream,TcpStream){
+            let listener=TcpListener::bind((Ipv4Addr::LOCALHOST,0)).unwrap();
+            let peer=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (server,_)=listener.accept().unwrap();
+            (server,peer)
+        }
+        let (inner,mut application)=pair();
+        let (outer,mut physical)=pair();
+        let mut choked=TcpDirectRelay::with_budget(inner,outer,QUANTUM_BYTES).unwrap();
+        choked.to_outer.extend(std::iter::repeat(b'X').take(QUANTUM_BYTES));
+        assert_eq!(choked.pending_bytes(),QUANTUM_BYTES);
+        let limit=choked.service_once_with_read_budget(0).unwrap();
+        assert!(limit.io.gated_reads[0]>0,"one flow buffer full failed to gate own read");
+        let (healthy_inner,mut healthy_app)=pair();
+        let (healthy_outer,mut healthy_peer)=pair();
+        healthy_peer.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut sibling=TcpDirectRelay::with_budget(
+            healthy_inner,healthy_outer,QUANTUM_BYTES).unwrap();
+        healthy_app.write_all(b"OTHER_DIRECT_LIVE").unwrap();
+        let mut wrote=0;
+        for _ in 0..200{
+            let turn=sibling.service_once_with_read_budget(usize::MAX).unwrap();
+            wrote+=turn.outer_write;
+            if wrote>=b"OTHER_DIRECT_LIVE".len(){break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(wrote,b"OTHER_DIRECT_LIVE".len(),
+            "sibling held behind unrelated Direct TCP buffer quota");
+        let mut observed=[0u8;17];
+        healthy_peer.read_exact(&mut observed).unwrap();
+        assert_eq!(&observed,b"OTHER_DIRECT_LIVE");
+        // Drain the original full queue into the existing kernel socket.
+        // No new relay object, fallback connection or worker is admitted.
+        for _ in 0..200{
+            if choked.pending_bytes()==0{break}
+            choked.service_once_with_read_budget(usize::MAX).unwrap();
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(choked.pending_bytes(),0,"original TCP queue never drained");
+        physical.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut old=vec![0u8;QUANTUM_BYTES];
+        physical.read_exact(&mut old).unwrap();
+        assert!(old.iter().all(|&b|b==b'X'));
+        application.write_all(b"RECOVER").unwrap();
+        let mut forwarded=0;
+        for _ in 0..200{
+            let turn=choked.service_once_with_read_budget(usize::MAX).unwrap();
+            forwarded+=turn.outer_write;
+            if forwarded>=7{break}
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(forwarded,7);
+        let mut resumed=[0u8;7];
+        physical.read_exact(&mut resumed).unwrap();
+        assert_eq!(&resumed,b"RECOVER");
+    }
+
     /// The original TX may have acknowledged FD_READ while this socket
     /// was still in Connecting. A newly created relay must drain bytes
     /// ALREADY resident in the original kernel TCP receive buffer on

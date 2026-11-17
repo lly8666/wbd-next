@@ -23,6 +23,19 @@ func TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback(t *testing.T) {
     }
     if _,err:=os.Stat(orphan);err!=nil{t.Fatal("orphan sidecar removed",err)}
     if err:=os.Remove(orphan);err!=nil{t.Fatal(err)}
+    defender:=n4Plan029DefenderSidecarPath(path)
+    sidecar:=[]byte("crash after exact Defender rule add")
+    if err:=os.WriteFile(defender,sidecar,0600);err!=nil{t.Fatal(err)}
+    if err:=N4NativeRecoverState(context.Background(),path);!errors.Is(err,ErrN4JournalConflict){
+        t.Fatalf("orphan Defender grant falsely recovered: %v",err)
+    }
+    if data,err:=os.ReadFile(defender);err!=nil||string(data)!=string(sidecar){
+        t.Fatalf("recover changed orphan Defender sidecar: %v",err)
+    }
+    if err:=os.Remove(defender);err!=nil{t.Fatal(err)}
+    if err:=N4NativeRecoverState(context.Background(),path);err!=nil{
+        t.Fatalf("absent sidecars falsely blocked: %v",err)
+    }
     old:=[]byte(`{"schema":1,"foreign_or_legacy":true}`)
     if err:=os.WriteFile(path,old,0600);err!=nil{t.Fatal(err)}
     err:=N4NativeRecoverState(context.Background(),path)

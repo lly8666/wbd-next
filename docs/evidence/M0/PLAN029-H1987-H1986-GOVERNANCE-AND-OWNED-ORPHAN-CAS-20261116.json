@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H1987",
+  "date": "2026-11-16",
+  "source_sha": "6d2ba3f5906a7dd4b71f5cf853ae6fb1da893b7c",
+  "completed_prior": {
+    "governance": {
+      "run": 43827991490,
+      "conclusion": "success"
+    },
+    "maintenance": {
+      "run": 43827991504,
+      "conclusion": "success"
+    }
+  },
+  "failure_boundary": "When primary four-stage WAL is absent, an otherwise confirmed generation-owned exact Defender Allow sidecar previously refused all recovery (H1982); unconfirmed intent still must not be deleted.",
+  "implementation": "Standalone sidecar only after both route sidecars absent: bounded Lstat/read, checksum/phase/identity, recompute exact rule Name+Description from generation, reuse native Defender COM Lookup/CAS/Lookup-absent and remove only matching owned sidecar; no global rule manipulation.",
+  "source_changed": [
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows.go",
+      "old": "cbec200140b92267dc0cc68d8cc06ed975f63d85",
+      "new": "a233ced718b4cb5cf2c866f7b7a2286d3dd6f4d1"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
+      "old": "45ebac5b21347ba47107352a61936b9cf7f5183a",
+      "new": "68ade031e7ece9b36a0cad572d9fb4035247c7fb"
+    },
+    {
+      "path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go",
+      "old": "d34f7d31dfd2d1366eda38b2387188079fb8d60f",
+      "new": "286a5f40d3cda72c2ffd9bd06c23615e52d0a362"
+    }
+  ],
+  "manifest": "Only three exact create result_blob pins in active PLAN020 M0 overlay; historical donor/frozen manifest untouched",
+  "old_m4": "Only explicit M0 reviewed entry SHA updated, original frozen pins unchanged",
+  "test_cases": {
+    "pure": "TestPlan029DefenderOrphanOwnedCASNotIntentOrForeign: owned success; intent/foreign/key tamper reject; NOT_RUN",
+    "actual_single_owned_COM": "existing H1661 Win2025 single-rule TestPlan029DefenderNativeCOMOneRealRuleOwnedCAS now uses real N4NativeRecoverState when primary WAL missing; NOT_RUN",
+    "full_D5": "NOT_RUN",
+    "product_network": "NOT_RUN"
+  },
+  "preserve": {
+    "H1978_native": "FAIL",
+    "H1974_61ms": "OPEN"
+  },
+  "unverified": [
+    "D1–D5",
+    "P1 CPU/p99",
+    "P2 real tail",
+    "WinForms actual Connect/Stop",
+    "Game4 CN",
+    "physical IPv6",
+    "pressure/padding"
+  ],
+  "plan_status": "IN_PROGRESS"
+}

@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1979_COLLECT_H1978_ORIGINAL_FAIL_AND_WIN32_CONCURRENT_SEND_RETURN",
+  "source_sha": "a07e62fe4ee62ba90b5a1fd60a2699c36ee2ab11",
+  "source_windows_go_rust": "a07e62fe4ee62ba90b5a1fd60a2699c36ee2ab11",
+  "source_linux_peer": "a07e62fe4ee62ba90b5a1fd60a2699c36ee2ab11",
+  "original_action": {
+    "run_id": 43817058020,
+    "native_job_id": 133133158554,
+    "artifact_id": 14202784333,
+    "native_conclusion": "failure",
+    "failed_step": 19,
+    "original_error": "H1966 QPC: H1977 causal boundary ordering invalid"
+  },
+  "original_report": {
+    "normal_public": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "stop": "PASS_BOTH_OWNED",
+    "p2_stop": "PASS_BOTH_OWNED",
+    "p2_steady_nested_stop": "PENDING_ORIGINAL_OWNED_STOP_BECAUSE_ANALYZER_FAILED_AFTER_REAL_STOP",
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS"
+  },
+  "real_app": {
+    "workload": "one already-established kernel TCP per physical and Wintun Direct arm; 32 warmup + 2048x1024B stop-and-wait, no early connect",
+    "sha256": "0c5cfc1733c1b0e54b53e2b67a1777dc4f7d27a0e77669f625aa8d8af40fa927",
+    "linux_kernel_received_each_arm_bytes": 2129920,
+    "windows_source_ip": "10.66.0.2",
+    "physical_source_port": 60356,
+    "direct_source_port": 60357,
+    "linux_receipts": 2,
+    "both_fin": true,
+    "app_samples_per_arm": 2048,
+    "qpc_frequency_hz": 10000000,
+    "physical_rtt_ms": {
+      "p50": 0.269,
+      "p95": 0.334,
+      "p99": 0.381,
+      "max": 0.916
+    },
+    "direct_rtt_ms": {
+      "p50": 0.521,
+      "p95": 0.62,
+      "p99": 0.682,
+      "max": 0.901
+    },
+    "direct_minus_physical_quantile_ms": {
+      "p50": 0.252,
+      "p95": 0.286,
+      "p99": 0.301
+    },
+    "no_original_request_ge8ms": true
+  },
+  "original_qpc_rows": {
+    "ingress_tcp_data": 2080,
+    "relay_events": 4160,
+    "tx_mailbox": 2080,
+    "rx_WintunSendPacket": 2080,
+    "FD_READ": 2080,
+    "dropped": 0,
+    "tcp_seq_retransmitted": 0,
+    "app_seq_byte_source_port_matched": 2048
+  },
+  "exact_parser_failure": {
+    "old_incorrect_rule": "Wintun SendPacket return MUST precede original kernel inner TCP read",
+    "correct_concurrent_order": "TX NAT <= TX mailbox enqueue <= RX SendPacket call start <= inner kernel TCP read <= app recv, with RX SendPacket call return separately <= app recv; inner read CAN precede send call return",
+    "invalid_windows_count": 2,
+    "actual_interleaved_windows": [
+      {
+        "zero_based_index": 495,
+        "seq": 1559948227,
+        "kernel_read_before_SendPacket_return_us": 22.8,
+        "send_call_duration_us": 123.6
+      },
+      {
+        "zero_based_index": 2042,
+        "seq": 1561532355,
+        "kernel_read_before_SendPacket_return_us": 2.6,
+        "send_call_duration_us": 103
+      }
+    ],
+    "other_2046_strict_ordered": true,
+    "offline_new_rule_all_2048_consistent": true,
+    "original_Action_remains_FAIL": true
+  },
+  "offline_same_windows_native_boundary_qpc_microseconds": {
+    "nat_to_tx": {
+      "p50": 2.4,
+      "p95": 5.1,
+      "p99": 7.6,
+      "max": 35.6
+    },
+    "tx_to_rx_send_start": {
+      "p50": 36,
+      "p95": 43.2,
+      "p99": 65.6,
+      "max": 147
+    },
+    "rx_SendPacket_call_duration": {
+      "p50": 11,
+      "p95": 15.6,
+      "p99": 26.4,
+      "max": 123.6
+    },
+    "rx_send_start_to_inner_kernel_read": {
+      "p50": 46.2,
+      "p95": 66.3,
+      "p99": 89.5,
+      "max": 143.7
+    },
+    "rx_SendPacket_return_to_inner_read_signed": {
+      "min": -22.8,
+      "p50": 35.3,
+      "p95": 52.2,
+      "p99": 75.5,
+      "max": 121.9
+    },
+    "nat_to_inner_kernel_read": {
+      "p50": 84.2,
+      "p95": 111.9,
+      "p99": 139.3,
+      "max": 251
+    },
+    "app_rtt": {
+      "p50": 521.4,
+      "p95": 619.6,
+      "p99": 681.6,
+      "max": 900.8
+    }
+  },
+  "status": "FAIL_SCOPED_ORIGINAL_ANALYZER_CAUSAL_ORDER_NOT_NETWORK_PACKET_FAIL",
+  "interpretation": [
+    "This original real 2048 sample run has zero 8ms+ stalls and zero retransmissions; previous H1974 genuine 5x61ms stalls remain unexplained and NOT proven fixed",
+    "The two qpc overlaps are real Windows kernel concurrent processing during a Win32 WintunSendPacket call; a positive send-return-to-inner wait cannot be mandated",
+    "P50 difference 252us is an unpaired sequential same-run RTT quantile difference, NOT pure Rust cost",
+    "Old native run is still FAIL, no retroactive promotion after offline parser reinterpretation",
+    "No additional high-rate/4MiB/extreme DNS or CDN; post-ingress is signed-only, normal product OFF"
+  ],
+  "full_plan029": "IN_PROGRESS"
+}

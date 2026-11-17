@@ -25,6 +25,7 @@ const MAX_POLL:usize=16;
 const TIMEOUT_MS:u64=5_000;
 const MAX_L3:usize=2048;
 #[repr(C)]
+#[derive(Clone,Copy)]
 struct PollFd{socket:usize,events:i16,revents:i16}
 #[link(name="ws2_32")]
 extern "system" { fn WSAPoll(fds:*mut PollFd,count:u32,timeout:i32)->i32; }
@@ -42,6 +43,9 @@ pub(crate) struct DirectDns{
     source:Ipv4Addr,ifindex:u32,lease:Ipv4Addr,endpoint:Ipv4Addr,
     mtu:usize,pending:DnsPending,cache:DnsAnswerCache,inflight:Vec<Inflight>,
     completed:VecDeque<Vec<u8>>,cursor:usize,ip_id:u16,
+    // No product counter; pure tests prove the return-drain never
+    // re-polls the same DNS sockets for each UDP/TCP response.
+    #[cfg(test)]poll_invocations:usize,
 }
 fn wall_ms()->Option<u64>{
     SystemTime::now().duration_since(UNIX_EPOCH).ok()
@@ -69,12 +73,20 @@ impl DirectDns{
             awaiting:VecDeque::new(),
             pending:DnsPending::new(MAX_PENDING,1024),
             cache:DnsAnswerCache::production(),inflight:Vec::new(),
-            completed:VecDeque::with_capacity(MAX_READY),cursor:0,ip_id:1}
+            completed:VecDeque::with_capacity(MAX_READY),cursor:0,ip_id:1,
+            #[cfg(test)]poll_invocations:0}
     }
     pub(crate) fn has_work(&self)->bool{
         !self.inflight.is_empty()||!self.completed.is_empty()||
             !self.awaiting.is_empty()
     }
+    // Completed packets are dequeued directly; only true pending DNS I/O
+    // needs one OS poll at the start of the owner's next bounded TX turn.
+    pub(crate) fn needs_poll(&self)->bool{
+        !self.inflight.is_empty()||!self.awaiting.is_empty()
+    }
+    #[cfg(test)]
+    pub(crate) fn poll_invocations(&self)->usize{self.poll_invocations}
     pub(crate) fn counts(&self)->(usize,usize,usize){
         (self.inflight.len(),self.pending.counts().1,self.completed.len())
     }
@@ -268,6 +280,7 @@ impl DirectDns{
     pub(crate) fn poll(&mut self,now_ms:u64,
         mut fake:Option<&mut FakeAllocator>,
         mut journal:Option<&mut FakeJournal>){
+        #[cfg(test)]{self.poll_invocations+=1;}
         // A completed filesystem write can publish only its own DNS A
         // ticket. Timeout/failure answers SERVFAIL; Tunnel/UDP/TCP keep
         // their independent scheduling turns during slow sync_data.
@@ -296,11 +309,14 @@ impl DirectDns{
         let count=self.inflight.len();
         if count==0{self.cursor=0;return}
         let quantum=count.min(MAX_POLL);
-        let mut fds=Vec::with_capacity(quantum);
+        // The same TX worker may wake thousands of times per second under
+        // mixed TCP/UDP traffic. A bounded stack WSAPoll array avoids one
+        // heap allocate/free on EVERY pending-DNS service turn.
+        let mut fds=[PollFd{socket:0,events:POLLRDNORM,revents:0};MAX_POLL];
         for n in 0..quantum{
             let idx=(self.cursor+n)%count;
-            fds.push(PollFd{socket:self.inflight[idx].socket.poll_socket(),
-                events:POLLRDNORM,revents:0});
+            fds[n]=PollFd{socket:self.inflight[idx].socket.poll_socket(),
+                events:POLLRDNORM,revents:0};
         }
         let rc=unsafe{WSAPoll(fds.as_mut_ptr(),quantum as u32,0)};
         if rc<0{return}

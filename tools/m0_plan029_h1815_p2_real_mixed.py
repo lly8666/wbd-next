@@ -28,6 +28,10 @@ SUSTAIN=os.environ.get("WBD_PLAN029_P2_SUSTAIN_SCENE")=="1"
 HIGH_RATE=os.environ.get("WBD_PLAN029_P2_HIGH_RATE_SCENE")=="1"
 SMALL_TCP=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 LONG_RATE=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
+STEADY_QPC=os.environ.get("WBD_PLAN029_P2_STEADY_QPC_SCENE")=="1"
+if STEADY_QPC and (BULK or ABBA or PRECON_BULK or SMALL_TCP or
+                  SUSTAIN or HIGH_RATE or TCP128):
+    raise RuntimeError("H1966 ordinary 1KiB established-TCP QPC cannot mix bulk/stress/first-SYN")
 if LONG_RATE and not HIGH_RATE:
     raise RuntimeError("H1903 extended 2GiB/1.5GiB requires explicit high-rate signed source")
 # H1931 one source-locked original product does both diagnostics: small
@@ -61,6 +65,89 @@ def udp_packet(i):
     return i.to_bytes(4,"big")+LABEL+bytes(96-4-len(LABEL))
 def receipt(label,data):
     print(label+" "+json.dumps(data,sort_keys=True),flush=True)
+
+# H1993 reads ONLY the eight pre-existing 128KiB application progress
+# receipts on each ordinary paced 1MiB arm. Do not add hot packet tracing,
+# timers, extra connections, network workload or product changes.
+def normal_tcp_128k_progress_gaps(log,role,size):
+    marker="PLAN029_H1839_P2_TCP_STAGE "
+    rows=[]
+    for line in pathlib.Path(log).read_text(encoding="utf-8").splitlines():
+        if not line.startswith(marker):continue
+        item=json.loads(line[len(marker):])
+        if item.get("role")!=role:
+            raise RuntimeError("H1993 unrelated real TCP application role")
+        rows.append(item)
+    fixed={}
+    progress={"upload_progress":[],"download_progress":[]}
+    for item in rows:
+        phase=item.get("phase")
+        if phase in progress:
+            progress[phase].append(item)
+        elif phase in ("connected","upload_complete","half_closed","first_reply"):
+            if phase in fixed:
+                raise RuntimeError("H1993 duplicate original TCP stage "+phase)
+            fixed[phase]=item
+        else:
+            raise RuntimeError("H1993 unrecognized original TCP phase "+repr(phase))
+    if set(fixed)!={"connected","upload_complete","half_closed","first_reply"}:
+        raise RuntimeError("H1993 incomplete actual TCP stages")
+    if size!=1024*1024 or size%(128*1024):
+        raise RuntimeError("H1993 only original ordinary paced 1MiB TCP")
+    count=size//(128*1024)
+    if any(len(progress[k])!=count for k in progress):
+        raise RuntimeError("H1993 missing/duplicate 128KiB original app milestone")
+    def timestamp(row):
+        t=row.get("elapsed_ms")
+        if type(t) not in (int,float) or not math.isfinite(t) or t<0:
+            raise RuntimeError("H1993 invalid original app monotonic timestamp")
+        return float(t)
+    # Upload times are relative to connected, download times to the
+    # original application start. Do NOT subtract the two clock origins.
+    up_end=timestamp(fixed["upload_complete"])
+    reply=timestamp(fixed["first_reply"])
+    half=timestamp(fixed["half_closed"])
+    if reply+0.002<half or up_end<0:
+        raise RuntimeError("H1993 TCP timing phase order invalid")
+    def gaps(kind,start):
+        prev=start
+        durations=[]
+        for i,row in enumerate(progress[kind],1):
+            # Upload is exact; original download recv(max=16KiB) logs
+            # bytes AFTER crossing a 128KiB boundary, not at that boundary.
+            # Reject skipped buckets and crossings larger than one recv.
+            lower=i*128*1024
+            upper=lower if kind=="upload_progress" else min(size,lower+16383)
+            observed=row.get("bytes")
+            if type(observed) is not int or not lower<=observed<=upper:
+                raise RuntimeError("H1995 TCP 128KiB milestone missing or reordered")
+            now=timestamp(row)
+            if now+0.002<prev:
+                raise RuntimeError("H1993 backwards original application progress")
+            durations.append(round(max(0,now-prev),3))
+            prev=now
+        return durations,prev
+    upload,last_up=gaps("upload_progress",0.0)
+    download,last_down=gaps("download_progress",reply)
+    if last_up>up_end+0.002:
+        raise RuntimeError("H1993 application upload_complete precedes progress")
+    # The final original actual recv() must coincide with the last bucket,
+    # but the summary elapsed is a different field in the final client receipt.
+    if last_down<reply:
+        raise RuntimeError("H1993 missing original 1MiB download")
+    return {
+        "source":"ORIGINAL_WINDOWS_APP_EXISTING_128K_RECEIPT",
+        "bucket_bytes":128*1024,"bucket_count":count,
+        "upload_max_gap_ms":max(upload),"download_max_gap_ms":max(download),
+        "upload_worst_bucket":upload.index(max(upload))+1,
+        "download_worst_bucket":download.index(max(download))+1,
+        "upload_bucket_gaps_ms":upload,"download_bucket_gaps_ms":download,
+        "download_crossing_recv_actual_bytes":[x["bytes"] for x in progress["download_progress"]],
+        "max_allowed_recv_crossing_bytes":16383,
+        "upload_includes_4ms_pacing_per_16k":True,
+        "download_includes_windows_and_linux_kernel_and_scheduling":True,
+        "not_app_rtt_p99_or_rust_cpu":True
+    }
 
 def tcp_guest(physical,expected_host):
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
@@ -474,6 +561,13 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         completed.write_text("direct-finished\n",encoding="ascii")
         wait(win,wn,23);wait(lin,ln,7)
         if not TCP128:wait(guest,gn,7)
+        steady=None
+        if STEADY_QPC:
+            # Do not reuse first-SYN, FIN-first or paced 1MiB phase times
+            # as settled data latency. The SAME original Windows Rust Wintun
+            # owner remains alive for a separate 2,048-message TCP stream.
+            from m0_plan029_h1966_steady_tcp_qpc import run_steady
+            steady=run_steady(root,out,physical,host_source,fake,unix,ready)
         base=proof(bn,"PLAN029_H1815_P2_TCP_CLIENT")
         # Preserve the historic P2 field, now one of the two B trials.
         # The full four-trial chain gets its OWN exact, signed receipt.
@@ -481,6 +575,17 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         linux=proof(gn,"PLAN029_H1815_P2_PHYSICAL_TCP_GUEST")
         small_win=proof(wn,"PLAN029_H1815_P2_TUNNEL_SMALL_WINDOWS")
         small_linux=proof(ln,"PLAN029_H1815_P2_TUNNEL_SMALL_LINUX")
+        # Original P2 has only one paced 1MiB physical arm and one
+        # FakeIP Direct arm. Check their existing app-side progress
+        # checkpoints, not an invented 2048-message microbenchmark.
+        normal_gaps=None
+        if not BULK:
+            normal_gaps={
+                "physical":normal_tcp_128k_progress_gaps(bn,"baseline",SIZE),
+                "direct":normal_tcp_128k_progress_gaps(dn,"direct",SIZE),
+                "scope":"SAME_VM_SEQUENTIAL_PACED_TCP_WITH_CONCURRENT_TUNNEL_UDP",
+                "comparison":"DESCRIPTIVE_ONLY_NOT_CAUSAL_OR_P99",
+            }
         if TCP128_CONTROL:
             if (tcp128 is None or not isinstance(
                     small_win.get("matched_phase_udp"),dict) or
@@ -620,6 +725,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
         ratio=round(direct_value["elapsed_ms"]/max(.001,base["elapsed_ms"]),3)
         return {"source_sha":source,"binary_source_sha":os.environ.get("WBD_WL_BINARY_SOURCE",source),
                 "p2_timeline":{"direct_over_physical_elapsed_ratio":ratio,
+                    "normal_128k_app_progress":normal_gaps,
                     "direct_minus_physical_phase_ms":delta,
                     "dominant_added_wait_phase":dominant,
                     "same_vm_sequential_baseline":True,
@@ -638,6 +744,7 @@ def run_p2(root,out,physical,host_source,tunnel_ip,fake,unix,ready):
                 "sustained_direct_tcp":sustained,
                 "highrate_direct_tcp":highrate,
                 "small_tcp_latency":latency,
+                "steady_tcp_qpc":steady,
                 "tunnel_udp_covers_all_128":whole_tcp128,
                 "cpu_attribution":"NOT_MEASURED_P2_TWO_DIFFERENT_KERNEL_SOCKET_PATHS",
                 "stop":"NOT_RUN_UNTIL_OWNER_STOP"}

@@ -10,6 +10,7 @@
      NativeSplitWorker,NativeDecision,NativeReverse,ColdSplitSourceV1,
  };
  use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
+ use crate::v4_windows_native_tcp_direct::{reply_qpc_now,reply_qpc_frequency};
  use crate::v4_client_startup_padding::StartupMode;
  use std::time::Duration;
  use std::ffi::c_void;
@@ -43,6 +44,66 @@
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
  const BATCH:usize=8;
+ // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
+ // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
+ // The rewritten kernel-local proxy port is joined to original source port
+ // via the source-locked NAT mapping. No kernel-consumed/ACK claim here.
+ fn steady_local_data(packet:&[u8])->Option<(u16,u32,u16)>{
+     if packet.len()<40||packet[0]>>4!=4||packet[9]!=6{return None}
+     let ihl=usize::from(packet[0]&15)*4;
+     if ihl<20||ihl+20>packet.len(){return None}
+     let total=usize::from(u16::from_be_bytes([packet[2],packet[3]]));
+     let frag=u16::from_be_bytes([packet[6],packet[7]]);
+     if total!=packet.len()||frag&0x3fff!=0{return None}
+     let th=usize::from(packet[ihl+12]>>4)*4;
+     if th<20||ihl+th>total||total-ihl-th!=1024{return None}
+     Some((u16::from_be_bytes([packet[ihl],packet[ihl+1]]),
+         u32::from_be_bytes(packet[ihl+4..ihl+8].try_into().ok()?),
+         1024))
+ }
+ const BOUNDARY_QPC_MAX:usize=8192;
+ struct BoundaryQpcRow{proxy:u16,source:u16,seq:u32,len:u16,
+     before:i64,after:i64}
+ struct BoundaryQpcTrace{
+     tag:&'static str,frequency:i64,rows:Vec<BoundaryQpcRow>,
+     dropped:u64,
+ }
+ impl BoundaryQpcTrace{
+     fn new(tag:&'static str)->Option<Self>{
+         let signed=cfg!(feature="m0_v4_probe") &&
+             std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+             std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+             std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+             std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1") &&
+             std::env::var("WBD_PLAN029_P2_BOUNDARY_QPC_SCENE").ok().as_deref()==Some("1");
+         signed.then(||Self{tag,frequency:reply_qpc_frequency().unwrap_or(0),
+             rows:Vec::with_capacity(BOUNDARY_QPC_MAX),dropped:0})
+     }
+     fn note(&mut self,key:(u16,u32,u16),source:u16,before:i64,after:i64){
+         if self.rows.len()>=BOUNDARY_QPC_MAX{
+             self.dropped=self.dropped.saturating_add(1);return
+         }
+         self.rows.push(BoundaryQpcRow{proxy:key.0,source,seq:key.1,
+             len:key.2,before,after});
+     }
+ }
+ impl Drop for BoundaryQpcTrace{
+     fn drop(&mut self){
+         for (chunk,rows) in self.rows.chunks(96).enumerate(){
+             let packed=rows.iter().map(|r|format!(
+                 "{}:{}:{}:{}:{}:{}",r.proxy,r.source,r.seq,
+                 r.len,r.before,r.after)).collect::<Vec<_>>().join(",");
+             eprintln!("PLAN029_H1977_{}_QPC_FINAL frequency={} total={} dropped={} chunk={} count={} rows={} source=original_native_windows_owner",
+                 self.tag,self.frequency,self.rows.len(),self.dropped,
+                 chunk,rows.len(),packed);
+         }
+         if self.rows.is_empty(){
+             eprintln!("PLAN029_H1977_{}_QPC_FINAL frequency={} total=0 dropped={} chunk=0 count=0 rows= source=original_native_windows_owner",
+                 self.tag,self.frequency,self.dropped);
+         }
+     }
+ }
+
  // Same bounded physical/locally-translated IPv4 buffer carries TCP and
  // UDP. Never use UDP's permitted datagram-drop policy for kernel TCP ACK,
  // FIN or DATA; a single lost translated ACK can force an OS RTO.
@@ -57,6 +118,7 @@
 // A Direct return quantum must match this TX loop's four 8-packet ingress
 // quanta. Otherwise the finite TCP return FIFO can fill under a real burst.
 const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
+ const POST_INGRESS_RETURN_QUANTUM:usize=BATCH;
  // An auto-reset mailbox wake is not a counting semaphore. When all 32
  // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
  // may already be queued even though Windows coalesced the SetEvent calls.
@@ -173,6 +235,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      tx_copied:AtomicU64,
      rx_delivered:AtomicU64,
      rx_tx_notify_attempts:AtomicU64,
+     post_ingress_direct_to_rx:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
      fresh_outer_bytes:AtomicU64,
@@ -200,6 +263,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      fn new(ack:u32,seq:u32)->Self{
          Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              rx_tx_notify_attempts:AtomicU64::new(0),
+             post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              fresh_outer_bytes:AtomicU64::new(0),
              startup_pad_npf_bytes:AtomicU64::new(0),
@@ -763,6 +827,20 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      }
      (order,19)
  }
+ // Within the 16 WinSock shards, WAIT_ANY also prefers a lower array
+ // index when multiple independent TCP flows are ready. Rotate the shard
+ // handles after the last SERVICED shard; a constantly ready earlier
+ // flow must not withhold the later flow's FD_READ/FD_WRITE. No extra
+ // waits, handles, scans of socket tables, timers or per-flow workers.
+ #[inline]
+ fn rotate_tcp_shard_wait_order(
+     order:&mut[u8;19],phase:u8,first_shard:u8
+ ){
+     let start=match phase%3{0=>3,1=>2,_=>1};
+     for i in 0..16{
+         order[start+i]=3+((usize::from(first_shard)+i)&15) as u8;
+     }
+ }
  // One existing TX timer due for exact reverse NAT cleanup, not a new worker.
  // A completed Direct TCP relay is not active socket work at 10ms cadence.
  fn closed_tcp_cleanup_wait_ms(now_ms:u64,deadline_ms:Option<u64>)->u32{
@@ -844,6 +922,18 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // WAIT_ANY's first-signaled-index bias is real even with one owner
      // and 16 fixed WinSock shard events. Rotate owner class priority.
      let mut wait_phase=0u8;
+     // The next WinSock shard after the last signaled one leads the
+     // existing WAIT_ANY group; Stop always keeps absolute priority.
+     let mut socket_wait_head=0u8;
+     let mut boundary_tx=BoundaryQpcTrace::new("TX_MAILBOX");
+     // Signed-only original normal small TCP: no product-default change.
+     let same_turn_direct=cfg!(feature="m0_v4_probe") &&
+         std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
+         std::env::var("WBD_PLAN029_NATIVE_V3_TRIAL").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_MIXED_SCENE").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_STEADY_QPC_SCENE").ok().as_deref()==Some("1") &&
+         std::env::var("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE").ok()
+             .as_deref()==Some("1");
      loop {
          if counters.stopping.load(Ordering::Acquire){
              log_padding_driver_receipt(&split,&counters);
@@ -885,6 +975,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              }
              let mut work=0;
              let mut direct_progress=false;
+             let mut fresh_direct_ingress=false;
              let mut still_ready=false;
              let now_ms=m2_clock().0/1_000_000;
              if let Some(owner)=split.as_mut(){
@@ -908,8 +999,21 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                          NativeReverse::InScratch(n)=>complete[..n].to_vec(),
                      };
                      let Some(queue)=direct_return.as_ref()else{return Err(BAD_STAGE)};
+                     let key=boundary_tx.as_ref()
+                         .and_then(|_|steady_local_data(&packet));
+                     let source=key.and_then(|k|
+                         owner.original_tcp_source_for_proxy(k.0));
+                     let before=if source.is_some(){
+                         reply_qpc_now().unwrap_or(0)
+                     }else{0};
                      match queue.try_send(packet){
-                         Ok(())=>{reverse_count+=1;},
+                         Ok(())=>{
+                             reverse_count+=1;
+                             if let (Some(t),Some(k),Some(src))=
+                                 (boundary_tx.as_mut(),key,source){
+                                 t.note(k,src,before,reply_qpc_now().unwrap_or(0));
+                             }
+                         },
                          Err(TrySendError::Full(packet))=>{
                              if is_direct_tcp_ipv4(&packet){
                                  // Preserve already NAT-translated TCP
@@ -942,10 +1046,66 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;
                  work+=staged.tunnel;
+                 fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;
                  // Exact exhaustion is a conservative next-turn hint.
                  still_ready|=staged.quantum_full();
                  if !staged.quantum_full(){break}
+             }
+             // The original 32-item return drain runs BEFORE stage_sources.
+             // A freshly NAT-translated Wintun segment otherwise waits for
+             // a second entire owner TX turn before reaching the sole RX
+             // Wintun writer. Keep older returns first, deliver <=8 fresh
+             // ones only in the explicitly signed steady test.
+             if same_turn_direct && fresh_direct_ingress{
+                 if let (Some(owner),Some(queue))=
+                     (split.as_mut(),direct_return.as_ref()){
+                     let mut scratch=[0u8;MAX_IPV4];
+                     let mut delivered=0usize;
+                     for _ in 0..POST_INGRESS_RETURN_QUANTUM{
+                         let Some(returned)=owner.poll_udp_reverse(
+                             &mut scratch,now_ms)else{break};
+                         let packet=match returned{
+                             NativeReverse::Owned(v)=>v,
+                             NativeReverse::InScratch(n)=>scratch[..n].to_vec(),
+                         };
+                         let key=boundary_tx.as_ref()
+                             .and_then(|_|steady_local_data(&packet));
+                         let source=key.and_then(|k|
+                             owner.original_tcp_source_for_proxy(k.0));
+                         let before=if source.is_some(){
+                             reply_qpc_now().unwrap_or(0)
+                         }else{0};
+                         match queue.try_send(packet){
+                             Ok(())=>{
+                                 delivered+=1;
+                                 if let (Some(t),Some(k),Some(src))=
+                                     (boundary_tx.as_mut(),key,source){
+                                     t.note(k,src,before,reply_qpc_now().unwrap_or(0));
+                                 }
+                             },
+                             Err(TrySendError::Full(packet))=>{
+                                 if is_direct_tcp_ipv4(&packet){
+                                     owner.requeue_tcp_reverse(packet)
+                                         .map_err(|_|BAD_STAGE)?;
+                                     break
+                                 }
+                                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+                             },
+                             Err(TrySendError::Disconnected(_))=>
+                                 return Err(BAD_STAGE),
+                         }
+                     }
+                     if delivered>0{
+                         counters.post_ingress_direct_to_rx.fetch_add(
+                             delivered as u64,Ordering::Relaxed);
+                         direct_progress=true;
+                         let _=direct_notify.wake();
+                     }
+                     if delivered==POST_INGRESS_RETURN_QUANTUM{
+                         still_ready=true;
+                     }
+                 }
              }
              // A bounded <=4-row parity quantum follows ready fresh sources.
              // In Fixed/Auto there is never an extra native parity worker.
@@ -1018,38 +1178,74 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                   let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
              };
-             // Only UDP and DNS TCP retain their original <=10ms poll.
-             // Direct TCP has exact fixed WinSock event shards, not a
-             // per-connection thread or unbounded periodic active scan.
+             // Only non-event UDP overflow and DNS retain <=10ms poll.
+             // The ordinary 16 Direct UDP sockets now signal native TX
+             // via their own WinSock events; no 1ms busy timer/worker.
              let timeout=if split.as_ref().is_some_and(|s|s.needs_10ms_poll()){
                  timeout.min(10)
              }else{timeout};
              let next_tcp_due=split.as_ref()
                  .and_then(|owner|owner.next_tcp_cleanup_due_ms());
              let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_tcp_due));
-             let mut handles=[0usize;3+16];
+             // 3 old owner events + 16 existing TCP shards + at most
+             // 16 ordinary Direct UDP FD_READ events = 35 (<64 WAIT_ANY).
+             // Overflow UDP keeps its old timed scan. No per-flow thread.
+             let mut handles=[0usize;3+16+16];
              handles[..3].copy_from_slice(&[
                  stop.handle(),tun.event(),notify.handle()]);
-             let mut count=3;
+             let mut base_count=3;
              if let Some(s)=split.as_ref(){
                  if let Some(events)=s.tcp_socket_wait_handles(){
                      if events.len()!=16{return Err(BAD_STAGE)}
                      handles[3..3+events.len()].copy_from_slice(events);
-                     count+=events.len();
+                     base_count+=events.len();
                  }
              }
-             // Compare only original *owned* handles. Stop always has
-             // absolute priority, and all 16 WinSock shard identities
-             // still map back to the same exact native actor.
-             let (order,n)=native_tx_wait_order(wait_phase,count==19);
-             if n==19{wait_phase=(wait_phase+1)%3;}
-             let mut ordered=[0usize;19];
+             let udp_count=if let Some(s)=split.as_ref(){
+                 let events=s.udp_socket_wait_handles();
+                 if events.len()>16{return Err(BAD_STAGE)}
+                 handles[base_count..base_count+events.len()]
+                     .copy_from_slice(events);
+                 events.len()
+             }else{0};
+             let (mut tcp_order,base_n)=
+                 native_tx_wait_order(wait_phase,base_count==19);
+             if base_n==19{
+                 rotate_tcp_shard_wait_order(
+                     &mut tcp_order,wait_phase,socket_wait_head);
+             }
+             let mut order=[0u8;35];
+             let mut n=1usize;order[0]=0; // Stop always absolute first.
+             // Rotate wake priority of the two genuine socket classes.
+             // Existing TCP within-class shard rotation stays unchanged.
+             if udp_count>0&&wait_phase%2==1{
+                 for j in 0..udp_count{
+                     order[n]=(base_n+j) as u8;n+=1;
+                 }
+             }
+             for &item in &tcp_order[1..base_n]{
+                 order[n]=item;n+=1;
+             }
+             if udp_count>0&&wait_phase%2!=1{
+                 for j in 0..udp_count{
+                     order[n]=(base_n+j) as u8;n+=1;
+                 }
+             }
+             if base_n==19||udp_count>0{
+                 wait_phase=(wait_phase+1)%3;
+             }
+             let mut ordered=[0usize;35];
              for i in 0..n{ordered[i]=handles[usize::from(order[i])];}
              match io::wait_ready(&ordered[..n],timeout){
                  Ok(WaitResult::Ready(index)) if order[index]==0=>Ok(true),
                  Ok(WaitResult::Ready(index))=>{
                      let kind=usize::from(order[index]);
-                     if kind>=3{
+                     if kind>=base_n{
+                         if let Some(s)=split.as_mut(){
+                             s.note_udp_socket_wake(kind-base_n);
+                         }
+                     }else if kind>=3{
+                         socket_wait_head=((kind-3+1)&15) as u8;
                          if let Some(s)=split.as_mut(){
                              s.note_tcp_socket_wake(kind-3);
                          }
@@ -1177,6 +1373,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // No thread/worker per flow, no second Wintun writer, no unbounded
      // backlog. UDP may still be discarded when the Wintun ring is full.
      let mut deferred_direct_tcp:Option<Vec<u8>>=None;
+     let mut boundary_rx=BoundaryQpcTrace::new("RX_WINTUN_SEND");
      loop{
          if counters.stopping.load(Ordering::Acquire){return OK}
          // Both Tunnel and Direct packets have ONE native Wintun TX owner.
@@ -1197,8 +1394,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  };
                  direct_processed+=1;
                  let tcp=is_direct_tcp_ipv4(&packet);
+                 let key=boundary_rx.as_ref()
+                     .and_then(|_|steady_local_data(&packet));
+                 let before=if key.is_some(){
+                     reply_qpc_now().unwrap_or(0)
+                 }else{0};
                  match tun.deliver_native_direct_response(&packet){
-                     Ok(())=>{},
+                     Ok(())=>{
+                         if let (Some(t),Some(k))=(boundary_rx.as_mut(),key){
+                             t.note(k,0,before,reply_qpc_now().unwrap_or(0));
+                         }
+                     },
                      Err(io::NativeIoError::BufferTooSmall) if tcp=>{
                          // Exact FIFO stays at the front until the real
                          // Wintun kernel ring has a slot. One retry every
@@ -1660,6 +1866,13 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          RX_WAKE_BATCH,
          session.counters.rx_tx_notify_attempts.load(Ordering::Relaxed),
          session.counters.rx_delivered.load(Ordering::Acquire));
+     if cfg!(feature="m0_v4_probe") &&
+         std::env::var("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE").ok()
+             .as_deref()==Some("1"){
+         eprintln!("PLAN029_H1972_POST_INGRESS_DIRECT_FINAL delivered={} max_per_turn={} sole_original_rx_owner=1 joined=true source=signed_original_native_only",
+             session.counters.post_ingress_direct_to_rx.load(Ordering::Acquire),
+             POST_INGRESS_RETURN_QUANTUM);
+     }
      #[cfg(feature="win_native_lock_profile")]
      {
          let p=&session.counters.profile;
@@ -1696,6 +1909,23 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  mod tests {
      use super::*;
      #[test]
+     fn plan029_h1977_only_valid_1024_tcp_data_sequenced_for_boundaries(){
+         let mut packet=[0u8;1064]; // 20 IPv4 + 20 TCP + 1024 bytes
+         packet[0]=0x45;packet[9]=6;
+         packet[2..4].copy_from_slice(&1064u16.to_be_bytes());
+         packet[20..22].copy_from_slice(&52008u16.to_be_bytes());
+         packet[24..28].copy_from_slice(&0x12345678u32.to_be_bytes());
+         packet[32]=0x50;
+         assert_eq!(steady_local_data(&packet),Some((52008,0x12345678,1024)));
+         packet[9]=17;assert_eq!(steady_local_data(&packet),None);
+         packet[9]=6;packet[2..4].copy_from_slice(&40u16.to_be_bytes());
+         assert_eq!(steady_local_data(&packet),None);
+         packet[2..4].copy_from_slice(&1064u16.to_be_bytes());
+         packet[32]=0x40;assert_eq!(steady_local_data(&packet),None);
+         packet[32]=0x50;packet[6..8].copy_from_slice(&0x2001u16.to_be_bytes());
+         assert_eq!(steady_local_data(&packet),None);
+     }
+     #[test]
      fn plan029_h1940_wait_any_rotates_tunnel_notify_tcp_without_stop_starvation(){
          let (a,na)=native_tx_wait_order(0,true);
          let (b,nb)=native_tx_wait_order(1,true);
@@ -1713,6 +1943,32 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          assert_eq!(n,3);
          assert_eq!(&no[..3],&[0,1,2]);
          assert_eq!(native_tx_wait_order(4,true).0,b);
+     }
+     #[test]
+     fn plan029_wait_any_rotates_all_sixteen_tcp_shards_no_cross_flow_hol(){
+         for phase in 0..3{
+             let first_tcp_index=match phase{0=>3,1=>2,_=>1};
+             for head in 0..16u8{
+                 let (mut order,n)=native_tx_wait_order(phase,true);
+                 assert_eq!(n,19);
+                 rotate_tcp_shard_wait_order(&mut order,phase,head);
+                 assert_eq!(order[0],0); // original Stop remains first
+                 assert_eq!(order[first_tcp_index],3+head);
+                 let mut once=order;
+                 once.sort_unstable();
+                 assert_eq!(once,std::array::from_fn(|i|i as u8));
+             }
+         }
+         // An absent Direct TCP actor retains the original exact three
+         // handles and never grows the hot Tunnel wait set.
+         let (mut no,n)=native_tx_wait_order(2,false);
+         assert_eq!(n,3);
+         rotate_tcp_shard_wait_order(&mut no,2,11);
+         assert_eq!(&no[..3],&[0,3+11,3+12]);
+         // The actual owner intentionally only rotates if n==19.
+         let (plain,only)=native_tx_wait_order(2,false);
+         assert_eq!(only,3);
+         assert_eq!(&plain[..3],&[0,1,2]);
      }
      #[cfg(feature="win_native_lock_profile")]
      #[test]

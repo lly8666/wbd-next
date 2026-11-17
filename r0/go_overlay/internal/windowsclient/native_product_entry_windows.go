@@ -44,14 +44,22 @@ func N4NativeRecoverState(ctx context.Context, statePath string) error {
     nativePath:=statePath+".n4-owned-wal"
     info,err:=os.Lstat(nativePath)
     if errors.Is(err,os.ErrNotExist){
-        // A crash may strand a route sidecar even if the primary WAL was
-        // lost. Do not display "recovered" while any owned route intent
-        // remains on disk without a verifiable journal.
+        // Route intents are not recoverable without their main WAL. Do
+        // not clean a sibling Defender rule while route state is unresolved.
         for _,candidate:=range []string{nativePath+".routes",statePath+".routes"} {
             _,sideErr:=os.Lstat(candidate)
-            if sideErr==nil{return fmt.Errorf("%w: orphan route sidecar without owned WAL: %s",ErrN4JournalConflict,candidate)}
+            if sideErr==nil{return fmt.Errorf("%w: orphan route sidecar without native WAL: %s",ErrN4JournalConflict,candidate)}
             if !errors.Is(sideErr,os.ErrNotExist){return sideErr}
         }
+        // Only a standalone exact owned Defender receipt can be recovered:
+        // checksum, generation-key, COM readback and CAS are all required.
+        // Intent, foreign/modified, corrupt or inaccessible state stays OPEN.
+        defender:=n4Plan029DefenderSidecarPath(statePath)
+        if _,sideErr:=os.Lstat(defender);sideErr==nil {
+            if e:=n4Plan029DefenderRecoverOrphan(ctx,defender,n4Plan029DefenderCOM{});e!=nil{
+                return fmt.Errorf("%w: orphan Defender exact recovery failed: %w",ErrN4JournalConflict,e)
+            }
+        }else if !errors.Is(sideErr,os.ErrNotExist){return sideErr}
         return nil
     }
     if err!=nil{return err}

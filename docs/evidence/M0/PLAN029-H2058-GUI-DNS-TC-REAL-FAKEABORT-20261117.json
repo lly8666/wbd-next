@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "date": "2026-11-17",
+  "checkpoint": "H2058",
+  "qualification": "USER_SELECTED_SOURCE_SCOPED_NOT_FULL_PLAN029",
+  "gui": {
+    "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+    "run": 44000778566,
+    "artifact_id": 14292293757,
+    "manifest": {
+      "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+      "exit_code": 0,
+      "product_pass": true
+    },
+    "real_winforms": "PASS_SCOPED_ORIGINAL_GUI_SOURCE_LOCKED",
+    "signed_go_tls_rust_wintun_npcap_os_applied": true,
+    "configured_outer_ipv4": 1460,
+    "windows_inner_os_mtu": 1389,
+    "linux_inner_os_mtu": 1389,
+    "cn_direct_udp": true,
+    "cn_direct_kernel_tcp": "PASS_REAL_KERNEL_TWO_LEG_TCP_32K",
+    "kernel_tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "kernel_tunnel_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "stop": "PASS_BOTH_OWNED",
+    "wal": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "cpu": "GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED",
+    "artifact_files": [
+      "report.json",
+      "mode-results/normal/artifact-manifest.json",
+      "direct-full.log",
+      "mode-results/normal/client.log",
+      "mode-results/normal/server.log"
+    ],
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44000778566"
+  },
+  "physical_tc": {
+    "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+    "run": 44001081299,
+    "artifact_id": 14292184174,
+    "manifest": {
+      "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+      "exit_code": 0,
+      "product_pass": true
+    },
+    "report_status": "PASS_REAL_WINDOWS_NPCAP_LINUX_KERNEL_UDP_TC_TCP53",
+    "guest_udp_received": true,
+    "udp_tc": 1,
+    "guest_tcp_received": true,
+    "tcp_a": 1,
+    "same_dns_id": "bce4",
+    "windows_physical_source": "172.24.80.1",
+    "same_guest_endpoint": "172.24.95.253",
+    "original_go_dns_selected_generation": 1,
+    "original_tls_sni_unchanged": "wbd-v4.example.test",
+    "no_cross_dns": true,
+    "configured_outer_ipv4": 1460,
+    "inner_os_both": 1389,
+    "cn_direct_udp": true,
+    "cn_direct_tcp": "PASS_REAL_KERNEL_TWO_LEG_TCP_32K",
+    "tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tunnel_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "stop": "PASS_BOTH_OWNED",
+    "reconnect": "NOT_RUN",
+    "exact_guest_log": [
+      "PLAN029_BOOTSTRAP_TC_GUEST_PHYSICAL_UDP_RX source=172.24.80.1 resolver=172.24.95.253 dns_id=bce4",
+      "PLAN029_BOOTSTRAP_TC_GUEST_SAME_ENDPOINT_TCP_A source=172.24.80.1 resolver=172.24.95.253 id=bce4"
+    ],
+    "artifact_files": [
+      "report.json",
+      "mode-results/normal/artifact-manifest.json",
+      "direct-full.log",
+      "mode-results/normal/client.log",
+      "plan029-bootstrap-tc-guest.log"
+    ],
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44001081299"
+  },
+  "fakeip_child_abort": {
+    "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+    "run": 44001435567,
+    "windows_job": 133766214310,
+    "ubuntu_job": 133766214645,
+    "conclusion_both": "success",
+    "case": "plan029_h2057_async_writer_real_child_abort_after_ack_recovers_identity",
+    "proof": "After real async filesystem fsync durable ACK, actual child process abort without Drop; parent real FS journal reopen restores original mapping/quarantine and denies new fake until durable",
+    "qualification": "PURE_COMPONENT_PROCESS_CRASH_NOT_ORIGINAL_WINTUN_OS_WAL_CRASH",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44001435567"
+  },
+  "five_class_small_quota": {
+    "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+    "run": 44001435567,
+    "status": "WINDOWS_UBUNTU_RUST_UNIT_PASS",
+    "cases": [
+      "plan029_h2051_small_classified_quotas_old_direct_tunnel_advance_and_recover",
+      "plan029_h2051_tcp_one_quantum_full_sibling_stays_live_then_recovers"
+    ],
+    "qualification": "PURE_COMPONENT_NOT_REAL_WINTUN_FIVE_CLASS_SAME_VM"
+  },
+  "retained_historical_failures": [
+    {
+      "case": "H2050",
+      "run": 43998891197,
+      "first": "WinForms extra Dispose handle race after actual native Stop exits1"
+    },
+    {
+      "case": "H2051",
+      "run": 43999380296,
+      "first": "physical UDP53 timeout before H2053 verified exact guest MAC"
+    }
+  ],
+  "retained_historical_success": [
+    "H2041 Game4 CN four-lane physical Stop",
+    "H2031 original padded encrypted capture"
+  ],
+  "open": [
+    "DNS physical TC second original reconnect generation",
+    "real product DNS cache TTL expiry and restart",
+    "unexpected WinForms/Go/Wintun OS WAL abort and FakeIP recovery",
+    "slow disk async writer with live native Direct/Tunnel",
+    "five-class concurrent small Wintun quota+RSS",
+    "GUI effective padding off/tls/flows and same VM off-on CPU/RSS"
+  ],
+  "invariant": "Only independently verified same-SOURCE native receipts count as physical success; unit tests never promote product crash/performance"
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "plan": "029",
+  "task": "H1961_FIX_H1960_ASSEMBLY_AND_GOVERNANCE",
+  "source_sha": "c34a6881dbe5de03715d1a0b3450a2ae5f830e5c",
+  "original_h1960_action": {
+    "cheap_run": 43795958866,
+    "cheap_conclusion": "failure",
+    "windows_source_build": 43795958940,
+    "windows_conclusion": "failure",
+    "gui_source_build": 43795958858,
+    "gui_conclusion": "failure",
+    "governance": 43795958874,
+    "governance_conclusion": "failure"
+  },
+  "original_product_windows_network": "NOT_RUN_SOURCE_PRECONDITION_FAILED",
+  "failure": "Manifest pinned Go overlay result_blob hashes outdated for 2 Go cold split files; tools/prepare_windows_wiring.py --check-only rejects before Windows Go compile",
+  "old_result_blobs": [
+    "2b0c2f9e4a19c7e6712d3ee6616c939d0100c8c0",
+    "7f1f0871f1c5bda88b099612eb190fcbea5e604d"
+  ],
+  "required_result_blobs": [
+    "b05ec84ae51db7d7928a9209740065d8f3015652",
+    "aa57526e43b13fa20bca34ba336997031f08b4d3"
+  ],
+  "governance_failure": "combined hot byte budget exceeded 32937>32768",
+  "catalog_unit_tests": "PASS_121",
+  "repo_structure": "FAIL_BUDGET",
+  "repair_scope": "ONLY_TWO_PINNED_GIT_RESULT_BLOBS_AND_SHORTENED_CURSOR_TEXT",
+  "not_modified": "historical evidence sources/status; Go business code; DNS fallback paths; Rust relay and Wintun; production early preconnect OFF",
+  "last_real_native_source": "ab224ae03cd362f758f98fb59fd097285e436ca6",
+  "h1961_verification": "NOT_RUN"
+}

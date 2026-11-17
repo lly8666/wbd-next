@@ -27,6 +27,7 @@ NATIVE_EXACT = frozenset({
     "crates/wbd-platform/src/windows_native_io.rs",
     "crates/wbd-platform/src/ipv4_tcp.rs",
     "crates/wbd-engine/src/lib.rs",
+    "crates/wbd-engine/src/v4_client_direct_udp_actor.rs",
     "crates/wbd-engine/src/v4_owner_crypto.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
 })
@@ -63,6 +64,9 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-v3-real-p2-bulk]",
     "[plan029-v3-real-direct-pressure]",
     "[plan029-real-product-cn]",
+    "[plan029-real-gui-cn]",
+    "[plan029-real-dns-tc]",
+    "[plan029-game4-cn-real]",
 )
 
 

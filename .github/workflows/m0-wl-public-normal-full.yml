@@ -1,3 +1,15 @@
+# H2002 exact normal physical-vs-FakeIP UDP 3size RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt] after bounded event wake; no TCP bulk, no extreme tests.
+# H1999 independent signed 3-size Direct UDP RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt], ordinary 120 per arm.
+# H1998 one ordinary unpaced 4MiB Direct P2 physical baseline + small Tunnel UDP [plan029-v3-real-p2-bulk]; no pressure/highrate/128/ABBA.
+ # H1997 one normal Direct latency source [plan029-v3-real-p2-rebuild] [plan029-v3-real-p2-steady-qpc]; NO post-ingress flush, preconnect, bulk, pressure or high-rate.
+# H1993 only one ordinary paced 1MiB physical/Direct+Tunnel-UDP P2;
+# passive existing 128KiB application milestone gaps, no 2048 QPC replay.
+# H1978 ONE normal Windows2025/WSL2 source-locked 2048x1KiB stall diagnosis
+# Original TX mailbox -> RX WintunSendPacket -> FD_READ QPC, retain real TCP retries
+# Test-only signed same-turn; no ordinary product change and no extreme CDN.
+# H1970 single original Windows2025/WSL2 steady 2048x1KiB QPC after H1969
+# doc-only push did not match on.push.paths: one SOURCE / one NativeOwner,
+# ordinary 1MiB paced P2 prerequisite; NO bulk/preconnect/CDN stress.
 # H1513 fix-only retry: SOURCE07312 loss0 did not start a native scenario;
 # original-Go test build refused a test-only extra runGame(nil) argument.
 # This source is a single loss0 scenario after Go compile; no loss30 yet.
@@ -80,6 +92,14 @@ on:
       - tests/test_delivery_ci.py
       - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
+      # Real original WinForms STA button fixture, signed same-Go/Rust product,
+      # and the independent cold physical UDP TC/TCP WSL2 DNS fixture.
+      # A fixture-only change must not silently skip its exact native Action.
+      # The separate native-scope gate still demands the explicit commit marker.
+      - tools/m0_plan029_gui_real_network_harness.cs
+      - tools/m0_plan029_gui_real_bridge.py
+      - tools/m0_plan029_bootstrap_tc_real_guest.py
+      - tools/m0_plan029_h2019_wire_padding_pcap.py
       - tools/m0_plan029_h1745_guest_dns_direct.py
       - tools/m0_plan029_h1745_win_client_dns_direct.py
       - tools/m0_plan029_h1760_guest_physical_direct_tcp.py
@@ -93,6 +113,8 @@ on:
       - tools/m0_plan029_h1770_windows_resolved_noncn_tunnel_udp.py
       - tools/m0_plan029_h1775_guest_cn_converse.py
       - tools/m0_plan029_h1775_windows_cn_converse.py
+      - tools/m0_plan029_h2010_shared_cdn_guest.py
+      - tools/m0_plan029_h2010_shared_cdn_windows.py
       - tools/m0_plan029_h1794_linux_real_tcp53.py
       - tools/m0_plan029_h1794_windows_real_app_tcp53.py
       - tools/m0_plan029_h1778_guest_bounded_flow_pressure.py
@@ -126,6 +148,14 @@ on:
       - tools/m0_plan029_h1933_abba_math.py
       - tests/test_m0_plan029_h1933_abba_math.py
       - tools/m0_plan029_h1815_p2_real_mixed.py
+      - tools/m0_plan029_h1966_steady_tcp_qpc.py
+      - tools/m0_plan029_h1966_steady_qpc.py
+      - tools/m0_plan029_h1972_gap_attribution.py
+      - tools/m0_plan029_h1977_boundary_qpc.py
+      - tests/test_m0_plan029_h1977_boundary_qpc.py
+      - tests/test_m0_plan029_h1993_p2_progress_gaps.py
+      - tests/test_m0_plan029_h1966_steady_qpc.py
+      - tests/test_m0_plan029_h1972_post_ingress.py
       - tools/m0_plan029_h1892_real_tcp128.py
       - tools/m0_plan029_h1898_highrate_tcp.py
       - tools/m0_plan029_h1926_small_tcp_latency.py
@@ -183,6 +213,7 @@ on:
       - crates/wbd-engine/src/lib.rs
       - crates/wbd-engine/src/v4_windows_native_tcp_direct.rs
       - crates/wbd-engine/src/v4_client_direct_tcp_nat.rs
+      - crates/wbd-engine/src/v4_client_direct_udp_actor.rs
       - crates/wbd-engine/src/v4_windows_native_split.rs
       - crates/wbd-engine/src/v4_windows_native_runtime.rs
       - crates/wbd-platform/src/windows_direct_tcp.rs
@@ -552,6 +583,10 @@ jobs:
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_native_ci_scope -v
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
+      - run: python -m unittest tests.test_m0_plan029_h1966_steady_qpc -v
+      - run: python -m unittest tests.test_m0_plan029_h1972_post_ingress -v
+      - run: python -m unittest tests.test_m0_plan029_h1977_boundary_qpc -v
+      - run: python -m unittest tests.test_m0_plan029_h1993_p2_progress_gaps -v
       - run: python -m unittest tests.test_m0_plan029_h1749_signed_direct_order -v
       - run: python -m unittest tests.test_m0_plan029_h1896_sustain_tcp -v
       - run: python -m unittest tests.test_m0_plan029_h1898_highrate -v
@@ -637,7 +672,8 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_plan029_h2019_wire_padding_pcap.py
+      - run: python -m py_compile tools/m0_plan029_d4_ipv6_route_probe.py tools/m0_plan029_h1815_p2_real_mixed.py tools/m0_plan029_h1966_steady_tcp_qpc.py tools/m0_plan029_h1966_steady_qpc.py tools/m0_plan029_h1972_gap_attribution.py tools/m0_plan029_h1977_boundary_qpc.py tools/m0_plan029_h1892_real_tcp128.py tools/m0_plan029_h1898_highrate_tcp.py tools/m0_plan029_h1814_p1_tunnel_ab.py tools/m0_wl_outer_pair.py tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -1002,12 +1038,19 @@ jobs:
       # One explicit current-SOURCE signed Windows NativeOwner V3
       # Tunnel-only qualification. No PLAN028 matrix or public default.
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]'))) && '1' || '0' }}
-      WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || '0' }}
+      WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-real-product-cn]') || contains(github.event.head_commit.message, '[plan029-real-gui-cn]') || contains(github.event.head_commit.message, '[plan029-real-dns-tc]')) && '1' || '0' }}
+      WBD_PLAN029_GUI_REAL_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1' || '0' }}
+      WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2059-gui-padding]') && '1' || '0' }}
+      WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2061-normal-reconnect]') && '1' || '0' }}
+      WBD_PLAN029_BOOTSTRAP_TC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1' || '0' }}
       # D4 read-only real Windows IPv6 route/Stop policy witness, same
       # explicit CN product as the existing signed Normal scene.
       WBD_PLAN029_D4_IPV6_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-d4-ipv6-probe]') && '1' || '0' }}
-      WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]')) && '1' || '0' }}
+      WBD_PLAN029_V3_DIRECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]')) && '1' || '0' }}
+      WBD_PLAN029_DIRECT_UDP_RTT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-h1999-direct-udp-rtt]') && '1' || '0' }}
+      WBD_PLAN029_SHARED_CDN_SCENE: '0' # H2016 user explicitly excluded same-IP contrary-domain scene
       WBD_PLAN029_APP_TCP53_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-tcp53]') && '1' || '0' }}
+      WBD_PLAN029_GAME4_CN_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-game4-cn-real]') && '1' || '0' }}
       WBD_PLAN029_STARTUP_PADDING_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-startup-pad]') && '1' || '0' }}
       WBD_PLAN029_DNS_CACHE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-dns-cache]') && '1' || '0' }}
       WBD_PLAN029_D3_MULTIA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]') && '1' || '0' }}
@@ -1025,6 +1068,15 @@ jobs:
       WBD_PLAN029_P2_PREWRITE_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-prewrite-qpc]') && '1' || '0' }}
       WBD_PLAN029_P2_PRECONNECT_AB_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-preconnect-ab]') && '1' || '0' }}
       WBD_PLAN029_P2_PRECONNECT_BULK_ABBA_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-preconnect-bulk-abba]') && '1' || '0' }}
+      # H1966: one ordinary 1KiB established-stream QPC, same original
+      # Rust owner. Explicit source marker, NEVER product default.
+      WBD_PLAN029_P2_STEADY_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-steady-qpc]') && '1' || '0' }}
+      # H1972: one signed normal steady 1KiB experiment ONLY, second
+      # bounded 8-return post-ingress mailbox flush; product default OFF.
+      WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-post-ingress-flush]') && '1' || '0' }}
+      # H1977: true Win32 same-QPC TX mailbox/RX Wintun Submit/FD_READ.
+      # Pure instrumentation, source-locked and OFF outside this one scene.
+      WBD_PLAN029_P2_BOUNDARY_QPC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-boundary-qpc]') && '1' || '0' }}
       WBD_PLAN029_P2_MIXED_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') || contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]')) && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || '0' }}
       # H1884: explicit one-run private V3 signed 4MiB A-B-B-A; absent for
       # every production GUI/user connection and ordinary P2 test.
@@ -1066,11 +1118,11 @@ jobs:
       # PLAN027 main push selects only Normal. Subsequent B public modes
       # each own a separate Action and reuse source-verified signed binaries,
       # never mixing throughput scenes on one VM.
-      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1581-win-auto-aes-mixed-150s]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1579-win30-cold-auth]') && 'normal' || github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && 'normal' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1506-win5-600]') || contains(github.event.head_commit.message, '[plan028-h1510-win5-loss0]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && 'game4' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && 'auto' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && 'fixed' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && 'game4-fec' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h900-game4fec6-off30]') && 'game4-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h899-native105-diag]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h897-normal100-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h896-game2fec6-off30]') && 'game2-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h892-normal50-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h890-normal-on300]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h888-managed105]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h886-game4-off]') && 'game4' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h884-paced-repair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h882-win-c2s105]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h880-loss-pair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h878-game2-off]') && 'game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h876-normal-pair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h875-normal-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-win-normal-on30]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-gamefec-cosmetic-native]') && 'game2-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-historical-order]') && 'through-game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-only]') && 'game2' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && 'normal' || contains(github.event.head_commit.message, '[wiring-full]') && 'all' || github.event_name == 'push' && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-game4-cn-real]') && 'game4' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1581-win-auto-aes-mixed-150s]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1596-same-account-win-linux-150s]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1579-win30-cold-auth]') && 'normal' || github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && 'normal' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-h1506-win5-600]') || contains(github.event.head_commit.message, '[plan028-h1510-win5-loss0]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && 'game4' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && 'auto' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && 'fixed' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && 'game4-fec' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h900-game4fec6-off30]') && 'game4-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h899-native105-diag]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h897-normal100-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h896-game2fec6-off30]') && 'game2-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h892-normal50-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h890-normal-on300]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h888-managed105]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h886-game4-off]') && 'game4' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h884-paced-repair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h882-win-c2s105]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h880-loss-pair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h878-game2-off]') && 'game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h876-normal-pair]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h875-normal-off]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-win-normal-on30]') && 'normal' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-gamefec-cosmetic-native]') && 'game2-fec' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-historical-order]') && 'through-game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-only]') && 'game2' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && 'normal' || contains(github.event.head_commit.message, '[wiring-full]') && 'all' || github.event_name == 'push' && 'normal' || inputs.public_mode || 'all' }}
       WBD_PLAN029_REAL_DEFAULT_OUTER1460: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-default1460]') && '1' || '0' }}
-      WBD_WL_NATIVE_OUTER_MTU_REQUEST: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-default1460]') && 'default1460' ||  github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && 'default1460' || contains(github.event.head_commit.message, '[plan028-h1581-win-auto-aes-mixed-150s]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1579-win30-cold-auth]') && 'default1460' || github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]')) && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && 'default1460' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && 'default1460' || inputs.native_outer_mtu || 'legacy1400' }}
+      WBD_WL_NATIVE_OUTER_MTU_REQUEST: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-default1460]') && 'default1460' ||  github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && 'default1460' || contains(github.event.head_commit.message, '[plan028-h1581-win-auto-aes-mixed-150s]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1579-win30-cold-auth]') && 'default1460' || github.ref_name == 'main' && ((contains(github.event.head_commit.message, '[plan028-h1572-bob-normal-control]') || (((contains(github.event.head_commit.message, '[plan028-h1577-win5-capacity-115]') || contains(github.event.head_commit.message, '[plan028-h1574-win5-native-150s]')) || contains(github.event.head_commit.message, '[plan028-h1573-mixed-peer-persona]')) || contains(github.event.head_commit.message, '[plan028-h1571-bob-real-kernel-listener]'))) || contains(github.event.head_commit.message, '[plan028-h1570-bob-first-real-os-udp]') || contains(github.event.head_commit.message, '[plan028-h1566-real-server-cold-udp]') || contains(github.event.head_commit.message, '[plan028-h1565-winfirst-five-native]')) && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && 'default1460' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && 'default1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && 'default1460' || inputs.native_outer_mtu || 'legacy1400' }}
       WBD_WL_TLS_WIRE_AUDIT: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && '1' || '0' }}
-      WBD_WL_TUN_MTU: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-default1460]') && '1460' ||  github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && '1460' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && '1460' || inputs.native_outer_mtu == 'default1460' && '1460' || inputs.native_outer_mtu == '1460' && '1460' || inputs.native_outer_mtu == '1280' && '1280' || inputs.native_outer_mtu == '1500' && '1500' || '1400' }}
+      WBD_WL_TUN_MTU: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-product-cn]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-default1460]') && '1460' ||  github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1602-near-mtu-five-native]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-h1548-win1-linux4-600]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-linux-co-client]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-dual-original]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4off]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-auto]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-fixed6]') && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-physical-game4fec]') && '1460' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan028-win-physical-owned]') || contains(github.event.head_commit.message, '[plan028-win-physical-mtu-only]')) && '1460' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan028-win-tls-wire]') && '1460' || inputs.native_outer_mtu == 'default1460' && '1460' || inputs.native_outer_mtu == '1460' && '1460' || inputs.native_outer_mtu == '1280' && '1280' || inputs.native_outer_mtu == '1500' && '1500' || '1400' }}
       WBD_WL_ABBA_NATIVE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '1' || '0' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
@@ -1175,7 +1227,8 @@ jobs:
           $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
           if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
-             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
             # Real explicit CN product uses the SAME V3 ABI as a signed
             # private trial, but activation comes only from --split-enable.
             # Do not omit the ABI from the normal release DLL on product
@@ -1196,11 +1249,16 @@ jobs:
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
           if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
-             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
             # Real Windows native DLL load/export, before any driver install.
             # A manifest with ISA-L but no m0_v4_probe is NOT a V3 binary.
             & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start"); print("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS")'
             if($LASTEXITCODE -ne 0){throw 'PLAN029 source-built V3 actual Rust DLL export missing; refusing native Wintun'}
+            if($env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
+              & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_game_native_v4_start"); getattr(d,"wbd_m0_win_game_native_v4_tcp_control"); print("PLAN029_H2022_ACTUAL_WINDOWS_GAME4_NATIVE_SPLIT_AND_TCP_CONTROL_DLL_ABI_PASS")'
+              if($LASTEXITCODE -ne 0){throw 'Game4 CN V4 Rust native FFI absent before Wintun'}
+            }
           }
           [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;isa_l_source='c387163fcbca62701d646149564c550c78a4f985';
             native_fec_acceleration=$true;
@@ -1657,6 +1715,46 @@ jobs:
             $receipt | ConvertTo-Json | Set-Content $dnsIntent
             Write-Output 'PLAN029_H1794_OWNED_PHYSICAL_GUEST_TCP53_HYPERV_READBACK_PASS'
           }
+          # H2050: physical cold bootstrap TC=1 is a guest UDP53 *and*
+          # same-address TCP53 test BEFORE original TLS/Wintun/OS Applied.
+          # The previously configured Hyper-V grants covered only TCP443
+          # and test Direct TCP46112, so an NPF UDP53 query was dropped by
+          # the WSL firewall. Scope BOTH grants to this one original guest
+          # and source, with intent-before-apply and exact owned cleanup.
+          if($env:WBD_PLAN029_BOOTSTRAP_TC_SCENE -eq '1'){
+            if($env:WBD_PLAN029_V3_DIRECT_SCENE -ne '1' -or
+               $env:WBD_PLAN029_APP_TCP53_SCENE -eq '1'){
+              throw 'H2050 cold TC bootstrap has a distinct physical DNS grant'
+            }
+            foreach($proto in @('UDP','TCP')){
+              $dnsName=$ruleName+'-P029-BOOTDNS-'+$proto
+              $intent="result/wl-public/hyperv-bootstrap-$($proto.ToLowerInvariant())53-owned.json"
+              if(Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction SilentlyContinue){
+                throw 'foreign same-run bootstrap DNS rule'
+              }
+              [ordered]@{name=$dnsName;creator_id=[string]$creator[0].VMCreatorId;
+                protocol=$proto;port=53;local_ip=$guestIP;
+                remote_ip=[string]$source[0].IPAddress;
+                scope='H2050_COLD_ORIGINAL_PHYSICAL_DNS_TC_SINGLE_ENDPOINT';
+                state='INTENT'} | ConvertTo-Json | Set-Content $intent
+              New-NetFirewallHyperVRule -Name $dnsName -DisplayName $dnsName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol $proto -LocalAddresses $guestIP -RemoteAddresses ([string]$source[0].IPAddress) -LocalPorts '53' -ErrorAction Stop | Out-Null
+              $read=Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction Stop
+              $protocolNames=if($proto -eq 'UDP'){@('UDP','17')}else{@('TCP','6')}
+              if($null -eq $read -or $read.Direction -ne 'Inbound' -or
+                 $read.Action -ne 'Allow' -or
+                 [string]$read.Protocol -notin $protocolNames -or
+                 [string]$read.LocalPorts -ne '53' -or
+                 [string]$read.LocalAddresses -ne $guestIP -or
+                 [string]$read.RemoteAddresses -ne [string]$source[0].IPAddress -or
+                 [string]$read.VMCreatorId -ne [string]$creator[0].VMCreatorId){
+                throw 'H2050 actual HyperV physical DNS owned rule readback mismatch'
+              }
+              $receipt=Get-Content $intent -Raw | ConvertFrom-Json
+              $receipt.state='OWNED'
+              $receipt | ConvertTo-Json | Set-Content $intent
+            }
+            Write-Output ('PLAN029_H2050_TRUE_PHYSICAL_DNS_GUEST_HYPERV_UDP53_TCP53_EXACT_SCOPED source='+[string]$source[0].IPAddress+' guest='+$guestIP)
+          }
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){Write-Output 'WL_GAME_NATIVE_STAGE HYPERV_RULE_INSTALLED'}
           # Real NPF header showed original product SYN destination MAC equals
           # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
@@ -1692,10 +1790,13 @@ jobs:
           # Keep exactly ONE remote IPv4, one local IPv4 and one test port:
           # never grant the whole subnet, global Allow or a product TCP rule.
           # The rule is owned by this exact run and deleted in finally.
+          # H2038 Game4 CN uses the same real 203.0.113.77 original
+          # guest TUN source for Linux->Windows TCP45902, not 10.66.0.1.
           # H1937 all/CN/CN/all original Rust P1 application source
           # is the same public Linux TUN alias; H1936 A1 TCP was
           # blocked by the old 10.66.0.1-only Windows listener ACL.
           $tcpRemote=if($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1' -or
+                        $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1' -or
                         ($env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and
                          $env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1')){
             '203.0.113.77'
@@ -2432,9 +2533,18 @@ jobs:
                $pad.driver_copied_bytes -lt 1 -or
                $pad.ordinary_windows_linux_udp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
                $pad.ordinary_windows_linux_tcp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
-               $pad.stop -ne 'PASS_BOTH_OWNED'){
+               $pad.stop -ne 'PASS_BOTH_OWNED' -or
+               $pad.record_padding_policy -ne 'INDEPENDENT_0_TO_MIN_500_AND_ACTUAL_MTU_NO_PER_FLOW_BUDGET' -or
+               $pad.original_physical_eth0_tcpdump.capture -ne 'TRUE_WSL2_ETH0_TCPDUMP_FROM_ORIGINAL_WINDOWS_NPF' -or
+               $pad.original_physical_eth0_tcpdump.tls_looking_exact_record_count -lt 5 -or
+               $pad.original_physical_eth0_tcpdump.distinct_ciphertext_record_lengths -lt 3 -or
+               $pad.original_physical_eth0_tcpdump.record_length_spread_bytes -lt 50 -or
+               $pad.original_physical_eth0_tcpdump.raw_pcap_retained -ne $false -or
+               $pad.original_physical_eth0_tcpdump.max_captured_l3_bytes -gt $pad.original_physical_eth0_tcpdump.outer_mtu_limit){
+
               throw 'H1799 original Rust NPF copied M1 padding or two-OS native Stop unqualified'
             }
+            Write-Output 'PLAN029_H2019_REAL_WSL2_ETH0_TLS_CIPHERTEXT_RANDOM_LENGTH_MTU_AND_NATIVE_NPF_PAD_BOTH_STOP_PASS'
             Write-Output 'PLAN029_H1799_SIGNED_NORMAL_M1_PADDING_FLOWS_NPF_COPIED_BOTH_OS_STOP_PASS_SCOPED'
           }
           # Only the already-verified ORIGINAL strict native report can
@@ -2487,7 +2597,8 @@ jobs:
             }
             Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
           } elseif($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1') {
-            if($env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'){
+            if($env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
+             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
               $product=$result.plan029_real_product_normal_cn
               if($null -eq $product -or
                  $product.source_sha -ne $env:GITHUB_SHA -or
@@ -2499,6 +2610,32 @@ jobs:
                 throw 'H1840 explicit nonCI Normal CN split missing current-source actual signed Wintun/OS/direct+tunnel/Stop receipts'
               }
               Write-Output 'PLAN029_H1840_PRODUCT_NONCI_CN_SPLIT_SIGNED_TWO_OS_AND_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE -eq '1'){
+                $again=$result.plan029_gui_normal_reconnect
+                if($null -eq $again -or $again.source_sha -ne $env:GITHUB_SHA -or
+                  $again.status -ne 'PASS_SCOPED_REAL_WINFORMS_NORMAL_DISCONNECT_RECONNECT' -or
+                  $again.first_owned_wal_stop -ne $true -or
+                  $again.second_os_applied -ne $true -or
+                  $again.second_kernel_direct_tunnel_tcp_udp -ne $true -or
+                  $again.second_owned_wal_stop -ne $true -or
+                  $again.outer_configured -ne 1460 -or $again.inner_os_applied -ne 1389){
+                  throw 'H2061 ordinary original GUI user Disconnect->Connect did not reapply actual OS and both egress/Stop'
+                }
+                Write-Output 'PLAN029_H2061_TWO_ORDINARY_GUI_GENERATIONS_SIGNED_OS_AND_STOP_PASS'
+              }
+              if($env:WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE -eq '1'){
+                $pad=$result.plan029_gui_startup_padding_effective
+                if($null -eq $pad -or $pad.source_sha -ne $env:GITHUB_SHA -or
+                   $pad.status -ne 'PASS_SCOPED_ORIGINAL_GUI_FLOWS_M1_NPF_AND_OWNED_STOP' -or
+                   $pad.saved_gui -ne 'flows' -or $pad.go_effective -ne 'flows' -or
+                   [int]$pad.npf_copied_records -lt 1 -or
+                   [int]$pad.npf_copied_bytes -lt 1 -or
+                   $pad.stop -ne 'PASS_BOTH_OWNED' -or
+                   $pad.cpu_rss_ab -ne 'NOT_MEASURED'){
+                   throw 'H2059 original WinForms flows effective/real Rust M1 NPF/OS Stop missing'
+                }
+                Write-Output 'PLAN029_H2059_GUI_FLOWS_REAL_M1_NPF_AND_BOTH_OS_STOP_VERIFIED_NOT_AB_CPU'
+              }
             }
             # PLAN029 has real original Windows->Linux outward Tunnel TCP.
             # The historical 028 duplex inbound comparator remains intact
@@ -2843,6 +2980,21 @@ jobs:
           } elseif($env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1' -and $result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
             throw 'real public original Normal product proof not emitted'
           }
+          if($env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
+            $g4=$result.plan029_game4_cn_real
+            if($result.mode -ne 'game4' -or
+               $g4.source_sha -ne $env:GITHUB_SHA -or
+               $g4.lanes -ne 4 -or $g4.fec -ne 'off' -or
+               $g4.stop -ne 'PASS_BOTH_OWNED' -or
+               $g4.cn_real_direct_udp.windows.fake4 -notlike '198.18.*' -or
+               $g4.cn_real_direct_udp.linux.business_client_physical -ne $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4 -or
+               $g4.cn_real_direct_tcp.windows.app_bytes_echoed -ne 32768 -or
+               $g4.cn_real_direct_tcp.windows.tcp_half_close -ne $true -or
+               $g4.tunnel_tcp -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP'){
+              throw 'H2017 Game4 CN real Direct/Tunnel TCP/UDP, FakeIP physical ingress and Stop not proven'
+            }
+            Write-Output 'PLAN029_H2017_TRUE_GAME4_CN_FOUR_LANES_PHYSICAL_DIRECT_AND_TUNNEL_BOTH_STOP_PASS'
+          }
           if($env:WBD_WL_RUN_N0 -eq '1' -and
              $result.WL_N0 -notlike 'PASS_SCOPED_*'){
             throw 'one-mode native N0 throughput/TC/delivery measured FAIL; functional startup cannot qualify performance'
@@ -2991,6 +3143,43 @@ jobs:
             }
             Write-Output 'PLAN029_H1794_EXACT_TCP53_PHYSICAL_RULE_RECOVERED'
           }else{Write-Output 'PLAN029_H1794_NO_OWNED_GUEST_TCP53_RULE'}
+      - name: Recover H2050 exact owned WSL physical bootstrap UDP53 and TCP53
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $base='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT+'-P029-BOOTDNS-'
+          foreach($proto in @('UDP','TCP')){
+            $name=$base+$proto
+            $receipt="result/wl-public/hyperv-bootstrap-$($proto.ToLowerInvariant())53-owned.json"
+            $live=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+            if($null -eq $live){continue}
+            if(-not (Test-Path -LiteralPath $receipt)){
+              throw 'unreceipted cold bootstrap DNS HyperV rule; refuse broad deletion'
+            }
+            $owner=Get-Content $receipt -Raw | ConvertFrom-Json
+            $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+              Where-Object {$_.FriendlyName -eq 'WSL'})
+            $protocolNames=if($proto -eq 'UDP'){@('UDP','17')}else{@('TCP','6')}
+            if($owner.name -ne $name -or $owner.protocol -ne $proto -or
+               $owner.port -ne 53 -or $owner.state -notin @('INTENT','OWNED') -or
+               $creator.Count -ne 1 -or
+               [string]$creator[0].VMCreatorId -ne $owner.creator_id -or
+               [string]$live.VMCreatorId -ne $owner.creator_id -or
+               [string]$live.Protocol -notin $protocolNames -or
+               [string]$live.LocalPorts -ne '53' -or
+               [string]$live.LocalAddresses -ne $owner.local_ip -or
+               [string]$live.RemoteAddresses -ne $owner.remote_ip -or
+               $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){
+               throw 'foreign cold bootstrap DNS rule; preserve for manual WAL recovery'
+            }
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){
+              throw 'H2050 exact physical DNS grant still live after Stop'
+            }
+            Write-Output ('PLAN029_H2050_PHYSICAL_BOOTSTRAP_RULE_OWNED_STOP_REMOVED '+$proto)
+          }
       - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
         if: always()
         timeout-minutes: 2
@@ -3116,6 +3305,9 @@ jobs:
             result/wl-public/hyperv-rule.json
             result/wl-public/hyperv-direct-tcp-owned.json
             result/wl-public/hyperv-direct-dns-tcp-owned.json
+            result/wl-public/hyperv-bootstrap-udp53-owned.json
+            result/wl-public/hyperv-bootstrap-tcp53-owned.json
+            result/wl-public/plan029-bootstrap-tc-guest.log
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn

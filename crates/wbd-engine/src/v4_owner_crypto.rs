@@ -1025,7 +1025,7 @@ impl ProtectedScopedOwner {
         budget:FrameBudget,carrier_snapshot:u64,now:MonoNs,
         padding_bytes:usize,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
-        if padding_bytes>256{return Err(ProtectedCryptoError::Tx)}
+        if padding_bytes>500{return Err(ProtectedCryptoError::Tx)}
         self.seal_scoped_authenticated_one_padded(
             buffer,payload_len,budget,carrier_snapshot,now,
             false,AUTHENTICATED_LINK_KIND,padding_bytes,
@@ -1176,7 +1176,7 @@ impl ProtectedScopedOwner {
             }else{budget.record_payload_mtu} {
             return Err(ProtectedCryptoError::Tx)
         }
-        if padding_bytes>256||
+        if padding_bytes>500||
             (padding_bytes!=0&&kind!=AUTHENTICATED_LINK_KIND){
             return Err(ProtectedCryptoError::Tx)
         }

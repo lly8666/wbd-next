@@ -55,7 +55,9 @@ struct UdpFlow{
     key:UdpFlowKey,
     tuple:DirectUdpTuple,
     real4:u32,
+    // Rust field drop order: close the WinSock socket BEFORE its WSAEVENT.
     socket:PhysicalUdpSocket,
+    #[cfg(target_os="windows")]wake:Option<UdpReadWake>,
     last_used_ms:u64,
 }
 #[cfg(target_os="windows")]
@@ -70,11 +72,55 @@ struct PollFd{
 #[link(name="ws2_32")]
 extern "system"{
     fn WSAPoll(fd_array:*mut PollFd,fds:u32,timeout:i32)->i32;
+    fn WSACreateEvent()->usize;
+    fn WSACloseEvent(handle:usize)->i32;
+    fn WSAEventSelect(socket:usize,event:usize,mask:i32)->i32;
+    fn WSAEnumNetworkEvents(socket:usize,event:usize,
+        out:*mut WsaNetworkEvents)->i32;
 }
 const POLLRDNORM:i16=0x0100;
 const POLLERR:i16=0x0001;
 const POLLHUP:i16=0x0002;
 const POLLNVAL:i16=0x0004;
+// H2002: event-wake only the ordinary first 16 genuine Direct UDP sockets.
+// Larger admission quotas keep the previous bounded timed WSAPoll fallback.
+// Each event belongs to one physical socket, never a worker or Wintun reader.
+#[cfg(target_os="windows")]
+const UDP_EVENT_LIMIT:usize=16;
+#[cfg(target_os="windows")]
+const FD_READ:i32=1;
+#[cfg(target_os="windows")]
+const FD_CLOSE:i32=32;
+#[cfg(target_os="windows")]
+#[repr(C)]
+struct WsaNetworkEvents{mask:i32,errors:[i32;10]}
+#[cfg(target_os="windows")]
+struct UdpReadWake{handle:usize}
+#[cfg(target_os="windows")]
+impl UdpReadWake{
+    fn attach(socket:usize)->Option<Self>{
+        let handle=unsafe{WSACreateEvent()};
+        if handle==0||handle==usize::MAX{return None}
+        if unsafe{WSAEventSelect(socket,handle,FD_READ|FD_CLOSE)}!=0{
+            unsafe{WSACloseEvent(handle);}
+            return None
+        }
+        Some(Self{handle})
+    }
+    // WSAEventSelect manual events must be acknowledged AFTER recv, also
+    // when a signaled socket turns out empty. Otherwise WAIT_ANY spins.
+    fn acknowledge(&self,socket:usize)->Result<(),NativeUdpFault>{
+        let mut flags=WsaNetworkEvents{mask:0,errors:[0;10]};
+        if unsafe{WSAEnumNetworkEvents(socket,self.handle,&mut flags)}!=0{
+            return Err(NativeUdpFault::RemoteReceive)
+        }
+        Ok(())
+    }
+}
+#[cfg(target_os="windows")]
+impl Drop for UdpReadWake{
+    fn drop(&mut self){unsafe{WSACloseEvent(self.handle);}}
+}
 
 /// This actor is intentionally !Sync: only its one Rust native I/O owner
 /// mutates socket/flow policy. Other actors must hand over copied bounded
@@ -93,6 +139,14 @@ pub(crate) struct DirectUdpActor{
     retired:VecDeque<DirectUdpTuple>,
     #[cfg(target_os="windows")]
     poll_fds:Vec<PollFd>,
+    #[cfg(target_os="windows")]
+    poll_indices:Vec<usize>,
+    #[cfg(target_os="windows")]
+    wake_handles:Vec<usize>,
+    #[cfg(target_os="windows")]
+    wake_keys:Vec<UdpFlowKey>,
+    #[cfg(target_os="windows")]
+    pending_wake:Option<UdpFlowKey>,
     scan_cursor:usize,
     next_ipv4_id:u16,
 }
@@ -113,14 +167,36 @@ impl DirectUdpActor{
             lease4,fake_bounds,budget,
             flow_index:HashMap::new(),flows:Vec::new(),
             retired:VecDeque::new(),
-            #[cfg(target_os="windows")]poll_fds:Vec::new(),
+            #[cfg(target_os="windows")]poll_fds:Vec::with_capacity(64),
+            #[cfg(target_os="windows")]poll_indices:Vec::with_capacity(64),
+            #[cfg(target_os="windows")]wake_handles:Vec::with_capacity(UDP_EVENT_LIMIT),
+            #[cfg(target_os="windows")]wake_keys:Vec::with_capacity(UDP_EVENT_LIMIT),
+            #[cfg(target_os="windows")]pending_wake:None,
             scan_cursor:0,next_ipv4_id:1})
     }
     pub fn len(&self)->usize{self.flows.len()}
     pub fn max_flows(&self)->usize{self.budget.hard_flows}
     pub fn poll_work_bound(&self)->usize{self.flows.len().min(self.budget.rx_quantum)}
+    #[cfg(target_os="windows")]
+    pub fn wake_handles(&self)->&[usize]{&self.wake_handles}
+    #[cfg(target_os="windows")]
+    pub fn has_unwatched_flows(&self)->bool{
+        self.flows.len()>self.wake_handles.len()
+    }
+    #[cfg(target_os="windows")]
+    pub fn note_socket_wake(&mut self,index:usize){
+        self.pending_wake=self.wake_keys.get(index).copied();
+    }
     fn discard_index(&mut self,index:usize){
         let removed=self.flows.swap_remove(index);
+        #[cfg(target_os="windows")]
+        {
+            if self.pending_wake==Some(removed.key){self.pending_wake=None;}
+            if let Some(pos)=self.wake_keys.iter().position(|k|*k==removed.key){
+                self.wake_keys.swap_remove(pos);
+                self.wake_handles.swap_remove(pos);
+            }
+        }
         self.flow_index.remove(&removed.key);
         // Every removed socket is reported to the sole native TX owner;
         // its original 5tuple must retire from PacketIngress and FakeIP.
@@ -183,8 +259,19 @@ impl DirectUdpActor{
                     self.physical_source,self.physical_ifindex,remote
                 ).map_err(NativeUdpFault::Socket)?;
                 let i=self.flows.len();
+                #[cfg(target_os="windows")]
+                let wake=if self.wake_handles.len()<UDP_EVENT_LIMIT{
+                    UdpReadWake::attach(socket.poll_socket())
+                }else{None};
+                #[cfg(target_os="windows")]
+                if let Some(event)=wake.as_ref(){
+                    self.wake_handles.push(event.handle);
+                    self.wake_keys.push(key);
+                }
                 self.flows.push(UdpFlow{key,tuple:parsed.tuple,
-                    real4:u32::from(real4),socket,last_used_ms:now_ms});
+                    real4:u32::from(real4),socket,
+                    #[cfg(target_os="windows")]wake,
+                    last_used_ms:now_ms});
                 self.flow_index.insert(key,i);
                 i
             }
@@ -212,13 +299,20 @@ impl DirectUdpActor{
         if self.flows.is_empty(){return Ok(None)}
         let count=self.flows.len();
         let quantum=count.min(self.budget.rx_quantum);
-        // WSAPoll itself scans the array. Polling all 16k sockets on
-        // every ready-only quantum burns CPU and hides ready flows beyond
-        // the rx quantum. Populate only this rotating bounded slice;
-        // reuse the Vec capacity across service turns.
-        self.poll_fds.clear();
-        for step in 0..quantum {
+        // A genuine WSAEVENT wake names its exact socket. Give it the
+        // first slot, then preserve the old rotating bounded WSAPoll scan
+        // for the rest. Never scan the whole 16k table for one wake.
+        let preferred=self.pending_wake.take()
+            .and_then(|k|self.flow_index.get(&k).copied());
+        self.poll_indices.clear();
+        if let Some(i)=preferred{self.poll_indices.push(i);}
+        for step in 0..count{
+            if self.poll_indices.len()==quantum{break}
             let i=(self.scan_cursor+step)%count;
+            if !self.poll_indices.contains(&i){self.poll_indices.push(i);}
+        }
+        self.poll_fds.clear();
+        for &i in &self.poll_indices{
             self.poll_fds.push(PollFd{
                 socket:self.flows[i].socket.poll_socket(),
                 events:POLLRDNORM,revents:0,
@@ -226,26 +320,29 @@ impl DirectUdpActor{
         }
         let rc=unsafe{WSAPoll(self.poll_fds.as_mut_ptr(),quantum as u32,0)};
         if rc<0{return Err(NativeUdpFault::RemoteReceive)}
-        if rc==0{
+        if rc==0&&preferred.is_none(){
             self.scan_cursor=(self.scan_cursor+quantum)%count;
             return Ok(None)
         }
         for step in 0..quantum{
-            let i=(self.scan_cursor+step)%count;
+            let i=self.poll_indices[step];
             let flags=self.poll_fds[step].revents;
-            if flags&POLLRDNORM==0{
-                if flags&(POLLERR|POLLHUP|POLLNVAL)!=0{
-                    self.discard_index(i);
-                    return Err(NativeUdpFault::RemoteReceive)
-                }
-                continue
+            if flags&(POLLERR|POLLHUP|POLLNVAL)!=0{
+                self.discard_index(i);
+                return Err(NativeUdpFault::RemoteReceive)
             }
-            // A single bounded packet, not a socket read loop. If this
-            // flow is continuously ready it consumes at most one packet
-            // per service turn; other flows remain on the ready list.
+            if flags&POLLRDNORM==0&&preferred!=Some(i){continue}
+            // WSAEnum must ACK the exact event BEFORE the nonblocking recv:
+            // recv re-arms level-triggered FD_READ even when more datagrams
+            // were queued. An event/WSAPoll race still attempts one recv;
+            // WouldBlock itself re-arms the next real packet event.
             let mut buf=[0u8;2048];
             let flow=&mut self.flows[i];
-            let n=match flow.socket.receive_ready(&mut buf){
+            if let Some(w)=flow.wake.as_ref(){
+                w.acknowledge(flow.socket.poll_socket())?;
+            }
+            let result=flow.socket.receive_ready(&mut buf);
+            let n=match result{
                 Ok(n)=>n,
                 Err(e) if e.kind()==ErrorKind::WouldBlock=>continue,
                 Err(_)=>{
@@ -263,7 +360,9 @@ impl DirectUdpActor{
             ).map_err(NativeUdpFault::Socket)?;
             self.next_ipv4_id=self.next_ipv4_id.wrapping_add(1);
             flow.last_used_ms=now_ms;
-            self.scan_cursor=(i+1)%count;
+            self.scan_cursor=if preferred==Some(i){
+                (self.scan_cursor+1)%count
+            }else{(i+1)%count};
             return Ok(Some(bytes))
         }
         self.scan_cursor=(self.scan_cursor+quantum)%count;
@@ -291,6 +390,12 @@ impl DirectUdpActor{
         self.flows.clear();
         self.flow_index.clear();
         self.retired.clear();
+        #[cfg(target_os="windows")]
+        {
+            self.wake_handles.clear();
+            self.wake_keys.clear();
+            self.pending_wake=None;
+        }
         n
     }
 }
@@ -317,6 +422,40 @@ mod tests{
         actor.budget.rx_quantum=16;
         assert_eq!(actor.poll_work_bound(),0);
         assert_eq!(actor.budget.rx_quantum,16);
+        #[cfg(target_os="windows")]
+        {
+            assert_eq!(UDP_EVENT_LIMIT,16);
+            assert!(actor.wake_handles().is_empty());
+            assert!(!actor.has_unwatched_flows());
+            actor.note_socket_wake(0);
+            assert!(actor.pending_wake.is_none());
+        }
+    }
+    #[cfg(target_os="windows")]
+    #[test]
+    fn plan029_windows_udp_wake_two_queued_datagrams_rearm_after_each_recv(){
+        use std::net::UdpSocket;
+        use std::os::windows::io::AsRawSocket;
+        #[link(name="kernel32")]
+        extern "system"{fn WaitForSingleObject(handle:usize,ms:u32)->u32;}
+        let socket=UdpSocket::bind("127.0.0.1:0").unwrap();
+        socket.set_nonblocking(true).unwrap();
+        let fd=socket.as_raw_socket() as usize;
+        let wake=UdpReadWake::attach(fd).expect("WinSock event registration");
+        let peer=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let addr=socket.local_addr().unwrap();
+        peer.send_to(b"p1",addr).unwrap();
+        peer.send_to(b"p2",addr).unwrap();
+        let mut buf=[0u8;32];
+        // One registered FD_READ, then the first receive must re-arm a
+        // SECOND event for data that was already queued before that read.
+        assert_eq!(unsafe{WaitForSingleObject(wake.handle,1500)},0);
+        wake.acknowledge(fd).unwrap();
+        assert_eq!(socket.recv(&mut buf).unwrap(),2);
+        assert_eq!(unsafe{WaitForSingleObject(wake.handle,1500)},0);
+        wake.acknowledge(fd).unwrap();
+        assert_eq!(socket.recv(&mut buf).unwrap(),2);
+        assert_ne!(unsafe{WaitForSingleObject(wake.handle,0)},0);
     }
     #[test]
     fn plan029_actor_never_sends_local_fake_or_raw_dns53_on_physical_socket(){

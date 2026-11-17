@@ -56,7 +56,8 @@ func m0WindowsGameOriginalClientFlow(
 }
 
 func runM0NativeV4WindowsGame(
- ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
+ ctx context.Context,o m0NativeV4Options,localIP [4]byte,
+ physicalMTU uint32,physicalIfIndex uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
  pathChanged <-chan struct{},
@@ -163,7 +164,7 @@ func runM0NativeV4WindowsGame(
  if err!=nil{return err}
  recordOffer,err:=m0WindowsV4ColdRecordOffer(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
-  o.ConnectionMTU,physical,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
+  o.ConnectionMTU,physicalMTU,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
  )
  if err!=nil{return err}
  cfg:=realityfront.ClientAdmissionConfig{
@@ -200,6 +201,27 @@ func runM0NativeV4WindowsGame(
  fmt.Printf("WBD_WINDOWS_AUTHENTICATED_NETWORK_SELECTION mode=%v auto_lease=%t lease=%s cipher=%d source=original_TLS_Rust_snapshot\n",
   o.Mode,o.AutoLease,o.Lease4,appliedCipher)
  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d client_record_offer=%d requested_tun_mtu=%d\n",count,fecMode,cfg.ClientLimit,o.TunnelMTU)
+ // Game4 uses the SAME cold CN/IP/DNS snapshot as Normal. No Go
+ // packet hot pump, separate Wintun, DNS fallback or Game FEC rewrite.
+ var gameSplit *realityfront.V4WindowsColdSplitConfig
+ var synthetic netip.Addr
+ if o.SplitEnable{
+  if o.Mode!=m0WinModeGame4||o.RouteMode!="bypass-lan-cn"||
+    o.StartupPaddingMode!=""&&o.StartupPaddingMode!="off"{
+   return fmt.Errorf("PLAN029 Game4 split requires CN mode and Game padding off")
+  }
+  gameSplit,err=m0Plan029TrialCold(o,netip.AddrFrom4(localIP),
+    physicalIfIndex,o.Lease4.Addr(),o.TunnelMTU,group.Epoch())
+  if err!=nil||gameSplit==nil{
+   return fmt.Errorf("PLAN029 Game4 original cold split: %w",errors.Join(err,windowsclient.ErrN4NativeGuard))
+  }
+  if gameSplit.TCPSynthetic4==[4]byte{}{
+   return windowsclient.ErrN4NativeGuard
+  }
+  synthetic=netip.AddrFrom4(gameSplit.TCPSynthetic4)
+  fmt.Printf("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE direct_dns=%v tunnel_dns=%v cn_rows=%d domains_bytes=%d fakeip=owned single_wintun=1\n",
+    o.DirectDNS4,o.DNSServers4[0],len(gameSplit.CN),len(gameSplit.Domains))
+ }
  fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER")
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
@@ -217,11 +239,18 @@ func runM0NativeV4WindowsGame(
   stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,
   pathMTU:o.ConnectionMTU, // NPF outer IPv4/TCP, never derived Wintun inner MTU
   disableOuterRepair:o.DisableOuterRepair,
+  plan029Cold:gameSplit,
   errors:make(chan error,1),
  }
  fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_ENTER")
- product,err:=windowsownerlease.PrepareOriginalTLSNativeGameProduct(
-  ctx,group,tun,plan,o.Installation,group.Epoch(),packet)
+ var product *windowsownerlease.OriginalTLSNativeProductSession
+ if synthetic.Is4(){
+  product,err=windowsownerlease.PrepareOriginalTLSNativeGameProductWithSyntheticTCP(
+   ctx,group,tun,plan,o.Installation,group.Epoch(),packet,synthetic)
+ }else{
+  product,err=windowsownerlease.PrepareOriginalTLSNativeGameProduct(
+   ctx,group,tun,plan,o.Installation,group.Epoch(),packet)
+ }
  if err!=nil{return err}
  fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_DONE")
  stop:=func()error{
@@ -264,6 +293,19 @@ func runM0NativeV4WindowsGame(
  select{
  case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,stop())
  default:
+ }
+ if synthetic.Is4(){
+  // Game4 first TLS owner and Rust TX prepare only AFTER OS Applied and
+  // MTU CAS. The same product WAL owns a single exact Defender Allow.
+  port,tcpErr:=group.Plan029GamePrepareNativeTCPAfterOSApply(ctx)
+  if tcpErr!=nil{return errors.Join(fmt.Errorf("Game4 CN TCP PREPARE: %w",tcpErr),stop())}
+  if tcpErr=product.Plan029ArmOwnedDirectTCP(ctx,port);tcpErr!=nil{
+   return errors.Join(fmt.Errorf("Game4 CN exact Defender Allow: %w",tcpErr),stop())
+  }
+  if tcpErr=group.Plan029GameEnableNativeTCPAfterDefender(ctx,port);tcpErr!=nil{
+   return errors.Join(fmt.Errorf("Game4 CN TCP ENABLE: %w",tcpErr),stop())
+  }
+  fmt.Printf("WBD_PLAN029_GAME4_CN_NATIVE_TCP_ENABLED port=%d synthetic=%s owned_allow=1\n",port,synthetic)
  }
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d fec=%d tls=1 rust=1 native_os_wal=1\n",count,fecMode)
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
