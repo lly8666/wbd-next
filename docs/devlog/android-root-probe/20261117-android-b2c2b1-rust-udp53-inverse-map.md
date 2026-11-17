@@ -23,3 +23,11 @@
 SOURCE `1288f1f714f6fc9a1f2e732b077ba3e455da6b25` [Action44090496300](https://github.com/lly8666/wbd-next/actions/runs/44090496300)，B2c2b1真实完整IPv4/UDP packet的双向反向映射、checksum、ID/QNAME防串答、64槽容量/Stop三项Rust Host测试PASS；第四项`b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation` FAIL，原因是畸形长度测试把`p[24]`（UDP长度**高字节、本来就是0**）再次设0，报文本身完全合法，所以产品候选正确接受为`Ok(())`。只将该负例改为`p[25]=0`（实际原UDP长度低字节非0、必须被拒绝），不改变解析/映射实现。前一Action的FAIL如实保留；必须新SOURCE重新跑全套Actions，不使用旧Native/APK/Linux工件代替同源证据。
 
 **路径触发补充**：夹具修正SOURCE `fb2f1ca2038d22362f7c1cfdd6065d3760e4d873` 通过governance但旧产品工作流paths不包含新增`crates/wbd-engine/src/v4_android_dns_udp_flow.rs`，因此**没有触发新产品测试**。本次改`android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh`（已包含在产品workflow路径）同时强制检查真正破坏UDP长度低字节的负例；新SOURCE将实跑整套Jobs，不把单独governance success当软件PASS。
+
+## B2c2b1 同源完整结论（2026-11-17）
+
+最终SOURCE `17a5322e39893ceac567f461a8a345c25d17305b` 的 [Action44091367458](https://github.com/lly8666/wbd-next/actions/runs/44091367458) **10/10 Jobs SUCCESS**：专门Job`b2c2b-rust-dns-udp-inverse-map`4项真实IPv4/UDP原包正反转换/完整IPv4+UDP伪头check/IP原地址和端口恢复/大小写QNAME+ID防串答/容量64和过期12秒、Stop/错误包零修改全部PASS，输出`ANDROID_B2C2B1_RUST_UDP_DNS53_BOUNDED_INVERSE_PACKET_HOST_PASS_NOT_LIVE`。原B2c2a单Rust TUN入口Host5、原M3、B1普通真UDP/TCP DNS、B2 CN8503真源+许可证、B2c1真实Host socket绑定、原Go/Rust Android ARM64 Bionic ELF、正式签名Root APK带同源CN8503 TXT/MIT source hash，原Linux WBD server真实TLS/认证租约/原Rust M4双向UDP/Stop oracle `ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN` 均同源通过。ARM64 Cuttlefish准入Job `KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE` 仅生成资格票据、**没有运行Android guest**。
+
+**保留首次失败**：SOURCE `1288f1f...` [Action44090496300](https://github.com/lly8666/wbd-next/actions/runs/44090496300) 新映射3项PASS但畸形包第四夹具误将本来为零的UDP长度高字节再次写零、生产正确接受，因此测试FAIL；修复只改低字节为0并通过同SOURCE CI，不改生产NAT逻辑。SOURCE `fb2f1ca...`因旧workflow未把新Rust文件列入paths仅跑治理，不能当产品验证，新SOURCE `17a5322...`同时改`android/root-native/ci`真实触发10/10。
+
+**软件完成 ≠ Android实际DNS**：UDP NAT组件只是Android ARM64原Rust引擎中已编译但`tun_worker`/认证RX写TUN尚不调用的候选，故真实原M4仍原加密DATA透明发送、`hijack_enabled=0`。没有Tunnel1.1.1.1独立DNS真实收发、物理CN223.5.5.5 Android netd真实socket、TCP53响应、system Resolver路由或普通App→KSU su/E2E。P2/P3仍ENV_BLOCKED，P5真实实体最后另授权，不动main/M0。
