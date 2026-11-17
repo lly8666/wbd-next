@@ -2,7 +2,7 @@
  "schema_version": 1,
  "id": "android-root-native-client",
  "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
- "summary": "A6 callback Java+ARM64 APK构建+Linux oracle PASS；Stop sh -n修复待验；KVM缺失/P2-P3 NOT_RUN。",
+ "summary": "A6 Java16断言、Stop POSIX11断言、ARM64 APK与Linux oracle PASS；owner.pid 3字段兼容门待验；KVM/P2/P3 NOT_RUN。",
  "owner": "Android 原生客户端适配（用户独立授权，非M0）",
  "stage": "experimental",
  "development_branch": "experiment/android-temp-root-probe",

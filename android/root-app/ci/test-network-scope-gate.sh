@@ -20,5 +20,18 @@ for method in ("registerNetworkCallback(", "unregisterNetworkCallback(",
  assert method in s, method
 assert "postDelayed(" not in s, "no 1-second steady Network watcher"
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
+assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
+# The exact POSIX read arity must preserve kernel starttime for both
+# existing old 2-field receipts and current 3-field receipts.
+import subprocess,tempfile
+with tempfile.TemporaryDirectory() as td:
+    for payload,expected in (("123 9876","123|9876|"),
+                             ("123 9876 abcdef","123|9876|abcdef")):
+        p=Path(td)/"owner.pid"
+        p.write_text(payload+chr(10))
+        cmd='read pid start generation < "$1"; printf "%s|%s|%s" "$pid" "$start" "$generation"'
+        result=subprocess.run(["sh","-c",cmd,"sh",str(p)],capture_output=True,text=True,check=True)
+        assert result.stdout==expected,(payload,result.stdout)
+print("ANDROID_ROOT_OWNED_PID_2_AND_3_FIELD_PARSE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

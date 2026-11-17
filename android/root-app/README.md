@@ -92,3 +92,5 @@ available. The previous macOS QEMU guest hang is retained as
 ENV_BLOCKED historical evidence, not silently overwritten.
 
 The exact Stop shell is now emitted by source-shared `RootStopCommand.build()` and its **production command string** is passed to a real host `sh -n` parser during Actions. This additional cold-control test catches syntax faults that the Android Java compiler alone cannot detect. Neither a successful parse nor APK build is a substitute for true rooted Android Stop.
+
+Owner takeover protection now parses both the legacy two-field and new three-field root-only `owner.pid` records into three separate shell variables, so the generation token is not mistakenly folded into the kernel process starttime. This is checked by a host POSIX shell fixture in Actions; runtime Root safety remains Android-P3 NOT_RUN.

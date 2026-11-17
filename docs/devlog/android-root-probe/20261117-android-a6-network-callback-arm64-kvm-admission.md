@@ -22,3 +22,9 @@ Java状态门、Android Native Go/Rust构建、签名APK、原Linux server oracl
 [A6 原始 Action44055024821](https://github.com/lly8666/wbd-next/actions/runs/44055024821) SOURCE `44ddd7e2902bb143f74b0dca82a5cad234cfe946`：5/5 Jobs SUCCESS，原 M3 wire、ARM64 原Go/Rust、Java NetworkScopeGate **16项断言**、同源Root APK、原Linux真实协议oracle通过。ARM64 Linux runner实测 `arch=aarch64`，但 `/dev/kvm` **NOT_AVAILABLE**；host admission JSON `ENV_BLOCKED`，P2/P3/正式Android数据严格NOT_RUN。
 
 首次 Action 的 Root Stop 内部脚本尚缺一层 `fi`；Java/App编译未发现，设备也未执行过 Stop。因此不是既有运行 PASS。此后将 Stop 脚本抽到正式产品用的 `RootStopCommand.build()`，增加严格16进制128bit会话 token 验证及 host JVM 使用 **`sh -n` 解析实际生产脚本文本** 的回归测试，后续同源 Action 通过才能标语法门 PASS。真实 Root Stop/Android路由回收仍NOT_RUN。
+
+## 本轮 Stop 命令语法复核结果与 PID 收据回归
+
+[修复版 Action44055875477](https://github.com/lly8666/wbd-next/actions/runs/44055875477) SOURCE `79f029867fd20d0196c26e78de30762b91b9676e`：Java NetworkCallback 16断言 PASS；`RootStopCommand.build()` 实际生成的 `su -c` 脚本接受 POSIX `sh -n` 解析，11断言 PASS；同SOURCE ARM64 Native 与 Root APK BUILD_PASS。同SOURCE 原Linux WBD server oracle PASS，Android runtime依然NOT_RUN。**这些是Java/语法/构建结果，不是设备Root Stop PASS。**
+
+复审发现新 owner.pid 为 `pid starttime token` 三字段，旧启动冲突检查却用两变量 `read oldpid oldstart`，POSIX read 会把第三字段合并进 `oldstart`，可能错过仍活旧进程。本次修正为 `read oldpid oldstart oldgeneration`，新增 host shell 读取旧2字段和新3字段的兼容回归门；仅确保 launch 防抢占条件正确解析，不冒充 Android 上真实 PID 启停已运行。

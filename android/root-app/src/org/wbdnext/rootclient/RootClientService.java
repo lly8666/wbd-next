@@ -221,7 +221,7 @@ public final class RootClientService extends Service {
         // Verify prior root PID is not still live BEFORE replacing a
         // previous owner's lockless cold stage or installing a second TUN.
         shell.append("if [ -f \"$p/owner.pid\" ]; then ");
-        shell.append("read oldpid oldstart < \"$p/owner.pid\"; ");
+        shell.append("read oldpid oldstart oldgeneration < \"$p/owner.pid\"; ");
         shell.append("case \"$oldpid\" in ''|*[!0-9]*) exit 43;; esac; ");
         shell.append("if [ -r \"/proc/$oldpid/stat\" ]; then ");
         shell.append("set -- $(cat \"/proc/$oldpid/stat\"); ");
