@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android ARM64原生/Root APK BUILD_PASS，同源原Linux服务器TLS/租约/UDP/Stop oracle PASS（bb30ed3/Action44041601960）；Android KSU E2E仍NOT_RUN。",
+  "summary": "Android ARM64原生与APK BUILD_PASS、同源Linux原server oracle PASS；macOS AOSP ARM64 guest ENV_BLOCKED；真实Android E2E NOT_RUN。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -278,7 +278,7 @@
     }
   ],
   "limitations": [
-    "旧Root探针 PASS 只证明隔离内核/能力；普通系统DNS/真实WBD服务器、生产内核路由与真热点尚无产品证据。",
+    "旧KSU x86仅证明真实App su UID0/CapEff/TUN/RAW等单侧能力，不曾同机配对adb root；P2 adb-root仅证明原生运行，P3必须普通App自己su，KSU实机最后验。",
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
     "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。",
