@@ -34,9 +34,14 @@ public final class RootDiagnosticReceiptTest {
                 throw new AssertionError("non-allowlisted/secret field");
         }
         if(RootDiagnosticReceipt.safeEventToken("secret_username")||
-           RootDiagnosticReceipt.safeEventToken("ROOT_PROCESS_EXIT_139")||
+           RootDiagnosticReceipt.safeEventToken("ROOT_PROCESS_EXIT_999")||
            RootDiagnosticReceipt.safeEventToken("10.0.0.1"))
             throw new AssertionError("untrusted input would be serialized");
+        // A real 139/132 shell exit is an allowed fixed failure class,
+        // not a dynamic user-provided string. 999 remains disallowed.
+        if(!RootDiagnosticReceipt.safeEventToken("ROOT_PROCESS_EXIT_139")||
+           !RootDiagnosticReceipt.safeEventToken("ROOT_PROCESS_EXIT_132"))
+            throw new AssertionError("fixed native failure classes were lost");
         for(int i=0;i<1200;i++){
             if(!receipt.record(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT))
                 throw new AssertionError("rollover failed at "+i);

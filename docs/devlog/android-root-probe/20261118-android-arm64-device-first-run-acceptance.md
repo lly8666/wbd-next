@@ -30,3 +30,14 @@ ADB首测脚本除UID rule pref9600..9607/readback，还检查真正的**私有�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"新增真实原Go TLS租约/Rust接管/UID route撤回/native.Close joined Stop固定码与SIGILL/SIGSEGV固定FAIL，ADB原路由表/TUN资源回读、只读无Root改动。"}
 ```
+
+
+## A9b 第一次 Host 收据断言错误（修正前证据）
+
+`78541206ed951dd9e55cf015bb525eb4a95b110d` [Action44146410813](https://github.com/lly8666/wbd-next/actions/runs/44146410813) 的 `arm64-native`与已完成DNS/Rust/M3 Host Jobs PASS；`root-arm64-app`的真正Java测试在新增`RootDiagnosticReceiptTest.java`行39 **FAIL**：测试曾将 `ROOT_PROCESS_EXIT_139` 当不可信自由文本拒绝，A9b现已将它引入正式封闭`enum`，因此该断言与产品需求不一致。失败不是JNI/Go/Rust代码问题；本SOURCE签名APK构建在Java阶段被SKIP，依赖其的KSU guest同样SKIP，绝不记为设备PASS。原fail artifact/Action保留。
+
+仅把Host Java拒绝样例改成**不存在于封闭enum**的 `ROOT_PROCESS_EXIT_999`，同时正向确认现在合法的固定`ROOT_PROCESS_EXIT_139`与`ROOT_PROCESS_EXIT_132`均被允许。Go/Rust实际产物、Root Stop、UID/journal、TLS、DNS开关、生产APK不做其他修改。本改动须以全新的SOURCE运行完整Android产品CI裁决。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"保留A9b Java host测试在已有固定EXIT139枚举上误FAIL，修封闭enum的正反测试输入且不放宽任意动态文本；新源码整套CI重新验收。"}
+```
