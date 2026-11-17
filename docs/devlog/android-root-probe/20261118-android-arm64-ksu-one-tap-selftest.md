@@ -34,3 +34,14 @@ UI只保存或复制固定测试结论，不打印root原始stdout、路由具�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"纠正A10第一轮纯静态审计误拒绝固定SHA码与无持久TUN注释，增强真实aarch64 uname内核核验；所有KSU/TUN/真实设备成功仍待新同源APK CI与用户实测。"}
 ```
+
+
+## 已生成A10同源签名APK / 治理红门保留
+
+SOURCE `9a0bca267719ff9b08f2220fecbc93ca8e66825c` [Android ARM64 Action44155431882](https://github.com/lly8666/wbd-next/actions/runs/44155431882) 中 `root-arm64-app` **SUCCESS**：Java枚举/7个Python设备脚本Host/新的A10源码范围检查全部PASS，真实NDK`aarch64-linux-android28-clang`编译独立TUN ioctl/AF_PACKET helper、16KiB ELF+SHA256与原Go/Rust/CN8503同源、签名APK内再次验证均PASS。APK artifact `14361445819`：`android-root-original-arm64-app-9a0bca267719ff9b08f2220fecbc93ca8e66825c`，真实APK SHA256 `c45459174270b60bd64f59b0a97e6eb86c0c6951f03c24891b8083fbe05c8ebb`，NDK test helper SHA256 `67d61fb9ba43e4acb2c44fd53f51747b8f1bdccb283cc31f63a88441e22ee58a`。以上仅BUILD_PASS，不宣称真ARM64设备Root/TUN/路由PASS。
+
+同SOURCE [governance44155431908](https://github.com/lly8666/wbd-next/actions/runs/44155431908) **FAIL**：A10二次修复提交漏掉了同提交 `docs/features/entries/android-root-native-client.json`的更新，违反必须同提交功能卡变更的规则；严格保留该红门并在本docs-only更正提交中同步feature卡、历史两条红门证据和A10原SOURCE build PASS，不回写不存在的设备验收。真Android KSU授权、实际普通App UID规则劫持与真实TLS/Rust M4/系统DNS仍NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A10同SOURCE Java/Python/NDK arm64 16KiB/原Go-Rust/CN签名APK成功，artifact及sha已保全；第一版Host审计误FAIL与二次补丁缺feature卡治理FAIL完整保留，实体KSU/TLS/M4/DNS未测。"}
+```
