@@ -174,11 +174,28 @@
     },
     {
       "id": "H2059_gui_flows_effective_original_rust_npf",
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "action": 44005631732,
+      "status": "PASS_SCOPED_GUI_FLOWS_REAL_RUST_M1_NPF_AND_OS_STOP",
+      "test": "Original WinForms saved flows selection, Go source --check-config effective flows, original M1 actual NPF copied records+bytes, same real CN Direct/Tunnel kernel business and original owned Stop",
+      "non_goal": "H2031 physical encrypted padding repeat and off/on CPU RSS not in this scene",
+      "artifact": 14295665084,
+      "npf_records": 41,
+      "npf_bytes": 11466
+    },
+    {
+      "id": "H2061_normal_GUI_stop_reconnect_then_real_business_stop",
       "source": null,
       "action": null,
-      "status": "IMPLEMENTED_PENDING_TRUE_SIGNED_NATIVE_ACTION",
-      "test": "Original WinForms saved flows selection, Go source --check-config effective flows, original M1 actual NPF copied records+bytes, same real CN Direct/Tunnel kernel business and original owned Stop",
-      "non_goal": "H2031 physical encrypted padding repeat and off/on CPU RSS not in this scene"
+      "status": "NATIVE_SCENE_NOT_YET_RUN",
+      "test": "same original WinForms session user Disconnect->WAL restored->user Connect new original signed Go/Rust generation/1460/1389->real CN Direct/Tunnel TCP/UDP->owned Stop",
+      "excludes": [
+        "abrupt crash",
+        "slow disk",
+        "resource exhaustion",
+        "high rate or long CPU A/B",
+        "second bootstrap TC after reconnect"
+      ]
     }
   ],
   "selected_unverified": {
@@ -192,11 +209,10 @@
     "resource_full_FakeIP_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
     "resource_full_direct": "H1868_SCOPED_REAL",
     "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
-    "GUI_effective_padding": "H2059_SCOPED_REAL_GUI_FLOWS_NPF_PENDING_NATIVE_ACTION_NOT_YET_PASS",
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
-  "closure_status": "USER_SELECTED_PARTIAL_PASS_GUI_H2055_BOOTSTRAP_TC_H2056_FAKEIP_CRASH_PURE_H2057_OTHER_SCOPES_OPEN",
+  "closure_status": "H2059_ORDINARY_GUI_PADDING_PASS_H2061_NORMAL_GUI_RECONNECT_PENDING_NO_EXTREME_SCENES",
   "selected_verified": {
     "real_original_GUI_Connect_OS_Applied_Direct_Tunnel_Stop": {
       "source": "e586ca2396535781a41cea3a454da45c32808aa7",
@@ -218,9 +234,35 @@
       "action": 44001435567,
       "status": "PURE_COMPONENT_PASS_NOT_SAME_VM_STRESS"
     },
-    "Game4_padding_historical": "H2041_H2031_RETAINED_SEPARATE_SOURCE"
+    "Game4_padding_historical": "H2041_H2031_RETAINED_SEPARATE_SOURCE",
+    "GUI_flows_to_original_Rust_M1_NPF": {
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "action": 44005631732,
+      "status": "PASS_SCOPED_NATIVE_OS_KERNEL_AND_NPF_41_RECORDS_11466_BYTES"
+    }
   },
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json"
-  ]
+  ],
+  "user_active_scope_20261117": {
+    "mode": "ORDINARY_DAILY_USE_ONLY",
+    "required": [
+      "GUI saved/effective cold config",
+      "Normal 1460 and automatic1389",
+      "one DNS per direction and CN IP/domain Direct",
+      "real GUI Connect, Direct/Tunnel TCP UDP, Stop",
+      "server domain cold physical DNS same-endpoint TCP fallback first generation",
+      "GUI off default/flows effective and original Rust NPF",
+      "ordinary Disconnect then reconnect if H2061 passes"
+    ],
+    "explicitly_not_required": [
+      "extreme five-class concurrent exhaustion",
+      "artificially slowed disk",
+      "hard process/machine crash",
+      "high-load multi-VM/long CPU-RSS A/B",
+      "repeat H2031 physical padding or H2041 Game4",
+      "IPv6 broad suite, shared CDN double QNAME reverse"
+    ],
+    "not_measured_still_not_pass": "Excluded stress and performance remain NOT_RUN; no false full PLAN029 D1–D5/P1–P2 promotion"
+  }
 }

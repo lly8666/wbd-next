@@ -1041,6 +1041,7 @@ jobs:
       WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-real-product-cn]') || contains(github.event.head_commit.message, '[plan029-real-gui-cn]') || contains(github.event.head_commit.message, '[plan029-real-dns-tc]')) && '1' || '0' }}
       WBD_PLAN029_GUI_REAL_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1' || '0' }}
       WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2059-gui-padding]') && '1' || '0' }}
+      WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2061-normal-reconnect]') && '1' || '0' }}
       WBD_PLAN029_BOOTSTRAP_TC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1' || '0' }}
       # D4 read-only real Windows IPv6 route/Stop policy witness, same
       # explicit CN product as the existing signed Normal scene.
@@ -2609,6 +2610,19 @@ jobs:
                 throw 'H1840 explicit nonCI Normal CN split missing current-source actual signed Wintun/OS/direct+tunnel/Stop receipts'
               }
               Write-Output 'PLAN029_H1840_PRODUCT_NONCI_CN_SPLIT_SIGNED_TWO_OS_AND_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE -eq '1'){
+                $again=$result.plan029_gui_normal_reconnect
+                if($null -eq $again -or $again.source_sha -ne $env:GITHUB_SHA -or
+                  $again.status -ne 'PASS_SCOPED_REAL_WINFORMS_NORMAL_DISCONNECT_RECONNECT' -or
+                  $again.first_owned_wal_stop -ne $true -or
+                  $again.second_os_applied -ne $true -or
+                  $again.second_kernel_direct_tunnel_tcp_udp -ne $true -or
+                  $again.second_owned_wal_stop -ne $true -or
+                  $again.outer_configured -ne 1460 -or $again.inner_os_applied -ne 1389){
+                  throw 'H2061 ordinary original GUI user Disconnect->Connect did not reapply actual OS and both egress/Stop'
+                }
+                Write-Output 'PLAN029_H2061_TWO_ORDINARY_GUI_GENERATIONS_SIGNED_OS_AND_STOP_PASS'
+              }
               if($env:WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE -eq '1'){
                 $pad=$result.plan029_gui_startup_padding_effective
                 if($null -eq $pad -or $pad.source_sha -ne $env:GITHUB_SHA -or

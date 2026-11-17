@@ -99,6 +99,9 @@ def receipt_and_cleanup(gui):
   status.get("padding_npf_copied_records",0)>0 and
   status.get("padding_npf_copied_bytes",0)>0):
   raise RuntimeError("GUI flows has no real Rust M1 NPF copied bytes")
+ reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
+ if bool(status.get("normal_reconnect_completed"))!=reconnect:
+  raise RuntimeError("real original second GUI Connect receipt missing")
  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
                 "profiles.json","active.json","pending.json"):
   (gui/"data"/secret).unlink(missing_ok=True)
@@ -106,5 +109,6 @@ def receipt_and_cleanup(gui):
    "outer":1460,"inner_os":1389,"stop":"PASS_BOTH_OWNED",
    "cpu_scope":"GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED",
    "startup_padding_mode":expected,
+   "normal_reconnect_completed":reconnect,
    "npf_copied_records":status.get("padding_npf_copied_records",0),
    "npf_copied_bytes":status.get("padding_npf_copied_bytes",0)}

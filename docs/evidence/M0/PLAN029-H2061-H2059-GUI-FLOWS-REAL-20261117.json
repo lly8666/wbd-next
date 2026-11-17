@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source_sha": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+  "result": "PASS",
+  "artifact_verified": true,
+  "plan": "PLAN029",
+  "checkpoint": "H2061_H2059",
+  "date": "2026-11-17",
+  "run_id": 44005631732,
+  "source": "ORIGINAL_SIGNED_WINFORMS_GO_RUST_WINDOWS_2025_WSL2",
+  "manifest": {
+    "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+    "mode": "normal",
+    "exit_code": 0,
+    "product_pass": true
+  },
+  "report": {
+    "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "stop": "PASS_BOTH_OWNED",
+    "outer": 1460,
+    "inner_windows": 1389,
+    "inner_linux": 1389,
+    "gui_effective": "flows",
+    "rust_m1_npf_copied_records": 41,
+    "rust_m1_npf_copied_bytes": 11466
+  },
+  "original_GUI": "PASS_SCOPED_ORIGINAL_GUI_FLOWS_M1_NPF_AND_OWNED_STOP",
+  "artifacts": {
+    "id": 14295665084,
+    "files": [
+      "mode-results/normal/report.json",
+      "mode-results/normal/artifact-manifest.json",
+      "mode-results/normal/client.log"
+    ]
+  },
+  "original_marker": "WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT mode=flows copied_records=41 copied_bytes=11466 source=original_Rust_M1_authenticated_NPF_accepted",
+  "limitations": [
+    "No same-source off/on CPU/RSS A/B (user excludes extreme workload)",
+    "TLS-only option config and Rust pure policy available but not new native scene",
+    "H2031 independent original physical encrypted padding not replayed"
+  ],
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44005631732"
+}

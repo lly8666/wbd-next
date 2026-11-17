@@ -65,6 +65,9 @@ public static class Plan029GuiReal {
     seed.ContainsKey("tls-ca-pem"),"missing GUI source fields");
    bool flows=Environment.GetEnvironmentVariable(
     "WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1";
+   bool normalReconnect=Environment.GetEnvironmentVariable(
+    "WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1";
+   Need(!(flows && normalReconnect),"normal reconnect must not join padding flows scene");
    string expectedPadding=flows?"flows":"off";
    Need(seed.ContainsKey("startup-padding") &&
     Convert.ToString(seed["startup-padding"])==expectedPadding,
@@ -108,6 +111,43 @@ public static class Plan029GuiReal {
     Label(form,"mtuStatus").Contains("1460B") &&
     Label(form,"mtuStatus").Contains("1389B"),
     "GUI true OS Applied/MTU readback/Go Rust owner incomplete");
+   if(normalReconnect){
+    // Normal user-disconnect then user-connect only. No power cut,
+    // forced process kill, new service, injected network fault or timer.
+    Click(form,"断开连接");
+    clock.Restart();
+    while(clock.ElapsedMilliseconds<34000){
+     Tick();
+     if(!client.Active && Label(form,"state")=="未连接")break;
+    }
+    Need(!client.Active && Label(form,"state")=="未连接",
+     "first original GUI Stop did not finish before reconnect");
+    string firstWal=store.InRoot("data/network-state.json");
+    foreach(var suffix in new[]{"",".n4-owned-wal",".n4-owned-wal.routes",
+      ".routes",".plan029-defender-tcp"})
+     Need(!File.Exists(firstWal+suffix),"first GUI Stop owned residue "+suffix);
+    Console.WriteLine("PLAN029_H2061_NORMAL_GUI_FIRST_DISCONNECT_WAL_ABSENT_PASS");
+    Console.Out.Flush();
+    ready=false;applied=false;inner=false;
+    Click(form,"连接 / 切换");
+    clock.Restart();
+    while(clock.ElapsedMilliseconds<60000){
+     Tick();
+     if(ready && applied && inner && client.Active &&
+       Label(form,"state").Contains("系统 Applied") &&
+       Label(form,"mtuStatus").Contains("1460B") &&
+       Label(form,"mtuStatus").Contains("1389B"))break;
+     if(!client.Active && clock.ElapsedMilliseconds>12000)
+      throw new IOException("second original GUI child ended before Ready");
+    }
+    Need(ready && applied && inner && client.Active &&
+     Label(form,"state").Contains("系统 Applied") &&
+     Label(form,"mtuStatus").Contains("1460B") &&
+     Label(form,"mtuStatus").Contains("1389B"),
+     "second normal GUI original Go/Rust OS Applied missing");
+    Console.WriteLine("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED");
+    Console.Out.Flush();
+   }
    form.Capture(store.InRoot("data/plan029-gui-applied.png"));
    Console.WriteLine("PLAN029_REAL_GUI_WINFORMS_BUTTON_CONNECT_APPLIED_PASS");Console.Out.Flush();
    // Existing independent Windows and Linux kernel apps run while this
@@ -142,7 +182,8 @@ public static class Plan029GuiReal {
     "\"owned_stop\":true,\"business\":\"EXTERNALLY_CHECKED\","+
     "\"startup_padding_mode\":\""+expectedPadding+"\","+
     "\"padding_npf_copied_records\":"+paddingRecords+","+
-    "\"padding_npf_copied_bytes\":"+paddingBytes+"}");
+    "\"padding_npf_copied_bytes\":"+paddingBytes+","+
+    "\"normal_reconnect_completed\":"+(normalReconnect?"true":"false")+"}");
    Console.WriteLine("PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS");Console.Out.Flush();
    return 0;
   }catch(Exception e){

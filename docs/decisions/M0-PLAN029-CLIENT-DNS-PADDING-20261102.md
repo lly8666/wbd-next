@@ -101,3 +101,9 @@ H1832正式冷配置新增`split-enable`（默认false，显式开启下次连�
 收口需要IP＋域名分流、单DNS不回退、bootstrap不自环、真实TCP/UDP Direct/Tunnel回程、路由规模不随规则数增长、配置/GUI、有限填充及owned Stop均有对应证据；不能仅完成配置界面就关闭029。更新现有功能卡/registry/cursor/evidence，不新建交接系统。
 
 建链沿[TLS契约](../architecture/TLS_HANDSHAKE_CONTRACT.md)：预共享route-key不在线私有交换，业务填充不改外层标准握手。当前默认1460与Rust自动内层预算不变。
+
+## 2026-11-17 用户收口范围修订：仅日常典型场景
+
+此修订仅改变**本轮开发/测试预算**，不改变既有产品功能的安全边界、资源限额或历史证据事实。用户明确“不再搞特别极端工况测试和适配”，要求以最短路径完成普通 WinForms 保存→有效配置→Connect/正常 Disconnect→重新 Connect、默认1460/自动内层、CN IP＋域名/单DNS、真实Direct/Tunnel TCP/UDP及Normal Padding生效。已证H2055/2056/2059不同SOURCE原生结果保留；H2031密文Padding、H2041 Game4不重跑。
+
+本轮**不再补测/扩展**极端五类同时满额、慢磁盘人为阻塞、强制杀进程/整机、长时间高负载或大规模CPU/RSS A/B、IPv6旧矩阵、同海外CDN双域名相反出口。其证据范围保持`NOT_RUN`/历史组件限定，不得标`PASS`或因未跑就误判日常使用失败。保留旧契约整体D1–D5/P1–P2尚未全部达标的事实：仅按用户新限定口径进行**日常使用范围的 scoped closeout**，不要把它提升为全场景的完结。

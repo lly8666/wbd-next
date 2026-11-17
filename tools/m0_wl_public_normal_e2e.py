@@ -36,6 +36,7 @@ if p029_p1_cn and not p029_p1_policy:
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
+p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
 p029_boot_tc=os.environ.get("WBD_PLAN029_BOOTSTRAP_TC_SCENE")=="1"
 if p029_boot_tc and not (p029_product and p029_direct and not p029_gui and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
@@ -45,6 +46,11 @@ if p029_gui_padding and not (
     p029_gui and not p029_boot_tc and p029_direct and p029_product and
     native_outer=="default1460" and mode=="normal"):
  raise RuntimeError("H2059 GUI flows requires only original nonCI CN/1460 GUI; no private trial")
+if p029_gui_reconnect and not (
+    p029_gui and not p029_boot_tc and not p029_gui_padding and
+    p029_product and p029_direct and mode=="normal" and
+    native_outer=="default1460"):
+ raise RuntimeError("H2061 only ordinary original WinForms GUI normal Stop and fresh Connect")
 p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
 ipv6_probe_before=None
 ipv6_probe_active=None
@@ -635,7 +641,8 @@ sock.setblocking(False)
 seen=set()
 sent=0
 start=time.monotonic()
-deadline=start+max(65. if os.environ.get("WBD_PLAN028_WSL_OWNED_SWITCH")=="1" else 35.,hold+9.)
+runtime_cap=float(sys.argv[6]) if len(sys.argv)>6 else 0.
+deadline=start+max(65. if os.environ.get("WBD_PLAN028_WSL_OWNED_SWITCH")=="1" else 35.,hold+9.,runtime_cap)
 next_send=start
 last_diag=start
 ready_since=None
@@ -681,11 +688,18 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
       out/"plan029-h1745-owned-tun-alias.txt").is_file():
    raise RuntimeError("H1934 Linux original public TUN alias never applied")
  linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn else "10.66.0.1"
- la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
- wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done)],stdout=wlog,stderr=subprocess.STDOUT)
+ # Keep the same two real kernel app generators alive while the human GUI
+ # performs its ordinary first Disconnect / second Connect. The second
+ # generation is separately proved by later CN Direct and Tunnel apps.
+ app_runtime=["2",".09","130"] if p029_gui_reconnect else []
+ la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done),*app_runtime],stdout=llog,stderr=subprocess.STDOUT)
+ wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done),*app_runtime],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
- ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
+ ready(out/"client.log",
+       ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
+        if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
+       w,110 if p029_gui_reconnect else 30)
  if p029_boot_tc:
   if p029_boot_tc_guest.wait(timeout=8)!=0:raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
   recs=[v.split(" ",1)[1] for v in (out/"plan029-bootstrap-tc-guest.log").read_text().splitlines() if v.startswith("PLAN029_BOOTSTRAP_TC_GUEST_RECEIPT ")]
@@ -2484,6 +2498,33 @@ print(json.dumps(result),flush=True)
    text=(out/"client.log").read_text(errors="replace")
    if "PLAN029_REAL_GUI_WINFORMS_BUTTON_CONNECT_APPLIED_PASS" not in text or "PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS" not in text:
     raise RuntimeError("original native GUI marker missing despite separate kernel business")
+   if p029_gui_reconnect:
+    receipt=report["plan029_gui_live"]
+    lines=text.splitlines()
+    def exact_count(prefix):
+     return sum(1 for row in lines if row.startswith(prefix))
+    if (not receipt["normal_reconnect_completed"] or
+        exact_count("WBD_WINDOWS_CLIENT_READY")!=2 or
+        exact_count("WBD_WINDOWS_OS_APPLIED")!=2 or
+        exact_count("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=1389 applied=1389 outer_config=1460")!=2 or
+        exact_count("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")!=2 or
+        exact_count("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")!=2 or
+        "PLAN029_H2061_NORMAL_GUI_FIRST_DISCONNECT_WAL_ABSENT_PASS" not in text or
+        "PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED" not in text or
+        report["stop"]!="PASS_BOTH_OWNED" or
+        report["app_duplex"]!="PASS_ACTUAL_TWO_OS_KERNEL_UDP" or
+        report["tcp_duplex"]!="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"):
+     raise RuntimeError("H2061 ordinary GUI 2-generation OS Applied, both owned Stops and kernel business not proven")
+    report["plan029_gui_normal_reconnect"]={
+     "source_sha":os.environ["GITHUB_SHA"],
+     "status":"PASS_SCOPED_REAL_WINFORMS_NORMAL_DISCONNECT_RECONNECT",
+     "first_os_applied":True,"first_owned_wal_stop":True,
+     "second_os_applied":True,"second_kernel_direct_tunnel_tcp_udp":True,
+     "second_owned_wal_stop":True,"outer_configured":1460,
+     "inner_os_applied":1389,
+     "cold_physical_domain_dns_TC_after_reconnect":"NOT_RUN_SEPARATE_H2056_FIRST_COLD",
+     "injected_faults":"NONE"}
+    print("PLAN029_H2061_REAL_WINFORMS_TWO_NORMAL_CONNECTED_GENERATIONS_AND_OS_STOP_PASS",flush=True)
    if p029_gui_padding:
     # Separate source-locked GUI selector vs original Go effective config
     # vs post-business Rust M1 actual NPF wire copy. No ciphertext or
