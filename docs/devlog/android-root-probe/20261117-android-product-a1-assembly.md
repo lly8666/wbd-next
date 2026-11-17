@@ -35,3 +35,11 @@ Rust `wbd-platform::android_root_io` 是 Android-only owned TUN FD / exact Andro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A1因aws-lc-sys没有NDK交叉C编译器而失败；给cc-rs配置精确NDK两个目标CC/AR并保留失败证据，产品连接NOT_RUN。"}
 ```
+
+## A1 第五次构建：原Go生产源码的条件编译闭包
+
+SOURCE `067e3fe91b106abdd50f12a9e8e31ea241e1a01f` [Action44013768079](https://github.com/lly8666/wbd-next/actions/runs/44013768079) **FAIL/ORIGINAL_GO_BUILD_TAG_CLOSURE**。NDK/Bionic静态ABI、共享Rust `wbd-engine` Android64 release 构建成功；原Go `realityfront/bridge_v4_linux_server_product.go:180:11` 缺 `V4LinuxGameAuthenticatedLane`，因为Go生产源在对应Linux原产品发布构建中本就需要 `wbd_v4_fec2_product` tag，单 `wbd_v4_embedded_go` 不构成封闭编译集。参照仓库既有 `tools/arm64_public_go_rust_bundle.sh` 将Go tags修正为 `wbd_v4_embedded_go,wbd_v4_fec2_product`，共享Rust加 `fec2_product_record` 以保持链接符号一致（不启 `native_fec_acceleration`；A1只运行Normal/off的设计目标不变）。**这次失败不是Android真实接线失败或通过；产品C桥与Rust M4的Android条件编译仍待连通。**
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A1源锁Go生产模块缺Game类型，修正为既有Linux公共产品构建使用的Go/Rust feature闭包；仅build检查，实际AndroidWBD未接通。"}
+```

@@ -45,7 +45,10 @@ cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Normal/off only. Native ISA-L FEC is intentionally NOT a first-connect gate.
-features=m0_v4_probe,m0_v4_embedded_go
+# Original-Go Linux source has a *compile-time* Game-lane type dependency in
+# bridge_v4_linux_server_product.go even when product mode is Normal/off.
+# Match the mature public Go build tags; FEC stays disabled at runtime for A1.
+features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
 for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
   if [ "$triple" = aarch64 ]; then rust_target=aarch64-linux-android; else rust_target=x86_64-linux-android; fi
@@ -58,7 +61,7 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   cp "$lib" "out/android-product-a1/libwbd_engine-$goarch.so"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine"
-  (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
+  (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
   unset CGO_LDFLAGS
 done
 python3 - <<'PY'
@@ -80,7 +83,7 @@ def elf(path):
     return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-"rust_features":"m0_v4_probe,m0_v4_embedded_go","mode":"NORMAL_OFF_BUILD_ONLY",
+"rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_OFF_BUILD_ONLY",
 "android_abis":["arm64","amd64"],"go_os":"android","android_api":28,
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
 "elf":elf(x) if x.name.endswith(".so") else None} for x in art},
