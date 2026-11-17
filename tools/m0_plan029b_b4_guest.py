@@ -6,6 +6,7 @@ Physical CN DNS remains one endpoint; ordinary/all use real A. A test-owned
 The same 203.0.113.77 stays on the original server TUN for subsequent
 Tunnel generations. AF_PACKET witnesses cannot stand in for Win32 or Rust.
 """
+import hashlib
 import json
 import select
 import socket
@@ -33,6 +34,31 @@ raw_fake = 0
 start = time.monotonic()
 deadline = start + 155
 done_at = None
+
+def first_dns_fault(reason, sock, wire, peer):
+    # Source-locked original guest first fault: one bounded, hash-only
+    # witness before rejecting. Never persist DNS QNAME, packet, keys or pcap.
+    # Prior H2123 guest exited on an unknown ticket and the WinForms app
+    # later saw SERVFAIL; this distinguishes OS noise, rewritten IDs and
+    # a genuinely wrong physical vs original TUN egress.
+    lane = "physical" if sock is direct else "tunnel"
+    print("PLAN029B_B4_FIRST_UNEXPECTED_DNS " + json.dumps({
+        "reason": reason,
+        "lane": lane,
+        "source_ipv4": peer[0],
+        "source_port": peer[1],
+        "expected_source_ipv4": host if sock is direct else lease,
+        "wire_bytes": len(wire),
+        "wire_id": wire[:2].hex(),
+        "flags": wire[2:4].hex(),
+        "qdcount": wire[4:6].hex(),
+        "question_sha256_24": hashlib.sha256(wire[12:]).hexdigest()[:24],
+        "qname_matches_cn_ticket": wire[12:] == question,
+        "tail_qtype": wire[-4:-2].hex() if len(wire) >= 16 else "",
+        "expected_ids": sorted(x.hex() for x in dns_ids),
+        "already_accepted": sorted(observed),
+    }, sort_keys=True), flush=True)
+    raise RuntimeError("B4 original DNS first unexpected packet: " + reason)
 
 def raw_socket(interface):
     s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(0x0800))
@@ -79,20 +105,23 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                     raise RuntimeError("B4 original guest short echo")
                 continue
             if len(data) < 12 or data[4:6] != b"\x00\x01":
-                raise RuntimeError("B4 invalid DNS question header")
+                first_dns_fault("invalid_dns_header", sock, data, peer)
             ticket = data[:2]
             if ticket not in dns_ids:
                 # Windows NCSI can independently query the Tunnel DNS;
                 # it is not a B4 transaction. Never count it as PASS.
-                if sock is tunneled and unrelated < 12:
+                if (sock is tunneled and peer[0] == lease and unrelated < 12
+                        and data[2:6] == b"\x01\x00\x00\x01"
+                        and data[12:] != question):
                     unrelated += 1
                     continue
-                raise RuntimeError("B4 unexpected DNS ticket or physical fallback")
+                first_dns_fault("unexpected_ticket_or_physical_fallback", sock, data, peer)
             phase, dst, source = dns_ids[ticket]
             selected = direct if dst == physical else tunneled
             if sock is not selected or peer[0] != source or \
                data[2:6] != b"\x01\x00\x00\x01" or data[12:] != question:
-                raise RuntimeError("B4 wrong DNS upstream lane/qname/type " + phase)
+                first_dns_fault("wrong_upstream_lane_qname_type_" + phase,
+                                sock, data, peer)
             attempts[phase] = attempts.get(phase, 0) + 1
             if attempts[phase] > 2:
                 raise RuntimeError("B4 excessive upstream retransmission " + phase)

@@ -54,6 +54,16 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
             'len(observed) == 6',
         ):
             self.assertIn(gate, guest)
+        # The real H2123 native guest failed before logging which query
+        # caused an original WinForms DNS SERVFAIL. The first packet must
+        # include only bounded header/hashed question provenance, and fail
+        # closed; no blanket retry, foreign lane or silent fake DNS PASS.
+        self.assertIn("PLAN029B_B4_FIRST_UNEXPECTED_DNS", guest)
+        self.assertIn('hashlib.sha256(wire[12:]).hexdigest()[:24]', guest)
+        self.assertIn('"qname_matches_cn_ticket": wire[12:] == question', guest)
+        self.assertIn('peer[0] == lease and unrelated < 12', guest)
+        self.assertIn('first_dns_fault("unexpected_ticket_or_physical_fallback"', guest)
+        self.assertIn('raise RuntimeError("B4 original DNS first unexpected packet:', guest)
         self.assertIn("PLAN029B_B4_REAL_LINUX_EGRESS", guest)
         # H2123 actual signed first failure: physical CN A had no
         # positive answer and generic normal app used RFC1918 Direct;
