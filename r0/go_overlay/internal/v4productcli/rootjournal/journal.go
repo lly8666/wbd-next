@@ -237,17 +237,29 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     original.Nonce=hex.EncodeToString(nonce[:])
     if !original.valid(){return nil,fmt.Errorf("invalid verified root UID /32 / Network scope")}
     s:=&Session{run:run,journal:path,plan:original,lock:lock}
-    old,exists,err:=journalRead(path)
+    kind,exists,err:=readOwnedJournalVersion(path)
     if err!=nil{return nil,err}
     if exists{
-        if old.UID!=original.UID||old.Tun!=original.Tun||
-           old.Underlay!=original.Underlay{
-            return nil,fmt.Errorf("foreign previous root generation: manual recovery required")
+        if kind==groupVersion{
+            group,ok,e:=groupRead(path)
+            if e!=nil||!ok{return nil,fmt.Errorf("invalid prior group journal: %w",e)}
+            if group.Tun!=original.Tun||group.Underlay!=original.Underlay||
+               !hasUID(group.UIDs,original.UID){
+                return nil,fmt.Errorf("foreign previous group generation: manual recovery required")
+            }
+            gs:=&GroupSession{run:run,journal:path,plan:group,lock:lock}
+            if err=gs.removeExact(group);err!=nil{return nil,err}
+        }else{
+            old,ok,e:=journalRead(path)
+            if e!=nil||!ok{return nil,fmt.Errorf("invalid prior single journal: %w",e)}
+            if old.UID!=original.UID||old.Tun!=original.Tun||
+               old.Underlay!=original.Underlay{
+                return nil,fmt.Errorf("foreign previous root generation: manual recovery required")
+            }
+            // A previous process may have died between durable journal,
+            // route/rule add and Stop. Recover exactly its owned state.
+            if err=s.removeExact(old);err!=nil{return nil,err}
         }
-        // A previous process may have died between fsync, route add, rule
-        // add and Stop. Recover only if all present kernel entries have
-        // precisely the old root-owned UID/table/TUN identity.
-        if err=s.removeExact(old);err!=nil{return nil,err}
     }
     if err=s.requireEmpty();err!=nil{return nil,err}
     if err=journalCreate(path,original);err!=nil{return nil,err}

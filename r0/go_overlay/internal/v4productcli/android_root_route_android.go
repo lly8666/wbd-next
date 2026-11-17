@@ -17,17 +17,23 @@ import (
 // This runs only AFTER true standard Go TLS/credential/auto-/32,
  // exact OS lease readback, original Rust M4 loop start and FakeTCP DATA
 // ownership handoff. The Android APK supplies a ConnectivityManager handle
-// and ONE target application UID; uidrange policy NEVER applies to root or
-// system processes and CANNOT redirect this same root Go FakeTCP socket.
+// and one exact app UID or up to eight validated app UIDs. uidrange policy
+// NEVER applies to root/system or this original Go FakeTCP socket.
 func androidRootRouteAfterNative(
     c config,tun *ownedTun,authenticatedLease string,
 )(func()error,error){
-    if c.androidRouteUID==0{return nil,nil}
+    if c.androidRouteUID==0&&len(c.androidRouteUIDs)==0{return nil,nil}
     if os.Geteuid()!=0{return nil,fmt.Errorf("Android root route requires effective uid 0")}
     if tun==nil||tun.f==nil||c.androidNetworkHandle==0||
-       c.androidPhysicalMTU<576||c.androidRouteUID<10000||
-       c.androidRouteUID>1999999{
-        return nil,fmt.Errorf("Android root route needs a real authenticated session/Network and one app UID")
+       c.androidPhysicalMTU<576{
+        return nil,fmt.Errorf("Android root route needs a real authenticated session/Network")
+    }
+    if len(c.androidRouteUIDs)>0{
+        if c.androidRouteUID!=0||!rootjournal.ValidGroupUIDs(c.androidRouteUIDs){
+            return nil,fmt.Errorf("Android group route must contain 2..8 distinct sorted ordinary App UIDs")
+        }
+    }else if c.androidRouteUID<10000||c.androidRouteUID>1999999{
+        return nil,fmt.Errorf("Android single route UID must identify an ordinary App")
     }
     lease,err:=netip.ParsePrefix(authenticatedLease)
     if err!=nil||lease.Bits()!=32||!lease.Addr().Is4()||
@@ -65,6 +71,26 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if len(c.androidRouteUIDs)>0{
+        group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
+            UIDs:append([]int(nil),c.androidRouteUIDs...),
+            Tun:tun.name,Lease:lease.String(),Underlay:c.rawInterface,
+            NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
+        })
+        if e!=nil{return nil,e}
+        // This receipt is printed only AFTER the entire owned kernel
+        // group receives positive readback. Not a fake per-App ACK.
+        var uidText []string
+        for _,uid:=range c.androidRouteUIDs{
+            uidText=append(uidText,strconv.Itoa(uid))
+        }
+        fmt.Fprintf(os.Stderr,
+            "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=%s table=%d priorities=%d..%d lease=%s physical_ifindex=%d network_handle=%s\n",
+            strings.Join(uidText,","),rootjournal.Table,rootjournal.Priority,
+            rootjournal.Priority+len(c.androidRouteUIDs)-1,
+            lease,physical.Index,strconv.FormatUint(c.androidNetworkHandle,10))
+        return group.Stop,nil
+    }
     session,e:=rootjournal.New(runner,rootOnlyJournal,rootjournal.Plan{
         UID:c.androidRouteUID,Tun:tun.name,Lease:lease.String(),
         Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,

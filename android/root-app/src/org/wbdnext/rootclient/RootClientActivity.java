@@ -10,6 +10,7 @@ import android.text.InputType;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -19,6 +20,8 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 // Independent ARM64 Root product front door: NOT VpnService/Vpn.Builder,
 // no Java packet pump, no Java Go/TLS/AEAD, no JNI fake-ready symbols.
@@ -26,8 +29,10 @@ public final class RootClientActivity extends Activity {
     private final Handler ui=new Handler(Looper.getMainLooper());
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
+    private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverIP,serverName,user,password,routeKey,caPEM,serverPort;
-    private Spinner networks,applications;
+    private Spinner networks;
+    private LinearLayout appChoices;
     private TextView status;
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
@@ -57,23 +62,31 @@ public final class RootClientActivity extends Activity {
         networks.setAdapter(adapter);
     }
     private void chooseInstalledApplications(){
-        String previous=null;
-        int old=applications.getSelectedItemPosition();
-        if(old>=0&&old<installedApps.size())
-            previous=installedApps.get(old).packageName;
-        installedApps.clear();
-        installedApps.addAll(InstalledAppCatalog.launchable(this));
-        ArrayList<String> labels=new ArrayList<>();
-        int restore=0;
-        for(int i=0;i<installedApps.size();i++){
-            InstalledAppTarget entry=installedApps.get(i);
-            labels.add(entry.title());
-            if(entry.packageName.equals(previous))restore=i;
+        // Keep only exact package+UID matches from the previous snapshot.
+        // A package reinstalled with a new UID is NEVER auto-reselected.
+        Map<String,Integer> previous=new TreeMap<>();
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=checkedApps.get(app.packageName);
+            if(cb!=null&&cb.isChecked())previous.put(app.packageName,app.uid);
         }
-        if(labels.isEmpty())labels.add("NO visible installed launchable user app (fail closed)");
-        applications.setAdapter(new ArrayAdapter<>(this,
-            android.R.layout.simple_spinner_dropdown_item,labels));
-        if(!installedApps.isEmpty())applications.setSelection(restore);
+        installedApps.clear();
+        checkedApps.clear();
+        appChoices.removeAllViews();
+        installedApps.addAll(InstalledAppCatalog.launchable(this));
+        if(installedApps.isEmpty()){
+            TextView message=new TextView(this);
+            message.setText("No visible installed launchable user app (fail closed)");
+            appChoices.addView(message);
+            return;
+        }
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=new CheckBox(this);
+            cb.setText(app.title());
+            cb.setChecked(previous.containsKey(app.packageName)&&
+                previous.get(app.packageName)==app.uid);
+            appChoices.addView(cb);
+            checkedApps.put(app.packageName,cb);
+        }
     }
     private static boolean ipv4(String s){
         String[] parts=s.split("\\.",-1);
@@ -110,13 +123,15 @@ public final class RootClientActivity extends Activity {
             String secret=password.getText().toString();
             String key=routeKey.getText().toString().trim();
             String pem=caPEM.getText().toString().trim();
-            int appPosition=applications.getSelectedItemPosition();
-            if(appPosition<0||appPosition>=installedApps.size())
-                throw new IllegalArgumentException("Select a real installed application");
-            InstalledAppTarget targetApp=installedApps.get(appPosition);
-            if(!InstalledAppCatalog.stillSame(this,targetApp.packageName,targetApp.uid))
-                throw new IllegalArgumentException("Selected application removed or changed UID; refresh");
-            int target=targetApp.uid;
+            ArrayList<InstalledAppTarget> chosenApps=new ArrayList<>();
+            for(InstalledAppTarget app:installedApps){
+                CheckBox cb=checkedApps.get(app.packageName);
+                if(cb!=null&&cb.isChecked())chosenApps.add(app);
+            }
+            SelectedAppGroup chosen=SelectedAppGroup.from(
+                chosenApps,android.os.Process.myUid(),getPackageName());
+            if(!InstalledAppCatalog.stillSameGroup(this,chosen.packages,chosen.uids))
+                throw new IllegalArgumentException("Selected package/UID changed; refresh");
             int port=Integer.parseInt(serverPort.getText().toString().trim());
             if(!ipv4(peer)||sni.length()==0||sni.length()>253||
                account.length()==0||account.length()>128||
@@ -145,8 +160,8 @@ public final class RootClientActivity extends Activity {
             request.putExtra("port",port);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
-            request.putExtra("uid",target);
-            request.putExtra("target_package",targetApp.packageName);
+            request.putExtra("target_uids",chosen.uids);
+            request.putExtra("target_packages",chosen.packages);
             request.putExtra("has_ca",!pem.isEmpty());
             startForegroundService(request);
             status.setText("Root start requested; awaiting actual native Go proof");
@@ -187,12 +202,15 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         TextView targetHelp=new TextView(this);
-        targetHelp.setText("Select an actual installed app below; routing is by Linux UID. "
-            +"Packages sharing one UID share the same route. System/root and this app are excluded. "
-            +"Only packages visible under Android package-visibility rules appear.");
+        targetHelp.setText("Select up to 16 visible installed packages with at most 8 "
+            +"distinct kernel UIDs for this ONE authenticated WBD session. "
+            +"Packages sharing one UID are inseparable: selecting one UID routes ALL "
+            +"packages using that UID. System/root and this controller are excluded. "
+            +"Normal/off only; DNS and split/direct modes are NOT YET implemented.");
         pane.addView(targetHelp);
-        applications=new Spinner(this);
-        pane.addView(applications);
+        appChoices=new LinearLayout(this);
+        appChoices.setOrientation(LinearLayout.VERTICAL);
+        pane.addView(appChoices);
         Button refreshApps=new Button(this);
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());

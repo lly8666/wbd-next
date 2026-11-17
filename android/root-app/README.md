@@ -126,3 +126,28 @@ association, while the signed APK build checks narrow manifest queries.
 Android runtime PackageManager visibility, dynamic package broadcasts,
 real UID route readback and the complete Android↔Linux WBD link are
 still P3 **NOT_RUN**.
+
+## A8: actual bounded multi-UID Root route (Normal/off only)
+
+Select **1–16 installed visible launcher packages**. A cold, canonical
+selection resolves to **1–8 distinct sorted Android kernel UIDs**;
+packages sharing an UID get ONE kernel route and cannot be separated
+by a per-package policy. App UI, the foreground Service, and just before
+the `su -c` launch all re-read PackageManager identity. Any selected
+package removal/replacement/change requests an exact-generation Stop
+for the whole group. No per-packet Java or extra native dataplane.
+
+A single UID uses the existing original-Go `--android-route-uid`.
+Two to eight use `--android-route-uids=...`; both remain Android-only
+and mutually exclusive. Original Go standard TLS/credentials/verified
+/32 lease and Rust M4 must succeed BEFORE Go grants the selected UIDs.
+`rootjournal.NewGroup` uses the same owner.lock and journal pathname
+as the legacy single UID, with a version-2 fsync'd receipt and exact
+kernel readback of private table19842 and pref9600..9607. Each
+UID rule is individually installed, rollback/recovery/Stop are bounded
+and do not edit main/default netd routes. The legacy version-1 journal
+can be recovered with strict matching ownership.
+
+Current CI software proof is **NOT** actual Android ARM64 root / netd
+routing / KSU E2E. DNS, split/direct modes, live multi-App packets and
+physical switching remain NOT_RUN pending P2/P3/P5. 

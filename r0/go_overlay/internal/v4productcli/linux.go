@@ -122,7 +122,8 @@ type config struct{
     underlayBudgetMTU int
     androidNetworkHandle uint64 // selected physical ConnectivityManager Network
     androidPhysicalMTU uint32 // same interface cold readback
-    androidRouteUID int // optional explicit single APP UID, NEVER root/global
+    androidRouteUID int // legacy single ordinary App UID; never root/global
+    androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -177,6 +178,31 @@ func originalV4ColdAssocPeerPersona(assoc *faketcp.ServerAssociation,
  return realityfront.V4PeerLegacy,true
 }
 
+// Read a bounded, deterministic set of ordinary app UIDs. The caller's
+// PackageManager must authenticate each package->UID association first;
+// Go validates the kernel-safe numeric and canonical group boundary.
+func parseAndroidRouteGroupArg(s string)([]int,error){
+    if s==""{return nil,nil}
+    parts:=strings.Split(s,",")
+    if len(parts)<2||len(parts)>8{
+        return nil,fmt.Errorf("Android UID group needs 2..8 entries")
+    }
+    uids:=make([]int,0,len(parts))
+    previous:=0
+    for _,p:=range parts{
+        if p==""||strings.TrimSpace(p)!=p{
+            return nil,fmt.Errorf("Android UID group has empty/spaced entry")
+        }
+        uid,err:=strconv.Atoi(p)
+        if err!=nil||uid<10000||uid>1999999||uid<=previous{
+            return nil,fmt.Errorf("Android UID group must be unique, sorted, ordinary app UIDs")
+        }
+        previous=uid
+        uids=append(uids,uid)
+    }
+    return uids,nil
+}
+
 func parse(role string,args []string)(config,error){
     var c config
     c.role=role
@@ -186,6 +212,8 @@ func parse(role string,args []string)(config,error){
     androidNet:=flags.Uint64("android-network-handle",0,"Android client-only Network.getNetworkHandle() (mandatory; cold per-socket binding)")
     androidRouteUID:=flags.Int("android-route-uid",0,
         "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
+    androidRouteGroup:=flags.String("android-route-uids","",
+        "Android ARM64 Root ONLY: canonical 2..8 ascending, distinct ordinary App UIDs; mutually exclusive with --android-route-uid")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     defaultPort:=uint(0)
@@ -240,7 +268,13 @@ func parse(role string,args []string)(config,error){
         if *androidRouteUID!=0&&(*androidRouteUID<10000||*androidRouteUID>1999999){
             return c,fmt.Errorf("Android route UID must identify one non-system application")
         }
-    }else if *androidNet!=0||*androidRouteUID!=0{
+        if *androidRouteUID!=0&&*androidRouteGroup!=""{
+            return c,fmt.Errorf("Android single and group UID route flags are mutually exclusive")
+        }
+        var e error
+        c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
+        if e!=nil{return c,e}
+    }else if *androidNet!=0||*androidRouteUID!=0||*androidRouteGroup!=""{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1364,7 +1398,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // Android grant ONE app UID a dedicated private route. Never a global
     // default/main-table route, VpnService, FakeIP or early pre-auth grant.
     var undoRootRoute func()error
-    if runtime.GOOS=="android"&&c.androidRouteUID!=0{
+    if runtime.GOOS=="android"&&(c.androidRouteUID!=0||len(c.androidRouteUIDs)>0){
         var authorizedLease string
         if authenticated==nil{
             return errors.Join(fmt.Errorf("missing real authenticated lease session"),native.Close())

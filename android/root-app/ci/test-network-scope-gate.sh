@@ -15,6 +15,11 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/ci/InstalledAppTargetTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.InstalledAppTargetTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/ci/SelectedAppGroupTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.SelectedAppGroupTest
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
@@ -25,11 +30,18 @@ for method in ("registerNetworkCallback(", "unregisterNetworkCallback(",
 assert "postDelayed(" not in s, "no 1-second steady Network watcher"
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
 assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
-assert 'InstalledAppCatalog.stillSame(this,targetPackage,uid)' in s, "must verify real installed package before Root"
-assert 'watchSelectedPackage(targetPackage)' in s and 'stopWatchingSelectedPackage()' in s, "must stop on selected package changes"
+assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
+assert 'watchSelectedPackages(targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw group on package events"
+assert '"--android-route-uids"' in s and '"--android-route-uid"' in s, "real original Go CLI group and one-UID flags"
 a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
-assert 'target_package' in a and 'InstalledAppCatalog.stillSame(' in a
+assert 'target_packages' in a and 'target_uids' in a
+assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
+assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
+go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
+assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
+j=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
+assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleState(' in j
 m=Path("android/root-app/AndroidManifest.xml").read_text()
 assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' not in m, "narrow package visibility"
 # The exact POSIX read arity must preserve kernel starttime for both

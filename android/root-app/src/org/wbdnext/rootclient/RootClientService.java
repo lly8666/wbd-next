@@ -112,8 +112,9 @@ public final class RootClientService extends Service {
     }
     // Package removal/replacement is a protected Android system broadcast.
     // This is event-driven: a re-used UID must not remain routed to WBD.
-    private void watchSelectedPackage(final String targetPackage){
+    private void watchSelectedPackages(final String[] selectedPackages){
         final String generation=ownerToken;
+        final String[] owned=selectedPackages.clone();
         IntentFilter filter=new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
         filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
@@ -122,14 +123,18 @@ public final class RootClientService extends Service {
         BroadcastReceiver receiver=new BroadcastReceiver(){
             @Override public void onReceive(Context ctx,Intent event){
                 Uri changed=event==null?null:event.getData();
-                if(changed!=null&&targetPackage.equals(changed.getSchemeSpecificPart())&&
-                   generation!=null&&generation.equals(ownerToken)){
-                    requestStop("TARGET_APPLICATION_CHANGED — withdrawing UID policy");
+                if(changed==null||generation==null||
+                   !generation.equals(ownerToken))return;
+                String actual=changed.getSchemeSpecificPart();
+                for(String target:owned){
+                    if(target.equals(actual)){
+                        requestStop("SELECTED_APPLICATION_CHANGED — withdrawing all owned UID rules");
+                        return;
+                    }
                 }
             }
         };
-        // Only protected system broadcasts. Android14 explicitly permits
-        // the no-flags receiver registration for exclusively system events.
+        // Events from Android itself, no periodic package enumeration.
         registerReceiver(receiver,filter);
         installedPackageWatch=receiver;
     }
@@ -184,26 +189,26 @@ public final class RootClientService extends Service {
             String sni=intent.getStringExtra("sni");
             String user=intent.getStringExtra("user");
             int port=intent.getIntExtra("port",0);
-            int uid=intent.getIntExtra("uid",0);
-            String targetPackage=intent.getStringExtra("target_package");
+            int[] targetUids=intent.getIntArrayExtra("target_uids");
+            String[] targetPackages=intent.getStringArrayExtra("target_packages");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
             if(peer==null||sni==null||user==null||
                 !peer.matches("[0-9.]{7,15}")||
                 sni.length()==0||user.length()==0||
                 port<1||port>65535||
-               !InstalledAppCatalog.stillSame(this,targetPackage,uid)){
-                throw new IllegalArgumentException("Selected installed package/UID changed or invalid");
+               !InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)){
+                throw new IllegalArgumentException("Selected installed package/UID group changed or invalid");
             }
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
-            watchSelectedPackage(targetPackage);
+            watchSelectedPackages(targetPackages);
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
-                port,uid,targetPackage,hasCA),"wbd-native-root-owner");
+                port,targetUids,targetPackages,hasCA),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             status="START_REFUSED: "+e.getMessage();
@@ -221,7 +226,7 @@ public final class RootClientService extends Service {
     }
     private String launchCommand(NativePayload nativeCode,
                                  PhysicalNetwork net,String peer,String sni,
-                                 String user,int peerPort,int targetUid,
+                                 String user,int peerPort,int[] targetUids,
                                  boolean hasCA,String token){
         List<String> args=new ArrayList<>();
         String[] fixed={
@@ -241,9 +246,20 @@ public final class RootClientService extends Service {
             "--tun-fq-maxrate-mbps","0",
             "--tun-txqlen-packets","500",
             "--outer-repair","off",
-            "--android-route-uid",Integer.toString(targetUid),
         };
         for(String a:fixed)args.add(q(a));
+        if(targetUids.length==1){
+            args.add(q("--android-route-uid"));
+            args.add(q(Integer.toString(targetUids[0])));
+        }else{
+            args.add(q("--android-route-uids"));
+            StringBuilder group=new StringBuilder();
+            for(int uid:targetUids){
+                if(group.length()>0)group.append(',');
+                group.append(uid);
+            }
+            args.add(q(group.toString()));
+        }
         if(hasCA){
             args.add(q("--tls-ca-pem"));
             args.add(q(new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath()));
@@ -287,7 +303,7 @@ public final class RootClientService extends Service {
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
-                         int port,int uid,String targetPackage,boolean hasCA){
+                         int port,int[] targetUids,String[] targetPackages,boolean hasCA){
         boolean nativeReady=false,uidReady=false;
         try{
             NativePayload code=NativePayload.stage(this);
@@ -300,10 +316,10 @@ public final class RootClientService extends Service {
             synchronized(ownerLaunchLock){
                 if(stopping.get())
                     throw new IllegalStateException("Root launch withdrawn before native start");
-                if(!InstalledAppCatalog.stillSame(this,targetPackage,uid))
-                    throw new IllegalStateException("Selected package or UID changed before Root grant");
+                if(!InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids))
+                    throw new IllegalStateException("Selected UID group changed before Root grant");
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,uid,hasCA,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,targetUids,hasCA,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
             }
@@ -318,7 +334,7 @@ public final class RootClientService extends Service {
                     if(line.contains("V4_ORIGINAL_GO_CLIENT_NATIVE_READY"))
                         nativeReady=true;
                     if(uidReady&&nativeReady&&!stopping.get()){
-                        status="NATIVE_M4_READY + ONE_UID_ROUTE_READBACK; real phone traffic unverified";
+                        status="NATIVE_M4_READY + OWNED_UID_GROUP_READBACK; real Android traffic unverified";
                     }
                     // Deliberately don't echo username, auth errors, route
                     // key, password, TLS transcript or full native stdout.

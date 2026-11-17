@@ -38,6 +38,27 @@ final class InstalledAppCatalog {
         return new ArrayList<>(unique.values());
     }
 
+    static boolean stillSameGroup(Context ctx,String[] packageNames,int[] uids){
+        if(packageNames==null||uids==null||
+           packageNames.length<1||packageNames.length>SelectedAppGroup.MAX_PACKAGES||
+           uids.length<1||uids.length>SelectedAppGroup.MAX_UIDS)return false;
+        PackageManager pm=ctx.getPackageManager();
+        ArrayList<InstalledAppTarget> resolved=new ArrayList<>();
+        try{
+            for(String name:packageNames){
+                if(!InstalledAppTarget.validPackage(name))return false;
+                ApplicationInfo info=pm.getApplicationInfo(name,0);
+                if(pm.getLaunchIntentForPackage(name)==null)return false;
+                resolved.add(new InstalledAppTarget(name,name,info.uid));
+            }
+            return SelectedAppGroup.matchesReceipt(packageNames,uids,resolved,
+                Process.myUid(),ctx.getPackageName());
+        }catch(PackageManager.NameNotFoundException|SecurityException|
+               IllegalArgumentException e){
+            return false; // package was removed, remapped or made invisible
+        }
+    }
+
     static boolean stillSame(Context ctx,String packageName,int uid){
         if(!InstalledAppTarget.eligible(packageName,uid,Process.myUid(),
              ctx.getPackageName()))return false;
