@@ -63,3 +63,13 @@ SOURCE `b2fe8422682e7e2dd34ce39211cb2f1f3dfcdd2a` [Action44014373562](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"实编译原私有Go-Rust冷认证模块发现16处Linux-only M4字段/辅助函数cfg遗漏，最小限定内核驱动以保持Bionic只复用同一冷owner，不增加假M4。"}
 ```
+
+## A1 第八次：真实冷所有权导出通过，真实M4产品链接阻塞（不是TLS成功）
+
+`7a721ae82c18e68db58af1b43b7fb3ce16057b0d` [Action44014838092](https://github.com/lly8666/wbd-next/actions/runs/44014838092) **整体FAIL/FULL_GO_LINK_M4_NOT_PORTED**。该Action内实际通过 Android ARM64 NDK静态ABI + 完整 `cargo release -p wbd-engine --target aarch64-linux-android` 与原共享Go-Rust冷控制 `prepare_client/stage/commit/stop` **真实 .so 导出检查**；原 Go CGo 产品源码也已编译到链接器。`ld.lld`仍报 `wbd_m0_embedded_go_attach_raw_rx/attach_tun/loop_start/route_refresh/Health/MTU` 等M4调用缺失，原因不是未连接server，而是原Linux raw/TUN worker尚未移植Android Bionic。不得生成空壳符号或用探针代码取代该认证所有权。**ARM64内核业务数据、TLS实际建链、真实认证/租约与Stop均NOT_RUN**。
+
+之前每次遇到原Go arm64链接阻塞都不能证明x86_64的完整Rust包。现在只在构建脚本内先对 **两种 Android ABI** 完成 C 静态布局、共享Rust冷所有权导出和16KiB ELF/PT_LOAD检查，并写入具 SOURCE 的 `rust-cold-stage-manifest.json`；随后真实原Go客户端全链接仍保持失败闸门，不会因为第一阶段成功就冒称可安装运行。后续 A2 专注真实Android套接字、Raw/TUN M4 worker与原Go冷阶段接线，A3才做KSU↔Linux同源服务器业务实测。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"区分已通过的arm64共享Rust认证冷ABI与尚缺失的Android M4 Go全链接；重排A1为双ABI冷编译证明与真实Go链接独立闸门，留精确SOURCE证据且不发布假APK。"}
+```

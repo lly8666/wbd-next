@@ -69,8 +69,48 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       exit 1
     }
   done
+done
+# The authenticated cold Rust owner is a genuine cross-target ABI milestone,
+# while full Go/M4 product linking has a separately failing/passing gate.
+# Persist exact hashes+16KiB ELF evidence for BOTH ABIs even if Go fails.
+python3 - <<'PY'
+import hashlib,json,os,pathlib,struct
+p=pathlib.Path("out/android-product-a1")
+def inspect(path,expected_machine):
+    b=path.read_bytes()
+    assert b[:5]==b"\\x7fELF\\x02",(path,"not ELF64")
+    bo="<" if b[5]==1 else ">"
+    assert struct.unpack_from(bo+"H",b,18)[0]==expected_machine,(path,"wrong ELF machine")
+    phoff=struct.unpack_from(bo+"Q",b,32)[0]
+    entsize,phnum=struct.unpack_from(bo+"HH",b,54)
+    aligns=[struct.unpack_from(bo+"Q",b,phoff+i*entsize+48)[0]
+        for i in range(phnum) if struct.unpack_from(bo+"I",b,phoff+i*entsize)[0]==1]
+    assert aligns and min(aligns)>=16384,(path,aligns)
+    return {"sha256":hashlib.sha256(b).hexdigest(),"machine":expected_machine,
+            "min_pt_load_align":min(aligns)}
+d={"schema":"android-root-product-a1-rust-cold-build/v1",
+   "source":os.environ["GITHUB_SHA"],
+   "pinned_original_go":"a7a82db31fe736ffedee330795a3234d358f1984",
+   "scope":"SHARED_RUST_COLD_ABI_ONLY",
+   "android_c_abi_static_checks":"PASS_IN_WORKFLOW",
+   "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
+   "native":{abi:inspect(p/("libwbd_engine-"+abi+".so"),mach)
+             for abi,mach in (("arm64",183),("amd64",62))},
+   "original_go_full_link":"NOT_YET_RUN_AT_THIS_STAGE",
+   "authenticated_product_M4_worker":"NOT_RUN",
+   "real_server_TLS_auth_lease_data_stop":"NOT_RUN",
+   "physical_android_load":"NOT_RUN"}
+(p/"rust-cold-stage-manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
+(p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\\n")
+PY
+# Do not remove the failing link gate: until real Android RAW/TUN M4 owner
+# is wired this must FAIL and never publish a pretend client binary.
+for pair in "aarch64 arm64" "x86_64 amd64"; do
+  read -r triple goarch <<< "$pair"
+  if [ "$triple" = aarch64 ]; then rust_target=aarch64-linux-android; else rust_target=x86_64-linux-android; fi
+  cc="$tool/${rust_target}28-clang"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
-  export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine"
+  export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384"
   (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
   unset CGO_LDFLAGS
 done
