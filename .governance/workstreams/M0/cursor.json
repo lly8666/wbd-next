@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2092,
-  "checkpoint_sha": "071dde382a314d52fa2959201317b166b3f08677",
+  "sequence": 2093,
+  "checkpoint_sha": "a73d170fcd2a029a224da385e23f5b149c5cf6b5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2092 B2 real signed original Windows/WSL2 first boundary: Action44060263345 source071d full native FAIL because Linux B2 DNS guest requires exactly one upstream per DNS QNAME and crashes on allowed same-direction retry (at most two UDP attempts). Inspected original ZIP artifact14318238283: Windows real app PASS CN physical CNAME+real-A TTL2, nonCN TUN real same overseas A, two actual overseas Tunnel business replies, ordinary no FakeIP; guest exited before full signed both-owned Stop validation. Change only guest strict per-lane two-attempt bound with exact peer/question and count/IDs report. H2091 FAIL preserved, product code unchanged; H2092 next signed rerun PENDING.",
-  "why_now": "H2091 Action44060263345 cheap, Windows Go/Rust/Linux Rust & Linux real builder PASS; native-public-two-os job 133962868439 FAIL. Raw result shows Linux guest RuntimeError 'B2 two upstream queries for one real app DNS ticket'; its own if label in seen rejects even a second UDP query despite existing PLAN029 contract §4 allowing total max two same-endpoint UDP tries. Windows real application log independently PASS 4 original app stages with CN real CNAME+A/TTL2, nonCN same A, both via authenticated Tunnel. Fix fixture without enlarging 5s DNS budget, changing real owner, or hiding retry count; original Linux guest crashed before final report/owned Stop.",
+  "current_task": "H2093 B2 next genuinely novel signed Windows/WSL2 first failure: H2092 actual native 44065841651 source a73 fails because Linux guest receives a direct/TUN DNS datagram not equal to expected original CN/nonCN A question, even with allowed <=2 attempts; original Windows real AF_INET CN app then gets mismatched DNS response and fails. Do NOT further relax QNAME/lane validator or claim B2. Add only bounded first-invalid Linux UDP header/question/peer and first-invalid Windows DNS response header/RCODE, accepted original DNS attempt ID summaries, not packet dumps or product log. H2092 complete FAIL and B0 prior scoped PASS preserved.",
+  "why_now": "H2092 Action44065841651 cheap, Windows Go, Windows Rust, Linux Rust, Linux original binary builder, Npcap/Wintun installs & WSL2 boot PASS, native-public-two-os job133981959108 FAILED actual B2. Original ZIP artifact14320149028: plan029b-b2-ordinary-guest.log RuntimeError 'B2 wrong real upstream domain/question' line57, and Windows CN app query first reply `real DNS original ID/status/question not preserved`; client originally OS Applied/Ready. Cannot infer the bad upstream packet qname/flags/type from current logs, so need one bounded first-error witness to distinguish extra Windows system DNS vs unexpected lane vs malformed retry. Existing H2091 action44060263345 guest strict-count FAIL and H2092 are retained.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect exactly one H2092 source-locked signed B2 original Windows2025/WSL2 native. Require guest sees both resolver lanes with <=2 same endpoint physical UDP tries each, exact QNAME/type/source, CNAME real A TTL2 and both overseas Tunnel app replies; verify full owned Stop and original GUI/Normal regression. If >2 retries or new first failure, preserve FAIL and diagnose product (not weaken again). After B2 PASS pursue smallest advanced CN true and IPv6 real Wintun/GUI lifecycle and B5 10Mbps same-VM sequential.",
+  "next_action": "Run one H2093 signed original Windows2025/WSL2 B2 scene with first-invalid bounded DNS metadata and exact product SHA. If invalid is nonCN on physical CN resolver or resolver cross-direction, fix product source policy; if unrelated OS query, scope by source+ticket without hiding leak; if malformed qtype/RD, fix real wire or precise contract. No further generic retry loosening, no 028 matrix. After B2 genuine native full stop PASS pursue advanced CN B2, real B3 IPv6, B4 GUI lifecycle and B5 10Mbps paired fair performance.",
   "unverified": true,
-  "last_tested_source": "071dde382a314d52fa2959201317b166b3f08677",
+  "last_tested_source": "a73d170fcd2a029a224da385e23f5b149c5cf6b5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2092-H2091-B2-BOUNDED-DNS-RETRY-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2093-H2092-B2-MISMATCH-FIRST-WIRE-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2092-B2-BOUNDED-DNS-RETRY-ORACLE.md",
-    "docs/evidence/M0/PLAN029B-H2092-H2091-B2-BOUNDED-DNS-RETRY-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2093-B2-FIRST-INVALID-WIRE-BOUND.md",
+    "docs/evidence/M0/PLAN029B-H2093-H2092-B2-MISMATCH-FIRST-WIRE-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2089 old exact SOURCE d0dd true signed B0 real DNS UDP/TCP53 AAAA NODATA Stop PASS_SCOPED. H2091 SOURCE071d signed B2 Windows original app four-stage true CNAME real A/Tunnel business PASS, but Linux guest overly strict one-upstream-count died on a same-endpoint retry => native overall FAIL, owned Stop final NOT_RUN. H2092 test-only bounded 2-attempt/endpoint retry + report count, one exact native retest pending. B3/B4/B5 full exit NOT_RUN."
+  "partial_summary": "H2089 B0 prior source d0dd signed A/AAAA UDP/TCP DNS/Stop PASS_SCOPED. H2091 B2 source071d native FAIL guest strict duplicate despite Windows app 4 stages PASS. H2092 source a73 new full real signed FAIL invalid upstream DNS question plus original Windows app mismatched returned DNS header. H2093 only bounded first-invalid wire metadata fixture, next real source pending; no product changes, new B2/B3/B4/B5 NOT_RUN/PARTIAL."
 }

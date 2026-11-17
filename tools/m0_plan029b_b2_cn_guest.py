@@ -54,6 +54,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                 continue
             if len(wire) < 12 or wire[2:6] != b"\x01\x00\x00\x01" or \
                wire[12:] != ip + A:
+                # H2093 one bounded first-error witness. The previous
+                # H2092 packet did not match the expected question; never
+                # call it a valid retry, never rewrite/cross-fallback.
+                diag = {"lane": label, "peer": peer[0],
+                        "peer_port": peer[1], "bytes": len(wire),
+                        "dns_header12": wire[:12].hex(),
+                        "question_prefix48": wire[12:60].hex(),
+                        "expected_question": (ip + A).hex(),
+                        "prior_expected_events": sorted(seen),
+                        "source": "REAL_LINUX_KERNEL_UDP"}
+                print("PLAN029B_B2_FIRST_INVALID_UPSTREAM_DNS " +
+                      json.dumps(diag, sort_keys=True), flush=True)
                 raise RuntimeError("B2 wrong real upstream domain/question")
             # The original Windows application deliberately retries its
             # same-id UDP ticket on a timeout, and the Rust owner may issue
@@ -68,6 +80,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                 raise RuntimeError("B2 excessive same-endpoint DNS upstream retry")
             upstream_ids = list(prior["upstream_ids"]) if prior else []
             upstream_ids.append("%04x" % int.from_bytes(wire[:2], "big"))
+            print("PLAN029B_B2_VALID_UPSTREAM_DNS " +
+                  json.dumps({"lane": label, "attempt": attempts,
+                              "peer": peer[0], "peer_port": peer[1],
+                              "dns_id": upstream_ids[-1],
+                              "question": "cn" if ip == CN else "noncn"},
+                             sort_keys=True), flush=True)
             if label == "cn_dns":
                 cname = (b"\xc0\x0c\x00\x05\x00\x01" +
                          struct.pack("!IH", 2, len(EDGE)) + EDGE)

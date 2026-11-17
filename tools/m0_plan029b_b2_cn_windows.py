@@ -71,6 +71,17 @@ def query(label, qname, presented, tid):
     if len(reply) < len(wire) or reply[2:4] != b"\x81\x80" or \
        reply[4:6] != b"\x00\x01" or reply[8:12] != b"\x00\x00"*2 or \
        reply[12:12+len(qname)+4] != qname + A:
+        # Only on the first genuine Windows application error. A SERVFAIL
+        # from an interrupted guest is not evidence of a bad product route;
+        # retain the exact returned RCODE and question in bounded form.
+        print("PLAN029B_B2_FIRST_INVALID_WINDOWS_DNS " +
+              json.dumps({"lane": label, "resolver": presented,
+                          "response_length": len(reply),
+                          "header12": reply[:12].hex(),
+                          "question_prefix48": reply[12:60].hex(),
+                          "expected_question": (qname + A).hex(),
+                          "source": "ORIGINAL_WINDOWS_AF_INET"},
+                         sort_keys=True), flush=True)
         raise RuntimeError("real DNS original ID/status/question not preserved")
     count = struct.unpack("!H", reply[6:8])[0]
     if count != (2 if label == "cn" else 1):

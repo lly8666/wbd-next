@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2093",
+  "date": "2026-11-17",
+  "source_sha": "a73d170fcd2a029a224da385e23f5b149c5cf6b5",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "h2092": {
+    "run_id": 44065841651,
+    "job_id": 133981959108,
+    "artifact_id": 14320149028,
+    "product_source_sha": "a73d170fcd2a029a224da385e23f5b149c5cf6b5",
+    "fixture_source_sha": "a73d170fcd2a029a224da385e23f5b149c5cf6b5",
+    "preflight": [
+      "cheap PASS",
+      "Windows Go PASS",
+      "Windows Rust PASS",
+      "Linux Rust PASS",
+      "real Linux Go+Rust peer PASS",
+      "signed Win2025 Npcap/Wintun and actual WSL2 boot PASS"
+    ],
+    "native_result": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "first_linux_error": "B2 wrong real upstream domain/question at tools/m0_plan029b_b2_cn_guest.py:57",
+    "first_windows_error": "real DNS original ID/status/question not preserved in CN application query",
+    "raw_linux_guest_log": "PLAN029B_B2_REAL_LINUX_DNS_AND_TUNNEL_READY then RuntimeError; no original wire fields recorded",
+    "current_original_windows_effective": "route_mode=2 business_split=true cn_domain_fakeip=false WBD_WINDOWS_CLIENT_READY",
+    "source_of_mismatch": "UNKNOWN_PENDING_BOUNDED_DNS_PACKET_HEADER_RESEARCH",
+    "owned_stop_final": "NOT_RUN_AS_SUCCESSFUL_B2_WITNESS"
+  },
+  "h2091": {
+    "run_id": 44060263345,
+    "artifact_id": 14318238283,
+    "result": "FAIL",
+    "notable": "Windows original app four controlled DNS/business stages independently PASS; Linux guest strict second packet abort"
+  },
+  "test_only_changes": [
+    "Linux guest first-invalid source IP/port, selected lane, at most 12+48 hex wire and expected question, prior 4-event set",
+    "Linux guest bounded valid upstream attempt receipt with actual ID, physical/Tunnel lane and attempt count",
+    "Windows original application first invalid response 12-byte DNS header/48-byte question and selected resolver"
+  ],
+  "invalid_dns_packets": "REJECTED_UNCHANGED",
+  "retry_budget": "UNCHANGED_MAX_TWO_PER_RESOLVER",
+  "product_code_changed": false,
+  "packet_dump": false,
+  "next_signed_status": "NOT_RUN",
+  "original_b0": {
+    "source": "d0dd9f1bcd662360473a8269effa413369875fb7",
+    "run_id": 44056378053,
+    "result": "PASS_SCOPED_SIGNED_DNS_A_AAAA_UDP_TCP53_STOP"
+  },
+  "full_B0_B5_complete": false
+}
