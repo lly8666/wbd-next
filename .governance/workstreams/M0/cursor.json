@@ -4,27 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2071,
-  "checkpoint_sha": "195a93aa09e877ed8ee31c7c32516773bb38f01e",
+  "sequence": 2072,
+  "checkpoint_sha": "e18f7368b85d05b2c0d9cb064ff3c1a4bf1a88cc",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2071 actual server B RAW Rx kernel/tuple/TUN stage proven: Action44025145100 original product 2fca, fixture195a, B 41032 Rust M4 kernel_raw_observed13, tuple_candidates10, TUN-delivered10 and rx_err0. Listener stayed alive, B real SYNACK/TLS, yet no canonical AEAD/PN Health verified, server refused B shared-route. GUI second OS/business FAIL.",
-  "why_now": "H2070 isolated real read-only per-port B Rust RAW RX; excludes all-SYN/4tuple/BPF drop, confirms real B native reception and TUN writes but still no peer Health. Windows M2 source seals canonical Health and NPF copied320 control wire bytes; Linux M3 authenticated Health TLV hint must be observed specifically, unlike plain TUN business.",
+  "current_task": "H2072: identified that H2067 only added a stand-alone HealthClock test and omitted the real Windows start_native Entry arm. Insert live Entry m2.health.arm_client_cold_ready at validated native startup, before TX/RX. SOURCE_ONLY, native NOT_RUN; old H2070 real FAIL preserved.",
+  "why_now": "Real H2070 signed B SYNACK/TLS and Linux M4 RAW13 tuple10 TUN10 did not produce authenticated B Health. H2067 exact commit 2fca changed a Windows test but no real start_native arm; Windows m2_next_feedback_entry is tx_due gated. This is first concrete product-path omission, independent of firewall/RAW reception.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Next one bounded source-locked diagnostic should correlate Windows actual kind0 NPF copies with Linux B M3 kind0 AEAD-open and canonical TLV parse/hint counters. Never promote from SYN/TLS/raw TUN or change 5s server gate. Only after root confirmed, smallest product change and re-run three ordinary real GUI/domain/TTL tests; current three H2067 FAIL and H2070 FAIL remain.",
+  "next_action": "Build/verify new product SOURCE once. Run exactly one true original Windows2025/WSL2 GUI Disconnect->Connect builder; gate on server B AEAD/PN Health + shared /32 promotion, B OS Applied1460/1389, Direct+Tunnel TCP/UDP and owned Stop. On builder PASS reuse exact manifest/hashes in two independent approved domain_reconnect and dns_ttl_restart scenes, no extra matrix. On FAIL do one bounded B M3 kind1 open/TLV/hint trace, not H2070 RAW rerun. No Action dispatched this batch.",
   "unverified": true,
   "last_tested_source": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json",
     "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md",
+    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2071-SERVER-B-RAW-EVIDENCE.md",
     "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2070-ONE-SERVER-M4-RX-DIAG.md",
     "docs/evidence/M0/PLAN029-H2070-H2067-SECOND-M4-RX-FAIL-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2067-WINDOWS-COLD-HEALTH-GATE.md",
-    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
+    "docs/devlog/M0/20261117-PLAN029-H2067-WINDOWS-COLD-HEALTH-GATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2070 actual signed native GUI original A Ready/OS/Stop PASS; second B SYNACK/TLS and M4 B RAW kernel13 tuple10 TUN10, still B Health proof missing and no second OS/business PASS. Domain second TC/TCP53 and TTL2 first two FakeIP independently proven earlier, postrestart third NOT_RUN."
+  "partial_summary": "Source-only live Windows native Health startup wiring; native compile/real second GUI/OS/Direct-Tunnel/third TTL still NOT_RUN. H2070 signed FAIL remains. First GUI OS/Stop, physical second-domain TC TCP53, TTL2 first two replies remain separate historical scoped evidence. User normal-scope excludes extreme saturation/abort/old IPv6 matrix."
 }

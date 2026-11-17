@@ -1708,6 +1708,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
 
      let mut guard=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      if guard.contains_key(&config.owner){return BAD_STAGE}
+     // H2072: H2067 tested only a stand-alone clock, not the live Entry.
+     // Arm existing five AEAD/PN Health controls after genuine Wintun/NPF
+     // validation and before the first native TX turn; the server still
+     // requires an authenticated peer Health to promote its shared /32.
+     {
+         let mut e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+         if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
+             ||e.role_server{return BAD_STAGE}
+         let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
+         m.health.arm_client_cold_ready(m2_clock().0);
+     }
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
      let rx_notify_for_tx=Arc::clone(&rx_notify);
@@ -1914,7 +1925,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          let at=100_000_000_000u64;
          let mut clock=HealthClock::new(HealthPolicy::default_connected(),at);
          assert!(!clock.tx_due(at)); // prior Windows default: 15s, misses B
-         clock.arm_client_cold_ready(at); // called only at real M4 worker birth
+         clock.arm_client_cold_ready(at); // isolated cadence; production arms live Entry in start_native
          assert!(clock.tx_due(at));
          let mut now=at;
          for n in 0..5 {

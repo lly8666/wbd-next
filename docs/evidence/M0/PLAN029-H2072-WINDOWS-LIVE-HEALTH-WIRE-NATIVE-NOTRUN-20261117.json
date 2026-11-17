@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2072",
+  "date": "2026-11-17",
+  "base_main_sha": "e18f7368b85d05b2c0d9cb064ff3c1a4bf1a88cc",
+  "last_tested_native_source": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "last_real_run_id": 44025145100,
+  "last_real_run_result": "FAIL",
+  "last_real_boundary": "B physical SYNACK/TLS; Linux B kernel RAW13, tuple10, TUN10; canonical AEAD/PN Health still unproved; second OS Applied/business NOT_RUN",
+  "h2067_exact_commit": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "source_audit": "H2067 modified only an isolated HealthClock unit test, not the Windows native start_native product path; Linux start_loop already arms the real clock, and Windows m2_next_feedback_entry requires health.tx_due",
+  "source_change": {
+    "path": "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "method": "start_native: after checked native NPF/Wintun attach and duplicate-owner exclusion arm actual Entry.m2.health; before TX/RX start",
+    "wire_changed": false,
+    "new_worker": false,
+    "server_5s_authenticated_gate_unchanged": true,
+    "legacy_WFP_reintroduced": false
+  },
+  "verification": {
+    "source_review": "COMPLETE",
+    "compile": "NOT_RUN",
+    "windows_native": "NOT_RUN",
+    "authenticated_server_B_health": "NOT_RUN",
+    "B_OS_Applied": "NOT_RUN",
+    "B_Direct_Tunnel_TCP_UDP": "NOT_RUN",
+    "TTL_postrestart": "NOT_RUN",
+    "new_source_owned_stop": "NOT_RUN",
+    "workflow_dispatch": false
+  },
+  "normal_user_scope": "One GUI reconnect then existing domain reconnect and CN DNS TTL restart; no extreme resource/old IPv6 stress",
+  "plan029_complete": false
+}
