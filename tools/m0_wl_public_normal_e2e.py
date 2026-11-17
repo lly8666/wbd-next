@@ -1191,7 +1191,15 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if native_outer!="legacy1400":
   # Independently validate the numeric receipt emitted by the REAL
   # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
-  if plan028_owned_switch or p029_gui_reconnect:
+  if p029b_b4:
+   receipts=re.findall(
+    r"WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=(\d+) applied=(\d+) outer_config=(\d+)",
+    winlog)
+   if len(receipts)!=3 or any(tuple(map(int,row))!=(1389,1389,1460) for row in receipts):
+    raise RuntimeError("B4 three actual Windows Wintun OS MTU receipts absent")
+   windows_inner=1389
+   report["plan029b_b4_three_original_windows_inner_mtu"]=receipts
+  elif plan028_owned_switch or p029_gui_reconnect:
    # Both native OS generations are real. The old single-receipt verifier
    # correctly refuses concatenated logs, but GUI Disconnect->Connect has
    # two independent Go child processes even without PLAN028 MTU mutation.
@@ -1257,6 +1265,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     per_gen_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu)
     report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
     budget_and_wire=per_gen_wire[-1]
+   elif p029b_b4:
+    from m0_wl_public_mss_contract import verified_plan029b_b4_three_gui_child_mss
+    budget_and_wire=verified_plan029b_b4_three_gui_child_mss(
+     winlog,linux_log,configured_mtu)
+    report["plan029b_b4_three_original_syn_synack_mss"]=budget_and_wire
    elif p029_gui_reconnect:
     # H2067: two *different* original WinForms Go child processes both
     # start internal generation=1, but use physical ports 41031 then
@@ -2768,7 +2781,7 @@ print(json.dumps(result),flush=True)
  stop_linux();s.wait(timeout=10)
  stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
-  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect) else
+  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
@@ -3438,7 +3451,7 @@ finally:
  if resource_worker is not None:resource_worker.join(timeout=3)
  for p in (wa,la,wt,lt,p029b_guest,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
   if p is not None and p.poll() is None:p.terminate()
- if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():
+ if (p029_cdn or p029b_b4) and (out/"plan029-h2010-owned-route-alias.json").exists():
   try:h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
   except Exception as exc:
    report["plan029_h2010_owned_cleanup"]="FAIL_OWNED_ROUTE_ALIAS"
@@ -3470,7 +3483,7 @@ finally:
     raise RuntimeError("foreign Tunnel DNS alias receipt; preserve OS address")
   except Exception as exc:
    print("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED "+str(exc)[-250:],flush=True)
- if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
+ if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
   # Exact ephemeral TUN alias only: cleanup is idempotent even after the
   # server has already removed its own interface on normal Stop.
   try:
