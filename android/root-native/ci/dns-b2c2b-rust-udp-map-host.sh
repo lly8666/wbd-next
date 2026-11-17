@@ -34,6 +34,11 @@ assert 'fn rewrite_query(' in wire and 'fn rewrite_reply(' in wire
 assert '2=>p[25]=0, // corrupt actual nonzero UDP length LOW byte' in wire
 assert 'fn set_checksums(' in wire and 'fn stop(&mut self)' in wire
 assert 'mod v4_android_dns_udp_flow;' in lib
+# Changes to any original-Rust Android DNS module MUST trigger the full
+# source-locked product workflow, not governance-only green.
+workflow=Path(".github/workflows/android-root-product-a1.yml").read_text()
+assert '      - "crates/wbd-engine/src/v4_android_dns_*.rs"' in workflow
+
 assert 'hijack_enabled.write(0)' in m4
 assert m4.count("tun.read_ip_scatter(")==1
 assert "rewrite_query(" not in m4 and "rewrite_reply(" not in m4
