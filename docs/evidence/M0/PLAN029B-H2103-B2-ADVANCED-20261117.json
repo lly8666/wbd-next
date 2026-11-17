@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2103",
+  "date": "2026-11-17",
+  "source_sha": "b7bbec854c0926c6003dd369f3195b8b73374d31",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action": {
+    "id": 44082170661,
+    "job_id": 134038261937,
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "original_artifact": {
+    "id": 14327264772,
+    "zip_sha256": "fff7d0f2060acdefbf69741b8b272523acb2cd1fbd2af6551af5ae1ca4fff2e2",
+    "win_exe_sha256": "bc1f6ee5c446b7de91de386ea2f881e11541f2bec3fb6d8c65b8e3c29e86d236",
+    "win_dll_sha256": "bfe9aed16dad1578e3494433c8282b1c0d42ab100ec9db4983ea8c55a66189d4",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+    "source_match": "source=fixture_source=product_binary_source=linux_binary_source=b7bbec854c0926c6003dd369f3195b8b73374d31"
+  },
+  "effective": {
+    "mode": "normal",
+    "outer_mtu": 1400,
+    "advanced_cn_source": "EXISTING_SIGNED_CI_V3_TRIAL_NOT_REAL_USER_GUI"
+  },
+  "advanced_cn": {
+    "cn_cname_multi_a": "PASS_ONE_REAL_PHYSICAL_DNS",
+    "fake4": [
+      "198.18.0.1",
+      "198.18.0.2"
+    ],
+    "distinct": true,
+    "windows_wintun_lease": "10.66.0.2",
+    "linux_physical_dns_source": "172.30.240.1",
+    "linux_physical_business_source": "172.30.240.1",
+    "direct_udp": "PASS_ORIGINAL_WINDOWS_KERNEL_REAL_PHYSICAL_ECHO",
+    "direct_tcp": {
+      "bytes_sent": 32768,
+      "bytes_echoed": 32768,
+      "half_close": true,
+      "linux_bytes_received": 32768
+    },
+    "tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tunnel_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "defender_cleanup": "PASS_OWNED_DEFENDER_AND_WAL_ABSENT",
+    "noncn_cn_ip_direct": "PASS_SEPARATE_D2"
+  },
+  "limits": {
+    "original_gui_canonical_option": "NOT_RUN",
+    "legacy_missing_key_migration": "NOT_RUN",
+    "stale_fakeip_reconnect": "NOT_RUN",
+    "linux_to_windows_generic_tcp": "NOT_RUN_028_SCOPED",
+    "real_ipv6_app_and_route": "NOT_RUN",
+    "same_vm_10mbps_p99_cpu": "NOT_RUN"
+  }
+}

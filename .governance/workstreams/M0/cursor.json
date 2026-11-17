@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2102,
-  "checkpoint_sha": "b7bbec854c0926c6003dd369f3195b8b73374d31",
+  "sequence": 2103,
+  "checkpoint_sha": "dae37c6fa6438d158c9e89bd3731143a307181ea",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2102 independent source fix: Rust original Windows WintunRx::read already skips/releases IPv6, but stage_sources Skipped did not increment captured, so full skipped quantum falsely idles before following IPv4. Add captured+=1 only for Skipped and tests for full/partial quantum; no new module/WFP/Go per-packet, no TCP/FEC/wire changes. Go cold all/off used to validate historical inactive DirectFlowHard>16384 before deriving mode; ignore cap only when effective All while keeping public DNS and post-OS DNS-only TCP listener. H2101 original advanced D3 Action44082170661 SOURCEb7bb still independently running; it is immutable, do not replay. H2102 product source qualified only by eventual Action, genuine IPv6 app packet NOT_RUN.",
-  "why_now": "H2101 true signed advanced CN independent Sourceb7bb started with cheap+WindowsGo/Rust+LinuxRust PASS, native in progress. H2102 covers two observed small 029B defects: WintunRx::read returns Skipped after releasing ring while StageWork::captured only advanced for Frame, violating fairness on all-IPv6 quantum; Go m0Plan029ColdSource enforced inactive DirectFlowHard before route-mode all, violating off cold admission. Both localized fixes preserve one native owner, DNS, Stop and existing MTU. Actual true IPv6 packet with controlled route cannot be inferred from unit test.",
+  "current_task": "H2103 collect H2101 original SOURCEb7bb advanced CN D3 true signed Npcap/Wintun↔WSL2 CNAME 2 real A→two FakeIP, physical Direct UDP+32KiB TCP half-close, Tunnel UDP/TCP and owned Stop PASS. CI private advanced trial only; GUI canonical old-key migration NOT_RUN. H2102 SOURCEdae new Wintun IPv6 fair skipped packet and off/all Direct cap cold patch original source/GUI workflows FAIL first assembly manifest result_blob stale for two Go overlay files; original signed native NOT_RUN. Fix only both pinned manifest blobs and bounded original card, preserve prior FAIL. Explicit [m0-native-smoke] one signed default Normal/off regression request for H2103 SOURCE; actual IPv6 kernel packets remain NOT_RUN.",
+  "why_now": "H2101 original Action44082170661 overall SUCCESS original artifact14327264772 zip sha256 fff7d0f2..., exact same 4 SOURCE fields, two announced FakeIP .1/.2 from CNAME multi-A, physical Direct UDP and 32768B Direct TCP FIN/Stop. H2102 Action44084190869 first failure prepare_windows_wiring.py expected Go overlay e567.. actual 42131..; Go test op expected39d1.. actual0c51..; 3 independent Windows-related workflows share this preflight error and no signed data plane. Update two manifest hashes only; feature card retains all historic non-null SOURCE verification records and current H2101 bounded PASS entry.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2101 signed advanced D3 result/source/hash. Collect H2102 cheap tests, Windows/Go/Rust and default native original signed regression for impacted Rust path; distinguish from B3 real IPv6 packet. Then B3 independent scoped physical IPv6 route/packet + IPv4 mix and Stop, B4 actual GUI import/legacy/reconnect/Game, B5 <=10Mbps sameVM paired CPU/GiB/p99; don't claim old D4 no-route as blocked.",
+  "next_action": "Collect H2103 corrected assembly cheap Go/Rust/lib and one signed original Normal/off Windows/WSL2 B0 packet regression Source exact binary hashes/Stop. It will NOT itself establish B3 real IPv6 packet capture. After qualification B3 genuine scoped Windows AF_INET6 to owned Wintun with actual route and concurrent IPv4, B4 real GUI/legacy migration/Game, B5 sameVM <=10Mbps CPU/GiB small TCP/UDP p99; no old 028 matrix.",
   "unverified": true,
-  "last_tested_source": "d9435610939774e601895d9dd998ec828174ef0f",
+  "last_tested_source": "b7bbec854c0926c6003dd369f3195b8b73374d31",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2103-B2-ADVANCED-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2102-B3-FAIR-SKIP-B0-INACTIVE-CAP.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2103-D3-ADVANCED-PASS-ASSEMBLY-HASH.md",
+    "docs/evidence/M0/PLAN029B-H2103-H2102-ASSEMBLY-FAIL-20261117.json",
     "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json",
-    "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2098 source d943 signed B2 ordinary true CN+nonCN shared real overseas A, dual DNS, both Tunnel UDP and original TCP duplex/Stop PASS; H2100 bounded card and governance PASS. H2101 sourceb7bb independent advanced D3 original signed trial in-flight. H2102 minimal B3 Wintun skipped IPv6 quantum fairness and all/off stale Direct cap cold fix with Go/Rust/Python source tests, new-source signed result NOT_RUN until Actions. Real Windows IPv6 app packet+route and performance/GUI remain unproven."
+  "partial_summary": "H2098 SOURCEd943 original signed B2 ordinary CN DNS A shared overseas IP both Tunnel UDP and real TCP duplex/Stop PASS; H2101 SOURCEb7bb independent advanced CI D3 signed two FakeIP physical Direct UDP/TCP32K/Tunnel/Stop PASS original artifact14327264772 SHA fff7d0f2. GUI canonical migration remains NOT_RUN. H2102 SOURCEdae real product fair IPv6 Wintun skip/b0 inactive cap fix, cheap Go/GUI assembly FAIL due two missing pinned Go blob hash updates; native NOT_RUN. H2103 manifest and compact original feature card corrected, source-locked one new Normal/off signature NOT_RUN pending. Genuine IPv6 route/app, GUI/Game and paired 10Mbps CPU/p99 pending."
 }
