@@ -53,7 +53,7 @@ func ResolveServerAFromOriginalPhysical(ctx context.Context,host,alias string,
  ips,e:=faketcp.LookupPhysicalServerA(ctx,faketcp.PhysicalDNSConfig{
   Device:physical.PacketDevice,SourceMAC:physical.SourceMAC,
   NextHopMAC:physical.NextHopMAC,Source4:physical.Source4,
-  Resolver4:resolver},host)
+  Resolver4:resolver,InterfaceIndex:physical.InterfaceIndex},host)
  if e!=nil{return PhysicalServerResolution{},fmt.Errorf("%w: %s via single dns.direct %s: %v",ErrServerBootstrapDNS,host,resolver,e)}
  if len(ips)==0{return PhysicalServerResolution{},fmt.Errorf("%w: %s via dns.direct %s returned no usable A",ErrServerBootstrapDNS,host,resolver)}
  return PhysicalServerResolution{

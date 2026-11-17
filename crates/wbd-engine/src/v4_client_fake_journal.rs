@@ -612,6 +612,69 @@ mod tests{
         drop(reopen);
         fs::remove_file(&path).unwrap();
     }
+
+    #[test]
+    fn plan029_async_writer_eight_job_pressure_does_not_publish_uncertain_fake_and_recovers(){
+        use crate::v4_client_dns_pending::{DnsPending,QueryKey,DnsClient,ResolverLane};
+        let path=temp_path();
+        let (mut j,_) =FakeJournal::open_async(&path).unwrap();
+        let mut p=pool();
+        let mut accepted=Vec::new();
+        for n in 0..ASYNC_QUEUE_JOBS{
+            let fake=p.prepare(key(&format!("queued-{n}.cn.example"),
+                0xc6336401+n as u32),30,1000).unwrap();
+            let job=j.enqueue_batch(&p,&[fake.fake4]).unwrap();
+            assert_eq!(p.announced_real(fake.fake4),None);
+            accepted.push((job,fake.fake4));
+        }
+        let extra=p.prepare(key("overlimit.cn.example",0xc63364fe),30,1000).unwrap();
+        assert!(matches!(j.enqueue_batch(&p,&[extra.fake4]),
+            Err(FakeJournalError::Limit)));
+        assert_eq!(p.announced_real(extra.fake4),None);
+        // An unrelated Tunnel DNS transaction can progress while the
+        // single asynchronous filesystem worker has a full job budget.
+        let mut transactions=DnsPending::new(1,1);
+        let k=QueryKey{name:"outside.example".into(),qtype:1,
+            lane:ResolverLane::Tunnel,resolver4:0x01010101,
+            resolver_port:53,policy_revision:7};
+        let client=DnsClient{src4:1,src_port:30000,
+            requested_dns4:0x08080808,original_id:99};
+        let original=transactions.begin(k.clone(),client,1000,5000).unwrap();
+        assert!(original.new_upstream_query);
+        assert_eq!(transactions.cancel_all(),vec![client]);
+        let mut pending=accepted;
+        for _ in 0..3000{
+            j.poll_completed(&mut p,8);
+            pending.retain(|(id,ip)|match j.take_async_status(*id){
+                Some(true)=>{
+                    assert!(p.announced_real(*ip).is_some());
+                    false
+                },
+                Some(false)=>panic!("async append failed"),
+                None=>true,
+            });
+            if pending.is_empty(){break}
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(pending.is_empty(),"bounded async writer never drained");
+        let job=j.enqueue_batch(&p,&[extra.fake4]).unwrap();
+        let mut restored=false;
+        for _ in 0..3000{
+            j.poll_completed(&mut p,8);
+            if let Some(result)=j.take_async_status(job){
+                assert!(result);restored=true;break
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(restored);
+        assert_eq!(p.announced_real(extra.fake4),Some(0xc63364fe));
+        drop(j);
+        let (reopened,rows)=FakeJournal::open(&path).unwrap();
+        assert_eq!(rows.len(),ASYNC_QUEUE_JOBS+1);
+        drop(reopened);
+        fs::remove_file(&path).unwrap();
+    }
+
     #[test]
     fn plan029_fake_journal_real_os_batch_sync_then_restore_same_cn_fakes(){
         let path=temp_path();

@@ -2,16 +2,20 @@
 
 package faketcp
 
-// PLAN029: a single bounded, physical-Npcap UDP A lookup. Unlike a normal
-// Winsock resolver, this never traverses the owned Wintun /1 routes or WFP's
-// non-tunnel port-53 guard. It is only used for the configured SERVER host,
-// not as a bypass for ordinary business DNS. There is no persistent worker.
+// PLAN029: one cold physical-Npcap UDP A lookup. A validated TC=1 response
+// permits only TCP/53 on the SAME dns.direct endpoint, with explicit physical
+// source/interface binding and a shared deadline. No system resolver, Wintun,
+// cross-direction fallback or persistent worker. Server bootstrap only.
 import (
+ "bytes"
  "context"
  "crypto/rand"
  "encoding/binary"
  "errors"
  "fmt"
+ "io"
+ "math/bits"
+ "net"
  "net/netip"
  "strings"
  "syscall"
@@ -27,6 +31,9 @@ type PhysicalDNSConfig struct {
  Device string
  SourceMAC, NextHopMAC [6]byte
  Source4, Resolver4 netip.Addr
+ // Actual cold-selected physical NIC, never the owned Wintun interface.
+ // Required only for the TCP branch after a validated UDP TC=1.
+ InterfaceIndex uint32
 }
 
 func (c PhysicalDNSConfig) valid() bool {
@@ -79,27 +86,33 @@ func physicalDNSFrame(c PhysicalDNSConfig,sourcePort uint16,wire []byte,id uint1
  return frame,nil
 }
 
-func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsmessage.Name)([]netip.Addr,bool){
+func physicalDNSReplyState(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsmessage.Name)([]netip.Addr,bool,bool){
  ip,ok:=extractEthernetIPv4(frame)
- if !ok||len(ip)<28||ip[9]!=17||binary.BigEndian.Uint16(ip[6:8])&0x3fff!=0{return nil,false}
+ if !ok||len(ip)<28||ip[9]!=17||binary.BigEndian.Uint16(ip[6:8])&0x3fff!=0{return nil,false,false}
  ihl:=int(ip[0]&0x0f)*4
- if ihl<20||len(ip)<ihl+8||physicalDNSChecksumFold(physicalDNSChecksumSum(ip[:ihl]))!=0{return nil,false}
+ if ihl<20||len(ip)<ihl+8||physicalDNSChecksumFold(physicalDNSChecksumSum(ip[:ihl]))!=0{return nil,false,false}
  dst,src:=c.Source4.As4(),c.Resolver4.As4()
- if string(ip[12:16])!=string(src[:])||string(ip[16:20])!=string(dst[:]){return nil,false}
+ if string(ip[12:16])!=string(src[:])||string(ip[16:20])!=string(dst[:]){return nil,false,false}
  udp:=ip[ihl:]
- if binary.BigEndian.Uint16(udp[0:2])!=53||binary.BigEndian.Uint16(udp[2:4])!=port{return nil,false}
+ if binary.BigEndian.Uint16(udp[0:2])!=53||binary.BigEndian.Uint16(udp[2:4])!=port{return nil,false,false}
  used:=int(binary.BigEndian.Uint16(udp[4:6]))
- if used<8||used>len(udp){return nil,false}
+ if used<8||used>len(udp){return nil,false,false}
  udp=udp[:used]
- if binary.BigEndian.Uint16(udp[6:8])!=0 && physicalDNSChecksumFold(physicalDNSPseudoSum(src[:],dst[:],udp))!=0{return nil,false}
+ if binary.BigEndian.Uint16(udp[6:8])!=0 && physicalDNSChecksumFold(physicalDNSPseudoSum(src[:],dst[:],udp))!=0{return nil,false,false}
+ return physicalDNSAnswerPayload(udp[8:],id,name)
+}
+func physicalDNSAnswerPayload(wire []byte,id uint16,name dnsmessage.Name)([]netip.Addr,bool,bool){
  var p dnsmessage.Parser
- h,err:=p.Start(udp[8:])
- if err!=nil||!h.Response||h.ID!=id||h.Truncated{return nil,false}
+ h,err:=p.Start(wire)
+ if err!=nil||!h.Response||h.ID!=id{return nil,false,false}
  q,e:=p.Question()
  if e!=nil||q.Type!=dnsmessage.TypeA||q.Class!=dnsmessage.ClassINET||
-  !strings.EqualFold(q.Name.String(),name.String()){return nil,false}
- if e=p.SkipAllQuestions();e!=nil{return nil,false}
- if h.RCode!=dnsmessage.RCodeSuccess{return nil,true}
+  !strings.EqualFold(q.Name.String(),name.String()){return nil,false,false}
+ if e=p.SkipAllQuestions();e!=nil{return nil,false,false}
+ // A valid original UDP truncation authorizes precisely one same-endpoint
+ // physical TCP attempt. Wrong question/source/ID never triggers a dial.
+ if h.Truncated{return nil,false,true}
+ if h.RCode!=dnsmessage.RCodeSuccess{return nil,true,false}
  // A records for unrelated owners are not valid answers to this query.
  // Follow only CNAME links rooted at the exact requested QNAME; a public
  // DNS resolver may return unrelated additional names. Bounded 16 RRs.
@@ -107,7 +120,7 @@ func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsme
  for i:=0;i<=16;i++{
   a,e:=p.Answer()
   if e==dnsmessage.ErrSectionDone{break}
-  if e!=nil||i==16{return nil,false}
+  if e!=nil||i==16{return nil,false,false}
   answers=append(answers,a)
  }
  allowed:=map[string]bool{strings.ToLower(name.String()):true}
@@ -116,7 +129,7 @@ func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsme
   for _,a:=range answers{
    if a.Header.Class!=dnsmessage.ClassINET||a.Header.Type!=dnsmessage.TypeCNAME||
       !allowed[strings.ToLower(a.Header.Name.String())]{continue}
-   cname,ok:=a.Body.(*dnsmessage.CNAMEResource);if !ok{return nil,false}
+   cname,ok:=a.Body.(*dnsmessage.CNAMEResource);if !ok{return nil,false,false}
    key:=strings.ToLower(cname.CNAME.String())
    if !allowed[key]{allowed[key]=true;grown=true}
   }
@@ -135,10 +148,73 @@ func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsme
   for _,v:=range out{if v==addr{duplicate=true;break}}
   if !duplicate{out=append(out,addr)}
  }
- return out,true
+ return out,true,false
 }
 
-// LookupPhysicalServerA performs ONE exact DNS query with a short deadline.
+func physicalDNSReply(frame []byte,c PhysicalDNSConfig,port,id uint16,name dnsmessage.Name)([]netip.Addr,bool){
+ ips,ok,tc:=physicalDNSReplyState(frame,c,port,id,name)
+ return ips,ok&&!tc
+}
+
+// TCP is used ONLY if the exact on-wire UDP tuple, question and ID matched
+// a truncated answer. Never call net.LookupHost or let Windows choose an
+// unbound interface under the Wintun /1 capture route.
+func physicalBootstrapTCPSameEndpoint(ctx context.Context,c PhysicalDNSConfig,
+ query []byte,id uint16,name dnsmessage.Name)([]netip.Addr,error){
+ if ctx==nil||!c.valid()||c.InterfaceIndex==0||len(query)<12||len(query)>1000{
+  return nil,ErrPhysicalDNS
+ }
+ tcpCtx,cancel:=context.WithTimeout(ctx,3500*time.Millisecond)
+ defer cancel()
+ src:=c.Source4.As4()
+ dialer:=net.Dialer{
+  LocalAddr:&net.TCPAddr{IP:net.IP(src[:])},
+  Control:func(network,address string,raw syscall.RawConn)error{
+   var sockErr error
+   if err:=raw.Control(func(fd uintptr){
+    // Winsock IP_UNICAST_IF=31 accepts the ifindex in network byte order.
+    // Windows x64/ARM64 are little-endian. Unselected/foreign NICs fail.
+    sockErr=syscall.SetsockoptInt(syscall.Handle(fd),syscall.IPPROTO_IP,
+     31,int(bits.ReverseBytes32(c.InterfaceIndex)))
+   });err!=nil{return err}
+   return sockErr
+  },
+ }
+ conn,err:=dialer.DialContext(tcpCtx,"tcp",net.JoinHostPort(c.Resolver4.String(),"53"))
+ if err!=nil{return nil,fmt.Errorf("%w: same-endpoint physical TCP dial: %v",ErrPhysicalDNS,err)}
+ defer conn.Close()
+ if actual,ok:=conn.LocalAddr().(*net.TCPAddr);!ok||
+  !actual.IP.Equal(net.IP(src[:])){
+  return nil,fmt.Errorf("%w: physical TCP source changed",ErrPhysicalDNS)
+ }
+ if deadline,ok:=tcpCtx.Deadline();ok{
+  if err=conn.SetDeadline(deadline);err!=nil{return nil,err}
+ }
+ length:=[]byte{byte(len(query)>>8),byte(len(query))}
+ if _,err=io.Copy(conn,bytes.NewReader(append(length,query...)));err!=nil{
+  return nil,fmt.Errorf("%w: physical TCP write: %v",ErrPhysicalDNS,err)
+ }
+ var prefix [2]byte
+ if _,err=io.ReadFull(conn,prefix[:]);err!=nil{return nil,fmt.Errorf("%w: physical TCP length: %v",ErrPhysicalDNS,err)}
+ n:=int(binary.BigEndian.Uint16(prefix[:]))
+ if n<12||n>2048{return nil,ErrPhysicalDNS}
+ response:=make([]byte,n)
+ if _,err=io.ReadFull(conn,response);err!=nil{return nil,fmt.Errorf("%w: physical TCP response: %v",ErrPhysicalDNS,err)}
+ var p dnsmessage.Parser
+ h,e:=p.Start(response)
+ if e!=nil||!h.Response||h.ID!=id||h.Truncated{return nil,ErrPhysicalDNS}
+ q,e:=p.Question()
+ if e!=nil||q.Type!=dnsmessage.TypeA||q.Class!=dnsmessage.ClassINET||
+  !strings.EqualFold(q.Name.String(),name.String()){return nil,ErrPhysicalDNS}
+ if e=p.SkipAllQuestions();e!=nil{return nil,ErrPhysicalDNS}
+ // The same CNAME/A parser used for UDP validates the DNS payload.
+ ips,ok:=physicalDNSAnswerPayload(response,id,name)
+ if !ok||len(ips)==0{return nil,ErrPhysicalDNS}
+ return ips,nil
+}
+
+// LookupPhysicalServerA starts with one exact physical UDP DNS query. A
+// validated TC=1 may use the SAME physical endpoint over TCP under 5s total.
 // It never calls GetAddrInfo, the system resolver, Wintun, or an unbound socket.
 // The caller must first select and verify the ORIGINAL physical underlay.
 func LookupPhysicalServerA(ctx context.Context,c PhysicalDNSConfig,host string)([]netip.Addr,error){
@@ -212,7 +288,11 @@ func LookupPhysicalServerA(ctx context.Context,c PhysicalDNSConfig,host string)(
   h:=(*pcapHeader)(unsafe.Pointer(header))
   if h.Caplen<42||h.Caplen>2048||h.Caplen!=h.Len{continue}
   wire:=unsafe.Slice((*byte)(unsafe.Pointer(packet)),int(h.Caplen))
-  ips,valid:=physicalDNSReply(wire,c,port,id,name)
+  ips,valid,truncated:=physicalDNSReplyState(wire,c,port,id,name)
+  if truncated{
+   // No extra UDP, no alternate endpoint, and no system DNS on failure.
+   return physicalBootstrapTCPSameEndpoint(ctx,c,query,id,name)
+  }
   if !valid{continue}
   if len(ips)==0{return nil,fmt.Errorf("%w: no usable A answer",ErrPhysicalDNS)}
   return ips,nil
