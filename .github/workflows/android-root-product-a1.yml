@@ -1,5 +1,5 @@
 name: Android root product A1 Go/Rust Bionic build
-run-name: "android-product-a1|Bionic-Go-Rust|\${{ github.sha }}"
+run-name: "android-product-a1|Bionic-Go-Rust|${{ github.sha }}"
 on:
   push:
     branches: [experiment/android-temp-root-probe]

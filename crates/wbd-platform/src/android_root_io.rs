@@ -78,7 +78,7 @@ impl AndroidOwnedTun {
         let namelen = ifreq[..IFNAMSIZ].iter().position(|b| *b == 0).unwrap_or(IFNAMSIZ);
         let flags = i16::from_ne_bytes([ifreq[16], ifreq[17]]);
         if namelen != expected_name.len() || &ifreq[..namelen] != expected_name.as_bytes()
-            || flags & (IFF_TUN | IFF_NO_PI) != IFF_TUN | IFF_NO_PI
+            || flags & (IFF_TUN | IFF_NO_PI) != (IFF_TUN | IFF_NO_PI)
             || flags & 2 != 0 {
             return Err((io::Error::new(io::ErrorKind::InvalidData, "wrong TUN or PI"), fd));
         }
