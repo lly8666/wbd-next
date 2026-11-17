@@ -129,8 +129,22 @@ final class RootDeviceSelfTest {
         events.add("REAL_TLS_AUTH_LEASE=NOT_RUN (needs real server and credentials)");
         events.add("REAL_M3_M4_APP_DATA=NOT_RUN (needs authenticated session)");
         events.add("SYSTEM_DNS_TAKEOVER=NOT_RUN (safety gates remain false)");
-        if(!"arm64-v8a".equals(Build.SUPPORTED_ABIS[0])){
-            events.add("NATIVE_ARM64_KERNEL=NOT_RUN (non ARM64 primary ABI)");
+        // Do not mistake an x86_64 Android16 NativeBridge advertising
+        // arm64-v8a for a real ARM64 kernel. Real C-layer qualification
+        // requires uname -m from the running guest kernel.
+        boolean arm64Kernel=false;
+        try{
+            Process kernel=new ProcessBuilder("uname","-m").start();
+            try(BufferedReader r=new BufferedReader(
+                new InputStreamReader(kernel.getInputStream(),StandardCharsets.US_ASCII))){
+                String arch=r.readLine();
+                arm64Kernel="aarch64".equals(arch)||"arm64".equals(arch);
+            }
+            arm64Kernel=arm64Kernel&&kernel.waitFor()==0;
+        }catch(Exception ignored){arm64Kernel=false;}
+        if(!arm64Kernel||Build.SUPPORTED_ABIS.length==0||
+           !"arm64-v8a".equals(Build.SUPPORTED_ABIS[0])){
+            events.add("NATIVE_ARM64_KERNEL=FAIL (requires actual aarch64 kernel+primary ABI)");
             return String.join("\n",events);
         }
         if(chosen==null||PhysicalNetwork.exact(ctx,chosen.handle,
@@ -138,6 +152,7 @@ final class RootDeviceSelfTest {
             events.add("PHYSICAL_NETWORK=FAIL (refresh real Wi-Fi/cellular Network)");
             return String.join("\n",events);
         }
+        events.add("NATIVE_ARM64_KERNEL=PASS (actual uname aarch64)");
         events.add("PHYSICAL_NETWORK=PASS (Android Network exact readback)");
         try{
             NativePayload original=NativePayload.stage(ctx);

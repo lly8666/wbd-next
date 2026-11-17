@@ -19,7 +19,7 @@ for token in (
     "trap cleanup EXIT", 'ROUTE_ROLLBACK_PASS',
     'ROOT_FAIL','GO_ELF_HELP_PASS', 'GO_ELF_SIGSEGV',
     'TUN_PASS', 'RAW_PASS', 'UNDERLAY_PASS','ROUTE_UID_PASS',
-    'ROOT_RUN_EXIT_NONZERO','source',
+    'ROOT_RUN_EXIT_NONZERO','SOURCE_AND_APK_ASSET_SHA=PASS',
 ):
     assert token in java,token
 assert 'ip -4 route add default' not in java
@@ -33,7 +33,7 @@ for token in ("TUNSETIFF","IFF_TUN | IFF_NO_PI", "close(fd)",
               "AF_PACKET", "SOCK_RAW", "SO_BINDTODEVICE", "SIOCGIFINDEX",
               "#error", "__aarch64__"):
     assert token in native,token
-for forbidden in ("sendto(", "recvfrom(", "write(fd,", "TUNSETPERSIST",
+for forbidden in ("sendto(", "recvfrom(", "write(fd,", "ioctl(fd, TUNSETPERSIST",
                   "192.0.2.1", "github.com/lly8666"):
     assert forbidden not in native,forbidden
 assert 'runDeviceSelfTest()' in activity

@@ -23,3 +23,14 @@ UI只保存或复制固定测试结论，不打印root原始stdout、路由具�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A10正品签名ARM64 Debug APK内一键本机KSU/原Go CLI/独立NDK真TUN ioctl/RAW/物理绑定/仅自身UID+TEST-NET/32独立路由及trap回滚；random Start校验解释，原TLS/M4/DNS/实机仍NOT_RUN。"}
 ```
+
+
+## A10 初次source-safe Host审计误FAIL与修复
+
+原A10 SOURCE `bd7a60b76d3d5d096245a5619b6056056486d02e` 的 [Action44154566551](https://github.com/lly8666/wbd-next/actions/runs/44154566551) 中，原生ARM64和全部已完成的DNS/M3 Host前置项PASS。Root APK依赖的Java/Python正式诊断Host测试PASS后，**新A10源范围审计**错误地要求Java存在字面量`source`（源码实际记录固定`SOURCE_AND_APK_ASSET_SHA=PASS`），会导致APK编译SKIPPED；还有一条静态禁止`TUNSETPERSIST`的检查误命中C注释中“**No TUNSETPERSIST**”而非真正调用。修复只匹配源代码里的真实固定成功码，并禁止`ioctl(fd, TUNSETPERSIST`实际永久化调用。已对所有其他静态token逐条实际比对，保持整套UID路由隔离/rollback/禁止发送任何数据包约束不变。
+
+同时A10的普通Java运行前加入`uname -m`原生`aarch64`核验，不能让只报告`arm64-v8a` ABI但内核仍是`x86_64`的NativeBridge guest误进入“真ARM64设备PASS”。本轮内核设备测试仍NOT_RUN，旧SOURCE的APK Job FAIL与原Go KSU ELF139绝不被盖成PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"纠正A10第一轮纯静态审计误拒绝固定SHA码与无持久TUN注释，增强真实aarch64 uname内核核验；所有KSU/TUN/真实设备成功仍待新同源APK CI与用户实测。"}
+```
