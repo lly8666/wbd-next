@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2105,
-  "checkpoint_sha": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
+  "sequence": 2106,
+  "checkpoint_sha": "71f6756a6c04adf1ad0f7334b11d1be3d77be1b8",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2105 H2104 SOURCE969ce actual WinForms/Go CLI/Rust DLL read-only config source-frozen PASS, old CN selector missing key migrated to true and explicit false preserved across reopened portable profile, all/off stale Direct hard cap accepted. Original GUI OS applied NOT_RUN. H2105 new real signed Normal/off AF_INET6 Wintun narrow test-owned /128 route with 16 kernel IPv6 sends+12 IPv4 TUN echoes, first-byte SkippedIpv6 only stop counter, owned route cleanup and both-owned Stop; new source status NOT_RUN. Global host IPv6 and Game/perf not proven.",
-  "why_now": "H2104 Action44091381879 job134067061653 SUCCESS original ZIP artifact14331293478 sha256 0c102af7ca7eac545fb9550c719dfab1981e6ee102bfbd4e16656153507f8f5e CRC9; original Go SHA a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46 Rust DLL aa8579739a253677d06089abcd4465c4543e7f072fe210969890f92fcde154df. H2104 Go CLI 44091382013 and source-locked cheap Windows/Linux 44091381897 PASS; native sign skipped correctly. Old D4 lacked actual IPv6 send/route, cannot conclude block. B3 needs original Wintun first byte v6 skip with true OS AF_INET6 send and fair IPv4 progress.",
+  "current_task": "H2106 H2105 signed B3 source71f675 Windows Rust library unit compile FAIL_E0004 before genuine AF_INET6: newly typed Wintun SkippedIpv6 not covered in original Game Wintun and Game NPF ReadResult matches v4_windows_game_native_runtime.rs:397,914. Cheap, WinGo and LinuxRust tests PASS. Fix only these two Game reader matches by reusing already existing Skipped branch/continue (no product logic, FEC or TCP refactor), static test both. Keep H2105 Action44095335952 in flight, don't cancel/reassign/duplicate; B3 physical NOT_RUN until exact result.",
+  "why_now": "H2105 Action44095335952 job134081225073 WinRust rustc E0004 at game runtime 397,914. Existing Native Normal branch skips IPv6 fair, Game reader still exhaustive matching older ReadResult; correction is compile exhaustivity only with original Game Skipped action. Historic H2104 real GUI/Go compile PASS and H2103 Normal/off true signed PASS retained. H2105 original Action44095335952 terminal FAILURE after same Windows Rust DLL E0004; Windows driver/app IPv6 stage never reached, original signed product artifact absent. H2106 one corrected Game exhaustive match rerun permitted after first Action terminated.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2105 [plan029b-b3-ipv6-real] one source-frozen signed original Windows2025 Wintun/Npcap↔WSL2 Normal/off: real Windows AF_INET6 16 sendto on exact owned /128 Wintun route, Rust first-byte v6 Skipped STOP>=16, 12 mixed IPv4 TUN echoes, dual real TCP/UDP, route/address exact removed and both owned WAL Stop. If Win IPv6 binding/route/kernel send unavailable record first error FAIL/NOT_RUN, never claim global block. Then B4 actual GUI multi-generation/Game, B5 sameVM <=10Mbps CPU/GiB/p99; don't redo 028 or weak matrix.",
+  "next_action": "H2105 original Action44095335952 terminal FAIL solely Windows Rust Game reader E0004 before B3 AF_INET6; H2106 exact Game two-read match correction now requests one [plan029b-b3-ipv6-real] Win2025/WSL2 original signing. Check Windows Rust compile before B3, actual /128 Wintun route + 16 AF_INET6 kernel send + 12 mixed IPv4 echoes + Rust skipped v6 Stop>=16 + exact test cleanup and both owned Stop. B4 Game GUI reconnect and B5 sameVM <=10Mbps CPU/GiB/p99 still NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
+  "last_tested_source": "71f6756a6c04adf1ad0f7334b11d1be3d77be1b8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2106-H2105-WIN-RUST-GAME-SKIP-COMPILE-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2105-REAL-OWNED-IPV6.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2106-GAME-READRESULT-FIRST-COMPILE.md",
+    "docs/evidence/M0/PLAN029B-H2106-H2105-WIN-RUST-GAME-SKIP-COMPILE-FAIL-20261117.json",
     "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2104-H2103-SIGNED-NORMAL-OFF-PASS-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "B2 ordinary H2098 and advanced CI H2101 independently signed true destination/DNS/FakeIP+Stop PASS. H2103 original Normal/off signed original kernel TCP/UDP Stop PASS. H2104 source969ce real WinForms/Go/Rust config-only GUI PASS missing-key true/explicit false persisted, all/off ignores inactive cap, active CN rejects bad; not OS Applied. H2105 scoped genuine IPv6 original Wintun route+kernel packet test NOT_RUN until signed Action. Other host IPv6 paths, B4 signed GUI/Game and B5 sameVM perf remain unverified."
+  "partial_summary": "H2104 source969ce WinForms→Go CLI config PASS same source, not original network. H2105 source71f675 B3 submitted, cheap PASS, Windows Go PASS, Linux Rust PASS, Windows Rust FAIL E0004 two Game native match arms omitted new internal IPv6 skip. H2106 fixes exact two exhaustive matches, no new machinery. H2105 B3 true Windows AF_INET6/Stop still NOT_RUN until original Action resolves; B4 Game GUI and B5 <=10Mbps perf pending."
 }

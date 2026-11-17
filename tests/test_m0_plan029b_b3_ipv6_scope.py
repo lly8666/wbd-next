@@ -15,6 +15,10 @@ class Plan029BRealIPv6(unittest.TestCase):
         self.assertIn("counters.skipped_ipv6.fetch_add(1,Ordering::Relaxed)",branch)
         self.assertNotIn("NativeDecision::Tunnel",branch)
         self.assertIn("PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets={}",runtime)
+        game=(ROOT/"crates/wbd-engine/src/v4_windows_game_native_runtime.rs").read_text()
+        self.assertIn("Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>{",game)
+        self.assertIn("Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,",game)
+        self.assertIn("c.rejected.fetch_add(1,Ordering::Relaxed);",game)
     def test_real_windows_os_owned_route_and_kernel_send_with_cleanup(self):
         win=(ROOT/"tools/m0_plan029b_b3_ipv6_windows.py").read_text()
         guest=(ROOT/"tools/m0_plan029b_b3_ipv4_guest.py").read_text()

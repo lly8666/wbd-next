@@ -426,7 +426,10 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     did_work=true;
                 }
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
-                Ok(ReadResult::Skipped)=>{
+                Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>{
+                    // Original Game Wintun loan already released and
+                    // consumed this bounded read turn. Never enter Game
+                    // FEC/Direct/Tunnel, continue fair next packet.
                     c.rejected.fetch_add(1,Ordering::Relaxed);
                 }
                 Err(err)=>{
@@ -913,7 +916,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 }
                 let n=match rx.read(&mut frame){
                     Ok(ReadResult::Frame(n))=>n,
-                    Ok(ReadResult::Skipped)=>continue,
+                    Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
                     Ok(ReadResult::NoPacket)=>break,
                     Ok(ReadResult::EndOfStream)=>{
                         eprintln!("M0_PLAN026_GAME_NATIVE_RX_LANE_RETIRED lane={} stage=npcap_read reason=EndOfStream",i+1);
