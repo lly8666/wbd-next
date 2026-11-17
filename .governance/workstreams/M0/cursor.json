@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2117,
-  "checkpoint_sha": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
+  "sequence": 2118,
+  "checkpoint_sha": "0efa73336f04eb0fbb8e5ef7469f64a6a48fa2c5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2117 H2116 original Win2025 Go/Rust Windows/Linux CI after one assembly test blob pin fix PASS, signed native intentionally SKIPPED. Artifact14346440193 GO_COMPILE_ONLY original source a560 and artifact14346250607 WinRust/R2 pass CRC/source. H2115 new Go B4 advanced→ordinary→all test was *compiled but NOT EXECUTED*; H2117 explicitly executes compiled client.test.exe exact three-gen test in original Windows Go preflight, hard fail on nonzero. Preserve Rust old-FakeIP policy unit, no new real OS claim. H2112 original signed B3 /128 real packet PASS_SCOPED.",
-  "why_now": "Previous H2115 cheap/WinForms Go assembly pinned blob failure fixed by H2116; Action44120844855 full cheap+Go+WinRust+LinuxRust SUCCESS. But Go preflight used go test -c on ./cmd/wbd-client and did not run H2115 added original cold test. H2117 exact Windows client.test.exe -test.run and static source assertions close that explicit qualification gap before true B4 GUI multi-connect.",
+  "current_task": "H2118 H2117 original M0-WIN-LINUX Action44122245145 FAIL 0 jobs because test-runner YAML line truncated; governance feature-catalog/maintenance also FAIL Python static SyntaxError. Root cause JS String.replace replacement containing dollar+apostrophe expanded suffix and cut rest, not Go tests/product. H2118 rederive source-locked full workflow/static test files from prior a560 and use callback replacement, GitHub blob readback exactly matches complete added B4 Go unit test-run line and static assertion. No native marker. True current SOURCE cheap GO test NOT_RUN until Action. H2112 B3 prior signed scope PASS unchanged.",
+  "why_now": "The only requested new action H2117 had zero jobs and corrupt test code due source editing template expansion; fail-closed CI worked. H2118 restores entire original valid file before inserting the new exact Windows client.test.exe execution gate and regression test. Scope is only test infrastructure, no OS/Wintun/owner product code.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2117 original Windows Go exact test execution exit/receipt PASS or first FAIL; no signed B4 yet. Then prepare one source-frozen genuine WinForms 3 generation advanced CN→ordinary CN→all on actual Win2025 signed Go/Rust/Wintun/Npcap↔WSL2; require each native Applied/owned Stop plus old FakeIP leak negative and DNS/cache/lane late work. Game2/Game4 supported entrance separately; B5 paired sameVM <=10Mbps CPU/GiB/RSS/p99 remains NOT_RUN.",
+  "next_action": "Collect exact H2118 GO Windows preflight real TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter exit and marker, governance/check YAML. If fail repair one first cause only. Then B4 true original WinForms three-generation advanced→ordinary→all with real OS Applied, DNS/cache/old FakeIP no tunnel, original Stop each and Game representative. B5 sameVM10Mbps CPU/GiB/RSS/p99 remains NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
+  "last_tested_source": "0efa73336f04eb0fbb8e5ef7469f64a6a48fa2c5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2117-H2116-ASSEMBLY-PIN-COMPILE-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2118-H2117-WORKFLOW-INTERPOLATION-INVALID-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2117-ACTUALLY-RUN-B4-GO-COLD.md",
-    "docs/evidence/M0/PLAN029B-H2117-H2116-ASSEMBLY-PIN-COMPILE-PASS-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2118-COMPLETE-WORKFLOW-B4-GO-TEST.md",
+    "docs/evidence/M0/PLAN029B-H2118-H2117-WORKFLOW-INTERPOLATION-INVALID-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "B3 H2112 original signed /128 real AF_INET6 16 IPv4 12 Rust skipped52 background included + true Stop PASS_SCOPED. H2113 catalog overbudget FAIL fixed H2114 PASS. B4 H2115 Go+Rust pure tests; H2115 assembly cheap FAIL fixed H2116 CI compiles PASS, Go test not executed so H2117 forces real Go test. Full B4 GUI/Game and B5 perf OPEN, no 029/030 closure."
+  "partial_summary": "H2112 signed B3 /128 IPv6+IPv4+Stop PASS_SCOPED; H2114 feature catalog restored PASS. H2115 assembly test SHA mismatch first cheap FAIL, H2116 Windows Go/Win-Linux Rust compile PASS but B4 Go test not executed. H2117 malformed YAML/Python test runner FAIL zero jobs, H2118 repaired exact source/verified Git blobs pending Action. Actual B4 GUI multigen/Game and B5 performance OPEN."
 }
