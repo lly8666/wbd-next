@@ -1,0 +1,172 @@
+package org.wbdnext.rootclient;
+
+import android.content.Context;
+import android.os.Build;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Explicit, one-tap, NON-PROTOCOL ARM64 KernelSU cold capabilities test.
+ *
+ * The only route mutation is a single documentation TEST-NET-1 /32 in
+ * independent table 19843 and an exact UID range for THIS test APK only,
+ * never another app UID / default route / netd table / production 19842.
+ * POSIX trap owns immediate rollback; no persistent TUN or packet tunnel.
+ * The signed ORIGINAL Go ELF is separately checked via its real CLI help.
+ * Real TLS/auth/lease/M4 needs an actual server and is always NOT_RUN here.
+ */
+final class RootDeviceSelfTest {
+    private RootDeviceSelfTest(){}
+    static final String[] CODES={
+        "ROOT_PASS","ROOT_FAIL",
+        "GO_ELF_HELP_PASS","GO_ELF_HELP_FAIL","GO_ELF_SIGSEGV","GO_ELF_SIGILL",
+        "TUN_PASS","TUN_FAIL",
+        "RAW_PASS","RAW_FAIL",
+        "UNDERLAY_PASS","UNDERLAY_FAIL","UNDERLAY_NOT_RUN",
+        "ROUTE_UID_PASS","ROUTE_UID_FAIL","ROUTE_UID_COLLISION",
+        "ROUTE_ROLLBACK_PASS","ROUTE_ROLLBACK_FAIL","ROUTE_ROLLBACK_NOT_RUN",
+        "SELFTEST_REFUSED","SELFTEST_SCRIPT_DONE"
+    };
+    private static String q(String value){
+        if(value==null)throw new IllegalArgumentException("null POSIX argument");
+        return "'"+value.replace("'","'\\''")+"'";
+    }
+    private static boolean allowed(String name){
+        for(String v:CODES)if(v.equals(name))return true;
+        return false;
+    }
+    private static boolean validIface(String value){
+        return value!=null&&value.matches("[A-Za-z0-9_.-]{1,15}");
+    }
+    static String script(File nativeClient,File originalRust,File probe,
+                         String iface,int ownUid){
+        if(!validIface(iface)||ownUid<10000||ownUid>999999999)
+            throw new IllegalArgumentException("invalid local kernel scope");
+        StringBuilder sh=new StringBuilder(8200);
+        sh.append("set -u; umask 077; PATH=/system/bin:/system/xbin:/vendor/bin; export PATH; ");
+        sh.append("p='/data/local/tmp/wbd-next-selftest'; ");
+        sh.append("if [ \"$(id -u)\" != 0 ]; then echo WBD_SELFTEST_ROOT_FAIL; exit 51; fi; ");
+        sh.append("echo WBD_SELFTEST_ROOT_PASS; ");
+        // Fail closed, including leftover root product owner. No accidental
+        // overwrite of an active Root Go app and no foreign/symlink staging.
+        sh.append("if [ -r /data/local/tmp/wbd-next-root/owner.pid ]; then ");
+        sh.append("echo WBD_SELFTEST_SELFTEST_REFUSED; exit 52; fi; ");
+        sh.append("if [ -L \"$p\" ]; then echo WBD_SELFTEST_SELFTEST_REFUSED; exit 53; fi; ");
+        sh.append("if [ ! -e \"$p\" ]; then mkdir -m 700 \"$p\" || exit 54; fi; ");
+        sh.append("if [ ! -d \"$p\" ] || [ \"$(stat -c %u \"$p\")\" != 0 ] || ");
+        sh.append("[ \"$(stat -c %a \"$p\")\" != 700 ]; then ");
+        sh.append("echo WBD_SELFTEST_SELFTEST_REFUSED; exit 55; fi; ");
+        sh.append("if ! mkdir \"$p/.lock\" 2>/dev/null; then ");
+        sh.append("echo WBD_SELFTEST_SELFTEST_REFUSED; exit 56; fi; ");
+        sh.append("route_added=0; rule_added=0; ");
+        // Cleanup is exact-match only: never delete a foreign table/rule.
+        sh.append("cleanup() { ");
+        sh.append("if [ \"$rule_added\" = 1 ]; then ");
+        sh.append("ip -4 rule del pref 9699 uidrange ").append(ownUid).append("-").append(ownUid);
+        sh.append(" lookup 19843 >/dev/null 2>&1 || :; fi; ");
+        sh.append("if [ \"$route_added\" = 1 ]; then ");
+        sh.append("ip -4 route del 192.0.2.1/32 dev lo table 19843 >/dev/null 2>&1 || :; fi; ");
+        sh.append("if ip -4 rule show 2>/dev/null | grep -Eq '^ *9699:'; then ");
+        sh.append("echo WBD_SELFTEST_ROUTE_ROLLBACK_FAIL; ");
+        sh.append("elif ip -4 route show table 19843 2>/dev/null | grep -q '[^[:space:]]'; then ");
+        sh.append("echo WBD_SELFTEST_ROUTE_ROLLBACK_FAIL; ");
+        sh.append("else echo WBD_SELFTEST_ROUTE_ROLLBACK_PASS; fi; ");
+        sh.append("rm -f \"$p/.help.log\"; rmdir \"$p/.lock\" 2>/dev/null || :; }; ");
+        sh.append("trap cleanup EXIT; trap 'exit 59' HUP INT TERM; ");
+        // Copy only previously SHA-verified files from APK private staging.
+        sh.append("if ! cp ").append(q(nativeClient.getAbsolutePath()));
+        sh.append(" \"$p/.go\" || ! cp ").append(q(originalRust.getAbsolutePath()));
+        sh.append(" \"$p/.rust\" || ! cp ").append(q(probe.getAbsolutePath()));
+        sh.append(" \"$p/.test\"; then echo WBD_SELFTEST_SELFTEST_REFUSED; exit 57; fi; ");
+        sh.append("chmod 700 \"$p/.go\" \"$p/.test\"; chmod 600 \"$p/.rust\"; ");
+        sh.append("mv -f \"$p/.go\" \"$p/wbd-v4-client-arm64\"; ");
+        sh.append("mv -f \"$p/.rust\" \"$p/libwbd_engine.so\"; ");
+        sh.append("mv -f \"$p/.test\" \"$p/device-selftest-arm64\"; ");
+        // Same original ARM64 Go ELF as official APK. ErrHelp may cause
+        // exit=1 via main's log.Fatal: success requires REAL usage content.
+        sh.append("LD_LIBRARY_PATH=\"$p\"; export LD_LIBRARY_PATH; ");
+        sh.append("\"$p/wbd-v4-client-arm64\" --help >\"$p/.help.log\" 2>&1; go_rc=$?; ");
+        sh.append("if [ \"$go_rc\" = 139 ]; then echo WBD_SELFTEST_GO_ELF_SIGSEGV; ");
+        sh.append("elif [ \"$go_rc\" = 132 ]; then echo WBD_SELFTEST_GO_ELF_SIGILL; ");
+        sh.append("elif [ \"$go_rc\" -le 1 ] && ");
+        sh.append("grep -q 'android-network-handle' \"$p/.help.log\"; then ");
+        sh.append("echo WBD_SELFTEST_GO_ELF_HELP_PASS; ");
+        sh.append("else echo WBD_SELFTEST_GO_ELF_HELP_FAIL; fi; ");
+        sh.append("if \"$p/device-selftest-arm64\" --tun >/dev/null 2>&1; then ");
+        sh.append("echo WBD_SELFTEST_TUN_PASS; else echo WBD_SELFTEST_TUN_FAIL; fi; ");
+        sh.append("if \"$p/device-selftest-arm64\" --raw ").append(q(iface));
+        sh.append(" >/dev/null 2>&1; then echo WBD_SELFTEST_RAW_PASS; ");
+        sh.append("else echo WBD_SELFTEST_RAW_FAIL; fi; ");
+        sh.append("if \"$p/device-selftest-arm64\" --underlay ").append(q(iface));
+        sh.append(" >/dev/null 2>&1; then echo WBD_SELFTEST_UNDERLAY_PASS; ");
+        sh.append("else echo WBD_SELFTEST_UNDERLAY_FAIL; fi; ");
+        // Hard gate BEFORE adding any rule: do not touch pre-existing data
+        // from any process, or original product table19842/pref9600..9607.
+        sh.append("if ip -4 rule show 2>/dev/null | grep -Eq '^ *9699:' || ");
+        sh.append("ip -4 route show table 19843 2>/dev/null | grep -q '[^[:space:]]'; then ");
+        sh.append("echo WBD_SELFTEST_ROUTE_UID_COLLISION; ");
+        sh.append("else ");
+        sh.append("if ip -4 route add 192.0.2.1/32 dev lo table 19843 >/dev/null 2>&1; then ");
+        sh.append("route_added=1; ");
+        sh.append("if ip -4 rule add pref 9699 uidrange ").append(ownUid).append("-");
+        sh.append(ownUid).append(" lookup 19843 >/dev/null 2>&1; then ");
+        sh.append("rule_added=1; ");
+        sh.append("if ip -4 rule show | grep -Eq '^ *9699:' && ");
+        sh.append("ip -4 route show table 19843 | grep -q '192.0.2.1'; then ");
+        sh.append("echo WBD_SELFTEST_ROUTE_UID_PASS; ");
+        sh.append("else echo WBD_SELFTEST_ROUTE_UID_FAIL; fi; ");
+        sh.append("else echo WBD_SELFTEST_ROUTE_UID_FAIL; fi; ");
+        sh.append("else echo WBD_SELFTEST_ROUTE_UID_FAIL; fi; fi; ");
+        sh.append("echo WBD_SELFTEST_SELFTEST_SCRIPT_DONE; ");
+        return sh.toString();
+    }
+    static String run(Context ctx,PhysicalNetwork chosen){
+        List<String> events=new ArrayList<>();
+        events.add("REAL_TLS_AUTH_LEASE=NOT_RUN (needs real server and credentials)");
+        events.add("REAL_M3_M4_APP_DATA=NOT_RUN (needs authenticated session)");
+        events.add("SYSTEM_DNS_TAKEOVER=NOT_RUN (safety gates remain false)");
+        if(!"arm64-v8a".equals(Build.SUPPORTED_ABIS[0])){
+            events.add("NATIVE_ARM64_KERNEL=NOT_RUN (non ARM64 primary ABI)");
+            return String.join("\n",events);
+        }
+        if(chosen==null||PhysicalNetwork.exact(ctx,chosen.handle,
+           chosen.interfaceName,chosen.ifindex,chosen.mtu,chosen.address)==null){
+            events.add("PHYSICAL_NETWORK=FAIL (refresh real Wi-Fi/cellular Network)");
+            return String.join("\n",events);
+        }
+        events.add("PHYSICAL_NETWORK=PASS (Android Network exact readback)");
+        try{
+            NativePayload original=NativePayload.stage(ctx);
+            File diag=NativePayload.stageDeviceSelfTest(ctx);
+            events.add("SOURCE_AND_APK_ASSET_SHA=PASS");
+            String shell=script(original.client,original.engine,diag,
+                                chosen.interfaceName,android.os.Process.myUid());
+            Process child=new ProcessBuilder("su","-c",shell)
+                .redirectErrorStream(true).start();
+            try(BufferedReader lines=new BufferedReader(
+                new InputStreamReader(child.getInputStream(),StandardCharsets.UTF_8))){
+                String line;
+                while((line=lines.readLine())!=null){
+                    line=line.trim();
+                    if(line.startsWith("WBD_SELFTEST_")){
+                        String code=line.substring("WBD_SELFTEST_".length());
+                        if(allowed(code)&&!events.contains(code))events.add(code);
+                    }
+                    // Never echo untrusted root/native stdout, tokens, app
+                    // package names, route UIDs, env, or shell failure text.
+                }
+            }
+            int rc=child.waitFor();
+            if(rc!=0)events.add("ROOT_RUN_EXIT_NONZERO");
+            if(!events.contains("ROUTE_ROLLBACK_PASS")&&
+               !events.contains("ROUTE_ROLLBACK_FAIL"))events.add("ROUTE_ROLLBACK=NOT_VERIFIED");
+        }catch(Exception e){
+            events.add("ROOT_TEST_LAUNCH=FAIL ("+e.getClass().getSimpleName()+")");
+        }
+        return String.join("\n",events);
+    }
+}

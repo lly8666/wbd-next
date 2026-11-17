@@ -85,6 +85,22 @@ final class NativePayload {
         }
         return target;
     }
+    // Isolated, non-product ARM64 debug capability helper. The signed
+    // archive carries a separate immutable SHA256 for this test-only binary.
+    // It never handles a packet or substitutes original Go/Rust/AEAD/TLS.
+    static File stageDeviceSelfTest(Context ctx)throws Exception{
+        String hash=new String(load(ctx,
+            "native-arm64/device-selftest-sha256.txt",128),
+            java.nio.charset.StandardCharsets.US_ASCII).trim();
+        if(!hash.matches("[0-9a-f]{64}"))
+            throw new SecurityException("invalid signed device diagnostic hash");
+        File dir=new File(ctx.getNoBackupFilesDir(),"wbd-arm64-verified");
+        if(!dir.isDirectory()&&!dir.mkdir())
+            throw new IllegalStateException("device diagnostic staging inaccessible");
+        return checkedCopy(ctx,"device-selftest-arm64",dir,
+            "device-selftest-arm64",hash,1024*1024);
+    }
+
     static NativePayload stage(Context ctx)throws Exception{
         boolean arm64=false;
         for(String abi:Build.SUPPORTED_64_BIT_ABIS){

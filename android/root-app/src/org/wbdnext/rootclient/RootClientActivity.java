@@ -1,6 +1,10 @@
 package org.wbdnext.rootclient;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import java.util.concurrent.atomic.AtomicBoolean;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -33,7 +37,34 @@ public final class RootClientActivity extends Activity {
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
     private LinearLayout appChoices;
-    private TextView status;
+    private TextView status,deviceSelfTestResult;
+    private final AtomicBoolean deviceSelfTestActive=new AtomicBoolean(false);
+    private void runDeviceSelfTest(){
+        if(deviceSelfTestActive.get())return;
+        new AlertDialog.Builder(this)
+            .setTitle("Android ARM64 / KernelSU 一键自检")
+            .setMessage("不需要服务器地址/用户名/密钥。\n\n将请求 KernelSU Root 授权，" +
+                "创建并关闭临时真实 TUN，测试 RAW/物理网络绑定，短暂添加仅对本 APK UID " +
+                "和测试地址 192.0.2.1/32 生效的独立规则/table19843，并立刻尝试" +
+                "完整撤销。不会修改默认路由、其他 App UID、原 WBD table19842、" +
+                "系统 DNS 或任何 TLS/AEAD 数据面。\n\n" +
+                "异常被强行杀进程时无法绝对保证回滚；若结果显示回滚失败，请停止后检查。")
+            .setNegativeButton("取消",null)
+            .setPositiveButton("允许本机测试",(dialog,which)->{
+                if(!deviceSelfTestActive.compareAndSet(false,true))return;
+                final int pos=networks.getSelectedItemPosition();
+                final PhysicalNetwork selected=pos>=0&&pos<physical.size()
+                    ?physical.get(pos):null;
+                deviceSelfTestResult.setText("正在等待 KernelSU 授权并运行隔离自检…");
+                new Thread(()->{
+                    String outcome=RootDeviceSelfTest.run(this,selected);
+                    runOnUiThread(()->{
+                        deviceSelfTestActive.set(false);
+                        deviceSelfTestResult.setText(outcome);
+                    });
+                },"wbd-arm64-ksu-selftest").start();
+            }).show();
+    }
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
             if(status!=null)status.setText(RootClientService.status);
@@ -115,18 +146,25 @@ public final class RootClientActivity extends Activity {
                 CheckBox cb=checkedApps.get(app.packageName);
                 if(cb!=null&&cb.isChecked())chosenApps.add(app);
             }
+            if(chosenApps.isEmpty())
+                throw new IllegalArgumentException("Select one installed App first; use One-Tap Self-Test without server settings");
             SelectedAppGroup chosen=SelectedAppGroup.from(
                 chosenApps,android.os.Process.myUid(),getPackageName());
             if(!InstalledAppCatalog.stillSameGroup(this,chosen.packages,chosen.uids))
                 throw new IllegalArgumentException("Selected package/UID changed; refresh");
             int port=Integer.parseInt(serverPort.getText().toString().trim());
-            if(!ServerAddress.valid(peer)||sni.length()==0||sni.length()>253||
-               account.length()==0||account.length()>128||
-               secret.length()==0||secret.length()>512||
-               !key.matches("[0-9a-fA-F]{64}")||
-               port<1||port>65535){
-                throw new IllegalArgumentException("Invalid server / TLS / credential / UID settings");
-            }
+            if(!ServerAddress.valid(peer))
+                throw new IllegalArgumentException("Invalid real WBD server IPv4/DNS name; use One-Tap Self-Test if no server");
+            if(sni.isEmpty()||sni.length()>253)
+                throw new IllegalArgumentException("Invalid TLS server name / SNI");
+            if(account.isEmpty()||account.length()>128)
+                throw new IllegalArgumentException("Invalid original WBD username");
+            if(secret.isEmpty()||secret.length()>512)
+                throw new IllegalArgumentException("Invalid password: real WBD server credentials required");
+            if(!key.matches("[0-9a-fA-F]{64}"))
+                throw new IllegalArgumentException("Invalid offline route key: need exactly 64 hexadecimal characters (32 bytes)");
+            if(port<1||port>65535)
+                throw new IllegalArgumentException("Invalid real server port: 1..65535");
             if(!pem.isEmpty()&&!pem.startsWith("-----BEGIN CERTIFICATE-----")){
                 throw new IllegalArgumentException("TLS CA must be a PEM certificate");
             }
@@ -170,12 +208,32 @@ public final class RootClientActivity extends Activity {
         intro.setText("WBD original Go + Rust — Android ARM64 Root\n"+
             "No VpnService or FakeIP. Normal/off only. Real traffic NOT YET DEVICE-QUALIFIED.");
         pane.addView(intro);
+        TextView diagHint=new TextView(this);
+        diagHint.setText("首次上真 ARM64 手机：直接点下面一键自检，不需要填写任何服务器参数。" +
+            " 这是独立内核能力测试；只有真正有效的 WBD 服务器/密钥才可使用 START 联网。");
+        pane.addView(diagHint);
         networks=new Spinner(this);
         pane.addView(networks);
         Button refresh=new Button(this);
         refresh.setText("Refresh physical Networks");
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
+        Button selfTestButton=new Button(this);
+        selfTestButton.setText("一键自检 ARM64 / KSU / TUN / RAW / UID 路由及回滚（免服务器）");
+        selfTestButton.setOnClickListener(v->runDeviceSelfTest());
+        pane.addView(selfTestButton);
+        deviceSelfTestResult=new TextView(this);
+        deviceSelfTestResult.setText("尚未测试。测试中会请求 KernelSU 授权；结果可长按复制。");
+        deviceSelfTestResult.setTextIsSelectable(true);
+        pane.addView(deviceSelfTestResult);
+        Button copySelfTest=new Button(this);
+        copySelfTest.setText("复制一键自检结果");
+        copySelfTest.setOnClickListener(v->{
+            ClipboardManager cb=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+            if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("WBD ARM64 诊断结果",
+                deviceSelfTestResult.getText()));
+        });
+        pane.addView(copySelfTest);
         serverAddress=input(pane,"Server underlay IPv4 or DNS name (physical DNS bootstrap)",InputType.TYPE_CLASS_TEXT);
         serverName=input(pane,"Standard TLS server name / SNI",InputType.TYPE_CLASS_TEXT);
         serverPort=input(pane,"Original FakeTCP peer port",InputType.TYPE_CLASS_NUMBER);

@@ -32,6 +32,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/ci/RootDiagnosticReceiptTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReceiptTest
 PYTHONPATH=android/root-app/ci python3 -m unittest -v device_first_run_test
+python3 android/root-app/ci/test-device-selftest-source.py
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()

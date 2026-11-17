@@ -250,3 +250,57 @@ remain the only production cleanup mechanism.
 If the original app cannot start, use the read-only collection mode or
 share the sanitized ZIP after examining it. Never share the Android
 password/route key or raw logcat.
+
+
+## A10: 手机内一键 KernelSU/TUN/RAW/独立 UID 路由安全验收
+
+**旧 Start 的 `Invalid server / TLS / credential / UID settings` 是预期的输入
+拒绝**，不是物理 TUN/内核 Root 测试结果。Start 是真实原 Go
+Normal/off 客户端：需要真实 WBD IPv4/域名、SNI、账号/密码、32-byte
+route-key 的 64 个十六进制字符、1–16 已安装的真实目标 App；乱填不能
+启动，因为不能伪造 TLS/authenticated lease。新版细分了表单错误，
+但不放宽原协议凭据的安全校验。
+
+**无服务端首次测试：** 安装 A10 SOURCE 对应的签名调试 APK，打开后不
+填任何服务器设置，选择 Wi-Fi/蜂窝 Network，直接点击顶部
+「一键自检 ARM64 / KSU / TUN / RAW / UID 路由及回滚（免服务器）」，
+阅读临时内核规则说明后同意，在 KernelSU Manager 中授权该 App Root。
+一次点击将顺序验证：
+
+- `NativePayload.stage()` 对同一签名 APK 中**原始 ARM64 Go/Rust ELF
+  与 CN8503 资产**执行 SOURCE/SHA256 门；测试专用 NDK Bionic ARM64
+  C helper 另经 APK 内独立 SHA256 验证，**不替代原业务二进制**。
+- 原始 Go `wbd-v4-client-arm64 --help` 实际从隔离 root-only
+  目录启动（标注真实 SIGSEGV139/SIGILL132，绝不把加载测试认作TLS成功）。
+- test-only C helper 真实调用 Linux `open(/dev/net/tun)`、
+  `ioctl(TUNSETIFF IFF_TUN|IFF_NO_PI)`，查询真实ifindex，关闭 FD
+  并确认不持久化；真实 `AF_PACKET/SOCK_RAW` 在所选物理接口 bind
+  后立即关闭；`SO_BINDTODEVICE` socket 仅设置选定接口，不发送包。
+- 在隔离root shell里尝试 **只针对本APK UID** 的
+  `pref 9699 uidrange APP_UID-APP_UID lookup 19843` 和
+  `192.0.2.1/32 dev lo table 19843`。它只指向IANA文档测试IPv4
+  地址，既不接管系统默认网关，也不使用正常WBD
+  table19842/pref9600..9607或目标App UID。真实内核安装/readback，
+  `trap EXIT` 使用完全匹配的规则和路由撤销，再被动readback。
+  预存规则/路由占位直接拒绝覆盖；不执行自动修复已有网络状态。
+- 所有原始root/stdout/凭据/IP/UID被过滤，UI只显示固定
+  PASS/FAIL/NOT_RUN阶段码，支持长按或「复制一键自检结果」。
+
+**风险声明**：这是经用户按钮授权的短暂原生内核测试，但进程被
+`SIGKILL`、设备断电或内核异常时，POSIX清理陷阱不是绝对保证，
+必须检查 `ROUTE_ROLLBACK_PASS`；若FAIL，停止重复测试并检查专用
+table19843/pref9699。普通 shell KernelSU授权不代表原 Go/Rust 在
+厂商 SELinux 下必定可工作。
+
+**严格未测**：无真实服务器凭据时，原Go真实TLS/authenticated lease、
+原 Rust M3/M4双向应用UDP/TCP、生产App选定UID转发以及Android
+system Resolver/物理/tunnel DNS接管仍是 `NOT_RUN`。双DNS冷开关
+继续false。绝不将模拟TUN创建+策略readback称为真实隧道成功。
+正式产品仍保持原Go/Rust ABI/data plane，不增加JNI/Java逐包循环、
+VpnService/FakeIP。
+
+**签名注意**：Actions生成一次性调试签名密钥，若旧APK由另一套密钥
+签名，Android不能直接覆盖升级。须**自己备份需要的数据后**
+卸载旧版 `org.wbdnext.rootclient` 再装新的调试APK；卸载会擦除本
+App 私有配置/密钥，切勿在原业务正在运行时卸载，也不能使用
+`adb install -r` 绕过签名校验。
