@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2120",
+  "date": "2026-11-17",
+  "source_sha": "22473652eb20a2d0127272f8c1c0496197b43710",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "B4_THREE_GENERATION_PURE_COMPONENT_TESTS_PASS_NO_WINDOWS_OS_CONNECT_OR_GAME",
+  "workflow": {
+    "id": 44124045844,
+    "conclusion": "success",
+    "run_attempt": 1,
+    "jobs": {
+      "cheap": "success",
+      "windows_go": "success",
+      "windows_rust": "success",
+      "linux_rust": "success",
+      "native_windows_wsl2": "SKIPPED_NO_REAL_B4_MARKER"
+    },
+    "governance_action_id": 44124046126,
+    "governance": "success",
+    "feature_catalog": "success",
+    "governance_maintenance_id": 44124045878,
+    "maintenance": "success"
+  },
+  "original_tests": {
+    "windows_go": "PASS_ACTUAL_EXECUTION",
+    "go_name": "TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter",
+    "go_stdout": "--- PASS: TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter (0.01s)",
+    "go_gate": "PLAN029B_B4_GO_THREE_GENERATIONS_COLD_UNIT_PASS_NO_OS",
+    "windows_rust": "PASS_ACTUAL_TEST_v4_client_split::tests::plan029b_b4_fresh_generations_drop_stale_fake_even_when_all_tunnels",
+    "windows_rust_tests": 417,
+    "linux_rust": "PASS_ACTUAL_TEST_v4_client_split::tests::plan029b_b4_fresh_generations_drop_stale_fake_even_when_all_tunnels",
+    "linux_rust_tests": 334,
+    "r2_windows": 11,
+    "r2_linux": 11
+  },
+  "artifacts": [
+    {
+      "id": 14346572866,
+      "sha256": "7c42b3b47e998a8e651a896a4b1378890f0945981cdf87fcf0a02108a42071ad",
+      "entries": 3,
+      "crc": "PASS",
+      "source": "22473652eb20a2d0127272f8c1c0496197b43710",
+      "qualifier": "GO_COMPILE_ONLY_RECEIPT_PLUS_SEPARATE_LOG_PROVES_NAMED_TEST_EXECUTED"
+    },
+    {
+      "id": 14346443150,
+      "sha256": "073702b86f1fa75d558346ad193958bf14a1ddde3db05e4a0df8f0cd811bd07e",
+      "entries": 2,
+      "crc": "PASS",
+      "source": "22473652eb20a2d0127272f8c1c0496197b43710",
+      "qualifier": "WINDOWS_RUST_LIBRARY_R2_NO_HARDWARE"
+    }
+  ],
+  "scope": {
+    "advanced_CN_fakeip_writer_path": "CONSTRUCTED_COLD",
+    "ordinary_CN_real_A_mode_no_fake_writer": "PASS_PURE",
+    "all_split_disabled_no_direct_rules_fake_writer": "PASS_PURE",
+    "original_fakeip_journal_sentinel_no_rebind": "PASS_PURE",
+    "stale_198_18_16_in_next_generations": "REJECT_UNKNOWN_FAKE_IN_PURE_RUST",
+    "real_A_overseas_in_all": "TUNNEL_PURE",
+    "real_WinForms_advanced_ordinary_all_three_OS_Applied": "NOT_RUN",
+    "actual_Windows_stale_fake_socket_no_egress": "NOT_RUN",
+    "three_generation_owning_Stop_WAL": "NOT_RUN",
+    "Game2_Game4_real": "NOT_RUN",
+    "B5_same_VM_10Mbps_CPU_GiB_RSS_p99": "NOT_RUN",
+    "H2112_original_signed_B3": "PASS_SCOPED_PREVIOUS_SOURCE"
+  },
+  "old_fails_preserved": [
+    {
+      "run": 44119996395,
+      "first": "H2115 assembly test SHA mismatch"
+    },
+    {
+      "run": 44122245145,
+      "first": "H2117 malformed YAML zero jobs"
+    },
+    {
+      "run": 44123359648,
+      "first": "H2118 test static NameError root"
+    }
+  ]
+}
