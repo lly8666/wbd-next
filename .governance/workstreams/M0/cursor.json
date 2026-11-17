@@ -4,21 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2080,
-  "checkpoint_sha": "0b2d6b03bb7cce05e823e8620eb4312d878588d5",
+  "sequence": 2081,
+  "checkpoint_sha": "b52f92bb7b613991e4da040b19e8978232b464c6",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2080 repair H2079 actual source CI first boundaries: Go pinned original assembly manifest missing six changed overlay source result_blob hashes; Rust new AAAA test missing semicolon; M0 cursor context_refs duplicate. H2079 native and app Actions FAIL are preserved; H2080 fixes exact SHA and syntax without changing 029B behavior.",
-  "why_now": "Actions 44041865897 cheap assembly, 44041865873 Windows original compile, 44041865928 WAL all rejected as intended by exact missing overlay result_blob for m0_native_v4_dispatch_windows.go. Cross-ABI 44041865875 and Windows Go/GUI 44041866088 failed new Rust test line 1095 expected semicolon. Governance 44041866046 failed invalid duplicate context_refs; feature catalog check itself PASS.",
+  "current_task": "H2081 fix two existing expected-behavior fixture mismatches from H2080: Rust NativeSplitWorker test helper still emitted V1 while native cold ABI intentionally V2; original Go old PLAN029 unit still required split=false to return nil/V2, now 029B explicitly requires Rust V3 public DNS/padding and business-off. No product code behavior changed; new Rust/Go real compile/functional still pending.",
+  "why_now": "H2080 cross ABI 44042418383 PASS, ABI 44042418407 PASS, governance 44042418496 PASS, native-functional 44042418733 PASS. H2080 source-only Go Action44042418488 failed only TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains old nil expectation; H2080 Rust component44042418360 9 tests failed because fixture config version1 mismatched newly versioned cold ABI2. Both updated to explicit B0 behavior/V2 fixture, prior failures retained.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2080 current-source Go assembly, Windows/Rust and cross ABI tests. Fix only next genuine first error; verify B0/B1 true native split-off resources, CN normal vs advanced, AAAA local DNS and legacy GUI; no product PASS until true source-locked Windows WSL2 and B5 conditions.",
+  "next_action": "Collect H2081 current-source Windows Go assembly tests, Rust/ABI & Windows/WSL2 old Normal regression; fix only new first real bug. 029B B0 DNS-only TCP53 and real IPv6 Wintun/GUI effective/B5 still NOT_RUN; do not claim completion or run old 028 matrix.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2081-H2080-TWO-FIXTURES-20261117.json",
+    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029B-H2081-COLD-ABI-FIXTURE-MIGRATION.md",
+    "docs/evidence/M0/PLAN029B-H2081-H2080-TWO-FIXTURES-20261117.json",
     "docs/devlog/M0/20261117-PLAN029B-H2080-FIRST-CI-REPAIR.md",
     "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json",
     "docs/devlog/M0/20261117-PLAN029B-H2079-PRODUCT-INITIAL-CANDIDATE.md",
@@ -29,5 +31,5 @@
     "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2079 candidate tests failed first exact assembly hash mismatch, rust syntax and duplicate context refs, not product runtime evidence. H2080 atomic metadata/source grammar repair, production behavior unchanged; old H2077 PASS independent, new 029B NOT_RUN."
+  "partial_summary": "H2081 existing tests adapted to explicitly selected new 029B semantics (Rust cold version2, split-off nonnil V3 DNS/padding). No user-facing product correctness claim; Go and Rust H2080 full compile/old original test partial PASS, new H2081 pending."
 }

@@ -90,7 +90,10 @@ func TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains(t *testing.T){
  t.Setenv("GITHUB_ACTIONS","false")
  t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","1")
  c,e:=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2})
- if e!=nil||c!=nil{t.Fatal("private V3 without CI admitted",e)}
+ if e!=nil||c==nil||c.RouteMode!=0||c.PolicyFlags!=0||
+  len(c.Direct)!=0||len(c.Domains)!=0||len(c.FakeJournalPath)!=0{
+  t.Fatal("business-off still requires original Rust V3 DNS/padding, never old V2",e)
+ }
  t.Setenv("GITHUB_ACTIONS","true")
  if _,e=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2});e==nil{
   t.Fatal("CN missing rules silently degraded")

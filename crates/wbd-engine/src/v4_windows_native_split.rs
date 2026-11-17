@@ -821,7 +821,7 @@ mod tests{
     fn config<'a>(cn:&'a [ColdCidrV1],lan:&'a [ColdCidrV1],
         domains:&'a [u8])->ColdSplitSourceV1{
         ColdSplitSourceV1{
-            version:1,size:std::mem::size_of::<ColdSplitSourceV1>() as u32,
+            version:2,size:std::mem::size_of::<ColdSplitSourceV1>() as u32,
             route_mode:2,physical_ifindex:14,
             physical_source:[10,1,0,7],lease4:[10,234,12,34],
             direct_dns:[223,5,5,5],tunnel_dns:[1,1,1,1],
