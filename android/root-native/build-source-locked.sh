@@ -63,7 +63,10 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   # SAME shared Rust engine, not a fake or adapter-local stub. M4 symbols
   # and actual kernel delivery remain separately required for true client.
   for symbol in wbd_m0_embedded_go_prepare_client wbd_m0_embedded_go_stage \
-      wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop; do
+      wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop \
+      wbd_m0_embedded_go_android_bind_physical \
+      wbd_m0_embedded_go_attach_raw_rx_on_interface \
+      wbd_m0_embedded_go_attach_tun; do
     "$tool/llvm-nm" -D "$lib" | grep -Eq " [TW] ${symbol}$" || {
       echo "ANDROID_RUST_AUTHENTICATED_COLD_FFI_MISSING: $symbol" >&2
       exit 1
@@ -91,9 +94,10 @@ def inspect(path,expected_machine):
 d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "source":os.environ["GITHUB_SHA"],
    "pinned_original_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-   "scope":"SHARED_RUST_COLD_ABI_ONLY",
+   "scope":"RUST_COLD_ABI_PLUS_ANDROID_OWNED_FD_ATTACH_ONLY",
    "android_c_abi_static_checks":"PASS_IN_WORKFLOW",
    "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
+   "android_original_owner_network_raw_tun_ffi_symbols":"PASS_IN_WORKFLOW",
    "native":{abi:inspect(p/("libwbd_engine-"+abi+".so"),mach)
              for abi,mach in (("arm64",183),("amd64",62))},
    "original_go_full_link":"NOT_YET_RUN_AT_THIS_STAGE",

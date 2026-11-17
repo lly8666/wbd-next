@@ -13,6 +13,7 @@ import (
     "fmt"
     "net"
     "os"
+    "runtime"
     "sync"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -20,6 +21,11 @@ import (
 type V4LinuxClientProductConfig struct {
     NetworkInterface string
     NetworkIfIndex uint32
+    // Required only on Android: the real ConnectivityManager Network handle
+    // and link MTU are supplied by the root App's cold controller. Zero is
+    // never interpreted as the default/physical network on Bionic.
+    AndroidPhysicalNetworkHandle uint64
+    AndroidPhysicalMTU uint32
     Tun *os.File
     TunName string
     // Only original Go authenticated AUTO /32 client mode uses one shared
@@ -56,6 +62,11 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     }
     iface,err:=net.InterfaceByName(cfg.NetworkInterface)
     if err!=nil||iface==nil||uint32(iface.Index)!=cfg.NetworkIfIndex{
+        return nil,ErrAdmissionParams
+    }
+    if runtime.GOOS=="android" && (cfg.AndroidPhysicalNetworkHandle==0||
+        cfg.AndroidPhysicalMTU<68||cfg.AndroidPhysicalMTU>65535||
+        uint32(iface.MTU)!=cfg.AndroidPhysicalMTU){
         return nil,ErrAdmissionParams
     }
     if _,err:=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
@@ -139,7 +150,14 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             return nil,errors.Join(err,p.closeLocked())
         }
     }
-    if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
+    // Android cannot inherit Linux's implicit physical interface binding.
+    // Fail closed if the OS Network handle/MTU cannot be pinned to this
+    // specific Go-authenticated Rust generation before either FD is opened.
+    err=v4BindPlatformUnderlay(bridge,p.cfg)
+    if err==nil{
+        err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex)
+    }
+    if err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
     if err==nil{

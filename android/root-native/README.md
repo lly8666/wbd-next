@@ -9,7 +9,9 @@ Production adapter boundary, **not** the existing probe or a connectable APK.
   TX requires a complete packet built by the original Rust owner and its
   approved route budget, RX remains untrusted until original AEAD/replay.
   No unbound fallback, global fwmark/UID bypass, TUN creation or route mutation.
-  **These real syscall adapters are not yet wired to the original M4 loop.**
+  The A2 handoff binds the original authenticated Rust Entry to this exact
+  Network and owns both RAW FDs and duplicated TUN FD; the live M4 loop
+  has **not** been ported and no DATA is sent/received by these handles.
 - `build-source-locked.sh`: NDK cross-build of **actual shared `wbd-engine`**
   and pinned original-Go product CLI overlay using Android GOOS/CGO, excluding
   native ISA-L to keep Normal/off first-connect unblocked.
@@ -20,3 +22,8 @@ Production adapter boundary, **not** the existing probe or a connectable APK.
 physical Android Network and Rust authenticated M4 raw/TUN workloop; A3 then
 test Android16 genuine KSU App ↔ source-locked Linux WBD server, real TCP/UDP.
 No VpnService, fake TLS, new protocol or probe-derived production success.
+
+- `r0/go_overlay/internal/realityfront/bridge_v4_android_network_android.go`:
+  Android-only original Go post-TLS, post-Detach physical Network/MTU bridge.
+  The Linux twin rejects Android-only values and preserves its existing path.
+  The root app must supply a real Network handle; none is invented here.

@@ -31,7 +31,10 @@
     ".github/workflows/android-root-product-a1.yml",
     "crates/wbd-engine/src/lib.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
-    "android/root-native/README.md"
+    "android/root-native/README.md",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_android_network_android.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_android_network_linux.go"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -39,7 +42,8 @@
     "docs/devlog/android-root-probe/20261117-android-native-client-kickoff.md",
     "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md",
     "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md",
-    "docs/devlog/android-root-probe/20261117-android-product-a2-raw-bionic-io.md"
+    "docs/devlog/android-root-probe/20261117-android-product-a2-raw-bionic-io.md",
+    "docs/devlog/android-root-probe/20261117-android-product-a2-cold-network-handoff.md"
   ],
   "verification": [
     {
@@ -148,7 +152,8 @@
     "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。",
     "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。",
     "A2 Bionic RAW IPv4 TX/tuple-filtered RX socket owner与ifindex/MTU冷读回已编写，尚未被共享Rust M4主循环消费；系统/真机socket行为、同源服务器业务均NOT_RUN；不可将此称为可连接客户端。",
-    "A2 SOURCE 097d3b0e Action44017866225 overall FAIL: NDK C ABI + dual Rust cold .so ELF build PASS with independently matched artifact14299801880 ZIP SHA256 47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914; arm64 real original-Go M4 link FAIL missing symbols, x86 complete Go link NOT_RUN. No Android raw socket runtime/real WBD/owned worker proof."
+    "A2 SOURCE 097d3b0e Action44017866225 overall FAIL: NDK C ABI + dual Rust cold .so ELF build PASS with independently matched artifact14299801880 ZIP SHA256 47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914; arm64 real original-Go M4 link FAIL missing symbols, x86 complete Go link NOT_RUN. No Android raw socket runtime/real WBD/owned worker proof.",
+    "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。"
   ],
   "promotion": null
 }
