@@ -129,9 +129,17 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     store.ImportValues(p,legacy029);
     Need(Convert.ToBoolean(p.Values["cn-domain-direct"]),
       "H2084_legacy_missing_selector_migrates_advanced_true");
+    store.Save();
+    var importedLegacy=new PortableStore(root);
+    Need(Convert.ToBoolean(importedLegacy.Book.Profiles.Single(x=>x.Id==p.Id).Values["cn-domain-direct"]),
+      "H2104_legacy_missing_key_persisted_true_through_real_GUI_reopen");
     store.ImportValues(p,fresh029B);
     Need(!Convert.ToBoolean(p.Values["cn-domain-direct"]),
       "H2084_explicit_false_survives_legacy_migration");
+    store.Save();
+    var importedExplicitOff=new PortableStore(root);
+    Need(!Convert.ToBoolean(importedExplicitOff.Book.Profiles.Single(x=>x.Id==p.Id).Values["cn-domain-direct"]),
+      "H2104_explicit_false_persisted_through_reopen");
     // A real Go parser must reject missing CN domain rules with explicit
     // split enabled. GUI cannot silently fall back to the old tunnel path.
     form.SetEditor("cn-rules-file","");
@@ -167,6 +175,31 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Correct(gameAll,"route-mode","all");
     Correct(gameAll,"split-enable","true");
     Correct(gameAll,"cn-domain-direct","false");
+    // H2104: saved stale Direct cap and inactive CN rule source must not
+    // prevent ordinary all/off Rust DNS/Tunnel construction. This is a
+    // real WinForms→original Go CLI cold gate, NOT an OS Applied receipt.
+    form.SetEditor("direct-flow-hard","16385");
+    form.SetEditor("cn-rules-file","");
+    form.SetEditor("cn-domain-direct",true);
+    form.SaveEditor();
+    var allDormant=Check(store,p,"data/h2104-all-dormant-direct.json",cli);
+    Correct(allDormant,"split-enable","true");
+    Correct(allDormant,"route-mode","all");
+    Correct(allDormant,"direct-flow-hard","16385");
+    Correct(allDormant,"cn-domain-direct","true");
+    form.SetEditor("split-enable",false);
+    form.SetEditor("route-mode","bypass-lan-cn");
+    form.SaveEditor();
+    var offDormant=Check(store,p,"data/h2104-off-dormant-direct.json",cli);
+    Correct(offDormant,"split-enable","false");
+    Correct(offDormant,"route-mode","bypass-lan-cn");
+    Correct(offDormant,"direct-flow-hard","16385");
+    form.SetEditor("route-mode","all");
+    form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
+    form.SetEditor("direct-flow-hard","2");
+    form.SetEditor("cn-domain-direct",false);
+    form.SetEditor("split-enable",true);
+    form.SaveEditor();
     form.SetEditor("split-enable",false);form.SaveEditor();
     var game=Check(store,p,"data/h1663-game4.json",cli);
     Correct(game,"server-ip","EDGE.Example.Test.");

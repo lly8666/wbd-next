@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2104",
+  "date": "2026-11-17",
+  "source_sha": "15978946fe382d6f124c64eceb81fcd7de2a2822",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action": {
+    "id": 44085831814,
+    "job_id": 134050923926,
+    "attempt": 1,
+    "conclusion": "success",
+    "windows_go_compile": "PASS",
+    "windows_rust_compile": "PASS",
+    "linux_rust_compile": "PASS",
+    "signed_windows2025_wintun_npcap_wsl2": "PASS"
+  },
+  "artifact": {
+    "id": 14329403547,
+    "zip_sha256": "b364c172281608bda0b9d4deb1269dcde83f3308472f023360659bd5185c0757",
+    "source_match": "source=product_binary_source=linux_binary_source=fixture_source=15978946fe382d6f124c64eceb81fcd7de2a2822",
+    "windows_exe_sha256": "b02d0d6abf4ee90dfab036ca385c39fd31a26bc82d47c713e74160b8b020d798",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "effective": {
+    "mode": "normal",
+    "split_enable": false,
+    "requested_route_mode": "bypass-lan",
+    "actual_route_mode": 0,
+    "business_split": false,
+    "cn_domain_fakeip": false,
+    "owned_tcp_listener": "DNS_ONLY_65410",
+    "direct_business_nat": 0,
+    "inner_mtu": 1329,
+    "outer_mtu": 1400,
+    "outer_note": "EXISTING_LEGACY1400_CI_SCENE_NOT_CANONICAL_DEFAULT1460"
+  },
+  "source_scenario": {
+    "windows_tls_rust_wintun_npcap_os_wal": "PASS",
+    "linux_after_original_tls": "PASS",
+    "kernel_udp_duplex": "PASS_ACTUAL_TWO_OS",
+    "kernel_tcp_duplex": "PASS_ACTUAL_TWO_OS",
+    "stop": "PASS_BOTH_OWNED",
+    "wal_restored": true,
+    "original_wintun_owned_npf_cleanup": "PASS",
+    "windows_cpu_seconds": 1.0625,
+    "original_windows_process_peak_working_set_bytes": 45105152
+  },
+  "not_covered": {
+    "original_gui_on_this_source": "NOT_RUN",
+    "real_ipv6_AF_INET6_route_packet": "NOT_RUN",
+    "all_plus_saved_stale_direct_cap_cli": "H2104_NEW_SOURCE_NOT_RUN",
+    "full_B4_gen_stop_game": "NOT_RUN",
+    "same_vm_10mbps_A_B_per_gib_p99": "NOT_RUN"
+  },
+  "release_claim": "PASS_SCOPED_NORMAL_OFF_FUNCTIONAL_NOT_B3_NOT_B4_NOT_B5"
+}
