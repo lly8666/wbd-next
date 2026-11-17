@@ -102,3 +102,15 @@ SOURCE `e284b720b4a7e806b24f1438f72ac2f6aaa63198` [Actions44126602143](https://g
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"KSU分层真结果NDK ARM64/Rust dlopen退出0，独立Go和正式Go SIGSEGV139，二者同由binfmt runner故障地址0x2；增加测试专用Go c-shared/Go runtime选项对照及失败后独立APK Activity验收，不引入假WBD业务。"}
 ```
+
+## 2026-11-18 真实Go c-shared和正式APK Activity对照：MIDR_EL1 SIGILL
+
+SOURCE `201ea3d4874f0b2396ef05797ae7a57fd7e69e38` [Actions44129262070](https://github.com/lly8666/wbd-next/actions/runs/44129262070)：原10个Host/正式Bionic ARM64/signed APK/Linux真实TLS oracle Jobs **10/10 PASS**；KSU ARM64 NativeBridge第11项**FAIL**，原始[artifact14348094207](https://github.com/lly8666/wbd-next/actions/runs/44129262070/artifacts/14348094207)可复核。
+- API36 Android16 x86_64 KVM/官方KSU Root；真实NDK ARM64最小执行`0`、原Rust`dlopen+dlsym=0` PASS。纯Go`139`，加`GODEBUG=asyncpreemptoff=1 GOMAXPROCS=1`仍`139`，原Go/Rust`--help`仍`139`。
+- 独立Go `-buildmode=c-shared`库由NDK ARM64启动器**成功dlopen**，但调用仅返回常数的Go导出函数时**SIGILL exit132**；`logcat -b crash`栈`/system/lib64/libndk_translation.so (berberis::UndefinedInsnThunk)` → 真`internal/cpu.getMIDR.abi0+0`。Go1.23.12 ARM64运行时在 HWCAP_CPUID 时调用`getMIDR()`、执行`MRS MIDR_EL1`；该翻译器不能执行它。纯Go/正式Go的SIGSEGV139可能还有其他独立原因，不能断言已修全部。
+- 独立Android**正式签名**`org.wbdnext.rootclient/.RootClientActivity`真实安装、`am start`+PID有界查得**2884**，收据`product_app_launch=PASS`；**仅UI Activity**，普通App Root->原Go真TLS/租约/TUN/Stop和Android↔Linux E2E仍**NOT_RUN**，Job如实FAIL。
+- 本批诊断将固定Go1.23.12 `GOROOT`**复制到隔离测试目录**，`internal/cpu/cpu_arm64_hwcap.go`中将MIDR探测判定仅对**测试版Android**增`&& os != "android"`。原工具链、签名APK、Go TLS/租约、Rust真AEAD/Stop、M0/main均不改。源片段必须与固定版本精确匹配，只改一次并记录前后SHA。分别构建实验CGO0与c-shared ABI的ARM64真ELF并在KSU guest跑，若失败仍保留根因红门，不能以隔离工具链成功宣告原WBD产品兼容。新SOURCE Android guest 结果提交前NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"留存Android16 KSU真实APK Activity PASS、Go c-shared调用在NativeBridge getMIDR处SIGILL132以及原Go139；仅以复制的Go1.23.12工具链做安卓MIDR条件隔离，不影响生产。"}
+```

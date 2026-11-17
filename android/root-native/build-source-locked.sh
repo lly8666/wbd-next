@@ -190,10 +190,24 @@ for pair in "aarch64 arm64"; do
     go build -buildmode=c-shared -trimpath -buildvcs=false \
     -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-go-cshared-probe.so" \
     android/root-app/ci/nativebridge-arm64-go-cshared-probe.go
+  # Isolated toolchain copy: NEVER patch system Go, original donor,
+  # or real product ELF. The Android NativeBridge guest reports an
+  # undefined MRS MIDR_EL1 instruction in Go1.23 runtime internal/cpu.
+  python3 android/root-app/ci/nativebridge-go-midrel1-isolate.py
+  patched_go_root="$GITHUB_WORKSPACE/out/nativebridge-go-patched-goroot"
+  GOROOT="$patched_go_root" GO111MODULE=off CGO_ENABLED=0 GOTOOLCHAIN=local \
+    go build -trimpath -buildvcs=false \
+    -o "$GITHUB_WORKSPACE/out/android-product-a1/ksu-arm64-go-midr-isolate" \
+    android/root-app/ci/nativebridge-arm64-go-probe.go
+  GOROOT="$patched_go_root" GO111MODULE=off CGO_ENABLED=1 GOTOOLCHAIN=local \
+    CGO_LDFLAGS="-Wl,-z,max-page-size=16384" \
+    go build -buildmode=c-shared -trimpath -buildvcs=false \
+    -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-go-cshared-midr-isolate.so" \
+    android/root-app/ci/nativebridge-arm64-go-cshared-probe.go
   python3 - <<'PYARM64'
 from pathlib import Path
 import struct
-for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared-probe.so"):
+for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared-probe.so","ksu-arm64-go-midr-isolate","libksu-arm64-go-cshared-midr-isolate.so"):
     raw=(Path("out/android-product-a1")/name).read_bytes()
     assert raw[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",raw,18)[0]==183,name
 print("ARM64_NATIVEBRIDGE_DIAGNOSTIC_PROBES_SOURCE_COMPILED_ONLY")
