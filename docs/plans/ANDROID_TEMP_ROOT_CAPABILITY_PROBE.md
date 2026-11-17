@@ -1,6 +1,6 @@
 # Android Root 原生客户端适配｜授权施工方案（2026-11-17）
 
-**状态：A6 同源 Android ARM64 Native/Root APK BUILD_PASS、原 Linux WBD server oracle PASS；原生 NetworkCallback/Stop 静态语法门 PASS；真 Android ARM64 guest 因 Actions ARM64 host 无 KVM 而 ENV_BLOCKED，产品 P2/P3 实际联机 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+**状态：A7 同源 Android ARM64 Go/Rust Native+Root APK BUILD_PASS、Linux 原服务端 oracle PASS；真实包名/UID JVM17断言、Launcher可见性Manifest、A6 callback/Stop静态门 PASS。Android16 ARM64 guest 因托管ARM64无KVM仍 ENV_BLOCKED，P2/P3正式业务 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
@@ -70,6 +70,8 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 - `adb root` 只证明 adbd/shell 可获得调试 Root，不授予普通 App `su`。KSU Root Profile 可限制 `su` 的 UID/GID、groups、capabilities、SELinux；**`uid=0` 或 `getenforce=Enforcing` 均不足以证明权限或网络行为等价**。只能对同一程序/同操作/相同 Android 系统网络语义/可观测结果在指定范围内认定行为等价，不能宣布 Root 提供者全面等价。
 
 - [A6 Action44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)，SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`：**5/5 Jobs SUCCESS**，原M3、ARM64 Bionic原Go/Rust、签名Root APK、原Linux WBD server oracle；Java事件Network门16断言、生成的Root Stop脚本 `sh -n` 11断言、`owner.pid`旧2/新3字段POSIX解析PASS。`ubuntu-24.04-arm`实测 `aarch64` 但 `/dev/kvm` 不可访问，**ARM64 Android P2/P3 环境 `ENV_BLOCKED`，不是正式Root App联网通过**；不再尝试已有hang的macOS AVD。需可信有KVM的ARM64 Actions runner及固定Cuttlefish镜像/host工具，否则保持NOT_RUN。
+
+- [A7 Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`：**5/5 Jobs SUCCESS**，原Go/Rust ARM64 Bionic+签名无VpnService APK BUILD_PASS、原Linux WBD server oracle PASS；A7 `InstalledAppTarget` JVM真实包名/UID 17断言 PASS、最小Launcher `<queries>` Manifest PASS、A6网络回调16/Stop语法11及owner PID兼容回归PASS。**真正 Android16 PackageManager/卸载广播/Root UID路由及 Android↔Linux业务依然NOT_RUN**；aarch64托管runner `/dev/kvm` 不可用、Cuttlefish P2/P3 `ENV_BLOCKED`。共享UID不能逐包分开；不得把编译的包选择器冒称真实Android per-app功能完成。
 
 ### Actions 准入、各层真实验收及最后实体终验
 

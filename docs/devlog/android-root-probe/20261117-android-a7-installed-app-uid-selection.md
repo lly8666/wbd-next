@@ -18,3 +18,9 @@ A7 JVM正反门、Manifest最小可见性/签名APK、同源ARM64 Go/Rust与原L
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A7正式Root客户端改用Android PackageManager真实可见已安装App选择，3次包名UID复核、目标包变更世代限定停止和最小queries；保留P3 NOT_RUN。"}
 ```
+
+## A7 同源 Actions 结果（已验）
+
+[Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`，**5/5 Jobs SUCCESS**：原M3 wire、原Go/Rust ARM64 Bionic native、无VpnService签名APK、原Linux server标准TLS/租约/UDP/Stop oracle均PASS；新增 `ANDROID_INSTALLED_PACKAGE_UID_POLICY_PASS assertions=17`、`ANDROID_ROOT_NARROW_INSTALLED_PACKAGE_VISIBILITY_MANIFEST_PASS`、旧A6网络回调16断言/Stop POSIX 11断言和两/三字段 `owner.pid` 兼容门全部 PASS。CI 是 host JVM + APK构建/源锁 + 原Linux数据真实收发，**不是Android系统App包清单或真正UID路由 PASS**。
+
+同 SOURCE `arm64-cuttlefish-host-admission` 在 `ubuntu-24.04-arm` 上确认 `arch=aarch64` 但 `kvm=NOT_AVAILABLE`，原因 `KVM_NOT_ACCESSIBLE`、Android16 ARM64 guest P2/P3 `ENV_BLOCKED`，没有adb root/App su/原Go Android真正TLS或实体KernelSU证据。后续软件仍可继续做多真实包/双DNS/路由状态机，但**B正式系统App使用门必须等P3实际回读，硬件待最后**。
