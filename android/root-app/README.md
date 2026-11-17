@@ -90,3 +90,5 @@ qualify Android, KernelSU or true Android↔Linux traffic: P2/P3/physical
 remain NOT_RUN until an actual ARM64 guest and authorized runtime are
 available. The previous macOS QEMU guest hang is retained as
 ENV_BLOCKED historical evidence, not silently overwritten.
+
+The exact Stop shell is now emitted by source-shared `RootStopCommand.build()` and its **production command string** is passed to a real host `sh -n` parser during Actions. This additional cold-control test catches syntax faults that the Android Java compiler alone cannot detect. Neither a successful parse nor APK build is a substitute for true rooted Android Stop.

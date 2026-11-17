@@ -16,3 +16,9 @@ Java状态门、Android Native Go/Rust构建、签名APK、原Linux server oracl
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A6正式Root App物理Network事件回调替代1秒轮询，精确token/PID/starttime Stop，Java状态门，ARM64主机KVM预检替代挂死的macOS AVD；保留设备P2/P3 NOT_RUN。"}
 ```
+
+## 首次 Actions 实测与 Stop 修复
+
+[A6 原始 Action44055024821](https://github.com/lly8666/wbd-next/actions/runs/44055024821) SOURCE `44ddd7e2902bb143f74b0dca82a5cad234cfe946`：5/5 Jobs SUCCESS，原 M3 wire、ARM64 原Go/Rust、Java NetworkScopeGate **16项断言**、同源Root APK、原Linux真实协议oracle通过。ARM64 Linux runner实测 `arch=aarch64`，但 `/dev/kvm` **NOT_AVAILABLE**；host admission JSON `ENV_BLOCKED`，P2/P3/正式Android数据严格NOT_RUN。
+
+首次 Action 的 Root Stop 内部脚本尚缺一层 `fi`；Java/App编译未发现，设备也未执行过 Stop。因此不是既有运行 PASS。此后将 Stop 脚本抽到正式产品用的 `RootStopCommand.build()`，增加严格16进制128bit会话 token 验证及 host JVM 使用 **`sh -n` 解析实际生产脚本文本** 的回归测试，后续同源 Action 通过才能标语法门 PASS。真实 Root Stop/Android路由回收仍NOT_RUN。

@@ -2,7 +2,7 @@
  "schema_version": 1,
  "id": "android-root-native-client",
  "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
- "summary": "ARM64原Go/Rust与Root APK BUILD_PASS，原Linux server oracle PASS；A6事件式Network回调/精确Stop待Actions；Android↔Linux E2E NOT_RUN。",
+ "summary": "A6 callback Java+ARM64 APK构建+Linux oracle PASS；Stop sh -n修复待验；KVM缺失/P2-P3 NOT_RUN。",
  "owner": "Android 原生客户端适配（用户独立授权，非M0）",
  "stage": "experimental",
  "development_branch": "experiment/android-temp-root-probe",
@@ -65,7 +65,9 @@
   "android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java",
   "android/root-app/ci/NetworkScopeGateTest.java",
   "android/root-app/ci/test-network-scope-gate.sh",
-  "android/root-app/ci/arm64-cuttlefish-admission.sh"
+  "android/root-app/ci/arm64-cuttlefish-admission.sh",
+  "android/root-app/src/org/wbdnext/rootclient/RootStopCommand.java",
+  "android/root-app/ci/RootStopCommandTest.java"
  ],
  "doc_refs": [
   "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",

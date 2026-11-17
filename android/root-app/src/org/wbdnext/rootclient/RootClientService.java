@@ -305,32 +305,13 @@ public final class RootClientService extends Service {
             stopSelf();
         }
     }
-    private static String stopCommand(String token){
-        // Only signal THIS owner generation, even if a previous Root worker
-        // still owns an older pid file after a refused overlapping launch.
-        // Wait boundedly only during Stop for the su shell to write owner.pid.
-        return "set -eu; p="+q(ROOT)+"; n=0; "+
-            "while [ \"$n\" -lt 60 ]; do "+
-            "if [ -r \"$p/owner.pid\" ]; then "+
-            "read pid expected generation < \"$p/owner.pid\"; "+
-            "if [ \"$generation\" = "+q(token)+" ]; then "+
-            "case \"$pid\" in ''|*[!0-9]*) exit 51;; esac; "+
-            "if [ -r \"/proc/$pid/stat\" ]; then "+
-            "set -- $(cat \"/proc/$pid/stat\"); "+
-            "if [ \"${22}\" = \"$expected\" ]; then "+
-            "actual=$(readlink \"/proc/$pid/exe\"); "+
-            "if [ \"$actual\" = \"$p/wbd-v4-client-arm64\" ]; then "+
-            "kill -TERM \"$pid\"; exit 0; "+
-            "fi; fi; fi; fi; "+
-            "n=$((n+1)); sleep 0.2; done; exit 55";
-    }
     private void signalRootStopIfStarted(){
         if(root==null||ownerToken==null||
            !stopSignalDispatched.compareAndSet(false,true))return;
         final String token=ownerToken;
         new Thread(()->{
             try{
-                Process p=new ProcessBuilder("su","-c",stopCommand(token))
+                Process p=new ProcessBuilder("su","-c",RootStopCommand.build(token))
                     .redirectErrorStream(true).start();
                 try(BufferedReader r=new BufferedReader(
                     new InputStreamReader(p.getInputStream()))){
