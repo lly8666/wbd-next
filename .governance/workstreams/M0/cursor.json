@@ -4,29 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2076,
-  "checkpoint_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
-  "progress": "in_progress",
+  "sequence": 2077,
+  "checkpoint_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
+  "progress": "partial",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2076 H2075 three REAL normal Windows+WSL2 native source498a runs all hit first legacy single-generation Windows numeric OS MTU checker mismatch after actual second GUI child OS Applied. All raw ZIPs prove 2 Windows OS MTU1389/1460, server B authenticated Health /32 promotion and both generation Stop; TTL three FakeIP replies. Fix only fixture two receipt strict parser, retain old single helper, reuse exact SOURCE498a binary artifacts via H2062 3-case coordinator.",
-  "why_now": "H2075 GUI44032936928 domain44034346200 TTL44034352986 real ZIP source498a: each 2 WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1, 2 OS Applied/Ready, server V4_PUBLIC_NORMAL_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX generation2 verified_client_cold_health1, exact two Rust Stop and shared TUN Stop; old m0_wl_native_mtu_contract.verified_native_windows_inner_mtu requires exactly one row even for p029_gui_reconnect, fails before real TCP/UDP business. Fail is fixture, not second auth/OS.",
+  "current_task": "H2077 PLAN029 ordinary user-scope CLOSEOUT PASS_SCOPED: product SOURCE498a fixture d7b; 3 independent signed normal GUI/domain/TTL real Windows/WSL2 Actions all SUCCESS with second B AEAD Health/route, OS1460/inner1389, Direct/Tunnel TCP/UDP, DNS TC TCP53, TTL3 FakeIP, owned Stop. Extended original D1–D5/P1–P2/old IPv6/stress remains partial NOT_RUN.",
+  "why_now": "H2076 GUI44035518047 ZIP14306069256, domain44035523669 ZIP14306553979, TTL44035528778 ZIP14306902967 each Action and native job SUCCESS; read original ZIP manifest/report/server real B authenticated Health/OS/business and Stop. Existing Normal regression 44031316063 PASS. H2075 failures retained.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "H2076 coordinator dispatch exactly three independent normal original WinForms GUI/domain/TTL fixture-only reuses with product_binary_source_sha=498a... via prior Action44032936928 uploaded Windows EXE/DLL & Linux peer, no recompiles. Collect each ZIP, real double OS receipt and MSS, Direct/Tunnel TCP+UDP, CN DNS TTL3 and physical TC/TCP53, Stop; fix only first new boundary. After all normal PASS, update devlog/card/evidence and limited impacted old native regression; do not run 028 matrix or 030.",
+  "next_action": "STOP PLAN029 work within 2026-11-17 daily-user scope; deliver H2077 scoped report and evidence. No more Action dispatch, no old PLAN028 seven-mode matrix or PLAN030. Extended performance/stress/IPv6 D1–D5/P1–P2 requires explicit new scope if ever requested; preserve NOT_RUN.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2076-H2075-THREE-MTU-GATE-20261117.json"
+    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md",
+    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2076-REAL-MTU-RECEIPT-FIXTURE.md",
     "docs/evidence/M0/PLAN029-H2076-H2075-THREE-MTU-GATE-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2074-ONE-SOURCE-THREE-ORDINARY-NATIVE.md",
-    "docs/evidence/M0/PLAN029-H2074-SOURCE-BUILDER-THREE-REAL-SCENES-PENDING-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md",
-    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2071-SERVER-B-RAW-EVIDENCE.md",
-    "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json"
+    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2075 signed source498a genuine B Health/route promotion and two OS Apply confirmed in GUI/domain/TTL, yet all 3 reported FAIL due old single OS receipt checker; normal TCP/UDP downstream NOT_RUN. H2076 fixture strict two OS row fix + old single checker preserved, source498a product reuse pending."
+  "partial_summary": "H2077 USER DAILY PASS_SCOPED: H2076 GUI/domain/TTL three signed physical native SUCCESS, product binary source498a, fixture d7b; B Health route promotion and both OS, Direct/Tunnel TCP UDP, single DNS and TTL3, Stop. Old original Normal 44031316063 regression PASS; old one-row MTU tests PASS. Full D1-D5/P1-P2/IPv6/extreme metrics not qualified; stop without extra runs."
 }
