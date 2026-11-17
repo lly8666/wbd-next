@@ -126,10 +126,24 @@
       "action": null,
       "status": "IMPLEMENTED_NOT_TESTED",
       "test": "physical single dns.direct UDP TC->TCP53 in original signed Normal CN plus one engine bounded quota old Direct/Tunnel recovery and Windows kernel TCP independent relay test"
+    },
+    {
+      "id": "H2050_GUI_real_kernel_then_dispose_crash",
+      "source": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
+      "action": 43998891197,
+      "status": "FAIL_AFTER_REAL_OS_APPLIED_AND_WAL_STOP",
+      "first_boundary": "True original WinForms two kernel egress and WAL Stop demonstrated, but harness Form.Dispose during Control.CreateHandle caused unhandled InvalidOperationException and process exit1 after Stop; native report stopped at strict exit0 oracle."
+    },
+    {
+      "id": "H2054_GUI_StopSTA_fix",
+      "source": null,
+      "action": null,
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "test": "Same exact signed original WinForms/kernel scene; no extra Form.Dispose after separately proven owned Stop; requires exit0, same SOURCE signed OS Applied and full business."
     }
   ],
   "selected_unverified": {
-    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "RETRY_H2050_NOT_RUN",
+    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "H2050_REAL_APPLIED_AND_ALL_KERNEL_BUSINESS_WAL_STOP_OBSERVED_BUT_ACTION_FAIL_H2054_RECHECK",
     "DNS_bootstrap_same_endpoint_TC_real": "H2047_FAILED_UDP_TIMEOUT_H2050_TEST_GRANT_PENDING",
     "DNS_bootstrap_after_reconnect": "NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
@@ -145,5 +159,5 @@
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
-  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NOT_PROMOTED"
+  "closure_status": "SELECTED_SCOPE_PARTIAL_NATIVE_RECEIPTS_NO_FULL_PRODUCT_PASS"
 }

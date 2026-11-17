@@ -136,7 +136,7 @@ public static class Plan029GuiReal {
     }catch(Exception e){
      Console.Error.WriteLine("PLAN029_REAL_GUI_OWNED_STOP_INCOMPLETE "+e.GetType().Name);
     }
-    form.Dispose();
+    // H2054: original WinForms Control.BeginInvoke may still be creating\n    // a status Label handle while an STA test main is returning. A second\n    // synchronous Form.Dispose() here races CreateHandle and converts a\n    // genuinely completed Rust/WAL Stop into an unhandled GUI exit(1).\n    // The original ClientSession Disconnect above already owned the\n    // complete product network cleanup; the harness is a short-lived STA\n    // process, and its WinForms handle belongs to normal process teardown.\n    // Never manufacture Stop or swallow a child failure to fix this race.
    }
   }
  }
