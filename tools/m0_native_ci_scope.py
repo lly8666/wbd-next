@@ -67,6 +67,10 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-real-gui-cn]",
     "[plan029-real-dns-tc]",
     "[plan029-game4-cn-real]",
+    # 029B H2088: one user-authorized signed default Normal/off smoke,
+    # no implicit old P1/P2 or 028 stress scene. Product PASS needs the
+    # genuine signed Windows↔WSL2 OS/UDP/TCP/Stop evidence, not this flag.
+    "[plan029b-normal-off-smoke]",
 )
 
 

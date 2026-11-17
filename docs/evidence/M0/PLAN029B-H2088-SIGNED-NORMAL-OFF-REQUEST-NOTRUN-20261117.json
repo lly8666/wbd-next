@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2088",
+  "date": "2026-11-17",
+  "source_sha": "2f1b0bac6701a985fc5aa31960bedd2425a5e02b",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "previous_source": {
+    "sha": "2f1b0bac6701a985fc5aa31960bedd2425a5e02b",
+    "action": 44051962624,
+    "cheap": "PASS",
+    "windows_go_compile": "PASS",
+    "windows_rust_library": "PASS",
+    "linux_rust_library": "PASS",
+    "signed_windows_wsl2": "SKIPPED_BY_TEST_ONLY_NATIVE_DIFF_GATE"
+  },
+  "previous_governance": {
+    "action": 44051962306,
+    "result": "FAIL",
+    "first_reason": "combined hot byte budget exceeded: 32923 chars > 32768"
+  },
+  "current_native_request": {
+    "marker": "[plan029b-normal-off-smoke]",
+    "eligible_repo": "lly8666/wbd-next",
+    "branch": "main",
+    "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "scene": "default Normal/off; no old Direct/CN/private trial; no loss/long-performance mode",
+    "source_sha": "CURRENT_H2088_COMMIT_PUBLISHED_NEXT",
+    "result": "REQUESTED_NOT_RUN",
+    "checked": "real signed Windows Wintun+Npcap/WAL, PE V3 export, Rust Tunnel, kernel UDP/TCP, owned Stop"
+  },
+  "explicit_limitations": [
+    "not public DNS A/AAAA TCP/UDP B0 acceptance yet",
+    "not B2 normal/advanced CN",
+    "not B3 actual IPv6 ingress",
+    "not B5 same-VM CPU/latency comparison"
+  ],
+  "h2077_original": "PASS_SCOPED_DISTINCT_PRODUCT_SOURCE",
+  "h2083_real": "FAIL_V3_EXPORT_PRE_READY_44045024679"
+}

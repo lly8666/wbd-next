@@ -65,6 +65,16 @@ class NativeSmokeScopeTests(unittest.TestCase):
         for marker in ("[wiring-full]", "[plan028-h1602-near-mtu-five-native]", "[m0-native-smoke]", "[plan029-v3-real-tunnel]", "[plan029-v3-real-direct-udp]", "[plan029-v3-real-p1-tunnel-ab]", "[plan029-v3-real-p2-bulk]", "[plan029-v3-real-direct-pressure]", "[plan029-real-product-cn]", "[plan029-game4-cn-real]"):
             self.assertTrue(requires_native_smoke("push", ["docs/readme.md"], marker))
 
+    def test_plan029b_explicit_one_normal_off_native_smoke_is_not_doc_only(self):
+        # Test/data-only hot fixes normally must not launch the real VM;
+        # one fully explicit source-locked 029B B0 Normal/off request does.
+        changed=["tests/test_m0_native_ci_scope.py"]
+        self.assertFalse(requires_native_smoke("push",changed))
+        self.assertTrue(requires_native_smoke(
+            "push",changed,"[plan029b-normal-off-smoke]"))
+        self.assertFalse(requires_native_smoke(
+            "push",changed,"[plan029b-b0-unrequested]"))
+
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
         workflow = (Path(__file__).resolve().parents[1] /
                     ".github/workflows/m0-wl-public-normal-full.yml").read_text(encoding="utf-8")
