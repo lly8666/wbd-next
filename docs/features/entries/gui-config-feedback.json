@@ -134,6 +134,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
       "evidence": "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"
+    },
+    {
+      "platform": "Windows2025 signed WinForms + genuine Linux WSL2 M4",
+      "scope": "H2066 首代 GUI OS/Stop PASS，第二代 SYNACK/TLS PASS；共享/32 M4 Health交接失败，第二代 OS/业务NOT_RUN",
+      "status": "FAIL",
+      "source_sha": "4633f9e8c1da206401ee8952db07e2e65c83fb8d",
+      "evidence": "docs/evidence/M0/PLAN029-H2067-H2066-M4-REVERSE-FIRST-FAIL-20261117.json"
     }
   ],
   "limitations": [

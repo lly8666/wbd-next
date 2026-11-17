@@ -48,6 +48,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 signed WinForms + genuine Linux WSL2 M4",
+      "scope": "H2066 二次服务器域名 UDP TC→同端点 TCP53、SYNACK/TLS PASS；第二代 M4 Health 5s失败、OS业务NOT_RUN；H2067待实网",
+      "status": "FAIL",
+      "source_sha": "4633f9e8c1da206401ee8952db07e2e65c83fb8d",
+      "evidence": "docs/evidence/M0/PLAN029-H2067-H2066-M4-REVERSE-FIRST-FAIL-20261117.json"
     }
   ],
   "limitations": [
