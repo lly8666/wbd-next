@@ -46,6 +46,7 @@ d={
  "arm64_go_cshared":probe_ok("go-cshared-exec.txt","go-cshared-exit-code.txt","WBD_ANDROID_ARM64_GO_CSHARED_CALL_PASS"),
  "arm64_go_midr_isolate":probe_ok("go-midr-exec.txt","go-midr-exit-code.txt","WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS"),
  "arm64_go_cshared_midr_isolate":probe_ok("go-cshared-midr-exec.txt","go-cshared-midr-exit-code.txt","WBD_ANDROID_ARM64_GO_CSHARED_CALL_PASS"),
+ "arm64_original_go_cshared_help":probe_ok("original-go-cshared-help.txt","original-go-cshared-help-exit-code.txt","WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS"),
  "arm64_native_exec":"PASS" if txt("arm64-exit-code.txt")=="0" and "ANDROID_AARCH64_GO_RUNTIME_STARTED" in execout else "NOT_PROVEN",
  "arm64_native_exit_code":txt("arm64-exit-code.txt"),
  "product_app_launch":"PASS" if "ACTIVITY_STARTED" in app else "NOT_PROVEN",
@@ -72,6 +73,7 @@ test -s out/ksu/patched-ramdisk.img
 test -s out/ksu/manager.apk
 test -s out/android-root-app-native/wbd-v4-client-arm64
 test -s out/android-root-app-native/libwbd_engine-arm64.so
+test -s out/android-root-app-native/libksu-arm64-original-go-cshared-midr.so
 # Test-only ARM64 executables built by the exact product SOURCE job;
 # they are never shipped in the official APK or treated as WBD success.
 test -s out/android-root-app-native/ksu-arm64-ndk-probe
@@ -81,6 +83,10 @@ test -s out/android-root-app-native/ksu-arm64-go-midr-isolate
 test -s out/android-root-app-native/libksu-arm64-go-cshared-midr-isolate.so
 test -s out/android-root-app-native/ksu-go-midrel1-isolation.json
 test -s out/android-root-app/wbd-root-arm64-debug.apk
+# Ensure the test-only c-shared runtime cannot be shipped in the official APK.
+if unzip -Z1 out/android-root-app/wbd-root-arm64-debug.apk | grep -q original-go-cshared-midr;then
+  echo TEST_ONLY_CSHARED_LEAKED_TO_APK >&2; exit 1
+fi
 test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
 test "$(cat out/android-root-app/SOURCE)" = "$GITHUB_SHA"
 (cd out/android-root-app-native && sha256sum -c SHA256SUMS) >"$dir/source-verify.txt"
@@ -238,7 +244,9 @@ adb push out/android-root-app-native/ksu-arm64-go-midr-isolate \
   /data/local/tmp/wbd-go-arm64-midr-isolate >"$dir/go-midr-push.txt"
 adb push out/android-root-app-native/libksu-arm64-go-cshared-midr-isolate.so \
   /data/local/tmp/libwbd-go-cshared-midr-isolate.so >"$dir/go-cshared-midr-push.txt"
-adb shell su -c 'chmod 755 /data/local/tmp/wbd-ndk-arm64-probe /data/local/tmp/wbd-go-arm64-probe /data/local/tmp/wbd-go-arm64-midr-isolate; chmod 644 /data/local/tmp/libwbd-go-cshared-test.so /data/local/tmp/libwbd-go-cshared-midr-isolate.so' \
+adb push out/android-root-app-native/libksu-arm64-original-go-cshared-midr.so \
+  /data/local/tmp/libwbd-original-go-cshared-midr.so >"$dir/original-go-cshared-push.txt"
+adb shell su -c 'chmod 755 /data/local/tmp/wbd-ndk-arm64-probe /data/local/tmp/wbd-go-arm64-probe /data/local/tmp/wbd-go-arm64-midr-isolate; chmod 644 /data/local/tmp/libwbd-go-cshared-test.so /data/local/tmp/libwbd-go-cshared-midr-isolate.so /data/local/tmp/libwbd-original-go-cshared-midr.so' \
   >"$dir/probe-chmod.txt" 2>&1
 # Each result is a real Bionic/NativeBridge process. Every probe is
 # independent; never short-circuit before the original WBD execution.
@@ -259,6 +267,11 @@ adb shell su -c '/data/local/tmp/wbd-go-arm64-midr-isolate' >"$dir/go-midr-exec.
 gomidrrc=$?
 adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --go-shared /data/local/tmp/libwbd-go-cshared-midr-isolate.so' >"$dir/go-cshared-midr-exec.txt" 2>&1
 gosharedmidrrc=$?
+# Test-only NDK launcher now calls the real source-locked original-Go
+# v4productcli.Run("client", ["--help"]) through c-shared+Rust.
+adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --original-go-help /data/local/tmp/libwbd-original-go-cshared-midr.so' \
+  >"$dir/original-go-cshared-help.txt" 2>&1
+originalsharedrc=$?
 set -e
 printf '%s\n' "$ndkrc" >"$dir/ndk-min-exit-code.txt"
 printf '%s\n' "$gorc" >"$dir/go-min-exit-code.txt"
@@ -267,6 +280,20 @@ printf '%s\n' "$gotunedrc" >"$dir/go-min-tuned-exit-code.txt"
 printf '%s\n' "$gosharedrc" >"$dir/go-cshared-exit-code.txt"
 printf '%s\n' "$gomidrrc" >"$dir/go-midr-exit-code.txt"
 printf '%s\n' "$gosharedmidrrc" >"$dir/go-cshared-midr-exit-code.txt"
+printf '%s\n' "$originalsharedrc" >"$dir/original-go-cshared-help-exit-code.txt"
+# Even if the export returned zero, require the ORIGINAL Go flagset and
+# original-Go Run() completion marker, not just an NDK wrapper's success.
+if [[ "$originalsharedrc" == 0 ]];then
+  grep -Fq WBD_ANDROID_ARM64_ORIGINAL_GO_CLIENT_HELP_RETURNED "$dir/original-go-cshared-help.txt" || {
+    echo "ORIGINAL_GO_CSHARED_MISSING_GO_MARKER" >&2
+    originalsharedrc=14
+  }
+  grep -Fq android-network-handle "$dir/original-go-cshared-help.txt" || {
+    echo "ORIGINAL_GO_CSHARED_MISSING_REAL_CLIENT_FLAGS" >&2
+    originalsharedrc=15
+  }
+  printf '%s\n' "$originalsharedrc" >"$dir/original-go-cshared-help-exit-code.txt"
+fi
 phase="ORIGINAL_ARM64_GO_RUST_EXEC_RUNTIME"
 set +e
 adb shell su -c 'LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/wbd-product-arm64 --help' \
@@ -281,8 +308,8 @@ adb logcat -d -t 800 >"$dir/arm64-recent-logcat.txt" 2>&1 || true
 adb shell su -c 'ls -lt /data/tombstones' >"$dir/tombstone-list.txt" 2>&1 || true
 adb shell su -c 'f=$(ls -t /data/tombstones/tombstone_* 2>/dev/null | head -1); test -n "$f" && head -n 220 "$f"' \
   >"$dir/latest-tombstone-excerpt.txt" 2>&1 || true
-printf 'NDK_ARM64_EXIT=%s PURE_GO_ARM64_EXIT=%s RUST_DLOPEN_EXIT=%s PURE_GO_TUNED_EXIT=%s GO_CSHARED_EXIT=%s PURE_GO_MIDR_ISOLATE_EXIT=%s GO_CSHARED_MIDR_ISOLATE_EXIT=%s ORIGINAL_WBD_ARM64_EXIT=%s\n' \
-  "$ndkrc" "$gorc" "$rustrc" "$gotunedrc" "$gosharedrc" "$gomidrrc" "$gosharedmidrrc" "$rc"
+printf 'NDK_ARM64_EXIT=%s PURE_GO_ARM64_EXIT=%s RUST_DLOPEN_EXIT=%s PURE_GO_TUNED_EXIT=%s GO_CSHARED_EXIT=%s PURE_GO_MIDR_ISOLATE_EXIT=%s GO_CSHARED_MIDR_ISOLATE_EXIT=%s ORIGINAL_GO_CSHARED_HELP_EXIT=%s ORIGINAL_WBD_ARM64_EXIT=%s\n' \
+  "$ndkrc" "$gorc" "$rustrc" "$gotunedrc" "$gosharedrc" "$gomidrrc" "$gosharedmidrrc" "$originalsharedrc" "$rc"
 original_ready=0
 if [[ "$rc" == 0 ]] &&
    grep -Eiq 'Usage of|Usage:|--peer-ip|peer-ip|--android-network-handle|android-network-handle' "$dir/arm64-exec.txt" &&
@@ -292,7 +319,7 @@ if [[ "$rc" == 0 ]] &&
 else
   echo "ENV_BLOCKED_NATIVEBRIDGE_AARCH64_RAW_EXEC: original ARM64 WBD did not complete --help (exit $rc)" >&2
   cat "$dir/native-bridge.txt" >&2
-  for f in ndk-min-exec.txt go-min-exec.txt rust-dlopen.txt go-min-tuned-exec.txt go-cshared-exec.txt go-midr-exec.txt go-cshared-midr-exec.txt arm64-exec.txt latest-tombstone-excerpt.txt;do
+  for f in ndk-min-exec.txt go-min-exec.txt rust-dlopen.txt go-min-tuned-exec.txt go-cshared-exec.txt go-midr-exec.txt go-cshared-midr-exec.txt original-go-cshared-help.txt arm64-exec.txt latest-tombstone-excerpt.txt;do
     echo "=== $f ===" >&2
     tail -n 85 "$dir/$f" >&2 || true
   done

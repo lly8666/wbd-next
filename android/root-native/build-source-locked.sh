@@ -59,6 +59,10 @@ cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productc
   ./internal/v4productcli/dnsnative)
 test -s out/android-product-a1/dnsnative-arm64.test
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+# Build-tagged test-only c-shared entry calls original Go Run("client").
+# It is EXCLUDED from the official ARM64 executable and signed Root APK.
+test ! -e legacy/cmd/wbd-v4-client/ksu_cshared_entry_android.go
+cp r0/go_overlay/cmd/wbd-v4-client/ksu_cshared_entry_android.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Android ARM64 first authentic Go/Rust product is Normal/off only.
 # Use the ALREADY-EXISTING original-Go !wbd_v4_fec2_product source variants.
@@ -204,10 +208,38 @@ for pair in "aarch64 arm64"; do
     go build -buildmode=c-shared -trimpath -buildvcs=false \
     -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-go-cshared-midr-isolate.so" \
     android/root-app/ci/nativebridge-arm64-go-cshared-probe.go
+  # Test-only full original-Go product logic through a verified NativeBridge
+  # c-shared runtime. This is the exact source-locked donor/overlay and real
+  # Rust .so, but a quarantined patched Go1.23 GOROOT plus a test-only export.
+  # The signed APK's unmodified GO executable remains the actual product and
+  # MUST continue to fail its own x86 NativeBridge gate if SIGSEGV persists.
+  GOROOT="$patched_go_root" CGO_ENABLED=1 GOTOOLCHAIN=local \
+    CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384 -Wl,-rpath,\$ORIGIN" \
+    bash -c 'cd legacy && go build -buildmode=c-shared -trimpath -buildvcs=false \
+      -tags "wbd_v4_embedded_go,wbd_ksu_cshared_test" \
+      -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-original-go-cshared-midr.so" \
+      ./cmd/wbd-v4-client'
+  readelf -d "out/android-product-a1/libksu-arm64-original-go-cshared-midr.so" \
+    >"out/android-product-a1/linker-original-go-cshared-midr.txt"
+  grep -Fq 'Shared library: [libwbd_engine.so]' \
+    "out/android-product-a1/linker-original-go-cshared-midr.txt"
+  grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' \
+    "out/android-product-a1/linker-original-go-cshared-midr.txt"
+  "$tool/llvm-nm" -D "out/android-product-a1/libksu-arm64-original-go-cshared-midr.so" \
+    >"out/android-product-a1/original-go-cshared-midr.dynsym.txt"
+  grep -Eq '[[:space:]]WBD_AndroidRootOriginalGoHelp$' \
+    "out/android-product-a1/original-go-cshared-midr.dynsym.txt"
+  # Guard against the test-only symbol ever entering the signed executable.
+  "$tool/llvm-nm" -D "out/android-product-a1/wbd-v4-client-$goarch" \
+    >"out/android-product-a1/official-go-exports.txt"
+  if grep -q WBD_AndroidRootOriginalGoHelp "out/android-product-a1/official-go-exports.txt";then
+    echo "TEST_ONLY_GO_EXPORT_LEAKED_TO_OFFICIAL_PRODUCT" >&2
+    exit 1
+  fi
   python3 - <<'PYARM64'
 from pathlib import Path
 import struct
-for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared-probe.so","ksu-arm64-go-midr-isolate","libksu-arm64-go-cshared-midr-isolate.so"):
+for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared-probe.so","ksu-arm64-go-midr-isolate","libksu-arm64-go-cshared-midr-isolate.so","libksu-arm64-original-go-cshared-midr.so"):
     raw=(Path("out/android-product-a1")/name).read_bytes()
     assert raw[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",raw,18)[0]==183,name
 print("ARM64_NATIVEBRIDGE_DIAGNOSTIC_PROBES_SOURCE_COMPILED_ONLY")
