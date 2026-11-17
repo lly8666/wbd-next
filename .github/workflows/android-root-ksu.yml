@@ -27,6 +27,7 @@ on:
       - "experiments/android-root-probe/ci/cn-ipv4-snapshot.py"
       - "experiments/android-root-probe/ci/cn-geosite-snapshot.py"
       - "experiments/android-root-probe/probe/src/cn_geosite.rs"
+      - "experiments/android-root-probe/probe/src/dns_udp_gate.rs"
       - "experiments/android-root-probe/ci/split-settings-ui.py"
       - "experiments/android-root-probe/ci/cn-geosite-quick-ui.py"
       - "experiments/android-root-probe/ci/build-device-diagnostic.sh"
