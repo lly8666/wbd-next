@@ -31,6 +31,15 @@ curl --fail --location --retry 3 "https://github.com/tiann/KernelSU/releases/dow
 echo 'b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450  out/ksu/manager.apk' | sha256sum -c - | tee out/ksu/manager-hash-verified.txt
 buildtool="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
 "$buildtool/aapt" dump badging out/ksu/manager.apk >out/ksu/manager-badging.txt
-# The native binary is built ONCE from this current SOURCE for this KSU run.
-(cd out/native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
-test "$(cat out/native/SOURCE)" = "$GITHUB_SHA"
+# Historical x86 KernelSU probe keeps its exact source-locked checks.
+# The new ARM64-product/native-bridge gate stages its OWN same-SHA Go/Rust
+# artifact and does NOT compile or reuse the historical x86 probe.
+if [[ "${WBD_KSU_PRODUCT_ARM64:-0}" == 1 ]]; then
+  test -s out/android-root-app-native/SOURCE
+  test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
+  (cd out/android-root-app-native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
+  echo "KSU_NATIVE_PRODUCT_ARM64_SOURCE_LOCKED" >out/ksu/native-source-mode.txt
+else
+  (cd out/native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
+  test "$(cat out/native/SOURCE)" = "$GITHUB_SHA"
+fi

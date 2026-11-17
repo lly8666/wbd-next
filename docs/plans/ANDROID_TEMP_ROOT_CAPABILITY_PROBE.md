@@ -2,6 +2,14 @@
 
 **状态：B2c2c 原Rust M4唯一TX就绪线程已有真实NDK物理DNS UDP53 fd、同TUN IPv4/UDP回包映射和Stop；`android_dns_hijack_ready=false`、`android_dns_physical_ready=false`，直到完整CN8503/物理TCP53/系统Resolver归属同代认证前严禁启用。修正SOURCE `9d902a171764b832b3528b111ce6a371a5feedb2` [Action44108696248](https://github.com/lly8666/wbd-next/actions/runs/44108696248) **10/10 Jobs SUCCESS**（Rust物理/隧道DNS7项真实IPv4报文、ARM64 Bionic Go/Rust ELF、签名APK、原Linux真TLS/租约/M4/Stop oracle）。上一版 `71565fd` [Action44107830995](https://github.com/lly8666/wbd-next/actions/runs/44107830995) 因Host模块测试路径错误FAIL（本身Rust7/7 PASS），原记录保留。Android16 ARM64模拟器 `KVM_NOT_ACCESSIBLE` 真实业务 NOT_RUN，实体KSU P5未授权。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
+## 0a. 当前最高优先：复用 x86_64 KVM + KernelSU 3.3.1、核验 ARM64 Native Bridge（用户最新指示）
+
+2026-11-17 用户明确要求先恢复过去成功的 x86_64 KVM / Android16 API36 / KernelSU 环境，再验证当前正式 ARM64 Native Bridge Go/Rust + Root APK 所有可能的业务，之后才继续增加产品功能。**x86_64 仅作为仿真机 KVM guest 架构，不编译或发布 x86_64 版本的正式WBD客户端**，唯一产品 ABI 仍 arm64-v8a。此条更新覆盖早期“只优先ARM64 KVM/Cuttlefish”的试验环境选择，但不解除应用权限、TLS、AEAD、NativeBridge真实执行和源码锁红线。
+
+已证实旧 [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528) ：API36 x86_64 Android16 x86`probe-x86_64-linux-android` + 真实KSU3.3.1普通 App授权/Root/TUN/RAW/UID和私有DNS有界用例 PASS；**同次不曾执行Arm64正式WBD ELF**。新增产品同SOURCE CI job `android-x86-kvm-ksu-arm64-nativebridge` 必须使用原已证实的 Google Play API36系统镜像/补丁ramdisk/两次冷启动，下载同一workflow `arm64-native`和签名`root-arm64-app`的原Go/共享Rust ARM64产物，检查真实guest`ro.product.cpu.abilist`/NativeBridge及`execve`原ARM64 ELF `--help`，正式APK真实安装+Activity实际启动。单纯 `ro.dalvik.vm.native.bridge`/ABI声明或旧x86探针不能等于原ARM64 ELF执行。无权限不得静默回退另一ABI、不建模拟TLS或伪WBD成功。
+
+若NativeBridge对独立AArch64程序`execve`返回`ENOEXEC`，原WBD APK现用`ProcessBuilder("su","-c",...)`也无理由按JNI NativeBridge自动执行原ARM64 Go主程序；应保留 Actions FAIL + 具体guest/内核/应用日志并寻找真正支持Android ARM64内核ABI的可行执行后端，而非标注Android业务PASS。KSU Shell UID0与普通App UID→KernelSU授权是两项证据，前者不可充当后者。真服务器TLS/lease/App DNS/Stop只在真实原ARM64进程确认可执行后实际执行。实体手机 P5 仍需单独授权。
+
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
 **唯一 Android 目标 ABI 是 `arm64-v8a`**（Rust `aarch64-linux-android` / Go `GOARCH=arm64`）。不再进行 Android x86、x86_64、armeabi-v7a 的开发、交叉编译、打包或验收；已存在的 x86 Android 源码/ZIP/Actions 仅历史留档，不代表新目标。Linux/Windows x86 产品、回归和保护区完全不受影响。首个 Actions 真业务目标是 Android16 ARM64 userdebug/Cuttlefish P2 原生及 P3 普通 App→受控 su；Android16 ARM64 实体 KernelSU 仅最后专项终验；Android9–17 仅按可用 ARM64 镜像/真机选择后续覆盖，无 ARM64 镜像记 NOT_RUN，不补 x86 平台测试。真机操作仍需用户明确授权。

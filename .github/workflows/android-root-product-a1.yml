@@ -284,3 +284,64 @@ jobs:
           path: out/android-a3-guest-admission/admission.json
           retention-days: 14
           if-no-files-found: warn
+
+  android-x86-kvm-ksu-arm64-nativebridge:
+    # The actual older KernelSU environment (x86_64 KVM Android16 API36)
+    # is NOT equivalent to an ARM64 guest. This job must launch the exact
+    # Android ARM64 signed APK and actually execve its original-Go AArch64
+    # ELF before claiming NativeBridge supports the product. Otherwise FAIL
+    # with a source-locked evidence receipt; never silently claim P2/P3.
+    needs: [root-arm64-app]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_ARM64: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-root-app
+      - name: Enforce exact SOURCE and signed APK ARM64 native asset hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
+          test "$(cat out/android-root-app/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-app-native && sha256sum -c SHA256SUMS)
+          (cd out/android-root-app && sha256sum -c SHA256SUMS)
+      - name: Check historical KSU setup and ARM64 guest execution script syntax
+        shell: bash
+        run: |
+          bash -n experiments/android-root-probe/ci/ksu-prepare-avd.sh
+          bash -n android/root-app/ci/x86-kvm-ksu-arm64-nativebridge.sh
+          test -c /dev/kvm
+      - name: Reuse pinned historical KernelSU 3.3.1 Android16 x86_64 KVM image
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Boot real KSU twice, inspect native bridge, execute exact ARM64 Go and launch product APK
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 970s bash android/root-app/ci/x86-kvm-ksu-arm64-nativebridge.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-x86-kvm-ksu-arm64-nativebridge-${{ github.sha }}
+          path: |
+            out/android-ksu-arm64/*.txt
+            out/android-ksu-arm64/*.json
+            out/android-ksu-arm64/*.log
+            out/ksu/sdk-install.txt
+            out/ksu/patch-log.txt
+            out/ksu/helper-sha.txt
+            out/ksu/manager-hash-verified.txt
+            out/ksu/native-source-mode.txt
+          retention-days: 14
+          if-no-files-found: warn
