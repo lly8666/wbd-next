@@ -1092,7 +1092,7 @@ mod tests{
             assert_eq!(owner.dns.counts().0,0,"AAAA never contacts physical DNS");
             let mut scratch=[0u8;2048];
             let NativeReverse::Owned(reply)=owner.poll_udp_reverse(&mut scratch,3)
-                .expect("local AAAA reply") else {panic!("must be owned")}
+                .expect("local AAAA reply") else {panic!("must be owned")};
             assert_eq!(&reply[12..16],&[1,1,1,1]); // original DNS server
             assert_eq!(reply[31]&15,0); // NOERROR, AD never set
             assert_eq!(&reply[34..36],&[0,0]); // ANCOUNT=0

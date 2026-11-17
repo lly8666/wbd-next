@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2079,
-  "checkpoint_sha": "7d4f15810892e32159e33915d7e81c72bb4c18a5",
+  "sequence": 2080,
+  "checkpoint_sha": "0b2d6b03bb7cce05e823e8620eb4312d878588d5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2079 PLAN029B first uncompiled source candidate: Go/Rust version2 cold ABI advanced-CN flag, off/all no Direct UDP actor/OS CN bypass/Fake writer but retains original Rust V3 Tunnel/DNS/startup padding; ordinary CN DNS returns real CNAME/A, advanced CN journaled FakeIP; all managed UDP/TCP53 AAAA local NODATA. Pinned original Go CLI+GUI assembled manifest updated with exact SHA, missing old cn-domain-direct key migrates true/new false. Actual new product qualification NOT_RUN.",
-  "why_now": "H2078 PR35 design/governance PASS; original Go CLI/Portable/parameters/fields produced via exact manifest-plan020-m0.json. H2079 source changes the one real C ABI and assembly; no second packet pump or new WFP. H2077 old Normal real Win/Linux qualification preserved separate.",
+  "current_task": "H2080 repair H2079 actual source CI first boundaries: Go pinned original assembly manifest missing six changed overlay source result_blob hashes; Rust new AAAA test missing semicolon; M0 cursor context_refs duplicate. H2079 native and app Actions FAIL are preserved; H2080 fixes exact SHA and syntax without changing 029B behavior.",
+  "why_now": "Actions 44041865897 cheap assembly, 44041865873 Windows original compile, 44041865928 WAL all rejected as intended by exact missing overlay result_blob for m0_native_v4_dispatch_windows.go. Cross-ABI 44041865875 and Windows Go/GUI 44041866088 failed new Rust test line 1095 expected semicolon. Governance 44041866046 failed invalid duplicate context_refs; feature catalog check itself PASS.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H2079 Go+Windows Rust+Linux Rust native compile/ABI. Fix only first concrete failure. Still implement B0 DNS-only TCP53 without business Direct NAT, B3 genuine Wintun IPv6 source, B4 GUI/effective, B5 bounded physical same-VM comparison and old Normal regression. Keep new-source status NOT_RUN until actual evidence; no old 028 matrix/030.",
+  "next_action": "Collect H2080 current-source Go assembly, Windows/Rust and cross ABI tests. Fix only next genuine first error; verify B0/B1 true native split-off resources, CN normal vs advanced, AAAA local DNS and legacy GUI; no product PASS until true source-locked Windows WSL2 and B5 conditions.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json",
     "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029B-H2080-FIRST-CI-REPAIR.md",
+    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json",
     "docs/devlog/M0/20261117-PLAN029B-H2079-PRODUCT-INITIAL-CANDIDATE.md",
     "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json",
-    "docs/prompts/M0-PLAN029B.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/devlog/M0/20261117-PLAN029B-H2078-PR35-MAIN-REBASE.md",
     "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2079 new product candidate SOURCE NOT_YET_COMPILED; B0–B3 Rust+Go code and C ABI/Go pinned assembly CLI/GUI selection wired, true physical tests NOT_RUN. Old H2077 source498a signed 029 daily PASS_SCOPED intact, B0 TCP53 IPv6 real entry and B5 performance pending."
+  "partial_summary": "H2079 candidate tests failed first exact assembly hash mismatch, rust syntax and duplicate context refs, not product runtime evidence. H2080 atomic metadata/source grammar repair, production behavior unchanged; old H2077 PASS independent, new 029B NOT_RUN."
 }

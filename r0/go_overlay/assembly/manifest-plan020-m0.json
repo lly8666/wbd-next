@@ -1252,7 +1252,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "ad750606e992fdafd0aee2a5aff5f2dd60ea4ed0"
+      "result_blob": "cff8876190a92effb7bb4d9366569e74b4e56be1"
     },
     {
       "kind": "create",
@@ -1264,7 +1264,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "bce26607aa3637ecb6d25c28731791910741a072"
+      "result_blob": "dae46cf37b62a3b3502c13e9a527dfde697aba9a"
     },
     {
       "kind": "create",
@@ -1791,25 +1791,25 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "b05ec84ae51db7d7928a9209740065d8f3015652"
+      "result_blob": "0deeaaaf4f317db0994dc06f614eb7bd11ee0b05"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "563fe7aefd8a70e444b3a941661daadabfb38a83"
+      "result_blob": "21df7a96fceaeeebec8a4d2bfdc2316ee2697b0d"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "d845b2e69a67a7e2ff0fa9d6394b926aa64c152e"
+      "result_blob": "6ebc92b6dd93348ac168e647b9c605e659acd0ef"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
-      "result_blob": "8341e161faacacdfd25d70f9553c73f3559b50b5"
+      "result_blob": "873cbd30b81dca4cdf4ef4b79ce8b3cecee80f30"
     },
     {
       "kind": "create",
