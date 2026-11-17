@@ -161,6 +161,13 @@
       "action": null,
       "status": "PENDING_EXACT_NATIVE_ACTION",
       "test": "Original signed Windows physical NPF UDP source/dst/guest L2 matching, same dns.direct UDP TC response + exact TCP/53 DNS ID and QNAME, original TLS + Direct/Tunnel kernel business/Stop, real guest stage receipt."
+    },
+    {
+      "id": "H2057_async_fake_writer_true_child_abort",
+      "source": null,
+      "action": null,
+      "status": "PURE_PROCESS_CRASH_TEST_IMPLEMENTED_NOT_VERIFIED",
+      "test": "Windows/Linux Rust test subprocess real fsync ACK then std::process::abort without Drop; parent opens journal and checks FakeIP identity/TTL quarantine/new alias not announced. NOT original Wintun/OS crash."
     }
   ],
   "selected_unverified": {
@@ -168,7 +175,7 @@
     "DNS_bootstrap_same_endpoint_TC_real": "H2051_FAIL_NPF_UDP_TIMEOUT_H2053_MAC_CORRECTED_H2056_PENDING",
     "DNS_bootstrap_after_reconnect": "NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
-    "FakeIP_durable_unexpected_process_crash_recovery": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
+    "FakeIP_durable_unexpected_process_crash_recovery": "H2057_REAL_CHILD_ABORT_FS_REOPEN_COMPONENT_PENDING",
     "FakeIP_writer_slow_disk_vs_other_live_flows": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
     "resource_full_tcp_resident_buffer_original_concurrent": "H2051_WINDOWS_LOOPBACK_TEST_PENDING_NATIVE_NOT_RUN",
     "resource_full_dns_cache_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",

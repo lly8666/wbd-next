@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2056,
-  "checkpoint_sha": "e586ca2396535781a41cea3a454da45c32808aa7",
+  "sequence": 2057,
+  "checkpoint_sha": "17ebe7e91830595d6083dd8314716f99e8c99918",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2056 physical real server bootstrap TC=1 on corrected H2053 original Windows physical guest verified L2 MAC and H2050 scoped WSL2 UDP53/TCP53 exact rules. H2051 real original TC Action43999380296 failed physical UDP timeout before TC despite correctly installed WSL2 hyperv grants; H2056 guest prints first actual UDP/TCP stage, does not fabricate. H2055 GUI signed repeat separately underway.",
-  "why_now": "H2051 original TC run43999380296 compiled source earlier than H2053 cold physical DNS L2 binding; it showed PLAN029_H2050_TRUE_PHYSICAL_DNS_GUEST_HYPERV_UDP53_TCP53_EXACT_SCOPED and exact cleanup, but timed out on NPF physical UDP. New H2053 product code pins actual WSL2 guest eth0 MAC using original Go already verified source/interface, not fallback. Requires one real native recheck.",
+  "current_task": "H2057 true separate-process abort after FakeIP 8-job async writer durable ACK and FS reopen without destructor, mapping quarantine and unrelated identity isolation; pure process crash test is pending Windows/Linux Rust CI. H2055 GUI real native and H2056 physical DNS TC native Actions independent source and in flight.",
+  "why_now": "H2043 async writer fsync/8 job backpressure test only did drop(journal) normal graceful exit; user explicitly requires crash recovery. H2057 uses test child process abort after durable fsync ACK, parent reopens exact owned on-disk file, proves identity and quarantine. No claim of real Wintun crash or OS WAL.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2056 real TC two-OS Action physical UDP/TCP IDs and original Go TLS/Direct/Tunnel/Stop; collect H2055 real GUI Action. Archive SOURCE-specific gaps; no repeat H2031/H2041.",
+  "next_action": "Collect H2057 Windows/Linux Rust unit results, H2055 signed GUI and H2056 physical bootstrap TC original source native results. Preserve source scope. Stop when user-specified evidence/OPEN ledger finalized.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2057-REAL-PROCESS-ABORT-FAKE-WRITER.md",
     "docs/devlog/M0/20261117-PLAN029-H2056-REAL-BOOTSTRAP-GUEST-L2-RETEST.md",
-    "docs/devlog/M0/20261117-PLAN029-H2055-FIX-GUI-FIXTURE-TRIGGER.md",
     "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
