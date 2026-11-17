@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/android-root-product-a1.yml"
       - "android/root-native/**"
+      - "android/root-app/**"
       - "crates/wbd-platform/src/android_root_io.rs"
       - "crates/wbd-platform/src/lib.rs"
       - "crates/wbd-engine/src/lib.rs"
@@ -64,5 +65,43 @@ jobs:
         with:
           name: android-root-product-a1-${{ github.sha }}
           path: out/android-product-a1/
+          retention-days: 14
+          if-no-files-found: warn
+  root-arm64-app:
+    needs: [arm64-native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fetch immutable original Go/Rust ARM64 binaries from SAME source run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/android-root-app-native
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-root-product-a1-$GITHUB_SHA" \
+            --dir out/android-root-app-native
+          test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-app-native && sha256sum -c SHA256SUMS)
+      - name: Build independent no-VpnService Root ARM64 APK
+        shell: bash
+        run: bash android/root-app/ci/build-source-locked.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: |
+            out/android-root-app/wbd-root-arm64-debug.apk
+            out/android-root-app/SOURCE
+            out/android-root-app/SHA256SUMS
+            out/android-root-app/manifest.json
+            out/android-root-app/manifest-tree.txt
+            out/android-root-app/badging.txt
           retention-days: 14
           if-no-files-found: warn

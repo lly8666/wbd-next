@@ -159,3 +159,15 @@ withdraws the route without forging an authenticated-peer dead flag.
 Pure Go fake-kernel state-machine tests run before ARM64 native CGo gate.
 Neither source compilation nor host tests prove real Android KSU,
 iproute2 uidrange, TLS/lease, kernel TUN I/O or Root application UI.
+
+## A5 separate original Go/Rust Android Root application
+
+`android/root-app` is an independent Java APK, NOT the historical
+`android/app` VpnService. Physical Networks are selected using real
+ConnectivityManager handles/LinkProperties and kernel interface
+readback. Private original-Go credential/key files never go in argv.
+CI bundles the exact same-source ARM64 original Go ELF and Rust .so
+into a signed SDK35 APK, with SHA/ELF/16KiB and no-VpnService checks.
+The Root Service issues SIGTERM only to the exact live PID/starttime/exe
+and waits for the original Go/Native owner to actually exit. All Android
+phone traffic and device root permission remain NOT_RUN.

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android arm64-v8a原Go TLS/自动/32＋原Rust共享M1/M3/M4 AEAD/PN/Health/Stop已有完整产品链接＋LINK20测试PASS。A4新增Root单UID可回滚路由和物理scope终止，待同SOURCE CI/真机。无VpnService/FakeIP。",
+  "summary": "Android arm64-v8a原Go TLS/租约＋原Rust M1/M3/M4/Health/Stop、单UID Root journal已有BUILD_PASS；A5新增独立无VpnService原生Root App（同源码Go/Rust ELF）待SDK CI/真机。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -22,7 +22,7 @@
   "usage": {
     "cli": "原Go ARM64 Normal/off已完整链接；A4 --android-route-uid=<普通APP UID>，独立table19842/pref9600，根目录journal和真实Network handle；KSU实机NOT_RUN。",
     "config": "预计包名/用户/默认模式、每App follow/split/global/direct、两单DNS、手动规则更新；尚未作为产品配置生效",
-    "gui": "计划Java原生安装App选择/搜索/批量/Start/Stop/状态；当前设置页仅诊断配置预览"
+    "gui": "A5独立无VpnService Root App：Java真实ConnectivityManager网络选择、私有凭据/单UID、运行同SOURCE ARM64原Go/Rust；App CI及KSU设备待验收。"
   },
   "code_refs": [
     "crates/wbd-platform/src/android_root_io.rs",
@@ -52,7 +52,14 @@
     "r0/go_overlay/internal/v4productcli/android_root_route_android.go",
     "r0/go_overlay/internal/v4productcli/android_root_route_linux.go",
     "r0/go_overlay/internal/v4productcli/rootjournal/journal.go",
-    "r0/go_overlay/internal/v4productcli/rootjournal/journal_test.go"
+    "r0/go_overlay/internal/v4productcli/rootjournal/journal_test.go",
+    "android/root-app/AndroidManifest.xml",
+    "android/root-app/src/org/wbdnext/rootclient/PhysicalNetwork.java",
+    "android/root-app/src/org/wbdnext/rootclient/NativePayload.java",
+    "android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java",
+    "android/root-app/src/org/wbdnext/rootclient/RootClientService.java",
+    "android/root-app/ci/build-source-locked.sh",
+    "android/root-app/README.md"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -66,7 +73,8 @@
     "docs/devlog/android-root-probe/20261117-android-arm64-a2-m4-real-worker-health-stop.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a3-normal-off-link-separation.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a3-original-m3-jumbo-scatter.md",
-    "docs/devlog/android-root-probe/20261117-android-arm64-a4-root-uid-route-journal.md"
+    "docs/devlog/android-root-probe/20261117-android-arm64-a4-root-uid-route-journal.md",
+    "docs/devlog/android-root-probe/20261117-android-arm64-a5-first-root-app.md"
   ],
   "verification": [
     {
@@ -204,62 +212,67 @@
     },
     {
       "platform": "Android ARM64 aarch64-linux-android Bionic M4 stage",
-      "scope": "First M4 worker batch f490: original Normal owner method normal_firstsend_identity Linux/Windows-only cfg not yet widened on Android; exactly two E0599 on original owner identity method; worker compile blocked, no .so or actual worker evidence; governance PASS",
+      "scope": "ARM64 Rust M4 initial E0599 original owner cfg FAIL; Go link not reached.",
       "status": "FAIL",
       "source_sha": "f490df0670804814d6fb60ff2a9dd9699ffc147f",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44024127542"
     },
     {
       "platform": "Android ARM64 aarch64-linux-android M4 original owner",
-      "scope": "Real M1/M3/M4+Health+eventfd Stop Rust release compiled to ELF64 AArch64 min PT_LOAD align16KiB and independently inspected dynamic symbols (loop_start, Health, cold prepare all genuinely exported). Stage script FALSE FAIL: set -o pipefail caught llvm-nm SIGPIPE after grep -q successful match; original-Go full link NOT_RUN at this SOURCE, phone NOT_RUN.",
+      "scope": "Rust M4 ELF PASS, nm|grep pipefail SIGPIPE141 false symbol FAIL; gate corrected.",
       "status": "BUILD_PASS",
       "source_sha": "2b8e662547e8d994f6ae201f3ad414019bd63774",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44024436340"
     },
     {
       "platform": "Android ARM64-v8a genuine original Go Normal/off linker",
-      "scope": "Original Rust M1/M3/M4 Health eventfd Stop and native Normal/off revision ELF BUILD_PASS; Go Normal/off exclusive edition compiles realityfront+v4productcli and reaches ld.lld, but required original Fixed/M2 sharedTun/physical MTU/public native ABIs still unresolved; no executable, real device NOT_RUN.",
+      "scope": "Rust and Go typecheck PASS; final CGo ld.lld FAIL optional M2/SharedTun/FEC.",
       "status": "FAIL",
       "source_sha": "33c4b2883064ea295a98bf1433f5ea3d940d2fd6",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026223115"
     },
     {
       "platform": "Android ARM64 Bionic genuine Rust original Normal/off M4 / lease / MTU",
-      "scope": "Source-locked original Go donor and Android Bionic C+Rust actual M1/M3/M4+Health+eventfd Stop+authenticated /32+physical RAW MTU; original complete .so ELF64 AArch64 machine183 min16KiB, all native required exports checked in same true .so, artifact hashes verified; code compiled only, not device-executed.",
+      "scope": "ARM64 shared Rust real M1/M3/M4/Health/Stop/lease/MTU ELF 16KiB PASS; Go link separately FAIL.",
       "status": "BUILD_PASS",
       "source_sha": "1b044ed3f76a4674e75ee409fe9746ba22343e84",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026702035"
     },
     {
       "platform": "Android ARM64 original Go Normal/off full product link",
-      "scope": "CGo full ld.lld still FAIL: original Fixed/M2, shared TUN promotion, route diagnostics, optional public FEC/outer and loop introspection unported. Go source/type compilation PASS, but no product client executable, physical Android KSU NOT_RUN.",
+      "scope": "Original Go final ld.lld FAIL: unported Fixed/M2/SharedTun/route/outer/FEC.",
       "status": "FAIL",
       "source_sha": "1b044ed3f76a4674e75ee409fe9746ba22343e84",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026702035"
     },
     {
       "platform": "Android ARM64 original Go Normal/off native build",
-      "scope": "Genuine original Go CGo Android arm64 executable AND original Rust M1/M3/M4/Health/Stop Bionic .so full link PASS; both ELF machine183 min PT_LOAD alignment16384, hashes verified from same source ZIP; not a real-device connection/Root app acceptance.",
+      "scope": "Android ARM64 original Go Normal/off CGo full executable + Rust original 16KiB ELF PASS; phone NOT_RUN.",
       "status": "BUILD_PASS",
       "source_sha": "02c2772d8d44da76db3210a69ffdebd277f4e4b3",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44029417500"
     },
     {
       "platform": "Android ARM64 original-Go Normal/off M3 jumbo native and wire oracle",
-      "scope": "bcebdd ARM64 Rust FAIL E0599 missing existing UniqueSealable trait, M3 original-byte oracle PASS; after 2da8 imported same M1 trait, genuine original Go arm64 CGo executable and shared Rust M1/M3/M4 Bionic readv/jumbo/Health/Stop ELF64/AArch64+16KiB build PASS, pure M3 LINK20 65535 byte/escape/MTU wire oracle PASS; real phone NOT_RUN.",
+      "scope": "Android ARM64 original Go+Rust M3 TUN readv/jumbo CGo/ELF PASS, LINK20 wire oracle PASS; phone NOT_RUN.",
       "status": "BUILD_PASS",
       "source_sha": "2da8ce6e116d7ee28b4d7d19021e623c4374a63d",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44031026873"
+    },
+    {
+      "platform": "Android ARM64 original-Go Root UID journal and physical scope terminal",
+      "scope": "A4 original Go/Rust Android arm64 full CGo ELF PASS, pure-Go single-app UID route/flock crash recovery state-machine PASS, original M4 physical scope terminal ABI PASS; Android root phone and APK NOT_RUN.",
+      "status": "BUILD_PASS",
+      "source_sha": "20d7c7ffaaeefcae96ab5f03c656994466420eac",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44033543628"
     }
   ],
   "limitations": [
     "旧Root探针 PASS 只证明隔离内核/能力；普通系统DNS/真实WBD服务器、生产内核路由与真热点尚无产品证据。",
-    "当前无Android可安装正式WBD客户端APK；仅有诊断APK。",
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
-    "A1/A2历史 Actions 的失败、双ABI过往证据和源码修复均保留在专门devlog及verification；当前仅Android ARM64、Rust真 M4 编译与真实Go/设备各自独立验收。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
-    "原Go Android授权/32绑定现有C ABI被Linux-only双cfg错误屏蔽，修正为真实Android ARM64导出；物理真实RAW FD读回后按原Rust MSS/Link/AEAD FrameBudget得到TUN inner IP MTU，不允许自报、默认路由或伪装控制接口。",
-    "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。"
+    "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。",
+    "A5 Java Root App仅App UI/进程控制，A4实际原Go/Rust已BUILD_PASS；A5独立APK和Android16 KSU真机TLS/双向包/Stop仍需实测；不含VpnService/FakeIP。"
   ],
   "promotion": null
 }
