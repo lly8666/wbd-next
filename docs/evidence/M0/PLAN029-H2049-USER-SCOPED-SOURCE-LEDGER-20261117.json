@@ -147,11 +147,25 @@
       "action": null,
       "status": "PENDING_EXACT_NATIVE_ACTION",
       "test": "One original WinForms STA real signed Go/Rust source, WSL2 Direct+Tunnel and Stop, no double Form.Dispose, require child exit0 and independently verified kernel business"
+    },
+    {
+      "id": "H2051_physical_TC_direct_two_os_attempt",
+      "source": "09c6a794b68447f1e6711db0f237b0beae9c37c8",
+      "action": 43999380296,
+      "status": "FAIL_BEFORE_UDP_TC",
+      "first_boundary": "Guest WSL2 HyperV exact UDP53/TCP53 grants installed/readback and owned cleanup PASS, but original physical NPF UDP A query still timed out. This SOURCE lacked H2053 verified Linux eth0 guest MAC binding for host-self SendARP route."
+    },
+    {
+      "id": "H2056_physical_TC_after_H2053_os_mac",
+      "source": null,
+      "action": null,
+      "status": "PENDING_EXACT_NATIVE_ACTION",
+      "test": "Original signed Windows physical NPF UDP source/dst/guest L2 matching, same dns.direct UDP TC response + exact TCP/53 DNS ID and QNAME, original TLS + Direct/Tunnel kernel business/Stop, real guest stage receipt."
     }
   ],
   "selected_unverified": {
     "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "H2050_NATIVE_ALL_BUSINESS_AND_WAL_STOP_SEEN_ACTION_FAIL; H2055_GUI_RETEST_PENDING",
-    "DNS_bootstrap_same_endpoint_TC_real": "H2047_FAILED_UDP_TIMEOUT_H2050_TEST_GRANT_PENDING",
+    "DNS_bootstrap_same_endpoint_TC_real": "H2051_FAIL_NPF_UDP_TIMEOUT_H2053_MAC_CORRECTED_H2056_PENDING",
     "DNS_bootstrap_after_reconnect": "NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
     "FakeIP_durable_unexpected_process_crash_recovery": "PURE_TEST_ONLY_NATIVE_NOT_RUN",

@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2055,
-  "checkpoint_sha": "921731ea489445a9970c6aadd26f5af6dcf7ebdf",
+  "sequence": 2056,
+  "checkpoint_sha": "e586ca2396535781a41cea3a454da45c32808aa7",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2055 fix original signed GUI fixture-only push not matching M0-WIN-LINUX workflow paths (H2054 native NOT_TRIGGERED). Add exact 3 GUI/TC fixture paths; re-run one original WinForms real Normal source under [plan029-real-gui-cn] using H2054 fixed STA cleanup. H2050 old source native logged real OS Applied, kernel business and WAL Stop but test exited1 due Dispose race.",
-  "why_now": "H2054 changed only tools/m0_plan029_gui_real_network_harness.cs not listed in workflow on.push.paths, so governance success but NO M0-WIN-LINUX source Action; must not falsely say original GUI retest happened. H2055 path contract makes trigger explicit for future fixture edits.",
+  "current_task": "H2056 physical real server bootstrap TC=1 on corrected H2053 original Windows physical guest verified L2 MAC and H2050 scoped WSL2 UDP53/TCP53 exact rules. H2051 real original TC Action43999380296 failed physical UDP timeout before TC despite correctly installed WSL2 hyperv grants; H2056 guest prints first actual UDP/TCP stage, does not fabricate. H2055 GUI signed repeat separately underway.",
+  "why_now": "H2051 original TC run43999380296 compiled source earlier than H2053 cold physical DNS L2 binding; it showed PLAN029_H2050_TRUE_PHYSICAL_DNS_GUEST_HYPERV_UDP53_TCP53_EXACT_SCOPED and exact cleanup, but timed out on NPF physical UDP. New H2053 product code pins actual WSL2 guest eth0 MAC using original Go already verified source/interface, not fallback. Requires one real native recheck.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2055 original GUI signed Action (actual exit0+kernel/OS receipts), H2051 physical TC original Action. H2053 corrected exact guest MAC but not yet physical verified. No padding/Game4 rerun.",
+  "next_action": "Collect H2056 real TC two-OS Action physical UDP/TCP IDs and original Go TLS/Direct/Tunnel/Stop; collect H2055 real GUI Action. Archive SOURCE-specific gaps; no repeat H2031/H2041.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2056-REAL-BOOTSTRAP-GUEST-L2-RETEST.md",
     "docs/devlog/M0/20261117-PLAN029-H2055-FIX-GUI-FIXTURE-TRIGGER.md",
-    "docs/devlog/M0/20261117-PLAN029-H2054-GUI-DISPOSE-RACE.md",
     "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],

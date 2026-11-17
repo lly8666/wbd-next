@@ -26,6 +26,7 @@ try:
     if addr[0]!=host or wire[4:6]!=b"\x00\x01" or wire[12:]!=question or receipt["udp_tc"]:
      raise RuntimeError("unexpected physical UDP bootstrap identity")
     receipt["id"]=wire[:2].hex()
+    print("PLAN029_BOOTSTRAP_TC_GUEST_PHYSICAL_UDP_RX source="+host+" resolver="+guest+" dns_id="+receipt["id"],flush=True)
     response=wire[:2]+b"\x83\x80\x00\x01\x00\x00\x00\x00\x00\x00"+question
     if udp.sendto(response,addr)!=len(response):raise RuntimeError("short UDP TC")
     receipt["udp_tc"]=1
@@ -44,6 +45,7 @@ try:
      response+=b"\xc0\x0c\x00\x01\x00\x01"+struct.pack("!I",30)+b"\x00\x04"+socket.inet_aton(guest)
      conn.sendall(struct.pack("!H",len(response))+response)
      receipt["tcp_a"]=1
+     print("PLAN029_BOOTSTRAP_TC_GUEST_SAME_ENDPOINT_TCP_A source="+host+" resolver="+guest+" id="+receipt["id"],flush=True)
   if receipt["tcp_a"]:break
  else:raise RuntimeError("physical TC/TCP bootstrap timeout")
 finally:
