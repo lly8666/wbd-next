@@ -1,4 +1,4 @@
-# Android Root product-native adapter (A1 / A2 I/O seam)
+# Android ARM64 Root product-native adapter (A2)
 
 Production adapter boundary, **not** the existing probe or a connectable APK.
 
@@ -37,3 +37,14 @@ No VpnService, fake TLS, new protocol or probe-derived production success.
   per-socket `android_setsocknetwork` plus exact SO_BINDTODEVICE on its
   existing IPPROTO_RAW sender, while keeping original AF_PACKET RX. This
   does not make existing Linux CLI TUN setup Android production routing.
+
+## 2026-11-17 ARM64-only target
+
+Only Android arm64-v8a (aarch64-linux-android / Go arm64) is developed,
+compiled, packaged and qualified. Historical Android x86 stages are archived
+but NOT target gates. Existing Linux/Windows x86 code and tests are unaffected.
+
+Large cross-layer SOURCE batches combine original Go cold control, shared Rust
+M1/M3, actual Bionic RAW/TUN, borrowed-FD Stop and catalog/governance.
+Independent code paths are prepared concurrently, then integrated once and
+validated by one ARM64 Actions run. No fake M4 ABI to force the link green.

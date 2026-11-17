@@ -4011,6 +4011,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_bind_physical(
     OK
 }
 
+// ARM64 Android M1/M3 method adapters have been added to the original
+// ProtectedScopedOwner; continuous M4 runtime Health/MTU/worker join remains
+// a genuine missing integration, NOT an empty ABI placeholder.
 // Original CGo attaches after verified TLS credentials, Detach and lease.
 // No second transport owner: these RAII FDs are parked on the same Entry;
 // the original Rust M3/M4 workloop still must consume them (NOT_RUN).
@@ -4038,7 +4041,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
     )else{return INVALID};
     let Ok(tx)=AndroidBoundRawTx::open(
         scope.network_handle,ifname,ifindex,scope.mtu,generation,
-        f.client_ip,f.server_ip,
+        f.client_ip,f.server_ip,f.client_port,f.server_port,
     )else{return INVALID};
     // Publish only the complete pair. Any failure before this point closes
     // both exact-owned sockets via RAII; no loose unfiltered RAW RX survives.

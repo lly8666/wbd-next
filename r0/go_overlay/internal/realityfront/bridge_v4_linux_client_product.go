@@ -129,13 +129,23 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if leaseErr=p.cfg.ConfigureLeaseIPv4(lease);leaseErr!=nil {
             return nil,errors.Join(leaseErr,p.closeLocked())
         }
+        if runtime.GOOS=="android"{
+            // The real Go-authenticated installed /32 must also restrict
+            // the native ARM64 TUN reverse-destination, even without the
+            // Linux SharedTun process-wide reader.
+            if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil{
+                return nil,errors.Join(leaseErr,p.closeLocked())
+            }
+        }
         if p.cfg.SharedTun!=nil {
             // Original protected lease has ALREADY been installed and
             // verified by the actual OS before the client may bind the
             // process-wide default Rust M1 ingress. A forged mutable
             // admission result or pre-TLS configuration is never authority.
-            if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil {
-                return nil,errors.Join(leaseErr,p.closeLocked())
+            if runtime.GOOS!="android"{
+                if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil{
+                    return nil,errors.Join(leaseErr,p.closeLocked())
+                }
             }
             if leaseErr=bridge.bindAuthenticatedSharedTun(p.cfg.SharedTun);leaseErr!=nil {
                 return nil,errors.Join(leaseErr,p.closeLocked())

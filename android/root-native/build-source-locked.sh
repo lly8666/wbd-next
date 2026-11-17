@@ -9,17 +9,13 @@ test "$(git -C legacy rev-parse HEAD)" = "a7a82db31fe736ffedee330795a3234d358f19
 ndk="$(find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
 tool="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
 test -x "$tool/aarch64-linux-android28-clang"
-test -x "$tool/x86_64-linux-android28-clang"
 rustup toolchain install 1.85.1 --profile minimal
-rustup target add --toolchain 1.85.1 aarch64-linux-android x86_64-linux-android
+rustup target add --toolchain 1.85.1 aarch64-linux-android
 export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$tool/aarch64-linux-android28-clang"
-export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$tool/x86_64-linux-android28-clang"
 # aws-lc-sys/cc-rs does NOT honor Cargo's linker setting for its C objects.
 # NDK has API-qualified clang wrappers, not aarch64-linux-android-clang.
 export CC_aarch64_linux_android="$tool/aarch64-linux-android28-clang"
-export CC_x86_64_linux_android="$tool/x86_64-linux-android28-clang"
 export AR_aarch64_linux_android="$tool/llvm-ar"
-export AR_x86_64_linux_android="$tool/llvm-ar"
 export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
 mkdir -p out/android-product-a1
 # Exact public original-Go source-lock installation; do not duplicate legacy.
@@ -54,9 +50,9 @@ cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # bridge_v4_linux_server_product.go even when product mode is Normal/off.
 # Match the mature public Go build tags; FEC stays disabled at runtime for A1.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
-for pair in "aarch64 arm64" "x86_64 amd64"; do
+for pair in "aarch64 arm64"; do
   read -r triple goarch <<< "$pair"
-  if [ "$triple" = aarch64 ]; then rust_target=aarch64-linux-android; else rust_target=x86_64-linux-android; fi
+  rust_target=aarch64-linux-android
   cc="$tool/${rust_target}28-clang"
   test -x "$cc"
   "$cc" -c -std=c11 -Wall -Wextra -Werror android/root-native/android_abi.c -o "out/android-product-a1/abi-$goarch.o"
@@ -80,7 +76,7 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
 done
 # The authenticated cold Rust owner is a genuine cross-target ABI milestone,
 # while full Go/M4 product linking has a separately failing/passing gate.
-# Persist exact hashes+16KiB ELF evidence for BOTH ABIs even if Go fails.
+# Persist exact hashes+16KiB ELF evidence for ARM64 only even if Go fails.
 python3 - <<'PY'
 import hashlib,json,os,pathlib,struct
 p=pathlib.Path("out/android-product-a1")
@@ -104,7 +100,7 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
    "android_original_owner_network_raw_tun_ffi_symbols":"PASS_IN_WORKFLOW",
    "native":{abi:inspect(p/("libwbd_engine-"+abi+".so"),mach)
-             for abi,mach in (("arm64",183),("amd64",62))},
+             for abi,mach in (("arm64",183),)},
    "original_go_full_link":"NOT_YET_RUN_AT_THIS_STAGE",
    "authenticated_product_M4_worker":"NOT_RUN",
    "real_server_TLS_auth_lease_data_stop":"NOT_RUN",
@@ -114,9 +110,9 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
 PY
 # Do not remove the failing link gate: until real Android RAW/TUN M4 owner
 # is wired this must FAIL and never publish a pretend client binary.
-for pair in "aarch64 arm64" "x86_64 amd64"; do
+for pair in "aarch64 arm64"; do
   read -r triple goarch <<< "$pair"
-  if [ "$triple" = aarch64 ]; then rust_target=aarch64-linux-android; else rust_target=x86_64-linux-android; fi
+  rust_target=aarch64-linux-android
   cc="$tool/${rust_target}28-clang"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384"
@@ -143,7 +139,7 @@ def elf(path):
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
 "rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_OFF_BUILD_ONLY",
-"android_abis":["arm64","amd64"],"go_os":"android","android_api":28,
+"android_abis":["arm64"],"go_os":"android","android_api":28,
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
 "elf":elf(x) if x.name.endswith(".so") else None} for x in art},
 "production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",

@@ -9,7 +9,7 @@
 /// R1 bounded, borrowed-handle driver API; legacy root types are R0 fixtures.
 /// Android/Bionic only: cold physical-network socket binding and owned TUN
 /// handoff. Does not enable the Linux GNU/musl M4 worker by implication.
-#[cfg(all(target_os = "android", target_pointer_width = "64"))]
+#[cfg(all(target_os = "android", target_arch = "aarch64"))]
 #[allow(unsafe_code)]
 pub mod android_root_io;
 pub mod r1;

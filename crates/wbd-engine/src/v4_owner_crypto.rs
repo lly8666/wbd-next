@@ -8,6 +8,15 @@
 use crate::cold_v4::{ColdV4Error, ExpectedRustOwner, UntrustedColdV4};
 use crate::memory::UniqueBuffer;
 use crate::runtime::{QueueLimits, RxOwner, RxPacket, TxOwner,TxDispatch};
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+use wbd_platform::android_root_io::{AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun};
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+use wbd_platform::ipv4_tcp::{Ipv4Tuple as AndroidTuple,PacketPersona as AndroidPersona,Presentation as AndroidPresentation};
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+use wbd_platform::rx_ipv4_tcp::extend_seq32 as android_extend_seq32;
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+use wbd_codec::path_budget::{FrameBudgetInput as AndroidFrameInput,FecReservation as AndroidFec};
+
 use crate::runtime::early_rx::{EarlyAccepted, EarlyError, EarlyLimits, EarlyRetirement, EarlyRxOwner};
 // Original protected Go StageTransition.MaxTransitionRecords is 64.
 // One bounded Rust M1 receiver already reserves 64 slots and 64*wire bytes.
@@ -1823,5 +1832,148 @@ mod m0_fec2_full_mtu_repair_body_contract {
         assert!(rep.body.len()>record_budget-RECORD_RESERVATION);
         assert!(!original_fec2_repair_symbol_fits(rep.body.len()+1,record_budget));
         assert!(!original_fec2_repair_symbol_fits(1,0));
+    }
+}
+
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+impl ProtectedScopedOwner{
+    /// Same original M1/M3 Normal/off owner; Bionic supplies only I/O and
+    /// the cold physical link ceiling. No second AEAD, replay or TCP stream.
+    pub(crate) fn android_normal_off_frame_budget(
+        &self,physical_mtu:u32
+    )->Result<FrameBudget,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached(){
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        FrameBudget::derive(AndroidFrameInput{
+            connection_mtu:(physical_mtu as usize).min(1500),
+            local_packet_mtu:physical_mtu as usize,
+            ipv4_header_len:20,tcp_header_len:20,
+            peer_mss:if self.peer_mss_advertised{Some(self.peer_mss)}else{None},
+            record_wire_limit:self.tx_wire_limit,
+            fec:AndroidFec::FixedOff,game:false,
+        }).map_err(|_|ProtectedCryptoError::Tx)
+    }
+
+    /// Real TUN bytes in the original M1 slab, then the SAME original
+    /// LINK+AEAD/PN and FrozenRecord TX. Large datagrams must be fragmented
+    /// by the missing shared M4 jumbo path; never send truncated IPv4.
+    pub(crate) fn seal_android_tun_normal_off(
+        &mut self,tun:&AndroidOwnedTun,mut slab:UniqueBuffer,
+        frame:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+    )->Result<(u64,u32,usize,usize),ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
+           tun.generation()!=self.generation{
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let capacity=slab.writable().len().checked_sub(14)
+            .ok_or(ProtectedCryptoError::Tx)?;
+        let limit=frame.single_business_payload_mtu.min(capacity);
+        if limit<20{return Err(ProtectedCryptoError::Tx)}
+        let attempt=limit.saturating_add(1).min(capacity);
+        let len=tun.read_ip(&mut slab.writable()[14..14+attempt])
+            .map_err(|_|ProtectedCryptoError::Owner)?;
+        if len==0||len>limit{return Err(ProtectedCryptoError::Tx)}
+        // A truncated TUN read may return exactly the buffer capacity.
+        // Require the entire IPv4 datagram length to match actual bytes
+        // BEFORE any original AEAD PN or driver loan is consumed.
+        let packet=&slab.writable()[14..14+len];
+        if len<20||packet[0]>>4!=4||
+           usize::from(packet[0]&15)*4<20||
+           usize::from(packet[0]&15)*4>len||
+           usize::from(u16::from_be_bytes([packet[2],packet[3]]))!=len{
+            return Err(ProtectedCryptoError::Tx)
+        }
+        let (pn,seq,wire)=self.seal_normal_off_one(
+            slab,len,frame,carrier_snapshot,now
+        )?;
+        Ok((pn,seq,wire,len))
+    }
+
+    /// Original M1 slab and original extended seq32 admission. Kernel/BPF
+    /// tuple+TCP checksum checks are NOT cryptographic authentication:
+    /// only the original drain_normal_off AEAD+unique PN may deliver.
+    pub(crate) fn receive_android_raw_into_owner(
+        &mut self,driver:&AndroidBoundRawRx,mut slab:UniqueBuffer,
+        tuple:AndroidTuple<'_>,persona:AndroidPersona,
+        trusted_anchor:u64,now:MonoNs,
+    )->Result<usize,(ProtectedCryptoError,UniqueBuffer)>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
+           driver.generation()!=self.generation||driver.is_stopping(){
+            return Err((ProtectedCryptoError::Inactive,slab))
+        }
+        let (len,seq)=match driver.read_original_record(
+            self.generation,slab.writable(),tuple,persona
+        ){
+            Ok(value)=>value,
+            Err(_)=>return Err((ProtectedCryptoError::Owner,slab)),
+        };
+        if len<FIXED_WIRE_OVERHEAD{
+            return Err((ProtectedCryptoError::Tx,slab))
+        }
+        let absolute=match android_extend_seq32(trusted_anchor,seq){
+            Ok(v)=>v,
+            Err(_)=>return Err((ProtectedCryptoError::Owner,slab)),
+        };
+        self.offer_after_active(slab,0..len,absolute,now)
+            .map_err(|(_,buf)|(ProtectedCryptoError::Owner,buf))?;
+        Ok(len)
+    }
+
+    /// One same M1 immutable ready record, shared pure IPv4/TCP writer and
+    /// real Bionic sendto guarded by the original r1 BorrowFence. No PN
+    /// reseal, blind retry, Go per-record callback or extra crypto stream.
+    pub(crate) fn submit_android_raw_ready(
+        &mut self,driver:&AndroidBoundRawTx,tuple:AndroidTuple<'_>,
+        presentation:AndroidPresentation,route_budget:u32,now:MonoNs,
+        storage:&mut Vec<TxDispatch>,scratch:&mut [u8],
+    )->Result<usize,ProtectedCryptoError>{
+        if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
+           driver.generation()!=self.generation||driver.is_stopping()||
+           !storage.is_empty()||storage.capacity()!=1{
+            return Err(ProtectedCryptoError::Inactive)
+        }
+        let available=std::mem::take(storage);
+        let batch=match self.drain_tx(now,available){
+            Ok(batch)=>batch,
+            Err((_,returned))=>{
+                *storage=returned;return Err(ProtectedCryptoError::Owner)
+            },
+        };
+        let outcome=(||{
+            let ready=self.checked_tx_ready(&batch)?;
+            if ready.len()!=1||ready[0].kind!=crate::runtime::TxKind::Fresh{
+                return Err(ProtectedCryptoError::Tx)
+            }
+            driver.send_original_frozen(
+                self.generation,&ready[0].record,tuple,presentation,
+                route_budget,scratch
+            ).map_err(|_|ProtectedCryptoError::Owner)
+        })();
+        *storage=batch.recycle();
+        outcome
+    }
+
+    /// Only post-AEAD+replay original M3 complete LINK is written to TUN;
+    /// original Go protected /32 is a destination gate for Android client.
+    pub(crate) fn drain_android_normal_off_to_tun(
+        &mut self,receiver:&mut NormalOffReceive,tun:&AndroidOwnedTun,
+        lease:Option<[u8;4]>,now:MonoNs,storage:Vec<RxPacket>,
+    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32),
+        (ProtectedCryptoError,Vec<RxPacket>)>{
+        if self.state!=OwnerPhase::Active||tun.generation()!=self.generation{
+            return Err((ProtectedCryptoError::Inactive,storage))
+        }
+        let mut delivered=0u32;let mut failed=0u32;
+        let (returned,report)=self.drain_normal_off(
+            receiver,now,storage,|_pn,business|{
+                if crate::v4_session_address::admitted_client_destination(
+                    business,lease
+                )&&tun.write_authenticated_ip(business).ok()==Some(business.len()){
+                    delivered+=1
+                }else{failed+=1}
+            }
+        )?;
+        Ok((returned,report,delivered,failed))
     }
 }

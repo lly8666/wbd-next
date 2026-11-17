@@ -27,8 +27,8 @@ const SOCK_NONBLOCK: c_int = 0x800;
 const SOCK_CLOEXEC: c_int = 0x80000;
 const IPPROTO_TCP: c_int = 6;
 
-// Only 64-bit Android (arm64-v8a / x86_64) is enabled. Revisit the
-// Bionic ifreq layout and ioctl request ABI before introducing a 32-bit ABI.
+// Only Android ARM64 arm64-v8a is supported. Android x86/x86_64 and
+// 32-bit targets are excluded; the mature Linux x86 code remains unchanged.
 const _: [(); IFREQ_BYTES] = [(); std::mem::size_of::<[u8; 40]>()];
 
 unsafe extern "C" {
@@ -288,6 +288,8 @@ impl AndroidBoundRawRx {
         Ok(Self { fd, generation, mtu: expected_mtu,
             stopping: AtomicBool::new(false), borrow: BorrowFence::default() })
     }
+    pub fn generation(&self) -> u32 { self.generation }
+    pub fn is_stopping(&self) -> bool { self.stopping.load(Ordering::Acquire) }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
     pub fn begin_stop(&self) {
         self.stopping.store(true, Ordering::Release);
@@ -319,6 +321,28 @@ impl AndroidBoundRawRx {
         }
         Ok(n as usize)
     }
+    /// Shared original rx_ipv4_tcp strict parser over the ORIGINAL M1 slab.
+    /// The result is untrusted ciphertext until the same M3 AEAD/unique PN
+    /// accepts it; the IPv4/TCP headers are compacted IN PLACE, no allocation.
+    pub fn read_original_record(
+        &self,generation:u32,slab:&mut [u8],
+        tuple:crate::ipv4_tcp::Ipv4Tuple<'_>,
+        persona:crate::ipv4_tcp::PacketPersona,
+    )->io::Result<(usize,u32)>{
+        let total=self.read_untrusted(generation,slab)?;
+        let parsed=crate::rx_ipv4_tcp::parse_data_packet(
+            &slab[..total],crate::rx_ipv4_tcp::TrustedRx{
+                tuple,persona,mtu:self.mtu as usize,
+                authenticated_options:None,
+            }
+        ).map_err(|_|io::Error::new(io::ErrorKind::InvalidData,
+            "invalid original M4 IPv4/TCP candidate"))?;
+        let seq=parsed.seq32;
+        let wire=parsed.ciphertext.len();
+        // No unrelated packets or malformed flags/checksums reach M1.
+        slab.copy_within(total-wire..total,0);
+        Ok((wire,seq))
+    }
 }
 
 /// Scoped native RAW TX. Only the original M4 may supply a fully formed
@@ -330,6 +354,8 @@ pub struct AndroidBoundRawTx {
     mtu: u32,
     source: [u8; 4],
     destination: [u8; 4],
+    source_port:u16,
+    destination_port:u16,
     stopping: AtomicBool,
     borrow: BorrowFence,
 }
@@ -338,9 +364,11 @@ impl AndroidBoundRawTx {
         network_handle: u64, interface: &str, expected_ifindex: u32,
         expected_mtu: u32, generation: u32,
         source: [u8; 4], destination: [u8; 4],
+        source_port:u16,destination_port:u16,
     ) -> io::Result<Self> {
         if generation == 0 || source[0] == 0 ||
-            destination[0] == 0 || destination[0] >= 224 {
+            destination[0] == 0 || destination[0] >= 224 ||
+            source_port==0 || destination_port==0 {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid owned outer tuple"));
         }
         let raw = unsafe { socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_RAW) };
@@ -357,8 +385,11 @@ impl AndroidBoundRawTx {
             return Err(io::Error::last_os_error());
         }
         Ok(Self { fd, generation, mtu: expected_mtu, source, destination,
+            source_port,destination_port,
             stopping: AtomicBool::new(false), borrow: BorrowFence::default() })
     }
+    pub fn generation(&self) -> u32 { self.generation }
+    pub fn is_stopping(&self) -> bool { self.stopping.load(Ordering::Acquire) }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
     pub fn begin_stop(&self) {
         self.stopping.store(true, Ordering::Release);
@@ -368,6 +399,27 @@ impl AndroidBoundRawTx {
         self.begin_stop();
         self.borrow.wait_drained_until(deadline)
     }
+    /// Build the exact original Ipv4/TCP presentation around the already
+    /// encrypted immutable FrozenRecord and its original PN/seq metadata.
+    /// Caller preallocates a reusable scratch buffer; no Go, TLS, heap or
+    /// independent worker is introduced on this record path.
+    pub fn send_original_frozen<H:wbd_types::buffer_contract::FrozenRecordHandle>(
+        &self,generation:u32,record:&H,
+        tuple:crate::ipv4_tcp::Ipv4Tuple<'_>,
+        presentation:crate::ipv4_tcp::Presentation,
+        route_budget:u32,scratch:&mut [u8],
+    )->io::Result<usize>{
+        if generation!=self.generation||self.is_stopping() ||
+            route_budget<MIN_IPV4_MTU||route_budget>self.mtu {
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe))
+        }
+        let built=crate::ipv4_tcp::build(
+            tuple,presentation,record,None,route_budget as usize,scratch
+        ).map_err(|_|io::Error::new(io::ErrorKind::InvalidData,
+            "original M3 frozen record exceeds physical MTU"))?;
+        self.send_built_outer(generation,built,route_budget)
+    }
+
     /// Kernel copy != remote delivery. Short/uncertain sends are returned
     /// as errors; never reseal a PN or silently try an unbound route.
     /// route_budget is the shared native M4's last approved PMTU snapshot,
@@ -380,11 +432,13 @@ impl AndroidBoundRawTx {
         }
         if packet.len() < 40 || route_budget < MIN_IPV4_MTU ||
             route_budget > self.mtu || packet.len() > route_budget as usize ||
-            packet.len() > MAX_IPV4_MTU as usize || packet[0] >> 4 != 4 ||
-            (packet[0] & 15) < 5 || packet[9] != IPPROTO_TCP as u8 ||
+            packet.len() > MAX_IPV4_MTU as usize || packet[0] != 0x45 ||
+            packet[9] != IPPROTO_TCP as u8 ||
             usize::from(u16::from_be_bytes([packet[2], packet[3]])) != packet.len() ||
             packet[12..16] != self.source || packet[16..20] != self.destination ||
-            u16::from_be_bytes([packet[6], packet[7]]) & 0x3fff != 0 {
+            u16::from_be_bytes([packet[20],packet[21]])!=self.source_port ||
+            u16::from_be_bytes([packet[22],packet[23]])!=self.destination_port ||
+            packet[6]!=0x40 || packet[7]!=0 {
             return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid original M4 outer"));
         }
         let _loan = self.borrow.try_enter_ready().map_err(|error|match error {

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "复用原Go标准TLS认证冷控制和Rust产品数据面，以已有Root下的TUN/内核策略实现Android手机业务、统一DNS、按App出口；真实产品连接仍未接线。",
+  "summary": "Android arm64-v8a Root 原生 WBD：仅 ARM64 同源 Go TLS/租约和原 Rust M1/M3/M4 + Bionic RAW/TUN，真业务与完整M4仍待验。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -16,10 +16,11 @@
     "cn_dns": "223.5.5.5（待实现）",
     "tunnel_dns": "1.1.1.1（待实现）",
     "fakeip": "off；禁止",
-    "vpn_service": "disabled"
+    "vpn_service": "disabled",
+    "android_abi": "arm64-v8a ONLY; Android x86/x86_64/32bit OUT OF SCOPE"
   },
   "usage": {
-    "cli": "A1源锁构建脚本 android/root-native/build-source-locked.sh（尚非可连接APK/正式Start），Root探针CLI另见历史卡",
+    "cli": "ARM64 only: android/root-native/build-source-locked.sh；原 Go 完整 M4 linker 和真连接仍未通过。",
     "config": "预计包名/用户/默认模式、每App follow/split/global/direct、两单DNS、手动规则更新；尚未作为产品配置生效",
     "gui": "计划Java原生安装App选择/搜索/批量/Start/Stop/状态；当前设置页仅诊断配置预览"
   },
@@ -37,7 +38,11 @@
     "r0/go_overlay/internal/realityfront/bridge_v4_android_network_linux.go",
     "r0/go_overlay/internal/v4productcli/linux.go",
     "r0/go_overlay/internal/faketcp/raw_android_network_android.go",
-    "r0/go_overlay/internal/faketcp/raw_android_network_linux.go"
+    "r0/go_overlay/internal/faketcp/raw_android_network_linux.go",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_session_address.rs",
+    "crates/wbd-platform/src/ipv4_tcp.rs",
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -46,7 +51,8 @@
     "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md",
     "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md",
     "docs/devlog/android-root-probe/20261117-android-product-a2-raw-bionic-io.md",
-    "docs/devlog/android-root-probe/20261117-android-product-a2-cold-network-handoff.md"
+    "docs/devlog/android-root-probe/20261117-android-product-a2-cold-network-handoff.md",
+    "docs/devlog/android-root-probe/20261117-android-arm64-a2-normal-m1m3-batch.md"
   ],
   "verification": [
     {
@@ -58,7 +64,7 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "Bionic 64-bit struct ABI + shared product Rust Go↔Rust cold owner FFI + 16KiB ELF (no live handshake)",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. Bionic 64-bit struct ABI + shared product Rust Go↔Rust cold owner FFI + 16KiB ELF (no live handshake)",
       "status": "BUILD_PASS",
       "source_sha": "c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44015392698"
@@ -72,14 +78,14 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "Full original-Go CGo client link to real Android M4 RAW/TUN/Health/MTU worker",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. Full original-Go CGo client link to real Android M4 RAW/TUN/Health/MTU worker",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
     {
       "platform": "Android16 KSU x86_64 AVD",
-      "scope": "正式Go TLS认证/租约→Rust Normal/off→实际服务端TCP/UDP/Stop",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. 正式Go TLS认证/租约→Rust Normal/off→实际服务端TCP/UDP/Stop",
       "status": "PLANNED",
       "source_sha": null,
       "evidence": null
@@ -114,7 +120,7 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "A2 Bionic SIOCGIFMTU/classic-BPF C ABI gate + original shared Rust cold FFI .so (16KiB PT_LOAD, SHA256 53a9445f1d5083b09c8d2d74cf57363648956b6292aba18664bb6e34f669c7ec); Android RAW runtime NOT_RUN",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. A2 Bionic SIOCGIFMTU/classic-BPF C ABI gate + original shared Rust cold FFI .so (16KiB PT_LOAD, SHA256 53a9445f1d5083b09c8d2d74cf57363648956b6292aba18664bb6e34f669c7ec); Android RAW runtime NOT_RUN",
       "status": "BUILD_PASS",
       "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
@@ -128,7 +134,7 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "A2 original-Go client full CGo M4 link was not reached after arm64 gate failure",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. A2 original-Go client full CGo M4 link was not reached after arm64 gate failure",
       "status": "NOT_RUN",
       "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
@@ -149,7 +155,7 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "A2 same original-Go donor compiled through Android cold AF_PACKET/raw Network binding, shared Rust authenticated Network/RAW/TUN FFI and 16KiB ELF; actual Network binding syscall NOT_RUN",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. A2 same original-Go donor compiled through Android cold AF_PACKET/raw Network binding, shared Rust authenticated Network/RAW/TUN FFI and 16KiB ELF; actual Network binding syscall NOT_RUN",
       "status": "BUILD_PASS",
       "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
@@ -163,7 +169,7 @@
     },
     {
       "platform": "Android NDK x86_64",
-      "scope": "A2 complete original-Go product CGo link after arm64 gate failure",
+      "scope": "HISTORICAL evidence only — retired from Android target matrix. A2 complete original-Go product CGo link after arm64 gate failure",
       "status": "NOT_RUN",
       "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
@@ -187,7 +193,8 @@
     "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。",
     "A2 FD在同一 Rust Entry 上引入原 wbd-platform::r1::BorrowFence：每次Bionic RAW/TUN真实syscall CAS借用、begin_stop阻止新借用、Stop检查零inflight并在未排空时STOP_INCOMPLETE；仍未运行原M4线程、尚无真WBD连接。",
     "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。",
-    "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed."
+    "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed.",
+    "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。"
   ],
   "promotion": null
 }
