@@ -238,6 +238,13 @@
       "status": "BUILD_PASS",
       "source_sha": "02c2772d8d44da76db3210a69ffdebd277f4e4b3",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44029417500"
+    },
+    {
+      "platform": "Android ARM64 original-Go Normal/off M3 jumbo native and wire oracle",
+      "scope": "bcebdd ARM64 Rust FAIL E0599 missing existing UniqueSealable trait, M3 original-byte oracle PASS; after 2da8 imported same M1 trait, genuine original Go arm64 CGo executable and shared Rust M1/M3/M4 Bionic readv/jumbo/Health/Stop ELF64/AArch64+16KiB build PASS, pure M3 LINK20 65535 byte/escape/MTU wire oracle PASS; real phone NOT_RUN.",
+      "status": "BUILD_PASS",
+      "source_sha": "2da8ce6e116d7ee28b4d7d19021e623c4374a63d",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44031026873"
     }
   ],
   "limitations": [
@@ -246,12 +253,9 @@
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
     "A1/A2历史 Actions 的失败、双ABI过往证据和源码修复均保留在专门devlog及verification；当前仅Android ARM64、Rust真 M4 编译与真实Go/设备各自独立验收。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
-    "SOURCE2951 ARM64 Rust/Bionic构建通过，原Go M4/FEC/Game全链接失败；详见A2 devlog。",
     "ARM64 Native M4原Normal/off/Health/Stop、物理MTU已跨编译；A3新增真实M3 LINK20零拷贝scatter/jumbo待同源CI和真机验收，成熟Fixed/FEC/Game、Root UI/路由仍待工作。",
-    "Android ARM64 first original-Go Normal/off only: compile existing !wbd_v4_fec2_product variants; native Fixed/Auto/Game refuse unsupported, not fabricated C ABI. Same Go cold TLS and Rust original M1/M3/Health/Stop.",
     "原Go Android授权/32绑定现有C ABI被Linux-only双cfg错误屏蔽，修正为真实Android ARM64导出；物理真实RAW FD读回后按原Rust MSS/Link/AEAD FrameBudget得到TUN inner IP MTU，不允许自报、默认路由或伪装控制接口。",
-    "A3 ARM64仅Normal/off原Go控制桥：Fixed/Auto/Game/M2/outer修复及Linux-only诊断通过真实Go策略明确拒绝；Rust原TLS lease+M1/M3/M4/Health/Stop保留，待完整链接和真机独立验收。",
-    "A3 ARM64原M3：TUN单readv散集正常IPv4零拷贝、超MTU完整65KiB暂存、原LINK20按同generation/MTU/packetID逐PN分片；单turn最多8帧，失败放弃余片避免重复PN。真实Android TUN设备行为仍NOT_RUN。"
+    "A3 ARM64原TUN readv常包零额外拷贝、最大65KiB原M3 LINK20分片同SOURCE native编译与wire oracle PASS；真实内核RAW/TUN、TLS/Health/Stop/Root仍NOT_RUN。"
   ],
   "promotion": null
 }

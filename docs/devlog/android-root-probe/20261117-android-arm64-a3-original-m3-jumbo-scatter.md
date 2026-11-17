@@ -32,3 +32,17 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"独立原M3 LINK20 byte oracle PASS，ARM64 A3 readv/jumbo源代码因5个相同的原M1 UniqueSealable trait未导入而编译FAIL；只导入原trait修复，不改线协议、加密/PN、热路径拷贝或Stop语义。"}
 ```
+
+## 第二次 A3 M3 Scatter/Jumbo 源锁构建 PASS 与精确治理收尾
+
+**初始源码** `bcebdd5956232967bbf4cd750961e84ad85bbc7d` 的 [Action44030658742](https://github.com/lly8666/wbd-next/actions/runs/44030658742) 两个并行job中，`original-m3-wire-oracle` **PASS**；Android `arm64-native` **FAIL** 五处完全相同E0599（原M1 `UniqueSealable` trait仅遗漏use导入），真实CGo构建未执行，不可宣称此版本Go ELF PASS。[Gov44030658698](https://github.com/lly8666/wbd-next/actions/runs/44030658698) PASS；Maintenance44030658703 PASS。
+
+**修复源码** `2da8ce6e116d7ee28b4d7d19021e623c4374a63d` [ARM64 Action44031026873](https://github.com/lly8666/wbd-next/actions/runs/44031026873) 两个job**全部PASS**：原M3 LINK20纯wire测试63/65/65535B、magic、容量终止逐字节一致；真实Bionic Rust同一M1/M3/M4+Health/Stop + scatter/readv/有界jumbo编译/导出PASS，原Go `wbd-v4-client-arm64` 真实CGo完整链接PASS。构建ZIP [artifact14305052397](https://github.com/lly8666/wbd-next/actions/runs/44031026873/artifacts/14305052397) 已下载、实际解包/独立对 `manifest.json` 核哈希：ZIP SHA256 `681c80ed4939058ac951e0e4936014f3e0cbe28707510aae7f99d329eb16bae9`；原Go ELF `wbd-v4-client-arm64` SHA256 `62db8d080f884a869935aa65040ddf8e7bed67e71bca6c2f75be60d120e2d3b7`；Rust `libwbd_engine-arm64.so` SHA256 `f840f6d22b45f45c1aca921ebbb59418a2ef6a9dae327d44382e9fa376201dfc`。双方ELF64 AArch64 machine183/最小PT_LOAD alignment16384，无Android x86。原SOURCES分别留存。
+
+**治理遗漏精准修复**：前SOURCE的 [Gov44031026876](https://github.com/lly8666/wbd-next/actions/runs/44031026876) FAIL只因产品代码修复未同步更改功能卡（`declared feature card not updated: android-root-native-client`）。本证据提交现在更新了同一功能卡和devlog，严格控制卡片<=16KiB，**不改已BUILD_PASS的二进制源码、不跳过治理**；以本证据SOURCE的Governance实际验收为准。
+
+**尚无真实设备实证**：Android16 ARM64 KSU Root/Network handle、Bionic RAW/TUN真实读写及65535B、标准TLS认证/租约、双向TCP/UDP、Health/Stop、系统路由/DNS、Root控制器/APP、性能功耗与热点全部 **NOT_RUN**。后续优先实现正式Root控制器、ConnectivityManager Network/ifindex与owned可撤销journal，再授权真机对同源Linux WBD服务端验证标准TLS、Normal/off业务、切网和Stop；不可把构建等同于Android生产可用。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"补A3修复原M1 trait的严格功能卡治理；封存同SOURCE ARM64原Go全链接、Rust readv/jumbo ELF和原M3 wire oracle双PASS的哈希与NOT_RUN设备边界。"}
+```
