@@ -14,3 +14,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"ARM64批次复用原Go授权/原RustM1M3实现Bionic RAW/TUN双就绪线程、加密HealthClock、物理MTU检查及双eventfd Stop同步join；同SOURCE真M4符号门，Go完整产品与真机未验。"}
 ```
+
+## 第一轮 ARM64 编译与精确修复
+
+- **SOURCE `f490df0670804814d6fb60ff2a9dd9699ffc147f`** [ARM64 Action44024127542](https://github.com/lly8666/wbd-next/actions/runs/44024127542) **FAIL**，原因仅报告两处 Rust `E0599`: Android 编译看不到已有 `ProtectedScopedOwner::normal_firstsend_identity`。该方法已有真实原Go TLS epoch+owner token 检查，但先前 cfg 只包含 Linux/Windows。不能宣称本 SOURCE M4 Rust 构建通过。Bionic C ABI 开始执行，但由于 Rust 出错，`.so` 导出和完整 Go 链接在本 SOURCE **NOT_RUN**。
+- 同源 [governance44024127523](https://github.com/lly8666/wbd-next/actions/runs/44024127523) **PASS**、[governance-maintenance44024127561](https://github.com/lly8666/wbd-next/actions/runs/44024127561) **PASS**。没有 Android x86 目标，没有设备部署。主分支未修改。
+- **本修复**：只将这个原 `normal_firstsend_identity` 的 cfg 扩到 Android arm64，保持原 active、detached、epoch 非零检查不变，不新建身份或替代接口；同时从新原生M4文件删除一个未引用、永不调用的辅助函数。当前修复 **Actions待执行**；不提前宣称通过。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"M4 SOURCE f490 ARM64 编译首次FAIL精准定位两处原TLS身份方法Android cfg缺口；原方法目标编译修正且去除未用助手；治理PASS，真机M4仍NOT_RUN。"}
+```

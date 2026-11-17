@@ -53,12 +53,6 @@ fn now()->MonoNs{
     let origin=BOOT.get_or_init(Instant::now);
     MonoNs(u64::try_from(origin.elapsed().as_nanos()).unwrap_or(u64::MAX))
 }
-fn outbound(flow:crate::v4_protected_handoff::GoFlow)->Ipv4Tuple<'static>{
-    // This function cannot return references to copied stack-local flow.
-    // Actual per-turn tuple is built from the caller's scoped GoFlow instead.
-    let _=flow;
-    unreachable!("use trusted per-turn borrowed flow")
-}
 fn presentation(e:&Entry,stats:&AndroidOriginalStats)->Presentation{
     Presentation{
         ack32:e.android_seq_anchor as u32,
