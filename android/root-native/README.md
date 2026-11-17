@@ -96,3 +96,9 @@ detached final-TLS-ACK bounded cold retry, which used to live behind
 Game's optional Go build tag. The Android-only no-FEC file retains the
 **identical verified ACK behavior**, while the original Linux file is
 selected unchanged on Linux and all Game calls fail closed.
+
+The Android Native original Go client /32 binding is now genuinely
+exported: an accidental Linux-only cfg had excluded the existing
+verified-lease FFI. The Android MTU readback uses the exact selected
+physical RAW socket and the SAME Rust FrameBudget's peer MSS/record/LINK
+deductions, never the default unbound Android Network.

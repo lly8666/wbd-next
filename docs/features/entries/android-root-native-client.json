@@ -205,6 +205,13 @@
       "status": "BUILD_PASS",
       "source_sha": "2b8e662547e8d994f6ae201f3ad414019bd63774",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44024436340"
+    },
+    {
+      "platform": "Android ARM64-v8a genuine original Go Normal/off linker",
+      "scope": "Original Rust M1/M3/M4 Health eventfd Stop and native Normal/off revision ELF BUILD_PASS; Go Normal/off exclusive edition compiles realityfront+v4productcli and reaches ld.lld, but required original Fixed/M2 sharedTun/physical MTU/public native ABIs still unresolved; no executable, real device NOT_RUN.",
+      "status": "FAIL",
+      "source_sha": "33c4b2883064ea295a98bf1433f5ea3d940d2fd6",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026223115"
     }
   ],
   "limitations": [
@@ -219,7 +226,8 @@
     "SOURCE2b8e ARM64原M4真实Rust ELF和符号通过；Go链接被nm|grep-q/pipefail误报跳过，见M4 devlog。",
     "Android ARM64 first original-Go Normal/off only: compile existing !wbd_v4_fec2_product variants; native Fixed/Auto/Game refuse unsupported, not fabricated C ABI. Same Go cold TLS and Rust original M1/M3/Health/Stop.",
     "Normal/off Android sole-source edition adds real original TLS policy-verified Normal lane type only to satisfy pre-existing server adoption parameter; no new Game/FEC native ABI or fallback and no VpnService.",
-    "Android-only no-FEC Go CLI retains exact original detached TLS FinalACK cold guard for Normal and fail-closed 7-argument Game supervisor signature; Linux variant remains unchanged by explicit !android tag."
+    "Android-only no-FEC Go CLI retains exact original detached TLS FinalACK cold guard for Normal and fail-closed 7-argument Game supervisor signature; Linux variant remains unchanged by explicit !android tag.",
+    "原Go Android授权/32绑定现有C ABI被Linux-only双cfg错误屏蔽，修正为真实Android ARM64导出；物理真实RAW FD读回后按原Rust MSS/Link/AEAD FrameBudget得到TUN inner IP MTU，不允许自报、默认路由或伪装控制接口。"
   ],
   "promotion": null
 }

@@ -4145,7 +4145,10 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     e.raw_rx=Some(Arc::new(driver));
     e.raw_ifname=Some(ifname.to_owned());OK
 }
-#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(any(
+    all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),
+    all(target_os="android",target_arch="aarch64")
+))]
 // PLAN028: bind the original Go protected and credential-checked /32 before
 // any native M4 worker writes an inner IPv4 datagram to the server TUN.
 // This C call is package-private original-Go VERIFIED cold control,
@@ -9253,6 +9256,32 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     let Ok(route)=route else{return INVALID};
     let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
     else{return INVALID};
+    if limit<28{return INVALID}
+    unsafe{out.write(limit)};
+    OK
+}
+// Android ARM64 same protected Go original client IPv4/32 and original
+// Rust peer-MSS/record/LINK FrameBudget. Recheck real bound RAW TX socket
+// ifindex+MTU before reporting the effective single-inner IPv4 budget.
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
+    h:u64,ifindex:u32,out:*mut u32
+)->i32{
+    if out.is_null()||ifindex==0{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||
+       e.android_raw_rx.is_none()||e.android_tun.is_none()||
+       e.client_lease_ipv4.is_none(){return BAD_STAGE}
+    let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
+    if scope.ifindex!=ifindex{return BAD_STAGE}
+    let Some(tx)=e.android_raw_tx.as_ref()else{return BAD_STAGE};
+    if tx.check_scope(&scope.interface,ifindex).is_err(){return INVALID}
+    let Ok(frame)=e.owner.android_normal_off_frame_budget(scope.mtu)
+        else{return INVALID};
+    let Ok(limit)=u32::try_from(frame.single_business_payload_mtu)
+        else{return INVALID};
     if limit<28{return INVALID}
     unsafe{out.write(limit)};
     OK

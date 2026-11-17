@@ -73,3 +73,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"ARM64无FEC Go原产品保留真实Normal冷FinalACK原逻辑及原Game路径supervisor 7参签名，Game严格不可用；Linux build tags不改运行，治理/真实M4仍保留。"}
 ```
+
+## ARM64原Go Normal/off真实CGo链接之后：修复认证/32与实际物理预算
+
+- SOURCE `33c4b2883064ea295a98bf1433f5ea3d940d2fd6` [ARM64 Action44026223115](https://github.com/lly8666/wbd-next/actions/runs/44026223115) **overall FAIL**：单ARM64 Rust M1/M3/M4/Health/eventfd/Normal off release BUILD_PASS、完整动态导出符号严格校验PASS、ELF16KiB PASS；原Go `realityfront`/`v4productcli`类型编译PASS，实际已经走到原Go最终 `ld.lld`。**真Go最终链接FAIL**仍缺原 `fixed_stage_pending`/`fixed_pending_readback`、`arm_public_original_m2_feedback`、`client_shared_tun_promote_after_rx`、firstsend-M2与其coverage、route-event/route-refresh/CPU/outer FEC counters 等，以及两个原产品关键认证与MTU接口。不能把该 Go ELF 标产品BUILD_PASS。[Governance44026223142](https://github.com/lly8666/wbd-next/actions/runs/44026223142) PASS。
+- 本批源码还原了已有原`bind_authenticated_client_ipv4`的 Android可见性：之前两个 cfg 相与意外要求 Android目标是Linux GNU/musl，导致原已实现的 Go TLS认证lease /32从Bionic动态库消失；现在使用Linux原架构或Android arm64的实际 OR target guard，**内部仍限原Go认证/已OS安装地址、原同一generation、RAW/TUN开工之前**。不是任意用户输入/IP自证。
+- 新Android ARM64真实`observed_tx_ipv4_mtu`：原Entry活跃、原Go/32客户端授权、精确物理ifindex和RAW/TUN存在；**在原绑定RAW TX socket 上**重新验真物理MTU，不调用默认网络，然后由原Rust `android_normal_off_frame_budget` 的peer MSS、record/LINK/AEAD扣减返回单一inner IP limit。错误必须fail-closed；不复用 Linux 特定 netlink驱动。两真实C ABI已加入原ELF严格符号校验。
+
+当前新提交前未跑Action，完整原Go M2/SharedTun/route/FEC等仍真实缺口，**Android真机运行/标准TLS/auth/lease、双向TCP/UDP、Health/Stop**全部 NOT_RUN；不为绿灯添加假函数。唯一下一步：对原Go产品链接余符号按原实现进行平台真正移植/按明确未启用模式收敛依赖，再获授权在ARM64 KSU同源真server实测。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"ARM64原Go Normal/off首次走到真实ld.lld链接并精确列出剩余原M2/FEC/route符号；修复原认证租约/32被误加Linux条件遮蔽，新增真实绑定物理RAW+原Rust预算的Android MTU读回。"}
+```
