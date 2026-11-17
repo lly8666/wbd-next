@@ -540,22 +540,11 @@ try:
   os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
   (out/"plan029-h1775-cn-one32.txt").write_text(p029_converse_cn4+"/32\n",encoding="ascii")
  if p029b_b4:
-  # The test-owned /32 physical route is needed only for advanced CN.
-  # It is removed after first owned Stop while the Linux original TUN
-  # retains its separate authenticated /32 for ordinary and all.
-  if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
-      out/"plan029-h1745-owned-tun-alias.txt").is_file():
-   raise RuntimeError("B4 original Linux TUN /32 alias absent")
+  # Owner-only test /32 first: the WSL original TUN is created by TLS
+  # server lifecycle and must not be awaited before the real client starts.
   host=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
   if not host:raise RuntimeError("B4 signed physical Windows source unknown")
   h1775_owned_apply(host,peer,target=p029_tunnel_alias,tag="h2010")
-  guest_log=(out/"plan029b-b4-guest.log").open("w");logs.append(guest_log)
-  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-    "python3","-u",unix(root/"tools/m0_plan029b_b4_guest.py"),
-    peer,host,"10.66.0.2","10.66.0.1",p029_tunnel_alias],
-    stdout=guest_log,stderr=subprocess.STDOUT)
-  ready(out/"plan029b-b4-guest.log","PLAN029B_B4_LINUX_DNS_AND_BUSINESS_READY",
-        p029b_guest,25)
  # One genuine WSL2 eth0 physical packet capture starts before the
  # original Normal Go TLS/NPF client. It stays active through actual
  # Tunnel TCP/UDP apps, then is stopped at owned Stop; only bounded
@@ -680,6 +669,8 @@ try:
  # Original signed Windows Go passes one cold diagnostic bit to Rust only
  # for this P2 scene; ordinary users never incur socket-byte telemetry.
  client_env=os.environ.copy()
+ if p029b_b4:
+  client_env["WBD_PLAN029B_B4_GUEST_READY_PATH"]=str(gui_root/"data/plan029b-b4-guest-ready.flag")
  if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
  if p029_abba:client_env["WBD_PLAN029_P2_ABBA_SCENE"]="1"
  if p029_tcp128:client_env["WBD_PLAN029_TCP128_SCENE"]="1"
@@ -797,6 +788,19 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  app_runtime=["2",".09","220"] if p029b_b4 else ["2",".09","130"] if p029_gui_reconnect else []
  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done),*app_runtime],stdout=llog,stderr=subprocess.STDOUT)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done),*app_runtime],stdout=wlog,stderr=subprocess.STDOUT)
+ if p029b_b4:
+  if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
+      out/"plan029-h1745-owned-tun-alias.txt").is_file():
+   raise RuntimeError("B4 genuine server TUN public alias not ready")
+  guest_log=(out/"plan029b-b4-guest.log").open("w");logs.append(guest_log)
+  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools/m0_plan029b_b4_guest.py"),
+    peer,host,"10.66.0.2","10.66.0.1",p029_tunnel_alias],
+    stdout=guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029b-b4-guest.log","PLAN029B_B4_LINUX_DNS_AND_BUSINESS_READY",
+        p029b_guest,25)
+  (gui_root/"data/plan029b-b4-guest-ready.flag").write_text(os.environ["GITHUB_SHA"])
+
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
  if p029b_b4:
