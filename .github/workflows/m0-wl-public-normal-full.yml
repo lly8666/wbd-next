@@ -361,7 +361,7 @@ jobs:
           CHANGE_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          if [[ "$CHANGE_EVENT" == 'push' && "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* ]]; then
+          if [[ "$CHANGE_EVENT" == 'push' && ( "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* || "$CHANGE_MESSAGE" == *'[plan029-h2066-server-accept]'* ) ]]; then
             # This push dispatches three distinct real-native Actions; do
             # not run a fourth normal network scenario on the coordinator.
             echo native_smoke=false >> "$GITHUB_OUTPUT"
@@ -387,11 +387,13 @@ jobs:
           python tools/m0_native_ci_scope.py --event "$CHANGE_EVENT" \
             --files "$changed" --message "$CHANGE_MESSAGE" >> "$GITHUB_OUTPUT"
       - name: H2062 dispatch three independent ordinary native Actions
-        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan029-h2062-three-normal-reuse]')
+        if: github.event_name == 'push' && (contains(github.event.head_commit.message, '[plan029-h2062-three-normal-reuse]') || contains(github.event.head_commit.message, '[plan029-h2066-server-accept]'))
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          FROZEN_SOURCE: ${{ contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && 'fb24fe784d960e3e8bf4ca63cc2a22332247e1dd' || '0e57cab2d53e2c95962eb673050fa54695fd3665' }}
+          FROZEN_RUN: ${{ contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && '44017075750' || '44007996775' }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF_NAME" = main
@@ -399,8 +401,8 @@ jobs:
             echo H2062_ALREADY_ATTEMPTED_NO_REDISPATCH
             exit 0
           fi
-          source=0e57cab2d53e2c95962eb673050fa54695fd3665
-          reused=44007996775
+          source="$FROZEN_SOURCE"
+          reused="$FROZEN_RUN"
           test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')" = "$GITHUB_SHA"
           test "$(gh api "repos/$GH_REPO/actions/runs/$reused" --jq '.head_sha')" = "$source"
           artifacts="$(gh api "repos/$GH_REPO/actions/runs/$reused/artifacts?per_page=100" --jq '.artifacts[].name')"
@@ -2723,6 +2725,19 @@ jobs:
                   throw 'H2061 ordinary original GUI user Disconnect->Connect did not reapply actual OS and both egress/Stop'
                 }
                 Write-Output 'PLAN029_H2061_TWO_ORDINARY_GUI_GENERATIONS_SIGNED_OS_AND_STOP_PASS'
+                if($env:WBD_PLAN029_THREE_CASE -ne 'none'){
+                  $server=$result.plan029_server_continuous_accept
+                  if($null -eq $server -or
+                     $server.status -ne 'PASS_REAL_ONE_AF_PACKET_LISTENER_TWO_NEW_SOURCE_PORT_SYNACK_TLS_M4_AND_OLD_NEW_STOP' -or
+                     $server.physical_synack_count -ne 2 -or
+                     $server.authenticated_server_native_sessions -ne 2 -or
+                     $server.generation_scoped_server_native_stop -ne 2 -or
+                     $server.one_shared_tun_stop -ne $true -or
+                     $server.product_binary_source -ne $env:WBD_WL_BINARY_SOURCE){
+                    throw 'H2066 original server one port continuous SYN admission and both Rust owners Stop not proven'
+                  }
+                  Write-Output 'PLAN029_H2066_SHARED_SERVER_ONE_LISTENER_TWO_GENERATION_SYNACK_AND_OWNED_STOP_PASS'
+                }
                 if($env:WBD_PLAN029_THREE_CASE -ne 'none'){
                   if($result.product_binary_source -ne $env:WBD_WL_BINARY_SOURCE -or
                      $result.fixture_source -ne $env:GITHUB_SHA){

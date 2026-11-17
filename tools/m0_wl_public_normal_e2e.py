@@ -456,7 +456,7 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if plan028_owned_switch else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  if p029_direct or p029_p1_policy or p029_game4_cn:
@@ -792,7 +792,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "direct_tunnel_business":"PENDING","owned_stop":"PENDING"}
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
-   "V4_PUBLIC_MULTI_SESSION_READY role=server" if plan028_owned_switch and not is_game else
+   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect) and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
   end_tls_capture()
@@ -2512,7 +2512,7 @@ print(json.dumps(result),flush=True)
  stop_linux();s.wait(timeout=10)
  stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
-  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if plan028_owned_switch else
+  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect) else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
@@ -2571,6 +2571,38 @@ print(json.dumps(result),flush=True)
    if "PLAN029_REAL_GUI_WINFORMS_BUTTON_CONNECT_APPLIED_PASS" not in text or "PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS" not in text:
     raise RuntimeError("original native GUI marker missing despite separate kernel business")
    if p029_gui_reconnect:
+    # H2066: the normal manual /32 server must retain one listening AF_PACKET
+    # socket across both genuine GUI child generations. Singleton Normal
+    # deliberately refuses ALL SYN after the first Rust handoff; using that
+    # path as a reconnect test was a false prerequisite.
+    server_text=(out/"server.log").read_text(errors="replace")
+    client_text=(out/"client.log").read_text(errors="replace")
+    server_markers={
+     "listener_ready":server_text.count("V4_PUBLIC_MULTI_SERVER_READY role=server port=443"),
+     "real_synack":server_text.count("V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=1 kind=SYNACK"),
+     "authenticated_sessions":server_text.count("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443"),
+     "native_stop":server_text.count("V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason="),
+     "shared_tun_stop":server_text.count("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server"),
+    }
+    selected_ports=re.findall(
+     r"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port=(\d+) original_peer_port=443 same_ip_reauth_safe_tuple=(?:true|false)",
+     client_text)
+    if (server_markers!={"listener_ready":1,"real_synack":2,
+         "authenticated_sessions":2,"native_stop":2,"shared_tun_stop":1}
+        or selected_ports!=["41031","41032"]):
+     raise RuntimeError("H2066 original server one-port continuous admission/old-vs-new native Stop missing "+
+       repr((server_markers,selected_ports)))
+    report["plan029_server_continuous_accept"]={
+     "status":"PASS_REAL_ONE_AF_PACKET_LISTENER_TWO_NEW_SOURCE_PORT_SYNACK_TLS_M4_AND_OLD_NEW_STOP",
+     "product_binary_source":report["product_binary_source"],
+     "server_mode":"NORMAL_ORIGINAL_SHARED_MANUAL_AUTHENTICATED_32",
+     "original_kernel_listener_count":1,
+     "windows_source_ports":[41031,41032],
+     "physical_synack_count":2,
+     "authenticated_server_native_sessions":2,
+     "generation_scoped_server_native_stop":2,
+     "one_shared_tun_stop":True}
+    print("PLAN029_H2066_REAL_SERVER_CONTINUOUS_SYN_ACCEPT_AND_TWO_NATIVE_STOPS_PASS",flush=True)
     receipt=report["plan029_gui_live"]
     lines=text.splitlines()
     def exact_count(prefix):
