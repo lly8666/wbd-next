@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2127,
-  "checkpoint_sha": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
+  "sequence": 2128,
+  "checkpoint_sha": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2127 original SOURCE534b Action44150334492 native product run + three GUI PASS, original two-OS UDP/TCP and 3 Stop PASS, full original mode-batch PASS rc0; GitHub native CI Action FAILURE only due PowerShell generic two-way TCP literal rejecting real H1762 one-way TCP receipt. H2128 SOURCEcde9 exclusive B4 source-locked post-native verifier added, Action44153223434 in progress. Game2/4 and B5 NOT_RUN.",
-  "why_now": "Inspected original artifact ZIP14358594070 SHA256 d7b6db... CRC28 verified and exact CI PowerShell Exception post product mode-batch PASS. Do not repair product network path or borrow historical 028 Linux-to-Windows inbound; add exact B4 CI guard, leave other modes strict.",
+  "current_task": "H2128 original cde9 Action44153223434 source-locked signed Win2025/WSL2 FAIL: original GUI advanced gen1 and ordinary gen2 Applied/real CN DNS+UDP and owned Stop PASS; gen3 all stopped before Connect because harness repeated disabled 保存配置 click after form.SaveEditor+original Go Validate effective. No product Rust/Go failure evidence. H2129 source43f test-only skips duplicate Save on gen2/3 but preserves three genuine Connect/Stop, new Action44195727026 cheap PASS, other CI IN_PROGRESS. Game2/4 B5 NOT_RUN.",
+  "why_now": "Original signed zip14359994122 SHA256 b3062c... 26 CRC PASS first failure at gen3 UI Save button, not DNS/route/network. Avoid repeating 029 B0-B3 and avoid weakening true GUI Connect/Disconnect/Stop.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2128 original Action44153223434 cheap and native, verify source cde9+archive/hash CRC and original 3 generations, TCP and final CI job SUCCESS. If PASS record B4 scoped and proceed 1 representative Game2/Game4 + separate B5 sameVM<=10Mbps actual CPU/GiB/p99. Preserve real NOT_RUN and 028 historical FAIL.",
+  "next_action": "Collect H2129 Action44195727026 exact SOURCE43f manifest/go+rust hashes and CRC, real original GUI Gen1/2/3 OS Applied+MTU/MSS+physical/tunnel DNS and business+retired FakeIP+3 owned Stop+original Windows-to-Linux TCP+final CI gate. If green mark B4 scoped PASS and proceed minimal Game2/Game4 then B5 sameVM <=10Mbps sequential AB. Else fix only first true failure; preserve no unseen result as PASS.",
   "unverified": true,
-  "last_tested_source": "534b7ba84af901492f571334a76ed510dad093da",
+  "last_tested_source": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2127-H2127-B4-ORIGINAL-PRODUCT-PASS-NATIVE-CI-GATE-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2128-H2128-THIRD-GUI-REDUNDANT-SAVE-BUTTON-REAL-FAIL-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2127-B4-ORIGINAL-PASS-CI-GATE-MISMATCH.md",
+    "docs/devlog/M0/20261118-PLAN029B-H2128-THIRD-GUI-SAVED-BUTTON-FIRST-FAIL.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/evidence/M0/PLAN029B-H2126-H2126-THREE-REAL-GUI-SCOPED-PASS-LEGACY-028-TCP-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2127-H2127-B4-ORIGINAL-PRODUCT-PASS-NATIVE-CI-GATE-FAIL-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "Original Action44150334492 source534b actual real three original GUI applied/Stop TCP/UDP/DNS/M4/MTU and no stale FakeIP PASS, mode-batch original PASS, CI post-verifier still FAIL due legacy generic two-way TCP literal. H2128 sourcecde9 only exclusive B4 CI hard gate candidate Action44153223434 running; B0–B3 historical scoped, Game/B5 not run, 029/029B OPEN."
+  "partial_summary": "H2128 original cde9 Action44153223434 failed at third original WinForms Save button already persisted/disabled, first two original real GUI Applied/DNS/UDP/Stop PASS; no Rust Go product hot path FAIL. H2129 source43f cheap PASS candidate B4 native running; B0-B3 historical PASS_SCOPED, Game/B5 NOT_RUN, 029/029B OPEN."
 }
