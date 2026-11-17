@@ -4,6 +4,10 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -41,6 +45,7 @@ public final class RootClientService extends Service {
     private ConnectivityManager watchedManager;
     private ConnectivityManager.NetworkCallback watchedCallback;
     private NetworkScopeGate watchedGate;
+    private BroadcastReceiver installedPackageWatch;
 
     private static String newOwnerToken(){
         byte[] bytes=new byte[16];
@@ -105,6 +110,37 @@ public final class RootClientService extends Service {
             catch(IllegalArgumentException ignored){/* already unregistered */ }
         }
     }
+    // Package removal/replacement is a protected Android system broadcast.
+    // This is event-driven: a re-used UID must not remain routed to WBD.
+    private void watchSelectedPackage(final String targetPackage){
+        final String generation=ownerToken;
+        IntentFilter filter=new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        filter.addDataScheme("package");
+        BroadcastReceiver receiver=new BroadcastReceiver(){
+            @Override public void onReceive(Context ctx,Intent event){
+                Uri changed=event==null?null:event.getData();
+                if(changed!=null&&targetPackage.equals(changed.getSchemeSpecificPart())&&
+                   generation!=null&&generation.equals(ownerToken)){
+                    requestStop("TARGET_APPLICATION_CHANGED — withdrawing UID policy");
+                }
+            }
+        };
+        // Only protected system broadcasts. Android14 explicitly permits
+        // the no-flags receiver registration for exclusively system events.
+        registerReceiver(receiver,filter);
+        installedPackageWatch=receiver;
+    }
+    private void stopWatchingSelectedPackage(){
+        BroadcastReceiver receiver=installedPackageWatch;
+        installedPackageWatch=null;
+        if(receiver!=null){
+            try{unregisterReceiver(receiver);}
+            catch(IllegalArgumentException ignored){/* already unregistered */}
+        }
+    }
     @Override public IBinder onBind(Intent i){return null;}
     private static String q(String s){
         // One POSIX shell token, including otherwise untrusted CLI labels.
@@ -149,27 +185,31 @@ public final class RootClientService extends Service {
             String user=intent.getStringExtra("user");
             int port=intent.getIntExtra("port",0);
             int uid=intent.getIntExtra("uid",0);
+            String targetPackage=intent.getStringExtra("target_package");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
             if(peer==null||sni==null||user==null||
                 !peer.matches("[0-9.]{7,15}")||
                 sni.length()==0||user.length()==0||
-                port<1||port>65535||uid<10000||uid>1999999){
-                throw new IllegalArgumentException("Invalid single-app root policy");
+                port<1||port>65535||
+               !InstalledAppCatalog.stillSame(this,targetPackage,uid)){
+                throw new IllegalArgumentException("Selected installed package/UID changed or invalid");
             }
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
+            watchSelectedPackage(targetPackage);
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
-                port,uid,hasCA),"wbd-native-root-owner");
+                port,uid,targetPackage,hasCA),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             status="START_REFUSED: "+e.getMessage();
             running.set(false);
             stopWatchingPhysicalNetwork();
+            stopWatchingSelectedPackage();
             selection=null;
             ownerToken=null;
             new File(getFilesDir(),"wbd-pass.secret").delete();
@@ -247,7 +287,7 @@ public final class RootClientService extends Service {
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
-                         int port,int uid,boolean hasCA){
+                         int port,int uid,String targetPackage,boolean hasCA){
         boolean nativeReady=false,uidReady=false;
         try{
             NativePayload code=NativePayload.stage(this);
@@ -260,6 +300,8 @@ public final class RootClientService extends Service {
             synchronized(ownerLaunchLock){
                 if(stopping.get())
                     throw new IllegalStateException("Root launch withdrawn before native start");
+                if(!InstalledAppCatalog.stillSame(this,targetPackage,uid))
+                    throw new IllegalStateException("Selected package or UID changed before Root grant");
                 p=new ProcessBuilder("su","-c",
                     launchCommand(code,net,peer,sni,user,port,uid,hasCA,ownerToken))
                     .redirectErrorStream(true).start();
@@ -301,6 +343,7 @@ public final class RootClientService extends Service {
             running.set(false);
             stopping.set(false);
             stopWatchingPhysicalNetwork();
+            stopWatchingSelectedPackage();
             stopForeground(true);
             stopSelf();
         }
@@ -342,6 +385,7 @@ public final class RootClientService extends Service {
     @Override public void onDestroy(){
         requestStop("SERVICE_DESTROYED");
         stopWatchingPhysicalNetwork();
+        stopWatchingSelectedPackage();
         super.onDestroy();
     }
 }

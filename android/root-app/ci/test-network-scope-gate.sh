@@ -11,6 +11,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootStopCommand.java \
   android/root-app/ci/RootStopCommandTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootStopCommandTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/ci/InstalledAppTargetTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.InstalledAppTargetTest
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
@@ -21,6 +25,13 @@ for method in ("registerNetworkCallback(", "unregisterNetworkCallback(",
 assert "postDelayed(" not in s, "no 1-second steady Network watcher"
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
 assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
+assert 'InstalledAppCatalog.stillSame(this,targetPackage,uid)' in s, "must verify real installed package before Root"
+assert 'watchSelectedPackage(targetPackage)' in s and 'stopWatchingSelectedPackage()' in s, "must stop on selected package changes"
+a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert 'target_package' in a and 'InstalledAppCatalog.stillSame(' in a
+assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
+m=Path("android/root-app/AndroidManifest.xml").read_text()
+assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' not in m, "narrow package visibility"
 # The exact POSIX read arity must preserve kernel starttime for both
 # existing old 2-field receipts and current 3-field receipts.
 import subprocess,tempfile

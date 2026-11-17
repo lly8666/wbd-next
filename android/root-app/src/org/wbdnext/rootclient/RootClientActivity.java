@@ -25,8 +25,9 @@ import java.util.List;
 public final class RootClientActivity extends Activity {
     private final Handler ui=new Handler(Looper.getMainLooper());
     private final List<PhysicalNetwork> physical=new ArrayList<>();
-    private EditText serverIP,serverName,user,password,routeKey,caPEM,uid,serverPort;
-    private Spinner networks;
+    private final List<InstalledAppTarget> installedApps=new ArrayList<>();
+    private EditText serverIP,serverName,user,password,routeKey,caPEM,serverPort;
+    private Spinner networks,applications;
     private TextView status;
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
@@ -54,6 +55,25 @@ public final class RootClientActivity extends Activity {
         ArrayAdapter<String> adapter=new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,labels);
         networks.setAdapter(adapter);
+    }
+    private void chooseInstalledApplications(){
+        String previous=null;
+        int old=applications.getSelectedItemPosition();
+        if(old>=0&&old<installedApps.size())
+            previous=installedApps.get(old).packageName;
+        installedApps.clear();
+        installedApps.addAll(InstalledAppCatalog.launchable(this));
+        ArrayList<String> labels=new ArrayList<>();
+        int restore=0;
+        for(int i=0;i<installedApps.size();i++){
+            InstalledAppTarget entry=installedApps.get(i);
+            labels.add(entry.title());
+            if(entry.packageName.equals(previous))restore=i;
+        }
+        if(labels.isEmpty())labels.add("NO visible installed launchable user app (fail closed)");
+        applications.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,labels));
+        if(!installedApps.isEmpty())applications.setSelection(restore);
     }
     private static boolean ipv4(String s){
         String[] parts=s.split("\\.",-1);
@@ -90,13 +110,18 @@ public final class RootClientActivity extends Activity {
             String secret=password.getText().toString();
             String key=routeKey.getText().toString().trim();
             String pem=caPEM.getText().toString().trim();
-            int target=Integer.parseInt(uid.getText().toString().trim());
+            int appPosition=applications.getSelectedItemPosition();
+            if(appPosition<0||appPosition>=installedApps.size())
+                throw new IllegalArgumentException("Select a real installed application");
+            InstalledAppTarget targetApp=installedApps.get(appPosition);
+            if(!InstalledAppCatalog.stillSame(this,targetApp.packageName,targetApp.uid))
+                throw new IllegalArgumentException("Selected application removed or changed UID; refresh");
+            int target=targetApp.uid;
             int port=Integer.parseInt(serverPort.getText().toString().trim());
             if(!ipv4(peer)||sni.length()==0||sni.length()>253||
                account.length()==0||account.length()>128||
                secret.length()==0||secret.length()>512||
                !key.matches("[0-9a-fA-F]{64}")||
-               target<10000||target>1999999||
                port<1||port>65535){
                 throw new IllegalArgumentException("Invalid server / TLS / credential / UID settings");
             }
@@ -121,6 +146,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("uid",target);
+            request.putExtra("target_package",targetApp.packageName);
             request.putExtra("has_ca",!pem.isEmpty());
             startForegroundService(request);
             status.setText("Root start requested; awaiting actual native Go proof");
@@ -160,9 +186,17 @@ public final class RootClientActivity extends Activity {
         caPEM=input(pane,"Optional server TLS CA certificate PEM",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
-        uid=input(pane,"Single application UID for private route (default this app)",
-            InputType.TYPE_CLASS_NUMBER);
-        uid.setText(Integer.toString(android.os.Process.myUid()));
+        TextView targetHelp=new TextView(this);
+        targetHelp.setText("Select an actual installed app below; routing is by Linux UID. "
+            +"Packages sharing one UID share the same route. System/root and this app are excluded. "
+            +"Only packages visible under Android package-visibility rules appear.");
+        pane.addView(targetHelp);
+        applications=new Spinner(this);
+        pane.addView(applications);
+        Button refreshApps=new Button(this);
+        refreshApps.setText("Refresh installed applications");
+        refreshApps.setOnClickListener(v->chooseInstalledApplications());
+        pane.addView(refreshApps);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
         connect.setOnClickListener(v->start());
         pane.addView(connect);
@@ -179,9 +213,12 @@ public final class RootClientActivity extends Activity {
         pane.addView(status);
         setContentView(scroll);
         chooseNetworks();
+        chooseInstalledApplications();
     }
     @Override protected void onResume(){
-        super.onResume();ui.post(refreshStatus);
+        super.onResume();
+        chooseInstalledApplications();
+        ui.post(refreshStatus);
     }
     @Override protected void onPause(){
         ui.removeCallbacks(refreshStatus);super.onPause();

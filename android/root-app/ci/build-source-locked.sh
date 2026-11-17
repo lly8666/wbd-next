@@ -83,6 +83,19 @@ if grep -Eq 'BIND_VPN_SERVICE|VpnService|android.net.VpnService' \
   echo "ANDROID_ROOT_PRODUCT_MUST_NOT_CONTAIN_VPN_SERVICE" >&2;exit 1
 fi
 python3 - <<'PY'
+import xml.etree.ElementTree as ET
+x=ET.parse("android/root-app/AndroidManifest.xml").getroot()
+ns="{http://schemas.android.com/apk/res/android}"
+q=x.find("queries")
+assert q is not None,"package visibility must be scoped"
+assert any(e.find("action").get(ns+"name")=="android.intent.action.MAIN" and
+           e.find("category").get(ns+"name")=="android.intent.category.LAUNCHER"
+           for e in q.findall("intent")),"only explicitly query launchable packages"
+assert all(p.get(ns+"name")!="android.permission.QUERY_ALL_PACKAGES"
+           for p in x.findall("uses-permission")),"no broad package visibility"
+print("ANDROID_ROOT_NARROW_INSTALLED_PACKAGE_VISIBILITY_MANIFEST_PASS")
+PY
+python3 - <<'PY'
 from pathlib import Path
 import hashlib,json,os,zipfile
 out=Path("out/android-root-app")

@@ -98,3 +98,31 @@ Owner takeover protection now parses both the legacy two-field and new three-fie
 ### A6 accepted CI evidence
 
 [Actions #44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256) at SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`: **5/5 jobs PASS**; Android ARM64 Go/Rust and signed Root APK BUILD_PASS, original Linux WBD server oracle PASS, JVM NetworkCallback gate 16 assertions, production Stop script POSIX sh -n 11 assertions, and old/new owner.pid parsing regression PASS. Host ARM64 has no accessible `/dev/kvm`, so Android guest/App Root/true network E2E remain **ENV_BLOCKED / NOT_RUN**. This does not authorize physical devices.
+
+## A7: real installed-app picker (not manual arbitrary UID)
+
+`RootClientActivity` queries current-user launcher apps using
+`PackageManager.queryIntentActivities(MAIN+LAUNCHER)` and the **real**
+`ApplicationInfo.uid`, deduplicates by package name and displays both
+package and UID. Android11+ uses a narrowly scoped manifest `<queries>`
+declaration, **not** `QUERY_ALL_PACKAGES`. System/root UID, the WBD
+controller's own UID/package, and unlisted apps are excluded. The user
+can refresh the installed-app snapshot. Unlaunchable or invisible packages
+are intentionally not offered.
+
+The signed APK's `START` action carries the selected package and exact
+observed UID. The foreground Service reconfirms the association on Start
+and again just before `su -c`, failing closed if the app was removed or
+its UID changed. Selected package removal, replacement or component
+changes send a protected Android broadcast to the Service, which requests
+the already-defined generation-bound original Go/Rust Stop. The package
+is never interpreted as an untrusted Go protocol argument or classified
+per packet by Java.
+
+**Shared Linux UID limitation:** several APKs can have the same UID;
+the kernel's uidrange rule cannot separate them. This is disclosed in
+the selector. The Java host policy test checks package syntax/UID
+association, while the signed APK build checks narrow manifest queries.
+Android runtime PackageManager visibility, dynamic package broadcasts,
+real UID route readback and the complete Android↔Linux WBD link are
+still P3 **NOT_RUN**.
