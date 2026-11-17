@@ -4,27 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2070,
-  "checkpoint_sha": "5d2a3856ebec2fce9724b222c43df47030ea8c67",
+  "sequence": 2071,
+  "checkpoint_sha": "195a93aa09e877ed8ee31c7c32516773bb38f01e",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2070: H2067 actual GUI/domain/TTL all second-generation SYNACK/TLS pass, B Windows Rust M4 TXCopied≈237–246 + control bytes≈280–298 but Linux shared server B fails AEAD Health, Win B RX=0, OS/business NOT_RUN. DNS second cold TC/TCP and TTL2 two physical FakeIP PASS. Existing H2067 2fca Windows/Linux binaries reused unchanged for ONE raw RX exact-tuples source-locked diagnostic.",
-  "why_now": "H2067 source `arm_client_cold_ready` change proved Windows B sends control frames, falsifies simple 15s schedule-only root theory. Linux eth0 physically captures B TCP payload. Need server Rust kernel raw socket counters for B port41032 vs packet tuple/error and BPF before any new product change.",
+  "current_task": "H2071 actual server B RAW Rx kernel/tuple/TUN stage proven: Action44025145100 original product 2fca, fixture195a, B 41032 Rust M4 kernel_raw_observed13, tuple_candidates10, TUN-delivered10 and rx_err0. Listener stayed alive, B real SYNACK/TLS, yet no canonical AEAD/PN Health verified, server refused B shared-route. GUI second OS/business FAIL.",
+  "why_now": "H2070 isolated real read-only per-port B Rust RAW RX; excludes all-SYN/4tuple/BPF drop, confirms real B native reception and TUN writes but still no peer Health. Windows M2 source seals canonical Health and NPF copied320 control wire bytes; Linux M3 authenticated Health TLV hint must be observed specifically, unlike plain TUN business.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Read one bounded H2070 real GUI Action with existing WBD_PLAN028_EXTERNAL_STAGE_DIAG and per-source B port counters. Compare physical B 41032 pcap vs kernel_raw_observed, tuple_candidates, rx_err and verified Health. Keep H2067 three FAIL historical, no new worker/third-party proxy or bypass of 5s B gate.",
+  "next_action": "Next one bounded source-locked diagnostic should correlate Windows actual kind0 NPF copies with Linux B M3 kind0 AEAD-open and canonical TLV parse/hint counters. Never promote from SYN/TLS/raw TUN or change 5s server gate. Only after root confirmed, smallest product change and re-run three ordinary real GUI/domain/TTL tests; current three H2067 FAIL and H2070 FAIL remain.",
   "unverified": true,
   "last_tested_source": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2070-H2067-SECOND-M4-RX-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2071-SERVER-B-RAW-EVIDENCE.md",
+    "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2070-ONE-SERVER-M4-RX-DIAG.md",
     "docs/evidence/M0/PLAN029-H2070-H2067-SECOND-M4-RX-FAIL-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2067-WINDOWS-COLD-HEALTH-GATE.md",
-    "docs/evidence/M0/PLAN029-H2067-H2066-M4-REVERSE-FIRST-FAIL-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2066-SERVER-REACCEPT-SHARED-32.md",
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
   ],
   "open_requests": [],
-  "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
+  "partial_summary": "H2070 actual signed native GUI original A Ready/OS/Stop PASS; second B SYNACK/TLS and M4 B RAW kernel13 tuple10 TUN10, still B Health proof missing and no second OS/business PASS. Domain second TC/TCP53 and TTL2 first two FakeIP independently proven earlier, postrestart third NOT_RUN."
 }
