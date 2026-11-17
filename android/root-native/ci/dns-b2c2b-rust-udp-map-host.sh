@@ -28,6 +28,10 @@ assert 'const TUNNEL_DNS:[u8;4]=[1,1,1,1];' in wire
 assert 'const CAP:usize=64;' in wire
 assert 'const MAX_AGE_MS:u64=12_000;' in wire
 assert 'fn rewrite_query(' in wire and 'fn rewrite_reply(' in wire
+# The negative fixture must mutate a NONZERO length byte. The earlier
+# test p[24]=0 wrote zero onto an already-zero UDP high length byte and
+# falsely expected a valid original query to fail admission.
+assert '2=>p[25]=0, // corrupt actual nonzero UDP length LOW byte' in wire
 assert 'fn set_checksums(' in wire and 'fn stop(&mut self)' in wire
 assert 'mod v4_android_dns_udp_flow;' in lib
 assert 'hijack_enabled.write(0)' in m4
