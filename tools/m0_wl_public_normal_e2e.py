@@ -34,6 +34,9 @@ if p029_p1_cn and not p029_p1_policy:
 # switches off in the launched original Go process. One source, one signed
 # Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
+p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
+if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
+ raise RuntimeError("true GUI original signed CN default1460 needed")
 p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
 ipv6_probe_before=None
 ipv6_probe_active=None
@@ -316,7 +319,7 @@ def stop_linux():
    print("WL_REAL_LINUX_OWNED_STOP_REQUEST_TIMEOUT seconds=8",file=sys.stderr,flush=True)
 def stop_windows(p):
  if p and p.poll() is None:
-  try:p.stdin.write("stop\n");p.stdin.flush();p.wait(timeout=15)
+  try:p.stdin.write("stop\n");p.stdin.flush();p.wait(timeout=40 if p029_gui else 15)
   except Exception:
    p.terminate()
    try:p.wait(timeout=4)
@@ -358,6 +361,7 @@ try:
  cli=out/"wbd-client-embedded.exe";lib=out/"wbd_engine.dll"
  for f in (cli,lib,out/"wintun.dll",root/"linux-product"/"wbd-v4-server",root/"linux-product"/"libwbd_engine.so"):
   if not f.exists() or f.stat().st_size<10000:raise RuntimeError("missing actual public native binary "+str(f))
+ gui_root=None
  report["windows_cli_sha256"]=hashlib.sha256(cli.read_bytes()).hexdigest()
  report["linux_server_sha256"]=hashlib.sha256((root/"linux-product"/"wbd-v4-server").read_bytes()).hexdigest()
  ip=wsl("ip","-4","-o","addr","show","dev","eth0")
@@ -537,6 +541,10 @@ try:
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
+ if p029_gui:
+  from m0_plan029_gui_real_bridge import prepare
+  args,gui_root=prepare(root,out,cli,lib,args,rules)
+  report["original_client_entry"]="WINFORMS_REAL_BUTTON_GO_RUST"
  log=(out/"client.log").open("w");logs.append(log)
  # Original signed Windows Go passes one cold diagnostic bit to Rust only
  # for this P2 scene; ordinary users never incur socket-byte telemetry.
@@ -572,11 +580,14 @@ try:
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
                     text=True,env=client_env)
  game_cold_stage("COLD_CLIENT_SPAWNED")
- resource_worker=threading.Thread(
-  target=sample_windows_original_process,
-  args=(w,out/"windows-original-go-rust-process-1hz.jsonl",resource_stop),
-  daemon=True)
- resource_worker.start()
+ if not p029_gui:
+  resource_worker=threading.Thread(
+   target=sample_windows_original_process,
+   args=(w,out/"windows-original-go-rust-process-1hz.jsonl",resource_stop),
+   daemon=True)
+  resource_worker.start()
+ else:
+  report["windows_process_cpu"]="NOT_SAMPLED_GO_RUST_GUI_PARENT_ONLY"
  # Launch true independent Windows/Wintun and Linux/TUN kernel applications
  # CONCURRENTLY with original authenticated client Apply. That product
  # requires first, reverse and a post-reverse packet BEFORE emitting READY.
@@ -2421,9 +2432,9 @@ print(json.dumps(result),flush=True)
             "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
             "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
   missing=[mark for mark in required if mark not in win_native]
-  wal=out/"owned-wal.json.n4-owned-wal"
-  routes=out/"owned-wal.json.n4-owned-wal.routes"
-  tcp_sidecar=out/"owned-wal.json.plan029-defender-tcp"
+  wal=(gui_root/"data/network-state.json.n4-owned-wal" if p029_gui else out/"owned-wal.json.n4-owned-wal")
+  routes=(gui_root/"data/network-state.json.n4-owned-wal.routes" if p029_gui else out/"owned-wal.json.n4-owned-wal.routes")
+  tcp_sidecar=(gui_root/"data/network-state.json.plan029-defender-tcp" if p029_gui else out/"owned-wal.json.plan029-defender-tcp")
   if missing or wal.exists() or routes.exists() or tcp_sidecar.exists():
    raise RuntimeError("H1840 signed real nonCI CN owner Stop/OS WAL missing "+
                       repr(missing)+" wal="+str(wal.exists())+
@@ -2436,6 +2447,13 @@ print(json.dumps(result),flush=True)
   prod=report["plan029_real_product_normal_cn"]
   prod["direct_tunnel_business"]="PASS_SIGNED_PHYSICAL_DIRECT_DNS_TCP_UDP_AND_TUNNEL"
   prod["owned_stop"]="PASS_BOTH_OWNED"
+  if p029_gui:
+   from m0_plan029_gui_real_bridge import receipt_and_cleanup
+   report["plan029_gui_live"]=receipt_and_cleanup(gui_root)
+   text=(out/"client.log").read_text(errors="replace")
+   if "PLAN029_REAL_GUI_WINFORMS_BUTTON_CONNECT_APPLIED_PASS" not in text or "PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS" not in text:
+    raise RuntimeError("original native GUI marker missing despite separate kernel business")
+   print("PLAN029_REAL_GUI_WINTUN_TWO_EGRESS_STOP_PASS_SCOPED",flush=True)
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_SIGNED_BOTH_OS_AND_STOP_PASS_SCOPED",flush=True)
  if p029_padding:
   # Actual original Rust authenticated M1 encrypted LINK copied by NPF.
@@ -2484,9 +2502,9 @@ print(json.dumps(result),flush=True)
    "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
   )
   missing=[marker for marker in required if marker not in win_native]
-  wal=out/"owned-wal.json.n4-owned-wal"
-  routes=out/"owned-wal.json.n4-owned-wal.routes"
-  tcp_sidecar=out/"owned-wal.json.plan029-defender-tcp"
+  wal=(gui_root/"data/network-state.json.n4-owned-wal" if p029_gui else out/"owned-wal.json.n4-owned-wal")
+  routes=(gui_root/"data/network-state.json.n4-owned-wal.routes" if p029_gui else out/"owned-wal.json.n4-owned-wal.routes")
+  tcp_sidecar=(gui_root/"data/network-state.json.plan029-defender-tcp" if p029_gui else out/"owned-wal.json.plan029-defender-tcp")
   if missing or wal.exists() or routes.exists() or (p029_direct and tcp_sidecar.exists()):
    raise RuntimeError("PLAN029 private V3 signed Tunnel/Stop oracle FAILED "+
                       json.dumps({"missing":missing,"wal":wal.exists(),
@@ -2981,6 +2999,9 @@ finally:
   try:wsl("rm","-f",route_guest,timeout=10)
   except Exception:pass
  if route_local and route_local.exists():route_local.unlink()
+ if p029_gui and gui_root is not None:
+  for name in ("route-key.hex","gui-seed.json","profiles.json","active.json","pending.json"):
+   (gui_root/"data"/name).unlink(missing_ok=True)
  (out/"tls-firstflight.pcap").unlink(missing_ok=True)
  if s and s.poll() is None:
   try:s.wait(timeout=4)

@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2044,
-  "checkpoint_sha": "e0a3f44461111aae5e3e17e4252f16202c5c4151",
+  "sequence": 2045,
+  "checkpoint_sha": "c7c3054579f9db9bac07bdbeccef44ca3ac01fe5",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2044 fix first native assembly failure: exact overlay bootstrap test blob pin; maintain GUI/DNS/writer narrow closeout only. Source-locked Windows build and Rust capacity component checks in flight, do not rerun or claim PASS.",
-  "why_now": "H2042 H1661 Action43992426014 stopped at native bootstrap source blob mismatch before Go compiler; H2043 Action43992703610 stopped at next native bootstrap _test.go blob. Fixed exact manifest. Governance lacked per-commit feature-impact and cursor exceeded bounded context_refs; both corrected.",
+  "current_task": "H2045 test-owned original WinForms button with real ClientSession, exact-Go/Rust binary, OS Applied/inner readback, Normal CN actual two kernel exits and owned Stop added to existing one native Windows/WSL2 scenario. New signed SOURCE pending.",
+  "why_now": "H2044 Windows original Go SOURCE Action43992993306 successful, H2043 two OS Rust pressure pure Action43992703683 success. H2044 feature catalog failed because pretty-printed card over16KiB; correct minification in this batch. No fake GUI origin claims.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect completed H2044 Go/Win/Lin Rust Actions before further changes. GUI real ClientSession signed network, five small quota classes and crash/reconnect TC remain OPEN; no unverified green promotion.",
+  "next_action": "Collect exact H2045 real GUI original Action and fix first failure; native TC network and all five quota classes must not be claimed real. No Game4/padding duplicate dispatch.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2045-GUI-REAL-SIGNED-CANDIDATE.md",
     "docs/devlog/M0/20261117-PLAN029-H2044-ASSEMBLY-STOP-RESTORE.md",
-    "docs/devlog/M0/20261117-PLAN029-H2042-SCOPED-DNS-TC-WRITER-CODING.md",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
